@@ -117,16 +117,14 @@ Example usage:
                             :description (funcall org-mu4e-link-desc-func msg))
         link))))
 
-(org-add-link-type "mu4e" 'org-mu4e-open)
-(add-hook 'org-store-link-functions 'org-mu4e-store-link)
-
 ;; org-add-link-type is obsolete as of org-mode 9.
 ;; Instead we will use the org-link-set-parameters method
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "mu4e"
 			     :follow #'org-mu4e-open
-			     :store #'org-mu4e-store-link))
-
+			     :store #'org-mu4e-store-link)
+  (org-add-link-type "mu4e" 'org-mu4e-open)
+  (add-hook 'org-store-link-functions 'org-mu4e-store-link))
 
 (defun org-mu4e-open (path)
   "Open the mu4e message (for paths starting with 'msgid:') or run
