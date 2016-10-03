@@ -170,6 +170,9 @@ unless PREFER-HTML is non-nil."
   (setq mu4e~message-body-html nil) ;; default
   (let* ((txt (mu4e-message-field msg :body-txt))
 	  (html (mu4e-message-field msg :body-html))
+	  (txtlen (length txt))
+	  (txtlimit (* mu4e-view-html-plaintext-ratio-heuristic txtlen))
+	  (txtlimit (if (>= txtlimit 0) txtlimit most-positive-fixnum)) ;; overflow
 	  (body
 	    (cond
 	      ;; does it look like some text? ie., if the text part is more than
@@ -177,10 +180,8 @@ unless PREFER-HTML is non-nil."
 	      ;; html part, it should't be used
 	      ;; This is an heuristic to guard against 'This messages requires
 	      ;; html' text bodies.
-	      ((and (> (* mu4e-view-html-plaintext-ratio-heuristic
-                      (length txt)) (length html))
-		 ;; use html if it's prefered, unless there is no html
-		 (or (not prefer-html) (not html)))
+	      ((and (> txtlen 0)
+		 (or (> txtlimit (length html)) (not prefer-html)))
 		txt)
 	      ;; otherwise, it there some html?
 	      (html
