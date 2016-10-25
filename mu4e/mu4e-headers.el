@@ -285,6 +285,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defvar mu4e~headers-sort-field-choices
   '( ("date"	. :date)
      ("from"	. :from)
+     ("maildir" . :maildir)
      ("prio"	. :prio)
      ("zsize"	. :size)
      ("subject"	. :subject)
