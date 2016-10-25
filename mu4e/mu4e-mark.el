@@ -120,9 +120,8 @@ is either a headers or view buffer."
        ;; the headers buffer
        (let ((hbuf (mu4e~mark-find-headers-buffer)))
 	 (if (buffer-live-p hbuf)
-	   (with-current-buffer hbuf
-	     ,@body)
-	   (progn (mu4e-message "%S" major-mode) ,@body))))))  
+	   (with-current-buffer hbuf ,@body)
+	   ,@body)))))
 
 (defvar mu4e-marks
     '((refile
