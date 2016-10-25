@@ -592,9 +592,10 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 	errno = 0;
 	while ((entry = readdir (dir))) {
 
-		const char *fp;
-		char *fullpath;
-		unsigned char d_type;
+		const char	*fp;
+		char		*fullpath;
+		unsigned char	 d_type;
+		guint		 len;
 
 		/* ignore empty, dot thingies */
 		if (entry->d_name[0] == '\0' || entry->d_name[0] == '.')
@@ -603,9 +604,10 @@ clear_links (const gchar* dirname, DIR *dir, GError **err)
 		/* we have to copy the buffer from fullpath_s, because
 		 * it returns a static buffer and we are
 		 * recursive*/
-		fp = mu_str_fullpath_s (dirname, entry->d_name);
-		fullpath = g_newa (char, strlen(fp) + 1);
-		strcpy (fullpath, fp);
+		fp	 = mu_str_fullpath_s (dirname, entry->d_name);
+		len	 = strlen(fp);
+		fullpath = g_newa (char, len + 1);
+		strncpy (fullpath, fp, len);
 
 		d_type = GET_DTYPE (entry, fullpath);
 
@@ -767,18 +769,11 @@ mu_maildir_get_maildir_from_path (const char* path)
 static char*
 get_new_basename (void)
 {
-	char	hostname[64];
-
-	if (gethostname (hostname, sizeof(hostname)) == -1)
-		memcpy (hostname, "localhost", sizeof(hostname));
-	else
-		hostname[sizeof(hostname)-1] = '\0';
-
 	return g_strdup_printf ("%u.%08x%08x.%s",
 				(guint)time(NULL),
 				g_random_int(),
 				(gint32)g_get_monotonic_time (),
-				hostname);
+				g_get_host_name ());
 }
 
 

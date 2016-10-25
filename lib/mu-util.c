@@ -123,7 +123,7 @@ mu_util_create_tmpdir (void)
 {
 	gchar *dirname;
 
-        dirname =  g_strdup_printf ("%s%cmu-%d%c%x",
+	dirname =  g_strdup_printf ("%s%cmu-%d%c%x",
 				    g_get_tmp_dir(),
 				    G_DIR_SEPARATOR,
 				    getuid(),
@@ -193,45 +193,45 @@ mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 gchar*
 mu_util_guess_maildir (void)
 {
-        const gchar *mdir1, *home;
+	const gchar *mdir1, *home;
 
-        /* first, try MAILDIR */
-        mdir1 = g_getenv ("MAILDIR");
+	/* first, try MAILDIR */
+	mdir1 = g_getenv ("MAILDIR");
 
-        if (mdir1 && mu_util_check_dir (mdir1, TRUE, FALSE))
-                return g_strdup (mdir1);
+	if (mdir1 && mu_util_check_dir (mdir1, TRUE, FALSE))
+		return g_strdup (mdir1);
 
-        /* then, try <home>/Maildir */
-        home = g_get_home_dir();
-        if (home) {
-                char *mdir2;
-                mdir2 = g_strdup_printf ("%s%cMaildir",
-                        home, G_DIR_SEPARATOR);
-                if (mu_util_check_dir (mdir2, TRUE, FALSE))
-                        return mdir2;
-                g_free (mdir2);
-        }
+	/* then, try <home>/Maildir */
+	home = g_get_home_dir();
+	if (home) {
+		char *mdir2;
+		mdir2 = g_strdup_printf ("%s%cMaildir",
+			home, G_DIR_SEPARATOR);
+		if (mu_util_check_dir (mdir2, TRUE, FALSE))
+			return mdir2;
+		g_free (mdir2);
+	}
 
-        /* nope; nothing found */
-        return NULL;
+	/* nope; nothing found */
+	return NULL;
 }
 
 
 gchar*
 mu_util_guess_mu_homedir (void)
 {
-        const char* home;
+	const char* home;
 
-        /* g_get_home_dir use /etc/passwd, not $HOME; this is better,
-         * as HOME may be wrong when using 'sudo' etc.*/
-        home = g_get_home_dir ();
+	/* g_get_home_dir use /etc/passwd, not $HOME; this is better,
+	 * as HOME may be wrong when using 'sudo' etc.*/
+	home = g_get_home_dir ();
 
-        if (!home) {
-                MU_WRITE_LOG ("failed to determine homedir");
-                return NULL;
-        }
+	if (!home) {
+		MU_WRITE_LOG ("failed to determine homedir");
+		return NULL;
+	}
 
-        return g_strdup_printf ("%s%c%s", home ? home : ".",
+	return g_strdup_printf ("%s%c%s", home ? home : ".",
 				G_DIR_SEPARATOR, ".mu");
 }
 
@@ -437,7 +437,6 @@ mu_util_fputs_encoded (const char *str, FILE *stream)
 	unsigned	 bytes;
 	char		*conv;
 
-	g_return_val_if_fail (str, FALSE);
 	g_return_val_if_fail (stream, FALSE);
 
 	/* g_get_charset return TRUE when the locale is UTF8 */
@@ -557,5 +556,3 @@ mu_util_read_password (const char *prompt)
 
 	return g_strdup (pass);
 }
-
-

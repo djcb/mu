@@ -459,7 +459,7 @@ output_plain_fields (MuMsg *msg, const char *fields,
 	int		nonempty;
 
 	g_return_if_fail (fields);
-	
+
 	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
 
 		MuMsgFieldId mfid;
