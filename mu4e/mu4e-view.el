@@ -787,7 +787,8 @@ FUNC should be a function taking two arguments:
   (put 'mu4e~view-attach-map 'permanent-local t)
 
   ;; show context in mode-string
-  (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
+  (make-local-variable 'global-mode-string)
+  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
  
   (setq buffer-undo-list t);; don't record undo info
      

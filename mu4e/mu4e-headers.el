@@ -1082,15 +1082,15 @@ the query history stack."
       (setq
 	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
-	mu4e~headers-last-query expr
-	global-mode-string
-	'(:eval
-	   (concat
-	    (propertize
-	     (mu4e~quote-for-modeline mu4e~headers-last-query)
-	     'face 'mu4e-modeline-face)
-	     " "
-	     (mu4e-context-label)))))
+	mu4e~headers-last-query expr)
+      (add-to-list 'global-mode-string
+                   '(:eval
+                     (concat
+                      (propertize
+                       (mu4e~quote-for-modeline mu4e~headers-last-query)
+                       'face 'mu4e-modeline-face)
+                      " "
+                      (mu4e-context-label)))))
 
     (switch-to-buffer buf)
     (run-hook-with-args 'mu4e-headers-search-hook expr)
