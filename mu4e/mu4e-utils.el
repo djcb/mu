@@ -993,7 +993,8 @@ frame to display buffer BUF."
 	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
 	  (buf (and (buffer-live-p mu4e~update-buffer) mu4e~update-buffer))
 	  (win (and buf (get-buffer-window buf))))
-    (message nil)
+    (unless mu4e-hide-index-messages
+      (message nil))
     (if maybe-error
       (progn
 	(when mu4e-index-update-error-warning
