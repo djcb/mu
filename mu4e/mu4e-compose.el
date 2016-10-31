@@ -502,7 +502,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (rename-buffer (generate-new-buffer-name
 		     (truncate-string-to-width str
 		       mu4e~compose-buffer-max-name-length
-		       nil nil t)))))
+		       nil nil t)
+		     (buffer-name)))))
 
 (defun mu4e~compose-crypto-reply (parent compose-type)
   "When composing a reply to an encrypted message, we can
