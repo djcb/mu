@@ -2452,8 +2452,8 @@ let-binds the @code{vars} for that account, and then determines the
 value for the folder. It does not, however, call the @code{enter-func}
 or @code{leave-func}, since we are not really switching context.
 
-In practice, this what this means that a long as each of the accounts
-has a good @t{match-func}, all message operations automatically find the
+In practice, this means that as long as each of the accounts has a good
+@t{match-func}, all message operations automatically find the
 appropriate folders.
 
 @node Contexts example
