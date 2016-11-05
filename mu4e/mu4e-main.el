@@ -75,7 +75,8 @@
     overwrite-mode 'overwrite-mode-binary)
 
   ;; show context in mode-string
-  (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label))) 
+  (make-local-variable 'global-mode-string)
+  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 
@@ -195,7 +196,7 @@ clicked."
   (mu4e~main-view-real nil nil)
   (switch-to-buffer mu4e~main-buffer-name)
   (goto-char (point-min))
-  (setq global-mode-string '(:eval (mu4e-context-label))))
+  (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions

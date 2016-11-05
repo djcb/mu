@@ -402,7 +402,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
-    (set (make-local-variable 'global-mode-string) '(:eval (mu4e-context-label)))
+    (make-local-variable 'global-mode-string)
+    (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
@@ -501,7 +502,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (rename-buffer (generate-new-buffer-name
 		     (truncate-string-to-width str
 		       mu4e~compose-buffer-max-name-length
-		       nil nil t)))))
+		       nil nil t)
+		     (buffer-name)))))
 
 (defun mu4e~compose-crypto-reply (parent compose-type)
   "When composing a reply to an encrypted message, we can
