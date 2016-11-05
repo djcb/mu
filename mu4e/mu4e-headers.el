@@ -851,7 +851,8 @@ after the end of the search results."
 	  (let* ((field (car item)) (width (cdr item))
 		  (info (cdr (assoc field
 			       (append mu4e-header-info mu4e-header-info-custom))))
-		  (sortable (plist-get info :sortable))
+		  (require-full (plist-get info :require-full))
+		  (sortable (plist-get info :sortable))		  
 		  ;; if sortable, it is either t (when field is sortable itself)
 		  ;; or a symbol (if another field is used for sorting)
 		  (sortfield (when sortable (if (booleanp sortable) field sortable)))
@@ -862,6 +863,8 @@ after the end of the search results."
 		      (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
 		  (name (concat (plist-get info :shortname) arrow))
 		  (map (make-sparse-keymap)))
+	    (when require-full
+	      (mu4e-error "Field %S is not supported in mu4e-headers-mode" field))
 	    (when sortable
 	      (define-key map [header-line mouse-1]
 		(lambda (&optional e)

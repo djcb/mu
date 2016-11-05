@@ -689,6 +689,7 @@ mu4e-compose-mode."
        ( :name "Attachments"
 	 :shortname "Atts"
 	 :help "Message attachments"
+	 :require-full t
 	 :sortable nil))
      (:bcc .
        ( :name "Bcc"
@@ -749,11 +750,13 @@ mu4e-compose-mode."
        ( :name "Signature"
 	 :shortname "Sgn"
 	 :help "Check for the cryptographic signature"
+	 :require-full t
 	 :sortable nil))
      (:decryption .
        ( :name "Decryption"
 	 :shortname "Dec"
 	 :help "Check the cryptographic decryption status"
+	 :require-full t
 	 :sortable nil))
      (:size .
        ( :name "Size"
@@ -784,6 +787,7 @@ mu4e-compose-mode."
        ( :name "User-Agent"
 	 :shortname "UA"
 	 :help "Program used for writing this message"
+	 :require-full t
 	 :sortable t)))
   "An alist of all possible header fields and information about them.
 This is used in the user-interface (the column headers in the header list, and
@@ -799,7 +803,12 @@ sort by this field.  This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
 
-Note, `:sortable' does not work for custom header fields.")
+Fields with which have the property `:require-full' set to
+non-nil require a full message; in practice this means that you
+cannot use such fieds as part of `mu4e-headers-fields', but only
+in `mu4e-view-fields.'
+
+Note, `:sortable' is not supported for custom header fields.")
 
 
 (defvar mu4e-header-info-custom
