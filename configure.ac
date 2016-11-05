@@ -65,7 +65,7 @@ AS_IF([test "x$enable_mu4e" != "xno"], [
     emacs_version="`$EMACS --version | head -1`"
     lispdir="${lispdir}/mu4e/"
   ])
-  AS_CASE([$emacs_version],[*23*|*24*|*25*],[build_mu4e=yes],
+  AS_CASE([$emacs_version],[*23*|*24*|*25*|*26*],[build_mu4e=yes],
           [AC_WARN([emacs is too old to build mu4e (need emacs >= 23.x)])])
 ])
 AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
