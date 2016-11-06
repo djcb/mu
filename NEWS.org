@@ -3,7 +3,20 @@
 
 ** 0.9.17
 
-   - Start of the new development series
+   New development series which will lead to 0.9.18.
+
+*** mu
+
+   - Increase the maximum default for message to index to 500 Mb; you
+     can customize this using the --max-msg-size parameter to mu
+     index.
+   - implement "lazy-checking", which makes mu not descend into
+     subdirectories when the directory-timestamp is up to date;
+     greatly speeds up indexing.
+   - prefer gpg2 for crypto
+    
+*** mu4e
+    
    - Add `mu4e-action-view-with-xwidget`, and action for viewing e-mails
      inside a Webkit-widget inside emacs (requires emacs 25.x)
    - Explicitly specify utf8 for external html viewing, so browser can
@@ -23,7 +36,7 @@
    - Now, just before executing any search, a hook-function
      `mu4e-headers-search-hook` is invoked, which receives the
      search expression as its parameter.
-   - In addition there's a `mu4e-headers-search-bookmark-hook` which
+   - In addition, there's a `mu4e-headers-search-bookmark-hook` which
      gets called when searches get invoked as a bookmark (note that
      `mu4e-headers-search-hook` will also be called just
      afterwards). This hook also receives the search expression as its
@@ -33,9 +46,7 @@
      mu4e-view-message-with-message-id) use a headers buffer, then
      view the message. This way, those linked message are just like
      any other, and can be deleted, moved etc.
-   - Increase the maximum default for message to index to 500 Mb; you
-     can customize this using the --max-msg-size parameter to mu
-     index.
+   - Support org-mode 9.x
    - Allow for indexing in the background; see
      `mu4e-index-update-in-background`.
    - Add a :user-agent field to the message-sexp (in mu4e-view), which
@@ -49,11 +60,10 @@
      checks for cited parts.
    - automatically sign/encrypt replies to signed/encrypted messages
      (subject to `mu4e-compose-crypto-reply-policy')
-   - implement "lazy-checking", which makes mu not descend into
-     subdirectories when the directory-timestamp is up to date;
-     greatly speeds up indexing. Add mu4e-index-cleanup and
-     mu4e-index-lazy to use these from mu4e.
-        
+   - Add variables mu4e-index-cleanup and mu4e-index-lazy to enable
+     lazy checking from mu4e.
+   - don't overwrite global-mode-string, append to it.
+             
 ** 0.9.16
 
 *** Release
