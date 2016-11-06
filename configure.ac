@@ -76,7 +76,7 @@ AC_ARG_ENABLE([perl],
   AS_HELP_STRING([--enable-perl],[Enable building the Perl interface]))
 AC_ARG_VAR([PERL], [the Perl interpreter command])
 AC_CHECK_PROGS([PERL], [perl], [no])
-AS_IF([test x"$enable_perl" != "xno" -a x"$PERL" != "xno"], [
+AS_IF([test x"$enable_perl" = "xyes" -a x"$PERL" != "xno"], [
     AM_PERL_MODULE([Data::SExpression],[build_perl=yes])
     if test x"$build_perl" = "xyes"; then
         perl_version=`$PERL -Iperl/lib -Mmup -e 'print "$mup::VERSION\n";'`
@@ -320,9 +320,9 @@ if test "x$build_mu4e" = "xyes"; then
 echo "Emacs version                        : $emacs_version"
 fi
 
-AM_COND_IF([BUILD_PERL],[
-echo "Perl interface version               : $perl_version"
-])
+#AM_COND_IF([BUILD_PERL],[
+#echo "Perl interface version               : $perl_version"
+#])
 
 echo
 echo "Have wordexp                         : $ac_cv_header_wordexp_h"
