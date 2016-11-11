@@ -1088,14 +1088,14 @@ attachment numbers, as per `mu4e-split-ranges-to-numbers', and
 return the corresponding string."
   (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
     (when (zerop count) (mu4e-error "No attachments for this message"))
-    (if (not multi)
-      (if (= count 1)
-	(read-number (mu4e-format "%s: " prompt) 1)
-	(read-number (mu4e-format "%s (1-%d): " prompt count)))
-      (progn
-	(setq def (if (= count 1) "1" (format "1-%d" count)))
-	(read-string (mu4e-format "%s (default %s): " prompt def)
-	  nil nil def)))))
+    (if (= count 1)
+        1                               ;immediately return 1
+      (if (not multi)                   ;more than 1 attachment and not multi
+          (read-number (mu4e-format "%s (1-%d): " prompt count))
+        ;; multi and more than 1 attachment
+        (read-string (mu4e-format "%s (default %s): " prompt (format "1-%d" count))
+                     nil nil def)))))
+
 
 (defun mu4e~view-get-attach (msg attnum)
   "Return the attachment plist in MSG corresponding to attachment
