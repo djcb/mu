@@ -452,6 +452,29 @@ handle_encrypted_part (MuMsg *msg, GMimeMultipartEncrypted *part,
 	return rv;
 }
 
+static gboolean
+looks_like_text_body_part (GMimeContentType *ctype)
+{
+	unsigned u;
+	static struct {
+		const char *type;
+		const char *subtype;
+	} types[] = {
+		{ "text", "plain" },
+		{ "text", "x-diff"  },
+		{ "text", "x-patch" },
+		{ "application", "x-patch"}
+		/* possible other types */
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(types); ++u)
+		if (g_mime_content_type_is_type (
+			    ctype, types[u].type, types[u].subtype))
+			return TRUE;
+
+	return FALSE;
+}
+
 
 
 /* call 'func' with information about this MIME-part */
@@ -460,8 +483,8 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	     MuMsgOptions opts, unsigned *index, gboolean decrypted,
 	     MuMsgPartForeachFunc func, gpointer user_data)
 {
-	GMimeContentType *ct;
-	MuMsgPart msgpart;
+	GMimeContentType	*ct;
+	MuMsgPart		 msgpart;
 
 	memset (&msgpart, 0, sizeof(MuMsgPart));
 
@@ -479,9 +502,8 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	if (GMIME_IS_CONTENT_TYPE(ct)) {
 		msgpart.type    = g_mime_content_type_get_media_type (ct);
 		msgpart.subtype = g_mime_content_type_get_media_subtype (ct);
-		/* store as in the part_type as well, for quick
-		 * checking */
-		if (g_mime_content_type_is_type (ct, "text", "plain"))
+		/* store in the part_type as well, for quick checking */
+		if (looks_like_text_body_part (ct))
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_PLAIN;
 		else if (g_mime_content_type_is_type (ct, "text", "html"))
 			msgpart.part_type |= MU_MSG_PART_TYPE_TEXT_HTML;
