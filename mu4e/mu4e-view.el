@@ -1200,8 +1200,8 @@ offer to save a range of attachments."
 
 (defun mu4e-view-open-attachment (&optional msg attnum)
   "Open attachment number ATTNUM from MSG.
-If MSG is nil use the message returned by `message-at-point'.
-If ATTNUM is nil ask for the attachment number."
+If MSG is nil use the message returned by `message-at-point'.  If
+ATTNUM is nil ask for the attachment number."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (attnum (or attnum
@@ -1231,7 +1231,6 @@ If ATTNUM is nil ask for the attachment number."
 (defun mu4e-view-open-attachment-with (msg attachnum &optional cmd)
   "Open MSG's attachment ATTACHNUM with CMD.
 If CMD is nil, ask user for it."
-  (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (cmd (or cmd
 		 (read-string
@@ -1247,7 +1246,6 @@ If CMD is nil, ask user for it."
 (defun mu4e-view-pipe-attachment (msg attachnum &optional pipecmd)
   "Feed MSG's attachment ATTACHNUM through pipe PIPECMD.
 If PIPECMD is nil, ask user for it."
-  (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (pipecmd (or pipecmd
 		     (read-string
@@ -1261,7 +1259,6 @@ If PIPECMD is nil, ask user for it."
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
   "Open MSG's attachment ATTACHNUM in the current emacs instance."
-  (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
 	  (index (plist-get att :index)))
     (mu4e~view-temp-action (mu4e-message-field msg :docid) index "emacs")))
