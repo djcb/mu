@@ -378,9 +378,9 @@ mu_msg_get_mailing_list (MuMsg *self)
 {
 	const char	*ml;
 	char		*decml;
-	
+
 	g_return_val_if_fail (self, NULL);
-	
+
 	ml = get_str_field (self, MU_MSG_FIELD_ID_MAILING_LIST);
 	if (!ml)
 		return NULL;
@@ -477,21 +477,20 @@ accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 	char *txt;
 	gboolean err;
 
-	/* if it looks like an attachment, skip it */
-	if (mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT)
-		return;
-
 	if (!GMIME_IS_PART(mpart->data))
 		return;
 
 	txt = NULL;
 	err = TRUE;
 
+	/* text-like attachments are included when in text-mode */
+
 	if (!bdata->want_html &&
 	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
 		txt = mu_msg_mime_part_to_string (
 			(GMimePart*)mpart->data, &err);
-	else if (bdata->want_html &&
+	else if (!(mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT) &&
+		 bdata->want_html &&
 		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
 		txt = mu_msg_mime_part_to_string (
 			(GMimePart*)mpart->data, &err);
