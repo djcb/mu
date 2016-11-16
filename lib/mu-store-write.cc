@@ -195,7 +195,7 @@ mu_store_flush (MuStore *store)
 		if (store->in_transaction())
 			store->commit_transaction ();
 		store->db_writable()->commit ();
-		
+
 	} MU_XAPIAN_CATCH_BLOCK;
 
 	if (store->contacts())
@@ -626,16 +626,16 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	g_free (f2);
 }
 
-static void
+static gboolean
 each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	/* for now, don't store reply-to addresses */
 	if (mu_msg_contact_type (contact) == MU_MSG_CONTACT_TYPE_REPLY_TO)
-		return;
+		return TRUE;
 
 	const std::string pfx (xapian_pfx(contact));
 	if (pfx.empty())
-		return; /* unsupported contact type */
+		return TRUE; /* unsupported contact type */
 
 	if (!mu_str_is_empty(contact->name)) {
 		Xapian::TermGenerator termgen;
@@ -660,16 +660,18 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 					 msgdoc->_personal,
 					 mu_msg_get_date(msgdoc->_msg));
 	}
+
+	return TRUE;
 }
 
 
-static void
+static gboolean
 each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	GSList *cur;
 
 	if (msgdoc->_personal || !contact->address)
-		return;
+		return TRUE;
 
 	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
 		if (g_ascii_strcasecmp (
@@ -678,6 +680,8 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 			break;
 		}
 	}
+
+	return TRUE;
 }
 
 Xapian::Document
