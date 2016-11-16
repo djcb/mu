@@ -123,14 +123,14 @@ AS_IF([test "x$PKG_CONFIG" = "xno"],[
 ])
 
 # glib2?
-# we need 2.14 at least, because we use GRegex
-PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.24 gobject-2.0 gio-2.0)
+# we pick some late-2012 version
+PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.32 gobject-2.0 gio-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
-# gmime
-PKG_CHECK_MODULES(GMIME,gmime-2.6 >= 2.6.7)
+# gmime, some late-2012 version
+PKG_CHECK_MODULES(GMIME,gmime-2.6 >= 2.6.12)
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
@@ -370,5 +370,5 @@ if test "x$ac_cv_header_wordexp_h" != "xyes"; then
 fi
 
 echo
-echo "Now, type 'make' to build mu (or 'make check' to run the unit tests, too)"
+echo "Now, type 'gmake' to build mu (or 'gmake check' to run the unit tests, too)"
 echo
