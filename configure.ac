@@ -130,7 +130,7 @@ AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
 # gmime, some late-2012 version
-PKG_CHECK_MODULES(GMIME,gmime-2.6 >= 2.6.12)
+PKG_CHECK_MODULES(GMIME,gmime-2.6 >= 2.6.7)
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
