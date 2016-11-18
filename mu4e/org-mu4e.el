@@ -318,9 +318,9 @@ body using org-mode."
 	  "org-mu4e-compose-org-mode enabled; "
 	  "press M-m before issuing message-mode commands")))
     (progn ;; otherwise, remove crap
+      (mu4e-compose-mode)
       (remove-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t)
       (org~mu4e-mime-undecorate-headers) ;; shut off org-mode stuff
-      (mu4e-compose-mode)
       (message "org-mu4e-compose-org-mode disabled"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
