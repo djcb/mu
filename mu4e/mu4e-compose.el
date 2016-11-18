@@ -184,6 +184,20 @@ place to do that."
   :type 'hook
   :group 'mu4e-compose)
 
+
+(defcustom mu4e-compose-post-hook nil
+  "Hook run *after* message composition buffer is set up.
+If the compose-type is either 'reply' or 'forward', the variable
+`mu4e-compose-parent-message' points to the message replied to /
+being forwarded / edited, and `mu4e-compose-type' contains the
+type of message to be composed.
+
+Use this as a replacement for `mu4e-compose-mode-hook' when you need
+ to avoid recursive loops e.g. with `org-mu4e-compose-org-mode'."
+  :type 'hook
+  :group 'mu4e-compose)
+
+
 (defvar mu4e-compose-type nil
   "The compose-type for this buffer, which is a symbol, `new',
   `forward', `reply' or `edit'.")
@@ -581,7 +595,11 @@ tempfile)."
   (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode)
-
+  ;; run mu4e-compose-post-hook -- having this here
+  ;; allows org-mu4e-compose-org-mode and any
+  ;; eventual replacement to run once on buffer creation
+  ;; but not every time mode gets switched
+  (run-hooks 'mu4e-compose-post-hook)
   ;; set mu4e-compose-type once more for this buffer,
   ;; we loose it after the mode-change, it seems
   (set (make-local-variable 'mu4e-compose-type) compose-type)
