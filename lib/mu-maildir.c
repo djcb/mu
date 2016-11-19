@@ -583,76 +583,78 @@ mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 
 
 static gboolean
-clear_links (const gchar* dirname, DIR *dir, GError **err)
+clear_links (const char *path, DIR *dir)
 {
-	struct dirent *entry;
-	gboolean rv;
+	gboolean	 rv;
+	struct dirent	*dentry;
 
-	rv = TRUE;
+	rv    = TRUE;
 	errno = 0;
-	while ((entry = readdir (dir))) {
 
-		const char	*fp;
-		char		*fullpath;
-		unsigned char	 d_type;
-		guint		 len;
+	while ((dentry = readdir (dir))) {
 
-		/* ignore empty, dot thingies */
-		if (entry->d_name[0] == '\0' || entry->d_name[0] == '.')
-			continue;
+		guint8	 d_type;
+		char	*fullpath;
 
-		/* we have to copy the buffer from fullpath_s, because
-		 * it returns a static buffer and we are
-		 * recursive*/
-		fp	 = mu_str_fullpath_s (dirname, entry->d_name);
-		len	 = strlen(fp);
-		fullpath = g_newa (char, len + 1);
-		strncpy (fullpath, fp, len);
+		if (dentry->d_name[0] == '.')
+			continue; /* ignore .,.. other dotdirs */
 
-		d_type = GET_DTYPE (entry, fullpath);
-
-		/* ignore non-links / non-dirs */
-		if (d_type != DT_LNK && d_type != DT_DIR)
-			continue;
+		fullpath = g_build_path ("/", path, dentry->d_name, NULL);
+		d_type	 = GET_DTYPE (dentry, fullpath);
 
 		if (d_type == DT_LNK) {
-			if (unlink (fullpath) != 0) {
-				/* don't use err */
-				g_warning  ("error unlinking %s: %s",
-					    fullpath, strerror(errno));
+			if (unlink (fullpath) != 0 ) {
+				g_warning ("error unlinking %s: %s",
+					   fullpath, strerror(errno));
 				rv = FALSE;
 			}
-		} else /* DT_DIR, see check before*/
-			rv = mu_maildir_clear_links (fullpath, err);
+		} else if (d_type == DT_DIR) {
+			DIR *subdir;
+			subdir = opendir (fullpath);
+			if (!subdir) {
+				g_warning ("failed to open dir %s: %s",
+					   fullpath, strerror(errno));
+				rv = FALSE;
+				goto next;
+			}
+
+			if (!clear_links (fullpath, subdir))
+				rv = FALSE;
+
+			closedir (subdir);
+		}
+
+	next:
+		g_free (fullpath);
 	}
 
-	if (errno != 0)
-		mu_util_g_set_error (err, MU_ERROR_FILE,
-				     "file error: %s", strerror(errno));
-
-	return (rv == FALSE && errno == 0);
+	return rv;
 }
 
-
 gboolean
-mu_maildir_clear_links (const gchar* path, GError **err)
+mu_maildir_clear_links (const char *path, GError **err)
 {
-	DIR *dir;
-	gboolean rv;
+	DIR		*dir;
+	gboolean	 rv;
 
 	g_return_val_if_fail (path, FALSE);
 
 	dir = opendir (path);
-	if (!dir)
-		return mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_OPEN,
-				       "failed to open %s: %s", path,
-				       strerror(errno));
+	if (!dir) {
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_OPEN,
+			     "failed to open %s: %s", path, strerror(errno));
+		return FALSE;
+	}
 
-	rv = clear_links (path, dir, err);
+	rv = clear_links (path, dir);
+
 	closedir (dir);
 
 	return rv;
 }
+
+
+
 
 MuFlags
 mu_maildir_get_flags_from_path (const char *path)

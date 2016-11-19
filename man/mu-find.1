@@ -362,7 +362,7 @@ The default is \fBplain\fR, i.e normal output with one line per message.
 
 \fBlinks\fR outputs the results as a maildir with symbolic links to the found
 messages. This enables easy integration with mail-clients (see below for more
-information). See \fB\-\-linksdir\fR and \fB\-\-clearlinks\fR below.
+information).
 
 \fBxml\fR formats the search results as XML.
 
@@ -375,13 +375,14 @@ is meant for for debugging purposes.
 .TP
 \fB\-\-linksdir\fR \fR=\fI<dir>\fR and \fB\-c\fR, \fB\-\-clearlinks\fR
 output the results as a maildir with symbolic links to the found
-messages. This enables easy integration with mail-clients (see below for more
-information). \fBmu\fR will create the maildir if it does not exist yet.
+messages. This enables easy integration with mail-clients (see below
+for more information). \fBmu\fR will create the maildir if it does not
+exist yet.
 
-If you specify \fB\-\-clearlinks\fR, all existing symlinks will be cleared
-from the target maildir; this allows for re-use of the same directory. An
-alternative would be to delete the target directory before, but this has a big
-chance of accidentally removing something that should not be removed.
+If you specify \fB\-\-clearlinks\fR, all existing symlinks will be
+cleared from the target directories; this allows for re-use of the
+same maildir. However, this option will delete any symlink it finds,
+so be careful.
 
 .nf
   $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
