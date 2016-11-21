@@ -51,8 +51,8 @@ function).
 
 In both cases, the output is expected to be in UTF-8 encoding.
 
-Newer emacs has the shr renderer, and when its available,
-conversion defaults `mu4e-shr2text'; otherwise, the default is
+Newer emacs has the shr renderer, and when it's available
+conversion defaults to `mu4e-shr2text'; otherwise, the default is
 emacs' built-in `html2text' function."
   :type '(choice string function)
   :group 'mu4e-view)
