@@ -290,12 +290,11 @@ contexts match, we have the following choices:
 Also see `mu4e-compose-context-policy'."
   :type '(choice
 	   (const :tag "Always ask what context to use, even if one matches"
-	     'always-ask)
-	   (const :tag "Ask if none of the contexts match" 'ask)
-	   (const :tag "Ask when there's no context yet" 'ask-if-none)
-	   (const :tag "Pick the first context if none match" 'pick-first)
+	     always-ask)
+	   (const :tag "Ask if none of the contexts match" ask)
+	   (const :tag "Ask when there's no context yet" ask-if-none)
+	   (const :tag "Pick the first context if none match" pick-first)
 	   (const :tag "Don't change the context when none match" nil))
-  :safe 'symbolp
   :group 'mu4e)
 
 
