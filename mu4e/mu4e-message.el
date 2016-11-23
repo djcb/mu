@@ -180,10 +180,11 @@ unless PREFER-HTML is non-nil."
 	      ;; html part, it should't be used
 	      ;; This is an heuristic to guard against 'This messages requires
 	     ;; html' text bodies.
-	      ((or (and (> txtlen 0)
-			(> (length html) txtlimit))
-		   (not prefer-html))
-		txt)
+	     ((or (= (length html) 0)
+		  (and (> txtlen 0)
+		       (> (length html) txtlimit))
+		  (not prefer-html))
+	      txt)
 	      ;; otherwise, it there some html?
 	      (html
 		(with-temp-buffer
