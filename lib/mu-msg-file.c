@@ -246,15 +246,24 @@ get_mailing_list (MuMsgFile *self)
 }
 
 
-
-
 static gboolean
 looks_like_attachment (GMimeObject *part)
 {
 	GMimeContentDisposition *disp;
-	GMimeContentType *ctype;
-
-	const char *dispstr;
+	GMimeContentType	*ctype;
+	const char		*dispstr;
+	guint			 u;
+	const struct {
+		const char	*type;
+		const char	*sub_type;
+	} att_types[] = {
+		{ "image", "*" },
+		{ "audio", "*" },
+		{ "application", "*"},
+		{ "text", "x-diff" },
+		{ "text", "x-patch"},
+		{ "application", "x-patch"}
+	};
 
 	disp = g_mime_object_get_content_disposition (part);
 
@@ -266,16 +275,17 @@ looks_like_attachment (GMimeObject *part)
 	if (g_ascii_strcasecmp (dispstr, "attachment") == 0)
 		return TRUE;
 
-	/* we also consider images, audio, and non-pgp-signature
+	/* we also consider patches, images, audio, and non-pgp-signature
 	 * application attachments to be attachments... */
 	ctype = g_mime_object_get_content_type (part);
-	if (g_mime_content_type_is_type (ctype, "image", "*"))
-		return TRUE;
-	if (g_mime_content_type_is_type (ctype, "audio", "*"))
-		return TRUE;
-	if ((g_mime_content_type_is_type (ctype, "application", "*")) &&
-	    !g_mime_content_type_is_type (ctype, "*", "pgp-signature"))
-		return TRUE;
+
+	if (g_mime_content_type_is_type (ctype, "*", "pgp-signature"))
+		return FALSE; /* don't consider as a signature */
+
+	for (u = 0; u != G_N_ELEMENTS(att_types); ++u)
+		if (g_mime_content_type_is_type (
+			    ctype, att_types[u].type, att_types[u].sub_type))
+			return TRUE;
 
 	return FALSE;
 }
