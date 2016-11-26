@@ -2908,7 +2908,7 @@ everywhere.
 @node Message functions
 @section Message functions
 
-Many functions in @t{mu4e} deal with message plist (property
+Many functions in @t{mu4e} deal with message plists (property
 lists). They contain information about messages, such as sender and
 recipient, subject, date and so on. To deal with these plists, there are
 a number of @code{mu4e-message-} functions (in @file{mu4e-message.el}),
@@ -2936,13 +2936,14 @@ recipients of the message?''), there is a convenience function
 headers view.
 @end itemize
 
-Note that the message-functions work available to @t{mu4e} -- the
-headers that are stored in the database and, in
-@code{mu4e-message-view}-context, the message body.
+Note that in headers-mode, you only have access to a reduced message
+plist, without the information about the message-body or mime-parts;
+@t{mu4e) does this for performance reasons. And even in view-mode, you
+do not have access to arbitrary message-headers.
 
-If you need access to other parts of the message, it is possible to do
-so by hand, using the raw-message and some third-party tool like
-@t{procmail}'s @t{formail}:
+However, it is possible to get the information indirectly, using the
+raw-message and some third-party tool like @t{procmail}'s @t{formail}:
+
 @lisp
 (defun my-mu4e-any-message-field-at-point (hdr)
   "Quick & dirty way to get an arbitrary header HDR at
@@ -3060,14 +3061,13 @@ you can do so by adding the following to your configuration:
 It can be useful to include links to e-mail messages or even search
 queries in your org-mode files. @t{mu4e} supports this with the
 @t{org-mu4e} module; you can set it up by adding it to your
-configuration:
+configuration, which expects org-mode 8.x. or higher@footnote{If you
+have an older version, you can try using @t{org-old-mu4e} instead}
+
 
 @lisp
 (require 'org-mu4e)
 @end lisp
-
-this expects org-mode 8.x.@footnote{If you have an older version, you
-can try @t{org-old-mu4e} instead}
 
 @noindent
 After this, you can use the normal @t{org-mode} mechanisms to store
