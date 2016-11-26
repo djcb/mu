@@ -88,7 +88,16 @@
      no exact match; small convenience that affects most the
      single-char option-reading in mu4e.
             
+** Contributors:
 
+   Aaron LI, Abdo Roig-Maranges, Adocentyn, Ævar Arnfjörð Bjarmason,
+   Alex Bennée, Allen, Anders Johansson, Antoine Levitt, Arthur Lee,
+   attila, Christophe Troestler, Chunyang Xu, Dirk-Jan C. Binnema,
+   Jakub Sitnicki, Josiah Schwab, jsrjenkins, Jun Hao, Klaus
+   Holst, Lukas Fürmetz, Magnus Therning, Maximilian Matthe, Nicolas
+   Richard, Piotr Trojanek, Prashant Sachdeva, Remco van 't Veer,
+   Stephen Eglen, Stephen J. Eglen, Stig Brautaset, Thierry Volpiatto,
+   Thomas Moulia, Titus von der Malsburg, Yuri D'Elia
 
 * Old news
   :PROPERTIES:
