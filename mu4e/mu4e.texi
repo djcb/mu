@@ -2938,7 +2938,7 @@ headers view.
 
 Note that in headers-mode, you only have access to a reduced message
 plist, without the information about the message-body or mime-parts;
-@t{mu4e) does this for performance reasons. And even in view-mode, you
+@t{mu4e} does this for performance reasons. And even in view-mode, you
 do not have access to arbitrary message-headers.
 
 However, it is possible to get the information indirectly, using the
