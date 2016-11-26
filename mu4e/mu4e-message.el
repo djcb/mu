@@ -179,10 +179,12 @@ unless PREFER-HTML is non-nil."
 	      ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
 	      ;; html part, it should't be used
 	      ;; This is an heuristic to guard against 'This messages requires
-	      ;; html' text bodies.
-	      ((and (> txtlen 0)
-		 (or (> txtlimit (length html)) (not prefer-html)))
-		txt)
+	     ;; html' text bodies.
+	     ((or (= (length html) 0)
+		  (and (> txtlen 0)
+		       (> (length html) txtlimit))
+		  (not prefer-html))
+	      txt)
 	      ;; otherwise, it there some html?
 	      (html
 		(with-temp-buffer
