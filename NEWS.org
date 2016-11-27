@@ -12,7 +12,7 @@
      mu index.
    - implement "lazy-checking", which makes mu not descend into
      subdirectories when the directory-timestamp is up to date;
-     greatly speeds up indexing.
+     greatly speeds up indexing (see --lazy-check)
    - prefer gpg2 for crypto
    - fix a crash when running on OpenBSD
    - fix --clear-links (broken filenames)
@@ -87,17 +87,22 @@
    - Let `mu4e~read-char-choice' become case-insensitive if there is
      no exact match; small convenience that affects most the
      single-char option-reading in mu4e.
+
+*** Perl
+
+   - an experimental Perl binding ("mup") is available now. See
+     perl/README.md for details.
             
 ** Contributors:
 
-   Aaron LI, Abdo Roig-Maranges, Adocentyn, Ævar Arnfjörð Bjarmason,
-   Alex Bennée, Allen, Anders Johansson, Antoine Levitt, Arthur Lee,
-   attila, Christophe Troestler, Chunyang Xu, Dirk-Jan C. Binnema,
-   Jakub Sitnicki, Josiah Schwab, jsrjenkins, Jun Hao, Klaus
-   Holst, Lukas Fürmetz, Magnus Therning, Maximilian Matthe, Nicolas
-   Richard, Piotr Trojanek, Prashant Sachdeva, Remco van 't Veer,
-   Stephen Eglen, Stephen J. Eglen, Stig Brautaset, Thierry Volpiatto,
-   Thomas Moulia, Titus von der Malsburg, Yuri D'Elia
+   Aaron LI, Abdo Roig-Maranges, Ævar Arnfjörð Bjarmason, Alex Bennée,
+   Allen, Anders Johansson, Antoine Levitt, Arthur Lee, attila,
+   Charles-H. Schulz, Christophe Troestler, Chunyang Xu, Dirk-Jan
+   C. Binnema, Jakub Sitnicki, Josiah Schwab, jsrjenkins, Jun Hao,
+   Klaus Holst, Lukas Fürmetz, Magnus Therning, Maximilian Matthe,
+   Nicolas Richard, Piotr Trojanek, Prashant Sachdeva, Remco van 't
+   Veer, Stephen Eglen, Stig Brautaset, Thierry Volpiatto, Thomas
+   Moulia, Titus von der Malsburg, Yuri D'Elia
 
 * Old news
   :PROPERTIES:
