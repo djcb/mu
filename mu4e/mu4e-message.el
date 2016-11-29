@@ -51,8 +51,8 @@ function).
 
 In both cases, the output is expected to be in UTF-8 encoding.
 
-Newer emacs has the shr renderer, and when its available,
-conversion defaults `mu4e-shr2text'; otherwise, the default is
+Newer emacs has the shr renderer, and when it's available
+conversion defaults to `mu4e-shr2text'; otherwise, the default is
 emacs' built-in `html2text' function."
   :type '(choice string function)
   :group 'mu4e-view)
@@ -161,60 +161,66 @@ This is equivalent to:
 (defvar mu4e~message-body-html nil
   "Whether the body text uses HTML.")
 
+
+(defun mu4e~message-use-html-p (msg prefer-html)
+  "Determine whether we want to use html or text; this is based
+on PREFER-HTML and whether the message supports the given
+representation."
+  (let* ((txt (mu4e-message-field msg :body-txt))
+	  (html (mu4e-message-field msg :body-html))
+	  (txt-len (length txt))
+	  (html-len (length html))
+	  (txt-limit (* mu4e-view-html-plaintext-ratio-heuristic txt-len))
+	  (txt-limit (if (>= txt-limit 0) txt-limit most-positive-fixnum)))
+    (cond
+      ; user prefers html --> use html if there is
+      (prefer-html (> html-len 0))
+      ;; otherwise (user prefers text) still use html if there is not enough
+      ;; text
+      ((< txt-limit html-len) t)
+      ;; otherwise, use text
+      (t nil))))
+
+
 (defun mu4e-message-body-text (msg &optional prefer-html)
   "Get the body in text form for this message.
 This is either :body-txt, or if not available, :body-html
 converted to text, using `mu4e-html2text-command' is non-nil, it
 will use that. Normally, this function prefers the text part,
 unless PREFER-HTML is non-nil."
-  (setq mu4e~message-body-html nil) ;; default
-  (let* ((txt (mu4e-message-field msg :body-txt))
-	  (html (mu4e-message-field msg :body-html))
-	  (txtlen (length txt))
-	  (txtlimit (* mu4e-view-html-plaintext-ratio-heuristic txtlen))
-	  (txtlimit (if (>= txtlimit 0) txtlimit most-positive-fixnum)) ;; overflow
-	  (body
-	    (cond
-	      ;; does it look like some text? ie., if the text part is more than
-	      ;; mu4e-view-html-plaintext-ratio-heuristic times shorter than the
-	      ;; html part, it should't be used
-	      ;; This is an heuristic to guard against 'This messages requires
-	      ;; html' text bodies.
-	      ((and (> txtlen 0)
-		 (or (> txtlimit (length html)) (not prefer-html)))
-		txt)
-	      ;; otherwise, it there some html?
-	      (html
-		(with-temp-buffer
-		  (insert html)
-		  (cond
-		    ((stringp mu4e-html2text-command)
-		      (let* ((tmp-file (mu4e-make-temp-file "html")))
-			(write-region (point-min) (point-max) tmp-file)
-			(erase-buffer)
-			(call-process-shell-command mu4e-html2text-command tmp-file t t)
-			(delete-file tmp-file)))
-		    ((functionp mu4e-html2text-command)
-		      (funcall mu4e-html2text-command))
-		    (t (mu4e-error "Invalid `mu4e-html2text-command'")))
-		  (setq mu4e~message-body-html t)
-		  (buffer-string))
-                )
-	      (t ;; otherwise, an empty body
-		""))))
+  (setq mu4e~message-body-html (mu4e~message-use-html-p msg prefer-html))
+  (let ((body
+	  (if mu4e~message-body-html
+	    ;; use an HTML body
+	    (with-temp-buffer
+	      (insert (mu4e-message-field msg :body-html))
+	      (cond
+		((stringp mu4e-html2text-command)
+		  (let* ((tmp-file (mu4e-make-temp-file "html")))
+		    (write-region (point-min) (point-max) tmp-file)
+		    (erase-buffer)
+		    (call-process-shell-command mu4e-html2text-command tmp-file t t)
+		    (delete-file tmp-file)))
+		((functionp mu4e-html2text-command)
+		  (funcall mu4e-html2text-command))
+		(t (mu4e-error "Invalid `mu4e-html2text-command'")))
+	      (setq mu4e~message-body-html t)
+	      (buffer-string))
+	    ;; use a text body
+	    (or (mu4e-message-field msg :body-txt) ""))))
     ;; and finally, remove some crap from the remaining string; it seems
     ;; esp. outlook lies about its encoding (ie., it says 'iso-8859-1' but
     ;; really it's 'windows-1252'), thus giving us these funky chars. here, we
     ;; either remove them, or replace with 'what-was-meant' (heuristically)
     (with-temp-buffer
-      (insert body)
-      (goto-char (point-min))
-      (while (re-search-forward "[ ’]" nil t)
-	(replace-match
-	  (cond
-	    ((string= (match-string 0) "’") "'")
-	    (t		                       ""))))
-      (buffer-string))))
+	   (insert body)
+	   (goto-char (point-min))
+	   (while (re-search-forward "[ ’]" nil t)
+	     (replace-match
+	       (cond
+		 ((string= (match-string 0) "’") "'")
+		 (t		                       ""))))
+	   (buffer-string)))) 
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Checks whether any of the of the contacts in field

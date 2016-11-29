@@ -91,24 +91,20 @@ background."
   :safe 'booleanp)
 
 (defcustom mu4e-index-cleanup t
-  "Whether to run a cleanup face after indexing -- that is, see
+  "Whether to run a cleanup phase after indexing -- that is, see
 if the is a message in the filesystem for each file in the
 message store. Having this option as `t' ensures that no
 non-existing mesages are shown but can also be quite slow with
-large message stores."
-  :type 'boolean
-  :group 'mu4e
-  :safe 'booleanp)
+large message stores."  :type 'boolean :group 'mu4e :safe
+'booleanp)
 
 (defcustom mu4e-index-lazy-check nil
-  "Whether to run do a 'lazy check' for deciding whether to
-indexing a message. When this is set to `t', mu only uses the
-directory timestamps to decide on whether it needs to check the
-messages beneath it, which would miss messages that are modified
-outside mu. On the other hand, it's significantly faster."
-  :type 'boolean
-  :group 'mu4e
-  :safe 'booleanp)
+  "Whether to only use a 'lazy check' to decide whether a message
+needs (re)indexing or not. When this is set to `t', mu only uses
+the directory timestamps to decide on whether it needs to check
+the messages beneath it, which would miss messages that are
+modified outside mu. On the other hand, it's significantly
+faster."  :type 'boolean :group 'mu4e :safe 'booleanp)
 
 
 (defcustom mu4e-update-interval nil
@@ -294,12 +290,11 @@ contexts match, we have the following choices:
 Also see `mu4e-compose-context-policy'."
   :type '(choice
 	   (const :tag "Always ask what context to use, even if one matches"
-	     'always-ask)
-	   (const :tag "Ask if none of the contexts match" 'ask)
-	   (const :tag "Ask when there's no context yet" 'ask-if-none)
-	   (const :tag "Pick the first context if none match" 'pick-first)
+	     always-ask)
+	   (const :tag "Ask if none of the contexts match" ask)
+	   (const :tag "Ask when there's no context yet" ask-if-none)
+	   (const :tag "Pick the first context if none match" pick-first)
 	   (const :tag "Don't change the context when none match" nil))
-  :safe 'symbolp
   :group 'mu4e)
 
 
