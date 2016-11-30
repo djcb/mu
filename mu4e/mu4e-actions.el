@@ -49,7 +49,11 @@ Works for headers view and message-view."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar mu4e-msg2pdf (concat mu4e-builddir "/toys/msg2pdf/msg2pdf")
+(defvar mu4e-msg2pdf
+  (let ((exec (locate-file "msg2pdf" exec-path exec-suffixes)))
+    (if exec
+        exec
+      (concat mu4e-builddir "/toys/msg2pdf/msg2pdf")))
   "Path to the msg2pdf toy.")
 
 (defun mu4e-action-view-as-pdf (msg)
