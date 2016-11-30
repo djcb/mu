@@ -100,13 +100,13 @@ non-nil."
       (when (and (mu4e-context-current)
 	      (mu4e-context-leave-func mu4e~context-current))
 	(funcall (mu4e-context-leave-func mu4e~context-current)))
-      ;; enter the new context
-      (when (mu4e-context-enter-func context)
-	(funcall (mu4e-context-enter-func context)))
       (when (mu4e-context-vars context)
 	(mapc #'(lambda (cell)
 		  (set (car cell) (cdr cell)))
 	  (mu4e-context-vars context)))
+      ;; enter the new context
+      (when (mu4e-context-enter-func context)
+	(funcall (mu4e-context-enter-func context)))
       (setq mu4e~context-current context)
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
