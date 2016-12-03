@@ -47,7 +47,7 @@
 
    - Add a hook `mu4e-mark-execute-pre-hook`, which is run just before
      executing marks.
-   - Just before executing any search, a hook-function
+   - Just before executing any search a hook-function
      `mu4e-headers-search-hook` is invoked, which receives the
      search expression as its parameter.
    - In addition, there's a `mu4e-headers-search-bookmark-hook` which
