@@ -507,6 +507,7 @@ test_mu_query_sizes (void)
 	int i;
 	QResults queries[] = {
 		{ "size:0b..2m", 19},
+		{ "size:3b..2m", 19},
 		{ "size:2k..4k", 4},
 		{ "size:2m..0b", 19}
 	};
