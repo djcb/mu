@@ -115,12 +115,12 @@ public:
 		if (!substitute_size (begin) || !substitute_size (end))
 			return Xapian::BAD_VALUENO;
 
+		begin = Xapian::sortable_serialise (atol(begin.c_str()));
+		end = Xapian::sortable_serialise (atol(end.c_str()));
+                
 		/* swap if b > e */
 		if (begin > end)
 			std::swap (begin, end);
-
-		begin = Xapian::sortable_serialise (atol(begin.c_str()));
-		end = Xapian::sortable_serialise (atol(end.c_str()));
 
 		return (Xapian::valueno)MU_MSG_FIELD_ID_SIZE;
 	}
