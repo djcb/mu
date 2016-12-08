@@ -122,7 +122,7 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 
 
 # we need these
-AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass])
+AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([missing required function timegm])])
 
 # require pkg-config
