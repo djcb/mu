@@ -48,6 +48,20 @@ all kinds of statistics
 
 ## News
 
+### 2016-12-05: mu/mu4e 0.9.18 is available
+
+mu 0.9.18 offers a number of improvements across the board. For
+example, people with huge maildirs can use a special "lazy-checking"
+mode to speed up indexing; it's now possible to view rich-text message
+in an embedded webkit-view, and the release adds support for org-mode
+9.x. There also many small fixes and tweaks in mu4e, all based on
+user-feedback.
+
+For all the details,
+see: [NEWS.org](https://github.com/djcb/mu/blob/0.9.18/NEWS.org).
+
+Get it from the [Release page](https://github.com/djcb/mu/releases).
+
 ### 2016-01-21: mu/mu4e 0.9.16 is here, and it is our latest stable release!
 
 #### Better behaviour and context handling
@@ -78,8 +92,6 @@ reported issues, provided suggestions etc.)
 We hope you will enjoy this release as much as we do. Happy Hacking!
                         
 -- The mu/mu4e Team
-
-
 
 ## Old News
 
