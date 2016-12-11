@@ -912,7 +912,7 @@ user-interaction ongoing."
 
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook 'mu4e~headers-do-auto-update nil t)
-  (add-hook 'mu4e-index-updated-hook (lambda () (run-hooks 'mu4e-msg-changed-hook)) t t)
+  (add-hook 'mu4e-index-updated-hook (lambda () (run-hooks 'mu4e-msg-changed-hook)) t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
