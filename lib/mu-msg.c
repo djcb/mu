@@ -807,7 +807,7 @@ mu_msg_is_readable (MuMsg *self)
  * from the /bar
  * that we got
  */
-char*
+static char*
 get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 {
 	char *rootmaildir, *rv;

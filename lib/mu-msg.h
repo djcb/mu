@@ -82,7 +82,7 @@ typedef enum _MuMsgOptions MuMsgOptions;
  */
 MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
 			     GError **err)
-                             G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -279,18 +279,6 @@ const char*     mu_msg_get_msgid           (MuMsg *msg);
  */
 const char*     mu_msg_get_mailing_list            (MuMsg *msg);
 
-
-/**
- * get any arbitrary header from this message
- *
- * @param msg a valid MuMsg* instance
- * @header the header requested
- *
- * @return the header requested or NULL in case of error or if there
- * is no such header. the returned string should *not* be modified or freed.
- */
-const char*     mu_msg_get_header          (MuMsg *msg,
-					    const char* header);
 
 /**
  * get the message date/time (the Date: field) as time_t, using UTC

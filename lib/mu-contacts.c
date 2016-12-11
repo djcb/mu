@@ -48,7 +48,7 @@ static ContactInfo *contact_info_new (char *email, char *name,
 				      gboolean personal, time_t tstamp, unsigned freq);
 
 struct _MuContacts {
-        GKeyFile	*_ccache;
+	GKeyFile	*_ccache;
 	gchar		*_path;
 
 	GHashTable	*_hash;
@@ -245,7 +245,7 @@ encode_email_address (const char *addr)
 /* downcase the domain-part of the email address, but only if it
  * consists of ascii (to prevent screwing up idna addresses)
  */
-char*
+static char*
 downcase_domain_maybe (const char *addr)
 {
 	char *addr_conv, *at, *cur;
@@ -291,7 +291,7 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 	g_return_val_if_fail (addr, FALSE);
 
 	group = encode_email_address (addr);
-	
+
 	cinfo = (ContactInfo*) g_hash_table_lookup (self->_hash, group);
 	if (!cinfo) {
 		char *addr_dc;
@@ -306,7 +306,7 @@ mu_contacts_add (MuContacts *self, const char *addr, const char *name,
 		 * personal */
 		if (personal)
 			cinfo->_personal = TRUE;
-		
+
 		if (cinfo->_tstamp < tstamp) {
 			if (!mu_str_is_empty(name)) {
 				/* update the name to the last one used, unless it's
@@ -458,7 +458,7 @@ mu_contacts_destroy (MuContacts *self)
 	    mu_contacts_serialize (self))
 		MU_WRITE_LOG("serialized contacts cache %s",
 			     self->_path);
-	
+
 	if (self->_ccache)
 		g_key_file_free (self->_ccache);
 

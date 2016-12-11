@@ -117,28 +117,6 @@ mu_util_dir_expand (const char *path)
 	return g_strdup (resolved);
 }
 
-
-char*
-mu_util_create_tmpdir (void)
-{
-	gchar *dirname;
-
-	dirname =  g_strdup_printf ("%s%cmu-%d%c%x",
-				    g_get_tmp_dir(),
-				    G_DIR_SEPARATOR,
-				    getuid(),
-				    G_DIR_SEPARATOR,
-				    (int)random()*getpid()*(int)time(NULL));
-
-	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
-		g_free (dirname);
-		return NULL;
-	}
-
-	return dirname;
-}
-
-
 GQuark
 mu_util_error_quark (void)
 {
@@ -480,6 +458,7 @@ mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 
 	return FALSE;
 }
+
 
 
 static gboolean
