@@ -298,7 +298,7 @@ $ sudo yum install webkitgtk3-devel
 @anchor{Building from a release tarball}
 
 Using a release-tarball (as available from
-GoogleCode@footnote{@url{http://code.google.com/p/mu0/downloads/list}},
+GoogleCode@footnote{@url{https://github.com/djcb/mu/releases}},
 installation follows the typical steps:
 
 @example
@@ -314,17 +314,17 @@ Xapian, GMime and their dependencies must be installed.
 @subsection Building from git
 @anchor{Building from git}
 
-Alternatively, if you build from the git repository or use a tarball like the
-ones that @t{github} produces, the instructions are slightly different, and
-require you to have @t{autotools} (Autoconf, Automake, Libtool, and friends)
-installed:
+Alternatively, if you build from the git repository or use a tarball
+like the ones that @t{github} produces, the instructions are slightly
+different, and require you to have @t{autotools} (@t{autoconf},
+@t{autoconf-archive}, @t{automake}, @t{libtool}, and friends) installed:
 
 @example
 # get from git (alternatively, use a github tarball)
 $ git clone git://github.com/djcb/mu.git
 
 $ cd mu
-$ autoreconf -i && ./configure && make
+$ ./autogen.sh && ./configure && make
 # On the BSDs: use gmake instead of make
 $ sudo make install
 @end example

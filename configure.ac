@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 AC_INIT([mu],[0.9.19],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2016 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
@@ -23,6 +23,9 @@ AC_CONFIG_SRCDIR([mu/mu.cc])
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([xua]) # Win/DOS don't like 'aux'
+
+m4_ifdef([AX_COMPILER_FLAGS], [],
+    AC_MSG_ERROR([Please install autoconf-archive]))
 
 AX_IS_RELEASE([git-directory])
 AX_CHECK_ENABLE_DEBUG([yes])

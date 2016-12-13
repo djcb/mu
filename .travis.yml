@@ -21,7 +21,6 @@ install:
   - export PATH="$HOME/.evm/bin:$PATH"
   - evm install $EVM_EMACS --use
 script:
-  - autoreconf -i
-  - ./configure
+  - ./autogen.sh
   - make
   - make check
