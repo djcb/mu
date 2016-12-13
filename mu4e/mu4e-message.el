@@ -45,9 +45,12 @@ htmltext program, it's recommended you use \"html2text -utf8
 -width 72\". Alternatives are the python-based html2markdown, w3m
 and on MacOS you may want to use textutil.
 
-It can also be a function, which takes the current buffer in html
+It can also be a function, which takes the message displayed in
+the buffer as an argument, must act on the current buffer in html
 as input, and transforms it into html (like the `html2text'
-function).
+function).  The message argument can be queried with
+`mu4e-message-field', for example to change the \"cid:\" images
+links to actual copies on the disk.
 
 In both cases, the output is expected to be in UTF-8 encoding.
 
@@ -202,7 +205,10 @@ unless PREFER-HTML is non-nil."
 		    (call-process-shell-command mu4e-html2text-command tmp-file t t)
 		    (delete-file tmp-file)))
 		((functionp mu4e-html2text-command)
-		  (funcall mu4e-html2text-command))
+		 (condition-case nil
+		     (funcall mu4e-html2text-command msg)
+		   (wrong-number-of-arguments
+		    (funcall mu4e-html2text-command))))
 		(t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	      (setq mu4e~message-body-html t)
 	      (buffer-string))
