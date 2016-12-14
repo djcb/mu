@@ -1,6 +1,8 @@
 * HACKING
 
-  Here are some guidelines for hacking on the 'mu' source code. 
+  Here are some guidelines for hacking on the 'mu' source code. For
+  hacking, you're strongly advised to use the latest git version.
+  Compilation instructions can be found in the mu4e user manual.
 
   This is a fairly long list -- this is not meant to discourage anyone
   from working on mu; I think most of the rules are common sense
@@ -107,26 +109,6 @@
    If you just want to log something in the log file without writing
    to screen, use MU_LOG_WRITE, as defined in mu-util.h
 
-** Compiling from git
-
-   For hacking, you're strongly advised to use the latest git
-   version. Compilation from git should be straightforward, if you
-   have the right tools (automake, autoconf and friends) installed --
-   but if you do development, you'd probably have those.
-
-   Anyhow, to compile straight from git:
-
-   $ git clone https://github.com/djcb/mu
-   $ cd mu
-   $ autoreconf -i
-   $ ./configure
-   $ make
-
-
 # Local Variables:
 # mode: org; org-startup-folded: nofold
 # End:
-   
-   
-   
-   
