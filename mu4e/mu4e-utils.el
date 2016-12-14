@@ -1166,6 +1166,35 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e-rewrite-cid-to-file-links (msg)
+  "Substitute all cid: links by file:// ones pointing to the files
+saved on disk."
+  (let ((attachments (remove-if (lambda (part)
+				  (or (null (plist-get part :attachment))
+				      (null (plist-get part :cid))))
+				(mu4e-message-field msg :parts))))
+    (mapc
+     (lambda (attachment)
+       (goto-char (point-min))
+       (while (re-search-forward
+	       (format "src=\"cid:%s\"" (plist-get attachment :cid)) nil t)
+	 (if (plist-get attachment :temp)
+	     (replace-match (format "src=\"file://%s\""
+				    (plist-get attachment :temp)))
+	   (replace-match (format "src=\"file://%s%s\""
+				  temporary-file-directory
+				  (plist-get attachment :name)))
+	   (let ((tmp-attachment-name
+		  (format "%s%s" temporary-file-directory
+			  (plist-get attachment :name))))
+	     (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
+				(plist-get attachment :index)
+				mu4e-decryption-policy tmp-attachment-name)
+	     (mu4e-remove-file-later tmp-attachment-name)))))
+     attachments)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defvar mu4e-imagemagick-identify "identify"
   "Name/path of the Imagemagick 'identify' program.")
 
