@@ -1181,12 +1181,10 @@ saved on disk."
 	 (if (plist-get attachment :temp)
 	     (replace-match (format "src=\"file://%s\""
 				    (plist-get attachment :temp)))
-	   (replace-match (format "src=\"file://%s%s\""
-				  temporary-file-directory
-				  (plist-get attachment :name)))
 	   (let ((tmp-attachment-name
-		  (format "%s%s" temporary-file-directory
+		  (concat temporary-file-directory
 			  (plist-get attachment :name))))
+	     (replace-match (format "src=\"file://%s\"" tmp-attachment-name))
 	     (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
 				(plist-get attachment :index)
 				mu4e-decryption-policy tmp-attachment-name)
