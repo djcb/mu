@@ -15,7 +15,7 @@
   a custom query language. You can use various message fields or words in the
   body text to find the right messages.
 
-  Built on top of the mu, are some extensions (included in this package):
+  Built on top of =mu= are some extensions (included in this package):
 
   - mu-for-emacs ([[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]): a full-featured e-mail client that runs inside emacs
   - [[http://www.djcbsoftware.nl/code/mu/mu-guile.html][mu-guile]]: bindings for the Guile/Scheme programming language (version 2.0
@@ -26,6 +26,6 @@
   written in [[http://en.wikipedia.org/wiki/Emacs-Lisp][Emacs-Lisp]] and =mu-guile= in a mix of C and Scheme.
 
   Note, =mu= is available in Debian/Ubuntu under the name =maildir-utils=;
-  apparently because they don't like short name. It's also possible to confuse
+  apparently because they don't like short names. It's also possible to confuse
   that name with the [[http://mailutils.org/][GNU Mailutils]] project (which is totally unrelated) - but
   now you have been warned.
