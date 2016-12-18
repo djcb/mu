@@ -167,6 +167,19 @@ const char*     mu_msg_get_body_text       (MuMsg *msg, MuMsgOptions opts);
 
 
 /**
+ * get the content type parameters for the text body part
+ *
+ * @param msg a valid MuMsg* instance
+ * @param opts options for getting the body
+ *
+ * @return the value of the requested body part content type parameter, or
+ * NULL in case of error or if there is no such body. the returned string
+ * should *not* be modified or freed. The returned data is in UTF8 or NULL.
+ */
+const GSList*	mu_msg_get_body_text_content_type_parameters	(MuMsg *self, MuMsgOptions opts);
+
+
+/**
  * get the html body of this message
  *
  * @param msg a valid MuMsg* instance

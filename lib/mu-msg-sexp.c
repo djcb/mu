@@ -423,10 +423,30 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 }
 
 static void
+append_sexp_param (GString *gstr, GSList *param)
+{
+	for (;param; param = g_slist_next (param)) {
+		char *key, *value;
+
+		key = param->data;
+		key = key ? mu_str_escape_c_literal (key, FALSE) : "";
+
+		param = g_slist_next (param);
+		value = param->data;
+		value = value ? mu_str_escape_c_literal (value, FALSE) : "";
+
+		g_string_append_printf (gstr, "(\"%s\" . \"%s\")", key, value);
+		if (param->next)
+			g_string_append_c (gstr, ' ');
+	}
+}
+
+static void
 append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 {
 	const char	*str;
 	GError		*err;
+	const GSList    *params;
 
 	err = NULL;
 
@@ -444,6 +464,13 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 	str = mu_msg_get_header (msg, "User-Agent");
 	if (str || (str = mu_msg_get_header (msg, "X-Mailer")))
 		append_sexp_attr (gstr, "user-agent", str);
+
+        params = mu_msg_get_body_text_content_type_parameters (msg, opts);
+        if (params) {
+		g_string_append_printf (gstr, "\t:body-txt-params (");
+		append_sexp_param (gstr, params);
+		g_string_append_printf (gstr, ")\n");
+	}
 
 	append_sexp_body_attr (gstr, "body-txt",
 			  mu_msg_get_body_text(msg, opts));

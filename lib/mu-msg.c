@@ -520,6 +520,76 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 		return g_string_free (bdata.gstr, FALSE);
 }
 
+
+struct _ContentTypeData {
+	const GMimeContentType *ctype;
+	gboolean want_html;
+};
+typedef struct _ContentTypeData ContentTypeData;
+
+
+static void
+find_content_type (MuMsg *msg, MuMsgPart *mpart, ContentTypeData *cdata)
+{
+	if (!GMIME_IS_PART(mpart->data))
+		return;
+
+	/* text-like attachments are included when in text-mode */
+
+	GMimePart *wanted = NULL;
+
+	if (!cdata->want_html &&
+	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
+		wanted = mpart->data;
+	else if (!(mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT) &&
+		 cdata->want_html &&
+		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
+		wanted = mpart->data;
+	if (wanted)
+		cdata->ctype = g_mime_object_get_content_type (wanted);
+}
+
+
+static const GSList*
+get_content_type_parameters (MuMsg *self, MuMsgOptions opts, gboolean want_html)
+{
+	ContentTypeData cdata;
+	cdata.want_html = want_html;
+	cdata.ctype = NULL;
+
+	mu_msg_part_foreach (self, opts,
+			     (MuMsgPartForeachFunc)find_content_type,
+			     &cdata);
+
+	if (cdata.ctype) {
+		const GSList *paramlist;
+		const GMimeParam *param;
+
+		paramlist = NULL;
+		param = g_mime_content_type_get_params (cdata.ctype);
+
+		for (; param; param = param->next) {
+			paramlist = g_slist_prepend (paramlist,
+						     g_strdup (param->name));
+
+			paramlist = g_slist_prepend (paramlist,
+						     g_strdup (param->value));
+		}
+
+		return free_later_lst(self, g_slist_reverse (paramlist));
+	}
+	return NULL;
+}
+
+
+const GSList*
+mu_msg_get_body_text_content_type_parameters (MuMsg *self, MuMsgOptions opts)
+{
+	g_return_val_if_fail (self, NULL);
+	return get_content_type_parameters(self, opts, FALSE);
+}
+
+
 const char*
 mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
 {

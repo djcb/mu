@@ -32,6 +32,7 @@
 
 (require 'cl)
 (require 'html2text)
+(require 'flow-fill)
 
 
 (defcustom mu4e-html2text-command
@@ -189,6 +190,12 @@ representation."
       ;; otherwise, use text
       (t nil))))
 
+(defun mu4e~message-body-has-content-type-param (msg param)
+  (cdr
+   (assoc param (mu4e-message-field msg :body-txt-params))))
+
+(defun mu4e~safe-iequal (a b)
+  (and b (equal (downcase b) a)))
 
 (defun mu4e-message-body-text (msg &optional prefer-html)
   "Get the body in text form for this message.
@@ -210,7 +217,17 @@ unless PREFER-HTML is non-nil."
 		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
 	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	    ;; use a text body
-	    (or (mu4e-message-field msg :body-txt) ""))))
+	    (or (with-temp-buffer
+		 (insert (mu4e-message-field msg :body-txt))
+		 (if (mu4e~safe-iequal "flowed"
+				       (mu4e~message-body-has-content-type-param
+					msg "format"))
+		     (fill-flowed nil (mu4e~safe-iequal
+				       "yes"
+				       (mu4e~message-body-has-content-type-param
+					msg "delsp"))))
+		 (buffer-string))
+                ""))))
     (dolist (func mu4e-message-body-rewrite-functions)
       (setq body (funcall func msg body)))
     body))
