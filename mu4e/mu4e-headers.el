@@ -233,10 +233,10 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
   '( ("capture message"  . mu4e-action-capture-message)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in the headers list.
-The actions are of the form (NAME SHORTCUT FUNC) where:
+The actions are of the form (NAME . FUNC) where:
 * NAME is the name of the action (e.g. \"Count lines\")
-* SHORTCUT is a one-character shortcut to call this action
-* FUNC is a function which receives a message plist as an argument.")
+* FUNC is a function which receives a message plist as an argument.
+The first character of NAME is used as the shortcut.")
 
 (defvar mu4e-headers-custom-markers
   '(("Older than"
