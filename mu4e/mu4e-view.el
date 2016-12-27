@@ -111,8 +111,17 @@ where:
 
 The first letter of NAME is used as a shortcut character.")
 
-(defvar mu4e-view-attachment-actions
-  '( ("wopen-with" . mu4e-view-open-attachment-with)
+(defcustom mu4e-view-attachment-assoc nil
+  "Alist of (EXTENSION . PROGRAM).
+Specify which PROGRAM to use to open attachment with EXTENSION.
+Args EXTENSION and PROGRAM should be specified as strings."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type string))
+
+(defcustom mu4e-view-attachment-actions
+  '( ("ssave" . mu4e-view-save-attachment-single)
+     ("Ssave multi" . mu4e-view-save-attachment-multi)
+     ("wopen-with" . mu4e-view-open-attachment-with)
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
      ("|pipe"      . mu4e-view-pipe-attachment))
@@ -123,7 +132,9 @@ where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives two arguments: the message
   plist and the attachment number.
-The first letter of NAME is used as a shortcut character.")
+The first letter of NAME is used as a shortcut character."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type function))
 
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
@@ -1243,11 +1254,13 @@ ATTNUM is nil ask for the attachment number."
   "Open MSG's attachment ATTACHNUM with CMD.
 If CMD is nil, ask user for it."
   (let* ((att (mu4e~view-get-attach msg attachnum))
-	  (cmd (or cmd
-		 (read-string
+         (ext (file-name-extension (plist-get att :name)))
+         (cmd (or cmd
+                  (read-string
 		   (mu4e-format "Shell command to open it with: ")
-		   nil 'mu4e~view-open-with-hist)))
-	  (index (plist-get att :index)))
+		   (assoc-default ext mu4e-view-attachment-assoc)
+                   'mu4e~view-open-with-hist)))
+         (index (plist-get att :index)))
     (mu4e~view-temp-action
       (mu4e-message-field msg :docid) index "open-with" cmd)))
 
@@ -1287,12 +1300,16 @@ If MSG is nil use the message returned by `message-at-point'.
 The actions are specified in `mu4e-view-attachment-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
-	  (actionfunc (mu4e-read-option
-			"Action on attachment: "
-			mu4e-view-attachment-actions))
-	  (attnum (mu4e~view-get-attach-num "Which attachment" msg)))
-    (when (and actionfunc attnum)
-      (funcall actionfunc msg attnum))))
+         (actionfunc (mu4e-read-option
+                      "Action on attachment: "
+                      mu4e-view-attachment-actions))
+         (multi (eq actionfunc 'mu4e-view-save-attachment-multi))
+         (attnum (unless multi
+                   (mu4e~view-get-attach-num "Which attachment" msg multi))))
+    (cond ((and actionfunc attnum)
+           (funcall actionfunc msg attnum))
+          ((and actionfunc multi)
+           (funcall actionfunc msg)))))
 
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
