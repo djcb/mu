@@ -979,7 +979,10 @@ updated immediately using the new parameters. You can toggle full-search
 (@ref{Searching}) using @kbd{M-x mu4e-headers-toggle-full-search} or @key{Q}.
 
 If you want to change the defaults for these settings, you can use the
-variables @code{mu4e-headers-sortfield} and @code{mu4e-headers-show-threads}.
+variables @code{mu4e-headers-sort-field} and
+@code{mu4e-headers-show-threads}, as well as
+@code{mu4e-headers-change-sorting} to change the sorting of the current
+search results.
 
 @node HV Custom headers
 @section Custom headers
