@@ -970,7 +970,7 @@ Also scrolls to the final line, and update the progress throbber."
 (define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
     "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
-(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
+(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-kill-update-mail)
 
 (defun mu4e~temp-window (buf height)
   "Create a temporary window with HEIGHT at the bottom of the
@@ -1054,13 +1054,16 @@ in the background; otherwise, pop up a window."
       (run-hooks 'mu4e-update-pre-hook)
       (mu4e~update-mail-and-index-real run-in-background))))
 
-(defun mu4e-interrupt-update-mail ()
-  "Stop the update process by sending SIGINT to it."
+(defun mu4e-kill-update-mail ()
+  "Stop the update process by killing it."
   (interactive)
   (let* ((proc (and (buffer-live-p mu4e~update-buffer)
 		 (get-buffer-process mu4e~update-buffer))))
     (when (process-live-p proc)
-      (interrupt-process proc t))))
+      (kill-process proc t))))
+
+(define-obsolete-function-alias 'mu4e-interrupt-update-mail
+  'mu4e-kill-update-mail)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

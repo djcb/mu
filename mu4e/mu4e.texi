@@ -478,7 +478,7 @@ mu4e-update-mail-and-index}, or @kbd{C-S-u} in all @t{mu4e}-views;
 alternatively, you can use @kbd{C-c C-u}, which may be more convenient
 if you use emacs in a terminal.
 
-You can interrupt the (foreground) update process with @kbd{q}.
+You can kill the (foreground) update process with @kbd{q}.
 
 It is possible to update your mail and index periodically in the
 background or foreground, by setting the variable
