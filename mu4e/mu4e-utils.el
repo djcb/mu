@@ -1281,7 +1281,7 @@ the view and compose modes."
     (save-excursion
       ;; give the footer a different color...
       (goto-char (point-min))
-      (let ((p (search-forward "^-- *$" nil t)))
+      (let ((p (re-search-forward "^-- *$" nil t)))
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
