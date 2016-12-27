@@ -330,6 +330,15 @@ mu_util_program_in_path (const char *prog)
 }
 
 
+/*
+ * Set the child to a group leader to avoid being killed when the
+ * parent group is killed.
+ */
+static void
+set_child_process_to_be_session_leader (G_GNUC_UNUSED gpointer user_data)
+{
+	setsid();
+}
 
 gboolean
 mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
@@ -366,8 +375,9 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
 
 	err = NULL;
 	rv = g_spawn_async (NULL, (gchar**)&argv, NULL,
-			    G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
-			    err);
+			    G_SPAWN_SEARCH_PATH,
+			    set_child_process_to_be_session_leader,
+			    NULL, NULL, err);
 	return rv;
 }
 
