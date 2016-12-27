@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -112,9 +112,24 @@ cleanup_str (const char* str)
 	return s;
 }
 
+static char*
+uniquify_nick (const char *nick, GHashTable *nicks)
+{
+	guint u;
+
+	for (u = 2; u != 1000; ++u) {
+		char *cand;
+		cand = g_strdup_printf ("%s%u", nick, u);
+		if (!g_hash_table_contains (nicks, cand))
+			return cand;
+	}
+
+	return g_strdup (nick); /* if all else fails */
+}
+
 
 static gchar*
-guess_nick (const char* name)
+guess_nick (const char* name, GHashTable *nicks)
 {
 	gchar *fname, *lname, *nick;
 	gchar initial[7];
@@ -148,6 +163,15 @@ leave:
 		g_free (nick);
 		nick = tmp;
 	}
+
+	if (g_hash_table_contains (nicks, nick)) {
+		char *tmp;
+		tmp = uniquify_nick (nick, nicks);
+		g_free (nick);
+		nick = tmp;
+	}
+
+	g_hash_table_add (nicks, g_strdup(nick));
 
 	return nick;
 }
@@ -192,14 +216,15 @@ each_contact_bbdb (const char *email, const char *name, time_t tstamp)
 
 
 static void
-each_contact_mutt_alias (const char *email, const char *name)
+each_contact_mutt_alias (const char *email, const char *name,
+			 GHashTable *nicks)
 {
 	gchar *nick;
 
 	if (!name)
 		return;
 
-	nick = guess_nick (name);
+	nick = guess_nick (name, nicks);
 	mu_util_print_encoded ("alias %s %s <%s>\n",
 			       nick, name, email);
 	g_free (nick);
@@ -208,14 +233,14 @@ each_contact_mutt_alias (const char *email, const char *name)
 
 
 static void
-each_contact_wl (const char *email, const char *name)
+each_contact_wl (const char *email, const char *name, GHashTable *nicks)
 {
 	gchar *nick;
 
 	if (!name)
 		return;
 
-	nick = guess_nick (name);
+	nick = guess_nick (name, nicks);
 	mu_util_print_encoded ("%s \"%s\" \"%s\"\n",
 			       email, nick, name);
 	g_free (nick);
@@ -230,9 +255,6 @@ each_contact_org_contact (const char *email, const char *name)
 			"* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
 			name, email);
 }
-
-
-
 
 
 static void
@@ -283,13 +305,12 @@ print_plain (const char *email, const char *name, gboolean color)
 	fputs ("\n", stdout);
 }
 
-struct _ECData {
-	MuConfigFormat format;
-	gboolean color, personal;
-	time_t after;
-};
-typedef struct _ECData ECData;
-
+typedef struct {
+	MuConfigFormat	 format;
+	gboolean	 color, personal;
+	time_t		 after;
+	GHashTable	*nicks;
+} ECData;
 
 
 static void
@@ -304,14 +325,14 @@ each_contact (const char *email, const char *name, gboolean personal,
 
 	switch (ecdata->format) {
 	case MU_CONFIG_FORMAT_MUTT_ALIAS:
-		each_contact_mutt_alias (email, name);
+		each_contact_mutt_alias (email, name, ecdata->nicks);
 		break;
 	case MU_CONFIG_FORMAT_MUTT_AB:
 		mu_util_print_encoded ("%s\t%s\t\n",
 				       email, name ? name : "");
 		break;
 	case MU_CONFIG_FORMAT_WL:
-		each_contact_wl (email, name);
+		each_contact_wl (email, name, ecdata->nicks);
 		break;
 	case MU_CONFIG_FORMAT_ORG_CONTACT:
 		each_contact_org_contact (email, name);
@@ -319,7 +340,7 @@ each_contact (const char *email, const char *name, gboolean personal,
 	case MU_CONFIG_FORMAT_BBDB:
 		each_contact_bbdb (email, name, tstamp);
 		break;
-        case MU_CONFIG_FORMAT_CSV:
+	case MU_CONFIG_FORMAT_CSV:
 		each_contact_csv (email, name);
 		break;
 	default:
@@ -334,15 +355,17 @@ run_cmd_cfind (const char* pattern,
 	       MuConfigFormat format,
 	       gboolean color, GError **err)
 {
-	gboolean rv;
-	MuContacts *contacts;
-	size_t num;
-	ECData ecdata;
+	gboolean	 rv;
+	MuContacts	*contacts;
+	size_t		 num;
+	ECData		 ecdata;
 
 	ecdata.personal = personal;
 	ecdata.after    = after;
 	ecdata.format	= format;
 	ecdata.color	= color;
+	ecdata.nicks    = g_hash_table_new_full (g_str_hash, g_str_equal,
+						 g_free, NULL);
 
 	contacts = mu_contacts_new
 		(mu_runtime_path(MU_RUNTIME_PATH_CONTACTS));
@@ -357,7 +380,9 @@ run_cmd_cfind (const char* pattern,
 	rv = mu_contacts_foreach (contacts,
 				  (MuContactsForeachFunc)each_contact,
 				  &ecdata, pattern, &num);
+	g_hash_table_unref (ecdata.nicks);
 	mu_contacts_destroy (contacts);
+
 
 	if (num == 0) {
 		g_warning ("no matching contacts found");

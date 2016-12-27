@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -38,7 +38,7 @@ typedef struct _MuContacts MuContacts;
  * @return a new MuContacts* if succeeded, NULL otherwise
  */
 MuContacts* mu_contacts_new (const gchar *ccachefile)
-          G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+	  G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -122,14 +122,15 @@ typedef void (*MuContactsForeachFunc) (const char *email, const char *name,
  * regular expression was invalid (and not NULL)
  */
 gboolean mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
-			      gpointer user_data, const char* pattern, size_t *num);
+			      gpointer user_data, const char* pattern,
+			      size_t *num);
 
 /**
  * serialize the contacts to the contacts cache file
  *
  * @param self contacts object
  *
- * @return TRUE if the function succeeded, FALSE otherwise 
+ * @return TRUE if the function succeeded, FALSE otherwise
  * */
 gboolean mu_contacts_serialize (MuContacts *self);
 
