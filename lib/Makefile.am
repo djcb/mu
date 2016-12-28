@@ -24,6 +24,7 @@ AM_CFLAGS=					\
 	$(WARN_CFLAGS)				\
 	-Wno-format-nonliteral			\
 	-Wno-switch-enum			\
+	-Wno-suggest-attribute=format		\
 	$(GMIME_CFLAGS)				\
 	$(GLIB_CFLAGS)				\
 	$(GUILE_CFLAGS)
