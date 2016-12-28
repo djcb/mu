@@ -11,7 +11,9 @@ if test -z `which autoreconf`; then
     exit 1
 fi
 
+rm -f config.cache
 rm -rf autom4te.cache
+
 autoreconf --force --install --verbose || exit $?
 
 if test -z "$*"; then
@@ -20,4 +22,4 @@ else
    echo "# Configure with parameters $*"
 fi
 
-./configure $@
+./configure --config-cache $@
