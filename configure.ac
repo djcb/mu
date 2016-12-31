@@ -24,8 +24,11 @@ AC_CONFIG_SRCDIR([mu/mu.cc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([xua]) # Win/DOS don't like 'aux'
 
-m4_ifdef([AX_COMPILER_FLAGS], [],
-    AC_MSG_ERROR([Please install autoconf-archive]))
+m4_ifndef([AX_COMPILER_FLAGS],[
+    AC_MSG_ERROR([
+    *** We need autoconf-archive for reconfiguring, but it is not found
+    *** Please install it.])
+])
 
 AX_IS_RELEASE([git-directory])
 AX_CHECK_ENABLE_DEBUG([yes])

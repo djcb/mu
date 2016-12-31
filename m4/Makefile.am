@@ -16,15 +16,5 @@
 
 include $(top_srcdir)/gtest.mk
 
-EXTRA_DIST =				\
-	ax_check_enable_debug.m4	\
-	ax_compiler_flags.m4		\
-	ax_compiler_flags_cflags.m4	\
-	ax_compiler_flags_cxxflags.m4	\
-	ax_is_release.m4		\
-	libtool.m4			\
-	ltoptions.m4			\
-	ltversion.m4			\
-	lt~obsolete.m4			\
-	ltsugar.m4			\
+EXTRA_DIST =	\
 	perlmod.m4
