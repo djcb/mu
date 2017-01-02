@@ -407,6 +407,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
     (make-local-variable 'message-default-charset)
+    ;; Set to nil to enable `electric-quote-local-mode' to work:
+    (set (make-variable-buffer-local 'comment-use-syntax) nil)
     ;; message-mode has font-locking, but uses its own faces. Let's
     ;; use the mu4e-specific ones instead
     (mu4e~compose-remap-faces)
