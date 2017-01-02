@@ -202,6 +202,8 @@ unless PREFER-HTML is non-nil."
 		    (call-process-shell-command mu4e-html2text-command tmp-file t t)
 		    (delete-file tmp-file)))
 		((functionp mu4e-html2text-command)
+		  (when mu4e-view-show-images
+		    (mu4e-rewrite-cid-to-file-links msg))
 		  (funcall mu4e-html2text-command))
 		(t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	      (setq mu4e~message-body-html t)
