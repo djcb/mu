@@ -85,7 +85,7 @@ you up to speed quickly: @ref{Example configurations}. There's also a
 section with answers to frequenly asked questions, @ref{FAQ}.
 
 @menu
-* Introduction:: Where we begin
+* Introduction:: Where to begin
 * Getting started:: Setting things up
 * Main view:: The @t{mu4e} overview
 * Headers view:: Lists of message headers
@@ -115,7 +115,7 @@ Let's get started!
 
 @menu
 * Why another e-mail client::Aren't there enough already
-* Other mail clients::Where @t{mu4e} takes its inspiration
+* Other mail clients::Where @t{mu4e} takes its inspiration from
 * What mu4e does not do::Focus on the core-business, delegate the rest
 * Becoming a mu4e user::Joining the club
 @end menu
@@ -562,7 +562,7 @@ updates -- for example when receiving new mail. See
 @node Sending mail
 @section Sending mail
 
-@t{mu4e} re-uses Gnus's @code{message-mode} (@inforef{Top,,message}) for
+@t{mu4e} re-uses Gnus' @code{message-mode} (@inforef{Top,,message}) for
 writing mail and inherits the setup for sending mail as well.
 
 For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
@@ -1504,7 +1504,7 @@ These actions all work on a @emph{temporary copy} of the attachment.
 @chapter The editor view
 
 Writing e-mail messages takes place in the Editor View. @t{mu4e}'s editor view
-builds on top of Gnu's @t{message-mode}. Most of the @t{message-mode}
+builds on top of Gnus' @t{message-mode}. Most of the @t{message-mode}
 functionality is available, as well some @t{mu4e}-specifics. Its major mode is
 @code{mu4e-compose-mode}.
 
@@ -1543,7 +1543,7 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
 @node EV Keybindings
 @section Keybindings
 
-@t{mu4e}'s editor view derives from Gnu's message editor and shares most of
+@t{mu4e}'s editor view derives from Gnus' message editor and shares most of
 its keybindings. Here are some of the more useful ones (you can use the menu
 to find more):
 
