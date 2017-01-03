@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ dist_lisp_LISP=			\
 	mu4e-message.el		\
 	mu4e-meta.el		\
 	mu4e-proc.el		\
+	mu4e-proc-mu.el		\
 	mu4e-speedbar.el	\
 	mu4e-utils.el		\
 	mu4e-vars.el		\
