@@ -857,13 +857,17 @@ If the url is mailto link, start writing an email to that address."
 	(browse-url url)))))
 
 (defun mu4e~view-show-images-maybe (msg)
-  "Show attached images, if `mu4e-show-images' is non-nil."
+  "Show attached images, if `mu4e-show-images' is non-nil.  If
+`mu4e-view-show-cid-inline' is t, then only images not appearing as
+cid:// links are displayed."
   (when (and (display-images-p) mu4e-view-show-images)
     (mu4e-view-for-each-part msg
       (lambda (msg part)
-	(when (string-match "^image/"
-		(or (mu4e-message-part-field part :mime-type)
-		  "application/object-stream"))
+	(when (and (string-match "^image/"
+				 (or (mu4e-message-part-field part :mime-type)
+				     "application/object-stream"))
+		   (or (not mu4e-view-show-cid-inline)
+		       (null (plist-get part :cid))))
 	  (let ((imgfile (mu4e-message-part-field part :temp)))
 	    (when (and imgfile (file-exists-p imgfile))
  	      (save-excursion

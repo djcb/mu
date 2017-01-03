@@ -1383,7 +1383,11 @@ alternative:
 
 If @code{mu4e-html2text-command} refers to an elisp function, it is
 expected to take the current buffer in html as input, and transform it
-into text (just like the @code{html2text} function).
+into text (just like the @code{html2text} function).  The function
+possesses an argument, the message displayed in the buffer.  It can be
+queried with @code{mu4e-message-field}, for example to change the
+"cid:" images links to actual copies on the disk.  A helper function
+for that is provided: @code{mu4e-rewrite-cid-to-file-links}.
 
 @subsection Privacy aspects
 @anchor{Privacy aspects}

@@ -242,12 +242,20 @@ and `mu4e-headers-visible-columns'."
 
 (defcustom mu4e-view-show-images nil
   "Whether to automatically display attached images in the message
-view buffer."
+view buffer.  If `mu4e-view-show-cid-inline' is t, only images not
+appearing as cid:// links are displayed."
   :type 'boolean
   :group 'mu4e-view)
 
 (make-obsolete-variable 'mu4e-show-images
   'mu4e-view-show-images "0.9.9.x")
+
+(defcustom mu4e-view-show-cid-inline nil
+  "Whether to embed cid:// images in the message view buffer (and
+thus not show them at the end).  If you define a custom
+`mu4e-html2text-command', you must check the value of this variable."
+  :type 'boolean
+  :group 'mu4e-view)
 
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."
