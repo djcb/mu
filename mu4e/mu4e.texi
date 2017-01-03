@@ -692,7 +692,7 @@ The main view looks something like the following:
 
   Misc
 
-	* [;]Switch focus
+	* [;]Switch context
 	* [U]pdate email & database
 
 	* [N]ews
@@ -923,7 +923,7 @@ E            edit (only allowed for draft messages)
 
 misc
 ----
-;            switch focus
+;            switch context
 a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
@@ -1226,7 +1226,7 @@ A            execute some custom action on an attachment
 
 misc
 ----
-;            switch focus
+;            switch context
 c            copy address at point (with C-u copy long version)
 
 h            toggle between html/text (if available)
@@ -2530,9 +2530,9 @@ when starting; see the discussion in the previous section.
 
 A couple of notes about this example:
 @itemize
-@item You can manually switch the focus use @code{M-x mu4e-context-switch}, 
+@item You can manually switch the context use @code{M-x mu4e-context-switch},
 by default bound to @kbd{;} in headers, view and main mode.
-The current focus appears in the mode-line.
+The current context appears in the mode-line.
 @item Normally, @code{M-x mu4e-context-switch} does not call the enter or 
 leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to

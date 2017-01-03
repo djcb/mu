@@ -146,7 +146,7 @@ clicked."
        "\n\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-	(mu4e~main-action-str "\t* [;]Switch focus\n" 'mu4e-context-switch)
+	(mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)
 	
 	(mu4e~main-action-str "\t* [U]pdate email & database\n"
 	  'mu4e-update-mail-and-index)
