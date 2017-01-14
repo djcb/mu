@@ -476,6 +476,23 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 				 GError **err);
 
 
+/**
+ * Tickle a message -- ie., rxename a message while maintaining the maildir and
+ * flags. This can be useful when dealing with third-party tools such as mbsync
+ * that depend on changed filenames.
+ *
+ * @param msg a message with an existing file system path in an actual
+ * maildir
+ * @param err (may be NULL) may contain error information; note if the
+ * function return FALSE, err is not set for all error condition
+ * (ie. not for parameter error
+ *
+ * @return TRUE if it worked, FALSE otherwise
+ */
+gboolean mu_msg_tickle (MuMsg *msg, GError **err);
+
+
+
 enum _MuMsgContactType {  /* Reply-To:? */
 	MU_MSG_CONTACT_TYPE_TO    = 0,
 	MU_MSG_CONTACT_TYPE_FROM,

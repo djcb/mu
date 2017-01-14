@@ -412,6 +412,33 @@ mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	return foreach_msg_file (store, opts, remove_path_func, err);
 }
 
+static gboolean
+tickle_func (MuStore *store, const char *path, GError **err)
+{
+	MuMsg		*msg;
+	gboolean	 rv;
+
+	msg = mu_msg_new_from_file (path, NULL, err);
+	if (!msg)
+		return FALSE;
+
+	rv = mu_msg_tickle (msg, err);
+	mu_msg_unref (msg);
+
+	return rv;
+}
+
+
+MuError
+mu_cmd_tickle (MuStore *store, MuConfig *opts, GError **err)
+{
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_TICKLE,
+			      MU_ERROR_INTERNAL);
+
+	return foreach_msg_file (store, opts, tickle_func, err);
+}
+
 struct _VData {
 	MuMsgPartSigStatus combined_status;
 	char *report;
@@ -632,6 +659,8 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		merr = with_store (mu_cmd_add, opts, FALSE, err);      break;
 	case MU_CONFIG_CMD_REMOVE:
 		merr = with_store (mu_cmd_remove, opts, FALSE, err);   break;
+	case MU_CONFIG_CMD_TICKLE:
+		merr = with_store (mu_cmd_tickle, opts, FALSE, err);   break;
 	case MU_CONFIG_CMD_SERVER:
 		merr = with_store (mu_cmd_server, opts, FALSE, err);   break;
 	default:

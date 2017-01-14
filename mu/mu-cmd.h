@@ -151,6 +151,18 @@ MuError mu_cmd_add (MuStore *store, MuConfig *opts, GError **err);
  */
 MuError mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err);
 
+/**
+ * execute the tickle command
+ *
+ * @param store store object to use
+ * @param opts configuration options
+ * @param err receives error information, or NULL
+ *
+ * @return MU_OK (0) if the command succeeds,
+ * some error code otherwise
+ */
+MuError mu_cmd_tickle (MuStore *store, MuConfig *opts, GError **err);
+
 
 /**
  * execute the server command

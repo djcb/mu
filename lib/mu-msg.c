@@ -902,3 +902,19 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 
 	return self->_file ? TRUE : FALSE;
 }
+
+
+/*
+ * Rename a message-file, keeping the same flags. This is useful for tricking
+ * some 3rd party progs such as mbsync
+ */
+gboolean
+mu_msg_tickle (MuMsg *self, GError **err)
+{
+	g_return_val_if_fail (self, FALSE);
+
+	return mu_msg_move_to_maildir (self,
+				       mu_msg_get_maildir (self),
+				       mu_msg_get_flags (self),
+				       FALSE, TRUE, err);
+}
