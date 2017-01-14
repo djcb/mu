@@ -119,7 +119,7 @@ search."
 (make-obsolete-variable 'mu4e-search-results-limit
   'mu4e-headers-results-limit "0.9.9.5-dev6")
 
-(defcustom mu4e-headers-skip-duplicates nil
+(defcustom mu4e-headers-skip-duplicates t
   "With this option set to non-nil, show only one of duplicate
 messages. This is useful when you have multiple copies of the same
 message, which is a common occurence for example when using Gmail
@@ -127,7 +127,7 @@ and offlineimap."
   :type 'boolean
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-include-related nil
+(defcustom mu4e-headers-include-related t
   "With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
 references) to these messages. This can be useful e.g. to include
