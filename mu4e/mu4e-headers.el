@@ -368,7 +368,7 @@ headers."
 		(mu4e~headers-highlight initial-message-at-point))
 	    ;; attempt to highlight the corresponding line and make it visible
 	    (mu4e~headers-highlight docid))
-	  (run-hooks 'mu4e-msg-changed-hook))))))
+	  (run-hooks 'mu4e-message-changed-hook))))))
 
 (defun mu4e~headers-remove-handler (docid &optional skip-hook)
   "Remove handler, will be called when a message with DOCID has
@@ -376,7 +376,7 @@ been removed from the database. This function will hide the removed
 message from the current list of headers. If the message is not
 present, don't do anything.
 
-If SKIP-HOOK is not nil, `mu4e-msg-changed-hook' will be invoked."
+If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (mu4e~headers-remove-header docid t)
@@ -390,7 +390,7 @@ If SKIP-HOOK is not nil, `mu4e-msg-changed-hook' will be invoked."
           (ignore-errors
             (kill-buffer-and-window))))
       (unless skip-hook
-        (run-hooks 'mu4e-msg-changed-hook)))))
+        (run-hooks 'mu4e-message-changed-hook)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -892,8 +892,9 @@ after the end of the search results."
 
 (defun mu4e~headers-do-auto-update ()
   "Update the current headers buffer after indexing has brought
-some changes, `mu4e-headers-auto-update' is non-nil and there is no
-user-interaction ongoing."
+some changes, `mu4e-headers-auto-update' is non-nil and there is
+no user-interaction ongoing."
+  (message "DO UPDA")
   (when (and mu4e-headers-auto-update       ;; must be set
 	  (zerop (mu4e-mark-marks-num))     ;; non active marks
 	  (not (active-minibuffer-window))) ;; no user input
@@ -911,8 +912,10 @@ user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-do-auto-update nil t)
-  (add-hook 'mu4e-index-updated-hook (lambda () (run-hooks 'mu4e-msg-changed-hook)) t)
+  (add-hook 'mu4e-index-updated-hook
+    'mu4e~headers-do-auto-update nil t)
+  (add-hook 'mu4e-index-updated-hook
+    (lambda () (run-hooks 'mu4e-message-changed-hook)) t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information

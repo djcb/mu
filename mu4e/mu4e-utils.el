@@ -632,11 +632,14 @@ This can be used as a simple way to invoke some action when new
 messages appear, but note that an update in the index does not
 necessarily mean a new message.")
 
-(defvar mu4e-msg-changed-hook nil
+(defvar mu4e-message-changed-hook nil
   "Hook run when there is a message changed in db. For new
 messages, it depends on `mu4e-index-updated-hook'. This can be
 used as a simple way to invoke some action when a message
 changed.")
+
+(make-obsolete-variable 'mu4e-msg-changed-hook
+'mu4e-message-changed-hook "0.9.19")
 
 ;; some handler functions for server messages
 ;;
