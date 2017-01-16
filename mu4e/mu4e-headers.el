@@ -583,7 +583,7 @@ found."
       (add-face-text-property 0 (length line) face t line))
     line))
 
-(defun mu4e~headers-line-handler (msg line)
+(defsubst mu4e~headers-line-handler (msg line)
   (dolist (func mu4e~headers-line-handler-functions)
     (setq line (funcall func msg line)))
   line)
@@ -592,14 +592,16 @@ found."
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (unless (and mu4e-headers-hide-predicate
-	    (funcall mu4e-headers-hide-predicate msg)) 
-    (let ((docid (mu4e-message-field msg :docid))
-	   (line (mapconcat (lambda (f-w)
-			      (mu4e~headers-field-handler f-w msg))
-		   mu4e-headers-fields " ")))
-      (setq line (mu4e~headers-line-handler msg line))
-      (mu4e~headers-add-header line docid point msg))))
+  (when (buffer-live-p mu4e~headers-buffer)
+    (with-current-buffer mu4e~headers-buffer
+      (unless (and mu4e-headers-hide-predicate
+		(funcall mu4e-headers-hide-predicate msg)) 
+	(let ((docid (mu4e-message-field msg :docid))
+	       (line (mapconcat
+		       (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+		       mu4e-headers-fields " ")))
+	  (setq line (mu4e~headers-line-handler msg line))
+	  (mu4e~headers-add-header line docid point msg))))))
 
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
@@ -890,15 +892,17 @@ after the end of the search results."
 
 (defvar mu4e-headers-mode-abbrev-table nil)
 
-(defun mu4e~headers-do-auto-update ()
+(defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there is
 no user-interaction ongoing."
-  (message "DO UPDA")
   (when (and mu4e-headers-auto-update       ;; must be set
 	  (zerop (mu4e-mark-marks-num))     ;; non active marks
-	  (not (active-minibuffer-window))) ;; no user input
-    (with-current-buffer mu4e~headers-buffer
+	  (not (active-minibuffer-window))) ;; no user input only
+    ;; rerun search if there's a live window with search results;
+    ;; otherwise we'd trigger a headers view from out of nowhere.
+    (when (and (buffer-live-p mu4e~hâeaders-buffer)
+	  (window-live-p (get-buffer-window mu4e~headers-buffer)))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode
@@ -912,10 +916,9 @@ no user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
+  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
   (add-hook 'mu4e-index-updated-hook
-    'mu4e~headers-do-auto-update nil t)
-  (add-hook 'mu4e-index-updated-hook
-    (lambda () (run-hooks 'mu4e-message-changed-hook)) t)
+    (lambda() (run-hooks 'mu4e-message-changed-hook)) t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
@@ -1097,9 +1100,11 @@ the query history stack."
                        (mu4e~quote-for-modeline mu4e~headers-last-query)
                        'face 'mu4e-modeline-face)
                       " "
-                      (mu4e-context-label)))))
-
-    (switch-to-buffer buf)
+		       (mu4e-context-label)))))
+    ;; when the buffer is already visible, select it; otherwise,
+    ;; switch to it.
+    (unless (get-buffer-window buf 'visible)
+      (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~proc-find
       expr
