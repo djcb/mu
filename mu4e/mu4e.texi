@@ -3824,7 +3824,7 @@ see @ref{(emacs) Mail Aliases}.
 @item @emph{How can I automatically add some header to an outgoing message?}
 Once more, see @ref{Compose hooks}.
 @item @emph{How can I influence the way the original message looks when
-replying or forwarding?} Since @code{mu4e-compose-mode} derives from
+replying or inline forwarding?} Since @code{mu4e-compose-mode} derives from
 @code{message-mode}, you can re-use many of its facilities.
 @inforef{Insertion Variables,,message}.
 @item @emph{How can I easily include attachments in the messages I write?}

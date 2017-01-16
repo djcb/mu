@@ -393,6 +393,10 @@ the From: address.)"
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-forward-as-attachment nil
+  "Whether to forward messages as attachments instead of inline."
+  :type 'boolean
+  :group 'mu4e-compose)
 
 ;; backward compatibility
 (make-obsolete-variable 'mu4e-reply-to-address 'mu4e-compose-reply-to-address
