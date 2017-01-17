@@ -380,7 +380,6 @@ If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (mu4e~headers-remove-header docid t)
-
       ;; if we were viewing this message, close it now.
       (when (and (mu4e~headers-view-this-message-p docid)
                  (buffer-live-p mu4e~view-buffer))
@@ -901,8 +900,8 @@ no user-interaction ongoing."
 	  (not (active-minibuffer-window))) ;; no user input only
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
-    (when (and (buffer-live-p mu4e~hâeaders-buffer)
-	  (window-live-p (get-buffer-window mu4e~headers-buffer)))
+    (when (and (buffer-live-p mu4e~headers-buffer)
+	    (window-live-p (get-buffer-window mu4e~headers-buffer)))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode
@@ -1079,7 +1078,7 @@ buffer for the results. If IGNORE-HISTORY is true, do *not* update
 the query history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
-  (mu4e-hide-other-mu4e-buffers)
+  ;;(mu4e-hide-other-mu4e-buffers)
   (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
 	 (inhibit-read-only t)
 	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit)))
