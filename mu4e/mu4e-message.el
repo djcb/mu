@@ -45,11 +45,14 @@ htmltext program, it's recommended you use \"html2text -utf8
 -width 72\". Alternatives are the python-based html2markdown, w3m
 and on MacOS you may want to use textutil.
 
-It can also be a function, which takes the current buffer in html
-as input, and transforms it into html (like the `html2text'
-function).
+It can also be a function, which takes a messsage-plist as
+argument and is expected to return the textified html as output.
 
-In both cases, the output is expected to be in UTF-8 encoding.
+For backward compatibility, it can also be a parameterless
+function which is run in the context of a buffer with the html
+and expected to transform this (like the `html2text' function).
+
+In all cases, the output is expected to be in UTF-8 encoding.
 
 Newer emacs has the shr renderer, and when it's available
 conversion defaults to `mu4e-shr2text'; otherwise, the default is
@@ -192,20 +195,16 @@ unless PREFER-HTML is non-nil."
   (let ((body
 	  (if mu4e~message-body-html
 	    ;; use an HTML body
-	    (with-temp-buffer
-	      (insert (mu4e-message-field msg :body-html))
-	      (cond
-		((stringp mu4e-html2text-command)
-		  (let* ((tmp-file (mu4e-make-temp-file "html")))
-		    (write-region (point-min) (point-max) tmp-file)
-		    (erase-buffer)
-		    (call-process-shell-command mu4e-html2text-command tmp-file t t)
-		    (delete-file tmp-file)))
-		((functionp mu4e-html2text-command)
-		  (funcall mu4e-html2text-command))
-		(t (mu4e-error "Invalid `mu4e-html2text-command'")))
-	      (setq mu4e~message-body-html t)
-	      (buffer-string))
+	    (cond
+	      ((stringp mu4e-html2text-command)
+		(mu4e-html2text-shell msg mu4e-html2text-command))
+	      ((functionp mu4e-html2text-command)
+		(if (help-function-arglist mu4e-html2text-command)
+		  (funcall mu4e-html2text-command msg)
+		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
+	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
+	    (setq mu4e~message-body-html t)
+	    (buffer-string)
 	    ;; use a text body
 	    (or (mu4e-message-field msg :body-txt) ""))))
     ;; and finally, remove some crap from the remaining string; it seems
@@ -276,7 +275,6 @@ point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point) field))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defun mu4e-shr2text ()
   "Html to text using the shr engine; this can be used in
 `mu4e-html2text-command' in a new enough emacs. Based on code by
@@ -293,5 +291,23 @@ Titus von der Malsburg."
 	 (shr-inhibit-images t))
     (shr-render-region (point-min) (point-max))
     (goto-char (point-min))))
+
+(defun mu4e~html2text-shell (msg cmd)
+  "Convert html2 text using a shell function."
+  (mu4e~html2-text-wrapper
+    (lambda ()
+      (let* ((tmp-file (mu4e-make-temp-file "html")))
+	(write-region (point-min) (point-max) tmp-file)
+	(erase-buffer)
+	(call-process-shell-command mu4e-html2text-command tmp-file t t)
+	(delete-file tmp-file))) msg))
+
+(defun mu4e~html2text-wrapper (func msg)
+  "Fill a temporary buffer with html from MSG, then call
+FUNC. Return the buffer contents."
+  (with-temp-buffer
+    (insert (mu4e-message-field msg :body-html))
+    (funcall func)
+    (buffer-string)))
 
 (provide 'mu4e-message)
