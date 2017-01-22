@@ -579,7 +579,14 @@ tempfile)."
 
   (if (member compose-type '(new forward))
     (message-goto-to)
-    (message-goto-body))
+    ;; otherwise, it depends...
+    (case message-cite-reply-position
+      (above
+	(message-goto-body))
+      (t
+	(when (message-goto-signature)
+	  (forward-line -2)))))
+  
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
