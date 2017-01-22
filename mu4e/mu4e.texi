@@ -3674,6 +3674,8 @@ and by enabling @code{helm-mode} use helm-style completion.
 things slow. What can I do?}
 Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
 its docstring).
+@item @emph{How can I hide certain message from the search results?}
+See the variable @code{mu4e-headers-hide-predicate}.
 @end enumerate
 
 
@@ -3682,10 +3684,10 @@ its docstring).
 
 @enumerate
 @item @emph{How can I get notifications when receiving mail?} There is
-@code{mu4e-index-updated-hook}, which gets triggered when the indexing process
-triggered sees an update (not just new mail though). To use this hook, put
-something like the following in your setup (assuming you have @t{aplay} and
-some soundfile, change as needed):
+@code{mu4e-index-updated-hook}, which gets triggered when the indexing
+process triggered sees an update (not just new mail though). To use this
+hook, put something like the following in your setup (assuming you have
+@t{aplay} and some soundfile, change as needed):
 @lisp
 (add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
