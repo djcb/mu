@@ -107,8 +107,8 @@ which takes no arguments, and which should return on of the mentioned symbols,
 for example:
 
   (setq mu4e-sent-messages-behavior (lambda ()
-        (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
-                   'delete 'sent)))
+	(if (string= (message-sendmail-envelope-from) \"foo@example.com\")
+		   'delete 'sent)))
 
 The various `message-' functions from `message-mode' are available
 for querying the message information."
@@ -581,12 +581,12 @@ tempfile)."
     (message-goto-to)
     ;; otherwise, it depends...
     (case message-cite-reply-position
-      (above
+      ((above traditional)
 	(message-goto-body))
       (t
 	(when (message-goto-signature)
 	  (forward-line -2)))))
-  
+
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
