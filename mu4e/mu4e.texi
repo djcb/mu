@@ -1391,9 +1391,9 @@ You can easily create your own function, for instance:
 @lisp
 (defun my-mu4e-html2text (msg)
   "My html2text function; shows short message inline, show
-longer functions in browser."
+long messages in some external browser (see `browse-url-generic-program')."
   (let ((html (or (mu4e-message-field msg :body-html) "")))
-    (if (> (length html) 1000)
+    (if (> (length html) 20000)
       (progn
 	(mu4e-action-view-in-browser msg)
 	"[Viewing message in external browser]")
@@ -2370,10 +2370,10 @@ accounts for private and work email, each with their own values for
 folders, e-mail addresses, mailservers and so on.
 
 The @code{mu4e-context} system is a @t{mu4e}-specific mechanism to allow
-for that; users can be define different @i{contexts} corresponding with
+for that; users can define different @i{contexts} corresponding with
 groups of setting and either manually switch between them, or let
-@t{mu4e} determine the right context when composing a message based on
-some user-provided function.
+@t{mu4e} determine the right context based on some user-provided
+function.
 
 Note that there are a number of existing ways to switch accounts in
 @t{mu4e}, for example using the method described in the @ref{Tips and
@@ -2470,7 +2470,7 @@ appropriate context using @code{mu4e-context-determine} (and policy
 @t{nil}; see @ref{Context policies}). If it finds a matching context, it
 let-binds the @code{vars} for that account, and then determines the
 value for the folder. It does not, however, call the @code{enter-func}
-or @code{leave-func}, since we are not really switching context.
+or @code{leave-func}, since we are not really switching contexts.
 
 In practice, this means that as long as each of the accounts has a good
 @t{match-func}, all message operations automatically find the
