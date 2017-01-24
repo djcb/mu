@@ -455,8 +455,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 	  '(menu-item "Electric quote" electric-quote-local-mode
 		      :button (:toggle . electric-quote-mode)
 		      :help "Toggle Electric quote mode"
-		      :visible (eq major-mode 'mu4e-compose-mode)
-		      :enable (functionp 'electric-quote-local-mode))
+		      :visible (and (eq major-mode 'mu4e-compose-mode)
+				    (functionp 'electric-quote-local-mode)))
 	  'mu4e-hard-newlines)))
 
     (when (lookup-key mml-mode-map [menu-bar Attachments])
