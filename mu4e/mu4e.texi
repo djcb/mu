@@ -1381,9 +1381,26 @@ alternative:
 @subsection Html2text functions
 @anchor{Html2text functions}
 
-If @code{mu4e-html2text-command} refers to an elisp function, it is
-expected to take the current buffer in html as input, and transform it
-into text (just like the @code{html2text} function).
+If @code{mu4e-html2text-command} refers to an elisp function, the
+function is expected to take a message plist as its input, and returns
+the transformed data.
+
+
+You can easily create your own function, for instance:
+
+@lisp
+(defun my-mu4e-html2text (msg)
+  "My html2text function; shows short message inline, show
+longer functions in browser."
+  (let ((html (or (mu4e-message-field msg :body-html) "")))
+    (if (> (length html) 1000)
+      (progn
+	(mu4e-action-view-in-browser msg)
+	"[Viewing message in external browser]")
+      (mu4e-shr2text msg))))
+
+(setq mu4e-html2text-command 'my-mu4e-html2text)
+@end lisp
 
 @subsection Privacy aspects
 @anchor{Privacy aspects}

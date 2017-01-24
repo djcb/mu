@@ -194,17 +194,18 @@ unless PREFER-HTML is non-nil."
   (setq mu4e~message-body-html (mu4e~message-use-html-p msg prefer-html))
   (let ((body
 	  (if mu4e~message-body-html
-	    ;; use an HTML body
-	    (cond
-	      ((stringp mu4e-html2text-command)
-		(mu4e-html2text-shell msg mu4e-html2text-command))
-	      ((functionp mu4e-html2text-command)
-		(if (help-function-arglist mu4e-html2text-command)
-		  (funcall mu4e-html2text-command msg)
-		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
-	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
-	    (setq mu4e~message-body-html t)
-	    (buffer-string)
+	    (progn
+	      ;; use an HTML body
+	      (cond
+		((stringp mu4e-html2text-command)
+		  (mu4e-html2text-shell msg mu4e-html2text-command))
+		((functionp mu4e-html2text-command)
+		  (if (help-function-arglist mu4e-html2text-command)
+		    (funcall mu4e-html2text-command msg)
+		    ;; oldskool parameterless mu4e-html2text-command
+		    (mu4e~html2text-wrapper mu4e-html2text-command msg)))
+		(t (mu4e-error "Invalid `mu4e-html2text-command'"))
+		(setq mu4e~message-body-html t)))
 	    ;; use a text body
 	    (or (mu4e-message-field msg :body-txt) ""))))
     ;; and finally, remove some crap from the remaining string; it seems
@@ -219,7 +220,7 @@ unless PREFER-HTML is non-nil."
 	       (cond
 		 ((string= (match-string 0) "’") "'")
 		 (t		                       ""))))
-	   (buffer-string)))) 
+	   (buffer-string))))
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Checks whether any of the of the contacts in field
@@ -275,12 +276,22 @@ point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point) field))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e-shr2text ()
-  "Html to text using the shr engine; this can be used in
-`mu4e-html2text-command' in a new enough emacs. Based on code by
-Titus von der Malsburg."
-  (interactive)
-  (let (
+(defun mu4e~html2text-wrapper (func msg)
+  "Fill a temporary buffer with html from MSG, then call
+FUNC. Return the buffer contents."
+  (with-temp-buffer
+    (insert (or (mu4e-message-field msg :body-html) ""))
+    (funcall func)
+    (message "buffer string...")
+    (or (buffer-string) "")))
+
+(defun mu4e-shr2text (msg)
+  "Convert html in MSG to text using the shr engine; this can be
+used in `mu4e-html2text-command' in a new enough emacs. Based on
+code by Titus von der Malsburg."
+  (mu4e~html2text-wrapper
+    (lambda ()
+	(let (
 	 ;; When HTML emails contain references to remote images,
 	 ;; retrieving these images leaks information. For example,
 	 ;; the sender can see when I openend the email and from which
@@ -289,8 +300,7 @@ Titus von der Malsburg."
 	 ;; See this discussion on mu-discuss:
 	 ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
 	 (shr-inhibit-images t))
-    (shr-render-region (point-min) (point-max))
-    (goto-char (point-min))))
+	  (shr-render-region (point-min) (point-max)))) msg))
 
 (defun mu4e~html2text-shell (msg cmd)
   "Convert html2 text using a shell function."
@@ -301,13 +311,5 @@ Titus von der Malsburg."
 	(erase-buffer)
 	(call-process-shell-command mu4e-html2text-command tmp-file t t)
 	(delete-file tmp-file))) msg))
-
-(defun mu4e~html2text-wrapper (func msg)
-  "Fill a temporary buffer with html from MSG, then call
-FUNC. Return the buffer contents."
-  (with-temp-buffer
-    (insert (mu4e-message-field msg :body-html))
-    (funcall func)
-    (buffer-string)))
 
 (provide 'mu4e-message)
