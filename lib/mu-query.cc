@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,22 +61,22 @@ public:
 private:
 	std::string to_sortable (std::string& s, bool is_begin) {
 
-		const char* str;
-		time_t t;
+		const char*	tmp;
+		time_t		t;
 
 		// note: if s is empty and not is_begin, xapian seems
 		// to repeat it.
 		if (s.empty() || g_str_has_suffix (s.c_str(), "..")) {
-			str = mu_date_complete_s ("", is_begin);
+			tmp = mu_date_complete_s ("", is_begin);
 		} else {
-			str = mu_date_interpret_s (s.c_str(),
+			tmp = mu_date_interpret_s (s.c_str(),
 						   is_begin ? TRUE: FALSE);
-			str = mu_date_complete_s (str, is_begin ? TRUE: FALSE);
-			t   = mu_date_str_to_time_t (str, TRUE /*local*/);
-			str = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
+			tmp = mu_date_complete_s (tmp, is_begin ? TRUE: FALSE);
+			t   = mu_date_str_to_time_t (tmp, TRUE /*local*/);
+			tmp = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
 		}
 
-		return s = std::string(str);
+		return s = std::string(tmp);
 	}
 
 
@@ -117,7 +117,7 @@ public:
 
 		begin = Xapian::sortable_serialise (atol(begin.c_str()));
 		end = Xapian::sortable_serialise (atol(end.c_str()));
-                
+
 		/* swap if b > e */
 		if (begin > end)
 			std::swap (begin, end);
@@ -145,12 +145,12 @@ private:
 	}
 
 	bool substitute_size (std::string& size) {
-		gchar str[16];
+		gchar buf[16];
 		gint64 num = mu_str_size_parse_bkm(size.c_str());
 		if (num < 0)
 			throw Xapian::QueryParserError ("invalid size");
-		snprintf (str, sizeof(str), "%" G_GUINT64_FORMAT, num);
-		size = str;
+		snprintf (buf, sizeof(buf), "%" G_GUINT64_FORMAT, num);
+		size = buf;
 		return true;
 	}
 };
@@ -414,7 +414,7 @@ static GHashTable*
 get_thread_ids (MuMsgIter *iter, GHashTable **orig_set)
 {
 	GHashTable *ids;
-	
+
 	ids	  = g_hash_table_new_full (g_str_hash, g_str_equal,
 					   (GDestroyNotify)g_free, NULL);
 	*orig_set = g_hash_table_new_full (g_str_hash, g_str_equal,

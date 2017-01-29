@@ -807,7 +807,7 @@ mu_msg_is_readable (MuMsg *self)
  * from the /bar
  * that we got
  */
-char*
+static char*
 get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 {
 	char *rootmaildir, *rv;
@@ -901,4 +901,20 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 	g_free (targetmdir);
 
 	return self->_file ? TRUE : FALSE;
+}
+
+
+/*
+ * Rename a message-file, keeping the same flags. This is useful for tricking
+ * some 3rd party progs such as mbsync
+ */
+gboolean
+mu_msg_tickle (MuMsg *self, GError **err)
+{
+	g_return_val_if_fail (self, FALSE);
+
+	return mu_msg_move_to_maildir (self,
+				       mu_msg_get_maildir (self),
+				       mu_msg_get_flags (self),
+				       FALSE, TRUE, err);
 }

@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -14,13 +14,26 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-AC_INIT([mu],[0.9.18],[https://github.com/djcb/mu/issues],[mu])
+AC_PREREQ([2.68])
+AC_INIT([mu],[0.9.19],[https://github.com/djcb/mu/issues],[mu])
+AC_COPYRIGHT([Copyright (C) 2008-2016 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE
+AC_CONFIG_AUX_DIR([xua]) # Win/DOS don't like 'aux'
+
+m4_ifndef([AX_COMPILER_FLAGS],[
+    AC_MSG_ERROR([
+    *** We need autoconf-archive for reconfiguring, but it is not found
+    *** Please install it.])
+])
+
+AX_IS_RELEASE([git-directory])
+AX_CHECK_ENABLE_DEBUG([yes])
+
+AM_INIT_AUTOMAKE([1.14 foreign no-dist-gzip tar-ustar dist-xz])
 
 # silent build if we have a new enough automake
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -36,6 +49,8 @@ AC_PROG_CC_STDC
 AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
+
+AX_COMPILER_FLAGS(,,[yes])
 
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
 # a too new setup for autotools/libtool
@@ -110,7 +125,7 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 
 
 # we need these
-AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass])
+AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([missing required function timegm])])
 
 # require pkg-config

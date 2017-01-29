@@ -1,4 +1,4 @@
-## Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2010-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -25,10 +25,13 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement \
-	-Wno-variadic-macros \
-        -DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=				\
+	$(WARN_CFLAGS)			\
+	-Wno-switch-enum		\
+	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
+
+AM_CXXFLAGS=				\
+	$(WARN_CXXFLAGS)
 
 bin_PROGRAMS=				\
 	mu
@@ -52,7 +55,7 @@ BUILT_SOURCES=				\
 	mu-help-strings.h
 
 mu-help-strings.h: mu-help-strings.txt mu-help-strings.awk
-	$(AWK) -f ${top_srcdir}/mu/mu-help-strings.awk < $< > $@
+	 $(AM_V_GEN) $(AWK) -f ${top_srcdir}/mu/mu-help-strings.awk < $< > $@
 
 mu_LDADD=				\
 	${top_builddir}/lib/libmu.la    \

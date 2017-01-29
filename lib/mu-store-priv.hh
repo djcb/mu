@@ -37,8 +37,8 @@
 
 class MuStoreError {
 public:
-	MuStoreError (MuError err, const std::string& what):
-		_err (err), _what(what) {}
+	MuStoreError (MuError err, const std::string& whatarg):
+		_err (err), _what(whatarg) {}
 	MuError mu_error () const { return _err; }
 	const std::string& what() const { return _what; }
 private:
@@ -50,17 +50,17 @@ private:
 struct _MuStore {
 public:
 	/* create a read-write MuStore */
-	_MuStore (const char *path, const char *contacts_path,
+	_MuStore (const char *patharg, const char *contacts_path,
 		  bool rebuild) {
 
-		init (path, contacts_path, rebuild, false);
+		init (patharg, contacts_path, rebuild, false);
 
 		if (rebuild)
 			_db = new Xapian::WritableDatabase
-				(path, Xapian::DB_CREATE_OR_OVERWRITE);
+				(patharg, Xapian::DB_CREATE_OR_OVERWRITE);
 		else
 			_db = new Xapian::WritableDatabase
-				(path, Xapian::DB_CREATE_OR_OPEN);
+				(patharg, Xapian::DB_CREATE_OR_OPEN);
 
 		check_set_version ();
 
@@ -81,10 +81,10 @@ public:
 	}
 
 	/* create a read-only MuStore */
-	_MuStore (const char *path) {
+	_MuStore (const char *patharg) {
 
-		init (path, NULL, false, false);
-		_db = new Xapian::Database (path);
+		init (patharg, NULL, false, false);
+		_db = new Xapian::Database (patharg);
 
 		if (!mu_store_versions_match(this)) {
 			char *errstr =
@@ -100,31 +100,31 @@ public:
 		MU_WRITE_LOG ("%s: opened %s read-only", __func__, this->path());
 	}
 
-	void init (const char *path, const char *contacts_path,
+	void init (const char *patharg, const char *contacts_path,
 		   bool rebuild, bool read_only) {
-		
+
 		_my_addresses   = NULL;
 		_batch_size	= DEFAULT_BATCH_SIZE;
 		_contacts       = 0;
 		_in_transaction = false;
-		_path           = path;
+		_path           = patharg;
 		_processed	= 0;
 		_read_only      = read_only;
 		_ref_count      = 1;
 		_version	= NULL;
 	}
 
-	void set_my_addresses (const char **my_addresses) {
+	void set_my_addresses (const char **addrs) {
 
 		if (_my_addresses) {
 			mu_str_free_list (_my_addresses);
 			_my_addresses = NULL;
 		}
 
-		while (my_addresses && *my_addresses) {
+		while (addrs && *addrs) {
 			_my_addresses = g_slist_prepend
-				(_my_addresses, g_strdup (*my_addresses));
-			++my_addresses;
+				(_my_addresses, g_strdup (*addrs));
+			++addrs;
 		}
 	}
 
@@ -136,7 +136,7 @@ public:
 			mu_store_set_metadata (this, MU_STORE_VERSION_KEY,
 					       MU_STORE_SCHEMA_VERSION, NULL);
 			_version = mu_store_get_metadata (this, MU_STORE_VERSION_KEY, NULL);
-			
+
 		} else if (g_strcmp0 (_version, MU_STORE_SCHEMA_VERSION) != 0)
 			throw MuStoreError (MU_ERROR_XAPIAN_VERSION_MISMATCH,
 					    "the database needs a rebuild");
@@ -149,7 +149,7 @@ public:
 
 			mu_contacts_destroy (_contacts);
 			_contacts = NULL;
-			
+
 			if (!_read_only)
 				mu_store_flush (this);
 
@@ -190,10 +190,10 @@ public:
 		return _version;
 	}
 
-	void set_version (const char *version)  {
+	void set_version (const char *vers)  {
 		g_free (_version);
 		_version = NULL;
-		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, version, NULL);
+		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, vers, NULL);
 	}
 
 	static unsigned max_term_length() { return MAX_TERM_LENGTH; }

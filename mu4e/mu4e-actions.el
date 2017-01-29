@@ -58,28 +58,28 @@ Works for the message view."
   (unless (file-executable-p mu4e-msg2pdf)
     (mu4e-error "msg2pdf not found; please set `mu4e-msg2pdf'"))
   (let* ((pdf
-	  (shell-command-to-string
-	    (concat mu4e-msg2pdf " "
-	      (shell-quote-argument (mu4e-message-field msg :path))
-	      " 2> /dev/null")))
-	 (pdf (and pdf (> (length pdf) 5)
-		(substring pdf 0 -1)))) ;; chop \n
+	   (shell-command-to-string
+	     (concat mu4e-msg2pdf " "
+	       (shell-quote-argument (mu4e-message-field msg :path))
+	       " 2> /dev/null")))
+	  (pdf (and pdf (> (length pdf) 5)
+		 (substring pdf 0 -1)))) ;; chop \n
     (unless (and pdf (file-exists-p pdf))
       (mu4e-warn "Failed to create PDF file"))
     (find-file pdf)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
- 
+
 (defun mu4e~write-body-to-html (msg)
   "Write the body (either html or text) to a temporary file;
 return the filename."
   (let* ((html (mu4e-message-field msg :body-html))
-         (txt (mu4e-message-field msg :body-txt))
-         (tmpfile (mu4e-make-temp-file "html"))
-         (attachments (remove-if (lambda (part)
-                                   (or (null (plist-get part :attachment))
-                                       (null (plist-get part :cid))))
-                                 (mu4e-message-field msg :parts))))
+	  (txt (mu4e-message-field msg :body-txt))
+	  (tmpfile (mu4e-make-temp-file "html"))
+	  (attachments (remove-if (lambda (part)
+				    (or (null (plist-get part :attachment))
+				      (null (plist-get part :cid))))
+			 (mu4e-message-field msg :parts))))
     (unless (or html txt)
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
@@ -89,14 +89,19 @@ return the filename."
       ;; rewrite attachment urls
       (mapc (lambda (attachment)
               (goto-char (point-min))
-              (while (re-search-forward (format "src=\"cid:%s\"" (plist-get attachment :cid)) nil t)
+              (while (re-search-forward (format "src=\"cid:%s\""
+					  (plist-get attachment :cid)) nil t)
                 (if (plist-get attachment :temp)
-                    (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
-                  (replace-match (format "src=\"%s%s\"" temporary-file-directory (plist-get attachment :name)))
-                  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory (plist-get attachment :name))))
-                    (mu4e~proc-extract 'save (mu4e-message-field msg :docid) (plist-get attachment :index) mu4e-decryption-policy tmp-attachment-name)
+		  (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
+                  (replace-match (format "src=\"%s%s\"" temporary-file-directory
+				   (plist-get attachment :name)))
+                  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory
+					       (plist-get attachment :name))))
+                    (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
+		      (plist-get attachment :index)
+		      mu4e-decryption-policy tmp-attachment-name)
                     (mu4e-remove-file-later tmp-attachment-name)))))
-            attachments)
+	attachments)
       (save-buffer)
       tmpfile)))
 
@@ -120,7 +125,7 @@ aspects in `(mu4e) Displaying rich-text messages'."
 
 
 
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-text2speech-command "festival --tts"
   "Program that speaks out text it receives on standard-input.")
@@ -201,10 +206,10 @@ store your org-contacts."
 (defun mu4e-action-git-apply-patch (msg)
   "Apply the git [patch] message."
   (let ((path (ido-read-directory-name "Target directory: "
-                                       (car ido-work-directory-list)
-                                       "~/" t)))
+		(car ido-work-directory-list)
+		"~/" t)))
     (setf ido-work-directory-list
-          (cons path (delete path ido-work-directory-list)))
+      (cons path (delete path ido-work-directory-list)))
     (shell-command
       (format "cd %s; git apply %s"
 	path
@@ -219,14 +224,14 @@ bother asking for the git tree again (useful for bulk actions)."
   (let ((cwd (car ido-work-directory-list)))
     (unless (and (stringp cwd) (string= default-directory cwd))
       (setq cwd (ido-read-directory-name "Target directory: "
-                                          cwd
-                                          "~/" t))
+		  cwd
+		  "~/" t))
       (setf ido-work-directory-list
-            (cons cwd (delete cwd ido-work-directory-list))))
+	(cons cwd (delete cwd ido-work-directory-list))))
     (shell-command
       (format "cd %s; git am %s"
-              (shell-quote-argument cwd)
-              (shell-quote-argument (mu4e-message-field msg :path))))))
+	(shell-quote-argument cwd)
+	(shell-quote-argument (mu4e-message-field msg :path))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -273,16 +278,19 @@ bother asking for the git tree again (useful for bulk actions)."
 
    would add 'tag' and 'long tag', and remove 'oldtag'."
   (let* (
-      (path (mu4e-message-field msg :path))
+	  (path (mu4e-message-field msg :path))
 	  (maildir (mu4e-message-field msg :maildir))
 	  (oldtags (mu4e-message-field msg :tags))
-      (tags-completion (append
-                        mu4e-action-tags-completion-list
-                        (mapcar (lambda (tag) (format "+%s" tag)) mu4e-action-tags-completion-list)
-                        (mapcar (lambda (tag) (format "-%s" tag)) oldtags)))
-      (retag (if retag-arg
-                 (split-string retag-arg ",")
-               (completing-read-multiple "Tags: " tags-completion)))
+	  (tags-completion
+	    (append
+	      mu4e-action-tags-completion-list
+	      (mapcar (lambda (tag) (format "+%s" tag))
+		mu4e-action-tags-completion-list)
+	      (mapcar (lambda (tag) (format "-%s" tag))
+		oldtags)))
+	  (retag (if retag-arg
+		   (split-string retag-arg ",")
+		   (completing-read-multiple "Tags: " tags-completion)))
 	  (header  mu4e-action-tags-header)
 	  (sep     (cond ((string= header "Keywords") ", ")
 		     ((string= header "X-Label") " ")
@@ -314,7 +322,7 @@ bother asking for the git tree again (useful for bulk actions)."
       (mu4e~replace-first-line-matching
 	(concat header ":.*")
 	(concat header ": " tagstr)
-       path))
+	path))
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
     (mu4e-refresh-message path maildir)))
@@ -329,9 +337,9 @@ display the message."
       (let ((mu4e-headers-show-threads t)
 	     (mu4e-headers-include-related t))
         (mu4e-headers-search
-         (format "msgid:%s" msgid)
-         nil nil nil
-         msgid (eq major-mode 'mu4e-view-mode))))))
+	  (format "msgid:%s" msgid)
+	  nil nil nil
+	  msgid (eq major-mode 'mu4e-view-mode))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

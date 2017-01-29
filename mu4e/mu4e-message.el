@@ -1,6 +1,6 @@
 ;;; mu4e-message.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2012-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -45,11 +45,14 @@ htmltext program, it's recommended you use \"html2text -utf8
 -width 72\". Alternatives are the python-based html2markdown, w3m
 and on MacOS you may want to use textutil.
 
-It can also be a function, which takes the current buffer in html
-as input, and transforms it into html (like the `html2text'
-function).
+It can also be a function, which takes a messsage-plist as
+argument and is expected to return the textified html as output.
 
-In both cases, the output is expected to be in UTF-8 encoding.
+For backward compatibility, it can also be a parameterless
+function which is run in the context of a buffer with the html
+and expected to transform this (like the `html2text' function).
+
+In all cases, the output is expected to be in UTF-8 encoding.
 
 Newer emacs has the shr renderer, and when it's available
 conversion defaults to `mu4e-shr2text'; otherwise, the default is
@@ -73,6 +76,12 @@ it (always show the text version) by using
   :type 'integer
   :group 'mu4e-view)
 
+(defvar mu4e-message-body-rewrite-functions '(mu4e-message-outlook-cleanup)
+  "List of functions to transform the message body text. The functions
+  take two parameters, MSG and TXT, which are the message-plist
+  and the text, which is the plain-text version, possibly
+  converted from html and/or transformed by earlier rewrite
+  functions. ")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
@@ -161,7 +170,6 @@ This is equivalent to:
 (defvar mu4e~message-body-html nil
   "Whether the body text uses HTML.")
 
-
 (defun mu4e~message-use-html-p (msg prefer-html)
   "Determine whether we want to use html or text; this is based
 on PREFER-HTML and whether the message supports the given
@@ -191,36 +199,39 @@ unless PREFER-HTML is non-nil."
   (setq mu4e~message-body-html (mu4e~message-use-html-p msg prefer-html))
   (let ((body
 	  (if mu4e~message-body-html
-	    ;; use an HTML body
-	    (with-temp-buffer
-	      (insert (mu4e-message-field msg :body-html))
-	      (cond
-		((stringp mu4e-html2text-command)
-		  (let* ((tmp-file (mu4e-make-temp-file "html")))
-		    (write-region (point-min) (point-max) tmp-file)
-		    (erase-buffer)
-		    (call-process-shell-command mu4e-html2text-command tmp-file t t)
-		    (delete-file tmp-file)))
-		((functionp mu4e-html2text-command)
-		  (funcall mu4e-html2text-command))
-		(t (mu4e-error "Invalid `mu4e-html2text-command'")))
-	      (setq mu4e~message-body-html t)
-	      (buffer-string))
+	    ;; use an htmml body
+	    (cond
+	      ((stringp mu4e-html2text-command)
+		(mu4e-html2text-shell msg mu4e-html2text-command))
+	      ((functionp mu4e-html2text-command)
+		(if (help-function-arglist mu4e-html2text-command)
+		  (funcall mu4e-html2text-command msg)
+		  ;; oldskool parameterless mu4e-html2text-command
+		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
+	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	    ;; use a text body
 	    (or (mu4e-message-field msg :body-txt) ""))))
-    ;; and finally, remove some crap from the remaining string; it seems
-    ;; esp. outlook lies about its encoding (ie., it says 'iso-8859-1' but
-    ;; really it's 'windows-1252'), thus giving us these funky chars. here, we
-    ;; either remove them, or replace with 'what-was-meant' (heuristically)
-    (with-temp-buffer
-	   (insert body)
-	   (goto-char (point-min))
-	   (while (re-search-forward "[ ’]" nil t)
-	     (replace-match
-	       (cond
-		 ((string= (match-string 0) "’") "'")
-		 (t		                       ""))))
-	   (buffer-string)))) 
+    (dolist (func mu4e-message-body-rewrite-functions)
+      (setq body (funcall func msg body)))
+    body))
+
+
+(defun mu4e-message-outlook-cleanup (msg txt)
+  "Remove some crap from the remaining string; it seems
+   esp. outlook lies about its encoding (ie., it says
+   'iso-8859-1' but really it's 'windows-1252'), thus giving us
+   these funky chars. here, we either remove them, or replace
+   with 'what-was-meant' (heuristically)."
+  (with-temp-buffer
+    (insert body)
+    (goto-char (point-min))
+    (while (re-search-forward "[ ’]" nil t)
+      (replace-match
+	(cond
+	  ((string= (match-string 0) "’") "'")
+	  (t ""))))
+    (buffer-string)))
+
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Checks whether any of the of the contacts in field
@@ -276,13 +287,22 @@ point in eiter the headers buffer or the view buffer."
   (plist-get (mu4e-message-at-point) field))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mu4e~html2text-wrapper (func msg)
+  "Fill a temporary buffer with html from MSG, then call
+FUNC. Return the buffer contents."
+  (with-temp-buffer
+    (insert (or (mu4e-message-field msg :body-html) ""))
+    (funcall func)
+    (message "buffer string...")
+    (or (buffer-string) "")))
 
-(defun mu4e-shr2text ()
-  "Html to text using the shr engine; this can be used in
-`mu4e-html2text-command' in a new enough emacs. Based on code by
-Titus von der Malsburg."
-  (interactive)
-  (let (
+(defun mu4e-shr2text (msg)
+  "Convert html in MSG to text using the shr engine; this can be
+used in `mu4e-html2text-command' in a new enough emacs. Based on
+code by Titus von der Malsburg."
+  (mu4e~html2text-wrapper
+    (lambda ()
+	(let (
 	 ;; When HTML emails contain references to remote images,
 	 ;; retrieving these images leaks information. For example,
 	 ;; the sender can see when I openend the email and from which
@@ -291,7 +311,16 @@ Titus von der Malsburg."
 	 ;; See this discussion on mu-discuss:
 	 ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
 	 (shr-inhibit-images t))
-    (shr-render-region (point-min) (point-max))
-    (goto-char (point-min))))
+	  (shr-render-region (point-min) (point-max)))) msg))
+
+(defun mu4e~html2text-shell (msg cmd)
+  "Convert html2 text using a shell function."
+  (mu4e~html2-text-wrapper
+    (lambda ()
+      (let* ((tmp-file (mu4e-make-temp-file "html")))
+	(write-region (point-min) (point-max) tmp-file)
+	(erase-buffer)
+	(call-process-shell-command mu4e-html2text-command tmp-file t t)
+	(delete-file tmp-file))) msg))
 
 (provide 'mu4e-message)

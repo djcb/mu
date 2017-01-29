@@ -308,8 +308,8 @@ gboolean
 mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 		     const char **args, GError **err)
 {
-	char *mainargs, *expr;
-	char *argv[] = {
+	char	*mainargs, *expr;
+	const char * argv[] = {
 		"guile", "-l", NULL, "-c", NULL, NULL
 	};
 

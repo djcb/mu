@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
 **
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,28 +116,6 @@ mu_util_dir_expand (const char *path)
 
 	return g_strdup (resolved);
 }
-
-
-char*
-mu_util_create_tmpdir (void)
-{
-	gchar *dirname;
-
-	dirname =  g_strdup_printf ("%s%cmu-%d%c%x",
-				    g_get_tmp_dir(),
-				    G_DIR_SEPARATOR,
-				    getuid(),
-				    G_DIR_SEPARATOR,
-				    (int)random()*getpid()*(int)time(NULL));
-
-	if (!mu_util_create_dir_maybe (dirname, 0700, FALSE)) {
-		g_free (dirname);
-		return NULL;
-	}
-
-	return dirname;
-}
-
 
 GQuark
 mu_util_error_quark (void)
@@ -352,6 +330,17 @@ mu_util_program_in_path (const char *prog)
 }
 
 
+/*
+ * Set the child to a group leader to avoid being killed when the
+ * parent group is killed.
+ */
+static void
+maybe_setsid (G_GNUC_UNUSED gpointer user_data)
+{
+#if HAVE_SETSID
+	setsid();
+#endif /*HAVE_SETSID*/
+}
 
 gboolean
 mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
@@ -388,8 +377,8 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
 
 	err = NULL;
 	rv = g_spawn_async (NULL, (gchar**)&argv, NULL,
-			    G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
-			    err);
+			    G_SPAWN_SEARCH_PATH, maybe_setsid,
+			    NULL, NULL, err);
 	return rv;
 }
 
@@ -480,6 +469,7 @@ mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 
 	return FALSE;
 }
+
 
 
 static gboolean

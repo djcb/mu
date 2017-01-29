@@ -111,17 +111,32 @@
 
    For hacking, you're strongly advised to use the latest git
    version. Compilation from git should be straightforward, if you
-   have the right tools (automake, autoconf and friends) installed --
-   but if you do development, you'd probably have those.
+   have the right tools installed.
 
-   Anyhow, to compile straight from git:
+*** dependencies
+
+    You need to install a few dependencies; e.g. on Debian/Ubuntu:
+
+    sudo apt-get install                 \
+        automake                         \
+        autoconf-archive                 \
+        autotools-dev                    \
+        libglib2.0-dev                   \
+	libxapian-dev			 \
+	libgmime-2.6-dev                 \
+        m4                               \
+        make                             \
+        pkg-config
+
+   Then, to compile straight from git:
 
    $ git clone https://github.com/djcb/mu
    $ cd mu
-   $ autoreconf -i
-   $ ./configure
+   $ ./autogen.sh
    $ make
 
+   You only need to run ./autogen.sh the first time and after changes
+   in the build system; otherwise you can use ./configure.
 
 # Local Variables:
 # mode: org; org-startup-folded: nofold

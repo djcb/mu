@@ -402,8 +402,10 @@ fields will be the same as in the original."
 	    ""
 	    mu4e~draft-forward-prefix)
 	  subject))
-      "\n\n"
-      (mu4e~draft-cite-original origmsg))))
+      (unless mu4e-compose-forward-as-attachment
+        (concat
+         "\n\n"
+          (mu4e~draft-cite-original origmsg))))))
 
 (defun mu4e~draft-newmsg-construct ()
   "Create a new message."

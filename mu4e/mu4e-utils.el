@@ -632,11 +632,14 @@ This can be used as a simple way to invoke some action when new
 messages appear, but note that an update in the index does not
 necessarily mean a new message.")
 
-(defvar mu4e-msg-changed-hook nil
+(defvar mu4e-message-changed-hook nil
   "Hook run when there is a message changed in db. For new
 messages, it depends on `mu4e-index-updated-hook'. This can be
 used as a simple way to invoke some action when a message
 changed.")
+
+(make-obsolete-variable 'mu4e-msg-changed-hook
+'mu4e-message-changed-hook "0.9.19")
 
 ;; some handler functions for server messages
 ;;
@@ -970,7 +973,7 @@ Also scrolls to the final line, and update the progress throbber."
 (define-derived-mode mu4e~update-mail-mode special-mode "mu4e:update"
     "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
-(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-interrupt-update-mail)
+(define-key mu4e~update-mail-mode-map (kbd "q") 'mu4e-kill-update-mail)
 
 (defun mu4e~temp-window (buf height)
   "Create a temporary window with HEIGHT at the bottom of the
@@ -1054,13 +1057,16 @@ in the background; otherwise, pop up a window."
       (run-hooks 'mu4e-update-pre-hook)
       (mu4e~update-mail-and-index-real run-in-background))))
 
-(defun mu4e-interrupt-update-mail ()
-  "Stop the update process by sending SIGINT to it."
+(defun mu4e-kill-update-mail ()
+  "Stop the update process by killing it."
   (interactive)
   (let* ((proc (and (buffer-live-p mu4e~update-buffer)
 		 (get-buffer-process mu4e~update-buffer))))
     (when (process-live-p proc)
-      (interrupt-process proc t))))
+      (kill-process proc t))))
+
+(define-obsolete-function-alias 'mu4e-interrupt-update-mail
+  'mu4e-kill-update-mail)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -1281,7 +1287,7 @@ the view and compose modes."
     (save-excursion
       ;; give the footer a different color...
       (goto-char (point-min))
-      (let ((p (search-forward "^-- *$" nil t)))
+      (let ((p (re-search-forward "^-- *$" nil t)))
 	(when p
 	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

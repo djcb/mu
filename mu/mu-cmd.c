@@ -319,41 +319,52 @@ check_file_okay (const char *path, gboolean cmd_add)
 }
 
 
-MuError
-mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
-{
-	gboolean allok;
-	int i;
+typedef gboolean (*ForeachMsgFunc) (MuStore *store, const char *path,
+				    GError **err);
 
-	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
-	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
-			      MU_ERROR_INTERNAL);
+
+static MuError
+foreach_msg_file (MuStore *store, MuConfig *opts,
+		  ForeachMsgFunc foreach_func, GError **err)
+{
+	unsigned	u;
+	gboolean	all_ok;
 
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
-		g_print ("usage: mu add <file> [<files>]\n");
+		g_print ("usage: mu %s <file> [<files>]\n",
+			 opts->params[0] ? opts->params[0] : "<cmd>");
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "missing source and/or target");
+				     "missing parameters");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
-	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
+	for (u = 1, all_ok = TRUE; opts->params[u]; ++u) {
 
-		const char* src;
-		src = opts->params[i];
+		const char* path;
 
-		if (!check_file_okay (src, TRUE) ||
-		    mu_store_add_path (store, src, NULL, err) ==
-		    MU_STORE_INVALID_DOCID) {
-			MU_WRITE_LOG ("failed to add %s", src);
-			allok = FALSE;
+		path = opts->params[u];
+
+		if (!check_file_okay (path, TRUE)) {
+			all_ok = FALSE;
+			MU_WRITE_LOG ("not a valid message file: %s", path);
+			continue;
+		}
+
+		if (!foreach_func (store, path, err)) {
+			all_ok = FALSE;
+			MU_WRITE_LOG ("error with %s: %s", path,
+				      (err&&*err) ? (*err)->message :
+				      "something went wrong");
+			g_clear_error (err);
+			continue;
 		}
 	}
 
-	if (!allok) {
+	if (!all_ok) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN_STORE_FAILED,
-				     "store failed for some message(s)");
+				     "%s failed for some message(s)",
+				     opts->params[0]);
 		return MU_ERROR_XAPIAN_STORE_FAILED;
 	}
 
@@ -361,46 +372,72 @@ mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
 }
 
 
+static gboolean
+add_path_func (MuStore *store, const char *path, GError **err)
+{
+	return mu_store_add_path (store, path, NULL, err);
+}
+
+
+MuError
+mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
+{
+	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
+			      MU_ERROR_INTERNAL);
+
+	return foreach_msg_file (store, opts, add_path_func, err);
+}
+
+static gboolean
+remove_path_func (MuStore *store, const char *path, GError **err)
+{
+	if (!mu_store_remove_path (store, path)) {
+		mu_util_g_set_error (err, MU_ERROR_XAPIAN_REMOVE_FAILED,
+				     "failed to remove %s", path);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 MuError
 mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 {
-	gboolean allok;
-	int i;
-
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
 			      MU_ERROR_INTERNAL);
 
-	/* note: params[0] will be 'remove' */
-	if (!opts->params[0] || !opts->params[1]) {
-		g_warning ("usage: mu remove <file> [<files>]");
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "missing source and/or target");
-		return MU_ERROR_IN_PARAMETERS;
-	}
+	return foreach_msg_file (store, opts, remove_path_func, err);
+}
 
-	for (i = 1, allok = TRUE; opts->params[i]; ++i) {
+static gboolean
+tickle_func (MuStore *store, const char *path, GError **err)
+{
+	MuMsg		*msg;
+	gboolean	 rv;
 
-		const char* src;
-		src = opts->params[i];
+	msg = mu_msg_new_from_file (path, NULL, err);
+	if (!msg)
+		return FALSE;
 
-		if (!check_file_okay (src, FALSE) ||
-		    !mu_store_remove_path (store, src)) {
-			allok = FALSE;
-			MU_WRITE_LOG ("failed to remove %s", src);
-		}
-	}
+	rv = mu_msg_tickle (msg, err);
+	mu_msg_unref (msg);
 
-	if (!allok) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_STORE_FAILED,
-			     "remove failed for some message(s)");
-		return MU_ERROR_XAPIAN_REMOVE_FAILED;
-	}
-
-	return MU_OK;
+	return rv;
 }
 
 
+MuError
+mu_cmd_tickle (MuStore *store, MuConfig *opts, GError **err)
+{
+	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_TICKLE,
+			      MU_ERROR_INTERNAL);
+
+	return foreach_msg_file (store, opts, tickle_func, err);
+}
 
 struct _VData {
 	MuMsgPartSigStatus combined_status;
@@ -622,6 +659,8 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 		merr = with_store (mu_cmd_add, opts, FALSE, err);      break;
 	case MU_CONFIG_CMD_REMOVE:
 		merr = with_store (mu_cmd_remove, opts, FALSE, err);   break;
+	case MU_CONFIG_CMD_TICKLE:
+		merr = with_store (mu_cmd_tickle, opts, FALSE, err);   break;
 	case MU_CONFIG_CMD_SERVER:
 		merr = with_store (mu_cmd_server, opts, FALSE, err);   break;
 	default:

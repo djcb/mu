@@ -119,7 +119,7 @@ search."
 (make-obsolete-variable 'mu4e-search-results-limit
   'mu4e-headers-results-limit "0.9.9.5-dev6")
 
-(defcustom mu4e-headers-skip-duplicates nil
+(defcustom mu4e-headers-skip-duplicates t
   "With this option set to non-nil, show only one of duplicate
 messages. This is useful when you have multiple copies of the same
 message, which is a common occurence for example when using Gmail
@@ -127,7 +127,7 @@ and offlineimap."
   :type 'boolean
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-include-related nil
+(defcustom mu4e-headers-include-related t
   "With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
 references) to these messages. This can be useful e.g. to include
@@ -239,10 +239,10 @@ Field must be a symbol, one of: :date, :subject, :size, :prio,
   '( ("capture message"  . mu4e-action-capture-message)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in the headers list.
-The actions are of the form (NAME SHORTCUT FUNC) where:
+The actions are of the form (NAME . FUNC) where:
 * NAME is the name of the action (e.g. \"Count lines\")
-* SHORTCUT is a one-character shortcut to call this action
-* FUNC is a function which receives a message plist as an argument.")
+* FUNC is a function which receives a message plist as an argument.
+The first character of NAME is used as the shortcut.")
 
 (defvar mu4e-headers-custom-markers
   '(("Older than"
@@ -374,7 +374,7 @@ headers."
 		(mu4e~headers-highlight initial-message-at-point))
 	    ;; attempt to highlight the corresponding line and make it visible
 	    (mu4e~headers-highlight docid))
-	  (run-hooks 'mu4e-msg-changed-hook))))))
+	  (run-hooks 'mu4e-message-changed-hook))))))
 
 (defun mu4e~headers-remove-handler (docid &optional skip-hook)
   "Remove handler, will be called when a message with DOCID has
@@ -382,11 +382,10 @@ been removed from the database. This function will hide the removed
 message from the current list of headers. If the message is not
 present, don't do anything.
 
-If SKIP-HOOK is not nil, `mu4e-msg-changed-hook' will be invoked."
+If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (mu4e~headers-remove-header docid t)
-
       ;; if we were viewing this message, close it now.
       (when (and (mu4e~headers-view-this-message-p docid)
                  (buffer-live-p mu4e~view-buffer))
@@ -396,7 +395,7 @@ If SKIP-HOOK is not nil, `mu4e-msg-changed-hook' will be invoked."
           (ignore-errors
             (kill-buffer-and-window))))
       (unless skip-hook
-        (run-hooks 'mu4e-msg-changed-hook)))))
+        (run-hooks 'mu4e-message-changed-hook)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -589,7 +588,7 @@ found."
       (add-face-text-property 0 (length line) face t line))
     line))
 
-(defun mu4e~headers-line-handler (msg line)
+(defsubst mu4e~headers-line-handler (msg line)
   (dolist (func mu4e~headers-line-handler-functions)
     (setq line (funcall func msg line)))
   line)
@@ -598,14 +597,16 @@ found."
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (unless (and mu4e-headers-hide-predicate
-	    (funcall mu4e-headers-hide-predicate msg)) 
-    (let ((docid (mu4e-message-field msg :docid))
-	   (line (mapconcat (lambda (f-w)
-			      (mu4e~headers-field-handler f-w msg))
-		   mu4e-headers-fields " ")))
-      (setq line (mu4e~headers-line-handler msg line))
-      (mu4e~headers-add-header line docid point msg))))
+  (when (buffer-live-p mu4e~headers-buffer)
+    (with-current-buffer mu4e~headers-buffer
+      (unless (and mu4e-headers-hide-predicate
+		(funcall mu4e-headers-hide-predicate msg)) 
+	(let ((docid (mu4e-message-field msg :docid))
+	       (line (mapconcat
+		       (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+		       mu4e-headers-fields " ")))
+	  (setq line (mu4e~headers-line-handler msg line))
+	  (mu4e~headers-add-header line docid point msg))))))
 
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
@@ -896,14 +897,17 @@ after the end of the search results."
 
 (defvar mu4e-headers-mode-abbrev-table nil)
 
-(defun mu4e~headers-do-auto-update ()
+(defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
-some changes, `mu4e-headers-auto-update' is non-nil and there is no
-user-interaction ongoing."
+some changes, `mu4e-headers-auto-update' is non-nil and there is
+no user-interaction ongoing."
   (when (and mu4e-headers-auto-update       ;; must be set
 	  (zerop (mu4e-mark-marks-num))     ;; non active marks
-	  (not (active-minibuffer-window))) ;; no user input
-    (with-current-buffer mu4e~headers-buffer
+	  (not (active-minibuffer-window))) ;; no user input only
+    ;; rerun search if there's a live window with search results;
+    ;; otherwise we'd trigger a headers view from out of nowhere.
+    (when (and (buffer-live-p mu4e~headers-buffer)
+	    (window-live-p (get-buffer-window mu4e~headers-buffer)))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode
@@ -917,8 +921,9 @@ user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-do-auto-update nil t)
-  (add-hook 'mu4e-index-updated-hook (lambda () (run-hooks 'mu4e-msg-changed-hook)) t t)
+  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
+  (add-hook 'mu4e-index-updated-hook
+    (lambda() (run-hooks 'mu4e-message-changed-hook)) t)
   (setq
     truncate-lines t
     buffer-undo-list t ;; don't record undo information
@@ -1079,7 +1084,7 @@ buffer for the results. If IGNORE-HISTORY is true, do *not* update
 the query history stack."
   ;; note: we don't want to update the history if this query comes from
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
-  (mu4e-hide-other-mu4e-buffers)
+  ;;(mu4e-hide-other-mu4e-buffers)
   (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
 	 (inhibit-read-only t)
 	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit)))
@@ -1100,9 +1105,11 @@ the query history stack."
                        (mu4e~quote-for-modeline mu4e~headers-last-query)
                        'face 'mu4e-modeline-face)
                       " "
-                      (mu4e-context-label)))))
-
-    (switch-to-buffer buf)
+		       (mu4e-context-label)))))
+    ;; when the buffer is already visible, select it; otherwise,
+    ;; switch to it.
+    (unless (get-buffer-window buf 'visible)
+      (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~proc-find
       expr

@@ -107,8 +107,8 @@ which takes no arguments, and which should return on of the mentioned symbols,
 for example:
 
   (setq mu4e-sent-messages-behavior (lambda ()
-        (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
-                   'delete 'sent)))
+	(if (string= (message-sendmail-envelope-from) \"foo@example.com\")
+		   'delete 'sent)))
 
 The various `message-' functions from `message-mode' are available
 for querying the message information."
@@ -190,20 +190,25 @@ place to do that."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(defun mu4e-compose-attach-message (msg)
+  "Insert message MSG as an attachment."
+  (let ((path (plist-get msg :path)))
+    (unless (file-exists-p path)
+      (mu4e-warn "Message file not found"))
+    (mml-attach-file
+      path
+      "message/rfc822"
+      (or (plist-get msg :subject) "No subject")
+      "attachment")))
+
 (defun mu4e-compose-attach-captured-message ()
   "Insert the last captured message file as an attachment.
 Messages are captured with `mu4e-action-capture-message'."
   (interactive)
   (unless mu4e-captured-message
     (mu4e-warn "No message has been captured"))
-  (let ((path (plist-get mu4e-captured-message :path)))
-    (unless (file-exists-p path)
-      (mu4e-warn "Captured message file not found"))
-    (mml-attach-file
-      path
-      "message/rfc822"
-      (or (plist-get mu4e-captured-message :subject) "No subject")
-      "attachment")))
+  (mu4e-compose-attach-message mu4e-captured-message))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -526,7 +531,7 @@ COMPOSE-TYPE is `new', ORIGINAL-MSG should be nil.
 Optionally (when forwarding, replying) ORIGINAL-MSG is the original
 message we will forward / reply to.
 
-Optionally (when forwarding) INCLUDES contains a list of
+Optionally (when inline forwarding) INCLUDES contains a list of
    (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
 for the attachements to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
@@ -557,13 +562,16 @@ tempfile)."
   (mu4e~draft-insert-mail-header-separator)
   ;; maybe encrypt/sign replies
   (mu4e~compose-crypto-reply original-msg compose-type)
-  ;; include files -- e.g. when forwarding a message with attachments,
-  ;; we take those from the original.
+  ;; include files -- e.g. when inline forwarding a message with
+  ;; attachments, we take those from the original.
   (save-excursion
     (goto-char (point-max)) ;; put attachments at the end
-    (dolist (att includes)
-      (mml-attach-file
-	(plist-get att :file-name) (plist-get att :mime-type))))
+
+    (if (and (eq compose-type 'forward) mu4e-compose-forward-as-attachment)
+	(mu4e-compose-attach-message original-msg)
+      (dolist (att includes)
+	(mml-attach-file
+	 (plist-get att :file-name) (plist-get att :mime-type)))))
   ;; buffer is not user-modified yet
   (mu4e~compose-set-friendly-buffer-name compose-type)
   (set-buffer-modified-p nil)
@@ -571,7 +579,14 @@ tempfile)."
 
   (if (member compose-type '(new forward))
     (message-goto-to)
-    (message-goto-body))
+    ;; otherwise, it depends...
+    (case message-cite-reply-position
+      ((above traditional)
+	(message-goto-body))
+      (t
+	(when (message-goto-signature)
+	  (forward-line -2)))))
+
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)

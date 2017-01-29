@@ -650,7 +650,7 @@ mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 }
 
 
-gboolean
+static gboolean
 write_part_to_fd (GMimePart *part, int fd, GError **err)
 {
 	GMimeStream *stream;

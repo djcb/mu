@@ -82,7 +82,7 @@ typedef enum _MuMsgOptions MuMsgOptions;
  */
 MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
 			     GError **err)
-                             G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -281,18 +281,6 @@ const char*     mu_msg_get_mailing_list            (MuMsg *msg);
 
 
 /**
- * get any arbitrary header from this message
- *
- * @param msg a valid MuMsg* instance
- * @header the header requested
- *
- * @return the header requested or NULL in case of error or if there
- * is no such header. the returned string should *not* be modified or freed.
- */
-const char*     mu_msg_get_header          (MuMsg *msg,
-					    const char* header);
-
-/**
  * get the message date/time (the Date: field) as time_t, using UTC
  *
  * @param msg a valid MuMsg* instance
@@ -486,6 +474,23 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 				 MuFlags flags, gboolean ignore_dups,
 				 gboolean new_name,
 				 GError **err);
+
+
+/**
+ * Tickle a message -- ie., rxename a message while maintaining the maildir and
+ * flags. This can be useful when dealing with third-party tools such as mbsync
+ * that depend on changed filenames.
+ *
+ * @param msg a message with an existing file system path in an actual
+ * maildir
+ * @param err (may be NULL) may contain error information; note if the
+ * function return FALSE, err is not set for all error condition
+ * (ie. not for parameter error
+ *
+ * @return TRUE if it worked, FALSE otherwise
+ */
+gboolean mu_msg_tickle (MuMsg *msg, GError **err);
+
 
 
 enum _MuMsgContactType {  /* Reply-To:? */

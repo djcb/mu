@@ -684,7 +684,7 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 	return TRUE;
 }
 
-Xapian::Document
+static Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
@@ -738,7 +738,7 @@ update_threading_info (Xapian::WritableDatabase* db,
 }
 
 
-unsigned
+static unsigned
 add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 {
 	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
