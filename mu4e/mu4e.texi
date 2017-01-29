@@ -2949,6 +2949,7 @@ Note that:
   (mu4e-message-field some-msg :to)
   ;; => (("Jack" . "jack@@example.com") (nil . "foo@@example.com"))
 @end lisp
+
 If you are only looking for a match in this list (e.g., ``Is Jack one of the
 recipients of the message?''), there is a convenience function
 @code{mu4e-message-contact-field-matches} to make this easy.
@@ -2972,6 +2973,31 @@ point. Requires the 'formail' tool from procmail."
     (shell-command-to-string
       (concat "formail -x " hdr " -c < "
 	(shell-quote-argument (mu4e-message-field-at-point :path))))))
+@end lisp
+
+@node Message rewriting
+@subsection Rewriting the message body
+
+Message body rewriting allows you to modify the message text that is
+presented in the message view. This can be useful if the message needs
+special processing, for instance for special filling or cleaning up
+encoding artifacts (this is what @t{mu4e} uses this for internally).
+
+To enable this, you can append your rewrite-function to
+@code{mu4e-message-body-rewrite-functions}; your function is expected to
+take two parameters @code{MSG} and @code{TXT}, which are the
+message-plist and the body-text, which could be the result of earlier
+transformations, including html->text conversion as per
+@code{mu4e-html2-text-command}. The function is expected to return the
+transformed text.
+
+As a fairly useless example, suppose we insist on reading @t{mu4e} as
+@t{MU4E}:
+@lisp
+(defun mu4e-to-MU4E-rewrite (msg txt)
+  (replace-regexp-in-string "mu4e" "MU4E" txt))
+
+(add-to-list 'mu4e-message-body-rewrite-functions 'mu4e-to-MU4E-rewrite t)
 @end lisp
 
 

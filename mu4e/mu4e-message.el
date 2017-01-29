@@ -1,6 +1,6 @@
 ;;; mu4e-message.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2012-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -76,6 +76,12 @@ it (always show the text version) by using
   :type 'integer
   :group 'mu4e-view)
 
+(defvar mu4e-message-body-rewrite-functions '(mu4e-message-outlook-cleanup)
+  "List of functions to transform the message body text. The functions
+  take two parameters, MSG and TXT, which are the message-plist
+  and the text, which is the plain-text version, possibly
+  converted from html and/or transformed by earlier rewrite
+  functions. ")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
@@ -164,7 +170,6 @@ This is equivalent to:
 (defvar mu4e~message-body-html nil
   "Whether the body text uses HTML.")
 
-
 (defun mu4e~message-use-html-p (msg prefer-html)
   "Determine whether we want to use html or text; this is based
 on PREFER-HTML and whether the message supports the given
@@ -194,33 +199,39 @@ unless PREFER-HTML is non-nil."
   (setq mu4e~message-body-html (mu4e~message-use-html-p msg prefer-html))
   (let ((body
 	  (if mu4e~message-body-html
-	    (progn
-	      ;; use an HTML body
-	      (cond
-		((stringp mu4e-html2text-command)
-		  (mu4e-html2text-shell msg mu4e-html2text-command))
-		((functionp mu4e-html2text-command)
-		  (if (help-function-arglist mu4e-html2text-command)
-		    (funcall mu4e-html2text-command msg)
-		    ;; oldskool parameterless mu4e-html2text-command
-		    (mu4e~html2text-wrapper mu4e-html2text-command msg)))
-		(t (mu4e-error "Invalid `mu4e-html2text-command'"))
-		(setq mu4e~message-body-html t)))
+	    ;; use an htmml body
+	    (cond
+	      ((stringp mu4e-html2text-command)
+		(mu4e-html2text-shell msg mu4e-html2text-command))
+	      ((functionp mu4e-html2text-command)
+		(if (help-function-arglist mu4e-html2text-command)
+		  (funcall mu4e-html2text-command msg)
+		  ;; oldskool parameterless mu4e-html2text-command
+		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
+	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	    ;; use a text body
 	    (or (mu4e-message-field msg :body-txt) ""))))
-    ;; and finally, remove some crap from the remaining string; it seems
-    ;; esp. outlook lies about its encoding (ie., it says 'iso-8859-1' but
-    ;; really it's 'windows-1252'), thus giving us these funky chars. here, we
-    ;; either remove them, or replace with 'what-was-meant' (heuristically)
-    (with-temp-buffer
-	   (insert body)
-	   (goto-char (point-min))
-	   (while (re-search-forward "[ ’]" nil t)
-	     (replace-match
-	       (cond
-		 ((string= (match-string 0) "’") "'")
-		 (t		                       ""))))
-	   (buffer-string))))
+    (dolist (func mu4e-message-body-rewrite-functions)
+      (setq body (funcall func msg body)))
+    body))
+
+
+(defun mu4e-message-outlook-cleanup (msg txt)
+  "Remove some crap from the remaining string; it seems
+   esp. outlook lies about its encoding (ie., it says
+   'iso-8859-1' but really it's 'windows-1252'), thus giving us
+   these funky chars. here, we either remove them, or replace
+   with 'what-was-meant' (heuristically)."
+  (with-temp-buffer
+    (insert body)
+    (goto-char (point-min))
+    (while (re-search-forward "[ ’]" nil t)
+      (replace-match
+	(cond
+	  ((string= (match-string 0) "’") "'")
+	  (t ""))))
+    (buffer-string)))
+
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Checks whether any of the of the contacts in field
