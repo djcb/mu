@@ -199,6 +199,12 @@ but also manually invoked searches."
   :type 'hook
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-keep-centered nil
+  "If this is t, then when you scroll up and down in the headers 
+   view using the standard functions which invoke `mu4e-headers-move', 
+   the selected line is kept in the middle of the screen if possible."
+  )
+
 (defvar mu4e-headers-sort-field :date
   "Field to sort the headers by.
 Field must be a symbol, one of: :date, :subject, :size, :prio,
@@ -1592,6 +1598,8 @@ docid. Otherwise, return nil."
        ;;(set-window-point (get-buffer-window mu4e~headers-buffer t) (point))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
+      (if mu4e-headers-keep-centered
+          (recenter))
       ;; update message view if it was already showing
       (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
 	(mu4e-headers-view-message))
