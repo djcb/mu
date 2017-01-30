@@ -2975,7 +2975,6 @@ point. Requires the 'formail' tool from procmail."
 	(shell-quote-argument (mu4e-message-field-at-point :path))))))
 @end lisp
 
-@node Message rewriting
 @subsection Rewriting the message body
 
 Message body rewriting allows you to modify the message text that is
