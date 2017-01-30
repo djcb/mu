@@ -412,6 +412,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
     (make-local-variable 'message-default-charset)
+    ;; Set to nil to enable `electric-quote-local-mode' to work:
+    (set (make-variable-buffer-local 'comment-use-syntax) nil)
     ;; message-mode has font-locking, but uses its own faces. Let's
     ;; use the mu4e-specific ones instead
     (mu4e~compose-remap-faces)
@@ -440,16 +442,27 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 	'(left-curly-arrow right-curly-arrow))
       (visual-line-mode t))
 
-    (when (lookup-key message-mode-map [menu-bar text])
-      (define-key-after
-	(lookup-key message-mode-map [menu-bar text])
-	[mu4e-hard-newlines]
-	'(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
-	   :button (:toggle . use-hard-newlines)
-	   :help "Toggle format=flowed"
-	   :visible (eq major-mode 'mu4e-compose-mode)
-	   :enable mu4e-compose-format-flowed)
-	'sep))
+    (let ((keymap (lookup-key message-mode-map [menu-bar text])))
+      (when keymap
+	(define-key-after
+	  keymap
+	  [mu4e-hard-newlines]
+	  '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
+		      :button (:toggle . use-hard-newlines)
+		      :help "Toggle format=flowed"
+		      :visible (eq major-mode 'mu4e-compose-mode)
+		      :enable mu4e-compose-format-flowed)
+	  'sep)
+
+	(define-key-after
+	  keymap
+	  [mu4e-electric-quote-mode]
+	  '(menu-item "Electric quote" electric-quote-local-mode
+		      :button (:toggle . electric-quote-mode)
+		      :help "Toggle Electric quote mode"
+		      :visible (and (eq major-mode 'mu4e-compose-mode)
+				    (functionp 'electric-quote-local-mode)))
+	  'mu4e-hard-newlines)))
 
     (when (lookup-key mml-mode-map [menu-bar Attachments])
       (define-key-after
