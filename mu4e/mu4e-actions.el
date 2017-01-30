@@ -1,6 +1,6 @@
 ;;; mu4e-actions.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -90,19 +90,19 @@ return the filename."
       (write-file tmpfile)
       ;; rewrite attachment urls
       (mapc (lambda (attachment)
-              (goto-char (point-min))
-              (while (re-search-forward (format "src=\"cid:%s\""
+	      (goto-char (point-min))
+	      (while (re-search-forward (format "src=\"cid:%s\""
 					  (plist-get attachment :cid)) nil t)
-                (if (plist-get attachment :temp)
+		(if (plist-get attachment :temp)
 		  (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
-                  (replace-match (format "src=\"%s%s\"" temporary-file-directory
+		  (replace-match (format "src=\"%s%s\"" temporary-file-directory
 				   (plist-get attachment :name)))
-                  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory
+		  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory
 					       (plist-get attachment :name))))
-                    (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
+		    (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
 		      (plist-get attachment :index)
 		      mu4e-decryption-policy tmp-attachment-name)
-                    (mu4e-remove-file-later tmp-attachment-name)))))
+		    (mu4e-remove-file-later tmp-attachment-name)))))
 	attachments)
       (save-buffer)
       tmpfile)))
@@ -113,7 +113,7 @@ You can influence the browser to use with the variable
 `browse-url-generic-program', and see the discussion of privacy
 aspects in `(mu4e) Displaying rich-text messages'."
   (browse-url (concat "file://"
-		(mu4e~write-body-to-html msg)))) 
+		(mu4e~write-body-to-html msg))))
 
 (defun mu4e-action-view-with-xwidget (msg)
   "View the body of the message inside xwidget-webkit. This is
@@ -122,7 +122,7 @@ aspects in `(mu4e) Displaying rich-text messages'."
   (unless (fboundp 'xwidget-webkit-browse-url)
     (mu4e-error "No xwidget support available"))
   (xwidget-webkit-browse-url
-    (concat "file://" (mu4e~write-body-to-html msg)) t)) 
+    (concat "file://" (mu4e~write-body-to-html msg)) t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -338,7 +338,7 @@ display the message."
     (when msgid
       (let ((mu4e-headers-show-threads t)
 	     (mu4e-headers-include-related t))
-        (mu4e-headers-search
+	(mu4e-headers-search
 	  (format "msgid:%s" msgid)
 	  nil nil nil
 	  msgid (eq major-mode 'mu4e-view-mode))))))

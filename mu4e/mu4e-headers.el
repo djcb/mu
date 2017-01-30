@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -156,17 +156,17 @@ Note that this is merely a display filter.")
 element is a symbol in the list (DRAFT FLAGGED NEW PASSED
 REPLIED SEEN TRASHED ATTACH ENCRYPTED SIGNED UNREAD)."
   :type '(set
-          (const :tag "Draft" draft)
-          (const :tag "Flagged" flagged)
-          (const :tag "New" new)
-          (const :tag "Passed" passed)
-          (const :tag "Replied" replied)
-          (const :tag "Seen" seen)
-          (const :tag "Trashed" trashed)
-          (const :tag "Attach" attach)
-          (const :tag "Encrypted" encrypted)
-          (const :tag "Signed" signed)
-          (const :tag "Unread" unread))
+	  (const :tag "Draft" draft)
+	  (const :tag "Flagged" flagged)
+	  (const :tag "New" new)
+	  (const :tag "Passed" passed)
+	  (const :tag "Replied" replied)
+	  (const :tag "Seen" seen)
+	  (const :tag "Trashed" trashed)
+	  (const :tag "Attach" attach)
+	  (const :tag "Encrypted" encrypted)
+	  (const :tag "Signed" signed)
+	  (const :tag "Unread" unread))
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-found-hook nil
@@ -382,14 +382,14 @@ If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
       (mu4e~headers-remove-header docid t)
       ;; if we were viewing this message, close it now.
       (when (and (mu4e~headers-view-this-message-p docid)
-                 (buffer-live-p mu4e~view-buffer))
-        (with-current-buffer mu4e~view-buffer
-          ;; XXX it seems this sometimes fails; investigate;
-          ;; for now, just ignore the error
-          (ignore-errors
-            (kill-buffer-and-window))))
+		 (buffer-live-p mu4e~view-buffer))
+	(with-current-buffer mu4e~view-buffer
+	  ;; XXX it seems this sometimes fails; investigate;
+	  ;; for now, just ignore the error
+	  (ignore-errors
+	    (kill-buffer-and-window))))
       (unless skip-hook
-        (run-hooks 'mu4e-message-changed-hook)))))
+	(run-hooks 'mu4e-message-changed-hook)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -430,24 +430,24 @@ function is for display. (This difference is significant, since
 internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
   (let ((str "")
-        (get-prefix
+	(get-prefix
 	  (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (dolist (flag mu4e-headers-visible-flags)
       (when (member flag flags)
-        (setq str
-          (concat str
-            (case flag
-              ('draft     (funcall get-prefix mu4e-headers-draft-mark))
-              ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
-              ('new       (funcall get-prefix mu4e-headers-new-mark))
-              ('passed    (funcall get-prefix mu4e-headers-passed-mark))
-              ('replied   (funcall get-prefix mu4e-headers-replied-mark))
-              ('seen      (funcall get-prefix mu4e-headers-seen-mark))
-              ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
-              ('attach    (funcall get-prefix mu4e-headers-attach-mark))
-              ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
-              ('signed    (funcall get-prefix mu4e-headers-signed-mark))
-              ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
+	(setq str
+	  (concat str
+	    (case flag
+	      ('draft     (funcall get-prefix mu4e-headers-draft-mark))
+	      ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
+	      ('new       (funcall get-prefix mu4e-headers-new-mark))
+	      ('passed    (funcall get-prefix mu4e-headers-passed-mark))
+	      ('replied   (funcall get-prefix mu4e-headers-replied-mark))
+	      ('seen      (funcall get-prefix mu4e-headers-seen-mark))
+	      ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
+	      ('attach    (funcall get-prefix mu4e-headers-attach-mark))
+	      ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
+	      ('signed    (funcall get-prefix mu4e-headers-signed-mark))
+	      ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
     str))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -485,7 +485,6 @@ date. The formats used for date and time are
 	      (eq (nth 5 day1) (nth 5 day2)))    ;; year
 	  (format-time-string mu4e-headers-time-format date)
 	  (format-time-string mu4e-headers-date-format date))))))
-
 
 (defsubst mu4e~headers-thread-subject (msg)
   "Get the subject if it is the first one in a thread; otherwise,
@@ -534,11 +533,11 @@ found."
     (:date (format-time-string mu4e-headers-date-format val))
     (:mailing-list (mu4e~headers-mailing-list val))
     (:human-date (propertize (mu4e~headers-human-date msg)
-                             'help-echo (format-time-string
-                                         mu4e-headers-long-date-format
-                                         (mu4e-msg-field msg :date))))
+			     'help-echo (format-time-string
+					 mu4e-headers-long-date-format
+					 (mu4e-msg-field msg :date))))
     (:flags (propertize (mu4e~headers-flags-str val)
-                        'help-echo (format "%S" val)))
+			'help-echo (format "%S" val)))
     (:tags (propertize (mapconcat 'identity val ", ")))
     (:size (mu4e-display-size val))
     (t (mu4e~headers-custom-field msg field))))
@@ -556,8 +555,8 @@ found."
 (defun mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
   (let* ((field (car f-w))
-         (width (cdr f-w))
-         (val (mu4e-message-field msg (car f-w))))
+	 (width (cdr f-w))
+	 (val (mu4e-message-field msg (car f-w))))
     (dolist (func mu4e~headers-field-handler-functions)
       (setq val (funcall func msg field val width)))
     val))
@@ -568,14 +567,14 @@ found."
 (defun mu4e~headers-line-apply-flag-face (msg line)
   "Adjust LINE's face property based on FLAGS."
   (let* ((flags (mu4e-message-field msg :flags))
-         (face (cond
-                ((memq 'trashed flags) 'mu4e-trashed-face)
-                ((memq 'draft flags)   'mu4e-draft-face)
-                ((or (memq 'unread flags) (memq 'new flags))
-                 'mu4e-unread-face)
-                ((memq 'flagged flags) 'mu4e-flagged-face)
-                ((memq 'replied flags) 'mu4e-replied-face)
-                ((memq 'passed flags)  'mu4e-forwarded-face)
+	 (face (cond
+		((memq 'trashed flags) 'mu4e-trashed-face)
+		((memq 'draft flags)   'mu4e-draft-face)
+		((or (memq 'unread flags) (memq 'new flags))
+		 'mu4e-unread-face)
+		((memq 'flagged flags) 'mu4e-flagged-face)
+		((memq 'replied flags) 'mu4e-replied-face)
+		((memq 'passed flags)  'mu4e-forwarded-face)
 		 (t                     'mu4e-header-face))))
     ;; hmmm, this only works with emacs 24.4+
     (when (fboundp 'add-face-text-property)
@@ -594,7 +593,7 @@ if provided, or at the end of the buffer otherwise."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
       (unless (and mu4e-headers-hide-predicate
-		(funcall mu4e-headers-hide-predicate msg)) 
+		(funcall mu4e-headers-hide-predicate msg))
 	(let ((docid (mu4e-message-field msg :docid))
 	       (line (mapconcat
 		       (lambda (f-w) (mu4e~headers-field-handler f-w msg))
@@ -853,7 +852,7 @@ after the end of the search results."
 		  (info (cdr (assoc field
 			       (append mu4e-header-info mu4e-header-info-custom))))
 		  (require-full (plist-get info :require-full))
-		  (sortable (plist-get info :sortable))		  
+		  (sortable (plist-get info :sortable))
 		  ;; if sortable, it is either t (when field is sortable itself)
 		  ;; or a symbol (if another field is used for sorting)
 		  (sortfield (when sortable (if (booleanp sortable) field sortable)))
@@ -1093,12 +1092,12 @@ the query history stack."
 	mode-name "mu4e-headers"
 	mu4e~headers-last-query expr)
       (add-to-list 'global-mode-string
-                   '(:eval
-                     (concat
-                      (propertize
-                       (mu4e~quote-for-modeline mu4e~headers-last-query)
-                       'face 'mu4e-modeline-face)
-                      " "
+		   '(:eval
+		     (concat
+		      (propertize
+		       (mu4e~quote-for-modeline mu4e~headers-last-query)
+		       'face 'mu4e-modeline-face)
+		      " "
 		       (mu4e-context-label)))))
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
@@ -1127,15 +1126,15 @@ of `mu4e-split-view', and return a window for the message view."
   ;; get a new view window
   (setq mu4e~headers-view-win
    (let* ((new-win-func
-           (cond
-            ((eq mu4e-split-view 'horizontal) ;; split horizontally
-             '(split-window-vertically mu4e-headers-visible-lines))
-            ((eq mu4e-split-view 'vertical) ;; split vertically
-             '(split-window-horizontally mu4e-headers-visible-columns)))))
+	   (cond
+	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
+	     '(split-window-vertically mu4e-headers-visible-lines))
+	    ((eq mu4e-split-view 'vertical) ;; split vertically
+	     '(split-window-horizontally mu4e-headers-visible-columns)))))
      (cond ((with-demoted-errors "Unable to split window: %S"
-              (eval new-win-func)))
-           (t ;; no splitting; just use the currently selected one
-            (selected-window)))))
+	      (eval new-win-func)))
+	   (t ;; no splitting; just use the currently selected one
+	    (selected-window)))))
   mu4e~headers-view-win)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1210,7 +1209,7 @@ matching messages with that mark."
 		  '( ("subject" . :subject)
 		     ("from"    . :from)
 		     ("to"      . :to)
-                     ("cc"      . :cc)
+		     ("cc"      . :cc)
 		     ("bcc"     . :bcc)
 		     ("list"    . :mailing-list))))
 	  (pattern (read-string
@@ -1291,10 +1290,10 @@ descendants."
   (interactive
    (let* ((subthread current-prefix-arg))
      (list current-prefix-arg
-           ;; FIXME: e.g., for refiling we should evaluate this
-           ;; for each line separately
-           (mu4e~mark-get-markpair
-            (if subthread "Mark subthread with: " "Mark whole thread with: ") t))))
+	   ;; FIXME: e.g., for refiling we should evaluate this
+	   ;; for each line separately
+	   (mu4e~mark-get-markpair
+	    (if subthread "Mark subthread with: " "Mark whole thread with: ") t))))
   (mu4e-headers-mark-thread-using-markpair markpair subthread))
 
 (defun mu4e-headers-mark-subthread (&optional markpair)
