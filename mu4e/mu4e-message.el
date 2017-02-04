@@ -202,7 +202,7 @@ unless PREFER-HTML is non-nil."
 	    ;; use an htmml body
 	    (cond
 	      ((stringp mu4e-html2text-command)
-		(mu4e-html2text-shell msg mu4e-html2text-command))
+		(mu4e~html2text-shell msg mu4e-html2text-command))
 	      ((functionp mu4e-html2text-command)
 		(if (help-function-arglist mu4e-html2text-command)
 		  (funcall mu4e-html2text-command msg)
@@ -315,7 +315,7 @@ code by Titus von der Malsburg."
 
 (defun mu4e~html2text-shell (msg cmd)
   "Convert html2 text using a shell function."
-  (mu4e~html2-text-wrapper
+  (mu4e~html2text-wrapper
     (lambda ()
       (let* ((tmp-file (mu4e-make-temp-file "html")))
 	(write-region (point-min) (point-max) tmp-file)
