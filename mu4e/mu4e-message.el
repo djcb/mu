@@ -202,7 +202,7 @@ unless PREFER-HTML is non-nil."
 	    ;; use an htmml body
 	    (cond
 	      ((stringp mu4e-html2text-command)
-		(mu4e-html2text-shell msg mu4e-html2text-command))
+		(mu4e~html2text-shell msg mu4e-html2text-command))
 	      ((functionp mu4e-html2text-command)
 		(if (help-function-arglist mu4e-html2text-command)
 		  (funcall mu4e-html2text-command msg)
