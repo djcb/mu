@@ -315,7 +315,7 @@ code by Titus von der Malsburg."
 
 (defun mu4e~html2text-shell (msg cmd)
   "Convert html2 text using a shell function."
-  (mu4e~html2-text-wrapper
+  (mu4e~html2text-wrapper
     (lambda ()
       (let* ((tmp-file (mu4e-make-temp-file "html")))
 	(write-region (point-min) (point-max) tmp-file)
