@@ -226,8 +226,7 @@ unless PREFER-HTML is non-nil."
 				       "yes"
 				       (mu4e~message-body-has-content-type-param
 					msg "delsp"))))
-		 (buffer-string))
-                ""))))
+		 (buffer-string)) ""))))
     (dolist (func mu4e-message-body-rewrite-functions)
       (setq body (funcall func msg body)))
     body))
@@ -310,7 +309,6 @@ FUNC. Return the buffer contents."
   (with-temp-buffer
     (insert (or (mu4e-message-field msg :body-html) ""))
     (funcall func)
-    (message "buffer string...")
     (or (buffer-string) "")))
 
 (defun mu4e-shr2text (msg)
