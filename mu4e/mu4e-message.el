@@ -218,14 +218,15 @@ unless PREFER-HTML is non-nil."
 	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
 	    ;; use a text body
 	    (or (with-temp-buffer
-		 (insert (mu4e-message-field msg :body-txt))
-		 (if (mu4e~safe-iequal "flowed"
-				       (mu4e~message-body-has-content-type-param
-					msg "format"))
-		     (fill-flowed nil (mu4e~safe-iequal
-				       "yes"
-				       (mu4e~message-body-has-content-type-param
-					msg "delsp"))))
+		  (insert (or (mu4e-message-field msg :body-txt) ""))
+		  (if (mu4e~safe-iequal "flowed"
+			(mu4e~message-body-has-content-type-param
+			  msg "format"))
+		    (fill-flowed nil
+		      (mu4e~safe-iequal
+			"yes"
+			(mu4e~message-body-has-content-type-param
+			  msg "delsp"))))
 		 (buffer-string)) ""))))
     (dolist (func mu4e-message-body-rewrite-functions)
       (setq body (funcall func msg body)))
