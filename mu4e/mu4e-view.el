@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -53,7 +53,7 @@
 
 (defcustom mu4e-view-fields
   '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
-          :attachments :signature :decryption)
+	  :attachments :signature :decryption)
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
@@ -273,7 +273,7 @@ found."
 	    (body (mu4e-message-body-text msg prefer-html)))
       (setq mu4e~view-html-text nil)
       (when (fboundp 'add-face-text-property)
-        (add-face-text-property 0 (length body) 'mu4e-view-body-face t body))
+	(add-face-text-property 0 (length body) 'mu4e-view-body-face t body))
       body)))
 
 (defun mu4e~view-embedded-winbuf ()
@@ -332,12 +332,12 @@ Meant to be evoked from interactive commands."
   (if (and (eventp last-command-event)
 	   (mouse-event-p last-command-event))
       (let ((posn (event-end last-command-event)))
-        (when (numberp (posn-point posn))
-          (get-text-property
-           (posn-point posn)
-           prop
-           (window-buffer (posn-window posn)))
-          ))
+	(when (numberp (posn-point posn))
+	  (get-text-property
+	   (posn-point posn)
+	   prop
+	   (window-buffer (posn-window posn)))
+	  ))
     (get-text-property (point) prop)))
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
@@ -348,7 +348,7 @@ add text-properties to VAL."
 		      (append mu4e-header-info mu4e-header-info-custom))))
 	  (key (plist-get info :name))
 	  (val (if val (propertize val 'field 'mu4e-header-field-value
-	                               'front-sticky '(field))))
+				       'front-sticky '(field))))
 	  (help (plist-get info :help)))
     (if (and val (> (length val) 0))
     (with-temp-buffer
@@ -377,24 +377,24 @@ add text-properties to VAL."
   "Fold/unfold headers' value if there are more than one line."
   (interactive)
   (let ((name-pos (field-beginning))
-        (value-pos (1+ (field-end))))
+	(value-pos (1+ (field-end))))
     (if (and name-pos value-pos
-             (eq (get-text-property name-pos 'field) 'mu4e-header-field-key))
+	     (eq (get-text-property name-pos 'field) 'mu4e-header-field-key))
       (save-excursion
-        (let* ((folded))
-          (mapc (lambda (o)
-                  (when (overlay-get o 'mu4e~view-header-field-folded)
-                    (delete-overlay o)
-                    (setq folded t)))
-                (overlays-at value-pos))
-          (unless folded
-            (let* ((o (make-overlay value-pos (field-end value-pos)))
-                   (vals (split-string (field-string value-pos) "\n" t))
-                   (val (if (= (length vals) 1)
-                            (car vals)
-                          (concat (substring (car vals) 0 -3) "..."))))
-              (overlay-put o 'mu4e~view-header-field-folded t)
-              (overlay-put o 'display val))))))))
+	(let* ((folded))
+	  (mapc (lambda (o)
+		  (when (overlay-get o 'mu4e~view-header-field-folded)
+		    (delete-overlay o)
+		    (setq folded t)))
+		(overlays-at value-pos))
+	  (unless folded
+	    (let* ((o (make-overlay value-pos (field-end value-pos)))
+		   (vals (split-string (field-string value-pos) "\n" t))
+		   (val (if (= (length vals) 1)
+			    (car vals)
+			  (concat (substring (car vals) 0 -3) "..."))))
+	      (overlay-put o 'mu4e~view-header-field-folded t)
+	      (overlay-put o 'display val))))))))
 
 (defun mu4e~view-compose-contact (&optional point)
   "Compose a message for the address at point."
@@ -501,7 +501,7 @@ add text-properties to VAL."
   "Open the attachement at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
-         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+	 ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
     (when (and msg attnum)
       (mu4e-view-open-attachment msg attnum))))
 
@@ -509,17 +509,17 @@ add text-properties to VAL."
   "Save the attachement at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
-         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+	 ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
     (when (and msg attnum)
       (mu4e-view-save-attachment-single msg attnum))))
 
 (defun mu4e~view-construct-attachments-header (msg)
   "Display attachment information; the field looks like something like:
    	:parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
-                 :type (leaf) :attachment nil :size 228)
-                (:index 2 :name \"analysis.doc\"
-                 :mime-type \"application/msword\"
-                 :type (leaf attachment) :attachment nil :size 605196))"
+		 :type (leaf) :attachment nil :size 228)
+		(:index 2 :name \"analysis.doc\"
+		 :mime-type \"application/msword\"
+		 :type (leaf attachment) :attachment nil :size 605196))"
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)
@@ -531,6 +531,7 @@ add text-properties to VAL."
 	      (lambda (part)
 		(let* ((mtype (or (mu4e-message-part-field part :mime-type)
 				"application/octet-stream"))
+			(partsize (or (mu4e-message-part-field part :size) 0))
 			(attachtype (mu4e-message-part-field part :type))
 			(isattach
 			  (or ;; we consider parts marked either
@@ -540,7 +541,9 @@ add text-properties to VAL."
 			    ;; saved), unless they are text/plain, which are
 			    ;; usually just message footers in mailing lists
 			    (and (member 'inline attachtype)
-			      (not (string-match "^text/plain" mtype))))))
+			      (or
+				(> partsize 256) ;; filter out footers
+				(not (string-match "^text/plain" mtype)))))))
 		  (or ;; remove if it's not an attach *or* if it's an
 		    ;; image/audio/application type (but not a signature)
 		    isattach
@@ -573,7 +576,7 @@ add text-properties to VAL."
 		      )
 		    (when (and size (> size 0))
 		      (propertize (format "(%s)" (mu4e-display-size size))
-                                  'face 'mu4e-header-key-face)))))
+				  'face 'mu4e-header-key-face)))))
 	      attachments ", ")))
     (when attachments
       (mu4e~view-construct-header :attachments attstr t))))
@@ -584,7 +587,7 @@ FUNC should be a function taking two arguments:
  1. the message MSG, and
  2. a plist describing the attachment. The plist looks like:
     	 (:index 1 :name \"test123.doc\"
-          :mime-type \"application/msword\" :attachment t :size 1234)."
+	  :mime-type \"application/msword\" :attachment t :size 1234)."
   (dolist (part (mu4e-msg-field msg :parts))
     (funcall func msg part)))
 
@@ -635,7 +638,7 @@ FUNC should be a function taking two arguments:
       (define-key map "a" 'mu4e-view-action)
 
       (define-key map ";" 'mu4e-context-switch)
-      
+
       ;; toggle header settings
       (define-key map "O" 'mu4e-headers-change-sorting)
       (define-key map "P" 'mu4e-headers-toggle-threading)
@@ -664,7 +667,7 @@ FUNC should be a function taking two arguments:
 
       (define-key map (kbd "[") 'mu4e-view-headers-prev-unread)
       (define-key map (kbd "]") 'mu4e-view-headers-next-unread)
-      
+
       ;; switching to view mode (if it's visible)
       (define-key map "y" 'mu4e-select-other-view)
 
@@ -688,7 +691,7 @@ FUNC should be a function taking two arguments:
       (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
       (define-key map (kbd "=") 'mu4e-view-mark-for-untrash)
       (define-key map (kbd "&") 'mu4e-view-mark-custom)
-      
+
       (define-key map (kbd "*")             'mu4e-view-mark-for-something)
       (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-something)
       (define-key map (kbd "<insert>")     'mu4e-view-mark-for-something)
@@ -806,9 +809,9 @@ FUNC should be a function taking two arguments:
   ;; show context in mode-string
   (make-local-variable 'global-mode-string)
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
- 
+
   (setq buffer-undo-list t);; don't record undo info
-     
+
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
@@ -956,7 +959,7 @@ N (prefix argument), to the Nth previous header."
 unread message header in the headers buffer connected with this
 message view. If this succeeds, return the new docid. Otherwise,
 return nil."
-  (mu4e~view-in-headers-context 
+  (mu4e~view-in-headers-context
     (mu4e~headers-prev-or-next-unread backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
@@ -1059,23 +1062,23 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              (concat "^" message-mark-insert-begin) nil t)
-        (setq ov-beg (match-beginning 0)
-              ov-end (match-end 0)
-              ov-inv (make-overlay ov-beg ov-end)
-              beg    ov-end)
-        (overlay-put ov-inv 'invisible t)
-        (when (re-search-forward
-               (concat "^" message-mark-insert-end) nil t)
-          (setq ov-beg (match-beginning 0)
-                ov-end (match-end 0)
-                ov-inv (make-overlay ov-beg ov-end)
-                end    ov-beg)
-          (overlay-put ov-inv 'invisible t))
-        (when (and beg end)
-          (let ((ov (make-overlay beg end)))
-            (overlay-put ov 'face 'mu4e-region-code))
-          (setq beg nil end nil))))))
+	      (concat "^" message-mark-insert-begin) nil t)
+	(setq ov-beg (match-beginning 0)
+	      ov-end (match-end 0)
+	      ov-inv (make-overlay ov-beg ov-end)
+	      beg    ov-end)
+	(overlay-put ov-inv 'invisible t)
+	(when (re-search-forward
+	       (concat "^" message-mark-insert-end) nil t)
+	  (setq ov-beg (match-beginning 0)
+		ov-end (match-end 0)
+		ov-inv (make-overlay ov-beg ov-end)
+		end    ov-beg)
+	  (overlay-put ov-inv 'invisible t))
+	(when (and beg end)
+	  (let ((ov (make-overlay beg end)))
+	    (overlay-put ov 'face 'mu4e-region-code))
+	  (setq beg nil end nil))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Wash functions
@@ -1085,19 +1088,19 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
   (with-current-buffer mu4e~view-buffer
     (save-excursion
       (let ((inhibit-read-only t)
-            (width (window-width (get-buffer-window (current-buffer)))))
-        (save-restriction
-          (message-goto-body)
-          (while (not (eobp))
-            (end-of-line)
-            (when (>= (current-column) (min fill-column width))
-              (narrow-to-region (min (1+ (point)) (point-max))
-                                (point-at-bol))
-              (let ((goback (point-marker)))
-                (fill-paragraph nil)
-                (goto-char (marker-position goback)))
-              (widen))
-            (forward-line 1)))))))
+	    (width (window-width (get-buffer-window (current-buffer)))))
+	(save-restriction
+	  (message-goto-body)
+	  (while (not (eobp))
+	    (end-of-line)
+	    (when (>= (current-column) (min fill-column width))
+	      (narrow-to-region (min (1+ (point)) (point-max))
+				(point-at-bol))
+	      (let ((goback (point-marker)))
+		(fill-paragraph nil)
+		(goto-char (marker-position goback)))
+	      (widen))
+	    (forward-line 1)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
@@ -1134,9 +1137,9 @@ number ATTNUM."
 (defun mu4e~view-request-attachment-path (fname path)
   "Ask the user where to save FNAME (default is PATH/FNAME)."
   (let ((fpath (expand-file-name
-                (read-file-name
-                 (mu4e-format "Save as ")
-                 path nil nil fname) path)))
+		(read-file-name
+		 (mu4e-format "Save as ")
+		 path nil nil fname) path)))
     (if (file-directory-p fpath)
       (expand-file-name fname fpath)
       fpath)))
@@ -1144,11 +1147,11 @@ number ATTNUM."
 (defun mu4e~view-request-attachments-dir (path)
   "Ask the user where to save multiple attachments (default is PATH)."
   (let ((fpath (expand-file-name
-                (read-directory-name
-                 (mu4e-format "Save in directory ")
-                 path nil nil nil) path)))
+		(read-directory-name
+		 (mu4e-format "Save in directory ")
+		 path nil nil nil) path)))
     (if (file-directory-p fpath)
-        fpath)))
+	fpath)))
 
 (defun mu4e-view-save-attachment-single (&optional msg attnum)
   "Save attachment number ATTNUM from MSG.
@@ -1186,30 +1189,30 @@ Furthermore, there is a shortcut \"a\" which so means all
 attachments, but as this is the default, you may not need it."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
-         (attachstr (mu4e~view-get-attach-num
-                     "Attachment number range (or 'a' for 'all')" msg t))
-         (count (hash-table-count mu4e~view-attach-map))
-         (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+	 (attachstr (mu4e~view-get-attach-num
+		     "Attachment number range (or 'a' for 'all')" msg t))
+	 (count (hash-table-count mu4e~view-attach-map))
+	 (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
     (if mu4e-save-multiple-attachments-without-asking
-        (let* ((path (concat (mu4e~get-attachment-dir) "/"))
-               (attachdir (mu4e~view-request-attachments-dir path)))
-          (dolist (num attachnums)
-            (let* ((att (mu4e~view-get-attach msg num))
-                   (fname  (plist-get att :name))
-                   (index (plist-get att :index))
-                   (retry t)
+	(let* ((path (concat (mu4e~get-attachment-dir) "/"))
+	       (attachdir (mu4e~view-request-attachments-dir path)))
+	  (dolist (num attachnums)
+	    (let* ((att (mu4e~view-get-attach msg num))
+		   (fname  (plist-get att :name))
+		   (index (plist-get att :index))
+		   (retry t)
 		   fpath)
-              (while retry
-                (setq fpath (expand-file-name (concat attachdir fname) path))
-                (setq retry
-                      (and (file-exists-p fpath)
+	      (while retry
+		(setq fpath (expand-file-name (concat attachdir fname) path))
+		(setq retry
+		      (and (file-exists-p fpath)
 			(not (y-or-n-p
 			       (mu4e-format "Overwrite '%s'?" fpath))))))
-              (mu4e~proc-extract
+	      (mu4e~proc-extract
 		'save (mu4e-message-field msg :docid)
 		index mu4e-decryption-policy fpath))))
       (dolist (num attachnums)
-        (mu4e-view-save-attachment-single msg num)))))
+	(mu4e-view-save-attachment-single msg num)))))
 
 (defun mu4e-view-save-attachment (&optional multi)
   "Offer to save attachment(s).
@@ -1254,13 +1257,13 @@ ATTNUM is nil ask for the attachment number."
   "Open MSG's attachment ATTACHNUM with CMD.
 If CMD is nil, ask user for it."
   (let* ((att (mu4e~view-get-attach msg attachnum))
-         (ext (file-name-extension (plist-get att :name)))
-         (cmd (or cmd
-                  (read-string
+	 (ext (file-name-extension (plist-get att :name)))
+	 (cmd (or cmd
+		  (read-string
 		   (mu4e-format "Shell command to open it with: ")
 		   (assoc-default ext mu4e-view-attachment-assoc)
-                   'mu4e~view-open-with-hist)))
-         (index (plist-get att :index)))
+		   'mu4e~view-open-with-hist)))
+	 (index (plist-get att :index)))
     (mu4e~view-temp-action
       (mu4e-message-field msg :docid) index "open-with" cmd)))
 
@@ -1300,16 +1303,16 @@ If MSG is nil use the message returned by `message-at-point'.
 The actions are specified in `mu4e-view-attachment-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
-         (actionfunc (mu4e-read-option
-                      "Action on attachment: "
-                      mu4e-view-attachment-actions))
-         (multi (eq actionfunc 'mu4e-view-save-attachment-multi))
-         (attnum (unless multi
-                   (mu4e~view-get-attach-num "Which attachment" msg multi))))
+	 (actionfunc (mu4e-read-option
+		      "Action on attachment: "
+		      mu4e-view-attachment-actions))
+	 (multi (eq actionfunc 'mu4e-view-save-attachment-multi))
+	 (attnum (unless multi
+		   (mu4e~view-get-attach-num "Which attachment" msg multi))))
     (cond ((and actionfunc attnum)
-           (funcall actionfunc msg attnum))
-          ((and actionfunc multi)
-           (funcall actionfunc msg)))))
+	   (funcall actionfunc msg attnum))
+	  ((and actionfunc multi)
+	   (funcall actionfunc msg)))))
 
 ;; handler-function to handle the response we get from the server when we
 ;; want to do something with one of the attachments.
@@ -1480,7 +1483,7 @@ it to a range of uris. PROMPT is the query to present to the user."
 user with PROMPT."
   (interactive)
   (let* ((num (or num (mu4e~view-get-urls-num prompt)))
-         (url (gethash num mu4e~view-link-map)))
+	 (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall urlfunc url)))
 
@@ -1594,12 +1597,12 @@ other windows."
       ;; headers are visible
       (progn
 	(kill-buffer-and-window) ;; kill the view win
-        (setq mu4e~headers-view-win nil)
+	(setq mu4e~headers-view-win nil)
 	(select-window headers-win)) ;; and switch to the headers win...
       ;; headers are not visible...
       (progn
 	(kill-buffer)
-        (setq mu4e~headers-view-win nil)
+	(setq mu4e~headers-view-win nil)
 	(when (buffer-live-p mu4e~view-headers-buffer)
 	  (switch-to-buffer mu4e~view-headers-buffer))))))
 
