@@ -523,6 +523,7 @@ add text-properties to VAL."
   (setq mu4e~view-attach-map ;; buffer local
     (make-hash-table :size 64 :weakness nil))
   (let* ((id 0)
+	  (partcount (length (mu4e-message-field msg :parts)))
 	  (attachments
 	    ;; we only list parts that look like attachments, ie. that have a
 	    ;; non-nil :attachment property; we record a mapping between
@@ -540,9 +541,13 @@ add text-properties to VAL."
 			    ;; list inline parts as attachment (so they can be
 			    ;; saved), unless they are text/plain, which are
 			    ;; usually just message footers in mailing lists
+			    ;;
+			    ;; however, slow bigger text parts as attachments,
+			    ;; except when they're the only part... it's
+			    ;; complicated.
 			    (and (member 'inline attachtype)
 			      (or
-				(> partsize 256) ;; filter out footers
+				(and (> partcount 1) (> partsize 256))
 				(not (string-match "^text/plain" mtype)))))))
 		  (or ;; remove if it's not an attach *or* if it's an
 		    ;; image/audio/application type (but not a signature)
