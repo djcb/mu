@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+c## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -22,12 +22,14 @@ AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
 # autotools/libtool setup. you can try to comment this out
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_AUX_DIR([xua]) # Win/DOS don't like 'aux'
+AC_CONFIG_AUX_DIR([build-aux])
 
 m4_ifndef([AX_COMPILER_FLAGS],[
     AC_MSG_ERROR([
-    *** We need autoconf-archive for reconfiguring, but it is not found
-    *** Please install it.])
+  *** autoconf-archive >= 20150925 required for the build setup.
+  *** Please install it, or get an official release from
+  ***    https://github.com/djcb/mu/releases
+])
 ])
 
 AX_IS_RELEASE([git-directory])
