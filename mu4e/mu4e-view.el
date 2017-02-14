@@ -757,6 +757,8 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [sepa1] '("--"))
 	(define-key menumap [mark-delete]
 	  '("Mark for deletion" . mu4e-view-mark-for-delete))
+	(define-key menumap [mark-untrash]
+	  '("Mark for untrash" .  mu4e-view-mark-for-untrash))
 	(define-key menumap [mark-trash]
 	  '("Mark for trash" .  mu4e-view-mark-for-trash))
 	(define-key menumap [mark-move]

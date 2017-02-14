@@ -800,6 +800,8 @@ after the end of the search results."
 
 	(define-key menumap [mark-delete]
 	  '("Mark for deletion" . mu4e-headers-mark-for-delete))
+	(define-key menumap [mark-untrash]
+	  '("Mark for untrash" .  mu4e-headers-mark-for-untrash))
 	(define-key menumap [mark-trash]
 	  '("Mark for trash" .  mu4e-headers-mark-for-trash))
 	(define-key menumap [mark-move]
