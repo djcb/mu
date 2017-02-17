@@ -265,7 +265,7 @@ separator is never written to the message file. Also see
   (save-excursion
     ;; make sure there's not one already
     (mu4e~draft-remove-mail-header-separator)
-    (let ((sepa (propertize mail-header-separator
+    (let ((sepa (propertize (concat mail-header-separator "\n")
 		  'intangible t
 		  ;; don't make this read-only, message-mode
 		  ;; seems to require it being writable in some cases
