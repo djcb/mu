@@ -16,6 +16,9 @@
    - prefer gpg2 for crypto
    - fix a crash when running on OpenBSD
    - fix --clear-links (broken filenames)
+   - You can now set the MU_HOME environment variable as an
+     alternative way of setting the mu homedir via the --muhome
+     commadn-line parameter.
     
 *** mu4e
 

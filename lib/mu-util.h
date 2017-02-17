@@ -62,7 +62,8 @@ char* mu_util_guess_maildir (void)
 
 
 /**
- * guess the place of the mu homedir (typically, ~/.mu). Note, this
+ * guess the place of the mu homedir; first try $MU_HOME; if it is
+ * unset or non-existant, try ~/.mu. Note, the fallback ~/.mu
  * directory does not necessarily exist. mu_util_check_dir can be used
  * to check that
  *

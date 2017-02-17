@@ -199,9 +199,16 @@ gchar*
 mu_util_guess_mu_homedir (void)
 {
 	const char* home;
+	const gchar *hdir1;
 
-	/* g_get_home_dir use /etc/passwd, not $HOME; this is better,
-	 * as HOME may be wrong when using 'sudo' etc.*/
+	/* first, try MU_HOME */
+	hdir1 = g_getenv ("MU_HOME");
+
+	if (hdir1 && mu_util_check_dir (hdir1, TRUE, FALSE))
+		return g_strdup (hdir1);
+
+	/* then, g_get_home_dir use /etc/passwd, not $HOME; this is
+	 * better, as HOME may be wrong when using 'sudo' etc.*/
 	home = g_get_home_dir ();
 
 	if (!home) {
