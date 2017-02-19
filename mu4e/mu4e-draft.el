@@ -191,6 +191,30 @@ the list form the original."
       reply-to)))
 
 
+(defun mu4e~strip-ignored-addresses (addrs)
+  "Return all the addresses in ADDRS not matching
+`mu4e-compose-reply-ignore-address'."
+  (cond
+    ((null mu4e-compose-reply-ignore-address)
+      addrs)
+    ((functionp mu4e-compose-reply-ignore-address)
+      (remove-if
+	(lambda (elt)
+	  (funcall mu4e-compose-reply-ignore-address (cdr elt)))
+	addrs))
+    (t
+      ;; regexp or list of regexps
+      (let* ((regexp mu4e-compose-reply-ignore-address)
+	     (regexp (if (listp regexp)
+		       (mapconcat (lambda (elt) (concat "\\(" elt "\\)"))
+			 regexp "\\|")
+		       regexp)))
+	(remove-if
+	  (lambda (elt)
+	    (string-match regexp (cdr elt)))
+	  addrs)))))
+
+
 (defun mu4e~draft-create-cc-lst (origmsg reply-all)
   "Create a list of address for the Cc: in a new message, based on
 the original message ORIGMSG, and whether it's a reply-all."
@@ -211,6 +235,8 @@ the original message ORIGMSG, and whether it's a reply-all."
 		      (mu4e~draft-address-cell-equal cc-cell to-cell))
 		    (mu4e~draft-create-to-lst origmsg)))
 		cc-lst))
+	    ;; remove ignored addresses
+	    (cc-lst (mu4e~strip-ignored-addresses cc-lst))
 	    ;; finally, we need to remove ourselves from the cc-list
 	    ;; unless mu4e-compose-keep-self-cc is non-nil
 	    (cc-lst

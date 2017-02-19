@@ -387,6 +387,18 @@ are needed for sorting the contacts."
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-reply-ignore-address message-dont-reply-to-names
+  "Addresses to prune when doing wide replies.
+
+This can be a regexp matching the address, a list of regexps
+or a predicate function. A value of nil keeps all the addresses."
+  :type '(choice
+	   (const nil)
+	   function
+	   string
+	   (repeat string))
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-reply-to-address nil
   "The Reply-To address (if this, for some reason, is not equal to
 the From: address.)"
