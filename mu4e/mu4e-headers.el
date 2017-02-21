@@ -1103,7 +1103,7 @@ the query history stack."
 		       (mu4e-context-label)))))
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
-    (unless (get-buffer-window buf 'visible)
+    (unless (get-buffer-window buf 0)
       (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~proc-find
