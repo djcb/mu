@@ -345,7 +345,8 @@ cache the next time `mu4e-get-maildirs' gets called.")
 (defun mu4e-get-maildirs ()
   "Get maildirs under `mu4e-maildir', recursively, as a list of
 relative paths (ie., /archive, /sent etc.). Most of the work is
-done in `mu4e-get-maildirs-1'. Note, these results are /cached/, so
+done in `mu4e~get-maildirs-1'. Note, these results are /cached/
+if `mu4e-cache-maildir-list' is customized to non-nil. In that case,
 the list of maildirs will not change until you restart mu4e."
   (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (unless (and mu4e-maildir-list mu4e-cache-maildir-list)
