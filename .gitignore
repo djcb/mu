@@ -84,4 +84,4 @@ configure.lineno
 /lib/doxyfile
 /version.texi
 /compile
-xua/
+build-aux/
