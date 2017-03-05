@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -178,7 +178,7 @@ append_sexp_contacts (GString *gstr, MuMsg *msg)
 	ContactData cdata;
 
 	cdata.from	 = cdata.to = cdata.cc = cdata.bcc
-		         = cdata.reply_to = FALSE;
+			 = cdata.reply_to = FALSE;
 	cdata.gstr	 = gstr;
 	cdata.prev_ctype = (unsigned)-1;
 
@@ -465,8 +465,8 @@ append_message_file_parts (GString *gstr, MuMsg *msg, MuMsgOptions opts)
 	if (str || (str = mu_msg_get_header (msg, "X-Mailer")))
 		append_sexp_attr (gstr, "user-agent", str);
 
-        params = mu_msg_get_body_text_content_type_parameters (msg, opts);
-        if (params) {
+	params = mu_msg_get_body_text_content_type_parameters (msg, opts);
+	if (params) {
 		g_string_append_printf (gstr, "\t:body-txt-params (");
 		append_sexp_param (gstr, params);
 		g_string_append_printf (gstr, ")\n");
