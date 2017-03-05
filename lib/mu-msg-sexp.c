@@ -494,7 +494,7 @@ append_sexp_date_and_size (GString *gstr, MuMsg *msg)
 
 	g_string_append_printf
 		(gstr,
-		 "\t:date (%u %u 0)\n\t:size %u\n",
+		 "\t:date (%d %u 0)\n\t:size %u\n",
 		 (unsigned)(t >> 16),
 		 (unsigned)(t & 0xffff),
 		 (unsigned)s);
