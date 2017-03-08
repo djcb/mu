@@ -79,7 +79,7 @@ current window."
 
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
-  "The User-Agent string for mu4e.")
+  "The User-Agent string for mu4e, or nil.")
 
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
@@ -356,7 +356,8 @@ You can append flags."
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (concat
-    (mu4e~draft-header "User-agent" mu4e-user-agent-string)
+    (when mu4e-user-agent-string
+      (mu4e~draft-header "User-agent" mu4e-user-agent-string))
    (when mu4e-compose-auto-include-date
      (mu4e~draft-header "Date" (message-make-date)))))
 
@@ -429,9 +430,9 @@ fields will be the same as in the original."
 	    mu4e~draft-forward-prefix)
 	  subject))
       (unless mu4e-compose-forward-as-attachment
-        (concat
-         "\n\n"
-          (mu4e~draft-cite-original origmsg))))))
+	(concat
+	 "\n\n"
+	  (mu4e~draft-cite-original origmsg))))))
 
 (defun mu4e~draft-newmsg-construct ()
   "Create a new message."
@@ -500,7 +501,7 @@ will be created from either `mu4e~draft-reply-construct', or
 		   (forward (mu4e~draft-forward-construct msg))
 		   (new     (mu4e~draft-newmsg-construct)))))
 	  (mu4e~draft-open-file draft-path)
-          (insert initial-contents)
+	  (insert initial-contents)
 	  (newline)
 	  ;; include the message signature (if it's set)
 	  (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
