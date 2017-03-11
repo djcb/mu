@@ -3157,7 +3157,7 @@ for that in headers and view mode:
 Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
 autocompletion}, and that is the recommended way to do this. However, it
 is also possible to manage your addresses with @t{org-mode}, using
-@t{org-contacts}@footnote{@url{http://julien.danjou.info/software/org-contacts.el}}.
+@t{org-contacts}@footnote{@url{https://julien.danjou.info/projects/emacs-packages#org-contacts}}.
 
 @t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a contact
 based on the @t{From:}-address in the message at point. To enable this, add to
