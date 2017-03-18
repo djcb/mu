@@ -105,16 +105,16 @@ where
 (defmacro mu4e~mark-in-context (&rest body)
   "Evaluate BODY in the context of the headers buffer in case this
 is either a headers or view buffer."
-  `(cond     
+  `(cond
      ((eq major-mode 'mu4e-headers-mode) ,@body)
-     ((eq major-mode 'mu4e-view-mode)  
+     ((eq major-mode 'mu4e-view-mode)
        (when (buffer-live-p mu4e~view-headers-buffer)
 	 (let* ((msg (mu4e-message-at-point))
 		 (docid (mu4e-message-field msg :docid)))
 	   (with-current-buffer mu4e~view-headers-buffer
 	     (if (mu4e~headers-goto-docid docid)
 	       ,@body
-	       (mu4e-error "cannot find message in headers buffer.")))))) 
+	       (mu4e-error "cannot find message in headers buffer."))))))
      (t
        ;; even in other modes (e.g. mu4e-main-mode we try to find
        ;; the headers buffer
@@ -188,7 +188,7 @@ is either a headers or view buffer."
 	 :char  ("*" . "✱")
 	 :prompt "*something"
 	 :action (mu4e-error "No action for deferred mark")))
-       
+
   "The list of all the possible marks.
 This is an alist mapping mark symbols to their properties.  The
 properties are:
@@ -253,7 +253,7 @@ The following marks are available, and the corresponding props:
 	  (show-fct (plist-get markdesc :show-target))
 	  (shown-target (if show-fct
 			  (funcall show-fct target)
-                          (if target (format "%S" target)))))
+			  (if target (format "%S" target)))))
     (unless docid (mu4e-warn "No message on this line"))
     (unless (eq major-mode 'mu4e-headers-mode) (mu4e-error "Not in headers-mode"))
     (save-excursion
@@ -391,28 +391,28 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (mu4e~mark-in-context
    (let ((marknum (hash-table-count mu4e~mark-map)))
      (if (zerop marknum)
-         (message "Nothing is marked")
+	 (message "Nothing is marked")
        (mu4e-mark-resolve-deferred-marks)
        (when (or no-confirmation
-                 (y-or-n-p
-                  (format "Are you sure you want to execute %d mark%s?"
-                          marknum (if (> marknum 1) "s" ""))))
-         (maphash
-          (lambda (docid val)
-            (let* ((mark (car val)) (target (cdr val))
-                   (markdescr (assq mark mu4e-marks))
-                   (msg (save-excursion
-                          (mu4e~headers-goto-docid docid)
-                          (mu4e-message-at-point))))
-              ;; note: whenever you do something with the message,
-              ;; it looses its N (new) flag
-              (if markdescr
-                  (progn
-                    (run-hook-with-args
-                    'mu4e-mark-execute-pre-hook mark msg)
-                    (funcall (plist-get (cdr markdescr) :action) docid msg target))
-                (mu4e-error "Unrecognized mark %S" mark))))
-          mu4e~mark-map))
+		 (y-or-n-p
+		  (format "Are you sure you want to execute %d mark%s?"
+			  marknum (if (> marknum 1) "s" ""))))
+	 (maphash
+	  (lambda (docid val)
+	    (let* ((mark (car val)) (target (cdr val))
+		   (markdescr (assq mark mu4e-marks))
+		   (msg (save-excursion
+			  (mu4e~headers-goto-docid docid)
+			  (mu4e-message-at-point))))
+	      ;; note: whenever you do something with the message,
+	      ;; it looses its N (new) flag
+	      (if markdescr
+		  (progn
+		    (run-hook-with-args
+		    'mu4e-mark-execute-pre-hook mark msg)
+		    (funcall (plist-get (cdr markdescr) :action) docid msg target))
+		(mu4e-error "Unrecognized mark %S" mark))))
+	  mu4e~mark-map))
        (mu4e-mark-unmark-all)
        (message nil)))))
 
@@ -438,8 +438,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 
 (defun mu4e-mark-marks-num ()
   "Return the number of marks in the current buffer."
-  (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0))
-
+  (mu4e~mark-in-context
+    (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0)))
 
 (defun mu4e-mark-handle-when-leaving ()
   "If there are any marks in the current buffer, handle those
@@ -447,7 +447,7 @@ according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
 quitting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'."
-  (mu4e~mark-in-context 
+  (mu4e~mark-in-context
     (let ((marknum (mu4e-mark-marks-num))
 	   (what mu4e-headers-leave-behavior))
       (unless (zerop marknum) ;; nothing to do?
