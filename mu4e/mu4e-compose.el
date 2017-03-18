@@ -285,6 +285,7 @@ appear on disk."
       (mu4e~draft-insert-mail-header-separator)
       ;; hide some headers again
       (mu4e~compose-hide-headers)
+      (widen)
       (set-buffer-modified-p nil)
       (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
       ;; update the file on disk -- ie., without the separator
