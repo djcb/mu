@@ -1,6 +1,6 @@
 ;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 ;; Copyright (C) 2013 Tibor Simko
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -278,7 +278,7 @@ can prefix the string with an uniquifying character.
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
-              '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
+	      '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
 
 User now will be presented with a list: \"Choose an animal:
    [M]onkey, [G]nu, [x]Moose\".
@@ -614,11 +614,11 @@ on `mu4e~mailing-lists', `mu4e-user-mailing-lists', and
   (or
     (gethash list-id mu4e~lists-hash)
     (and (boundp 'mu4e-mailing-list-patterns)
-         (cl-member-if
-          (lambda (pattern)
-            (string-match pattern list-id))
-          mu4e-mailing-list-patterns)
-         (match-string 1 list-id))
+	 (cl-member-if
+	  (lambda (pattern)
+	    (string-match pattern list-id))
+	  mu4e-mailing-list-patterns)
+	 (match-string 1 list-id))
     ;; if it's not in the db, take the part until the first dot if there is one;
     ;; otherwise just return the whole thing
     (if (string-match "\\([^.]*\\)\\." list-id)
@@ -931,18 +931,18 @@ Also scrolls to the final line, and update the progress throbber."
 
   (when (string-match mu4e~get-mail-password-regexp msg)
     (if (process-get proc 'x-interactive)
-        (process-send-string proc
-                             (concat (read-passwd mu4e~get-mail-ask-password)
+	(process-send-string proc
+			     (concat (read-passwd mu4e~get-mail-ask-password)
 			       "\n"))
       ;; TODO kill process?
       (mu4e-error "Unrecognized password request")))
   (when (process-buffer proc)
     (let ((inhibit-read-only t)
-          (procwin (get-buffer-window (process-buffer proc))))
+	  (procwin (get-buffer-window (process-buffer proc))))
       ;; Insert at end of buffer. Leave point alone.
       (with-current-buffer (process-buffer proc)
-        (goto-char (point-max))
-        (if (string-match ".*\r\\(.*\\)" msg)
+	(goto-char (point-max))
+	(if (string-match ".*\r\\(.*\\)" msg)
 	  (progn
 	    ;; kill even with \r
 	    (end-of-line)
@@ -950,12 +950,12 @@ Also scrolls to the final line, and update the progress throbber."
 	      (beginning-of-line)
 	      (delete-region (point) end))
 	    (insert (match-string 1 msg)))
-          (insert msg)))
+	  (insert msg)))
       ;; Auto-scroll unless user is interacting with the window.
       (when (and (window-live-p procwin)
 	      (not (eq (selected-window) procwin)))
-        (with-selected-window procwin
-          (goto-char (point-max)))))))
+	(with-selected-window procwin
+	  (goto-char (point-max)))))))
 
 (defun mu4e-update-index ()
   "Update the mu4e index."
@@ -1273,13 +1273,13 @@ used in the view and compose modes."
     (goto-char (point-min))
     (when (search-forward-regexp "^\n" nil t) ;; search the first empty line
       (while (re-search-forward mu4e-cited-regexp nil t)
-        (let* ((level (string-width (replace-regexp-in-string
-                                     "[^>]" "" (match-string 0))))
-               (face  (unless (zerop level)
-                        (intern-soft (format "mu4e-cited-%d-face" level)))))
-          (when face
-            (add-text-properties (line-beginning-position 1)
-                                 (line-end-position 1) `(face ,face))))))))
+	(let* ((level (string-width (replace-regexp-in-string
+				     "[^>]" "" (match-string 0))))
+	       (face  (unless (zerop level)
+			(intern-soft (format "mu4e-cited-%d-face" level)))))
+	  (when face
+	    (add-text-properties (line-beginning-position 1)
+				 (line-end-position 1) `(face ,face))))))))
 
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used in
@@ -1304,9 +1304,9 @@ the view and compose modes."
   (let (buffers)
     (save-excursion
       (dolist (buffer (buffer-list t))
-        (set-buffer buffer)
-        (when (eq major-mode 'mu4e-compose-mode)
-          (push (buffer-name buffer) buffers))))
+	(set-buffer buffer)
+	(when (eq major-mode 'mu4e-compose-mode)
+	  (push (buffer-name buffer) buffers))))
     (nreverse buffers)))
 
 (provide 'mu4e-utils)
