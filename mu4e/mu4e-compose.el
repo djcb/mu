@@ -51,7 +51,8 @@
 ;;   a) move the message from drafts to the sent folder (maybe; depends on
 ;;      `mu4e-sent-messages-behavior')
 ;;   b) if it's a reply, mark the replied-to message as "R", i.e. replied
-;;      if it's a forward, mark the forwarded message as "P", i.e. passed (forwarded)
+;;      if it's a forward, mark the forwarded message as "P", i.e.
+;;      passed (forwarded)
 ;;   c) kill all buffers looking at the sent message
 
 ;;  a) is dealt with by message-mode, but we need to tell it where to move the
@@ -83,6 +84,8 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 (require 'mu4e-draft)
+(require 'mu4e-context)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Composing / Sending messages
