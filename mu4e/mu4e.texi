@@ -3718,8 +3718,15 @@ Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
 its docstring).
 @item @emph{How can I hide certain message from the search results?}
 See the variable @code{mu4e-headers-hide-predicate}.
+@item @emph{I'm getting an error 'Variable binding depth exceeds max-specpdl-size'
+when using mu4e -- what can I do about it?}  The error occurs because
+@t{mu4e} is binding more variables than @t{emacs} allows for, by
+default. You can avoid this by setting a higher value, e.g. by adding the
+following to your configuration:
+@lisp
+(setq max-specpdl-size 5000)
+@end lisp
 @end enumerate
-
 
 @node Retrieving mail
 @section Retrieving mail
