@@ -106,8 +106,8 @@ Note, when using GMail/IMAP, you should set this to either
 copies in the sent folder.
 
 Alternatively, `mu4e-sent-messages-behavior' can be a function
-which takes no arguments, and which should return on of the mentioned symbols,
-for example:
+which takes no arguments, and which should return one of the mentioned
+symbols, for example:
 
   (setq mu4e-sent-messages-behavior (lambda ()
 	(if (string= (message-sendmail-envelope-from) \"foo@example.com\")
