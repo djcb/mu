@@ -146,7 +146,7 @@ return the result."
 (defun mu4e-remove-file-later (filename)
   "Remove FILENAME in a few seconds."
   (lexical-let ((filename filename))
-    (run-at-time "10 sec" nil
+    (run-at-time "30 sec" nil
       (lambda () (ignore-errors (delete-file filename))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
