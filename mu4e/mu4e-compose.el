@@ -441,9 +441,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
       (setq truncate-lines nil
 	word-wrap t
 	use-hard-newlines t)
-      ;; Set the marks in the fringes before activating visual-line-mode
-      (set (make-local-variable 'visual-line-fringe-indicators)
-	'(left-curly-arrow right-curly-arrow))
       (visual-line-mode t))
 
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
