@@ -827,9 +827,10 @@ draft message."
   "Adapter for `browse-url-mailto-function."
   (let* ((headers (rfc2368-parse-mailto-url url))
 	  (to (cdr (assoc "To" headers)))
+	  (cc (assoc "Cc" headers))
 	  (subject (cdr (assoc "Subject" headers)))
 	  (body (cdr (assoc "Body" headers))))
-    (mu4e~compose-mail to subject)
+    (mu4e~compose-mail to subject (delq nil `(,cc)))
     (if body
       (progn
 	(message-goto-body)
