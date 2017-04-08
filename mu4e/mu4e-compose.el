@@ -821,25 +821,8 @@ draft message."
 ;; returning the symbol is probably the correct thing to do, as other
 ;; such functions suggest.
 (defun mu4e-user-agent ()
+  "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
-
-(defun mu4e~compose-browse-url-mail (url &optional ignored)
-  "Adapter for `browse-url-mailto-function."
-  (let* ((headers (rfc2368-parse-mailto-url url))
-	  (to (cdr (assoc "To" headers)))
-	  (cc (assoc "Cc" headers))
-	  (subject (cdr (assoc "Subject" headers)))
-	  (body (cdr (assoc "Body" headers))))
-    (mu4e~compose-mail to subject (delq nil `(,cc)))
-    (if body
-      (progn
-	(message-goto-body)
-	(insert body)
-	(if (not to)
-	  (message-goto-to)
-	  (if (not subject)
-	    (message-goto-subject)
-	    (message-goto-body)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

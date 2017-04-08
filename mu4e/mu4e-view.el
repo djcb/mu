@@ -833,7 +833,8 @@ changes, it triggers a refresh."
     (let ((flags (mu4e-message-field msg :flags))
 	   (msgid (mu4e-message-field msg :message-id))
 	   (docid (mu4e-message-field msg :docid)))
-      ;; attached (embedded) messages don't have docids; leave them alone if it is a new message
+      ;; attached (embedded) messages don't have docids; leave them alone if it
+      ;; is a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
@@ -842,14 +843,14 @@ changes, it triggers a refresh."
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.
-What browser is called is depending on
+The browser that is called depends on
 `browse-url-browser-function' and `browse-url-mailto-function'."
   (save-match-data
     (if (string-match "^mailto:" url)
       (lexical-let ((url url))
 	(lambda ()
 	  (interactive)
-	  (mu4e~compose-browse-url-mail url)))
+	  (browse-url-mail url)))
       (lexical-let ((url url))
 	(lambda ()
 	  (interactive)
@@ -863,7 +864,7 @@ If the url is mailto link, start writing an email to that address."
   (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
     (when url
       (if (string-match-p "^mailto:" url)
-	  (mu4e~compose-browse-url-mail url)
+	  (browse-url-mail url)
 	(browse-url url)))))
 
 (defun mu4e~view-show-images-maybe (msg)
@@ -1453,7 +1454,8 @@ string."
 a single one, otherwise, offer to go to a range of urls."
   (interactive "P")
   (mu4e~view-handle-urls "URL to visit"
-    multi (lambda (url) (mu4e~view-browse-url-from-binding url))))
+    multi
+    (lambda (url) (mu4e~view-browse-url-from-binding url))))
 
 (defun mu4e-view-save-url (&optional multi)
   "Offer to save urls(s) to the kill-ring. If

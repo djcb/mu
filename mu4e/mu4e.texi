@@ -3369,6 +3369,9 @@ see, most of it is commented-out.
 ;; make sure mu4e is in your load-path
 (require 'mu4e)
 
+;; use mu4e for e-mail in emacs
+(setq mail-user-agent 'mu4e-user-agent)
+
 ;; Only needed if your maildir is _not_ ~/Maildir
 ;; Must be a real dir, not a symlink
 ;;(setq mu4e-maildir "/home/user/Maildir")
@@ -3403,6 +3406,9 @@ customize.
 ;; example configuration for mu4e
 (require 'mu4e)
 
+;; use mu4e for e-mail in emacs
+(setq mail-user-agent 'mu4e-user-agent)
+
 ;; path to our Maildir directory
 (setq mu4e-maildir "/home/user/Maildir")
 
@@ -3422,7 +3428,6 @@ customize.
 
 ;; a  list of user's e-mail addresses
 (setq mu4e-user-mail-address-list '("foo@@bar.example.com" "cuux@@example.com")
-
 
 ;; the headers to show in the headers list -- a pair of a field
 ;; and its width, with `nil' meaning 'unlimited'
@@ -3570,6 +3575,9 @@ Next step: let's make a @t{mu4e} configuration for this:
 
 @lisp
 (require 'mu4e)
+
+;; use mu4e for e-mail in emacs
+(setq mail-user-agent 'mu4e-user-agent)
 
 ;; default
 ;; (setq mu4e-maildir "~/Maildir")
