@@ -731,9 +731,10 @@ is a symbol, one of `reply', `forward', `edit', `resend'
 		  (if (eq mu4e-decryption-policy 'ask)
 		    (yes-or-no-p (mu4e-format "Decrypt message?"))
 		    mu4e-decryption-policy))))
-	;; if there's a visible view window, select that before starting composing
-	;; a new message, so that one will be replaced by the compose window. The
-	;; 10-or-so line headers buffer is not a good place to write it...
+	;; if there's a visible view window, select that before starting
+	;; composing a new message, so that one will be replaced by the compose
+	;; window. The 10-or-so line headers buffer is not a good place to write
+	;; it...
 	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
 	  (when (window-live-p viewwin)
 	    (select-window viewwin)))

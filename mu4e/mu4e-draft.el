@@ -319,7 +319,6 @@ never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
       (let ((inhibit-read-only t))
 	(replace-match "")))))
 
-
 (defun mu4e~draft-reply-all-p (origmsg)
   "Ask user whether she wants to reply to *all* recipients.
 If there is just one recipient of ORIGMSG do nothing."
@@ -327,8 +326,8 @@ If there is just one recipient of ORIGMSG do nothing."
 	   (+ (length (mu4e~draft-create-to-lst origmsg))
 	     (length (mu4e~draft-create-cc-lst origmsg t))))
 	  (response
-	    (if (= recipnum 1)
-	      'all ;; with one recipient, we can reply to 'all'....
+	    (if (< recipnum 2)
+	      'all ;; with less than 2 recipients, we can reply to 'all'
 	      (mu4e-read-option
 		"Reply to "
 		`( (,(format "all %d recipients" recipnum) . all)
