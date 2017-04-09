@@ -353,21 +353,27 @@ get_part_type_string (MuMsgPartType ptype)
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
-	char	*name, *tmp, *parttype;
+	char	*name, *encname, *tmp, *parttype;
 	char	*tmpfile, *cid;
 
 	name     = mu_msg_part_get_filename (part, TRUE);
+	encname  = name ?
+		mu_str_escape_c_literal(name, TRUE) :
+		g_strdup("\"noname\"");
+	g_free (name);
+
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
-	cid      = mu_str_escape_c_literal(mu_msg_part_get_content_id(part), TRUE);
+	cid      = mu_str_escape_c_literal(mu_msg_part_get_content_id(part),
+					   TRUE);
 
 	tmp = g_strdup_printf
-		("%s(:index %d :name \"%s\" :mime-type \"%s/%s\"%s%s "
+		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
 		 ":type %s "
 		 ":attachment %s %s%s :size %i %s %s)",
 		 pinfo->parts ? pinfo->parts: "",
 		 part->index,
-		 name ? mu_str_escape_c_literal(name, FALSE) : "noname",
+		 encname,
 		 part->type ? part->type : "application",
 		 part->subtype ? part->subtype : "octet-stream",
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
@@ -378,7 +384,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 sig_verdict (part),
 		 dec_verdict (part));
 
-	g_free (name);
+	g_free (encname);
 	g_free (tmpfile);
 	g_free (parttype);
 	g_free (cid);
