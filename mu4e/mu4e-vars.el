@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -37,7 +37,7 @@
   "Location of the mu homedir, or nil for the default."
   :group 'mu4e
   :type '(choice (const :tag "Default location" nil)
-                 (directory :tag "Specify location"))
+		 (directory :tag "Specify location"))
   :safe 'stringp)
 
 (defcustom mu4e-mu-binary (executable-find "mu")
@@ -91,12 +91,13 @@ background."
   :safe 'booleanp)
 
 (defcustom mu4e-index-cleanup t
-  "Whether to run a cleanup phase after indexing -- that is, see
-if the is a message in the filesystem for each file in the
-message store. Having this option as `t' ensures that no
-non-existing mesages are shown but can also be quite slow with
-large message stores."  :type 'boolean :group 'mu4e :safe
-'booleanp)
+  "Whether to run a cleanup phase after indexing -- that is,
+validate that each message in the message store has a
+corresponding message file in the filesystem.
+
+Having this option as `t' ensures that no non-existing mesages
+are shown but can also be quite slow with large message stores."
+:type 'boolean :group 'mu4e :safe 'booleanp)
 
 (defcustom mu4e-index-lazy-check nil
   "Whether to only use a 'lazy check' to decide whether a message
@@ -106,14 +107,13 @@ the messages beneath it, which would miss messages that are
 modified outside mu. On the other hand, it's significantly
 faster."  :type 'boolean :group 'mu4e :safe 'booleanp)
 
-
 (defcustom mu4e-update-interval nil
   "Number of seconds between automatic calls to retrieve mail and
 update the database. If nil, don't update automatically. Note,
 changes in `mu4e-update-interval' only take effect after restarting
 mu4e."
   :type '(choice (const :tag "No automatic update" nil)
-                 (integer :tag "Seconds"))
+		 (integer :tag "Seconds"))
   :group 'mu4e
   :safe 'integerp)
 
@@ -232,12 +232,12 @@ A symbol which is either:
  * `horizontal':   split horizontally (headers on top)
  * `vertical':     split vertically (headers on the left).
  * anything else:  don't split (show either headers or messages,
-                  not both)
+		  not both)
 Also see `mu4e-headers-visible-lines'
 and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
-                 (const :tag "Split vertically" vertical)
-                 (const :tag "Don't split" nil))
+		 (const :tag "Split vertically" vertical)
+		 (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
 (defcustom mu4e-view-show-images nil
@@ -315,8 +315,8 @@ The setting is a symbol:
  * `ask': ask before decrypting anything
  * nil:   don't try to decrypt anything."
   :type '(choice (const :tag "Try to decrypt automatically" t)
-                 (const :tag "Ask before decrypting anything" ask)
-                 (const :tag "Don't try to decrypt anything" nil))
+		 (const :tag "Ask before decrypting anything" ask)
+		 (const :tag "Don't try to decrypt anything" nil))
   :group 'mu4e-crypto)
 
 ;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
@@ -359,7 +359,7 @@ Set to nil to not have any time-based restriction."
 It is used as the identity function for converting contacts to
 their canonical counterpart; useful as an example."
     (let ((name (plist-get contact :name))
-          (mail (plist-get contact :mail)))
+	  (mail (plist-get contact :mail)))
       (list :name name :mail mail)))
 
 (defcustom mu4e-contact-rewrite-function nil
