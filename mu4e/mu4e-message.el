@@ -128,7 +128,7 @@ Some notes on the format:
     (plist-get msg field)
     (mu4e-error "message must be non-nil")))
 
-(defsubst mu4e-message-field (msg field)
+(defun mu4e-message-field (msg field)
   "Retrieve FIELD from message plist MSG.
 Like `mu4e-message-field-nil', but will sanitize `nil' values:
 - all string field except body-txt/body-html: nil -> \"\"
@@ -152,7 +152,7 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
   "Return t if MSG contains FIELD, nil otherwise."
   (plist-member msg field))
 
-(defsubst mu4e-message-at-point (&optional noerror)
+(defun mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point in either
 the headers buffer or the view buffer, or nil if there is no such
 message. If optional NOERROR is non-nil, do not raise an error when

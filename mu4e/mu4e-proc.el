@@ -59,7 +59,7 @@ Match 1 will be the length (in hex).")
 	    '(run open listen connect stop)))
     t))
 
-(defsubst mu4e~proc-eat-sexp-from-buf ()
+(defun mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'.
 Note: this is a string, not an emacs-buffer. `mu4e~proc-buf gets
 its contents from the mu-servers in the following form:
