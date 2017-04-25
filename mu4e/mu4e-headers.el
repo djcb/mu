@@ -127,6 +127,12 @@ and offlineimap."
   :type 'boolean
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-advance-after-mark t
+  "With this option set to non-nil, automatically advance to the
+next mail after marking a message in header view."
+  :type 'boolean
+  :group 'mu4e-headers)
+
 (defcustom mu4e-headers-include-related t
   "With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
@@ -1700,7 +1706,7 @@ argument."
 region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-set mark)
-  (mu4e-headers-next))
+  (when mu4e-headers-advance-after-mark (mu4e-headers-next)))
 
 (defun mu4e~headers-quit-buffer ()
   "Quit the mu4e-headers buffer.
