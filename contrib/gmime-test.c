@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@cthulhu>
+** Copyright (C) 2011-2017 Dirk-Jan C. Binnema <djcb@cthulhu>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,8 +20,8 @@
 */
 
 /* gmime-test; compile with:
-       gcc -o gmime-test gmime-test.c -Wall -O0 -ggdb3 \
-           `pkg-config --cflags --libs gmime-2.4`
+       gcc -o gmime-test gmime-test.c -Wall -O0 -ggdb \
+	   `pkg-config --cflags --libs gmime-2.6`
  */
 
 #include <gmime/gmime.h>
@@ -34,17 +34,17 @@ static gchar*
 get_recip (GMimeMessage *msg, GMimeRecipientType rtype)
 {
 	char *recep;
-        InternetAddressList *receps;
+	InternetAddressList *receps;
 
-        receps = g_mime_message_get_recipients (msg, rtype);
-        recep = (char*)internet_address_list_to_string (receps, FALSE);
+	receps = g_mime_message_get_recipients (msg, rtype);
+	recep = (char*)internet_address_list_to_string (receps, FALSE);
 
-        if (!recep || !*recep) {
-                g_free (recep);
-                return NULL;
-        }
+	if (!recep || !*recep) {
+		g_free (recep);
+		return NULL;
+	}
 
-        return recep;
+	return recep;
 }
 
 static gchar*
@@ -95,11 +95,52 @@ print_date (GMimeMessage *msg)
 			 buf,tz < 0 ? "-" : "+", tz);
 }
 
+
+static void
+print_body (GMimeMessage *msg)
+{
+	GMimeObject		*body;
+	GMimeDataWrapper	*wrapper;
+	GMimeStream		*stream;
+
+	body = g_mime_message_get_body (msg);
+
+	if (GMIME_IS_MULTIPART(body))
+		body = g_mime_multipart_get_part (GMIME_MULTIPART(body), 0);
+
+	if (!GMIME_IS_PART(body))
+		return;
+
+	wrapper = g_mime_part_get_content_object (GMIME_PART(body));
+	if (!GMIME_IS_DATA_WRAPPER(wrapper))
+		return;
+
+	stream = g_mime_data_wrapper_get_stream (wrapper);
+	if (!GMIME_IS_STREAM(stream))
+		return;
+
+	do {
+		char	buf[512];
+		ssize_t	len;
+
+		len = g_mime_stream_read (stream, buf, sizeof(buf));
+		if (len == -1)
+			break;
+
+		if (write (fileno(stdout), buf, len) == -1)
+			break;
+
+		if (len < (int)sizeof(buf))
+			break;
+
+	} while (1);
+}
+
 static gboolean
 test_message (GMimeMessage *msg)
 {
-	gchar *val;
-	const gchar *str;
+	gchar		*val;
+	const gchar	*str;
 
 	g_print ("From   : %s\n", g_mime_message_get_sender (msg));
 
@@ -120,17 +161,17 @@ test_message (GMimeMessage *msg)
 
 	print_date (msg);
 
-
 	str = g_mime_message_get_message_id (msg);
 	g_print ("Msg-id : %s\n", str ? str : "<none>");
 
 	{
-		gchar *refsstr;
+		gchar	*refsstr;
 		refsstr = get_refs_str (msg);
 		g_print ("Refs   : %s\n", refsstr ? refsstr : "<none>");
 		g_free (refsstr);
 	}
 
+	print_body (msg);
 
 	return TRUE;
 }
