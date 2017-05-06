@@ -659,7 +659,8 @@ process."
 	      "Indexing completed; processed %d, updated %d, cleaned-up %d"
 	      (plist-get info :processed) (plist-get info :updated)
 	      (plist-get info :cleaned-up))
-	    (unless (zerop (plist-get info :updated))
+	    (unless (or (zerop (plist-get info :updated)) (not mu4e~contacts))
+	      (mu4e~request-contacts)
 	      (run-hooks 'mu4e-index-updated-hook)))))
       ((plist-get info :message)
 	(mu4e-index-message "%s" (plist-get info :message))))))
@@ -765,9 +766,9 @@ on the ranking in `mu4e~contacts.'"
 ;; start and stopping
 (defun mu4e~fill-contacts (contact-data)
   "We receive a list of contacts, which each contact of the form
-  (:me NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY)
-and fill the hash  `mu4e~contacts-for-completion' with it, with
-each contact mapped to an integer for their ranking.
+  (:me NAME :mail EMAIL :tstamp TIMESTAMP :freq FREQUENCY) and
+fill the hash `mu4e~contacts' with it, with each contact mapped
+to an integer for their ranking.
 
 This is used by the completion function in mu4e-compose."
   (let ((contacts) (rank 0))
@@ -842,8 +843,9 @@ Checks whether the server process is live."
   "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
 (defun mu4e~request-contacts ()
-  "If `mu4e-compose-complete-addresses' is non-nil, get/update the
-list of contacts we use for autocompletion; otherwise, do nothing."
+  "If `mu4e-compose-complete-addresses' is non-nil, get/update
+the list of contacts we use for autocompletion; otherwise, do
+nothing."
   (when mu4e-compose-complete-addresses
     (setq mu4e-contacts-func 'mu4e~fill-contacts)
     (mu4e~proc-contacts
@@ -889,8 +891,7 @@ successful, call FUNC (if non-nil) afterwards."
       (mu4e~proc-ping)
       ;; maybe request the list of contacts, automatically refresh after
       ;; reindexing
-      (mu4e~request-contacts)
-      (add-hook 'mu4e-index-updated-hook 'mu4e~request-contacts))))
+      (mu4e~request-contacts))))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."
