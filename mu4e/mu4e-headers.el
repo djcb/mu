@@ -598,14 +598,20 @@ found."
 if provided, or at the end of the buffer otherwise."
   (when (buffer-live-p mu4e~headers-buffer)
     (with-current-buffer mu4e~headers-buffer
-      (unless (and mu4e-headers-hide-predicate
-		(funcall mu4e-headers-hide-predicate msg))
-	(let ((docid (mu4e-message-field msg :docid))
-	       (line (mapconcat
-		       (lambda (f-w) (mu4e~headers-field-handler f-w msg))
-		       mu4e-headers-fields " ")))
-	  (setq line (mu4e~headers-line-handler msg line))
-	  (mu4e~headers-add-header line docid point msg))))))
+      (let ((line (mu4e~message-header-description msg)))
+        (when line
+	  (mu4e~headers-add-header line (mu4e-message-field msg :docid)
+                                   point msg))))))
+
+(defun mu4e~message-header-description (msg)
+  "Return a propertized description of MSG suitable for
+displaying in the header view."
+  (unless (and mu4e-headers-hide-predicate
+               (funcall mu4e-headers-hide-predicate msg))
+    (let ((line (mapconcat
+                 (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+                 mu4e-headers-fields " ")))
+      (mu4e~headers-line-handler msg line))))
 
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
@@ -1597,18 +1603,20 @@ docid. Otherwise, return nil."
     ;; move point, even if this function is called when this window is not
     ;; visible
     (when docid
-      ;; update all windows showing the headers buffer
-      (walk-windows
-	(lambda (win)
-	  (when (eq (window-buffer win) mu4e~headers-buffer)
-	    (set-window-point win (point))))
-	nil t)
-       ;;(set-window-point (get-buffer-window mu4e~headers-buffer t) (point))
+      (if (eq mu4e-split-view 'single-window)
+          (when (eq (window-buffer) mu4e~view-buffer)
+            (mu4e-headers-view-message))
+        ;; update all windows showing the headers buffer
+        (walk-windows
+         (lambda (win)
+           (when (eq (window-buffer win) mu4e~headers-buffer)
+             (set-window-point win (point))))
+         nil t)
+        ;; update message view if it was already showing
+        (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
+          (mu4e-headers-view-message)))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
-      ;; update message view if it was already showing
-      (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
-	(mu4e-headers-view-message))
       docid)))
 
 (defun mu4e-headers-next (&optional n)
@@ -1713,29 +1721,32 @@ region if there is a region, then move to the next message."
 This is a rather complex function, to ensure we don't disturb
 other windows."
   (interactive)
-  (unless (eq major-mode 'mu4e-headers-mode)
-    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (mu4e-mark-handle-when-leaving)
-  (let ((curbuf (current-buffer)) (curwin (selected-window))
-	 (headers-visible))
-    (walk-windows
-      (lambda (win)
-	(with-selected-window win
-	  ;; if we the view window connected to this one, kill it
-	  (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
-	    (delete-window win)
-	    (setq mu4e~headers-view-win nil)))
-	;; and kill any _other_ (non-selected) window that shows the current
-	;; buffer
-	(when (and
-		(eq curbuf (window-buffer win)) ;; does win show curbuf?
-		(not (eq curwin win))	        ;; it's not the curwin?
-		(not (one-window-p)))           ;; and not the last one?
-	  (delete-window win))))  ;; delete it!
-    ;; now, all *other* windows should be gone. kill ourselves, and return
-    ;; to the main view
-    (kill-buffer)
-    (mu4e~main-view)))
+  (if (eq mu4e-split-view 'single-window)
+      (progn (mu4e-mark-handle-when-leaving)
+             (mu4e-quit))
+    (unless (eq major-mode 'mu4e-headers-mode)
+      (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
+    (mu4e-mark-handle-when-leaving)
+    (let ((curbuf (current-buffer)) (curwin (selected-window))
+           (headers-visible))
+      (walk-windows
+        (lambda (win)
+          (with-selected-window win
+            ;; if we the view window connected to this one, kill it
+            (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
+              (delete-window win)
+              (setq mu4e~headers-view-win nil)))
+          ;; and kill any _other_ (non-selected) window that shows the current
+          ;; buffer
+          (when (and
+                  (eq curbuf (window-buffer win)) ;; does win show curbuf?
+                  (not (eq curwin win))	        ;; it's not the curwin?
+                  (not (one-window-p)))           ;; and not the last one?
+            (delete-window win))))  ;; delete it!
+      ;; now, all *other* windows should be gone. kill ourselves, and return
+      ;; to the main view
+      (kill-buffer)
+      (mu4e~main-view))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-headers)

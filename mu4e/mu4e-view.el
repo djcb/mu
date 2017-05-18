@@ -938,8 +938,9 @@ this view."
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer mu4e~view-headers-buffer
-	 (when (get-buffer-window)
-	   (select-window (get-buffer-window)))
+         (unless (eq mu4e-split-view 'single-window)
+           (when (get-buffer-window)
+             (select-window (get-buffer-window))))
 	 (if (mu4e~headers-goto-docid docid)
 	   ,@body
 	   (mu4e-error "cannot find message in headers buffer."))))))
@@ -969,8 +970,12 @@ message view. If this succeeds, return the new docid. Otherwise,
 return nil."
   (mu4e~view-in-headers-context
     (mu4e~headers-prev-or-next-unread backwards))
-  (mu4e-select-other-view)
-  (mu4e-headers-view-message))
+  (if (eq mu4e-split-view 'single-window)
+      (when (eq (window-buffer) mu4e~view-buffer)
+        (with-current-buffer mu4e~view-headers-buffer
+         (mu4e-headers-view-message)))
+    (mu4e-select-other-view)
+    (mu4e-headers-view-message)))
 
 (defun mu4e-view-headers-prev-unread ()
 "Move point to the previous unread message header in the headers

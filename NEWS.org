@@ -105,7 +105,7 @@
    Klaus Holst, Lukas Fürmetz, Magnus Therning, Maximilian Matthe,
    Nicolas Richard, Piotr Trojanek, Prashant Sachdeva, Remco van 't
    Veer, Stephen Eglen, Stig Brautaset, Thierry Volpiatto, Thomas
-   Moulia, Titus von der Malsburg, Yuri D'Elia
+   Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir Sedach
 
 * Old news
   :PROPERTIES:

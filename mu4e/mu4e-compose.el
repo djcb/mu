@@ -621,6 +621,16 @@ tempfile)."
     (push 'delete-frame message-exit-actions)
     (push 'delete-frame message-postpone-actions)))
 
+(defun mu4e~switch-back-to-mu4e-buffer ()
+  "Try to go back to some previous buffer, in the order view->headers->main."
+  (unless (eq mu4e-split-view 'single-window)
+    (if (buffer-live-p mu4e~view-buffer)
+	(switch-to-buffer mu4e~view-buffer)
+      (if (buffer-live-p mu4e~headers-buffer)
+	  (switch-to-buffer mu4e~headers-buffer)
+	;; if all else fails, back to the main view
+	(when (fboundp 'mu4e) (mu4e))))))
+
 (defun mu4e-sent-handler (docid path)
   "Handler function, called with DOCID and PATH for the just-sent
 message. For Forwarded ('Passed') and Replied messages, try to set
@@ -634,15 +644,8 @@ the appropriate flag at the message forwarded or replied-to."
     (when (and (buffer-file-name buf)
 	    (string= (buffer-file-name buf) path))
       (if message-kill-buffer-on-exit
-	(kill-buffer buf))))
-  ;; now, try to go back to some previous buffer, in the order
-  ;; view->headers->main
-  (if (buffer-live-p mu4e~view-buffer)
-    (switch-to-buffer mu4e~view-buffer)
-    (if (buffer-live-p mu4e~headers-buffer)
-      (switch-to-buffer mu4e~headers-buffer)
-      ;; if all else fails, back to the main view
-      (when (fboundp 'mu4e) (mu4e))))
+	  (kill-buffer buf))))
+  (mu4e~switch-back-to-mu4e-buffer)
   (mu4e-message "Message sent"))
 
 (defun mu4e-message-kill-buffer ()
@@ -655,13 +658,8 @@ It restores mu4e window layout after killing the compose-buffer."
     (when (not (equal current-buffer (current-buffer)))
       ;; Restore mu4e
       (if mu4e-compose-in-new-frame
-	(delete-frame)
-	(if (buffer-live-p mu4e~view-buffer)
-	  (switch-to-buffer mu4e~view-buffer)
-	  (if (buffer-live-p mu4e~headers-buffer)
-	    (switch-to-buffer mu4e~headers-buffer)
-	    ;; if all else fails, back to the main view
-	    (when (fboundp 'mu4e) (mu4e))))))))
+	  (delete-frame)
+	(mu4e~switch-back-to-mu4e-buffer)))))
 
 (defun mu4e~compose-set-parent-flag (path)
   "Set the 'replied' \"R\" flag on messages we replied to, and the
@@ -735,9 +733,10 @@ is a symbol, one of `reply', `forward', `edit', `resend'
 	;; composing a new message, so that one will be replaced by the compose
 	;; window. The 10-or-so line headers buffer is not a good place to write
 	;; it...
-	(let ((viewwin (get-buffer-window mu4e~view-buffer)))
-	  (when (window-live-p viewwin)
-	    (select-window viewwin)))
+	(unless (eq mu4e-split-view 'single-window)
+	  (let ((viewwin (get-buffer-window mu4e~view-buffer)))
+	    (when (window-live-p viewwin)
+	      (select-window viewwin))))
 	;; talk to the backend
 	(mu4e~proc-compose compose-type decrypt docid)))))
 
