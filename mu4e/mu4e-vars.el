@@ -229,14 +229,17 @@ KEY) is still recognized as well, for backward-compatibility.")
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:
- * `horizontal':   split horizontally (headers on top)
- * `vertical':     split vertically (headers on the left).
- * anything else:  don't split (show either headers or messages,
-		  not both)
+ * `horizontal':    split horizontally (headers on top)
+ * `vertical':      split vertically (headers on the left).
+ * `single-window': view and headers in one window (mu4e will try not to
+		    touch your window layout), main view in minibuffer
+ * anything else:   don't split (show either headers or messages,
+		    not both)
 Also see `mu4e-headers-visible-lines'
 and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
 		 (const :tag "Split vertically" vertical)
+		 (const :tag "Single window" single-window)
 		 (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
@@ -848,7 +851,7 @@ argument, and returns a string. See the default value of
 ;; headers
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
-(defvar mu4e~headers-buffer nil "Buffer for message headers.")
+
 ; view
 (defconst mu4e~view-buffer-name "*mu4e-view*"
   "Name for the message view buffer.")
@@ -856,12 +859,8 @@ argument, and returns a string. See the default value of
 (defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
   "Name for the embedded message view buffer.")
 
-(defvar mu4e~view-buffer nil "The view buffer.")
-
 (defvar mu4e~view-msg nil "The message being viewed in view mode.")
-
-(defvar mu4e~view-headers-buffer nil
-  "The headers buffer connected to this view.")
+(make-variable-buffer-local 'mu4e~view-msg)
 
 (defvar mu4e~contacts nil
   "Hash of that maps contacts (ie. 'name <e-mail>') to an integer

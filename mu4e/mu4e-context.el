@@ -115,7 +115,8 @@ non-nil."
 		  (set (car cell) (cdr cell)))
 	  (mu4e-context-vars context)))
       (setq mu4e~context-current context)
-      (mu4e~main-view-real nil nil)
+      (unless (eq mu4e-split-view 'single-window)
+        (mu4e~main-view-real nil nil))
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 

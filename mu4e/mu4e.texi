@@ -1060,6 +1060,11 @@ shown (default: 8).
 @item @t{vertical}: display the message view on the
 right side of the header view. Use @code{mu4e-headers-visible-columns} to set
 the number of visible columns (default: 30).
+@item @t{single-window}: single window mode. Single-window mode tries to
+minimize mu4e window operations (opening, killing, resizing, etc) and buffer
+changes, while still retaining the view and headers buffers. In addition, it
+replaces mu4e main view with a minibuffer prompt containing the same
+information.
 @item anything else: don't do any splitting
 @end itemize
 

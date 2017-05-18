@@ -563,9 +563,15 @@ Or go to the top level if there is none."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer  mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer  (mu4e-get-headers-buffer)
       mu4e~headers-last-query)))
+
+(defun mu4e-get-view-buffer ()
+  (get-buffer mu4e~view-buffer-name))
+
+(defun mu4e-get-headers-buffer ()
+  (get-buffer mu4e~headers-buffer-name))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -574,9 +580,9 @@ that has a live window), and vice versa."
   (let* ((other-buf
 	   (cond
 	     ((eq major-mode 'mu4e-headers-mode)
-	       mu4e~view-buffer)
+	       (mu4e-get-view-buffer))
 	     ((eq major-mode 'mu4e-view-mode)
-	       mu4e~headers-buffer)))
+	       (mu4e-get-headers-buffer))))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
       (select-window other-win)
@@ -906,8 +912,8 @@ successful, call FUNC (if non-nil) afterwards."
     (setq mu4e~update-timer nil))
   (mu4e-clear-caches)
   (mu4e~proc-kill)
-  ;; kill all main/view/headers buffer
-  (mapcar
+  ;; kill all mu4e buffers
+  (mapc
     (lambda (buf)
       (with-current-buffer buf
 	(when (member major-mode
@@ -993,24 +999,21 @@ frame to display buffer BUF."
   (when mu4e~progress-reporter
     (progress-reporter-done mu4e~progress-reporter)
     (setq mu4e~progress-reporter nil))
-  (let* ((status (process-status proc))
-	  (code (process-exit-status proc))
-	  (maybe-error (or (not (eq status 'exit)) (/= code 0)))
-	  (buf (and (buffer-live-p mu4e~update-buffer) mu4e~update-buffer))
-	  (win (and buf (get-buffer-window buf))))
-    (unless mu4e-hide-index-messages
-      (message nil))
-    (if maybe-error
+  (unless mu4e-hide-index-messages
+    (message nil))
+  (if (or (not (eq (process-status proc) 'exit))
+          (/= (process-exit-status proc) 0))
       (progn
 	(when mu4e-index-update-error-warning
 	  (mu4e-message "Update process returned with non-zero exit code")
 	  (sit-for 5))
 	(when mu4e-index-update-error-continue
 	  (mu4e-update-index)))
-      (mu4e-update-index))
-    (if (window-live-p win)
-      (with-selected-window win (kill-buffer-and-window))
-      (when (buffer-live-p buf) (kill-buffer buf)))))
+    (mu4e-update-index))
+  (when (buffer-live-p mu4e~update-buffer)
+    (unless (eq mu4e-split-view 'single-window)
+      (mapc #'delete-window (get-buffer-window-list mu4e~update-buffer)))
+    (kill-buffer mu4e~update-buffer)))
 
 ;; complicated function, as it:
 ;;   - needs to check for errors
@@ -1210,16 +1213,17 @@ and MAXHEIGHT are ignored."
   "Bury mu4e-buffers (main, headers, view) (and delete all windows
 displaying it). Do _not_ bury the current buffer, though."
   (interactive)
-  (let ((curbuf (current-buffer)))
-    ;; note: 'walk-windows' does not seem to work correctly when modifying
-    ;; windows; therefore, the doloops here
-    (dolist (frame (frame-list))
-      (dolist (win (window-list frame nil))
-	(with-current-buffer (window-buffer win)
-	  (unless (eq curbuf (current-buffer))
-	    (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-	      (when (eq t (window-deletable-p win))
-		(delete-window win))))))) t))
+  (unless (eq mu4e-split-view 'single-window)
+    (let ((curbuf (current-buffer)))
+      ;; note: 'walk-windows' does not seem to work correctly when modifying
+      ;; windows; therefore, the doloops here
+      (dolist (frame (frame-list))
+        (dolist (win (window-list frame nil))
+          (with-current-buffer (window-buffer win)
+            (unless (eq curbuf (current-buffer))
+              (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
+                (when (eq t (window-deletable-p win))
+                  (delete-window win))))))) t)))
 
 
 (defun mu4e-get-time-date (prompt)

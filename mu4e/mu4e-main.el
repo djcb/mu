@@ -197,9 +197,13 @@ clicked."
 
 (defun mu4e~main-view ()
   "Create the mu4e main-view, and switch to it."
-  (mu4e~main-view-real nil nil)
-  (switch-to-buffer mu4e~main-buffer-name)
-  (goto-char (point-min))
+  (if (eq mu4e-split-view 'single-window)
+      (if (buffer-live-p (mu4e-get-headers-buffer))
+          (switch-to-buffer (mu4e-get-headers-buffer))
+        (mu4e~main-menu))
+    (mu4e~main-view-real nil nil)
+    (switch-to-buffer mu4e~main-buffer-name)
+    (goto-char (point-min)))
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -209,16 +213,37 @@ clicked."
 (defun mu4e~main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
-  (let ((curpos (point)))
-    (unless (file-directory-p smtpmail-queue-dir)
-      (mu4e-error "`smtpmail-queue-dir' does not exist"))
-    (setq smtpmail-queue-mail (not smtpmail-queue-mail))
-    (message
-     (concat "Outgoing mail will now be "
-	     (if smtpmail-queue-mail "queued" "sent directly")))
-    (mu4e~main-view-real nil nil)
-    (goto-char curpos)))
+  (unless (file-directory-p smtpmail-queue-dir)
+    (mu4e-error "`smtpmail-queue-dir' does not exist"))
+  (setq smtpmail-queue-mail (not smtpmail-queue-mail))
+  (message (concat "Outgoing mail will now be "
+                   (if smtpmail-queue-mail "queued" "sent directly")))
+  (unless (eq mu4e-split-view 'single-window)
+    (let ((curpos (point)))
+      (mu4e~main-view-real nil nil)
+      (goto-char curpos))))
 
+(defun mu4e~main-menu ()
+  "mu4e main view in the minibuffer."
+  (interactive)
+  (let ((mu4e-hide-index-messages t))
+    (call-interactively
+     (lookup-key
+      mu4e-main-mode-map
+      (string
+       (read-key
+        (mu4e-format
+         "%s"
+         (concat
+          (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
+          (mu4e~main-action-str "[s]earch " 'mu4e-search)
+          (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
+          (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
+          (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
+          (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
+          (mu4e~main-action-str "[N]ews " 'mu4e-news)
+          (mu4e~main-action-str "[A]bout " 'mu4e-about)
+          (mu4e~main-action-str "[H]elp " 'mu4e-display-manual)))))))))
 
 ;; (progn
 ;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)

@@ -108,10 +108,10 @@ is either a headers or view buffer."
   `(cond
      ((eq major-mode 'mu4e-headers-mode) ,@body)
      ((eq major-mode 'mu4e-view-mode)
-       (when (buffer-live-p mu4e~view-headers-buffer)
+       (when (buffer-live-p (mu4e-get-headers-buffer))
 	 (let* ((msg (mu4e-message-at-point))
 		 (docid (mu4e-message-field msg :docid)))
-	   (with-current-buffer mu4e~view-headers-buffer
+	   (with-current-buffer (mu4e-get-headers-buffer)
 	     (if (mu4e~headers-goto-docid docid)
 	       ,@body
 	       (mu4e-error "cannot find message in headers buffer."))))))
