@@ -1126,26 +1126,29 @@ the query history stack."
 (defun mu4e~headers-redraw-get-view-window ()
   "Close all windows, redraw the headers buffer based on the value
 of `mu4e-split-view', and return a window for the message view."
-  (mu4e-hide-other-mu4e-buffers)
-  (unless (buffer-live-p mu4e~headers-buffer)
-    (mu4e-error "No headers buffer available"))
-  (switch-to-buffer mu4e~headers-buffer)
-  ;; kill the existing view win
-  (when (buffer-live-p mu4e~view-buffer)
-    (kill-buffer mu4e~view-buffer))
-  ;; get a new view window
-  (setq mu4e~headers-view-win
-   (let* ((new-win-func
-	   (cond
-	    ((eq mu4e-split-view 'horizontal) ;; split horizontally
-	     '(split-window-vertically mu4e-headers-visible-lines))
-	    ((eq mu4e-split-view 'vertical) ;; split vertically
-	     '(split-window-horizontally mu4e-headers-visible-columns)))))
-     (cond ((with-demoted-errors "Unable to split window: %S"
-	      (eval new-win-func)))
-	   (t ;; no splitting; just use the currently selected one
-	    (selected-window)))))
-  mu4e~headers-view-win)
+  (if (eq mu4e-split-view 'single-window)
+      (or (and (buffer-live-p (mu4e-get-view-buffer))
+               (get-buffer-window (mu4e-get-view-buffer)))
+          (selected-window))
+    (mu4e-hide-other-mu4e-buffers)
+    (unless (buffer-live-p (mu4e-get-headers-buffer))
+      (mu4e-error "No headers buffer available"))
+    (switch-to-buffer (mu4e-get-headers-buffer))
+    ;; kill the existing view buffer
+    (when (buffer-live-p (mu4e-get-view-buffer))
+      (kill-buffer (mu4e-get-view-buffer)))
+    ;; get a new view window
+    (setq mu4e~headers-view-win
+     (let* ((new-win-func
+             (cond
+              ((eq mu4e-split-view 'horizontal) ;; split horizontally
+               '(split-window-vertically mu4e-headers-visible-lines))
+              ((eq mu4e-split-view 'vertical) ;; split vertically
+               '(split-window-horizontally mu4e-headers-visible-columns)))))
+       (cond ((with-demoted-errors "Unable to split window: %S"
+                (eval new-win-func)))
+             (t ;; no splitting; just use the currently selected one
+              (selected-window)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
@@ -1520,7 +1523,9 @@ _not_ refresh the last search with the new setting for threading."
   (with-current-buffer mu4e~headers-loading-buf
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(local-set-key (kbd "q") 'kill-buffer-and-window)
+	(local-set-key (kbd "q") (if (eq mu4e-split-view 'single-window)
+                                     'kill-buffer
+                                   'kill-buffer-and-window))
 	(insert (propertize "Waiting for message..."
 		  'face 'mu4e-system-face 'intangible t))))
   mu4e~headers-loading-buf)
@@ -1599,15 +1604,15 @@ docid. Otherwise, return nil."
     ;; move point, even if this function is called when this window is not
     ;; visible
     (when docid
+      ;; update all windows showing the headers buffer
+      (walk-windows
+       (lambda (win)
+         (when (eq (window-buffer win) (mu4e-get-headers-buffer))
+           (set-window-point win (point))))
+       nil t)
       (if (eq mu4e-split-view 'single-window)
-          (when (eq (window-buffer) mu4e~view-buffer)
+          (when (eq (window-buffer) (mu4e-get-view-buffer))
             (mu4e-headers-view-message))
-        ;; update all windows showing the headers buffer
-        (walk-windows
-         (lambda (win)
-           (when (eq (window-buffer win) mu4e~headers-buffer)
-             (set-window-point win (point))))
-         nil t)
         ;; update message view if it was already showing
         (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
           (mu4e-headers-view-message)))
@@ -1723,8 +1728,9 @@ other windows."
     (unless (eq major-mode 'mu4e-headers-mode)
       (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
     (mu4e-mark-handle-when-leaving)
-    (let ((curbuf (current-buffer)) (curwin (selected-window))
-           (headers-visible))
+    (let ((curbuf (current-buffer))
+          (curwin (selected-window))
+          (headers-visible))
       (walk-windows
         (lambda (win)
           (with-selected-window win
