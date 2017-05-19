@@ -308,7 +308,6 @@ marking if it still had that."
     ;; again by triggering mu4e~view again as it marks the message as read
     (with-current-buffer buf
       (switch-to-buffer buf)
-      (setq mu4e~view-msg msg)
       (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
@@ -320,7 +319,8 @@ marking if it still had that."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-	  (mu4e-view-mode))))))
+	  (mu4e-view-mode)
+          (setq mu4e~view-msg msg))))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
@@ -800,7 +800,6 @@ FUNC should be a function taking two arguments:
 \\{mu4e-view-mode-map}."
   (use-local-map mu4e-view-mode-map)
 
-  (make-local-variable 'mu4e~view-msg)
   (make-local-variable 'mu4e~view-link-map)
   (make-local-variable 'mu4e~view-attach-map)
   (make-local-variable 'mu4e~view-cited-hidden)
