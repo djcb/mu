@@ -302,10 +302,9 @@ In the format needed for `mu4e-read-option'.")
 
 (defun mu4e~headers-clear ()
   "Clear the header buffer and related data structures."
-  (when (buffer-live-p mu4e~headers-buffer)
+  (when (buffer-live-p (mu4e-get-headers-buffer))
     (let ((inhibit-read-only t))
-      (with-current-buffer mu4e~headers-buffer
-	(setq mu4e~view-msg nil)
+      (with-current-buffer (mu4e-get-headers-buffer)
 	(mu4e~mark-clear)
 	(erase-buffer)))))
 
@@ -317,21 +316,20 @@ In the format needed for `mu4e-read-option'.")
 
 (defun mu4e~headers-view-handler (msg)
   "Handler function for displaying a message."
-  (mu4e-view msg mu4e~headers-buffer))
+  (mu4e-view msg))
 
 (defun mu4e~headers-view-this-message-p (docid)
   "Is DOCID currently being viewed?"
-  (let ((viewbuf (get-buffer mu4e~view-buffer-name)))
-    (when (and viewbuf (buffer-live-p viewbuf))
-      (with-current-buffer viewbuf
-	(eq docid (plist-get mu4e~view-msg :docid))))))
+  (when (buffer-live-p (mu4e-get-view-buffer))
+    (with-current-buffer (mu4e-get-view-buffer)
+      (eq docid (plist-get mu4e~view-msg :docid)))))
 
 (defun mu4e~headers-update-handler (msg is-move)
   "Update handler, will be called when a message has been updated
 in the database. This function will update the current list of
 headers."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
       (let* ((docid (mu4e-message-field msg :docid))
 	      (initial-message-at-point (mu4e~headers-docid-at-point))
 	      (initial-column (current-column))
@@ -359,7 +357,7 @@ headers."
 	  ;; update it; that way, the flags can be updated, as well as the path
 	  ;; (which is useful for viewing the raw message)
 	  (when (mu4e~headers-view-this-message-p docid)
-	    (mu4e-view msg mu4e~headers-buffer))
+	    (mu4e-view msg))
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
 	  ;; longer matches the query, but this seem a good heuristic.  if it
@@ -383,17 +381,16 @@ message from the current list of headers. If the message is not
 present, don't do anything.
 
 If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
       (mu4e~headers-remove-header docid t)
       ;; if we were viewing this message, close it now.
       (when (and (mu4e~headers-view-this-message-p docid)
-		 (buffer-live-p mu4e~view-buffer))
-	(with-current-buffer mu4e~view-buffer
-	  ;; XXX it seems this sometimes fails; investigate;
-	  ;; for now, just ignore the error
-	  (ignore-errors
-	    (kill-buffer-and-window))))
+		 (buffer-live-p (mu4e-get-view-buffer)))
+        (unless (eq mu4e-split-view 'single-window)
+          (mapc #'delete-window (get-buffer-window-list
+                                 (mu4e-get-view-buffer))))
+        (kill-buffer (mu4e-get-view-buffer)))
       (unless skip-hook
 	(run-hooks 'mu4e-message-changed-hook)))))
 
@@ -596,8 +593,8 @@ found."
 (defun mu4e~headers-header-handler (msg &optional point)
   "Create a one line description of MSG in this buffer, at POINT,
 if provided, or at the end of the buffer otherwise."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
       (let ((line (mu4e~message-header-description msg)))
         (when line
 	  (mu4e~headers-add-header line (mu4e-message-field msg :docid)
@@ -619,8 +616,8 @@ displaying in the header view."
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
       (save-excursion
 	(goto-char (point-max))
 	(let ((inhibit-read-only t)
@@ -913,8 +910,8 @@ no user-interaction ongoing."
 	  (not (active-minibuffer-window))) ;; no user input only
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
-    (when (and (buffer-live-p mu4e~headers-buffer)
-	    (window-live-p (get-buffer-window mu4e~headers-buffer)))
+    (when (and (buffer-live-p (mu4e-get-headers-buffer))
+	    (window-live-p (get-buffer-window (mu4e-get-headers-buffer))))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode
@@ -948,7 +945,7 @@ no user-interaction ongoing."
 (defun mu4e~headers-highlight (docid)
   "Highlight the header with DOCID, or do nothing if it's not found.
 Also, unhighlight any previously highlighted headers."
-  (with-current-buffer mu4e~headers-buffer
+  (with-current-buffer (mu4e-get-headers-buffer)
     (save-excursion
       ;; first, unhighlight the previously highlighted docid, if any
       (when (and docid mu4e~highlighted-docid
@@ -965,7 +962,7 @@ Also, unhighlight any previously highlighted headers."
   "When there is a visible window for the headers buffer, make sure
 to select it. This is needed when adding new headers, otherwise
 adding a lot of new headers looks really choppy."
-  (let ((win (get-buffer-window mu4e~headers-buffer)))
+  (let ((win (get-buffer-window (mu4e-get-headers-buffer))))
     (when win (select-window win))))
 
 ;;;; headers in the buffer are prefixed by an invisible string with the docid
@@ -1034,7 +1031,7 @@ message plist, or nil if not found."
 ;;;; markers mark headers for
 (defun mu4e~headers-mark (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
-  (with-current-buffer mu4e~headers-buffer
+  (with-current-buffer (mu4e-get-headers-buffer)
     (let ((inhibit-read-only t) (oldpoint (point)))
       (unless (mu4e~headers-goto-docid docid)
 	(mu4e-error "Cannot find message with docid %S" docid))
@@ -1059,8 +1056,8 @@ message plist, or nil if not found."
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
 at (point-max) otherwise. If MSG is not nil, add it as the
 text-property `msg'."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
       (let ((inhibit-read-only t)
 	     (is-first-header (= (point-min) (point-max))))
 	(save-excursion
@@ -1077,7 +1074,7 @@ text-property `msg'."
   "Remove header with DOCID at point.
 When IGNORE-MISSING is non-nill, don't raise an error when the
 docid is not found."
-  (with-current-buffer mu4e~headers-buffer
+  (with-current-buffer (mu4e-get-headers-buffer)
     (if (mu4e~headers-goto-docid docid)
       (let ((inhibit-read-only t))
 	(delete-region (line-beginning-position) (line-beginning-position 2)))
@@ -1102,7 +1099,6 @@ the query history stack."
 	(when mu4e~headers-last-query
 	  (mu4e~headers-push-query mu4e~headers-last-query 'past)))
       (setq
-	mu4e~headers-buffer buf
 	mode-name "mu4e-headers"
 	mu4e~headers-last-query expr)
       (add-to-list 'global-mode-string
@@ -1678,8 +1674,8 @@ If N is negative shrink the headers window.  When not in split-view
 do nothing."
   (interactive "P")
   (let ((n (or n 1))
-	 (hwin (get-buffer-window mu4e~headers-buffer)))
-  (when (and (buffer-live-p mu4e~view-buffer) (window-live-p hwin))
+	 (hwin (get-buffer-window (mu4e-get-headers-buffer))))
+  (when (and (buffer-live-p (mu4e-get-view-buffer)) (window-live-p hwin))
      (let ((n (or n 1)))
        (case mu4e-split-view
 	 ;; emacs has weird ideas about what horizontal, vertical means...

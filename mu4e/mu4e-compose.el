@@ -624,10 +624,10 @@ tempfile)."
 (defun mu4e~switch-back-to-mu4e-buffer ()
   "Try to go back to some previous buffer, in the order view->headers->main."
   (unless (eq mu4e-split-view 'single-window)
-    (if (buffer-live-p mu4e~view-buffer)
-	(switch-to-buffer mu4e~view-buffer)
-      (if (buffer-live-p mu4e~headers-buffer)
-	  (switch-to-buffer mu4e~headers-buffer)
+    (if (buffer-live-p (mu4e-get-view-buffer))
+	(switch-to-buffer (mu4e-get-view-buffer))
+      (if (buffer-live-p (mu4e-get-headers-buffer))
+	  (switch-to-buffer (mu4e-get-headers-buffer))
 	;; if all else fails, back to the main view
 	(when (fboundp 'mu4e) (mu4e))))))
 
@@ -734,7 +734,7 @@ is a symbol, one of `reply', `forward', `edit', `resend'
 	;; window. The 10-or-so line headers buffer is not a good place to write
 	;; it...
 	(unless (eq mu4e-split-view 'single-window)
-	  (let ((viewwin (get-buffer-window mu4e~view-buffer)))
+	  (let ((viewwin (get-buffer-window (mu4e-get-view-buffer))))
 	    (when (window-live-p viewwin)
 	      (select-window viewwin))))
 	;; talk to the backend

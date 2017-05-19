@@ -851,7 +851,7 @@ argument, and returns a string. See the default value of
 ;; headers
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
-(defvar mu4e~headers-buffer nil "Buffer for message headers.")
+
 ; view
 (defconst mu4e~view-buffer-name "*mu4e-view*"
   "Name for the message view buffer.")
@@ -859,12 +859,7 @@ argument, and returns a string. See the default value of
 (defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
   "Name for the embedded message view buffer.")
 
-(defvar mu4e~view-buffer nil "The view buffer.")
-
 (defvar mu4e~view-msg nil "The message being viewed in view mode.")
-
-(defvar mu4e~view-headers-buffer nil
-  "The headers buffer connected to this view.")
 
 (defvar mu4e~contacts nil
   "Hash of that maps contacts (ie. 'name <e-mail>') to an integer

@@ -563,9 +563,15 @@ Or go to the top level if there is none."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
-  (when (buffer-live-p mu4e~headers-buffer)
-    (with-current-buffer  mu4e~headers-buffer
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer  (mu4e-get-headers-buffer)
       mu4e~headers-last-query)))
+
+(defun mu4e-get-view-buffer ()
+  (get-buffer mu4e~view-buffer-name))
+
+(defun mu4e-get-headers-buffer ()
+  (get-buffer mu4e~headers-buffer-name))
 
 (defun mu4e-select-other-view ()
   "When the headers view is selected, select the message view (if
@@ -574,9 +580,9 @@ that has a live window), and vice versa."
   (let* ((other-buf
 	   (cond
 	     ((eq major-mode 'mu4e-headers-mode)
-	       mu4e~view-buffer)
+	       (mu4e-get-view-buffer))
 	     ((eq major-mode 'mu4e-view-mode)
-	       mu4e~headers-buffer)))
+	       (mu4e-get-headers-buffer))))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
       (select-window other-win)
@@ -906,8 +912,8 @@ successful, call FUNC (if non-nil) afterwards."
     (setq mu4e~update-timer nil))
   (mu4e-clear-caches)
   (mu4e~proc-kill)
-  ;; kill all main/view/headers buffer
-  (mapcar
+  ;; kill all mu4e buffers
+  (mapc
     (lambda (buf)
       (with-current-buffer buf
 	(when (member major-mode
