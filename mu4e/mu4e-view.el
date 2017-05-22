@@ -182,8 +182,11 @@ off, for example when using a read-only file-system."
 
 
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
+(make-variable-buffer-local 'mu4e~view-cited-hidden)
+
 (defvar mu4e~view-link-map nil
   "A map of some number->url so we can jump to url by number.")
+(make-variable-buffer-local 'mu4e~view-link-map)
 
 (defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
   "A map of msg paths --> parent-docids.
@@ -192,6 +195,7 @@ message extracted at some path.")
 
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
+(make-variable-buffer-local 'mu4e~view-attach-map)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-view-message-with-message-id (msgid)
@@ -304,10 +308,14 @@ marking if it still had that."
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
 	      (get-buffer-create mu4e~view-buffer-name))))
-    ;; note: mu4e~view-mark-as-read-maybe will pseudo-recursively call mu4e-view
-    ;; again by triggering mu4e~view again as it marks the message as read
     (with-current-buffer buf
+      (unless (eq major-mode 'mu4e-view-mode)
+        (mu4e-view-mode))
+      (setq mu4e~view-msg msg)
       (switch-to-buffer buf)
+      ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
+      ;; another call to mu4e-view (via mu4e~headers-update-handler as
+      ;; the reply handler to mu4e~proc-move)
       (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
@@ -318,9 +326,7 @@ marking if it still had that."
 	  (mu4e~fontify-signature)
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
-	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-	  (mu4e-view-mode)
-          (setq mu4e~view-msg msg))))))
+	  (when embedded (local-set-key "q" 'kill-buffer-and-window)))))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
@@ -799,14 +805,6 @@ FUNC should be a function taking two arguments:
   "Major mode for viewing an e-mail message in mu4e.
 \\{mu4e-view-mode-map}."
   (use-local-map mu4e-view-mode-map)
-
-  (make-local-variable 'mu4e~view-link-map)
-  (make-local-variable 'mu4e~view-attach-map)
-  (make-local-variable 'mu4e~view-cited-hidden)
-
-  ;; make permanent too, so they'll survive changing the mode
-  (put 'mu4e~view-link-map 'permanent-local t)
-  (put 'mu4e~view-attach-map 'permanent-local t)
 
   ;; show context in mode-string
   (make-local-variable 'global-mode-string)

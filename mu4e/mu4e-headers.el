@@ -351,7 +351,7 @@ headers."
 
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
-	  (mu4e~headers-remove-handler docid t)
+          (mu4e~headers-remove-header docid t)
 
 	  ;; if we're actually viewing this message (in mu4e-view mode), we
 	  ;; update it; that way, the flags can be updated, as well as the path
@@ -374,7 +374,7 @@ headers."
 	    (mu4e~headers-highlight docid))
 	  (run-hooks 'mu4e-message-changed-hook))))))
 
-(defun mu4e~headers-remove-handler (docid &optional skip-hook)
+(defun mu4e~headers-remove-handler (docid)
   "Remove handler, will be called when a message with DOCID has
 been removed from the database. This function will hide the removed
 message from the current list of headers. If the message is not
@@ -382,17 +382,15 @@ present, don't do anything.
 
 If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
   (when (buffer-live-p (mu4e-get-headers-buffer))
-    (with-current-buffer (mu4e-get-headers-buffer)
-      (mu4e~headers-remove-header docid t)
-      ;; if we were viewing this message, close it now.
-      (when (and (mu4e~headers-view-this-message-p docid)
-		 (buffer-live-p (mu4e-get-view-buffer)))
-        (unless (eq mu4e-split-view 'single-window)
-          (mapc #'delete-window (get-buffer-window-list
-                                 (mu4e-get-view-buffer))))
-        (kill-buffer (mu4e-get-view-buffer)))
-      (unless skip-hook
-	(run-hooks 'mu4e-message-changed-hook)))))
+    (mu4e~headers-remove-header docid t))
+  ;; if we were viewing this message, close it now.
+  (when (and (mu4e~headers-view-this-message-p docid)
+             (buffer-live-p (mu4e-get-view-buffer)))
+    (unless (eq mu4e-split-view 'single-window)
+      (mapc #'delete-window (get-buffer-window-list
+                             (mu4e-get-view-buffer))))
+    (kill-buffer (mu4e-get-view-buffer)))
+  (run-hooks 'mu4e-message-changed-hook))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
