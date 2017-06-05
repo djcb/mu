@@ -1043,35 +1043,25 @@ errexit:
 }
 
 
-
 char *
 mu_str_remove_ctrl_in_place (char *str)
 {
-	char *cur;
+	char *orig = str;
 
 	g_return_val_if_fail (str, NULL);
 
-	for (cur = str; *cur; ++cur) {
-
-		GString *gstr;
-
-		if (!iscntrl(*cur))
-			continue;
-
+	for (char *cur = orig; *cur; ++cur) {
 		if (isspace(*cur)) {
 			/* squash special white space into a simple space */
-			*cur = ' ';
+			*orig++ = ' ';
+		} else if (iscntrl(*cur)) {
+			// eat it
 		} else {
-			/* remove other control characters */
-			gstr = g_string_sized_new (strlen (str));
-			for (cur = str; *cur; ++cur)
-				if (!iscntrl (*cur))
-					g_string_append_c (gstr, *cur);
-			memcpy (str, gstr->str, gstr->len); /* fits */
-			g_string_free (gstr, TRUE);
-			break;
+			*orig++ = *cur;
 		}
 	}
+
+	*orig = '\0';  // ensure the updated string has a NULL
 
 	return str;
 }
