@@ -220,7 +220,8 @@ an absolute path."
   "Like `message', but prefixed with mu4e.
 If we're waiting for user-input or if there's some message in the
 echo area, don't show anything."
-  (unless (or (active-minibuffer-window))
+  (unless (or (active-minibuffer-window)
+              (current-message))
     (message "%s" (apply 'mu4e-format frm args))))
 
 (defun mu4e-index-message (frm &rest args)
