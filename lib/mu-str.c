@@ -927,28 +927,17 @@ mu_str_quoted_from_strv (const gchar **params)
 static char*
 read_key (const char *str, const char **val, GError **err)
 {
-	const char *cur;
-	GString *gstr;
-
-	cur = str;
-
-	gstr = g_string_sized_new (strlen(cur));
-	while (*cur && *cur != ':') {
-		g_string_append_c (gstr, *cur);
-		++cur;
+	const gchar *sep = g_strstr_len (str, strlen(str), ":");
+	if (sep) {
+		*val = sep + 1;
+		return g_strndup (str, sep - str);
 	}
 
-	if (*cur != ':' || gstr->len == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
-			     "expected: '<alphanum>+:' (%s)",
-			     str);
-		g_string_free (gstr, TRUE);
-		*val = NULL;
-		return NULL;
-	} else {
-		*val = cur + 1;
-		return g_string_free (gstr, FALSE);
-	}
+	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
+		     "expected: '<alphanum>+:' (%s)",
+		     str);
+	*val = NULL;
+	return NULL;
 }
 
 
@@ -971,15 +960,14 @@ read_val (const char *str, const char **endval, GError **err)
 			} else {
 				++cur;
 				g_string_append_c (gstr, *cur);
-				continue;
 			}
 		} else if (*cur == '"') {
 			quoted = !quoted;
-			continue;
-		} else if (isblank(*cur) && !quoted)
+		} else if (isblank(*cur) && !quoted) {
 			break;
-		else
+		} else {
 			g_string_append_c (gstr, *cur);
+		}
 	}
 
 	if (quoted) {
