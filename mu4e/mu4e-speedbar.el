@@ -32,6 +32,7 @@
 ;;; Code:
 
 (require 'speedbar)
+(require 'sr-speedbar nil t)
 (require 'mu4e-vars)
 (require 'mu4e-headers)
 (require 'mu4e-utils)
