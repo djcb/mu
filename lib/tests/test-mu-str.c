@@ -502,6 +502,30 @@ test_mu_str_replace (void)
 }
 
 
+static void
+test_mu_str_remove_ctrl_in_place (void)
+{
+	unsigned u;
+	struct {
+		char *str;
+		const char *exp;
+	} strings [] = {
+		{ g_strdup(""), ""},
+		{ g_strdup("hello, world!"), "hello, world!" },
+		{ g_strdup("hello,\tworld!"), "hello, world!" },
+		{ g_strdup("hello,\n\nworld!"), "hello,  world!", },
+		{ g_strdup("hello,\x1f\x1e\x1ew\nor\nld!"), "hello,w or ld!" },
+		{ g_strdup("\x1ehello, world!\x1f"), "hello, world!" }
+	};
+
+	for (u = 0; u != G_N_ELEMENTS(strings); ++u) {
+		char *res;
+		res = mu_str_remove_ctrl_in_place (strings[u].str);
+		g_assert_cmpstr (res,==,strings[u].exp);
+		g_free (strings[u].str);
+	}
+}
+
 
 int
 main (int argc, char *argv[])
@@ -559,6 +583,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu_term_fixups",
 			 test_mu_term_fixups);
 
+	g_test_add_func ("/mu-str/mu_str_remove_ctrl_in_place",
+			 test_mu_str_remove_ctrl_in_place);
 
 	/* FIXME: add tests for mu_str_flags; but note the
 	 * function simply calls mu_msg_field_str */

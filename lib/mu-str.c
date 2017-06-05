@@ -588,7 +588,7 @@ process_str (const char *str, gboolean xapian_esc, gboolean query_esc)
 
 		if (!is_range_field)
 			uc = g_unichar_tolower (uc);
-		
+
 		g_string_append_unichar (gstr, uc);
 	}
 
@@ -1043,35 +1043,26 @@ errexit:
 }
 
 
-
-char *
+char*
 mu_str_remove_ctrl_in_place (char *str)
 {
-	char *cur;
+	char *orig, *cur;
 
 	g_return_val_if_fail (str, NULL);
 
-	for (cur = str; *cur; ++cur) {
+	orig = str;
 
-		GString *gstr;
-
-		if (!iscntrl(*cur))
-			continue;
-
+	for (cur = orig; *cur; ++cur) {
 		if (isspace(*cur)) {
 			/* squash special white space into a simple space */
-			*cur = ' ';
-		} else {
-			/* remove other control characters */
-			gstr = g_string_sized_new (strlen (str));
-			for (cur = str; *cur; ++cur)
-				if (!iscntrl (*cur))
-					g_string_append_c (gstr, *cur);
-			memcpy (str, gstr->str, gstr->len); /* fits */
-			g_string_free (gstr, TRUE);
-			break;
-		}
+			*orig++ = ' ';
+		} else if (iscntrl(*cur)) {
+			/* eat it */
+		} else
+			*orig++ = *cur;
 	}
+
+	*orig = '\0';  /* ensure the updated string has a NULL */
 
 	return str;
 }
