@@ -1046,7 +1046,14 @@ run in the background; otherwise, pop up a window."
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
-      (set-process-filter proc 'mu4e~get-mail-process-filter))))
+      (set-process-filter proc 'mu4e~get-mail-process-filter))
+    (if mu4e-update-timeout
+        (lexical-let ((proc proc))
+          (run-at-time mu4e-update-timeout nil
+                       (lambda ()
+                         (let ((status (process-status proc)))
+                           (if (eq status 'run)
+                               (kill-process proc)))))))))
 
 (defun mu4e-update-mail-and-index (run-in-background)
   "Get a new mail by running `mu4e-get-mail-command'. If

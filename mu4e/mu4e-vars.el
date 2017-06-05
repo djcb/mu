@@ -117,6 +117,13 @@ mu4e."
   :group 'mu4e
   :safe 'integerp)
 
+(defcustom mu4e-update-timeout nil
+  "Number of seconds for update operation to timeout. If nil, no timeout."
+  :type '(choice (const :tag "No timeout" nil)
+                 (integer :tag "Seconds"))
+  :group 'mu4e
+  :safe 'integerp)
+
 (defvar mu4e-update-pre-hook nil
   "Hook run just *before* the mail-retrieval / database updating process starts.
  You can use this hook for example to `mu4e-get-mail-command' with
