@@ -109,7 +109,7 @@ Start the process if needed."
       (t
 	(error "Something bad happened to the mu server process")))))
 
-(defsubst mu4e~docid-msgid-param (docid-or-msgid)
+(defun mu4e~docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."
   (format
     (if (stringp docid-or-msgid)

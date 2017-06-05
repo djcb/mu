@@ -719,7 +719,7 @@ process."
       (t (format "\"%s\"" ph)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defsubst mu4e~process-contact (contact)
+(defun mu4e~process-contact (contact)
   "Process CONTACT, and either return nil when it should not be included,
 or (rfc822-string . CONTACT) otherwise."
   (when mu4e-contact-rewrite-function
