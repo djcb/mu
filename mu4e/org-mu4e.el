@@ -78,8 +78,8 @@ Example usage:
 	      desc link)
 	(org-store-link-props :type "mu4e" :query query)
 	(setq
-	  desc (concat "mu4e:query:" query)
-	  link desc)
+          desc (mu4e-message-field-at-point :subject)
+          link (concat "mu4e:query:" query))
 	(org-add-link-props :link link :description desc)
 	link)
       ;; storing links to messages
