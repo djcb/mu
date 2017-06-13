@@ -226,24 +226,31 @@ clicked."
 (defun mu4e~main-menu ()
   "mu4e main view in the minibuffer."
   (interactive)
-  (let ((mu4e-hide-index-messages t))
-    (call-interactively
-     (lookup-key
-      mu4e-main-mode-map
-      (string
-       (read-key
-        (mu4e-format
-         "%s"
-         (concat
-          (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
-          (mu4e~main-action-str "[s]earch " 'mu4e-search)
-          (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
-          (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
-          (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
-          (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
-          (mu4e~main-action-str "[N]ews " 'mu4e-news)
-          (mu4e~main-action-str "[A]bout " 'mu4e-about)
-          (mu4e~main-action-str "[H]elp " 'mu4e-display-manual)))))))))
+  (let ((key
+          (read-key
+           (mu4e-format
+            "%s"
+            (concat
+             (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
+             (mu4e~main-action-str "[s]earch " 'mu4e-search)
+             (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
+             (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
+             (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
+             (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
+             (mu4e~main-action-str "[N]ews " 'mu4e-news)
+             (mu4e~main-action-str "[A]bout " 'mu4e-about)
+             (mu4e~main-action-str "[H]elp " 'mu4e-display-manual))))))
+    (unless (member key '(?\C-g ?\C-\[))
+      (let ((mu4e-command (lookup-key mu4e-main-mode-map (string key) t)))
+        (if mu4e-command
+            (condition-case err
+                (let ((mu4e-hide-index-messages t))
+                  (call-interactively mu4e-command))
+              (error (when (cadr err) (message (cadr err)))))
+          (message (mu4e-format "key %s not bound to a command" (string key))))
+        (when (or (not mu4e-command) (eq mu4e-command 'mu4e-context-switch))
+          (sit-for 1)
+          (mu4e~main-menu))))))
 
 ;; (progn
 ;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
