@@ -1722,7 +1722,7 @@ other windows."
   (interactive)
   (if (eq mu4e-split-view 'single-window)
       (progn (mu4e-mark-handle-when-leaving)
-             (mu4e-quit))
+             (kill-buffer))
     (unless (eq major-mode 'mu4e-headers-mode)
       (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
     (mu4e-mark-handle-when-leaving)
