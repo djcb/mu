@@ -3525,7 +3525,6 @@ remoteuser = USERNAME@gmail.com
 remotepass = PASSWORD
 ssl = yes
 maxconnections = 1
-realdelete = no
 @end verbatim
 
 Obviously, you need to replace @t{USERNAME} and @t{PASSWORD} with your actual
