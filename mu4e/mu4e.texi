@@ -2759,7 +2759,7 @@ corresponds to the message at point. Something like:
 @end lisp
 
 @noindent
-Messages that operate on attachments receive a @var{msg} parameter, which
+Functions that operate on attachments receive a @var{msg} parameter, which
 corresponds to the message at point, and an @var{attachment-num}, which is the
 number of the attachment as seen in the message view. An attachment function
 looks like:
