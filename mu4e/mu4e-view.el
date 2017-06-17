@@ -1418,6 +1418,7 @@ list."
 (mu4e~view-defun-mark-for something)
 (mu4e~view-defun-mark-for read)
 (mu4e~view-defun-mark-for unread)
+(mu4e~view-defun-mark-for untrash)
 
 (defun mu4e-view-marked-execute ()
   "Execute the marks."
