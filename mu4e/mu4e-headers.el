@@ -1387,10 +1387,11 @@ searching. If SHOW is non-nil, show the message with MSGID."
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'."
   (interactive)
   (let* ((prompt (mu4e-format (or prompt "Search for: ")))
-         (expr
-          (read-string prompt
-                       (if edit expr nil)
-                       'mu4e~headers-search-hist)))
+	  (expr
+	    (if edit
+	      (read-string prompt expr)
+	      (or expr
+		(read-string prompt nil 'mu4e~headers-search-hist)))))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr ignore-history)
     (setq mu4e~headers-msgid-target msgid
