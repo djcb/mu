@@ -202,7 +202,6 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 		return;
 
 	rv	 = FALSE;
-	filepath = NULL;
 	err      = NULL;
 
 	msgopts = mu_config_get_msg_options (sd->opts);
