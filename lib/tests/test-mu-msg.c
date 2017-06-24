@@ -183,8 +183,8 @@ test_mu_msg_02 (void)
 static void
 test_mu_msg_03 (void)
 {
-	MuMsg *msg;
-	GSList *params;
+	MuMsg		*msg;
+	const GSList	*params;
 
 	msg = get_msg (MU_TESTMAILDIR4 "/1283599333.1840_11.cthulhu!2,");
 	g_assert_cmpstr (mu_msg_get_to(msg),
@@ -201,7 +201,8 @@ test_mu_msg_03 (void)
 			 ==,
 			 "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 
-	params = mu_msg_get_body_text_content_type_parameters(msg, MU_MSG_OPTION_NONE);
+	params = mu_msg_get_body_text_content_type_parameters(
+		msg, MU_MSG_OPTION_NONE);
 	g_assert_cmpuint (g_slist_length ((GSList*)params), ==, 2);
 
 	g_assert_cmpstr ((char*)params->data,==, "charset");
@@ -375,7 +376,7 @@ test_mu_msg_references_dups (void)
 
 	mlist = mu_msg_get_mailing_list (msg);
 	g_assert_cmpstr (mlist ,==, "Example of List Id");
-		
+
 	mu_msg_unref (msg);
 }
 

@@ -354,6 +354,7 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
 				/* looks like a backup / tempsave file */
 				if (entry->d_name[u + 1] == '\0')
 					return TRUE;
+				continue;
 			default:
 				continue;
 			}

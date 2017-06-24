@@ -429,19 +429,23 @@ append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 }
 
 static void
-append_sexp_param (GString *gstr, GSList *param)
+append_sexp_param (GString *gstr, const GSList *param)
 {
 	for (;param; param = g_slist_next (param)) {
+		const char *str;
 		char *key, *value;
 
-		key = param->data;
-		key = key ? mu_str_escape_c_literal (key, FALSE) : "";
+		str   = param->data;
+		key   = str ? mu_str_escape_c_literal (str, FALSE) : g_strdup ("");
 
 		param = g_slist_next (param);
-		value = param->data;
-		value = value ? mu_str_escape_c_literal (value, FALSE) : "";
+		str   = param->data;
+		value = str ? mu_str_escape_c_literal (str, FALSE) : g_strdup ("");
 
 		g_string_append_printf (gstr, "(\"%s\" . \"%s\")", key, value);
+		g_free (key);
+		g_free (value);
+
 		if (param->next)
 			g_string_append_c (gstr, ' ');
 	}
