@@ -229,8 +229,8 @@ store your org-contacts."
 	path
 	(mu4e-message-field msg :path)))))
 
-(defun mu4e-action-git-apply-mbox (msg)
-  "Apply and commit the git [patch] MSG.
+(defun mu4e-action-git-apply-mbox (msg &optional signoff)
+  "Apply and commit the git [patch] MSG with optional SIGNOFF.
 
 If the `default-directory' matches the most recent history entry don't
 bother asking for the git tree again (useful for bulk actions)."
@@ -243,9 +243,10 @@ bother asking for the git tree again (useful for bulk actions)."
       (setf ido-work-directory-list
 	(cons cwd (delete cwd ido-work-directory-list))))
     (shell-command
-      (format "cd %s; git am %s"
-	(shell-quote-argument cwd)
-	(shell-quote-argument (mu4e-message-field msg :path))))))
+      (format "cd %s; git am %s %s"
+              (shell-quote-argument cwd)
+              (if signoff "--signoff" "")
+              (shell-quote-argument (mu4e-message-field msg :path))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
