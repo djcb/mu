@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,14 +34,14 @@ enum _FieldFlags {
 	FLAG_GMIME	         = 1 << 0, /* field retrieved through
 					    * gmime */
 	FLAG_XAPIAN_INDEX        = 1 << 1, /* field is indexed in
-			          	    * xapian (i.e., the text
-			          	    * is processed */
+			        	    * xapian (i.e., the text
+					    * is processed */
 	FLAG_XAPIAN_TERM         = 1 << 2, /* field stored as term in
-			          	    * xapian (so it can be searched) */
+					    * xapian (so it can be searched) */
 	FLAG_XAPIAN_VALUE        = 1 << 3, /* field stored as value in
-			          	    * xapian (so the literal
-			          	    * value can be
-			          	    * retrieved) */
+					    * xapian (so the literal
+					    * value can be
+					    * retrieved) */
 	FLAG_XAPIAN_CONTACT      = 1 << 4, /* field contains one or more
 					    * e-mail-addresses */
 	FLAG_XAPIAN_BOOLEAN      = 1 << 5, /* use 'add_boolean_prefix'
