@@ -745,11 +745,16 @@ mu4e-compose-mode."
 	 :shortname "Maildir"
 	 :help "Maildir for this message"
 	 :sortable t))
+     (:list .
+       ( :name "List-Id"
+	 :shortname "List"
+	 :help "Mailing list id for this message"
+	 :sortable t))
      (:mailing-list .
        ( :name "List"
 	 :shortname "List"
-	 :help "Mailing list for this message"
-	 :sortable nil))
+	 :help "Mailing list friendly name for this message"
+	 :sortable :list))
      (:message-id .
        ( :name "Message-Id"
 	 :shortname "MsgID"
