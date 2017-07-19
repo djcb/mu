@@ -1107,7 +1107,13 @@ the query history stack."
 		       (mu4e~quote-for-modeline mu4e~headers-last-query)
 		       'face 'mu4e-modeline-face)
 		      " "
-		       (mu4e-context-label)))))
+                      (mu4e-context-label)
+                      (if (and mu4e-display-update-status-in-modeline
+                               (buffer-live-p mu4e~update-buffer)
+                               (process-live-p (get-buffer-process mu4e~update-buffer)))
+                          (propertize " (updating)" 'face 'mu4e-modeline-face)
+                        "")))))
+
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
     (unless (get-buffer-window buf 0)
