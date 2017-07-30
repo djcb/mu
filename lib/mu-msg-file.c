@@ -159,7 +159,7 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 		return FALSE;
 	}
 
-	self->_mime_msg = g_mime_parser_construct_message (parser);
+	self->_mime_msg = g_mime_parser_construct_message (parser, NULL);
 	g_object_unref (parser);
 	if (!self->_mime_msg) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
@@ -171,15 +171,15 @@ init_mime_msg (MuMsgFile *self, const char* path, GError **err)
 }
 
 static char*
-get_recipient (MuMsgFile *self, GMimeRecipientType rtype)
+get_recipient (MuMsgFile *self, GMimeAddressType atype)
 {
 	char			*recip;
 	InternetAddressList	*recips;
 
-	recips = g_mime_message_get_recipients (self->_mime_msg, rtype);
+	recips = g_mime_message_get_addresses (self->_mime_msg, atype);
 
 	/* FALSE --> don't encode */
-	recip = (char*)internet_address_list_to_string (recips, FALSE);
+	recip = (char*)internet_address_list_to_string (recips, NULL, FALSE);
 
 	if (recip && !g_utf8_validate (recip, -1, NULL)) {
 		g_debug ("invalid recipient in %s\n", self->_path);
@@ -488,7 +488,7 @@ mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 	*err = TRUE; /* guilty until proven innocent */
 	g_return_val_if_fail (GMIME_IS_PART(part), NULL);
 
-	wrapper = g_mime_part_get_content_object (part);
+	wrapper = g_mime_part_get_content (part);
 	if (!wrapper) {
 		/* this happens with invalid mails */
 		g_debug ("failed to create data wrapper");
@@ -545,20 +545,21 @@ get_references  (MuMsgFile *self)
 	for (msgids = NULL, u = 0; headers[u]; ++u) {
 
 		char *str;
-		const GMimeReferences *cur;
 		GMimeReferences *mime_refs;
+		int i, refs_len;
 
 		str = mu_msg_file_get_header (self, headers[u]);
 		if (!str)
 			continue;
 
-		mime_refs = g_mime_references_decode (str);
+		mime_refs = g_mime_references_parse (NULL, str);
 		g_free (str);
 
-		for (cur = mime_refs; cur;
-		     cur = g_mime_references_get_next(cur)) {
+		refs_len = g_mime_references_length (mime_refs);
+		for (i = 0; i < refs_len; ++i) {
 			const char* msgid;
-			msgid = g_mime_references_get_message_id (cur);
+			msgid = g_mime_references_get_message_id (mime_refs, i);
+
 			/* don't include duplicates */
 			if (msgid && !contains (msgids, msgid))
 				/* explicitly ensure it's utf8-safe,
@@ -638,13 +639,14 @@ cleanup_maybe (const char *str, gboolean *do_free)
 
 
 
-G_GNUC_CONST static GMimeRecipientType
-recipient_type (MuMsgFieldId mfid)
+G_GNUC_CONST static GMimeAddressType
+address_type (MuMsgFieldId mfid)
 {
 	switch (mfid) {
-	case MU_MSG_FIELD_ID_BCC: return GMIME_RECIPIENT_TYPE_BCC;
-	case MU_MSG_FIELD_ID_CC : return GMIME_RECIPIENT_TYPE_CC;
-	case MU_MSG_FIELD_ID_TO : return GMIME_RECIPIENT_TYPE_TO;
+	case MU_MSG_FIELD_ID_BCC : return GMIME_ADDRESS_TYPE_BCC;
+	case MU_MSG_FIELD_ID_CC	 : return GMIME_ADDRESS_TYPE_CC;
+	case MU_MSG_FIELD_ID_TO	 : return GMIME_ADDRESS_TYPE_TO;
+	case MU_MSG_FIELD_ID_FROM: return GMIME_ADDRESS_TYPE_FROM;
 	default: g_return_val_if_reached (-1);
 	}
 }
@@ -679,12 +681,10 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 
 	case MU_MSG_FIELD_ID_BCC:
 	case MU_MSG_FIELD_ID_CC:
-	case MU_MSG_FIELD_ID_TO: *do_free = TRUE;
-		return get_recipient (self, recipient_type(mfid));
-
 	case MU_MSG_FIELD_ID_FROM:
-		return (char*)cleanup_maybe
-			(g_mime_message_get_sender (self->_mime_msg), do_free);
+	case MU_MSG_FIELD_ID_TO:
+		*do_free = TRUE;
+		return get_recipient (self, address_type(mfid));
 
 	case MU_MSG_FIELD_ID_PATH: return self->_path;
 
@@ -736,9 +736,9 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 	switch (mfid) {
 
 	case MU_MSG_FIELD_ID_DATE: {
-		time_t t;
-		g_mime_message_get_date (self->_mime_msg, &t, NULL);
-		return (time_t)t;
+		GDateTime *dt;
+		dt = g_mime_message_get_date (self->_mime_msg);
+		return dt ? g_date_time_to_unix (dt) : 0;
 	}
 
 	case MU_MSG_FIELD_ID_FLAGS:

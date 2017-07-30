@@ -99,83 +99,6 @@ dummy_password_func (const char *user_id, const char *prompt_ctx,
 }
 
 
-static char*
-get_gpg (GError **err)
-{
-	char		*path;
-	const char	*envpath;
-
-	if ((envpath = g_getenv ("MU_GPG_PATH"))) {
-		if (access (envpath, X_OK) != 0) {
-			mu_util_g_set_error (
-				err, MU_ERROR,
-				"'%s': not a valid gpg path: %s",
-				envpath, strerror (errno));
-			return NULL;
-		 }
-		return g_strdup (envpath);
-	}
-
-	if (!(path = g_find_program_in_path ("gpg2")) &&
-	    !(path = g_find_program_in_path ("gpg"))) {
-		mu_util_g_set_error (err, MU_ERROR, "gpg/gpg2 not found");
-		return NULL;
-	} else
-		return path;
-}
-
-
-static GMimeCryptoContext*
-get_gpg_crypto_context (MuMsgOptions opts, GError **err)
-{
-	GMimeCryptoContext	*cctx;
-	char			*gpg;
-
-	cctx  = NULL;
-	if (!(gpg   = get_gpg (err)))
-		return NULL;
-
-	cctx = g_mime_gpg_context_new (
-		(GMimePasswordRequestFunc)password_requester, gpg);
-	g_free (gpg);
-
-	if (!cctx) {
-		mu_util_g_set_error (err, MU_ERROR,
-				     "failed to get GPG crypto context");
-		return NULL;
-	}
-
-	/* always try to use the agent */
-	g_mime_gpg_context_set_use_agent (GMIME_GPG_CONTEXT(cctx), TRUE);
- 	g_mime_gpg_context_set_auto_key_retrieve
-		(GMIME_GPG_CONTEXT(cctx),
-		 opts & MU_MSG_OPTION_AUTO_RETRIEVE ? TRUE:FALSE);
-
-	return cctx;
-}
-
-
-static GMimeCryptoContext*
-get_crypto_context (MuMsgOptions opts, MuMsgPartPasswordFunc password_func,
-		    gpointer user_data, GError **err)
-{
-	CallbackData *cbdata;
-	GMimeCryptoContext *cctx;
-
-	cctx = get_gpg_crypto_context (opts, err);
-	if (!cctx)
-		return NULL;
-
-	/* use gobject to pass data to the callback func */
-	cbdata = g_new0 (CallbackData, 1);
-	cbdata->pw_func   = password_func ? password_func : dummy_password_func;
-	cbdata->user_data = user_data;
-
-	g_object_set_data_full (G_OBJECT(cctx), CALLBACK_DATA,
-				cbdata, (GDestroyNotify)g_free);
-	return cctx;
-}
-
 static const char*
 get_pubkey_algo_name (GMimePubKeyAlgo algo)
 {
@@ -250,12 +173,12 @@ get_cert_data (GMimeCertificate *cert)
 		(g_mime_certificate_get_pubkey_algo (cert));
 
 	switch (g_mime_certificate_get_trust (cert)) {
-	case GMIME_CERTIFICATE_TRUST_NONE:      trust = "none"; break;
-	case GMIME_CERTIFICATE_TRUST_NEVER:     trust = "never"; break;
-	case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
-	case GMIME_CERTIFICATE_TRUST_MARGINAL:  trust = "marginal"; break;
-	case GMIME_CERTIFICATE_TRUST_FULLY:     trust = "full"; break;
-	case GMIME_CERTIFICATE_TRUST_ULTIMATE:  trust = "ultimate"; break;
+	case GMIME_TRUST_UNKNOWN:   trust = "unknown"; break;
+	case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
+	case GMIME_TRUST_NEVER:     trust = "never"; break;
+	case GMIME_TRUST_MARGINAL:  trust = "marginal"; break;
+	case GMIME_TRUST_FULL:      trust = "full"; break;
+	case GMIME_TRUST_ULTIMATE:  trust = "ultimate"; break;
 	default:
 		g_return_val_if_reached (NULL);
 	}
@@ -277,13 +200,17 @@ get_verdict_report (GMimeSignature *msig)
 	time_t t;
 	const char *status, *created, *expires;
 	gchar *certdata, *report;
+	GMimeSignatureStatus sigstat;
 
-	switch (g_mime_signature_get_status (msig)) {
-	case GMIME_SIGNATURE_STATUS_GOOD:  status = "good";  break;
-	case GMIME_SIGNATURE_STATUS_ERROR: status = "error"; break;
-	case GMIME_SIGNATURE_STATUS_BAD:   status = "bad";   break;
-	default: g_return_val_if_reached (NULL);
-	}
+	sigstat = g_mime_signature_get_status (msig);
+	if (sigstat & GMIME_SIGNATURE_STATUS_ERROR_MASK)
+	  status = "error";
+	else if (sigstat & GMIME_SIGNATURE_STATUS_RED)
+	  status = "bad";
+	else if (sigstat & GMIME_SIGNATURE_STATUS_GREEN)
+	  status = "good";
+	else
+	  g_return_val_if_reached (NULL);
 
 	t = g_mime_signature_get_created (msig);
 	created = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
@@ -320,14 +247,13 @@ get_status_report (GMimeSignatureList *sigs)
 		msig = g_mime_signature_list_get_signature (sigs, i);
 		sigstat = g_mime_signature_get_status (msig);
 
-		switch (sigstat) {
-		case GMIME_SIGNATURE_STATUS_GOOD:              break;
-		case GMIME_SIGNATURE_STATUS_ERROR:
-			status = MU_MSG_PART_SIG_STATUS_ERROR; break;
-		case GMIME_SIGNATURE_STATUS_BAD:
-			status = MU_MSG_PART_SIG_STATUS_BAD;   break;
-		default: g_return_val_if_reached (NULL);
-		}
+		/* downgrade our expectations */
+		if ((sigstat & GMIME_SIGNATURE_STATUS_ERROR_MASK) &&
+		    status != MU_MSG_PART_SIG_STATUS_ERROR)
+		  status = MU_MSG_PART_SIG_STATUS_ERROR;
+		else if ((sigstat & GMIME_SIGNATURE_STATUS_RED) &&
+			 status == MU_MSG_PART_SIG_STATUS_GOOD)
+		  status = MU_MSG_PART_SIG_STATUS_BAD;
 
 		rep  = get_verdict_report (msig);
 		report = g_strdup_printf ("%s%s%d: %s",
@@ -371,20 +297,11 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 {
 	/* the signature status */
 	MuMsgPartSigStatusReport *report;
-	GMimeCryptoContext *ctx;
 	GMimeSignatureList *sigs;
 
 	g_return_if_fail (GMIME_IS_MULTIPART_SIGNED(sig));
 
-	ctx = get_crypto_context (opts, NULL, NULL, err);
-	if (!ctx) {
-		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-				     "failed to get crypto context");
-		return;
-	}
-
-	sigs = g_mime_multipart_signed_verify (sig, ctx, err);
-	g_object_unref (ctx);
+	sigs = g_mime_multipart_signed_verify (sig, GMIME_VERIFY_NONE, err);
 	if (!sigs) {
 		if (err && !*err)
 			mu_util_g_set_error (err, MU_ERROR_CRYPTO,
@@ -434,29 +351,12 @@ mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 			    GError **err)
 {
 	GMimeObject *dec;
-	GMimeCryptoContext *ctx;
 	GMimeDecryptResult *res;
 
 	g_return_val_if_fail (GMIME_IS_MULTIPART_ENCRYPTED(enc), NULL);
 
-	ctx = get_crypto_context (opts, func, user_data, err);
-	if (!ctx) {
-		mu_util_g_set_error (err, MU_ERROR_CRYPTO,
-				     "failed to get crypto context");
-		return NULL;
-	}
-
-	/* at the time of writing, there is a small leak in
-	 * g_mime_multipart_encrypted_decrypt; I've notified its
-	 * author and it has been fixed 2012-09-12:
-	 *   http://git.gnome.org/browse/gmime/commit/
-	 *   ?id=1bacd43b50d91bd03a4ae1dc9f46f5783dee61b1
-	 * (or GMime > 2.6.10)
-	 *   */
 	res = NULL;
-	dec = g_mime_multipart_encrypted_decrypt (enc, ctx, &res, err);
-	g_object_unref (ctx);
-
+	dec = g_mime_multipart_encrypted_decrypt (enc, GMIME_DECRYPT_NONE, NULL, &res, err);
 	check_decrypt_result(enc, res, err);
 
 	if (!dec) {
