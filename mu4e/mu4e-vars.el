@@ -501,6 +501,11 @@ be quoted, since mu4e does this automatically for you."
   :type '(repeat (cons (string :tag "Maildir") character))
   :group 'mu4e-folders)
 
+(defcustom mu4e-display-update-status-in-modeline nil
+  "Non-nil value will display the update status in the modeline."
+  :group 'mu4e
+  :type 'boolean)
+
 ;; Faces
 (defgroup mu4e-faces nil
   "Type faces (fonts) used in mu4e."
