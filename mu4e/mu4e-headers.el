@@ -352,7 +352,7 @@ headers."
 
 	  ;; first, remove the old one (otherwise, we'd have two headers with
 	  ;; the same docid...
-          (mu4e~headers-remove-header docid t)
+	  (mu4e~headers-remove-header docid t)
 
 	  ;; if we're actually viewing this message (in mu4e-view mode), we
 	  ;; update it; that way, the flags can be updated, as well as the path
@@ -386,10 +386,10 @@ If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
     (mu4e~headers-remove-header docid t))
   ;; if we were viewing this message, close it now.
   (when (and (mu4e~headers-view-this-message-p docid)
-             (buffer-live-p (mu4e-get-view-buffer)))
+	     (buffer-live-p (mu4e-get-view-buffer)))
     (unless (eq mu4e-split-view 'single-window)
       (mapc #'delete-window (get-buffer-window-list
-                             (mu4e-get-view-buffer))))
+			     (mu4e-get-view-buffer))))
     (kill-buffer (mu4e-get-view-buffer)))
   (run-hooks 'mu4e-message-changed-hook))
 
@@ -595,18 +595,18 @@ if provided, or at the end of the buffer otherwise."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
       (let ((line (mu4e~message-header-description msg)))
-        (when line
+	(when line
 	  (mu4e~headers-add-header line (mu4e-message-field msg :docid)
-                                   point msg))))))
+				   point msg))))))
 
 (defun mu4e~message-header-description (msg)
   "Return a propertized description of MSG suitable for
 displaying in the header view."
   (unless (and mu4e-headers-hide-predicate
-               (funcall mu4e-headers-hide-predicate msg))
+	       (funcall mu4e-headers-hide-predicate msg))
     (let ((line (mapconcat
-                 (lambda (f-w) (mu4e~headers-field-handler f-w msg))
-                 mu4e-headers-fields " ")))
+		 (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+		 mu4e-headers-fields " ")))
       (mu4e~headers-line-handler msg line))))
 
 (defconst mu4e~no-matches     "No matching messages found")
@@ -1127,8 +1127,8 @@ the query history stack."
 of `mu4e-split-view', and return a window for the message view."
   (if (eq mu4e-split-view 'single-window)
       (or (and (buffer-live-p (mu4e-get-view-buffer))
-               (get-buffer-window (mu4e-get-view-buffer)))
-          (selected-window))
+	       (get-buffer-window (mu4e-get-view-buffer)))
+	  (selected-window))
     (mu4e-hide-other-mu4e-buffers)
     (unless (buffer-live-p (mu4e-get-headers-buffer))
       (mu4e-error "No headers buffer available"))
@@ -1139,15 +1139,15 @@ of `mu4e-split-view', and return a window for the message view."
     ;; get a new view window
     (setq mu4e~headers-view-win
      (let* ((new-win-func
-             (cond
-              ((eq mu4e-split-view 'horizontal) ;; split horizontally
-               '(split-window-vertically mu4e-headers-visible-lines))
-              ((eq mu4e-split-view 'vertical) ;; split vertically
-               '(split-window-horizontally mu4e-headers-visible-columns)))))
+	     (cond
+	      ((eq mu4e-split-view 'horizontal) ;; split horizontally
+	       '(split-window-vertically mu4e-headers-visible-lines))
+	      ((eq mu4e-split-view 'vertical) ;; split vertically
+	       '(split-window-horizontally mu4e-headers-visible-columns)))))
        (cond ((with-demoted-errors "Unable to split window: %S"
-                (eval new-win-func)))
-             (t ;; no splitting; just use the currently selected one
-              (selected-window)))))))
+		(eval new-win-func)))
+	     (t ;; no splitting; just use the currently selected one
+	      (selected-window)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; search-based marking
@@ -1523,8 +1523,8 @@ _not_ refresh the last search with the new setting for threading."
       (let ((inhibit-read-only t))
 	(erase-buffer)
 	(local-set-key (kbd "q") (if (eq mu4e-split-view 'single-window)
-                                     'kill-buffer
-                                   'kill-buffer-and-window))
+				     'kill-buffer
+				   'kill-buffer-and-window))
 	(insert (propertize "Waiting for message..."
 		  'face 'mu4e-system-face 'intangible t))))
   mu4e~headers-loading-buf)
@@ -1606,15 +1606,15 @@ docid. Otherwise, return nil."
       ;; update all windows showing the headers buffer
       (walk-windows
        (lambda (win)
-         (when (eq (window-buffer win) (mu4e-get-headers-buffer))
-           (set-window-point win (point))))
+	 (when (eq (window-buffer win) (mu4e-get-headers-buffer))
+	   (set-window-point win (point))))
        nil t)
       (if (eq mu4e-split-view 'single-window)
-          (when (eq (window-buffer) (mu4e-get-view-buffer))
-            (mu4e-headers-view-message))
-        ;; update message view if it was already showing
-        (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
-          (mu4e-headers-view-message)))
+	  (when (eq (window-buffer) (mu4e-get-view-buffer))
+	    (mu4e-headers-view-message))
+	;; update message view if it was already showing
+	(when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
+	  (mu4e-headers-view-message)))
       ;; attempt to highlight the new line, display the message
       (mu4e~headers-highlight docid)
       docid)))
@@ -1723,27 +1723,27 @@ other windows."
   (interactive)
   (if (eq mu4e-split-view 'single-window)
       (progn (mu4e-mark-handle-when-leaving)
-             (kill-buffer))
+	     (kill-buffer))
     (unless (eq major-mode 'mu4e-headers-mode)
       (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
     (mu4e-mark-handle-when-leaving)
     (let ((curbuf (current-buffer))
-          (curwin (selected-window))
-          (headers-visible))
+	  (curwin (selected-window))
+	  (headers-visible))
       (walk-windows
-        (lambda (win)
-          (with-selected-window win
-            ;; if we the view window connected to this one, kill it
-            (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
-              (delete-window win)
-              (setq mu4e~headers-view-win nil)))
-          ;; and kill any _other_ (non-selected) window that shows the current
-          ;; buffer
-          (when (and
-                  (eq curbuf (window-buffer win)) ;; does win show curbuf?
-                  (not (eq curwin win))	        ;; it's not the curwin?
-                  (not (one-window-p)))           ;; and not the last one?
-            (delete-window win))))  ;; delete it!
+	(lambda (win)
+	  (with-selected-window win
+	    ;; if we the view window connected to this one, kill it
+	    (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
+	      (delete-window win)
+	      (setq mu4e~headers-view-win nil)))
+	  ;; and kill any _other_ (non-selected) window that shows the current
+	  ;; buffer
+	  (when (and
+		  (eq curbuf (window-buffer win)) ;; does win show curbuf?
+		  (not (eq curwin win))	        ;; it's not the curwin?
+		  (not (one-window-p)))           ;; and not the last one?
+	    (delete-window win))))  ;; delete it!
       ;; now, all *other* windows should be gone. kill ourselves, and return
       ;; to the main view
       (kill-buffer)
