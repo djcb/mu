@@ -31,7 +31,7 @@
 (require 'mu4e-utils)
 
 (require 'cl)
-(require 'html2text)
+(and (version< emacs-version "26.0") (require 'html2text))
 (require 'flow-fill)
 
 
