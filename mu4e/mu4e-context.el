@@ -58,16 +58,16 @@ none."
 
 (defstruct mu4e-context
   "A mu4e context object with the following members:
-- `name': the name of the context, eg. \"Work\" or \"Private\".'
+- `name': the name of the context, eg. \"Work\" or \"Private\".
 - `enter-func': a parameterless function invoked when entering
   this context, or nil
-- `leave-func':a parameterless fuction invoked when leaving this
+- `leave-func':a parameterless function invoked when leaving this
   context, or nil
-- `match-func': a function called when comnposing a new messages,
-  and takes a message plist
-for the message replied to or forwarded, and nil
-otherwise. Before composing a new message, `mu4e' switches to the
-first context for which `match-func' return t."
+- `match-func': a function called when composing a new message,
+  that takes a message plist for the message replied to or
+  forwarded, and nil otherwise. Before composing a new message,
+  `mu4e' switches to the first context for which `match-func'
+  returns t."
   name                      ;; name of the context, e.g. "work"
   (enter-func nil)          ;; function invoked when entering the context
   (leave-func nil)          ;; function invoked when leaving the context
