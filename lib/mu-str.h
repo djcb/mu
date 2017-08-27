@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,8 +76,6 @@ const char* mu_str_size_s  (size_t s) G_GNUC_CONST;
 char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
 
-
-
 /**
  * Replace all occurences of substr in str with repl
  *
@@ -144,7 +142,6 @@ char* mu_str_process_text (const char *text)
 char* mu_str_process_term (const char *term)
 	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-
 /**
  * Process some query term (e.g., an e-mail address, subject field):
  * remove accents, replace some punctuation by _, but leave some query
@@ -167,7 +164,6 @@ char* mu_str_process_query_term (const char *qterm)
  * @return the massaged message-id
  */
 char* mu_str_process_msgid (const char *str, gboolean query);
-
 
 
 /**
@@ -222,8 +218,7 @@ const char* mu_str_fullpath_s (const char* path, const char* name);
  * @return the escaped string, newly allocated (free with g_free)
  */
 char* mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
-        G_GNUC_WARN_UNUSED_RESULT;
-
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -331,7 +326,6 @@ G_GNUC_WARN_UNUSED_RESULT;
 void mu_str_free_list (GSList *lst);
 
 
-
 /**
  * strip the subject of Re:, Fwd: etc.
  *
@@ -352,7 +346,6 @@ const gchar* mu_str_subject_normalize (const gchar* str);
  * @return the quoted concatenation of the strings
  */
 gchar* mu_str_quoted_from_strv (const gchar **params);
-
 
 
 
