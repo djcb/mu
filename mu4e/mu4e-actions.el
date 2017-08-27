@@ -94,11 +94,13 @@ return the filename."
 	      (while (re-search-forward (format "src=\"cid:%s\""
 					  (plist-get attachment :cid)) nil t)
 		(if (plist-get attachment :temp)
-		  (replace-match (format "src=\"%s\"" (plist-get attachment :temp)))
+		  (replace-match (format "src=\"%s\""
+				   (plist-get attachment :temp)))
 		  (replace-match (format "src=\"%s%s\"" temporary-file-directory
 				   (plist-get attachment :name)))
-		  (let ((tmp-attachment-name (format "%s%s" temporary-file-directory
-					       (plist-get attachment :name))))
+		  (let ((tmp-attachment-name
+			  (format "%s%s" temporary-file-directory
+			    (plist-get attachment :name))))
 		    (mu4e~proc-extract 'save (mu4e-message-field msg :docid)
 		      (plist-get attachment :index)
 		      mu4e-decryption-policy tmp-attachment-name)
@@ -158,6 +160,16 @@ with `mu4e-compose-attach-captured-message'."
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun mu4e-action-copy-message-file-path (msg)
+  "Save the full path the message file for the current message to
+the kill-ring."
+  (kill-new (mu4e-message-field msg :path)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 
