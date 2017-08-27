@@ -310,7 +310,7 @@ marking if it still had that."
 	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (unless (eq major-mode 'mu4e-view-mode)
-        (mu4e-view-mode))
+	(mu4e-view-mode))
       (setq mu4e~view-msg msg)
       (switch-to-buffer buf)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
@@ -460,6 +460,11 @@ add text-properties to VAL."
 	    (remove-if 'null
 	      (mapcar (lambda (part) (mu4e-message-part-field part :signature))
 		parts)))
+	  (signers
+	    (mapconcat 'identity
+	      (remove-if 'null
+		(mapcar (lambda (part) (mu4e-message-part-field part :signers))
+		  parts)) ", "))
 	  (val (when verdicts
 		 (mapconcat
 		   (lambda (v)
@@ -474,7 +479,7 @@ add text-properties to VAL."
 			       (mu4e-view-verify-msg-popup
 				 (button-get b 'msg))))
 		   (buffer-string))))
-	  (val (when val (concat val " (" btn ")"))))
+	  (val (when val (concat val signers " (" btn ")"))))
     (mu4e~view-construct-header :signature val t)))
 
 (defun mu4e~view-construct-decryption-header (msg)
@@ -926,13 +931,13 @@ this view."
      (unless (buffer-live-p (mu4e-get-headers-buffer))
        (mu4e-error "no headers buffer connected"))
      (let* ((msg (mu4e-message-at-point))
-            (docid (mu4e-message-field msg :docid)))
+	    (docid (mu4e-message-field msg :docid)))
        (unless docid
 	 (mu4e-error "message without docid: action is not possible."))
        (with-current-buffer (mu4e-get-headers-buffer)
-         (unless (eq mu4e-split-view 'single-window)
-           (when (get-buffer-window)
-             (select-window (get-buffer-window))))
+	 (unless (eq mu4e-split-view 'single-window)
+	   (when (get-buffer-window)
+	     (select-window (get-buffer-window))))
 	 (if (mu4e~headers-goto-docid docid)
 	   ,@body
 	   (mu4e-error "cannot find message in headers buffer."))))))
@@ -964,8 +969,8 @@ return nil."
     (mu4e~headers-prev-or-next-unread backwards))
   (if (eq mu4e-split-view 'single-window)
       (when (eq (window-buffer) (mu4e-get-view-buffer))
-        (with-current-buffer (mu4e-get-headers-buffer)
-         (mu4e-headers-view-message)))
+	(with-current-buffer (mu4e-get-headers-buffer)
+	 (mu4e-headers-view-message)))
     (mu4e-select-other-view)
     (mu4e-headers-view-message)))
 
@@ -1582,40 +1587,40 @@ other windows."
   (interactive)
   (if (eq mu4e-split-view 'single-window)
       (when (buffer-live-p (mu4e-get-view-buffer))
-        (kill-buffer (mu4e-get-view-buffer)))
+	(kill-buffer (mu4e-get-view-buffer)))
     (unless (eq major-mode 'mu4e-view-mode)
       (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
     (let ((curbuf (current-buffer))
-          (curwin (selected-window))
-          (headers-win))
+	  (curwin (selected-window))
+	  (headers-win))
       (walk-windows
-        (lambda (win)
-          ;; check whether the headers buffer window is visible
-          (when (eq (mu4e-get-headers-buffer) (window-buffer win))
-            (setq headers-win win))
-          ;; and kill any _other_ (non-selected) window that shows the current
-          ;; buffer
-          (when
-            (and
-              (eq curbuf (window-buffer win)) ;; does win show curbuf?
-              (not (eq curwin win))	    ;; but it's not the curwin?
-              (not (one-window-p))) ;; and not the last one on the frame?
-            (delete-window win))))  ;; delete it!
+	(lambda (win)
+	  ;; check whether the headers buffer window is visible
+	  (when (eq (mu4e-get-headers-buffer) (window-buffer win))
+	    (setq headers-win win))
+	  ;; and kill any _other_ (non-selected) window that shows the current
+	  ;; buffer
+	  (when
+	    (and
+	      (eq curbuf (window-buffer win)) ;; does win show curbuf?
+	      (not (eq curwin win))	    ;; but it's not the curwin?
+	      (not (one-window-p))) ;; and not the last one on the frame?
+	    (delete-window win))))  ;; delete it!
       ;; now, all *other* windows should be gone.
       ;; if the headers view is also visible, kill ourselves + window; otherwise
       ;; switch to the headers view
       (if (window-live-p headers-win)
-        ;; headers are visible
-        (progn
-          (kill-buffer-and-window) ;; kill the view win
-          (setq mu4e~headers-view-win nil)
-          (select-window headers-win)) ;; and switch to the headers win...
-        ;; headers are not visible...
-        (progn
-          (kill-buffer)
-          (setq mu4e~headers-view-win nil)
-          (when (buffer-live-p (mu4e-get-headers-buffer))
-            (switch-to-buffer (mu4e-get-headers-buffer))))))))
+	;; headers are visible
+	(progn
+	  (kill-buffer-and-window) ;; kill the view win
+	  (setq mu4e~headers-view-win nil)
+	  (select-window headers-win)) ;; and switch to the headers win...
+	;; headers are not visible...
+	(progn
+	  (kill-buffer)
+	  (setq mu4e~headers-view-win nil)
+	  (when (buffer-live-p (mu4e-get-headers-buffer))
+	    (switch-to-buffer (mu4e-get-headers-buffer))))))))
 
 (provide 'mu4e-view)
 ;; end of mu4e-view
