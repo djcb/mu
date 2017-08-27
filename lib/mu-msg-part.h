@@ -65,11 +65,11 @@ enum _MuMsgPartSigStatus {
 };
 typedef enum _MuMsgPartSigStatus MuMsgPartSigStatus;
 
-struct _MuMsgPartSigStatusReport {
-	MuMsgPartSigStatus verdict;
-	const char        *report;
-};
-typedef struct _MuMsgPartSigStatusReport MuMsgPartSigStatusReport;
+typedef struct {
+	MuMsgPartSigStatus	 verdict;
+	const char		*report;
+	const char		*signers;
+} MuMsgPartSigStatusReport;
 
 /**
  * destroy a MuMsgPartSignatureStatusReport object
@@ -178,7 +178,7 @@ gboolean mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
  */
 gchar* mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts,
 			      guint partidx, GError **err)
-        G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 
@@ -217,7 +217,7 @@ gchar* mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
  */
 gchar* mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts,
 				   guint partidx, GError **err)
-        G_GNUC_WARN_UNUSED_RESULT;
+	G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**

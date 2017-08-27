@@ -235,7 +235,7 @@ get_digestkey_algo_name (GMimeDigestAlgo algo)
 
 /* get data from the 'certificate' */
 static char*
-get_cert_data (GMimeCertificate *cert)
+get_cert_details (GMimeCertificate *cert)
 {
 	const char /**email,*/ *name, *digest_algo, *pubkey_algo,
 		*keyid, *trust;
@@ -274,15 +274,23 @@ get_cert_data (GMimeCertificate *cert)
 static char*
 get_verdict_report (GMimeSignature *msig)
 {
-	time_t t;
-	const char *status, *created, *expires;
-	gchar *certdata, *report;
+	time_t			 t;
+	const char		*created, *expires, *verdict;
+	char			*certdata, *report;
 
 	switch (g_mime_signature_get_status (msig)) {
-	case GMIME_SIGNATURE_STATUS_GOOD:  status = "good";  break;
-	case GMIME_SIGNATURE_STATUS_ERROR: status = "error"; break;
-	case GMIME_SIGNATURE_STATUS_BAD:   status = "bad";   break;
-	default: g_return_val_if_reached (NULL);
+	case GMIME_SIGNATURE_STATUS_GOOD:
+		verdict = "good";
+		break;
+	case GMIME_SIGNATURE_STATUS_ERROR:
+		verdict = "error";
+		break;
+	case GMIME_SIGNATURE_STATUS_BAD:
+		verdict = "bad";
+		break;
+	default:
+		g_return_val_if_reached (NULL);
+		return NULL;
 	}
 
 	t = g_mime_signature_get_created (msig);
@@ -291,41 +299,69 @@ get_verdict_report (GMimeSignature *msig)
 	t = g_mime_signature_get_expires (msig);
 	expires = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
 
-	certdata = get_cert_data (g_mime_signature_get_certificate (msig));
-	report = g_strdup_printf ("%s; created:%s, expires:%s, %s",
-				  status, created, expires,
+	certdata = get_cert_details (g_mime_signature_get_certificate (msig));
+	report = g_strdup_printf ("%s\ncreated:%s, expires:%s, %s",
+				  verdict, created, expires,
 				  certdata ? certdata : "?");
 	g_free (certdata);
+
 	return report;
+}
+
+static char*
+get_signers (GHashTable *signerhash)
+{
+	GString		*gstr;
+	GHashTableIter	 iter;
+	const char	*name;
+
+	if (!signerhash || g_hash_table_size(signerhash) == 0)
+		return NULL;
+
+	gstr = g_string_new (NULL);
+	g_hash_table_iter_init (&iter, signerhash);
+	while (g_hash_table_iter_next (&iter, (gpointer)&name, NULL)) {
+		if (gstr->len != 0)
+			g_string_append_c (gstr, ',');
+		gstr = g_string_append (gstr, name);
+	}
+
+	return g_string_free (gstr, FALSE);
 }
 
 
 static MuMsgPartSigStatusReport*
 get_status_report (GMimeSignatureList *sigs)
 {
-	int i;
-	MuMsgPartSigStatus status;
-	MuMsgPartSigStatusReport *status_report;
-	char *report;
+	int				 i;
+	MuMsgPartSigStatus		 status;
+	MuMsgPartSigStatusReport	*status_report;
+	char				*report;
+	GHashTable			*signerhash;
 
-	status = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
+	status	   = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
+	signerhash = g_hash_table_new (g_str_hash, g_str_equal);
 
 	for (i = 0, report = NULL; i != g_mime_signature_list_length (sigs);
 	     ++i) {
 
-		GMimeSignature *msig;
-		GMimeSignatureStatus sigstat;
-		gchar *rep;
+		GMimeSignature		*msig;
+		GMimeCertificate	*cert;
+		GMimeSignatureStatus	 sigstat;
+		gchar			*rep;
 
 		msig = g_mime_signature_list_get_signature (sigs, i);
 		sigstat = g_mime_signature_get_status (msig);
 
 		switch (sigstat) {
-		case GMIME_SIGNATURE_STATUS_GOOD:              break;
+		case GMIME_SIGNATURE_STATUS_GOOD:
+			break;
 		case GMIME_SIGNATURE_STATUS_ERROR:
-			status = MU_MSG_PART_SIG_STATUS_ERROR; break;
+			status = MU_MSG_PART_SIG_STATUS_ERROR;
+			break;
 		case GMIME_SIGNATURE_STATUS_BAD:
-			status = MU_MSG_PART_SIG_STATUS_BAD;   break;
+			status = MU_MSG_PART_SIG_STATUS_BAD;
+			break;
 		default: g_return_val_if_reached (NULL);
 		}
 
@@ -335,11 +371,21 @@ get_status_report (GMimeSignatureList *sigs)
 					  report ? "; " : "",  i + 1,
 					  rep);
 		g_free (rep);
+
+		cert = g_mime_signature_get_certificate (msig);
+		if (cert && g_mime_certificate_get_name (cert))
+			g_hash_table_add (
+				signerhash,
+				(gpointer)g_mime_certificate_get_name (cert));
 	}
 
-	status_report = g_slice_new (MuMsgPartSigStatusReport);
+	status_report = g_slice_new0 (MuMsgPartSigStatusReport);
+
 	status_report->verdict = status;
 	status_report->report  = report;
+	status_report->signers = get_signers(signerhash);
+
+	g_hash_table_unref (signerhash);
 
 	return status_report;
 }
@@ -351,6 +397,8 @@ mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
 		return;
 
 	g_free ((char*)report->report);
+	g_free ((char*)report->signers);
+
 	g_slice_free (MuMsgPartSigStatusReport, report);
 }
 

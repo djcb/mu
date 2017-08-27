@@ -279,25 +279,40 @@ struct _PartInfo {
 };
 typedef struct _PartInfo PartInfo;
 
-static const char*
+static char*
 sig_verdict (MuMsgPart *mpart)
 {
-	MuMsgPartSigStatusReport *report;
+	char				*signers, *s;
+	const char			*verdict;
+	MuMsgPartSigStatusReport	*report;
 
 	report = mpart->sig_status_report;
 	if (!report)
-		return "";
+		return g_strdup ("");
 
 	switch (report->verdict) {
 	case MU_MSG_PART_SIG_STATUS_GOOD:
-		return ":signature verified";
+		verdict = ":signature verified";
+		break;
 	case MU_MSG_PART_SIG_STATUS_BAD:
-		return ":signature bad";
+		verdict = ":signature bad";
+		break;
 	case MU_MSG_PART_SIG_STATUS_ERROR:
-		return ":signature unverified";
+		verdict = ":signature unverified";
+		break;
 	default:
-		return "";
+		verdict = "";
+		break;
 	}
+
+	if (!report->signers)
+		return g_strdup (verdict);
+
+	signers = mu_str_escape_c_literal (report->signers, TRUE);
+	s	= g_strdup_printf ("%s :signers %s", verdict, signers);
+	g_free (signers);
+
+	return s;
 }
 
 static const char*
@@ -354,7 +369,7 @@ static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
 	char	*name, *encname, *tmp, *parttype;
-	char	*tmpfile, *cid;
+	char	*tmpfile, *cid, *verdict;
 
 	name     = mu_msg_part_get_filename (part, TRUE);
 	encname  = name ?
@@ -364,8 +379,10 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
+	verdict  = sig_verdict (part);
 	cid      = mu_str_escape_c_literal(mu_msg_part_get_content_id(part),
 					   TRUE);
+
 
 	tmp = g_strdup_printf
 		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
@@ -381,12 +398,13 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
 		 cid ? " :cid" : "", cid ? cid : "",
 		 (int)part->size,
-		 sig_verdict (part),
+		 verdict,
 		 dec_verdict (part));
 
 	g_free (encname);
 	g_free (tmpfile);
 	g_free (parttype);
+	g_free (verdict);
 	g_free (cid);
 
 	g_free (pinfo->parts);
