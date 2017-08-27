@@ -1470,10 +1470,20 @@ either @t{verified}, @t{unverified} or @t{error}. For instance:
 @verbatim
 Signature: unverified (Details)
 @end verbatim
+or
+@verbatim
+Signature: verified Darrow Andromedus <darrow@rising.com> (Details)
+@end verbatim
 
 You can see the details of the signature verification by activating the
 @t{Details} or pressing @key{v}. This pops up a little window with the
-details of the signatures found and whether they could be verified or not.
+details of the signatures found and whether they could be verified or
+not.
+
+Note that @t{mu4e} does not check whether the signer is the same as the
+sender of the message, since this would cause too many false negatives
+for senders that use an address that is not part of their certificate.
+Also, the From: address can easily be forged.
 
 For more information, see the @command{mu-verify} manual page.
 
