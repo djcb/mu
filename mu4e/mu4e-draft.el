@@ -302,15 +302,16 @@ separator is never written to the message file. Also see
       ;; search for the first empty line
       (goto-char (point-min))
       (if (search-forward-regexp "^$" nil t)
-          (progn
-            (replace-match sepa)
-            ;; `message-narrow-to-headers` searches for a `mail-header-separator` followed by a new
-            ;; line. Therefore, we must insert a newline if on the last line of the buffer.
-            (when (= (point) (point-max))
-              (insert "\n")))
-          (progn ;; no empty line? then prepend one
-            (goto-char (point-max))
-            (insert "\n" sepa))))))
+	  (progn
+	    (replace-match sepa)
+	    ;; `message-narrow-to-headers` searches for a
+	    ;; `mail-header-separator` followed by a new line. Therefore, we
+	    ;; must insert a newline if on the last line of the buffer.
+	    (when (= (point) (point-max))
+	      (insert "\n")))
+	  (progn ;; no empty line? then prepend one
+	    (goto-char (point-max))
+	    (insert "\n" sepa))))))
 
 (defun mu4e~draft-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
@@ -345,9 +346,10 @@ It looks something like
   <time>-<random>.<hostname>:2,
 You can append flags."
   (let* ((sysname (if (fboundp 'system-name)
-		      (system-name)
+		    (system-name)
 		    (with-no-warnings system-name)))
-	 (hostname (downcase
+	  (sysname (if (string= sysname "") "localhost" sysname))
+	  (hostname (downcase
 		    (save-match-data
 		      (substring sysname
 				 (string-match "^[^.]+" sysname)
