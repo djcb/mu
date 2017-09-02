@@ -403,8 +403,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (face-remap-add-relative 'message-cited-text
     '((:inherit mu4e-cited-1-face))))
 
-
-(defvar mu4e-compose-mode-abbrev-table nil)
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
 \\{message-mode-map}."
