@@ -79,18 +79,22 @@ In the format of `format-time-string'."
   "The maximum width for images to display.
 This is only effective if you're using an emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
+  :type 'integer
   :group 'mu4e-view)
 
 (defcustom mu4e-view-image-max-height 600
   "The maximum height for images to display.
 This is only effective if you're using an emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
+  :type 'integer
   :group 'mu4e-view)
 
 (defcustom mu4e-view-scroll-to-next t
   "If non-nil, move to the next message when calling
 `mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
-end of a message. Otherwise, don't move to the next message.")
+end of a message. Otherwise, don't move to the next message."
+  :type 'boolean
+  :group 'mu4e-view)
 
 (defcustom mu4e-save-multiple-attachments-without-asking nil
   "If non-nil, saving multiple attachments asks once for a
