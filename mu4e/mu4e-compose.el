@@ -162,7 +162,8 @@ We have the following choices:
 	   :safe 'symbolp
 	   :group 'mu4e-compose))
 
-(defcustom mu4e-compose-crypto-reply-plain-encrypted-policy 'sign  "Policy for signing/encrypting replies to encrypted messages.
+(defcustom mu4e-compose-crypto-reply-plain-policy 'sign
+  "Policy for signing/encrypting replies to messages received unencrypted.
 We have the following choices:
 
 - `sign': sign the reply
@@ -176,6 +177,12 @@ We have the following choices:
 	   (const :tag "Don't do anything" nil)
 	   :safe 'symbolp
 	   :group 'mu4e-compose))
+
+(make-obsolete-variable mu4e-compose-crypto-reply-policy "The use of the
+ 'mu4e-compose-crypto-reply-policy' variable is deprecated.
+ 'mu4e-compose-crypto-reply-plain-policy' and
+ 'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
+			"2017-09-02")
 
 
 (defcustom mu4e-compose-format-flowed nil
@@ -543,7 +550,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   "When composing a reply to an encrypted message, we can
 automatically encrypt that reply. When the message is unencrypted, 
 we can decide what we want to do."
-  (message "%S %S" parent compose-type)
   (if (and  (eq compose-type 'reply)
 	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
 	(case mu4e-compose-crypto-reply-encrypted-policy
