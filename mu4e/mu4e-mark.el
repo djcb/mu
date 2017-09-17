@@ -128,8 +128,8 @@ is either a headers or view buffer."
 	:char ("r" . "▶")
 	:prompt "refile"
 	:dyn-target (lambda (target msg) (mu4e-get-refile-folder msg))
-	:action (lambda (docid msg target) (mu4e~proc-move docid
-						  (mu4e~mark-check-target target) "-N")))
+	:action (lambda (docid msg target)
+		  (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
        (delete
 	 :char ("D" . "❌")
 	 :prompt "Delete"
@@ -139,13 +139,14 @@ is either a headers or view buffer."
 	 :char ("+" . "✚")
 	 :prompt "+flag"
 	 :show-target (lambda (target) "flag")
-	 :action (lambda (docid msg target) (mu4e~proc-move docid nil "+F-u-N")))
+	 :action (lambda (docid msg target)
+		   (mu4e~proc-move docid nil "+F-u-N")))
        (move
 	 :char ("m" . "▷")
 	 :prompt "move"
 	 :ask-target  mu4e~mark-get-move-target
-	 :action (lambda (docid msg target) (mu4e~proc-move docid
-					      (mu4e~mark-check-target target) "-N")))
+	 :action (lambda (docid msg target)
+		   (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
        (read
 	 :char    ("!" . "◼")
 	 :prompt "!read"
@@ -242,7 +243,8 @@ The following marks are available, and the corresponding props:
 	  ;; get a cell with the mark char and the 'target' 'move' already has a
 	  ;; target (the target folder) the other ones get a pseudo "target", as
 	  ;; info for the user.
-	  (markdesc (cdr (or (assq mark mu4e-marks) (mu4e-error "Invalid mark %S" mark))))
+	  (markdesc (cdr (or (assq mark mu4e-marks)
+			   (mu4e-error "Invalid mark %S" mark))))
 	  (get-markkar
 	   (lambda (char)
 	     (if (listp char)
@@ -255,11 +257,12 @@ The following marks are available, and the corresponding props:
 			  (funcall show-fct target)
 			  (if target (format "%S" target)))))
     (unless docid (mu4e-warn "No message on this line"))
-    (unless (eq major-mode 'mu4e-headers-mode) (mu4e-error "Not in headers-mode"))
+    (unless (eq major-mode 'mu4e-headers-mode)
+      (mu4e-error "Not in headers-mode"))
     (save-excursion
       (when (mu4e~headers-mark docid markkar)
-	;; update the hash -- remove everything current, and if add the new stuff,
-	;; unless we're unmarking
+	;; update the hash -- remove everything current, and if add the new
+	;; stuff, unless we're unmarking
 	(remhash docid mu4e~mark-map)
 	;; remove possible overlays
 	(remove-overlays (line-beginning-position) (line-end-position))
@@ -271,8 +274,8 @@ The following marks are available, and the corresponding props:
 	  (when (and shown-target mu4e-headers-show-target)
 	    (let* ((targetstr (propertize (concat "-> " shown-target " ")
 				'face 'mu4e-system-face))
-		    ;; mu4e~headers-goto-docid docid t \will take us just after the
-		    ;; docid cookie and then we skip the mu4e~mark-fringe
+		    ;; mu4e~headers-goto-docid docid t \will take us just after
+		    ;; the docid cookie and then we skip the mu4e~mark-fringe
 		    (start (+ (length mu4e~mark-fringe)
 			     (mu4e~headers-goto-docid docid t)))
 		    (overlay (make-overlay start (+ start (length targetstr)))))
@@ -410,7 +413,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 		  (progn
 		    (run-hook-with-args
 		    'mu4e-mark-execute-pre-hook mark msg)
-		    (funcall (plist-get (cdr markdescr) :action) docid msg target))
+		    (funcall (plist-get (cdr markdescr) :action)
+		      docid msg target))
 		(mu4e-error "Unrecognized mark %S" mark))))
 	  mu4e~mark-map))
        (mu4e-mark-unmark-all)
@@ -453,7 +457,8 @@ action', return nil means 'don't do anything'."
       (unless (zerop marknum) ;; nothing to do?
 	(when (eq what 'ask)
 	  (setq what (mu4e-read-option
-		       (format  "There are %d existing mark(s); should we: " marknum)
+		       (format  "There are %d existing mark(s); should we: "
+			 marknum)
 		       '( ("apply marks"   . apply)
 			  ("ignore marks?" . ignore)))))
 	;; we determined what to do... now do it

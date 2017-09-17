@@ -1107,12 +1107,12 @@ the query history stack."
 		       (mu4e~quote-for-modeline mu4e~headers-last-query)
 		       'face 'mu4e-modeline-face)
 		      " "
-                      (mu4e-context-label)
-                      (if (and mu4e-display-update-status-in-modeline
-                               (buffer-live-p mu4e~update-buffer)
-                               (process-live-p (get-buffer-process mu4e~update-buffer)))
-                          (propertize " (updating)" 'face 'mu4e-modeline-face)
-                        "")))))
+		      (mu4e-context-label)
+		      (if (and mu4e-display-update-status-in-modeline
+			       (buffer-live-p mu4e~update-buffer)
+			       (process-live-p (get-buffer-process mu4e~update-buffer)))
+			  (propertize " (updating)" 'face 'mu4e-modeline-face)
+			"")))))
 
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
@@ -1311,7 +1311,8 @@ descendants."
 	   ;; FIXME: e.g., for refiling we should evaluate this
 	   ;; for each line separately
 	   (mu4e~mark-get-markpair
-	    (if subthread "Mark subthread with: " "Mark whole thread with: ") t))))
+	     (if subthread "Mark subthread with: " "Mark whole thread with: ")
+	     t))))
   (mu4e-headers-mark-thread-using-markpair markpair subthread))
 
 (defun mu4e-headers-mark-subthread (&optional markpair)

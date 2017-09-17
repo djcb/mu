@@ -1,6 +1,6 @@
 ;; mu4e-proc.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -26,7 +26,6 @@
 (require 'mu4e-vars)
 (require 'mu4e-utils)
 (require 'mu4e-meta)
-
 
 (require 'mu4e-proc-mu)
 
@@ -207,7 +206,7 @@ The server output is as follows:
 	    (funcall mu4e-temp-func
 	      (plist-get sexp :temp)   ;; name of the temp file
 	      (plist-get sexp :what)   ;; what to do with it
-	                               ;; (pipe|emacs|open-with...)
+				       ;; (pipe|emacs|open-with...)
 	      (plist-get sexp :docid)  ;; docid of the message
 	      (plist-get sexp :param)));; parameter for the action
 
@@ -226,8 +225,9 @@ The server output is as follows:
 	(setq sexp (mu4e~proc-eat-sexp-from-buf))))))
 
 (defun mu4e~escape (str)
-  "Escape STRING for transport -- put it in quotes, and escape existing quotation.
-In particular, backslashes and double-quotes."
+  "Escape STRING for transport -- put it in quotes, and escape
+existing quotation. In particular, backslashes and
+double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
     (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
 
