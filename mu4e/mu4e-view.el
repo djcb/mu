@@ -1228,14 +1228,7 @@ attachments, but as this is the default, you may not need it."
       (dolist (num attachnums)
 	(mu4e-view-save-attachment-single msg num)))))
 
-(defun mu4e-view-save-attachment (&optional multi)
-  "Offer to save attachment(s).
-If MULTI (prefix-argument) is nil, save a single one, otherwise,
-offer to save a range of attachments."
-  (interactive "P")
-  (if multi
-    (mu4e-view-save-attachment-multi)
-    (mu4e-view-save-attachment-single)))
+(defalias #'mu4e-view-save-attachment #'mu4e-view-save-attachment-multi)
 
 (defun mu4e-view-open-attachment (&optional msg attnum)
   "Open attachment number ATTNUM from MSG.
