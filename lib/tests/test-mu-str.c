@@ -105,29 +105,6 @@ test_mu_str_prio_02 (void)
 
 
 
-static void
-test_mu_str_flatten (void)
-{
-	int			i;
-	struct {
-		const char*	word;
-		const char*	norm;
-	} words [] = {
-		{ "dantès", "dantes"},
-		{ "foo", "foo" },
-		{ "Föö", "foo" },
-		{ "číslo", "cislo" },
-		{ "hÆvý mëÐal ümláõt", "hævy_meðal_umlaot"}
-	};
-
-
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *str;
-		str = mu_str_process_term (words[i].word);
-		g_assert_cmpstr (str, ==, words[i].norm);
-		g_free (str);
-	}
-}
 
 static void
 test_parse_arglist (void)
@@ -152,11 +129,6 @@ test_parse_arglist (void)
 
 	g_hash_table_destroy (hash);
 }
-
-
-
-
-
 
 
 static void
@@ -185,130 +157,6 @@ test_mu_str_esc_to_list (void)
 		mu_str_free_list (lst);
 	}
 }
-
-static void
-test_mu_str_process_query_term (void)
-{
-	int			i;
-	struct {
-		const char*	word;
-		const char*	esc;
-	} words [] = {
-		{ "aap@noot.mies", "aap_noot_mies" },
-		{ "Foo..Bar", "foo__bar" },
-		{ "Foo.Bar", "foo_bar" },
-		{ "Foo Bar", "foo_bar" },
-		{ "\\foo", "_foo" },
-		{ "subject:test@foo", "subject:test_foo" },
-		{ "xxx:test@bar", "xxx:test_bar" },
-		{ "aa$bb$cc", "aa_bb_cc" },
-		{ "date:2010..2012", "date:2010..2012"},
-		{ "d:2010..2012", "d:2010..2012"},
-		{ "size:10..20", "size:10..20"},
-		{ "x:2010..2012", "x:2010__2012"},
-		{ "q:2010..2012", "q:2010__2012"},
-		{ "subject:2010..2012", "subject:2010__2012"},
-		{ "(maildir:foo)", "(maildir:foo)"},
-		{ "Тесла, Никола", "тесла__никола"},
-		{ "Masha@Аркона.ru", "masha_аркона_ru" },
-		{ "foo:ελληνικά", "foo:ελληνικα" },
-		{ "日本語!!", "日本語__" },
-		{ "￡", "_" }
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *s;
-		s = mu_str_process_query_term (words[i].word);
-		if (g_test_verbose())
-			g_print ("expected: '%s' <=> got: '%s'\n",
-				 words[i].esc, s);
-		g_assert_cmpstr (s, ==, words[i].esc);
-		g_free (s);
-	}
-}
-
-
-static void
-test_mu_str_process_term (void)
-{
-	int			i;
-	struct {
-		const char*	word;
-		const char*	esc;
-	} words [] = {
-		{ "aap@noot.mies", "aap_noot_mies" },
-		{ "A&B", "a_b" },
-		{ "Foo..Bar", "foo__bar" },
-		{ "Foo.Bar", "foo_bar" },
-		{ "Foo Bar", "foo_bar" },
-		{ "\\foo", "_foo" },
-		{ "subject:test@foo", "subject_test_foo" },
-		{ "xxx:test@bar", "xxx_test_bar" },
-		{ "aa$bb$cc", "aa_bb_cc" },
-		{ "date:2010..2012", "date_2010__2012"},
-		{ "subject:2010..2012", "subject_2010__2012"},
-		{ "(maildir:foo)", "_maildir_foo_"},
-		{ "Тесла, Никола", "тесла__никола"},
-		{ "Masha@Аркона.ru", "masha_аркона_ru" },
-		{ "foo:ελληνικά", "foo_ελληνικα" },
-		{ "日本語!!", "日本語__" },
-		{ "￡", "_" },
-		/* invalid utf8 */
-		{ "Hello\xC3\x2EWorld", "hello__world" }
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *s;
-		s = mu_str_process_term (words[i].word);
-		if (g_test_verbose())
-			g_print ("expected: '%s' <=> got: '%s'\n",
-				 words[i].esc, s);
-		g_assert_cmpstr (s, ==, words[i].esc);
-		g_free (s);
-	}
-}
-
-
-
-
-static void
-test_mu_str_process_text (void)
-{
-	int			i;
-	struct {
-		const char*	word;
-		const char*	esc;
-	} words [] = {
-		{ "aap@noot.mies", "aap@noot.mies" },
-		{ "A&B", "a&b" },
-		{ "Foo..Bar", "foo..bar" },
-		{ "Foo.Bar", "foo.bar" },
-		{ "Foo Bar", "foo bar" },
-		{ "\\foo", "\\foo" },
-		{ "subject:test@foo", "subject:test@foo" },
-		{ "xxx:test@bar", "xxx:test@bar" },
-		{ "aa$bb$cc", "aa$bb$cc" },
-		{ "date:2010..2012", "date:2010..2012"},
-		{ "subject:2010..2012", "subject:2010..2012"},
-		{ "(maildir:foo)", "(maildir:foo)"},
-		{ "Тесла, Никола", "тесла, никола"},
-		{ "Masha@Аркона.ru", "masha@аркона.ru" },
-		{ "foo:ελληνικά", "foo:ελληνικα" },
-		{ "日本語!!", "日本語!!" }
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(words); ++i) {
-		gchar *s;
-		s = mu_str_process_text (words[i].word);
-		if (g_test_verbose())
-			g_print ("expected: '%s' <=> got: '%s'\n",
-				 words[i].esc, s);
-		g_assert_cmpstr (s, ==, words[i].esc);
-		g_free (s);
-	}
-}
-
-
 
 
 static void
@@ -444,38 +292,6 @@ test_mu_str_subject_normalize (void)
 }
 
 
-
-static void
-test_mu_term_fixups (void)
-{
-	unsigned u;
-	struct {
-		const gchar *expr, *expected;
-	} testcases [] = {
-		{ "date:19700101", "date:19700101..19700101" },
-		{ "date:19700101..19700101", "date:19700101..19700101" },
-		{ "(date:20121107))", "(date:20121107..20121107))" },
-		{ "maildir:/somepath", "maildir:/somepath" },
-		{ "([maildir:/somepath]", "([maildir:/somepath]" },
-		/* add more */
-		{ "({", "({" },
-		{ "({abc", "({abc" },
-		{ "abc)}", "abc)}" },
-		{ "", "" }
-	};
-
- 	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
-		gchar *prep;
-		prep = mu_str_xapian_fixup_terms (testcases[u].expr);
-		g_assert_cmpstr (prep, ==, testcases[u].expected);
-		g_free (prep);
-	}
-}
-
-
-
-
-
 static void
 test_mu_str_replace (void)
 {
@@ -546,16 +362,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu-str-prio-02",
 			 test_mu_str_prio_02);
 
-	g_test_add_func ("/mu-str/mu-str-flatten",
-			 test_mu_str_flatten);
-
-	g_test_add_func ("/mu-str/process-query-term",
-			 test_mu_str_process_query_term);
-	g_test_add_func ("/mu-str/process-term",
-			 test_mu_str_process_term);
-	g_test_add_func ("/mu-str/process-text",
-			 test_mu_str_process_text);
-
 
 	g_test_add_func ("/mu-str/mu-str-display_contact",
 			 test_mu_str_display_contact);
@@ -579,10 +385,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-str/mu_str_subject_normalize",
 			 test_mu_str_subject_normalize);
 
-	/* mu_str_xapian_fixup_terms */
-	g_test_add_func ("/mu-str/mu_term_fixups",
-			 test_mu_term_fixups);
-
 	g_test_add_func ("/mu-str/mu_str_remove_ctrl_in_place",
 			 test_mu_str_remove_ctrl_in_place);
 
@@ -590,7 +392,8 @@ main (int argc, char *argv[])
 	 * function simply calls mu_msg_field_str */
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			   G_LOG_FLAG_RECURSION,
 			   (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();

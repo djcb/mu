@@ -300,13 +300,14 @@ test_mu_find_links (void)
 static void
 test_mu_find_maildir_special (void)
 {
-	search ("\"maildir:/wom_bat\" subject:atoms", 1);
+
 	search ("\"maildir:/wOm_bàT\"", 3);
 	search ("\"maildir:/wOm*\"", 3);
 	search ("\"maildir:/wOm_*\"", 3);
 	search ("\"maildir:wom_bat\"", 0);
 	search ("\"maildir:/wombat\"", 0);
 	search ("subject:atoms", 1);
+	search ("\"maildir:/wom_bat\" subject:atoms", 1);
 }
 
 

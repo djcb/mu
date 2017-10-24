@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -120,16 +120,15 @@ run_and_count_matches_with_query_flags (const char *xpath, const char *query,
 	mu_store_unref (store);
 
 	if (g_test_verbose()) {
-		char *xs;
+		char *x;
 		g_print ("\n==> query: %s\n", query);
-		xs = mu_query_preprocess (query, NULL);
-		g_print ("==> preproc: '%s'\n", xs);
-		g_free (xs);
-		xs = mu_query_as_string (mquery, query, NULL);
-		g_print ("==> xquery: '%s'\n", xs);
-		g_free (xs);
+		x = mu_query_internal (mquery, query, FALSE, NULL);
+		g_print ("==> mquery: '%s'\n", x);
+		g_free (x);
+		x = mu_query_internal_xapian (mquery, query, NULL);
+		g_print ("==> xquery: '%s'\n", x);
+		g_free (x);
 	}
-
 
 	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE, -1,
 			     flags, NULL);
@@ -384,9 +383,6 @@ test_mu_query_accented_chars_fraiche (void)
 	}
 }
 
-
-
-
 static void
 test_mu_query_wildcards (void)
 {
@@ -476,6 +472,8 @@ test_mu_query_dates_la (void)
 
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
+		{ "date:2008-07-31..2008-08-04", 5},
+		{ "date:20080804..20080731", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
 		{ "date:200808110803..now", 6},
 		{ "date:200808110803..today", 6},
@@ -509,7 +507,9 @@ test_mu_query_sizes (void)
 		{ "size:0b..2m", 19},
 		{ "size:3b..2m", 19},
 		{ "size:2k..4k", 4},
-		{ "size:2m..0b", 19}
+
+		{ "size:0b..2m", 19},
+		{ "size:2m..0b", 19},
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
@@ -595,7 +595,8 @@ test_mu_query_wom_bat (void)
 	int i;
 	QResults queries[] = {
 		{ "maildir:/wom_bat", 3},
-		{ "\"maildir:/wom bat\"", 3},
+		//{ "\"maildir:/wom bat\"", 3},
+		// as expected, no longer works with new parser
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
@@ -685,26 +686,6 @@ test_mu_query_threads_compilation_error (void)
 }
 
 
-static void
-test_mu_query_preprocess (void)
-{
-	unsigned u;
-	struct {
-		const gchar *expr, *expected;
-	} testcases [] = {
-		{ "hello", "hello" },
-		{ "/[Gmail].Sent Mail", "__gmail__sent mail" }
-		/* add more */
-	};
-
-	for (u = 0; u != G_N_ELEMENTS(testcases); ++u) {
-		gchar *prep;
-		prep = mu_query_preprocess (testcases[u].expr, NULL);
-		g_assert_cmpstr (prep, ==, testcases[u].expected);
-		g_free (prep);
-	}
-}
-
 
 int
 main (int argc, char *argv[])
@@ -720,9 +701,6 @@ main (int argc, char *argv[])
 
 	DB_PATH2 = fill_database (MU_TESTMAILDIR2);
 	g_assert (DB_PATH2);
-
-	g_test_add_func ("/mu-query/test-mu-query-preprocess",
-			 test_mu_query_preprocess);
 
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
