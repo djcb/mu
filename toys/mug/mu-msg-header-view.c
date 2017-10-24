@@ -42,8 +42,8 @@ struct _MuMsgHeaderViewPrivate {
 	GtkWidget *_grid;
 };
 #define MU_MSG_HEADER_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
-                                                MU_TYPE_MSG_HEADER_VIEW, \
-                                                MuMsgHeaderViewPrivate))
+						MU_TYPE_MSG_HEADER_VIEW, \
+						MuMsgHeaderViewPrivate))
 /* globals */
 static GtkBoxClass *parent_class = NULL;
 
@@ -142,7 +142,7 @@ add_row (GtkWidget *grid, guint row, const char* fieldname, const char *value,
 }
 
 
-GtkWidget *
+static GtkWidget*
 get_grid (MuMsg *msg)
 {
 	GtkWidget *grid;

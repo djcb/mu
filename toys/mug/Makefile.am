@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) \
-	-DICONDIR='"$(icondir)"' -DMUGDIR='"$(abs_srcdir)"' \
+AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS)	\
+	-DICONDIR='"$(icondir)"' -DMUGDIR='"$(abs_srcdir)"'			\
 	-DGSEAL_ENABLE
 
 # remove -DGTK_DISABLE_DEPRECATED for now, since it breaks 3.10+ compilation
@@ -28,63 +28,66 @@ AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) \
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=									\
+	$(WARN_CFLAGS)								\
+	-Wno-redundant-decls							\
+	-Wno-deprecated-declarations						\
+	-Wno-switch-enum
 
-noinst_PROGRAMS=				\
+AM_CXXFLAGS=$(WARN_CXXFLAGS)
+
+noinst_PROGRAMS=								\
 	mug
 
 # note, mug.cc is '.cc' only because libmu must explicitly
 # be linked as c++, not c.
-mug_SOURCES=					\
-	mug.c					\
-	mug-msg-list-view.c			\
-	mug-msg-list-view.h			\
-	mug-msg-view.h				\
-	mug-msg-view.c				\
-	mug-query-bar.h				\
-	mug-query-bar.c				\
-	mug-shortcuts.c				\
-	mug-shortcuts.h				\
+mug_SOURCES=									\
+	mug.c									\
+	mug-msg-list-view.c							\
+	mug-msg-list-view.h							\
+	mug-msg-view.h								\
+	mug-msg-view.c								\
+	mug-query-bar.h								\
+	mug-query-bar.c								\
+	mug-shortcuts.c								\
+	mug-shortcuts.h								\
 	dummy.cc
 
 # we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=					\
+BUILT_SOURCES=									\
 	dummy.cc
 
 dummy.cc:
 	touch dummy.cc
 
-DISTCLEANFILES=					\
+DISTCLEANFILES=									\
 	$(BUILT_SOURCES)
 
-
-mug_LDADD=					\
-	${top_builddir}/lib/libmu.la		\
-	libmuwidgets.la				\
+mug_LDADD=									\
+	${top_builddir}/lib/libmu.la						\
+	libmuwidgets.la								\
 	${GTK_LIBS}
 
-
-noinst_LTLIBRARIES=				\
+noinst_LTLIBRARIES=								\
 	libmuwidgets.la
 
-libmuwidgets_la_SOURCES=		        \
-	mu-widget-util.h		        \
-	mu-widget-util.c		        \
-	mu-msg-attach-view.c		        \
-	mu-msg-attach-view.h		        \
-	mu-msg-body-view.c		        \
-	mu-msg-body-view.h		        \
-	mu-msg-header-view.c		        \
-	mu-msg-header-view.h		        \
-	mu-msg-view.h			        \
+libmuwidgets_la_SOURCES=							\
+	mu-widget-util.h							\
+	mu-widget-util.c							\
+	mu-msg-attach-view.c							\
+	mu-msg-attach-view.h							\
+	mu-msg-body-view.c							\
+	mu-msg-body-view.h							\
+	mu-msg-header-view.c							\
+	mu-msg-header-view.h							\
+	mu-msg-view.h								\
 	mu-msg-view.c
 
-libmuwidgets_la_LIBADD=			        \
-	${top_builddir}/lib/libmu.la	        \
-	${GTK_LIBS}			        \
-	${WEBKIT_LIBS}			        \
+libmuwidgets_la_LIBADD=								\
+	${top_builddir}/lib/libmu.la						\
+	${GTK_LIBS}								\
+	${WEBKIT_LIBS}								\
 	${GIO_LIBS}
 
-EXTRA_DIST=					\
+EXTRA_DIST=									\
 	mug.svg

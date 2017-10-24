@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2013 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2017 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -110,7 +110,7 @@ tool_button (const char *name)
 
 	icon = gtk_image_new_from_icon_name
 		(name, GTK_ICON_SIZE_SMALL_TOOLBAR);
-	
+
 	return gtk_menu_tool_button_new (icon, NULL);
 }
 
@@ -331,8 +331,8 @@ mug_main_area (MugData * mugdata)
 	return mainarea;
 }
 
-GtkWidget *
-mug_shell (MugData * mugdata)
+static GtkWidget*
+mug_shell (MugData *mugdata)
 {
 	GtkWidget *vbox;
 

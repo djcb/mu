@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -51,8 +51,8 @@ struct _MuMsgBodyViewPrivate {
 	ViewMode          _view_mode;
 };
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
-                                              MU_TYPE_MSG_BODY_VIEW, \
-                                              MuMsgBodyViewPrivate))
+					      MU_TYPE_MSG_BODY_VIEW, \
+					      MuMsgBodyViewPrivate))
 /* globals */
 static WebKitWebViewClass *parent_class = NULL;
 
@@ -319,7 +319,7 @@ mu_msg_body_view_new (void)
 }
 
 
-void
+static void
 set_html (MuMsgBodyView *self, const char* html)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
