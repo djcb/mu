@@ -173,7 +173,7 @@ struct MuProc: public Mux::ProcIface {
 	const Xapian::Database& db_;
 };
 
-class _MuQuery {
+struct _MuQuery {
 public:
 	_MuQuery (MuStore *store): _store(mu_store_ref(store)) {}
 	~_MuQuery () { mu_store_unref (_store); }

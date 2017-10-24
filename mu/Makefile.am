@@ -25,44 +25,45 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=				\
-	$(WARN_CFLAGS)			\
-	-Wno-switch-enum		\
+AM_CFLAGS=						\
+	$(WARN_CFLAGS)					\
+	-Wno-switch-enum				\
 	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 
-AM_CXXFLAGS=				\
+AM_CXXFLAGS=						\
 	$(WARN_CXXFLAGS)
 
-bin_PROGRAMS=				\
+bin_PROGRAMS=						\
 	mu
 
 # note, mu.cc is only '.cc' and not '.c' because libmu must explicitly
 # be linked as c++, not c.
-mu_SOURCES=				\
-	mu.cc				\
-	mu-cmd-cfind.c			\
-	mu-config.c			\
-	mu-config.h			\
-	mu-cmd-extract.c		\
-	mu-cmd-find.c			\
-	mu-cmd-index.c			\
-	mu-cmd-server.c			\
-	mu-cmd-script.c			\
-	mu-cmd.c			\
+mu_SOURCES=						\
+	mu.cc						\
+	mu-cmd-cfind.c					\
+	mu-config.c					\
+	mu-config.h					\
+	mu-cmd-extract.c				\
+	mu-cmd-find.c					\
+	mu-cmd-index.c					\
+	mu-cmd-server.c					\
+	mu-cmd-script.c					\
+	mu-cmd.c					\
 	mu-cmd.h
 
-BUILT_SOURCES=				\
+BUILT_SOURCES=						\
 	mu-help-strings.h
 
 mu-help-strings.h: mu-help-strings.txt mu-help-strings.awk
 	 $(AM_V_GEN) $(AWK) -f ${top_srcdir}/mu/mu-help-strings.awk < $< > $@
 
-mu_LDADD=				\
-	${top_builddir}/lib/libmu.la    \
+mu_LDADD=						\
+	${top_builddir}/lib/libmu.la			\
+	${top_builddir}/lib/parser/libmuxparser.la	\
 	$(GLIB_LIBS)
 
-EXTRA_DIST=				\
-	mu-help-strings.awk		\
+EXTRA_DIST=						\
+	mu-help-strings.awk				\
 	mu-help-strings.txt
 
 CLEANFILES=$(BUILT_SOURCES)

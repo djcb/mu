@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -55,6 +55,7 @@ enum _MuConfigFormat {
 	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
 	MU_CONFIG_FORMAT_XML,		/* output xml */
 	MU_CONFIG_FORMAT_XQUERY,	/* output the xapian query */
+	MU_CONFIG_FORMAT_MQUERY,	/* output the mux query */
 
 	MU_CONFIG_FORMAT_EXEC		/* execute some command */
 };
@@ -94,8 +95,8 @@ struct _MuConfig {
 
 	MuConfigCmd	 cmd;           /* the command, or
 					 * MU_CONFIG_CMD_NONE */
-	char		*cmdstr;       /* cmd string, for user
-					* info */
+	char		*cmdstr;        /* cmd string, for user
+					 * info */
 	/* general options */
 	gboolean	 quiet;	/* don't give any output */
 	gboolean	 debug;	/* spew out debug info */
@@ -166,7 +167,6 @@ struct _MuConfig {
 					   * multiple messages in mu
 					   * view */
 
-
 	/* options for cfind (and 'find' --> "after") */
 	gboolean          personal;       /* only show 'personal' addresses */
 	/* also 'after' --> see above */
@@ -226,7 +226,6 @@ void mu_config_uninit (MuConfig *conf);
  *
  */
 MuError mu_config_execute (MuConfig *conf);
-
 
 /**
  * count the number of non-option parameters

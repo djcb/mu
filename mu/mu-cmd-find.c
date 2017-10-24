@@ -48,19 +48,25 @@ typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
 			       MuConfig *opts, GError **err);
 
 static gboolean
-print_xapian_query (MuQuery *xapian, const gchar *query, GError **err)
+print_internal (MuQuery *query, const gchar *expr, gboolean xapian,
+		gboolean warn, GError **err)
 {
-	char *querystr;
+	char *str;
 
-	querystr = mu_query_as_string (xapian, query, err);
-	if (!querystr)
-		return FALSE;
+	if (xapian)
+		str = mu_query_internal_xapian (query, expr, err);
+	else
+		str = mu_query_internal (query, expr, warn, err);
 
-	g_print ("%s\n", querystr);
-	g_free (querystr);
+	if (str) {
+		g_print ("%s\n", str);
+		g_free (str);
+	}
 
-	return TRUE;
+	return str != NULL;
 }
+
+
 
 /* returns MU_MSG_FIELD_ID_NONE if there is an error */
 static MuMsgFieldId
@@ -187,7 +193,7 @@ resolve_bookmark (MuConfig *opts, GError **err)
 static gchar*
 get_query (MuConfig *opts, GError **err)
 {
-	gchar *query, *bookmarkval;
+	gchar	*query, *bookmarkval;
 
 	/* params[0] is 'find', actual search params start with [1] */
 	if (!opts->bookmark && !opts->params[1]) {
@@ -203,7 +209,7 @@ get_query (MuConfig *opts, GError **err)
 			return NULL;
 	}
 
-	query = mu_str_quoted_from_strv ((const gchar**)&opts->params[1]);
+	query = g_strjoinv (" ", &opts->params[1]);
 	if (bookmarkval) {
 		gchar *tmp;
 		tmp = g_strdup_printf ("%s %s", bookmarkval, query);
@@ -650,11 +656,11 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err
 static gboolean
 execute_find (MuStore *store, MuConfig *opts, GError **err)
 {
-	char *query_str;
-	MuQuery *oracle;
-	gboolean rv;
+	char		*query_str;
+	MuQuery		*oracle;
+	gboolean	 rv;
 
-	oracle = get_query_obj(store, err);
+	oracle = get_query_obj (store, err);
 	if (!oracle)
 		return FALSE;
 
@@ -665,7 +671,10 @@ execute_find (MuStore *store, MuConfig *opts, GError **err)
 	}
 
 	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		rv = print_xapian_query (oracle, query_str, err);
+		rv = print_internal (oracle, query_str, TRUE, FALSE, err);
+	else if (opts->format == MU_CONFIG_FORMAT_MQUERY)
+		rv = print_internal (oracle, query_str, FALSE,
+				     opts->verbose, err);
 	else
 		rv = process_query (oracle, query_str, opts, err);
 
@@ -687,6 +696,7 @@ format_params_valid (MuConfig *opts, GError **err)
 	case MU_CONFIG_FORMAT_LINKS:
 	case MU_CONFIG_FORMAT_XML:
 	case MU_CONFIG_FORMAT_XQUERY:
+	case MU_CONFIG_FORMAT_MQUERY:
 		if (opts->exec) {
 			mu_util_g_set_error
 				(err, MU_ERROR_IN_PARAMETERS,

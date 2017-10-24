@@ -52,7 +52,8 @@ get_output_format (const char *formatstr)
 		{"plain",	MU_CONFIG_FORMAT_PLAIN},
 		{"sexp",	MU_CONFIG_FORMAT_SEXP},
 		{"xml",		MU_CONFIG_FORMAT_XML},
-		{"xquery",	MU_CONFIG_FORMAT_XQUERY}
+		{"xquery",	MU_CONFIG_FORMAT_XQUERY},
+		{"mquery",	MU_CONFIG_FORMAT_MQUERY}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(formats); i++)
