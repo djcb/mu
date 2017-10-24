@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -44,7 +44,7 @@ typedef struct _MuStore MuStore;
 MuStore*  mu_store_new_writable  (const char *xpath,
 				  const char *ccachepath,
 				  gboolean rebuild, GError **err)
-                 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+		 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
@@ -57,7 +57,7 @@ MuStore*  mu_store_new_writable  (const char *xpath,
  * of error; free with mu_store_unref
  */
 MuStore* mu_store_new_read_only (const char* xpath, GError **err)
-                   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+		   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
 

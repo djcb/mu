@@ -1,6 +1,6 @@
 /* -*-mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8-*- */
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,6 +26,9 @@
 #include <xapian.h>
 #include <cstring>
 #include <stdexcept>
+#include <iostream>
+
+#include <parser/utils.hh>
 
 #include "mu-store.h"
 #include "mu-store-priv.hh" /* _MuStore */
@@ -202,18 +205,24 @@ mu_store_flush (MuStore *store)
 		mu_contacts_serialize (store->contacts());
 }
 
-
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
-	time_t t;
-	const char *datestr;
+	const auto dstr = Mux::date_to_time_t_string (
+		(time_t)mu_msg_get_field_numeric (msg, mfid));
 
-	t = (time_t)mu_msg_get_field_numeric (msg, mfid);
-
-	datestr = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
-	doc.add_value ((Xapian::valueno)mfid, datestr);
+	doc.add_value ((Xapian::valueno)mfid, dstr);
 }
+
+static void
+add_terms_values_size (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
+{
+	const auto szstr =
+		Mux::size_to_string (mu_msg_get_field_numeric (msg, mfid));
+	doc.add_value ((Xapian::valueno)mfid, szstr);
+}
+
+
 
 G_GNUC_CONST
 static const std::string&
@@ -258,9 +267,6 @@ flag_val (char flagchar)
 	}
 }
 
-
-
-
 /* pre-calculate; optimization */
 G_GNUC_CONST static const std::string&
 prio_val (MuMsgPrio prio)
@@ -281,7 +287,6 @@ prio_val (MuMsgPrio prio)
 		return norm;
 	}
 }
-
 
 
 static void
@@ -305,54 +310,25 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 		doc.add_term (prio_val((MuMsgPrio)num));
 }
 
-static void
-add_terms_values_msgid (Xapian::Document& doc, MuMsg *msg)
-{
-	char *str;
-	const char *orig;
-
-	if (!(orig = mu_msg_get_field_string (
-		      msg, MU_MSG_FIELD_ID_MSGID)))
-		return; /* nothing to do */
-
-	str = mu_str_process_msgid (orig, FALSE);
-
-	doc.add_value ((Xapian::valueno)MU_MSG_FIELD_ID_MSGID, orig);
-	doc.add_term (prefix(MU_MSG_FIELD_ID_MSGID) +
-		      std::string(str, 0, _MuStore::MAX_TERM_LENGTH));
-
-	g_free (str);
-}
-
-
 
 /* for string and string-list */
 static void
 add_terms_values_str (Xapian::Document& doc, const char *val, MuMsgFieldId mfid)
 {
-	char *str;
-
-	if (mu_msg_field_preprocess (mfid))
-		str = mu_str_process_term (val);
-	else
-		str = g_strdup (val);
+	const auto flat = Mux::utf8_flatten (val);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (doc);
-		termgen.index_text_without_positions (str, 1, prefix(mfid));
-		if (g_strcmp0 (val, str) != 0)
-			termgen.index_text_without_positions (
-				val, 1, prefix(mfid));
+		termgen.index_text (flat, 1, prefix(mfid));
 	}
 
-	if (mu_msg_field_xapian_term(mfid))
-		doc.add_term (prefix(mfid) +
-			      std::string(str, 0, _MuStore::MAX_TERM_LENGTH));
-
-	g_free (str);
+	if (mu_msg_field_xapian_term(mfid)) {
+		//std::cerr << ":" << prefix(mfid) + flat << std::endl;
+		doc.add_term((prefix(mfid) + flat)
+			     .substr(0, MuStore::MAX_TERM_LENGTH));
+	}
 }
-
 
 static void
 add_terms_values_string (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -369,8 +345,6 @@ add_terms_values_string (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 
 	add_terms_values_str (doc, orig, mfid);
 }
-
-
 
 static void
 add_terms_values_string_list (Xapian::Document& doc, MuMsg *msg,
@@ -409,7 +383,7 @@ struct PartData {
 static void
 maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 {
-	char *txt, *str;
+	char *txt;
 	Xapian::TermGenerator termgen;
 
 	/* only deal with attachments/messages; inlines are indexed as
@@ -423,14 +397,10 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 		return;
 
 	termgen.set_document(pdata->_doc);
-
-	str = mu_str_process_text (txt);
-
-	termgen.index_text_without_positions
-		(str, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
-
+	const auto str = Mux::utf8_flatten (txt);
 	g_free (txt);
-	g_free (str);
+
+	termgen.index_text (str, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
 }
 
 
@@ -444,25 +414,17 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 	/* save the mime type of any part */
 	if (part->type) {
-		/* note, we use '_' instead of '/' to separate
-		 * type/subtype -- Xapian doesn't treat '/' as
-		 * desired, so we use '_' and pre-process queries; see
-		 * mu_query_preprocess */
 		char ctype[MuStore::MAX_TERM_LENGTH + 1];
-		snprintf (ctype, sizeof(ctype), "%s_%s",
-			  part->type, part->subtype);
-
+		snprintf (ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
 		pdata->_doc.add_term
 			(mime + std::string(ctype, 0, MuStore::MAX_TERM_LENGTH));
 	}
 
 	if ((fname = mu_msg_part_get_filename (part, FALSE))) {
-		char *str;
-		str = mu_str_process_term (fname);
+		const auto flat = Mux::utf8_flatten (fname);
 		g_free (fname);
 		pdata->_doc.add_term
-			(file + std::string(str, 0, MuStore::MAX_TERM_LENGTH));
-		g_free (str);
+			(file + std::string(flat, 0, MuStore::MAX_TERM_LENGTH));
 	}
 
 	maybe_index_text_part (msg, part, pdata);
@@ -483,13 +445,10 @@ static void
 add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 		       MuMsgFieldId mfid)
 {
-	const char *str;
-	char *flat;
-
 	if (mu_msg_get_flags(msg) & MU_FLAG_ENCRYPTED)
 		return; /* ignore encrypted bodies */
 
-	str = mu_msg_get_body_text (msg, MU_MSG_OPTION_NONE);
+	auto str = mu_msg_get_body_text (msg, MU_MSG_OPTION_NONE);
 	if (!str) /* FIXME: html->txt fallback needed */
 		str = mu_msg_get_body_html (msg, MU_MSG_OPTION_NONE);
 	if (!str)
@@ -498,11 +457,8 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 
-	flat = mu_str_process_text (str);
-
-	// g_print ("\n--\n%s\n--\n", flat);
-	termgen.index_text_without_positions (flat, 1, prefix(mfid));
-	g_free (flat);
+	const auto flat = Mux::utf8_flatten(str);
+	termgen.index_text (flat, 1, prefix(mfid));
 }
 
 struct _MsgDoc {
@@ -544,12 +500,12 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 	    !mu_msg_field_xapian_value(mfid))
 		return;
 
-	// if (mu_msg_field_xapian_contact (mfid))
-	// 	return; /* handled in new_doc_from_message */
-
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_DATE:
 		add_terms_values_date (*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
+	case MU_MSG_FIELD_ID_SIZE:
+		add_terms_values_size (*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 	case MU_MSG_FIELD_ID_BODY_TEXT:
 		add_terms_values_body (*msgdoc->_doc, msgdoc->_msg, mfid);
@@ -562,11 +518,6 @@ add_terms_values (MuMsgFieldId mfid, MsgDoc* msgdoc)
 	case MU_MSG_FIELD_ID_MIME:
 	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
 		break;
-
-	case MU_MSG_FIELD_ID_MSGID:
-		add_terms_values_msgid (*msgdoc->_doc, msgdoc->_msg);
-		break;
-
 	case MU_MSG_FIELD_ID_THREAD_ID:
 	case MU_MSG_FIELD_ID_UID:
 		break; /* already taken care of elsewhere */
@@ -604,7 +555,7 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 		       const std::string& pfx)
 {
 	const char *at, *domain_part;
-	char *name_part, *f1, *f2;
+	char *name_part;
 
 	/* add "foo" and "bar.com" as terms as well for
 	 * "foo@bar.com" */
@@ -614,16 +565,10 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	name_part   = g_strndup(addr, at - addr); // foo
 	domain_part = at + 1;
 
-	f1 = mu_str_process_term (name_part);
-	f2 = mu_str_process_term (domain_part);
+	doc.add_term (pfx + std::string(name_part, 0, _MuStore::MAX_TERM_LENGTH));
+	doc.add_term (pfx + std::string(domain_part, 0, _MuStore::MAX_TERM_LENGTH));
 
-	g_free (name_part);
-
-	doc.add_term (pfx + std::string(f1, 0, _MuStore::MAX_TERM_LENGTH));
-	doc.add_term (pfx + std::string(f2, 0, _MuStore::MAX_TERM_LENGTH));
-
-	g_free (f1);
-	g_free (f2);
+ 	g_free (name_part);
 }
 
 static gboolean
@@ -640,19 +585,15 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->name)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*msgdoc->_doc);
-		char *flat = mu_str_process_text (contact->name);
-		termgen.index_text_without_positions (flat, 1, pfx);
-		g_free (flat);
+		const auto flat = Mux::utf8_flatten(contact->name);
+		termgen.index_text (flat, 1, pfx);
 	}
 
 	if (!mu_str_is_empty(contact->address)) {
-		char *flat;
-		flat = mu_str_process_term (contact->address);
+		const auto flat = Mux::utf8_flatten(contact->address);
 		msgdoc->_doc->add_term
 			(std::string (pfx + flat, 0, MuStore::MAX_TERM_LENGTH));
-		g_free (flat);
 		add_address_subfields (*msgdoc->_doc, contact->address, pfx);
-
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->contacts())
 			mu_contacts_add (msgdoc->_store->contacts(),

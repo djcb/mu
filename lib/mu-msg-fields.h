@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,6 @@ enum _MuMsgFieldId {
 	/* add new ones here... */
 	MU_MSG_FIELD_ID_MAILING_LIST, /* mailing list */
 	MU_MSG_FIELD_ID_THREAD_ID,
-
 
 	MU_MSG_FIELD_ID_NUM
 };
@@ -231,19 +230,6 @@ gboolean mu_msg_field_xapian_value (MuMsgFieldId id) G_GNUC_PURE;
  * otherwise
  */
 gboolean mu_msg_field_uses_boolean_prefix (MuMsgFieldId id) G_GNUC_PURE;
-
-
-/**
- * should this field be escaped for xapian? in practice, should
- * word-breaking chars be replaced with '_'? Also, flatten accents,
- * downcase?
- *
- * @param field a MuMsgField
- *
- * @return TRUE if the field is to be preprocessed, FALSE otherwise
- */
-gboolean mu_msg_field_preprocess (MuMsgFieldId id) G_GNUC_PURE;
-
 
 /**
  * is this a range-field? ie. date, or size

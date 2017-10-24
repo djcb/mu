@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,8 +21,9 @@
 #include <string>
 #include <cctype>
 #include <cstring>
-#include <stdlib.h>
+#include <sstream>
 
+#include <stdlib.h>
 #include <xapian.h>
 #include <glib/gstdio.h>
 
@@ -35,250 +36,176 @@
 #include "mu-str.h"
 #include "mu-date.h"
 
-/*
- * custom parser for date ranges
- */
-class MuDateRangeProcessor : public Xapian::StringValueRangeProcessor {
-public:
-	MuDateRangeProcessor():
-		Xapian::StringValueRangeProcessor(
-			(Xapian::valueno)MU_MSG_FIELD_ID_DATE) {}
+#include <parser/proc-iface.hh>
+#include <parser/utils.hh>
+#include <parser/xapian.hh>
 
-	Xapian::valueno operator()(std::string &begin, std::string &end) {
+struct MuProc: public Mux::ProcIface {
 
-		if (!clear_prefix (begin))
-			return Xapian::BAD_VALUENO;
+	MuProc (const Xapian::Database& db): db_{db} {}
 
-		 begin = to_sortable (begin, true);
-		 end   = to_sortable (end, false);
+	static MuMsgFieldId field_id (const std::string& field) {
 
-		if (begin > end)
-			throw Xapian::QueryParserError
-				("end time is before begin");
+		if (field.empty())
+			return MU_MSG_FIELD_ID_NONE;
 
-		return (Xapian::valueno)MU_MSG_FIELD_ID_DATE;
+		MuMsgFieldId id = mu_msg_field_id_from_name (field.c_str(), FALSE);
+		if (id != MU_MSG_FIELD_ID_NONE)
+			return id;
+		else
+			return mu_msg_field_id_from_shortcut (field[0], FALSE);
 	}
-private:
-	std::string to_sortable (std::string& s, bool is_begin) {
 
-		const char*	tmp;
-		time_t		t;
+	std::string
+	process_value (const std::string& field,
+		       const std::string& value) const override {
+		const auto id = field_id (field);
+		if (id == MU_MSG_FIELD_ID_NONE)
+			return value;
+		switch(id) {
+		case MU_MSG_FIELD_ID_PRIO: {
+			if (!value.empty())
+				return std::string(1, value[0]);
+		} break;
 
-		// note: if s is empty and not is_begin, xapian seems
-		// to repeat it.
-		if (s.empty() || g_str_has_suffix (s.c_str(), "..")) {
-			tmp = mu_date_complete_s ("", is_begin);
-		} else {
-			tmp = mu_date_interpret_s (s.c_str(),
-						   is_begin ? TRUE: FALSE);
-			tmp = mu_date_complete_s (tmp, is_begin ? TRUE: FALSE);
-			t   = mu_date_str_to_time_t (tmp, TRUE /*local*/);
-			tmp = mu_date_time_t_to_str_s (t, FALSE /*UTC*/);
+		case MU_MSG_FIELD_ID_FLAGS: {
+			const auto flag = mu_flag_char_from_name (value.c_str());
+			if (flag)
+				return std::string(1, tolower(flag));
+		} break;
+
+		default:
+			break;
 		}
 
-		return s = std::string(tmp);
+		return value; // XXX prio/flags, etc. alias
 	}
 
+	void add_field (std::vector<FieldInfo>& fields, MuMsgFieldId id) const {
 
-	bool clear_prefix (std::string& begin) {
+		const auto shortcut = mu_msg_field_shortcut(id);
+		if (!shortcut)
+			return; // can't be searched
 
-		const std::string colon (":");
-		const std::string name (mu_msg_field_name
-					(MU_MSG_FIELD_ID_DATE) + colon);
-		const std::string shortcut (
-			std::string(1, mu_msg_field_shortcut
-				    (MU_MSG_FIELD_ID_DATE)) + colon);
+		const auto name = mu_msg_field_name (id);
+		const auto pfx  = mu_msg_field_xapian_prefix (id);
 
-		if (begin.find (name) == 0) {
-			begin.erase (0, name.length());
-			return true;
-		} else if (begin.find (shortcut) == 0) {
-			begin.erase (0, shortcut.length());
-			return true;
-		} else
+		if (!name || !pfx)
+			return;
+
+		fields.push_back ({{name}, {pfx}, id});
+	}
+
+	std::vector<FieldInfo>
+	process_field (const std::string& field) const override {
+
+		std::vector<FieldInfo> fields;
+
+		if (field == "contact" || field == "recip") { // multi fields
+			add_field (fields, MU_MSG_FIELD_ID_TO);
+			add_field (fields, MU_MSG_FIELD_ID_CC);
+			add_field (fields, MU_MSG_FIELD_ID_BCC);
+			if (field == "contact")
+				add_field (fields, MU_MSG_FIELD_ID_FROM);
+		} else if (field == "") {
+			add_field (fields, MU_MSG_FIELD_ID_TO);
+			add_field (fields, MU_MSG_FIELD_ID_CC);
+			add_field (fields, MU_MSG_FIELD_ID_BCC);
+			add_field (fields, MU_MSG_FIELD_ID_FROM);
+			add_field (fields, MU_MSG_FIELD_ID_SUBJECT);
+			add_field (fields, MU_MSG_FIELD_ID_BODY_TEXT);
+		} else {
+			const auto id = field_id (field.c_str());
+			if (id != MU_MSG_FIELD_ID_NONE)
+				add_field (fields, id);
+		}
+
+		return fields;
+	}
+
+	bool is_range_field (const std::string& field) const override {
+		const auto id = field_id (field.c_str());
+		if (id == MU_MSG_FIELD_ID_NONE)
 			return false;
+		else
+			return mu_msg_field_is_range_field (id);
 	}
+
+	Range process_range (const std::string& field, const std::string& lower,
+			     const std::string& upper) const override {
+
+		const auto id = field_id (field.c_str());
+		if (id == MU_MSG_FIELD_ID_NONE)
+			return { lower, upper };
+
+		std::string	l2 = lower;
+		std::string	u2 = upper;
+
+		if (id == MU_MSG_FIELD_ID_DATE) {
+			l2 = Mux::date_to_time_t_string (lower, true);
+			u2 = Mux::date_to_time_t_string (upper, false);
+		} else if (id == MU_MSG_FIELD_ID_SIZE) {
+			l2 = Mux::size_to_string (lower, true);
+			u2 = Mux::size_to_string (upper, false);
+		}
+
+		return { l2, u2 };
+	}
+
+	std::vector<std::string>
+	process_regex (const std::string& field, const std::regex& rx) const override {
+
+		const auto id = field_id (field.c_str());
+		if (id == MU_MSG_FIELD_ID_NONE)
+			return {};
+
+		char pfx[] = {  mu_msg_field_xapian_prefix(id), '\0' };
+
+		std::vector<std::string> terms;
+		for (auto it = db_.allterms_begin(pfx); it != db_.allterms_end(pfx); ++it) {
+			if (std::regex_search((*it).c_str() + 1, rx)) // avoid copy
+				terms.push_back(*it);
+		}
+
+		return terms;
+	}
+
+	const Xapian::Database& db_;
 };
 
-
-class MuSizeRangeProcessor : public Xapian::NumberValueRangeProcessor {
+class _MuQuery {
 public:
-	MuSizeRangeProcessor():
-		Xapian::NumberValueRangeProcessor(MU_MSG_FIELD_ID_SIZE) {
-	}
-
-	Xapian::valueno operator()(std::string &begin, std::string &end) {
-
-		if (!clear_prefix (begin))
-			return Xapian::BAD_VALUENO;
-
-		if (!substitute_size (begin) || !substitute_size (end))
-			return Xapian::BAD_VALUENO;
-
-		begin = Xapian::sortable_serialise (atol(begin.c_str()));
-		end = Xapian::sortable_serialise (atol(end.c_str()));
-
-		/* swap if b > e */
-		if (begin > end)
-			std::swap (begin, end);
-
-		return (Xapian::valueno)MU_MSG_FIELD_ID_SIZE;
-	}
-private:
-	bool clear_prefix (std::string& begin) {
-
-		const std::string colon (":");
-		const std::string name (mu_msg_field_name
-					(MU_MSG_FIELD_ID_SIZE) + colon);
-		const std::string shortcut (
-			std::string(1, mu_msg_field_shortcut
-				    (MU_MSG_FIELD_ID_SIZE)) + colon);
-
-		if (begin.find (name) == 0) {
-			begin.erase (0, name.length());
-			return true;
-		} else if (begin.find (shortcut) == 0) {
-			begin.erase (0, shortcut.length());
-			return true;
-		} else
-			return false;
-	}
-
-	bool substitute_size (std::string& size) {
-		gchar buf[16];
-		gint64 num = mu_str_size_parse_bkm(size.c_str());
-		if (num < 0)
-			throw Xapian::QueryParserError ("invalid size");
-		snprintf (buf, sizeof(buf), "%" G_GUINT64_FORMAT, num);
-		size = buf;
-		return true;
-	}
-};
-
-
-
-static void add_prefix (MuMsgFieldId field, Xapian::QueryParser* qparser);
-
-struct _MuQuery {
-public:
-	_MuQuery (MuStore *store): _store(mu_store_ref(store)) {
-
-		_qparser.set_database (db());
-		_qparser.set_default_op (Xapian::Query::OP_AND);
-
-		_qparser.add_valuerangeprocessor (&_date_range_processor);
-		_qparser.add_valuerangeprocessor (&_size_range_processor);
-
-		mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_prefix,
-				      &_qparser);
-
-		/* add some convenient special prefixes */
-		add_special_prefixes ();
-	}
-
+	_MuQuery (MuStore *store): _store(mu_store_ref(store)) {}
 	~_MuQuery () { mu_store_unref (_store); }
 
 	Xapian::Database& db() const {
-		Xapian::Database* db;
-		db = reinterpret_cast<Xapian::Database*>
+		const auto db = reinterpret_cast<Xapian::Database*>
 			(mu_store_get_read_only_database (_store));
 		if (!db)
 			throw std::runtime_error ("no database");
 		return *db;
 	}
-	Xapian::QueryParser& query_parser () { return _qparser; }
-
 private:
-	void add_special_prefixes () {
-		char pfx[] = { '\0', '\0' };
-
-		/* add 'contact' as a shortcut for From/Cc/Bcc/To: */
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_FROM);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_BCC);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_CONTACT, pfx);
-
-		/* add 'recip' as a shortcut for Cc/Bcc/To: */
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_TO);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_CC);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
-		pfx[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_BCC);
-		_qparser.add_prefix (MU_MSG_FIELD_PSEUDO_RECIP, pfx);
-	}
-
-	Xapian::QueryParser	_qparser;
-	MuDateRangeProcessor	_date_range_processor;
-	MuSizeRangeProcessor	_size_range_processor;
-
 	MuStore *_store;
 };
 
 static const Xapian::Query
 get_query (MuQuery *mqx, const char* searchexpr, GError **err)
 {
-	Xapian::Query query;
-	char *preprocessed;
-
-	preprocessed = mu_query_preprocess (searchexpr, err);
-	if (!preprocessed)
-		throw std::runtime_error
-			("parse error while preprocessing query");
-
 	try {
-		query = mqx->query_parser().parse_query
-			(preprocessed,
-			 Xapian::QueryParser::FLAG_BOOLEAN          |
-			 Xapian::QueryParser::FLAG_PURE_NOT         |
-			 Xapian::QueryParser::FLAG_AUTO_SYNONYMS    |
-			 Xapian::QueryParser::FLAG_WILDCARD	    |
-			 Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE
-			 );
-		g_free (preprocessed);
-		return query;
+		Mux::WarningVec warns;
+		const auto tree = Mux::parse (searchexpr, warns,
+					      std::make_unique<MuProc>(mqx->db()));
+		for (const auto w: warns)
+			std::cerr << w << std::endl;
+
+		return Mux::xapian_query (tree);
 
 	} catch (...) {
 		mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
 				     "parse error in query");
-		g_free (preprocessed);
 		throw;
 	}
-}
-
-
-
-static void
-add_prefix (MuMsgFieldId mfid, Xapian::QueryParser* qparser)
-{
-	if (!mu_msg_field_xapian_index(mfid) &&
-	    !mu_msg_field_xapian_term(mfid) &&
-	    !mu_msg_field_xapian_contact(mfid))
-		return;
-	try {
-		const std::string  pfx
-			(1, mu_msg_field_xapian_prefix (mfid));
-		const std::string shortcut
-			(1, mu_msg_field_shortcut (mfid));
-
-		if (mu_msg_field_uses_boolean_prefix (mfid)) {
-		 	qparser->add_boolean_prefix
-		 		(mu_msg_field_name(mfid), pfx);
-		 	qparser->add_boolean_prefix (shortcut, pfx);
-		} else {
-			qparser->add_prefix
-				(mu_msg_field_name(mfid), pfx);
-		 	qparser->add_prefix (shortcut, pfx);
-		}
-
-		// all fields are also matched implicitly, without
-		// any prefix
-		qparser->add_prefix ("", pfx);
-
-	} MU_XAPIAN_CATCH_BLOCK;
 }
 
 MuQuery*
@@ -299,44 +226,10 @@ mu_query_new (MuStore *store, GError **err)
 	return 0;
 }
 
-
 void
 mu_query_destroy (MuQuery *self)
 {
 	try { delete self; } MU_XAPIAN_CATCH_BLOCK;
-}
-
-
-/* preprocess a query to make them a bit more promiscuous */
-char*
-mu_query_preprocess (const char *query, GError **err)
-{
-	GSList *parts, *cur;
-	gchar *myquery;
-
-	g_return_val_if_fail (query, NULL);
-
-	/* convert the query to a list of query terms, and escape them
-	 * separately */
-	parts = mu_str_esc_to_list (query);
-	if (!parts)
-		return NULL;
-
-	for (cur = parts; cur; cur = g_slist_next(cur)) {
-		char *data;
-		data = (gchar*)cur->data;
-		cur->data = mu_str_process_query_term (data);
-		g_free (data);
-		/* run term fixups */
-		data = (gchar*)cur->data;
-		cur->data = mu_str_xapian_fixup_terms (data);
-		g_free (data);
-	}
-
-	myquery = mu_str_from_list (parts, ' ');
-	mu_str_free_list (parts);
-
-	return myquery ? myquery : g_strdup ("");
 }
 
 
@@ -533,7 +426,11 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 		 * effort to calculate threads already in the first
 		 * query since we can do it in the second one
 		 */
-		first_flags = inc_related ? (flags & ~MU_QUERY_FLAG_THREADS) : flags;
+		if (inc_related)
+			first_flags = (MuQueryFlags)(flags & ~MU_QUERY_FLAG_THREADS);
+		else
+			first_flags = flags;
+
 		iter   = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum,
@@ -563,7 +460,7 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 
 
 char*
-mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
+mu_query_internal_xapian (MuQuery *self, const char *searchexpr, GError **err)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (searchexpr, NULL);
@@ -571,6 +468,31 @@ mu_query_as_string (MuQuery *self, const char *searchexpr, GError **err)
 	try {
 		Xapian::Query query (get_query(self, searchexpr, err));
 		return g_strdup(query.get_description().c_str());
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+}
+
+
+char*
+mu_query_internal (MuQuery *self, const char *searchexpr,
+		   gboolean warn, GError **err)
+{
+	g_return_val_if_fail (self, NULL);
+	g_return_val_if_fail (searchexpr, NULL);
+
+	try {
+		Mux::WarningVec warns;
+		const auto tree = Mux::parse (searchexpr, warns,
+					      std::make_unique<MuProc>(self->db()));
+		std::stringstream ss;
+		ss << tree;
+
+		if (warn) {
+			for (const auto w: warns)
+				std::cerr << w << std::endl;
+		}
+
+		return g_strdup(ss.str().c_str());
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
 }

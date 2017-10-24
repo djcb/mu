@@ -144,11 +144,11 @@ Mux::quote (const std::string& str)
 	 return str;
  }
 
-constexpr const auto InternalDateFormat = "%012" G_GINT64_FORMAT;
-constexpr const char InternalDateMin[] = "000000000000";
-constexpr const char InternalDateMax[] = "999999999999";
-static_assert(sizeof(InternalDateMin) == 12 + 1);
-static_assert(sizeof(InternalDateMax) == 12 + 1);
+constexpr const auto InternalDateFormat = "%010" G_GINT64_FORMAT;
+constexpr const char InternalDateMin[] = "0000000000";
+constexpr const char InternalDateMax[] = "9999999999";
+static_assert(sizeof(InternalDateMin) == 10 + 1);
+static_assert(sizeof(InternalDateMax) == 10 + 1);
 
 static std::string
 date_boundary (bool is_first)
@@ -204,7 +204,6 @@ delta_ymwdhMs (const std::string& expr)
 	return date_to_time_t_string (t);
 }
 
-
 static std::string
 special_date (const std::string& d, bool is_first)
 {
@@ -235,9 +234,8 @@ special_date (const std::string& d, bool is_first)
 		return date_boundary (is_first);
 }
 
-
 constexpr const char UserDateMin[] = "19700101000000";
-constexpr const char UserDateMax[] = "29993112235959";
+constexpr const char UserDateMax[] = "29991231235959";
 
 std::string
 Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
@@ -249,7 +247,10 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 	/* one-sided dates */
 	if (dstr.empty())
 		return date_boundary (is_first);
-	else if (is_first && dstr.find_first_of("ymdwhMs") != std::string::npos)
+	else if (dstr == "today" || dstr == "now")
+		return special_date (dstr, is_first);
+
+	else if (dstr.find_first_of("ymdwhMs") != std::string::npos)
 		return delta_ymwdhMs (dstr);
 
 	std::string date (is_first ? UserDateMin : UserDateMax);
@@ -261,7 +262,7 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 	    !strptime (date.c_str(), "%Y%m%d", &tbuf) &&
 	    !strptime (date.c_str(), "%Y%m", &tbuf) &&
 	    !strptime (date.c_str(), "%Y", &tbuf))
-		return special_date (date, is_first);
+		return date_boundary (is_first);
 
 	dtime = g_date_time_new_local (tbuf.tm_year + 1900,
 				       tbuf.tm_mon + 1,

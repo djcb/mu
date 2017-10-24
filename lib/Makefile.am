@@ -1,4 +1,4 @@
-## Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2010-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,13 +18,14 @@ include $(top_srcdir)/gtest.mk
 
 # enforce compiling guile (optionally) first,then this dir first
 # before decending into tests/
-SUBDIRS= . tests
+SUBDIRS= parser . tests
 
 AM_CFLAGS=					\
 	$(WARN_CFLAGS)				\
 	-Wno-format-nonliteral			\
 	-Wno-switch-enum			\
 	-Wno-suggest-attribute=format		\
+	-Wno-deprecated-declarations		\
 	$(GMIME_CFLAGS)				\
 	$(GLIB_CFLAGS)				\
 	$(GUILE_CFLAGS)
@@ -103,7 +104,8 @@ libmu_la_LIBADD=				\
 	$(XAPIAN_LIBS)				\
 	$(GMIME_LIBS)				\
 	$(GLIB_LIBS)				\
-	$(GUILE_LIBS)
+	$(GUILE_LIBS)				\
+	${builddir}/parser/libmuxparser.la
 
 EXTRA_DIST=					\
 	mu-msg-crypto.c				\

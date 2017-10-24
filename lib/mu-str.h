@@ -119,83 +119,6 @@ char*       mu_str_flags    (MuFlags flags)
 char* mu_str_summarize (const char* str, size_t max_lines)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-
-/**
- * Process some text (e.g. message bodies) -- flatten (remove accents
- * etc.), and remove some punctuation.
- *
- * @param text some text
- *
- * @return the processed text, free with g_free
- */
-char* mu_str_process_text (const char *text)
-	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * Process some term (e.g., an e-mail address, subject field):
- * remove accents, replace some punctuation by _
- *
- * @param term some term
- *
- * @return the processed text, free with g_free
- */
-char* mu_str_process_term (const char *term)
-	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * Process some query term (e.g., an e-mail address, subject field):
- * remove accents, replace some punctuation by _, but leave some query
- * metachars alone.
- *
- * @param qterm some query term
- *
- * @return the processed text, free with g_free
- */
-char* mu_str_process_query_term (const char *qterm)
-	 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-
-/**
- * Handle the message-id in a special way
- *
- * @param str the message-id str
- * @param query is this a query?
- *
- * @return the massaged message-id
- */
-char* mu_str_process_msgid (const char *str, gboolean query);
-
-
-/**
- * Fixup values for some fields in the DWIM manner:
- * - if term is date:YYYYMMDD, replace it with the range
- *   date:YYYYMMDD..YYYYMMDD.
- *
- * @param query a query string
- *
- * @return the fixup'd string that must be g_free()d
- * after use or NULL in case of error.
- */
-gchar* mu_str_xapian_fixup_terms (const gchar *term);
-
-/**
- * parse a byte size; a size is a number, with optionally a
- * unit. Units recognized are b/B (bytes) k/K (1000) and m/M
- * (1000*1000). Only the first letter is checked and the function is
- * not case-sensitive, so 1000Kb, 3M will work equally well.  Note,
- * for kB, MB etc., we then follow the SI standards, not 2^10 etc. The
- * 'b' may be omitted.
- *
- * practical sizes for email messages are in terms of Mb; even in
- * extreme cases it should be under 100 Mb. Function return
- * GUINT64_MAX if there a parsing error
- *
- * @param str a string with a size, such a "100", "100Kb", "1Mb"
- *
- * @return the corresponding size in bytes, or -1 in case of error
- */
-gint64 mu_str_size_parse_bkm (const char* str);
-
 /**
  * create a full path from a path + a filename. function is _not_
  * reentrant.
@@ -206,7 +129,6 @@ gint64 mu_str_size_parse_bkm (const char* str);
  * @return the path as a statically allocated buffer. don't free.
  */
 const char* mu_str_fullpath_s (const char* path, const char* name);
-
 
 /**
  * escape a string like a string literal in C; ie. replace \ with \\,
@@ -220,7 +142,6 @@ const char* mu_str_fullpath_s (const char* path, const char* name);
 char* mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
 	G_GNUC_WARN_UNUSED_RESULT;
 
-
 /**
  * turn a string into plain ascii by replacing each non-ascii
  * character with a dot ('.'). Replacement is done in-place.
@@ -231,7 +152,6 @@ char* mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
  */
 char* mu_str_asciify_in_place (char *buf);
 
-
 /**
  * turn string in buf into valid utf8. If this string is not valid
  * utf8 already, the function massages the offending characters.
@@ -241,7 +161,6 @@ char* mu_str_asciify_in_place (char *buf);
  * @return a newly allocated utf8 string
  */
 char* mu_str_utf8ify (const char *buf);
-
 
 /**
  * convert a string in a certain charset into utf8
@@ -255,7 +174,6 @@ char* mu_str_utf8ify (const char *buf);
 gchar* mu_str_convert_to_utf8 (const char* buffer, const char *charset);
 
 
-
 /**
  * macro to check whether the string is empty, ie. if it's NULL or
  * it's length is 0
@@ -266,7 +184,6 @@ gchar* mu_str_convert_to_utf8 (const char* buffer, const char *charset);
  */
 #define mu_str_is_empty(S) ((!(S)||!(*S))?TRUE:FALSE)
 
-
 /**
  * convert a GSList of strings to a #sepa-separated list
  *
@@ -276,7 +193,6 @@ gchar* mu_str_convert_to_utf8 (const char* buffer, const char *charset);
  * @return a newly allocated string
  */
 char* mu_str_from_list (const GSList *lst, char sepa);
-
 
 /**
  * convert a #sepa-separated list of strings in to a GSList
@@ -289,7 +205,6 @@ char* mu_str_from_list (const GSList *lst, char sepa);
  */
 GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
 
-
 /**
  * convert a string (with possible escaping) to a list. list items are
  * separated by one or more spaces. list items can be quoted (using
@@ -301,8 +216,6 @@ GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
  * mu_str_free_list
  */
 GSList* mu_str_esc_to_list (const char *str);
-
-
 
 /**
  * Parse a list of <key>:<value> arguments, where <value> supports
@@ -317,14 +230,12 @@ GSList* mu_str_esc_to_list (const char *str);
 GHashTable* mu_str_parse_arglist (const char *args, GError **err)
 G_GNUC_WARN_UNUSED_RESULT;
 
-
 /**
  * free a GSList consisting of allocated strings
  *
  * @param lst a GSList
  */
 void mu_str_free_list (GSList *lst);
-
 
 /**
  * strip the subject of Re:, Fwd: etc.

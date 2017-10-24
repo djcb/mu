@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,7 +20,7 @@
 #include "mu-msg-prio.h"
 
 
-const char* 
+const char*
 mu_msg_prio_name (MuMsgPrio prio)
 {
 	switch (prio) {
@@ -45,8 +45,8 @@ mu_msg_prio_char (MuMsgPrio prio)
 	if (!(prio == 'l' || prio == 'n' || prio == 'h')) {
 		g_warning ("prio: %c", (char)prio);
 	}
-		
-	
+
+
 	g_return_val_if_fail (prio == 'l' || prio == 'n' || prio == 'h',
 			      0);
 

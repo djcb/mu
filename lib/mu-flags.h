@@ -128,6 +128,18 @@ MuFlags mu_flags_from_str (const char *str, MuFlagType types,
 			   gboolean ignore_invalid);
 
 
+
+
+/**
+ * Get the MuFlag char for some flag name
+ *
+ * @param str a flag name
+ *
+ * @return a flag character, or 0
+ */
+MuFlags mu_flag_char_from_name (const char *str);
+
+
 /**
  * return the concatenation of all non-standard file flags in str
  * (ie., characters other than DFPRST) as a newly allocated string.

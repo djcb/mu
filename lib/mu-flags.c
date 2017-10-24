@@ -77,6 +77,20 @@ mu_flag_char (MuFlags flag)
 }
 
 
+MuFlags
+mu_flag_char_from_name (const char *str)
+{
+	unsigned u;
+
+	g_return_val_if_fail (str, MU_FLAG_INVALID);
+
+	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
+		if (g_strcmp0(FLAG_INFO[u].name, str) == 0)
+			return FLAG_INFO[u].kar;
+
+	return 0;
+}
+
 
 static MuFlags
 mu_flag_from_char (char kar)
