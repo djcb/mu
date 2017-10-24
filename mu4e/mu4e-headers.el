@@ -1183,8 +1183,8 @@ message, you can use `mu4e-headers-find-if-next'."
     (save-excursion
       (while (and (null pos)
 	       (funcall search-func mu4e~headers-docid-pre nil t))
-	;; not really sure why we need to jump to bol; we do need to, otherwise we
-	;; miss lines sometimes...
+	;; not really sure why we need to jump to bol; we do need to, otherwise
+	;; we miss lines sometimes...
 	(let ((msg (get-text-property (line-beginning-position) 'msg)))
 	  (when (and msg (funcall func msg))
 	    (setq pos (point))))))
@@ -1674,8 +1674,7 @@ maildir)."
       (list maildir)))
   (when maildir
     (mu4e-mark-handle-when-leaving)
-    (mu4e-headers-search
-      (format "maildir:\"%s\"" maildir))))
+    (mu4e-headers-search (format "\"maildir:%s\"" maildir))))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.
