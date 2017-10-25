@@ -34,113 +34,6 @@
 #include "mu-date.h"
 
 
-static void
-test_mu_date_str (void)
-{
-	struct tm *tmbuf;
-	char buf[64];
-	gchar *tmp;
-	time_t some_time;
-
-	some_time = 1234567890;
-	tmbuf = localtime (&some_time);
-	strftime (buf, 64, "%x", tmbuf);
-
-	/*  $ date -ud@1234567890; Fri Feb 13 23:31:30 UTC 2009 */
-	g_assert_cmpstr (mu_date_str_s ("%x", some_time), ==, buf);
-
-	/* date -ud@987654321 Thu Apr 19 04:25:21 UTC 2001 */
-	some_time = 987654321;
-	tmbuf = localtime (&some_time);
-	strftime (buf, 64, "%c", tmbuf);
-	tmp = mu_date_str ("%c", some_time);
-
-	g_assert_cmpstr (tmp, ==, buf);
-	g_free (tmp);
-}
-
-
-
-static void
-test_mu_date_parse_hdwmy (void)
-{
-	time_t diff;
-
-	diff = time(NULL) - mu_date_parse_hdwmy ("3h");
-	g_assert (diff > 0);
-	g_assert_cmpuint (3 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_date_parse_hdwmy ("5y");
-	g_assert (diff > 0);
-	g_assert_cmpuint (5 * 365 * 24 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_date_parse_hdwmy ("3m");
-	g_assert (diff > 0);
-	g_assert_cmpuint (3 * 30 * 24 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_date_parse_hdwmy ("21d");
-	g_assert (diff > 0);
-	g_assert_cmpuint (21 * 24 * 60 * 60 - diff, <=, 1);
-
-	diff = time(NULL) - mu_date_parse_hdwmy ("2w");
-	g_assert (diff > 0);
-	g_assert_cmpuint (2 * 7 * 24 * 60 * 60 - diff, <=, 1);
-
-
-	g_assert_cmpint (mu_date_parse_hdwmy("-1y"),==, (time_t)-1);
-}
-
-
-static void
-test_mu_date_complete_begin (void)
-{
-	g_assert_cmpstr (mu_date_complete_s("2000", TRUE), ==,
-			 "20000101000000");
-	g_assert_cmpstr (mu_date_complete_s("2", TRUE), ==,
-			 "20000101000000");
-	g_assert_cmpstr (mu_date_complete_s ("", TRUE), ==,
-			 "00000101000000");
-	g_assert_cmpstr (mu_date_complete_s ("201007", TRUE), ==,
-			 "20100701000000");
-	g_assert_cmpstr (mu_date_complete_s ("19721214", TRUE), ==,
-			 "19721214000000");
-	g_assert_cmpstr (mu_date_complete_s ("19721214234512", TRUE), ==,
-			 "19721214234512");
-
-	g_assert_cmpstr (mu_date_complete_s ("2010-07", TRUE), ==,
-			 "20100701000000");
-	g_assert_cmpstr (mu_date_complete_s ("1972/12/14", TRUE), ==,
-			 "19721214000000");
-	g_assert_cmpstr (mu_date_complete_s ("1972-12-14 23:45:12", TRUE), ==,
-			 "19721214234512");
-
-}
-
-
-static void
-test_mu_date_complete_end (void)
-{
-	g_assert_cmpstr (mu_date_complete_s ("2000", FALSE), ==,
-			 "20001231235959");
-	g_assert_cmpstr (mu_date_complete_s ("2", FALSE), ==,
-			 "29991231235959");
-	g_assert_cmpstr (mu_date_complete_s ("", FALSE), ==,
-			 "99991231235959");
-	g_assert_cmpstr (mu_date_complete_s ("201007", FALSE), ==,
-			 "20100731235959");
-	g_assert_cmpstr (mu_date_complete_s ("19721214", FALSE), ==,
-			 "19721214235959");
-	g_assert_cmpstr (mu_date_complete_s ("19721214234512", FALSE), ==,
-			 "19721214234512");
-
-	g_assert_cmpstr (mu_date_complete_s ("2010-07", FALSE), ==,
-			 "20100731235959");
-	g_assert_cmpstr (mu_date_complete_s ("1972.12.14", FALSE), ==,
-			 "19721214235959");
-	g_assert_cmpstr (mu_date_complete_s ("1972.12.14 23:45/12", FALSE), ==,
-			 "19721214234512");
-}
-
 
 
 
@@ -178,10 +71,6 @@ int
 main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
-
-	/* mu_str_date */
-	g_test_add_func ("/mu-str/mu-date-str",
-			 test_mu_date_str);
 
 	g_test_add_func ("/mu-str/mu_date_parse_hdwmy",
 			 test_mu_date_parse_hdwmy);

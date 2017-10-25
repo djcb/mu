@@ -249,31 +249,6 @@ mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
 }
 
 
-gchar*
-mu_util_str_from_strv (const gchar **params)
-{
-	GString *str;
-	int i;
-
-	g_return_val_if_fail (params, NULL);
-
-	if (!params[0])
-		return g_strdup ("");
-
-	str = g_string_sized_new (64); /* just a guess */
-
-	for (i = 0; params[i]; ++i) {
-
-		if (i > 0)
-			g_string_append_c (str, ' ');
-
-		g_string_append (str, params[i]);
-	}
-
-	return g_string_free (str, FALSE);
-}
-
-
 int
 mu_util_create_writeable_fd (const char* path, mode_t mode,
 			     gboolean overwrite)

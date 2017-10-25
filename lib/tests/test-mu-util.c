@@ -56,7 +56,7 @@ test_mu_util_dir_expand_01 (void)
 	 * work. Turn of the test for now */
 	return;
 
-	
+
 #ifdef HAVE_WORDEXP_H
 	{
 	gchar *got, *expected;
@@ -162,37 +162,6 @@ test_mu_util_check_dir_04 (void)
 		FALSE);
 }
 
-
-static void
-test_mu_util_str_from_strv_01 (void)
-{
-	const gchar *strv[] = { "aap", "noot", "mies", NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "aap noot mies");
-	g_free (str);
-
-}
-
-static void
-test_mu_util_str_from_strv_02 (void)
-{
-	const gchar *strv[] = { "test", NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "test");
-	g_free (str);
-
-}
-
-static void
-test_mu_util_str_from_strv_03 (void)
-{
-	const gchar *strv[] = { NULL };
-	gchar *str = mu_util_str_from_strv (strv);
-	g_assert_cmpstr (str, ==, "");
-	g_free (str);
-}
-
-
 static void
 test_mu_util_get_dtype_with_lstat (void)
 {
@@ -223,10 +192,12 @@ test_mu_util_supports (void)
 	path = g_find_program_in_path ("gnuplot");
 	g_free (path);
 
-	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GNUPLOT),==,path ? TRUE : FALSE);
+	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GNUPLOT),==,
+			  path ? TRUE : FALSE);
 
 	g_assert_cmpuint (
-		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE|MU_FEATURE_CRYPTO),
+		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE|
+				  MU_FEATURE_CRYPTO),
 		==,
 		has_guile && path ? TRUE : FALSE);
 }
@@ -246,8 +217,10 @@ main (int argc, char *argv[])
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_util_dir_expand */
-	g_test_add_func ("/mu-util/mu-util-dir-expand-00", test_mu_util_dir_expand_00);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-01", test_mu_util_dir_expand_01);
+	g_test_add_func ("/mu-util/mu-util-dir-expand-00",
+			 test_mu_util_dir_expand_00);
+	g_test_add_func ("/mu-util/mu-util-dir-expand-01",
+			 test_mu_util_dir_expand_01);
 
 	/* mu_util_guess_maildir */
 	g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
@@ -256,24 +229,21 @@ main (int argc, char *argv[])
 			 test_mu_util_guess_maildir_02);
 
 	/* mu_util_check_dir */
-	g_test_add_func ("/mu-util/mu-util-check-dir-01", test_mu_util_check_dir_01);
-	g_test_add_func ("/mu-util/mu-util-check-dir-02", test_mu_util_check_dir_02);
-	g_test_add_func ("/mu-util/mu-util-check-dir-03", test_mu_util_check_dir_03);
-	g_test_add_func ("/mu-util/mu-util-check-dir-04", test_mu_util_check_dir_04);
-
-	/* test_mu_util_str_from_strv */
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-01",
-			 test_mu_util_str_from_strv_01);
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-02",
-			 test_mu_util_str_from_strv_02);
-	g_test_add_func ("/mu-util/mu-util-str-from-strv-03",
-			 test_mu_util_str_from_strv_03);
+	g_test_add_func ("/mu-util/mu-util-check-dir-01",
+			 test_mu_util_check_dir_01);
+	g_test_add_func ("/mu-util/mu-util-check-dir-02",
+			 test_mu_util_check_dir_02);
+	g_test_add_func ("/mu-util/mu-util-check-dir-03",
+			 test_mu_util_check_dir_03);
+	g_test_add_func ("/mu-util/mu-util-check-dir-04",
+			 test_mu_util_check_dir_04);
 
 	g_test_add_func ("/mu-util/mu-util-get-dtype-with-lstat",
 			 test_mu_util_get_dtype_with_lstat);
 
 	g_test_add_func ("/mu-util/mu-util-supports", test_mu_util_supports);
-	g_test_add_func ("/mu-util/mu-util-program-in-path", test_mu_util_program_in_path);
+	g_test_add_func ("/mu-util/mu-util-program-in-path",
+			 test_mu_util_program_in_path);
 
 
 	g_log_set_handler (NULL,
