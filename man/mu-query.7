@@ -1,0 +1,287 @@
+.TH MU QUERY 7 "25 October 2017" "User Manuals"
+
+.SH NAME
+
+mu query language \- a language for finding messages in a \fBmu\fR database.
+
+.SH DESCRIPTION
+
+The mu query language is a language that allows for searching in a
+\fBmu\fR database and is used by \fBmu find\fR and \fBmu4e\fR to find
+messages. The language is similar to the default query-parser that
+\fBmu\fR's underlying Xapian database uses, but is a indepedent
+\fBmu\fR-specific implementation.
+
+In this manpage, we give a structured but informal overview of the
+query language and provide examples.
+
+.de EX1
+.nf
+.RS
+..
+
+.de EX2
+.RE
+.fi
+..
+
+
+.SH TERMS
+
+The basic building blocks are \fBterms\fR; these are just normal
+alphanumerical strings like 'banana' or 'hello' or prefixed with a
+field-name.
+
+Some example queries:
+.EX1
+vacation
+subject:capybara
+maildir:/inbox
+.EX2
+
+Terms without an explicit field-prefix, (like 'vacation' above) are
+interpreted as something like:
+.EX1
+to:vacation or subject:vacation or body:vacation or ... 
+.EX2
+
+The language is case-insensitive for terms and attempts to flatten any
+diactrics, so \fIangtrom\fR matches \fIÅngström\fR.
+
+.SH LOGICAL OPERATORS
+
+We can combine terms with logical operators -- binary ones: \fBand\fR,
+\fBor\fR, \fBxor\fR and the unary \fBnot\fR, with conventional
+precedence and association, and case-insensitive. You can also group
+things with \fB(\fR and \fB)\fR, so you can do things like:
+.EX1
+(subject:beethoven or subject:bach) and not body:elvis
+.EX2
+
+If you do not explicitly specify an operator between terms, \fBand\fR
+is implied, so the queries
+.EX1
+subject:chip subject:dale
+.EX2
+.EX1
+subject:chip AND subject:dale
+.EX2
+are equivalent. For readability, we recommend the second version.
+
+Note that a \fIpure not\fR - e.g. searching for \fBnot apples\fR is
+quite a 'heavy' query.
+
+.SH REGULAR EXPRESSIONS AND WILDCARDS
+
+The language supports matching regular expressions that follow
+ECMAScript; for details, see
+
+.BR http://www.cplusplus.com/reference/regex/ECMAScript/
+
+Regular expressions must be enclosed in \fB//\fR. Some examples:
+.EX1
+subject:/h.llo/		# match hallo, hello, ...
+subject:/
+.EX2
+
+Note the difference between 'maildir:/foo' and 'maildir:/foo/'; the
+latter matches messages in the '/foo' maildir, while the latter
+matches all messages in all maildirs that match 'foo', such
+as '/foo', '/bar/cuux/foo', '/fooishbar' etc.
+
+Wildcards are an older mechanism for matching where a term with a
+rightmost \fB*\fR matches any term that starts with the part before
+the \fB*\fR; they are supported for backward compatibility and
+\fBmu\fR translates them to regular expressions internally; e.g.
+\fBfoo*\fR is equivalent to \fB/foo.*/\fR.
+
+Wildcards and regular expressions can be quite heavy to execute.
+
+.SH FIELDS
+
+We already saw a number of search fields, such as \fBsubject:\fR and
+\fBbody:\fR. Here is the full table, a shortcut character (so
+\fBsubject:october\fR can be written as \fBs:october\fR) and a
+description.
+
+.nf
+	cc,c            Cc (carbon-copy) recipient(s)
+	bcc,h           Bcc (blind-carbon-copy) recipient(s)
+	from,f          Message sender
+	to,t            To: recipient(s)
+	subject,s       Message subject
+	body,b          Message body
+	maildir,m       Maildir
+	msgid,i         Message-ID
+	prio,p          Message priority ('low', 'normal' or 'high')
+	flag,g          Message Flags
+	date,d          Date range
+	size,z          Message size range
+	embed,e         Search inside embedded text parts (messages, attachments)
+	file,j          Attachment filename
+	mime,y          MIME-type of one or more message parts
+	tag,x           Tags for the message (\fIX-Label\fR and/or \fIX-Keywords\fR)
+	list,v          Mailing list (e.g. the List-Id value)
+.fi
+
+There are also the special fields \fBcontact\fR, which matches all
+contact-fields (\fBfrom\fR, \fBto\fR, \fBcc\fR and \fBbcc\fR), and
+\fBrecip\fR, which matches all recipient-fields (\fBto\fR, \fBcc\fR
+and \fBbcc\fR).
+
+.SH DATE RANGES
+
+The \fBdate:\fR field takes a date-range, expressed as the lower and
+upper bound, separated by \fB..\fR. Either lower or upper (but not
+both) can be omitted to create an open range.
+
+Dates are expressed in local time and using ISO-8601 format
+(YYYY-MM-DD HH:MM:SS); you can leave out the right part, and \fBmu\fR
+adds the rest, depending on whether this is the beginning or end of
+the range (e.g., as a lower bound, '2015' would be interpreted as the
+start of that year; as an upper bound as the end of the year).
+
+You can use '/' , '.', '-' and 'T' to make dates more human readable.
+
+Some examples:
+.EX1
+date:20170505..20170602
+date:2017-05-05..2017-06-02
+date:..2017-10-01T12:00
+date:2015-06-01..
+date:2016..2016
+.EX2
+
+You can also use the special 'dates' \fBnow\fR and \fBtoday\fR:
+.EX1
+date:20170505..now
+date:today..
+.EX2
+
+Finally, you can use relative 'ago' times which express some time
+before now and consist of a number followed by a unit, with units
+\fBs\fR for seconds, \fBM\fR for minutes, \fBh\fR for hours, \fBd\fR
+for days, \fBw\fR for week, \fBm\fR for months and \fBy\fR for years.
+Some examples:
+
+.EX1
+date:3m..
+e:2017.01.01..5w
+.EX2
+
+.SH SIZE RANGES
+
+The \fBsize\fR or \fBz\fR field allows you to match \fIsize ranges\fR
+-- that is, match messages that have a byte-size within a certain
+range. Units (b (for bytes), K (for 1000 bytes) and M (for 1000 * 1000
+bytes) are supported). Some examples:
+
+.EX1
+size:10k..2m
+size:10m..
+.EX2
+
+.SH FLAG FIELDS
+
+The \fBflag\fR/\fBg\fR field allows you to match message flags. The
+following fields are available:
+.nf
+	d,draft         Draft Message
+	f,flagged       Flagged
+	n,new           New message (in new/ Maildir)
+	p,passed        Passed ('Handled')
+	r,replied       Replied
+	s,seen          Seen
+	t,trashed       Marked for deletion
+	a,attach        Has attachment
+	z,signed        Signed message
+	x,encrypted     Encrypted message
+	l,list          Mailing-list message
+.fi
+
+Some examples:
+.EX1
+flag:attach
+flag:replied
+g:x
+.EX2
+
+Encrypted messages may be signed as well, but this is only visible
+after decrypting and thus, invisible to \fBmu\fR.
+
+.SH PRIORITY FIELD
+
+The message priority field (\fBprio:\fR) has three possible values:
+\fBlow\fR, \fBnormal\fR or \fBhigh\fR. For instance, to match
+high-priority messages:
+.EX1
+ prio:high
+.EX2
+
+.SH MAILDIR
+
+The Maildir field describes the directory path starting \fBafter\fR
+the Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part.
+So for example, if there's a message with the file name
+\fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and
+all the other messages in the same maildir) with:
+.EX1
+maildir:/lists/running
+.EX2
+
+Note the starting '/'. If you want to match mails in the 'root'
+maildir, you can do with a single '/':
+.EX1
+maildir:/
+.EX2
+
+.SH MORE EXAMPLES
+
+Here are some simple examples of \fBmu\fR queries; you can make many
+more complicated queries using various logical operators, parentheses
+and so on, but in the author's experience, it's usually faster to find
+a message with a simple query just searching for some words.
+
+Find all messages with both 'bee' and 'bird' (in any field)
+.EX1
+bee AND bird
+.EX2
+
+Find all messages with either Frodo or Sam:
+.EX1
+Frodo OR Sam
+.EX2
+
+Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
+.EX1
+subject:wombat and capibara
+.EX2
+
+Find all messages in the 'Archive' folder from Fred:
+.EX1
+from:fred and maildir:/Archive
+.EX2
+
+Find all unread messages with attachments:
+.EX1
+flag:attach and flag:unread
+.EX2
+
+
+Find all messages with PDF-attachments:
+.EX1
+mime:application/pdf
+.EX2
+
+Find all messages with attached images:
+.EX1
+mime:image/*
+.EX2
+
+.SH AUTHOR
+
+Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+.SH "SEE ALSO"
+
+.BR mu-find(1)

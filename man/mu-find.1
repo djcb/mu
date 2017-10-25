@@ -10,21 +10,23 @@ mu find \- find e-mail messages in the \fBmu\fR database.
 
 .SH DESCRIPTION
 
-\fBmu find\fR is the \fBmu\fR command for searching e-mail message that
-were stored earlier using
-\fBmu index(1)\fR.
+\fBmu find\fR is the \fBmu\fR command for searching e-mail message
+that were stored earlier using \fBmu index(1)\fR.
 
 .SH SEARCHING MAIL
 
-\fBmu find\fR starts a search for messages in the database that match some
-search pattern. For example:
+\fBmu find\fR starts a search for messages in the database that match
+some search pattern. The search patterns are described in detail in
+.BR mu-query
+.
+
+For example:
 
 .nf
-   $ mu find subject:snow from:john
+   $ mu find subject:snow and date:2017..
 .fi
 
-would find all messages from John with 'snow' in the subject field, something
-like:
+would find all messages in 2017 with 'snow' in the subject field, e.g:
 
 .nf
   2009-03-05 17:57:33 EET Lucia  <lucia@example.com> running in the snow
@@ -37,235 +39,11 @@ XML or s-expressions), see the discussion in the \fBOPTIONS\fR-section
 below about \fB--format\fR.
 
 The search pattern is taken as a command-line parameter. If the search
-parameter consists of multiple parts (as in the example) they are treated as
-if there were a logical \fBAND\fR between them.
+parameter consists of multiple parts (as in the example) they are
+treated as if there were a logical \fBand\fR between them.
 
-\fBmu\fR relies on the Xapian database for its searching capabilities, so it
-offers all the search functionality that Xapian offers; for all the details,
-see:
-     \fIhttp://xapian.org/docs/queryparser.html\fR
+For details on the possible queries, see 
 
-One special feature of \fBmu\fR is that is does not distinguish between
-uppercase and lowercase, nor the accented or unaccented versions of
-characters. All match. In general, \fBmu\fR tries to be 'eager' in matching,
-as filtering out unwanted results is usually preferable over non matching
-messages.
-
-A wildcard search is a search where a \fB*\fR matches the last \fIn\fR
-character(s) in some string. The string must always start with one or more
-characters before the wildcard. \fBmu\fR supports wildcard searches for all
-fields except maildirs and paths. To get all mails with a subject containing a
-word starting with \fBcom\fR, you can use:
-
-.nf
-  $ mu find 'subject:com*'
-.fi
-
-and get mails about computers, comments, compilation and so on. Note, when
-running from the command-line it's important to put the query in quotes,
-otherwise the shell would interpret the '*'. It is equally important to
-remember that the '*' invokes the wildcard search only when used as the
-rightmost character of a search term. Furthermore, it is \fBnot\fR a regular
-expression.
-
-The basic way to search a message is to type some words matching it, as you
-would do in an internet search engine. For example,
-
-.nf
-  $ mu find monkey banana
-.fi
-
-will find all messages that contain both 'monkey' and 'banana' in either body
-or subject or one of the address-fields (to/from/cc).
-
-As mentioned, matching is case-insensitive and accent-insensitive; thus
-
-.nf
-  $ mu find Mönkey BÄNAÑå
-.fi
-
-yields the same results as the example above.
-
-
-\fBmu\fR also recognizes prefixes for specific fields in a messages; for
-example:
-
-.nf
-  $ mu find subject:penguin
-.fi
-
-to find messages with have the word \fBpenguin\fR in the subject field. You
-can abbreviate \fBsubject:\fR to just \fBs:\fR. Here is the full table of the
-search fields and their abbreviations:
-
-.nf
-	cc,c            Cc (carbon-copy) recipient(s)
-	bcc,h           Bcc (blind-carbon-copy) recipient(s)
-	from,f          Message sender
-	to,t            To: recipient(s)
-	subject,s       Message subject
-	body,b          Message body
-	maildir,m       Maildir
-	msgid,i         Message-ID
-	prio,p          Message priority ('low', 'normal' or 'high')
-	flag,g          Message Flags
-	date,d          Date-Range
-	size,z          Message size
-	embed,e         Search inside embedded text parts (messages, attachments)
-	file,j          Attachment filename
-	mime,y          MIME-type of one or more message parts
-	tag,x           Tags for the message (\fIX-Label\fR and/or \fIX-Keywords\fR)
-	list,v          Mailing list (e.g. the List-Id value)
-.fi
-
-There are also the special fields \fBcontact\fR, which matches all
-contact-fields (\fBfrom\fR, \fBto\fR, \fBcc\fR and \fBbcc\fR), and
-\fBrecip\fR, which matches all recipient-fields (\fBto\fR, \fBcc\fR and
-\fBbcc\fR).
-
-The meaning of most of the above fields should be clear, but some require some
-extra discussion. First, the message flags field describes certain properties
-of the message, as listed in the following table:
-
-.nf
-	d,draft         Draft Message
-	f,flagged       Flagged
-	n,new           New message (in new/ Maildir)
-	p,passed        Passed ('Handled')
-	r,replied       Replied
-	s,seen          Seen
-	t,trashed       Marked for deletion
-	a,attach        Has attachment
-	z,signed        Signed message
-	x,encrypted     Encrypted message
-	l,list          Mailing-list message
-.fi
-
-Using this, we can search e.g. for all signed messages that have an
-attachment:
-
-.nf
-  $ mu find flag:signed flag:attach
-.fi
-
-Encrypted messages may be signed as well, but this is only visible after
-decrypting, and thus, is invisible to \fBmu\fR.
-
-The message-priority has three possible values: low, normal or high. We can
-match them using \fBprio:\fR - for example, to get all high-priority messages
-with a subject containing some bird:
-
-.nf
-  $ mu find prio:high subject:nightingale
-.fi
-
-The Maildir field describes the directory path starting \fBafter\fR the
-Maildir-base path, and before the \fI/cur/\fR or \fI/new/\fR part. So for
-example, if there's a message with the file name
-\fI~/Maildir/lists/running/cur/1234.213:2,\fR, you could find it (and all the
-other messages in the same maildir) with:
-
-.nf
-  $ mu find maildir:/lists/running
-.fi
-
-Note the starting '/'. If you want to match mails in the 'root' maildir, you
-can do with a single '/':
-
-.nf
-  $ mu find maildir:/
-.fi
-
-(and of course you can use the \fBm:\fR shortcut instead of \fBmaildir:\fR)
-
-The \fBdate:\fR (or \fBd:\fR) search parameter is 'special' in the fact that
-it takes a range of dates. For now, these dates are in ISO 8601 format
-(YYYYMMDDHHMM); you can leave out the right part, and mu will add the rest,
-depending on whether this is the beginning or end of the date interval. For
-example, for the beginning of the interval "201012" would be interpreted as
-"20101201010000", or December 1, 2010 at 00:00, while for the end of the
-interval, this would be interpreted as "20101231122359", or December 31, 2010
-at 23:59. If you omit the left part completely, the beginning date is
-assumed to be January 1, year 0 at 00:00.  Likewise, if you omit the
-right part, the end data is assumed to be to the last second of the
-year 9999.
-
-To get all messages between (inclusive) the 5th of May 2009 and the 2nd of
-June 2010, you could use:
-
-.nf
-  $ mu find date:20090505..20100602
-.fi
-
-Non-numeric characters are ignored, so the following is equivalent but more
-readable:
-
-.nf
-  $ mu find date:2009-05-05..2010-06-02
-.fi
-
-Precision is up to the minute and 24-hour notation for times is used, so
-another example would be:
-
-.nf
-  $ mu find date:2009-05-05/12:23..2010-06-02/17:18
-.fi
-
-\fBmu\fR also understand relative dates, in the form of a positive number
-followed by h (hour), d (day), w (week), m (30 days) or y (365 days). Some
-examples to explain this:
-
-.nf
-	5h      five hours in the past
-	2w      two weeks in the past
-	3m      three times 30 days in the past
-	1y      365 days in the past
-.fi
-
-Using this notation, you can for example match messages between two and three
-weeks old:
-
-.nf
-  $ mu find date:3w..2w
-.fi
-
-There are some special keywords for dates, namely 'now', meaning the
-present moment and 'today' for the beginning of today. So to get all messages
-sent or received today, you could use:
-
-.nf
-  $ mu find date:today..now
-.fi
-
-The \fBsize\fR or \fBz\fR allows you to match \fIsize ranges\fR -- that is,
-match messages that have a byte-size within a certain range. Units (B (for
-bytes), K (for 1000 bytes) and M (for 1000 * 1000 bytes) are supported). For
-example, to get all messages between 10Kb and 2Mb (assuming SI units), you
-could use:
-
-.nf
-  $ mu find size:10K..2M
-.fi
-
-
-It's important to remember that if a search term includes spaces, you should
-\fIquote\fr those parts. Thus, when we look at the following examples:
-
-.nf
-  $ mu find maildir:/Sent Items yoghurt
-  $ mu find maildir:'/Sent Items' yoghurt
-.fi
-
-The first query searches for messages in the \fI/Sent\fR maildir matching
-\fIItems\fR and \fIyoghurt\fR, while the second query searches the \fI/Sent
-Items\fR maildir searching for messages matching \fIyoghurt\fR.
-
-
-You can match \fIall\fR messages using "" (or ''):
-
-.nf
-  $ mu find ""
-.fi
 
 
 .SH OPTIONS
@@ -468,68 +246,6 @@ The algorithm used for determining the threads is based on Jamie Zawinksi's
 description:
 .BR http://www.jwz.org/doc/threading.html
 
-.SS Example queries
-
-Here are some simple examples of \fBmu\fR search queries; you can make many
-more complicated queries using various logical operators, parentheses and so
-on, but in the author's experience, it's usually faster to find a message with
-a simple query just searching for some words.
-
-Find all messages with both 'bee' and 'bird' (in any field)
-
-.nf
-  $ mu find bee AND bird
-.fi
-
-or shorter, because \fBAND\fR is implied:
-
-.nf
-  $ mu find bee bird
-.fi
-
-Find all messages with either Frodo or Sam:
-
-.nf
-  $ mu find 'Frodo OR Sam'
-.fi
-
-Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
-
-.nf
-  $ mu find subject:wombat capibara
-.fi
-
-Find all messages in the 'Archive' folder from Fred:
-
-.nf
-  $ mu find from:fred maildir:/Archive
-.fi
-
-Find all unread messages with attachments:
-
-.nf
-  $ mu find flag:attach flag:unread
-.fi
-
-
-Find all messages with PDF-attachments:
-
-.nf
-  $ mu find mime:application/pdf
-.fi
-
-Find all messages with attached images:
-
-.nf
-  $ mu find 'mime:image/*'
-.fi
-
-Note[1]: the argument needs to be quoted, or the shell will interpret the '*'
-Note[2]: the '*' wild card can only be used as the last (rightmost) part of a
-search term.
-Note[3]: non-word characters (such as € or ☺) are ignore in queries; you
-cannot search for them.
-
 
 .SS Integrating mu find with mail clients
 
@@ -666,3 +382,5 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .BR mu(1)
 .BR mu-index(1)
+.BR mu-query(7)
+
