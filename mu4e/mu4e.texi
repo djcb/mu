@@ -1814,10 +1814,10 @@ see @ref{Sorting and threading}.
 @section Queries
 
 @t{mu4e} queries are the same as the ones that @t{mu find}
-understands@footnote{with the caveat that command-line queries are subject to
-the shell's interpretation before @t{mu} sees them}. Let's look at some
-examples here, please refer to the @code{mu-find} and @code{mu-easy} man pages
-for details and more examples.
+understands@footnote{with the caveat that command-line queries are
+subject to the shell's interpretation before @t{mu} sees them}. Let's
+look at some examples here; you can consult the @code{mu-query} man page
+for the details.
 
 @itemize
 
@@ -1828,33 +1828,33 @@ bananas
 
 @item Get all messages regarding @emph{bananas} from @emph{John} with an attachment:
 @verbatim
-from:john flag:attach bananas
+from:john and flag:attach and bananas
 @end verbatim
 
-@item Get all messages with subject @emph{wombat} in June 2009
+@item Get all messages with subject @emph{wombat} in June 2017
 @verbatim
-subject:wombat date:20090601..20090630
+subject:wombat and date:20170601..20170630
 @end verbatim
 
 @item Get all messages with PDF attachments in the @t{/projects} folder
 @verbatim
-maildir:/projects mime:application/pdf
+maildir:/projects and mime:application/pdf
 @end verbatim
 
 @item Get all messages about @emph{Rupert} in the @t{/Sent Items} folder. Note that
 maildirs with spaces must be quoted.
 @verbatim
-maildir:"/Sent Items" rupert
+"maildir:/Sent Items" and rupert
 @end verbatim
 
 @item Get all important messages which are signed:
 @verbatim
-flag:signed prio:high
+flag:signed and prio:high
 @end verbatim
 
 @item Get all messages from @emph{Jim} without an attachment:
 @verbatim
-from:jim AND NOT flag:attach
+from:jim and not flag:attach
 @end verbatim
 
 @item Get all messages with Alice in one of the contacts-fields (@t{to}, @t{from},
@@ -1867,36 +1867,29 @@ contact:alice
 case-insensitive and accent-insensitive, so this matches Ångström, angstrom,
 aNGstrøM, ...)
 @verbatim
-subject:Ångström flag:unread
+subject:Ångström and flag:unread
 @end verbatim
 
-@item Get all unread messages between Mar-2002 and Aug-2003 about some bird:
+@item Get all unread messages between Mar-2012 and Aug-2013 about some bird:
 @verbatim
-date:20020301..20030831 nightingale flag:unread
+date:20120301..20130831 and nightingale and flag:unread
 @end verbatim
 
 @item Get today's messages:
 @verbatim
 date:today..now
 @end verbatim
-or, unless you have a really old Xapian
-@verbatim
-date:today
-@end verbatim
 
 @item Get all messages we got in the last two weeks regarding @emph{emacs}:
 @verbatim
-date:2w..now emacs
-@end verbatim
-or, unless you have a really old Xapian
-@verbatim
-date:2w.. emacs
+date:2w.. and emacs
 @end verbatim
 
 @item Get messages from the @emph{Mu} mailing list:
 @verbatim
 list:mu-discuss.googlegroups.com
 @end verbatim
+
 Note --- in the @ref{Headers view} you may see the `friendly name' for a
 list; however, when searching you need the real name. You can see the
 real name for a mailing list from the friendly name's tool-tip.
