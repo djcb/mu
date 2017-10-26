@@ -18,6 +18,7 @@
 */
 
 #include <string>
+#include <vector>
 
 #ifndef __UTILS_HH__
 #define __UTILS_HH__
@@ -32,6 +33,17 @@ namespace Mux {
  * @return a flattened string
  */
 std::string utf8_flatten (const std::string& str);
+
+/**
+ * Split a string in parts
+ *
+ * @param str a string
+ * @param sepa the separator
+ *
+ * @return the parts.
+ */
+std::vector<std::string> split (const std::string& str,
+				const std::string& sepa);
 
 /**
  * Quote & escape a string

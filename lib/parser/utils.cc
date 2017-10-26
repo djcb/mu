@@ -110,6 +110,20 @@ Mux::utf8_flatten (const std::string& str)
 }
 
 
+std::vector<std::string>
+Mux::split (const std::string& str, const std::string& sepa)
+{
+	char **parts = g_strsplit(str.c_str(), sepa.c_str(), -1);
+	std::vector<std::string> vec;
+	for (auto part = parts; part && *part; ++part)
+		vec.push_back (*part);
+
+	g_strfreev(parts);
+
+	return vec;
+}
+
+
 std::string
 Mux::quote (const std::string& str)
 {

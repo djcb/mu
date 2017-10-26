@@ -27,12 +27,11 @@ using namespace Mux;
 static bool
 is_separator (char c)
 {
-	const auto seps = std::string (":()\"");
-
 	if (isblank(c))
 		return true;
-	else
-		return seps.find(c) != std::string::npos;
+
+	const auto seps = std::string ("()");
+	return seps.find(c) != std::string::npos;
 }
 
 
@@ -80,8 +79,14 @@ eat_token (std::string& food, size_t& pos)
 				continue;
 		}
 
-		if (kar == '"' && !escaped && quoted)
-			return Token{pos, Token::Type::Data, value};
+		if (kar == '"') {
+			if (!escaped && quoted)
+				return Token{pos, Token::Type::Data, value};
+			else {
+				quoted = true;
+				continue;
+			}
+		}
 
 		if (!quoted && !escaped && is_separator(kar)) {
 
@@ -89,9 +94,6 @@ eat_token (std::string& food, size_t& pos)
 				unread_char (food, kar, pos);
 				return op_or_value(pos, value);
 			}
-
-			if (kar == '"')
-				quoted = true;
 
 			if (quoted || isblank(kar))
 				continue;

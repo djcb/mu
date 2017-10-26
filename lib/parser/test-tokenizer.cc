@@ -118,11 +118,10 @@ static void
 test_escape ()
 {
 	CaseVec cases = {
-		{ "foo\"bar\"",      Tokens{Token{3, TT::Data, "foo"},
-					      Token{8, TT::Data, "bar"}}},
+		{ "foo\"bar\"",      Tokens{Token{8, TT::Data, "foobar"}}},
 		{ "\"fnorb\"",      Tokens{Token{7, TT::Data, "fnorb"}}},
-		{ "\\\"fnorb\\\"",  Tokens{Token{9, TT::Data, "\"fnorb\""}}},
-		{ "foo\\\"bar\\\"",  Tokens{Token{10, TT::Data, "foo\"bar\""}}}
+		{ "\\\"fnorb\\\"",  Tokens{Token{9, TT::Data, "fnorb"}}},
+		{ "foo\\\"bar\\\"",  Tokens{Token{10, TT::Data, "foobar"}}}
 	};
 
 	test_cases (cases);

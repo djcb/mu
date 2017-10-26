@@ -48,6 +48,35 @@ xapian_query_op (const Mux::Tree& tree)
 	return Xapian::Query(op, childvec.begin(), childvec.end());
 }
 
+static Xapian::Query
+xapian_query_value (const Mux::Tree& tree)
+{
+	const auto v = dynamic_cast<Value*> (tree.node.data.get());
+	const auto parts = split (v->value, " ");
+
+	std::vector<Xapian::Query> phvec;
+	for (const auto p: parts)
+		phvec.push_back(Xapian::Query(v->prefix + p));
+
+	if (parts.empty())
+		return Xapian::Query::MatchNothing; // shouldn't happen
+
+	if (parts.size() == 1)
+		return phvec.front();
+
+	return Xapian::Query (Xapian::Query::OP_PHRASE,
+			      phvec.begin(), phvec.end());
+}
+
+static Xapian::Query
+xapian_query_range (const Mux::Tree& tree)
+{
+	const auto r = dynamic_cast<Range*> (tree.node.data.get());
+	return Xapian::Query(Xapian::Query::OP_VALUE_RANGE,
+			     (Xapian::valueno)r->id, r->lower, r->upper);
+}
+
+
 Xapian::Query
 Mux::xapian_query (const Mux::Tree& tree)
 {
@@ -60,15 +89,10 @@ Mux::xapian_query (const Mux::Tree& tree)
 	case Node::Type::OpXor:
 	case Node::Type::OpAndNot:
 		return xapian_query_op (tree);
-	case Node::Type::Value: {
-		const auto v = dynamic_cast<Value*> (tree.node.data.get());
-		return Xapian::Query(v->prefix + v->value);
-	}
-	case Node::Type::Range: {
-		const auto r = dynamic_cast<Range*> (tree.node.data.get());
-		return Xapian::Query(Xapian::Query::OP_VALUE_RANGE,
-				     (Xapian::valueno)r->id, r->lower, r->upper);
-	}
+	case Node::Type::Value:
+		return xapian_query_value (tree);
+	case Node::Type::Range:
+		return xapian_query_range (tree);
 	default:
 		throw std::runtime_error ("invalid query"); // bug
 	}
