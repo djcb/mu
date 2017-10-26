@@ -146,7 +146,7 @@ Also see `mu4e-context-policy'."
 	   :group 'mu4e-compose))
 
 
-(defcustom mu4e-compose-crypto-reply-policy 'sign-and-encrypt
+(defcustom mu4e-compose-crypto-reply-encrypted-policy 'sign-and-encrypt
   "Policy for signing/encrypting replies to encrypted messages.
 We have the following choices:
 
@@ -161,6 +161,33 @@ We have the following choices:
 	   (const :tag "Don't do anything" nil)
 	   :safe 'symbolp
 	   :group 'mu4e-compose))
+
+(defcustom mu4e-compose-crypto-reply-plain-policy 'sign
+  "Policy for signing/encrypting replies to messages received unencrypted.
+We have the following choices:
+
+- `sign': sign the reply
+- `sign-and-encrypt': sign and encrypt the reply
+- `encrypt': encrypt the reply, but don't sign it.
+-  anything else: do nothing."
+  :type '(choice
+	   (const :tag "Sign the reply" sign)
+	   (const :tag "Sign and encrypt the reply" sign-and-encrypt)
+	   (const :tag "Encrypt the reply" encrypt)
+	   (const :tag "Don't do anything" nil)
+	   :safe 'symbolp
+	   :group 'mu4e-compose))
+
+(defcustom mu4e-compose-crypto-reply-policy nil "The use of the
+ 'mu4e-compose-crypto-reply-policy' variable is deprecated.
+ 'mu4e-compose-crypto-reply-plain-policy' and
+ 'mu4e-compose-crypto-reply-encrypted-policy' should be used instead")
+(make-obsolete-variable mu4e-compose-crypto-reply-policy "The use of the
+ 'mu4e-compose-crypto-reply-policy' variable is deprecated.
+ 'mu4e-compose-crypto-reply-plain-policy' and
+ 'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
+			"2017-09-02")
+
 
 (defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed (or
@@ -523,13 +550,22 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 
 (defun mu4e~compose-crypto-reply (parent compose-type)
   "When composing a reply to an encrypted message, we can
-automatically encrypt that reply."
-  (when (and  (eq compose-type 'reply)
+automatically encrypt that reply. When the message is unencrypted, 
+we can decide what we want to do."
+  (if (and  (eq compose-type 'reply)
 	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
-	(case mu4e-compose-crypto-reply-policy
+	(case mu4e-compose-crypto-reply-encrypted-policy
 	  (sign (mml-secure-message-sign))
 	  (encrypt (mml-secure-message-encrypt))
-	  (sign-and-encrypt (mml-secure-message-sign-encrypt)))))
+	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
+	  (message "Do nothing"))
+	(case mu4e-compose-crypto-reply-plain-policy
+	  (sign (mml-secure-message-sign))
+	  (encrypt (mml-secure-message-encrypt))
+	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
+	  (message "Do nothing")))
+  )
+
 
 (defun* mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
