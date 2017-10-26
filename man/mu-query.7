@@ -1,4 +1,4 @@
-.TH MU QUERY 7 "25 October 2017" "User Manuals"
+.TH MU QUERY 7 "26 October 2017" "User Manuals"
 
 .SH NAME
 
@@ -15,6 +15,11 @@ messages. The language is similar to the default query-parser that
 In this manpage, we give a structured but informal overview of the
 query language and provide examples.
 
+\fBNOTE:\fR t if you use queries on the command-line (say, for \fBmu
+find\fR), you need to quote any characters that would otherwise be
+interpreted by the shell, such as \fB""\fR, \fB(\fR and \fB)\fR and
+not to forget, whitespace.
+
 .de EX1
 .nf
 .RS
@@ -25,12 +30,10 @@ query language and provide examples.
 .fi
 ..
 
-
 .SH TERMS
 
-The basic building blocks are \fBterms\fR; these are just normal
-alphanumerical strings like 'banana' or 'hello' or prefixed with a
-field-name.
+The basic building blocks are \fBterms\fR; these are just normal words
+like 'banana' or 'hello' or prefixed with a field-name.
 
 Some example queries:
 .EX1
@@ -48,12 +51,29 @@ to:vacation or subject:vacation or body:vacation or ...
 The language is case-insensitive for terms and attempts to flatten any
 diactrics, so \fIangtrom\fR matches \fIÅngström\fR.
 
+.PP
+If terms contain whitespace, they need to be quoted:
+.EX1
+subject:"hi there"
+.EX2
+This is a so-called \fIphrase query\fR, which means that we match
+against subjects that contain the literal phrase "hi there".
+
+Remember that you need to escape those quotes when using this from the
+command-line:
+.EX1
+mu find subject:\\"hi there\\"
+.EX2
+
 .SH LOGICAL OPERATORS
 
 We can combine terms with logical operators -- binary ones: \fBand\fR,
-\fBor\fR, \fBxor\fR and the unary \fBnot\fR, with conventional
-precedence and association, and case-insensitive. You can also group
-things with \fB(\fR and \fB)\fR, so you can do things like:
+\fBor\fR, \fBxor\fR and the unary \fBnot\fR, with the conventional
+rules for precedence and association, and are case-insensitive.
+
+.PP
+You can also group things with \fB(\fR and \fB)\fR, so you can do
+things like:
 .EX1
 (subject:beethoven or subject:bach) and not body:elvis
 .EX2
@@ -90,21 +110,27 @@ matches all messages in all maildirs that match 'foo', such
 as '/foo', '/bar/cuux/foo', '/fooishbar' etc.
 
 Wildcards are an older mechanism for matching where a term with a
-rightmost \fB*\fR matches any term that starts with the part before
-the \fB*\fR; they are supported for backward compatibility and
-\fBmu\fR translates them to regular expressions internally; e.g.
-\fBfoo*\fR is equivalent to \fB/foo.*/\fR.
+rightmost \fB*\fR (and \fIonly\fR in that position) matches any term
+that starts with the part before the \fB*\fR; they are supported for
+backward compatibility and \fBmu\fR translates them to regular
+expressions internally:
+.EX1
+foo*
+.EX2
+is equivalent to
+.EX1
+/foo.*/
+.EX2
 
-Wildcards and regular expressions can be quite heavy to execute.
+As a note of caution, certain wild-cards and regular expression can
+take quite a bit longer than 'normal' queries.
 
 .SH FIELDS
 
 We already saw a number of search fields, such as \fBsubject:\fR and
-\fBbody:\fR. Here is the full table, a shortcut character (so
-\fBsubject:october\fR can be written as \fBs:october\fR) and a
+\fBbody:\fR. Here is the full table, a shortcut character and a
 description.
-
-.nf
+.EX1
 	cc,c            Cc (carbon-copy) recipient(s)
 	bcc,h           Bcc (blind-carbon-copy) recipient(s)
 	from,f          Message sender
@@ -113,21 +139,39 @@ description.
 	body,b          Message body
 	maildir,m       Maildir
 	msgid,i         Message-ID
-	prio,p          Message priority ('low', 'normal' or 'high')
+	prio,p          Message priority (\fIlow\fR, \fInormal\fR or \fIhigh\fR)
 	flag,g          Message Flags
 	date,d          Date range
 	size,z          Message size range
-	embed,e         Search inside embedded text parts (messages, attachments)
+	embed,e         Search inside embedded text parts
 	file,j          Attachment filename
 	mime,y          MIME-type of one or more message parts
-	tag,x           Tags for the message (\fIX-Label\fR and/or \fIX-Keywords\fR)
+	tag,x           Tags for the message
 	list,v          Mailing list (e.g. the List-Id value)
-.fi
+.EX2
+The shortcut character can be used instead of the full name:
+.EX1
+f:foo@bar
+.EX2
+is the same as 
+.EX1
+from:foo@bar
+.EX2
+For queries that are not one-off, we would recommend the longer name
+for readabilty.
 
-There are also the special fields \fBcontact\fR, which matches all
-contact-fields (\fBfrom\fR, \fBto\fR, \fBcc\fR and \fBbcc\fR), and
-\fBrecip\fR, which matches all recipient-fields (\fBto\fR, \fBcc\fR
-and \fBbcc\fR).
+There are also the special fields \fBcontact:\fR, which matches all
+contact-fields (\fIfrom\fR, \fIto\fR, \fIcc\fR and \fIbcc\fR), and
+\fBrecip\fR, which matches all recipient-fields (\fIto\fR, \fIcc\fR
+and \fIbcc\fR). Hence, for instance,
+.EX1
+contact:fnorb@example.com
+.EX2
+is equivalent to
+.EX1
+(from:fnorb@example.com or to:fnorb@example.com or
+      cc:from:fnorb@example.com or bcc:fnorb@example.com)
+.EX2
 
 .SH DATE RANGES
 
@@ -185,7 +229,7 @@ size:10m..
 
 The \fBflag\fR/\fBg\fR field allows you to match message flags. The
 following fields are available:
-.nf
+.EX1
 	d,draft         Draft Message
 	f,flagged       Flagged
 	n,new           New message (in new/ Maildir)
@@ -197,7 +241,7 @@ following fields are available:
 	z,signed        Signed message
 	x,encrypted     Encrypted message
 	l,list          Mailing-list message
-.fi
+.EX2
 
 Some examples:
 .EX1
