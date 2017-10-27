@@ -1,4 +1,4 @@
-c## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -53,6 +53,11 @@ AC_PROG_INSTALL
 AC_HEADER_STDC
 
 AX_CXX_COMPILE_STDCXX_14
+AS_IF([test "x$ax_cv_cxx_compile_cxx14" != "xyes"],[
+ AC_MSG_ERROR([No C++14 compiler found, please upgrade (g++ >= 5 or clang >= 3.4)])
+],[
+ AC_MSG_NOTICE([Found C++14 compatible compiler])
+])
 
 AX_COMPILER_FLAGS(,,[yes])
 AX_VALGRIND_CHECK
