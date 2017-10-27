@@ -235,7 +235,7 @@ The server output is as follows:
 existing quotation. In particular, backslashes and
 double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
-    (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
+    (format "%s" (replace-regexp-in-string "\"" "\\\\\"" esc))))
 
 
 (defun mu4e~proc-send-command (frm &rest args)
@@ -244,7 +244,7 @@ Start the process if needed."
   (unless (mu4e~proc-running-p)
     (mu4e~proc-start))
   (let ((cmd (apply 'format frm args)))
-    (mu4e-log 'to-server "%s" cmd)
+    (mu4e-log 'to-server "%S" cmd)
     (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
 (defun mu4e~proc-start ()
@@ -339,7 +339,7 @@ or an error."
     (concat
       "cmd:find query:%s threads:%s sortfield:%s reverse:%s maxnum:%d "
       "skip-dups:%s include-related:%s")
-    (mu4e~escape query)
+    (format "%s" query)
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
