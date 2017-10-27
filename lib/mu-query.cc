@@ -93,7 +93,9 @@ struct MuProc: public Mux::ProcIface {
 		if (!name || !pfx)
 			return;
 
-		fields.push_back ({{name}, {pfx}, id});
+		fields.push_back ({{name}, {pfx},
+				   mu_msg_field_xapian_index(id),
+				   id});
 	}
 
 	std::vector<FieldInfo>

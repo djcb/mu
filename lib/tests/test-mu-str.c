@@ -113,7 +113,7 @@ test_parse_arglist (void)
 	GHashTable *hash;
 	GError *err;
 
-	args = "cmd:find query:\"maildir:\\\"/sent items\\\"\" maxnum:500";
+	args = "cmd:find query:maildir:\"/sent items\" maxnum:500";
 
 	err  = NULL;
 	hash = mu_str_parse_arglist (args, &err);

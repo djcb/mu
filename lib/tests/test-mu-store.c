@@ -175,7 +175,8 @@ test_mu_store_store_msg_remove_and_count (void)
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (FALSE,==,mu_store_contains_message
 			  (store,
-			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,", NULL));
+			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,",
+			   NULL));
 	g_free (tmpdir);
 	mu_store_unref (store);
 }
