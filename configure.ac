@@ -52,13 +52,7 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
 
-AX_CXX_COMPILE_STDCXX_14
-AS_IF([test "x$ax_cv_cxx_compile_cxx14" != "xyes"],[
- AC_MSG_ERROR([No C++14 compiler found, please upgrade (g++ >= 5 or clang >= 3.4)])
-],[
- AC_MSG_NOTICE([Found C++14 compatible compiler])
-])
-
+AX_CXX_COMPILE_STDCXX_14(,[mandatory])
 AX_COMPILER_FLAGS(,,[yes])
 AX_VALGRIND_CHECK
 
