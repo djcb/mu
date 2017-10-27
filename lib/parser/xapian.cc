@@ -52,6 +52,9 @@ static Xapian::Query
 xapian_query_value (const Mux::Tree& tree)
 {
 	const auto v = dynamic_cast<Value*> (tree.node.data.get());
+	if (!v->phrase)
+		return Xapian::Query(v->prefix + v->value);
+
 	const auto parts = split (v->value, " ");
 
 	std::vector<Xapian::Query> phvec;

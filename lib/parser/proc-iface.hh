@@ -41,6 +41,7 @@ struct ProcIface {
 	struct FieldInfo {
 		const std::string	field;
 		const std::string	prefix;
+		bool			supports_phrase;
 		unsigned		id;
 	};
 	using FieldInfoVec = std::vector<FieldInfo>;
@@ -102,7 +103,7 @@ struct DummyProc: public ProcIface { // For testing
 
 	std::vector<FieldInfo>
 	process_field (const std::string& field) const override {
-		return {{ field, "x", 0 }};
+		return {{ field, "x", false, 0 }};
 	}
 
 	std::string

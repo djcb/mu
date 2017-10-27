@@ -68,7 +68,8 @@ value (const ProcIface::FieldInfoVec& fields, const std::string& v,
 		return Tree({Node::Type::Value,
 			     std::make_unique<Value>(
 				     item.field, item.prefix, item.id,
-				     proc->process_value(item.field, val))});
+				     proc->process_value(item.field, val),
+				     item.supports_phrase)});
 	}
 
 	// a 'multi-field' such as "recip:"
@@ -77,7 +78,8 @@ value (const ProcIface::FieldInfoVec& fields, const std::string& v,
 		tree.add_child (Tree({Node::Type::Value,
 				      std::make_unique<Value>(
 					      item.field, item.prefix, item.id,
-					      proc->process_value(item.field, val))}));
+					      proc->process_value(item.field, val),
+					      item.supports_phrase)}));
 	return tree;
 }
 

@@ -104,11 +104,12 @@ struct Value: public Data {
 	 * @param _value the value
 	 */
 	Value (const std::string& _field, const std::string& _prefix,
-	       unsigned _id, const std::string& _value):
+	       unsigned _id, const std::string& _value, bool _phrase = false):
 		Data(Value::Type::Value, _field, _prefix, _id),
-		value(_value) {}
+		value(_value), phrase(_phrase) {}
 
-	std::string value;	/**< the value */
+	std::string	value;	/**< the value */
+	bool		phrase;
 };
 
 
@@ -128,6 +129,9 @@ operator<< (std::ostream& os, const std::unique_ptr<Data>& v)
 		const auto bval = dynamic_cast<Value*> (v.get());
 		os << ' ' << quote(v->field) << ' '
 		   << quote(utf8_flatten(bval->value));
+		if (bval->phrase)
+			os << " (ph)";
+
 		break;
 	}
 	case Data::Type::Range: {
