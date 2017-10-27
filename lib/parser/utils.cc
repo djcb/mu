@@ -161,8 +161,8 @@ Mux::quote (const std::string& str)
 constexpr const auto InternalDateFormat = "%010" G_GINT64_FORMAT;
 constexpr const char InternalDateMin[] = "0000000000";
 constexpr const char InternalDateMax[] = "9999999999";
-static_assert(sizeof(InternalDateMin) == 10 + 1);
-static_assert(sizeof(InternalDateMax) == 10 + 1);
+static_assert(sizeof(InternalDateMin) == 10 + 1, "invalid");
+static_assert(sizeof(InternalDateMax) == 10 + 1, "invalid");
 
 static std::string
 date_boundary (bool is_first)
@@ -304,8 +304,8 @@ constexpr const auto SizeFormat = "%010" G_GINT64_FORMAT;
 
 constexpr const char SizeMin[] = "0000000000";
 constexpr const char SizeMax[] = "9999999999";
-static_assert(sizeof(SizeMin) == 10 + 1);
-static_assert(sizeof(SizeMax) == 10 + 1);
+static_assert(sizeof(SizeMin) == 10 + 1, "invalid");
+static_assert(sizeof(SizeMax) == 10 + 1, "invalid");
 
 static std::string
 size_boundary (bool is_first)

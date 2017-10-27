@@ -47,7 +47,7 @@ struct Node {
 	Type			type;
 	std::unique_ptr<Data>   data;
 
-	static constexpr const char* type_name (Type t) {
+	static const char* type_name (Type t) {
 		switch (t) {
 		case Type::Empty:    return ""; break;
 		case Type::OpAnd:    return "and"; break;
