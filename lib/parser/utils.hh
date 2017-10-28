@@ -34,6 +34,17 @@ namespace Mux {
  */
 std::string utf8_flatten (const std::string& str);
 
+
+/**
+ * Replace all control characters with spaces, and remove leading and trailing space.
+ *
+ * @param dirty an unclean string
+ *
+ * @return a cleaned-up string.
+ */
+std::string utf8_clean (const std::string& dirty);
+
+
 /**
  * Split a string in parts
  *

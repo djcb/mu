@@ -18,6 +18,8 @@
 */
 
 #include "tokenizer.hh"
+#include "utils.hh"
+
 #include <cctype>
 #include <iostream>
 #include <algorithm>
@@ -113,29 +115,12 @@ eat_token (std::string& food, size_t& pos)
 }
 
 
-static std::string
-cleanup (const std::string& dirty)
-{
-	auto clean = dirty;
-
-	// only accept spc as whitespace
-	for (auto f = clean.begin(); f != clean.end(); ++f)
-		if (*f < ' ')
-			*f = ' ';
-
-	clean.erase (0, clean.find_first_not_of(" "));
-	clean.erase (clean.find_last_not_of(" ") + 1); // remove trailing space
-
-	return clean;
-}
-
-
 Mux::Tokens
 Mux::tokenize (const std::string& s)
 {
 	Tokens tokens{};
 
-	std::string food = cleanup(s);
+	std::string food = utf8_clean(s);
 	size_t pos{0};
 
 	if (s.empty())

@@ -110,6 +110,32 @@ Mux::utf8_flatten (const std::string& str)
 }
 
 
+std::string
+Mux::utf8_clean (const std::string& dirty)
+{
+	GString *gstr = g_string_sized_new (dirty.length());
+
+	for (auto cur = dirty.c_str(); cur && *cur; cur = g_utf8_next_char (cur)) {
+
+		const gunichar uc = g_utf8_get_char (cur);
+		if (g_unichar_iscntrl (uc))
+			g_string_append_c (gstr, ' ');
+		else
+			g_string_append_unichar (gstr, uc);
+	}
+
+	std::string clean(gstr->str, gstr->len);
+	g_string_free (gstr, TRUE);
+
+	clean.erase (0, clean.find_first_not_of(" "));
+	clean.erase (clean.find_last_not_of(" ") + 1); // remove trailing space
+
+	return clean;
+}
+
+
+
+
 std::vector<std::string>
 Mux::split (const std::string& str, const std::string& sepa)
 {
