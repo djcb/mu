@@ -265,12 +265,13 @@ apply to you, you can follow either @ref{Building from a release tarball} or
 
 @subsection Dependencies for Debian/Ubuntu
 
+Tested with Ubuntu 16.04.
+
 @example
 $ sudo apt-get install libgmime-2.6-dev libxapian-dev
-# if libgmime-2.6-dev is not available, try libgmime-2.4-dev
 
-# get emacs 23 or 24 if you don't have it yet
-$ sudo apt-get install emacs24
+# get emacs 24 or higher if you don't have it yet
+$ sudo apt-get install emacs
 
 # optional
 $ sudo apt-get install guile-2.0-dev html2text xdg-utils
@@ -284,7 +285,7 @@ $ sudo apt-get install libwebkit-dev
 @example
 $ sudo yum install gmime-devel xapian-core-devel
 
-# get emacs 23 or 24 if you don't have it yet
+# get emacs 25 or higher if you don't have it yet
 $ sudo yum install emacs
 
 # optional
@@ -317,7 +318,7 @@ Xapian, GMime and their dependencies must be installed.
 Alternatively, if you build from the git repository or use a tarball
 like the ones that @t{github} produces, the instructions are slightly
 different, and require you to have @t{autotools} (@t{autoconf},
-@t{autoconf-archive}, @t{automake}, @t{libtool}, and friends) installed:
+@t{autoconf-archive}, @t{automake}, @t{libtool}, @t{texinfo}) installed:
 
 @example
 # get from git (alternatively, use a github tarball)
