@@ -92,11 +92,34 @@ test_complex ()
 		},
 		{ "(a or b) and c",
 		  R"#((and(or(value "" "a")(value "" "b"))(value "" "c")))#"
+		},
+		{ "a b", // implicit and
+		  R"#((and(value "" "a")(value "" "b")))#"
+		},
+		{ "a not b", // implicit and not
+		  R"#((andnot(value "" "a")(value "" "b")))#"
+		},
+		{ "not b", // implicit and not
+		  R"#((not(value "" "b")))#"
 		}
 	};
 
 	test_cases (cases);
 }
+
+
+static void
+test_range ()
+{
+	CaseVec cases = {
+		{ "range:a..b", // implicit and
+		  R"#((range "range" "a" "b"))#"
+		},
+	};
+
+	test_cases (cases);
+}
+
 
 static void
 test_flatten ()
@@ -115,6 +138,7 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/parser/basic",    test_basic);
 	g_test_add_func ("/parser/complex",  test_complex);
+	g_test_add_func ("/parser/range",    test_range);
 	g_test_add_func ("/parser/flatten",  test_flatten);
 
 	return g_test_run ();

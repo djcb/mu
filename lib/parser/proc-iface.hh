@@ -112,7 +112,7 @@ struct DummyProc: public ProcIface { // For testing
 	}
 
 	bool is_range_field (const std::string& field) const override {
-		return false;
+		return field == "range";
 	}
 
 	Range process_range (const std::string& field, const std::string& lower,

@@ -20,6 +20,7 @@
 #include <vector>
 #include <glib.h>
 #include <iostream>
+#include <sstream>
 
 #include "tokenizer.hh"
 
@@ -128,6 +129,20 @@ test_escape ()
 }
 
 
+static void
+test_to_string ()
+{
+	std::stringstream ss;
+	for (const auto t: tokenize ("foo and bar xor not cuux or fnorb"))
+		ss << t << ' ';
+
+	g_assert_true (ss.str() ==
+		       "3: <data> [foo] 7: <and> [and] 11: <data> [bar] "
+		       "15: <xor> [xor] 19: <not> [not] 24: <data> [cuux] "
+		       "27: <or> [or] 33: <data> [fnorb] ");
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -137,6 +152,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/tokens/specials", test_specials);
 	g_test_add_func ("/tokens/ops", test_ops);
 	g_test_add_func ("/tokens/escape", test_escape);
+	g_test_add_func ("/tokens/to-string", test_to_string);
 
 	return g_test_run ();
 }

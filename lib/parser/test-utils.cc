@@ -44,8 +44,8 @@ test_cases(const CaseVec& cases, ProcFunc proc)
 		if (g_test_verbose()) {
 			std::cout << "\n";
 			std::cout << casus.expr << ' ' << casus.is_first << std::endl;
-			std::cout << "exp:" << casus.expected << std::endl;
-			std::cout << "got:" << res << std::endl;
+			std::cout << "exp: '" << casus.expected << "'" << std::endl;
+			std::cout << "got: '" << res << "'" << std::endl;
 		}
 
 		g_assert_true (casus.expected == res);
@@ -119,6 +119,40 @@ test_size ()
 }
 
 
+static void
+test_flatten ()
+{
+	CaseVec cases = {
+		{ "Менделе́ев", true,  "менделеев" },
+		{ "",    false, "" },
+		{ "Ångström",    true,  "angstrom" },
+	};
+
+	test_cases (cases, [](auto s, auto f){ return utf8_flatten(s); });
+}
+
+static void
+test_clean ()
+{
+	CaseVec cases = {
+		{ "\t a\t\nb ", true,  "a  b" },
+		{ "",    false, "" },
+		{ "Ångström",    true,  "Ångström" },
+	};
+
+	test_cases (cases, [](auto s, auto f){ return utf8_clean(s); });
+}
+
+
+static void
+test_format ()
+{
+	g_assert_true (format ("hello %s, %u", "world", 123) ==
+		       "hello world, 123");
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
@@ -127,6 +161,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/utils/date-basic",  test_date_basic);
 	g_test_add_func ("/utils/date-ymwdhMs",  test_date_ymwdhMs);
 	g_test_add_func ("/utils/size",  test_size);
+	g_test_add_func ("/utils/flatten",  test_flatten);
+	g_test_add_func ("/utils/clean",  test_clean);
+	g_test_add_func ("/utils/format",  test_format);
 
 	return g_test_run ();
 }

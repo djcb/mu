@@ -18,24 +18,6 @@ include $(top_srcdir)/gtest.mk
 
 @VALGRIND_CHECK_RULES@
 
-noinst_PROGRAMS=		\
-	tokenize		\
-	parse
-
-tokenize_SOURCES=		\
-	tokenize.cc
-
-tokenize_LDADD=			\
-	$(GCOV_LDADD)		\
-	libmuxparser.la
-
-parse_SOURCES=			\
-	parse.cc
-
-parse_LDADD=			\
-	$(GCOV_LDADD)		\
-	libmuxparser.la
-
 AM_CXXFLAGS=			\
 	-I$(srcdir)/..		\
 	-I$(top_srcdir)/lib	\
@@ -46,11 +28,33 @@ AM_CXXFLAGS=			\
 	-Wno-inline		\
 	-Wno-switch-enum
 
-libmuxparser_la_LIBADD=		\
+AM_CPPFLAGS=			\
+	$(GCOV_CFLAGS)
+
+AM_LDFLAGS=			\
 	$(WARN_LDFLAGS)		\
-	$(GLIB_LIBS)		\
-	$(XAPIAN_LIBS)		\
 	$(GCOV_LDADD)
+
+noinst_PROGRAMS=		\
+	tokenize		\
+	parse
+
+tokenize_SOURCES=		\
+	tokenize.cc
+
+tokenize_LDADD=			\
+	$(WARN_LDFLAGS)		\
+	$(GCOV_LDADD)		\
+	libmuxparser.la
+
+parse_SOURCES=			\
+	parse.cc
+
+parse_LDADD=			\
+	$(WARN_LDFLAGS)		\
+	$(GCOV_LDADD)		\
+	libmuxparser.la
+
 
 noinst_LTLIBRARIES=		\
 	libmuxparser.la
@@ -68,20 +72,25 @@ libmuxparser_la_SOURCES=	\
 	xapian.cc		\
 	xapian.hh
 
+libmuxparser_la_LIBADD=		\
+	$(WARN_LDFLAGS)		\
+	$(GLIB_LIBS)		\
+	$(XAPIAN_LIBS)
+
 VALGRIND_SUPPRESSIONS_FILES= ${top_srcdir}/mux.supp
 
 noinst_PROGRAMS+=$(TEST_PROGS)
 
 TEST_PROGS += test-tokenizer
 test_tokenizer_SOURCES=test-tokenizer.cc
-test_tokenizer_LDADD=libmuxparser.la
+test_tokenizer_LDADD=$(GCOV_LDADD) libmuxparser.la
 
 TEST_PROGS += test-parser
 test_parser_SOURCES=test-parser.cc
-test_parser_LDADD=libmuxparser.la
+test_parser_LDADD=$(GCOV_LDADD) libmuxparser.la
 
 TEST_PROGS += test-utils
 test_utils_SOURCES=test-utils.cc
-test_utils_LDADD=libmuxparser.la
+test_utils_LDADD= $(GCOV_LDADD) libmuxparser.la
 
 TESTS=$(TEST_PROGS)

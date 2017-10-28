@@ -22,13 +22,15 @@ SUBDIRS= parser . tests
 
 AM_CFLAGS=					\
 	$(WARN_CFLAGS)				\
+	$(GMIME_CFLAGS)				\
+	$(GLIB_CFLAGS)				\
+	$(GUILE_CFLAGS)				\
 	-Wno-format-nonliteral			\
 	-Wno-switch-enum			\
 	-Wno-suggest-attribute=format		\
 	-Wno-deprecated-declarations		\
-	$(GMIME_CFLAGS)				\
-	$(GLIB_CFLAGS)				\
-	$(GUILE_CFLAGS)
+	-Wno-inline
+
 
 AM_CXXFLAGS=					\
 	$(WARN_CXXFLAGS)			\
