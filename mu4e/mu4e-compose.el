@@ -162,7 +162,7 @@ We have the following choices:
 	   :safe 'symbolp
 	   :group 'mu4e-compose))
 
-(defcustom mu4e-compose-crypto-reply-plain-policy 'sign
+(defcustom mu4e-compose-crypto-reply-plain-policy nil
   "Policy for signing/encrypting replies to messages received unencrypted.
 We have the following choices:
 
@@ -550,7 +550,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 
 (defun mu4e~compose-crypto-reply (parent compose-type)
   "When composing a reply to an encrypted message, we can
-automatically encrypt that reply. When the message is unencrypted, 
+automatically encrypt that reply. When the message is unencrypted,
 we can decide what we want to do."
   (if (and  (eq compose-type 'reply)
 	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
