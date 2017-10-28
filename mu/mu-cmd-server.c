@@ -949,6 +949,7 @@ cmd_find (ServerContext *ctx, GHashTable *args, GError **err)
 	MuMsgFieldId sortfield;
 	const char *querystr;
 	MuQueryFlags qflags;
+	char *query;
 
 	GET_STRING_OR_ERROR_RETURN (args, "query", &querystr, err);
 	if (get_find_params (args, &sortfield, &maxnum, &qflags, err)
@@ -957,12 +958,21 @@ cmd_find (ServerContext *ctx, GHashTable *args, GError **err)
 		return MU_OK;
 	}
 
+	{
+		char	*s;
+		gsize	 len;
+		s     = (char*)g_base64_decode (querystr, &len);
+		query = g_strndup (s, len);
+		g_free (s);
+	}
+
 	/* note: when we're threading, we get *all* matching messages,
 	 * and then only return maxnum; this is so that we maximimize
 	 * the change of all messages in a thread showing up */
 
-	iter = mu_query_run (ctx->query, querystr, sortfield,
+	iter = mu_query_run (ctx->query, query, sortfield,
 			     maxnum, qflags, err);
+	g_free (query);
 	if (!iter) {
 		print_and_clear_g_error (err);
 		return MU_OK;

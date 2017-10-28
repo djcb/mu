@@ -339,7 +339,7 @@ or an error."
     (concat
       "cmd:find query:%s threads:%s sortfield:%s reverse:%s maxnum:%d "
       "skip-dups:%s include-related:%s")
-    (format "%s" query)
+    (base64-encode-string query)
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
