@@ -16,7 +16,7 @@
 
 AC_PREREQ([2.68])
 AC_INIT([mu],[0.9.19],[https://github.com/djcb/mu/issues],[mu])
-AC_COPYRIGHT([Copyright (C) 2008-2016 Dirk-Jan C. Binnema])
+AC_COPYRIGHT([Copyright (C) 2008-2017 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
