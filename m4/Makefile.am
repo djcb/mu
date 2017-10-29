@@ -19,4 +19,5 @@ include $(top_srcdir)/gtest.mk
 EXTRA_DIST =				\
 	ax_cxx_compile_stdcxx.m4	\
 	ax_cxx_compile_stdcxx_14.m4	\
+	ax_valgrind_check.m4		\
 	perlmod.m4
