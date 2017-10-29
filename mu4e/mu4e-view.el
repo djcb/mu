@@ -306,13 +306,13 @@ the the message view affects HDRSBUF, as does marking etc.
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that."
   (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
-          (when (gethash (mu4e-message-field msg :path)
-                         mu4e~path-parent-docid-map) t))
-         (buf
-          (if embedded
+	   (when (gethash (mu4e-message-field msg :path)
+		   mu4e~path-parent-docid-map) t))
+	  (buf
+	    (if embedded
 	      (mu4e~view-embedded-winbuf)
-            (get-buffer-create mu4e~view-buffer-name)))
-         (insert-it (or embedded (not (mu4e~view-mark-as-read-maybe msg)))))
+	      (get-buffer-create mu4e~view-buffer-name)))
+          (insert-it (or embedded (not (mu4e~view-mark-as-read-maybe msg)))))
     (with-current-buffer buf
       (switch-to-buffer buf)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
