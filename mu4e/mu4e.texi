@@ -317,8 +317,8 @@ Xapian, GMime and their dependencies must be installed.
 
 Alternatively, if you build from the git repository or use a tarball
 like the ones that @t{github} produces, the instructions are slightly
-different, and require you to have @t{autotools} (@t{autoconf},
-@t{autoconf-archive}, @t{automake}, @t{libtool}, @t{texinfo}) installed:
+different, and require you to have autotools (@t{autoconf},
+@t{automake}, @t{libtool}, @t{texinfo}) installed:
 
 @example
 # get from git (alternatively, use a github tarball)

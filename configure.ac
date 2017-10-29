@@ -24,16 +24,8 @@ AC_CONFIG_SRCDIR([mu/mu.cc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-m4_ifndef([AX_COMPILER_FLAGS],[
-    AC_MSG_ERROR([
-  *** autoconf-archive >= 20150925 required for the build setup.
-  *** Please install it, or get an official release from
-  ***    https://github.com/djcb/mu/releases
-])
-])
-
-AX_IS_RELEASE([git-directory])
-AX_CHECK_ENABLE_DEBUG([yes])
+m4_ifdef([AX_IS_RELEASE],[AX_IS_RELEASE([git-directory])])
+m4_ifdef([AX_CHECK_ENABLE_DEBUG],[AX_CHECK_ENABLE_DEBUG([yes])])
 
 AM_INIT_AUTOMAKE([1.14 foreign no-dist-gzip tar-ustar dist-xz])
 
@@ -53,7 +45,7 @@ AC_PROG_INSTALL
 AC_HEADER_STDC
 
 AX_CXX_COMPILE_STDCXX_14
-AX_COMPILER_FLAGS(,,[yes])
+m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes])])
 AX_VALGRIND_CHECK
 
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
