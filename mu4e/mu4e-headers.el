@@ -301,13 +301,16 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 In the format needed for `mu4e-read-option'.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e~headers-clear ()
+(defun mu4e~headers-clear (&optional msg)
   "Clear the header buffer and related data structures."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
 	(mu4e~mark-clear)
-	(erase-buffer)))))
+	(erase-buffer)
+	(when msg
+	  (goto-char (point-min))
+	  (insert (propertize msg 'face 'mu4e-system-face 'intangible t)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handler functions
@@ -609,6 +612,7 @@ displaying in the header view."
 		 mu4e-headers-fields " ")))
       (mu4e~headers-line-handler msg line))))
 
+(defconst mu4e~searching      "Searching...")
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
 
@@ -1110,7 +1114,8 @@ the query history stack."
 		      (mu4e-context-label)
 		      (if (and mu4e-display-update-status-in-modeline
 			       (buffer-live-p mu4e~update-buffer)
-			       (process-live-p (get-buffer-process mu4e~update-buffer)))
+			    (process-live-p (get-buffer-process
+					      mu4e~update-buffer)))
 			  (propertize " (updating)" 'face 'mu4e-modeline-face)
 			"")))))
 
@@ -1119,6 +1124,7 @@ the query history stack."
     (unless (get-buffer-window buf 0)
       (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-headers-search-hook expr)
+    (mu4e~headers-clear mu4e~searching)
     (mu4e~proc-find
       expr
       mu4e-headers-show-threads
