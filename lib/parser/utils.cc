@@ -99,11 +99,27 @@ gx_utf8_flatten (const gchar *str, gssize len)
 std::string // gx_utf8_flatten
 Mux::utf8_flatten (const std::string& str)
 {
+	// optimization for boring old ascii strings
+	bool is_ascii = true;
+	std::string s{str};
+	for (auto it = s.begin(); it != s.end(); ++it) {
+		if (*it & 0x80) {
+			is_ascii = false;
+			break;
+		} else
+			*it = tolower(*it);
+	}
+
+	if (G_LIKELY(is_ascii))
+		return s;
+	///////////////////////////////////////////
+
+	// seems we need the big guns
 	char *flat = gx_utf8_flatten (str.c_str(), str.length());
 	if (!flat)
 		return {};
 
-	std::string s(flat);
+	s = flat;
 	g_free (flat);
 
 	return s;

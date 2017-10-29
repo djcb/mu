@@ -256,9 +256,7 @@ static const MuMsgField FIELD_DATA[] = {
 static MuMsgField* _msg_field_data[MU_MSG_FIELD_ID_NUM];
 static const MuMsgField* mu_msg_field (MuMsgFieldId id)
 {
-	static gboolean _initialized;
-
-	_initialized = FALSE;
+	static gboolean _initialized = FALSE;
 
 	/* initialize the array, but only once... */
 	if (G_UNLIKELY(!_initialized)) {
