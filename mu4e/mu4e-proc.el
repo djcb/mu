@@ -235,7 +235,7 @@ The server output is as follows:
 existing quotation. In particular, backslashes and
 double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
-    (format "%s" (replace-regexp-in-string "\"" "\\\\\"" esc))))
+    (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
 
 
 (defun mu4e~proc-send-command (frm &rest args)

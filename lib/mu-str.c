@@ -557,7 +557,6 @@ read_val (const char *str, const char **endval, GError **err)
 			}
 		} else if (*cur == '"') {
 			quoted = !quoted;
-			g_string_append_c (gstr, *cur);
 			continue;
 		} else if (isblank(*cur) && !quoted)
 			break;
