@@ -208,7 +208,7 @@ but also manually invoked searches."
 (defvar mu4e-headers-sort-field :date
   "Field to sort the headers by. Must be a symbol,
 one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
-`:list-id'")
+`:list'")
 
 (defvar mu4e-headers-sort-direction 'descending
   "Direction to sort by; a symbol either `descending' (sorting
@@ -291,7 +291,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defvar mu4e~headers-sort-field-choices
   '( ("date"	. :date)
      ("from"	. :from)
-     ("list"    . :list-id)
+     ("list"    . :list)
      ("maildir" . :maildir)
      ("prio"	. :prio)
      ("zsize"	. :size)
