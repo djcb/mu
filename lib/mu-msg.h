@@ -490,9 +490,9 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 
 
 /**
- * Tickle a message -- ie., rxename a message while maintaining the maildir and
- * flags. This can be useful when dealing with third-party tools such as mbsync
- * that depend on changed filenames.
+ * Tickle a message -- ie., rename a message to some new semi-random name,while
+ * maintaining the maildir and flags. This can be useful when dealing with
+ * third-party tools such as mbsync that depend on changed filenames.
  *
  * @param msg a message with an existing file system path in an actual
  * maildir
