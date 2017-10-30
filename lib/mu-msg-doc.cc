@@ -110,7 +110,8 @@ mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 		const std::string s (self->doc().get_value(mfid));
 		if (s.empty())
 			return 0;
-		else if (mfid == MU_MSG_FIELD_ID_DATE)
+		else if (mfid == MU_MSG_FIELD_ID_DATE ||
+			 mfid == MU_MSG_FIELD_ID_SIZE)
 			return strtol (s.c_str(), NULL, 10);
 		else {
 			return static_cast<gint64>
