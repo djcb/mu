@@ -94,7 +94,7 @@ struct MuProc: public Mux::ProcIface {
 			return;
 
 		fields.push_back ({{name}, {pfx},
-				   mu_msg_field_xapian_index(id),
+				   (bool)mu_msg_field_xapian_index(id),
 				   id});
 	}
 
