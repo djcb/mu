@@ -257,7 +257,8 @@ view buffer."
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-cited-regexp  "^\\(\\([[:alpha:]]+\\)\\|\\( *\\)\\)\\(\\(>+ ?\\)+\\)"
+(defcustom mu4e-cited-regexp
+  "^\\(\\([[:alpha:]]+\\)\\|\\( *\\)\\)\\(\\(>+ ?\\)+\\)"
   "Regular expression that determines whether a line is a
   citation. This recognizes lines starting with numbers of '>'
   and spaces as well as citations of the type \"John> ... \"."

@@ -303,7 +303,7 @@ Start the process if needed."
 	  ((eq code 11)
 	    (error "Database is locked by another process"))
 	  ((eq code 15)
-	    (error "Database needs upgrade; try `mu index --rebuild' from the command line"))
+	    (error "Database needs upgrade; try `mu index --rebuild'"))
 	  ((eq code 19)
 	    (error "Database empty; try indexing some messages"))
 	  (t (error "mu server process ended with exit code %d" code))))
@@ -343,7 +343,8 @@ or an error."
     (if threads "true" "false")
     ;; sortfield is e.g. ':subject'; this removes the ':'
     (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
-    ;; TODO: use ascending/descending in backend too (it's clearer than 'reverse'
+    ;; TODO: use ascending/descending in backend too (it's clearer than
+    ;; 'reverse'
     (if (eq sortdir 'descending) "true" "false")
     (if maxnum maxnum -1)
     (if skip-dups "true" "false")
@@ -385,7 +386,8 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 `mu4e-error-func', respectively."
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
-  (unless (or (not maildir) (file-exists-p (concat mu4e-maildir "/" maildir "/")))
+  (unless (or (not maildir)
+	    (file-exists-p (concat mu4e-maildir "/" maildir "/")))
     (mu4e-error "Target dir does not exist"))
   (let* ((idparam (mu4e~docid-msgid-param docid-or-msgid))
 	  (flagstr
@@ -396,7 +398,8 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 	    (when maildir
 	      (format " maildir:%s" (mu4e~escape maildir))))
 	  (rename
-	    (if (and maildir mu4e-change-filenames-when-moving) "true" "false")))
+	    (if (and maildir mu4e-change-filenames-when-moving)
+	      "true" "false")))
     (mu4e~proc-send-command "cmd:move %s %s %s %s"
       idparam (or flagstr "") (or path "")
       (format "newname:%s" rename))))
@@ -408,7 +411,8 @@ of 'my' email addresses (see `mu4e-user-mail-address-list')."
   (let ((path (mu4e~escape path))
 	 (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
     (if addrs
-      (mu4e~proc-send-command "cmd:index path:%s my-addresses:%s cleanup:%s lazy-check:%s"
+      (mu4e~proc-send-command
+	"cmd:index path:%s my-addresses:%s cleanup:%s lazy-check:%s"
 	path addrs (if cleanup "true" : "false") (if lazy-check "true"))
       (mu4e~proc-send-command "cmd:index path:%s" path))))
 
@@ -454,7 +458,8 @@ The result will be delivered to the function registered as
   "Create a new maildir-directory at filesystem PATH."
   (mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~escape path)))
 
-(defun mu4e~proc-extract (action docid partidx decrypt &optional path what param)
+(defun mu4e~proc-extract (action docid partidx decrypt
+			   &optional path what param)
   "Extract an attachment with index PARTIDX from message with DOCID
 and perform ACTION on it (as symbol, either `save', `open', `temp') which
 mean:
