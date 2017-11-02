@@ -52,8 +52,10 @@ struct MuProc: public Mux::ProcIface {
 		MuMsgFieldId id = mu_msg_field_id_from_name (field.c_str(), FALSE);
 		if (id != MU_MSG_FIELD_ID_NONE)
 			return id;
-		else
+		else if (field.length() == 1)
 			return mu_msg_field_id_from_shortcut (field[0], FALSE);
+		else
+			return MU_MSG_FIELD_ID_NONE;
 	}
 
 	std::string
