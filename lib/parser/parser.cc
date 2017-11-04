@@ -239,10 +239,13 @@ factor_2 (Mux::Tokens& tokens, Node::Type& op, ProcPtr proc,
 		tokens.pop_front();
 		op = Node::Type::OpAnd;
 	} break;
+
 	case Token::Type::Open:
 	case Token::Type::Data:
+	case Token::Type::Not:
 		op = Node::Type::OpAnd; // implicit AND
 		break;
+
 	default:
 		return empty();
 	}
