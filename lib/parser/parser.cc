@@ -104,7 +104,11 @@ regex (const ProcIface::FieldInfoVec& fields, const std::string& v,
 								 field.id, term)}));
 			}
 		}
-		return tree;
+
+		if (tree.children.empty())
+			return empty();
+		else
+			return tree;
 
 	} catch (...) {
 		// fallback
