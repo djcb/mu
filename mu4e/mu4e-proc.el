@@ -351,15 +351,13 @@ or an error."
     (if include-related "true" "false")))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
-  "Move message identified by DOCID-OR-MSGID.
-At least one of MAILDIR and FLAGS should be specified. Note, even
-if MAILDIR is nil, this is still a move, since a change in flags
-still implies a change in message filename.
+  "Move message identified by DOCID-OR-MSGID to optional MAILDIR
+and optionally setting FLAGS. If MAILDIR is nil, message will be
+moved within the same maildir.
 
-MAILDIR (), optionally
-setting FLAGS (keyword argument :flags).  optionally setting FLAGS
-in the process. If MAILDIR is nil, message will be moved within the
-same maildir.
+At least one of MAILDIR and FLAGS must be specified. Note that
+even when MAILDIR is nil, this is still a filesystem move, since
+a change in flags implies a change in message filename.
 
 MAILDIR must be a maildir, that is, the part _without_ cur/ or new/
 or the root-maildir-prefix. E.g. \"/archive\". This directory must

@@ -107,8 +107,8 @@ directory and saves all attachments in the chosen directory."
      ("view as pdf"      . mu4e-action-view-as-pdf)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in view mode.
-The actions are of the form:
-  (NAME FUNC)
+The actions are cons-cells of the form:
+  (NAME . FUNC)
 where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives a message plist as an argument.
