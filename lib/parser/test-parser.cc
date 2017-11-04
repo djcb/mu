@@ -84,8 +84,9 @@ test_complex ()
 		{ "foo and bar or cuux",
 		  R"#((or(and(value "" "foo")(value "" "bar")))#" +
 		  std::string(R"#((value "" "cuux")))#") },
+
 		{ "a and not b",
-		  R"#((andnot(value "" "a")(value "" "b")))#"
+		  R"#((and(value "" "a")(not(value "" "b"))))#"
 		},
 		{ "a and b and c",
 		  R"#((and(value "" "a")(and(value "" "b")(value "" "c"))))#"
@@ -97,7 +98,7 @@ test_complex ()
 		  R"#((and(value "" "a")(value "" "b")))#"
 		},
 		{ "a not b", // implicit and not
-		  R"#((andnot(value "" "a")(value "" "b")))#"
+		  R"#((and(value "" "a")(not(value "" "b"))))#"
 		},
 		{ "not b", // implicit and not
 		  R"#((not(value "" "b")))#"

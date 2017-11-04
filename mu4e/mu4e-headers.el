@@ -183,20 +183,23 @@ query have been received and are displayed."
 
 (defcustom mu4e-headers-search-bookmark-hook nil
   "Hook run just after we invoke a bookmarked search. This
-function receives the query as its parameter.
+function receives the query as its parameter, before any
+rewriting as per `mu4e-query-rewrite-function' has taken place.
 
-The reason to use this instead of `mu4e-headers-search-hook'
-is if you only want to execute a hook when a search is entered
-via a bookmark, e.g. if you'd like to treat the bookmarks as a
-custom folder and change the options for the search,
-e.g. `mu4e-headers-show-threads', `mu4e-headers-include-related',
-`mu4e-headers-skip-duplicates` or `mu4e-headers-results-limit'."
+The reason to use this instead of `mu4e-headers-search-hook' is
+if you only want to execute a hook when a search is entered via a
+bookmark, e.g. if you'd like to treat the bookmarks as a custom
+folder and change the options for the search, e.g.
+`mu4e-headers-show-threads', `mu4e-headers-include-related',
+`mu4e-headers-skip-duplicates` or `mu4e-headers-results-limit'.
+"
   :type 'hook
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-search-hook nil
   "Hook run just before executing a new search operation. This
-function receives the query as its parameter.
+function receives the query as its parameter, before any
+rewriting as per `mu4e-query-rewrite-function' has taken place
 
 This is a more general hook facility than the
 `mu4e-headers-search-bookmark-hook'. It gets called on every
@@ -1084,7 +1087,31 @@ docid is not found."
       (unless ignore-missing
 	(mu4e-error "Cannot find message with docid %S" docid)))))
 
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defcustom mu4e-query-rewrite-function 'identity
+  "Function that takes a search expression string, and returns a
+  possibly changed search expression string.
+
+This function is applied on the search expression just before
+searching, and allows users to modify the query.
+
+For instance, we could change and of workmail into
+\"maildir:/long-path-to-work-related-emails\", by setting the function
+
+(setq mu4e-query-rewrite-function
+  (lambda(expr)
+     (replace-regexp-in-string \"workmail\"
+		   \"maildir:/long-path-to-work-related-emails\" expr)))
+
+It is good to remember that the replacement does not understand
+anything about the query, it just does text replacement."
+  :type 'function
+  :group 'mu4e)
+
+
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If IGNORE-HISTORY is true, do *not* update
@@ -1093,7 +1120,8 @@ the query history stack."
   ;; `mu4e~headers-query-next' or `mu4e~headers-query-prev'.
   ;;(mu4e-hide-other-mu4e-buffers)
   (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
-	 (inhibit-read-only t)
+	  (inhibit-read-only t)
+	  (rewritten-expr (funcall mu4e-query-rewrite-function expr))
 	  (maxnum (unless mu4e-headers-full-search mu4e-headers-results-limit)))
     (with-current-buffer buf
       (mu4e-headers-mode)
@@ -1103,7 +1131,7 @@ the query history stack."
 	  (mu4e~headers-push-query mu4e~headers-last-query 'past)))
       (setq
 	mode-name "mu4e-headers"
-	mu4e~headers-last-query expr)
+	mu4e~headers-last-query rewritten-expr)
       (add-to-list 'global-mode-string
 		   '(:eval
 		     (concat
@@ -1126,7 +1154,7 @@ the query history stack."
     (run-hook-with-args 'mu4e-headers-search-hook expr)
     (mu4e~headers-clear mu4e~searching)
     (mu4e~proc-find
-      expr
+      rewritten-expr
       mu4e-headers-show-threads
       mu4e-headers-sort-field
       mu4e-headers-sort-direction
@@ -1387,7 +1415,9 @@ or `past'."
   "Whether to automatically view (open) the target message (as
   per `mu4e~headers-msgid-target').")
 
-(defun mu4e-headers-search (&optional expr prompt edit ignore-history msgid show)
+
+(defun mu4e-headers-search (&optional expr prompt edit
+			     ignore-history msgid show)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. This is an interactive function which ask
 user for EXPR. PROMPT, if non-nil, is the prompt used by this

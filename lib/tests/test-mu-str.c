@@ -122,8 +122,9 @@ test_parse_arglist (void)
 
 	g_assert_cmpstr (g_hash_table_lookup (hash, "cmd"), ==,
 			 "find");
+	/* note, mu4e now passes queries as base64 */
 	g_assert_cmpstr (g_hash_table_lookup (hash, "query"), ==,
-			 "maildir:\"/sent items\"");
+			 "maildir:/sent items");
 	g_assert_cmpstr (g_hash_table_lookup (hash, "maxnum"), ==,
 			 "500");
 
