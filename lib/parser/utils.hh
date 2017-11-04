@@ -88,13 +88,14 @@ std::string format (const char *frm, ...)
 std::string date_to_time_t_string (const std::string& date, bool first);
 
 /**
- * time_t expressed as a string with a 10-digit time_t
+ * 64-bit incarnation of time_t expressed as a 10-digit string. Uses 64-bit for the time-value,
+ *  regardless of the size of time_t.
  *
- * @param t
+ * @param t some time value
  *
  * @return
  */
-std::string date_to_time_t_string (time_t t);
+std::string date_to_time_t_string (int64_t t);
 
 
 

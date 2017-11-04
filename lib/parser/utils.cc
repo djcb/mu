@@ -149,9 +149,6 @@ Mux::utf8_clean (const std::string& dirty)
 	return clean;
 }
 
-
-
-
 std::vector<std::string>
 Mux::split (const std::string& str, const std::string& sepa)
 {
@@ -213,7 +210,7 @@ date_boundary (bool is_first)
 }
 
 std::string
-Mux::date_to_time_t_string (time_t t)
+Mux::date_to_time_t_string (int64_t t)
 {
 	char buf[sizeof(InternalDateMax)];
 	snprintf (buf, sizeof(buf), InternalDateFormat, t);
@@ -332,7 +329,7 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 		return date_boundary (is_first);
 	}
 
-	t = (gint64)g_date_time_to_unix (dtime);
+	t = g_date_time_to_unix (dtime);
 	g_date_time_unref (dtime);
 
 	if (t < 0 || t > 9999999999)
