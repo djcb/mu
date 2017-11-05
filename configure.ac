@@ -382,5 +382,5 @@ if test "x$ac_cv_header_wordexp_h" != "xyes"; then
 fi
 
 echo
-echo "Now, type 'gmake' to build mu (or 'gmake check' to run the unit tests, too)"
+echo "Now, type 'make' (or 'gmake') to build mu"
 echo

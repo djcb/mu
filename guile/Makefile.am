@@ -20,7 +20,10 @@ include $(top_srcdir)/gtest.mk
 # with separate builddir)
 SUBDIRS= . mu scripts examples tests
 
-AM_CPPFLAGS=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFLAGS}
+AM_CPPFLAGS=						\
+	-I. -I${top_builddir} -I${top_srcdir}/lib	\
+	${GUILE_CFLAGS}					\
+	${GLIB_CFLAGS}
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -28,28 +31,28 @@ AM_CPPFLAGS=-I. -I${top_builddir} -I${top_srcdir}/lib ${GUILE_CFLAGS} ${GLIB_CFL
 AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
-lib_LTLIBRARIES=			\
+lib_LTLIBRARIES=					\
 	libguile-mu.la
 
-libguile_mu_la_SOURCES=			\
-	mu-guile.c			\
-	mu-guile.h			\
-	mu-guile-message.c		\
+libguile_mu_la_SOURCES=					\
+	mu-guile.c					\
+	mu-guile.h					\
+	mu-guile-message.c				\
 	mu-guile-message.h
 
-libguile_mu_la_LIBADD=			\
-	${top_builddir}/lib/libmu.la	\
+libguile_mu_la_LIBADD=					\
+	${top_builddir}/lib/libmu.la			\
 	${GUILE_LIBS}
 
 libguile_mu_la_LDFLAGS= -export-dynamic
 
-XFILES=					\
-	mu-guile.x			\
+XFILES=							\
+	mu-guile.x					\
 	mu-guile-message.x
 
-info_TEXINFOS=				\
+info_TEXINFOS=						\
 	mu-guile.texi
-mu_guile_TEXINFOS=			\
+mu_guile_TEXINFOS=					\
 	fdl.texi
 
 BUILT_SOURCES=$(XFILES)

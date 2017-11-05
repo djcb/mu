@@ -308,21 +308,26 @@ gboolean
 mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 		     const char **args, GError **err)
 {
-	char	*mainargs, *expr;
-	const char * argv[] = {
-		"guile", "-l", NULL, "-c", NULL, NULL
-	};
+	const char	 *s;
+	char		 *mainargs, *expr;
+	char		**argv;
 
 	g_return_val_if_fail (msi, FALSE);
 	g_return_val_if_fail (muhome, FALSE);
+
+	argv = g_new0 (char*, 6);
+	argv[0] = g_strdup("guile");
+	argv[1] = g_strdup("-l");
 
 	if (access (mu_script_info_path (msi), R_OK) != 0) {
 		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
 				     "failed to read script: %s",
 				     strerror(errno));
 		 return FALSE;
-	 }
-	argv[2] = (char*)mu_script_info_path (msi);
+	}
+
+	s	= mu_script_info_path (msi);
+	argv[2] = g_strdup (s ? s : "");
 
 	mainargs = mu_str_quoted_from_strv (args);
 	expr = g_strdup_printf (
@@ -332,12 +337,13 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 		mainargs ? mainargs : "");
 
 	g_free (mainargs);
+	argv[3] = g_strdup("-c");
 	argv[4] = expr;
 
 	scm_boot_guile (5, argv, guile_shell, NULL);
 
 	/* never reached but let's be correct(TM)*/
-	g_free (expr);
+	g_strfreev (argv);
 	return TRUE;
 }
 #else /*!BUILD_GUILE*/
