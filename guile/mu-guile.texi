@@ -514,7 +514,7 @@ messages matching 'book':
         (lambda (contact)
            (format #t "~a => ~a\n"
              (or (mu:email contact) "") (or (mu:name contact) "no-name")))
-        (mu:contacts msg mu:field:to)))
+        (mu:contacts msg mu:contact:to)))
     "book")
 @end lisp
 
