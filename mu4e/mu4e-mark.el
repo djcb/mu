@@ -324,7 +324,7 @@ headers in the region. Optionally, provide TARGET (for moves)."
     (save-excursion
       (let ((cant-go-further) (eor (region-end)))
 	(goto-char (region-beginning))
-	(while (and (<= (point) eor) (not cant-go-further))
+	(while (and (< (point) eor) (not cant-go-further))
 	  (mu4e-mark-at-point mark target)
 	  (setq cant-go-further (not (mu4e-headers-next))))))))
 
