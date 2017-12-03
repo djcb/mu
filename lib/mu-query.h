@@ -70,7 +70,8 @@ typedef enum {
 	MU_QUERY_FLAG_SKIP_UNREADABLE = 1 << 1,	/**< skip unreadable msgs */
 	MU_QUERY_FLAG_SKIP_DUPS       = 1 << 2,	/**< skip duplicate msgs */
 	MU_QUERY_FLAG_INCLUDE_RELATED = 1 << 3,	/**< include related msgs */
-	MU_QUERY_FLAG_THREADS         = 1 << 4  /**< calculate threading info */
+	MU_QUERY_FLAG_THREADS         = 1 << 4, /**< calculate threading info */
+	MU_QUERY_FLAG_RAW             = 1 << 5  /**< don't parse the query */
 } MuQueryFlags;
 
 /**

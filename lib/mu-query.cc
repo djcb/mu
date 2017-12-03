@@ -194,22 +194,20 @@ private:
 };
 
 static const Xapian::Query
-get_query (MuQuery *mqx, const char* searchexpr, GError **err)
-{
-	try {
-		Mux::WarningVec warns;
-		const auto tree = Mux::parse (searchexpr, warns,
-					      std::make_unique<MuProc>(mqx->db()));
-		for (const auto w: warns)
-			std::cerr << w << std::endl;
+get_query (MuQuery *mqx, const char* searchexpr, bool raw, GError **err) try {
 
-		return Mux::xapian_query (tree);
+	Mux::WarningVec warns;
+	const auto tree = Mux::parse (searchexpr, warns,
+				      std::make_unique<MuProc>(mqx->db()));
+	for (const auto w: warns)
+		std::cerr << w << std::endl;
 
-	} catch (...) {
-		mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
-				     "parse error in query");
-		throw;
-	}
+	return Mux::xapian_query (tree);
+
+} catch (...) {
+	mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
+			     "parse error in query");
+	throw;
 }
 
 MuQuery*
@@ -279,16 +277,17 @@ msg_iter_flags (MuQueryFlags flags)
 
 static Xapian::Enquire
 get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
-	     bool descending, GError **err)
+	     bool descending, bool raw, GError **err)
 {
 	Xapian::Enquire enq (self->db());
 
 	try {
-		/* empty or "" means "matchall" */
-		if (!mu_str_is_empty(searchexpr) &&
+		if (raw)
+			enq.set_query(Xapian::Query(Xapian::Query(searchexpr)));
+		else if (!mu_str_is_empty(searchexpr) &&
 		    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
-			enq.set_query(get_query (self, searchexpr, err));
-		else
+			enq.set_query(get_query (self, searchexpr, raw, err));
+		else/* empty or "" means "matchall" */
 			enq.set_query(Xapian::Query::MatchAll);
 	} catch (...) {
 		mu_util_g_set_error (err, MU_ERROR_XAPIAN_QUERY,
@@ -413,15 +412,16 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 	try {
 		MuMsgIter	*iter;
 		MuQueryFlags	 first_flags;
-		bool		 inc_related  = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
-		bool		 descending   = flags & MU_QUERY_FLAG_DESCENDING;
+		const auto 	 inc_related  = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
+		const auto	 descending   = flags & MU_QUERY_FLAG_DESCENDING;
+		const auto       raw	      = flags & MU_QUERY_FLAG_RAW;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
-						 descending, err));
+						 descending, raw, err));
 
-		/* when we're doing a 'include-related query', we're
-		 * actually doing /two/ queries; one to get the
-		 * initial matches, and based on that one to get all
-		 * messages in threads in those matches.
+		/* when we're doing a 'include-related query', wea're actually
+		 * doing /two/ queries; one to get the initial matches, and
+		 * based on that one to get all messages in threads in those
+		 * matches.
 		 */
 
 		/* get the 'real' maxnum if it was specified as < 0 */
@@ -470,7 +470,7 @@ mu_query_internal_xapian (MuQuery *self, const char *searchexpr, GError **err)
 	g_return_val_if_fail (searchexpr, NULL);
 
 	try {
-		Xapian::Query query (get_query(self, searchexpr, err));
+		Xapian::Query query (get_query(self, searchexpr, false, err));
 		return g_strdup(query.get_description().c_str());
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
