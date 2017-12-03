@@ -181,6 +181,10 @@ data (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 	if (dotdot != std::string::npos)
 		return range(fields, val.substr(0, dotdot), val.substr(dotdot + 2),
 			     token.pos, proc, warnings);
+	else if (proc->is_range_field(fields.front().field)) {
+		// range field without a range - treat as field:val..val
+		return range (fields, val, val, token.pos, proc, warnings);
+	}
 
 	// if nothing else, it's a value.
 	return value (fields, val, token.pos, proc, warnings);
