@@ -265,70 +265,37 @@ get_bool_from_args (GHashTable *args, const char *param, gboolean optional,
 	} while (0);
 
 
-
-/* NOTE: this assumes there is only _one_ docid (message) for the
- * particular message id */
-static unsigned
-get_docid_from_msgid (MuQuery *query, const char *str, GError **err)
-{
-	gchar *querystr;
-	unsigned docid;
-	MuMsgIter *iter;
-
-	querystr = g_strdup_printf ("msgid:%s", str);
-	iter = mu_query_run (query, querystr,
-			     MU_MSG_FIELD_ID_NONE,
-			     1, MU_QUERY_FLAG_NONE, err);
-	g_free (querystr);
-
-	docid = MU_STORE_INVALID_DOCID;
-	if (!iter || mu_msg_iter_is_done (iter))
-		mu_util_g_set_error (err, MU_ERROR_NO_MATCHES,
-				     "could not find message %s", str);
-	else {
-		MuMsg *msg;
-		msg = mu_msg_iter_get_msg_floating (iter);
-		if (!mu_msg_is_readable(msg)) {
-			mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
-					     "'%s' is not readable",
-					     mu_msg_get_path(msg));
-		} else
-			docid = mu_msg_iter_get_docid (iter);
-
-		mu_msg_iter_destroy (iter);
-	}
-
-	return docid;
-}
-
-
 /* get a *list* of all messages with the given message id */
 static GSList*
-get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
+get_docids_from_msgids (MuQuery *query, const char *msgid,
+			int max, GError **err)
 {
-	gchar *querystr;
-	MuMsgIter *iter;
-	GSList *lst;
+	char		 xprefix;
+	char		*rawq, *tmp;
+	MuMsgIter	*iter;
+	GSList		*lst;
 
-	querystr = g_strdup_printf ("msgid:%s", str);
-	iter = mu_query_run (query, querystr, MU_MSG_FIELD_ID_NONE,
-			     -1 /*unlimited*/, MU_QUERY_FLAG_NONE,
-			     err);
-	g_free (querystr);
+	xprefix = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_MSGID);
+	/*XXX this is a bit dodgy */
+	tmp	= g_ascii_strdown(msgid, -1);
+	rawq    = g_strdup_printf("%c%s", xprefix, tmp);
+	g_free(tmp);
+	iter	= mu_query_run (query, rawq, MU_MSG_FIELD_ID_NONE,
+				max, MU_QUERY_FLAG_RAW, err);
+	g_free (rawq);
 
 	if (!iter || mu_msg_iter_is_done (iter)) {
 		mu_util_g_set_error (err, MU_ERROR_NO_MATCHES,
-				     "could not find message %s", str);
+				     "could not find message(s) for msgid %s",
+				     msgid);
 		return NULL;
 	}
 
 	lst = NULL;
 	do {
 		lst = g_slist_prepend
-			(lst,
-			 GSIZE_TO_POINTER(mu_msg_iter_get_docid (iter)));
+			(lst, GSIZE_TO_POINTER(mu_msg_iter_get_docid (iter)));
 	} while (mu_msg_iter_next (iter));
-
 	mu_msg_iter_destroy (iter);
 
 	return lst;
@@ -342,7 +309,9 @@ get_docids_from_msgids (MuQuery *query, const char *str, GError **err)
 static unsigned
 determine_docid (MuQuery *query, GHashTable *args, GError **err)
 {
-	const char* docidstr, *msgidstr;
+	GSList		*docids;
+	unsigned	 docid;
+	const char*	 docidstr, *msgidstr;
 
 	docidstr = get_string_from_args (args, "docid", TRUE, err);
 	if (docidstr)
@@ -356,7 +325,14 @@ determine_docid (MuQuery *query, GHashTable *args, GError **err)
 		return MU_STORE_INVALID_DOCID;
 	}
 
-	return get_docid_from_msgid (query, msgidstr, err);
+	docids = get_docids_from_msgids (query, msgidstr, 1, err);
+	if (!docids)
+		return MU_STORE_INVALID_DOCID;
+
+	docid = GPOINTER_TO_UINT(docids->data);
+	g_slist_free (docids);
+
+	return docid;
 }
 
 
@@ -1291,7 +1267,8 @@ move_msgid_maybe (ServerContext *ctx, GHashTable *args, GError **err)
 	if (!msgid || !flagstr || maildir)
 		return FALSE;
 
-	if (!(docids = get_docids_from_msgids (ctx->query, msgid, err))) {
+	if (!(docids = get_docids_from_msgids (ctx->query, msgid,
+					       -1/*unlimited*/, err))) {
 		print_and_clear_g_error (err);
 		return TRUE;
 	}
