@@ -46,6 +46,9 @@ GTAGS
 *.tp
 *.vr
 *.elc
+*.gcda
+*.gcno
+*.trs
 elisp-comp
 elc-stamp
 dummy.cc
@@ -85,3 +88,12 @@ configure.lineno
 /version.texi
 /compile
 build-aux/
+/TAGS
+/lib/parser/parse
+/lib/parser/test-parser
+/lib/parser/test-tokenizer
+/lib/parser/test-utils
+/lib/parser/tokenize
+/perf.data
+perf.data
+perf.data.old
