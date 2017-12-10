@@ -314,7 +314,7 @@ Start the process if needed."
   "Construct a backend parameter based on DOCID-OR-MSGID."
   (format
     (if (stringp docid-or-msgid)
-      (concat "msgid:"(mu4e~escape (format "%s" msgid)))
+      (concat "msgid:"(mu4e~escape (format "%s" docid-or-msgid)))
       "docid:%d")
     docid-or-msgid))
 
