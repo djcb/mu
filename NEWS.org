@@ -1,6 +1,44 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
+** 1.0 (unreleased)
+   
+   mu 1.0, after 10 years or so!
+
+*** mu
+
+    - New, custom query parser which Xapian's 'QueryParser' both in mu
+      and mu4e. Existing queries should generally still work, but the
+      new engine handles non-alphanum much better.
+    - Support regular expression queries (with the new query engine)
+    - cfind: ensure nicks are unique
+    
+*** mu4e
+
+    - allow for rewriting message bodies
+    - electric-quote-(local-)mode work when composing emails
+    - Respect format=flowed and delsp=yes for viewing plain-text
+      messages
+    - Added new mu4e-split-view mode: single-window
+    - Unbreak abbrevs in mu4e-compose-mode
+    - Allow forwarding messages as attachments
+      (`mu4e-compose-forward-as-attachment')
+    - Updated documentation
+
+*** Contributors for this release:
+
+    Ævar Arnfjörð Bjarmason, Alex Bennée, Arne Köhn, Christophe
+    Troestler, Damien Garaud, Dirk-Jan C. Binnema, galaunay, Hong Xu,
+    Ian Kelling, John Whitbeck, Josiah Schwab, Jun Hao, Krzysztof
+    Jurewicz, maxime, Mekeor Melire, Nathaniel Nicandro, Ronald Evers,
+    Sean 'Shaleh' Perry, Sébastien Le Callonnec, Stig Brautaset,
+    Thierry Volpiatto, Titus von der Malsburg, Vladimir Sedach, Wataru
+    Ashihara, Yuri D'Elia.
+
+    And all the people on the mailing-list and in github, with bug
+    reports, questions and suggestions.
+
+
 ** 0.9.18
 
    New development series which will lead to 0.9.18.
