@@ -310,13 +310,11 @@ Start the process if needed."
       (t
 	(error "Something bad happened to the mu server process")))))
 
-(defsubst mu4e~docid-msgid-param (docid-or-msgid)
+(defun mu4e~docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."
-  (format
-    (if (stringp docid-or-msgid)
-      (concat "msgid:"(mu4e~escape (format "%s" docid-or-msgid)))
-      "docid:%d")
-    docid-or-msgid))
+  (if (stringp docid-or-msgid)
+    (concat "msgid:" (mu4e~escape docid-or-msgid))
+    (format "docid:%d" docid-or-msgid)))
 
 (defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups
 			include-related)
