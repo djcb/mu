@@ -3,26 +3,39 @@
 
 ** 1.0 (unreleased)
    
-   mu 1.0, after 10 years or so!
+   mu 1.0, after 10 years or so! 
+
+   Note: the new release requires a C++14 capable compiler.
 
 *** mu
 
     - New, custom query parser which Xapian's 'QueryParser' both in mu
       and mu4e. Existing queries should generally still work, but the
-      new engine handles non-alphanum much better.
-    - Support regular expression queries (with the new query engine)
+      new engine handles non-alphanumeric queries much better.
+    - Support regular expression queries (with the new query engine).
+      See the new `mu-query` and updated `mu-easy` manpages for
+      examples.
     - cfind: ensure nicks are unique
+    - auxiliary programs invoked from mu/mu4e survive terminating the shell /
+      emacs
     
 *** mu4e
 
-    - allow for rewriting message bodies
+    - Allow for rewriting message bodies
+    - Toggle-menus for header settings
     - electric-quote-(local-)mode work when composing emails
     - Respect format=flowed and delsp=yes for viewing plain-text
       messages
     - Added new mu4e-split-view mode: single-window
+    - Add menu item for `untrash'.p
     - Unbreak abbrevs in mu4e-compose-mode
     - Allow forwarding messages as attachments
       (`mu4e-compose-forward-as-attachment')
+    - Default to 'skip duplicates' and 'include headers' in
+      headers-view, which should be good defaults for most users. Can
+      be customized using `mu4e-headers-skip-duplicates' and
+      `mu4e-headers-include-related', respectively.
+    - Many bug fixed (see github for all the details).
     - Updated documentation
 
 *** Contributors for this release:
