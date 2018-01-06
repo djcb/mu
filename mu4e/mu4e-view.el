@@ -311,17 +311,17 @@ marking if it still had that."
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name))))
+	      (get-buffer-create mu4e~view-buffer-name)))
+         mode-enabled)
     (with-current-buffer buf
-      (unless (eq major-mode 'mu4e-view-mode)
-	(mu4e-view-mode))
+      (unless (setq mode-enabled (eq major-mode 'mu4e-view-mode))
+        (let (mu4e-view-mode-hook) (mu4e-view-mode)))
       (setq mu4e~view-msg msg)
-      (switch-to-buffer buf)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
       ;; another call to mu4e-view (via mu4e~headers-update-handler as
       ;; the reply handler to mu4e~proc-move)
-      (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
-	(let ((inhibit-read-only t))
+      (let ((inhibit-read-only t))
+        (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
 	  (mu4e~delete-all-overlays)
 	  (insert (mu4e-view-message-text msg))
@@ -330,7 +330,9 @@ marking if it still had that."
 	  (mu4e~fontify-signature)
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
-	  (when embedded (local-set-key "q" 'kill-buffer-and-window)))))))
+	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
+          (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
+    (switch-to-buffer buf)))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
