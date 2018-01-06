@@ -81,13 +81,18 @@
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
   "AList of cells (MAILING-LIST-ID . SHORTNAME)")
 
-(defvar mu4e-user-mailing-lists nil
+(defcustom mu4e-user-mailing-lists nil
   "An alist with cells (MAILING-LIST-ID . SHORTNAME); these are
-used in addition to the built-in list `mu4e~mailing-lists'.")
+used in addition to the built-in list `mu4e~mailing-lists'."
+  :group 'mu4e-headers
+  :type '(repeat (cons string string)))
 
-(defvar mu4e-mailing-list-patterns nil
+
+(defcustom mu4e-mailing-list-patterns nil
   "A list of regex patterns to capture a shortname out of a list
 ID. For the first regex that matches, its first matchgroup will
-be used as the shortname.")
+be used as the shortname."
+  :group 'mu4e-headers
+  :type '(repeat (regexp)))
 
 (provide 'mu4e-lists)
