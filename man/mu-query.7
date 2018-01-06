@@ -1,24 +1,25 @@
-.TH MU QUERY 7 "26 October 2017" "User Manuals"
+.TH MU QUERY 7 "28 December 2017" "User Manuals"
 
 .SH NAME
 
-mu query language \- a language for finding messages in a \fBmu\fR database.
+mu query language \- a language for finding messages in \fBmu\fR
+databases.
 
 .SH DESCRIPTION
 
-The mu query language is a language that allows for searching in a
-\fBmu\fR database and is used by \fBmu find\fR and \fBmu4e\fR to find
-messages. The language is similar to the default query-parser that
-\fBmu\fR's underlying Xapian database uses, but is a indepedent
-\fBmu\fR-specific implementation.
+The mu query language is a language used by \fBmu find\fR and
+\fBmu4e\fR to find messages in \fBmu\fR's Xapian databases. The
+language is quite similar to Xapian's default query-parser, but is an
+independent implementation that is customized for the mu/mu4e
+use-case.
 
-In this manpage, we give a structured but informal overview of the
+In this article, we give a structured but informal overview of the
 query language and provide examples.
 
 \fBNOTE:\fR t if you use queries on the command-line (say, for \fBmu
 find\fR), you need to quote any characters that would otherwise be
 interpreted by the shell, such as \fB""\fR, \fB(\fR and \fB)\fR and
-not to forget, whitespace.
+whitespace.
 
 .de EX1
 .nf
@@ -32,8 +33,11 @@ not to forget, whitespace.
 
 .SH TERMS
 
-The basic building blocks are \fBterms\fR; these are just normal words
-like 'banana' or 'hello' or prefixed with a field-name.
+The basic building blocks of a query are \fBterms\fR; these are just
+normal words like 'banana' or 'hello', or words prefixed with a
+field-name which make them apply to just that field. See
+.BR mu find
+for all the available fields.
 
 Some example queries:
 .EX1
@@ -43,13 +47,13 @@ maildir:/inbox
 .EX2
 
 Terms without an explicit field-prefix, (like 'vacation' above) are
-interpreted as something like:
+interpreted like:
 .EX1
 to:vacation or subject:vacation or body:vacation or ... 
 .EX2
 
-The language is case-insensitive for terms and attempts to flatten any
-diactrics, so \fIangtrom\fR matches \fIÅngström\fR.
+The language is case-insensitive for terms and attempts to 'flatten'
+any diacritics, so \fIangtrom\fR matches \fIÅngström\fR.
 
 .PP
 If terms contain whitespace, they need to be quoted:
