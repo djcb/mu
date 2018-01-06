@@ -437,7 +437,7 @@ in `mu4e-compose-pre-hook'. For new messages, it is nil.")
 (defcustom mu4e-drafts-folder "/drafts"
   "Your folder for draft messages, relative to `mu4e-maildir'.
 e.g. \"/drafts\". Instead of a string, may also be a function that
-takes a message (a msg plist, see `mu4e-message-get-field'), and
+takes a message (a msg plist, see `mu4e-message-field'), and
 returns a folder.  Note, the message parameter refers to the
 original message being replied to / being forwarded / re-edited and
 is nil otherwise. `mu4e-drafts-folder' is only evaluated once."
@@ -449,7 +449,7 @@ is nil otherwise. `mu4e-drafts-folder' is only evaluated once."
 (defcustom mu4e-refile-folder "/archive"
   "Your folder for refiling messages, relative to `mu4e-maildir',
 e.g. \"/Archive\". Instead of a string, may also be a function that
-takes a message (a msg plist, see `mu4e-message-get-field'), and
+takes a message (a msg plist, see `mu4e-message-field'), and
 returns a folder. Note that the message parameter refers to the
 message-at-point."
   :type '(choice
@@ -460,7 +460,7 @@ message-at-point."
 (defcustom mu4e-sent-folder "/sent"
   "Your folder for sent messages, relative to `mu4e-maildir',
 e.g. \"/Sent Items\". Instead of a string, may also be a function
-that takes a message (a msg plist, see `mu4e-message-get-field'),
+that takes a message (a msg plist, see `mu4e-message-field'),
 and returns a folder.  Note that the message parameter refers to
 the original message being replied to / being forwarded /
 re-edited, and is nil otherwise."
@@ -472,7 +472,7 @@ re-edited, and is nil otherwise."
 (defcustom mu4e-trash-folder "/trash"
   "Your folder for trashed messages, relative to `mu4e-maildir',
 e.g. \"/trash\". Instead of a string, may also be a function that
-takes a message (a msg plist, see `mu4e-message-get-field'), and
+takes a message (a msg plist, see `mu4e-message-field'), and
 returns a folder.  When using `mu4e-trash-folder' in the headers
 view (when marking messages for trash). Note that the message
 parameter refers to the message-at-point. When using it when
