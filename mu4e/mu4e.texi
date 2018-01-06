@@ -995,10 +995,11 @@ headers} in both the headers-view and the message-view.
 You can do so by adding a description of your custom header to
 @code{mu4e-header-info-custom}, which is a list of custom headers.
 
-Let's look at an example --- suppose we want to add a custom header that shows
-the number of recipients for a message, i.e., the sum of the number of
-recipients in the @t{To:} and @t{Cc:} fields. Let's further suppose that our function
-takes a message-plist as its argument (@ref{Message functions}).
+Let's look at an example --- suppose we want to add a custom header that
+shows the number of recipients for a message, i.e., the sum of the
+number of recipients in the @t{To:} and @t{Cc:} fields. Let's further
+suppose that our function takes a message-plist as its argument
+(@ref{Message functions}).
 
 @lisp
 (add-to-list 'mu4e-header-info-custom
@@ -1342,8 +1343,8 @@ the @t{shr} key bindings, with something like:
     (local-set-key (kbd "<backtab>") 'shr-previous-link)))
 @end lisp
 
-If you're using a dark theme, and the messages are hard to read, it can help to change
-the luminosity, e.g.:
+If you're using a dark theme, and the messages are hard to read, it can
+help to change the luminosity, e.g.:
 @lisp
 (setq shr-color-visible-luminance-min 80)
 @end lisp
@@ -1447,26 +1448,28 @@ This starts the daemon, and sets the environment variable.
 @subsection Decryption
 @anchor{Decryption}
 
-If you receive messages that are encrypted (using PGP/MIME), @t{mu4e} can try
-to decrypt them, base on the setting of @code{mu4e-decryption-policy}. If you
-set it to @t{t}, @t{mu4e} attempts to decrypt messages automatically; this is
-the default. If you set it to @t{nil}, @t{mu4e} @emph{won't} attempt to
-decrypt anything. Finally, if you set it to @t{'ask}, it asks you what to do,
-each time an encrypted message is encountered.
+If you receive messages that are encrypted (using PGP/MIME), @t{mu4e}
+can try to decrypt them, base on the setting of
+@code{mu4e-decryption-policy}. If you set it to @t{t}, @t{mu4e} attempts
+to decrypt messages automatically; this is the default. If you set it to
+@t{nil}, @t{mu4e} @emph{won't} attempt to decrypt anything. Finally, if
+you set it to @t{'ask}, it asks you what to do, each time an encrypted
+message is encountered.
 
-When opening an encrypted message, @t{mu} consults @t{gpg-agent} to see if it
-already has unlocked the key needed to decrypt the message; if not, it prompts
-you for a password (typically with a separate top-level window). This is only
-needed once per session.
+When opening an encrypted message, @t{mu} consults @t{gpg-agent} to see
+if it already has unlocked the key needed to decrypt the message; if
+not, it prompts you for a password (typically with a separate top-level
+window). This is only needed once per session.
 
 @subsection Verifying signatures
 @anchor{Verifying signatures}
 
-Some e-mail messages are cryptographically signed, and @t{mu4e} can check the
-validity of these signatures. If a message has one or more signatures, the
-message view shows an extra header @t{Signature:} (assuming it is part of your
-@code{mu4e-view-fields}), and one or more `verdicts' of the signatures found;
-either @t{verified}, @t{unverified} or @t{error}. For instance:
+Some e-mail messages are cryptographically signed, and @t{mu4e} can
+check the validity of these signatures. If a message has one or more
+signatures, the message view shows an extra header @t{Signature:}
+(assuming it is part of your @code{mu4e-view-fields}), and one or more
+`verdicts' of the signatures found; either @t{verified}, @t{unverified}
+or @t{error}. For instance:
 
 @verbatim
 Signature: unverified (Details)
@@ -1673,8 +1676,8 @@ Let's look at some examples. First, suppose we want to set the
 	    (t "me@@cuux.example.com")))))))
 @end lisp
 
-Second, as mentioned, @code{mu4e-compose-mode-hook} is especially useful for
-editing-related settings. For example:
+Secondly, as mentioned, @code{mu4e-compose-mode-hook} is especially
+useful for editing-related settings. For example:
 @lisp
 (add-hook 'mu4e-compose-mode-hook
   (defun my-do-compose-stuff ()
@@ -1693,6 +1696,21 @@ message is fully formed when this hook runs. For example, to add a
   (defun my-add-bcc ()
     "Add a Bcc: header."
     (save-excursion (message-add-header "Bcc: me@@example.com\n"))))
+@end lisp
+
+Or to something context-specific:
+
+@lisp
+(add-hook 'mu4e-compose-mode-hook
+  (lambda()
+    (let* ((ctx (mu4e-context-current))
+	    (name (if ctx (mu4e-context-name ctx))))
+      (when name
+	(cond
+	  ((string= name "account1")
+            (save-excursion (message-add-header "Bcc: account1@@example.com\n")))
+	  ((string= name "account2")
+            (save-excursion (message-add-header "Bcc: account2@@example.com\n"))))))))
 @end lisp
 
 @noindent
