@@ -82,7 +82,7 @@
 
 (defun mu4e~speedbar-maildir (&optional text token ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
-  (speedbar-with-attached-buffer
+  (dframe-with-attached-buffer
     (mu4e-headers-search (concat "\"maildir:" token "\"")
       current-prefix-arg)))
 
@@ -100,7 +100,7 @@
 
 (defun mu4e~speedbar-bookmark (&optional text token ident)
   "Run bookmarked query TOKEN. TEXT and INDENT are not used."
-  (speedbar-with-attached-buffer
+  (dframe-with-attached-buffer
     (mu4e-headers-search token current-prefix-arg)))
 
 ;;;###autoload
