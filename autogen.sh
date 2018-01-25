@@ -7,7 +7,7 @@ test -f mu/mu.cc || {
 }
 
 command -V autoreconf > /dev/null
-if [[ $? != 0 ]]; then
+if [ $? != 0 ]; then
     echo "*** No autoreconf found, please install it ***"
     exit 1
 fi
