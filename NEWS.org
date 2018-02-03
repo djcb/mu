@@ -1,23 +1,23 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
-** 1.0 (unreleased)
+** 1.0
    
-   mu 1.0, after 10 years or so! 
+   After a decade of development, *mu 1.0*!
 
    Note: the new release requires a C++14 capable compiler.
 
 *** mu
 
-    - New, custom query parser which Xapian's 'QueryParser' both in mu
-      and mu4e. Existing queries should generally still work, but the
+    - New, custom query parser which replaces Xapian's 'QueryParser'
+      both in mu and mu4e. Existing queries should still work, but the
       new engine handles non-alphanumeric queries much better.
-    - Support regular expression queries (with the new query engine).
-      See the new `mu-query` and updated `mu-easy` manpages for
-      examples.
+    - Support regular expressions in queries (with the new query engine),
+      e.g. "subject:/foo.*bar/".  See the new `mu-query` and updated
+      `mu-easy` manpages for examples.
     - cfind: ensure nicks are unique
-    - auxiliary programs invoked from mu/mu4e survive terminating the shell /
-      emacs
+    - auxiliary programs invoked from mu/mu4e survive terminating the
+      shell / emacs
     
 *** mu4e
 
