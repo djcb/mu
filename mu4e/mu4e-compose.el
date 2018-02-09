@@ -287,6 +287,12 @@ If needed, set the Fcc header, and register the handler function."
 	(lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
 	  (lambda (file)
 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
+	    (let ((mdir-path (concat mu4e-maildir maildir)))
+	      ;; Create the full maildir structure for the sent folder if it doesn't exist. `mu4e~proc-mkdir`
+              ;; runs asynchronously but no matter whether it runs before or after `write-file`, the sent
+              ;; maildir ends up in the correct state.
+	      (unless (file-exists-p mdir-path)
+		(mu4e~proc-mkdir mdir-path)))
 	    (write-file file)		       ;; writing maildirs files is easy
 	    (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
