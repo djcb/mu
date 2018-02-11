@@ -17,6 +17,9 @@
 **  02110-1301, USA.
 */
 
+#define _XOPEN_SOUCE
+#include <time.h>
+
 #define GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
@@ -28,6 +31,7 @@
 #include <algorithm>
 
 #include <glib.h>
+#include <glib/gprintf.h>
 
 using namespace Mux;
 
@@ -184,7 +188,7 @@ Mux::quote (const std::string& str)
 	 va_start (args, frm);
 
 	 char *s = {};
-	 const auto res = vasprintf (&s, frm, args);
+	 const auto res = g_vasprintf (&s, frm, args);
 	 va_end (args);
 	 if (res == -1) {
 		 std::cerr << "string format failed" << std::endl;
