@@ -800,8 +800,9 @@ This is used by the completion function in mu4e-compose."
   (unless (>= emacs-major-version 23)
     (mu4e-error "Emacs >= 23.x is required for mu4e"))
   (when mu4e~server-props
-    (let ((version (plist-get mu4e~server-props :version)))
-      (unless (string= version mu4e-mu-version)
+    (let ((version (plist-get mu4e~server-props :version))
+	   (mux (plist-get mu4e~server-props :mux)))
+      (unless (or (string= version mu4e-mu-version) mux)
 	(mu4e-error "mu server has version %s, but we need %s"
 	  version mu4e-mu-version))))
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
@@ -1002,7 +1003,7 @@ frame to display buffer BUF."
   (unless mu4e-hide-index-messages
     (message nil))
   (if (or (not (eq (process-status proc) 'exit))
-          (/= (process-exit-status proc) 0))
+	  (/= (process-exit-status proc) 0))
       (progn
 	(when mu4e-index-update-error-warning
 	  (mu4e-message "Update process returned with non-zero exit code")
@@ -1218,12 +1219,12 @@ displaying it). Do _not_ bury the current buffer, though."
       ;; note: 'walk-windows' does not seem to work correctly when modifying
       ;; windows; therefore, the doloops here
       (dolist (frame (frame-list))
-        (dolist (win (window-list frame nil))
-          (with-current-buffer (window-buffer win)
-            (unless (eq curbuf (current-buffer))
-              (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-                (when (eq t (window-deletable-p win))
-                  (delete-window win))))))) t)))
+	(dolist (win (window-list frame nil))
+	  (with-current-buffer (window-buffer win)
+	    (unless (eq curbuf (current-buffer))
+	      (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
+		(when (eq t (window-deletable-p win))
+		  (delete-window win))))))) t)))
 
 
 (defun mu4e-get-time-date (prompt)

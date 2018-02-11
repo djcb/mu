@@ -125,8 +125,9 @@ clicked."
        " "
        (propertize
 	(concat
-	 (when (plist-get mu4e~server-props :crypto) "C")
-	 (when (plist-get mu4e~server-props :guile)  "G"))
+	  (when (plist-get mu4e~server-props :crypto) "C")
+	  (when (plist-get mu4e~server-props :guile)  "G")
+	  (when (plist-get mu4e~server-props :mux)  "X"))
 	 'face 'mu4e-title-face)
 
        "\n\n"
@@ -199,8 +200,8 @@ clicked."
   "Create the mu4e main-view, and switch to it."
   (if (eq mu4e-split-view 'single-window)
       (if (buffer-live-p (mu4e-get-headers-buffer))
-          (switch-to-buffer (mu4e-get-headers-buffer))
-        (mu4e~main-menu))
+	  (switch-to-buffer (mu4e-get-headers-buffer))
+	(mu4e~main-menu))
     (mu4e~main-view-real nil nil)
     (switch-to-buffer mu4e~main-buffer-name)
     (goto-char (point-min)))
@@ -217,7 +218,7 @@ clicked."
     (mu4e-error "`smtpmail-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message (concat "Outgoing mail will now be "
-                   (if smtpmail-queue-mail "queued" "sent directly")))
+		   (if smtpmail-queue-mail "queued" "sent directly")))
   (unless (eq mu4e-split-view 'single-window)
     (let ((curpos (point)))
       (mu4e~main-view-real nil nil)
@@ -227,30 +228,30 @@ clicked."
   "mu4e main view in the minibuffer."
   (interactive)
   (let ((key
-          (read-key
-           (mu4e-format
-            "%s"
-            (concat
-             (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
-             (mu4e~main-action-str "[s]earch " 'mu4e-search)
-             (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
-             (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
-             (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
-             (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
-             (mu4e~main-action-str "[N]ews " 'mu4e-news)
-             (mu4e~main-action-str "[A]bout " 'mu4e-about)
-             (mu4e~main-action-str "[H]elp " 'mu4e-display-manual))))))
+	  (read-key
+	   (mu4e-format
+	    "%s"
+	    (concat
+	     (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
+	     (mu4e~main-action-str "[s]earch " 'mu4e-search)
+	     (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
+	     (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
+	     (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
+	     (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
+	     (mu4e~main-action-str "[N]ews " 'mu4e-news)
+	     (mu4e~main-action-str "[A]bout " 'mu4e-about)
+	     (mu4e~main-action-str "[H]elp " 'mu4e-display-manual))))))
     (unless (member key '(?\C-g ?\C-\[))
       (let ((mu4e-command (lookup-key mu4e-main-mode-map (string key) t)))
-        (if mu4e-command
-            (condition-case err
-                (let ((mu4e-hide-index-messages t))
-                  (call-interactively mu4e-command))
-              (error (when (cadr err) (message (cadr err)))))
-          (message (mu4e-format "key %s not bound to a command" (string key))))
-        (when (or (not mu4e-command) (eq mu4e-command 'mu4e-context-switch))
-          (sit-for 1)
-          (mu4e~main-menu))))))
+	(if mu4e-command
+	    (condition-case err
+		(let ((mu4e-hide-index-messages t))
+		  (call-interactively mu4e-command))
+	      (error (when (cadr err) (message (cadr err)))))
+	  (message (mu4e-format "key %s not bound to a command" (string key))))
+	(when (or (not mu4e-command) (eq mu4e-command 'mu4e-context-switch))
+	  (sit-for 1)
+	  (mu4e~main-menu))))))
 
 ;; (progn
 ;;   (define-key mu4e-compose-mode-map (kbd "C-c m") 'mu4e~main-toggle-mail-sending-mode)
