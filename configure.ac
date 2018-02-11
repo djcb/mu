@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2018 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.0],[https://github.com/djcb/mu/issues],[mu])
-AC_COPYRIGHT([Copyright (C) 2008-2017 Dirk-Jan C. Binnema])
+AC_INIT([mu],[1.1.0],[https://github.com/djcb/mu/issues],[mu])
+AC_COPYRIGHT([Copyright (C) 2008-2018 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -119,10 +119,9 @@ AC_ARG_ENABLE([dirent-d-ino],
 AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 	    [use_dirent_d_ino="no"], [use_dirent_d_ino="yes"])
 
-
-# we need these
 AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
-AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([missing required function timegm])])
+AC_CHECK_FUNCS([vasprintf strptime])
+AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([*** missing required function timegm])])
 
 # require pkg-config
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
