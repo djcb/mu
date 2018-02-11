@@ -27,13 +27,13 @@
     - Respect format=flowed and delsp=yes for viewing plain-text
       messages
     - Added new mu4e-split-view mode: single-window
-    - Add menu item for `untrash'.p
+    - Add menu item for `untrash'.
     - Unbreak abbrevs in mu4e-compose-mode
     - Allow forwarding messages as attachments
       (`mu4e-compose-forward-as-attachment')
-    - Default to 'skip duplicates' and 'include headers' in
-      headers-view, which should be good defaults for most users. Can
-      be customized using `mu4e-headers-skip-duplicates' and
+    - New defaults: default to 'skip duplicates' and 'include related'
+      in headers-view, which should be good defaults for most users.
+      Can be customized using `mu4e-headers-skip-duplicates' and
       `mu4e-headers-include-related', respectively.
     - Many bug fixed (see github for all the details).
     - Updated documentation
