@@ -291,8 +291,40 @@ special_date (const std::string& d, bool is_first)
 		return date_boundary (is_first);
 }
 
-constexpr const char UserDateMin[] = "19700101000000";
-constexpr const char UserDateMax[] = "29991231235959";
+// if a date has a month day greater than the number of days in that month,
+// change it to a valid date point to the last second in that month
+static void
+fixup_month (struct tm *tbuf)
+{
+	decltype(tbuf->tm_mday)	max_days;
+	const auto	month = tbuf->tm_mon + 1;
+	const auto	year  = tbuf->tm_year + 1900;
+
+	switch (month) {
+	case 2:
+		if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0))
+			max_days = 29;
+		else
+			max_days = 28;
+		break;
+	case 4:
+	case 6:
+	case 9:
+	case 11:
+		max_days = 30;
+		break;
+	default:
+		max_days = 31;
+		break;
+	}
+
+	if (tbuf->tm_mday > max_days) {
+		tbuf->tm_mday = max_days;
+		tbuf->tm_hour  = 23;
+		tbuf->tm_min   = 59;
+		tbuf->tm_sec   = 59;
+	}
+}
 
 std::string
 Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
@@ -310,6 +342,9 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 	else if (dstr.find_first_of("ymdwhMs") != std::string::npos)
 		return delta_ymwdhMs (dstr);
 
+	constexpr char UserDateMin[] = "19700101000000";
+	constexpr char UserDateMax[] = "29991231235959";
+
 	std::string date (is_first ? UserDateMin : UserDateMax);
 	std::copy_if (dstr.begin(), dstr.end(), date.begin(),[](auto c){return isdigit(c);});
 
@@ -320,6 +355,8 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 	    !strptime (date.c_str(), "%Y%m", &tbuf) &&
 	    !strptime (date.c_str(), "%Y", &tbuf))
 		return date_boundary (is_first);
+
+	fixup_month(&tbuf);
 
 	dtime = g_date_time_new_local (tbuf.tm_year + 1900,
 				       tbuf.tm_mon + 1,
