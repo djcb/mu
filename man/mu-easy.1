@@ -12,7 +12,8 @@ pages for the various sub-commands. This man pages jumps over all of
 the details and gives examples of some common use cases. If the use
 cases described here do not precisely do what you want, please check
 the more extensive information in the man page about the sub-command
-you are using -- for example, the mu-index or mu-find man pages.
+you are using -- for example, the \fBmu-index\fR(1) or \fBmu-find\fR(1)
+man pages.
 
 \fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that
 depend on that, such as \fBfind\fR), require that you store your mail
@@ -39,7 +40,7 @@ second.
 
 \fBmu index\fR guesses the top-level Maildir to do its job; if it
 guesses wrongly, you can use the \fI--maildir\fR option to specify the
-top-level directory that should be processed. See the \fBmu-index\fR
+top-level directory that should be processed. See the \fBmu-index\fR(1)
 man page for more details.
 
 Normally, \fBmu index\fR visits all the directories under the
@@ -47,7 +48,7 @@ top-level Maildir; however, you can exclude certain directories (say,
 the 'trash' or 'spam' folders) by creating a file called
 \fI.noindex\fR in the directory. When \fBmu\fR sees such a file, it
 will exclude this directory and its sub-directories from indexing.
-Also see \fB.noupdate\fR in the \fBmu-index\fR manpage.
+Also see \fB.noupdate\fR in the \fBmu-index\fR(1) manpage.
 
 .SH SEARCHING YOUR E-MAIL
 
@@ -55,7 +56,7 @@ After you have indexed your mail, you can start searching it. By
 default, the search results are printed on standard output.
 Alternatively, the output can take the form of Maildir with symbolic
 links to the found messages. This enables integration with e-mail
-clients; see the \fBmu-find\fR man page for details, the syntax of the
+clients; see the \fBmu-find\fR(1) man page for details, the syntax of the
 search parameters and so on. Here, we just give some examples for
 common cases.
 
@@ -79,7 +80,7 @@ the date format depends on your the language/locale you are using.
 How do we know that the message was sent to Julius Caesar? Well, it's
 not visible from the results above, because the default fields that
 are shown are date/sender/subject. However, we can change this using
-the \fI--fields\fR parameter (see the \fBmu-find\fR man page for the
+the \fI--fields\fR parameter (see the \fBmu-find\fR(1) man page for the
 details):
 
 .nf
@@ -291,9 +292,9 @@ Then, you can use them in \fBmutt\fR if you add something like \fBsource
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
-.BR mu(1)
-.BR mu-index(1)
-.BR mu-find(1)
-.BR mu-mkdir(1)
-.BR mu-view(1)
-.BR mu-extract(1)
+.BR mu (1),
+.BR mu-index (1),
+.BR mu-find (1),
+.BR mu-mkdir (1),
+.BR mu-view (1),
+.BR mu-extract (1)
