@@ -11,13 +11,13 @@ mu find \- find e-mail messages in the \fBmu\fR database.
 .SH DESCRIPTION
 
 \fBmu find\fR is the \fBmu\fR command for searching e-mail message
-that were stored earlier using \fBmu index(1)\fR.
+that were stored earlier using \fBmu index\fR(1).
 
 .SH SEARCHING MAIL
 
 \fBmu find\fR starts a search for messages in the database that match
 some search pattern. The search patterns are described in detail in
-.BR mu-query
+.BR mu-query (7).
 .
 
 For example:
@@ -48,7 +48,7 @@ For details on the possible queries, see
 
 .SH OPTIONS
 
-Note, some of the important options are described in the \fBmu(1)\fR man-page
+Note, some of the important options are described in the \fBmu\fR(1) man-page
 and not here, as they apply to multiple mu-commands.
 
 The \fBfind\fR-command has various options that influence the way \fBmu\fR
@@ -90,10 +90,10 @@ search parameters; the complete list:
 .fi
 
 
-The message flags are the same ones we already saw in the message flags
-above. Thus, a message which is 'seen', has an attachment and is signed would
-have 'asz' as its corresponding output string, while an encrypted new message
-would have 'nx'.
+The message flags are described in \fBmu-query\fR(7). As an example, a
+message which is 'seen', has an attachment and is signed would
+have 'asz' as its corresponding output string, while an encrypted new
+message would have 'nx'.
 
 .TP
 \fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR,
@@ -204,7 +204,7 @@ which is roughly equivalent to:
 .TP
 \fB\-b\fR, \fB\-\-bookmark\fR=\fI<bookmark>\fR
 use a bookmarked search query. Using this option, a query from your bookmark
-file will be prepended to other search queries. See mu-bookmarks(1) for the
+file will be prepended to other search queries. See \fBmu-bookmarks\fR(1) for the
 details of the bookmarks file.
 
 
@@ -380,7 +380,6 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu(1)
-.BR mu-index(1)
-.BR mu-query(7)
-
+.BR mu (1),
+.BR mu-index (1),
+.BR mu-query (7)
