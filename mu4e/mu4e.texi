@@ -1,9 +1,9 @@
 \input texinfo.tex    @c -*-texinfo-*-
 @documentencoding UTF-8
-@include texi.texi
+@include version.texi
 @c %**start of header
 @setfilename mu4e.info
-@settitle Mu4e @value{mu-version} user manual
+@settitle Mu4e @value{VERSION} user manual
 
 @c Use proper quote and backtick for code sections in PDF output
 @c Cf. Texinfo manual 14.2
@@ -26,7 +26,7 @@ Documentation License.''
 
 @titlepage
 @title @t{Mu4e} --- an e-mail client for GNU/Emacs
-@subtitle version  @value{mu-version}
+@subtitle version  @value{VERSION}, @value{UPDATED}
 @author Dirk-Jan C. Binnema
 
 @c The following two commands start the copyright page.
@@ -52,7 +52,7 @@ Documentation License.''
 @unnumbered Welcome to mu4e
 @end iftex
 
-Welcome to @t{mu4e} @value{mu-version}.
+Welcome to @t{mu4e} @value{VERSION}.
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
 24.4 or higher, built on top of the

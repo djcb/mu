@@ -278,7 +278,6 @@ lib/parser/Makefile
 lib/tests/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
-mu4e/texi.texi
 guile/Makefile
 guile/texi.texi
 guile/mu/Makefile
