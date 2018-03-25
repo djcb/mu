@@ -56,7 +56,7 @@ Welcome to @t{mu4e} @value{VERSION}.
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
 24.4 or higher, built on top of the
-@t{mu}@footnote{@url{http://www.djcbsoftware.nl/code/mu}} e-mail search
+@t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for fast handling of large amounts of
 e-mail.
 
@@ -137,8 +137,8 @@ basis.
 @section Other mail clients
 
 Under the hood, @t{mu4e} is fully search-based, similar to programs like
-@t{notmuch}@footnote{@url{http://notmuchmail.org}} and
-@t{sup}@footnote{@url{http://sup.rubyforge.org/}}.
+@t{notmuch}@footnote{@url{https://notmuchmail.org/}} and
+@t{sup}@footnote{@url{https://sup-heliotrope.github.io/}}.
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
 handling (deleting, moving etc.) is inspired by
@@ -158,7 +158,7 @@ There are a number of things that @t{mu4e} does @b{not} do, by design:
 @itemize
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
 a mail server. That task is delegated to other tools, such as
-@t{offlineimap}@footnote{@url{http://offlineimap.org/}},
+@t{offlineimap}@footnote{@url{https://www.offlineimap.org/}},
 @t{isync/mbsync}@footnote{@url{http://isync.sourceforge.net/}} or
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}. As long as the
 messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with
@@ -185,7 +185,7 @@ sensible defaults, and allow for customization.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
 @t{mu}/@t{mu4e}-mailing
-list@footnote{@url{http://groups.google.com/group/mu-discuss}}.
+list@footnote{@url{https://groups.google.com/group/mu-discuss}}.
 
 Sometimes, you might encounter some unexpected behavior while using
 @t{mu4e}. It could be a bug in @t{mu4e}, it could be an issue in other
@@ -232,7 +232,7 @@ After these steps, @t{mu4e} should be ready to go!
 Unix-like systems, including many Linux distributions, OS X and FreeBSD,
 and even on MS-Windows (with Cygwin). @command{emacs} 23 or 24
 (recommended) is required, as well as
-Xapian@footnote{@url{http://xapian.org/}} and
+Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 @t{mu} has optional support for the Guile 2.x (Scheme) programming
@@ -359,7 +359,7 @@ through things step-by-step.
 
 In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to have
 your e-mail messages stored in a
-@emph{maildir}@footnote{@url{http://en.wikipedia.org/wiki/Maildir}; in this
+@emph{maildir}@footnote{@url{https://en.wikipedia.org/wiki/Maildir}; in this
 manual we use the term `maildir' for both the standard and the hierarchy of
 maildirs that store your messages} --- a specific directory structure with
 one-file-per-message. If you are already using a maildir, you are lucky. If
@@ -850,7 +850,7 @@ a=@emph{has-attachment}, x=@emph{encrypted}, s=@emph{signed},
 u=@emph{unread}. The tooltip for this field also contains this information.
 @item The subject field also indicates the discussion threads @footnote{using
 Jamie Zawinski's mail threading algorithm,
-@url{http://www.jwz.org/doc/threading.html}}.
+@url{https://www.jwz.org/doc/threading.html}}.
 @item The headers view is @emph{automatically updated} if any changes are
 found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
@@ -1254,10 +1254,10 @@ For the marking commands, please refer to @ref{Marking messages}.
 @section Attachments
 
 By default, @t{mu4e} uses the @t{xdg-open}-program
-@footnote{@url{http://portland.freedesktop.org/wiki/}} or (on OS X) the
-@t{open} program for opening attachments. If you want to use another
-program, you do so by setting the @t{MU_PLAY_PROGRAM} environment
-variable to the program to be used.
+@footnote{@url{https://www.freedesktop.org/wiki/Software/xdg-utils/}} or (on
+OS X) the @t{open} program for opening attachments. If you want to use another
+program, you do so by setting the @t{MU_PLAY_PROGRAM} environment variable to
+the program to be used.
 
 The default directory for extracting (saving) attachments is your home
 directory (@file{~/}); you can change this using the variable
@@ -1297,7 +1297,7 @@ It is possible to show images inline in the message view buffer if you run
 @code{mu4e-view-show-images} to @t{t}. Since @command{emacs} does not always
 handle images correctly, this is not enabled by default. If you are using
 @command{emacs} 24 with
-@emph{ImageMagick}@footnote{@url{http://www.imagemagick.org}} support, make
+@emph{ImageMagick}@footnote{@url{http://www.imagemagick.org/}} support, make
 sure you call @code{imagemagick-register-types} in your configuration, so it
 is used for images.
 
@@ -2214,7 +2214,7 @@ in a buffer}. For this reason, you can disable this by setting
 for `something', and then decide later what the `something' should
 be@footnote{This kind of `deferred marking' is similar to the facility
 in @t{dired}, @t{midnight commander}
-(@url{http://www.midnight-commander.org/}) and the like, and uses the
+(@url{https://www.midnight-commander.org/}) and the like, and uses the
 same key binding (@key{insert}).}  Later, you can set the actual mark
 using @kbd{M-x mu4e-mark-resolve-deferred-marks}
 (@key{#}). Alternatively, @t{mu4e} will ask you when you try to execute
@@ -3210,7 +3210,7 @@ Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
 autocompletion}, and that is the recommended way to do this. However, it
 is also possible to manage your addresses with the current (2015-06-23)
 development release of @t{BBDB}, or releases of @t{BBDB} after
-3.1.2.@footnote{@url{http://savannah.nongnu.org/projects/bbdb/}}.
+3.1.2.@footnote{@url{https://savannah.nongnu.org/projects/bbdb/}}.
 
 To enable BBDB, add to your @file{~/.emacs} (or its moral equivalent,
 such as @file{~/.emacs.d/init.el}) the following @emph{after} the
@@ -3246,7 +3246,7 @@ After this, you should be able to:
 
 The @command{emacs} package @t{sauron}@footnote{Sauron can be found at
 @url{https://github.com/djcb/sauron}, or in the Marmalade package repository
-at @url{http://http://marmalade-repo.org/}} (by the same author) can be used
+at @url{https://marmalade-repo.org/}} (by the same author) can be used
 to get notifications about new mails. If you run something like the below
 script from your @t{crontab} (or have some other way of having it execute
 every @emph{n} minutes), you receive notifications in the @t{sauron}-buffer
@@ -3322,7 +3322,7 @@ list, such as auto-completion when jumping to a maildir.
 unconnected to @t{mu}/@t{mu4e}} is a package to control the way message
 citations look like (i.e., the message you responded to when you reply to them
 or forward them), with its latest version available at
-@url{http://www.jpl.org/elips/mu/}.
+@url{https://www.jpl.org/elips/mu/}.
 
 After installing @t{mu-cite}, you can use something like the following to make
 it work with @t{mu4e}:
@@ -3930,7 +3930,7 @@ MIME-support --- check the @t{Attachments}-menu while composing a
 message. Also see @ref{Signing and encrypting}.
 @item @emph{Can I use @t{BBDB} with @t{mu4e}?} Yes, with the current
 (2015-06-23) development release of BBDB
-@url{http://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
+@url{https://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
 after 3.1.2.
 @ref{BBDB}.
 @item @emph{After sending some messages, it seems the buffer for these
@@ -3979,7 +3979,7 @@ Here's an explanatory blog post which also shows why this is a desirable
 feature: @url{https://mathiasbynens.be/notes/gmail-plain-text} (if you
 don't have it, your mails mostly look quite bad especially on mobile
 devices) and here's the RFC with all the details:
-@url{http://www.ietf.org/rfc/rfc2646.txt}.
+@url{https://www.ietf.org/rfc/rfc2646.txt}.
 
 Since version 0.9.17, @t{mu4e} send emails with @t{format=flowed} by
 setting
