@@ -368,8 +368,9 @@ get_part_type_string (MuMsgPartType ptype)
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
-	char	*name, *encname, *tmp, *parttype;
-	char	*tmpfile, *cid, *verdict;
+	char		*name, *encname, *tmp, *parttype;
+	char		*tmpfile, *cidesc, *verdict;
+	const char	*cid;
 
 	name     = mu_msg_part_get_filename (part, TRUE);
 	encname  = name ?
@@ -380,9 +381,9 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
 	parttype = get_part_type_string (part->part_type);
 	verdict  = sig_verdict (part);
-	cid      = mu_str_escape_c_literal(mu_msg_part_get_content_id(part),
-					   TRUE);
 
+	cid    = mu_msg_part_get_content_id(part);
+	cidesc = cid ? mu_str_escape_c_literal(cid, TRUE) : NULL;
 
 	tmp = g_strdup_printf
 		("%s(:index %d :name %s :mime-type \"%s/%s\"%s%s "
@@ -396,7 +397,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 		 tmpfile ? " :temp" : "", tmpfile ? tmpfile : "",
 		 parttype,
 		 mu_msg_part_maybe_attachment (part) ? "t" : "nil",
-		 cid ? " :cid" : "", cid ? cid : "",
+		 cidesc ? " :cid" : "", cidesc ? cidesc : "",
 		 (int)part->size,
 		 verdict,
 		 dec_verdict (part));
@@ -405,7 +406,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 	g_free (tmpfile);
 	g_free (parttype);
 	g_free (verdict);
-	g_free (cid);
+	g_free (cidesc);
 
 	g_free (pinfo->parts);
 	pinfo->parts = tmp;
