@@ -81,13 +81,13 @@ static void
 test_date_ymwdhMs (void)
 {
 	struct {
-		std::string expr;
-		long diff;
-		int tolerance;
+		std::string	expr;
+		long		diff;
+		int		tolerance;
 	} tests[] = {
 		{ "3h", 3 * 60 * 60, 1 },
-		{ "21d", 21 * 24 * 60 * 60, 1 },
-		{ "2w", 2 * 7 * 24 * 60 * 60, 1 },
+		{ "21d", 21 * 24 * 60 * 60, 3600 + 1 },
+		{ "2w", 2 * 7 * 24 * 60 * 60, 3600 + 1 },
 
 		{ "2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1 },
 		{ "3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1 }
@@ -153,8 +153,6 @@ test_format ()
 	g_assert_true (format ("hello %s, %u", "world", 123) ==
 		       "hello world, 123");
 }
-
-
 
 int
 main (int argc, char *argv[])
