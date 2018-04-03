@@ -1289,14 +1289,17 @@ used in the view and compose modes."
 
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used in
-the view and compose modes."
+the view and compose modes and will color each signature in digest messages adhearing to RFC 1153."
   (let ((inhibit-read-only t))
     (save-excursion
       ;; give the footer a different color...
       (goto-char (point-min))
-      (let ((p (re-search-forward "^-- *$" nil t)))
-	(when p
-	  (add-text-properties p (point-max) '(face mu4e-footer-face)))))))
+      (while (re-search-forward "^-- *$" nil t)
+        (let ((p (point))
+              (end (or
+                    (re-search-forward "\\(^-\\{30\\}.*$\\)" nil t) ;; 30 by RFC1153
+                    (point-max))))
+              (add-text-properties p end '(face mu4e-footer-face)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~quote-for-modeline (str)
