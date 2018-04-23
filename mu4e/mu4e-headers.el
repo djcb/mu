@@ -232,11 +232,39 @@ one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 (defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
 
 ;; thread prefix marks
-(defvar mu4e-headers-has-child-prefix    '("+"  . "◼ ") "Parent.")
-(defvar mu4e-headers-empty-parent-prefix '("-"  . "◽ ") "Orphan.")
-(defvar mu4e-headers-first-child-prefix  '("\\" . "┗▶") "First child.")
-(defvar mu4e-headers-duplicate-prefix    '("="  . "≡ ") "Duplicate.")
-(defvar mu4e-headers-default-prefix      '("|"  . "│ ") "Default.")
+(defvar mu4e-headers-thread-child-prefix '("├>" . "┣▶ ")
+  "Prefix for messages in sub threads that do have a following sibling.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+
+(defvar mu4e-headers-thread-last-child-prefix '("└>" . "┗▶ ")
+  "Prefix for messages in sub threads that do not have a following sibling.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+
+(defvar mu4e-headers-thread-connection-prefix '("│" . "┃ ")
+  "Prefix to connect sibling messages that do not follow each other.
+
+This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+
+(defvar mu4e-headers-thread-blank-prefix '(" " . "  ")
+  "Prefix to separate non connected messages.
+
+This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+
+(defvar mu4e-headers-thread-orphan-prefix '("" . "")
+  "Prefix for orphan messages.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+
+(defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
+  "Prefix for duplicate messages.
+
+This variable is only used when mu4e-headers-new-thread-style is non-nil.")
 
 (defvar mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message)
@@ -411,26 +439,78 @@ into a string."
 	(or name email "?"))) contacts ", "))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defsubst mu4e~headers-thread-prefix-map (type)
+  "Return the thread prefix based on the symbol TYPE."
+  (let ((get-prefix
+	 (lambda (cell)
+	   (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
+    (case type
+      ('child      (funcall get-prefix mu4e-headers-thread-child-prefix))
+      ('last-child (funcall get-prefix mu4e-headers-thread-last-child-prefix))
+      ('connection (funcall get-prefix mu4e-headers-thread-connection-prefix))
+      ('blank      (funcall get-prefix mu4e-headers-thread-blank-prefix))
+      ('orphan     (funcall get-prefix mu4e-headers-thread-orphan-prefix))
+      ('duplicate  (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
+      (t           "?"))))
+
+;; In order to print a thread tree with all the message connections,
+;; it's necessary to keep track of all sub levels that still have
+;; following messages. For each level, mu4e~headers-thread-state keeps
+;; the value t for a connection or nil otherwise.
+(defvar-local mu4e~headers-thread-state '())
+
 (defsubst mu4e~headers-thread-prefix (thread)
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
-    (let ((get-prefix
-	    (lambda (cell) (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
-      (concat
-	(make-string (* (if (plist-get thread :empty-parent) 0 1)
-		 (plist-get thread :level)) ?\s)
-	(cond
-	  ((plist-get thread :has-child)
-	    (funcall get-prefix mu4e-headers-has-child-prefix))
-	  ((plist-get thread :empty-parent)
-	    (funcall get-prefix mu4e-headers-empty-parent-prefix))
-	  ((plist-get thread :first-child)
-	    (funcall get-prefix mu4e-headers-first-child-prefix))
-	  ((plist-get thread :duplicate)
-	    (funcall get-prefix mu4e-headers-duplicate-prefix))
-	  (t
-	    (funcall get-prefix mu4e-headers-default-prefix)))
-	" "))))
+    (let ((prefix       "")
+	  (level        (plist-get thread :level))
+	  (has-child    (plist-get thread :has-child))
+	  (empty-parent (plist-get thread :empty-parent))
+	  (first-child  (plist-get thread :first-child))
+	  (last-child   (plist-get thread :last-child))
+	  (duplicate    (plist-get thread :duplicate)))
+      ;; Do not prefix root messages.
+      (if (or (= level 0) empty-parent)
+	  (setq mu4e~headers-thread-state '()))
+      (if (> level 0)
+	  (let* ((length (length mu4e~headers-thread-state))
+		 (padding (make-list (max 0 (- level length)) nil)))
+	    ;; Trim and pad the state to ensure a message will
+	    ;; always be shown with the correct identation, even if
+	    ;; a broken thread is returned. It's trimmed to level-1
+	    ;; because the current level has always an connection
+	    ;; and it used a special formatting.
+	    (setq mu4e~headers-thread-state
+		  (subseq (append mu4e~headers-thread-state padding)
+			  0 (- level 1)))
+	    ;; Prepare the thread prefix.
+	    (setq prefix
+		  (concat
+		   ;; Current mu4e~headers-thread-state, composed by
+		   ;; connections or blanks.
+		   (mapconcat
+		    (lambda (s)
+		      (if s (mu4e~headers-thread-prefix-map 'connection)
+			(mu4e~headers-thread-prefix-map 'blank)))
+		    mu4e~headers-thread-state "")
+		   ;; Current entry.
+		   (if last-child (mu4e~headers-thread-prefix-map 'last-child)
+		     (mu4e~headers-thread-prefix-map 'child))))))
+      ;; If a new sub-thread will follow (has-child) and the current
+      ;; one is still not done (not last-child), then a new
+      ;; connection needs to be added to the tree-state.  It's not
+      ;; necessary to a blank (nil), because padding will handle
+      ;; that.
+      (if (and has-child (not last-child))
+	  (setq mu4e~headers-thread-state
+		(append mu4e~headers-thread-state '(t))))
+      ;; Return the thread prefix.
+      (format "%s%s%s"
+	      prefix
+	      (if empty-parent
+		  (mu4e~headers-thread-prefix-map 'orphan) "")
+	      (if duplicate
+		  (mu4e~headers-thread-prefix-map 'duplicate) "")))))
 
 (defsubst mu4e~headers-flags-str (flags)
   "Get a display string for the flags.
