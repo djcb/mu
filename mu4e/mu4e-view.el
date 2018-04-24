@@ -297,6 +297,17 @@ found."
     (delete-all-overlays)
     (remove-overlays)))
 
+(defun mu4e-view-msg (msg)
+  "Call mu4e~proc-view to trigger a call to mu4e-view with complete msg"
+  (let ((docid (or (mu4e-message-field msg :docid)
+                   (mu4e-warn "No message at point")))
+        ;; decrypt (or not), based on `mu4e-decryption-policy'.
+        (decrypt
+         (and (member 'encrypted (mu4e-message-field msg :flags))
+              (if (eq mu4e-decryption-policy 'ask)
+                  (yes-or-no-p (mu4e-format "Decrypt message?"))
+                mu4e-decryption-policy))))
+    (mu4e~proc-view docid mu4e-view-show-images decrypt)))
 
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
