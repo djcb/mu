@@ -73,11 +73,13 @@ AC_ARG_ENABLE([mu4e],
 AS_IF([test "x$enable_mu4e" != "xno"], [
   AM_PATH_LISPDIR
   AS_IF([test "x$lispdir" != "xno"], [
-    emacs_version="`$EMACS --version | head -1`"
+    emacs_version="$($EMACS --version | head -1)"
     lispdir="${lispdir}/mu4e/"
   ])
-  AS_CASE([$emacs_version],[*23*|*24*|*25*|*26*|*27*],[build_mu4e=yes],
-	  [AC_WARN([emacs is too old to build mu4e (need emacs >= 23.x)])])
+  AS_CASE([$emacs_version],
+  	[*24.4*|*24.5*],[build_mu4e=yes],
+	[*25*|*26*|*27*],[build_mu4e=yes],
+	[AC_WARN([emacs is too old to build mu4e (need emacs >= 24.4)])])
 ])
 AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 
