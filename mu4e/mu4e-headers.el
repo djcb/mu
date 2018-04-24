@@ -365,7 +365,7 @@ headers."
 	  ;; update it; that way, the flags can be updated, as well as the path
 	  ;; (which is useful for viewing the raw message)
 	  (when (mu4e~headers-view-this-message-p docid)
-	    (mu4e-view msg))
+	    (mu4e-view-msg msg))
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no
 	  ;; longer matches the query, but this seem a good heuristic.  if it
@@ -1584,20 +1584,12 @@ window. "
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((msg (mu4e-message-at-point))
-	  (docid (or (mu4e-message-field msg :docid)
-		   (mu4e-warn "No message at point")))
-	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
-	  (decrypt
-	    (and (member 'encrypted (mu4e-message-field msg :flags))
-	      (if (eq mu4e-decryption-policy 'ask)
-		(yes-or-no-p (mu4e-format "Decrypt message?"))
-		mu4e-decryption-policy)))
-	  (viewwin (mu4e~headers-redraw-get-view-window)))
+         (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-view-show-images decrypt)))
+    (mu4e-view-msg msg)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
