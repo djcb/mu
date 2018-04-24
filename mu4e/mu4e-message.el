@@ -31,12 +31,13 @@
 (require 'mu4e-utils)
 
 (require 'cl)
-(require 'html2text)
 (require 'flow-fill)
 
 
 (defcustom mu4e-html2text-command
-  (if (fboundp 'shr-insert-document) 'mu4e-shr2text 'html2text)
+  (if (fboundp 'shr-insert-document)
+    'mu4e-shr2text
+    (progn (require 'html2text) 'html2text))
 
   "Either a shell command or a function that converts from html to plain text.
 
