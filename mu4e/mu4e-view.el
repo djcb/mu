@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2018 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -34,6 +34,7 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
+(require 'gnus-art)
 (require 'comint)
 (require 'browse-url)
 (require 'button)
@@ -45,11 +46,16 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
-
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."
   :group 'mu4e)
+
+(defcustom mu4e-view-use-gnus nil
+  "Whether to (experimentally) use Gnu's article view instead of
+mu4e's internal viewer."
+  :type 'boolean
+  :group 'mu4e-view)
 
 (defcustom mu4e-view-fields
   '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
@@ -297,14 +303,23 @@ found."
     (delete-all-overlays)
     (remove-overlays)))
 
-
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 'In sync' here means that moving to the next/previous message in
 the the message view affects HDRSBUF, as does marking etc.
 
 As a side-effect, a message that is being viewed loses its 'unread'
-marking if it still had that."
+marking if it still had that.
+
+Depending on the value of `mu4e-view-use-gnus', either use mu4e's
+internal display mode, or a display mode based on Gnu's
+article-mode."
+  (if mu4e-view-use-gnus
+    (mu4e~view-gnus msg)
+    (mu4e~view-internal msg)))
+
+(defun mu4e~view-internal (msg)
+  "Display a message using mu4e's internal view mode."
   (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
 	   (when (gethash (mu4e-message-field msg :path)
 		   mu4e~path-parent-docid-map) t))
@@ -333,6 +348,28 @@ marking if it still had that."
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
           (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
     (switch-to-buffer buf)))
+
+(defun mu4e~view-gnus (msg)
+  "View MSG using Gnu's article mode. Experimental."
+  (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
+	 (path (mu4e-message-field msg :path))
+	 (inhibit-read-only t))
+    (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
+    (erase-buffer)
+    (unless marked-read
+      ;; when we're being marked as read, no need to start rendering the messages; just the minimail
+      ;; so (update... ) can find us.
+      (insert-file-contents path)
+      (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
+      (let ((gnu-article-buffer (current-buffer)))
+	(gnus-article-prepare-display))
+      (mu4e~view-make-urls-clickable)
+      (mu4e~view-construct-attachments-header msg))
+    (mu4e-view-mode)
+    (setq mu4e~view-msg msg)
+    (setq gnus-article-buffer (current-buffer))
+    (set-buffer-modified-p nil)
+    (read-only-mode)))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
@@ -812,21 +849,31 @@ FUNC should be a function taking two arguments:
   :group 'mu4e-view)
 
 (defvar mu4e-view-mode-abbrev-table nil)
-(define-derived-mode mu4e-view-mode special-mode "mu4e:view"
-  "Major mode for viewing an e-mail message in mu4e.
-\\{mu4e-view-mode-map}."
-  (use-local-map mu4e-view-mode-map)
 
+(defun mu4e~view-mode-body ()
+  "Body of the mode-function."
+  (use-local-map mu4e-view-mode-map)
   ;; show context in mode-string
   (make-local-variable 'global-mode-string)
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
-
   (setq buffer-undo-list t);; don't record undo info
-
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
+
+(if mu4e-view-use-gnus
+  (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view/g"
+    ;; remove some gnus stuff that does not apply
+    (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
+    (define-key mu4e-view-mode-map [menu-bar Article] nil)
+    (define-key mu4e-view-mode-map [menu-bar post] nil)
+    "Major mode for viewing an e-mail message in mu4e, based on Gnus."
+    (mu4e~view-mode-body))
+  (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
+    "Major mode for viewing an e-mail message in mu4e, using the
+    mu4e-specific view."
+    (mu4e~view-mode-body)))
 
 (defun mu4e~view-mark-as-read-maybe (msg)
   "Clear the message MSG New/Unread status and set it to Seen.
@@ -886,7 +933,6 @@ If the url is mailto link, start writing an email to that address."
 		(mu4e-display-image imgfile
 		  mu4e-view-image-max-width
 		  mu4e-view-image-max-height)))))))))
-
 
 (defvar mu4e~view-beginning-of-url-regexp
   "https?\\://\\|mailto:"
