@@ -434,11 +434,13 @@ static void
 append_sexp_thread_info (GString *gstr, const MuMsgIterThreadInfo *ti)
 {
 	g_string_append_printf
-		(gstr, "\t:thread (:path \"%s\" :level %u%s%s%s%s)\n",
+		(gstr, "\t:thread (:path \"%s\" :level %u%s%s%s%s%s)\n",
 		 ti->threadpath,
 		 ti->level,
 		 ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  ?
 		 " :first-child t" : "",
+		 ti->prop & MU_MSG_ITER_THREAD_PROP_LAST_CHILD   ?
+		 " :last-child t" : "",
 		 ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT ?
 		 " :empty-parent t" : "",
 		 ti->prop & MU_MSG_ITER_THREAD_PROP_DUP          ?

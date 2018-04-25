@@ -571,7 +571,8 @@ count_colons (const char *str)
 
 static MuMsgIterThreadInfo*
 thread_info_new (gchar *threadpath, gboolean root, gboolean first_child,
-		 gboolean empty_parent, gboolean has_child, gboolean is_dup)
+		 gboolean last_child, gboolean empty_parent,
+		 gboolean has_child, gboolean is_dup)
 {
 	MuMsgIterThreadInfo *ti;
 
@@ -582,6 +583,7 @@ thread_info_new (gchar *threadpath, gboolean root, gboolean first_child,
 	ti->prop  = MU_MSG_ITER_THREAD_PROP_NONE;
 	ti->prop |= root         ? MU_MSG_ITER_THREAD_PROP_ROOT         : 0;
 	ti->prop |= first_child  ? MU_MSG_ITER_THREAD_PROP_FIRST_CHILD  : 0;
+	ti->prop |= last_child   ? MU_MSG_ITER_THREAD_PROP_LAST_CHILD   : 0;
 	ti->prop |= empty_parent ? MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT : 0;
 	ti->prop |= is_dup       ? MU_MSG_ITER_THREAD_PROP_DUP          : 0;
 	ti->prop |= has_child    ? MU_MSG_ITER_THREAD_PROP_HAS_CHILD    : 0;
@@ -610,12 +612,13 @@ static void
 add_to_thread_info_hash (GHashTable *thread_info_hash, MuContainer *c,
 			 char *threadpath)
 {
-	gboolean is_root, first_child, empty_parent, is_dup, has_child;
+	gboolean is_root, first_child, last_child, empty_parent, is_dup, has_child;
 
 	/* 'root' means we're a child of the dummy root-container */
 	is_root = (c->parent == NULL);
 
 	first_child  = is_root ? FALSE : (c->parent->child == c);
+	last_child  = is_root ? FALSE : (c->next == NULL);
 	empty_parent = is_root ? FALSE : (!c->parent->msg);
 	is_dup	     = c->flags & MU_CONTAINER_FLAG_DUP;
 	has_child    = c->child ? TRUE : FALSE;
@@ -625,6 +628,7 @@ add_to_thread_info_hash (GHashTable *thread_info_hash, MuContainer *c,
 			     thread_info_new (threadpath,
 					      is_root,
 					      first_child,
+					      last_child,
 					      empty_parent,
 					      has_child,
 					      is_dup));
