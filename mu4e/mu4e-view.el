@@ -890,6 +890,7 @@ changes, it triggers a refresh."
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
 	(mu4e~proc-move msgid nil "+S-u-N")
+        (mu4e~proc-view docid mu4e-view-show-images (mu4e~decrypt-p msg))
 	t))))
 
 (defun mu4e~view-browse-url-func (url)
