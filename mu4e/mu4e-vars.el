@@ -877,8 +877,8 @@ argument, and returns a string. See the default value of
 (defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
   "Name for the embedded message view buffer.")
 
-(defvar mu4e~view-msg nil "The message being viewed in view mode.")
-(make-variable-buffer-local 'mu4e~view-msg)
+(defvar mu4e~view-msg nil
+  "The message being viewed in view mode.")
 
 (defvar mu4e~contacts nil
   "Hash of that maps contacts (ie. 'name <e-mail>') to an integer
