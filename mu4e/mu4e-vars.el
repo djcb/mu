@@ -180,6 +180,13 @@ threads. You can customize the exact fancy characters used with
   :type 'string
   :group 'mu4e)
 
+(defcustom mu4e-modeline-max-width 30
+  "Determines the maximum length of the string to be used in the
+modeline. If the string exeeds this limit, it will be shortened
+to fit."
+  :type 'integer
+  :group 'mu4e)
+
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
