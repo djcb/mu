@@ -1644,14 +1644,23 @@ _not_ refresh the last search with the new setting for threading."
     (setq mu4e~headers-loading-buf
       (get-buffer-create " *mu4e-loading*")))
   (with-current-buffer mu4e~headers-loading-buf
-      (let ((inhibit-read-only t))
-	(erase-buffer)
-	(local-set-key (kbd "q") (if (eq mu4e-split-view 'single-window)
-				     'kill-buffer
-				   'kill-buffer-and-window))
-	(insert (propertize "Waiting for message..."
-		  'face 'mu4e-system-face 'intangible t))))
+    (read-only-mode)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (local-set-key (kbd "q")
+	(if (eq mu4e-split-view 'single-window)
+	  'kill-buffer
+	  'kill-buffer-and-window))
+      (insert (propertize "Waiting for message..."
+		'face 'mu4e-system-face 'intangible t))))
   mu4e~headers-loading-buf)
+
+(defun mu4e~decrypt-p (msg)
+  "Should we decrypt this message?"
+  (and (member 'encrypted (mu4e-message-field msg :flags))
+    (if (eq mu4e-decryption-policy 'ask)
+      (yes-or-no-p (mu4e-format "Decrypt message?"))
+      mu4e-decryption-policy)))
 
 (defun mu4e-headers-view-message ()
   "View message at point.
@@ -1666,12 +1675,7 @@ window. "
   (let* ((msg (mu4e-message-at-point))
 	  (docid (or (mu4e-message-field msg :docid)
 		   (mu4e-warn "No message at point")))
-	  ;; decrypt (or not), based on `mu4e-decryption-policy'.
-	  (decrypt
-	    (and (member 'encrypted (mu4e-message-field msg :flags))
-	      (if (eq mu4e-decryption-policy 'ask)
-		(yes-or-no-p (mu4e-format "Decrypt message?"))
-		mu4e-decryption-policy)))
+	  (decrypt (mu4e~decrypt-p msg))
 	  (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
