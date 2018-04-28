@@ -37,7 +37,7 @@ show_version (void)
 {
 	const char* blurb =
 		"mu (mail indexer/searcher) version " VERSION "\n"
-		"Copyright (C) 2008-2015 Dirk-Jan C. Binnema\n"
+		"Copyright (C) 2008-2018 Dirk-Jan C. Binnema\n"
 		"License GPLv3+: GNU GPL version 3 or later "
 		"<http://gnu.org/licenses/gpl.html>.\n"
 		"This is free software: you are free to change "
