@@ -4036,11 +4036,17 @@ your Emacs setup.
 @item @emph{The PDF-version of the manual does not show any of the non-ASCII
 characters} --- this is because the @t{texi2pdf} documentation system does
 not support those. There is not much we can do about that.
+@item @emph{@t{mu4e} can get very slow when using Aquamacs' default theme (May 2018} --
+it's not clear what the root-cause for this is, but if you suffer from
+this, you can try to put
+@verbatim
+(aquamacs-autoface-mode 0)
+@end verbatim
+in @t{site-start.el}.
 @end itemize
 
 For a more complete list, please refer to the issues-list in the
 github-repository.
-
 
 @node Tips and Tricks
 @appendix Tips and Tricks
