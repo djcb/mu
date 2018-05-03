@@ -233,38 +233,26 @@ one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 
 ;; thread prefix marks
 (defvar mu4e-headers-thread-child-prefix '("├>" . "┣▶ ")
-  "Prefix for messages in sub threads that do have a following sibling.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+  "Prefix for messages in sub threads that do have a following sibling.")
 
 (defvar mu4e-headers-thread-last-child-prefix '("└>" . "┗▶ ")
-  "Prefix for messages in sub threads that do not have a following sibling.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+  "Prefix for messages in sub threads that do not have a following sibling.")
 
 (defvar mu4e-headers-thread-connection-prefix '("│" . "┃ ")
   "Prefix to connect sibling messages that do not follow each other.
 
-This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.")
 
 (defvar mu4e-headers-thread-blank-prefix '(" " . "  ")
   "Prefix to separate non connected messages.
 
-This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.")
 
 (defvar mu4e-headers-thread-orphan-prefix '("" . "")
-  "Prefix for orphan messages.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+  "Prefix for orphan messages.")
 
 (defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
-  "Prefix for duplicate messages.
-
-This variable is only used when mu4e-headers-new-thread-style is non-nil.")
+  "Prefix for duplicate messages.")
 
 (defvar mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message)
