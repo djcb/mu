@@ -248,8 +248,11 @@ This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.")
 
 This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.")
 
-(defvar mu4e-headers-thread-orphan-prefix '("" . "")
-  "Prefix for orphan messages.")
+(defvar mu4e-headers-thread-orphan-prefix '("┬>" . "┳▶ ")
+  "Prefix for orphan messages with siblings.")
+
+(defvar mu4e-headers-thread-single-orphan-prefix '("─>" . "━▶ ")
+  "Prefix for orphan messages with no siblings.")
 
 (defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
   "Prefix for duplicate messages.")
@@ -433,13 +436,14 @@ into a string."
 	 (lambda (cell)
 	   (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (case type
-      ('child      (funcall get-prefix mu4e-headers-thread-child-prefix))
-      ('last-child (funcall get-prefix mu4e-headers-thread-last-child-prefix))
-      ('connection (funcall get-prefix mu4e-headers-thread-connection-prefix))
-      ('blank      (funcall get-prefix mu4e-headers-thread-blank-prefix))
-      ('orphan     (funcall get-prefix mu4e-headers-thread-orphan-prefix))
-      ('duplicate  (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
-      (t           "?"))))
+      ('child         (funcall get-prefix mu4e-headers-thread-child-prefix))
+      ('last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
+      ('connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
+      ('blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
+      ('orphan        (funcall get-prefix mu4e-headers-thread-orphan-prefix))
+      ('single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
+      ('duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
+      (t              "?"))))
 
 ;; In order to print a thread tree with all the message connections,
 ;; it's necessary to keep track of all sub levels that still have
@@ -478,12 +482,14 @@ into a string."
 		   ;; connections or blanks.
 		   (mapconcat
 		    (lambda (s)
-		      (if s (mu4e~headers-thread-prefix-map 'connection)
-			(mu4e~headers-thread-prefix-map 'blank)))
+		      (mu4e~headers-thread-prefix-map
+		       (if s 'connection 'blank)))
 		    mu4e~headers-thread-state "")
 		   ;; Current entry.
-		   (if last-child (mu4e~headers-thread-prefix-map 'last-child)
-		     (mu4e~headers-thread-prefix-map 'child))))))
+		   (mu4e~headers-thread-prefix-map
+		    (if (and empty-parent first-child)
+			(if last-child 'single-orphan 'orphan)
+		      (if last-child 'last-child 'child)))))))
       ;; If a new sub-thread will follow (has-child) and the current
       ;; one is still not done (not last-child), then a new
       ;; connection needs to be added to the tree-state.  It's not
@@ -493,10 +499,8 @@ into a string."
 	  (setq mu4e~headers-thread-state
 		(append mu4e~headers-thread-state '(t))))
       ;; Return the thread prefix.
-      (format "%s%s%s"
+      (format "%s%s"
 	      prefix
-	      (if empty-parent
-		  (mu4e~headers-thread-prefix-map 'orphan) "")
 	      (if duplicate
 		  (mu4e~headers-thread-prefix-map 'duplicate) "")))))
 
