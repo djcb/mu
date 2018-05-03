@@ -462,7 +462,7 @@ into a string."
 	  (last-child   (plist-get thread :last-child))
 	  (duplicate    (plist-get thread :duplicate)))
       ;; Do not prefix root messages.
-      (if (or (= level 0) empty-parent)
+      (if (= level 0)
 	  (setq mu4e~headers-thread-state '()))
       (if (> level 0)
 	  (let* ((length (length mu4e~headers-thread-state))
