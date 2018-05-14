@@ -277,7 +277,7 @@ $ sudo apt-get install emacs
 $ sudo apt-get install guile-2.0-dev html2text xdg-utils
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-$ sudo apt-get install libwebkit-dev
+$ sudo apt-get install libwebkitgtk-3.0-dev
 @end example
 
 @subsection Dependencies for Fedora
