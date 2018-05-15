@@ -31,6 +31,9 @@
 ;; Should we reply to the selected message or to the last?  Make it an option: 'current, 'last, 'ask.
 ;; Binding to switch to regular view?
 ;; TODO: Mark visible messages as read.
+;; TODO: Indent user messages?
+;; TODO: Detect subject changes.
+;; TODO: Trim top-posting quote.
 
 (defconst mu4e~conversation-buffer-name "*mu4e-conversation*"
   "Name of the conversation view buffer.")
@@ -211,13 +214,12 @@ See `mu4e~proc-filter'"
         mu4e-header-func 'mu4e-conversation-header-handler
         mu4e~conversation-previous-found-func mu4e-found-func
         mu4e-found-func 'mu4e-conversation-found-handler)
-  ;; (mu4e-action-show-thread (mu4e-message-at-point))
   (mu4e~proc-find
    (funcall mu4e-query-rewrite-function
             (format "msgid:%s" (mu4e-message-field (mu4e-message-at-point) :message-id)))
-   'show-threads            ; TODO: This is for tree output.  Add option to use chronological output instead?
+   (not 'show-threads)            ; TODO: Add option to use tree view, e.g. with outline-mode.
    :date
-   'descending
+   'ascending
    (not 'limited)
    'skip-duplicates
    'include-related))
