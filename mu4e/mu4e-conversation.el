@@ -73,11 +73,11 @@ The message can be retrieved from `mu4e~conversation-thread'.")
   (let ((current-message-pos 0)
         (index 0))
     (dolist (msg mu4e~conversation-thread)
-      ;; TODO: Show pictures.
       (when (= (mu4e-message-field msg :docid)
                (mu4e-message-field mu4e~conversation-current-message :docid))
         (setq current-message-pos (point)))
       (funcall mu4e-conversation-print-message-function index)
+      (mu4e~view-show-images-maybe msg)
       (setq index (1+ index)))
     (goto-char current-message-pos)))
 
