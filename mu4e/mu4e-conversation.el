@@ -136,6 +136,20 @@ The message can be retrieved from `mu4e~conversation-thread'.")
   "Face for conversation message sent by someone else."
   :group 'mu4e-faces)
 
+(defun mu4e-conversation-trim-bottom-quote (message)
+  "Trim the replied-to emails quoted at the end of message."
+  (require 'rx)
+  (replace-regexp-in-string (rx (+ line-start
+                                 (+ ">")
+                                 (* not-newline)
+                                 (? ?\n))
+                              (* (or space blank ?\n))
+                              (or
+                               string-end
+                               (and line-start  "--" (* space) ?\n (* anything))))
+                            "[...]"
+                            message))
+
 (defun mu4e-conversation-print-message (index)
   "Insert formatted message found at INDEX in `mu4e~conversation-thread'."
   ;; See the docstring of `mu4e-message-field-raw'.
@@ -168,7 +182,8 @@ The message can be retrieved from `mu4e~conversation-thread'.")
                                         (mu4e-message-field msg :flags)))
                         'face
                         'mu4e-conversation-header)
-            (propertize (mu4e-message-body-text msg) 'face
+            ;; TODO: Add button to display trimmed quote.
+            (propertize (mu4e-conversation-trim-bottom-quote (mu4e-message-body-text msg)) 'face
                         (if from-me-p
                             'mu4e-conversation-sender-me
                           (gethash (cdr from) sender-faces)))
