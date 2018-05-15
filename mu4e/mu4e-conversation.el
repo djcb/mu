@@ -61,9 +61,12 @@ The message can be retrieved from `mu4e~conversation-thread'.")
 (defun mu4e~conversation-show ()
   ;; See the docstring of `mu4e-message-field-raw'.
   ;; mu4e~conversation-thread is in reverse order.
-  ;; TODO: Use same windowing configuration as mu4e-view.
   (setq mu4e-view-func (or mu4e~conversation-previous-view-func
                            'mu4e~headers-view-handler))
+  (let ((viewwin (mu4e~headers-redraw-get-view-window)))
+    (unless (window-live-p viewwin)
+      (mu4e-error "Cannot get a conversation window"))
+    (select-window viewwin))
   (switch-to-buffer (get-buffer-create mu4e~conversation-buffer-name))
   (erase-buffer)
   (setq header-line-format (mu4e-message-field (car mu4e~conversation-thread) :subject))
