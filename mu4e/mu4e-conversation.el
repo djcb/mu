@@ -25,8 +25,8 @@
 ;; In this file we define mu4e-conversation-mode (+ helper functions), which is
 ;; used for viewing all e-mail messages of a thread in a single buffer.
 
-;; TODO: Use unwind-protect to set handlers.
-;; TODO: Don't hide current headers e-mails.
+;; TODO: Use unwind-protect to set handlers?  I don't think it would work.
+;; TODO: Don't hide e-mails in header buffer.
 ;; TODO: Create mode: read-only (or use view-mode), quit with "q", browse messages with "C-c C-n/p", reply with "r".
 ;; Should we reply to the selected message or to the last?  Make it an option: 'current, 'last, 'ask.
 ;; Binding to switch to regular view?
@@ -34,9 +34,13 @@
 ;; TODO: Indent user messages?
 ;; TODO: Detect subject changes.
 ;; TODO: Trim top-posting quote.
+;; TODO: Mention in manual.
+;; TODO: Support fill-paragraph.  See `mu4e-view-fill-long-lines'.
 
 (defconst mu4e~conversation-buffer-name "*mu4e-conversation*"
   "Name of the conversation view buffer.")
+
+(defvar mu4e-conversation-my-name "Me")
 
 (defvar mu4e~conversation-thread-headers nil)
 (defvar mu4e~conversation-thread nil)
@@ -130,7 +134,7 @@ The message can be retrieved from `mu4e~conversation-thread'.")
   :group 'mu4e-faces)
 
 (defun mu4e-conversation-print-message (index)
-  ""
+  "Insert formatted message found at INDEX in `mu4e~conversation-thread'."
   ;; See the docstring of `mu4e-message-field-raw'.
   ;; mu4e~conversation-thread is in reverse order.
   ;; TODO: Use same windowing configuration as mu4e-view.
@@ -155,7 +159,7 @@ The message can be retrieved from `mu4e~conversation-thread'.")
     ;; Actual printing.
     (insert (propertize (concat (format "%s, %s %s\n"
                                         (if from-me-p
-                                            "Me"
+                                            mu4e-conversation-my-name
                                           (format "%s <%s>" (car from) (cdr from)))
                                         (current-time-string (mu4e-message-field msg :date))
                                         (mu4e-message-field msg :flags)))
@@ -195,7 +199,7 @@ See `mu4e~proc-filter'"
             (decrypt
              (and (member 'encrypted (mu4e-message-field msg :flags))
                   (if (eq mu4e-decryption-policy 'ask)
-                      (yes-or-no-p (mu4e-format "Decrypt message?"))
+                      (yes-or-no-p (mu4e-format "Decrypt message?")) ; TODO: Never ask?
                     mu4e-decryption-policy))))
         (mu4e~proc-view docid mu4e-view-show-images decrypt)))))
 
