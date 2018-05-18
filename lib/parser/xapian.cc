@@ -48,18 +48,30 @@ xapian_query_op (const Mux::Tree& tree)
 	return Xapian::Query(op, childvec.begin(), childvec.end());
 }
 
+
+static Xapian::Query
+maybe_wildcard (const Value* val, const std::string& str)
+{
+	const auto vlen = str.length();
+	if (vlen <= 1 || str[vlen-1] != '*')
+		return Xapian::Query(val->prefix + str);
+	else
+		return Xapian::Query(Xapian::Query::OP_WILDCARD,
+				     val->prefix + str.substr(0, vlen-1));
+}
+
 static Xapian::Query
 xapian_query_value (const Mux::Tree& tree)
 {
 	const auto v = dynamic_cast<Value*> (tree.node.data.get());
 	if (!v->phrase)
-		return Xapian::Query(v->prefix + v->value);
+		return maybe_wildcard(v, v->value);
 
 	const auto parts = split (v->value, " ");
 
 	std::vector<Xapian::Query> phvec;
 	for (const auto p: parts)
-		phvec.push_back(Xapian::Query(v->prefix + p));
+		phvec.emplace_back(maybe_wildcard(v, p));
 
 	if (parts.empty())
 		return Xapian::Query::MatchNothing; // shouldn't happen
