@@ -182,7 +182,7 @@ We have the following choices:
  'mu4e-compose-crypto-reply-policy' variable is deprecated.
  'mu4e-compose-crypto-reply-plain-policy' and
  'mu4e-compose-crypto-reply-encrypted-policy' should be used instead")
-(make-obsolete-variable mu4e-compose-crypto-reply-policy "The use of the
+(make-obsolete-variable 'mu4e-compose-crypto-reply-policy "The use of the
  'mu4e-compose-crypto-reply-policy' variable is deprecated.
  'mu4e-compose-crypto-reply-plain-policy' and
  'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
