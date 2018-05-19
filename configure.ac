@@ -159,7 +159,10 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    *** is in your PATH.])],
    [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
 AS_CASE([$xapian_version],
-	[1.[[2-9]].[[0-9]]*], [],
+	[1.[[3-9]].[[3-9]]*],
+	  [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
+        [1.[[2-9]].[[0-9]]*],
+          [AC_MSG_WARN([*** xapian $xapian_version, no Query::Op::Wildcard])],
 	[AC_MSG_ERROR([*** xapian version >= 1.2 needed,
 	but version $xapian_version found.])])
 

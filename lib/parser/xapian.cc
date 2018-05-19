@@ -17,6 +17,10 @@
 **  02110-1301, USA.
 */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /*HAVE_CONFIG_H*/
+
 #include <xapian.h>
 #include "parser/xapian.hh"
 
@@ -52,12 +56,16 @@ xapian_query_op (const Mux::Tree& tree)
 static Xapian::Query
 maybe_wildcard (const Value* val, const std::string& str)
 {
+#ifndef XAPIAN_HAVE_OP_WILDCARD
+	return Xapian::Query(val->prefix + str);
+#else
 	const auto vlen = str.length();
 	if (vlen <= 1 || str[vlen-1] != '*')
 		return Xapian::Query(val->prefix + str);
 	else
 		return Xapian::Query(Xapian::Query::OP_WILDCARD,
 				     val->prefix + str.substr(0, vlen-1));
+#endif/*XAPIAN_HAVE_OP_WILDCARD*/
 }
 
 static Xapian::Query
