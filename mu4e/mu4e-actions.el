@@ -217,36 +217,44 @@ store your org-contacts."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar mu4e~patch-directory-history nil
+  "History of directories we have applied patches to.")
+
+;; This essentially works around the fact that read-directory-name
+;; can't have custom history.
+(defun mu4e~read-patch-directory (&optional prompt)
+  "Read a `PROMPT'ed directory name via `completing-read' with history."
+  (unless prompt
+    (setq prompt "Target directory:"))
+  (file-truename
+   (completing-read prompt 'read-file-name-internal #'file-directory-p
+                    nil nil 'mu4e~patch-directory-history)))
+
 (defun mu4e-action-git-apply-patch (msg)
-  "Apply the git [patch] message."
-  (let ((path (ido-read-directory-name "Target directory: "
-		(car ido-work-directory-list)
-		"~/" t)))
-    (setf ido-work-directory-list
-      (cons path (delete path ido-work-directory-list)))
-    (shell-command
-      (format "cd %s; git apply %s"
-	path
-	(mu4e-message-field msg :path)))))
+  "Apply `MSG' as a git patch."
+  (let ((path (mu4e~read-patch-directory "Target directory: ")))
+    (let ((default-directory path))
+      (shell-command
+       (format "git apply %s"
+               (shell-quote-argument (mu4e-message-field msg :path)))))))
 
 (defun mu4e-action-git-apply-mbox (msg &optional signoff)
-  "Apply and commit the git [patch] MSG with optional SIGNOFF.
+  "Apply `MSG' a git patch with optional `SIGNOFF'.
 
 If the `default-directory' matches the most recent history entry don't
 bother asking for the git tree again (useful for bulk actions)."
 
-  (let ((cwd (car ido-work-directory-list)))
+  (let ((cwd (substring-no-properties
+              (or (car mu4e~patch-directory-history)
+                  "not-a-dir"))))
     (unless (and (stringp cwd) (string= default-directory cwd))
-      (setq cwd (ido-read-directory-name "Target directory: "
-		  cwd
-		  "~/" t))
-      (setf ido-work-directory-list
-	(cons cwd (delete cwd ido-work-directory-list))))
-    (shell-command
-      (format "cd %s; git am %s %s"
-              (shell-quote-argument cwd)
-              (if signoff "--signoff" "")
-              (shell-quote-argument (mu4e-message-field msg :path))))))
+      (setq cwd (mu4e~read-patch-directory "Target directory: ")))
+    (let ((default-directory cwd))
+      (shell-command
+       (format "git am %s %s"
+               (if signoff "--signoff" "")
+               (shell-quote-argument (mu4e-message-field msg :path)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
