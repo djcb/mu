@@ -72,4 +72,4 @@ EXTRA_DIST=$(scm_DATA)
 ## Add -MG to make the .x magic work with auto-dep code.
 MKDEP = $(CC) -M -MG $(snarfcppopts)
 
-DISTCLEANFILES=$(XFILES)
+CLEANFILES=$(XFILES)

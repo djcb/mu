@@ -218,7 +218,36 @@ build_guile=no
 AC_ARG_ENABLE([guile],
    AS_HELP_STRING([--disable-guile],[Disable guile]))
 
+#
+# guile 2.2
+#
 AS_IF([test "x$enable_guile" != "xno"], [
+   PKG_CHECK_MODULES(GUILE,guile-2.2,[build_guile=yes],[build_guile=no])
+   AC_SUBST(GUILE_CFLAGS)
+   AC_SUBST(GUILE_LIBS)
+
+   GUILE_EXECDIR="`${PKG_CONFIG} guile-2.2 --variable=exec_prefix`/bin"
+
+   AS_IF([test "x$build_guile" = "xyes"],[
+   AC_PATH_PROG(GUILE_BINARY, [guile2.2], [], [$GUILE_EXECDIR])
+      AS_IF([test "x$GUILE_BINARY" != "x"],
+	 [AC_DEFINE_UNQUOTED([GUILE_BINARY],["$GUILE_BINARY"],[Path to the guile binary])],
+	 [AC_MSG_WARN([cannot find guile-snarf])])])
+
+   AS_IF([test "x$build_guile" = "xyes"],[
+      AC_PATH_PROG(GUILE_SNARF, [guile-snarf2.2], [], [$GUILE_EXECDIR])
+      AS_IF([test "x$GUILE_SNARF" != "x"],
+	 [AC_DEFINE_UNQUOTED([GUILE_SNARF],["$GUILE_SNARF"],[Path to guile-snarf])
+	 GUILE_SITEDIR="`${PKG_CONFIG} guile-2.2 --variable=sitedir`"],
+	 [AC_MSG_WARN([cannot find guile-snarf])])])
+   AC_SUBST(GUILE_SITEDIR)
+   guile_version="$(${PKG_CONFIG} --modversion guile-2.2)"
+])
+
+#
+# still support guile 2.0
+#
+AS_IF([test "x$enable_guile" != "xno" -a "x$build_guile" = "xno"], [
    PKG_CHECK_MODULES(GUILE,guile-2.0,[build_guile=yes],[build_guile=no])
    AC_SUBST(GUILE_CFLAGS)
    AC_SUBST(GUILE_LIBS)
@@ -237,11 +266,12 @@ AS_IF([test "x$enable_guile" != "xno"], [
 	 [AC_DEFINE_UNQUOTED([GUILE_SNARF],["$GUILE_SNARF"],[Path to guile-snarf])
 	 GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
 	 [AC_MSG_WARN([cannot find guile-snarf])])])
-   AC_SUBST(GUILE_SITEDIR)])
+   AC_SUBST(GUILE_SITEDIR)
+   guile_version="$(${PKG_CONFIG} --modversion guile-2.0)"
+])
 
 AS_IF([test "x$build_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
-      [guile_version="`${PKG_CONFIG} --modversion guile-2.0`"
-      AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we build with guile 2.0 support])])
+    AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we build with guilesupport]))
 AM_CONDITIONAL(BUILD_GUILE, [test "x$build_guile" = "xyes"])
 ###############################################################################
 
