@@ -41,8 +41,8 @@
 ;; before-save-hook and after-save-hook to remove/re-add this special line, so
 ;; it stays in the buffer, but never hits the disk.
 ;; see:
-;;     mu4e~compose-insert-mail-header-separator
-;;     mu4e~compose-remove-mail-header-separator
+;;     mu4e~draft-insert-mail-header-separator
+;;     mu4e~draft-remove-mail-header-separator
 ;;
 ;; (maybe we can get away with remove it only just before sending? what does
 ;; gnus do?)

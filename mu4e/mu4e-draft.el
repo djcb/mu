@@ -316,14 +316,37 @@ separator is never written to the message file. Also see
 (defun mu4e~draft-remove-mail-header-separator ()
   "Remove `mail-header-separator; we do this before saving a
 file (and restore it afterwards), to ensure that the separator
-never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
+never hits the disk. Also see `mu4e~draft-insert-mail-header-separator"
+  (let*
+      ((try-replace
+        (lambda
+          (pattern replace-with)
+          "Return what to replace with if pattern matches."
+          (when (search-forward-regexp pattern nil 't)
+            replace-with)))
+       (find-replacement
+        (lambda
+          (sep)
+          "Find a replacement for `sep`" "replacement!"
+          (or
+           ;; if there is an empty line after the separator
+           ;; we completely remove the separator and the line
+           (funcall try-replace (concat "^" sep "\n\n") "\n")
+           ;; else we just replace the separator by the empty
+           ;; string; this way there is an empty line between
+           ;; headers and content (which is required)
+           (funcall try-replace (concat "^" sep) "")))))
   (save-excursion
     (widen)
     (goto-char (point-min))
-    ;; remove the --text follows this line-- separator
-    (when (search-forward-regexp (concat "^" mail-header-separator) nil t)
-      (let ((inhibit-read-only t))
-	(replace-match "")))))
+      ;; remove the `mail-header-separator`
+    ;; we match until "\n" to also remove the newline character.
+      ;; (let (repl (find-replacement mail-header-separator))
+      (let ((repl (funcall find-replacement mail-header-separator))
+            (inhibit-read-only t))
+        (when repl
+          (replace-match repl))))))
+
 
 (defun mu4e~draft-reply-all-p (origmsg)
   "Ask user whether she wants to reply to *all* recipients.
