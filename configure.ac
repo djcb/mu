@@ -211,70 +211,23 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 ###############################################################################
 
 
-
 ###############################################################################
-# check for guile 2.0 & guile-snarf
-build_guile=no
-AC_ARG_ENABLE([guile],
-   AS_HELP_STRING([--disable-guile],[Disable guile]))
+# build with guile when available and not disabled.
+AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
+AS_IF([test "x$enable_guile" != "xno"],[
+  PKG_CHECK_MODULES(guile_20, guile-2.0, [have_guile20=yes],[have_guile20=no])
+  PKG_CHECK_MODULES(guile_22, guile-2.2, [have_guile22=yes],[have_guile22=no])
 
-#
-# guile 2.2
-#
-AS_IF([test "x$enable_guile" != "xno"], [
-   PKG_CHECK_MODULES(GUILE,guile-2.2,[build_guile=yes],[build_guile=no])
-   AC_SUBST(GUILE_CFLAGS)
-   AC_SUBST(GUILE_LIBS)
-
-   GUILE_EXECDIR="`${PKG_CONFIG} guile-2.2 --variable=exec_prefix`/bin"
-
-   AS_IF([test "x$build_guile" = "xyes"],[
-   AC_PATH_PROG(GUILE_BINARY, [guile2.2], [], [$GUILE_EXECDIR])
-      AS_IF([test "x$GUILE_BINARY" != "x"],
-	 [AC_DEFINE_UNQUOTED([GUILE_BINARY],["$GUILE_BINARY"],[Path to the guile binary])],
-	 [AC_MSG_WARN([cannot find guile-snarf])])])
-
-   AS_IF([test "x$build_guile" = "xyes"],[
-      AC_PATH_PROG(GUILE_SNARF, [guile-snarf2.2], [], [$GUILE_EXECDIR])
-      AS_IF([test "x$GUILE_SNARF" != "x"],
-	 [AC_DEFINE_UNQUOTED([GUILE_SNARF],["$GUILE_SNARF"],[Path to guile-snarf])
-	 GUILE_SITEDIR="`${PKG_CONFIG} guile-2.2 --variable=sitedir`"],
-	 [AC_MSG_WARN([cannot find guile-snarf])])])
-   AC_SUBST(GUILE_SITEDIR)
-   guile_version="$(${PKG_CONFIG} --modversion guile-2.2)"
+  # this is a bit hacky; GUILE_PKG
+  AS_IF([test "x$have_guile20" = "xyes" -o "x$have_guile22" = "xyes"],[
+    GUILE_PKG([2.2 2.0])
+    GUILE_PROGS
+    GUILE_FLAGS
+    AC_DEFINE([GUILE_BINARY],"$GUILE",[guile binary])
+  ])
 ])
-
-#
-# still support guile 2.0
-#
-AS_IF([test "x$enable_guile" != "xno" -a "x$build_guile" = "xno"], [
-   PKG_CHECK_MODULES(GUILE,guile-2.0,[build_guile=yes],[build_guile=no])
-   AC_SUBST(GUILE_CFLAGS)
-   AC_SUBST(GUILE_LIBS)
-
-   GUILE_EXECDIR="`${PKG_CONFIG} guile-2.0 --variable=exec_prefix`/bin"
-
-   AS_IF([test "x$build_guile" = "xyes"],[
-   AC_PATH_PROG(GUILE_BINARY, [guile], [], [$GUILE_EXECDIR])
-      AS_IF([test "x$GUILE_BINARY" != "x"],
-	 [AC_DEFINE_UNQUOTED([GUILE_BINARY],["$GUILE_BINARY"],[Path to the guile binary])],
-	 [AC_MSG_WARN([cannot find guile-snarf])])])
-
-   AS_IF([test "x$build_guile" = "xyes"],[
-      AC_PATH_PROG(GUILE_SNARF, [guile-snarf], [], [$GUILE_EXECDIR])
-      AS_IF([test "x$GUILE_SNARF" != "x"],
-	 [AC_DEFINE_UNQUOTED([GUILE_SNARF],["$GUILE_SNARF"],[Path to guile-snarf])
-	 GUILE_SITEDIR="`${PKG_CONFIG} guile-2.0 --variable=sitedir`"],
-	 [AC_MSG_WARN([cannot find guile-snarf])])])
-   AC_SUBST(GUILE_SITEDIR)
-   guile_version="$(${PKG_CONFIG} --modversion guile-2.0)"
-])
-
-AS_IF([test "x$build_guile" = "xyes" -a "x$GUILE_SNARF" != "x"],
-    AC_DEFINE_UNQUOTED([BUILD_GUILE],1,[Whether we build with guilesupport]))
-AM_CONDITIONAL(BUILD_GUILE, [test "x$build_guile" = "xyes"])
+AM_CONDITIONAL(BUILD_GUILE,[test -n "$GUILE_EFFECTIVE_VERSION"])
 ###############################################################################
-
 
 
 ###############################################################################
@@ -357,7 +310,7 @@ echo "Webkit version                       : $webkit_version"
 ])
 
 AM_COND_IF([BUILD_GUILE],[
-echo "Guile version                        : $guile_version"
+echo "Guile version                        : $GUILE_EFFECTIVE_VERSION"
 ])
 
 
