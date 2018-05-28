@@ -28,11 +28,11 @@ else
 mu4e=
 endif
 
-if BUILD_PERL
-perl=perl
-else
-perl=
-endif
+# if BUILD_PERL
+# perl=perl
+# else
+# perl=
+# endif
 
 SUBDIRS=m4 man lib $(guile) mu $(mu4e) contrib toys # $(perl)
 
