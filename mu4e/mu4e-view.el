@@ -66,7 +66,7 @@ For the complete list of available headers, see `mu4e-header-info'."
   :group 'mu4e-view)
 
 
-(defcustom mu4e-view-show-addresses nil
+(defcustom mu4e-view-show-addresses t
   "Whether to initially show full e-mail addresses for contacts in
 address fields, rather than only their names."
   :type 'boolean
