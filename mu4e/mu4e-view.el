@@ -368,6 +368,9 @@ article-mode."
     (mu4e-view-mode)
     (setq mu4e~view-msg msg)
     (setq gnus-article-buffer (current-buffer))
+    (run-hooks 'gnus-article-decode-hook)
+    ;; Mark article as decoded or not.
+    (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (read-only-mode)))
 
