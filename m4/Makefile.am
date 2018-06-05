@@ -21,5 +21,7 @@ EXTRA_DIST =				\
 	ax_cxx_compile_stdcxx_14.m4	\
 	ax_valgrind_check.m4		\
 	guile.m4			\
+	lib-ld.m4			\
 	lib-link.m4			\
+	lib-prefix.m4			\
 	perlmod.m4
