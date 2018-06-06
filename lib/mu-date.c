@@ -55,7 +55,7 @@ mu_date_str_s (const char* frm, time_t t)
 			g_error_free (err);
 			strcpy (buf, "<error>");
 		} else
-			strncpy (buf, conv, sizeof(buf));
+			strncpy (buf, conv, sizeof(buf) - 1);
 
 		g_free (conv);
 	}
