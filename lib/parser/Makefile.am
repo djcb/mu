@@ -21,6 +21,8 @@ include $(top_srcdir)/gtest.mk
 AM_CXXFLAGS=			\
 	-I$(srcdir)/..		\
 	-I$(top_srcdir)/lib	\
+	$(WARN_CFLAGS)		\
+	$(HARDEN_CFLAGS)	\
 	$(GLIB_CFLAGS)		\
 	$(XAPIAN_CXXFLAGS)	\
 	$(WARN_CXXFLAGS)	\

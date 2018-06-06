@@ -27,6 +27,7 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # really need all the params they get
 AM_CFLAGS=						\
 	$(WARN_CFLAGS)					\
+	$(HARDEN_CFLAGS)			  	\
 	-Wno-switch-enum				\
 	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 

@@ -48,6 +48,14 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes])])
 AX_VALGRIND_CHECK
 
+AX_CHECK_COMPILE_FLAG([-Wall], [AX_APPEND_COMPILE_FLAGS([-Wall], [WARN_CFLAGS])])
+AC_SUBST(WARN_CFLAGS)
+
+AX_CHECK_COMPILE_FLAG([-Wformat-security], [AX_APPEND_COMPILE_FLAGS([-Wformat-security], [HARDEN_CFLAGS])])
+AX_CHECK_COMPILE_FLAG([-Wstack-protector],[AX_APPEND_COMPILE_FLAGS([-Wstack-protector], [HARDEN_CFLAGS])])
+AX_CHECK_COMPILE_FLAG([-Wstack-protector-all],[AX_APPEND_COMPILE_FLAGS([-Wstack-protector-all], [HARDEN_CFLAGS])])
+AC_SUBST(HARDEN_CFLAGS)
+
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
 # a too new setup for autotools/libtool
 AM_PROG_LIBTOOL
