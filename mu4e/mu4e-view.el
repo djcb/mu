@@ -357,22 +357,27 @@ article-mode."
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (erase-buffer)
     (unless marked-read
-      ;; when we're being marked as read, no need to start rendering the messages; just the minimail
+      ;; when we're being marked as read, no need to start rendering the messages; just the minimal
       ;; so (update... ) can find us.
       (insert-file-contents path)
-      (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
-      (let ((gnu-article-buffer (current-buffer)))
-	(gnus-article-prepare-display))
-      (mu4e~view-make-urls-clickable)
-      (mu4e~view-construct-attachments-header msg))
-    (mu4e-view-mode)
-    (setq mu4e~view-msg msg)
-    (setq gnus-article-buffer (current-buffer))
-    (run-hooks 'gnus-article-decode-hook)
-    ;; Mark article as decoded or not.
-    (setq gnus-article-decoded-p gnus-article-decode-hook)
-    (set-buffer-modified-p nil)
-    (read-only-mode)))
+      (setq
+	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
+	gnus-original-article-buffer (current-buffer))
+      (article-de-base64-unreadable)
+      (article-de-quoted-unreadable)
+      (gnus-article-prepare-display)
+      (mu4e~view-construct-attachments-header msg)
+      (mu4e-view-mode)
+      (setq mu4e~view-msg msg)
+      (let* ((gnus-article-decode-hook
+	       '( article-decode-charset
+		  article-decode-encoded-words
+		  article-decode-group-name
+		  article-decode-idna-rhs)))
+	(run-hooks 'gnus-article-decode-hook)
+	(setq gnus-article-decoded-p gnus-article-decode-hook))
+      (set-buffer-modified-p nil)
+      (read-only-mode))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
