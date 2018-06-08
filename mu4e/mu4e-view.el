@@ -314,6 +314,7 @@ marking if it still had that.
 Depending on the value of `mu4e-view-use-gnus', either use mu4e's
 internal display mode, or a display mode based on Gnu's
 article-mode."
+  (mu4e~view-define-mode)
   (if mu4e-view-use-gnus
     (mu4e~view-gnus msg)
     (mu4e~view-internal msg)))
@@ -870,18 +871,20 @@ FUNC should be a function taking two arguments:
   (when (boundp 'autopair-dont-activate)
     (setq autopair-dont-activate t)))
 
-(if mu4e-view-use-gnus
-  (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view/g"
-    ;; remove some gnus stuff that does not apply
-    (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
-    (define-key mu4e-view-mode-map [menu-bar Article] nil)
-    (define-key mu4e-view-mode-map [menu-bar post] nil)
-    "Major mode for viewing an e-mail message in mu4e, based on Gnus."
-    (mu4e~view-mode-body))
-  (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
-    "Major mode for viewing an e-mail message in mu4e, using the
-    mu4e-specific view."
-    (mu4e~view-mode-body)))
+(defun mu4e~view-define-mode ()
+  "Define the major-mode for the mu4e-view."
+  (if mu4e-view-use-gnus
+    (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
+      ;; remove some gnus stuff that does not apply
+      (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
+      (define-key mu4e-view-mode-map [menu-bar Article] nil)
+      (define-key mu4e-view-mode-map [menu-bar post] nil)
+      "Major mode for viewing an e-mail message in mu4e, based on
+Gnus' article-mode."
+      (mu4e~view-mode-body))
+    (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
+      "Major mode for viewing an e-mail message in mu4e."
+      (mu4e~view-mode-body))))
 
 (defun mu4e~view-mark-as-read-maybe (msg)
   "Clear the message MSG New/Unread status and set it to Seen.
