@@ -81,7 +81,7 @@ contact_new (const char *email, const char *name,
 }
 
 static void
-contact_destroy (Contact *contact)
+contact_destroy (Contact *contact, void *unused)
 {
 	if (contact) {
 		g_free (contact->name);

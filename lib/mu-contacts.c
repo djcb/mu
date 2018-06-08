@@ -232,7 +232,7 @@ encode_email_address (const char *addr)
 		return FALSE;
 
 	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
-	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
+	for (cur = strncpy(enc, addr, sizeof(enc) - 1); *cur != '\0'; ++cur)
 		if (!isalnum(*cur)) {
 			*cur = 'A' +  (*cur % ('Z' - 'A'));
 		} else

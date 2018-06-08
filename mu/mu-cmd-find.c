@@ -344,7 +344,7 @@ field_string_list (MuMsg *msg, MuMsgFieldId mfid)
 
 	str = mu_str_from_list (lst, ',');
 	if (str) {
-		strncpy (buf, str, sizeof(buf));
+		strncpy (buf, str, sizeof(buf) - 1);
 		g_free (str);
 		return buf;
 	}

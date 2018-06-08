@@ -22,6 +22,7 @@ SUBDIRS= parser . tests
 
 AM_CFLAGS=					\
 	$(WARN_CFLAGS)				\
+	$(HARDEN_CFLAGS)			\
 	$(GMIME_CFLAGS)				\
 	$(GLIB_CFLAGS)				\
 	$(GUILE_CFLAGS)				\
