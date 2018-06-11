@@ -1406,7 +1406,8 @@ get_path_from_docid (MuStore *store, unsigned docid, GError **err)
 		return NULL;
 	}
 
-	strncpy (path, msgpath, sizeof(path));
+	strncpy (path, msgpath, sizeof(path) - 1);
+	path[sizeof(path)-1] = '\0';
 
 	mu_msg_unref (msg);
 	return path;

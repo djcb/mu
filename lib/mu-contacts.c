@@ -225,14 +225,17 @@ mu_contacts_clear (MuContacts *self)
 static const char*
 encode_email_address (const char *addr)
 {
-	static char enc[254 + 1]; /* max size for an e-mail addr */
-	char *cur;
+	static char	 enc[254 + 1];	/* max size for an e-mail addr */
+	char		*cur;
 
 	if (!addr)
 		return FALSE;
 
+	cur		     = strncpy(enc, addr, sizeof(enc) - 1);
+	cur[sizeof(enc) - 1] = '\0';
+
 	/* make sure chars are with {' ' .. '~'}, and not '[' ']' */
-	for (cur = strncpy(enc, addr, sizeof(enc)); *cur != '\0'; ++cur)
+	for (; *cur != '\0'; ++cur)
 		if (!isalnum(*cur)) {
 			*cur = 'A' +  (*cur % ('Z' - 'A'));
 		} else

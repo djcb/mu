@@ -54,8 +54,10 @@ mu_date_str_s (const char* frm, time_t t)
 			g_warning ("conversion failed: %s", err->message);
 			g_error_free (err);
 			strcpy (buf, "<error>");
-		} else
-			strncpy (buf, conv, sizeof(buf));
+		} else {
+			strncpy (buf, conv, sizeof(buf)-1);
+			buf[sizeof(buf)-1] = '\0';
+		}
 
 		g_free (conv);
 	}
