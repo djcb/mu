@@ -217,15 +217,13 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 
 
 ###############################################################################
-# build with guile when available and not disabled.
+# build with guile2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
 AS_IF([test "x$enable_guile" != "xno"],[
-  PKG_CHECK_MODULES(guile_20, guile-2.0, [have_guile20=yes],[have_guile20=no])
   PKG_CHECK_MODULES(guile_22, guile-2.2, [have_guile22=yes],[have_guile22=no])
-
   # this is a bit hacky; GUILE_PKG
-  AS_IF([test "x$have_guile20" = "xyes" -o "x$have_guile22" = "xyes"],[
-    GUILE_PKG([2.2 2.0])
+  AS_IF([test "x$have_guile22" = "xyes"],[
+    GUILE_PKG([2.2])
     GUILE_PROGS
     GUILE_FLAGS
     AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
