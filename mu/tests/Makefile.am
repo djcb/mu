@@ -33,8 +33,8 @@ AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)						\
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=${WARN_CFLAGS}
+AM_CXXFLAGS=${WARN_CXXFLAGS}
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
@@ -59,7 +59,7 @@ test_mu_threads_SOURCES= test-mu-threads.c dummy.cc
 test_mu_threads_LDADD=${top_builddir}/lib/tests/libtestmucommon.la
 
 # we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=					\
+BUILT_SOURCES=								\
 	dummy.cc
 dummy.cc:
 	touch dummy.cc

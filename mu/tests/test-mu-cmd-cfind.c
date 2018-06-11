@@ -98,8 +98,6 @@ test_mu_cfind_bbdb (void)
 {
 	gchar *cmdline, *output, *erroutput, *expected;
 	gchar today[12];
-	const char* frm1;
-	const char *frm2;
 	struct tm *tmtoday;
 	time_t now;
 	const char *old_tz;
@@ -114,24 +112,24 @@ test_mu_cfind_bbdb (void)
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
 
-	frm1 =  ";; -*-coding: utf-8-emacs;-*-\n"
-		";;; file-version: 6\n"
-		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
-		"((creation-date . \"%s\") "
+#define frm1   ";; -*-coding: utf-8-emacs;-*-\n"			\
+		";;; file-version: 6\n"					\
+		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") " \
+		"((creation-date . \"%s\") "				\
+		"(time-stamp . \"1970-01-01\")) nil]\n"			\
+		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "	\
+		"((creation-date . \"%s\") "				\
 		"(time-stamp . \"1970-01-01\")) nil]\n"
-		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "
-		"((creation-date . \"%s\") "
-		"(time-stamp . \"1970-01-01\")) nil]\n";
 
 
-	frm2 =  ";; -*-coding: utf-8-emacs;-*-\n"
-		";;; file-version: 6\n"
-		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "
-		"((creation-date . \"%s\") "
+#define	frm2   ";; -*-coding: utf-8-emacs;-*-\n"			\
+		";;; file-version: 6\n"					\
+		"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "	\
+		"((creation-date . \"%s\") "				\
+		"(time-stamp . \"1970-01-01\")) nil]\n"			\
+		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") " \
+		"((creation-date . \"%s\") "				\
 		"(time-stamp . \"1970-01-01\")) nil]\n"
-		"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "
-		"((creation-date . \"%s\") "
-		"(time-stamp . \"1970-01-01\")) nil]\n";
 
 	g_assert (output);
 

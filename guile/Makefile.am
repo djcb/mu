@@ -28,8 +28,8 @@ AM_CPPFLAGS=						\
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=${WARN_CFLAGS}
+AM_CXXFLAGS=${WARN_CXXFLAGS}
 
 lib_LTLIBRARIES=					\
 	libguile-mu.la

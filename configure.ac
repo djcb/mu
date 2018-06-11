@@ -44,8 +44,13 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
 
+extra_flags="-Wformat-security		\
+             -Wstack-protector		\
+	     -Wstack-protector-all	\
+	     -Wno-cast-function-type"
+
 AX_CXX_COMPILE_STDCXX_14
-m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes])])
+m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
