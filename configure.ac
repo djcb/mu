@@ -223,7 +223,7 @@ AS_IF([test "x$enable_guile" != "xno"],[
     GUILE_PKG([2.2 2.0])
     GUILE_PROGS
     GUILE_FLAGS
-    AC_DEFINE([GUILE_BINARY],"$GUILE",[guile binary])
+    AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
   ])
 ])
 AM_CONDITIONAL(BUILD_GUILE,[test -n "$GUILE_EFFECTIVE_VERSION"])
