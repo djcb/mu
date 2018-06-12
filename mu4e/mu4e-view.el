@@ -46,6 +46,8 @@
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
 
+(declare-function mu4e-view-mode "mu4e-view")
+
 ;; the message view
 (defgroup mu4e-view nil
   "Settings for the message view."
@@ -354,7 +356,14 @@ article-mode."
   "View MSG using Gnu's article mode. Experimental."
   (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
 	 (path (mu4e-message-field msg :path))
-	 (inhibit-read-only t))
+	 (inhibit-read-only t)
+	 ;; support signature verification
+	 (mm-verify-option 'known)
+	 (mm-decrypt-option 'known)
+	 (gnus-article-emulate-mime t)
+	 (gnus-buttonized-mime-types (append (list "multipart/signed"
+					       "multipart/encrypted")
+				       gnus-buttonized-mime-types)))
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (erase-buffer)
     (unless marked-read
@@ -367,16 +376,10 @@ article-mode."
       (article-de-base64-unreadable)
       (article-de-quoted-unreadable)
       (gnus-article-prepare-display)
-      (mu4e~view-construct-attachments-header msg)
       (mu4e-view-mode)
       (setq mu4e~view-msg msg)
-      (let* ((gnus-article-decode-hook
-	       '( article-decode-charset
-		  article-decode-encoded-words
-		  article-decode-group-name
-		  article-decode-idna-rhs)))
-	(run-hooks 'gnus-article-decode-hook)
-	(setq gnus-article-decoded-p gnus-article-decode-hook))
+      (run-hooks 'gnus-article-decode-hook)
+      (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
 
@@ -689,9 +692,9 @@ FUNC should be a function taking two arguments:
 
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
-      (define-key map "g" 'mu4e-view-go-to-url)
-      (define-key map "k" 'mu4e-view-save-url)
-      (define-key map "f" 'mu4e-view-fetch-url)
+      (define-key map "g" (if mu4e-view-use-gnus 'ignore 'mu4e-view-go-to-url))
+      (define-key map "k" (if mu4e-view-use-gnus 'ignore 'mu4e-view-save-url))
+      (define-key map "f" (if mu4e-view-use-gnus 'ignore 'mu4e-view-fetch-url))
 
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
@@ -737,9 +740,9 @@ FUNC should be a function taking two arguments:
       (define-key map "y" 'mu4e-select-other-view)
 
       ;; attachments
-      (define-key map "e" 'mu4e-view-save-attachment)
-      (define-key map "o" 'mu4e-view-open-attachment)
-      (define-key map "A" 'mu4e-view-attachment-action)
+      (define-key map "e" (if mu4e-view-use-gnus 'ignore 'mu4e-view-save-attachment))
+      (define-key map "o" (if mu4e-view-use-gnus 'ignore 'mu4e-view-open-attachment))
+      (define-key map "A" (if mu4e-view-use-gnus 'ignore 'mu4e-view-attachment-action))
 
       ;; marking/unmarking
       (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -798,21 +801,19 @@ FUNC should be a function taking two arguments:
 	  '("View raw message" . mu4e-view-raw-message))
 	(define-key menumap [pipe]
 	  '("Pipe through shell" . mu4e-view-pipe))
-	;; (define-key menumap [inspect]
-	;;   '("Inspect with guile" . mu4e-inspect-message))
 
-	(define-key menumap [sepa8] '("--"))
-	(define-key menumap [open-att]
-	  '("Open attachment" . mu4e-view-open-attachment))
-	(define-key menumap [extract-att]
-	  '("Extract attachment" . mu4e-view-save-attachment))
-
-	(define-key menumap [save-url]
-	  '("Save URL to kill-ring" . mu4e-view-save-url))
-	(define-key menumap [fetch-url]
-	  '("Fetch URL" . mu4e-view-fetch-url))
-	(define-key menumap [goto-url]
-	  '("Visit URL" . mu4e-view-go-to-url))
+	(unless mu4e-view-use-gnus
+	  (define-key menumap [sepa8] '("--"))
+	  (define-key menumap [open-att]
+	    '("Open attachment" . mu4e-view-open-attachment))
+	  (define-key menumap [extract-att]
+	    '("Extract attachment" . mu4e-view-save-attachment))
+	  (define-key menumap [save-url]
+	    '("Save URL to kill-ring" . mu4e-view-save-url))
+	  (define-key menumap [fetch-url]
+	    '("Fetch URL" . mu4e-view-fetch-url))
+	  (define-key menumap [goto-url]
+	    '("Visit URL" . mu4e-view-go-to-url)))
 
 	(define-key menumap [sepa1] '("--"))
 	(define-key menumap [mark-delete]
@@ -844,12 +845,12 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [search]
 	  '("Search" . mu4e-headers-search))
 
-	(define-key menumap [sepa4] '("--"))
-	(define-key menumap [next]  '("Next" . mu4e-view-headers-next))
+	(define-key menumap [sepa4]     '("--"))
+	(define-key menumap [next]      '("Next" . mu4e-view-headers-next))
 	(define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
-      map)))
+      map))
 
-(fset 'mu4e-view-mode-map mu4e-view-mode-map)
+  (fset 'mu4e-view-mode-map mu4e-view-mode-map))
 
 (defcustom mu4e-view-mode-hook nil
   "Hook run when entering Mu4e-View mode."
