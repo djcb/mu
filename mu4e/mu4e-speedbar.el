@@ -1,6 +1,6 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e
 
-;; Copyright (C) 2012-2016 Antono Vasiljev, Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2018 Antono Vasiljev, Dirk-Jan C. Binnema
 ;;
 ;; Author: Antono Vasiljev <self@antono.info>
 ;; Version: 0.1
@@ -34,6 +34,7 @@
 (require 'speedbar)
 (require 'mu4e-vars)
 (require 'mu4e-headers)
+(require 'mu4e-context)
 (require 'mu4e-utils)
 
 (defvar mu4e-main-speedbar-key-map nil
@@ -53,6 +54,7 @@
 
 (defun mu4e-speedbar-install-variables ()
   "Install those variables used by speedbar to enhance mu4e."
+  (add-hook 'mu4e-context-changed-hook 'mu4e~speedbar-render-maildir-list)
   (dolist (keymap
 	    '( mu4e-main-speedbar-key-map
 	       mu4e-headers-speedbar-key-map
@@ -61,7 +63,6 @@
       (setq keymap (speedbar-make-specialized-keymap))
       (define-key keymap "RET" 'speedbar-edit-line)
       (define-key keymap "e" 'speedbar-edit-line))))
-
 
 ;; Make sure our special speedbar major mode is loaded
 (if (featurep 'speedbar)
@@ -104,7 +105,7 @@
     (mu4e-headers-search token current-prefix-arg)))
 
 ;;;###autoload
-(defun mu4e-speedbar-buttons (buffer)
+(defun mu4e-speedbar-buttons (&optional buffer)
   "Create buttons for any mu4e BUFFER."
   (interactive)
   (erase-buffer)
@@ -116,10 +117,9 @@
   (insert (propertize " Maildirs\n" 'face 'mu4e-title-face))
   (mu4e~speedbar-render-maildir-list))
 
-(defun mu4e-main-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
-(defun mu4e-headers-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
-(defun mu4e-view-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer)) 
-
+(defun mu4e-main-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer))
+(defun mu4e-headers-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer))
+(defun mu4e-view-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer))
 
 (provide 'mu4e-speedbar)
 ;;; mu4e-speedbar.el ends here

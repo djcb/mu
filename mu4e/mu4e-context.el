@@ -33,6 +33,11 @@
 (defvar mu4e-contexts nil "The list of `mu4e-context' objects
 describing mu4e's contexts.")
 
+(defcustom mu4e-context-changed-hook nil
+  "Hook run just *after* the context changed."
+  :type 'hook
+  :group 'mu4e-headers)
+
 (defvar mu4e~context-current nil
   "The current context; for internal use. Use
   `mu4e-context-switch' to change it.")
@@ -117,6 +122,7 @@ non-nil."
       (setq mu4e~context-current context)
       (unless (eq mu4e-split-view 'single-window)
         (mu4e~main-view-real nil nil))
+      (run-hooks 'mu4e-context-changed-hook)
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
