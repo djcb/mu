@@ -882,6 +882,7 @@ FUNC should be a function taking two arguments:
       (define-key mu4e-view-mode-map [menu-bar post] nil)
       "Major mode for viewing an e-mail message in mu4e, based on
 Gnus' article-mode."
+      (setq mu4e~view-buffer-name gnus-article-buffer)
       (mu4e~view-mode-body))
     (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
       "Major mode for viewing an e-mail message in mu4e."
