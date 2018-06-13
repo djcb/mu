@@ -769,9 +769,10 @@ FUNC should be a function taking two arguments:
 
       ;; misc
       (define-key map "w" 'visual-line-mode)
-      (define-key map "#" 'mu4e-view-toggle-hide-cited)
-      (define-key map "h" 'mu4e-view-toggle-html)
-      (define-key map (kbd "M-q") 'mu4e-view-fill-long-lines)
+      (define-key map "#" (if mu4e-view-use-gnus 'ignore 'mu4e-view-toggle-hide-cited))
+      (define-key map "h" (if mu4e-view-use-gnus 'ignore 'mu4e-view-toggle-html))
+      (define-key map (kbd "M-q")
+	(if 'mu4e-view-use-gnus 'article-fill-long-lines 'mu4e-view-fill-long-lines))
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
@@ -793,10 +794,9 @@ FUNC should be a function taking two arguments:
 	(define-key menumap [sepa0] '("--"))
 	(define-key menumap [wrap-lines]
 	  '("Toggle wrap lines" . visual-line-mode))
-	(define-key menumap [toggle-html]
-	  '("Toggle view-html" . mu4e-view-toggle-html))
-	(define-key menumap [hide-cited]
-	  '("Toggle hide cited" . mu4e-view-toggle-hide-cited))
+	(unless 'mu4e-view-use-gnus
+	  (define-key menumap [toggle-html]
+	    '("Toggle view-html" . mu4e-view-toggle-html)))
 	(define-key menumap [raw-view]
 	  '("View raw message" . mu4e-view-raw-message))
 	(define-key menumap [pipe]
