@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012-2016 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2018 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -25,7 +25,7 @@ Documentation License.''
 @end copying
 
 @titlepage
-@title @t{Mu4e} --- an e-mail client for GNU/Emacs
+@title @t{Mu4e} --- an e-mail client for GNU Emacs
 @subtitle version  @value{VERSION}, @value{UPDATED}
 @author Dirk-Jan C. Binnema
 
@@ -37,7 +37,7 @@ Documentation License.''
 
 @dircategory Emacs
 @direntry
-* mu4e: (Mu4e).  An email client for GNU/Emacs.
+* Mu4e: (Mu4e).  An email client for GNU Emacs.
 @end direntry
 
 @contents
@@ -54,10 +54,10 @@ Documentation License.''
 
 Welcome to @t{mu4e} @value{VERSION}.
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU-Emacs version
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version
 24.4 or higher, built on top of the
 @t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search
-engine. @t{mu4e} is optimized for fast handling of large amounts of
+engine. @t{mu4e} is optimized for quickly processing large amounts of
 e-mail.
 
 Some of its highlights:
@@ -81,7 +81,7 @@ basic configuration and explain its daily use. We also show you how you
 can customize @t{mu4e} for your special needs.
 
 At the end of the manual, there are some example configurations, to get
-you up to speed quickly: @ref{Example configurations}. There's also a
+you up to speed quickly: @ref{Example configs}. There's also a
 section with answers to frequenly asked questions, @ref{FAQ}.
 
 @menu
@@ -99,12 +99,13 @@ section with answers to frequenly asked questions, @ref{FAQ}.
 * Extending mu4e:: Writing code for @t{mu4e}
 
 Appendices
-* Interaction with other tools:: mu4e and the rest of the world
-* Example configurations:: Some examples to set you up quickly
+* Other tools:: mu4e and the rest of the world
+* Example configs:: Some examples to set you up quickly
 * FAQ:: Common questions and answers
 * Tips and Tricks:: Useful tips
 * How it works:: Some notes about the implementation of @t{mu4e}
-* Logging and debugging:: How to debug problems in @t{mu4e}
+* Debugging:: How to debug problems in @t{mu4e}
+
 * GNU Free Documentation License::  The license of this manual
 @end menu
 
@@ -351,7 +352,7 @@ configuration before trying again:
 
 There is some support for using the @command{emacs} customization system in
 @t{mu4e}, but for now, we recommend setting the values manually. Please refer
-to @ref{Example configurations} for a couple of examples of this; here we go
+to @ref{Example configs} for a couple of examples of this; here we go
 through things step-by-step.
 
 @node Getting mail
@@ -570,8 +571,8 @@ For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
 (@inforef{Top,,smtpmail}). This package supports many different ways to
 send mail; please refer to its documentation for the details.
 
-Here, we only provide some simple examples --- for more, see @ref{Example
-configurations}.
+Here, we only provide some simple examples --- for more, see
+@ref{Example configs}.
 
 A very minimal setup:
 
@@ -1087,6 +1088,11 @@ headers-view to the message-view and vice-versa with
 After selecting a message in the @ref{Headers view}, it appears in a message
 view window, which shows the message headers, followed by the message
 body. Its major mode is @code{mu4e-view-mode}.
+
+Note, the current message view is to be replaced by a new one, based on
+Gnus' article-mode. It is available now as a 'tech preview', which you
+can try by setting @code{mu4e-view-use-gnus} to @code{t} before starting
+@code{mu4e}.
 
 @menu
 * Overview: MSGV Overview. What is the Message View
@@ -3098,8 +3104,8 @@ see @code{mu4e-toggle-logging}.
 @end itemize
 
 
-@node Interaction with other tools
-@appendix Interaction with other tools
+@node Other tools
+@appendix Other tools
 
 In this chapter, we discuss some ways in which @t{mu4e} can cooperate
 with other tools.
@@ -3369,8 +3375,8 @@ Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
 RET C-a}, and you'll be asked whether to attach them to an existing message,
 or create a new one.
 
-@node Example configurations
-@appendix Example configurations
+@node Example configs
+@appendix Example configs
 
 In this chapter, we show some example configurations. While it is very useful
 to see some working settings, we'd like to warn against blindly copying such
@@ -3820,6 +3826,16 @@ non-ascii folder names, while @t{mu} expects UTF-8 (so, e.g. @t{/まりも
 correctly?} This is best solved by telling @command{offlineimap} to use
 UTF-8 instead --- see
 @url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
+@item @emph{@t{mbsync} or @t{offlineimap} do not sync properly with my web-mail
+provider (such as gmail) -- what can I do about it?} Unfortunately,
+@t{mbsync} and/or @t{offlineimap} do not always agree with @t{mu} about
+the meaning of various Maildir-flags. If you encounter unexpected
+behavior, it is recommended you check before and after a sync-operation.
+
+If the problem only shows up @emph{after} sync'ing, the problem is with
+the sync-program, and it's most productive to complain there. Otherwise,
+there have been quite a few related queries on the mailing-list;
+worthwhile to check out.
 @end enumerate
 
 @node Reading messages
@@ -4003,7 +4019,20 @@ understand the latter as it is the case for Google or Github), use
 @kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
 uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
 message.
+@item @emph{How can force images to be shown at the end of my messages,
+regardless of where I insert them?}
+User Marcin Borkowski has a solution:
+@lisp
+(defun mml-attach-file--go-to-eob (orig-fun &rest args)
+  "Go to the end of buffer before attaching files."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-max))
+      (apply orig-fun args))))
 
+(advice-add 'mml-attach-file :around #'mml-attach-file--go-to-eob)
+@end lisp
 @end enumerate
 
 @node Known issues
@@ -4554,8 +4583,8 @@ When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda function
 we registered is called, and it compares the version we got from the @t{pong}
 with the version we expected, and raises an error if they differ.
 
-@node Logging and debugging
-@appendix Logging and debugging
+@node Debugging
+@appendix Debugging
 
 As explained in @ref{How it works}, @t{mu4e} communicates with its backend
 (@t{mu server}) by sending commands and receiving responses (s-expressions).
