@@ -288,9 +288,9 @@ If needed, set the Fcc header, and register the handler function."
 	  (lambda (file)
 	    (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
 	    (let ((mdir-path (concat mu4e-maildir maildir)))
-	      ;; Create the full maildir structure for the sent folder if it doesn't exist. `mu4e~proc-mkdir`
-              ;; runs asynchronously but no matter whether it runs before or after `write-file`, the sent
-              ;; maildir ends up in the correct state.
+	      ;; Create the full maildir structure for the sent folder if it doesn't exist.
+              ;; `mu4e~proc-mkdir` runs asynchronously but no matter whether it runs before or after
+              ;; `write-file`, the sent maildir ends up in the correct state.
 	      (unless (file-exists-p mdir-path)
 		(mu4e~proc-mkdir mdir-path)))
 	    (write-file file)		       ;; writing maildirs files is easy
@@ -465,8 +465,9 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (setq default-directory (expand-file-name "~/"))
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
+      (unless mu4e~contacts   ;; work-around for https://github.com/djcb/mu/issues/1016
+	(mu4e~request-contacts))
       (mu4e~compose-setup-completion))
-
     (when mu4e-compose-format-flowed
       (turn-off-auto-fill)
       (setq truncate-lines nil
