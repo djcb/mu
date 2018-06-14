@@ -72,14 +72,16 @@
 (defun mu4e~speedbar-render-maildir-list ()
   "Insert the list of maildirs in the speedbar."
   (interactive)
-  (mapcar (lambda (maildir-name)
-            (speedbar-insert-button
-	      (concat "  " maildir-name)
-	      'mu4e-highlight-face
-	      'highlight
-	      'mu4e~speedbar-maildir
-	      maildir-name))
-    (mu4e-get-maildirs)))
+  (when (buffer-live-p speedbar-buffer)
+    (with-current-buffer speedbar-buffer
+      (mapcar (lambda (maildir-name)
+		(speedbar-insert-button
+		  (concat "  " maildir-name)
+		  'mu4e-highlight-face
+		  'highlight
+		  'mu4e~speedbar-maildir
+		  maildir-name))
+	(mu4e-get-maildirs)))))
 
 (defun mu4e~speedbar-maildir (&optional text token ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
