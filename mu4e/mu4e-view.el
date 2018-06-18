@@ -329,15 +329,18 @@ article-mode."
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name)))
-         mode-enabled)
+	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (unless (setq mode-enabled (eq major-mode 'mu4e-view-mode))
+      (unless (eq major-mode 'mu4e-view-mode)
         (let (mu4e-view-mode-hook) (mu4e-view-mode)))
       (setq mu4e~view-msg msg)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
       ;; another call to mu4e-view (via mu4e~headers-update-handler as
-      ;; the reply handler to mu4e~proc-move)
+      ;; the reply handler to mu4e~proc-move); this in turn will call
+      ;; recursively enter this method. Since we only want to display
+      ;; the text once, the following `when' gaurds against entering
+      ;; the display code and prevents displaying the text twice and
+      ;; also prevents running the hooks twice.
       (let ((inhibit-read-only t))
         (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
@@ -349,7 +352,7 @@ article-mode."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-          (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
+	  (run-mode-hooks 'mu4e-view-mode-hook))))
     (switch-to-buffer buf)))
 
 (defun mu4e~view-gnus (msg)
