@@ -329,10 +329,9 @@ article-mode."
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name)))
-         mode-enabled)
+	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (unless (setq mode-enabled (eq major-mode 'mu4e-view-mode))
+      (unless (eq major-mode 'mu4e-view-mode)
         (let (mu4e-view-mode-hook) (mu4e-view-mode)))
       (setq mu4e~view-msg msg)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
@@ -349,7 +348,7 @@ article-mode."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-          (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
+          (run-mode-hooks 'mu4e-view-mode-hook))))
     (switch-to-buffer buf)))
 
 (defun mu4e~view-gnus (msg)
@@ -903,8 +902,13 @@ changes, it triggers a refresh."
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
 	(mu4e~proc-move msgid nil "+S-u-N")
+        (add-function :override mu4e-view-func 'mu4e~view-advice-view-func)
         (mu4e~proc-view docid mu4e-view-show-images (mu4e~decrypt-p msg))
 	t))))
+
+(defun mu4e~view-advice-view-func (&rest args)
+  (apply 'ignore args)
+  (remove-function mu4e-view-func 'mu4e~view-advice-view-func))
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.
