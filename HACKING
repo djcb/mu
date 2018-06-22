@@ -126,6 +126,7 @@
 	libgmime-2.6-dev                 \
         m4                               \
         make                             \
+        libtool                          \
         pkg-config
 
    Then, to compile straight from git:
