@@ -3233,7 +3233,7 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
   ;; (bbdb-initialize 'message 'mu4e)
 
   (setq bbdb-mail-user-agent 'mu4e-user-agent)
-  (setq mu4e-view-mode-hook 'bbdb-mua-auto-update visual-line-mode)
+  (setq mu4e-view-mode-hook 'bbdb-mua-auto-update)
   (setq mu4e-compose-complete-addresses nil)
   (setq bbdb-mua-pop-up t)
   (setq bbdb-mua-pop-up-window-size 5)
