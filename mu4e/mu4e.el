@@ -46,40 +46,6 @@
 (add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; register our handler functions; these connect server messages to functions
-;; to handle them.
-;;
-;; these form mu4e's central nervous system so it's not really recommended
-;; to override them (they reference various internal bits which could change)
-
-;; these are all defined in mu4e-headers
-(defvar mu4e-update-func  'mu4e~headers-update-handler)
-(defvar mu4e-header-func  'mu4e~headers-header-handler)
-(defvar mu4e-found-func   'mu4e~headers-found-handler)
-(defvar mu4e-view-func    'mu4e~headers-view-handler)
-(defvar mu4e-remove-func  'mu4e~headers-remove-handler)
-(defvar mu4e-erase-func   'mu4e~headers-clear)
-
-;; these ones are defined in mu4e-utils
-(defvar mu4e-info-func    'mu4e-info-handler)
-(defvar mu4e-error-func   'mu4e-error-handler)
-;; note: mu4e-utils also dynamically (temporarily)
-;; registers mu4e-pong func
-
-;; this one is defined in mu4e-compose
-(defvar mu4e-compose-func 'mu4e~compose-handler)
-;; note: mu4e-compose.el dynamically registers mu4e-sent-func
-;; we don't do that here, because it's only a local (temporary)
-;; handler
-
-;; this one is defined in mu4e-view
-(defvar mu4e-temp-func 'mu4e~view-temp-handler)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;###autoload
