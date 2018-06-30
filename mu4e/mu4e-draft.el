@@ -325,20 +325,30 @@ never hits the disk. Also see `mu4e~draft-insert-mail-header-separator."
       (let ((inhibit-read-only t))
 	(replace-match "")))))
 
-(defun mu4e~draft-reply-all-p (origmsg)
-  "Ask user whether she wants to reply to *all* recipients.
+(defun mu4e~draft-user-wants-reply-all (origmsg)
+  "Ask user whether she wants to reply to *all* recipients, just the sender or
+the mailing list address (the latter only if a `List-Post' header is found).
 If there is just one recipient of ORIGMSG do nothing."
-  (let* ((recipnum
-	   (+ (length (mu4e~draft-create-to-lst origmsg))
+  (let* ((cc-reps (mu4e~draft-create-cc-lst origmsg t))
+	 (recipnum
+	  (+ (length (mu4e~draft-create-to-lst origmsg))
 	     (length (mu4e~draft-create-cc-lst origmsg t))))
-	  (response
-	    (if (< recipnum 2)
-	      'all ;; with less than 2 recipients, we can reply to 'all'
+	 (response
+	  (let (list-address (origmsg-as-string ""))
+	    (with-temp-buffer
+	      (insert-file-contents (plist-get origmsg :path))
+	      (setq origmsg-as-string (buffer-string)))
+	    (if (string-match "^List-Post: *\\(?:<mailto:\\)?\\([^>[:space:]]+\\)" origmsg-as-string)
+	        (setq list-address (match-string 1 origmsg-as-string)))
+	    (if (and (= recipnum 1) (not list-address))
+	        'all ;; with one recipient, we can reply to 'all'....
 	      (mu4e-read-option
-		"Reply to "
-		`( (,(format "all %d recipients" recipnum) . all)
-		   ("sender only" . sender-only))))))
-    (eq response 'all)))
+	       "Reply to "
+	       `( (,(format "all %d recipients" recipnum) . all)
+		  ,(if (or list-address cc-reps)
+		       `("list only" . ,(or list-address (cdar cc-reps))))
+		  ("sender only" . sender-only)))))))
+    response))
 
 (defun mu4e~draft-message-filename-construct (&optional flagstr)
   "Construct a randomized name for a message file with flags FLAGSTR.
@@ -379,7 +389,8 @@ fields will be the same as in the original."
 	     (+ (length (mu4e~draft-create-to-lst origmsg))
 	       (length (mu4e~draft-create-cc-lst origmsg t))))
 	  ;; reply-to-self implies reply-all
-	  (reply-all (or reply-to-self (mu4e~draft-reply-all-p origmsg)))
+	  (reply-type (mu4e~draft-user-wants-reply-all origmsg))
+	  (reply-all (or reply-to-self (eq 'all reply-type)))
 	  (old-msgid (plist-get origmsg :message-id))
 	  (subject
 	    (concat mu4e~draft-reply-prefix
@@ -401,10 +412,12 @@ fields will be the same as in the original."
 	  (mu4e~draft-header "To" (mu4e~draft-recipients-construct
 				    :cc origmsg reply-all))
 	  ;; otherwise...
-	  (concat
-	    (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-	    (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
-				      reply-all)))))
+	  (if (stringp reply-type)
+	      (mu4e~draft-header "To" reply-type)
+            (concat
+	     (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
+	     (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
+				                                      reply-all))))))
       (mu4e~draft-header "Subject" subject)
       (mu4e~draft-header "References"
 	(mu4e~draft-references-construct origmsg))
