@@ -362,7 +362,8 @@ display the message."
 	(mu4e-headers-search
 	  (format "msgid:%s" msgid)
 	  nil nil nil
-	  msgid (eq major-mode 'mu4e-view-mode))))))
+	  msgid (and (eq major-mode 'mu4e-view-mode)
+		     (not (eq mu4e-split-view 'single-window))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
