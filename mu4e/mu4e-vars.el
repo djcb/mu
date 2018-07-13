@@ -232,6 +232,10 @@ string or an s-expression that evaluates to query string) and a
 An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
 KEY) is still recognized as well, for backward-compatibility.")
 
+(defcustom mu4e-hide-main-view-buffer nil
+  "If non-nil, mu4e's main view buffer will be replaced with a minibuffer prompt."
+  :type 'boolean
+  :group 'mu4e)
 
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
