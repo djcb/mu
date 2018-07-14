@@ -54,11 +54,16 @@
 
 (defun mu4e-speedbar-install-variables ()
   "Install those variables used by speedbar to enhance mu4e."
-  (add-hook 'mu4e-context-changed-hook 'mu4e~speedbar-render-maildir-list)
+  (add-hook 'mu4e-context-changed-hook
+    (lambda()
+        (when (buffer-live-p speedbar-buffer)
+          (with-current-buffer speedbar-buffer
+            (let ((inhibit-read-only t))
+              (mu4e-speedbar-buttons))))))
   (dolist (keymap
-	    '( mu4e-main-speedbar-key-map
-	       mu4e-headers-speedbar-key-map
-	       mu4e-view-speedbar-key-map))
+            '( mu4e-main-speedbar-key-map
+               mu4e-headers-speedbar-key-map
+               mu4e-view-speedbar-key-map))
     (unless keymap
       (setq keymap (speedbar-make-specialized-keymap))
       (define-key keymap "RET" 'speedbar-edit-line)
