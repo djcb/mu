@@ -329,15 +329,19 @@ article-mode."
 	  (buf
 	    (if embedded
 	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name)))
-         mode-enabled)
+	      (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (unless (setq mode-enabled (eq major-mode 'mu4e-view-mode))
+      (unless (eq major-mode 'mu4e-view-mode)
         (let (mu4e-view-mode-hook) (mu4e-view-mode)))
       (setq mu4e~view-msg msg)
       ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
-      ;; another call to mu4e-view (via mu4e~headers-update-handler as
-      ;; the reply handler to mu4e~proc-move)
+      ;; 2 other calls to mu4e~view-internal when running
+      ;; mu4e~proc-move and mu4e~proc-view. To avoid printing and
+      ;; running hooks a second time we advice mu4e-view-func aka
+      ;; mu4e~headers-view-handler aka mu4e-view aka
+      ;; mu4e~view-internal so that it does nothing. See
+      ;; mu4e~view-mark-as-read-maybe and mu4e~view-advice-view-func.
+      ;; Ref Issues #1265 #1267 #1268.
       (let ((inhibit-read-only t))
         (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
@@ -349,7 +353,7 @@ article-mode."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-          (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
+          (run-mode-hooks 'mu4e-view-mode-hook))))
     (switch-to-buffer buf)))
 
 (defun mu4e~view-gnus (msg)
@@ -903,8 +907,18 @@ changes, it triggers a refresh."
 	;; mark /all/ messages with this message-id as read, so all copies of
 	;; this message will be marked as read.
 	(mu4e~proc-move msgid nil "+S-u-N")
+        ;; Now mu4e-view have printed view buffer and ran hooks
+        ;; prevent mu4e~proc-view doing this again.
+        (add-function :override mu4e-view-func 'mu4e~view-advice-view-func)
         (mu4e~proc-view docid mu4e-view-show-images (mu4e~decrypt-p msg))
 	t))))
+
+(defun mu4e~view-advice-view-func (&rest args)
+  "Advice for `mu4e-view-func'.
+Run in `mu4e~view-mark-as-read-maybe'.
+Do nothing and remove itself."
+  (apply 'ignore args)
+  (remove-function mu4e-view-func 'mu4e~view-advice-view-func))
 
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.
