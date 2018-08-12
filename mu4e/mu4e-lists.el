@@ -35,6 +35,7 @@
      ("crypto-gram-list.schneier.com "                        . "CryptoGr")
      ("dbus.lists.freedesktop.org"                            . "DBus")
      ("desktop-devel-list.gnome.org"                          . "GnomeDT")
+     ("discuss-webrtc.googlegroups.com"                       . "WebRTC")
      ("emacs-devel.gnu.org"                                   . "EmacsDev")
      ("emacs-orgmode.gnu.org"                                 . "Orgmode")
      ("emms-help.gnu.org"                                     . "Emms")
