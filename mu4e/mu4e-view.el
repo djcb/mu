@@ -901,8 +901,9 @@ changes, it triggers a refresh."
       ;; is a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
 	;; mark /all/ messages with this message-id as read, so all copies of
-	;; this message will be marked as read.
-	(mu4e~proc-move msgid nil "+S-u-N")
+	;; this message will be marked as read. We don't want an update thougn,
+	;; we want a full message, so images etc. work correctly.
+	(mu4e~proc-move msgid nil "+S-u-N" 'noupdate)
         (mu4e~proc-view docid mu4e-view-show-images (mu4e~decrypt-p msg))
 	t))))
 

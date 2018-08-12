@@ -348,7 +348,7 @@ or an error."
     (if skip-dups "true" "false")
     (if include-related "true" "false")))
 
-(defun mu4e~proc-move (docid-or-msgid &optional maildir flags)
+(defun mu4e~proc-move (docid-or-msgid &optional maildir flags no-update)
   "Move message identified by DOCID-OR-MSGID to optional MAILDIR
 and optionally setting FLAGS. If MAILDIR is nil, message will be
 moved within the same maildir.
@@ -374,12 +374,12 @@ The server reports the results for the operation through
 `mu4e-update-func'.
 
 If the variable `mu4e-change-filenames-when-moving' is
-non-nil, moving to a different maildir generates new names for
+non-nil, moving to a different maildir generates new names forq
 the target files; this helps certain tools (such as mbsync).
 
-The results are reported through either (:update ... )
-or (:error ) sexp, which are handled my `mu4e-update-func' and
-`mu4e-error-func', respectively."
+Unless NO-UPDATE is non-nil, the results are reported through
+either (:update ... ) or (:error ) sexp, which are handled my
+`mu4e-update-func' and `mu4e-error-func', respectively."
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
   (unless (or (not maildir)
@@ -396,9 +396,12 @@ or (:error ) sexp, which are handled my `mu4e-update-func' and
 	  (rename
 	    (if (and maildir mu4e-change-filenames-when-moving)
 	      "true" "false")))
-    (mu4e~proc-send-command "cmd:move %s %s %s %s"
-      idparam (or flagstr "") (or path "")
-      (format "newname:%s" rename))))
+    (mu4e~proc-send-command "cmd:move %s %s %s %s %s"
+      idparam
+      (or flagstr "")
+      (or path "")
+      (format "newname:%s" rename)
+      (format "noupdate:%s" (if no-update "true" "false")))))
 
 (defun mu4e~proc-index (path my-addresses cleanup lazy-check)
   "Update the message database for filesystem PATH, which should
