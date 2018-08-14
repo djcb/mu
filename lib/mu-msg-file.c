@@ -30,6 +30,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-maildir.h"
+#include "mu-store.h"
 #include "mu-msg-priv.h"
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
@@ -655,13 +656,12 @@ get_msgid (MuMsgFile *self, gboolean *do_free)
 	const char *msgid;
 
 	msgid = g_mime_message_get_message_id (self->_mime_msg);
-	if (msgid)
+	if (msgid && strlen(msgid) < MU_STORE_MAX_TERM_LENGTH) {
 		return (char*)msgid;
-	else { /* if there is none, fake it */
+	} else { /* if there is none, fake it */
 		*do_free = TRUE;
-		return g_strdup_printf (
-			"%s@fake-msgid",
-			mu_util_get_hash (self->_path));
+		return g_strdup_printf ("%s@fake-msgid",
+					mu_util_get_hash (self->_path));
 	}
 }
 

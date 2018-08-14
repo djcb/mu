@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 struct _MuStore;
 typedef struct _MuStore MuStore;
 
+/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
+#define MU_STORE_MAX_TERM_LENGTH (240)
 
 /**
  * create a new writable Xapian store, a place to store documents

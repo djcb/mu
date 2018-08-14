@@ -46,7 +46,6 @@ private:
 	const std::string _what;
 };
 
-
 struct _MuStore {
 public:
 	/* create a read-write MuStore */
@@ -196,7 +195,7 @@ public:
 		mu_store_set_metadata (this, MU_STORE_VERSION_KEY, vers, NULL);
 	}
 
-	static unsigned max_term_length() { return MAX_TERM_LENGTH; }
+	static unsigned max_term_length() { return MU_STORE_MAX_TERM_LENGTH; }
 
 	void begin_transaction ();
 	void commit_transaction ();
@@ -237,9 +236,6 @@ public:
 
 	/* by default, use transactions of 30000 messages */
 	static const unsigned DEFAULT_BATCH_SIZE = 30000;
-	/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-	static const unsigned MAX_TERM_LENGTH = 240;
-
 private:
 	/* transaction handling */
 	bool   _in_transaction;

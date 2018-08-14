@@ -289,6 +289,17 @@ prio_val (MuMsgPrio prio)
 }
 
 
+static void // add term, truncate if needed.
+add_term (Xapian::Document& doc, const std::string& term)
+{
+	if (term.length() < MU_STORE_MAX_TERM_LENGTH)
+		doc.add_term(term);
+	else
+		doc.add_term(term.substr(0, MU_STORE_MAX_TERM_LENGTH));
+}
+
+
+
 static void
 add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
@@ -302,12 +313,12 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 			((MuFlags)num,(MuFlagType)MU_FLAG_TYPE_ANY);
 		g_return_if_fail (cur);
 		while (*cur) {
-			doc.add_term (flag_val(*cur));
+			add_term (doc, flag_val(*cur));
 			++cur;
 		}
 
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO)
-		doc.add_term (prio_val((MuMsgPrio)num));
+		add_term (doc, prio_val((MuMsgPrio)num));
 }
 
 
@@ -323,11 +334,9 @@ add_terms_values_str (Xapian::Document& doc, const char *val, MuMsgFieldId mfid)
 		termgen.index_text (flat, 1, prefix(mfid));
 	}
 
-	if (mu_msg_field_xapian_term(mfid)) {
-		//std::cerr << ":" << prefix(mfid) + flat << std::endl;
-		doc.add_term((prefix(mfid) + flat)
-			     .substr(0, MuStore::MAX_TERM_LENGTH));
-	}
+	if (mu_msg_field_xapian_term(mfid))
+		add_term(doc, prefix(mfid) + flat);
+
 }
 
 static void
@@ -414,17 +423,15 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 	/* save the mime type of any part */
 	if (part->type) {
-		char ctype[MuStore::MAX_TERM_LENGTH + 1];
-		snprintf (ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
-		pdata->_doc.add_term
-			(mime + std::string(ctype, 0, MuStore::MAX_TERM_LENGTH));
+		char ctype[MU_STORE_MAX_TERM_LENGTH + 1];
+		snprintf(ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
+		add_term(pdata->_doc, mime + ctype);
 	}
 
 	if ((fname = mu_msg_part_get_filename (part, FALSE))) {
 		const auto flat = Mux::utf8_flatten (fname);
 		g_free (fname);
-		pdata->_doc.add_term
-			(file + std::string(flat, 0, MuStore::MAX_TERM_LENGTH));
+		add_term(pdata->_doc, file + flat);
 	}
 
 	maybe_index_text_part (msg, part, pdata);
@@ -565,8 +572,8 @@ add_address_subfields (Xapian::Document& doc, const char *addr,
 	name_part   = g_strndup(addr, at - addr); // foo
 	domain_part = at + 1;
 
-	doc.add_term (pfx + std::string(name_part, 0, _MuStore::MAX_TERM_LENGTH));
-	doc.add_term (pfx + std::string(domain_part, 0, _MuStore::MAX_TERM_LENGTH));
+	add_term(doc, pfx + name_part);
+	add_term(doc, pfx + domain_part);
 
  	g_free (name_part);
 }
@@ -591,8 +598,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 
 	if (!mu_str_is_empty(contact->address)) {
 		const auto flat = Mux::utf8_flatten(contact->address);
-		msgdoc->_doc->add_term
-			(std::string (pfx + flat, 0, MuStore::MAX_TERM_LENGTH));
+		add_term(*msgdoc->_doc, pfx + flat);
 		add_address_subfields (*msgdoc->_doc, contact->address, pfx);
 		/* store it also in our contacts cache */
 		if (msgdoc->_store->contacts())
@@ -664,8 +670,8 @@ update_threading_info (Xapian::WritableDatabase* db,
 	// one first until the last one, which is the direct parent of
 	// the current message. of course, it may be empty.
 	//
-	// NOTE: there may be cases where the the list is truncated;
-	// we happily ignore that case.
+	// NOTE: there may be cases where the list is truncated; we happily
+	// ignore that case.
 	refs  = mu_msg_get_references (msg);
 
 	std::string thread_id;
@@ -674,7 +680,7 @@ update_threading_info (Xapian::WritableDatabase* db,
 	else
 		thread_id = mu_util_get_hash (mu_msg_get_msgid (msg));
 
-	doc.add_term (prefix(MU_MSG_FIELD_ID_THREAD_ID) + thread_id);
+	add_term (doc, prefix(MU_MSG_FIELD_ID_THREAD_ID) + thread_id);
 	doc.add_value((Xapian::valueno)MU_MSG_FIELD_ID_THREAD_ID, thread_id);
 }
 
@@ -693,7 +699,7 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 		if (!store->in_transaction())
 			store->begin_transaction();
 
-		doc.add_term (term);
+		add_term (doc, term);
 
 		// update the threading info if this message has a message id
 		if (mu_msg_get_msgid (msg))

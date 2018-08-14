@@ -50,6 +50,7 @@
 #include "mu-maildir.h"
 #include "mu-query.h"
 #include "mu-index.h"
+#include "mu-store.h"
 #include "mu-msg-part.h"
 #include "mu-contacts.h"
 
@@ -274,6 +275,13 @@ get_docids_from_msgids (MuQuery *query, const char *msgid,
 	char		*rawq, *tmp;
 	MuMsgIter	*iter;
 	GSList		*lst;
+
+	if (!msgid || strlen(msgid) > MU_STORE_MAX_TERM_LENGTH - 1) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "invalid message-id '%s' (length=%zu)",
+				     msgid, strlen(msgid));
+		return NULL;
+	}
 
 	xprefix = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_MSGID);
 	/*XXX this is a bit dodgy */

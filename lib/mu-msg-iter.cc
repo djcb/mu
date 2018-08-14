@@ -397,9 +397,7 @@ mu_msg_iter_get_thread_id (MuMsgIter *iter)
 	try {
 		const std::string thread_id (
 			iter->cursor().get_document().get_value(MU_MSG_FIELD_ID_THREAD_ID).c_str());
-		
 		return thread_id.empty() ? NULL : g_strdup (thread_id.c_str());
-
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
