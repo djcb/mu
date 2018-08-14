@@ -351,7 +351,7 @@ In the format needed for `mu4e-read-option'.")
     (with-current-buffer (mu4e-get-view-buffer)
       (eq docid (plist-get mu4e~view-msg :docid)))))
 
-(defun mu4e~headers-update-handler (msg is-move)
+(defun mu4e~headers-update-handler (msg is-move maybe-view)
   "Update handler, will be called when a message has been updated
 in the database. This function will update the current list of
 headers."
@@ -383,7 +383,7 @@ headers."
 	  ;; if we're actually viewing this message (in mu4e-view mode), we
 	  ;; update it; that way, the flags can be updated, as well as the path
 	  ;; (which is useful for viewing the raw message)
-	  (when (mu4e~headers-view-this-message-p docid)
+	  (when (and maybe-view (mu4e~headers-view-this-message-p docid))
 	    (mu4e-view msg))
 	  ;; now, if this update was about *moving* a message, we don't show it
 	  ;; anymore (of course, we cannot be sure if the message really no

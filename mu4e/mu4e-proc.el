@@ -194,7 +194,9 @@ The server output is as follows:
 	  ;; something got moved/flags changed
 	  ((plist-get sexp :update)
 	    (funcall mu4e-update-func
-	      (plist-get sexp :update) (plist-get sexp :move)))
+	      (plist-get sexp :update)
+	      (plist-get sexp :move)
+	      (plist-get sexp :view)))
 
 	  ;; a message got removed
 	  ((plist-get sexp :remove)
@@ -348,7 +350,7 @@ or an error."
     (if skip-dups "true" "false")
     (if include-related "true" "false")))
 
-(defun mu4e~proc-move (docid-or-msgid &optional maildir flags no-update)
+(defun mu4e~proc-move (docid-or-msgid &optional maildir flags no-view)
   "Move message identified by DOCID-OR-MSGID to optional MAILDIR
 and optionally setting FLAGS. If MAILDIR is nil, message will be
 moved within the same maildir.
@@ -377,8 +379,9 @@ If the variable `mu4e-change-filenames-when-moving' is
 non-nil, moving to a different maildir generates new names forq
 the target files; this helps certain tools (such as mbsync).
 
-Unless NO-UPDATE is non-nil, the results are reported through
-either (:update ... ) or (:error ) sexp, which are handled my
+If NO-VIEW is non-nil, don't updat the view.
+
+Returns either (:update ... ) or (:error ) sexp, which are handled my
 `mu4e-update-func' and `mu4e-error-func', respectively."
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
@@ -401,7 +404,7 @@ either (:update ... ) or (:error ) sexp, which are handled my
       (or flagstr "")
       (or path "")
       (format "newname:%s" rename)
-      (format "noupdate:%s" (if no-update "true" "false")))))
+      (format "noview:%s" (if no-view "true" "false")))))
 
 (defun mu4e~proc-index (path my-addresses cleanup lazy-check)
   "Update the message database for filesystem PATH, which should
