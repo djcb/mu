@@ -317,27 +317,23 @@ Depending on the value of `mu4e-view-use-gnus', either use mu4e's
 internal display mode, or a display mode based on Gnu's
 article-mode."
   (mu4e~view-define-mode)
-  (if mu4e-view-use-gnus
-    (mu4e~view-gnus msg)
-    (mu4e~view-internal msg)))
+  ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
+  ;; another call to mu4e-view (via mu4e~headers-update-handler as
+  ;; the reply handler to mu4e~proc-move)
+  (unless (mu4e~view-mark-as-read-maybe msg)
+    (if mu4e-view-use-gnus
+      (mu4e~view-gnus msg)
+      (mu4e~view-internal msg))))
 
 (defun mu4e~view-internal (msg)
   "Display a message using mu4e's internal view mode."
   (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
 	   (when (gethash (mu4e-message-field msg :path)
 		   mu4e~path-parent-docid-map) t))
-	  (buf
-	    (if embedded
-	      (mu4e~view-embedded-winbuf)
-	      (get-buffer-create mu4e~view-buffer-name)))
-         mode-enabled)
+	  (buf (if embedded
+		 (mu4e~view-embedded-winbuf)
+		 (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
-      (unless (setq mode-enabled (eq major-mode 'mu4e-view-mode))
-        (let (mu4e-view-mode-hook) (mu4e-view-mode)))
-      (setq mu4e~view-msg msg)
-      ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
-      ;; another call to mu4e-view (via mu4e~headers-update-handler as
-      ;; the reply handler to mu4e~proc-move)
       (let ((inhibit-read-only t))
         (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
@@ -349,8 +345,9 @@ article-mode."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-          (unless mode-enabled (run-mode-hooks 'mu4e-view-mode-hook)))))
-    (switch-to-buffer buf)))
+	  (when (not embedded) (setq mu4e~view-msg msg))
+	  (mu4e-view-mode)))
+      (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnu's article mode. Experimental."
