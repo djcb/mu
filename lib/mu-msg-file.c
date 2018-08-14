@@ -228,22 +228,29 @@ get_fake_mailing_list_maybe (MuMsgFile *self)
 static gchar*
 get_mailing_list (MuMsgFile *self)
 {
-	const char *hdr, *b, *e;
+	char		*dechdr, *res;
+	const char	*hdr, *b, *e;
 
 	hdr = g_mime_object_get_header (GMIME_OBJECT(self->_mime_msg),
 					"List-Id");
 	if (mu_str_is_empty (hdr))
 		return get_fake_mailing_list_maybe (self);
 
+	dechdr = g_mime_utils_header_decode_phrase (hdr);
+	if (!dechdr)
+		return NULL;
+
 	e = NULL;
-	b = strchr (hdr, '<');
+	b = strchr (dechdr, '<');
 	if (b)
 		e = strchr (b, '>');
 
 	if (b && e)
-		return g_strndup (b + 1, e - b - 1);
+		res = g_strndup (b + 1, e - b - 1);
 	else
-		return g_strdup (hdr);
+		res = g_strdup (dechdr);
+
+	return res;
 }
 
 
