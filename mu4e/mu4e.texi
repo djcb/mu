@@ -143,7 +143,7 @@ Under the hood, @t{mu4e} is fully search-based, similar to programs like
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
 handling (deleting, moving etc.) is inspired by
-Wanderlustu@footnote{@url{http://www.gohome.org/wl/}} (another
+Wanderlust@footnote{@url{http://www.gohome.org/wl/}} (another
 @t{emacs}-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
 file-manager for emacs.
