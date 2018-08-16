@@ -338,6 +338,7 @@ article-mode."
         (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
 	  (mu4e~delete-all-overlays)
+	  (mu4e-view-mode)
 	  (insert (mu4e-view-message-text msg))
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
@@ -345,8 +346,7 @@ article-mode."
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-	  (when (not embedded) (setq mu4e~view-msg msg))
-	  (mu4e-view-mode)))
+	  (when (not embedded) (setq mu4e~view-msg msg))))
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
