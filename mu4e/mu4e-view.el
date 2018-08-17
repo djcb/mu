@@ -368,12 +368,14 @@ article-mode."
       ;; so (update... ) can find us.
       (mm-disable-multibyte)
       (insert-file-contents path)
+      (mm-enable-multibyte)
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer)
         mu4e~view-msg msg)
+      (run-hooks 'gnus-article-decode-hook)
       (let ((gnus-display-mime-function 'mu4e~view-gnus-display-mime))
-        (mm-view-message)); decode and run `gnus-article-prepare-display'
+        (gnus-article-prepare-display))
       (mu4e-view-mode)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
