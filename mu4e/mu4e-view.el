@@ -366,7 +366,8 @@ article-mode."
     (unless marked-read
       ;; when we're being marked as read, no need to start rendering the messages; just the minimal
       ;; so (update... ) can find us.
-      (mm-disable-multibyte)
+      (when (mu4e-message-field msg :body-txt-params)
+        (mm-disable-multibyte))
       (insert-file-contents path)
       (mm-enable-multibyte)
       (setq
