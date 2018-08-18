@@ -38,7 +38,6 @@
 (require 'org-exp nil 'noerror)
 
 (eval-when-compile (require 'cl))
-(require 'mu4e)
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
@@ -129,6 +128,7 @@ Example usage:
 (defun org-mu4e-open (path)
   "Open the mu4e message (for paths starting with 'msgid:') or run
 the query (for paths starting with 'query:')."
+  (require 'mu4e)
   (cond
     ((string-match "^msgid:\\(.+\\)" path)
       (mu4e-view-message-with-message-id (match-string 1 path)))
