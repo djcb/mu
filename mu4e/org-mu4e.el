@@ -33,10 +33,7 @@
 
 
 ;; the 'noerror is just to make sure bytecompilations does not break...
-;; FIXME: find a better solution
-(require 'org nil 'noerror)
-(require 'org-exp nil 'noerror)
-
+(require 'org)
 (eval-when-compile (require 'cl))
 
 (defgroup org-mu4e nil
@@ -263,7 +260,7 @@ body."
   (when org-mu4e-convert-to-html
     (mu4e-message "Converting to html")
     (org~mu4e-mime-convert-to-html)))
- 
+
 (defun org~mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
 or org-mode (when in the body)."
