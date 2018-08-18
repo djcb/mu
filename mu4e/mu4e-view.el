@@ -362,21 +362,25 @@ article-mode."
     (unless marked-read
       ;; when we're being marked as read, no need to start rendering the messages; just the minimal
       ;; so (update... ) can find us.
-      (mm-disable-multibyte)
       (insert-file-contents-literally path)
+      (message-narrow-to-headers-or-head)
+      (if (message-fetch-field "Content-Type" t)
+          (widen)
+        ;; For example, for messages in `mu4e-drafts-folder'
+        (erase-buffer)
+        (mm-enable-multibyte)
+        (insert-file-contents path))
+      (mm-enable-multibyte)
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer)
         mu4e~view-msg msg)
-      (mm-enable-multibyte)
-      (article-de-base64-unreadable)
-      (article-de-quoted-unreadable)
       (run-hooks 'gnus-article-decode-hook)
+      (setq gnus-article-decoded-p gnus-article-decode-hook)
       ;; Add a "Maildir" header (before "Attachments")
       (let ((gnus-display-mime-function 'mu4e~view-gnus-display-mime))
         (gnus-article-prepare-display))
       (mu4e-view-mode)
-      (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
 
