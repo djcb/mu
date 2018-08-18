@@ -366,19 +366,35 @@ article-mode."
     (unless marked-read
       ;; when we're being marked as read, no need to start rendering the messages; just the minimal
       ;; so (update... ) can find us.
+      (when (mu4e-message-field msg :body-txt-params)
+        (mm-disable-multibyte))
       (insert-file-contents path)
+      (mm-enable-multibyte)
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
-	gnus-original-article-buffer (current-buffer))
-      (article-de-base64-unreadable)
-      (article-de-quoted-unreadable)
-      (gnus-article-prepare-display)
-      (mu4e-view-mode)
-      (setq mu4e~view-msg msg)
+	gnus-original-article-buffer (current-buffer)
+        mu4e~view-msg msg)
       (run-hooks 'gnus-article-decode-hook)
+      (let ((gnus-display-mime-function 'mu4e~view-gnus-display-mime))
+        (gnus-article-prepare-display))
+      (mu4e-view-mode)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
+
+(defun mu4e~view-gnus-display-mime (&optional ihandles)
+  "Same as `gnus-display-mime' but add a \"Maildir\" header to the message."
+  (gnus-display-mime ihandles)
+  (unless ihandles
+    (save-restriction
+      (article-goto-body)
+      (forward-line -1)
+      (narrow-to-region (point) (point))
+      (insert "Maildir: " (mu4e-message-field mu4e~view-msg :maildir) "\n")
+      (let ((gnus-treatment-function-alist
+             '((gnus-treat-highlight-headers
+                gnus-article-highlight-headers))))
+        (gnus-treat-article 'head)))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
