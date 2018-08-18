@@ -83,7 +83,7 @@ exec guile -e main -s $0 $@
     (str-equal-or-exit (mu:subject msg) "atoms")
     (str-equal-or-exit (mu:to      msg) "Democritus <demo@example.com>")
     (str-equal-or-exit (mu:from    msg) "\"Richard P. Feynman\" <rpf@example.com>")
-    (str-equal-or-exit (mu:header msg "Content-transfer-encoding") "7BIT")
+    ;;(str-equal-or-exit (mu:header msg "Content-transfer-encoding") "7BIT")
 
     (if (not (equal? (mu:priority msg) mu:prio:high))
       (error-exit "Expected ~a, got ~a"  (mu:priority msg) mu:prio:high))))

@@ -31,13 +31,13 @@
 #include <locale.h>
 
 static gchar*
-get_recip (GMimeMessage *msg, GMimeRecipientType rtype)
+get_recip (GMimeMessage *msg, GMimeAddressType atype)
 {
 	char *recep;
 	InternetAddressList *receps;
 
-	receps = g_mime_message_get_recipients (msg, rtype);
-	recep = (char*)internet_address_list_to_string (receps, FALSE);
+	receps = g_mime_message_get_addresses (msg, atype);
+	recep = (char*)internet_address_list_to_string (receps, NULL, FALSE);
 
 	if (!recep || !*recep) {
 		g_free (recep);
@@ -51,20 +51,19 @@ static gchar*
 get_refs_str (GMimeMessage *msg)
 {
 	const gchar *str;
-	const GMimeReferences *cur;
 	GMimeReferences *mime_refs;
+	int i, refs_len;
 	gchar *rv;
 
 	str = g_mime_object_get_header (GMIME_OBJECT(msg), "References");
 	if (!str)
 		return NULL;
 
-	mime_refs = g_mime_references_decode (str);
-	for (rv = NULL, cur = mime_refs; cur;
-	     cur = g_mime_references_get_next(cur)) {
-
+	mime_refs = g_mime_references_parse (NULL, str);
+	refs_len = g_mime_references_length (mime_refs);
+	for (rv = NULL, i = 0; i < refs_len; ++i) {
 		const char* msgid;
-		msgid = g_mime_references_get_message_id (cur);
+		msgid = g_mime_references_get_message_id (mime_refs, i);
 		rv = g_strdup_printf ("%s%s%s",
 				      rv ? rv : "",
 				      rv ? "," : "",
@@ -78,21 +77,21 @@ get_refs_str (GMimeMessage *msg)
 static void
 print_date (GMimeMessage *msg)
 {
-	time_t		 t;
-	int		 tz;
-	char		 buf[64];
-	size_t		 len;
-	struct  tm	*t_m;
+	GDateTime       *dt;
+	gchar           *buf;
 
+	dt = g_mime_message_get_date (msg);
+	if (!dt)
+		return;
 
-	g_mime_message_get_date (msg, &t, &tz);
-	t_m = localtime (&t);
+	dt = g_date_time_to_local (dt);
+	buf = g_date_time_format (dt, "%c");
+	g_date_time_unref (dt);
 
-	len = strftime (buf, sizeof(buf) - 1, "%c", t_m);
-
-	if (len > 0)
-		g_print ("Date   : %s (%s%04d)\n",
-			 buf,tz < 0 ? "-" : "+", tz);
+	if (buf) {
+		g_print ("Date   : %s\n", buf);
+		g_free (buf);
+	}
 }
 
 
@@ -111,7 +110,7 @@ print_body (GMimeMessage *msg)
 	if (!GMIME_IS_PART(body))
 		return;
 
-	wrapper = g_mime_part_get_content_object (GMIME_PART(body));
+	wrapper = g_mime_part_get_content (GMIME_PART(body));
 	if (!GMIME_IS_DATA_WRAPPER(wrapper))
 		return;
 
@@ -142,17 +141,19 @@ test_message (GMimeMessage *msg)
 	gchar		*val;
 	const gchar	*str;
 
-	g_print ("From   : %s\n", g_mime_message_get_sender (msg));
+	val = get_recip (msg, GMIME_ADDRESS_TYPE_FROM);
+	g_print ("From   : %s\n", val ? val : "<none>" );
+	g_free (val);
 
-	val = get_recip (msg, GMIME_RECIPIENT_TYPE_TO);
+	val = get_recip (msg, GMIME_ADDRESS_TYPE_TO);
 	g_print ("To     : %s\n", val ? val : "<none>" );
 	g_free (val);
 
-	val = get_recip (msg, GMIME_RECIPIENT_TYPE_CC);
+	val = get_recip (msg, GMIME_ADDRESS_TYPE_CC);
 	g_print ("Cc     : %s\n", val ? val : "<none>" );
 	g_free (val);
 
-	val = get_recip (msg, GMIME_RECIPIENT_TYPE_BCC);
+	val = get_recip (msg, GMIME_ADDRESS_TYPE_BCC);
 	g_print ("Bcc    : %s\n", val ? val : "<none>" );
 	g_free (val);
 
@@ -195,7 +196,7 @@ test_stream (GMimeStream *stream)
 		goto leave;
 	}
 
-	msg = g_mime_parser_construct_message (parser);
+	msg = g_mime_parser_construct_message (parser, NULL);
 	if (!msg) {
 		g_warning ("failed to construct message");
 		rv = FALSE;
@@ -207,8 +208,6 @@ test_stream (GMimeStream *stream)
 leave:
 	if (parser)
 		g_object_unref (parser);
-	else
-		g_object_unref (stream);
 
 	if (msg)
 		g_object_unref (msg);
@@ -242,7 +241,9 @@ test_file (const char *path)
 		goto leave;
 	}
 
-	rv = test_stream (stream);  /* test-stream will unref it */
+	rv = test_stream (stream);
+	g_object_unref (stream);
+	return rv;
 
 leave:
 	if (file)
@@ -264,7 +265,7 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	g_mime_init(GMIME_ENABLE_RFC2047_WORKAROUNDS);
+	g_mime_init();
 
 	rv = test_file (argv[1]);
 

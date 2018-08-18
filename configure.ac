@@ -146,11 +146,11 @@ AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 glib_version="`$PKG_CONFIG --modversion glib-2.0`"
 
-# gmime, some late-2012 version
-PKG_CHECK_MODULES(GMIME,gmime-2.6 >= 2.6.7)
+# gmime, version 3.0 or higher
+PKG_CHECK_MODULES(GMIME,gmime-3.0)
 AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
-gmime_version="`$PKG_CONFIG --modversion gmime-2.6`"
+gmime_version="`$PKG_CONFIG --modversion gmime-3.0`"
 
 
 # xapian checking - we need 1.2.x at least
