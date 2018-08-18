@@ -193,10 +193,10 @@ The server output is as follows:
 
 	  ;; something got moved/flags changed
 	  ((plist-get sexp :update)
-	    (funcall mu4e-update-func
+            (funcall mu4e-update-func
 	      (plist-get sexp :update)
 	      (plist-get sexp :move)
-	      (plist-get sexp :view)))
+	      (plist-get sexp :maybe-view)))
 
 	  ;; a message got removed
 	  ((plist-get sexp :remove)

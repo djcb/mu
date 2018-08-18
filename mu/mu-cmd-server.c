@@ -258,11 +258,11 @@ get_bool_from_args (GHashTable *args, const char *param, gboolean optional,
 }
 
 
-#define GET_STRING_OR_ERROR_RETURN(ARGS,PARAM,SP,E)			\
-	do {								\
+#define GET_STRING_OR_ERROR_RETURN(ARGS,PARAM,SP,E)			 \
+	do {								 \
 		*(SP) = get_string_from_args ((ARGS),(PARAM),FALSE,(E)); \
-		if (!(*(SP)))						\
-			return MU_G_ERROR_CODE((E));			\
+		if (!(*(SP)))						 \
+			return MU_G_ERROR_CODE((E));			 \
 	} while (0);
 
 
@@ -1207,15 +1207,13 @@ do_move (MuStore *store, unsigned docid, MuMsg *msg, const char *maildir,
 		print_and_clear_g_error (err);
 	}
 
-	if (!no_view) {
-		sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
-		/* note, the :move t thing is a hint to the frontend that it
-		 * could remove the particular header */
-		print_expr ("(:update %s :move %s :view %s)", sexp,
-			    different_mdir ? "t" : "nil",
-			    no_view ? "nil" : "t");
-		g_free (sexp);
-	}
+	sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
+	/* note, the :move t thing is a hint to the frontend that it
+	 * could remove the particular header */
+	print_expr ("(:update %s :move %s :maybe-view %s)", sexp,
+		    different_mdir ? "t" : "nil",
+		    no_view ? "nil" : "t");
+	g_free (sexp);
 
 	return MU_OK;
 }
