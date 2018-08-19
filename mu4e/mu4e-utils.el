@@ -584,9 +584,13 @@ that has a live window), and vice versa."
 	     ((eq major-mode 'mu4e-view-mode)
 	       (mu4e-get-headers-buffer))))
 	  (other-win (and other-buf (get-buffer-window other-buf))))
-    (if (window-live-p other-win)
-      (select-window other-win)
-      (mu4e-message "No window to switch to"))))
+    (if (eq mu4e-split-view 'single-window)
+	(if other-buf
+	    (switch-to-buffer other-buf)
+	  (mu4e-message "No buffer to switch to"))
+      (if (window-live-p other-win)
+	  (select-window other-win)
+	(mu4e-message "No window to switch to")))))
 
 
 (defconst mu4e-output-buffer-name "*mu4e-output*"
