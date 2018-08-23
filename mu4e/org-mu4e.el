@@ -64,6 +64,11 @@ Example usage:
   :type 'function
   :group 'org-mu4e)
 
+(defvar org-mu4e-open-pre-hook nil
+  "Hook run before opening a link.
+You can use this hook for example to move to another window or
+frame.")
+  
 (defun org-mu4e-store-link ()
   "Store a link to a mu4e query or message."
   (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
@@ -128,9 +133,11 @@ the query (for paths starting with 'query:')."
   (require 'mu4e)
   (cond
     ((string-match "^msgid:\\(.+\\)" path)
-      (mu4e-view-message-with-message-id (match-string 1 path)))
+     (run-hooks 'org-mu4e-open-pre-hook)
+     (mu4e-view-message-with-message-id (match-string 1 path)))
     ((string-match "^query:\\(.+\\)" path)
-      (mu4e-headers-search (match-string 1 path) current-prefix-arg))
+     (run-hooks 'org-mu4e-open-pre-hook)
+     (mu4e-headers-search (match-string 1 path) current-prefix-arg))
     (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
 
 (defun org-mu4e-store-and-capture ()
