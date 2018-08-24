@@ -17,11 +17,11 @@ BuildRequires: automake
 BuildRequires: libtool
 BuildRequires: xapian-core-devel
 BuildRequires: libuuid-devel
-BuildRequires: gmime-devel
+BuildRequires: gmime30-devel
 BuildRequires: texinfo
 Requires: xapian-core
 Requires: libuuid
-Requires: gmime
+Requires: gmime30
 
 %description
 E-mail is the 'flow' in the work flow of many people. Consequently, one spends a lot of time searching for old e-mails, to dig up some important piece of information. With people having tens of thousands of e-mails (or more), this is becoming harder and harder. How to find that one e-mail in an ever-growing haystack?
