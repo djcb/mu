@@ -1,0 +1,4 @@
+* spec file for bulding mu on Fedora
+An attempt to create spec file for building packages for mu and emacs-mu4e.
+This spec file has been tested to create packages on Fedora 27.
+Packages can be found at https://copr.fedorainfracloud.org/coprs/bojov/mu-fedora 
