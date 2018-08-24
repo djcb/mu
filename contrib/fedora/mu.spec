@@ -1,9 +1,9 @@
 %global pkg mu
 %global pkgname mu
-%global commit 4242ca8bbf59c07e90b5d4b6d31cd4c0b5b9dc40
+%global commit 16fa5d9a22e3fbe1787ffd2e00978d442d0c9aa5
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
-%global gitdate 20180325
-%global gittime 2203
+%global gitdate 20180818
+%global gittime 1137
 
 Summary: A lightweight email search engine for Maildirs
 Name: mu
