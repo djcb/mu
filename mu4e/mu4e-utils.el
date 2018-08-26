@@ -323,15 +323,14 @@ Function will return the cdr of the list element."
 	     (directory-files-and-attributes
 	       (concat path mdir) nil
 	       "^[^.]\\|\\.[^.][^.]" t))))
-    (dolist (dentry dentries)
-      (when (and (booleanp (cadr dentry)) (cadr dentry))
+    (dolist (dentry dentries dirs)
+      (when (eq (cadr dentry) t)
 	(if (file-accessible-directory-p
-	      (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
-	  (setq dirs (cons (concat mdir (car dentry)) dirs)))
-	(unless (member (car dentry) '("cur" "new" "tmp"))
-	  (setq dirs (append dirs (mu4e~get-maildirs-1 path
-				    (concat mdir (car dentry) "/")))))))
-    dirs))
+	     (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
+	    (push (concat mdir (car dentry)) dirs)
+	  (unless (member (car dentry) '("cur" "new" "tmp"))
+	    (setq dirs (append dirs (mu4e~get-maildirs-1 path
+							 (concat mdir (car dentry) "/"))))))))))
 
 (defvar mu4e-cache-maildir-list nil
   "Whether to cache the list of maildirs; set it to t if you find
