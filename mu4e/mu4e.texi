@@ -242,8 +242,8 @@ Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++ compilers (both @command{gcc} and
-@command{clang} should work), GNU Autotools and @command{make}, and the
-development packages for GMime, GLib and Xapian. Optionally (if you use them),
+@command{clang} should work), GNU Autotools and @command{make}, and
+the development packages for GMime 3.x, GLib and Xapian. Optionally,
 you also need the development packages for GTK+, Webkit and Guile.
 
 @node Installation
@@ -266,12 +266,10 @@ apply to you, you can follow either @ref{Building from a release tarball} or
 
 @subsection Dependencies for Debian/Ubuntu
 
-Tested with Ubuntu 16.04.
-
 @example
-$ sudo apt-get install libgmime-2.6-dev libxapian-dev
+$ sudo apt-get install libgmime-3.0-dev libxapian-dev
 
-# get emacs 24 or higher if you don't have it yet
+# get emacs 25 or higher if you don't have it yet
 $ sudo apt-get install emacs
 
 # optional
@@ -284,7 +282,7 @@ $ sudo apt-get install libwebkitgtk-3.0-dev
 @subsection Dependencies for Fedora
 
 @example
-$ sudo yum install gmime-devel xapian-core-devel
+$ sudo yum install gmime30-devel xapian-core-devel
 
 # get emacs 25 or higher if you don't have it yet
 $ sudo yum install emacs
