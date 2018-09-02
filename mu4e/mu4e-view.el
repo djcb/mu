@@ -366,10 +366,12 @@ article-mode."
     (unless marked-read
       ;; when we're being marked as read, no need to start rendering the messages; just the minimal
       ;; so (update... ) can find us.
-      (insert-file-contents path)
+      (mm-disable-multibyte)
+      (insert-file-contents-literally path)
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer))
+      (mm-enable-multibyte)
       (article-de-base64-unreadable)
       (article-de-quoted-unreadable)
       (gnus-article-prepare-display)
