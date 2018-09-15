@@ -190,33 +190,21 @@ static GHashTable*
 read_command_line (GError **err)
 {
 	char		*line;
+	size_t           size;
 	GHashTable	*hash;
-	GString		*gstr;
 
 	line = NULL;
-	gstr = g_string_sized_new (512);
+	size = 0;
 
 	fputs (";; mu> ", stdout);
-
-	do {
-		int kar;
-
-		kar = fgetc (stdin);
-		if (kar == '\n' || kar == EOF)
-			break;
-		else
-			gstr = g_string_append_c (gstr, (char)kar);
-
-	} while (1);
-
-	line = g_string_free (gstr, FALSE);
+	getline (&line, &size, stdin);
 
 	if (!mu_str_is_empty (line))
 		hash = mu_str_parse_arglist (line, err);
 	else
 		hash = NULL;
 
-	g_free (line);
+	free (line);
 
 	return hash;
 }
