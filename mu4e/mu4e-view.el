@@ -26,6 +26,9 @@
 ;; viewing e-mail messages
 
 ;;; Code:
+(eval-when-compile
+  (require 'cl))
+(require 'cl-lib)
 (require 'mu4e-utils) ;; utility functions
 (require 'mu4e-vars)
 (require 'mu4e-mark)
@@ -42,9 +45,6 @@
 (require 'epg)
 (require 'thingatpt)
 (require 'calendar)
-
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
 
 (declare-function mu4e-view-mode "mu4e-view")
 
@@ -232,7 +232,7 @@ found."
     (mapconcat
       (lambda (field)
 	(let ((fieldval (mu4e-message-field msg field)))
-	  (case field
+	  (cl-case field
 	    (:subject    (mu4e~view-construct-header field fieldval))
 	    (:path       (mu4e~view-construct-header field fieldval))
 	    (:maildir    (mu4e~view-construct-header field fieldval))
@@ -506,12 +506,12 @@ add text-properties to VAL."
   "Construct a Signature: header, if there are any signed parts."
   (let* ((parts (mu4e-message-field msg :parts))
 	  (verdicts
-	    (remove-if 'null
+	    (cl-remove-if 'null
 	      (mapcar (lambda (part) (mu4e-message-part-field part :signature))
 		parts)))
 	  (signers
 	    (mapconcat 'identity
-	      (remove-if 'null
+	      (cl-remove-if 'null
 		(mapcar (lambda (part) (mu4e-message-part-field part :signers))
 		  parts)) ", "))
 	  (val (when verdicts
@@ -535,12 +535,12 @@ add text-properties to VAL."
   "Construct a Decryption: header, if there are any encrypted parts."
   (let* ((parts (mu4e-message-field msg :parts))
 	 (verdicts
-	  (remove-if 'null
+	  (cl-remove-if 'null
 	    (mapcar (lambda (part)
 		      (mu4e-message-part-field part :decryption))
 	      parts)))
-	 (succeeded (remove-if (lambda (v) (eq v 'failed)) verdicts))
-	 (failed (remove-if (lambda (v) (eq v 'succeeded)) verdicts))
+	 (succeeded (cl-remove-if (lambda (v) (eq v 'failed)) verdicts))
+	 (failed (cl-remove-if (lambda (v) (eq v 'succeeded)) verdicts))
 	 (succ (when succeeded
 		 (propertize
 		  (concat (number-to-string (length succeeded))
@@ -585,7 +585,7 @@ add text-properties to VAL."
 	    ;; we only list parts that look like attachments, ie. that have a
 	    ;; non-nil :attachment property; we record a mapping between
 	    ;; user-visible numbers and the part indices
-	    (remove-if-not
+	    (cl-remove-if-not
 	      (lambda (part)
 		(let* ((mtype (or (mu4e-message-part-field part :mime-type)
 				"application/octet-stream"))
@@ -1198,7 +1198,7 @@ return the corresponding string."
 number ATTNUM."
   (let* ((partid (gethash attnum mu4e~view-attach-map))
 	 (attach
-	   (find-if
+	   (cl-find-if
 	     (lambda (part)
 	       (eq (mu4e-message-part-field part :index) partid))
 	     (mu4e-message-field msg :parts))))

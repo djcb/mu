@@ -67,10 +67,8 @@
 ;;
 
 ;;; Code:
-
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
-
+(eval-when-compile
+  (require 'cl))
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -259,7 +257,7 @@ If needed, set the Fcc header, and register the handler function."
 	       (funcall mu4e-sent-messages-behavior)
 	       mu4e-sent-messages-behavior)))
 	  (mdir
-	    (case sent-behavior
+	    (cl-case sent-behavior
 	      (delete nil)
 	      (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
 	      (sent (mu4e-get-sent-folder mu4e-compose-parent-message))
@@ -536,7 +534,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (let* ((subj (message-field-value "subject"))
 	  (subj (unless (and subj (string-match "^[:blank:]*$" subj)) subj))
 	  (str (or subj
-		 (case compose-type
+		 (cl-case compose-type
 		   (reply       "*reply*")
 		   (forward     "*forward*")
 		   (otherwise   "*draft*")))))
@@ -552,19 +550,20 @@ automatically encrypt that reply. When the message is unencrypted,
 we can decide what we want to do."
   (if (and  (eq compose-type 'reply)
 	  (and parent (member 'encrypted (mu4e-message-field parent :flags))))
-	(case mu4e-compose-crypto-reply-encrypted-policy
+	(cl-case mu4e-compose-crypto-reply-encrypted-policy
 	  (sign (mml-secure-message-sign))
 	  (encrypt (mml-secure-message-encrypt))
 	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
 	  (message "Do nothing"))
-	(case mu4e-compose-crypto-reply-plain-policy
+	(cl-case mu4e-compose-crypto-reply-plain-policy
 	  (sign (mml-secure-message-sign))
 	  (encrypt (mml-secure-message-encrypt))
 	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
 	  (message "Do nothing")))
   )
 
-(defun* mu4e~compose-handler (compose-type &optional original-msg includes)
+
+(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -601,7 +600,7 @@ tempfile)."
       (mu4e-draft-open compose-type original-msg)
       (quit (set-window-configuration winconf)
 	(mu4e-message "Operation aborted")
-	(return-from mu4e~compose-handler))))
+	(cl-return-from mu4e~compose-handler))))
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
@@ -624,7 +623,7 @@ tempfile)."
   (if (member compose-type '(new forward))
     (message-goto-to)
     ;; otherwise, it depends...
-    (case message-cite-reply-position
+    (cl-case message-cite-reply-position
       ((above traditional)
 	(message-goto-body))
       (t

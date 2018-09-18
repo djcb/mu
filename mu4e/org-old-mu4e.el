@@ -34,7 +34,6 @@
 (require 'org nil 'noerror)
 (require 'org-exp nil 'noerror)
 
-(eval-when-compile (require 'cl))
 (require 'mu4e)
 
 (defgroup org-mu4e nil

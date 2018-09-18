@@ -26,8 +26,7 @@
 ;; manual)
 
 ;;; Code:
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
+(require 'cl-lib)
 (require 'ido)
 
 (require 'mu4e-utils)
@@ -78,7 +77,7 @@ return the filename."
   (let* ((html (mu4e-message-field msg :body-html))
 	  (txt (mu4e-message-field msg :body-txt))
 	  (tmpfile (mu4e-make-temp-file "html"))
-	  (attachments (remove-if (lambda (part)
+	  (attachments (cl-remove-if (lambda (part)
 				    (or (null (plist-get part :attachment))
 				      (null (plist-get part :cid))))
 			 (mu4e-message-field msg :parts))))

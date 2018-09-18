@@ -30,11 +30,7 @@
 
 
 ;; The expect version here is org 8.x
-
-
-;; the 'noerror is just to make sure bytecompilations does not break...
 (require 'org)
-(eval-when-compile (require 'cl))
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
