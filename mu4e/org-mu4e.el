@@ -138,7 +138,7 @@ the query (for paths starting with 'query:')."
 `org-mu4e-link-query-in-headers-mode', and capture it with
 org-mode)."
   (interactive)
-  (org-mu4e-store-link)
+  (call-interactively 'org-store-link)
   (org-capture))
 
 
