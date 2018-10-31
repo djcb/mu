@@ -234,17 +234,18 @@ size:10m..
 The \fBflag\fR/\fBg\fR field allows you to match message flags. The
 following fields are available:
 .EX1
+	a,attach        Has attachment
 	d,draft         Draft Message
 	f,flagged       Flagged
+	l,list          Mailing-list message
 	n,new           New message (in new/ Maildir)
 	p,passed        Passed ('Handled')
 	r,replied       Replied
 	s,seen          Seen
 	t,trashed       Marked for deletion
-	a,attach        Has attachment
-	z,signed        Signed message
+	u,unread        Unread: opposite of seen
 	x,encrypted     Encrypted message
-	l,list          Mailing-list message
+	z,signed        Signed message
 .EX2
 
 Some examples:
