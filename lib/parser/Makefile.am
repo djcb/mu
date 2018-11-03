@@ -25,6 +25,7 @@ AM_CXXFLAGS=			\
 	$(XAPIAN_CXXFLAGS)	\
 	$(WARN_CXXFLAGS)	\
 	$(GCOV_CFLAGS)		\
+	$(ASAN_CXXFLAGS)	\
 	-Wno-inline		\
 	-Wno-switch-enum
 
@@ -32,6 +33,7 @@ AM_CPPFLAGS=			\
 	$(GCOV_CFLAGS)
 
 AM_LDFLAGS=			\
+	$(ASAN_LDFLAGS)		\
 	$(WARN_LDFLAGS)		\
 	$(GCOV_LDADD)
 

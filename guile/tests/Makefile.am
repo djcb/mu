@@ -16,26 +16,27 @@
 
 include $(top_srcdir)/gtest.mk
 
-AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)					\
-	 $(GMIME_CFLAGS)					\
-	 $(GLIB_CFLAGS)						\
-	-I ${top_srcdir}					\
-	-I ${top_srcdir}/lib					\
-	-I ${top_srcdir}/lib/tests				\
-	-DMU_TESTMAILDIR=\"${top_srcdir}/lib/tests/testdir\"	\
-	-DMU_TESTMAILDIR2=\"${top_srcdir}/lib/tests/testdir2\"	\
-	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/tests/testdir3\"	\
-	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"		\
-	-DMU_GUILE_MODULE_PATH=\"${abs_top_srcdir}/guile/\"     \
-	-DMU_GUILE_LIBRARY_PATH=\"${abs_top_builddir}/guile/.libs\" \
-	-DABS_CURDIR=\"${abs_builddir}\"			\
+AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)						\
+	 $(GMIME_CFLAGS)						\
+	 $(GLIB_CFLAGS)							\
+	-I ${top_srcdir}						\
+	-I ${top_srcdir}/lib						\
+	-I ${top_srcdir}/lib/tests					\
+	-DMU_TESTMAILDIR=\"${top_srcdir}/lib/tests/testdir\"		\
+	-DMU_TESTMAILDIR2=\"${top_srcdir}/lib/tests/testdir2\"		\
+	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/tests/testdir3\"		\
+	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"			\
+	-DMU_GUILE_MODULE_PATH=\"${abs_top_srcdir}/guile/\"		\
+	-DMU_GUILE_LIBRARY_PATH=\"${abs_top_builddir}/guile/.libs\"	\
+	-DABS_CURDIR=\"${abs_builddir}\"				\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=$(ASAN_CFLAGS) ${WARN_CFLAGS}
+AM_CXXFLAGS=$(ASAN_CXXFLAGS) ${WARN_CXXFLAGS}
+AM_LDFLAGS=$(ASAN_LDFLAGS)
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
@@ -44,7 +45,7 @@ test_mu_guile_SOURCES= test-mu-guile.c dummy.cc
 test_mu_guile_LDADD=${top_builddir}/lib/tests/libtestmucommon.la
 
 # we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=					\
+BUILT_SOURCES=								\
 	dummy.cc
 dummy.cc:
 	touch dummy.cc

@@ -31,8 +31,15 @@ AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)					\
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=							\
+	$(WARN_CFLAGS)						\
+	$(ASAN_CFLAGS)
+AM_CXXFLAGS=							\
+	$(WARN_CXXFLAGS)					\
+	$(ASAN_CXXFLAGS)
+
+AM_LDFLAGS=							\
+	$(ASAN_LDFLAGS)
 
 noinst_PROGRAMS= $(TEST_PROGS)
 

@@ -25,19 +25,20 @@ AM_CFLAGS=					\
 	$(GMIME_CFLAGS)				\
 	$(GLIB_CFLAGS)				\
 	$(GUILE_CFLAGS)				\
+	$(ASAN_CFLAGS)				\
 	-Wno-format-nonliteral			\
 	-Wno-switch-enum			\
 	-Wno-suggest-attribute=format		\
 	-Wno-deprecated-declarations		\
 	-Wno-inline
 
-
 AM_CXXFLAGS=					\
 	$(WARN_CXXFLAGS)			\
 	$(GMIME_CFLAGS)				\
 	$(GLIB_CFLAGS)				\
 	$(XAPIAN_CXXFLAGS)			\
-	$(GUILE_CFLAGS)
+	$(GUILE_CFLAGS)				\
+	$(ASAN_CXXFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
@@ -108,6 +109,10 @@ libmu_la_LIBADD=				\
 	$(GLIB_LIBS)				\
 	$(GUILE_LIBS)				\
 	${builddir}/parser/libmuxparser.la
+
+libmu_la_LDFLAGS=				\
+	$(ASAN_LDFLAGS)
+
 
 EXTRA_DIST=					\
 	mu-msg-crypto.c				\
