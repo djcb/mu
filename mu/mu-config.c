@@ -608,7 +608,7 @@ mu_config_show_help (MuConfigCmd cmd)
 {
 	GOptionContext *ctx;
 	GOptionGroup *group;
-	char *cleanhelp;
+	char *help, *cleanhelp;
 
 	g_return_if_fail (mu_config_cmd_is_valid(cmd));
 
@@ -619,15 +619,16 @@ mu_config_show_help (MuConfigCmd cmd)
 	if (group)
 		g_option_context_add_group (ctx, group);
 
-	g_option_context_set_description (ctx,
-					  get_help_string (cmd, TRUE));
-	cleanhelp = massage_help
-		(g_option_context_get_help (ctx, TRUE, group));
+	g_option_context_set_description (ctx, get_help_string (cmd, TRUE));
+	help	  = g_option_context_get_help (ctx, TRUE, group);
+	cleanhelp = massage_help (help);
 
 	g_print ("usage:\n\t%s%s",
 		 get_help_string (cmd, FALSE), cleanhelp);
 
+	g_free (help);
 	g_free (cleanhelp);
+	g_option_context_free (ctx);
 }
 
 static gboolean
