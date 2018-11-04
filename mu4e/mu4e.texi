@@ -520,9 +520,9 @@ because you are running your own mail-server, you can leave
 @subsection Speeding up indexing
 
 If you have a large number of e-mail messages in your store,
-(re)indexing might take a while. The defaults for indexing are to ensure
-that we always have correct, up-to-date information about your messages,
-even if other programs have modified the Maildir.
+(re)indexing might take a while. The defaults for indexing are to
+ensure that we always have correct, up-to-date information about your
+messages, even if other programs have modified the Maildir.
 
 The downside of this thoroughness (which is the default) is that it is
 relatively slow, something that can be noticeable with large e-mail
@@ -536,8 +536,11 @@ corpa. For a faster approach, you can use the following:
 
 In many cases, the mentioned thoroughness might not be needed, and these
 settings give a very significant speed-up. Note that you can of course
-occasionally run a thorough indexing round. For further details, please
-refer to the @t{mu-index} manpage.
+occasionally run a thorough indexing round.
+
+For further details, please refer to the @t{mu-index} manpage; in
+particular, see @t{.noindex} and @t{.noupdate} which can help reducing
+the indexing time.
 
 @subsection Example setup
 
