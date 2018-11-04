@@ -3120,6 +3120,7 @@ with other tools.
 * Speedbar::A special frame with your folders
 * Mu-cite:: Fancy citation engine
 * Dired:: Attaching files using @t{dired}
+* Hydra:: Custom shortcut menus
 @end menu
 
 @node Emacs default
@@ -3142,7 +3143,6 @@ queries in your org-mode files. @t{mu4e} supports this with the
 @t{org-mu4e} module; you can set it up by adding it to your
 configuration, which expects org-mode 8.x. or higher@footnote{If you
 have an older version, you can try using @t{org-old-mu4e} instead}.
-
 
 @lisp
 (require 'org-mu4e)
@@ -3375,6 +3375,33 @@ well; so put in your configuration:
 Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
 RET C-a}, and you'll be asked whether to attach them to an existing message,
 or create a new one.
+
+@node Hydra
+@section Hydra
+
+People sometimes ask about having multi-character shortcuts for
+bookmarks; and easy way to achieve this, is by using anm emacs package
+called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
+
+With Hydra installed, we can add multi-character shortcuts, for instance:
+@lisp
+(defhydra my-mu4e-bookmarks-work (:color blue)
+  "work bookmarks"
+  ("b" (mu4e-headers-search "banana AND maildir:/work") "banana")
+  ("u" (mu4e-headers-search "flag:unread AND maildir:/work")   "unread"))
+
+(defhydra my-mu4e-bookmarks-personal (:color blue)
+  "personal bookmarks"
+  ("c" (mu4e-headers-search "capybara AND maildir:/personal") "capybara")
+  ("u" (mu4e-headers-search "flag:unread AND maildir:/personal")  "unread"))
+
+(defhydra my-mu4e-bookmarks (:color blue)
+  "mu4e bookmarks"
+  ("p" (my-mu4e-bookmarks-personal/body) "Personal")
+  ("w" (my-mu4e-bookmarks-work/body) "Work"))
+
+Now, you can bind a convenient key to my-mu4e-bookmarks/body.
+@end lisp
 
 @node Example configs
 @appendix Example configs
