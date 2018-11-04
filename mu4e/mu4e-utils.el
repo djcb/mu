@@ -665,8 +665,8 @@ process."
 	      "Indexing completed; processed %d, updated %d, cleaned-up %d"
 	      (plist-get info :processed) (plist-get info :updated)
 	      (plist-get info :cleaned-up))
-	    (unless (or (zerop (plist-get info :updated)) (not mu4e~contacts))
-	      (mu4e~request-contacts)
+	    (unless (zerop (plist-get info :updated))
+	      (mu4e~request-contacts-maybe)
 	      (run-hooks 'mu4e-index-updated-hook)))))
       ((plist-get info :message)
 	(mu4e-index-message "%s" (plist-get info :message))))))
@@ -849,7 +849,7 @@ Checks whether the server process is live."
 (defvar mu4e~get-mail-password-regexp "^Remote: Enter password: $"
   "Regexp to match a password query in the `mu4e-get-mail-command' output.")
 
-(defun mu4e~request-contacts ()
+(defun mu4e~request-contacts-maybe ()
   "If `mu4e-compose-complete-addresses' is non-nil, get/update
 the list of contacts we use for autocompletion; otherwise, do
 nothing."
@@ -898,7 +898,7 @@ successful, call FUNC (if non-nil) afterwards."
       (mu4e~proc-ping)
       ;; maybe request the list of contacts, automatically refresh after
       ;; reindexing
-      (mu4e~request-contacts))))
+      (mu4e~request-contacts-maybe))))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."

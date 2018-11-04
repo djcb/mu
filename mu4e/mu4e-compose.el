@@ -466,7 +466,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
       (unless mu4e~contacts   ;; work-around for https://github.com/djcb/mu/issues/1016
-	(mu4e~request-contacts))
+	(mu4e~request-contacts-maybe))
       (mu4e~compose-setup-completion))
     (when mu4e-compose-format-flowed
       (turn-off-auto-fill)
