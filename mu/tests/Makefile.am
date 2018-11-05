@@ -38,8 +38,8 @@ AM_CFLAGS=								\
 	${WARN_CFLAGS}
 AM_CXXFLAGS=								\
 	$(ASAN_CFLAGS)							\
-	${WARN_CFLAGS}
-${WARN_CXXFLAGS}
+	${WARN_CFLAGS}							\
+	${WARN_CXXFLAGS}
 
 AM_LDFLAGS=								\
 	$(ASAN_LDFLAGS)
