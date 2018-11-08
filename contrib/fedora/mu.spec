@@ -1,19 +1,21 @@
 %global pkg mu
 %global pkgname mu
-%global commit 16fa5d9a22e3fbe1787ffd2e00978d442d0c9aa5
+%global commit 700e5e76dac7a56c6f34233890fb7947a4d65419
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
-%global gitdate 20180818
-%global gittime 1137
+%global gitdate 20181107
+%global gittime 2124
 
 Summary: A lightweight email search engine for Maildirs
 Name: mu
 Version: 1.0
-Release: 2.%{gitdate}%{gittime}git%{shortcommit}%{?dist}
+Release: 4.%{gitdate}%{gittime}git%{shortcommit}%{?dist}
 License: GPLv3
 Group: Applications/Internet
 URL: https://github.com/djcb/mu
 Source0: https://github.com/djcb/%{pkgname}/archive/%{commit}/%{pkgname}-%{shortcommit}.tar.gz
 BuildRequires: automake
+BuildRequires: gcc
+BuildRequires: gcc-c++
 BuildRequires: libtool
 BuildRequires: xapian-core-devel
 BuildRequires: libuuid-devel
@@ -76,6 +78,10 @@ rm -f %{buildroot}%{_infodir}/dir
 %{_datadir}/doc/%{pkgname}/mu4e-about.org
 
 %changelog
+* Wed Mar 28 2018 Bojan <bojov@e754.snefu.lnet> - 1.0-4
+- bump to latest master
+- added gcc and gcc-c++ into BuildRequires (Fedora 29) 
+
 * Wed Mar 28 2018 Bojan <bojov@e754.snefu.lnet> - 1.0-2.20180325%{gittime}git%{shortcommit}%{?dist}
 - bump to version 1.0 with latest master repo
 - build only mu and emacs-mu4e packages
