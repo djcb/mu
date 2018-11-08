@@ -26,12 +26,17 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=						\
+	$(ASAN_CFLAGS)					\
 	$(WARN_CFLAGS)					\
 	-Wno-switch-enum				\
 	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 
 AM_CXXFLAGS=						\
+	$(ASAN_CXXCFLAGS)				\
 	$(WARN_CXXFLAGS)
+
+AM_LDFLAGS=						\
+	$(ASAN_LDFLAGS)
 
 bin_PROGRAMS=						\
 	mu

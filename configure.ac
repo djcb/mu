@@ -53,6 +53,7 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
+
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
 # a too new setup for autotools/libtool
 AM_PROG_LIBTOOL
@@ -65,6 +66,16 @@ AC_CHECK_HEADERS([wordexp.h])
 
 # use the 64-bit versions
 AC_SYS_LARGEFILE
+
+# asan is somewhat similar to valgrind, but has low enough overhead so it
+# can be used during normal operation.
+AC_ARG_ENABLE([asan],[AS_HELP_STRING([--enable-asan],
+              [Enable Address Sanitizer])], [use_asan=$enableval], [use_asan=no])
+AS_IF([test "x$use_asan" = "xyes"],[
+  AC_SUBST(ASAN_CFLAGS,  "-fsanitize=address -static-libasan -fno-omit-frame-pointer")
+  AC_SUBST(ASAN_CXXFLAGS,"-fsanitize=address -static-libasan -fno-omit-frame-pointer")
+  AC_SUBST(ASAN_LDFLAGS, "-fsanitize=address -static-libasan -fno-omit-frame-pointer")
+])
 
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)

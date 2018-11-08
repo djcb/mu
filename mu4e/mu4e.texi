@@ -242,8 +242,8 @@ Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++ compilers (both @command{gcc} and
-@command{clang} should work), GNU Autotools and @command{make}, and the
-development packages for GMime, GLib and Xapian. Optionally (if you use them),
+@command{clang} should work), GNU Autotools and @command{make}, and
+the development packages for GMime 3.x, GLib and Xapian. Optionally,
 you also need the development packages for GTK+, Webkit and Guile.
 
 @node Installation
@@ -266,12 +266,10 @@ apply to you, you can follow either @ref{Building from a release tarball} or
 
 @subsection Dependencies for Debian/Ubuntu
 
-Tested with Ubuntu 16.04.
-
 @example
-$ sudo apt-get install libgmime-2.6-dev libxapian-dev
+$ sudo apt-get install libgmime-3.0-dev libxapian-dev
 
-# get emacs 24 or higher if you don't have it yet
+# get emacs 25 or higher if you don't have it yet
 $ sudo apt-get install emacs
 
 # optional
@@ -284,7 +282,7 @@ $ sudo apt-get install libwebkitgtk-3.0-dev
 @subsection Dependencies for Fedora
 
 @example
-$ sudo yum install gmime-devel xapian-core-devel
+$ sudo yum install gmime30-devel xapian-core-devel
 
 # get emacs 25 or higher if you don't have it yet
 $ sudo yum install emacs
@@ -522,9 +520,9 @@ because you are running your own mail-server, you can leave
 @subsection Speeding up indexing
 
 If you have a large number of e-mail messages in your store,
-(re)indexing might take a while. The defaults for indexing are to ensure
-that we always have correct, up-to-date information about your messages,
-even if other programs have modified the Maildir.
+(re)indexing might take a while. The defaults for indexing are to
+ensure that we always have correct, up-to-date information about your
+messages, even if other programs have modified the Maildir.
 
 The downside of this thoroughness (which is the default) is that it is
 relatively slow, something that can be noticeable with large e-mail
@@ -538,8 +536,11 @@ corpa. For a faster approach, you can use the following:
 
 In many cases, the mentioned thoroughness might not be needed, and these
 settings give a very significant speed-up. Note that you can of course
-occasionally run a thorough indexing round. For further details, please
-refer to the @t{mu-index} manpage.
+occasionally run a thorough indexing round.
+
+For further details, please refer to the @t{mu-index} manpage; in
+particular, see @t{.noindex} and @t{.noupdate} which can help reducing
+the indexing time.
 
 @subsection Example setup
 
@@ -3119,6 +3120,7 @@ with other tools.
 * Speedbar::A special frame with your folders
 * Mu-cite:: Fancy citation engine
 * Dired:: Attaching files using @t{dired}
+* Hydra:: Custom shortcut menus
 @end menu
 
 @node Emacs default
@@ -3141,7 +3143,6 @@ queries in your org-mode files. @t{mu4e} supports this with the
 @t{org-mu4e} module; you can set it up by adding it to your
 configuration, which expects org-mode 8.x. or higher@footnote{If you
 have an older version, you can try using @t{org-old-mu4e} instead}.
-
 
 @lisp
 (require 'org-mu4e)
@@ -3374,6 +3375,33 @@ well; so put in your configuration:
 Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
 RET C-a}, and you'll be asked whether to attach them to an existing message,
 or create a new one.
+
+@node Hydra
+@section Hydra
+
+People sometimes ask about having multi-character shortcuts for
+bookmarks; and easy way to achieve this, is by using anm emacs package
+called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
+
+With Hydra installed, we can add multi-character shortcuts, for instance:
+@lisp
+(defhydra my-mu4e-bookmarks-work (:color blue)
+  "work bookmarks"
+  ("b" (mu4e-headers-search "banana AND maildir:/work") "banana")
+  ("u" (mu4e-headers-search "flag:unread AND maildir:/work")   "unread"))
+
+(defhydra my-mu4e-bookmarks-personal (:color blue)
+  "personal bookmarks"
+  ("c" (mu4e-headers-search "capybara AND maildir:/personal") "capybara")
+  ("u" (mu4e-headers-search "flag:unread AND maildir:/personal")  "unread"))
+
+(defhydra my-mu4e-bookmarks (:color blue)
+  "mu4e bookmarks"
+  ("p" (my-mu4e-bookmarks-personal/body) "Personal")
+  ("w" (my-mu4e-bookmarks-work/body) "Work"))
+
+Now, you can bind a convenient key to my-mu4e-bookmarks/body.
+@end lisp
 
 @node Example configs
 @appendix Example configs

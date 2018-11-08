@@ -1,4 +1,4 @@
-.TH MU 1 "March 2013" "User Manuals"
+.TH MU 1 "September 2018" "User Manuals"
 
 .SH NAME
 
@@ -10,53 +10,66 @@ index and search e-mail messages.
 In alphabetical order:
 
 .B mu [options]
-general mu command
+general mu command.
 
 .B mu add
-add specific messages to the database
+add specific messages to the database. See
+.BR mu-add(1)
 
 .B mu cfind [options] [<regexp>]
-find contacts
+find contacts. See
+.BR mu-cfind(1)
 
 .B mu extract [options] <file> [<parts>] [<regexp>]
-extract attachments and other MIME-parts
+extract attachments and other MIME-parts. See
+.BR mu-extract(1)
 
 .B mu find [options] <search expression>
-find messages
+find messages. See
+.BR mu-find(1)
+
+.B mu help [command]
+get help for some command. See
+.BR mu-help(1)
 
 .B mu index [options]
-(re)index the messages in a Maildir
+(re)index the messages in a Maildir. See
+.BR mu-index(1)
 
 .B mu mkdir [options] <dir> [<dirs>]
-create a new Maildir
+create a new Maildir. See
+.BR mu-mkdir(1)
 
 .B mu remove [options]
-remove specific messages from the database
+remove specific messages from the database. See
+.BR mu-remove(1)
 
 .B mu script [options]
-run a mu (Guile) script
+run a mu (Guile) script. See
+.BR mu-guile(1)
 
 .B mu server [options]
-start a server process (for \fBmu4e\fR-internal use)
+start a server process (for \fBmu4e\fR-internal use). See
+.BR mu-server(1)
 
 .B mu view <file> [<files>]
-view a specific message
-
-
+view a specific message. See
+.BR mu-view(1)
 
 .SH DESCRIPTION
 
 \fBmu\fR is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
 
-\fBmu\fR's main function is to enable searching of e-mail messages. It does so
-by periodically scanning a Maildir directory tree and analyzing the e-mail
-messages found ('indexing'). The results of this analysis are stored in a
-database, which can then be queried.
+\fBmu\fR's main purpose is to enable searching of e-mail messages. It
+does so by periodically scanning a Maildir directory tree and
+analyzing the e-mail messages found (this is called 'indexing'). The
+results of this analysis are stored in a database, which can then be
+queried.
 
-In addition to indexing and searching, \fBmu\fR also offers functionality for
-viewing messages, extracting attachments and creating maildirs, and searching
-and exporting contact information.
+In addition to indexing and searching, \fBmu\fR also offers
+functionality for viewing messages, extracting attachments and
+creating maildirs, and searching and exporting contact information.
 
 \fBmu\fR can be used from the command line or can be integrated with various
 e-mail clients.
@@ -64,50 +77,6 @@ e-mail clients.
 This manpage gives a general overview of the available commands
 (\fBindex\fR, \fBfind\fR, etc.); each \fBmu\fR command has its own
 man-page as well.
-
-.SH COMMANDS
-
-\fBmu\fR offers the following commands:
-
-.TP
-\fBindex\fR
-for indexing (analyzing) the contents of your Maildirs, and storing the
-information in a database. See
-.BR mu-index(1)
-\.
-
-.TP
-\fBfind\fR
-for finding messages in your database, using certain search
-parameters. See
-.BR mu-find(1)
-\.
-
-
-.TP
-\fBcfind\fR
-for finding contacts (names + e-mail addresses) matching a certain expression,
-and exporting the results in various formats for use in other programs.
-.BR mu-cfind(1)
-\.
-
-.TP
-\fBview\fR
-for displaying e-mail messages. See
-.BR mu-view(1)
-\.
-
-.TP
-\fBmkdir\fR
-for creating Maildirs. See
-.BR mu-mkdir(1)
-\.
-
-.TP
-\fBextract\fR
-for extract MIME-parts (such as attachments) from messages. See
-.BR mu-extract(1)
-\.
 
 .SH COLORS
 
@@ -183,9 +152,7 @@ prints \fBmu\fR version and copyright information.
 
 .TP
 \fB\-h\fR, \fB\-\-help\fR
-lists the various command line options, while \fB\-\-help\-index\fR,
-\fB\-\-help\-find\fR and \fB\-\-help\-all\fR list only the options for
-respectively the specified command or for all commands.
+lists the various command line options.
 
 .SH ERROR CODES
 
