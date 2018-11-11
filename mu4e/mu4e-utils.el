@@ -454,7 +454,9 @@ KAR, or raise an error if none is found."
 		 (mu4e-bookmarks))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))
 	 (expr (mu4e-bookmark-query chosen-bm))
-	 (query (eval expr)))
+         (expr (if (not (functionp expr)) expr
+                 (funcall expr)))
+         (query (eval expr)))
     (if (stringp query)
       query
       (mu4e-warn "Expression must evaluate to query string ('%S')" expr))))
