@@ -83,6 +83,24 @@ MuMsgIter *mu_msg_iter_new (XapianEnquire *enq,
  */
 gboolean  mu_msg_iter_next  (MuMsgIter *iter);
 
+/**
+ * Does this iterator point to the first item?
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
+ * @return TRUE or FALSE
+ */
+gboolean  mu_msg_iter_is_first  (MuMsgIter *iter);
+
+/**
+ * Does this iterator point to the last item?
+ *
+ * @param iter a valid MuMsgIter iterator
+ *
+ * @return TRUE or FALSE
+ */
+gboolean  mu_msg_iter_is_last  (MuMsgIter *iter);
+
 
 /**
  * reset the iterator to the beginning
@@ -124,8 +142,6 @@ void		 mu_msg_iter_destroy           (MuMsgIter *iter);
 MuMsg* mu_msg_iter_get_msg_floating (MuMsgIter *iter)
           G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-
-
 /**
  * Provide a preferred_hash, which is a hashtable msgid->docid to
  * indicate the messages which should /not/ be seen as duplicates.
@@ -135,8 +151,6 @@ MuMsg* mu_msg_iter_get_msg_floating (MuMsgIter *iter)
  * mark as duplicates, or NULL
  */
 void mu_msg_iter_set_preferred (MuMsgIter *iter, GHashTable *preferred_hash);
-
-
 
 /**
  * get the document id for the current message
@@ -189,8 +203,6 @@ typedef struct _MuMsgIterThreadInfo MuMsgIterThreadInfo;
  * @return an info struct
  */
 const MuMsgIterThreadInfo* mu_msg_iter_get_thread_info (MuMsgIter *iter);
-
-
 
 /**
  * get the message-id for this message
