@@ -52,19 +52,18 @@ xapian_query_op (const Mux::Tree& tree)
 	return Xapian::Query(op, childvec.begin(), childvec.end());
 }
 
-
 static Xapian::Query
-maybe_wildcard (const Value* val, const std::string& str)
+make_query (const Value* val, const std::string& str, bool maybe_wildcard)
 {
 #ifndef XAPIAN_HAVE_OP_WILDCARD
 	return Xapian::Query(val->prefix + str);
 #else
-	const auto vlen = str.length();
-	if (vlen <= 1 || str[vlen-1] != '*')
+	const auto vlen{str.length()};
+	if (!maybe_wildcard || vlen <= 1 || str[vlen - 1] != '*')
 		return Xapian::Query(val->prefix + str);
 	else
 		return Xapian::Query(Xapian::Query::OP_WILDCARD,
-				     val->prefix + str.substr(0, vlen-1));
+				     val->prefix + str.substr(0, vlen - 1));
 #endif/*XAPIAN_HAVE_OP_WILDCARD*/
 }
 
@@ -73,32 +72,30 @@ xapian_query_value (const Mux::Tree& tree)
 {
 	const auto v = dynamic_cast<Value*> (tree.node.data.get());
 	if (!v->phrase)
-		return maybe_wildcard(v, v->value);
+		return make_query(v, v->value, true/*maybe-wildcard*/);
 
 	const auto parts = split (v->value, " ");
-
-	std::vector<Xapian::Query> phvec;
-	for (const auto p: parts)
-		phvec.emplace_back(maybe_wildcard(v, p));
-
 	if (parts.empty())
 		return Xapian::Query::MatchNothing; // shouldn't happen
 
 	if (parts.size() == 1)
-		return phvec.front();
+		return make_query(v, parts.front(), true/*maybe-wildcard*/);
 
-	return Xapian::Query (Xapian::Query::OP_PHRASE,
-			      phvec.begin(), phvec.end());
+	std::vector<Xapian::Query> phvec;
+	for (const auto p: parts)
+		phvec.emplace_back(make_query(v, p, false/*no wildcards*/));
+
+        return Xapian::Query (Xapian::Query::OP_PHRASE, phvec.begin(), phvec.end());
 }
 
 static Xapian::Query
 xapian_query_range (const Mux::Tree& tree)
 {
-	const auto r = dynamic_cast<Range*> (tree.node.data.get());
-	return Xapian::Query(Xapian::Query::OP_VALUE_RANGE,
-			     (Xapian::valueno)r->id, r->lower, r->upper);
-}
+	const auto r { dynamic_cast<Range *>(tree.node.data.get()) };
 
+	return Xapian::Query(Xapian::Query::OP_VALUE_RANGE, (Xapian::valueno)r->id,
+			     r->lower, r->upper);
+}
 
 Xapian::Query
 Mux::xapian_query (const Mux::Tree& tree)
