@@ -1,5 +1,3 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -44,6 +42,10 @@
 #include "mu-cmd.h"
 #include "mu-threader.h"
 
+#ifdef HAVE_JSON_GLIB
+#include <json-glib/json-glib.h>
+#endif /*HAVE_JSON_GLIB*/
+
 typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
 			       MuConfig *opts, GError **err);
 
@@ -67,7 +69,6 @@ print_internal (MuQuery *query, const gchar *expr, gboolean xapian,
 }
 
 
-
 /* returns MU_MSG_FIELD_ID_NONE if there is an error */
 static MuMsgFieldId
 sort_field_from_string (const char* fieldstr, GError **err)
@@ -87,7 +88,6 @@ sort_field_from_string (const char* fieldstr, GError **err)
 	return mfid;
 }
 
-
 static MuMsg*
 get_message (MuMsgIter *iter, time_t after)
 {
@@ -104,7 +104,6 @@ get_message (MuMsgIter *iter, time_t after)
 		mu_msg_iter_next (iter);
 		return get_message (iter, after);
 	}
-
 
 	if (after != 0 && after > mu_msg_get_timestamp (msg)) {
 		mu_msg_iter_next (iter);
@@ -142,7 +141,6 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	return iter;
 }
 
-
 static gboolean
 exec_cmd (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
 {
@@ -160,8 +158,6 @@ exec_cmd (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
 
 	return rv;
 }
-
-
 
 static gchar*
 resolve_bookmark (MuConfig *opts, GError **err)
@@ -188,7 +184,6 @@ resolve_bookmark (MuConfig *opts, GError **err)
 	mu_bookmarks_destroy (bm);
 	return val;
 }
-
 
 static gchar*
 get_query (MuConfig *opts, GError **err)
@@ -222,7 +217,6 @@ get_query (MuConfig *opts, GError **err)
 	return query;
 }
 
-
 static MuQuery*
 get_query_obj (MuStore *store, GError **err)
 {
@@ -253,7 +247,6 @@ get_query_obj (MuStore *store, GError **err)
 	return mquery;
 }
 
-
 static gboolean
 prepare_links (MuConfig *opts, GError **err)
 {
@@ -277,14 +270,15 @@ prepare_links (MuConfig *opts, GError **err)
 	return TRUE;
 }
 
-
 static gboolean
 output_link (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
 {
+	if (mu_msg_iter_is_first (iter) && !prepare_links (opts, err))
+		return FALSE;
+
 	return mu_maildir_link (mu_msg_get_path (msg),
 				opts->linksdir, err);
 }
-
 
 static void
 ansi_color_maybe (MuMsgFieldId mfid, gboolean color)
@@ -320,7 +314,6 @@ ansi_color_maybe (MuMsgFieldId mfid, gboolean color)
 	fputs (ansi, stdout);
 }
 
-
 static void
 ansi_reset_maybe (MuMsgFieldId mfid, gboolean color)
 {
@@ -352,8 +345,6 @@ field_string_list (MuMsg *msg, MuMsgFieldId mfid)
 
 	return NULL;
 }
-
-
 
 static const char*
 display_field (MuMsg *msg, MuMsgFieldId mfid)
@@ -394,7 +385,6 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 	}
 }
 
-
 static void
 print_summary (MuMsg *msg, MuConfig *opts)
 {
@@ -416,7 +406,6 @@ print_summary (MuMsg *msg, MuConfig *opts)
 
 	g_free (summ);
 }
-
 
 static void
 thread_indent (MuMsgIter *iter)
@@ -455,8 +444,6 @@ thread_indent (MuMsgIter *iter)
 		fputs (empty_parent ? "*> " : is_dup ? "=> " : "-> ", stdout);
 	}
 }
-
-
 
 static void
 output_plain_fields (MuMsg *msg, const char *fields,
@@ -506,8 +493,6 @@ output_plain (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 	return TRUE;
 }
 
-
-
 static gboolean
 output_sexp (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 {
@@ -523,6 +508,41 @@ output_sexp (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 	return TRUE;
 }
 
+static gboolean
+output_json (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
+{
+#ifdef HAVE_JSON_GLIB
+	JsonNode			*node;
+	const MuMsgIterThreadInfo	*ti;
+	char				*s;
+
+	if (mu_msg_iter_is_first(iter))
+		g_print ("[\n");
+
+	ti   = opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+	node = mu_msg_to_json (msg, mu_msg_iter_get_docid (iter),
+			       ti, MU_MSG_OPTION_HEADERS_ONLY);
+
+	s = json_to_string (node, TRUE);
+	json_node_free (node);
+
+	fputs (s, stdout);
+	g_free (s);
+
+	if (mu_msg_iter_is_last(iter))
+		fputs("]\n", stdout);
+	else
+		fputs (",\n", stdout);
+
+	return TRUE;
+#else
+	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+		     "this mu was built without json support");
+	return FALSE;
+#endif /*HAVE_JSON_GLIB*/
+
+}
+
 static void
 print_attr_xml (const char* elm, const char *str)
 {
@@ -536,10 +556,14 @@ print_attr_xml (const char* elm, const char *str)
 	g_free (esc);
 }
 
-
 static gboolean
 output_xml (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 {
+	if (mu_msg_iter_is_first(iter)) {
+		g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+		g_print ("<messages>\n");
+	}
+
 	g_print ("\t<message>\n");
 	print_attr_xml ("from", mu_msg_get_from (msg));
 	print_attr_xml ("to", mu_msg_get_to (msg));
@@ -553,43 +577,28 @@ output_xml (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 	print_attr_xml ("maildir", mu_msg_get_maildir (msg));
 	g_print ("\t</message>\n");
 
+	if (mu_msg_iter_is_last(iter))
+		g_print ("</messages>\n");
+
 	return TRUE;
 }
 
-
 static OutputFunc*
-output_prepare (MuConfig *opts, GError **err)
+get_output_func (MuConfig *opts, GError **err)
 {
 	switch (opts->format) {
-	case MU_CONFIG_FORMAT_EXEC:
-		return exec_cmd;
-	case MU_CONFIG_FORMAT_LINKS:
-		if (!prepare_links (opts, err))
-			return NULL;
-		else
-			return output_link;
-	case MU_CONFIG_FORMAT_PLAIN:
-		return output_plain;
-	case MU_CONFIG_FORMAT_XML:
-		g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-		g_print ("<messages>\n");
-		return output_xml;
-	case MU_CONFIG_FORMAT_SEXP:
-		return output_sexp;
+	case MU_CONFIG_FORMAT_LINKS: return output_link;
+	case MU_CONFIG_FORMAT_EXEC:  return exec_cmd;
+	case MU_CONFIG_FORMAT_PLAIN: return output_plain;
+	case MU_CONFIG_FORMAT_XML:   return output_xml;
+	case MU_CONFIG_FORMAT_SEXP:  return output_sexp;
+	case MU_CONFIG_FORMAT_JSON:  return output_json;
 
 	default:
 		g_return_val_if_reached (NULL);
 		return NULL;
 	}
 }
-
-static void
-output_finish (MuConfig *opts)
-{
-	if (opts->format == MU_CONFIG_FORMAT_XML)
-		g_print ("</messages>\n");
-}
-
 
 static gboolean
 output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
@@ -598,7 +607,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 	gboolean	 rv;
 	OutputFunc	*output_func;
 
-	output_func = output_prepare (opts, err);
+	output_func = get_output_func (opts, err);
 	if (!output_func)
 		return FALSE;
 
@@ -625,8 +634,6 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 			++count;
 	}
 
-	output_finish (opts);
-
 	if (rv && count == 0) {
 		mu_util_g_set_error (err, MU_ERROR_NO_MATCHES,
 				     "no matches for search expression");
@@ -635,7 +642,6 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 
 	return rv;
 }
-
 
 static gboolean
 process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err)
@@ -652,7 +658,6 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err
 
 	return rv;
 }
-
 
 static gboolean
 execute_find (MuStore *store, MuConfig *opts, GError **err)
@@ -685,7 +690,6 @@ execute_find (MuStore *store, MuConfig *opts, GError **err)
 	return rv;
 }
 
-
 static gboolean
 format_params_valid (MuConfig *opts, GError **err)
 {
@@ -694,6 +698,7 @@ format_params_valid (MuConfig *opts, GError **err)
 		break;
 	case MU_CONFIG_FORMAT_PLAIN:
 	case MU_CONFIG_FORMAT_SEXP:
+	case MU_CONFIG_FORMAT_JSON:
 	case MU_CONFIG_FORMAT_LINKS:
 	case MU_CONFIG_FORMAT_XML:
 	case MU_CONFIG_FORMAT_XQUERY:
@@ -746,7 +751,6 @@ query_params_valid (MuConfig *opts, GError **err)
 			     xpath);
 	return FALSE;
 }
-
 
 MuError
 mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)

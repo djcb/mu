@@ -51,6 +51,7 @@ get_output_format (const char *formatstr)
 		{"links",	MU_CONFIG_FORMAT_LINKS},
 		{"plain",	MU_CONFIG_FORMAT_PLAIN},
 		{"sexp",	MU_CONFIG_FORMAT_SEXP},
+		{"json",	MU_CONFIG_FORMAT_JSON},
 		{"xml",		MU_CONFIG_FORMAT_XML},
 		{"xquery",	MU_CONFIG_FORMAT_XQUERY},
 		{"mquery",	MU_CONFIG_FORMAT_MQUERY}

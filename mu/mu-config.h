@@ -50,6 +50,7 @@ enum _MuConfigFormat {
 
 	/* for find, view */
 	MU_CONFIG_FORMAT_SEXP,		/* output sexps (emacs) */
+	MU_CONFIG_FORMAT_JSON,		/* output JSON */
 
 	/* for find */
 	MU_CONFIG_FORMAT_LINKS,		/* output as symlinks */
