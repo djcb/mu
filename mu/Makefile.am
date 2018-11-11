@@ -26,6 +26,7 @@ AM_CPPFLAGS=-I${top_srcdir}/lib $(GLIB_CFLAGS)
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=						\
+	$(JSON_GLIB_CFLAGS)				\
 	$(ASAN_CFLAGS)					\
 	$(WARN_CFLAGS)					\
 	-Wno-switch-enum				\
