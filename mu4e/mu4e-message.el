@@ -247,6 +247,7 @@ unless PREFER-HTML is non-nil."
       (replace-match
 	(cond
 	  ((string= (match-string 0) "’") "'")
+	  ((string= (match-string 0) " ") " ")
 	  (t ""))))
     (buffer-string)))
 
