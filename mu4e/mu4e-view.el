@@ -1298,19 +1298,22 @@ If MSG is nil use the message returned by `message-at-point'.  If
 ATTNUM is nil ask for the attachment number."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
-	  (attnum (or attnum
-		    (mu4e~view-get-attach-num "Attachment to open" msg)))
-	  (att (or (mu4e~view-get-attach msg attnum)))
-	  (index (plist-get att :index))
-	  (docid (mu4e-message-field msg :docid))
-	  (mimetype (plist-get att :mime-type)))
+         (attnum (or attnum
+                     (progn
+                       (unless mu4e~view-attach-map
+                         (mu4e~view-construct-attachments-header msg))
+                       (mu4e~view-get-attach-num "Attachment to open" msg))))
+         (att (or (mu4e~view-get-attach msg attnum)))
+         (index (plist-get att :index))
+         (docid (mu4e-message-field msg :docid))
+         (mimetype (plist-get att :mime-type)))
     (if (and mimetype (string= mimetype "message/rfc822"))
-      ;; special handling for message-attachments; we open them in mu4e. we also
-      ;; send the docid as parameter (4th arg); we'll get this back from the
-      ;; server, and use it to determine the parent message (ie., the current
-      ;; message) when showing the embedded message/rfc822, and return to the
-      ;; current message when quitting that one.
-      (mu4e~view-temp-action docid index "mu4e" docid)
+        ;; special handling for message-attachments; we open them in mu4e. we also
+        ;; send the docid as parameter (4th arg); we'll get this back from the
+        ;; server, and use it to determine the parent message (ie., the current
+        ;; message) when showing the embedded message/rfc822, and return to the
+        ;; current message when quitting that one.
+        (mu4e~view-temp-action docid index "mu4e" docid)
       ;; otherwise, open with the default program (handled in mu-server
       (mu4e~proc-extract 'open docid index mu4e-decryption-policy))))
 
