@@ -189,25 +189,23 @@ off, for example when using a read-only file-system."
   :type 'boolean
   :group 'mu4e-view)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
-(make-variable-buffer-local 'mu4e~view-cited-hidden)
+(put 'mu4e~view-cited-hidden 'permanent-local t)
 
 (defvar mu4e~view-link-map nil
   "A map of some number->url so we can jump to url by number.")
-(make-variable-buffer-local 'mu4e~view-link-map)
+(put 'mu4e~view-link-map 'permanent-local t)
 
 (defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
   "A map of msg paths --> parent-docids.
 This is to determine what is the parent docid for embedded
 message extracted at some path.")
+(put 'mu4e~path-parent-docid-map 'permanent-local t)
 
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
-(make-variable-buffer-local 'mu4e~view-attach-map)
+(put 'mu4e~view-attach-map 'permanent-local t)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-view-message-with-message-id (msgid)
@@ -326,7 +324,7 @@ article-mode."
       (mu4e~view-internal msg))))
 
 (defun mu4e~view-internal (msg)
-  "Display a message using mu4e's internal view mode."
+  "Display MSG using mu4e's internal view mode."
   (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
 	   (when (gethash (mu4e-message-field msg :path)
 		   mu4e~path-parent-docid-map) t))
@@ -338,13 +336,13 @@ article-mode."
         (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
 	  (erase-buffer)
 	  (mu4e~delete-all-overlays)
-	  (mu4e-view-mode)
           (insert (mu4e-view-message-text msg))
 	  (goto-char (point-min))
 	  (mu4e~fontify-cited)
 	  (mu4e~fontify-signature)
 	  (mu4e~view-make-urls-clickable)
 	  (mu4e~view-show-images-maybe msg)
+	  (mu4e-view-mode)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
 	  (when (not embedded) (setq mu4e~view-msg msg))))
       (switch-to-buffer buf))))
