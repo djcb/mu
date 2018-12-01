@@ -54,8 +54,8 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-use-gnus nil
-  "Whether to (experimentally) use Gnu's article view instead of
-mu4e's internal viewer."
+  "Whether to (experimentally) use Gnu's article view.
+\(instead of mu4e's internal viewer)."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -67,10 +67,9 @@ For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
-
 (defcustom mu4e-view-show-addresses nil
-  "Whether to initially show full e-mail addresses for contacts in
-address fields, rather than only their names."
+  "Whether to initially show full e-mail addresses for contacts.
+Otherwise, just show their names."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -85,22 +84,22 @@ In the format of `format-time-string'."
 
 (defcustom mu4e-view-image-max-width 800
   "The maximum width for images to display.
-This is only effective if you're using an emacs with Imagemagick
+This is only effective if you're using an Emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
   :type 'integer
   :group 'mu4e-view)
 
 (defcustom mu4e-view-image-max-height 600
   "The maximum height for images to display.
-This is only effective if you're using an emacs with Imagemagick
+This is only effective if you're using an Emacs with Imagemagick
 support, and `mu4e-view-show-images' is non-nil."
   :type 'integer
   :group 'mu4e-view)
 
 (defcustom mu4e-view-scroll-to-next t
-  "If non-nil, move to the next message when calling
-`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at the
-end of a message. Otherwise, don't move to the next message."
+  "Move to the next message when calling
+`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at
+the end of a message. Otherwise, don't move to the next message."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -226,7 +225,6 @@ found."
 		  (mu4e-error "no :function defined for field %S %S"
 		    field (cdr item)))))
     (funcall func msg)))
-
 
 (defun mu4e-view-message-text (msg)
   "Return the message to display (as a string), based on the MSG plist."
@@ -489,7 +487,6 @@ add text-properties to VAL."
 	    'help-echo (format "<%s>\n%s" email
 			 "[mouse-2] or C to compose a mail for this recipient"))))
 	  (mu4e-message-field msg field) ", ") t))
-
 
 (defun mu4e~view-construct-flags-tags-header (field val)
   "Construct a Flags: header."
@@ -1207,7 +1204,6 @@ number ATTNUM."
 	     (mu4e-message-field msg :parts))))
     (or attach (mu4e-error "Not a valid attachment"))))
 
-
 (defun mu4e~view-request-attachment-path (fname path)
   "Ask the user where to save FNAME (default is PATH/FNAME)."
   (let ((fpath (expand-file-name
@@ -1250,7 +1246,6 @@ If ATTNUM is nil ask for the attachment number."
     (mu4e~proc-extract
       'save (mu4e-message-field msg :docid)
       index mu4e-decryption-policy fpath)))
-
 
 (defun mu4e-view-save-attachment-multi (&optional msg)
   "Offer to save multiple email attachments from the current message.
@@ -1315,7 +1310,6 @@ ATTNUM is nil ask for the attachment number."
       ;; otherwise, open with the default program (handled in mu-server
       (mu4e~proc-extract 'open docid index mu4e-decryption-policy))))
 
-
 (defun mu4e~view-temp-action (docid index what &optional param)
   "Open attachment INDEX for message with DOCID, and invoke ACTION."
   (interactive)
@@ -1352,7 +1346,6 @@ If PIPECMD is nil, ask user for it."
 	  (index (plist-get att :index)))
     (mu4e~view-temp-action
       (mu4e-message-field msg :docid) index "pipe" pipecmd)))
-
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
   "Open MSG's attachment ATTACHNUM in the current emacs instance."
@@ -1461,7 +1454,6 @@ list."
     (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
-
 (defmacro mu4e~view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for-MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
@@ -1486,11 +1478,10 @@ list."
 (mu4e~view-defun-mark-for untrash)
 
 (defun mu4e-view-marked-execute ()
-  "Execute the marks."
+  "Execute the marked actions."
   (interactive)
   (mu4e~view-in-headers-context
     (mu4e-mark-execute-all)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; URL handling
@@ -1578,14 +1569,13 @@ this is the default, you may not need it."
       (mu4e~view-handle-single-url prompt urlfunc num))))
 
 (defun mu4e-view-for-each-uri (func)
-  "Execute FUNC (which receives a uri) for each uri in the current
-  message."
+  "Evaluate FUNC(uri) for each uri in the current message."
   (maphash (lambda (num uri) (funcall func uri)) mu4e~view-link-map))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
-  "*internal* Name for the raw message view buffer")
+  "Name for the raw message view buffer.")
 
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."
@@ -1603,8 +1593,8 @@ this is the default, you may not need it."
     (switch-to-buffer buf)))
 
 (defun mu4e-view-pipe (cmd)
-  "Pipe the message at point through shell command CMD, and display
-the results."
+  "Pipe the message at point through shell command CMD.
+Then, display the results."
   (interactive "sShell command: ")
   (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
     (mu4e-process-file-through-pipe path cmd)))
@@ -1612,8 +1602,8 @@ the results."
 (defconst mu4e~verify-buffer-name " *mu4e-verify*")
 
 (defun mu4e-view-verify-msg-popup (&optional msg)
-  "Pop-up a little signature verification window for (optional) MSG
-or message-at-point."
+  "Pop-up a signature verification window for MSG.
+If MSG is nil, use the message at point."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
 	  (path (mu4e-message-field msg :path))
@@ -1638,7 +1628,6 @@ or message-at-point."
 	(local-set-key "q" 'kill-buffer-and-window))
       (setq buffer-read-only t))
     (select-window win)))
-
 
 (defun mu4e~view-quit-buffer ()
   "Quit the mu4e-view buffer.
@@ -1683,4 +1672,4 @@ other windows."
 	    (switch-to-buffer (mu4e-get-headers-buffer))))))))
 
 (provide 'mu4e-view)
-;; end of mu4e-view
+;;; mu4e-view ends here
