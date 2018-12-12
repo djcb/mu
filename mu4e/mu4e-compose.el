@@ -26,7 +26,6 @@
 ;; In this file, various functions to compose/send messages, piggybacking on
 ;; gnus' message mode
 
-
 ;; Magic / Rupe Goldberg
 
 ;; 1) When we reply/forward a message, we get it from the backend, ie:
@@ -34,7 +33,6 @@
 ;;     compose type:reply docid:30935
 ;; backend responds with:
 ;;      (:compose reply :original ( .... <original message> ))
-
 
 ;; 2) When we compose a message, message and headers are separated by
 ;; `mail-header-separator', ie. '--text follows this line--. We use
@@ -86,7 +84,6 @@
 (require 'mu4e-draft)
 (require 'mu4e-context)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Composing / Sending messages
 (defgroup mu4e-compose nil
@@ -120,7 +117,6 @@ for querying the message information."
 	   (const :tag "delete message" delete))
   :group 'mu4e-compose)
 
-
 (defcustom mu4e-compose-context-policy 'ask
   "Policy for determining the context when composing a new message.
 
@@ -144,7 +140,6 @@ Also see `mu4e-context-policy'."
 	   (const :tag "Don't change the context when none match" nil)
 	   :safe 'symbolp
 	   :group 'mu4e-compose))
-
 
 (defcustom mu4e-compose-crypto-reply-encrypted-policy 'sign-and-encrypt
   "Policy for signing/encrypting replies to encrypted messages.
@@ -188,7 +183,6 @@ We have the following choices:
  'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
 			"2017-09-02")
 
-
 (defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed (or
    with long lines if `use-hard-newlines' is set to nil).  The
@@ -219,7 +213,6 @@ place to do that."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defun mu4e-compose-attach-message (msg)
   "Insert message MSG as an attachment."
   (let ((path (plist-get msg :path)))
@@ -240,7 +233,6 @@ Messages are captured with `mu4e-action-capture-message'."
   (mu4e-compose-attach-message mu4e-captured-message))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
@@ -539,7 +531,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
 
-
 (defun mu4e~compose-set-friendly-buffer-name (&optional compose-type)
   "Set some user-friendly buffer name based on the compose type."
   (let* ((subj (message-field-value "subject"))
@@ -572,7 +563,6 @@ we can decide what we want to do."
 	  (sign-and-encrypt (mml-secure-message-sign-encrypt))
 	  (message "Do nothing")))
   )
-
 
 (defun* mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
@@ -627,11 +617,10 @@ tempfile)."
       (dolist (att includes)
 	(mml-attach-file
 	 (plist-get att :file-name) (plist-get att :mime-type)))))
-  ;; buffer is not user-modified yet
-  (mu4e~compose-set-friendly-buffer-name compose-type)
-  (set-buffer-modified-p nil)
-  ;; now jump to some useful positions, and start writing that mail!
 
+  (mu4e~compose-set-friendly-buffer-name compose-type)
+
+  ;; now jump to some useful positions, and start writing that mail!
   (if (member compose-type '(new forward))
     (message-goto-to)
     ;; otherwise, it depends...
@@ -660,7 +649,10 @@ tempfile)."
     ;; make sure to close the frame when we're done with the message these are
     ;; all buffer-local;
     (push 'delete-frame message-exit-actions)
-    (push 'delete-frame message-postpone-actions)))
+    (push 'delete-frame message-postpone-actions))
+
+  ;; buffer is not user-modified yet
+  (set-buffer-modified-p nil))
 
 (defun mu4e~switch-back-to-mu4e-buffer ()
   "Try to go back to some previous buffer, in the order view->headers->main."
