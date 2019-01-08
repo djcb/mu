@@ -4081,6 +4081,24 @@ User Marcin Borkowski has a solution:
 
 (advice-add 'mml-attach-file :around #'mml-attach-file--go-to-eob)
 @end lisp
+
+@item @emph{How can I avoid Outlook display issues?}
+
+Limited testing shows that certain Outlook clients do not work well
+with inline replies, and the entire message including-and-below the
+first quoted section is collapsed. This means recipients may not even
+notice important inline text, especially if there is some top-posted
+content. This has been observed on OS X, Windows, and Web-based
+Outlook clients accessing Office 365.
+
+It appears the bug is triggered by the standard reply regex "On ...
+wrote:". Changing "On", or removing the trailing ":" appears to fix
+the bug (in limited testing). Therefore, a simple work-around is to
+set `message-citation-line-format` to something slightly non-standard,
+such as:
+@lisp
+(setq  message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
+@end lisp
 @end enumerate
 
 @node Known issues
