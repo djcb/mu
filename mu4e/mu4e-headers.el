@@ -717,9 +717,10 @@ after the end of the search results."
 	;; view the message at point when there is one.
 	(mu4e-headers-view-message))
       (setq mu4e~headers-view-target nil
-	mu4e~headers-msgid-target nil))
-    (when (mu4e~headers-docid-at-point)
-      (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
+            mu4e~headers-msgid-target nil)
+      (when (mu4e~headers-docid-at-point)
+        (mu4e~headers-highlight (mu4e~headers-docid-at-point))))
+
     ;; run-hooks
     (run-hooks 'mu4e-headers-found-hook)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
