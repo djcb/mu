@@ -2183,6 +2183,7 @@ can happen in both the @ref{Headers view} and the @ref{Message view}.
 * Marking messages::Selecting message do something with them
 * What to mark for::What can we do with them
 * Executing the marks::Do it
+* Trashing messages::Exceptions for mailboxes like Gmail
 * Leaving the headers buffer::Handling marks automatically when leaving
 * Built-in marking functions::Helper functions for dealing with them
 * Custom mark functions::Define your own mark function
@@ -2257,6 +2258,29 @@ After you have marked some messages, you can execute them with @key{x}
 A hook, @code{mu4e-mark-execute-pre-hook}, is available which is run
 right before execution of each mark. The hook is called with two
 arguments, the mark and the message itself.
+
+@node Trashing messages
+@section Trashing messages
+
+For regular mailboxes, trashing works like other marks: when executed,
+the message is flagged as trashed.  Depending on your mailbox provider,
+the trash flag is used to automatically move the message to the trash
+folder (@code{mu4e-trash-folder}) for instance.
+
+Some mailboxes behave differently however and they don't interpret the
+trash flag.  In cases like Gmail, the message must be @emph{moved} to
+the trash folder and the trash flag must not be used.
+
+@code{mu4e} has provisions for non-standard mailboxes: if a message
+maildir matches a regular expression in
+@code{mu4e-move-to-trash-patterns} then the message is moved instead of
+being flagged.  When a context is created with
+@code{make-mu4e-context-account} (see @ref{Account setup helper}), the
+pattern is automatically added for you.
+
+This should work fine for Gmail and similar mailboxes.  Note that in the
+case of Gmail, you might have to configure your mailbox ``expunge''
+settings.
 
 @node Leaving the headers buffer
 @section Leaving the headers buffer
