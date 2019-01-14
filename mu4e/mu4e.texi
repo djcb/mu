@@ -2415,6 +2415,7 @@ example:
 * Context policies::How to determine the current context
 * Contexts and special folders::Using context variables to determine them
 * Contexts example::How to define contexts
+* Account setup helper::Easy context creation with sane defaults
 * Some context tricks::Other thing to do with contexts
 @end menu
 
@@ -2625,6 +2626,52 @@ no context matches (or if you always want to be asked).
 @item Finally, be careful to get the quotations right --- backticks, single quotes 
 and commas and note the '.' between variable name and its value.
 @end itemize
+
+@node Account setup helper
+@section Account setup helper
+
+Contexts can be cumbersome to set up.  Thankfully @code{mu4e} provides a
+helper function @code{make-mu4e-context-account} to easily get started.
+The function helps initializing the context plus a couple of variables
+with sane defaults.
+Everything should work out of the box in most cases.
+
+A short example for two contexts:
+
+@lisp
+(let ((gandi-smtp-vars '((smtpmail-smtp-server . "mail.gandi.net")
+                         (smtpmail-stream-type . starttls)
+                         (smtpmail-smtp-service . 587))))
+  (make-mu4e-context-account
+   :name "personal"
+   :user-mail-address "john@doe.xyz"
+   :sent-folder "Sent"
+   :vars gandi-smtp-vars)
+  (make-mu4e-context-account
+   :name "work"
+   :user-mail-address "john@work.org"
+   :sent-folder "Sent"
+   :predicate (lambda (msg)
+                (mu4e-message-contact-field-matches
+                 msg '(:from :to) "boss@work.org"))
+   :vars gandi-smtp-vars))
+@end lisp
+
+A couple of things to note:
+
+@itemize
+@item Only the @code{name} slot is mandatory.
+@item The maildir default to the context name.
+@item Folders only need to be given a name, not a relative path.
+They will be automatically stored under the maildir.
+@item When the @code{match-func} is not provided, the context is matched
+against @code{predicate} if provided or the maildir of the current
+message otherwise.
+@end itemize
+
+If the context created by @code{make-mu4e-context-account} is not
+enough, you can display the generated context with e.g. @code{M-x
+describe-variable mu4e-contexts} and tweak the result as needed.
 
 @node Some context tricks
 @section Some context tricks
