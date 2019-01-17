@@ -277,7 +277,7 @@ test_mu_str_subject_normalize (void)
 	int i;
 
 	struct {
-		char *src, *exp;
+		const char *src, *exp;
 	} tests[] = {
 		{ "test123", "test123" },
 		{ "Re:test123", "test123" },

@@ -251,8 +251,6 @@ errexit:
 static gchar*
 get_temp_file_maybe (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
 {
-	char *tmp, *tmpfile;
-
 	opts |= MU_MSG_OPTION_USE_EXISTING;
 
 	if  (!(opts & MU_MSG_OPTION_EXTRACT_IMAGES) ||
@@ -273,7 +271,6 @@ typedef struct _PartInfo	 PartInfo;
 static void
 add_part_crypto (JsonBuilder *bob, MuMsgPart *mpart, PartInfo *pinfo)
 {
-	char				*signers, *s;
 	const char			*verdict;
 	MuMsgPartSigStatusReport	*report;
 
@@ -329,13 +326,11 @@ static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
 	char		*name, *tmpfile;
-	const char	*cid;
 
 	pinfo->bob = json_builder_begin_object(pinfo->bob);
 
 	name	 = mu_msg_part_get_filename (part, TRUE);
 	tmpfile  = get_temp_file_maybe (msg, part, pinfo->opts);
-	cid	 = mu_msg_part_get_content_id(part);
 
 	add_int_member    (pinfo->bob, "index", part->index);
 	add_string_member (pinfo->bob, "name", name);
