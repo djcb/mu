@@ -171,7 +171,7 @@ AS_IF([test "x$have_json_glib" = "xyes"],[
 ])
 AM_CONDITIONAL(HAVE_JSON_GLIB,[test "x$have_json_glib" = "xyes"])
 
-# xapian checking - we need 1.2.x at least
+# xapian checking - we need 1.4 at least
 AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN_CONFIG" != "xno")
 AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
@@ -181,16 +181,14 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    *** If you compiled it yourself, you should ensure that xapian-config
    *** is in your PATH.])],
    [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
-AS_CASE([$xapian_version],
-	[1.[[3-9]].[[3-9]]*],
-	  [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
-        [1.[[2-9]].[[0-9]]*],
-          [AC_MSG_WARN([*** xapian $xapian_version, no Query::Op::Wildcard])],
-	[AC_MSG_ERROR([*** xapian version >= 1.2 needed,
-	but version $xapian_version found.])])
 
-XAPIAN_CXXFLAGS="`$XAPIAN_CONFIG --cxxflags`"
-XAPIAN_LIBS="`$XAPIAN_CONFIG --libs`"
+AS_CASE([$xapian_version],
+	[1.[[4-9]].[[0-9]]*],
+	  [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
+	[AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
+
+XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
+XAPIAN_LIBS="($XAPIAN_CONFIG --libs)"
 have_xapian="yes"
 
 AC_SUBST(XAPIAN_CXXFLAGS)
