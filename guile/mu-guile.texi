@@ -181,13 +181,19 @@ If necessary, you can add the @t{%load-path} by adding to your
 
 Or, alternatively, you can set @t{GUILE_LOAD_PATH}:
 @example
-export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.0"
+export GUILE_LOAD_PATH=/usr/local/share/guile/site/2.0
 @end example
 
 In both cases the directory should be the directory that contains the
 installed @t{mu.scm}; if you installed @t{mu} under a different prefix, you
 must change the @code{%load-path} accordingly. After this, you should be ready
 to go!
+
+Furthermore, you need to ensure that @t{guile} can find the mu-guile
+library; for this we can use @code{LTDL_LIBRARY_PATH}, e.g.
+@example
+export LTDL_LIBRARY_PATH=/usr/local/lib
+@end example
 
 @node Making sure it works
 @section Making sure it works
