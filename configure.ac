@@ -188,7 +188,7 @@ AS_CASE([$xapian_version],
 	[AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
 
 XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
-XAPIAN_LIBS="($XAPIAN_CONFIG --libs)"
+XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
 have_xapian="yes"
 
 AC_SUBST(XAPIAN_CXXFLAGS)
