@@ -708,14 +708,19 @@ after the end of the search results."
       ;; if we need to jump to some specific message, do so now
       (goto-char (point-min))
       (when mu4e~headers-msgid-target
-	(mu4e-headers-goto-message-id mu4e~headers-msgid-target))
+        (if (eq (current-buffer) (window-buffer))
+            (mu4e-headers-goto-message-id mu4e~headers-msgid-target)
+          (let* ((pos (mu4e-headers-goto-message-id mu4e~headers-msgid-target)))
+            (when pos
+              (set-window-point (get-buffer-window) pos)))))
       (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
 	;; view the message at point when there is one.
 	(mu4e-headers-view-message))
       (setq mu4e~headers-view-target nil
-	mu4e~headers-msgid-target nil))
-    (when (mu4e~headers-docid-at-point)
-      (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
+            mu4e~headers-msgid-target nil)
+      (when (mu4e~headers-docid-at-point)
+        (mu4e~headers-highlight (mu4e~headers-docid-at-point))))
+
     ;; run-hooks
     (run-hooks 'mu4e-headers-found-hook)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
