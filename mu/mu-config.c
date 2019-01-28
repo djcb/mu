@@ -81,7 +81,7 @@ set_group_mu_defaults (void)
 
 	/* check for the MU_NOCOLOR or NO_COLOR env vars; but in any case don't
 	 * use colors unless we're writing to a tty */
-	if (g_getenv (MU_NOCOLOR) != NULL || g_getenv (NO_COLOR) != NULL)
+	if (g_getenv (MU_NOCOLOR) != NULL || g_getenv ("NO_COLOR") != NULL)
 		MU_CONFIG.nocolor = TRUE;
 
 	if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))
