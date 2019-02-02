@@ -248,6 +248,11 @@ and `mu4e-headers-visible-columns'."
 		 (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
+(defcustom mu4e-view-max-specpdl-size 4096
+  "The value of `max-specpdl-size' for displaying messages with Gnus."
+  :type 'integer
+  :group 'mu4e-view)
+
 (defcustom mu4e-view-show-images nil
   "If non-nil, automatically display images in the view buffer."
   :type 'boolean
