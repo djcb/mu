@@ -360,10 +360,14 @@ article-mode."
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (erase-buffer)
     (unless marked-read
-      ;; when we're being marked as read, no need to start rendering the messages; just the minimal
-      ;; so (update... ) can find us.
-      (mm-disable-multibyte)
+      ;; when we're being marked as read, no need to start rendering
+      ;; the messages; just the minimal so (update... ) can find us.
       (insert-file-contents-literally path)
+      (unless (message-fetch-field "Content-Type" t)
+        ;; For example, for messages in `mu4e-drafts-folder'
+        (let ((coding (or (default-value 'buffer-file-coding-system)
+                          'prefer-utf-8)))
+          (recode-region (point-min) (point-max) coding 'no-conversion)))
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer))
