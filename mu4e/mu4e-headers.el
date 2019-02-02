@@ -27,9 +27,7 @@
 ;; headers like 'To:' or 'Subject:')
 
 ;; Code:
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
-
+(require 'cl-lib)
 (require 'fringe)
 (require 'hl-line)
 
@@ -435,7 +433,7 @@ into a string."
   (let ((get-prefix
 	 (lambda (cell)
 	   (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
-    (case type
+    (cl-case type
       ('child         (funcall get-prefix mu4e-headers-thread-child-prefix))
       ('last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
       ('connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
@@ -473,7 +471,7 @@ into a string."
 	    ;; because the current level has always an connection
 	    ;; and it used a special formatting.
 	    (setq mu4e~headers-thread-state
-		  (subseq (append mu4e~headers-thread-state padding)
+		  (cl-subseq (append mu4e~headers-thread-state padding)
 			  0 (- level 1)))
 	    ;; Prepare the thread prefix.
 	    (setq prefix
@@ -517,7 +515,7 @@ while our display may be different)."
       (when (member flag flags)
 	(setq str
 	  (concat str
-	    (case flag
+	    (cl-case flag
 	      ('draft     (funcall get-prefix mu4e-headers-draft-mark))
 	      ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
 	      ('new       (funcall get-prefix mu4e-headers-new-mark))
@@ -597,7 +595,7 @@ found."
     (funcall func msg)))
 
 (defun mu4e~headers-field-apply-basic-properties (msg field val width)
-  (case field
+  (cl-case field
     (:subject
      (concat ;; prefix subject with a thread indicator
       (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
@@ -1351,7 +1349,7 @@ matching messages with that mark."
 	(let* ((do-mark) (value (mu4e-msg-field msg field)))
 	  (setq do-mark
 	    (if (member field '(:to :from :cc :bcc :reply-to))
-	      (find-if (lambda (contact)
+	      (cl-find-if (lambda (contact)
 			 (let ((name (car contact)) (email (cdr contact)))
 			   (or (and name (string-match pattern name))
 			     (and email (string-match pattern email))))) value)
@@ -1372,7 +1370,7 @@ matching messages with that mark."
 		   (mu4e-error "No thread info found")))
 	  (path  (or (plist-get thread :path)
 		   (mu4e-error "No threadpath found"))))
-    (case what
+    (cl-case what
       (path path)
       (thread-id
 	(save-match-data
@@ -1450,7 +1448,7 @@ WHERE is a symbol telling us where to push; it's a symbol, either
 'future or 'past. Functional also removes duplicats, limits the
 stack size."
   (let ((stack
-	  (case where
+	  (cl-case where
 	    (past   mu4e~headers-query-past)
 	    (future mu4e~headers-query-future))))
      ;; only add if not the same item
@@ -1458,11 +1456,11 @@ stack size."
       (push query stack)
       ;; limit the stack to `mu4e~headers-query-stack-size' elements
       (when (> (length stack) mu4e~headers-query-stack-size)
-	(setq stack (subseq stack 0 mu4e~headers-query-stack-size)))
+	(setq stack (cl-subseq stack 0 mu4e~headers-query-stack-size)))
       ;; remove all duplicates of the new element
-      (remove-if (lambda (elm) (string= elm (car stack))) (cdr stack))
+      (cl-remove-if (lambda (elm) (string= elm (car stack))) (cdr stack))
       ;; update the stacks
-      (case where
+      (cl-case where
 	(past   (setq mu4e~headers-query-past   stack))
 	(future (setq mu4e~headers-query-future stack))))))
 
@@ -1470,7 +1468,7 @@ stack size."
   "Pop a query from the stack.
 WHENCE is a symbol telling us where to get it from, either `future'
 or `past'."
-  (case whence
+  (cl-case whence
     (past
       (unless mu4e~headers-query-past
 	(mu4e-warn "No more previous queries"))
@@ -1575,7 +1573,7 @@ sortfield, change the sort-order) or nil (ask the user)."
 	      (mu4e-error "Not a sortable field")))
 	  (sortfield (if (booleanp sortable) field sortable))
 	  (dir
-	    (case dir
+	    (cl-case dir
 	      ((ascending descending) dir)
 	      ;; change the sort order if field = curfield
 	      (t
@@ -1805,7 +1803,7 @@ do nothing."
 	 (hwin (get-buffer-window (mu4e-get-headers-buffer))))
   (when (and (buffer-live-p (mu4e-get-view-buffer)) (window-live-p hwin))
      (let ((n (or n 1)))
-       (case mu4e-split-view
+       (cl-case mu4e-split-view
 	 ;; emacs has weird ideas about what horizontal, vertical means...
 	 (horizontal
 	   (window-resize hwin n nil)
