@@ -460,12 +460,15 @@ buffers; lets remap its faces so it uses the ones for mu4e."
       (unless mu4e~contacts   ;; work-around for https://github.com/djcb/mu/issues/1016
 	(mu4e~request-contacts-maybe))
       (mu4e~compose-setup-completion))
-    (when mu4e-compose-format-flowed
-      (turn-off-auto-fill)
-      (setq truncate-lines nil
-	word-wrap t
-	use-hard-newlines t)
-      (visual-line-mode t))
+    (if mu4e-compose-format-flowed
+	(progn
+	  (turn-off-auto-fill)
+	  (setq truncate-lines nil
+		word-wrap t
+		mml-enable-flowed t
+		use-hard-newlines t)
+	  (visual-line-mode t))
+      (setq mml-enable-flowed nil))
 
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
