@@ -367,9 +367,6 @@ article-mode."
       (setq
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer))
-      (mm-enable-multibyte)
-      (article-de-base64-unreadable)
-      (article-de-quoted-unreadable)
       (run-hooks 'gnus-article-decode-hook)
       (gnus-article-prepare-display)
       (mu4e-view-mode)
