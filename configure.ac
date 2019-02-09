@@ -244,7 +244,8 @@ AS_IF([test "x$enable_guile" != "xno"],[
     AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
   ])
 ])
-AM_CONDITIONAL(BUILD_GUILE,[test -n "$GUILE_EFFECTIVE_VERSION"])
+AM_CONDITIONAL(BUILD_GUILE,
+[ test -n "$GUILE_EFFECTIVE_VERSION" -a -n "$GUILE_SNARF"])
 ###############################################################################
 
 ###############################################################################
