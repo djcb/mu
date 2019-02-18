@@ -61,7 +61,6 @@ gmime_uninit (void)
 	_gmime_initialized = FALSE;
 }
 
-
 static MuMsg*
 msg_new (void)
 {
@@ -97,7 +96,6 @@ mu_msg_new_from_file (const char *path, const char *mdir,
 	return self;
 }
 
-
 MuMsg*
 mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
@@ -121,7 +119,6 @@ mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 	return self;
 }
 
-
 static void
 mu_msg_destroy (MuMsg *self)
 {
@@ -140,7 +137,6 @@ mu_msg_destroy (MuMsg *self)
 
 	g_slice_free (MuMsg, self);
 }
-
 
 MuMsg*
 mu_msg_ref (MuMsg *self)
@@ -180,7 +176,6 @@ free_later_lst (MuMsg *self, GSList *lst)
 	return lst;
 }
 
-
 /* use this instead of mu_msg_get_path so we don't get into infinite
  * regress...*/
 static const char*
@@ -209,7 +204,6 @@ get_path (MuMsg *self)
 	return free_later_str (self, val);
 }
 
-
 /* for some data, we need to read the message file from disk */
 gboolean
 mu_msg_load_msg_file (MuMsg *self, GError **err)
@@ -232,7 +226,6 @@ mu_msg_load_msg_file (MuMsg *self, GError **err)
 	return  (self->_file != NULL);
 }
 
-
 void
 mu_msg_unload_msg_file (MuMsg *msg)
 {
@@ -241,7 +234,6 @@ mu_msg_unload_msg_file (MuMsg *msg)
 	mu_msg_file_destroy (msg->_file);
 	msg->_file = NULL;
 }
-
 
 static const GSList*
 get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
@@ -262,7 +254,6 @@ get_str_list_field (MuMsg *self, MuMsgFieldId mfid)
 
 	return free_later_lst (self, val);
 }
-
 
 static const char*
 get_str_field (MuMsg *self, MuMsgFieldId mfid)
@@ -288,7 +279,6 @@ get_str_field (MuMsg *self, MuMsgFieldId mfid)
 	return do_free ? free_later_str (self, val) : val;
 }
 
-
 static gint64
 get_num_field (MuMsg *self, MuMsgFieldId mfid)
 {
@@ -308,7 +298,6 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 	return val;
 }
 
-
 const char*
 mu_msg_get_header (MuMsg *self, const char *header)
 {
@@ -323,7 +312,6 @@ mu_msg_get_header (MuMsg *self, const char *header)
 	return free_later_str
 		(self, mu_msg_file_get_header (self->_file, header));
 }
-
 
 time_t
 mu_msg_get_timestamp (MuMsg *self)
@@ -343,14 +331,12 @@ mu_msg_get_timestamp (MuMsg *self)
 	return statbuf.st_mtime;
 }
 
-
 const char*
 mu_msg_get_path (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_PATH);
 }
-
 
 const char*
 mu_msg_get_subject  (MuMsg *self)
@@ -365,8 +351,6 @@ mu_msg_get_msgid  (MuMsg *self)
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_MSGID);
 }
-
-
 
 const char*
 mu_msg_get_mailing_list (MuMsg *self)
@@ -387,7 +371,6 @@ mu_msg_get_mailing_list (MuMsg *self)
 	return free_later_str (self, decml);
 }
 
-
 const char*
 mu_msg_get_maildir (MuMsg *self)
 {
@@ -395,14 +378,12 @@ mu_msg_get_maildir (MuMsg *self)
 	return get_str_field (self, MU_MSG_FIELD_ID_MAILDIR);
 }
 
-
 const char*
 mu_msg_get_from (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_FROM);
 }
-
 
 const char*
 mu_msg_get_to (MuMsg *self)
@@ -418,7 +399,6 @@ mu_msg_get_cc (MuMsg *self)
 	return get_str_field (self, MU_MSG_FIELD_ID_CC);
 }
 
-
 const char*
 mu_msg_get_bcc (MuMsg *self)
 {
@@ -426,14 +406,12 @@ mu_msg_get_bcc (MuMsg *self)
 	return get_str_field (self, MU_MSG_FIELD_ID_BCC);
 }
 
-
 time_t
 mu_msg_get_date (MuMsg *self)
 {
 	g_return_val_if_fail (self, (time_t)-1);
 	return (time_t)get_num_field (self, MU_MSG_FIELD_ID_DATE);
 }
-
 
 MuFlags
 mu_msg_get_flags (MuMsg *self)
@@ -449,7 +427,6 @@ mu_msg_get_size (MuMsg *self)
 	return (size_t)get_num_field (self, MU_MSG_FIELD_ID_SIZE);
 }
 
-
 MuMsgPrio
 mu_msg_get_prio (MuMsg *self)
 {
@@ -457,44 +434,38 @@ mu_msg_get_prio (MuMsg *self)
 	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_PRIO);
 }
 
-
-
 struct _BodyData {
 	GString *gstr;
 	gboolean want_html;
 };
 typedef struct _BodyData BodyData;
 
-
 static void
 accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 {
-	char *txt;
-	gboolean err;
+	char		*txt;
+	GMimePart       *mimepart;
+	gboolean	 has_err, is_plain, is_html;
 
 	if (!GMIME_IS_PART(mpart->data))
 		return;
+	if (mpart->part_type &	MU_MSG_PART_TYPE_ATTACHMENT)
+		return;
 
-	txt = NULL;
-	err = TRUE;
+	mimepart = (GMimePart*)mpart->data;
+	is_html  = mpart->part_type &	MU_MSG_PART_TYPE_TEXT_HTML;
+	is_plain = mpart->part_type &	MU_MSG_PART_TYPE_TEXT_PLAIN;
 
-	/* text-like attachments are included when in text-mode */
+	txt	    = NULL;
+	has_err	    = TRUE;
+	if (bdata->want_html && is_html || !bdata->want_html && is_plain)
+		txt = mu_msg_mime_part_to_string (mimepart, &has_err);
 
-	if (!bdata->want_html &&
-	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
-		txt = mu_msg_mime_part_to_string (
-			(GMimePart*)mpart->data, &err);
-	else if (!(mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT) &&
-		 bdata->want_html &&
-		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
-		txt = mu_msg_mime_part_to_string (
-			(GMimePart*)mpart->data, &err);
-	if (!err && txt)
+	if (!has_err && txt)
 		bdata->gstr = g_string_append (bdata->gstr, txt);
 
 	g_free (txt);
 }
-
 
 static char*
 get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
@@ -514,7 +485,6 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 	} else
 		return g_string_free (bdata.gstr, FALSE);
 }
-
 
 typedef struct {
 	GMimeContentType	*ctype;
@@ -545,7 +515,6 @@ find_content_type (MuMsg *msg, MuMsgPart *mpart, ContentTypeData *cdata)
 		cdata->ctype = g_mime_object_get_content_type (
 			GMIME_OBJECT(wanted));
 }
-
 
 static const GSList*
 get_content_type_parameters (MuMsg *self, MuMsgOptions opts, gboolean want_html)
@@ -581,14 +550,12 @@ get_content_type_parameters (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 	return NULL;
 }
 
-
 const GSList*
 mu_msg_get_body_text_content_type_parameters (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_content_type_parameters(self, opts, FALSE);
 }
-
 
 const char*
 mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
@@ -597,15 +564,12 @@ mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
 	return free_later_str (self, get_body (self, opts, TRUE));
 }
 
-
-
 const char*
 mu_msg_get_body_text (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
 	return free_later_str (self, get_body (self, opts, FALSE));
 }
-
 
 const GSList*
 mu_msg_get_references (MuMsg *self)
@@ -614,14 +578,12 @@ mu_msg_get_references (MuMsg *self)
 	return get_str_list_field (self, MU_MSG_FIELD_ID_REFS);
 }
 
-
 const GSList*
 mu_msg_get_tags (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_list_field (self, MU_MSG_FIELD_ID_TAGS);
 }
-
 
 const char*
 mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
@@ -630,7 +592,6 @@ mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
 	return get_str_field (self, mfid);
 }
 
-
 const GSList*
 mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid)
 {
@@ -638,15 +599,12 @@ mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid)
 	return get_str_list_field (self, mfid);
 }
 
-
-
 gint64
 mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, -1);
 	return get_num_field (self, mfid);
 }
-
 
 static gboolean
 fill_contact (MuMsgContact *self, InternetAddress *addr,
@@ -682,7 +640,6 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 	return self->address != NULL;
 }
 
-
 static void
 address_list_foreach (InternetAddressList *addrlist, MuMsgContactType ctype,
 		      MuMsgContactForeachFunc func, gpointer user_data)
@@ -706,7 +663,6 @@ address_list_foreach (InternetAddressList *addrlist, MuMsgContactType ctype,
 	}
 }
 
-
 static void
 addresses_foreach (const char* addrs, MuMsgContactType ctype,
 		   MuMsgContactForeachFunc func, gpointer user_data)
@@ -722,7 +678,6 @@ addresses_foreach (const char* addrs, MuMsgContactType ctype,
 		g_object_unref (addrlist);
 	}
 }
-
 
 static void
 msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func,
@@ -748,7 +703,6 @@ msg_contact_foreach_file (MuMsg *msg, MuMsgContactForeachFunc func,
 	}
 }
 
-
 static void
 msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func,
 			 gpointer user_data)
@@ -762,7 +716,6 @@ msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func,
 	addresses_foreach (mu_msg_get_bcc (msg),
 			   MU_MSG_CONTACT_TYPE_BCC, func, user_data);
 }
-
 
 void
 mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
@@ -778,8 +731,6 @@ mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 	else
 		g_return_if_reached ();
 }
-
-
 
 static int
 cmp_str (const char *s1, const char *s2)
@@ -816,7 +767,6 @@ cmp_str (const char *s1, const char *s2)
 	}
 }
 
-
 static int
 cmp_subject (const char* s1, const char *s2)
 {
@@ -831,7 +781,6 @@ cmp_subject (const char* s1, const char *s2)
 		mu_str_subject_normalize (s1),
 		mu_str_subject_normalize (s2));
 }
-
 
 int
 mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
@@ -858,7 +807,6 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 	return 0; /* TODO: handle lists */
 }
 
-
 gboolean
 mu_msg_is_readable (MuMsg *self)
 {
@@ -866,8 +814,6 @@ mu_msg_is_readable (MuMsg *self)
 
 	return access (mu_msg_get_path (self), R_OK) == 0 ? TRUE : FALSE;
 }
-
-
 
 /* we need do to determine the
  *   /home/foo/Maildir/bar
@@ -925,7 +871,6 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
 	return rv;
 }
 
-
 /*
  * move a msg to another maildir, trying to maintain 'integrity',
  * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
@@ -969,7 +914,6 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 
 	return self->_file ? TRUE : FALSE;
 }
-
 
 /*
  * Rename a message-file, keeping the same flags. This is useful for tricking
