@@ -115,7 +115,8 @@ valid even after moving the message around."
   (if (and (eq major-mode 'mu4e-headers-mode)
 	org-mu4e-link-query-in-headers-mode)
     (org~mu4e-store-link-query)
-    (org~mu4e-store-link-message)))
+    (when (mu4e-message-at-point t)
+      (org~mu4e-store-link-message))))
 
 ;; org-add-link-type is obsolete as of org-mode 9.
 ;; Instead we will use the org-link-set-parameters method
