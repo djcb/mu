@@ -147,6 +147,9 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+(defvar-local mu4e~view-message nil
+  "The message being viewed in view mode.")
+
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
 
@@ -342,7 +345,7 @@ article-mode."
 	  (mu4e~view-show-images-maybe msg)
 	  (mu4e-view-mode)
 	  (when embedded (local-set-key "q" 'kill-buffer-and-window))
-	  (when (not embedded) (setq mu4e~view-msg msg))))
+	  (when (not embedded) (setq mu4e~view-message msg))))
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
@@ -374,7 +377,7 @@ article-mode."
       (run-hooks 'gnus-article-decode-hook)
       (gnus-article-prepare-display)
       (mu4e-view-mode)
-      (setq mu4e~view-msg msg)
+      (setq mu4e~view-message msg)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
@@ -1075,7 +1078,7 @@ or `html' or nil.")
 (defun mu4e-view-refresh ()
   "Redisplay the current message."
   (interactive)
-  (mu4e-view mu4e~view-msg)
+  (mu4e-view mu4e~view-message)
   (setq mu4e~view-cited-hidden nil))
 
 (defun mu4e-view-action (&optional msg)

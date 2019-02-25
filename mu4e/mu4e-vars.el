@@ -230,7 +230,6 @@ shortcut-key for the query.
 An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
 KEY) is still recognized as well, for backward-compatibility.")
 
-
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:
@@ -305,7 +304,6 @@ Also see `mu4e-compose-context-policy'."
 	   (const :tag "Don't change the context when none match" nil))
   :group 'mu4e)
 
-
 ;; crypto
 (defgroup mu4e-crypto nil
   "Crypto-related settings."
@@ -358,7 +356,6 @@ Set to nil to not have any time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
-
 ;;; names and mail-addresses can be mapped onto their canonical
 ;;; counterpart.  use the customizeable function
 ;;; mu4e-canonical-contact-function to do that.  below the identity
@@ -388,7 +385,6 @@ changed parameters, so the other properties stay in place. Those
 are needed for sorting the contacts."
   :type 'function
   :group 'mu4e-compose)
-
 
 (defcustom mu4e-compose-complete-ignore-address-regexp "no-?reply"
   "Ignore any e-mail addresses for completion if they match this regexp."
@@ -489,7 +485,6 @@ nil otherwise."
 	   (string :tag "Folder name")
 	   (function :tag "Function return folder name"))
   :group 'mu4e-folders)
-
 
 (defcustom mu4e-maildir-shortcuts nil
   "A list of maildir shortcuts.
@@ -842,7 +837,6 @@ in `mu4e-view-fields.'
 
 Note, `:sortable' is not supported for custom header fields.")
 
-
 (defvar mu4e-header-info-custom
   '( (:recipnum .
        ( :name "Number of recipients"
@@ -860,9 +854,7 @@ should point to a function that takes a message p-list as
 argument, and returns a string. See the default value of
 `mu4e-header-info-custom for an example.")
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; run-time vars used in multiple places
@@ -877,9 +869,6 @@ argument, and returns a string. See the default value of
 
 (defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
   "Name for the embedded message view buffer.")
-
-(defvar mu4e~view-msg nil
-  "The message being viewed in view mode.")
 
 (defvar mu4e~contacts nil
   "Hash that maps contacts (ie. 'name <e-mail>') to an integer for sorting.
@@ -970,7 +959,6 @@ sexp received from the server process.")
 (defvar mu4e-temp-func 'mu4e~view-temp-handler
   "A function called for each (:temp <file> <cookie>) sexp.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-vars)

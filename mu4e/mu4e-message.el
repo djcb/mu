@@ -30,7 +30,6 @@
 (require 'mu4e-utils)
 (require 'flow-fill)
 
-
 (defcustom mu4e-html2text-command
   (if (fboundp 'shr-insert-document)
     'mu4e-shr2text
@@ -154,7 +153,7 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
 Either the headers buffer or the view buffer, or nil if there is
 no such message. If optional NOERROR is non-nil, do not raise an
 error when there is no message at point."
-  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg)))
+  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-message)))
     (if msg
       msg
       (unless noerror (mu4e-warn "No message at point")))))
@@ -232,7 +231,6 @@ unless PREFER-HTML is non-nil."
       (setq body (funcall func msg body)))
     body))
 
-
 (defun mu4e-message-outlook-cleanup (msg body)
   "Clean-up MSG's BODY.
 Esp. MS-Outlook-originating message may not advertise the correct
@@ -249,7 +247,6 @@ replace with."
 	  ((string= (match-string 0) " ") " ")
 	  (t ""))))
     (buffer-string)))
-
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Does MSG's contact-field CFIELD matche rx?
