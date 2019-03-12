@@ -3561,8 +3561,8 @@ with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
 Gmail web interface (in the settings, under the ``Forwarding and
 POP/IMAP''-tab).
 
-Gmail users may also be interested in @ref{Including related messages,
-skipping duplicates}.
+Gmail users may also be interested in @ref{Including related messages},
+and in @ref{Skipping duplicates}.
 
 @subsection Setting up offlineimap
 
