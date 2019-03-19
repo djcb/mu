@@ -369,15 +369,23 @@ get_related_query (MuMsgIter *iter, GHashTable **orig_set)
 
 
 static void
-include_related (MuQuery *self, MuMsgIter **iter, int maxnum,
-		 MuMsgFieldId sortfieldid, MuQueryFlags flags)
+get_related_messages (MuQuery *self, MuMsgIter **iter, int maxnum,
+                      MuMsgFieldId sortfieldid, MuQueryFlags flags,
+                      Xapian::Query orig_query)
 {
 	GHashTable *orig_set;
 	Xapian::Enquire enq (self->db());
 	MuMsgIter *rel_iter;
+	const bool inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
 
 	orig_set = NULL;
-	enq.set_query(get_related_query (*iter, &orig_set));
+	Xapian::Query new_query = get_related_query (*iter, &orig_set);
+	/* If related message are not desired, filter out messages which would not
+	   have matched the original query.
+	 */
+	if (!inc_related)
+	    new_query = Xapian::Query (Xapian::Query::OP_AND, orig_query, new_query);
+	enq.set_query(new_query);
 	enq.set_cutoff(0,0);
 
 	rel_iter= mu_msg_iter_new (
@@ -410,11 +418,12 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 			      sortfieldid    == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
-		MuMsgIter	*iter;
-		MuQueryFlags	 first_flags;
-		const auto 	 inc_related  = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
-		const auto	 descending   = flags & MU_QUERY_FLAG_DESCENDING;
-		const auto       raw	      = flags & MU_QUERY_FLAG_RAW;
+		MuMsgIter *iter;
+		MuQueryFlags first_flags;
+		const bool threads     = flags & MU_QUERY_FLAG_THREADS;
+		const bool inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
+		const bool descending  = flags & MU_QUERY_FLAG_DESCENDING;
+		const bool raw         = flags & MU_QUERY_FLAG_RAW;
 		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
 						 descending, raw, err));
 
@@ -426,31 +435,32 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 
 		/* get the 'real' maxnum if it was specified as < 0 */
 		maxnum = maxnum < 0 ? self->db().get_doccount() : maxnum;
-		/* if we do a include-related query, it's wasted
-		 * effort to calculate threads already in the first
-		 * query since we can do it in the second one
+		/* Calculating threads involves two queries, so do the calculation only in
+		 * the second query instead of in both.
 		 */
-		if (inc_related)
+		if (threads)
 			first_flags = (MuQueryFlags)(flags & ~MU_QUERY_FLAG_THREADS);
 		else
 			first_flags = flags;
-
-		iter   = mu_msg_iter_new (
+		/* Perform the initial query, returning up to max num results.
+		 */
+		iter  = mu_msg_iter_new (
 			reinterpret_cast<XapianEnquire*>(&enq),
 			maxnum,
-			/* with inc_related, we do the sorting in the
-			 * second query
-			 */
-			inc_related ? MU_MSG_FIELD_ID_NONE : sortfieldid,
+			sortfieldid,
 			msg_iter_flags (first_flags),
 			err);
-		/*
-		 * if we want related messages, do a second query,
-		 * based on the message ids / refs of the first one
-		 * */
-		if (inc_related)
-			include_related (self, &iter, maxnum, sortfieldid,
-					 flags);
+		/* If we want threads or related messages, find related messages using a
+		 * second query based on the message ids / refs of the first query's result.
+		 * Do this even if we don't want to include related messages in the final
+		 * result so we can apply the threading algorithm to the related message set
+		 * of a maxnum-sized result instead of the unbounded result of the first
+		 * query. If threads are desired but related message are not, we will remove
+		 * the undesired related messages later.
+		 */
+		if(threads||inc_related)
+			get_related_messages (self, &iter, maxnum, sortfieldid, flags,
+			                      enq.get_query());
 
 		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
 			g_clear_error (err);

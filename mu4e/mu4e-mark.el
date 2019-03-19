@@ -1,6 +1,6 @@
 ;; mu4e-mark.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -25,18 +25,16 @@
 ;; In this file are function related to marking messages; they assume we are
 ;; currently in the headers buffer.
 
-;; Code:
+;;; Code:
+(require 'cl-lib)
 (require 'mu4e-proc)
 (require 'mu4e-utils)
 (require 'mu4e-message)
-
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 
 ;; keep byte-compiler happy
 (declare-function mu4e~headers-mark "mu4e-headers")
 (declare-function mu4e~headers-goto-docid "mu4e-headers")
 (declare-function mu4e-headers-next "mu4e-headers")
-
 
 (defcustom mu4e-headers-leave-behavior 'ask
   "What to do when user leaves the headers view.
@@ -51,26 +49,27 @@ Value is one of the following symbols:
   :group 'mu4e-headers)
 
 (defcustom mu4e-mark-execute-pre-hook nil
-  "Hook run just *before* a mark is applied to a message. The hook function
-is called with two arguments, the mark being executed and the message itself.")
+  "Hook run just *before* a mark is applied to a message.
+The hook function is called with two arguments, the mark being
+executed and the message itself."
+  :type 'hook
+  :group 'mu4e-headers)
 
 (defvar mu4e-headers-show-target t
   "Whether to show targets (such as '-> delete', '-> /archive')
 when marking message. Normally, this is useful information for the
 user, however, when you often mark large numbers (thousands) of
 message, showing the target makes this quite a bit slower (showing
-the target uses an emacs feature called 'overlays', which aren't
+the target uses an Emacs feature called 'overlays', which aren't
 particularly fast).")
 
 ;;; insert stuff;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e~mark-map nil
-  "Map (hash) of docid->markinfo; when a message is marked, the
-information is added here.
-markinfo is a cons cell consisting of the following:
-\(mark . target)
-where
-   MARK is the type of mark (move, trash, delete)
-   TARGET (optional) is the target directory (for 'move')")
+  "Contains a mapping of docid->markinfo.
+When a message is marked, the information is added here. markinfo
+is a cons cell consisting of the following: \(mark . target)
+where MARK is the type of mark (move, trash, delete)
+TARGET (optional) is the target directory (for 'move')")
 
 ;; the mark-map is specific for the current header buffer
 ;; currently, there can't be more than one, but we never know what will
@@ -87,24 +86,24 @@ where
   "Format string to set a mark and leave remaining space.")
 
 (defun mu4e~mark-initialize ()
-  "Initialize the marks subsystem."
+  "Initialize the marks-subsystem."
   (set (make-local-variable 'mu4e~mark-map) (make-hash-table)))
 
 (defun mu4e~mark-clear ()
-  "Clear the marks subsystem."
+  "Clear the marks-subsystem."
   (clrhash mu4e~mark-map))
 
 (defun mu4e~mark-find-headers-buffer ()
   "Find the headers buffer, if any."
-  (find-if
+  (cl-find-if
     (lambda (b)
       (with-current-buffer b
 	(eq major-mode 'mu4e-headers-mode)))
     (buffer-list)))
 
 (defmacro mu4e~mark-in-context (&rest body)
-  "Evaluate BODY in the context of the headers buffer in case this
-is either a headers or view buffer."
+  "Evaluate BODY in the context of the headers buffer.
+The current buffer must be either a headers or view buffer."
   `(cond
      ((eq major-mode 'mu4e-headers-mode) ,@body)
      ((eq major-mode 'mu4e-view-mode)
@@ -114,7 +113,7 @@ is either a headers or view buffer."
 	   (with-current-buffer (mu4e-get-headers-buffer)
 	     (if (mu4e~headers-goto-docid docid)
 	       ,@body
-	       (mu4e-error "cannot find message in headers buffer."))))))
+	       (mu4e-error "Cannot find message in headers buffer"))))))
      (t
        ;; even in other modes (e.g. mu4e-main-mode we try to find
        ;; the headers buffer
@@ -123,7 +122,7 @@ is either a headers or view buffer."
 	   (with-current-buffer hbuf ,@body)
 	   ,@body)))))
 
-(defvar mu4e-marks
+(defconst mu4e-marks
     '((refile
 	:char ("r" . "▶")
 	:prompt "refile"
@@ -131,7 +130,7 @@ is either a headers or view buffer."
 	:action (lambda (docid msg target)
 		  (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
        (delete
-	 :char ("D" . "❌")
+	 :char ("D" . "x")
 	 :prompt "Delete"
 	 :show-target (lambda (target) "delete")
 	 :action (lambda (docid msg target) (mu4e~proc-remove docid)))
@@ -196,7 +195,7 @@ properties are:
   :char (string) or (basic . fancy) The character to display in
     the headers view. Either a single-character string, or a
     dotted-pair cons cell where the second item will be used if
-    `mu4e-use-fancy-chars' is `t', otherwise we'll use
+    `mu4e-use-fancy-chars' is t, otherwise we'll use
     the first one. It can also be a plain string for backwards
     compatibility since we didn't always support
     `mu4e-use-fancy-chars' here.
@@ -212,7 +211,6 @@ properties are:
      the target.
   :action (function taking (DOCID MSG TARGET)).  The action to
      apply on the message.")
-
 
 (defun mu4e-mark-at-point (mark target)
   "Mark (or unmark) message at point.
@@ -282,7 +280,6 @@ The following marks are available, and the corresponding props:
 	      (overlay-put overlay 'display targetstr)
 	      docid)))))))
 
-
 (defun mu4e~mark-get-move-target ()
   "Ask for a move target, and propose to create it if it does not exist."
   (interactive)
@@ -304,17 +301,16 @@ The following marks are available, and the corresponding props:
     (and getter (funcall getter))))
 
 (defun mu4e~mark-get-dyn-target (mark target)
-  "Get the dynamic target for MARK.  The result may depend on the
-message at point."
+  "Get the dynamic TARGET for MARK.
+The result may depend on the message at point."
   (let ((getter (plist-get (cdr (assq mark mu4e-marks)) :dyn-target)))
     (if getter
       (funcall getter target (mu4e-message-at-point))
       target)))
 
-
 (defun mu4e-mark-set (mark &optional target)
-  "Mark the header at point, or, if region is active, mark all
-headers in the region. Optionally, provide TARGET (for moves)."
+  "Mark the header at point with MARK or all in the region.
+Optionally, provide TARGET (for moves)."
   (unless target
     (setq target (mu4e~mark-ask-target mark)))
   (if (not (use-region-p))
@@ -337,7 +333,7 @@ headers in the region. Optionally, provide TARGET (for moves)."
 	  (mu4e-mark-at-point (car markcell) (cdr markcell)))))))
 
 (defun mu4e~mark-get-markpair (prompt &optional allow-something)
-  "Ask user for a mark; return (MARK . TARGET).
+  "Ask user with PROMPT for a mark and return (MARK . TARGET).
 If ALLOW-SOMETHING is non-nil, allow the 'something' pseudo mark
 as well."
   (let* ((marks (mapcar (lambda (markdescr)
@@ -346,14 +342,13 @@ as well."
 		  mu4e-marks))
 	  (marks
 	    (if allow-something
-	      marks (remove-if (lambda (m) (eq 'something (cdr m))) marks)))
+	      marks (cl-remove-if (lambda (m) (eq 'something (cdr m))) marks)))
 	  (mark (mu4e-read-option prompt marks))
 	  (target (mu4e~mark-ask-target mark)))
     (cons mark target)))
 
-
 (defun mu4e-mark-resolve-deferred-marks ()
-  "Check if there are any deferred ('something') marks.
+  "Check if there are any deferred ('something') mark-instances.
 If there are such marks, replace them with a _real_ mark (ask the
 user which one)."
   (interactive)
@@ -372,7 +367,7 @@ user which one)."
 	mu4e~mark-map))))
 
 (defun mu4e~mark-check-target (target)
-  "Check if the target exists; if not, offer to create it."
+  "Check if TARGET exists; if not, offer to create it."
   (let ((fulltarget (concat mu4e-maildir target)))
     (if (not (mu4e-create-maildir-maybe fulltarget))
       (mu4e-error "Target dir %s does not exist " fulltarget)
@@ -392,14 +387,13 @@ work well.
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (interactive)
   (mu4e~mark-in-context
-   (let ((marknum (hash-table-count mu4e~mark-map)))
+    (let* ((marknum (hash-table-count mu4e~mark-map))
+	   (prompt (format "Are you sure you want to execute %d mark%s?"
+		     marknum (if (> marknum 1) "s" ""))))
      (if (zerop marknum)
-	 (message "Nothing is marked")
+	 (mu4e-warn "Nothing is marked")
        (mu4e-mark-resolve-deferred-marks)
-       (when (or no-confirmation
-		 (y-or-n-p
-		  (format "Are you sure you want to execute %d mark%s?"
-			  marknum (if (> marknum 1) "s" ""))))
+       (when (or no-confirmation (y-or-n-p prompt))
 	 (maphash
 	  (lambda (docid val)
 	    (let* ((mark (car val)) (target (cdr val))
@@ -436,18 +430,18 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
     (mu4e~mark-clear)))
 
 (defun mu4e-mark-docid-marked-p (docid)
-  "Is the given docid marked?"
+  "Is the given DOCID marked?"
   (when (gethash docid mu4e~mark-map) t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-mark-marks-num ()
-  "Return the number of marks in the current buffer."
+  "Return the number of mark-instances in the current buffer."
   (mu4e~mark-in-context
     (if mu4e~mark-map (hash-table-count mu4e~mark-map) 0)))
 
 (defun mu4e-mark-handle-when-leaving ()
-  "If there are any marks in the current buffer, handle those
-according to the value of `mu4e-headers-leave-behavior'. This
+  "Handle any mark-instances in the current buffer when leaving.
+This is done according to the value of `mu4e-headers-leave-behavior'. This
 function is to be called before any further action (like searching,
 quitting the buffer) is taken; returning t means 'take the following
 action', return nil means 'don't do anything'."
@@ -465,6 +459,5 @@ action', return nil means 'don't do anything'."
 	(when (eq what 'apply)
 	  (mu4e-mark-execute-all t))))))
 
-
 (provide 'mu4e-mark)
-;; End of mu4e-mark.el
+;;; mu4e-mark.el ends here

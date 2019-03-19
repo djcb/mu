@@ -28,6 +28,8 @@
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
 
+(eval-when-compile
+  (require 'cl))
 
 (defconst mu4e~main-buffer-name " *mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")

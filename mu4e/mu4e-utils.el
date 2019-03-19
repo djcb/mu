@@ -26,11 +26,10 @@
 ;; Utility functions used in the mu4e
 
 ;;; Code:
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
-
-(eval-when-compile (require 'org nil 'noerror))
-
+(eval-when-compile
+  (require 'cl)
+  (require 'org nil 'noerror))
+(require 'cl-lib)
 (require 'mu4e-vars)
 (require 'mu4e-meta)
 (require 'mu4e-lists)
@@ -88,7 +87,7 @@ NODEFAULT, hour and minute fields will be nil if not given."
 User's addresses are set in `mu4e-user-mail-address-list'.  Case
 insensitive comparison is used."
   (when (and addr mu4e-user-mail-address-list
-	  (find addr mu4e-user-mail-address-list
+	  (cl-find addr mu4e-user-mail-address-list
 		:test (lambda (s1 s2)
 			(eq t (compare-strings s1 nil nil s2 nil nil t)))))
     t))
@@ -306,9 +305,9 @@ Function will return the cdr of the list element."
 		" [" (propertize "C-g" 'face 'mu4e-highlight-face)
 		" to cancel]")
 	      ;; the allowable chars
-	      (map 'list (lambda(elm) (string-to-char (car elm))) options)))
+	      (cl-map 'list (lambda(elm) (string-to-char (car elm))) options)))
 	  (chosen
-	    (find-if
+	    (cl-find-if
 	      (lambda (option) (eq response (string-to-char (car option))))
 	      options)))
     (if chosen
@@ -384,7 +383,7 @@ maildirs under `mu4e-maildir'."
 	  (funcall mu4e-completing-read-function prompt
 	    (mu4e-get-maildirs) nil nil "/")
 	  (or (car-safe
-		(find-if (lambda (item) (= kar (cdr item)))
+		(cl-find-if (lambda (item) (= kar (cdr item)))
 		  mu4e-maildir-shortcuts))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))))))
 
@@ -401,7 +400,7 @@ and offer to create it if it does not exist yet."
     mdir))
 
 
-(defstruct mu4e-bookmark
+(cl-defstruct mu4e-bookmark
   "A mu4e bookmarl object with the following members:
 - `name': the user-visible name of the bookmark
 - `key': a single key to search for this bookmark
@@ -415,7 +414,7 @@ and offer to create it if it does not exist yet."
 (defun mu4e-bookmarks ()
   "Get `mu4e-bookmarks' in the (new) format, converting from the old
 format if needed."
-  (map 'list
+  (cl-map 'list
     (lambda (item)
       (if (mu4e-bookmark-p item)
 	item ;; already in the right format
@@ -448,13 +447,15 @@ format if needed."
   "Get the corresponding bookmarked query for shortcut character
 KAR, or raise an error if none is found."
   (let* ((chosen-bm
-	   (or (find-if
+	   (or (cl-find-if
 		 (lambda (bm)
 		   (= kar (mu4e-bookmark-key bm)))
 		 (mu4e-bookmarks))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))
 	 (expr (mu4e-bookmark-query chosen-bm))
-	 (query (eval expr)))
+         (expr (if (not (functionp expr)) expr
+                 (funcall expr)))
+         (query (eval expr)))
     (if (stringp query)
       query
       (mu4e-warn "Expression must evaluate to query string ('%S')" expr))))
@@ -465,15 +466,15 @@ KAR, or raise an error if none is found."
 shortcut-character KEY in the list of `mu4e-bookmarks'. This
 replaces any existing bookmark with KEY."
   (setq mu4e-bookmarks
-    (remove-if
-      (lambda (bm)
-	(= (mu4e-bookmark-key bm) key))
-      (mu4e-bookmarks)))
+        (cl-remove-if
+         (lambda (bm)
+	   (= (mu4e-bookmark-key bm) key))
+         (mu4e-bookmarks)))
   (add-to-list 'mu4e-bookmarks
-    (make-mu4e-bookmark
-      :name name
-      :query query
-      :key key) t))
+               (make-mu4e-bookmark
+                :name name
+                :query query
+                :key key) t))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -486,7 +487,7 @@ than the ones listed here are ignored.
 Also see `mu4e-flags-to-string'.
 \[1\]: http://cr.yp.to/proto/maildir.html"
   (when flags
-    (let ((kar (case (car flags)
+    (let ((kar (cl-case (car flags)
 		 ('draft     ?D)
 		 ('flagged   ?F)
 		 ('new       ?N)
@@ -504,7 +505,7 @@ Also see `mu4e-flags-to-string'.
 (defun mu4e-flags-to-string (flags)
   "Remove duplicates and sort the output of `mu4e~flags-to-string-raw'."
   (concat
-    (sort (remove-duplicates
+    (sort (cl-remove-duplicates
 	    (append (mu4e~flags-to-string-raw flags) nil)) '>)))
 
 (defun mu4e~string-to-flags-1 (str)
@@ -517,7 +518,7 @@ Also see `mu4e-flags-to-string'.
 \[1\]: http://cr.yp.to/proto/maildir.html."
   (when (/= 0 (length str))
     (let ((flag
-	    (case (string-to-char str)
+	    (cl-case (string-to-char str)
 	      (?D   'draft)
 	      (?F   'flagged)
 	      (?P   'passed)
@@ -536,7 +537,7 @@ letters than the ones listed here are ignored.  Also see
 `mu4e-flags-to-string'.  \[1\]:
 http://cr.yp.to/proto/maildir.html "
   ;;  "Remove duplicates from the output of `mu4e~string-to-flags-1'"
-  (remove-duplicates (mu4e~string-to-flags-1 str)))
+  (cl-remove-duplicates (mu4e~string-to-flags-1 str)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -554,7 +555,7 @@ http://cr.yp.to/proto/maildir.html "
   "Display the mu4e manual page for the current mode.
 Or go to the top level if there is none."
   (interactive)
-  (info (case major-mode
+  (info (cl-case major-mode
 	  ('mu4e-main-mode "(mu4e)Main view")
 	  ('mu4e-headers-mode "(mu4e)Headers view")
 	  ('mu4e-view-mode "(mu4e)Message view")
@@ -674,7 +675,7 @@ process."
 (defun mu4e-error-handler (errcode errmsg)
   "Handler function for showing an error."
   ;; don't use mu4e-error here; it's running in the process filter context
-  (case errcode
+  (cl-case errcode
     (4 (user-error "No matches for this search query."))
     (t (error "Error %d: %s" errcode errmsg))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -739,7 +740,7 @@ or (rfc822-string . CONTACT) otherwise."
  'mostly likely contact'.t See the code for the detail"
   (let* ((now (+ (float-time) 3600)) ;; allow for clock diffs
 	  (recent (- (float-time) (* 15 24 3600))))
-    (sort* contacts
+    (cl-sort contacts
       (lambda (c1 c2)
 	(let* ( (c1 (cdr c1)) (c2 (cdr c2))
 		(personal1 (plist-get c1 :personal))
@@ -763,7 +764,7 @@ or (rfc822-string . CONTACT) otherwise."
 (defun mu4e~sort-contacts-for-completion (contacts)
   "Takes CONTACTS, which is a list of RFC-822 addresses, and sort them based
 on the ranking in `mu4e~contacts.'"
-  (sort* contacts
+  (cl-sort contacts
     (lambda (c1 c2)
       (let ((rank1 (gethash c1 mu4e~contacts))
 	     (rank2 (gethash c2 mu4e~contacts)))
@@ -1097,7 +1098,7 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 				    (current-time))
 			'face 'font-lock-string-face))
 	      (msg-face
-		(case type
+		(cl-case type
 		  (from-server 'font-lock-type-face)
 		  (to-server   'font-lock-function-name-face)
 		  (misc        'font-lock-variable-name-face)
@@ -1106,7 +1107,7 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 	      (msg (propertize (apply 'format frm args) 'face msg-face)))
 	(goto-char (point-max))
 	(insert tstamp
-	  (case type
+	  (cl-case type
 	    (from-server " <- ")
 	    (to-server   " -> ")
 	    (error       " !! ")

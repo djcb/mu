@@ -37,7 +37,6 @@
 #include "mu-msg-iter.h"
 #include "mu-threader.h"
 
-
 struct ltstr {
 	bool operator () (const std::string &s1,
 			  const std::string &s2) const {
@@ -135,7 +134,6 @@ public:
 		return doc.get_docid();
 	}
 
-
 	bool looks_like_dup () const {
 		try {
 			const Xapian::Document doc (cursor().get_document());
@@ -201,7 +199,6 @@ private:
 	bool _skip_dups;
 };
 
-
 static gboolean
 is_msg_file_readable (MuMsgIter *iter)
 {
@@ -217,8 +214,7 @@ is_msg_file_readable (MuMsgIter *iter)
 }
 
 
-
-MuMsgIter *
+MuMsgIter*
 mu_msg_iter_new (XapianEnquire *enq, size_t maxnum,
 		 MuMsgFieldId sortfield, MuMsgIterFlags flags,
 		 GError **err)
@@ -255,16 +251,12 @@ mu_msg_iter_destroy (MuMsgIter *iter)
 	try { delete iter; } MU_XAPIAN_CATCH_BLOCK;
 }
 
-
-
 void
 mu_msg_iter_set_preferred (MuMsgIter *iter, GHashTable *preferred_hash)
 {
 	g_return_if_fail (iter);
 	iter->set_preferred_map (preferred_hash);
 }
-
-
 
 MuMsg*
 mu_msg_iter_get_msg_floating (MuMsgIter *iter)
@@ -342,7 +334,24 @@ mu_msg_iter_is_done (MuMsgIter *iter)
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (TRUE);
 }
 
+gboolean
+mu_msg_iter_is_first  (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, FALSE);
 
+	return iter->cursor() == iter->matches().begin();
+}
+
+gboolean
+mu_msg_iter_is_last  (MuMsgIter *iter)
+{
+	g_return_val_if_fail (iter, FALSE);
+
+	if (mu_msg_iter_is_done (iter))
+		return FALSE;
+
+	return iter->cursor() + 1 == iter->matches().end();
+}
 
 /* hmmm.... is it impossible to get a 0 docid, or just very improbable? */
 unsigned
@@ -358,7 +367,6 @@ mu_msg_iter_get_docid (MuMsgIter *iter)
 }
 
 
-
 char*
 mu_msg_iter_get_msgid (MuMsgIter *iter)
 {
@@ -370,7 +378,6 @@ mu_msg_iter_get_msgid (MuMsgIter *iter)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
-
 
 char**
 mu_msg_iter_get_refs (MuMsgIter *iter)
@@ -401,7 +408,6 @@ mu_msg_iter_get_thread_id (MuMsgIter *iter)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
 }
-
 
 const MuMsgIterThreadInfo*
 mu_msg_iter_get_thread_info (MuMsgIter *iter)

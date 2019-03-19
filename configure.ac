@@ -53,7 +53,6 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
-
 # for now, use AM_PROG_LIBTOOL, as we don't want to require
 # a too new setup for autotools/libtool
 AM_PROG_LIBTOOL
@@ -124,7 +123,6 @@ AC_ARG_ENABLE([dirent-d-type],
 AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
 	    [use_dirent_d_type="no"], [use_dirent_d_type="yes"])
 
-
 # support for d_ino (inode) in struct dirent is optional; if it's
 # available we can sort direntries by inode and access them in that
 # order; this is much faster on some file systems (such as extfs3).
@@ -163,8 +161,17 @@ AC_SUBST(GMIME_CFLAGS)
 AC_SUBST(GMIME_LIBS)
 gmime_version="`$PKG_CONFIG --modversion gmime-3.0`"
 
+# gmime, version 3.0 or higher
+PKG_CHECK_MODULES(JSON_GLIB,json-glib-1.0 >= 1.4,[have_json_glib=yes],[have_json_glib=no])
+AS_IF([test "x$have_json_glib" = "xyes"],[
+  AC_SUBST(JSON_GLIB_CFLAGS)
+  AC_SUBST(JSON_GLIB_LIBS)
+  json_glib_version="$($PKG_CONFIG --modversion json-glib-1.0)"
+  AC_DEFINE(HAVE_JSON_GLIB,[1], [Do we support json-glib?])
+])
+AM_CONDITIONAL(HAVE_JSON_GLIB,[test "x$have_json_glib" = "xyes"])
 
-# xapian checking - we need 1.2.x at least
+# xapian checking - we need 1.4 at least
 AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
 AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN_CONFIG" != "xno")
 AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
@@ -174,16 +181,14 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
    *** If you compiled it yourself, you should ensure that xapian-config
    *** is in your PATH.])],
    [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
-AS_CASE([$xapian_version],
-	[1.[[3-9]].[[3-9]]*],
-	  [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
-        [1.[[2-9]].[[0-9]]*],
-          [AC_MSG_WARN([*** xapian $xapian_version, no Query::Op::Wildcard])],
-	[AC_MSG_ERROR([*** xapian version >= 1.2 needed,
-	but version $xapian_version found.])])
 
-XAPIAN_CXXFLAGS="`$XAPIAN_CONFIG --cxxflags`"
-XAPIAN_LIBS="`$XAPIAN_CONFIG --libs`"
+AS_CASE([$xapian_version],
+	[1.[[4-9]].[[0-9]]*],
+	  [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
+	[AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
+
+XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
+XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
 have_xapian="yes"
 
 AC_SUBST(XAPIAN_CXXFLAGS)
@@ -199,7 +204,6 @@ AC_SUBST(XAPIAN_LIBS)
 # also, this has nothing to do with Xapian's software version
 AC_DEFINE(MU_STORE_SCHEMA_VERSION,["0.99"], ['Schema' version of the database])
 ###############################################################################
-
 
 ###############################################################################
 # we need GTK+3 for some of the graphical tools
@@ -226,7 +230,6 @@ AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
 ###############################################################################
 
-
 ###############################################################################
 # build with guile2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
@@ -238,11 +241,12 @@ AS_IF([test "x$enable_guile" != "xno"],[
     GUILE_PROGS
     GUILE_FLAGS
     AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
+    AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
   ])
 ])
-AM_CONDITIONAL(BUILD_GUILE,[test -n "$GUILE_EFFECTIVE_VERSION"])
+AM_CONDITIONAL(BUILD_GUILE,
+[ test -n "$GUILE_EFFECTIVE_VERSION" -a -n "$GUILE_SNARF"])
 ###############################################################################
-
 
 ###############################################################################
 # check for makeinfo
@@ -250,14 +254,10 @@ AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 ###############################################################################
 
-
-
 ###############################################################################
 # docdir, so we can use it in mu4e-meta.el.in
 AC_SUBST(MU_DOC_DIR, "${prefix}/share/doc/mu")
 ###############################################################################
-
-
 
 ###############################################################################
 # check for pmccabe
@@ -318,6 +318,10 @@ echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
 
+AM_COND_IF([HAVE_JSON_GLIB],[
+echo "Json-Glib version                    : $json_glib_version"
+])
+
 AM_COND_IF([BUILD_GUI],[
 echo "GTK+ version                         : $gtk_version"
 echo "Webkit version                       : $webkit_version"
@@ -326,7 +330,6 @@ echo "Webkit version                       : $webkit_version"
 AM_COND_IF([BUILD_GUILE],[
 echo "Guile version                        : $GUILE_EFFECTIVE_VERSION"
 ])
-
 
 if test "x$build_mu4e" = "xyes"; then
 echo "Emacs version                        : $emacs_version"

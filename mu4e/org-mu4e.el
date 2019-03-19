@@ -28,13 +28,8 @@
 
 ;;; Code:
 
-
 ;; The expect version here is org 8.x
-
-
-;; the 'noerror is just to make sure bytecompilations does not break...
 (require 'org)
-(eval-when-compile (require 'cl))
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
@@ -64,54 +59,64 @@ Example usage:
   :type 'function
   :group 'org-mu4e)
 
+(defun org~mu4e-store-link-query ()
+  "Store a link to a mu4e query."
+  (let* ((query (mu4e-last-query))
+	  desc link)
+    (org-store-link-props :type "mu4e" :query query)
+    (setq
+      desc (concat "mu4e:query:" query)
+      link desc)
+    (org-add-link-props :link link :description desc)
+    link))
+
+(defun org~mu4e-store-link-message ()
+  "Store a link to a mu4e message."
+  (let* ((msg  (mu4e-message-at-point))
+          (msgid   (or (plist-get msg :message-id) "<none>"))
+          (from  (or (plist-get msg :from) '(("none" . "none"))))
+          (fromname (car (car from)))
+          (fromaddress (cdr (car from)))
+          (to  (or (plist-get msg :to) '(("none" . "none"))))
+          (toname (car (car to)))
+          (toaddress (cdr (car to)))
+          (fromto (if (mu4e-user-mail-address-p fromaddress)
+                    (format "to %s <%s>" toname toaddress)
+                    (format "from %s <%s>" fromname fromaddress)))
+          (date (plist-get msg :date))
+          (date-ts (format-time-string (org-time-stamp-format t) date))
+          (date-ts-ia (format-time-string (org-time-stamp-format t t) date))
+          (subject  (or (plist-get msg :subject) "<none>"))
+          link)
+    (org-store-link-props :type "mu4e" :link link
+      :message-id msgid)
+    (setq link (concat "mu4e:msgid:" msgid))
+    (org-add-link-props :link link
+      :to (format "%s <%s>" toname toaddress)
+      :toname toname
+      :toaddress toaddress
+      :from (format "%s <%s>" fromname fromaddress)
+      :fromname fromname
+      :fromaddress fromaddress
+      :fromto fromto
+      :date date-ts-ia
+      :date-timestamp date-ts
+      :date-timestamp-inactive date-ts-ia
+      :subject subject
+      :description (funcall org-mu4e-link-desc-func msg))
+    link))
+
 (defun org-mu4e-store-link ()
-  "Store a link to a mu4e query or message."
-  (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-    (if (and (eq major-mode 'mu4e-headers-mode)
-	  org-mu4e-link-query-in-headers-mode)
-      ;; storing links to queries
-      (let* ((query (mu4e-last-query))
-	      desc link)
-	(org-store-link-props :type "mu4e" :query query)
-	(setq
-	  desc (concat "mu4e:query:" query)
-	  link desc)
-	(org-add-link-props :link link :description desc)
-	link)
-      ;; storing links to messages
-      (let* ((msg  (mu4e-message-at-point))
-             (msgid   (or (plist-get msg :message-id) "<none>"))
-             (from  (or (plist-get msg :from) '(("none" . "none"))))
-             (fromname (car (car from)))
-             (fromaddress (cdr (car from)))
-             (to  (or (plist-get msg :to) '(("none" . "none"))))
-             (toname (car (car to)))
-             (toaddress (cdr (car to)))
-             (fromto (if (mu4e-user-mail-address-p fromaddress)
-                         (format "to %s <%s>" toname toaddress)
-                       (format "from %s <%s>" fromname fromaddress)))
-             (date (plist-get msg :date))
-             (date-ts (format-time-string (org-time-stamp-format t) date))
-             (date-ts-ia (format-time-string (org-time-stamp-format t t) date))
-             (subject  (or (plist-get msg :subject) "<none>"))
-             link)
-        (org-store-link-props :type "mu4e" :link link
-                              :message-id msgid)
-        (setq link (concat "mu4e:msgid:" msgid))
-        (org-add-link-props :link link
-                            :to (format "%s <%s>" toname toaddress)
-                            :toname toname
-                            :toaddress toaddress
-                            :from (format "%s <%s>" fromname fromaddress)
-                            :fromname fromname
-                            :fromaddress fromaddress
-                            :fromto fromto
-                            :date date-ts-ia
-                            :date-timestamp date-ts
-                            :date-timestamp-inactive date-ts-ia
-                            :subject subject
-                            :description (funcall org-mu4e-link-desc-func msg))
-        link))))
+  "Store a link to a mu4e message or query.
+It links to the last known query when in `mu4e-headers-mode' with
+`org-mu4e-link-query-in-headers-mode' set; otherwise it links to
+a specific message, based on its message-id, so that links stay
+valid even after moving the message around."
+  (if (and (eq major-mode 'mu4e-headers-mode)
+	org-mu4e-link-query-in-headers-mode)
+    (org~mu4e-store-link-query)
+    (when (mu4e-message-at-point t)
+      (org~mu4e-store-link-message))))
 
 ;; org-add-link-type is obsolete as of org-mode 9.
 ;; Instead we will use the org-link-set-parameters method
@@ -140,7 +145,6 @@ org-mode)."
   (interactive)
   (call-interactively 'org-store-link)
   (org-capture))
-
 
 
 ;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,7 +198,7 @@ and images in a multipart/related part."
 (defun org~mu4e-mime-convert-to-html ()
   "Convert the current body to html."
   (unless (fboundp 'org-export-string-as)
-    (mu4e-error "require function 'org-export-string-as not found."))
+    (mu4e-error "require function 'org-export-string-as not found"))
   (let* ((begin
 	     (save-excursion
 	       (goto-char (point-min))
@@ -249,14 +253,13 @@ and images in a multipart/related part."
       (remove-overlays (point-min) eoh))))
 
 (defvar org-mu4e-convert-to-html nil
-  "Whether to do automatic org-mode => html conversion when sending messages.")
+  "Whether to do automatic `org-mode' => html conversion when sending messages.")
 
 (defun org~mu4e-mime-convert-to-html-maybe ()
   "Convert to html if `org-mu4e-convert-to-html' is non-nil.
 This function is called when sending a message (from
-`message-send-hook') and, if non-nil, will send the message as
-the rich-text version of the what is assumed to be an org-mode
-body."
+`message-send-hook') and, if non-nil, sends the message as the
+rich-text version of what is assumed to be an org mode body."
   (when org-mu4e-convert-to-html
     (mu4e-message "Converting to html")
     (org~mu4e-mime-convert-to-html)))
@@ -280,7 +283,7 @@ or org-mode (when in the body)."
 	  (org-mode)
 	  (add-hook 'before-save-hook
 	    (lambda ()
-	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving."))
+	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
 	    nil t)
 	  (org~mu4e-mime-decorate-headers)
 	  (local-set-key (kbd "M-m")
@@ -297,10 +300,9 @@ or org-mode (when in the body)."
       ;; and add the hook
       (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
 
-
 (defun org-mu4e-compose-org-mode ()
-  "Pseudo-Minor mode for mu4e-compose-mode, to edit the message
-body using org-mode."
+  "Defines a pseudo-minor mode for mu4e-compose-mode.
+Edit the message body using org mode. DEPRECATED."
   (interactive)
   (unless (member major-mode '(org-mode mu4e-compose-mode))
     (mu4e-error "Need org-mode or mu4e-compose-mode"))

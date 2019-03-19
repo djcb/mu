@@ -51,6 +51,7 @@ get_output_format (const char *formatstr)
 		{"links",	MU_CONFIG_FORMAT_LINKS},
 		{"plain",	MU_CONFIG_FORMAT_PLAIN},
 		{"sexp",	MU_CONFIG_FORMAT_SEXP},
+		{"json",	MU_CONFIG_FORMAT_JSON},
 		{"xml",		MU_CONFIG_FORMAT_XML},
 		{"xquery",	MU_CONFIG_FORMAT_XQUERY},
 		{"mquery",	MU_CONFIG_FORMAT_MQUERY}
@@ -78,9 +79,9 @@ set_group_mu_defaults (void)
 		MU_CONFIG.muhome = exp;
 	}
 
-	/* check for the MU_NOCOLOR env var; but in any case don't
+	/* check for the MU_NOCOLOR or NO_COLOR env vars; but in any case don't
 	 * use colors unless we're writing to a tty */
-	if (g_getenv (MU_NOCOLOR) != NULL)
+	if (g_getenv (MU_NOCOLOR) != NULL || g_getenv ("NO_COLOR") != NULL)
 		MU_CONFIG.nocolor = TRUE;
 
 	if (!isatty(fileno(stdout)) || !isatty(fileno(stderr)))

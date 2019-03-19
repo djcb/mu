@@ -24,10 +24,7 @@
 
 ;; A mu4e 'context' is a a set of variable-settings and functions, which can be
 ;; used e.g. to switch between accounts.
-
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-(require 'cl)
-
+(require 'cl-lib)
 (require 'mu4e-utils)
 
 (defvar mu4e-contexts nil "The list of `mu4e-context' objects
@@ -61,7 +58,7 @@ none."
 			      (mu4e-context-name (mu4e-context-current)))
 		  'face 'mu4e-context-face) "]") ""))
 
-(defstruct mu4e-context
+(cl-defstruct mu4e-context
   "A mu4e context object with the following members:
 - `name': the name of the context, eg. \"Work\" or \"Private\".
 - `enter-func': a parameterless function invoked when entering
@@ -83,7 +80,7 @@ none."
 (defun mu4e~context-ask-user (prompt)
   "Let user choose some context based on its name."
   (when mu4e-contexts
-    (let* ((names (map 'list (lambda (context)
+    (let* ((names (cl-map 'list (lambda (context)
 			       (cons (mu4e-context-name context) context))
 		    mu4e-contexts))
 	    (context (mu4e-read-option prompt names)))
@@ -99,7 +96,7 @@ non-nil."
   (interactive "P")
   (unless mu4e-contexts
     (mu4e-error "No contexts defined"))
-  (let* ((names (map 'list (lambda (context)
+  (let* ((names (cl-map 'list (lambda (context)
 			     (cons (mu4e-context-name context) context))
 		  mu4e-contexts))
 	  (context
@@ -156,12 +153,12 @@ match, POLICY determines what to do:
     (if (eq policy 'always-ask)
       (mu4e~context-ask-user "Select context: ")
       (or ;; is there a matching one?
-	(find-if (lambda (context)
+	(cl-find-if (lambda (context)
 		     (when (mu4e-context-match-func context)
 		       (funcall (mu4e-context-match-func context) msg)))
 	  mu4e-contexts)
 	;; no context found yet; consult policy
-	(case policy
+	(cl-case policy
 	  (pick-first (car mu4e-contexts))
 	  (ask (mu4e~context-ask-user "Select context: "))
 	  (ask-if-none (or (mu4e-context-current)

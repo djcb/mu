@@ -32,6 +32,7 @@ AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)					\
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
 AM_CFLAGS=							\
+	$(JSON_GLIB_CFLAGS)					\
 	$(WARN_CFLAGS)						\
 	$(ASAN_CFLAGS)
 AM_CXXFLAGS=							\

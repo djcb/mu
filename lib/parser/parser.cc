@@ -135,7 +135,7 @@ range (const ProcIface::FieldInfoVec& fields, const std::string& lower,
 	if (prange.lower > prange.upper)
 		prange = proc->process_range (field.field, upper, lower);
 
-	return Tree({{Node::Type::Range},
+	return Tree({Node::Type::Range,
 			     std::make_unique<Range>(field.field, field.prefix, field.id,
 						     prange.lower, prange.upper)});
 }

@@ -1,6 +1,6 @@
 ;;; mu4e-message.el -- part of mu4e, the mu mail user agent
 ;;
-;; Copyright (C) 2012-2017 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2018 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -25,23 +25,18 @@
 ;; Functions to get data from mu4e-message plist structure
 
 ;;; Code:
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
-
+(require 'cl-lib)
 (require 'mu4e-vars)
 (require 'mu4e-utils)
-
-(require 'cl)
 (require 'flow-fill)
-
 
 (defcustom mu4e-html2text-command
   (if (fboundp 'shr-insert-document)
     'mu4e-shr2text
     (progn (require 'html2text) 'html2text))
-
   "Either a shell command or a function that converts from html to plain text.
 
-If it is a shell-command, the command reads html from standard
+If it is a shell command, the command reads html from standard
 input and outputs plain text on standard output. If you use the
 htmltext program, it's recommended you use \"html2text -utf8
 -width 72\". Alternatives are the python-based html2markdown, w3m
@@ -70,20 +65,20 @@ is always used."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-html-plaintext-ratio-heuristic 5
-  "Ratio between the length of the html and the plain text part
-below which mu4e will consider the plain text part to be 'This
-messages requires html' text bodies. You can neutralize
+  "Ratio between the length of the html and the plain text part.
+Below this ratio mu4e will consider the plain text part to be
+'This messages requires html' text bodies. You can neutralize
 it (always show the text version) by using
 `most-positive-fixnum'."
   :type 'integer
   :group 'mu4e-view)
 
 (defvar mu4e-message-body-rewrite-functions '(mu4e-message-outlook-cleanup)
-  "List of functions to transform the message body text. The functions
-  take two parameters, MSG and TXT, which are the message-plist
-  and the text, which is the plain-text version, possibly
-  converted from html and/or transformed by earlier rewrite
-  functions. ")
+  "List of functions to transform the message body text.
+The functions take two parameters, MSG and TXT, which are the
+message-plist and the text, which is the plain-text version,
+ossibly converted from html and/or transformed by earlier rewrite
+functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defsubst mu4e-message-field-raw (msg field)
@@ -92,7 +87,7 @@ FIELD is one of :from, :to, :cc, :bcc, :subject, :data,
 :message-id, :path, :maildir, :priority, :attachments,
 :references, :in-reply-to, :body-txt, :body-html
 
-Returns `nil' if the field does not exist.
+Returns nil if the field does not exist.
 
 A message plist looks something like:
 \(:docid 32461
@@ -102,7 +97,7 @@ A message plist looks something like:
  :subject \"RE: what about the 50K?\"
  :date (20369 17624 0)
  :size 4337
- :message-id \"6BDC23465F79238C8233AB82D81EE81AF0114E4E74@123213.mail.example.com\"
+ :message-id \"238C8233AB82D81EE81AF0114E4E74@123213.mail.example.com\"
  :path  \"/home/tom/Maildir/INBOX/cur/133443243973_1.10027.atlas:2,S\"
  :maildir \"/INBOX\"
  :priority normal
@@ -110,9 +105,9 @@ A message plist looks something like:
  :attachments
      ((:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)
       (:index 3 :name \"book.pdf\" :mime-type \"application/pdf\" :size 192220))
- :references  (\"6BDC23465F79238C8384574032D81EE81AF0114E4E74@123213.mail.example.com\"
+ :references  (\"238C8384574032D81EE81AF0114E4E74@123213.mail.example.com\"
  \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\")
- :in-reply-to \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
+ :in-reply-to \"238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
  :body-txt \"Hi Tom, ...\"
 \)).
 Some notes on the format:
@@ -127,11 +122,11 @@ Some notes on the format:
   ;; after all this documentation, the spectacular implementation
   (if msg
     (plist-get msg field)
-    (mu4e-error "message must be non-nil")))
+    (mu4e-error "Message must be non-nil")))
 
 (defsubst mu4e-message-field (msg field)
   "Retrieve FIELD from message plist MSG.
-Like `mu4e-message-field-nil', but will sanitize `nil' values:
+Like `mu4e-message-field-nil', but will sanitize nil values:
 - all string field except body-txt/body-html: nil -> \"\"
 - numeric fields + dates                    : nil -> 0
 - all others                                : return the value
@@ -150,15 +145,15 @@ Thus, function will return nil for empty lists, non-existing body-txt or body-ht
 	val)))) ;; otherwise, just return nil
 
 (defsubst mu4e-message-has-field (msg field)
-  "Return t if MSG contains FIELD, nil otherwise."
+  "If MSG has a FIELD return t, nil otherwise."
   (plist-member msg field))
 
 (defsubst mu4e-message-at-point (&optional noerror)
-  "Get the message s-expression for the message at point in either
-the headers buffer or the view buffer, or nil if there is no such
-message. If optional NOERROR is non-nil, do not raise an error when
-there is no message at point."
-  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-msg)))
+  "Get the message s-expression for the message at point.
+Either the headers buffer or the view buffer, or nil if there is
+no such message. If optional NOERROR is non-nil, do not raise an
+error when there is no message at point."
+  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-message)))
     (if msg
       msg
       (unless noerror (mu4e-warn "No message at point")))))
@@ -173,9 +168,10 @@ This is equivalent to:
   "Whether the body text uses HTML.")
 
 (defun mu4e~message-use-html-p (msg prefer-html)
-  "Determine whether we want to use html or text; this is based
-on PREFER-HTML and whether the message supports the given
-representation."
+  "Do we want to PREFER-HTML for MSG?
+Determine whether we want
+to use html or text. The decision is based on PREFER-HTML and
+whether the message supports the given representation."
   (let* ((txt (mu4e-message-field msg :body-txt))
 	  (html (mu4e-message-field msg :body-html))
 	  (txt-len (length txt))
@@ -192,14 +188,16 @@ representation."
       (t nil))))
 
 (defun mu4e~message-body-has-content-type-param (msg param)
+  "Does the MSG have a content-type parameter PARAM?"
   (cdr
    (assoc param (mu4e-message-field msg :body-txt-params))))
 
 (defun mu4e~safe-iequal (a b)
+  "Is string A equal to a downcased B?"
   (and b (equal (downcase b) a)))
 
 (defun mu4e-message-body-text (msg &optional prefer-html)
-  "Get the body in text form for this message.
+  "Get the body in text form for message MSG.
 This is either :body-txt, or if not available, :body-html
 converted to text, using `mu4e-html2text-command' is non-nil, it
 will use that. Normally, this function prefers the text part,
@@ -233,13 +231,12 @@ unless PREFER-HTML is non-nil."
       (setq body (funcall func msg body)))
     body))
 
-
-(defun mu4e-message-outlook-cleanup (msg txt)
-  "Remove some crap from the remaining string; it seems
-   esp. outlook lies about its encoding (ie., it says
-   'iso-8859-1' but really it's 'windows-1252'), thus giving us
-   these funky chars. here, we either remove them, or replace
-   with 'what-was-meant' (heuristically)."
+(defun mu4e-message-outlook-cleanup (msg body)
+  "Clean-up MSG's BODY.
+Esp. MS-Outlook-originating message may not advertise the correct
+encoding (e.g. 'iso-8859-1' instead of 'windows-1252'), thus
+giving us these funky chars. here, we either remove them, or
+replace with."
   (with-temp-buffer
     (insert body)
     (goto-char (point-min))
@@ -247,28 +244,29 @@ unless PREFER-HTML is non-nil."
       (replace-match
 	(cond
 	  ((string= (match-string 0) "’") "'")
+	  ((string= (match-string 0) " ") " ")
 	  (t ""))))
     (buffer-string)))
 
-
 (defun mu4e-message-contact-field-matches (msg cfield rx)
-  "Checks whether any of the of the contacts in field
-CFIELD (either :to, :from, :cc or :bcc, or a list of those) of
-msg MSG matches (with their name or e-mail address) regular
-expressions RX. If there is a match, return non-nil; otherwise
-return nil. RX can also be a list of regular expressions, in
-which case any of those are tried for a match."
+  "Does MSG's contact-field CFIELD matche rx?
+Check if any of the of the CFIELD in MSG matches RX. I.e.
+anything in field CFIELD (either :to, :from, :cc or :bcc, or a
+list of those) of msg MSG matches (with their name or e-mail
+address) regular expressions RX. If there is a match, return
+non-nil; otherwise return nil. RX can also be a list of regular
+expressions, in which case any of those are tried for a match."
   (if (and cfield (listp cfield))
     (or (mu4e-message-contact-field-matches msg (car cfield) rx)
       (mu4e-message-contact-field-matches msg (cdr cfield) rx))
     (when cfield
       (if (listp rx)
 	;; if rx is a list, try each one of them for a match
-	(find-if
+	(cl-find-if
 	  (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
 	  rx)
 	;; not a list, check the rx
-	(find-if
+	(cl-find-if
 	  (lambda (ct)
 	    (let ((name (car ct)) (email (cdr ct)))
 	      (or
@@ -277,21 +275,23 @@ which case any of those are tried for a match."
 	  (mu4e-message-field msg cfield))))))
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
-  "Checks whether any of the of the contacts in field
+  "Does contact-field CFIELD in MSG match me?
+Checks whether any of the of the contacts in field
 CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches *me*,
 that is, any of the e-mail address in
 `mu4e-user-mail-address-list'. Returns the contact cell that
 matched, or nil."
-  (find-if
+  (cl-find-if
     (lambda (cc-cell)
-      (member-if
+      (cl-member-if
 	(lambda (addr)
 	  (string= (downcase addr) (downcase (cdr cc-cell))))
 	mu4e-user-mail-address-list))
     (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)
-  "Get some field in a message part; a part would look something like:
+  "Get some FIELD from MSGPART.
+A part would look something like:
   (:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)."
   (plist-get msgpart field))
 
@@ -300,23 +300,24 @@ matched, or nil."
 (defalias 'mu4e-body-text 'mu4e-message-body-text) ;; backward compatibility
 
 (defun mu4e-field-at-point (field)
-  "Get FIELD (a symbol, see `mu4e-header-info') for the message at
-point in eiter the headers buffer or the view buffer."
+  "Get FIELD for the message at point.
+Eiter in the headers buffer or the view buffer. Field is a
+symbol, see `mu4e-header-info'."
   (plist-get (mu4e-message-at-point) field))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e~html2text-wrapper (func msg)
-  "Fill a temporary buffer with html from MSG, then call
-FUNC. Return the buffer contents."
+  "Apply FUNC on a temporary buffer with html from MSG.
+Return the buffer contents."
   (with-temp-buffer
     (insert (or (mu4e-message-field msg :body-html) ""))
     (funcall func)
     (or (buffer-string) "")))
 
 (defun mu4e-shr2text (msg)
-  "Convert html in MSG to text using the shr engine; this can be
-used in `mu4e-html2text-command' in a new enough emacs. Based on
-code by Titus von der Malsburg."
+  "Convert html in MSG to text using the shr engine.
+This can be used in `mu4e-html2text-command' in a new enough
+Emacs. Based on code by Titus von der Malsburg."
   (mu4e~html2text-wrapper
     (lambda ()
 	(let (
@@ -331,7 +332,7 @@ code by Titus von der Malsburg."
 	  (shr-render-region (point-min) (point-max)))) msg))
 
 (defun mu4e~html2text-shell (msg cmd)
-  "Convert html2 text using a shell function."
+  "Convert html2 text in MSG using a shell function CMD."
   (mu4e~html2text-wrapper
     (lambda ()
       (let* ((tmp-file (mu4e-make-temp-file "html")))
@@ -341,3 +342,4 @@ code by Titus von der Malsburg."
 	(delete-file tmp-file))) msg))
 
 (provide 'mu4e-message)
+;;; mu4e-message ends here

@@ -425,7 +425,6 @@ const GSList* mu_msg_get_tags (MuMsg *self);
 int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 
 
-
 /**
  * check whether there there's a readable file behind this message
  *
@@ -465,6 +464,30 @@ char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
 		      MuMsgOptions ops)
 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
+#ifdef HAVE_JSON_GLIB
+
+struct _JsonNode; /* forward declaration */
+
+/**
+ * convert the msg to json
+ *
+ * @param msg a valid message
+ * @param docid the docid for this message, or 0
+ * @param ti thread info for the current message, or NULL
+ * @param opts, bitwise OR'ed;
+ *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
+ *      obtained from the database (this is much faster if the MuMsg is
+ *      database-backed, so no file needs to be opened)
+ *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
+ *      files and include links to those in the sexp
+ *
+ * @return a string with the sexp (free with g_free) or NULL in case of error
+ */
+struct _JsonNode* mu_msg_to_json (MuMsg *msg, unsigned docid,
+				  const struct _MuMsgIterThreadInfo *ti,
+				  MuMsgOptions ops) G_GNUC_WARN_UNUSED_RESULT;
+#endif /*HAVE_JSON_GLIB*/
+
 /**
  * move a message to another maildir; note that this does _not_ update
  * the database
@@ -488,7 +511,6 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
 				 gboolean new_name,
 				 GError **err);
 
-
 /**
  * Tickle a message -- ie., rename a message to some new semi-random name,while
  * maintaining the maildir and flags. This can be useful when dealing with
@@ -503,7 +525,6 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
  * @return TRUE if it worked, FALSE otherwise
  */
 gboolean mu_msg_tickle (MuMsg *msg, GError **err);
-
 
 
 enum _MuMsgContactType {  /* Reply-To:? */
