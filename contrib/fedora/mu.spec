@@ -1,18 +1,18 @@
 %global pkg mu
-%global pkgname mu
-%global commit 700e5e76dac7a56c6f34233890fb7947a4d65419
+%global pkgname mu-mail-search
+%global commit f9b615c3bbe80b8afdcdae113c739ab6c1601d8e
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
-%global gitdate 20181107
+%global gitdate 20190302
 %global gittime 2124
 
 Summary: A lightweight email search engine for Maildirs
-Name: mu
-Version: 1.0
-Release: 4.%{gitdate}%{gittime}git%{shortcommit}%{?dist}
+Name: %{pkgname}
+Version: 1.0.0
+Release: 5.%{gitdate}%{gittime}git%{shortcommit}%{?dist}
 License: GPLv3
 Group: Applications/Internet
 URL: https://github.com/djcb/mu
-Source0: https://github.com/djcb/%{pkgname}/archive/%{commit}/%{pkgname}-%{shortcommit}.tar.gz
+Source0: https://github.com/djcb/%{pkg}/archive/%{commit}/%{pkg}-%{shortcommit}.tar.gz
 BuildRequires: automake
 BuildRequires: gcc
 BuildRequires: gcc-c++
@@ -24,6 +24,7 @@ BuildRequires: texinfo
 Requires: xapian-core
 Requires: libuuid
 Requires: gmime30
+Conflicts: mu
 
 %description
 E-mail is the 'flow' in the work flow of many people. Consequently, one spends a lot of time searching for old e-mails, to dig up some important piece of information. With people having tens of thousands of e-mails (or more), this is becoming harder and harder. How to find that one e-mail in an ever-growing haystack?
@@ -31,19 +32,26 @@ Enter mu.
 'mu' is a set of command-line tools for Linux/Unix that enable you to quickly find the e-mails you are looking for, assuming that you store your e-mails in Maildirs (if you don't know what 'Maildirs' are, you are probably not using them). 
 
 %package -n emacs-mu4e
-Group:   Applications/Editors
 Summary: mu support files for Emacs
 BuildArch: noarch
 BuildRequires: emacs
 Requires: %{pkgname} = %{version}-%{release}
-Requires: emacs(bin) >= %{_emacs_version}
+Requires: emacs-filesystem >= %{_emacs_version}
 
 %description -n emacs-mu4e
 %{summary}.
 
+%package -n %{pkgname}-guile
+Summary: This package contains Guile bindings for %{pkgname}
+BuildRequires: guile22-devel
+Requires: guile22
+Requires: %{pkgname} = %{version}-%{release}
+
+%description -n %{pkgname}-guile
+%{summary}.
 
 %prep -n
-%setup -q -n %{name}-%{commit}
+%setup -q -n %{pkg}-%{commit}
 
 %build
 NOCONFIGURE=yes ./autogen.sh
@@ -70,14 +78,26 @@ rm -f %{buildroot}%{_infodir}/dir
 %doc
 %{_bindir}/mu
 %{_mandir}/man*/*
-%{_datadir}/doc/%{pkgname}/NEWS.org
+%{_datadir}/doc/%{pkg}/NEWS.org
 
 %files -n emacs-mu4e
 %{_emacs_sitelispdir}/mu4e/
 %{_infodir}/mu4e.info.gz
-%{_datadir}/doc/%{pkgname}/mu4e-about.org
+%{_datadir}/doc/%{pkg}/mu4e-about.org
+
+%files -n %{pkgname}-guile
+%{_libdir}/libguile-%{pkg}*
+%{_infodir}/%{pkg}-guile.info.gz
+%{_datadir}/guile/site/2.0/%{pkg}.scm
+%{_datadir}/guile/site/2.0/%{pkg}/*
+%{_datadir}/%{pkg}/scripts/*
 
 %changelog
+* Tue Mar 19 2019 Bojan <bojov@fedoraproject.org> - 1.0.0-5.20190302%{gittime}git%{shortcommit}%{?dist}
+- change package name to mu-mail-search because conflict with mu-editor
+- initial package for guile
+- bump to latest master at March 2019
+
 * Wed Mar 28 2018 Bojan <bojov@e754.snefu.lnet> - 1.0-4
 - bump to latest master
 - added gcc and gcc-c++ into BuildRequires (Fedora 29) 
