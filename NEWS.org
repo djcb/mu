@@ -1,8 +1,63 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
+** 1.2
+
+   After a bit over a year since version 1.0, here is version 1.2. This is
+   mostly a bugfix release, but there are also a number of new features.
+
+*** mu
+
+    - Substantial (algorithmic) speed-up of message-threading; this also (or
+      especially) affects mu4e, since threading is the default. See commit
+      eb9bfbb1ca3c for all the details, and thanks to Nicolas Avrutin.
+
+    - The query-parser now generates better queries for wildcard searches, by
+      using the Xapian machinery for that (when available) rather than
+      tranforming into regexp queries.
+
+    - The perl backend is hardly used and will be removed; for now we just
+      disable it in the build.
+
+    - Allow outputing messages in json format, closely following the sexp
+      output. This adds an (optional) dependency on the Json-Glib library.
+
+*** mu4e
+
+    - Bump the minimal required emacs version to 24.4. This was already de-facto
+      true, now it is enforced.
+
+    - In mu4e-bookmarks, allow the `:query` element to take a function (or
+      lambda) to dynamically generate the query string.
+
+    - There is a new message-view for mu4e, based on the Gnus' article-view.
+      This bring a lot of (but not all) of the very rich Gnus article-mode
+      feature-set to mu4e, such as S/MIME-support, syntax-highlighting,
+
+      For now this is experimental ("tech preview"), but might replace the
+      current message-view in a future release. Enable it with:
+               (setq mu4e-view-use-gnus t)
+
+      Thanks to Christophe Troestler for his work on fixing various encoding
+      issues.
+
+    - Many bug fixes
+
+*** guile
+
+    - Now requires guile 2.2.
+
+*** Contributors for this release:
+
+    Ævar Arnfjörð Bjarmason, Albert Krewinkel, Alberto Luaces, Alex Bennée, Alex
+    Branham, Alex Murray, Cheong Yiu Fung, Chris Nixon, Christian Egli,
+    Christophe Troestler, Dirk-Jan C. Binnema, Eric Danan, Evan Klitzke, Ian
+    Kelling, ibizaman, James P. Ascher, John Whitbeck, Junyeong Jeong, Kevin
+    Foley, Marcelo Henrique Cerri, Nicolas Avrutin, Oleh Krehel, Peter W. V.
+    Tran-Jørgensen, Piotr Oleskiewicz, Sebastian Miele, Ulrich Ölmann,
+
 ** 1.0
-   
+
    After a decade of development, *mu 1.0*!
 
    Note: the new release requires a C++14 capable compiler.
@@ -10,15 +65,15 @@
 *** mu
 
     - New, custom query parser which replaces Xapian's 'QueryParser'
-      both in mu and mu4e. Existing queries should still work, but the
-      new engine handles non-alphanumeric queries much better.
+      both in mu and mu4e. Existing queries should still work, but the new
+      engine handles non-alphanumeric queries much better.
     - Support regular expressions in queries (with the new query engine),
-      e.g. "subject:/foo.*bar/".  See the new `mu-query` and updated
-      `mu-easy` manpages for examples.
+      e.g. "subject:/foo.*bar/". See the new `mu-query` and updated `mu-easy`
+      manpages for examples.
     - cfind: ensure nicks are unique
     - auxiliary programs invoked from mu/mu4e survive terminating the
       shell / emacs
-    
+
 *** mu4e
 
     - Allow for rewriting message bodies
@@ -32,24 +87,23 @@
     - Allow forwarding messages as attachments
       (`mu4e-compose-forward-as-attachment')
     - New defaults: default to 'skip duplicates' and 'include related'
-      in headers-view, which should be good defaults for most users.
-      Can be customized using `mu4e-headers-skip-duplicates' and
+      in headers-view, which should be good defaults for most users. Can be
+      customized using `mu4e-headers-skip-duplicates' and
       `mu4e-headers-include-related', respectively.
     - Many bug fixed (see github for all the details).
     - Updated documentation
 
 *** Contributors for this release:
 
-    Ævar Arnfjörð Bjarmason, Alex Bennée, Arne Köhn, Christophe
-    Troestler, Damien Garaud, Dirk-Jan C. Binnema, galaunay, Hong Xu,
-    Ian Kelling, John Whitbeck, Josiah Schwab, Jun Hao, Krzysztof
-    Jurewicz, maxime, Mekeor Melire, Nathaniel Nicandro, Ronald Evers,
-    Sean 'Shaleh' Perry, Sébastien Le Callonnec, Stig Brautaset,
-    Thierry Volpiatto, Titus von der Malsburg, Vladimir Sedach, Wataru
-    Ashihara, Yuri D'Elia.
+    Ævar Arnfjörð Bjarmason, Alex Bennée, Arne Köhn, Christophe Troestler,
+    Damien Garaud, Dirk-Jan C. Binnema, galaunay, Hong Xu, Ian Kelling, John
+    Whitbeck, Josiah Schwab, Jun Hao, Krzysztof Jurewicz, maxime, Mekeor Melire,
+    Nathaniel Nicandro, Ronald Evers, Sean 'Shaleh' Perry, Sébastien Le
+    Callonnec, Stig Brautaset, Thierry Volpiatto, Titus von der Malsburg,
+    Vladimir Sedach, Wataru Ashihara, Yuri D'Elia.
 
-    And all the people on the mailing-list and in github, with bug
-    reports, questions and suggestions.
+    And all the people on the mailing-list and in github, with bug reports,
+    questions and suggestions.
 
 
 ** 0.9.18
@@ -58,105 +112,100 @@
 
 *** mu
 
-   - Increase the default maximum size for messages to index to 500
-     Mb; you can customize this using the --max-msg-size parameter to
-     mu index.
-   - implement "lazy-checking", which makes mu not descend into
-     subdirectories when the directory-timestamp is up to date;
-     greatly speeds up indexing (see --lazy-check)
-   - prefer gpg2 for crypto
-   - fix a crash when running on OpenBSD
-   - fix --clear-links (broken filenames)
-   - You can now set the MU_HOME environment variable as an
-     alternative way of setting the mu homedir via the --muhome
-     commadn-line parameter.
-    
+    - Increase the default maximum size for messages to index to 500
+      Mb; you can customize this using the --max-msg-size parameter to mu index.
+    - implement "lazy-checking", which makes mu not descend into
+      subdirectories when the directory-timestamp is up to date; greatly speeds
+      up indexing (see --lazy-check)
+    - prefer gpg2 for crypto
+    - fix a crash when running on OpenBSD
+    - fix --clear-links (broken filenames)
+    - You can now set the MU_HOME environment variable as an
+      alternative way of setting the mu homedir via the --muhome commadn-line
+      parameter.
+
 *** mu4e
 
 **** reading messages
-     
-   - Add `mu4e-action-view-with-xwidget`, and action for viewing
-     e-mails inside a Webkit-widget inside emacs (requires emacs 25.x
-     with xwidget/webkit/gtk3 support)
-   - Explicitly specify utf8 for external html viewing, so browsers
-     can handle it correctly.
-   - Make `shr' the default renderer for rich-text emails (when
-     available)
-   - Add a :user-agent field to the message-sexp (in mu4e-view), which
-     is either the User-Agent or X-Mailer field, when present.
+
+     - Add `mu4e-action-view-with-xwidget`, and action for viewing
+       e-mails inside a Webkit-widget inside emacs (requires emacs 25.x with
+       xwidget/webkit/gtk3 support)
+     - Explicitly specify utf8 for external html viewing, so browsers
+       can handle it correctly.
+     - Make `shr' the default renderer for rich-text emails (when
+       available)
+     - Add a :user-agent field to the message-sexp (in mu4e-view), which
+       is either the User-Agent or X-Mailer field, when present.
 
 **** composing messages
-     
-   - Cleanly handle early exits from message composition as well as
-     while composing.
-   - Allow for resending existing messages, possibly editing them. M-x
-     mu4e-compose-resend, or use the menu; no shortcut.
-   - Better handle the closing of separate compose frames
-   - Improved font-locking for the compose buffers, and more extensive
-     checks for cited parts.
-   - automatically sign/encrypt replies to signed/encrypted messages
-     (subject to `mu4e-compose-crypto-reply-policy')
+
+     - Cleanly handle early exits from message composition as well as while
+       composing.
+     - Allow for resending existing messages, possibly editing them. M-x
+       mu4e-compose-resend, or use the menu; no shortcut.
+     - Better handle the closing of separate compose frames
+     - Improved font-locking for the compose buffers, and more extensive
+       checks for cited parts.
+     - automatically sign/encrypt replies to signed/encrypted messages
+       (subject to `mu4e-compose-crypto-reply-policy')
 
 **** searching & marking
 
-   - Add a hook `mu4e-mark-execute-pre-hook`, which is run just before
-     executing marks.
-   - Just before executing any search, a hook-function
-     `mu4e-headers-search-hook` is invoked, which receives the
-     search expression as its parameter.
-   - In addition, there's a `mu4e-headers-search-bookmark-hook` which
-     gets called when searches get invoked as a bookmark (note that
-     `mu4e-headers-search-hook` will also be called just
-     afterwards). This hook also receives the search expression as its
-     parameter.
-   - Remove the 'z' keybinding for leaving the headers
-     view. Keybindings are precious!
-   - Fix parentheses/precedence in narrowing search terms
+     - Add a hook `mu4e-mark-execute-pre-hook`, which is run just before
+       executing marks.
+     - Just before executing any search, a hook-function
+       `mu4e-headers-search-hook` is invoked, which receives the search
+       expression as its parameter.
+     - In addition, there's a `mu4e-headers-search-bookmark-hook` which
+       gets called when searches get invoked as a bookmark (note that
+       `mu4e-headers-search-hook` will also be called just afterwards). This
+       hook also receives the search expression as its parameter.
+     - Remove the 'z' keybinding for leaving the headers
+       view. Keybindings are precious!
+     - Fix parentheses/precedence in narrowing search terms
 
 **** indexing
-     
-   - Allow for indexing in the background; see
-     `mu4e-index-update-in-background`.
-   - Better handle mbsync output in the update buffer
-   - Add variables mu4e-index-cleanup and mu4e-index-lazy to enable
-     lazy checking from mu4e; you can sit from mu4e using something
-     like:
-#+BEGIN_SRC elisp
-(setq
-  mu4e-index-cleanup nil      ;; don't do a full cleanup check
-  mu4e-index-lazy-check t)    ;; don't consider up-to-date dirs
-#+END_SRC
+
+     - Allow for indexing in the background; see
+       `mu4e-index-update-in-background`.
+     - Better handle mbsync output in the update buffer
+     - Add variables mu4e-index-cleanup and mu4e-index-lazy to enable
+       lazy checking from mu4e; you can sit from mu4e using something like:
+     #+BEGIN_SRC elisp
+(setq mu4e-index-cleanup nil ;; don't do a full cleanup check
+  mu4e-index-lazy-check t) ;; don't consider up-to-date dirs #+END_SRC
 
 **** misc
-     
-   - don't overwrite global-mode-string, append to it.
-   - Make org-links (and more general, all users of
-     mu4e-view-message-with-message-id) use a headers buffer, then
-     view the message. This way, those linked message are just like
-     any other, and can be deleted, moved etc.
-   - Support org-mode 9.x
-   - Improve file-name escaping, and make it support non-ascii filenames
-   - Attempt to jump to the same messages after a re-search update operation
-   - Add action for spam-filter options
-   - Let `mu4e~read-char-choice' become case-insensitive if there is
-     no exact match; small convenience that affects most the
-     single-char option-reading in mu4e.
+
+     - don't overwrite global-mode-string, append to it.
+     - Make org-links (and more general, all users of
+       mu4e-view-message-with-message-id) use a headers buffer, then view the
+       message. This way, those linked message are just like any other, and can
+       be deleted, moved etc.
+     - Support org-mode 9.x
+     - Improve file-name escaping, and make it support non-ascii filenames
+     - Attempt to jump to the same messages after a re-search update operation
+     - Add action for spam-filter options
+     - Let `mu4e~read-char-choice' become case-insensitive if there is
+       no exact match; small convenience that affects most the single-char
+       option-reading in mu4e.
 
 *** Perl
 
-   - an experimental Perl binding ("mup") is available now. See
-     perl/README.md for details.
-            
+    - an experimental Perl binding ("mup") is available now. See
+      perl/README.md for details.
+
 ** Contributors:
 
-   Aaron LI, Abdo Roig-Maranges, Ævar Arnfjörð Bjarmason, Alex Bennée,
-   Allen, Anders Johansson, Antoine Levitt, Arthur Lee, attila,
-   Charles-H. Schulz, Christophe Troestler, Chunyang Xu, Dirk-Jan
-   C. Binnema, Jakub Sitnicki, Josiah Schwab, jsrjenkins, Jun Hao,
-   Klaus Holst, Lukas Fürmetz, Magnus Therning, Maximilian Matthe,
-   Nicolas Richard, Piotr Trojanek, Prashant Sachdeva, Remco van 't
-   Veer, Stephen Eglen, Stig Brautaset, Thierry Volpiatto, Thomas
-   Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir Sedach
+   Aaron LI, Abdo Roig-Maranges, Ævar Arnfjörð Bjarmason, Alex Bennée, Allen,
+   Anders Johansson, Antoine Levitt, Arthur Lee, attila, Charles-H. Schulz,
+   Christophe Troestler, Chunyang Xu, Dirk-Jan C. Binnema, Jakub Sitnicki,
+   Josiah Schwab, jsrjenkins, Jun Hao, Klaus Holst, Lukas Fürmetz, Magnus
+   Therning, Maximilian Matthe, Nicolas Richard, Piotr Trojanek, Prashant
+   Sachdeva, Remco van 't Veer, Stephen Eglen, Stig Brautaset, Thierry
+   Volpiatto, Thomas Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir
+   Sedach
 
 * Old news
   :PROPERTIES:
@@ -171,65 +220,60 @@
 
 *** Contributors:
 
-     Adam Sampson, Ævar Arnfjörð Bjarmason, Bar Shirtcliff,
-     Charles-H. Schulz, Clément Pit--Claudel, Damien Cassou, Declan
-     Qian, Dima Kogan, Dirk-Jan C. Binnema, Foivos S. Zakkak, Hinrik
-     Örn Sigurðsson, Jeroen Tiebout, JJ Asghar, Jonas Bernoulli, Jun
-     Hao, Martin Yrjölä, Maximilian Matthé, Piotr Trojanek, prsarv,
-     Thierry Volpiatto, Titus von der Malsburg
+    Adam Sampson, Ævar Arnfjörð Bjarmason, Bar Shirtcliff, Charles-H. Schulz,
+    Clément Pit--Claudel, Damien Cassou, Declan Qian, Dima Kogan, Dirk-Jan C.
+    Binnema, Foivos S. Zakkak, Hinrik Örn Sigurðsson, Jeroen Tiebout, JJ Asghar,
+    Jonas Bernoulli, Jun Hao, Martin Yrjölä, Maximilian Matthé, Piotr Trojanek,
+    prsarv, Thierry Volpiatto, Titus von der Malsburg
 
-     (and of course all people who reported issues, provided
-     suggestions etc.)
-     
+    (and of course all people who reported issues, provided suggestions etc.)
+
 ** 0.9.15
 
    - bump version to 0.9.15. From now on, odd minor version numbers
-     are for development versions; thus, 0.9.16 is to be the next
-     stable release.
+     are for development versions; thus, 0.9.16 is to be the next stable
+     release.
    - special case text/calendar attachements to get .vcs
-     extensions. This makes it easier to process those with external
-     tools.
+     extensions. This makes it easier to process those with external tools.
    - change the message file names to better conform to the maildir
      spec; this was confusing some tools.
    - fix navigation when not running in split-view mode
    - add `mu4e-view-body-face', so the body-face for message in the
-     view can be customized; e.g.  (set-face-attribute
-     'mu4e-view-body-face nil :font "Liberation Serif-10")
+     view can be customized; e.g. (set-face-attribute 'mu4e-view-body-face nil
+     :font "Liberation Serif-10")
    - add `mu4e-action-show-thread`, an action for the headers and view
-     buffers to search for messages in the same thread as the current
-     one.
+     buffers to search for messages in the same thread as the current one.
    - allow for transforming mailing-list names for display, using
      `mu4e-mailing-list-patterns'.
    - some optimizations in indexing (~30% faster in some cases)
    - new variable mu4e-user-agent-string, to customize the User-Agent:
      header.
    - when removing the "In-reply-to" header from replies, mu4e will
-     also remove the (hidden) References header, effectively creating
-     a new message-thread.
+     also remove the (hidden) References header, effectively creating a new
+     message-thread.
    - implement 'mu4e-context', for defining and switching between
-     various contexts, which are groups of settings. This can be used
-     for instance for switch between e-mail accounts. See the section
-     in the manual for details.
+     various contexts, which are groups of settings. This can be used for
+     instance for switch between e-mail accounts. See the section in the manual
+     for details.
    - correctly decode mailing-list headers
    - allow for "fancy" mark-characters; and improve the default set
    - by default, the maildirs are no longer cached; please see the
-     variable ~mu4e-cache-maildir-list~ if you have a lot of maildirs
-     and it gets slow.
+     variable ~mu4e-cache-maildir-list~ if you have a lot of maildirs and it
+     gets slow.
    - change the default value for
-     ~org-mu4e-link-query-in-headers-mode~ to ~nil~, ie. by default
-     link to the message, not the query, as this is usually more useful
-     behavior.
+     ~org-mu4e-link-query-in-headers-mode~ to ~nil~, ie. by default link to the
+     message, not the query, as this is usually more useful behavior.
    - overwrite target message files that already exist, rather than
      erroring out.
    - set mu4e-view-html-plaintext-ratio-heuristic to 5, as 10 was too
      high to detect some effectively html-only messages
    - add mu4e-view-toggle-html (keybinding: 'h') to toggle between
-     text and html display. The existing 'mu4e-view-toggle-hide-cited'
-     gets the new binding '#'.
+     text and html display. The existing 'mu4e-view-toggle-hide-cited' gets the
+     new binding '#'.
    - add a customization variable `mu4e-view-auto-mark-as-read'
-     (defaults to t); if set to nil, mu4e won't mark messages as read
-     when you open them. This can be useful on read-only file-systems,
-     since marking-as-read implies a file-move operation.
+     (defaults to t); if set to nil, mu4e won't mark messages as read when you
+     open them. This can be useful on read-only file-systems, since
+     marking-as-read implies a file-move operation.
    - use smaller chunks for mu server on Cygwin, allowing for better
      mu4e support there.
 
@@ -237,21 +281,20 @@
 
 *** contributors
 
-    Attila, Daniele Pizzolli, Charles-H.Schulz, David C Sterrat,
-    Dirk-Jan C. Binnema, Eike Kettner, Florian Lindner, Foivos
-    S. Zakkak, Gour, KOMURA Takaaki, Pan Jie, Phil Hagelberg, thdox,
-    Tiago Saboga, Titus von der Malsburg
+    Attila, Daniele Pizzolli, Charles-H.Schulz, David C Sterrat, Dirk-Jan C.
+    Binnema, Eike Kettner, Florian Lindner, Foivos S. Zakkak, Gour, KOMURA
+    Takaaki, Pan Jie, Phil Hagelberg, thdox, Tiago Saboga, Titus von der
+    Malsburg
 
-    (and of course all people who reported issues, provided
-    suggestions etc.)
+    (and of course all people who reported issues, provided suggestions etc.)
 
 *** mu/mu4e/guile
 
     - NEWS (this file) is now visible from within mu4e – "N" in the main-menu.
 
     - make `mu4e-headers-sort-field', `mu4e-headers-sort-direction'
-      public (that, is change the prefix from mu4e~ to mu4e-), so
-      users can manipulate them
+      public (that, is change the prefix from mu4e~ to mu4e-), so users can
+      manipulate them
 
     - make it possible the 'fancy' (unicode) characters separately for
       headers and marks (see the variable `mu4e-use-fancy-chars'.)
@@ -263,39 +306,33 @@
       for a thread only once. So, instead of (from the manual):
 
       #+BEGIN_EXAMPLE
-06:32        Nu    To Edmund Dantès    GstDev       + Re: Gstreamer-V4L...
-15:08        Nu    Abbé Busoni         GstDev         + Re: Gstreamer-V...
-18:20        Nu    Pierre Morrel       GstDev           \ Re: Gstreamer...
-2013-03-18   S     Jacopo              EmacsUsr   + emacs server on win...
-2013-03-18   S     Mercédès            EmacsUsr     \ RE: emacs server ...
-2013-03-18   S     Beachamp            EmacsUsr   + Re: Copying a whole...
-22:07        Nu    Albert de Moncerf   EmacsUsr     \ Re: Copying a who...
-2013-03-18   S     Gaspard Caderousse  GstDev     | Issue with GESSimpl...
-2013-03-18   Ss    Baron Danglars      GuileUsr   | Guile-SDL 0.4.2 ava...
-End of search results
-      #+END_EXAMPLE
+06:32 Nu To Edmund Dantès GstDev + Re: Gstreamer-V4L... 15:08 Nu Abbé Busoni
+GstDev + Re: Gstreamer-V... 18:20 Nu Pierre Morrel GstDev \ Re: Gstreamer...
+2013-03-18 S Jacopo EmacsUsr + emacs server on win... 2013-03-18 S Mercédès
+EmacsUsr \ RE: emacs server ... 2013-03-18 S Beachamp EmacsUsr + Re: Copying a
+whole... 22:07 Nu Albert de Moncerf EmacsUsr \ Re: Copying a who... 2013-03-18 S
+Gaspard Caderousse GstDev | Issue with GESSimpl... 2013-03-18 Ss Baron Danglars
+GuileUsr | Guile-SDL 0.4.2 ava... End of search results #+END_EXAMPLE
 
       the headers list would now look something like:
       #+BEGIN_EXAMPLE
-10:26      ⭑☐   Nicolas Goaziou      Orgmode  /bulk    ◼ Re: [O] 2 issue with Include function
-11:00      ⭑☐   Leonard Randall      Orgmode  /bulk     ┗▶
-10:55      ⭑☐   Guillermo Rodrigu... GstDev   /bulk    ◼ Re: stop pipeline into a callback funtion.
-12:04      ⭑☐   Enrique Ocaña Gon... GstDev   /bulk     ┗▶
-11:27      ⭑☐   Tim Müller           GstDev   /bulk     ◼
-09:34      ⭑☐   Robert Klein         Orgmode  /bulk    ◼ Re: [O] Agenda Tag filtering - has the behaviour changed?
-      #+END_EXAMPLE
+10:26 ⭑☐ Nicolas Goaziou Orgmode /bulk ◼ Re: [O] 2 issue with Include function
+11:00 ⭑☐ Leonard Randall Orgmode /bulk ┗▶ 10:55 ⭑☐ Guillermo Rodrigu... GstDev
+/bulk ◼ Re: stop pipeline into a callback funtion. 12:04 ⭑☐ Enrique Ocaña Gon...
+GstDev /bulk ┗▶ 11:27 ⭑☐ Tim Müller GstDev /bulk ◼ 09:34 ⭑☐ Robert Klein Orgmode
+/bulk ◼ Re: [O] Agenda Tag filtering - has the behaviour changed? #+END_EXAMPLE
 
-      This is a feature known from e.g. `mutt' and `gnus` and many
-      other clients, and can be enabled by customizing
-      `mu4e-headers-fields' (replacing `:subject' with `:thread-subject')
+      This is a feature known from e.g. `mutt' and `gnus` and many other
+      clients, and can be enabled by customizing `mu4e-headers-fields'
+      (replacing `:subject' with `:thread-subject')
 
       It's not the default yet, but may become so in the future.
 
     - add some spam-handling actions to mu4e-contrib.el
 
     - mu4e now targets org 8.x, which support for previous versions
-      relegated to `org-old-mu4e.el`. Some of the new org-features are
-      improved capture templates.
+      relegated to `org-old-mu4e.el`. Some of the new org-features are improved
+      capture templates.
 
     - updates to the documentation, in particular about using BBDB.
 
@@ -305,8 +342,8 @@ End of search results
 
 *** guile
 
-    – add --delete option to the find-dups scripts, to automatically
-    delete them. Use with care!
+    – add --delete option to the find-dups scripts, to automatically delete
+    them. Use with care!
 
 ** Release 0.9.12
 
@@ -335,14 +372,14 @@ End of search results
 
 *** mu
 
-     - allow 'contact:' as a shortcut in queries for 'from:foo OR to:foo OR
-       cc:foo OR bcc:foo', and 'recip:' as a shortcut for 'to:foo OR
-       cc:foo OR bcc:foo'
-     - support getting related messages (--include-related), which includes
-       messages that may not match the query, but that are in the same threads
-       as messages that were
-     - support "list:"/"v:" for matching mailing list names, and the "v"
-       format-field to show them. E.g 'mu find list:emacs-orgmode.gnu.org'
+    - allow 'contact:' as a shortcut in queries for 'from:foo OR to:foo OR
+      cc:foo OR bcc:foo', and 'recip:' as a shortcut for 'to:foo OR cc:foo OR
+      bcc:foo'
+    - support getting related messages (--include-related), which includes
+      messages that may not match the query, but that are in the same threads as
+      messages that were
+    - support "list:"/"v:" for matching mailing list names, and the "v"
+      format-field to show them. E.g 'mu find list:emacs-orgmode.gnu.org'
 
 *** mu4e
 
@@ -373,7 +410,7 @@ End of search results
     - ported to gtk+ 3; remove gtk+ 2.x code
 
 
-  
+
 ** Release 0.9.9 <2012-10-14>
 
 *** mu4e
@@ -520,11 +557,11 @@ End of search results
 
 *** mu4e:
 
-   - make mail updating non-blocking
-   - allow for automatic periodic update ('mu4e-update-interval')
-   - allow for external triggering of update
-   - make behavior when leaving the headers buffer customizable, ie.
-     ask/apply/ignore ('mu4e-headers-leave-behaviour')
+    - make mail updating non-blocking
+    - allow for automatic periodic update ('mu4e-update-interval')
+    - allow for external triggering of update
+    - make behavior when leaving the headers buffer customizable, ie.
+      ask/apply/ignore ('mu4e-headers-leave-behaviour')
 
 *** general
 
@@ -539,19 +576,19 @@ End of search results
 ** Release 0.9.8.1 <2012-02-18 Sat>
 
 *** mu
-   - show only leaf/rfc822 MIME-parts
+    - show only leaf/rfc822 MIME-parts
 
 *** mu4e
 
-   - allow for shell commands with arguments in `mu4e-get-mail-command'.
-   - support marking messages as 'read' and 'unread'
-   - show the current query in the the mode-line (`global-mode-string').
-   - don't repeat 'Re:' / 'Fwd:'
-   - colorize cited message parts
-   - better handling of text-based, embedded message attachments
-   - for text-bodies, concatenate all text/plain parts
-   - make filladapt dep optional
-   - documentation improvements
+    - allow for shell commands with arguments in `mu4e-get-mail-command'.
+    - support marking messages as 'read' and 'unread'
+    - show the current query in the the mode-line (`global-mode-string').
+    - don't repeat 'Re:' / 'Fwd:'
+    - colorize cited message parts
+    - better handling of text-based, embedded message attachments
+    - for text-bodies, concatenate all text/plain parts
+    - make filladapt dep optional
+    - documentation improvements
 
 ** Release 0.9.8 <2012-01-31>
 
@@ -590,8 +627,8 @@ End of search results
    - display the references for a message using the 'r' character (xmu find)
    - remove --summary-len/-k, instead use --summary for mu view and mu find, and
    - support colorized output for some sub-commands (view, cfind and
-     extract). Disabled by default, use --color to enable, or set env
-     MU_COLORS to non-empty
+     extract). Disabled by default, use --color to enable, or set env MU_COLORS
+     to non-empty
    - update documentation, added more examples
 
 ** Release 0.9.5 <2011-04-25 Mon>
@@ -614,8 +651,8 @@ End of search results
    - stricter checking of options; and options must now *follow* the sub-command
      (if any); so, something like: 'mu index --maildir=/foo/bar'
    - output searches as plain text (default), XML, JSON or s-expressions using
-     --format=plain|xml|json|sexp. For example: 'mu find foobar
-     --output=json'. These format options  are experimental (except for 'plain')
+     --format=plain|xml|json|sexp. For example: 'mu find foobar --output=json'.
+     These format options are experimental (except for 'plain')
    - the --xquery option should now be used as --format=xquery, for output
      symlinks, use --format=links. This is a change in the options.
    - search output can include the message size using the 'z' shortcut
@@ -681,18 +718,19 @@ End of search results
      when it gets too big (unless you use --nocleanup)
    - Search for a certain Maildir using the maildir:,m: search prefixes. For
      example, you can find all messages located in ~/Maildir/foo/bar/cur/msg
-     ~/Maildir/foo/bar/new/msg and with
-	m:/foo/bar
-     this replace the search for path/p in 0.6
+     ~/Maildir/foo/bar/new/msg and with m:/foo/bar this replace the search for
+     path/p in 0.6
    - Fixes for reported issues ()
    - A test suite with a growing number of unit tests
 
 
 ** Release 0.6 <2010-01-23 Sat>
 
-    - First new release of mu since 2008
-    - No longer depends on sqlite
+   - First new release of mu since 2008
+   - No longer depends on sqlite
+
 
 # Local Variables:
 # mode: org; org-startup-folded: nil
+# fill-column:80
 # End:
