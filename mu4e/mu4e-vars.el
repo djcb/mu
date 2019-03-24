@@ -830,7 +830,7 @@ sort by this field.  This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
 
-Fields with which have the property `:require-full' set to
+Fields which have the property `:require-full' set to
 non-nil require a full message; in practice this means that you
 cannot use such fieds as part of `mu4e-headers-fields', but only
 in `mu4e-view-fields.'

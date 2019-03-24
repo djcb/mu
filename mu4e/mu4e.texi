@@ -813,11 +813,11 @@ custom fields using @code{mu4e-header-info-custom}; see @ref{HV Custom
 headers} for details.
 @item By default, the date is shown with the @t{:human-date} field, which
 shows the @emph{time} for today's messages, and the @emph{date} for older
-messages. If you want to distinguish between `today' and `older', you can use
+messages. If you do not want to distinguish between `today' and `older', you can use
 the @t{:date} field instead.
 @item You can customize the date and time formats with the variable
 @code{mu4e-headers-date-format} and @code{mu4e-headers-time-format},
-respectively. In the example, we use @code{:human-date}, which shows when the
+respectively. In the example, we use @code{:human-date}, which shows the
 time when the message was sent today, and the date otherwise.
 @item By default, the subject is shown using the @t{:subject} field;
 however, it is also possible to use @t{:thread-subject}, which shows
