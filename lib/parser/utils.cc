@@ -105,15 +105,13 @@ Mux::utf8_flatten (const char *str)
 	if (!str)
 		return {};
 
-	bool is_ascii = true;
-	while (*str && is_ascii) {
-		is_ascii = *str & 0x80;
-		++str;
+	// the pure-ascii case
+	if (g_str_is_ascii(str)) {
+		auto l = g_ascii_strdown (str, -1);
+		std::string s{l};
+		g_free (l);
+		return s;
 	}
-
-	if (G_LIKELY(is_ascii))
-		return str;
-	///////////////////////////////////////////
 
 	// seems we need the big guns
 	char *flat = gx_utf8_flatten (str, -1);
