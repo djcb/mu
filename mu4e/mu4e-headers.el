@@ -982,7 +982,7 @@ no user-interaction ongoing."
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
     (when (and (buffer-live-p (mu4e-get-headers-buffer))
-	    (window-live-p (get-buffer-window (mu4e-get-headers-buffer))))
+	    (window-live-p (get-buffer-window (mu4e-get-headers-buffer) t)))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode
