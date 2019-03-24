@@ -1,19 +1,12 @@
-Return-path: <>
-Envelope-to: skipio@localhost
-Delivery-date: Fri, 11 May 2012 16:21:57 +0300
-Received: from localhost.roma.net([127.0.0.1] helo=borealis)
-	by borealis with esmtp (Exim 4.77)
-	id 1SSpnB-00038a-55
-	for djcb@localhost; Fri, 11 May 2012 16:21:57 +0300
+User-agent: mu4e 1.1.0; emacs 27.0.50
 From: Skipio <skipio@roma.net>
-To: Hannibal <hanni@carthago.net> 
-Subject: signed
-User-agent: mu4e 0.9.8.5-dev1; emacs 24.1.50.8
-Date: Fri, 11 May 2012 16:20:45 +0300
-Message-ID: <878vgy97ma.fsf@roma.net>
+To: Hannibal <hanni@carthago.net>
+Subject: test 123
+Date: Sun, 24 Mar 2019 11:50:42 +0200
+Message-ID: <87zhpky51p.fsf@djcbsoftware.nl>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 
 --=-=-=
 Content-Type: text/plain
@@ -22,14 +15,22 @@ Content-Type: text/plain
 I am signed!
 
 --=-=-=
-Content-Type: application/pgp-signature
+Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAk+tEi0ACgkQ6WrHoQF92jxTzACeKd/XxY+P7bpymWL3JBRHaW9p
-DpwAoKw7PDW4z/lNTkWjndVTjoO9jGhs
-=blXz
+iQIzBAEBCAAdFiEEaYec7RdFk3UPFNqYEd3+qdzEoDYFAlyXUwAACgkQEd3+qdzE
+oDbjdw//dAosaEyqSfyUMXjS++iJEeDIwKwO6AjEI0xCbJjHmxq93PA61ApE/BS3
+d/sKa1dsfN+plRS+Fh3NNGSA7evar9dXtMBUr6hwL0VTmm5NDwedaPeuW6mgyVcB
+VNUn5x1e/QdnSClapnGd156sryfcM1pg/667fTHT6WC01Xe0sezpkV9l0j4pslYt
+y6ud/Hejszax+NcwQY7vkCcVWfB9K4zbiapdoCjHi78S4YAcsbd//KmePOqn04Sa
+Tg1XsmMzIh7L/3njkJdIOd9XctTwYEcN5geY1QKrHQ/3+gBeaEYvwsvrnqnVKqMY
+WCg/aYibuXl+xNkPMcKHIj1dXA3m5MkL77RrxODiAYz0YkiQx1/DLZs8PV3IVoB4
+f0GGDqyiOwSmSDa4iuCottwO4yG1WM1i7r6pir22qAekIt43wSdwakOrT1IkS8q2
+o0VGiQtEPy27D+ufiw06t02Ryf20Q7i2YcueZxYeRBq41m11M41DJ4wH7LQcJsww
+qG5iBOdwQFCTWpi1UrbbFjlxXXWvKMuIU+4k7nsamrEL4SDXmq1v13vtlcgJ6vnn
+v7c9+MF7laqdfI+BYnlD1v/9LosPbFTm0hPdvK4yIOORp8Iwj/1PGzTOz6SCUxzA
+kDu+Y+NN9/SM1ppStg1OikYPcfEXF8igWhuORwqcmpgHxVkIQ9I=
+=wnkU
 -----END PGP SIGNATURE-----
 --=-=-=--
-
