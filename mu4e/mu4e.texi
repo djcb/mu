@@ -3530,7 +3530,7 @@ customize.
 
 ;; general emacs mail settings; used when composing e-mail
 ;; the non-mu4e-* stuff is inherited from emacs/message-mode
-(setq mu4e-reply-to-address "foo@@bar.example.com"
+(setq mu4e-compose-reply-to-address "foo@@bar.example.com"
       user-mail-address "foo@@bar.example.com"
       user-full-name  "Foo X. Bar")
 (setq mu4e-compose-signature
@@ -3561,8 +3561,8 @@ with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
 Gmail web interface (in the settings, under the ``Forwarding and
 POP/IMAP''-tab).
 
-Gmail users may also be interested in @ref{Including related messages,
-skipping duplicates}.
+Gmail users may also be interested in @ref{Including related messages},
+and in @ref{Skipping duplicates}.
 
 @subsection Setting up offlineimap
 
