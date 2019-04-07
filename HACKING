@@ -1,148 +1,144 @@
 * HACKING
 
-  Here are some guidelines for hacking on the 'mu' source code. 
+  Here are some guidelines for hacking on the 'mu' source code.
 
-  This is a fairly long list -- this is not meant to discourage anyone
-  from working on mu; I think most of the rules are common sense
-  anyway, and some of the more stylistic-aesthetic rules are clearly
-  visible in current source code, so as long as any new code 'fits
-  in', it should go a long way in satisfying them.
+  This is a fairly long list -- this is not meant to discourage anyone from
+  working on mu; I think most of the rules are common sense anyway, and some of
+  the more stylistic-aesthetic rules are clearly visible in current source code,
+  so as long as any new code 'fits in', it should go a long way in satisfying
+  them.
 
   I should add some notes for the Lisp/Scheme code as well...
 
 ** Coding style
 
-   For consistency and, more important, to keep things understandable,
-   mu attempts to follow the following rules:
+   For consistency and, more important, to keep things understandable, mu
+   attempts to follow the following rules:
 
-   1. Basic code layout is like in the Linux kernel coding style. Keep
-      the '{' on the same line as the statement, except for
-      functions. Tabs for indentation, space for aligment; use 8-char
-      tabs.
+   1. Basic code layout is like in the Linux kernel coding style. Keep the '{'
+      on the same line as the statement, except for functions. Tabs for
+      indentation, space for aligment; use 8-char tabs.
 
-   2. Lines should not exceed 80 characters (C) or 100 characters
-      (C++)
+   2. Lines should not exceed 80 characters (C) or 100 characters (C++)
 
-   3. Functions should not exceed 35 lines (with few exceptions). You
-      can easily check if any functions violate this rule with 'make
-      line35', which lists all functions with more than 35 non-comment
-      lines.
+   3. Functions should not exceed 35 lines (with few exceptions). You can easily
+      check if any functions violate this rule with 'make line35', which lists
+      all functions with more than 35 non-comment lines.
 
    4. Source files should not exceed 1000 lines
 
-   5. A function's cyclomatic complexity should not exceed 10 (there
-      could be rare exceptions, see the toplevel Makefile.am). You can
-      test the cyclomatic complexity with the pmccabe tool; if you
-      installed that, you can use 'make cc10' to list all functions
-      that violate this rule; there should be none.
+   5. A function's cyclomatic complexity should not exceed 10 (there could be
+      rare exceptions, see the toplevel ~Makefile.am~). You can test the
+      cyclomatic complexity with the ~pmccabe~ tool; if you installed that, you
+      can use 'make cc10' to list all functions that violate this rule; there
+      should be none.
 
-   6. Filenames have their components separated with dashes (e.g, 'mu-log.h'),
-      and start with 'mu-' where appropriate.
+   6. Filenames have their components separated with dashes (e.g, ~mu-log.h~), and
+      start with ~mu-~ where appropriate.
 
-   7. Global functions have the prefix based on their module, e.g., mu-foo.h
+   7. Global functions have the prefix based on their module, e.g., ~mu-foo.h~
       declares a function of 'mu_foo_bar (int a);', mu-foo.c implements this.
 
    8. Non-global functions *don't* have the module prefix, and are declared
       static.
 
-   9. Functions have their return type on a separate line before the
-      function name, so:
-
+   9. Functions have their return type on a separate line before the function
+      name, so:
+#+BEGIN_EXAMPLE
       int
       foo (const char *bar)
       {
 	....
       }
+#+END_EXAMPLE
 
       There is no non-aesthetic reason for this.
 
-   10. In C code, variable-declarations are at the beginning of a
-       block; in principle, C++ follows that same guideline, unless
-       for heavy yet uncertain initializations following RAII.
-       
-       In C code, the declaration does *not* initialize the
-       variable. This will give the compiler a chance to warn us if
-       the variable is not initialized in a certain code path.
+   10. In C code, variable-declarations are at the beginning of a block; in
+       principle, C++ follows that same guideline, unless for heavy yet
+       uncertain initializations following RAII.
 
-   11. Returned strings of type char* must be freed by the caller; if
-       they are not to be freed, 'const char*' should be used instead
+       In C code, the declaration does *not* initialize the variable. This will
+       give the compiler a chance to warn us if the variable is not initialized
+       in a certain code path.
 
-   12. Functions calls have a space between function name and
-       arguments, unless there are none, so:
+   11. Returned strings of type char* must be freed by the caller; if they are
+       not to be freed, 'const char*' should be used instead
 
-	foo (12, 3);
+   12. Functions calls have a space between function name and arguments, unless
+       there are none, so:
+
+	~foo (12, 3)~;
 
        and
 
-	bar();
+	~bar();~
 
        after a comma, a space should follow.
 
    13. Functions that do not take arguments are explicitly declared as
        f(void) and not f(). Reason: f() means that the arguments are
        /unspecified/ (in C)
-       
-   14. C-code should use /* comments */, not // commments
+
+   14. C-code should not use ~//~ comments.
 
 
 ** Logging
 
-   For logging, mu uses the GLib logging functions/macros as listed
-   below, except when logging may not have been initialized.
+   For logging, mu uses the GLib logging functions/macros as listed below,
+   except when logging may not have been initialized.
 
-   The logging system redirects most logging to the log file
-   (typically, ~/.mu/mu.log). g_warning, g_message and g_critical are
-   shown to the user, except when running with --quiet, in which case
-   g_message is *not* shown.
+   The logging system redirects most logging to the log file (typically,
+   ~/.mu/mu.log). g_warning, g_message and g_critical are shown to the user,
+   except when running with --quiet, in which case g_message is *not* shown.
 
-   - g_message is for non-error messages the user will see (unless
-     running with --quiet)
-   - g_warning is for problems the user may be able to do something
-     about (and they are written on stderr)
-   - g_critical is for mu bugs, serious, internal problems
-     (g_return_if_fail and friends use this). (and they are written on
-     stderr)
-   - don't use g_error
+   - ~g_message~ is for non-error messages the user will see (unless running with
+     ~--quiet~)
+   - ~g_warning~ is for problems the user may be able to do something about (and
+     they are written on ~stderr~)
+   - ~g_critical~ is for mu bugs, serious, internal problems (~g_return_if_fail~ and
+     friends use this). (and they are written on ~stderr~)
+   - don't use ~g_error~
 
-   If you just want to log something in the log file without writing
-   to screen, use MU_LOG_WRITE, as defined in mu-util.h
+   If you just want to log something in the log file without writing to screen,
+   use ~MU_LOG_WRITE~, as defined in ~mu-util.h~.
 
 ** Compiling from git
 
-   For hacking, you're strongly advised to use the latest git
-   version. Compilation from git should be straightforward, if you
-   have the right tools installed.
+   For hacking, you're strongly advised to use the latest git version.
+   Compilation from git should be straightforward, if you have the right tools
+   installed.
 
 *** dependencies
 
     You need to install a few dependencies; e.g. on Debian/Ubuntu:
-
+#+BEGIN_EXAMPLE
     sudo apt-get install                 \
         automake                         \
         autoconf-archive                 \
         autotools-dev                    \
         libglib2.0-dev                   \
 	libxapian-dev			 \
-	libgmime-2.6-dev                 \
+	libgmime-3.0-dev                 \
         m4                               \
         make                             \
         libtool                          \
         pkg-config
+#+END_EXAMPLE
 
-   Then, to compile straight from git:
+   Then, to compile straight from ~git~:
 
+#+BEGIN_EXAMPLE
    $ git clone https://github.com/djcb/mu
    $ cd mu
    $ ./autogen.sh
    $ make
+#+END_EXAMPLE
 
-   You only need to run ./autogen.sh the first time and after changes
-   in the build system; otherwise you can use ./configure.
+   You only need to run ~./autogen.sh~ the first time and after changes in the
+   build system; otherwise you can use ~./configure~.
 
 # Local Variables:
 # mode: org; org-startup-folded: nofold
+# fill-column: 80
 # End:
-   
-   
-   
-   
