@@ -405,6 +405,14 @@ predicate function. A value of nil keeps all the addresses."
      (repeat string))
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-reply-recipients 'ask
+  "Which recipients to use when replying to a message.
+May be 'ask, 'all, 'sender."
+  :type '(choice ask
+                 all
+	         sender)
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-reply-to-address nil
   "The Reply-To address.
 Useful when this is not equal to the From: address."
