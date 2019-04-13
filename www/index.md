@@ -5,24 +5,20 @@ permalink: /code/mu/
 
 # Welcome to mu!
 
-<img src="mu.jpg" align="right" margin="10px"/>
-With the *enormous* amounts of e-mail many people gather and the
-importance of e-mail messages in our daily work-flow, it is very
-important to be able to quickly deal with all that - in particular,
-to instantly find that one important e-mail you need right now.
+<img src="mu.jpg" align="right" margin="10px"/> With the *enormous* amounts of e-mail many people
+gather and the importance of e-mail messages in our daily work-flow, it is very important to be able
+to quickly deal with all that - in particular, to instantly find that one important e-mail you need
+right now.
 
-For that, *mu* was created.  *mu* is a tool for dealing with e-mail
-messages stored in the
-[Maildir](http://en.wikipedia.org/wiki/Maildir)-format, on Unix-like
-systems. *mu*'s main purpose is to help you to find the messages you
-need, quickly; in addition, it allows you to view messages, extract
-attachments, create new maildirs, ... See the
-[mu cheatsheet](cheatsheet.html) for some examples. Mu's source code
-is available [in github](https://github.com/djcb/mu), and there is the
+For that, *mu* was created. *mu* is a tool for dealing with e-mail messages stored in the
+[Maildir](http://en.wikipedia.org/wiki/Maildir)-format, on Unix-like systems. *mu*'s main purpose is
+to help you to find the messages you need, quickly; in addition, it allows you to view messages,
+extract attachments, create new maildirs, ... See the [mu cheatsheet](cheatsheet.html) for some
+examples. Mu's source code is available [in github](https://github.com/djcb/mu), and there is the
 [mu-discuss](http://groups.google.com/group/mu-discuss) mailing list.
 
-*mu* includes an emacs-based e-mail client (`mu4e`), a simple GUI
-(`mug`) and bindings for the Guile/Scheme programming language.
+*mu* includes an emacs-based e-mail client (`mu4e`), a simple GUI (`mug`) and bindings for the
+Guile/Scheme programming language.
 
 ## Features
 
@@ -47,6 +43,17 @@ all kinds of statistics
 - fully documented (man pages, info pages)
 
 ## News
+
+### 2019-04-07: mu/mu4e 1.2 is available
+
+A new release is available; see the [release notes](https://github.com/djcb/mu/releases/tag/1.2) and
+grab the [tarball](https://github.com/djcb/mu/releases/download/1.2/mu-1.2.0.tar.xz).
+
+
+### 2018-02-03: mu/mu4e 1.0 is available
+
+After a decade of development, mu 1.0 is available. Read
+[NEWS](https://github.com/djcb/mu/blob/v1.0/NEWS.org) with all the details.
 
 ### 2016-12-05: mu/mu4e 0.9.18 is available
 
@@ -90,7 +97,7 @@ Volpiatto, Titus von der Malsburg (and of course all people who
 reported issues, provided suggestions etc.)
 
 We hope you will enjoy this release as much as we do. Happy Hacking!
-                        
+
 -- The mu/mu4e Team
 
 ## Old News
@@ -169,4 +176,4 @@ There's also a [mailing list](http://groups.google.com/group/mu-discuss).
 ## License & Copyright
 
 *mu* was designed and implemented by Dirk-Jan C. Binnema, and is Free
- Software, licensed under the GNU GPLv3
+Software, licensed under the GNU GPLv3
