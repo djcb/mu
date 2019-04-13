@@ -48,14 +48,18 @@
 	    (while (re-search-forward "^\\(.\\{72\\}\\)\\(.+\\)$" nil t)
 	      (replace-match "\\1\n \\2")
 	      (goto-char (line-beginning-position)))))
-        (let ((subject (concat (capitalize (symbol-name status))
-                               ": " (gnus-icalendar-event:summary event))))
 
-          (with-current-buffer (get-buffer-create gnus-icalendar-reply-bufname)
-            (delete-region (point-min) (point-max))
-            (insert reply)
-            (fold-icalendar-buffer)
-            (mu4e-icalendar-reply-with-buffer msg subject (buffer-name)))
+        (with-current-buffer (get-buffer-create gnus-icalendar-reply-bufname)
+          (delete-region (point-min) (point-max))
+          (insert reply)
+          (fold-icalendar-buffer)
+          (let* ((subject (concat (capitalize (symbol-name status))
+                                 ": " (gnus-icalendar-event:summary event)))
+                 (reply-event (gnus-icalendar-event-from-buffer
+                               (buffer-name) mu4e-user-mail-address-list))
+                 (body (gnus-icalendar-event->gnus-calendar reply-event
+                                                            status)))
+            (mu4e-icalendar-reply-with-buffer msg subject body (buffer-name))))
 
           ;; Back in article buffer
           (setq-local gnus-icalendar-reply-status status)
@@ -63,12 +67,12 @@
             (gnus-icalendar--update-org-event event status)
             ;; refresh article buffer to update the reply status
             (with-current-buffer mu4e~headers-buffer-name
-              (mu4e-headers-rerun-search))))))))
+              (mu4e-headers-rerun-search)))))))
 
 (defun mu4e~icalendar-delete-citation ()
   (delete-region (point-min) (point-max)))
 
-(defun mu4e-icalendar-reply-with-buffer (original-msg subject buffer-name)
+(defun mu4e-icalendar-reply-with-buffer (original-msg subject body buffer-name)
   (let ((message-signature nil))
     (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
           (mu4e-sent-messages-behavior 'delete)
@@ -77,8 +81,8 @@
       (mu4e~compose-handler 'reply original-msg))
     (message-goto-body)
     (insert "\n\n")
+    (insert body)
     (mml-insert-multipart "alternative")
-    (mml-insert-empty-tag 'part 'type "text/plain")
     (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=UTF-8")
     (message-goto-subject)
     (delete-region (line-beginning-position) (line-end-position))
