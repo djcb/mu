@@ -413,15 +413,15 @@ You can append flags."
 Replying-to-self is special; in that case, the To and Cc fields
 will be the same as in the original."
   (let* ((reply-to-self (mu4e-message-contact-field-matches-me origmsg :from))
-    (recipnum
-       (+ (length (mu4e~draft-create-to-lst origmsg))
-         (length (mu4e~draft-create-cc-lst origmsg t))))
-    ;; reply-to-self implies reply-all
-    (reply-all (or reply-to-self (mu4e~draft-reply-all-p origmsg)))
-    (old-msgid (plist-get origmsg :message-id))
-    (subject
-      (concat mu4e~draft-reply-prefix
-        (message-strip-subject-re (or (plist-get origmsg :subject) "")))))
+         (recipnum
+          (+ (length (mu4e~draft-create-to-lst origmsg))
+             (length (mu4e~draft-create-cc-lst origmsg t))))
+         ;; reply-to-self implies reply-all
+         (reply-all (or reply-to-self (mu4e~draft-reply-all-p origmsg)))
+         (old-msgid (plist-get origmsg :message-id))
+         (subject (concat mu4e~draft-reply-prefix
+                          (message-strip-subject-re
+                           (or (plist-get origmsg :subject) "")))))
     (concat
       (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
       (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)

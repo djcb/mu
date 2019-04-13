@@ -941,9 +941,9 @@ This before new headers are displayed, to clear the current
 headers buffer. See `mu4e~proc-filter' for the format.")
 
 (defvar mu4e-compose-func 'mu4e~compose-handler
-  "Function called for each comoose message received.
-Ie. the original message that is used as basis for composing a
-new message (ie., either a reply or a forward); the function is
+  "Function called for each compose message received.
+I.e., the original message that is used as basis for composing a
+new message (i.e., either a reply or a forward); the function is
 passed msg and a symbol (either reply or forward). See
 `mu4e~proc-filter' for the format of <msg-plist>.")
 
