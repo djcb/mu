@@ -85,9 +85,12 @@ return the filename."
       (mu4e-error "No body part for this message"))
     (with-temp-buffer
       (insert "<head><meta charset=\"UTF-8\"></head>\n")
-      (insert (concat "<p><strong>From</strong>: " (mu4e-html-construct-contacts-header msg :from) "</br>"))
-      (insert (concat "<strong>To</strong>: " (mu4e-html-construct-contacts-header msg :to) "</br>"))
-      (insert (concat "<strong>Date</strong>: " (format-time-string mu4e-view-date-format (mu4e-message-field msg :date)) "</br>"))
+      (insert (concat "<p><strong>From</strong>: "
+                (mu4e~view-construct-contacts-header msg :from) "</br>"))
+      (insert (concat "<strong>To</strong>: "
+                (mu4e~view-construct-contacts-header msg :to) "</br>"))
+      (insert (concat "<strong>Date</strong>: "
+                (format-time-string mu4e-view-date-format (mu4e-message-field msg :date)) "</br>"))
       (insert (concat "<strong>Subject</strong>: " (mu4e-message-field msg :subject) "</p>"))
       (insert (or html (concat "<pre>" txt "</pre>")))
       (write-file tmpfile)
