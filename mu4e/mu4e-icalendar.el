@@ -53,13 +53,7 @@
           (delete-region (point-min) (point-max))
           (insert reply)
           (fold-icalendar-buffer)
-          (let* ((subject (concat (capitalize (symbol-name status))
-                                 ": " (gnus-icalendar-event:summary event)))
-                 (reply-event (gnus-icalendar-event-from-buffer
-                               (buffer-name) mu4e-user-mail-address-list))
-                 (body (gnus-icalendar-event->gnus-calendar reply-event
-                                                            status)))
-            (mu4e-icalendar-reply-with-buffer msg subject body (buffer-name))))
+          (mu4e-icalendar-reply-ical msg event status (buffer-name)))
 
           ;; Back in article buffer
           (setq-local gnus-icalendar-reply-status status)
@@ -72,21 +66,29 @@
 (defun mu4e~icalendar-delete-citation ()
   (delete-region (point-min) (point-max)))
 
-(defun mu4e-icalendar-reply-with-buffer (original-msg subject body buffer-name)
+(defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
   (let ((message-signature nil))
     (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
           (mu4e-sent-messages-behavior 'delete)
           (mu4e-compose-reply-recipients 'sender))
-      ;; FIXME: only reply to the original sender (do not ask)
       (mu4e~compose-handler 'reply original-msg))
+    ;; Make sure the recipient is the organizer
+    (let ((organizer (gnus-icalendar-event:organizer event)))
+      (unless (string= organizer "")
+        (message-goto-to)
+        (delete-region (line-beginning-position) (line-end-position))
+        (insert "To: " organizer)))
     (message-goto-body)
     (insert "\n\n")
-    (insert body)
+    (let ((reply-event (gnus-icalendar-event-from-buffer
+                        buffer-name mu4e-user-mail-address-list)))
+      (insert (gnus-icalendar-event->gnus-calendar reply-event status)))
     (mml-insert-multipart "alternative")
     (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=UTF-8")
     (message-goto-subject)
     (delete-region (line-beginning-position) (line-end-position))
-    (insert "Subject: " subject)
+    (insert "Subject: " (capitalize (symbol-name status))
+            ": " (gnus-icalendar-event:summary event))
 ;    (message-send-and-exit)
     ))
 
