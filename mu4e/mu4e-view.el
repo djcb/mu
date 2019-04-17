@@ -743,7 +743,7 @@ FUNC should be a function taking two arguments:
       (define-key map "A" (if mu4e-view-use-gnus 'ignore 'mu4e-view-attachment-action))
 
       ;; marking/unmarking
-      (define-key map "d" 'mu4e-view-mark-for-trash)
+      (define-key map "d" 'mu4e-view-mark-or-move-to-trash)
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "<deletechar>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
@@ -1486,6 +1486,13 @@ list."
   (interactive)
   (mu4e~view-in-headers-context
     (mu4e-mark-execute-all)))
+
+(defun mu4e-view-mark-or-move-to-trash (&optional n)
+  "See `mu4e-headers-mark-or-move-to-trash'."
+  (interactive "P")
+  (mu4e~view-in-headers-context
+   (mu4e-headers-mark-or-move-to-trash)
+   (mu4e~headers-move (or n 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; URL handling
