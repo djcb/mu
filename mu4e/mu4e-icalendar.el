@@ -35,6 +35,7 @@
   (let* ((handle (car data))
          (status (cadr data))
          (event (caddr data))
+         (gnus-icalendar-additional-identities mu4e-user-mail-address-list)
          (reply (gnus-icalendar-with-decoded-handle handle
                   (gnus-icalendar-event-reply-from-buffer
                    (current-buffer) status (gnus-icalendar-identities))))
