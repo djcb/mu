@@ -2668,16 +2668,16 @@ A short example for two contexts:
                          (smtpmail-smtp-service . 587))))
   (make-mu4e-context-account
    :name "personal"
-   :user-mail-address "john@doe.xyz"
+   :user-mail-address "john@@doe.xyz"
    :sent-folder "Sent"
    :vars gandi-smtp-vars)
   (make-mu4e-context-account
    :name "work"
-   :user-mail-address "john@work.org"
+   :user-mail-address "john@@work.org"
    :sent-folder "Sent"
    :predicate (lambda (msg)
                 (mu4e-message-contact-field-matches
-                 msg '(:from :to) "boss@work.org"))
+                 msg '(:from :to) "boss@@work.org"))
    :vars gandi-smtp-vars))
 @end lisp
 
