@@ -42,8 +42,8 @@
          (reply (gnus-icalendar-with-decoded-handle handle
                   (gnus-icalendar-event-reply-from-buffer
                    (current-buffer) status (gnus-icalendar-identities))))
-         (msg (mu4e-message-at-point 'noerror)))
-
+         (msg (mu4e-message-at-point 'noerror))
+         (charset (cdr (assoc 'charset (mm-handle-type handle)))))
     (when reply
       (cl-labels
 	  ((fold-icalendar-buffer
@@ -57,6 +57,8 @@
           (delete-region (point-min) (point-max))
           (insert reply)
           (fold-icalendar-buffer)
+          (when (string= (downcase charset) "utf-8")
+            (decode-coding-region (point-min) (point-max) 'utf-8))
           (mu4e-icalendar-reply-ical msg event status (buffer-name)))
 
         ;; Back in article buffer
@@ -64,13 +66,21 @@
         (when gnus-icalendar-org-enabled-p
           (gnus-icalendar--update-org-event event status))
         (when mu4e-icalendar-diary-file
-          (mu4e~icalendar-insert-diary event status mu4e-icalendar-diary-file))
-        ;; refresh article buffer to update the reply status
-        (with-current-buffer mu4e~headers-buffer-name
-          (mu4e-headers-rerun-search))))))
+          (mu4e~icalendar-insert-diary event status
+                                       mu4e-icalendar-diary-file))))))
 
 (defun mu4e~icalendar-delete-citation ()
   (delete-region (point-min) (point-max)))
+
+(defun mu4e~icalendar-trash-message (msg)
+  "Trash the message MSG."
+  (with-current-buffer mu4e~headers-buffer-name
+    (let* ((docid (mu4e-message-field msg :docid))
+           (markdescr (assq 'trash mu4e-marks))
+           (action (plist-get (cdr markdescr) :action))
+           (target (mu4e-get-trash-folder msg)))
+      (run-hook-with-args 'mu4e-mark-execute-pre-hook 'trash msg)
+      (funcall action docid msg target))))
 
 (defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
   (let ((message-signature nil))
@@ -85,7 +95,6 @@
         (delete-region (line-beginning-position) (line-end-position))
         (insert "To: " organizer)))
     (message-goto-body)
-    (insert "\n\n")
     (mml-insert-multipart "alternative")
     (mml-insert-part "text/plain")
     (let ((reply-event (gnus-icalendar-event-from-buffer
@@ -97,6 +106,18 @@
     (delete-region (line-beginning-position) (line-end-position))
     (insert "Subject: " (capitalize (symbol-name status))
             ": " (gnus-icalendar-event:summary event))
+    (when mu4e-icalendar-trash-after-reply
+      ;; `mu4e~switch-back-to-mu4e-buffer' was executed.
+      (push
+       (lexical-let ((msg original-msg))
+         #'(lambda ()
+             (when (and (not (eq mu4e-split-view 'single-window))
+                        (buffer-live-p (mu4e-get-view-buffer)))
+               (switch-to-buffer (mu4e-get-view-buffer))
+               (or (mu4e-view-headers-next)
+                   (kill-buffer-and-window))
+               (mu4e~icalendar-trash-message msg))))
+         message-send-actions))
 ;    (message-send-and-exit)
     ))
 
