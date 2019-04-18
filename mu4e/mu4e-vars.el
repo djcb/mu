@@ -439,6 +439,22 @@ Useful when this is not equal to the From: address."
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new messages, it is nil.")
 
+(defgroup mu4e-icalendar nil
+  "Icalendar related settings."
+  :group 'mu4e)
+
+(defcustom mu4e-icalendar-trash-after-reply nil
+  "If non-nil, trash the icalendar invitation after replying."
+  :type 'boolean
+  :group 'mu4e-icalendar)
+
+(defcustom mu4e-icalendar-diary-file nil
+  "If non-nil, the file in which to add events upon reply."
+  :type '(choice (const :tag "Do not insert a diary entry" nil)
+                 (string :tag "Insert a diary entry in this file"))
+  :group 'mu4e-icalendar)
+
+
 ;; Folders
 (defgroup mu4e-folders nil
   "Special folders."

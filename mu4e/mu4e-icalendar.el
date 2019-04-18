@@ -8,6 +8,7 @@
 
 ;; To enable optional iCalendar->Org sync functionality
 ;; NOTE: both the capture file and the headline(s) inside must already exist
+;; (require 'org-agenda)
 ;; (setq gnus-icalendar-org-capture-file "~/org/notes.org")
 ;; (setq gnus-icalendar-org-capture-headline '("Calendar"))
 ;; (gnus-icalendar-org-setup)
@@ -58,13 +59,15 @@
           (fold-icalendar-buffer)
           (mu4e-icalendar-reply-ical msg event status (buffer-name)))
 
-          ;; Back in article buffer
-          (setq-local gnus-icalendar-reply-status status)
-          (when gnus-icalendar-org-enabled-p
-            (gnus-icalendar--update-org-event event status)
-            ;; refresh article buffer to update the reply status
-            (with-current-buffer mu4e~headers-buffer-name
-              (mu4e-headers-rerun-search)))))))
+        ;; Back in article buffer
+        (setq-local gnus-icalendar-reply-status status)
+        (when gnus-icalendar-org-enabled-p
+          (gnus-icalendar--update-org-event event status))
+        (when mu4e-icalendar-diary-file
+          (mu4e~icalendar-insert-diary event status mu4e-icalendar-diary-file))
+        ;; refresh article buffer to update the reply status
+        (with-current-buffer mu4e~headers-buffer-name
+          (mu4e-headers-rerun-search))))))
 
 (defun mu4e~icalendar-delete-citation ()
   (delete-region (point-min) (point-max)))
@@ -97,6 +100,28 @@
 ;    (message-send-and-exit)
     ))
 
+
+(defun mu4e~icalendar-insert-diary (event reply-status filename)
+  "Insert a diary entry for the EVENT with reply STATUS in FILE."
+  ;; FIXME: handle recurring events
+  (let* ((beg (gnus-icalendar-event:start-time event))
+         (beg-date (format-time-string "%d/%m/%Y" beg))
+         (beg-time (format-time-string "%H:%M" beg))
+         (end (gnus-icalendar-event:end-time event))
+         (end-date (format-time-string "%d/%m/%Y" end))
+         (end-time (format-time-string "%H:%M" end))
+         (summary (gnus-icalendar-event:summary event))
+         (location (gnus-icalendar-event:location event))
+         (status (capitalize (symbol-name reply-status)))
+         (txt (if location
+                  (format "%s (%s)\n %s " summary status location)
+                (format "%s (%s)" summary status))))
+    (with-temp-buffer
+      (if (string= beg-date end-date)
+          (insert beg-date " " beg-time "-" end-time " " txt "\n")
+        (insert beg-date " " beg-time " Start of: " txt "\n")
+        (insert beg-date " " end-time " End of: " txt "\n"))
+      (write-region (point-min) (point-max) filename t))))
 
 
 (provide 'mu4e-icalendar)
