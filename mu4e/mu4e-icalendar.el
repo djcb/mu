@@ -3,10 +3,10 @@
 ;;; Commentary:
 
 ;; To install:
-;; (require 'gnus-icalendar)
-;; (gnus-icalendar-setup)
+;; (require 'mu4e-icalendar)
+;; (mu4e-icalendar-setup)
 
-;; to enable optional iCalendar->Org sync functionality
+;; To enable optional iCalendar->Org sync functionality
 ;; NOTE: both the capture file and the headline(s) inside must already exist
 ;; (setq gnus-icalendar-org-capture-file "~/org/notes.org")
 ;; (setq gnus-icalendar-org-capture-headline '("Calendar"))
