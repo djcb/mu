@@ -80,11 +80,13 @@
         (insert "To: " organizer)))
     (message-goto-body)
     (insert "\n\n")
+    (mml-insert-multipart "alternative")
+    (mml-insert-part "text/plain")
     (let ((reply-event (gnus-icalendar-event-from-buffer
                         buffer-name mu4e-user-mail-address-list)))
       (insert (gnus-icalendar-event->gnus-calendar reply-event status)))
-    (mml-insert-multipart "alternative")
-    (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=UTF-8")
+    (forward-line 1); move past closing tag
+    (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=utf-8")
     (message-goto-subject)
     (delete-region (line-beginning-position) (line-end-position))
     (insert "Subject: " (capitalize (symbol-name status))
