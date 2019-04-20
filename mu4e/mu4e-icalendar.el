@@ -106,6 +106,7 @@
     (delete-region (line-beginning-position) (line-end-position))
     (insert "Subject: " (capitalize (symbol-name status))
             ": " (gnus-icalendar-event:summary event))
+    (set-buffer-modified-p nil); not yet modified by user
     (when mu4e-icalendar-trash-after-reply
       ;; `mu4e~switch-back-to-mu4e-buffer' was executed.
       (push
