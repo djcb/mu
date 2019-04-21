@@ -71,6 +71,19 @@ Works for the message view."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(defun mu4e~action-header-to-html (msg field)
+  "Convert the FIELD of MSG to an HTML string."
+  (mapconcat
+   (lambda(c)
+     (let* ((name (when (car c)
+                    (replace-regexp-in-string "[[:cntrl:]]" "" (car c))))
+            (email (when (cdr c)
+                     (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
+            (short (or name email)) ;; name may be nil
+            (long (if name (format "%s <%s>" name email) email)))
+       (if mu4e-view-show-addresses long short)))
+   (mu4e-message-field msg field) ", "))
+
 (defun mu4e~write-body-to-html (msg)
   "Write MSG's body (either html or text) to a temporary file;
 return the filename."
@@ -86,9 +99,9 @@ return the filename."
     (with-temp-buffer
       (insert "<head><meta charset=\"UTF-8\"></head>\n")
       (insert (concat "<p><strong>From</strong>: "
-                (mu4e~view-construct-contacts-header msg :from) "</br>"))
+                (mu4e~action-header-to-html msg :from) "</br>"))
       (insert (concat "<strong>To</strong>: "
-                (mu4e~view-construct-contacts-header msg :to) "</br>"))
+                (mu4e~action-header-to-html msg :to) "</br>"))
       (insert (concat "<strong>Date</strong>: "
                 (format-time-string mu4e-view-date-format (mu4e-message-field msg :date)) "</br>"))
       (insert (concat "<strong>Subject</strong>: " (mu4e-message-field msg :subject) "</p>"))
