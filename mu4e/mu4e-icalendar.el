@@ -121,9 +121,9 @@ response in icalendar format."
     ;; Make sure the recipient is the organizer
     (let ((organizer (gnus-icalendar-event:organizer event)))
       (unless (string= organizer "")
+        (message-remove-header "To")
         (message-goto-to)
-        (delete-region (line-beginning-position) (line-end-position))
-        (insert "To: " organizer)))
+        (insert organizer)))
     (message-goto-body)
     (mml-insert-multipart "alternative")
     (mml-insert-part "text/plain")
@@ -132,9 +132,9 @@ response in icalendar format."
       (insert (gnus-icalendar-event->gnus-calendar reply-event status)))
     (forward-line 1); move past closing tag
     (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=utf-8")
+    (message-remove-header "Subject")
     (message-goto-subject)
-    (delete-region (line-beginning-position) (line-end-position))
-    (insert "Subject: " (capitalize (symbol-name status))
+    (insert (capitalize (symbol-name status))
             ": " (gnus-icalendar-event:summary event))
     (set-buffer-modified-p nil); not yet modified by user
     (when mu4e-icalendar-trash-after-reply
