@@ -79,9 +79,14 @@ Works for the message view."
                     (replace-regexp-in-string "[[:cntrl:]]" "" (car c))))
             (email (when (cdr c)
                      (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
-            (short (or name email)) ;; name may be nil
-            (long (if name (format "%s <%s>" name email) email)))
-       (if mu4e-view-show-addresses long short)))
+            (addr (if mu4e-view-show-addresses
+                      (if name (format "%s <%s>" name email) email)
+                    (short (or name email)))) ;; name may be nil
+            ;; Escape HTML entities
+            (addr (replace-regexp-in-string "&" "&amp;" addr))
+            (addr (replace-regexp-in-string "<" "&lt;" addr))
+            (addr (replace-regexp-in-string ">" "&gt;" addr)))
+       addr))
    (mu4e-message-field msg field) ", "))
 
 (defun mu4e~write-body-to-html (msg)
