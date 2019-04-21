@@ -1,4 +1,26 @@
-;;; mu4e-icalendar.el --- reply to iCalendar meeting requests
+;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)
+;;
+;; Copyright (C) 2019- Christophe Troestler
+
+;; Author: Christophe Troestler <Christophe.Troestler@umons.ac.be>
+;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Keywords: email icalendar
+;; Version: 0.0
+
+;; This file is not part of GNU Emacs.
+;;
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -13,13 +35,16 @@
 ;; (setq gnus-icalendar-org-capture-headline '("Calendar"))
 ;; (gnus-icalendar-org-setup)
 
+;;; Code:
+
 (require 'mu4e)
 (require 'gnus-icalendar)
 
 (eval-when-compile (require 'cl))
 
-
+;;;###autoload
 (defun mu4e-icalendar-setup ()
+  "Perform the necessary initialization to use mu4e-icalendar."
   (gnus-icalendar-setup)
   (cl-defmethod gnus-icalendar-event:inline-reply-buttons :around
     ((event gnus-icalendar-event) handle)
@@ -33,7 +58,7 @@
       (cl-call-next-method event handle))))
 
 (defun mu4e-icalendar-reply (data)
-  "Reply to a text/calendar event."
+  "Reply to the text/calendar event present in DATA."
   ;; Based on `gnus-icalendar-reply'.
   (let* ((handle (car data))
          (status (cadr data))
@@ -70,6 +95,7 @@
                                        mu4e-icalendar-diary-file))))))
 
 (defun mu4e~icalendar-delete-citation ()
+  "Function passed to `mu4e-compose-cite-function' to remove the citation."
   (delete-region (point-min) (point-max)))
 
 (defun mu4e~icalendar-trash-message (msg)
@@ -83,6 +109,10 @@
       (funcall action docid msg target))))
 
 (defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
+  "Reply to ORIGINAL-MSG containing invitation EVENT with STATUS.
+See `gnus-icalendar-event-reply-from-buffer' for the possible
+STATUS values.  BUFFER-NAME is the name of the buffer holding the
+response in icalendar format."
   (let ((message-signature nil))
     (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
           (mu4e-sent-messages-behavior 'delete)
@@ -124,7 +154,9 @@
 
 
 (defun mu4e~icalendar-insert-diary (event reply-status filename)
-  "Insert a diary entry for the EVENT with reply STATUS in FILE."
+  "Insert a diary entry for the EVENT in file named FILENAME.
+REPLY-STATUS is the status of the reply.  The possible values are
+given in the doc of `gnus-icalendar-event-reply-from-buffer'."
   ;; FIXME: handle recurring events
   (let* ((beg (gnus-icalendar-event:start-time event))
          (beg-date (format-time-string "%d/%m/%Y" beg))
