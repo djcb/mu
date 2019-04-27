@@ -316,6 +316,12 @@ Depending on the value of `mu4e-view-use-gnus', either use mu4e's
 internal display mode, or a display mode based on Gnu's
 article-mode."
   (mu4e~view-define-mode)
+
+  ;; XXX(djcb): only called for the side-effect of setting up
+  ;; `mu4e~view-attach-map'. Instead, we should split that function
+  ;; into setting up the map, and actually producing the header.
+  (mu4e~view-construct-attachments-header msg)
+
   ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
   ;; another call to mu4e-view (via mu4e~headers-update-handler as
   ;; the reply handler to mu4e~proc-move)
@@ -1188,7 +1194,7 @@ the attachment; otherwise (MULTI is non-nil), accept ranges of
 attachment numbers, as per `mu4e-split-ranges-to-numbers', and
 return the corresponding string."
   (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
-    (when (zerop count) (mu4e-error "No attachments for this message"))
+    (when (zerop count) (mu4e-warn "No attachments for this message"))
     (if (not multi)
       (if (= count 1)
 	(read-number (mu4e-format "%s: " prompt) 1)
