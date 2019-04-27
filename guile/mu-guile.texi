@@ -70,7 +70,7 @@ Guile/Scheme is a member of the @emph{Lisp} family of programming languages --
 like emacs-lisp, @emph{Racket}, Common Lisp. If you're not familiar with
 Scheme, @t{mu-guile} is an excellent opportunity to learn a bit about!
 
-Trust me, it's not very hard -- and it it's @emph{fun}!
+Trust me, it's not very hard -- and it's @emph{fun}!
 
 @menu
 * Getting started::
