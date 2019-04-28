@@ -50,10 +50,6 @@ TEST_PROGS += test-mu-query
 test_mu_query_SOURCES= test-mu-query.c dummy.cc
 test_mu_query_LDADD=${top_builddir}/lib/tests/libtestmucommon.la
 
-TEST_PROGS += test-mu-contacts
-test_mu_contacts_SOURCES= test-mu-contacts.c dummy.cc
-test_mu_contacts_LDADD=${top_builddir}/lib/tests/libtestmucommon.la
-
 TEST_PROGS += test-mu-cmd
 test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
 test_mu_cmd_LDADD=${top_builddir}/lib/tests/libtestmucommon.la

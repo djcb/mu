@@ -78,6 +78,10 @@ TEST_PROGS += test-mu-container
 test_mu_container_SOURCES= test-mu-container.c dummy.cc
 test_mu_container_LDADD= libtestmucommon.la
 
+TEST_PROGS += test-mu-contacts
+test_mu_contacts_SOURCES= test-mu-contacts.cc
+test_mu_contacts_LDADD= libtestmucommon.la
+
 # we need to use dummy.cc to enforce c++ linking...
 BUILT_SOURCES=							\
 	dummy.cc
