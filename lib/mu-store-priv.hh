@@ -21,18 +21,18 @@
 #ifndef __MU_STORE_PRIV_HH__
 #define __MU_STORE_PRIV_HH__
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <cstdio>
-#include <xapian.h>
+#include <memory>
 #include <cstring>
 #include <stdexcept>
 #include <unistd.h>
 
+#include <xapian.h>
+
 #include "mu-store.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 #include "mu-str.h"
 
 class MuStoreError {
@@ -46,34 +46,22 @@ private:
 	const std::string _what;
 };
 
+#define MU_CONTACTS_CACHE "contacts-cache"
+
 struct _MuStore {
 public:
 	/* create a read-write MuStore */
-	_MuStore (const char *patharg, const char *contacts_path,
-		  bool rebuild) {
-
-		init (patharg, contacts_path, rebuild, false);
+	_MuStore (const char *patharg, bool rebuild) {
 
 		if (rebuild)
-			_db = new Xapian::WritableDatabase
+			_db = std::make_unique<Xapian::WritableDatabase>
 				(patharg, Xapian::DB_CREATE_OR_OVERWRITE);
 		else
-			_db = new Xapian::WritableDatabase
+			_db = std::make_unique<Xapian::WritableDatabase>
 				(patharg, Xapian::DB_CREATE_OR_OPEN);
 
+		init (patharg, rebuild, false);
 		check_set_version ();
-
-		if (contacts_path) {
-			/* when rebuilding, attempt to clear the
-			 * contacts path */
-			if (rebuild && access (contacts_path, W_OK) == 0)
-				(void)unlink (contacts_path);
-
-			_contacts = mu_contacts_new (contacts_path);
-			if (!_contacts)
-				throw MuStoreError (MU_ERROR_FILE,
-					    ("failed to init contacts cache"));
-		}
 
 		MU_WRITE_LOG ("%s: opened %s (batch size: %u) for read-write",
 			      __func__, this->path(), (unsigned)batch_size());
@@ -82,9 +70,9 @@ public:
 	/* create a read-only MuStore */
 	_MuStore (const char *patharg) {
 
-		init (patharg, NULL, false, false);
-		_db = new Xapian::Database (patharg);
+		_db = std::make_unique<Xapian::Database>(patharg);
 
+		init (patharg, false, false);
 		if (!mu_store_versions_match(this)) {
 			char *errstr =
 				g_strdup_printf ("db version: %s, but we need %s; "
@@ -99,18 +87,19 @@ public:
 		MU_WRITE_LOG ("%s: opened %s read-only", __func__, this->path());
 	}
 
-	void init (const char *patharg, const char *contacts_path,
-		   bool rebuild, bool read_only) {
+	void init (const char *patharg, bool rebuild, bool read_only) {
 
 		_my_addresses   = NULL;
 		_batch_size	= DEFAULT_BATCH_SIZE;
-		_contacts       = 0;
 		_in_transaction = false;
 		_path           = patharg;
 		_processed	= 0;
 		_read_only      = read_only;
 		_ref_count      = 1;
 		_version	= NULL;
+
+		_contacts = std::make_unique<Mu::Contacts>(
+			_db->get_metadata(MU_CONTACTS_CACHE));
 	}
 
 	void set_my_addresses (const char **addrs) {
@@ -146,18 +135,14 @@ public:
 			if (_ref_count != 0)
 				g_warning ("ref count != 0");
 
-			mu_contacts_destroy (_contacts);
-			_contacts = NULL;
-
-			if (!_read_only)
-				mu_store_flush (this);
+			if (!_read_only && db_writable())
+                                mu_store_flush (this);
 
 			g_free (_version);
 			mu_str_free_list (_my_addresses);
 
 			MU_WRITE_LOG ("closing xapian database with %d document(s)",
 				      (int)db_read_only()->get_doccount());
-			delete _db;
 
 		} MU_XAPIAN_CATCH_BLOCK;
 	}
@@ -169,19 +154,14 @@ public:
 
 		// clear the database
 		db_writable()->close ();
-		delete _db;
-		_db = new Xapian::WritableDatabase
+		_db = std::make_unique<Xapian::WritableDatabase>
 			(path(), Xapian::DB_CREATE_OR_OVERWRITE);
-
-		// clear the contacts cache
-		if (_contacts)
-			mu_contacts_clear (_contacts);
 	}
 
 	// not re-entrant; stays valid until called again
 	const char *get_uid_term (const char *path) const;
 
-	MuContacts* contacts() { return _contacts; }
+	Mu::Contacts* contacts() { return _contacts.get(); }
 
 	const char *version () const {
 		if (!_version)
@@ -204,10 +184,11 @@ public:
 	Xapian::WritableDatabase* db_writable() {
 		if (G_UNLIKELY(is_read_only()))
 			throw std::runtime_error ("database is read-only");
-		return (Xapian::WritableDatabase*)_db;
+		return dynamic_cast<Xapian::WritableDatabase*>(_db.get());
 	}
 
-	Xapian::Database* db_read_only() const { return _db; }
+	Xapian::Database* db_read_only() const {
+		return dynamic_cast<Xapian::Database*>(_db.get()); }
 
 	const char* path () const { return _path.c_str(); }
 	bool is_read_only () const { return _read_only; }
@@ -235,20 +216,20 @@ public:
 	GSList *my_addresses () { return _my_addresses; }
 
 	/* by default, use transactions of 30000 messages */
-	static const unsigned DEFAULT_BATCH_SIZE = 30000;
+	static const unsigned	DEFAULT_BATCH_SIZE = 30000;
 private:
 	/* transaction handling */
-	bool   _in_transaction;
-	int    _processed;
-	size_t  _batch_size;  /* batch size of a xapian transaction */
+	bool			_in_transaction;
+	int			_processed;
+	size_t			_batch_size;	/* batch size of a xapian transaction */
 
 	/* contacts object to cache all the contact information */
-	MuContacts *_contacts;
-
 	std::string _path;
 	mutable char *_version;
 
-	Xapian::Database *_db;
+	std::unique_ptr<Xapian::Database>	_db;
+	std::unique_ptr<Mu::Contacts>		_contacts;
+
 	bool _read_only;
 	guint _ref_count;
 

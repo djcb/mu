@@ -87,6 +87,19 @@ mu_store_is_read_only (const MuStore *store)
 }
 
 
+MuContacts*
+mu_store_contacts (MuStore *store)
+{
+	g_return_val_if_fail (store, FALSE);
+
+	try {
+		return store->contacts()->mu_contacts();
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
+}
+
+
+
 unsigned
 mu_store_count (const MuStore *store, GError **err)
 {
