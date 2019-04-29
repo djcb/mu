@@ -27,6 +27,8 @@
 ;; To install:
 ;; (require 'mu4e-icalendar)
 ;; (mu4e-icalendar-setup)
+;; Optional
+;; (setq mu4e-icalendar-trash-after-reply t)
 
 ;; To enable optional iCalendar->Org sync functionality
 ;; NOTE: both the capture file and the headline(s) inside must already exist
