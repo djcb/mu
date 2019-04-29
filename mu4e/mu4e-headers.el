@@ -396,13 +396,13 @@ headers."
 	    (mu4e~headers-highlight docid))
 	  (run-hooks 'mu4e-message-changed-hook))))))
 
-(defun mu4e~headers-remove-handler (docid)
+(defun mu4e~headers-remove-handler (docid &optional skip-hook)
   "Remove handler, will be called when a message with DOCID has
 been removed from the database. This function will hide the removed
 message from the current list of headers. If the message is not
 present, don't do anything.
 
-If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
+If SKIP-HOOK is absent or nil, `mu4e-message-changed-hook' will be invoked."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (mu4e~headers-remove-header docid t))
   ;; if we were viewing this message, close it now.
@@ -410,9 +410,10 @@ If SKIP-HOOK is not nil, `mu4e-message-changed-hook' will be invoked."
 	     (buffer-live-p (mu4e-get-view-buffer)))
     (unless (eq mu4e-split-view 'single-window)
       (mapc #'delete-window (get-buffer-window-list
-			     (mu4e-get-view-buffer))))
+			     (mu4e-get-view-buffer) nil t)))
     (kill-buffer (mu4e-get-view-buffer)))
-  (run-hooks 'mu4e-message-changed-hook))
+  (unless skip-hook
+    (run-hooks 'mu4e-message-changed-hook)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
