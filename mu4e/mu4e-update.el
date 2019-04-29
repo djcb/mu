@@ -144,7 +144,11 @@ If non-nil, this is a plist of the form:
   "Height of the mu4e message retrieval/update buffer.")
 (defvar mu4e--get-mail-ask-password "mu4e get-mail: Enter password: "
   "Query string for `mu4e-get-mail-command' password.")
-(defvar mu4e--get-mail-password-regexp "^Remote: Enter password: $"
+(defvar mu4e--get-mail-password-regexp
+  (rx (: bol
+         (zero-or-more (in alnum "_: "))
+         (or "P" "p") "ass" (or "word" "phrase") ":"
+         (zero-or-one " ") eol))
   "Regexp for a `mu4e-get-mail-command' password query.")
 
 
@@ -153,7 +157,7 @@ If non-nil, this is a plist of the form:
 
 Currently the filter only checks if the command asks for a
 password by matching the output against
-`mu4e~get-mail-password-regexp'. The messages are inserted into
+`mu4e--get-mail-password-regexp'. The messages are inserted into
 the process buffer.
 
 Also scrolls to the final line, and update the progress
