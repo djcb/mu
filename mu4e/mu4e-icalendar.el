@@ -1,4 +1,4 @@
-;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)
+;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)  -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2019- Christophe Troestler
 
@@ -100,15 +100,23 @@
   "Function passed to `mu4e-compose-cite-function' to remove the citation."
   (delete-region (point-min) (point-max)))
 
-(defun mu4e~icalendar-trash-message (msg)
-  "Trash the message MSG."
-  (with-current-buffer mu4e~headers-buffer-name
-    (let* ((docid (mu4e-message-field msg :docid))
+(defun mu4e~icalendar-trash-message (original-msg)
+  "Trash the message ORIGINAL-MSG and move to the next one."
+  (lambda (docid path)
+    "See `mu4e-sent-handler' for DOCID and PATH."
+    (mu4e-sent-handler docid path)
+    (let* ((docid (mu4e-message-field original-msg :docid))
            (markdescr (assq 'trash mu4e-marks))
            (action (plist-get (cdr markdescr) :action))
-           (target (mu4e-get-trash-folder msg)))
-      (run-hook-with-args 'mu4e-mark-execute-pre-hook 'trash msg)
-      (funcall action docid msg target))))
+           (target (mu4e-get-trash-folder original-msg)))
+      (with-current-buffer (mu4e-get-headers-buffer)
+        (run-hook-with-args 'mu4e-mark-execute-pre-hook 'trash original-msg)
+        (funcall action docid original-msg target))
+      (when (and (mu4e~headers-view-this-message-p docid)
+                 (buffer-live-p (mu4e-get-view-buffer)))
+        (switch-to-buffer (mu4e-get-view-buffer))
+        (or (mu4e-view-headers-next)
+            (kill-buffer-and-window))))))
 
 (defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
   "Reply to ORIGINAL-MSG containing invitation EVENT with STATUS.
@@ -140,19 +148,13 @@ response in icalendar format."
             ": " (gnus-icalendar-event:summary event))
     (set-buffer-modified-p nil); not yet modified by user
     (when mu4e-icalendar-trash-after-reply
-      ;; `mu4e~switch-back-to-mu4e-buffer' was executed.
-      (push
-       (lexical-let ((msg original-msg))
-         #'(lambda ()
-             (when (and (not (eq mu4e-split-view 'single-window))
-                        (buffer-live-p (mu4e-get-view-buffer)))
-               (switch-to-buffer (mu4e-get-view-buffer))
-               (or (mu4e-view-headers-next)
-                   (kill-buffer-and-window))
-               (mu4e~icalendar-trash-message msg))))
-         message-send-actions))
-;    (message-send-and-exit)
-    ))
+      ;; Override `mu4e-sent-handler' set by `mu4e-compose-mode' to
+      ;; also trash the message (thus must be appended to hooks).
+      (add-hook
+       'message-sent-hook
+       #'(lambda () (setq mu4e-sent-func
+                          (mu4e~icalendar-trash-message original-msg)))
+       t t))))
 
 
 (defun mu4e~icalendar-insert-diary (event reply-status filename)
