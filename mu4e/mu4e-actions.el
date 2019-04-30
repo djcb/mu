@@ -81,7 +81,7 @@ Works for the message view."
                      (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
             (addr (if mu4e-view-show-addresses
                       (if name (format "%s <%s>" name email) email)
-                    (short (or name email)))) ;; name may be nil
+                    (or name email))) ;; name may be nil
             ;; Escape HTML entities
             (addr (replace-regexp-in-string "&" "&amp;" addr))
             (addr (replace-regexp-in-string "<" "&lt;" addr))
