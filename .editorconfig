@@ -1,0 +1,41 @@
+#-*-mode:conf-*-
+# editorconfig file (see EditorConfig.org), with some
+# lowest-denominator settings that should work for many editors.
+
+root                        = true # this is the top-level
+
+[*]
+end_of_line                 = lf
+insert_final_newline        = true
+charset                     = utf-8
+trim_trailing_whitespace    = true
+
+# The "best" answer is "tabs-for-indentation; spaces for alignment", but in
+# practice that's hard to accomplish in many editors.
+#
+# So we use spaces instead, at least that looks consistent for all
+
+[*.{cc,cpp,hh,hpp}]
+indent_style                = space
+indent_size                 = 8
+max_line_length             = 100
+
+[*.{c,h}]
+indent_style                = space
+indent_size                 = 8
+max_line_length             = 80
+
+[configure.ac]
+indent_style                = space
+indent_size                 = 4
+max_line_length             = 100
+
+[Makefile.am]
+indent_style                = tab
+indent_size                 = 8
+max_line_length             = 100
+
+[*.el]
+indent_style                = space
+indent_size                 = 2
+max_line_length             = 100

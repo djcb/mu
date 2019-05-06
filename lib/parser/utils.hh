@@ -32,7 +32,9 @@ namespace Mux {
  *
  * @return a flattened string
  */
-std::string utf8_flatten (const std::string& str);
+std::string utf8_flatten (const char *str);
+inline std::string utf8_flatten (const std::string& s) { return utf8_flatten(s.c_str()); }
+
 
 
 /**

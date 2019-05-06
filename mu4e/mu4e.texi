@@ -813,11 +813,11 @@ custom fields using @code{mu4e-header-info-custom}; see @ref{HV Custom
 headers} for details.
 @item By default, the date is shown with the @t{:human-date} field, which
 shows the @emph{time} for today's messages, and the @emph{date} for older
-messages. If you want to distinguish between `today' and `older', you can use
+messages. If you do not want to distinguish between `today' and `older', you can use
 the @t{:date} field instead.
 @item You can customize the date and time formats with the variable
 @code{mu4e-headers-date-format} and @code{mu4e-headers-time-format},
-respectively. In the example, we use @code{:human-date}, which shows when the
+respectively. In the example, we use @code{:human-date}, which shows the
 time when the message was sent today, and the date otherwise.
 @item By default, the subject is shown using the @t{:subject} field;
 however, it is also possible to use @t{:thread-subject}, which shows
@@ -2183,6 +2183,7 @@ can happen in both the @ref{Headers view} and the @ref{Message view}.
 * Marking messages::Selecting message do something with them
 * What to mark for::What can we do with them
 * Executing the marks::Do it
+* Trashing messages::Exceptions for mailboxes like Gmail
 * Leaving the headers buffer::Handling marks automatically when leaving
 * Built-in marking functions::Helper functions for dealing with them
 * Custom mark functions::Define your own mark function
@@ -2257,6 +2258,29 @@ After you have marked some messages, you can execute them with @key{x}
 A hook, @code{mu4e-mark-execute-pre-hook}, is available which is run
 right before execution of each mark. The hook is called with two
 arguments, the mark and the message itself.
+
+@node Trashing messages
+@section Trashing messages
+
+For regular mailboxes, trashing works like other marks: when executed,
+the message is flagged as trashed.  Depending on your mailbox provider,
+the trash flag is used to automatically move the message to the trash
+folder (@code{mu4e-trash-folder}) for instance.
+
+Some mailboxes behave differently however and they don't interpret the
+trash flag.  In cases like Gmail, the message must be @emph{moved} to
+the trash folder and the trash flag must not be used.
+
+@code{mu4e} has provisions for non-standard mailboxes: if a message
+maildir matches a regular expression in
+@code{mu4e-move-to-trash-patterns} then the message is moved instead of
+being flagged.  When a context is created with
+@code{make-mu4e-context-account} (see @ref{Account setup helper}), the
+pattern is automatically added for you.
+
+This should work fine for Gmail and similar mailboxes.  Note that in the
+case of Gmail, you might have to configure your mailbox ``expunge''
+settings.
 
 @node Leaving the headers buffer
 @section Leaving the headers buffer
@@ -2415,6 +2439,7 @@ example:
 * Context policies::How to determine the current context
 * Contexts and special folders::Using context variables to determine them
 * Contexts example::How to define contexts
+* Account setup helper::Easy context creation with sane defaults
 * Some context tricks::Other thing to do with contexts
 @end menu
 
@@ -2625,6 +2650,52 @@ no context matches (or if you always want to be asked).
 @item Finally, be careful to get the quotations right --- backticks, single quotes 
 and commas and note the '.' between variable name and its value.
 @end itemize
+
+@node Account setup helper
+@section Account setup helper
+
+Contexts can be cumbersome to set up.  Thankfully @code{mu4e} provides a
+helper function @code{make-mu4e-context-account} to easily get started.
+The function helps initializing the context plus a couple of variables
+with sane defaults.
+Everything should work out of the box in most cases.
+
+A short example for two contexts:
+
+@lisp
+(let ((gandi-smtp-vars '((smtpmail-smtp-server . "mail.gandi.net")
+                         (smtpmail-stream-type . starttls)
+                         (smtpmail-smtp-service . 587))))
+  (make-mu4e-context-account
+   :name "personal"
+   :user-mail-address "john@@doe.xyz"
+   :sent-folder "Sent"
+   :vars gandi-smtp-vars)
+  (make-mu4e-context-account
+   :name "work"
+   :user-mail-address "john@@work.org"
+   :sent-folder "Sent"
+   :predicate (lambda (msg)
+                (mu4e-message-contact-field-matches
+                 msg '(:from :to) "boss@@work.org"))
+   :vars gandi-smtp-vars))
+@end lisp
+
+A couple of things to note:
+
+@itemize
+@item Only the @code{name} slot is mandatory.
+@item The maildir default to the context name.
+@item Folders only need to be given a name, not a relative path.
+They will be automatically stored under the maildir.
+@item When the @code{match-func} is not provided, the context is matched
+against @code{predicate} if provided or the maildir of the current
+message otherwise.
+@end itemize
+
+If the context created by @code{make-mu4e-context-account} is not
+enough, you can display the generated context with e.g. @code{M-x
+describe-variable mu4e-contexts} and tweak the result as needed.
 
 @node Some context tricks
 @section Some context tricks
@@ -3530,7 +3601,7 @@ customize.
 
 ;; general emacs mail settings; used when composing e-mail
 ;; the non-mu4e-* stuff is inherited from emacs/message-mode
-(setq mu4e-reply-to-address "foo@@bar.example.com"
+(setq mu4e-compose-reply-to-address "foo@@bar.example.com"
       user-mail-address "foo@@bar.example.com"
       user-full-name  "Foo X. Bar")
 (setq mu4e-compose-signature
@@ -3561,8 +3632,8 @@ with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
 Gmail web interface (in the settings, under the ``Forwarding and
 POP/IMAP''-tab).
 
-Gmail users may also be interested in @ref{Including related messages,
-skipping duplicates}.
+Gmail users may also be interested in @ref{Including related messages},
+and in @ref{Skipping duplicates}.
 
 @subsection Setting up offlineimap
 

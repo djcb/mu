@@ -742,6 +742,29 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for unread)
 (mu4e~headers-defun-mark-for action)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar mu4e-move-to-trash-patterns '()
+  "List of regexps to match for moving to trash instead of flagging them.
+This is particularly useful for mailboxes that don't use the
+trash flag like Gmail.  See `mu4e-headers-mark-or-move-to-trash'
+and `mu4e-view-mark-or-move-to-trash'.")
+
+(defun mu4e-headers-mark-or-move-to-trash ()
+  "Mark message for \"move\" to the trash folder if the message
+maildir matches any regexp in `mu4e-move-to-trash-patterns'.
+Otherwise mark with the \"trash\" flag.
+Also see `mu4e-view-mark-or-move-to-trash'."
+  (interactive)
+  (let ((msg-dir (mu4e-message-field (mu4e-message-at-point) :maildir)))
+    (if (not (seq-filter (lambda (re)
+                           (string-match re msg-dir))
+                         mu4e-move-to-trash-patterns))
+        (mu4e-headers-mark-for-trash)
+      (mu4e-mark-set 'move (if (functionp mu4e-trash-folder)
+                               (funcall mu4e-trash-folder (mu4e-message-at-point))
+                             mu4e-trash-folder))
+      (mu4e-headers-next))))
+
 ;;; headers-mode and mode-map ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-headers-mode-map nil
   "Keymap for *mu4e-headers* buffers.")
@@ -801,8 +824,8 @@ after the end of the search results."
       (define-key map "y" 'mu4e-select-other-view)
 
       ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      (define-key map (kbd "<backspace>")  'mu4e-headers-mark-for-trash)
-      (define-key map (kbd "d")            'mu4e-headers-mark-for-trash)
+      (define-key map (kbd "<backspace>")  'mu4e-headers-mark-or-move-to-trash)
+      (define-key map (kbd "d")            'mu4e-headers-mark-or-move-to-trash)
       (define-key map (kbd "<delete>")     'mu4e-headers-mark-for-delete)
       (define-key map (kbd "<deletechar>") 'mu4e-headers-mark-for-delete)
       (define-key map (kbd "D")            'mu4e-headers-mark-for-delete)
@@ -982,7 +1005,7 @@ no user-interaction ongoing."
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
     (when (and (buffer-live-p (mu4e-get-headers-buffer))
-	    (window-live-p (get-buffer-window (mu4e-get-headers-buffer))))
+	    (window-live-p (get-buffer-window (mu4e-get-headers-buffer) t)))
       (mu4e-headers-rerun-search))))
 
 (define-derived-mode mu4e-headers-mode special-mode

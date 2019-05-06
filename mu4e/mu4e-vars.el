@@ -247,6 +247,11 @@ and `mu4e-headers-visible-columns'."
 		 (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
+(defcustom mu4e-view-max-specpdl-size 4096
+  "The value of `max-specpdl-size' for displaying messages with Gnus."
+  :type 'integer
+  :group 'mu4e-view)
+
 (defcustom mu4e-view-show-images nil
   "If non-nil, automatically display images in the view buffer."
   :type 'boolean
@@ -830,7 +835,7 @@ sort by this field.  This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
 
-Fields with which have the property `:require-full' set to
+Fields which have the property `:require-full' set to
 non-nil require a full message; in practice this means that you
 cannot use such fieds as part of `mu4e-headers-fields', but only
 in `mu4e-view-fields.'

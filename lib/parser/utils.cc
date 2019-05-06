@@ -99,36 +99,30 @@ gx_utf8_flatten (const gchar *str, gssize len)
 
 } // namespace
 
-
 std::string // gx_utf8_flatten
-Mux::utf8_flatten (const std::string& str)
+Mux::utf8_flatten (const char *str)
 {
-	// optimization for boring old ascii strings
-	bool is_ascii = true;
-	std::string s{str};
-	for (auto it = s.begin(); it != s.end(); ++it) {
-		if (*it & 0x80) {
-			is_ascii = false;
-			break;
-		} else
-			*it = tolower(*it);
+	if (!str)
+		return {};
+
+	// the pure-ascii case
+	if (g_str_is_ascii(str)) {
+		auto l = g_ascii_strdown (str, -1);
+		std::string s{l};
+		g_free (l);
+		return s;
 	}
 
-	if (G_LIKELY(is_ascii))
-		return s;
-	///////////////////////////////////////////
-
 	// seems we need the big guns
-	char *flat = gx_utf8_flatten (str.c_str(), str.length());
+	char *flat = gx_utf8_flatten (str, -1);
 	if (!flat)
 		return {};
 
-	s = flat;
+	std::string s{flat};
 	g_free (flat);
 
 	return s;
 }
-
 
 std::string
 Mux::utf8_clean (const std::string& dirty)
@@ -165,7 +159,6 @@ Mux::split (const std::string& str, const std::string& sepa)
 
 	return vec;
 }
-
 
 std::string
 Mux::quote (const std::string& str)
@@ -221,7 +214,6 @@ Mux::date_to_time_t_string (int64_t t)
 
 	return buf;
 }
-
 
 static std::string
 delta_ymwdhMs (const std::string& expr)
@@ -378,7 +370,6 @@ Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
 	else
 		return date_to_time_t_string (t);
 }
-
 
 constexpr const auto SizeFormat = "%010" G_GINT64_FORMAT;
 

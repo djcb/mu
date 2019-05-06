@@ -316,6 +316,12 @@ Depending on the value of `mu4e-view-use-gnus', either use mu4e's
 internal display mode, or a display mode based on Gnu's
 article-mode."
   (mu4e~view-define-mode)
+
+  ;; XXX(djcb): only called for the side-effect of setting up
+  ;; `mu4e~view-attach-map'. Instead, we should split that function
+  ;; into setting up the map, and actually producing the header.
+  (mu4e~view-construct-attachments-header msg)
+
   ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
   ;; another call to mu4e-view (via mu4e~headers-update-handler as
   ;; the reply handler to mu4e~proc-move)
@@ -375,7 +381,8 @@ article-mode."
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer))
       (run-hooks 'gnus-article-decode-hook)
-      (gnus-article-prepare-display)
+      (let ((max-specpdl-size mu4e-view-max-specpdl-size))
+        (gnus-article-prepare-display))
       (mu4e-view-mode)
       (setq mu4e~view-message msg)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
@@ -743,7 +750,7 @@ FUNC should be a function taking two arguments:
       (define-key map "A" (if mu4e-view-use-gnus 'ignore 'mu4e-view-attachment-action))
 
       ;; marking/unmarking
-      (define-key map "d" 'mu4e-view-mark-for-trash)
+      (define-key map "d" 'mu4e-view-mark-or-move-to-trash)
       (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "<deletechar>") 'mu4e-view-mark-for-delete)
       (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
@@ -1187,7 +1194,7 @@ the attachment; otherwise (MULTI is non-nil), accept ranges of
 attachment numbers, as per `mu4e-split-ranges-to-numbers', and
 return the corresponding string."
   (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
-    (when (zerop count) (mu4e-error "No attachments for this message"))
+    (when (zerop count) (mu4e-warn "No attachments for this message"))
     (if (not multi)
       (if (= count 1)
 	(read-number (mu4e-format "%s: " prompt) 1)
@@ -1486,6 +1493,13 @@ list."
   (interactive)
   (mu4e~view-in-headers-context
     (mu4e-mark-execute-all)))
+
+(defun mu4e-view-mark-or-move-to-trash (&optional n)
+  "See `mu4e-headers-mark-or-move-to-trash'."
+  (interactive "P")
+  (mu4e~view-in-headers-context
+   (mu4e-headers-mark-or-move-to-trash)
+   (mu4e~headers-move (or n 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; URL handling

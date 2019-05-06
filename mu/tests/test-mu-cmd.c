@@ -780,10 +780,10 @@ verify_is_testable (void)
 		else
 			gpg = g_strdup (gpg);
 
-	} else if (!(gpg = g_find_program_in_path ("gpg")))
+	} else if (!(gpg = g_find_program_in_path ("gpg2")))
 		return FALSE;
 
-	cmdline = g_strdup_printf ("%s --list-keys 017DDA3C", gpg);
+	cmdline = g_strdup_printf ("%s --list-keys DCC4A036", gpg);
 	g_free (gpg);
 
 	output = erroutput = NULL;
@@ -806,8 +806,7 @@ test_mu_verify_good (void)
 		return;
 
 	cmdline = g_strdup_printf ("%s verify %s/signed!2,S",
-				   MU_PROGRAM,
-				   MU_TESTMAILDIR4);
+				   MU_PROGRAM, MU_TESTMAILDIR4);
 
 	if (g_test_verbose())
 		g_print ("$ %s\n", cmdline);
