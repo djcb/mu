@@ -1,4 +1,20 @@
-* spec file for bulding mu on Fedora
+* Spec file for bulding mu on Fedora
 An attempt to create spec file for building packages for mu and emacs-mu4e.
-This spec file has been tested to create packages on Fedora 27.
-Packages can be found at https://copr.fedorainfracloud.org/coprs/bojov/mu-fedora 
+This spec file has been tested to create packages on Fedora.
+Unfortunately, it conflicts with mu-editor ([[https://github.com/mu-editor/mu][GitHub]] and [[https://codewith.mu][Home Page]]) as using the same program name.
+
+Packages can be found at https://copr.fedorainfracloud.org/coprs/bojov/mu-fedora
+
+* Instalation
+The following packages are included:
+- mu-mail-search
+- mu-mail-search-guile
+- emacs-mu4e
+
+** Adding repo
+
+dnf copr enable bojov/mu-fedora
+
+** Installation of packages
+
+dnf install mu-mail-search mu-mail-search-guile emacs-mu4e
