@@ -458,7 +458,7 @@ accumulate_body (MuMsg *msg, MuMsgPart *mpart, BodyData *bdata)
 
 	txt	    = NULL;
 	has_err	    = TRUE;
-	if (bdata->want_html && is_html || !bdata->want_html && is_plain)
+	if ((bdata->want_html && is_html) || (!bdata->want_html && is_plain))
 		txt = mu_msg_mime_part_to_string (mimepart, &has_err);
 
 	if (!has_err && txt)
