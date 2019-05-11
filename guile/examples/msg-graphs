@@ -24,34 +24,34 @@ exec guile -e main -s $0 $@
 (use-modules (mu) (mu stats) (mu plot))
 ;;(use-modules (mu) (mu message) (mu stats) (mu plot))
 
-(define (per-hour expr plain-text)
-  "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+(define (per-hour expr output)
+  "Count the total number of messages for each weekday (0-6 for Sun..Sat) that
+match EXPR. OUTPUT corresponds to the output format, as per gnuplot's 'set
+terminal'."
   (mu:plot
     (sort
       (mu:tabulate
 	(lambda (msg)
 	  (tm:hour (localtime (mu:date msg)))) expr)
       (lambda (x y) (< (car x) (car y))))
-    (format #f "Messages per hour matching ~a" expr) "Hour" "Messages" plain-text))
+    (format #f "Messages per hour matching ~a" expr) "Hour" "Messages" output))
 
-(define (per-day expr plain-text)
-  "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+(define (per-day expr output)
+  "Count the total number of messages for each weekday (0-6 for Sun..Sat) that
+match EXPR. OUTPUT corresponds to the output format, as per gnuplot's 'set
+terminal'."
   (mu:plot
     (mu:weekday-numbers->names
       (sort (mu:tabulate
 	      (lambda (msg)
 		(tm:wday (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
-    (format #f "Messages per weekday matching ~a" expr) "Day" "Messages" plain-text))
+    (format #f "Messages per weekday matching ~a" expr) "Day" "Messages" output))
 
-(define (per-month expr plain-text)
-  "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+(define (per-month expr output)
+  "Count the total number of messages for each weekday (0-6 for Sun..Sat) that
+match EXPR. OUTPUT corresponds to the output format, as per gnuplot's 'set
+terminal'."
   (mu:plot
     (mu:month-numbers->names
       (sort
@@ -59,13 +59,13 @@ display, otherwise, use a graphical window."
 	  (lambda (msg)
 	    (tm:mon (localtime (mu:date msg)))) expr)
 	(lambda (x y) (< (car x) (car y)))))
-    (format #f "Messages per month matching ~a" expr) "Month" "Messages" plain-text))
+    (format #f "Messages per month matching ~a" expr) "Month" "Messages" output))
 
 
-(define (per-year-month expr plain-text)
-  "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+(define (per-year-month expr output)
+  "Count the total number of messages for each weekday (0-6 for Sun..Sat) that
+match EXPR. OUTPUT corresponds to the output format, as per gnuplot's 'set
+terminal'."
   (mu:plot
     (sort (mu:tabulate
 	    (lambda (msg)
@@ -76,20 +76,20 @@ display, otherwise, use a graphical window."
 	    expr)
       (lambda (x y) (< (car x) (car y))))
     (format #f "Messages per year/month matching ~a" expr)
-    "Year/Month" "Messages" plain-text))
+    "Year/Month" "Messages" output))
 
 
 
-(define (per-year expr plain-text)
-  "Count the total number of messages for each weekday (0-6 for
-Sun..Sat) that match EXPR. If PLAIN-TEXT is true, use a plain-text
-display, otherwise, use a graphical window."
+(define (per-year expr output)
+  "Count the total number of messages for each weekday (0-6 for Sun..Sat) that
+match EXPR. OUTPUT corresponds to the output format, as per gnuplot's 'set
+terminal'."
   (mu:plot
     (sort (mu:tabulate
 	    (lambda (msg)
 	      (+ 1900 (tm:year (localtime (mu:date msg))))) expr)
       (lambda (x y) (< (car x) (car y))))
-    (format #f "Messages per year matching ~a" expr) "Year" "Messages" plain-text))
+    (format #f "Messages per year matching ~a" expr) "Year" "Messages" output))
 
 
 
@@ -107,6 +107,9 @@ display, otherwise, use a graphical window."
 	  (help (option-ref options 'help #f))
 	  (what (option-ref options 'what #f))
 	  (text (option-ref options 'text #f))
+	  ;; if `text' is `#f', use a graphical window by setting output to "wxt",
+	  ;; else use text-mode plotting ("dumb")
+	  (output (if text "dumb" "wxt"))
 	  (muhome (option-ref options 'muhome #f))
 	  (restargs (option-ref options '() #f))
 	  (expr (if restargs (string-join restargs) "")))
@@ -116,11 +119,11 @@ display, otherwise, use a graphical window."
 	(exit (if help 0 1))))
     (mu:initialize muhome)
     (cond
-      ((string= what "per-hour")  (per-hour expr text))
-      ((string= what "per-day")   (per-day expr text))
-      ((string= what "per-month") (per-month expr text))
-      ((string= what "per-year-month") (per-year-month expr text))
-      ((string= what "per-year")  (per-year expr text))
+      ((string= what "per-hour")  (per-hour expr output))
+      ((string= what "per-day")   (per-day expr output))
+      ((string= what "per-month") (per-month expr output))
+      ((string= what "per-year-month") (per-year-month expr output))
+      ((string= what "per-year")  (per-year expr output))
       (else (begin
 	      (display msg)
 	      (exit 1))))))
