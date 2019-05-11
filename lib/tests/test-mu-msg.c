@@ -65,13 +65,13 @@ check_contact_01 (MuMsgContact *contact, int *idx)
 	case 0:
 		g_assert_cmpstr (mu_msg_contact_name (contact),
 				 ==, "Mickey Mouse");
-		g_assert_cmpstr (mu_msg_contact_address (contact),
+		g_assert_cmpstr (mu_msg_contact_email (contact),
 				 ==, "anon@example.com");
 		break;
 	case 1:
 		g_assert_cmpstr (mu_msg_contact_name (contact),
 				 ==, "Donald Duck");
-		g_assert_cmpstr (mu_msg_contact_address (contact),
+		g_assert_cmpstr (mu_msg_contact_email (contact),
 				 ==, "gcc-help@gcc.gnu.org");
 		break;
 	default:
@@ -128,13 +128,13 @@ check_contact_02 (MuMsgContact *contact, int *idx)
 	case 0:
 		g_assert_cmpstr (mu_msg_contact_name (contact),
 				 ==, NULL);
-		g_assert_cmpstr (mu_msg_contact_address (contact),
+		g_assert_cmpstr (mu_msg_contact_email (contact),
 				 ==, "anon@example.com");
 		break;
 	case 1:
 		g_assert_cmpstr (mu_msg_contact_name (contact),
 				 ==, NULL);
-		g_assert_cmpstr (mu_msg_contact_address (contact),
+		g_assert_cmpstr (mu_msg_contact_email (contact),
 				 ==, "help-gnu-emacs@gnu.org");
 		break;
 	default:

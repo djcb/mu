@@ -102,8 +102,8 @@ add_contact (JsonArray **arr, MuMsgContact *c)
 	cell = json_object_new ();
 	if (c->name)
 		json_object_set_string_member (cell, "name", c->name);
-	if (c->address)
-		json_object_set_string_member (cell, "email", c->address);
+	if (c->email)
+		json_object_set_string_member (cell, "email", c->email);
 
 	json_array_add_object_element (*arr, cell); /* consumes */
 }

@@ -594,17 +594,18 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		termgen.index_text (flat, 1, pfx);
 	}
 
-	if (!mu_str_is_empty(contact->address)) {
-		const auto flat = Mux::utf8_flatten(contact->address);
+	if (!mu_str_is_empty(contact->email)) {
+		const auto flat = Mux::utf8_flatten(contact->email);
 		add_term(*msgdoc->_doc, pfx + flat);
-		add_address_subfields (*msgdoc->_doc, contact->address, pfx);
+		add_address_subfields (*msgdoc->_doc, contact->email, pfx);
 		/* store it also in our contacts cache */
 		auto contacts = msgdoc->_store->contacts();
 		if (contacts)
-			contacts->add(contact->address,
-				      contact->name ? contact->name : "",
-				      msgdoc->_personal,
-				      mu_msg_get_date(msgdoc->_msg));
+			contacts->add(Mu::ContactInfo(contact->full_address,
+						      contact->email,
+						      contact->name ? contact->name : "",
+						      msgdoc->_personal,
+						      mu_msg_get_date(msgdoc->_msg)));
 	}
 
 	return TRUE;
@@ -616,12 +617,12 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	GSList *cur;
 
-	if (msgdoc->_personal || !contact->address)
+	if (msgdoc->_personal || !contact->email)
 		return TRUE;
 
 	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
 		if (g_ascii_strcasecmp (
-			    contact->address, (const char*)cur->data) == 0) {
+			    contact->email, (const char*)cur->data) == 0) {
 			msgdoc->_personal = TRUE;
 			break;
 		}
