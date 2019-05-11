@@ -1,6 +1,26 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
+* 1.4 (unreleased)
+
+*** mu
+
+    - The contacts cache (as uses in ~mu cfind~ and mu4e contact-completion is now
+      stored as part of the Xapian database rather than as a separate file.
+
+*** mu4e
+
+    - In many cases, ~mu4e~ used to get /all/ contacts after each indexing
+      operation; this was slow for some users, so we have updated this to only
+      get the contacts that have changed since the last time ~mu4e~ received that
+      information.
+
+      We also moved sorting the contacts to the mu-side, which speeds things up
+      further. However, as a side-effect of this, ~mu4e-contacts-rewrite-function~
+      and ~mu4e-compose-complete-ignore-address-regexp~ have been obsoleted; users
+      of those should migrate to ~mu4e-contact-process-function~; see its
+      docstring for details.
+
 ** 1.2
 
    After a bit over a year since version 1.0, here is version 1.2. This is

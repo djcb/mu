@@ -1120,16 +1120,16 @@ An example message view:
     Date: Mon 19 Jan 2004 09:39:42 AM EET
     Maildir: /inbox
     Attachments(2): [1]DSCN4961.JPG(1.3M), [2]DSCN4962.JPG(1.4M)
-     
+
     Hi Julia,
-     
+
     Some pics from our trip to Cerin Amroth. Enjoy!
-     
+
     All the best,
     Randy.
-     
+
     On Sun 21 Dec 2003 09:06:34 PM EET, Julia wrote:
-     
+
     [....]
 @end verbatim
 @end cartouche
@@ -1571,9 +1571,9 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
     To: Wally the Walrus <wally@example.com>
     Subject: Re: Eau-qui d'eau qui?
     --text follows this line--
-     
+
     On Mon 16 Jan 2012 10:18:47 AM EET, Wally the Walrus wrote:
-     
+
     > Hi Rupert,
     >
     > Dude - how are things?
@@ -2574,8 +2574,8 @@ when starting; see the discussion in the previous section.
           :leave-func (lambda () (mu4e-message "Leaving Private context"))
 	  ;; we match based on the contact-fields of the message
 	  :match-func (lambda (msg)
-			(when msg 
-			  (mu4e-message-contact-field-matches msg 
+			(when msg
+			  (mu4e-message-contact-field-matches msg
 			    :to "aliced@@home.example.com")))
 	  :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
 		   ( user-full-name	    . "Alice Derleth" )
@@ -2615,12 +2615,12 @@ when starting; see the discussion in the previous section.
   ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
   ;; guess or ask the correct context, e.g.
 
-  ;; start with the first (default) context; 
+  ;; start with the first (default) context;
   ;; default is to ask-if-none (ask when there's no context yet, and none match)
   ;; (setq mu4e-context-policy 'pick-first)
 
   ;; compose with the current context is no context matches;
-  ;; default is to ask 
+  ;; default is to ask
   ;; (setq mu4e-compose-context-policy nil)
 @end lisp
 
@@ -2629,25 +2629,25 @@ A couple of notes about this example:
 @item You can manually switch the context use @code{M-x mu4e-context-switch},
 by default bound to @kbd{;} in headers, view and main mode.
 The current context appears in the mode-line.
-@item Normally, @code{M-x mu4e-context-switch} does not call the enter or 
+@item Normally, @code{M-x mu4e-context-switch} does not call the enter or
 leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to
 invoke those function even in that case.
-@item The function @code{mu4e-context-current} returns the current-context; 
+@item The function @code{mu4e-context-current} returns the current-context;
 the current context is also visible in the mode-line when in
 headers, view or main mode.
-@item You can set any kind of variable; including settings for mail servers etc. 
+@item You can set any kind of variable; including settings for mail servers etc.
 However, settings such as @code{mu4e-maildir} and @code{mu4e-mu-home} are
 not changeable after they have been set without quitting @t{mu4e} first.
-@item @code{leave-func} (if defined) for the context we are leaving, is invoked 
+@item @code{leave-func} (if defined) for the context we are leaving, is invoked
 before the @code{enter-func} (if defined) of the
 context we are entering.
 @item @code{enter-func} (if defined) is invoked before setting the variables.
 @item @code{match-func} (if defined) is invoked just before @code{mu4e-compose-pre-hook}.
 @item See the variables @code{mu4e-context-policy} and
-@code{mu4e-compose-context-policy} to tweak what @t{mu4e} should do when 
+@code{mu4e-compose-context-policy} to tweak what @t{mu4e} should do when
 no context matches (or if you always want to be asked).
-@item Finally, be careful to get the quotations right --- backticks, single quotes 
+@item Finally, be careful to get the quotations right --- backticks, single quotes
 and commas and note the '.' between variable name and its value.
 @end itemize
 
@@ -3128,41 +3128,42 @@ As a fairly useless example, suppose we insist on reading @t{mu4e} as
 @node Contact functions
 @section Contact functions
 
-It can sometimes be useful to rewrite the contact information that
-@t{mu4e} provides, for example to convert them to some standardized
-format, or to fix spelling errors. And sometimes, you may want to remove
-certain contacts altogether.
+It can sometimes be useful to discard or rewrite the contact
+information that @t{mu4e} provides, for example to fix spelling
+errors, or omit unwanted contacts.
 
-For this, @t{mu4e} provides @code{mu4e-contact-rewrite-function}, which
-passes each contact to a user-provided function, which is expected to
-return either the possibly rewritten contact or @code{nil} to remove the
-contact from the list --- note that the latter can also be achieved using
-@code{mu4e-compose-complete-ignore-address-regexp}.
+To handle this, @t{mu4e} provides
+@code{mu4e-contact-process-function}, which, if defined, is applied to
+each contact. If the result is @t{nil}, the contact is discarded,
+otherwise the (modified or not) contact information is used.
 
-Each of the contacts are property-lists (`plists'), with properties
-@code{:name} (which may be @code{nil}), and @code{:mail}, and a number
-of other properties which you should return unchanged.
+Each contact is a full e-mail address as you would see in a
+contact-field of an e-mail message, e.g.,
+@verbatim
+"Foo Bar" <foo.bar@example.com>
+@end verbatim
+or
+@verbatim
+cuux@example.com
+@end verbatim
 
-Let's look at an example:
+An example @code{mu4e-contact-process-function} might look like:
 
 @lisp
-(defun my-rewrite-function (contact)
-  (let ((name (or (plist-get contact :name) ""))
-	 (mail (plist-get contact :mail)))
-    (cond
-      ;; jonh smiht --> John Smith
-      ((string= "jonh smiht" name) 
-	(plist-put contact :name "John C. Smith")
-	contact) 
-      ;; remove evilspammer from the contacts list
-      ((string= "evilspammer@@example.com" mail) nil)
-      ;; others stay as the are
-      (t contact))))
+(defun my-contact-processor (contact)
+  (cond
+    ;; remove unwanted
+    ((string-match-p "evilspammer@@example.com" contact) nil)
+    ((string-match-p "noreply" contact) nil)
+    ;;
+    ;; jonh smiht --> John Smith
+    ((string-match "jonh smiht" contact)
+       (replace-regexp-in-string "jonh smiht" "John Smith" contact))
+    (t contact)))
 
-(setq mu4e-contact-rewrite-function 'my-rewrite-function)
+(setq mu4e-contact-process-function 'my-contact-processor)
 @end lisp
 
-This function is called for each of your contacts.
 
 @node Utility functions
 @section Utility functions
@@ -3329,7 +3330,7 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
   (setq mu4e-compose-complete-addresses nil)
   (setq bbdb-mua-pop-up t)
   (setq bbdb-mua-pop-up-window-size 5)
-  (setq mu4e-view-show-addresses t)  
+  (setq mu4e-view-show-addresses t)
 @end lisp
 
 @noindent
