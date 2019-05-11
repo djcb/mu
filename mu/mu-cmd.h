@@ -118,13 +118,14 @@ MuError mu_cmd_script (MuConfig *opts, GError **err);
 /**
  * execute the cfind command
  *
+ * @param store store object to use
  * @param opts configuration options
  * @param err receives error information, or NULL
  *
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_cfind (MuConfig *opts, GError **err);
+MuError mu_cmd_cfind (MuStore *store, MuConfig *opts, GError **err);
 
 
 /**

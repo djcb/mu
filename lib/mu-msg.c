@@ -613,6 +613,9 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 	if (!addr)
 		return FALSE;
 
+	self->full_address = internet_address_to_string (
+		addr, NULL, FALSE);
+
 	self->name = internet_address_get_name (addr);
 	if (mu_str_is_empty (self->name)) {
 		self->name = NULL;
@@ -624,20 +627,20 @@ fill_contact (MuMsgContact *self, InternetAddress *addr,
 	 * check, g_mime hits an assert
 	 */
 	if (INTERNET_ADDRESS_IS_MAILBOX(addr))
-		self->address = internet_address_mailbox_get_addr
+		self->email= internet_address_mailbox_get_addr
 			(INTERNET_ADDRESS_MAILBOX(addr));
 	else
-		self->address  = NULL;
+		self->email  = NULL;
 
 	/* if there's no address, just a name, it's probably a local
 	 * address (without @) */
-	if (self->name && !self->address)
-		self->address = self->name;
+	if (self->name && !self->email)
+		self->email = self->name;
 
-	/* note, the address could NULL e.g. when the recipient is something like
-	 * 'Undisclosed recipients'
+	/* note, the address could be NULL e.g. when the recipient is something
+	 * like 'Undisclosed recipients'
 	 */
-	return self->address != NULL;
+	return self->email != NULL;
 }
 
 static void
@@ -652,13 +655,18 @@ address_list_foreach (InternetAddressList *addrlist, MuMsgContactType ctype,
 	len = internet_address_list_length(addrlist);
 
 	for (i = 0; i != len; ++i) {
-		MuMsgContact contact;
+		MuMsgContact	contact;
+		gboolean	keep_going;
+
 		if (!fill_contact(&contact,
 				  internet_address_list_get_address (addrlist, i),
 				  ctype))
 			continue;
 
-		if (!(func)(&contact, user_data))
+		keep_going = func(&contact, user_data);
+		g_free ((char*)contact.full_address);
+
+		if (!keep_going)
 			break;
 	}
 }

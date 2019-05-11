@@ -63,7 +63,8 @@ noinst_LTLIBRARIES=				\
 libmu_la_SOURCES=				\
 	mu-bookmarks.c				\
 	mu-bookmarks.h				\
-	mu-contacts.c				\
+	mu-contacts.cc				\
+	mu-contacts.hh				\
 	mu-contacts.h				\
 	mu-container.c				\
 	mu-container.h				\

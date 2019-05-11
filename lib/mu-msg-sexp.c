@@ -90,21 +90,21 @@ struct _ContactData {
 typedef struct _ContactData ContactData;
 
 static gchar*
-get_name_addr_pair (MuMsgContact *c)
+get_name_email_pair (MuMsgContact *c)
 {
-	gchar *name, *addr, *pair;
+	gchar *name, *email, *pair;
 
-	name = (char*)mu_msg_contact_name(c);
-	addr = (char*)mu_msg_contact_address(c);
+	name  = (char*)mu_msg_contact_name(c);
+	email = (char*)mu_msg_contact_email(c);
 
-	name = name ? mu_str_escape_c_literal (name, TRUE) : NULL;
-	addr = addr ? mu_str_escape_c_literal (addr, TRUE) : NULL;
+	name  = name ? mu_str_escape_c_literal (name, TRUE) : NULL;
+	email = email ? mu_str_escape_c_literal (email, TRUE) : NULL;
 
 	pair = g_strdup_printf ("(%s . %s)",
 				name ? name : "nil",
-				addr ? addr : "nil");
+				email ? email : "nil");
 	g_free (name);
-	g_free (addr);
+	g_free (email);
 
 	return pair;
 }
@@ -156,7 +156,7 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 
 	cdata->prev_ctype = ctype;
 
-	pair = get_name_addr_pair (c);
+	pair = get_name_email_pair (c);
 	g_string_append (cdata->gstr, pair);
 	g_free (pair);
 

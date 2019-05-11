@@ -545,10 +545,11 @@ typedef guint MuMsgContactType;
 	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
 struct _MuMsgContact {
-	const char		*name;	    /* Foo Bar */
-	const char		*address;   /* foo@bar.cuux */
-	MuMsgContactType	 type;	    /* MU_MSG_CONTACT_TYPE_{ TO,
-					     * CC, BCC, FROM, REPLY_TO} */
+	const char		*name;	       /**< Foo Bar */
+	const char		*email;        /**< foo@bar.cuux */
+	const char              *full_address; /**< Foo Bar <foo@bar.cuux> */
+	MuMsgContactType	 type;	       /**< MU_MSG_CONTACT_TYPE_{ TO,
+						  CC, BCC, FROM, REPLY_TO} */
 };
 typedef struct _MuMsgContact	 MuMsgContact;
 
@@ -563,13 +564,13 @@ typedef struct _MuMsgContact	 MuMsgContact;
 #define mu_msg_contact_name(ct)    ((ct)->name)
 
 /**
- * macro to get the address of a contact
+ * macro to get the email address of a contact
  *
  * @param ct a MuMsgContact
  *
  * @return the address
  */
-#define mu_msg_contact_address(ct) ((ct)->address)
+#define mu_msg_contact_email(ct) ((ct)->email)
 
 /**
  * macro to get the contact type

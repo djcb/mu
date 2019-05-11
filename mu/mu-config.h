@@ -47,6 +47,7 @@ enum _MuConfigFormat {
 	MU_CONFIG_FORMAT_CSV,		/* comma-sep'd values */
 	MU_CONFIG_FORMAT_ORG_CONTACT,	/* org-contact */
 	MU_CONFIG_FORMAT_BBDB,		/* BBDB */
+	MU_CONFIG_FORMAT_DEBUG,
 
 	/* for find, view */
 	MU_CONFIG_FORMAT_SEXP,		/* output sexps (emacs) */

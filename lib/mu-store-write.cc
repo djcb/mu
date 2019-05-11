@@ -40,7 +40,7 @@
 #include "mu-str.h"
 #include "mu-date.h"
 #include "mu-flags.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 
 void
 _MuStore::begin_transaction ()
@@ -133,8 +133,7 @@ mu_store_new_writable (const char* xpath, const char *contacts_cache,
 	try {
 		try {
 			MuStore *store;
-			store = new _MuStore (xpath, contacts_cache,
-					      rebuild ? true : false);
+			store = new _MuStore (xpath, rebuild ? true : false);
 			add_synonyms (store);
 			return store;
 
@@ -190,20 +189,19 @@ mu_store_clear (MuStore *store, GError **err)
 
 
 void
-mu_store_flush (MuStore *store)
-{
-	g_return_if_fail (store);
+mu_store_flush (MuStore *store) try {
 
-	try {
-		if (store->in_transaction())
-			store->commit_transaction ();
-		store->db_writable()->commit ();
+        g_return_if_fail (store);
 
-	} MU_XAPIAN_CATCH_BLOCK;
+        if (store->in_transaction())
+                store->commit_transaction ();
+        store->db_writable()->commit ();
 
-	if (store->contacts())
-		mu_contacts_serialize (store->contacts());
-}
+        if (store->contacts())
+                store->db_writable()->set_metadata(MU_CONTACTS_CACHE,
+                                                   store->contacts()->serialize());
+
+} MU_XAPIAN_CATCH_BLOCK;
 
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -596,16 +594,18 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		termgen.index_text (flat, 1, pfx);
 	}
 
-	if (!mu_str_is_empty(contact->address)) {
-		const auto flat = Mux::utf8_flatten(contact->address);
+	if (!mu_str_is_empty(contact->email)) {
+		const auto flat = Mux::utf8_flatten(contact->email);
 		add_term(*msgdoc->_doc, pfx + flat);
-		add_address_subfields (*msgdoc->_doc, contact->address, pfx);
+		add_address_subfields (*msgdoc->_doc, contact->email, pfx);
 		/* store it also in our contacts cache */
-		if (msgdoc->_store->contacts())
-			mu_contacts_add (msgdoc->_store->contacts(),
-					 contact->address, contact->name,
-					 msgdoc->_personal,
-					 mu_msg_get_date(msgdoc->_msg));
+		auto contacts = msgdoc->_store->contacts();
+		if (contacts)
+			contacts->add(Mu::ContactInfo(contact->full_address,
+						      contact->email,
+						      contact->name ? contact->name : "",
+						      msgdoc->_personal,
+						      mu_msg_get_date(msgdoc->_msg)));
 	}
 
 	return TRUE;
@@ -617,12 +617,12 @@ each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 {
 	GSList *cur;
 
-	if (msgdoc->_personal || !contact->address)
+	if (msgdoc->_personal || !contact->email)
 		return TRUE;
 
 	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
 		if (g_ascii_strcasecmp (
-			    contact->address, (const char*)cur->data) == 0) {
+			    contact->email, (const char*)cur->data) == 0) {
 			msgdoc->_personal = TRUE;
 			break;
 		}

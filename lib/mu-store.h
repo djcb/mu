@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include <mu-msg.h>
 #include <mu-util.h> /* for MuError, MuError */
+#include <mu-contacts.h>
 
 G_BEGIN_DECLS
 
@@ -144,6 +145,16 @@ void  mu_store_set_batch_size (MuStore *store, guint batchsize);
  * @param my_addresses a char** of email addresses
  */
 void mu_store_set_my_addresses (MuStore *store, const char **my_addresses);
+
+
+/**
+ * Get the a MuContacts* ptr for this store.
+ *
+ * @param store a store
+ *
+ * @return the contacts ptr
+ */
+MuContacts* mu_store_contacts (MuStore *store);
 
 
 /**

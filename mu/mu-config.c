@@ -54,7 +54,8 @@ get_output_format (const char *formatstr)
 		{"json",	MU_CONFIG_FORMAT_JSON},
 		{"xml",		MU_CONFIG_FORMAT_XML},
 		{"xquery",	MU_CONFIG_FORMAT_XQUERY},
-		{"mquery",	MU_CONFIG_FORMAT_MQUERY}
+		{"mquery",	MU_CONFIG_FORMAT_MQUERY},
+		{"debug",	MU_CONFIG_FORMAT_DEBUG}
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(formats); i++)
