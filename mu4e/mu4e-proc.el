@@ -187,7 +187,8 @@ The server output is as follows:
     ;; note: we use 'member', to match (:contacts nil)
     ((plist-member sexp :contacts)
       (funcall mu4e-contacts-func
-        (plist-get sexp :contacts)))
+        (plist-get sexp :contacts)
+        (plist-get sexp :tstamp)))
 
     ;; something got moved/flags changed
     ((plist-get sexp :update)
@@ -495,15 +496,17 @@ to a temporary file, then respond with
   "Sends a ping to the mu server, expecting a (:pong ...) in response."
   (mu4e~proc-send-command "cmd:ping"))
 
-(defun mu4e~proc-contacts (personal after)
-  "Sends the contacts command to the mu server.
-A (:contacts (<list>)) is expected in response. If PERSONAL is
-non-nil, only get personal contacts, if AFTER is non-nil, get
-only contacts seen AFTER (the time_t value)."
+(defun mu4e~proc-contacts (personal after tstamp)
+  "Ask for contacts with PERSONAL AFTER TSTAMP.
+S-expression (:contacts (<list>) :tstamp \"<tstamp>\") is expected in
+response. If PERSONAL is non-nil, only get personal contacts, if
+AFTER is non-nil, get only contacts seen AFTER (the time_t
+value)."
   (mu4e~proc-send-command
-    "cmd:contacts personal:%s after:%d"
+    "cmd:contacts personal:%s after:%d tstamp:%s"
     (if personal "true" "false")
-    (or after 0)))
+    (or after 0)
+    (or tstamp "0")))
 
 (defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
   "Get a message DOCID-OR-MSGID.

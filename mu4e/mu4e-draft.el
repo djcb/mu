@@ -262,6 +262,45 @@ message. Return nil if there are no recipients for the particular field."
       (otherwise
 	(mu4e-error "Unsupported field")))))
 
+;;; RFC2822 handling of phrases in mail-addresses
+;;; The optional display-name contains a phrase, it sits before the angle-addr
+;;; as specified in RFC2822 for email-addresses in header fields.
+;;; contributed by jhelberg
+
+(defun mu4e~rfc822-phrase-type (ph)
+  "Return either atom, quoted-string, a corner-case or nil. This
+   checks for empty string first. Then quotes around the phrase
+   (returning 'rfc822-quoted-string). Then whether there is a quote
+   inside the phrase (returning 'rfc822-containing-quote).
+   The reverse of the RFC atext definition is then tested.
+   If it matches, nil is returned, if not, it is an 'rfc822-atom, which
+   is returned."
+  (cond
+    ((= (length ph) 0) 'rfc822-empty)
+    ((= (aref ph 0) ?\")
+      (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
+	'rfc822-quoted-string
+	'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
+    ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
+    ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
+    (t 'rfc822-atom)))
+
+(defun mu4e~rfc822-quoteit (ph)
+  "Quote RFC822 phrase only if necessary.
+   Atoms and quoted strings don't need quotes. The rest do.  In
+   case a phrase contains a quote, it will be escaped."
+  (let ((type (mu4e~rfc822-phrase-type ph)))
+    (cond
+      ((eq type 'rfc822-atom) ph)
+      ((eq type 'rfc822-quoted-string) ph)
+      ((eq type 'rfc822-containing-quote)
+        (format "\"%s\""
+	  (replace-regexp-in-string "\"" "\\\\\"" ph)))
+      (t (format "\"%s\"" ph)))))
+
+
+
+
 
 (defun mu4e~draft-from-construct ()
   "Construct a value for the From:-field of the reply to MSG,
