@@ -77,4 +77,4 @@ of any additional options for gnuplot."
     (close-pipe gnuplot)))
 
 ;; backward compatibility
-(define mu-plot mu:plot-histogram)
+(define mu:plot mu:plot-histogram)
