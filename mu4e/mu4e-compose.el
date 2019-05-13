@@ -330,8 +330,8 @@ appear on disk."
       ;; our contacts are already sorted - just need to tell the
       ;; completion machinery not to try to undo that...
       '(metadata
-	 (display-sort-function . mu4e~sort-contacts-for-completion)
-	 (cycle-sort-function   . mu4e~sort-contacts-for-completion)))))
+	 (display-sort-function . identity)
+	 (cycle-sort-function   . identity)))))
 
 (defun mu4e~compose-complete-contact (&optional start)
   "Complete the text at START with a contact.
