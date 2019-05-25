@@ -37,7 +37,6 @@ AM_CFLAGS=					\
 	$(json_flag)				\
 	-Wno-format-nonliteral			\
 	-Wno-switch-enum			\
-	-Wno-suggest-attribute=format		\
 	-Wno-deprecated-declarations		\
 	-Wno-inline
 

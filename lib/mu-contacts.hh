@@ -23,6 +23,7 @@
 #include <memory>
 #include <functional>
 #include <chrono>
+#include <string>
 #include <time.h>
 #include <inttypes.h>
 

@@ -20,7 +20,6 @@
 #include "mu-contacts.hh"
 
 #include <mutex>
-#include <string>
 #include <unordered_map>
 #include <set>
 #include <sstream>
@@ -90,7 +89,7 @@ struct ContactInfoLessThan {
         }
 };
 
-using ContactUMap = std::unordered_map<std::string, ContactInfo, EmailHash, EmailEqual>;
+using ContactUMap = std::unordered_map<const std::string, ContactInfo, EmailHash, EmailEqual>;
 //using ContactUSet = std::unordered_set<ContactInfo, ContactInfoHash, ContactInfoEqual>;
 using ContactSet  = std::set<std::reference_wrapper<const ContactInfo>, ContactInfoLessThan>;
 
@@ -150,7 +149,7 @@ Contacts::serialize() const
         std::lock_guard<std::mutex> l_{priv_->mtx_};
         std::string s;
 
-        for (const auto& item: priv_->contacts_) {
+        for (auto& item: priv_->contacts_) {
                 const auto& ci{item.second};
                 s += Mux::format("%s%s"
                                  "%s%s"
@@ -188,9 +187,9 @@ Contacts::add (ContactInfo&& ci)
                         if (!ci.name.empty())
                                 ci2.name = std::move(ci.name);
                 }
-        } else {
-                 priv_->contacts_.emplace(std::move(email), std::move(ci));
-        }
+        } else
+                priv_->contacts_.emplace(
+                        ContactUMap::value_type(std::move(email), std::move(ci)));
 }
 
 
