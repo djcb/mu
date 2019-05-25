@@ -33,6 +33,8 @@
 (require 'mu4e-message)
 (require 'mu4e-meta)
 
+(declare-function mu4e~proc-extract     "mu4e-proc")
+(declare-function mu4e-headers-search   "mu4e-headers")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
