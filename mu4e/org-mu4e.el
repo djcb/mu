@@ -2,7 +2,7 @@
 ;;; org-mode, and for writing message in org-mode, sending them as
 ;;; rich-text
 ;;
-;; Copyright (C) 2012-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2019 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -31,19 +31,29 @@
 ;; The expect version here is org 8.x
 (require 'org)
 
+(declare-function mu4e-last-query                   "mu4e-headers")
+(declare-function mu4e-message-at-point             "mu4e-message")
+(declare-function mu4e-view-message-with-message-id "mu4e-view")
+(declare-function mu4e-headers-search               "mu4e-headers")
+(declare-function mu4e-error                        "mu4e-utils")
+(declare-function mu4e-message                      "mu4e-message")
+(declare-function mu4e-compose-mode                 "mu4e-compose")
+
+
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
   :group 'mu4e
   :group 'org)
 
 (defvar org-mu4e-link-query-in-headers-mode nil
-  "If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
+  "Prefer linking to the query rather than to the message.
+If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
 
 (defcustom org-mu4e-link-desc-func
   (lambda (msg) (or (plist-get msg :subject) "No subject"))
-  "Function that takes a msg and returns a string for the
-description part of an org-mode link.
+  "Function that takes a msg and returns a description.
+This can be use in org capture templates.
 
 Example usage:
 
@@ -61,48 +71,46 @@ Example usage:
 
 (defun org~mu4e-store-link-query ()
   "Store a link to a mu4e query."
-  (let* ((query (mu4e-last-query))
-	  desc link)
-    (org-store-link-props :type "mu4e" :query query)
-    (setq
-      desc (concat "mu4e:query:" query)
-      link desc)
-    (org-add-link-props :link link :description desc)
+  (let* ((query  (mu4e-last-query))
+          (date (format-time-string (org-time-stamp-format)))
+          ;; seems we get an error when there's no date...
+          (link (concat "mu4e:query:" query)))
+    (org-store-link-props
+      :type "mu4e"
+      :query query
+      :date date)
+    (org-add-link-props
+      :link link
+      :description (format "mu4e-query: '%s'" query))
     link))
+
+(defun org~mu4e-first-address (msg field)
+  "Get address field FIELD from MSG as a string or nil."
+  (let* ((val (plist-get msg field))
+          (name (when val (car (car val))))
+          (addr (when val (cdr (car val)))))
+    (when val
+      (if name
+        (format "%s <%s>" name addr)
+        (format "%s" addr)))))
 
 (defun org~mu4e-store-link-message ()
   "Store a link to a mu4e message."
-  (let* ((msg  (mu4e-message-at-point))
+  (let* ((msg      (mu4e-message-at-point))
           (msgid   (or (plist-get msg :message-id) "<none>"))
-          (from  (or (plist-get msg :from) '(("none" . "none"))))
-          (fromname (car (car from)))
-          (fromaddress (cdr (car from)))
-          (to  (or (plist-get msg :to) '(("none" . "none"))))
-          (toname (car (car to)))
-          (toaddress (cdr (car to)))
-          (fromto (if (mu4e-user-mail-address-p fromaddress)
-                    (format "to %s <%s>" toname toaddress)
-                    (format "from %s <%s>" fromname fromaddress)))
-          (date (plist-get msg :date))
-          (date-ts (format-time-string (org-time-stamp-format t) date))
-          (date-ts-ia (format-time-string (org-time-stamp-format t t) date))
-          (subject  (or (plist-get msg :subject) "<none>"))
-          link)
-    (org-store-link-props :type "mu4e" :link link
-      :message-id msgid)
-    (setq link (concat "mu4e:msgid:" msgid))
-    (org-add-link-props :link link
-      :to (format "%s <%s>" toname toaddress)
-      :toname toname
-      :toaddress toaddress
-      :from (format "%s <%s>" fromname fromaddress)
-      :fromname fromname
-      :fromaddress fromaddress
-      :fromto fromto
-      :date date-ts-ia
-      :date-timestamp date-ts
-      :date-timestamp-inactive date-ts-ia
-      :subject subject
+          (date    (plist-get msg :date))
+          (date    (format-time-string (org-time-stamp-format) date))
+          ;; seems we get an error when there's no date...
+          (link    (concat "mu4e:msgid:" msgid)))
+    (org-store-link-props
+      :type        "mu4e"
+      :message-id  msgid
+      :to          (org~mu4e-first-address msg :to)
+      :from        (org~mu4e-first-address msg :from)
+      :date        date
+      :subject     (plist-get msg :subject))
+    (org-add-link-props
+      :link link
       :description (funcall org-mu4e-link-desc-func msg))
     link))
 
@@ -113,7 +121,7 @@ It links to the last known query when in `mu4e-headers-mode' with
 a specific message, based on its message-id, so that links stay
 valid even after moving the message around."
   (if (and (eq major-mode 'mu4e-headers-mode)
-	org-mu4e-link-query-in-headers-mode)
+  org-mu4e-link-query-in-headers-mode)
     (org~mu4e-store-link-query)
     (when (mu4e-message-at-point t)
       (org~mu4e-store-link-message))))
@@ -122,26 +130,27 @@ valid even after moving the message around."
 ;; Instead we will use the org-link-set-parameters method
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "mu4e"
-			     :follow #'org-mu4e-open
-			     :store #'org-mu4e-store-link)
+           :follow #'org-mu4e-open
+           :store #'org-mu4e-store-link)
   (org-add-link-type "mu4e" 'org-mu4e-open)
   (add-hook 'org-store-link-functions 'org-mu4e-store-link))
 
-(defun org-mu4e-open (path)
-  "Open the mu4e message (for paths starting with 'msgid:') or run
-the query (for paths starting with 'query:')."
+(defun org-mu4e-open (link)
+  "Open the org LINK.
+Open the mu4e message (for links starting with 'msgid:') or run
+the query (for links starting with 'query:')."
   (require 'mu4e)
   (cond
-    ((string-match "^msgid:\\(.+\\)" path)
-      (mu4e-view-message-with-message-id (match-string 1 path)))
-    ((string-match "^query:\\(.+\\)" path)
-      (mu4e-headers-search (match-string 1 path) current-prefix-arg))
-    (t (mu4e-error "mu4e: unrecognized link type '%s'" path))))
+    ((string-match "^msgid:\\(.+\\)" link)
+      (mu4e-view-message-with-message-id (match-string 1 link)))
+    ((string-match "^query:\\(.+\\)" link)
+      (mu4e-headers-search (match-string 1 link) current-prefix-arg))
+    (t (mu4e-error "Unrecognized link type '%s'" link))))
 
 (defun org-mu4e-store-and-capture ()
-  "Store a link to the current message or query (depending on
-`org-mu4e-link-query-in-headers-mode', and capture it with
-org-mode)."
+  "Store a link to the current message or query.
+\(depending on `org-mu4e-link-query-in-headers-mode', and capture
+it with org)."
   (interactive)
   (call-interactively 'org-store-link)
   (org-capture))
@@ -155,14 +164,14 @@ org-mode)."
 ;;
 ;; EXPERIMENTAL
 (defun org~mu4e-mime-file (ext path id)
-  "Create a file for an attachment."
+  "Create a file of type EXT at PATH with ID for an attachment."
   (format (concat "<#part type=\"%s\" filename=\"%s\" "
-	    "disposition=inline id=\"<%s>\">\n<#/part>\n")
+      "disposition=inline id=\"<%s>\">\n<#/part>\n")
     ext path id))
 
 (defun org~mu4e-mime-multipart (plain html &optional images)
-  "Create a multipart/alternative with text/plain and text/html alternatives.
-If the html portion of the message includes images, wrap the html
+  "Create a multipart/alternative with PLAIN and HTML alternatives.
+If the html portion of the message includes IMAGES, wrap the html
 and images in a multipart/related part."
   (concat "<#multipart type=alternative><#part type=text/plain>"
     plain
@@ -174,7 +183,7 @@ and images in a multipart/related part."
     "<#/multipart>\n"))
 
 (defun org~mu4e-mime-replace-images (str current-file)
-  "Replace images in html files with cid links."
+  "Replace images in html files STR in CURRENT-FILE with cid links."
   (let (html-images)
     (cons
      (replace-regexp-in-string ;; replace images in html
@@ -190,7 +199,7 @@ and images in a multipart/related part."
                 (id (replace-regexp-in-string "[\/\\\\]" "_" path)))
            (add-to-list 'html-images
                         (org~mu4e-mime-file
-			  (concat "image/" ext) path id))
+        (concat "image/" ext) path id))
            id)))
       str)
      html-images)))
@@ -198,38 +207,38 @@ and images in a multipart/related part."
 (defun org~mu4e-mime-convert-to-html ()
   "Convert the current body to html."
   (unless (fboundp 'org-export-string-as)
-    (mu4e-error "require function 'org-export-string-as not found"))
+    (mu4e-error "Required function 'org-export-string-as not found"))
   (let* ((begin
-	     (save-excursion
-	       (goto-char (point-min))
-	       (search-forward mail-header-separator)))
-	    (end (point-max))
-	    (raw-body (buffer-substring begin end))
-	    (tmp-file (make-temp-name (expand-file-name "mail"
-					temporary-file-directory)))
-	    ;; because we probably don't want to skip part of our mail
-	    (org-export-skip-text-before-1st-heading nil)
-	    ;; because we probably don't want to export a huge style file
-	    (org-export-htmlize-output-type 'inline-css)
-	    ;; makes the replies with ">"s look nicer
-	    (org-export-preserve-breaks t)
-	    ;; dvipng for inline latex because MathJax doesn't work in mail
-	    (org-export-with-LaTeX-fragments
-	      (if (executable-find "dvipng") 'dvipng
-	        (mu4e-message "Cannot find dvipng, ignore inline LaTeX") nil))
-	    ;; to hold attachments for inline html images
-	    (html-and-images
-	      (org~mu4e-mime-replace-images
+       (save-excursion
+         (goto-char (point-min))
+         (search-forward mail-header-separator)))
+      (end (point-max))
+      (raw-body (buffer-substring begin end))
+      (tmp-file (make-temp-name (expand-file-name "mail"
+          temporary-file-directory)))
+      ;; because we probably don't want to skip part of our mail
+      (org-export-skip-text-before-1st-heading nil)
+      ;; because we probably don't want to export a huge style file
+      (org-export-htmlize-output-type 'inline-css)
+      ;; makes the replies with ">"s look nicer
+      (org-export-preserve-breaks t)
+      ;; dvipng for inline latex because MathJax doesn't work in mail
+      (org-export-with-LaTeX-fragments
+        (if (executable-find "dvipng") 'dvipng
+          (mu4e-message "Cannot find dvipng, ignore inline LaTeX") nil))
+      ;; to hold attachments for inline html images
+      (html-and-images
+        (org~mu4e-mime-replace-images
                 (org-export-string-as raw-body 'html t)
-		tmp-file))
-	    (html-images (cdr html-and-images))
-	    (html (car html-and-images)))
+    tmp-file))
+      (html-images (cdr html-and-images))
+      (html (car html-and-images)))
       (delete-region begin end)
       (save-excursion
-	(goto-char begin)
-	(newline)
-	(insert (org~mu4e-mime-multipart
-		  raw-body html (mapconcat 'identity html-images "\n"))))))
+  (goto-char begin)
+  (newline)
+  (insert (org~mu4e-mime-multipart
+      raw-body html (mapconcat 'identity html-images "\n"))))))
 
 ;; next some functions to make the org/mu4e-compose-mode switch as smooth as
 ;; possible.
@@ -238,10 +247,10 @@ and images in a multipart/related part."
   (save-excursion
     (goto-char (point-min))
     (let* ((eoh (when (search-forward mail-header-separator)
-		  (match-end 0)))
-	    (olay (make-overlay (point-min) eoh)))
+      (match-end 0)))
+      (olay (make-overlay (point-min) eoh)))
       (when olay
-	(overlay-put olay 'face 'font-lock-comment-face)))))
+  (overlay-put olay 'face 'font-lock-comment-face)))))
 
 (defun org~mu4e-mime-undecorate-headers ()
   "Don't make the headers visually distinctive.
@@ -249,7 +258,7 @@ and images in a multipart/related part."
   (save-excursion
     (goto-char (point-min))
     (let* ((eoh (when (search-forward mail-header-separator)
-		  (match-end 0))))
+      (match-end 0))))
       (remove-overlays (point-min) eoh))))
 
 (defvar org-mu4e-convert-to-html nil
@@ -269,34 +278,34 @@ rich-text version of what is assumed to be an org mode body."
 or org-mode (when in the body)."
   (interactive)
   (let* ((sepapoint
-	   (save-excursion
-	     (goto-char (point-min))
-	     (search-forward-regexp mail-header-separator nil t))))
+     (save-excursion
+       (goto-char (point-min))
+       (search-forward-regexp mail-header-separator nil t))))
     ;; only do stuff when the sepapoint exist; note that after sending the
     ;; message, this function maybe called on a message with the sepapoint
     ;; stripped. This is why we don't use `message-point-in-header'.
     (when sepapoint
       (cond
-	;; we're in the body, but in mu4e-compose-mode?
-	;; if so, switch to org-mode
-	((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
-	  (org-mode)
-	  (add-hook 'before-save-hook
-	    (lambda ()
-	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
-	    nil t)
-	  (org~mu4e-mime-decorate-headers)
-	  (local-set-key (kbd "M-m")
-	    (lambda (keyseq)
-	      (interactive "kEnter mu4e-compose-mode key sequence: ")
-	      (let ((func (lookup-key mu4e-compose-mode-map keyseq)))
-		(if func (funcall func) (insert keyseq))))))
-	;; we're in the headers, but in org-mode?
-	;; if so, switch to mu4e-compose-mode
-	((and (<= (point) sepapoint) (eq major-mode 'org-mode))
-      	  (org~mu4e-mime-undecorate-headers)
-	  (mu4e-compose-mode)
-	  (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
+  ;; we're in the body, but in mu4e-compose-mode?
+  ;; if so, switch to org-mode
+  ((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
+    (org-mode)
+    (add-hook 'before-save-hook
+      (lambda ()
+        (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
+      nil t)
+    (org~mu4e-mime-decorate-headers)
+    (local-set-key (kbd "M-m")
+      (lambda (keyseq)
+        (interactive "kEnter mu4e-compose-mode key sequence: ")
+        (let ((func (lookup-key mu4e-compose-mode-map keyseq)))
+    (if func (funcall func) (insert keyseq))))))
+  ;; we're in the headers, but in org-mode?
+  ;; if so, switch to mu4e-compose-mode
+  ((and (<= (point) sepapoint) (eq major-mode 'org-mode))
+          (org~mu4e-mime-undecorate-headers)
+    (mu4e-compose-mode)
+    (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
       ;; and add the hook
       (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
 
@@ -313,9 +322,9 @@ Edit the message body using org mode. DEPRECATED."
     (progn
       (org~mu4e-mime-switch-headers-or-body)
       (mu4e-message
-	(concat
-	  "org-mu4e-compose-org-mode enabled; "
-	  "press M-m before issuing message-mode commands")))
+  (concat
+    "org-mu4e-compose-org-mode enabled; "
+    "press M-m before issuing message-mode commands")))
     (progn ;; otherwise, remove crap
       (remove-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t)
       (org~mu4e-mime-undecorate-headers) ;; shut off org-mode stuff
