@@ -289,7 +289,7 @@ PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
 
 (defvar mu4e-headers-full-search nil
   "Whether to show all results.
-If this is nil show results up to `mu4e-search-results-limit')")
+If this is nil show results up to `mu4e-headers-results-limit')")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
