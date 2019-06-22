@@ -53,10 +53,7 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
-# for now, use AM_PROG_LIBTOOL, as we don't want to require too new
-# an autotools setup
-AM_PROG_LIBTOOL
-#LT_INIT([disable-shared])
+LT_INIT([disable-shared])
 
 AC_PROG_AWK
 AC_CHECK_PROG(SORT,sort,sort)
