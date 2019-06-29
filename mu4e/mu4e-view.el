@@ -978,6 +978,36 @@ If the url is mailto link, start writing an email to that address."
   "Regexp that matches the beginning of http:/https:/mailto:
 URLs; match-string 1 will contain the matched URL, if any.")
 
+(defvar mu4e-view-url-washers nil
+  "A list of functions which can replace displayed URL text and/or targets.
+
+When displaying a URL, the list is walked, stopping at the first
+function which returns non-`nil' on the given URL, and using its
+return value for the URL text displayed and potentially replacing
+the link target as well.
+
+Each function in the list must accept a single argument, which is
+the string representing the URL. The return value must be one of:
+
+- `nil', to continue searching.
+
+- A string, which will be used as a replacement display text. The
+  link target will stay the same.
+
+- A two-element list, where the first element is the replacement
+  display text, and the second element the replacement link
+  target.")
+
+(defun mu4e~view-wash-url (url)
+  (catch 'found
+    (dolist (washer mu4e-view-url-washers)
+      (let ((result (funcall washer url)))
+        (if result
+            (throw 'found
+                   (if (consp result)
+                       result
+                     (list result result))))))))
+
 ;; this is fairly simplistic...
 (defun mu4e~view-make-urls-clickable ()
   "Turn things that look like URLs into clickable things.
@@ -991,17 +1021,21 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	(let ((bounds (thing-at-point-bounds-of-url-at-point)))
 	  (when bounds
 	    (let* ((url (thing-at-point-url-at-point))
-		    (ov (make-overlay (car bounds) (cdr bounds))))
+		   (ov (make-overlay (car bounds) (cdr bounds)))
+		   (washed (mu4e~view-wash-url url)))
 	      (puthash (cl-incf num) url mu4e~view-link-map)
 	      (add-text-properties
 		(car bounds)
 		(cdr bounds)
 		`(face mu4e-link-face
 		   mouse-face highlight
-		   mu4e-url ,url
+		   mu4e-url ,(if washed (nth 1 washed) url)
 		   keymap ,mu4e-view-clickable-urls-keymap
+		   ,@(if washed `(display ,(nth 0 washed)) nil)
 		   help-echo
-		   "[mouse-1] or [M-RET] to open the link"))
+		   ,(if (or (not washed) (string= (nth 0 washed) (nth 1 washed)))
+			"[mouse-1] or [M-RET] to open"
+		      (format "[mouse-1] or [M-RET] to open <%s>" (nth 1 washed)))))
 	      (overlay-put ov 'after-string
 		(propertize (format "\u200B[%d]" num)
 		  'face 'mu4e-url-number-face)))))))))
