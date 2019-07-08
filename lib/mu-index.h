@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,10 +42,10 @@ struct _MuIndexStats {
 typedef struct _MuIndexStats MuIndexStats;
 
 /**
- * create a new MuIndex instance. NOTE(1): the database does not have
+ * create a new MuIndex instance. NOTE: the database does not have
  * to exist yet, but the directory must already exist; NOTE(2): before
  * doing anything with the returned Index object, make sure you haved
- * called g_type_init, and mu_msg_init somewhere in your code.
+ * called mu_msg_init somewhere in your code.
  *
  * @param store a writable MuStore object
  * @param err to receive error or NULL; there are only errors when this

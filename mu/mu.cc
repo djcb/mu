@@ -1,7 +1,7 @@
 /* -*-mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8-*- */
 
 /*
-** Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -37,7 +37,7 @@ show_version (void)
 {
 	const char* blurb =
 		"mu (mail indexer/searcher) version " VERSION "\n"
-		"Copyright (C) 2008-2018 Dirk-Jan C. Binnema\n"
+		"Copyright (C) 2008-2019 Dirk-Jan C. Binnema\n"
 		"License GPLv3+: GNU GPL version 3 or later "
 		"<http://gnu.org/licenses/gpl.html>.\n"
 		"This is free software: you are free to change "
@@ -88,15 +88,11 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 int
 main (int argc, char *argv[])
 {
-	GError *err;
-	MuError rv;
-	MuConfig *conf;
+	GError		*err;
+	MuError		 rv;
+	MuConfig	*conf;
 
 	setlocale (LC_ALL, "");
-
-#ifndef GLIB_VERSION_2_36
-	g_type_init ();
-#endif /*GLIB_VERSION_2_36*/
 
 	err = NULL;
 	rv  = MU_OK;
