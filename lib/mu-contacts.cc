@@ -24,6 +24,7 @@
 #include <set>
 #include <sstream>
 #include <functional>
+#include <algorithm>
 
 #include <parser/utils.hh>
 #include <glib.h>
@@ -168,6 +169,15 @@ Contacts::serialize() const
         return s;
 }
 
+
+// for now, we only care about _not_ having newlines.
+static void
+wash (std::string& str)
+{
+        str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+}
+
+
 void
 Contacts::add (ContactInfo&& ci)
 {
@@ -183,12 +193,20 @@ Contacts::add (ContactInfo&& ci)
                 ++ci2.freq;
                 if (ci.last_seen > ci2.last_seen) {
                         ci2.last_seen = ci.last_seen;
+                        wash(ci.email);
                         ci2.email = std::move(ci.email);
-                        if (!ci.name.empty())
+                        if (!ci.name.empty()) {
+                                wash(ci.name);
                                 ci2.name = std::move(ci.name);
+                        }
                 }
-        } else
-                priv_->contacts_.emplace(
+        }
+
+        wash(ci.name);
+        wash(ci.email);
+        wash(ci.full_address);
+
+        priv_->contacts_.emplace(
                         ContactUMap::value_type(std::move(email), std::move(ci)));
 }
 
