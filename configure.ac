@@ -122,32 +122,30 @@ AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNCS([vasprintf strptime])
 AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([*** missing required function timegm])])
 
-# require pkg-config
-AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
-AS_IF([test "x$PKG_CONFIG" = "xno"],[
+# require pkg-config >= 0.28 (release in 2013; should be old enough...)
+# with that version, we don't need the AC_SUBST stuff after PKG_CHECK.
+m4_ifndef([PKG_PROG_PKG_CONFIG],
+   [m4_fatal([please install pkg-config >= 0.28 before running autoconf/autogen])])
+PKG_PROG_PKG_CONFIG(0.28) # latest version in buildroot
+AS_IF([test -z "$PKG_CONFIG"],[
    AC_MSG_ERROR([
-   *** The pkg-config script could not be found. Make sure it is
-   *** in your path, or set the PKG_CONFIG environment variable
+   *** pkg-config with version >= 0.28 could not be found.
+   ***
+   *** Make sure it is in your path, or set the PKG_CONFIG environment variable
    *** to the full path to pkg-config.])
 ])
 
 # glib2?
 PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.38 gobject-2.0 gio-2.0)
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
-glib_version="`$PKG_CONFIG --modversion glib-2.0`"
+glib_version="$($PKG_CONFIG --modversion glib-2.0)"
 
 # gmime, version 3.0 or higher
 PKG_CHECK_MODULES(GMIME,gmime-3.0)
-AC_SUBST(GMIME_CFLAGS)
-AC_SUBST(GMIME_LIBS)
-gmime_version="`$PKG_CONFIG --modversion gmime-3.0`"
+gmime_version="$($PKG_CONFIG --modversion gmime-3.0)"
 
 # gmime, version 3.0 or higher
 PKG_CHECK_MODULES(JSON_GLIB,json-glib-1.0 >= 1.4,[have_json_glib=yes],[have_json_glib=no])
 AS_IF([test "x$have_json_glib" = "xyes"],[
-  AC_SUBST(JSON_GLIB_CFLAGS)
-  AC_SUBST(JSON_GLIB_LIBS)
   json_glib_version="$($PKG_CONFIG --modversion json-glib-1.0)"
   AC_DEFINE(HAVE_JSON_GLIB,[1], [Do we support json-glib?])
 ])
@@ -193,9 +191,8 @@ AC_DEFINE(MU_STORE_SCHEMA_VERSION,["0.999"], ['Schema' version of the database])
 AC_ARG_ENABLE([gtk],AS_HELP_STRING([--disable-gtk],[Disable GTK+]))
 AS_IF([test "x$enable_gtk" != "xno"],[
      PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk=yes],[have_gtk=no])
-     AC_SUBST(GTK_CFLAGS)
-     AC_SUBST(GTK_LIBS)
-     gtk_version="`$PKG_CONFIG --modversion gtk+-3.0`"])
+     gtk_version="$($PKG_CONFIG --modversion gtk+-3.0)"
+])
 AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk" = "xyes"])
 
 # webkit? needed for the fancy web widget
@@ -204,9 +201,7 @@ AC_ARG_ENABLE([webkit],AS_HELP_STRING([--disable-webkit],[Disable webkit]))
 AS_IF([test "x$enable_webkit" != "xno"],[
        PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0,[have_webkit=yes],[have_webkit=no])
        AS_IF([test "x$have_webkit" = "xyes"],[
-        webkit_version="`$PKG_CONFIG --modversion webkitgtk-3.0`"])
-       AC_SUBST(WEBKIT_CFLAGS)
-       AC_SUBST(WEBKIT_LIBS)
+        webkit_version="$($PKG_CONFIG --modversion webkitgtk-3.0)"])
 ])
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
