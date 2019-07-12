@@ -94,6 +94,8 @@ build-aux/
 /lib/parser/test-tokenizer
 /lib/parser/test-utils
 /lib/parser/tokenize
+*_flymake.*
+*_flymake_*
 /perf.data
 perf.data
 perf.data.old
