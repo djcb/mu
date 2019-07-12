@@ -6,6 +6,14 @@ test -f mu/mu.cc || {
     exit 1
 }
 
+# opportunistically; usually not needed, but occassionaly it'll
+# avoid build errors that would otherwise confuse users.
+test -f Makefile && {
+    echo "*** clear out old things"
+    make distclean 2> /dev/null
+}
+
+
 command -V autoreconf > /dev/null
 if [ $? != 0 ]; then
     echo "*** No autoreconf found, please install it ***"
