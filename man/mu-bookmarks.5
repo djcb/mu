@@ -1,17 +1,18 @@
-.TH MU-BOOKMARKS 5 "May 2011" "User Manuals"
+.TH MU-BOOKMARKS 5 "July 2019" "User Manuals"
 
-.SH NAME 
+.SH NAME
 
 bookmarks \- file with bookmarks (shortcuts) for mu search expressions
 
 .SH DESCRIPTION
 
-Bookmarks are named shortcuts for search queries. They allow using a
-convenient name for often-used queries. The bookmarks are also visible as
-shortcuts in the mu experimental user interfaces, \fImug\fR and \fImug2\fR.
+Bookmarks are named shortcuts for search queries. They allow using a convenient
+name for often-used queries. The bookmarks are also visible as shortcuts in the
+mu experimental user interfaces, \fImug\fR and \fImug2\fR.
 
-\fBmu\fR supports bookmarks stored in a file called \fBbookmarks\fR in the mu
-home directory (typically, this would be \fI~/.mu/bookmarks\fR).
+The bookmarks file is read from \fI<muhome>/bookmarks\fR. On Unix this would
+typically be w be \fI~/.config/mu/bookmarks\fR, but this can be influenced using
+the \fB\-\-muhome\fR parameter for \fBmu-find\fR(1) and \fBmug\fR(1).
 
 The bookmarks file is a typical key=value \fB.ini\fR-file, which is best shown
 by means of an example:
@@ -25,12 +26,6 @@ by means of an example:
 The \fB[mu]\fR group header is required.
 
 For practical uses of bookmarks, see \fBmu-find\fR(1).
-
-.SH LOCATION
-
-The bookmarks file is read from \fI<muhome>/bookmarks\fR. Typically, this
-would be \fI~/.mu/bookmarks\fR, but this can be influenced using the
-\fB\-\-muhome\fR parameter for \fBmu-find\fR(1) and \fBmug\fR(1).
 
 .SH AUTHOR
 

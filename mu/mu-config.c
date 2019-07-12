@@ -69,15 +69,16 @@ get_output_format (const char *formatstr)
 static void
 set_group_mu_defaults (void)
 {
-	gchar *exp;
+	/* If muhome is not set, we use the XDG Base Directory Specification
+	 * locations. */
 
-	if (!MU_CONFIG.muhome)
-		MU_CONFIG.muhome = mu_util_guess_mu_homedir();
-
-	exp = mu_util_dir_expand(MU_CONFIG.muhome);
-	if (exp) {
-		g_free(MU_CONFIG.muhome);
-		MU_CONFIG.muhome = exp;
+	if (MU_CONFIG.muhome) {
+		gchar *exp;
+		exp = mu_util_dir_expand(MU_CONFIG.muhome);
+		if (exp) {
+			g_free(MU_CONFIG.muhome);
+			MU_CONFIG.muhome = exp;
+		}
 	}
 
 	/* check for the MU_NOCOLOR or NO_COLOR env vars; but in any case don't

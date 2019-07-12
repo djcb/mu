@@ -1,4 +1,4 @@
-.TH MU 1 "September 2018" "User Manuals"
+.TH MU 1 "July 2019" "User Manuals"
 
 .SH NAME
 
@@ -120,10 +120,10 @@ including \fBmu\fR without any command.
 
 .TP
 \fB\-\-muhome\fR
-causes \fBmu\fR to use an alternative directory to
-store and read its database and logs. By default, \fBmu\fR uses
-whatever the \fBMU_HOME\fR environment variable is set to; if it is
-not set, \fI~/.mu\fR is used.
+use an alternative directory to store and read the database, write the logs,
+etc. By default, \fBmu\fR uses XDG Base Directory Specification (e.g. on Linux
+by default \fI~/.cache/mu\fR, \fI~/.config/mu\fR). Earlier versions of \fBmu\fR defaulted
+to \fI~/.mu\fR, which now requires \fI\-\-muhome=~/.mu\fR.
 
 .TP
 \fB\-d\fR, \fB\-\-debug\fR
@@ -157,40 +157,7 @@ lists the various command line options.
 .SH ERROR CODES
 
 The various mu subcommands typically exit with 0 (zero) upon success, and
-non-zero when some error occurred. The table lists the various error codes.
-
-.nf
-exit code |  error
-----------+-------------------------------------------
-     1    |  MU_ERROR
-     2    |  MU_ERROR_IN_PARAMETERS
-     3    |  MU_ERROR_INTERNAL
-     4    |  MU_ERROR_NO_MATCHES
-          |
-     11   |  MU_ERROR_XAPIAN
-          |
-     13   |  MU_ERROR_XAPIAN_QUERY
-     14   |  MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE
-     15   |  MU_ERROR_XAPIAN_NOT_UP_TO_DATE
-     16   |  MU_ERROR_XAPIAN_MISSING_DATA
-     17   |  MU_ERROR_XAPIAN_CORRUPTION
-     18   |  MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK
-     30   |  MU_ERROR_GMIME
-          |
-     50   |  MU_ERROR_CONTACTS
-     51   |  MU_ERROR_CONTACTS_CANNOT_RETRIEVE
-          |
-     70   |  MU_ERROR_FILE
-     71   |  MU_ERROR_FILE_INVALID_NAME
-     72   |  MU_ERROR_FILE_CANNOT_LINK
-     73   |  MU_ERROR_FILE_CANNOT_OPEN
-     74   |  MU_ERROR_FILE_CANNOT_READ
-     75   |  MU_ERROR_FILE_CANNOT_CREATE
-     76   |  MU_ERROR_FILE_CANNOT_MKDIR
-     77   |  MU_ERROR_FILE_STAT_FAILED
-     78   |  MU_ERROR_FILE_READDIR_FAILED
-     79   |  MU_ERROR_FILE_INVALID_SOURCE
-.fi
+non-zero when some error occurred.
 
 .SH BUGS
 
@@ -204,3 +171,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .SH "SEE ALSO"
 .BR mu-index (1), mu-find (1), mu-cfind (1), mu-mkdir (1), mu-view (1),
 .BR mu-extract (1), mu-easy (1), mu-bookmarks (5), mu-query (7)
+.BR https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html

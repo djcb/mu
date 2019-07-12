@@ -34,7 +34,8 @@
   :group 'mail)
 
 (defcustom mu4e-mu-home nil
-  "Location of the mu homedir, or nil for the default."
+  "Location of an alternate mu home dir. If not set, use the
+defaults, based on the XDG Base Directory Specification."
   :group 'mu4e
   :type '(choice (const :tag "Default location" nil)
      (directory :tag "Specify location"))

@@ -64,7 +64,6 @@ libmu_la_SOURCES=				\
 	mu-bookmarks.h				\
 	mu-contacts.cc				\
 	mu-contacts.hh				\
-	mu-contacts.h				\
 	mu-container.c				\
 	mu-container.h				\
 	mu-date.c				\
@@ -98,7 +97,7 @@ libmu_la_SOURCES=				\
 	mu-msg.h				\
 	mu-query.cc				\
 	mu-query.h				\
-	mu-runtime.c				\
+	mu-runtime.cc				\
 	mu-runtime.h				\
 	mu-script.c				\
 	mu-script.h				\
@@ -124,7 +123,6 @@ libmu_la_LIBADD=				\
 
 libmu_la_LDFLAGS=				\
 	$(ASAN_LDFLAGS)
-
 
 EXTRA_DIST=					\
 	mu-msg-crypto.c				\

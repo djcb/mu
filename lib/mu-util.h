@@ -60,19 +60,6 @@ char* mu_util_dir_expand (const char* path)
 char* mu_util_guess_maildir (void)
 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-
-/**
- * guess the place of the mu homedir; first try $MU_HOME; if it is
- * unset or non-existant, try ~/.mu. Note, the fallback ~/.mu
- * directory does not necessarily exist. mu_util_check_dir can be used
- * to check that
- *
- * @return the guessed mu homedir, which needs to be freed with g_free
- * when no longer needed.
- */
-gchar* mu_util_guess_mu_homedir (void)
-G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
 /**
  * if path exists, check that's a read/writeable dir; otherwise try to
  * create it (with perms 0700)
