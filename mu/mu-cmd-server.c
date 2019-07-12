@@ -51,7 +51,7 @@
 #include "mu-index.h"
 #include "mu-store.h"
 #include "mu-msg-part.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 
 /* signal handling *****************************************************/
 /*

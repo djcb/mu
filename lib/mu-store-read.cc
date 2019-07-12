@@ -40,7 +40,7 @@
 #include "mu-str.h"
 #include "mu-date.h"
 #include "mu-flags.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 
 
 // note: not re-entrant

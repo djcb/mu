@@ -24,7 +24,7 @@
 #include <inttypes.h>
 #include <mu-msg.h>
 #include <mu-util.h> /* for MuError, MuError */
-#include <mu-contacts.h>
+#include <mu-contacts.hh>
 
 G_BEGIN_DECLS
 

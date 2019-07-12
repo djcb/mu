@@ -27,7 +27,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-date.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 #include "mu-runtime.h"
 
 /**

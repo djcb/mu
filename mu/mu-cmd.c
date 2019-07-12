@@ -35,7 +35,7 @@
 #include "mu-str.h"
 #include "mu-date.h"
 #include "mu-maildir.h"
-#include "mu-contacts.h"
+#include "mu-contacts.hh"
 #include "mu-runtime.h"
 #include "mu-flags.h"
 #include "mu-store.h"
@@ -583,7 +583,6 @@ with_store (store_func func, MuConfig *opts, gboolean read_only,
 	else
 		store = mu_store_new_writable
 			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			 mu_runtime_path(MU_RUNTIME_PATH_CONTACTS),
 			 opts->rebuild, err);
 	if (!store)
 		return MU_G_ERROR_CODE(err);
