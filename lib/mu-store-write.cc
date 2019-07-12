@@ -125,8 +125,7 @@ add_synonyms (MuStore *store)
 
 
 MuStore*
-mu_store_new_writable (const char* xpath, const char *contacts_cache,
-		       gboolean rebuild, GError **err)
+mu_store_new_writable (const char* xpath, gboolean rebuild, GError **err)
 {
 	g_return_val_if_fail (xpath, NULL);
 

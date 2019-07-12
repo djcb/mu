@@ -38,14 +38,12 @@ typedef struct _MuStore MuStore;
  * create a new writable Xapian store, a place to store documents
  *
  * @param path the path to the database
- * @param ccachepath path where to cache the contacts information, or NULL
  * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return a new MuStore object with ref count == 1, or NULL in case
  * of error; free with mu_store_unref
  */
 MuStore*  mu_store_new_writable  (const char *xpath,
-				  const char *ccachepath,
 				  gboolean rebuild, GError **err)
 		 G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
