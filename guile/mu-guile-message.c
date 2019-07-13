@@ -262,7 +262,7 @@ contacts_to_list (MuMsgContact *contact, EachContactData *ecdata)
 	item = scm_list_1
 		(scm_cons
 		 (mu_guile_scm_from_str(mu_msg_contact_name (contact)),
-		  mu_guile_scm_from_str(mu_msg_contact_address (contact))));
+		  mu_guile_scm_from_str(mu_msg_contact_email (contact))));
 
 	ecdata->lst = scm_append_x (scm_list_2(ecdata->lst, item));
 }
