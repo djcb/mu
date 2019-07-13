@@ -405,6 +405,14 @@ predicate function. A value of nil keeps all the addresses."
      (repeat string))
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-reply-recipients 'ask
+  "Which recipients to use when replying to a message.
+May be 'ask, 'all, 'sender."
+  :type '(choice ask
+                 all
+	         sender)
+  :group 'mu4e-compose)
+
 (defcustom mu4e-compose-reply-to-address nil
   "The Reply-To address.
 Useful when this is not equal to the From: address."
@@ -430,6 +438,22 @@ Useful when this is not equal to the From: address."
   "The parent message plist.
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new messages, it is nil.")
+
+(defgroup mu4e-icalendar nil
+  "Icalendar related settings."
+  :group 'mu4e)
+
+(defcustom mu4e-icalendar-trash-after-reply nil
+  "If non-nil, trash the icalendar invitation after replying."
+  :type 'boolean
+  :group 'mu4e-icalendar)
+
+(defcustom mu4e-icalendar-diary-file nil
+  "If non-nil, the file in which to add events upon reply."
+  :type '(choice (const :tag "Do not insert a diary entry" nil)
+                 (string :tag "Insert a diary entry in this file"))
+  :group 'mu4e-icalendar)
+
 
 ;; Folders
 (defgroup mu4e-folders nil
@@ -941,9 +965,9 @@ This before new headers are displayed, to clear the current
 headers buffer. See `mu4e~proc-filter' for the format.")
 
 (defvar mu4e-compose-func 'mu4e~compose-handler
-  "Function called for each comoose message received.
-Ie. the original message that is used as basis for composing a
-new message (ie., either a reply or a forward); the function is
+  "Function called for each compose message received.
+I.e., the original message that is used as basis for composing a
+new message (i.e., either a reply or a forward); the function is
 passed msg and a symbol (either reply or forward). See
 `mu4e~proc-filter' for the format of <msg-plist>.")
 

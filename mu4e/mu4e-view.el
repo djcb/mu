@@ -381,7 +381,10 @@ article-mode."
 	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
 	gnus-original-article-buffer (current-buffer))
       (run-hooks 'gnus-article-decode-hook)
-      (let ((max-specpdl-size mu4e-view-max-specpdl-size))
+      (let ((mu4e~view-rendering t) ; customize gnus in mu4e
+            (max-specpdl-size mu4e-view-max-specpdl-size)
+            (gnus-icalendar-additional-identities
+             mu4e-user-mail-address-list))
         (gnus-article-prepare-display))
       (mu4e-view-mode)
       (setq mu4e~view-message msg)
