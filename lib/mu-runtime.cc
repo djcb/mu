@@ -21,6 +21,8 @@
 #include "mu-util.h"
 
 #include <locale.h> /* for setlocale() */
+
+#include <string>
 #include <unordered_map>
 static std::unordered_map<MuRuntimePath, std::string> RuntimePaths;
 
