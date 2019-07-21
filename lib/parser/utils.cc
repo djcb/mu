@@ -17,7 +17,7 @@
 **  02110-1301, USA.
 */
 
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE_EXTENDED 1
 #include <time.h>
 
 #define GNU_SOURCE
