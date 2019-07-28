@@ -34,7 +34,7 @@
 #include "test-mu-common.h"
 #include "mu-query.h"
 #include "mu-str.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 
 static char* DB_PATH1 = NULL;
 static char* DB_PATH2 = NULL;
@@ -100,7 +100,7 @@ run_and_count_matches_with_query_flags (const char *xpath, const char *query,
 	GError *err;
 
 	err = NULL;
-	store = mu_store_new_read_only (xpath, &err);
+	store = mu_store_new_readable (xpath, &err);
 	if (err) {
 		g_printerr ("error: %s\n", err->message);
 		g_clear_error (&err);
@@ -305,7 +305,7 @@ test_mu_query_accented_chars_01 (void)
 	GError *err;
 	gchar *summ;
 
-	store = mu_store_new_read_only (DB_PATH1, NULL);
+	store = mu_store_new_readable (DB_PATH1, NULL);
 	g_assert (store);
 
 	query = mu_query_new (store, NULL);

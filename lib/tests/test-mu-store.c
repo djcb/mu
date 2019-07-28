@@ -31,7 +31,7 @@
 #include <locale.h>
 
 #include "test-mu-common.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 
 static void
 test_mu_store_new_destroy (void)
@@ -44,7 +44,7 @@ test_mu_store_new_destroy (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_writable (tmpdir, FALSE, &err);
+	store = mu_store_new_create (tmpdir, "/tmp", &err);
 	g_assert_no_error (err);
 	g_assert (store);
 
@@ -68,17 +68,17 @@ test_mu_store_version (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_writable (tmpdir, FALSE, &err);
+	store = mu_store_new_create (tmpdir, "/tmp", &err);
 	g_assert (store);
 	mu_store_unref (store);
-	store = mu_store_new_read_only (tmpdir, &err);
+	store = mu_store_new_readable (tmpdir, &err);
 	g_assert (store);
 
 	g_assert (err == NULL);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
 	g_assert_cmpstr (MU_STORE_SCHEMA_VERSION,==,
-			 mu_store_version(store));
+			 mu_store_schema_version(store));
 
 	mu_store_unref (store);
 	g_free (tmpdir);
@@ -95,7 +95,7 @@ test_mu_store_store_msg_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_writable (tmpdir, FALSE, NULL);
+	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL);
 	g_assert (store);
 	g_free (tmpdir);
 
@@ -153,7 +153,7 @@ test_mu_store_store_msg_remove_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_writable (tmpdir, FALSE, NULL);
+	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));

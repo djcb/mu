@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 
 static gchar *CONTACTS_CACHE = NULL;
 

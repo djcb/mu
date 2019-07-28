@@ -124,7 +124,7 @@ run_and_get_iter_full (const char *xpath, const char *query,
 	MuStore *store;
 	MuMsgIter *iter;
 
-	store = mu_store_new_read_only (xpath, NULL);
+	store = mu_store_new_readable (xpath, NULL);
 	g_assert (store);
 
 	mquery = mu_query_new (store, NULL);

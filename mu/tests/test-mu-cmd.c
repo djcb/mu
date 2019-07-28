@@ -34,7 +34,7 @@
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 
 
 /* tests for the command line interface, uses testdir2 */
@@ -122,7 +122,7 @@ test_mu_index (void)
 
 	xpath = g_strdup_printf ("%s%c%s", DBPATH, G_DIR_SEPARATOR, "xapian");
 
-	store = mu_store_new_read_only (xpath, NULL);
+	store = mu_store_new_readable (xpath, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (mu_store_count (store, NULL), ==, 13);
