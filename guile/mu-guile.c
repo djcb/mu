@@ -29,7 +29,7 @@
 #include <mu-runtime.h>
 #include <mu-query.h>
 #include <mu-runtime.h>
-#include <mu-store.h>
+#include <mu-store.hh>
 #include <mu-query.h>
 #include <mu-msg.h>
 
@@ -89,7 +89,7 @@ mu_guile_init_instance (const char *muhome)
 		return FALSE;
 
 	err = NULL;
-	store = mu_store_new_read_only
+	store = mu_store_new_readable
 		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 		 &err);
 	if (!store)
