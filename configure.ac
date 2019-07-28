@@ -182,7 +182,7 @@ AC_SUBST(XAPIAN_LIBS)
 # note that MU_STORE_SCHEMA_VERSION does not necessarily follow MU
 # versioning, as we hopefully don't have updates for each version;
 # also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_STORE_SCHEMA_VERSION,["1.3"], ['Schema' version of the database])
+AC_DEFINE(MU_STORE_SCHEMA_VERSION,["1.3.1"], ['Schema' version of the database])
 ###############################################################################
 
 ###############################################################################
