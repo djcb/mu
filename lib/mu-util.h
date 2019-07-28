@@ -1,5 +1,3 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -284,15 +282,15 @@ typedef gpointer XapianEnquire;
 
 
 /* print a warning for a GError, and free it */
-#define MU_HANDLE_G_ERROR(GE)						\
-	do {								\
-		if (!(GE))						\
-			g_warning ("%s:%u: an error occured in %s",	\
-				   __FILE__, __LINE__, __func__);	\
-		else {							\
-			g_warning ("error %u: %s", (GE)->code, (GE)->message); \
-			g_error_free ((GE));				\
-		}							\
+#define MU_HANDLE_G_ERROR(GE)							\
+	do {									\
+		if (!(GE))							\
+			g_warning ("%s:%u: an error occured in %s",		\
+				   __FILE__, __LINE__, __func__);		\
+		else {								\
+			g_warning ("error %u: %s", (GE)->code, (GE)->message);	\
+			g_error_free ((GE));					\
+		}								\
 	} while (0)
 
 
@@ -311,72 +309,70 @@ typedef gpointer XapianEnquire;
 	}							\
 
 
-#define MU_XAPIAN_CATCH_BLOCK					\
-	catch (const Xapian::Error &xerr) {			\
-		g_critical ("%s: xapian error '%s'",		\
-			    __func__, xerr.get_msg().c_str());	\
-	} catch (...) {						\
-		g_critical ("%s: caught exception", __func__);	\
-	  }
-
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)				\
-	catch (const Xapian::DatabaseLockError &xerr) {			\
-		mu_util_g_set_error ((GE),				\
-				     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK, \
-				     "%s: xapian error '%s'",		\
-				     __func__, xerr.get_msg().c_str());	\
-	} catch (const Xapian::DatabaseCorruptError &xerr) {		\
-		mu_util_g_set_error ((GE),				\
-				     MU_ERROR_XAPIAN_CORRUPTION,	\
-				     "%s: xapian error '%s'",		\
-				     __func__, xerr.get_msg().c_str());	\
-	  } catch (const Xapian::DatabaseError &xerr) {			\
-		  mu_util_g_set_error ((GE),MU_ERROR_XAPIAN,		\
-				       "%s: xapian error '%s'",		\
-				       __func__, xerr.get_msg().c_str()); \
-	    } catch (const Xapian::Error &xerr) {			\
-		    mu_util_g_set_error ((GE),(E),			\
-					 "%s: xapian error '%s'",	\
-					 __func__, xerr.get_msg().c_str()); \
-	      } catch (...) {						\
-		      mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),	\
-					   "%s: caught exception", __func__); \
-		}
-
-
-#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)				\
-	catch (const Xapian::Error &xerr) {			\
-		g_critical ("%s: xapian error '%s'",		\
-			    __func__, xerr.get_msg().c_str());	\
-		return (R);					\
-	} catch (...) {						\
-		g_critical ("%s: caught exception", __func__);	\
-		return (R);					\
-	  }
-
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)			\
+#define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &xerr) {				\
-		mu_util_g_set_error ((GE),(E),				\
-				     "%s: xapian error '%s'",		\
-				     __func__, xerr.get_msg().c_str());	\
-		return (R);						\
+		g_critical ("%s: xapian error '%s'",			\
+			    __func__, xerr.get_msg().c_str());		\
+	} catch (const std::runtime_error& re) {			\
+		g_critical ("%s: error: %s", __func__, re.what());	\
 	} catch (...) {							\
-		if ((GE)&&!(*(GE)))					\
-			mu_util_g_set_error ((GE),			\
-					     (MU_ERROR_INTERNAL),	\
+		g_critical ("%s: caught exception", __func__);		\
+        }
+
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
+	catch (const Xapian::DatabaseLockError &xerr) {				\
+		mu_util_g_set_error ((GE),					\
+				     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
+				     "%s: xapian error '%s'",			\
+				     __func__, xerr.get_msg().c_str());		\
+	} catch (const Xapian::DatabaseError &xerr) {				\
+		 mu_util_g_set_error ((GE),MU_ERROR_XAPIAN,			\
+				       "%s: xapian error '%s'",			\
+				       __func__, xerr.get_msg().c_str());	\
+	} catch (const Xapian::Error &xerr) {					\
+		mu_util_g_set_error ((GE),(E),					\
+					 "%s: xapian error '%s'",		\
+					 __func__, xerr.get_msg().c_str());	\
+	} catch (const std::runtime_error& ex) {				\
+		mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
+				     "%s: error: %s", __func__, ex.what());	\
+										\
+	} catch (...) {								\
+		mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
+				     "%s: caught exception", __func__);		\
+	}
+
+
+#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)						\
+	catch (const Xapian::Error &xerr) {					\
+		g_critical ("%s: xapian error '%s'",				\
+			    __func__, xerr.get_msg().c_str());			\
+		return (R);							\
+	} catch (const std::runtime_error& ex) {				\
+		g_critical("%s: error: %s", __func__, ex.what());	        \
+		return (R);							\
+	} catch (...) {								\
+		g_critical ("%s: caught exception", __func__);			\
+		return (R);							\
+	}
+
+#define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)				\
+	catch (const Xapian::Error &xerr) {					\
+		mu_util_g_set_error ((GE),(E),					\
+				     "%s: xapian error '%s'",			\
+				     __func__, xerr.get_msg().c_str());		\
+		return (R);							\
+	} catch (const std::runtime_error& ex) {			        \
+		mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
+				     "%s: error: %s", __func__, ex.what());	\
+		return (R);							\
+	} catch (...) {								\
+		if ((GE)&&!(*(GE)))						\
+			mu_util_g_set_error ((GE),				\
+					     (MU_ERROR_INTERNAL),		\
 					     "%s: caught exception", __func__);	\
-		return (R);						\
+		return (R);							\
 	  }
-
-/* the name of the (leaf) dir which has the xapian database */
-#define MU_XAPIAN_DIR_NAME    "xapian"
-
-/* name of the bookmark file */
-#define MU_BOOKMARK_FILENAME "bookmarks"
-
-/* metadata key for the xapian 'schema' version */
-#define MU_STORE_VERSION_KEY "db_version"
-
 
 /**
  * log something in the log file; note, we use G_LOG_LEVEL_INFO
@@ -414,24 +410,20 @@ enum _MuError {
 
 	/* (parsing) error in the query */
 	MU_ERROR_XAPIAN_QUERY                 = 13,
-	/* xapian dir is not accessible */
-	MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE    = 14,
-	/* database version is not up-to-date */
-	MU_ERROR_XAPIAN_VERSION_MISMATCH      = 15,
+
 	/* missing data for a document */
-	MU_ERROR_XAPIAN_MISSING_DATA          = 16,
-	/* database corruption */
-	MU_ERROR_XAPIAN_CORRUPTION            = 17,
+	MU_ERROR_XAPIAN_MISSING_DATA         = 17,
 	/* can't get write lock */
-	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK  = 18,
-	/* database is empty */
-	MU_ERROR_XAPIAN_IS_EMPTY              = 19,
-	/* could not write */
-	MU_ERROR_XAPIAN_STORE_FAILED	      = 20,
+	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK = 19,
+        /* could not write */
+	MU_ERROR_XAPIAN_STORE_FAILED	     = 21,
 	/* could not remove */
-	MU_ERROR_XAPIAN_REMOVE_FAILED	      = 21,
+	MU_ERROR_XAPIAN_REMOVE_FAILED	     = 22,
 	/* database was modified; reload */
-	MU_ERROR_XAPIAN_MODIFIED              = 22,
+	MU_ERROR_XAPIAN_MODIFIED             = 23,
+        /* database was modified; reload */
+	MU_ERROR_XAPIAN_NEEDS_REINDEX        = 24,
+
 
 	/* GMime related errors */
 
@@ -481,36 +473,37 @@ typedef enum _MuError MuError;
 gboolean mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 	G_GNUC_PRINTF(3,4);
 
-
 /**
- * calculate a 64-bit hash for the given string, based on a
- * combination of the DJB and BKDR hash functions
+ * calculate a 64-bit hash for the given string, based on a combination of the
+ * DJB and BKDR hash functions.
  *
  * @param a string
  *
- * @return the hash as a static string, which stays valid until this
- * function is called again.
+ * @return the hash
  */
-static inline const char*
+static inline guint64
 mu_util_get_hash (const char* str)
 {
-	unsigned	djbhash, bkdrhash, bkdrseed;
-	unsigned	u;
-	static char	hex[18];
+	guint32 djbhash;
+        guint32 bkdrhash;
+        guint32 bkdrseed;
 
-	djbhash  = 5381;
-	bkdrhash = 0;
-	bkdrseed = 1313;
+        djbhash  = 5381;
+        bkdrhash = 0;
+        bkdrseed = 1313;
 
-	for(u = 0; str[u]; ++u) {
+        for(unsigned u = 0U; str[u]; ++u) {
 		djbhash  = ((djbhash << 5) + djbhash) + str[u];
 		bkdrhash = bkdrhash * bkdrseed + str[u];
 	}
 
-	snprintf (hex, sizeof(hex), "%08x%08x", djbhash, bkdrhash);
-
-	return hex;
+        guint64 hash = djbhash;
+        return (hash<<32) | bkdrhash;
 }
+
+
+
+
 
 
 #define MU_COLOR_RED		"\x1b[31m"

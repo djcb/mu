@@ -71,11 +71,11 @@ struct ContactInfo {
 class Contacts {
 public:
         /**
-         * Construct a new contacts object
+         * Construct a new contacts objects
          *
          * @param serialized serialized contacts
          */
-        Contacts (const std::string& serialized);
+        Contacts (const std::string& serialized = "");
 
         /**
          * DTOR
@@ -147,7 +147,9 @@ public:
          *
          * @return a MuContacts* refering to this.
          */
-        MuContacts* mu_contacts() { return reinterpret_cast<MuContacts*>(this); }
+        const MuContacts* mu_contacts() const {
+                return reinterpret_cast<const MuContacts*>(this);
+        }
 
 
 
@@ -170,7 +172,7 @@ G_BEGIN_DECLS
  *
  * @return the number of contacts
  */
-size_t mu_contacts_count (MuContacts *self);
+size_t mu_contacts_count (const MuContacts *self);
 
 /**
  * Function called for mu_contacts_foreach; returns the e-mail address, name
@@ -196,7 +198,7 @@ typedef void (*MuContactsForeachFunc) (const char *full_address,
  * @return TRUE if the function succeeded, or FALSE if the provide regular
  * expression was invalid (and not NULL)
  */
-gboolean mu_contacts_foreach (MuContacts *self,
+gboolean mu_contacts_foreach (const MuContacts *self,
                               MuContactsForeachFunc func,
                               gpointer user_data);
 

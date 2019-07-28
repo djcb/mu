@@ -102,10 +102,7 @@ libmu_la_SOURCES=				\
 	mu-script.c				\
 	mu-script.h				\
 	mu-store.cc				\
-	mu-store.h				\
-	mu-store-read.cc			\
-	mu-store-write.cc			\
-	mu-store-priv.hh			\
+	mu-store.hh				\
 	mu-str.c				\
 	mu-str.h				\
 	mu-threader.c				\

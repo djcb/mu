@@ -33,7 +33,6 @@
 #include <errno.h>
 
 #include "mu-maildir.h"
-#include "mu-store.h"
 #include "mu-util.h"
 
 #define	MU_LAST_USED_MAILDIR_KEY "last_used_maildir"
@@ -330,14 +329,6 @@ mu_index_set_max_msg_size (MuIndex *index, guint max_size)
 	else
 		index->_max_filesize = max_size;
 }
-
-void
-mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize)
-{
-	g_return_if_fail (index);
-	mu_store_set_batch_size (index->_store, xbatchsize);
-}
-
 
 
 MuError

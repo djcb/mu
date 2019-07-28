@@ -25,12 +25,13 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include <gmime/gmime.h>
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-maildir.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 #include "mu-msg-priv.h"
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
@@ -650,7 +651,7 @@ get_msgid (MuMsgFile *self, gboolean *do_free)
 		return (char*)msgid;
 	} else { /* if there is none, fake it */
 		*do_free = TRUE;
-		return g_strdup_printf ("%s@fake-msgid",
+		return g_strdup_printf ("%016 " PRIx64  "@fake-msgid",
 					mu_util_get_hash (self->_path));
 	}
 }

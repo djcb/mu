@@ -263,23 +263,23 @@ Contacts::for_each(const EachContactFunc& each_contact) const
 /// C binding
 
 size_t
-mu_contacts_count (MuContacts *self)
+mu_contacts_count (const MuContacts *self)
 {
         g_return_val_if_fail (self, 0);
 
-        auto myself = reinterpret_cast<Mu::Contacts*>(self);
+        auto myself = reinterpret_cast<const Mu::Contacts*>(self);
 
         return myself->size();
 }
 
 gboolean
-mu_contacts_foreach (MuContacts *self, MuContactsForeachFunc func,
+mu_contacts_foreach (const MuContacts *self, MuContactsForeachFunc func,
                      gpointer user_data)
 {
         g_return_val_if_fail (self, FALSE);
         g_return_val_if_fail (func, FALSE);
 
-        auto myself = reinterpret_cast<Mu::Contacts*>(self);
+        auto myself = reinterpret_cast<const Mu::Contacts*>(self);
 
         myself->for_each([&](const ContactInfo& ci) {
                  g_return_if_fail (!ci.email.empty());

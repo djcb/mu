@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <mu-util.h> /* for MuResult */
-#include <mu-store.h>
+#include <mu-store.hh>
 
 G_BEGIN_DECLS
 
@@ -75,16 +75,6 @@ void mu_index_destroy (MuIndex *index);
  * @param max_size the maximum msg size, or 0 to reset to the default
  */
 void mu_index_set_max_msg_size (MuIndex *index, guint max_size);
-
-
-/**
- * change batch size for Xapian store transaction (see
- * 'mu_store_set_batch_size')
- *
- * @param index a mu index object
- * @param max_size the batch size, or 0 to reset to the default
- */
-void mu_index_set_xbatch_size (MuIndex *index, guint xbatchsize);
 
 
 /**

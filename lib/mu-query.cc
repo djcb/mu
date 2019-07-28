@@ -215,12 +215,6 @@ mu_query_new (MuStore *store, GError **err)
 {
 	g_return_val_if_fail (store, NULL);
 
-	if (mu_store_count (store, err) == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_IS_EMPTY,
-			     "database is empty");
-		return 0;
-	}
-
 	try {
 		return new MuQuery (store);
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);

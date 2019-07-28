@@ -21,7 +21,7 @@
 #define __MU_QUERY_H__
 
 #include <glib.h>
-#include <mu-store.h>
+#include <mu-store.hh>
 #include <mu-msg-iter.h>
 #include <mu-util.h>
 
