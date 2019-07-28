@@ -253,13 +253,14 @@ Start the process if needed."
   (unless (file-executable-p mu4e-mu-binary)
     (mu4e-error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
-    (args '("server"))
-    (args (append args (when mu4e-mu-home
-             (list (concat "--muhome=" mu4e-mu-home))))))
+          (args '("server"))
+          (args (append args (when mu4e-mu-home (list (concat "--muhome=" mu4e-mu-home)))))
+          (args (append args (list (concat "--maildir=" mu4e-maildir)))))
     (setq mu4e~proc-buf "")
+    (message "%S" args)
     (setq mu4e~proc-process (apply 'start-process
             mu4e~proc-name mu4e~proc-name
-            mu4e-mu-binary args))
+                              mu4e-mu-binary args))
     ;; register a function for (:info ...) sexps
     (unless mu4e~proc-process
       (mu4e-error "Failed to start the mu4e backend"))
@@ -293,23 +294,19 @@ Start the process if needed."
     (setq mu4e~proc-buf "") ;; clear any half-received sexps
     (cond
       ((eq status 'signal)
-  (cond
-    ((or(eq code 9) (eq code 2)) (message nil))
-      ;;(message "the mu server process has been stopped"))
-    (t (error (format "mu server process received signal %d" code)))))
+        (cond
+          ((or(eq code 9) (eq code 2)) (message nil))
+          ;;(message "the mu server process has been stopped"))
+          (t (error (format "mu server process received signal %d" code)))))
       ((eq status 'exit)
-  (cond
-    ((eq code 0)
-      (message nil)) ;; don't do anything
-    ((eq code 11)
-      (error "Database is locked by another process"))
-    ((eq code 15)
-      (error "Database needs upgrade; try `mu index --rebuild'"))
-    ((eq code 19)
-      (error "Database empty; try indexing some messages"))
-    (t (error "Mu server process ended with exit code %d" code))))
+        (cond
+          ((eq code 0)
+            (message nil)) ;; don't do anything
+          ((eq code 19)
+            (error "Database is locked by another process"))
+          (t (error "Mu server process ended with exit code %d" code))))
       (t
-  (error "Something bad happened to the mu server process")))))
+        (error "Something bad happened to the mu server process")))))
 
 (defun mu4e~docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."

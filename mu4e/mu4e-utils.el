@@ -802,17 +802,20 @@ When successful, call FUNC (if non-nil) afterwards."
 	  (lambda (props)
 	    (setq mu4e~server-props props) ;; save props from the server
 	    (let ((version (plist-get props :version))
-		   (doccount (plist-get props :doccount)))
+		         (doccount (plist-get props :doccount)))
 	      (mu4e~check-requirements)
 	      (when func (funcall func))
+        (when (zerop doccount)
+          (mu4e-message "Store is empty; (re)indexing. This can take a while.");
+          (mu4e-update-index))
 	      (when (and mu4e-update-interval (null mu4e~update-timer))
-		(setq mu4e~update-timer
-		  (run-at-time
-		    0 mu4e-update-interval
-		    (lambda () (mu4e-update-mail-and-index
-				 mu4e-index-update-in-background)))))
+		      (setq mu4e~update-timer
+		        (run-at-time
+		          0 mu4e-update-interval
+		          (lambda () (mu4e-update-mail-and-index
+				                   mu4e-index-update-in-background)))))
 	      (mu4e-message "Started mu4e with %d message%s in store"
-		doccount (if (= doccount 1) "" "s"))))))
+		      doccount (if (= doccount 1) "" "s"))))))
       ;; wake up server
       (mu4e~proc-ping)
       ;; maybe request the list of contacts, automatically refresh after
