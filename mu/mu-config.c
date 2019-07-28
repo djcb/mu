@@ -132,8 +132,6 @@ config_options_group_mu (void)
 		}						\
 	}
 
-
-
 static void
 set_group_index_defaults (void)
 {
@@ -156,16 +154,10 @@ config_options_group_index (void)
 		 "only check dir-timestamps (false)", NULL},
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses,
-		 "my e-mail address (regexp); can be used multiple times",
+		 "my e-mail address; can be used multiple times",
 		 "<address>"},
-		{"autoupgrade", 0, 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.autoupgrade,
-		 "auto-upgrade the database with new mu versions (false)",
-		 NULL},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
-		{"xbatchsize", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.xbatchsize,
-		 "set transaction batchsize for xapian commits (0)", NULL},
 		{"max-msg-size", 0, 0, G_OPTION_ARG_INT,
 		 &MU_CONFIG.max_msg_size,
 		 "set the maximum size for message files", "<size>"},

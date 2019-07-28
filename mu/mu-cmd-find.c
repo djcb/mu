@@ -229,14 +229,8 @@ get_query_obj (MuStore *store, GError **err)
 		return NULL;
 
 	if (count == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_IS_EMPTY,
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
 			     "the database is empty");
-		return NULL;
-	}
-
-	if (!mu_store_versions_match (store)) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_VERSION_MISMATCH,
-			     "the database needs a rebuild");
 		return NULL;
 	}
 

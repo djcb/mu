@@ -34,7 +34,7 @@
 #include "mu-util.h"
 #include "mu-msg.h"
 #include "mu-index.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 #include "mu-runtime.h"
 #include "mu-log.h"
 
@@ -78,12 +78,6 @@ check_params (MuConfig *opts, GError **err)
 	if (opts->params[1]) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
 				     "unexpected parameter");
-		return FALSE;
-	}
-
-	if (opts->xbatchsize < 0) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "the batch size must be >= 0");
 		return FALSE;
 	}
 
@@ -185,36 +179,6 @@ index_msg_cb  (MuIndexStats* stats, IndexData *idata)
 	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
 }
 
-
-
-static gboolean
-database_version_check_and_update (MuStore *store, MuConfig *opts,
-				   GError **err)
-{
-	if (mu_store_count (store, err) == 0)
-		return TRUE;
-
-	/* when rebuilding, we empty the database before doing
-	 * anything */
-	if (opts->rebuild) {
-		g_debug ("clearing database");
-		g_debug ("clearing contacts-cache");
-		return mu_store_clear (store, err);
-	}
-
-	if (mu_store_versions_match (store))
-		return TRUE; /* ok, nothing to do */
-
-	/* ok, database is not up to date */
-	if (opts->autoupgrade) {
-		g_debug ("auto-upgrade: clearing old database and cache");
-		return mu_store_clear (store, err);
-	}
-
-	return FALSE;
-}
-
-
 static void
 show_time (unsigned t, unsigned processed, gboolean color)
 {
@@ -288,17 +252,44 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 
 
 static void
-index_title (const char* maildir, const char* xapiandir, gboolean color)
+index_title (MuStore *store, MuConfig *opts)
 {
-	if (color)
-		g_print ("indexing messages under "
-			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
-			   " ["
-			   MU_COLOR_BLUE "%s" MU_COLOR_DEFAULT
-			   "]\n", maildir, xapiandir);
-	else
-		g_print ("indexing messages under %s [%s]\n",
-			 maildir, xapiandir);
+	const char	 *blue, *green, *def;
+	char		**addrs;
+	int		  i;
+	time_t            created;
+	struct tm	  *tstamp;
+	char		  tbuf[40];
+
+	blue  = opts->nocolor ? "" : MU_COLOR_BLUE;
+	green = opts->nocolor ? "" : MU_COLOR_GREEN;
+	def   = opts->nocolor ? "" : MU_COLOR_DEFAULT;
+
+	g_print ("database           : %s%s%s\n",
+		 green, mu_store_database_path (store), def);
+	g_print ("schema-version     : %s%s%s\n",
+		 green, mu_store_schema_version(store), def);
+
+	created = mu_store_created (store);
+	tstamp = localtime (&created);
+	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
+
+	g_print ("created            : %s%s%s\n", green, tbuf, def);
+	g_print ("maildir            : %s%s%s\n",
+		 green, mu_store_maildir (store), def);
+
+	g_print ("personal-addresses : ");
+
+	addrs = mu_store_personal_addresses (store);
+	for (i = 0; addrs[i]; ++i) {
+		if (i != 0)
+			g_print ("                     ");
+		g_print ("%s%s%s\n", green, addrs[i], def);
+	}
+
+	g_strfreev(addrs);
+
+	g_print ("\n");
 }
 
 
@@ -308,11 +299,6 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 	IndexData	idata;
 	MuError		rv;
 	gboolean	show_progress;
-
-	if (!opts->quiet)
-		index_title (opts->maildir,
-			     mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			     !opts->nocolor);
 
 	show_progress = !opts->quiet && isatty(fileno(stdout));
 	idata.color   = !opts->nocolor;
@@ -345,10 +331,6 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 	if (!check_params (opts, err))
 		return NULL;
 
-	if (!database_version_check_and_update(store, opts, err))
-		return NULL;
-
-
 	if (!check_maildir (opts->maildir, err))
 		return NULL;
 
@@ -357,7 +339,6 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 		return NULL;
 
 	mu_index_set_max_msg_size (midx, opts->max_msg_size);
-	mu_index_set_xbatch_size (midx, opts->xbatchsize);
 
 	return midx;
 }
@@ -366,10 +347,10 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 MuError
 mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 {
-	MuIndex *midx;
-	MuIndexStats stats;
-	gboolean rv;
-	time_t t;
+	MuIndex		*midx;
+	MuIndexStats	 stats;
+	gboolean	 rv;
+	time_t		 t;
 
 	g_return_val_if_fail (opts, FALSE);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
@@ -382,6 +363,9 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 
 	mu_index_stats_clear (&stats);
 	install_sig_handler ();
+
+	if (!opts->quiet)
+		index_title (store, opts);
 
 	t = time (NULL);
 	rv = cmd_index (midx, opts, &stats, err);

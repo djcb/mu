@@ -19,13 +19,12 @@
 **
 */
 
-
 #ifndef __MU_CMD_H__
 #define __MU_CMD_H__
 
 #include <glib.h>
 #include <mu-config.h>
-#include <mu-store.h>
+#include <mu-store.hh>
 
 G_BEGIN_DECLS
 

@@ -49,7 +49,7 @@
 #include "mu-maildir.h"
 #include "mu-query.h"
 #include "mu-index.h"
-#include "mu-store.h"
+#include "mu-store.hh"
 #include "mu-msg-part.h"
 #include "mu-contacts.hh"
 
@@ -624,7 +624,7 @@ each_contact_sexp (const char* full_address,
  * @return the sexp
  */
 static char*
-contacts_to_sexp (MuContacts *contacts, gboolean personal,
+contacts_to_sexp (const MuContacts *contacts, gboolean personal,
                   time_t last_seen, gint64 tstamp)
 {
         SexpData sdata;
@@ -657,12 +657,12 @@ contacts_to_sexp (MuContacts *contacts, gboolean personal,
 static MuError
 cmd_contacts (ServerContext *ctx, GHashTable *args, GError **err)
 {
-        MuContacts *contacts;
-        char	   *sexp;
-        gboolean    personal;
-        time_t	    after;
-        const char *str;
-        gint64      tstamp;
+        const MuContacts *contacts;
+        char             *sexp;
+        gboolean          personal;
+        time_t            after;
+        const char       *str;
+        gint64            tstamp;
 
         personal = get_bool_from_args (args, "personal", TRUE, NULL);
         str      = get_string_from_args (args, "after", TRUE, NULL);
@@ -1012,7 +1012,7 @@ set_my_addresses (MuStore *store, const char *addrstr)
                 return;
 
         my_addresses = g_strsplit (addrstr, ",", -1);
-        mu_store_set_my_addresses (store, (const char**)my_addresses);
+        mu_store_set_personal_addresses (store, (const char**)my_addresses);
 
         g_strfreev (my_addresses);
 }
@@ -1040,7 +1040,7 @@ static MuError
 index_and_maybe_cleanup (MuIndex *index, const char *path,
                          gboolean cleanup, gboolean lazy_check, GError **err)
 {
-        MuError rv;
+        MuError      rv;
         MuIndexStats stats, stats2;
 
         mu_index_stats_clear (&stats);
@@ -1100,7 +1100,6 @@ cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
         index_and_maybe_cleanup (index, path,
                                  cleanup, lazy_check,
                                  err);
-
 leave:
         g_free (path);
 
@@ -1531,10 +1530,6 @@ cmd_view (ServerContext *ctx, GHashTable *args, GError **err)
         return MU_OK;
 }
 
-
-
-
-
 /*************************************************************************/
 
 static MuError
@@ -1578,12 +1573,11 @@ handle_args (ServerContext *ctx, GHashTable *args, GError **err)
 }
 
 
-
 MuError
 mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err)
 {
         ServerContext ctx;
-        gboolean do_quit;
+        gboolean      do_quit;
 
         g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 

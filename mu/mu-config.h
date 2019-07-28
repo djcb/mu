@@ -114,13 +114,8 @@ struct _MuConfig {
 	gchar	        *maildir;	/* where the mails are */
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
 	gboolean        rebuild;	/* empty the database before indexing */
-	gboolean        autoupgrade;    /* automatically upgrade db
-					 * when needed */
 	gboolean        lazycheck;      /* don't check dirs with up-to-date
 					 * timestamps */
-	int             xbatchsize;     /* batchsize for xapian
-					 * commits, or 0 for
-					 * default */
 	int		max_msg_size;   /* maximum size for message files */
 	char**          my_addresses;   /* 'my e-mail address', for mu
 					 * cfind; can be use multiple
@@ -136,7 +131,7 @@ struct _MuConfig {
 	gboolean	 summary;	/* OBSOLETE: use summary_len */
 	int	         summary_len;   /* max # of lines for summary */
 
-	gchar            *bookmark;	/* use bookmark */
+	gchar           *bookmark;	/* use bookmark */
 	gchar		*formatstr;     /* output type for find
 					 * (plain,links,xml,json,sexp)
 					 * and view (plain, sexp) and cfind

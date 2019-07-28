@@ -58,14 +58,11 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
 		g_printerr ("maybe mu is already running?\n");
 		break;
-	case MU_ERROR_XAPIAN_CORRUPTION:
-	case MU_ERROR_XAPIAN_VERSION_MISMATCH:
-		g_printerr ("database needs a rebuild; "
-			    "try 'mu index --rebuild'\n");
-		break;
-	case MU_ERROR_XAPIAN_IS_EMPTY:
-		g_printerr ("database is empty; try 'mu index'\n");
-		break;
+	case MU_ERROR_XAPIAN_NEEDS_REINDEX:
+		g_printerr ("database needs (re)indexing.\n"
+			    "try 'mu index' "
+			    "(see mu-index(1) for details)\n");
+		return;
 	case MU_ERROR_IN_PARAMETERS:
 		if (conf && mu_config_cmd_is_valid(conf->cmd))
 			mu_config_show_help (conf->cmd);
