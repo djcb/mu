@@ -1,25 +1,56 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
-* 1.4 (unreleased)
+* 1.3.x (unreleased, experimental/development version)
 
 *** mu
 
-    - The contacts cache (as uses in ~mu cfind~ and mu4e contact-completion is now
-      stored as part of the Xapian database rather than as a separate file.
+    - The contacts cache (as uses in ~mu cfind~ and mu4e contact-completion) is
+      now stored as part of the Xapian database rather than as a separate file.
+
+    - mu now defaults to the [[https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG Base Directory Specification]] for the default
+      locations for various files. E.g. on Unix the mu database now lives under
+      ~~/.cache/mu/~ rather than ~~/.mu~. You can still use the old location by
+      passing --muhome=~/.mu to various mu commands, or setting ~(setq
+      mu4e-mu-home "~/.mu")~ for mu. Otherwise, after upgrading, you may wish to
+      delete the old location.
+
+    - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
+      are determined implicitly now.
+
+    - The ~--maildir~ parameter is only used when initializing the database, and
+      it is stored in that database. Afterwards that its value is used; which
+      means you cannot change the parameter without rebuilding and this is by
+      design.
+
+    - The ~--my-address~ parameter is persistent as well, but can be overwritten;
+      note that an updated value only applies to the messages indexed /after/ the
+      change.
 
 *** mu4e
 
-    - In many cases, ~mu4e~ used to get /all/ contacts after each indexing
-      operation; this was slow for some users, so we have updated this to only
-      get the contacts that have changed since the last time ~mu4e~ received that
-      information.
+    - In many cases, ~mu4e~ used to receive /all/ contacts after each indexing
+      operation; this was slow for some users, so we have updated this to /only/
+      get the contacts that have changed since the last round.
 
       We also moved sorting the contacts to the mu-side, which speeds things up
       further. However, as a side-effect of this, ~mu4e-contacts-rewrite-function~
       and ~mu4e-compose-complete-ignore-address-regexp~ have been obsoleted; users
       of those should migrate to ~mu4e-contact-process-function~; see its
       docstring for details.
+
+    - Christophe Troestler contributed support for Gnus' calender-invitation
+      handling in mu4e (i.e., you should be able to accept/reject invitations
+      etc.). It's very fresh code, and likely it'll be tweaked in the future.
+      But it's available now for testing. Note that this requires the gnus-based
+      viewer, ie ~(setq mu4e-view-use-gnus t)~
+
+    - Pierre Neidhardt contributed an "Account Setup Helper" which wraps the
+      existing context setup with some niceties for accounts. See the manual for
+      details.
+
+    - When the mu store (database) is not present or not up to date, mu4e will
+      attempt to re-index it automatically.
 
 ** 1.2
 

@@ -101,21 +101,6 @@ it is necessary to run \fBmu index \-\-rebuild\fR when there is an upgrade in
 the database format. \fBmu index\fR will issue a warning about this.
 
 .TP
-\fB\-\-autoupgrade\fR
-automatically use \fB\-y\fR, \fB\-\-empty\fR
-when \fBmu\fR notices that the database version is not up-to-date. This option
-is for use in cron scripts and the like, so they won't require any user
-interaction, even when mu introduces a new database version.
-
-.TP
-\fB\-\-xbatchsize\fR=\fI<batch size>\fR
-set the maximum number of messages to process in a single Xapian
-transaction. In practice, this option is only useful if you find that \fBmu\fR
-is running out of memory while indexing; in that case, you can set the batch
-size to (for example) 1000, which will reduce memory consumption, but also
-substantially reduce the indexing performance.
-
-.TP
 \fB\-\-max-msg-size\fR=\fI<max msg size>\fR
 set the maximum size (in bytes) for messages. The default maximum
 (currently at 500Mb) should be enough in most cases, but if you
