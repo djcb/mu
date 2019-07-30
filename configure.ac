@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.3.3],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.3.4],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2019 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
@@ -53,7 +53,7 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
-LT_INIT([disable-shared])
+LT_INIT
 
 AC_PROG_AWK
 AC_CHECK_PROG(SORT,sort,sort)
@@ -179,10 +179,10 @@ AC_SUBST(XAPIAN_LIBS)
 # here; it will become part of the db name, so we can automatically
 # recreate the database when we have incompatible changes.
 #
-# note that MU_STORE_SCHEMA_VERSION does not necessarily follow MU
-# versioning, as we hopefully don't have updates for each version;
-# also, this has nothing to do with Xapian's software version
-AC_DEFINE(MU_STORE_SCHEMA_VERSION,["1.3.1"], ['Schema' version of the database])
+# note that MU_STORE_SCHEMA_VERSION does not follow mu versioning, as we
+# hopefully don't have updates for each version; also, this has nothing to do
+# with Xapian's software version
+AC_DEFINE(MU_STORE_SCHEMA_VERSION,["450"],['Schema' version of the database])
 ###############################################################################
 
 ###############################################################################

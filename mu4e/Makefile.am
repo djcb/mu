@@ -40,12 +40,15 @@ dist_lisp_LISP=			\
 	mu4e-vars.el		\
 	mu4e-view.el		\
 	mu4e.el			\
-	org-mu4e.el
+	org-mu4e.el		\
+	org-old-mu4e.el
 
-EXTRA_DIST=$(elisp_DATA) mu4e-about.org
+EXTRA_DIST=			\
+	mu4e-about.org 		\
+	org-old-mu4e.el
 
-CLEANFILES=*.elc ${BUILT_SOURCES}
+CLEANFILES=			\
+	*.elc
 
 doc_DATA =			\
-	mu4e-about.org		\
-	org-old-mu4e.el
+	mu4e-about.org

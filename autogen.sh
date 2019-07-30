@@ -31,4 +31,4 @@ else
    echo "# Configure with parameters $*"
 fi
 
-./configure --config-cache --enable-shared --disable-static $@
+./configure --config-cache $@
