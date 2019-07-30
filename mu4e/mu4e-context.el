@@ -81,7 +81,7 @@ none."
 (defvar mu4e-no-trash-providers '("gmail.com" "googlemail.com")
   "List of email providers that don't support the trash flag.")
 
-(cl-defun make-mu4e-context-account (name &key
+(cl-defun make-mu4e-context-account (&key name
                                           enter-func
                                           leave-func
                                           match-func
