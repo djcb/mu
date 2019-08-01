@@ -487,6 +487,7 @@ mu_util_get_hash (const char* str)
 	guint32 djbhash;
         guint32 bkdrhash;
         guint32 bkdrseed;
+        guint64 hash;
 
         djbhash  = 5381;
         bkdrhash = 0;
@@ -497,7 +498,7 @@ mu_util_get_hash (const char* str)
 		bkdrhash = bkdrhash * bkdrseed + str[u];
 	}
 
-        guint64 hash = djbhash;
+        hash = djbhash;
         return (hash<<32) | bkdrhash;
 }
 
