@@ -20,7 +20,7 @@
 #ifndef __MU_MSG_BODY_VIEW_H__
 #define __MU_MSG_BODY_VIEW_H__
 
-#include <webkit/webkitwebview.h>
+#include <webkit2/webkit2.h>
 #include <mu-msg.h>
 
 G_BEGIN_DECLS
@@ -67,4 +67,3 @@ void mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg);
 G_END_DECLS
 
 #endif /* __MU_MSG_BODY_VIEW_H__ */
-

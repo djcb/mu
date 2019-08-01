@@ -16,10 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-#include <webkit/webkitwebview.h>
-#include <webkit/webkitnetworkresponse.h>
-#include <webkit/webkitwebnavigationaction.h>
-#include <webkit/webkitwebpolicydecision.h>
+
 #include "mu-msg-body-view.h"
 #include <mu-msg-part.h>
 
@@ -46,10 +43,11 @@ enum {
 
 
 struct _MuMsgBodyViewPrivate {
-	WebKitWebSettings *_settings;
+	WebKitSettings *_settings;
 	MuMsg             *_msg;
 	ViewMode          _view_mode;
 };
+
 #define MU_MSG_BODY_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
 					      MU_TYPE_MSG_BODY_VIEW, \
 					      MuMsgBodyViewPrivate))
@@ -136,62 +134,54 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 
 
 static gboolean
-on_navigation_policy_decision_requested (MuMsgBodyView *self, WebKitWebFrame *frame,
-					 WebKitNetworkRequest *request,
-					 WebKitWebNavigationAction *nav_action,
-					 WebKitWebPolicyDecision *policy_decision,
+on_navigation_policy_decision_requested (MuMsgBodyView *self,
+					 WebKitPolicyDecision *decision,
+                                         WebKitPolicyDecisionType decision_type,
 					 gpointer data)
 {
-	const char* uri;
-	WebKitWebNavigationReason reason;
+	/* const char* uri; */
 
-	uri = webkit_network_request_get_uri (request);
-	reason = webkit_web_navigation_action_get_reason (nav_action);
+	/* uri    = webkit_network_request_get_uri (request); */
 
-	/* if it wasn't a user click, don't the navigation */
-	if (reason != WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
-		webkit_web_policy_decision_ignore (policy_decision);
+	/* XXX if it wasn't a user click, don't navigate */
+	if (decision_type != WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
+                webkit_policy_decision_ignore (decision);
 		return TRUE;
 	}
 
-	/* we handle links clicked ourselves, no need for navigation */
-	webkit_web_policy_decision_ignore (policy_decision);
 
-	/* if there are 'cmd:<action>" links in the body text of
-	 * mu-internal messages (ie., notification from mu, not real
-	 * e-mail messages), we emit the 'action requested'
-	 * signal. this allows e.g triggering a database refresh from
-	 * a <a href="cmd:refresh">Refresh</a> link
-	 */
-	if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  {
-		if (self->_priv->_view_mode == VIEW_MODE_NOTE) {
-			g_signal_emit (G_OBJECT(self),
-				       signals[ACTION_REQUESTED], 0,
-				       uri + 4);
-		}
-		return TRUE;
-	}
+	/* /\* if there are 'cmd:<action>" links in the body text of */
+	/*  * mu-internal messages (ie., notification from mu, not real */
+	/*  * e-mail messages), we emit the 'action requested' */
+	/*  * signal. this allows e.g triggering a database refresh from */
+	/*  * a <a href="cmd:refresh">Refresh</a> link */
+	/*  *\/ */
+	/* if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  { */
+	/* 	if (self->_priv->_view_mode == VIEW_MODE_NOTE) { */
+	/* 		g_signal_emit (G_OBJECT(self), */
+	/* 			       signals[ACTION_REQUESTED], 0, */
+	/* 			       uri + 4); */
+	/* 	} */
+	/* 	return TRUE; */
+	/* } */
 
-	/* don't try to play files on our local file system, this is not something
-	 * external content should do.*/
-	if (!mu_util_is_local_file(uri))
-		mu_util_play (uri, FALSE, TRUE, NULL);
+	/* /\* don't try to play files on our local file system, this is not something */
+	/*  * external content should do.*\/ */
+	/* if (!mu_util_is_local_file(uri)) */
+	/* 	mu_util_play (uri, FALSE, TRUE, NULL); */
 
 	return TRUE;
 }
 
-
-
 static void
-on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
-			      WebKitWebResource *resource, WebKitNetworkRequest *request,
-			      WebKitNetworkResponse *response, gpointer data)
+on_resource_load_started (MuMsgBodyView *self, WebKitWebResource *resource,
+                           WebKitURIRequest *request, gpointer data)
 {
-	const char* uri;
-	MuMsg *msg;
+	const char*  uri;
+	MuMsg       *msg;
 
 	msg = self->_priv->_msg;
-	uri = webkit_network_request_get_uri (request);
+	uri = webkit_uri_request_get_uri (request);
 
 	/* g_warning ("%s: %s", __func__, uri); */
 
@@ -201,7 +191,7 @@ on_resource_request_starting (MuMsgBodyView *self, WebKitWebFrame *frame,
 		if (filepath) {
 			gchar *fileuri;
 			fileuri = g_strdup_printf ("file://%s", filepath);
-			webkit_network_request_set_uri (request, fileuri);
+			webkit_uri_request_set_uri (request, fileuri);
 			g_free (fileuri);
 			g_free (filepath);
 		}
@@ -276,24 +266,18 @@ mu_msg_body_view_init (MuMsgBodyView *obj)
 	obj->_priv->_msg = NULL;
 	obj->_priv->_view_mode = VIEW_MODE_NONE;
 
-	obj->_priv->_settings = webkit_web_settings_new ();
+	obj->_priv->_settings = webkit_settings_new ();
 	g_object_set (G_OBJECT(obj->_priv->_settings),
-		      "enable-scripts", FALSE,
+		      "enable-javascript", FALSE,
 		      "auto-load-images", TRUE,
 		      "enable-plugins", FALSE,
 		      NULL);
 
-	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(obj),
-				      obj->_priv->_settings);
-	webkit_web_view_set_editable (WEBKIT_WEB_VIEW(obj), FALSE);
+	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(obj), obj->_priv->_settings);
 
 	/* to support cid: */
-	g_signal_connect (obj, "resource-request-starting",
-			  G_CALLBACK (on_resource_request_starting), NULL);
-	/* handle navigation requests */
-	g_signal_connect (obj, "navigation-policy-decision-requested",
-			  G_CALLBACK (on_navigation_policy_decision_requested), NULL);
-	/* handle right-button clicks */
+	g_signal_connect (obj, "resource-load-started",
+			  G_CALLBACK (on_resource_load_started), NULL);
 	g_signal_connect (obj, "button-press-event",
 			  G_CALLBACK(on_button_press_event), NULL);
 }
@@ -324,11 +308,9 @@ set_html (MuMsgBodyView *self, const char* html)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 
-	webkit_web_view_load_string (WEBKIT_WEB_VIEW(self),
-				     html ? html : "",
-				     "text/html",
-				     "utf-8",
-				     "");
+	webkit_web_view_load_html (WEBKIT_WEB_VIEW(self),
+                                   html ? html : "",
+                                   NULL);
 }
 
 static void
@@ -336,11 +318,7 @@ set_text (MuMsgBodyView *self, const char* txt)
 {
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 
-	webkit_web_view_load_string (WEBKIT_WEB_VIEW(self),
-				     txt ? txt : "",
-				     "text/plain",
-				     "utf-8",
-				     "");
+	webkit_web_view_load_plain_text (WEBKIT_WEB_VIEW(self), txt ? txt : "");
 }
 
 void

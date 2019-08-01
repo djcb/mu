@@ -146,18 +146,20 @@ mu_msg_view_init (MuMsgView *self)
 					GTK_ORIENTATION_VERTICAL);
 
 	self->_priv = MU_MSG_VIEW_GET_PRIVATE(self);
-	self->_priv->_msg     = NULL;
-	self->_priv->_headers = mu_msg_header_view_new ();
-	self->_priv->_attach  = mu_msg_attach_view_new ();
-	self->_priv->_attachexpander =  gtk_expander_new_with_mnemonic
+
+        self->_priv->_msg            = NULL;
+	self->_priv->_headers        = mu_msg_header_view_new ();
+	self->_priv->_attach         = mu_msg_attach_view_new ();
+	self->_priv->_attachexpander = gtk_expander_new_with_mnemonic
 		("_Attachments");
-	gtk_container_add (GTK_CONTAINER(self->_priv->_attachexpander),
+
+        gtk_container_add (GTK_CONTAINER(self->_priv->_attachexpander),
 			   self->_priv->_attach);
 	g_signal_connect (self->_priv->_attach, "attach-activated",
 			  G_CALLBACK(on_attach_activated),
 			  self);
 
-	self->_priv->_body    = mu_msg_body_view_new ();
+	self->_priv->_body = mu_msg_body_view_new ();
 	g_signal_connect (self->_priv->_body,
 			  "action-requested",
 			  G_CALLBACK(on_body_action_requested),
@@ -167,10 +169,6 @@ mu_msg_view_init (MuMsgView *self)
 			    FALSE, FALSE, 2);
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_attachexpander,
 			    FALSE, FALSE, 2);
-	gtk_box_pack_start (GTK_BOX(self),
-			    gtk_separator_new(GTK_ORIENTATION_HORIZONTAL),
-			    TRUE,TRUE,0);
-
 	gtk_box_pack_start (GTK_BOX(self), self->_priv->_body,
 			    TRUE, TRUE, 2);
 }

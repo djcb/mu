@@ -26,7 +26,7 @@
 #include <string.h>		/* for memset */
 
 #include <mu-util.h>
-#include <mu-store.h>
+#include <mu-store.hh>
 #include <mu-runtime.h>
 #include <mu-index.h>
 

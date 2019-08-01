@@ -197,11 +197,13 @@ AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk" = "xyes"])
 
 # webkit? needed for the fancy web widget
 # use --disable-webkit to disable it, even if you have it
+#
+# and note this is just a toy, not for distribution.
 AC_ARG_ENABLE([webkit],AS_HELP_STRING([--disable-webkit],[Disable webkit]))
 AS_IF([test "x$enable_webkit" != "xno"],[
-       PKG_CHECK_MODULES(WEBKIT,webkitgtk-3.0 >= 1.8.0,[have_webkit=yes],[have_webkit=no])
+       PKG_CHECK_MODULES(WEBKIT,webkit2gtk-4.0 >= 2.0, [have_webkit=yes],[have_webkit=no])
        AS_IF([test "x$have_webkit" = "xyes"],[
-        webkit_version="$($PKG_CONFIG --modversion webkitgtk-3.0)"])
+        webkit_version="$($PKG_CONFIG --modversion webkit2gtk-4.0)"])
 ])
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
@@ -288,7 +290,7 @@ echo "Json-Glib version                    : $json_glib_version"
 
 AM_COND_IF([BUILD_GUI],[
 echo "GTK+ version                         : $gtk_version"
-echo "Webkit version                       : $webkit_version"
+echo "Webkit2/GTK+ version                 : $webkit_version"
 ])
 
 AM_COND_IF([BUILD_GUILE],[
@@ -298,10 +300,6 @@ echo "Guile version                        : $GUILE_EFFECTIVE_VERSION"
 if test "x$build_mu4e" = "xyes"; then
 echo "Emacs version                        : $emacs_version"
 fi
-
-#AM_COND_IF([BUILD_PERL],[
-#echo "Perl interface version               : $perl_version"
-#])
 
 echo
 echo "Have wordexp                         : $ac_cv_header_wordexp_h"

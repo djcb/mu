@@ -1,6 +1,6 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -309,10 +309,10 @@ static MugError
 mu_result_to_mug_error (MuError r)
 {
 	switch (r) {
-	case MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE:
-		return MUG_ERROR_XAPIAN_DIR;
-	case MU_ERROR_XAPIAN_VERSION_MISMATCH:
-		return MUG_ERROR_XAPIAN_NOT_UPTODATE;
+	/* case MU_ERROR_XAPIAN_DIR_NOT_ACCESSIBLE: */
+	/* 	return MUG_ERROR_XAPIAN_DIR; */
+	/* case MU_ERROR_XAPIAN_VERSION_MISMATCH: */
+	/* 	return MUG_ERROR_XAPIAN_NOT_UPTODATE; */
 	case MU_ERROR_XAPIAN_QUERY:
 		return MUG_ERROR_QUERY;
 	default:
@@ -330,7 +330,7 @@ run_query (const char *xpath, const char *query, MugMsgListView * self)
 	MuQueryFlags qflags;
 
 	err = NULL;
-	if (! (store = mu_store_new_read_only (xpath, &err)) ||
+	if (! (store = mu_store_new_readable (xpath, &err)) ||
 	    ! (xapian = mu_query_new (store, &err))) {
 		if (store)
 			mu_store_unref (store);
