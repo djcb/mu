@@ -67,8 +67,6 @@ struct _MuMsgField {
 	const char        _xprefix;  /* the Xapian-prefix  */
 	FieldFlags        _flags;    /* the flags that tells us
 				      * what to do */
-
-
 };
 typedef struct _MuMsgField MuMsgField;
 
@@ -324,7 +322,8 @@ gboolean
 mu_msg_field_xapian_index  (MuMsgFieldId id)
 {
 	g_return_val_if_fail (mu_msg_field_id_is_valid(id),FALSE);
-	return mu_msg_field(id)->_flags & FLAG_XAPIAN_INDEX ? TRUE: FALSE;
+	return mu_msg_field(id)->_flags &
+		(FLAG_XAPIAN_INDEX | FLAG_XAPIAN_CONTACT) ? TRUE: FALSE;
 }
 
 gboolean

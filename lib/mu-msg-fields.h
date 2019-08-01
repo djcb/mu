@@ -192,7 +192,7 @@ gboolean mu_msg_field_is_cacheable (MuMsgFieldId id) G_GNUC_PURE;
 
 /**
  * is the field Xapian-indexable? That is, should this field be
- * indexed in the in the Xapian database, so we can use the all the
+ * indexed in the Xapian database, so we can use the all the
  * phrasing, stemming etc. magic
  *
  * @param id a MuMsgFieldId
