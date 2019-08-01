@@ -32,5 +32,4 @@ dist_man_MANS =		\
 	mu-script.1	\
 	mu-verify.1     \
 	mu-view.1	\
-	mu.1		\
-	mug.1
+	mu.1
