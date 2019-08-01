@@ -20,5 +20,7 @@ SUBDIRS=
 
 # for mug2 and msg2pdf, we need webkit
 if BUILD_GUI
-SUBDIRS += mug msg2pdf
+SUBDIRS += mug
 endif
+
+# msg2pdf --> FIXME
