@@ -416,11 +416,11 @@ mu_store_new_readable (const char* xpath, GError **err)
         } catch (const NeedsReIndex& nri) {
                 g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
                              "database @ %s needs (re)indexing", xpath);
-        } catch (const Xapian::DatabaseNotFoundError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "database @ %s not found", xpath);
+        // } catch (const Xapian::DatabaseNotFoundError& dbe) { // Xapian 1.4.10
+        //         g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
+        //                      "database @ %s not found", xpath);
         } catch (const Xapian::DatabaseOpeningError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
+                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
                              "failed to open database @ %s", xpath);
         } catch (...) {
                 g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
@@ -442,11 +442,11 @@ mu_store_new_writable (const char* xpath, GError **err)
         } catch (const NeedsReIndex& nri) {
                 g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
                              "database @ %s needs (re)indexing", xpath);
-        } catch (const Xapian::DatabaseNotFoundError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "database @ %s not found", xpath);
+        // } catch (const Xapian::DatabaseNotFoundError& dbe) { // Xapian 1.4.10
+        //         g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
+        //                      "database @ %s not found", xpath);
         } catch (const Xapian::DatabaseOpeningError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
+                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
                              "failed to open database @ %s", xpath);
         } catch (const Xapian::DatabaseLockError& dle) {
                 g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
