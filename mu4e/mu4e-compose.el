@@ -134,9 +134,9 @@ Also see `mu4e-context-policy'."
      (const :tag "Ask if none of the contexts match" ask)
      (const :tag "Ask when there's no context yet" ask-if-none)
      (const :tag "Pick the first context if none match" pick-first)
-     (const :tag "Don't change the context when none match" nil)
+     (const :tag "Don't change the context when none match" nil))
      :safe 'symbolp
-     :group 'mu4e-compose))
+     :group 'mu4e-compose)
 
 (defcustom mu4e-compose-crypto-reply-encrypted-policy 'sign-and-encrypt
   "Policy for signing/encrypting replies to encrypted messages.
