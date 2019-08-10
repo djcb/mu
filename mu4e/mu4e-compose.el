@@ -110,8 +110,8 @@ symbols, for example:
 The various `message-' functions from `message-mode' are available
 for querying the message information."
   :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
-     (const :tag "move message to mu4e-trash-folder" trash)
-     (const :tag "delete message" delete))
+           (const :tag "move message to mu4e-trash-folder" trash)
+           (const :tag "delete message" delete))
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-context-policy 'ask
@@ -130,13 +130,13 @@ contexts match, we have the following choices:
 
 Also see `mu4e-context-policy'."
   :type '(choice
-     (const :tag "Always ask what context to use" always-ask)
-     (const :tag "Ask if none of the contexts match" ask)
-     (const :tag "Ask when there's no context yet" ask-if-none)
-     (const :tag "Pick the first context if none match" pick-first)
-     (const :tag "Don't change the context when none match" nil))
-     :safe 'symbolp
-     :group 'mu4e-compose)
+           (const :tag "Always ask what context to use" always-ask)
+           (const :tag "Ask if none of the contexts match" ask)
+           (const :tag "Ask when there's no context yet" ask-if-none)
+           (const :tag "Pick the first context if none match" pick-first)
+           (const :tag "Don't change the context when none match" nil))
+  :safe 'symbolp
+  :group 'mu4e-compose)
 
 (defcustom mu4e-compose-crypto-reply-encrypted-policy 'sign-and-encrypt
   "Policy for signing/encrypting replies to encrypted messages.
@@ -147,12 +147,12 @@ We have the following choices:
 - `encrypt': encrypt the reply, but don't sign it.
 -  anything else: do nothing."
   :type '(choice
-     (const :tag "Sign the reply" sign)
-     (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-     (const :tag "Encrypt the reply" encrypt)
-     (const :tag "Don't do anything" nil)
-     :safe 'symbolp
-     :group 'mu4e-compose))
+           (const :tag "Sign the reply" sign)
+           (const :tag "Sign and encrypt the reply" sign-and-encrypt)
+           (const :tag "Encrypt the reply" encrypt)
+           (const :tag "Don't do anything" nil))
+  :safe 'symbolp
+  :group 'mu4e-compose)
 
 (defcustom mu4e-compose-crypto-reply-plain-policy nil
   "Policy for signing/encrypting replies to messages received unencrypted.
@@ -163,12 +163,12 @@ We have the following choices:
 - `encrypt': encrypt the reply, but don't sign it.
 -  anything else: do nothing."
   :type '(choice
-     (const :tag "Sign the reply" sign)
-     (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-     (const :tag "Encrypt the reply" encrypt)
-     (const :tag "Don't do anything" nil)
-     :safe 'symbolp
-     :group 'mu4e-compose))
+           (const :tag "Sign the reply" sign)
+           (const :tag "Sign and encrypt the reply" sign-and-encrypt)
+           (const :tag "Encrypt the reply" encrypt)
+           (const :tag "Don't do anything" nil))
+  :safe 'symbolp
+  :group 'mu4e-compose)
 
 (make-obsolete-variable 'mu4e-compose-crypto-reply-policy "The use of the
  'mu4e-compose-crypto-reply-policy' variable is deprecated.
