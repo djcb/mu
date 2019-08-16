@@ -996,7 +996,7 @@ struct MsgDoc {
 	Store            *_store;
 	/* callback data, to determine whether this message is 'personal' */
 	gboolean          _personal;
-	GSList           *_my_addresses;
+	const Addresses  *_my_addresses;
 };
 
 
@@ -1135,14 +1135,13 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 static gboolean
 each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 {
-	GSList *cur;
-
 	if (msgdoc->_personal || !contact->email)
 		return TRUE;
 
-	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
-		if (g_ascii_strcasecmp (
-			    contact->email, (const char*)cur->data) == 0) {
+	for (const auto& cur : *msgdoc->_my_addresses) {
+		if (g_ascii_strcasecmp
+                    (contact->email,
+                     (const char*)cur.c_str()) == 0) {
 			msgdoc->_personal = TRUE;
 			break;
 		}
@@ -1155,21 +1154,21 @@ static Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
-	MsgDoc docinfo = {&doc, msg, mutable_self(store), 0, FALSE};
+	MsgDoc docinfo = {&doc, msg, mutable_self(store), 0, NULL};
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 
 	/* determine whether this is 'personal' email, ie. one of my
 	 * e-mail addresses is explicitly mentioned -- it's not a
 	 * mailing list message. Callback will update docinfo->_personal */
-	// FIXME
-        // if (store->my_addresses()) {
-	// 	docinfo._my_addresses = store->my_addresses();
-	// 	mu_msg_contact_foreach
-	// 		(msg,
-	// 		 (MuMsgContactForeachFunc)each_contact_check_if_personal,
-	// 		 &docinfo);
-	// }
+        const auto& personal_addresses = self(store)->personal_addresses();
+        if (personal_addresses.size()) {
+		docinfo._my_addresses = &personal_addresses;
+		mu_msg_contact_foreach
+			(msg,
+			 (MuMsgContactForeachFunc)each_contact_check_if_personal,
+			 &docinfo);
+	}
 
 	/* also store the contact-info as separate terms, and add it
 	 * to the cache */
