@@ -142,6 +142,8 @@ struct Store::Private {
         void set_personal_addresses (const Addresses& addresses) {
 
                 std::string all_addresses;
+                personal_addresses_.clear();
+
                 for (const auto& addr : addresses) {
                         // very basic check; just ensure there's no ',' in the address.
                         // we don't insist on full RFC5322
@@ -150,6 +152,7 @@ struct Store::Private {
                         if (!all_addresses.empty())
                                 all_addresses += ',';
                         all_addresses += addr;
+                        personal_addresses_.emplace_back(addr);
                 }
                 writable_db()->set_metadata (PersonalAddressesKey, all_addresses);
         }
@@ -172,7 +175,7 @@ struct Store::Private {
         const std::string                 maildir_;
         const time_t                      created_{};
         const std::string                 schema_version_;
-        const Addresses                   personal_addresses_;
+        Addresses                         personal_addresses_;
         Contacts                          contacts_;
 
         bool                              in_transaction_{};
