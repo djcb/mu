@@ -709,7 +709,7 @@ mu_store_personal_addresses (const MuStore *store)
 
         const auto size = self(store)->personal_addresses().size();
         auto addrs = g_new0 (char*, 1 + size);
-        for (auto i = 0; i != size; ++i)
+        for (size_t i = 0; i != size; ++i)
                 addrs[i] = g_strdup(self(store)->personal_addresses()[i].c_str());
 
         return addrs;
