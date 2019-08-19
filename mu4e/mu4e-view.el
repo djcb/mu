@@ -1,4 +1,4 @@
-;;; mu4e-view.el -- part of mu4e, the mu mail user agent
+;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2018 Dirk-Jan C. Binnema
 
@@ -26,8 +26,6 @@
 ;; viewing e-mail messages
 
 ;;; Code:
-(eval-when-compile
-  (require 'cl))
 (require 'cl-lib)
 (require 'mu4e-utils) ;; utility functions
 (require 'mu4e-vars)
@@ -47,6 +45,8 @@
 (require 'calendar)
 
 (declare-function mu4e-view-mode "mu4e-view")
+(defvar gnus-icalendar-additional-identities)
+(defvar mu4e~headers-view-win)
 
 ;; the message view
 (defgroup mu4e-view nil
@@ -208,6 +208,12 @@ message extracted at some path.")
 (defvar mu4e~view-attach-map nil
   "A mapping of user-visible attachment number to the actual part index.")
 (put 'mu4e~view-attach-map 'permanent-local t)
+
+(defvar mu4e~view-rendering nil)
+
+(defvar mu4e~view-html-text nil
+  "Should we prefer html or text just this once? A symbol `text'
+or `html' or nil.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun mu4e-view-message-with-message-id (msgid)
@@ -635,7 +641,7 @@ add text-properties to VAL."
 		(let ((index (mu4e-message-part-field part :index))
 		       (name (mu4e-message-part-field part :name))
 		       (size (mu4e-message-part-field part :size)))
-		  (incf id)
+		  (cl-incf id)
 		  (puthash id index mu4e~view-attach-map)
 
 		  (concat
@@ -921,14 +927,12 @@ The browser that is called depends on
 `browse-url-browser-function' and `browse-url-mailto-function'."
   (save-match-data
     (if (string-match "^mailto:" url)
-      (lexical-let ((url url))
 	(lambda ()
 	  (interactive)
-	  (browse-url-mail url)))
-      (lexical-let ((url url))
-	(lambda ()
-	  (interactive)
-	  (browse-url url))))))
+	  (browse-url-mail url))
+      (lambda ()
+        (interactive)
+        (browse-url url)))))
 
 (defun mu4e~view-browse-url-from-binding (&optional url)
   "View in browser the url at point, or click location.
@@ -945,7 +949,7 @@ If the url is mailto link, start writing an email to that address."
   "Show attached images, if `mu4e-show-images' is non-nil."
   (when (and (display-images-p) mu4e-view-show-images)
     (mu4e-view-for-each-part msg
-      (lambda (msg part)
+      (lambda (_msg part)
 	(when (string-match "^image/"
 		(or (mu4e-message-part-field part :mime-type)
 		  "application/object-stream"))
@@ -976,7 +980,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	  (when bounds
 	    (let* ((url (thing-at-point-url-at-point))
 		    (ov (make-overlay (car bounds) (cdr bounds))))
-	      (puthash (incf num) url mu4e~view-link-map)
+	      (puthash (cl-incf num) url mu4e~view-link-map)
 	      (add-text-properties
 		(car bounds)
 		(cdr bounds)
@@ -1073,10 +1077,6 @@ the new docid. Otherwise, return nil."
   (if mu4e~view-cited-hidden
     (mu4e-view-refresh)
     (mu4e~view-hide-cited)))
-
-(defvar mu4e~view-html-text nil
-  "Should we prefer html or text just this once? A symbol `text'
-or `html' or nil.")
 
 (defun mu4e-view-toggle-html ()
   "Toggle html-display of the message body (if any)."
@@ -1189,7 +1189,7 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; attachment handling
-(defun mu4e~view-get-attach-num (prompt msg &optional multi)
+(defun mu4e~view-get-attach-num (prompt _msg &optional multi)
   "Ask the user with PROMPT for an attachment number for MSG, and
 ensure it is valid. The number is [1..n] for attachments
 \[0..(n-1)] in the message. If MULTI is nil, return the number for
@@ -1591,7 +1591,7 @@ this is the default, you may not need it."
 
 (defun mu4e-view-for-each-uri (func)
   "Evaluate FUNC(uri) for each uri in the current message."
-  (maphash (lambda (num uri) (funcall func uri)) mu4e~view-link-map))
+  (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

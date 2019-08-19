@@ -1,4 +1,4 @@
-;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs
+;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -66,8 +66,7 @@
 ;;
 
 ;;; Code:
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
@@ -270,7 +269,8 @@ If needed, set the Fcc header, and register the handler function."
       ;; etc. if you run it after mu4e so, (hack hack) we reset it to the old
       ;; handler after we've done our thing.
       (setq message-fcc-handler-function
-  (lexical-let ((maildir mdir) (old-handler message-fcc-handler-function))
+  (let ((maildir mdir)
+        (old-handler message-fcc-handler-function))
     (lambda (file)
       (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
       (let ((mdir-path (concat mu4e-maildir maildir)))
@@ -278,8 +278,8 @@ If needed, set the Fcc header, and register the handler function."
         ;; `mu4e~proc-mkdir` runs asynchronously but no matter whether it runs before or after
         ;; `write-file`, the sent maildir ends up in the correct state.
         (unless (file-exists-p mdir-path)
-    (mu4e~proc-mkdir mdir-path)))
-      (write-file file)		       ;; writing maildirs files is easy
+          (mu4e~proc-mkdir mdir-path)))
+      (write-file file) ;; writing maildirs files is easy
       (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
 
 (defvar mu4e-compose-hidden-headers
@@ -734,7 +734,7 @@ buffer."
       (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
         (push (match-string 0) refs))
       ;; the last will be the first
-      (setq forwarded-from (first refs))))))
+      (setq forwarded-from (cl-first refs))))))
     ;; remove the <>
     (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
       (mu4e~proc-move (match-string 1 in-reply-to) nil "+R-N"))

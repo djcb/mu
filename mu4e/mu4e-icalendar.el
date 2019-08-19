@@ -41,8 +41,7 @@
 
 (require 'mu4e)
 (require 'gnus-icalendar)
-
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 
 ;;;###autoload
 (defun mu4e-icalendar-setup ()

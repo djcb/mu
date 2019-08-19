@@ -197,9 +197,10 @@ and images in a multipart/related part."
                        url (file-name-directory current-file)))
                 (ext (file-name-extension path))
                 (id (replace-regexp-in-string "[\/\\\\]" "_" path)))
-           (add-to-list 'html-images
-                        (org~mu4e-mime-file
-        (concat "image/" ext) path id))
+           (cl-pushnew (org~mu4e-mime-file
+                         (concat "image/" ext) path id)
+                       html-images
+                       :test 'equal)
            id)))
       str)
      html-images)))
