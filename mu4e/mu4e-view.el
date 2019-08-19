@@ -1,4 +1,4 @@
-;;; mu4e-view.el -- part of mu4e, the mu mail user agent
+;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2018 Dirk-Jan C. Binnema
 
@@ -26,8 +26,6 @@
 ;; viewing e-mail messages
 
 ;;; Code:
-(eval-when-compile
-  (require 'cl))
 (require 'cl-lib)
 (require 'mu4e-utils) ;; utility functions
 (require 'mu4e-vars)
@@ -635,7 +633,7 @@ add text-properties to VAL."
 		(let ((index (mu4e-message-part-field part :index))
 		       (name (mu4e-message-part-field part :name))
 		       (size (mu4e-message-part-field part :size)))
-		  (incf id)
+		  (cl-incf id)
 		  (puthash id index mu4e~view-attach-map)
 
 		  (concat
@@ -921,14 +919,12 @@ The browser that is called depends on
 `browse-url-browser-function' and `browse-url-mailto-function'."
   (save-match-data
     (if (string-match "^mailto:" url)
-      (lexical-let ((url url))
 	(lambda ()
 	  (interactive)
-	  (browse-url-mail url)))
-      (lexical-let ((url url))
-	(lambda ()
-	  (interactive)
-	  (browse-url url))))))
+	  (browse-url-mail url))
+      (lambda ()
+        (interactive)
+        (browse-url url)))))
 
 (defun mu4e~view-browse-url-from-binding (&optional url)
   "View in browser the url at point, or click location.
@@ -976,7 +972,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 	  (when bounds
 	    (let* ((url (thing-at-point-url-at-point))
 		    (ov (make-overlay (car bounds) (cdr bounds))))
-	      (puthash (incf num) url mu4e~view-link-map)
+	      (puthash (cl-incf num) url mu4e~view-link-map)
 	      (add-text-properties
 		(car bounds)
 		(cdr bounds)

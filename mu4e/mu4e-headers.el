@@ -1,4 +1,4 @@
-;;; mu4e-headers.el -- part of mu4e, the mu mail user agent
+;;; mu4e-headers.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
 
@@ -1809,10 +1809,10 @@ do nothing."
 	 ;; emacs has weird ideas about what horizontal, vertical means...
 	 (horizontal
 	   (window-resize hwin n nil)
-	   (incf mu4e-headers-visible-lines n))
+	   (cl-incf mu4e-headers-visible-lines n))
 	 (vertical
 	   (window-resize hwin n t)
-	   (incf mu4e-headers-visible-columns n)))))))
+	   (cl-incf mu4e-headers-visible-columns n)))))))
 
 (defun mu4e-headers-split-view-shrink (&optional n)
   "In split-view, shrink the headers window.
