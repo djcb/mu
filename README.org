@@ -29,3 +29,5 @@
   apparently because they don't like short names. It's also possible to confuse
   that name with the [[http://mailutils.org/][GNU Mailutils]] project (which is totally unrelated) - but
   now you have been warned.
+  
+  You can install `mu` package in the openSUSE Linux distro with `zypper in maildir-utils`
