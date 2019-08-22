@@ -1027,7 +1027,7 @@ get_checked_path (const char *path)
         if (!cpath ||
             !mu_util_check_dir (cpath, TRUE, FALSE)) {
                 print_error (MU_ERROR_IN_PARAMETERS,
-                             "not a readable dir: '%s'");
+                             sprintf("not a readable dir: '%s'", path));
                 g_free (cpath);
                 return NULL;
         }
