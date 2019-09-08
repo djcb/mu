@@ -49,7 +49,7 @@ maildir:/inbox
 Terms without an explicit field-prefix, (like 'vacation' above) are
 interpreted like:
 .EX1
-to:vacation or subject:vacation or body:vacation or ... 
+to:vacation or subject:vacation or body:vacation or ...
 .EX2
 
 The language is case-insensitive for terms and attempts to 'flatten'
@@ -157,7 +157,7 @@ The shortcut character can be used instead of the full name:
 .EX1
 f:foo@bar
 .EX2
-is the same as 
+is the same as
 .EX1
 from:foo@bar
 .EX2
@@ -234,17 +234,18 @@ size:10m..
 The \fBflag\fR/\fBg\fR field allows you to match message flags. The
 following fields are available:
 .EX1
+	a,attach        Message with attachment
 	d,draft         Draft Message
 	f,flagged       Flagged
+	l,list          Mailing-list message
 	n,new           New message (in new/ Maildir)
 	p,passed        Passed ('Handled')
 	r,replied       Replied
 	s,seen          Seen
 	t,trashed       Marked for deletion
-	a,attach        Has attachment
-	z,signed        Signed message
+	u,unread        new OR NOT seen
 	x,encrypted     Encrypted message
-	l,list          Mailing-list message
+	z,signed        Signed message
 .EX2
 
 Some examples:
