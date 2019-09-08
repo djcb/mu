@@ -156,14 +156,20 @@ print_expr (const char* frm, ...)
         }
 }
 
-
 static MuError
-print_error (MuError errcode, const char *msg)
+print_error (MuError errcode, const char* frm, ...)
 {
-        char *str;
+        char    *msg, *str;
+        va_list  ap;
+
+        va_start (ap, frm);
+        g_vasprintf (&msg, frm, ap);
+        va_end (ap);
 
         str = mu_str_escape_c_literal (msg, TRUE);
         print_expr ("(:error %u :message %s)", errcode, str);
+
+        g_free (msg);
         g_free (str);
 
         return errcode;
@@ -1026,8 +1032,9 @@ get_checked_path (const char *path)
         cpath = mu_util_dir_expand(path);
         if (!cpath ||
             !mu_util_check_dir (cpath, TRUE, FALSE)) {
+                char *err;
                 print_error (MU_ERROR_IN_PARAMETERS,
-                             "not a readable dir: '%s'");
+                             "not a readable dir: '%s'", cpath);
                 g_free (cpath);
                 return NULL;
         }
