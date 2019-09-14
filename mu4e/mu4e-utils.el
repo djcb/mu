@@ -1,4 +1,4 @@
-;;; mu4e-utils.el -- part of mu4e, the mu mail user agent
+;;; mu4e-utils.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -26,7 +26,6 @@
 
 ;;; Code:
 (eval-when-compile
-  (require 'cl)
   (require 'org nil 'noerror))
 (require 'cl-lib)
 (require 'mu4e-vars)
@@ -97,7 +96,7 @@ insensitive comparison is used."
 `funcall'."
   (declare (indent 2))
   `(let* ((vars (and ,context (mu4e-context-vars ,context))))
-     (progv ;; XXX: perhaps use eval's lexical environment instead of progv?
+     (cl-progv ;; XXX: perhaps use eval's lexical environment instead of progv?
        (mapcar (lambda(cell) (car cell)) vars)
        (mapcar (lambda(cell) (cdr cell)) vars)
        (eval ,@body))))
@@ -143,9 +142,8 @@ return the result."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-remove-file-later (filename)
   "Remove FILENAME in a few seconds."
-  (lexical-let ((filename filename))
-    (run-at-time "30 sec" nil
-      (lambda () (ignore-errors (delete-file filename))))))
+  (run-at-time "30 sec" nil
+               (lambda () (ignore-errors (delete-file filename)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -469,11 +467,12 @@ replaces any existing bookmark with KEY."
          (lambda (bm)
 	   (= (mu4e-bookmark-key bm) key))
          (mu4e-bookmarks)))
-  (add-to-list 'mu4e-bookmarks
-               (make-mu4e-bookmark
+  (cl-pushnew (make-mu4e-bookmark
                 :name name
                 :query query
-                :key key) t))
+                :key key)
+              mu4e-bookmarks
+              :test 'equal))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -702,7 +701,7 @@ This is used by the completion function in mu4e-compose."
       (setq mu4e~contacts (make-hash-table :test 'equal :weakness nil
 		                        :size (length contacts))))
     (dolist (contact contacts)
-      (incf n)
+      (cl-incf n)
       (let ((address
               (if (functionp mu4e-contact-process-function)
                 (funcall mu4e-contact-process-function (car contact))
@@ -789,33 +788,32 @@ first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
-  (if (mu4e-running-p)   ;; already running?
-    (when func (funcall func)) ;; yes! run func if defined
+  (if (mu4e-running-p)         ;; already running?
+      (when func (funcall func)) ;; yes! run func if defined
     (progn
       ;; no! try to set a context, do some checks, set up pong handler and ping
       ;; the server maybe switch the context
       (mu4e~context-autoswitch nil mu4e-context-policy)
-      (lexical-let ((func func))
-	(mu4e~check-requirements)
-	;; set up the 'pong' handler func
-	(setq mu4e-pong-func
-	  (lambda (props)
-	    (setq mu4e~server-props props) ;; save props from the server
-	    (let ((version (plist-get props :version))
-		         (doccount (plist-get props :doccount)))
-	      (mu4e~check-requirements)
-	      (when func (funcall func))
-        (when (zerop doccount)
-          (mu4e-message "Store is empty; (re)indexing. This can take a while.");
-          (mu4e-update-index))
-	      (when (and mu4e-update-interval (null mu4e~update-timer))
-		      (setq mu4e~update-timer
+      (mu4e~check-requirements)
+      ;; set up the 'pong' handler func
+      (setq mu4e-pong-func
+	    (lambda (props)
+	      (setq mu4e~server-props props) ;; save props from the server
+	      (let ((version (plist-get props :version))
+		    (doccount (plist-get props :doccount)))
+	        (mu4e~check-requirements)
+	        (when func (funcall func))
+                (when (zerop doccount)
+                  (mu4e-message "Store is empty; (re)indexing. This can take a while.") ;
+                  (mu4e-update-index))
+	        (when (and mu4e-update-interval (null mu4e~update-timer))
+		  (setq mu4e~update-timer
 		        (run-at-time
-		          0 mu4e-update-interval
-		          (lambda () (mu4e-update-mail-and-index
-				                   mu4e-index-update-in-background)))))
-	      (mu4e-message "Started mu4e with %d message%s in store"
-		      doccount (if (= doccount 1) "" "s"))))))
+		         0 mu4e-update-interval
+		         (lambda () (mu4e-update-mail-and-index
+				     mu4e-index-update-in-background)))))
+	        (mu4e-message "Started mu4e with %d message%s in store"
+		              doccount (if (= doccount 1) "" "s")))))
       ;; wake up server
       (mu4e~proc-ping)
       ;; maybe request the list of contacts, automatically refresh after
@@ -1084,10 +1082,10 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
 	  (setq beg (string-to-number (match-string 1 elem))
 	    end (string-to-number (match-string 2 elem)))
 	  (while (<= beg end)
-	    (add-to-list 'list beg 'append)
+            (cl-pushnew beg list :test 'equal)
 	    (setq beg (1+ beg))))
 	;; else just a number
-	(add-to-list 'list (string-to-number elem) 'append)))
+        (cl-pushnew (string-to-number elem) list :test 'equal)))
     ;; Check that all numbers are valid.
     (mapc
       #'(lambda (x)
@@ -1167,15 +1165,15 @@ displaying it). Do _not_ bury the current buffer, though."
   (interactive)
   (unless (file-exists-p path)
     (mu4e-error "Cannot find %s" path))
-  (lexical-let ((curbuf (current-buffer)))
+  (let ((curbuf (current-buffer)))
     (find-file path)
     (mu4e-org-mode)
     (setq buffer-read-only t)
     (define-key mu4e-org-mode-map (kbd "q")
-      (lambda ()
-	(interactive)
-	(bury-buffer)
-	(switch-to-buffer curbuf)))))
+      `(lambda ()
+	 (interactive)
+	 (bury-buffer)
+	 (switch-to-buffer ,curbuf)))))
 
 (defun mu4e-about ()
   "Show the mu4e 'about' page."

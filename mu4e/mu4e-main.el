@@ -1,4 +1,4 @@
-;;; mu4e-main.el -- part of mu4e, the mu mail user agent
+;;; mu4e-main.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
 
@@ -27,9 +27,7 @@
 (require 'smtpmail)      ;; the queing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
-
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 (defconst mu4e~main-buffer-name " *mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")
@@ -99,9 +97,8 @@ clicked."
 	(func (if (functionp func-or-shortcut)
 		  func-or-shortcut
 		(if (stringp func-or-shortcut)
-		    (lexical-let ((macro func-or-shortcut))
-		      (lambda()(interactive)
-			(execute-kbd-macro macro)))))))
+                    (lambda()(interactive)
+			   (execute-kbd-macro func-or-shortcut))))))
     (define-key map [mouse-2] func)
     (define-key map (kbd "RET") func)
     (put-text-property 0 (length newstr) 'keymap map newstr)
