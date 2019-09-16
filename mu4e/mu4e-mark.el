@@ -1,4 +1,4 @@
-;; mu4e-mark.el -- part of mu4e, the mu mail user agent
+;; mu4e-mark.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -356,7 +356,7 @@ user which one)."
     (let ((markpair))
       (maphash
 	(lambda (docid val)
-	  (let ((mark (car val)) (target (cdr val)))
+	  (let ((mark (car val)))
 	    (when (eql mark 'something)
 	      (unless markpair
 		(setq markpair
@@ -421,7 +421,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
     (when (or (null mu4e~mark-map) (zerop (hash-table-count mu4e~mark-map)))
       (mu4e-warn "Nothing is marked"))
     (maphash
-      (lambda (docid val)
+      (lambda (docid _val)
 	(save-excursion
 	  (when (mu4e~headers-goto-docid docid)
 	    (mu4e-mark-set 'unmark))))

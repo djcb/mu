@@ -1,4 +1,4 @@
-;; mu4e-draft.el -- part of mu4e, the mu mail user agent for emacs
+;; mu4e-draft.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -76,6 +76,8 @@ If nil, only do so when sending the message."
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
   "The User-Agent string for mu4e, or nil.")
+
+(defvar mu4e-view-date-format)
 
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
@@ -413,9 +415,6 @@ You can append flags."
 Replying-to-self is special; in that case, the To and Cc fields
 will be the same as in the original."
   (let* ((reply-to-self (mu4e-message-contact-field-matches-me origmsg :from))
-	 (recipnum
-	  (+ (length (mu4e~draft-create-to-lst origmsg))
-	     (length (mu4e~draft-create-cc-lst origmsg t))))
 	 ;; reply-to-self implies reply-all
 	 (reply-all (or reply-to-self
                         (eq mu4e-compose-reply-recipients 'all)

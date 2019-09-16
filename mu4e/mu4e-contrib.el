@@ -1,4 +1,4 @@
-;;; mu4e-contrib.el -- part of mu4e, the mu mail user agent
+;;; mu4e-contrib.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2013-2016 Dirk-Jan C. Binnema
 
@@ -25,12 +25,14 @@
 
 (require 'mu4e)
 
+(defvar bookmark-make-record-function)
+
 (defun mu4e-headers-mark-all-unread-read ()
   "Put a ! \(read) mark on all visible unread messages."
   (interactive)
   (mu4e-headers-mark-for-each-if
    (cons 'read nil)
-   (lambda (msg param)
+   (lambda (msg _param)
      (memq 'unread (mu4e-msg-field msg :flags)))))
 
 (defun mu4e-headers-flag-all-read ()
@@ -46,7 +48,7 @@
   (interactive)
   (mu4e-headers-mark-for-each-if
    (cons 'something nil)
-   (lambda (msg param) t))
+   (lambda (_msg _param) t))
   (mu4e-mark-execute-all))
 
 ;;;

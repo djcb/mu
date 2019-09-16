@@ -1,4 +1,4 @@
-; mu4e-context.el -- part of mu4e, the mu mail user agent
+; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2015-2016 Dirk-Jan C. Binnema
 
@@ -26,6 +26,10 @@
 ;; used e.g. to switch between accounts.
 (require 'cl-lib)
 (require 'mu4e-utils)
+
+(defvar mu4e-move-to-trash-patterns)
+(defvar smtpmail-smtp-user)
+(defvar mu4e-view-date-format)
 
 (defvar mu4e-contexts nil "The list of `mu4e-context' objects
 describing mu4e's contexts.")

@@ -1,4 +1,4 @@
-;;; mu4e-message.el -- part of mu4e, the mu mail user agent
+;;; mu4e-message.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2012-2018 Dirk-Jan C. Binnema
 
@@ -29,6 +29,9 @@
 (require 'mu4e-vars)
 (require 'mu4e-utils)
 (require 'flow-fill)
+
+(defvar mu4e~view-message)
+(defvar shr-inhibit-images)
 
 (defcustom mu4e-html2text-command
   (if (fboundp 'shr-insert-document)
@@ -231,7 +234,7 @@ unless PREFER-HTML is non-nil."
       (setq body (funcall func msg body)))
     body))
 
-(defun mu4e-message-outlook-cleanup (msg body)
+(defun mu4e-message-outlook-cleanup (_msg body)
   "Clean-up MSG's BODY.
 Esp. MS-Outlook-originating message may not advertise the correct
 encoding (e.g. 'iso-8859-1' instead of 'windows-1252'), thus
@@ -331,7 +334,7 @@ Emacs. Based on code by Titus von der Malsburg."
 	 (shr-inhibit-images t))
 	  (shr-render-region (point-min) (point-max)))) msg))
 
-(defun mu4e~html2text-shell (msg cmd)
+(defun mu4e~html2text-shell (msg _cmd)
   "Convert html2 text in MSG using a shell function CMD."
   (mu4e~html2text-wrapper
     (lambda ()

@@ -1,4 +1,4 @@
-;;; mu4e-speedbar --- Speedbar support for mu4e
+;;; mu4e-speedbar --- Speedbar support for mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2018 Antono Vasiljev, Dirk-Jan C. Binnema
 ;;
@@ -88,7 +88,7 @@
 		  maildir-name))
 	(mu4e-get-maildirs)))))
 
-(defun mu4e~speedbar-maildir (&optional text token ident)
+(defun mu4e~speedbar-maildir (&optional _text token _ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
     (mu4e-headers-search (concat "\"maildir:" token "\"")
@@ -106,13 +106,13 @@
 	      (mu4e-bookmark-query bookmark)))
     (mu4e-bookmarks)))
 
-(defun mu4e~speedbar-bookmark (&optional text token ident)
+(defun mu4e~speedbar-bookmark (&optional _text token _ident)
   "Run bookmarked query TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
     (mu4e-headers-search token current-prefix-arg)))
 
 ;;;###autoload
-(defun mu4e-speedbar-buttons (&optional buffer)
+(defun mu4e-speedbar-buttons (&optional _buffer)
   "Create buttons for any mu4e BUFFER."
   (interactive)
   (erase-buffer)

@@ -1,4 +1,4 @@
-;; mu4e-proc.el -- part of mu4e, the mu mail user agent
+;; mu4e-proc.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -92,7 +92,7 @@ removed."
       (car objcons)))))))
 
 
-(defun mu4e~proc-filter (proc str)
+(defun mu4e~proc-filter (_proc str)
   "Filter string STR from PROC.
 This process the the 'mu server' output. It accumulates the
 strings into valid sexps by checking of the ';;eox' `end-of-sexp'
@@ -287,7 +287,7 @@ Start the process if needed."
 ;; error codes are defined in src/mu-util
 ;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
 
-(defun mu4e~proc-sentinel (proc msg)
+(defun mu4e~proc-sentinel (proc _msg)
   "Function called when the server process PROC terminates with MSG."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
     (setq mu4e~proc-process nil)

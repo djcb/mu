@@ -1,4 +1,4 @@
-;;; mu4e-actions.el -- part of mu4e, the mu mail user agent
+;;; mu4e-actions.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
@@ -35,6 +35,11 @@
 
 (declare-function mu4e~proc-extract     "mu4e-proc")
 (declare-function mu4e-headers-search   "mu4e-headers")
+
+(defvar mu4e-headers-include-related)
+(defvar mu4e-headers-show-threads)
+(defvar mu4e-view-show-addresses)
+(defvar mu4e-view-date-format)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1,4 +1,4 @@
-;;; org-mu4e -- Support for links to mu4e messages/queries from within org-mode,
+;;; org-mu4e -- Support for links to mu4e messages/queries from within org-mode, -*- lexical-binding: t -*-
 ;;; and for writing message in org-mode, sending them as rich-text
 ;;
 ;; Copyright (C) 2012-2016 Dirk-Jan C. Binnema
@@ -33,6 +33,11 @@
 ;; FIXME: find a better solution
 (require 'org nil 'noerror)
 (require 'org-exp nil 'noerror)
+
+(defvar org-export-skip-text-before-1st-heading)
+(defvar org-export-htmlize-output-type)
+(defvar org-export-preserve-breaks)
+(defvar org-export-with-LaTeX-fragments)
 
 (require 'mu4e)
 

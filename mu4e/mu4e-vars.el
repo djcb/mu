@@ -1,4 +1,4 @@
-;;; mu4e-vars.el -- part of mu4e, the mu mail user agent
+;;; mu4e-vars.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
 
