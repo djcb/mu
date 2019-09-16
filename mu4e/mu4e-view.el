@@ -384,13 +384,12 @@ article-mode."
                           'prefer-utf-8)))
           (recode-region (point-min) (point-max) coding 'no-conversion)))
       (setq
-	gnus-summary-buffer (get-buffer-create " *appease-gnus*")
-	gnus-original-article-buffer (current-buffer))
+	      gnus-summary-buffer (get-buffer-create " *appease-gnus*")
+	      gnus-original-article-buffer (current-buffer))
       (run-hooks 'gnus-article-decode-hook)
       (let ((mu4e~view-rendering t) ; customize gnus in mu4e
-            (max-specpdl-size mu4e-view-max-specpdl-size)
-            (gnus-icalendar-additional-identities
-             mu4e-user-mail-address-list))
+             (max-specpdl-size mu4e-view-max-specpdl-size)
+             (gnus-icalendar-additional-identities mu4e-user-mail-address-list))
         (gnus-article-prepare-display))
       (mu4e-view-mode)
       (setq mu4e~view-message msg)
@@ -673,6 +672,13 @@ FUNC should be a function taking two arguments:
   (dolist (part (mu4e-msg-field msg :parts))
     (funcall func msg part)))
 
+(defmacro mu4e~native-def (def)
+  "Definition DEF only available in 'native' mode."
+  `(lambda() (interactive)
+     (if mu4e-view-use-gnus
+       (mu4e-warn "binding not supported with the gnus-based view")
+       (,def))))
+
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
 (unless mu4e-view-mode-map
@@ -706,9 +712,9 @@ FUNC should be a function taking two arguments:
 
       (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
-      (define-key map "g" (if mu4e-view-use-gnus 'ignore 'mu4e-view-go-to-url))
-      (define-key map "k" (if mu4e-view-use-gnus 'ignore 'mu4e-view-save-url))
-      (define-key map "f" (if mu4e-view-use-gnus 'ignore 'mu4e-view-fetch-url))
+      (define-key map "g" (mu4e~native-def mu4e-view-go-to-url))
+      (define-key map "k" (mu4e~native-def mu4e-view-save-url))
+      (define-key map "f" (mu4e~native-def mu4e-view-fetch-url))
 
       (define-key map "F" 'mu4e-compose-forward)
       (define-key map "R" 'mu4e-compose-reply)
@@ -754,9 +760,9 @@ FUNC should be a function taking two arguments:
       (define-key map "y" 'mu4e-select-other-view)
 
       ;; attachments
-      (define-key map "e" (if mu4e-view-use-gnus 'ignore 'mu4e-view-save-attachment))
-      (define-key map "o" (if mu4e-view-use-gnus 'ignore 'mu4e-view-open-attachment))
-      (define-key map "A" (if mu4e-view-use-gnus 'ignore 'mu4e-view-attachment-action))
+      (define-key map "e" (mu4e~native-def mu4e-view-save-attachment))
+      (define-key map "o" (mu4e~native-def mu4e-view-open-attachment))
+      (define-key map "A" (mu4e~native-def mu4e-view-attachment-action))
 
       ;; marking/unmarking
       (define-key map "d" 'mu4e-view-mark-or-move-to-trash)
@@ -783,10 +789,14 @@ FUNC should be a function taking two arguments:
 
       ;; misc
       (define-key map "w" 'visual-line-mode)
-      (define-key map "#" (if mu4e-view-use-gnus 'ignore 'mu4e-view-toggle-hide-cited))
-      (define-key map "h" (if mu4e-view-use-gnus 'ignore 'mu4e-view-toggle-html))
+      (define-key map "#" (mu4e~native-def mu4e-view-toggle-hide-cited))
+      (define-key map "h" (mu4e~native-def mu4e-view-toggle-html))
       (define-key map (kbd "M-q")
-	(if 'mu4e-view-use-gnus 'article-fill-long-lines 'mu4e-view-fill-long-lines))
+        (lambda()
+          (interactive)
+	        (if 'mu4e-view-use-gnus
+            (article-fill-long-lines)
+            (mu4e-view-fill-long-lines))))
 
       ;; next 3 only warn user when attempt in the message view
       (define-key map "u" 'mu4e-view-unmark)
