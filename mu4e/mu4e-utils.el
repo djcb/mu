@@ -685,7 +685,7 @@ process."
   "Timestamp for the most recent contacts update." )
 
 (defun mu4e~update-contacts (contacts &optional tstamp)
-  "Rceive a sorted list of CONTACTS.
+  "Receive a sorted list of CONTACTS.
 Each of the contacts has the form
   (FULL_EMAIL_ADDRESS . RANK) and fill the hash
 `mu4e~contacts' with it, with each contact mapped to an integer
@@ -712,6 +712,26 @@ This is used by the completion function in mu4e-compose."
     (setq mu4e~contacts-tstamp (or tstamp "0"))
     (mu4e-index-message "Contacts updated: %d; total %d"
       n (hash-table-count mu4e~contacts))))
+
+(defun mu4e-contacts-info ()
+  "Display information about the cache used for contacts
+completion; for testing/debugging."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*mu4e-contacts-info*")
+    (erase-buffer)
+    (insert (format "complete addresses:        %s\n"
+              (if mu4e-compose-complete-addresses "yes" "no")))
+    (insert (format "only personal addresses:   %s\n"
+              (if mu4e-compose-complete-only-personal "yes" "no")))
+    (insert (format "only addresses seen after: %s\n"
+              (or mu4e-compose-complete-only-after "no restrictions")))
+
+    (when mu4e~contacts
+      (insert (format "number of contacts cached: %d\n\n"
+                (hash-table-count mu4e~contacts)))
+      (maphash (lambda(key val)
+                 (insert (format "%S\n" key))) mu4e~contacts)))
+  (pop-to-buffer "*mu4e-contacts-info*"))
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
