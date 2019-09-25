@@ -142,6 +142,8 @@ struct Store::Private {
         void set_personal_addresses (const Addresses& addresses) {
 
                 std::string all_addresses;
+                personal_addresses_.clear();
+
                 for (const auto& addr : addresses) {
                         // very basic check; just ensure there's no ',' in the address.
                         // we don't insist on full RFC5322
@@ -150,6 +152,7 @@ struct Store::Private {
                         if (!all_addresses.empty())
                                 all_addresses += ',';
                         all_addresses += addr;
+                        personal_addresses_.emplace_back(addr);
                 }
                 writable_db()->set_metadata (PersonalAddressesKey, all_addresses);
         }
@@ -172,7 +175,7 @@ struct Store::Private {
         const std::string                 maildir_;
         const time_t                      created_{};
         const std::string                 schema_version_;
-        const Addresses                   personal_addresses_;
+        Addresses                         personal_addresses_;
         Contacts                          contacts_;
 
         bool                              in_transaction_{};
@@ -706,7 +709,7 @@ mu_store_personal_addresses (const MuStore *store)
 
         const auto size = self(store)->personal_addresses().size();
         auto addrs = g_new0 (char*, 1 + size);
-        for (auto i = 0; i != size; ++i)
+        for (size_t i = 0; i != size; ++i)
                 addrs[i] = g_strdup(self(store)->personal_addresses()[i].c_str());
 
         return addrs;
@@ -993,7 +996,7 @@ struct MsgDoc {
 	Store            *_store;
 	/* callback data, to determine whether this message is 'personal' */
 	gboolean          _personal;
-	GSList           *_my_addresses;
+	const Addresses  *_my_addresses;
 };
 
 
@@ -1132,14 +1135,13 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 static gboolean
 each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
 {
-	GSList *cur;
-
 	if (msgdoc->_personal || !contact->email)
 		return TRUE;
 
-	for (cur = msgdoc->_my_addresses; cur; cur = g_slist_next (cur)) {
-		if (g_ascii_strcasecmp (
-			    contact->email, (const char*)cur->data) == 0) {
+	for (const auto& cur : *msgdoc->_my_addresses) {
+		if (g_ascii_strcasecmp
+                    (contact->email,
+                     (const char*)cur.c_str()) == 0) {
 			msgdoc->_personal = TRUE;
 			break;
 		}
@@ -1152,21 +1154,21 @@ static Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
 	Xapian::Document doc;
-	MsgDoc docinfo = {&doc, msg, mutable_self(store), 0, FALSE};
+	MsgDoc docinfo = {&doc, msg, mutable_self(store), 0, NULL};
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 
 	/* determine whether this is 'personal' email, ie. one of my
 	 * e-mail addresses is explicitly mentioned -- it's not a
 	 * mailing list message. Callback will update docinfo->_personal */
-	// FIXME
-        // if (store->my_addresses()) {
-	// 	docinfo._my_addresses = store->my_addresses();
-	// 	mu_msg_contact_foreach
-	// 		(msg,
-	// 		 (MuMsgContactForeachFunc)each_contact_check_if_personal,
-	// 		 &docinfo);
-	// }
+        const auto& personal_addresses = self(store)->personal_addresses();
+        if (personal_addresses.size()) {
+		docinfo._my_addresses = &personal_addresses;
+		mu_msg_contact_foreach
+			(msg,
+			 (MuMsgContactForeachFunc)each_contact_check_if_personal,
+			 &docinfo);
+	}
 
 	/* also store the contact-info as separate terms, and add it
 	 * to the cache */
