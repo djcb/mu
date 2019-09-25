@@ -1,4 +1,4 @@
-;;; org-mu4e -- Support for links to mu4e messages/queries from within
+;;; org-mu4e -- Support for links to mu4e messages/queries from within -*- lexical-binding: t -*-
 ;;; org-mode, and for writing message in org-mode, sending them as
 ;;; rich-text
 ;;
@@ -39,6 +39,10 @@
 (declare-function mu4e-message                      "mu4e-message")
 (declare-function mu4e-compose-mode                 "mu4e-compose")
 
+(defvar org-export-skip-text-before-1st-heading)
+(defvar org-export-htmlize-output-type)
+(defvar org-export-preserve-breaks)
+(defvar org-export-with-LaTeX-fragments)
 
 (defgroup org-mu4e nil
   "Settings for the org-mode related functionality in mu4e."
