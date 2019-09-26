@@ -197,7 +197,6 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 	MuMsg *msg;
 	gboolean rv;
 
-	err = NULL;
 	msg = mu_msg_new_from_file (fname, NULL, err);
 	if (!msg)
 		return FALSE;
