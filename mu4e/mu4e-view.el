@@ -721,6 +721,8 @@ FUNC should be a function taking two arguments:
       (define-key map "C" 'mu4e-compose-new)
       (define-key map "E" 'mu4e-compose-edit)
 
+      (define-key map "K" 'ignore) ;; for gnus mode
+
       (define-key map "." 'mu4e-view-raw-message)
       (define-key map "|" 'mu4e-view-pipe)
       (define-key map "a" 'mu4e-view-action)
