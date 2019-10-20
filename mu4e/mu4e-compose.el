@@ -298,9 +298,13 @@ If needed, set the Fcc header, and register the handler function."
 (defun mu4e~compose-register-message-save-hooks ()
   "Just before saving, we remove the `mail-header-separator'.
 Just after saving we restore it; thus, the separator should never
-appear on disk."
+appear on disk. Also update the Date and ensure we have a
+Message-ID."
   (add-hook 'before-save-hook
     (lambda()
+      ;; replace the date
+      (message-remove-header "Date")
+      (message-generate-headers '(Date Message-ID))
       (save-match-data
         (mu4e~draft-remove-mail-header-separator))) nil t)
   (add-hook 'after-save-hook
