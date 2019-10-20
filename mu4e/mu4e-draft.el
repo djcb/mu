@@ -62,11 +62,8 @@ mu4e-specific version of `message-signature'."
   :type 'boolean
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-auto-include-date nil
-  "Whether to include a date header.
-If nil, only do so when sending the message."
-  :type 'boolean
-  :group 'mu4e-compose)
+(make-obsolete-variable 'mu4e-compose-auto-include-date
+  "This is done unconditionally now" "1.3.5")
 
 (defcustom mu4e-compose-in-new-frame nil
   "Whether to compose messages in a new frame."
@@ -404,8 +401,7 @@ You can append flags."
   (concat
     (when mu4e-user-agent-string
       (mu4e~draft-header "User-agent" mu4e-user-agent-string))
-   (when mu4e-compose-auto-include-date
-     (mu4e~draft-header "Date" (message-make-date)))))
+    (mu4e~draft-header "Date" (message-make-date))))
 
 (defconst mu4e~draft-reply-prefix "Re: "
   "String to prefix replies with.")
