@@ -109,7 +109,15 @@ indexing operation showed changes."
 quite a bit, especially when `mu4e-headers-include-related' is
 non-nil. Set to -1 for no limits, and you temporarily (for one
 query) ignore the limit by pressing a C-u before invoking the
-search."
+search.
+
+Note that there are a few complications when
+`mu4e-headers-include-related' is enabled: mu perform *two*
+queries; the first one with this limit set, and then a second
+(unlimited) query for all messages that are related to the first
+matches. We then limit this second result as well, favoring the
+messages that were found in the first set (the \"leaders\").
+"
   :type '(choice (const :tag "Unlimited" -1)
 	   (integer :tag "Limit"))
   :group 'mu4e-headers)
