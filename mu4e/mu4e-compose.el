@@ -303,10 +303,11 @@ Message-ID."
   (add-hook 'before-save-hook
     (lambda()
       ;; replace the date
-      (message-remove-header "Date")
-      (message-generate-headers '(Date Message-ID))
-      (save-match-data
-        (mu4e~draft-remove-mail-header-separator))) nil t)
+      (save-excursion
+        (message-remove-header "Date")
+        (message-generate-headers '(Date Message-ID))
+        (save-match-data
+          (mu4e~draft-remove-mail-header-separator)))) nil t)
   (add-hook 'after-save-hook
     (lambda ()
       (save-match-data
