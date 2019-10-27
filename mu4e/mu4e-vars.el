@@ -591,7 +591,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-highlight-face
-  '((t :inherit region :weight bold :underline t))
+  '((t :inherit hl-line :weight bold :underline t))
   "Face for the header at point."
   :group 'mu4e-faces)
 
