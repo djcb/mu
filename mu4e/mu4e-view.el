@@ -424,8 +424,10 @@ article-mode."
                  (mu4e~view-gnus-insert-header field flags)))
               (:size (mu4e~view-gnus-insert-header
                       field (mu4e-display-size fieldval)))
-              ;; :subject :to :from :cc :bcc :from-or-to :date :attachments
-              ;; :signature :decryption are handled by Gnus
+              ((:subject :to :from :cc :bcc :from-or-to :date :attachments
+                         :signature :decryption)) ; handled by Gnus
+              (t
+               (mu4e~view-gnus-insert-header-custom msg field))
               )))
         (let ((gnus-treatment-function-alist
                '((gnus-treat-highlight-headers
@@ -434,13 +436,25 @@ article-mode."
 
 (defun mu4e~view-gnus-insert-header (field val)
   "Insert a header FIELD with value VAL in Gnus article view."
-  (let* ((info (cdr (assoc field
-		           (append mu4e-header-info mu4e-header-info-custom))))
+  (let* ((info (cdr (assoc field mu4e-header-info)))
 	 (key (plist-get info :name))
          (help (plist-get info :help)))
     (if (and val (> (length val) 0))
         (insert (propertize (concat key ":") 'help-echo help)
                 " " val "\n"))))
+
+(defun mu4e~view-gnus-insert-header-custom (msg field)
+  "Insert the custom FIELD in Gnus article view."
+  (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
+                             (mu4e-error "custom field %S not found" field))))
+	 (key (plist-get info :name))
+         (func (or (plist-get info :function)
+                   (mu4e-error "no :function defined for custom field %S %S"
+		               field info)))
+         (val (funcall func msg))
+         (help (plist-get info :help)))
+    (when (and val (> (length val) 0))
+      (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
