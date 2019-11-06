@@ -465,6 +465,7 @@ looks_like_text_body_part (GMimeContentType *ctype)
 		const char *subtype;
 	} types[] = {
 		{ "text", "plain" },
+		{ "text", "x-markdown" },
 		{ "text", "x-diff"  },
 		{ "text", "x-patch" },
 		{ "application", "x-patch"}
