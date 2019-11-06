@@ -385,7 +385,7 @@ SCM_DEFINE (get_parts, "mu:c:get-parts", 1, 1, 0,
 
 
 SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
-	    (SCM MSG, SCM HEADER), "Get an arbitary HEADER from MSG.\n")
+	    (SCM MSG, SCM HEADER), "Get an arbitrary HEADER from MSG.\n")
 #define FUNC_NAME s_get_header
 {
 	MuMsgWrapper *msgwrap;

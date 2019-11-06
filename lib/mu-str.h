@@ -77,7 +77,7 @@ char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
 
 /**
- * Replace all occurences of substr in str with repl
+ * Replace all occurrences of substr in str with repl
  *
  * @param str a string
  * @param substr some string to replace

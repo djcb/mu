@@ -44,7 +44,7 @@ struct ContactInfo {
          * Construct a new ContactInfo
          *
          * @param _full_address the full email address + name.
-         * @param _email email addres
+         * @param _email email address
          * @param _name name or empty
          * @param _personal is this a personal contact?
          * @param _last_seen when was this contact last seen?
@@ -145,7 +145,7 @@ public:
         /**
          * For C compatiblityy
          *
-         * @return a MuContacts* refering to this.
+         * @return a MuContacts* referring to this.
          */
         const MuContacts* mu_contacts() const {
                 return reinterpret_cast<const MuContacts*>(this);

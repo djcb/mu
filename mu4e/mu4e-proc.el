@@ -317,7 +317,7 @@ Start the process if needed."
 (defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups
       include-related)
   "Run QUERY with THREADS SORTFIELD SORTDIR MAXNUM SKIP-DUPS INCLUDE-RELATED.
-If THREADS is non-nil, show results in threaded fasion, SORTFIELD
+If THREADS is non-nil, show results in threaded fashion, SORTFIELD
 is a symbol describing the field to sort by (or nil); see
 `mu4e~headers-sortfield-choices'. If SORT is `descending', sort
 Z->A, if it's `ascending', sort A->Z. MAXNUM determines the
@@ -375,7 +375,7 @@ If the variable `mu4e-change-filenames-when-moving' is
 non-nil, moving to a different maildir generates new names forq
 the target files; this helps certain tools (such as mbsync).
 
-If NO-VIEW is non-nil, don't updat the view.
+If NO-VIEW is non-nil, don't update the view.
 
 Returns either (:update ... ) or (:error ) sexp, which are handled my
 `mu4e-update-func' and `mu4e-error-func', respectively."

@@ -471,7 +471,7 @@ As we have seen, we can do all of the mail retrieval @emph{outside} of
 
 @subsection Basics
 
-To set up mail-retrieval from withing @t{mu4e}, set the variable
+To set up mail-retrieval from within @t{mu4e}, set the variable
 @code{mu4e-get-mail-command} to the program or shell command you want to
 use for retrieving mail. You can then get your e-mail using @kbd{M-x
 mu4e-update-mail-and-index}, or @kbd{C-S-u} in all @t{mu4e}-views;

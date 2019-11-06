@@ -36,7 +36,7 @@ typedef struct _MuQuery MuQuery;
  * @param store a MuStore object
  * @param err receives error information (if there is any); if
  * function returns non-NULL, err will _not_be set. err can be NULL
- * possble errors (err->code) are MU_ERROR_XAPIAN_DIR and
+ * possible errors (err->code) are MU_ERROR_XAPIAN_DIR and
  * MU_ERROR_XAPIAN_NOT_UPTODATE
  *
  * @return a new MuQuery instance, or NULL in case of error.

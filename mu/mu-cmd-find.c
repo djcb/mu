@@ -123,7 +123,7 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
 		sortid = sort_field_from_string (opts->sortfield, err);
-		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occured? */
+		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occurred? */
 			return FALSE;
 	}
 

@@ -62,7 +62,7 @@ MuMsgPrio mu_msg_prio_from_char (char k) G_GNUC_CONST;
  * ('l'=>MU_MSG_PRIO_, 'n'=>MU_MSG_PRIO_NORMAL or
  * 'h'=>MU_MSG_PRIO_HIGH)
  *
- * @param prio a mesage priority
+ * @param prio a message priority
  *
  * @return a shortcut character or 0 in case of error
  */

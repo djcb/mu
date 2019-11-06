@@ -84,7 +84,7 @@ Trust me, it's not very hard -- and it's @emph{fun}!
 
 Appendices
 
-* Recipies:: Snippets do specific things
+* Recipes:: Snippets do specific things
 * GNU Free Documentation License::  The license of this manual.
 @end menu
 
@@ -155,7 +155,7 @@ Guile version                        : 2.0.3.82-a2c66
 @end example
 
 If you don't see any line referring to @t{guile}, please install it, and run
-@t{configure} again. After a succesfull @t{./configure}, we can make and
+@t{configure} again. After a successful @t{./configure}, we can make and
 install the package:
 
 @example
@@ -309,7 +309,7 @@ modules and show what you can do with them.
 In this chapter, we discuss searching messages and doing things with them.
 
 @menu
-* Finding messages:: query for messages in the databse
+* Finding messages:: query for messages in the database
 * Message methods::  what methods are available for messages?
 * Example - the longest subject:: find the messages with the longest subject
 @end menu
@@ -549,7 +549,7 @@ which is a @emph{subclass} of the @t{<mu:contact>} class discussed in
 expose the following additional methods:
 
 @itemize
-@item @code{(mu:frequency <contact>)}: returns the @emph{number of times} this contact occured in
+@item @code{(mu:frequency <contact>)}: returns the @emph{number of times} this contact occurred in
 one of the address fields
 @item @code{(mu:last-seen <contact>)}: returns the @emph{most recent time} the contact was
 seen in one of the address fields, as a @t{time_t} value
@@ -623,7 +623,7 @@ exec guile -s $0 $@
 @end lisp
 
 This simple program could be improved in many ways; this is left as an
-excercise to the reader.
+exercise to the reader.
 
 @node Attachments and other parts
 @chapter Attachments and other parts
@@ -965,8 +965,8 @@ Please refer to the @t{mu-script} man-page for some details on writing your
 own scripts.
 
 
-@node Recipies
-@appendix Recipies
+@node Recipes
+@appendix Recipes
 
 @itemize
 @item Calculating the average length of subject-lines

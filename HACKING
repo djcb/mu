@@ -17,7 +17,7 @@
 
    1. Basic code layout is like in the Linux kernel coding style. Keep the '{'
       on the same line as the statement, except for functions. Tabs for
-      indentation, space for aligment; use 8-char tabs.
+      indentation, space for alignment; use 8-char tabs.
 
    2. Lines should not exceed 80 characters (C) or 100 characters (C++)
 

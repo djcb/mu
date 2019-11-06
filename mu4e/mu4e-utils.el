@@ -1230,7 +1230,7 @@ used in the view and compose modes."
 
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used in
-the view and compose modes and will color each signature in digest messages adhearing to RFC 1153."
+the view and compose modes and will color each signature in digest messages adhering to RFC 1153."
   (let ((inhibit-read-only t))
     (save-excursion
       ;; give the footer a different color...

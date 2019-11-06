@@ -127,7 +127,7 @@ assert_no_duplicates (GHashTable *ids)
 }
 
 
-/* a referred message is a message that is refered by some other
+/* a referred message is a message that is referred by some other
  * message */
 static MuContainer*
 find_or_create_referred (GHashTable *id_table, const char *msgid,

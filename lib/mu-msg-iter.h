@@ -167,7 +167,7 @@ guint    mu_msg_iter_get_docid         (MuMsgIter *iter);
  *
  * @param iter a valid MuMsgIter iterator
  *
- * @return TRUE if it worked, FALSE otherwsie.
+ * @return TRUE if it worked, FALSE otherwise.
  */
 gboolean mu_msg_iter_calculate_threads (MuMsgIter *iter);
 
@@ -185,7 +185,7 @@ enum _MuMsgIterThreadProp {
 typedef guint8 MuMsgIterThreadProp;
 
 struct _MuMsgIterThreadInfo {
-	gchar *threadpath; /* a string decribing the thread-path in
+	gchar *threadpath; /* a string describing the thread-path in
 			    * such a way that we can sort by this
 			    * string to get the right order. */
 	guint level;       /* thread-depth -- [0...] */

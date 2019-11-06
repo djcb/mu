@@ -109,7 +109,7 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
 # support for d_ino (inode) in struct dirent is optional; if it's
 # available we can sort direntries by inode and access them in that
 # order; this is much faster on some file systems (such as extfs3).
-# Explicity disabling it is for testing purposes only.
+# Explicitly disabling it is for testing purposes only.
 AC_ARG_ENABLE([dirent-d-ino],
     AC_HELP_STRING([--disable-dirent-d-ino],
             [Don't use dirent->d_ino, even if you have it]),

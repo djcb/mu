@@ -65,7 +65,7 @@ returns #t if A < B, #f otherwise), and then take the first N."
   (take (sort (mu:tabulate func expr) less) n))
 
 (define* (mu:top-n-most-frequent func n #:optional (expr #t))
-  "Take the results of (mu:tabulate FUNC EXPR), and return the N items with the higest frequency."
+  "Take the results of (mu:tabulate FUNC EXPR), and return the N items with the highest frequency."
   (top-n func (lambda (a b) (> (cdr a) (cdr b))) n expr))
  
 (define* (mu:count #:optional (expr #t))

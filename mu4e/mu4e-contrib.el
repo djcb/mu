@@ -165,7 +165,7 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
 ;;; end of spam-filtering functions
 
 ;;; eshell functions
-;; Code for 'gnus-dired-attached' modifed to run from eshell, allowing files to
+;; Code for 'gnus-dired-attached' modified to run from eshell, allowing files to
 ;; be attached to an email via mu4e using the eshell. Does not depend on gnus.
 (defun eshell/mu4e-attach (&rest args)
   "Attach files to a mu4e message using eshell. If no mu4e

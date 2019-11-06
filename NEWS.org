@@ -70,12 +70,12 @@
 
     - The query-parser now generates better queries for wildcard searches, by
       using the Xapian machinery for that (when available) rather than
-      tranforming into regexp queries.
+      transforming into regexp queries.
 
     - The perl backend is hardly used and will be removed; for now we just
       disable it in the build.
 
-    - Allow outputing messages in json format, closely following the sexp
+    - Allow outputting messages in json format, closely following the sexp
       output. This adds an (optional) dependency on the Json-Glib library.
 
 *** mu4e
@@ -374,7 +374,7 @@ GuileUsr | Guile-SDL 0.4.2 ava... End of search results #+END_EXAMPLE
       #+BEGIN_EXAMPLE
 10:26 ⭑☐ Nicolas Goaziou Orgmode /bulk ◼ Re: [O] 2 issue with Include function
 11:00 ⭑☐ Leonard Randall Orgmode /bulk ┗▶ 10:55 ⭑☐ Guillermo Rodrigu... GstDev
-/bulk ◼ Re: stop pipeline into a callback funtion. 12:04 ⭑☐ Enrique Ocaña Gon...
+/bulk ◼ Re: stop pipeline into a callback function. 12:04 ⭑☐ Enrique Ocaña Gon...
 GstDev /bulk ┗▶ 11:27 ⭑☐ Tim Müller GstDev /bulk ◼ 09:34 ⭑☐ Robert Klein Orgmode
 /bulk ◼ Re: [O] Agenda Tag filtering - has the behaviour changed? #+END_EXAMPLE
 

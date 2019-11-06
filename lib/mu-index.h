@@ -119,7 +119,7 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * @param cb_dir a callback function called for every dir entered/left or NULL
  * @param user_data a user pointer that will be passed to the callback function
  *
- * @return MU_OK if the stats gathering was completed succesfully,
+ * @return MU_OK if the stats gathering was completed successfully,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
@@ -144,7 +144,7 @@ MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
  * @param dir_cb a callback function which will be called for every dir or NULL
  * @param user_data a user pointer that will be passed to the callback function
  * xb
- * @return MU_OK if the stats gathering was completed succesfully,
+ * @return MU_OK if the stats gathering was completed successfully,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
@@ -177,7 +177,7 @@ typedef MuError (*MuIndexCleanupDeleteCallback) (MuIndexStats *stats,
  * @param user_data a user pointer that will be passed to the callback function
  * @param err to receive error info or NULL. err->code is MuError value
  *
- * @return MU_OK if the stats gathering was completed succesfully,
+ * @return MU_OK if the stats gathering was completed successfully,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */

@@ -128,7 +128,7 @@ messages that were found in the first set (the \"leaders\").
 (defcustom mu4e-headers-skip-duplicates t
   "With this option set to non-nil, show only one of duplicate
 messages. This is useful when you have multiple copies of the same
-message, which is a common occurence for example when using Gmail
+message, which is a common occurrence for example when using Gmail
 and offlineimap."
   :type 'boolean
   :group 'mu4e-headers)
@@ -472,7 +472,7 @@ into a string."
 	  (let* ((length (length mu4e~headers-thread-state))
 		 (padding (make-list (max 0 (- level length)) nil)))
 	    ;; Trim and pad the state to ensure a message will
-	    ;; always be shown with the correct identation, even if
+	    ;; always be shown with the correct indentation, even if
 	    ;; a broken thread is returned. It's trimmed to level-1
 	    ;; because the current level has always an connection
 	    ;; and it used a special formatting.
@@ -1458,7 +1458,7 @@ descendants."
 (defun mu4e~headers-push-query (query where)
   "Push QUERY to one of the query stacks.
 WHERE is a symbol telling us where to push; it's a symbol, either
-'future or 'past. Functional also removes duplicats, limits the
+'future or 'past. Functional also removes duplicates, limits the
 stack size."
   (let ((stack
 	  (cl-case where

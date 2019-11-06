@@ -247,7 +247,7 @@ on_list_view_error (MugMsgListView * mlist, MugError err, MugData * mugdata)
 		msg = "Error in query";
 		break;
 	default:
-		msg = "Some error occured";
+		msg = "Some error occurred";
 		break;
 	}
 

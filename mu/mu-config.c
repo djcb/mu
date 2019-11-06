@@ -557,7 +557,7 @@ get_option_group (MuConfigCmd cmd)
 
 
 /* ugh yuck massaging the GOption text output; glib prepares some text
- * which has a 'Usage:' for the 'help' commmand. However, we need the
+ * which has a 'Usage:' for the 'help' command. However, we need the
  * help for the command we're asking help for. So, we remove the Usage:
  * from what glib generates. :-( */
 static gchar*
