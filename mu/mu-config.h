@@ -148,7 +148,7 @@ struct _MuConfig {
 					  * in results */
 	/* for find and cind */
 	time_t            after;          /* only show messages or
-					   * adresses last seen after
+					   * addresses last seen after
 					   * T */
 	/* options for crypto
 	 * ie, 'view', 'extract' */

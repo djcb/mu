@@ -6,7 +6,7 @@ test -f mu/mu.cc || {
     exit 1
 }
 
-# opportunistically; usually not needed, but occassionaly it'll
+# opportunistically; usually not needed, but occasionally it'll
 # avoid build errors that would otherwise confuse users.
 test -f Makefile && {
     echo "*** clear out old things"

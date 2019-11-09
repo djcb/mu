@@ -375,7 +375,7 @@ user which one)."
 
 (defun mu4e-mark-execute-all (&optional no-confirmation)
   "Execute the actions for all marked messages in this buffer.
-After the actions have been executed succesfully, the affected
+After the actions have been executed successfully, the affected
 messages are *hidden* from the current header list. Since the
 headers are the result of a search, we cannot be certain that the
 messages no longer match the current one - to get that

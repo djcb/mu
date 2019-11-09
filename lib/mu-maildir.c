@@ -714,7 +714,7 @@ mu_maildir_get_flags_from_path (const char *path)
 
 
 /*
- * take an exising message path, and return a new path, based on
+ * take an existing message path, and return a new path, based on
  * whether it should be in 'new' or 'cur'; ie.
  *
  * /home/user/Maildir/foo/bar/cur/abc:2,F  and flags == MU_FLAG_NEW

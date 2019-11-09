@@ -44,7 +44,7 @@ for use in other programs.
 'plain' is the default.
 
 If you specify '--personal', only addresses that were found in mails
-that include 'my' e-mail addres will be listed - so to exclude e.g.
+that include 'my' e-mail address will be listed - so to exclude e.g.
 mailing-list posts. Use the --my-address= option in 'mu index' to
 specify what addresses are considered 'my' address.
 

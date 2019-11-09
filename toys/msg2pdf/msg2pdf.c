@@ -260,7 +260,7 @@ main(int argc, char *argv[])
 	return 0;
 
 err:
-	/* some error occured */
+	/* some error occurred */
 	mu_msg_unref (msg);
 
 	if (err)

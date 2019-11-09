@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  * @param t the time as time_t
  *
  * @return a string representation of the time; see above for what to
- * do with it. Lenght is max. 128 bytes, inc. the ending \0.  if the
+ * do with it. Length is max. 128 bytes, inc. the ending \0.  if the
  * format is too long, the value will be truncated. in practice this
  * should not happen.
  */

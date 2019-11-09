@@ -444,7 +444,7 @@ add_file_parts (JsonBuilder *bob, MuMsg *msg, MuMsgOptions opts)
 
 	if (!mu_msg_load_msg_file (msg, &err)) {
 		g_warning ("failed to load message file: %s",
-			   err ? err->message : "some error occured");
+			   err ? err->message : "some error occurred");
 		g_clear_error (&err);
 		return;
 	}

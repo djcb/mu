@@ -24,7 +24,7 @@
 
 ;;; Code:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'smtpmail)      ;; the queing stuff (silence elint)
+(require 'smtpmail)      ;; the queueing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
 (require 'cl-lib)
@@ -81,7 +81,7 @@
 
 
 (defun mu4e~main-action-str (str &optional func-or-shortcut)
-  "Highlight the first occurence of [.] in STR.
+  "Highlight the first occurrence of [.] in STR.
 If FUNC-OR-SHORTCUT is non-nil and if it is a function, call it
 when STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is
 a string, execute the corresponding keyboard action when it is

@@ -574,7 +574,7 @@ add text-properties to VAL."
     (mu4e~view-construct-header :decryption val t)))
 
 (defun mu4e~view-open-attach-from-binding ()
-  "Open the attachement at point, or click location."
+  "Open the attachment at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
 	 ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
@@ -582,7 +582,7 @@ add text-properties to VAL."
       (mu4e-view-open-attachment msg attnum))))
 
 (defun mu4e~view-save-attach-from-binding ()
-  "Save the attachement at point, or click location."
+  "Save the attachment at point, or click location."
   (interactive)
   (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
 	 ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
@@ -1587,7 +1587,7 @@ user with PROMPT."
   "Apply URLFUNC to a a range of urls in the current message,
 prompting the user with PROMPT.
 
-Default is to aplly it to all URLs, [1..n], where n is the number
+Default is to apply it to all URLs, [1..n], where n is the number
 of urls. You can type multiple values separated by space, e.g.  1
 3-6 8 will visit urls 1,3,4,5,6 and 8.
 

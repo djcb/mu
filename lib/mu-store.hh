@@ -45,7 +45,7 @@ public:
         /**
          * Construct a store for a not-yet-existing document database
          *
-         * @param path path to the detabase
+         * @param path path to the database
          * @param maildir maildir to use for this store
          */
         Store (const std::string& path, const std::string& maildir);

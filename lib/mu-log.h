@@ -76,7 +76,7 @@ gboolean mu_log_init (const char *logfile, MuLogOptions opts)
 gboolean mu_log_init_silence    (void) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
- * unitialize the logging system, and free all resources
+ * uninitialize the logging system, and free all resources
  */
 void mu_log_uninit             (void);
 

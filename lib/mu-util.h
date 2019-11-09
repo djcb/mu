@@ -285,7 +285,7 @@ typedef gpointer XapianEnquire;
 #define MU_HANDLE_G_ERROR(GE)							\
 	do {									\
 		if (!(GE))							\
-			g_warning ("%s:%u: an error occured in %s",		\
+			g_warning ("%s:%u: an error occurred in %s",		\
 				   __FILE__, __LINE__, __func__);		\
 		else {								\
 			g_warning ("error %u: %s", (GE)->code, (GE)->message);	\
@@ -466,7 +466,7 @@ typedef enum _MuError MuError;
  *
  * @param err errptr, or NULL
  * @param errcode error code
- * @param frm printf-style format, followed by paremeters
+ * @param frm printf-style format, followed by parameters
  *
  * @return FALSE
  */

@@ -109,7 +109,7 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
  * @param msg a MuMsg
  * @param err receives error information
  *
- * @return TRUE if this succceeded, FALSE in case of error
+ * @return TRUE if this succeeded, FALSE in case of error
  */
 gboolean mu_msg_load_msg_file (MuMsg *msg, GError **err);
 

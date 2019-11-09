@@ -63,7 +63,7 @@ Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
 arbitrary shell-commands can be used.
 
 When set to the literal string \"true\" (the default), the
-command simply finishes succesfully (running the 'true' command)
+command simply finishes successfully (running the 'true' command)
 without retrieving any mail. This can be useful when mail is
 already retrieved in another way."
   :type 'string
@@ -94,7 +94,7 @@ This depends on the `mu4e-get-mail-command' exit code."
 That is, validate that each message in the message store has a
 corresponding message file in the filesystem.
 
-Having this option as t ensures that no non-existing mesages are
+Having this option as t ensures that no non-existing messages are
 shown but can also be quite slow with large message stores."
 :type 'boolean :group 'mu4e :safe 'booleanp)
 
@@ -181,7 +181,7 @@ Follows the format of `format-time-string'."
 
 (defcustom mu4e-modeline-max-width 30
   "Determines the maximum length of the modeline string.
-If the string exeeds this limit, it will be truncated to fit."
+If the string exceeds this limit, it will be truncated to fit."
   :type 'integer
   :group 'mu4e)
 
