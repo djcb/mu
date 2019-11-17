@@ -73,8 +73,8 @@ set_tz (const char* tz)
 gboolean
 set_en_us_utf8_locale (void)
 {
-	setenv ("LC_ALL", "en_US.utf8", 1);
-	setlocale (LC_ALL, "en_US.utf8");
+	setenv ("LC_ALL", "en_US.UTF-8", 1);
+	setlocale (LC_ALL, "en_US.UTF-8");
 
 	if (strcmp (nl_langinfo(CODESET), "UTF-8") != 0) {
 		g_print ("Note: Unit tests require the en_US.utf8 locale. "
