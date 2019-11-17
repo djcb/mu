@@ -219,8 +219,8 @@ test_mu_find_04 (void)
 {
 	gchar *cmdline, *erroutput;
 
-	cmdline = g_strdup_printf ("%s --muhome=%cfoo%cbar%cnonexistent "
-				   "find f:socrates",
+	cmdline = g_strdup_printf ("find %s --muhome=%cfoo%cbar%cnonexistent "
+				   "f:socrates",
 				   MU_PROGRAM,
 				   G_DIR_SEPARATOR,
 				   G_DIR_SEPARATOR,
