@@ -257,7 +257,6 @@ Start the process if needed."
           (args (append args (when mu4e-mu-home (list (concat "--muhome=" mu4e-mu-home)))))
           (args (append args (list (concat "--maildir=" mu4e-maildir)))))
     (setq mu4e~proc-buf "")
-    (message "%S" args)
     (setq mu4e~proc-process (apply 'start-process
             mu4e~proc-name mu4e~proc-name
                               mu4e-mu-binary args))
