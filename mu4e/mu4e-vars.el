@@ -57,6 +57,16 @@ change until after quitting."
   :safe 'stringp
   :group 'mu4e)
 
+(defcustom mu4e-org-support t
+  "Support org-mode links."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-speedbar-support nil
+  "Support having a speedbar to navigate folders/bookmarks."
+  :type 'boolean
+  :group 'mu4e)
+
 (defcustom mu4e-get-mail-command "true"
   "Shell command to run to retrieve new mail.
 Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
@@ -69,6 +79,8 @@ already retrieved in another way."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
+
+
 
 (defcustom mu4e-index-update-error-warning t
   "Whether to display warnings during the retrieval process.

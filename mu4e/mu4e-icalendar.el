@@ -39,7 +39,6 @@
 
 ;;; Code:
 
-(require 'mu4e)
 (require 'gnus-icalendar)
 (require 'cl-lib)
 

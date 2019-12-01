@@ -34,18 +34,17 @@ dist_lisp_LISP=			\
 	mu4e-mark.el		\
 	mu4e-message.el		\
 	mu4e-meta.el		\
+	mu4e-org.el		\
 	mu4e-proc.el		\
 	mu4e-speedbar.el	\
 	mu4e-utils.el		\
 	mu4e-vars.el		\
 	mu4e-view.el		\
 	mu4e.el			\
-	org-mu4e.el		\
-	org-old-mu4e.el
+	org-mu4e.el
 
 EXTRA_DIST=			\
-	mu4e-about.org 		\
-	org-old-mu4e.el
+	mu4e-about.org
 
 CLEANFILES=			\
 	*.elc

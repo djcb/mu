@@ -3232,34 +3232,27 @@ you can do so by adding the following to your configuration:
 @section Org-mode links
 
 It can be useful to include links to e-mail messages or even search
-queries in your org-mode files. @t{mu4e} supports this with the
-@t{org-mu4e} module; you can set it up by adding it to your
-configuration, which expects org-mode 8.x. or higher@footnote{If you
-have an older version, you can try using @t{org-old-mu4e} instead}.
+queries in your org-mode files. @t{mu4e} supports this by default,
+unless you set @t{mu4e-support-org} to @code{nil}.
 
-@lisp
-(require 'org-mu4e)
-@end lisp
-
-@noindent
-After this, you can use the normal @t{org-mode} mechanisms to store
-links: @kbd{M-x org-store-link} stores a link to a particular message
-when you are in @ref{Message view}. When you are in @ref{Headers view},
+You can use the normal @t{org-mode} mechanisms to store links:
+@kbd{M-x org-store-link} stores a link to a particular message when
+you are in @ref{Message view}. When you are in @ref{Headers view},
 @kbd{M-x org-store-link} links to the @emph{query} if
-@code{org-mu4e-link-query-in-headers-mode} is non-@code{nil}, and to the
-particular message otherwise (which is the default).
+@code{mu4e-org-link-query-in-headers-mode} is non-@code{nil}, and to
+the particular message otherwise (which is the default).
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
 @t{org-mode}, you can go to the query or message the link points to with
 either @kbd{M-x org-agenda-open-link} in agenda buffers, or @kbd{M-x
 org-open-at-point} elsewhere --- both typically bound to @kbd{C-c C-o}.
 
-You can also directly @emph{capture} such links --- for example, to add
-e-mail messages to your todo-list. For that, @t{org-mu4e} has a function
-@code{org-mu4e-store-and-capture}. This captures the message-at-point
-(or header --- see the discussion on
-@code{org-mu4e-link-query-in-headers-mode} above), then calls org-mode's
-capture functionality.
+You can also directly @emph{capture} such links --- for example, to
+add e-mail messages to your todo-list. For that, @t{org-mu4e} has a
+function @code{mu4e-org-store-and-capture}. This captures the
+message-at-point (or header --- see the discussion on
+@code{mu4e-org-link-query-in-headers-mode} above), then calls
+@t{org-mode}'s capture functionality.
 
 You can add some specific capture-template for this: for example, to add
 a message to your todo-list, and set a deadline for processing it within

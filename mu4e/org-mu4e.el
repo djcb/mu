@@ -30,6 +30,7 @@
 
 ;; The expect version here is org 8.x
 (require 'org)
+(require 'mu4e-compose)
 
 (declare-function mu4e-last-query                   "mu4e-headers")
 (declare-function mu4e-message-at-point             "mu4e-message")
@@ -39,125 +40,7 @@
 (declare-function mu4e-message                      "mu4e-message")
 (declare-function mu4e-compose-mode                 "mu4e-compose")
 
-(defvar org-export-skip-text-before-1st-heading)
-(defvar org-export-htmlize-output-type)
-(defvar org-export-preserve-breaks)
-(defvar org-export-with-LaTeX-fragments)
 
-(defgroup org-mu4e nil
-  "Settings for the org-mode related functionality in mu4e."
-  :group 'mu4e
-  :group 'org)
-
-(defvar org-mu4e-link-query-in-headers-mode nil
-  "Prefer linking to the query rather than to the message.
-If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
-the current query; otherwise, it links to the message at point.")
-
-(defcustom org-mu4e-link-desc-func
-  (lambda (msg) (or (plist-get msg :subject) "No subject"))
-  "Function that takes a msg and returns a description.
-This can be use in org capture templates.
-
-Example usage:
-
-  (defun my-link-descr (msg)
-    (let ((subject (or (plist-get msg :subject)
-                       \"No subject\"))
-          (date (or (format-time-string mu4e-headers-date-format
-                    (mu4e-msg-field msg :date))
-                    \"No date\")))
-      (concat subject \" \" date)))
-
-  (setq org-mu4e-link-desc-func 'my-link-descr)"
-  :type 'function
-  :group 'org-mu4e)
-
-(defun org~mu4e-store-link-query ()
-  "Store a link to a mu4e query."
-  (let* ((query  (mu4e-last-query))
-          (date (format-time-string (org-time-stamp-format)))
-          ;; seems we get an error when there's no date...
-          (link (concat "mu4e:query:" query)))
-    (org-store-link-props
-      :type "mu4e"
-      :query query
-      :date date)
-    (org-add-link-props
-      :link link
-      :description (format "mu4e-query: '%s'" query))
-    link))
-
-(defun org~mu4e-first-address (msg field)
-  "Get address field FIELD from MSG as a string or nil."
-  (let* ((val (plist-get msg field))
-          (name (when val (car (car val))))
-          (addr (when val (cdr (car val)))))
-    (when val
-      (if name
-        (format "%s <%s>" name addr)
-        (format "%s" addr)))))
-
-(defun org~mu4e-store-link-message ()
-  "Store a link to a mu4e message."
-  (let* ((msg      (mu4e-message-at-point))
-          (msgid   (or (plist-get msg :message-id) "<none>"))
-          (date    (plist-get msg :date))
-          (date    (format-time-string (org-time-stamp-format) date))
-          ;; seems we get an error when there's no date...
-          (link    (concat "mu4e:msgid:" msgid)))
-    (org-store-link-props
-      :type        "mu4e"
-      :message-id  msgid
-      :to          (org~mu4e-first-address msg :to)
-      :from        (org~mu4e-first-address msg :from)
-      :date        date
-      :subject     (plist-get msg :subject))
-    (org-add-link-props
-      :link link
-      :description (funcall org-mu4e-link-desc-func msg))
-    link))
-
-(defun org-mu4e-store-link ()
-  "Store a link to a mu4e message or query.
-It links to the last known query when in `mu4e-headers-mode' with
-`org-mu4e-link-query-in-headers-mode' set; otherwise it links to
-a specific message, based on its message-id, so that links stay
-valid even after moving the message around."
-  (if (and (eq major-mode 'mu4e-headers-mode)
-  org-mu4e-link-query-in-headers-mode)
-    (org~mu4e-store-link-query)
-    (when (mu4e-message-at-point t)
-      (org~mu4e-store-link-message))))
-
-;; org-add-link-type is obsolete as of org-mode 9.
-;; Instead we will use the org-link-set-parameters method
-(if (fboundp 'org-link-set-parameters)
-    (org-link-set-parameters "mu4e"
-           :follow #'org-mu4e-open
-           :store #'org-mu4e-store-link)
-  (org-add-link-type "mu4e" 'org-mu4e-open)
-  (add-hook 'org-store-link-functions 'org-mu4e-store-link))
-
-(defun org-mu4e-open (link)
-  "Open the org LINK.
-Open the mu4e message (for links starting with 'msgid:') or run
-the query (for links starting with 'query:')."
-  (require 'mu4e)
-  (cond
-    ((string-match "^msgid:\\(.+\\)" link)
-      (mu4e-view-message-with-message-id (match-string 1 link)))
-    ((string-match "^query:\\(.+\\)" link)
-      (mu4e-headers-search (match-string 1 link) current-prefix-arg))
-    (t (mu4e-error "Unrecognized link type '%s'" link))))
-
-(defun org-mu4e-store-and-capture ()
-  "Store a link to the current message or query.
-\(depending on `org-mu4e-link-query-in-headers-mode', and capture
-it with org)."
-  (interactive)
-  (call-interactively 'org-store-link)
-  (org-capture))
 
 
 ;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -167,6 +50,11 @@ it with org)."
 ;; Homepage: http://orgmode.org/worg/org-contrib/org-mime.php
 ;;
 ;; EXPERIMENTAL
+(defvar org-export-skip-text-before-1st-heading)
+(defvar org-export-htmlize-output-type)
+(defvar org-export-preserve-breaks)
+(defvar org-export-with-LaTeX-fragments)
+
 (defun org~mu4e-mime-file (ext path id)
   "Create a file of type EXT at PATH with ID for an attachment."
   (format (concat "<#part type=\"%s\" filename=\"%s\" "
