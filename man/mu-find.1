@@ -42,7 +42,7 @@ The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
 treated as if there were a logical \fBand\fR between them.
 
-For details on the possible queries, see 
+For details on the possible queries, see
 
 
 
@@ -209,17 +209,17 @@ details of the bookmarks file.
 
 
 .TP
-\fB\-\-skip\-dups\fR,\fB-u\fR whenever there are multiple messages with the
-same name, only show the first one. This is useful if you have copies of the
-same message, which is a common occurrence when using e.g. Gmail together with
-\fBofflineimap\fR.
+\fB\-\-include\-dups\fR,\fB-u\fR by default, whenever there are multiple
+messages with the same name, only show the first one. This is useful if you have
+copies of the same message, which is a common occurrence when using e.g. Gmail
+together with \fBofflineimap\fR. Use this option to turn that behavior off.
 
 .TP
-\fB\-\-include\-related\fR,\fB-r\fR also include messages being refered to by
-the matched messages -- i.e.. include messages that are part of the same
-message thread as some matched messages. This is useful if you want
-Gmail-style 'conversations'. Note, finding these related messages make
-searches slower.
+\fB\-\-skip\-related\fR,\fB-r\fR by default, the results include messages being
+refered to by the matched messages -- i.e.. include messages that are part of
+the same message thread as some matched messages. This is useful if you want
+Gmail-style 'conversations'. Note, finding these related messages make searches
+slightly slower. Use this option to turn that behavior off.
 
 .TP
 \fB\-t\fR, \fB\-\-threads\fR show messages in a 'threaded' format -- that is,

@@ -211,12 +211,24 @@ config_options_group_find (void)
 		 "use a bookmarked query", "<bookmark>"},
 		{"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
 		 "sort in reverse (descending) order (z -> a)", NULL},
-		{"skip-dups", 'u', 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.skip_dups,
+		/* default is to skip dups (messages with the same message-id);
+		 * option left for backward compatibility */
+		{"skip-dups", 'u', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_REVERSE,
+		 G_OPTION_ARG_NONE, &MU_CONFIG.include_dups,
 		 "show only the first of messages duplicates (false)", NULL},
-		{"include-related", 'r', 0, G_OPTION_ARG_NONE,
-		 &MU_CONFIG.include_related,
-		 "include related messages in results (false)", NULL},
+		{"include-dups", 'u', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.include_dups,
+		 "do not skip all but the first message with some message-id",
+		 NULL},
+		/* default is to include related messages; option left for
+		 * backward compatibility */
+		{"include-related", 'r', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
+		 G_OPTION_ARG_NONE, &MU_CONFIG.skip_related,
+		 "include related messages in results", NULL},
+		{"skip-related", 'r', 0, G_OPTION_ARG_NONE,
+		 &MU_CONFIG.skip_related,
+		 "do not include related messages in the results (false)", NULL},
+
 		{"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
 		 "output as symbolic links to a target maildir", "<dir>"},
 		{"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,
