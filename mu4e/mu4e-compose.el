@@ -931,7 +931,7 @@ is supplied, or Transient Mark mode is enabled and the mark is active."
       (region-active-p)
       (push-mark))
   (let ((old-position (point))
-	(message-position (save-excursion (message-goto-body) (point))))
+   (message-position (save-excursion (message-goto-body) (point))))
     (goto-char (point-max))
     (when (re-search-backward message-signature-separator message-position t)
       (forward-line -1))
