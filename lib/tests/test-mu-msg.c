@@ -31,7 +31,7 @@
 
 #include "test-mu-common.h"
 #include "mu-msg.h"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 
 
 static MuMsg*
@@ -491,6 +491,55 @@ test_mu_msg_comp_unix_programmer (void)
 	mu_msg_unref (msg);
 }
 
+
+
+static void
+test_mu_str_prio_01 (void)
+{
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_LOW), ==, "low");
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_NORMAL), ==, "normal");
+	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_HIGH), ==, "high");
+}
+
+
+static gboolean
+ignore_error (const char* log_domain, GLogLevelFlags log_level,
+	      const gchar* msg, gpointer user_data)
+{
+	return FALSE; /* don't abort */
+}
+
+
+static void
+test_mu_str_prio_02 (void)
+{
+	/* this must fail */
+	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
+	g_assert_cmpstr (mu_msg_prio_name(666), ==, NULL);
+}
+
+
+
+static void
+test_mu_str_display_contact (void)
+{
+	int			i;
+	struct {
+		const char*	word;
+		const char*	disp;
+	} words [] = {
+		{ "\"Foo Bar\" <aap@noot.mies>", "Foo Bar"},
+		{ "Foo Bar <aap@noot.mies>", "Foo Bar" },
+		{ "<aap@noot.mies>", "aap@noot.mies" },
+		{ "foo@bar.nl", "foo@bar.nl" }
+	};
+
+	for (i = 0; i != G_N_ELEMENTS(words); ++i)
+		g_assert_cmpstr (mu_str_display_contact_s (words[i].word), ==,
+				 words[i].disp);
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -526,6 +575,17 @@ main (int argc, char *argv[])
 			 test_mu_msg_umlaut);
 	g_test_add_func ("/mu-msg/mu-msg-comp-unix-programmer",
 			 test_mu_msg_comp_unix_programmer);
+
+	/* mu_str_prio */
+	g_test_add_func ("/mu-str/mu-str-prio-01",
+			 test_mu_str_prio_01);
+	g_test_add_func ("/mu-str/mu-str-prio-02",
+			 test_mu_str_prio_02);
+
+
+	g_test_add_func ("/mu-str/mu-str-display_contact",
+			 test_mu_str_display_contact);
+
 
 	g_log_set_handler (NULL,
 			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|

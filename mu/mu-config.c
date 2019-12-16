@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "mu-util.h"
 #include "mu-config.h"
 #include "mu-cmd.h"
 

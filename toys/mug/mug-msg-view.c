@@ -24,7 +24,7 @@
 #include "mu-msg-view.h"
 #include "mug-msg-view.h"
 #include "mu-msg.h"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 
 /* 'private'/'protected' functions */
 static void mug_msg_view_class_init (MugMsgViewClass * klass);

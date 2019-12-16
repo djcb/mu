@@ -26,7 +26,7 @@
 #include "mu-msg.h"
 #include "mu-msg-priv.h"
 #include "mu-msg-part.h"
-#include "mu-date.h"
+#include "utils/mu-date.h"
 
 #include <gmime/gmime.h>
 #include <gmime/gmime-multipart-signed.h>

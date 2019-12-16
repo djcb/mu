@@ -19,7 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "mu-str.h"
+#include "utils/mu-str.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-msg-part.h"

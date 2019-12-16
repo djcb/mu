@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <glib.h>
-#include <mu-util.h> /* for MuResult */
+#include <utils/mu-util.h>
 #include <mu-store.hh>
 
 G_BEGIN_DECLS

@@ -33,7 +33,6 @@
 #include <errno.h>
 
 #include "mu-maildir.h"
-#include "mu-util.h"
 
 #define	MU_LAST_USED_MAILDIR_KEY "last_used_maildir"
 #define MU_INDEX_MAX_FILE_SIZE (500*1000*1000) /* 500 Mb */

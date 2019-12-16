@@ -21,7 +21,7 @@
 #define __MUG_MSG_LIST_VIEW_H__
 
 #include <gtk/gtk.h>
-#include <mu-util.h>
+#include <utils/mu-util.h>
 
 G_BEGIN_DECLS
 /* convenience macros */

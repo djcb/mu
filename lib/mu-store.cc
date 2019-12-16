@@ -27,7 +27,7 @@
 #include <atomic>
 
 #include "mu-store.hh"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 #include "mu-msg-part.h"
 #include "parser/utils.hh"
 

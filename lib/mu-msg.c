@@ -30,9 +30,7 @@
 
 #include "mu-msg-priv.h" /* include before mu-msg.h */
 #include "mu-msg.h"
-
-#include "mu-util.h"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 
 #include "mu-maildir.h"
 
@@ -936,4 +934,71 @@ mu_msg_tickle (MuMsg *self, GError **err)
 				       mu_msg_get_maildir (self),
 				       mu_msg_get_flags (self),
 				       FALSE, TRUE, err);
+}
+
+const char*
+mu_str_flags_s  (MuFlags flags)
+{
+	return mu_flags_to_str_s (flags, MU_FLAG_TYPE_ANY);
+}
+
+char*
+mu_str_flags  (MuFlags flags)
+{
+	return g_strdup (mu_str_flags_s(flags));
+}
+
+static void
+cleanup_contact (char *contact)
+{
+	char *c, *c2;
+
+	/* replace "'<> with space */
+	for (c2 = contact; *c2; ++c2)
+		if (*c2 == '"' || *c2 == '\'' || *c2 == '<' || *c2 == '>')
+			*c2 = ' ';
+
+	/* remove everything between '()' if it's after the 5th pos;
+	 * good to cleanup corporate contact address spam... */
+	c = g_strstr_len (contact, -1, "(");
+	if (c && c - contact > 5)
+		*c = '\0';
+
+	g_strstrip (contact);
+}
+
+
+/* this is still somewhat simplistic... */
+const char*
+mu_str_display_contact_s (const char *str)
+{
+	static gchar contact[255];
+	gchar *c, *c2;
+
+	str = str ? str : "";
+	g_strlcpy (contact, str, sizeof(contact));
+
+	/* we check for '<', so we can strip out the address stuff in
+	 * e.g. 'Hello World <hello@world.xx>, but only if there is
+	 * something alphanumeric before the <
+	 */
+	c = g_strstr_len (contact, -1, "<");
+	if (c != NULL) {
+		for (c2 = contact; c2 < c && !(isalnum(*c2)); ++c2);
+		if (c2 != c) /* apparently, there was something,
+			      * so we can remove the <... part*/
+			*c = '\0';
+	}
+
+	cleanup_contact (contact);
+
+	return contact;
+}
+
+char*
+mu_str_display_contact (const char *str)
+{
+	g_return_val_if_fail (str, NULL);
+
+	return g_strdup (mu_str_display_contact_s (str));
 }

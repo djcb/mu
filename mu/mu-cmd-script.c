@@ -30,9 +30,10 @@
 #include <errno.h>
 
 #include "mu-cmd.h"
-#include "mu-util.h"
-#include "mu-str.h"
 #include "mu-script.h"
+
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
 
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; INFO: "

@@ -23,11 +23,12 @@
 #include <errno.h>
 #include <xapian.h>
 
-#include "mu-util.h"
 #include "mu-msg-fields.h"
 #include "mu-msg-doc.h"
-#include "mu-str.h"
-#include "mu-date.h"
+
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
+#include "utils/mu-date.h"
 
 struct _MuMsgDoc {
 

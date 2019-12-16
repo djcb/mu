@@ -29,9 +29,8 @@
 #include "mu-msg.h"
 #include "mu-msg-part.h"
 #include "mu-cmd.h"
-#include "mu-util.h"
-#include "mu-str.h"
-
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
 
 
 static gboolean

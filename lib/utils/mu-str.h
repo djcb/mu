@@ -22,11 +22,9 @@
 #ifndef __MU_STR_H__
 #define __MU_STR_H__
 
+#include <glib.h>
 #include <time.h>
 #include <sys/types.h>
-
-#include <mu-msg.h>
-#include <mu-flags.h>
 
 G_BEGIN_DECLS
 
@@ -35,28 +33,6 @@ G_BEGIN_DECLS
  * Various string utilities
  * @{
  */
-
-/**
- * create a 'display contact' from an email header To/Cc/Bcc/From-type address
- * ie., turn
- *     "Foo Bar" <foo@bar.com>
- * into
- *      Foo Bar
- * Note that this is based on some simple heuristics. Max length is 255 bytes.
- *
- *   mu_str_display_contact_s returns a statically allocated
- *   buffer (ie, non-reentrant), while mu_str_display_contact
- *   returns a newly allocated string that you must free with g_free
- *   when done with it.
- *
- * @param str a 'contact str' (ie., what is in the To/Cc/Bcc/From
- * fields), or NULL
- *
- * @return a newly allocated string with a display contact
- */
-const char* mu_str_display_contact_s (const char *str) G_GNUC_CONST;
-char *mu_str_display_contact (const char *str) G_GNUC_WARN_UNUSED_RESULT;
-
 
 /**
  * get a display size for a given size_t; uses M for sizes >
@@ -87,25 +63,6 @@ char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
  */
 char *mu_str_replace (const char *str, const char *substr, const char *repl);
 
-
-/**
- * get a display string for a given set of flags, OR'ed in
- * @param flags; one character per flag:
- * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed
- * a=has-attachment,s=signed, x=encrypted
- *
- * mu_str_file_flags_s  returns a ptr to a static buffer,
- * while mu_str_file_flags returns dynamically allocated
- * memory that must be freed after use.
- *
- * @param flags file flags
- *
- * @return a string representation of the flags; see above
- * for what to do with it
- */
-const char* mu_str_flags_s  (MuFlags flags) G_GNUC_CONST;
-char*       mu_str_flags    (MuFlags flags)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a 'summary' of the string, ie. the first /n/ lines of the

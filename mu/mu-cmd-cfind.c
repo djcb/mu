@@ -24,11 +24,12 @@
 #include <ctype.h>
 
 #include "mu-cmd.h"
-#include "mu-util.h"
-#include "mu-str.h"
-#include "mu-date.h"
 #include "mu-contacts.hh"
 #include "mu-runtime.h"
+
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
+#include "utils/mu-date.h"
 
 /**
  * guess the last name for the given name; clearly,

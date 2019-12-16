@@ -21,7 +21,7 @@
 #define __MU_RUNTIME_H__
 
 #include <glib.h>
-#include <mu-log.h>
+#include <utils/mu-log.h>
 
 G_BEGIN_DECLS
 

@@ -30,7 +30,7 @@
 
 #include "test-mu-common.h"
 #include "mu-maildir.h"
-#include "mu-util.h"
+#include "utils/mu-util.h"
 
 static void
 test_mu_maildir_mkdir_01 (void)

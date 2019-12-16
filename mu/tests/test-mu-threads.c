@@ -32,7 +32,7 @@
 
 #include "test-mu-common.h"
 #include "mu-query.h"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 
 struct _tinfo {
 	const char *threadpath;

@@ -32,7 +32,7 @@
 #include <set>
 #include <map>
 
-#include "mu-util.h"
+#include "utils/mu-util.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-threader.h"

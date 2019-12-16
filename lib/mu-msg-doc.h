@@ -21,7 +21,7 @@
 #define __MU_MSG_DOC_H__
 
 #include <glib.h>
-#include <mu-util.h> /* for XapianDocument */
+#include <utils/mu-util.h>
 
 G_BEGIN_DECLS
 

@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
-#include <mu-util.h>
+#include <utils/mu-util.h>
 #include <mu-flags.h>
 
 

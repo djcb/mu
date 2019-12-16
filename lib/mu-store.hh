@@ -195,7 +195,7 @@ private:
 #include <glib.h>
 #include <inttypes.h>
 #include <mu-msg.h>
-#include <mu-util.h> /* for MuError, MuError */
+#include <utils/mu-util.h>
 #include <mu-contacts.hh>
 
 G_BEGIN_DECLS

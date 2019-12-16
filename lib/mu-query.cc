@@ -32,9 +32,8 @@
 
 #include "mu-msg-iter.h"
 
-#include "mu-util.h"
-#include "mu-str.h"
-#include "mu-date.h"
+#include "utils/mu-str.h"
+#include "utils/mu-date.h"
 
 #include <parser/proc-iface.hh>
 #include <parser/utils.hh>

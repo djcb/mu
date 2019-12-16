@@ -26,7 +26,7 @@
 #include <sys/types.h> /* for mode_t */
 #include <mu-msg-fields.h>
 #include <mu-msg.h>
-#include <mu-util.h>
+#include <utils/mu-util.h>
 
 G_BEGIN_DECLS
 

@@ -31,12 +31,13 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "mu-util.h"
 #include "mu-msg.h"
 #include "mu-index.h"
 #include "mu-store.hh"
 #include "mu-runtime.h"
-#include "mu-log.h"
+
+#include "utils/mu-util.h"
+#include "utils/mu-log.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 

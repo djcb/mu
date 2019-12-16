@@ -34,9 +34,9 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "mu-str.h"
+#include "utils/mu-str.h"
 #include "mu-script.h"
-#include "mu-util.h"
+#include "utils/mu-util.h"
 
 /**
  * Structure with information about a certain script.

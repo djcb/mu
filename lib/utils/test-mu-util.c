@@ -28,8 +28,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include "test-mu-common.h"
-#include "lib/mu-util.h"
+#include "mu-util.h"
 
 static void
 test_mu_util_dir_expand_00 (void)
@@ -244,12 +243,6 @@ main (int argc, char *argv[])
 	g_test_add_func ("/mu-util/mu-util-supports", test_mu_util_supports);
 	g_test_add_func ("/mu-util/mu-util-program-in-path",
 			 test_mu_util_program_in_path);
-
-
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_DEBUG|
-			   G_LOG_LEVEL_MESSAGE|
-			   G_LOG_LEVEL_INFO, (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();
 }

@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <mu-store.hh>
 #include <mu-msg-iter.h>
-#include <mu-util.h>
+#include <utils/mu-util.h>
 
 G_BEGIN_DECLS
 

@@ -28,11 +28,12 @@
 #include <inttypes.h>
 
 #include <gmime/gmime.h>
-#include "mu-util.h"
-#include "mu-str.h"
 #include "mu-maildir.h"
 #include "mu-store.hh"
 #include "mu-msg-priv.h"
+
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);

@@ -29,8 +29,6 @@
 #include <signal.h>
 
 #include "mu-msg.h"
-#include "mu-str.h"
-#include "mu-date.h"
 #include "mu-maildir.h"
 #include "mu-index.h"
 #include "mu-query.h"
@@ -38,7 +36,10 @@
 #include "mu-bookmarks.h"
 #include "mu-runtime.h"
 
-#include "mu-util.h"
+#include "utils/mu-util.h"
+#include "utils/mu-str.h"
+#include "utils/mu-date.h"
+
 #include "mu-cmd.h"
 #include "mu-threader.h"
 

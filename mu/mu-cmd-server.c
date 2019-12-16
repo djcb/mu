@@ -44,7 +44,6 @@
 #endif 	/*PATH_MAX */
 
 #include "mu-runtime.h"
-#include "mu-str.h"
 #include "mu-cmd.h"
 #include "mu-maildir.h"
 #include "mu-query.h"
@@ -52,6 +51,8 @@
 #include "mu-store.hh"
 #include "mu-msg-part.h"
 #include "mu-contacts.hh"
+
+#include "utils/mu-str.h"
 
 /* signal handling *****************************************************/
 /*

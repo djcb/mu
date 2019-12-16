@@ -20,8 +20,8 @@
 
 #include "mug-msg-list-view.h"
 #include "mu-query.h"
-#include "mu-str.h"
-#include "mu-date.h"
+#include "utils/mu-str.h"
+#include "utils/mu-date.h"
 #include "mu-threader.h"
 
 /* 'private'/'protected' functions */

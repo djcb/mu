@@ -25,7 +25,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <string.h>		/* for memset */
 
-#include <mu-util.h>
+#include <utils/mu-util.h>
 #include <mu-store.hh>
 #include <mu-runtime.h>
 #include <mu-index.h>

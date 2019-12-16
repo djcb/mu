@@ -22,7 +22,7 @@
 
 #include "mu-threader.h"
 #include "mu-container.h"
-#include "mu-str.h"
+#include "utils/mu-str.h"
 
 /* msg threading implementation based on JWZ's algorithm, as described in:
  *    http://www.jwz.org/doc/threading.html
@@ -157,7 +157,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 	MuContainer	*c;
 	const char*	 msgid;
 	char		 fake[32];
-	
+
 	g_return_val_if_fail (msg, NULL);
 	g_return_val_if_fail (docid != 0, NULL);
 
@@ -169,7 +169,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 		snprintf (fake, sizeof(fake), "fake:%p", (gpointer)msg);
 		msgid = fake;
 	}
-	
+
 	/* XXX the '<none>' works around a crash; find a better
 	 * solution */
 	c = g_hash_table_lookup (id_table, msgid);

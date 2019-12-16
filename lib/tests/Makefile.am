@@ -46,14 +46,6 @@ noinst_PROGRAMS= $(TEST_PROGS)
 
 noinst_LTLIBRARIES=libtestmucommon.la
 
-TEST_PROGS += test-mu-util
-test_mu_util_SOURCES= test-mu-util.c dummy.cc
-test_mu_util_LDADD=   libtestmucommon.la
-
-TEST_PROGS += test-mu-str
-test_mu_str_SOURCES= test-mu-str.c dummy.cc
-test_mu_str_LDADD=  libtestmucommon.la
-
 TEST_PROGS += test-mu-maildir
 test_mu_maildir_SOURCES= test-mu-maildir.c dummy.cc
 test_mu_maildir_LDADD=  libtestmucommon.la
