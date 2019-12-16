@@ -348,9 +348,9 @@ test_mu_extract_01 (void)
 	g_assert_cmpstr (output,
 			 ==,
 			 "MIME-parts in this message:\n"
-			 "  1 <none> text/plain [<none>] (0.0 kB)\n"
-			 "  2 sittingbull.jpg image/jpeg [inline] (23.9 kB)\n"
-			 "  3 custer.jpg image/jpeg [inline] (21.6 kB)\n");
+			 "  1 <none> text/plain [<none>] (27 bytes)\n"
+			 "  2 sittingbull.jpg image/jpeg [inline] (23.3 KB)\n"
+			 "  3 custer.jpg image/jpeg [inline] (21.1 KB)\n");
 
 	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);

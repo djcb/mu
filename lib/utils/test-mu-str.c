@@ -45,15 +45,13 @@ test_mu_str_size_01 (void)
 
 	lc = localeconv();
 
-	tmp2 = g_strdup_printf ("0%s0 kB", lc->decimal_point);
-	g_assert_cmpstr (mu_str_size_s (0),           ==,  tmp2);
+	g_assert_cmpstr (mu_str_size_s (0), ==, "0 bytes");
+
+	tmp2 = g_strdup_printf ("97%s7 KB", lc->decimal_point);
+	g_assert_cmpstr (mu_str_size_s (100000), ==, tmp2);
 	g_free (tmp2);
 
-	tmp2 = g_strdup_printf ("100%s0 kB", lc->decimal_point);
-	g_assert_cmpstr (mu_str_size_s (100000),      ==,  tmp2);
-	g_free (tmp2);
-
-	tmp2 = g_strdup_printf ("1%s1 MB", lc->decimal_point);
+	tmp2 = g_strdup_printf ("1%s0 MB", lc->decimal_point);
 	g_assert_cmpstr (mu_str_size_s (1100*1000), ==,  tmp2);
 	g_free (tmp2);
 }
@@ -272,28 +270,6 @@ test_mu_str_to_list_strip (void)
 
 
 static void
-test_mu_str_subject_normalize (void)
-{
-	int i;
-
-	struct {
-		const char *src, *exp;
-	} tests[] = {
-		{ "test123", "test123" },
-		{ "Re:test123", "test123" },
-		{ "Re: Fwd: test123", "test123" },
-		{ "Re[3]: Fwd: test123", "test123" },
-		{ "operation: mindcrime", "operation: mindcrime" }, /*...*/
-		{ "", "" }
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(tests); ++i)
-		g_assert_cmpstr (mu_str_subject_normalize (tests[i].src), ==,
-				 tests[i].exp);
-}
-
-
-static void
 test_mu_str_replace (void)
 {
 	unsigned u;
@@ -382,9 +358,6 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-str/mu-str-esc-to-list",
 			 test_mu_str_esc_to_list);
-
-	g_test_add_func ("/mu-str/mu_str_subject_normalize",
-			 test_mu_str_subject_normalize);
 
 	g_test_add_func ("/mu-str/mu_str_remove_ctrl_in_place",
 			 test_mu_str_remove_ctrl_in_place);

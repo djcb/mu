@@ -255,6 +255,7 @@ mu/Makefile
 mu/tests/Makefile
 lib/Makefile
 lib/doxyfile
+lib/utils/Makefile
 lib/parser/Makefile
 lib/tests/Makefile
 mu4e/Makefile

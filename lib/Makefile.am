@@ -18,7 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # enforce compiling guile (optionally) first,then this dir first
 # before decending into tests/
-SUBDIRS= parser . tests
+SUBDIRS= utils parser . tests
 
 if HAVE_JSON_GLIB
 json_srcs=					\
@@ -66,14 +66,10 @@ libmu_la_SOURCES=				\
 	mu-contacts.hh				\
 	mu-container.c				\
 	mu-container.h				\
-	mu-date.c				\
-	mu-date.h				\
 	mu-flags.h				\
 	mu-flags.c				\
 	mu-index.c				\
 	mu-index.h				\
-	mu-log.c				\
-	mu-log.h				\
 	mu-maildir.c				\
 	mu-maildir.h				\
 	mu-msg-crypto.c				\
@@ -103,12 +99,8 @@ libmu_la_SOURCES=				\
 	mu-script.h				\
 	mu-store.cc				\
 	mu-store.hh				\
-	mu-str.c				\
-	mu-str.h				\
 	mu-threader.c				\
-	mu-threader.h				\
-	mu-util.c				\
-	mu-util.h
+	mu-threader.h
 
 libmu_la_LIBADD=				\
 	$(XAPIAN_LIBS)				\
@@ -116,6 +108,7 @@ libmu_la_LIBADD=				\
 	$(GLIB_LIBS)				\
 	$(GUILE_LIBS)				\
 	$(JSON_GLIB_LIBS)			\
+	${builddir}/utils/libmu-utils.la	\
 	${builddir}/parser/libmuxparser.la
 
 libmu_la_LDFLAGS=				\
