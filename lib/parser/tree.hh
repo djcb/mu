@@ -17,13 +17,16 @@
 **  02110-1301, USA.
 */
 
+#ifndef TREE_HH__
+#define TREE_HH__
+
 #include <vector>
 #include <string>
 #include <iostream>
 
 #include <parser/data.hh>
 
-namespace Mux {
+namespace Mu {
 
 // A node in the parse tree
 struct Node {
@@ -101,4 +104,7 @@ operator<< (std::ostream& os, const Tree& tree)
 	return os;
 }
 
-} // namespace Mux
+} // namespace Mu
+
+
+#endif /* TREE_HH__ */

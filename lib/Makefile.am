@@ -109,7 +109,7 @@ libmu_la_LIBADD=				\
 	$(GUILE_LIBS)				\
 	$(JSON_GLIB_LIBS)			\
 	${builddir}/utils/libmu-utils.la	\
-	${builddir}/parser/libmuxparser.la
+	${builddir}/parser/libmu-parser.la
 
 libmu_la_LDFLAGS=				\
 	$(ASAN_LDFLAGS)

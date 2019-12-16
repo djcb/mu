@@ -18,13 +18,13 @@
 */
 
 #include "tokenizer.hh"
-#include "utils.hh"
+#include "utils/mu-utils.hh"
 
 #include <cctype>
 #include <iostream>
 #include <algorithm>
 
-using namespace Mux;
+using namespace Mu;
 
 static bool
 is_separator (char c)
@@ -37,7 +37,7 @@ is_separator (char c)
 }
 
 
-static Mux::Token
+static Mu::Token
 op_or_value (size_t pos, const std::string& val)
 {
 	auto s = val;
@@ -62,7 +62,7 @@ unread_char (std::string& food, char kar, size_t& pos)
 	--pos;
 }
 
-static Mux::Token
+static Mu::Token
 eat_token (std::string& food, size_t& pos)
 {
 	bool quoted{};
@@ -115,8 +115,8 @@ eat_token (std::string& food, size_t& pos)
 }
 
 
-Mux::Tokens
-Mux::tokenize (const std::string& s)
+Mu::Tokens
+Mu::tokenize (const std::string& s)
 {
 	Tokens tokens{};
 

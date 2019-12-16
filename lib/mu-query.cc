@@ -34,12 +34,12 @@
 
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
+#include <utils/mu-utils.hh>
 
 #include <parser/proc-iface.hh>
-#include <parser/utils.hh>
 #include <parser/xapian.hh>
 
-struct MuProc: public Mux::ProcIface {
+struct MuProc: public Mu::ProcIface {
 
 	MuProc (const Xapian::Database& db): db_{db} {}
 
@@ -145,11 +145,11 @@ struct MuProc: public Mux::ProcIface {
 		std::string	u2 = upper;
 
 		if (id == MU_MSG_FIELD_ID_DATE) {
-			l2 = Mux::date_to_time_t_string (lower, true);
-			u2 = Mux::date_to_time_t_string (upper, false);
+			l2 = Mu::date_to_time_t_string (lower, true);
+			u2 = Mu::date_to_time_t_string (upper, false);
 		} else if (id == MU_MSG_FIELD_ID_SIZE) {
-			l2 = Mux::size_to_string (lower, true);
-			u2 = Mux::size_to_string (upper, false);
+			l2 = Mu::size_to_string (lower, true);
+			u2 = Mu::size_to_string (upper, false);
 		}
 
 		return { l2, u2 };
@@ -195,13 +195,13 @@ private:
 static const Xapian::Query
 get_query (MuQuery *mqx, const char* searchexpr, bool raw, GError **err) try {
 
-	Mux::WarningVec warns;
-	const auto tree = Mux::parse (searchexpr, warns,
+	Mu::WarningVec warns;
+	const auto tree = Mu::parse (searchexpr, warns,
 				      std::make_unique<MuProc>(mqx->db()));
 	for (const auto w: warns)
 		std::cerr << w << std::endl;
 
-	return Mux::xapian_query (tree);
+	return Mu::xapian_query (tree);
 
 } catch (...) {
 	mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
@@ -488,8 +488,8 @@ mu_query_internal (MuQuery *self, const char *searchexpr,
 	g_return_val_if_fail (searchexpr, NULL);
 
 	try {
-		Mux::WarningVec warns;
-		const auto tree = Mux::parse (searchexpr, warns,
+		Mu::WarningVec warns;
+		const auto tree = Mu::parse (searchexpr, warns,
 					      std::make_unique<MuProc>(self->db()));
 		std::stringstream ss;
 		ss << tree;

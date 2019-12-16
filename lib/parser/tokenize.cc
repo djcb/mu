@@ -30,7 +30,7 @@ main (int argc, char *argv[])
 	for (auto i = 1; i < argc; ++i)
 		s += " " + std::string(argv[i]);
 
-	const auto tvec = Mux::tokenize (s);
+	const auto tvec = Mu::tokenize (s);
 	for (const auto& t : tvec)
 		std::cout << t << std::endl;
 

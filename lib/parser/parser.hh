@@ -32,7 +32,7 @@
 // A simple recursive-descent parser for queries. Follows the Xapian syntax,
 // but better handles non-alphanum; also implements regexp
 
-namespace Mux {
+namespace Mu {
 
 /**
  * A parser warning
@@ -84,6 +84,6 @@ using ProcPtr = const std::unique_ptr<ProcIface>&;
 Tree parse (const std::string& query, WarningVec& warnings,
 	    ProcPtr proc = std::make_unique<DummyProc>());
 
-} // namespace Mux
+} // namespace Mu
 
 #endif /* __PARSER_HH__ */

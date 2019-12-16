@@ -29,7 +29,7 @@
 #include "mu-store.hh"
 #include "utils/mu-str.h"
 #include "mu-msg-part.h"
-#include "parser/utils.hh"
+#include "utils/mu-utils.hh"
 
 using namespace Mu;
 
@@ -98,7 +98,7 @@ struct Store::Private {
                 maildir_{db()->get_metadata(MaildirKey)},
                 created_{atoll(db()->get_metadata(CreatedKey).c_str())},
                 schema_version_{db()->get_metadata(SchemaVersionKey)},
-                personal_addresses_{Mux::split(db()->get_metadata(PersonalAddressesKey),",")},
+                personal_addresses_{Mu::split(db()->get_metadata(PersonalAddressesKey),",")},
                 contacts_{db()->get_metadata(ContactsKey)} {
         }
 
@@ -113,7 +113,7 @@ struct Store::Private {
                 writable_db()->set_metadata(SchemaVersionKey, schema_version_);
                 writable_db()->set_metadata(MaildirKey, maildir_);
                 writable_db()->set_metadata(CreatedKey,
-                                            Mux::format("%" PRId64, (int64_t)created_));
+                                            Mu::format("%" PRId64, (int64_t)created_));
         }
 
         ~Private() {
@@ -732,7 +732,7 @@ mu_store_flush (MuStore *store) try {
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
-	const auto dstr = Mux::date_to_time_t_string (
+	const auto dstr = Mu::date_to_time_t_string (
 		(time_t)mu_msg_get_field_numeric (msg, mfid));
 
 	doc.add_value ((Xapian::valueno)mfid, dstr);
@@ -742,7 +742,7 @@ static void
 add_terms_values_size (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 {
 	const auto szstr =
-		Mux::size_to_string (mu_msg_get_field_numeric (msg, mfid));
+		Mu::size_to_string (mu_msg_get_field_numeric (msg, mfid));
 	doc.add_value ((Xapian::valueno)mfid, szstr);
 }
 
@@ -848,7 +848,7 @@ add_terms_values_number (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
 static void
 add_terms_values_str (Xapian::Document& doc, const char *val, MuMsgFieldId mfid)
 {
-	const auto flat = Mux::utf8_flatten (val);
+	const auto flat = Mu::utf8_flatten (val);
 
 	if (mu_msg_field_xapian_index (mfid)) {
 		Xapian::TermGenerator termgen;
@@ -928,7 +928,7 @@ maybe_index_text_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 		return;
 
 	termgen.set_document(pdata->_doc);
-	const auto str = Mux::utf8_flatten (txt);
+	const auto str = Mu::utf8_flatten (txt);
 	g_free (txt);
 
 	termgen.index_text (str, 1, prefix(MU_MSG_FIELD_ID_EMBEDDED_TEXT));
@@ -951,7 +951,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	}
 
 	if ((fname = mu_msg_part_get_filename (part, FALSE))) {
-		const auto flat = Mux::utf8_flatten (fname);
+		const auto flat = Mu::utf8_flatten (fname);
 		g_free (fname);
 		add_term(pdata->_doc, file + flat);
 	}
@@ -986,7 +986,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 
-	const auto flat = Mux::utf8_flatten(str);
+	const auto flat = Mu::utf8_flatten(str);
 	termgen.index_text (flat, 1, prefix(mfid));
 }
 
@@ -1111,12 +1111,12 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 	if (!mu_str_is_empty(contact->name)) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document (*msgdoc->_doc);
-		const auto flat = Mux::utf8_flatten(contact->name);
+		const auto flat = Mu::utf8_flatten(contact->name);
 		termgen.index_text (flat, 1, pfx);
 	}
 
 	if (!mu_str_is_empty(contact->email)) {
-		const auto flat = Mux::utf8_flatten(contact->email);
+		const auto flat = Mu::utf8_flatten(contact->email);
 		add_term(*msgdoc->_doc, pfx + flat);
 		add_address_subfields (*msgdoc->_doc, contact->email, pfx);
 		/* store it also in our contacts cache */

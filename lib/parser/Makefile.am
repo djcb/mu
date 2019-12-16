@@ -1,4 +1,4 @@
-## Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2017-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -47,7 +47,8 @@ tokenize_SOURCES=		\
 tokenize_LDADD=			\
 	$(WARN_LDFLAGS)		\
 	$(GCOV_LDADD)		\
-	libmuxparser.la
+	libmu-parser.la		\
+	../utils/libmu-utils.la
 
 parse_SOURCES=			\
 	parse.cc
@@ -55,13 +56,13 @@ parse_SOURCES=			\
 parse_LDADD=			\
 	$(WARN_LDFLAGS)		\
 	$(GCOV_LDADD)		\
-	libmuxparser.la
-
+	libmu-parser.la		\
+	../utils/libmu-utils.la
 
 noinst_LTLIBRARIES=		\
-	libmuxparser.la
+	libmu-parser.la
 
-libmuxparser_la_SOURCES=	\
+libmu_parser_la_SOURCES=	\
 	data.hh			\
 	parser.cc		\
 	parser.hh		\
@@ -69,30 +70,37 @@ libmuxparser_la_SOURCES=	\
 	tokenizer.cc		\
 	tokenizer.hh		\
 	tree.hh			\
-	utils.cc		\
-	utils.hh		\
 	xapian.cc		\
 	xapian.hh
 
-libmuxparser_la_LIBADD=		\
+libmu_parser_la_LIBADD=		\
 	$(WARN_LDFLAGS)		\
 	$(GLIB_LIBS)		\
 	$(XAPIAN_LIBS)
 
-VALGRIND_SUPPRESSIONS_FILES= ${top_srcdir}/mux.supp
+
+VALGRIND_SUPPRESSIONS_FILES= 	\
+	${top_srcdir}/mu.supp
 
 noinst_PROGRAMS+=$(TEST_PROGS)
 
-TEST_PROGS += test-tokenizer
-test_tokenizer_SOURCES=test-tokenizer.cc
-test_tokenizer_LDADD=$(GCOV_LDADD) libmuxparser.la
+TEST_PROGS+= 			\
+	test-tokenizer
+test_tokenizer_SOURCES=		\
+	test-tokenizer.cc
+test_tokenizer_LDADD=		\
+	$(GCOV_LDADD)		\
+	libmu-parser.la		\
+	../utils/libmu-utils.la
 
-TEST_PROGS += test-parser
-test_parser_SOURCES=test-parser.cc
-test_parser_LDADD=$(GCOV_LDADD) libmuxparser.la
+TEST_PROGS+= 			\
+	test-parser
+test_parser_SOURCES=		\
+	test-parser.cc
+test_parser_LDADD=		\
+	$(GCOV_LDADD) 		\
+	libmu-parser.la		\
+	../utils/libmu-utils.la
 
-TEST_PROGS += test-utils
-test_utils_SOURCES=test-utils.cc
-test_utils_LDADD= $(GCOV_LDADD) libmuxparser.la
 
 TESTS=$(TEST_PROGS)

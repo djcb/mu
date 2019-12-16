@@ -65,7 +65,6 @@ mu-help-strings.h: mu-help-strings.txt mu-help-strings.awk
 
 mu_LDADD=						\
 	${top_builddir}/lib/libmu.la			\
-	${top_builddir}/lib/parser/libmuxparser.la	\
 	$(GLIB_LIBS)
 
 EXTRA_DIST=						\

@@ -24,7 +24,7 @@
 #include <xapian.h>
 #include <parser/parser.hh>
 
-namespace Mux {
+namespace Mu {
 
 /**
  * Transform a parse-tree into a Xapian query object
@@ -33,8 +33,8 @@ namespace Mux {
  *
  * @return a Xapian query object
  */
-Xapian::Query xapian_query (const Mux::Tree& tree);
+Xapian::Query xapian_query (const Mu::Tree& tree);
 
-};
+} // namespace Mu
 
 #endif /* __XAPIAN_H__ */

@@ -17,13 +17,14 @@
 **  02110-1301, USA.
 */
 
+#ifndef __MU_UTILS_HH__
+#define __MU_UTILS_HH__
+
 #include <string>
 #include <vector>
+#include <cstdarg>
 
-#ifndef __UTILS_HH__
-#define __UTILS_HH__
-
-namespace Mux {
+namespace Mu {
 
 /**
  * Flatten a string -- downcase and fold diacritics etc.
@@ -75,8 +76,19 @@ std::string quote (const std::string& str);
  *
  * @return a formatted string
  */
-std::string format (const char *frm, ...)
-	__attribute__((format(printf, 1, 2)));
+std::string format (const char *frm, ...) __attribute__((format(printf, 1, 2)));
+
+/**
+ * Format a string, printf style
+ *
+ * @param frm format string
+ * @param ... parameters
+ *
+ * @return a formatted string
+ */
+std::string format (const char *frm, va_list args) __attribute__((format(printf, 1, 0)));
+
+
 
 /**
  * Convert an ISO date to the corresponding time expressed as a string
@@ -121,6 +133,6 @@ std::string size_to_string (const std::string& sizestr, bool first);
  */
 std::string size_to_string (int64_t size);
 
-} // namespace Mux
+} // namespace Mu
 
-#endif /* __UTILS_HH__ */
+#endif /* __MU_UTILS_HH__ */

@@ -24,7 +24,7 @@
 #include <tuple>
 #include <regex>
 
-namespace Mux {
+namespace Mu {
 
 struct ProcIface {
 
@@ -127,6 +127,6 @@ struct DummyProc: public ProcIface { // For testing
 }; //Dummy
 
 
-} // Mux
+} // Mu
 
 #endif /* __PROC_IFACE_HH__ */

@@ -24,9 +24,9 @@
 #include <iostream>
 #include <regex>
 
-#include <parser/utils.hh>
+#include <utils//mu-utils.hh>
 
-namespace Mux {
+namespace Mu {
 
 // class representing some data item; either a Value or a Range a Value can still be a Regex (but
 // that's not a separate type here)
@@ -149,7 +149,7 @@ operator<< (std::ostream& os, const std::unique_ptr<Data>& v)
 	return os;
 }
 
-} // namespace Mux
+} // namespace Mu
 
 
 #endif /* __DATA_HH__ */

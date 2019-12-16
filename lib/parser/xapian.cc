@@ -24,10 +24,10 @@
 #include <xapian.h>
 #include "parser/xapian.hh"
 
-using namespace Mux;
+using namespace Mu;
 
 static Xapian::Query
-xapian_query_op (const Mux::Tree& tree)
+xapian_query_op (const Mu::Tree& tree)
 {
 	Xapian::Query::op op;
 
@@ -68,7 +68,7 @@ make_query (const Value* val, const std::string& str, bool maybe_wildcard)
 }
 
 static Xapian::Query
-xapian_query_value (const Mux::Tree& tree)
+xapian_query_value (const Mu::Tree& tree)
 {
 	const auto v = dynamic_cast<Value*> (tree.node.data.get());
 	if (!v->phrase)
@@ -89,7 +89,7 @@ xapian_query_value (const Mux::Tree& tree)
 }
 
 static Xapian::Query
-xapian_query_range (const Mux::Tree& tree)
+xapian_query_range (const Mu::Tree& tree)
 {
 	const auto r { dynamic_cast<Range *>(tree.node.data.get()) };
 
@@ -98,7 +98,7 @@ xapian_query_range (const Mux::Tree& tree)
 }
 
 Xapian::Query
-Mux::xapian_query (const Mux::Tree& tree)
+Mu::xapian_query (const Mu::Tree& tree)
 {
 	switch (tree.node.type) {
 	case Node::Type::Empty:

@@ -26,7 +26,7 @@
 #include <functional>
 #include <algorithm>
 
-#include <parser/utils.hh>
+#include <utils/mu-utils.hh>
 #include <glib.h>
 
 using namespace Mu;
@@ -117,7 +117,7 @@ Contacts::Private::deserialize(const std::string& serialized) const
 
         while (getline (ss, line)) {
 
-                const auto parts = Mux::split (line, Separator);
+                const auto parts = Mu::split (line, Separator);
                 if (G_UNLIKELY(parts.size() != 6)) {
                         g_warning ("error: '%s'", line.c_str());
                         continue;
@@ -152,7 +152,7 @@ Contacts::serialize() const
 
         for (auto& item: priv_->contacts_) {
                 const auto& ci{item.second};
-                s += Mux::format("%s%s"
+                s += Mu::format("%s%s"
                                  "%s%s"
                                  "%s%s"
                                  "%d%s"

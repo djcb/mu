@@ -36,7 +36,7 @@
 // Furthermore, we detect ranges ("a..b") and regexps (/../) at the parser level, since we need a
 // bit more context to resolve ambiguities.
 
-namespace Mux {
+namespace Mu {
 
 // A token
 struct Token {
@@ -135,6 +135,6 @@ operator<< (std::ostream& os, const Token& t)
 using Tokens = std::deque<Token>;
 Tokens tokenize (const std::string& s);
 
-} // namespace Mux
+} // namespace Mu
 
 #endif /* __TOKENIZER_HH__ */

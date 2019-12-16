@@ -22,9 +22,11 @@
 
 #include <iostream>
 #include <sstream>
+#include <functional>
 
-#include "parser.hh"
-using namespace Mux;
+#include "mu-utils.hh"
+
+using namespace Mu;
 
 struct Case {
 	const std::string	expr;
@@ -95,7 +97,7 @@ test_date_ymwdhMs (void)
 
 	for (auto i = 0; i != G_N_ELEMENTS(tests); ++i) {
 		const auto diff = time(NULL) -
-			strtol(Mux::date_to_time_t_string(tests[i].expr, true).c_str(),
+			strtol(Mu::date_to_time_t_string(tests[i].expr, true).c_str(),
 			       NULL, 10);
 		if (g_test_verbose())
 			std::cerr << tests[i].expr << ' '
@@ -105,7 +107,7 @@ test_date_ymwdhMs (void)
 		g_assert_true (tests[i].diff - diff <= tests[i].tolerance);
 	}
 
-	g_assert_true (strtol(Mux::date_to_time_t_string("-1y", true).c_str(),
+	g_assert_true (strtol(Mu::date_to_time_t_string("-1y", true).c_str(),
 			      NULL, 10) == 0);
 }
 

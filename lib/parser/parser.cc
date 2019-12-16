@@ -18,9 +18,9 @@
 */
 #include "parser.hh"
 #include "tokenizer.hh"
-#include "utils.hh"
+#include "utils/mu-utils.hh"
 
-using namespace Mux;
+using namespace Mu;
 
 // 3 precedence levels: units (NOT,()) > factors (OR) > terms (AND)
 
@@ -40,21 +40,21 @@ using namespace Mux;
 				     + format(__VA_ARGS__))
 
 static Token
-look_ahead (const Mux::Tokens& tokens)
+look_ahead (const Mu::Tokens& tokens)
 {
 	return tokens.front();
 }
 
-static Mux::Tree
+static Mu::Tree
 empty()
 {
 	return {{Node::Type::Empty}};
 }
 
-static Mux::Tree term_1 (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings);
+static Mu::Tree term_1 (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings);
 
 
-static Mux::Tree
+static Mu::Tree
 value (const ProcIface::FieldInfoVec& fields, const std::string& v,
        size_t pos, ProcPtr proc, WarningVec& warnings)
 {
@@ -83,7 +83,7 @@ value (const ProcIface::FieldInfoVec& fields, const std::string& v,
 	return tree;
 }
 
-static Mux::Tree
+static Mu::Tree
 regex (const ProcIface::FieldInfoVec& fields, const std::string& v,
        size_t pos, ProcPtr proc, WarningVec& warnings)
 {
@@ -119,7 +119,7 @@ regex (const ProcIface::FieldInfoVec& fields, const std::string& v,
 
 
 
-static Mux::Tree
+static Mu::Tree
 range (const ProcIface::FieldInfoVec& fields, const std::string& lower,
        const std::string& upper, size_t pos, ProcPtr proc,
        WarningVec& warnings)
@@ -141,8 +141,8 @@ range (const ProcIface::FieldInfoVec& fields, const std::string& lower,
 }
 
 
-static Mux::Tree
-data (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
+static Mu::Tree
+data (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 {
 	const auto token = look_ahead(tokens);
 	if (token.type != Token::Type::Data)
@@ -185,8 +185,8 @@ data (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 	return value (fields, val, token.pos, proc, warnings);
 }
 
-static Mux::Tree
-unit (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
+static Mu::Tree
+unit (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 {
 	if (tokens.empty()) {
 		warnings.push_back ({0, "expected: unit"});
@@ -225,11 +225,11 @@ unit (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 	return data (tokens, proc, warnings);
 }
 
-static Mux::Tree factor_1 (Mux::Tokens& tokens, ProcPtr proc,
+static Mu::Tree factor_1 (Mu::Tokens& tokens, ProcPtr proc,
 			   WarningVec& warnings);
 
-static Mux::Tree
-factor_2 (Mux::Tokens& tokens, Node::Type& op, ProcPtr proc,
+static Mu::Tree
+factor_2 (Mu::Tokens& tokens, Node::Type& op, ProcPtr proc,
 	  WarningVec& warnings)
 {
 	if (tokens.empty())
@@ -256,8 +256,8 @@ factor_2 (Mux::Tokens& tokens, Node::Type& op, ProcPtr proc,
 	return factor_1 (tokens, proc, warnings);
 }
 
-static Mux::Tree
-factor_1 (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
+static Mu::Tree
+factor_1 (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 {
 	Node::Type op { Node::Type::Invalid };
 
@@ -275,8 +275,8 @@ factor_1 (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 }
 
 
-static Mux::Tree
-term_2 (Mux::Tokens& tokens, Node::Type& op, ProcPtr proc,
+static Mu::Tree
+term_2 (Mu::Tokens& tokens, Node::Type& op, ProcPtr proc,
 	WarningVec& warnings)
 {
 	if (tokens.empty())
@@ -302,8 +302,8 @@ term_2 (Mux::Tokens& tokens, Node::Type& op, ProcPtr proc,
 	return term_1 (tokens, proc, warnings);
 }
 
-static Mux::Tree
-term_1 (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
+static Mu::Tree
+term_1 (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 {
 	Node::Type op { Node::Type::Invalid };
 
@@ -320,8 +320,8 @@ term_1 (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 	}
 }
 
-static Mux::Tree
-query (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
+static Mu::Tree
+query (Mu::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 {
 	if (tokens.empty())
 		return empty ();
@@ -329,8 +329,8 @@ query (Mux::Tokens& tokens, ProcPtr proc, WarningVec& warnings)
 		return term_1 (tokens, proc, warnings);
 }
 
-Mux::Tree
-Mux::parse (const std::string& expr, WarningVec& warnings, ProcPtr proc)
+Mu::Tree
+Mu::parse (const std::string& expr, WarningVec& warnings, ProcPtr proc)
 {
 	try {
 		auto tokens = tokenize (expr);

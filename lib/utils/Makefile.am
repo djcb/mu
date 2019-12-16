@@ -43,7 +43,9 @@ libmu_utils_la_SOURCES=							\
 	mu-str.c							\
 	mu-str.h							\
 	mu-util.c							\
-	mu-util.h
+	mu-util.h							\
+	mu-utils.cc							\
+	mu-utils.hh
 
 libmu_utils_la_LIBADD=							\
 	$(GLIB_LIBS)
@@ -59,6 +61,13 @@ TEST_PROGS+=								\
 test_mu_util_SOURCES=							\
 	test-mu-util.c
 test_mu_util_LDADD=							\
+	libmu-utils.la
+
+TEST_PROGS+=								\
+	test-mu-utils
+test_mu_utils_SOURCES=							\
+	test-utils.cc
+test_mu_utils_LDADD=							\
 	libmu-utils.la
 
 TEST_PROGS+=								\

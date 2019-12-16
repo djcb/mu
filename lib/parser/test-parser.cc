@@ -24,7 +24,7 @@
 #include <sstream>
 
 #include "parser.hh"
-using namespace Mux;
+using namespace Mu;
 
 struct Case {
 	const std::string expr;

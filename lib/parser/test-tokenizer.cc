@@ -26,12 +26,12 @@
 
 struct Case {
 	const char *str;
-	const Mux::Tokens tokens;
+	const Mu::Tokens tokens;
 };
 
 using CaseVec = std::vector<Case>;
 
-using namespace Mux;
+using namespace Mu;
 using TT = Token::Type;
 
 static void

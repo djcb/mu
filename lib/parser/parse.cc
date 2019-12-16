@@ -29,9 +29,9 @@ main (int argc, char *argv[])
 	for (auto i = 1; i < argc; ++i)
 		s += " " + std::string(argv[i]);
 
-	Mux::WarningVec warnings;
+	Mu::WarningVec warnings;
 
-	const auto tree = Mux::parse (s, warnings);
+	const auto tree = Mu::parse (s, warnings);
 	for (const auto& w: warnings)
 		std::cerr << "1:" << w.pos << ": " << w.msg << std::endl;
 

@@ -17,14 +17,13 @@
 **  02110-1301, USA.
 */
 
+
 #define _XOPEN_SOURCE
 #include <time.h>
 
 #define GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
-
-#include "utils.hh"
 
 #include <string.h>
 #include <iostream>
@@ -33,7 +32,10 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-using namespace Mux;
+#include "mu-utils.hh"
+
+
+using namespace Mu;
 
 namespace {
 
@@ -100,7 +102,7 @@ gx_utf8_flatten (const gchar *str, gssize len)
 } // namespace
 
 std::string // gx_utf8_flatten
-Mux::utf8_flatten (const char *str)
+Mu::utf8_flatten (const char *str)
 {
 	if (!str)
 		return {};
@@ -125,7 +127,7 @@ Mux::utf8_flatten (const char *str)
 }
 
 std::string
-Mux::utf8_clean (const std::string& dirty)
+Mu::utf8_clean (const std::string& dirty)
 {
 	GString *gstr = g_string_sized_new (dirty.length());
 
@@ -148,7 +150,7 @@ Mux::utf8_clean (const std::string& dirty)
 }
 
 std::vector<std::string>
-Mux::split (const std::string& str, const std::string& sepa)
+Mu::split (const std::string& str, const std::string& sepa)
 {
 	char **parts = g_strsplit(str.c_str(), sepa.c_str(), -1);
 	std::vector<std::string> vec;
@@ -161,7 +163,7 @@ Mux::split (const std::string& str, const std::string& sepa)
 }
 
 std::string
-Mux::quote (const std::string& str)
+Mu::quote (const std::string& str)
 {
 	char *s = g_strescape (str.c_str(), NULL);
 	if (!s)
@@ -174,7 +176,7 @@ Mux::quote (const std::string& str)
 }
 
  std::string
- Mux::format (const char *frm, ...)
+ Mu::format (const char *frm, ...)
  {
 	 va_list args;
 
@@ -207,7 +209,7 @@ date_boundary (bool is_first)
 }
 
 std::string
-Mux::date_to_time_t_string (int64_t t)
+Mu::date_to_time_t_string (int64_t t)
 {
 	char buf[sizeof(InternalDateMax)];
 	snprintf (buf, sizeof(buf), InternalDateFormat, t);
@@ -319,7 +321,7 @@ fixup_month (struct tm *tbuf)
 }
 
 std::string
-Mux::date_to_time_t_string (const std::string& dstr, bool is_first)
+Mu::date_to_time_t_string (const std::string& dstr, bool is_first)
 {
 	gint64		 t;
 	struct tm	 tbuf;
@@ -385,7 +387,7 @@ size_boundary (bool is_first)
 }
 
 std::string
-Mux::size_to_string (int64_t size)
+Mu::size_to_string (int64_t size)
 {
 	char buf[sizeof(SizeMax)];
 	snprintf (buf, sizeof(buf), SizeFormat, size);
@@ -394,7 +396,7 @@ Mux::size_to_string (int64_t size)
 }
 
 std::string
-Mux::size_to_string (const std::string& val, bool is_first)
+Mu::size_to_string (const std::string& val, bool is_first)
 {
 	std::string	 str;
 	GRegex		*rx;
