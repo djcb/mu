@@ -201,10 +201,22 @@ If the string exceeds this limit, it will be truncated to fit."
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
 (defcustom mu4e-bookmarks
-  '( ("flag:unread AND NOT flag:trashed" "Unread messages"      ?u)
-     ("date:today..now"                  "Today's messages"     ?t)
-     ("date:7d..now"                     "Last 7 days"          ?w)
-     ("mime:image/*"                     "Messages with images" ?p))
+  `( ,(make-mu4e-bookmark
+        :name  "Unread messages"
+        :query "flag:unread AND NOT flag:trashed"
+        :key ?u)
+     ,(make-mu4e-bookmark
+        :name "Today's messages"
+        :query "date:today..now"
+        :key ?t)
+     ,(make-mu4e-bookmark
+        :name "Last 7 days"
+        :query "date:7d..now"
+        :key ?w)
+     ,(make-mu4e-bookmark
+        :name "Messages with images"
+        :query "mime:image/*"
+        :key ?p))
   "A list of pre-defined queries.
 These will show up in the main screen. Each of the list elements
 is a three-element list of the form (QUERY DESCRIPTION KEY),
@@ -212,36 +224,9 @@ where QUERY is a string with a mu query, DESCRIPTION is a short
 description of the query (this will show up in the UI), and KEY
 is a shortcut key for the query."
   :type '(repeat (list (string :tag "Query")
-       (string :tag "Description")
-       character))
+                       (string :tag "Description")
+                       character))
   :group 'mu4e)
-
-(defvar mu4e-bookmarks
-  `( ,(make-mu4e-bookmark
-  :name  "Unread messages"
-  :query "flag:unread AND NOT flag:trashed"
-  :key ?u)
-     ,(make-mu4e-bookmark
-  :name "Today's messages"
-  :query "date:today..now"
-  :key ?t)
-     ,(make-mu4e-bookmark
-  :name "Last 7 days"
-  :query "date:7d..now"
-  :key ?w)
-     ,(make-mu4e-bookmark
-  :name "Messages with images"
-  :query "mime:image/*"
-  :key ?p))
-  "A list of pre-defined queries.
-Each query is represented by a mu4e-bookmark structure with
-parameters @t{:name} with the name of the bookmark, @t{:query}
-with the query expression (a query string or an s-expression that
-evaluates to query string) and a @t{:key}, which is the
-shortcut-key for the query.
-
-An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
-KEY) is still recognized as well, for backward-compatibility.")
 
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
