@@ -31,8 +31,9 @@
 (defvar smtpmail-smtp-user)
 (defvar mu4e-view-date-format)
 
-(defvar mu4e-contexts nil "The list of `mu4e-context' objects
-describing mu4e's contexts.")
+(defcustom mu4e-contexts nil "The list of `mu4e-context' objects
+describing mu4e's contexts."
+  :group 'mu4e)
 
 (defcustom mu4e-context-changed-hook nil
   "Hook run just *after* the context changed."
