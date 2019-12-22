@@ -29,6 +29,7 @@
 (require 'mu4e-meta)
 (require 'message)
 
+
 (defgroup mu4e nil
   "mu4e - mu for emacs"
   :group 'mail)
@@ -199,6 +200,17 @@ If the string exceeds this limit, it will be truncated to fit."
 
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
+
+(cl-defstruct mu4e-bookmark
+  "A mu4e bookmarl object with the following members:
+- `name': the user-visible name of the bookmark
+- `key': a single key to search for this bookmark
+- `query': the query for this bookmark. Either a literal string or a function
+   that evaluates to a string."
+  name                      ;; name/description of the bookmark
+  query                     ;; a query (a string or a function evaluation to string)
+  key                       ;; key to activate the bookmark
+  )
 
 (defcustom mu4e-bookmarks
   `( ,(make-mu4e-bookmark
