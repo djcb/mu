@@ -88,7 +88,7 @@ search (const char* query, unsigned expected)
 {
 	gchar *cmdline, *output, *erroutput;
 
-	cmdline = g_strdup_printf ("%s find --muhome=%s %s --skip-related --include-dups",
+	cmdline = g_strdup_printf ("%s find --muhome=%s %s",
 				   MU_PROGRAM, DBPATH, query);
 
 	if (g_test_verbose())

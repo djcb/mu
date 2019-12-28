@@ -131,9 +131,9 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	qflags = MU_QUERY_FLAG_NONE;
 	if (opts->reverse)
 		qflags |= MU_QUERY_FLAG_DESCENDING;
-	if (!opts->include_dups)
+	if (opts->skip_dups)
 		qflags |= MU_QUERY_FLAG_SKIP_DUPS;
-	if (!opts->skip_related)
+	if (opts->include_related)
 		qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
 	if (opts->threads)
 		qflags |= MU_QUERY_FLAG_THREADS;
