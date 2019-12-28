@@ -4,6 +4,8 @@
 
 mu find \- find e-mail messages in the \fBmu\fR database.
 
+mu mfind \- find e-mail messages in the \fBmu\fR database with mu4e defaults.
+
 .SH SYNOPSIS
 
 .B mu find [options] <search expression>
@@ -12,6 +14,9 @@ mu find \- find e-mail messages in the \fBmu\fR database.
 
 \fBmu find\fR is the \fBmu\fR command for searching e-mail message
 that were stored earlier using \fBmu index\fR(1).
+
+\fBmu mfind\fR is a version of \fBmu find\fR that defaults to
+\f--include-related\fR and \fB--skip-dups\fR, just like \fBmu4e\fR does.
 
 .SH SEARCHING MAIL
 
@@ -42,7 +47,7 @@ The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
 treated as if there were a logical \fBand\fR between them.
 
-For details on the possible queries, see 
+For details on the possible queries, see
 
 
 

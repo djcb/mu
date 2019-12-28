@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 #define MU_NOCOLOR "MU_NOCOLOR"
 
 
-enum _MuConfigFormat {
+typedef enum {
 	MU_CONFIG_FORMAT_UNKNOWN = 0,
 
 	/* for cfind, find, view */
@@ -60,11 +60,9 @@ enum _MuConfigFormat {
 	MU_CONFIG_FORMAT_MQUERY,	/* output the mux query */
 
 	MU_CONFIG_FORMAT_EXEC		/* execute some command */
-};
-typedef enum _MuConfigFormat MuConfigFormat;
+} MuConfigFormat;
 
-
-enum _MuConfigCmd {
+typedef enum {
 	MU_CONFIG_CMD_UNKNOWN = 0,
 
 	MU_CONFIG_CMD_ADD,
@@ -73,6 +71,7 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_FIND,
 	MU_CONFIG_CMD_HELP,
 	MU_CONFIG_CMD_INDEX,
+	MU_CONFIG_CMD_MFIND,
 	MU_CONFIG_CMD_MKDIR,
 	MU_CONFIG_CMD_REMOVE,
 	MU_CONFIG_CMD_SCRIPT,
@@ -82,8 +81,7 @@ enum _MuConfigCmd {
 	MU_CONFIG_CMD_VIEW,
 
 	MU_CONFIG_CMD_NONE
-};
-typedef enum _MuConfigCmd MuConfigCmd;
+} MuConfigCmd;
 
 
 #define mu_config_cmd_is_valid(C)					\

@@ -172,7 +172,7 @@ config_options_group_index (void)
 }
 
 static void
-set_group_find_defaults (void)
+set_group_find_defaults ()
 {
 	/* note, when no fields are specified, we use
 	 * date-from-subject, and sort descending by date. If fields
@@ -190,6 +190,13 @@ set_group_find_defaults (void)
 			get_output_format (MU_CONFIG.formatstr);
 
 	expand_dir (MU_CONFIG.linksdir);
+
+	if (MU_CONFIG.cmd == MU_CONFIG_CMD_MFIND) {
+		/* 'mfind' --> find with mu4e defaults */
+		MU_CONFIG.include_related = TRUE;
+		MU_CONFIG.skip_dups	  = TRUE;
+		MU_CONFIG.cmd		  = MU_CONFIG_CMD_FIND;
+	}
 }
 
 static GOptionGroup*
@@ -462,6 +469,7 @@ cmd_from_string (const char *str)
 		{ "find",    MU_CONFIG_CMD_FIND    },
 		{ "help",    MU_CONFIG_CMD_HELP    },
 		{ "index",   MU_CONFIG_CMD_INDEX   },
+		{ "mfind",   MU_CONFIG_CMD_MFIND   },
 		{ "mkdir",   MU_CONFIG_CMD_MKDIR   },
 		{ "remove",  MU_CONFIG_CMD_REMOVE  },
 		{ "script",  MU_CONFIG_CMD_SCRIPT  },
@@ -535,6 +543,7 @@ get_option_group (MuConfigCmd cmd)
 	case MU_CONFIG_CMD_EXTRACT:
 		return config_options_group_extract();
 	case MU_CONFIG_CMD_FIND:
+	case MU_CONFIG_CMD_MFIND:
 		return config_options_group_find();
 	case MU_CONFIG_CMD_INDEX:
 		return config_options_group_index();

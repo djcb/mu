@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -32,4 +32,14 @@ dist_man_MANS =		\
 	mu-script.1	\
 	mu-verify.1     \
 	mu-view.1	\
-	mu.1
+	mu.1		\
+	$(BUILT_SOURCES)
+
+BUILT_SOURCES=		\
+	mu-mfind.1
+
+mu-mfind.1: mu-find.1
+	cp -f $< $@
+
+CLEANFILES=		\
+	$(BUILT_SOURCES)
