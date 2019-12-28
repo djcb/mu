@@ -11,9 +11,11 @@
     - mu now defaults to the [[https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG Base Directory Specification]] for the default
       locations for various files. E.g. on Unix the mu database now lives under
       ~~/.cache/mu/~ rather than ~~/.mu~. You can still use the old location by
-      passing --muhome=~/.mu to various mu commands, or setting ~(setq
-      mu4e-mu-home "~/.mu")~ for mu. Otherwise, after upgrading, you may wish to
-      delete the old location.
+      passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
+      mu4e-mu-home "~/.mu")~ for mu4e.
+
+      Otherwise, after upgrading, you may wish to delete the old location to recover
+      some diskspace.
 
     - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
       are determined implicitly now.
@@ -26,6 +28,9 @@
     - The ~--my-address~ parameter is persistent as well, but can be overwritten;
       note that an updated value only applies to the messages indexed /after/ the
       change.
+
+    - There is a new sub-command ~mfind~, which works just like ~find~, but uses
+      some mu4e-defaults ~--skip-dups~ and ~--include-related~.
 
 *** mu4e
 
@@ -51,6 +56,12 @@
 
     - When the mu store (database) is not present or not up to date, mu4e will
       attempt to re-index it automatically.
+
+    - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
+      by default.
+
+   - Add message-id's to messages when saving drafts, so we can find them even
+     with ~mu4e-headers-skip-duplicates~.
 
 *** toys
 
