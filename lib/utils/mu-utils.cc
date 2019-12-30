@@ -181,20 +181,28 @@ Mu::quote (const std::string& str)
 	 va_list args;
 
 	 va_start (args, frm);
-
-	 char *s = {};
-	 const auto res = g_vasprintf (&s, frm, args);
+         auto str = format(frm, args);
 	 va_end (args);
-	 if (res == -1) {
-		 std::cerr << "string format failed" << std::endl;
-		 return {};
-	 }
-
-	 std::string str = s;
-	 free (s);
 
 	 return str;
  }
+
+std::string
+Mu::format (const char *frm, va_list args)
+{
+        char *s{};
+        const auto res = g_vasprintf (&s, frm, args);
+        if (res == -1) {
+                std::cerr << "string format failed" << std::endl;
+                return {};
+        }
+
+	 std::string str{s};
+	 g_free (s);
+
+	 return str;
+}
+
 
 constexpr const auto InternalDateFormat = "%010" G_GINT64_FORMAT;
 constexpr const char InternalDateMin[] = "0000000000";

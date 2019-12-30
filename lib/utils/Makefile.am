@@ -38,6 +38,7 @@ noinst_LTLIBRARIES=							\
 libmu_utils_la_SOURCES=							\
 	mu-date.c							\
 	mu-date.h							\
+	mu-error.hh							\
 	mu-log.c							\
 	mu-log.h							\
 	mu-str.c							\
