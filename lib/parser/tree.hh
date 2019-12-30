@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include <parser/data.hh>
+#include <utils/mu-error.hh>
 
 namespace Mu {
 
@@ -62,7 +63,7 @@ struct Node {
 		case Type::Range:    return "range"; break;
 		case Type::Invalid:  return "<invalid>"; break;
 		default:
-			throw std::runtime_error ("bug");
+			throw Mu::Error(Error::Code::Internal, "unexpected type");
 		}
 	}
 

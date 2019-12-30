@@ -39,6 +39,8 @@
 #include <parser/proc-iface.hh>
 #include <parser/xapian.hh>
 
+using namespace Mu;
+
 struct MuProc: public Mu::ProcIface {
 
 	MuProc (const Xapian::Database& db): db_{db} {}
@@ -185,7 +187,7 @@ public:
 		const auto db = reinterpret_cast<Xapian::Database*>
 			(mu_store_get_read_only_database (_store));
 		if (!db)
-			throw std::runtime_error ("no database");
+			throw Mu::Error(Error::Code::NotFound, "no database");
 		return *db;
 	}
 private:

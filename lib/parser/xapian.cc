@@ -23,6 +23,7 @@
 
 #include <xapian.h>
 #include "parser/xapian.hh"
+#include <utils/mu-error.hh>
 
 using namespace Mu;
 
@@ -42,7 +43,7 @@ xapian_query_op (const Mu::Tree& tree)
 	case Node::Type::OpOr:  op    = Xapian::Query::OP_OR; break;
 	case Node::Type::OpXor: op    = Xapian::Query::OP_XOR; break;
 	case Node::Type::OpAndNot: op = Xapian::Query::OP_AND_NOT; break;
-	default: throw std::runtime_error ("invalid op");	// bug
+	default: throw Mu::Error (Error::Code::Internal, "invalid op");	// bug
 	}
 
 	std::vector<Xapian::Query> childvec;
@@ -114,6 +115,6 @@ Mu::xapian_query (const Mu::Tree& tree)
 	case Node::Type::Range:
 		return xapian_query_range (tree);
 	default:
-		throw std::runtime_error ("invalid query"); // bug
+                throw Mu::Error (Error::Code::Internal, "invalid query");	// bug
 	}
 }

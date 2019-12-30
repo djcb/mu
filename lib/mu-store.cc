@@ -28,6 +28,8 @@
 
 #include "mu-store.hh"
 #include "utils/mu-str.h"
+#include "utils/mu-error.hh"
+
 #include "mu-msg-part.h"
 #include "utils/mu-utils.hh"
 
@@ -112,8 +114,7 @@ struct Store::Private {
 
                 writable_db()->set_metadata(SchemaVersionKey, schema_version_);
                 writable_db()->set_metadata(MaildirKey, maildir_);
-                writable_db()->set_metadata(CreatedKey,
-                                            Mu::format("%" PRId64, (int64_t)created_));
+                writable_db()->set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)created_));
         }
 
         ~Private() {
@@ -123,7 +124,7 @@ struct Store::Private {
 
         std::shared_ptr<Xapian::Database> db() const {
                 if (!db_)
-                        throw std::runtime_error ("no db");
+                        throw Mu::Error(Error::Code::NotFound, "no database found");
                 return db_;
         }
 
@@ -134,7 +135,7 @@ struct Store::Private {
         std::shared_ptr<Xapian::WritableDatabase> writable_db() const {
                 auto w_db{wdb()};
                 if (!w_db)
-                        throw std::runtime_error ("database is read-only");
+                        throw Mu::Error(Error::Code::AccessDenied, "database is read-only");
                 else
                         return w_db;
         }
@@ -148,7 +149,9 @@ struct Store::Private {
                         // very basic check; just ensure there's no ',' in the address.
                         // we don't insist on full RFC5322
                         if (addr.find(",") != std::string::npos)
-                                throw std::runtime_error ("e-mail address with ',': " + addr);
+                                throw Mu::Error::make(Error::Code::InvalidArgument,
+                                                      "e-mail address '%s' contains comma",
+                                                      addr.c_str());
                         if (!all_addresses.empty())
                                 all_addresses += ',';
                         all_addresses += addr;
@@ -188,10 +191,6 @@ struct Store::Private {
 #undef  LOCKED
 #define LOCKED std::lock_guard<std::mutex> l(priv_->lock_);
 
-struct NeedsReIndex: public std::runtime_error {
-        using std::runtime_error::runtime_error;
-};
-
 Store::Store (const std::string& path, bool readonly):
         priv_{std::make_unique<Private>(path, readonly)}
 {
@@ -199,7 +198,7 @@ Store::Store (const std::string& path, bool readonly):
                 return; // All is good; nothing further to do
 
         if (readonly || maildir().empty())
-                throw NeedsReIndex("database needs reindexing");
+                throw Mu::Error(Error::Code::SchemaMismatch, "database needs reindexing");
 
         g_debug ("upgrading database");
         const auto addresses{personal_addresses()};
@@ -416,9 +415,13 @@ mu_store_new_readable (const char* xpath, GError **err)
 	try {
 		return reinterpret_cast<MuStore*>(new Store (xpath));
 
-        } catch (const NeedsReIndex& nri) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "database @ %s needs (re)indexing", xpath);
+        } catch (const Mu::Error& me) {
+                if (me.code() == Mu::Error::Code::SchemaMismatch)
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
+                                     "database @ %s needs (re)indexing", xpath);
+                else
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
+                                     "error opening database @ %s: %s", xpath, me.what());
         // } catch (const Xapian::DatabaseNotFoundError& dbe) { // Xapian 1.4.10
         //         g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
         //                      "database @ %s not found", xpath);
@@ -442,9 +445,13 @@ mu_store_new_writable (const char* xpath, GError **err)
 
 	try {
                 return reinterpret_cast<MuStore*>(new Store (xpath, false/*!readonly*/));
-        } catch (const NeedsReIndex& nri) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "database @ %s needs (re)indexing", xpath);
+        } catch (const Mu::Error& me) {
+                if (me.code() == Mu::Error::Code::SchemaMismatch)
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
+                                     "database @ %s needs (re)indexing", xpath);
+                else
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
+                                     "error opening database @ %s: %s", xpath, me.what());
         // } catch (const Xapian::DatabaseNotFoundError& dbe) { // Xapian 1.4.10
         //         g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
         //                      "database @ %s not found", xpath);
@@ -600,7 +607,8 @@ mu_store_get_docid_for_path (const MuStore *store, const char* path, GError **er
 
 		Xapian::MSet mset (enq.get_mset (0,1));
 		if (mset.empty())
-			throw std::runtime_error ("message not found");
+			throw Mu::Error::make(Error::Code::NotFound,
+                                              "message @ %s not found in store", path);
 
 		return *mset.begin();
 

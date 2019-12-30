@@ -19,6 +19,7 @@
 #include "parser.hh"
 #include "tokenizer.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-error.hh"
 
 using namespace Mu;
 
@@ -36,7 +37,7 @@ using namespace Mu;
 // <regex>      ->      [field:]/regex/
 
 
-#define BUG(...) std::runtime_error (format("%u: BUG: ",__LINE__)	\
+#define BUG(...) Mu::Error (Error::Code::Internal, format("%u: BUG: ",__LINE__)	\
 				     + format(__VA_ARGS__))
 
 static Token

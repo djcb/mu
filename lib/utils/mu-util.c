@@ -428,7 +428,7 @@ mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 
 
 
-static gboolean
+__attribute__((format(printf, 2, 0))) static gboolean
 print_args (FILE *stream, const char *frm, va_list args)
 {
 	gchar *str;
