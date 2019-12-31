@@ -109,7 +109,7 @@ directory and saves all attachments in the chosen directory."
   :type 'boolean
   :group 'mu4e-view)
 
-(defvar mu4e-view-actions
+(defcustom mu4e-view-actions
   '( ("capture message"  . mu4e-action-capture-message)
      ("view as pdf"      . mu4e-action-view-as-pdf)
      ("show this thread" . mu4e-action-show-thread))
@@ -120,7 +120,9 @@ where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives a message plist as an argument.
 
-The first letter of NAME is used as a shortcut character.")
+The first letter of NAME is used as a shortcut character."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type function))
 
 (defcustom mu4e-view-attachment-assoc nil
   "Alist of (EXTENSION . PROGRAM).
