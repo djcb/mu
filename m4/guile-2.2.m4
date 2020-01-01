@@ -305,10 +305,6 @@ AC_DEFUN([GUILE_PROGS],
   else
     AC_PATH_PROG(GUILE_TOOLS,[guile-tools$_guile_suffix])
   fi
-
-  AC_PATH_PROG(GUILE_SNARF,[guile-snarf$_guile_suffix])
-  AC_SUBST(GUILE_SNARF)
-
   AC_SUBST(GUILE_TOOLS)
  ])
 
