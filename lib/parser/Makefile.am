@@ -1,4 +1,4 @@
-## Copyright (C) 2017-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2017-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -24,40 +24,21 @@ AM_CXXFLAGS=			\
 	$(GLIB_CFLAGS)		\
 	$(XAPIAN_CXXFLAGS)	\
 	$(WARN_CXXFLAGS)	\
-	$(GCOV_CFLAGS)		\
 	$(ASAN_CXXFLAGS)	\
+	$(CODE_COVERAGE_CFLAGS)	\
 	-Wno-inline		\
 	-Wno-switch-enum
 
 AM_CPPFLAGS=			\
-	$(GCOV_CFLAGS)
+	$(CODE_COVERAGE_CPPFLAGS)
 
 AM_LDFLAGS=			\
 	$(ASAN_LDFLAGS)		\
-	$(WARN_LDFLAGS)		\
-	$(GCOV_LDADD)
+	$(WARN_LDFLAGS)
 
 noinst_PROGRAMS=		\
 	tokenize		\
 	parse
-
-tokenize_SOURCES=		\
-	tokenize.cc
-
-tokenize_LDADD=			\
-	$(WARN_LDFLAGS)		\
-	$(GCOV_LDADD)		\
-	libmu-parser.la		\
-	../utils/libmu-utils.la
-
-parse_SOURCES=			\
-	parse.cc
-
-parse_LDADD=			\
-	$(WARN_LDFLAGS)		\
-	$(GCOV_LDADD)		\
-	libmu-parser.la		\
-	../utils/libmu-utils.la
 
 noinst_LTLIBRARIES=		\
 	libmu-parser.la
@@ -76,11 +57,26 @@ libmu_parser_la_SOURCES=	\
 libmu_parser_la_LIBADD=		\
 	$(WARN_LDFLAGS)		\
 	$(GLIB_LIBS)		\
-	$(XAPIAN_LIBS)
-
+	$(XAPIAN_LIBS)		\
+	../utils/libmu-utils.la \
+	$(CODE_COVERAGE_LIBS)
 
 VALGRIND_SUPPRESSIONS_FILES= 	\
 	${top_srcdir}/mu.supp
+
+tokenize_SOURCES=		\
+	tokenize.cc
+
+tokenize_LDADD=			\
+	$(WARN_LDFLAGS)		\
+	libmu-parser.la
+
+parse_SOURCES=			\
+	parse.cc
+
+parse_LDADD=			\
+	$(WARN_LDFLAGS)		\
+	libmu-parser.la
 
 noinst_PROGRAMS+=$(TEST_PROGS)
 
@@ -89,18 +85,15 @@ TEST_PROGS+= 			\
 test_tokenizer_SOURCES=		\
 	test-tokenizer.cc
 test_tokenizer_LDADD=		\
-	$(GCOV_LDADD)		\
-	libmu-parser.la		\
-	../utils/libmu-utils.la
+	libmu-parser.la
 
 TEST_PROGS+= 			\
 	test-parser
 test_parser_SOURCES=		\
 	test-parser.cc
 test_parser_LDADD=		\
-	$(GCOV_LDADD) 		\
-	libmu-parser.la		\
-	../utils/libmu-utils.la
-
+	libmu-parser.la
 
 TESTS=$(TEST_PROGS)
+
+include $(top_srcdir)/aminclude_static.am

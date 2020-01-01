@@ -55,6 +55,9 @@ AX_VALGRIND_CHECK
 
 LT_INIT
 
+
+AX_CODE_COVERAGE
+
 AC_PROG_AWK
 AC_CHECK_PROG(SORT,sort,sort)
 
@@ -120,20 +123,20 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 
 AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNCS([vasprintf strptime])
-AC_CHECK_FUNC(timegm,[],[AC_MSG_ERROR([*** missing required function timegm])])
+AC_CHECK_FUNC(timegm,[],AC_MSG_ERROR([missing required function timegm]))
 
 # require pkg-config >= 0.28 (release in 2013; should be old enough...)
 # with that version, we don't need the AC_SUBST stuff after PKG_CHECK.
 m4_ifndef([PKG_PROG_PKG_CONFIG],
    [m4_fatal([please install pkg-config >= 0.28 before running autoconf/autogen])])
 PKG_PROG_PKG_CONFIG(0.28) # latest version in buildroot
-AS_IF([test -z "$PKG_CONFIG"],[
+AS_IF([test -z "$PKG_CONFIG"],
    AC_MSG_ERROR([
    *** pkg-config with version >= 0.28 could not be found.
    ***
    *** Make sure it is in your path, or set the PKG_CONFIG environment variable
    *** to the full path to pkg-config.])
-])
+)
 
 # glib2?
 PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.38 gobject-2.0 gio-2.0)
@@ -165,7 +168,7 @@ AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
 AS_CASE([$xapian_version],
     [1.[[4-9]].[[0-9]]*],
       [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
-    [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
+      [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
 
 XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
 XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
@@ -252,12 +255,10 @@ AS_IF([test "x$PMCCABE" = "xno"],[
 AC_CONFIG_FILES([
 Makefile
 mu/Makefile
-mu/tests/Makefile
 lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
 lib/parser/Makefile
-lib/tests/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
 guile/Makefile

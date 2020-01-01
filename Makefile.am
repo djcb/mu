@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2018 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -28,13 +28,7 @@ else
 mu4e=
 endif
 
-# if BUILD_PERL
-# perl=perl
-# else
-# perl=
-# endif
-
-SUBDIRS=m4 man lib $(guile) mu $(mu4e) contrib toys # $(perl)
+SUBDIRS=m4 man lib $(guile) mu $(mu4e) contrib toys
 
 ACLOCAL_AMFLAGS=-I m4
 
@@ -95,3 +89,9 @@ EXTRA_DIST=							\
 
 doc_DATA =							\
 	NEWS.org
+
+include $(top_srcdir)/aminclude_static.am
+
+CODE_COVERAGE_IGNORE_PATTERN=					\
+	'/usr/*'						\
+	'*test-*'

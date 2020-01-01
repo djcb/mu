@@ -20,17 +20,25 @@ AM_CFLAGS=								\
 	$(WARN_CFLAGS)							\
 	$(GLIB_CFLAGS)							\
 	$(ASAN_CFLAGS)							\
-	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/tests/testdir\"	\
-	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/tests/testdir2\"	\
+	$(CODE_COVERAGE_CFLAGS)						\
+	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"		\
+	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"		\
 	-Wno-format-nonliteral						\
 	-Wno-switch-enum						\
 	-Wno-deprecated-declarations					\
 	-Wno-inline
 
+AM_CPPFLAGS=								\
+	$(CODE_COVERAGE_CPPFLAGS)
+
 AM_CXXFLAGS=								\
 	$(WARN_CXXFLAGS)						\
 	$(GLIB_CFLAGS)							\
-	$(ASAN_CXXFLAGS)
+	$(ASAN_CXXFLAGS)						\
+	$(CODE_COVERAGE_CFLAGS)
+
+AM_LDFLAGS=								\
+	$(ASAN_LDFLAGS)
 
 noinst_LTLIBRARIES=							\
 	libmu-utils.la
@@ -49,10 +57,8 @@ libmu_utils_la_SOURCES=							\
 	mu-utils.hh
 
 libmu_utils_la_LIBADD=							\
-	$(GLIB_LIBS)
-
-libmu_utils_la_LDFLAGS=							\
-	$(ASAN_LDFLAGS)
+	$(GLIB_LIBS)							\
+	$(CODE_COVERAGE_LIBS)
 
 noinst_PROGRAMS=							\
 	$(TEST_PROGS)
@@ -77,3 +83,7 @@ test_mu_str_SOURCES=							\
 	test-mu-str.c
 test_mu_str_LDADD=							\
 	libmu-utils.la
+
+TESTS=$(TEST_PROGS)
+
+include $(top_srcdir)/aminclude_static.am
