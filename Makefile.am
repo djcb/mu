@@ -87,6 +87,7 @@ gitcheck:
 EXTRA_DIST=							\
 	TODO							\
 	HACKING							\
+	README							\
 	gtest.mk						\
 	NEWS							\
 	NEWS.org						\
