@@ -157,7 +157,9 @@ print_expr (const char* frm, ...)
         }
 }
 
-static MuError
+
+
+G_GNUC_PRINTF(2,3) static MuError
 print_error (MuError errcode, const char* frm, ...)
 {
         char    *msg, *str;
@@ -182,7 +184,7 @@ print_and_clear_g_error (GError **err)
         MuError rv;
 
         if (err && *err)
-                rv = print_error ((*err)->code, (*err)->message);
+                rv = print_error ((*err)->code, "%s", (*err)->message);
         else
                 rv = print_error (MU_ERROR_INTERNAL, "unknown error");
 
@@ -1033,7 +1035,6 @@ get_checked_path (const char *path)
         cpath = mu_util_dir_expand(path);
         if (!cpath ||
             !mu_util_check_dir (cpath, TRUE, FALSE)) {
-                char *err;
                 print_error (MU_ERROR_IN_PARAMETERS,
                              "not a readable dir: '%s'", cpath);
                 g_free (cpath);
@@ -1087,7 +1088,7 @@ cmd_index (ServerContext *ctx, GHashTable *args, GError **err)
         MuIndex		*index;
         const char	*argpath;
         char		*path;
-        gboolean	 cleanup, lazy_check, contacts;
+        gboolean	 cleanup, lazy_check;
 
         index = NULL;
 

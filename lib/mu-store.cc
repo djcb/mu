@@ -621,7 +621,7 @@ MuError
 mu_store_foreach (MuStore *store,
 		  MuStoreForeachFunc func, void *user_data, GError **err)
 {
-	g_return_val_if_fail (self, MU_ERROR);
+	g_return_val_if_fail (store, MU_ERROR);
 	g_return_val_if_fail (func, MU_ERROR);
 
 	try {

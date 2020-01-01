@@ -381,9 +381,8 @@ run_cmd_cfind (MuStore         *store,
                gboolean         color,
                GError         **err)
 {
-        gboolean	 rv;
-        MuContacts	*contacts;
-        ECData		 ecdata;
+        gboolean rv;
+        ECData	 ecdata;
 
         memset(&ecdata, 0, sizeof(ecdata));
 

@@ -1,7 +1,5 @@
-/* -*-Mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -172,7 +170,7 @@ config_options_group_index (void)
 }
 
 static void
-set_group_find_defaults ()
+set_group_find_defaults (void)
 {
 	/* note, when no fields are specified, we use
 	 * date-from-subject, and sort descending by date. If fields

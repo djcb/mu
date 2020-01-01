@@ -255,14 +255,13 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 static void
 index_title (MuStore *store, MuConfig *opts)
 {
-	const char	 *blue, *green, *def;
+	const char	  *green, *def;
 	char		**addrs;
 	int		  i;
 	time_t            created;
-	struct tm	  *tstamp;
+	struct tm	 *tstamp;
 	char		  tbuf[40];
 
-	blue  = opts->nocolor ? "" : MU_COLOR_BLUE;
 	green = opts->nocolor ? "" : MU_COLOR_GREEN;
 	def   = opts->nocolor ? "" : MU_COLOR_DEFAULT;
 
