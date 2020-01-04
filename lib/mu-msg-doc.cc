@@ -29,6 +29,7 @@
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
+#include "utils/mu-utils.hh"
 
 struct _MuMsgDoc {
 

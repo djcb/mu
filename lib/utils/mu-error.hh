@@ -29,6 +29,7 @@ namespace Mu {
 struct Error final: public std::runtime_error {
         enum struct Code {
                 AccessDenied,
+                File,
                 Internal,
                 InvalidArgument,
                 NotFound,

@@ -33,6 +33,8 @@
 #include <map>
 
 #include "utils/mu-util.h"
+#include "utils/mu-utils.hh"
+
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 #include "mu-threader.h"

@@ -443,3 +443,30 @@ Mu::size_to_string (const std::string& val, bool is_first)
 
 	return str;
 }
+
+
+void
+Mu::assert_equal(const std::string& s1, const std::string& s2)
+{
+        g_assert_cmpstr (s1.c_str(), ==, s2.c_str());
+}
+
+void
+Mu::assert_equal (const Mu::StringVec& v1, const Mu::StringVec& v2)
+{
+        g_assert_cmpuint(v1.size(), ==, v2.size());
+
+        for (auto i = 0U; i != v1.size(); ++i)
+                assert_equal(v1[i], v2[i]);
+}
+
+
+void
+Mu::allow_warnings()
+{
+        g_test_log_set_fatal_handler(
+                [](const char*, GLogLevelFlags, const char*, gpointer) {
+                        return FALSE;
+                },{});
+
+}
