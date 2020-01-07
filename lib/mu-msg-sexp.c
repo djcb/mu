@@ -163,9 +163,8 @@ each_contact (MuMsgContact *c, ContactData *cdata)
 	return TRUE;
 }
 
-
 static void
-maybe_append_list_post_as_reply_to (GString *gstr, MuMsg *msg)
+maybe_append_list_post (GString *gstr, MuMsg *msg)
 {
 	/* some mailing lists do not set the reply-to; see pull #1278. So for
 	 * those cases, check the List-Post address and use that instead */
@@ -184,7 +183,7 @@ maybe_append_list_post_as_reply_to (GString *gstr, MuMsg *msg)
 	if (g_regex_match (rx, list_post, 0, &minfo)) {
 		char	*addr;
 		addr = g_match_info_fetch (minfo, 2);
-		g_string_append_printf (gstr,"\t:reply-to ((nil . \"%s\"))\n", addr);
+		g_string_append_printf (gstr,"\t:list-post ((nil . \"%s\"))\n", addr);
 		g_free(addr);
 	}
 
@@ -209,8 +208,7 @@ append_sexp_contacts (GString *gstr, MuMsg *msg)
 	if (cdata.from || cdata.to || cdata.cc || cdata.bcc || cdata.reply_to)
 		gstr = g_string_append (gstr, ")\n");
 
-	if (!cdata.reply_to)
-		maybe_append_list_post_as_reply_to (gstr, msg);
+        maybe_append_list_post (gstr, msg);
 }
 
 struct _FlagData {
