@@ -539,7 +539,7 @@ path_to_string (Path *p, const char* frmt)
 	for (u = 0, str = NULL; p->_data[u] != 0; ++u) {
 
 		char segm[16];
-		snprintf (segm, sizeof(segm), frmt, p->_data[u] - 1);
+		g_snprintf (segm, sizeof(segm), frmt, p->_data[u] - 1);
 
 		if (!str)
 			str = g_strdup (segm);
@@ -645,7 +645,7 @@ thread_segment_format_string (size_t matchnum)
 	/* get the number of digits needed in a hex-representation of
 	 * matchnum */
 	digitnum = (unsigned) (ceil (log(matchnum)/log(16)));
-	snprintf (frmt, sizeof(frmt), "%%0%ux", digitnum);
+	g_snprintf (frmt, sizeof(frmt), "%%0%ux", digitnum);
 
 	return frmt;
 }

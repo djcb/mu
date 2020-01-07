@@ -166,7 +166,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 		msgid = mu_msg_get_path (msg); /* fake it */
 	if (!msgid) { /* no path either? seems to happen... */
 		g_warning ("message without path");
-		snprintf (fake, sizeof(fake), "fake:%p", (gpointer)msg);
+		g_snprintf (fake, sizeof(fake), "fake:%p", (gpointer)msg);
 		msgid = fake;
 	}
 

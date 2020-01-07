@@ -299,7 +299,7 @@ mu_str_fullpath_s (const char* path, const char* name)
 
 	g_return_val_if_fail (path, NULL);
 
-	snprintf (buf, sizeof(buf), "%s%c%s", path, G_DIR_SEPARATOR,
+	g_snprintf (buf, sizeof(buf), "%s%c%s", path, G_DIR_SEPARATOR,
 		  name ? name : "");
 
 	return buf;

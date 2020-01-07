@@ -137,7 +137,7 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 		fputs ("\r", stdout);
 
 	if (color)
-		snprintf
+		g_snprintf
 			(output, sizeof(output),
 			 MU_COLOR_YELLOW "%c " MU_COLOR_DEFAULT
 			 "processing mail; "
@@ -149,7 +149,7 @@ print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
 			 (unsigned)stats->_updated,
 			 (unsigned)stats->_cleaned_up);
 	else
-		snprintf
+		g_snprintf
 			(output, sizeof(output),
 			 "%c processing mail; processed: %u; "
 			 "updated/new: %u, cleaned-up: %u",

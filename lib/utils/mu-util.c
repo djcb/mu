@@ -135,7 +135,7 @@ mu_util_cache_dir (void)
 {
 	static char cachedir [PATH_MAX];
 
-	snprintf (cachedir, sizeof(cachedir), "%s%cmu-%u",
+	g_snprintf (cachedir, sizeof(cachedir), "%s%cmu-%u",
 		  g_get_tmp_dir(), G_DIR_SEPARATOR,
 		  getuid());
 

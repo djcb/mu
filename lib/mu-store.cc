@@ -306,7 +306,7 @@ Store::set_path_tstamp (const std::string& path, time_t tstamp)
         LOCKED;
 
         std::array<char, 2*sizeof(tstamp)+1> data{};
-        const std::size_t len = snprintf (data.data(), data.size(), "%x", tstamp);
+        const std::size_t len = g_snprintf (data.data(), data.size(), "%x", tstamp);
 
         priv_->writable_db()->set_metadata(path, std::string{data.data(), len});
 }
@@ -390,7 +390,7 @@ mutable_self (MuStore *store)
 static void
 hash_str (char *buf, size_t buf_size, const char *data)
 {
-        snprintf(buf, buf_size, "016%" PRIx64, mu_util_get_hash(data));
+        g_snprintf(buf, buf_size, "016%" PRIx64, mu_util_get_hash(data));
 }
 
 
@@ -954,7 +954,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 	/* save the mime type of any part */
 	if (part->type) {
 		char ctype[MU_STORE_MAX_TERM_LENGTH + 1];
-		snprintf(ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
+		g_snprintf(ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
 		add_term(pdata->_doc, mime + ctype);
 	}
 

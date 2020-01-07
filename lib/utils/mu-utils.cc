@@ -220,7 +220,7 @@ std::string
 Mu::date_to_time_t_string (int64_t t)
 {
 	char buf[sizeof(InternalDateMax)];
-	snprintf (buf, sizeof(buf), InternalDateFormat, t);
+	g_snprintf (buf, sizeof(buf), InternalDateFormat, t);
 
 	return buf;
 }
@@ -398,7 +398,7 @@ std::string
 Mu::size_to_string (int64_t size)
 {
 	char buf[sizeof(SizeMax)];
-	snprintf (buf, sizeof(buf), SizeFormat, size);
+	g_snprintf (buf, sizeof(buf), SizeFormat, size);
 
 	return buf;
 }
