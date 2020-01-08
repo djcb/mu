@@ -177,12 +177,12 @@ maybe_append_list_post (GString *gstr, MuMsg *msg)
 	if (!list_post)
 		return;
 
-	rx = g_regex_new ("^(<?mailto:)?([a-z0-9%+@._-]+)>?", G_REGEX_CASELESS, 0, NULL);
+	rx = g_regex_new ("<?mailto:([a-z0-9%+@._-]+)>?", G_REGEX_CASELESS, 0, NULL);
 	g_return_if_fail(rx);
 
 	if (g_regex_match (rx, list_post, 0, &minfo)) {
 		char	*addr;
-		addr = g_match_info_fetch (minfo, 2);
+		addr = g_match_info_fetch (minfo, 1);
 		g_string_append_printf (gstr,"\t:list-post ((nil . \"%s\"))\n", addr);
 		g_free(addr);
 	}
