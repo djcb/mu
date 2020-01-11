@@ -417,9 +417,10 @@ predicate function. A value of nil keeps all the addresses."
 
 (defcustom mu4e-compose-reply-recipients 'ask
   "Which recipients to use when replying to a message.
-May be 'ask, 'all, 'sender."
+May be 'ask, 'all, 'sender. Note that that only applies to
+non-mailing-list message; for those, mu4e always asks."
   :type '(choice ask
-                 all
+           all
 	         sender)
   :group 'mu4e-compose)
 

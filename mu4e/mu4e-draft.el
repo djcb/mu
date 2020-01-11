@@ -55,6 +55,11 @@ This is the mu4e-specific version of
   "The message signature.
 \(i.e. the blob at the bottom of messages). This is the
 mu4e-specific version of `message-signature'."
+  :type '(choice string
+           (const :tag "None" nil)
+           (const :tag "Contents of signature file" t)
+           function sexp)
+  :risky t
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-signature-auto-include t
@@ -177,6 +182,7 @@ of the original, we simple copy the list form the original."
   (let ((reply-to
           (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
     (cl-delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)
+    (message "%S %S %S"  reply-to (plist-get origmsg :reply-to) (plist-get origmsg :from))
     (if mu4e-compose-dont-reply-to-self
       (cl-delete-if
         (lambda (to-cell)
@@ -222,7 +228,8 @@ REPLY-ALL."
              (cl-delete-duplicates
                (append
                  (plist-get origmsg :to)
-                 (plist-get origmsg :cc))
+                 (plist-get origmsg :cc)
+                 (plist-get origmsg :list-post))
                :test #'mu4e~draft-address-cell-equal))
             ;; now we have the basic list, but we must remove
             ;; addresses also in the to list
@@ -406,24 +413,15 @@ You can append flags."
 (defconst mu4e~draft-reply-prefix "Re: "
   "String to prefix replies with.")
 
-(defun mu4e~draft-reply-construct (origmsg)
-  "Create a draft message as a reply to ORIGMSG.
-Replying-to-self is special; in that case, the To and Cc fields
-will be the same as in the original."
+(defun mu4e~draft-reply-construct-recipients (origmsg)
+  "Determine the to/cc recipients for a reply message."
   (let* ((reply-to-self (mu4e-message-contact-field-matches-me origmsg :from))
 	        ;; reply-to-self implies reply-all
 	        (reply-all (or reply-to-self
                        (eq mu4e-compose-reply-recipients 'all)
                        (and (not (eq mu4e-compose-reply-recipients 'sender))
-                         (mu4e~draft-reply-all-p origmsg))))
-	        (old-msgid (plist-get origmsg :message-id))
-	        (subject (concat mu4e~draft-reply-prefix
-	                   (message-strip-subject-re
-                       (or (plist-get origmsg :subject) "")))))
+                         (mu4e~draft-reply-all-p origmsg)))))
     (concat
-      (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
-      (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)
-
       (if reply-to-self
         ;; When we're replying to ourselves, simply keep the same headers.
         (concat
@@ -439,8 +437,52 @@ will be the same as in the original."
           ;; otherwise...
           (concat
             (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-            (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg
-                                      reply-all)))))
+            (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg))))))))
+
+(defun mu4e~draft-reply-construct-recipients-list (origmsg)
+  "Determine the to/cc recipients for a reply message to a
+mailing-list."
+  (let* ( ;; reply-to-self implies reply-all
+          (list-post (plist-get origmsg :list-post))
+          (from      (plist-get origmsg :from))
+          (recipnum
+            (+ (length (mu4e~draft-create-to-lst origmsg))
+              (length (mu4e~draft-create-cc-lst origmsg t))))
+          (reply-type
+            (mu4e-read-option
+                "Reply to mailing-list "
+              `( (,(format "all %d recipient(s)" recipnum)     . all)
+                 (,(format "list-only (%s)" (cdar list-post))  . list-only)
+                 (,(format "sender-only (%s)" (cdar from))     . sender-only)))))
+    (cl-case reply-type
+      (all
+        (concat
+          (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
+          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t))))
+      (list-only
+        (mu4e~draft-header "To"
+          (mu4e~draft-recipients-list-to-string list-post)))
+      (sender-only
+        (mu4e~draft-header "To"
+          (mu4e~draft-recipients-list-to-string from))))))
+
+(defun mu4e~draft-reply-construct (origmsg)
+  "Create a draft message as a reply to ORIGMSG.
+Replying-to-self is special; in that case, the To and Cc fields
+will be the same as in the original."
+  (let* ((old-msgid (plist-get origmsg :message-id))
+	        (subject (concat mu4e~draft-reply-prefix
+	                   (message-strip-subject-re
+                       (or (plist-get origmsg :subject) ""))))
+          (list-post (plist-get origmsg :list-post)))
+    (concat
+      (mu4e~draft-header "From" (or (mu4e~draft-from-construct) ""))
+      (mu4e~draft-header "Reply-To" mu4e-compose-reply-to-address)
+
+      (if list-post ;; mailing-lists are a bit special.
+        (mu4e~draft-reply-construct-recipients-list origmsg)
+        (mu4e~draft-reply-construct-recipients origmsg))
+
       (mu4e~draft-header "Subject" subject)
       (mu4e~draft-header "References"
         (mu4e~draft-references-construct origmsg))
