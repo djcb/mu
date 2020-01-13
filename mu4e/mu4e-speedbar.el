@@ -99,11 +99,11 @@
   (interactive)
   (mapcar (lambda (bookmark)
             (speedbar-insert-button
-	      (concat "  " (mu4e-bookmark-name bookmark))
+	      (concat "  " (plist-get bookmark :name))
 	      'mu4e-highlight-face
 	      'highlight
 	      'mu4e~speedbar-bookmark
-	      (mu4e-bookmark-query bookmark)))
+	      (plist-get bookmark :query)))
     (mu4e-bookmarks)))
 
 (defun mu4e~speedbar-bookmark (&optional _text token _ident)

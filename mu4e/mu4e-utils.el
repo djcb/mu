@@ -397,20 +397,16 @@ and offer to create it if it does not exist yet."
     mdir))
 
 (defun mu4e-bookmarks ()
-  "Get `mu4e-bookmarks' in the (new) format, converting from the old
-format if needed."
+  "Get `mu4e-bookmarks' in the (new) format, converting from the
+old format if needed."
   (cl-map 'list
     (lambda (item)
-      (if (mu4e-bookmark-p item)
-	item ;; already in the right format
-	(if (and (listp item) (= (length item) 3))
-	  (make-mu4e-bookmark
-	    :name (nth 1 item)
-	    :query (nth 0 item)
-	    :key (nth 2 item))
-	  (mu4e-error "Invalid bookmark in mu4e-bookmarks"))))
-      mu4e-bookmarks))
-
+      (if (and (listp item) (= (length item) 3))
+	      `(:name  ,(nth 1 item)
+	        :query ,(nth 0 item)
+	        :key   ,(nth 2 item))
+        item))
+    mu4e-bookmarks))
 
 (defun mu4e-ask-bookmark (prompt &optional kar)
   "Ask the user for a bookmark (using PROMPT) as defined in
@@ -421,10 +417,10 @@ format if needed."
 	   (mapconcat
 	     (lambda (bm)
 	       (concat
-		 "[" (propertize (make-string 1 (mu4e-bookmark-key bm))
+		 "[" (propertize (make-string 1 (plist-get bm :key))
 		       'face 'mu4e-highlight-face)
 		 "]"
-		 (mu4e-bookmark-name bm))) (mu4e-bookmarks) ", "))
+		 (plist-get bm :name))) (mu4e-bookmarks) ", "))
 	     (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
 
@@ -434,10 +430,10 @@ KAR, or raise an error if none is found."
   (let* ((chosen-bm
 	   (or (cl-find-if
 		 (lambda (bm)
-		   (= kar (mu4e-bookmark-key bm)))
+		   (= kar (plist-get bm :key)))
 		 (mu4e-bookmarks))
 	    (mu4e-warn "Unknown shortcut '%c'" kar)))
-	 (expr (mu4e-bookmark-query chosen-bm))
+	 (expr (plist-get chosen-bm :query))
          (expr (if (not (functionp expr)) expr
                  (funcall expr)))
          (query (eval expr)))
@@ -453,14 +449,12 @@ replaces any existing bookmark with KEY."
   (setq mu4e-bookmarks
         (cl-remove-if
          (lambda (bm)
-	   (= (mu4e-bookmark-key bm) key))
-         (mu4e-bookmarks)))
-  (cl-pushnew (make-mu4e-bookmark
-                :name name
-                :query query
-                :key key)
-              mu4e-bookmarks
-              :test 'equal))
+	   (= (plist-get bm :key) key))
+          (mu4e-bookmarks)))
+  (cl-pushnew `(:name  ,name
+                :query ,query
+                 :key   ,key)
+    mu4e-bookmarks :test 'equal))
 
 
 ;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
