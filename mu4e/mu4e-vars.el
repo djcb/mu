@@ -209,6 +209,8 @@ If the string exceeds this limit, it will be truncated to fit."
 - `query': the query for this bookmark. Either a literal string or a function
    that evaluates to a string."
   `(:name ,name :query ,query :key ,key))
+(make-obsolete 'make-mu4e-bookmark "`unneeded; `mu4e-bookmarks'
+are plists" "1.3.7")
 
 (defcustom mu4e-bookmarks
   '(( :name  "Unread messages"
@@ -225,14 +227,15 @@ If the string exceeds this limit, it will be truncated to fit."
       :key ?p))
   "List of pre-defined queries that are shown on the main screen.
 
-Each of the list elements is a plist with
-three-element list of the
-form (QUERY DESCRIPTION KEY), where QUERY is a string with a mu
-query, DESCRIPTION is a short description of the query (this will
-show up in the UI), and KEY is a shortcut key for the query."
-  :type '(repeat (plist (string :tag "Query")
-                       (string :tag "Description")
-                       character))
+Each of the list elements is a plist with at least:
+:name  - the name of the queryt
+:query - the query expression
+:key   - the shortcut key.
+
+Optionally, you add the following:
+:hide  - if t, bookmark is hdden from the main-view and speedbar.
+"
+  :type '(repeat (plist))
   :group 'mu4e)
 
 (defcustom mu4e-split-view 'horizontal

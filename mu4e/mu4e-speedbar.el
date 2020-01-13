@@ -1,6 +1,6 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2018 Antono Vasiljev, Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2020 Antono Vasiljev, Dirk-Jan C. Binnema
 ;;
 ;; Author: Antono Vasiljev <self@antono.info>
 ;; Version: 0.1
@@ -56,10 +56,10 @@
   "Install those variables used by speedbar to enhance mu4e."
   (add-hook 'mu4e-context-changed-hook
     (lambda()
-        (when (buffer-live-p speedbar-buffer)
-          (with-current-buffer speedbar-buffer
-            (let ((inhibit-read-only t))
-              (mu4e-speedbar-buttons))))))
+      (when (buffer-live-p speedbar-buffer)
+        (with-current-buffer speedbar-buffer
+          (let ((inhibit-read-only t))
+            (mu4e-speedbar-buttons))))))
   (dolist (keymap
             '( mu4e-main-speedbar-key-map
                mu4e-headers-speedbar-key-map
@@ -80,13 +80,13 @@
   (when (buffer-live-p speedbar-buffer)
     (with-current-buffer speedbar-buffer
       (mapcar (lambda (maildir-name)
-		(speedbar-insert-button
-		  (concat "  " maildir-name)
-		  'mu4e-highlight-face
-		  'highlight
-		  'mu4e~speedbar-maildir
-		  maildir-name))
-	(mu4e-get-maildirs)))))
+		            (speedbar-insert-button
+		              (concat "  " maildir-name)
+		              'mu4e-highlight-face
+		              'highlight
+		              'mu4e~speedbar-maildir
+		              maildir-name))
+	      (mu4e-get-maildirs)))))
 
 (defun mu4e~speedbar-maildir (&optional _text token _ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
@@ -98,12 +98,13 @@
   "Insert the list of bookmarks in the speedbar"
   (interactive)
   (mapcar (lambda (bookmark)
-            (speedbar-insert-button
-	      (concat "  " (plist-get bookmark :name))
-	      'mu4e-highlight-face
-	      'highlight
-	      'mu4e~speedbar-bookmark
-	      (plist-get bookmark :query)))
+            (unless (plist-get bookmark :hide)
+              (speedbar-insert-button
+	              (concat "  " (plist-get bookmark :name))
+	              'mu4e-highlight-face
+	              'highlight
+	              'mu4e~speedbar-bookmark
+	              (plist-get bookmark :query))))
     (mu4e-bookmarks)))
 
 (defun mu4e~speedbar-bookmark (&optional _text token _ident)

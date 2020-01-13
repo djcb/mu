@@ -142,10 +142,11 @@ clicked."
         ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
         (mapconcat
 	        (lambda (bm)
-	          (mu4e~main-action-str
-	            (concat "\t* [b" (make-string 1 (plist-get bm :key)) "] "
-	              (plist-get bm :name))
-	            (concat "b" (make-string 1 (plist-get bm :key)))))
+            (unless (plist-get bm :hide)
+	            (mu4e~main-action-str
+	              (concat "\t* [b" (make-string 1 (plist-get bm :key)) "] "
+	                (plist-get bm :name))
+	              (concat "b" (make-string 1 (plist-get bm :key))))))
 	        (mu4e-bookmarks) "\n")
         "\n\n"
         (propertize "  Misc\n\n" 'face 'mu4e-title-face)
