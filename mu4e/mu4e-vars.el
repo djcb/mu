@@ -201,43 +201,41 @@ If the string exceeds this limit, it will be truncated to fit."
 (defvar mu4e-debug nil
   "When set to non-nil, log debug information to the *mu4e-log* buffer.")
 
-(cl-defstruct mu4e-bookmark
-  "A mu4e bookmarl object with the following members:
+;; for backward compatibility, when a bookmark was defined with defstruct.
+(cl-defun make-mu4e-bookmark (&key name query key)
+  "Create a mu4e proplist with the following elements:
 - `name': the user-visible name of the bookmark
 - `key': a single key to search for this bookmark
 - `query': the query for this bookmark. Either a literal string or a function
    that evaluates to a string."
-  name                      ;; name/description of the bookmark
-  query                     ;; a query (a string or a function evaluation to string)
-  key                       ;; key to activate the bookmark
-  )
+  `(:name ,name :query ,query :key ,key))
+(make-obsolete 'make-mu4e-bookmark "`unneeded; `mu4e-bookmarks'
+are plists" "1.3.7")
 
 (defcustom mu4e-bookmarks
-  `( ,(make-mu4e-bookmark
-        :name  "Unread messages"
-        :query "flag:unread AND NOT flag:trashed"
-        :key ?u)
-     ,(make-mu4e-bookmark
-        :name "Today's messages"
-        :query "date:today..now"
-        :key ?t)
-     ,(make-mu4e-bookmark
-        :name "Last 7 days"
-        :query "date:7d..now"
-        :key ?w)
-     ,(make-mu4e-bookmark
-        :name "Messages with images"
-        :query "mime:image/*"
-        :key ?p))
-  "A list of pre-defined queries.
-These will show up in the main screen. Each of the list elements
-is a three-element list of the form (QUERY DESCRIPTION KEY),
-where QUERY is a string with a mu query, DESCRIPTION is a short
-description of the query (this will show up in the UI), and KEY
-is a shortcut key for the query."
-  :type '(repeat (list (string :tag "Query")
-                       (string :tag "Description")
-                       character))
+  '(( :name  "Unread messages"
+      :query "flag:unread AND NOT flag:trashed"
+      :key ?u)
+    ( :name "Today's messages"
+      :query "date:today..now"
+      :key ?t)
+    ( :name "Last 7 days"
+      :query "date:7d..now"
+      :key ?w)
+    ( :name "Messages with images"
+      :query "mime:image/*"
+      :key ?p))
+  "List of pre-defined queries that are shown on the main screen.
+
+Each of the list elements is a plist with at least:
+:name  - the name of the queryt
+:query - the query expression
+:key   - the shortcut key.
+
+Optionally, you add the following:
+:hide  - if t, bookmark is hdden from the main-view and speedbar.
+"
+  :type '(repeat (plist))
   :group 'mu4e)
 
 (defcustom mu4e-split-view 'horizontal

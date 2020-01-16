@@ -1962,25 +1962,21 @@ mu4e-search-bookmark-edit}) which lets you edit the bookmark first.
 
 @subsection Setting up bookmarks
 
-@t{mu4e} provides a number of default bookmarks. Their definition is
-instructive:
+@t{mu4e} provides a number of default bookmarks. Their definition may
+be instructive:
 
 @lisp
 (defvar mu4e-bookmarks
-  `( ,(make-mu4e-bookmark
-	:name  "Unread messages"
+  '( (	:name  "Unread messages"
 	:query "flag:unread AND NOT flag:trashed"
 	:key ?u)
-     ,(make-mu4e-bookmark
-	:name "Today's messages"
+     (	:name "Today's messages"
 	:query "date:today..now"
 	:key ?t)
-     ,(make-mu4e-bookmark
-	:name "Last 7 days"
+     (	:name "Last 7 days"
 	:query "date:7d..now"
 	:key ?w)
-     ,(make-mu4e-bookmark
-	:name "Messages with images"
+     (	:name "Messages with images"
 	:query "mime:image/*"
 	:key ?p))
   "A list of pre-defined queries. Each query is represented by a
@@ -1997,10 +1993,9 @@ You can replace these or add your own items, by putting in your
 configuration (@file{~/.emacs}) something like:
 @lisp
 (add-to-list 'mu4e-bookmarks
-  (make-mu4e-bookmark
-    :name  "Big messages"
-    :query "size:5M..500M"
-    :key ?b))
+  '( :name  "Big messages"
+     :query "size:5M..500M"
+     :key   ?b))
  @end lisp
 
 This prepends your bookmark to the list, and assigns the key @key{b} to it. If
@@ -2023,12 +2018,11 @@ inbox:
 
 @lisp
 (add-to-list 'mu4e-bookmarks
-  (make-mu4e-bookmark
-   :name  "Inbox messages in the last 7 days"
-   :query (lambda () (concat "maildir:/inbox AND date:"
-             (format-time-string "%Y%m%d"
+  '( :name  "Inbox messages in the last 7 days"
+     :query (lambda () (concat "maildir:/inbox AND date:"
+            (format-time-string "%Y%m%d"
                 (subtract-time (current-time) (days-to-time 7)))))
-   :key ?w) t)
+     :key   ?w) t)
 @end lisp
 
 Another example where the user is prompted how many days old messages should be
@@ -2042,10 +2036,9 @@ shown:
             (format-time-string "%Y%m%d" start-date))))
 
 (add-to-list 'mu4e-bookmarks
-  (make-mu4e-bookmark
-   :name  "Inbox messages in the last 7 days"
-   :query (lambda () (call-interactively 'my/mu4e-bookmark-num-days-old-query))
-   :key ?o) t)
+  `(:name  "Inbox messages in the last 7 days"
+    :query ,(lambda () (call-interactively 'my/mu4e-bookmark-num-days-old-query))
+    :key  ?o) t)
 @end lisp
 
 It is defining a function to make the code more readable.

@@ -63,6 +63,16 @@
    - Add message-id's to messages when saving drafts, so we can find them even
      with ~mu4e-headers-skip-duplicates~.
 
+   - Bookmarks (as in ~mu4e-bookmarks~) are now simple plists (instead of cl
+     structs). ~make-mu4e-bookmark~ has been updated to produce such plists (for
+     backward compatibility). A bookmark now looks like a list of e.g.
+        ~(:name "My bookmark" :query "banana OR pear" :key ?f)~
+    this format is a bit easier extensible.
+
+   - For instance, we now recognize an attribute ~:hide t~, which will hide the
+     bookmark item from the main-screen (and speedbar), but keep it avilable
+     through the completion UI.
+
 *** toys
 
     - Updated the ~mug~ toy UI to use Webkit2/GTK+. Note that this is just a toy
