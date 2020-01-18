@@ -1,4 +1,4 @@
-## Copyright (C) 2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,72 +16,92 @@
 
 include $(top_srcdir)/gtest.mk
 
-AM_CFLAGS=								\
-	$(WARN_CFLAGS)							\
-	$(GLIB_CFLAGS)							\
-	$(ASAN_CFLAGS)							\
-	$(CODE_COVERAGE_CFLAGS)						\
-	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"		\
-	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"		\
-	-Wno-format-nonliteral						\
-	-Wno-switch-enum						\
-	-Wno-deprecated-declarations					\
-	-Wno-inline
+AM_CFLAGS=							\
+	$(WARN_CFLAGS)						\
+	$(GLIB_CFLAGS)						\
+	$(ASAN_CFLAGS)						\
+	$(CODE_COVERAGE_CFLAGS)					\
+	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"	\
+	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"	\
+	-Wno-format-nonliteral					\
+	-Wno-switch-enum					\
+	-Wno-deprecated-declarations				\
+	-Wno-inline						\
+	-I${top_srcdir}/lib
 
-AM_CPPFLAGS=								\
+AM_CPPFLAGS=							\
 	$(CODE_COVERAGE_CPPFLAGS)
 
-AM_CXXFLAGS=								\
-	$(WARN_CXXFLAGS)						\
-	$(GLIB_CFLAGS)							\
-	$(ASAN_CXXFLAGS)						\
-	$(CODE_COVERAGE_CFLAGS)
+AM_CXXFLAGS=							\
+	$(WARN_CXXFLAGS)					\
+	$(GLIB_CFLAGS)						\
+	$(ASAN_CXXFLAGS)					\
+	$(CODE_COVERAGE_CFLAGS)					\
+	-I${top_srcdir}/lib
 
-AM_LDFLAGS=								\
+AM_LDFLAGS=							\
 	$(ASAN_LDFLAGS)
 
-noinst_LTLIBRARIES=							\
+noinst_LTLIBRARIES=						\
 	libmu-utils.la
 
-libmu_utils_la_SOURCES=							\
-	mu-date.c							\
-	mu-date.h							\
-	mu-error.hh							\
-	mu-log.c							\
-	mu-log.h							\
-	mu-str.c							\
-	mu-str.h							\
-	mu-util.c							\
-	mu-util.h							\
-	mu-utils.cc							\
+libmu_utils_la_SOURCES=						\
+	mu-date.c						\
+	mu-date.h						\
+	mu-error.hh						\
+	mu-log.c						\
+	mu-log.h						\
+	mu-command-parser.cc					\
+	mu-command-parser.hh					\
+	mu-sexp-parser.cc					\
+	mu-sexp-parser.hh					\
+	mu-str.c						\
+	mu-str.h						\
+	mu-util.c						\
+	mu-util.h						\
+	mu-utils.cc						\
 	mu-utils.hh
 
-libmu_utils_la_LIBADD=							\
-	$(GLIB_LIBS)							\
+libmu_utils_la_LIBADD=						\
+	$(GLIB_LIBS)						\
 	$(CODE_COVERAGE_LIBS)
 
-noinst_PROGRAMS=							\
+noinst_PROGRAMS=						\
 	$(TEST_PROGS)
 
-TEST_PROGS+=								\
+TEST_PROGS+=							\
 	test-mu-util
-test_mu_util_SOURCES=							\
+test_mu_util_SOURCES=						\
 	test-mu-util.c
-test_mu_util_LDADD=							\
+test_mu_util_LDADD=						\
 	libmu-utils.la
 
-TEST_PROGS+=								\
+TEST_PROGS+=							\
 	test-mu-utils
-test_mu_utils_SOURCES=							\
+test_mu_utils_SOURCES=						\
 	test-utils.cc
-test_mu_utils_LDADD=							\
+test_mu_utils_LDADD=						\
 	libmu-utils.la
 
-TEST_PROGS+=								\
+TEST_PROGS+=							\
 	test-mu-str
-test_mu_str_SOURCES=							\
+test_mu_str_SOURCES=						\
 	test-mu-str.c
-test_mu_str_LDADD=							\
+test_mu_str_LDADD=						\
+	libmu-utils.la
+
+TEST_PROGS+=							\
+	test-sexp-parser
+test_sexp_parser_SOURCES=					\
+	test-sexp-parser.cc
+test_sexp_parser_LDADD=						\
+	libmu-utils.la
+
+TEST_PROGS+=							\
+	test-command-parser
+test_command_parser_SOURCES=					\
+	test-command-parser.cc
+test_command_parser_LDADD=					\
 	libmu-utils.la
 
 TESTS=$(TEST_PROGS)

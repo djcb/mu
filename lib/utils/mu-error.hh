@@ -70,6 +70,9 @@ struct Error final: public std::exception {
                 va_end(args);
         }
 
+        Error(Error&& rhs)      = default;
+        Error(const Error& rhs) = delete;
+
         /**
          * Build an error from a GError an error-code and a format string
          *
