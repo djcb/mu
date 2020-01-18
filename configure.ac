@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 AC_PREREQ([2.68])
 AC_INIT([mu],[1.3.6],[https://github.com/djcb/mu/issues],[mu])
-AC_COPYRIGHT([Copyright (C) 2008-2019 Dirk-Jan C. Binnema])
+AC_COPYRIGHT([Copyright (C) 2008-2020 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -231,6 +231,14 @@ AM_CONDITIONAL(BUILD_GUILE,
 ###############################################################################
 
 ###############################################################################
+# optional readline
+saved_libs=$LIBS
+AX_LIB_READLINE
+AC_SUBST(READLINE_LIBS,${LIBS})
+LIBS=$saved_libs
+###############################################################################
+
+###############################################################################
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
@@ -239,17 +247,6 @@ AM_CONDITIONAL(HAVE_MAKEINFO, [test "x$have_makeinfo" = "xyes"])
 ###############################################################################
 # docdir, so we can use it in mu4e-meta.el.in
 AC_SUBST(MU_DOC_DIR, "${prefix}/share/doc/mu")
-###############################################################################
-
-###############################################################################
-# check for pmccabe
-AC_PATH_PROG([PMCCABE],[pmccabe],[no])
-AS_IF([test "x$PMCCABE" = "xno"],[
-   have_pmccabe="no"
-   AC_MSG_WARN([
-   *** Developers: you do not seem to have the pmccabe tool installed.
-   *** Please install it if you want to run the automated code checks])
-],[have_pmccabe="yes"])
 ###############################################################################
 
 AC_CONFIG_FILES([
@@ -314,7 +311,6 @@ echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : no"
 ])
 
-echo "McCabe's Cyclomatic Complexity tool  : $have_pmccabe"
 echo
 
 echo "Have direntry->d_ino                 : $use_dirent_d_ino"

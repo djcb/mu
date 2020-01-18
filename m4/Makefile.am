@@ -38,6 +38,7 @@ EXTRA_DIST=				\
 	ax_cxx_compile_stdcxx.m4	\
 	ax_file_escapes.m4		\
 	ax_is_release.m4		\
+	ax_lib_readline.m4		\
 	ax_require_defined.m4		\
 	ax_valgrind_check.m4		\
 	guile-2.2.m4			\
