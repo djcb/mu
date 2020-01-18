@@ -21,6 +21,7 @@
 #define __MU_UTILS_HH__
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <cstdarg>
 #include <glib.h>
@@ -134,6 +135,24 @@ std::string size_to_string (const std::string& sizestr, bool first);
  * @return the size expressed as a string with the decimal number of bytes
  */
 std::string size_to_string (int64_t size);
+
+
+/**
+ * Convert any ostreamable<< value to a string
+ *
+ * @param t the value
+ *
+ * @return a std::string
+ */
+template <typename T>
+static inline std::string to_string (const T& val)
+{
+        std::stringstream sstr;
+        sstr << val;
+
+        return sstr.str();
+}
+
 
 
 /**

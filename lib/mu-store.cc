@@ -149,9 +149,8 @@ struct Store::Private {
                         // very basic check; just ensure there's no ',' in the address.
                         // we don't insist on full RFC5322
                         if (addr.find(",") != std::string::npos)
-                                throw Mu::Error::make(Error::Code::InvalidArgument,
-                                                      "e-mail address '%s' contains comma",
-                                                      addr.c_str());
+                                throw Mu::Error(Error::Code::InvalidArgument,
+                                                "e-mail address '%s' contains comma", addr.c_str());
                         if (!all_addresses.empty())
                                 all_addresses += ',';
                         all_addresses += addr;
@@ -607,8 +606,8 @@ mu_store_get_docid_for_path (const MuStore *store, const char* path, GError **er
 
 		Xapian::MSet mset (enq.get_mset (0,1));
 		if (mset.empty())
-			throw Mu::Error::make(Error::Code::NotFound,
-                                              "message @ %s not found in store", path);
+			throw Mu::Error(Error::Code::NotFound,
+                                        "message @ %s not found in store", path);
 
 		return *mset.begin();
 

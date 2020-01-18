@@ -23,17 +23,24 @@
 
 #include <stdexcept>
 #include "mu-utils.hh"
+#include <glib.h>
 
 namespace Mu {
 
-struct Error final: public std::runtime_error {
+struct Error final: public std::exception {
+
         enum struct Code {
                 AccessDenied,
+                Command,
                 File,
+                Index,
                 Internal,
                 InvalidArgument,
                 NotFound,
+                Parsing,
+                Query,
                 SchemaMismatch,
+                Store,
         };
 
         /**
@@ -43,9 +50,8 @@ struct Error final: public std::runtime_error {
          * #param msgarg the error diecription
          */
         Error(Code codearg, const std::string& msgarg):
-                std::runtime_error(msgarg), code_{codearg}
+                code_{codearg}, what_{msgarg}
                 {}
-
 
         /**
          * Build an error from an error-code and a format string
@@ -56,13 +62,53 @@ struct Error final: public std::runtime_error {
          *
          * @return an Error object
          */
-        __attribute__((format(printf, 2, 0)))
-        static Error make(Code codearg, const char *frm, ...) {
+        __attribute__((format(printf, 3, 0)))
+        Error(Code codearg, const char *frm, ...): code_{codearg} {
                 va_list args;
                 va_start(args, frm);
-                auto msg = format(frm, args);
+                what_ = format(frm, args);
                 va_end(args);
-                return Error(codearg, msg);
+        }
+
+        /**
+         * Build an error from a GError an error-code and a format string
+         *
+         * @param code error-code
+         * @param gerr a GError or {}, which is consumed
+         * @param frm format string
+         * @param ... format parameters
+         *
+         * @return an Error object
+         */
+        __attribute__((format(printf, 4, 0)))
+        Error(Code codearg, GError **err, const char *frm, ...): code_{codearg} {
+
+                va_list args;
+                va_start(args, frm);
+                what_ = format(frm, args);
+                va_end(args);
+
+                if (err && *err)
+                        what_ += format (": %s", (*err)->message);
+                else
+                        what_ += ": something went wrong";
+
+                g_clear_error(err);
+        }
+
+        /**
+         * DTOR
+         *
+         */
+        virtual ~Error() = default;
+
+        /**
+         * Get the descriptiove message.
+         *
+         * @return
+         */
+        virtual const char* what() const noexcept override {
+                return what_.c_str();
         }
 
         /**
@@ -72,8 +118,12 @@ struct Error final: public std::runtime_error {
          */
         Code code() const { return code_; }
 
+
+
 private:
         const Code   code_;
+        std::string  what_;
+
 };
 
 
