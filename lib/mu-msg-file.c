@@ -247,6 +247,8 @@ get_mailing_list (MuMsgFile *self)
 	else
 		res = g_strdup (dechdr);
 
+	g_free (dechdr);
+
 	return res;
 }
 

@@ -917,6 +917,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 	/* and create a new one */
 	self->_file = mu_msg_file_new (newfullpath, maildir, err);
 	g_free (targetmdir);
+	g_free (newfullpath);
 
 	return self->_file ? TRUE : FALSE;
 }
