@@ -4568,22 +4568,23 @@ them. @t{mu} can run in a special @t{server}-mode, where it provides services
 @node mu server
 @section @t{mu server}
 
-@t{mu4e} is based on the @t{mu} e-mail searching/indexer. The latter is a
-C-program; there are different ways to communicate with a client that is
-emacs-based.
+@t{mu4e} is based on the @t{mu} e-mail searching/indexer. The latter
+is a C++-program; there are different ways to communicate with a
+client that is emacs-based.
 
-One way to implement this, would be to call the @t{mu} command-line tool with
-some parameters and then parse the output. In fact, that was the first
-approach --- @t{mu4e} would invoke e.g., @t{mu find} and process the output in
-@command{emacs}.
+One way to implement this, would be to call the @t{mu} command-line
+tool with some parameters and then parse the output. In fact, that was
+the first approach --- @t{mu4e} would invoke e.g., @t{mu find} and
+process the output in @command{emacs}.
 
-However, with this approach, we need to load the entire e-mail @emph{Xapian}
-database (in which the message is stored) for each invocation. Wouldn't it be
-nicer to keep a running @t{mu} instance around?  Indeed, it would --- and thus,
-the @t{mu server} sub-command was born. Running @t{mu server} starts a simple
-shell, in which you can give commands to @command{mu}, which then spits out
-the results/errors. @command{mu server} is not meant for humans, but it can be
-used manually, which is great for debugging.
+However, with this approach, we need to load the entire e-mail
+@emph{Xapian} database (in which the message is stored) for each
+invocation. Wouldn't it be nicer to keep a running @t{mu} instance
+around? Indeed, it would --- and thus, the @t{mu server} sub-command
+was born. Running @t{mu server} starts a simple shell, in which you
+can give commands to @command{mu}, which then spits out the
+results/errors. @command{mu server} is not meant for humans, but it
+can be used manually, which is great for debugging.
 
 @node Reading from the server
 @section Reading from the server
@@ -4610,10 +4611,11 @@ invoked whenever the process has some data for us. Something like:
     (set-process-sentinel proc 'my-process-sentinel))
 @end lisp
 
-Note, the process sentinel is invoked when the process is terminated --- so
-there you can clean things up. The function @code{my-process-filter} is a
-user-defined function that takes the process and the chunk of output as
-arguments; in @t{mu4e} it looks something like (pseudo-lisp):
+Note, the process sentinel is invoked when the process is terminated
+--- so there you can clean things up. The function
+@code{my-process-filter} is a user-defined function that takes the
+process and the chunk of output as arguments; in @t{mu4e} it looks
+something like (pseudo-lisp):
 
 @lisp
 (defun my-process-filter (proc str)
@@ -4625,16 +4627,19 @@ arguments; in @t{mu4e} it looks something like (pseudo-lisp):
       <evaluate-expression>))
 @end lisp
 
-@code{<evaluate-expression>} de-multiplexes the s-expression we got. For
-example, if the s-expression looks like an e-mail message header, it is
-processed by the header-handling function, which appends it to the header
-list. If the s-expression looks like an error message, it is reported to the
-user. And so on.
+@code{<evaluate-expression>} de-multiplexes the s-expression we got.
+For example, if the s-expression looks like an e-mail message header,
+it is processed by the header-handling function, which appends it to
+the header list. If the s-expression looks like an error message, it
+is reported to the user. And so on.
 
-The language between frontend and backend is documented in the @t{mu-server}
-man-page. @t{mu4e} can log these communications; you can use @kbd{M-x
-mu4e-toggle-logging} to turn logging on and off, and you can view the log
-using @kbd{M-x mu4e-show-log} (@key{$}).
+The language between frontend and backend is documented partly in the
+@t{mu-server} man-page and more completely in the output of @t{mu
+server --commands}.
+
+@t{mu4e} can log these communications; you can use @kbd{M-x
+mu4e-toggle-logging} to turn logging on and off, and you can view the
+log using @kbd{M-x mu4e-show-log} (@key{$}).
 
 @node The message s-expression
 @section The message s-expression
@@ -4680,8 +4685,9 @@ Some notes on the format:
 where @t{name} can be @t{nil}.
 @item The date is in format @command{emacs} uses (for example in
 @code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
-available for the actual number; the other bits are use by @command{emacs} for
-internal purposes. Therefore, we need to split @t{time_t} in two numbers.}
+available for the actual number; the other bits are use by
+@command{emacs} for internal purposes. Therefore, we need to split
+@t{time_t} in two numbers.}
 @item Attachments are a list of elements with fields @t{:index} (the number of
 the MIME-part), @t{:name} (the file name, if any), @t{:mime-type} (the
 MIME-type, if any) and @t{:size} (the size in bytes, if any).
@@ -4692,24 +4698,26 @@ MIME-type, if any) and @t{:size} (the size in bytes, if any).
 
 @subsection Example: ping-pong
 
-As an example of the communication between @t{mu4e} and @command{mu}, let's
-look at the @t{ping-pong}-sequence. When @t{mu4e} starts, it sends a command
-@t{ping} to the @t{mu server} backend, to learn about its version. @t{mu
-server} then responds with a @t{pong} s-expression to provide this information
-(this is implemented in @file{mu-cmd-server.c}).
+As an example of the communication between @t{mu4e} and @command{mu},
+let's look at the @t{ping-pong}-sequence. When @t{mu4e} starts, it
+sends a command @t{ping} to the @t{mu server} backend, to learn about
+its version. @t{mu server} then responds with a @t{pong} s-expression
+to provide this information (this is implemented in
+@file{mu-cmd-server.c}).
 
 We start this sequence when @t{mu4e} is invoked (when the program is
 started). It calls @t{mu4e-proc-ping}, and registers a (lambda) function for
 @t{mu4e-proc-pong-func}, to handle the response.
 
 @verbatim
--> cmd:ping
-<- (pong "mu" :version "x.x.x" :doccount 10000)
+-> (ping)
+<-<prefix>(:pong "mu" :props (:version "x.x.x" :doccount 78545))
 @end verbatim
 
-When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda function
-we registered is called, and it compares the version we got from the @t{pong}
-with the version we expected, and raises an error if they differ.
+When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda
+function we registered is called, and it compares the version we got
+from the @t{pong} with the version we expected, and raises an error if
+they differ.
 
 @node Debugging
 @appendix Debugging
@@ -4717,14 +4725,15 @@ with the version we expected, and raises an error if they differ.
 As explained in @ref{How it works}, @t{mu4e} communicates with its backend
 (@t{mu server}) by sending commands and receiving responses (s-expressions).
 
-For debugging purposes, it can be very useful to see this data. For this
-reason, @t{mu4e} can log all these messages. Note that the `protocol' is
-documented to some extent in the @t{mu-server} manpage.
+For debugging purposes, it can be very useful to see this data. For
+this reason, @t{mu4e} can log all these messages. Note that the
+`protocol' is documented to some extent in the @t{mu-server} manpage.
 
-You can enable (and disable) logging with @kbd{M-x mu4e-toggle-logging}. The
-log-buffer is called @t{*mu4e-log*}, and in the @ref{Main view}, @ref{Headers
-view} and @ref{Message view}, there's a keybinding @key{$} that takes you
-there. You can quit it by pressing @key{q}.
+You can enable (and disable) logging with @kbd{M-x
+mu4e-toggle-logging}. The log-buffer is called @t{*mu4e-log*}, and in
+the @ref{Main view}, @ref{Headers view} and @ref{Message view},
+there's a keybinding @key{$} that takes you there. You can quit it by
+pressing @key{q}.
 
 Logging can be a bit resource-intensive, so you may not want to leave
 it on all the time. By default, the log only maintains the most recent

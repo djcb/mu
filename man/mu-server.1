@@ -1,4 +1,4 @@
-.TH MU-SERVER 1 "September 2012" "User Manuals"
+.TH MU-SERVER 1 "January 2020" "User Manuals"
 
 .SH NAME
 
@@ -10,27 +10,28 @@ mu server \- the mu backend for the mu4e e-mail client
 
 .SH DESCRIPTION
 
-\fBmu server\fR starts a simple shell in which one can query and manipulate
-the mu database. The output of the commands is terms of Lisp symbolic
-expressions (s-exps). \fBmu server\fR is not meant for use by humans; instead,
-it is designed specifically for the \fBmu4e\fR e-mail client.
+\fBmu server\fR starts a simple shell in which one can query and manipulate the
+mu database. The output uses s-expressiong. \fBmu server\fR is not meant for use
+by humans, except for debugging purposes. Instead, it is designed specifically
+for the \fBmu4e\fR e-mail client.
 
 In this man-page, we document the commands \fBmu server\fR accepts, as well as
-their responses. In general, the commands sent to the server are of the form
+their responses. In general, the commands sent to the server are s-expressions
+of the form:
 
 .nf
-   cmd:<command> [<parameters>]*
+   (<command-name> :param1 value1 :param2 value2)
 .fi
 
-where each of the parameters is prefixed by their name and a colon. For
-example, to view a certain message, the command would be:
+For example, to view a certain message, the command would be:
 
 .nf
-   cmd:view docid:12345
+   (view :docid 12345)
 .fi
 
-Parameters can be sent in any order, and parameters not used by a certain
-command are simply ignored.
+Parameters can be sent in any order; they must be of the correct type though.
+See \fBlib/utils/mu-sexp-parser.hh\fR and \fBlib/utils/mu-sexp-parser.hh\fR in
+source-tree for the details.
 
 
 .SH OUTPUT FORMAT
@@ -50,223 +51,8 @@ By prefixing the expression with its length, it can be processed more
 efficiently. The \\376 and \\377 were chosen since they never occur in valid
 UTF-8 (in which the s-expressions are encoded).
 
-.SH COMMAND AND RESPONSE
+.sh COMMANDS
 
-.TP
-.B add
-
-Using the \fBadd\fR command, we can add a message to the database.
-
-.nf
--> cmd:add path:<path> maildir:<maildir>
-<- (:info add :path <path> :docid <docid>)
-.fi
-
-
-.TP
-.B compose
-
-Using the \fBcompose\fR command, we get the (original) message, and tell what
-to do with it. The user-interface is then expected to pre-process the message,
-e.g. set the subject, sender and recipient for a reply message.
-
-Messages of type 'new' don't use the docid: parameter, the other ones do.
-
-.nf
--> cmd:compose type:<reply|forward|edit|new> [docid:<docid>]
-<- (:compose <reply|forward|edit|new> :original <s-exp> :include (<list-of-attachments))
-.fi
-
-The <list-of-attachments> is an s-expression describing the attachments to
-include in the message; this currently only applies to message we are
-forwarding. This s-expression looks like:
-
-.nf
-   (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
-.fi
-
-
-.TP
-.B contacts
-
-Using the \fBcompose\fR command, we can retrieve an s-expression with all known
-contacts (name + e-mail address). For the details, see \fBmu-cfind(1)\fR.
-
-.nf
--> cmd:contacts [personal:true|false] [after:<time_t>]
-<- (:contacts ((:name abc :mail foo@example.com ...) ...)
-.fi
-
-
-.TP
-.B extract
-
-Using the \fBextract\fR command we can save and open attachments.
-.nf
--> cmd:extract action:<save|open|temp> index:<index> [path:<path>] [what:<what> [param:<param>]]
-.fi
-
-If the action is 'save', the path argument is required; the attachment will
-be saved, and a message
-.nf
-<- (:info save :message "... has been saved")
-.fi
-is sent.
-
-If the action is 'open', the attachment will saved to a temporary file, after
-which it will be opened with the default handler for this kind of file (see
-\fBmu-extract\fR(1)), and a message
-.nf
-<- (:info open :message "... has been opened")
-.fi
-is sent.
-
-If the action is 'temp', the arguments 'what' is required. The attachment will
-saved to a temporary file, and the following message is sent:
-.nf
-<- (:temp :what <what> :param <param :docid 12345)
-.fi
-The front-end can then take action on the temp file, based on what :what and
-:param contain. \fBmu4e\fR uses this mechanism e.g. for piping an attachment
-to a shell command.
-
-.TP
-.B find
-
-Using the \fBfind\fR command we can search for messages.
-.nf
--> cmd:find query:"<query>" [threads:true|false] [sortfield:<sortfield>]
-   [reverse:true|false] [maxnum:<maxnum>]
-.fi
-The \fBquery\fR-parameter provides the search query; the
-\fBthreads\fR-parameter determines whether the results will be returned in
-threaded fashion or not; the \fBsortfield\fR-parameter (a string, "to",
-"from", "subject", "date", "size", "prio") sets the search field, the
-\fBreverse\fR-parameter, if true, set the sorting order Z->A and, finally, the
-\fBmaxnum\fR-parameter limits the number of results to return (<= 0
-means 'unlimited').
-
-First, this will return an 'erase'-sexp, to clear the buffer from possible
-results from a previous query.
-.nf
-<- (:erase t)
-.fi
-
-This will return a series of 0 up to <maxnum> s-expression corresponding to
-each message found (if there's no maxnum, all results will be returned). The
-information message s-exps this function returns do not contain the message
-body; the \fBview\fR command is for that.
-.nf
-<- (...)
-.fi
-and finally, we receive:
-.nf
-<- (:found <number-of-matches>)
-.fi
-
-
-.TP
-.B guile
-The \fBguile\fR command is reserved for future use.
-
-
-.TP
-.B index
-
-Using the \fBindex\fR command, we can (re)index the database, similar to what
-\fBmu find\fR does. The \fBmy-addresses\fR parameter (optionally)
-registers 'my' email addresses; see the documentation for
-\fBmu_store_set_my_addresses\fR.
-
-.nf
--> cmd:index path:<path> [my-addresses:<comma-separated-list-of-email-addresses>]
-.fi
-As a response, it will send (for each 1000 messages):
-.nf
-(:info index :status running :processed <processed> :updated <updated>)
-.fi
-and finally:
-.nf
-(:info index :status complete :processed <processed :updated <updated>
- :cleaned-up <cleaned-up>)
-.fi
-
-.TP
-.B mkdir
-
-Using the \fBmkdir\fR command, we can create a new maildir.
-
-.nf
--> cmd:mkdir path:<path>
-<- (:info mkdir :message "<maildir> has been created")
-.fi
-
-.TP
-.B move
-
-Using the \fBmove\fR command, we can move messages to another maildir or
-change its flags (which ultimately means it is being move to a different
-filename), and update the database correspondingly. The function returns an
-s-exp describing the updated message, so that it can be updated in the user
-interface.
-
-.nf
--> cmd:move docid:<docid>|msgid:<msgid> [maildir:<maildir>] [flags:<flags>]
-<- (:update <s-exp> :move t)
-.fi
-
-One of docid and msgid must be specified to identify the message. At least one
-of maildir and flags must be specified.
-
-
-.TP
-.B ping
-
-The \fBping\fR command provokes a \fBpong\fR response. It is used for the initial
-handshake between \fBmu4e\fR and \fBmu server\fR.
-.nf
--> cmd:ping
-<- (:pong "mu" :version <version> :doccount <doccount>)
-.fi
-
-.TP
-.B remove
-
-Using the \fBremove\fR command, we can remove the message from disk, and
-update the database accordingly.
-
-.nf
--> cmd:remove docid:<docid>
-<- (:remove <docid>)
-.fi
-
-
-.TP
-.B view
-
-Using the \fBview\fR command, we can retrieve all information (including the
-body) of a particular e-mail message.
-
-If the optional parameter \fBextract-images\fR is \fBtrue\fR, extract images
-to temp files, and include links to them in the returned s-exp.
-
-If the optional parameter \fBuse-agent\fR is \fBtrue\fR, try to use
-\fBgpg-agent\fR when verifying PGP/GPG message parts.
-
-If the optional parameter \fBauto-retrieve-key\fR is \fBtrue\fR, attempt to
-retrieve public keys online automatically.
-
-.nf
--> cmd:view docid:<docid>|msgid:<msgid> [extract-images:true] [use-agent:false] [auto-retrieve-key:false]
-<- (:view <s-exp>)
-.fi
-
-or, alternatively:
-
-.nf
--> cmd:view path:<path-to-msg> [extract-images:true] [use-agent:false] [auto-retrieve-key:false]
-<- (:view <s-exp>)
-.fi
 
 .SH AUTHOR
 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
