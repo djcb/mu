@@ -274,8 +274,7 @@ Start the process if needed."
     (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
-  ;; the mu server signal handler will make it quit after 'quit'
-  (mu4e~proc-send-command "cmd:quit"))
+        (mu4e~call-mu '(quit)))
   ;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
   (signal-process proc 'SIGINT))))
@@ -307,11 +306,18 @@ Start the process if needed."
       (t
         (error "Something bad happened to the mu server process")))))
 
+(defun mu4e~call-mu (form)
+  "Call 'mu' with some command."
+  (unless (mu4e~proc-running-p) (mu4e~proc-start))
+  (let ((cmd (format "%S" form)))
+    (mu4e-log 'to-server "%s" cmd)
+    (process-send-string mu4e~proc-process (concat cmd "\n"))))
+
 (defun mu4e~docid-msgid-param (docid-or-msgid)
   "Construct a backend parameter based on DOCID-OR-MSGID."
   (if (stringp docid-or-msgid)
-    (concat "msgid:" (mu4e~escape docid-or-msgid))
-    (format "docid:%d" docid-or-msgid)))
+    `(:msgid ,(mu4e~escape docid-or-msgid))
+    `(:docid ,docid-or-msgid)))
 
 (defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups
       include-related)
@@ -330,20 +336,14 @@ For each result found, a function is called, depending on the
 kind of result. The variables `mu4e-error-func' contain the
 function that will be called for, resp., a message (header row)
 or an error."
-  (mu4e~proc-send-command
-    (concat
-      "cmd:find query:%s threads:%s sortfield:%s reverse:%s maxnum:%d "
-      "skip-dups:%s include-related:%s")
-    (base64-encode-string (encode-coding-string query 'utf-8 t) t)
-    (if threads "true" "false")
-    ;; sortfield is e.g. ':subject'; this removes the ':'
-    (if (null sortfield) "nil" (substring (symbol-name sortfield) 1))
-    ;; TODO: use ascending/descending in backend too (it's clearer than
-    ;; 'reverse'
-    (if (eq sortdir 'descending) "true" "false")
-    (if maxnum maxnum -1)
-    (if skip-dups "true" "false")
-    (if include-related "true" "false")))
+  (mu4e~call-mu `(find
+                   :query ,query
+                   :threads ,threads
+;;                   :sortfield ,sortfield
+                   :sortdir ,sortdir
+                   :maxnum ,maxnum
+                   :skip-dups ,skip-dups
+                   :include-related ,include-related)))
 
 (defun mu4e~proc-move (docid-or-msgid &optional maildir flags no-view)
   "Move message identified by DOCID-OR-MSGID.
@@ -394,40 +394,32 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
     (rename
       (if (and maildir mu4e-change-filenames-when-moving)
         "true" "false")))
-    (mu4e~proc-send-command "cmd:move %s %s %s %s %s"
-      idparam
-      (or flagstr "")
-      (or path "")
-      (format "newname:%s" rename)
-      (format "noview:%s" (if no-view "true" "false")))))
+    (mu4e~call-mu `(move
+                     :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
+                     :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
+                     :flags ,(or flags nil)
+                     :maildir ,(or maildir nil)
+                     :rename ,(and maildir mu4e-change-filenames-when-moving)
+                     :noview ,no-view))))
 
 (defun mu4e~proc-index (path my-addresses cleanup lazy-check)
   "Index messages on PATH with possible CLEANUP and LAZY-CHECK.
 PATH should point to some maildir directory structure.
 MY-ADDRESSES is a list of 'my' email addresses (see
 `mu4e-user-mail-address-list')."
-  (let ((path (mu4e~escape path))
-   (addrs (when my-addresses (mapconcat 'identity my-addresses ","))))
-    (if addrs
-      (mu4e~proc-send-command
-        "cmd:index path:%s my-addresses:%s cleanup:%s lazy-check:%s contacts:%s"
-        path
-        addrs
-        (if cleanup "true" : "false")
-        (if lazy-check "true")
-        (if mu4e-compose-complete-addresses "true"))
-      (mu4e~proc-send-command "cmd:index path:%s" path))))
+  (mu4e~call-mu `(index
+                   :my-addresses ,my-addresses
+                   :cleanup ,cleanup
+                   :lazy-check ,lazy-check)))
 
 (defun mu4e~proc-add (path maildir)
   "Add the message at PATH to the database.
 With MAILDIR set to the maildir this message resides in,
 e.g. '/drafts'; if this works, we will receive (:info add :path
 <path> :docid <docid>) as well as (:update <msg-sexp>)."
-  (mu4e~proc-send-command "cmd:add path:%s %s"
-    (mu4e~escape path)
-    (if maildir
-      (format "maildir:%s" (mu4e~escape maildir))
-      "")))
+  (mu4e~call-mu `(add
+                   :path ,path
+                   :maildir ,maildir)))
 
 (defun mu4e~proc-sent (path maildir)
     "Add the message at PATH to the database.
@@ -436,9 +428,9 @@ e.g. '/drafts'.
 
  if this works, we will receive (:info add :path <path> :docid
 <docid> :fcc <path>)."
-    (mu4e~proc-send-command "cmd:sent path:%s maildir:%s"
-      (mu4e~escape path) (mu4e~escape maildir)))
-
+  (mu4e~call-mu `(sent
+                   :path ,path
+                   :maildir ,maildir)))
 
 (defun mu4e~proc-compose (type decrypt &optional docid)
   "Compose a message of TYPE, DECRYPT it and use DOCID.
@@ -448,49 +440,37 @@ editing, resending) with DOCID or nil for type `new'.
 
 The result is delivered to the function registered as
 `mu4e-compose-func'."
-  (unless (member type '(forward reply edit resend new))
-    (mu4e-error "Unsupported compose-type %S" type))
-  (unless (eq (null docid) (eq type 'new))
-    (mu4e-error "`new' implies docid not-nil, and vice-versa"))
-  (mu4e~proc-send-command
-    "cmd:compose type:%s docid:%d extract-encrypted:%s use-agent:true"
-    (symbol-name type) docid (if decrypt "true" "false")))
+  (mu4e~call-mu `(compose
+                   :type ,type
+                   :decrypt ,decrypt
+                   :docid ,docid)))
 
 (defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
-  (mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~escape path)))
+  ;;(mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~escape path))
+  (mu4e~call-mu `(mkdir :path ,path)))
 
-(defun mu4e~proc-extract (action docid partidx decrypt
+(defun mu4e~proc-extract (action docid index decrypt
          &optional path what param)
-  "Perform ACTION  on part with DOCID PARTIDX DECRYPT PATH WHAT PARAM.
+  "Perform ACTION  on part with DOCID INDEX DECRYPT PATH WHAT PARAM.
 Use a message with DOCID and perform ACTION on it (as symbol,
 either `save', `open', `temp') which mean: * save: save the part
 to PATH (a path) (non-optional for save)$ * open: open the part
 with the default application registered for doing so * temp: save
 to a temporary file, then respond with
        (:temp <path> :what <what> :param <param>)."
-  (let ((cmd
-    (concat "cmd:extract "
-      (cl-case action
-        (save
-    (format "action:save docid:%d index:%d path:%s extract-encrypted:%s use-agent:true"
-      docid partidx (mu4e~escape path) (if decrypt "true" "false")))
-        (open (format "action:open docid:%d index:%d extract-encrypted:%s use-agent:true"
-      docid partidx (if decrypt "true" "false")))
-        (temp
-    (format "action:temp docid:%d index:%d what:%s%s extract-encrypted:%s use-agent:true"
-      docid partidx what
-      (if param
-        (if (stringp param)
-          (format " param:%s" (mu4e~escape param))
-          (format " param:%S" param)) "") (if decrypt "true" "false")))
-        (otherwise (mu4e-error "Unsupported action %S" action))))
-    ))
-    (mu4e~proc-send-command "%s" cmd)))
+  (mu4e~call-mu `(extract
+                   :action ,action
+                   :docid ,docid
+                   :index ,index
+                   :decrypt ,decrypt
+                   :path ,path
+                   :what ,what
+                   :param ,param)))
 
 (defun mu4e~proc-ping ()
   "Sends a ping to the mu server, expecting a (:pong ...) in response."
-  (mu4e~proc-send-command "cmd:ping"))
+  (mu4e~call-mu '(ping)))
 
 (defun mu4e~proc-contacts (personal after tstamp)
   "Ask for contacts with PERSONAL AFTER TSTAMP.
@@ -498,11 +478,10 @@ S-expression (:contacts (<list>) :tstamp \"<tstamp>\") is expected in
 response. If PERSONAL is non-nil, only get personal contacts, if
 AFTER is non-nil, get only contacts seen AFTER (the time_t
 value)."
-  (mu4e~proc-send-command
-    "cmd:contacts personal:%s after:%d tstamp:%s"
-    (if personal "true" "false")
-    (or after 0)
-    (or tstamp "0")))
+  (mu4e~call-mu `(contacts
+                   :personal ,personal
+                   ;; :after  ,(or after nil)
+                   :tstamp ,(or tstamp nil))))
 
 (defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
   "Get a message DOCID-OR-MSGID.
@@ -510,11 +489,11 @@ Optionally, if IMAGES is non-nil, backend will any images
 attached to the message, and return them as temp files. DECRYPT
 if necessary. The result will be delivered to the function
 registered as `mu4e-view-func'."
-  (mu4e~proc-send-command
-    "cmd:view %s extract-images:%s extract-encrypted:%s use-agent:true"
-    (mu4e~docid-msgid-param docid-or-msgid)
-    (if images "true" "false")
-    (if decrypt "true" "false")))
+  (mu4e~call-mu `(view
+                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
+                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
+                   :extract-images ,images
+                   :extract-encrypt ,decrypt)))
 
 (defun mu4e~proc-view-path (path &optional images decrypt)
   "View message at PATH..
@@ -522,18 +501,17 @@ Optionally, if IMAGES is non-nil, backend will any images
 attached to the message, and return them as temp files. The
 result will be delivered to the function registered as
 `mu4e-view-func'. Optionally DECRYPT."
-  (mu4e~proc-send-command
-    "cmd:view path:%s extract-images:%s extract-encrypted:%s use-agent:true"
-    (mu4e~escape path)
-    (if images "true" "false")
-    (if decrypt "true" "false")))
+  (mu4e~call-mu `(view-path
+                   :path ,path
+                   :images ,images
+                   :decrypt ,decrypt)))
 
 (defun mu4e~proc-remove (docid)
   "Remove message  with DOCID.
 The results are reporter through either (:update ... )
 or (:error) sexp, which are handled my `mu4e-error-func',
 respectively."
-  (mu4e~proc-send-command "cmd:remove docid:%d" docid))
+  (mu4e~call-mu `(remove :docid ,docid)))
 
 (provide 'mu4e-proc)
 ;;; mu4e-proc.el ends here

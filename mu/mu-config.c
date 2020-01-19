@@ -441,8 +441,8 @@ config_options_group_server (void)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", "<maildir>"},
-                {"list-commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.list_commands,
-		 "overwrite existing files (false)", NULL},
+                {"commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.commands,
+		 "list the available command and their parameters, then exit", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -759,7 +759,6 @@ mu_config_uninit (MuConfig *opts)
 
 	memset (opts, 0, sizeof(MU_CONFIG));
 }
-
 
 size_t
 mu_config_param_num (MuConfig *opts)

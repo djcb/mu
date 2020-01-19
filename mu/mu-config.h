@@ -179,8 +179,8 @@ struct _MuConfig {
 	gboolean         play;          /* after saving, try to 'play'
 					 * (open) the attmnt using xdgopen */
 	/* for server */
-	gboolean        list_commands;  /* dump documentations for server
-					 * commands */
+	gboolean        commands;        /* dump documentations for server
+					  * commands */
 
 	/* options for mu-script */
 	gchar           *script;         /* script to run */

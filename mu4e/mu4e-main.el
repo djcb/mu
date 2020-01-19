@@ -118,16 +118,9 @@ clicked."
         "* "
 	      (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
 	      (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-
-        ;; show some server properties; in this case; a big C when there's
-        ;; crypto support, a big G when there's Guile support
-        " "
-        (propertize
-	        (concat
-	          (when (plist-get mu4e~server-props :crypto) "C")
-	          (when (plist-get mu4e~server-props :guile)  "G")
-	          (when (plist-get mu4e~server-props :mux)  "X"))
-	        'face 'mu4e-title-face)
+        (propertize "; (in store: " 'face 'mu4e-title-face)
+        (propertize (format "%s" (plist-get mu4e~server-props :doccount)) 'face 'mu4e-header-key-face)
+        (propertize " messages)" 'face 'mu4e-title-face)
 
         "\n\n"
         (propertize "  Basics\n\n" 'face 'mu4e-title-face)
