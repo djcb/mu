@@ -441,6 +441,8 @@ config_options_group_server (void)
 	GOptionEntry entries[] = {
 		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
 		 "top of the maildir", "<maildir>"},
+                {"list-commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.list_commands,
+		 "overwrite existing files (false)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 

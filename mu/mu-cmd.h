@@ -173,6 +173,7 @@ MuError mu_cmd_tickle (MuStore *store, MuConfig *opts, GError **err);
  * some error code otherwise
  */
 MuError mu_cmd_server (MuStore *store, MuConfig *opts, GError**/*unused*/);
+MuError mu_cmd_server2 (MuStore *store, MuConfig *opts, GError**/*unused*/);
 
 /**
  * execute the verify command (to verify signatures)

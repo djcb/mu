@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -180,6 +178,10 @@ struct _MuConfig {
 	gboolean	 overwrite;	/* should we overwrite same-named files */
 	gboolean         play;          /* after saving, try to 'play'
 					 * (open) the attmnt using xdgopen */
+	/* for server */
+	gboolean        list_commands;  /* dump documentations for server
+					 * commands */
+
 	/* options for mu-script */
 	gchar           *script;         /* script to run */
 	const char      **script_params; /* parameters for scripts */

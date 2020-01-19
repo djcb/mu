@@ -53,7 +53,7 @@ mu_SOURCES=							\
 	mu-cmd-extract.c					\
 	mu-cmd-find.c						\
 	mu-cmd-index.c						\
-	mu-cmd-server.c						\
+	mu-cmd-server.cc					\
 	mu-cmd-script.c						\
 	mu-cmd.c						\
 	mu-cmd.h
@@ -66,7 +66,9 @@ mu-help-strings.h: mu-help-strings.txt mu-help-strings.awk
 
 mu_LDADD=							\
 	${top_builddir}/lib/libmu.la				\
+	${top_builddir}/lib/utils/libmu-utils.la		\
 	$(GLIB_LIBS)						\
+	$(READLINE_LIBS)					\
 	$(CODE_COVERAGE_LIBS)
 
 EXTRA_DIST=							\
