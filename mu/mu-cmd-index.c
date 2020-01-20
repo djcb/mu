@@ -305,7 +305,8 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 
 	newline_before_on();
 
-	rv = mu_index_run (midx, opts->maildir, opts->rebuild,
+	rv = mu_index_run (midx,
+			   opts->rebuild,
 			   opts->lazycheck, stats,
 			   show_progress ?
 			   (MuIndexMsgCallback)index_msg_cb :

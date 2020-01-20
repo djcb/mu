@@ -331,18 +331,19 @@ mu_index_set_max_msg_size (MuIndex *index, guint max_size)
 
 
 MuError
-mu_index_run (MuIndex *index, const char *path,
-	      gboolean reindex, gboolean lazycheck,
+mu_index_run (MuIndex *index,  gboolean reindex, gboolean lazycheck,
 	      MuIndexStats *stats,
 	      MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 	      void *user_data)
 {
-	MuIndexCallbackData	cb_data;
-	MuError			rv;
+	MuIndexCallbackData	 cb_data;
+	MuError			 rv;
+	const char		*path;
 
 	g_return_val_if_fail (index && index->_store, MU_ERROR);
 	g_return_val_if_fail (msg_cb, MU_ERROR);
 
+	path = mu_store_maildir (index->_store);
 	if (!check_path (path))
 		return MU_ERROR;
 
@@ -390,15 +391,17 @@ on_stats_maildir_file (const char *fullpath, const char *mdir,
 
 
 MuError
-mu_index_stats (MuIndex *index, const char *path,
+mu_index_stats (MuIndex *index,
 		MuIndexStats *stats, MuIndexMsgCallback cb_msg,
 		MuIndexDirCallback cb_dir, void *user_data)
 {
-	MuIndexCallbackData cb_data;
+	const char		*path;
+	MuIndexCallbackData	 cb_data;
 
 	g_return_val_if_fail (index, MU_ERROR);
 	g_return_val_if_fail (cb_msg, MU_ERROR);
 
+	path = mu_store_maildir (index->_store);
 	if (!check_path (path))
 		return MU_ERROR;
 

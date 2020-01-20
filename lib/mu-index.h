@@ -106,7 +106,6 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * start the indexing process
  *
  * @param index a valid MuIndex instance
- * @param path the path to index. This must be an absolute path
  * @param force if != 0, force re-indexing already index messages; this is
  *         obviously a lot slower than only indexing new/changed messages
  * @param lazycheck whether ignore subdirectoryies that have up-to-date
@@ -123,7 +122,7 @@ typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
+MuError mu_index_run (MuIndex *index, gboolean force,
 		      gboolean lazycheck, MuIndexStats *stats,
 		      MuIndexMsgCallback msg_cb,
 		      MuIndexDirCallback dir_cb, void *user_data);
@@ -135,7 +134,6 @@ MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
  * mu_index_run sees, when there are updates in the Maildir
  *
  * @param index a valid MuIndex instance
- * @param path the path to get stats for; this must be an absolute path
  * @param stats a structure with some statistics about the results;
  * note that this function does *not* reset the struct values to allow
  * for cumulative stats from multiple calls. If needed, you can use
@@ -148,7 +146,7 @@ MuError mu_index_run (MuIndex *index, const char *path, gboolean force,
  * MU_STOP if the user stopped or MU_ERROR in
  * case of some error.
  */
-MuError mu_index_stats (MuIndex *index, const char *path, MuIndexStats *stats,
+MuError mu_index_stats (MuIndex *index, MuIndexStats *stats,
 			MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			void *user_data);
 
