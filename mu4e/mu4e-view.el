@@ -35,7 +35,6 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
-(require 'gnus-art)
 (require 'comint)
 (require 'browse-url)
 (require 'button)
@@ -364,6 +363,7 @@ article-mode."
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnu's article mode. Experimental."
+  (require 'gnus-art)
   (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
 	 (path (mu4e-message-field msg :path))
 	 (inhibit-read-only t)
