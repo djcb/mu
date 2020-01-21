@@ -982,14 +982,33 @@ static void
 ping_handler (Context& context, const Parameters& params)
 {
         GError *gerr{};
-        const auto count = mu_store_count(context.store, &gerr);
-        if (count == (unsigned)-1)
+        const auto storecount = mu_store_count(context.store, &gerr);
+        if (storecount == (unsigned)-1)
                 throw Error{Error::Code::Store, &gerr, "failed to read store"};
+
+        const auto queries  = get_string_vec (params, "queries");
+
+        const auto qresults= [&]() -> std::string {
+                if (queries.empty())
+                        return {};
+
+                std::string res{":queries ("};
+                for (auto&& q: queries) {
+                        const auto count{mu_query_count_run (context.query, q.c_str())};
+                        const auto unreadq{format("(%s) AND flag:unread", q.c_str())};
+                        const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
+                        res += format("(:query %s :count %zu :unread %zu)", quoted(q).c_str(), count, unread);
+                }
+                return res + ")";
+        }();
 
         print_expr ("(:pong \"" PACKAGE_NAME "\" "
                     ":props ("
                     ":version \"" VERSION "\" "
-                    ":doccount %u))", count);
+                    "%s "
+                    ":doccount %u))",
+                    qresults.c_str(),
+                    storecount);
 }
 
 static void
@@ -1165,7 +1184,9 @@ make_command_map (Context& context)
                            "create a new maildir",
                           [&](const auto& params){mkdir_handler(context, params);}});
       cmap.emplace("ping",
-                   CommandInfo{{},
+                   CommandInfo{
+                           ArgMap{ {"queries",  ArgInfo{Type::List, false,
+                                                   "queries for which to get read/unread numbers"}}},
                            "ping the mu-server and get information in response",
                           [&](const auto& params){ping_handler(context, params);}});
 
