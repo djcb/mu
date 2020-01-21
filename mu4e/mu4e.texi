@@ -4506,6 +4506,9 @@ wish.
       (signal 'quit nil))))
 @end lisp
 
+Another option is to simply set @code{message-confirm-send} to
+non-@t{nil} so the question ``Send message?'' is asked for confirmation.
+
 @node How it works
 @appendix How it works
 
