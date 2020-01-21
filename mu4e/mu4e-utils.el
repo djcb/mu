@@ -253,6 +253,7 @@ trying an exact match."
     (while (not chosen)
       (message nil);; this seems needed...
       (setq choice (read-char-exclusive prompt))
+      (if (eq choice 27) (keyboard-quit)) ;; quit if ESC is pressed
       (setq chosen (or (member choice choices)
 		                 (member (downcase choice) choices)
 		                 (member (upcase choice) choices))))
