@@ -693,8 +693,10 @@ This is used by the completion function in mu4e-compose."
           (puthash address (cdr contact) mu4e~contacts))))
 
     (setq mu4e~contacts-tstamp (or tstamp "0"))
-    (mu4e-index-message "Contacts updated: %d; total %d"
-      n (hash-table-count mu4e~contacts))))
+
+    (unless (zerop n)
+      (mu4e-index-message "Contacts updated: %d; total %d"
+        n (hash-table-count mu4e~contacts)))))
 
 (defun mu4e-contacts-info ()
   "Display information about the cache used for contacts
@@ -784,6 +786,23 @@ nothing."
 	          (mu4e-parse-time-string mu4e-compose-complete-only-after))))
       mu4e~contacts-tstamp)))
 
+(defun mu4e~pong-handler (props func)
+  "Handle 'pong' responses from the mu server."
+	(setq mu4e~server-props props) ;; save props from the server
+	(let ((version (plist-get props :version))
+		     (doccount (plist-get props :doccount)))
+	  (mu4e~check-requirements)
+	  (when func (funcall func))
+    (when (zerop doccount)
+      (mu4e-message "Store is empty; (re)indexing. This can take a while.") ;
+      (mu4e-update-index))
+	  (when (and mu4e-update-interval (null mu4e~update-timer))
+		  (setq mu4e~update-timer
+        (run-at-time 0 mu4e-update-interval
+		      (lambda () (mu4e-update-mail-and-index
+				               mu4e-index-update-in-background)))))))
+
+
 (defun mu4e~start (&optional func)
   "If `mu4e-contexts' have been defined, but we don't have a
 context yet, switch to the matching one, or none matches, the
@@ -791,7 +810,7 @@ first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
-  (if (mu4e-running-p)         ;; already running?
+  (if (and nil mu4e-running-p)         ;; already running?
     (when func (funcall func)) ;; yes! run func if defined
     (progn
       ;; no! try to set a context, do some checks, set up pong handler and ping
@@ -799,26 +818,15 @@ When successful, call FUNC (if non-nil) afterwards."
       (mu4e~context-autoswitch nil mu4e-context-policy)
       (mu4e~check-requirements)
       ;; set up the 'pong' handler func
-      (setq mu4e-pong-func
-	      (lambda (props)
-	        (setq mu4e~server-props props) ;; save props from the server
-	        (let ((version (plist-get props :version))
-		             (doccount (plist-get props :doccount)))
-	          (mu4e~check-requirements)
-	          (when func (funcall func))
-            (when (zerop doccount)
-              (mu4e-message "Store is empty; (re)indexing. This can take a while.") ;
-              (mu4e-update-index))
-	          (when (and mu4e-update-interval (null mu4e~update-timer))
-		          (setq mu4e~update-timer
-		            (run-at-time
-		              0 mu4e-update-interval
-		              (lambda () (mu4e-update-mail-and-index
-				                       mu4e-index-update-in-background)))))
-	          (mu4e-message "Started mu4e with %d message%s in store"
-		          doccount (if (= doccount 1) "" "s")))))
+      (setq mu4e-pong-func #'(lambda (props) (mu4e~pong-handler props func)))
       ;; wake up server
-      (mu4e~proc-ping)
+      (mu4e~proc-ping
+        (mapcar ;; send it a list of queries we'd like to see read/unread info
+                ;; for.
+          (lambda(bm) (plist-get bm :query))
+          (seq-filter (lambda (bm) ;; exclude bookmarks with these flags.
+                        (not (or (plist-get bm :hide) (plist-get bm :hide-unread))))
+            mu4e-bookmarks)))
       ;; maybe request the list of contacts, automatically refresh after
       ;; reindexing
       (mu4e~request-contacts-maybe))))
@@ -961,7 +969,7 @@ run in the background; otherwise, pop up a window."
 	      ;; ;;(switch-to-buffer buf)
 	      ;; (set-window-dedicated-p win t)
 	      (erase-buffer)
-	      (insert "\n") ;; FIXME -- needed so output start
+	      (insert "\n") ;; FIXME -- needed so output starts
 	      (mu4e~update-mail-mode)))
     (setq mu4e~progress-reporter
       (unless mu4e-hide-index-messages

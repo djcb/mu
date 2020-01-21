@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012-2019 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2020 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -674,7 +674,7 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-* mu4e - mu for emacs version 0.X.X CG
+* mu4e - mu for emacs version @value{VERSION}; (in store: 78379 messages)
 
   Basics
 
@@ -684,14 +684,10 @@ The main view looks something like the following:
 
   Bookmarks
 
-	* [bu] Unread messages
-	* [bt] Today's messages
-	* [bw] Last 7 days
-	* [bp] Messages with images
-	* [bs] Sent mail
-	* [bf] Flagged messages
-	* [b]] Flow
-	* [b/] Test
+	* [bu] Unread messages (26217/26217)
+	* [bt] Today's messages (2/8)
+	* [bw] Last 7 days (7/34)
+	* [bp] Messages with images (276/2315)
 
   Misc
 
@@ -705,15 +701,6 @@ The main view looks something like the following:
 
 @end verbatim
 @end cartouche
-
-In the example above, you can see the letters ``@t{CG}'', which indicate:
-@itemize
-@item @t{C}: support for decryption of encrypted messages, and verifying
-signatures. See @ref{MSGV Crypto} in the @ref{Message view} for details.
-@item @t{G}: support for the Guile 2.0 programming language
-@end itemize
-Whether you see both, one or none of these letters depends on the way @t{mu}
-is built.
 
 Let's walk through the menu.
 
@@ -738,11 +725,16 @@ the @ref{Editor view} to write a new message.
 @node MV Bookmarks
 @section Bookmarks
 
-The next item in the Main view is @emph{Bookmarks}. Bookmarks are predefined
-queries with a descriptive name and a shortcut --- in the example above, we see
-the default bookmarks. You can view the list of messages matching a certain
-bookmark by pressing @key{b} followed by the bookmark's shortcut. If you'd
-like to edit the bookmarked query first before invoking it, use @key{B}.
+The next item in the Main view is @emph{Bookmarks}.
+
+Bookmarks are predefined queries with a descriptive name and a
+shortcut --- in the example above, we see the default bookmarks. You
+can view the list of messages matching a certain bookmark by pressing
+@key{b} followed by the bookmark's shortcut. If you'd like to edit the
+bookmarked query first before invoking it, use @key{B}.
+
+Next to each bookmark there is the number of (unread/all) messages
+that match.
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add your
 own and/or replace the default ones; @xref{Bookmarks}.
@@ -1966,27 +1958,35 @@ mu4e-search-bookmark-edit}) which lets you edit the bookmark first.
 be instructive:
 
 @lisp
-(defvar mu4e-bookmarks
-  '( (	:name  "Unread messages"
-	:query "flag:unread AND NOT flag:trashed"
-	:key ?u)
-     (	:name "Today's messages"
-	:query "date:today..now"
-	:key ?t)
-     (	:name "Last 7 days"
-	:query "date:7d..now"
-	:key ?w)
-     (	:name "Messages with images"
-	:query "mime:image/*"
-	:key ?p))
-  "A list of pre-defined queries. Each query is represented by a
-mu4e-bookmark structure with parameters @t{:name} with the name
-of the bookmark, @t{:query} with the query expression (a query
-string or an s-expression that evaluates to query string) and a
-@t{:key}, which is the shortcut-key for the query.
+(defcustom mu4e-bookmarks
+  '(( :name  "Unread messages"
+      :query "flag:unread AND NOT flag:trashed"
+      :key ?u)
+    ( :name "Today's messages"
+      :query "date:today..now"
+      :key ?t)
+    ( :name "Last 7 days"
+      :query "date:7d..now"
+      :show-unread t
+      :key ?w)
+    ( :name "Messages with images"
+      :query "mime:image/*"
+      :key ?p))
+  "List of pre-defined queries that are shown on the main screen.
 
-An older form of bookmark, a 3-item list with (QUERY DESCRIPTION
-KEY) is still recognized as well, for backward-compatibility.")
+Each of the list elements is a plist with at least:
+:name  - the name of the queryt
+:query - the query expression
+:key   - the shortcut key.
+
+Optionally, you add the following:
+:hide  - if t, bookmark is hdden from the main-view and speedbar.
+:hide-unread - do not show the counts of unread/total number
+ of matches for the query. This can be useful if a bookmark uses
+ a very slow query. :hide-unread is implied from :hide.
+"
+  :type '(repeat (plist))
+  :group 'mu4e)
 @end lisp
 
 You can replace these or add your own items, by putting in your

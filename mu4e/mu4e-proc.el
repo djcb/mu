@@ -468,9 +468,12 @@ to a temporary file, then respond with
                    :what ,what
                    :param ,param)))
 
-(defun mu4e~proc-ping ()
-  "Sends a ping to the mu server, expecting a (:pong ...) in response."
-  (mu4e~call-mu '(ping)))
+(defun mu4e~proc-ping (&optional queries)
+  "Sends a ping to the mu server, expecting a (:pong ...) in response.
+QUERIES is a list of queries for the number of results with read/unread status
+are returned in the 'pong' response."
+  (mu4e~call-mu `(ping
+                   :queries ,queries)))
 
 (defun mu4e~proc-contacts (personal after tstamp)
   "Ask for contacts with PERSONAL AFTER TSTAMP.

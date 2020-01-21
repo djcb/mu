@@ -81,8 +81,6 @@ already retrieved in another way."
   :group 'mu4e
   :safe 'stringp)
 
-
-
 (defcustom mu4e-index-update-error-warning t
   "Whether to display warnings during the retrieval process.
 This depends on the `mu4e-get-mail-command' exit code."
@@ -206,6 +204,8 @@ If the string exceeds this limit, it will be truncated to fit."
   "Create a mu4e proplist with the following elements:
 - `name': the user-visible name of the bookmark
 - `key': a single key to search for this bookmark
+- `show-unread' whether to show an indicator for read/unread messages. Specifying
+this for too many bookmarks may incur slowdowns in  showing the mu4e main page.
 - `query': the query for this bookmark. Either a literal string or a function
    that evaluates to a string."
   `(:name ,name :query ,query :key ,key))
@@ -221,6 +221,7 @@ are plists" "1.3.7")
       :key ?t)
     ( :name "Last 7 days"
       :query "date:7d..now"
+      :show-unread t
       :key ?w)
     ( :name "Messages with images"
       :query "mime:image/*"
@@ -234,6 +235,9 @@ Each of the list elements is a plist with at least:
 
 Optionally, you add the following:
 :hide  - if t, bookmark is hdden from the main-view and speedbar.
+:hide-unread - do not show the counts of unread/total number
+ of matches for the query. This can be useful if a bookmark uses
+ a very slow query. :hide-unread is implied from :hide.
 "
   :type '(repeat (plist))
   :group 'mu4e)

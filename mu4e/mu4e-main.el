@@ -45,7 +45,6 @@
 
     (define-key map "m" 'mu4e~main-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
-
     ;;
     (define-key map "U" 'mu4e-update-mail-and-index)
     (define-key map  (kbd "C-S-u")   'mu4e-update-mail-and-index)
@@ -106,6 +105,35 @@ clicked."
       (- (length newstr) 1) 'mouse-face 'highlight newstr)
     newstr))
 
+
+(defun mu4e~main-bookmarks ()
+  ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
+  (mapconcat
+	  (lambda (bm)
+      (unless (plist-get bm :hide)
+        (let* ((key (plist-get bm :key))
+                (name (plist-get bm :name))
+                (query (plist-get bm :query))
+                (qcounts
+                  (seq-filter (lambda (q)
+                                (string= (plist-get q :query) query))
+                    (plist-get mu4e~server-props :queries))))
+          (concat
+            ;; menu entry
+            (mu4e~main-action-str
+	            (concat "\t* [b" (make-string 1 key) "] " name)
+	            (concat "b" (make-string 1 key)))
+            ;; append all/unread numbers, if available.
+            (if qcounts
+              (let ((unread (propertize (format "%s" (plist-get (car qcounts) :unread))
+                              'face 'mu4e-header-key-face))
+                     (count (propertize(format "%s" (plist-get (car qcounts) :count))
+                              'face 'default)))
+                (concat " (" unread "/" count ")"))
+              "")))))
+    (mu4e-bookmarks) "\n"))
+
+
 ;; NEW
 ;; This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
@@ -132,15 +160,7 @@ clicked."
 	        "\t* [C]ompose a new message\n" 'mu4e-compose-new)
         "\n"
         (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-        ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
-        (mapconcat
-	        (lambda (bm)
-            (unless (plist-get bm :hide)
-	            (mu4e~main-action-str
-	              (concat "\t* [b" (make-string 1 (plist-get bm :key)) "] "
-	                (plist-get bm :name))
-	              (concat "b" (make-string 1 (plist-get bm :key))))))
-	        (mu4e-bookmarks) "\n")
+        (mu4e~main-bookmarks)
         "\n\n"
         (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
