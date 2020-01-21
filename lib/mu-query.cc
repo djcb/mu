@@ -468,6 +468,39 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 }
 
 
+size_t
+mu_query_count_run (MuQuery *self, const char *searchexpr) try
+{
+	g_return_val_if_fail (self, 0);
+	g_return_val_if_fail (searchexpr, 0);
+
+        // XXX: this _should_ work and be a bit faster, but gives incorrect
+        // results.
+        // find out why.
+        // const auto enq{get_enquire(self, searchexpr,MU_MSG_FIELD_ID_NONE, false, false, NULL)};
+        // auto mset(enq.get_mset(0, self->db().get_doccount()));
+        // mset.fetch();
+        // return mset.size();
+
+        auto msgiter{mu_query_run(self, searchexpr, MU_MSG_FIELD_ID_NONE, -1,
+                                  MU_QUERY_FLAG_NONE, NULL)};
+        if (!msgiter)
+                return 0;
+
+        size_t num{};
+        while (!mu_msg_iter_is_done(msgiter))  {
+                ++num;
+                mu_msg_iter_next(msgiter);
+        }
+        mu_msg_iter_destroy (msgiter);
+
+        return num;
+
+} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
+
+
+
+
 char*
 mu_query_internal_xapian (MuQuery *self, const char *searchexpr, GError **err)
 {

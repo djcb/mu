@@ -75,8 +75,8 @@ typedef enum {
 } MuQueryFlags;
 
 /**
- * run a Xapian query; for the syntax, please refer to the mu-find
- * manpage, or http://xapian.org/docs/queryparser.html
+ * run a Xapian query; for the syntax, please refer to the mu-query
+ * manpage
  *
  * @param self a valid MuQuery instance
  * @param expr the search expression; use "" to match all messages
@@ -96,6 +96,18 @@ MuMsgIter* mu_query_run (MuQuery *self, const char* expr,
 			 MuMsgFieldId sortfieldid, int maxnum,
 			 MuQueryFlags flags, GError **err)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+/**
+ * run a Xapian query to count the number of matches; for the syntax, please
+ * refer to the mu-query manpage
+ *
+ * @param self a valid MuQuery instance
+ * @param expr the search expression; use "" to match all messages
+ *
+ * @return the number of matches
+ */
+size_t mu_query_count_run (MuQuery *self, const char *searchexpr);
 
 
 /**
