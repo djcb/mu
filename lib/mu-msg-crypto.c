@@ -125,24 +125,56 @@ get_cert_data (GMimeCertificate *cert)
 }
 
 
+static char*
+get_signature_status (GMimeSignatureStatus status)
+{
+        size_t   n;
+        GString *descr;
+
+        struct {
+                GMimeSignatureStatus  status;
+                const char           *name;
+        } status_info[] = {
+                { GMIME_SIGNATURE_STATUS_VALID,         "valid" },
+                { GMIME_SIGNATURE_STATUS_GREEN,         "green" },
+                { GMIME_SIGNATURE_STATUS_RED,           "red" },
+                { GMIME_SIGNATURE_STATUS_KEY_REVOKED,   "key revoked" },
+                { GMIME_SIGNATURE_STATUS_KEY_EXPIRED,   "key expired" },
+                { GMIME_SIGNATURE_STATUS_SIG_EXPIRED,   "signature expired" },
+                { GMIME_SIGNATURE_STATUS_KEY_MISSING,   "key missing" },
+                { GMIME_SIGNATURE_STATUS_CRL_MISSING,   "crl missing" },
+                { GMIME_SIGNATURE_STATUS_CRL_TOO_OLD,   "crl too old" },
+                { GMIME_SIGNATURE_STATUS_BAD_POLICY,    "bad policy" },
+                { GMIME_SIGNATURE_STATUS_SYS_ERROR,     "system error" },
+                { GMIME_SIGNATURE_STATUS_TOFU_CONFLICT, "tofu conflict " },
+        };
+
+        descr = g_string_new("");
+        for (n = 0; n != G_N_ELEMENTS(status_info); ++n) {
+
+                if (!(status & status_info[n].status))
+                        continue;
+
+                g_string_append_printf (descr, "%s%s",
+                                        descr->len > 0 ? ", " : "",
+                                        status_info[n].name);
+        }
+
+        return g_string_free (descr, FALSE);
+}
+
+
 /* get a human-readable report about the signature */
 static char*
 get_verdict_report (GMimeSignature *msig)
 {
-	time_t t;
-	const char *status, *created, *expires;
-	gchar *certdata, *report;
-	GMimeSignatureStatus sigstat;
+	time_t                t;
+	const char           *created, *expires;
+	gchar                *certdata, *report, *status;
+	GMimeSignatureStatus  sigstat;
 
 	sigstat = g_mime_signature_get_status (msig);
-	if (sigstat & GMIME_SIGNATURE_STATUS_ERROR_MASK)
-		status = "error";
-	else if (sigstat & GMIME_SIGNATURE_STATUS_RED)
-		status = "bad";
-	else if (sigstat & GMIME_SIGNATURE_STATUS_GREEN)
-		status = "good";
-	else
-		g_return_val_if_reached (NULL);
+        status = get_signature_status(sigstat);
 
 	t = g_mime_signature_get_created (msig);
 	created = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s ("%x", t);
@@ -155,6 +187,8 @@ get_verdict_report (GMimeSignature *msig)
 				  status, created, expires,
 				  certdata ? certdata : "?");
 	g_free (certdata);
+        g_free (status);
+
 	return report;
 }
 
