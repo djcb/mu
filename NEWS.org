@@ -72,6 +72,13 @@
    - For instance, we now recognize an attribute ~:hide t~, which will hide the
      bookmark item from the main-screen (and speedbar), but keep it avilable
      through the completion UI.
+   - As an example of this, mu4e now shows unread/all counts for bookmarks in
+     the main screen. This is on by default, but can be disabled by setting
+     ~:hide-unread~ in the bookmark ~plist~ to ~t~.
+
+   - Also, we now recognize an attribute ~:hide t~, which will
+     hide the bookmark item from the main-screen (and speedbar), but keep it
+     available through the completion UI.
 
 *** toys
 
