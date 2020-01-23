@@ -340,7 +340,7 @@ or an error."
                    :query ,query
                    :threads ,threads
                    :sortfield ,sortfield
-                   :sortdir ,sortdir
+                   :reverse ,(if (eq sortdir 'descending) t nil)
                    :maxnum ,maxnum
                    :skip-dups ,skip-dups
                    :include-related ,include-related)))
