@@ -22,6 +22,8 @@
 
 #include <string>
 #include <vector>
+#include <ostream>
+
 
 #include "utils/mu-error.hh"
 
