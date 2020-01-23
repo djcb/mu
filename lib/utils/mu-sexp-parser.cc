@@ -33,7 +33,7 @@ parsing_error(size_t pos, const char* frm, ...)
         va_end(args);
 
         if (pos == 0)
-                return Mu::Error(Error::Code::Parsing, "%s", msg);
+                return Mu::Error(Error::Code::Parsing, "%s", msg.c_str());
         else
                 return Mu::Error(Error::Code::Parsing, "%zu: %s", msg.c_str());
 }
@@ -149,7 +149,7 @@ parse (const std::string& expr, size_t& pos)
                 else if (isalpha(kar) ||  kar == ':')
                         return parse_symbol(expr, pos);
                 else
-                        throw parsing_error(pos, "unexpected character '%c" + kar);
+                        throw parsing_error(pos, "unexpected character '%c", kar);
         }();
 
         pos = skip_whitespace(expr, pos);

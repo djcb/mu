@@ -98,9 +98,6 @@ using CommandMap = std::unordered_map<std::string, CommandInfo>;
 void invoke(const Command::CommandMap& cmap, const Sexp::Node& call);
 
 
-} // namespace Command
-
-
 static inline std::ostream&
 operator<<(std::ostream& os, const Command::ArgInfo& info)
 {
@@ -129,6 +126,8 @@ operator<<(std::ostream& os, const Command::CommandMap& map)
         return os;
 }
 
+
+} // namespace Command
 } // namespace Mu
 
 

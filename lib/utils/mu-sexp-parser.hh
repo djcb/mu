@@ -22,8 +22,6 @@
 
 #include <string>
 #include <vector>
-#include <ostream>
-
 
 #include "utils/mu-error.hh"
 
@@ -79,8 +77,6 @@ struct Node {
  */
 Node parse(const std::string& expr);
 
-} // Sexp
-
 static inline std::ostream&
 operator<<(std::ostream& os, Sexp::Type id)
 {
@@ -109,6 +105,10 @@ operator<<(std::ostream& os, const Sexp::Node& node)
 
         return os;
 }
+
+
+} // Sexp
+
 
 } // Mu
 

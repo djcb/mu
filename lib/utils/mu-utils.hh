@@ -25,6 +25,7 @@
 #include <vector>
 #include <cstdarg>
 #include <glib.h>
+#include <ostream>
 
 namespace Mu {
 
@@ -163,7 +164,6 @@ static inline std::string to_string (const T& val)
 
         return sstr.str();
 }
-
 
 
 /**

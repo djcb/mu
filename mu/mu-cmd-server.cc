@@ -1030,8 +1030,8 @@ remove_handler (Context& context, const Parameters& params)
 
         if (!mu_store_remove_path (context.store, path.c_str()))
                 throw Error(Error::Code::Store,
-                                  "failed to remove message @ %s (%d) from store",
-                                  path, docid);
+                            "failed to remove message @ %s (%d) from store",
+                            path.c_str(), docid);
 
         print_expr ("(:remove %u)", docid);
 }
