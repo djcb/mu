@@ -339,7 +339,7 @@ or an error."
   (mu4e~call-mu `(find
                    :query ,query
                    :threads ,threads
-;;                   :sortfield ,sortfield
+                   :sortfield ,sortfield
                    :sortdir ,sortdir
                    :maxnum ,maxnum
                    :skip-dups ,skip-dups

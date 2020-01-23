@@ -666,7 +666,7 @@ find_handler (Context& context, const Parameters& params)
 {
         const auto query{get_string_or(params, "query")};
         const auto threads{get_bool_or(params, "threads", false)};
-        const auto sortfieldstr{get_string_or(params, "sortfield")};
+        const auto sortfieldstr{get_symbol_or(params, "sortfield")};
         const auto reverse{get_bool_or(params, "reverse", false)};
         const auto maxnum{get_int_or(params, "maxnum", 500)};
         const auto skip_dups{get_bool_or(params, "skip-dups", false)};
@@ -674,11 +674,11 @@ find_handler (Context& context, const Parameters& params)
 
         MuMsgFieldId sort_field{MU_MSG_FIELD_ID_NONE};
         if (!sortfieldstr.empty()) {
-                sort_field = mu_msg_field_id_from_name (sortfieldstr.c_str(), FALSE);
-                if (sort_field == MU_MSG_FIELD_ID_NONE) {
-                        g_warning ("invalid sort field %s", sortfieldstr.c_str()); // XXXX
-                        return;
-                }
+                sort_field = mu_msg_field_id_from_name (
+                        sortfieldstr.c_str() + 1, FALSE); // skip ':'
+                if (sort_field == MU_MSG_FIELD_ID_NONE)
+                        throw Error{Error::Code::InvalidArgument, "invalid sort field %s",
+                                        sortfieldstr.c_str()};
         }
 
         int qflags{MU_QUERY_FLAG_NONE};
@@ -1134,7 +1134,7 @@ make_command_map (Context& context)
                            ArgMap{ {"query",   ArgInfo{Type::String, true, "search expression" }},
                                    {"threads", ArgInfo{Type::Symbol, false,
                                             "whether to include threading information" }},
-                                   //{"sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
+                                   {"sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
                                    {"sortdir",  ArgInfo{Type::Symbol, false,
                                             "whether to sort in descending order" }},
                                    {"maxnum",  ArgInfo{Type::Integer, false,
