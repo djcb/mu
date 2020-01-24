@@ -932,7 +932,7 @@ move_handler (Context& context, const Parameters& params)
 {
         auto maildir{get_string_or(params, "maildir")};
         const auto flagstr{get_string_or(params, "flags")};
-        const auto new_name{get_bool_or (params, "newname")};
+        const auto rename{get_bool_or (params, "rename")};
         const auto no_view{get_bool_or (params, "noupdate")};
         const auto docids{determine_docids (context.query, params)};
 
@@ -942,7 +942,7 @@ move_handler (Context& context, const Parameters& params)
                                         "can't move multiple messages at the same time"};
                 // multi.
                 for (auto&& docid: docids)
-                        move_docid(context.store, docid, flagstr, new_name, no_view);
+                        move_docid(context.store, docid, flagstr, rename, no_view);
                 return;
         }
         auto docid{docids.at(0)};
@@ -971,8 +971,7 @@ move_handler (Context& context, const Parameters& params)
         }
 
         try {
-                do_move (context.store, docid, msg, maildir, flags,
-                         new_name, no_view);
+                do_move (context.store, docid, msg, maildir, flags, rename, no_view);
         } catch (...) {
                 mu_msg_unref(msg);
                 throw;
@@ -1174,9 +1173,9 @@ make_command_map (Context& context)
                            ArgMap{
                                    {"docid",  ArgInfo{Type::Integer, false, "document-id"}},
                                    {"msgid",  ArgInfo{Type::String, false, "message-id"}},
-
-                                   {"maildir", ArgInfo{Type::String, false, "the target maildir" }},
                                    {"flags",   ArgInfo{Type::String, false, "new flags for the message"}},
+                                   {"maildir", ArgInfo{Type::String, false, "the target maildir" }},
+                                   {"rename", ArgInfo{Type::Symbol, false,  "change filename when moving" }},
                                    {"no-view", ArgInfo{Type::Symbol, false,
                                             "if set, do not hint at updating the view"}},},
                            "move messages and/or change their flags",
