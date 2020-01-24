@@ -233,12 +233,15 @@ Each of the list elements is a plist with at least:
 :query - the query expression
 :key   - the shortcut key.
 
-Optionally, you add the following:
+Optionally, you can add the following:
 :hide  - if t, bookmark is hdden from the main-view and speedbar.
 :hide-unread - do not show the counts of unread/total number
  of matches for the query. This can be useful if a bookmark uses
  a very slow query. :hide-unread is implied from :hide.
-"
+
+Note that the queries used to determine the unread/all counts do
+current not apply `mu4e-query-rewrite-function', so if your
+bookmarks depend on that, the results may differ."
   :type '(repeat (plist))
   :group 'mu4e)
 
