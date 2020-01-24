@@ -826,7 +826,7 @@ When successful, call FUNC (if non-nil) afterwards."
           (lambda(bm) (plist-get bm :query))
           (seq-filter (lambda (bm) ;; exclude bookmarks with these flags.
                         (not (or (plist-get bm :hide) (plist-get bm :hide-unread))))
-            mu4e-bookmarks)))
+            (mu4e-bookmarks))))
       ;; maybe request the list of contacts, automatically refresh after
       ;; reindexing
       (mu4e~request-contacts-maybe))))
