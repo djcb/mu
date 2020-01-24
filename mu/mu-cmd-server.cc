@@ -732,14 +732,19 @@ help_handler (Context& context, const Parameters& params)
                 if (!command.empty() && name != command)
                         continue;
 
-                std::cout << ";;   " << format("%-10s -- %s\n", name.c_str(), info.docstring.c_str());
+                if (!command.empty())
+                        std::cout << ";;   " << format("%-10s -- %s\n", name.c_str(),
+                                                       info.docstring.c_str());
+                else
+                        std::cout << ";;  " << name.c_str() << ": "
+                                  << info.docstring.c_str() << '\n';
 
                 if (!full)
                         continue;
 
                 for (auto&& arg: info.args) {
                         std::cout << ";;        "
-                                  << format("%-17s  : %-20s ", arg.first.c_str(),
+                                  << format("%-17s  : %-22s ", arg.first.c_str(),
                                             to_string(arg.second).c_str());
                         std::cout << "  " << arg.second.docstring << "\n";
                 }
@@ -1098,7 +1103,7 @@ make_command_map (Context& context)
                                             "type of composition: reply/forward/edit/resend/new"}},
                                    {"docid", ArgInfo{Type::Integer, false,"document id of parent-message, if any"}},
                                    {"extract-images", ArgInfo{Type::Symbol, false,
-                                                           "whether to extract imagas for this messages (if any)"}},
+                                                           "whether to extract images for this messages (if any)"}},
                                    {"extract-encrypted", ArgInfo{Type::Symbol, false,
                                                            "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
@@ -1140,7 +1145,7 @@ make_command_map (Context& context)
                                    {"maxnum",  ArgInfo{Type::Integer, false,
                                             "maximum number of result (hint)" }},
                                    {"skip-dups",  ArgInfo{Type::Symbol, false,
-                                            "whether to skip messages with duplicate message-idsr" }},
+                                            "whether to skip messages with duplicate message-ids" }},
                                    {"include-related",  ArgInfo{Type::Symbol, false,
                                             "whether to include other message related to matching ones" }}},
                            "query the database for messages",
@@ -1199,7 +1204,7 @@ make_command_map (Context& context)
                    CommandInfo{
                            ArgMap{ {"docid", ArgInfo{Type::Integer, true,
                                                    "document-id for the message to remove" }}},
-                           "remove a message based from filesystem and database",
+                           "remove a message from filesystem and database",
                           [&](const auto& params){remove_handler(context, params);}});
 
       cmap.emplace("sent",
@@ -1220,7 +1225,7 @@ make_command_map (Context& context)
                                    {"path",   ArgInfo{Type::String, false, "message filesystem path"}},
 
                                    {"extract-images", ArgInfo{Type::Symbol, false,
-                                                           "whether to extract imagas for this messages (if any)"}},
+                                                           "whether to extract images for this messages (if any)"}},
                                    {"extract-encrypted", ArgInfo{Type::Symbol, false,
                                                            "whether to decrypt encrypted parts (if any)" }}},
                            "view a message. exactly one of docid/msgid/path must be specified",
