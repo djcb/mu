@@ -218,8 +218,7 @@ I.e. return all the addresses in ADDRS not matching
             (string-match regexp (cdr elt)))
           addrs)))))
 
-
-(defun mu4e~draft-create-cc-lst (origmsg reply-all)
+(defun mu4e~draft-create-cc-lst (origmsg &optional reply-all include-from)
   "Create a list of address for the Cc: in a new message.
 This is based on the original message ORIGMSG, and whether it's a
 REPLY-ALL."
@@ -229,10 +228,11 @@ REPLY-ALL."
                (append
                  (plist-get origmsg :to)
                  (plist-get origmsg :cc)
+                 (when include-from(plist-get origmsg :from))
                  (plist-get origmsg :list-post))
                :test #'mu4e~draft-address-cell-equal))
             ;; now we have the basic list, but we must remove
-            ;; addresses also in the to list
+            ;; addresses also in the To: list
             (cc-lst
               (cl-delete-if
                 (lambda (cc-cell)
@@ -257,7 +257,7 @@ REPLY-ALL."
                   cc-lst))))
       cc-lst)))
 
-(defun mu4e~draft-recipients-construct (field origmsg &optional reply-all)
+(defun mu4e~draft-recipients-construct (field origmsg &optional reply-all include-from)
   "Create value (a string) for the recipient FIELD.
 \(which is a symbol, :to or :cc), based on the original message ORIGMSG,
 and (optionally) REPLY-ALL which indicates this is a reply-to-all
@@ -267,7 +267,7 @@ message. Return nil if there are no recipients for the particular field."
       (:to
         (mu4e~draft-create-to-lst origmsg))
       (:cc
-        (mu4e~draft-create-cc-lst origmsg reply-all))
+        (mu4e~draft-create-cc-lst origmsg reply-all include-from))
       (otherwise
         (mu4e-error "Unsupported field")))))
 
@@ -447,7 +447,7 @@ mailing-list."
           (from      (plist-get origmsg :from))
           (recipnum
             (+ (length (mu4e~draft-create-to-lst origmsg))
-              (length (mu4e~draft-create-cc-lst origmsg t))))
+              (length (mu4e~draft-create-cc-lst origmsg t t))))
           (reply-type
             (mu4e-read-option
                 "Reply to mailing-list "
@@ -458,7 +458,7 @@ mailing-list."
       (all
         (concat
           (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t))))
+          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t t))))
       (list-only
         (mu4e~draft-header "To"
           (mu4e~draft-recipients-list-to-string list-post)))
