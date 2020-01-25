@@ -35,7 +35,7 @@ parsing_error(size_t pos, const char* frm, ...)
         if (pos == 0)
                 return Mu::Error(Error::Code::Parsing, "%s", msg.c_str());
         else
-                return Mu::Error(Error::Code::Parsing, "%zu: %s", msg.c_str());
+                return Mu::Error(Error::Code::Parsing, "%zu: %s", pos, msg.c_str());
 }
 static size_t
 skip_whitespace (const std::string& s, size_t pos)

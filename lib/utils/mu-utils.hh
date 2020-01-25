@@ -106,13 +106,15 @@ std::string quoted (const std::string& str);
 
 
 /**
- * Convert an ISO date to the corresponding time expressed as a string
- * with a 10-digit time_t
+ * Convert an date to the corresponding time expressed as a string with a
+ * 10-digit time_t
  *
- * @param date
- * @param first
+ * @param date the date expressed a YYYYMMDDHHMMSS or any n... of the first
+ * characters.
+ * @param first whether to fill out incomplete dates to the start or the end;
+ * ie. either 1972 -> 197201010000 or 1972 -> 197212312359
  *
- * @return
+ * @return the corresponding time_t expressed as a strng
  */
 std::string date_to_time_t_string (const std::string& date, bool first);
 
