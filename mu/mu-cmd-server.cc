@@ -428,7 +428,7 @@ each_contact_sexp (const char* full_address,
  */
 static char*
 contacts_to_sexp (const MuContacts *contacts, bool personal,
-                  time_t last_seen, gint64 tstamp)
+                  int64_t last_seen, gint64 tstamp)
 {
 
         g_return_val_if_fail (contacts, NULL);
@@ -460,7 +460,8 @@ contacts_handler (Context& context, const Parameters& params)
         const auto afterstr  = get_string_or(params, "after");
         const auto tstampstr = get_string_or(params, "tstamp");
 
-        const auto after  = (time_t)g_ascii_strtoll (afterstr.c_str(), NULL, 10);
+        const auto after{afterstr.empty() ? 0 :
+                        g_ascii_strtoll(date_to_time_t_string(afterstr, true).c_str(), {}, 10)};
         const auto tstamp = g_ascii_strtoll (tstampstr.c_str(), NULL, 10);
 
         const auto contacts{mu_store_contacts(context.store)};
