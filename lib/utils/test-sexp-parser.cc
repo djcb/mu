@@ -48,6 +48,7 @@ test_parser()
         check_parse(R"(:foo-123)", "<symbol>{:foo-123}");
         check_parse(R"("foo")",    "<string>{foo}");
         check_parse(R"(12345)",    "<integer>{12345}");
+        check_parse(R"(-12345)",   "<integer>{-12345}");
         check_parse(R"((123 bar "cuux"))",    "<list>(<integer>{123}<symbol>{bar}<string>{cuux})");
 
         check_parse(R"("\"")", "<string>{\"}");

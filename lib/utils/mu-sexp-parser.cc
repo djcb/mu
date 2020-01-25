@@ -106,14 +106,19 @@ parse_string (const std::string& expr, size_t& pos)
 static Node
 parse_integer (const std::string& expr, size_t& pos)
 {
-        if (!isdigit(expr[pos])) // sanity check.
+        if (!isdigit(expr[pos]) && expr[pos] != '-') // sanity check.
                 throw parsing_error(pos, "expected: <digit> but got '%c", expr[pos]);
 
-        std::string num;
+        std::string num; // negative number?
+        if (expr[pos] == '-') {
+                num = "-";
+                ++pos;
+        }
+
         for (; isdigit(expr[pos]); ++pos)
                 num += expr[pos];
 
-        return  Node {Type::Integer, std::move(num)};
+        return Node {Type::Integer, std::move(num)};
 }
 
 static Node
@@ -126,7 +131,7 @@ parse_symbol (const std::string& expr, size_t& pos)
         for  (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
                 symbol += expr[pos];
 
-        return  Node { Type::Symbol, std::move(symbol)};
+        return Node { Type::Symbol, std::move(symbol)};
 }
 
 
@@ -144,7 +149,7 @@ parse (const std::string& expr, size_t& pos)
                         return parse_list (expr, pos);
                 else if (kar == '"')
                         return parse_string(expr, pos);
-                else if (isdigit(kar))
+                else if (isdigit(kar) || kar == '-')
                         return parse_integer(expr, pos);
                 else if (isalpha(kar) ||  kar == ':')
                         return parse_symbol(expr, pos);
