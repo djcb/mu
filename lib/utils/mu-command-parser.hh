@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <functional>
+#include <algorithm>
 
 #include "utils/mu-error.hh"
 #include "utils/mu-sexp-parser.hh"
@@ -80,6 +81,27 @@ struct CommandInfo {
         const ArgMap      args;
         const std::string docstring;
         const Handler     handler;
+
+        /**
+         * Get a sorted list of argument names, for display. Required args come
+         * first, then alphabetical.
+         *
+         * @return vec with the sorted names.
+         */
+        std::vector<std::string> sorted_argnames() const { // sort args -- by required, then alphabetical.
+                std::vector<std::string> names;
+                for (auto&& arg: args)
+                        names.emplace_back(arg.first);
+                std::sort(names.begin(), names.end(), [&](const auto& name1, const auto& name2) {
+                        const auto& arg1{args.find(name1)->second};
+                        const auto& arg2{args.find(name2)->second};
+                        if (arg1.required != arg2.required)
+                                return arg1.required;
+                        else
+                                return name1 < name2;
+                });
+                return names;
+        }
 };
 /// All commands, mapping their name to information about them.
 using CommandMap = std::unordered_map<std::string, CommandInfo>;

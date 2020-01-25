@@ -742,11 +742,12 @@ help_handler (Context& context, const Parameters& params)
                 if (!full)
                         continue;
 
-                for (auto&& arg: info.args) {
+                for (auto&& argname: info.sorted_argnames()) {
+                        const auto& arg{info.args.find(argname)};
                         std::cout << ";;        "
-                                  << format("%-17s  : %-22s ", arg.first.c_str(),
-                                            to_string(arg.second).c_str());
-                        std::cout << "  " << arg.second.docstring << "\n";
+                                  << format("%-17s  : %-24s ", arg->first.c_str(),
+                                            to_string(arg->second).c_str());
+                        std::cout << "  " << arg->second.docstring << "\n";
                 }
                 std::cout << ";;\n";
         }
@@ -1090,8 +1091,8 @@ make_command_map (Context& context)
 
       cmap.emplace("add",
                    CommandInfo{
-                           ArgMap{ {"path",    ArgInfo{Type::String, true, "message-path" }},
-                                   {"maildir", ArgInfo{Type::String, true, "maildir" }}},
+                           ArgMap{ {"path",    ArgInfo{Type::String, true, "file system path to the message" }},
+                                   {"maildir", ArgInfo{Type::String, true, "the maildir the where the message lives" }}},
                            "add a message to the store",
                            [&](const auto& params){add_handler(context, params);}});
 
@@ -1164,7 +1165,7 @@ make_command_map (Context& context)
                                    {"cleanup", ArgInfo{Type::Symbol, false,
                                                            "whether to remove stale messages from the store"}},
                                    {"lazy-check", ArgInfo{Type::Symbol, false,
-                                            "Whether to avoid indexing up-to-date directories"}}},
+                                            "whether to avoid indexing up-to-date directories"}}},
                            "scan maildir for new/updated/removed messages",
                            [&](const auto& params){index_handler(context, params);}});
 
