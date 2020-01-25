@@ -114,10 +114,11 @@ clicked."
         (let* ((key (plist-get bm :key))
                 (name (plist-get bm :name))
                 (query (plist-get bm :query))
-                (qcounts
-                  (seq-filter (lambda (q)
-                                (string= (plist-get q :query) query))
-                    (plist-get mu4e~server-props :queries))))
+                (qcounts (and (stringp query)
+                           (seq-filter
+                             (lambda (q)
+                               (string= (plist-get q :query) query))
+                             (plist-get mu4e~server-props :queries)))))
           (concat
             ;; menu entry
             (mu4e~main-action-str

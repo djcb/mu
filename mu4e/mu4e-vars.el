@@ -229,15 +229,19 @@ are plists" "1.3.7")
   "List of pre-defined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
-:name  - the name of the queryt
-:query - the query expression
+:name  - the name of the query
+:query - the query expression or function
 :key   - the shortcut key.
+
+Note that the :query parameter can be a function/lambda.
 
 Optionally, you can add the following:
 :hide  - if t, bookmark is hdden from the main-view and speedbar.
 :hide-unread - do not show the counts of unread/total number
- of matches for the query. This can be useful if a bookmark uses
- a very slow query. :hide-unread is implied from :hide.
+ of matches for the query in the main-view. This can be useful
+if a bookmark uses  a very slow query. :hide-unread
+is implied from :hide. Furthermore, it is implied from the query
+not being a string.
 
 Note that the queries used to determine the unread/all counts do
 current not apply `mu4e-query-rewrite-function', so if your

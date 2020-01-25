@@ -821,8 +821,10 @@ When successful, call FUNC (if non-nil) afterwards."
         (mapcar ;; send it a list of queries we'd like to see read/unread info
                 ;; for.
           (lambda(bm) (plist-get bm :query))
-          (seq-filter (lambda (bm) ;; exclude bookmarks with these flags.
-                        (not (or (plist-get bm :hide) (plist-get bm :hide-unread))))
+          (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings,
+                                   ;; and with these flags.
+                        (and (stringp (plist-get bm :query))
+                          (not (or (plist-get bm :hide) (plist-get bm :hide-unread)))))
             (mu4e-bookmarks))))
       ;; maybe request the list of contacts, automatically refresh after
       ;; reindexing
