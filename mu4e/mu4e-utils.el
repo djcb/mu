@@ -780,11 +780,8 @@ nothing."
     (setq mu4e-contacts-func 'mu4e~update-contacts)
     (mu4e~proc-contacts
       mu4e-compose-complete-only-personal
-      (when mu4e-compose-complete-only-after
-	      (float-time
-	        (apply 'encode-time
-	          (mu4e-parse-time-string mu4e-compose-complete-only-after))))
-      mu4e~contacts-tstamp)))
+      mu4e-compose-complete-only-after
+	    mu4e~contacts-tstamp)))
 
 (defun mu4e~pong-handler (props func)
   "Handle 'pong' responses from the mu server."

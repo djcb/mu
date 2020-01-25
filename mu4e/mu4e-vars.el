@@ -370,9 +370,13 @@ addresses)."
 
 (defcustom mu4e-compose-complete-only-after "2014-01-01"
   "Consider only contacts last seen after this date.
-Date must be a string, in a format parseable by
-`org-parse-time-string'. This excludes really old contacts.
-Set to nil to not have any time-based restriction."
+
+Date must be a string of the form YYY-MM-DD.
+
+This is useful for limiting a potentially enormous set of
+contacts for auto-completion to just those that are present in
+the e-mail corpus in recent timses. Set to nil to not have any
+time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 

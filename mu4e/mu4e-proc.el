@@ -483,7 +483,7 @@ AFTER is non-nil, get only contacts seen AFTER (the time_t
 value)."
   (mu4e~call-mu `(contacts
                    :personal ,personal
-                   ;; :after  ,(or after nil)
+                   :after  ,(or after nil)
                    :tstamp ,(or tstamp nil))))
 
 (defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
