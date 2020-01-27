@@ -166,7 +166,7 @@ clicked."
         "\n"
         (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
         (mu4e~main-bookmarks)
-        "\n\n"
+        "\n"
         (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
 	      (mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)

@@ -28,6 +28,7 @@
 (eval-when-compile
   (require 'org nil 'noerror))
 (require 'cl-lib)
+(require 'cl-seq nil 'noerror)
 (require 'mu4e-vars)
 (require 'mu4e-meta)
 (require 'mu4e-lists)
@@ -282,7 +283,6 @@ User now will be presented with a list: \"Choose an animal:
 
 Function will return the cdr of the list element."
   (let* ((prompt (mu4e-format "%s" prompt))
-	        (chosen)
 	        (optionsstr
 	          (mapconcat
 	            (lambda (option)
@@ -291,8 +291,7 @@ Function will return the cdr of the list element."
 		              (mu4e-error
 		                (concat "Please use the new format for options/actions; "
 				              "see the manual")))
-		            (let* ((kar (substring (car option) 0 1))
-			                  (val (cdr option)))
+		            (let ((kar (substring (car option) 0 1)))
 		              (concat
 		                "[" (propertize kar 'face 'mu4e-highlight-face) "]"
 		                (substring (car option) 1))))
@@ -409,7 +408,7 @@ old format if needed."
         item))
     mu4e-bookmarks))
 
-(defun mu4e-ask-bookmark (prompt &optional kar)
+(defun mu4e-ask-bookmark (prompt)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
   (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))
@@ -630,6 +629,9 @@ changed.")
 (make-obsolete-variable 'mu4e-msg-changed-hook
   'mu4e-message-changed-hook "0.9.19")
 
+(defvar mu4e~contacts-tstamp "0"
+  "Timestamp for the most recent contacts update." )
+
 ;; some handler functions for server messages
 ;;
 (defun mu4e-info-handler (info)
@@ -664,8 +666,6 @@ process."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar mu4e~contacts-tstamp "0"
-  "Timestamp for the most recent contacts update." )
 
 (defun mu4e~update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS.
@@ -714,7 +714,7 @@ completion; for testing/debugging."
     (when mu4e~contacts
       (insert (format "number of contacts cached: %d\n\n"
                 (hash-table-count mu4e~contacts)))
-      (maphash (lambda(key val)
+      (maphash (lambda(key _val)
                  (insert (format "%S\n" key))) mu4e~contacts)))
   (pop-to-buffer "*mu4e-contacts-info*"))
 
@@ -786,8 +786,7 @@ nothing."
 (defun mu4e~pong-handler (props func)
   "Handle 'pong' responses from the mu server."
 	(setq mu4e~server-props props) ;; save props from the server
-	(let ((version (plist-get props :version))
-		     (doccount (plist-get props :doccount)))
+	(let ((doccount (plist-get props :doccount)))
 	  (mu4e~check-requirements)
 	  (when func (funcall func))
     (when (zerop doccount)
@@ -926,7 +925,7 @@ frame to display buffer BUF."
     (set-window-dedicated-p win t)
     win))
 
-(defun mu4e~update-sentinel-func (proc msg)
+(defun mu4e~update-sentinel-func (proc _msg)
   "Sentinel function for the update process."
   (when mu4e~progress-reporter
     (progress-reporter-done mu4e~progress-reporter)
