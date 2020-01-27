@@ -762,7 +762,7 @@ Checks whether the server process is live."
 ;;
 (defvar mu4e~update-timer nil
   "The mu4e update timer.")
-(defconst mu4e~update-name "*mu4e-update*"
+(defconst mu4e~update-name " *mu4e-update*"
   "Name of the process and buffer to update mail.")
 (defconst mu4e~update-buffer-height 8
   "Height of the mu4e message retrieval/update buffer.")
@@ -957,7 +957,7 @@ RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
 run in the background; otherwise, pop up a window."
   (let* ((process-connection-type t)
 	        (proc (start-process-shell-command
-		              "mu4e-update" " *mu4e-update*"
+		              "mu4e-update" mu4e~update-name
 		              mu4e-get-mail-command))
 	        (buf (process-buffer proc))
 	        (win (or run-in-background
