@@ -108,31 +108,35 @@ clicked."
 
 (defun mu4e~main-bookmarks ()
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
-  (mapconcat
-	  (lambda (bm)
-      (unless (plist-get bm :hide)
-        (let* ((key (plist-get bm :key))
-                (name (plist-get bm :name))
-                (query (plist-get bm :query))
-                (qcounts (and (stringp query)
-                           (seq-filter
-                             (lambda (q)
-                               (string= (plist-get q :query) query))
-                             (plist-get mu4e~server-props :queries)))))
-          (concat
-            ;; menu entry
-            (mu4e~main-action-str
-	            (concat "\t* [b" (make-string 1 key) "] " name)
-	            (concat "b" (make-string 1 key)))
-            ;; append all/unread numbers, if available.
-            (if qcounts
-              (let ((unread (propertize (format "%s" (plist-get (car qcounts) :unread))
-                              'face 'mu4e-header-key-face))
-                     (count (propertize(format "%s" (plist-get (car qcounts) :count))
-                              'face 'default)))
-                (concat " (" unread "/" count ")"))
-              "")))))
-    (mu4e-bookmarks) "\n"))
+  (cl-loop with bmks = (mu4e-bookmarks)
+           with longest = (cl-loop for b in bmks
+                                   maximize (length (plist-get b :name)))
+           with queries = (plist-get mu4e~server-props :queries)
+           for bm in bmks
+           for key = (string (plist-get bm :key))
+           for name = (plist-get bm :name)
+           for query = (plist-get bm :query)
+           for qcounts = (and (stringp query)
+                              (cl-loop for q in queries
+                                       when (string= (plist-get q :query) query)
+                                       collect q))
+           concat (concat
+                   ;; menu entry
+                   (mu4e~main-action-str
+	            (concat "\t* [b" key "] " name)
+	            (concat "b" key))
+                   ;; append all/unread numbers, if available.
+                   (if qcounts
+                       (let ((unread (plist-get (car qcounts) :unread))
+                             (count  (plist-get (car qcounts) :count)))
+                         (format
+                          "%s (%s/%s)"
+                          (make-string (- longest (length name)) ? )
+                          (propertize (number-to-string unread)
+                                      'face 'mu4e-header-key-face)
+                          count))
+                     "")
+                   "\n")))
 
 
 ;; NEW
