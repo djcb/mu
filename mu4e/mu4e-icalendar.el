@@ -150,7 +150,7 @@ response in icalendar format."
       ;; also trash the message (thus must be appended to hooks).
       (add-hook
        'message-sent-hook
-       #'(lambda () (setq mu4e-sent-func
+       (lambda () (setq mu4e-sent-func
                           (mu4e~icalendar-trash-message original-msg)))
        t t))))
 

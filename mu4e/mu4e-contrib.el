@@ -57,12 +57,12 @@
 
 ;; Probably this can be moved to mu4e-view.el.
 (add-hook 'mu4e-view-mode-hook
-          #'(lambda ()
+          (lambda ()
               (set (make-local-variable 'bookmark-make-record-function)
                    'mu4e-view-bookmark-make-record)))
 ;; And this can be moved to mu4e-headers.el.
 (add-hook 'mu4e-headers-mode-hook
-          #'(lambda ()
+          (lambda ()
               (set (make-local-variable 'bookmark-make-record-function)
                    'mu4e-view-bookmark-make-record)))
 
