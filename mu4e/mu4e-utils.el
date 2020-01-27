@@ -815,7 +815,7 @@ When successful, call FUNC (if non-nil) afterwards."
       (mu4e~context-autoswitch nil mu4e-context-policy)
       (mu4e~check-requirements)
       ;; set up the 'pong' handler func
-      (setq mu4e-pong-func #'(lambda (props) (mu4e~pong-handler props func)))
+      (setq mu4e-pong-func (lambda (props) (mu4e~pong-handler props func)))
       ;; wake up server
       (mu4e~proc-ping
         (mapcar ;; send it a list of queries we'd like to see read/unread info
@@ -1098,7 +1098,7 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
         (cl-pushnew (string-to-number elem) list :test 'equal)))
     ;; Check that all numbers are valid.
     (mapc
-      #'(lambda (x)
+      (lambda (x)
 	        (cond
 	          ((> x n)
 	            (mu4e-warn "Attachment %d bigger than maximum (%d)" x n))

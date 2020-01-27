@@ -234,7 +234,7 @@ non-nil."
       (when (mu4e-context-enter-func context)
 	(funcall (mu4e-context-enter-func context)))
       (when (mu4e-context-vars context)
-	(mapc #'(lambda (cell)
+	(mapc (lambda (cell)
 		  (set (car cell) (cdr cell)))
 	  (mu4e-context-vars context)))
       (setq mu4e~context-current context)
