@@ -35,6 +35,7 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
+(eval-when-compile (require 'gnus-art))
 (require 'comint)
 (require 'browse-url)
 (require 'button)
