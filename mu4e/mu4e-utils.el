@@ -806,7 +806,7 @@ first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
-  (if (and nil mu4e-running-p)         ;; already running?
+  (if (mu4e-running-p)         ;; already running?
     (when func (funcall func)) ;; yes! run func if defined
     (progn
       ;; no! try to set a context, do some checks, set up pong handler and ping
