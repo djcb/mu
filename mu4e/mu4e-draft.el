@@ -437,7 +437,7 @@ You can append flags."
           ;; otherwise...
           (concat
             (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-            (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg :reply-all))))))))
+            (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg reply-all))))))))
 
 (defun mu4e~draft-reply-construct-recipients-list (origmsg)
   "Determine the to/cc recipients for a reply message to a
