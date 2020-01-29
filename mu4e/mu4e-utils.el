@@ -637,7 +637,8 @@ changed.")
 (defun mu4e-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
-  (let ((type (plist-get info :info)))
+  (let ((type (plist-get info :info))
+        (main-buf (get-buffer mu4e~main-buffer-name)))
     (cond
       ((eq type 'add) t) ;; do nothing
       ((eq type 'index)
@@ -652,7 +653,9 @@ process."
 	          (unless (and (not (string= mu4e~contacts-tstamp "0"))
                       (zerop (plist-get info :updated)))
 	            (mu4e~request-contacts-maybe)
-	            (run-hooks 'mu4e-index-updated-hook)))))
+	            (run-hooks 'mu4e-index-updated-hook))
+                  (when (and main-buf (buffer-live-p main-buf))
+                    (mu4e~main-view-real-1 t)))))
       ((plist-get info :message)
 	      (mu4e-index-message "%s" (plist-get info :message))))))
 
