@@ -230,15 +230,17 @@ When REFRESH is non nil refresh infos from server."
 	    (count-lines (point-min) (point-max)))
     (error 0)))
 
-(defun mu4e~main-view ()
-  "Create the mu4e main-view, and switch to it."
+(defun mu4e~main-view (&optional refresh)
+  "Create the mu4e main-view, and switch to it.
+
+When REFRESH is non nil refresh infos from server."
   (if (eq mu4e-split-view 'single-window)
       (if (buffer-live-p (mu4e-get-headers-buffer))
 	  (switch-to-buffer (mu4e-get-headers-buffer))
 	(mu4e~main-menu))
     ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
     ;; a second time here i.e. do not refresh. 
-    (mu4e~main-view-real-1)
+    (mu4e~main-view-real-1 refresh)
     (switch-to-buffer mu4e~main-buffer-name)
     (goto-char (point-min)))
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))

@@ -1879,7 +1879,9 @@ other windows."
       ;; now, all *other* windows should be gone. kill ourselves, and return
       ;; to the main view
       (kill-buffer)
-      (mu4e~main-view))))
+      (if (get-buffer-window mu4e~main-buffer-name 'visible)
+          (mu4e~main-view-real-1 t)
+        (mu4e~main-view 'refresh)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'mu4e-headers)
