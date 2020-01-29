@@ -239,7 +239,7 @@ non-nil."
 	  (mu4e-context-vars context)))
       (setq mu4e~context-current context)
       (unless (eq mu4e-split-view 'single-window)
-        (mu4e~main-view-real nil nil))
+        (mu4e~main-view-real-1))
       (run-hooks 'mu4e-context-changed-hook)
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))

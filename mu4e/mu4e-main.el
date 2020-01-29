@@ -143,13 +143,22 @@ clicked."
 ;; NEW
 ;; This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
-(defun mu4e~main-view-real (ignore-auto noconfirm)
+(defun mu4e~main-view-real (_ignore-auto _noconfirm)
+  "The revert buffer function for `mu4e-main-mode'."
+  (mu4e~main-view-real-1 'refresh))
+
+(defun mu4e~main-view-real-1 (&optional refresh)
+  "Create `mu4e~main-buffer-name' and set it up.
+When REFRESH is non nil refresh infos from server."
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
         (inhibit-read-only t)
         (pos (point)))
     (message "Reverting %s..." mu4e~main-buffer-name)
-    ;; Refresh infos from server.
-    (mu4e~start-1)
+    ;; Maybe refresh infos from server.
+    (when refresh
+      (mu4e~start-1)
+      ;; Wait for server update.
+      (sit-for 0.5))
     (with-current-buffer buf
       (erase-buffer)
       (insert
@@ -224,10 +233,12 @@ clicked."
 (defun mu4e~main-view ()
   "Create the mu4e main-view, and switch to it."
   (if (eq mu4e-split-view 'single-window)
-    (if (buffer-live-p (mu4e-get-headers-buffer))
-	    (switch-to-buffer (mu4e-get-headers-buffer))
-	    (mu4e~main-menu))
-    (mu4e~main-view-real nil nil)
+      (if (buffer-live-p (mu4e-get-headers-buffer))
+	  (switch-to-buffer (mu4e-get-headers-buffer))
+	(mu4e~main-menu))
+    ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
+    ;; a second time here i.e. do not refresh. 
+    (mu4e~main-view-real-1)
     (switch-to-buffer mu4e~main-buffer-name)
     (goto-char (point-min)))
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))
@@ -246,7 +257,7 @@ clicked."
 		         (if smtpmail-queue-mail "queued" "sent directly")))
   (unless (eq mu4e-split-view 'single-window)
     (let ((curpos (point)))
-      (mu4e~main-view-real nil nil)
+      (mu4e~main-view-real-1)
       (goto-char curpos))))
 
 (defun mu4e~main-menu ()
