@@ -239,7 +239,8 @@ When REFRESH is non nil refresh infos from server."
 	  (switch-to-buffer (mu4e-get-headers-buffer))
 	(mu4e~main-menu))
     ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
-    ;; a second time here i.e. do not refresh. 
+    ;; a second time here i.e. do not refresh unless specified
+    ;; explicitely with REFRESH arg. 
     (mu4e~main-view-real-1 refresh)
     (switch-to-buffer mu4e~main-buffer-name)
     (goto-char (point-min)))
