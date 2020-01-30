@@ -803,14 +803,27 @@ nothing."
 
 
 (defun mu4e~start (&optional func)
-  "If `mu4e-contexts' have been defined, but we don't have a
+  "Start mu4e and call FUNC if non nil.
+
+If mu4e is already running and FUNC is non nil
+only execute function FUNC.
+If mu4e is not running yet and FUNC is non nil
+start mu4e and execute FUNC.
+If FUNC is nil starts mu4e in background.
+
+Function FUNC when specified should display the `mu4e-main-mode'
+buffer (actually the one which is used is `mu4e-main-view').
+
+If `mu4e-contexts' have been defined, but we don't have a
 context yet, switch to the matching one, or none matches, the
-first. If mu4e is already running, execute function FUNC (if
-non-nil). Otherwise, check various requireme`'nts, then start mu4e.
-When successful, call FUNC (if non-nil) afterwards."
-  (mu4e~start-1 func))
+first. Otherwise, check various `requirements', then start mu4e."
+  (if (and func (mu4e-running-p))
+      (funcall func)
+    (mu4e~start-1 func)))
 
 (defun mu4e~start-1 (&optional func)
+  "Start the mu4e server and execute FUNC when non nil.
+Function FUNC when specified should display the `mu4e-main-mode' buffer."
   ;; Try to set a context, do some checks, set up pong handler and ping
   ;; the server maybe switching the context.
   (mu4e~context-autoswitch nil mu4e-context-policy)
