@@ -59,6 +59,7 @@
     (define-key map "A" 'mu4e-about)
     (define-key map "N" 'mu4e-news)
     (define-key map "H" 'mu4e-display-manual)
+    (define-key map "g" 'mu4e)
     map)
 
   "Keymap for the *mu4e-main* buffer.")
