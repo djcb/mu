@@ -112,8 +112,8 @@ needs_index (MuIndexCallbackData *data, const char *fullpath,
 	if (data->_reindex)
 		return TRUE;
 
-	/* it's not in the database yet (FIXME: GError)*/
-	if (!mu_store_contains_message (data->_store, fullpath, NULL))
+	/* it's not in the database yet */
+	if (!mu_store_contains_message (data->_store, fullpath))
 		return TRUE;
 
 	/* it's there, but it's not up to date */
@@ -242,7 +242,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 	 */
 	if (enter) {
 		data->_dirstamp =
-			mu_store_get_timestamp (data->_store, fullpath, &err);
+			mu_store_get_dirstamp (data->_store, fullpath, &err);
 		/* in 'lazy' mode, we only check the dir timestamp, and if it's
 		 * up to date, we don't bother with this dir. This fails to
 		 * account for messages below this dir that have merely
@@ -257,7 +257,7 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 		}
 		g_debug ("entering %s", fullpath);
 	} else {
-		mu_store_set_timestamp (data->_store, fullpath,
+		mu_store_set_dirstamp (data->_store, fullpath,
 					time(NULL), &err);
 		g_debug ("leaving %s", fullpath);
 	}

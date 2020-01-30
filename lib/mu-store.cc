@@ -36,7 +36,7 @@
 using namespace Mu;
 
 constexpr auto SchemaVersionKey     = "schema-version";
-constexpr auto MaildirKey           = "maildir";
+constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir'
 constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
@@ -44,6 +44,10 @@ constexpr auto CreatedKey           = "created";
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 
 using Addresses = Store::Addresses;
+
+extern "C" {
+static unsigned add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err);
+}
 
 /* we cache these prefix strings, so we don't have to allocate them all
  * the time; this should save 10-20 string allocs per message */
@@ -97,23 +101,23 @@ struct Store::Private {
                 db_{readonly?
                 std::make_shared<Xapian::Database>(db_path_) :
                 std::make_shared<Xapian::WritableDatabase>(db_path_, Xapian::DB_OPEN)},
-                maildir_{db()->get_metadata(MaildirKey)},
+                root_maildir_{db()->get_metadata(RootMaildirKey)},
                 created_{atoll(db()->get_metadata(CreatedKey).c_str())},
                 schema_version_{db()->get_metadata(SchemaVersionKey)},
                 personal_addresses_{Mu::split(db()->get_metadata(PersonalAddressesKey),",")},
                 contacts_{db()->get_metadata(ContactsKey)} {
         }
 
-        Private (const std::string& path, const std::string& maildir):
+        Private (const std::string& path, const std::string& root_maildir):
                 db_path_{path},
                 db_{std::make_shared<Xapian::WritableDatabase>(
                                 db_path_, Xapian::DB_CREATE_OR_OVERWRITE)},
-                maildir_{maildir},
+                root_maildir_{root_maildir},
                 created_{time({})},
                 schema_version_{MU_STORE_SCHEMA_VERSION} {
 
                 writable_db()->set_metadata(SchemaVersionKey, schema_version_);
-                writable_db()->set_metadata(MaildirKey, maildir_);
+                writable_db()->set_metadata(RootMaildirKey, root_maildir_);
                 writable_db()->set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)created_));
         }
 
@@ -174,7 +178,7 @@ struct Store::Private {
 
         const std::string                 db_path_;
         std::shared_ptr<Xapian::Database> db_;
-        const std::string                 maildir_;
+        const std::string                 root_maildir_;
         const time_t                      created_{};
         const std::string                 schema_version_;
         Addresses                         personal_addresses_;
@@ -187,6 +191,24 @@ struct Store::Private {
 };
 
 
+static void
+hash_str (char *buf, size_t buf_size, const char *data)
+{
+        g_snprintf(buf, buf_size, "016%" PRIx64, mu_util_get_hash(data));
+}
+
+
+static std::string
+get_uid_term (const char* path)
+{
+        char uid_term[1 + 16 + 1] = {'\0'};
+        uid_term[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
+        hash_str(uid_term + 1, sizeof(uid_term)-1, path);
+
+        return std::string{uid_term, sizeof(uid_term)};
+}
+
+
 #undef  LOCKED
 #define LOCKED std::lock_guard<std::mutex> l(priv_->lock_);
 
@@ -196,15 +218,15 @@ Store::Store (const std::string& path, bool readonly):
         if (ExpectedSchemaVersion == schema_version())
                 return; // All is good; nothing further to do
 
-        if (readonly || maildir().empty())
+        if (readonly || root_maildir().empty())
                 throw Mu::Error(Error::Code::SchemaMismatch, "database needs reindexing");
 
         g_debug ("upgrading database");
         const auto addresses{personal_addresses()};
-        const auto mdir{maildir()};
+        const auto root_mdir{root_maildir()};
 
         priv_.reset();
-        priv_ = std::make_unique<Private> (path, mdir);
+        priv_ = std::make_unique<Private> (path, root_mdir);
         set_personal_addresses (addresses);
 }
 
@@ -222,10 +244,10 @@ Store::read_only() const
 }
 
 const std::string&
-Store::maildir () const
+Store::root_maildir () const
 {
 	LOCKED;
-        return priv_->maildir_;
+        return priv_->root_maildir_;
 }
 
 void
@@ -287,8 +309,77 @@ Store::created() const
         return priv_->created_;
 }
 
+static std::string
+maildir_from_path (const std::string& root, const std::string& path)
+{
+        if (G_UNLIKELY(root.empty()) || root.length() >= path.length() ||
+            path.find(root) != 0)
+                throw Mu::Error{Error::Code::InvalidArgument,
+                                "root '%s' is not a proper suffix of path '%s'",
+                                root.c_str(), path.c_str()};
+
+        auto mdir{path.substr(root.length())};
+        auto slash{mdir.rfind('/')};
+
+        if (G_UNLIKELY(slash == std::string::npos) || slash < 4)
+                throw Mu::Error{Error::Code::InvalidArgument,
+                                "invalid path: %s", path.c_str()};
+        mdir.erase(slash);
+        auto subdir=mdir.data()+slash-4;
+        if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 &&
+                       strncmp(subdir, "/new", 4)))
+                throw Mu::Error{Error::Code::InvalidArgument,
+                                "cannot find '/new' or '/cur' - invalid path: %s", path.c_str()};
+        if (mdir.length() == 4)
+                return "/";
+
+        mdir.erase(mdir.length()-4);
+        return mdir;
+}
+
+
+unsigned
+Store::add_message (const std::string& path)
+{
+        LOCKED;
+
+        GError *gerr{};
+        const auto maildir{ maildir_from_path(root_maildir(), path)};
+        auto msg{mu_msg_new_from_file (path.c_str(), maildir.c_str(), &gerr)};
+        if (G_UNLIKELY(!msg))
+                throw Error{Error::Code::Message, "failed to create message: %s",
+                                gerr ? gerr->message : "something went wrong"};
+
+        auto store{reinterpret_cast<MuStore*>(this)}; // yuk.
+	const auto docid{add_or_update_msg (store, 0, msg, &gerr)};
+	mu_msg_unref (msg);
+        if (G_UNLIKELY(docid == MU_STORE_INVALID_DOCID))
+                throw Error{Error::Code::Message, "failed to store message: %s",
+                                gerr ? gerr->message : "something went wrong"};
+
+	return docid;
+}
+
+bool
+Store::remove_message (const std::string& path)
+{
+        LOCKED;
+
+	try {
+		const std::string term{(get_uid_term(path.c_str()))};
+                auto wdb{priv()->wdb()};
+
+		wdb->delete_document (term);
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (false);
+
+        return true;
+}
+
+
+
 time_t
-Store::path_tstamp (const std::string& path) const
+Store::dirstamp (const std::string& path) const
 {
         LOCKED;
 
@@ -300,14 +391,27 @@ Store::path_tstamp (const std::string& path) const
 }
 
 void
-Store::set_path_tstamp (const std::string& path, time_t tstamp)
+Store::set_dirstamp (const std::string& path, time_t tstamp)
 {
         LOCKED;
 
         std::array<char, 2*sizeof(tstamp)+1> data{};
-        const std::size_t len = g_snprintf (data.data(), data.size(), "%x", tstamp);
+        const std::size_t len = g_snprintf (data.data(), data.size(), "%zx", tstamp);
 
         priv_->writable_db()->set_metadata(path, std::string{data.data(), len});
+}
+
+
+bool
+Store::contains_message (const std::string& path) const
+{
+        LOCKED;
+
+	try {
+		const std::string term (get_uid_term(path.c_str()));
+ 		return priv_->db()->term_exists (term);
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN(false);
 }
 
 void
@@ -383,24 +487,6 @@ mutable_self (MuStore *store)
         }
 
         return s;
-}
-
-
-static void
-hash_str (char *buf, size_t buf_size, const char *data)
-{
-        g_snprintf(buf, buf_size, "016%" PRIx64, mu_util_get_hash(data));
-}
-
-
-static std::string
-get_uid_term (const char* path)
-{
-        char uid_term[1 + 16 + 1] = {'\0'};
-        uid_term[0] = mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_UID);
-        hash_str(uid_term + 1, sizeof(uid_term)-1, path);
-
-        return std::string{uid_term, sizeof(uid_term)};
 }
 
 
@@ -579,16 +665,15 @@ mu_store_get_read_only_database (MuStore *store)
 }
 
 gboolean
-mu_store_contains_message (const MuStore *store, const char* path, GError **err)
+mu_store_contains_message (const MuStore *store, const char* path)
 {
 	g_return_val_if_fail (store, FALSE);
 	g_return_val_if_fail (path, FALSE);
 
 	try {
-		const std::string term (get_uid_term(path));
- 		return self(store)->priv()->db()->term_exists (term) ? TRUE: FALSE;
+ 		return self(store)->contains_message(path) ? TRUE : FALSE;
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, FALSE);
+        } MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 }
 
 unsigned
@@ -679,7 +764,7 @@ mu_store_maildir (const MuStore *store)
 {
         g_return_val_if_fail (store, NULL);
 
-        return self(store)->maildir().c_str();
+        return self(store)->root_maildir().c_str();
 }
 
 
@@ -1222,7 +1307,7 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 		const std::string term (get_uid_term (mu_msg_get_path(msg)));
 
                 auto self = mutable_self(store);
-                auto wdb   = self->priv()->wdb();
+                auto wdb  = self->priv()->wdb();
 
 		if (!self->in_transaction())
 			self->begin_transaction();
@@ -1324,24 +1409,24 @@ mu_store_remove_path (MuStore *store, const char *msgpath)
 
 
 gboolean
-mu_store_set_timestamp (MuStore *store, const char* msgpath,
-			time_t stamp, GError **err)
+mu_store_set_dirstamp (MuStore *store, const char* dirpath,
+                            time_t stamp, GError **err)
 {
         g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (msgpath, FALSE);
+	g_return_val_if_fail (dirpath, FALSE);
 
-	mutable_self(store)->set_path_tstamp(msgpath, stamp);
+	mutable_self(store)->set_dirstamp(dirpath, stamp);
 
         return TRUE;
 }
 
 time_t
-mu_store_get_timestamp (const MuStore *store, const char *msgpath, GError **err)
+mu_store_get_dirstamp (const MuStore *store, const char *dirpath, GError **err)
 {
 	g_return_val_if_fail (store, 0);
-	g_return_val_if_fail (msgpath, 0);
+	g_return_val_if_fail (dirpath, 0);
 
-        return self(store)->path_tstamp(msgpath);
+        return self(store)->dirstamp(dirpath);
 }
 
 

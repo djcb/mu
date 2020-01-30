@@ -112,8 +112,7 @@ test_mu_store_store_msg_and_count (void)
 	g_assert_cmpuint (1,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (TRUE,==,mu_store_contains_message
 			  (store,
-			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,",
-			   NULL));
+			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,"));
 	mu_msg_unref (msg);
 
 	/* add another one */
@@ -125,7 +124,7 @@ test_mu_store_store_msg_and_count (void)
 	g_assert_cmpuint (2,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (TRUE,==,
 			  mu_store_contains_message (store, MU_TESTMAILDIR2
-						     "/bar/cur/mail3", NULL));
+						     "/bar/cur/mail3"));
 	mu_msg_unref (msg);
 
 	/* try to add the first one again. count should be 2 still */
@@ -175,8 +174,7 @@ test_mu_store_store_msg_remove_and_count (void)
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
 	g_assert_cmpuint (FALSE,==,mu_store_contains_message
 			  (store,
-			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,",
-			   NULL));
+			   MU_TESTMAILDIR "/cur/1283599333.1840_11.cthulhu!2,"));
 	g_free (tmpdir);
 	mu_store_unref (store);
 }

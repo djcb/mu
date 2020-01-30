@@ -41,7 +41,7 @@ AM_CFLAGS=							\
 	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"		\
 	-DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"		\
 	-DABS_CURDIR=\"${abs_builddir}\"			\
-	-DABS_SRCDIR=\"${abs_srcdir}\"
+	-DABS_SRCDIR=\"${abs_srcdir}\"				\
 	-Wno-format-nonliteral					\
 	-Wno-switch-enum					\
 	-Wno-deprecated-declarations				\
@@ -56,7 +56,8 @@ AM_CXXFLAGS=							\
 	$(WARN_CXXFLAGS)					\
 	$(XAPIAN_CXXFLAGS)					\
 	$(ASAN_CXXFLAGS)					\
-	$(CODE_COVERAGE_CFLAGS)
+	$(CODE_COVERAGE_CFLAGS)					\
+	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"
 
 AM_CPPFLAGS=							\
 	$(CODE_COVERAGE_CPPFLAGS)

@@ -75,7 +75,7 @@ public:
          *
          * @return the maildir
          */
-        const std::string& maildir() const;
+        const std::string& root_maildir() const;
 
         /**
          * Version of the database-schema
@@ -118,6 +118,51 @@ public:
         const Contacts& contacts() const;
 
         /**
+         * Add a message to the store.
+         *
+         * @param path the message path.
+         *
+         * @return the doc id of the added message
+         */
+        unsigned add_message (const std::string& path);
+
+        /**
+         * Add a message to the store.
+         *
+         * @param path the message path.
+         *
+         * @return true if removing happened; false otherwise.
+         */
+        bool remove_message (const std::string& path);
+
+
+        /**
+         * does a certain message exist in the store already?
+         *
+         * @param path the message path
+         *
+         * @return true if the message exists in the store, false otherwise
+         */
+        bool contains_message (const std::string& path) const;
+
+        /**
+         * Get the timestamp for some directory
+         *
+         * @param path the path
+         *
+         * @return the timestamp, or 0 if not found
+         */
+        time_t dirstamp (const std::string& path) const;
+
+        /**
+         * Set the timestamp for some directory
+         *
+         * @param path a filesystem path
+         * @param tstamp the timestamp for that path
+         */
+        void set_dirstamp (const std::string& path, time_t tstamp);
+
+        /**
          * Get the number of documents in the document database
          *
          * @return the number
@@ -130,24 +175,6 @@ public:
          * @return true or false
          */
         bool empty() const;
-
-        /**
-         * Get the timestamp for a given path.
-         *
-         * @param path the path
-         *
-         * @return the timestamp, or 0 if not found
-         */
-        time_t path_tstamp (const std::string& path) const;
-
-        /**
-         * Set the timestamp for some path
-         *
-         * @param path a filesystem path
-         * @param tstamp the timestamp for that path
-         */
-        void set_path_tstamp (const std::string& path, time_t tstamp);
-
 
         /**
          * Begin a database transaction
@@ -451,18 +478,15 @@ unsigned mu_store_add_path (MuStore *store, const char *path,
  */
 gboolean mu_store_remove_path (MuStore *store, const char* msgpath);
 
-
 /**
  * does a certain message exist in the database already?
  *
  * @param store a store
  * @param path the message path
- * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return TRUE if the message exists, FALSE otherwise
  */
-gboolean mu_store_contains_message (const MuStore *store,  const char* path,
-				    GError **err);
+gboolean mu_store_contains_message (const MuStore *store,  const char* path);
 
 /**
  * get the docid for message at path
@@ -480,25 +504,25 @@ unsigned mu_store_get_docid_for_path (const MuStore *store, const char* path,
  * store a timestamp for a directory
  *
  * @param store a valid store
- * @param msgpath path to a maildir
+ * @param dirpath path to some directory
  * @param stamp a timestamp
  * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return TRUE if setting the timestamp succeeded, FALSE otherwise
  */
-gboolean mu_store_set_timestamp (MuStore *store, const char* msgpath,
+gboolean mu_store_set_dirstamp (MuStore *store, const char* dirpath,
 				 time_t stamp, GError **err);
 
 /**
  * get the timestamp for a directory
  *
  * @param store a valid store
- * @param msgpath path to a maildir
+ * @param msgpath path to some directory
  * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return the timestamp, or 0 in case of error
  */
-time_t mu_store_get_timestamp (const MuStore *store, const char* msgpath,
+time_t mu_store_get_dirstamp (const MuStore *store, const char* dirpath,
 			       GError **err);
 
 /**
