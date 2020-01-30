@@ -36,6 +36,7 @@ struct Error final: public std::exception {
                 Index,
                 Internal,
                 InvalidArgument,
+                Message,
                 NotFound,
                 Parsing,
                 Query,
