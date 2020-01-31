@@ -158,7 +158,7 @@ When REFRESH is non nil refresh infos from server."
     (when refresh
       (mu4e~start-1)
       ;; Wait for server update.
-      (sit-for 0.5))
+      (sit-for 0.1))
     (with-current-buffer buf
       (erase-buffer)
       (insert
@@ -166,7 +166,8 @@ When REFRESH is non nil refresh infos from server."
        (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
        (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
        (propertize "; (in store: " 'face 'mu4e-title-face)
-       (propertize (format "%s" (plist-get mu4e~server-props :doccount)) 'face 'mu4e-header-key-face)
+       (propertize (format "%s" (plist-get mu4e~server-props :doccount))
+                   'face 'mu4e-header-key-face)
        (propertize " messages)" 'face 'mu4e-title-face)
 
        "\n\n"
