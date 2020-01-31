@@ -805,25 +805,28 @@ context yet, switch to the matching one, or none matches, the
 first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
-  ;; if we're already running, simply go to the main view
-  (unless (mu4e-running-p) ;; already running?
-    ;; no! try to set a context, do some checks, set up pong handler and ping
-    ;; the server maybe switch the context
-    (mu4e~context-autoswitch nil mu4e-context-policy)
-    (mu4e~check-requirements))
+  (mu4e~start-1 func))
+
+(defun mu4e~start-1 (&optional func)
+  ;; Try to set a context, do some checks, set up pong handler and ping
+  ;; the server maybe switching the context.
+  (mu4e~context-autoswitch nil mu4e-context-policy)
+  (mu4e~check-requirements)
+  ;; set up the 'pong' handler func
   (setq mu4e-pong-func (lambda (props) (mu4e~pong-handler props func)))
+  ;; wake up server
   (mu4e~proc-ping
-    (mapcar ;; send it a list of queries we'd like to see read/unread info
-      ;; for.
-      (lambda(bm) (plist-get bm :query))
-      (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings,
-                    ;; and with these flags.
-                    (and (stringp (plist-get bm :query))
-                      (not (or (plist-get bm :hide) (plist-get bm :hide-unread)))))
-        (mu4e-bookmarks))))
-  ;; maybe request the list of contacts, automatically refreshed after
+   (mapcar ;; send it a list of queries we'd like to see read/unread info
+    ;; for.
+    (lambda (bm) (plist-get bm :query))
+    (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings,
+                  ;; and with these flags.
+                  (and (stringp (plist-get bm :query))
+                       (not (or (plist-get bm :hide) (plist-get bm :hide-unread)))))
+                (mu4e-bookmarks))))
+  ;; maybe request the list of contacts, automatically refresh after
   ;; reindexing
-  (unless mu4e~contacts (mu4e~request-contacts-maybe)))
+  (mu4e~request-contacts-maybe))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."

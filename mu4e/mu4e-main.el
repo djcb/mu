@@ -145,46 +145,52 @@ clicked."
 ;; buffer switching at the end.
 (defun mu4e~main-view-real (ignore-auto noconfirm)
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
-	       (inhibit-read-only t))
+        (inhibit-read-only t)
+        (pos (point)))
+    (message "Reverting %s..." mu4e~main-buffer-name)
+    ;; Refresh infos from server.
+    (mu4e~start-1)
     (with-current-buffer buf
       (erase-buffer)
       (insert
-        "* "
-	      (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
-	      (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-        (propertize "; (in store: " 'face 'mu4e-title-face)
-        (propertize (format "%s" (plist-get mu4e~server-props :doccount)) 'face 'mu4e-header-key-face)
-        (propertize " messages)" 'face 'mu4e-title-face)
+       "* "
+       (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
+       (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
+       (propertize "; (in store: " 'face 'mu4e-title-face)
+       (propertize (format "%s" (plist-get mu4e~server-props :doccount)) 'face 'mu4e-header-key-face)
+       (propertize " messages)" 'face 'mu4e-title-face)
 
-        "\n\n"
-        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
-	      (mu4e~main-action-str
-	        "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
-	      (mu4e~main-action-str
-	        "\t* enter a [s]earch query\n" 'mu4e-search)
-	      (mu4e~main-action-str
-	        "\t* [C]ompose a new message\n" 'mu4e-compose-new)
-        "\n"
-        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-        (mu4e~main-bookmarks)
-        "\n"
-        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
+       "\n\n"
+       (propertize "  Basics\n\n" 'face 'mu4e-title-face)
+       (mu4e~main-action-str
+	"\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
+       (mu4e~main-action-str
+	"\t* enter a [s]earch query\n" 'mu4e-search)
+       (mu4e~main-action-str
+	"\t* [C]ompose a new message\n" 'mu4e-compose-new)
+       "\n"
+       (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
+       (mu4e~main-bookmarks)
+       "\n\n"
+       (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-	      (mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)
+       (mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)
 
-	      (mu4e~main-action-str "\t* [U]pdate email & database\n"
-	        'mu4e-update-mail-and-index)
+       (mu4e~main-action-str "\t* [U]pdate email & database\n"
+	                     'mu4e-update-mail-and-index)
 
-	      ;; show the queue functions if `smtpmail-queue-dir' is defined
-	      (if (file-directory-p smtpmail-queue-dir)
-	        (mu4e~main-view-queue)
-	        "")
-	      "\n"
-	      (mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
-	      (mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
-	      (mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
-	      (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
+       ;; show the queue functions if `smtpmail-queue-dir' is defined
+       (if (file-directory-p smtpmail-queue-dir)
+	   (mu4e~main-view-queue)
+	 "")
+       "\n"
+       (mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
+       (mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
+       (mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
+       (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
       (mu4e-main-mode)
+      (goto-char pos)
+      (message "Reverting %s done" mu4e~main-buffer-name)
       )))
 
 (defun mu4e~main-view-queue ()
