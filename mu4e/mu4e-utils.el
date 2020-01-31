@@ -637,22 +637,26 @@ changed.")
 (defun mu4e-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
-  (let ((type (plist-get info :info)))
+  (let* ((type (plist-get info :info))
+          (processed (plist-get info :processed))
+          (updated (plist-get info :updated))
+          (cleaned-up (plist-get info :cleaned-up)))
     (cond
       ((eq type 'add) t) ;; do nothing
       ((eq type 'index)
 	      (if (eq (plist-get info :status) 'running)
-	        (mu4e-index-message "Indexing... processed %d, updated %d"
-	          (plist-get info :processed) (plist-get info :updated))
+	        (mu4e-index-message
+            "Indexing... processed %d, updated %d" processed updated)
 	        (progn
 	          (mu4e-index-message
 	            "Indexing completed; processed %d, updated %d, cleaned-up %d"
-	            (plist-get info :processed) (plist-get info :updated)
-	            (plist-get info :cleaned-up))
+              processed updated cleaned-up)
+            ;; call the updated hook if anything changed.
+            (unless (zerop (+ updated cleaned-up))
+              (run-hooks 'mu4e-index-updated-hook))
 	          (unless (and (not (string= mu4e~contacts-tstamp "0"))
                       (zerop (plist-get info :updated)))
-	            (mu4e~request-contacts-maybe)
-	            (run-hooks 'mu4e-index-updated-hook)))))
+	            (mu4e~request-contacts-maybe)))))
       ((plist-get info :message)
 	      (mu4e-index-message "%s" (plist-get info :message))))))
 
@@ -810,7 +814,15 @@ When successful, call FUNC (if non-nil) afterwards."
     ;; no! try to set a context, do some checks, set up pong handler and ping
     ;; the server maybe switch the context
     (mu4e~context-autoswitch nil mu4e-context-policy)
-    (mu4e~check-requirements))
+    (mu4e~check-requirements)
+
+    ;; when it's visible, re-draw the main view when there are changes.
+    (add-hook 'mu4e-index-updated-hook
+      (lambda()
+        (let ((mainbuf (get-buffer mu4e~main-buffer-name)))
+          (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
+            (mu4e~start 'mu4e~main-view))))))
+
   (setq mu4e-pong-func (lambda (props) (mu4e~pong-handler props func)))
   (mu4e~proc-ping
     (mapcar ;; send it a list of queries we'd like to see read/unread info
