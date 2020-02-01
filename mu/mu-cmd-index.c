@@ -255,7 +255,7 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 static void
 index_title (MuStore *store, MuConfig *opts)
 {
-	const char	  *green, *def;
+	const char	 *green, *def;
 	char		**addrs;
 	int		  i;
 	time_t            created;
@@ -272,8 +272,11 @@ index_title (MuStore *store, MuConfig *opts)
 
 	created = mu_store_created (store);
 	tstamp = localtime (&created);
-	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-y2k"
+	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
+#pragma GCC diagnostic pop
 	g_print ("created            : %s%s%s\n", green, tbuf, def);
 	g_print ("maildir            : %s%s%s\n",
 		 green, mu_store_maildir (store), def);
