@@ -280,7 +280,7 @@ If needed, set the Fcc header, and register the handler function."
         (unless (file-exists-p mdir-path)
           (mu4e~proc-mkdir mdir-path)))
       (write-file file) ;; writing maildirs files is easy
-      (mu4e~proc-add file (or maildir "/")))))))) ;; update the database
+      (mu4e~proc-add file))))))) ;; update the database
 
 (defvar mu4e-compose-hidden-headers
   `("^References:" "^Face:" "^X-Face:"
@@ -319,7 +319,7 @@ Message-ID."
         (set-buffer-modified-p nil)
         (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
         ;; update the file on disk -- ie., without the separator
-        (mu4e~proc-add (buffer-file-name) mu4e~draft-drafts-folder))) nil t))
+        (mu4e~proc-add (buffer-file-name)))) nil t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; address completion; inspired by org-contacts.el and
@@ -524,7 +524,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (add-hook 'message-sent-hook
       (lambda () ;;  mu4e~compose-mark-after-sending
   (setq mu4e-sent-func 'mu4e-sent-handler)
-  (mu4e~proc-sent (buffer-file-name) mu4e~draft-drafts-folder)) nil t))
+  (mu4e~proc-sent (buffer-file-name))) nil t))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))

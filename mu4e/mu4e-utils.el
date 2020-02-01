@@ -1203,11 +1203,11 @@ displaying it). Do _not_ bury the current buffer, though."
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun mu4e-refresh-message (path maildir)
-  "Re-parse message at PATH and MAILDIR; if this works, we will
+(defun mu4e-refresh-message (path)
+  "Re-parse message at PATH; if this works, we will
 receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
-  (mu4e~proc-add path maildir))
+  (mu4e~proc-add path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~fontify-cited ()
