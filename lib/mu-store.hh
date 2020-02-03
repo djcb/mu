@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,6 +30,8 @@
 #include <vector>
 #include <ctime>
 
+#include <utils/mu-utils.hh>
+
 namespace Mu {
 
 class Store {
@@ -47,8 +49,11 @@ public:
          *
          * @param path path to the database
          * @param maildir maildir to use for this store
+         * @param personal_addressesaddresses that should be recognized as
+         * 'personal' for identifying personal messages.
          */
-        Store (const std::string& path, const std::string& maildir);
+        Store (const std::string& path, const std::string& maildir,
+               const StringVec& personal_addresses);
 
         /**
          * DTOR
@@ -92,23 +97,12 @@ public:
          */
         std::time_t created() const;
 
-        using Addresses = std::vector<std::string>;
-        /**< A vec of email addresses (of the type foo@example.com, RFC-5322)*/
-
-        /**
-         * Set addresses that should be recognized as 'personal'
-         *
-         * @param addresses
-         */
-        void set_personal_addresses (const Addresses& addresses);
-
-
         /**
          * Get a vec with the personal addresses
          *
          * @return personal addresses
          */
-        const Addresses& personal_addresses() const;
+        const StringVec& personal_addresses() const;
 
         /**
          * Get the Contacts object for this store
@@ -263,13 +257,15 @@ MuStore*  mu_store_new_writable (const char *xpath, GError **err)
  *
  * @param path the path to the database
  * @param path to the maildir
+ * @param personal_addressesaddresses that should be recognized as
+ * 'personal' for identifying personal messages.
  * @param err to receive error info or NULL. err->code is MuError value
  *
  * @return a new MuStore object with ref count == 1, or NULL in case
  * of error; free with mu_store_unref
  */
 MuStore*  mu_store_new_create (const char *xpath, const char *maildir,
-                               GError **err)
+                               const char **personal_addresses, GError **err)
         G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
@@ -346,13 +342,13 @@ const char *mu_store_database_path (const MuStore *store);
 
 
 /**
- * Get the maildir for this message store.
+ * Get the root-maildir for this message store.
  *
  * @param store the store
  *
  * @return the maildir.
  */
-const char *mu_store_maildir(const MuStore *store);
+const char *mu_store_root_maildir(const MuStore *store);
 
 
 /**
@@ -363,20 +359,6 @@ const char *mu_store_maildir(const MuStore *store);
  * @return the maildir.
  */
 time_t mu_store_created(const MuStore *store);
-
-
-/**
- * register a char** of email addresses as 'my' addresses, ie. mark
- * message that have these addresses in one of the address fields as
- * 'personal' (e.g., in mu-contacts). calling this function overrides
- * any 'my addresses' that were set before, using this function or
- * through mu_store_new_writable
- *
- * @param store a valid store object
- * @param my_addresses a char** of email addresses
- */
-void mu_store_set_personal_addresses (MuStore *store,
-                                      const char **my_addresses);
 
 /**
  * Get the list of personal addresses from the store
@@ -455,15 +437,12 @@ unsigned mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg,
  *
  * @param store a valid store
  * @param path full filesystem path to a valid message
- * @param maildir set the maildir (e.g. "/drafts") for this message, or NULL
- *    note that you cannot mu_msg_move_msg_to_maildir unless maildir is set.
  * @param err receives error information, if any, or NULL
  *
  * @return the docid of the stored message, or 0
  * (MU_STORE_INVALID_DOCID) in case of error
  */
-unsigned mu_store_add_path (MuStore *store, const char *path,
-			    const char* maildir, GError **err);
+unsigned mu_store_add_path (MuStore *store, const char *path, GError **err);
 
 /**
  * remove a message from the database based on its path

@@ -222,8 +222,6 @@ message_options (const Parameters& params)
         return (MuMsgOptions)opts;
 }
 
-
-
 /* 'add' adds a message to the database, and takes two parameters: 'path', which
  * is the full path to the message, and 'maildir', which is the maildir this
  * message lives in (e.g. "/inbox"). response with an (:info ...) message with
@@ -233,10 +231,9 @@ static void
 add_handler (Context& context, const Parameters& params)
 {
         const auto path{get_string_or(params, "path")};
-        const auto maildir{get_string_or(params, "maildir")};
 
         GError *gerr{};
-        const auto docid{mu_store_add_path (context.store, path.c_str(), maildir.c_str(), &gerr)};
+        const auto docid{mu_store_add_path (context.store, path.c_str(), &gerr)};
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error(Error::Code::Store, &gerr, "failed to add message at %s",
                             path.c_str());
@@ -1048,9 +1045,7 @@ sent_handler (Context& context, const Parameters& params)
 {
         GError *gerr{};
         const auto path{get_string_or(params, "path")};
-        const auto docid{mu_store_add_path(context.store, path.c_str(),
-                                           get_string_or(params, "maildir").c_str(),
-                                           &gerr)};
+        const auto docid{mu_store_add_path(context.store, path.c_str(), &gerr)};
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::Store, &gerr, "failed to add path"};
 
@@ -1092,8 +1087,7 @@ make_command_map (Context& context)
 
       cmap.emplace("add",
                    CommandInfo{
-                           ArgMap{ {"path",    ArgInfo{Type::String, true, "file system path to the message" }},
-                                   {"maildir", ArgInfo{Type::String, true, "the maildir the where the message lives" }}},
+                           ArgMap{ {"path",    ArgInfo{Type::String, true, "file system path to the message" }}},
                            "add a message to the store",
                            [&](const auto& params){add_handler(context, params);}});
 

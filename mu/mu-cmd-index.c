@@ -279,7 +279,7 @@ index_title (MuStore *store, MuConfig *opts)
 #pragma GCC diagnostic pop
 	g_print ("created            : %s%s%s\n", green, tbuf, def);
 	g_print ("maildir            : %s%s%s\n",
-		 green, mu_store_maildir (store), def);
+		 green, mu_store_root_maildir (store), def);
 
 	g_print ("personal-addresses : ");
 

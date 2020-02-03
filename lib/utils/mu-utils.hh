@@ -174,15 +174,6 @@ static inline std::string to_string (const T& val)
  *
  */
 
-#define MU_STORE_CATCH_BLOCK_RETURN(GE,R)			\
-	catch (const MuStoreError& merr) {			\
-		mu_util_g_set_error ((GE),			\
-				     merr.mu_error(), "%s",	\
-				     merr.what().c_str());	\
-		return (R);					\
-	}							\
-
-
 #define MU_XAPIAN_CATCH_BLOCK						\
 	catch (const Xapian::Error &xerr) {				\
 		g_critical ("%s: xapian error '%s'",			\

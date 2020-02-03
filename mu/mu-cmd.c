@@ -374,7 +374,7 @@ foreach_msg_file (MuStore *store, MuConfig *opts,
 static gboolean
 add_path_func (MuStore *store, const char *path, GError **err)
 {
-	return mu_store_add_path (store, path, NULL, err);
+	return mu_store_add_path (store, path, err);
 }
 
 
@@ -569,16 +569,36 @@ show_usage (void)
 typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
 
-static gboolean
-needs_rebuild (MuStore *store, MuConfig *opts, GError **err)
+static MuStore*
+get_store (MuConfig *opts, gboolean read_only, GError **err)
 {
-	if (store)
-		return mu_store_count(store, NULL) == 0;
-	else
-		return err &&
-			(*err)->code == MU_ERROR_XAPIAN_NEEDS_REINDEX &&
-			opts->maildir;
+	if (opts->rebuild && read_only) {
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
+			     "cannot rebuild a read-only database");
+		return NULL;
+	}
+
+	if (read_only)
+		return mu_store_new_readable (
+			mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
+
+	if (!opts->rebuild)
+		return mu_store_new_writable
+			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
+
+	if (!opts->maildir) {
+		g_set_error (err, MU_ERROR_DOMAIN,
+			     MU_ERROR_IN_PARAMETERS,
+			     "missing --maildir parameter");
+		return NULL;
+	}
+
+	return mu_store_new_create (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+				    opts->maildir,
+				    (const char**)opts->my_addresses,
+				    err);
 }
+
 
 static MuError
 with_store (store_func func, MuConfig *opts, gboolean read_only,
@@ -587,42 +607,10 @@ with_store (store_func func, MuConfig *opts, gboolean read_only,
 	MuStore *store;
 	MuError	 merr;
 
-	if (opts->rebuild && read_only) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
-			     "cannot rebuild a read-only database");
-		return MU_G_ERROR_CODE(err);
-	}
-
-	if (read_only) {
-		store = mu_store_new_readable (
-			mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
-	} else if (!opts->rebuild) {
-		store = mu_store_new_writable
-			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
-		if (needs_rebuild (store, opts, err)) {
-			if (store)
-				mu_store_unref(store);
-			opts->rebuild = TRUE;
-			g_clear_error (err);
-			return with_store(func, opts, read_only, err);
-		}
-	} else { /* rebuilding */
-		if (!opts->maildir) {
-			g_set_error (err, MU_ERROR_DOMAIN,
-				     MU_ERROR_IN_PARAMETERS,
-				     "missing --maildir parameter");
-		}
-		store = mu_store_new_create
-			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-			 opts->maildir, err);
-	}
-
+	store = get_store (opts, read_only, err);
 	if (!store)
 		return MU_G_ERROR_CODE(err);
 
-	if (!read_only && opts->my_addresses)
-		mu_store_set_personal_addresses (
-			store, (const char**)opts->my_addresses);
 
 	merr = func (store, opts, err);
 	mu_store_unref (store);

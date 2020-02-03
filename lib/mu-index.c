@@ -343,7 +343,7 @@ mu_index_run (MuIndex *index,  gboolean reindex, gboolean lazycheck,
 	g_return_val_if_fail (index && index->_store, MU_ERROR);
 	g_return_val_if_fail (msg_cb, MU_ERROR);
 
-	path = mu_store_maildir (index->_store);
+	path = mu_store_root_maildir (index->_store);
 	if (!check_path (path))
 		return MU_ERROR;
 
@@ -401,7 +401,7 @@ mu_index_stats (MuIndex *index,
 	g_return_val_if_fail (index, MU_ERROR);
 	g_return_val_if_fail (cb_msg, MU_ERROR);
 
-	path = mu_store_maildir (index->_store);
+	path = mu_store_root_maildir (index->_store);
 	if (!check_path (path))
 		return MU_ERROR;
 

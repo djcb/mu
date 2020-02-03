@@ -44,7 +44,7 @@ test_mu_store_new_destroy (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_create (tmpdir, "/tmp", &err);
+	store = mu_store_new_create (tmpdir, "/tmp", NULL, &err);
 	g_assert_no_error (err);
 	g_assert (store);
 
@@ -68,7 +68,7 @@ test_mu_store_version (void)
 	g_assert (tmpdir);
 
 	err = NULL;
-	store = mu_store_new_create (tmpdir, "/tmp", &err);
+	store = mu_store_new_create (tmpdir, "/tmp", NULL, &err);
 	g_assert (store);
 	mu_store_unref (store);
 	store = mu_store_new_readable (tmpdir, &err);
@@ -95,7 +95,7 @@ test_mu_store_store_msg_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL);
+	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL, NULL);
 	g_assert (store);
 	g_free (tmpdir);
 
@@ -152,7 +152,7 @@ test_mu_store_store_msg_remove_and_count (void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert (tmpdir);
 
-	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL);
+	store = mu_store_new_create (tmpdir, MU_TESTMAILDIR, NULL, NULL);
 	g_assert (store);
 
 	g_assert_cmpuint (0,==,mu_store_count (store, NULL));
