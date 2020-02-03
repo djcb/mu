@@ -439,8 +439,10 @@ config_options_group_server (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-		{"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
-		 "top of the maildir", "<maildir>"},
+                {"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
+		 &MU_CONFIG.my_addresses,
+		 "my e-mail address; can be used multiple times",
+		 "<address>"},
                 {"commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.commands,
 		 "list the available command and their parameters, then exit", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}

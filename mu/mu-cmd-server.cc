@@ -764,20 +764,6 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
         return MU_OK;
 }
 
-static void
-set_my_addresses (MuStore *store, const std::vector<std::string>& addrs)
-{
-        if (addrs.empty())
-                return;
-
-        const char **addresses = g_new0 (const char*, addrs.size() + 1);
-        for (auto i = 0U; i != addrs.size(); ++i)
-                addresses[i] = addrs[i].c_str();
-
-        mu_store_set_personal_addresses (store, (const char**)addresses);
-        g_free (addresses); // shallow
-}
-
 
 static MuError
 index_and_maybe_cleanup (MuIndex *index, bool cleanup, bool lazy_check)
@@ -808,13 +794,9 @@ index_and_maybe_cleanup (MuIndex *index, bool cleanup, bool lazy_check)
 static void
 index_handler (Context& context, const Parameters& params)
 {
+        GError *gerr{};
         const auto cleanup{get_bool_or(params,   "cleanup")};
         const auto lazy_check{get_bool_or(params,  "lazy-check")};
-        const auto my_addresses{get_string_vec(params, "my-addresses")};
-
-        set_my_addresses(context.store, my_addresses);
-
-        GError *gerr{};
         auto index{mu_index_new (context.store, &gerr)};
         if (!index)
                 throw Error(Error::Code::Index, &gerr, "failed to create index object");
@@ -1273,10 +1255,11 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err) try
                 return MU_OK;
         }
 
+        install_sig_handler();
         std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
                   << ";; Use (help) to get a list of commands, (quit) to quit.\n";
 
-        while (!context.do_quit) {
+        while (!MuTerminate && !context.do_quit) {
 
                 try {
                         const auto line{read_line(context)};

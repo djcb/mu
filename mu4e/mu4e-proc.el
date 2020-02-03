@@ -255,7 +255,9 @@ Start the process if needed."
   (let* ((process-connection-type nil) ;; use a pipe
           (args '("server"))
           (args (append args (when mu4e-mu-home (list (concat "--muhome=" mu4e-mu-home)))))
-          (args (append args (list (concat "--maildir=" mu4e-maildir)))))
+          (args (append args (mapcar (lambda(addr)
+                                  (format "--my-address=%s" addr))
+                          mu4e-user-mail-address-list))))
     (setq mu4e~proc-buf "")
     (setq mu4e~proc-process (apply 'start-process
             mu4e~proc-name mu4e~proc-name
