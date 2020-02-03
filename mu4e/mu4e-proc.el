@@ -277,9 +277,9 @@ Start the process if needed."
     (when proc
       (let ((delete-exited-processes t))
         (mu4e~call-mu '(quit)))
-  ;; try sending SIGINT (C-c) to process, so it can exit gracefully
+      ;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
-  (signal-process proc 'SIGINT))))
+        (signal-process proc 'SIGINT))))
   (setq
     mu4e~proc-process nil
     mu4e~proc-buf nil))
@@ -405,7 +405,6 @@ MY-ADDRESSES is a list of 'my' email addresses (see
                    :cleanup ,cleanup
                    :lazy-check ,lazy-check)))
 
-
 (defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
   ;;(mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~escape path))
@@ -469,7 +468,6 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
                      :rename ,(and maildir mu4e-change-filenames-when-moving)
                      :noview ,no-view))))
 
-
 (defun mu4e~proc-ping (&optional queries)
   "Sends a ping to the mu server, expecting a (:pong ...) in response.
 QUERIES is a list of queries for the number of results with read/unread status
@@ -512,7 +510,6 @@ result will be delivered to the function registered as
                    :path ,path
                    :images ,images
                    :decrypt ,decrypt)))
-
 
 (provide 'mu4e-proc)
 ;;; mu4e-proc.el ends here

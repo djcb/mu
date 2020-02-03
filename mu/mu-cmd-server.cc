@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <atomic>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -62,6 +63,33 @@ using namespace Command;
 using namespace Sexp;
 
 using DocId = unsigned;
+
+static std::atomic<bool> MuTerminate{false};
+
+static void
+sig_handler (int sig)
+{
+        MuTerminate = true;
+}
+
+static void
+install_sig_handler (void)
+{
+        struct sigaction action;
+        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGPIPE };
+
+        MuTerminate = false;
+
+        action.sa_handler = sig_handler;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags   = SA_RESETHAND;
+
+        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+                if (sigaction (sigs[i], &action, NULL) != 0)
+                        g_critical ("set sigaction for %d failed: %s",
+                                    sigs[i], strerror (errno));;
+}
+
 
 struct Context {
         Context() {}
@@ -754,6 +782,9 @@ help_handler (Context& context, const Parameters& params)
 static MuError
 index_msg_cb (MuIndexStats *stats, void *user_data)
 {
+        if (MuTerminate)
+                return MU_STOP;
+
         if (stats->_processed % 1000)
                 return MU_OK;
 
