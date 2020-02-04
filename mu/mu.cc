@@ -51,8 +51,12 @@ show_version (void)
 static void
 handle_error (MuConfig *conf, MuError merr, GError **err)
 {
+	const char *path;
+
 	if (!(err && *err))
 		return;
+
+	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
 
 	switch ((*err)->code) {
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
@@ -71,6 +75,17 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 		g_printerr ("see the mu manpage for commands, or "
 			    "'mu script' for the scripts\n");
 		break;
+	case MU_ERROR_XAPIAN_CANNOT_OPEN:
+		g_printerr("Failed to open database @ %s, \n"
+			   "Please (re)build the database, i.e., with\n"
+				   "\tmu index --rebuild\n", path);
+		return;
+	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
+		g_printerr("Failed to open database @ %s, \n"
+			   "because the schema version does not match mu's.\n\n"
+			   "Please rebuild the database, i.e., with\n"
+				   "\tmu index --rebuild\n", path);
+		return;
 	default:
 		break; /* nothing to do */
 	}

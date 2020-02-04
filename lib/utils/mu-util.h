@@ -344,7 +344,10 @@ enum _MuError {
 	MU_ERROR_XAPIAN_MODIFIED             = 23,
         /* database was modified; reload */
 	MU_ERROR_XAPIAN_NEEDS_REINDEX        = 24,
-
+        /* database schema version doesn't match */
+        MU_ERROR_XAPIAN_SCHEMA_MISMATCH      = 25,
+        /* failed to open the database */
+        MU_ERROR_XAPIAN_CANNOT_OPEN          = 26,
 
 	/* GMime related errors */
 

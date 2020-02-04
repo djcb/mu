@@ -479,22 +479,19 @@ mu_store_new_readable (const char* xpath, GError **err)
 		return reinterpret_cast<MuStore*>(new Store (xpath));
 
         } catch (const Mu::Error& me) {
-                if (me.code() == Mu::Error::Code::SchemaMismatch)
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                                     "read-only database @ %s needs (re)indexing", xpath);
-                else
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                                     "error opening database @ %s: %s", xpath, me.what());
-        // } catch (const Xapian::DatabaseNotFoundError& dbe) { // Xapian 1.4.10
-        //         g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-        //                      "database @ %s not found", xpath);
-        } catch (const Xapian::DatabaseOpeningError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "failed to open database @ %s", xpath);
-        } catch (...) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                             "error opening database @ %s", xpath);
+                if (me.code() == Mu::Error::Code::SchemaMismatch) {
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_SCHEMA_MISMATCH,
+                                     "read-only database @ %s schema version does not match",
+                                     xpath);
+                        return NULL;
+                }
+        } catch (const Xapian::Error& dbe) {
+                g_warning ("failed to open database @ %s: %s", xpath,
+                           dbe.get_error_string() ? dbe.get_error_string() : "something went wrong");
         }
+
+        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_OPEN,
+                     "failed to open database @ %s", xpath);
 
         return NULL;
 }

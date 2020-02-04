@@ -569,6 +569,33 @@ show_usage (void)
 typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
 
+static MuError
+with_readonly_store (store_func func, MuConfig *opts, GError **err)
+{
+	MuError		 merr;
+	MuStore		*store;
+	const char	*path;
+
+	if (opts->rebuild) {
+		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
+			     "cannot rebuild a read-only database");
+		return MU_G_ERROR_CODE(err);
+	}
+
+	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
+	store = mu_store_new_readable (path, err);
+
+	if (!store)
+		return MU_G_ERROR_CODE(err);
+
+	merr = func (store, opts, err);
+	mu_store_unref (store);
+
+	return merr;
+}
+
+
+
 static MuStore*
 get_store (MuConfig *opts, gboolean read_only, GError **err)
 {
@@ -672,9 +699,10 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
 
 	case MU_CONFIG_CMD_CFIND:
-		merr = with_store (mu_cmd_cfind, opts, TRUE, err); break;
+		merr = with_readonly_store (mu_cmd_cfind, opts, err); break;
 	case MU_CONFIG_CMD_FIND:
-		merr = with_store (mu_cmd_find, opts, TRUE, err);      break;
+		merr = with_readonly_store (mu_cmd_find, opts, err);  break;
+
 	case MU_CONFIG_CMD_INDEX:
 		merr = with_store (mu_cmd_index, opts, FALSE, err);    break;
 	case MU_CONFIG_CMD_ADD:
