@@ -564,6 +564,14 @@ gboolean mu_store_database_is_locked (const gchar *xpath);
 MuMsg* mu_store_get_msg (const MuStore *self, unsigned docid, GError **err)
 	G_GNUC_WARN_UNUSED_RESULT;
 
+/**
+ * Print some information about the store
+ *
+ * @param store a store
+ * @param nocolor whether to _not_ show color
+ */
+void mu_store_print_info  (const MuStore *store, gboolean nocolor);
+
 
 G_END_DECLS
 

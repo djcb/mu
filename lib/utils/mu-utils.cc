@@ -444,34 +444,6 @@ Mu::size_to_string (const std::string& val, bool is_first)
 	return str;
 }
 
-
-std::string
-Mu::quoted (const std::string& str)
-{
-        std::string res{"\""};
-        for (auto&& c : str) {
-                if (c == '\\' || c == '\"')
-                        res += '\\';
-                res += c;
-        }
-
-        return res + '"';
-}
-
-// std::string
-// Mu::quoted (const char* str)
-// {
-//         if (!str)
-//                 return str;
-
-//         char *s{g_strescape(str, NULL)};
-//         auto res = format("\"%s\"", s ? s : "");
-//         g_free(s);
-
-//         return res;
-// }
-
-
 void
 Mu::assert_equal(const std::string& s1, const std::string& s2)
 {

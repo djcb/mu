@@ -25,6 +25,7 @@
 #include <xapian.h>
 #include <unordered_map>
 #include <atomic>
+#include <iostream>
 
 #include "mu-store.hh"
 #include "utils/mu-str.h"
@@ -206,22 +207,17 @@ get_uid_term (const char* path)
 Store::Store (const std::string& path, bool readonly):
         priv_{std::make_unique<Private>(path, readonly)}
 {
-        if (ExpectedSchemaVersion == schema_version())
-                return; // All is good; nothing further to do
-
-        g_warning ("expected schema-version %s, but got %s",
-                   ExpectedSchemaVersion, schema_version().c_str());
-
-        if (readonly) // this requires user-action.
+        if (ExpectedSchemaVersion != schema_version())
                 throw Mu::Error(Error::Code::SchemaMismatch,
-                                "database needs reindexing");
+                                "expected schema-version %s, but got %s",
+                                ExpectedSchemaVersion, schema_version().c_str());
 
-        g_debug ("upgrading database");
-        const auto addresses{personal_addresses()};
-        const auto root_mdir{root_maildir()};
+        // g_debug ("upgrading database to schema-version %s", ExpectedSchemaVersion);
+        // const auto addresses{personal_addresses()};
+        // const auto root_mdir{root_maildir()};
 
-        priv_.reset();
-        priv_ = std::make_unique<Private> (path, root_mdir, addresses);
+        // priv_.reset();
+        // priv_ = std::make_unique<Private> (path, root_mdir, addresses);
 }
 
 Store::Store (const std::string& path, const std::string& maildir,
@@ -479,12 +475,7 @@ mu_store_new_readable (const char* xpath, GError **err)
 		return reinterpret_cast<MuStore*>(new Store (xpath));
 
         } catch (const Mu::Error& me) {
-                if (me.code() == Mu::Error::Code::SchemaMismatch) {
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_SCHEMA_MISMATCH,
-                                     "read-only database @ %s schema version does not match",
-                                     xpath);
-                        return NULL;
-                }
+                g_warning ("failed to open database: %s", me.what());
         } catch (const Xapian::Error& dbe) {
                 g_warning ("failed to open database @ %s: %s", xpath,
                            dbe.get_error_string() ? dbe.get_error_string() : "something went wrong");
@@ -503,28 +494,30 @@ mu_store_new_writable (const char* xpath, GError **err)
 
 	g_debug ("opening database at %s (writable)", xpath);
 
-	try {
+        try {
                 return reinterpret_cast<MuStore*>(new Store (xpath, false/*!readonly*/));
+
         } catch (const Mu::Error& me) {
-                if (me.code() == Mu::Error::Code::SchemaMismatch)
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                                     "read/write database @ %s needs (re)indexing", xpath);
-                else
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                                     "error opening database @ %s: %s", xpath, me.what());
-        } catch (const Xapian::DatabaseOpeningError& dbe) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-                             "failed to open database @ %s", xpath);
+                if (me.code() == Mu::Error::Code::SchemaMismatch) {
+                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_SCHEMA_MISMATCH,
+                                     "%s", me.what());
+                        return NULL;
+                }
         } catch (const Xapian::DatabaseLockError& dle) {
                 g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
-                             "database @ %s is write-locked already", xpath);
-        } catch (...) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                             "error opening database @ %s", xpath);
+                             "database @ %s is write-locked", xpath);
+                return NULL;
+        } catch (const Xapian::Error& dbe) {
+                g_warning ("failed to open database @ %s: %s", xpath,
+                           dbe.get_error_string() ? dbe.get_error_string() : "something went wrong");
         }
+
+        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_OPEN,
+                     "failed to open database @ %s", xpath);
 
         return NULL;
 }
+
 
 MuStore*
 mu_store_new_create (const char* xpath, const char *root_maildir,

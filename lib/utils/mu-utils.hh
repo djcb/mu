@@ -95,17 +95,6 @@ std::string format (const char *frm, va_list args) __attribute__((format(printf,
 
 
 /**
- * Quote a string -- put in "" and escape any special characters by putting '\'
- * in front of them.
- *
- * @param str
- *
- * @return
- */
-std::string quoted (const std::string& str);
-
-
-/**
  * Convert an date to the corresponding time expressed as a string with a
  * 10-digit time_t
  *
