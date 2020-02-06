@@ -1,4 +1,4 @@
-.TH MU-EASY 1 "December 2012" "User Manuals"
+.TH MU-EASY 1 "February 2020" "User Manuals"
 
 .SH NAME
 
@@ -6,25 +6,35 @@ mu easy \- a quick introduction to mu
 
 .SH DESCRIPTION
 
-\fBmu\fR is a set of tools for dealing with e-mail messages in
-Maildirs. There are many options, which are all described in the man
-pages for the various sub-commands. This man pages jumps over all of
-the details and gives examples of some common use cases. If the use
-cases described here do not precisely do what you want, please check
-the more extensive information in the man page about the sub-command
-you are using -- for example, the \fBmu-index\fR(1) or \fBmu-find\fR(1)
-man pages.
+\fBmu\fR is a set of tools for dealing with e-mail messages in Maildirs. There
+are many options, which are all described in the man pages for the various
+sub-commands. This man pages jumps over all of the details and gives examples of
+some common use cases. If the use cases described here do not precisely do what
+you want, please check the more extensive information in the man page about the
+sub-command you are using -- for example, the \fBmu-index\fR(1) or
+\fBmu-find\fR(1) man pages.
 
-\fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that
-depend on that, such as \fBfind\fR), require that you store your mail
-in the Maildir-format. If you don't do so, you can still use the other
-commands, but you won't be able to index/search your mail.
+\fBNOTE\fR: the \fBindex\fR command (and therefore, the ones that depend on
+that, such as \fBfind\fR), require that you store your mail in the
+Maildir-format. If you don't do so, you can still use the other commands, but
+you won't be able to index/search your mail.
 
-By default, \fBmu\fR uses colorized output when it thinks your
-terminal is capable of doing so. If you don't like color, you can use
-the \fB--nocolor\fR command-line option, or set either the
-\fBMU_NOCOLOR\fR or the \fBNO_COLOR\fR environment variable to
-non-empty.
+By default, \fBmu\fR uses colorized output when it thinks your terminal is
+capable of doing so. If you don't like color, you can use the \fB--nocolor\fR
+command-line option, or set either the \fBMU_NOCOLOR\fR or the \fBNO_COLOR\fR
+environment variable to non-empty.
+
+.SH SETTING THINGS UP
+
+The first time you run the mu commands, you need to initialize it. This is done
+with the \fBinit\fR command.
+
+.nf
+  \fB$ mu init\fR
+.fi
+
+This uses the defaults (see \fBmu-init(1)\fR for details on how to change that).
+
 
 .SH INDEXING YOUR E-MAIL
 
@@ -294,6 +304,7 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 .BR mu (1),
+.BR mu-init (1),
 .BR mu-index (1),
 .BR mu-find (1),
 .BR mu-mfind (1),

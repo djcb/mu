@@ -69,6 +69,8 @@ typedef enum {
 	MU_CONFIG_CMD_FIND,
 	MU_CONFIG_CMD_HELP,
 	MU_CONFIG_CMD_INDEX,
+        MU_CONFIG_CMD_INFO,
+        MU_CONFIG_CMD_INIT,
 	MU_CONFIG_CMD_MFIND,
 	MU_CONFIG_CMD_MKDIR,
 	MU_CONFIG_CMD_REMOVE,
@@ -106,16 +108,18 @@ struct _MuConfig {
 					 * in some output */
 	gboolean	 verbose;	/* verbose output */
 
+        /* options for init */
+        gchar	        *maildir;	/* where the mails are */
+        char**          my_addresses;   /* 'my e-mail address', for mu
+                                         * cfind; can be use multiple
+                                         * times */
 	/* options for indexing */
-	gchar	        *maildir;	/* where the mails are */
+
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
 	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        lazycheck;      /* don't check dirs with up-to-date
 					 * timestamps */
 	int		max_msg_size;   /* maximum size for message files */
-	char**          my_addresses;   /* 'my e-mail address', for mu
-					 * cfind; can be use multiple
-					 * times */
 
 	/* options for querying 'find' (and view-> 'summary') */
 	gchar		*fields;	/* fields to show in output */

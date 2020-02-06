@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "July 2016" "User Manuals"
+.TH MU-INDEX 1 "February 2020" "User Manuals"
 
 .SH NAME
 
@@ -14,6 +14,9 @@ mu index \- index e-mail messages stored in Maildirs
 directories and storing the results in a Xapian database. The data can then be
 queried using
 .BR mu-find (1)\.
+
+Note that before the first time you run \fBmu index\fR, you must run \fBmu
+init\fR to initialize the database.
 
 \fBindex\fR understands Maildirs as defined by Daniel Bernstein for
 \fBqmail\fR(7). In addition, it understands recursive Maildirs (Maildirs
@@ -60,22 +63,6 @@ more), \fBmu index\fR will terminate immediately.
 
 Note, some of the general options are described in the \fBmu(1)\fR man-page
 and not here, as they apply to multiple mu commands.
-
-.TP
-\fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
-starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
-\fBMAILDIR\fR environment variable is set to; if it is not set, it tries
-\fI~/Maildir\fR. See the note on mixing sub-maildirs below.
-
-.TP
-\fB\-\-my-address\fR=\fI<my-email-address>\fR
-specifies that some e-mail address is 'my-address' (\fB\-\-my-address\fR can
-be used multiple times). This is used by \fBmu cfind\fR -- any e-mail address
-found in the address fields of a message which also has
-\fI<my-email-address>\fR in one of its address fields is considered a
-\fIpersonal\fR e-mail address. This allows you, for example, to filter out
-(\fBmu cfind --personal\fR) addresses which were merely seen in mailing list
-messages.
 
 .TP
 \fB\-\-lazy-check\fR
@@ -190,17 +177,6 @@ case-insensitve/accent-insensitive matching). The profiles are
 dominated by operations in the Xapian database now.
 
 .SH FILES
-By default, \fBmu index\fR stores its message database in \fI~/.mu/xapian\fR;
-the database has an embedded version number, and \fBmu\fR will automatically
-update it when it notices a different version. This allows for automatic
-updating of \fBmu\fR-versions, without the need to clear out any old
-databases.
-
-However, note that versions of \fBmu\fR before 0.7 used a different scheme,
-which puts the database in \fI~/.mu/xapian\-<version>\fR. These older
-databases can safely be deleted. Starting from version 0.7, this manual
-cleanup should no longer be needed.
-
 \fBmu\fR stores logs of its operations and queries in \fI<muhome>/mu.log\fR
 (by default, this is \fI~/.mu/mu.log\fR). Upon startup, \fBmu\fR checks the
 size of this log file. If it exceeds 1 MB, it will be moved to
@@ -232,5 +208,6 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .BR maildir (5),
 .BR mu (1),
+.BR mu-init (1),
 .BR mu-find (1),
 .BR mu-cfind (1)

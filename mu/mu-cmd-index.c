@@ -251,51 +251,6 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_G_ERROR_CODE(err);
 }
 
-
-static void
-index_title (MuStore *store, MuConfig *opts)
-{
-	const char	 *green, *def;
-	char		**addrs;
-	int		  i;
-	time_t            created;
-	struct tm	 *tstamp;
-	char		  tbuf[40];
-
-	green = opts->nocolor ? "" : MU_COLOR_GREEN;
-	def   = opts->nocolor ? "" : MU_COLOR_DEFAULT;
-
-	g_print ("database           : %s%s%s\n",
-		 green, mu_store_database_path (store), def);
-	g_print ("schema-version     : %s%s%s\n",
-		 green, mu_store_schema_version(store), def);
-
-	created = mu_store_created (store);
-	tstamp = localtime (&created);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-y2k"
-	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
-#pragma GCC diagnostic pop
-	g_print ("created            : %s%s%s\n", green, tbuf, def);
-	g_print ("maildir            : %s%s%s\n",
-		 green, mu_store_root_maildir (store), def);
-
-	g_print ("personal-addresses : ");
-
-	addrs = mu_store_personal_addresses (store);
-	for (i = 0; addrs[i]; ++i) {
-		if (i != 0)
-			g_print ("                     ");
-		g_print ("%s%s%s\n", green, addrs[i], def);
-	}
-
-	g_strfreev(addrs);
-
-	g_print ("\n");
-}
-
-
 static MuError
 cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 {
@@ -347,7 +302,6 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 	return midx;
 }
 
-
 MuError
 mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 {
@@ -369,7 +323,7 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 	install_sig_handler ();
 
 	if (!opts->quiet)
-		index_title (store, opts);
+		mu_store_print_info (store, opts->nocolor);
 
 	t = time (NULL);
 	rv = cmd_index (midx, opts, &stats, err);

@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,9 +17,7 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -243,8 +240,8 @@ view_params_valid (MuConfig *opts, GError **err)
 }
 
 
-MuError
-mu_cmd_view (MuConfig *opts, GError **err)
+static MuError
+cmd_view (MuConfig *opts, GError **err)
 {
 	int i;
 	gboolean rv;
@@ -275,9 +272,8 @@ leave:
 	return MU_OK;
 }
 
-
-MuError
-mu_cmd_mkdir (MuConfig *opts, GError **err)
+static MuError
+cmd_mkdir (MuConfig *opts, GError **err)
 {
 	int i;
 
@@ -378,8 +374,8 @@ add_path_func (MuStore *store, const char *path, GError **err)
 }
 
 
-MuError
-mu_cmd_add (MuStore *store, MuConfig *opts, GError **err)
+static MuError
+cmd_add (MuStore *store, MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
@@ -401,8 +397,8 @@ remove_path_func (MuStore *store, const char *path, GError **err)
 	return TRUE;
 }
 
-MuError
-mu_cmd_remove (MuStore *store, MuConfig *opts, GError **err)
+static MuError
+cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
@@ -428,8 +424,8 @@ tickle_func (MuStore *store, const char *path, GError **err)
 }
 
 
-MuError
-mu_cmd_tickle (MuStore *store, MuConfig *opts, GError **err)
+static MuError
+cmd_tickle (MuStore *store, MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_TICKLE,
@@ -513,8 +509,8 @@ print_verdict (VData *vdata, gboolean color, gboolean verbose)
 }
 
 
-MuError
-mu_cmd_verify (MuConfig *opts, GError **err)
+static MuError
+cmd_verify (MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	MuMsgOptions msgopts;
@@ -555,6 +551,40 @@ mu_cmd_verify (MuConfig *opts, GError **err)
 		MU_OK : MU_ERROR;
 }
 
+static MuError
+cmd_info (MuStore *store, MuConfig *opts, GError **err)
+{
+	mu_store_print_info (store, opts->nocolor);
+
+	return MU_OK;
+}
+
+
+static MuError
+cmd_init (MuConfig *opts, GError **err)
+{
+	MuStore		*store;
+	const char	*path;
+
+	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
+	store = mu_store_new_create (path,
+				     opts->maildir,
+				     (const char**)opts->my_addresses,
+				     err);
+	if (!store)
+		return MU_G_ERROR_CODE(err);
+
+	if (!opts->quiet) {
+		mu_store_print_info (store, opts->nocolor);
+		g_print ("\nstore created.\n"
+			 "now you can use the index command to index some messages.\n"
+			 "see mu-index(1) for details\n");
+	}
+
+	mu_store_unref (store);
+	return MU_OK;
+}
+
 
 static void
 show_usage (void)
@@ -570,79 +600,38 @@ typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
 
 
 static MuError
-with_readonly_store (store_func func, MuConfig *opts, GError **err)
+with_store (store_func func, MuConfig *opts, gboolean read_only, GError **err)
 {
 	MuError		 merr;
 	MuStore		*store;
 	const char	*path;
 
-	if (opts->rebuild) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
-			     "cannot rebuild a read-only database");
-		return MU_G_ERROR_CODE(err);
-	}
-
 	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
-	store = mu_store_new_readable (path, err);
-
-	if (!store)
-		return MU_G_ERROR_CODE(err);
-
-	merr = func (store, opts, err);
-	mu_store_unref (store);
-
-	return merr;
-}
-
-
-
-static MuStore*
-get_store (MuConfig *opts, gboolean read_only, GError **err)
-{
-	if (opts->rebuild && read_only) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR,
-			     "cannot rebuild a read-only database");
-		return NULL;
-	}
 
 	if (read_only)
-		return mu_store_new_readable (
-			mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
+		store = mu_store_new_readable (path, err);
+	else
+		store = mu_store_new_writable (path, err);
 
-	if (!opts->rebuild)
-		return mu_store_new_writable
-			(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), err);
-
-	if (!opts->maildir) {
-		g_set_error (err, MU_ERROR_DOMAIN,
-			     MU_ERROR_IN_PARAMETERS,
-			     "missing --maildir parameter");
-		return NULL;
-	}
-
-	return mu_store_new_create (mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-				    opts->maildir,
-				    (const char**)opts->my_addresses,
-				    err);
-}
-
-
-static MuError
-with_store (store_func func, MuConfig *opts, gboolean read_only,
-	    GError **err)
-{
-	MuStore *store;
-	MuError	 merr;
-
-	store = get_store (opts, read_only, err);
 	if (!store)
 		return MU_G_ERROR_CODE(err);
-
 
 	merr = func (store, opts, err);
 	mu_store_unref (store);
 
 	return merr;
+}
+
+static MuError
+with_readonly_store (store_func func, MuConfig *opts, GError **err)
+{
+	return with_store (func, opts, TRUE, err);
+}
+
+static MuError
+with_writable_store (store_func func, MuConfig *opts, GError **err)
+{
+	return with_store (func, opts, FALSE, err);
 }
 
 static gboolean
@@ -675,7 +664,6 @@ set_log_options (MuConfig *opts)
 		logopts |= MU_LOG_OPTIONS_DEBUG;
 }
 
-
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
@@ -689,34 +677,44 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	set_log_options (opts);
 
 	switch (opts->cmd) {
+
 		/* already handled in mu-config.c */
 	case MU_CONFIG_CMD_HELP: return MU_OK;
 
-	case MU_CONFIG_CMD_MKDIR:   merr = mu_cmd_mkdir   (opts, err); break;
+        /* no store needed */
+
+	case MU_CONFIG_CMD_MKDIR:   merr = cmd_mkdir   (opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT:  merr = mu_cmd_script  (opts, err); break;
-	case MU_CONFIG_CMD_VIEW:    merr = mu_cmd_view    (opts, err); break;
-	case MU_CONFIG_CMD_VERIFY:  merr = mu_cmd_verify  (opts, err); break;
+	case MU_CONFIG_CMD_VIEW:    merr = cmd_view    (opts, err); break;
+	case MU_CONFIG_CMD_VERIFY:  merr = cmd_verify  (opts, err); break;
 	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
+
+	/* read-only store */
 
 	case MU_CONFIG_CMD_CFIND:
 		merr = with_readonly_store (mu_cmd_cfind, opts, err); break;
 	case MU_CONFIG_CMD_FIND:
 		merr = with_readonly_store (mu_cmd_find, opts, err);  break;
+	case MU_CONFIG_CMD_INFO:
+		merr = with_readonly_store (cmd_info, opts, err);  break;
 
-	case MU_CONFIG_CMD_INDEX:
-		merr = with_store (mu_cmd_index, opts, FALSE, err);    break;
+	/* writable store */
+
 	case MU_CONFIG_CMD_ADD:
-		merr = with_store (mu_cmd_add, opts, FALSE, err);      break;
+		merr = with_writable_store (cmd_add, opts, err);      break;
 	case MU_CONFIG_CMD_REMOVE:
-		merr = with_store (mu_cmd_remove, opts, FALSE, err);   break;
+		merr = with_writable_store (cmd_remove, opts, err);   break;
 	case MU_CONFIG_CMD_TICKLE:
-		merr = with_store (mu_cmd_tickle, opts, FALSE, err);   break;
+		merr = with_writable_store (cmd_tickle, opts, err);   break;
+	case MU_CONFIG_CMD_INDEX:
+		merr = with_writable_store (mu_cmd_index, opts, err);   break;
+
+	/* commands instantiate store themselves */
+	case MU_CONFIG_CMD_INIT:
+		merr = cmd_init (opts,err); break;
 	case MU_CONFIG_CMD_SERVER:
-		if (opts->commands)
-			merr = mu_cmd_server (NULL, opts, err);
-		else
-			merr = with_store (mu_cmd_server, opts, FALSE, err);
-		break;
+		merr = mu_cmd_server (opts, err); break;
+
 	default:
 		merr = MU_ERROR_IN_PARAMETERS; break;
 	}

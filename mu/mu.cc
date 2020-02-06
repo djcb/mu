@@ -1,7 +1,5 @@
-/* -*-mode: c++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8-*- */
-
 /*
-** Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -37,7 +35,7 @@ show_version (void)
 {
 	const char* blurb =
 		"mu (mail indexer/searcher) version " VERSION "\n"
-		"Copyright (C) 2008-2019 Dirk-Jan C. Binnema\n"
+		"Copyright (C) 2008-2020 Dirk-Jan C. Binnema\n"
 		"License GPLv3+: GNU GPL version 3 or later "
 		"<http://gnu.org/licenses/gpl.html>.\n"
 		"This is free software: you are free to change "
@@ -51,12 +49,8 @@ show_version (void)
 static void
 handle_error (MuConfig *conf, MuError merr, GError **err)
 {
-	const char *path;
-
 	if (!(err && *err))
 		return;
-
-	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
 
 	switch ((*err)->code) {
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
@@ -76,15 +70,12 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 			    "'mu script' for the scripts\n");
 		break;
 	case MU_ERROR_XAPIAN_CANNOT_OPEN:
-		g_printerr("Failed to open database @ %s, \n"
-			   "Please (re)build the database, i.e., with\n"
-				   "\tmu index --rebuild\n", path);
+		g_printerr("Please (re)init mu with 'mu init' "
+			   "see mu-init(1) for details");
 		return;
 	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
-		g_printerr("Failed to open database @ %s, \n"
-			   "because the schema version does not match mu's.\n\n"
-			   "Please rebuild the database, i.e., with\n"
-				   "\tmu index --rebuild\n", path);
+		g_printerr("Please (re)init mu with 'mu init' "
+			   "see mu-init(1) for details");
 		return;
 	default:
 		break; /* nothing to do */
