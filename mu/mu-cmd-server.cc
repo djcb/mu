@@ -91,35 +91,6 @@ install_sig_handler (void)
 }
 
 
-struct Context {
-        Context() {}
-        Context (MuStore *storearg): store{storearg} {
-                if (!store)
-                        return;
-
-                GError *gerr{};
-                query = mu_query_new (store, &gerr);
-                if (!query)
-                        throw Error(Error::Code::Store, &gerr, "failed to create query");
-        }
-
-        ~Context() {
-                if (query)
-                        mu_query_destroy(query);
-                if (store)
-                        mu_store_flush(store);
-        }
-
-        Context(const Context&) = delete;
-
-        MuStore *store{};
-        MuQuery *query{};
-        bool do_quit{};
-
-        CommandMap command_map;
-};
-
-
 /*
  * Markers for/after the length cookie that precedes the expression we write to
  * output. We use octal 376, 377 (ie, 0xfe, 0xff) as they will never occur in
@@ -201,7 +172,7 @@ print_error (MuError errcode, const char* frm, ...)
         g_vasprintf (&msg, frm, ap);
         va_end (ap);
 
-        print_expr ("(:error %u :message %s)", errcode, quoted(msg).c_str());
+        print_expr ("(:error %u :message %s)", errcode, quote(msg).c_str());
         g_free (msg);
 
         return errcode;
@@ -235,6 +206,55 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 }
 
 
+struct Context {
+        Context(){}
+        Context (MuConfig *opts) {
+                const auto dbpath{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
+                GError *gerr{};
+                store = mu_store_new_writable (dbpath, NULL);
+                if (!store) {
+                        if (gerr) {
+                                if ((MuError)gerr->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK)
+                                        print_error(MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
+                                                    "mu database already locked; "
+                                                    "some other mu running?");
+                                else
+                                        print_error((MuError)gerr->code,
+                                                    "cannot open database @ %s:%s; "
+                                                    "pleasy try 'mu init", dbpath,
+                                                    gerr->message ? gerr->message : "something went wrong");
+                        } else
+                                print_error(MU_ERROR,
+                                            "cannot open database @ %s; pleasy try 'mu init'", dbpath);
+
+                        throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
+                                         "failed to open database @ %s; please try 'mu init'", dbpath);
+                }
+
+                query = mu_query_new (store, &gerr);
+                if (!query)
+                        throw Error(Error::Code::Store, &gerr, "failed to create query");
+        }
+
+        ~Context() {
+                if (query)
+                        mu_query_destroy(query);
+                if (store) {
+                        mu_store_flush(store);
+                        mu_store_unref(store);
+                }
+        }
+
+        Context(const Context&) = delete;
+
+        MuStore *store{};
+        MuQuery *query{};
+        bool do_quit{};
+
+        CommandMap command_map;
+};
+
+
 static MuMsgOptions
 message_options (const Parameters& params)
 {
@@ -266,7 +286,7 @@ add_handler (Context& context, const Parameters& params)
                 throw Error(Error::Code::Store, &gerr, "failed to add message at %s",
                             path.c_str());
 
-        print_expr ("(:info add :path %s :docid %u)", quoted(path).c_str(), docid);
+        print_expr ("(:info add :path %s :docid %u)", quote(path).c_str(), docid);
 
         auto msg{mu_store_get_msg(context.store, docid, &gerr)};
         if (!msg)
@@ -304,7 +324,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
                 throw Error (Error::Code::File, &gerr, "failed to save part");
 
         att = g_strdup_printf ("(:file-name %s :mime-type \"%s/%s\")",
-                               quoted(cachefile).c_str(), part->type, part->subtype);
+                               quote(cachefile).c_str(), part->type, part->subtype);
         pinfo->attlist = g_slist_append (pinfo->attlist, att);
 
         g_free (cachefile);
@@ -439,7 +459,7 @@ each_contact_sexp (const char* full_address,
                 return;
 
         g_string_append_printf (sdata->gstr, "(%s . %zu)\n",
-                                quoted(full_address).c_str(), sdata->rank);
+                                quote(full_address).c_str(), sdata->rank);
 }
 
 /**
@@ -512,7 +532,7 @@ save_part (MuMsg *msg, unsigned docid, unsigned index,
                                path.c_str(), index, &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to save part"};
 
-        print_expr ("(:info save :message %s)", quoted(path + " has been saved").c_str());
+        print_expr ("(:info save :message %s)", quote(path + " has been saved").c_str());
 }
 
 
@@ -537,7 +557,7 @@ open_part (MuMsg *msg, unsigned docid, unsigned index, MuMsgOptions opts)
         }
 
         print_expr ("(:info open :message %s)",
-                    quoted(std::string{targetpath} + " has been opened").c_str());
+                    quote(std::string{targetpath} + " has been opened").c_str());
         g_free (targetpath);
 }
 
@@ -562,7 +582,7 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
                 throw Error{Error::Code::File, &gerr, "saving failed"};
         }
 
-        const auto qpath{quoted(path)};
+        const auto qpath{quote(path)};
         g_free(path);
 
         if (!param.empty())
@@ -571,7 +591,7 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
                             " :docid %u"
                             " :param %s"
                             ")",
-                            qpath.c_str(), what.c_str(), docid, quoted(param).c_str());
+                            qpath.c_str(), what.c_str(), docid, quote(param).c_str());
         else
                 print_expr ("(:temp %s :what \"%s\" :docid %u)",
                             qpath.c_str(), what.c_str(), docid);
@@ -992,8 +1012,6 @@ move_handler (Context& context, const Parameters& params)
         mu_msg_unref(msg);
 }
 
-
-
 static void
 ping_handler (Context& context, const Parameters& params)
 {
@@ -1003,7 +1021,6 @@ ping_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Store, &gerr, "failed to read store"};
 
         const auto queries  = get_string_vec (params, "queries");
-
         const auto qresults= [&]() -> std::string {
                 if (queries.empty())
                         return {};
@@ -1013,18 +1030,36 @@ ping_handler (Context& context, const Parameters& params)
                         const auto count{mu_query_count_run (context.query, q.c_str())};
                         const auto unreadq{format("(%s) AND flag:unread", q.c_str())};
                         const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
-                        res += format("(:query %s :count %zu :unread %zu)", quoted(q).c_str(), count, unread);
+                        res += format("(:query %s :count %zu :unread %zu)", quote(q).c_str(), count, unread);
                 }
                 return res + ")";
         }();
 
-        print_expr ("(:pong \"" PACKAGE_NAME "\" "
-                    ":props ("
+        const auto personal = [&]() ->std::string {
+                auto addrs{mu_store_personal_addresses (context.store)};
+                std::string res;
+                if (addrs && g_strv_length(addrs) != 0) {
+                        res = ":personal-addresses (";
+                        for (int i = 0; addrs[i]; ++i)
+                                res += quote(addrs[i]) + ' ';
+                        res += ")";
+                }
+                g_strfreev(addrs);
+                return res;
+        }();
+
+        print_expr ("(:pong \"mu\" :props ("
                     ":version \"" VERSION "\" "
                     "%s "
-                    ":doccount %u))",
-                    qresults.c_str(),
-                    storecount);
+                    ":database-path %s "
+                    ":root-maildir %s "
+                    ":doccount %u "
+                    "%s))",
+                    personal.c_str(),
+                    quote(mu_store_database_path(context.store)).c_str(),
+                    quote(mu_store_root_maildir(context.store)).c_str(),
+                    storecount,
+                    qresults.c_str());
 }
 
 static void
@@ -1062,7 +1097,7 @@ sent_handler (Context& context, const Parameters& params)
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::Store, &gerr, "failed to add path"};
 
-        print_expr ("(:sent t :path %s :docid %u)", quoted(path).c_str(), docid);
+        print_expr ("(:sent t :path %s :docid %u)", quote(path).c_str(), docid);
 }
 
 
@@ -1273,18 +1308,17 @@ read_line (Context& context)
 
 
 MuError
-mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err) try
+mu_cmd_server (MuConfig *opts, GError **err) try
 {
-        if (!store && !opts->commands)
-                throw Error{Error::Code::Internal, "missing store"};
-
-        Context context{store};
-        context.command_map = make_command_map (context);
-
         if (opts->commands) {
-                invoke(context.command_map, Sexp::parse("(help :full t)"));
+                Context ctx{};
+                auto cmap = make_command_map(ctx);
+                invoke(cmap, Sexp::parse("(help :full t)"));
                 return MU_OK;
         }
+
+        Context context{opts};
+        context.command_map = make_command_map (context);
 
         install_sig_handler();
         std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
@@ -1292,8 +1326,9 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err) try
 
         while (!MuTerminate && !context.do_quit) {
 
+                std::string line;
                 try {
-                        const auto line{read_line(context)};
+                        line = read_line(context);
                         if (line.find_first_not_of(" \t") == std::string::npos)
                                 continue; // skip whitespace-only lines
 
@@ -1301,7 +1336,8 @@ mu_cmd_server (MuStore *store, MuConfig *opts/*unused*/, GError **err) try
 
                 } catch (const Error& er) {
                         std::cerr << ";; error: " << er.what() << "\n";
-                        print_error ((MuError)er.code(), "%s", er.what());
+                        print_error ((MuError)er.code(), "%s (line was:'%s')",
+                                     er.what(), line.c_str());
                 }
         }
 
