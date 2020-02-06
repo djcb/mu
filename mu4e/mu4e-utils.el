@@ -83,10 +83,10 @@ NODEFAULT, hour and minute fields will be nil if not given."
 
 (defun mu4e-user-mail-address-p (addr)
   "If ADDR is one of user's e-mail addresses return t, nil otherwise.
-User's addresses are set in `mu4e-user-mail-address-list'.  Case
+User's addresses are set in `(mu4e-personal-addresses)'.  Case
 insensitive comparison is used."
-  (when (and addr mu4e-user-mail-address-list
-	        (cl-find addr mu4e-user-mail-address-list
+  (when (and addr (mu4e-personal-addresses)
+	        (cl-find addr (mu4e-personal-addresses)
 		        :test (lambda (s1 s2)
 			              (eq t (compare-strings s1 nil nil s2 nil nil t)))))
     t))
@@ -182,10 +182,10 @@ see its docstring)."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
-  (let ((idx (string-match mu4e-maildir path)))
+  (let ((idx (string-match (mu4e-root-maildir) path)))
     (when (and idx (zerop idx))
       (replace-regexp-in-string
-	      mu4e-maildir
+	      (mu4e-root-maildir)
 	      ""
 	      (expand-file-name
 	        (concat path "/../.."))))))
@@ -322,7 +322,7 @@ Function will return the cdr of the list element."
     (dolist (dentry dentries)
       (when (and (booleanp (cadr dentry)) (cadr dentry))
 	      (if (file-accessible-directory-p
-	            (concat mu4e-maildir "/" mdir "/" (car dentry) "/cur"))
+	            (concat (mu4e-root-maildir) "/" mdir "/" (car dentry) "/cur"))
 	        (setq dirs (cons (concat mdir (car dentry)) dirs)))
 	      (unless (member (car dentry) '("cur" "new" "tmp"))
 	        (setq dirs (append dirs (mu4e~get-maildirs-1 path
@@ -332,7 +332,7 @@ Function will return the cdr of the list element."
 (defvar mu4e-cache-maildir-list nil
   "Whether to cache the list of maildirs; set it to t if you find
 that generating the list on the fly is too slow. If you do, you
-can set `mu4e-maildir-list' to nil to force regenerating the
+can set `(mu4e-root-maildir)-list' to nil to force regenerating the
 cache the next time `mu4e-get-maildirs' gets called.")
 
 (defvar mu4e-maildir-list nil
@@ -344,14 +344,13 @@ relative paths (ie., /archive, /sent etc.). Most of the work is
 done in `mu4e~get-maildirs-1'. Note, these results are /cached/
 if `mu4e-cache-maildir-list' is customized to non-nil. In that case,
 the list of maildirs will not change until you restart mu4e."
-  (unless mu4e-maildir (mu4e-error "`mu4e-maildir' is not defined"))
   (unless (and mu4e-maildir-list mu4e-cache-maildir-list)
     (setq mu4e-maildir-list
       (sort
 	      (append
 	        (when (file-accessible-directory-p
-		              (concat mu4e-maildir "/cur")) '("/"))
-	        (mu4e~get-maildirs-1 mu4e-maildir "/"))
+		              (concat (mu4e-root-maildir) "/cur")) '("/"))
+	        (mu4e~get-maildirs-1 (mu4e-root-maildir) "/"))
 	      (lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
   mu4e-maildir-list)
 
@@ -389,7 +388,7 @@ maildirs under `mu4e-maildir'."
   "Like `mu4e-ask-maildir', but check for existence of the maildir,
 and offer to create it if it does not exist yet."
   (let* ((mdir (mu4e-ask-maildir prompt))
-	        (fullpath (concat mu4e-maildir mdir)))
+	        (fullpath (concat (mu4e-root-maildir) mdir)))
     (unless (file-directory-p fullpath)
       (and (yes-or-no-p
 	           (mu4e-format "%s does not exist. Create now?" fullpath))
@@ -724,36 +723,26 @@ completion; for testing/debugging."
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
-  (unless (>= emacs-major-version 23)
-    (mu4e-error "Emacs >= 23.x is required for mu4e"))
+  (unless (>= emacs-major-version 25)
+    (mu4e-error "Emacs >= 25.x is required for mu4e"))
   (when mu4e~server-props
-    (let ((version (plist-get mu4e~server-props :version))
-	         (mux (plist-get mu4e~server-props :mux)))
-      (unless (or (string= version mu4e-mu-version) mux)
-	      (mu4e-error "mu server has version %s, but we need %s"
-	        version mu4e-mu-version))))
+    (unless (string= (mu4e-server-version) mu4e-mu-version)
+	    (mu4e-error "mu server has version %s, but we need %s"
+	      (mu4e-server-version) mu4e-mu-version)))
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary."))
-  (unless mu4e-maildir
-    (mu4e-error "Please set `mu4e-maildir' to the full path to your
-    Maildir directory."))
-  ;; expand mu4e-maildir, mu4e-attachment-dir
-  (setq mu4e-maildir (expand-file-name mu4e-maildir))
-  (unless (mu4e-create-maildir-maybe mu4e-maildir)
-    (mu4e-error "%s is not a valid maildir directory" mu4e-maildir))
   (dolist (var '(mu4e-sent-folder mu4e-drafts-folder
 		              mu4e-trash-folder))
     (unless (and (boundp var) (symbol-value var))
       (mu4e-error "Please set %S" var))
     (unless (functionp (symbol-value var)) ;; functions are okay, too
       (let* ((dir (symbol-value var))
-	            (path (concat mu4e-maildir dir)))
+	            (path (concat (mu4e-root-maildir) dir)))
 	      (unless (string= (substring dir 0 1) "/")
 	        (mu4e-error "%S must start with a '/'" dir))
 	      (unless (mu4e-create-maildir-maybe path)
 	        (mu4e-error "%s (%S) does not exist" path var))))))
-
 
 (defun mu4e-running-p ()
   "Whether mu4e is running.
@@ -787,14 +776,15 @@ nothing."
       mu4e-compose-complete-only-after
 	    mu4e~contacts-tstamp)))
 
-(defun mu4e~pong-handler (props func)
+(defun mu4e~pong-handler (data func)
   "Handle 'pong' responses from the mu server."
-	(setq mu4e~server-props props) ;; save props from the server
-	(let ((doccount (plist-get props :doccount)))
+	(setq mu4e~server-props (plist-get data :props)) ;; save info from the server
+	(let ((doccount (plist-get mu4e~server-props :doccount)))
 	  (mu4e~check-requirements)
+    (mu4e~context-autoswitch nil mu4e-context-policy)
 	  (when func (funcall func))
     (when (zerop doccount)
-      (mu4e-message "Store is empty; (re)indexing. This can take a while.") ;
+      (mu4e-message "Store is empty; (re)indexing. This may take a while.") ;
       (mu4e-update-index))
 	  (when (and mu4e-update-interval (null mu4e~update-timer))
 		  (setq mu4e~update-timer
@@ -811,11 +801,6 @@ non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   ;; if we're already running, simply go to the main view
   (unless (mu4e-running-p) ;; already running?
-    ;; no! try to set a context, do some checks, set up pong handler and ping
-    ;; the server maybe switch the context
-    (mu4e~context-autoswitch nil mu4e-context-policy)
-    (mu4e~check-requirements)
-
     ;; when it's visible, re-draw the main view when there are changes.
     (add-hook 'mu4e-index-updated-hook
       (lambda()
@@ -823,7 +808,7 @@ When successful, call FUNC (if non-nil) afterwards."
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
             (mu4e~start 'mu4e~main-view))))))
 
-  (setq mu4e-pong-func (lambda (props) (mu4e~pong-handler props func)))
+  (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
     (mapcar ;; send it a list of queries we'd like to see read/unread info
       ;; for.
@@ -906,12 +891,7 @@ Also scrolls to the final line, and update the progress throbber."
 (defun mu4e-update-index ()
   "Update the mu4e index."
   (interactive)
-  (unless mu4e-maildir
-    (mu4e-error "`mu4e-maildir' is not defined"))
-  (mu4e~proc-index mu4e-maildir
-    mu4e-user-mail-address-list
-    mu4e-index-cleanup
-    mu4e-index-lazy-check))
+  (mu4e~proc-index  mu4e-index-cleanup mu4e-index-lazy-check))
 
 (defvar mu4e~update-buffer nil
   "Internal, store the buffer of the update process when

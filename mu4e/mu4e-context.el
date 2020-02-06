@@ -1,6 +1,6 @@
 ; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2015-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2015-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -31,14 +31,11 @@
 (defvar smtpmail-smtp-user)
 (defvar mu4e-view-date-format)
 
-(defcustom mu4e-contexts nil "The list of `mu4e-context' objects
-describing mu4e's contexts."
-  :group 'mu4e)
+(defvar mu4e-contexts nil "The list of `mu4e-context' objects
+describing mu4e's contexts.")
 
-(defcustom mu4e-context-changed-hook nil
-  "Hook run just *after* the context changed."
-  :type 'hook
-  :group 'mu4e-headers)
+(defvar mu4e-context-changed-hook nil
+  "Hook run just *after* the context changed.")
 
 (defvar mu4e~context-current nil
   "The current context; for internal use. Use
@@ -238,8 +235,7 @@ non-nil."
 		  (set (car cell) (cdr cell)))
 	  (mu4e-context-vars context)))
       (setq mu4e~context-current context)
-      (unless (eq mu4e-split-view 'single-window)
-        (mu4e~main-view-real nil nil))
+
       (run-hooks 'mu4e-context-changed-hook)
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
@@ -248,7 +244,7 @@ non-nil."
   "When contexts are defined but there is no context yet, switch
 to the first whose :match-func return non-nil. If none of them
 match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
-  (when mu4e-contexts
+  (when (and mu4e-contexts (not mu4e~context-current))
     (let ((context (mu4e-context-determine msg policy)))
       (when context (mu4e-context-switch
 		      nil (mu4e-context-name context))))))

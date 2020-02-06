@@ -27,6 +27,7 @@
 (require 'smtpmail)      ;; the queueing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
+(require 'mu4e-vars)  ;; the context
 (require 'cl-lib)
 
 (defconst mu4e~main-buffer-name " *mu4e-main*"
@@ -140,22 +141,31 @@ clicked."
                    "\n")))
 
 
+(defun mu4e~key-val (key val &optional unit)
+  "Return a key / value pair."
+  (concat
+    "        * "
+    (propertize (format "%-20s" key) 'face 'mu4e-header-title-face)
+    ": "
+    (propertize val 'face 'mu4e-header-key-face)
+    (if unit
+      (propertize (concat " " unit) 'face 'mu4e-header-title-face)
+      "")
+    "\n"))
+
 ;; NEW
 ;; This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
-(defun mu4e~main-view-real (ignore-auto noconfirm)
+(defun mu4e~main-view-real (_ignore-auto _noconfirm)
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
 	       (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
       (insert
         "* "
-	      (propertize "mu4e - mu for emacs version " 'face 'mu4e-title-face)
+        (propertize "mu4e" 'face 'mu4e-header-key-face)
+	      (propertize " - mu for emacs version " 'face 'mu4e-title-face)
 	      (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-        (propertize "; (in store: " 'face 'mu4e-title-face)
-        (propertize (format "%s" (plist-get mu4e~server-props :doccount)) 'face 'mu4e-header-key-face)
-        (propertize " messages)" 'face 'mu4e-title-face)
-
         "\n\n"
         (propertize "  Basics\n\n" 'face 'mu4e-title-face)
 	      (mu4e~main-action-str
@@ -183,9 +193,15 @@ clicked."
 	      (mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
 	      (mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
 	      (mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
-	      (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit))
-      (mu4e-main-mode)
-      )))
+	      (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit)
+
+        "\n"
+        (propertize "  Info\n\n" 'face 'mu4e-title-face)
+        (mu4e~key-val "database-path" (mu4e-database-path))
+        (mu4e~key-val "maildir" (mu4e-root-maildir))
+        (mu4e~key-val "in store"
+          (format "%d" (plist-get mu4e~server-props :doccount)) "messages"))
+      (mu4e-main-mode))))
 
 (defun mu4e~main-view-queue ()
   "Display queue-related actions in the main view."

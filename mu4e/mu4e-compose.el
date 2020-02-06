@@ -1,6 +1,6 @@
 ;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -260,8 +260,8 @@ If needed, set the Fcc header, and register the handler function."
       `mu4e-sent-messages-behavior'"
       mu4e-sent-messages-behavior))))
     (fccfile (and mdir
-         (concat mu4e-maildir mdir "/cur/"
-           (mu4e~draft-message-filename-construct "S")))))
+               (concat (mu4e-root-maildir) mdir "/cur/"
+                 (mu4e~draft-message-filename-construct "S")))))
     ;; if there's an fcc header, add it to the file
     (when fccfile
       (message-add-header (concat "Fcc: " fccfile "\n"))
@@ -273,7 +273,7 @@ If needed, set the Fcc header, and register the handler function."
         (old-handler message-fcc-handler-function))
     (lambda (file)
       (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
-      (let ((mdir-path (concat mu4e-maildir maildir)))
+      (let ((mdir-path (concat (mu4e-root-maildir) maildir)))
         ;; Create the full maildir structure for the sent folder if it doesn't exist.
         ;; `mu4e~proc-mkdir` runs asynchronously but no matter whether it runs before or after
         ;; `write-file`, the sent maildir ends up in the correct state.
@@ -817,8 +817,8 @@ draft message."
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
 ;;;###autoload
-(defun mu4e~compose-mail (&optional to subject other-headers continue
-         switch-function yank-action send-actions return-action)
+(defun mu4e~compose-mail (&optional to subject other-headers _continue
+         _switch-function yank-action _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 Start composing a mail message to send.

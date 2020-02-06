@@ -180,8 +180,7 @@ The server output is as follows:
 
     ;; received a pong message
     ((plist-get sexp :pong)
-      (funcall mu4e-pong-func
-        (plist-get sexp :props)))
+      (funcall mu4e-pong-func sexp))
 
     ;; received a contacts message
     ;; note: we use 'member', to match (:contacts nil)
@@ -253,11 +252,7 @@ Start the process if needed."
   (unless (file-executable-p mu4e-mu-binary)
     (mu4e-error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
-          (args '("server"))
-          (args (append args (when mu4e-mu-home (list (concat "--muhome=" mu4e-mu-home)))))
-          (args (append args (mapcar (lambda(addr)
-                                  (format "--my-address=%s" addr))
-                          mu4e-user-mail-address-list))))
+          (args '("server")))
     (setq mu4e~proc-buf "")
     (setq mu4e~proc-process (apply 'start-process
             mu4e~proc-name mu4e~proc-name
@@ -395,15 +390,12 @@ or an error."
                    :skip-dups ,skip-dups
                    :include-related ,include-related)))
 
-(defun mu4e~proc-index (path my-addresses cleanup lazy-check)
-  "Index messages on PATH with possible CLEANUP and LAZY-CHECK.
+(defun mu4e~proc-index (&optional cleanup lazy-check)
+  "Index messages with possible CLEANUP and LAZY-CHECK.
 PATH should point to some maildir directory structure.
 MY-ADDRESSES is a list of 'my' email addresses (see
 `mu4e-user-mail-address-list')."
-  (mu4e~call-mu `(index
-                   :my-addresses ,my-addresses
-                   :cleanup ,cleanup
-                   :lazy-check ,lazy-check)))
+  (mu4e~call-mu `(index :cleanup ,cleanup :lazy-check ,lazy-check)))
 
 (defun mu4e~proc-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
@@ -447,26 +439,15 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
   (unless (or (not maildir)
-      (file-exists-p (concat mu4e-maildir "/" maildir "/")))
+      (file-exists-p (concat (mu4e-root-maildir) "/" maildir "/")))
     (mu4e-error "Target dir does not exist"))
-  (let* ((idparam (mu4e~docid-msgid-param docid-or-msgid))
-    (flagstr
-      (when flags
-        (concat " flags:"
-    (if (stringp flags) flags (mu4e-flags-to-string flags)))))
-    (path
-      (when maildir
-        (format " maildir:%s" (mu4e~escape maildir))))
-    (rename
-      (if (and maildir mu4e-change-filenames-when-moving)
-        "true" "false")))
-    (mu4e~call-mu `(move
-                     :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
-                     :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-                     :flags ,(or flags nil)
-                     :maildir ,(or maildir nil)
-                     :rename ,(and maildir mu4e-change-filenames-when-moving)
-                     :noview ,no-view))))
+  (mu4e~call-mu `(move
+                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
+                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
+                   :flags ,(or flags nil)
+                   :maildir ,(or maildir nil)
+                   :rename ,(and maildir mu4e-change-filenames-when-moving)
+                   :noview ,no-view)))
 
 (defun mu4e~proc-ping (&optional queries)
   "Sends a ping to the mu server, expecting a (:pong ...) in response.

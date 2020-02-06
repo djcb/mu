@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -29,6 +29,7 @@
 (require 'mu4e-meta)
 (require 'message)
 
+(declare-function mu4e-error "mu4e-utils")
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
@@ -50,13 +51,8 @@ path."
   :group 'mu4e
   :safe 'stringp)
 
-(defcustom mu4e-maildir (expand-file-name "~/Maildir")
-  "The absolute file system path to your Maildir.
-Must not be a symbolic link, and after starting mu4e, cannot
-change until after quitting."
-  :type 'directory
-  :safe 'stringp
-  :group 'mu4e)
+(make-obsolete-variable 'mu4e-maildir
+  "determined by server; see `mu4e-root-maildir'." "1.3.8")
 
 (defcustom mu4e-org-support t
   "Support org-mode links."
@@ -172,9 +168,10 @@ matched case-insensitively."
 ;; don't use the older vars anymore
 (make-obsolete-variable 'mu4e-user-mail-address-regexp
   'mu4e-user-mail-address-list "0.9.9.x")
-
 (make-obsolete-variable 'mu4e-my-email-addresses
   'mu4e-user-mail-address-list "0.9.9.x")
+(make-obsolete-variable 'mu4e-user-mail-address-list
+  "determined by server; see `mu4e-personal-addresses'." "1.3.8")
 
 (defcustom mu4e-use-fancy-chars nil
   "When set, allow fancy (Unicode) characters for marks/threads.
@@ -365,10 +362,8 @@ The setting is a symbol:
 (defcustom mu4e-compose-complete-only-personal nil
   "Whether to consider only 'personal' e-mail addresses for completion.
 That is, addresses from messages where user was explicitly in one
-of the address fields (this excludes mailing list messages). See
-`mu4e-user-mail-address-list' and the mu-index manpage for
-details for details (in particular, how to define your own e-mail
-addresses)."
+of the address fields (this excludes mailing list messages).
+These addresses are the ones specified with `mu init'."
   :type 'boolean
   :group 'mu4e-compose)
 
@@ -926,12 +921,41 @@ We need to keep this information around to quickly re-sort
 subsets of the contacts in the completions function in
 mu4e-compose.")
 
-(defvar mu4e~server-props nil
-  "Properties we receive from the mu4e server process.
-\(in the 'pong-handler').")
-
 (defvar mu4e~headers-last-query nil
   "The present (most recent) query.")
+
+(defvar mu4e~server-props nil
+  "Information  we receive from the mu4e server process \(in the 'pong-handler').")
+
+(defun mu4e-root-maildir()
+  "Get the root maildir."
+  (let ((root-maildir (and mu4e~server-props
+                        (plist-get mu4e~server-props :root-maildir))))
+    (unless root-maildir
+      (mu4e-error "root maildir unknown; did you start mu4e?"))
+    root-maildir))
+
+(defun mu4e-database-path()
+  "Get the mu4e database path"
+  (let ((path (and mu4e~server-props
+                        (plist-get mu4e~server-props :database-path))))
+    (unless path
+      (mu4e-error "database-path unknown; did you start mu4e?"))
+    path))
+
+(defun mu4e-personal-addresses()
+  "Get the user's personal addresses, if any. If none are set on the server-side,
+fall back to the obsolete `mu4e-user-mail-address-list'."
+  (let ((addrs (and mu4e~server-props
+                (plist-get mu4e~server-props :personal-addresses))))
+    (if addrs addrs mu4e-user-mail-address-list)))
+
+(defun mu4e-server-version()
+  "Get the server version, which should match mu4e's."
+  (let ((version (and mu4e~server-props (plist-get mu4e~server-props :version))))
+    (unless version
+      (mu4e-error "version unknown; did you start mu4e?"))
+    version))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

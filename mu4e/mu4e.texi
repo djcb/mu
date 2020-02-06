@@ -217,6 +217,7 @@ After these steps, @t{mu4e} should be ready to go!
 * Requirements:: What is needed
 * Installation:: How to install @t{mu} and @t{mu4e}
 * Getting mail:: Getting mail from a server
+* Initializing the message store:: Settings things up
 * Indexing your messages:: Creating and maintaining the index
 * Basic configuration:: Settings for @t{mu4e}
 * Folders::  Setting up standard folders
@@ -230,14 +231,14 @@ After these steps, @t{mu4e} should be ready to go!
 @section Requirements
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
-Unix-like systems, including many Linux distributions, OS X and FreeBSD,
-and even on MS-Windows (with Cygwin). @command{emacs} 23 or 24
-(recommended) is required, as well as
+Unix-like systems, including many Linux distributions, OS X and
+FreeBSD, and even on MS-Windows (with Cygwin). @command{emacs} 24 or
+higher is required, as well as
 Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 @t{mu} has optional support for the Guile 2.x (Scheme) programming
-language. There are also some GUI-tools, which require GTK+ 3.x and
+language. There are also some GUI-toys, which require GTK+ 3.x and
 Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
@@ -249,16 +250,17 @@ you also need the development packages for GTK+, Webkit and Guile.
 @node Installation
 @section Installation
 
-@t{mu4e} is part of @t{mu} --- by installing the latter, the former is installed
-as well. Some Linux distributions provide packaged versions of
-@t{mu}/@t{mu4e}; if you can use those, there is no need to compile anything
-yourself. However, if there are no packages for your distribution, if they are
-outdated, or if you want to use the latest development versions, you can
-follow the steps below.
+@t{mu4e} is part of @t{mu} --- by installing the latter, the former is
+installed as well. Some Linux distributions provide packaged versions
+of @t{mu}/@t{mu4e}; if you can use those, there is no need to compile
+anything yourself. However, if there are no packages for your
+distribution, if they are outdated, or if you want to use the latest
+development versions, you can follow the steps below.
 
-First, you need make sure you have the necessary dependencies; the details
-depend on your distribution. If you're using another distribution (or another
-OS), the below can at least be helpful in identifying the packages to install.
+First, you need make sure you have the necessary dependencies; the
+details depend on your distribution. If you're using another
+distribution (or another OS), the below can at least be helpful in
+identifying the packages to install.
 
 We provide some instructions for Debian, Ubuntu and Fedora; if those do not
 apply to you, you can follow either @ref{Building from a release tarball} or
@@ -356,46 +358,74 @@ through things step-by-step.
 @node Getting mail
 @section Getting mail
 
-In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to have
-your e-mail messages stored in a
-@emph{maildir}@footnote{@url{https://en.wikipedia.org/wiki/Maildir}; in this
-manual we use the term `maildir' for both the standard and the hierarchy of
-maildirs that store your messages} --- a specific directory structure with
-one-file-per-message. If you are already using a maildir, you are lucky. If
-not, some setup is required:
+In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to
+have your e-mail messages stored in a
+@emph{maildir}@footnote{@url{https://en.wikipedia.org/wiki/Maildir};
+in this manual we use the term `maildir' for both the standard and the
+hierarchy of maildirs that store your messages} --- a specific
+directory structure with one-file-per-message. If you are already
+using a maildir, you are lucky. If not, some setup is required:
 
 @itemize
 @item @emph{Using an external IMAP or POP server} --- if you are using an
 @abbr{IMAP} or @abbr{POP} server, you can use tools like @t{getmail},
-@t{fetchmail}, @t{offlineimap} or @t{isync} to download your messages into a
-maildir (@file{~/Maildir}, often). Because it is such a common case, there is
-a full example of setting @t{mu4e} up with @t{offlineimap} and Gmail;
-@pxref{Gmail configuration}.
+@t{fetchmail}, @t{offlineimap} or @t{isync} to download your messages
+into a maildir (@file{~/Maildir}, often). Because it is such a common
+case, there is a full example of setting @t{mu4e} up with
+@t{offlineimap} and Gmail; @pxref{Gmail configuration}.
 @item @emph{Using a local mail server} --- if you are using a local mail-server
-(such as @t{postfix} or @t{qmail}), you can teach them to deliver into a
-maildir as well, maybe in combination with @t{procmail}. A bit of googling
-should be able to provide you with the details.
+(such as @t{postfix} or @t{qmail}), you can teach them to deliver into
+a maildir as well, maybe in combination with @t{procmail}. A bit of
+googling should be able to provide you with the details.
 @end itemize
+
+@node Initializing the message store
+@section Initializing the message store
+
+The first time your run @t{mu}, you need to initialize its store
+(database). The default location for that is @t{~/.cache/mu/xapian},
+but you can change this using the @t{--muhome} option, and remember to
+pass that to the other commands as well.
+
+Assuming that your maildir is at @file{~/Maildir}, we issue the
+following command:
+@example
+  $ mu init --maildir=~/Maildir
+@end example
+
+Optionally, you can add some e-mail addresses, so @t{mu} recognizes
+them as yours:
+
+@example
+  $ mu init --maildir=~/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
+@end example
+
+@t{mu} remembers the maildir and your addresses and uses them when
+indexing messages. If you want to change them, you need to @t{init}
+once again.
+
+If you want to see the current values, you can use @t{mu info}.
 
 @node Indexing your messages
 @section Indexing your messages
 
-After you have succeeded in @ref{Getting mail}, we need to @emph{index} the
-messages. That is --- we need to scan the messages in the maildir and store the
-information about them in a special database. We can do that from @t{mu4e} ---
-@ref{Main view}, but the first time, it is a good idea to run it from the
-command line, which makes it easier to verify that everything works correctly.
+After you have succeeded in @ref{Getting mail} and initialized the
+message database, we need to @emph{index} the messages. That is --- we
+need to scan the messages in the maildir and store the information
+about them in a special database.
+
+We can do that from @t{mu4e} --- @ref{Main view}, but the first time,
+it is a good idea to run it from the command line, which makes it
+easier to verify that everything works correctly.
 
 Assuming that your maildir is at @file{~/Maildir}, we issue the following
 command:
 @example
-  $ mu index --maildir=~/Maildir
+  $ mu index
 @end example
 
-This should scan your @file{~/Maildir}@footnote{In most cases, you do not even
-need to provide the @t{--maildir=~/Maildir} since it is the default; see the
-@t{mu-index} man-page for details} and fill the database, and give progress
-information while doing so.
+This should scan your messages and fill the database, and give
+progress information while doing so.
 
 The indexing process may take a few minutes the first time you do it
 (for thousands of e-mails); afterwards it is much faster, since @t{mu}
@@ -448,19 +478,15 @@ situation. See @ref{Dynamic folders} for details.}:
 @lisp
 ;; these are actually the defaults
 (setq
-  mu4e-maildir       "~/Maildir"   ;; top-level Maildir
   mu4e-sent-folder   "/sent"       ;; folder for sent messages
   mu4e-drafts-folder "/drafts"     ;; unfinished messages
   mu4e-trash-folder  "/trash"      ;; trashed messages
   mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
-Note, @code{mu4e-maildir} takes an actual filesystem-path, the other
-folder names are all relative to @code{mu4e-maildir}. Also note that
-this must @emph{not} be a symbolic link.
-
-If you use @t{mu4e-context}, see @ref{Contexts and special folders} for
-what that means for these special folders.
+Note, the folder names are all relative to the root-maildir (see the
+output of @t{mu info}). If you use @t{mu4e-context}, see @ref{Contexts
+and special folders} for what that means for these special folders.
 
 @node Retrieval and indexing
 @section Retrieval and indexing with mu4e
@@ -684,9 +710,9 @@ The main view looks something like the following:
 
   Bookmarks
 
-	* [bu] Unread messages (26217/26217)
-	* [bt] Today's messages (2/8)
-	* [bw] Last 7 days (7/34)
+	* [bu] Unread messages      (26217/26217)
+	* [bt] Today's messages     (2/8)
+	* [bw] Last 7 days          (7/34)
 	* [bp] Messages with images (276/2315)
 
   Misc
@@ -710,11 +736,11 @@ Let's walk through the menu.
 First, the @emph{Basics}:
 @itemize
 @item @t{[j]ump to some maildir}: after pressing @key{j} (``jump''),
-@t{mu4e} asks you for a maildir to visit. These are the maildirs you set in
-@ref{Basic configuration} and any of your own. If you choose @key{o}
-(``other'') or @key{/}, you can choose from all maildirs under
-@code{mu4e-maildir}. After choosing a maildir, the messages in that maildir
-are listed, in the @ref{Headers view}.
+@t{mu4e} asks you for a maildir to visit. These are the maildirs you
+set in @ref{Basic configuration} and any of your own. If you choose
+@key{o} (``other'') or @key{/}, you can choose from all maildirs under
+the root-maildir. After choosing a maildir, the messages in that
+maildir are listed, in the @ref{Headers view}.
 @item @t{enter a [s]earch query}: after pressing @key{s}, @t{mu4e} asks
 you for a search query, and after entering one, shows the results in the
 @ref{Headers view}.
@@ -2630,9 +2656,8 @@ invoke those function even in that case.
 the current context is also visible in the mode-line when in
 headers, view or main mode.
 @item You can set any kind of variable; including settings for mail servers etc.
-However, settings such as @code{mu4e-maildir} and @code{mu4e-mu-home}
-are not changeable after they have been set without quitting @t{mu4e}
-first.
+However, settings such as @code{mu4e-mu-home} are not changeable after
+they have been set without quitting @t{mu4e} first.
 @item @code{leave-func} (if defined) for the context we are leaving, is invoked
 before the @code{enter-func} (if defined) of the
 context we are entering.
@@ -3512,10 +3537,6 @@ see, most of it is commented-out.
 ;; use mu4e for e-mail in emacs
 (setq mail-user-agent 'mu4e-user-agent)
 
-;; Only needed if your maildir is _not_ ~/Maildir
-;; Must be a real dir, not a symlink
-;;(setq mu4e-maildir "/home/user/Maildir")
-
 ;; these must start with a "/", and must exist
 ;; (i.e.. /home/user/Maildir/sent must exist)
 ;; you use e.g. 'mu mkdir' to make the Maildirs if they don't
@@ -3549,10 +3570,8 @@ customize.
 ;; use mu4e for e-mail in emacs
 (setq mail-user-agent 'mu4e-user-agent)
 
-;; path to our Maildir directory
-(setq mu4e-maildir "/home/user/Maildir")
-
-;; the next are relative to `mu4e-maildir'
+;; the next are relative to the root maildir
+;; (see `mu info`).
 ;; instead of strings, they can be functions too, see
 ;; their docstring or the chapter 'Dynamic folders'
 (setq mu4e-sent-folder   "/sent"
@@ -3717,9 +3736,6 @@ Next step: let's make a @t{mu4e} configuration for this:
 
 ;; use mu4e for e-mail in emacs
 (setq mail-user-agent 'mu4e-user-agent)
-
-;; default
-;; (setq mu4e-maildir "~/Maildir")
 
 (setq mu4e-drafts-folder "/[Gmail].Drafts")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
@@ -4207,7 +4223,6 @@ github-repository.
 
 @menu
 * Fancy characters:: Non-ascii characters in the UI
-* Multiple accounts:: (Obsolete) the old way to deal with multiple accounts
 * Refiling messages:: Moving message to some archive folder
 * Saving outgoing messages:: Automatically save sent messages
 * Confirmation before sending:: Check messages before sending
@@ -4241,121 +4256,6 @@ try the @emph{unicode-fonts} package:
 (require 'persistent-soft) ; To cache the fonts and reduce load time
 (unicode-fonts-setup)
 @end lisp
-
-
-@node Multiple accounts
-@section Multiple accounts
-
-@b{Note}: for @t{mu4e} version 0.9.16 and higher, the recommended way
-to deal with multiple accounts is through @t{mu4e}'s built-in
-@ref{Contexts} system. For older versions, the below still works.
-
-Using @t{mu4e} with multiple email accounts is fairly easy. Although
-variables such as @code{user-mail-address}, @code{mu4e-sent-folder},
-@code{message-*}, @code{smtpmail-*}, etc. typically only take one value,
-it is easy to change their values using @code{mu4e-compose-pre-hook}.
-The setup described here is one way of doing this (though certainly not
-the only way).
-
-This setup assumes that you have multiple mail accounts under
-@code{mu4e-maildir}. As an example, we'll use @t{~/Maildir/Account1}
-and @t{~/Maildir/Account2}, but the setup works just as well if
-@code{mu4e-maildir} points to something else.
-
-First, you need to make sure that all variables that you wish to change
-based on user account are set to some initial value. So set up your
-environment with e.g., your main account:
-
-@lisp
-(setq mu4e-sent-folder "/Account1/Saved Items"
-      mu4e-drafts-folder "/Account1/Drafts"
-      user-mail-address "my.address@@account1.example.com"
-      smtpmail-default-smtp-server "smtp.account1.example.com"
-      smtpmail-local-domain "account1.example.com"
-      smtpmail-smtp-server "smtp.account1.example.com"
-      smtpmail-stream-type 'starttls
-      smtpmail-smtp-service 25)
-@end lisp
-
-Then create a variable @code{my-mu4e-account-alist}, which should
-contain a list for each of your accounts. Each list should start with
-the account name, (which @emph{must} be identical to the account's
-directory name under @t{~/Maildir}), followed by @code{(variable
-value)} pairs:
-
-@lisp
-(defvar my-mu4e-account-alist
-  '(("Account1"
-     (mu4e-sent-folder "/Account1/Saved Items")
-     (mu4e-drafts-folder "/Account1/Drafts")
-     (user-mail-address "my.address@@account1.example.com")
-     (smtpmail-default-smtp-server "smtp.account1.example.com")
-     (smtpmail-local-domain "account1.example.com")
-     (smtpmail-smtp-user "username1")
-     (smtpmail-smtp-server "smtp.account1.example.com")
-     (smtpmail-stream-type starttls)
-     (smtpmail-smtp-service 25))
-    ("Account2"
-     (mu4e-sent-folder "/Account2/Saved Items")
-     (mu4e-drafts-folder "/Account2/Drafts")
-     (user-mail-address "my.address@@account2.example.com")
-     (smtpmail-default-smtp-server "smtp.account2.example.com")
-     (smtpmail-local-domain "account2.example.com")
-     (smtpmail-smtp-user "username2")
-     (smtpmail-smtp-server "smtp.account2.example.com")
-     (smtpmail-stream-type starttls)
-     (smtpmail-smtp-service 587))))
-@end lisp
-
-You can put any variable you want in the account lists, just make sure
-that you put in @emph{all} the variables that differ for each account.
-Variables that do not differ need not be included. For example, if you
-use the same SMTP server for both accounts, you don't need to include
-the SMTP-related variables in @code{my-mu4e-account-alist}.
-
-Note that some SMTP servers (such as Gmail) require the SMTP username to
-match the user mail address. In this case, your mail appears to
-originate from whichever SMTP account you use. Thus unless you are
-certain your SMTP server does not have this requirement, you should
-generally use different SMTP account credentials for each mail account.
-
-Now, the following function can be used to select an account and set the
-variables in @code{my-mu4e-account-alist} to the correct values:
-
-@lisp
-(defun my-mu4e-set-account ()
-  "Set the account for composing a message."
-  (let* ((account
-          (if mu4e-compose-parent-message
-              (let ((maildir (mu4e-message-field mu4e-compose-parent-message :maildir)))
-                (string-match "/\\(.*?\\)/" maildir)
-                (match-string 1 maildir))
-            (completing-read (format "Compose with account: (%s) "
-                                     (mapconcat #'(lambda (var) (car var))
-                                                my-mu4e-account-alist "/"))
-                             (mapcar #'(lambda (var) (car var)) my-mu4e-account-alist)
-                             nil t nil nil (caar my-mu4e-account-alist))))
-         (account-vars (cdr (assoc account my-mu4e-account-alist))))
-    (if account-vars
-        (mapc #'(lambda (var)
-                  (set (car var) (cadr var)))
-              account-vars)
-      (error "No email account found"))))
-@end lisp
-
-This function then needs to be added to @code{mu4e-compose-pre-hook}:
-
-@lisp
-(add-hook 'mu4e-compose-pre-hook 'my-mu4e-set-account)
-@end lisp
-
-This way, @code{my-mu4e-set-account} is called every time you edit a
-message. If you compose a new message, it simply asks you for the
-account you wish to send the message from (TAB completion works). If
-you're replying or forwarding a message, or editing an existing draft,
-the account is chosen automatically, based on the first component of the
-maildir of the message being replied to, forwarded or edited (i.e., the
-directory under @t{~/Maildir}).
 
 @node Refiling messages
 @section Refiling messages

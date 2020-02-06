@@ -577,7 +577,8 @@ cmd_init (MuConfig *opts, GError **err)
 	if (!opts->quiet) {
 		mu_store_print_info (store, opts->nocolor);
 		g_print ("\nstore created.\n"
-			 "now you can use the index command to index some messages.\n"
+			 "use 'mu index' to fill the database "
+                         "with your messsages.\n"
 			 "see mu-index(1) for details\n");
 	}
 

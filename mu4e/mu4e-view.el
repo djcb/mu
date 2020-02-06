@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2018 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -392,7 +392,7 @@ article-mode."
       (run-hooks 'gnus-article-decode-hook)
       (let ((mu4e~view-rendering t) ; customize gnus in mu4e
              (max-specpdl-size mu4e-view-max-specpdl-size)
-             (gnus-icalendar-additional-identities mu4e-user-mail-address-list))
+             (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
         (gnus-article-prepare-display))
       (mu4e-view-mode)
       (setq mu4e~view-message msg)

@@ -1,6 +1,6 @@
 ;; mu4e-draft.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -38,7 +38,7 @@
 
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, don't include self.
-\(that is, member of `mu4e-user-mail-address-list') in replies."
+\(that is, member of `(mu4e-personal-addresses)') in replies."
   :type 'boolean
   :group 'mu4e-compose)
 
@@ -189,7 +189,7 @@ of the original, we simple copy the list form the original."
           (cl-member-if
             (lambda (addr)
               (string= (downcase addr) (downcase (cdr to-cell))))
-            mu4e-user-mail-address-list))
+            (mu4e-personal-addresses)))
         reply-to)
       reply-to)))
 
@@ -253,7 +253,7 @@ REPLY-ALL."
                     (cl-member-if
                       (lambda (addr)
                         (string= (downcase addr) (downcase (cdr cc-cell))))
-                      mu4e-user-mail-address-list))
+                      (mu4e-personal-addresses)))
                   cc-lst))))
       cc-lst)))
 
@@ -540,7 +540,7 @@ This is based on `mu4e-drafts-folder', which is evaluated once.")
 (defun mu4e~draft-determine-path (draft-dir)
   "Determines the path for a new draft file in DRAFT-DIR."
   (format "%s/%s/cur/%s"
-    mu4e-maildir draft-dir (mu4e~draft-message-filename-construct "DS")))
+    (mu4e-root-maildir) draft-dir (mu4e~draft-message-filename-construct "DS")))
 
 
 (defun mu4e-draft-open (compose-type &optional msg)
@@ -550,12 +550,11 @@ In case of a new message (when COMPOSE-TYPE is `reply', `forward'
  or re-send an existing message (when COMPOSE-TYPE is `resend').
 
 The name of the draft folder is constructed from the
-concatenation of `mu4e-maildir' and `mu4e-drafts-folder' (the
+concatenation of `(mu4e-root-maildir)' and `mu4e-drafts-folder' (the
 latter will be evaluated). The message file name is a unique name
 determined by `mu4e-send-draft-file-name'. The initial contents
 will be created from either `mu4e~draft-reply-construct', or
 `mu4e~draft-forward-construct' or `mu4e~draft-newmsg-construct'."
-  (unless mu4e-maildir (mu4e-error "Variable mu4e-maildir not set"))
   (let ((draft-dir nil))
     (cl-case compose-type
 

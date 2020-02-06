@@ -1,6 +1,6 @@
 ;;; mu4e-message.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2012-2018 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -243,11 +243,11 @@ replace with."
   (with-temp-buffer
     (insert body)
     (goto-char (point-min))
-    (while (re-search-forward "[ ’]" nil t)
+    (while (re-search-forward "[Â Â’]" nil t)
       (replace-match
 	(cond
-	  ((string= (match-string 0) "’") "'")
-	  ((string= (match-string 0) " ") " ")
+	  ((string= (match-string 0) "Â’") "'")
+	  ((string= (match-string 0) "Â ") " ")
 	  (t ""))))
     (buffer-string)))
 
@@ -282,14 +282,14 @@ expressions, in which case any of those are tried for a match."
 Checks whether any of the of the contacts in field
 CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches *me*,
 that is, any of the e-mail address in
-`mu4e-user-mail-address-list'. Returns the contact cell that
+`(mu4e-personal-addresses)'. Returns the contact cell that
 matched, or nil."
   (cl-find-if
     (lambda (cc-cell)
       (cl-member-if
 	(lambda (addr)
 	  (string= (downcase addr) (downcase (cdr cc-cell))))
-	mu4e-user-mail-address-list))
+	(mu4e-personal-addresses)))
     (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)

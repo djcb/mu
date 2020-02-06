@@ -323,7 +323,6 @@ Example: +tag,+long tag,-oldtag
 would add 'tag' and 'long tag', and remove 'oldtag'."
   (let* (
           (path (mu4e-message-field msg :path))
-          (maildir (mu4e-message-field msg :maildir))
           (oldtags (mu4e-message-field msg :tags))
           (tags-completion
             (append
@@ -369,7 +368,7 @@ would add 'tag' and 'long tag', and remove 'oldtag'."
         path))
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
-    (mu4e-refresh-message path maildir)))
+    (mu4e-refresh-message path)))
 
 (defun mu4e-action-show-thread (msg)
   "Show thread for message at point with point remaining on MSG.

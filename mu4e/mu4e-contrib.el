@@ -1,6 +1,6 @@
 ;;; mu4e-contrib.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2013-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2013-2020 Dirk-Jan C. Binnema
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -20,7 +20,10 @@
 ;;; Commentary:
 
 ;; Some user-contributed functions for mu4e
-
+(require 'mu4e-headers)
+(require 'mu4e-view)
+(require 'bookmark)
+(require 'eshell)
 
 ;; Contributed by sabof
 (defvar bookmark-make-record-function)
