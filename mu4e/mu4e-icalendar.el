@@ -132,7 +132,9 @@ response in icalendar format."
         (message-remove-header "To")
         (message-goto-to)
         (insert organizer)))
-    (message-goto-body)
+    ;; Not (message-goto-body) to possibly skip mll sign directive
+    ;; inserted by `mu4e-compose-mode-hook':
+    (goto-char (point-max))
     (mml-insert-multipart "alternative")
     (mml-insert-part "text/plain")
     (let ((reply-event (gnus-icalendar-event-from-buffer
