@@ -29,7 +29,11 @@
 #include "mu-config.h"
 #include "mu-cmd.h"
 
+
 static MuConfig MU_CONFIG;
+
+#define color_maybe(C) (MU_CONFIG.nocolor ? "" : (C))
+
 
 static MuConfigFormat
 get_output_format (const char *formatstr)
@@ -151,11 +155,35 @@ config_options_group_init (void)
 	return og;
 }
 
+static gboolean
+index_post_parse_func (GOptionContext *context, GOptionGroup *group,
+                       gpointer data, GError **error)
+{
+        if (!MU_CONFIG.maildir && !MU_CONFIG.my_addresses)
+                return TRUE;
+
+        g_printerr ("%sNOTE%s: as of mu 1.3.8, 'mu index' no longer uses the\n"
+                    "--maildir/-m or --my-address options.\n\n",
+                    color_maybe(MU_COLOR_RED), color_maybe(MU_COLOR_DEFAULT));
+        g_printerr ("Instead, these options should be passed to 'mu init'.\n");
+        g_printerr ("See the mu-init(1) or the mu4e reference manual,\n'Initializing the message store' for details.\n\n");
+
+        return TRUE;
+}
+
+
 static GOptionGroup*
 config_options_group_index (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
+                /* only here so we can tell users they are deprecated */
+                {"maildir", 'm', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME,
+                 &MU_CONFIG.maildir, "top of the maildir", "<maildir>"},
+		{"my-address", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY,
+		 &MU_CONFIG.my_addresses, "my e-mail address; can be used multiple times",
+		 "<address>"},
+
 		{"lazy-check", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.lazycheck,
 		 "only check dir-timestamps (false)", NULL},
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
@@ -167,10 +195,10 @@ config_options_group_index (void)
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("index",
-				"Options for the 'index' command",
+	og = g_option_group_new("index", "Options for the 'index' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
+        g_option_group_set_parse_hooks(og, NULL, (GOptionParseFunc)index_post_parse_func);
 
 	return og;
 }
@@ -434,10 +462,6 @@ config_options_group_server (void)
 {
 	GOptionGroup *og;
 	GOptionEntry entries[] = {
-                {"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
-		 &MU_CONFIG.my_addresses,
-		 "my e-mail address; can be used multiple times",
-		 "<address>"},
                 {"commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.commands,
 		 "list the available command and their parameters, then exit", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}

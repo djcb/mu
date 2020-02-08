@@ -52,6 +52,11 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 	if (!(err && *err))
 		return;
 
+	if (*err)
+		g_printerr ("error: %s (%u)\n",
+			    (*err)->message,
+			    (*err)->code);
+
 	switch ((*err)->code) {
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
 		g_printerr ("maybe mu is already running?\n");
@@ -70,21 +75,16 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 			    "'mu script' for the scripts\n");
 		break;
 	case MU_ERROR_XAPIAN_CANNOT_OPEN:
-		g_printerr("Please (re)init mu with 'mu init' "
-			   "see mu-init(1) for details");
+		g_printerr("Please (re)initialize mu with 'mu init' "
+			   "see mu-init(1) for details\n");
 		return;
 	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
-		g_printerr("Please (re)init mu with 'mu init' "
-			   "see mu-init(1) for details");
+		g_printerr("Please (re)initialize mu with 'mu init' "
+			   "see mu-init(1) for details\n");
 		return;
 	default:
 		break; /* nothing to do */
 	}
-
-	if (*err)
-		g_printerr ("mu: %s (%u)\n",
-			    (*err)->message,
-			    (*err)->code);
 }
 
 
