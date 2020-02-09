@@ -1253,9 +1253,7 @@ make_command_map (Context& context)
       cmap.emplace("sent",
                    CommandInfo{
                            ArgMap{ {"path", ArgInfo{Type::String, true,
-                                            "path to the message file" }},
-                                   {"maildir", ArgInfo{Type::String, true,
-                                            "maildir the messages resides under" }}
+                                            "path to the message file" }}
                            },
                            "tell mu about a message that was sent",
                           [&](const auto& params){sent_handler(context, params);}});
