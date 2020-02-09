@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2017 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -38,6 +38,8 @@
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 (require 'mu4e-message)
+
+(eval-when-compile (require 'mu4e-view))
 
 ;; the headers view
 (defgroup mu4e-headers nil
@@ -425,7 +427,7 @@ If SKIP-HOOK is absent or nil, `mu4e-message-changed-hook' will be invoked."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defsubst mu4e~headers-contact-str (contacts)
+(defun mu4e~headers-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
 into a string."
   (mapconcat
@@ -434,7 +436,7 @@ into a string."
 	      (or name email "?"))) contacts ", "))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defsubst mu4e~headers-thread-prefix-map (type)
+(defun mu4e~headers-thread-prefix-map (type)
   "Return the thread prefix based on the symbol TYPE."
   (let ((get-prefix
 	        (lambda (cell)
@@ -449,13 +451,70 @@ into a string."
       ('duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
       (t              "?"))))
 
+;;;; headers in the buffer are prefixed by an invisible string with the docid
+;;;; followed by an EOT ('end-of-transmission', \004, ^D) non-printable ascii
+;;;; character. this string also has a text-property with the docid. the former
+;;;; is used for quickly finding a certain header, the latter for retrieving the
+;;;; docid at point without string matching etc.
+
+
+
+(defun mu4e~headers-docid-pos (docid)
+  "Return the pos of the beginning of the line with the header with
+docid DOCID, or nil if it cannot be found."
+  (let ((pos))
+    (save-excursion
+      (setq pos (mu4e~headers-goto-docid docid)))
+    pos))
+
+(defun mu4e~headers-docid-cookie (docid)
+  "Create an invisible string containing DOCID; this is to be used
+at the beginning of lines to identify headers."
+  (propertize (format "%s%d%s"
+		            mu4e~headers-docid-pre docid mu4e~headers-docid-post)
+    'docid docid 'invisible t));;
+
+(defun mu4e~headers-docid-at-point (&optional point)
+  "Get the docid for the header at POINT, or at current (point) if
+nil. Returns the docid, or nil if there is none."
+  (save-excursion
+    (when point
+	    (goto-char point))
+    (get-text-property (line-beginning-position) 'docid)))
+
+
+(defun mu4e~headers-goto-docid (docid &optional to-mark)
+  "Go to the beginning of the line with the header with docid
+DOCID, or nil if it cannot be found. If the optional TO-MARK is
+non-nil, go to the point directly *after* the docid-cookie instead
+of the beginning of the line."
+  (let ((oldpoint (point)) (newpoint))
+    (goto-char (point-min))
+    (setq newpoint
+      (search-forward (mu4e~headers-docid-cookie docid) nil t))
+    (unless to-mark
+      (if (null newpoint)
+	      (goto-char oldpoint) ;; not found; restore old pos
+	      (progn
+	        (beginning-of-line) ;; found, move to beginning of line
+	        (setq newpoint (point)))))
+    newpoint)) ;; return the point, or nil if not found
+
+(defun mu4e~headers-field-for-docid (docid field)
+  "Get FIELD (a symbol, see `mu4e-headers-names') for the message
+with DOCID which must be present in the headers buffer."
+  (save-excursion
+    (when (mu4e~headers-goto-docid docid)
+      (mu4e-message-field (mu4e-message-at-point) field))))
+
+
 ;; In order to print a thread tree with all the message connections,
 ;; it's necessary to keep track of all sub levels that still have
 ;; following messages. For each level, mu4e~headers-thread-state keeps
 ;; the value t for a connection or nil otherwise.
 (defvar-local mu4e~headers-thread-state '())
 
-(defsubst mu4e~headers-thread-prefix (thread)
+(defun mu4e~headers-thread-prefix (thread)
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
     (let ((prefix       "")
@@ -508,7 +567,7 @@ into a string."
 	      (if duplicate
 		      (mu4e~headers-thread-prefix-map 'duplicate) "")))))
 
-(defsubst mu4e~headers-flags-str (flags)
+(defun mu4e~headers-flags-str (flags)
   "Get a display string for the flags.
 Note that `mu4e-flags-to-string' is for internal use only; this
 function is for display. (This difference is significant, since
@@ -541,7 +600,7 @@ while our display may be different)."
 It's a cons cell with the car element being the From: prefix, the
 cdr element the To: prefix.")
 
-(defsubst mu4e~headers-from-or-to (msg)
+(defun mu4e~headers-from-or-to (msg)
   "When the from address for message MSG is one of the the user's addresses,
 \(as per `mu4e-user-mail-address-list'), show the To address;
 otherwise ; show the from address; prefixed with the appropriate
@@ -553,7 +612,7 @@ otherwise ; show the from address; prefixed with the appropriate
       (concat (car mu4e-headers-from-or-to-prefix)
 	      (mu4e~headers-contact-str (mu4e-message-field msg :from))))))
 
-(defsubst mu4e~headers-human-date (msg)
+(defun mu4e~headers-human-date (msg)
   "Show a 'human' date.
 If the date is today, show the time, otherwise, show the
 date. The formats used for date and time are
@@ -570,7 +629,7 @@ date. The formats used for date and time are
 	        (format-time-string mu4e-headers-time-format date)
 	        (format-time-string mu4e-headers-date-format date))))))
 
-(defsubst mu4e~headers-thread-subject (msg)
+(defun mu4e~headers-thread-subject (msg)
   "Get the subject if it is the first one in a thread; otherwise,
 return the thread-prefix without the subject-text. In other words,
 show the subject of a thread only once, similar to e.g. 'mutt'."
@@ -582,7 +641,7 @@ show the subject of a thread only once, similar to e.g. 'mutt'."
 	          (plist-get tinfo :empty-parent))
 	      (truncate-string-to-width subj 600) ""))))
 
-(defsubst mu4e~headers-mailing-list (list)
+(defun mu4e~headers-mailing-list (list)
   "Get some identifier for the mailing list."
   (if list
     (propertize (mu4e-get-mailing-list-shortname list) 'help-echo list)
@@ -664,7 +723,7 @@ found."
       (add-face-text-property 0 (length line) face t line))
     line))
 
-(defsubst mu4e~headers-line-handler (msg line)
+(defun mu4e~headers-line-handler (msg line)
   (dolist (func mu4e~headers-line-handler-functions)
     (setq line (funcall func msg line)))
   line)
@@ -1010,6 +1069,7 @@ Also see `mu4e-view-mark-or-move-to-trash'."
 		            'field field) " ")))
 	      mu4e-headers-fields))))
 
+
 (defvar mu4e-headers-mode-abbrev-table nil)
 
 (defun mu4e~headers-maybe-auto-update ()
@@ -1075,59 +1135,6 @@ adding a lot of new headers looks really choppy."
   (let ((win (get-buffer-window (mu4e-get-headers-buffer))))
     (when win (select-window win))))
 
-;;;; headers in the buffer are prefixed by an invisible string with the docid
-;;;; followed by an EOT ('end-of-transmission', \004, ^D) non-printable ascii
-;;;; character. this string also has a text-property with the docid. the former
-;;;; is used for quickly finding a certain header, the latter for retrieving the
-;;;; docid at point without string matching etc.
-
-(defsubst mu4e~headers-docid-cookie (docid)
-  "Create an invisible string containing DOCID; this is to be used
-at the beginning of lines to identify headers."
-  (propertize (format "%s%d%s"
-		            mu4e~headers-docid-pre docid mu4e~headers-docid-post)
-    'docid docid 'invisible t));;
-
-(defsubst mu4e~headers-docid-at-point (&optional point)
-  "Get the docid for the header at POINT, or at current (point) if
-nil. Returns the docid, or nil if there is none."
-  (save-excursion
-    (when point
-	    (goto-char point))
-    (get-text-property (line-beginning-position) 'docid)))
-
-(defun mu4e~headers-goto-docid (docid &optional to-mark)
-  "Go to the beginning of the line with the header with docid
-DOCID, or nil if it cannot be found. If the optional TO-MARK is
-non-nil, go to the point directly *after* the docid-cookie instead
-of the beginning of the line."
-  (let ((oldpoint (point)) (newpoint))
-    (goto-char (point-min))
-    (setq newpoint
-      (search-forward (mu4e~headers-docid-cookie docid) nil t))
-    (unless to-mark
-      (if (null newpoint)
-	      (goto-char oldpoint) ;; not found; restore old pos
-	      (progn
-	        (beginning-of-line) ;; found, move to beginning of line
-	        (setq newpoint (point)))))
-    newpoint)) ;; return the point, or nil if not found
-
-(defsubst mu4e~headers-docid-pos (docid)
-  "Return the pos of the beginning of the line with the header with
-docid DOCID, or nil if it cannot be found."
-  (let ((pos))
-    (save-excursion
-      (setq pos (mu4e~headers-goto-docid docid)))
-    pos))
-
-(defsubst mu4e~headers-field-for-docid (docid field)
-  "Get FIELD (a symbol, see `mu4e-headers-names') for the message
-with DOCID which must be present in the headers buffer."
-  (save-excursion
-    (when (mu4e~headers-goto-docid docid)
-      (mu4e-message-field (mu4e-message-at-point) field))))
-
 (defun mu4e-headers-goto-message-id (msgid)
   "Go to the next message with message-id MSGID. Return the
 message plist, or nil if not found."
@@ -1160,14 +1167,13 @@ message plist, or nil if not found."
 		              'msg msg)))
       (goto-char oldpoint))))
 
-(defsubst mu4e~headers-add-header (str docid point &optional msg)
+(defun mu4e~headers-add-header (str docid point &optional msg)
   "Add header STR with DOCID to the buffer at POINT if non-nil, or
 at (point-max) otherwise. If MSG is not nil, add it as the
 text-property `msg'."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
-      (let ((inhibit-read-only t)
-	           (is-first-header (= (point-min) (point-max))))
+      (let ((inhibit-read-only t))
 	      (save-excursion
 	        (goto-char (if point point (point-max)))
 	        (insert
@@ -1367,15 +1373,14 @@ matching messages with that mark."
 		                nil 'mu4e~headers-regexp-hist)))
     (mu4e-headers-mark-for-each-if
       markpair
-      (lambda (msg param)
-	      (let* ((do-mark) (value (mu4e-msg-field msg field)))
-	        (setq do-mark
-	          (if (member field '(:to :from :cc :bcc :reply-to))
-	            (cl-find-if (lambda (contact)
-			                      (let ((name (car contact)) (email (cdr contact)))
-			                        (or (and name (string-match pattern name))
-			                          (and email (string-match pattern email))))) value)
-	            (string-match pattern (or value "")))))))))
+      (lambda (msg _param)
+	      (let* ((value (mu4e-msg-field msg field)))
+	        (if (member field '(:to :from :cc :bcc :reply-to))
+	          (cl-find-if (lambda (contact)
+			                    (let ((name (car contact)) (email (cdr contact)))
+			                      (or (and name (string-match pattern name))
+			                        (and email (string-match pattern email))))) value)
+	          (string-match pattern (or value ""))))))))
 
 (defun mu4e-headers-mark-custom ()
   "Mark messages based on a user-provided predicate function."
@@ -1731,7 +1736,7 @@ backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let ((succeeded (zerop (forward-line lines)))
+  (let* ((_succeeded (zerop (forward-line lines)))
 	       (docid (mu4e~headers-docid-at-point)))
     ;; move point, even if this function is called when this window is not
     ;; visible
@@ -1860,8 +1865,7 @@ other windows."
       (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
     (mu4e-mark-handle-when-leaving)
     (let ((curbuf (current-buffer))
-	         (curwin (selected-window))
-	         (headers-visible))
+	         (curwin (selected-window)))
       (walk-windows
 	      (lambda (win)
 	        (with-selected-window win
