@@ -20,6 +20,8 @@
 #ifndef __MU_STORE_HH__
 #define __MU_STORE_HH__
 
+#include <mu-msg.h>
+
 #ifdef __cplusplus
 
 #include "mu-contacts.hh"
@@ -129,6 +131,14 @@ public:
          */
         bool remove_message (const std::string& path);
 
+        /**
+         * Fina  message in the store.
+         *
+         * @param docid doc id for the message to find
+         *
+         * @return a message (owned by caller), or nullptr
+         */
+        MuMsg* find_message (unsigned docid) const;
 
         /**
          * does a certain message exist in the store already?
@@ -215,7 +225,6 @@ private:
 
 #include <glib.h>
 #include <inttypes.h>
-#include <mu-msg.h>
 #include <utils/mu-util.h>
 #include <mu-contacts.hh>
 

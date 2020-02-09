@@ -376,6 +376,27 @@ Store::set_dirstamp (const std::string& path, time_t tstamp)
 }
 
 
+MuMsg*
+Store::find_message (unsigned docid) const
+{
+        LOCKED;
+
+	try {
+		Xapian::Document *doc{new Xapian::Document{priv_->db()->get_document (docid)}};
+                GError *gerr{};
+                auto msg{mu_msg_new_from_doc (reinterpret_cast<XapianDocument*>(doc), &gerr)};
+                if (!msg) {
+                        g_warning ("could not create message: %s", gerr ? gerr->message :
+                                   "something went wrong");
+                        g_clear_error(&gerr);
+                }
+
+                return msg;
+
+	} MU_XAPIAN_CATCH_BLOCK_RETURN (nullptr);
+}
+
+
 bool
 Store::contains_message (const std::string& path) const
 {
@@ -633,6 +654,9 @@ mu_store_get_read_only_database (MuStore *store)
 	return (XapianWritableDatabase*)self(store)->priv()->db().get();
 }
 
+
+
+
 gboolean
 mu_store_contains_message (const MuStore *store, const char* path)
 {
@@ -709,13 +733,7 @@ mu_store_get_msg (const MuStore *store, unsigned docid, GError **err)
 	g_return_val_if_fail (store, NULL);
 	g_return_val_if_fail (docid != 0, NULL);
 
-	try {
-		Xapian::Document *doc =
-			new Xapian::Document
-			(self(store)->priv()->db()->get_document (docid));
-		return mu_msg_new_from_doc ((XapianDocument*)doc, err);
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
+        return self(store)->find_message(docid);
 }
 
 
@@ -1388,7 +1406,6 @@ mu_store_get_dirstamp (const MuStore *store, const char *dirpath, GError **err)
 }
 
 
-}
 
 void
 mu_store_print_info  (const MuStore *store, gboolean nocolor)
@@ -1429,4 +1446,5 @@ mu_store_print_info  (const MuStore *store, gboolean nocolor)
         }
 
 	g_strfreev(addrs);
+}
 }
