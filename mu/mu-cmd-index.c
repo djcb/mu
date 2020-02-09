@@ -91,32 +91,6 @@ check_params (MuConfig *opts, GError **err)
 	return TRUE;
 }
 
-static gboolean
-check_maildir (const char *maildir, GError **err)
-{
-	if (!maildir) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "no maildir to work on; use --maildir=");
-		return FALSE;
-	}
-
-	if (!g_path_is_absolute (maildir)) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "maildir path '%s' is not absolute",
-				     maildir);
-		return FALSE;
-	}
-
-	if (!mu_util_check_dir (maildir, TRUE, FALSE)) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "not a valid Maildir: %s", maildir);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-
 static MuError
 index_msg_silent_cb (MuIndexStats* stats, void *user_data)
 {
@@ -288,9 +262,6 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 	MuIndex *midx;
 
 	if (!check_params (opts, err))
-		return NULL;
-
-	if (!check_maildir (opts->maildir, err))
 		return NULL;
 
 	midx = mu_index_new (store, err);

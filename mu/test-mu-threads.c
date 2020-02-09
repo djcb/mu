@@ -99,9 +99,13 @@ fill_database (const char *testdir)
 	gchar *cmdline, *tmpdir, *xpath;
 
 	tmpdir = test_mu_common_get_random_tmpdir();
-	cmdline = g_strdup_printf ("%s index --muhome=%s --maildir=%s"
-				   " --quiet",
-				   MU_PROGRAM, tmpdir, testdir);
+	cmdline = g_strdup_printf (
+		"/bin/sh -c '"
+		"%s init  --muhome=%s --maildir=%s --quiet ; "
+		"%s index --muhome=%s  --quiet'",
+		MU_PROGRAM,  tmpdir, testdir,
+		MU_PROGRAM,  tmpdir);
+
 	if (g_test_verbose())
 		g_print ("%s\n", cmdline);
 
