@@ -154,17 +154,6 @@ the attachment dir. See Info node `(mu4e) Attachments' for details."
   :group 'mu4e
   :safe 'stringp)
 
-(defcustom mu4e-user-mail-address-list `(,user-mail-address)
-  "List of e-mail addresses to consider 'my email addresses'.
-I.e. addresses whose presence in an email imply that it is a
-personal message. Note that the local part (the part before '@')
-of e-mail addresses is case-sensitive, as per RFC531.  In
-practice however, most of the mail systems do not distinguish
-addresses based on the case, so the emails in this list will be
-matched case-insensitively."
-  :type '(repeat (string :tag "Address"))
-  :group 'mu4e)
-
 ;; don't use the older vars anymore
 (make-obsolete-variable 'mu4e-user-mail-address-regexp
   'mu4e-user-mail-address-list "0.9.9.x")

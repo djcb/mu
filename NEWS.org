@@ -5,6 +5,15 @@
 
 *** mu
 
+    - There's a new subcommand ~mu init~ to initialize the mu database, which
+      takes the ~--maildir~ and ~--my-address~ parameters that ~index~ used to take.
+      These parameters are persistent so ~index~ does not need them anymore.
+
+      ~init~ only needs to be run once or when changing these parameters.
+
+    - There is another new subcommand ~mu info~ to get information about the mu
+      database.
+
     - The contacts cache (as uses in ~mu cfind~ and mu4e contact-completion) is
       now stored as part of the Xapian database rather than as a separate file.
 
@@ -14,20 +23,11 @@
       passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
       mu4e-mu-home "~/.mu")~ for mu4e.
 
-      Otherwise, after upgrading, you may wish to delete the old location to recover
-      some diskspace.
+      Otherwise, after upgrading, you may wish to delete the old location to
+      recover some diskspace.
 
     - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
       are determined implicitly now.
-
-    - The ~--maildir~ parameter is only used when initializing the database, and
-      it is stored in that database. Afterwards that its value is used; which
-      means you cannot change the parameter without rebuilding and this is by
-      design.
-
-    - The ~--my-address~ parameter is persistent as well, but can be overwritten;
-      note that an updated value only applies to the messages indexed /after/ the
-      change.
 
     - There is a new sub-command ~mfind~, which works just like ~find~, but uses
       some mu4e-defaults ~--skip-dups~ and ~--include-related~.
@@ -43,6 +43,9 @@
       and ~mu4e-compose-complete-ignore-address-regexp~ have been obsoleted; users
       of those should migrate to ~mu4e-contact-process-function~; see its
       docstring for details.
+
+    - ~mu4e~ no longer uses the ~mu4e-maildir~ and ~mu4e-user-mail-address-list~
+      variables, instead getting the information from ~mu~ (see above).
 
     - Christophe Troestler contributed support for Gnus' calender-invitation
       handling in mu4e (i.e., you should be able to accept/reject invitations
