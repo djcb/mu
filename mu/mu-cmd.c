@@ -563,8 +563,16 @@ cmd_info (MuStore *store, MuConfig *opts, GError **err)
 static MuError
 cmd_init (MuConfig *opts, GError **err)
 {
-	MuStore		*store;
-	const char	*path;
+	MuStore	   *store;
+	const char *path;
+
+        /* not provided, nor could we find a good default */
+        if (!opts->maildir) {
+                mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "missing --maildir parameter and could "
+                                     "not determine default");
+		return MU_ERROR_IN_PARAMETERS;
+        }
 
 	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
 	store = mu_store_new_create (path,

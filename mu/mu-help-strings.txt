@@ -1,6 +1,6 @@
 #-*-mode:org-*-
 #
-# Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+# Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -111,14 +111,27 @@ directories and storing the results in a Xapian database.The
 data can then be queried using mu-find(1).
 #END
 
+#BEGIN MU_CONFIG_CMD_INIT
+#STRING
+mu init [options]
+#STRING
+mu init is the mu command for setting up the mu database.
+#END
+
+#BEGIN MU_CONFIG_CMD_INFO
+#STRING
+mu init [options]
+#STRING
+mu info is the command for getting information about a mu database.
+#END
+
 #BEGIN MU_CONFIG_CMD_MKDIR
 #STRING
 mu mkdir [options] <dir> [<dirs>]
 #STRING
-mu mkdir is the mu command for creating Maildirs.It does not
+mu mkdir is the command for creating Maildirs.It does not
 use the mu database.
 #END
-
 
 #BEGIN MU_CONFIG_CMD_REMOVE
 #STRING
@@ -127,18 +140,15 @@ mu remove [options] <file> [<files>]
 mu remove is the mu command to remove messages from the database.
 #END
 
-
 #BEGIN MU_CONFIG_CMD_SERVER
 #STRING
 mu server [options]
 #STRING
 mu server starts a simple shell in which one can query and
 manipulate the mu database.The output of the commands is terms
-of Lisp symbolic expressions (s-exps).mu server is not meant for
-use by humans; instead, it is designed specificallyfor the
-mu4e e-mail client.
+of Lisp symbolic expressions (s-exps). Its main use is for
+the mu4e e-mail client.
 #END
-
 
 #BEGIN MU_CONFIG_CMD_SCRIPT
 #STRING
