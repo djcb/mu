@@ -112,8 +112,6 @@ Options beyond those of `make-mu4e-context':
 - `user-mail-address': Defaults to the global value when the context is created.
 - `smtpmail-smtp-user': Defaults to the global value if non-nil when the context
   is created, or the context `user-mail-address' otherwise.
-- `maildir': Mailbox folder name in as stored in `mu4e-maildir' (just the name,
-  there must be no '/').  Defaults to `name'.
 - `drafts-folder': Context value of `mu4e-drafts-folder'.  Defaults to
   \"drafts\".
 - `sent-folder': Context value of `mu4e-sent-folder'.  Defaults to \"sent\".
@@ -146,7 +144,7 @@ default folders (see `make-mu4e-context' and `mu4e-context'):
                    msg '(:from :to) \"boss@work.org\"))
      :vars gandi-smtp-vars))"
   (cl-assert name)
-  (setq maildir (concat "/" (or maildir name) "/")
+  (setq maildir (concat "/" (mu4e-root-maildir) "/")
         smtpmail-smtp-user (or smtpmail-smtp-user user-mail-address)
         no-trash-flag (or no-trash-flag
                           (string-match (regexp-opt mu4e-no-trash-providers)
@@ -189,9 +187,6 @@ default folders (see `make-mu4e-context' and `mu4e-context'):
                     (mu4e-trash-folder . ,mu4e-trash-folder)
                     (mu4e-refile-folder . ,mu4e-refile-folder))
                   (mu4e-context-vars context)))
-    ;; Required when using multiple addresses and if we don't want to
-    ;; reply to ourselves.
-    (add-to-list 'mu4e-user-mail-address-list user-mail-address)
     (add-to-list 'mu4e-contexts context)
     context))
 
