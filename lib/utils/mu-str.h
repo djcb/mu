@@ -175,19 +175,6 @@ GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
 GSList* mu_str_esc_to_list (const char *str);
 
 /**
- * Parse a list of <key>:<value> arguments, where <value> supports
- * quoting and escaping.
- *
- * @param args a list of arguments
- * @param err receives error information
- *
- * @return a hash table with key->value, or NULL in case of
- * error. Free with g_hash_table_destroy.
- */
-GHashTable* mu_str_parse_arglist (const char *args, GError **err)
-G_GNUC_WARN_UNUSED_RESULT;
-
-/**
  * free a GSList consisting of allocated strings
  *
  * @param lst a GSList

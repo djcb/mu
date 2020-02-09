@@ -53,16 +53,6 @@ MuQuery* mu_query_new  (MuStore *store, GError **err)
  */
 void mu_query_destroy  (MuQuery *self);
 
-/**
- * get a version string for the database
- *
- * @param store a valid MuQuery
- *
- * @return the version string (free with g_free), or NULL in case of error
- */
-char* mu_query_version (MuQuery *store)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
 
 typedef enum {
 	MU_QUERY_FLAG_NONE            = 0 << 0, /**< no flags */

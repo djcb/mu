@@ -70,34 +70,6 @@ test_mu_str_size_02 (void)
 	g_free (tmp2);
 }
 
-
-
-static void
-test_parse_arglist (void)
-{
-	const char *args;
-	GHashTable *hash;
-	GError *err;
-
-	args = "cmd:find query:maildir:\"/sent items\" maxnum:500";
-
-	err  = NULL;
-	hash = mu_str_parse_arglist (args, &err);
-	g_assert_no_error (err);
-	g_assert (hash);
-
-	g_assert_cmpstr (g_hash_table_lookup (hash, "cmd"), ==,
-			 "find");
-	/* note, mu4e now passes queries as base64 */
-	g_assert_cmpstr (g_hash_table_lookup (hash, "query"), ==,
-			 "maildir:/sent items");
-	g_assert_cmpstr (g_hash_table_lookup (hash, "maxnum"), ==,
-			 "500");
-
-	g_hash_table_destroy (hash);
-}
-
-
 static void
 test_mu_str_esc_to_list (void)
 {
@@ -288,9 +260,6 @@ main (int argc, char *argv[])
 			 test_mu_str_to_list);
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
-
-	g_test_add_func ("/mu-str/mu-str-parse-arglist",
-			 test_parse_arglist);
 
 	g_test_add_func ("/mu-str/mu-str-replace",
 			 test_mu_str_replace);
