@@ -221,7 +221,7 @@ struct Context {
                                 else
                                         print_error((MuError)gerr->code,
                                                     "cannot open database @ %s:%s; "
-                                                    "pleasy try 'mu init", dbpath,
+                                                    "please try 'mu init", dbpath,
                                                     gerr->message ? gerr->message : "something went wrong");
                         } else
                                 print_error(MU_ERROR,
