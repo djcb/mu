@@ -41,6 +41,9 @@
 
 (eval-when-compile (require 'mu4e-view))
 
+(declare-function mu4e-view       "mu4e-view")
+(declare-function mu4e~main-view  "mu4e-main")
+
 ;; the headers view
 (defgroup mu4e-headers nil
   "Settings for the headers view."
@@ -1691,7 +1694,11 @@ window. "
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
     (switch-to-buffer (mu4e~headers-get-loading-buf))
-    (mu4e~proc-view docid mu4e-view-show-images decrypt)))
+    ;; note, in the 'gnus' case, we don't need to call the server to get the
+    ;; body etc., we only need the path which we already have.
+    (if mu4e-view-use-gnus
+      (mu4e-view msg)
+      (mu4e~proc-view docid mu4e-view-show-images decrypt))))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."
