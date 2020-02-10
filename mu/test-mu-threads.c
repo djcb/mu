@@ -158,9 +158,9 @@ test_mu_threads_01 (void)
 
 	const tinfo items [] = {
 		{"0",   "root0@msg.id",  "root0"},
-		{"0:0", "child0.0@msg.id", "Re: child 0.0"},
-		{"0:1",   "child0.1@msg.id", "Re: child 0.1"},
-		{"0:1:0", "child0.1.0@msg.id", "Re: child 0.1.0"},
+		{"0:0",   "child0.1@msg.id", "Re: child 0.1"},
+		{"0:0:0", "child0.1.0@msg.id", "Re: child 0.1.0"},
+		{"0:1", "child0.0@msg.id", "Re: child 0.0"},
 		{"1",   "root1@msg.id", "root1"},
 		{"2",   "root2@msg.id", "root2"},
 		/* next one's been promoted 2.0.0 => 2.0 */
@@ -169,8 +169,8 @@ test_mu_threads_01 (void)
 		{"3", "child3.0.0.0.0@msg.id", "Re: child 3.0.0.0"},
 
 		/* two children of absent root 4.0 */
-		{"4:0", "child4.0@msg.id", "Re: child 4.0"},
-		{"4:1", "child4.1@msg.id", "Re: child 4.1"}
+		{"4:0", "child4.1@msg.id", "Re: child 4.1"},
+		{"4:1", "child4.0@msg.id", "Re: child 4.0"}
 	};
 
 	xpath = fill_database (MU_TESTMAILDIR3);
@@ -308,13 +308,13 @@ test_mu_threads_sort_2nd_child_promotes_thread (void)
 		{ "0", "A@msg.id", "A"},
 		{ "1", "D@msg.id", "D"},
 		{ "2", "B@msg.id", "B"},
-		{ "2:0", "C@msg.id", "C"},
-		{ "2:1", "E@msg.id", "E"},
+		{ "2:0", "E@msg.id", "E"},
+		{ "2:1", "C@msg.id", "C"},
 	};
 	const tinfo expected_desc [] = {
 		{ "0", "B@msg.id", "B"},
-		{ "0:0", "E@msg.id", "E"},
-		{ "0:1", "C@msg.id", "C"},
+		{ "0:0", "C@msg.id", "C"},
+		{ "0:1", "E@msg.id", "E"},
 		{ "1", "D@msg.id", "D"},
 		{ "2", "A@msg.id", "A"},
 	};
@@ -334,12 +334,12 @@ test_mu_threads_sort_orphan_promotes_thread (void)
 	const tinfo expected_asc [] = {
 		{ "0", "A@msg.id", "A"},
 		{ "1", "D@msg.id", "D"},
-		{ "2:0", "C@msg.id", "C"},
-		{ "2:1", "E@msg.id", "E"},
+		{ "2:0", "E@msg.id", "E"},
+		{ "2:1", "C@msg.id", "C"},
 	};
 	const tinfo expected_desc [] = {
-		{ "0:0", "E@msg.id", "E"},
-		{ "0:1", "C@msg.id", "C"},
+		{ "0:0", "C@msg.id", "C"},
+		{ "0:1", "E@msg.id", "E"},
 		{ "1", "D@msg.id", "D"},
 		{ "2", "A@msg.id", "A"},
 	};
@@ -357,16 +357,16 @@ test_mu_threads_sort_child_does_not_promote_thread (void)
 	const char *query = "maildir:/sort/child-does-not-promote-thread";
 
 	const tinfo expected_asc [] = {
-		{ "0", "X@msg.id", "X"},
-		{ "1", "Y@msg.id", "Y"},
-		{ "1:0", "A@msg.id", "A"},
+		{ "0", "Y@msg.id", "Y"},
+		{ "0:0", "A@msg.id", "A"},
+		{ "1", "X@msg.id", "X"},
 		{ "2", "Z@msg.id", "Z"},
 	};
 	const tinfo expected_desc [] = {
 		{ "0", "Z@msg.id", "Z"},
-		{ "1", "Y@msg.id", "Y"},
-		{ "1:0", "A@msg.id", "A"},
-		{ "2", "X@msg.id", "X"},
+		{ "1", "X@msg.id", "X"},
+		{ "2", "Y@msg.id", "Y"},
+		{ "2:0", "A@msg.id", "A"},
 	};
 
 	check_sort_by_subject_asc (query, expected_asc,
@@ -409,19 +409,19 @@ test_mu_threads_sort_granchild_promotes_only_subthread (void)
 	const tinfo expected_asc [] = {
 		{ "0", "A@msg.id", "A"},
 		{ "1", "B@msg.id", "B"},
-		{ "1:0", "C@msg.id", "C"},
-		{ "1:1", "E@msg.id", "E"},
-		{ "1:2", "D@msg.id", "D"},
-		{ "1:2:0", "F@msg.id", "F"},
+		{ "1:0", "E@msg.id", "E"},
+		{ "1:1", "D@msg.id", "D"},
+		{ "1:1:0", "F@msg.id", "F"},
+		{ "1:2", "C@msg.id", "C"},
 		{ "2", "G@msg.id", "G"},
 	};
 	const tinfo expected_desc [] = {
 		{ "0", "G@msg.id", "G"},
 		{ "1", "B@msg.id", "B"},
-		{ "1:0", "D@msg.id", "D"},
-		{ "1:0:0", "F@msg.id", "F"},
-		{ "1:1", "E@msg.id", "E"},
-		{ "1:2", "C@msg.id", "C"},
+		{ "1:0", "C@msg.id", "C"},
+		{ "1:1", "D@msg.id", "D"},
+		{ "1:1:0", "F@msg.id", "F"},
+		{ "1:2", "E@msg.id", "E"},
 		{ "2", "A@msg.id", "A"},
 	};
 
