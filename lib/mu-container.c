@@ -353,36 +353,8 @@ container_cmp (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
 	return mu_msg_cmp (a->msg, b->msg, mfid);
 }
 
-static gboolean
-container_is_leaf (const MuContainer *c)
-{
-	return c->child == NULL;
-}
-
-static MuContainer*
-container_max (MuContainer *a, MuContainer *b, MuMsgFieldId mfid)
-{
-	return container_cmp (a, b, mfid) > 0 ? a : b;
-}
-
-static MuContainer*
-find_sorted_tree_leader (MuContainer *root, SortFuncData *order)
-{
-	MuContainer *last_child;
-
-	if (container_is_leaf (root))
-		return root;
-
-	if (!order->descending)
-		last_child = root->child->last;
-	else /* reversed order, first is last */
-		last_child = root->child;
-
-	return container_max (root, last_child->leader, order->mfid);
-}
-
 static int
-sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
+sort_func_root (MuContainer *a, MuContainer *b, SortFuncData *data)
 {
 	if (data->descending)
 		return container_cmp (b->leader, a->leader, data->mfid);
@@ -390,10 +362,56 @@ sort_func_wrapper (MuContainer *a, MuContainer *b, SortFuncData *data)
 		return container_cmp (a->leader, b->leader, data->mfid);
 }
 
+static int
+sort_func_child (MuContainer *a, MuContainer *b, SortFuncData *data)
+{
+	if (data->descending)
+		return container_cmp (a, b, data->mfid);
+	else
+		return container_cmp (b, a, data->mfid);
+}
+
 static MuContainer*
-container_sort_real (MuContainer *c, SortFuncData *sfdata)
+container_sort(MuContainer *c, GCompareDataFunc func, SortFuncData *sfdata)
 {
 	GSList *lst;
+
+	lst = mu_container_to_list (c);
+	lst = g_slist_sort_with_data (lst, func, sfdata);
+	c = mu_container_from_list (lst);
+	g_slist_free (lst);
+
+	return c;
+}
+
+static MuContainer*
+container_sort_child (MuContainer *c, SortFuncData *sfdata)
+{
+	MuContainer *cur, *leader;
+
+	if (!c)
+		return NULL;
+
+	/* find leader */
+	leader = c->leader;
+	for (cur = c; cur; cur = cur->next) {
+		if (cur->child)
+			cur->child = container_sort_child (cur->child, sfdata);
+		if (container_cmp (cur->leader, leader, sfdata->mfid) > 0)
+			leader = cur->leader;
+	}
+
+	c = container_sort(c, (GCompareDataFunc)sort_func_child, sfdata);
+
+	/* set parent's leader to the one found */
+	c->parent->leader = leader;
+
+	return c;
+}
+
+static MuContainer*
+container_sort_root (MuContainer *c, SortFuncData *sfdata)
+{
 	MuContainer *cur;
 
 	if (!c)
@@ -401,19 +419,10 @@ container_sort_real (MuContainer *c, SortFuncData *sfdata)
 
 	for (cur = c; cur; cur = cur->next) {
 		if (cur->child)
-			cur->child = container_sort_real (cur->child, sfdata);
-		cur->leader = find_sorted_tree_leader (cur, sfdata);
+			cur->child = container_sort_child (cur->child, sfdata);
 	}
 
-	/* sort siblings */
-	lst = mu_container_to_list (c);
-	lst = g_slist_sort_with_data(lst,
-				     (GCompareDataFunc)sort_func_wrapper,
-				     sfdata);
-	c = mu_container_from_list (lst);
-	g_slist_free (lst);
-
-	return c;
+	return container_sort (c, (GCompareDataFunc)sort_func_root, sfdata);
 }
 
 MuContainer*
@@ -429,7 +438,7 @@ mu_container_sort (MuContainer *c, MuMsgFieldId mfid, gboolean descending,
 	g_return_val_if_fail (c, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 
-	return container_sort_real (c, &sfdata);
+	return container_sort_root (c, &sfdata);
 }
 
 
