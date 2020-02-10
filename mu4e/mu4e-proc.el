@@ -252,7 +252,8 @@ Start the process if needed."
   (unless (file-executable-p mu4e-mu-binary)
     (mu4e-error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
-          (args '("server")))
+          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
+          (args (cons "server" args)))
     (setq mu4e~proc-buf "")
     (setq mu4e~proc-process (apply 'start-process
             mu4e~proc-name mu4e~proc-name

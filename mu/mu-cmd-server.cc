@@ -213,6 +213,10 @@ struct Context {
                 GError *gerr{};
                 store = mu_store_new_writable (dbpath, NULL);
                 if (!store) {
+                        const auto mu_init = format("mu init %s%s",
+                                                    opts->muhome ? "--muhome=" : "",
+                                                    opts->muhome ? opts->muhome : "");
+
                         if (gerr) {
                                 if ((MuError)gerr->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK)
                                         print_error(MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
@@ -221,14 +225,17 @@ struct Context {
                                 else
                                         print_error((MuError)gerr->code,
                                                     "cannot open database @ %s:%s; "
-                                                    "please try 'mu init", dbpath,
-                                                    gerr->message ? gerr->message : "something went wrong");
+                                                    "please try '%s", dbpath,
+                                                    gerr->message ? gerr->message : "something went wrong",
+                                                    mu_init.c_str());
                         } else
                                 print_error(MU_ERROR,
-                                            "cannot open database @ %s; pleasy try 'mu init'", dbpath);
+                                            "cannot open database @ %s; please try '%s'",
+                                            dbpath, mu_init.c_str());
 
                         throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
-                                         "failed to open database @ %s; please try 'mu init'", dbpath);
+                                         "failed to open database @ %s; please try '%s'",
+                                         dbpath, mu_init.c_str());
                 }
 
                 query = mu_query_new (store, &gerr);
