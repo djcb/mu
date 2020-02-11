@@ -1249,5 +1249,6 @@ string will be shortened to fit if its length exceeds
           (push (buffer-name buffer) buffers))))
     (nreverse buffers)))
 
+;;; _
 (provide 'mu4e-utils)
 ;;; mu4e-utils.el ends here

@@ -184,6 +184,6 @@ given in the doc of `gnus-icalendar-event-reply-from-buffer'."
         (insert beg-date " " end-time " End of: " txt "\n"))
       (write-region (point-min) (point-max) filename t))))
 
-
+;;; _
 (provide 'mu4e-icalendar)
 ;;; mu4e-icalendar.el ends here

@@ -225,6 +225,6 @@ Edit the message body using org mode. DEPRECATED."
       (mu4e-compose-mode)
       (message "org-mu4e-compose-org-mode disabled"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; _
 (provide 'org-mu4e)
 ;;; org-mu4e.el ends here

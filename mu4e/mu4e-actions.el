@@ -383,7 +383,7 @@ the message."
          nil nil nil
          msgid (and (eq major-mode 'mu4e-view-mode)
                     (not (eq mu4e-split-view 'single-window))))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; _
 (provide 'mu4e-actions)
 ;;; mu4e-actions.el ends here

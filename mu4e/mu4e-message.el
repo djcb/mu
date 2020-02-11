@@ -344,5 +344,6 @@ Emacs. Based on code by Titus von der Malsburg."
        (call-process-shell-command mu4e-html2text-command tmp-file t t)
        (delete-file tmp-file))) msg))
 
+;;; _
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here

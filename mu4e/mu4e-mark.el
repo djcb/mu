@@ -459,5 +459,6 @@ action', return nil means 'don't do anything'."
        (when (eq what 'apply)
          (mu4e-mark-execute-all t))))))
 
+;;; _
 (provide 'mu4e-mark)
 ;;; mu4e-mark.el ends here

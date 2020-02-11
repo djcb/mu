@@ -280,5 +280,6 @@ match, POLICY determines what to do:
                           (mu4e~context-ask-user "Select context: ")))
          (otherwise nil))))))
 
+;;; _
 (provide 'mu4e-context)
 ;;; mu4e-context.el ends here

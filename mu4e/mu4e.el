@@ -63,7 +63,7 @@ window, unless BACKGROUND (prefix-argument) is non-nil."
       (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
         (mu4e~stop))
     (mu4e~stop)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; _
 (provide 'mu4e)
 ;;; mu4e.el ends here

@@ -97,5 +97,6 @@ be used as the shortname."
   :group 'mu4e-headers
   :type '(repeat (regexp)))
 
+;;; _
 (provide 'mu4e-lists)
 ;;; mu4e-lists.el ends here

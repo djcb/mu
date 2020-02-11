@@ -287,5 +287,6 @@ clicked."
           (sit-for 1)
           (mu4e~main-menu))))))
 
+;;; _
 (provide 'mu4e-main)
 ;;; mu4e-main.el ends here
