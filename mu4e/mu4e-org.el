@@ -1,4 +1,5 @@
 ;;; mu4e-org -- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
+;;
 ;; Copyright (C) 2012-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
