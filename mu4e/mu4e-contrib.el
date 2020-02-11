@@ -31,6 +31,8 @@
 ;; Contributed by sabof
 (defvar bookmark-make-record-function)
 
+;;; Various simple commands
+
 (defun mu4e-headers-mark-all-unread-read ()
   "Put a ! \(read) mark on all visible unread messages."
   (interactive)
@@ -45,8 +47,6 @@
   (mu4e-headers-mark-all-unread-read)
   (mu4e-mark-execute-all t))
 
-;;;
-
 (defun mu4e-headers-mark-all ()
   "Mark all messages within current query results and ask user to execute which action."
   (interactive)
@@ -54,8 +54,6 @@
    (cons 'something nil)
    (lambda (_msg _param) t))
   (mu4e-mark-execute-all))
-
-;;;
 
 ;;; Bookmark handlers
 ;;
@@ -109,13 +107,13 @@ BOOKMARK is a bookmark name or a bookmark record."
                            ,(bookmark-get-bookmark-record bmk))))
                       bookmark))))
 
-
-
-;;; handling spam with Bogofilter with possibility to define it for SpamAssassin
-;;; contributed by Gour
-
-;;  to add the actions to the menu, you can use something like:
-
+;;; Bogofilter/SpamAssassin
+;;
+;; Support for handling spam with Bogofilter with the possibility
+;; to define it for SpamAssassin, contributed by Gour.
+;;
+;; To add the actions to the menu, you can use something like:
+;;
 ;; (add-to-list 'mu4e-headers-actions
 ;;              '("sMark as spam" . mu4e-register-msg-as-spam) t)
 ;; (add-to-list 'mu4e-headers-actions
@@ -166,11 +164,12 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
     (shell-command command))
   (mu4e-view-mark-for-something))
 
-;;; end of spam-filtering functions
+;;; Eshell functions
+;;
+;; Code for `gnus-dired-attached' modified to run from eshell,
+;; allowing files to be attached to an email via mu4e using the
+;; eshell.  Does not depend on gnus.
 
-;;; eshell functions
-;; Code for 'gnus-dired-attached' modified to run from eshell, allowing files to
-;; be attached to an email via mu4e using the eshell. Does not depend on gnus.
 (defun eshell/mu4e-attach (&rest args)
   "Attach files to a mu4e message using eshell. If no mu4e
 buffers found, compose a new message and then attach the file."

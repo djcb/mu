@@ -25,6 +25,7 @@
 ;; Utility functions used in the mu4e
 
 ;;; Code:
+
 (eval-when-compile
   (require 'org nil 'noerror))
 (require 'cl-lib)
@@ -49,8 +50,6 @@
 (declare-function mu4e-context-vars       "mu4e-context")
 (declare-function show-all "org")
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the following is taken from org.el; we copy it here since we don't want to
 ;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
 ;; cleaner solution....
@@ -80,6 +79,7 @@ NODEFAULT, hour and minute fields will be nil if not given."
             nil nil nil)
     (mu4e-error "Not a standard mu4e time string: %s" s)))
 
+;;; Various
 
 (defun mu4e-user-mail-address-p (addr)
   "If ADDR is one of user's e-mail addresses return t, nil otherwise.
@@ -90,7 +90,6 @@ insensitive comparison is used."
                       :test (lambda (s1 s2)
                               (eq t (compare-strings s1 nil nil s2 nil nil t)))))
     t))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro with~mu4e-context-vars (context &rest body)
   "Evaluate BODY, with variables let-bound for CONTEXT (if any).
@@ -102,7 +101,8 @@ insensitive comparison is used."
          (mapcar (lambda(cell) (cdr cell)) vars)
        (eval ,@body))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Folders (1/2)
+
 ;; the standard folders can be functions too
 (defun mu4e~get-folder (foldervar msg)
   "Within the mu-context of MSG, get message folder FOLDERVAR.
@@ -138,16 +138,14 @@ return the result."
 (defun mu4e-get-trash-folder (&optional msg)
   "Get the sent folder. See `mu4e-trash-folder'."
   (mu4e~get-folder 'mu4e-trash-folder msg))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Self-destructing files
+
 (defun mu4e-remove-file-later (filename)
   "Remove FILENAME in a few seconds."
   (run-at-time "30 sec" nil
                (lambda () (ignore-errors (delete-file filename)))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-make-temp-file (ext)
   "Create a temporary file with extension EXT. The file will
 self-destruct in a few seconds, enough to open it in another
@@ -155,12 +153,13 @@ program."
   (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
     (mu4e-remove-file-later tmpfile)
     tmpfile))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; Folders (2/2)
+;;
+;; mu4e-attachment-dir is either a string or a function that takes a
+;; filename and the mime-type as argument, either (or both) which can
+;; be nil
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; mu4e-attachment-dir is either a string or a function that takes a filename
-;; and the mime-type as argument, either (or both) which can be nil
 (defun mu4e~get-attachment-dir (&optional fname mimetype)
   "Get the directory for saving attachments from
 `mu4e-attachment-dir' (which can be either a string or a function,
@@ -177,9 +176,9 @@ see its docstring)."
     (if dir
         (expand-file-name dir)
       (mu4e-error (mu4e-error "mu4e-attachment-dir evaluates to nil")))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Maildir (1/2)
+
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
   (let ((idx (string-match (mu4e-root-maildir) path)))
@@ -189,10 +188,7 @@ see its docstring)."
        ""
        (expand-file-name
         (concat path "/../.."))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create maildir DIR if it does not exist yet.
 Return t if the dir already existed, or an attempt has been made to
@@ -206,6 +202,8 @@ an absolute path."
    ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
     (mu4e~proc-mkdir dir) t)
    (t nil)))
+
+;;; Messages, warnings and errors
 
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
@@ -244,6 +242,8 @@ Does a local-exit and does not return. In emacs versions below
 24.2, the functions is the same as `mu4e-error'."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (user-error "%s" (apply 'mu4e-format frm args)))
+
+;;; Reading user input
 
 (defun mu4e~read-char-choice (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
@@ -310,6 +310,8 @@ Function will return the cdr of the list element."
     (if chosen
         (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
+
+;;; Maildir (1/2)
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative paths."
@@ -395,6 +397,8 @@ and offer to create it if it does not exist yet."
            (mu4e~proc-mkdir fullpath)))
     mdir))
 
+;;; Bookmarks
+
 (defun mu4e-bookmarks ()
   "Get `mu4e-bookmarks' in the (new) format, converting from the
 old format if needed."
@@ -456,7 +460,8 @@ replaces any existing bookmark with KEY."
               mu4e-bookmarks :test 'equal))
 
 
-;;; converting flags->string and vice-versa ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Converting flags->string and vice-versa
+
 (defun mu4e~flags-to-string-raw (flags)
   "Convert a list of flags into a string as seen in Maildir
 message files; flags are symbols draft, flagged, new, passed,
@@ -517,8 +522,8 @@ letters than the ones listed here are ignored.  Also see
 http://cr.yp.to/proto/maildir.html "
   ;;  "Remove duplicates from the output of `mu4e~string-to-flags-1'"
   (cl-remove-duplicates (mu4e~string-to-flags-1 str)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; Various
 
 (defun mu4e-display-size (size)
   "Get a string representation of SIZE (in bytes)."
@@ -540,7 +545,8 @@ Or go to the top level if there is none."
           ('mu4e-view-mode "(mu4e)Message view")
           (t               "mu4e"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED Buffers and windows (1/2)
+
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
   (when (buffer-live-p (mu4e-get-headers-buffer))
@@ -582,7 +588,8 @@ that has a live window), and vice versa."
         (view-mode)))
     (switch-to-buffer buf)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
+
 (defvar mu4e~lists-hash nil
   "Hashtable of mailing-list-id => shortname, based on
   `mu4e~mailing-lists' and `mu4e-user-mailing-lists'.")
@@ -611,7 +618,7 @@ on `mu4e~mailing-lists', `mu4e-user-mailing-lists', and
        (match-string 1 list-id)
      list-id)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
 
 (defvar mu4e-index-updated-hook nil
   "Hook run when the indexing process had one or more updated messages.
@@ -631,8 +638,8 @@ changed.")
 (defvar mu4e~contacts-tstamp "0"
   "Timestamp for the most recent contacts update." )
 
-;; some handler functions for server messages
-;;
+;;; Some handler functions for server messages
+
 (defun mu4e-info-handler (info)
   "Handler function for (:info ...) sexps received from the server
 process."
@@ -665,10 +672,9 @@ process."
   (cl-case errcode
     (4 (user-error "No matches for this search query."))
     (t (error "Error %d: %s" errcode errmsg))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; UNNAMED
 
 (defun mu4e~update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS.
@@ -749,10 +755,8 @@ completion; for testing/debugging."
 Checks whether the server process is live."
   (mu4e~proc-running-p))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; starting / getting mail / updating the index
-;;
-;;
+;;; Starting / getting mail / updating the index
+
 (defvar mu4e~update-timer nil
   "The mu4e update timer.")
 (defconst mu4e~update-name " *mu4e-update*"
@@ -846,6 +850,7 @@ When successful, call FUNC (if non-nil) afterwards."
    (buffer-list)))
 
 
+;;; UNNAMED
 
 (defvar mu4e~progress-reporter nil
   "Internal, the progress reporter object.")
@@ -991,12 +996,10 @@ in the background; otherwise, pop up a window."
 
 (define-obsolete-function-alias 'mu4e-interrupt-update-mail
   'mu4e-kill-update-mail)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; logging / debugging
+;;; Logging / debugging
+
 (defvar mu4e~log-max-lines 1200
   "*internal* Last <n> number of lines to keep around in the buffer.")
 (defconst mu4e~log-buffer-name "*mu4e-log*"
@@ -1093,8 +1096,7 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
          (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
      list)))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
 
 (defvar mu4e-imagemagick-identify "identify"
   "Name/path of the Imagemagick 'identify' program.")
@@ -1151,8 +1153,10 @@ displaying it). Do _not_ bury the current buffer, though."
   `parse-time-string'."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
     (apply 'encode-time (mu4e-parse-time-string timestr))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
+;;; Mu4e-org-mode
+
 (define-derived-mode mu4e-org-mode org-mode "mu4e:org"
   "Major mode for mu4e documents, derived from
   `org-mode'.")
@@ -1181,7 +1185,8 @@ displaying it). Do _not_ bury the current buffer, though."
   "Show the mu4e 'about' page."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; UNNAMED
 
 (defun mu4e-refresh-message (path)
   "Re-parse message at PATH; if this works, we will
@@ -1189,7 +1194,8 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
   (mu4e~proc-add path))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
+
 (defun mu4e~fontify-cited ()
   "Colorize message content based on the citation level. This is
 used in the view and compose modes."
@@ -1218,7 +1224,8 @@ the view and compose modes and will color each signature in digest messages adhe
                     (re-search-forward "\\(^-\\{30\\}.*$\\)" nil t) ;; 30 by RFC1153
                     (point-max))))
           (add-text-properties p end '(face mu4e-footer-face)))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; UNNAMED
 
 (defun mu4e~quote-for-modeline (str)
   "Quote a string to be used literally in the modeline. The
@@ -1236,7 +1243,7 @@ string will be shortened to fit if its length exceeds
     ;; Escape the % character
     (replace-regexp-in-string "%" "%%" str t t)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED Buffers and windows (1/2)
 
 (defun mu4e~active-composition-buffers ()
   "Return all active mu4e composition buffers"

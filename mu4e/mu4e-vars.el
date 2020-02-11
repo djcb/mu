@@ -24,12 +24,12 @@
 
 ;;; Code:
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Customization
 (require 'mu4e-meta)
 (require 'message)
 
 (declare-function mu4e-error "mu4e-utils")
+
+;;; Customization
 
 (defgroup mu4e nil
   "mu4e - mu for emacs"
@@ -314,7 +314,8 @@ Also see `mu4e-compose-context-policy'."
           (const :tag "Don't change the context when none match" nil))
   :group 'mu4e)
 
-;; crypto
+;;;; Crypto
+
 (defgroup mu4e-crypto nil
   "Crypto-related settings."
   :group 'mu4e)
@@ -335,14 +336,15 @@ The setting is a symbol:
                  (const :tag "Don't try to decrypt anything" nil))
   :group 'mu4e-crypto)
 
-;; completion; we put them here rather than in mu4e-compose, as mu4e-utils needs
-;; the variables.
+;;;; Address completion
+;;
+;; We put these options here rather than in mu4e-compose, because
+;; mu4e-utils needs them.
 
 (defgroup mu4e-compose nil
   "Message-composition related settings."
   :group 'mu4e)
 
-;; address completion
 (defcustom mu4e-compose-complete-addresses t
   "Whether to do auto-completion of e-mail addresses."
   :type 'boolean
@@ -368,10 +370,10 @@ time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
-;;; names and mail-addresses can be mapped onto their canonical
-;;; counterpart.  use the customizeable function
-;;; mu4e-canonical-contact-function to do that.  below the identity
-;;; function for mapping a contact onto the canonical one.
+;; names and mail-addresses can be mapped onto their canonical
+;; counterpart.  use the customizeable function
+;; mu4e-canonical-contact-function to do that.  below the identity
+;; function for mapping a contact onto the canonical one.
 (defun mu4e-contact-identity (contact)
   "Return the name and the mail-address of a CONTACT.
 It is used as the identity function for converting contacts to
@@ -447,6 +449,8 @@ Useful when this is not equal to the From: address."
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new messages, it is nil.")
 
+;;;; Calendar
+
 (defgroup mu4e-icalendar nil
   "Icalendar related settings."
   :group 'mu4e)
@@ -463,7 +467,8 @@ in `mu4e-compose-pre-hook'. For new messages, it is nil.")
   :group 'mu4e-icalendar)
 
 
-;; Folders
+;;;; Folders
+
 (defgroup mu4e-folders nil
   "Special folders."
   :group 'mu4e)
@@ -543,7 +548,8 @@ be quoted, since mu4e does this automatically for you."
   :group 'mu4e
   :type 'boolean)
 
-;; Faces
+;;; Faces
+
 (defgroup mu4e-faces nil
   "Type faces (fonts) used in mu4e."
   :group 'mu4e
@@ -739,7 +745,8 @@ mu4e-compose-mode."
   "Face for highlighting marked region in mu4e-view buffer."
   :group 'mu4e-faces)
 
-;; headers info
+;;; Header information
+
 (defconst mu4e-header-info
   '((:attachments
      . (:name "Attachments"
@@ -888,21 +895,21 @@ should point to a function that takes a message p-list as
 argument, and returns a string. See the default value of
 `mu4e-header-info-custom for an example.")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Run-time variables
+;;;; Headers
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; run-time vars used in multiple places
-
-;; headers
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
 
-;; view
+;;;; View
+
 (defconst mu4e~view-buffer-name "*mu4e-view*"
   "Name for the message view buffer.")
 
 (defconst mu4e~view-embedded-buffer-name " *mu4e-embedded-view*"
   "Name for the embedded message view buffer.")
+
+;;;; Other
 
 (defvar mu4e~contacts nil
   "Hash that maps contacts (ie. 'name <e-mail>') to an integer for sorting.
@@ -947,19 +954,19 @@ fall back to the obsolete `mu4e-user-mail-address-list'."
     version))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; our handlers funcs these handler funcs define what happens when we receive a
-;; certain message from the server
+;;; Handler functions
+;;
+;; The handler funcions define what happens when we receive a certain
+;; message from the server.  Here we register our handler functions;
+;; these connect server messages to functions to handle them.
+;;
+;; These bindings form mu4e's central nervous system so it's not
+;; really recommended to override them (they reference various
+;; internal bits, which could change).
+
 (defun mu4e~default-handler (&rest args)
   "Dummy handler function with arbitrary ARGS."
   (error "Not handled: %S" args))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; register our handler functions; these connect server messages to functions
-;; to handle them.
-;;
-;; these form mu4e's central nervous system so it's not really recommended
-;; to override them (they reference various internal bits which could change)
 
 (defvar mu4e-error-func 'mu4e-error-handler
   "Function called for each error received.

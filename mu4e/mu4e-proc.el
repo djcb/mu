@@ -23,12 +23,12 @@
 ;;; Commentary:
 
 ;;; Code:
+
 (require 'mu4e-vars)
 (require 'mu4e-utils)
 (require 'mu4e-meta)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; internal vars
+;;; Internal vars
 
 (defvar mu4e~proc-buf nil
   "Buffer (string) for data received from the backend.")
@@ -48,6 +48,8 @@
   (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
+
+;;; Functions
 
 (defun mu4e~proc-running-p  ()
   "Whether the mu process is running."

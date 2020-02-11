@@ -26,6 +26,7 @@
 ;; manual)
 
 ;;; Code:
+
 (require 'cl-lib)
 (require 'ido)
 
@@ -42,19 +43,17 @@
 (defvar mu4e-view-date-format)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
+
 (defun mu4e-action-count-lines (msg)
   "Count the number of lines in the e-mail MSG.
 Works for headers view and message-view."
   (message "Number of lines: %s"
            (shell-command-to-string
             (concat "wc -l < " (shell-quote-argument (mu4e-message-field msg :path))))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; UNNAMED
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-msg2pdf
   (let ((exec-path (cons (concat mu4e-builddir "/toys/msg2pdf/") exec-path)))
     (locate-file "msg2pdf" exec-path exec-suffixes))
@@ -75,8 +74,8 @@ Works for the message view."
     (unless (and pdf (file-exists-p pdf))
       (mu4e-warn "Failed to create PDF file"))
     (find-file pdf)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+
+;;; UNNAMED
 
 (defun mu4e~action-header-to-html (msg field)
   "Convert the FIELD of MSG to an HTML string."
@@ -156,12 +155,9 @@ privacy aspects in `(mu4e) Displaying rich-text messages'."
     (mu4e-error "No xwidget support available"))
   (xwidget-webkit-browse-url
    (concat "file://" (mu4e~write-body-to-html msg)) t))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; UNNAMED
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defconst mu4e-text2speech-command "festival --tts"
   "Program that speaks out text it receives on standard input.")
 
@@ -173,11 +169,9 @@ privacy aspects in `(mu4e) Displaying rich-text messages'."
     (insert (mu4e-message-field msg :body-txt))
     (shell-command-on-region (point-min) (point-max)
                              mu4e-text2speech-command)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; UNNAMED
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-captured-message nil
   "The most recently captured message.")
 
@@ -187,18 +181,15 @@ Later, we can create an attachment based on this message with
 `mu4e-compose-attach-captured-message'."
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; UNNAMED
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun mu4e-action-copy-message-file-path (msg)
   "Save the full path for the current MSG to the kill ring."
   (kill-new (mu4e-message-field msg :path)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
+
 (defvar mu4e-org-contacts-file nil
   "File to store contact information for org-contacts.
 Needed by `mu4e-action-add-org-contact'.")
@@ -236,11 +227,8 @@ file where you store your org-contacts."
     (message "%S" org-capture-templates)
     (when (fboundp 'org-capture)
       (org-capture nil key))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
 
 (defvar mu4e~patch-directory-history nil
   "History of directories we have applied patches to.")
@@ -280,11 +268,8 @@ bother asking for the git tree again (useful for bulk actions)."
                (if signoff "--signoff" "")
                (shell-quote-argument (mu4e-message-field msg :path)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar mu4e-action-tags-header "X-Keywords"
   "Header where tags are stored.
 Used by `mu4e-action-retag-message'. Make sure it is one of the

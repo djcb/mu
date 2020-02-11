@@ -26,6 +26,7 @@
 ;; currently in the headers buffer.
 
 ;;; Code:
+
 (require 'cl-lib)
 (require 'mu4e-proc)
 (require 'mu4e-utils)
@@ -35,6 +36,8 @@
 (declare-function mu4e~headers-mark "mu4e-headers")
 (declare-function mu4e~headers-goto-docid "mu4e-headers")
 (declare-function mu4e-headers-next "mu4e-headers")
+
+;;; UNNAMED
 
 (defcustom mu4e-headers-leave-behavior 'ask
   "What to do when user leaves the headers view.
@@ -63,7 +66,8 @@ message, showing the target makes this quite a bit slower (showing
 the target uses an Emacs feature called 'overlays', which aren't
 particularly fast).")
 
-;;; insert stuff;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Insert stuff
+
 (defvar mu4e~mark-map nil
   "Contains a mapping of docid->markinfo.
 When a message is marked, the information is added here. markinfo
@@ -432,7 +436,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 (defun mu4e-mark-docid-marked-p (docid)
   "Is the given DOCID marked?"
   (when (gethash docid mu4e~mark-map) t))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; UNNAMED
 
 (defun mu4e-mark-marks-num ()
   "Return the number of mark-instances in the current buffer."
