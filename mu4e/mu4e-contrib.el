@@ -219,3 +219,4 @@ buffers found, compose a new message and then attach the file."
 ;;; end of eshell functions
 
 (provide 'mu4e-contrib)
+;;; mu4e-contrib.el ends here

@@ -345,4 +345,4 @@ Emacs. Based on code by Titus von der Malsburg."
        (delete-file tmp-file))) msg))
 
 (provide 'mu4e-message)
-;;; mu4e-message ends here
+;;; mu4e-message.el ends here

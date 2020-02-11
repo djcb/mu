@@ -66,5 +66,4 @@ window, unless BACKGROUND (prefix-argument) is non-nil."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e)
-
 ;;; mu4e.el ends here

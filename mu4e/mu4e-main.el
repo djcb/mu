@@ -288,3 +288,4 @@ clicked."
           (mu4e~main-menu))))))
 
 (provide 'mu4e-main)
+;;; mu4e-main.el ends here
