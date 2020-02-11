@@ -1,5 +1,5 @@
 ;;; org-mu4e -- support for links to mu4e messages and writing org-mode messages -*- lexical-binding: t -*-
-;;
+
 ;; Copyright (C) 2012-2019 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -8,7 +8,7 @@
 ;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
-;;
+
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of 1the License, or
