@@ -602,6 +602,6 @@ will be created from either `mu4e~draft-reply-construct', or
     (unless mu4e~draft-drafts-folder
       (mu4e-error "Failed to determine drafts folder"))))
 
-
+;;; _
 (provide 'mu4e-draft)
 ;;; mu4e-draft.el ends here

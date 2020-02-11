@@ -488,5 +488,6 @@ result will be delivered to the function registered as
                   :extract-images ,images
                   :extract-encrypted ,decrypt)))
 
+;;; _
 (provide 'mu4e-proc)
 ;;; mu4e-proc.el ends here

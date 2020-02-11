@@ -216,7 +216,7 @@ buffers found, compose a new message and then attach the file."
                    (setq files-to-attach (cdr files-to-attach)))
                  (message "Attached file(s) %s" files-str))
         (message "No buffer to attach file to.")))))
-;;; end of eshell functions
 
+;;; _
 (provide 'mu4e-contrib)
 ;;; mu4e-contrib.el ends here

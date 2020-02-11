@@ -1704,5 +1704,6 @@ other windows."
           (when (buffer-live-p (mu4e-get-headers-buffer))
             (switch-to-buffer (mu4e-get-headers-buffer))))))))
 
+;;; _
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here

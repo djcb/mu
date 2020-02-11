@@ -129,5 +129,6 @@
 (defun mu4e-headers-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer))
 (defun mu4e-view-speedbar-buttons (buffer) (mu4e-speedbar-buttons buffer))
 
+;;; _
 (provide 'mu4e-speedbar)
 ;;; mu4e-speedbar.el ends here

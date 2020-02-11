@@ -151,6 +151,7 @@ it with org)."
   (org-capture))
 
 (make-obsolete 'org-mu4e-store-and-capture 'org-mu4e-store-and-capture "1.3.6")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; _
 (provide 'mu4e-org)
 ;;; mu4e-org.el ends here

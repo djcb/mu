@@ -943,5 +943,6 @@ is supplied, or Transient Mark mode is enabled and the mark is active."
 (define-key mu4e-compose-mode-map
   (vector 'remap 'end-of-buffer) 'mu4e-compose-goto-bottom)
 
+;;; _
 (provide 'mu4e-compose)
 ;;; mu4e-compose.el ends here

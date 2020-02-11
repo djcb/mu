@@ -1892,6 +1892,6 @@ other windows."
       (kill-buffer)
       (mu4e~main-view))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; _
 (provide 'mu4e-headers)
 ;;; mu4e-headers.el ends here
