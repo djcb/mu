@@ -98,3 +98,4 @@ be used as the shortname."
   :type '(repeat (regexp)))
 
 (provide 'mu4e-lists)
+;;; mu4e-lists.el ends here

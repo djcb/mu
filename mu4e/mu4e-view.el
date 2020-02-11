@@ -1705,4 +1705,4 @@ other windows."
             (switch-to-buffer (mu4e-get-headers-buffer))))))))
 
 (provide 'mu4e-view)
-;;; mu4e-view ends here
+;;; mu4e-view.el ends here

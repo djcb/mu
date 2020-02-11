@@ -1250,4 +1250,4 @@ string will be shortened to fit if its length exceeds
     (nreverse buffers)))
 
 (provide 'mu4e-utils)
-;;; End of mu4e-utils.el
+;;; mu4e-utils.el ends here

@@ -281,3 +281,4 @@ match, POLICY determines what to do:
          (otherwise nil))))))
 
 (provide 'mu4e-context)
+;;; mu4e-context.el ends here

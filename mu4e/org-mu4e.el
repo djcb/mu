@@ -227,5 +227,4 @@ Edit the message body using org mode. DEPRECATED."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'org-mu4e)
-
 ;;; org-mu4e.el ends here
