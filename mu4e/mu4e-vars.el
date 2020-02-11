@@ -741,115 +741,115 @@ mu4e-compose-mode."
 
 ;; headers info
 (defconst mu4e-header-info
-  '( (:attachments
-      . ( :name "Attachments"
-          :shortname "Atts"
-          :help "Message attachments"
-          :require-full t
-          :sortable nil))
-     (:bcc
-      . ( :name "Bcc"
-                :shortname "Bcc"
-                :help "Blind Carbon-Copy recipients for the message"
-                :sortable t))
-     (:cc
-      . ( :name "Cc"
-                :shortname "Cc"
-                :help "Carbon-Copy recipients for the message"
-                :sortable t))
-     (:date
-      . ( :name "Date"
-                :shortname "Date"
-                :help "Date/time when the message was written"
-                :sortable t))
-     (:human-date .
-                  ( :name "Date"
-                          :shortname "Date"
-                          :help "Date/time when the message was written."
-                          :sortable :date))
-     (:flags .
-             ( :name "Flags"
-                     :shortname "Flgs"
-                     :help "Flags for the message"
-                     :sortable nil))
-     (:from .
-            ( :name "From"
-                    :shortname "From"
-                    :help "The sender of the message"
-                    :sortable t))
-     (:from-or-to .
-                  ( :name "From/To"
-                          :shortname "From/To"
-                          :help "Sender of the message if it's not me; otherwise the recipient"
-                          :sortable nil))
-     (:maildir .
-               ( :name "Maildir"
-                       :shortname "Maildir"
-                       :help "Maildir for this message"
-                       :sortable t))
-     (:list .
-            ( :name "List-Id"
-                    :shortname "List"
-                    :help "Mailing list id for this message"
-                    :sortable t))
-     (:mailing-list .
-                    ( :name "List"
-                            :shortname "List"
-                            :help "Mailing list friendly name for this message"
-                            :sortable :list))
-     (:message-id .
-                  ( :name "Message-Id"
-                          :shortname "MsgID"
-                          :help "Message-Id for this message"
-                          :sortable nil))
-     (:path .
-            ( :name "Path"
-                    :shortname "Path"
-                    :help "Full filesystem path to the message"
-                    :sortable t))
-     (:signature .
-                 ( :name "Signature"
-                         :shortname "Sgn"
-                         :help "Check for the cryptographic signature"
-                         :require-full t
-                         :sortable nil))
-     (:decryption .
-                  ( :name "Decryption"
-                          :shortname "Dec"
-                          :help "Check the cryptographic decryption status"
-                          :require-full t
-                          :sortable nil))
-     (:size .
-            ( :name "Size"
-                    :shortname "Size"
-                    :help "Size of the message"
-                    :sortable t))
-     (:subject .
-               ( :name "Subject"
-                       :shortname "Subject"
-                       :help "Subject of the message"
-                       :sortable t))
-     (:tags .
-            ( :name "Tags"
-                    :shortname "Tags"
-                    :help "Tags for the message"
-                    :sortable nil))
-     (:thread-subject .
-                      ( :name "Subject"
-                              :shortname "Subject"
-                              :help "Subject of the thread"
-                              :sortable :subject))
-     (:to .
-          ( :name "To"
-                  :shortname "To"
-                  :help "Recipient of the message"
-                  :sortable t))
-     (:user-agent .
-                  ( :name "User-Agent"
-                          :shortname "UA"
-                          :help "Program used for writing this message"
-                          :require-full t
-                          :sortable t)))
+  '((:attachments
+     . (:name "Attachments"
+        :shortname "Atts"
+        :help "Message attachments"
+        :require-full t
+        :sortable nil))
+    (:bcc
+     . (:name "Bcc"
+        :shortname "Bcc"
+        :help "Blind Carbon-Copy recipients for the message"
+        :sortable t))
+    (:cc
+     . (:name "Cc"
+        :shortname "Cc"
+        :help "Carbon-Copy recipients for the message"
+        :sortable t))
+    (:date
+     . (:name "Date"
+        :shortname "Date"
+        :help "Date/time when the message was written"
+        :sortable t))
+    (:human-date
+     . (:name "Date"
+        :shortname "Date"
+        :help "Date/time when the message was written."
+        :sortable :date))
+    (:flags
+     . (:name "Flags"
+        :shortname "Flgs"
+        :help "Flags for the message"
+        :sortable nil))
+    (:from
+     . (:name "From"
+        :shortname "From"
+        :help "The sender of the message"
+        :sortable t))
+    (:from-or-to
+     . (:name "From/To"
+        :shortname "From/To"
+        :help "Sender of the message if it's not me; otherwise the recipient"
+        :sortable nil))
+    (:maildir
+     . (:name "Maildir"
+        :shortname "Maildir"
+        :help "Maildir for this message"
+        :sortable t))
+    (:list
+     . (:name "List-Id"
+        :shortname "List"
+        :help "Mailing list id for this message"
+        :sortable t))
+    (:mailing-list
+     . (:name "List"
+        :shortname "List"
+        :help "Mailing list friendly name for this message"
+        :sortable :list))
+    (:message-id
+     . (:name "Message-Id"
+        :shortname "MsgID"
+        :help "Message-Id for this message"
+        :sortable nil))
+    (:path
+     . (:name "Path"
+        :shortname "Path"
+        :help "Full filesystem path to the message"
+        :sortable t))
+    (:signature
+     . (:name "Signature"
+        :shortname "Sgn"
+        :help "Check for the cryptographic signature"
+        :require-full t
+        :sortable nil))
+    (:decryption
+     . (:name "Decryption"
+        :shortname "Dec"
+        :help "Check the cryptographic decryption status"
+        :require-full t
+        :sortable nil))
+    (:size
+     . (:name "Size"
+        :shortname "Size"
+        :help "Size of the message"
+        :sortable t))
+    (:subject
+     . (:name "Subject"
+        :shortname "Subject"
+        :help "Subject of the message"
+        :sortable t))
+    (:tags
+     . (:name "Tags"
+        :shortname "Tags"
+        :help "Tags for the message"
+        :sortable nil))
+    (:thread-subject
+     . (:name "Subject"
+        :shortname "Subject"
+        :help "Subject of the thread"
+        :sortable :subject))
+    (:to
+     . (:name "To"
+        :shortname "To"
+        :help "Recipient of the message"
+        :sortable t))
+    (:user-agent
+     . (:name "User-Agent"
+        :shortname "UA"
+        :help "Program used for writing this message"
+        :require-full t
+        :sortable t)))
   "An alist of all possible header fields and information about them.
 This is used in the user-interface (the column headers in the header list, and
 the fields the message view).
