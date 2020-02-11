@@ -61,13 +61,13 @@
 ;; Probably this can be moved to mu4e-view.el.
 (add-hook 'mu4e-view-mode-hook
           (lambda ()
-              (set (make-local-variable 'bookmark-make-record-function)
-                   'mu4e-view-bookmark-make-record)))
+            (set (make-local-variable 'bookmark-make-record-function)
+                 'mu4e-view-bookmark-make-record)))
 ;; And this can be moved to mu4e-headers.el.
 (add-hook 'mu4e-headers-mode-hook
           (lambda ()
-              (set (make-local-variable 'bookmark-make-record-function)
-                   'mu4e-view-bookmark-make-record)))
+            (set (make-local-variable 'bookmark-make-record-function)
+                 'mu4e-view-bookmark-make-record)))
 
 (defun mu4e-view-bookmark-make-record ()
   "Make a bookmark entry for a mu4e buffer. Note that this is an
@@ -81,9 +81,9 @@ emacs bookmark, not to be confused with `mu4e-bookmarks'."
          (subject (or (plist-get msg :subject) "No subject")))
     `(,subject
       ,@(bookmark-make-record-default 'no-file 'no-context)
-        (location . (,query . ,docid))
-        (mode . ,mode)
-        (handler . mu4e-bookmark-jump))))
+      (location . (,query . ,docid))
+      (mode . ,mode)
+      (handler . mu4e-bookmark-jump))))
 
 (defun mu4e-bookmark-jump (bookmark)
   "Handler function for record returned by `mu4e-view-bookmark-make-record'.
@@ -102,8 +102,8 @@ BOOKMARK is a bookmark name or a bookmark record."
       (run-with-timer 0.1 nil
                       (lambda (bmk)
                         (bookmark-default-handler
-			  `("" (buffer . ,(current-buffer)) .
-			     ,(bookmark-get-bookmark-record bmk))))
+                         `("" (buffer . ,(current-buffer)) .
+                           ,(bookmark-get-bookmark-record bmk))))
                       bookmark))))
 
 
@@ -132,7 +132,7 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
   (let* ((path (shell-quote-argument (mu4e-message-field msg :path)))
          (command (format mu4e-register-as-spam-cmd path))) ;; re-register msg as spam
     (shell-command command))
-(mu4e-mark-at-point 'delete nil))
+  (mu4e-mark-at-point 'delete nil))
 
 (defun mu4e-register-msg-as-ham (msg)
   "Mark message as ham."
@@ -140,7 +140,7 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
   (let* ((path (shell-quote-argument(mu4e-message-field msg :path)))
          (command (format mu4e-register-as-ham-cmd path))) ;; re-register msg as ham
     (shell-command command))
-(mu4e-mark-at-point 'something nil))
+  (mu4e-mark-at-point 'something nil))
 
 ;; (add-to-list 'mu4e-view-actions
 ;;              '("sMark as spam" . mu4e-view-register-msg-as-spam) t)
@@ -178,8 +178,8 @@ buffers found, compose a new message and then attach the file."
         (files-to-attach
          (delq nil (mapcar
                     (lambda (f) (if (or (not (file-exists-p f)) (file-directory-p f))
-                                    nil
-                                  (expand-file-name f)))
+                               nil
+                             (expand-file-name f)))
                     (eshell-flatten-list (reverse args))))))
     ;; warn if user tries to attach without any files marked
     (if (null files-to-attach)
@@ -205,7 +205,7 @@ buffers found, compose a new message and then attach the file."
       ;; if buffer was found, set buffer to destination buffer, and attach files
       (if (not (eq destination 'nil))
           (progn (set-buffer destination)
-                 (goto-char (point-max))		;attach at end of buffer
+                 (goto-char (point-max)) ; attach at end of buffer
                  (while files-to-attach
                    (mml-attach-file (car files-to-attach)
                                     (or (mm-default-file-encoding (car files-to-attach))

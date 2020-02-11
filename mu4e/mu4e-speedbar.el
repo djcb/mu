@@ -55,15 +55,15 @@
 (defun mu4e-speedbar-install-variables ()
   "Install those variables used by speedbar to enhance mu4e."
   (add-hook 'mu4e-context-changed-hook
-    (lambda()
-      (when (buffer-live-p speedbar-buffer)
-        (with-current-buffer speedbar-buffer
-          (let ((inhibit-read-only t))
-            (mu4e-speedbar-buttons))))))
+            (lambda()
+              (when (buffer-live-p speedbar-buffer)
+                (with-current-buffer speedbar-buffer
+                  (let ((inhibit-read-only t))
+                    (mu4e-speedbar-buttons))))))
   (dolist (keymap
-            '( mu4e-main-speedbar-key-map
-               mu4e-headers-speedbar-key-map
-               mu4e-view-speedbar-key-map))
+           '( mu4e-main-speedbar-key-map
+              mu4e-headers-speedbar-key-map
+              mu4e-view-speedbar-key-map))
     (unless keymap
       (setq keymap (speedbar-make-specialized-keymap))
       (define-key keymap "RET" 'speedbar-edit-line)
@@ -71,7 +71,7 @@
 
 ;; Make sure our special speedbar major mode is loaded
 (if (featurep 'speedbar)
-  (mu4e-speedbar-install-variables)
+    (mu4e-speedbar-install-variables)
   (add-hook 'speedbar-load-hook 'mu4e-speedbar-install-variables))
 
 (defun mu4e~speedbar-render-maildir-list ()
@@ -80,19 +80,19 @@
   (when (buffer-live-p speedbar-buffer)
     (with-current-buffer speedbar-buffer
       (mapcar (lambda (maildir-name)
-		            (speedbar-insert-button
-		              (concat "  " maildir-name)
-		              'mu4e-highlight-face
-		              'highlight
-		              'mu4e~speedbar-maildir
-		              maildir-name))
-	      (mu4e-get-maildirs)))))
+                (speedbar-insert-button
+                 (concat "  " maildir-name)
+                 'mu4e-highlight-face
+                 'highlight
+                 'mu4e~speedbar-maildir
+                 maildir-name))
+              (mu4e-get-maildirs)))))
 
 (defun mu4e~speedbar-maildir (&optional _text token _ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
-    (mu4e-headers-search (concat "\"maildir:" token "\"")
-      current-prefix-arg)))
+   (mu4e-headers-search (concat "\"maildir:" token "\"")
+                        current-prefix-arg)))
 
 (defun mu4e~speedbar-render-bookmark-list ()
   "Insert the list of bookmarks in the speedbar"
@@ -100,17 +100,17 @@
   (mapcar (lambda (bookmark)
             (unless (plist-get bookmark :hide)
               (speedbar-insert-button
-	              (concat "  " (plist-get bookmark :name))
-	              'mu4e-highlight-face
-	              'highlight
-	              'mu4e~speedbar-bookmark
-	              (plist-get bookmark :query))))
-    (mu4e-bookmarks)))
+               (concat "  " (plist-get bookmark :name))
+               'mu4e-highlight-face
+               'highlight
+               'mu4e~speedbar-bookmark
+               (plist-get bookmark :query))))
+          (mu4e-bookmarks)))
 
 (defun mu4e~speedbar-bookmark (&optional _text token _ident)
   "Run bookmarked query TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
-    (mu4e-headers-search token current-prefix-arg)))
+   (mu4e-headers-search token current-prefix-arg)))
 
 ;;;###autoload
 (defun mu4e-speedbar-buttons (&optional _buffer)

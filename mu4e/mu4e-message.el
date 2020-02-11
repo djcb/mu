@@ -35,7 +35,7 @@
 
 (defcustom mu4e-html2text-command
   (if (fboundp 'shr-insert-document)
-    'mu4e-shr2text
+      'mu4e-shr2text
     (progn (require 'html2text) 'html2text))
   "Either a shell command or a function that converts from html to plain text.
 
@@ -124,7 +124,7 @@ Some notes on the format:
   Message view use the actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
   (if msg
-    (plist-get msg field)
+      (plist-get msg field)
     (mu4e-error "Message must be non-nil")))
 
 (defsubst mu4e-message-field (msg field)
@@ -136,16 +136,16 @@ Like `mu4e-message-field-nil', but will sanitize nil values:
 Thus, function will return nil for empty lists, non-existing body-txt or body-html."
   (let ((val (mu4e-message-field-raw msg field)))
     (cond
-      (val
-	val)   ;; non-nil -> just return it
-      ((member field '(:subject :message-id :path :maildir :in-reply-to))
-	"")    ;; string fields except body-txt, body-html: nil -> ""
-      ((member field '(:body-html :body-txt))
-	val)
-      ((member field '(:docid :size))
-	0)     ;; numeric type: nil -> 0
-      (t
-	val)))) ;; otherwise, just return nil
+     (val
+      val)   ;; non-nil -> just return it
+     ((member field '(:subject :message-id :path :maildir :in-reply-to))
+      "")    ;; string fields except body-txt, body-html: nil -> ""
+     ((member field '(:body-html :body-txt))
+      val)
+     ((member field '(:docid :size))
+      0)     ;; numeric type: nil -> 0
+     (t
+      val)))) ;; otherwise, just return nil
 
 (defsubst mu4e-message-has-field (msg field)
   "If MSG has a FIELD return t, nil otherwise."
@@ -158,7 +158,7 @@ no such message. If optional NOERROR is non-nil, do not raise an
 error when there is no message at point."
   (let ((msg (or (get-text-property (point) 'msg) mu4e~view-message)))
     (if msg
-      msg
+        msg
       (unless noerror (mu4e-warn "No message at point")))))
 
 (defsubst mu4e-message-field-at-point (field)
@@ -176,19 +176,19 @@ Determine whether we want
 to use html or text. The decision is based on PREFER-HTML and
 whether the message supports the given representation."
   (let* ((txt (mu4e-message-field msg :body-txt))
-	  (html (mu4e-message-field msg :body-html))
-	  (txt-len (length txt))
-	  (html-len (length html))
-	  (txt-limit (* mu4e-view-html-plaintext-ratio-heuristic txt-len))
-	  (txt-limit (if (>= txt-limit 0) txt-limit most-positive-fixnum)))
+         (html (mu4e-message-field msg :body-html))
+         (txt-len (length txt))
+         (html-len (length html))
+         (txt-limit (* mu4e-view-html-plaintext-ratio-heuristic txt-len))
+         (txt-limit (if (>= txt-limit 0) txt-limit most-positive-fixnum)))
     (cond
-      ; user prefers html --> use html if there is
-      (prefer-html (> html-len 0))
-      ;; otherwise (user prefers text) still use html if there is not enough
-      ;; text
-      ((< txt-limit html-len) t)
-      ;; otherwise, use text
-      (t nil))))
+                                        ; user prefers html --> use html if there is
+     (prefer-html (> html-len 0))
+     ;; otherwise (user prefers text) still use html if there is not enough
+     ;; text
+     ((< txt-limit html-len) t)
+     ;; otherwise, use text
+     (t nil))))
 
 (defun mu4e~message-body-has-content-type-param (msg param)
   "Does the MSG have a content-type parameter PARAM?"
@@ -207,29 +207,29 @@ will use that. Normally, this function prefers the text part,
 unless PREFER-HTML is non-nil."
   (setq mu4e~message-body-html (mu4e~message-use-html-p msg prefer-html))
   (let ((body
-	  (if mu4e~message-body-html
-	    ;; use an htmml body
-	    (cond
-	      ((stringp mu4e-html2text-command)
-		(mu4e~html2text-shell msg mu4e-html2text-command))
-	      ((functionp mu4e-html2text-command)
-		(if (help-function-arglist mu4e-html2text-command)
-		  (funcall mu4e-html2text-command msg)
-		  ;; oldskool parameterless mu4e-html2text-command
-		  (mu4e~html2text-wrapper mu4e-html2text-command msg)))
-	      (t (mu4e-error "Invalid `mu4e-html2text-command'")))
-	    ;; use a text body
-	    (or (with-temp-buffer
-		  (insert (or (mu4e-message-field msg :body-txt) ""))
-		  (if (mu4e~safe-iequal "flowed"
-			(mu4e~message-body-has-content-type-param
-			  msg "format"))
-		    (fill-flowed nil
-		      (mu4e~safe-iequal
-			"yes"
-			(mu4e~message-body-has-content-type-param
-			  msg "delsp"))))
-		 (buffer-string)) ""))))
+         (if mu4e~message-body-html
+             ;; use an htmml body
+             (cond
+              ((stringp mu4e-html2text-command)
+               (mu4e~html2text-shell msg mu4e-html2text-command))
+              ((functionp mu4e-html2text-command)
+               (if (help-function-arglist mu4e-html2text-command)
+                   (funcall mu4e-html2text-command msg)
+                 ;; oldskool parameterless mu4e-html2text-command
+                 (mu4e~html2text-wrapper mu4e-html2text-command msg)))
+              (t (mu4e-error "Invalid `mu4e-html2text-command'")))
+           ;; use a text body
+           (or (with-temp-buffer
+                 (insert (or (mu4e-message-field msg :body-txt) ""))
+                 (if (mu4e~safe-iequal "flowed"
+                                       (mu4e~message-body-has-content-type-param
+                                        msg "format"))
+                     (fill-flowed nil
+                                  (mu4e~safe-iequal
+                                   "yes"
+                                   (mu4e~message-body-has-content-type-param
+                                    msg "delsp"))))
+                 (buffer-string)) ""))))
     (dolist (func mu4e-message-body-rewrite-functions)
       (setq body (funcall func msg body)))
     body))
@@ -245,10 +245,10 @@ replace with."
     (goto-char (point-min))
     (while (re-search-forward "[ ]" nil t)
       (replace-match
-	(cond
-	  ((string= (match-string 0) "") "'")
-	  ((string= (match-string 0) " ") " ")
-	  (t ""))))
+       (cond
+        ((string= (match-string 0) "") "'")
+        ((string= (match-string 0) " ") " ")
+        (t ""))))
     (buffer-string)))
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
@@ -260,22 +260,22 @@ address) regular expressions RX. If there is a match, return
 non-nil; otherwise return nil. RX can also be a list of regular
 expressions, in which case any of those are tried for a match."
   (if (and cfield (listp cfield))
-    (or (mu4e-message-contact-field-matches msg (car cfield) rx)
-      (mu4e-message-contact-field-matches msg (cdr cfield) rx))
+      (or (mu4e-message-contact-field-matches msg (car cfield) rx)
+          (mu4e-message-contact-field-matches msg (cdr cfield) rx))
     (when cfield
       (if (listp rx)
-	;; if rx is a list, try each one of them for a match
-	(cl-find-if
-	  (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
-	  rx)
-	;; not a list, check the rx
-	(cl-find-if
-	  (lambda (ct)
-	    (let ((name (car ct)) (email (cdr ct)))
-	      (or
-		(and name  (string-match rx name))
-		(and email (string-match rx email)))))
-	  (mu4e-message-field msg cfield))))))
+          ;; if rx is a list, try each one of them for a match
+          (cl-find-if
+           (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
+           rx)
+        ;; not a list, check the rx
+        (cl-find-if
+         (lambda (ct)
+           (let ((name (car ct)) (email (cdr ct)))
+             (or
+              (and name  (string-match rx name))
+              (and email (string-match rx email)))))
+         (mu4e-message-field msg cfield))))))
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
   "Does contact-field CFIELD in MSG match me?
@@ -285,12 +285,12 @@ that is, any of the e-mail address in
 `(mu4e-personal-addresses)'. Returns the contact cell that
 matched, or nil."
   (cl-find-if
-    (lambda (cc-cell)
-      (cl-member-if
-	(lambda (addr)
-	  (string= (downcase addr) (downcase (cdr cc-cell))))
-	(mu4e-personal-addresses)))
-    (mu4e-message-field msg cfield)))
+   (lambda (cc-cell)
+     (cl-member-if
+      (lambda (addr)
+        (string= (downcase addr) (downcase (cdr cc-cell))))
+      (mu4e-personal-addresses)))
+   (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some FIELD from MSGPART.
@@ -322,27 +322,27 @@ Return the buffer contents."
 This can be used in `mu4e-html2text-command' in a new enough
 Emacs. Based on code by Titus von der Malsburg."
   (mu4e~html2text-wrapper
-    (lambda ()
-	(let (
-	 ;; When HTML emails contain references to remote images,
-	 ;; retrieving these images leaks information. For example,
-	 ;; the sender can see when I openend the email and from which
-	 ;; computer (IP address). For this reason, it is preferrable
-	 ;; to not retrieve images.
-	 ;; See this discussion on mu-discuss:
-	 ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
-	 (shr-inhibit-images t))
-	  (shr-render-region (point-min) (point-max)))) msg))
+   (lambda ()
+     (let (
+           ;; When HTML emails contain references to remote images,
+           ;; retrieving these images leaks information. For example,
+           ;; the sender can see when I openend the email and from which
+           ;; computer (IP address). For this reason, it is preferrable
+           ;; to not retrieve images.
+           ;; See this discussion on mu-discuss:
+           ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo
+           (shr-inhibit-images t))
+       (shr-render-region (point-min) (point-max)))) msg))
 
 (defun mu4e~html2text-shell (msg _cmd)
   "Convert html2 text in MSG using a shell function CMD."
   (mu4e~html2text-wrapper
-    (lambda ()
-      (let* ((tmp-file (mu4e-make-temp-file "html")))
-	(write-region (point-min) (point-max) tmp-file)
-	(erase-buffer)
-	(call-process-shell-command mu4e-html2text-command tmp-file t t)
-	(delete-file tmp-file))) msg))
+   (lambda ()
+     (let* ((tmp-file (mu4e-make-temp-file "html")))
+       (write-region (point-min) (point-max) tmp-file)
+       (erase-buffer)
+       (call-process-shell-command mu4e-html2text-command tmp-file t t)
+       (delete-file tmp-file))) msg))
 
 (provide 'mu4e-message)
 ;;; mu4e-message ends here
