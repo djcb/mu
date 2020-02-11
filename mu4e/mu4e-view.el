@@ -26,6 +26,7 @@
 ;; viewing e-mail messages
 
 ;;; Code:
+
 (require 'cl-lib)
 (require 'mu4e-utils) ;; utility functions
 (require 'mu4e-vars)
@@ -48,7 +49,8 @@
 (defvar gnus-icalendar-additional-identities)
 (defvar mu4e~headers-view-win)
 
-;; the message view
+;;; Options
+
 (defgroup mu4e-view nil
   "Settings for the message view."
   :group 'mu4e)
@@ -149,11 +151,15 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+;;; Variables
+
 (defvar-local mu4e~view-message nil
   "The message being viewed in view mode.")
 
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
+
+;;; Keymaps
 
 (defvar mu4e-view-header-field-keymap
   (let ((map (make-sparse-keymap)))
@@ -193,7 +199,8 @@ off, for example when using a read-only file-system."
   :type 'boolean
   :group 'mu4e-view)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Variables
+
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
 (put 'mu4e~view-cited-hidden 'permanent-local t)
 
@@ -216,7 +223,8 @@ message extracted at some path.")
 (defvar mu4e~view-html-text nil
   "Should we prefer html or text just this once? A symbol `text'
 or `html' or nil.")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; UNNAMED Main
 
 (defun mu4e-view-message-with-message-id (msgid)
   "View message with message-id MSGID. This (re)creates a
@@ -1082,9 +1090,8 @@ the new docid. Otherwise, return nil."
   (interactive)
   (mu4e~view-prev-or-next-unread nil))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Interactive functions
+;;; Interactive functions
 
 (defun mu4e-view-toggle-hide-cited ()
   "Toggle hiding of cited lines in the message body."
@@ -1180,8 +1187,8 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
             (overlay-put ov 'face 'mu4e-region-code))
           (setq beg nil end nil))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Wash functions
+;;; Wash functions
+
 (defun mu4e-view-fill-long-lines ()
   "Fill lines that are wider than the window width or `fill-column'."
   (interactive)
@@ -1202,8 +1209,8 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
               (widen))
             (forward-line 1)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; attachment handling
+;;; Attachment handling
+
 (defun mu4e~view-get-attach-num (prompt _msg &optional multi)
   "Ask the user with PROMPT for an attachment number for MSG, and
 ensure it is valid. The number is [1..n] for attachments
@@ -1433,7 +1440,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
    ((string= what "diary")
     (icalendar-import-file path diary-file))
    (t (mu4e-error "Unsupported action %S" what))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; UNNAMED Utilities
 
 (defun mu4e-view-mark-custom ()
   "Run some custom mark function."
@@ -1443,6 +1451,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
 (defun mu4e~view-split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
+
+;;; Scroll commands
 
 (defun mu4e-view-scroll-up-or-next ()
   "Scroll-up the current message.
@@ -1464,6 +1474,8 @@ anymore, go the next message."
   "Scroll text of selected window down one line."
   (interactive)
   (scroll-down 1))
+
+;;; Mark commands
 
 (defun mu4e-view-unmark-all ()
   "If we're in split-view, unmark all messages.
@@ -1519,8 +1531,8 @@ list."
    (mu4e-headers-mark-or-move-to-trash)
    (mu4e~headers-move (or n 1))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; URL handling
+;;; URL handling
+
 (defun mu4e~view-get-urls-num (prompt &optional multi)
   "Ask the user with PROMPT for an URL number for MSG, and ensure
 it is valid. The number is [1..n] for URLs \[0..(n-1)] in the
@@ -1605,7 +1617,7 @@ this is the default, you may not need it."
   "Evaluate FUNC(uri) for each uri in the current message."
   (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Various commands
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")

@@ -27,9 +27,10 @@
 ;; Support for links to mu4e messages/queries from within org-mode,
 ;; and for writing message in org-mode, sending them as rich-text.
 
+;; At least version 8.x of Org mode is required.
+
 ;;; Code:
 
-;; The expect version here is org 8.x
 (require 'org)
 (require 'mu4e-compose)
 
@@ -41,16 +42,15 @@
 (declare-function mu4e-message                      "mu4e-message")
 (declare-function mu4e-compose-mode                 "mu4e-compose")
 
-
-
 
-;;; editing with org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;; Editing with org-mode
+;;
 ;; below, some functions for the org->html conversion
 ;; based on / inspired by Eric Schulte's org-mime.el
 ;; Homepage: http://orgmode.org/worg/org-contrib/org-mime.php
 ;;
 ;; EXPERIMENTAL
+
 (defvar org-export-skip-text-before-1st-heading)
 (defvar org-export-htmlize-output-type)
 (defvar org-export-preserve-breaks)

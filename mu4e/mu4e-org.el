@@ -24,9 +24,10 @@
 
 ;;; Commentary:
 
+;; The expect version here is org 8.x.
+
 ;;; Code:
 
-;; The expect version here is org 8.x
 (require 'org)
 
 (defgroup mu4e-org nil

@@ -31,10 +31,8 @@
 (require 'mu4e-utils)
 (require 'mu4e-message)
 (require 'message) ;; mail-header-separator
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Options
 
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, don't include self.
@@ -74,6 +72,8 @@ mu4e-specific version of `message-signature'."
   "Whether to compose messages in a new frame."
   :type 'boolean
   :group 'mu4e-compose)
+
+;;; UNNAMED
 
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
@@ -145,8 +145,7 @@ References. If both are empty, return nil."
     (mapconcat (lambda (id) (format "<%s>" id)) refs " ")))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; determine the recipient fields for new messages
+;;; Determine the recipient fields for new messages
 
 (defun mu4e~draft-recipients-list-to-string (lst)
   "Convert a lst LST of address cells into a string.
@@ -271,9 +270,10 @@ message. Return nil if there are no recipients for the particular field."
       (mu4e-error "Unsupported field")))))
 
 ;;; RFC2822 handling of phrases in mail-addresses
-;;; The optional display-name contains a phrase, it sits before the angle-addr
-;;; as specified in RFC2822 for email-addresses in header fields.
-;;; contributed by jhelberg
+;;
+;; The optional display-name contains a phrase, it sits before the
+;; angle-addr as specified in RFC2822 for email-addresses in header
+;; fields.  Contributed by jhelberg.
 
 (defun mu4e~rfc822-phrase-type (ph)
   "Return an atom or quoted-string for the phrase PH.
@@ -317,7 +317,8 @@ This is based on the variable `user-full-name' and
       (format "%s" user-mail-address))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; UNNAMED
+
 (defun mu4e~draft-insert-mail-header-separator ()
   "Insert `mail-header-separator' in the first empty line of the message.
 `message-mode' needs this line to know where the headers end and

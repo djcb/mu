@@ -25,6 +25,7 @@
 ;;; Commentary:
 
 ;;; Code:
+
 (require 'mu4e-vars)
 (require 'mu4e-headers)  ;; headers view
 (require 'mu4e-view)     ;; message view
@@ -39,15 +40,12 @@
 (when mu4e-org-support
   (require 'mu4e-org))      ;; support for org-mode links
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; we can't properly use compose buffers that are revived using
-;; desktop-save-mode; so let's turn that off
+;; We can't properly use compose buffers that are revived using
+;; desktop-save-mode; so let's turn that off.
 (require 'desktop)
 (add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;###autoload
 (defun mu4e (&optional background)
   "If mu4e is not running yet, start it. Then, show the main

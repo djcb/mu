@@ -23,12 +23,15 @@
 ;;; Commentary:
 
 ;;; Code:
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (require 'smtpmail)      ;; the queueing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
 (require 'mu4e-vars)  ;; the context
 (require 'cl-lib)
+
+
+;;; Mode
 
 (defconst mu4e~main-buffer-name " *mu4e-main*"
   "*internal* Name of the mu4e main view buffer.")
@@ -152,8 +155,7 @@ clicked."
      "")
    "\n"))
 
-;; NEW
-;; This is the old `mu4e~main-view' function but without
+;; NEW This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
 (defun mu4e~main-view-real (_ignore-auto _noconfirm)
   (let ((buf (get-buffer-create mu4e~main-buffer-name))
@@ -241,10 +243,9 @@ clicked."
     (goto-char (point-min)))
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Interactive functions
-;; NEW
-;; Toggle mail sending mode without switching
+;;; Commands
+
+;; NEW Toggle mail sending mode without switching
 (defun mu4e~main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
