@@ -1,5 +1,5 @@
 ;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)  -*- lexical-binding: t; -*- -*- lexical-binding: t -*-
-;;
+
 ;; Copyright (C) 2019- Christophe Troestler
 
 ;; Author: Christophe Troestler <Christophe.Troestler@umons.ac.be>
@@ -8,7 +8,7 @@
 ;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
-;;
+
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or

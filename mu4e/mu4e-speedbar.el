@@ -1,5 +1,5 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e -*- lexical-binding: t -*-
-;;
+
 ;; Copyright (C) 2012-2020 Antono Vasiljev, Dirk-Jan C. Binnema
 
 ;; Author: Antono Vasiljev <self@antono.info>
@@ -7,7 +7,7 @@
 ;; Keywords: file, tags, tools
 
 ;; This file is not part of GNU Emacs.
-;;
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
