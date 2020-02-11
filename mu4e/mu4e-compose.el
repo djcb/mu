@@ -1,4 +1,4 @@
-;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
+;;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
