@@ -1,6 +1,4 @@
-;;; org-mu4e -- Support for links to mu4e messages/queries from within -*- lexical-binding: t -*-
-;;; org-mode, and for writing message in org-mode, sending them as
-;;; rich-text
+;;; org-mu4e -- support for links to mu4e messages and writing org-mode messages -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2012-2019 Dirk-Jan C. Binnema
 
@@ -25,6 +23,9 @@
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; Support for links to mu4e messages/queries from within org-mode,
+;; and for writing message in org-mode, sending them as rich-text.
 
 ;;; Code:
 
