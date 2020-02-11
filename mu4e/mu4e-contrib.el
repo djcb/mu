@@ -20,6 +20,9 @@
 ;;; Commentary:
 
 ;; Some user-contributed functions for mu4e
+
+;;; Code:
+
 (require 'mu4e-headers)
 (require 'mu4e-view)
 (require 'bookmark)

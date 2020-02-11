@@ -24,6 +24,9 @@
 
 ;; A mu4e 'context' is a set of variable-settings and functions, which can be
 ;; used e.g. to switch between accounts.
+
+;;; Code:
+
 (require 'cl-lib)
 (require 'mu4e-utils)
 
