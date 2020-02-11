@@ -25,6 +25,7 @@
 ;; In this file, we create a table of list-id -> shortname for mailing lists.
 ;; The shortname (friendly) should a at most 8 characters, camel-case
 
+;;; Code:
 
 (defvar mu4e~mailing-lists
   '( ("bbdb-info.lists.sourceforge.net"                       . "BBDB")

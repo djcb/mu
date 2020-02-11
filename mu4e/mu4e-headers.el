@@ -26,7 +26,7 @@
 ;; one-line descriptions of emails, aka 'headers' (not to be confused with
 ;; headers like 'To:' or 'Subject:')
 
-;; Code:
+;;; Code:
 (require 'cl-lib)
 (require 'fringe)
 (require 'hl-line)
