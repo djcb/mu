@@ -89,7 +89,7 @@ removed."
 
 (defun mu4e~proc-filter (_proc str)
   "Filter string STR from PROC.
-This process the the 'mu server' output. It accumulates the
+This processes the 'mu server' output. It accumulates the
 strings into valid sexps by checking of the ';;eox' `end-of-sexp'
 marker, and then evaluating them.
 
