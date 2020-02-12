@@ -480,7 +480,7 @@ registered as `mu4e-view-func'."
                    :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
                    :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
                    :extract-images ,images
-                   :extract-encrypt ,decrypt)))
+                   :extract-encrypted ,decrypt)))
 
 (defun mu4e~proc-view-path (path &optional images decrypt)
   "View message at PATH..
@@ -488,10 +488,10 @@ Optionally, if IMAGES is non-nil, backend will any images
 attached to the message, and return them as temp files. The
 result will be delivered to the function registered as
 `mu4e-view-func'. Optionally DECRYPT."
-  (mu4e~call-mu `(view-path
+  (mu4e~call-mu `(view
                    :path ,path
-                   :images ,images
-                   :decrypt ,decrypt)))
+                   :extract-images ,images
+                   :extract-encrypted ,decrypt)))
 
 (provide 'mu4e-proc)
 ;;; mu4e-proc.el ends here
