@@ -51,10 +51,10 @@ Match 1 will be the length (in hex).")
 
 (defun mu4e~proc-running-p  ()
   "Whether the mu process is running."
-  (when (and mu4e~proc-process
-             (memq (process-status mu4e~proc-process)
-                   '(run open listen connect stop)))
-    t))
+  (and mu4e~proc-process
+       (memq (process-status mu4e~proc-process)
+             '(run open listen connect stop))
+       t))
 
 (defsubst mu4e~proc-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e~proc-buf'.
