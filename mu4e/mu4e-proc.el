@@ -30,7 +30,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal vars
 
-(defconst mu4e~proc-name "*mu4e-proc*"
+(defvar mu4e~proc-buf nil
+  "Buffer (string) for data received from the backend.")
+(defconst mu4e~proc-name " *mu4e-proc*"
   "Name of the server process, buffer.")
 (defvar mu4e~proc-process nil
   "The mu-server process.")
@@ -46,13 +48,6 @@
   (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
-
-(defvar mu4e~proc-buf nil
-  "Buffer (string) for data received from the backend.")
-(defconst mu4e~proc-name " *mu4e-proc*"
-  "Name of the server process, buffer.")
-(defvar mu4e~proc-process nil
-  "The mu-server process.")
 
 (defun mu4e~proc-running-p  ()
   "Whether the mu process is running."
