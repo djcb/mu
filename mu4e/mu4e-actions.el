@@ -296,14 +296,13 @@ messages can lead to messages with multiple tags headers.")
   "List of tags for completion in `mu4e-action-retag-message'.")
 
 (defun mu4e~contains-line-matching (regexp path)
-  "Does file at PATH contain a line matching the given REGEXP?"
+  "Return non-nil if the file at PATH contain a line matching REGEXP.
+Otherwise return nil."
   (with-temp-buffer
     (insert-file-contents path)
     (save-excursion
       (goto-char (point-min))
-      (if (re-search-forward regexp nil t)
-          t
-        nil))))
+      (re-search-forward regexp nil t))))
 
 (defun mu4e~replace-first-line-matching (regexp to-string path)
   "Replace first line matching REGEXP in PATH with TO-STRING."
