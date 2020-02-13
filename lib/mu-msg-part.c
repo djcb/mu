@@ -481,6 +481,27 @@ looks_like_text_body_part (GMimeContentType *ctype)
 }
 
 
+static MuMsgPartSigStatusReport*
+copy_status_report_maybe (GObject *obj)
+{
+	MuMsgPartSigStatusReport *report, *copy;
+
+	report = g_object_get_data (obj, SIG_STATUS_REPORT);
+	if (!report)
+		return NULL; /* nothing to copy */
+
+	copy = g_new0(MuMsgPartSigStatusReport, 1);
+	copy->verdict = report->verdict;
+
+	if (report->report)
+		copy->report  = g_strdup (report->report);
+	if (report->signers)
+		copy->signers = g_strdup (report->signers);
+
+	return copy;
+}
+
+
 
 /* call 'func' with information about this MIME-part */
 static gboolean
@@ -520,10 +541,7 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	if (g_ascii_strcasecmp (msgpart.subtype, "pgp-signature") == 0 ||
 	    decrypted) {
 		msgpart.sig_status_report =
-			(MuMsgPartSigStatusReport*)
-			g_object_get_data (G_OBJECT(parent),
-					   SIG_STATUS_REPORT);
-
+			copy_status_report_maybe (G_OBJECT(parent));
 		if (msgpart.sig_status_report)
 			msgpart.part_type |= MU_MSG_PART_TYPE_SIGNED;
 	}
@@ -532,6 +550,8 @@ handle_part (MuMsg *msg, GMimePart *part, GMimeObject *parent,
 	msgpart.index   = (*index)++;
 
 	func (msg, &msgpart, user_data);
+
+	mu_msg_part_sig_status_report_destroy (msgpart.sig_status_report);
 
 	return TRUE;
 }

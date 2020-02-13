@@ -1152,8 +1152,6 @@ make_command_map (Context& context)
                                    {"type", ArgInfo{Type::Symbol, true,
                                             "type of composition: reply/forward/edit/resend/new"}},
                                    {"docid", ArgInfo{Type::Integer, false,"document id of parent-message, if any"}},
-                                   {"extract-images", ArgInfo{Type::Symbol, false,
-                                                           "whether to extract images for this messages (if any)"}},
                                    {"extract-encrypted", ArgInfo{Type::Symbol, false,
                                                            "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
