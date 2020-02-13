@@ -333,7 +333,7 @@ The result is delivered to the function registered as
 `mu4e-compose-func'."
   (mu4e~call-mu `(compose
                    :type ,type
-                   :decrypt ,decrypt
+                   :extract-encrypted ,decrypt
                    :docid ,docid)))
 
 (defun mu4e~proc-contacts (personal after tstamp)
