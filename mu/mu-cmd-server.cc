@@ -933,24 +933,26 @@ static void
 move_docid (MuStore *store, DocId docid, const std::string& flagstr,
             bool new_name, bool no_view)
 {
-        GError *gerr{};
-        auto msg{mu_store_get_msg (store, docid, &gerr)};
-        if (!msg)
-                throw Error{Error::Code::Store, &gerr, "failed to get message from store"};
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::InvalidArgument, "invalid docid"};
 
-        const auto flags = flagstr.empty() ? mu_msg_get_flags (msg) :
-                get_flags (mu_msg_get_path(msg), flagstr);
-        if (flags == MU_FLAG_INVALID) {
-                mu_msg_unref(msg);
-                throw Error{Error::Code::InvalidArgument, "invalid flags '%s'", flagstr.c_str()};
-        }
+        GError *gerr{};
+        auto msg{mu_store_get_msg (store, docid, &gerr)};
 
         try {
+                if (!msg)
+                        throw Error{Error::Code::Store, &gerr, "failed to get message from store"};
+
+                const auto flags = flagstr.empty() ? mu_msg_get_flags (msg) :
+                        get_flags (mu_msg_get_path(msg), flagstr);
+                if (flags == MU_FLAG_INVALID)
+                        throw Error{Error::Code::InvalidArgument, "invalid flags '%s'", flagstr.c_str()};
+
                 do_move (store, docid, msg, "", flags, new_name, no_view);
+
         } catch (...) {
-                mu_msg_unref (msg);
+                if (msg)
+                        mu_msg_unref (msg);
                 throw;
         }
 
