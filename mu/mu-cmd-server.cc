@@ -866,6 +866,7 @@ index_handler (Context& context, const Parameters& params)
                 throw;
         }
         mu_index_destroy(index);
+        mu_store_flush(context.store);
 }
 
 static void
