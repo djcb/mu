@@ -105,16 +105,17 @@ get_matching_part_index (MuMsg *msg, MuMsgOptions opts,
 static void
 accumulate_text_message (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 {
-	const gchar *str;
-	char *adrs;
-	GMimeMessage *mimemsg;
-	InternetAddressList *addresses;
+	const gchar		*str;
+	char			*adrs;
+	GMimeMessage		*mimemsg;
+	InternetAddressList	*addresses;
 
 	/* put sender, recipients and subject in the string, so they
 	 * can be indexed as well */
-	mimemsg = GMIME_MESSAGE (part->data);
+	mimemsg	  = GMIME_MESSAGE (part->data);
 	addresses = g_mime_message_get_addresses (mimemsg, GMIME_ADDRESS_TYPE_FROM);
-	adrs = internet_address_list_to_string (addresses, NULL, FALSE);
+	adrs	  = internet_address_list_to_string (addresses, NULL, FALSE);
+
 	g_string_append_printf
 		(*gstrp, "%s%s", adrs ? adrs : "", adrs ? "\n" : "");
 	g_free (adrs);
@@ -124,8 +125,9 @@ accumulate_text_message (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 		(*gstrp, "%s%s", str ? str : "", str ? "\n" : "");
 
 	addresses = g_mime_message_get_all_recipients (mimemsg);
-	adrs = internet_address_list_to_string (addresses, NULL, FALSE);
+	adrs	  = internet_address_list_to_string (addresses, NULL, FALSE);
 	g_object_unref (addresses);
+
 	g_string_append_printf
 		(*gstrp, "%s%s", adrs ? adrs : "", adrs ? "\n" : "");
 	g_free (adrs);
@@ -134,16 +136,18 @@ accumulate_text_message (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 static void
 accumulate_text_part (MuMsg *msg, MuMsgPart *part, GString **gstrp)
 {
-	GMimeContentType *ctype;
-	gboolean err;
-	char *txt;
+	GMimeContentType	*ctype;
+	gboolean		 err;
+	char			*txt;
+
 	ctype = g_mime_object_get_content_type ((GMimeObject*)part->data);
 	if (!g_mime_content_type_is_type (ctype, "text", "plain"))
 		return; /* not plain text */
-	txt = mu_msg_mime_part_to_string
-		((GMimePart*)part->data, &err);
+
+	txt = mu_msg_mime_part_to_string((GMimePart*)part->data, &err);
 	if (txt)
 		g_string_append (*gstrp, txt);
+
 	g_free (txt);
 }
 
@@ -768,10 +772,6 @@ save_object (GMimeObject *obj, MuMsgOptions opts, const char *fullpath,
 	else
 		rv = write_object_to_fd (obj, fd, err);
 
-	/* Unref it since it was referenced earlier by
-	 * get_mime_object_at_index */
-	g_object_unref (obj);
-
 	if (close (fd) != 0 && !err) { /* don't write on top of old err */
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not close '%s': %s",
@@ -855,15 +855,18 @@ gboolean
 mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 		  const char *fullpath, guint partidx, GError **err)
 {
-	GMimeObject *part;
+	gboolean	 rv;
+	GMimeObject	*part;
 
 	g_return_val_if_fail (msg, FALSE);
 	g_return_val_if_fail (fullpath, FALSE);
 	g_return_val_if_fail (!((opts & MU_MSG_OPTION_OVERWRITE) &&
 				(opts & MU_MSG_OPTION_USE_EXISTING)), FALSE);
 
+	rv = FALSE;
+
 	if (!mu_msg_load_msg_file (msg, err))
-		return FALSE;
+		return rv;
 
 	part = get_mime_object_at_index (msg, opts, partidx);
 
@@ -872,21 +875,20 @@ mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 		part = (GMimeObject*)g_mime_message_part_get_message
 			(GMIME_MESSAGE_PART (part));
 
-	if (!part) {
+	if (!part)
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "part %u does not exist", partidx);
-		return FALSE;
-	}
-	if (!GMIME_IS_PART(part) && !GMIME_IS_MESSAGE(part)) {
+	else if (!GMIME_IS_PART(part) && !GMIME_IS_MESSAGE(part))
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "unexpected type %s for part %u",
 			     G_OBJECT_TYPE_NAME((GObject*)part),
 			     partidx);
-		return FALSE;
-	}
+	else
+		rv = save_object (part, opts, fullpath, err);
 
+	g_clear_object(&part);
 
-	return save_object (part, opts, fullpath, err);
+	return rv;
 }
 
 
