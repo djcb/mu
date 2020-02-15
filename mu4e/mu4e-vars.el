@@ -400,16 +400,16 @@ an RFC-2822-compatible e-mail address."
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-reply-ignore-address
-message-dont-reply-to-names
+  '("no-?reply")
   "Addresses to prune when doing wide replies.
 
 This can be a regexp matching the address, a list of regexps or a
 predicate function. A value of nil keeps all the addresses."
   :type '(choice
-     (const nil)
-     function
-     string
-     (repeat string))
+           (const nil)
+           function
+           string
+           (repeat string))
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-reply-recipients 'ask

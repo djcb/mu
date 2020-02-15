@@ -182,7 +182,6 @@ of the original, we simple copy the list form the original."
   (let ((reply-to
           (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
     (cl-delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)
-    (message "%S %S %S"  reply-to (plist-get origmsg :reply-to) (plist-get origmsg :from))
     (if mu4e-compose-dont-reply-to-self
       (cl-delete-if
         (lambda (to-cell)
