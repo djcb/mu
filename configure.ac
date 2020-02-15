@@ -252,6 +252,7 @@ AC_SUBST(MU_DOC_DIR, "${prefix}/share/doc/mu")
 AC_CONFIG_FILES([
 Makefile
 mu/Makefile
+mu/mu-memcheck
 lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
@@ -269,6 +270,8 @@ toys/mug/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile
+],[
+ [chmod +x mu/mu-memcheck]
 ])
 AC_OUTPUT
 

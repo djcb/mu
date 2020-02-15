@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export G_SLICE=always-malloc
+export G_DEBUG=gc-friendly
+
+libtool --mode=execute valgrind --tool=memcheck --leak-check=full --show-possibly-lost=no --leak-resolution=med --track-origins=yes --num-callers=20 --log-file='@abs_top_builddir@/mu-%p.vgdump' @abs_top_builddir@/mu/mu $@

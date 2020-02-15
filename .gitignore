@@ -99,3 +99,9 @@ build-aux/
 /perf.data
 perf.data
 perf.data.old
+*vgdump
+/lib/asan.log*
+/man/mu-mfind.1
+/mu/mu-memcheck
+mu-*-coverage
+mu*tar.xz
