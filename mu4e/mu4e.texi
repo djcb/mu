@@ -2864,8 +2864,8 @@ edited. When you compose a totally new message, the @var{msg} parameter is
 @node Actions
 @chapter Actions
 
-@t{mu4e} lets you define custom actions for messages in the @ref{Headers view}
-and for both messages and attachments in the @ref{Message view}. Custom
+@t{mu4e} lets you define custom actions for messages in @ref{Headers view}
+and for both messages and attachments in @ref{Message view}. Custom
 actions allow you to easily extend @t{mu4e} for specific needs --- for example,
 marking messages as spam in a spam filter or applying an attachment with a
 source code patch.
