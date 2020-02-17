@@ -2864,8 +2864,8 @@ edited. When you compose a totally new message, the @var{msg} parameter is
 @node Actions
 @chapter Actions
 
-@t{mu4e} lets you define custom actions for messages in the @ref{Headers view}
-and for both messages and attachments in the @ref{Message view}. Custom
+@t{mu4e} lets you define custom actions for messages in @ref{Headers view}
+and for both messages and attachments in @ref{Message view}. Custom
 actions allow you to easily extend @t{mu4e} for specific needs --- for example,
 marking messages as spam in a spam filter or applying an attachment with a
 source code patch.
@@ -2891,7 +2891,7 @@ Defining a new custom action comes down to writing an elisp-function to do the
 work. Functions that operate on messages receive a @var{msg} parameter, which
 corresponds to the message at point. Something like:
 @lisp
-  (defun my-action-func (msg)
+(defun my-action-func (msg)
   "Describe my message function."
   ;; do stuff
   )
@@ -2903,7 +2903,7 @@ corresponds to the message at point, and an @var{attachment-num}, which is the
 number of the attachment as seen in the message view. An attachment function
 looks like:
 @lisp
-  (defun my-attachment-action-func (msg attachment-num)
+(defun my-attachment-action-func (msg attachment-num)
   "Describe my attachment function."
   ;; do stuff
   )

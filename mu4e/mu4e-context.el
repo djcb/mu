@@ -1,4 +1,4 @@
-; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2015-2020 Dirk-Jan C. Binnema
 
@@ -49,16 +49,16 @@ none."
   (let ((ctx mu4e~context-current))
     (when output
       (mu4e-message "Current context: %s"
-	(if ctx (mu4e-context-name ctx) "<none>")))
+                    (if ctx (mu4e-context-name ctx) "<none>")))
     ctx))
 
 (defun mu4e-context-label ()
   "Propertized string with the current context name, or \"\" if
   there is none."
   (if (mu4e-context-current)
-    (concat "[" (propertize (mu4e~quote-for-modeline
-			      (mu4e-context-name (mu4e-context-current)))
-		  'face 'mu4e-context-face) "]") ""))
+      (concat "[" (propertize (mu4e~quote-for-modeline
+                               (mu4e-context-name (mu4e-context-current)))
+                              'face 'mu4e-context-face) "]") ""))
 
 (cl-defstruct mu4e-context
   "A mu4e context object with the following members:
@@ -194,9 +194,9 @@ default folders (see `make-mu4e-context' and `mu4e-context'):
   "Let user choose some context based on its name."
   (when mu4e-contexts
     (let* ((names (cl-map 'list (lambda (context)
-			       (cons (mu4e-context-name context) context))
-		    mu4e-contexts))
-	    (context (mu4e-read-option prompt names)))
+                                  (cons (mu4e-context-name context) context))
+                          mu4e-contexts))
+           (context (mu4e-read-option prompt names)))
       (or context (mu4e-error "No such context")))))
 
 (defun mu4e-context-switch (&optional force name)
@@ -210,25 +210,25 @@ non-nil."
   (unless mu4e-contexts
     (mu4e-error "No contexts defined"))
   (let* ((names (cl-map 'list (lambda (context)
-			     (cons (mu4e-context-name context) context))
-		  mu4e-contexts))
-	  (context
-	    (if name
-	      (cdr-safe (assoc name names))
-	      (mu4e~context-ask-user "Switch to context: "))))
+                                (cons (mu4e-context-name context) context))
+                        mu4e-contexts))
+         (context
+          (if name
+              (cdr-safe (assoc name names))
+            (mu4e~context-ask-user "Switch to context: "))))
     (unless context (mu4e-error "No such context"))
     ;; if new context is same as old one one switch with FORCE is set.
     (when (or force (not (eq context (mu4e-context-current))))
       (when (and (mu4e-context-current)
-	      (mu4e-context-leave-func mu4e~context-current))
-	(funcall (mu4e-context-leave-func mu4e~context-current)))
+                 (mu4e-context-leave-func mu4e~context-current))
+        (funcall (mu4e-context-leave-func mu4e~context-current)))
       ;; enter the new context
       (when (mu4e-context-enter-func context)
-	(funcall (mu4e-context-enter-func context)))
+        (funcall (mu4e-context-enter-func context)))
       (when (mu4e-context-vars context)
-	(mapc (lambda (cell)
-		  (set (car cell) (cdr cell)))
-	  (mu4e-context-vars context)))
+        (mapc (lambda (cell)
+                (set (car cell) (cdr cell)))
+              (mu4e-context-vars context)))
       (setq mu4e~context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
@@ -242,7 +242,7 @@ match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
   (when (and mu4e-contexts (not mu4e~context-current))
     (let ((context (mu4e-context-determine msg policy)))
       (when context (mu4e-context-switch
-		      nil (mu4e-context-name context))))))
+                     nil (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
   "Return the first context with a match-func that returns t. MSG
@@ -263,18 +263,18 @@ match, POLICY determines what to do:
 - otherwise, return nil. Effectively, this leaves the current context as it is."
   (when mu4e-contexts
     (if (eq policy 'always-ask)
-      (mu4e~context-ask-user "Select context: ")
+        (mu4e~context-ask-user "Select context: ")
       (or ;; is there a matching one?
-	(cl-find-if (lambda (context)
-		     (when (mu4e-context-match-func context)
-		       (funcall (mu4e-context-match-func context) msg)))
-	  mu4e-contexts)
-	;; no context found yet; consult policy
-	(cl-case policy
-	  (pick-first (car mu4e-contexts))
-	  (ask (mu4e~context-ask-user "Select context: "))
-	  (ask-if-none (or (mu4e-context-current)
-			 (mu4e~context-ask-user "Select context: ")))
-	  (otherwise nil))))))
+       (cl-find-if (lambda (context)
+                     (when (mu4e-context-match-func context)
+                       (funcall (mu4e-context-match-func context) msg)))
+                   mu4e-contexts)
+       ;; no context found yet; consult policy
+       (cl-case policy
+         (pick-first (car mu4e-contexts))
+         (ask (mu4e~context-ask-user "Select context: "))
+         (ask-if-none (or (mu4e-context-current)
+                          (mu4e~context-ask-user "Select context: ")))
+         (otherwise nil))))))
 
 (provide 'mu4e-context)

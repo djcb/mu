@@ -60,9 +60,9 @@ window, unless BACKGROUND (prefix-argument) is non-nil."
   "Quit the mu4e session."
   (interactive)
   (if mu4e-confirm-quit
-	  (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
-		(mu4e~stop))
-	(mu4e~stop)))
+      (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
+        (mu4e~stop))
+    (mu4e~stop)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (provide 'mu4e)
