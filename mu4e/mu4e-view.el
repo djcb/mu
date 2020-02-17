@@ -1572,7 +1572,6 @@ URLs. The urls are fetched to `mu4e-attachment-dir'."
 (defun mu4e~view-handle-urls (prompt multi urlfunc)
   "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
 it to a range of uris. PROMPT is the query to present to the user."
-  (interactive "P")
   (if multi
       (mu4e~view-handle-multi-urls prompt urlfunc)
     (mu4e~view-handle-single-url prompt urlfunc)))
@@ -1580,7 +1579,6 @@ it to a range of uris. PROMPT is the query to present to the user."
 (defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
   "Apply URLFUNC to url NUM in the current message, prompting the
 user with PROMPT."
-  (interactive)
   (let* ((num (or num (mu4e~view-get-urls-num prompt)))
          (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
@@ -1596,7 +1594,6 @@ of urls. You can type multiple values separated by space, e.g.  1
 
 Furthermore, there is a shortcut \"a\" which means all urls, but as
 this is the default, you may not need it."
-  (interactive)
   (let* ((linkstr (mu4e~view-get-urls-num
                    "URL number range (or 'a' for 'all')" t))
          (count (hash-table-count mu4e~view-link-map))
