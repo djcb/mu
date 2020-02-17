@@ -49,6 +49,7 @@ GTAGS
 *.gcda
 *.gcno
 *.trs
+aminclude_static.am
 elisp-comp
 elc-stamp
 dummy.cc
@@ -94,6 +95,9 @@ build-aux/
 /lib/parser/test-tokenizer
 /lib/parser/test-utils
 /lib/parser/tokenize
+/lib/utils/test-command-parser
+/lib/utils/test-mu-utils
+/lib/utils/test-sexp-parser
 *_flymake.*
 *_flymake_*
 /perf.data
