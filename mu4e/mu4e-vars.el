@@ -901,6 +901,9 @@ argument, and returns a string. See the default value of
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
 
+(defvar mu4e~headers-last-query nil
+  "The present (most recent) query.")
+
 ;;;; View
 
 (defconst mu4e~view-buffer-name "*mu4e-view*"
@@ -916,9 +919,6 @@ argument, and returns a string. See the default value of
 We need to keep this information around to quickly re-sort
 subsets of the contacts in the completions function in
 mu4e-compose.")
-
-(defvar mu4e~headers-last-query nil
-  "The present (most recent) query.")
 
 (defvar mu4e~server-props nil
   "Information  we receive from the mu4e server process \(in the 'pong-handler').")

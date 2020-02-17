@@ -105,6 +105,13 @@ the end of a message. Otherwise, don't move to the next message."
   :type 'boolean
   :group 'mu4e-view)
 
+(defcustom mu4e-view-auto-mark-as-read t
+  "Automatically mark messages are 'read' when you read
+them. This is typically the expected behavior, but can be turned
+off, for example when using a read-only file-system."
+  :type 'boolean
+  :group 'mu4e-view)
+
 (defcustom mu4e-save-multiple-attachments-without-asking nil
   "If non-nil, saving multiple attachments asks once for a
 directory and saves all attachments in the chosen directory."
@@ -151,14 +158,6 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
-;;; Variables
-
-(defvar-local mu4e~view-message nil
-  "The message being viewed in view mode.")
-
-(defvar mu4e-view-fill-headers t
-  "If non-nil, automatically fill the headers when viewing them.")
-
 ;;; Keymaps
 
 (defvar mu4e-view-header-field-keymap
@@ -192,14 +191,13 @@ The first letter of NAME is used as a shortcut character."
     map)
   "Keymap used in the \"Attachements\" header field.")
 
-(defcustom mu4e-view-auto-mark-as-read t
-  "Automatically mark messages are 'read' when you read
-them. This is typically the expected behavior, but can be turned
-off, for example when using a read-only file-system."
-  :type 'boolean
-  :group 'mu4e-view)
-
 ;;; Variables
+
+(defvar-local mu4e~view-message nil
+  "The message being viewed in view mode.")
+
+(defvar mu4e-view-fill-headers t
+  "If non-nil, automatically fill the headers when viewing them.")
 
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
 (put 'mu4e~view-cited-hidden 'permanent-local t)
