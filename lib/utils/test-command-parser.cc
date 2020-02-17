@@ -63,8 +63,10 @@ static void
 test_command()
 {
         using namespace Command;
+        allow_warnings();
 
         CommandMap cmap;
+
 
         cmap.emplace("my-command",
                      CommandInfo{
@@ -77,13 +79,15 @@ test_command()
 
         g_assert_true(call(cmap, "(my-command :param1 \"hello\")"));
         g_assert_true(call(cmap, "(my-command :param1 \"hello\" :param2 123)"));
-        g_assert_true(call(cmap, "(my-command :param1 \"hello\" :param2 123 :param3 xxx)"));
+
+        g_assert_false(call(cmap, "(my-command :param1 \"hello\" :param2 123 :param3 xxx)"));
 }
 
 static void
 test_command2()
 {
         using namespace Command;
+        allow_warnings();
 
         CommandMap cmap;
         cmap.emplace("bla",
@@ -95,7 +99,8 @@ test_command2()
                            [&](const auto& params){}});
 
 
-        g_assert_true (call(cmap, "(bla :foo nil :bla nil)"));
+        g_assert_true (call(cmap, "(bla :foo nil)"));
+        g_assert_false (call(cmap, "(bla :foo nil :bla nil)"));
 }
 
 

@@ -82,6 +82,13 @@ Command::invoke(const Command::CommandMap& cmap, const Node& call)
                                             " but got " + to_string(param_it->type));
         }
 
+        // all passed parameters must be known
+        for (size_t i = 1; i < params.size(); i += 2) {
+                if (std::none_of(cinfo.args.begin(), cinfo.args.end(),
+                                 [&](auto&& arg) {return params[i].value == ":" + arg.first;}))
+                        throw command_error("unknown parameter '" + params[i].value + "'");
+        }
+
         if (cinfo.handler)
                 cinfo.handler(params);
 }
