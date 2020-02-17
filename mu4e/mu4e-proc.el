@@ -381,7 +381,7 @@ or an error."
                   :query ,query
                   :threads ,threads
                   :sortfield ,sortfield
-                  :reverse ,(if (eq sortdir 'descending) t nil)
+                  :descending ,(if (eq sortdir 'descending) t nil)
                   :maxnum ,maxnum
                   :skip-dups ,skip-dups
                   :include-related ,include-related)))
@@ -443,7 +443,7 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
                   :flags ,(or flags nil)
                   :maildir ,(or maildir nil)
                   :rename ,(and maildir mu4e-change-filenames-when-moving)
-                  :noview ,no-view)))
+                  :no-view ,(if no-view t nil))))
 
 (defun mu4e~proc-ping (&optional queries)
   "Sends a ping to the mu server, expecting a (:pong ...) in response.

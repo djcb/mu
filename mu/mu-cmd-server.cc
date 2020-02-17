@@ -720,7 +720,7 @@ find_handler (Context& context, const Parameters& params)
         const auto query{get_string_or(params, "query")};
         const auto threads{get_bool_or(params, "threads", false)};
         const auto sortfieldstr{get_symbol_or(params, "sortfield")};
-        const auto reverse{get_bool_or(params, "reverse", false)};
+        const auto descending{get_bool_or(params, "descending", false)};
         const auto maxnum{get_int_or(params, "maxnum", 500)};
         const auto skip_dups{get_bool_or(params, "skip-dups", false)};
         const auto include_related{get_bool_or(params, "include-related", false)};
@@ -735,7 +735,7 @@ find_handler (Context& context, const Parameters& params)
         }
 
         int qflags{MU_QUERY_FLAG_NONE};
-        if (reverse)
+        if (descending)
                 qflags |= MU_QUERY_FLAG_DESCENDING;
         if (skip_dups)
                 qflags |= MU_QUERY_FLAG_SKIP_DUPS;
@@ -1151,8 +1151,7 @@ make_command_map (Context& context)
 
       cmap.emplace("compose",
                    CommandInfo{
-                           ArgMap{
-                                   {"type", ArgInfo{Type::Symbol, true,
+                           ArgMap{{"type", ArgInfo{Type::Symbol, true,
                                             "type of composition: reply/forward/edit/resend/new"}},
                                    {"docid", ArgInfo{Type::Integer, false,"document id of parent-message, if any"}},
                                    {"extract-encrypted", ArgInfo{Type::Symbol, false,
@@ -1173,8 +1172,7 @@ make_command_map (Context& context)
 
       cmap.emplace("extract",
                    CommandInfo{
-                           ArgMap{
-                                   {"docid", ArgInfo{Type::Integer, true,  "document for the message" }},
+                           ArgMap{{"docid", ArgInfo{Type::Integer, true,  "document for the message" }},
                                    {"index", ArgInfo{Type::Integer, true,  "index for the part to operate on" }},
                                    {"action", ArgInfo{Type::Symbol, true, "what to do with the part" }},
                                    {"extract-encrypted", ArgInfo{Type::Symbol, false,
@@ -1191,7 +1189,7 @@ make_command_map (Context& context)
                                    {"threads", ArgInfo{Type::Symbol, false,
                                             "whether to include threading information" }},
                                    {"sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
-                                   {"sortdir",  ArgInfo{Type::Symbol, false,
+                                   {"descending", ArgInfo{Type::Symbol, false,
                                             "whether to sort in descending order" }},
                                    {"maxnum",  ArgInfo{Type::Integer, false,
                                             "maximum number of result (hint)" }},
@@ -1222,8 +1220,7 @@ make_command_map (Context& context)
 
       cmap.emplace("move",
                    CommandInfo{
-                           ArgMap{
-                                   {"docid",  ArgInfo{Type::Integer, false, "document-id"}},
+                           ArgMap{{"docid",  ArgInfo{Type::Integer, false, "document-id"}},
                                    {"msgid",  ArgInfo{Type::String, false, "message-id"}},
                                    {"flags",   ArgInfo{Type::String, false, "new flags for the message"}},
                                    {"maildir", ArgInfo{Type::String, false, "the target maildir" }},
@@ -1268,8 +1265,7 @@ make_command_map (Context& context)
 
       cmap.emplace("view",
                    CommandInfo{
-                           ArgMap{
-                                   {"docid",  ArgInfo{Type::Integer, false, "document-id"}},
+                           ArgMap{{"docid",  ArgInfo{Type::Integer, false, "document-id"}},
                                    {"msgid",  ArgInfo{Type::String, false, "message-id"}},
                                    {"path",   ArgInfo{Type::String, false, "message filesystem path"}},
 
