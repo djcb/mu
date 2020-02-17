@@ -905,12 +905,12 @@ FUNC should be a function taking two arguments:
   "Define the major-mode for the mu4e-view."
   (if mu4e-view-use-gnus
       (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
+        "Major mode for viewing an e-mail message in mu4e, based on
+Gnus' article-mode."
         ;; remove some gnus stuff that does not apply
         (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
         (define-key mu4e-view-mode-map [menu-bar Article] nil)
         (define-key mu4e-view-mode-map [menu-bar post] nil)
-        "Major mode for viewing an e-mail message in mu4e, based on
-Gnus' article-mode."
         (setq mu4e~view-buffer-name gnus-article-buffer)
         (mu4e~view-mode-body))
     (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
