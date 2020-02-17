@@ -133,8 +133,13 @@ struct Store::Private {
         }
 
         ~Private() {
-                if (wdb())
+                LOCKED;
+                if (wdb()) {
                         wdb()->set_metadata (ContactsKey, contacts_.serialize());
+                        if (in_transaction_)  // auto-commit.
+                                wdb()->commit_transaction();
+                }
+
         }
 
         std::shared_ptr<Xapian::Database> db() const {
@@ -442,8 +447,6 @@ Store::cancel_transaction () try
 bool
 Store::in_transaction () const
 {
-        LOCKED;
-
         return priv_->in_transaction_;
 }
 
@@ -1404,8 +1407,6 @@ mu_store_get_dirstamp (const MuStore *store, const char *dirpath, GError **err)
 
         return self(store)->dirstamp(dirpath);
 }
-
-
 
 void
 mu_store_print_info  (const MuStore *store, gboolean nocolor)
