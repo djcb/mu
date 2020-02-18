@@ -239,7 +239,7 @@ non-nil."
   "When contexts are defined but there is no context yet, switch
 to the first whose :match-func return non-nil. If none of them
 match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
-  (when (and mu4e-contexts (not mu4e~context-current))
+  (when mu4e-contexts
     (let ((context (mu4e-context-determine msg policy)))
       (when context (mu4e-context-switch
                      nil (mu4e-context-name context))))))

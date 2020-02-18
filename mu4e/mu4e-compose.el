@@ -456,7 +456,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
       (setq message-default-charset 'utf-8))
     ;; make sure mu4e is started in the background (ie. we don't want to error
     ;; out when sending the message; better to do it now if there's a problem)
-    (mu4e~start) ;; start mu4e in background, if needed
+    (unless (mu4e-running-p)
+      (mu4e~start)) ;; start mu4e in background, if needed
     (mu4e~compose-register-message-save-hooks)
     ;; set the default directory to the user's home dir; this is probably more
     ;; useful e.g. when finding an attachment file the directory the current

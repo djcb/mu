@@ -780,7 +780,8 @@ nothing."
   "Handle 'pong' responses from the mu server."
   (setq mu4e~server-props (plist-get data :props)) ;; save info from the server
   (let ((doccount (plist-get mu4e~server-props :doccount)))
-    (mu4e~context-autoswitch nil mu4e-context-policy)
+    (unless (mu4e-context-current)
+      (mu4e~context-autoswitch nil mu4e-context-policy))
     (mu4e~check-requirements)
     (when func (funcall func))
     (when (zerop doccount)
