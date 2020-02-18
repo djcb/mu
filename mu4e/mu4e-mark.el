@@ -37,7 +37,7 @@
 (declare-function mu4e~headers-goto-docid "mu4e-headers")
 (declare-function mu4e-headers-next "mu4e-headers")
 
-;;; UNNAMED
+;;; Variables & constants
 
 (defcustom mu4e-headers-leave-behavior 'ask
   "What to do when user leaves the headers view.
@@ -437,7 +437,6 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   "Is the given DOCID marked?"
   (when (gethash docid mu4e~mark-map) t))
 
-;;; UNNAMED
 
 (defun mu4e-mark-marks-num ()
   "Return the number of mark-instances in the current buffer."

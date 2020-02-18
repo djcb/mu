@@ -43,7 +43,7 @@
 (defvar mu4e-view-date-format)
 
 
-;;; UNNAMED
+;;; Count lines
 
 (defun mu4e-action-count-lines (msg)
   "Count the number of lines in the e-mail MSG.
@@ -52,7 +52,7 @@ Works for headers view and message-view."
            (shell-command-to-string
             (concat "wc -l < " (shell-quote-argument (mu4e-message-field msg :path))))))
 
-;;; UNNAMED
+;;; To PDF
 
 (defvar mu4e-msg2pdf
   (let ((exec-path (cons (concat mu4e-builddir "/toys/msg2pdf/") exec-path)))
@@ -75,7 +75,7 @@ Works for the message view."
       (mu4e-warn "Failed to create PDF file"))
     (find-file pdf)))
 
-;;; UNNAMED
+;;; To HTML
 
 (defun mu4e~action-header-to-html (msg field)
   "Convert the FIELD of MSG to an HTML string."
@@ -156,7 +156,7 @@ privacy aspects in `(mu4e) Displaying rich-text messages'."
   (xwidget-webkit-browse-url
    (concat "file://" (mu4e~write-body-to-html msg)) t))
 
-;;; UNNAMED
+;;; To speech
 
 (defconst mu4e-text2speech-command "festival --tts"
   "Program that speaks out text it receives on standard input.")
@@ -170,7 +170,7 @@ privacy aspects in `(mu4e) Displaying rich-text messages'."
     (shell-command-on-region (point-min) (point-max)
                              mu4e-text2speech-command)))
 
-;;; UNNAMED
+;;; Org Helpers
 
 (defvar mu4e-captured-message nil
   "The most recently captured message.")
@@ -182,13 +182,10 @@ Later, we can create an attachment based on this message with
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
 
-;;; UNNAMED
 
 (defun mu4e-action-copy-message-file-path (msg)
   "Save the full path for the current MSG to the kill ring."
   (kill-new (mu4e-message-field msg :path)))
-
-;;; UNNAMED
 
 (defvar mu4e-org-contacts-file nil
   "File to store contact information for org-contacts.
@@ -228,7 +225,7 @@ file where you store your org-contacts."
     (when (fboundp 'org-capture)
       (org-capture nil key))))
 
-;;; UNNAMED
+;;; Patches
 
 (defvar mu4e~patch-directory-history nil
   "History of directories we have applied patches to.")
@@ -268,7 +265,7 @@ bother asking for the git tree again (useful for bulk actions)."
                (if signoff "--signoff" "")
                (shell-quote-argument (mu4e-message-field msg :path)))))))
 
-;;; UNNAMED
+;;; Tagging
 
 (defvar mu4e-action-tags-header "X-Keywords"
   "Header where tags are stored.

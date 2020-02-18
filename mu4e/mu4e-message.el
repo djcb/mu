@@ -84,7 +84,7 @@ message-plist and the text, which is the plain-text version,
 ossibly converted from html and/or transformed by earlier rewrite
 functions.")
 
-;;; UNNAMED
+;;; Message fields
 
 (defsubst mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG.
@@ -310,7 +310,7 @@ Eiter in the headers buffer or the view buffer. Field is a
 symbol, see `mu4e-header-info'."
   (plist-get (mu4e-message-at-point) field))
 
-;;; UNNAMED
+;;; Html2Text
 
 (defun mu4e~html2text-wrapper (func msg)
   "Apply FUNC on a temporary buffer with html from MSG.

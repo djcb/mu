@@ -203,7 +203,7 @@ place to do that."
   "The compose-type for this buffer.
 This is a symbol, `new', `forward', `reply' or `edit'.")
 
-;;; UNNAMED
+;;; Attachments
 
 (defun mu4e-compose-attach-message (msg)
   "Insert message MSG as an attachment."
@@ -224,7 +224,7 @@ Messages are captured with `mu4e-action-capture-message'."
     (mu4e-warn "No message has been captured"))
   (mu4e-compose-attach-message mu4e-captured-message))
 
-;;; UNNAMED
+;;; Misc
 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
 ;; what these 'Sent mail' folders are for!
@@ -376,7 +376,7 @@ removing the In-Reply-To header."
   (unless (message-fetch-field "in-reply-to")
     (message-remove-header "References")))
 
-;;; UNNAMED
+;;; Compose Mode
 
 (defvar mu4e-compose-mode-map nil
   "Keymap for \"*mu4e-compose*\" buffers.")
@@ -818,7 +818,7 @@ draft message."
   (mu4e-compose 'new))
 
 
-;;; UNNAMED
+;;; Compose Mail
 ;; mu4e-compose-func and mu4e-send-func are wrappers so we can set ourselves
 ;; as default emacs mailer (define-mail-user-agent etc.)
 
@@ -904,7 +904,7 @@ buffer buried."
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
 
-;;; UNNAMED
+;;; Go to bottom / top
 
 (defun mu4e-compose-goto-top (&optional arg)
   "Go to the beginning of the message or buffer.

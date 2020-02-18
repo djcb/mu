@@ -73,8 +73,6 @@ mu4e-specific version of `message-signature'."
   :type 'boolean
   :group 'mu4e-compose)
 
-;;; UNNAMED
-
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
   "The User-Agent string for mu4e, or nil.")
@@ -317,7 +315,7 @@ This is based on the variable `user-full-name' and
       (format "%s" user-mail-address))))
 
 
-;;; UNNAMED
+;;; Header separators
 
 (defun mu4e~draft-insert-mail-header-separator ()
   "Insert `mail-header-separator' in the first empty line of the message.

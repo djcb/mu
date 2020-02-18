@@ -338,7 +338,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
   "List of cells describing the various sort-options.
 In the format needed for `mu4e-read-option'.")
 
-;;; UNNAMED
+;;; Clear
 
 (defun mu4e~headers-clear (&optional msg)
   "Clear the header buffer and related data structures."
@@ -436,7 +436,7 @@ If SKIP-HOOK is absent or nil, `mu4e-message-changed-hook' will be invoked."
     (run-hooks 'mu4e-message-changed-hook)))
 
 
-;;; UNNAMED
+;;; Misc
 
 (defun mu4e~headers-contact-str (contacts)
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
@@ -445,8 +445,6 @@ into a string."
    (lambda (ct)
      (let ((name (car ct)) (email (cdr ct)))
        (or name email "?"))) contacts ", "))
-
-;;; UNNAMED
 
 (defun mu4e~headers-thread-prefix-map (type)
   "Return the thread prefix based on the symbol TYPE."
@@ -604,7 +602,7 @@ while our display may be different)."
                         ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
     str))
 
-;;; UNNAMED
+;;; Special headers
 
 (defconst mu4e-headers-from-or-to-prefix '("" . "To ")
   "Prefix for the :from-or-to field.
@@ -805,7 +803,7 @@ after the end of the search results."
     (run-hooks 'mu4e-headers-found-hook)))
 
 
-;;; UNNAMED
+;;; Marking
 
 (defmacro mu4e~headers-defun-mark-for (mark)
   "Define a function mu4e~headers-mark-MARK."
@@ -829,8 +827,6 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for unmark)
 (mu4e~headers-defun-mark-for unread)
 (mu4e~headers-defun-mark-for action)
-
-;;; UNNAMED
 
 (defvar mu4e-move-to-trash-patterns '()
   "List of regexps to match for moving to trash instead of flagging them.
@@ -1140,7 +1136,7 @@ Also, unhighlight any previously highlighted headers."
         (hl-line-highlight)))
     (setq mu4e~highlighted-docid docid)))
 
-;;; UNNAMED
+;;; Misc 2
 
 (defun mu4e~headers-select-window ()
   "When there is a visible window for the headers buffer, make sure
@@ -1158,7 +1154,7 @@ message plist, or nil if not found."
        (when (and this-msgid (string= msgid this-msgid))
          msg)))))
 
-;;; UNNAMED markers mark headers for
+;;; Marking 2
 
 (defun mu4e~headers-mark (docid mark)
   "(Visually) mark the header for DOCID with character MARK."
@@ -1210,7 +1206,7 @@ docid is not found."
       (unless ignore-missing
         (mu4e-error "Cannot find message with docid %S" docid)))))
 
-;;; UNNAMED
+;;; Queries & searching
 
 (defcustom mu4e-query-rewrite-function 'identity
   "Function that takes a search expression string, and returns a

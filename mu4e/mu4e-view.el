@@ -222,7 +222,7 @@ message extracted at some path.")
   "Should we prefer html or text just this once? A symbol `text'
 or `html' or nil.")
 
-;;; UNNAMED Main
+;;; Main
 
 (defun mu4e-view-message-with-message-id (msgid)
   "View message with message-id MSGID. This (re)creates a
@@ -1439,7 +1439,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     (icalendar-import-file path diary-file))
    (t (mu4e-error "Unsupported action %S" what))))
 
-;;; UNNAMED Utilities
+;;; View Utilities
 
 (defun mu4e-view-mark-custom ()
   "Run some custom mark function."

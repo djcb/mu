@@ -545,7 +545,7 @@ Or go to the top level if there is none."
           ('mu4e-view-mode "(mu4e)Message view")
           (t               "mu4e"))))
 
-;;; UNNAMED Buffers and windows (1/2)
+;;; Misc
 
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
@@ -588,8 +588,6 @@ that has a live window), and vice versa."
         (view-mode)))
     (switch-to-buffer buf)))
 
-;;; UNNAMED
-
 (defvar mu4e~lists-hash nil
   "Hashtable of mailing-list-id => shortname, based on
   `mu4e~mailing-lists' and `mu4e-user-mailing-lists'.")
@@ -617,8 +615,6 @@ on `mu4e~mailing-lists', `mu4e-user-mailing-lists', and
    (if (string-match "\\([^.]*\\)\\." list-id)
        (match-string 1 list-id)
      list-id)))
-
-;;; UNNAMED
 
 (defvar mu4e-index-updated-hook nil
   "Hook run when the indexing process had one or more updated messages.
@@ -674,7 +670,7 @@ process."
     (t (error "Error %d: %s" errcode errmsg))))
 
 
-;;; UNNAMED
+;;; Contacts
 
 (defun mu4e~update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS.
@@ -851,7 +847,7 @@ When successful, call FUNC (if non-nil) afterwards."
    (buffer-list)))
 
 
-;;; UNNAMED
+;;; Indexing & Updating
 
 (defvar mu4e~progress-reporter nil
   "Internal, the progress reporter object.")
@@ -1097,7 +1093,7 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
          (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
      list)))
 
-;;; UNNAMED
+;;; Misc 2
 
 (defvar mu4e-imagemagick-identify "identify"
   "Name/path of the Imagemagick 'identify' program.")
@@ -1187,7 +1183,7 @@ displaying it). Do _not_ bury the current buffer, though."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 
-;;; UNNAMED
+;;; Misc 3
 
 (defun mu4e-refresh-message (path)
   "Re-parse message at PATH; if this works, we will
@@ -1195,7 +1191,6 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
   (mu4e~proc-add path))
 
-;;; UNNAMED
 
 (defun mu4e~fontify-cited ()
   "Colorize message content based on the citation level. This is
@@ -1226,7 +1221,7 @@ the view and compose modes and will color each signature in digest messages adhe
                     (point-max))))
           (add-text-properties p end '(face mu4e-footer-face)))))))
 
-;;; UNNAMED
+;;; Misc 4
 
 (defun mu4e~quote-for-modeline (str)
   "Quote a string to be used literally in the modeline. The
@@ -1243,8 +1238,6 @@ string will be shortened to fit if its length exceeds
                 (concat (substring str 0 w) a))))
     ;; Escape the % character
     (replace-regexp-in-string "%" "%%" str t t)))
-
-;;; UNNAMED Buffers and windows (1/2)
 
 (defun mu4e~active-composition-buffers ()
   "Return all active mu4e composition buffers"
