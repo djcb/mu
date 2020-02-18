@@ -224,17 +224,17 @@ struct Context {
                                                     "some other mu running?");
                                 else
                                         print_error((MuError)gerr->code,
-                                                    "cannot open database @ %s:%s; "
-                                                    "please try '%s", dbpath,
+                                                    "cannot open database @ %s:%s; already running? "
+                                                    "if not, please try '%s", dbpath,
                                                     gerr->message ? gerr->message : "something went wrong",
                                                     mu_init.c_str());
                         } else
                                 print_error(MU_ERROR,
-                                            "cannot open database @ %s; please try '%s'",
+                                            "cannot open database @ %s; already running? if not, please try '%s'",
                                             dbpath, mu_init.c_str());
 
                         throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
-                                         "failed to open database @ %s; please try '%s'",
+                                         "failed to open database @ %s; already running? if not, please try '%s'",
                                          dbpath, mu_init.c_str());
                 }
 
