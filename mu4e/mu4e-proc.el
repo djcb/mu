@@ -355,7 +355,7 @@ to a temporary file, then respond with
                   :action ,action
                   :docid ,docid
                   :index ,index
-                  :decrypt ,decrypt
+                  :extract-encrypted ,decrypt
                   :path ,path
                   :what ,what
                   :param ,param)))
