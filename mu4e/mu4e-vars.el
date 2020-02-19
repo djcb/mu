@@ -889,11 +889,15 @@ Note, `:sortable' is not supported for custom header fields.")
                                   (+ (length (mu4e-message-field msg :to))
                                      (length (mu4e-message-field msg :cc))))))))
   "A list of custom (user-defined) headers.
-The format is similar
-to `mu4e-header-info', but adds a :function property, which
-should point to a function that takes a message p-list as
-argument, and returns a string. See the default value of
-`mu4e-header-info-custom for an example.")
+The format is similar to `mu4e-header-info', but adds a :function
+property, which should point to a function that takes a message
+plist as argument, and returns a string. See the default value of
+`mu4e-header-info-custom for an example.
+
+Note that when using the gnus-based view (see
+`mu4e-view-use-gnus'), you only have access to a limited set of
+message fields: only the ones used in the header-view, not
+including, for instance, the message body.")
 
 ;;; Run-time variables
 ;;;; Headers
