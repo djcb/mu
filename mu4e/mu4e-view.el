@@ -398,6 +398,9 @@ article-mode."
       (run-hooks 'gnus-article-decode-hook)
       (let ((mu4e~view-rendering t) ; customize gnus in mu4e
             (max-specpdl-size mu4e-view-max-specpdl-size)
+            (gnus-icalendar-additional-identities (mu4e-personal-addresses))
+            ;; Possibly add headers (before "Attachments")
+            (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
             (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
         (gnus-article-prepare-display))
       (mu4e-view-mode)
@@ -405,6 +408,60 @@ article-mode."
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
+
+(defun mu4e~view-gnus-display-mime (msg)
+  "Same as `gnus-display-mime' but add a mu4e headers to MSG."
+  (lambda (&optional ihandles)
+    (gnus-display-mime ihandles)
+    (unless ihandles
+      (save-restriction
+        (article-goto-body)
+        (forward-line -1)
+        (narrow-to-region (point) (point))
+        (dolist (field mu4e-view-fields)
+          (let ((fieldval (mu4e-message-field msg field)))
+            (cl-case field
+              ((:path :maildir :user-agent :mailing-list :message-id)
+               (mu4e~view-gnus-insert-header field fieldval))
+              ((:flags :tags)
+               (let ((flags (mapconcat (lambda (flag)
+                                         (if (symbolp flag)
+	                                     (symbol-name flag)
+	                                   flag)) fieldval ", ")))
+                 (mu4e~view-gnus-insert-header field flags)))
+              (:size (mu4e~view-gnus-insert-header
+                      field (mu4e-display-size fieldval)))
+              ((:subject :to :from :cc :bcc :from-or-to :date :attachments
+                         :signature :decryption)) ; handled by Gnus
+              (t
+               (mu4e~view-gnus-insert-header-custom msg field))
+              )))
+        (let ((gnus-treatment-function-alist
+               '((gnus-treat-highlight-headers
+                  gnus-article-highlight-headers))))
+          (gnus-treat-article 'head))))))
+
+(defun mu4e~view-gnus-insert-header (field val)
+  "Insert a header FIELD with value VAL in Gnus article view."
+  (let* ((info (cdr (assoc field mu4e-header-info)))
+	 (key (plist-get info :name))
+         (help (plist-get info :help)))
+    (if (and val (> (length val) 0))
+        (insert (propertize (concat key ":") 'help-echo help)
+                " " val "\n"))))
+
+(defun mu4e~view-gnus-insert-header-custom (msg field)
+  "Insert the custom FIELD in Gnus article view."
+  (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
+                             (mu4e-error "custom field %S not found" field))))
+	 (key (plist-get info :name))
+         (func (or (plist-get info :function)
+                   (mu4e-error "no :function defined for custom field %S %S"
+		               field info)))
+         (val (funcall func msg))
+         (help (plist-get info :help)))
+    (when (and val (> (length val) 0))
+      (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
 
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
