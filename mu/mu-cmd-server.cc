@@ -734,7 +734,7 @@ find_handler (Context& context, const Parameters& params)
                                         sortfieldstr.c_str()};
         }
 
-        int qflags{MU_QUERY_FLAG_NONE};
+        int qflags{MU_QUERY_FLAG_SKIP_UNREADABLE};
         if (descending)
                 qflags |= MU_QUERY_FLAG_DESCENDING;
         if (skip_dups)
