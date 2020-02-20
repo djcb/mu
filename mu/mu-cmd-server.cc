@@ -1279,34 +1279,67 @@ make_command_map (Context& context)
 }
 
 
-static std::string
-read_line (Context& context)
-{
-// if we don't have readline, use the simple version.
-#ifndef HAVE_LIBREADLINE
-        std::cout << ";; mu> ";
-        std::string line;
-        if (!std::getline(std::cin, line))
-                context.do_quit = true;
-        return line;
-#else /*!HAVE_LIBREADLINE*/
+struct  Readline {
+        Readline (const std::string& histpath, size_t max_lines);
+        ~Readline();
+        std::string read_line(bool& do_quit);
+        void save_line(const std::string& line);
+        std::string histpath_;
+        size_t max_lines_{0};
+};
 
+/// Wrapper around readline (if available) or nothing otherwise.
+#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY) && defined(bla)
+Readline::Readline (const std::string& histpath, size_t max_lines):
+        histpath_{histpath}, max_lines_{max_lines}
+{
+        rl_bind_key('\t', rl_insert); // default (filenames) is not useful
+        using_history();
+        read_history (histpath_.c_str());
+
+        if (max_lines_ > 0)
+                stifle_history(max_lines_);
+}
+
+Readline::~Readline () {
+        write_history(histpath_.c_str());
+        if (max_lines_ > 0)
+                history_truncate_file (histpath_.c_str(), max_lines_);
+}
+
+std::string
+Readline::read_line(bool& do_quit)
+{
         auto buf = readline(";; mu% ");
         if (!buf) {
-                context.do_quit = true;
+                do_quit = true;
                 return {};
         }
-#ifdef HAVE_READLINE_HISTORY
-        else if (buf[0])
-                add_history(buf);
-#endif /*HAVE_LIBREADLINE_HISTORY*/
-
         std::string line{buf};
         ::free (buf);
-
         return line;
-#endif /*HAVE_LIBREADLINE*/
 }
+
+void
+Readline::save_line(const std::string& line)
+{
+        add_history(line.c_str());
+}
+#else
+Readline::Readline (const std::string& histpath, size_t max_lines) {}
+Readline::~Readline() {}
+void Readline::save_line(const std::string& line) {}
+
+std::string
+Readline::read_line(bool& do_quit)
+{
+        std::string line;
+        std::cout << ";; mu> ";
+        if (!std::getline(std::cin, line))
+                do_quit = true;
+        return line;
+}
+#endif // ! defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY)
 
 
 MuError
@@ -1322,6 +1355,9 @@ mu_cmd_server (MuConfig *opts, GError **err) try
         Context context{opts};
         context.command_map = make_command_map (context);
 
+        const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
+        Readline readline(histpath, 50);
+
         install_sig_handler();
         std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
                   << ";; Use (help) to get a list of commands, (quit) to quit.\n";
@@ -1330,11 +1366,14 @@ mu_cmd_server (MuConfig *opts, GError **err) try
 
                 std::string line;
                 try {
-                        line = read_line(context);
+                        line = readline.read_line(context.do_quit);
                         if (line.find_first_not_of(" \t") == std::string::npos)
                                 continue; // skip whitespace-only lines
 
-                        invoke(context.command_map, Sexp::parse(line));
+                        auto call{Sexp::parse(line)};
+                        readline.save_line(line);
+
+                        invoke(context.command_map, call);
 
                 } catch (const Error& er) {
                         std::cerr << ";; error: " << er.what() << "\n";
@@ -1343,7 +1382,14 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                 }
         }
 
+#ifdef HAVE_READLINE_HISTORY
+        const auto history{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
+        read_history (history.c_str());
+        stifle_history(20); // remember last 20.
+#endif /*HAVE_READLINE_HISTORY*/
+
         return MU_OK;
+
 } catch (const Error& er) {
         g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", er.what());
         return MU_ERROR;

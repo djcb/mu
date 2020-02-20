@@ -39,6 +39,8 @@ init_paths_xdg ()
 {
         RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB, g_get_user_cache_dir() +
                              Sepa + Mu + Sepa + XapianDir);
+        RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, g_get_user_cache_dir() +
+                             Sepa + Mu);
         RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE, g_get_user_cache_dir() +
                              Sepa + Mu + Sepa + PartsDir);
         RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR, g_get_user_cache_dir() +
@@ -51,6 +53,7 @@ static void
 init_paths_muhome (const char *muhome)
 {
         RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB,  muhome + Sepa + XapianDir);
+        RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, muhome);
 	RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE, muhome + Sepa + PartsDir);
 	RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR,    muhome + Sepa + LogDir);
 	RuntimePaths.emplace(MU_RUNTIME_PATH_BOOKMARKS, muhome + Sepa + Bookmarks);
