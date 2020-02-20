@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2017-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -20,7 +20,7 @@
 #include <string>
 #include <iostream>
 
-#include "tokenizer.hh"
+#include "mu-tokenizer.hh"
 
 int
 main (int argc, char *argv[])

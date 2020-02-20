@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "tokenizer.hh"
+#include "mu-tokenizer.hh"
 
 struct Case {
 	const char *str;

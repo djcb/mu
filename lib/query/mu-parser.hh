@@ -25,9 +25,9 @@
 #include <vector>
 #include <memory>
 
-#include <parser/data.hh>
-#include <parser/tree.hh>
-#include <parser/proc-iface.hh>
+#include <query/mu-data.hh>
+#include <query/mu-tree.hh>
+#include <query/mu-proc-iface.hh>
 
 // A simple recursive-descent parser for queries. Follows the Xapian syntax,
 // but better handles non-alphanum; also implements regexp

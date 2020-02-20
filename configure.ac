@@ -256,7 +256,7 @@ mu/mu-memcheck
 lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
-lib/parser/Makefile
+lib/query/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
 guile/Makefile

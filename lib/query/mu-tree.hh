@@ -24,7 +24,7 @@
 #include <string>
 #include <iostream>
 
-#include <parser/data.hh>
+#include <query/mu-data.hh>
 #include <utils/mu-error.hh>
 
 namespace Mu {

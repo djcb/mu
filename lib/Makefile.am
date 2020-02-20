@@ -18,7 +18,7 @@
 # before decending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils parser
+SUBDIRS= utils query
 
 if HAVE_JSON_GLIB
 json_srcs=							\
@@ -122,7 +122,7 @@ libmu_la_LIBADD=						\
 	$(GUILE_LIBS)						\
 	$(JSON_GLIB_LIBS)					\
 	${builddir}/utils/libmu-utils.la			\
-	${builddir}/parser/libmu-parser.la			\
+	${builddir}/query/libmu-query.la			\
 	$(CODE_COVERAGE_LIBS)
 
 libmu_la_LDFLAGS=						\

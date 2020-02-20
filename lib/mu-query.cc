@@ -36,8 +36,8 @@
 #include "utils/mu-date.h"
 #include <utils/mu-utils.hh>
 
-#include <parser/proc-iface.hh>
-#include <parser/xapian.hh>
+#include <query/mu-proc-iface.hh>
+#include <query/mu-xapian.hh>
 
 using namespace Mu;
 

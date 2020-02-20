@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "parser.hh"
+#include "mu-parser.hh"
 using namespace Mu;
 
 struct Case {

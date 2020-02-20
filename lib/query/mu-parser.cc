@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -16,8 +16,8 @@
 **  Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 **  02110-1301, USA.
 */
-#include "parser.hh"
-#include "tokenizer.hh"
+#include "mu-parser.hh"
+#include "mu-tokenizer.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
 

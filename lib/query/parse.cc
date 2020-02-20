@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -17,24 +17,25 @@
 **  02110-1301, USA.
 */
 
+#include <string>
+#include <iostream>
+#include "mu-parser.hh"
 
-#ifndef __XAPIAN_HH__
-#define __XAPIAN_HH__
+int
+main (int argc, char *argv[])
+{
+	std::string s;
 
-#include <xapian.h>
-#include <parser/parser.hh>
+	for (auto i = 1; i < argc; ++i)
+		s += " " + std::string(argv[i]);
 
-namespace Mu {
+	Mu::WarningVec warnings;
 
-/**
- * Transform a parse-tree into a Xapian query object
- *
- * @param tree a parse tree
- *
- * @return a Xapian query object
- */
-Xapian::Query xapian_query (const Mu::Tree& tree);
+	const auto tree = Mu::parse (s, warnings);
+	for (const auto& w: warnings)
+		std::cerr << "1:" << w.pos << ": " << w.msg << std::endl;
 
-} // namespace Mu
+	std::cout << tree << std::endl;
 
-#endif /* __XAPIAN_H__ */
+	return 0;
+}

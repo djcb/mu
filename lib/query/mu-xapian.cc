@@ -22,7 +22,7 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <xapian.h>
-#include "parser/xapian.hh"
+#include "mu-xapian.hh"
 #include <utils/mu-error.hh>
 
 using namespace Mu;

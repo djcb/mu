@@ -41,20 +41,20 @@ noinst_PROGRAMS=		\
 	parse
 
 noinst_LTLIBRARIES=		\
-	libmu-parser.la
+	libmu-query.la
 
-libmu_parser_la_SOURCES=	\
-	data.hh			\
-	parser.cc		\
-	parser.hh		\
-	proc-iface.hh		\
-	tokenizer.cc		\
-	tokenizer.hh		\
-	tree.hh			\
-	xapian.cc		\
-	xapian.hh
+libmu_query_la_SOURCES=   	\
+	mu-data.hh		\
+	mu-parser.cc		\
+	mu-parser.hh		\
+	mu-proc-iface.hh	\
+	mu-tokenizer.cc		\
+	mu-tokenizer.hh		\
+	mu-tree.hh		\
+	mu-xapian.cc		\
+	mu-xapian.hh
 
-libmu_parser_la_LIBADD=		\
+libmu_query_la_LIBADD=		\
 	$(WARN_LDFLAGS)		\
 	$(GLIB_LIBS)		\
 	$(XAPIAN_LIBS)		\
@@ -69,14 +69,14 @@ tokenize_SOURCES=		\
 
 tokenize_LDADD=			\
 	$(WARN_LDFLAGS)		\
-	libmu-parser.la
+	libmu-query.la
 
 parse_SOURCES=			\
 	parse.cc
 
 parse_LDADD=			\
 	$(WARN_LDFLAGS)		\
-	libmu-parser.la
+	libmu-query.la
 
 noinst_PROGRAMS+=$(TEST_PROGS)
 
@@ -85,14 +85,14 @@ TEST_PROGS+= 			\
 test_tokenizer_SOURCES=		\
 	test-tokenizer.cc
 test_tokenizer_LDADD=		\
-	libmu-parser.la
+	libmu-query.la
 
 TEST_PROGS+= 			\
 	test-parser
 test_parser_SOURCES=		\
 	test-parser.cc
 test_parser_LDADD=		\
-	libmu-parser.la
+	libmu-query.la
 
 TESTS=$(TEST_PROGS)
 
