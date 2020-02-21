@@ -132,15 +132,14 @@ struct Store::Private {
 
         }
 
-        ~Private() {
+        ~Private() try {
                 LOCKED;
                 if (wdb()) {
                         wdb()->set_metadata (ContactsKey, contacts_.serialize());
                         if (in_transaction_)  // auto-commit.
                                 wdb()->commit_transaction();
                 }
-
-        }
+        } MU_XAPIAN_CATCH_BLOCK;
 
         std::shared_ptr<Xapian::Database> db() const {
                 if (!db_)
