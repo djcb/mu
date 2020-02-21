@@ -218,11 +218,11 @@ get_signers (GHashTable *signerhash)
 static MuMsgPartSigStatusReport*
 get_status_report (GMimeSignatureList *sigs)
 {
-	int				 i;
-	MuMsgPartSigStatus		 status;
-	MuMsgPartSigStatusReport	*status_report;
-	char				*report;
-	GHashTable			*signerhash;
+	int			  i;
+	MuMsgPartSigStatus	  status;
+	MuMsgPartSigStatusReport *status_report;
+	char			 *report;
+	GHashTable		 *signerhash;
 
 	status	   = MU_MSG_PART_SIG_STATUS_GOOD; /* let's start positive! */
 	signerhash = g_hash_table_new (g_str_hash, g_str_equal);
@@ -313,7 +313,7 @@ mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 	}
 
 	report = get_status_report (sigs);
-	g_mime_signature_list_clear (sigs);
+	g_clear_object (&sigs);
 
 	/* tag this part with the signature status check */
 	tag_with_sig_status(G_OBJECT(sig), report);
