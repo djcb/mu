@@ -235,7 +235,8 @@ non-nil."
       (setq mu4e~context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
-      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
+      (mu4e-message "Switched context to %s" (mu4e-context-name context))
+      (force-mode-line-update))
     context))
 
 (defun mu4e~context-autoswitch (&optional msg policy)
