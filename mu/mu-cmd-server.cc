@@ -734,7 +734,7 @@ find_handler (Context& context, const Parameters& params)
                                         sortfieldstr.c_str()};
         }
 
-        int qflags{MU_QUERY_FLAG_SKIP_UNREADABLE};
+        int qflags{MU_QUERY_FLAG_NONE/*UNREADABLE*/};
         if (descending)
                 qflags |= MU_QUERY_FLAG_DESCENDING;
         if (skip_dups)
@@ -1289,7 +1289,7 @@ struct  Readline {
 };
 
 /// Wrapper around readline (if available) or nothing otherwise.
-#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY) && defined(bla)
+#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY)
 Readline::Readline (const std::string& histpath, size_t max_lines):
         histpath_{histpath}, max_lines_{max_lines}
 {
@@ -1381,12 +1381,6 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                                      er.what(), line.c_str());
                 }
         }
-
-#ifdef HAVE_READLINE_HISTORY
-        const auto history{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
-        read_history (history.c_str());
-        stifle_history(20); // remember last 20.
-#endif /*HAVE_READLINE_HISTORY*/
 
         return MU_OK;
 
