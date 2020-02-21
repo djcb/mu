@@ -642,7 +642,8 @@ process."
   (let* ((type (plist-get info :info))
          (processed (plist-get info :processed))
          (updated (plist-get info :updated))
-         (cleaned-up (plist-get info :cleaned-up)))
+         (cleaned-up (plist-get info :cleaned-up))
+         (mainbuf (get-buffer mu4e~main-buffer-name)))
     (cond
      ((eq type 'add) t) ;; do nothing
      ((eq type 'index)
@@ -658,7 +659,9 @@ process."
             (run-hooks 'mu4e-index-updated-hook))
           (unless (and (not (string= mu4e~contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
-            (mu4e~request-contacts-maybe)))))
+            (mu4e~request-contacts-maybe))
+          (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
+            (mu4e~main-view 'refresh)))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 
@@ -800,19 +803,10 @@ context yet, switch to the matching one, or none matches, the
 first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
-  ;; if we're already running, simply go to the main view
-  (unless (mu4e-running-p) ;; already running?
-    ;; when it's visible, re-draw the main view when there are changes.
-    (add-hook 'mu4e-index-updated-hook
-              (lambda()
-                (let ((mainbuf (get-buffer mu4e~main-buffer-name)))
-                  (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
-                    (mu4e~start 'mu4e~main-view))))))
-
   (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
-   (mapcar ;; send it a list of queries we'd like to see read/unread info
-    ;; for.
+   (mapcar
+    ;; send it a list of queries we'd like to see read/unread info for.
     (lambda(bm) (plist-get bm :query))
     (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings,
                   ;; and with these flags.

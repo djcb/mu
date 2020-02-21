@@ -63,19 +63,16 @@
     (define-key map "A" 'mu4e-about)
     (define-key map "N" 'mu4e-news)
     (define-key map "H" 'mu4e-display-manual)
-    (define-key map "g" 'mu4e)
     map)
 
   "Keymap for the *mu4e-main* buffer.")
-(fset 'mu4e-main-mode-map mu4e-main-mode-map)
 
 (defvar mu4e-main-mode-abbrev-table nil)
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."
-  (use-local-map mu4e-main-mode-map)
-  (setq truncate-lines t)
-  (setq overwrite-mode 'overwrite-mode-binary)
+  (setq truncate-lines t
+        overwrite-mode 'overwrite-mode-binary)
 
   ;; show context in mode-string
   (make-local-variable 'global-mode-string)
@@ -158,9 +155,23 @@ clicked."
 ;; NEW This is the old `mu4e~main-view' function but without
 ;; buffer switching at the end.
 (defun mu4e~main-view-real (_ignore-auto _noconfirm)
-  (let ((buf (get-buffer-create mu4e~main-buffer-name))
-        (inhibit-read-only t))
-    (with-current-buffer buf
+  "The revert buffer function for `mu4e-main-mode'."
+  (mu4e~main-view-real-1 'refresh))
+
+(defun mu4e~main-view-real-1 (&optional refresh)
+  "Create `mu4e~main-buffer-name' and set it up.
+When REFRESH is non nil refresh infos from server."
+  (let ((inhibit-read-only t)
+        (pos (point)))
+    ;; Maybe refresh infos from server.
+    (if refresh
+        (mu4e~start 'mu4e~main-redraw-buffer)
+      (mu4e~main-redraw-buffer))))
+
+(defun mu4e~main-redraw-buffer ()
+  (with-current-buffer mu4e~main-buffer-name
+    (let ((inhibit-read-only t)
+          (pos (point)))
       (erase-buffer)
       (insert
        "* "
@@ -202,7 +213,8 @@ clicked."
        (mu4e~key-val "maildir" (mu4e-root-maildir))
        (mu4e~key-val "in store"
                      (format "%d" (plist-get mu4e~server-props :doccount)) "messages"))
-      (mu4e-main-mode))))
+      (mu4e-main-mode)
+      (goto-char pos))))
 
 (defun mu4e~main-view-queue ()
   "Display queue-related actions in the main view."
@@ -232,20 +244,29 @@ clicked."
         (count-lines (point-min) (point-max)))
     (error 0)))
 
-(defun mu4e~main-view ()
-  "Create the mu4e main-view, and switch to it."
-  (if (eq mu4e-split-view 'single-window)
-      (if (buffer-live-p (mu4e-get-headers-buffer))
-          (switch-to-buffer (mu4e-get-headers-buffer))
-        (mu4e~main-menu))
-    (mu4e~main-view-real nil nil)
-    (switch-to-buffer mu4e~main-buffer-name)
-    (goto-char (point-min)))
-  (add-to-list 'global-mode-string '(:eval (mu4e-context-label))))
+(defun mu4e~main-view (&optional refresh)
+  "Create the mu4e main-view, and switch to it.
 
-;;; Commands
+When REFRESH is non nil refresh infos from server."
+  (let ((buf (get-buffer-create mu4e~main-buffer-name)))
+    (if (eq mu4e-split-view 'single-window)
+        (if (buffer-live-p (mu4e-get-headers-buffer))
+	    (switch-to-buffer (mu4e-get-headers-buffer))
+	  (mu4e~main-menu))
+      ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
+      ;; a second time here i.e. do not refresh unless specified
+      ;; explicitely with REFRESH arg. 
+      (switch-to-buffer buf)
+      (with-current-buffer buf
+        (mu4e-main-mode)
+        (mu4e~main-view-real-1 refresh))
+      (goto-char (point-min)))
+  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))))
 
-;; NEW Toggle mail sending mode without switching
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interactive functions
+;; NEW
+;; Toggle mail sending mode without switching
 (defun mu4e~main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
@@ -254,10 +275,10 @@ clicked."
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (message (concat "Outgoing mail will now be "
                    (if smtpmail-queue-mail "queued" "sent directly")))
-  (unless (eq mu4e-split-view 'single-window)
-    (let ((curpos (point)))
-      (mu4e~main-view-real nil nil)
-      (goto-char curpos))))
+  (unless (or (eq mu4e-split-view 'single-window)
+              (not (buffer-live-p (get-buffer mu4e~main-buffer-name))))
+    (with-current-buffer mu4e~main-buffer-name
+      (revert-buffer))))
 
 (defun mu4e~main-menu ()
   "mu4e main view in the minibuffer."

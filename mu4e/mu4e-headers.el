@@ -1903,7 +1903,7 @@ other windows."
       ;; now, all *other* windows should be gone. kill ourselves, and return
       ;; to the main view
       (kill-buffer)
-      (mu4e~main-view))))
+      (mu4e~main-view 'refresh))))
 
 ;;; _
 (provide 'mu4e-headers)
