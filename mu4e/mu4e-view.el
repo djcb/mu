@@ -861,7 +861,7 @@ FUNC should be a function taking two arguments:
           (define-key map (kbd "M-q")
             (lambda()
               (interactive)
-              (if 'mu4e-view-use-gnus
+              (if mu4e-view-use-gnus
                   (article-fill-long-lines)
                 (mu4e-view-fill-long-lines))))
 
