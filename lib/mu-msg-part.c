@@ -494,7 +494,7 @@ copy_status_report_maybe (GObject *obj)
 	if (!report)
 		return NULL; /* nothing to copy */
 
-	copy = g_new0(MuMsgPartSigStatusReport, 1);
+	copy = g_slice_new0(MuMsgPartSigStatusReport);
 	copy->verdict = report->verdict;
 
 	if (report->report)
