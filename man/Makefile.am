@@ -34,14 +34,4 @@ dist_man_MANS =		\
 	mu-script.1	\
 	mu-verify.1     \
 	mu-view.1	\
-	mu.1		\
-	$(BUILT_SOURCES)
-
-BUILT_SOURCES=		\
-	mu-mfind.1
-
-mu-mfind.1: mu-find.1
-	cp -f $< $@
-
-CLEANFILES=		\
-	$(BUILT_SOURCES)
+	mu.1

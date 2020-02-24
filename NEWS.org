@@ -29,9 +29,6 @@
     - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
       are determined implicitly now.
 
-    - There is a new sub-command ~mfind~, which works just like ~find~, but uses
-      some mu4e-defaults ~--skip-dups~ and ~--include-related~.
-
 *** mu4e
 
     - In many cases, ~mu4e~ used to receive /all/ contacts after each indexing
@@ -52,6 +49,9 @@
       etc.). It's very fresh code, and likely it'll be tweaked in the future.
       But it's available now for testing. Note that this requires the gnus-based
       viewer, ie ~(setq mu4e-view-use-gnus t)~
+
+    - In addition, he added support for custom headers, so the ones for for the
+      non-gnus-view should work just as well.
 
     - Pierre Neidhardt contributed an "Account Setup Helper" which wraps the
       existing context setup with some niceties for accounts. See the manual for
