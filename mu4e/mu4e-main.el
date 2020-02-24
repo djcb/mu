@@ -125,11 +125,45 @@ clicked."
                               (cl-loop for q in queries
                                        when (string= (plist-get q :query) query)
                                        collect q))
+           when (not (plist-get bm :hide))
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
                     (concat "\t* [b" key "] " name)
                     (concat "b" key))
+                   ;; append all/unread numbers, if available.
+                   (if qcounts
+                       (let ((unread (plist-get (car qcounts) :unread))
+                             (count  (plist-get (car qcounts) :count)))
+                         (format
+                          "%s (%s/%s)"
+                          (make-string (- longest (length name)) ? )
+                          (propertize (number-to-string unread)
+                                      'face 'mu4e-header-key-face)
+                          count))
+                     "")
+                   "\n")))
+
+
+(defun mu4e~main-maildirs ()
+  "Return a string of maildirs with their counts."
+  (cl-loop with mds = (mu4e~maildirs-with-query)
+           with longest = (mu4e~longest-of-maildirs-and-bookmarks)
+           with queries = (plist-get mu4e~server-props :queries)
+           for m in mds
+           for key = (string (plist-get m :key))
+           for name = (plist-get m :name)
+           for query = (plist-get m :query)
+           for qcounts = (and (stringp query)
+                              (cl-loop for q in queries
+                                       when (string= (plist-get q :query) query)
+                                       collect q))
+           when (not (plist-get m :hide))
+           concat (concat
+                   ;; menu entry
+                   (mu4e~main-action-str
+                    (concat "\t* [j" key "] " name)
+                    (concat "j" key))
                    ;; append all/unread numbers, if available.
                    (if qcounts
                        (let ((unread (plist-get (car qcounts) :unread))
@@ -194,6 +228,9 @@ When REFRESH is non nil refresh infos from server."
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
        (mu4e~main-bookmarks)
+       "\n"
+       (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
+       (mu4e~main-maildirs)
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
