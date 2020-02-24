@@ -190,8 +190,6 @@ If the string exceeds this limit, it will be truncated to fit."
   "Create a mu4e proplist with the following elements:
 - `name': the user-visible name of the bookmark
 - `key': a single key to search for this bookmark
-- `show-unread' whether to show an indicator for read/unread messages. Specifying
-this for too many bookmarks may incur slowdowns in  showing the mu4e main page.
 - `query': the query for this bookmark. Either a literal string or a function
    that evaluates to a string."
   `(:name ,name :query ,query :key ,key))
@@ -215,15 +213,15 @@ are plists" "1.3.7")
   "List of pre-defined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
-:name  - the name of the query
-:query - the query expression or function
-:key   - the shortcut key.
+`:name'  - the name of the query
+`:query' - the query expression or function
+`:key'   - the shortcut key.
 
 Note that the :query parameter can be a function/lambda.
 
 Optionally, you can add the following:
-:hide  - if t, bookmark is hdden from the main-view and speedbar.
-:hide-unread - do not show the counts of unread/total number
+`:hide'  - if t, bookmark is hdden from the main-view and speedbar.
+`:hide-unread' - do not show the counts of unread/total number
  of matches for the query in the main-view. This can be useful
 if a bookmark uses  a very slow query. :hide-unread
 is implied from :hide. Furthermore, it is implied from the query

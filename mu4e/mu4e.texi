@@ -91,7 +91,7 @@ section with answers to frequenly asked questions, @ref{FAQ}.
 * Headers view:: Lists of message headers
 * Message view:: Viewing specific messages
 * Editor view:: Creating / editing messages
-* Searching:: Some more background on searching/queries
+* Searching:: Some more background on searching/queries`
 * Marking:: Marking messages and performing actions
 * Contexts:: Defining contexts and switching between them
 * Dynamic folders:: Folders that change based on circumstances
@@ -129,7 +129,7 @@ professionally and privately. Having an efficient e-mail client is
 essential. Since none of the existing ones worked the way I wanted, I
 thought about creating my own.
 
-@command{emacs} is an integral part of my workflow, so it made a lot of
+Emacs is an integral part of my workflow, so it made a lot of
 sense to use it for e-mail as well. And as I had already written an
 e-mail search engine (@t{mu}), it seemed only logical to use that as a
 basis.
@@ -166,7 +166,7 @@ messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with
 them.
 @item @t{mu4e} also does @emph{not} implement sending of messages; instead, it
 depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of
-@command{emacs}. In addition, @t{mu4e} piggybacks on Gnus' message editor;
+Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor;
 @inforef{Top,,message}.
 @end itemize
 
@@ -232,7 +232,7 @@ After these steps, @t{mu4e} should be ready to go!
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
 Unix-like systems, including many Linux distributions, OS X and
-FreeBSD, and even on MS-Windows (with Cygwin). @command{emacs} 24 or
+FreeBSD, and even on MS-Windows (with Cygwin). Emacs 24 or
 higher is required, as well as
 Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
@@ -326,20 +326,20 @@ different, and require you to have autotools (@t{autoconf},
 $ git clone git://github.com/djcb/mu.git
 
 $ cd mu
-$ ./autogen.sh && ./configure && make
+$ ./autogen.sh && make
 # On the BSDs: use gmake instead of make
 $ sudo make install
 @end example
 
 (Xapian, GMime and their dependencies must be installed).
 
-After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a hard
-dependency between versions of @t{mu4e} and @t{mu} --- you cannot combine
-different versions} on your system, and be available from the command line
-in @command{emacs}.
+After this, @t{mu} and @t{mu4e} should be installed @footnote{there's
+a hard dependency between versions of @t{mu4e} and @t{mu} --- you
+cannot combine different versions} on your system, and be available
+from the command line and in  Emacs.
 
-You may need to restart @command{emacs}, so it can find @t{mu4e} in its
-@code{load-path}. If, even after restarting, @command{emacs} cannot find
+You may need to restart Emacs, so it can find @t{mu4e} in its
+@code{load-path}. If, even after restarting, Emacs cannot find
 @t{mu4e}, you may need to add it to your @code{load-path} explicitly; check
 where @t{mu4e} is installed, and add something like the following to your
 configuration before trying again:
@@ -350,7 +350,7 @@ configuration before trying again:
 
 @subsection mu4e and emacs customization
 
-There is some support for using the @command{emacs} customization system in
+There is some support for using the Emacs customization system in
 @t{mu4e}, but for now, we recommend setting the values manually. Please refer
 to @ref{Example configs} for a couple of examples of this; here we go
 through things step-by-step.
@@ -382,7 +382,7 @@ googling should be able to provide you with the details.
 @node Initializing the message store
 @section Initializing the message store
 
-The first time your run @t{mu}, you need to initialize its store
+The first time you run @t{mu}, you need to initialize its store
 (database). The default location for that is @t{~/.cache/mu/xapian},
 but you can change this using the @t{--muhome} option, and remember to
 pass that to the other commands as well.
@@ -404,7 +404,7 @@ them as yours:
 indexing messages. If you want to change them, you need to @t{init}
 once again.
 
-If you want to see the current values, you can use @t{mu info}.
+If you want to see the current values, you can use @command{mu info}.
 
 @node Indexing your messages
 @section Indexing your messages
@@ -446,7 +446,7 @@ is to do some basic configuration for @t{mu4e}.
 @node Basic configuration
 @section Basic configuration
 
-Before we can start using @t{mu4e}, we need to tell @command{emacs} to load
+Before we can start using @t{mu4e}, we need to tell Emacs to load
 it. So, add to your @file{~/.emacs} (or its moral equivalent, such as
 @file{~/.emacs.d/init.el}) something like:
 
@@ -454,7 +454,7 @@ it. So, add to your @file{~/.emacs} (or its moral equivalent, such as
 (require 'mu4e)
 @end lisp
 
-If @command{emacs} complains that it cannot find @t{mu4e}, check your
+If Emacs complains that it cannot find @t{mu4e}, check your
 @code{load-path} and make sure that @t{mu4e}'s installation directory is part
 of it. If not, you can add it:
 
@@ -485,14 +485,15 @@ situation. See @ref{Dynamic folders} for details.}:
 @end lisp
 
 Note, the folder names are all relative to the root-maildir (see the
-output of @t{mu info}). If you use @t{mu4e-context}, see @ref{Contexts
-and special folders} for what that means for these special folders.
+output of @command{mu info}). If you use @t{mu4e-context}, see
+@ref{Contexts and special folders} for what that means for these
+special folders.
 
 @node Retrieval and indexing
 @section Retrieval and indexing with mu4e
 
 As we have seen, we can do all of the mail retrieval @emph{outside} of
-@command{emacs}/@t{mu4e}. However, you can also do it from within
+Emacs/@t{mu4e}. However, you can also do it from within
 @t{mu4e}.
 
 @subsection Basics
@@ -763,7 +764,19 @@ Next to each bookmark there is the number of (unread/all) messages
 that match.
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add your
-own and/or replace the default ones; @xref{Bookmarks}.
+own and/or replace the default ones; @xref{Bookmarks}. For instance:
+@lisp
+(add-to-list 'mu4e-bookmarks
+  ;; add bookmark for recent messages on the Mu mailing list.
+  '( :name "Mu7Days"
+     :key  ?m
+     :query "list:mu-discuss.googlegroups.com AND date:7d..now"))
+@end lisp
+
+There are optional keys @t{:hide} to hide the bookmark from the main
+memu, but still have it available (using @key{b})) and
+@t{:hide-unread} to avoid generating the unread-number; that can be
+useful if you have bookmarks for slow queries.
 
 @node Miscellaneous
 @section Miscellaneous
@@ -888,7 +901,7 @@ headers-view.
 @section Keybindings
 
 Using the below key bindings, you can do various things with these messages;
-these actions are also listed in the @t{Headers} menu in the @command{emacs}
+these actions are also listed in the @t{Headers} menu in the Emacs
 menu bar.
 
 @verbatim
@@ -1319,10 +1332,10 @@ extract (for example, @kbd{1 3-6 8}). The range "@samp{a}" is a shortcut for
 @section Viewing images inline
 
 It is possible to show images inline in the message view buffer if you run
-@command{emacs} in GUI-mode. You can enable this by setting the variable
-@code{mu4e-view-show-images} to @t{t}. Since @command{emacs} does not always
+Emacs in GUI-mode. You can enable this by setting the variable
+@code{mu4e-view-show-images} to @t{t}. Since Emacs does not always
 handle images correctly, this is not enabled by default. If you are using
-@command{emacs} 24 with
+Emacs 24 with
 @emph{ImageMagick}@footnote{@url{http://www.imagemagick.org/}} support, make
 sure you call @code{imagemagick-register-types} in your configuration, so it
 is used for images.
@@ -1458,7 +1471,7 @@ Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not.
 
 For all of this to work, @command{gpg-agent} must be running, and it
 must set the environment variable @t{GPG_AGENT_INFO}. You can check from
-@command{emacs} with @key{M-x getenv GPG_AGENT_INFO}.
+Emacs with @key{M-x getenv GPG_AGENT_INFO}.
 
 In many mainstream Linux/Unix desktop environments, everything works
 out-of-the-box, but if your environment does not automatically start
@@ -1554,8 +1567,8 @@ Gimp}
 see the results. Suppose you receive a patch file, and would like to get an
 overview of the changes, using the @t{diffstat} program. You can use something
 like: @kbd{A | 1 RET diffstat -b RET}.
-@item @command{emacs} (@key{e}): open the attachment in your running @command{emacs}. For
-example, if you receive some text file you'd like to open in @command{emacs}:
+@item Emacs (@key{e}): open the attachment in your running Emacs. For
+example, if you receive some text file you'd like to open in Emacs:
 @kbd{A e 1 RET}.
 @end itemize
 
@@ -1623,7 +1636,7 @@ C-S-u        update mail & reindex
 @node Address autocompletion
 @section Address autocompletion
 
-@t{mu4e} supports@footnote{@command{emacs} 23.2 or higher is required}
+@t{mu4e} supports@footnote{GNU Emacs 24.4 or higher is required}
 autocompleting addresses when composing e-mail messages. @t{mu4e} uses the
 e-mail addresses from the messages you sent or received as the source for
 this. Address auto-completion is enabled by default; if you want to disable it
@@ -1814,7 +1827,7 @@ then still include the signature manually, using the function
 @section Other settings
 
 @itemize
-@item If you want use @t{mu4e} as @command{emacs}' default program for sending mail,
+@item If you want use @t{mu4e} as Emacs' default program for sending mail,
 see @ref{Emacs default}.
 @item Normally, @t{mu4e} @emph{buries} the message buffer after sending; if you want
 to kill the buffer instead, add something like the following to your
@@ -2254,7 +2267,7 @@ action       | a           | apply some action
 After marking a message, the left-most columns in the headers view indicate
 the kind of mark. This is informative, but if you mark many (say, thousands)
 messages, this slows things down significantly@footnote{this uses an
-@command{emacs} feature called @emph{overlays}, which are slow when used a lot
+Emacs feature called @emph{overlays}, which are slow when used a lot
 in a buffer}. For this reason, you can disable this by setting
 @code{mu4e-headers-show-target} to @code{nil}.
 
@@ -2742,10 +2755,10 @@ In @ref{Folders}, we explained how you can set up @t{mu4e}'s special
 folders:
 @lisp
 (setq
-  mu4e-sent-folder   "/sent"	   ;; sent messages
-  mu4e-drafts-folder "/drafts"	   ;; unfinished messages
-  mu4e-trash-folder  "/trash"	   ;; trashed messages
-  mu4e-refile-folder "/archive")   ;; saved messages01
+  mu4e-sent-folder   "/sent"       ;; sent messages
+  mu4e-drafts-folder "/drafts"     ;; unfinished messages
+  mu4e-trash-folder  "/trash"      ;; trashed messages
+  mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
 In some cases, having such static folders may not suffice --- perhaps you want
@@ -3210,7 +3223,7 @@ one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
 see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
 @t{mu4e} equivalents of the normal elisp @code{message},
-@code{user-error}@footnote{@code{user-error} only appears in @command{emacs}
+@code{user-error}@footnote{@code{user-error} only appears in Emacs
 24.2 and later; in older versions it falls back to @code{error}} and
 @code{error} functions.
 @end itemize
@@ -3229,7 +3242,6 @@ with other tools.
 * BBDB::Hooking up with the Insidious Big Brother Database
 * Sauron::Getting new mail notifications with Sauron
 * Speedbar::A special frame with your folders
-* Mu-cite:: Fancy citation engine
 * Dired:: Attaching files using @t{dired}
 * Hydra:: Custom shortcut menus
 @end menu
@@ -3237,7 +3249,7 @@ with other tools.
 @node Emacs default
 @section Emacs default
 
-@command{emacs} allows you to select an e-mail program as the default
+Emacs allows you to select an e-mail program as the default
 program it uses when you press @key{C-x m} (@code{compose-mail}), call
 @code{report-emacs-bug} and so on. If you want to use @t{mu4e} for this,
 you can do so by adding the following to your configuration:
@@ -3356,7 +3368,7 @@ After this, you should be able to:
 @node Sauron
 @section Sauron
 
-The @command{emacs} package @t{sauron}@footnote{Sauron can be found at
+The Emacs package @t{sauron}@footnote{Sauron can be found at
 @url{https://github.com/djcb/sauron}, or in the Marmalade package repository
 at @url{https://marmalade-repo.org/}} (by the same author) can be used
 to get notifications about new mails. If you run something like the below
@@ -3412,8 +3424,8 @@ running outside its session.
 @node Speedbar
 @section Speedbar
 
-@code{speedbar} is an @command{emacs}-extension that shows navigational information for
-an @command{emacs} buffer in a separate frame. Using @code{mu4e-speedbar}, @t{mu4e}
+@code{speedbar} is an Emacs-extension that shows navigational information for
+an Emacs buffer in a separate frame. Using @code{mu4e-speedbar}, @t{mu4e}
 lists your bookmarks and maildir folders and allows for one-click access to
 them.
 
@@ -3426,25 +3438,6 @@ have those changes reflected in the speedbar and in other places that use this
 list, such as auto-completion when jumping to a maildir.
 
 @code{mu4e-speedbar} was contributed by @emph{Antono Vasiljev}.
-
-@node Mu-cite
-@section Mu-cite
-
-@t{mu-cite}@footnote{Note, despite its name, @t{mu-cite} is a project
-unconnected to @t{mu}/@t{mu4e}} is a package to control the way message
-citations look like (i.e., the message you responded to when you reply to them
-or forward them), with its latest version available at
-@url{https://www.jpl.org/elips/mu/}.
-
-After installing @t{mu-cite}, you can use something like the following to make
-it work with @t{mu4e}:
-
-@lisp
-(require 'mu-cite)
-(setq mu4e-compose-cite-function 'mu-cite-original)
-(setq mu-cite-top-format '("On " date ", " from " wrote:\n\n"))
-(setq mu-cite-prefix-format '(" > "))
-@end lisp
 
 @node Dired
 @section Dired
@@ -3797,7 +3790,7 @@ Next step: let's make a @t{mu4e} configuration for this:
 @end lisp
 
 And that's it --- put the above in your @file{~/.emacs}, change @t{USERNAME}
-etc. to your own, and restart @command{emacs}, and run @kbd{M-x mu4e}.
+etc. to your own, and restart Emacs, and run @kbd{M-x mu4e}.
 
 @node CONF Other settings
 @section Other settings
@@ -3833,100 +3826,117 @@ answers.
 @node General
 @section General
 
-@enumerate
-@item @emph{Does @t{mu4e} provide context-sensitive help information?} Yes --- pressing @key{H}
-should take you to the right section in this manual.
-@item @emph{How can I quickly delete/move/trash a lot of messages?} You can
-select ('mark' in @command{emacs}-speak) the messages like you would select
-text in a buffer; the actions you then take (e.g., @key{DEL} for delete,
-@key{m} for move and @key{t} for trash) apply to all selected messages. You
-can also use functions like @code{mu4e-headers-mark-thread} (@key{T}),
-@code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
-time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
-matching a certain regular expression.
-@item @emph{@t{mu4e} seems to return a subset of all matches --- how can I
-get them all?} For speed reasons, @t{mu4e} returns only up to the value
-of the variable @code{mu4e-search-result-limit} (default: 500)
-matches. To show @emph{all}, use @kbd{M-x
-mu4e-headers-toggle-full-search} (@key{Q}), or customize the variable
-@code{mu4e-headers-full-search}. This applies to all search commands.
-@item @emph{Can I automatically apply the marks on messages when
-leaving the headers buffer?} Yes you can --- see the documentation for the
-variable @t{mu4e-headers-leave-behavior}.
-@item @emph{How can I set @t{mu4e} as the default e-mail client in @command{emacs}?}
+@subsection Results from @command{mu} and @t{mu4e} differ - why?
+In general, the same queries for @command{mu} and @t{mu4e} should
+yield the same results. If they differ, this is usually because one
+of the following reasons:
+@itemize
+@item different default options:
+mu4e defaults to having @t{mu4e-headers-include-related} and
+@t{mu4e-headers-skip-duplicates} enabled and
+@t{mu4e-headers-results-limit} set to 500. However, the command-line
+@command{mu find}'s corresponding @t{--include-related} and
+@t{--skip-dups} are false, and there's no limit (@t{--maxnum}).
+@item reverse sorting:
+The results amy be different when only one @t{mu4e} and @command{mu
+find} do not both sort their results in the same direction.
+@item shell quoting issues:
+Depending on the shell, various shell metacharacters in search query
+(such as @t{*}) may be expanded by the shell before @command{mu} ever
+sees them, and the query may not be what you think it is. Quoting is
+necessary.
+@end itemize
+
+@subsection How can I quickly delete/move/trash a lot of messages?
+You can select ('mark' in Emacs-speak) the messages like you
+would select text in a buffer; the actions you then take (e.g.,
+@key{DEL} for delete, @key{m} for move and @key{t} for trash) apply to
+all selected messages. You can also use functions like
+@code{mu4e-headers-mark-thread} (@key{T}),
+@code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at
+the same time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark
+all messages matching a certain regular expression.
+
+@subsection Can I automatically apply the marks on messages when leaving the headers buffer?
+Yes you can --- see the documentation for the variable
+@t{mu4e-headers-leave-behavior}.
+
+@subsection How can I set @t{mu4e} as the default e-mail client in Emacs?
 See @ref{Emacs default}.
-@item @emph{Can @t{mu4e} use some fancy Unicode characters instead of these
-boring plain-ASCII ones?} Glad you asked! Yes, if you set
-@code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e} uses such fancy
-characters in a number of places. Since not all fonts include all
-characters, you may want to install the @t{unifont} and/or @t{symbola}
-fonts on your system.
-@item @emph{Can I start @t{mu4e} in the background?} Yes --- if you provide a
-prefix-argument (@key{C-u}), @t{mu4e} starts, but does not show the
-main-window.
-@item @emph{Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?}
+
+@subsection Can @t{mu4e} use some fancy Unicode instead of these boring plain-ASCII ones?
+Glad you asked! Yes, if you set @code{mu4e-use-fancy-chars} to @t{t},
+@t{mu4e} uses such fancy characters in a number of places. Since not
+all fonts include all characters, you may want to install the
+@t{unifont} and/or @t{symbola} fonts on your system.
+
+@subsection Can I start @t{mu4e} in the background?
+Yes --- if you provide a prefix-argument (@key{C-u}), @t{mu4e} starts,
+but does not show the main-window.
+
+@subsection Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?
 Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
 variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
 using @t{mu} from the command-line and from @t{mu4e}.
-@item @emph{How can I customize the function to select a folder?}
-The @t{mu4e-completing-read-function} variable can be customized to select a
-folder in any way. The variable can be set to a function that receives
-five arguments, following @t{completing-read}. The default value is
-@code{ido-completing-read}; to use emacs's default behavior, set the
-variable to @code{completing-read}. Helm users can use the same value,
-and by enabling @code{helm-mode} use helm-style completion.
-@item @emph{I have a lot of Maildir folders, so regenerating them each time makes
-things slow. What can I do?}
-Set @code{mu4e-cache-maildir-list} to @code{t} (but make sure to read
+
+@subsection How can I customize the function to select a folder?
+The @t{mu4e-completing-read-function} variable can be customized to
+select a folder in any way. The variable can be set to a function that
+receives five arguments, following @t{completing-read}. The default
+value is @code{ido-completing-read}; to use emacs's default behavior,
+set the variable to @code{completing-read}. Helm users can use the
+same value, and by enabling @code{helm-mode} use helm-style
+completion.
+
+@subsection With a lot of Maildir folders, jumping to them can get slow. What can I do?
+Set @code{mu4e-cache-maildir-list} to @code{t} (make sure to read
 its docstring).
-@item @emph{How can I hide certain message from the search results?}
+
+@subsection How can I hide messages from the search results?
 See the variable @code{mu4e-headers-hide-predicate}.
-@item @emph{I'm getting an error 'Variable binding depth exceeds max-specpdl-size'
-when using mu4e -- what can I do about it?}  The error occurs because
-@t{mu4e} is binding more variables than @t{emacs} allows for, by
-default. You can avoid this by setting a higher value, e.g. by adding the
-following to your configuration:
+
+@subsection I'm getting an error 'Variable binding depth exceeds max-specpdl-size' when using mu4e -- what can I do about it?
+The error occurs because @t{mu4e} is binding more variables than
+@t{emacs} allows for, by default. You can avoid this by setting a
+higher value, e.g. by adding the following to your configuration:
 @lisp
 (setq max-specpdl-size 5000)
 @end lisp
-@end enumerate
 
 @node Retrieving mail
 @section Retrieving mail
 
-@enumerate
-@item @emph{How can I get notifications when receiving mail?} There is
-@code{mu4e-index-updated-hook}, which gets triggered when the indexing
-process triggered sees an update (not just new mail though). To use this
-hook, put something like the following in your setup (assuming you have
-@t{aplay} and some soundfile, change as needed):
+@subsection How can I get notifications when receiving mail?
+There is @code{mu4e-index-updated-hook}, which gets triggered when the
+indexing process triggered sees an update (not just new mail though).
+To use this hook, put something like the following in your setup
+(assuming you have @t{aplay} and some soundfile, change as needed):
 @lisp
 (add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
     (shell-command "aplay ~/Sounds/boing.wav&")))
 @end lisp
-@item @emph{It seems my headers-buffer is automatically updated when new
-  messages are found during the indexing process --- can I disable this
-  somehow?} Yes --- set @code{mu4e-headers-auto-update} to @code{nil}.
-@item @emph{I don't use @t{offlineimap}, @t{fetchmail} etc., I get my mail
-through my own mailserver. What should I use for
-@code{mu4e-get-mail-command}}? Use the literal string @t{"true"} (or
-don't do anything, it's the default) which then uses @t{/bin/true} (a
-command that does nothing and always succeeds). This makes getting mail
-a no-op, but the messages are still re-indexed.
-@item @emph{How can I re-index my messages without getting new mail?}
+
+@subsection Getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
+Use the literal string @t{"true"} (or don't do anything, it's the
+default) which then uses @t{/bin/true} (a command that does nothing
+and always succeeds). This makes getting mail a no-op, but the
+messages are still re-indexed.
+
+@subsection How can I re-index my messages without getting new mail?
 Use @kbd{M-x mu4e-update-index}
-@item @emph{When I try to run @t{mu index} while @t{mu4e} is running I get
-errors like:}
+
+@subsection When I try to run @t{mu index} while @t{mu4e} is running I get errors
+For instance:
 @verbatim
 mu: mu_store_new_writable: xapian error
   'Unable to get write lock on ~/.cache/mu/xapian: already locked
 @end verbatim
-@emph{What to do about this?}  You get this error because the underlying
-Xapian database is locked by some other process; it can be opened only once in
-read-write mode. There is not much @t{mu4e} can do about this, but if is
-another @command{mu} instance that is holding the lock, you can ask it to
-(gracefully) terminate:
+What to do about this? You get this error because the underlying
+Xapian database is locked by some other process; it can be opened only
+once in read-write mode. There is not much @t{mu4e} can do about this,
+but if is another @command{mu} instance that is holding the lock, you
+can ask it to (gracefully) terminate:
 @verbatim
    pkill -2 -u $UID mu # send SIGINT
    sleep 1
@@ -3934,66 +3944,67 @@ another @command{mu} instance that is holding the lock, you can ask it to
 @end verbatim
 @t{mu4e} automatically restarts @t{mu} when it needs it. In practice, this
 seems to work quite well.
-@item @emph{I don't like the @t{Indexing...} messages that the indexing process
-gives me. Can I turn them off?}. Yes: set the variable
-@code{mu4e-hide-index-messages} to non-@t{nil}.
-@item @emph{Some IMAP-synchronization programs such as @t{mbsync} (but not
-@t{offlineimap}) don't like it when message files do not change their names
-when they are moved to different folders. Can @t{mu4e} somehow accommodate
-this?} Yes --- you can set the variable @code{mu4e-change-filenames-when-moving}
-to non-@t{nil}.
-@item @emph{@command{offlineimap} uses IMAP's UTF-7 for encoding
-non-ascii folder names, while @t{mu} expects UTF-8 (so, e.g. @t{/まりも
-えお}@footnote{some Japanese characters} becomes
-@t{/&MH4wijCCMEgwSg-}). How can I make @t{mu4e} display such folders
-correctly?} This is best solved by telling @command{offlineimap} to use
-UTF-8 instead --- see
-@url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
-@item @emph{@t{mbsync} or @t{offlineimap} do not sync properly with my web-mail
-provider (such as gmail) -- what can I do about it?} Unfortunately,
-@t{mbsync} and/or @t{offlineimap} do not always agree with @t{mu} about
-the meaning of various Maildir-flags. If you encounter unexpected
-behavior, it is recommended you check before and after a sync-operation.
 
-If the problem only shows up @emph{after} sync'ing, the problem is with
-the sync-program, and it's most productive to complain there. Otherwise,
-there have been quite a few related queries on the mailing-list;
-worthwhile to check out.
-@end enumerate
+@subsection How can I disable the @t{Indexing...} messages?
+Set the variable @code{mu4e-hide-index-messages} to non-@t{nil}.
+
+@subsection IMAP-synchronization and file-name changes
+Some IMAP-synchronization programs such as @t{mbsync} (but not
+@t{offlineimap}) don't like it when message files do not change their
+names when they are moved to different folders. @t{mu4e} can attempt
+to help with this - you can set the variable
+@code{mu4e-change-filenames-when-moving} to non-@t{nil}.
+
+@subsection @command{offlineimap} and UTF-7
+@command{offlineimap} uses IMAP's UTF-7 for encoding non-ascii folder
+names, while @command{mu} expects UTF-8 (so, e.g. @t{/まりもえ
+お}@footnote{some Japanese characters} becomes @t{/&MH4wijCCMEgwSg-}).
+
+This is best solved by telling @command{offlineimap} to use UTF-8
+instead --- see
+@url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
+
+@subsection @command{mbsync} or @command{offlineimap} do not sync properly
+Unfortunately, @command{mbsync} and/or @command{offlineimap} do not
+always agree with @t{mu} about the meaning of various Maildir-flags.
+If you encounter unexpected behavior, it is recommended you check
+before and after a sync-operation. If the problem only shows up
+@emph{after} sync'ing, the problem is with the sync-program, and it's
+most productive to complain there. Otherwise, there have been quite a
+few related queries on the mailing-list; worthwhile to check out.
 
 @node Reading messages
 @section Reading messages
 
-@enumerate
-@item @emph{How can I view attached images in my message view buffers?} See
+@subsection How can I view attached images in my message view buffers? See
 @ref{Viewing images inline}.
-@item @emph{How can I word-wrap long lines in when viewing a
-message?} You can toggle between wrapped and non-wrapped states using
+@subsection How can I word-wrap long lines in when viewing a message?
+You can toggle between wrapped and non-wrapped states using
 @key{w}. If you want to do this automatically, invoke @code{visual-line-mode} in
 your @code{mu4e-view-mode-hook}.
-@item @emph{How can I perform custom actions on messages and attachments?} See
-@ref{Actions}.
-@item @emph{Does @t{mu4e} support crypto (i.e., decrypting messages and
-verifying signatures)?}  Yes --- if @t{mu} was built with @t{GMime} 2.6
+@subsection How can I perform custom actions on messages and attachments?
+See @ref{Actions}.
+@subsection Does @t{mu4e} support crypto (i.e., decrypting messages and verifying signatures)?
+Yes --- if @t{mu} was built with @t{GMime} 2.6
 or later, it is possible to do both (note, only PGP/MIME is
 supported). In the @ref{Main view} the support is indicated by a big
 letter @t{C} on the right hand side of the @t{mu4e} version. See
 @ref{Decryption} and @ref{Verifying signatures}. For encryption and
 signing messages, see @ref{Writing messages}.
-@item @emph{How can I prevent @t{mu4e} from automatically marking messages as `read' when I read them?}
+@subsection How can I prevent @t{mu4e} from automatically marking messages as `read' when I read them?
 Set @code{mu4e-view-auto-mark-as-read} to @code{nil}.
-@item @emph{Does @t{mu4e} support including all related messages in a thread,
-like Gmail does?} Yes --- see @ref{Including related messages}.
-@item @emph{There seems to be a lot of duplicate messages --- how can I get rid
-of them?} See @ref{Skipping duplicates}.
-@item @emph{How can I use the @t{eww} browser to view rich-text messages?}
-With a new enough emacs, this happens automatically. See @ref{Html2text
-functions} for some details.
-@item @emph{Some messages are almost unreadable in emacs --- can I view them in
-an external web browser?} Indeed, airlines often send messages that
-heavily depend on html and are hard to digest inside emacs. Fortunately,
-there's an @emph{action} (@ref{Message view actions})
-defined for this. Simply add to your configuration:
+@subsection Does @t{mu4e} support including all related messages in a thread, like Gmail does?
+Yes --- see @ref{Including related messages}.
+@subsection There seems to be a lot of duplicate messages --- how can I get rid of them?
+See @ref{Skipping duplicates}.
+@subsection How can I use the @t{eww} browser to view rich-text messages?
+With a new enough emacs, this happens automatically. See
+@ref{Html2text functions} for some details.
+@subsection Some messages are almost unreadable in emacs --- can I view them in an external web browser?
+Indeed, airlines often send messages that heavily depend on html and
+are hard to digest inside emacs. Fortunately, there's an @emph{action}
+(@ref{Message view actions}) defined for this. Simply add to your
+configuration:
 @lisp
 (add-to-list 'mu4e-view-actions
   '("ViewInBrowser" . mu4e-action-view-in-browser) t)
@@ -4001,11 +4012,11 @@ defined for this. Simply add to your configuration:
 Now, when viewing such a difficult message, type @kbd{aV}, and the message
 opens inside a webbrowser. You can influence the browser with
 @code{browse-url-generic-program}; and see @ref{Privacy aspects}.
-@item @emph{How can I read encrypted messages that I sent?}. Since you do not own the
-recipient's key you typically cannot read those mails --- so the trick is
-to encrypt outgoing mails with your key, too. This can be automated by
-adding the following snippet to your configuration (courtesy of user
-@t{kpachnis}):
+@subsection How can I read encrypted messages that I sent?
+Since you do not own the recipient's key you typically cannot read
+those mails --- so the trick is to encrypt outgoing mails with your
+key, too. This can be automated by adding the following snippet to
+your configuration (courtesy of user @t{kpachnis}):
 @lisp
 (require 'epg-config)
 (setq mml2015-use 'epg
@@ -4013,75 +4024,78 @@ adding the following snippet to your configuration (courtesy of user
       mml2015-encrypt-to-self t
       mml2015-sign-with-sender t)
 @end lisp
-@item @emph{view-as-pdf seems to hang for some e-mails --- what can I do about that?}
-Short answer: install @t{nspluginwrapper}. Longer answer: @t{mu} comes
-with @t{msg2pdf}, which is a program used to convert the messages to
-pdf, and which depends on WebKit, which in some cases needs
-@t{nspluginwrapper} and it waits for a long time if it's not there. So,
-installing @t{nspluginwrapper} prevents that.
-@item @emph{Can I `bounce' or `resend' messages?}
-Yes --- it is possible to edit a (copy of) an existing message and then
-send it, using @code{M-x mu4e-compose-resend}. This gives you a raw copy
-of the message, including all headers, encoded parts and so on. Reason
-for this is that for resending, it is important not to change anything
-(except perhaps for the @t{To:} address when bouncing); since we cannot
-losslessly decode an existing message, you get the raw version.
-
-@end enumerate
+@subsection Can I `bounce' or `resend' messages?
+Yes --- it is possible to edit a (copy of) an existing message and
+then send it, using @code{M-x mu4e-compose-resend}. This gives you a
+raw copy of the message, including all headers, encoded parts and so
+on. Reason for this is that for resending, it is important not to
+change anything (except perhaps for the @t{To:} address when
+bouncing); since we cannot losslessly decode an existing message, you
+get the raw version.
 
 @node Writing messages
 @section Writing messages
 
-@enumerate
-@item @emph{What's the deal with replies to messages I wrote myself?} Like
-many other mail-clients, @t{mu4e} treats replies to messages you wrote
-yourself as special --- these messages keep the same @t{To:} and @t{Cc:}
-as the original message. This is to ease the common case of following up
-to a message you wrote earlier.
-@item @emph{How can I automatically set the @t{From:}-address for a
-reply-message, based on some field in the original?} See @ref{Compose hooks}.
-@item @emph{And what about customizable folders for draft messages, sent
-messages, trashed messages, based on e.g. the @t{From:} header?} See
-@ref{Dynamic folders}.
-@item @emph{Can I define aliases for (groups of) e-mail addresses?} Sure -
-see @ref{(emacs) Mail Aliases}.
-@item @emph{How can I automatically add some header to an outgoing message?}
-Once more, see @ref{Compose hooks}.
-@item @emph{How can I influence the way the original message looks when
-replying or inline forwarding?} Since @code{mu4e-compose-mode} derives from
-@code{message-mode}, you can re-use many of its facilities.
-@inforef{Insertion Variables,,message}.
-@item @emph{How can I easily include attachments in the messages I write?}
-You can drag-and-drop from your desktop; alternatively, you can use @t{dired}
---- see @ref{Dired}.
-@item @emph{@t{mu4e} seems to remove myself from the @t{Cc:}-list; how can I
-prevent that?}  Set @code{mu4e-compose-keep-self-cc} to @t{t} in your
-configuration.
-@item @emph{How can I start a new message-thread from a reply?} Remove the @t{In-Reply-To} header,
-and @t{mu4e} automatically removes the (hidden) @t{References} header as
-well when sending it. This makes the message show up as a top-level
-message rather than as a response.
-@item @emph{How can I attach an existing message?} Use @code{mu4e-action-capture-message}
- (i.e., @kbd{a c} in the headers view) to `capture' the to-be-attached
- message, then when editing the message, use @kbd{M-x
- mu4e-compose-attach-captured-message}.
-@item @emph{How can I sign or encrypt messages?} You can do so using @command{emacs}'
-MIME-support --- check the @t{Attachments}-menu while composing a
-message. Also see @ref{Signing and encrypting}.
-@item @emph{Can I use @t{BBDB} with @t{mu4e}?} Yes, with the current
-(2015-06-23) development release of BBDB
+@subsection What's the deal with replies to messages I wrote myself?
+Like many other mail-clients, @t{mu4e} treats replies to messages you
+wrote yourself as special --- these messages keep the same @t{To:} and
+@t{Cc:} as the original message. This is to ease the common case of
+following up to a message you wrote earlier.
+
+@subsection How can I automatically set the @t{From:}-address for a reply-message?
+See @ref{Compose hooks}.
+
+@subsection How can I dynamically determine the folders for draft/sent/trashed messages?
+See @ref{Dynamic folders}.
+
+@subsection How can I define aliases for (groups of) e-mail addresses?
+See @ref{(emacs) Mail Aliases}.
+
+@subsection How can I automatically add some header to an outgoing message?
+See @ref{Compose hooks}.
+
+@subsection How can I influence the way the original message looks when replying/forwarding?
+Since @code{mu4e-compose-mode} derives from @code{message-mode}, you
+can re-use many of its facilities. @inforef{Insertion
+Variables,,message}.
+
+@subsection How can I easily include attachments in the messages I write?
+You can drag-and-drop from your desktop; alternatively, you can use
+@t{dired} --- see @ref{Dired}.
+
+@subsection @t{mu4e} seems to remove myself from the @t{Cc:}-list; how can Iprevent that?
+Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
+
+@subsection How can I start a new message-thread from a reply?
+Remove the @t{In-Reply-To} header, and @t{mu4e} automatically removes
+the (hidden) @t{References} header as well when sending it. This makes
+the message show up as a top-level message rather than as a response.
+
+@subsection How can I attach an existing message?
+Use @code{mu4e-action-capture-message} (i.e., @kbd{a c} in the headers
+ view) to `capture' the to-be-attached message, then when editing the
+ message, use @kbd{M-x mu4e-compose-attach-captured-message}.
+
+@subsection How can I sign or encrypt messages?
+You can do so using Emacs' MIME-support --- check the
+@t{Attachments}-menu while composing a message. Also see @ref{Signing
+and encrypting}.
+
+@subsection Can I use @t{BBDB} with @t{mu4e}?
+Yes, with the current (2015-06-23) development release of BBDB
 @url{https://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
-after 3.1.2.
-@ref{BBDB}.
-@item @emph{After sending some messages, it seems the buffer for these
-messages stay around. How can I get rid of those?}
+after 3.1.2. @ref{BBDB}.
+
+@subsection How can I get rid of the message buffer after sending?
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
-@item @emph{Sending big messages is slow and blocks emacs --- what can I do
-about it?} For this, there's @url{https://github.com/jwiegley/emacs-async}
-(also available from the Emacs package repository); add the following snippet
-to your configuration:
+
+@subsection Sending big messages is slow and blocks emacs --- what can I do about it?
+
+For this, there's @url{https://github.com/jwiegley/emacs-async} (also
+available from the Emacs package repository); add the following
+snippet to your configuration:
 @lisp
 (require 'smtpmail-async)
 (setq
@@ -4091,9 +4105,9 @@ to your configuration:
 With this, messages are sent using a background Emacs instance.
 
 A word of warning though, this tends to not be as reliable as sending
-the message in the normal, synchronous fashion, and people have reported
-silent failures, where mail sending fails for some reason without any
-indication of that.
+the message in the normal, synchronous fashion, and people have
+reported silent failures, where mail sending fails for some reason
+without any indication of that.
 
 You can check the progress of the background by checking the
 @t{*Messages*}-buffer, which should show something like:
@@ -4106,24 +4120,27 @@ Sending...done
 @end verbatim
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
-@item @emph{Is it possible to compose messages in a separate frame?}
-Yes --- set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
-@item @emph{How can I apply format=flowed to my outgoing messages, enabling
-receiving clients that support this feature to reflow my paragraphs?}
-Plain text emails with @t{Content-Type: text/plain; format=flowed} can
-be reflowed (i.e. line endings removed, paragraphs refilled) by
-receiving clients that support this standard. Clients that don't support
-this, show them as is, which means this feature is truly non-invasive.
 
-Here's an explanatory blog post which also shows why this is a desirable
-feature: @url{https://mathiasbynens.be/notes/gmail-plain-text} (if you
-don't have it, your mails mostly look quite bad especially on mobile
+@subsection Is it possible to compose messages in a separate frame?
+Yes --- set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
+
+@subsection How can I apply format=flowed to my outgoing messages?
+This enables receiving clients that support this feature to reflow
+paragraphs. Plain text emails with @t{Content-Type: text/plain;
+format=flowed} can be reflowed (i.e. line endings removed, paragraphs
+refilled) by receiving clients that support this standard. Clients
+that don't support this, show them as is, which means this feature is
+truly non-invasive.
+
+Here's an explanatory blog post which also shows why this is a
+desirable feature:
+@url{https://mathiasbynens.be/notes/gmail-plain-text} (if you don't
+have it, your mails mostly look quite bad especially on mobile
 devices) and here's the RFC with all the details:
 @url{https://www.ietf.org/rfc/rfc2646.txt}.
 
-Since version 0.9.17, @t{mu4e} send emails with @t{format=flowed} by
+Since version 0.9.17, @t{mu4e} sensd emails with @t{format=flowed} by
 setting
-
 @lisp
 (setq mu4e-compose-format-flowed t)
 @end lisp
@@ -4142,8 +4159,8 @@ understand the latter as it is the case for Google or Github), use
 @kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
 uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
 message.
-@item @emph{How can force images to be shown at the end of my messages,
-regardless of where I insert them?}
+
+@subsection How can force images to be shown at the end of my messages, regardless of where I insert them?
 User Marcin Borkowski has a solution:
 @lisp
 (defun mml-attach-file--go-to-eob (orig-fun &rest args)
@@ -4157,7 +4174,7 @@ User Marcin Borkowski has a solution:
 (advice-add 'mml-attach-file :around #'mml-attach-file--go-to-eob)
 @end lisp
 
-@item @emph{How can I avoid Outlook display issues?}
+@subsection How can I avoid Outlook display issues?
 
 Limited testing shows that certain Outlook clients do not work well
 with inline replies, and the entire message including-and-below the
@@ -4174,7 +4191,6 @@ such as:
 @lisp
 (setq  message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
 @end lisp
-@end enumerate
 
 @node Known issues
 @section Known issues
@@ -4185,7 +4201,7 @@ won't have to search in vain for things that are not there (yet), and
 the author can use it as a todo-list.
 
 @itemize
-@item @emph{mu4e does not work well if the @command{emacs} language environment is not
+@item @emph{mu4e does not work well if the Emacs language environment is not
 UTF-8}; so, if you encounter problems with encodings, be sure to have
 @code{(set-language-environment "UTF-8")} in your @file{~/.emacs}.
 @item @emph{Thread handling is incomplete.} While threads are calculated and are
@@ -4457,11 +4473,11 @@ server.
 @item @t{mu} indexes these messages periodically, so you can quickly search for
 them. @t{mu} can run in a special @t{server}-mode, where it provides services
  to client software.
-@item @t{mu4e}, which runs inside @command{emacs} is
+@item @t{mu4e}, which runs inside Emacs is
  such a client; it communicates with @command{mu} (in its @t{server}-mode) to
  search for messages, and manipulate them.
 @item @t{mu4e} uses the facilities
- offered by @command{emacs} (the Gnus message editor and @t{smtpmail}) to send
+ offered by Emacs (the Gnus message editor and @t{smtpmail}) to send
  messages.
 @end itemize
 
@@ -4475,7 +4491,7 @@ client that is emacs-based.
 One way to implement this, would be to call the @t{mu} command-line
 tool with some parameters and then parse the output. In fact, that was
 the first approach --- @t{mu4e} would invoke e.g., @t{mu find} and
-process the output in @command{emacs}.
+process the output in Emacs.
 
 However, with this approach, we need to load the entire e-mail
 @emph{Xapian} database (in which the message is stored) for each
@@ -4490,15 +4506,15 @@ can be used manually, which is great for debugging.
 @section Reading from the server
 
 In the design, the next question was what format @t{mu} should use for its
-output for @t{mu4e} (@command{emacs}) to process. Some other programs use
+output for @t{mu4e} (Emacs) to process. Some other programs use
 @abbr{JSON} here, but it seemed easier (and possibly, more efficient) just to
-talk to @command{emacs} in its native language: @emph{s-expressions}, and
-interpret those using the @command{emacs}-function
+talk to Emacs in its native language: @emph{s-expressions}, and
+interpret those using the Emacs-function
 @code{read-from-string}. See @ref{The message s-expression} for details on the
 format.
 
 So, now let's look at how we process the data from @t{mu server} in
-@command{emacs}. We'll leave out a lot of details, @t{mu4e}-specifics, and look
+Emacs. We'll leave out a lot of details, @t{mu4e}-specifics, and look
 at a bit more generic approach.
 
 The first thing to do is to create a process (for example, with
@@ -4583,10 +4599,10 @@ Some notes on the format:
 @itemize
 @item The address fields are @emph{lists} of pairs @code{(name . email)},
 where @t{name} can be @t{nil}.
-@item The date is in format @command{emacs} uses (for example in
+@item The date is in format Emacs uses (for example in
 @code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
 available for the actual number; the other bits are use by
-@command{emacs} for internal purposes. Therefore, we need to split
+Emacs for internal purposes. Therefore, we need to split
 @t{time_t} in two numbers.}
 @item Attachments are a list of elements with fields @t{:index} (the number of
 the MIME-part), @t{:name} (the file name, if any), @t{:mime-type} (the
@@ -4646,3 +4662,7 @@ it on all the time. By default, the log only maintains the most recent
 @include fdl.texi
 
 @bye
+
+@c Local Variables:
+@c coding: utf-8
+@c End:
