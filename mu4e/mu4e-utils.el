@@ -802,14 +802,14 @@ non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
-   (mapcar
-    ;; send it a list of queries we'd like to see read/unread info for.
-    (lambda(bm) (plist-get bm :query))
-    (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings,
-                  ;; and with these flags.
+   (mapcar ;; send it a list of queries we'd like to see read/unread info for
+    (lambda (bm) (plist-get bm :query))
+    (seq-filter (lambda (bm) ;; exclude bookmarks that are not strings, and with
+                             ;; these flags
                   (and (stringp (plist-get bm :query))
                        (not (or (plist-get bm :hide) (plist-get bm :hide-unread)))))
-                (mu4e-bookmarks))))
+                (append (mu4e-bookmarks)
+                        (mu4e~maildirs-with-query)))))
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
   (unless mu4e~contacts (mu4e~request-contacts-maybe)))
