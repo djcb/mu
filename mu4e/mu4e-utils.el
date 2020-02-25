@@ -357,34 +357,34 @@ the list of maildirs will not change until you restart mu4e."
   mu4e-maildir-list)
 
 (defun mu4e-ask-maildir (prompt)
-  "Ask the user for a shortcut (using PROMPT) as defined in
-`mu4e-maildir-shortcuts', then return the corresponding folder
+  "Ask the user for a shortcut (using PROMPT) as per
+(mu4e-maildir-shortcuts), then return the corresponding folder
 name. If the special shortcut 'o' (for _o_ther) is used, or if
-`mu4e-maildir-shortcuts' is not defined, let user choose from all
-maildirs under `mu4e-maildir'."
+`(mu4e-maildir-shortcuts)' evaluates to nil, let user choose from
+all maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
-    (if (not mu4e-maildir-shortcuts)
+    (if (not (mu4e-maildir-shortcuts))
         (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs))
-      (let* ((mlist (append mu4e-maildir-shortcuts '(("ther" . ?o))))
+      (let* ((mlist (append (mu4e-maildir-shortcuts)
+                            '((:maildir "ther"  :key ?o))))
              (fnames
               (mapconcat
                (lambda (item)
                  (concat
                   "["
-                  (propertize (make-string 1 (cdr item))
+                  (propertize (make-string 1 (plist-get item :key))
                               'face 'mu4e-highlight-face)
                   "]"
-                  (car item)))
+                  (plist-get item :maildir)))
                mlist ", "))
              (kar (read-char (concat prompt fnames))))
         (if (member kar '(?/ ?o)) ;; user chose 'other'?
             (funcall mu4e-completing-read-function prompt
                      (mu4e-get-maildirs) nil nil "/")
-          (or (car-safe
-               (cl-find-if (lambda (item) (= kar (cdr item)))
-                           mu4e-maildir-shortcuts))
+          (or (plist-get
+               (cl-find-if (lambda (item) (= kar (plist-get item :key)))
+                           (mu4e-maildir-shortcuts)) :maildir)
               (mu4e-warn "Unknown shortcut '%c'" kar)))))))
-
 
 (defun mu4e-ask-maildir-check-exists (prompt)
   "Like `mu4e-ask-maildir', but check for existence of the maildir,
@@ -398,20 +398,7 @@ and offer to create it if it does not exist yet."
     mdir))
 
 ;;; Bookmarks
-
-(defun mu4e-bookmarks ()
-  "Get `mu4e-bookmarks' in the (new) format, converting from the
-old format if needed."
-  (cl-map 'list
-          (lambda (item)
-            (if (and (listp item) (= (length item) 3))
-                `(:name  ,(nth 1 item)
-                         :query ,(nth 0 item)
-                         :key   ,(nth 2 item))
-              item))
-          mu4e-bookmarks))
-
-(defun mu4e-ask-bookmark (prompt)
+ (defun mu4e-ask-bookmark (prompt)
   "Ask the user for a bookmark (using PROMPT) as defined in
 `mu4e-bookmarks', then return the corresponding query."
   (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))

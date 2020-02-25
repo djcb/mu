@@ -233,6 +233,20 @@ bookmarks depend on that, the results may differ."
   :type '(repeat (plist))
   :group 'mu4e)
 
+
+(defun mu4e-bookmarks ()
+  "Get `mu4e-bookmarks' in the (new) format, converting from the
+old format if needed."
+  (cl-map 'list
+          (lambda (item)
+            (if (and (listp item) (= (length item) 3))
+                `(:name  ,(nth 1 item)
+                         :query ,(nth 0 item)
+                         :key   ,(nth 2 item))
+              item))
+          mu4e-bookmarks))
+
+
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:
@@ -527,19 +541,42 @@ nil otherwise."
   "A list of maildir shortcuts.
 This makes it possible to quickly go to a particular
 maildir (folder), or quickly moving messages to them (e.g., for
-archiving or refiling). The list contains elements of the
-form (maildir . shortcut), where MAILDIR is a maildir (such as
-\"/archive/\"), and shortcut is a single character.
+archiving or refiling).
+
+Each of the list elements is a plist with at least:
+`:maildir'  - the maildir for the shortcut (e.g. \"/archive\")
+`:key'      - the shortcut key.
+
+Optionally, you can add the following:
+`:hide'  - if t, maildir is hdden from the main-view and speedbar.
+`:hide-unread' - do not show the counts of unread/total number
+ of messages for the maildir in the main-view.
+
+For backward compatibility, an older form is recognized as well:
+
+   (maildir . key), where MAILDIR is a maildir (such as
+\"/archive/\"), and key is a single character.
 
 You can use these shortcuts in the headers and view buffers, for
 example with `mu4e-mark-for-move-quick' (or 'm', by default) or
 `mu4e-jump-to-maildir' (or 'j', by default), followed by the
 designated shortcut character for the maildir.
 
-Unlike in search queries, folder names with spaces in them must NOT
-be quoted, since mu4e does this automatically for you."
+Unlike in search queries, folder names with spaces in them must
+NOT be quoted, since mu4e does this for you."
   :type '(repeat (cons (string :tag "Maildir") character))
   :group 'mu4e-folders)
+
+
+(defun mu4e-maildir-shortcuts ()
+  "Get `mu4e-maildir-shortcuts' in the (new) format, converting
+from the old format if needed."
+  (cl-map 'list
+          (lambda (item) ;; convert from old format?
+            (if (and (consp item) (not (consp (cdr item))))
+                `(:maildir  ,(car item) :key ,(cdr item))
+              item))
+          mu4e-maildir-shortcuts))
 
 (defcustom mu4e-display-update-status-in-modeline nil
   "Non-nil value will display the update status in the modeline."
