@@ -216,7 +216,7 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 # build with guile2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
 AS_IF([test "x$enable_guile" != "xno"],[
-  PKG_CHECK_MODULES(guile_22, guile-2.2, [have_guile22=yes],[have_guile22=no])
+  PKG_CHECK_MODULES(GUILE22, guile-2.2, [have_guile22=yes],[have_guile22=no])
   # this is a bit hacky; GUILE_PKG
   AS_IF([test "x$have_guile22" = "xyes"],[
     GUILE_PKG([2.2])
@@ -224,10 +224,11 @@ AS_IF([test "x$enable_guile" != "xno"],[
     GUILE_FLAGS
     AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
     AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
+    AC_SUBST(GUILE_SNARF, [guile-snarf])
+    guile_version=$($PKG_CONFIG guile-2.2 --modversion)
   ])
 ])
-AM_CONDITIONAL(BUILD_GUILE,
-[ test -n "$GUILE_EFFECTIVE_VERSION" -a -n "$GUILE_SNARF"])
+AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" != "xno"])
 ###############################################################################
 
 ###############################################################################
@@ -298,7 +299,7 @@ echo "Webkit2/GTK+ version                 : $webkit_version"
 ])
 
 AM_COND_IF([BUILD_GUILE],[
-echo "Guile version                        : $GUILE_EFFECTIVE_VERSION"
+echo "Guile version                        : $guile_version"
 ])
 
 if test "x$build_mu4e" = "xyes"; then

@@ -47,7 +47,8 @@ libguile_mu_la_LIBADD=					\
 libguile_mu_la_LDFLAGS= 				\
 	$(ASAN_LDFLAGS)					\
 	-shared						\
-	-export-dynamic
+	-export-dynamic					\
+	-Wl,-z,muldefs
 
 XFILES=							\
 	mu-guile.x					\

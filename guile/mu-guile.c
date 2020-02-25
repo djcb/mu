@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,14 +17,15 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include <config.h>
-#endif /*HAVE_CONFIG_H*/
-
 #include <locale.h>
 
 #include <glib-object.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <libguile.h>
+#pragma GCC diagnostic pop
 
 #include <mu-runtime.h>
 #include <mu-query.h>

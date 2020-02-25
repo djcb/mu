@@ -1,6 +1,5 @@
-/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
-**
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/*
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -25,14 +24,13 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include "../mu-query.h"
-
+#include <lib/mu-query.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
 #include "test-mu-common.h"
-#include "mu-store.hh"
+#include <lib/mu-store.hh>
 
 
 /* tests for the command line interface, uses testdir2 */
