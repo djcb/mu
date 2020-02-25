@@ -684,8 +684,9 @@ This is used by the completion function in mu4e-compose."
              (if (functionp mu4e-contact-process-function)
                  (funcall mu4e-contact-process-function (car contact))
                (car contact))))
-        (when address
-          (puthash address (cdr contact) mu4e~contacts))))
+        (when address ;; note the explicit deccode; the strings we get are  utf-8,
+          ;; but emacs doesn't know yet.
+          (puthash (decode-coding-string address 'utf-8) (cdr contact) mu4e~contacts))))
 
     (setq mu4e~contacts-tstamp (or tstamp "0"))
 
