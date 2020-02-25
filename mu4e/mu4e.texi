@@ -2106,16 +2106,17 @@ You can search for maildirs like any other message property
 (e.g. with a query like @t{maildir:/myfolder}), but since it is so common,
 @t{mu4e} offers a shortcut for this.
 
-For this to work, you need to set the variable @code{mu4e-maildir-shortcuts}
-to the list of maildirs you want to have quick access to, for example:
+For this to work, you need to set the variable
+@code{mu4e-maildir-shortcuts} to the list of maildirs you want to have
+quick access to, for example:
 
 @lisp
 (setq mu4e-maildir-shortcuts
-  '( ("/inbox"     . ?i)
-     ("/archive"   . ?a)
-     ("/lists"     . ?l)
-     ("/work"      . ?w)
-     ("/sent"      . ?s)))
+  '( (:maildir "/inbox"     :key  ?i)
+     (:maildir "/archive"   :key  ?a)
+     (:maildir "/lists"     :key  ?l)
+     (:maildir "/work"      :key  ?w)
+     (:maildir "/sent"      :key  ?s)))
 @end lisp
 
 This sets @key{i} as a shortcut for the @t{/inbox} folder --- effectively a
@@ -3573,10 +3574,10 @@ customize.
 
 ;; the maildirs you use frequently; access them with 'j' ('jump')
 (setq   mu4e-maildir-shortcuts
-    '(("/archive"     . ?a)
-      ("/inbox"       . ?i)
-      ("/work"        . ?w)
-      ("/sent"        . ?s)))
+    '((:maildir "/archive" :key ?a)
+      (:maildir "/inbox"   :key ?i)
+      (:maildir "/work"    :key ?w)
+      (:maildir "/sent"    :key ?s)))
 
 ;; a  list of user's e-mail addresses
 (setq mu4e-user-mail-address-list '("foo@@bar.example.com" "cuux@@example.com")
@@ -3747,10 +3748,10 @@ Next step: let's make a @t{mu4e} configuration for this:
 ;; the 'All Mail' folder by pressing ``ma''.
 
 (setq mu4e-maildir-shortcuts
-    '( ("/INBOX"               . ?i)
-       ("/[Gmail].Sent Mail"   . ?s)
-       ("/[Gmail].Trash"       . ?t)
-       ("/[Gmail].All Mail"    . ?a)))
+    '( (:maildir "/INBOX"              :key ?i)
+       (:maildir "/[Gmail].Sent Mail"  :key ?s)
+       (:maildir "/[Gmail].Trash"      :key ?t)
+       (:maildir "/[Gmail].All Mail"   :key ?a)))
 
 ;; allow for updating mail using 'U' in the main view:
 (setq mu4e-get-mail-command "offlineimap")
@@ -3975,6 +3976,39 @@ few related queries on the mailing-list; worthwhile to check out.
 
 @node Reading messages
 @section Reading messages
+
+@subsection Opening messages is slower than expected - why?
+@t{mu4e} is designed to be very fast, even with large amounts of mail.
+However, if you experience slowdowns, here are some things to consider:
+@itemize
+@item opening messages while indexing:
+@t{mu4e} corresponds with the @t{mu} server synchronously; this means
+that you can do only one thing at a time. The one operation that can
+take a bit of time is retrieving/indexing of mail, during which you
+have to wait for messages to open. For some strategies to reduce that
+time, see the next question.
+@item getting contact information can take some time:
+especially when opening @t{mu4e} the first time and you have a
+@emph{lot} of contacts, it can take a few seconds to process those.
+Note that @t{mu4e} 1.3 and higher only get @emph{changed} contacts in
+subsequent updates (after and indexing operation), so this should be
+less of a concern.
+@item decryption / sign verification:
+encrypted / signed messages sometimes require network access, and this
+may take a while; certainly if the needed servers cannot be found.
+Part of this may be that influential environment variables are not set
+in the emacs environment.
+@end itemize
+
+If you still see unexpect slowness you can of course file a ticket,
+but please be sure to mention the following:
+
+@itemize
+@item are all messages slow or only some messages?
+@item if it's only some messages, is there something specific about them?
+@item in addition, please a (sufficiently censored version of) a message that is slow
+@item is opening @emph{always} slow or only sometimes? When?
+@end itemize
 
 @subsection How can I view attached images in my message view buffers? See
 @ref{Viewing images inline}.
