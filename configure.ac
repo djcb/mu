@@ -228,7 +228,7 @@ AS_IF([test "x$enable_guile" != "xno"],[
     guile_version=$($PKG_CONFIG guile-2.2 --modversion)
   ])
 ])
-AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" != "xno"])
+AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile22" != "xno"])
 ###############################################################################
 
 ###############################################################################
