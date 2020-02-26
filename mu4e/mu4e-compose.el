@@ -462,10 +462,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (unless (mu4e-running-p)
       (mu4e~start)) ;; start mu4e in background, if needed
     (mu4e~compose-register-message-save-hooks)
-    ;; set the default directory to the user's home dir; this is probably more
-    ;; useful e.g. when finding an attachment file the directory the current
-    ;; mail files lives in...
-    (setq default-directory (expand-file-name "~/"))
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
       (unless mu4e~contacts   ;; work-around for https://github.com/djcb/mu/issues/1016
