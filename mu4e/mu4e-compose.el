@@ -655,6 +655,8 @@ tempfile)."
   (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode)
+  ;; don't allow undoing anything before this.
+  (setq buffer-undo-list nil)
 
   ;; set mu4e-compose-type once more for this buffer,
   ;; we loose it after the mode-change, it seems
