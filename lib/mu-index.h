@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -149,8 +147,6 @@ MuError mu_index_run (MuIndex *index, gboolean force,
 MuError mu_index_stats (MuIndex *index, MuIndexStats *stats,
 			MuIndexMsgCallback msg_cb, MuIndexDirCallback dir_cb,
 			void *user_data);
-
-
 
 /**
  * callback function called for each message

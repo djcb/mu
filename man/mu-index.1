@@ -87,15 +87,6 @@ indexing only a part of messages (using \fB\-\-maildir\fR). For this reason,
 it is necessary to run \fBmu index \-\-rebuild\fR when there is an upgrade in
 the database format. \fBmu index\fR will issue a warning about this.
 
-.TP
-\fB\-\-max-msg-size\fR=\fI<max msg size>\fR
-set the maximum size (in bytes) for messages. The default maximum
-(currently at 500Mb) should be enough in most cases, but if you
-encounter warnings from \fBmu\fR about ignoring messsage because they
-are too big, you may want to increase this. Note that the reason for
-having a maximum size is that big messages require big memory
-allocations, which may lead to problems.
-
 .B NOTE:
 It is not recommended to mix maildirs and sub-maildirs within the hierarchy
 in the same database; for example, it's better not to index both with
