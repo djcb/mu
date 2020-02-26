@@ -398,6 +398,7 @@ article-mode."
       (run-hooks 'gnus-article-decode-hook)
       (let ((mu4e~view-rendering t) ; customize gnus in mu4e
             (max-specpdl-size mu4e-view-max-specpdl-size)
+            (gnus-blocked-images ".") ;; don't load external images.
             ;; Possibly add headers (before "Attachments")
             (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
             (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
