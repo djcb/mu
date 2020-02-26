@@ -81,6 +81,13 @@ NODEFAULT, hour and minute fields will be nil if not given."
 
 ;;; Various
 
+(defun mu4e-copy-message-path ()
+  "Copy the message-path of message at point to the kill-ring."
+  (interactive)
+  (let ((path (mu4e-message-field-at-point :path)))
+    (kill-new path)
+    (mu4e-message "Saved '%s' to kill-ring" path)))
+
 (defun mu4e-user-mail-address-p (addr)
   "If ADDR is one of user's e-mail addresses return t, nil otherwise.
 User's addresses are set in `(mu4e-personal-addresses)'.  Case
