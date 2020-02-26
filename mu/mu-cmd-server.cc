@@ -721,7 +721,7 @@ find_handler (Context& context, const Parameters& params)
         const auto threads{get_bool_or(params, "threads", false)};
         const auto sortfieldstr{get_symbol_or(params, "sortfield")};
         const auto descending{get_bool_or(params, "descending", false)};
-        const auto maxnum{get_int_or(params, "maxnum", 500)};
+        const auto maxnum{get_int_or(params, "maxnum", -1/*unlimited*/)};
         const auto skip_dups{get_bool_or(params, "skip-dups", false)};
         const auto include_related{get_bool_or(params, "include-related", false)};
 
