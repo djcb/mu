@@ -90,6 +90,8 @@ Example usage:
 
 (defun mu4e~org-store-link-message ()
   "Store a link to a mu4e message."
+  (unless (fboundp 'mu4e-message-at-point)
+    (error "Please load mu4e before mu4e-org"))
   (let* ((msg      (mu4e-message-at-point))
          (msgid   (or (plist-get msg :message-id) "<none>"))
          (date    (plist-get msg :date))
@@ -114,6 +116,8 @@ It links to the last known query when in `mu4e-headers-mode' with
 `mu4e-org-link-query-in-headers-mode' set; otherwise it links to
 a specific message, based on its message-id, so that links stay
 valid even after moving the message around."
+  (unless (fboundp 'mu4e-message-at-point)
+    (error "Please load mu4e before mu4e-org"))
   (if (and (eq major-mode 'mu4e-headers-mode)
            mu4e-org-link-query-in-headers-mode)
       (mu4e~org-store-link-query)
