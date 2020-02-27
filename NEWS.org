@@ -63,24 +63,28 @@
     - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
       by default.
 
-   - Add message-id's to messages when saving drafts, so we can find them even
-     with ~mu4e-headers-skip-duplicates~.
+    - Add message-id's to messages when saving drafts, so we can find them even
+      with ~mu4e-headers-skip-duplicates~.
 
-   - Improved handling of replies to mailing-lists.
+    - Bookmarks (as in ~mu4e-bookmarks~) are now simple plists (instead of cl
+      structs). ~make-mu4e-bookmark~ has been updated to produce such plists (for
+      backward compatibility). A bookmark now looks like a list of e.g. ~(:name
+      "My bookmark" :query "banana OR pear" :key ?f)~ this format is a bit easier
+      extensible.
 
-   - Bookmarks (as in ~mu4e-bookmarks~) are now simple plists (instead of cl
-     structs). ~make-mu4e-bookmark~ has been updated to produce such plists (for
-     backward compatibility). A bookmark now looks like a list of e.g.
-        ~(:name "My bookmark" :query "banana OR pear" :key ?f)~
-    this format is a bit easier extensible.
+    - Improved handling of replies to mailing-lists.
 
-   - For instance, we now recognize an attribute ~:hide t~, which will hide the
-     bookmark item from the main-screen (and speedbar), but keep it avilable
-     through the completion UI.
+    - For instance, we now recognize an attribute ~:hide t~, which will hide the
+      bookmark item from the main-screen (and speedbar), but keep it avilable
+      through the completion UI.
 
-   - Furthermore, mu4e now shows unread/all counts for bookmarks in
-     the main screen. This is on by default, but can be disabled by setting
-     ~:hide-unread~ in the bookmark ~plist~ to ~t~.
+    - Furthermore, mu4e now shows unread/all counts for bookmarks in the main
+      screen. This is on by default, but can be disabled by setting ~:hide-unread~
+      in the bookmark ~plist~ to ~t~.
+
+    - The mu4e <-> mu has been rewritten to communicate using s-expressions,
+      with a repl for testing. If you have readline installed, you also get
+      history etc.
 
 *** toys
 
