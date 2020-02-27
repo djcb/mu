@@ -1771,6 +1771,33 @@ other windows."
           (when (buffer-live-p (mu4e-get-headers-buffer))
             (switch-to-buffer (mu4e-get-headers-buffer))))))))
 
-;;; _
+;;
+;; Loading messages
+;;
+
+(defvar mu4e-loading-mode-map nil  "Keymap for *mu4e-loading* buffers.")
+(unless mu4e-loading-mode-map
+  (setq mu4e-loading-mode-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map "n" 'ignore)
+          (define-key map "p" 'ignore)
+          (define-key map "q"
+            (lambda()(interactive)
+              (if (eq mu4e-split-view 'single-window)
+                  'kill-buffer
+                'kill-buffer-and-window)))
+          map)))
+(fset 'mu4e-loading-mode-map mu4e-loading-mode-map)
+
+(define-derived-mode mu4e-loading-mode special-mode
+  "mu4e:loading"
+  (use-local-map mu4e-loading-mode-map)
+  (make-local-variable 'global-mode-string)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert (propertize "Loading message..."
+                        'face 'mu4e-system-face 'intangible t))))
+
+;;;
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here

@@ -1659,23 +1659,6 @@ _not_ refresh the last search with the new setting for threading."
 (defvar mu4e~headers-loading-buf nil
   "A buffer for loading a message view.")
 
-(defun mu4e~headers-get-loading-buf ()
-  "Get a buffer to give feedback while loading a message view."
-  (unless (buffer-live-p mu4e~headers-loading-buf)
-    (setq mu4e~headers-loading-buf
-          (get-buffer-create " *mu4e-loading*")))
-  (with-current-buffer mu4e~headers-loading-buf
-    (read-only-mode)
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (local-set-key (kbd "q")
-                     (if (eq mu4e-split-view 'single-window)
-                         'kill-buffer
-                       'kill-buffer-and-window))
-      (insert (propertize "Waiting for message..."
-                          'face 'mu4e-system-face 'intangible t))))
-  mu4e~headers-loading-buf)
-
 (defun mu4e~decrypt-p (msg)
   "Should we decrypt this message?"
   (and (member 'encrypted (mu4e-message-field msg :flags))
@@ -1701,7 +1684,13 @@ window. "
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
-    (switch-to-buffer (mu4e~headers-get-loading-buf))
+
+    (unless (buffer-live-p mu4e~headers-loading-buf)
+      (setq mu4e~headers-loading-buf (get-buffer-create " *mu4e-loading*"))
+      (with-current-buffer mu4e~headers-loading-buf
+        (mu4e-loading-mode)))
+
+    (switch-to-buffer mu4e~headers-loading-buf)
     ;; Note, ideally in the 'gnus' case, we don't need to call the server to get
     ;; the body etc., we only need the path which we already have.
     ;;
