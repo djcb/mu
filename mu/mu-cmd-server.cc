@@ -1289,7 +1289,7 @@ struct  Readline {
 };
 
 /// Wrapper around readline (if available) or nothing otherwise.
-#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY)
+#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY) && defined(HAVE_READLINE_H)
 Readline::Readline (const std::string& histpath, size_t max_lines):
         histpath_{histpath}, max_lines_{max_lines}
 {
