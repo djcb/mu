@@ -266,13 +266,16 @@ static MuMsgOptions
 message_options (const Parameters& params)
 {
         const auto extract_images{get_bool_or(params, "extract-images", false)};
-        const auto extract_encrypted{get_bool_or(params, "extract-encrypted", false)};
+        const auto decrypt{get_bool_or(params, "decrypt", false)};
+        const auto verify{get_bool_or(params, "verify", false)};
 
-        int opts{MU_MSG_OPTION_VERIFY | MU_MSG_OPTION_USE_AGENT};
+        int opts{MU_MSG_OPTION_NONE};
         if (extract_images)
                 opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
-        if (extract_encrypted)
-                opts |= MU_MSG_OPTION_DECRYPT;
+        if (verify)
+                opts |= MU_MSG_OPTION_VERIFY  | MU_MSG_OPTION_USE_AGENT;
+        if (decrypt)
+                opts |= MU_MSG_OPTION_DECRYPT | MU_MSG_OPTION_USE_AGENT;
 
         return (MuMsgOptions)opts;
 }
@@ -1154,8 +1157,7 @@ make_command_map (Context& context)
                            ArgMap{{"type", ArgInfo{Type::Symbol, true,
                                             "type of composition: reply/forward/edit/resend/new"}},
                                    {"docid", ArgInfo{Type::Integer, false,"document id of parent-message, if any"}},
-                                   {"extract-encrypted", ArgInfo{Type::Symbol, false,
-                                                           "whether to decrypt encrypted parts (if any)" }}},
+                                   {"decrypt", ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
                            [&](const auto& params){compose_handler(context, params);}});
 
@@ -1175,7 +1177,7 @@ make_command_map (Context& context)
                            ArgMap{{"docid", ArgInfo{Type::Integer, true,  "document for the message" }},
                                    {"index", ArgInfo{Type::Integer, true,  "index for the part to operate on" }},
                                    {"action", ArgInfo{Type::Symbol, true, "what to do with the part" }},
-                                   {"extract-encrypted", ArgInfo{Type::Symbol, false,
+                                   {"decrypt", ArgInfo{Type::Symbol, false,
                                             "whether to decrypt encrypted parts (if any)" }},
                                    {"path",    ArgInfo{Type::String, false, "part for saving (for action: save)" }},
                                    {"what",    ArgInfo{Type::Symbol, false, "what to do with the part (feedback)" }},
@@ -1271,8 +1273,12 @@ make_command_map (Context& context)
 
                                    {"extract-images", ArgInfo{Type::Symbol, false,
                                                            "whether to extract images for this messages (if any)"}},
-                                   {"extract-encrypted", ArgInfo{Type::Symbol, false,
-                                                           "whether to decrypt encrypted parts (if any)" }}},
+                                   {"decrypt", ArgInfo{Type::Symbol, false,
+                                                           "whether to decrypt encrypted parts (if any)" }},
+                                   {"verify", ArgInfo{Type::Symbol, false,
+                                                           "whether to verify signatures (if any)" }}
+
+                           },
                            "view a message. exactly one of docid/msgid/path must be specified",
                            [&](const auto& params){view_handler(context, params);}});
       return cmap;

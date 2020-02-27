@@ -330,7 +330,7 @@ The result is delivered to the function registered as
 `mu4e-compose-func'."
   (mu4e~call-mu `(compose
                   :type ,type
-                  :extract-encrypted ,decrypt
+                  :decrypt ,decrypt
                   :docid ,docid)))
 
 (defun mu4e~proc-contacts (personal after tstamp)
@@ -357,7 +357,7 @@ to a temporary file, then respond with
                   :action ,action
                   :docid ,docid
                   :index ,index
-                  :extract-encrypted ,decrypt
+                  :decrypt ,decrypt
                   :path ,path
                   :what ,what
                   :param ,param)))
@@ -467,28 +467,30 @@ respectively."
 <docid> :fcc <path>)."
   (mu4e~call-mu `(sent :path ,path)))
 
-(defun mu4e~proc-view (docid-or-msgid &optional images decrypt)
+(defun mu4e~proc-view (docid-or-msgid &optional images decrypt verify)
   "Get a message DOCID-OR-MSGID.
 Optionally, if IMAGES is non-nil, backend will any images
-attached to the message, and return them as temp files. DECRYPT
+attached to the message, and return them as temp files. DECRYPT and VERIFY
 if necessary. The result will be delivered to the function
 registered as `mu4e-view-func'."
   (mu4e~call-mu `(view
                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
                   :extract-images ,images
-                  :extract-encrypted ,decrypt)))
+                  :decrypt ,decrypt
+                  :verify ,verify)))
 
 (defun mu4e~proc-view-path (path &optional images decrypt)
   "View message at PATH..
 Optionally, if IMAGES is non-nil, backend will any images
 attached to the message, and return them as temp files. The
 result will be delivered to the function registered as
-`mu4e-view-func'. Optionally DECRYPT."
+`mu4e-view-func'. Optionally DECRYPT and VERIFY."
   (mu4e~call-mu `(view
                   :path ,path
                   :extract-images ,images
-                  :extract-encrypted ,decrypt)))
+                  :decrypt ,decrypt
+                  :verify ,verify)))
 
 ;;; _
 (provide 'mu4e-proc)
