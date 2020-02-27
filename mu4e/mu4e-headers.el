@@ -1661,18 +1661,19 @@ _not_ refresh the last search with the new setting for threading."
 
 (defun mu4e~decrypt-p (msg)
   "Should we decrypt this message?"
-  (and (member 'encrypted (mu4e-message-field msg :flags))
-       (if (eq mu4e-decryption-policy 'ask)
-           (yes-or-no-p (mu4e-format "Decrypt message?"))
-         mu4e-decryption-policy)))
+  (unless mu4e-view-use-gnus ;; we don't decrypt in the gnus-view case
+    (and (member 'encrypted (mu4e-message-field msg :flags))
+         (if (eq mu4e-decryption-policy 'ask)
+             (yes-or-no-p (mu4e-format "Decrypt message?"))
+           mu4e-decryption-policy))))
 
 (defun mu4e-headers-view-message ()
-  "View message at point.
-If there's an existing window for the view, re-use that one. If
+  "View message at point                                    .
+If there's an existing window for the view, re-use that one . If
 not, create a new one, depending on the value of
 `mu4e-split-view': if it's a symbol `horizontal' or `vertical',
 split the window accordingly; if it is nil, replace the current
-window. "
+window                                                      . "
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
@@ -1680,11 +1681,13 @@ window. "
          (docid (or (mu4e-message-field msg :docid)
                     (mu4e-warn "No message at point")))
          (decrypt (mu4e~decrypt-p msg))
+         (verify  (not mu4e-view-use-gnus))
          (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
     (select-window viewwin)
 
+    ;; show some 'loading...' buffer
     (unless (buffer-live-p mu4e~headers-loading-buf)
       (setq mu4e~headers-loading-buf (get-buffer-create " *mu4e-loading*"))
       (with-current-buffer mu4e~headers-loading-buf
@@ -1700,7 +1703,7 @@ window. "
     ;; (if mu4e-view-use-gnus
     ;;     (mu4e-view msg)
     ;;   (mu4e~proc-view docid mu4e-view-show-images decrypt))
-    (mu4e~proc-view docid mu4e-view-show-images decrypt)))
+    (mu4e~proc-view docid mu4e-view-show-images decrypt verify)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."

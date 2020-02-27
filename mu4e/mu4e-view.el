@@ -996,7 +996,8 @@ changes, it triggers a refresh."
         ;; this message will be marked as read. We don't want an update thougn,
         ;; we want a full message, so images etc. work correctly.
         (mu4e~proc-move msgid nil "+S-u-N" 'noview)
-        (mu4e~proc-view docid mu4e-view-show-images (mu4e~decrypt-p msg))
+        (mu4e~proc-view docid mu4e-view-show-images
+                        (mu4e~decrypt-p msg) (not mu4e-view-use-gnus))
         t))))
 
 (defun mu4e~view-browse-url-func (url)
