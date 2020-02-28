@@ -332,17 +332,16 @@ Also see `mu4e-compose-context-policy'."
   "Crypto-related settings."
   :group 'mu4e)
 
-(defcustom mu4e-auto-retrieve-keys nil
-  "Attempt to automatically retrieve public keys when needed."
-  :type 'boolean
-  :group 'mu4e-crypto)
+(make-obsolete-variable 'mu4e-auto-retrieve-keys  "no longer used." "1.3.1")
 
 (defcustom mu4e-decryption-policy t
   "Policy for dealing with encrypted parts.
 The setting is a symbol:
  * t:     try to decrypt automatically
  * `ask': ask before decrypting anything
- * nil:   don't try to decrypt anything."
+ * nil:   don't try to decrypt anything.
+
+Note that this is not used when `mu4e-view-use-gnus' is enabled."
   :type '(choice (const :tag "Try to decrypt automatically" t)
                  (const :tag "Ask before decrypting anything" ask)
                  (const :tag "Don't try to decrypt anything" nil))
