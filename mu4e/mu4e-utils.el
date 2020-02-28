@@ -637,7 +637,7 @@ process."
          (processed (plist-get info :processed))
          (updated (plist-get info :updated))
          (cleaned-up (plist-get info :cleaned-up))
-         (mainbuf (get-buffer mu4e~main-buffer-name)))
+         (mainbuf (get-buffer mu4e-main-buffer-name)))
     (cond
      ((eq type 'add) t) ;; do nothing
      ((eq type 'index)
