@@ -198,9 +198,8 @@ This is a symbol, `new', `forward', `reply' or `edit'.")
 
 (defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed.
-\(Or with long lines if variable `use-hard-newlines' is set to
-nil). The variable `fill-flowed-encode-column' lets you customize
-the width beyond which format=flowed lines are wrapped."
+The variable `fill-flowed-encode-column' lets you customize the
+width beyond which format=flowed lines are wrapped."
   :type 'boolean
   :safe 'booleanp
   :group 'mu4e-compose)
@@ -458,36 +457,13 @@ removing the In-Reply-To header."
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
-          (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
           (if mu4e-compose-format-flowed
               (define-key map (kbd "C-c C-c" 'mu4e-fill-send-and-exit)))
           map)))
 
-(defun mu4e-fill-paragraph (&optional region)
-  "Re-layout either the whole message or REGION.
-If variable `use-hard-newlines', takes a multi-line paragraph and
-makes it into a single line of text. Assume paragraphs are
-separated by blank lines. If variable `use-hard-newlines' is not
-
-set, this simply executes `fill-paragraph'."
-  ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
-  (interactive (progn (barf-if-buffer-read-only) '(t)))
-  (if mu4e-compose-format-flowed
-      (let ((fill-column (point-max))
-            (use-hard-newlines nil)); rfill "across" hard newlines
-        (when (use-region-p)
-          (delete-trailing-whitespace (region-beginning) (region-end)))
-        (fill-paragraph nil region))
-    (when (use-region-p)
-      (delete-trailing-whitespace (region-beginning) (region-end)))
-    (fill-paragraph nil region)))
-
-(defun mu4e-toggle-use-hard-newlines ()
+(defun mu4e-toggle-format-flowed ()
   (interactive)
-  (setq use-hard-newlines (not use-hard-newlines))
-  (if use-hard-newlines
-      (turn-off-auto-fill)
-    (turn-on-auto-fill)))
+  (setq mu4e-compose-format-flowed (not mu4e-compose-format-flowed)))
 
 (defun mu4e~compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
@@ -544,21 +520,18 @@ buffers; lets remap its faces so it uses the ones for mu4e."
       (mu4e~compose-setup-completion))
     (if mu4e-compose-format-flowed
         (progn
-          (turn-off-auto-fill)
           (setq truncate-lines nil
                 word-wrap t
-                mml-enable-flowed t
-                use-hard-newlines t)
-          (visual-line-mode t))
+                mml-enable-flowed t))
       (setq mml-enable-flowed nil))
 
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
         (define-key-after
           keymap
-          [mu4e-hard-newlines]
-          '(menu-item "Format=flowed" mu4e-toggle-use-hard-newlines
-                      :button (:toggle . use-hard-newlines)
+          [mu4e-format-flowed-newlines]
+          '(menu-item "Format=flowed" mu4e-toggle-format-flowed
+                      :button (:toggle . mu4e-compose-format-flowed)
                       :help "Toggle format=flowed"
                       :visible (eq major-mode 'mu4e-compose-mode)
                       :enable mu4e-compose-format-flowed)
@@ -571,8 +544,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                       :button (:toggle . electric-quote-mode)
                       :help "Toggle Electric quote mode"
                       :visible (and (eq major-mode 'mu4e-compose-mode)
-                                    (functionp 'electric-quote-local-mode)))
-          'mu4e-hard-newlines)))
+                                    (functionp 'electric-quote-local-mode))))))
 
     (when (lookup-key mml-mode-map [menu-bar Attachments])
       (define-key-after
@@ -590,7 +562,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                 ;; when in-reply-to was removed, remove references as well.
                 (when (eq mu4e-compose-type 'reply)
                   (mu4e~remove-refs-maybe))
-                (when use-hard-newlines
+                (when mu4e-compose-format-flowed
                   (mu4e-send-harden-newlines))
                 ;; for safety, always save the draft before sending
                 (set-buffer-modified-p t)
