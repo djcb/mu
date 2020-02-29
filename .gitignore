@@ -49,6 +49,8 @@ GTAGS
 *.gcda
 *.gcno
 *.trs
+*.exe
+*.lib
 aminclude_static.am
 elisp-comp
 elc-stamp
