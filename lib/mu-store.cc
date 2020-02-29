@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <atomic>
 #include <iostream>
-
+#include <cstring>
 #include "mu-store.hh"
 #include "utils/mu-str.h"
 #include "utils/mu-error.hh"

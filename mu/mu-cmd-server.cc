@@ -25,7 +25,7 @@
 #include <string>
 #include <algorithm>
 #include <atomic>
-
+#include <cstring>
 #include <glib.h>
 #include <glib/gprintf.h>
 
@@ -87,7 +87,7 @@ install_sig_handler (void)
         for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
                 if (sigaction (sigs[i], &action, NULL) != 0)
                         g_critical ("set sigaction for %d failed: %s",
-                                    sigs[i], strerror (errno));;
+                                    sigs[i], g_strerror (errno));;
 }
 
 
@@ -155,7 +155,7 @@ print_expr (const char* frm, ...)
                 rv = write (outfd, "\n", 1);
         if (rv == -1) {
                 g_critical ("%s: write() failed: %s",
-                           __func__, strerror(errno));
+                           __func__, g_strerror(errno));
                 /* terminate ourselves */
                 raise (SIGTERM);
         }
