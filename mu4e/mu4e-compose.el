@@ -175,15 +175,6 @@ We have the following choices:
  'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
                         "2017-09-02")
 
-(defcustom mu4e-compose-format-flowed nil
-  "Whether to compose messages to be sent as format=flowed.
-\(Or with long lines if variable `use-hard-newlines' is set to
-nil). The variable `fill-flowed-encode-column' lets you customize
-the width beyond which format=flowed lines are wrapped."
-  :type 'boolean
-  :safe 'booleanp
-  :group 'mu4e-compose)
-
 (defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
 If the compose-type is either 'reply' or 'forward', the variable
@@ -202,6 +193,75 @@ place to do that."
 (defvar mu4e-compose-type nil
   "The compose-type for this buffer.
 This is a symbol, `new', `forward', `reply' or `edit'.")
+
+;;; Composing format=flowed messages
+
+(defcustom mu4e-compose-format-flowed nil
+  "Whether to compose messages to be sent as format=flowed.
+\(Or with long lines if variable `use-hard-newlines' is set to
+nil). The variable `fill-flowed-encode-column' lets you customize
+the width beyond which format=flowed lines are wrapped."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'mu4e-compose)
+
+(defun mu4e-fill-buffer-for-flowed ()
+  "Fill all lines in buffer to match format=flowed email spec.
+
+Specifically, fills all paragraph lines to the number of
+columns specified in fill-code-encode-column and ends each
+paragraph line with a space followed by a newline, following the
+specification.
+
+Non-paragraph lines are not filled, allowing for manual
+formatting.
+
+A line is a non-paragraph line if it is a code line or if it,
+plus the following word on the next line, are short enough that
+they would not have been filled by (fill-paragraph) based on the
+current value of fill-column.  The effect of this feature is that
+you can compose messages with auto-fill-mode on (to have a
+comfortable line length for writing) and any lines that were long
+enough to have been altered by auto-fill-mode will be refilled
+(potentially to a different length) and padded with a final space to
+match the fill=flowed RFC.
+
+A line is a code line if it begins with a tab character or at
+least four space characters.  Code lines have their initial
+whitespace trimmed and retain their hard wrapping. This allows
+for arbitrarily long code snippets (though any code snippets
+longer than the recipients screen width may display poorly).  Any
+trailing whitespace at the end of a code line is deleted to avoid
+triggering the soft-wrap behavior of format=flowed."
+  (interactive)
+  (end-of-buffer)    
+  (mu4e-compose-goto-top)
+  (narrow-to-region (point-max) (point))    
+  (while (not (eobp))
+    (beginning-of-line)
+    (cond ((> (save-excursion (forward-line 1)
+                              (forward-word)
+                              (point))
+              (+ (point-at-bol) fill-column))
+           (beginning-of-line)
+           (let ((fill-column fill-flowed-encode-column))
+             (fill-paragraph))
+           (end-of-line)
+           (let ((paragraph-end-line (save-excursion (forward-paragraph)
+                                                     (line-number-at-pos))))
+             (while (< (line-number-at-pos) paragraph-end-line)
+               (insert " ")
+               (end-of-line 2))))
+          ((looking-at "    ")
+           (delete-char 4)
+           (delete-trailing-whitespace (point) (point-at-eol)))
+          ((looking-at "\t")
+           (delete-char 1)
+           (delete-trailing-whitespace (point) (point-at-eol))))
+    (end-of-line 2))
+  (insert " ")
+  (widen))
+
 
 ;;; Attachments
 
@@ -394,6 +454,7 @@ removing the In-Reply-To header."
 If variable `use-hard-newlines', takes a multi-line paragraph and
 makes it into a single line of text. Assume paragraphs are
 separated by blank lines. If variable `use-hard-newlines' is not
+
 set, this simply executes `fill-paragraph'."
   ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
   (interactive (progn (barf-if-buffer-read-only) '(t)))
