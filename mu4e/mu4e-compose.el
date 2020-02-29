@@ -459,6 +459,8 @@ removing the In-Reply-To header."
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
           (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
+          (if mu4e-compose-format-flowed
+              (define-key map (kbd "C-c C-c" 'mu4e-fill-send-and-exit)))
           map)))
 
 (defun mu4e-fill-paragraph (&optional region)
