@@ -155,28 +155,35 @@ AS_IF([test "x$have_json_glib" = "xyes"],[
 AM_CONDITIONAL(HAVE_JSON_GLIB,[test "x$have_json_glib" = "xyes"])
 
 # xapian checking - we need 1.4 at least
-AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
-AM_CONDITIONAL(HAVE_XAPIAN,test "x$XAPIAN_CONFIG" != "xno")
-AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
-   AC_MSG_ERROR([
-   *** xapian could not be found; please install it
-   *** e.g., in debian/ubuntu the package would be 'libxapian-dev'
-   *** If you compiled it yourself, you should ensure that xapian-config
-   *** is in your PATH.])],
-   [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
+PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
+  have_xapian=yes
+  xapian_version=$($PKG_CONFIG xapian-core --modversion)
+  AC_SUBST(XAPIAN_CXXFLAGS,${XAPIAN_CFLAGS})
+],[
+  # fall back to the xapian-config script. Not sure if there are cases where the
+  # pkgconfig does not work, but xapian-config does, so keep this for now.
+  AC_MSG_NOTICE([falling back to xapian-config])
+  AC_CHECK_PROG(XAPIAN_CONFIG,xapian-config,xapian-config,no)
+  AS_IF([test "x$XAPIAN_CONFIG" = "xno"],[
+     AC_MSG_ERROR([
+     *** xapian could not be found; please install it
+     *** e.g., in debian/ubuntu the package would be 'libxapian-dev'
+     *** If you compiled it yourself, you should ensure that xapian-config
+     *** is in your PATH.])],
+     [xapian_version=$($XAPIAN_CONFIG --version | sed -e 's/.* //')])
 
-AS_CASE([$xapian_version],
-    [1.[[4-9]].[[0-9]]*],
-      [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
-      [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
+  AS_CASE([$xapian_version],
+      [1.[[4-9]].[[0-9]]*],
+        [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
+        [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
 
-XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
-XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
-have_xapian="yes"
+  XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
+  XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
+  have_xapian="yes"
 
-AC_SUBST(XAPIAN_CXXFLAGS)
-AC_SUBST(XAPIAN_LIBS)
-
+  AC_SUBST(XAPIAN_CXXFLAGS)
+  AC_SUBST(XAPIAN_LIBS)
+])
 ###############################################################################
 # we set the set the version of the MuStore (Xapian database) layout
 # here; it will become part of the db name, so we can automatically
