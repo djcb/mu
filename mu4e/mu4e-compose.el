@@ -262,6 +262,18 @@ triggering the soft-wrap behavior of format=flowed."
   (insert " ")
   (widen))
 
+(defun mu4e-fill-send-and-exit ()
+  "Reflow message with `mu4e-fill-buffer-for-flowed' and send it.
+
+With a prefix argument, prompt for a line length to use in place
+of `fill-flowed-encode-column'"
+  (interactive)
+  (let ((fill-flowed-encode-column (if current-prefix-arg
+                                       (read-number "format=flowed line length: " 72)
+                                     fill-flowed-encode-column)))
+    (mu4e-fill-buffer-for-flowed))
+  (message-send-and-exit))
+
 
 ;;; Attachments
 
