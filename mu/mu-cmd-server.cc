@@ -30,20 +30,31 @@
 #include <glib/gprintf.h>
 
 #ifdef HAVE_LIBREADLINE
-#if defined(HAVE_READLINE_READLINE_H)
-#include <readline/readline.h>
-#elif defined(HAVE_READLINE_H)
-#include <readline.h>
-# endif /* !defined(HAVE_READLINE_H) */
+#  if defined(HAVE_READLINE_READLINE_H)
+#    include <readline/readline.h>
+#  elif defined(HAVE_READLINE_H)
+#    include <readline.h>
+#  else /* !defined(HAVE_READLINE_H) */
+extern char *readline ();
+#  endif /* !defined(HAVE_READLINE_H) */
+char *cmdline = NULL;
+#else /* !defined(HAVE_READLINE_READLINE_H) */
+   /* no readline */
 #endif /* HAVE_LIBREADLINE */
 
 #ifdef HAVE_READLINE_HISTORY
-#if defined(HAVE_READLINE_HISTORY_H)
-#include <readline/history.h>
-#elif defined(HAVE_HISTORY_H)
-#include <history.h>
-#endif
-#endif
+#  if defined(HAVE_READLINE_HISTORY_H)
+#    include <readline/history.h>
+#  elif defined(HAVE_HISTORY_H)
+#    include <history.h>
+#  else /* !defined(HAVE_HISTORY_H) */
+extern void add_history ();
+extern int write_history ();
+extern int read_history ();
+#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+   /* no history */
+#endif /* HAVE_READLINE_HISTORY */
+
 
 #include "mu-runtime.h"
 #include "mu-cmd.h"
@@ -1295,7 +1306,7 @@ struct  Readline {
 };
 
 /// Wrapper around readline (if available) or nothing otherwise.
-#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY) && defined(HAVE_READLINE_H)
+#if defined(HAVE_LIBREADLINE) && defined(HAVE_READLINE_HISTORY)
 Readline::Readline (const std::string& histpath, size_t max_lines):
         histpath_{histpath}, max_lines_{max_lines}
 {
