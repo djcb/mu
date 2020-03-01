@@ -4181,18 +4181,35 @@ setting
 
 @noindent
 in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}).
-The transformation of your message into the proper format is
-done at the time of sending.  For this to happen properly, you should
-write each paragraph of your message of as a long line (i.e. without
-carriage return).  If you introduce unwanted newlines in your paragraph,
-use @kbd{M-q} to reformat it as a single line.
+Optionally, you may also set @code{fill-flowed-encode-column} to control
+length at which your email is wrapped for clients that do not support
+format=flowed.  By default, this is set to 66.
 
-If you want to send the message with paragraphs on single lines but
-without @t{format=flowed} (because, say, the receiver does not
-understand the latter as it is the case for Google or Github), use
-@kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
-uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
-message.
+The transformation of your message into the proper format is
+done at the time of sending by removing the current hard newlines
+from your message and inserting soft newlines at intervals determined
+by @code{fill-flowed-encode-column}.  This means that you can freely use
+@code{auto-fill-mode} to compose your message at a comfortable line
+length and then let your message be rewrapped when you send it.  (This
+represents a change from Mu4e 1.2.0, which required you to write each
+paragraph as a single long line).
+
+If you want to send the message with paragraphs on single lines when
+using @t{format=flowed} (for example, because the receiver does not
+reflow format=flowed emails as it is the case for Google or Github), 
+set @code{fill-flowed-encode-column} to a high value.  With this
+setting, mu4e will format your paragraphs as single lines, which will
+result in good display on clients that fully implement @t{format=flowed}
+and on clients that do not implement @t{format=flowed} but wrap all
+plaintext lines with a narrow width.
+
+This technique is described in more detail at
+@url{https://vxlabs.com/2019/08/25/format-flowed-with-long-lines/}.
+
+Note, however, that this will cause your emails to display poorly on
+clients that do not reflow @t{format=flowed} lines, such as aerc or
+pre-1.3.0 versions of mu4e using the mu4e message viewer (as opposed
+to the then-experimental gnus message viewer).
 
 @subsection How can force images to be shown at the end of my messages, regardless of where I insert them?
 User Marcin Borkowski has a solution:
