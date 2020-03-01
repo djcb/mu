@@ -124,10 +124,10 @@ Let's get started!
 @node Why another e-mail client
 @section Why another e-mail client?
 
-I (the author) spend a @emph{lot} of time dealing with e-mail, both
-professionally and privately. Having an efficient e-mail client is
-essential. Since none of the existing ones worked the way I wanted, I
-thought about creating my own.
+I (@t{mu4e}'s author) spend a @emph{lot} of time dealing with e-mail,
+both professionally and privately. Having an efficient e-mail client
+is essential. Since none of the existing ones worked the way I wanted,
+I thought about creating my own.
 
 Emacs is an integral part of my workflow, so it made a lot of
 sense to use it for e-mail as well. And as I had already written an
@@ -137,20 +137,22 @@ basis.
 @node Other mail clients
 @section Other mail clients
 
-Under the hood, @t{mu4e} is fully search-based, similar to programs like
-@t{notmuch}@footnote{@url{https://notmuchmail.org/}} and
+Under the hood, @t{mu4e} is fully search-based, similar to programs
+like @t{notmuch}@footnote{@url{https://notmuchmail.org/}} and
 @t{sup}@footnote{@url{https://sup-heliotrope.github.io/}}.
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
 handling (deleting, moving etc.) is inspired by
 Wanderlust@footnote{@url{http://www.gohome.org/wl/}} (another
-@t{emacs}-based e-mail client),
+Emacs-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
 file-manager for emacs.
 
-@t{mu4e} tries to keep all the `state' in your maildirs, so you can easily
-switch between clients, synchronize over @abbr{IMAP}, backup with @t{rsync}
-and so on. If you delete the database, you won't lose any information.
+@t{mu4e} keeps all the `state' in your maildirs, so you can easily
+switch between clients, synchronize over @abbr{IMAP}, backup with
+@t{rsync} and so on. The Xapian-database that @t{mu} maintains is
+mererly a @emph{cache}; if you delete it, you won't lose any
+information.
 
 @node What mu4e does not do
 @section What @t{mu4e} does not do
@@ -158,12 +160,13 @@ and so on. If you delete the database, you won't lose any information.
 There are a number of things that @t{mu4e} does @b{not} do, by design:
 @itemize
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
-a mail server. That task is delegated to other tools, such as
+a mail server. Nor does it sync-back any changes. Those tasks are
+delegated to other tools, such as
 @t{offlineimap}@footnote{@url{https://www.offlineimap.org/}},
 @t{isync/mbsync}@footnote{@url{http://isync.sourceforge.net/}} or
-@t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}. As long as the
-messages end up in a maildir, @t{mu4e} and @t{mu} are happy to deal with
-them.
+@t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}; As long as
+the messages end up in a maildir, @t{mu4e} and @t{mu} are happy to
+deal with them.
 @item @t{mu4e} also does @emph{not} implement sending of messages; instead, it
 depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of
 Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor;
@@ -275,7 +278,7 @@ $ sudo apt-get install libgmime-3.0-dev libxapian-dev
 $ sudo apt-get install emacs
 
 # optional
-$ sudo apt-get install guile-2.0-dev html2text xdg-utils
+$ sudo apt-get install guile-2.2-dev html2text xdg-utils
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
 $ sudo apt-get install libwebkitgtk-3.0-dev
@@ -290,10 +293,38 @@ $ sudo yum install gmime30-devel xapian-core-devel
 $ sudo yum install emacs
 
 # optional
-$ sudo yum install html2text xdg-utils
+$ sudo yum install html2text xdg-utils guile22-devel
 
 # optional: only needed for msg2pdf and mug (toy gtk+ frontend)
 $ sudo yum install webkitgtk3-devel
+@end example
+
+@subsection Building on Msys2
+@example
+# 1) install makepkg tool
+
+pacman -S base-devel msys-devel gcc git
+
+# 2) clone packages repo
+
+cd ~
+git clone https://github.com/msys2-unofficial/MSYS2-packages.git --depth=1
+
+# make and install dependencies
+
+cd ~/MSYS2-packages/xapian-core
+makepkg -s
+pacman -U xapian-core-1.4.15-1-x86_64.pkg.tar.xz
+
+cd ~/MSYS2-packages/gmime3
+makepkg -s
+pacman -U gmime3-devel-3.2.6-1-x86_64.pkg.tar.xz
+
+# 4) make and install mu from git (changes versions as needed)
+
+cd ~/MSYS2-packages/mu
+makepkg -sfp PKGBUILD-git
+pacman -U mu-git-2020-03-01-r4854.17f38dc4-1-x86_64.pkg.tar.xz
 @end example
 
 @subsection Building from a release tarball
@@ -4000,8 +4031,8 @@ Part of this may be that influential environment variables are not set
 in the emacs environment.
 @end itemize
 
-If you still see unexpect slowness you can of course file a ticket,
-but please be sure to mention the following:
+If you still experience unexpected slowness, you can of course file a
+ticket, but please be sure to mention the following:
 
 @itemize
 @item are all messages slow or only some messages?
@@ -4019,8 +4050,7 @@ your @code{mu4e-view-mode-hook}.
 @subsection How can I perform custom actions on messages and attachments?
 See @ref{Actions}.
 @subsection Does @t{mu4e} support crypto (i.e., decrypting messages and verifying signatures)?
-Yes --- if @t{mu} was built with @t{GMime} 2.6
-or later, it is possible to do both (note, only PGP/MIME is
+Yes --- it is possible to do both (note, only PGP/MIME is
 supported). In the @ref{Main view} the support is indicated by a big
 letter @t{C} on the right hand side of the @t{mu4e} version. See
 @ref{Decryption} and @ref{Verifying signatures}. For encryption and
@@ -4234,36 +4264,19 @@ a list of known issues and/or missing features in @t{mu4e}. Thus, users
 won't have to search in vain for things that are not there (yet), and
 the author can use it as a todo-list.
 
-@itemize
-@item @emph{mu4e does not work well if the Emacs language environment is not
-UTF-8}; so, if you encounter problems with encodings, be sure to have
-@code{(set-language-environment "UTF-8")} in your @file{~/.emacs}.
-@item @emph{Thread handling is incomplete.} While threads are calculated and are
-visible in the headers buffer, you cannot collapse/open them.
-@item @emph{The key-bindings are @emph{somewhat} hard-coded.} That is, the main
-menu assumes the default key-bindings, as do the clicks-on-bookmarks.
-@item @emph{The @t{emacs} front-end of the @t{notmuch} e-mail indexer
-conflicts with @t{mu4e}}. @t{notmuch} running in parallel with
-@t{mu4e} leads to
-@verbatim
-error in process filter: mu4e-error-handler: Error 70: cannot read
-~/Maildir/...
-@end verbatim
-when sending a reply to some e-mail. This seems to be caused by
-@t{notmuch} changing the name of the original message file while
-@t{mu4e} is working on it. To prevent this, deactivate @t{notmuch} in
-your Emacs setup.
-@item @emph{The PDF-version of the manual does not show any of the non-ASCII
-characters} --- this is because the @t{texi2pdf} documentation system does
-not support those. There is not much we can do about that.
-@item @emph{@t{mu4e} can get very slow when using Aquamacs' default theme (May 2018} --
-it's not clear what the root-cause for this is, but if you suffer from
-this, you can try to put
-@verbatim
-(aquamacs-autoface-mode 0)
-@end verbatim
-in @t{site-start.el}.
-@end itemize
+@subsection UTF-8 language environment is required
+@t{mu4e} does not work well if the Emacs language environment is not
+UTF-8; so, if you encounter problems with encodings, be sure to have
+@code{(set-language-environment "UTF-8")} in your @file{~/.emacs} (or
+its moral equivalents in other places).
+
+@subsection Thread handling is incomplete
+While threads are calculated and are visible in the headers buffer,
+you cannot collapse/open them.
+
+@subsection Key-bindings are @emph{somewhat} hard-coded.
+That is, the main menu assumes the default key-bindings, as do the
+clicks-on-bookmarks.
 
 For a more complete list, please refer to the issues-list in the
 github-repository.
