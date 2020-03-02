@@ -174,7 +174,7 @@ PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
 
   AS_CASE([$xapian_version],
       [1.[[4-9]].[[0-9]]*],
-        [AC_DEFINE([XAPIAN_HAVE_OP_WILDCARD],[1],[Xapian::Query::OP_WILDCARD?])],
+        [AC_MSG_NOTICE([xapian $xapian_version found.])],
         [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
 
   XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
