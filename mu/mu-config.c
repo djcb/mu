@@ -186,10 +186,6 @@ config_options_group_index (void)
 
 		{"lazy-check", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.lazycheck,
 		 "only check dir-timestamps (false)", NULL},
-		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
-		 &MU_CONFIG.my_addresses,
-		 "my e-mail address; can be used multiple times",
-		 "<address>"},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
