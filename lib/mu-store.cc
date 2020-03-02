@@ -41,8 +41,11 @@ constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir
 constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
+constexpr auto BatchSize            = 150'000;
 
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
+
+
 
 extern "C" {
 static unsigned add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err);
@@ -159,6 +162,18 @@ struct Store::Private {
                         return w_db;
         }
 
+        void begin_transaction () try {
+                wdb()->begin_transaction();
+                in_transaction_ = true;
+                dirtiness_      = 0;
+        } MU_XAPIAN_CATCH_BLOCK;
+
+        void commit_transaction () try {
+                in_transaction_ = false;
+                dirtiness_      = 0;
+                wdb()->commit_transaction();
+        } MU_XAPIAN_CATCH_BLOCK;
+
         void add_synonyms () {
                 mu_flags_foreach ((MuFlagsForeachFunc)add_synonym_for_flag,
                                   writable_db().get());
@@ -166,11 +181,12 @@ struct Store::Private {
                                      writable_db().get());
         }
 
-
         time_t metadata_time_t (const std::string& key) const {
                 const auto ts = db()->get_metadata(key);
                 return (time_t)atoll(db()->get_metadata(key).c_str());
         }
+
+
 
         const std::string                 db_path_;
         std::shared_ptr<Xapian::Database> db_;
@@ -182,6 +198,8 @@ struct Store::Private {
 
         std::atomic<bool>                 in_transaction_{};
         std::mutex                        lock_;
+
+        size_t                            dirtiness_{};
 
         mutable std::atomic<std::size_t> ref_count_{1};
 };
@@ -215,13 +233,6 @@ Store::Store (const std::string& path, bool readonly):
                 throw Mu::Error(Error::Code::SchemaMismatch,
                                 "expected schema-version %s, but got %s",
                                 ExpectedSchemaVersion, schema_version().c_str());
-
-        // g_debug ("upgrading database to schema-version %s", ExpectedSchemaVersion);
-        // const auto addresses{personal_addresses()};
-        // const auto root_mdir{root_maildir()};
-
-        // priv_.reset();
-        // priv_ = std::make_unique<Private> (path, root_mdir, addresses);
 }
 
 Store::Store (const std::string& path, const std::string& maildir,
@@ -417,9 +428,7 @@ void
 Store::begin_transaction () try
 {
         LOCKED;
-
-        priv_->wdb()->begin_transaction();
-        priv_->in_transaction_ = true;
+        priv_->begin_transaction();
 
 } MU_XAPIAN_CATCH_BLOCK;
 
@@ -427,19 +436,7 @@ void
 Store::commit_transaction () try
 {
         LOCKED;
-
-        priv_->in_transaction_ = false;
-        priv_->wdb()->commit_transaction();
-
-} MU_XAPIAN_CATCH_BLOCK;
-
-void
-Store::cancel_transaction () try
-{
-        LOCKED;
-
-        priv_->in_transaction_ = false;
-        priv_->wdb()->cancel_transaction();
+        priv_->commit_transaction();
 
 } MU_XAPIAN_CATCH_BLOCK;
 
@@ -606,15 +603,6 @@ mu_store_is_read_only (const MuStore *store)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
 
-}
-
-gboolean
-mu_store_clear (MuStore *store, GError **err)
-{
-	g_return_val_if_fail (store, FALSE);
-
-	// FIXME: implement
-	return TRUE;
 }
 
 
@@ -1280,7 +1268,7 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
                 auto wdb  = self->priv()->wdb();
 
 		if (!self->in_transaction())
-			self->begin_transaction();
+			self->priv()->begin_transaction();
 
 		add_term (doc, term);
 
@@ -1295,17 +1283,12 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 			id = docid;
 		}
 
-                // FIXME
-		// if (self->inc_processed() % store->batch_size() == 0)
-		// 	self->commit_transaction();
+                if (++self->priv()->dirtiness_ >= BatchSize)
+                        self->priv()->commit_transaction();
 
 		return id;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
-
-        // FIXME
-        // if (store->in_transaction())
-	// 	store->rollback_transaction();
 
 	return MU_STORE_INVALID_DOCID;
 }

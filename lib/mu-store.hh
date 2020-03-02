@@ -192,12 +192,6 @@ public:
         void commit_transaction();
 
         /**
-         * Cancel (rollback) the current database transaction.
-         *
-         */
-        void cancel_transaction();
-
-        /**
          * Are we in a transaction?
          *
          * @return true or false
@@ -537,19 +531,6 @@ gboolean mu_store_is_read_only (const MuStore *store);
 typedef MuError (*MuStoreForeachFunc) (const char* path, gpointer user_data);
 MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
 			   void *user_data, GError **err);
-
-
-/**
- * clear the database, ie., remove all of the contents. This is a
- * destructive operation, but the database can be restored be doing a
- * full scan of the maildirs. Also, clear the contacts cache file
- *
- * @param store a MuStore object
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return TRUE if the clearing succeeded, FALSE otherwise.
- */
-gboolean mu_store_clear (MuStore *store, GError **err);
 
 /**
  * check if the database is locked for writing
