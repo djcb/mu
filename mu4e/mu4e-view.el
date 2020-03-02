@@ -993,7 +993,7 @@ changes, it triggers a refresh."
       ;; is a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
         ;; mark /all/ messages with this message-id as read, so all copies of
-        ;; this message will be marked as read. We don't want an update thougn,
+        ;; this message will be marked as read. We don't want an update though,
         ;; we want a full message, so images etc. work correctly.
         (mu4e~proc-move msgid nil "+S-u-N" 'noview)
         (mu4e~proc-view docid mu4e-view-show-images
