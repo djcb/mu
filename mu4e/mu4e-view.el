@@ -1421,7 +1421,7 @@ If CMD is nil, ask user for it."
                    'mu4e~view-open-with-hist)))
          (index (plist-get att :index)))
     (mu4e~view-temp-action
-     (mu4e-message-field msg :docid) index "open-with" cmd)))
+     (mu4e-message-field msg :docid) index 'open-with cmd)))
 
 (defvar mu4e~view-pipe-hist nil
   "History list for the pipe argument.")
@@ -1437,20 +1437,20 @@ If PIPECMD is nil, ask user for it."
                        'mu4e~view-pipe-hist)))
          (index (plist-get att :index)))
     (mu4e~view-temp-action
-     (mu4e-message-field msg :docid) index "pipe" pipecmd)))
+     (mu4e-message-field msg :docid) index 'pipe pipecmd)))
 
 (defun mu4e-view-open-attachment-emacs (msg attachnum)
   "Open MSG's attachment ATTACHNUM in the current emacs instance."
   (let* ((att (mu4e~view-get-attach msg attachnum))
          (index (plist-get att :index)))
-    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "emacs")))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'emacs)))
 
 (defun mu4e-view-import-attachment-diary (msg attachnum)
   "Open MSG's attachment ATTACHNUM in the current emacs instance."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
          (index (plist-get att :index)))
-    (mu4e~view-temp-action (mu4e-message-field msg :docid) index "diary")))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'diary)))
 
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG
