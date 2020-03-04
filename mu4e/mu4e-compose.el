@@ -385,12 +385,23 @@ removing the In-Reply-To header."
         (let ((map (make-sparse-keymap)))
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+          (define-key map (kbd "M-RET") 'mu4e-compose-soft-newline)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
           map)))
 
 (defun mu4e-toggle-format-flowed ()
   (interactive)
   (setq mu4e-compose-format-flowed (not mu4e-compose-format-flowed)))
+
+(defun mu4e-compose-soft-newline ()
+  "Insert a soft newline.
+
+Soft newlines do not break paragraphs and will be reflowed by
+`fill-paragraph' or when sending messages with
+`mu4e-compose-format-flowed' enabled."
+  (interactive)
+  (let ((use-hard-newlines nil))
+    (newline)))
 
 (defun mu4e~compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
