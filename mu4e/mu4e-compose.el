@@ -180,8 +180,8 @@ We have the following choices:
 
 The variable `fill-flowed-encode-column' lets you customize
 the width beyond which format=flowed lines are wrapped."
-  :type 'boolean
-  :safe 'booleanp
+  :type 'symbol
+  :safe 'symbolp
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-pre-hook nil
@@ -387,6 +387,7 @@ removing the In-Reply-To header."
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "M-RET") 'mu4e-compose-soft-newline)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
+          (define-key map (kbd "C-c C-c") 'mu4e-compose-send-and-exit)
           map)))
 
 (defun mu4e-toggle-format-flowed ()
@@ -396,12 +397,71 @@ removing the In-Reply-To header."
 (defun mu4e-compose-soft-newline ()
   "Insert a soft newline.
 
-Soft newlines do not break paragraphs and will be reflowed by
-`fill-paragraph' or when sending messages with
-`mu4e-compose-format-flowed' enabled."
+Soft newlines do not break paragraphs and thus will be refilled by
+`fill-paragraph' or when sending emails with `mu4e-compose-format-flowed'
+set to a non-nil value other that `manual'."
   (interactive)
   (let ((use-hard-newlines nil))
     (newline)))
+
+(defun mu4e-compose-fill-flowed ()
+  "Fill the message for sending with the format=flowed header.
+
+This function fills all paragraphs and inserts the SPACE NEWLINE
+line separator required by the format=flowed RFC.  This functions
+behavior depends on the current value of the variable
+`mu4e-compose-format-flowed'.  See info node `(mu4e)The
+format=flowed header' for details." 
+  (interactive)
+  (goto-char (point-max))
+  (mu4e-compose-goto-top)
+  (narrow-to-region (point-max) (point))
+  (pcase mu4e-compose-format-flowed
+    ('emacs-newlines (let ((fill-flowed-encode-column fill-column))
+                       (fill-flowed-encode))) 
+    ('refill-emacs-newlines (fill-flowed-encode))
+    ('refill-emacs-newlines-fix-one-line-paragraphs
+     (progn (fill-flowed-encode)
+            (add-space-to-one-line-paragraphs)))
+    (_ t))
+  (widen))
+
+(defun add-space-to-one-line-paragraphs ()
+  "Add a space immediately before the newline in a one-line paragraph."
+  (goto-char (1- (point-max)))
+  (when (not (looking-at "\n"))
+    (forward-char 1)
+    (insert "\n"))
+  (goto-char (point-min))
+  (end-of-line)
+  (while (not (eobp))
+    (let ((line-ends-with-space-newline
+           (save-excursion (backward-char 1) (looking-at " \n"))))
+      (when (and (blank-or-absent-p -1)
+                 (blank-or-absent-p 1)
+                 (not (blank-or-absent-p 0))
+                 (not line-ends-with-space-newline))
+        (insert " ")))
+    (end-of-line 2)))
+
+(defun blank-or-absent-p (relative-line)
+  "Check whether a line is blank or not present in the buffer.
+
+RELATIVE-LINE specifies a line relative to the current line
+(e.g., `-1' for the previous line, `1' for the next line).  This
+function returns t if the specified line is either blank (only a
+newline) or absent (not contained in the buffer)."
+  (save-excursion (or (not (= (forward-line relative-line) 0))
+                      (looking-at "$"))))
+
+
+(defun mu4e-compose-send-and-exit ()
+  "Send the current message and exit the buffer."
+  (interactive)
+  (if (eq mu4e-compose-format-flowed 'manual)
+      (let ((fill-flowed-encode (lambda () t)))
+        (message-send-and-exit))
+    (message-send-and-exit)))
 
 (defun mu4e~compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
