@@ -932,7 +932,7 @@ headers-view.
 @section Keybindings
 
 Using the below key bindings, you can do various things with these messages;
-these actions are also listed in the @t{Headers} menu in the Emacs
+these actions are also listed in the @t{Mu4e} menu in the Emacs
 menu bar.
 
 @verbatim
@@ -1229,7 +1229,7 @@ prevent this behavior, set @code{mu4e-view-scroll-to-next} to @code{nil}.
 @node MSGV Keybindings
 @section Keybindings
 
-You can find most things you can do with this message in the @emph{View} menu,
+You can find most things you can do with this message in the @emph{Mu4e} menu,
 or by using the keyboard; the default bindings are:
 
 @verbatim

@@ -787,7 +787,17 @@ FUNC should be a function taking two arguments:
           (define-key map "C" 'mu4e-compose-new)
           (define-key map "E" 'mu4e-compose-edit)
 
-          (define-key map "K" 'ignore) ;; for gnus mode
+          ;; some gnus things we do not support
+          (define-key map "G" 'ignore)
+          (define-key map "I" 'ignore)
+          (define-key map "J" 'ignore)
+          (define-key map "K" 'ignore)
+          (define-key map "L" 'ignore)
+          (define-key map "N" 'ignore)
+          (define-key map "V" 'ignore)
+          (define-key map "X" 'ignore)
+          (define-key map "Y" 'ignore)
+          (define-key map "Z" 'ignore)
 
           (define-key map "." 'mu4e-view-raw-message)
           (define-key map "|" 'mu4e-view-pipe)
@@ -875,9 +885,9 @@ FUNC should be a function taking two arguments:
           (define-key map "H" 'mu4e-display-manual)
 
           ;; menu
-          (define-key map [menu-bar] (make-sparse-keymap))
-          (let ((menumap (make-sparse-keymap "View")))
-            (define-key map [menu-bar headers] (cons "View" menumap))
+          ;;(define-key map [menu-bar] (make-sparse-keymap))
+          (let ((menumap (make-sparse-keymap)))
+            (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
             (define-key menumap [quit-buffer]
               '("Quit view" . mu4e~view-quit-buffer))
@@ -974,6 +984,7 @@ Gnus' article-mode."
         (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
         (define-key mu4e-view-mode-map [menu-bar Article] nil)
         (define-key mu4e-view-mode-map [menu-bar post] nil)
+        (define-key mu4e-view-mode-map [menu-bar commands] nil)
         (setq mu4e~view-buffer-name gnus-article-buffer)
         (mu4e~view-mode-body))
     (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
