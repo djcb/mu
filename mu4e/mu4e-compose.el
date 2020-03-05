@@ -404,27 +404,28 @@ set to a non-nil value other that `manual'."
   (let ((use-hard-newlines nil))
     (newline)))
 
-(defun mu4e-compose-fill-flowed ()
+(defun mu4e-compose-fill-flowed (&optional original-fill-fn)
   "Fill the message for sending with the format=flowed header.
 
 This function fills all paragraphs and inserts the SPACE NEWLINE
 line separator required by the format=flowed RFC.  This functions
 behavior depends on the current value of the variable
 `mu4e-compose-format-flowed'.  See info node `(mu4e)The
-format=flowed header' for details." 
+format=flowed header' for details."
   (interactive)
-  (goto-char (point-max))
-  (mu4e-compose-goto-top)
-  (narrow-to-region (point-max) (point))
-  (pcase mu4e-compose-format-flowed
-    ('emacs-newlines (let ((fill-flowed-encode-column fill-column))
-                       (fill-flowed-encode))) 
-    ('refill-emacs-newlines (fill-flowed-encode))
-    ('refill-emacs-newlines-fix-one-line-paragraphs
-     (progn (fill-flowed-encode)
-            (add-space-to-one-line-paragraphs)))
-    (_ t))
-  (widen))
+  (let ((fill-flowed (or original-fill-fn #'fill-flowed-encode)))
+    (goto-char (point-max))
+    (mu4e-compose-goto-top)
+    (narrow-to-region (point-max) (point))
+    (pcase mu4e-compose-format-flowed
+      ('emacs-newlines (let ((fill-flowed-encode-column fill-column))
+                         (apply fill-flowed nil)))
+      ('refill-emacs-newlines (apply fill-flowed nil))
+      ('refill-emacs-newlines-fix-one-line-paragraphs
+       (progn (apply fill-flowed nil)
+              (add-space-to-one-line-paragraphs)))
+      (_ t))
+    (widen)))
 
 (defun add-space-to-one-line-paragraphs ()
   "Add a space immediately before the newline in a one-line paragraph."
@@ -458,10 +459,9 @@ newline) or absent (not contained in the buffer)."
 (defun mu4e-compose-send-and-exit ()
   "Send the current message and exit the buffer."
   (interactive)
-  (if (eq mu4e-compose-format-flowed 'manual)
-      (let ((fill-flowed-encode (lambda () t)))
-        (message-send-and-exit))
-    (message-send-and-exit)))
+  (advice-add #'fill-flowed-encode :around #'mu4e-compose-fill-flowed)
+  (message-send-and-exit)
+  (advice-remove #'fill-flowed-encode #'mu4e-compose-fill-flowed))
 
 (defun mu4e~compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
