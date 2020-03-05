@@ -240,7 +240,7 @@ higher is required, as well as
 Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
-@t{mu} has optional support for the Guile 2.x (Scheme) programming
+@t{mu} has optional support for the Guile 2.2 (Scheme) programming
 language. There are also some GUI-toys, which require GTK+ 3.x and
 Webkit.
 
@@ -732,7 +732,7 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-* mu4e - mu for emacs version @value{VERSION}; (in store: 78379 messages)
+* mu4e - mu for emacs version @value{VERSION}
 
   Basics
 
@@ -742,21 +742,27 @@ The main view looks something like the following:
 
   Bookmarks
 
-	* [bu] Unread messages      (26217/26217)
-	* [bt] Today's messages     (2/8)
-	* [bw] Last 7 days          (7/34)
-	* [bp] Messages with images (276/2315)
+	* [bu] Unread messages      (26119/26119)
+	* [bt] Today's messages     (1/7)
+	* [bw] Last 7 days          (30/126)
+	* [bp] Messages with images (268/2309)
 
   Misc
 
 	* [;]Switch context
 	* [U]pdate email & database
+	* toggle [m]ail sending mode (currently direct)
 
 	* [N]ews
 	* [A]bout mu4e
 	* [H]elp
 	* [q]uit
 
+  Info
+
+        * database-path       : /home/user/.cache/mu/xapian
+        * maildir             : /home/user/Maildir
+        * in store            : 78825 messages
 @end verbatim
 @end cartouche
 
@@ -1334,7 +1340,7 @@ directory (@file{~/}); you can change this using the variable
 @code{mu4e-attachment-dir}, for example:
 
 @lisp
-(setq mu4e-attachment-dir  "~/Downloads")
+(setq mu4e-attachment-dir "~/Downloads")
 @end lisp
 
 For more flexibility, @code{mu4e-attachment-dir} can also be a user-provided
@@ -1798,9 +1804,6 @@ The support for encryption and signing is @emph{independent} of the support
 for their counterparts, decrypting and signature verification (as discussed in
 @ref{MSGV Crypto}). Even if your @t{mu4e} does not have support for the latter
 two, you can still sign/encrypt messages.
-
-Currently, decryption and signature verification only works for PGP/MIME;
-inline-PGP and S/MIME are not supported.
 
 Important note: the messages are encrypted when they are @emph{sent}:
 this means that draft messages are @emph{not} encrypted. So if you are
@@ -3456,20 +3459,21 @@ running outside its session.
 @node Speedbar
 @section Speedbar
 
-@code{speedbar} is an Emacs-extension that shows navigational information for
-an Emacs buffer in a separate frame. Using @code{mu4e-speedbar}, @t{mu4e}
-lists your bookmarks and maildir folders and allows for one-click access to
-them.
+@code{speedbar} is an Emacs-extension that shows navigational
+information for an Emacs buffer in a separate frame. Using
+@code{mu4e-speedbar}, @t{mu4e} lists your bookmarks and maildir
+folders and allows for one-click access to them.
 
-@t{mu4e} loads @t{mu4e-speedbar} automatically; all you need to do to activate
-it is @kbd{M-x speedbar}. Then, when then switching to the @ref{Main view},
-the speedbar-frame is updated with your bookmarks and maildirs. For speed
-reasons, the list of maildirs is determined when @t{mu4e} starts; if the list
-of maildirs changes while @t{mu4e} is running, you need to restart @t{mu4e} to
-have those changes reflected in the speedbar and in other places that use this
-list, such as auto-completion when jumping to a maildir.
+To enable this, add @t{(require 'mu4e-speedbar)} to your
+configuration; then, all you need to do to activate it is @kbd{M-x
+speedbar}. Then, when then switching to the @ref{Main view}, the
+speedbar-frame is updated with your bookmarks and maildirs.
 
-@code{mu4e-speedbar} was contributed by @emph{Antono Vasiljev}.
+For speed reasons, the list of maildirs is determined when @t{mu4e}
+starts; if the list of maildirs changes while @t{mu4e} is running, you
+need to restart @t{mu4e} to have those changes reflected in the
+speedbar and in other places that use this list, such as
+auto-completion when jumping to a maildir.
 
 @node Dired
 @section Dired
@@ -4014,10 +4018,10 @@ However, if you experience slowdowns, here are some things to consider:
 @itemize
 @item opening messages while indexing:
 @t{mu4e} corresponds with the @t{mu} server synchronously; this means
-that you can do only one thing at a time. The one operation that can
-take a bit of time is retrieving/indexing of mail, during which you
-have to wait for messages to open. For some strategies to reduce that
-time, see the next question.
+that you can do only one thing at a time. The one operation that
+potentially does take a bit of time is indexing of mail, during which
+you have to wait for messages to open. For some strategies to reduce
+that time, see the next question.
 @item getting contact information can take some time:
 especially when opening @t{mu4e} the first time and you have a
 @emph{lot} of contacts, it can take a few seconds to process those.
@@ -4089,7 +4093,7 @@ your configuration (courtesy of user @t{kpachnis}):
       mml2015-sign-with-sender t)
 @end lisp
 @subsection Can I `bounce' or `resend' messages?
-Yes --- it is possible to edit a (copy of) an existing message and
+Somewhat --- it is possible to edit a (copy of) an existing message and
 then send it, using @code{M-x mu4e-compose-resend}. This gives you a
 raw copy of the message, including all headers, encoded parts and so
 on. Reason for this is that for resending, it is important not to
