@@ -146,6 +146,7 @@ Args EXTENSION and PROGRAM should be specified as strings."
      ("wopen-with" . mu4e-view-open-attachment-with)
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
+     ("kimport-public-key" . mu4e-view-import-public-key)
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments.
 The actions are cons-cells of the form:
@@ -1463,6 +1464,16 @@ If PIPECMD is nil, ask user for it."
          (index (plist-get att :index)))
     (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'diary)))
 
+(defun mu4e-view-import-public-key (msg attachnum)
+  "Import MSG's attachment ATTACHNUM into the gpg-keyring."
+  (interactive)
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (index (plist-get att :index))
+         (mime-type (plist-get att :mime-type)))
+    (if (string= "application/pgp-keys" mime-type)
+        (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'gpg)
+      (mu4e-error "Invalid mime-type for a pgp-key: `%s'" mime-type))))
+
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG
 If MSG is nil use the message returned by `message-at-point'.
@@ -1506,6 +1517,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     (setq buffer-read-only t))
    ((string= what "diary")
     (icalendar-import-file path diary-file))
+   ((string= what "gpg")
+    (epa-import-keys path))
    (t (mu4e-error "Unsupported action %S" what))))
 
 ;;; View Utilities
