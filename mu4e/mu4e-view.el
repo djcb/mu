@@ -1457,8 +1457,11 @@ If PIPECMD is nil, ask user for it."
   "Import MSG's attachment ATTACHNUM into the gpg-keyring."
   (interactive)
   (let* ((att (mu4e~view-get-attach msg attachnum))
-         (index (plist-get att :index)))
-    (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'gpg)))
+         (index (plist-get att :index))
+         (mime-type (plist-get att :mime-type)))
+    (if (string= "application/pgp-keys" mime-type)
+        (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'gpg)
+      (user-error "Invalid mime-type for a pgp-key: `%s'" mime-type))))
 
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG
