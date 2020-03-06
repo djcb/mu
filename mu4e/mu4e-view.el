@@ -56,7 +56,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-use-gnus nil
-  "Whether to (experimentally) use Gnu's article view.
+  "Whether to (experimentally) use Gnus' article view.
 \(instead of mu4e's internal viewer)."
   :type 'boolean
   :group 'mu4e-view)
@@ -328,7 +328,7 @@ As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that.
 
 Depending on the value of `mu4e-view-use-gnus', either use mu4e's
-internal display mode, or a display mode based on Gnu's
+internal display mode, or a display mode based on Gnus'
 article-mode."
   (mu4e~view-define-mode)
 
@@ -370,7 +370,7 @@ article-mode."
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
-  "View MSG using Gnu's article mode. Experimental."
+  "View MSG using Gnus' article mode. Experimental."
   (require 'gnus-art)
   (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
         (path (mu4e-message-field msg :path))
