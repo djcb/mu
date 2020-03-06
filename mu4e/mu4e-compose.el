@@ -178,22 +178,20 @@ We have the following choices:
 (defcustom mu4e-compose-format-flowed nil
   "If non-nil, send messages with the format=flowed header.
 
-Additionally, the message will be reformatted based on the value:
+Depending on the non-nil value, reformat the message as follows:
  * `manual': Set the header, but do not reformat the message
- * `emacs-newlines': As above, but also refill lines to the
-    length in `fill-column' and add a SPACE to any lines that do
-    not end a paragraph
- * `refill-emacs-newlines': As above, but use the line length in
-   `fill-flowed-encode-column'
- * `refill-emacs-newlines-fix-one-line-paragraphs': As above, but
-    also add a SPACE to the end of any single-line paragraphs
+ * `auto': Set the header and refill lines to the length in
+    `fill-flowed-encode-column' and add a SPACE to any lines that
+    do not end a paragraph
+ * `auto-long-lines': As above, but also add a SPACE to the end
+   of any single-line paragraphs (indicating that clients should
+   wrap those lines)
 
 See info node `(mu4e)The format=flowed header' for details."
   :type '(choice (const :tag "Disable" nil)
                  (const manual)
-                 (const emacs-newlines)
-                 (const refill-emacs-newlines)
-                 (const refill-emacs-newlines-fix-one-line-paragraphs))
+                 (const auto)
+                 (const auto-long-lines))
   :safe 'symbolp
   :group 'mu4e-compose)
 
@@ -420,13 +418,12 @@ Formatting the message consists of two steps:
 
 How these two steps are carried out depends on the value of
 `mu4e-compose-format-flowed':
- * `nil' or `manual': No change to existing formatting
- * `emacs-newlines':  Refill lines to the length in `fill-column'
+ * `nil' or `manual': No reformatting
+ * `auto': Refill lines to length in `fill-flowed-encode-column'
     and add a SPACE to any lines that do not end a paragraph
- * `refill-emacs-newlines': As above, but use the line length in
-   `fill-flowed-encode-column'
- * `refill-emacs-newlines-fix-one-line-paragraphs': As above, but
-    also add a SPACE to the end of any single-line paragraphs
+ * `auto-long-lines': As above, but also add a SPACE to the end
+   of any single-line paragraphs (indicating that clients should
+   wrap those lines)
 
 See info node `(mu4e)The format=flowed header' for details."
   (interactive)
@@ -436,17 +433,14 @@ See info node `(mu4e)The format=flowed header' for details."
     (when (/= (char-after (1- (point-max))) ?\n) ; without a final hard newline
       (save-excursion (goto-char (point-max))    ; we won't fill last paragraph
                       (insert (propertize "\n" 'hard t))))
-    (pcase mu4e-compose-format-flowed
-      ('emacs-newlines (let ((fill-flowed-encode-column fill-column))
-                         (apply fill-flowed nil)))
-      ('refill-emacs-newlines (apply fill-flowed nil))
-      ('refill-emacs-newlines-fix-one-line-paragraphs
-       (progn (apply fill-flowed nil)
-              (add-space-to-one-line-paragraphs)))
-      (_ t))
+    (when (or (eq mu4e-compose-format-flowed 'auto)
+              (eq mu4e-compose-format-flowed 'auto-long-lines))
+      (apply fill-flowed nil)
+      (when (eq mu4e-compose-format-flowed 'auto-long-lines)
+        (mu4e-compose-format-flowed-wrap-one-line-paragraphs)))
     (widen)))
 
-(defun add-space-to-one-line-paragraphs ()
+(defun mu4e-compose-format-flowed-wrap-one-line-paragraphs ()
   "Add a space to the end of any one-line paragraphs.
 A one-line paragraph is any single line that is preceded by a
 blank line (or is the first line of the buffer) and is followed
@@ -455,24 +449,19 @@ by a blank line (or is the last line of the buffer)."
   (end-of-line)
   (while (not (eobp))
     (let ((line-ends-with-space-newline
-           (save-excursion (backward-char 1) (looking-at " \n"))))
-      (when (and (blank-or-absent-p -1)
-                 (blank-or-absent-p 1)
-                 (not (blank-or-absent-p 0))
+           (save-excursion (backward-char 1) (looking-at " \n")))
+          (blank-or-absent-p
+           (lambda (relative-line)
+             "Return t if a line is only a newline or is outside the buffer.
+Lines are relative to current line: (e.g., `-1' for the previous line, `1' for the next line)."
+             (save-excursion (or (not (= (forward-line relative-line) 0))
+                                 (looking-at "$"))))))
+      (when (and (funcall blank-or-absent-p -1)
+                 (funcall blank-or-absent-p 1)
+                 (not (funcall blank-or-absent-p 0))
                  (not line-ends-with-space-newline))
         (insert " ")))
     (end-of-line 2)))
-
-(defun blank-or-absent-p (relative-line)
-  "Return t if a line is blank or not present in the buffer.
-
-RELATIVE-LINE specifies a line relative to the current line
-(e.g., `-1' for the previous line, `1' for the next line).
-
-A line is blank if it contains only a newline; a line is absent
-if it is before the beginning or after then end of the buffer."
-  (save-excursion (or (not (= (forward-line relative-line) 0))
-                      (looking-at "$"))))
 
 
 (defun mu4e-compose-send-and-exit ()
@@ -538,6 +527,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (if mu4e-compose-format-flowed
         (progn
           (setq mml-enable-flowed t
+                fill-flowed-encode-column fill-column
                 use-hard-newlines t))
       (setq mml-enable-flowed nil))
 
@@ -546,31 +536,25 @@ buffers; lets remap its faces so it uses the ones for mu4e."
         (define-key-after keymap [mu4e-format-flowed]
           (cons "Set format=flowed"
                 (let ((map (make-sparse-keymap "format=flowed")))
-                  (define-key-after map [nil]
-                    '(menu-item "disable" set-nil
+                  (define-key-after map [mu4e-fill-flowed-nil]
+                    '(menu-item "disable" mu4e-set-fill-flowed-nil
                                 :button (:radio . (eq mu4e-compose-format-flowed nil))
                                 :help "Disable the format=flowed header"))
-                  (define-key-after map [manual]
-                    '(menu-item "manual" set-manual
+                  (define-key-after map [mu4e-fill-flowed-manual]
+                    '(menu-item "manual" mu4e-set-fill-flowed-manual
                                 :button (:radio . (eq mu4e-compose-format-flowed
                                                       'manual))
                                 :help "Set header without any automatic formatting"))
-                  (define-key-after map [emacs-newlines]
-                    '(menu-item "emacs-newlines" set-emacs-newline
+                  (define-key-after map [mu4e-fill-flowed-auto]
+                    '(menu-item "auto" mu4e-set-fill-flowed-auto
                                 :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'emacs-newlines))
-                                :help "Set header and refill lines with (fill-column)"))
-                  (define-key-after map [refill-emacs-newlines]
-                    '(menu-item "refill-emacs-newlines" set-refill-emacs-newline
-                                :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'refill-emacs-newlines))
+                                                      'auto))
                                 :help "Set header and refill lines to `fill-flowed-encode-column' line length"))
-                  (define-key-after map [refill-emacs-newlines-fix-one-line-paragraphs]
-                    '(menu-item "refill-emacs-newlines-fix-one-line-paragraphs"
-                                set-refill-emacs-newline-fix
+                  (define-key-after map [mu4e-fill-flowed-auto-long-lines]
+                    '(menu-item "auto + wrap single-line paragraphs" mu4e-set-fill-flowed-auto-long-lines
                                 :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'refill-emacs-newlines-fix-one-line-paragraphs))
-                                :help "Set header, refill lines to `fill-flowed-encode-column' line length and add spaces to single-line paragraphs"))
+                                                      'auto-long-lines))
+                                :help "Set header, refill lines to `fill-flowed-encode-column' line length, and end single-line paragraphs with SPACE"))
                   map)))
         (define-key-after
           keymap
@@ -612,25 +596,22 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
 
 
-(defun set-nil ()
+(defun mu4e-set-fill-flowed-nil ()
   (interactive)
   (setq mu4e-compose-format-flowed nil))
 
-(defun set-manual ()
+(defun mu4e-set-fill-flowed-manual ()
   (interactive)
   (setq mu4e-compose-format-flowed 'manual))
 
-(defun set-emacs-newline ()
+(defun mu4e-set-fill-flowed-auto ()
   (interactive)
-  (setq mu4e-compose-format-flowed 'emacs-newlines))
+  (setq mu4e-compose-format-flowed 'auto))
 
-(defun set-refill-emacs-newline ()
+(defun mu4e-set-fill-flowed-auto-long-lines ()
   (interactive)
-  (setq mu4e-compose-format-flowed 'refill-emacs-newlines))
+  (setq mu4e-compose-format-flowed 'auto-long-lines))
 
-(defun set-refill-emacs-newline-fix ()
-  (interactive)
-  (setq mu4e-compose-format-flowed 'refill-emacs-newlines-fix-one-line-paragraphs))
 
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
