@@ -897,7 +897,7 @@ FUNC should be a function taking two arguments:
             (define-key menumap [sepa0] '("--"))
             (define-key menumap [wrap-lines]
               '("Toggle wrap lines" . visual-line-mode))
-            (unless 'mu4e-view-use-gnus
+            (unless mu4e-view-use-gnus
               (define-key menumap [toggle-html]
                 '("Toggle view-html" . mu4e-view-toggle-html)))
             (define-key menumap [raw-view]
