@@ -431,9 +431,11 @@ How these two steps are carried out depends on the value of
 See info node `(mu4e)The format=flowed header' for details."
   (interactive)
   (let ((fill-flowed (or fill-fn #'fill-flowed-encode)))
-    (goto-char (point-max))
-    (mu4e-compose-goto-top)
+    (message-goto-body)
     (narrow-to-region (point-max) (point))
+    (when (/= (char-after (1- (point-max))) ?\n) ; without a final hard newline
+      (save-excursion (goto-char (point-max))    ; we won't fill last paragraph
+                      (insert (propertize "\n" 'hard t))))
     (pcase mu4e-compose-format-flowed
       ('emacs-newlines (let ((fill-flowed-encode-column fill-column))
                          (apply fill-flowed nil)))
@@ -449,10 +451,6 @@ See info node `(mu4e)The format=flowed header' for details."
 A one-line paragraph is any single line that is preceded by a
 blank line (or is the first line of the buffer) and is followed
 by a blank line (or is the last line of the buffer)."
-  (goto-char (1- (point-max)))
-  (when (not (looking-at "\n"))
-    (forward-char 1)
-    (insert "\n"))
   (goto-char (point-min))
   (end-of-line)
   (while (not (eobp))
@@ -563,7 +561,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                                                       'emacs-newlines))
                                 :help "Set header and refill lines with (fill-column)"))
                   (define-key-after map [refill-emacs-newlines]
-                    '(menu-item "refill-emacs-newlines" set-refill
+                    '(menu-item "refill-emacs-newlines" set-refill-emacs-newline
                                 :button (:radio . (eq mu4e-compose-format-flowed
                                                       'refill-emacs-newlines))
                                 :help "Set header and refill lines to `fill-flowed-encode-column' line length"))
@@ -634,35 +632,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (interactive)
   (setq mu4e-compose-format-flowed 'refill-emacs-newlines-fix-one-line-paragraphs))
 
-
-
-;; (defvar mu4e-format-flowed-menu
-;;   (let ((map (make-sparse-keymap "format=flowed")))
-;;     (define-key-after map [nil]
-;;       '(menu-item "disable" set-nil
-;;                   :button (:radio . (eq mu4e-compose-format-flowed nil))
-;;                   :help "Disable the format=flowed header"))
-;;     (define-key-after map [manual]
-;;       '(menu-item "manual" set-manual
-;;                   :button (:radio . (eq mu4e-compose-format-flowed 'manual))
-;;                   :help "Set header without any automatic formatting"))
-;;     (define-key-after map [emacs-newlines]
-;;       '(menu-item "emacs-newlines" set-emacs-newline
-;;                   :button (:radio . (eq mu4e-compose-format-flowed 'emacs-newlines))
-;;                   :help "Set header and refill lines with (fill-column)"))
-;;     (define-key-after map [refill-emacs-newlines]
-;;       '(menu-item "refill-emacs-newlines" set-refill
-;;                   :button (:radio . (eq mu4e-compose-format-flowed 'refill-emacs-newlines))
-;;                   :help "Set header and refill lines to `fill-flowed-encode-column' line length"))
-;;     (define-key-after map [refill-emacs-newlines-fix-one-line-paragraphs]
-;;       '(menu-item "refill-emacs-newlines-fix-one-line-paragraphs" set-refill-emacs-newline-fix
-;;                   :button (:radio . (eq mu4e-compose-format-flowed
-;;                                         'refill-emacs-newlines-fix-one-line-paragraphs))
-;;                   :help "Set header, refill lines to `fill-flowed-encode-column' line length and add spaces to single-line paragraphs"))
-;;     map)
-;;   "Select the formatting of emails sent with the format=flowed header")
-
-
 (defconst mu4e~compose-buffer-max-name-length 30
   "Maximum length of the mu4e-send-buffer-name.")
 
@@ -697,8 +666,7 @@ we can decide what we want to do."
       (sign (mml-secure-message-sign))
       (encrypt (mml-secure-message-encrypt))
       (sign-and-encrypt (mml-secure-message-sign-encrypt))
-      (message "Do nothing")))
-  )
+      (message "Do nothing"))))
 
 
 (cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
