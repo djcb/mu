@@ -137,7 +137,49 @@ Also see `mu4e-context-policy'."
   :safe 'symbolp
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-crypto-reply-encrypted-policy 'sign-and-encrypt
+(defcustom mu4e-compose-crypto-policy
+  '(encrypt-encrypted-replies sign-encrypted-replies)
+  "Policy to control when messages will be signed/encrypted.
+
+The value is a list, whose members determine the behaviour of
+`mu4e~compose-crypto-message'. Specifically, it might contain:
+
+- `sign-all-messages': Always add a signature.
+- `sign-new-messages': Add a signature to new message, ie.
+  messages that aren't responses to another message.
+- `sign-forwarded-messages': Add a signature when forwarding
+  a message
+- `sign-edited-messages': Add a signature to drafts
+- `sign-all-replies': Add a signature when responding to
+  another message.
+- `sign-plain-replies': Add a signature when responding to
+  non-encrypted messages.
+- `sign-encrypted-replies': Add a signature when responding
+  to encrypted messages.
+
+It should be noted that certain symbols have priorities over one
+another. So `sign-all-messages' implies `sign-all-replies', which
+in turn implies `sign-plain-replies'. Adding both to the set, is
+not a contradiction, but a redundant configuration.
+
+All `sign-*' options have a `encrypt-*' analogue."
+  :type '(set (const :tag "Sign all messages" sign-all-messages)
+              (const :tag "Encrypt all messages" encrypt-all-messages)
+              (const :tag "Sign new messages" sign-new-messages)
+              (const :tag "Encrypt new messages" encrypt-new-messages)
+              (const :tag "Sign forwarded messages" sign-forwarded-messages)
+              (const :tag "Encrypt forwarded messages" encrypt-forwarded-messages)
+              (const :tag "Sign edited messages" sign-edited-messages)
+              (const :tag "Encrypt edited messages" edited-forwarded-messages)
+              (const :tag "Sign all replies" sign-all-replies)
+              (const :tag "Encrypt all replies" encrypt-all-replies)
+              (const :tag "Sign replies to plain messages" sign-plain-replies)
+              (const :tag "Encrypt replies to plain messages" encrypt-plain-replies)
+              (const :tag "Sign replies to encrypted messages" sign-encrypted-replies)
+              (const :tag "Encrypt replies to encrypted messages" encrypt-encrypted-replies))
+  :group 'mu4e-compose)
+
+(defcustom mu4e-compose-crypto-reply-encrypted-policy nil
   "Policy for signing/encrypting replies to encrypted messages.
 We have the following choices:
 
@@ -152,6 +194,11 @@ We have the following choices:
           (const :tag "Don't do anything" nil))
   :safe 'symbolp
   :group 'mu4e-compose)
+
+(make-obsolete-variable 'mu4e-compose-crypto-reply-encrypted-policy "The use of the
+ 'mu4e-compose-crypto-reply-encrypted-policy' variable is deprecated.
+ 'mu4e-compose-crypto-policy' should be used instead"
+                        "2020-03-06")
 
 (defcustom mu4e-compose-crypto-reply-plain-policy nil
   "Policy for signing/encrypting replies to messages received unencrypted.
@@ -168,6 +215,11 @@ We have the following choices:
           (const :tag "Don't do anything" nil))
   :safe 'symbolp
   :group 'mu4e-compose)
+
+(make-obsolete-variable 'mu4e-compose-crypto-reply-plain-policy "The use of the
+ 'mu4e-compose-crypto-reply-plain-policy' variable is deprecated.
+ 'mu4e-compose-crypto-policy' should be used instead"
+                        "2020-03-06")
 
 (make-obsolete-variable 'mu4e-compose-crypto-reply-policy "The use of the
  'mu4e-compose-crypto-reply-policy' variable is deprecated.
@@ -556,25 +608,56 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                                               nil nil t)
                     (buffer-name)))))
 
-(defun mu4e~compose-crypto-reply (parent compose-type)
+(defun mu4e-compose-crypto-message (parent compose-type)
   "Possibly encrypt or sign a message based on PARENT and COMPOSE-TYPE.
-When composing a reply to an encrypted message, we can
-automatically encrypt that reply. When the message is unencrypted,
-we can decide what we want to do."
-  (if (and  (eq compose-type 'reply)
-            (and parent (member 'encrypted (mu4e-message-field parent :flags))))
-      (cl-case mu4e-compose-crypto-reply-encrypted-policy
-        (sign (mml-secure-message-sign))
-        (encrypt (mml-secure-message-encrypt))
-        (sign-and-encrypt (mml-secure-message-sign-encrypt))
-        (message "Do nothing"))
-    (cl-case mu4e-compose-crypto-reply-plain-policy
-      (sign (mml-secure-message-sign))
-      (encrypt (mml-secure-message-encrypt))
-      (sign-and-encrypt (mml-secure-message-sign-encrypt))
-      (message "Do nothing")))
-  )
-
+See `mu4e-compose-crypto-policy' for more details."
+  (let* ((encrypted-p
+          (and parent (memq 'encrypted (mu4e-message-field parent :flags))))
+         (encrypt
+          (or (memq 'encrypt-all-messages mu4e-compose-crypto-policy)
+              ;; new messages
+              (and (memq 'encrypt-new-messages mu4e-compose-crypto-policy)
+                   (eq compose-type 'new))
+              ;; forwarded messages
+              (and (eq compose-type 'forward)
+                   (memq 'encrypt-forwarded-messages mu4e-compose-crypto-policy))
+              ;; edited messages
+              (and (eq compose-type 'edit)
+                   (memq 'encrypt-edited-messages mu4e-compose-crypto-policy))
+              ;; all replies
+              (and (eq compose-type 'reply)
+                   (memq 'encrypt-all-replies mu4e-compose-crypto-policy))
+              ;; plain replies
+              (and (eq compose-type 'reply) (not encrypted-p)
+                   (memq 'encrypt-plain-replies mu4e-compose-crypto-policy))
+              ;; encrypted replies
+              (and (eq compose-type 'reply) encrypted-p
+                   (memq 'encrypt-encrypted-replies mu4e-compose-crypto-policy))))
+         (sign
+          (or (memq 'sign-all-messages mu4e-compose-crypto-policy)
+              ;; new messages
+              (and (eq compose-type 'new)
+                   (memq 'sign-new-messages mu4e-compose-crypto-policy))
+              ;; forwarded messages
+              (and (eq compose-type 'forward)
+                   (memq 'sign-forwarded-messages mu4e-compose-crypto-policy))
+              ;; edited messages
+              (and (eq compose-type 'edit)
+                   (memq 'sign-edited-messages mu4e-compose-crypto-policy))
+              ;; all replies
+              (and (eq compose-type 'reply)
+                   (memq 'sign-all-replies mu4e-compose-crypto-policy))
+              ;; plain replies
+              (and (eq compose-type 'reply) (not encrypted-p)
+                   (memq 'sign-plain-replies mu4e-compose-crypto-policy))
+              ;; encrypted replies
+              (and (eq compose-type 'reply) encrypted-p
+                   (memq 'sign-encrypted-replies mu4e-compose-crypto-policy)))))
+    (cond ((and sign encrypt)
+           (mml-secure-message-sign-encrypt))
+          (sign (mml-secure-message-sign))
+          (encrypt (mml-secure-message-encrypt))
+          (t (message "Do nothing")))))
 
 (cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
@@ -617,8 +700,23 @@ tempfile)."
   ;; insert mail-header-separator, which is needed by message mode to separate
   ;; headers and body. will be removed before saving to disk
   (mu4e~draft-insert-mail-header-separator)
+
   ;; maybe encrypt/sign replies
-  (mu4e~compose-crypto-reply original-msg compose-type)
+  (let ((mu4e-compose-crypto-policy     ; backwards compatibility
+         (append
+          (cl-case mu4e-compose-crypto-reply-encrypted-policy
+            (sign '(sign-encrypted-replies))
+            (encrypt '(encrypt-encrypted-replies))
+            (sign-and-encrypt
+             '(sign-encrypted-replies encrypt-encrypted-replies)))
+          (cl-case mu4e-compose-crypto-reply-plain-policy
+            (sign '(sign-plain-replies))
+            (encrypt '(encrypt-plain-replies))
+            (sign-and-encrypt
+             '(sign-plain-replies encrypt-plain-replies)))
+          mu4e-compose-crypto-policy)))
+    (mu4e-compose-crypto-message original-msg compose-type))
+
   ;; include files -- e.g. when inline forwarding a message with
   ;; attachments, we take those from the original.
   (save-excursion
