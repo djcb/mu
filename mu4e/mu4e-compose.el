@@ -546,28 +546,35 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
         (define-key-after keymap [mu4e-format-flowed]
-          (cons "Set format=flowed"
-                (let ((map (make-sparse-keymap "format=flowed")))
-                  (define-key-after map [mu4e-fill-flowed-nil]
-                    '(menu-item "disable" mu4e-set-fill-flowed-nil
-                                :button (:radio . (eq mu4e-compose-format-flowed nil))
-                                :help "Disable the format=flowed header"))
-                  (define-key-after map [mu4e-fill-flowed-manual]
-                    '(menu-item "manual" mu4e-set-fill-flowed-manual
-                                :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'manual))
-                                :help "Set header without any automatic formatting"))
-                  (define-key-after map [mu4e-fill-flowed-auto]
-                    '(menu-item "auto" mu4e-set-fill-flowed-auto
-                                :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'auto))
-                                :help "Set header and refill lines to `fill-flowed-encode-column' line length"))
-                  (define-key-after map [mu4e-fill-flowed-auto-long-lines]
-                    '(menu-item "auto + wrap single-line paragraphs" mu4e-set-fill-flowed-auto-long-lines
-                                :button (:radio . (eq mu4e-compose-format-flowed
-                                                      'auto-long-lines))
-                                :help "Set header, refill lines to `fill-flowed-encode-column' line length, and end single-line paragraphs with SPACE"))
-                  map)))
+          `("Set format=flowed" .
+            ,(let ((map (make-sparse-keymap "format=flowed"))
+                   ;; This is likely taking concision too far, but it makes the
+                   ;; next lines much more readable with a bit of (eval) hackery
+                   (v 'mu4e-compose-format-flowed))
+               (define-key-after map [mu4e-fill-flowed-nil]
+                 `(menu-item
+                   "disable" ,(lambda () (interactive) (eval `(setq ,v 'nil)))
+                   :button (:radio . (eq ,v nil))
+                   :help "Disable the format=flowed header"))
+               (define-key-after map [mu4e-fill-flowed-manual]
+                 `(menu-item
+                   "manual" ,(lambda () (interactive) (eval `(setq ,v 'manual)))
+                   :button (:radio . (eq ,v 'manual))
+                   :help "Set header without any automatic formatting"))
+               (define-key-after map [mu4e-fill-flowed-auto]
+                 `(menu-item
+                   "auto" ,(lambda () (interactive) (eval `(setq ,v 'auto)))
+                   :button (:radio . (eq ,v 'auto))
+                   :help "Set header and refill lines to \
+`fill-flowed-encode-column' line length"))
+               (define-key-after map [mu4e-fill-flowed-auto-long-lines]
+                 `(menu-item
+                   "auto + wrap single-line paragraphs"
+                   ,(lambda () (interactive) (eval `(setq ,v' auto-long-lines)))
+                   :button (:radio . (eq ,v 'auto-long-lines))
+                   :help "Set header, refill lines to `fill-flowed-encode-column' \
+line length, and end single-line paragraphs with SPACE"))
+               map)))
         (define-key-after
           keymap
           [mu4e-electric-quote-mode]
@@ -606,23 +613,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
-
-
-(defun mu4e-set-fill-flowed-nil ()
-  (interactive)
-  (setq mu4e-compose-format-flowed nil))
-
-(defun mu4e-set-fill-flowed-manual ()
-  (interactive)
-  (setq mu4e-compose-format-flowed 'manual))
-
-(defun mu4e-set-fill-flowed-auto ()
-  (interactive)
-  (setq mu4e-compose-format-flowed 'auto))
-
-(defun mu4e-set-fill-flowed-auto-long-lines ()
-  (interactive)
-  (setq mu4e-compose-format-flowed 'auto-long-lines))
 
 
 (defconst mu4e~compose-buffer-max-name-length 30
