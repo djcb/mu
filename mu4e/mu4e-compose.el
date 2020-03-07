@@ -411,7 +411,7 @@ by `fill-paragraph' or `mu4e-compose-fill-flowed'."
     (newline)))
 
 (defun mu4e-compose-fill-flowed (&optional fill-fn)
-  "Format the message for sending with the format=flowed header.
+    "Format the message for sending with the format=flowed header.
 Formatting the message consists of two steps:
  1.  Fill each paragraph to the appropriate line length
  2.  Prefix newlines that do *not* end a paragraph with a SPACE
@@ -425,18 +425,24 @@ How these two steps are carried out depends on the value of
    of any single-line paragraphs (indicating that clients should
    wrap those lines)
 
+With a prefix argument, prompt for a line length to use in place
+of `fill-flowed-encode-column'.
+
 See info node `(mu4e)The format=flowed header' for details."
-  (interactive)
-  (message-goto-body)
-  (mu4e-compose-ensure-final-newline)
-  (narrow-to-region (point) (point-max))
-  (let ((fill-flowed (or fill-fn #'fill-flowed-encode)))
-    (when (or (eq mu4e-compose-format-flowed 'auto)
-              (eq mu4e-compose-format-flowed 'auto-long-lines))
-      (apply fill-flowed nil)
-      (when (eq mu4e-compose-format-flowed 'auto-long-lines)
-        (mu4e-compose-format-flowed-wrap-one-line-paragraphs)))
-    (widen)))
+    (interactive)
+    (let* ((fill-flowed (or fill-fn #'fill-flowed-encode))
+           (column (eval fill-flowed-encode-column))
+           (fill-flowed-encode-column
+            (if current-prefix-arg (read-number "Line length: " column) column)))
+      (message-goto-body)
+      (mu4e-compose-ensure-final-newline)
+      (narrow-to-region (point) (point-max))
+      (when (or (eq mu4e-compose-format-flowed 'auto)
+                (eq mu4e-compose-format-flowed 'auto-long-lines))
+        (apply fill-flowed nil)
+        (when (eq mu4e-compose-format-flowed 'auto-long-lines)
+          (mu4e-compose-format-flowed-wrap-one-line-paragraphs)))
+      (widen)))
 
 (defun mu4e-compose-ensure-final-newline ()
   "If the buffer's final character is not a newline, insert one."
@@ -452,21 +458,19 @@ by a blank line (or is the last line of the buffer)."
   (goto-char (point-min))
   (end-of-line)
   (while (not (eobp))
-    (let ((line-ends-with-space-newline
-           (save-excursion (backward-char 1) (looking-at " \n")))
+    (let ((has-space-p (save-excursion (backward-char 1) (looking-at " \n")))
           (blank-or-absent-p
            (lambda (relative-line)
              "Return t if a line is only a newline or is outside the buffer.
-Lines are relative to current line: (e.g., `-1' for the previous line, `1' for the next line)."
+Lines are relative to current line: e.g., `1' for next line."
              (save-excursion (or (not (= (forward-line relative-line) 0))
                                  (looking-at "$"))))))
       (when (and (funcall blank-or-absent-p -1)
                  (funcall blank-or-absent-p 1)
                  (not (funcall blank-or-absent-p 0))
-                 (not line-ends-with-space-newline))
+                 (not has-space-p))
         (insert " ")))
     (end-of-line 2)))
-
 
 (defun mu4e-compose-send-and-exit ()
   "Send the current message and exit the buffer."
