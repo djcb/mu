@@ -427,18 +427,22 @@ How these two steps are carried out depends on the value of
 
 See info node `(mu4e)The format=flowed header' for details."
   (interactive)
+  (message-goto-body)
+  (mu4e-compose-ensure-final-newline)
+  (narrow-to-region (point) (point-max))
   (let ((fill-flowed (or fill-fn #'fill-flowed-encode)))
-    (message-goto-body)
-    (narrow-to-region (point-max) (point))
-    (when (/= (char-after (1- (point-max))) ?\n) ; without a final hard newline
-      (save-excursion (goto-char (point-max))    ; we won't fill last paragraph
-                      (insert (propertize "\n" 'hard t))))
     (when (or (eq mu4e-compose-format-flowed 'auto)
               (eq mu4e-compose-format-flowed 'auto-long-lines))
       (apply fill-flowed nil)
       (when (eq mu4e-compose-format-flowed 'auto-long-lines)
         (mu4e-compose-format-flowed-wrap-one-line-paragraphs)))
     (widen)))
+
+(defun mu4e-compose-ensure-final-newline ()
+  "If the buffer's final character is not a newline, insert one."
+  (when (not (= (char-before (point-max)) ?\n))
+    (save-excursion (goto-char (point-max))
+                    (newline))))
 
 (defun mu4e-compose-format-flowed-wrap-one-line-paragraphs ()
   "Add a space to the end of any one-line paragraphs.
@@ -467,6 +471,10 @@ Lines are relative to current line: (e.g., `-1' for the previous line, `1' for t
 (defun mu4e-compose-send-and-exit ()
   "Send the current message and exit the buffer."
   (interactive)
+  (mu4e-compose-ensure-final-newline)
+  ;; We have to make sure the message ends in a newline *before* calling
+  ;; message-send-and-exit (even though we check again later) to avoid
+  ;; message-send-and-exit messing with the formatting of the final paragraph
   (advice-add #'fill-flowed-encode :around #'mu4e-compose-fill-flowed)
   (message-send-and-exit)
   (advice-remove #'fill-flowed-encode #'mu4e-compose-fill-flowed))
