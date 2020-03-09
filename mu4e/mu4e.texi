@@ -1709,96 +1709,149 @@ filter out other `junk' e-mail addresses; defaults to ``@t{no-?reply}''.
 @node The format=flowed header
 @section The format=flowed header
 
-mu4e supports sending emails with the `Content-Type: text/plain; format=flowed'
-header described at @url{https://www.ietf.org/rfc/rfc2646.html}.
+When composing outgoing emails, mu4e provides the option to send emails with the
+`Content-Type: text/plain; format=flowed' header described in
+@url{https://www.ietf.org/rfc/rfc2646.html}.  This RFC empowers readers of your
+emails to reformat line length of your messages without distorting semantically
+important line breaks.
 
-This RFC specifies that lines may end with either a SOFT NEWLINE or a HARD
-NEWLINE.  A SOFT NEWLINE consists of a newline preceded by a space character
-(i.e., the sequence " \n"); a HARD NEWLINE is a newline preceded by anything
-other than a space.  Receiving agents that support the format=flowed header will
-strip out all SOFT NEWLINES and refill the text of any paragraphs containing
-SOFT NEWLINES by inserting line breaks at the length specified by the recipient.
-Receiving agents will @strong{not} insert newlines into a paragraph that does
-not contain any SOFT NEWLINES.
+You can enable format=flowed support with automatic formatting (suitable for
+most users) by setting @code{mu4e-compose-format-flowed} to @verb{_'auto_} and
+setting @code{fill-flow-encode-column} to your desired line length:
 
-Receiving agents that do @strong{not} support format=flowed (including many
-popular webmail clients) will not render format=flowed lines specially - they
-will break lines on all newlines.
+@lisp
+(setq mu4e-compose-format-flowed 'auto)
+(setq fill-flow-encode-column 66) ; if unset, this defaults to
+                                  ; the value of `fill-column`
+@end lisp
+
+For more advanced usage, see below.
+
+@subsection Background and Advanced Usage
+
+Under the f=f RFC, lines may end with either a SOFT NEWLINE or a HARD NEWLINE.  A
+SOFT NEWLINE consists of a newline preceded by a space character (i.e., the
+sequence " \n") and indicates that the line break is optional and can be
+adjusted to fit the reader's line-length preference. Any newline character
+@emph{not} preceded by a space creates a HARD NEWLINE, which indicates a line
+break that should @emph{not} be adjusted based on the reader's line-length
+preference (for example, a line break separating paragraphs or inside a code
+excerpt).
+
+If a recipient's email client supports the f=f RFC, it will refill the lines in
+any paragraph containing at least one SOFT NEWLINE but will leave all HARD
+NEWLINES in place.  Clients that do @strong{not} support f=f (including many
+popular webmail clients) will not render SOFT NEWLINES specially.
 
 To tell mu4e to send mail with the format=flowed header, set
-@code{mu4e-compose-format-flowed} to a non-nil value.  This variable may be set
-to the following symbols:
+@code{mu4e-compose-format-flowed} to a non-nil value.  Supported non-nil values
+are:
 
 @itemize
-
-@item @code{manual}: set the format=flowed header and leave text unaltered.
-In this mode, you are responsible for manually inserting any SOFT NEWLINES by
-ending lines with a space-newline sequence; mu4e will not insert any SOFT
-NEWLINES, including in quoted text.  NOTE: `auto-fill-mode' and
-`electric-indent-mode' may interfere with manual formatting by deleting trailing
-whitespace.
-
-@item @code{emacs-newlines} --- transform Emacs built-in hard and soft newlines
-into format=flowed HARD and SOFT NEWLINES, respectively.  See @inforef{Hard and
-Soft Newlines,,emacs}.  Emacs defines a hard newline as one you manually insert
-with @code{newline} (@key{RET}) or @code{open-line} (@key{C-o}); any newlines
-Emacs inserts for you (such as with @inforef{Auto Fill,,emacs}) are soft
-newlines.  Thus, if you type normally using @code{auto-fill-mode}, all newlines
-inside your paragraphs will be soft newlines and your paragraphs will be
-separated by hard newlines.
-
-@item @code{refill-emacs-newlines} --- like @code{emacs-newlines} but, just
-before sending the email, refill paragraphs to the line length
-specified in @code{fill-flowed-encode-column}.  This allows you to
-send emails with a line length that is not tied to the line length you
-use when composing them.  You should use this setting if you would
-like to compose emails using @inforef{Visual Line Mode,,emacs} (which
-would result in overly long lines under @code{emacs-newlines}).  To
-view the results of refilling your email without sending it (which is
-how it will display on clients that do not implement format=flowed),
-use the function @code{mu4e-compose-fill-flowed}.
-
-@item @code{refill-emacs-newlines-fix-one-line-paragraphs} --- like
-@code{refill-emacs-newlines} but adds a soft newline to any paragraph
-consisting of a single line and both preceded and followed by a blank
-line.  Using this setting along with a very high value for
-@code{fill-flowed-encode-column} allows you to implement a workaround
-that results in messages that display well both on clients that refill
-format=flowed messages and on clients (such as many mobile clients)
-that do not support format=flowed.  See
-@url{https://vxlabs.com/2019/08/25/format-flowed-with-long-lines/}.
-@strong{NOTE}: You should exercise caution before using this
-workaround because it can result in @emph{very} poor rendering on
-clients that neither refill format=flowed emails nor automatically
-wrap long lines (including older versions of mu4e).
-
-@item @code{nil} --- does not set the format=flowed header.
+@item @verb{_'manual_}
+@item @verb{_'auto_}
+@item @verb{_'auto-long-lines_}
+@item t (for backwards compatibility only)
 @end itemize
+
+
+@unnumberedsubsubsec @verb{_'manual_}
+
+When @code{mu4e-compose-format-flowed} is set to @verb{_'manual_}, mu4e adds the
+format=flowed header and leaves the message text unaltered.  In this mode, you
+are responsible for manually inserting any SOFT NEWLINES by ending lines with a
+space-newline sequence; mu4e will not insert any SOFT NEWLINES, including in
+quoted text.  NOTE: `auto-fill-mode' and `electric-indent-mode' may interfere
+with manual formatting by deleting trailing whitespace.
+
+@unnumberedsubsubsec @verb{_'auto_}
+
+When @code{mu4e-compose-format-flowed} is set to @verb{_'auto_} or
+@verb{_'auto-long-lines_}, mu4e will automatically refill your text immediately
+before sending it.  Specifically, before sending your message, mu4e will run
+@code{mu4e-compose-fill-flowed}, which reformats you message in two ways.
+
+First, it refills each paragraph as though you had run @code{fill-paragraph}
+(bound to @key{M-q} by default) -- the only difference is that
+@code{mu4e-compose-fill-flowed} uses the line length in the
+@code{fill-flowed-encode-column} variable rather than the @code{fill-column}
+variable, which allows you to compose messages with a different line length than
+the one you send it with.
+
+To understand how refilling each paragraph will work, you should understand how
+Emacs defines paragraphs when the @code{use-hard-newlines} minor mode is active
+(as it is when composing messages in mu4e).  Emacs internally identifies hard
+newlines by setting the 'hard @code{formatted text property}; any time you
+manually insert a newline with @code{(newline)} (@key{RET}) or
+@code{(open-line)} (@key{C-o}), Emacs gives it the @verb{_'hard_} property.
+Conversely, any newlines Emacs inserts for you (such as with @inforef{Auto
+Fill,,emacs}) are soft newlines.  Emacs considers a any block of text separated
+from other text by hard newlines to be a paragraph.  See @inforef{Hard and Soft
+Newlines,,emacs}.
+
+The result of the above is that you can compose messages normally in mu4e with
+@code{auto-fill} mode active and all of the line breaks Emacs inserts inside
+your paragraphs will be soft newline, and all of the line breaks you manually
+insert (either to separate paragraphs or when typing code/poetry/etc) will be
+hard.  If you would like to insert a soft newline manually, you can do so with
+@code{mu4e-compose-soft-newline} (@key{M-RET} by default).
+
+The second way @code{mu4e-compose-fill-flowed} reformats your code is by adding
+spaces before any newlines Emacs views as soft.  This transforms them into SOFT
+NEWLINES for the purpose of the format=flowed specification.
+
+If you would like to see how your email will be reformatted (which is how it
+will be displayed in clients that do not implement f=f), you can manually run
+@code{mu4e-compose-fill-flowed} before sending your message.  Additionally, if
+you run @code{mu4e-compose-fill-flowed} or @code{mu4e-compose-send-and-exit}
+with a prefix argument, mu4e will prompt you for a line length to use in place
+of @code{fill-flowed-encode-length}.
+
+For backwards compatibility, t is an alias for @verb{_'auto_}.
+
+@unnumberedsubsubsec @verb{_'auto-long-lines_}
+
+When @code{mu4e-compose-format-flowed} is set to @verb{_'auto-long-lines_},
+@code{mu4e-compose-fill-flowed} reformats your messages in a third way as well:
+it adds a SOFT NEWLINE to the end of any single-line paragraphs.  This setting
+supports the workaround of using a high value for
+@code{fill-flowed-encode-column}, resulting is well-formatted output on both
+clients that support format=flowed and on clients that do @emph{not} support
+format=flowed but that wrap all text with a short line length.  For details on
+this workaround, see
+@url{https://vxlabs.com/2019/08/25/format-flowed-with-long-lines/}.
+@strong{NOTE}: You should exercise caution before using this workaround because
+it can result in @emph{very} poor rendering on clients that neither refill
+format=flowed emails nor automatically wrap long lines (including older versions
+of mu4e).
 
 @subsection Example Configurations
 
 To compose messages using @code{auto-fill-mode} and send them with
 lines of the same length you see when writing them:
+
 @lisp
-(setq mu4e-compose-format-flowed 'emacs-newlines)
+(setq mu4e-compose-format-flowed 'auto)
 @end lisp
 
 To compose messages using @code{visual-line-mode} and send them with
 the line length recommended in RFC 2646:
+
 @lisp
 (add-hook 'mu4e-compose-mode-hook
           (lambda ()
             (auto-fill-mode -1)
             (visual-line-mode 1)))
 (setq fill-flow-encode-column 66
-      mu4e-compose-format-flowed 'reflow-emacs-newlines)
+      mu4e-compose-format-flowed 'auto)
 @end lisp
 
 To send messages using the long-lines workaround for mobile clients
 described above:
+
 @lisp
 (setq fill-flow-encode-column 998
-      mu4e-compose-format-flowed 'reflow-emacs-newlines-fix-one-line-paragraphs)
+      mu4e-compose-format-flowed 'auto-long-lines)
 @end lisp
 
 @node Compose hooks
