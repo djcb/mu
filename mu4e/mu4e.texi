@@ -1731,6 +1731,7 @@ setting @code{fill-flow-encode-column} to your desired line length:
                                   ; the value of `fill-column`
 @end lisp
 
+@noindent
 For more advanced usage, see below.
 
 @subsection Background and Advanced Usage
@@ -1759,7 +1760,6 @@ are:
 @item @verb{_'auto-long-lines_}
 @item t (for backwards compatibility only)
 @end itemize
-
 
 @unnumberedsubsubsec @verb{_'manual_}
 
@@ -1840,6 +1840,7 @@ lines of the same length you see when writing them:
 (setq mu4e-compose-format-flowed 'auto)
 @end lisp
 
+@noindent
 To compose messages using @code{visual-line-mode} and send them with
 the line length recommended in RFC 2646:
 
@@ -1852,6 +1853,7 @@ the line length recommended in RFC 2646:
       mu4e-compose-format-flowed 'auto)
 @end lisp
 
+@noindent
 To send messages using the long-lines workaround for mobile clients
 described above:
 
@@ -4342,40 +4344,27 @@ considerable time between them, depending on the size of the message.
 Yes --- set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
 
 @subsection How can I apply format=flowed to my outgoing messages?
-This enables receiving clients that support this feature to reflow
-paragraphs. Plain text emails with @t{Content-Type: text/plain;
-format=flowed} can be reflowed (i.e. line endings removed, paragraphs
-refilled) by receiving clients that support this standard. Clients
-that don't support this, show them as is, which means this feature is
-truly non-invasive.
+Setting the format=flowed header enables receiving clients that
+support this feature to reflow paragraphs. Plain text emails with
+@t{Content-Type: text/plain; format=flowed} can be reflowed (i.e. line
+endings removed, paragraphs refilled) by receiving clients that
+support this standard. Clients that don't support this, show them as
+is, which means this feature is truly non-invasive.
 
-Here's an explanatory blog post which also shows why this is a
-desirable feature:
-@url{https://mathiasbynens.be/notes/gmail-plain-text} (if you don't
-have it, your mails mostly look quite bad especially on mobile
-devices) and here's the RFC with all the details:
-@url{https://www.ietf.org/rfc/rfc2646.txt}.
+See @url{https://www.ietf.org/rfc/rfc2646.html}.
 
-Since version 0.9.17, @t{mu4e} sensd emails with @t{format=flowed} by
-setting
+Since version 0.9.17, @t{mu4e} send emails with @t{format=flowed}.  To
+do so, set
 @lisp
-(setq mu4e-compose-format-flowed t)
+(setq mu4e-compose-format-flowed 'auto)
 @end lisp
 
 @noindent
 in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}).
 The transformation of your message into the proper format is
-done at the time of sending.  For this to happen properly, you should
-write each paragraph of your message of as a long line (i.e. without
-carriage return).  If you introduce unwanted newlines in your paragraph,
-use @kbd{M-q} to reformat it as a single line.
+done at the time of sending. 
 
-If you want to send the message with paragraphs on single lines but
-without @t{format=flowed} (because, say, the receiver does not
-understand the latter as it is the case for Google or Github), use
-@kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
-uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
-message.
+See @ref{The format=flowed header} for details.
 
 @subsection How can force images to be shown at the end of my messages, regardless of where I insert them?
 User Marcin Borkowski has a solution:
