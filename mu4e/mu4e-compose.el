@@ -655,8 +655,7 @@ See `mu4e-compose-crypto-policy' for more details."
     (cond ((and sign encrypt)
            (mml-secure-message-sign-encrypt))
           (sign (mml-secure-message-sign))
-          (encrypt (mml-secure-message-encrypt))
-          (t (message "Do nothing")))))
+          (encrypt (mml-secure-message-encrypt)))))
 
 (cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
