@@ -588,13 +588,12 @@ corpa. For a faster approach, you can use the following:
 
 @lisp
 (setq
-  mu4e-index-cleanup nil      ;; don't do a full cleanup check
   mu4e-index-lazy-check t)    ;; don't consider up-to-date dirs
 @end lisp
 
-In many cases, the mentioned thoroughness might not be needed, and these
-settings give a very significant speed-up. Note that you can of course
-occasionally run a thorough indexing round.
+In many cases, the mentioned thoroughness might not be needed, and
+these settings give a very significant speed-up. Note that you can of
+course occasionally run a thorough indexing round.
 
 For further details, please refer to the @t{mu-index} manpage; in
 particular, see @t{.noindex} and @t{.noupdate} which can help reducing
