@@ -741,10 +741,10 @@ FUNC should be a function taking two arguments:
 
 (defmacro mu4e~native-def (def)
   "Definition DEF only available in 'native' mode."
-  `(lambda() (interactive)
+  `(lambda(prefix-argument) (interactive "P")
      (if mu4e-view-use-gnus
          (mu4e-warn "binding not supported with the gnus-based view")
-       (,def))))
+       (if prefix-argument (,def prefix-argument) (,def)))))
 
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
