@@ -30,6 +30,7 @@ AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS)	\
 # really need all the params they get
 AM_CFLAGS=									\
 	$(WARN_CFLAGS)								\
+	$(ASAN_CFLAGS)								\
 	-Wno-redundant-decls							\
 	-Wno-deprecated-declarations						\
 	-Wno-switch-enum
@@ -67,6 +68,7 @@ DISTCLEANFILES=									\
 	$(BUILT_SOURCES)
 
 mug_LDADD=									\
+	$(ASAN_LDFLAGS)								\
 	${top_builddir}/lib/libmu.la						\
 	libmuwidgets.la								\
 	${GTK_LIBS}

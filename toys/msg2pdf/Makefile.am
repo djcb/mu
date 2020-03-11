@@ -19,14 +19,12 @@ include $(top_srcdir)/gtest.mk
 # enforce compiling this dir first before decending into tests/
 SUBDIRS= .
 
-
-AM_CPPFLAGS=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS) -DICONDIR='"$(icondir)"'
+AM_CPPFLAGS=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS)
 
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
-AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
+AM_CFLAGS=$(ASAN_CFLAGS) -Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement
 
 noinst_PROGRAMS=					\
 	msg2pdf
@@ -49,6 +47,7 @@ DISTCLEANFILES=						\
 
 
 msg2pdf_LDADD=						\
+	$(ASAN_LDFLAGS)					\
 	${top_builddir}/lib/libmu.la			\
 	$(GTK_LIBS)					\
 	${WEBKIT_LIBS}

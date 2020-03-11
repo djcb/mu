@@ -275,6 +275,7 @@ guile/tests/Makefile
 guile/scripts/Makefile
 toys/Makefile
 toys/mug/Makefile
+#toys/msg2pdf/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,47 +18,97 @@
 */
 
 #include <mu-msg.h>
-#include <mu-date.h>
+#include <utils/mu-date.h>
 #include <mu-msg-part.h>
 
 #include <gtk/gtk.h>
-#include <webkit/webkitwebview.h>
-#include <webkit/webkitwebresource.h>
+#include <webkit2/webkit2.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-static gboolean
-print_to_pdf (WebKitWebFrame *frame, GError **err)
-{
-	GtkPrintOperation *op;
-	GtkPrintOperationResult res;
-	char *path;
-	gboolean rv;
+typedef enum { UNKNOWN, OK, FAILED } Result;
 
-	path = g_strdup_printf ("%s%c%x.pdf",mu_util_cache_dir(),
+static void
+on_failed (WebKitPrintOperation *print_operation,
+           GError               *error,
+           Result               *result)
+{
+        if (error)
+                g_warning ("%s", error->message);
+
+        *result = FAILED;
+}
+
+
+static void
+on_finished (WebKitPrintOperation *print_operation,
+             Result               *result)
+{
+        if (*result == UNKNOWN)
+                *result = OK;
+}
+
+
+static gboolean
+print_to_pdf (GtkWidget *webview, GError **err)
+{
+        GtkWidget            *win;
+	WebKitPrintOperation *op;
+        GtkPrintSettings     *settings;
+	char                 *path, *uri;
+        Result                res;
+        time_t                started;
+	const int             max_time = 3; /* max 3 seconds to download stuff */
+
+
+	path = g_strdup_printf ("%s%c%x.pdf", mu_util_cache_dir(),
 				G_DIR_SEPARATOR, (unsigned)random());
-	if (!mu_util_create_dir_maybe (mu_util_cache_dir(),0700,FALSE)) {
+	if (!mu_util_create_dir_maybe (mu_util_cache_dir(), 0700, FALSE)) {
 		g_warning ("Couldn't create tempdir");
+                g_free (path);
 		return FALSE;
 	}
+        uri = g_filename_to_uri (path, NULL, NULL);
+        g_print ("%s\n", path);
+        g_free(path);
+        if (!uri) {
+                g_warning ("failed to create uri");
+                return FALSE;
+        }
+
+        win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        gtk_container_add(GTK_CONTAINER(win), webview);
+        gtk_widget_show_all(win);
 
 
-	op = gtk_print_operation_new ();
-	gtk_print_operation_set_export_filename
-		(GTK_PRINT_OPERATION(op), path);
+	op       = webkit_print_operation_new (WEBKIT_WEB_VIEW(webview));
+        settings = gtk_print_settings_new();
+        gtk_print_settings_set(settings,
+                               GTK_PRINT_SETTINGS_OUTPUT_URI, uri);
+        gtk_print_settings_set(settings,
+                               GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "PDF");
+        g_free(uri);
 
-	res = webkit_web_frame_print_full (frame, op,
-					   GTK_PRINT_OPERATION_ACTION_EXPORT,
-					   err);
-	g_object_unref (op);
-	rv = (res != GTK_PRINT_OPERATION_RESULT_ERROR);
-	if (rv)
-		g_print ("%s\n", path);
+        webkit_print_operation_set_print_settings(op, settings);
 
-	g_free (path);
-	return rv;
 
+        webkit_print_operation_run_dialog(op, NULL);
+
+
+        res = UNKNOWN;
+        g_signal_connect(op, "failed", G_CALLBACK(on_failed), &res);
+        g_signal_connect(op, "finished", G_CALLBACK(on_finished), &res);
+
+        webkit_print_operation_print(op);
+        started = time (NULL);
+        do {
+                gtk_main_iteration_do (FALSE);
+	} while (res == UNKNOWN /*&& (time(NULL) - started) <= max_time*/);
+
+        g_object_unref (op);
+
+        return res == OK;
 }
 
 
@@ -100,13 +150,14 @@ errexit:
 }
 
 static void
-on_resource_request_starting (WebKitWebView *self, WebKitWebFrame *frame,
-			      WebKitWebResource *resource,
-			      WebKitNetworkRequest *request,
-			      WebKitNetworkResponse *response, MuMsg *msg)
+on_resource_load_started (WebKitWebView     *self,
+                          WebKitWebResource *resource,
+                          WebKitURIRequest  *request,
+                          MuMsg             *msg)
 {
 	const char* uri;
-	uri = webkit_network_request_get_uri (request);
+
+	uri = webkit_uri_request_get_uri (request);
 
 	if (g_ascii_strncasecmp (uri, "cid:", 4) == 0) {
 		gchar *filepath;
@@ -114,7 +165,8 @@ on_resource_request_starting (WebKitWebView *self, WebKitWebFrame *frame,
 		if (filepath) {
 			gchar *fileuri;
 			fileuri = g_strdup_printf ("file://%s", filepath);
-			webkit_network_request_set_uri (request, fileuri);
+			webkit_uri_request_set_uri (request, fileuri);
+                        g_debug("printing %s", fileuri);
 			g_free (fileuri);
 			g_free (filepath);
 		}
@@ -126,46 +178,37 @@ on_resource_request_starting (WebKitWebView *self, WebKitWebFrame *frame,
 static gboolean
 generate_pdf (MuMsg *msg, const char *str, GError **err)
 {
-	GtkWidget *view;
-	WebKitWebFrame *frame;
-	WebKitWebSettings *settings;
-	WebKitLoadStatus status;
-	time_t started;
-	const int max_time = 3; /* max 3 seconds to download stuff */
+	GtkWidget      *view;
+	WebKitSettings *settings;
+	time_t          started;
+        gboolean        loading;
+	const int       max_time = 3; /* max 3 seconds to download stuff */
 
-	settings = webkit_web_settings_new ();
+	settings = webkit_settings_new ();
 	g_object_set (G_OBJECT(settings),
-		      "enable-scripts", FALSE,
+		      "enable-javascript", FALSE,
 		      "auto-load-images", TRUE,
-		      "enable-plugins", FALSE,  NULL);
+		      "enable-plugins", FALSE,
+                      NULL);
 
 	view = webkit_web_view_new ();
 
 	/* to support cid: */
-	g_signal_connect (G_OBJECT(view), "resource-request-starting",
-			  G_CALLBACK (on_resource_request_starting), msg);
+	g_signal_connect (G_OBJECT(view), "resource-load-started",
+			  G_CALLBACK (on_resource_load_started), msg);
 
 	webkit_web_view_set_settings (WEBKIT_WEB_VIEW(view), settings);
- 	webkit_web_view_load_string (WEBKIT_WEB_VIEW(view),
-				     str, "text/html", "utf-8", "");
+ 	webkit_web_view_load_html (WEBKIT_WEB_VIEW(view), str, NULL);
 	g_object_unref (settings);
-
-	frame = webkit_web_view_get_main_frame (WEBKIT_WEB_VIEW(view));
-	if (!frame) {
-		g_set_error (err, 0, MU_ERROR, "cannot get web frame");
-		return FALSE;
-	}
 
 	started = time (NULL);
 	do {
-		status = webkit_web_view_get_load_status (WEBKIT_WEB_VIEW(view));
+		loading = webkit_web_view_is_loading (WEBKIT_WEB_VIEW(view));
 		gtk_main_iteration_do (FALSE);
-	} while (status != WEBKIT_LOAD_FINISHED &&
-		 (time(NULL) - started) <= max_time);
+	} while (loading && (time(NULL) - started) <= max_time);
 
-	return print_to_pdf (frame, err);
+	return print_to_pdf (view, err);
 }
-
 
 static void
 add_header (GString *gstr, const char* header, const char *val)
@@ -184,10 +227,10 @@ add_header (GString *gstr, const char* header, const char *val)
 static gboolean
 convert_to_pdf (MuMsg *msg, GError **err)
 {
-	GString *gstr;
+	GString    *gstr;
 	const char *body;
-	gchar *data;
-	gboolean rv;
+	gchar      *data;
+	gboolean    rv;
 
 	gstr = g_string_sized_new (4096);
 
@@ -227,7 +270,7 @@ convert_to_pdf (MuMsg *msg, GError **err)
 int
 main(int argc, char *argv[])
 {
-	MuMsg *msg;
+	MuMsg  *msg;
 	GError *err;
 
 	if (argc != 2) {
