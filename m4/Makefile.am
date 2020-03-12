@@ -29,17 +29,19 @@ EXTRA_DIST=				\
 	ax_check_gnu_make.m4		\
 	ax_check_link_flag.m4		\
 	ax_code_coverage.m4		\
+	ax_compiler_flags.m4		\
 	ax_compiler_flags_cflags.m4	\
 	ax_compiler_flags_cxxflags.m4	\
 	ax_compiler_flags_gir.m4	\
 	ax_compiler_flags_ldflags.m4	\
-	ax_compiler_flags.m4		\
-	ax_cxx_compile_stdcxx_14.m4	\
 	ax_cxx_compile_stdcxx.m4	\
+	ax_cxx_compile_stdcxx_14.m4	\
 	ax_file_escapes.m4		\
 	ax_is_release.m4		\
 	ax_lib_readline.m4		\
 	ax_require_defined.m4		\
 	ax_valgrind_check.m4		\
 	guile-2.2.m4			\
-	lib-link.m4
+	lib-ld.m4			\
+	lib-link.m4			\
+	lib-prefix.m4

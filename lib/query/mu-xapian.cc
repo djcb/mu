@@ -56,16 +56,12 @@ xapian_query_op (const Mu::Tree& tree)
 static Xapian::Query
 make_query (const Value* val, const std::string& str, bool maybe_wildcard)
 {
-#ifndef XAPIAN_HAVE_OP_WILDCARD
-	return Xapian::Query(val->prefix + str);
-#else
 	const auto vlen{str.length()};
 	if (!maybe_wildcard || vlen <= 1 || str[vlen - 1] != '*')
 		return Xapian::Query(val->prefix + str);
 	else
 		return Xapian::Query(Xapian::Query::OP_WILDCARD,
 				     val->prefix + str.substr(0, vlen - 1));
-#endif/*XAPIAN_HAVE_OP_WILDCARD*/
 }
 
 static Xapian::Query

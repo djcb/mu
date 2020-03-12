@@ -96,23 +96,30 @@ This depends on the `mu4e-get-mail-command' exit code."
   :group 'mu4e
   :safe 'booleanp)
 
-(defcustom mu4e-index-cleanup t
+(defcustom mu4e-index-cleanup nil
   "Whether to run a cleanup phase after indexing.
+
 That is, validate that each message in the message store has a
 corresponding message file in the filesystem.
 
 Having this option as t ensures that no non-existing messages are
-shown but can also be quite slow with large message stores."
-  :type 'boolean :group 'mu4e :safe 'booleanp)
+shown but can also be quite slow with large message stores, and
+especially with slow filesystems."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp
+  :version "1.3.9")
 
 (defcustom mu4e-index-lazy-check nil
   "Whether to only use a 'lazy check' during reindexing.
 This influences how we decide whether a message
 needs (re)indexing or not. When this is set to t, mu only uses
-the directory timestamps to decide on whether it needs to check
-the messages beneath it, which would miss messages that are
-modified outside mu. On the other hand, it's significantly
-faster." :type 'boolean :group 'mu4e :safe 'booleanp)
+the directory timestamps to decide whether it needs to check the
+messages beneath it, which would miss messages that are modified
+outside mu. On the other hand, it's significantly faster."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
 
 (defcustom mu4e-update-interval nil
   "Number of seconds between mail retrieval/indexing.
@@ -231,6 +238,7 @@ Note that the queries used to determine the unread/all counts do
 current not apply `mu4e-query-rewrite-function', so if your
 bookmarks depend on that, the results may differ."
   :type '(repeat (plist))
+  :version "1.3.9"
   :group 'mu4e)
 
 
@@ -564,6 +572,7 @@ designated shortcut character for the maildir.
 Unlike in search queries, folder names with spaces in them must
 NOT be quoted, since mu4e does this for you."
   :type '(repeat (cons (string :tag "Maildir") character))
+  :version "1.3.9"
   :group 'mu4e-folders)
 
 

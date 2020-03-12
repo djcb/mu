@@ -56,7 +56,7 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-use-gnus nil
-  "Whether to (experimentally) use Gnu's article view.
+  "Whether to (experimentally) use Gnus' article view.
 \(instead of mu4e's internal viewer)."
   :type 'boolean
   :group 'mu4e-view)
@@ -146,6 +146,7 @@ Args EXTENSION and PROGRAM should be specified as strings."
      ("wopen-with" . mu4e-view-open-attachment-with)
      ("ein-emacs"  . mu4e-view-open-attachment-emacs)
      ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
+     ("kimport-public-key" . mu4e-view-import-public-key)
      ("|pipe"      . mu4e-view-pipe-attachment))
   "List of actions to perform on message attachments.
 The actions are cons-cells of the form:
@@ -327,7 +328,7 @@ As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that.
 
 Depending on the value of `mu4e-view-use-gnus', either use mu4e's
-internal display mode, or a display mode based on Gnu's
+internal display mode, or a display mode based on Gnus'
 article-mode."
   (mu4e~view-define-mode)
 
@@ -369,7 +370,7 @@ article-mode."
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
-  "View MSG using Gnu's article mode. Experimental."
+  "View MSG using Gnus' article mode. Experimental."
   (require 'gnus-art)
   (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
         (path (mu4e-message-field msg :path))
@@ -740,10 +741,10 @@ FUNC should be a function taking two arguments:
 
 (defmacro mu4e~native-def (def)
   "Definition DEF only available in 'native' mode."
-  `(lambda() (interactive)
+  `(lambda(prefix-argument) (interactive "P")
      (if mu4e-view-use-gnus
          (mu4e-warn "binding not supported with the gnus-based view")
-       (,def))))
+       (if prefix-argument (,def prefix-argument) (,def)))))
 
 (defvar mu4e-view-mode-map nil
   "Keymap for \"*mu4e-view*\" buffers.")
@@ -787,7 +788,17 @@ FUNC should be a function taking two arguments:
           (define-key map "C" 'mu4e-compose-new)
           (define-key map "E" 'mu4e-compose-edit)
 
-          (define-key map "K" 'ignore) ;; for gnus mode
+          ;; some gnus things we do not support
+          (define-key map "G" 'ignore)
+          (define-key map "I" 'ignore)
+          (define-key map "J" 'ignore)
+          (define-key map "K" 'ignore)
+          (define-key map "L" 'ignore)
+          (define-key map "N" 'ignore)
+          (define-key map "V" 'ignore)
+          (define-key map "X" 'ignore)
+          (define-key map "Y" 'ignore)
+          (define-key map "Z" 'ignore)
 
           (define-key map "." 'mu4e-view-raw-message)
           (define-key map "|" 'mu4e-view-pipe)
@@ -875,9 +886,9 @@ FUNC should be a function taking two arguments:
           (define-key map "H" 'mu4e-display-manual)
 
           ;; menu
-          (define-key map [menu-bar] (make-sparse-keymap))
-          (let ((menumap (make-sparse-keymap "View")))
-            (define-key map [menu-bar headers] (cons "View" menumap))
+          ;;(define-key map [menu-bar] (make-sparse-keymap))
+          (let ((menumap (make-sparse-keymap)))
+            (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
             (define-key menumap [quit-buffer]
               '("Quit view" . mu4e~view-quit-buffer))
@@ -886,7 +897,7 @@ FUNC should be a function taking two arguments:
             (define-key menumap [sepa0] '("--"))
             (define-key menumap [wrap-lines]
               '("Toggle wrap lines" . visual-line-mode))
-            (unless 'mu4e-view-use-gnus
+            (unless mu4e-view-use-gnus
               (define-key menumap [toggle-html]
                 '("Toggle view-html" . mu4e-view-toggle-html)))
             (define-key menumap [raw-view]
@@ -974,6 +985,7 @@ Gnus' article-mode."
         (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
         (define-key mu4e-view-mode-map [menu-bar Article] nil)
         (define-key mu4e-view-mode-map [menu-bar post] nil)
+        (define-key mu4e-view-mode-map [menu-bar commands] nil)
         (setq mu4e~view-buffer-name gnus-article-buffer)
         (mu4e~view-mode-body))
     (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
@@ -993,7 +1005,7 @@ changes, it triggers a refresh."
       ;; is a new message
       (when (and docid (or (member 'unread flags) (member 'new flags)))
         ;; mark /all/ messages with this message-id as read, so all copies of
-        ;; this message will be marked as read. We don't want an update thougn,
+        ;; this message will be marked as read. We don't want an update though,
         ;; we want a full message, so images etc. work correctly.
         (mu4e~proc-move msgid nil "+S-u-N" 'noview)
         (mu4e~proc-view docid mu4e-view-show-images
@@ -1452,6 +1464,16 @@ If PIPECMD is nil, ask user for it."
          (index (plist-get att :index)))
     (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'diary)))
 
+(defun mu4e-view-import-public-key (msg attachnum)
+  "Import MSG's attachment ATTACHNUM into the gpg-keyring."
+  (interactive)
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (index (plist-get att :index))
+         (mime-type (plist-get att :mime-type)))
+    (if (string= "application/pgp-keys" mime-type)
+        (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'gpg)
+      (mu4e-error "Invalid mime-type for a pgp-key: `%s'" mime-type))))
+
 (defun mu4e-view-attachment-action (&optional msg)
   "Ask user what to do with attachments in MSG
 If MSG is nil use the message returned by `message-at-point'.
@@ -1495,6 +1517,8 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     (setq buffer-read-only t))
    ((string= what "diary")
     (icalendar-import-file path diary-file))
+   ((string= what "gpg")
+    (epa-import-keys path))
    (t (mu4e-error "Unsupported action %S" what))))
 
 ;;; View Utilities

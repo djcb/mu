@@ -953,9 +953,9 @@ Also see `mu4e-view-mark-or-move-to-trash'."
           (define-key map "H" 'mu4e-display-manual)
 
           ;; menu
-          (define-key map [menu-bar] (make-sparse-keymap))
-          (let ((menumap (make-sparse-keymap "Headers")))
-            (define-key map [menu-bar headers] (cons "Headers" menumap))
+          ;;(define-key map [menu-bar] (make-sparse-keymap))
+          (let ((menumap (make-sparse-keymap)))
+            (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
             (define-key menumap [mu4e~headers-quit-buffer]
               '("Quit view" . mu4e~headers-quit-buffer))
