@@ -145,7 +145,11 @@ The server output is as follows:
 
   6. a compose looks like:
   (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
-  `mu4e-compose-func'."
+  `mu4e-compose-func'.
+
+  7. a header-field looks like:
+  (:header <header-fild> :docid <docid>  :value <header-field-value>)
+  will be passed to `mu4e-search-header-field-func'."
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
   (setq mu4e~proc-buf (concat mu4e~proc-buf str)) ;; update our buffer
   (let ((sexp (mu4e~proc-eat-sexp-from-buf)))
@@ -212,6 +216,14 @@ The server output is as follows:
                    ;; (pipe|emacs|open-with...)
                    (plist-get sexp :docid)  ;; docid of the message
                    (plist-get sexp :param)));; parameter for the action
+
+         ;; do something with a header-field
+         ((plist-get sexp :header)
+          (funcall mu4e-search-header-field-func
+                   (plist-get sexp :header)
+                   (plist-get sexp :docid)
+                   (plist-get sexp :value)
+                   ))
 
          ;; get some info
          ((plist-get sexp :info)
@@ -387,6 +399,11 @@ or an error."
                   :maxnum ,maxnum
                   :skip-dups ,skip-dups
                   :include-related ,include-related)))
+
+(defun mu4e~proc-header (docid header)
+  "Scans the message with the DOCID for a HEADER-field.
+The result is delivered to the function registered as`mu4e-search-header-field-func'."
+  (mu4e~call-mu `(header :docid ,docid :header ,header)))
 
 (defun mu4e~proc-index (&optional cleanup lazy-check)
   "Index messages with possible CLEANUP and LAZY-CHECK.
