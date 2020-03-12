@@ -222,8 +222,7 @@ The server output is as follows:
           (funcall mu4e-search-header-field-func
                    (plist-get sexp :header)
                    (plist-get sexp :docid)
-                   (plist-get sexp :value)
-                   ))
+                   (plist-get sexp :value)))
 
          ;; get some info
          ((plist-get sexp :info)
