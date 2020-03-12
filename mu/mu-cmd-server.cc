@@ -884,6 +884,29 @@ index_handler (Context& context, const Parameters& params)
 }
 
 static void
+header_handler (Context& context, const Parameters& params)
+{
+	const auto docid{get_int_or(params, "docid")};
+	const auto header{get_string_or(params, "header")};
+
+	GError *gerr{};
+	auto msg{mu_store_get_msg (context.store, docid, &gerr)};
+	if (!msg)
+		throw Error{Error::Code::Store, "failed to get message"};
+
+	auto header_value{mu_msg_get_header(msg, header.c_str())};
+
+	if (header_value)
+	{
+	  print_expr("(:header \"%s\" :docid \"%d\"  :value \"%s\")",
+				 header.c_str(), docid, header_value);
+	  return;
+	}
+	print_expr("(:header \"%s\" :docid \"%d\"  :value nil)",
+			   header.c_str(), docid);
+}
+
+static void
 mkdir_handler (Context& context, const Parameters& params)
 {
         const auto path{get_string_or(params, "path")};
@@ -1221,7 +1244,17 @@ make_command_map (Context& context)
                                             "whether to include information about parameters" }}},
                            "get information about one or all commands",
                            [&](const auto& params){help_handler(context, params);}});
-      cmap.emplace("index",
+
+	  cmap.emplace("header",
+				   CommandInfo{
+					 ArgMap{
+					   {"docid",  ArgInfo{Type::Integer, false, "document-id"}},
+						   {"header", ArgInfo{Type::String, false, "header-name"}}}
+					 ,
+					   "query the header of a message",
+						 [&](const auto& params){header_handler(context, params);}});
+
+	  cmap.emplace("index",
                    CommandInfo{
                            ArgMap{ {"my-addresses", ArgInfo{Type::List, false, "list of 'my' addresses"}},
                                    {"cleanup", ArgInfo{Type::Symbol, false,

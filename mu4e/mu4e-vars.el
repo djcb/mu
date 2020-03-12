@@ -1067,6 +1067,10 @@ sexp received from the server process.")
 (defvar mu4e-temp-func 'mu4e~view-temp-handler
   "A function called for each (:temp <file> <cookie>) sexp.")
 
+(defvar mu4e-search-header-field-func 'mu4e-header-field-handler
+  "A function called for each (:header <header-fild> ...) sexp
+  received. See `mu4e~proc-filter' for the format.")
+
 ;;; _
 (provide 'mu4e-vars)
 ;;; mu4e-vars.el ends here
