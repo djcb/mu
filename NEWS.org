@@ -89,15 +89,6 @@
       with a repl for testing. If you have readline installed, you also get
       history etc.
 
-    - mu4e now defaults to _not_ doing a cleanup after indexing; see
-      ~mu4e-index-cleanup~; reason is that some users have slow (file)systems,
-      making the index operation unnecessary lengthy. More over, files that do not exist
-      are excluded during querying.
-
-      It is recommended to occasionally still clean up the database, perhaps by
-      closing mu4e and calling ~mu index~ from the command-line; this is esp. true
-      if other programs are working in your maildir, behind mu's back.
-
 *** toys
 
     - Updated the ~mug~ toy UI to use Webkit2/GTK+. Note that this is just a toy

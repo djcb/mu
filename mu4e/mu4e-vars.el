@@ -96,19 +96,17 @@ This depends on the `mu4e-get-mail-command' exit code."
   :group 'mu4e
   :safe 'booleanp)
 
-(defcustom mu4e-index-cleanup nil
+(defcustom mu4e-index-cleanup t
   "Whether to run a cleanup phase after indexing.
 
 That is, validate that each message in the message store has a
 corresponding message file in the filesystem.
 
 Having this option as t ensures that no non-existing messages are
-shown but can also be quite slow with large message stores, and
-especially with slow filesystems."
+shown but can slow with large message stores on slow file-systems."
   :type 'boolean
   :group 'mu4e
-  :safe 'booleanp
-  :version "1.3.9")
+  :safe 'booleanp)
 
 (defcustom mu4e-index-lazy-check nil
   "Whether to only use a 'lazy check' during reindexing.
