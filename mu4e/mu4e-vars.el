@@ -140,6 +140,22 @@ some specific setting.")
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-headers-include-related t
+  "With this option set to non-nil, not just return the matches for
+a searches, but also messages that are related (through their
+references) to these messages. This can be useful e.g. to include
+sent messages into message threads."
+  :type 'boolean
+  :group 'mu4e-headers)
+
+(defcustom mu4e-headers-skip-duplicates t
+  "With this option set to non-nil, show only one of duplicate
+messages. This is useful when you have multiple copies of the same
+message, which is a common occurrence for example when using Gmail
+and offlineimap."
+  :type 'boolean
+  :group 'mu4e-headers)
+
 (defcustom mu4e-change-filenames-when-moving nil
   "Change message file names when moving them.
 When moving messages to different folders, normally mu/mu4e keep

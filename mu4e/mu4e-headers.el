@@ -132,27 +132,12 @@ messages that were found in the first set (the \"leaders\").
 (make-obsolete-variable 'mu4e-search-results-limit
                         'mu4e-headers-results-limit "0.9.9.5-dev6")
 
-(defcustom mu4e-headers-skip-duplicates t
-  "With this option set to non-nil, show only one of duplicate
-messages. This is useful when you have multiple copies of the same
-message, which is a common occurrence for example when using Gmail
-and offlineimap."
-  :type 'boolean
-  :group 'mu4e-headers)
-
 (defcustom mu4e-headers-advance-after-mark t
   "With this option set to non-nil, automatically advance to the
 next mail after marking a message in header view."
   :type 'boolean
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-include-related t
-  "With this option set to non-nil, not just return the matches for
-a searches, but also messages that are related (through their
-references) to these messages. This can be useful e.g. to include
-sent messages into message threads."
-  :type 'boolean
-  :group 'mu4e-headers)
 
 (defvar mu4e-headers-hide-predicate nil
   "Predicate function applied to headers before they are shown;

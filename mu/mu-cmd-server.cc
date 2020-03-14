@@ -1045,16 +1045,17 @@ ping_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Store, &gerr, "failed to read store"};
 
         const auto queries  = get_string_vec (params, "queries");
-        const auto qresults= [&]() -> std::string {
+        const auto qresults = [&]() -> std::string {
                 if (queries.empty())
                         return {};
 
                 std::string res{":queries ("};
                 for (auto&& q: queries) {
                         const auto count{mu_query_count_run (context.query, q.c_str())};
-                        const auto unreadq{format("(%s) AND flag:unread", q.c_str())};
+                        const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
                         const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
-                        res += format("(:query %s :count %zu :unread %zu)", quote(q).c_str(), count, unread);
+                        res += format("(:query %s :count %zu :unread %zu)", quote(q).c_str(),
+                                      count, unread);
                 }
                 return res + ")";
         }();
@@ -1252,7 +1253,9 @@ make_command_map (Context& context)
       cmap.emplace("ping",
                    CommandInfo{
                            ArgMap{ {"queries",  ArgInfo{Type::List, false,
-                                                   "queries for which to get read/unread numbers"}}},
+                                                   "queries for which to get read/unread numbers"}},
+                                   {"skip-dups",  ArgInfo{Type::Symbol, false,
+                                            "whether to exclude messages with duplicate message-ids"}},},
                            "ping the mu-server and get information in response",
                           [&](const auto& params){ping_handler(context, params);}});
 

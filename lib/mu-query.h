@@ -99,7 +99,6 @@ MuMsgIter* mu_query_run (MuQuery *self, const char* expr,
  */
 size_t mu_query_count_run (MuQuery *self, const char *searchexpr);
 
-
 /**
  * get Xapian's internal string representation of the query
  *
