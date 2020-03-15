@@ -72,22 +72,24 @@
       "My bookmark" :query "banana OR pear" :key ?f)~ this format is a bit easier
       extensible.
 
-    - Same is true for ~mu4e-maildir-shortcuts~. The older format is still
+    - mu4e recognizes an attribute ~:hide t~, which will hide the bookmark
+      item from the main-screen (and speedbar), but keep it avilable through the
+      completion UI.
+
+    - ~mu4e-maildir-shortcuts~ have also become plists. The older format is still
       recognized.
 
-    - Improved handling of replies to mailing-lists.
+    - Replying to mailing-lists has been improved, allowing for choosing for
+      replying to all, sender, list-only.
 
-    - For instance, we now recognize an attribute ~:hide t~, which will hide the
-      bookmark item from the main-screen (and speedbar), but keep it avilable
-      through the completion UI.
-
-    - Furthermore, mu4e now shows unread/all counts for bookmarks in the main
-      screen. This is on by default, but can be disabled by setting ~:hide-unread~
-      in the bookmark ~plist~ to ~t~.
+    - mu4e now shows unread/all counts for bookmarks in the main screen. This is
+      on by default, but can be disabled by setting ~:hide-unread~ in the bookmark
+      ~plist~ to ~t~. For speed-reasons, these counts do _not_ filter out duplicates
+      or messages that have been removed from the filesystem behind mu4e's back.
 
     - The mu4e <-> mu has been rewritten to communicate using s-expressions,
       with a repl for testing. If you have readline installed, you also get
-      history etc.
+      history.
 
 *** toys
 
