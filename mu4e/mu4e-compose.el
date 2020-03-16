@@ -646,6 +646,9 @@ tempfile)."
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
+  ;; set mu4e-compose-type once more for this buffer,
+  (set (make-local-variable 'mu4e-compose-type) compose-type)
+  (put 'mu4e-compose-type 'permanent-local t)
 
   ;; hide some headers
   (mu4e~compose-hide-headers)
@@ -654,10 +657,6 @@ tempfile)."
   ;; don't allow undoing anything before this.
   (setq buffer-undo-list nil)
 
-  ;; set mu4e-compose-type once more for this buffer,
-  ;; we loose it after the mode-change, it seems
-  (set (make-local-variable 'mu4e-compose-type) compose-type)
-  (put 'mu4e-compose-type 'permanent-local t)
 
   (when mu4e-compose-in-new-frame
     ;; make sure to close the frame when we're done with the message these are
