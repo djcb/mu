@@ -3864,7 +3864,7 @@ answers.
 @section General
 
 @subsection Results from @command{mu} and @t{mu4e} differ - why?
-@node mu-mu4e-differ
+@anchor{mu-mu4e-differ}
 In general, the same queries for @command{mu} and @t{mu4e} should
 yield the same results. If they differ, this is usually because one of
 the following reasons:
@@ -3886,8 +3886,7 @@ necessary.
 
 @subsection The unread/all counts in the main-screen differ from the 'real' numbers - what's going on?
 For speed reasons, the counts do not exclude messages that no longer
-exist in the file-system, nor does it exclude duplicate messages. See
-@ref{mu-mu4e-differ}.
+exist in the file-system, nor does it exclude duplicate messages; @xref{mu-mu4e-differ}.
 
 @subsection How can I quickly delete/move/trash a lot of messages?
 You can select ('mark' in Emacs-speak) the messages like you would
