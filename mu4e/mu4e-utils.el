@@ -987,11 +987,10 @@ in the background; otherwise, pop up a window."
 
 ;;; Logging / debugging
 
-(defvar mu4e~log-max-lines 1200
-  "*internal* Last <n> number of lines to keep around in the buffer.")
+(defconst mu4e~log-max-size 100000
+  "Max number of characters to keep around in the log buffer.")
 (defconst mu4e~log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
-
 (defun mu4e-log (type frm &rest args)
   "Write a message of TYPE with format-string FRM and ARGS in
 *mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
@@ -1023,13 +1022,10 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
 
         ;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
         ;; lines
-        (when (numberp mu4e~log-max-lines)
-          (let ((lines (count-lines (point-min) (point-max))))
-            (when (> lines mu4e~log-max-lines)
-              (goto-char (point-max))
-              (forward-line (- mu4e~log-max-lines lines))
-              (beginning-of-line)
-              (delete-region (point-min) (point)))))))))
+        (when (> (buffer-size) mu4e~log-max-size)
+          (goto-char (- (buffer-size) mu4e~log-max-size))
+          (beginning-of-line)
+          (delete-region (point-min) (point)))))))
 
 (defun mu4e-toggle-logging ()
   "Toggle between enabling/disabling debug-mode (in debug-mode,
