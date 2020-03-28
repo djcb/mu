@@ -30,7 +30,6 @@
 (require 'mu4e-vars)  ;; the context
 (require 'cl-lib)
 
-
 ;;; Mode
 
 (defvar mu4e-main-buffer-name " *mu4e-main*"
@@ -213,7 +212,11 @@ When REFRESH is non nil refresh infos from server."
        (mu4e~key-val "database-path" (mu4e-database-path))
        (mu4e~key-val "maildir" (mu4e-root-maildir))
        (mu4e~key-val "in store"
-                     (format "%d" (plist-get mu4e~server-props :doccount)) "messages"))
+                     (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
+       ;; (mu4e~key-val "personal addresses"
+       ;;               (let ((addrs (mu4e-personal-addresses)))
+       ;;                 (if addrs(string-join addrs ", "  ) "none")))
+       )
       (mu4e-main-mode)
       (goto-char pos))))
 

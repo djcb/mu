@@ -507,7 +507,7 @@ in `mu4e-compose-pre-hook'. For new messages, it is nil.")
   :group 'mu4e)
 
 (defcustom mu4e-drafts-folder "/drafts"
-  "Your folder for draft messages, relative to `mu4e-maildir'.
+  "Your folder for draft messages, relative to the root maildir.
 For instance, \"/drafts\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. Note, the message
@@ -520,7 +520,7 @@ is only evaluated once."
   :group 'mu4e-folders)
 
 (defcustom mu4e-refile-folder "/archive"
-  "Your folder for refiling messages, relative to `mu4e-maildir'.
+  "Your folder for refiling messages, relative to the root maildir.
 For instance \"/Archive\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. Note that the
@@ -531,7 +531,7 @@ message parameter refers to the message-at-point."
   :group 'mu4e-folders)
 
 (defcustom mu4e-sent-folder "/sent"
-  "Your folder for sent messages, relative to `mu4e-maildir'.
+  "Your folder for sent messages, relative to the root maildir.
 For instance, \"/Sent Items\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. Note that the
@@ -543,7 +543,7 @@ message parameter refers to the original message being replied to
   :group 'mu4e-folders)
 
 (defcustom mu4e-trash-folder "/trash"
-  "Your folder for trashed messages, relative to `mu4e-maildir'.
+  "Your folder for trashed messages, relative to the root maildir.
 For instance, \"/trash\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. When using

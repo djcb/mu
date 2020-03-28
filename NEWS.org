@@ -9,21 +9,26 @@
       takes the ~--maildir~ and ~--my-address~ parameters that ~index~ used to take.
       These parameters are persistent so ~index~ does not need them anymore.
 
-      ~init~ only needs to be run once or when changing these parameters.
+      ~init~ only needs to be run once or when changing these parameters. That
+      implies that you need to re-index after changing these parameters.
 
     - There is another new subcommand ~mu info~ to get information about the mu
       database.
 
-    - The contacts cache (as uses in ~mu cfind~ and mu4e contact-completion) is
-      now stored as part of the Xapian database rather than as a separate file.
+    - The contacts cache (which is used by ~mu cfind~ and ~mu4e~'s
+      contact-completion) is now stored as part of the Xapian database rather
+      than as a separate file.
 
     - mu now defaults to the [[https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG Base Directory Specification]] for the default
       locations for various files. E.g. on Unix the mu database now lives under
       ~~/.cache/mu/~ rather than ~~/.mu~. You can still use the old location by
       passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
-      mu4e-mu-home "~/.mu")~ for mu4e.
+      mu4e-mu-home "~/.mu")~ for ~mu4e~.
 
-      Otherwise, after upgrading, you may wish to delete the old location to
+      It is expected that the directory where the database lives survives a
+      reboot; if that is not true for the default, you can use ~--muhome~.
+
+      After upgrading, you may wish to delete the files in the old location to
       recover some diskspace.
 
     - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
@@ -42,7 +47,8 @@
       docstring for details.
 
     - ~mu4e~ no longer uses the ~mu4e-maildir~ and ~mu4e-user-mail-address-list~
-      variables, instead getting the information from ~mu~ (see above).
+      variables; instead it uses the information it gets from ~mu~ (see the ~mu~
+      section above).
 
     - Christophe Troestler contributed support for Gnus' calender-invitation
       handling in mu4e (i.e., you should be able to accept/reject invitations
@@ -57,14 +63,11 @@
       existing context setup with some niceties for accounts. See the manual for
       details.
 
-    - When the mu store (database) is not present or not up to date, mu4e will
-      attempt to re-index it automatically.
-
     - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
       by default.
 
-    - Add message-id's to messages when saving drafts, so we can find them even
-      with ~mu4e-headers-skip-duplicates~.
+    - ~mu4e~ now adds message-id's to messages when saving drafts, so we can find
+      them even with ~mu4e-headers-skip-duplicates~.
 
     - Bookmarks (as in ~mu4e-bookmarks~) are now simple plists (instead of cl
       structs). ~make-mu4e-bookmark~ has been updated to produce such plists (for
@@ -72,24 +75,24 @@
       "My bookmark" :query "banana OR pear" :key ?f)~ this format is a bit easier
       extensible.
 
-    - mu4e recognizes an attribute ~:hide t~, which will hide the bookmark
-      item from the main-screen (and speedbar), but keep it avilable through the
+    - ~mu4e~ recognizes an attribute ~:hide t~, which will hide the bookmark item
+      from the main-screen (and speedbar), but keep it avilable through the
       completion UI.
 
     - ~mu4e-maildir-shortcuts~ have also become plists. The older format is still
-      recognized.
+      recognized for backward compatibility, but you are encouraged to upgrade.
 
     - Replying to mailing-lists has been improved, allowing for choosing for
       replying to all, sender, list-only.
 
-    - mu4e now shows unread/all counts for bookmarks in the main screen. This is
+    - ~mu4e~ now shows unread/all counts for bookmarks in the main screen. This is
       on by default, but can be disabled by setting ~:hide-unread~ in the bookmark
       ~plist~ to ~t~. For speed-reasons, these counts do _not_ filter out duplicates
       or messages that have been removed from the filesystem behind mu4e's back.
 
-    - The mu4e <-> mu has been rewritten to communicate using s-expressions,
-      with a repl for testing. If you have readline installed, you also get
-      history.
+    - The mu4e <-> mu intreaction has been rewritten to communicate using
+      s-expressions, with a repl for testing. If you have readline installed,
+      you also get history.
 
 *** toys
 
