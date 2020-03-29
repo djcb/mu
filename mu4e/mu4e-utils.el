@@ -655,8 +655,9 @@ process."
                        (zerop (plist-get info :updated)))
             (mu4e~request-contacts-maybe))
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
-            (select-window (get-buffer-window mainbuf))
-            (mu4e~main-view 'refresh)))))
+            (save-window-excursion
+              (select-window (get-buffer-window mainbuf))
+              (mu4e~main-view 'refresh))))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 
