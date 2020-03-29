@@ -314,8 +314,8 @@ Message-ID."
                 (mu4e~compose-set-friendly-buffer-name)
                 (mu4e~draft-insert-mail-header-separator)
                 ;; hide some headers again
-                (mu4e~compose-hide-headers)
                 (widen)
+                (mu4e~compose-hide-headers)
                 (set-buffer-modified-p nil)
                 (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
                 ;; update the file on disk -- ie., without the separator
