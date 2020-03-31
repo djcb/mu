@@ -29,7 +29,8 @@ this defaults to \fI~/.cache/mu\fR, \fI~/.config/mu\fR). Earlier versions of
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
 starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 \fBMAILDIR\fR environment variable is set to; if it is not set, it tries
-\fI~/Maildir\fR.
+\fI~/Maildir\fR. The maildir must be on a single file-system; and symbolic links
+are not supported.
 
 .TP
 \fB\-\-my-address\fR=\fI<my-email-address>\fR

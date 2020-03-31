@@ -1002,11 +1002,8 @@ mu4e-compose.")
     path))
 
 (defun mu4e-personal-addresses()
-  "Get the user's personal addresses, if any. If none are set on the server-side,
-fall back to the obsolete `mu4e-user-mail-address-list'."
-  (let ((addrs (and mu4e~server-props
-                    (plist-get mu4e~server-props :personal-addresses))))
-    (if addrs addrs mu4e-user-mail-address-list)))
+  "Get the user's personal addresses, if any."
+  (when mu4e~server-props (plist-get mu4e~server-props :personal-addresses)))
 
 (defun mu4e-server-version()
   "Get the server version, which should match mu4e's."

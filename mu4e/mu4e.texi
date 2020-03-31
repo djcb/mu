@@ -394,9 +394,10 @@ have your e-mail messages stored in a
 @emph{maildir}@footnote{@url{https://en.wikipedia.org/wiki/Maildir};
 in this manual we use the term `maildir' for both the standard and the
 hierarchy of maildirs that store your messages} --- a specific
-directory structure with one-file-per-message. If you are already
-using a maildir, you are lucky. If not, some setup is required:
+directory structure with one-file-per-message.
 
+If you are already using a maildir, you are lucky. If not, some setup
+is required:
 @itemize
 @item @emph{Using an external IMAP or POP server} --- if you are using an
 @abbr{IMAP} or @abbr{POP} server, you can use tools like @t{getmail},
@@ -409,6 +410,9 @@ case, there is a full example of setting @t{mu4e} up with
 a maildir as well, maybe in combination with @t{procmail}. A bit of
 googling should be able to provide you with the details.
 @end itemize
+
+The maildir must be on a single file-system; and symbolic links are
+not supported.
 
 @node Initializing the message store
 @section Initializing the message store

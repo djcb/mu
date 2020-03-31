@@ -36,6 +36,13 @@
 
 *** mu4e
 
+    - ~mu4e~ no longer uses the ~mu4e-maildir~ and ~mu4e-user-mail-address-list~
+      variables; instead it uses the information it gets from ~mu~ (see the ~mu~
+      section above).
+
+      It is strongly recommended that you run ~mu init~ with the appropriate
+      parameters to (re)initialize the Xapian database.
+
     - In many cases, ~mu4e~ used to receive /all/ contacts after each indexing
       operation; this was slow for some users, so we have updated this to /only/
       get the contacts that have changed since the last round.
@@ -46,15 +53,11 @@
       of those should migrate to ~mu4e-contact-process-function~; see its
       docstring for details.
 
-    - ~mu4e~ no longer uses the ~mu4e-maildir~ and ~mu4e-user-mail-address-list~
-      variables; instead it uses the information it gets from ~mu~ (see the ~mu~
-      section above).
-
     - Christophe Troestler contributed support for Gnus' calender-invitation
       handling in mu4e (i.e., you should be able to accept/reject invitations
       etc.). It's very fresh code, and likely it'll be tweaked in the future.
       But it's available now for testing. Note that this requires the gnus-based
-      viewer, ie ~(setq mu4e-view-use-gnus t)~
+      viewer, as per ~(setq mu4e-view-use-gnus t)~
 
     - In addition, he added support for custom headers, so the ones for for the
       non-gnus-view should work just as well.
@@ -66,7 +69,7 @@
     - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
       by default.
 
-    - ~mu4e~ now adds message-id's to messages when saving drafts, so we can find
+    - ~mu4e~ now adds message-ids to messages when saving drafts, so we can find
       them even with ~mu4e-headers-skip-duplicates~.
 
     - Bookmarks (as in ~mu4e-bookmarks~) are now simple plists (instead of cl
