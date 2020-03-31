@@ -39,8 +39,8 @@ namespace Mu {
  *
  */
 struct Warning {
-	size_t			pos; /**< pos in string */
-	const std::string	msg; /**< warning message */
+	size_t			pos{}; /**< pos in string */
+	const std::string	msg;   /**< warning message */
 
 	/**
 	 * operator==

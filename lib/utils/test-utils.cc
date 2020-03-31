@@ -30,7 +30,7 @@ using namespace Mu;
 
 struct Case {
 	const std::string	expr;
-	bool			is_first;
+	bool			is_first{};
 	const std::string	expected;
 };
 using CaseVec = std::vector<Case>;
