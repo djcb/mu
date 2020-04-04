@@ -988,7 +988,7 @@ in the background; otherwise, pop up a window."
 
 ;;; Logging / debugging
 
-(defconst mu4e~log-max-size 100000
+(defconst mu4e~log-max-size 1000000
   "Max number of characters to keep around in the log buffer.")
 (defconst mu4e~log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
@@ -1001,7 +1001,7 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
       (view-mode)
       (setq buffer-undo-list t)
       (let* ((inhibit-read-only t)
-             (tstamp (propertize (format-time-string "%Y-%m-%d %T"
+             (tstamp (propertize (format-time-string "%Y-%m-%d %T.%3N"
                                                      (current-time))
                                  'face 'font-lock-string-face))
              (msg-face
