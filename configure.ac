@@ -275,7 +275,6 @@ guile/tests/Makefile
 guile/scripts/Makefile
 toys/Makefile
 toys/mug/Makefile
-#toys/msg2pdf/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile
@@ -284,8 +283,7 @@ contrib/Makefile
 ])
 AC_OUTPUT
 
-# toys/msg2pdf/Makefile
-
+dnl toys/msg2pdf/Makefile
 
 echo
 echo "mu configuration is complete."
