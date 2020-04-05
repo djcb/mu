@@ -464,6 +464,23 @@ article-mode."
     (when (and val (> (length val) 0))
       (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
 
+(define-advice gnus-icalendar-event-from-handle
+    (:filter-args (handle-attendee) mu4e~view-fix-missing-charset)
+  "Do not trigger an error when displaying an ical attachment
+with no charset."
+  (if (and (boundp 'mu4e~view-rendering) mu4e~view-rendering)
+      (let* ((handle (car handle-attendee))
+             (attendee (cdr handle-attendee))
+             (buf (mm-handle-buffer handle))
+             (ty (mm-handle-type handle))
+             (rest (cddr handle)))
+        ;; Put the fallback at the end:
+        (setq ty (append ty '((charset . "utf-8"))))
+        (setq handle (cons buf (cons ty rest)))
+        (list handle attendee))
+  handle-attendee))
+
+
 (defun mu4e~view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
 The action is chosen based on the `last-command-event'.
