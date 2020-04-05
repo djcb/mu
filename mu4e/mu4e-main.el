@@ -262,7 +262,6 @@ When REFRESH is non nil refresh infos from server."
       ;; explicitely with REFRESH arg.
       (switch-to-buffer buf)
       (with-current-buffer buf
-        (mu4e-main-mode)
         (mu4e~main-view-real-1 refresh))
       (goto-char (point-min)))
   (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))))
