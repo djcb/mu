@@ -477,6 +477,11 @@ buffers; lets remap its faces so it uses the ones for mu4e."
           (visual-line-mode t))
       (setq mml-enable-flowed nil))
 
+    ;; set the attachment dir to something more reasonable than the draft
+    ;; directory.
+    (setq default-directory (mu4e~get-attachment-dir))
+
+
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
         (define-key-after

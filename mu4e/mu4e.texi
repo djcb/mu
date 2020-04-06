@@ -1340,9 +1340,9 @@ OS X) the @t{open} program for opening attachments. If you want to use another
 program, you do so by setting the @t{MU_PLAY_PROGRAM} environment variable to
 the program to be used.
 
-The default directory for extracting (saving) attachments is your home
-directory (@file{~/}); you can change this using the variable
-@code{mu4e-attachment-dir}, for example:
+The default directory for attaching and extracting (saving)
+attachmentsis your home directory (@file{~/}); you can change this
+using the variable @code{mu4e-attachment-dir}, for example:
 
 @lisp
 (setq mu4e-attachment-dir "~/Downloads")

@@ -167,10 +167,15 @@ better with e.g. offlineimap."
   :safe 'booleanp)
 
 (defcustom mu4e-attachment-dir (expand-file-name "~/")
-  "Default directory for saving attachments.
+  "Default directory for attaching and saving attachments.
+
 This can be either a string (a file system path), or a function
 that takes a filename and the mime-type as arguments, and returns
-the attachment dir. See Info node `(mu4e) Attachments' for details."
+the attachment dir. See Info node `(mu4e) Attachments' for
+details.
+
+When this called for composing a message, both filename and
+mime-type are nill."
   :type 'directory
   :group 'mu4e
   :safe 'stringp)

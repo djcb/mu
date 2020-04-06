@@ -93,7 +93,10 @@
       ~plist~ to ~t~. For speed-reasons, these counts do _not_ filter out duplicates
       or messages that have been removed from the filesystem behind mu4e's back.
 
-    - The mu4e <-> mu intreaction has been rewritten to communicate using
+    - ~mu4e-attachment-dir~ now also applies to composing messages; it determines
+      the default directory for inclusion.
+
+    - The mu4e <-> mu interaction has been rewritten to communicate using
       s-expressions, with a repl for testing. If you have readline installed,
       you also get history.
 
