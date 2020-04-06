@@ -32,6 +32,13 @@
 
 ;;; Mode
 
+(defvar mu4e-main-buffer-hide-personal-addresses nil
+  "Whether to hid trhe personal address in the main view. This
+  can be useful to avoid the noise when there are many.
+
+  This also hides the warning if your `user-mail-address' is not
+part of the personal addresses.")
+
 (defvar mu4e-main-buffer-name " *mu4e-main*"
   "Name of the mu4e main view buffer. The default name starts
 with SPC and therefore is not visible in buffer list.")
@@ -171,7 +178,8 @@ When REFRESH is non nil refresh infos from server."
 (defun mu4e~main-redraw-buffer ()
   (with-current-buffer mu4e-main-buffer-name
     (let ((inhibit-read-only t)
-          (pos (point)))
+          (pos (point))
+          (addrs (mu4e-personal-addresses)))
       (erase-buffer)
       (insert
        "* "
@@ -213,10 +221,15 @@ When REFRESH is non nil refresh infos from server."
        (mu4e~key-val "maildir" (mu4e-root-maildir))
        (mu4e~key-val "in store"
                      (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
-       ;; (mu4e~key-val "personal addresses"
-       ;;               (let ((addrs (mu4e-personal-addresses)))
-       ;;                 (if addrs(string-join addrs ", "  ) "none")))
-       )
+       (unless mu4e-main-buffer-hide-personal-addresses
+         (mu4e~key-val "personal addresses" (if addrs (string-join addrs ", "  ) "none"))))
+
+      (unless mu4e-main-buffer-hide-personal-addresses
+        (when (and addrs user-mail-address (not (member user-mail-address addrs)))
+          (mu4e-message (concat
+                         "Note: `user-mail-address' ('%s') is not part "
+                         "of mu's addresses; add it with 'mu init --my-address='")
+                        user-mail-address)))
       (mu4e-main-mode)
       (goto-char pos))))
 

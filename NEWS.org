@@ -7,7 +7,8 @@
 
     - There's a new subcommand ~mu init~ to initialize the mu database, which
       takes the ~--maildir~ and ~--my-address~ parameters that ~index~ used to take.
-      These parameters are persistent so ~index~ does not need them anymore.
+      These parameters are persistent so ~index~ does not need (or accept) them
+      anymore. ~mu4e~ now depends on those parameters.
 
       ~init~ only needs to be run once or when changing these parameters. That
       implies that you need to re-index after changing these parameters.
@@ -25,8 +26,9 @@
       passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
       mu4e-mu-home "~/.mu")~ for ~mu4e~.
 
-      It is expected that the directory where the database lives survives a
-      reboot; if that is not true for the default, you can use ~--muhome~.
+      It is expected that the directory where the database lives, survives a
+      reboot; if that is not true in your case, you can use ~--muhome~ (otherwise
+      you'd have to reindex after each reboot).
 
       After upgrading, you may wish to delete the files in the old location to
       recover some diskspace.
@@ -42,6 +44,11 @@
 
       It is strongly recommended that you run ~mu init~ with the appropriate
       parameters to (re)initialize the Xapian database.
+
+      The main screen shows your address(es), and issues a warning if
+      ~user-email-address~ is not part of that (and refer you to ~mu init~). You can
+      avoid the addresses in the main screen and the warning by setting
+      ~mu4e-main-view-hide-addresses~ to non-nil.
 
     - In many cases, ~mu4e~ used to receive /all/ contacts after each indexing
       operation; this was slow for some users, so we have updated this to /only/
