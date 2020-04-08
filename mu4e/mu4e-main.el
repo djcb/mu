@@ -222,7 +222,7 @@ When REFRESH is non nil refresh infos from server."
        (mu4e~key-val "in store"
                      (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
        (unless mu4e-main-buffer-hide-personal-addresses
-         (mu4e~key-val "personal addresses" (if addrs (string-join addrs ", "  ) "none"))))
+         (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (unless mu4e-main-buffer-hide-personal-addresses
         (when (and addrs user-mail-address (not (member user-mail-address addrs)))
