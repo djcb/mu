@@ -470,7 +470,7 @@ article-mode."
 with no charset."
   (if (and (boundp 'mu4e~view-rendering) mu4e~view-rendering)
       (let* ((handle (car handle-attendee))
-             (attendee (cdr handle-attendee))
+             (attendee (cadr handle-attendee))
              (buf (mm-handle-buffer handle))
              (ty (mm-handle-type handle))
              (rest (cddr handle)))
