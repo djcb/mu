@@ -907,9 +907,7 @@ compact way to convey the most important information: it shows @t{From:}
 @emph{except} when the e-mail was sent by the user (i.e., you) --- in that case
 it shows @t{To:} (prefixed by @t{To}@footnote{You can customize this by
 changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
-in the example above). To determine whether a message was sent by you,
-@t{mu4e} uses the variable @code{mu4e-user-mail-address-list}, a list of
-your e-mail addresses.
+in the example above).
 @item The `List' field shows the mailing-list a message is sent to;
 @code{mu4e} tries to create a convenient shortcut for the mailing-list name;
 the variable @code{mu4e-user-mailing-lists} can be used to add your
@@ -1700,13 +1698,12 @@ this:
 
 @itemize
 @item @code{mu4e-compose-complete-only-personal} --- when set to @t{t},
-only consider addresses that were seen in @emph{personal} messages --- that is,
-messages in which one of my e-mail addresses was seen in one of the address
-fields. This is to exclude mailing list posts. You can define what is
-considered `my e-mail address' using @code{mu4e-user-mail-address-list}, a
-list of e-mail address (defaults to @code{user-mail-address}, and when
-indexing from the command line, the @t{--my-address} parameter for @t{mu
-index}.
+only consider addresses that were seen in @emph{personal} messages ---
+that is, messages in which one of my e-mail addresses was seen in one
+of the address fields. This is to exclude mailing list posts. You can
+define what is considered `my e-mail address' using the
+@t{--my-address} parameter to @t{mu init}.
+
 @item @code{mu4e-compose-complete-only-after} --- only consider e-mail
 addresses last seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes old e-mail addresses. The default
@@ -1875,11 +1872,9 @@ configuration:
 (setq message-kill-buffer-on-exit t)
 @end lisp
 @item If you want to exclude your own e-mail address when ``replying to
-all'', set @code{mu4e-compose-dont-reply-to-self} to @code{t}.  In order
-for this to work properly you need to properly set the
-@code{user-mail-address} variable or in the case you use multiple e-mail
-addresses you need to set the @code{mu4e-user-mail-address-list}
-variable accordingly.
+all'', set @code{mu4e-compose-dont-reply-to-self} to @code{t}. In
+order for this to work properly you need to pass your address to
+@command{mu init --my-address=} at database initialization time.
 @end itemize
 
 @node Searching
@@ -2512,7 +2507,6 @@ example:
 * Contexts and special folders::Using context variables to determine them
 * Contexts example::How to define contexts
 * Account setup helper::Easy context creation with sane defaults
-* Some context tricks::Other thing to do with contexts
 @end menu
 
 It can be useful to switch between different sets of settings in
@@ -2769,25 +2763,6 @@ If the context created by @code{make-mu4e-context-account} is not
 enough, you can display the generated context with e.g. @code{M-x
 describe-variable mu4e-contexts} and tweak the result as needed.
 
-@node Some context tricks
-@section Some context tricks
-
-It is possible to automatically fill @code{mu4e-user-address-list} by
-concatenating the @code{user-mail-address} fields of all contexts:
-
-@lisp
-  ;; This sets `mu4e-user-mail-address-list' to the concatenation of all
-  ;; `user-mail-address' values for all contexts. If you have other mail
-  ;; addresses as well, you'll need to add those manually.
-  (setq mu4e-user-mail-address-list
-    (delq nil
-      (mapcar (lambda (context)
-		(when (mu4e-context-vars context)
-		  (cdr (assq 'user-mail-address (mu4e-context-vars context)))))
-	mu4e-contexts)))
-@end lisp
-
-
 @node Dynamic folders
 @chapter Dynamic folders
 
@@ -2851,7 +2826,7 @@ message. An example should clarify this:
       ((find-if
 	 (lambda (addr)
 	   (mu4e-message-contact-field-matches msg :from addr))
-	 mu4e-user-mail-address-list)
+	 (mu4e-personal-addresses))
 	mu4e-sent-folder)
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
@@ -3258,7 +3233,7 @@ maildirs.
 @item @code{mu4e-running-p}: return @code{t} if the @t{mu4e} process is
 running, @code{nil} otherwise.
 @item @code{(mu4e-user-mail-address-p addr)}: return @code{t} if @var{addr} is
-one of the user's e-mail addresses (as per @code{mu4e-user-mail-address-list}).
+one of the user's e-mail addresses (as per @code{(mu4e-personal-addresses)}).
 @item @code{mu4e-log} logs to the @t{mu4e} debugging log if it is enabled;
 see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
@@ -3618,9 +3593,6 @@ customize.
       (:maildir "/inbox"   :key ?i)
       (:maildir "/work"    :key ?w)
       (:maildir "/sent"    :key ?s)))
-
-;; a  list of user's e-mail addresses
-(setq mu4e-user-mail-address-list '("foo@@bar.example.com" "cuux@@example.com")
 
 ;; the headers to show in the headers list -- a pair of a field
 ;; and its width, with `nil' meaning 'unlimited'
