@@ -389,10 +389,7 @@ or an error."
                   :include-related ,include-related)))
 
 (defun mu4e~proc-index (&optional cleanup lazy-check)
-  "Index messages with possible CLEANUP and LAZY-CHECK.
-PATH should point to some maildir directory structure.
-MY-ADDRESSES is a list of 'my' email addresses (see
-`mu4e-user-mail-address-list')."
+  "Index messages with possible CLEANUP and LAZY-CHECK."
   (mu4e~call-mu `(index :cleanup ,cleanup :lazy-check ,lazy-check)))
 
 (defun mu4e~proc-mkdir (path)

@@ -109,7 +109,6 @@ none."
 Also:
 - Add the context to the `mu4e-contexts'.
 - Update the bookmarks to ignore the trash folder if NO-TRASH-FLAG is non-nil.
-- Update the `mu4e-user-mail-address-list'.
 
 Options beyond those of `make-mu4e-context':
 - `user-mail-address': Defaults to the global value when the context is created.
