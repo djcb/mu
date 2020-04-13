@@ -925,9 +925,9 @@ This is used in the user-interface (the column headers in the header list, and
 the fields the message view).
 
 Most fields should be self-explanatory. A special one is
-`:from-or-to', which is equal to `:from' unless `:from' matches one
-of the addresses in `mu4e-user-mail-address-list', in which case it
-will be equal to `:to'.
+`:from-or-to', which is equal to `:from' unless `:from' matches
+one of the addresses in `(mu4e-personal-addresses)', in which
+case it will be equal to `:to'.
 
 Furthermore, the property `:sortable' determines whether we can
 sort by this field.  This can be either a boolean (nil or t), or a
