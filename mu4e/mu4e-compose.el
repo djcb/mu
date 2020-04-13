@@ -163,7 +163,8 @@ in turn implies `sign-plain-replies'. Adding both to the set, is
 not a contradiction, but a redundant configuration.
 
 All `sign-*' options have a `encrypt-*' analogue."
-  :type '(set (const :tag "Sign all messages" sign-all-messages)
+  :type '(set :greedy t
+	      (const :tag "Sign all messages" sign-all-messages)
               (const :tag "Encrypt all messages" encrypt-all-messages)
               (const :tag "Sign new messages" sign-new-messages)
               (const :tag "Encrypt new messages" encrypt-new-messages)
