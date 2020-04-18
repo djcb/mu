@@ -51,3 +51,12 @@ CLEANFILES=			\
 
 doc_DATA =			\
 	mu4e-about.org
+
+##
+## Change as needed.
+##
+BUILDPATH=mu4e
+TEXINFO_CSS_PATH=~/Sources/ext/texinfo-css
+fancyhtml:
+	mkdir -p $(BUILDPATH) ; cp -R $(TEXINFO_CSS_PATH)/static $(BUILDPATH)
+	makeinfo --html --css-ref=static/css/texinfo-klare.css -o $(BUILDPATH) mu4e.texi
