@@ -1,9 +1,23 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
-* 1.3.x (unreleased, experimental/development version)
+* 1.4 (released, as of April 18 2020)
 
 *** mu
+
+    - mu now defaults to the [[https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG Base Directory Specification]] for the default
+      locations for various files. E.g. on Unix the mu database now lives under
+      ~~/.cache/mu/~ rather than ~~/.mu~. You can still use the old location by
+      passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
+      mu4e-mu-home "~/.mu")~ for ~mu4e~.
+
+      If your ~~/.cache~ is volatile (e.g., is cleared on reboot), you may want
+      use ~--muhome~. Some mailing-list dicussion suggest that's fairly rare
+      though.
+
+      After upgrading, you may wish to delete the files in the old location to
+      recover some diskspace.
+
 
     - There's a new subcommand ~mu init~ to initialize the mu database, which
       takes the ~--maildir~ and ~--my-address~ parameters that ~index~ used to take.
@@ -14,24 +28,11 @@
       implies that you need to re-index after changing these parameters.
 
     - There is another new subcommand ~mu info~ to get information about the mu
-      database.
+      database, the personal addresses etc.
 
     - The contacts cache (which is used by ~mu cfind~ and ~mu4e~'s
       contact-completion) is now stored as part of the Xapian database rather
       than as a separate file.
-
-    - mu now defaults to the [[https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG Base Directory Specification]] for the default
-      locations for various files. E.g. on Unix the mu database now lives under
-      ~~/.cache/mu/~ rather than ~~/.mu~. You can still use the old location by
-      passing ~--muhome=~/.mu~ to various ~mu~ commands, or setting ~(setq
-      mu4e-mu-home "~/.mu")~ for ~mu4e~.
-
-      It is expected that the directory where the database lives, survives a
-      reboot; if that is not true in your case, you can use ~--muhome~ (otherwise
-      you'd have to reindex after each reboot).
-
-      After upgrading, you may wish to delete the files in the old location to
-      recover some diskspace.
 
     - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
       are determined implicitly now.
@@ -43,7 +44,8 @@
       section above).
 
       It is strongly recommended that you run ~mu init~ with the appropriate
-      parameters to (re)initialize the Xapian database.
+      parameters to (re)initialize the Xapian database, as mentioned in the
+      mu-section above.
 
       The main screen shows your address(es), and issues a warning if
       ~user-email-address~ is not part of that (and refer you to ~mu init~). You can
@@ -69,9 +71,9 @@
     - In addition, he added support for custom headers, so the ones for for the
       non-gnus-view should work just as well.
 
-    - Pierre Neidhardt contributed an "Account Setup Helper" which wraps the
-      existing context setup with some niceties for accounts. See the manual for
-      details.
+    - Pierre Neidhardt contributed an experimental "Account Setup Helper" which
+      wraps the existing context setup with some niceties for accounts. See the
+      manual for details.
 
     - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
       by default.
@@ -95,10 +97,11 @@
     - Replying to mailing-lists has been improved, allowing for choosing for
       replying to all, sender, list-only.
 
-    - ~mu4e~ now shows unread/all counts for bookmarks in the main screen. This is
-      on by default, but can be disabled by setting ~:hide-unread~ in the bookmark
-      ~plist~ to ~t~. For speed-reasons, these counts do _not_ filter out duplicates
-      or messages that have been removed from the filesystem behind mu4e's back.
+    - A very visible change, ~mu4e~ now shows unread/all counts for bookmarks in
+      the main screen. This is on by default, but can be disabled by setting
+      ~:hide-unread~ in the bookmark ~plist~ to ~t~. For speed-reasons, these counts
+      do _not_ filter out duplicates or messages that have been removed from the
+      filesystem behind mu4e's back.
 
     - ~mu4e-attachment-dir~ now also applies to composing messages; it determines
       the default directory for inclusion.
