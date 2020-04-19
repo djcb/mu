@@ -36,7 +36,7 @@ with spam-messages.
 
 If there is a file called \fI.noupdate\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored, unless we do a full
-rebuild (with \fB--rebuild\fR). This can be useful to speed up things you have
+rebuild (with \fBmu init\fR). This can be useful to speed up things you have
 some maildirs that never change. Note that you can still search for these
 messages, this only affects updating the database.
 
@@ -77,22 +77,6 @@ occasionally without \fB\-\-lazy-check\fR, to pick up such messages.
 .TP
 \fB\-\-nocleanup\fR
 disables the database cleanup that \fBmu\fR does by default after indexing.
-
-.TP
-\fB\-\-rebuild\fR
-clear all messages from the database before indexing. \fB\-\-rebuild\fR
-guarantees that after the indexing has finished, there are no 'old' messages
-in the database anymore, which is not true with \fB\-\-reindex\fR when
-indexing only a part of messages (using \fB\-\-maildir\fR). For this reason,
-it is necessary to run \fBmu index \-\-rebuild\fR when there is an upgrade in
-the database format. \fBmu index\fR will issue a warning about this.
-
-.B NOTE:
-It is not recommended to mix maildirs and sub-maildirs within the hierarchy
-in the same database; for example, it's better not to index both with
-\fB\-\-maildir\fR=~/MyMaildir and \fB\-\-maildir\fR=~/MyMaildir/foo, as this
-may lead to unexpected results when searching with the 'maildir:' search
-parameter (see below).
 
 .SS A note on performance (i)
 As a non-scientific benchmark, a simple test on the author's machine (a
