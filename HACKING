@@ -89,7 +89,7 @@
    except when logging may not have been initialized.
 
    The logging system redirects most logging to the log file (typically,
-   ~/.mu/mu.log). g_warning, g_message and g_critical are shown to the user,
+   ~/.cache/mu/mu.log). g_warning, g_message and g_critical are shown to the user,
    except when running with --quiet, in which case g_message is *not* shown.
 
    - ~g_message~ is for non-error messages the user will see (unless running with

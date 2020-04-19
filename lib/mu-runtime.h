@@ -29,7 +29,7 @@ G_BEGIN_DECLS
  * initialize the mu runtime system; initializes logging and other
  * systems. To uninitialize, use mu_runtime_uninit
  *
- * @param muhome path where to find the mu home directory (typically, ~/.mu)
+ * @param muhome path where to find the mu home directory (typically, ~/.cache/mu)
  * @param name of the main program, ie. 'mu', 'mug' or
  * 'procmule'. this influences the name of the e.g. the logfile
  *
