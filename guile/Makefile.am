@@ -68,7 +68,7 @@ SUFFIXES = .x .doc
 
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
-scmdir=${prefix}/share/guile/site/2.0/
+scmdir=${prefix}/share/guile/site/2.2/
 scm_DATA=mu.scm
 
 EXTRA_DIST=$(scm_DATA)

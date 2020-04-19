@@ -83,7 +83,6 @@ set_group_mu_defaults (void)
 {
 	/* If muhome is not set, we use the XDG Base Directory Specification
 	 * locations. */
-
 	if (MU_CONFIG.muhome)
                 expand_dir(MU_CONFIG.muhome);
 

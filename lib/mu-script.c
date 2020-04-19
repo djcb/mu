@@ -318,7 +318,7 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 	g_return_val_if_fail (muhome, FALSE);
 
 	argv = g_new0 (char*, 6);
-	argv[0] = g_strdup("guile");
+	argv[0] = g_strdup("guile2.2");
 	argv[1] = g_strdup("-l");
 
 	if (access (mu_script_info_path (msi), R_OK) != 0) {

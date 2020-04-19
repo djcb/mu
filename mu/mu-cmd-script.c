@@ -31,9 +31,12 @@
 
 #include "mu-cmd.h"
 #include "mu-script.h"
+#include "mu-runtime.h"
+
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
+
 
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; INFO: "
@@ -192,7 +195,8 @@ mu_cmd_script (MuConfig *opts, GError **err)
 	}
 
 	/* do it! */
-	mu_script_guile_run (msi, opts->muhome, opts->script_params, err);
+	mu_script_guile_run (msi, mu_runtime_path(MU_RUNTIME_PATH_CACHE),
+			     opts->script_params, err);
 leave:
 	/* this won't be reached, unless there is some error */
 	mu_script_info_list_destroy (scripts);
