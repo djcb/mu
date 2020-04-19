@@ -297,7 +297,7 @@ scheme@(guile-user)> (mu:initialize)
 @end verbatim
 
 This opens the database for reading, using the default location of
-@file{~/.mu}@footnote{If you keep your @t{mu} database in a non-standard
+@file{~/.cache/mu}@footnote{If you keep your @t{mu} database in a non-standard
 place, use @code{(mu:initialize "/path/to/my/mu/")}}
 
 Now, @t{mu-guile} is ready to go. In the next chapter, we go through the

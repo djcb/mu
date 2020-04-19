@@ -145,7 +145,7 @@ SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 		   "Initialize mu - needed before you call any of the other "
 		   "functions. Optionally, you can provide MUHOME which should be an "
 		   "absolute path to your mu home directory "
-		   "-- typically, the default, ~/.mu, should be just fine.")
+		   "-- typically, the default, ~/.cache/mu, should be just fine.")
 #define FUNC_NAME s_mu_initialize
 {
 	char *muhome;

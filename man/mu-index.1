@@ -153,9 +153,9 @@ dominated by operations in the Xapian database now.
 
 .SH FILES
 \fBmu\fR stores logs of its operations and queries in \fI<muhome>/mu.log\fR
-(by default, this is \fI~/.mu/mu.log\fR). Upon startup, \fBmu\fR checks the
+(by default, this is \fI~/.cache/mu/mu.log\fR). Upon startup, \fBmu\fR checks the
 size of this log file. If it exceeds 1 MB, it will be moved to
-\fI~/.mu/mu.log.old\fR, overwriting any existing file of that name, and start
+\fI~/.cache/mu/mu.log.old\fR, overwriting any existing file of that name, and start
 with an empty log file. This scheme allows for continued use of \fBmu\fR
 without the need for any manual maintenance of log files.
 
