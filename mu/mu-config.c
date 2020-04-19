@@ -146,6 +146,7 @@ config_options_group_init (void)
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses, "my e-mail address; can be used multiple times",
 		 "<address>"},
+                {NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("init", "Options for the 'index' command",
