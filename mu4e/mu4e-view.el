@@ -839,7 +839,13 @@ FUNC should be a function taking two arguments:
           (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
           (define-key map (kbd "<home>") 'beginning-of-buffer)
           (define-key map (kbd "<end>") 'end-of-buffer)
-          (define-key map (kbd "RET") 'mu4e-scroll-up)
+          (define-key map (kbd "RET")
+            (lambda()
+              (interactive)
+              (if (and mu4e-view-use-gnus
+                       (eq (get-text-property (point) 'gnus-callback) 'gnus-button-push))
+                  (widget-button-press (point))
+                (mu4e-scroll-up))))
           (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
 
           ;; navigation between messages
