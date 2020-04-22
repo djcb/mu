@@ -2506,7 +2506,7 @@ example:
 * Context policies::How to determine the current context
 * Contexts and special folders::Using context variables to determine them
 * Contexts example::How to define contexts
-* Account setup helper::Easy context creation with sane defaults
+* Account setup helper::Context creation with reasonable defaults
 @end menu
 
 It can be useful to switch between different sets of settings in
@@ -2720,11 +2720,11 @@ and commas and note the '.' between variable name and its value.
 @node Account setup helper
 @section Account setup helper
 
-Contexts can be cumbersome to set up.  Thankfully @code{mu4e} provides a
-helper function @code{make-mu4e-context-account} to easily get started.
-The function helps initializing the context plus a couple of variables
-with sane defaults.
-Everything should work out of the box in most cases.
+Contexts can be cumbersome to set up. Thankfully @code{mu4e} provides
+a helper function @code{make-mu4e-context-account} to easily get
+started. The function helps initializing the context plus a couple of
+variables with reasonable defaults. Everything should work out of the
+box in most cases.
 
 A short example for two contexts:
 
@@ -2757,6 +2757,9 @@ They will be automatically stored under the maildir.
 @item When the @code{match-func} is not provided, the context is matched
 against @code{predicate} if provided or the maildir of the current
 message otherwise.
+@item If the e-mail address for some account is not already known to @t{mu}, you
+should probably @t{mu} about it with the @t{--my-address} parameter to
+@t{mu init}.
 @end itemize
 
 If the context created by @code{make-mu4e-context-account} is not
