@@ -117,8 +117,7 @@ clicked."
 (defun mu4e~main-bookmarks ()
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
   (cl-loop with bmks = (mu4e-bookmarks)
-           with longest = (cl-loop for b in bmks
-                                   maximize (length (plist-get b :name)))
+           with longest = (mu4e~longest-of-maildirs-and-bookmarks)
            with queries = (plist-get mu4e~server-props :queries)
            for bm in bmks
            for key = (string (plist-get bm :key))
