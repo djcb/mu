@@ -855,6 +855,11 @@ This is meant to be the exact same data structure as
                append (list key value))))
    (mu4e-maildir-shortcuts)))
 
+(defun mu4e~longest-of-maildirs-and-bookmarks ()
+  "Return the length of longest name of bookmarks and maildirs."
+  (cl-loop for b in (append (mu4e-bookmarks)
+                            (mu4e~maildirs-with-query))
+           maximize (length (plist-get b :name))))
 
 
 ;;; Indexing & Updating
