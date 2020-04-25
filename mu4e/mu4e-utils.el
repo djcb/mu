@@ -837,6 +837,25 @@ When successful, call FUNC (if non-nil) afterwards."
          (kill-buffer))))
    (buffer-list)))
 
+(defun mu4e~maildirs-with-query ()
+  "Return a copy of `mu4e-maildirs-shortcuts' with :query populated.
+
+This is meant to be the exact same data structure as
+`mu4e-bookmarks'."
+  (cl-mapcar
+   (lambda (m)
+     (append
+      ;; we want to change the :maildir key to :name, and add a :query key
+      (list :name (substring (plist-get m :maildir) 1)
+            :query (format "maildir:\"%s\"" (plist-get m :maildir)))
+      ;; next we want to append any other keys to our previous list (e.g. :hide,
+      ;; :key, etc) but skipping :maildir (since it's renamed to :name)
+      (cl-loop for (key value) on m by 'cddr
+               when (not (equal key :maildir))
+               append (list key value))))
+   (mu4e-maildir-shortcuts)))
+
+
 
 ;;; Indexing & Updating
 
