@@ -780,8 +780,6 @@ nothing."
   "Handle 'pong' responses from the mu server."
   (setq mu4e~server-props (plist-get data :props)) ;; save info from the server
   (let ((doccount (plist-get mu4e~server-props :doccount)))
-    (unless (mu4e-context-current)
-      (mu4e~context-autoswitch nil mu4e-context-policy))
     (mu4e~check-requirements)
     (when func (funcall func))
     (when (zerop doccount)
@@ -800,6 +798,8 @@ context yet, switch to the matching one, or none matches, the
 first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
+  (unless (mu4e-context-current)
+    (mu4e~context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
    (mapcar
