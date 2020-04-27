@@ -1,6 +1,6 @@
 ;;; mu4e-proc.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2019 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -330,7 +330,7 @@ The result is delivered to the function registered as
 `mu4e-compose-func'."
   (mu4e~call-mu `(compose
                   :type ,type
-                  :decrypt ,decrypt
+                  :decrypt ,(if decrypt t nil)
                   :docid ,docid)))
 
 (defun mu4e~proc-contacts (personal after tstamp)
@@ -340,7 +340,7 @@ response. If PERSONAL is non-nil, only get personal contacts, if
 AFTER is non-nil, get only contacts seen AFTER (the time_t
 value)."
   (mu4e~call-mu `(contacts
-                  :personal ,personal
+                  :personal ,(if personal t nil)
                   :after  ,(or after nil)
                   :tstamp ,(or tstamp nil))))
 
@@ -357,7 +357,7 @@ to a temporary file, then respond with
                   :action ,action
                   :docid ,docid
                   :index ,index
-                  :decrypt ,decrypt
+                  :decrypt ,(if decrypt t nil)
                   :path ,path
                   :what ,what
                   :param ,param)))
@@ -441,7 +441,7 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
                   :flags ,(or flags nil)
                   :maildir ,(or maildir nil)
-                  :rename ,(and maildir mu4e-change-filenames-when-moving)
+                  :rename ,(if mu4e-change-filenames-when-moving t nil)
                   :no-view ,(if no-view t nil))))
 
 (defun mu4e~proc-ping (&optional queries)
@@ -473,9 +473,9 @@ registered as `mu4e-view-func'."
   (mu4e~call-mu `(view
                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-                  :extract-images ,images
-                  :decrypt ,decrypt
-                  :verify ,verify)))
+                  :extract-images ,(if images t nil)
+                  :decrypt ,(if decrypt t nil)
+                  :verify ,(if verify t nil))))
 
 (defun mu4e~proc-view-path (path &optional images decrypt)
   "View message at PATH..
@@ -485,9 +485,9 @@ result will be delivered to the function registered as
 `mu4e-view-func'. Optionally DECRYPT and VERIFY."
   (mu4e~call-mu `(view
                   :path ,path
-                  :extract-images ,images
-                  :decrypt ,decrypt
-                  :verify ,verify)))
+                  :extract-images ,(if images t nil)
+                  :decrypt ,(if decrypt t nil)
+                  :verify ,(if verify t nil))))
 
 ;;; _
 (provide 'mu4e-proc)
