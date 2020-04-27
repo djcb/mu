@@ -18,7 +18,6 @@
       After upgrading, you may wish to delete the files in the old location to
       recover some diskspace.
 
-
     - There's a new subcommand ~mu init~ to initialize the mu database, which
       takes the ~--maildir~ and ~--my-address~ parameters that ~index~ used to take.
       These parameters are persistent so ~index~ does not need (or accept) them
@@ -34,14 +33,15 @@
       contact-completion) is now stored as part of the Xapian database rather
       than as a separate file.
 
-    - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone now; both
-      are determined implicitly now.
+    - The ~--xbatchsize~ and ~--autoupgrade~ options for indexing are gone; both are
+      determined implicitly now.
 
 *** mu4e
 
     - ~mu4e~ no longer uses the ~mu4e-maildir~ and ~mu4e-user-mail-address-list~
       variables; instead it uses the information it gets from ~mu~ (see the ~mu~
-      section above).
+      section above). If you have a non-default ~mu4e-mu-home~, make sure to set
+      it before ~mu4e~ starts.
 
       It is strongly recommended that you run ~mu init~ with the appropriate
       parameters to (re)initialize the Xapian database, as mentioned in the
@@ -114,8 +114,8 @@
 
     - Updated the ~mug~ toy UI to use Webkit2/GTK+. Note that this is just a toy
       which is not meant for distribution. ~msg2pdf~ is disabled for now.
-      
-      
+
+
 *** How to upgrade
 
     - upgrade mu to the latest stable version
@@ -124,13 +124,13 @@
 
     - Run `mu init' in a terminal
 
-    - Make sure mu init points to the right Maildir folder and add your email address(es) the following way: 
+    - Make sure mu init points to the right Maildir folder and add your email address(es) the following way:
       `mu init --maildir=~/Maildir --my-address=jim@example.com --my-address=bob@example.com'
 
     - once this is done run `mu index'
 
-    - Don't forget to delete your old mail cache location if necessary (see release notes for more detail). 
-  
+    - Don't forget to delete your old mail cache location if necessary (see release notes for more detail).
+
 
 ** 1.2
 

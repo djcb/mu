@@ -2013,6 +2013,12 @@ only appear as the term's rightmost character:
 mime:image/*
 @end verbatim
 
+Get all messages with files that end in @t{.ppt}; this uses the
+regular-expression support, which is powerful but relatively slow:
+@verbatim
+file:/\.ppt$/
+@end verbatim
+
 @end itemize
 
 @node Bookmarks
