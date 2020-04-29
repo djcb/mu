@@ -60,12 +60,7 @@ mu_index_new (MuStore *store, GError **err)
 	if (count == (unsigned)-1)
 		return NULL;
 	else if (count  == 0)
-		index->_needs_reindex = FALSE;
-
-	/* FIXME */
-	/* else */
-	/* 	index->_needs_reindex = */
-	/* 		mu_store_database_needs_upgrade (xpath); */
+		index->_needs_reindex = TRUE;
 
 	return index;
 }
@@ -341,10 +336,8 @@ mu_index_run (MuIndex *index,  gboolean reindex, gboolean lazycheck,
 	if (!check_path (path))
 		return MU_ERROR;
 
-	if (!reindex && index->_needs_reindex) {
-		g_warning ("database not up-to-date; needs full reindex");
-		return MU_ERROR;
-	}
+	if (index->_needs_reindex)
+                reindex = TRUE;
 
 	init_cb_data (&cb_data, index->_store, reindex, lazycheck,
 		      index->_max_filesize, stats,

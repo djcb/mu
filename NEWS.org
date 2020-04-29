@@ -24,7 +24,9 @@
       anymore. ~mu4e~ now depends on those parameters.
 
       ~init~ only needs to be run once or when changing these parameters. That
-      implies that you need to re-index after changing these parameters.
+      implies that you need to re-index after changing these parameters. The
+      ~.noupdate~ files are ignored when indexing the first time after ~mu init~ (or
+      in general, when the database is empty).
 
     - There is another new subcommand ~mu info~ to get information about the mu
       database, the personal addresses etc.
