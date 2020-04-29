@@ -365,10 +365,7 @@ sort_func_root (MuContainer *a, MuContainer *b, SortFuncData *data)
 static int
 sort_func_child (MuContainer *a, MuContainer *b, SortFuncData *data)
 {
-	if (data->descending)
-		return container_cmp (a, b, data->mfid);
-	else
-		return container_cmp (b, a, data->mfid);
+	return container_cmp (a, b, data->mfid);
 }
 
 static MuContainer*
