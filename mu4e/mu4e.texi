@@ -4121,8 +4121,15 @@ Variables,,message}.
 You can drag-and-drop from your desktop; alternatively, you can use
 @t{dired} --- see @ref{Dired}.
 
-@subsection @t{mu4e} seems to remove myself from the @t{Cc:}-list; how can Iprevent that?
+@subsection @t{mu4e} seems to remove myself from the @t{Cc:}-list; how can I prevent that?
 Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
+
+@subsection @t{mu4e} include myself from the @t{Cc:}-list; how can I prevent that?
+You need list your personal addresses by passing one or more
+@t{--my-address=...} to @t{mu init}. Note that the
+@code{mu4e-user-mail-address-list} which was used in older @t{mu4e}
+versions is no longer used. Also see the entries for version 1.4 in
+@t{NEWS.org} (@kbd{N}) in the main-menu.
 
 @subsection How can I start a new message-thread from a reply?
 Remove the @t{In-Reply-To} header, and @t{mu4e} automatically removes
