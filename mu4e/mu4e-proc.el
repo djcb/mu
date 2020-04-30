@@ -441,7 +441,7 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
                   :flags ,(or flags nil)
                   :maildir ,(or maildir nil)
-                  :rename ,(if mu4e-change-filenames-when-moving t nil)
+                  :rename ,(and maildir (if mu4e-change-filenames-when-moving t nil))
                   :no-view ,(if no-view t nil))))
 
 (defun mu4e~proc-ping (&optional queries)
