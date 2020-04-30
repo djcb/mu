@@ -443,8 +443,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
-    (make-local-variable 'global-mode-string)
-    (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
+    (mu4e-context-in-modeline)
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)

@@ -80,10 +80,7 @@ with SPC and therefore is not visible in buffer list.")
 \\{mu4e-main-mode-map}."
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
-
-  ;; show context in mode-string
-  (make-local-variable 'global-mode-string)
-  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
+  (mu4e-context-in-modeline)
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 
@@ -225,7 +222,7 @@ When REFRESH is non nil refresh infos from server."
          (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (if mu4e-main-buffer-hide-personal-addresses ""
-        (when (and addrs user-mail-address (not (member user-mail-address addrs)))
+        (when (and user-mail-address (not (member user-mail-address addrs)))
           (mu4e-message (concat
                          "Note: `user-mail-address' ('%s') is not part "
                          "of mu's addresses; add it with 'mu init --my-address='")
@@ -276,8 +273,7 @@ When REFRESH is non nil refresh infos from server."
       (switch-to-buffer buf)
       (with-current-buffer buf
         (mu4e~main-view-real-1 refresh))
-      (goto-char (point-min)))
-  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))))
+      (goto-char (point-min)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions

@@ -1086,8 +1086,9 @@ no user-interaction ongoing."
   (use-local-map mu4e-headers-mode-map)
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
-  (make-local-variable 'global-mode-string)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
+
+  (mu4e-context-in-modeline)
 
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
@@ -1233,6 +1234,7 @@ the query history stack."
       (setq
        mode-name "mu4e-headers"
        mu4e~headers-last-query rewritten-expr)
+      (make-local-variable 'global-mode-string)
       (add-to-list 'global-mode-string
                    '(:eval
                      (concat
@@ -1240,7 +1242,6 @@ the query history stack."
                        (mu4e~quote-for-modeline mu4e~headers-last-query)
                        'face 'mu4e-modeline-face)
                       " "
-                      (mu4e-context-label)
                       (if (and mu4e-display-update-status-in-modeline
                                (buffer-live-p mu4e~update-buffer)
                                (process-live-p (get-buffer-process

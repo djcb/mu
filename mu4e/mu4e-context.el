@@ -284,6 +284,13 @@ match, POLICY determines what to do:
                           (mu4e~context-ask-user "Select context: ")))
          (otherwise nil))))))
 
+(defun mu4e-context-in-modeline ()
+  "Display the mu4e-context (if any) in a (buffer-specific)
+global-mode-line."
+  (add-to-list
+   (make-local-variable 'global-mode-string)
+   '(:eval (mu4e-context-label))))
+
 ;;; _
 (provide 'mu4e-context)
 ;;; mu4e-context.el ends here

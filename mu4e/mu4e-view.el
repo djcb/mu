@@ -989,9 +989,7 @@ FUNC should be a function taking two arguments:
 (defun mu4e~view-mode-body ()
   "Body of the mode-function."
   (use-local-map mu4e-view-mode-map)
-  ;; show context in mode-string
-  (make-local-variable 'global-mode-string)
-  (add-to-list 'global-mode-string '(:eval (mu4e-context-label)))
+  (mu4e-context-in-modeline)
   (setq buffer-undo-list t);; don't record undo info
   ;; autopair mode gives error when pressing RET
   ;; turn it off
@@ -1840,7 +1838,6 @@ other windows."
 (define-derived-mode mu4e-loading-mode special-mode
   "mu4e:loading"
   (use-local-map mu4e-loading-mode-map)
-  (make-local-variable 'global-mode-string)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert (propertize "Loading message..."
