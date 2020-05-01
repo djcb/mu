@@ -1408,7 +1408,7 @@ mu_store_print_info  (const MuStore *store, gboolean nocolor)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-y2k"
-        char tbuf[32];
+        char tbuf[64];
 	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
 #pragma GCC diagnostic pop
 
