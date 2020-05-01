@@ -2054,7 +2054,7 @@ be instructive:
   "List of pre-defined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
-:name  - the name of the queryt
+:name  - the name of the query
 :query - the query expression
 :key   - the shortcut key.
 
