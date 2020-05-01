@@ -480,7 +480,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; directory.
     (setq default-directory (mu4e~get-attachment-dir))
 
-
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
         (define-key-after
@@ -570,17 +569,18 @@ we can decide what we want to do."
       (cl-case mu4e-compose-crypto-reply-encrypted-policy
         (sign (mml-secure-message-sign))
         (encrypt (mml-secure-message-encrypt))
-        (sign-and-encrypt (mml-secure-message-sign-encrypt))
-        (message "Do nothing"))
+        (sign-and-encrypt (mml-secure-message-sign-encrypt)))
     (cl-case mu4e-compose-crypto-reply-plain-policy
       (sign (mml-secure-message-sign))
       (encrypt (mml-secure-message-encrypt))
-      (sign-and-encrypt (mml-secure-message-sign-encrypt))
-      (message "Do nothing")))
-  )
+      (sign-and-encrypt (mml-secure-message-sign-encrypt)))))
 
+(defun mu4e~compose-handler (compose-type &optional original-msg includes)
+  "Call mu4e~compose-handler (see for details), starting mu4e if
+necessary first."
+  (mu4e~start (lambda() (mu4e~compose-handler-real compose-type original-msg includes))))
 
-(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
+(cl-defun mu4e~compose-handler-real (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -660,7 +660,6 @@ tempfile)."
   (mu4e-compose-mode)
   ;; don't allow undoing anything before this.
   (setq buffer-undo-list nil)
-
 
   (when mu4e-compose-in-new-frame
     ;; make sure to close the frame when we're done with the message these are
