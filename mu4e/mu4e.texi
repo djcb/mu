@@ -816,9 +816,12 @@ own and/or replace the default ones; @xref{Bookmarks}. For instance:
 @end lisp
 
 There are optional keys @t{:hide} to hide the bookmark from the main
-memu, but still have it available (using @key{b})) and
+menu, but still have it available (using @key{b})) and
 @t{:hide-unread} to avoid generating the unread-number; that can be
-useful if you have bookmarks for slow queries.
+useful if you have bookmarks for slow queries. Note that
+@t{:hide-unread} is implied when the query is not a string; this for
+the common case where the query function involves some user input,
+which would be disruptive in this case.
 
 @node Miscellaneous
 @section Miscellaneous
