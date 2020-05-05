@@ -1375,6 +1375,12 @@ mu_cmd_server (MuConfig *opts, GError **err) try
         Context context{opts};
         context.command_map = make_command_map (context);
 
+        if (opts->eval) { // evaluate command-line command & exit
+                auto call{Sexp::parse(opts->eval)};
+                invoke(context.command_map, call);
+                return MU_OK;
+        }
+
         const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
         Readline readline(histpath, 50);
 

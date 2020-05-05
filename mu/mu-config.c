@@ -453,6 +453,8 @@ config_options_group_server (void)
 	GOptionEntry entries[] = {
                 {"commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.commands,
 		 "list the available command and their parameters, then exit", NULL},
+                {"eval", 'e', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
+                 &MU_CONFIG.eval, "expression to evaluate", "<expr>"},
 		{NULL, 0, 0, 0, NULL, NULL, NULL}
 	};
 
@@ -766,6 +768,7 @@ mu_config_uninit (MuConfig *opts)
 	g_free (opts->targetdir);
 	g_free (opts->parts);
 	g_free (opts->script);
+        g_free (opts->eval);
 
 	g_strfreev (opts->params);
 

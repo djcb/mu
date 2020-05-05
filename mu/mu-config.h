@@ -184,8 +184,9 @@ struct _MuConfig {
 	/* for server */
 	gboolean        commands;        /* dump documentations for server
 					  * commands */
+        gchar          *eval;            /* command to evaluate */
 
-	/* options for mu-script */
+        /* options for mu-script */
 	gchar           *script;         /* script to run */
 	const char      **script_params; /* parameters for scripts */
 };
