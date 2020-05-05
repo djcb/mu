@@ -59,6 +59,10 @@ get_mime_object_at_index (MuMsg *msg, MuMsgOptions opts, unsigned index)
 	ddata.mime_obj  = NULL;
 	ddata.index     = index;
 
+	/* wipe out some irrelevant options */
+	opts &= ~MU_MSG_OPTION_VERIFY;
+	opts &= ~MU_MSG_OPTION_EXTRACT_IMAGES;
+
 	mu_msg_part_foreach (msg, opts,
 			     (MuMsgPartForeachFunc)do_it_with_index,
 			     &ddata);

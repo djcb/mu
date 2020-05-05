@@ -473,6 +473,10 @@ get_body (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 	bdata.want_html = want_html;
 	bdata.gstr	= g_string_sized_new (4096);
 
+	/* wipe out some irrelevant options */
+	opts &= ~MU_MSG_OPTION_VERIFY;
+	opts &= ~MU_MSG_OPTION_EXTRACT_IMAGES;
+
 	mu_msg_part_foreach (self, opts,
 			     (MuMsgPartForeachFunc)accumulate_body,
 			     &bdata);
@@ -521,6 +525,10 @@ get_content_type_parameters (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 
 	cdata.want_html = want_html;
 	cdata.ctype	= NULL;
+
+	/* wipe out some irrelevant options */
+	opts &= ~MU_MSG_OPTION_VERIFY;
+	opts &= ~MU_MSG_OPTION_EXTRACT_IMAGES;
 
 	mu_msg_part_foreach (self, opts,
 			     (MuMsgPartForeachFunc)find_content_type,
