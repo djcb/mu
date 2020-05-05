@@ -182,7 +182,7 @@ see its docstring)."
           (mu4e-error "unsupported type for mu4e-attachment-dir" )))))
     (if dir
         (expand-file-name dir)
-      (mu4e-error (mu4e-error "mu4e-attachment-dir evaluates to nil")))))
+      (mu4e-error "mu4e-attachment-dir evaluates to nil"))))
 
 ;;; Maildir (1/2)
 
@@ -216,7 +216,12 @@ an absolute path."
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
   (concat
    "[" (propertize "mu4e" 'face 'mu4e-title-face) "] "
-   (apply 'format frm args)))
+   (apply 'format frm
+          (mapcar (lambda (x)
+                    (if (stringp x)
+                        (decode-coding-string x 'utf-8)
+                      x))
+                  args))))
 
 (defun mu4e-message (frm &rest args)
   "Like `message', but prefixed with mu4e.
