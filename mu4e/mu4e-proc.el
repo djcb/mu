@@ -246,8 +246,11 @@ Start the process if needed."
 
 (defun mu4e~proc-start ()
   "Start the mu server process."
-  (unless (file-executable-p mu4e-mu-binary)
-    (mu4e-error (format "`mu4e-mu-binary' (%S) not found" mu4e-mu-binary)))
+  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (mu4e-error
+     (format
+      "`mu4e-mu-binary' (%S) not found; please set to the path to the mu executable"
+      mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
          (args (cons "server" args)))
