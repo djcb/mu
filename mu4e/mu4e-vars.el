@@ -250,12 +250,13 @@ Optionally, you can add the following:
 `:hide-unread' - do not show the counts of unread/total number
  of matches for the query in the main-view. This can be useful
 if a bookmark uses  a very slow query. :hide-unread
-is implied from :hide. Furthermore, it is implied from the query
-not being a string.
+is implied from :hide. Furthermore, it is implied if
+`:query' is a function.
 
-Note that the queries used to determine the unread/all counts do
-current not apply `mu4e-query-rewrite-function', so if your
-bookmarks depend on that, the results may differ."
+Queries used to determine the unread/all counts do _not_ apply
+`mu4e-query-rewrite-function'; nor do they discard duplicate or
+unreadable messages (for efficiency). Thus, the numbers shown may
+differ from the number you get from a 'real' query."
   :type '(repeat (plist))
   :version "1.3.9"
   :group 'mu4e)

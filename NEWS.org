@@ -100,10 +100,10 @@
       replying to all, sender, list-only.
 
     - A very visible change, ~mu4e~ now shows unread/all counts for bookmarks in
-      the main screen. This is on by default, but can be disabled by setting
-      ~:hide-unread~ in the bookmark ~plist~ to ~t~. For speed-reasons, these counts
-      do _not_ filter out duplicates or messages that have been removed from the
-      filesystem behind mu4e's back.
+      the main screen that are strings. This is on by default, but can be
+      disabled by setting ~:hide-unread~ in the bookmark ~plist~ to ~t~. For
+      speed-reasons, these counts do _not_ filter out duplicates nor messages that
+      have been removed from the filesystem.
 
     - ~mu4e-attachment-dir~ now also applies to composing messages; it determines
       the default directory for inclusion.
