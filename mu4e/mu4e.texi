@@ -1510,8 +1510,6 @@ requires @t{mu} to have been build with crypto-support; see the
 signatures. For signing/encrypting messages your outgoing messages, see
 @ref{Signing and encrypting}.
 
-Currently, only PGP/MIME is supported; PGP-inline and S/MIME are not.
-
 For all of this to work, @command{gpg-agent} must be running, and it
 must set the environment variable @t{GPG_AGENT_INFO}. You can check from
 Emacs with @key{M-x getenv GPG_AGENT_INFO}.
@@ -1525,6 +1523,11 @@ $ eval $(gpg-agent --daemon)
 
 @noindent
 This starts the daemon, and sets the environment variable.
+
+Some users have reported problems with certain S/MIME-signed messages
+where mu checks if the certificate has been revoked. This can be
+avoided by adding @t{disable-crl-checks} to @t{~/.gnupg/gpgsm.conf};
+alternatively, you could use the gnus-based viewer.
 
 @subsection Decryption
 @anchor{Decryption}
