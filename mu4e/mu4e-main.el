@@ -147,7 +147,7 @@ clicked."
 (defun mu4e~key-val (key val &optional unit)
   "Return a key / value pair."
   (concat
-   "        * "
+   "\t* "
    (propertize (format "%-20s" key) 'face 'mu4e-header-title-face)
    ": "
    (propertize val 'face 'mu4e-header-key-face)
