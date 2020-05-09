@@ -194,8 +194,14 @@ The first letter of NAME is used as a shortcut character."
 
 ;;; Variables
 
+;; It's useful to have the current view message available to
+;; `mu4e-view-mode-hooks' functions, and we set up this variable
+;; before calling `mu4e-view-mode'.  However, changing the major mode
+;; clobbers any local variables.  Work around that by declaring the
+;; variable permanent-local.
 (defvar-local mu4e~view-message nil
   "The message being viewed in view mode.")
+(put 'mu4e~view-message 'permanent-local t)
 
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
@@ -364,9 +370,9 @@ article-mode."
           (mu4e~fontify-signature)
           (mu4e~view-make-urls-clickable)
           (mu4e~view-show-images-maybe msg)
+          (when (not embedded) (setq mu4e~view-message msg))
           (mu4e-view-mode)
-          (when embedded (local-set-key "q" 'kill-buffer-and-window))
-          (when (not embedded) (setq mu4e~view-message msg))))
+          (when embedded (local-set-key "q" 'kill-buffer-and-window))))
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
@@ -404,8 +410,8 @@ article-mode."
             (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
             (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
         (gnus-article-prepare-display))
-      (mu4e-view-mode)
       (setq mu4e~view-message msg)
+      (mu4e-view-mode)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
       (read-only-mode))))
