@@ -832,7 +832,7 @@ Also see `mu4e-view-mark-or-move-to-trash'."
         (mu4e-headers-mark-for-trash)
       (mu4e-mark-set 'move (if (functionp mu4e-trash-folder)
                                (funcall mu4e-trash-folder (mu4e-message-at-point))
-                             mu4e-trash-folder))
+                             (mu4e-get-trash-folder (mu4e-message-at-point))))
       (mu4e-headers-next))))
 
 ;;; Headers-mode and mode-map
