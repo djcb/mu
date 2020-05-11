@@ -152,24 +152,24 @@ default folders (see `make-mu4e-context' and `mu4e-context'):
         smtpmail-smtp-user (or smtpmail-smtp-user user-mail-address)
         no-trash-flag (or no-trash-flag
                           (string-match (regexp-opt mu4e-no-trash-providers)
-                                        user-mail-address)))
+                                        user-mail-address))
+        ;; TODO: Seems that mu4e fails to start when no default folder is set.
+        ;; The following setq is a workaround.
+        mu4e-drafts-folder (concat maildir drafts-folder)
+        mu4e-sent-folder (concat maildir sent-folder)
+        mu4e-trash-folder (concat maildir trash-folder)
+        mu4e-refile-folder (concat maildir refile-folder))
   (when no-trash-flag
     ;; Exclude trash folder from all bookmarks.  This is useful for mailboxes
     ;; which don't use the "trash" flag like Gmail.
     (dolist (bookmark mu4e-bookmarks)
-      ;; TODO: mu4e-bookmark-query does not work here, why?
-      (setf (car bookmark) (format "NOT maildir:\"%s\" and %s"
-                                   mu4e-trash-folder
-                                   (car bookmark))))
+      (setq bookmark (plist-put bookmark :query
+                                (format "NOT maildir:\"%s\" AND %s"
+                                        mu4e-trash-folder
+                                        (plist-get bookmark :query)))))
     ;; If this is a Gmail context, we add the maildir to the pattern list so
     ;; that they can be properly trashed.
     (add-to-list 'mu4e-move-to-trash-patterns (concat "^" maildir)))
-  ;; TODO: Seems that mu4e fails to start when no default folder is set.
-  ;; The following setq is a workaround.
-  (setq mu4e-drafts-folder (concat maildir drafts-folder)
-        mu4e-sent-folder (concat maildir sent-folder)
-        mu4e-trash-folder (concat maildir trash-folder)
-        mu4e-refile-folder (concat maildir refile-folder))
   (let ((context (make-mu4e-context :name name
                                     :enter-func enter-func
                                     :leave-func leave-func
