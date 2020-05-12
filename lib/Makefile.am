@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # enforce compiling guile (optionally) first,then this dir first
-# before decending into tests/
+# before descending into tests/
 include $(top_srcdir)/gtest.mk
 
 SUBDIRS= utils query

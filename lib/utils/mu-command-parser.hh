@@ -38,12 +38,13 @@ namespace Command {
 /// Commands are s-expressions with the follow properties:
 
 /// 1) a command is a list with a command-name as its first argument
-/// 2) the rest of the parameters are pairs of colon-prefixed symbol and a value of some type
-///      (ie. 'keyword arguments')
+/// 2) the rest of the parameters are pairs of colon-prefixed symbol and a value of some
+///    type (ie. 'keyword arguments')
 /// 3) each command is described by its CommandInfo structure, which defines the type
 /// 4) calls to the command must include all required parameters
 /// 5) all parameters must be of the specified type; however the symbol 'nil' is allowed
-///    for specify a non-required parameter to be absent; this is for convience on the call side.
+///    for specify a non-required parameter to be absent; this is for convenience on the
+///    call side.
 
 
 /// Information about a function argument

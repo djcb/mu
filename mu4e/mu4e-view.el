@@ -190,7 +190,7 @@ The first letter of NAME is used as a shortcut character."
     (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
     (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
     map)
-  "Keymap used in the \"Attachements\" header field.")
+  "Keymap used in the \"Attachments\" header field.")
 
 ;;; Variables
 

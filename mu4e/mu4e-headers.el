@@ -1412,7 +1412,7 @@ descendants."
     (unless (memq mark allowed-marks)
       (mu4e-error "The mark (%s) has to be one of: %s"
                   mark allowed-marks)))
-  ;; note: the tread id is shared by all messages in a thread
+  ;; note: the thread id is shared by all messages in a thread
   (let* ((msg (mu4e-message-at-point))
          (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
          (path      (mu4e~headers-get-thread-info msg 'path))

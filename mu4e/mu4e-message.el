@@ -306,7 +306,7 @@ A part would look something like:
 
 (defun mu4e-field-at-point (field)
   "Get FIELD for the message at point.
-Eiter in the headers buffer or the view buffer. Field is a
+Either in the headers buffer or the view buffer. Field is a
 symbol, see `mu4e-header-info'."
   (plist-get (mu4e-message-at-point) field))
 
@@ -329,8 +329,8 @@ Emacs. Based on code by Titus von der Malsburg."
      (let (
            ;; When HTML emails contain references to remote images,
            ;; retrieving these images leaks information. For example,
-           ;; the sender can see when I openend the email and from which
-           ;; computer (IP address). For this reason, it is preferrable
+           ;; the sender can see when I opened the email and from which
+           ;; computer (IP address). For this reason, it is preferable
            ;; to not retrieve images.
            ;; See this discussion on mu-discuss:
            ;; https://groups.google.com/forum/#!topic/mu-discuss/gr1cwNNZnXo

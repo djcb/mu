@@ -103,7 +103,7 @@ std::string format (const char *frm, va_list args) __attribute__((format(printf,
  * @param first whether to fill out incomplete dates to the start or the end;
  * ie. either 1972 -> 197201010000 or 1972 -> 197212312359
  *
- * @return the corresponding time_t expressed as a strng
+ * @return the corresponding time_t expressed as a string
  */
 std::string date_to_time_t_string (const std::string& date, bool first);
 

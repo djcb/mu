@@ -594,7 +594,7 @@ message we will forward / reply to.
 
 Optionally (when inline forwarding) INCLUDES contains a list of
    (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
-for the attachements to include; file-name refers to
+for the attachments to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
 tempfile)."
 
