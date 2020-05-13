@@ -132,7 +132,10 @@ clicked."
            for query = (plist-get bm :query)
            for qcounts = (and (stringp query)
                               (cl-loop for q in queries
-                                       when (string= (plist-get q :query) query)
+                                       when (string=
+                                             (decode-coding-string
+                                              (plist-get q :query) 'utf-8 t)
+                                             query)
                                        collect q))
            concat (concat
                    ;; menu entry
@@ -164,7 +167,11 @@ clicked."
            for query = (plist-get m :query)
            for qcounts = (and (stringp query)
                               (cl-loop for q in queries
-                                       when (string= (plist-get q :query) query)
+                                       when (string=
+                                             (decode-coding-string
+                                              (plist-get q :query)
+                                              'utf-8 t)
+                                             query)
                                        collect q))
            concat (concat
                    ;; menu entry
