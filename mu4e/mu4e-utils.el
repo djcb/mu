@@ -859,7 +859,7 @@ This is meant to be the exact same data structure as
   "Return the length of longest name of bookmarks and maildirs."
   (cl-loop for b in (append (mu4e-bookmarks)
                             (mu4e~maildirs-with-query))
-           maximize (length (plist-get b :name))))
+           maximize (string-width (plist-get b :name))))
 
 
 ;;; Indexing & Updating
