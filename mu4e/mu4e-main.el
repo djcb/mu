@@ -146,7 +146,7 @@ clicked."
                              (count  (plist-get (car qcounts) :count)))
                          (format
                           "%s (%s/%s)"
-                          (make-string (- longest (length name)) ? )
+                          (make-string (- longest (string-width name)) ? )
                           (propertize (number-to-string unread)
                                       'face 'mu4e-header-key-face)
                           count))
@@ -183,7 +183,7 @@ clicked."
                              (count  (plist-get (car qcounts) :count)))
                          (format
                           "%s (%s/%s)"
-                          (make-string (- longest (length name)) ? )
+                          (make-string (- longest (string-width name)) ? )
                           (propertize (number-to-string unread)
                                       'face 'mu4e-header-key-face)
                           count))
