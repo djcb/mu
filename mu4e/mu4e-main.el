@@ -107,7 +107,14 @@ clicked."
     (define-key map (kbd "RET") func)
     (put-text-property 0 (length newstr) 'keymap map newstr)
     (put-text-property (string-match "\\[.+$" newstr)
-                       (- (length newstr) 1) 'mouse-face 'highlight newstr)
+                       ;; only subtract one from length of newstr if we're
+                       ;; actually consuming the first letter (e.g.
+                       ;; `func-or-shortcut' is a function, meaning we put
+                       ;; braces around the first letter of `str')
+                       (if (stringp func-or-shortcut)
+                           (length newstr)
+                         (- (length newstr) 1))
+                       'mouse-face 'highlight newstr)
     newstr))
 
 
