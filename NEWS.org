@@ -109,8 +109,7 @@
       the default directory for inclusion.
 
     - The mu4e <-> mu interaction has been rewritten to communicate using
-      s-expressions, with a repl for testing. If you have readline installed,
-      you also get history.
+      s-expressions, with a repl for testing.
 
 *** toys
 
