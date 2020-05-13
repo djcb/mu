@@ -1021,7 +1021,7 @@ mu4e-compose.")
 
 ;;; Handler functions
 ;;
-;; The handler funcions define what happens when we receive a certain
+;; The handler functions define what happens when we receive a certain
 ;; message from the server.  Here we register our handler functions;
 ;; these connect server messages to functions to handle them.
 ;;

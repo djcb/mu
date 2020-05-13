@@ -33,7 +33,7 @@
 ;;; Mode
 
 (defvar mu4e-main-buffer-hide-personal-addresses nil
-  "Whether to hid trhe personal address in the main view. This
+  "Whether to hid the personal address in the main view. This
   can be useful to avoid the noise when there are many.
 
   This also hides the warning if your `user-mail-address' is not
@@ -269,7 +269,7 @@ When REFRESH is non nil refresh infos from server."
 	  (mu4e~main-menu))
       ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
       ;; a second time here i.e. do not refresh unless specified
-      ;; explicitely with REFRESH arg.
+      ;; explicitly with REFRESH arg.
       (switch-to-buffer buf)
       (with-current-buffer buf
         (mu4e~main-view-real-1 refresh))

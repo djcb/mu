@@ -402,7 +402,7 @@ compose_handler (Context& context, const Parameters& params)
                 const unsigned docid{(unsigned)get_int_or(params, "docid")};
                 auto msg{mu_store_get_msg (context.store, docid, &gerr)};
                 if (!msg)
-                        throw Error{Error::Code::Store, &gerr, "faile to get message %u", docid};
+                        throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
                 const auto opts{message_options(params)};
                 sexp = mu_msg_to_sexp (msg, docid, NULL, opts);
@@ -756,7 +756,7 @@ help_handler (Context& context, const Parameters& params)
                 std::cout << ";; Commands are s-expressions of the form\n"
                           << ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
                           << ";; For instance:\n;;  (help :command quit)\n"
-                          << ";; to get information about the 'quit' commmand\n;;\n";
+                          << ";; to get information about the 'quit' command\n;;\n";
                 std::cout << ";; The following commands are available:\n";
         }
 

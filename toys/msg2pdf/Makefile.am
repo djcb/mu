@@ -16,7 +16,7 @@
 
 include $(top_srcdir)/gtest.mk
 
-# enforce compiling this dir first before decending into tests/
+# enforce compiling this dir first before descending into tests/
 SUBDIRS= .
 
 AM_CPPFLAGS=-I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS)

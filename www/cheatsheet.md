@@ -20,7 +20,7 @@ If `mu` did not guess the right Maildir, you can set it explicitly:
 
 If you want to exclude certain directories from being indexed (for example,
 directories with spam-messages), put a file called `.noindex` in the directory
-to exlude, and it will be ignored when indexing (including its children)
+to exclude, and it will be ignored when indexing (including its children)
 
 ## Finding messages
 

@@ -90,7 +90,7 @@
       extensible.
 
     - ~mu4e~ recognizes an attribute ~:hide t~, which will hide the bookmark item
-      from the main-screen (and speedbar), but keep it avilable through the
+      from the main-screen (and speedbar), but keep it available through the
       completion UI.
 
     - ~mu4e-maildir-shortcuts~ have also become plists. The older format is still
@@ -254,7 +254,7 @@
     - fix a crash when running on OpenBSD
     - fix --clear-links (broken filenames)
     - You can now set the MU_HOME environment variable as an
-      alternative way of setting the mu homedir via the --muhome commadn-line
+      alternative way of setting the mu homedir via the --muhome command-line
       parameter.
 
 *** mu4e
@@ -366,7 +366,7 @@
    - bump version to 0.9.15. From now on, odd minor version numbers
      are for development versions; thus, 0.9.16 is to be the next stable
      release.
-   - special case text/calendar attachements to get .vcs
+   - special case text/calendar attachments to get .vcs
      extensions. This makes it easier to process those with external tools.
    - change the message file names to better conform to the maildir
      spec; this was confusing some tools.

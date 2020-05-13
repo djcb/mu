@@ -586,7 +586,7 @@ cmd_init (MuConfig *opts, GError **err)
 		mu_store_print_info (store, opts->nocolor);
 		g_print ("\nstore created.\n"
 			 "use 'mu index' to fill the database "
-                         "with your messsages.\n"
+                         "with your messages.\n"
 			 "see mu-index(1) for details\n");
 	}
 

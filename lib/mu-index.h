@@ -35,7 +35,7 @@ struct _MuIndexStats {
 	unsigned _processed;     /* number of msgs processed or counted */
 	unsigned _updated;       /* number of msgs new or updated */
 	unsigned _cleaned_up;    /* number of msgs cleaned up */
-	unsigned _uptodate;      /* number of msgs already uptodate */
+	unsigned _uptodate;      /* number of msgs already up-to-date */
 };
 typedef struct _MuIndexStats MuIndexStats;
 
@@ -94,7 +94,7 @@ typedef MuError (*MuIndexMsgCallback) (MuIndexStats* stats, void *user_data);
  * @param enter did we enter (TRUE) or leave(FALSE) the dir?
  * @param user_data pointer to user data
  *
- * @return  MU_OK to contiue, MU_STOP to stopd or MU_ERROR in
+ * @return  MU_OK to continue, MU_STOP to stopd or MU_ERROR in
  * case of some error.
  */
 typedef MuError (*MuIndexDirCallback) (const char* path, gboolean enter,

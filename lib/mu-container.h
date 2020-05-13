@@ -168,7 +168,7 @@ gboolean   mu_container_foreach (MuContainer *c,
 				 gpointer user_data);
 
 /**
- * check wither container needle is a child or sibling (recursively)
+ * check whether container needle is a child or sibling (recursively)
  * of container haystack
  *
  * @param haystack a container
