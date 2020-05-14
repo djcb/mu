@@ -980,7 +980,7 @@ Also see `mu4e-view-mark-or-move-to-trash'."
             (define-key menumap [mark-untrash]
               '("Mark for untrash" .  mu4e-headers-mark-for-untrash))
             (define-key menumap [mark-trash]
-              '("Mark for trash" .  mu4e-headers-mark-for-trash))
+              '("Mark for trash" .  mu4e-headers-mark-or-move-to-trash))
             (define-key menumap [mark-move]
               '("Mark for move" . mu4e-headers-mark-for-move))
             (define-key menumap [sepa2] '("--"))
