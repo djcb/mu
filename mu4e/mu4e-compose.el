@@ -859,7 +859,7 @@ called after the mail has been sent or put aside, and the mail
 buffer buried."
   ;; create a new draft message 'resetting' (as below) is not actually needed in this case, but
   ;; let's prepare for the re-edit case as well
-  (mu4e~compose-handler 'new)
+  (mu4e~compose-handler-real 'new)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
@@ -891,7 +891,11 @@ buffer buried."
 ;; happily, we can re-use most things from message mode
 ;;;###autoload
 (define-mail-user-agent 'mu4e-user-agent
-  'mu4e~compose-mail
+  (lambda (to subject other-headers continue switch-function yank-action
+              send-actions return-action)
+    (mu4e~start (lambda() (mu4e~compose-mail to subject other-headers continue
+                                             switch-function yank-action
+                                             send-actions return-action))))
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
