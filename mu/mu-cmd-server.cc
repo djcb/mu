@@ -401,8 +401,15 @@ contacts_handler (Context& context, const Parameters& params)
                 if (after > ci.last_seen)
                         return;
 
+                /* using name and email yields prettier results than full_address */
+                auto full_email_address{std::string{ci.full_address}};
+                if (!ci.name.empty()) {
+                        const auto address{std::string{ci.name} + " <" + std::string{ci.email} + ">"};
+                        full_email_address = address;
+                }
+
                 Sexp::List contact;
-                contact.add_prop(":address", Sexp::make_string(ci.full_address));
+                contact.add_prop(":address", Sexp::make_string(full_email_address));
                 contact.add_prop(":rank",    Sexp::make_number(rank));
 
                 contacts.add(Sexp::make_list(std::move(contact)));
