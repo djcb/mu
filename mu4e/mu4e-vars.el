@@ -282,6 +282,10 @@ old format if needed."
           mu4e-bookmarks))
 
 
+(defvar mu4e-fallback-window-func #'selected-window
+  "Function which will be called when a splitting the current window to get a view window
+fails (usually if the current window is too small)")
+
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
 A symbol which is either:

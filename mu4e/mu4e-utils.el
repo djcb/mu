@@ -1151,22 +1151,22 @@ and MAXHEIGHT are ignored."
           (insert-image img))))))
 
 
-(defun mu4e-hide-other-mu4e-buffers ()
-  "Bury mu4e-buffers (main, headers, view) (and delete all windows
-displaying it). Do _not_ bury the current buffer, though."
-  (interactive)
-  (unless (eq mu4e-split-view 'single-window)
-    (let ((curbuf (current-buffer)))
+(defun mu4e-hide-other-mu4e-buffers (&optional except)
+    "Bury mu4e-buffers (main, headers, view) (and delete all windows
+displaying it) excluding those in EXCEPT defaults to (selected-window)"
+    (interactive)
+    (unless except
+      (setq except (list (selected-window))))
+    (unless (eq mu4e-split-view 'single-window)
       ;; note: 'walk-windows' does not seem to work correctly when modifying
       ;; windows; therefore, the doloops here
       (dolist (frame (frame-list))
         (dolist (win (window-list frame nil))
-          (with-current-buffer (window-buffer win)
-            (unless (eq curbuf (current-buffer))
+          (unless (member win except)
+            (with-current-buffer (window-buffer win)
               (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
                 (when (eq t (window-deletable-p win))
-                  (delete-window win))))))) t)))
-
+                  (delete-window win))))))) t))
 
 (defun mu4e-get-time-date (prompt)
   "Determine the emacs time value for the time/date entered by user

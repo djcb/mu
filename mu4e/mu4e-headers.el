@@ -1253,26 +1253,38 @@ of `mu4e-split-view', and return a window for the message view."
       (or (and (buffer-live-p (mu4e-get-view-buffer))
                (get-buffer-window (mu4e-get-view-buffer)))
           (selected-window))
-    (mu4e-hide-other-mu4e-buffers)
     (unless (buffer-live-p (mu4e-get-headers-buffer))
       (mu4e-error "No headers buffer available"))
     (switch-to-buffer (mu4e-get-headers-buffer))
-    ;; kill the existing view buffer
-    (when (buffer-live-p (mu4e-get-view-buffer))
-      (kill-buffer (mu4e-get-view-buffer)))
-    ;; get a new view window
-    (setq mu4e~headers-view-win
-          (let* ((new-win-func
-                  (cond
-                   ((eq mu4e-split-view 'horizontal) ;; split horizontally
-                    '(split-window-vertically mu4e-headers-visible-lines))
-                   ((eq mu4e-split-view 'vertical) ;; split vertically
-                    '(split-window-horizontally mu4e-headers-visible-columns)))))
-            (cond ((with-demoted-errors "Unable to split window: %S"
-                     (eval new-win-func)))
-                  (t ;; no splitting; just use the currently selected one
-                   (selected-window)))))))
-
+    (let* ((view-buff (mu4e-get-view-buffer))
+           (except-win (list (selected-window)))
+           ret-window)
+      ;; If a view buffer exists, we will return it and exclude it
+      ;; from the windows that will be delete
+      (when (and (buffer-live-p view-buff)
+                 (not (eq mu4e-split-view 'single-window))
+                 (setq ret-window (get-buffer-window view-buff)))
+        (setq except-win (cons ret-window except-win)))
+      ;; Delete other windows
+      (mu4e-hide-other-mu4e-buffers except-win)
+      ;; Kill the previous view buffer
+      (when (and (buffer-live-p view-buff))
+        (kill-buffer (mu4e-get-view-buffer)))
+      ;; get a new view window
+      (setq mu4e~headers-view-win
+            (or ret-window
+                (let* ((new-win-func
+                        (cond
+                         ((eq mu4e-split-view 'single-window)
+                          '(selected-window))
+                         ((eq mu4e-split-view 'horizontal) ;; split horizontally
+                          '(split-window-vertically mu4e-headers-visible-lines))
+                         ((eq mu4e-split-view 'vertical) ;; split vertically
+                          '(split-window-horizontally mu4e-headers-visible-columns)))))
+                  (cond ((with-demoted-errors "Unable to split window: %S"
+                           (eval new-win-func)))
+                        (t ;; splitting failed, call fallback
+                         (funcall mu4e-fallback-window-func)))))))))
 ;;; Search-based marking
 
 (defun mu4e-headers-for-each (func)
