@@ -806,7 +806,6 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for flag)
 (mu4e~headers-defun-mark-for move)
 (mu4e~headers-defun-mark-for read)
-(mu4e~headers-defun-mark-for trash)
 (mu4e~headers-defun-mark-for unflag)
 (mu4e~headers-defun-mark-for untrash)
 (mu4e~headers-defun-mark-for unmark)
@@ -816,20 +815,18 @@ after the end of the search results."
 (defvar mu4e-move-to-trash-patterns '()
   "List of regexps to match for moving to trash instead of flagging them.
 This is particularly useful for mailboxes that don't use the
-trash flag like Gmail.  See `mu4e-headers-mark-or-move-to-trash'
-and `mu4e-view-mark-or-move-to-trash'.")
+trash flag like Gmail.  See `mu4e-view-mark-for-trash'.")
 
-(defun mu4e-headers-mark-or-move-to-trash ()
+(defun mu4e-headers-mark-for-trash ()
   "Mark message for \"move\" to the trash folder if the message
 maildir matches any regexp in `mu4e-move-to-trash-patterns'.
-Otherwise mark with the \"trash\" flag.
-Also see `mu4e-view-mark-or-move-to-trash'."
+Otherwise mark with the \"trash\" flag."
   (interactive)
   (let ((msg-dir (mu4e-message-field (mu4e-message-at-point) :maildir)))
     (if (not (seq-filter (lambda (re)
                            (string-match re msg-dir))
                          mu4e-move-to-trash-patterns))
-        (mu4e-headers-mark-for-trash)
+        (mu4e-headers-mark-and-next 'trash)
       (mu4e-mark-set 'move (if (functionp mu4e-trash-folder)
                                (funcall mu4e-trash-folder (mu4e-message-at-point))
                              (mu4e-get-trash-folder (mu4e-message-at-point))))
@@ -895,8 +892,8 @@ Also see `mu4e-view-mark-or-move-to-trash'."
           (define-key map "y" 'mu4e-select-other-view)
 
           ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-          (define-key map (kbd "<backspace>")  'mu4e-headers-mark-or-move-to-trash)
-          (define-key map (kbd "d")            'mu4e-headers-mark-or-move-to-trash)
+          (define-key map (kbd "<backspace>")  'mu4e-headers-mark-for-trash)
+          (define-key map (kbd "d")            'mu4e-headers-mark-for-trash)
           (define-key map (kbd "<delete>")     'mu4e-headers-mark-for-delete)
           (define-key map (kbd "<deletechar>") 'mu4e-headers-mark-for-delete)
           (define-key map (kbd "D")            'mu4e-headers-mark-for-delete)
