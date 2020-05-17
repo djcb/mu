@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -64,7 +64,7 @@ struct ContactInfo {
         time_t      last_seen;    /**< when was this contact last seen? */
         std::size_t freq;         /**< how often was this contact seen? */
 
-        int64_t      tstamp;      /**< Time-stamp, as per g_get_monotonic_time */
+        int64_t     tstamp;       /**< Time-stamp, as per g_get_monotonic_time */
 };
 
 /// All contacts
