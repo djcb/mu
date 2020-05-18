@@ -1615,7 +1615,6 @@ list."
 
 (mu4e~view-defun-mark-for move)
 (mu4e~view-defun-mark-for refile)
-(mu4e~view-defun-mark-for trash)
 (mu4e~view-defun-mark-for delete)
 (mu4e~view-defun-mark-for flag)
 (mu4e~view-defun-mark-for unflag)
@@ -1623,6 +1622,7 @@ list."
 (mu4e~view-defun-mark-for something)
 (mu4e~view-defun-mark-for read)
 (mu4e~view-defun-mark-for unread)
+(mu4e~view-defun-mark-for trash)
 (mu4e~view-defun-mark-for untrash)
 
 (defun mu4e-view-marked-execute ()

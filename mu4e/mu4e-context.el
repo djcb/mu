@@ -30,7 +30,6 @@
 (require 'cl-lib)
 (require 'mu4e-utils)
 
-(defvar mu4e-move-to-trash-patterns)
 (defvar smtpmail-smtp-user)
 (defvar mu4e-view-date-format)
 
@@ -83,118 +82,6 @@ none."
   ;; if it matches, nil otherwise
   vars) ;; alist of variables.
 
-(defvar mu4e-no-trash-providers '("gmail.com" "googlemail.com")
-  "List of email providers that don't support the trash flag.")
-
-(cl-defun make-mu4e-context-account (&key name
-                                          enter-func
-                                          leave-func
-                                          match-func
-                                          vars
-                                          ;; We set sane defaults for the following variables.  They will be added to
-                                          ;; the context vars.
-                                          (user-mail-address user-mail-address)
-                                          (smtpmail-smtp-user smtpmail-smtp-user)
-                                          ;; Folders:
-                                          maildir
-                                          (drafts-folder "drafts")
-                                          (sent-folder "sent")
-                                          (trash-folder "trash")
-                                          (refile-folder "archive")
-                                          ;; Trash fix.
-                                          no-trash-flag
-                                          ;; Rule for matching the context.
-                                          predicate)
-  "Create a context with sane defaults (see `make-mu4e-context').
-Also:
-- Add the context to the `mu4e-contexts'.
-- Update the bookmarks to ignore the trash folder if NO-TRASH-FLAG is non-nil.
-
-Options beyond those of `make-mu4e-context':
-- `user-mail-address': Defaults to the global value when the context is created.
-- `smtpmail-smtp-user': Defaults to the global value if non-nil when the context
-  is created, or the context `user-mail-address' otherwise.
-- `maildir': Mailbox folder name in as stored in `mu4e-maildir' (just the name,
-  there must be no '/').  Defaults to `name'.
-- `drafts-folder': Context value of `mu4e-drafts-folder'.  Defaults to
-  \"drafts\".
-- `sent-folder': Context value of `mu4e-sent-folder'.  Defaults to \"sent\".
-- `trash-folder': Context value of `mu4e-trash-folder'.  Defaults to \"trash\".
-- `refile-folder': Context value of `mu4e-refile-folder'.  Defaults to
-  \"refile\".
-- `no-trash-flag': If non-nil, the maildir will be added to
-  `mu4e-move-to-trash-patterns' so that trashing moves the message instead of flagging.
-- `predicate': A function that takes a message and returns non-nil if it matches
-  the context.  This is only used if `match-func' is not provided, in which case
-  the context is always matched against the message folder.
-
-Example of a mailbox where only the sent-folder differs from the
-default folders (see `make-mu4e-context' and `mu4e-context'):
-
-  (let ((gandi-smtp-vars '((smtpmail-smtp-server . \"mail.gandi.net\")
-                           (smtpmail-stream-type . starttls)
-                           (smtpmail-smtp-service . 587))))
-    (make-mu4e-context-account
-     :name \"personal\"
-     :user-mail-address \"john@doe.xyz\"
-     :sent-folder \"Sent\"
-     :vars gandi-smtp-vars)
-    (make-mu4e-context-account
-     :name \"work\"
-     :user-mail-address \"john@work.org\"
-     :sent-folder \"Sent\"
-     :predicate (lambda (msg)
-                  (mu4e-message-contact-field-matches
-                   msg '(:from :to) \"boss@work.org\"))
-     :vars gandi-smtp-vars))"
-  (cl-assert name)
-  (setq maildir (concat "/" (or maildir name) "/")
-        smtpmail-smtp-user (or smtpmail-smtp-user user-mail-address)
-        no-trash-flag (or no-trash-flag
-                          (string-match (regexp-opt mu4e-no-trash-providers)
-                                        user-mail-address))
-        ;; TODO: Seems that mu4e fails to start when no default folder is set.
-        ;; The following setq is a workaround.
-        mu4e-drafts-folder (concat maildir drafts-folder)
-        mu4e-sent-folder (concat maildir sent-folder)
-        mu4e-trash-folder (concat maildir trash-folder)
-        mu4e-refile-folder (concat maildir refile-folder))
-  (when no-trash-flag
-    ;; Exclude trash folder from all bookmarks.  This is useful for mailboxes
-    ;; which don't use the "trash" flag like Gmail.
-    (dolist (bookmark mu4e-bookmarks)
-      (setq bookmark (plist-put bookmark :query
-                                (format "NOT maildir:\"%s\" AND %s"
-                                        mu4e-trash-folder
-                                        (plist-get bookmark :query)))))
-    ;; If this is a Gmail context, we add the maildir to the pattern list so
-    ;; that they can be properly trashed.
-    (add-to-list 'mu4e-move-to-trash-patterns (concat "^" maildir)))
-  (let ((context (make-mu4e-context :name name
-                                    :enter-func enter-func
-                                    :leave-func leave-func
-                                    :match-func match-func
-                                    :vars vars)))
-    (unless (mu4e-context-match-func context)
-      (setf (mu4e-context-match-func context)
-            `(lambda (msg)
-               (when msg
-                 (or
-                  ,(when predicate
-                     `(funcall ,predicate msg))
-                  (string-prefix-p ,maildir (mu4e-message-field msg :maildir)))))))
-    (setf (mu4e-context-vars context)
-          (append `((user-mail-address . ,user-mail-address)
-                    (smtpmail-smtp-user . ,smtpmail-smtp-user)
-                    (mu4e-drafts-folder . ,mu4e-drafts-folder)
-                    (mu4e-sent-folder . ,mu4e-sent-folder)
-                    (mu4e-trash-folder . ,mu4e-trash-folder)
-                    (mu4e-refile-folder . ,mu4e-refile-folder))
-                  (mu4e-context-vars context)))
-    ;; Required when using multiple addresses and if we don't want to
-    ;; reply to ourselves.
-    (add-to-list 'mu4e-contexts context)
-    context))
 
 (defun mu4e~context-ask-user (prompt)
   "Let user choose some context based on its name."

@@ -803,6 +803,7 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for refile)
 (mu4e~headers-defun-mark-for something)
 (mu4e~headers-defun-mark-for delete)
+(mu4e~headers-defun-mark-for trash)
 (mu4e~headers-defun-mark-for flag)
 (mu4e~headers-defun-mark-for move)
 (mu4e~headers-defun-mark-for read)
@@ -811,26 +812,6 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for unmark)
 (mu4e~headers-defun-mark-for unread)
 (mu4e~headers-defun-mark-for action)
-
-(defvar mu4e-move-to-trash-patterns '()
-  "List of regexps to match for moving to trash instead of flagging them.
-This is particularly useful for mailboxes that don't use the
-trash flag like Gmail.  See `mu4e-view-mark-for-trash'.")
-
-(defun mu4e-headers-mark-for-trash ()
-  "Mark message for \"move\" to the trash folder if the message
-maildir matches any regexp in `mu4e-move-to-trash-patterns'.
-Otherwise mark with the \"trash\" flag."
-  (interactive)
-  (let ((msg-dir (mu4e-message-field (mu4e-message-at-point) :maildir)))
-    (if (not (seq-filter (lambda (re)
-                           (string-match re msg-dir))
-                         mu4e-move-to-trash-patterns))
-        (mu4e-headers-mark-and-next 'trash)
-      (mu4e-mark-set 'move (if (functionp mu4e-trash-folder)
-                               (funcall mu4e-trash-folder (mu4e-message-at-point))
-                             (mu4e-get-trash-folder (mu4e-message-at-point))))
-      (mu4e-headers-next))))
 
 ;;; Headers-mode and mode-map
 
