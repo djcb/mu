@@ -198,8 +198,9 @@ buffers found, compose a new message and then attach the file."
                 (if (= (length bufs) 1)
                     (get-buffer (car bufs))
                   (let ((prompt (mu4e-format "%s" "Attach to buffer")))
-                    (funcall mu4e-completing-read-function prompt
-                             bufs))))
+                    (substring-no-properties
+                     (funcall mu4e-completing-read-function prompt
+                              bufs)))))
         ;; setup a new mail composition buffer
         (if (y-or-n-p "Compose new mail and attach this file? ")
             (progn (mu4e-compose-new)
