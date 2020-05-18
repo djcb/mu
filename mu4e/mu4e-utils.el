@@ -376,7 +376,8 @@ name. If the special shortcut 'o' (for _o_ther) is used, or if
 all maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not (mu4e-maildir-shortcuts))
-        (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs))
+        (substring-no-properties
+         (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs)))
       (let* ((mlist (append (mu4e-maildir-shortcuts)
                             '((:maildir "ther"  :key ?o))))
              (fnames
@@ -391,8 +392,9 @@ all maildirs under `mu4e-maildir'."
                mlist ", "))
              (kar (read-char (concat prompt fnames))))
         (if (member kar '(?/ ?o)) ;; user chose 'other'?
-            (funcall mu4e-completing-read-function prompt
-                     (mu4e-get-maildirs) nil nil "/")
+            (substring-no-properties
+             (funcall mu4e-completing-read-function prompt
+                      (mu4e-get-maildirs) nil nil "/"))
           (or (plist-get
                (cl-find-if (lambda (item) (= kar (plist-get item :key)))
                            (mu4e-maildir-shortcuts)) :maildir)
