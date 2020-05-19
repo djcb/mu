@@ -637,7 +637,7 @@ add text-properties to VAL."
                                                 (mu4e-view-verify-msg-popup
                                                  (button-get b 'msg))))
                   (buffer-string))))
-         (val (when val (concat val signers " (" btn ")"))))
+         (val (when val (concat val " " signers " (" btn ")"))))
     (mu4e~view-construct-header :signature val t)))
 
 (defun mu4e~view-construct-decryption-header (msg)
