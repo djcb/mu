@@ -71,6 +71,7 @@
 (require 'mail-parse)
 (require 'smtpmail)
 (require 'rfc2368)
+(require 'browse-url)
 
 (require 'mu4e-utils)
 (require 'mu4e-vars)
@@ -907,6 +908,45 @@ buffer buried."
 (defun mu4e-user-agent ()
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
+
+;; `browse-url-mail' expects that `compose-mail' is synchronous which is
+;; not the case because `mu4e~start' in the above definition of
+;; mail-user-agent.  So we define our own and advise `browse-url-mail'.
+(defun mu4e~browse-url-mail (url &optional new-window)
+  "Version of `browse-url-mail' for mu4e."
+  (interactive (browse-url-interactive-arg "Mailto URL: "))
+  (save-excursion
+    (let* ((alist (rfc2368-parse-mailto-url url))
+	   (to (assoc "To" alist))
+	   (subject (assoc "Subject" alist))
+	   (body (assoc "Body" alist))
+	   (rest (delq to (delq subject (delq body alist))))
+	   (to (cdr to))
+	   (subject (cdr subject))
+	   (body (cdr body))
+	   (mail-citation-hook (unless body mail-citation-hook))
+           (switch-function (if (browse-url-maybe-new-window new-window)
+                                'switch-to-buffer-other-window)))
+      (mu4e~start
+       (lambda()
+         (mu4e~compose-mail to subject rest nil switch-function
+                            (list 'insert-buffer (current-buffer)))
+         (when body
+           (save-excursion
+             (message-goto-body)
+             ;; Skip possible mml annotations.
+             (while (looking-at "<#")
+               (forward-line))
+             (insert (replace-regexp-in-string "\r\n" "\n" body))
+             (unless (bolp)
+               (insert "\n")))))))))
+
+(define-advice browse-url-mail (:around (oldfn &rest args) mu4e)
+  "Suitable implementation for mu4e."
+  (if (eq mail-user-agent 'mu4e-user-agent)
+      (apply 'mu4e~browse-url-mail args)
+    (apply oldfn args)))
+
 
 ;;; Go to bottom / top
 
