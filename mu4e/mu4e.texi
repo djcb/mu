@@ -2350,17 +2350,6 @@ Some mailboxes behave differently however and they don't interpret the
 trash flag.  In cases like Gmail, the message must be @emph{moved} to
 the trash folder and the trash flag must not be used.
 
-@code{mu4e} has provisions for non-standard mailboxes: if a message
-maildir matches a regular expression in
-@code{mu4e-move-to-trash-patterns} then the message is moved instead of
-being flagged.  When a context is created with
-@code{make-mu4e-context-account} (see @ref{Account setup helper}), the
-pattern is automatically added for you.
-
-This should work fine for Gmail and similar mailboxes.  Note that in the
-case of Gmail, you might have to configure your mailbox ``expunge''
-settings.
-
 @node Leaving the headers buffer
 @section Leaving the headers buffer
 
@@ -2518,7 +2507,6 @@ example:
 * Context policies::How to determine the current context
 * Contexts and special folders::Using context variables to determine them
 * Contexts example::How to define contexts
-* Account setup helper::Context creation with reasonable defaults
 @end menu
 
 It can be useful to switch between different sets of settings in
@@ -2728,55 +2716,6 @@ no context matches (or if you always want to be asked).
 @item Finally, be careful to get the quotations right --- backticks, single quotes
 and commas and note the '.' between variable name and its value.
 @end itemize
-
-@node Account setup helper
-@section Account setup helper
-
-Contexts can be cumbersome to set up. Thankfully @code{mu4e} provides
-a helper function @code{make-mu4e-context-account} to easily get
-started. The function helps initializing the context plus a couple of
-variables with reasonable defaults. Everything should work out of the
-box in most cases.
-
-A short example for two contexts:
-
-@lisp
-(let ((gandi-smtp-vars '((smtpmail-smtp-server . "mail.gandi.net")
-                         (smtpmail-stream-type . starttls)
-                         (smtpmail-smtp-service . 587))))
-  (make-mu4e-context-account
-   :name "personal"
-   :user-mail-address "john@@doe.xyz"
-   :sent-folder "Sent"
-   :vars gandi-smtp-vars)
-  (make-mu4e-context-account
-   :name "work"
-   :user-mail-address "john@@work.org"
-   :sent-folder "Sent"
-   :predicate (lambda (msg)
-                (mu4e-message-contact-field-matches
-                 msg '(:from :to) "boss@@work.org"))
-   :vars gandi-smtp-vars))
-@end lisp
-
-A couple of things to note:
-
-@itemize
-@item Only the @code{name} slot is mandatory.
-@item The maildir default to the context name.
-@item Folders only need to be given a name, not a relative path.
-They will be automatically stored under the maildir.
-@item When the @code{match-func} is not provided, the context is matched
-against @code{predicate} if provided or the maildir of the current
-message otherwise.
-@item If the e-mail address for some account is not already known to @t{mu}, you
-should probably @t{mu} about it with the @t{--my-address} parameter to
-@t{mu init}.
-@end itemize
-
-If the context created by @code{make-mu4e-context-account} is not
-enough, you can display the generated context with e.g. @code{M-x
-describe-variable mu4e-contexts} and tweak the result as needed.
 
 @node Dynamic folders
 @chapter Dynamic folders
