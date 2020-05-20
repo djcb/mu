@@ -574,11 +574,6 @@ Each of the list elements is a plist with at least:
 `:maildir'  - the maildir for the shortcut (e.g. \"/archive\")
 `:key'      - the shortcut key.
 
-Optionally, you can add the following:
-`:hide'  - if t, maildir is hdden from the main-view and speedbar.
-`:hide-unread' - do not show the counts of unread/total number
- of messages for the maildir in the main-view.
-
 For backward compatibility, an older form is recognized as well:
 
    (maildir . key), where MAILDIR is a maildir (such as
