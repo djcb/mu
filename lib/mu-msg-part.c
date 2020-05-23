@@ -263,7 +263,7 @@ cleanup_filename (char *fname)
 	/* replace control characters, slashes, and colons by '-' */
 	for (cur = fname; cur && *cur; cur = g_utf8_next_char (cur)) {
 		uc = g_utf8_get_char (cur);
-		if (g_unichar_iscntrl (uc) || uc == '/' || uc == ':')
+		if (g_unichar_iscntrl (uc) || uc == '/' || uc == ':' || uc == ';')
 			g_string_append_unichar (gstr, '-');
 		else
 			g_string_append_unichar (gstr, uc);
