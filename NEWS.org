@@ -74,7 +74,8 @@
       non-gnus-view should work just as well.
 
     - ~org-mode~ support is enabled by default now. ~speedbar~ support is disabled
-      by default.
+      by default. The support org functionality has been moved to ~mu4e-org.el~,
+      with ~org-mu4e.el~ remaining for older things.
 
     - ~mu4e~ now adds message-ids to messages when saving drafts, so we can find
       them even with ~mu4e-headers-skip-duplicates~.

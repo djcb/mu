@@ -4091,10 +4091,18 @@ You can do so using Emacs' MIME-support --- check the
 @t{Attachments}-menu while composing a message. Also see @ref{Signing
 and encrypting}.
 
+You can do so using Emacs' MIME-support --- check the
+@t{Attachments}-menu while composing a message. Also see @ref{Signing
+and encrypting}.
+
+@subsection Addres auto-completion does not work?
+If you have set @code{mu4e-compose-complete-only-personal} to non-nil,
+@t{mu4e} only completes 'personal' addresses - so you tell it about
+your e-mail addresses when setting up the database (@t{mu init});
+@ref{Initializing the message store}.
+
 @subsection Can I use @t{BBDB} with @t{mu4e}?
-Yes, with the current (2015-06-23) development release of BBDB
-@url{https://savannah.nongnu.org/projects/bbdb/}, or releases of BBDB
-after 3.1.2. @ref{BBDB}.
+Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
 
 @subsection How can I get rid of the message buffer after sending?
 @lisp
