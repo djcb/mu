@@ -45,7 +45,7 @@ tags:
 EXTRA_DIST=							\
 	TODO							\
 	HACKING							\
-	README							\
+	README.org						\
 	gtest.mk						\
 	NEWS							\
 	NEWS.org						\
