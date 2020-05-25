@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.4.7],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.5.1],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2020 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])

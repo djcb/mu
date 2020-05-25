@@ -1,5 +1,12 @@
 Welcome to mu & mu4e!
 
+*Note*: you are looking at the *development* branch, which is where new code is being developed and
+tested, and which may occasionally break.
+
+Distribution and non-adventurous users are instead recommended to use the [1.4.x Release
+Branch](https://github.com/djcb/mu/tree/release/1.4.x) or to pick up one of the [1.4.x
+releases](https://github.com/djcb/mu/releases).
+
 Given the enormous amounts of e-mail many people gather and the importance of e-mail message in our
 work-flows, it's essential to quickly deal with all that mail - in particular, to instantly find
 that one important e-mail you need right now, and quickly file away message for later use.
