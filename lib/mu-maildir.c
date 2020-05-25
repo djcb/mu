@@ -663,12 +663,13 @@ mu_maildir_get_flags_from_path (const char *path)
 	g_return_val_if_fail (path, MU_FLAG_INVALID);
 
 	/* try to find the info part */
-	/* note that we can use either the ':' or '!' as separator;
+	/* note that we can use either the ':', ';', or '!' as separator;
 	 * the former is the official, but as it does not work on e.g. VFAT
 	 * file systems, some Maildir implementations use the latter instead
 	 * (or both). For example, Tinymail/modest does this. The python
 	 * documentation at http://docs.python.org/lib/mailbox-maildir.html
-	 * mentions the '!' as well as a 'popular choice'
+	 * mentions the '!' as well as a 'popular choice'. Isync uses ';' by
+	 * default on Windows.
 	 */
 
 	/* we check the dir -- */
@@ -702,7 +703,7 @@ mu_maildir_get_flags_from_path (const char *path)
 
 		info = strrchr (path, '2');
 		if (!info || info == path ||
-		    (info[-1] != ':' && info[-1] != '!') ||
+		    (info[-1] != ':' && info[-1] != '!' && info[-1] != ';') ||
 		    (info[1] != ','))
 			return MU_FLAG_NONE;
 		else
@@ -729,7 +730,7 @@ mu_maildir_get_flags_from_path (const char *path)
  */
 static gchar*
 get_new_path (const char *mdir, const char *mfile, MuFlags flags,
-	      const char* custom_flags)
+	      const char* custom_flags, char flags_sep)
 {
 	if (flags & MU_FLAG_NEW)
 		return g_strdup_printf ("%s%cnew%c%s",
@@ -739,9 +740,9 @@ get_new_path (const char *mdir, const char *mfile, MuFlags flags,
 		const char *flagstr;
 		flagstr = mu_flags_to_str_s (flags, MU_FLAG_TYPE_MAILFILE);
 
-		return g_strdup_printf ("%s%ccur%c%s:2,%s%s",
+		return g_strdup_printf ("%s%ccur%c%s%c2,%s%s",
 					mdir, G_DIR_SEPARATOR, G_DIR_SEPARATOR,
-					mfile, flagstr,
+					mfile, flags_sep, flagstr,
 					custom_flags ? custom_flags : "");
 	}
 }
@@ -784,7 +785,7 @@ char*
 mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			 MuFlags newflags, gboolean new_name)
 {
-	char *mfile, *mdir, *custom_flags, *newpath;
+	char *mfile, *mdir, *custom_flags, *newpath, flags_sep = ':';
 
 	g_return_val_if_fail (oldpath, NULL);
 
@@ -803,11 +804,14 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 		char *cur;
 		mfile = g_path_get_basename (oldpath);
 		for (cur = &mfile[strlen(mfile)-1]; cur > mfile; --cur) {
-			if ((*cur == ':' || *cur == '!') &&
+			if ((*cur == ':' || *cur == '!' || *cur == ';') &&
 			    (cur[1] == '2' && cur[2] == ',')) {
 				/* get the custom flags (if any) */
 				custom_flags =
 					mu_flags_custom_from_str (cur + 3);
+				/* preserve the existing flags separator
+				 * in the new file name */
+				flags_sep = *cur;
 				cur[0] = '\0'; /* strip the flags */
 				break;
 			}
@@ -815,7 +819,7 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 	}
 
 	newpath = get_new_path (new_mdir ? new_mdir : mdir,
-				mfile, newflags, custom_flags);
+				mfile, newflags, custom_flags, flags_sep);
 	g_free (mfile);
 	g_free (mdir);
 	g_free (custom_flags);
