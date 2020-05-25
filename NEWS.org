@@ -1,6 +1,14 @@
 #+STARTUP:showall
 * NEWS (user visible changes)
 
+* 1.5.x (unreleased, development version)
+
+*** mu4e
+
+    - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
+      truncated strings with ~(setq truncate-string-ellipsis "…")~
+
+
 * 1.4 (released, as of April 18 2020)
 
 *** mu

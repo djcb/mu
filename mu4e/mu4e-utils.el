@@ -1221,17 +1221,9 @@ the view and compose modes and will color each signature in digest messages adhe
   "Quote a string to be used literally in the modeline. The
 string will be shortened to fit if its length exceeds
 `mu4e-modeline-max-width'."
-  (let* (;; Adjust the max-width to include the length of the " ..." string
-         (width (let ((w (- mu4e-modeline-max-width 4)))
-                  (if (> w 0) w 0)))
-         (str (let* ((l (length str))
-                     ;; If the input str is longer than the max-width, then will shorten
-                     (w (if (> l width) width l))
-                     ;; If the input str is longer than the max-width, then append " ..."
-                     (a (if (> l width) " ..." "")))
-                (concat (substring str 0 w) a))))
-    ;; Escape the % character
-    (replace-regexp-in-string "%" "%%" str t t)))
+  (replace-regexp-in-string
+   "%" "%%"
+   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
 
 (defun mu4e~active-composition-buffers ()
   "Return all active mu4e composition buffers"

@@ -536,7 +536,7 @@ add text-properties to VAL."
       "")))
 
 (defun mu4e~view-header-field-fold ()
-  "Fold/unfold headers' value if there are more than one line."
+  "Fold/unfold headers' value if there is more than one line."
   (interactive)
   (let ((name-pos (field-beginning))
         (value-pos (1+ (field-end))))
@@ -554,7 +554,8 @@ add text-properties to VAL."
                      (vals (split-string (field-string value-pos) "\n" t))
                      (val (if (= (length vals) 1)
                               (car vals)
-                            (concat (substring (car vals) 0 -3) "..."))))
+                            (truncate-string-to-width (car vals)
+                                                      (- (length (car vals)) 1) 0 nil t)))) 
                 (overlay-put o 'mu4e~view-header-field-folded t)
                 (overlay-put o 'display val))))))))
 
