@@ -66,6 +66,7 @@ libmu_utils_la_SOURCES=						\
 
 libmu_utils_la_LIBADD=						\
 	$(GLIB_LIBS)						\
+	$(READLINE_LIBS)					\
 	$(CODE_COVERAGE_LIBS)
 
 noinst_PROGRAMS=						\

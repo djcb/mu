@@ -42,6 +42,7 @@ libguile_mu_la_SOURCES=					\
 
 libguile_mu_la_LIBADD=					\
 	${top_builddir}/lib/libmu.la			\
+	$(READLINE_LIBS)				\
 	${GUILE_LIBS}
 
 libguile_mu_la_LDFLAGS= 				\
