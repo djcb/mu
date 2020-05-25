@@ -33,6 +33,7 @@
 #include <string.h>
 #include <errno.h>
 #include <glib/gprintf.h>
+#include <gio/gio.h>
 
 #include "mu-maildir.h"
 #include "utils/mu-str.h"
@@ -894,6 +895,25 @@ msg_move_check_post (const char *src, const char *dst, GError **err)
 	return TRUE;
 }
 
+/* use GIO to move files; this is slower than rename() so only use
+ * this when needed: when moving across filesystems */
+static gboolean
+msg_move_g_file (const char* src, const char *dst, GError **err)
+{
+	GFile		*srcfile, *dstfile;
+	gboolean	 res;
+
+	srcfile = g_file_new_for_path (src);
+	dstfile = g_file_new_for_path (dst);
+
+	res = g_file_move (srcfile, dstfile, G_FILE_COPY_NONE,
+			   NULL, NULL, NULL, err);
+
+	g_clear_object (&srcfile);
+	g_clear_object (&dstfile);
+
+	return res;
+}
 
 static gboolean
 msg_move (const char* src, const char *dst, GError **err)
@@ -901,11 +921,15 @@ msg_move (const char* src, const char *dst, GError **err)
 	if (!msg_move_check_pre (src, dst, err))
 		return FALSE;
 
-	if (rename (src, dst) != 0)
+	if (rename (src, dst) == 0) /* seems it worked. */
+		return msg_move_check_post (src, dst, err);
+
+	if (errno != EXDEV) /* some unrecoverable error occured */
 		return mu_util_g_set_error
 			(err, MU_ERROR_FILE,"error moving %s to %s", src, dst);
 
-	return msg_move_check_post (src, dst, err);
+	/* he EXDEV case -- source and target live on different filesystems */
+	return msg_move_g_file (src, dst, err);
 }
 
 gchar*
