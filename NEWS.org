@@ -3,6 +3,9 @@
 
 * 1.5.x (unreleased, development version)
 
+*** mu
+    - Optionally provide readline support for the mu server (when in tty-mode)
+
 *** mu4e
 
     - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for

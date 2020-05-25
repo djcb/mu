@@ -40,6 +40,7 @@
 #include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 #include "utils/mu-command-parser.hh"
+#include "utils/mu-readline.hh"
 
 using namespace Mu;
 using namespace Command;
@@ -1270,17 +1271,6 @@ make_command_map (Context& context)
       return cmap;
 }
 
-
-static std::string
-read_line(bool& do_quit)
-{
-        std::string line;
-        std::cout << ";; mu> ";
-        if (!std::getline(std::cin, line))
-                do_quit = true;
-        return line;
-}
-
 MuError
 mu_cmd_server (MuConfig *opts, GError **err) try
 {
@@ -1299,6 +1289,10 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                 invoke(context.command_map, call);
                 return MU_OK;
         }
+
+
+        const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
+        setup_readline(histpath, 50);
 
         install_sig_handler();
         std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
@@ -1322,6 +1316,7 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                                      er.what(), line.c_str());
                 }
         }
+        shutdown_readline();
 
         return MU_OK;
 

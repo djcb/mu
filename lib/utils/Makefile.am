@@ -53,6 +53,8 @@ libmu_utils_la_SOURCES=						\
 	mu-log.h						\
 	mu-command-parser.cc					\
 	mu-command-parser.hh					\
+	mu-readline.cc						\
+	mu-readline.hh						\
 	mu-sexp-parser.cc					\
 	mu-sexp-parser.hh					\
 	mu-str.c						\
