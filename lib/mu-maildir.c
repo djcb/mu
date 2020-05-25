@@ -1,7 +1,7 @@
 /* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -913,14 +913,16 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 			 MuFlags newflags, gboolean ignore_dups,
 			 gboolean new_name, GError **err)
 {
-	char *newfullpath;
-	gboolean rv;
-	gboolean src_is_target;
+	char		*newfullpath;
+	gboolean	 rv;
+	gboolean	 src_is_target;
 
 	g_return_val_if_fail (oldpath, FALSE);
 
+	/* first try *without* changing the name (as per new_name), since
+	 * src_is_target shouldn't use a changed name */
 	newfullpath = mu_maildir_get_new_path (oldpath, targetmdir,
-					       newflags, new_name);
+					       newflags, FALSE);
 	if (!newfullpath) {
 		mu_util_g_set_error (err, MU_ERROR_FILE,
 				     "failed to determine targetpath");
@@ -928,11 +930,23 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	}
 
 	src_is_target = (g_strcmp0 (oldpath, newfullpath) == 0);
-
 	if (!ignore_dups && src_is_target) {
 		mu_util_g_set_error (err, MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
 				     "target equals source");
 		return NULL;
+	}
+
+	/* if we generated file is not the same (modulo flags), create a fully
+	 * new name in the new_name case */
+	if (!src_is_target && new_name) {
+		g_free(newfullpath);
+		newfullpath = mu_maildir_get_new_path (oldpath, targetmdir,
+						       newflags, new_name);
+		if (!newfullpath) {
+			mu_util_g_set_error (err, MU_ERROR_FILE,
+					     "failed to determine targetpath");
+			return NULL;
+		}
 	}
 
 	if (!src_is_target) {
