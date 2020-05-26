@@ -13,11 +13,17 @@
 
 *** mu4e
 
-    - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
-      truncated strings with ~(setq truncate-string-ellipsis "…")~
+    - Include maildir-shortcuts in the main-view with overall/unread counts,
+      similar to bookmarks, and with the same ~:hide~ and ~:hide-unread~ properties.
+      Note that for the latter, you see to update your maildir-shortcuts to the
+      new format, as explained in the ~mu4e-maildir-shortcuts~ docstring.
 
     - Add some more properties for use in capturing org-mode links to messages /
       queries. See [[info:mu4e#Org-mode links][the mu4e manual]] for details.
+
+    - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
+      truncated strings with ~(setq truncate-string-ellipsis "…")~
+
 
 * 1.4 (released, as of April 18 2020)
 
