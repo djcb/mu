@@ -16,6 +16,8 @@
     - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
       truncated strings with ~(setq truncate-string-ellipsis "…")~
 
+    - Add some more properties for use in capturing org-mode links to messages /
+      queries. See [[info:mu4e#Org-mode links][the mu4e manual]] for details.
 
 * 1.4 (released, as of April 18 2020)
 

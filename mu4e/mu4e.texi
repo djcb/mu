@@ -3230,9 +3230,9 @@ you can do so by adding the following to your configuration:
 @node Org-mode links
 @section Org-mode links
 
-It can be useful to include links to e-mail messages or even search
-queries in your org-mode files. @t{mu4e} supports this by default,
-unless you set @t{mu4e-support-org} to @code{nil}.
+It can be useful to include links to e-mail messages or search queries
+in your org-mode files. @t{mu4e} supports this by default, unless you
+set @t{mu4e-support-org} to @code{nil}.
 
 You can use the normal @t{org-mode} mechanisms to store links:
 @kbd{M-x org-store-link} stores a link to a particular message when
@@ -3242,33 +3242,52 @@ you are in @ref{Message view}. When you are in @ref{Headers view},
 the particular message otherwise (which is the default).
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
-@t{org-mode}, you can go to the query or message the link points to with
-either @kbd{M-x org-agenda-open-link} in agenda buffers, or @kbd{M-x
-org-open-at-point} elsewhere --- both typically bound to @kbd{C-c C-o}.
+@t{org-mode}, you can go to the query or message the link points to
+with either @kbd{M-x org-agenda-open-link} in agenda buffers, or
+@kbd{M-x org-open-at-point} elsewhere --- both typically bound to
+@kbd{C-c C-o}.
 
 You can also directly @emph{capture} such links --- for example, to
-add e-mail messages to your todo-list. For that, @t{org-mu4e} has a
+add e-mail messages to your todo-list. For that, @t{mu4e-org} has a
 function @code{mu4e-org-store-and-capture}. This captures the
 message-at-point (or header --- see the discussion on
 @code{mu4e-org-link-query-in-headers-mode} above), then calls
 @t{org-mode}'s capture functionality.
 
-You can add some specific capture-template for this: for example, to add
-a message to your todo-list, and set a deadline for processing it within
-two days, you could add this to @code{org-capture-templates}:
+You can add some specific capture-template for this. In your capture
+templates, the following mu4e-specific values are available:
+
+@cartouche
+@verbatim
+item                                                 | description
+-----------------------------------------------------+------------------------
+%:date, %:date-timestamp, %d:date-timestamp-inactive | date, org timestamps
+%:from, %:fromname, %:fromaddress                    | sender, name/address
+%:to, %:toname, %:toaddress                          | recipient, name/address
+%:maildir                                            | maildir for the message
+%:message-id                                         | message-id
+%:path                                               | file system path
+%:subject                                            | message subject
+@end verbatim
+@end cartouche
+
+For example, to add a message to your todo-list, and set a deadline
+for processing it within two days, you could add this to
+@code{org-capture-templates}:
 
 @lisp
   ("P" "process-soon" entry (file+headline "todo.org" "Todo")
-  "* TODO %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
+  "* TODO %:fromname: %a %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+2d\"))")
 @end lisp
 
-If you use the functionality a lot, you may want to define key-bindings
-for that in headers and view mode:
+If you use the functionality a lot, you may want to define
+key-bindings for that in headers and view mode:
 
 @lisp
   (define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
   (define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)
 @end lisp
+
 
 @node Org-contacts
 @section Org-contacts

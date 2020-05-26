@@ -24,7 +24,7 @@
 
 ;;; Commentary:
 
-;; The expect version here is org 8.x.
+;; The expect version here is org 9.x.
 
 ;;; Code:
 
@@ -39,76 +39,48 @@
   "Prefer linking to the query rather than to the message.
 If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
-(define-obsolete-variable-alias 'org-mu4e-link-query-in-headers-mode
-  'mu4e-org-link-query-in-headers-mode "1.3.6")
-
-(defcustom mu4e-org-link-desc-func
-  (lambda (msg) (or (plist-get msg :subject) "No subject"))
-  "Function that takes a msg and returns a description.
-This can be use in org capture templates.
-
-Example usage:
-
-  (defun my-link-descr (msg)
-    (let ((subject (or (plist-get msg :subject)
-                       \"No subject\"))
-          (date (or (format-time-string mu4e-headers-date-format
-                    (mu4e-msg-field msg :date))
-                    \"No date\")))
-      (concat subject \" \" date)))
-
-  (setq org-mu4e-link-desc-func 'my-link-descr)"
-  :type 'function
-  :group 'org-mu4e)
-(define-obsolete-variable-alias 'org-mu4e-link-desc-func
-  'mu4e-org-link-desc-func "1.3.6")
 
 (defun mu4e~org-store-link-query ()
   "Store a link to a mu4e query."
-  (let* ((query  (mu4e-last-query))
-         (date (format-time-string (org-time-stamp-format)))
-         ;; seems we get an error when there's no date...
-         (link (concat "mu4e:query:" query)))
-    (org-store-link-props
-     :type "mu4e"
-     :query query
-     :date date)
-    (org-add-link-props
-     :link link
-     :description (format "mu4e-query: '%s'" query))
-    link))
+  (setq org-store-link-plist nil) ; reset
+  (org-store-link-props
+   :type        "mu4e"
+   :query       (mu4e-last-query)
+   :date        (format-time-string "%FT%T") ;; avoid error
+   :link        (link (concat "mu4e:query:" query))
+   :description (format "[%s]" query)))
 
-(defun mu4e~org-first-address (msg field)
+(defun mu4e~org-address (cell)
   "Get address field FIELD from MSG as a string or nil."
-  (let* ((val (plist-get msg field))
-         (name (when val (car (car val))))
-         (addr (when val (cdr (car val)))))
-    (when val
-      (if name
-          (format "%s <%s>" name addr)
-        (format "%s" addr)))))
+  (let ((name (car cell)) (addr (cdr cell)))
+    (if name
+        (format "%s <%s>" name addr)
+      (format "%s" addr))))
 
 (defun mu4e~org-store-link-message ()
   "Store a link to a mu4e message."
   (unless (fboundp 'mu4e-message-at-point)
     (error "Please load mu4e before mu4e-org"))
+  (setq org-store-link-plist nil)
   (let* ((msg      (mu4e-message-at-point))
-         (msgid   (or (plist-get msg :message-id) "<none>"))
-         (date    (plist-get msg :date))
-         (date    (format-time-string (org-time-stamp-format) date))
-         ;; seems we get an error when there's no date...
-         (link    (concat "mu4e:msgid:" msgid)))
+         (from     (car-safe (plist-get msg :from)))
+         (to       (car-safe (plist-get msg :to)))
+         (date     (format-time-string "%FT%T" (plist-get msg :date)))
+         (msgid    (or (plist-get msg :message-id)
+                       (mu4e-error "Cannot link message without message-id"))))
     (org-store-link-props
-     :type        "mu4e"
-     :message-id  msgid
-     :to          (mu4e~org-first-address msg :to)
-     :from        (mu4e~org-first-address msg :from)
-     :date        date
-     :subject     (plist-get msg :subject))
-    (org-add-link-props
-     :link link
-     :description (funcall mu4e-org-link-desc-func msg))
-    link))
+     :type                     "mu4e"
+     :date                     date
+     :from                     (when from
+                                 (mu4e~org-address from))
+     :maildir                  (plist-get msg :maildir)
+     :message-id               msgid
+     :path                     (plist-get msg :path)
+     :subject                  (plist-get msg :subject)
+     :to                       (when to
+                                 (mu4e~org-address to))
+     :link                     (concat "mu4e:msgid:" msgid)
+     :description              (or (plist-get msg :subject) "No subject"))))
 
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.
@@ -123,16 +95,7 @@ valid even after moving the message around."
       (mu4e~org-store-link-query)
     (when (mu4e-message-at-point t)
       (mu4e~org-store-link-message))))
-
-;; org-add-link-type is obsolete as of org-mode 9. Instead we will use the
-;; org-link-set-parameters method
-(if (fboundp 'org-link-set-parameters)
-    (org-link-set-parameters "mu4e"
-                             :follow #'mu4e-org-open
-                             :store  #'mu4e-org-store-link)
-  (org-add-link-type "mu4e" 'mu4e-org-open)
-  (add-hook 'org-store-link-functions 'mu4e-org-store-link))
-
+                                        ;
 (defun mu4e-org-open (link)
   "Open the org LINK.
 Open the mu4e message (for links starting with 'msgid:') or run
@@ -155,8 +118,10 @@ it with org)."
   (call-interactively 'org-store-link)
   (org-capture))
 
-(make-obsolete 'org-mu4e-store-and-capture 'org-mu4e-store-and-capture "1.3.6")
 
-;;; _
+;; install mu4e-link support.
+(org-link-set-parameters "mu4e"
+                         :follow #'mu4e-org-open
+                         :store  #'mu4e-org-store-link)
 (provide 'mu4e-org)
 ;;; mu4e-org.el ends here
