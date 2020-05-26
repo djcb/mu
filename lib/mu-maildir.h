@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2015 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -126,7 +126,7 @@ MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
  *
  * @return TRUE if it worked, FALSE in case of error
  */
-gboolean mu_maildir_clear_links (const gchar* dir, GError **err);
+gboolean mu_maildir_clear_links (const char* dir, GError **err);
 
 
 
@@ -213,9 +213,9 @@ char* mu_maildir_get_maildir_from_path (const char* path)
  * @return return the full path name of the target file (g_free) if
  * the move succeeded, NULL otherwise
  */
-gchar* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
-				MuFlags newflags, gboolean ignore_dups,
-				gboolean new_name, GError **err)
+char* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
+                               MuFlags newflags, gboolean ignore_dups,
+                               gboolean new_name, GError **err)
 	G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

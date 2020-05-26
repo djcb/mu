@@ -1,5 +1,3 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -19,10 +17,7 @@
 **
 */
 
-
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -41,28 +36,34 @@
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
 #define MU_MAILDIR_NOUPDATE_FILE      ".noupdate"
 
-
 /* On Linux (and some BSD), we have entry->d_type, but some file
  * systems (XFS, ReiserFS) do not support it, and set it DT_UNKNOWN.
  * On other OSs, notably Solaris, entry->d_type is not present at all.
  * For these cases, we use lstat (in get_dtype) as a slower fallback,
  * and return it in the d_type parameter
  */
+static unsigned char
+get_dtype (struct dirent* dentry, const char *path, gboolean use_lstat)
+{
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
-#define GET_DTYPE(DE,FP)						   \
-	((DE)->d_type == DT_UNKNOWN ? mu_util_get_dtype_with_lstat((FP)) : \
-	 (DE)->d_type)
-#else
-#define GET_DTYPE(DE,FP)			                           \
-	mu_util_get_dtype_with_lstat((FP))
-#endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
 
+	if (dentry->d_type == DT_UNKNOWN)
+		goto slowpath;
+	if (dentry->d_type == DT_LNK && !use_lstat)
+		goto slowpath;
+
+	return dentry->d_type; /* fastpath */
+
+slowpath:
+#endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
+	return mu_util_get_dtype (path, use_lstat);
+}
 
 static gboolean
 create_maildir (const char *path, mode_t mode, GError **err)
 {
 	int i;
-	const gchar* subdirs[] = {"new", "cur", "tmp"};
+	const char* subdirs[] = {"new", "cur", "tmp"};
 
 	for (i = 0; i != G_N_ELEMENTS(subdirs); ++i) {
 
@@ -136,7 +137,7 @@ static gboolean
 check_subdir (const char *src, gboolean *in_cur, GError **err)
 {
 	gboolean rv;
-	gchar *srcpath;
+	char *srcpath;
 
 	srcpath = g_path_get_dirname (src);
 	*in_cur = FALSE;
@@ -153,10 +154,10 @@ check_subdir (const char *src, gboolean *in_cur, GError **err)
 	return rv;
 }
 
-static gchar*
-get_target_fullpath (const char* src, const gchar *targetpath, GError **err)
+static char*
+get_target_fullpath (const char* src, const char *targetpath, GError **err)
 {
-	gchar *targetfullpath, *srcfile;
+	char *targetfullpath, *srcfile;
 	gboolean in_cur;
 
 	if (!check_subdir (src, &in_cur, err))
@@ -185,7 +186,7 @@ get_target_fullpath (const char* src, const gchar *targetpath, GError **err)
 gboolean
 mu_maildir_link (const char* src, const char *targetpath, GError **err)
 {
-	gchar *targetfullpath;
+	char *targetfullpath;
 	int rv;
 
 	g_return_val_if_fail (src, FALSE);
@@ -208,13 +209,13 @@ mu_maildir_link (const char* src, const char *targetpath, GError **err)
 
 
 static MuError
-process_dir (const char* path, const gchar *mdir,
+process_dir (const char* path, const char *mdir,
 	     MuMaildirWalkMsgCallback msg_cb,
 	     MuMaildirWalkDirCallback dir_cb, gboolean full,
 	     void *data);
 
 static MuError
-process_file (const char* fullpath, const gchar* mdir,
+process_file (const char* fullpath, const char* mdir,
 	      MuMaildirWalkMsgCallback msg_cb, void *data)
 {
 	MuError result;
@@ -374,8 +375,8 @@ ignore_dir_entry (struct dirent *entry, unsigned char d_type)
  * leaf "/cur" or "/new". In other words, contatenate old_mdir + "/" + dir,
  * unless dir is either 'new' or 'cur'. The value will be used in queries.
  */
-static gchar*
-get_mdir_for_path (const gchar *old_mdir, const gchar *dir)
+static char*
+get_mdir_for_path (const char *old_mdir, const char *dir)
 {
 	/* if the current dir is not 'new' or 'cur', contatenate
 	 * old_mdir an dir */
@@ -406,7 +407,7 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 	fullpath = g_newa (char, strlen(fp) + 1);
 	strcpy (fullpath, fp);
 
-	d_type = GET_DTYPE(entry, fullpath);
+	d_type = get_dtype(entry, fullpath, FALSE/*stat*/);
 
 	/* ignore special files/dirs */
 	if (ignore_dir_entry (entry, d_type)) {
@@ -446,7 +447,7 @@ static const size_t DIRENT_ALLOC_SIZE =
 static struct dirent*
 dirent_new (void)
 {
-	return (struct dirent*) g_slice_alloc (DIRENT_ALLOC_SIZE);
+	return (struct dirent*) g_new0(guchar, DIRENT_ALLOC_SIZE);
 }
 
 
@@ -602,7 +603,7 @@ clear_links (const char *path, DIR *dir)
 			continue; /* ignore .,.. other dotdirs */
 
 		fullpath = g_build_path ("/", path, dentry->d_name, NULL);
-		d_type	 = GET_DTYPE (dentry, fullpath);
+		d_type	 = get_dtype (dentry, fullpath, TRUE/*lstat*/);
 
 		if (d_type == DT_LNK) {
 			if (unlink (fullpath) != 0 ) {
@@ -729,7 +730,7 @@ mu_maildir_get_flags_from_path (const char *path)
  * latter case, no other flags are allowed.
  *
  */
-static gchar*
+static char*
 get_new_path (const char *mdir, const char *mfile, MuFlags flags,
 	      const char* custom_flags, char flags_sep)
 {
@@ -752,7 +753,7 @@ get_new_path (const char *mdir, const char *mfile, MuFlags flags,
 char*
 mu_maildir_get_maildir_from_path (const char* path)
 {
-	gchar *mdir;
+	char *mdir;
 
 	/* determine the maildir */
 	mdir = g_path_get_dirname (path);
@@ -846,7 +847,7 @@ get_file_size (const char* path)
 
 
 static gboolean
-msg_move_check_pre (const gchar *src, const gchar *dst, GError **err)
+msg_move_check_pre (const char *src, const char *dst, GError **err)
 {
 	gint size1, size2;
 
@@ -932,7 +933,7 @@ msg_move (const char* src, const char *dst, GError **err)
 	return msg_move_g_file (src, dst, err);
 }
 
-gchar*
+char*
 mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 			 MuFlags newflags, gboolean ignore_dups,
 			 gboolean new_name, GError **err)

@@ -340,14 +340,21 @@ mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
 
 
 unsigned char
-mu_util_get_dtype_with_lstat (const char *path)
+mu_util_get_dtype (const char *path, gboolean use_lstat)
 {
+	int res;
 	struct stat statbuf;
 
 	g_return_val_if_fail (path, DT_UNKNOWN);
 
-	if (lstat (path, &statbuf) != 0) {
-		g_warning ("stat failed on %s: %s", path, strerror(errno));
+	if (use_lstat)
+		res = lstat (path, &statbuf);
+	else
+		res = stat (path, &statbuf);
+
+	if (res != 0) {
+		g_warning ("%sstat failed on %s: %s",
+			   use_lstat ? "l" : "", path, strerror(errno));
 		return DT_UNKNOWN;
 	}
 
@@ -361,6 +368,7 @@ mu_util_get_dtype_with_lstat (const char *path)
 
 	return DT_UNKNOWN;
 }
+
 
 
 gboolean

@@ -165,11 +165,11 @@ static void
 test_mu_util_get_dtype_with_lstat (void)
 {
 	g_assert_cmpuint (
-		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR), ==, DT_DIR);
+		mu_util_get_dtype (MU_TESTMAILDIR, TRUE), ==, DT_DIR);
 	g_assert_cmpuint (
-		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2), ==, DT_DIR);
+		mu_util_get_dtype (MU_TESTMAILDIR2, TRUE), ==, DT_DIR);
 	g_assert_cmpuint (
-		mu_util_get_dtype_with_lstat (MU_TESTMAILDIR2 "/Foo/cur/mail5"),
+		mu_util_get_dtype (MU_TESTMAILDIR2 "/Foo/cur/mail5", TRUE),
 		==, DT_REG);
 }
 

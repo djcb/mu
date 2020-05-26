@@ -257,15 +257,16 @@ enum {
 
 
 /**
- * get the d_type (as in direntry->d_type) for the file at path, using
-* lstat(3)
+ * get the d_type (as in direntry->d_type) for the file at path, using either
+ * stat(3) or lstat(3)
  *
  * @param path full path
+ * @param use_lstat whether to use lstat (otherwise use stat)
  *
- * @return DT_REG, DT_DIR, DT_LNK, or DT_UNKNOWN (other values are not
- * supported currently )
+ * @return DT_REG, DT_DIR, DT_LNK, or DT_UNKNOWN (other values are not supported
+ * currently )
  */
-unsigned char mu_util_get_dtype_with_lstat (const char *path);
+unsigned char mu_util_get_dtype (const char *path, gboolean use_lstat);
 
 
 /**

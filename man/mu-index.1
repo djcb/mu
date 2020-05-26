@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "February 2020" "User Manuals"
+.TH MU-INDEX 1 "May 2020" "User Manuals"
 
 .SH NAME
 
@@ -27,7 +27,9 @@ E-mail messages which are not stored in something resembling a maildir
 leaf-directory (\fIcur\fR and \fInew\fR) are ignored, as are the cache
 directories for \fInotmuch\fR and \fIgnus\fR, and any dot-directory.
 
-The maildir must be on a single file-system; symlinks are not followed.
+Starting with mu 1.5.x, symlinks are followed, and can be spread over multiple
+filesystems; however note that moving files around is much faster when multiple
+filesystems are not involved.
 
 If there is a file called \fI.noindex\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to

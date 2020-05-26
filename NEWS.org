@@ -4,6 +4,11 @@
 * 1.5.x (unreleased, development version)
 
 *** mu
+
+    - Follow symlinks in maildirs, and support moving messsages between across
+      multiple filesystems (but note that that is quite a bit slower than the
+      single-filesystem case)
+
     - Optionally provide readline support for the mu server (when in tty-mode)
 
 *** mu4e
