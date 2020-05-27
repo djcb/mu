@@ -70,6 +70,9 @@ mu_msg_file_destroy (MuMsgFile *self)
 	if (self->_mime_msg)
 		g_object_unref (self->_mime_msg);
 
+	g_free(self->_path);
+	g_free(self->_maildir);
+
 	g_slice_free (MuMsgFile, self);
 }
 
@@ -78,6 +81,12 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 		    GError **err)
 {
 	struct stat statbuf;
+
+	if (!g_path_is_absolute (path)) {
+		mu_util_g_set_error (err, MU_ERROR_FILE,
+				     "path '%s' is not absolute", path);
+		return FALSE;
+	}
 
 	if (access (path, R_OK) != 0) {
 		mu_util_g_set_error (err, MU_ERROR_FILE,
@@ -101,16 +110,9 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 
 	self->_timestamp = statbuf.st_mtime;
 	self->_size	 = (size_t)statbuf.st_size;
+	self->_path      = g_canonicalize_filename(path, NULL);
+	self->_maildir   = g_strdup(mdir ? mdir : "");
 
-	/* remove double slashes, relative paths etc. from path & mdir */
-	if (!realpath (path, self->_path)) {
-		mu_util_g_set_error (err, MU_ERROR_FILE,
-				     "could not get realpath for %s: %s",
-				     path, strerror(errno));
-		return FALSE;
-	}
-
-	strncpy (self->_maildir, mdir ? mdir : "", PATH_MAX);
 	return TRUE;
 }
 
