@@ -456,10 +456,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; if the default charset is not set, use UTF-8
     (unless message-default-charset
       (setq message-default-charset 'utf-8))
-    ;; make sure mu4e is started in the background (ie. we don't want to error
-    ;; out when sending the message; better to do it now if there's a problem)
-    (unless (mu4e-running-p)
-      (mu4e~start)) ;; start mu4e in background, if needed
     (mu4e~compose-register-message-save-hooks)
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
@@ -575,12 +571,7 @@ we can decide what we want to do."
       (encrypt (mml-secure-message-encrypt))
       (sign-and-encrypt (mml-secure-message-sign-encrypt)))))
 
-(defun mu4e~compose-handler (compose-type &optional original-msg includes)
-  "Call mu4e~compose-handler (see for details), starting mu4e if
-necessary first."
-  (mu4e~start (lambda() (mu4e~compose-handler-real compose-type original-msg includes))))
-
-(cl-defun mu4e~compose-handler-real (compose-type &optional original-msg includes)
+(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -857,9 +848,12 @@ RETURN-ACTION, if non-nil, is an action for returning to the
 caller.  It has the form (FUNCTION . ARGS).  The function is
 called after the mail has been sent or put aside, and the mail
 buffer buried."
+   (unless (mu4e-running-p)
+     (mu4e~start))
+
   ;; create a new draft message 'resetting' (as below) is not actually needed in this case, but
   ;; let's prepare for the re-edit case as well
-  (mu4e~compose-handler-real 'new)
+  (mu4e~compose-handler 'new)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
@@ -891,11 +885,7 @@ buffer buried."
 ;; happily, we can re-use most things from message mode
 ;;;###autoload
 (define-mail-user-agent 'mu4e-user-agent
-  (lambda (to subject other-headers continue switch-function yank-action
-              send-actions return-action)
-    (mu4e~start (lambda() (mu4e~compose-mail to subject other-headers continue
-                                             switch-function yank-action
-                                             send-actions return-action))))
+  'mu4e~compose-mail
   'message-send-and-exit
   'message-kill-buffer
   'message-send-hook)
