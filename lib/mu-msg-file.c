@@ -110,7 +110,7 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 
 	self->_timestamp = statbuf.st_mtime;
 	self->_size	 = (size_t)statbuf.st_size;
-	self->_path      = g_canonicalize_filename(path, NULL);
+	self->_path      = mu_canonicalize_filename(path, NULL);
 	self->_maildir   = g_strdup(mdir ? mdir : "");
 
 	return TRUE;

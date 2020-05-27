@@ -49,6 +49,20 @@ G_BEGIN_DECLS
 char* mu_util_dir_expand (const char* path)
 	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
+
+/**
+ * See g_canonicalize_filename
+ *
+ * @param filename
+ * @param relative_to
+ *
+ * @return
+ */
+char *mu_canonicalize_filename (const gchar *filename,
+                                const gchar *relative_to)
+        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
 /**
  * guess the maildir; first try $MAILDIR; if it is unset or
  * non-existent, try ~/Maildir if both fail, return NULL

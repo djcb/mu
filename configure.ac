@@ -138,7 +138,7 @@ AS_IF([test -z "$PKG_CONFIG"],
 )
 
 # glib2?
-PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.38 gobject-2.0 gio-2.0)
+PKG_CHECK_MODULES(GLIB,glib-2.0 >= 2.50 gobject-2.0 gio-2.0)
 glib_version="$($PKG_CONFIG --modversion glib-2.0)"
 
 # gmime, version 3.0 or higher
