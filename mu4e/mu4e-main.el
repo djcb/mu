@@ -33,11 +33,15 @@
 ;;; Mode
 
 (defvar mu4e-main-buffer-hide-personal-addresses nil
-  "Whether to hid the personal address in the main view. This
+  "Whether to hide the personal address in the main view. This
   can be useful to avoid the noise when there are many.
 
   This also hides the warning if your `user-mail-address' is not
 part of the personal addresses.")
+
+(defvar mu4e-main-hide-fully-read nil
+  "When set to t, do not hide bookmarks or maildirs that have
+no unread messages.")
 
 (defvar mu4e-main-buffer-name " *mu4e-main*"
   "Name of the mu4e main view buffer. The default name starts
@@ -134,7 +138,9 @@ clicked."
                                               (plist-get q :query) 'utf-8 t)
                                              query)
                                        collect q))
+           for unread = (and qcounts (plist-get (car qcounts) :unread))
            when (not (plist-get bm :hide))
+           when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
@@ -171,7 +177,9 @@ clicked."
                                               'utf-8 t)
                                              query)
                                        collect q))
+           for unread = (and qcounts (plist-get (car qcounts) :unread))
            when (not (plist-get m :hide))
+           when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
