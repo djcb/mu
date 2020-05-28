@@ -966,7 +966,15 @@ Note that when using the gnus-based view (see
 message fields: only the ones used in the header-view, not
 including, for instance, the message body.")
 
-;;; Run-time variables
+;;; Run-time variables / constants
+
+;;;; Main
+
+(defvar mu4e-main-buffer-name " *mu4e-main*"
+  "Name of the mu4e main view buffer. The default name starts
+with SPC and therefore is not visible in buffer list.")
+
+
 ;;;; Headers
 
 (defconst mu4e~headers-buffer-name "*mu4e-headers*"
@@ -1020,6 +1028,7 @@ mu4e-compose.")
     (unless version
       (mu4e-error "version unknown; did you start mu4e?"))
     version))
+
 
 
 ;;; Handler functions

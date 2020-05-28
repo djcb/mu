@@ -28,16 +28,13 @@
 
 (require 'cl-lib)
 (require 'mu4e-vars)
-(require 'mu4e-utils)
 (require 'flow-fill)
+(require 'shr)
 
 (defvar mu4e~view-message)
 (defvar shr-inhibit-images)
 
-(defcustom mu4e-html2text-command
-  (if (fboundp 'shr-insert-document)
-      'mu4e-shr2text
-    (progn (require 'html2text) 'html2text))
+(defcustom mu4e-html2text-command 'mu4e-shr2text
   "Either a shell command or a function that converts from html to plain text.
 
 If it is a shell command, the command reads html from standard
@@ -55,9 +52,7 @@ and expected to transform this (like the `html2text' function).
 
 In all cases, the output is expected to be in UTF-8 encoding.
 
-Newer emacs has the shr renderer, and when it's available
-conversion defaults to `mu4e-shr2text'; otherwise, the default is
-emacs' built-in `html2text' function."
+The default is to use the shr renderer."
   :type '(choice string function)
   :group 'mu4e-view)
 

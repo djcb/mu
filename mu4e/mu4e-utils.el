@@ -26,11 +26,11 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'org nil 'noerror))
+(require 'org)
 (require 'cl-lib)
 (require 'cl-seq nil 'noerror)
 (require 'mu4e-vars)
+(require 'mu4e-message)
 (require 'mu4e-meta)
 (require 'mu4e-lists)
 (require 'doc-view)
@@ -45,39 +45,14 @@
 (declare-function mu4e~proc-mkdir     "mu4e-proc")
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
+(declare-function mu4e-message-field-at-point     "mu4e-proc")
+(declare-function mu4e~proc-running-p "mu4e-proc")
+
+
 (declare-function mu4e~context-autoswitch "mu4e-context")
 (declare-function mu4e-context-determine  "mu4e-context")
 (declare-function mu4e-context-vars       "mu4e-context")
 (declare-function show-all "org")
-
-;; the following is taken from org.el; we copy it here since we don't want to
-;; depend on org-mode directly (it causes byte-compilation errors) TODO: a
-;; cleaner solution....
-(defconst mu4e~ts-regexp0
-  (concat
-   "\\(\\([0-9]\\{4\\}\\)-\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)"
-   "\\( +[^]+0-9>\r\n -]+\\)?\\( +\\([0-9]\\{1,2\\}\\):"
-   "\\([0-9]\\{2\\}\\)\\)?\\)")
-  "Regular expression matching time strings for analysis.
-This one does not require the space after the date, so it can be
-used on a string that terminates immediately after the date.")
-
-(defun mu4e-parse-time-string (s &optional nodefault)
-  "Parse the standard Org-mode time string.
-This should be a lot faster than the normal `parse-time-string'.
-If time is not given, defaults to 0:00.  However, with optional
-NODEFAULT, hour and minute fields will be nil if not given."
-  (if (string-match mu4e~ts-regexp0 s)
-      (list 0
-            (if (or (match-beginning 8) (not nodefault))
-                (string-to-number (or (match-string 8 s) "0")))
-            (if (or (match-beginning 7) (not nodefault))
-                (string-to-number (or (match-string 7 s) "0")))
-            (string-to-number (match-string 4 s))
-            (string-to-number (match-string 3 s))
-            (string-to-number (match-string 2 s))
-            nil nil nil)
-    (mu4e-error "Not a standard mu4e time string: %s" s)))
 
 ;;; Various
 
@@ -1167,7 +1142,7 @@ displaying it). Do _not_ bury the current buffer, though."
   after PROMPT. Formats are all that are accepted by
   `parse-time-string'."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
-    (apply 'encode-time (mu4e-parse-time-string timestr))))
+    (apply 'encode-time (org-parse-time-string timestr))))
 
 
 ;;; Mu4e-org-mode
@@ -1258,6 +1233,33 @@ string will be shortened to fit if its length exceeds
         (when (eq major-mode 'mu4e-compose-mode)
           (push (buffer-name buffer) buffers))))
     (nreverse buffers)))
+
+
+;;
+;; Loading messages
+;;
+
+(defvar mu4e-loading-mode-map nil  "Keymap for *mu4e-loading* buffers.")
+(unless mu4e-loading-mode-map
+  (setq mu4e-loading-mode-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map "n" 'ignore)
+          (define-key map "p" 'ignore)
+          (define-key map "q"
+            (lambda()(interactive)
+              (if (eq mu4e-split-view 'single-window)
+                  'kill-buffer
+                'kill-buffer-and-window)))
+          map)))
+(fset 'mu4e-loading-mode-map mu4e-loading-mode-map)
+
+(define-derived-mode mu4e-loading-mode special-mode
+  "mu4e:loading"
+  (use-local-map mu4e-loading-mode-map)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert (propertize "Loading message..."
+                        'face 'mu4e-system-face 'intangible t))))
 
 ;;; _
 (provide 'mu4e-utils)

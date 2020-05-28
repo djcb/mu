@@ -27,7 +27,7 @@
 (require 'smtpmail)      ;; the queueing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
-(require 'mu4e-vars)  ;; the context
+(require 'mu4e-vars)     ;; mu-wide variables
 (require 'cl-lib)
 
 ;;; Mode
@@ -42,10 +42,6 @@ part of the personal addresses.")
 (defvar mu4e-main-hide-fully-read nil
   "When set to t, do not hide bookmarks or maildirs that have
 no unread messages.")
-
-(defvar mu4e-main-buffer-name " *mu4e-main*"
-  "Name of the mu4e main view buffer. The default name starts
-with SPC and therefore is not visible in buffer list.")
 
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
@@ -220,8 +216,7 @@ clicked."
 (defun mu4e~main-view-real-1 (&optional refresh)
   "Create `mu4e-main-buffer-name' and set it up.
 When REFRESH is non nil refresh infos from server."
-  (let ((inhibit-read-only t)
-        (pos (point)))
+  (let ((inhibit-read-only t))
     ;; Maybe refresh infos from server.
     (if refresh
         (mu4e~start 'mu4e~main-redraw-buffer)

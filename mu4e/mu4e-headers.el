@@ -743,7 +743,7 @@ displaying in the header view."
                  mu4e-headers-fields " ")))
       (mu4e~headers-line-handler msg line))))
 
-(defconst mu4e~searching      "Searching...")
+(defconst mu4e~search-message "Searching...")
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
 
@@ -1232,7 +1232,7 @@ the query history stack."
     (unless (get-buffer-window buf 0)
       (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-headers-search-hook expr)
-    (mu4e~headers-clear mu4e~searching)
+    (mu4e~headers-clear mu4e~search-message)
     (mu4e~proc-find
      rewritten-expr
      mu4e-headers-show-threads
