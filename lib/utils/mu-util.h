@@ -309,20 +309,6 @@ typedef gpointer XapianEnquire;
 	} while (0)
 
 
-
-/**
- * log something in the log file; note, we use G_LOG_LEVEL_INFO
- * for such messages
- */
-#define MU_WRITE_LOG(...)			\
-	G_STMT_START {				\
-		g_log (G_LOG_DOMAIN,		\
-		       G_LOG_LEVEL_INFO,	\
-		       __VA_ARGS__);		\
-	} G_STMT_END
-
-
-
 #define MU_G_ERROR_CODE(GE) ((GE)&&(*(GE))?(*(GE))->code:MU_ERROR)
 
 

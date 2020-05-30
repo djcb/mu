@@ -5,6 +5,9 @@
 
 *** mu
 
+    - Where available (and with suitable glib), log to the systemd journal
+      instead of a =~/.cache/mu.log=
+
     - Follow symlinks in maildirs, and support moving messsages between across
       multiple filesystems (but note that that is quite a bit slower than the
       single-filesystem case)

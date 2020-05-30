@@ -19,6 +19,7 @@
 
 #include "mu-runtime.h"
 #include "utils/mu-util.h"
+#include "utils/mu-logger.hh"
 
 #include <locale.h> /* for setlocale() */
 
@@ -29,24 +30,25 @@ static std::unordered_map<MuRuntimePath, std::string> RuntimePaths;
 constexpr auto PartsDir      = "parts";
 constexpr auto LogDir        = "log";
 constexpr auto XapianDir     = "xapian";
-constexpr auto Mu            = "mu";
+constexpr auto MuName        = "mu";
 constexpr auto Bookmarks     = "bookmarks";
 
 static const std::string Sepa{G_DIR_SEPARATOR_S};
+
 
 static void
 init_paths_xdg ()
 {
         RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB, g_get_user_cache_dir() +
-                             Sepa + Mu + Sepa + XapianDir);
+                             Sepa + MuName + Sepa + XapianDir);
         RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, g_get_user_cache_dir() +
-                             Sepa + Mu);
+                             Sepa + MuName);
         RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE, g_get_user_cache_dir() +
-                             Sepa + Mu + Sepa + PartsDir);
+                             Sepa + MuName + Sepa + PartsDir);
         RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR, g_get_user_cache_dir() +
-                             Sepa + Mu);
+                             Sepa + MuName);
         RuntimePaths.emplace(MU_RUNTIME_PATH_BOOKMARKS, g_get_user_config_dir() +
-                             Sepa + Mu);
+                             Sepa + MuName);
 }
 
 static void
@@ -60,7 +62,7 @@ init_paths_muhome (const char *muhome)
 }
 
 gboolean
-mu_runtime_init (const char* muhome, const char *name)
+mu_runtime_init (const char* muhome, const char *name, gboolean debug)
 {
         g_return_val_if_fail (RuntimePaths.empty(), FALSE);
 	g_return_val_if_fail (name, FALSE);
@@ -92,10 +94,12 @@ mu_runtime_init (const char* muhome, const char *name)
         const auto log_path = RuntimePaths[MU_RUNTIME_PATH_LOGDIR] +
                 Sepa + name + ".log";
 
-	if (!mu_log_init (log_path.c_str(), MU_LOG_OPTIONS_BACKUP)) {
-                mu_runtime_uninit();
-                return FALSE;
-        }
+        using namespace Mu;
+        LogOptions opts{LogOptions::None};
+        if (debug)
+                opts |= (LogOptions::Debug | LogOptions::None);
+
+        Mu::log_init(log_path, opts);
 
         return TRUE;
 }
@@ -104,7 +108,7 @@ void
 mu_runtime_uninit (void)
 {
         RuntimePaths.clear();
-        mu_log_uninit();
+        Mu::log_uninit();
 }
 
 const char*

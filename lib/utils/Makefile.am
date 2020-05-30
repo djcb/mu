@@ -49,8 +49,8 @@ libmu_utils_la_SOURCES=						\
 	mu-date.c						\
 	mu-date.h						\
 	mu-error.hh						\
-	mu-log.c						\
-	mu-log.h						\
+	mu-logger.cc						\
+	mu-logger.hh						\
 	mu-command-parser.cc					\
 	mu-command-parser.hh					\
 	mu-readline.cc						\

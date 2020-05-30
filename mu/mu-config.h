@@ -97,8 +97,8 @@ struct _MuConfig {
 	char		*cmdstr;        /* cmd string, for user
 					 * info */
 	/* general options */
-	gboolean	 quiet;	/* don't give any output */
-	gboolean	 debug;	/* spew out debug info */
+	gboolean	 quiet;	        /* don't give any output */
+	gboolean	 debug;	        /* log debug-level info */
 	gchar		*muhome;	/* the House of Mu */
 	gboolean	 version;	/* request mu version */
 	gboolean	 log_stderr;	/* log to stderr (not logfile) */

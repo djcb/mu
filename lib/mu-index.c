@@ -257,7 +257,8 @@ on_run_maildir_dir (const char* fullpath, gboolean enter,
 					  data->_user_data);
 
 	if (err) {
-		MU_WRITE_LOG ("%s: %s", __func__, err->message);
+		g_warning("%s: error handling %s: %s", __func__,
+                          fullpath, err->message);
 		g_clear_error(&err);
 	}
 

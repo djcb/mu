@@ -91,9 +91,9 @@ handle_error (MuConfig *conf, MuError merr, GError **err)
 int
 main (int argc, char *argv[])
 {
-	GError		*err;
-	MuError		 rv;
-	MuConfig	*conf;
+	GError	 *err;
+	MuError	  rv;
+	MuConfig *conf;
 
 	setlocale (LC_ALL, "");
 
@@ -113,7 +113,7 @@ main (int argc, char *argv[])
 	if (conf->cmd == MU_CONFIG_CMD_NONE)
 		return 0;
 
-	if (!mu_runtime_init (conf->muhome, PACKAGE_NAME)) {
+	if (!mu_runtime_init (conf->muhome, PACKAGE_NAME, conf->debug)) {
 		mu_config_uninit (conf);
 		return 1;
 	}

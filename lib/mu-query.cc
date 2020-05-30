@@ -241,7 +241,7 @@ try_requery (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
 		/* let's assume that infinite regression is
 		 * impossible */
 		self->db().reopen();
-		MU_WRITE_LOG ("reopening db after modification");
+		g_message ("reopening db after modification");
 		return mu_query_run (self, searchexpr, sortfieldid,
 				     maxnum, flags, err);
 

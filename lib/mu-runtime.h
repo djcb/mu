@@ -21,7 +21,6 @@
 #define __MU_RUNTIME_H__
 
 #include <glib.h>
-#include <utils/mu-log.h>
 
 G_BEGIN_DECLS
 
@@ -32,10 +31,12 @@ G_BEGIN_DECLS
  * @param muhome path where to find the mu home directory (typically, ~/.cache/mu)
  * @param name of the main program, ie. 'mu', 'mug' or
  * 'procmule'. this influences the name of the e.g. the logfile
+ * @param debug debug-mode
  *
  * @return TRUE if succeeded, FALSE in case of error
  */
-gboolean mu_runtime_init (const char *muhome, const char *name);
+gboolean mu_runtime_init (const char *muhome, const char *name,
+			  gboolean debug);
 
 /**
  * free all resources
@@ -47,7 +48,7 @@ void mu_runtime_uninit (void);
 typedef enum {
 	MU_RUNTIME_PATH_XAPIANDB,   /* mu xapian db path */
 	MU_RUNTIME_PATH_BOOKMARKS,  /* mu bookmarks file path */
-	MU_RUNTIME_PATH_CACHE,      /* mu cache path for attachments etc. */
+	MU_RUNTIME_PATH_CACHE,      /* mu cache path */
 	MU_RUNTIME_PATH_MIMECACHE,  /* mu cache path for attachments etc. */
 	MU_RUNTIME_PATH_LOGDIR,     /* mu path for log files */
 

@@ -86,7 +86,7 @@ mu_guile_init_instance (const char *muhome)
 
 	setlocale (LC_ALL, "");
 
-	if (!mu_runtime_init (muhome, "guile"))
+	if (!mu_runtime_init (muhome, "guile", FALSE))
 		return FALSE;
 
 	err = NULL;

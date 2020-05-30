@@ -402,7 +402,7 @@ main (int argc, char *argv[])
 	}
 
 	g_option_context_free (octx);
-	mu_runtime_init (mugdata.muhome, "mug");
+	mu_runtime_init (mugdata.muhome, "mug", FALSE);
 
 	mugshell = mug_shell (&mugdata);
 	g_signal_connect (G_OBJECT (mugshell), "destroy",

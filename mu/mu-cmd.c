@@ -33,7 +33,6 @@
 #include "mu-runtime.h"
 #include "mu-flags.h"
 
-#include "utils/mu-log.h"
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
@@ -342,15 +341,15 @@ foreach_msg_file (MuStore *store, MuConfig *opts,
 
 		if (!check_file_okay (path, TRUE)) {
 			all_ok = FALSE;
-			MU_WRITE_LOG ("not a valid message file: %s", path);
+			g_warning ("not a valid message file: %s", path);
 			continue;
 		}
 
 		if (!foreach_func (store, path, err)) {
 			all_ok = FALSE;
-			MU_WRITE_LOG ("error with %s: %s", path,
-				      (err&&*err) ? (*err)->message :
-				      "something went wrong");
+			g_warning ("error with %s: %s", path,
+                                   (err&&*err) ? (*err)->message :
+                                   "something went wrong");
 			g_clear_error (err);
 			continue;
 		}
@@ -656,23 +655,6 @@ check_params (MuConfig *opts, GError **err)
 	return TRUE;
 }
 
-static void
-set_log_options (MuConfig *opts)
-{
-	MuLogOptions logopts;
-
-	logopts = MU_LOG_OPTIONS_NONE;
-
-	if (opts->quiet)
-		logopts |= MU_LOG_OPTIONS_QUIET;
-	if (!opts->nocolor)
-		logopts |= MU_LOG_OPTIONS_COLOR;
-	if (opts->log_stderr)
-		logopts |= MU_LOG_OPTIONS_STDERR;
-	if (opts->debug)
-		logopts |= MU_LOG_OPTIONS_DEBUG;
-}
-
 MuError
 mu_cmd_execute (MuConfig *opts, GError **err)
 {
@@ -683,8 +665,6 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	if (!check_params(opts, err))
 		return MU_G_ERROR_CODE(err);
 
-	set_log_options (opts);
-
 	switch (opts->cmd) {
 
 		/* already handled in mu-config.c */
@@ -692,10 +672,10 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 
         /* no store needed */
 
-	case MU_CONFIG_CMD_MKDIR:   merr = cmd_mkdir   (opts, err); break;
+	case MU_CONFIG_CMD_MKDIR:   merr = cmd_mkdir      (opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT:  merr = mu_cmd_script  (opts, err); break;
-	case MU_CONFIG_CMD_VIEW:    merr = cmd_view    (opts, err); break;
-	case MU_CONFIG_CMD_VERIFY:  merr = cmd_verify  (opts, err); break;
+	case MU_CONFIG_CMD_VIEW:    merr = cmd_view       (opts, err); break;
+	case MU_CONFIG_CMD_VERIFY:  merr = cmd_verify     (opts, err); break;
 	case MU_CONFIG_CMD_EXTRACT: merr = mu_cmd_extract (opts, err); break;
 
 	/* read-only store */

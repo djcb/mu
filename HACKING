@@ -19,7 +19,7 @@
       on the same line as the statement, except for functions. Tabs for
       indentation, space for alignment; use 8-char tabs.
 
-   2. Lines should not exceed 80 characters (C) or 100 characters (C++)
+   2. Lines should not exceed 100 characters
 
    3. Functions should not exceed 35 lines (with few exceptions). You can easily
       check if any functions violate this rule with 'make line35', which lists
@@ -27,45 +27,34 @@
 
    4. Source files should not exceed 1000 lines
 
-   5. A function's cyclomatic complexity should not exceed 10 (there could be
-      rare exceptions, see the toplevel ~Makefile.am~). You can test the
-      cyclomatic complexity with the ~pmccabe~ tool; if you installed that, you
-      can use 'make cc10' to list all functions that violate this rule; there
-      should be none.
+   5. Non-static C-functions have the prefix based on their module, e.g.,
+      ~mu-foo.h~ declares a function of 'mu_foo_bar (int a);', mu-foo.c implements
+      this. C++ functions using the Mu namespace
 
-   6. Filenames have their components separated with dashes (e.g, ~mu-log.h~), and
-      start with ~mu-~ where appropriate.
-
-   7. Global functions have the prefix based on their module, e.g., ~mu-foo.h~
-      declares a function of 'mu_foo_bar (int a);', mu-foo.c implements this.
-
-   8. Non-global functions *don't* have the module prefix, and are declared
+   6. Non-global functions *don't* have the module prefix, and are declared
       static.
 
-   9. Functions have their return type on a separate line before the function
+   7. Functions have their return type on a separate line before the function
       name, so:
+
 #+BEGIN_EXAMPLE
-      int
+      static int
       foo (const char *bar)
       {
 	....
       }
 #+END_EXAMPLE
 
-      There is no non-aesthetic reason for this.
+   8. In C code, variable-declarations are at the beginning of a block.
 
-   10. In C code, variable-declarations are at the beginning of a block; in
-       principle, C++ follows that same guideline, unless for heavy yet
-       uncertain initializations following RAII.
+      In C code, the declaration does *not* initialize the variable. This will
+      give the compiler a chance to warn us if the variable is not initialized
+      in a certain code path.
 
-       In C code, the declaration does *not* initialize the variable. This will
-       give the compiler a chance to warn us if the variable is not initialized
-       in a certain code path.
-
-   11. Returned strings of type char* must be freed by the caller; if they are
+   9. Returned strings of type char* must be freed by the caller; if they are
        not to be freed, 'const char*' should be used instead
 
-   12. Functions calls have a space between function name and arguments, unless
+   10. Functions calls have a space between function name and arguments, unless
        there are none, so:
 
 	~foo (12, 3)~;
@@ -76,11 +65,11 @@
 
        after a comma, a space should follow.
 
-   13. Functions that do not take arguments are explicitly declared as
+   11. C-functions that do not take arguments are explicitly declared as
        f(void) and not f(). Reason: f() means that the arguments are
        /unspecified/ (in C)
 
-   14. C-code should not use ~//~ comments.
+   12. C-code should not use ~//~ comments.
 
 
 ** Logging
@@ -89,8 +78,7 @@
    except when logging may not have been initialized.
 
    The logging system redirects most logging to the log file (typically,
-   ~/.cache/mu/mu.log). g_warning, g_message and g_critical are shown to the user,
-   except when running with --quiet, in which case g_message is *not* shown.
+   =~/.cache/mu/mu.log=). ~g_critical~ messages are written to stderr.
 
    - ~g_message~ is for non-error messages the user will see (unless running with
      ~--quiet~)
@@ -99,9 +87,6 @@
    - ~g_critical~ is for mu bugs, serious, internal problems (~g_return_if_fail~ and
      friends use this). (and they are written on ~stderr~)
    - don't use ~g_error~
-
-   If you just want to log something in the log file without writing to screen,
-   use ~MU_LOG_WRITE~, as defined in ~mu-util.h~.
 
 ** Compiling from git
 

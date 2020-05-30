@@ -119,10 +119,7 @@ mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
 {
 	g_return_val_if_fail (path, FALSE);
 
-	MU_WRITE_LOG ("%s (%s, %o, %s)", __func__,
-		      path, mode, noindex ? "TRUE" : "FALSE");
-
-	if (!create_maildir (path, mode, err))
+        if (!create_maildir (path, mode, err))
 		return FALSE;
 
 	if (noindex && !create_noindex (path, err))

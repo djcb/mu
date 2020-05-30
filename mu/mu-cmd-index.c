@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -37,7 +35,6 @@
 #include "mu-runtime.h"
 
 #include "utils/mu-util.h"
-#include "utils/mu-log.h"
 
 static gboolean MU_CAUGHT_SIGNAL;
 
@@ -180,22 +177,14 @@ show_time (unsigned t, unsigned processed, gboolean color)
 	g_print ("\n");
 }
 
-/* when logging to console, print a newline before doing so; this
- * makes it more clear when something happens during the
- * indexing/cleanup progress output */
-#define newline_before_on()			                          \
-	mu_log_options_set(mu_log_options_get() | MU_LOG_OPTIONS_NEWLINE)
-#define newline_before_off()						  \
-	mu_log_options_set(mu_log_options_get() & ~MU_LOG_OPTIONS_NEWLINE)
-
 static MuError
 cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 		 GError **err)
 {
-	MuError rv;
-	time_t t;
-	IndexData idata;
-	gboolean show_progress;
+	MuError		rv;
+	time_t		t;
+	IndexData	idata;
+	gboolean	show_progress;
 
 	if (!opts->quiet)
 		g_print ("cleaning up messages [%s]\n",
@@ -206,14 +195,12 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 
 	t = time (NULL);
 	idata.color = !opts->nocolor;
-	newline_before_on();
 	rv = mu_index_cleanup
 		(midx, stats,
 		 show_progress ?
 		 (MuIndexCleanupDeleteCallback)index_msg_cb :
 		 (MuIndexCleanupDeleteCallback)index_msg_silent_cb,
 		 &idata, err);
-	newline_before_off();
 
 	if (!opts->quiet) {
 		print_stats (stats, TRUE, !opts->nocolor);
@@ -235,8 +222,6 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 	show_progress = !opts->quiet && isatty(fileno(stdout));
 	idata.color   = !opts->nocolor;
 
-	newline_before_on();
-
 	rv = mu_index_run (midx,
 			   opts->rebuild,
 			   opts->lazycheck, stats,
@@ -244,11 +229,9 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 			   (MuIndexMsgCallback)index_msg_cb :
 			   (MuIndexMsgCallback)index_msg_silent_cb,
 			   NULL, &idata);
-	newline_before_off();
-
 	if (rv == MU_OK || rv == MU_STOP) {
-		MU_WRITE_LOG ("index: processed: %u; updated/new: %u",
-			      stats->_processed, stats->_updated);
+		g_message ("index: processed: %u; updated/new: %u",
+			   stats->_processed, stats->_updated);
 	} else
 		mu_util_g_set_error (err, rv, "error while indexing");
 
