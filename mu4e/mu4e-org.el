@@ -43,12 +43,16 @@ the current query; otherwise, it links to the message at point.")
 (defun mu4e~org-store-link-query ()
   "Store a link to a mu4e query."
   (setq org-store-link-plist nil) ; reset
-  (org-store-link-props
-   :type        "mu4e"
-   :query       (mu4e-last-query)
-   :date        (format-time-string "%FT%T") ;; avoid error
-   :link        (link (concat "mu4e:query:" query))
-   :description (format "[%s]" query)))
+  (let* ((query  (mu4e-last-query))
+         (date (format-time-string (org-time-stamp-format)))
+         ;; seems we get an error when there's no date...
+         (link (concat "mu4e:query:" query)))
+    (org-store-link-props
+     :type        "mu4e"
+     :query       query
+     :date        date ;; avoid error
+     :link        link
+     :description (format "[%s]" query))))
 
 (defun mu4e~org-address (cell)
   "Get address field FIELD from MSG as a string or nil."
