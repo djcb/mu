@@ -47,8 +47,8 @@ the current query; otherwise, it links to the message at point.")
    :type        "mu4e"
    :query       (mu4e-last-query)
    :date        (format-time-string "%FT%T") ;; avoid error
-   :link        (link (concat "mu4e:query:" query))
-   :description (format "[%s]" query)))
+   :link        (concat "mu4e:query:" (mu4e-last-query))
+   :description (format "[%s]" (mu4e-last-query))))
 
 (defun mu4e~org-address (cell)
   "Get address field FIELD from MSG as a string or nil."
