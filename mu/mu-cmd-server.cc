@@ -146,6 +146,20 @@ print_expr (const char* frm, ...)
 }
 
 
+static void
+print_expr (const Node& sexp)
+{
+        print_expr ("%s", sexp.to_string().c_str());
+}
+
+static void
+print_expr (Node::Seq&& seq)
+{
+        print_expr (Node::make_list(std::move(seq)));
+}
+
+
+
 G_GNUC_PRINTF(2,3) static MuError
 print_error (MuError errcode, const char* frm, ...)
 {
@@ -156,7 +170,12 @@ print_error (MuError errcode, const char* frm, ...)
         g_vasprintf (&msg, frm, ap);
         va_end (ap);
 
-        print_expr ("(:error %u :message %s)", errcode, quote(msg).c_str());
+        Node::Seq err_sexp;
+        err_sexp.add_prop(":error",   (int)errcode);
+        err_sexp.add_prop(":message", msg);
+
+        print_expr(Node::make_list(std::move(err_sexp)));
+
         g_free (msg);
 
         return errcode;
@@ -289,6 +308,7 @@ add_handler (Context& context, const Parameters& params)
 
         auto sexp{mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY)};
         print_expr ("(:update %s :move nil)", sexp);
+
         mu_msg_unref(msg);
         g_free (sexp);
 }
@@ -322,7 +342,6 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
         pinfo->attlist = g_slist_append (pinfo->attlist, att);
 
         g_free (cachefile);
-
 }
 
 
@@ -410,6 +429,7 @@ compose_handler (Context& context, const Parameters& params)
                 atts = (ctype == FORWARD) ? include_attachments (msg, opts) : NULL;
                 mu_msg_unref (msg);
         }
+
         print_expr ("(:compose %s :original %s :include %s)",
                     typestr.c_str(), sexp ? sexp : "nil", atts ? atts : "nil");
 
@@ -419,11 +439,11 @@ compose_handler (Context& context, const Parameters& params)
 
 
 struct SexpData {
-        GString  *gstr;
-        gboolean  personal;
-        time_t    last_seen;
-        gint64    tstamp;
-        size_t    rank;
+        Sexp::Node::Seq         contacts;
+        gboolean                personal;
+        time_t                  last_seen;
+        gint64                  tstamp;
+        size_t                  rank;
 };
 
 
@@ -452,8 +472,11 @@ each_contact_sexp (const char* full_address,
         if (!email || !strstr (email, "@"))
                 return;
 
-        g_string_append_printf (sdata->gstr, "(%s . %zu)\n",
-                                quote(full_address).c_str(), sdata->rank);
+        Node::Seq contact;
+        contact.add_prop(":address", full_address);
+        contact.add_prop(":rank",    sdata->rank);
+
+        sdata->contacts.add(Node::make_list(std::move(contact)));
 }
 
 /**
@@ -465,32 +488,24 @@ each_contact_sexp (const char* full_address,
  *
  * @return the sexp
  */
-static char*
+static Sexp::Node
 contacts_to_sexp (const MuContacts *contacts, bool personal,
                   int64_t last_seen, gint64 tstamp)
 {
-
-        g_return_val_if_fail (contacts, NULL);
-
         SexpData sdata{};
         sdata.personal  = personal;
         sdata.last_seen = last_seen;
         sdata.tstamp    = tstamp;
         sdata.rank      = 0;
 
-        /* make a guess for the initial size */
-        sdata.gstr = g_string_sized_new (mu_contacts_count(contacts) * 128);
-        g_string_append (sdata.gstr, "(:contacts (");
-
         const auto cutoff{g_get_monotonic_time()};
         mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact_sexp, &sdata);
-        /* pass a string, elisp doesn't like 64-bit nums */
-        g_string_append_printf (sdata.gstr,
-                                ") :tstamp \"%" G_GINT64_FORMAT  "\")", cutoff);
+        Node::Seq seq;
+        seq.add_prop(":contacts", std::move(sdata.contacts));
+        seq.add_prop(":tstamp",   Node::make_string(format("%" G_GINT64_FORMAT, cutoff)));
 
-        return g_string_free (sdata.gstr, FALSE);
+        return Node::make_list(std::move(seq));
 }
-
 
 static void
 contacts_handler (Context& context, const Parameters& params)
@@ -508,9 +523,7 @@ contacts_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Internal, "failed to get contacts"};
 
         /* dump the contacts cache as a giant sexp */
-        auto sexp = contacts_to_sexp (contacts, personal, after, tstamp);
-        print_expr ("%s\n", sexp);
-        g_free (sexp);
+        print_expr(contacts_to_sexp (contacts, personal, after, tstamp));
 }
 
 static void
@@ -526,7 +539,11 @@ save_part (MuMsg *msg, unsigned docid, unsigned index,
                                path.c_str(), index, &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to save part"};
 
-        print_expr ("(:info save :message %s)", quote(path + " has been saved").c_str());
+        Node::Seq seq;
+        seq.add_prop(":info", Node::make_symbol("save"));
+        seq.add_prop(":message", Node::make_string(format("%s has been saved", path.c_str())));
+
+        print_expr(std::move(seq));
 }
 
 
@@ -550,9 +567,12 @@ open_part (MuMsg *msg, unsigned docid, unsigned index, MuMsgOptions opts)
                 throw Error{Error::Code::File, &gerr, "failed to play"};
         }
 
-        print_expr ("(:info open :message %s)",
-                    quote(std::string{targetpath} + " has been opened").c_str());
+        Node::Seq seq;
+        seq.add_prop(":info",    Node::make_symbol("open"));
+        seq.add_prop(":message", Node::make_string(format("%s has been opened", targetpath)));
         g_free (targetpath);
+
+        print_expr(std::move(seq));
 }
 
 static void
@@ -576,19 +596,16 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
                 throw Error{Error::Code::File, &gerr, "saving failed"};
         }
 
-        const auto qpath{quote(path)};
-        g_free(path);
+        Node::Seq seq;
+        seq.add_prop(":temp", path);
+        seq.add_prop(":what", std::string(what));
+        seq.add_prop(":docid", docid);
 
         if (!param.empty())
-                print_expr ("(:temp %s"
-                            " :what \"%s\""
-                            " :docid %u"
-                            " :param %s"
-                            ")",
-                            qpath.c_str(), what.c_str(), docid, quote(param).c_str());
-        else
-                print_expr ("(:temp %s :what \"%s\" :docid %u)",
-                            qpath.c_str(), what.c_str(), docid);
+                seq.add_prop(":param", std::string(param));
+
+        g_free(path);
+        print_expr(std::move(seq));
 }
 
 
@@ -740,9 +757,19 @@ find_handler (Context& context, const Parameters& params)
         /* before sending new results, send an 'erase' message, so the frontend
          * knows it should erase the headers buffer. this will ensure that the
          * output of two finds will not be mixed. */
-        print_expr ("(:erase t)");
-        const auto foundnum{print_sexps (miter, maxnum)};
-        print_expr ("(:found %u)", foundnum);
+        {
+                Node::Seq seq;
+                seq.add_prop(":erase", Node::make_symbol("t"));
+                print_expr(std::move(seq));
+        }
+        //print_expr ("(:erase t)");
+        {
+                const auto foundnum{print_sexps (miter, maxnum)};
+                Node::Seq seq;
+                seq.add_prop(":found", foundnum);
+                print_expr(std::move(seq));
+        }
+        //print_expr ("(:found %u)", foundnum);
         mu_msg_iter_destroy (miter);
 }
 
@@ -802,9 +829,13 @@ index_msg_cb (MuIndexStats *stats, void *user_data)
         if (stats->_processed % 1000)
                 return MU_OK;
 
-        print_expr ("(:info index :status running "
-                    ":processed %u :updated %u)",
-                    stats->_processed, stats->_updated);
+        Node::Seq seq;
+        seq.add_prop(":info",       Node::make_symbol("index"));
+        seq.add_prop(":status",     Node::make_symbol("running"));
+        seq.add_prop(":processed",  stats->_processed);
+        seq.add_prop(":updated",    stats->_updated);
+
+        print_expr(std::move(seq));
 
         return MU_OK;
 }
@@ -828,11 +859,16 @@ index_and_maybe_cleanup (MuIndex *index, bool cleanup, bool lazy_check)
                         throw Error{Error::Code::Store, &gerr, "cleanup failed"};
         }
 
-        print_expr ("(:info index :status complete "
-                    ":processed %u :updated %u :cleaned-up %u)",
-                    stats._processed, stats._updated, stats2._cleaned_up);
+        Node::Seq seq;
+        seq.add_prop(":info",       Node::make_symbol("index"));
+        seq.add_prop(":status",     Node::make_symbol("complete"));
+        seq.add_prop(":processed",  stats._processed);
+        seq.add_prop(":updated",    stats._updated);
+        seq.add_prop(":cleaned-up", stats2._cleaned_up);
 
-        return rv;
+        print_expr(std::move(seq));
+
+        return MU_OK;
 }
 
 
@@ -865,7 +901,11 @@ mkdir_handler (Context& context, const Parameters& params)
         if (!mu_maildir_mkdir(path.c_str(), 0755, FALSE, &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to create maildir"};
 
-        print_expr ("(:info mkdir :message \"%s has been created\")", path.c_str());
+        Node::Seq seq;
+        seq.add_prop(":info",    "mkdir");
+        seq.add_prop(":message", format("%s has been created", path.c_str()));
+
+        print_expr(std::move(seq));
 }
 
 
@@ -996,7 +1036,7 @@ move_handler (Context& context, const Parameters& params)
 
         if (flags == MU_FLAG_INVALID) {
                 mu_msg_unref(msg);
-                throw Error{Error::Code::InvalidArgument, "invalid flagse"};
+                throw Error{Error::Code::InvalidArgument, "invalid flags"};
         }
 
         try {
@@ -1018,46 +1058,43 @@ ping_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Store, &gerr, "failed to read store"};
 
         const auto queries  = get_string_vec (params, "queries");
-        const auto qresults = [&]() -> std::string {
-                if (queries.empty())
-                        return {};
+        Node::Seq qresults;
+        for (auto&& q: queries) {
+                const auto count{mu_query_count_run (context.query, q.c_str())};
+                const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
+                const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
 
-                std::string res{":queries ("};
-                for (auto&& q: queries) {
-                        const auto count{mu_query_count_run (context.query, q.c_str())};
-                        const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
-                        const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
-                        res += format("(:query %s :count %zu :unread %zu)", quote(q).c_str(),
-                                      count, unread);
-                }
-                return res + ")";
-        }();
+                Node::Seq seq;
+                seq.add_prop(":query", std::string(q));
+                seq.add_prop(":count", count);
+                seq.add_prop(":unread", unread);
 
-        const auto personal = [&]() ->std::string {
-                auto addrs{mu_store_personal_addresses (context.store)};
-                std::string res;
-                if (addrs && g_strv_length(addrs) != 0) {
-                        res = ":personal-addresses (";
-                        for (int i = 0; addrs[i]; ++i)
-                                res += quote(addrs[i]) + ' ';
-                        res += ")";
-                }
-                g_strfreev(addrs);
-                return res;
-        }();
+                qresults.add(Node::make_list(std::move(seq)));
+        }
 
-        print_expr ("(:pong \"mu\" :props ("
-                    ":version \"" VERSION "\" "
-                    "%s "
-                    ":database-path %s "
-                    ":root-maildir %s "
-                    ":doccount %u "
-                    "%s))",
-                    personal.c_str(),
-                    quote(mu_store_database_path(context.store)).c_str(),
-                    quote(mu_store_root_maildir(context.store)).c_str(),
-                    storecount,
-                    qresults.c_str());
+        Node::Seq addrs;
+        char **addrs_strv{mu_store_personal_addresses (context.store)};
+        for (auto cur = addrs_strv; cur && *cur; ++cur)
+                addrs.add(*cur);
+        g_strfreev (addrs_strv);
+
+        const auto dbpath{mu_store_database_path(context.store)};
+        const auto root{mu_store_root_maildir(context.store)};
+
+        Node::Seq seq;
+        seq.add_prop(":pong", "mu");
+
+        Node::Seq propseq;
+        propseq.add_prop(":version",            VERSION);
+        propseq.add_prop(":personal-addresses", std::move(addrs));
+        propseq.add_prop(":database-path",      dbpath);
+        propseq.add_prop(":root-maildir",       root);
+        propseq.add_prop(":doccount",           storecount);
+        propseq.add_prop(":queries",            std::move(qresults));
+
+        seq.add_prop(":props",   std::move(propseq));
+
+        print_expr(std::move(seq));
 }
 
 static void
@@ -1081,8 +1118,10 @@ remove_handler (Context& context, const Parameters& params)
                 throw Error(Error::Code::Store,
                             "failed to remove message @ %s (%d) from store",
                             path.c_str(), docid);
+        Node::Seq seq;
+        seq.add_prop(":remove", docid);
 
-        print_expr ("(:remove %u)", docid);
+        print_expr(std::move(seq));
 }
 
 
@@ -1095,7 +1134,12 @@ sent_handler (Context& context, const Parameters& params)
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::Store, &gerr, "failed to add path"};
 
-        print_expr ("(:sent t :path %s :docid %u)", quote(path).c_str(), docid);
+        Node::Seq seq;
+        seq.add_prop (":sent",  Node::make_symbol("t"));
+        seq.add_prop (":path",  std::string(path));
+        seq.add_prop (":docid", docid);
+
+        print_expr (std::move(seq));
 }
 
 
@@ -1118,11 +1162,11 @@ view_handler (Context& context, const Parameters& params)
         if (!msg)
                 throw Error{Error::Code::Store, &gerr, "failed to find message for view"};
 
-        auto sexp{mu_msg_to_sexp(msg, docid, {}, message_options(params))};
+        Node::Seq seq;
+        seq.add_prop(":view", msg_to_sexp(msg, docid, {}, message_options(params)));
         mu_msg_unref(msg);
 
-        print_expr ("(:view %s)\n", sexp);
-        g_free (sexp);
+        print_expr (std::move(seq));
 }
 
 
@@ -1143,7 +1187,7 @@ make_command_map (Context& context)
                    CommandInfo{
                            ArgMap{{"type", ArgInfo{Type::Symbol, true,
                                             "type of composition: reply/forward/edit/resend/new"}},
-                                   {"docid", ArgInfo{Type::Integer, false,"document id of parent-message, if any"}},
+                                   {"docid", ArgInfo{Type::Number, false,"document id of parent-message, if any"}},
                                    {"decrypt", ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
                            [&](const auto& params){compose_handler(context, params);}});
@@ -1161,8 +1205,8 @@ make_command_map (Context& context)
 
       cmap.emplace("extract",
                    CommandInfo{
-                           ArgMap{{"docid", ArgInfo{Type::Integer, true,  "document for the message" }},
-                                   {"index", ArgInfo{Type::Integer, true,  "index for the part to operate on" }},
+                           ArgMap{{"docid", ArgInfo{Type::Number, true,  "document for the message" }},
+                                   {"index", ArgInfo{Type::Number, true,  "index for the part to operate on" }},
                                    {"action", ArgInfo{Type::Symbol, true, "what to do with the part" }},
                                    {"decrypt", ArgInfo{Type::Symbol, false,
                                             "whether to decrypt encrypted parts (if any)" }},
@@ -1180,7 +1224,7 @@ make_command_map (Context& context)
                                    {"sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
                                    {"descending", ArgInfo{Type::Symbol, false,
                                             "whether to sort in descending order" }},
-                                   {"maxnum",  ArgInfo{Type::Integer, false,
+                                   {"maxnum",  ArgInfo{Type::Number, false,
                                             "maximum number of result (hint)" }},
                                    {"skip-dups",  ArgInfo{Type::Symbol, false,
                                             "whether to skip messages with duplicate message-ids" }},
@@ -1209,7 +1253,7 @@ make_command_map (Context& context)
 
       cmap.emplace("move",
                    CommandInfo{
-                           ArgMap{{"docid",  ArgInfo{Type::Integer, false, "document-id"}},
+                           ArgMap{{"docid",  ArgInfo{Type::Number, false, "document-id"}},
                                    {"msgid",  ArgInfo{Type::String, false, "message-id"}},
                                    {"flags",   ArgInfo{Type::String, false, "new flags for the message"}},
                                    {"maildir", ArgInfo{Type::String, false, "the target maildir" }},
@@ -1241,7 +1285,7 @@ make_command_map (Context& context)
 
       cmap.emplace("remove",
                    CommandInfo{
-                           ArgMap{ {"docid", ArgInfo{Type::Integer, true,
+                           ArgMap{ {"docid", ArgInfo{Type::Number, true,
                                                    "document-id for the message to remove" }}},
                            "remove a message from filesystem and database",
                           [&](const auto& params){remove_handler(context, params);}});
@@ -1256,7 +1300,7 @@ make_command_map (Context& context)
 
       cmap.emplace("view",
                    CommandInfo{
-                           ArgMap{{"docid",  ArgInfo{Type::Integer, false, "document-id"}},
+                           ArgMap{{"docid",  ArgInfo{Type::Number, false, "document-id"}},
                                    {"msgid",  ArgInfo{Type::String, false, "message-id"}},
                                    {"path",   ArgInfo{Type::String, false, "message filesystem path"}},
 
@@ -1310,6 +1354,8 @@ mu_cmd_server (MuConfig *opts, GError **err) try
 
                         auto call{Sexp::Node::make(line)};
                         invoke(context.command_map, call);
+
+                        save_line(line);
 
                 } catch (const Error& er) {
                         std::cerr << ";; error: " << er.what() << "\n";
