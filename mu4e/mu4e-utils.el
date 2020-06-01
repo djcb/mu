@@ -671,13 +671,15 @@ This is used by the completion function in mu4e-compose."
                                            :size (length contacts))))
     (dolist (contact contacts)
       (cl-incf n)
-      (let ((address
-             (if (functionp mu4e-contact-process-function)
-                 (funcall mu4e-contact-process-function (car contact))
-               (car contact))))
+      (let* ((address (plist-get contact :address))
+             (address
+              (if (functionp mu4e-contact-process-function)
+                  (funcall mu4e-contact-process-function address)
+                address)))
         (when address ;; note the explicit deccode; the strings we get are  utf-8,
           ;; but emacs doesn't know yet.
-          (puthash (decode-coding-string address 'utf-8) (cdr contact) mu4e~contacts))))
+          (puthash (decode-coding-string address 'utf-8)
+                   (plist-get contact :rank) mu4e~contacts))))
 
     (setq mu4e~contacts-tstamp (or tstamp "0"))
 
