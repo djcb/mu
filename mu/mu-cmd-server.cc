@@ -1131,9 +1131,11 @@ make_command_map (Context& context)
 {
       CommandMap cmap;
 
+      using Type = Node::Type;
+
       cmap.emplace("add",
                    CommandInfo{
-                           ArgMap{ {"path",    ArgInfo{Type::String, true, "file system path to the message" }}},
+                           ArgMap{ {"path", ArgInfo{Type::String, true, "file system path to the message" }}},
                            "add a message to the store",
                            [&](const auto& params){add_handler(context, params);}});
 
@@ -1277,7 +1279,7 @@ mu_cmd_server (MuConfig *opts, GError **err) try
         if (opts->commands) {
                 Context ctx{};
                 auto cmap = make_command_map(ctx);
-                invoke(cmap, Sexp::parse("(help :full t)"));
+                invoke(cmap, Sexp::Node::make("(help :full t)"));
                 return MU_OK;
         }
 
@@ -1285,7 +1287,7 @@ mu_cmd_server (MuConfig *opts, GError **err) try
         context.command_map = make_command_map (context);
 
         if (opts->eval) { // evaluate command-line command & exit
-                auto call{Sexp::parse(opts->eval)};
+                auto call{Sexp::Node::make(opts->eval)};
                 invoke(context.command_map, call);
                 return MU_OK;
         }
@@ -1306,8 +1308,7 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                         if (line.find_first_not_of(" \t") == std::string::npos)
                                 continue; // skip whitespace-only lines
 
-                        auto call{Sexp::parse(line)};
-
+                        auto call{Sexp::Node::make(line)};
                         invoke(context.command_map, call);
 
                 } catch (const Error& er) {

@@ -28,7 +28,7 @@
 #include <algorithm>
 
 #include "utils/mu-error.hh"
-#include "utils/mu-sexp-parser.hh"
+#include "utils/mu-sexp.hh"
 
 
 namespace Mu {
@@ -49,18 +49,18 @@ namespace Command {
 
 /// Information about a function argument
 struct ArgInfo {
-        ArgInfo (Sexp::Type typearg, bool requiredarg, std::string&& docarg):
+        ArgInfo (Sexp::Node::Type typearg, bool requiredarg, std::string&& docarg):
                 type{typearg}, required{requiredarg},docstring{std::move(docarg)}
                 {}
-        const Sexp::Type  type; /**< Sexp::Type of the argument */
-        const bool        required; /**< Is this argument required? */
-        const std::string docstring; /**< Documentation */
+        const Sexp::Node::Type type; /**< Sexp::Node::Type of the argument */
+        const bool             required; /**< Is this argument required? */
+        const std::string      docstring; /**< Documentation */
 };
 
 /// The arguments for a function, which maps their names to the information.
 using ArgMap     = std::unordered_map<std::string, ArgInfo>;
 // The parameters to a Handler.
-using Parameters = std::vector<Sexp::Node>;
+using Parameters = Sexp::Node::Seq;
 
 int                get_int_or    (const Parameters& parms, const std::string& argname, int alt=0);
 bool               get_bool_or   (const Parameters& parms, const std::string& argname, bool alt=false);
@@ -148,7 +148,6 @@ operator<<(std::ostream& os, const Command::CommandMap& map)
 
         return os;
 }
-
 
 } // namespace Command
 } // namespace Mu

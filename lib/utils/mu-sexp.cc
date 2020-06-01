@@ -1,5 +1,6 @@
 /*
-** Copyright (C) 2020 djcb <djcb@evergrey>
+** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,8 +19,10 @@
 */
 
 
-#include "mu-sexp-parser.hh"
+#include "mu-sexp.hh"
 #include "mu-utils.hh"
+
+#include <sstream>
 
 using namespace Mu;
 using namespace Sexp;
@@ -58,16 +61,16 @@ parse_list (const std::string& expr, size_t& pos)
         if (expr[pos] != '(') // sanity check.
                 throw parsing_error(pos, "expected: '(' but got '%c", expr[pos]);
 
-        std::vector<Node> children;
+        Node::Seq children;
 
         ++pos;
         while (expr[pos] != ')' && pos != expr.size())
-                children.emplace_back(parse(expr, pos));
+                children.add(parse(expr, pos));
 
         if (expr[pos] != ')')
                 throw parsing_error(pos, "expected: ')' but got '%c'", expr[pos]);
         ++pos;
-        return Node{std::move(children)};
+        return Node::make_list(std::move(children));
 }
 
 // parse string
@@ -100,7 +103,7 @@ parse_string (const std::string& expr, size_t& pos)
                 throw parsing_error(pos, "unterminated string '%s'", str.c_str());
 
         ++pos;
-        return Node{Type::String, std::move(str)};
+        return Node::make_string(std::move(str));
 }
 
 static Node
@@ -118,7 +121,7 @@ parse_integer (const std::string& expr, size_t& pos)
         for (; isdigit(expr[pos]); ++pos)
                 num += expr[pos];
 
-        return Node {Type::Integer, std::move(num)};
+        return Node::make_number(::atoi(num.c_str()));
 }
 
 static Node
@@ -131,7 +134,7 @@ parse_symbol (const std::string& expr, size_t& pos)
         for  (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
                 symbol += expr[pos];
 
-        return Node { Type::Symbol, std::move(symbol)};
+        return Node::make_symbol(std::move(symbol));
 }
 
 
@@ -163,7 +166,7 @@ parse (const std::string& expr, size_t& pos)
 }
 
 Node
-Sexp::parse (const std::string& expr)
+Sexp::Node::make (const std::string& expr)
 {
         size_t pos{};
         auto node{::parse (expr, pos)};
@@ -172,4 +175,43 @@ Sexp::parse (const std::string& expr)
                 throw parsing_error(pos, "trailing data starting with '%c'", expr[pos]);
 
         return node;
+}
+
+
+std::string
+Sexp::Node::to_string () const
+{
+        std::stringstream sstrm;
+
+        switch (type()) {
+        case Type::List: {
+                sstrm << '(';
+                bool first{true};
+                for (auto&& child : elements()) {
+                        sstrm << (first ? "" : " ") << child.to_string();
+                        first = false;
+                }
+                sstrm << ')';
+                break;
+        }
+        case Type::String:
+                //sstrm << quote(value());
+                sstrm << "\"";
+                for (auto&& k: value()) {
+                        switch (k) {
+                        case '"' : sstrm << "\\\""; break;
+                        case '\\': sstrm << "\\\\"; break;
+                        default:   sstrm << k;
+                        }
+                }
+                sstrm << "\"";
+                break;
+
+        case Type::Number:
+        case Type::Symbol:
+        default:
+                sstrm << value();
+        }
+
+        return sstrm.str();
 }

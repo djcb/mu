@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -31,23 +31,23 @@ using namespace Mu;
 static void
 test_param_getters()
 {
-        const auto node { Sexp::parse(R"((foo :bar 123 :cuux "456" :boo nil :bah true))")};
+        const auto node { Sexp::Node::make(R"((foo :bar 123 :cuux "456" :boo nil :bah true))")};
 
         std::cout << node << "\n";
 
-        g_assert_cmpint(Command::get_int_or(node.children,"bar"), ==, 123);
-        assert_equal(Command::get_string_or(node.children, "bra", "bla"), "bla");
-        assert_equal(Command::get_string_or(node.children, "cuux"), "456");
+        g_assert_cmpint(Command::get_int_or(node.elements(), "bar"), ==, 123);
+        assert_equal(Command::get_string_or(node.elements(), "bra", "bla"), "bla");
+        assert_equal(Command::get_string_or(node.elements(), "cuux"), "456");
 
-        g_assert_true(Command::get_bool_or(node.children,"boo") == false);
-        g_assert_true(Command::get_bool_or(node.children,"bah") == true);
+        g_assert_true(Command::get_bool_or(node.elements(),"boo") == false);
+        g_assert_true(Command::get_bool_or(node.elements(),"bah") == true);
 }
 
 
 static bool
 call (const Command::CommandMap& cmap, const std::string& sexp) try
 {
-        const auto node{Sexp::parse(sexp)};
+        const auto node{Sexp::Node::make(sexp)};
         g_message ("invoking %s", to_string(node).c_str());
 
         invoke (cmap, node);
@@ -70,8 +70,8 @@ test_command()
 
         cmap.emplace("my-command",
                      CommandInfo{
-                             ArgMap{ {"param1", ArgInfo{Sexp::Type::String, true, "some string" }},
-                                     {"param2", ArgInfo{Sexp::Type::Integer, false, "some integer"}}},
+                             ArgMap{ {"param1", ArgInfo{Sexp::Node::Type::String, true, "some string" }},
+                                     {"param2", ArgInfo{Sexp::Node::Type::Number, false, "some integer"}}},
                             "My command,",
                             {}});
 
@@ -93,8 +93,8 @@ test_command2()
         cmap.emplace("bla",
                    CommandInfo{
                            ArgMap{
-                                   {"foo",  ArgInfo{Sexp::Type::Integer, false, "foo"}},
-                                   {"bar",  ArgInfo{Sexp::Type::String, false,  "bar"}},
+                                   {"foo",  ArgInfo{Sexp::Node::Type::Number, false, "foo"}},
+                                   {"bar",  ArgInfo{Sexp::Node::Type::String, false,  "bar"}},
                            },"yeah",
                            [&](const auto& params){}});
 
@@ -115,8 +115,8 @@ test_command_fail()
 
         cmap.emplace("my-command",
                      CommandInfo{
-                             ArgMap{ {"param1", ArgInfo{Sexp::Type::String, true, "some string" }},
-                                     {"param2", ArgInfo{Sexp::Type::Integer, false, "some integer"}}},
+                             ArgMap{ {"param1", ArgInfo{Sexp::Node::Type::String, true, "some string" }},
+                                     {"param2", ArgInfo{Sexp::Node::Type::Number, false, "some integer"}}},
                             "My command,",
                             {}});
 
@@ -124,7 +124,6 @@ test_command_fail()
         g_assert_false (call(cmap, "(my-command2)"));
         g_assert_false(call(cmap, "(my-command :param1 123 :param2 123)"));
         g_assert_false(call(cmap, "(my-command :param1 \"hello\" :param2 \"123\")"));
-
 }
 
 
