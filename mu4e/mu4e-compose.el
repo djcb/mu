@@ -550,9 +550,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                     (forward     "*forward*")
                     (otherwise   "*draft*")))))
     (rename-buffer (generate-new-buffer-name
-                    (truncate-string-to-width str
-                                              mu4e~compose-buffer-max-name-length
-                                              nil nil t)
+                    (truncate-string-to-width str mu4e~compose-buffer-max-name-length)
                     (buffer-name)))))
 
 (defun mu4e~compose-crypto-reply (parent compose-type)
