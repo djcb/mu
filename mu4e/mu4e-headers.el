@@ -681,7 +681,7 @@ found."
 (defun mu4e~headers-field-truncate-to-width (_msg _field val width)
   "Truncate VAL to WIDTH."
   (if width
-      (truncate-string-to-width val width 0 ?\s t)
+      (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
     val))
 
 (defvar mu4e~headers-field-handler-functions
@@ -1032,7 +1032,7 @@ after the end of the search results."
           (concat
            (propertize
             (if width
-                (truncate-string-to-width name width 0 ?\s t)
+                (truncate-string-to-width name width 0 ?\s truncate-string-ellipsis)
               name)
             'face (when arrow 'bold)
             'help-echo help
