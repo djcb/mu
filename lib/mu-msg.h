@@ -1,3 +1,4 @@
+
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
 **
 ** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -32,7 +33,7 @@ struct _MuMsg;
 typedef struct _MuMsg MuMsg;
 
 /* options for various functions */
-enum _MuMsgOptions {
+typedef enum {
 	MU_MSG_OPTION_NONE              = 0,
 /* 1 << 0 is still free! */
 
@@ -59,10 +60,7 @@ enum _MuMsgOptions {
 	/* recurse into submessages */
 	MU_MSG_OPTION_RECURSE_RFC822    = 1 << 11
 
-};
-typedef enum _MuMsgOptions MuMsgOptions;
-
-
+} MuMsgOptions;
 
 /**
  * create a new MuMsg* instance which parses a message and provides
@@ -435,59 +433,6 @@ int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
 gboolean mu_msg_is_readable (MuMsg *self);
 
 
-struct _MuMsgIterThreadInfo;
-
-
-/**
- * convert the msg to a Lisp symbolic expression (for further processing in
- * e.g. emacs)
- *
- * @param msg a valid message
- * @param docid the docid for this message, or 0
- * @param ti thread info for the current message, or NULL
- * @param opts, bitwise OR'ed;
- *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
- *      obtained from the database (this is much faster if the MuMsg is
- *      database-backed, so no file needs to be opened)
- *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
- *      files and include links to those in the sexp
- *  and for message parts:
- *  	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
- *	MU_MSG_OPTION_AUTO_RETRIEVE_KEY: attempt to retrieve keys online
- *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
- *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)
- *
- * @return a string with the sexp (free with g_free) or NULL in case of error
- */
-char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
-		      const struct _MuMsgIterThreadInfo *ti,
-		      MuMsgOptions ops)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-#ifdef HAVE_JSON_GLIB
-
-struct _JsonNode; /* forward declaration */
-
-/**
- * convert the msg to json
- *
- * @param msg a valid message
- * @param docid the docid for this message, or 0
- * @param ti thread info for the current message, or NULL
- * @param opts, bitwise OR'ed;
- *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
- *      obtained from the database (this is much faster if the MuMsg is
- *      database-backed, so no file needs to be opened)
- *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
- *      files and include links to those in the sexp
- *
- * @return a string with the sexp (free with g_free) or NULL in case of error
- */
-struct _JsonNode* mu_msg_to_json (MuMsg *msg, unsigned docid,
-				  const struct _MuMsgIterThreadInfo *ti,
-				  MuMsgOptions ops) G_GNUC_WARN_UNUSED_RESULT;
-#endif /*HAVE_JSON_GLIB*/
-
 /**
  * move a message to another maildir; note that this does _not_ update
  * the database
@@ -544,14 +489,13 @@ typedef guint MuMsgContactType;
 #define mu_msg_contact_type_is_valid(MCT)\
 	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
-struct _MuMsgContact {
+typedef struct {
 	const char		*name;	       /**< Foo Bar */
 	const char		*email;        /**< foo@bar.cuux */
 	const char              *full_address; /**< Foo Bar <foo@bar.cuux> */
 	MuMsgContactType	 type;	       /**< MU_MSG_CONTACT_TYPE_{ TO,
 						  CC, BCC, FROM, REPLY_TO} */
-};
-typedef struct _MuMsgContact	 MuMsgContact;
+} MuMsgContact;
 
 
 /**
@@ -649,6 +593,97 @@ char*       mu_str_flags    (MuFlags flags)
     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
+struct _MuMsgIterThreadInfo;
+
+#ifdef HAVE_JSON_GLIB
+
+struct _JsonNode; /* forward declaration */
+
+/**
+ * convert the msg to json
+ *
+ * @param msg a valid message
+ * @param docid the docid for this message, or 0
+ * @param ti thread info for the current message, or NULL
+ * @param opts, bitwise OR'ed;
+ *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
+ *      obtained from the database (this is much faster if the MuMsg is
+ *      database-backed, so no file needs to be opened)
+ *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
+ *      files and include links to those in the sexp
+ *
+ * @return a string with the sexp (free with g_free) or NULL in case of error
+ */
+struct _JsonNode* mu_msg_to_json (MuMsg *msg, unsigned docid,
+				  const struct _MuMsgIterThreadInfo *ti,
+				  MuMsgOptions ops) G_GNUC_WARN_UNUSED_RESULT;
+#endif /*HAVE_JSON_GLIB*/
+
+
+/**
+ * convert the msg to a Lisp symbolic expression (for further processing in
+ * e.g. emacs)
+ *
+ * @param msg a valid message
+ * @param docid the docid for this message, or 0
+ * @param ti thread info for the current message, or NULL
+ * @param opts, bitwise OR'ed;
+ *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
+ *      obtained from the database (this is much faster if the MuMsg is
+ *      database-backed, so no file needs to be opened)
+ *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
+ *      files and include links to those in the sexp
+ *  and for message parts:
+ *  	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
+ *	MU_MSG_OPTION_AUTO_RETRIEVE_KEY: attempt to retrieve keys online
+ *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
+ *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)
+ *
+ * @return a string with the sexp (free with g_free) or NULL in case of error
+ */
+char* mu_msg_to_sexp (MuMsg *msg, unsigned docid,
+		      const struct _MuMsgIterThreadInfo *ti,
+		      MuMsgOptions ops)
+	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+
+
 G_END_DECLS
+
+
+#ifdef __cplusplus
+
+#include <utils/mu-sexp.hh>
+
+namespace Mu {
+
+/**
+ * convert the msg to a Lisp symbolic expression (for further processing in
+ * e.g. emacs)
+ *
+ * @param msg a valid message
+ * @param docid the docid for this message, or 0
+ * @param ti thread info for the current message, or NULL
+ * @param opts, bitwise OR'ed;
+ *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
+ *      obtained from the database (this is much faster if the MuMsg is
+ *      database-backed, so no file needs to be opened)
+ *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
+ *      files and include links to those in the sexp
+ *  and for message parts:
+ *  	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
+ *	MU_MSG_OPTION_AUTO_RETRIEVE_KEY: attempt to retrieve keys online
+ *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
+ *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)
+ *
+ * @return a Sexp::Node representing the message
+ */
+Mu::Sexp::Node msg_to_sexp (MuMsg *msg, unsigned docid,
+			    const struct _MuMsgIterThreadInfo *ti,
+			    MuMsgOptions ops);
+}
+
+#endif /*__cplusplus*/
+
 
 #endif /*__MU_MSG_H__*/
