@@ -1,5 +1,5 @@
 #+STARTUP:showall
-* NEWS (user visible changes)
+* NEWS (user visible changes & bigger non-visible ones)
 
 * 1.5.x (unreleased, development version)
 
@@ -13,6 +13,9 @@
       single-filesystem case)
 
     - Optionally provide readline support for the mu server (when in tty-mode)
+
+    - Reworked the way mu generates s-expressions for mu4e; they are created
+      programmatically now instead of through string building.
 
 *** mu4e
 

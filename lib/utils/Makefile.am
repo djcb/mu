@@ -55,8 +55,8 @@ libmu_utils_la_SOURCES=						\
 	mu-command-parser.hh					\
 	mu-readline.cc						\
 	mu-readline.hh						\
-	mu-sexp-parser.cc					\
-	mu-sexp-parser.hh					\
+	mu-sexp.cc						\
+	mu-sexp.hh						\
 	mu-str.c						\
 	mu-str.h						\
 	mu-util.c						\
@@ -94,10 +94,10 @@ test_mu_str_LDADD=						\
 	libmu-utils.la
 
 TEST_PROGS+=							\
-	test-sexp-parser
-test_sexp_parser_SOURCES=					\
-	test-sexp-parser.cc
-test_sexp_parser_LDADD=						\
+	test-sexp
+test_sexp_SOURCES=						\
+	test-sexp.cc
+test_sexp_LDADD=						\
 	libmu-utils.la
 
 TEST_PROGS+=							\

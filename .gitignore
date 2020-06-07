@@ -121,3 +121,4 @@ perf.data.old
 mu-*-coverage
 mu*tar.xz
 compile_commands.json
+/lib/utils/test-sexp
