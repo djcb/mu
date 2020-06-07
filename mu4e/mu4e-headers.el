@@ -32,6 +32,8 @@
 (require 'fringe)
 (require 'hl-line)
 
+(require 'mule-util) ;; seems _some_ people need this for truncate-string-ellipsis
+
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-proc)
 (require 'mu4e-vars)
