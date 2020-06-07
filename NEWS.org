@@ -114,20 +114,23 @@
       which is not meant for distribution. ~msg2pdf~ is disabled for now.
 
 
-*** How to upgrade
+*** How to upgrade mu4e
 
-    - upgrade mu to the latest stable version
+    - upgrade ~mu~ to the latest stable version (1.4.x)
 
     - shut down emacs
 
-    - Run `mu init' in a terminal
+    - Run ~mu init~ in a terminal
 
-    - Make sure mu init points to the right Maildir folder and add your email address(es) the following way:
-      `mu init --maildir=~/Maildir --my-address=jim@example.com --my-address=bob@example.com'
+    - Make sure ~mu init~ points to the right Maildir folder and add your email
+      address(es) the following way:
 
-    - once this is done run `mu index'
+      ~mu init --maildir=~/Maildir --my-address=jim@example.com --my-address=bob@example.com~
 
-    - Don't forget to delete your old mail cache location if necessary (see release notes for more detail).
+    - once this is done, run ~mu index~
+
+    - Don't forget to delete your old mail cache location if necessary (see
+      release notes for more detail).
 
 
 ** 1.2
