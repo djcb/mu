@@ -55,7 +55,7 @@ test_parser()
         check_parse(R"("foo\"bar\"cuux")",  "\"foo\\\"bar\\\"cuux\"");
 
         check_parse(R"("foo
-bar")",  "\"foo\\nbar\"");
+bar")",  "\"foo\nbar\"");
 }
 
 static void
@@ -107,7 +107,7 @@ test_props()
 
         Node expr = Node::make_list(std::move(seq));
         assert_equal(expr.to_string(),
-                     "(:foo \"b\\303\\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
+                     "(:foo \"b\303\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
 }
 
 int
