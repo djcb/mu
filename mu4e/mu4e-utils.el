@@ -1050,6 +1050,7 @@ mu4e logs some of its internal workings to a log-buffer. See
 (defun mu4e-show-log ()
   "Visit the mu4e debug log."
   (interactive)
+  (unless mu4e-debug (mu4e-toggle-logging))
   (let ((buf (get-buffer mu4e~log-buffer-name)))
     (unless (buffer-live-p buf)
       (mu4e-warn "No debug log available"))
