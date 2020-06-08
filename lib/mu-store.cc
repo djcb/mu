@@ -447,6 +447,7 @@ Store::in_transaction () const
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // C compat
 extern "C" {
@@ -1390,44 +1391,4 @@ mu_store_get_dirstamp (const MuStore *store, const char *dirpath, GError **err)
         return self(store)->dirstamp(dirpath);
 }
 
-void
-mu_store_print_info  (const MuStore *store, gboolean nocolor)
-{
-	const auto green{nocolor ? "" : MU_COLOR_GREEN};
-	const auto def{nocolor ? "" : MU_COLOR_DEFAULT};
-
-        std::cout << "database-path      : "
-                  << green << self(store)->database_path() << def << "\n"
-                  << "messages in store  : "
-                  << green << self(store)->size() << def << "\n"
-                  << "schema-version     : "
-                  << green << self(store)->schema_version() << def << "\n";
-
-	const auto created{mu_store_created (store)};
-	const auto tstamp{localtime (&created)};
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-y2k"
-        char tbuf[64];
-	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
-#pragma GCC diagnostic pop
-
-        std::cout << "created            : " << green << tbuf << def << "\n"
-                  << "maildir            : "
-                  << green << self(store)->root_maildir() << def << "\n";
-
-	std::cout << ("personal-addresses : ");
-
-	auto addrs{mu_store_personal_addresses (store)};
-        if (!addrs || g_strv_length(addrs) == 0)
-                std::cout << green << "<none>" << def << "\n";
-        else {
-                for (auto i = 0U; addrs[i]; ++i) {
-                        std::cout << (i != 0 ?  "                     " : "")
-                                  << green << addrs[i] << def << "\n";
-                }
-        }
-
-	g_strfreev(addrs);
-}
 }

@@ -17,16 +17,14 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
 #include <glib-object.h>
 #include <locale.h>
 
-#include "mu-config.h"
-#include "mu-cmd.h"
+#include "mu-config.hh"
+#include "mu-cmd.hh"
 #include "mu-runtime.h"
 
 

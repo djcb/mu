@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <iostream>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +29,7 @@
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 #include "mu-maildir.h"
 #include "mu-contacts.hh"
 #include "mu-runtime.h"
@@ -37,10 +39,12 @@
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
 
+#include "utils/mu-error.hh"
+
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
 static gboolean
-view_msg_sexp (MuMsg *msg, MuConfig *opts)
+view_msg_sexp (MuMsg *msg, const MuConfig *opts)
 {
 	char *sexp;
 
@@ -74,13 +78,12 @@ each_part (MuMsg *msg, MuMsgPart *part, gchar **attach)
 
 /* return comma-sep'd list of attachments */
 static gchar *
-get_attach_str (MuMsg *msg, MuConfig *opts)
+get_attach_str (MuMsg *msg, const MuConfig *opts)
 {
 	gchar		*attach;
-	MuMsgOptions	 msgopts;
 
-	msgopts = mu_config_get_msg_options(opts) |
-		MU_MSG_OPTION_CONSOLE_PASSWORD;
+        const auto msgopts = (MuMsgOptions)
+                (mu_config_get_msg_options(opts) | MU_MSG_OPTION_CONSOLE_PASSWORD);
 
 	attach = NULL;
 	mu_msg_part_foreach (msg, msgopts,
@@ -113,15 +116,15 @@ print_field (const char* field, const char *val, gboolean color)
 
 /* a summary_len of 0 mean 'don't show summary, show body */
 static void
-body_or_summary (MuMsg *msg, MuConfig *opts)
+body_or_summary (MuMsg *msg, const MuConfig *opts)
 {
 	const char *body;
-	gboolean color;
+	gboolean    color;
+        int my_opts = mu_config_get_msg_options(opts) |
+                MU_MSG_OPTION_CONSOLE_PASSWORD;
 
 	color = !opts->nocolor;
-	body = mu_msg_get_body_text (msg,
-				     mu_config_get_msg_options(opts) |
-				     MU_MSG_OPTION_CONSOLE_PASSWORD);
+	body = mu_msg_get_body_text (msg, (MuMsgOptions)my_opts);
 	if (!body) {
 		if (mu_msg_get_flags (msg) & MU_FLAG_ENCRYPTED) {
 			color_maybe (MU_COLOR_CYAN);
@@ -151,7 +154,7 @@ body_or_summary (MuMsg *msg, MuConfig *opts)
 /* we ignore fields for now */
 /* summary_len == 0 means "no summary */
 static gboolean
-view_msg_plain (MuMsg *msg, MuConfig *opts)
+view_msg_plain (MuMsg *msg, const MuConfig *opts)
 {
 	gchar *attachs;
 	time_t date;
@@ -189,7 +192,7 @@ view_msg_plain (MuMsg *msg, MuConfig *opts)
 
 
 static gboolean
-handle_msg (const char *fname, MuConfig *opts, GError **err)
+handle_msg (const char *fname, const MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	gboolean rv;
@@ -216,7 +219,7 @@ handle_msg (const char *fname, MuConfig *opts, GError **err)
 }
 
 static gboolean
-view_params_valid (MuConfig *opts, GError **err)
+view_params_valid (const MuConfig *opts, GError **err)
 {
 	/* note: params[0] will be 'view' */
 	if (!opts->params[0] || !opts->params[1]) {
@@ -240,7 +243,7 @@ view_params_valid (MuConfig *opts, GError **err)
 
 
 static MuError
-cmd_view (MuConfig *opts, GError **err)
+cmd_view (const MuConfig *opts, GError **err)
 {
 	int i;
 	gboolean rv;
@@ -266,13 +269,13 @@ cmd_view (MuConfig *opts, GError **err)
 
 leave:
 	if (!rv)
-		return err && *err ? (*err)->code : MU_ERROR;
+		return err && *err ? (MuError)(*err)->code : MU_ERROR;
 
 	return MU_OK;
 }
 
 static MuError
-cmd_mkdir (MuConfig *opts, GError **err)
+cmd_mkdir (const MuConfig *opts, GError **err)
 {
 	int i;
 
@@ -289,7 +292,7 @@ cmd_mkdir (MuConfig *opts, GError **err)
 	for (i = 1; opts->params[i]; ++i)
 		if (!mu_maildir_mkdir (opts->params[i], opts->dirmode,
 				       FALSE, err))
-			return err && *err ? (*err)->code :
+			return err && *err ? (MuError)(*err)->code :
 				MU_ERROR_FILE_CANNOT_MKDIR;
 	return MU_OK;
 }
@@ -312,13 +315,10 @@ check_file_okay (const char *path, gboolean cmd_add)
 	return TRUE;
 }
 
-
-typedef gboolean (*ForeachMsgFunc) (MuStore *store, const char *path,
-				    GError **err);
-
+typedef bool (*ForeachMsgFunc) (Mu::Store& store, const char *path, GError **err);
 
 static MuError
-foreach_msg_file (MuStore *store, MuConfig *opts,
+foreach_msg_file (Mu::Store& store, const MuConfig *opts,
 		  ForeachMsgFunc foreach_func, GError **err)
 {
 	unsigned	u;
@@ -366,17 +366,19 @@ foreach_msg_file (MuStore *store, MuConfig *opts,
 }
 
 
-static gboolean
-add_path_func (MuStore *store, const char *path, GError **err)
+static bool
+add_path_func (Mu::Store& store, const char *path, GError **err)
 {
-	return mu_store_add_path (store, path, err);
+        const auto docid = store.add_message (path);
+        g_debug ("added message @ %s, docid=%u", docid);
+
+        return true;
 }
 
 
 static MuError
-cmd_add (MuStore *store, MuConfig *opts, GError **err)
+cmd_add (Mu::Store& store, const MuConfig *opts, GError **err)
 {
-	g_return_val_if_fail (store, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_ADD,
 			      MU_ERROR_INTERNAL);
@@ -384,20 +386,17 @@ cmd_add (MuStore *store, MuConfig *opts, GError **err)
 	return foreach_msg_file (store, opts, add_path_func, err);
 }
 
-static gboolean
-remove_path_func (MuStore *store, const char *path, GError **err)
+static bool
+remove_path_func (Mu::Store& store, const char *path, GError **err)
 {
-	if (!mu_store_remove_path (store, path)) {
-		mu_util_g_set_error (err, MU_ERROR_XAPIAN_REMOVE_FAILED,
-				     "failed to remove %s", path);
-		return FALSE;
-	}
+        const auto res = store.remove_message (path);
+        g_debug ("removed %s (%s)", path, res ? "yes" : "no");
 
-	return TRUE;
+        return true;
 }
 
 static MuError
-cmd_remove (MuStore *store, MuConfig *opts, GError **err)
+cmd_remove (Mu::Store& store, const MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_REMOVE,
@@ -406,25 +405,23 @@ cmd_remove (MuStore *store, MuConfig *opts, GError **err)
 	return foreach_msg_file (store, opts, remove_path_func, err);
 }
 
-static gboolean
-tickle_func (MuStore *store, const char *path, GError **err)
+static bool
+tickle_func (Mu::Store& store, const char *path, GError **err)
 {
-	MuMsg		*msg;
-	gboolean	 rv;
-
-	msg = mu_msg_new_from_file (path, NULL, err);
+	MuMsg *msg{mu_msg_new_from_file (path, NULL, err)};
 	if (!msg)
-		return FALSE;
+		return false;
 
-	rv = mu_msg_tickle (msg, err);
+	const auto res = mu_msg_tickle (msg, err);
+        g_debug ("tickled %s (%s)", res ? "ok" : "failed");
 	mu_msg_unref (msg);
 
-	return rv;
+	return res == TRUE;
 }
 
 
 static MuError
-cmd_tickle (MuStore *store, MuConfig *opts, GError **err)
+cmd_tickle (Mu::Store& store, const MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_TICKLE,
@@ -509,11 +506,11 @@ print_verdict (VData *vdata, gboolean color, gboolean verbose)
 
 
 static MuError
-cmd_verify (MuConfig *opts, GError **err)
+cmd_verify (const MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
-	MuMsgOptions msgopts;
-	VData vdata;
+	int    msgopts;
+	VData  vdata;
 
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_VERIFY,
@@ -537,7 +534,7 @@ cmd_verify (MuConfig *opts, GError **err)
 	vdata.combined_status = MU_MSG_PART_SIG_STATUS_UNSIGNED;
 	vdata.oneline = FALSE;
 
-	mu_msg_part_foreach (msg, msgopts,
+	mu_msg_part_foreach (msg, (MuMsgOptions)msgopts,
 			     (MuMsgPartForeachFunc)each_sig, &vdata);
 
 	if (!opts->quiet)
@@ -551,20 +548,51 @@ cmd_verify (MuConfig *opts, GError **err)
 }
 
 static MuError
-cmd_info (MuStore *store, MuConfig *opts, GError **err)
+cmd_info (const Mu::Store& store, const MuConfig *opts, GError **err)
 {
-	mu_store_print_info (store, opts->nocolor);
+	const auto green{opts->nocolor ? "" : MU_COLOR_GREEN};
+	const auto def{opts->nocolor ? "" : MU_COLOR_DEFAULT};
+
+        std::cout << "database-path      : "
+                  << green << store.database_path() << def << "\n"
+                  << "messages in store  : "
+                  << green << store.size() << def << "\n"
+                  << "schema-version     : "
+                  << green << store.schema_version() << def << "\n";
+
+	const auto created{store.created()};
+	const auto tstamp{::localtime (&created)};
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-y2k"
+        char tbuf[64];
+	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
+#pragma GCC diagnostic pop
+
+        std::cout << "created            : " << green << tbuf << def << "\n"
+                  << "maildir            : "
+                  << green << store.root_maildir() << def << "\n";
+
+	std::cout << ("personal-addresses : ");
+
+	const auto addrs{store.personal_addresses()};
+        if (addrs.empty())
+                std::cout << green << "<none>" << def << "\n";
+        else {
+                bool first{true};
+                for (auto&& c: addrs) {
+                        std::cout << (!first ?  "                     " : "")
+                                  << green << c << def << "\n";
+                        first = false;
+                }
+        }
 
 	return MU_OK;
 }
 
-
 static MuError
-cmd_init (MuConfig *opts, GError **err)
+cmd_init (const MuConfig *opts, GError **err)
 {
-	MuStore	   *store;
-	const char *path;
-
         /* not provided, nor could we find a good default */
         if (!opts->maildir) {
                 mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
@@ -573,26 +601,43 @@ cmd_init (MuConfig *opts, GError **err)
 		return MU_ERROR_IN_PARAMETERS;
         }
 
-	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
-	store = mu_store_new_create (path,
-				     opts->maildir,
-				     (const char**)opts->my_addresses,
-				     err);
-	if (!store)
-		return MU_G_ERROR_CODE(err);
+        Mu::StringVec my_addrs;
+        auto addrs = opts->my_addresses;
+        while (addrs && *addrs)  {
+                my_addrs.emplace_back (*addrs);
+                ++addrs;
+        }
+
+        Mu::Store store(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), opts->maildir, my_addrs);
 
 	if (!opts->quiet) {
-		mu_store_print_info (store, opts->nocolor);
+		cmd_info (store, opts, NULL);
 		g_print ("\nstore created.\n"
 			 "use 'mu index' to fill the database "
                          "with your messages.\n"
 			 "see mu-index(1) for details\n");
 	}
 
-	mu_store_unref (store);
 	return MU_OK;
 }
 
+static MuError
+cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
+{
+        const auto res = mu_cmd_index(store, opts, err);
+        if (res == MU_OK && !opts->quiet)
+                cmd_info(store, opts, err);
+
+        return res;
+}
+
+static MuError
+cmd_find (const MuConfig *opts, GError **err)
+{
+        Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), true/*readonly*/};
+
+        return mu_cmd_find(reinterpret_cast<MuStore*>(&store), opts, err);
+}
 
 static void
 show_usage (void)
@@ -604,46 +649,27 @@ show_usage (void)
 		   "more information\n");
 }
 
-typedef MuError (*store_func) (MuStore *, MuConfig *, GError **err);
+typedef MuError (*readonly_store_func) (const Mu::Store&, const MuConfig *, GError **err);
+typedef MuError (*writable_store_func) (Mu::Store&,       const MuConfig *, GError **err);
 
 
 static MuError
-with_store (store_func func, MuConfig *opts, gboolean read_only, GError **err)
+with_readonly_store (readonly_store_func func, const MuConfig *opts, GError **err)
 {
-	MuError		 merr;
-	MuStore		*store;
-	const char	*path;
-
-	path  = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
-
-	if (read_only)
-		store = mu_store_new_readable (path, err);
-	else
-		store = mu_store_new_writable (path, err);
-
-	if (!store)
-		return MU_G_ERROR_CODE(err);
-
-	merr = func (store, opts, err);
-	mu_store_unref (store);
-
-	return merr;
+        const Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), true/*readonly*/};
+	return func (store, opts, err);
 }
 
 static MuError
-with_readonly_store (store_func func, MuConfig *opts, GError **err)
+with_writable_store (writable_store_func func, const MuConfig *opts, GError **err)
 {
-	return with_store (func, opts, TRUE, err);
+        Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false/*!readonly*/};
+	return func (store, opts, err);
 }
 
-static MuError
-with_writable_store (store_func func, MuConfig *opts, GError **err)
-{
-	return with_store (func, opts, FALSE, err);
-}
 
 static gboolean
-check_params (MuConfig *opts, GError **err)
+check_params (const MuConfig *opts, GError **err)
 {
 	if (!opts->params||!opts->params[0]) {/* no command? */
 		show_usage ();
@@ -656,7 +682,7 @@ check_params (MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_execute (MuConfig *opts, GError **err)
+mu_cmd_execute (const MuConfig *opts, GError **err) try
 {
 	MuError merr;
 
@@ -683,9 +709,9 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_CFIND:
 		merr = with_readonly_store (mu_cmd_cfind, opts, err); break;
 	case MU_CONFIG_CMD_FIND:
-		merr = with_readonly_store (mu_cmd_find, opts, err);  break;
+		merr = cmd_find(opts, err);  break;
 	case MU_CONFIG_CMD_INFO:
-		merr = with_readonly_store (cmd_info, opts, err);  break;
+		merr = with_readonly_store (cmd_info, opts,  err);  break;
 
 	/* writable store */
 
@@ -696,7 +722,7 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	case MU_CONFIG_CMD_TICKLE:
 		merr = with_writable_store (cmd_tickle, opts, err);   break;
 	case MU_CONFIG_CMD_INDEX:
-		merr = with_writable_store (mu_cmd_index, opts, err);   break;
+		merr = with_writable_store (cmd_index, opts, err);   break;
 
 	/* commands instantiate store themselves */
 	case MU_CONFIG_CMD_INIT:
@@ -709,4 +735,11 @@ mu_cmd_execute (MuConfig *opts, GError **err)
 	}
 
 	return merr;
+
+} catch (const Mu::Error& er) {
+        g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", er.what());
+        return MU_ERROR;
+} catch (...) {
+        g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
+        return MU_ERROR;
 }

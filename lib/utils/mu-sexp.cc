@@ -195,18 +195,8 @@ Sexp::Node::to_string () const
                 break;
         }
         case Type::String:
-                //sstrm << quote(value());
-                sstrm << "\"";
-                for (auto&& k: value()) {
-                        switch (k) {
-                        case '"' : sstrm << "\\\""; break;
-                        case '\\': sstrm << "\\\\"; break;
-                        default:   sstrm << k;
-                        }
-                }
-                sstrm << "\"";
+                sstrm << quote(value());
                 break;
-
         case Type::Number:
         case Type::Symbol:
         default:

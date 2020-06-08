@@ -226,11 +226,14 @@ test_mu_cfind_mutt_ab (void)
 				   "'testmu\\.xxx?'",
 				   MU_PROGRAM, CONTACTS_CACHE);
 
+	if (g_test_verbose())
+		g_print("%s\n", cmdline);
+
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-
 	g_assert (output);
+
 	if (output[39] == 'h')
 		g_assert_cmpstr (output,
 				 ==,
@@ -305,20 +308,26 @@ test_mu_cfind_csv (void)
 				   "'testmu\\.xxx?'",
 				   MU_PROGRAM, CONTACTS_CACHE);
 
+	if (g_test_verbose())
+		g_print("%s\n", cmdline);
+
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
+
+	g_print ("\n\n%s\n\n", output);
+
 	g_assert (output);
-	if (output[0] == 'H')
+	if (output[1] == 'H')
 		g_assert_cmpstr (output,
 				 ==,
-				 "Helmut Kröger,hk@testmu.xxx\n"
-				 "Mü,testmu@testmu.xx\n");
+				 "\"Helmut Kröger\",\"hk@testmu.xxx\"\n"
+				 "\"Mü\",\"testmu@testmu.xx\"\n");
 	else
 		g_assert_cmpstr (output,
 				 ==,
-				 "Mü,testmu@testmu.xx\n"
-				 "Helmut Kröger,hk@testmu.xxx\n");
+				 "\"Mü\",\"testmu@testmu.xx\"\n"
+				 "\"Helmut Kröger\",\"hk@testmu.xxx\"\n");
 	g_free (cmdline);
 	g_free (output);
 	g_free (erroutput);
@@ -349,8 +358,9 @@ main (int argc, char *argv[])
 			 test_mu_cfind_csv);
 
 	g_log_set_handler (NULL,
+			   (GLogLevelFlags)(
 			   G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING|
-			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();

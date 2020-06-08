@@ -24,8 +24,9 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "mu-config.h"
-#include "mu-cmd.h"
+#include "mu-config.hh"
+#include "mu-cmd.hh"
+#include "mu-msg.h"
 
 
 static MuConfig MU_CONFIG;
@@ -115,7 +116,7 @@ config_options_group_mu (void)
 
 		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.params, "parameters", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, (GOptionArg)0, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("mu", "general mu options", "", NULL, NULL);
@@ -143,7 +144,7 @@ config_options_group_init (void)
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses, "my e-mail address; can be used multiple times",
 		 "<address>"},
-                {NULL, 0, 0, 0, NULL, NULL, NULL}
+                {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("init", "Options for the 'index' command",
@@ -186,7 +187,7 @@ config_options_group_index (void)
 		 "only check dir-timestamps (false)", NULL},
 		{"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
 		 "don't clean up the database after indexing (false)", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("index", "Options for the 'index' command",
@@ -257,7 +258,7 @@ config_options_group_find (void)
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
 		 "only show messages whose m_time > T (t_time)",
 		 "<timestamp>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("find",
@@ -275,7 +276,7 @@ config_options_group_mkdir (void)
 	GOptionEntry entries[] = {
 		{"mode", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.dirmode,
 		 "set the mode (as in chmod), in octal notation", "<mode>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	/* set dirmode before, because '0000' is a valid mode */
@@ -309,7 +310,7 @@ config_options_group_cfind (void)
 		 "whether to only get 'personal' contacts", NULL},
 		{"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
 		 "only get addresses last seen after T", "<timestamp>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("cfind", "Options for the 'cfind' command",
@@ -326,7 +327,7 @@ config_options_group_script (void)
 	GOptionEntry entries[] = {
 		{G_OPTION_REMAINING, 0,0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.params, "script parameters", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("script", "Options for the 'script' command",
@@ -359,7 +360,7 @@ crypto_option_entries (void)
 		 "attempt to use the GPG agent (false)", NULL},
 		{"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
 		 "attempt to decrypt the message", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	return entries;
@@ -378,7 +379,7 @@ config_options_group_view (void)
 		 "<term>"},
 		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
 		 "output format ('plain'(*), 'sexp')", "<format>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("view", "Options for the 'view' command",
@@ -419,7 +420,7 @@ config_options_group_extract (void)
 		 "overwrite existing files (false)", NULL},
 		{"play", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.play,
 		 "try to 'play' (open) the extracted parts", NULL},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 	og = g_option_group_new("extract",
 				"Options for the 'extract' command",
@@ -453,7 +454,7 @@ config_options_group_server (void)
 		 "list the available command and their parameters, then exit", NULL},
                 {"eval", 'e', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
                  &MU_CONFIG.eval, "expression to evaluate", "<expr>"},
-		{NULL, 0, 0, 0, NULL, NULL, NULL}
+		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
 	og = g_option_group_new("server",
@@ -587,7 +588,7 @@ massage_help (const char *help)
 	char *str;
 
 	rx = g_regex_new ("^Usage:.*\n.*\n",
-			  0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
+			  (GRegexCompileFlags)0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
 	str = g_regex_replace (rx, help,
 			       -1, 0, "",
 			       G_REGEX_MATCH_NEWLINE_ANY, NULL);
@@ -774,7 +775,7 @@ mu_config_uninit (MuConfig *opts)
 }
 
 size_t
-mu_config_param_num (MuConfig *opts)
+mu_config_param_num (const MuConfig *opts)
 {
 	size_t n;
 
@@ -786,9 +787,9 @@ mu_config_param_num (MuConfig *opts)
 
 
 MuMsgOptions
-mu_config_get_msg_options (MuConfig *muopts)
+mu_config_get_msg_options (const MuConfig *muopts)
 {
-	MuMsgOptions opts;
+	int opts;
 
 	opts = MU_MSG_OPTION_NONE;
 
@@ -803,5 +804,5 @@ mu_config_get_msg_options (MuConfig *muopts)
 	if (muopts->overwrite)
 		opts |= MU_MSG_OPTION_OVERWRITE;
 
-	return opts;
+	return (MuMsgOptions)opts;
 }

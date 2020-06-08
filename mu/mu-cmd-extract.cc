@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,22 +17,20 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 
 
 static gboolean
-save_part (MuMsg *msg, const char *targetdir, guint partidx, MuConfig *opts)
+save_part (MuMsg *msg, const char *targetdir, guint partidx, const MuConfig *opts)
 {
 	GError *err;
 	gchar *filepath;
@@ -70,7 +66,7 @@ exit:
 
 
 static gboolean
-save_numbered_parts (MuMsg *msg, MuConfig *opts)
+save_numbered_parts (MuMsg *msg, const MuConfig *opts)
 {
 	gboolean rv;
 	char **parts, **cur;
@@ -116,8 +112,9 @@ anchored_regex (const char* pattern)
 		 pattern[strlen(pattern)-1] == '$' ? "" : "$");
 
 	err = NULL;
-	rx = g_regex_new (anchored, G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0,
-			  &err);
+	rx = g_regex_new (anchored,
+			  (GRegexCompileFlags)(G_REGEX_CASELESS|G_REGEX_OPTIMIZE),
+			  (GRegexMatchFlags)0, &err);
 	g_free (anchored);
 
 	if (!rx) {
@@ -132,7 +129,7 @@ anchored_regex (const char* pattern)
 
 
 static gboolean
-save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
+save_part_with_filename (MuMsg *msg, const char *pattern, const MuConfig *opts)
 {
 	GSList *lst, *cur;
 	GRegex *rx;
@@ -164,7 +161,7 @@ save_part_with_filename (MuMsg *msg, const char *pattern, MuConfig *opts)
 struct _SaveData {
 	gboolean		 result;
 	guint			 saved_num;
-	MuConfig                 *opts;
+	const MuConfig                 *opts;
 };
 typedef struct _SaveData	 SaveData;
 
@@ -232,7 +229,7 @@ exit:
 }
 
 static gboolean
-save_certain_parts (MuMsg *msg, MuConfig *opts)
+save_certain_parts (MuMsg *msg, const MuConfig *opts)
 {
 	SaveData sd;
 	MuMsgOptions msgopts;
@@ -256,7 +253,7 @@ save_certain_parts (MuMsg *msg, MuConfig *opts)
 
 
 static gboolean
-save_parts (const char *path, const char *filename, MuConfig *opts)
+save_parts (const char *path, const char *filename, const MuConfig *opts)
 {
 	MuMsg* msg;
 	gboolean rv;
@@ -336,7 +333,7 @@ each_part_show (MuMsg *msg, MuMsgPart *part, gboolean color)
 
 
 static gboolean
-show_parts (const char* path, MuConfig *opts, GError **err)
+show_parts (const char* path, const MuConfig *opts, GError **err)
 {
 	MuMsg *msg;
 	MuMsgOptions msgopts;
@@ -362,7 +359,7 @@ show_parts (const char* path, MuConfig *opts, GError **err)
 
 
 static gboolean
-check_params (MuConfig *opts, GError **err)
+check_params (const MuConfig *opts, GError **err)
 {
 	size_t param_num;
 
@@ -396,7 +393,7 @@ check_params (MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_extract (MuConfig *opts, GError **err)
+mu_cmd_extract (const MuConfig *opts, GError **err)
 {
 	int rv;
 

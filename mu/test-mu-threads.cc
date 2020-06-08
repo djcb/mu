@@ -124,9 +124,10 @@ static MuMsgIter*
 run_and_get_iter_full (const char *xpath, const char *query,
 		       MuMsgFieldId sort_field, MuQueryFlags flags)
 {
-	MuQuery  *mquery;
-	MuStore *store;
-	MuMsgIter *iter;
+	MuQuery		*mquery;
+	MuStore		*store;
+	MuMsgIter	*iter;
+	int		 myflags;
 
 	store = mu_store_new_readable (xpath, NULL);
 	g_assert (store);
@@ -135,8 +136,10 @@ run_and_get_iter_full (const char *xpath, const char *query,
 	mu_store_unref (store);
 	g_assert (query);
 
-	flags |= MU_QUERY_FLAG_THREADS;
-	iter = mu_query_run (mquery, query, sort_field, -1, flags, NULL);
+	myflags = flags;
+	myflags |= MU_QUERY_FLAG_THREADS;
+	iter = mu_query_run (mquery, query, sort_field, -1,
+			     (MuQueryFlags)myflags, NULL);
 	mu_query_destroy (mquery);
 	g_assert (iter);
 
@@ -233,7 +236,7 @@ query_testdir (const char *query, MuMsgFieldId sort_field,  gboolean descending)
 {
 	MuMsgIter *iter;
 	gchar *xpath;
-	MuQueryFlags flags;
+	int flags;
 
 	flags = MU_QUERY_FLAG_NONE;
 	if (descending)
@@ -242,7 +245,7 @@ query_testdir (const char *query, MuMsgFieldId sort_field,  gboolean descending)
 	xpath = fill_database (MU_TESTMAILDIR3);
 	g_assert (xpath != NULL);
 
-	iter = run_and_get_iter_full (xpath, query, sort_field, flags);
+	iter = run_and_get_iter_full (xpath, query, sort_field, (MuQueryFlags)flags);
 	g_assert (iter != NULL);
 	g_assert (!mu_msg_iter_is_done (iter));
 
@@ -453,7 +456,8 @@ main (int argc, char *argv[])
 			 test_mu_threads_sort_granchild_promotes_only_subthread);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+					   G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();

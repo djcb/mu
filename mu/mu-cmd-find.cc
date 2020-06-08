@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,9 +17,7 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <unistd.h>
 #include <stdio.h>
@@ -40,7 +38,7 @@
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
 
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 #include "mu-threader.h"
 
 #ifdef HAVE_JSON_GLIB
@@ -48,7 +46,7 @@
 #endif /*HAVE_JSON_GLIB*/
 
 typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
-			       MuConfig *opts, GError **err);
+			       const MuConfig *opts, GError **err);
 
 static gboolean
 print_internal (MuQuery *query, const gchar *expr, gboolean xapian,
@@ -115,11 +113,11 @@ get_message (MuMsgIter *iter, time_t after)
 }
 
 static MuMsgIter*
-run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
+run_query (MuQuery *xapian, const gchar *query, const MuConfig *opts,  GError **err)
 {
-	MuMsgIter *iter;
-	MuMsgFieldId sortid;
-	MuQueryFlags qflags;
+	MuMsgIter    *iter;
+	MuMsgFieldId  sortid;
+	int           qflags;
 
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
@@ -138,12 +136,13 @@ run_query (MuQuery *xapian, const gchar *query, MuConfig *opts,  GError **err)
 	if (opts->threads)
 		qflags |= MU_QUERY_FLAG_THREADS;
 
-	iter = mu_query_run (xapian, query, sortid, opts->maxnum, qflags, err);
+	iter = mu_query_run (xapian, query, sortid, opts->maxnum,
+                             (MuQueryFlags)qflags, err);
 	return iter;
 }
 
 static gboolean
-exec_cmd (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
+exec_cmd (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts,  GError **err)
 {
 	gint status;
 	char *cmdline, *escpath;
@@ -161,7 +160,7 @@ exec_cmd (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
 }
 
 static gchar*
-resolve_bookmark (MuConfig *opts, GError **err)
+resolve_bookmark (const MuConfig *opts, GError **err)
 {
 	MuBookmarks *bm;
 	char* val;
@@ -187,7 +186,7 @@ resolve_bookmark (MuConfig *opts, GError **err)
 }
 
 static gchar*
-get_query (MuConfig *opts, GError **err)
+get_query (const MuConfig *opts, GError **err)
 {
 	gchar	*query, *bookmarkval;
 
@@ -243,7 +242,7 @@ get_query_obj (MuStore *store, GError **err)
 }
 
 static gboolean
-prepare_links (MuConfig *opts, GError **err)
+prepare_links (const MuConfig *opts, GError **err)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
@@ -266,7 +265,7 @@ prepare_links (MuConfig *opts, GError **err)
 }
 
 static gboolean
-output_link (MuMsg *msg, MuMsgIter *iter, MuConfig *opts,  GError **err)
+output_link (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts,  GError **err)
 {
 	if (mu_msg_iter_is_first (iter) && !prepare_links (opts, err))
 		return FALSE;
@@ -381,7 +380,7 @@ display_field (MuMsg *msg, MuMsgFieldId mfid)
 }
 
 static void
-print_summary (MuMsg *msg, MuConfig *opts)
+print_summary (MuMsg *msg, const MuConfig *opts)
 {
 	const char* body;
 	char *summ;
@@ -472,7 +471,7 @@ output_plain_fields (MuMsg *msg, const char *fields,
 }
 
 static gboolean
-output_plain (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
+output_plain (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 	/* we reuse the color (whatever that may be)
 	 * for message-priority for threads, too */
@@ -489,7 +488,7 @@ output_plain (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 }
 
 static gboolean
-output_sexp (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
+output_sexp (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 	char *sexp;
 	const MuMsgIterThreadInfo *ti;
@@ -504,7 +503,7 @@ output_sexp (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 }
 
 static gboolean
-output_json (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
+output_json (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 #ifdef HAVE_JSON_GLIB
 	JsonNode			*node;
@@ -552,7 +551,7 @@ print_attr_xml (const char* elm, const char *str)
 }
 
 static gboolean
-output_xml (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
+output_xml (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 	if (mu_msg_iter_is_first(iter)) {
 		g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
@@ -579,7 +578,7 @@ output_xml (MuMsg *msg, MuMsgIter *iter, MuConfig *opts, GError **err)
 }
 
 static OutputFunc*
-get_output_func (MuConfig *opts, GError **err)
+get_output_func (const MuConfig *opts, GError **err)
 {
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_LINKS: return output_link;
@@ -596,7 +595,7 @@ get_output_func (MuConfig *opts, GError **err)
 }
 
 static gboolean
-output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
+output_query_results (MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 	int		 count;
 	gboolean	 rv;
@@ -639,7 +638,7 @@ output_query_results (MuMsgIter *iter, MuConfig *opts, GError **err)
 }
 
 static gboolean
-process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err)
+process_query (MuQuery *xapian, const gchar *query, const MuConfig *opts, GError **err)
 {
 	MuMsgIter *iter;
 	gboolean rv;
@@ -655,7 +654,7 @@ process_query (MuQuery *xapian, const gchar *query, MuConfig *opts, GError **err
 }
 
 static gboolean
-execute_find (MuStore *store, MuConfig *opts, GError **err)
+execute_find (MuStore *store, const MuConfig *opts, GError **err)
 {
 	char		*query_str;
 	MuQuery		*oracle;
@@ -686,7 +685,7 @@ execute_find (MuStore *store, MuConfig *opts, GError **err)
 }
 
 static gboolean
-format_params_valid (MuConfig *opts, GError **err)
+format_params_valid (const MuConfig *opts, GError **err)
 {
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_EXEC:
@@ -727,7 +726,7 @@ format_params_valid (MuConfig *opts, GError **err)
 }
 
 static gboolean
-query_params_valid (MuConfig *opts, GError **err)
+query_params_valid (const MuConfig *opts, GError **err)
 {
 	const gchar *xpath;
 
@@ -748,20 +747,22 @@ query_params_valid (MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_find (MuStore *store, MuConfig *opts, GError **err)
+mu_cmd_find (MuStore *store, const MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND,
 			      MU_ERROR_INTERNAL);
 
-	if (opts->exec)
-		opts->format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
+        MuConfig myopts{*opts};
 
-	if (!query_params_valid (opts, err) ||
-	    !format_params_valid(opts, err))
+	if (myopts.exec)
+		myopts.format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
+
+	if (!query_params_valid (&myopts, err) ||
+	    !format_params_valid(&myopts, err))
 		return MU_G_ERROR_CODE (err);
 
-	if (!execute_find (store, opts, err))
+	if (!execute_find (store, &myopts, err))
 		return MU_G_ERROR_CODE(err);
 	else
 		return MU_OK;

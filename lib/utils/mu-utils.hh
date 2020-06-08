@@ -65,7 +65,7 @@ std::vector<std::string> split (const std::string& str,
 				const std::string& sepa);
 
 /**
- * Quote & escape a string
+ * Quote & escape a string for " and \
  *
  * @param str a string
  *

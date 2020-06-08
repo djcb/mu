@@ -165,14 +165,17 @@ Mu::split (const std::string& str, const std::string& sepa)
 std::string
 Mu::quote (const std::string& str)
 {
-	char *s = g_strescape (str.c_str(), NULL);
-	if (!s)
-		return {};
+        std::string res{"\""};
 
-	std::string res (s);
-	g_free (s);
+        for (auto&& k: str) {
+                switch (k) {
+                case '"' : res += "\\\""; break;
+                case '\\': res += "\\\\"; break;
+                default:   res += k;
+                }
+        }
 
-	return "\"" + res + "\"";
+        return res + "\"";
 }
 
  std::string

@@ -309,7 +309,7 @@ typedef gpointer XapianEnquire;
 	} while (0)
 
 
-#define MU_G_ERROR_CODE(GE) ((GE)&&(*(GE))?(*(GE))->code:MU_ERROR)
+#define MU_G_ERROR_CODE(GE) ((GE)&&(*(GE))?(MuError)(*(GE))->code:MU_ERROR)
 
 
 enum _MuError {

@@ -226,7 +226,7 @@ void mu_config_uninit (MuConfig *conf);
  * the exit code of the process
  *
  */
-MuError mu_config_execute (MuConfig *conf);
+MuError mu_config_execute (const MuConfig *conf);
 
 /**
  * count the number of non-option parameters
@@ -235,7 +235,7 @@ MuError mu_config_execute (MuConfig *conf);
  *
  * @return the number of non-option parameters, or 0 in case of error
  */
-size_t mu_config_param_num (MuConfig *conf);
+size_t mu_config_param_num (const MuConfig *conf);
 
 
 /**
@@ -245,7 +245,7 @@ size_t mu_config_param_num (MuConfig *conf);
  *
  * @return the corresponding MuMsgOptions
  */
-MuMsgOptions mu_config_get_msg_options (MuConfig *opts);
+MuMsgOptions mu_config_get_msg_options (const MuConfig *opts);
 
 
 /**
@@ -253,7 +253,7 @@ MuMsgOptions mu_config_get_msg_options (MuConfig *opts);
  *
  * @param cmd the command to show help for
  */
-void mu_config_show_help (MuConfigCmd cmd);
+void mu_config_show_help (const MuConfigCmd cmd);
 
 G_END_DECLS
 

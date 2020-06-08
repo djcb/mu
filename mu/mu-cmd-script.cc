@@ -29,7 +29,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 #include "mu-script.h"
 #include "mu-runtime.h"
 
@@ -151,7 +151,7 @@ get_script_info_list (const char *muhome, GError **err)
 
 
 static gboolean
-check_params (MuConfig *opts, GError **err)
+check_params (const MuConfig *opts, GError **err)
 {
 	if (!mu_util_supports (MU_FEATURE_GUILE)) {
 		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
@@ -165,7 +165,7 @@ check_params (MuConfig *opts, GError **err)
 
 
 MuError
-mu_cmd_script (MuConfig *opts, GError **err)
+mu_cmd_script (const MuConfig *opts, GError **err)
 {
 	MuScriptInfo *msi;
 	GSList *scripts;

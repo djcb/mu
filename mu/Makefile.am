@@ -21,21 +21,14 @@ AM_CPPFLAGS=							\
 	$(GLIB_CFLAGS)						\
 	$(CODE_COVERAGE_CFLAGS)
 
-# don't use -Werror, as it might break on other compilers
-# use -Wno-unused-parameters, because some callbacks may not
-# really need all the params they get
-AM_CFLAGS=							\
-	$(JSON_GLIB_CFLAGS)					\
-	$(ASAN_CFLAGS)						\
-	$(WARN_CFLAGS)						\
-	$(CODE_COVERAGE_CFLAGS)					\
-	-Wno-switch-enum					\
-	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
-
 AM_CXXFLAGS=							\
+	$(JSON_GLIB_CFLAGS)					\
+	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
 	$(ASAN_CXXCFLAGS)					\
 	$(WARN_CXXFLAGS)					\
-	$(CODE_COVERAGE_CFLAGS)
+	$(CODE_COVERAGE_CFLAGS)					\
+	-Wno-switch-enum
+
 
 AM_LDFLAGS=							\
 	$(ASAN_LDFLAGS)
@@ -47,16 +40,16 @@ bin_PROGRAMS=							\
 # be linked as c++, not c.
 mu_SOURCES=							\
 	mu.cc							\
-	mu-cmd-cfind.c						\
-	mu-config.c						\
-	mu-config.h						\
-	mu-cmd-extract.c					\
-	mu-cmd-find.c						\
-	mu-cmd-index.c						\
+	mu-cmd-cfind.cc						\
+	mu-config.cc						\
+	mu-config.hh						\
+	mu-cmd-extract.cc					\
+	mu-cmd-find.cc						\
+	mu-cmd-index.cc						\
 	mu-cmd-server.cc					\
-	mu-cmd-script.c						\
-	mu-cmd.c						\
-	mu-cmd.h
+	mu-cmd-script.cc					\
+	mu-cmd.cc						\
+	mu-cmd.hh
 
 BUILT_SOURCES=							\
 	mu-help-strings.h
@@ -77,8 +70,8 @@ EXTRA_DIST=							\
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
-test_cflags=							\
-	${AM_CFLAGS}						\
+test_cxxflags=							\
+	${AM_CXXFLAGS}						\
 	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"	\
 	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"	\
 	-DMU_TESTMAILDIR3=\"${abs_top_srcdir}/lib/testdir3\"	\
@@ -88,30 +81,24 @@ test_cflags=							\
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 TEST_PROGS += test-mu-query
-test_mu_query_SOURCES= test-mu-query.c dummy.cc
-test_mu_query_CFLAGS=$(test_cflags)
+test_mu_query_SOURCES= test-mu-query.cc
+test_mu_query_CXXFLAGS=$(test_cxxflags)
 test_mu_query_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TEST_PROGS += test-mu-cmd
-test_mu_cmd_SOURCES= test-mu-cmd.c dummy.cc
-test_mu_cmd_CFLAGS=$(test_cflags)
+test_mu_cmd_SOURCES= test-mu-cmd.cc
+test_mu_cmd_CXXFLAGS=$(test_cxxflags)
 test_mu_cmd_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TEST_PROGS += test-mu-cmd-cfind
-test_mu_cmd_cfind_SOURCES= test-mu-cmd-cfind.c dummy.cc
-test_mu_cmd_cfind_CFLAGS=$(test_cflags)
+test_mu_cmd_cfind_SOURCES= test-mu-cmd-cfind.cc
+test_mu_cmd_cfind_CXXFLAGS=$(test_cxxflags)
 test_mu_cmd_cfind_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TEST_PROGS += test-mu-threads
-test_mu_threads_SOURCES= test-mu-threads.c dummy.cc
-test_mu_threads_CFLAGS=$(test_cflags)
+test_mu_threads_SOURCES= test-mu-threads.cc
+test_mu_threads_CXXFLAGS=$(test_cxxflags)
 test_mu_threads_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
-
-# we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES+=							\
-	dummy.cc
-dummy.cc:
-	touch dummy.cc
 
 TESTS=$(TEST_PROGS)
 include $(top_srcdir)/aminclude_static.am

@@ -17,11 +17,8 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
-
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 
 #include <errno.h>
 #include <string.h>
@@ -70,7 +67,7 @@ install_sig_handler (void)
 
 
 static gboolean
-check_params (MuConfig *opts, GError **err)
+check_params (const MuConfig *opts, GError **err)
 {
 	/* param[0] == 'index'  there should be no param[1] */
 	if (opts->params[1]) {
@@ -178,7 +175,7 @@ show_time (unsigned t, unsigned processed, gboolean color)
 }
 
 static MuError
-cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
+cleanup_missing (MuIndex *midx, const MuConfig *opts, MuIndexStats *stats,
 		 GError **err)
 {
 	MuError		rv;
@@ -213,7 +210,7 @@ cleanup_missing (MuIndex *midx, MuConfig *opts, MuIndexStats *stats,
 }
 
 static MuError
-cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
+cmd_index (MuIndex *midx, const MuConfig *opts, MuIndexStats *stats, GError **err)
 {
 	IndexData	idata;
 	MuError		rv;
@@ -240,7 +237,7 @@ cmd_index (MuIndex *midx, MuConfig *opts, MuIndexStats *stats, GError **err)
 
 
 static MuIndex*
-init_mu_index (MuStore *store, MuConfig *opts, GError **err)
+init_mu_index (MuStore *store, const MuConfig *opts, GError **err)
 {
 	MuIndex *midx;
 
@@ -257,27 +254,25 @@ init_mu_index (MuStore *store, MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
+mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
 {
 	MuIndex		*midx;
 	MuIndexStats	 stats;
 	gboolean	 rv;
 	time_t		 t;
 
-	g_return_val_if_fail (opts, FALSE);
-	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX,
-			      FALSE);
+	g_return_val_if_fail (opts, MU_ERROR);
+	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX, MU_ERROR);
 
 	/* create, and do error handling if needed */
-	midx = init_mu_index (store, opts, err);
+	midx = init_mu_index (reinterpret_cast<MuStore*>(&store), // ugh.
+                              opts, err);
 	if (!midx)
-		return MU_G_ERROR_CODE(err);
+                throw Mu::Error(Mu::Error::Code::Internal, err/*consumes*/,
+                                "error in index");
 
 	mu_index_stats_clear (&stats);
 	install_sig_handler ();
-
-	if (!opts->quiet)
-		mu_store_print_info (store, opts->nocolor);
 
 	t = time (NULL);
 	rv = cmd_index (midx, opts, &stats, err);
@@ -297,5 +292,9 @@ mu_cmd_index (MuStore *store, MuConfig *opts, GError **err)
 
 	mu_index_destroy (midx);
 
-	return rv;
+        if (rv != MU_OK)
+                throw Mu::Error(Mu::Error::Code::Internal, err/*consumes*/,
+                                "error in index");
+
+	return rv ? MU_OK : MU_ERROR;
 }

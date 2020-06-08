@@ -18,7 +18,7 @@
 */
 
 #include "config.h"
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 
 #include <iostream>
 #include <string>
@@ -29,7 +29,7 @@
 #include <glib/gprintf.h>
 
 #include "mu-runtime.h"
-#include "mu-cmd.h"
+#include "mu-cmd.hh"
 #include "mu-maildir.h"
 #include "mu-query.h"
 #include "mu-index.h"
@@ -211,7 +211,7 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 
 struct Context {
         Context(){}
-        Context (MuConfig *opts) {
+        Context (const MuConfig *opts) {
                 const auto dbpath{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
                 GError *gerr{};
                 store = mu_store_new_writable (dbpath, NULL);
@@ -314,84 +314,31 @@ add_handler (Context& context, const Parameters& params)
 }
 
 
-struct _PartInfo {
-        GSList      *attlist;
-        MuMsgOptions opts;
+struct PartInfo {
+        Node::Seq        attseq;
+        MuMsgOptions      opts;
 };
-typedef struct _PartInfo PartInfo;
 
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
-        char	*att, *cachefile;
-
-        /* exclude things that don't look like proper attachments,
-         * unless they're images */
+        /* exclude things that don't look like proper attachments, unless they're images */
         if (!mu_msg_part_maybe_attachment(part))
                 return;
 
         GError *gerr{};
-        cachefile = mu_msg_part_save_temp (msg,
-                                           (MuMsgOptions)(pinfo->opts|MU_MSG_OPTION_OVERWRITE),
-                                           part->index, &gerr);
+        char *cachefile = mu_msg_part_save_temp (
+                msg, (MuMsgOptions)(pinfo->opts|MU_MSG_OPTION_OVERWRITE),
+                part->index, &gerr);
         if (!cachefile)
                 throw Error (Error::Code::File, &gerr, "failed to save part");
 
-        att = g_strdup_printf ("(:file-name %s :mime-type \"%s/%s\")",
-                               quote(cachefile).c_str(), part->type, part->subtype);
-        pinfo->attlist = g_slist_append (pinfo->attlist, att);
+        Node::Seq seq;
+        seq.add_prop(":file-name", cachefile);
+        seq.add_prop(":mime-type", format("%s/%s", part->type, part->subtype));
+        pinfo->attseq.add(std::move(seq));
 
         g_free (cachefile);
-}
-
-
-/* take the attachments of msg, save them as tmp files, and return
- * as sexp (as a string) describing them
- *
- * ((:name <filename> :mime-type <mime-type> :disposition
- *   <attachment|inline>) ... )
- *
- */
-static gchar*
-include_attachments (MuMsg *msg, MuMsgOptions opts)
-{
-        GSList  *cur;
-        GString *gstr;
-        PartInfo pinfo;
-
-        pinfo.attlist = NULL;
-        pinfo.opts    = opts;
-        mu_msg_part_foreach (msg, opts,
-                             (MuMsgPartForeachFunc)each_part,
-                             &pinfo);
-
-        gstr = g_string_sized_new (512);
-        gstr = g_string_append_c (gstr, '(');
-        for (cur = pinfo.attlist; cur; cur = g_slist_next (cur))
-                g_string_append (gstr, (gchar*)cur->data);
-        gstr = g_string_append_c (gstr, ')');
-
-        mu_str_free_list (pinfo.attlist);
-
-        return g_string_free (gstr, FALSE);
-}
-
-enum { NEW, REPLY, FORWARD, EDIT, RESEND, INVALID_TYPE };
-static unsigned
-compose_type (const char *typestr)
-{
-        if (g_str_equal (typestr, "reply"))
-                return REPLY;
-        else if (g_str_equal (typestr, "forward"))
-                return FORWARD;
-        else if (g_str_equal (typestr, "edit"))
-                return EDIT;
-        else if (g_str_equal (typestr, "resend"))
-                return RESEND;
-        else if (g_str_equal (typestr, "new"))
-                return NEW;
-        else
-                return INVALID_TYPE;
 }
 
 /* 'compose' produces the un-changed *original* message sexp (ie., the message
@@ -408,15 +355,15 @@ compose_type (const char *typestr)
 static void
 compose_handler (Context& context, const Parameters& params)
 {
-        const auto typestr{get_symbol_or(params, "type")};
-        const auto ctype{compose_type(typestr.c_str())};
-        if (ctype == INVALID_TYPE)
-                throw Error(Error::Code::InvalidArgument, "invalid compose type");
+        auto ctype{get_symbol_or(params, "type")};
+
+        Node::Seq compose_seq;
+        compose_seq.add_prop(":compose", ctype);
 
         // message optioss below checks extract-images / extract-encrypted
 
-        char *sexp{}, *atts{};
-        if (ctype == REPLY || ctype == FORWARD || ctype == EDIT || ctype == RESEND) {
+
+        if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
 
                 GError *gerr{};
                 const unsigned docid{(unsigned)get_int_or(params, "docid")};
@@ -425,16 +372,22 @@ compose_handler (Context& context, const Parameters& params)
                         throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
                 const auto opts{message_options(params)};
-                sexp = mu_msg_to_sexp (msg, docid, NULL, opts);
-                atts = (ctype == FORWARD) ? include_attachments (msg, opts) : NULL;
+                compose_seq.add_prop(":original", Mu::msg_to_sexp(msg, docid, {}, opts));
+
+                if (ctype == "forward") {
+                        PartInfo pinfo{};
+                        pinfo.opts = opts;
+                        mu_msg_part_foreach (msg, opts,
+                                             (MuMsgPartForeachFunc)each_part, &pinfo);
+                        if (!pinfo.attseq.empty())
+                                compose_seq.add_prop (":include", std::move(pinfo.attseq));
+                }
                 mu_msg_unref (msg);
-        }
 
-        print_expr ("(:compose %s :original %s :include %s)",
-                    typestr.c_str(), sexp ? sexp : "nil", atts ? atts : "nil");
+        } else if (ctype != "new")
+                throw Error(Error::Code::InvalidArgument, "invalid compose type");
 
-        g_free (sexp);
-        g_free (atts);
+        print_expr (std::move(compose_seq));
 }
 
 
@@ -1318,7 +1271,7 @@ make_command_map (Context& context)
 }
 
 MuError
-mu_cmd_server (MuConfig *opts, GError **err) try
+mu_cmd_server (const MuConfig *opts, GError **err) try
 {
         if (opts->commands) {
                 Context ctx{};
@@ -1335,7 +1288,6 @@ mu_cmd_server (MuConfig *opts, GError **err) try
                 invoke(context.command_map, call);
                 return MU_OK;
         }
-
 
         const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
         setup_readline(histpath, 50);
