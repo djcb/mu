@@ -1154,7 +1154,6 @@ displaying it). Do _not_ bury the current buffer, though."
 
 (defun mu4e-info (path)
   "Show a buffer with the information (an org-file) at PATH."
-  (interactive)
   (unless (file-exists-p path)
     (mu4e-error "Cannot find %s" path))
   (let ((curbuf (current-buffer)))
