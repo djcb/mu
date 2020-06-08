@@ -28,6 +28,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
+#include "mu-msg.h"
 #include "mu-runtime.h"
 #include "mu-cmd.hh"
 #include "mu-maildir.h"
@@ -211,55 +212,59 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 
 struct Context {
         Context(){}
-        Context (const MuConfig *opts) {
-                const auto dbpath{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
+        Context (const MuConfig *opts):
+                store_{std::make_unique<Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false/*writable*/)} {
+
+                // store = mu_store_new_writable (dbpath, NULL);
+                // if (!store) {
+                //         const auto mu_init = format("mu init %s%s",
+                //                                     opts->muhome ? "--muhome=" : "",
+                //                                     opts->muhome ? opts->muhome : "");
+
+                //         if (gerr) {
+                //                 if ((MuError)gerr->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK)
+                //                         print_error(MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
+                //                                     "mu database already locked; "
+                //                                     "some other mu running?");
+                //                 else
+                //                         print_error((MuError)gerr->code,
+                //                                     "cannot open database @ %s:%s; already running? "
+                //                                     "if not, please try '%s", dbpath,
+                //                                     gerr->message ? gerr->message : "something went wrong",
+                //                                     mu_init.c_str());
+                //         } else
+                //                 print_error(MU_ERROR,
+                //                             "cannot open database @ %s; already running? if not, please try '%s'",
+                //                             dbpath, mu_init.c_str());
+
+                //         throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
+                //                          "failed to open database @ %s; already running? if not, please try '%s'",
+                //                          dbpath, mu_init.c_str());
+                // }
+
                 GError *gerr{};
-                store = mu_store_new_writable (dbpath, NULL);
-                if (!store) {
-                        const auto mu_init = format("mu init %s%s",
-                                                    opts->muhome ? "--muhome=" : "",
-                                                    opts->muhome ? opts->muhome : "");
-
-                        if (gerr) {
-                                if ((MuError)gerr->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK)
-                                        print_error(MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
-                                                    "mu database already locked; "
-                                                    "some other mu running?");
-                                else
-                                        print_error((MuError)gerr->code,
-                                                    "cannot open database @ %s:%s; already running? "
-                                                    "if not, please try '%s", dbpath,
-                                                    gerr->message ? gerr->message : "something went wrong",
-                                                    mu_init.c_str());
-                        } else
-                                print_error(MU_ERROR,
-                                            "cannot open database @ %s; already running? if not, please try '%s'",
-                                            dbpath, mu_init.c_str());
-
-                        throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
-                                         "failed to open database @ %s; already running? if not, please try '%s'",
-                                         dbpath, mu_init.c_str());
-                }
-
-                query = mu_query_new (store, &gerr);
+                query = mu_query_new (reinterpret_cast<MuStore*>(store_.get()), &gerr);
                 if (!query)
-                        throw Error(Error::Code::Store, &gerr, "failed to create query");
+                        throw Error(Error::Code::Store, &gerr/*consumes*/, "failed to create query");
         }
 
         ~Context() {
                 if (query)
                         mu_query_destroy(query);
-                if (store) {
-                        mu_store_flush(store);
-                        mu_store_unref(store);
-                }
         }
 
         Context(const Context&) = delete;
 
-        MuStore *store{};
-        MuQuery *query{};
-        bool do_quit{};
+        Store& store() {
+                if (!store_)
+                        throw Mu::Error (Error::Code::Internal, "no store");
+                return *store_.get();
+        }
+
+
+        std::unique_ptr<Mu::Store> store_;
+        MuQuery   *query{};
+        bool      do_quit{};
 
         CommandMap command_map;
 };
@@ -291,26 +296,28 @@ message_options (const Parameters& params)
 static void
 add_handler (Context& context, const Parameters& params)
 {
-        const auto path{get_string_or(params, "path")};
+        auto path{get_string_or(params, "path")};
+        const auto docid{context.store().add_message(path)};
 
-        GError *gerr{};
-        const auto docid{mu_store_add_path (context.store, path.c_str(), &gerr)};
-        if (docid == MU_STORE_INVALID_DOCID)
-                throw Error(Error::Code::Store, &gerr, "failed to add message at %s",
-                            path.c_str());
+        Node::Seq seq;
+        seq.add_prop(":info", Node::make_symbol("add"));
+        seq.add_prop(":path", path);
+        seq.add_prop(":docid", docid);
 
-        print_expr ("(:info add :path %s :docid %u)", quote(path).c_str(), docid);
+        print_expr (std::move(seq));
 
-        auto msg{mu_store_get_msg(context.store, docid, &gerr)};
+        auto msg{context.store().find_message(docid)};
         if (!msg)
-                throw Error(Error::Code::Store, &gerr, "failed to get message at %s",
-                            path.c_str());
+                throw Error(Error::Code::Store,
+                            "failed to get message at %s (docid=%u)",
+                            path.c_str(), docid);
 
-        auto sexp{mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY)};
-        print_expr ("(:update %s :move nil)", sexp);
+        Node::Seq updateseq;
+        updateseq.add_prop(":update", Mu::msg_to_sexp(msg, docid, NULL,
+                                                      MU_MSG_OPTION_VERIFY));
 
+        print_expr (std::move(updateseq));
         mu_msg_unref(msg);
-        g_free (sexp);
 }
 
 
@@ -367,7 +374,7 @@ compose_handler (Context& context, const Parameters& params)
 
                 GError *gerr{};
                 const unsigned docid{(unsigned)get_int_or(params, "docid")};
-                auto msg{mu_store_get_msg (context.store, docid, &gerr)};
+                auto msg{context.store().find_message(docid)};
                 if (!msg)
                         throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
@@ -390,80 +397,10 @@ compose_handler (Context& context, const Parameters& params)
         print_expr (std::move(compose_seq));
 }
 
-
-struct SexpData {
-        Sexp::Node::Seq         contacts;
-        gboolean                personal;
-        time_t                  last_seen;
-        gint64                  tstamp;
-        size_t                  rank;
-};
-
-
-static void
-each_contact_sexp (const char* full_address,
-                   const char *email, const char *name, gboolean personal,
-                   time_t last_seen, unsigned freq,
-                   gint64 tstamp, SexpData *sdata)
-{
-        sdata->rank++;
-
-        /* since the last time we got some contacts */
-        if (sdata->tstamp > tstamp)
-                return;
-
-        /* (maybe) only include 'personal' contacts */
-        if (sdata->personal && !personal)
-                return;
-
-        /* only include newer-than-x contacts */
-        if (sdata->last_seen > last_seen)
-                return;
-
-        /* only include *real* e-mail addresses (ignore local
-         * addresses... there's little to complete there anyway...) */
-        if (!email || !strstr (email, "@"))
-                return;
-
-        Node::Seq contact;
-        contact.add_prop(":address", full_address);
-        contact.add_prop(":rank",    sdata->rank);
-
-        sdata->contacts.add(Node::make_list(std::move(contact)));
-}
-
-/**
- * get all contacts as an s-expression
- *
- * @param self contacts object
- * @param personal_only whether to restrict the list to 'personal' email
- * addresses
- *
- * @return the sexp
- */
-static Sexp::Node
-contacts_to_sexp (const MuContacts *contacts, bool personal,
-                  int64_t last_seen, gint64 tstamp)
-{
-        SexpData sdata{};
-        sdata.personal  = personal;
-        sdata.last_seen = last_seen;
-        sdata.tstamp    = tstamp;
-        sdata.rank      = 0;
-
-        const auto cutoff{g_get_monotonic_time()};
-        mu_contacts_foreach (contacts, (MuContactsForeachFunc)each_contact_sexp, &sdata);
-        Node::Seq seq;
-        seq.add_prop(":contacts", std::move(sdata.contacts));
-        seq.add_prop(":tstamp",   Node::make_string(format("%" G_GINT64_FORMAT, cutoff)));
-
-        return Node::make_list(std::move(seq));
-}
-
 static void
 contacts_handler (Context& context, const Parameters& params)
 {
-        const auto personal  = get_bool_or(params, "personal");
+        const auto personal  = get_bool_or(params,   "personal");
         const auto afterstr  = get_string_or(params, "after");
         const auto tstampstr = get_string_or(params, "tstamp");
 
@@ -471,13 +408,38 @@ contacts_handler (Context& context, const Parameters& params)
                         g_ascii_strtoll(date_to_time_t_string(afterstr, true).c_str(), {}, 10)};
         const auto tstamp = g_ascii_strtoll (tstampstr.c_str(), NULL, 10);
 
-        const auto contacts{mu_store_contacts(context.store)};
-        if (!contacts)
-                throw Error{Error::Code::Internal, "failed to get contacts"};
+        auto rank{0};
+        Node::Seq contacts;
+        context.store().contacts().for_each([&](const ContactInfo& ci) {
+
+                rank++;
+
+                /* since the last time we got some contacts */
+                if (tstamp > ci.tstamp)
+                        return;
+                /* (maybe) only include 'personal' contacts */
+                if (personal && !ci.personal)
+                        return;
+                /* only include newer-than-x contacts */
+                if (after > ci.last_seen)
+                        return;
+
+                Node::Seq contact;
+                contact.add_prop(":address", std::string{ci.full_address});
+                contact.add_prop(":rank",    rank);
+
+                contacts.add(Node::make_list(std::move(contact)));
+        });
+
+        Node::Seq seq;
+        seq.add_prop(":contacts", std::move(contacts));
+        seq.add_prop(":tstamp",   Node::make_string(format("%" G_GINT64_FORMAT,
+                                                           g_get_monotonic_time())));
 
         /* dump the contacts cache as a giant sexp */
-        print_expr(contacts_to_sexp (contacts, personal, after, tstamp));
+        print_expr(std::move(seq));
 }
+
 
 static void
 save_part (MuMsg *msg, unsigned docid, unsigned index,
@@ -572,7 +534,7 @@ extract_handler (Context& context, const Parameters& params)
         const auto opts{message_options(params)};
 
         GError *gerr{};
-        auto msg{mu_store_get_msg (context.store, docid, &gerr)};
+        auto msg{context.store().find_message(docid)};
         if (!msg)
                 throw Error{Error::Code::Store, "failed to get message"};
 
@@ -633,12 +595,11 @@ docids_for_msgid (MuQuery *query, const std::string& msgid, size_t max=100)
  * mu_store_get_path could be added if this turns out to be a problem
  */
 static std::string
-path_from_docid (MuStore *store, unsigned docid)
+path_from_docid (const Store& store, unsigned docid)
 {
-        GError *gerr{};
-        auto msg{mu_store_get_msg (store, docid, &gerr)};
+        auto msg{store.find_message(docid)};
         if (!msg)
-                throw Error(Error::Code::Store, &gerr, "could not get message from store");
+                throw Error(Error::Code::Store, "could not get message from store");
 
         auto p{mu_msg_get_path(msg)};
         if (!p) {
@@ -831,7 +792,10 @@ index_handler (Context& context, const Parameters& params)
         GError *gerr{};
         const auto cleanup{get_bool_or(params,   "cleanup")};
         const auto lazy_check{get_bool_or(params,  "lazy-check")};
-        auto index{mu_index_new (context.store, &gerr)};
+
+        auto store_ptr = reinterpret_cast<MuStore*>(&context.store());
+
+        auto index{mu_index_new (store_ptr, &gerr)};
         if (!index)
                 throw Error(Error::Code::Index, &gerr, "failed to create index object");
 
@@ -842,7 +806,7 @@ index_handler (Context& context, const Parameters& params)
                 throw;
         }
         mu_index_destroy(index);
-        mu_store_flush(context.store);
+        mu_store_flush(store_ptr);
 }
 
 static void
@@ -880,14 +844,14 @@ get_flags (const std::string& path, const std::string& flagstr)
 }
 
 static void
-do_move (MuStore *store, DocId docid, MuMsg *msg, const std::string& maildirarg,
+do_move (Store& store, DocId docid, MuMsg *msg, const std::string& maildirarg,
          MuFlags flags, bool new_name, bool no_view)
 {
         bool different_mdir{};
         auto maildir{maildirarg};
         if (maildir.empty()) {
                 maildir = mu_msg_get_maildir (msg);
-                different_mdir = FALSE;
+                different_mdir = false;
         } else /* are we moving to a different mdir, or is it just flags? */
                 different_mdir = maildir != mu_msg_get_maildir(msg);
 
@@ -897,37 +861,38 @@ do_move (MuStore *store, DocId docid, MuMsg *msg, const std::string& maildirarg,
 
         /* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir fields
          * will be updated as wel */
-        auto rv = mu_store_update_msg (store, docid, msg, &gerr);
-        if (rv == MU_STORE_INVALID_DOCID)
-                throw Error{Error::Code::Store, &gerr, "failed to store updated message"};
+        if (!store.update_message (msg, docid))
+                throw Error{Error::Code::Store, "failed to store updated message"};
 
-        char *sexp = mu_msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY);
+        Node::Seq seq;
+        seq.add_prop(":update", msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY));
         /* note, the :move t thing is a hint to the frontend that it
          * could remove the particular header */
-        print_expr ("(:update %s :move %s :maybe-view %s)", sexp,
-                    different_mdir ? "t" : "nil",
-                    no_view ? "nil" : "t");
-        g_free (sexp);
+        if (different_mdir)
+                seq.add_prop(":move", Node::make_symbol("t"));
+        if (!no_view)
+                seq.add_prop(":maybe-view", Node::make_symbol("t"));
+
+        print_expr (std::move(seq));
 }
 
 static void
-move_docid (MuStore *store, DocId docid, const std::string& flagstr,
+move_docid (Store& store, DocId docid, const std::string& flagstr,
             bool new_name, bool no_view)
 {
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::InvalidArgument, "invalid docid"};
 
-        GError *gerr{};
-        auto msg{mu_store_get_msg (store, docid, &gerr)};
-
+        auto msg{store.find_message(docid)};
         try {
                 if (!msg)
-                        throw Error{Error::Code::Store, &gerr, "failed to get message from store"};
+                        throw Error{Error::Code::Store, "failed to get message from store"};
 
                 const auto flags = flagstr.empty() ? mu_msg_get_flags (msg) :
                         get_flags (mu_msg_get_path(msg), flagstr);
                 if (flags == MU_FLAG_INVALID)
-                        throw Error{Error::Code::InvalidArgument, "invalid flags '%s'", flagstr.c_str()};
+                        throw Error{Error::Code::InvalidArgument, "invalid flags '%s'",
+                                        flagstr.c_str()};
 
                 do_move (store, docid, msg, "", flags, new_name, no_view);
 
@@ -964,15 +929,16 @@ move_handler (Context& context, const Parameters& params)
                                         "can't move multiple messages at the same time"};
                 // multi.
                 for (auto&& docid: docids)
-                        move_docid(context.store, docid, flagstr, rename, no_view);
+                        move_docid(context.store(), docid, flagstr, rename, no_view);
                 return;
         }
         auto docid{docids.at(0)};
 
         GError *gerr{};
-        auto msg{mu_store_get_msg(context.store, docid, &gerr)};
+        auto msg{context.store().find_message(docid)};
         if (!msg)
-                throw Error{Error::Code::InvalidArgument, &gerr, "could not create message"};
+                throw Error{Error::Code::InvalidArgument, &gerr,
+                                "could not create message"};
 
         /* if maildir was not specified, take the current one */
         if (maildir.empty())
@@ -993,7 +959,8 @@ move_handler (Context& context, const Parameters& params)
         }
 
         try {
-                do_move (context.store, docid, msg, maildir, flags, rename, no_view);
+                do_move (context.store(), docid, msg, maildir, flags,
+                         rename, no_view);
         } catch (...) {
                 mu_msg_unref(msg);
                 throw;
@@ -1005,10 +972,9 @@ move_handler (Context& context, const Parameters& params)
 static void
 ping_handler (Context& context, const Parameters& params)
 {
-        GError *gerr{};
-        const auto storecount = mu_store_count(context.store, &gerr);
+        const auto storecount{context.store().size()};
         if (storecount == (unsigned)-1)
-                throw Error{Error::Code::Store, &gerr, "failed to read store"};
+                throw Error{Error::Code::Store, "failed to read store"};
 
         const auto queries  = get_string_vec (params, "queries");
         Node::Seq qresults;
@@ -1026,13 +992,8 @@ ping_handler (Context& context, const Parameters& params)
         }
 
         Node::Seq addrs;
-        char **addrs_strv{mu_store_personal_addresses (context.store)};
-        for (auto cur = addrs_strv; cur && *cur; ++cur)
-                addrs.add(*cur);
-        g_strfreev (addrs_strv);
-
-        const auto dbpath{mu_store_database_path(context.store)};
-        const auto root{mu_store_root_maildir(context.store)};
+        for (auto&& addr: context.store().personal_addresses())
+                addrs.add(std::string(addr));
 
         Node::Seq seq;
         seq.add_prop(":pong", "mu");
@@ -1040,8 +1001,8 @@ ping_handler (Context& context, const Parameters& params)
         Node::Seq propseq;
         propseq.add_prop(":version",            VERSION);
         propseq.add_prop(":personal-addresses", std::move(addrs));
-        propseq.add_prop(":database-path",      dbpath);
-        propseq.add_prop(":root-maildir",       root);
+        propseq.add_prop(":database-path",      context.store().database_path());
+        propseq.add_prop(":root-maildir",       context.store().root_maildir());
         propseq.add_prop(":doccount",           storecount);
         propseq.add_prop(":queries",            std::move(qresults));
 
@@ -1061,16 +1022,17 @@ static void
 remove_handler (Context& context, const Parameters& params)
 {
         const auto docid{get_int_or(params, "docid")};
-        const auto path{path_from_docid (context.store, docid)};
+        const auto path{path_from_docid (context.store(), docid)};
 
         if (::unlink (path.c_str()) != 0 && errno != ENOENT)
                 throw Error(Error::Code::File, "could not delete %s: %s",
                                   path.c_str(), strerror (errno));
 
-        if (!mu_store_remove_path (context.store, path.c_str()))
-                throw Error(Error::Code::Store,
-                            "failed to remove message @ %s (%d) from store",
-                            path.c_str(), docid);
+        if (!context.store().remove_message (path))
+                g_warning("failed to remove message @ %s (%d) from store",
+                          path.c_str(), docid);
+        // act as if it worked.
+
         Node::Seq seq;
         seq.add_prop(":remove", docid);
 
@@ -1081,11 +1043,10 @@ remove_handler (Context& context, const Parameters& params)
 static void
 sent_handler (Context& context, const Parameters& params)
 {
-        GError *gerr{};
         const auto path{get_string_or(params, "path")};
-        const auto docid{mu_store_add_path(context.store, path.c_str(), &gerr)};
+        const auto docid{context.store().add_message(path)};
         if (docid == MU_STORE_INVALID_DOCID)
-                throw Error{Error::Code::Store, &gerr, "failed to add path"};
+                throw Error{Error::Code::Store, "failed to add path"};
 
         Node::Seq seq;
         seq.add_prop (":sent",  Node::make_symbol("t"));
@@ -1095,12 +1056,40 @@ sent_handler (Context& context, const Parameters& params)
         print_expr (std::move(seq));
 }
 
+static void
+maybe_mark_as_unread (MuMsg *msg, DocId docid)
+{
+        g_debug ("%s", __func__);
+
+        if (!msg)
+                throw Error{Error::Code::Store, "missing message"};
+        if (docid == MU_STORE_INVALID_DOCID)
+                throw Error{Error::Code::Store, "invalid docid"};
+
+        const auto oldflags{mu_msg_get_flags (msg)};
+        const auto newflags{get_flags (mu_msg_get_path(msg), "+S-u-N")};
+        if (oldflags == newflags)
+                return; // nothing to do.
+
+        GError* gerr{};
+        if (!mu_msg_move_to_maildir (msg,
+                                     mu_msg_get_maildir (msg),
+                                     newflags,
+                                     TRUE,
+                                     FALSE,/*new_name,*/
+                                     &gerr))
+                throw Error{Error::Code::File, &gerr, "failed to move message"};
+
+        g_debug ("marked message %d as read => %s", docid, mu_msg_get_path(msg));
+}
+
 
 static void
 view_handler (Context& context, const Parameters& params)
 {
-        DocId docid{};
+        DocId docid{MU_STORE_INVALID_DOCID};
         const auto path{get_string_or(params, "path")};
+        const auto mark_unread{get_bool_or(params, "mark-unread")};
 
         GError *gerr{};
         MuMsg *msg{};
@@ -1109,11 +1098,14 @@ view_handler (Context& context, const Parameters& params)
                 msg   = mu_msg_new_from_file (path.c_str(), NULL, &gerr);
         else {
                 docid = determine_docids(context.query, params).at(0);
-                msg   = mu_store_get_msg (context.store, docid, &gerr);
+                msg   = context.store().find_message(docid);
         }
 
         if (!msg)
-                throw Error{Error::Code::Store, &gerr, "failed to find message for view"};
+                throw Error{Error::Code::Store, &gerr,
+                                "failed to find message for view"};
+        //if (mark_unread)
+                maybe_mark_as_unread (msg, docid);
 
         Node::Seq seq;
         seq.add_prop(":view", msg_to_sexp(msg, docid, {}, message_options(params)));
@@ -1141,7 +1133,8 @@ make_command_map (Context& context)
                            ArgMap{{"type", ArgInfo{Type::Symbol, true,
                                             "type of composition: reply/forward/edit/resend/new"}},
                                    {"docid", ArgInfo{Type::Number, false,"document id of parent-message, if any"}},
-                                   {"decrypt", ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)" }}},
+                                   {"decrypt", ArgInfo{Type::Symbol, false,
+                                            "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
                            [&](const auto& params){compose_handler(context, params);}});
 
@@ -1214,6 +1207,7 @@ make_command_map (Context& context)
                                    {"no-view", ArgInfo{Type::Symbol, false,
                                             "if set, do not hint at updating the view"}},},
                            "move messages and/or change their flags",
+
                            [&](const auto& params){move_handler(context, params);}});
 
       cmap.emplace("mkdir",
@@ -1253,10 +1247,10 @@ make_command_map (Context& context)
 
       cmap.emplace("view",
                    CommandInfo{
-                           ArgMap{{"docid",  ArgInfo{Type::Number, false, "document-id"}},
-                                   {"msgid",  ArgInfo{Type::String, false, "message-id"}},
-                                   {"path",   ArgInfo{Type::String, false, "message filesystem path"}},
-
+                           ArgMap{{"docid",          ArgInfo{Type::Number, false, "document-id"}},
+                                   {"msgid",         ArgInfo{Type::String, false, "message-id"}},
+                                   {"path",          ArgInfo{Type::String, false, "message filesystem path"}},
+                                   {"mark-unread",   ArgInfo{Type::String, false, "mark message as unread"}},
                                    {"extract-images", ArgInfo{Type::Symbol, false,
                                                            "whether to extract images for this messages (if any)"}},
                                    {"decrypt", ArgInfo{Type::Symbol, false,
@@ -1311,6 +1305,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
 
                 } catch (const Error& er) {
                         std::cerr << ";; error: " << er.what() << "\n";
+                        g_warning ("error in server: %s", er.what());
                         print_error ((MuError)er.code(), "%s (line was:'%s')",
                                      er.what(), line.c_str());
                 }
@@ -1320,9 +1315,11 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
         return MU_OK;
 
 } catch (const Error& er) {
+        g_critical ("server caught exception: %s", er.what());
         g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", er.what());
         return MU_ERROR;
 } catch (...) {
+        g_critical ("server caught exception");
         g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
         return MU_ERROR;
 }
