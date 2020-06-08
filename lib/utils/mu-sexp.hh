@@ -90,12 +90,15 @@ struct Node {
 
                         if (name.empty() || name[0] != ':')
                                 throw Error{Error::Code::InvalidArgument,
-                                                "property names must start with ':'"};
+                                                "property names must start with ':' ('%s')",
+                                                name.c_str()};
 
                         add(make_symbol(std::move(name)));
                         add(std::move(val));
                 }
-
+                void  add_prop(std::string&& name, const std::string& val) {
+                        add_prop(std::move(name), std::string(val));
+                }
 
                 // deliberately limited stl-like
 
