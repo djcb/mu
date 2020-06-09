@@ -6,7 +6,7 @@
 *** mu
 
     - Where available (and with suitable glib), log to the systemd journal
-      instead of a =~/.cache/mu.log=
+      instead of a ~~/.cache/mu.log~
 
     - Follow symlinks in maildirs, and support moving messsages between across
       multiple filesystems (but note that that is quite a bit slower than the
@@ -32,6 +32,10 @@
 
     - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
       truncated strings with ~(setq truncate-string-ellipsis "…")~
+
+    - Add a variable ~mu4e-mu-debug~ which, when set to non-~nil~ makes the ~mu~
+      server log more verbosely (to ~mu.log~ or the journal)
+
 
 
 * 1.4 (released, as of April 18 2020)

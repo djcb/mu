@@ -51,6 +51,12 @@ path."
   :group 'mu4e
   :safe 'stringp)
 
+(defcustom mu4e-mu-debug nil
+  "Whether to run the mu binary in debug-mode.
+Setting this to t increases the amount of information in the log."
+  :type 'boolean
+  :group 'mu4e)
+
 (make-obsolete-variable 'mu4e-maildir
                         "determined by server; see `mu4e-root-maildir'." "1.3.8")
 

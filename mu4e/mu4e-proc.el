@@ -249,10 +249,11 @@ Start the process if needed."
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
      (format
-      "`mu4e-mu-binary' (%S) not found; please set to the path to the mu executable"
+      "`mu4e-mu-binary' (%S) not found; please set to the mu executable path"
       mu4e-mu-binary)))
   (let* ((process-connection-type nil) ;; use a pipe
          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
+         (args (if mu4e-mu-debug (cons "--debug" args) args))
          (args (cons "server" args)))
     (setq mu4e~proc-buf "")
     (setq mu4e~proc-process (apply 'start-process
