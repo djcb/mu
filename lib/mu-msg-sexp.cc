@@ -390,7 +390,7 @@ add_date_and_size (Node::Seq& items, MuMsg *msg)
 
         Node::Seq dseq;
         dseq.add((unsigned)(t >> 16));
-        dseq.add((unsigned)(t && 0xffff));
+        dseq.add((unsigned)(t & 0xffff));
         dseq.add(0);
 
         items.add_prop(":date", std::move(dseq));
