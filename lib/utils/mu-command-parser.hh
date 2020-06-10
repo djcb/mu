@@ -134,7 +134,7 @@ static inline std::ostream&
 operator<<(std::ostream& os, const Command::CommandInfo& info)
 {
         for (auto&& arg: info.args)
-                os << "  " << arg.first << ": " << arg.second << '\n'
+                os << "  " << arg.first << " " << arg.second << '\n'
                    << "    " << arg.second.docstring << "\n";
 
         return os;

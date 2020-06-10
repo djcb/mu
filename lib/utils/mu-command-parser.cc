@@ -60,7 +60,7 @@ Command::invoke(const Command::CommandMap& cmap, const Node& call)
                 const auto param_it = [&]() {
                         for (size_t i = 1; i < params.size(); i += 2)
                                 if (params.at(i).type() == Type::Symbol &&
-                                    params.at(i).value() == ':' + argname)
+                                    params.at(i).value() == argname)
                                         return params.begin() + i + 1;
 
                         return params.end();
@@ -86,7 +86,7 @@ Command::invoke(const Command::CommandMap& cmap, const Node& call)
         // all passed parameters must be known
         for (size_t i = 1; i < params.size(); i += 2) {
                 if (std::none_of(cinfo.args.begin(), cinfo.args.end(),
-                                 [&](auto&& arg) {return params.at(i).value() == ":" + arg.first;}))
+                                 [&](auto&& arg) {return params.at(i).value() == arg.first;}))
                         throw command_error("unknown parameter '" + params.at(i).value() + "'");
         }
 
@@ -97,10 +97,19 @@ Command::invoke(const Command::CommandMap& cmap, const Node& call)
 static auto
 find_param_node (const Parameters& params, const std::string& argname)
 {
+        if (params.empty())
+                throw Error(Error::Code::InvalidArgument,
+                            "params must not be empty");
+
+        if (argname.empty() || argname.at(0) != ':')
+                throw Error(Error::Code::InvalidArgument,
+                            "property key must start with ':' but got '%s')",
+                            argname.c_str());
+
         for (size_t i = 1; i < params.size(); i += 2) {
                 if (i + 1 != params.size() &&
                     params.at(i).type() == Type::Symbol &&
-                    params.at(i).value() == ':' + argname)
+                    params.at(i).value() == argname)
                         return params.begin() + i + 1;
         }
 
@@ -123,7 +132,8 @@ Command::get_string_or (const Parameters& params, const std::string& argname,
         if (it == params.end() || is_nil(*it))
                 return alt;
         else if (it->type() != Type::String)
-                throw Error(Error::Code::InvalidArgument, "expected <string> but got %s (value: '%s')",
+                throw Error(Error::Code::InvalidArgument,
+                            "expected <string> but got %s (value: '%s')",
                             to_string(it->type()).c_str(),
                             it->value().c_str());
 
@@ -138,7 +148,8 @@ Command::get_symbol_or (const Parameters& params, const std::string& argname,
         if (it == params.end() || is_nil(*it))
                 return alt;
         else if (it->type() != Type::Symbol)
-                throw Error(Error::Code::InvalidArgument, "expected <symbol> but got %s (value: '%s')",
+                throw Error(Error::Code::InvalidArgument,
+                            "expected <symbol> but got %s (value: '%s')",
                             to_string(it->type()).c_str(),
                             it->value().c_str());
 
@@ -154,7 +165,8 @@ Command::get_int_or (const Parameters& params, const std::string& argname,
         if (it == params.end() || is_nil(*it))
                 return alt;
         else if (it->type() != Type::Number)
-                throw Error(Error::Code::InvalidArgument, "expected <integer> but got %s",
+                throw Error(Error::Code::InvalidArgument,
+                            "expected <integer> but got %s",
                             to_string(it->type()).c_str());
         else
                 return ::atoi(it->value().c_str());
@@ -168,7 +180,8 @@ Command::get_bool_or (const Parameters& params, const std::string& argname,
         if (it == params.end())
                 return alt;
         else if (it->type() != Type::Symbol)
-                throw Error(Error::Code::InvalidArgument, "expected <symbol> but got %s",
+                throw Error(Error::Code::InvalidArgument,
+                            "expected <symbol> but got %s",
                             to_string(it->type()).c_str());
         else
                 return it->value() != Nil;
@@ -181,7 +194,8 @@ Command::get_string_vec  (const Parameters& params, const std::string& argname)
         if (it == params.end() || is_nil(*it))
                 return {};
         else if (it->type() != Type::List)
-                throw Error(Error::Code::InvalidArgument, "expected <list> but got %s",
+                throw Error(Error::Code::InvalidArgument,
+                            "expected <list> but got %s",
                             to_string(it->type()).c_str());
 
         std::vector<std::string> vec;
