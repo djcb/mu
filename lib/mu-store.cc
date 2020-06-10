@@ -346,6 +346,8 @@ Store::add_message (const std::string& path)
                 throw Error{Error::Code::Message, "failed to add message: %s",
                                 gerr ? gerr->message : "something went wrong"};
 
+        g_debug ("added message @ %s; docid = %u", path.c_str(), docid);
+
 	return docid;
 }
 
@@ -361,6 +363,9 @@ Store::update_message (MuMsg *msg, unsigned docid)
         if (G_UNLIKELY(docid != docid2))
             throw Error{Error::Code::Internal, "failed to update message",
                     gerr ? gerr->message : "something went wrong"};
+
+        g_debug ("updated message @ %s; docid = %u",
+                 mu_msg_get_path(msg), docid);
 
         return true;
 }
@@ -378,6 +383,9 @@ Store::remove_message (const std::string& path)
 		wdb->delete_document (term);
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (false);
+
+        g_debug ("deleted message @ %s from database", path.c_str());
+
 
         return true;
 }
