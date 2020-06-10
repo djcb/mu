@@ -123,6 +123,16 @@ public:
         unsigned add_message (const std::string& path);
 
         /**
+         * Update a message in the store.
+         *
+         * @param msg a message
+         * @param docid a docid
+         *
+         * @return false in case of failure; true ottherwise.
+         */
+        bool update_message (MuMsg *msg, unsigned docid);
+
+        /**
          * Add a message to the store.
          *
          * @param path the message path.

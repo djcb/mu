@@ -343,11 +343,28 @@ Store::add_message (const std::string& path)
 	const auto docid{add_or_update_msg (store, 0, msg, &gerr)};
 	mu_msg_unref (msg);
         if (G_UNLIKELY(docid == MU_STORE_INVALID_DOCID))
-                throw Error{Error::Code::Message, "failed to store message: %s",
+                throw Error{Error::Code::Message, "failed to add message: %s",
                                 gerr ? gerr->message : "something went wrong"};
 
 	return docid;
 }
+
+
+bool
+Store::update_message (MuMsg *msg, unsigned docid)
+{
+        auto store{reinterpret_cast<MuStore*>(this)}; // yuk.
+
+        GError *gerr{};
+	const auto docid2{add_or_update_msg (store, docid, msg, &gerr)};
+
+        if (G_UNLIKELY(docid != docid2))
+            throw Error{Error::Code::Internal, "failed to update message",
+                    gerr ? gerr->message : "something went wrong"};
+
+        return true;
+}
+
 
 bool
 Store::remove_message (const std::string& path)
