@@ -1646,6 +1646,10 @@ window                                                      . "
   (let* ((msg (mu4e-message-at-point))
          (docid (or (mu4e-message-field msg :docid)
                     (mu4e-warn "No message at point")))
+         (mark-as-read
+          (if (functionp mu4e-view-auto-mark-as-read)
+              (funcall mu4e-view-auto-mark-as-read msg)
+            mu4e-view-auto-mark-as-read))
          (decrypt (mu4e~decrypt-p msg))
          (verify  (not mu4e-view-use-gnus))
          (viewwin (mu4e~headers-redraw-get-view-window)))
@@ -1668,8 +1672,8 @@ window                                                      . "
 
     ;; (if mu4e-view-use-gnus
     ;;     (mu4e-view msg)
-    ;;   (mu4e~proc-view docid mu4e-view-show-images decrypt))
-    (mu4e~proc-view docid mu4e-view-show-images decrypt verify)))
+    ;;   (mu4e~proc-view dowcid decrypt))
+    (mu4e~proc-view docid mark-as-read decrypt verify)))
 
 (defun mu4e-headers-rerun-search ()
   "Rerun the search for the last search expression."

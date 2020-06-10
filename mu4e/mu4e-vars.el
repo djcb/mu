@@ -312,6 +312,21 @@ and `mu4e-headers-visible-columns'."
 (make-obsolete-variable 'mu4e-show-images
                         'mu4e-view-show-images "0.9.9.x")
 
+
+(defcustom mu4e-view-auto-mark-as-read t
+  "Automatically mark messages are 'read' when you read them.
+This is the default behavior, but can be turned off, for example
+when using a read-only file-system.
+
+This can also be set to a function; if so, receives a message
+plist which should evaluate to nil if the message should *not* be
+marked as read-only, or non-nil otherwise."
+  :type '(choice
+          boolean
+          function)
+  :group 'mu4e-view)
+
+
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."
   :type 'boolean

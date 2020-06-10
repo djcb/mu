@@ -1056,11 +1056,9 @@ sent_handler (Context& context, const Parameters& params)
         print_expr (std::move(seq));
 }
 
-static void
-maybe_mark_as_unread (MuMsg *msg, DocId docid)
+static bool
+maybe_mark_as_read (Mu::Store& store, MuMsg *msg, DocId docid)
 {
-        g_debug ("%s", __func__);
-
         if (!msg)
                 throw Error{Error::Code::Store, "missing message"};
         if (docid == MU_STORE_INVALID_DOCID)
@@ -1247,15 +1245,16 @@ make_command_map (Context& context)
 
       cmap.emplace("view",
                    CommandInfo{
-                           ArgMap{{"docid",          ArgInfo{Type::Number, false, "document-id"}},
-                                   {"msgid",         ArgInfo{Type::String, false, "message-id"}},
-                                   {"path",          ArgInfo{Type::String, false, "message filesystem path"}},
-                                   {"mark-unread",   ArgInfo{Type::String, false, "mark message as unread"}},
-                                   {"extract-images", ArgInfo{Type::Symbol, false,
+                           ArgMap{{":docid",           ArgInfo{Type::Number, false, "document-id"}},
+                                   {":msgid",          ArgInfo{Type::String, false, "message-id"}},
+                                   {":path",           ArgInfo{Type::String, false, "message filesystem path"}},
+                                   {":mark-as-read",   ArgInfo{Type::Symbol, false,
+                                            "mark message as read (if not already)"}},
+                                   {":extract-images", ArgInfo{Type::Symbol, false,
                                                            "whether to extract images for this messages (if any)"}},
-                                   {"decrypt", ArgInfo{Type::Symbol, false,
+                                   {":decrypt",        ArgInfo{Type::Symbol, false,
                                                            "whether to decrypt encrypted parts (if any)" }},
-                                   {"verify", ArgInfo{Type::Symbol, false,
+                                   {":verify",         ArgInfo{Type::Symbol, false,
                                                            "whether to verify signatures (if any)" }}
 
                            },

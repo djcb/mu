@@ -468,16 +468,17 @@ respectively."
 <docid> :fcc <path>)."
   (mu4e~call-mu `(sent :path ,path)))
 
-(defun mu4e~proc-view (docid-or-msgid &optional images decrypt verify)
+(defun mu4e~proc-view (docid-or-msgid &optional mark-as-read decrypt verify)
   "Get a message DOCID-OR-MSGID.
-Optionally, if IMAGES is non-nil, backend will any images
-attached to the message, and return them as temp files. DECRYPT and VERIFY
-if necessary. The result will be delivered to the function
-registered as `mu4e-view-func'."
+Optionally, if MARK-AS-READ is non-nil, the backend marks the message as
+read before returning, if it was not already unread.
+ DECRYPT and VERIFY if necessary. The result will be delivered to
+the function registered as `mu4e-view-func'."
   (mu4e~call-mu `(view
                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-                  :extract-images ,(if images t nil)
+                  :mark-as-read ,mark-as-read
+                  :extract-images ,(if mu4e-view-show-images t nil)
                   :decrypt ,(and decrypt t)
                   :verify  ,(and verify t))))
 
@@ -489,7 +490,7 @@ result will be delivered to the function registered as
 `mu4e-view-func'. Optionally DECRYPT and VERIFY."
   (mu4e~call-mu `(view
                   :path ,path
-                  :extract-images ,(and images t)
+                  :extract-images ,(if mu4e-view-show-images t nil)
                   :decrypt        ,(and decrypt t)
                   :verify         ,(and verify t))))
 

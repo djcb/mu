@@ -106,12 +106,6 @@ the end of a message. Otherwise, don't move to the next message."
   :type 'boolean
   :group 'mu4e-view)
 
-(defcustom mu4e-view-auto-mark-as-read t
-  "Automatically mark messages are 'read' when you read
-them. This is typically the expected behavior, but can be turned
-off, for example when using a read-only file-system."
-  :type 'boolean
-  :group 'mu4e-view)
 
 (defcustom mu4e-save-multiple-attachments-without-asking nil
   "If non-nil, saving multiple attachments asks once for a
@@ -337,6 +331,8 @@ marking if it still had that.
 Depending on the value of `mu4e-view-use-gnus', either use mu4e's
 internal display mode, or a display mode based on Gnus'
 article-mode."
+  (mu4e~headers-update-handler msg nil nil);; update headers, if necessary.
+
   (mu4e~view-define-mode)
 
   ;; XXX(djcb): only called for the side-effect of setting up
@@ -347,10 +343,9 @@ article-mode."
   ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
   ;; another call to mu4e-view (via mu4e~headers-update-handler as
   ;; the reply handler to mu4e~proc-move)
-  (unless (mu4e~view-mark-as-read-maybe msg)
-    (if mu4e-view-use-gnus
-        (mu4e~view-gnus msg)
-      (mu4e~view-internal msg))))
+  (if mu4e-view-use-gnus
+      (mu4e~view-gnus msg)
+    (mu4e~view-internal msg)))
 
 (defun mu4e~view-internal (msg)
   "Display MSG using mu4e's internal view mode."
@@ -362,25 +357,23 @@ article-mode."
                 (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
-        (when (or embedded (not (mu4e~view-mark-as-read-maybe msg)))
-          (erase-buffer)
-          (mu4e~delete-all-overlays)
-          (insert (mu4e-view-message-text msg))
-          (goto-char (point-min))
-          (mu4e~fontify-cited)
-          (mu4e~fontify-signature)
-          (mu4e~view-make-urls-clickable)
-          (mu4e~view-show-images-maybe msg)
-          (when (not embedded) (setq mu4e~view-message msg))
-          (mu4e-view-mode)
-          (when embedded (local-set-key "q" 'kill-buffer-and-window))))
+        (erase-buffer)
+        (mu4e~delete-all-overlays)
+        (insert (mu4e-view-message-text msg))
+        (goto-char (point-min))
+        (mu4e~fontify-cited)
+        (mu4e~fontify-signature)
+        (mu4e~view-make-urls-clickable)
+        (mu4e~view-show-images-maybe msg)
+        (when (not embedded) (setq mu4e~view-message msg))
+        (mu4e-view-mode)
+        (when embedded (local-set-key "q" 'kill-buffer-and-window)))
       (switch-to-buffer buf))))
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode. Experimental."
   (require 'gnus-art)
-  (let ((marked-read (mu4e~view-mark-as-read-maybe msg))
-        (path (mu4e-message-field msg :path))
+  (let ((path (mu4e-message-field msg :path))
         (inhibit-read-only t)
         ;; support signature verification
         (mm-verify-option 'known)
@@ -391,31 +384,28 @@ article-mode."
                                             gnus-buttonized-mime-types)))
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (erase-buffer)
-    (unless marked-read
-      ;; when we're being marked as read, no need to start rendering
-      ;; the messages; just the minimal so (update... ) can find us.
-      (insert-file-contents-literally path)
-      (unless (message-fetch-field "Content-Type" t)
-        ;; For example, for messages in `mu4e-drafts-folder'
-        (let ((coding (or (default-value 'buffer-file-coding-system)
-                          'prefer-utf-8)))
-          (recode-region (point-min) (point-max) coding 'no-conversion)))
-      (setq
-       gnus-summary-buffer (get-buffer-create " *appease-gnus*")
-       gnus-original-article-buffer (current-buffer))
-      (run-hooks 'gnus-article-decode-hook)
-      (let ((mu4e~view-rendering t) ; customize gnus in mu4e
-            (max-specpdl-size mu4e-view-max-specpdl-size)
-            (gnus-blocked-images ".") ;; don't load external images.
-            ;; Possibly add headers (before "Attachments")
-            (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
-            (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
-        (gnus-article-prepare-display))
-      (setq mu4e~view-message msg)
-      (mu4e-view-mode)
-      (setq gnus-article-decoded-p gnus-article-decode-hook)
-      (set-buffer-modified-p nil)
-      (read-only-mode))))
+    (insert-file-contents-literally path)
+    (unless (message-fetch-field "Content-Type" t)
+      ;; For example, for messages in `mu4e-drafts-folder'
+      (let ((coding (or (default-value 'buffer-file-coding-system)
+                        'prefer-utf-8)))
+        (recode-region (point-min) (point-max) coding 'no-conversion)))
+    (setq
+     gnus-summary-buffer (get-buffer-create " *appease-gnus*")
+     gnus-original-article-buffer (current-buffer))
+    (run-hooks 'gnus-article-decode-hook)
+    (let ((mu4e~view-rendering t) ; customize gnus in mu4e
+          (max-specpdl-size mu4e-view-max-specpdl-size)
+          (gnus-blocked-images ".") ;; don't load external images.
+          ;; Possibly add headers (before "Attachments")
+          (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
+          (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
+      (gnus-article-prepare-display))
+    (setq mu4e~view-message msg)
+    (mu4e-view-mode)
+    (setq gnus-article-decoded-p gnus-article-decode-hook)
+    (set-buffer-modified-p nil)
+    (read-only-mode)))
 
 (defun mu4e~view-gnus-display-mime (msg)
   "Same as `gnus-display-mime' but add a mu4e headers to MSG."
@@ -1021,26 +1011,6 @@ Gnus' article-mode."
       "Major mode for viewing an e-mail message in mu4e."
       (mu4e~view-mode-body))))
 
-(defun mu4e~view-mark-as-read-maybe (msg)
-  "Clear the message MSG New/Unread status and set it to Seen.
-If the message is not New/Unread, do nothing. Evaluates to t if it
-triggers any changes, nil otherwise. If this function does any
-changes, it triggers a refresh."
-  (when (and mu4e-view-auto-mark-as-read msg)
-    (let ((flags (mu4e-message-field msg :flags))
-          (msgid (mu4e-message-field msg :message-id))
-          (docid (mu4e-message-field msg :docid)))
-      ;; attached (embedded) messages don't have docids; leave them alone if it
-      ;; is a new message
-      (when (and docid (or (member 'unread flags) (member 'new flags)))
-        ;; mark /all/ messages with this message-id as read, so all copies of
-        ;; this message will be marked as read. We don't want an update though,
-        ;; we want a full message, so images etc. work correctly.
-        (mu4e~proc-move msgid nil "+S-u-N" 'noview)
-        (mu4e~proc-view docid mu4e-view-show-images
-                        (mu4e~decrypt-p msg) (not mu4e-view-use-gnus))
-        t))))
-
 (defun mu4e~view-browse-url-func (url)
   "Return a function that executes `browse-url' with URL.
 The browser that is called depends on
@@ -1538,7 +1508,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     ;; remember the mapping path->docid, which maps the path of the embedded
     ;; message to the docid of its parent
     (puthash path docid mu4e~path-parent-docid-map)
-    (mu4e~proc-view-path path mu4e-view-show-images mu4e-decryption-policy))
+    (mu4e~proc-view-path path mu4e-decryption-policy))
    ((string= what "emacs")
     (find-file path)
     ;; make the buffer read-only since it usually does not make
