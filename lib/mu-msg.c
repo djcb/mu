@@ -1,6 +1,6 @@
-/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+/*
 **
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,8 +179,8 @@ free_later_lst (MuMsg *self, GSList *lst)
 static const char*
 get_path (MuMsg *self)
 {
-	char *val;
-	gboolean do_free;
+	char	 *val;
+	gboolean  do_free;
 
 	do_free = TRUE;
 	val     = NULL;
@@ -197,7 +197,7 @@ get_path (MuMsg *self)
 
 	/* shouldn't happen */
 	if (!val)
-		g_warning ("%s: cannot find path", __func__);
+		g_warning ("%s: message without path?!", __func__);
 
 	return free_later_str (self, val);
 }
