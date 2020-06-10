@@ -213,39 +213,17 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 struct Context {
         Context(){}
         Context (const MuConfig *opts):
-                store_{std::make_unique<Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false/*writable*/)} {
-
-                // store = mu_store_new_writable (dbpath, NULL);
-                // if (!store) {
-                //         const auto mu_init = format("mu init %s%s",
-                //                                     opts->muhome ? "--muhome=" : "",
-                //                                     opts->muhome ? opts->muhome : "");
-
-                //         if (gerr) {
-                //                 if ((MuError)gerr->code == MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK)
-                //                         print_error(MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
-                //                                     "mu database already locked; "
-                //                                     "some other mu running?");
-                //                 else
-                //                         print_error((MuError)gerr->code,
-                //                                     "cannot open database @ %s:%s; already running? "
-                //                                     "if not, please try '%s", dbpath,
-                //                                     gerr->message ? gerr->message : "something went wrong",
-                //                                     mu_init.c_str());
-                //         } else
-                //                 print_error(MU_ERROR,
-                //                             "cannot open database @ %s; already running? if not, please try '%s'",
-                //                             dbpath, mu_init.c_str());
-
-                //         throw Mu::Error (Error::Code::Store, &gerr/*consumed*/,
-                //                          "failed to open database @ %s; already running? if not, please try '%s'",
-                //                          dbpath, mu_init.c_str());
-                // }
-
+                store_{std::make_unique<Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+                                               false/*writable*/)} {
                 GError *gerr{};
                 query = mu_query_new (reinterpret_cast<MuStore*>(store_.get()), &gerr);
                 if (!query)
                         throw Error(Error::Code::Store, &gerr/*consumes*/, "failed to create query");
+
+                g_message ("opened store @ %s; maildir @ %s; debug-mode %s",
+                           store_->database_path().c_str(),
+                           store_->root_maildir().c_str(),
+                           opts->debug ? "yes" : "no");
         }
 
         ~Context() {
@@ -273,9 +251,9 @@ struct Context {
 static MuMsgOptions
 message_options (const Parameters& params)
 {
-        const auto extract_images{get_bool_or(params, "extract-images", false)};
-        const auto decrypt{get_bool_or(params, "decrypt", false)};
-        const auto verify{get_bool_or(params, "verify", false)};
+        const auto extract_images{get_bool_or(params, ":extract-images", false)};
+        const auto decrypt{get_bool_or(params, ":decrypt", false)};
+        const auto verify{get_bool_or(params, ":verify", false)};
 
         int opts{MU_MSG_OPTION_NONE};
         if (extract_images)
@@ -296,7 +274,7 @@ message_options (const Parameters& params)
 static void
 add_handler (Context& context, const Parameters& params)
 {
-        auto path{get_string_or(params, "path")};
+        auto path{get_string_or(params, ":path")};
         const auto docid{context.store().add_message(path)};
 
         Node::Seq seq;
@@ -362,18 +340,16 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 static void
 compose_handler (Context& context, const Parameters& params)
 {
-        auto ctype{get_symbol_or(params, "type")};
+        const auto ctype{get_symbol_or(params, ":type")};
 
         Node::Seq compose_seq;
-        compose_seq.add_prop(":compose", ctype);
+        compose_seq.add_prop(":compose", Node::make_symbol(std::string(ctype)));
 
         // message optioss below checks extract-images / extract-encrypted
-
-
         if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
 
                 GError *gerr{};
-                const unsigned docid{(unsigned)get_int_or(params, "docid")};
+                const unsigned docid{(unsigned)get_int_or(params, ":docid")};
                 auto msg{context.store().find_message(docid)};
                 if (!msg)
                         throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
@@ -392,7 +368,8 @@ compose_handler (Context& context, const Parameters& params)
                 mu_msg_unref (msg);
 
         } else if (ctype != "new")
-                throw Error(Error::Code::InvalidArgument, "invalid compose type");
+                throw Error(Error::Code::InvalidArgument, "invalid compose type '%s'",
+                            ctype.c_str());
 
         print_expr (std::move(compose_seq));
 }
@@ -400,9 +377,9 @@ compose_handler (Context& context, const Parameters& params)
 static void
 contacts_handler (Context& context, const Parameters& params)
 {
-        const auto personal  = get_bool_or(params,   "personal");
-        const auto afterstr  = get_string_or(params, "after");
-        const auto tstampstr = get_string_or(params, "tstamp");
+        const auto personal  = get_bool_or(params,   ":personal");
+        const auto afterstr  = get_string_or(params, ":after");
+        const auto tstampstr = get_string_or(params, ":tstamp");
 
         const auto after{afterstr.empty() ? 0 :
                         g_ascii_strtoll(date_to_time_t_string(afterstr, true).c_str(), {}, 10)};
@@ -445,7 +422,7 @@ static void
 save_part (MuMsg *msg, unsigned docid, unsigned index,
            MuMsgOptions opts, const Parameters& params)
 {
-        const auto path{get_string_or(params, "path")};
+        const auto path{get_string_or(params, ":path")};
         if (path.empty())
                 throw Error{Error::Code::Command, "missing path"};
 
@@ -494,11 +471,11 @@ static void
 temp_part (MuMsg *msg, unsigned docid, unsigned index,
            MuMsgOptions opts, const Parameters& params)
 {
-        const auto what{get_symbol_or(params, "what")};
+        const auto what{get_symbol_or(params, ":what")};
         if (what.empty())
                 throw Error{Error::Code::Command, "missing 'what'"};
 
-        const auto param{get_string_or(params, "param")};
+        const auto param{get_string_or(params, ":param")};
 
         GError *gerr{};
         char *path{mu_msg_part_get_cache_path (msg, opts, index, &gerr)};
@@ -529,8 +506,8 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
 static void
 extract_handler (Context& context, const Parameters& params)
 {
-        const auto docid{get_int_or(params, "docid")};
-        const auto index{get_int_or(params, "index")};
+        const auto docid{get_int_or(params, ":docid")};
+        const auto index{get_int_or(params, ":index")};
         const auto opts{message_options(params)};
 
         GError *gerr{};
@@ -539,7 +516,7 @@ extract_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Store, "failed to get message"};
 
         try {
-                const auto action{get_symbol_or(params, "action")};
+                const auto action{get_symbol_or(params, ":action")};
                 if (action == "save")
                         save_part (msg, docid, index, opts, params);
                 else if (action == "open")
@@ -618,8 +595,8 @@ path_from_docid (const Store& store, unsigned docid)
 static std::vector<DocId>
 determine_docids (MuQuery *query, const Parameters& params)
 {
-        auto docid{get_int_or(params, "docid", 0)};
-        const auto msgid{get_string_or(params, "msgid")};
+        auto docid{get_int_or(params, ":docid", 0)};
+        const auto msgid{get_string_or(params, ":msgid")};
 
         if ((docid == 0) == msgid.empty())
                 throw Error(Error::Code::InvalidArgument,
@@ -635,13 +612,13 @@ determine_docids (MuQuery *query, const Parameters& params)
 static void
 find_handler (Context& context, const Parameters& params)
 {
-        const auto query{get_string_or(params, "query")};
-        const auto threads{get_bool_or(params, "threads", false)};
-        const auto sortfieldstr{get_symbol_or(params, "sortfield")};
-        const auto descending{get_bool_or(params, "descending", false)};
-        const auto maxnum{get_int_or(params, "maxnum", -1/*unlimited*/)};
-        const auto skip_dups{get_bool_or(params, "skip-dups", false)};
-        const auto include_related{get_bool_or(params, "include-related", false)};
+        const auto query{get_string_or(params,         ":query")};
+        const auto threads{get_bool_or(params,         ":threads", false)};
+        const auto sortfieldstr{get_symbol_or(params,  ":sortfield")};
+        const auto descending{get_bool_or(params,      ":descending", false)};
+        const auto maxnum{get_int_or(params,           ":maxnum", -1/*unlimited*/)};
+        const auto skip_dups{get_bool_or(params,       ":skip-dups", false)};
+        const auto include_related{get_bool_or(params, ":include-related", false)};
 
         MuMsgFieldId sort_field{MU_MSG_FIELD_ID_NONE};
         if (!sortfieldstr.empty()) {
@@ -691,8 +668,8 @@ find_handler (Context& context, const Parameters& params)
 static void
 help_handler (Context& context, const Parameters& params)
 {
-        const auto command{get_symbol_or(params, "command", "")};
-        const auto full{get_bool_or(params, "full")};
+        const auto command{get_symbol_or(params, ":command", "")};
+        const auto full{get_bool_or(params, ":full")};
 
         if (command.empty()) {
                 std::cout << ";; Commands are s-expressions of the form\n"
@@ -790,8 +767,8 @@ static void
 index_handler (Context& context, const Parameters& params)
 {
         GError *gerr{};
-        const auto cleanup{get_bool_or(params,   "cleanup")};
-        const auto lazy_check{get_bool_or(params,  "lazy-check")};
+        const auto cleanup{get_bool_or(params,    ":cleanup")};
+        const auto lazy_check{get_bool_or(params, ":lazy-check")};
 
         auto store_ptr = reinterpret_cast<MuStore*>(&context.store());
 
@@ -812,7 +789,7 @@ index_handler (Context& context, const Parameters& params)
 static void
 mkdir_handler (Context& context, const Parameters& params)
 {
-        const auto path{get_string_or(params, "path")};
+        const auto path{get_string_or(params, ":path")};
 
         GError *gerr{};
         if (!mu_maildir_mkdir(path.c_str(), 0755, FALSE, &gerr))
@@ -917,10 +894,10 @@ move_docid (Store& store, DocId docid, const std::string& flagstr,
 static void
 move_handler (Context& context, const Parameters& params)
 {
-        auto maildir{get_string_or(params, "maildir")};
-        const auto flagstr{get_string_or(params, "flags")};
-        const auto rename{get_bool_or (params, "rename")};
-        const auto no_view{get_bool_or (params, "noupdate")};
+        auto maildir{get_string_or(params,       ":maildir")};
+        const auto flagstr{get_string_or(params, ":flags")};
+        const auto rename{get_bool_or (params,   ":rename")};
+        const auto no_view{get_bool_or (params,  ":noupdate")};
         const auto docids{determine_docids (context.query, params)};
 
         if (docids.size() > 1) {
@@ -976,7 +953,7 @@ ping_handler (Context& context, const Parameters& params)
         if (storecount == (unsigned)-1)
                 throw Error{Error::Code::Store, "failed to read store"};
 
-        const auto queries  = get_string_vec (params, "queries");
+        const auto queries  = get_string_vec (params, ":queries");
         Node::Seq qresults;
         for (auto&& q: queries) {
                 const auto count{mu_query_count_run (context.query, q.c_str())};
@@ -1005,7 +982,6 @@ ping_handler (Context& context, const Parameters& params)
         propseq.add_prop(":root-maildir",       context.store().root_maildir());
         propseq.add_prop(":doccount",           storecount);
         propseq.add_prop(":queries",            std::move(qresults));
-
         seq.add_prop(":props",   std::move(propseq));
 
         print_expr(std::move(seq));
@@ -1021,7 +997,7 @@ quit_handler (Context& context, const Parameters& params)
 static void
 remove_handler (Context& context, const Parameters& params)
 {
-        const auto docid{get_int_or(params, "docid")};
+        const auto docid{get_int_or(params, ":docid")};
         const auto path{path_from_docid (context.store(), docid)};
 
         if (::unlink (path.c_str()) != 0 && errno != ENOENT)
@@ -1043,7 +1019,7 @@ remove_handler (Context& context, const Parameters& params)
 static void
 sent_handler (Context& context, const Parameters& params)
 {
-        const auto path{get_string_or(params, "path")};
+        const auto path{get_string_or(params, ":path")};
         const auto docid{context.store().add_message(path)};
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::Store, "failed to add path"};
@@ -1067,7 +1043,7 @@ maybe_mark_as_read (Mu::Store& store, MuMsg *msg, DocId docid)
         const auto oldflags{mu_msg_get_flags (msg)};
         const auto newflags{get_flags (mu_msg_get_path(msg), "+S-u-N")};
         if (oldflags == newflags)
-                return; // nothing to do.
+                return false; // nothing to do.
 
         GError* gerr{};
         if (!mu_msg_move_to_maildir (msg,
@@ -1078,7 +1054,13 @@ maybe_mark_as_read (Mu::Store& store, MuMsg *msg, DocId docid)
                                      &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to move message"};
 
+        /* after mu_msg_move_to_maildir, path will be the *new* path, and flags
+         * and maildir fields will be updated as wel */
+        if (!store.update_message (msg, docid))
+                throw Error{Error::Code::Store, "failed to store updated message"};
+
         g_debug ("marked message %d as read => %s", docid, mu_msg_get_path(msg));
+        return true;
 }
 
 
@@ -1086,8 +1068,8 @@ static void
 view_handler (Context& context, const Parameters& params)
 {
         DocId docid{MU_STORE_INVALID_DOCID};
-        const auto path{get_string_or(params, "path")};
-        const auto mark_unread{get_bool_or(params, "mark-unread")};
+        const auto path{get_string_or(params,       ":path")};
+        const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
 
         GError *gerr{};
         MuMsg *msg{};
@@ -1102,11 +1084,13 @@ view_handler (Context& context, const Parameters& params)
         if (!msg)
                 throw Error{Error::Code::Store, &gerr,
                                 "failed to find message for view"};
-        //if (mark_unread)
-                maybe_mark_as_unread (msg, docid);
+
+        if (mark_as_read)
+                maybe_mark_as_read (context.store(), msg, docid);
 
         Node::Seq seq;
         seq.add_prop(":view", msg_to_sexp(msg, docid, {}, message_options(params)));
+
         mu_msg_unref(msg);
 
         print_expr (std::move(seq));
@@ -1122,87 +1106,91 @@ make_command_map (Context& context)
 
       cmap.emplace("add",
                    CommandInfo{
-                           ArgMap{ {"path", ArgInfo{Type::String, true, "file system path to the message" }}},
+                           ArgMap{ {":path", ArgInfo{Type::String, true, "file system path to the message" }}},
                            "add a message to the store",
                            [&](const auto& params){add_handler(context, params);}});
 
       cmap.emplace("compose",
                    CommandInfo{
-                           ArgMap{{"type", ArgInfo{Type::Symbol, true,
-                                            "type of composition: reply/forward/edit/resend/new"}},
-                                   {"docid", ArgInfo{Type::Number, false,"document id of parent-message, if any"}},
-                                   {"decrypt", ArgInfo{Type::Symbol, false,
-                                            "whether to decrypt encrypted parts (if any)" }}},
+                           ArgMap{{":type",    ArgInfo{Type::Symbol, true,
+                                           "type of composition: reply/forward/edit/resend/new"}},
+                                  {":docid",   ArgInfo{Type::Number, false,
+                                           "document id of parent-message, if any"}},
+                                  {":decrypt", ArgInfo{Type::Symbol, false,
+                                           "whether to decrypt encrypted parts (if any)" }}},
                            "get contact information",
                            [&](const auto& params){compose_handler(context, params);}});
 
       cmap.emplace("contacts",
                    CommandInfo{
-                           ArgMap{ {"personal", ArgInfo{Type::Symbol, false,
+                           ArgMap{ {":personal", ArgInfo{Type::Symbol, false,
                                                    "only personal contacts" }},
-                                   {"after", ArgInfo{Type::String, false,
+                                   {":after",    ArgInfo{Type::String, false,
                                             "only contacts seen after time_t string" }},
-                                   {"tstamp",  ArgInfo{Type::String, false,
+                                   {":tstamp",   ArgInfo{Type::String, false,
                                             "return changes since tstamp" }}},
                            "get contact information",
                            [&](const auto& params){contacts_handler(context, params);}});
 
       cmap.emplace("extract",
                    CommandInfo{
-                           ArgMap{{"docid", ArgInfo{Type::Number, true,  "document for the message" }},
-                                   {"index", ArgInfo{Type::Number, true,  "index for the part to operate on" }},
-                                   {"action", ArgInfo{Type::Symbol, true, "what to do with the part" }},
-                                   {"decrypt", ArgInfo{Type::Symbol, false,
+                           ArgMap{{":docid",    ArgInfo{Type::Number, true,  "document for the message" }},
+                                   {":index",   ArgInfo{Type::Number, true,
+                                            "index for the part to operate on" }},
+                                   {":action",  ArgInfo{Type::Symbol, true, "what to do with the part" }},
+                                   {":decrypt", ArgInfo{Type::Symbol, false,
                                             "whether to decrypt encrypted parts (if any)" }},
-                                   {"path",    ArgInfo{Type::String, false, "part for saving (for action: save)" }},
-                                   {"what",    ArgInfo{Type::Symbol, false, "what to do with the part (feedback)" }},
-                                   {"param",   ArgInfo{Type::String, false, "parameter for 'what'" }}},
+                                   {":path",    ArgInfo{Type::String, false,
+                                            "part for saving (for action: save)" }},
+                                   {":what",    ArgInfo{Type::Symbol, false,
+                                            "what to do with the part (feedback)" }},
+                                   {":param",   ArgInfo{Type::String, false, "parameter for 'what'" }}},
                            "extract mime-parts from a message",
                            [&](const auto& params){extract_handler(context, params);}});
 
       cmap.emplace("find",
                    CommandInfo{
-                           ArgMap{ {"query",   ArgInfo{Type::String, true, "search expression" }},
-                                   {"threads", ArgInfo{Type::Symbol, false,
+                           ArgMap{ {":query",   ArgInfo{Type::String, true, "search expression" }},
+                                   {":threads", ArgInfo{Type::Symbol, false,
                                             "whether to include threading information" }},
-                                   {"sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
-                                   {"descending", ArgInfo{Type::Symbol, false,
+                                   {":sortfield",  ArgInfo{Type::Symbol, false, "the field to sort results by" }},
+                                   {":descending", ArgInfo{Type::Symbol, false,
                                             "whether to sort in descending order" }},
-                                   {"maxnum",  ArgInfo{Type::Number, false,
+                                   {":maxnum",  ArgInfo{Type::Number, false,
                                             "maximum number of result (hint)" }},
-                                   {"skip-dups",  ArgInfo{Type::Symbol, false,
+                                   {":skip-dups",  ArgInfo{Type::Symbol, false,
                                             "whether to skip messages with duplicate message-ids" }},
-                                   {"include-related",  ArgInfo{Type::Symbol, false,
+                                   {":include-related",  ArgInfo{Type::Symbol, false,
                                             "whether to include other message related to matching ones" }}},
                            "query the database for messages",
                            [&](const auto& params){find_handler(context, params);}});
 
       cmap.emplace("help",
                    CommandInfo{
-                           ArgMap{ {"command", ArgInfo{Type::Symbol, false,
+                           ArgMap{ {":command", ArgInfo{Type::Symbol, false,
                                                    "command to get information for" }},
-                                   {"full", ArgInfo{Type::Symbol, false,
+                                   {":full", ArgInfo{Type::Symbol, false,
                                             "whether to include information about parameters" }}},
                            "get information about one or all commands",
                            [&](const auto& params){help_handler(context, params);}});
       cmap.emplace("index",
                    CommandInfo{
-                           ArgMap{ {"my-addresses", ArgInfo{Type::List, false, "list of 'my' addresses"}},
-                                   {"cleanup", ArgInfo{Type::Symbol, false,
+                           ArgMap{ {":my-addresses", ArgInfo{Type::List, false, "list of 'my' addresses"}},
+                                   {":cleanup",      ArgInfo{Type::Symbol, false,
                                                            "whether to remove stale messages from the store"}},
-                                   {"lazy-check", ArgInfo{Type::Symbol, false,
+                                   {":lazy-check",   ArgInfo{Type::Symbol, false,
                                             "whether to avoid indexing up-to-date directories"}}},
                            "scan maildir for new/updated/removed messages",
                            [&](const auto& params){index_handler(context, params);}});
 
       cmap.emplace("move",
                    CommandInfo{
-                           ArgMap{{"docid",  ArgInfo{Type::Number, false, "document-id"}},
-                                   {"msgid",  ArgInfo{Type::String, false, "message-id"}},
-                                   {"flags",   ArgInfo{Type::String, false, "new flags for the message"}},
-                                   {"maildir", ArgInfo{Type::String, false, "the target maildir" }},
-                                   {"rename", ArgInfo{Type::Symbol, false,  "change filename when moving" }},
-                                   {"no-view", ArgInfo{Type::Symbol, false,
+                           ArgMap{ {":docid",   ArgInfo{Type::Number, false, "document-id"}},
+                                   {":msgid",   ArgInfo{Type::String, false, "message-id"}},
+                                   {":flags",   ArgInfo{Type::String, false, "new flags for the message"}},
+                                   {":maildir", ArgInfo{Type::String, false, "the target maildir" }},
+                                   {":rename",  ArgInfo{Type::Symbol, false,  "change filename when moving" }},
+                                   {":no-view", ArgInfo{Type::Symbol, false,
                                             "if set, do not hint at updating the view"}},},
                            "move messages and/or change their flags",
 
@@ -1210,15 +1198,15 @@ make_command_map (Context& context)
 
       cmap.emplace("mkdir",
                    CommandInfo{
-                           ArgMap{ {"path", ArgInfo{Type::String, true,
+                           ArgMap{ {":path", ArgInfo{Type::String, true,
                                                    "location for the new maildir" }}},
                            "create a new maildir",
                           [&](const auto& params){mkdir_handler(context, params);}});
       cmap.emplace("ping",
                    CommandInfo{
-                           ArgMap{ {"queries",  ArgInfo{Type::List, false,
+                           ArgMap{ {":queries",    ArgInfo{Type::List, false,
                                                    "queries for which to get read/unread numbers"}},
-                                   {"skip-dups",  ArgInfo{Type::Symbol, false,
+                                   {":skip-dups",  ArgInfo{Type::Symbol, false,
                                             "whether to exclude messages with duplicate message-ids"}},},
                            "ping the mu-server and get information in response",
                           [&](const auto& params){ping_handler(context, params);}});
@@ -1230,14 +1218,14 @@ make_command_map (Context& context)
 
       cmap.emplace("remove",
                    CommandInfo{
-                           ArgMap{ {"docid", ArgInfo{Type::Number, true,
+                           ArgMap{ {":docid", ArgInfo{Type::Number, true,
                                                    "document-id for the message to remove" }}},
                            "remove a message from filesystem and database",
                           [&](const auto& params){remove_handler(context, params);}});
 
       cmap.emplace("sent",
                    CommandInfo{
-                           ArgMap{ {"path", ArgInfo{Type::String, true,
+                           ArgMap{ {":path", ArgInfo{Type::String, true,
                                             "path to the message file" }}
                            },
                            "tell mu about a message that was sent",
@@ -1289,6 +1277,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
         std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
                   << ";; Use (help) to get a list of commands, (quit) to quit.\n";
 
+        g_debug ("starting repl");
         while (!MuTerminate && !context.do_quit) {
 
                 std::string line;
