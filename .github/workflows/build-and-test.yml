@@ -1,0 +1,39 @@
+name: Build & run tests
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - if: contains(matrix.os, 'ubuntu')
+        name: ubuntu-deps
+        run: |
+          sudo apt update
+          sudo apt-get install automake autoconf-archive autotools-dev libglib2.0-dev libxapian-dev libgmime-3.0-dev m4 make libtool pkg-config
+
+      - if: contains(matrix.os, 'macos')
+        name: macos-deps
+        run: |
+          brew install autoconf automake libgpg-error libtool pkg-config gettext glib gmime xapian
+
+      - name: configure
+        run: ./autogen.sh
+
+      - name: build
+        run: make
+
+      - name: test
+        run: make test
