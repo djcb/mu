@@ -55,7 +55,7 @@ save_part (MuMsg *msg, const char *targetdir, guint partidx, const MuConfig *opt
 		rv = TRUE;
 exit:
 	if (err) {
-		g_warning ("error with MIME-part: %s", err->message);
+		g_printerr ("error with MIME-part: %s\n", err->message);
 		g_clear_error (&err);
 	}
 
@@ -81,13 +81,13 @@ save_numbered_parts (MuMsg *msg, const MuConfig *opts)
 
 		idx = (unsigned)(i = strtol (*cur, &endptr, 10));
 		if (i < 0 || *cur == endptr) {
-			g_warning ("invalid MIME-part index '%s'", *cur);
+			g_printerr ("invalid MIME-part index '%s'\n", *cur);
 			rv = FALSE;
 			break;
 		}
 
 		if (!save_part (msg, opts->targetdir, idx, opts)) {
-			g_warning ("failed to save MIME-part %d", idx);
+			g_printerr ("failed to save MIME-part %d\n", idx);
 			rv = FALSE;
 			break;
 		}
@@ -118,8 +118,8 @@ anchored_regex (const char* pattern)
 	g_free (anchored);
 
 	if (!rx) {
-		g_warning ("error in regular expression '%s': %s",
-			   pattern, err->message ? err->message : "error");
+		g_printerr ("error in regular expression '%s': %s\n",
+                            pattern, err->message ? err->message : "error");
 		g_error_free (err);
 		return NULL;
 	}
@@ -146,7 +146,7 @@ save_part_with_filename (MuMsg *msg, const char *pattern, const MuConfig *opts)
 	lst = mu_msg_find_files (msg, msgopts, rx);
 	g_regex_unref (rx);
 	if (!lst) {
-		g_warning ("no matching attachments found");
+		g_printerr ("no matching attachments found");
 		return FALSE;
 	}
 
@@ -219,7 +219,7 @@ save_part_if (MuMsg *msg, MuMsgPart *part, SaveData *sd)
 	++sd->saved_num;
 exit:
 	if (err)
-		g_warning ("error saving MIME part: %s", err->message);
+		g_printerr ("error saving MIME part: %s", err->message);
 
 	g_free (filepath);
 	g_clear_error (&err);
@@ -243,8 +243,8 @@ save_certain_parts (MuMsg *msg, const MuConfig *opts)
 			     (MuMsgPartForeachFunc)save_part_if, &sd);
 
 	if (sd.saved_num == 0) {
-		g_warning ("no %s extracted from this message",
-			   opts->save_attachments ? "attachments" : "parts");
+		g_printerr ("no %s extracted from this message",
+                            opts->save_attachments ? "attachments" : "parts");
 		sd.result = FALSE;
 	}
 
@@ -263,7 +263,7 @@ save_parts (const char *path, const char *filename, const MuConfig *opts)
 	msg = mu_msg_new_from_file (path, NULL, &err);
 	if (!msg) {
 		if (err) {
-			g_warning ("error: %s", err->message);
+			g_printerr ("error: %s", err->message);
 			g_error_free (err);
 		}
 		return FALSE;

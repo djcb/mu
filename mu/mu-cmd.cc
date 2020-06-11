@@ -302,13 +302,13 @@ static gboolean
 check_file_okay (const char *path, gboolean cmd_add)
 {
  	if (!g_path_is_absolute (path)) {
-		g_warning ("path is not absolute: %s", path);
+		g_printerr ("path is not absolute: %s\n", path);
 		return FALSE;
 	}
 
 	if (cmd_add && access(path, R_OK) != 0) {
-		g_warning ("path is not readable: %s: %s",
-			   path, strerror (errno));
+		g_printerr ("path is not readable: %s: %s\n",
+                            path, strerror (errno));
 		return FALSE;
 	}
 
@@ -341,14 +341,14 @@ foreach_msg_file (Mu::Store& store, const MuConfig *opts,
 
 		if (!check_file_okay (path, TRUE)) {
 			all_ok = FALSE;
-			g_warning ("not a valid message file: %s", path);
+			g_printerr ("not a valid message file: %s\n", path);
 			continue;
 		}
 
 		if (!foreach_func (store, path, err)) {
 			all_ok = FALSE;
-			g_warning ("error with %s: %s", path,
-                                   (err&&*err) ? (*err)->message :
+			g_printerr ("error with %s: %s\n", path,
+                                    (err&&*err) ? (*err)->message :
                                    "something went wrong");
 			g_clear_error (err);
 			continue;

@@ -75,12 +75,10 @@ install_sig_handler (void)
                                     sigs[i], g_strerror (errno));;
 }
 
-
 /*
  * Markers for/after the length cookie that precedes the expression we write to
  * output. We use octal 376, 377 (ie, 0xfe, 0xff) as they will never occur in
  * utf8 */
-
 
 #define COOKIE_PRE  '\376'
 #define COOKIE_POST '\377'

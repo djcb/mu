@@ -38,13 +38,11 @@ static gboolean MU_CAUGHT_SIGNAL;
 static void
 sig_handler (int sig)
 {
-	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) { /* Ctrl-C */
-		g_print ("\n");
-		g_warning ("shutting down gracefully, "
+	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) /* Ctrl-C */
+		g_print ("\nshutting down gracefully, "
 			   "press again to kill immediately");
-	}
 
-	MU_CAUGHT_SIGNAL = TRUE;
+        MU_CAUGHT_SIGNAL = TRUE;
 }
 
 static void

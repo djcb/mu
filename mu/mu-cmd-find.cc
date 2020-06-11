@@ -411,8 +411,8 @@ thread_indent (MuMsgIter *iter)
 
 	ti = mu_msg_iter_get_thread_info (iter);
 	if (!ti) {
-		g_warning ("cannot get thread-info for message %u",
-			   mu_msg_iter_get_docid (iter));
+		g_printerr ("cannot get thread-info for message %u\n",
+                            mu_msg_iter_get_docid (iter));
 		return;
 	}
 

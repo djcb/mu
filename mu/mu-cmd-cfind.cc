@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it under
 ** the terms of the GNU General Public License as published by the Free Software
@@ -368,7 +368,7 @@ run_cmd_cfind (const Mu::Store&       store,
                 g_regex_unref (ecdata.rx);
 
         if (ecdata.n == 0) {
-                g_warning ("no matching contacts found");
+                g_printerr ("no matching contacts found\n");
                 return MU_ERROR_NO_MATCHES;
         }
 
@@ -389,14 +389,14 @@ cfind_params_valid (const MuConfig *opts)
         case MU_CONFIG_FORMAT_DEBUG:
                 break;
         default:
-                g_warning ("invalid output format %s",
-                           opts->formatstr ? opts->formatstr : "<none>");
+                g_printerr ("invalid output format %s\n",
+                            opts->formatstr ? opts->formatstr : "<none>");
                 return FALSE;
         }
 
         /* only one pattern allowed */
         if (opts->params[1] && opts->params[2]) {
-                g_warning ("usage: mu cfind [options] [<ptrn>]");
+                g_printerr ("usage: mu cfind [options] [<ptrn>]\n");
                 return FALSE;
         }
 
