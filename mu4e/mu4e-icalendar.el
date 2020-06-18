@@ -30,6 +30,12 @@
 ;; Optional
 ;; (setq mu4e-icalendar-trash-after-reply t)
 
+;; To add the event to a diary file of your choice:
+;; (setq mu4e-icalendar-diary-file "/path/to/your/diary")
+;; If the file specified is not your main diary file, add
+;; #include "/path/to/your/diary"
+;; to you main diary file to display the events.
+
 ;; To enable optional iCalendar->Org sync functionality
 ;; NOTE: both the capture file and the headline(s) inside must already exist
 ;; (require 'org-agenda)
