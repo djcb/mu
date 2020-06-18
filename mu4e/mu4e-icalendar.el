@@ -151,17 +151,12 @@ response in icalendar format."
     ;; Not (message-goto-body) to possibly skip mll sign directive
     ;; inserted by `mu4e-compose-mode-hook':
     (goto-char (point-max))
-    (mml-insert-multipart "alternative")
-    (mml-insert-part "text/plain")
-    (let ((reply-event (gnus-icalendar-event-from-buffer
-                        buffer-name (mu4e-personal-addresses))))
-      (insert (gnus-icalendar-event->gnus-calendar reply-event status)))
-    (forward-line 1); move past closing tag
     (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=utf-8")
     (message-remove-header "Subject")
     (message-goto-subject)
     (insert (capitalize (symbol-name status))
             ": " (gnus-icalendar-event:summary event))
+    (message-goto-body)
     (set-buffer-modified-p nil); not yet modified by user
     (when mu4e-icalendar-trash-after-reply
       ;; Override `mu4e-sent-handler' set by `mu4e-compose-mode' to
