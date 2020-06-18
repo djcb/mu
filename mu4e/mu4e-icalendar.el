@@ -30,6 +30,10 @@
 ;; Optional
 ;; (setq mu4e-icalendar-trash-after-reply t)
 
+;; By default, the original message is not cited.  However, if you
+;; would like to reply to it, the citation is in the kill-ring (paste
+;; it with `yank').
+
 ;; To add the event to a diary file of your choice:
 ;; (setq mu4e-icalendar-diary-file "/path/to/your/diary")
 ;; If the file specified is not your main diary file, add
@@ -107,7 +111,8 @@
 
 (defun mu4e~icalendar-delete-citation ()
   "Function passed to `mu4e-compose-cite-function' to remove the citation."
-  (delete-region (point-min) (point-max)))
+  (message-cite-original-without-signature)
+  (kill-region (point-min) (point-max)))
 
 (defun mu4e~icalendar-trash-message (original-msg)
   "Trash the message ORIGINAL-MSG and move to the next one."
