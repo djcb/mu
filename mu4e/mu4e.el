@@ -42,8 +42,8 @@
 
 ;; We can't properly use compose buffers that are revived using
 ;; desktop-save-mode; so let's turn that off.
-(require 'desktop)
-(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)
+(with-eval-after-load 'desktop
+  (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
 
 
 ;;;###autoload
