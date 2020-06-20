@@ -30,6 +30,16 @@
 ;; Optional
 ;; (setq mu4e-icalendar-trash-after-reply t)
 
+;; By default, the original message is not cited.  However, if you
+;; would like to reply to it, the citation is in the kill-ring (paste
+;; it with `yank').
+
+;; To add the event to a diary file of your choice:
+;; (setq mu4e-icalendar-diary-file "/path/to/your/diary")
+;; If the file specified is not your main diary file, add
+;; #include "/path/to/your/diary"
+;; to you main diary file to display the events.
+
 ;; To enable optional iCalendar->Org sync functionality
 ;; NOTE: both the capture file and the headline(s) inside must already exist
 ;; (require 'org-agenda)
@@ -67,9 +77,11 @@
          (status (cadr data))
          (event (caddr data))
          (gnus-icalendar-additional-identities (mu4e-personal-addresses))
-         (reply (gnus-icalendar-with-decoded-handle handle
-                                                    (gnus-icalendar-event-reply-from-buffer
-                                                     (current-buffer) status (gnus-icalendar-identities))))
+         (reply (gnus-icalendar-with-decoded-handle
+                 handle
+                 (let ((gnus-icalendar-find-if (lambda(pred seq) nil)))
+                   (gnus-icalendar-event-reply-from-buffer
+                    (current-buffer) status (gnus-icalendar-identities)))))
          (msg (mu4e-message-at-point 'noerror))
          (charset (cdr (assoc 'charset (mm-handle-type handle)))))
     (when reply
@@ -99,7 +111,8 @@
 
 (defun mu4e~icalendar-delete-citation ()
   "Function passed to `mu4e-compose-cite-function' to remove the citation."
-  (delete-region (point-min) (point-max)))
+  (message-cite-original-without-signature)
+  (kill-region (point-min) (point-max)))
 
 (defun mu4e~icalendar-trash-message (original-msg)
   "Trash the message ORIGINAL-MSG and move to the next one."
@@ -138,17 +151,12 @@ response in icalendar format."
     ;; Not (message-goto-body) to possibly skip mll sign directive
     ;; inserted by `mu4e-compose-mode-hook':
     (goto-char (point-max))
-    (mml-insert-multipart "alternative")
-    (mml-insert-part "text/plain")
-    (let ((reply-event (gnus-icalendar-event-from-buffer
-                        buffer-name (mu4e-personal-addresses))))
-      (insert (gnus-icalendar-event->gnus-calendar reply-event status)))
-    (forward-line 1); move past closing tag
     (mml-attach-buffer buffer-name "text/calendar; method=REPLY; charset=utf-8")
     (message-remove-header "Subject")
     (message-goto-subject)
     (insert (capitalize (symbol-name status))
             ": " (gnus-icalendar-event:summary event))
+    (message-goto-body)
     (set-buffer-modified-p nil); not yet modified by user
     (when mu4e-icalendar-trash-after-reply
       ;; Override `mu4e-sent-handler' set by `mu4e-compose-mode' to
