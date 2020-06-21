@@ -1,3 +1,17 @@
+#+TITLE:MU
+[[https://github.com/djcb/mu/blob/master/COPYING][https://img.shields.io/github/license/djcb/mu?logo=gnu&.svg]]
+[[https://en.cppreference.com][https://img.shields.io/badge/Made%20with-C/CPP-1f425f?logo=c&.svg]]
+[[https://img.shields.io/github/v/release/djcb/mu][https://img.shields.io/github/v/release/djcb/mu.svg]]
+[[https://github.com/djcb/mu/graphs/contributors][https://img.shields.io/github/contributors/djcb/mu.svg]]
+[[https://github.com/djcb/mu/issues][https://img.shields.io/github/issues/djcb/mu.svg]]
+[[https://github.com/djcb/mu/issues?q=is%3Aissue+is%3Aopen+label%3Arfe][https://img.shields.io/github/issues/djcb/mu/rfe?color=008b8b.svg]]
+[[https://github.com/djcb/mu/pull/new][https://img.shields.io/badge/PRs-welcome-brightgreen.svg]]\\
+[[https://melpa.org/#/?q=mu4e&sort=version&asc=false][https://img.shields.io/badge/Emacs-25.3-922793?logo=gnu-emacs&logoColor=b39ddb&.svg]]
+[[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Dependencies-for-Debian_002fUbuntu][https://img.shields.io/badge/Platform-Linux-2e8b57?logo=linux&.svg]]
+[[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Building-from-a-release-tarball-1][https://img.shields.io/badge/Platform-FreeBSD-8b3a3a?logo=freebsd&logoColor=c32136&.svg]]
+[[https://formulae.brew.sh/formula/mu#default][https://img.shields.io/badge/Platform-macOS-101010?logo=apple&logoColor=ffffff&.svg]]
+[[https://github.com/msys2-unofficial/MSYS2-packages/blob/master/mu/README.org][https://img.shields.io/badge/Platform-Windows-00bfff?logo=windows&logoColor=00bfff&.svg]]
+
 Welcome to ~mu~!
 
 *Note*: you are looking at the *development* branch, which is where new code is being developed and
