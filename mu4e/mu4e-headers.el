@@ -206,6 +206,12 @@ but also manually invoked searches."
   :type 'hook
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-thread-subject-format-function
+  'mu4e~headers-thread-subject-format-default
+  "Function to use to format the subject line of emails in a thread."
+  :type 'function
+  :group 'mu4e-headers)
+
 ;;; Public variables
 
 (defvar mu4e-headers-sort-field :date
@@ -232,6 +238,9 @@ one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 (defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
 (defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
 (defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
+
+(defvar mu4e-headers-thread-subject-repeat '("\"" . "⸗")
+  "Character used to signify repeated subject.")
 
 ;;;; Graph drawing
 
@@ -625,17 +634,48 @@ date. The formats used for date and time are
             (format-time-string mu4e-headers-time-format date)
           (format-time-string mu4e-headers-date-format date))))))
 
+(defvar-local mu4e~headers-thread-subject-state '())
+(defvar mu4e-headers-thread-subject-cleanup-regexp
+  (concat "^\\(\\(Re\\|Fw\\|Fwd\\):[[:space:]]*\\)*")
+  "Regex to remove from subjects of parent messages before comparing with
+subjects of children.")
+
+
+(defun mu4e~headers-thread-subject-format-abbrev (msg)
+  "Calculate the thread prefix based on thread info THREAD."
+  (let* ((thread  (mu4e-message-field msg :thread))
+         (cur-subject  (mu4e-msg-field msg :subject))
+         parent-subject
+         (repeat-char
+          (if mu4e-use-fancy-chars (cdr mu4e-headers-thread-subject-repeat)
+            (car mu4e-headers-thread-subject-repeat))))
+    (mu4e~stack-push 'mu4e~headers-thread-subject-state
+                     (replace-regexp-in-string mu4e-headers-thread-subject-cleanup-regexp
+                                               "" cur-subject
+                                               nil 'literal)
+                     (plist-get thread :level))
+    (let ((parent-subject (nth 1 mu4e~headers-thread-subject-state)))
+      (when parent-subject
+        (setq cur-subject
+              (replace-in-string parent-subject
+                                 repeat-char cur-subject))))
+    (truncate-string-to-width cur-subject 600)))
+
+
+(defun mu4e~headers-thread-subject-format-default (msg)
+  (let* ((tinfo  (mu4e-message-field msg :thread))
+         (subj (mu4e-msg-field msg :subject)))
+    (if (or (not tinfo) (zerop (plist-get tinfo :level))
+            (plist-get tinfo :empty-parent))
+        (truncate-string-to-width subj 600) "")))
+
 (defun mu4e~headers-thread-subject (msg)
   "Get the subject if it is the first one in a thread; otherwise,
 return the thread-prefix without the subject-text. In other words,
 show the subject of a thread only once, similar to e.g. 'mutt'."
-  (let* ((tinfo  (mu4e-message-field msg :thread))
-         (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
-     (mu4e~headers-thread-prefix tinfo)
-     (if (or (not tinfo) (zerop (plist-get tinfo :level))
-             (plist-get tinfo :empty-parent))
-         (truncate-string-to-width subj 600) ""))))
+     (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
+     (funcall mu4e-headers-thread-subject-format-function msg)))
 
 (defun mu4e~headers-mailing-list (list)
   "Get some identifier for the mailing list."

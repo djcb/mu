@@ -1263,6 +1263,17 @@ string will be shortened to fit if its length exceeds
     (insert (propertize "Loading message..."
                         'face 'mu4e-system-face 'intangible t))))
 
+
+(defun mu4e~stack-push (lst x &optional lvl)
+  "Pushes X to the top of LST. LVL is the level of X."
+  (unless lvl
+    (setq lvl (1+ (length lst))))
+  (while (> (length (symbol-value lst)) lvl)
+    (set lst (cdr (symbol-value lst))))
+  (while (< (length (symbol-value lst)) lvl)
+    (set lst (cons nil (symbol-value lst))))
+  (set lst (cons x (symbol-value lst))))
+
 ;;; _
 (provide 'mu4e-utils)
 ;;; mu4e-utils.el ends here
