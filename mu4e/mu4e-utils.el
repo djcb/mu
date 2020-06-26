@@ -1007,6 +1007,10 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
   (when mu4e-debug
     (with-current-buffer (get-buffer-create mu4e~log-buffer-name)
       (view-mode)
+
+      (when (fboundp 'so-long-mode)
+        (eval '(so-long-mode)))
+
       (setq buffer-undo-list t)
       (let* ((inhibit-read-only t)
              (tstamp (propertize (format-time-string "%Y-%m-%d %T.%3N"
