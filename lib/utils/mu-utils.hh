@@ -23,9 +23,11 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <chrono>
 #include <cstdarg>
 #include <glib.h>
 #include <ostream>
+#include <iostream>
 
 namespace Mu {
 
@@ -117,7 +119,14 @@ std::string date_to_time_t_string (const std::string& date, bool first);
  */
 std::string date_to_time_t_string (int64_t t);
 
+using SteadyClock  = std::chrono::steady_clock;
 
+static inline int64_t to_ms (SteadyClock::duration dur) {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+}
+static inline int64_t to_us (SteadyClock::duration dur) {
+        return std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+}
 
 /**
  * Convert a size string to a size in bytes
@@ -155,6 +164,44 @@ static inline std::string to_string (const T& val)
 
         return sstr.str();
 }
+
+
+struct MaybeAnsi {
+        explicit MaybeAnsi(bool use_color): color_{use_color} {}
+
+        enum struct Color {
+                Black         = 30,
+                Red           = 31,
+                Green         = 32,
+                Yellow        = 33,
+                Blue          = 34,
+                Magenta       = 35,
+                Cyan          = 36,
+                White         = 37,
+
+                BrightBlack   = 90,
+                BrightRed     = 91,
+                BrightGreen   = 92,
+                BrightYellow  = 93,
+                BrightBlue    = 94,
+                BrightMagenta = 95,
+                BrightCyan    = 96,
+                BrightWhite   = 97,
+        };
+
+        std::string fg(Color c) const { return ansi(c, true); }
+        std::string bg(Color c) const { return ansi(c, false); }
+
+        std::string reset() const { return color_ ? "\x1b[0m" : ""; }
+
+private:
+        std::string ansi(Color c, bool fg=true) const {
+                return color_ ? format("\x1b[%dm", static_cast<int>(c) + (fg ? 0 : 10)) : "";
+        }
+
+        const bool color_;
+};
+
 
 
 /**

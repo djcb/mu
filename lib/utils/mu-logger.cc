@@ -163,10 +163,8 @@ Mu::log_init (const std::string& path, Mu::LogOptions opts)
 void
 Mu::log_uninit ()
 {
-        if (!MuLogInitialized) {
-                g_warning ("logging was not initialized");
+        if (!MuLogInitialized)
                 return;
-        }
 
         if (MuStream.is_open())
                 MuStream.close();

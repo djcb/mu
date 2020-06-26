@@ -46,6 +46,7 @@ noinst_LTLIBRARIES=						\
 	libmu-utils.la
 
 libmu_utils_la_SOURCES=						\
+	mu-async-queue.hh					\
 	mu-date.c						\
 	mu-date.h						\
 	mu-error.hh						\
