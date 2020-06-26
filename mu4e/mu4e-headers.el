@@ -121,7 +121,7 @@ query) ignore the limit by pressing a C-u before invoking the
 search.
 
 Note that there are a few complications when
-`mu4e-headers-include-related' is enabled: mu perform *two*
+`mu4e-headers-include-related' is enabled: mu performs *two*
 queries; the first one with this limit set, and then a second
 (unlimited) query for all messages that are related to the first
 matches. We then limit this second result as well, favoring the
@@ -643,7 +643,7 @@ show the subject of a thread only once, similar to e.g. 'mutt'."
       (propertize (mu4e-get-mailing-list-shortname list) 'help-echo list)
     ""))
 
-(defun mu4e~headers-custom-field (msg field)
+(defsubst mu4e~headers-custom-field-value (msg field)
   "Show some custom header field, or raise an error if it is not
 found."
   (let* ((item (or (assoc field mu4e-header-info-custom)
@@ -653,56 +653,65 @@ found."
                                field (cdr item)))))
     (funcall func msg)))
 
-(defun mu4e~headers-field-apply-basic-properties (msg field val _width)
-  (cl-case field
-    (:subject
-     (concat ;; prefix subject with a thread indicator
-      (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
-      ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
-      ;; work-around: emacs' display gets really slow when lines are too long;
-      ;; so limit subject length to 600
-      (truncate-string-to-width val 600)))
-    (:thread-subject (mu4e~headers-thread-subject msg))
-    ((:maildir :path :message-id) val)
-    ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
-    ;; if we (ie. `user-mail-address' is the 'From', show
-    ;; 'To', otherwise show From
-    (:from-or-to (mu4e~headers-from-or-to msg))
-    (:date (format-time-string mu4e-headers-date-format val))
-    (:mailing-list (mu4e~headers-mailing-list val))
-    (:human-date (propertize (mu4e~headers-human-date msg)
-                             'help-echo (format-time-string
-                                         mu4e-headers-long-date-format
-                                         (mu4e-msg-field msg :date))))
-    (:flags (propertize (mu4e~headers-flags-str val)
-                        'help-echo (format "%S" val)))
-    (:tags (propertize (mapconcat 'identity val ", ")))
-    (:size (mu4e-display-size val))
-    (t (mu4e~headers-custom-field msg field))))
+(defsubst mu4e~headers-field-value (msg field)
+  (let ((val (mu4e-message-field msg field)))
+    (cl-case field
+      (:subject
+       (concat ;; prefix subject with a thread indicator
+        (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
+        ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
+        ;; work-around: emacs' display gets really slow when lines are too long;
+        ;; so limit subject length to 600
+        (truncate-string-to-width val 600)))
+      (:thread-subject (mu4e~headers-thread-subject msg))
+      ((:maildir :path :message-id) val)
+      ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
+      ;; if we (ie. `user-mail-address' is the 'From', show
+      ;; 'To', otherwise show From
+      (:from-or-to (mu4e~headers-from-or-to msg))
+      (:date (format-time-string mu4e-headers-date-format val))
+      (:mailing-list (mu4e~headers-mailing-list val))
+      (:human-date (propertize (mu4e~headers-human-date msg)
+                               'help-echo (format-time-string
+                                           mu4e-headers-long-date-format
+                                           (mu4e-msg-field msg :date))))
+      (:flags (propertize (mu4e~headers-flags-str val)
+                          'help-echo (format "%S" val)))
+      (:tags (propertize (mapconcat 'identity val ", ")))
+      (:size (mu4e-display-size val))
+      (t (mu4e~headers-custom-field-value msg field)))))
 
-(defun mu4e~headers-field-truncate-to-width (_msg _field val width)
+(defsubst mu4e~headers-truncate-field (val width)
   "Truncate VAL to WIDTH."
   (if width
       (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
     val))
 
-(defvar mu4e~headers-field-handler-functions
-  '(mu4e~headers-field-apply-basic-properties
-    mu4e~headers-field-truncate-to-width))
 
-(defun mu4e~headers-field-handler (f-w msg)
+(defcustom mu4e-headers-field-properties-function nil
+  "Function that specifies custom text properties for a header field.
+
+The function takes a message-plist and a field-id, and is expected to
+return either nil or a property-list with text-properties to apply.
+
+This allows for turning the list of message headers into an angry
+fruit salad. Note that this function is called for each relevant
+field of each message and thus should you should be careful to
+avoid slowdowns."
+  :type 'function
+  :group 'mu4e-headers)
+
+
+(defsubst mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
-  (let* ((field (car f-w))
+  (let* ((field-id (car f-w))
          (width (cdr f-w))
-         (val (mu4e-message-field msg (car f-w))))
-    (dolist (func mu4e~headers-field-handler-functions)
-      (setq val (funcall func msg field val width)))
+         (val (mu4e~headers-field-value msg field-id))
+         (val (if width (mu4e~headers-truncate-field val width) val)))
     val))
 
-(defvar mu4e~headers-line-handler-functions
-  '(mu4e~headers-line-apply-flag-face))
 
-(defun mu4e~headers-line-apply-flag-face (msg line)
+(defsubst mu4e~headers-apply-flags (msg fieldval)
   "Adjust LINE's face property based on FLAGS."
   (let* ((flags (mu4e-message-field msg :flags))
          (face (cond
@@ -714,15 +723,18 @@ found."
                 ((memq 'replied flags) 'mu4e-replied-face)
                 ((memq 'passed flags)  'mu4e-forwarded-face)
                 (t                     'mu4e-header-face))))
-    ;; hmmm, this only works with emacs 24.4+
-    (when (fboundp 'add-face-text-property)
-      (add-face-text-property 0 (length line) face t line))
-    line))
+    (add-face-text-property 0 (length fieldval) face t fieldval)
+    fieldval))
 
-(defun mu4e~headers-line-handler (msg line)
-  (dolist (func mu4e~headers-line-handler-functions)
-    (setq line (funcall func msg line)))
-  line)
+(defsubst mu4e~message-header-line (msg)
+  "Return a propertized description of MSG suitable for
+displaying in the header view."
+  (unless (and mu4e-headers-hide-predicate
+               (funcall mu4e-headers-hide-predicate msg))
+    (mu4e~headers-apply-flags
+     msg
+     (mapconcat (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+                mu4e-headers-fields " "))))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-header-handler (msg &optional point)
@@ -730,20 +742,10 @@ found."
 if provided, or at the end of the buffer otherwise."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
-      (let ((line (mu4e~message-header-description msg)))
+      (let ((line (mu4e~message-header-line msg)))
         (when line
           (mu4e~headers-add-header line (mu4e-message-field msg :docid)
                                    point msg))))))
-
-(defun mu4e~message-header-description (msg)
-  "Return a propertized description of MSG suitable for
-displaying in the header view."
-  (unless (and mu4e-headers-hide-predicate
-               (funcall mu4e-headers-hide-predicate msg))
-    (let ((line (mapconcat
-                 (lambda (f-w) (mu4e~headers-field-handler f-w msg))
-                 mu4e-headers-fields " ")))
-      (mu4e~headers-line-handler msg line))))
 
 (defconst mu4e~search-message "Searching...")
 (defconst mu4e~no-matches     "No matching messages found")
