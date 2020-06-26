@@ -74,10 +74,13 @@ MuMsg*
 mu_msg_new_from_file (const char *path, const char *mdir,
 		      GError **err)
 {
-	MuMsg *self;
+	MuMsg     *self;
 	MuMsgFile *msgfile;
+        gint64     start;
 
 	g_return_val_if_fail (path, NULL);
+
+        start = g_get_monotonic_time();
 
 	if (G_UNLIKELY(!_gmime_initialized)) {
 		gmime_init ();
@@ -91,16 +94,22 @@ mu_msg_new_from_file (const char *path, const char *mdir,
 	self = msg_new ();
 	self->_file = msgfile;
 
+        g_debug ("created msg from file in %" G_GINT64_FORMAT "us",
+                 g_get_monotonic_time() - start);
+
 	return self;
 }
 
 MuMsg*
 mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
-	MuMsg *self;
+	MuMsg    *self;
 	MuMsgDoc *msgdoc;
+        gint64   start;
 
 	g_return_val_if_fail (doc, NULL);
+
+        start = g_get_monotonic_time();
 
 	if (G_UNLIKELY(!_gmime_initialized)) {
 		gmime_init ();
