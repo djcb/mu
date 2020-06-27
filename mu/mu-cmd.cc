@@ -20,12 +20,14 @@
 #include "config.h"
 
 #include <iostream>
+#include <iomanip>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+
 
 #include "mu-msg.h"
 #include "mu-msg-part.h"
@@ -547,21 +549,34 @@ cmd_verify (const MuConfig *opts, GError **err)
 		MU_OK : MU_ERROR;
 }
 
+template <typename T>
+static void key_val(const Mu::MaybeAnsi& col, const std::string& key, T val)
+{
+        using Color = Mu::MaybeAnsi::Color;
+
+        std::cout << col.fg(Color::BrightBlue)
+                  << std::left << std::setw(18) << key
+                  << col.reset() << ": ";
+
+        std::cout << col.fg(Color::Green)
+                  << val << col.reset() << "\n";
+}
+
+
 static MuError
 cmd_info (const Mu::Store& store, const MuConfig *opts, GError **err)
 {
-	const auto green{opts->nocolor ? "" : MU_COLOR_GREEN};
-	const auto def{opts->nocolor ? "" : MU_COLOR_DEFAULT};
+        Mu::MaybeAnsi col{!opts->nocolor};
 
-        std::cout << "database-path      : "
-                  << green << store.database_path() << def << "\n"
-                  << "messages in store  : "
-                  << green << store.size() << def << "\n"
-                  << "schema-version     : "
-                  << green << store.schema_version() << def << "\n";
+        key_val(col, "maildir",           store.metadata().root_maildir);
+        key_val(col, "database-path",     store.metadata().database_path);
+        key_val(col, "schema-version",    store.metadata().schema_version);
+        key_val(col, "max-message-size",  store.metadata().max_message_size);
+        key_val(col, "batch-size",        store.metadata().batch_size);
+        key_val(col, "messages in store", store.size());
 
-	const auto created{store.created()};
-	const auto tstamp{::localtime (&created)};
+	const auto created{store.metadata().created};
+        const auto tstamp{::localtime (&created)};
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-y2k"
@@ -569,25 +584,16 @@ cmd_info (const Mu::Store& store, const MuConfig *opts, GError **err)
 	strftime (tbuf, sizeof(tbuf), "%c", tstamp);
 #pragma GCC diagnostic pop
 
-        std::cout << "created            : " << green << tbuf << def << "\n"
-                  << "maildir            : "
-                  << green << store.root_maildir() << def << "\n";
+        key_val(col, "created", tbuf);
 
-	std::cout << ("personal-addresses : ");
-
-	const auto addrs{store.personal_addresses()};
+	const auto addrs{store.metadata().personal_addresses};
         if (addrs.empty())
-                std::cout << green << "<none>" << def << "\n";
-        else {
-                bool first{true};
-                for (auto&& c: addrs) {
-                        std::cout << (!first ?  "                     " : "")
-                                  << green << c << def << "\n";
-                        first = false;
-                }
-        }
+                key_val(col, "personal-address", "<none>");
+        else
+                for (auto&& c: addrs)
+                        key_val(col, "personal-address", c);
 
-	return MU_OK;
+        return MU_OK;
 }
 
 static MuError
@@ -601,6 +607,20 @@ cmd_init (const MuConfig *opts, GError **err)
 		return MU_ERROR_IN_PARAMETERS;
         }
 
+        if (opts->max_msg_size < 0) {
+                mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "invalid value for max-message-size");
+		return MU_ERROR_IN_PARAMETERS;
+        } else if (opts->batch_size < 0) {
+                mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "invalid value for batch-size");
+		return MU_ERROR_IN_PARAMETERS;
+        }
+
+        Mu::Store::Config conf{};
+        conf.max_message_size = opts->max_msg_size;
+        conf.batch_size       = opts->batch_size;
+
         Mu::StringVec my_addrs;
         auto addrs = opts->my_addresses;
         while (addrs && *addrs)  {
@@ -608,27 +628,14 @@ cmd_init (const MuConfig *opts, GError **err)
                 ++addrs;
         }
 
-        Mu::Store store(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), opts->maildir, my_addrs);
-
+        Mu::Store store(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+                        opts->maildir, my_addrs, conf);
 	if (!opts->quiet) {
 		cmd_info (store, opts, NULL);
-		g_print ("\nstore created.\n"
-			 "use 'mu index' to fill the database "
-                         "with your messages.\n"
-			 "see mu-index(1) for details\n");
+		std::cout << "\nstore created; use the 'index' command to fill/update it.\n";
 	}
 
 	return MU_OK;
-}
-
-static MuError
-cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
-{
-        const auto res = mu_cmd_index(store, opts, err);
-        if (res == MU_OK && !opts->quiet)
-                cmd_info(store, opts, err);
-
-        return res;
 }
 
 static MuError
@@ -722,7 +729,7 @@ mu_cmd_execute (const MuConfig *opts, GError **err) try
 	case MU_CONFIG_CMD_TICKLE:
 		merr = with_writable_store (cmd_tickle, opts, err);   break;
 	case MU_CONFIG_CMD_INDEX:
-		merr = with_writable_store (cmd_index, opts, err);   break;
+		merr = with_writable_store (mu_cmd_index, opts, err);   break;
 
 	/* commands instantiate store themselves */
 	case MU_CONFIG_CMD_INIT:
