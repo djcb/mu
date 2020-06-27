@@ -132,6 +132,16 @@ constexpr int64_t to_ms (Duration d) { return to_unit<std::chrono::milliseconds>
 constexpr int64_t to_us (Duration d) { return to_unit<std::chrono::microseconds>(d); }
 
 /**
+ * See g_canonicalize_filename
+ *
+ * @param filename
+ * @param relative_to
+ *
+ * @return
+ */
+std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
+
+/**
  * Convert a size string to a size in bytes
  *
  * @param sizestr the size string
@@ -204,8 +214,6 @@ private:
 
         const bool color_;
 };
-
-
 
 /**
  *
