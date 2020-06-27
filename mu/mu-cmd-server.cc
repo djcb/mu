@@ -667,13 +667,13 @@ static void
 help_handler (Context& context, const Parameters& params)
 {
         const auto command{get_symbol_or(params, ":command", "")};
-        const auto full{get_bool_or(params, ":full")};
+        const auto terse{get_bool_or(params, ":terse", command.empty())};
 
         if (command.empty()) {
                 std::cout << ";; Commands are s-expressions of the form\n"
                           << ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
                           << ";; For instance:\n;;  (help :command quit)\n"
-                          << ";; to get information about the 'quit' command\n;;\n";
+                          << ";; to get detailed information about the 'quit'\n;;\n";
                 std::cout << ";; The following commands are available:\n";
         }
 
@@ -694,8 +694,7 @@ help_handler (Context& context, const Parameters& params)
                 else
                         std::cout << ";;  " << name.c_str() << ": "
                                   << info.docstring.c_str() << '\n';
-
-                if (!full)
+                if (terse)
                         continue;
 
                 for (auto&& argname: info.sorted_argnames()) {
@@ -1167,8 +1166,8 @@ make_command_map (Context& context)
                    CommandInfo{
                            ArgMap{ {":command", ArgInfo{Type::Symbol, false,
                                                    "command to get information for" }},
-                                   {":full", ArgInfo{Type::Symbol, false,
-                                            "whether to include information about parameters" }}},
+                                   {":terse", ArgInfo{Type::Symbol, false,
+                                            "only show a short description" }}},
                            "get information about one or all commands",
                            [&](const auto& params){help_handler(context, params);}});
       cmap.emplace("index",
