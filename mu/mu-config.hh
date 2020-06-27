@@ -109,16 +109,18 @@ struct _MuConfig {
 
         /* options for init */
         gchar	        *maildir;	/* where the mails are */
-        char**          my_addresses;   /* 'my e-mail address', for mu
-                                         * cfind; can be use multiple
-                                         * times */
+        char**          my_addresses;   /* 'my e-mail address', for mu cfind;
+                                         * can be use multiple times */
+        int		max_msg_size;    /* maximum size for message files */
+        int		batch_size;      /* database transaction batch size */
+
 	/* options for indexing */
 
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
 	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        lazycheck;      /* don't check dirs with up-to-date
 					 * timestamps */
-	int		max_msg_size;   /* maximum size for message files */
+
 
 	/* options for querying 'find' (and view-> 'summary') */
 	gchar		*fields;	/* fields to show in output */
