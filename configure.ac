@@ -264,6 +264,7 @@ lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
 lib/query/Makefile
+lib/index/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
 guile/Makefile

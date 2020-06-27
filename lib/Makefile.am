@@ -18,7 +18,7 @@
 # before descending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils query
+SUBDIRS= utils query index
 
 if HAVE_JSON_GLIB
 json_srcs=							\
