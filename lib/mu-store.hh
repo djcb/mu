@@ -24,20 +24,26 @@
 
 #ifdef __cplusplus
 
-#include "mu-contacts.hh"
-
-#include <xapian.h>
-
 #include <string>
 #include <vector>
+#include <mutex>
 #include <ctime>
 
+
+#include "mu-contacts.hh"
+#include <xapian.h>
+
 #include <utils/mu-utils.hh>
+#include <index/mu-indexer.hh>
 
 namespace Mu {
 
 class Store {
 public:
+        using Id = unsigned;    /**< Id for a message in the store (internally,
+                                 * corresponds to a Xapian document-id) */
+        static constexpr Id InvalidId = 0; /**< Invalid  store id */
+
         /**
          * Construct a store for an existing document database
          *
@@ -46,65 +52,51 @@ public:
          */
         Store (const std::string& path, bool readonly=true);
 
+
+        struct Config {
+                size_t max_message_size{};
+                /**< maximum size (in bytes) for a message, or 0 for default */
+                size_t batch_size{};
+                /**< size of batches before committing, or 0 for default */
+        };
+
         /**
          * Construct a store for a not-yet-existing document database
          *
          * @param path path to the database
          * @param maildir maildir to use for this store
-         * @param personal_addressesaddresses that should be recognized as
+         * @param personal_addresses addresses that should be recognized as
          * 'personal' for identifying personal messages.
          */
         Store (const std::string& path, const std::string& maildir,
-               const StringVec& personal_addresses);
+               const StringVec& personal_addresses, const Config& conf);
 
         /**
          * DTOR
          */
         ~Store();
 
-        /**
-         * Is the store read-only?
-         *
-         * @return true or false
-         */
-        bool read_only() const;
+        struct Metadata {
+                std::string database_path;      /**< Full path to the Xapian database */
+                std::string schema_version;     /**< Database schema version */
+                std::time_t created;            /**<  database creation time */
+
+                bool        read_only;          /**< Is the database opened read-only? */
+                size_t      batch_size;         /**< Maximum database tranasction batch size */
+
+                std::string root_maildir;       /**<  Absolute path to the top-level maildir */
+
+                StringVec   personal_addresses; /**< Personal e-mail addresses */
+                size_t      max_message_size;   /**<  Maximus allowed message size */
+        };
 
         /**
-         * Path to the database; this is some subdirectory of the path
-         * passed to the constructor.
+         * Get metadata about this store.
          *
-         * @return the database path
+         * @return the metadata
          */
-        const std::string& database_path() const;
+        const Metadata& metadata() const;
 
-        /**
-         * Path to the top-level Maildir
-         *
-         * @return the maildir
-         */
-        const std::string& root_maildir() const;
-
-        /**
-         * Version of the database-schema
-         *
-         * @return the maildir
-         */
-        const std::string& schema_version() const;
-
-
-        /**
-         * Time of creation of the store
-         *
-         * @return creation time
-         */
-        std::time_t created() const;
-
-        /**
-         * Get a vec with the personal addresses
-         *
-         * @return personal addresses
-         */
-        const StringVec& personal_addresses() const;
 
         /**
          * Get the Contacts object for this store
@@ -113,6 +105,15 @@ public:
          */
         const Contacts& contacts() const;
 
+
+        /**
+         * Get the Indexer associated with this store. It is an error
+         * to call this on a read-only store.
+         *
+         * @return the indexer.
+         */
+        Indexer& indexer();
+
         /**
          * Add a message to the store.
          *
@@ -120,20 +121,21 @@ public:
          *
          * @return the doc id of the added message
          */
-        unsigned add_message (const std::string& path);
+        Id add_message (const std::string& path);
 
         /**
          * Update a message in the store.
          *
          * @param msg a message
-         * @param docid a docid
+         * @param id the id for this message
          *
          * @return false in case of failure; true ottherwise.
          */
-        bool update_message (MuMsg *msg, unsigned docid);
+        bool update_message (MuMsg *msg, Id id);
 
         /**
-         * Add a message to the store.
+         * Remove a message from the store. It will _not_ remove the message
+         * fromt he file system.
          *
          * @param path the message path.
          *
@@ -142,13 +144,29 @@ public:
         bool remove_message (const std::string& path);
 
         /**
-         * Fina  message in the store.
+         * Remove a number if messages from the store. It will _not_ remove the
+         * message fromt he file system.
          *
-         * @param docid doc id for the message to find
+         * @param ids vector with store ids for the message
+         */
+        void remove_messages (const std::vector<Id>& ids);
+
+        /**
+         * Remove a message from the store. It will _not_ remove the message
+         * fromt he file system.
+         *
+         * @param id the store id for the message
+         */
+        void remove_message (Id id) { remove_messages({id}); }
+
+        /**
+         * Find message in the store.
+         *
+         * @param id doc id for the message to find
          *
          * @return a message (owned by caller), or nullptr
          */
-        MuMsg* find_message (unsigned docid) const;
+        MuMsg* find_message (Id id) const;
 
         /**
          * does a certain message exist in the store already?
@@ -158,6 +176,36 @@ public:
          * @return true if the message exists in the store, false otherwise
          */
         bool contains_message (const std::string& path) const;
+
+
+        /**
+         * Prototype for the ForEachFunc
+         *
+         * @param id :t store Id for the message
+         * @param path: the absolute path to the message
+         *
+         * @return true if for_each should continue; false to quit
+         */
+        using ForEachFunc = std::function<bool(Id, const std::string&)>;
+
+        /**
+         * Call @param func for each document in the store. This takes a lock on
+         * the store, so the func should _not_ call any other Store:: methods.
+         *
+         * @param func a functio
+         *
+         * @return the number of times func was invoked
+         */
+        size_t for_each (ForEachFunc func);
+
+        /**
+         * Get the timestamp for some message, or 0 if not found
+         *
+         * @param path the path
+         *
+         * @return the timestamp, or 0 if not found
+         */
+        time_t message_tstamp (const std::string& path) const;
 
         /**
          * Get the timestamp for some directory
@@ -191,30 +239,18 @@ public:
         bool empty() const;
 
         /**
-         * Begin a database transaction
+         * Commit the current group of modifcations (i.e., transaction) to disk;
+         * This rarely needs to be called explicitly, as Store will take care of
+         * it.
          */
-        void begin_transaction();
-
-        /**
-         * Commit a database transaction
-         *
-         */
-        void commit_transaction();
-
-        /**
-         * Are we in a transaction?
-         *
-         * @return true or false
-         */
-        bool in_transaction() const;
-
+        void commit();
 
         /**
          * Get a reference to the private data. For internal use.
          *
          * @return private reference.
          */
-        struct                   Private;
+        struct Private;
         std::unique_ptr<Private>&       priv()       { return priv_; }
         const std::unique_ptr<Private>& priv() const { return priv_; }
 
@@ -240,7 +276,6 @@ typedef struct MuStore_ MuStore;
 /* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
 #define MU_STORE_MAX_TERM_LENGTH (240)
 
-
 /**
  * create a new read-only Xapian store, for querying documents
  *
@@ -252,34 +287,6 @@ typedef struct MuStore_ MuStore;
  */
 MuStore* mu_store_new_readable (const char* xpath, GError **err)
 		   G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-/**
- * create a new writable Xapian store, a place to store documents
- *
- * @param path the path to the database
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return a new MuStore object with ref count == 1, or NULL in case
- * of error; free with mu_store_unref
- */
-MuStore*  mu_store_new_writable (const char *xpath, GError **err)
-        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * create a new writable Xapian store, a place to store documents, and
- * create/overwrite the existing database.
- *
- * @param path the path to the database
- * @param path to the maildir
- * @param personal_addressesaddresses that should be recognized as
- * 'personal' for identifying personal messages.
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return a new MuStore object with ref count == 1, or NULL in case
- * of error; free with mu_store_unref
- */
-MuStore*  mu_store_new_create (const char *xpath, const char *maildir,
-                               const char **personal_addresses, GError **err)
-        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * increase the reference count for this store with 1
@@ -304,21 +311,7 @@ MuStore* mu_store_unref (MuStore *store);
 /**
  * we need this when using Xapian::(Writable)Database* from C
  */
-typedef gpointer XapianWritableDatabase;
 typedef gpointer XapianDatabase;
-
-
-/**
- * get the underlying writable database object for this store; not
- * that this pointer becomes in valid after mu_store_destroy
- *
- * @param store a valid store
- *
- * @return a Xapian::WritableDatabase (you'll need to cast in C++), or
- * NULL in case of error.
- */
-XapianWritableDatabase* mu_store_get_writable_database (MuStore *store);
-
 
 /**
  * get the underlying read-only database object for this store; not that this
@@ -345,56 +338,6 @@ const char* mu_store_schema_version (const MuStore* store);
 
 
 /**
- * Get the database-path for this message store
- *
- * @param store the store to inspetc
- *
- * @return the database-path
- */
-const char *mu_store_database_path (const MuStore *store);
-
-
-/**
- * Get the root-maildir for this message store.
- *
- * @param store the store
- *
- * @return the maildir.
- */
-const char *mu_store_root_maildir(const MuStore *store);
-
-
-/**
- * Get the time this database was created
- *
- * @param store the store
- *
- * @return the maildir.
- */
-time_t mu_store_created(const MuStore *store);
-
-/**
- * Get the list of personal addresses from the store
- *
- * @param store the message store
- *
- * @return the list of personal addresses, or NULL in case of error.
- *
- * Free with g_strfreev().
- */
-char** mu_store_personal_addresses (const MuStore *store);
-
-/**
- * Get the a MuContacts* ptr for this store.
- *
- * @param store a store
- *
- * @return the contacts ptr
- */
-const MuContacts* mu_store_contacts (MuStore *store);
-
-
-/**
  * get the numbers of documents in the database
  *
  * @param index a valid MuStore instance
@@ -405,173 +348,7 @@ const MuContacts* mu_store_contacts (MuStore *store);
  */
 unsigned mu_store_count (const MuStore *store, GError **err);
 
-
-/**
- * try to flush/commit all outstanding work to the database and the contacts
- * cache.
- *
- * @param store a valid xapian store
- */
-void mu_store_flush (MuStore *store);
-
 #define MU_STORE_INVALID_DOCID 0
-
-/**
- * store an email message in the XapianStore
- *
- * @param store a valid store
- * @param msg a valid message
- * @param err receives error information, if any, or NULL
- *
- * @return the docid of the stored message, or 0
- * (MU_STORE_INVALID_DOCID) in case of error
- */
-unsigned mu_store_add_msg   (MuStore *store, MuMsg *msg, GError **err);
-
-
-/**
- * update an email message in the XapianStore
- *
- * @param store a valid store
- * @param the docid for the message
- * @param msg a valid message
- * @param err receives error information, if any, or NULL
- *
- * @return the docid of the stored message, or 0
- * (MU_STORE_INVALID_DOCID) in case of error
- */
-unsigned mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg,
-			      GError **err);
-
-/**
- * store an email message in the XapianStore; similar to
- * mu_store_store, but instead takes a path as parameter instead of a
- * MuMsg*
- *
- * @param store a valid store
- * @param path full filesystem path to a valid message
- * @param err receives error information, if any, or NULL
- *
- * @return the docid of the stored message, or 0
- * (MU_STORE_INVALID_DOCID) in case of error
- */
-unsigned mu_store_add_path (MuStore *store, const char *path, GError **err);
-
-/**
- * remove a message from the database based on its path
- *
- * @param store a valid store
- * @param msgpath path of the message (note, this is only used to
- * *identify* the message; a common use of this function is to remove
- * a message from the database, for which there is no message anymore
- * in the filesystem.
- *
- * @return TRUE if it succeeded, FALSE otherwise
- */
-gboolean mu_store_remove_path (MuStore *store, const char* msgpath);
-
-/**
- * does a certain message exist in the database already?
- *
- * @param store a store
- * @param path the message path
- *
- * @return TRUE if the message exists, FALSE otherwise
- */
-gboolean mu_store_contains_message (const MuStore *store,  const char* path);
-
-/**
- * get the docid for message at path
- *
- * @param store a store
- * @param path the message path
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return the docid if the message was found, MU_STORE_INVALID_DOCID (0) otherwise
- * */
-unsigned mu_store_get_docid_for_path (const MuStore *store, const char* path,
-                                      GError **err);
-
-/**
- * store a timestamp for a directory
- *
- * @param store a valid store
- * @param dirpath path to some directory
- * @param stamp a timestamp
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return TRUE if setting the timestamp succeeded, FALSE otherwise
- */
-gboolean mu_store_set_dirstamp (MuStore *store, const char* dirpath,
-				 time_t stamp, GError **err);
-
-/**
- * get the timestamp for a directory
- *
- * @param store a valid store
- * @param msgpath path to some directory
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return the timestamp, or 0 in case of error
- */
-time_t mu_store_get_dirstamp (const MuStore *store, const char* dirpath,
-			       GError **err);
-
-/**
- * check whether this store is read-only
- *
- * @param store a store
- *
- * @return TRUE if the store is read-only, FALSE otherwise (and in
- * case of error)
- */
-gboolean mu_store_is_read_only (const MuStore *store);
-
-/**
- * call a function for each document in the database
- *
- * @param self a valid store
- * @param func a callback function to to call for each document
- * @param user_data a user pointer passed to the callback function
- * @param err to receive error info or NULL. err->code is MuError value
- *
- * @return MU_OK if all went well, MU_STOP if the foreach was interrupted,
- * MU_ERROR in case of error
- */
-typedef MuError (*MuStoreForeachFunc) (const char* path, gpointer user_data);
-MuError  mu_store_foreach (MuStore *self, MuStoreForeachFunc func,
-			   void *user_data, GError **err);
-
-/**
- * check if the database is locked for writing
- *
- * @param xpath path to a xapian database
- *
- * @return TRUE if it is locked, FALSE otherwise (or in case of error)
- */
-gboolean mu_store_database_is_locked (const gchar *xpath);
-
-/**
- * get a specific message, based on its Xapian docid
- *
- * @param self a valid MuQuery instance
- * @param docid the Xapian docid for the wanted message
- * @param err receives error information, or NULL
- *
- * @return a MuMsg instance (use mu_msg_unref when done with it), or
- * NULL in case of error
- */
-MuMsg* mu_store_get_msg (const MuStore *self, unsigned docid, GError **err)
-	G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * Print some information about the store
- *
- * @param store a store
- * @param nocolor whether to _not_ show color
- */
-void mu_store_print_info  (const MuStore *store, gboolean nocolor);
-
 
 G_END_DECLS
 
