@@ -532,7 +532,7 @@ mu_util_read_password (const char *prompt)
  */
 gchar *
 mu_canonicalize_filename (const gchar *filename,
-                         const gchar *relative_to)
+			  const gchar *relative_to)
 {
   gchar *canon, *start, *p, *q;
   guint i;

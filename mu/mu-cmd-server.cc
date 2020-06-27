@@ -24,6 +24,9 @@
 #include <string>
 #include <algorithm>
 #include <atomic>
+#include <thread>
+#include <mutex>
+
 #include <cstring>
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -33,7 +36,7 @@
 #include "mu-cmd.hh"
 #include "mu-maildir.h"
 #include "mu-query.h"
-#include "mu-index.h"
+#include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-msg-part.h"
 #include "mu-contacts.hh"
@@ -49,13 +52,8 @@ using namespace Sexp;
 
 using DocId = unsigned;
 
+static std::mutex OutputLock;
 static std::atomic<bool> MuTerminate{false};
-
-static void
-sig_handler (int sig)
-{
-        MuTerminate = true;
-}
 
 static void
 install_sig_handler (void)
@@ -65,7 +63,7 @@ install_sig_handler (void)
 
         MuTerminate = false;
 
-        action.sa_handler = sig_handler;
+        action.sa_handler = [](int sig){ MuTerminate = true; };
         sigemptyset(&action.sa_mask);
         action.sa_flags   = SA_RESETHAND;
 
@@ -86,6 +84,8 @@ install_sig_handler (void)
 static void G_GNUC_PRINTF(1, 2)
 print_expr (const char* frm, ...)
 {
+        std::lock_guard<std::mutex> l {OutputLock};
+
         char *expr, *expr_orig;
         va_list ap;
         ssize_t rv;
@@ -208,6 +208,7 @@ print_sexps (MuMsgIter *iter, unsigned maxnum)
 }
 
 
+/// @brief object to manage the server-context for all commands.
 struct Context {
         Context(){}
         Context (const MuConfig *opts):
@@ -219,8 +220,8 @@ struct Context {
                         throw Error(Error::Code::Store, &gerr/*consumes*/, "failed to create query");
 
                 g_message ("opened store @ %s; maildir @ %s; debug-mode %s",
-                           store_->database_path().c_str(),
-                           store_->root_maildir().c_str(),
+                           store_->metadata().database_path.c_str(),
+                           store_->metadata().root_maildir.c_str(),
                            opts->debug ? "yes" : "no");
         }
 
@@ -236,9 +237,10 @@ struct Context {
                         throw Mu::Error (Error::Code::Internal, "no store");
                 return *store_.get();
         }
+        Indexer& indexer() { return store().indexer(); }
 
+        std::unique_ptr<Mu::Store>   store_;
 
-        std::unique_ptr<Mu::Store> store_;
         MuQuery   *query{};
         bool      do_quit{};
 
@@ -343,7 +345,6 @@ compose_handler (Context& context, const Parameters& params)
         Node::Seq compose_seq;
         compose_seq.add_prop(":compose", Node::make_symbol(std::string(ctype)));
 
-        // message optioss below checks extract-images / extract-encrypted
         if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
 
                 GError *gerr{};
@@ -410,7 +411,6 @@ contacts_handler (Context& context, const Parameters& params)
         seq.add_prop(":contacts", std::move(contacts));
         seq.add_prop(":tstamp",   Node::make_string(format("%" G_GINT64_FORMAT,
                                                            g_get_monotonic_time())));
-
         /* dump the contacts cache as a giant sexp */
         print_expr(std::move(seq));
 }
@@ -708,79 +708,35 @@ help_handler (Context& context, const Parameters& params)
         }
 }
 
-static MuError
-index_msg_cb (MuIndexStats *stats, void *user_data)
+static void
+print_stats (const Indexer::Progress& stats, const std::string& state)
 {
-        if (MuTerminate)
-                return MU_STOP;
-
-        if (stats->_processed % 1000)
-                return MU_OK;
-
         Node::Seq seq;
+
         seq.add_prop(":info",       Node::make_symbol("index"));
-        seq.add_prop(":status",     Node::make_symbol("running"));
-        seq.add_prop(":processed",  stats->_processed);
-        seq.add_prop(":updated",    stats->_updated);
+        seq.add_prop(":status",     Node::make_symbol(std::string{state}));
+        seq.add_prop(":processed",  stats.processed);
+        seq.add_prop(":updated",    stats.updated);
+        seq.add_prop(":cleaned-up", stats.removed);
 
         print_expr(std::move(seq));
-
-        return MU_OK;
 }
-
-
-static MuError
-index_and_maybe_cleanup (MuIndex *index, bool cleanup, bool lazy_check)
-{
-        MuIndexStats stats{}, stats2{};
-        mu_index_stats_clear (&stats);
-        auto rv = mu_index_run (index, FALSE, lazy_check, &stats,
-                                index_msg_cb, NULL, NULL);
-        if (rv != MU_OK && rv != MU_STOP)
-                throw Error{Error::Code::Store, "indexing failed"};
-
-        mu_index_stats_clear (&stats2);
-        if (cleanup) {
-                GError *gerr{};
-                rv = mu_index_cleanup (index, &stats2, NULL, NULL, &gerr);
-                if (rv != MU_OK && rv != MU_STOP)
-                        throw Error{Error::Code::Store, &gerr, "cleanup failed"};
-        }
-
-        Node::Seq seq;
-        seq.add_prop(":info",       Node::make_symbol("index"));
-        seq.add_prop(":status",     Node::make_symbol("complete"));
-        seq.add_prop(":processed",  stats._processed);
-        seq.add_prop(":updated",    stats._updated);
-        seq.add_prop(":cleaned-up", stats2._cleaned_up);
-
-        print_expr(std::move(seq));
-
-        return MU_OK;
-}
-
 
 static void
 index_handler (Context& context, const Parameters& params)
 {
-        GError *gerr{};
-        const auto cleanup{get_bool_or(params,    ":cleanup")};
-        const auto lazy_check{get_bool_or(params, ":lazy-check")};
+        Mu::Indexer::Config conf{};
+        conf.cleanup    = get_bool_or(params, ":cleanup");
+        conf.lazy_check = get_bool_or(params, ":lazy-check");
 
-        auto store_ptr = reinterpret_cast<MuStore*>(&context.store());
+        context.indexer().stop();
 
-        auto index{mu_index_new (store_ptr, &gerr)};
-        if (!index)
-                throw Error(Error::Code::Index, &gerr, "failed to create index object");
-
-        try {
-                index_and_maybe_cleanup (index, cleanup, lazy_check);
-        } catch (...) {
-                mu_index_destroy(index);
-                throw;
+        context.indexer().start(conf);
+        while (context.indexer().is_running()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                print_stats (context.indexer().progress(), "running");
         }
-        mu_index_destroy(index);
-        mu_store_flush(store_ptr);
+        print_stats (context.indexer().progress(), "complete");
 }
 
 static void
@@ -953,6 +909,7 @@ ping_handler (Context& context, const Parameters& params)
         const auto queries  = get_string_vec (params, ":queries");
         Node::Seq qresults;
         for (auto&& q: queries) {
+
                 const auto count{mu_query_count_run (context.query, q.c_str())};
                 const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
                 const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
@@ -966,7 +923,7 @@ ping_handler (Context& context, const Parameters& params)
         }
 
         Node::Seq addrs;
-        for (auto&& addr: context.store().personal_addresses())
+        for (auto&& addr: context.store().metadata().personal_addresses)
                 addrs.add(std::string(addr));
 
         Node::Seq seq;
@@ -975,8 +932,8 @@ ping_handler (Context& context, const Parameters& params)
         Node::Seq propseq;
         propseq.add_prop(":version",            VERSION);
         propseq.add_prop(":personal-addresses", std::move(addrs));
-        propseq.add_prop(":database-path",      context.store().database_path());
-        propseq.add_prop(":root-maildir",       context.store().root_maildir());
+        propseq.add_prop(":database-path",      context.store().metadata().database_path);
+        propseq.add_prop(":root-maildir",       context.store().metadata().root_maildir);
         propseq.add_prop(":doccount",           storecount);
         propseq.add_prop(":queries",            std::move(qresults));
         seq.add_prop(":props",   std::move(propseq));

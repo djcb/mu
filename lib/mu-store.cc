@@ -19,14 +19,20 @@
 
 #include "config.h"
 
+#include <chrono>
 #include <mutex>
 #include <array>
 #include <cstdlib>
-#include <xapian.h>
+#include <stdexcept>
 #include <unordered_map>
 #include <atomic>
+#include <type_traits>
 #include <iostream>
 #include <cstring>
+
+#include <xapian.h>
+
+
 #include "mu-store.hh"
 #include "utils/mu-str.h"
 #include "utils/mu-error.hh"
@@ -36,16 +42,21 @@
 
 using namespace Mu;
 
+static_assert(std::is_same<Store::Id, Xapian::docid>::value,
+              "wrong type for Store::Id");
+
 constexpr auto SchemaVersionKey     = "schema-version";
 constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir'
 constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
-constexpr auto BatchSize            = 150'000;
+constexpr auto BatchSizeKey         = "batch-size";
+constexpr auto DefaultBatchSize     = 250'000U;
+
+constexpr auto MaxMessageSizeKey     = "max-message-size";
+constexpr auto DefaultMaxMessageSize = 100'000'000U;
 
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
-
-
 
 extern "C" {
 static unsigned add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err);
@@ -98,51 +109,57 @@ struct Store::Private {
 
 #define LOCKED std::lock_guard<std::mutex> l(lock_);
 
+        enum struct XapianOpts {ReadOnly, Open, CreateOverwrite };
+
         Private (const std::string& path, bool readonly):
-                db_path_{path},
-                db_{readonly?
-                        std::make_shared<Xapian::Database>(db_path_) :
-                        std::make_shared<Xapian::WritableDatabase>(db_path_, Xapian::DB_OPEN)},
-                root_maildir_{db()->get_metadata(RootMaildirKey)},
-                created_{atoll(db()->get_metadata(CreatedKey).c_str())},
-                schema_version_{db()->get_metadata(SchemaVersionKey)},
-                personal_addresses_{Mu::split(db()->get_metadata(PersonalAddressesKey),",")},
+                db_{make_xapian(path, readonly ? XapianOpts::ReadOnly : XapianOpts::Open)},
+                mdata_{make_metadata(path)},
                 contacts_{db()->get_metadata(ContactsKey)} {
+
+                if (!readonly)
+                        wdb()->begin_transaction();
         }
 
         Private (const std::string& path, const std::string& root_maildir,
-                 const StringVec& personal_addresses):
-                db_path_{path},
-                db_{std::make_shared<Xapian::WritableDatabase>(
-                                db_path_, Xapian::DB_CREATE_OR_OVERWRITE)},
-                root_maildir_{root_maildir},
-                created_{time({})},
-                schema_version_{MU_STORE_SCHEMA_VERSION},
-                personal_addresses_{personal_addresses} {
+                 const StringVec& personal_addresses, const Store::Config& conf):
+                db_{make_xapian(path, XapianOpts::CreateOverwrite)},
+                mdata_{init_metadata(conf, path, root_maildir, personal_addresses)} {
 
-                writable_db()->set_metadata(SchemaVersionKey, schema_version_);
-                writable_db()->set_metadata(RootMaildirKey, root_maildir_);
-                writable_db()->set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)created_));
-
-                std::string addrs;
-                for (const auto& addr : personal_addresses_) { // _very_ minimal check.
-                        if (addr.find(",") != std::string::npos)
-                                throw Mu::Error(Error::Code::InvalidArgument,
-                                                "e-mail address '%s' contains comma", addr.c_str());
-                        addrs += (addrs.empty() ? "": ",") + addr;
-                }
-                writable_db()->set_metadata (PersonalAddressesKey, addrs);
-
+                wdb()->begin_transaction();
         }
 
         ~Private() try {
                 LOCKED;
+                g_debug("closing store @ %s", mdata_.database_path.c_str());
                 if (wdb()) {
                         wdb()->set_metadata (ContactsKey, contacts_.serialize());
-                        if (in_transaction_)  // auto-commit.
-                                wdb()->commit_transaction();
+                        commit();
                 }
         } MU_XAPIAN_CATCH_BLOCK;
+
+        std::shared_ptr<Xapian::Database> make_xapian (const std::string db_path,
+                                                       XapianOpts opts) try {
+                switch (opts) {
+                case XapianOpts::ReadOnly:
+                        return std::make_shared<Xapian::Database>(db_path);
+                case XapianOpts::Open:
+                        return std::make_shared<Xapian::WritableDatabase>(
+                                db_path, Xapian::DB_OPEN);
+                case XapianOpts::CreateOverwrite:
+                        return std::make_shared<Xapian::WritableDatabase>(
+                                db_path, Xapian::DB_CREATE_OR_OVERWRITE);
+                default:
+                        throw std::logic_error ("invalid xapian options");
+                }
+
+        } catch (const Xapian::DatabaseError& xde) {
+                throw Mu::Error(Error::Code::Store, "failed to open store @ %s: %s",
+                                db_path.c_str(), xde.get_msg().c_str());
+        } catch (...) {
+                throw Mu::Error(Error::Code::Internal,
+                                "something went wrong when opening store @ %s",
+                                db_path.c_str());
+        }
 
         std::shared_ptr<Xapian::Database> db() const {
                 if (!db_)
@@ -162,16 +179,16 @@ struct Store::Private {
                         return w_db;
         }
 
-        void begin_transaction () try {
-                wdb()->begin_transaction();
-                in_transaction_ = true;
-                dirtiness_      = 0;
+        void dirty () try {
+                if (++dirtiness_ > mdata_.batch_size)
+                        commit();
         } MU_XAPIAN_CATCH_BLOCK;
 
-        void commit_transaction () try {
-                in_transaction_ = false;
+        void commit () try {
+                g_debug("committing %zu modification(s)", dirtiness_);
                 dirtiness_      = 0;
                 wdb()->commit_transaction();
+                wdb()->begin_transaction();
         } MU_XAPIAN_CATCH_BLOCK;
 
         void add_synonyms () {
@@ -186,19 +203,58 @@ struct Store::Private {
                 return (time_t)atoll(db()->get_metadata(key).c_str());
         }
 
+        Store::Metadata make_metadata(const std::string& db_path) {
+                Store::Metadata mdata;
 
+                mdata.database_path       = db_path;
+                mdata.schema_version      = db()->get_metadata(SchemaVersionKey);
+                mdata.created             = ::atoll(db()->get_metadata(CreatedKey).c_str());
+                mdata.read_only           = !wdb();
 
-        const std::string                 db_path_;
+                mdata.batch_size          = ::atoll(db()->get_metadata(BatchSizeKey).c_str());
+                mdata.max_message_size    = ::atoll(db()->get_metadata(MaxMessageSizeKey).c_str());
+
+                mdata.root_maildir       = db()->get_metadata(RootMaildirKey);
+                mdata.personal_addresses = Mu::split(db()->get_metadata(PersonalAddressesKey),",");
+
+                return mdata;
+        }
+
+        Store::Metadata init_metadata(const Store::Config& conf,
+                                      const std::string& path, const std::string& root_maildir,
+                                      const StringVec& personal_addresses) {
+
+                wdb()->set_metadata(SchemaVersionKey, ExpectedSchemaVersion);
+                wdb()->set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)::time({})));
+
+                const size_t batch_size = conf.batch_size ? conf.batch_size : DefaultBatchSize;
+                wdb()->set_metadata(BatchSizeKey, Mu::format("%zu", batch_size));
+
+                const size_t max_msg_size = conf.max_message_size ?
+                        conf.max_message_size : DefaultMaxMessageSize;
+                wdb()->set_metadata(MaxMessageSizeKey, Mu::format("%zu", max_msg_size));
+
+                wdb()->set_metadata(RootMaildirKey, root_maildir);
+
+                std::string addrs;
+                for (const auto& addr : personal_addresses) { // _very_ minimal check.
+                        if (addr.find(",") != std::string::npos)
+                                throw Mu::Error(Error::Code::InvalidArgument,
+                                                "e-mail address '%s' contains comma", addr.c_str());
+                        addrs += (addrs.empty() ? "": ",") + addr;
+                }
+                wdb()->set_metadata (PersonalAddressesKey, addrs);
+
+                return make_metadata(path);
+        }
+
         std::shared_ptr<Xapian::Database> db_;
-        const std::string                 root_maildir_;
-        const time_t                      created_{};
-        const std::string                 schema_version_;
-        const StringVec                   personal_addresses_;
+        const Store::Metadata             mdata_;
         Contacts                          contacts_;
+        std::unique_ptr<Indexer>          indexer_;
 
         std::atomic<bool>                 in_transaction_{};
         std::mutex                        lock_;
-
         size_t                            dirtiness_{};
 
         mutable std::atomic<std::size_t> ref_count_{1};
@@ -222,48 +278,30 @@ get_uid_term (const char* path)
         return std::string{uid_term, sizeof(uid_term)};
 }
 
-
 #undef  LOCKED
-#define LOCKED std::lock_guard<std::mutex> l(priv_->lock_);
+#define LOCKED  std::lock_guard<std::mutex> l__(priv_->lock_)
 
 Store::Store (const std::string& path, bool readonly):
         priv_{std::make_unique<Private>(path, readonly)}
 {
-        if (ExpectedSchemaVersion != schema_version())
+        if (metadata().schema_version != ExpectedSchemaVersion)
                 throw Mu::Error(Error::Code::SchemaMismatch,
                                 "expected schema-version %s, but got %s",
-                                ExpectedSchemaVersion, schema_version().c_str());
+                                ExpectedSchemaVersion,
+                                metadata().schema_version.c_str());
 }
 
 Store::Store (const std::string& path, const std::string& maildir,
-              const StringVec& personal_addresses):
-        priv_{std::make_unique<Private>(path, maildir, personal_addresses)}
+              const StringVec& personal_addresses, const Store::Config& conf):
+        priv_{std::make_unique<Private>(path, maildir, personal_addresses, conf)}
 {}
 
 Store::~Store() = default;
 
-bool
-Store::read_only() const
+const Store::Metadata&
+Store::metadata() const
 {
-        return !priv_->wdb();
-}
-
-const std::string&
-Store::root_maildir () const
-{
-        return priv_->root_maildir_;
-}
-
-const StringVec&
-Store::personal_addresses(void) const
-{
-	return priv_->personal_addresses_;
-}
-
-const std::string&
-Store::database_path() const
-{
-        return priv_->db_path_;
+        return priv_->mdata_;
 }
 
 const Contacts&
@@ -273,9 +311,23 @@ Store::contacts() const
         return priv_->contacts_;
 }
 
+Indexer&
+Store::indexer()
+{
+        LOCKED;
+
+        if (metadata().read_only)
+                throw Error{Error::Code::Store, "no indexer for read-only store"};
+        else if (!priv_->indexer_)
+                priv_->indexer_ = std::make_unique<Indexer>(*this);
+
+        return *priv_->indexer_.get();
+}
+
 std::size_t
 Store::size() const
 {
+        LOCKED;
         return priv_->db()->get_doccount();
 }
 
@@ -283,19 +335,6 @@ bool
 Store::empty() const
 {
         return size() == 0;
-}
-
-
-const std::string&
-Store::schema_version() const
-{
-        return priv_->schema_version_;
-}
-
-time_t
-Store::created() const
-{
-        return priv_->created_;
 }
 
 static std::string
@@ -333,7 +372,7 @@ Store::add_message (const std::string& path)
         LOCKED;
 
         GError *gerr{};
-        const auto maildir{maildir_from_path(root_maildir(), path)};
+        const auto maildir{maildir_from_path(metadata().root_maildir, path)};
         auto msg{mu_msg_new_from_file (path.c_str(), maildir.c_str(), &gerr)};
         if (G_UNLIKELY(!msg))
                 throw Error{Error::Code::Message, "failed to create message: %s",
@@ -347,6 +386,7 @@ Store::add_message (const std::string& path)
                                 gerr ? gerr->message : "something went wrong"};
 
         g_debug ("added message @ %s; docid = %u", path.c_str(), docid);
+        priv_->dirty();
 
 	return docid;
 }
@@ -366,6 +406,7 @@ Store::update_message (MuMsg *msg, unsigned docid)
 
         g_debug ("updated message @ %s; docid = %u",
                  mu_msg_get_path(msg), docid);
+        priv_->dirty();
 
         return true;
 }
@@ -384,13 +425,26 @@ Store::remove_message (const std::string& path)
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (false);
 
-        g_debug ("deleted message @ %s from database", path.c_str());
-
+        g_debug ("deleted message @ %s from store", path.c_str());
+        priv_->dirty();
 
         return true;
 }
 
 
+void
+Store::remove_messages (const std::vector<Store::Id>& ids)
+{
+        LOCKED;
+
+	try {
+                for (auto&& id: ids) {
+                        priv()->wdb()->delete_document(id);
+                        priv_->dirty();
+                }
+
+        } MU_XAPIAN_CATCH_BLOCK;
+}
 
 time_t
 Store::dirstamp (const std::string& path) const
@@ -413,6 +467,7 @@ Store::set_dirstamp (const std::string& path, time_t tstamp)
         const std::size_t len = g_snprintf (data.data(), data.size(), "%zx", tstamp);
 
         priv_->writable_db()->set_metadata(path, std::string{data.data(), len});
+        priv_->dirty();
 }
 
 
@@ -449,29 +504,38 @@ Store::contains_message (const std::string& path) const
 	} MU_XAPIAN_CATCH_BLOCK_RETURN(false);
 }
 
-void
-Store::begin_transaction () try
+
+std::size_t
+Store::for_each (Store::ForEachFunc func)
 {
         LOCKED;
-        priv_->begin_transaction();
 
-} MU_XAPIAN_CATCH_BLOCK;
+        size_t n{};
 
-void
-Store::commit_transaction () try
-{
-        LOCKED;
-        priv_->commit_transaction();
+	try {
+		Xapian::Enquire enq (*priv_->db().get());
 
-} MU_XAPIAN_CATCH_BLOCK;
+		enq.set_query  (Xapian::Query::MatchAll);
+		enq.set_cutoff (0,0);
 
-bool
-Store::in_transaction () const
-{
-        return priv_->in_transaction_;
+		Xapian::MSet matches(enq.get_mset (0, priv_->db()->get_doccount()));
+
+                for (auto&& it = matches.begin(); it != matches.end(); ++it, ++n)
+                        if (!func (*it, it.get_document().get_value(MU_MSG_FIELD_ID_PATH)))
+                                break;
+
+	} MU_XAPIAN_CATCH_BLOCK;
+
+        return n;
 }
 
+void
+Store::commit () try
+{
+        LOCKED;
+        priv_->commit();
 
+} MU_XAPIAN_CATCH_BLOCK;
 
 ////////////////////////////////////////////////////////////////////////////////
 // C compat
@@ -501,7 +565,7 @@ mutable_self (MuStore *store)
         }
 
         auto s = reinterpret_cast<Mu::Store*>(store);
-        if (s->read_only()) {
+        if (s->metadata().read_only) {
                 g_error ("store is read-only"); // terminates
                 return {};
         }
@@ -533,66 +597,6 @@ mu_store_new_readable (const char* xpath, GError **err)
         return NULL;
 }
 
-MuStore*
-mu_store_new_writable (const char* xpath, GError **err)
-{
-	g_return_val_if_fail (xpath, NULL);
-
-	g_debug ("opening database at %s (writable)", xpath);
-
-        try {
-                return reinterpret_cast<MuStore*>(new Store (xpath, false/*!readonly*/));
-
-        } catch (const Mu::Error& me) {
-                if (me.code() == Mu::Error::Code::SchemaMismatch) {
-                        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_SCHEMA_MISMATCH,
-                                     "%s", me.what());
-                        return NULL;
-                }
-        } catch (const Xapian::DatabaseLockError& dle) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
-                             "database @ %s is write-locked", xpath);
-                return NULL;
-        } catch (const Xapian::Error& dbe) {
-                g_warning ("failed to open database @ %s: %s", xpath,
-                           dbe.get_error_string() ? dbe.get_error_string() : "something went wrong");
-        }
-
-        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_OPEN,
-                     "failed to open database @ %s", xpath);
-
-        return NULL;
-}
-
-
-MuStore*
-mu_store_new_create (const char* xpath, const char *root_maildir,
-                     const char **personal_addresses, GError **err)
-{
-	g_return_val_if_fail (xpath, NULL);
-        g_return_val_if_fail (root_maildir, NULL);
-
-	g_debug ("create database at %s (root-maildir=%s)", xpath, root_maildir);
-
-	try {
-                StringVec addrs;
-                for (auto i = 0; personal_addresses && personal_addresses[i]; ++i)
-                        addrs.emplace_back(personal_addresses[i]);
-
-                return reinterpret_cast<MuStore*>(
-			new Store (xpath, std::string{root_maildir}, addrs));
-
-        } catch (const Xapian::DatabaseLockError& dle) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,
-                             "database @ %s is write-locked already", xpath);
-        } catch (...) {
-                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                             "error opening database @ %s", xpath);
-        }
-
-        return NULL;
-}
-
 
 MuStore*
 mu_store_ref (MuStore* store)
@@ -619,30 +623,6 @@ mu_store_unref (MuStore* store)
         return NULL;
 }
 
-gboolean
-mu_store_is_read_only (const MuStore *store)
-{
-	g_return_val_if_fail (store, FALSE);
-
-	try {
-		return self(store)->read_only() ? TRUE : FALSE;
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
-
-}
-
-
-const MuContacts*
-mu_store_contacts (MuStore *store)
-{
-	g_return_val_if_fail (store, FALSE);
-
-	try {
-		return self(store)->contacts().mu_contacts();
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
-}
-
 unsigned
 mu_store_count (const MuStore *store, GError **err)
 {
@@ -660,150 +640,15 @@ mu_store_schema_version (const MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
 
-	return self(store)->schema_version().c_str();
+	return self(store)->metadata().schema_version.c_str();
 }
 
 XapianDatabase*
 mu_store_get_read_only_database (MuStore *store)
 {
 	g_return_val_if_fail (store, NULL);
-	return (XapianWritableDatabase*)self(store)->priv()->db().get();
+	return (XapianDatabase*)self(store)->priv()->db().get();
 }
-
-
-
-
-gboolean
-mu_store_contains_message (const MuStore *store, const char* path)
-{
-	g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (path, FALSE);
-
-	try {
- 		return self(store)->contains_message(path) ? TRUE : FALSE;
-
-        } MU_XAPIAN_CATCH_BLOCK_RETURN(FALSE);
-}
-
-unsigned
-mu_store_get_docid_for_path (const MuStore *store, const char* path, GError **err)
-{
-	g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (path, FALSE);
-
-	try {
-		const std::string term (get_uid_term(path));
-		Xapian::Query query (term);
-		Xapian::Enquire enq (*self(store)->priv()->db().get());
-
-		enq.set_query (query);
-
-		Xapian::MSet mset (enq.get_mset (0,1));
-		if (mset.empty())
-			throw Mu::Error(Error::Code::NotFound,
-                                        "message @ %s not found in store", path);
-
-		return *mset.begin();
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
-					       MU_STORE_INVALID_DOCID);
-}
-
-
-MuError
-mu_store_foreach (MuStore *store,
-		  MuStoreForeachFunc func, void *user_data, GError **err)
-{
-	g_return_val_if_fail (store, MU_ERROR);
-	g_return_val_if_fail (func, MU_ERROR);
-
-	try {
-		Xapian::Enquire enq (*self(store)->priv()->db().get());
-
-		enq.set_query  (Xapian::Query::MatchAll);
-		enq.set_cutoff (0,0);
-
-		Xapian::MSet matches(enq.get_mset (0, self(store)->size()));
-		if (matches.empty())
-			return MU_OK; /* database is empty */
-
-		for (Xapian::MSet::iterator iter = matches.begin();
-		     iter != matches.end(); ++iter) {
-			Xapian::Document doc (iter.get_document());
-			const std::string path(doc.get_value(MU_MSG_FIELD_ID_PATH));
-			MuError res = func (path.c_str(), user_data);
-			if (res != MU_OK)
-				return res;
-		}
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
-					       MU_ERROR_XAPIAN);
-
-	return MU_OK;
-}
-
-
-MuMsg*
-mu_store_get_msg (const MuStore *store, unsigned docid, GError **err)
-{
-	g_return_val_if_fail (store, NULL);
-	g_return_val_if_fail (docid != 0, NULL);
-
-        return self(store)->find_message(docid);
-}
-
-
-const char*
-mu_store_database_path (const MuStore *store)
-{
-        g_return_val_if_fail (store, NULL);
-
-        return self(store)->database_path().c_str();
-}
-
-
-const char*
-mu_store_root_maildir (const MuStore *store)
-{
-        g_return_val_if_fail (store, NULL);
-
-        return self(store)->root_maildir().c_str();
-}
-
-
-time_t
-mu_store_created (const MuStore *store)
-{
-        g_return_val_if_fail (store, (time_t)0);
-
-        return self(store)->created();
-}
-
-char**
-mu_store_personal_addresses (const MuStore *store)
-{
-	g_return_val_if_fail (store, NULL);
-
-        const auto size = self(store)->personal_addresses().size();
-        auto addrs = g_new0 (char*, 1 + size);
-        for (size_t i = 0; i != size; ++i)
-                addrs[i] = g_strdup(self(store)->personal_addresses()[i].c_str());
-
-        return addrs;
-}
-
-void
-mu_store_flush (MuStore *store) try {
-
-        g_return_if_fail (store);
-
-        if (self(store)->priv()->in_transaction_)
-                mutable_self(store)->commit_transaction ();
-
-        mutable_self(store)->priv()->wdb()->set_metadata(
-                ContactsKey, self(store)->priv()->contacts_.serialize());
-
-} MU_XAPIAN_CATCH_BLOCK;
 
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -1237,7 +1082,7 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 	/* determine whether this is 'personal' email, ie. one of my
 	 * e-mail addresses is explicitly mentioned -- it's not a
 	 * mailing list message. Callback will update docinfo->_personal */
-        const auto& personal_addresses = self(store)->personal_addresses();
+        const auto& personal_addresses = self(store)->metadata().personal_addresses;
         if (personal_addresses.size()) {
 		docinfo._my_addresses = &personal_addresses;
 		mu_msg_contact_foreach
@@ -1293,9 +1138,6 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
                 auto self = mutable_self(store);
                 auto wdb  = self->priv()->wdb();
 
-		if (!self->in_transaction())
-			self->priv()->begin_transaction();
-
 		add_term (doc, term);
 
 		// update the threading info if this message has a message id
@@ -1309,9 +1151,6 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 			id = docid;
 		}
 
-                if (++self->priv()->dirtiness_ >= BatchSize)
-                        self->priv()->commit_transaction();
-
 		return id;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
@@ -1319,101 +1158,4 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 	return MU_STORE_INVALID_DOCID;
 }
 
-unsigned
-mu_store_add_msg (MuStore *store, MuMsg *msg, GError **err)
-{
-	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
-	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
-
-	return add_or_update_msg (store, 0, msg, err);
-}
-
-unsigned
-mu_store_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
-{
-	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
-	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
-	g_return_val_if_fail (docid != 0, MU_STORE_INVALID_DOCID);
-
-	return add_or_update_msg (store, docid, msg, err);
-}
-
-unsigned
-mu_store_add_path (MuStore *store, const char *path, GError **err)  try {
-
-        MuMsg *msg;
-        unsigned docid;
-
-        g_return_val_if_fail (store, FALSE);
-        g_return_val_if_fail (path, FALSE);
-
-        const auto maildir{maildir_from_path(self(store)->root_maildir(), path)};
-        msg = mu_msg_new_from_file (path, maildir.c_str(), err);
-        if (!msg)
-                return MU_STORE_INVALID_DOCID;
-
-        docid = add_or_update_msg (store, 0, msg, err);
-        mu_msg_unref (msg);
-
-        return docid;
-
-} catch (const Mu::Error& me) {
-        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN,
-                     "%s", me.what());
-        return MU_STORE_INVALID_DOCID;
-} catch (...) {
-        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_INTERNAL,
-                     "caught exception");
-        return MU_STORE_INVALID_DOCID;
-}
-
-XapianWritableDatabase*
-mu_store_get_writable_database (MuStore *store)
-{
-	g_return_val_if_fail (store, NULL);
-
-	return (XapianWritableDatabase*)mutable_self(store)->priv()->wdb().get();
-}
-
-
-gboolean
-mu_store_remove_path (MuStore *store, const char *msgpath)
-{
-	g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (msgpath, FALSE);
-
-	try {
-		const std::string term{(get_uid_term(msgpath))};
-                auto wdb = mutable_self(store)->priv()->wdb();
-
-		wdb->delete_document (term);
-		//store->inc_processed();
-
-		return TRUE;
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN (FALSE);
-}
-
-
-gboolean
-mu_store_set_dirstamp (MuStore *store, const char* dirpath,
-                            time_t stamp, GError **err)
-{
-        g_return_val_if_fail (store, FALSE);
-	g_return_val_if_fail (dirpath, FALSE);
-
-	mutable_self(store)->set_dirstamp(dirpath, stamp);
-
-        return TRUE;
-}
-
-time_t
-mu_store_get_dirstamp (const MuStore *store, const char *dirpath, GError **err)
-{
-	g_return_val_if_fail (store, 0);
-	g_return_val_if_fail (dirpath, 0);
-
-        return self(store)->dirstamp(dirpath);
-}
-
-}
+} // extern C

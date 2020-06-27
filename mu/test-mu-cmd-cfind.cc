@@ -314,9 +314,6 @@ test_mu_cfind_csv (void)
 	output = erroutput = NULL;
 	g_assert (g_spawn_command_line_sync (cmdline, &output, &erroutput,
 					     NULL, NULL));
-
-	g_print ("\n\n%s\n\n", output);
-
 	g_assert (output);
 	if (output[1] == 'H')
 		g_assert_cmpstr (output,

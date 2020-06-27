@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2017 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2020 Dirk-Jan C. Binnema  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,9 +17,7 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG*/
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
@@ -28,7 +26,6 @@
 #include <utils/mu-util.h>
 #include <mu-store.hh>
 #include <mu-runtime.h>
-#include <mu-index.h>
 
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"

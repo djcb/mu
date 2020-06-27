@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -119,14 +119,27 @@ std::string date_to_time_t_string (const std::string& date, bool first);
  */
 std::string date_to_time_t_string (int64_t t);
 
-using SteadyClock  = std::chrono::steady_clock;
+using Clock    = std::chrono::steady_clock;
+using Duration = Clock::duration;
 
-static inline int64_t to_ms (SteadyClock::duration dur) {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+template <typename Unit> constexpr int64_t to_unit (Duration d) {
+        using namespace std::chrono;
+        return duration_cast<Unit>(d).count();
 }
-static inline int64_t to_us (SteadyClock::duration dur) {
-        return std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-}
+
+constexpr int64_t to_s  (Duration d) { return to_unit<std::chrono::seconds>(d); }
+constexpr int64_t to_ms (Duration d) { return to_unit<std::chrono::milliseconds>(d); }
+constexpr int64_t to_us (Duration d) { return to_unit<std::chrono::microseconds>(d); }
+
+/**
+ * See g_canonicalize_filename
+ *
+ * @param filename
+ * @param relative_to
+ *
+ * @return
+ */
+std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
 
 /**
  * Convert a size string to a size in bytes
@@ -201,8 +214,6 @@ private:
 
         const bool color_;
 };
-
-
 
 /**
  *

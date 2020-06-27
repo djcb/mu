@@ -5,17 +5,23 @@
 
 *** mu
 
-    - Where available (and with suitable glib), log to the systemd journal
-      instead of a ~~/.cache/mu.log~
+    - Where available (and with suitable ~libglib~), log to the systemd journal
+      instead of a ~~/.cache/mu.log~. The ~--debug~ option to ~mu~ increases the
+      amount that is logged.
 
-    - Follow symlinks in maildirs, and support moving messsages between across
-      multiple filesystems (but note that that is quite a bit slower than the
+    - Follow symlinks in maildirs, and support moving messsages across
+      filesystems (but note that that is quite a bit slower than the
       single-filesystem case)
 
-    - Optionally provide readline support for the mu server (when in tty-mode)
+    - Optionally provide readline support for the ~mu~ server (when in tty-mode)
 
     - Reworked the way mu generates s-expressions for mu4e; they are created
       programmatically now instead of through string building.
+
+    - The indexer (the part of mu that scans maildirs and updates the message
+      store) has been rewritten so it can work asynchronously and take advantage
+      of multiple cores. Note that for now, indexing in ~mu4e~ is still a blocking
+      operation.
 
 *** mu4e
 
@@ -35,8 +41,6 @@
 
     - Add a variable ~mu4e-mu-debug~ which, when set to non-~nil~ makes the ~mu~
       server log more verbosely (to ~mu.log~ or the journal)
-
-
 
 * 1.4 (released, as of April 18 2020)
 

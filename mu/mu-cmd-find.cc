@@ -28,7 +28,6 @@
 
 #include "mu-msg.h"
 #include "mu-maildir.h"
-#include "mu-index.h"
 #include "mu-query.h"
 #include "mu-msg-iter.h"
 #include "mu-bookmarks.h"

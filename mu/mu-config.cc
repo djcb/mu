@@ -144,10 +144,17 @@ config_options_group_init (void)
 		{"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY,
 		 &MU_CONFIG.my_addresses, "my e-mail address; can be used multiple times",
 		 "<address>"},
+                {"max-message-size", 0, 0, G_OPTION_ARG_INT,
+		 &MU_CONFIG.max_msg_size, "Maximum allowed size for messages",
+                 "<size-in-bytes>"},
+                {"batch-size", 0, 0, G_OPTION_ARG_INT,
+		 &MU_CONFIG.max_msg_size,
+                 "Number of changes in a database transaction batch",
+                 "<number>"},
                 {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
 	};
 
-	og = g_option_group_new("init", "Options for the 'index' command",
+	og = g_option_group_new("init", "Options for the 'init' command",
 				"", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 

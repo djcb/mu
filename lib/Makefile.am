@@ -18,7 +18,7 @@
 # before descending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils query
+SUBDIRS= utils query index
 
 if HAVE_JSON_GLIB
 json_srcs=							\
@@ -26,6 +26,15 @@ json_srcs=							\
 	mu-msg-json.h
 json_flag="-DHAVE_JSON_GLIB"
 endif
+
+TESTDEFS=							\
+	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
+	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"		\
+	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"		\
+	-DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"		\
+	-DABS_CURDIR=\"${abs_builddir}\"			\
+	-DABS_SRCDIR=\"${abs_srcdir}\"
+
 
 AM_CFLAGS=							\
 	$(WARN_CFLAGS)						\
@@ -36,12 +45,7 @@ AM_CFLAGS=							\
 	$(ASAN_CFLAGS)						\
 	$(json_flag)						\
 	$(CODE_COVERAGE_CFLAGS)					\
-	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
-	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"		\
-	-DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"		\
-	-DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"		\
-	-DABS_CURDIR=\"${abs_builddir}\"			\
-	-DABS_SRCDIR=\"${abs_srcdir}\"				\
+	$(TESTDEFS)						\
 	-Wno-format-nonliteral					\
 	-Wno-switch-enum					\
 	-Wno-deprecated-declarations				\
@@ -57,7 +61,7 @@ AM_CXXFLAGS=							\
 	$(XAPIAN_CXXFLAGS)					\
 	$(ASAN_CXXFLAGS)					\
 	$(CODE_COVERAGE_CFLAGS)					\
-	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"
+	$(TESTDEFS)
 
 AM_CPPFLAGS=							\
 	$(CODE_COVERAGE_CPPFLAGS)
@@ -81,8 +85,6 @@ libmu_la_SOURCES=						\
 	mu-container.h						\
 	mu-flags.h						\
 	mu-flags.c						\
-	mu-index.c						\
-	mu-index.h						\
 	mu-maildir.c						\
 	mu-maildir.h						\
 	mu-msg-crypto.c						\
@@ -123,6 +125,7 @@ libmu_la_LIBADD=						\
 	$(JSON_GLIB_LIBS)					\
 	${builddir}/utils/libmu-utils.la			\
 	${builddir}/query/libmu-query.la			\
+	${builddir}/index/libmu-index.la			\
 	$(CODE_COVERAGE_LIBS)
 
 libmu_la_LDFLAGS=						\
@@ -150,7 +153,7 @@ test_mu_msg_SOURCES= test-mu-msg.c dummy.cc
 test_mu_msg_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-store
-test_mu_store_SOURCES= test-mu-store.c dummy.cc
+test_mu_store_SOURCES= test-mu-store.cc
 test_mu_store_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-flags
