@@ -105,11 +105,8 @@ mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
 	MuMsg    *self;
 	MuMsgDoc *msgdoc;
-        gint64   start;
 
 	g_return_val_if_fail (doc, NULL);
-
-        start = g_get_monotonic_time();
 
 	if (G_UNLIKELY(!_gmime_initialized)) {
 		gmime_init ();
