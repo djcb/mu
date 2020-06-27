@@ -26,7 +26,9 @@
 #include "mu-config.hh"
 #include "mu-cmd.hh"
 #include "mu-runtime.h"
+#include "utils/mu-utils.hh"
 
+using namespace Mu;
 
 static void
 show_version (void)
@@ -47,42 +49,51 @@ show_version (void)
 static void
 handle_error (MuConfig *conf, MuError merr, GError **err)
 {
-	if (!(err && *err))
+        if (!(err && *err))
 		return;
 
+        using Color = MaybeAnsi::Color;
+        MaybeAnsi col{conf ? !conf->nocolor : false};
+
 	if (*err)
-		g_printerr ("error: %s (%u)\n",
-			    (*err)->message,
-			    (*err)->code);
+                std::cerr << col.fg(Color::Red)	<< "error" << col.reset() << ": "
+                          << col.fg(Color::BrightYellow)
+                          << ((*err) ? (*err)->message : "something when wrong")
+                          << "\n";
+
+        std::cerr << col.fg(Color::Green);
 
 	switch ((*err)->code) {
 	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-		g_printerr ("maybe mu is already running?\n");
+		std::cerr << "Maybe mu is already running?\n";
 		break;
-	case MU_ERROR_XAPIAN_NEEDS_REINDEX:
-		g_printerr ("database needs (re)indexing.\n"
-			    "try 'mu index' "
-			    "(see mu-index(1) for details)\n");
+
+        case MU_ERROR_XAPIAN_NEEDS_REINDEX:
+                std::cerr << "Database needs (re)indexing.\n"
+                          << "try 'mu index' "
+                          << "(see mu-index(1) for details)\n";
 		return;
 	case MU_ERROR_IN_PARAMETERS:
 		if (conf && mu_config_cmd_is_valid(conf->cmd))
 			mu_config_show_help (conf->cmd);
 		break;
 	case MU_ERROR_SCRIPT_NOT_FOUND:
-		g_printerr ("see the mu manpage for commands, or "
-			    "'mu script' for the scripts\n");
+		std::cerr << "See the mu manpage for commands, or "
+                          << "'mu script' for the scripts\n";
 		break;
 	case MU_ERROR_XAPIAN_CANNOT_OPEN:
-		g_printerr("Please (re)initialize mu with 'mu init' "
-			   "see mu-init(1) for details\n");
+		std::cerr << "Please (re)initialize mu with 'mu init' "
+                          << "see mu-init(1) for details\n";
 		return;
 	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
-		g_printerr("Please (re)initialize mu with 'mu init' "
-			   "see mu-init(1) for details\n");
+		std::cerr << "Please (re)initialize mu with 'mu init' "
+                          << "see mu-init(1) for details\n";
 		return;
 	default:
 		break; /* nothing to do */
 	}
+
+        std::cerr << col.reset();
 }
 
 
@@ -119,7 +130,7 @@ main (int argc, char *argv[])
 	rv = mu_cmd_execute (conf, &err);
 
 cleanup:
-	handle_error (conf, rv, &err);
+        handle_error (conf, rv, &err);
 	g_clear_error (&err);
 
 	mu_config_uninit (conf);
