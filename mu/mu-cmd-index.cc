@@ -20,6 +20,10 @@
 #include "config.h"
 #include "mu-cmd.hh"
 
+#include <chrono>
+#include <thread>
+#include <atomic>
+
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -27,23 +31,15 @@
 #include <unistd.h>
 
 #include "mu-msg.h"
-#include "mu-index.h"
+#include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-runtime.h"
 
 #include "utils/mu-util.h"
 
-static gboolean MU_CAUGHT_SIGNAL;
+using namespace Mu;
 
-static void
-sig_handler (int sig)
-{
-	if (!MU_CAUGHT_SIGNAL && sig == SIGINT) /* Ctrl-C */
-		g_print ("\nshutting down gracefully, "
-			   "press again to kill immediately");
-
-        MU_CAUGHT_SIGNAL = TRUE;
-}
+static std::atomic<bool> CaughtSignal{};
 
 static void
 install_sig_handler (void)
@@ -51,11 +47,14 @@ install_sig_handler (void)
 	struct sigaction action;
 	int i, sigs[] = { SIGINT, SIGHUP, SIGTERM };
 
-	MU_CAUGHT_SIGNAL = FALSE;
-
-	action.sa_handler = sig_handler;
 	sigemptyset(&action.sa_mask);
-	action.sa_flags = SA_RESETHAND;
+	action.sa_flags   = SA_RESETHAND;
+        action.sa_handler = [](int sig) {
+                if (!CaughtSignal && sig == SIGINT) /* Ctrl-C */
+                        g_print ("\nshutting down gracefully, "
+                                 "press again to kill immediately");
+                CaughtSignal = true;
+        };
 
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction (sigs[i], &action, NULL) != 0)
@@ -64,235 +63,82 @@ install_sig_handler (void)
 }
 
 
-static gboolean
-check_params (const MuConfig *opts, GError **err)
-{
-	/* param[0] == 'index'  there should be no param[1] */
-	if (opts->params[1]) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "unexpected parameter");
-		return FALSE;
-	}
-
-	if (opts->max_msg_size < 0) {
-		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
-				     "the maximum message size must >= 0");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static MuError
-index_msg_silent_cb (MuIndexStats* stats, void *user_data)
-{
-	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
-}
-
-
-
 static void
-print_stats (MuIndexStats* stats, gboolean clear, gboolean color)
+print_stats (const Indexer::Progress& stats, bool color)
 {
-	const char *kars="-\\|/";
-	char output[120];
+	const char  *kars = "-\\|/";
+	static auto  i    = 0U;
 
-	static unsigned i = 0;
+        MaybeAnsi col{color};
+        using Color = MaybeAnsi::Color;
 
-	if (clear)
-		fputs ("\r", stdout);
-
-	if (color)
-		g_snprintf
-			(output, sizeof(output),
-			 MU_COLOR_YELLOW "%c " MU_COLOR_DEFAULT
-			 "processing mail; "
-			 "processed: " MU_COLOR_GREEN "%u; " MU_COLOR_DEFAULT
-			 "updated/new: " MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
-			 ", cleaned-up: " MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT,
-			 (unsigned)kars[++i % 4],
-			 (unsigned)stats->_processed,
-			 (unsigned)stats->_updated,
-			 (unsigned)stats->_cleaned_up);
-	else
-		g_snprintf
-			(output, sizeof(output),
-			 "%c processing mail; processed: %u; "
-			 "updated/new: %u, cleaned-up: %u",
-			 (unsigned)kars[++i % 4],
-			 (unsigned)stats->_processed,
-			 (unsigned)stats->_updated,
-			 (unsigned)stats->_cleaned_up);
-
-	fputs (output, stdout);
-	fflush (stdout);
+        std::cout << col.fg(Color::Yellow) << kars[++i % 4] << col.reset()
+                  << " indexing messages; "
+                  << "processed: " << col.fg(Color::Green) << stats.processed << col.reset()
+                  << "; updated/new: " << col.fg(Color::Green) << stats.updated << col.reset()
+                  << "; cleaned-up: " << col.fg(Color::Green) << stats.removed << col.reset();
 }
 
-
-struct _IndexData {
-	gboolean color;
-};
-typedef struct _IndexData IndexData;
-
-
-static MuError
-index_msg_cb  (MuIndexStats* stats, IndexData *idata)
-{
-	if (stats->_processed % 75)
-	 	return MU_OK;
-
-	print_stats (stats, TRUE, idata->color);
-
-	return MU_CAUGHT_SIGNAL ? MU_STOP: MU_OK;
-}
-
-static void
-show_time (unsigned t, unsigned processed, gboolean color)
-{
-	if (color) {
-		if (t)
-			g_print ("elapsed: "
-				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
-				   " second(s), ~ "
-				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
-				   " msg/s",
-				   t, processed/t);
-		else
-			g_print ("elapsed: "
-				   MU_COLOR_GREEN "%u" MU_COLOR_DEFAULT
-				   " second(s)", t);
-	} else {
-		if (t)
-			g_print ("elapsed: %u second(s), ~ %u msg/s",
-				   t, processed/t);
-		else
-			g_print ("elapsed: %u second(s)", t);
-	}
-
-	g_print ("\n");
-}
-
-static MuError
-cleanup_missing (MuIndex *midx, const MuConfig *opts, MuIndexStats *stats,
-		 GError **err)
-{
-	MuError		rv;
-	time_t		t;
-	IndexData	idata;
-	gboolean	show_progress;
-
-	if (!opts->quiet)
-		g_print ("cleaning up messages [%s]\n",
-			 mu_runtime_path (MU_RUNTIME_PATH_XAPIANDB));
-
-	show_progress = !opts->quiet && isatty(fileno(stdout));
-	mu_index_stats_clear (stats);
-
-	t = time (NULL);
-	idata.color = !opts->nocolor;
-	rv = mu_index_cleanup
-		(midx, stats,
-		 show_progress ?
-		 (MuIndexCleanupDeleteCallback)index_msg_cb :
-		 (MuIndexCleanupDeleteCallback)index_msg_silent_cb,
-		 &idata, err);
-
-	if (!opts->quiet) {
-		print_stats (stats, TRUE, !opts->nocolor);
-		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),stats->_processed,
-			   !opts->nocolor);
-	}
-
-	return (rv == MU_OK || rv == MU_STOP) ? MU_OK: MU_G_ERROR_CODE(err);
-}
-
-static MuError
-cmd_index (MuIndex *midx, const MuConfig *opts, MuIndexStats *stats, GError **err)
-{
-	IndexData	idata;
-	MuError		rv;
-	gboolean	show_progress;
-
-	show_progress = !opts->quiet && isatty(fileno(stdout));
-	idata.color   = !opts->nocolor;
-
-	rv = mu_index_run (midx,
-			   opts->rebuild,
-			   opts->lazycheck, stats,
-			   show_progress ?
-			   (MuIndexMsgCallback)index_msg_cb :
-			   (MuIndexMsgCallback)index_msg_silent_cb,
-			   NULL, &idata);
-	if (rv == MU_OK || rv == MU_STOP) {
-		g_message ("index: processed: %u; updated/new: %u",
-			   stats->_processed, stats->_updated);
-	} else
-		mu_util_g_set_error (err, rv, "error while indexing");
-
-	return rv;
-}
-
-
-static MuIndex*
-init_mu_index (MuStore *store, const MuConfig *opts, GError **err)
-{
-	MuIndex *midx;
-
-	if (!check_params (opts, err))
-		return NULL;
-
-	midx = mu_index_new (store, err);
-	if (!midx)
-		return NULL;
-
-	mu_index_set_max_msg_size (midx, opts->max_msg_size);
-
-	return midx;
-}
 
 MuError
 mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
 {
-	MuIndex		*midx;
-	MuIndexStats	 stats;
-	gboolean	 rv;
-	time_t		 t;
-
 	g_return_val_if_fail (opts, MU_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX, MU_ERROR);
 
-	/* create, and do error handling if needed */
-	midx = init_mu_index (reinterpret_cast<MuStore*>(&store), // ugh.
-                              opts, err);
-	if (!midx)
-                throw Mu::Error(Mu::Error::Code::Internal, err/*consumes*/,
-                                "error in index");
-
-	mu_index_stats_clear (&stats);
-	install_sig_handler ();
-
-	t = time (NULL);
-	rv = cmd_index (midx, opts, &stats, err);
-
-	if (rv == MU_OK && !opts->nocleanup) {
-		if (!opts->quiet)
-			g_print ("\n");
-		rv = cleanup_missing (midx, opts, &stats, err);
+        /* param[0] == 'index'  there should be no param[1] */
+	if (opts->params[1]) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "unexpected parameter");
+		return MU_ERROR;
+	}
+	if (opts->max_msg_size < 0) {
+		mu_util_g_set_error (err, MU_ERROR_IN_PARAMETERS,
+				     "the maximum message size must be >= 0");
+		return MU_ERROR;
 	}
 
-	if (!opts->quiet)  {
-		print_stats (&stats, TRUE, !opts->nocolor);
-		g_print ("\n");
-		show_time ((unsigned)(time(NULL)-t),
-			   stats._processed, !opts->nocolor);
-	}
+        MaybeAnsi col{!opts->nocolor};
+        using Color = MaybeAnsi::Color;
+        if (!opts->quiet) {
 
-	mu_index_destroy (midx);
+                if (opts->lazycheck)
+                        std::cout << "lazily ";
 
-        if (rv != MU_OK)
-                throw Mu::Error(Mu::Error::Code::Internal, err/*consumes*/,
-                                "error in index");
+                std::cout << "indexing maildir "
+                          << col.fg(Color::Green) << store.metadata().root_maildir
+                          << col.reset()
+                          << " -> store "
+                          << col.fg(Color::Green) << store.metadata().database_path
+                          << col.reset()
+                          << std::endl;
+        }
 
-	return rv ? MU_OK : MU_ERROR;
+        Mu::Indexer::Config conf{};
+        conf.cleanup          = !opts->nocleanup;
+        conf.lazy_check       = opts->lazycheck;
+
+        install_sig_handler ();
+
+        store.indexer().start(conf);
+        while (!CaughtSignal && store.indexer().is_running()) {
+                if (!opts->quiet)
+                        print_stats (store.indexer().progress(), !opts->nocolor);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                if (!opts->quiet) {
+                        std::cout << "\r";
+                        std::cout.flush();
+                }
+        }
+
+        store.indexer().stop();
+
+        if (!opts->quiet) {
+                print_stats (store.indexer().progress(), !opts->nocolor);
+                std::cout << std::endl;
+        }
+
+        return MU_OK;
 }
