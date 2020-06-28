@@ -3284,8 +3284,8 @@ If you use the functionality a lot, you may want to define
 key-bindings for that in headers and view mode:
 
 @lisp
-  (define-key mu4e-headers-mode-map (kbd "C-c c") 'org-mu4e-store-and-capture)
-  (define-key mu4e-view-mode-map    (kbd "C-c c") 'org-mu4e-store-and-capture)
+  (define-key mu4e-headers-mode-map (kbd "C-c c") 'mu4e-org-store-and-capture)
+  (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
 @end lisp
 
 
