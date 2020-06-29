@@ -1009,7 +1009,8 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
       (view-mode)
 
       (when (fboundp 'so-long-mode)
-        (eval '(so-long-mode)))
+        (unless (eq major-mode 'so-long-mode)
+          (eval '(so-long-mode))))
 
       (setq buffer-undo-list t)
       (let* ((inhibit-read-only t)
