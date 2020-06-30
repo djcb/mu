@@ -48,7 +48,7 @@ G_BEGIN_DECLS
  * @return a string representation of the size; see above
  * for what to do with it
  */
-const char* mu_str_size_s  (size_t s) G_GNUC_CONST;
+const char* mu_str_size_s  (size_t s);
 char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
 
 
