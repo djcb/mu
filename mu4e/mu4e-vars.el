@@ -421,7 +421,7 @@ their canonical counterpart; useful as an example."
         (mail (plist-get contact :mail)))
     (list :name name :mail mail)))
 
-(make-obsolete-variable 'mu4e-contacts-rewrite-function
+(make-obsolete-variable 'mu4e-contact-rewrite-function
                         "mu4e-contact-process-function (see docstring)" "mu4e 1.3.2")
 (make-obsolete-variable 'mu4e-compose-complete-ignore-address-regexp
                         "mu4e-contact-process-function (see docstring)" "mu4e 1.3.2")

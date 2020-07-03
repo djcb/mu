@@ -59,7 +59,7 @@
       get the contacts that have changed since the last round.
 
       We also moved sorting the contacts to the mu-side, which speeds things up
-      further. However, as a side-effect of this, ~mu4e-contacts-rewrite-function~
+      further. However, as a side-effect of this, ~mu4e-contact-rewrite-function~
       and ~mu4e-compose-complete-ignore-address-regexp~ have been obsoleted; users
       of those should migrate to ~mu4e-contact-process-function~; see its
       docstring for details.
