@@ -1107,23 +1107,39 @@ This includes expanding e.g. 3-5 into 3,4,5.  If the letter
 (defvar mu4e-imagemagick-identify "identify"
   "Name/path of the Imagemagick 'identify' program.")
 
+(defun mu4e~image-width-scale (width height max_width max_height)
+  "Returns a width to use for proportional image scaling
+to satisfy both MAX_WIDTH and MAX_HEIGHT restrictions."
+  (floor
+   (if (<= width max_width)
+       (if (<= height max_height)
+           width                                  ; both width and height ok, just return width
+         (* (/ max_height (float height)) width)) ; height is too large, scale width by hmax/h
+     (if (<= height max_height)
+         max_width                                ; width is too large, return max_width as scaling
+       (let ((width_heightscale (* (/ max_height (float height)) width)))
+         (min max_width width_heightscale))))))    ; both too large, return smallest width
+
 (defun mu4e-display-image (imgpath &optional maxwidth maxheight)
   "Display image IMG at point; optionally specify MAXWIDTH and
 MAXHEIGHT. Function tries to use imagemagick if available (ie.,
-emacs was compiled with inmagemagick support); otherwise MAXWIDTH
+emacs was compiled with imagemagick support); otherwise MAXWIDTH
 and MAXHEIGHT are ignored."
   (let* ((have-im (and (fboundp 'imagemagick-types)
                        (imagemagick-types))) ;; hmm, should check for specific type
          (identify (and have-im maxwidth
                         (executable-find mu4e-imagemagick-identify)))
-         (props (and identify (shell-command-to-string
-                               (format "%s -format '%%w' %s"
-                                       identify (shell-quote-argument imgpath)))))
-         (width (and props (string-to-number props)))
+         (props (mapcar 'string-to-number
+                        (split-string (and identify
+                                           (shell-command-to-string
+                                            (format "%s -format '%%w %%h' %s"
+                                                    identify (shell-quote-argument imgpath)))))))
+         (width (and props (car props)))
+         (height (and props (car (cdr props))))
+
          (img (if have-im
-                  (if (> (or width 0) (or maxwidth 0))
-                      (create-image imgpath 'imagemagick nil :width maxwidth)
-                    (create-image imgpath 'imagemagick))
+                  (create-image imgpath 'imagemagick nil
+                                :width (mu4e~image-width-scale width height maxwidth maxheight))
                 (create-image imgpath))))
     (when img
       (save-excursion
