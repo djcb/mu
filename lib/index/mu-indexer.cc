@@ -270,6 +270,9 @@ Indexer::Private::start(const Indexer::Config& conf)
                         cleanup();
                         clean_done_ = true;
                         g_debug ("cleanup finished");
+                } else {
+                        clean_done_ = true;
+                        g_debug ("cleanup skipped");
                 }
 
                 store_.commit();
