@@ -1000,11 +1000,10 @@ in the background; otherwise, pop up a window."
   "Max number of characters to keep around in the log buffer.")
 (defconst mu4e~log-buffer-name "*mu4e-log*"
   "*internal* Name of the logging buffer.")
-(defun mu4e-log (type frm &rest args)
-  "Write a message of TYPE with format-string FRM and ARGS in
-*mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
-either 'to-server, 'from-server or 'misc. This function is meant for debugging."
-  (when mu4e-debug
+
+(defun mu4e~get-log-buffer ()
+  "Fetch (and maybe create) the log buffer."
+  (unless (get-buffer mu4e~log-buffer-name)
     (with-current-buffer (get-buffer-create mu4e~log-buffer-name)
       (view-mode)
 
@@ -1012,7 +1011,15 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
         (unless (eq major-mode 'so-long-mode)
           (eval '(so-long-mode))))
 
-      (setq buffer-undo-list t)
+      (setq buffer-undo-list t)))
+  mu4e~log-buffer-name)
+
+(defun mu4e-log (type frm &rest args)
+  "Write a message of TYPE with format-string FRM and ARGS in
+*mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
+either 'to-server, 'from-server or 'misc. This function is meant for debugging."
+  (when mu4e-debug
+    (with-current-buffer (mu4e~get-log-buffer)
       (let* ((inhibit-read-only t)
              (tstamp (propertize (format-time-string "%Y-%m-%d %T.%3N"
                                                      (current-time))
