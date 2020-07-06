@@ -1032,21 +1032,22 @@ either 'to-server, 'from-server or 'misc. This function is meant for debugging."
                 (error       'font-lock-warning-face)
                 (otherwise   (mu4e-error "Unsupported log type"))))
              (msg (propertize (apply 'format frm args) 'face msg-face)))
-        (goto-char (point-max))
-        (insert tstamp
-                (cl-case type
-                  (from-server " <- ")
-                  (to-server   " -> ")
-                  (error       " !! ")
-                  (otherwise   " "))
-                msg "\n")
+        (save-excursion
+          (goto-char (point-max))
+          (insert tstamp
+                  (cl-case type
+                    (from-server " <- ")
+                    (to-server   " -> ")
+                    (error       " !! ")
+                    (otherwise   " "))
+                  msg "\n")
 
-        ;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
-        ;; lines
-        (when (> (buffer-size) mu4e~log-max-size)
-          (goto-char (- (buffer-size) mu4e~log-max-size))
-          (beginning-of-line)
-          (delete-region (point-min) (point)))))))
+          ;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
+          ;; lines
+          (when (> (buffer-size) mu4e~log-max-size)
+            (goto-char (- (buffer-size) mu4e~log-max-size))
+            (beginning-of-line)
+            (delete-region (point-min) (point))))))))
 
 (defun mu4e-toggle-logging ()
   "Toggle between enabling/disabling debug-mode (in debug-mode,
