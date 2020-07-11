@@ -1129,11 +1129,10 @@ and MAXHEIGHT are ignored."
                        (imagemagick-types))) ;; hmm, should check for specific type
          (identify (and have-im maxwidth
                         (executable-find mu4e-imagemagick-identify)))
-         (props (mapcar 'string-to-number
-                        (split-string (and identify
-                                           (shell-command-to-string
-                                            (format "%s -format '%%w %%h' %s"
-                                                    identify (shell-quote-argument imgpath)))))))
+         (props (and identify (mapcar 'string-to-number
+                                      (split-string (shell-command-to-string
+                                                     (format "%s -format '%%w %%h' %s"
+                                                             identify (shell-quote-argument imgpath)))))))
          (width (and props (car props)))
          (height (and props (car (cdr props))))
 
