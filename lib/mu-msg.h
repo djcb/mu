@@ -678,9 +678,9 @@ namespace Mu {
  *
  * @return a Sexp::Node representing the message
  */
-Mu::Sexp::Node msg_to_sexp (MuMsg *msg, unsigned docid,
-			    const struct _MuMsgIterThreadInfo *ti,
-			    MuMsgOptions ops);
+Mu::Sexp msg_to_sexp (MuMsg *msg, unsigned docid,
+                      const struct _MuMsgIterThreadInfo *ti,
+                      MuMsgOptions ops);
 }
 
 #endif /*__cplusplus*/
