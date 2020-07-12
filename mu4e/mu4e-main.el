@@ -39,9 +39,10 @@
   This also hides the warning if your `user-mail-address' is not
 part of the personal addresses.")
 
-(defvar mu4e-main-hide-fully-read nil
-  "When set to t, do not hide bookmarks or maildirs that have
-no unread messages.")
+(defcustom mu4e-main-hide-fully-read nil
+  "When set to t, hide bookmarks or maildirs that have no unread messages."
+  :type 'boolean
+  :group 'mu4e)
 
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
@@ -119,6 +120,7 @@ clicked."
 
 
 (defun mu4e~main-bookmarks ()
+  "Return bookmarks string for main view."
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
   (cl-loop with bmks = (mu4e-bookmarks)
            with longest = (mu4e~longest-of-maildirs-and-bookmarks)
@@ -135,8 +137,8 @@ clicked."
                                              query)
                                        collect q))
            for unread = (and qcounts (plist-get (car qcounts) :unread))
-           when (not (plist-get bm :hide))
-           when (not (and mu4e-main-hide-fully-read (eq unread 0)))
+           unless (or (plist-get bm :hide)
+                      (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
