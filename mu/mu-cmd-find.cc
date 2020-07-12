@@ -44,6 +44,8 @@
 #include <json-glib/json-glib.h>
 #endif /*HAVE_JSON_GLIB*/
 
+using namespace Mu;
+
 typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
 			       const MuConfig *opts, GError **err);
 
@@ -486,17 +488,63 @@ output_plain (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 	return TRUE;
 }
 
+
+static std::string
+to_string (const Mu::Sexp& sexp, bool color, size_t level = 0)
+{
+        Mu::MaybeAnsi col{color};
+        using Color = Mu::MaybeAnsi::Color;
+
+        constexpr std::array<Color, 6> rainbow = {
+                Color::BrightBlue, Color::Green, Color::Yellow,
+                Color::Magenta,    Color::Cyan,  Color::BrightGreen,
+        };
+
+        std::stringstream sstrm;
+
+        switch (sexp.type()) {
+        case Sexp::Type::List: {
+                const auto bracecol{col.fg(rainbow[level % rainbow.size()])};
+                sstrm << bracecol << "(";
+
+                bool first{true};
+                for (auto&& child : sexp.list()) {
+                        sstrm << (first ? "" : " ")
+                              << to_string(child , color, level + 1);
+                        first = false;
+                }
+                sstrm << bracecol << ")";
+                break;
+        }
+        case Sexp::Type::String:
+                sstrm << col.fg(Color::BrightCyan) << Mu::quote(sexp.value())
+                      << col.reset();
+                break;
+        case Sexp::Type::Number:
+                sstrm << col.fg(Color::BrightMagenta) << sexp.value()
+                      << col.reset();
+                break;
+        case Sexp::Type::Symbol:
+                sstrm << (col.fg(sexp.value().at(0) == ':' ? Color::BrightGreen : Color::BrightBlue))
+                      << sexp.value() << col.reset();
+                break;
+        default:
+                throw std::logic_error ("invalid type");
+        }
+
+        return sstrm.str();
+}
+
+
+
 static gboolean
 output_sexp (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
-	char *sexp;
-	const MuMsgIterThreadInfo *ti;
-
-	ti   = opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL;
-	sexp = mu_msg_to_sexp (msg, mu_msg_iter_get_docid (iter),
-			       ti, MU_MSG_OPTION_HEADERS_ONLY);
-	fputs (sexp, stdout);
-	g_free (sexp);
+	const auto *ti{opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL};
+        const auto sexp{Mu:Mu::msg_to_sexp(msg , mu_msg_iter_get_docid (iter), ti,
+                                           MU_MSG_OPTION_HEADERS_ONLY)};
+	fputs (to_string(sexp, !opts->nocolor).c_str(), stdout);
+        fputs ("\n", stdout);
 
 	return TRUE;
 }

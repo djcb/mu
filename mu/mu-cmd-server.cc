@@ -48,7 +48,6 @@
 
 using namespace Mu;
 using namespace Command;
-using namespace Sexp;
 
 using DocId = unsigned;
 
@@ -146,15 +145,15 @@ print_expr (const char* frm, ...)
 
 
 static void
-print_expr (const Node& sexp)
+print_expr (const Sexp& sexp)
 {
         print_expr ("%s", sexp.to_string().c_str());
 }
 
 static void
-print_expr (Node::Seq&& seq)
+print_expr (Sexp::List&& list)
 {
-        print_expr (Node::make_list(std::move(seq)));
+        print_expr (Sexp::make_list(std::move(list)));
 }
 
 
@@ -169,11 +168,11 @@ print_error (MuError errcode, const char* frm, ...)
         g_vasprintf (&msg, frm, ap);
         va_end (ap);
 
-        Node::Seq err_sexp;
-        err_sexp.add_prop(":error",   (int)errcode);
-        err_sexp.add_prop(":message", msg);
+        Sexp::List err;
+        err.add_prop(":error",   Sexp::make_number((int)errcode));
+        err.add_prop(":message", Sexp::make_string(msg));
 
-        print_expr(Node::make_list(std::move(err_sexp)));
+        print_expr(Sexp::make_list(std::move(err)));
 
         g_free (msg);
 
@@ -277,12 +276,12 @@ add_handler (Context& context, const Parameters& params)
         auto path{get_string_or(params, ":path")};
         const auto docid{context.store().add_message(path)};
 
-        Node::Seq seq;
-        seq.add_prop(":info", Node::make_symbol("add"));
-        seq.add_prop(":path", path);
-        seq.add_prop(":docid", docid);
+        Sexp::List expr;
+        expr.add_prop(":info",  Sexp::make_symbol("add"));
+        expr.add_prop(":path",  Sexp::make_string(path));
+        expr.add_prop(":docid", Sexp::make_number(docid));
 
-        print_expr (std::move(seq));
+        print_expr (std::move(expr));
 
         auto msg{context.store().find_message(docid)};
         if (!msg)
@@ -290,17 +289,17 @@ add_handler (Context& context, const Parameters& params)
                             "failed to get message at %s (docid=%u)",
                             path.c_str(), docid);
 
-        Node::Seq updateseq;
-        updateseq.add_prop(":update", Mu::msg_to_sexp(msg, docid, NULL,
-                                                      MU_MSG_OPTION_VERIFY));
+        Sexp::List update;
+        update.add_prop(":update", Mu::msg_to_sexp(msg, docid, NULL,
+                                                   MU_MSG_OPTION_VERIFY));
 
-        print_expr (std::move(updateseq));
+        print_expr (std::move(update));
         mu_msg_unref(msg);
 }
 
 
 struct PartInfo {
-        Node::Seq        attseq;
+        Sexp::List        attseq;
         MuMsgOptions      opts;
 };
 
@@ -318,11 +317,12 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
         if (!cachefile)
                 throw Error (Error::Code::File, &gerr, "failed to save part");
 
-        Node::Seq seq;
-        seq.add_prop(":file-name", cachefile);
-        seq.add_prop(":mime-type", format("%s/%s", part->type, part->subtype));
-        pinfo->attseq.add(std::move(seq));
-
+        Sexp::List pi;
+        pi.add_prop(":file-name", Sexp::make_string(cachefile));
+        pi.add_prop(":mime-type", Sexp::make_string(format("%s/%s",
+                                                            part->type,
+                                                            part->subtype)));
+        pinfo->attseq.add(Sexp::make_list(std::move(pi)));
         g_free (cachefile);
 }
 
@@ -342,8 +342,8 @@ compose_handler (Context& context, const Parameters& params)
 {
         const auto ctype{get_symbol_or(params, ":type")};
 
-        Node::Seq compose_seq;
-        compose_seq.add_prop(":compose", Node::make_symbol(std::string(ctype)));
+        Sexp::List comp_lst;
+        comp_lst.add_prop(":compose", Sexp::make_symbol(std::string(ctype)));
 
         if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
 
@@ -354,7 +354,7 @@ compose_handler (Context& context, const Parameters& params)
                         throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
                 const auto opts{message_options(params)};
-                compose_seq.add_prop(":original", Mu::msg_to_sexp(msg, docid, {}, opts));
+                comp_lst.add_prop(":original", Mu::msg_to_sexp(msg, docid, {}, opts));
 
                 if (ctype == "forward") {
                         PartInfo pinfo{};
@@ -362,7 +362,8 @@ compose_handler (Context& context, const Parameters& params)
                         mu_msg_part_foreach (msg, opts,
                                              (MuMsgPartForeachFunc)each_part, &pinfo);
                         if (!pinfo.attseq.empty())
-                                compose_seq.add_prop (":include", std::move(pinfo.attseq));
+                                comp_lst.add_prop (":include",
+                                                   Sexp::make_list(std::move(pinfo.attseq)));
                 }
                 mu_msg_unref (msg);
 
@@ -370,7 +371,7 @@ compose_handler (Context& context, const Parameters& params)
                 throw Error(Error::Code::InvalidArgument, "invalid compose type '%s'",
                             ctype.c_str());
 
-        print_expr (std::move(compose_seq));
+        print_expr (std::move(comp_lst));
 }
 
 static void
@@ -385,7 +386,7 @@ contacts_handler (Context& context, const Parameters& params)
         const auto tstamp = g_ascii_strtoll (tstampstr.c_str(), NULL, 10);
 
         auto rank{0};
-        Node::Seq contacts;
+        Sexp::List contacts;
         context.store().contacts().for_each([&](const ContactInfo& ci) {
 
                 rank++;
@@ -400,16 +401,16 @@ contacts_handler (Context& context, const Parameters& params)
                 if (after > ci.last_seen)
                         return;
 
-                Node::Seq contact;
-                contact.add_prop(":address", std::string{ci.full_address});
-                contact.add_prop(":rank",    rank);
+                Sexp::List contact;
+                contact.add_prop(":address", Sexp::make_string(ci.full_address));
+                contact.add_prop(":rank",    Sexp::make_number(rank));
 
-                contacts.add(Node::make_list(std::move(contact)));
+                contacts.add(Sexp::make_list(std::move(contact)));
         });
 
-        Node::Seq seq;
-        seq.add_prop(":contacts", std::move(contacts));
-        seq.add_prop(":tstamp",   Node::make_string(format("%" G_GINT64_FORMAT,
+        Sexp::List seq;
+        seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
+        seq.add_prop(":tstamp",   Sexp::make_string(format("%" G_GINT64_FORMAT,
                                                            g_get_monotonic_time())));
         /* dump the contacts cache as a giant sexp */
         print_expr(std::move(seq));
@@ -429,9 +430,9 @@ save_part (MuMsg *msg, unsigned docid, unsigned index,
                                path.c_str(), index, &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to save part"};
 
-        Node::Seq seq;
-        seq.add_prop(":info", Node::make_symbol("save"));
-        seq.add_prop(":message", Node::make_string(format("%s has been saved", path.c_str())));
+        Sexp::List seq;
+        seq.add_prop(":info", Sexp::make_symbol("save"));
+        seq.add_prop(":message", Sexp::make_string(format("%s has been saved", path.c_str())));
 
         print_expr(std::move(seq));
 }
@@ -457,9 +458,9 @@ open_part (MuMsg *msg, unsigned docid, unsigned index, MuMsgOptions opts)
                 throw Error{Error::Code::File, &gerr, "failed to play"};
         }
 
-        Node::Seq seq;
-        seq.add_prop(":info",    Node::make_symbol("open"));
-        seq.add_prop(":message", Node::make_string(format("%s has been opened", targetpath)));
+        Sexp::List seq;
+        seq.add_prop(":info",    Sexp::make_symbol("open"));
+        seq.add_prop(":message", Sexp::make_string(format("%s has been opened", targetpath)));
         g_free (targetpath);
 
         print_expr(std::move(seq));
@@ -486,16 +487,16 @@ temp_part (MuMsg *msg, unsigned docid, unsigned index,
                 throw Error{Error::Code::File, &gerr, "saving failed"};
         }
 
-        Node::Seq seq;
-        seq.add_prop(":temp", path);
-        seq.add_prop(":what", std::string(what));
-        seq.add_prop(":docid", docid);
+        Sexp::List lst;
+        lst.add_prop(":temp",  Sexp::make_string(path));
+        lst.add_prop(":what",  Sexp::make_string(what));
+        lst.add_prop(":docid", Sexp::make_number(docid));
 
         if (!param.empty())
-                seq.add_prop(":param", std::string(param));
+                lst.add_prop(":param", Sexp::make_string(param));
 
         g_free(path);
-        print_expr(std::move(seq));
+        print_expr(std::move(lst));
 }
 
 
@@ -647,16 +648,16 @@ find_handler (Context& context, const Parameters& params)
          * knows it should erase the headers buffer. this will ensure that the
          * output of two finds will not be mixed. */
         {
-                Node::Seq seq;
-                seq.add_prop(":erase", Node::make_symbol("t"));
-                print_expr(std::move(seq));
+                Sexp::List lst;
+                lst.add_prop(":erase", Sexp::make_symbol("t"));
+                print_expr(std::move(lst));
         }
-        //print_expr ("(:erase t)");
+
         {
                 const auto foundnum{print_sexps (miter, maxnum)};
-                Node::Seq seq;
-                seq.add_prop(":found", foundnum);
-                print_expr(std::move(seq));
+                Sexp::List lst;
+                lst.add_prop(":found", Sexp::make_number(foundnum));
+                print_expr(std::move(lst));
         }
         //print_expr ("(:found %u)", foundnum);
         mu_msg_iter_destroy (miter);
@@ -711,15 +712,15 @@ help_handler (Context& context, const Parameters& params)
 static void
 print_stats (const Indexer::Progress& stats, const std::string& state)
 {
-        Node::Seq seq;
+        Sexp::List lst;
 
-        seq.add_prop(":info",       Node::make_symbol("index"));
-        seq.add_prop(":status",     Node::make_symbol(std::string{state}));
-        seq.add_prop(":processed",  stats.processed);
-        seq.add_prop(":updated",    stats.updated);
-        seq.add_prop(":cleaned-up", stats.removed);
+        lst.add_prop(":info",       Sexp::make_symbol("index"));
+        lst.add_prop(":status",     Sexp::make_symbol(std::string{state}));
+        lst.add_prop(":processed",  Sexp::make_number(stats.processed));
+        lst.add_prop(":updated",    Sexp::make_number(stats.updated));
+        lst.add_prop(":cleaned-up", Sexp::make_number(stats.removed));
 
-        print_expr(std::move(seq));
+        print_expr(std::move(lst));
 }
 
 static void
@@ -748,11 +749,12 @@ mkdir_handler (Context& context, const Parameters& params)
         if (!mu_maildir_mkdir(path.c_str(), 0755, FALSE, &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to create maildir"};
 
-        Node::Seq seq;
-        seq.add_prop(":info",    "mkdir");
-        seq.add_prop(":message", format("%s has been created", path.c_str()));
+        Sexp::List lst;
+        lst.add_prop(":info",    Sexp::make_string("mkdir"));
+        lst.add_prop(":message", Sexp::make_string(format("%s has been created",
+                                                          path.c_str())));
 
-        print_expr(std::move(seq));
+        print_expr(std::move(lst));
 }
 
 
@@ -794,14 +796,14 @@ do_move (Store& store, DocId docid, MuMsg *msg, const std::string& maildirarg,
         if (!store.update_message (msg, docid))
                 throw Error{Error::Code::Store, "failed to store updated message"};
 
-        Node::Seq seq;
+        Sexp::List seq;
         seq.add_prop(":update", msg_to_sexp (msg, docid, NULL, MU_MSG_OPTION_VERIFY));
         /* note, the :move t thing is a hint to the frontend that it
          * could remove the particular header */
         if (different_mdir)
-                seq.add_prop(":move", Node::make_symbol("t"));
+                seq.add_prop(":move", Sexp::make_symbol("t"));
         if (!no_view)
-                seq.add_prop(":maybe-view", Node::make_symbol("t"));
+                seq.add_prop(":maybe-view", Sexp::make_symbol("t"));
 
         print_expr (std::move(seq));
 }
@@ -907,38 +909,41 @@ ping_handler (Context& context, const Parameters& params)
                 throw Error{Error::Code::Store, "failed to read store"};
 
         const auto queries  = get_string_vec (params, ":queries");
-        Node::Seq qresults;
+        Sexp::List qresults;
         for (auto&& q: queries) {
 
                 const auto count{mu_query_count_run (context.query, q.c_str())};
                 const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
                 const auto unread{mu_query_count_run (context.query, unreadq.c_str())};
 
-                Node::Seq seq;
-                seq.add_prop(":query", std::string(q));
-                seq.add_prop(":count", count);
-                seq.add_prop(":unread", unread);
+                Sexp::List lst;
+                lst.add_prop(":query",  Sexp::make_string(q));
+                lst.add_prop(":count",  Sexp::make_number(count));
+                lst.add_prop(":unread", Sexp::make_number(unread));
 
-                qresults.add(Node::make_list(std::move(seq)));
+                qresults.add(Sexp::make_list(std::move(lst)));
         }
 
-        Node::Seq addrs;
+        Sexp::List addrs;
         for (auto&& addr: context.store().metadata().personal_addresses)
-                addrs.add(std::string(addr));
+                addrs.add(Sexp::make_string(addr));
 
-        Node::Seq seq;
-        seq.add_prop(":pong", "mu");
+        Sexp::List lst;
+        lst.add_prop(":pong", Sexp::make_string("mu"));
 
-        Node::Seq propseq;
-        propseq.add_prop(":version",            VERSION);
-        propseq.add_prop(":personal-addresses", std::move(addrs));
-        propseq.add_prop(":database-path",      context.store().metadata().database_path);
-        propseq.add_prop(":root-maildir",       context.store().metadata().root_maildir);
-        propseq.add_prop(":doccount",           storecount);
-        propseq.add_prop(":queries",            std::move(qresults));
-        seq.add_prop(":props",   std::move(propseq));
+        Sexp::List proplst;
+        proplst.add_prop(":version",            Sexp::make_string(VERSION));
+        proplst.add_prop(":personal-addresses", Sexp::make_list(std::move(addrs)));
+        proplst.add_prop(":database-path",
+                         Sexp::make_string(context.store().metadata().database_path));
+        proplst.add_prop(":root-maildir",
+                         Sexp::make_string(context.store().metadata().root_maildir));
+        proplst.add_prop(":doccount",           Sexp::make_number(storecount));
+        proplst.add_prop(":queries",            Sexp::make_list(std::move(qresults)));
 
-        print_expr(std::move(seq));
+        lst.add_prop(":props",   Sexp::make_list(std::move(proplst)));
+
+        print_expr(std::move(lst));
 }
 
 static void
@@ -963,10 +968,10 @@ remove_handler (Context& context, const Parameters& params)
                           path.c_str(), docid);
         // act as if it worked.
 
-        Node::Seq seq;
-        seq.add_prop(":remove", docid);
+        Sexp::List lst;
+        lst.add_prop(":remove", Sexp::make_number(docid));
 
-        print_expr(std::move(seq));
+        print_expr(std::move(lst));
 }
 
 
@@ -978,12 +983,12 @@ sent_handler (Context& context, const Parameters& params)
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::Store, "failed to add path"};
 
-        Node::Seq seq;
-        seq.add_prop (":sent",  Node::make_symbol("t"));
-        seq.add_prop (":path",  std::string(path));
-        seq.add_prop (":docid", docid);
+        Sexp::List lst;
+        lst.add_prop (":sent",  Sexp::make_symbol("t"));
+        lst.add_prop (":path",  Sexp::make_string(path));
+        lst.add_prop (":docid", Sexp::make_number(docid));
 
-        print_expr (std::move(seq));
+        print_expr (std::move(lst));
 }
 
 static bool
@@ -1042,7 +1047,7 @@ view_handler (Context& context, const Parameters& params)
         if (mark_as_read)
                 maybe_mark_as_read (context.store(), msg, docid);
 
-        Node::Seq seq;
+        Sexp::List seq;
         seq.add_prop(":view", msg_to_sexp(msg, docid, {}, message_options(params)));
 
         mu_msg_unref(msg);
@@ -1056,7 +1061,7 @@ make_command_map (Context& context)
 {
       CommandMap cmap;
 
-      using Type = Node::Type;
+      using Type = Sexp::Type;
 
       cmap.emplace("add",
                    CommandInfo{
@@ -1211,7 +1216,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
         if (opts->commands) {
                 Context ctx{};
                 auto cmap = make_command_map(ctx);
-                invoke(cmap, Sexp::Node::make("(help :full t)"));
+                invoke(cmap, Sexp::make_parse("(help :full t)"));
                 return MU_OK;
         }
 
@@ -1219,7 +1224,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
         context.command_map = make_command_map (context);
 
         if (opts->eval) { // evaluate command-line command & exit
-                auto call{Sexp::Node::make(opts->eval)};
+                auto call{Sexp::Sexp::make_parse(opts->eval)};
                 invoke(context.command_map, call);
                 return MU_OK;
         }
@@ -1240,7 +1245,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try
                         if (line.find_first_not_of(" \t") == std::string::npos)
                                 continue; // skip whitespace-only lines
 
-                        auto call{Sexp::Node::make(line)};
+                        auto call{Sexp::Sexp::make_parse(line)};
                         invoke(context.command_map, call);
 
                         save_line(line);
