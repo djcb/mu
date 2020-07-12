@@ -23,9 +23,9 @@
 #include "mu-utils.hh"
 
 #include <sstream>
+#include <array>
 
 using namespace Mu;
-using namespace Sexp;
 
 __attribute__((format(printf, 2, 0))) static Mu::Error
 parsing_error(size_t pos, const char* frm, ...)
@@ -53,28 +53,28 @@ skip_whitespace (const std::string& s, size_t pos)
         return pos;
 }
 
-static Node parse (const std::string& expr, size_t& pos);
+static Sexp parse (const std::string& expr, size_t& pos);
 
-static Node
+static Sexp
 parse_list (const std::string& expr, size_t& pos)
 {
         if (expr[pos] != '(') // sanity check.
                 throw parsing_error(pos, "expected: '(' but got '%c", expr[pos]);
 
-        Node::Seq children;
+        Sexp::List list;
 
         ++pos;
         while (expr[pos] != ')' && pos != expr.size())
-                children.add(parse(expr, pos));
+                list.add(parse(expr, pos));
 
         if (expr[pos] != ')')
                 throw parsing_error(pos, "expected: ')' but got '%c'", expr[pos]);
         ++pos;
-        return Node::make_list(std::move(children));
+        return Sexp::make_list(std::move(list));
 }
 
 // parse string
-static Node
+static Sexp
 parse_string (const std::string& expr, size_t& pos)
 {
         if (expr[pos] != '"') // sanity check.
@@ -103,10 +103,10 @@ parse_string (const std::string& expr, size_t& pos)
                 throw parsing_error(pos, "unterminated string '%s'", str.c_str());
 
         ++pos;
-        return Node::make_string(std::move(str));
+        return Sexp::make_string(std::move(str));
 }
 
-static Node
+static Sexp
 parse_integer (const std::string& expr, size_t& pos)
 {
         if (!isdigit(expr[pos]) && expr[pos] != '-') // sanity check.
@@ -121,10 +121,10 @@ parse_integer (const std::string& expr, size_t& pos)
         for (; isdigit(expr[pos]); ++pos)
                 num += expr[pos];
 
-        return Node::make_number(::atoi(num.c_str()));
+        return Sexp::make_number(::atoi(num.c_str()));
 }
 
-static Node
+static Sexp
 parse_symbol (const std::string& expr, size_t& pos)
 {
         if (!isalpha(expr[pos]) && expr[pos] != ':') // sanity check.
@@ -134,11 +134,11 @@ parse_symbol (const std::string& expr, size_t& pos)
         for  (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
                 symbol += expr[pos];
 
-        return Node::make_symbol(std::move(symbol));
+        return Sexp::make_symbol(std::move(symbol));
 }
 
 
-static Node
+static Sexp
 parse (const std::string& expr, size_t& pos)
 {
         pos = skip_whitespace(expr, pos);
@@ -147,7 +147,7 @@ parse (const std::string& expr, size_t& pos)
                 throw parsing_error(pos, "expected: character '%c", expr[pos]);
 
         const auto kar = expr[pos];
-        const auto node =[&]() -> Node {
+        const auto node =[&]() -> Sexp {
                 if (kar == '(')
                         return parse_list (expr, pos);
                 else if (kar == '"')
@@ -165,8 +165,8 @@ parse (const std::string& expr, size_t& pos)
         return node;
 }
 
-Node
-Sexp::Node::make (const std::string& expr)
+Sexp
+Sexp::make_parse (const std::string& expr)
 {
         size_t pos{};
         auto node{::parse (expr, pos)};
@@ -179,7 +179,7 @@ Sexp::Node::make (const std::string& expr)
 
 
 std::string
-Sexp::Node::to_string () const
+Sexp::to_string () const
 {
         std::stringstream sstrm;
 
@@ -187,7 +187,7 @@ Sexp::Node::to_string () const
         case Type::List: {
                 sstrm << '(';
                 bool first{true};
-                for (auto&& child : elements()) {
+                for (auto&& child : list()) {
                         sstrm << (first ? "" : " ") << child.to_string();
                         first = false;
                 }
@@ -199,6 +199,7 @@ Sexp::Node::to_string () const
                 break;
         case Type::Number:
         case Type::Symbol:
+        case Type::Empty:
         default:
                 sstrm << value();
         }

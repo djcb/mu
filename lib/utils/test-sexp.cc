@@ -27,14 +27,13 @@
 #include "mu-utils.hh"
 
 using namespace Mu;
-using namespace Sexp;
 
 static bool
 check_parse (const std::string& expr, const std::string& expected)
 {
         try {
-                const auto parsed{to_string(Node::make(expr))};
-                g_assert_cmpstr(parsed.c_str(), ==, expected.c_str());
+                const auto parsed{to_string(Sexp::make_parse(expr))};
+                assert_equal(parsed, expected);
                 return true;
 
         } catch (const Error& err) {
@@ -59,54 +58,71 @@ bar")",  "\"foo\nbar\"");
 }
 
 static void
-test_builder()
+test_list()
 {
-        const auto nstr{Node::make_string("foo")};
+        const auto nstr{Sexp::make_string("foo")};
         g_assert_true(nstr.value() == "foo");
-        g_assert_true(nstr.type()  == Node::Type::String);
+        g_assert_true(nstr.type()  == Sexp::Type::String);
         assert_equal(nstr.to_string(), "\"foo\"");
 
-        const auto nnum{Node::make_number(123)};
+        const auto nnum{Sexp::make_number(123)};
         g_assert_true(nnum.value() == "123");
-        g_assert_true(nnum.type()  == Node::Type::Number);
+        g_assert_true(nnum.type()  == Sexp::Type::Number);
         assert_equal(nnum.to_string(), "123");
 
-        const auto nsym{Node::make_symbol("blub")};
+        const auto nsym{Sexp::make_symbol("blub")};
         g_assert_true(nsym.value() == "blub");
-        g_assert_true(nsym.type()  == Node::Type::Symbol);
+        g_assert_true(nsym.type()  == Sexp::Type::Symbol);
         assert_equal(nsym.to_string(), "blub");
 
-        Node::Seq seq;
-        seq.add(Node::make_string("foo"));
-        seq.add(Node::make_number(123));
-        seq.add(Node::make_symbol("blub"));
+        Sexp::List list;
+        list .add(Sexp::make_string("foo"))
+                .add(Sexp::make_number(123))
+                .add(Sexp::make_symbol("blub"));
 
-        const auto nlst = Node::make_list(std::move(seq));
-        g_assert_true(nlst.elements().size() == 3);
-        g_assert_true(nlst.type() == Node::Type::List);
-        g_assert_true(nlst.elements().at(1).value() == "123");
+        const auto nlst = Sexp::make_list(std::move(list));
+        g_assert_true(nlst.list().size() == 3);
+        g_assert_true(nlst.type() == Sexp::Type::List);
+        g_assert_true(nlst.list().at(1).value() == "123");
 
         assert_equal(nlst.to_string(),"(\"foo\" 123 blub)");
+}
+
+
+static void
+test_prop_list()
+{
+        Sexp::List l1;
+        l1.add_prop(":foo", Sexp::make_string("bar"));
+        Sexp s2{Sexp::make_list(std::move(l1))};
+        assert_equal(s2.to_string(), "(:foo \"bar\")");
+
+
+        Sexp::List l2;
+        const std::string x{"bar"};
+        l2.add_prop(":foo", Sexp::make_string(x));
+        l2.add_prop(":bar", Sexp::make_number(77));
+        Sexp::List l3;
+        l3.add_prop(":cuux", Sexp::make_list(std::move(l2)));
+        Sexp s3{Sexp::make_list(std::move(l3))};
+        assert_equal(s3.to_string(), "(:cuux (:foo \"bar\" :bar 77))");
 }
 
 static void
 test_props()
 {
-        Node::Seq seq;
+        auto sexp2 = Sexp::make_list(
+                Sexp::make_string("foo"),
+                Sexp::make_number(123),
+                Sexp::make_symbol("blub"));
 
-        seq.add_prop(":foo", "bär");
-        seq.add_prop(":cuux", 123);
-        seq.add_prop(":flub", Node::make_symbol("fnord"));
+        auto sexp = Sexp::make_prop_list(
+                ":foo",  Sexp::make_string("bär"),
+                ":cuux", Sexp::make_number(123),
+                ":flub", Sexp::make_symbol("fnord"),
+                ":boo",  std::move(sexp2));
 
-        Node::Seq seq2;
-        seq2.add(Node::make_string("foo"));
-        seq2.add(Node::make_number(123));
-        seq2.add(Node::make_symbol("blub"));
-
-        seq.add_prop(":boo", std::move(seq2));
-
-        Node expr = Node::make_list(std::move(seq));
-        assert_equal(expr.to_string(),
+        assert_equal(sexp.to_string(),
                      "(:foo \"b\303\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
 }
 
@@ -116,13 +132,14 @@ main (int argc, char *argv[]) try
         g_test_init (&argc, &argv, NULL);
 
         if (argc == 2) {
-                std::cout << Sexp::Node::make(argv[1]) << '\n';
+                std::cout << Sexp::make_parse(argv[1]) << '\n';
                 return 0;
         }
 
-        g_test_add_func ("/utils/sexp/parser",  test_parser);
-        g_test_add_func ("/utils/sexp/builder", test_builder);
-        g_test_add_func ("/utils/sexp/props",   test_props);
+        g_test_add_func ("/utils/sexp/parser",    test_parser);
+        g_test_add_func ("/utils/sexp/list",      test_list);
+        g_test_add_func ("/utils/sexp/proplist",  test_prop_list);
+        g_test_add_func ("/utils/sexp/props",     test_props);
 
 	return g_test_run ();
 

@@ -49,10 +49,10 @@ namespace Command {
 
 /// Information about a function argument
 struct ArgInfo {
-        ArgInfo (Sexp::Node::Type typearg, bool requiredarg, std::string&& docarg):
+        ArgInfo (Sexp::Type typearg, bool requiredarg, std::string&& docarg):
                 type{typearg}, required{requiredarg},docstring{std::move(docarg)}
                 {}
-        const Sexp::Node::Type type; /**< Sexp::Node::Type of the argument */
+        const Sexp::Type type; /**< Sexp::Type of the argument */
         const bool             required; /**< Is this argument required? */
         const std::string      docstring; /**< Documentation */
 };
@@ -60,7 +60,7 @@ struct ArgInfo {
 /// The arguments for a function, which maps their names to the information.
 using ArgMap     = std::unordered_map<std::string, ArgInfo>;
 // The parameters to a Handler.
-using Parameters = Sexp::Node::Seq;
+using Parameters = Sexp::Seq;
 
 int                get_int_or    (const Parameters& parms, const std::string& argname, int alt=0);
 bool               get_bool_or   (const Parameters& parms, const std::string& argname, bool alt=false);
@@ -108,7 +108,7 @@ struct CommandInfo {
 using CommandMap = std::unordered_map<std::string, CommandInfo>;
 
 /**
- * Validate that the call (a Sexp::Node) specifies a valid call, then invoke it.
+ * Validate that the call (a Sexp) specifies a valid call, then invoke it.
  *
  * A call uses keyword arguments, e.g. something like:
  *    (foo :bar 1 :cuux "fnorb")
@@ -118,7 +118,7 @@ using CommandMap = std::unordered_map<std::string, CommandInfo>;
  * @param cmap map of commands
  * @param call node describing a call.
  */
-void invoke(const Command::CommandMap& cmap, const Sexp::Node& call);
+void invoke(const Command::CommandMap& cmap, const Sexp& call);
 
 
 static inline std::ostream&

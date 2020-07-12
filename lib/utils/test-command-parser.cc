@@ -31,26 +31,27 @@ using namespace Mu;
 static void
 test_param_getters()
 {
-        const auto node { Sexp::Node::make(R"((foo :bar 123 :cuux "456" :boo nil :bah true))")};
+        const auto sexp { Sexp::make_parse(R"((foo :bar 123 :cuux "456" :boo nil :bah true))")};
 
-        std::cout << node << "\n";
+        if (g_test_verbose())
+                std::cout << sexp << "\n";
 
-        g_assert_cmpint(Command::get_int_or(node.elements(), ":bar"), ==, 123);
-        assert_equal(Command::get_string_or(node.elements(), ":bra", "bla"), "bla");
-        assert_equal(Command::get_string_or(node.elements(), ":cuux"), "456");
+        g_assert_cmpint(Command::get_int_or(sexp.list(), ":bar"), ==, 123);
+        assert_equal(Command::get_string_or(sexp.list(), ":bra", "bla"), "bla");
+        assert_equal(Command::get_string_or(sexp.list(), ":cuux"), "456");
 
-        g_assert_true(Command::get_bool_or(node.elements(),":boo") == false);
-        g_assert_true(Command::get_bool_or(node.elements(),":bah") == true);
+        g_assert_true(Command::get_bool_or(sexp.list(),":boo") == false);
+        g_assert_true(Command::get_bool_or(sexp.list(),":bah") == true);
 }
 
 
 static bool
-call (const Command::CommandMap& cmap, const std::string& sexp) try
+call (const Command::CommandMap& cmap, const std::string& str) try
 {
-        const auto node{Sexp::Node::make(sexp)};
-        g_message ("invoking %s", to_string(node).c_str());
+        const auto sexp{Sexp::make_parse(str)};
+        g_message ("invoking %s", to_string(sexp).c_str());
 
-        invoke (cmap, node);
+        invoke (cmap, sexp);
 
         return true;
 
@@ -69,8 +70,8 @@ test_command()
 
         cmap.emplace("my-command",
                      CommandInfo{
-                             ArgMap{ {":param1", ArgInfo{Sexp::Node::Type::String, true, "some string" }},
-                                     {":param2", ArgInfo{Sexp::Node::Type::Number, false, "some integer"}}},
+                             ArgMap{ {":param1", ArgInfo{Sexp::Type::String, true, "some string" }},
+                                     {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
                             "My command,",
                             {}});
 
@@ -92,8 +93,8 @@ test_command2()
         cmap.emplace("bla",
                    CommandInfo{
                            ArgMap{
-                                   {":foo",  ArgInfo{Sexp::Node::Type::Number, false, "foo"}},
-                                   {":bar",  ArgInfo{Sexp::Node::Type::String, false,  "bar"}},
+                                   {":foo",  ArgInfo{Sexp::Type::Number, false, "foo"}},
+                                   {":bar",  ArgInfo{Sexp::Type::String, false,  "bar"}},
                            },"yeah",
                            [&](const auto& params){}});
 
@@ -114,8 +115,8 @@ test_command_fail()
 
         cmap.emplace("my-command",
                      CommandInfo{
-                             ArgMap{ {":param1", ArgInfo{Sexp::Node::Type::String, true, "some string" }},
-                                     {":param2", ArgInfo{Sexp::Node::Type::Number, false, "some integer"}}},
+                             ArgMap{ {":param1", ArgInfo{Sexp::Type::String, true, "some string" }},
+                                     {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
                             "My command,",
                             {}});
 
