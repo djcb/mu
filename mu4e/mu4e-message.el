@@ -279,14 +279,14 @@ expressions, in which case any of those are tried for a match."
 Checks whether any of the of the contacts in field
 CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches *me*,
 that is, any of the e-mail address in
-`(mu4e-personal-addresses)'. Returns the contact cell that
+`(mu4e~server-prop :personal-addresses t)'. Returns the contact cell that
 matched, or nil."
   (cl-find-if
    (lambda (cc-cell)
      (cl-member-if
       (lambda (addr)
         (string= (downcase addr) (downcase (cdr cc-cell))))
-      (mu4e-personal-addresses)))
+      (mu4e~server-prop :personal-addresses t)))
    (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)

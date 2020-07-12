@@ -226,7 +226,7 @@ When REFRESH is non nil refresh infos from server."
   (with-current-buffer mu4e-main-buffer-name
     (let ((inhibit-read-only t)
           (pos (point))
-          (addrs (mu4e-personal-addresses)))
+          (addrs (mu4e~server-prop :personal-addresses t)))
       (erase-buffer)
       (insert
        "* "
@@ -267,8 +267,8 @@ When REFRESH is non nil refresh infos from server."
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
-       (mu4e~key-val "database-path" (mu4e-database-path))
-       (mu4e~key-val "maildir" (mu4e-root-maildir))
+       (mu4e~key-val "database-path" (mu4e~server-prop :database-path))
+       (mu4e~key-val "maildir" (mu4e~server-prop :root-maildir))
        (mu4e~key-val "in store"
                      (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
        (if mu4e-main-buffer-hide-personal-addresses ""

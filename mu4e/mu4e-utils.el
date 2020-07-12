@@ -65,10 +65,10 @@
 
 (defun mu4e-user-mail-address-p (addr)
   "If ADDR is one of user's e-mail addresses return t, nil otherwise.
-User's addresses are set in `(mu4e-personal-addresses)'.  Case
+User's addresses are set in `(mu4e~server-prop :personal-addresses t)'.  Case
 insensitive comparison is used."
-  (when (and addr (mu4e-personal-addresses)
-             (cl-find addr (mu4e-personal-addresses)
+  (when (and addr (mu4e~server-prop :personal-addresses t)
+             (cl-find addr (mu4e~server-prop :personal-addresses t)
                       :test (lambda (s1 s2)
                               (eq t (compare-strings s1 nil nil s2 nil nil t)))))
     t))
@@ -163,10 +163,10 @@ see its docstring)."
 
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
-  (let ((idx (string-match (mu4e-root-maildir) path)))
+  (let ((idx (string-match (mu4e~server-prop :root-maildir) path)))
     (when (and idx (zerop idx))
       (replace-regexp-in-string
-       (mu4e-root-maildir)
+       (mu4e~server-prop :root-maildir)
        ""
        (expand-file-name
         (concat path "/../.."))))))
@@ -311,7 +311,7 @@ Function will return the cdr of the list element."
     (dolist (dentry dentries)
       (when (and (booleanp (cadr dentry)) (cadr dentry))
         (if (file-accessible-directory-p
-             (concat (mu4e-root-maildir) "/" mdir "/" (car dentry) "/cur"))
+             (concat (mu4e~server-prop :root-maildir) "/" mdir "/" (car dentry) "/cur"))
             (setq dirs (cons (concat mdir (car dentry)) dirs)))
         (unless (member (car dentry) '("cur" "new" "tmp"))
           (setq dirs (append dirs (mu4e~get-maildirs-1 path
@@ -321,7 +321,7 @@ Function will return the cdr of the list element."
 (defvar mu4e-cache-maildir-list nil
   "Whether to cache the list of maildirs; set it to t if you find
 that generating the list on the fly is too slow. If you do, you
-can set `(mu4e-root-maildir)-list' to nil to force regenerating the
+can set `(mu4e~server-prop :root-maildir)-list' to nil to force regenerating the
 cache the next time `mu4e-get-maildirs' gets called.")
 
 (defvar mu4e-maildir-list nil
@@ -338,8 +338,8 @@ the list of maildirs will not change until you restart mu4e."
           (sort
            (append
             (when (file-accessible-directory-p
-                   (concat (mu4e-root-maildir) "/cur")) '("/"))
-            (mu4e~get-maildirs-1 (mu4e-root-maildir) "/"))
+                   (concat (mu4e~server-prop :root-maildir) "/cur")) '("/"))
+            (mu4e~get-maildirs-1 (mu4e~server-prop :root-maildir) "/"))
            (lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
   mu4e-maildir-list)
 
@@ -379,7 +379,7 @@ all maildirs under `mu4e-maildir'."
   "Like `mu4e-ask-maildir', but check for existence of the maildir,
 and offer to create it if it does not exist yet."
   (let* ((mdir (mu4e-ask-maildir prompt))
-         (fullpath (concat (mu4e-root-maildir) mdir)))
+         (fullpath (concat (mu4e~server-prop :root-maildir) mdir)))
     (unless (file-directory-p fullpath)
       (and (yes-or-no-p
             (mu4e-format "%s does not exist. Create now?" fullpath))
@@ -712,9 +712,9 @@ completion; for testing/debugging."
   (unless (>= emacs-major-version 25)
     (mu4e-error "Emacs >= 25.x is required for mu4e"))
   (when mu4e~server-props
-    (unless (string= (mu4e-server-version) mu4e-mu-version)
+    (unless (string= (mu4e~server-prop :version) mu4e-mu-version)
       (mu4e-error "mu server has version %s, but we need %s"
-                  (mu4e-server-version) mu4e-mu-version)))
+                  (mu4e~server-prop :version) mu4e-mu-version)))
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary."))
@@ -724,7 +724,7 @@ completion; for testing/debugging."
       (mu4e-error "Please set %S" var))
     (unless (functionp (symbol-value var)) ;; functions are okay, too
       (let* ((dir (symbol-value var))
-             (path (concat (mu4e-root-maildir) dir)))
+             (path (concat (mu4e~server-prop :root-maildir) dir)))
         (unless (string= (substring dir 0 1) "/")
           (mu4e-error "%S must start with a '/'" dir))
         (unless (mu4e-create-maildir-maybe path)

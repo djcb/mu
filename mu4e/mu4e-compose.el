@@ -313,7 +313,7 @@ If needed, set the Fcc header, and register the handler function."
       `mu4e-sent-messages-behavior'"
                          mu4e-sent-messages-behavior))))
          (fccfile (and mdir
-                       (concat (mu4e-root-maildir) mdir "/cur/"
+                       (concat (mu4e~server-prop :root-maildir) mdir "/cur/"
                                (mu4e~draft-message-filename-construct "S")))))
     ;; if there's an fcc header, add it to the file
     (when fccfile
@@ -326,7 +326,7 @@ If needed, set the Fcc header, and register the handler function."
                   (old-handler message-fcc-handler-function))
               (lambda (file)
                 (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
-                (let ((mdir-path (concat (mu4e-root-maildir) maildir)))
+                (let ((mdir-path (concat (mu4e~server-prop :root-maildir) maildir)))
                   ;; Create the full maildir structure for the sent folder if it doesn't exist.
                   ;; `mu4e~proc-mkdir` runs asynchronously but no matter whether it runs before or after
                   ;; `write-file`, the sent maildir ends up in the correct state.

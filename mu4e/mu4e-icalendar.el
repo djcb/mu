@@ -76,7 +76,7 @@
   (let* ((handle (car data))
          (status (cadr data))
          (event (caddr data))
-         (gnus-icalendar-additional-identities (mu4e-personal-addresses))
+         (gnus-icalendar-additional-identities (mu4e~server-prop :personal-addresses t))
          (reply (gnus-icalendar-with-decoded-handle
                  handle
                  (let ((gnus-icalendar-find-if (lambda(pred seq) nil)))

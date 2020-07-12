@@ -399,7 +399,7 @@ article-mode."
           (gnus-blocked-images ".") ;; don't load external images.
           ;; Possibly add headers (before "Attachments")
           (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
-          (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
+          (gnus-icalendar-additional-identities (mu4e~server-prop :personal-addresses t)))
       (gnus-article-prepare-display))
     (setq mu4e~view-message msg)
     (mu4e-view-mode)
