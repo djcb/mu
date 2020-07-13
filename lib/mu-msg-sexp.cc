@@ -40,19 +40,6 @@ add_prop_nonempty (Sexp::List& list, const char* elm, const GSList *str_lst)
                 list.add_prop(elm, Sexp::make_list(std::move(elms)));
 }
 
-// static void
-// add_prop_nonempty (Sexp::List& list, const char* elm, Seq&& seq)
-// {
-//         if (!seq.empty())
-//                 seq_add_prop(items, elm, std::move(seq));
-// }
-
-// static void
-// add_prop_symbol (Seq& items, const char* name, const char *str)
-// {
-//         seq_add_prop(items, name, Sexp::make_symbol(str));
-// }
-
 static void
 add_prop_nonempty (Sexp::List& list, const char* name, const char *str)
 {
@@ -99,7 +86,8 @@ add_list_post (Sexp::List& list, MuMsg *msg)
 	if (g_regex_match (rx, list_post, (GRegexMatchFlags)0, &minfo)) {
                 auto address = (char*)g_match_info_fetch (minfo, 1);
                 MuMsgContact contact{NULL,  address};
-                list.add_prop(":list-post", make_contact_sexp(&contact));
+                list.add_prop(":list-post",
+                              Sexp::make_list(make_contact_sexp(&contact)));
                 g_free(address);
         }
 
