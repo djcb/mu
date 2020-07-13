@@ -24,6 +24,7 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <cstring>
 
 #include <sys/types.h>
 #include <sys/stat.h>
