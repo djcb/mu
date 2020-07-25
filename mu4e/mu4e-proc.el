@@ -234,16 +234,6 @@ backslashes and double-quotes."
   (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
     (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
 
-
-(defun mu4e~proc-send-command (frm &rest args)
-  "Send string from FRM and ARGS to the mu server process.
-Start the process if needed."
-  (unless (mu4e~proc-running-p)
-    (mu4e~proc-start))
-  (let ((cmd (apply 'format frm args)))
-    (mu4e-log 'to-server "%S" cmd)
-    (process-send-string mu4e~proc-process (concat cmd "\n"))))
-
 (defun mu4e~proc-start ()
   "Start the mu server process."
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
@@ -307,7 +297,8 @@ Start the process if needed."
 (defun mu4e~call-mu (form)
   "Call 'mu' with some command."
   (unless (mu4e~proc-running-p) (mu4e~proc-start))
-  (let ((cmd (format "%S" form)))
+  (let* ((print-length nil) (print-level nil)
+         (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
     (process-send-string mu4e~proc-process (concat cmd "\n"))))
 
