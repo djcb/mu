@@ -473,7 +473,7 @@ the function registered as `mu4e-view-func'."
                   :decrypt ,(and decrypt t)
                   :verify  ,(and verify t))))
 
-(defun mu4e~proc-view-path (path &optional images decrypt)
+(defun mu4e~proc-view-path (path &optional images decrypt verify)
   "View message at PATH..
 Optionally, if IMAGES is non-nil, backend will any images
 attached to the message, and return them as temp files. The
@@ -481,7 +481,7 @@ result will be delivered to the function registered as
 `mu4e-view-func'. Optionally DECRYPT and VERIFY."
   (mu4e~call-mu `(view
                   :path ,path
-                  :extract-images ,(if mu4e-view-show-images t nil)
+                  :extract-images ,(if  images t nil)
                   :decrypt        ,(and decrypt t)
                   :verify         ,(and verify t))))
 

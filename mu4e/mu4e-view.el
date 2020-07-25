@@ -1508,7 +1508,7 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     ;; remember the mapping path->docid, which maps the path of the embedded
     ;; message to the docid of its parent
     (puthash path docid mu4e~path-parent-docid-map)
-    (mu4e~proc-view-path path mu4e-decryption-policy))
+    (mu4e~proc-view-path path mu4e-view-show-images mu4e-decryption-policy))
    ((string= what "emacs")
     (find-file path)
     ;; make the buffer read-only since it usually does not make
