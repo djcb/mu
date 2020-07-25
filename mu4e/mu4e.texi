@@ -1504,11 +1504,9 @@ profile) that does not load images. The same applies to Javascript.
 @node MSGV Crypto
 @section Crypto
 
-The @t{mu4e} message view supports@footnote{Crypto-support in @t{mu4e}
-requires @t{mu} to have been build with crypto-support; see the
-@ref{FAQ}} decryption of encrypted messages, as well as verification of
-signatures. For signing/encrypting messages your outgoing messages, see
-@ref{Signing and encrypting}.
+The @t{mu4e} message view supports decryption of encrypted messages,
+as well as verification of signatures. For signing/encrypting messages
+your outgoing messages, see @ref{Signing and encrypting}.
 
 For all of this to work, @command{gpg-agent} must be running, and it
 must set the environment variable @t{GPG_AGENT_INFO}. You can check from
