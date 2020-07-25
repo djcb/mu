@@ -176,8 +176,8 @@ struct Sexp {
                 size_t empty() const { return seq_.empty(); }
 
         private:
-                friend class Sexp;
-                Seq          seq_;
+                friend struct Sexp;
+                Seq           seq_;
         };
 
         /**

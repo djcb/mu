@@ -32,7 +32,6 @@
 
 using namespace Mu;
 
-constexpr auto        MuLogDomain      = "mu";
 static bool           MuLogInitialized = false;
 static Mu::LogOptions MuLogOptions;
 static std::ofstream  MuStream;

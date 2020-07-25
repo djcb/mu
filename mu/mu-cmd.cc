@@ -372,7 +372,7 @@ static bool
 add_path_func (Mu::Store& store, const char *path, GError **err)
 {
         const auto docid = store.add_message (path);
-        g_debug ("added message @ %s, docid=%u", docid);
+        g_debug ("added message @ %s, docid=%u", path, docid);
 
         return true;
 }
@@ -415,7 +415,7 @@ tickle_func (Mu::Store& store, const char *path, GError **err)
 		return false;
 
 	const auto res = mu_msg_tickle (msg, err);
-        g_debug ("tickled %s (%s)", res ? "ok" : "failed");
+        g_debug ("tickled %s (%s)", path, res ? "ok" : "failed");
 	mu_msg_unref (msg);
 
 	return res == TRUE;

@@ -200,7 +200,7 @@ get_query (MuQuery *mqx, const char* searchexpr, bool raw, GError **err) try {
 	Mu::WarningVec warns;
 	const auto tree = Mu::parse (searchexpr, warns,
 				      std::make_unique<MuProc>(mqx->db()));
-	for (const auto w: warns)
+	for (auto&& w: warns)
 		std::cerr << w << std::endl;
 
 	return Mu::xapian_query (tree);
@@ -514,7 +514,7 @@ mu_query_internal (MuQuery *self, const char *searchexpr,
 		ss << tree;
 
 		if (warn) {
-			for (const auto w: warns)
+			for (auto&& w: warns)
 				std::cerr << w << std::endl;
 		}
 

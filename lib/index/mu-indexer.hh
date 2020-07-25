@@ -25,7 +25,7 @@
 
 namespace Mu {
 
-struct Store;
+class Store;
 
 /// An object abstracting the index process.
 class Indexer {

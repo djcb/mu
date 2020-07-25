@@ -133,7 +133,7 @@ static void
 test_to_string ()
 {
 	std::stringstream ss;
-	for (const auto t: tokenize ("foo and bar xor not cuux or fnorb"))
+	for (auto&& t: tokenize ("foo and bar xor not cuux or fnorb"))
 		ss << t << ' ';
 
 	g_assert_true (ss.str() ==

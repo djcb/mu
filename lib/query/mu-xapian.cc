@@ -79,7 +79,7 @@ xapian_query_value (const Mu::Tree& tree)
 		return make_query(v, parts.front(), true/*maybe-wildcard*/);
 
 	std::vector<Xapian::Query> phvec;
-	for (const auto p: parts)
+	for (const auto& p: parts)
 		phvec.emplace_back(make_query(v, p, false/*no wildcards*/));
 
         return Xapian::Query (Xapian::Query::OP_PHRASE, phvec.begin(), phvec.end());

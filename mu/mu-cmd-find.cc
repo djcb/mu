@@ -541,8 +541,8 @@ static gboolean
 output_sexp (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
 	const auto *ti{opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL};
-        const auto sexp{Mu:Mu::msg_to_sexp(msg , mu_msg_iter_get_docid (iter), ti,
-                                           MU_MSG_OPTION_HEADERS_ONLY)};
+        const auto sexp{Mu::msg_to_sexp(msg , mu_msg_iter_get_docid (iter), ti,
+                                        MU_MSG_OPTION_HEADERS_ONLY)};
 	fputs (to_string(sexp, !opts->nocolor).c_str(), stdout);
         fputs ("\n", stdout);
 
