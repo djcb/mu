@@ -51,7 +51,7 @@ public:
         /**
          * Construct a scanner object for scanning a directory, recursively.
          *
-         * If handler is a directroy
+         * If handler is a directory
          *
          *
          * @param root_dir root dir to start scanning
@@ -91,6 +91,6 @@ private:
         std::unique_ptr<Private>	priv_;
 };
 
-} // namepace Mu
+} // namespace Mu
 
 #endif /* MU_SCANNER_HH__ */

@@ -4112,7 +4112,7 @@ You can do so using Emacs' MIME-support --- check the
 @t{Attachments}-menu while composing a message. Also see @ref{Signing
 and encrypting}.
 
-@subsection Addres auto-completion does not work?
+@subsection Address auto-completion does not work?
 If you have set @code{mu4e-compose-complete-only-personal} to non-nil,
 @t{mu4e} only completes 'personal' addresses - so you tell it about
 your e-mail addresses when setting up the database (@t{mu init});
