@@ -306,7 +306,8 @@ private:
 
         static bool is_prop_list (Seq::const_iterator b, Seq::const_iterator e) {
                 while (b != e) {
-                        if (!is_prop_name(*b))
+                        const Sexp& s{*b};
+                        if (!is_prop_name(s))
                                 return false;
                         if (++b == e)
                                 return false;

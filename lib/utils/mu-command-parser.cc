@@ -53,7 +53,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
                 // calls used keyword-parameters, e.g.
                 //    (my-function :bar 1 :cuux "fnorb")
                 // so, we're looking for the odd-numbered parameters.
-                const auto param_it = [&]() {
+                const auto param_it = [&]()->Sexp::Seq::const_iterator {
                         for (size_t i = 1; i < params.size(); i += 2)
                                 if (params.at(i).is_symbol() && params.at(i).value() == argname)
                                         return params.begin() + i + 1;
@@ -94,7 +94,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
                 cinfo.handler(params);
 }
 
-static auto
+static Sexp::Seq::const_iterator
 find_param_node (const Parameters& params, const std::string& argname)
 {
         if (params.empty())
