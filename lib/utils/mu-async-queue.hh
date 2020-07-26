@@ -81,7 +81,7 @@ public:
         /**
          * Pop an item from the queue
          *
-         * @param receives the value if the funtion returns true
+         * @param receives the value if the function returns true
          * @param timeout optional time to wait for an item to become available
          *
          * @return true if an item was popped (into val), false otherwise.

@@ -110,5 +110,5 @@ private:
 
 
 
-} // namepace Mu
+} // namespace Mu
 #endif /* MU_INDEXER_HH__ */

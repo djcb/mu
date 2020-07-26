@@ -212,7 +212,7 @@ Indexer::Private::cleanup()
                         return false;
 
                 if (::access(path.c_str(), F_OK) != 0) {
-                        g_debug ("%s not found; queing id=%u for removal",
+                        g_debug ("%s not found; queueing id=%u for removal",
                                  path.c_str(), id);
                         orphans_.emplace_back(id);
                 }

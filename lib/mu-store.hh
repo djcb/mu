@@ -82,7 +82,7 @@ public:
                 std::time_t created;            /**<  database creation time */
 
                 bool        read_only;          /**< Is the database opened read-only? */
-                size_t      batch_size;         /**< Maximum database tranasction batch size */
+                size_t      batch_size;         /**< Maximum database transaction batch size */
 
                 std::string root_maildir;       /**<  Absolute path to the top-level maildir */
 
@@ -239,7 +239,7 @@ public:
         bool empty() const;
 
         /**
-         * Commit the current group of modifcations (i.e., transaction) to disk;
+         * Commit the current group of modifications (i.e., transaction) to disk;
          * This rarely needs to be called explicitly, as Store will take care of
          * it.
          */

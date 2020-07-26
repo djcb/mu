@@ -66,7 +66,7 @@ void log_set_options (LogOptions opts);
 LogOptions log_get_options ();
 
 
-} // namepace Mu
+} // namespace Mu
 MU_ENABLE_BITOPS(Mu::LogOptions);
 
 #endif /* MU_LOGGER_HH__ */

@@ -922,7 +922,7 @@ msg_move (const char* src, const char *dst, GError **err)
 	if (rename (src, dst) == 0) /* seems it worked. */
 		return msg_move_check_post (src, dst, err);
 
-	if (errno != EXDEV) /* some unrecoverable error occured */
+	if (errno != EXDEV) /* some unrecoverable error occurred */
 		return mu_util_g_set_error
 			(err, MU_ERROR_FILE,"error moving %s to %s", src, dst);
 
