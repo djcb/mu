@@ -919,6 +919,8 @@ after the end of the search results."
           (define-key map "$" 'mu4e-show-log)
           (define-key map "H" 'mu4e-display-manual)
 
+          (define-key map "|" 'mu4e-view-pipe)
+
           ;; menu
           ;;(define-key map [menu-bar] (make-sparse-keymap))
           (let ((menumap (make-sparse-keymap)))
@@ -942,6 +944,7 @@ after the end of the search results."
                                            (and (boundp 'mu4e-headers-show-threads)
                                                 mu4e-headers-show-threads))))
 
+            (define-key menumap "|" '("Pipe through shell" . mu4e-view-pipe))
             (define-key menumap [sepa1] '("--"))
 
             (define-key menumap [execute-marks]  '("Execute marks"
