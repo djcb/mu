@@ -374,7 +374,7 @@ article-mode."
 ;; we quit this buffer.
 (defvar-local mu4e~gnus-article-mime-handles nil)
 (put 'mu4e~gnus-article-mime-handles 'permanent-local t)
-      (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
+
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode. Experimental."
   (require 'gnus-art)
