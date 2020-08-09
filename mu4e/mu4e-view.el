@@ -375,6 +375,11 @@ article-mode."
           (when embedded (local-set-key "q" 'kill-buffer-and-window))))
       (switch-to-buffer buf))))
 
+;; remember the mime-handles, so we can clean them up when
+;; we quit this buffer.
+(defvar-local mu4e~gnus-article-mime-handles nil)
+(put 'mu4e~gnus-article-mime-handles 'permanent-local t)
+
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode. Experimental."
   (require 'gnus-art)
@@ -410,10 +415,16 @@ article-mode."
             (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
             (gnus-icalendar-additional-identities (mu4e-personal-addresses)))
         (gnus-article-prepare-display))
+      (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
       (setq mu4e~view-message msg)
       (mu4e-view-mode)
       (setq gnus-article-decoded-p gnus-article-decode-hook)
       (set-buffer-modified-p nil)
+      (add-hook 'kill-buffer-hook
+                (lambda() ;; cleanup the mm-* buffers that the view spawns
+                  (when mu4e~gnus-article-mime-handles
+                    (mm-destroy-parts mu4e~gnus-article-mime-handles)
+                    (setq mu4e~gnus-article-mime-handles nil))))
       (read-only-mode))))
 
 (defun mu4e~view-gnus-display-mime (msg)
