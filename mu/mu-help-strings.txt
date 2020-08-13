@@ -86,7 +86,7 @@ See the `mu-find' and `mu-easy' man-pages for more information.
 #STRING
 mu help <command>
 #STRING
-mu find is the mu command to get help about <command>, where <command>
+mu help is the mu command to get help about <command>, where <command>
 is one of:
   add     - add message to database
   cfind   - find a contact
@@ -94,6 +94,7 @@ is one of:
   find    - query the message database
   help    - get help
   index   - index messages
+  init    - init the mu database
   mkdir   - create a maildir
   remove  - remove a message from the database
   script  - run a script (available only when mu was built with guile-support)
