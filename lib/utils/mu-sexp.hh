@@ -24,7 +24,6 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include <deque>
 #include <type_traits>
 
 #include "utils/mu-utils.hh"
@@ -49,8 +48,9 @@ struct Sexp {
          */
         Sexp():type_{Type::Empty}{}
 
-        /// Underlying data type for list
-        using Seq = std::deque<Sexp>;
+        // Underlying data type for list; we'd like to use std::dequeu here,
+        // but that does not compile with libc++ (it does with libstdc++)
+        using Seq = std::vector<Sexp>;
 
         /**
          * Make a sexp out of an s-expression string.
