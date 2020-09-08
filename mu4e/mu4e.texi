@@ -240,9 +240,9 @@ higher is required, as well as
 Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
-@t{mu} has optional support for the Guile 2.2 (Scheme) programming
-language. There are also some GUI-toys, which require GTK+ 3.x and
-Webkit.
+@t{mu} has optional support for both versions 2.2 and 3.0 of the Guile
+(Scheme) programming language. There are also some GUI-toys, which
+require GTK+ 3.x and Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++ compilers (both @command{gcc} and
