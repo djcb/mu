@@ -108,6 +108,10 @@
     - The mu4e <-> mu interaction has been rewritten to communicate using
       s-expressions, with a repl for testing.
 
+*** guile
+
+    - guile 3.0 is now supported; guile 2.2 still works.
+
 *** toys
 
     - Updated the ~mug~ toy UI to use Webkit2/GTK+. Note that this is just a toy
