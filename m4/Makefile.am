@@ -41,7 +41,7 @@ EXTRA_DIST=				\
 	ax_lib_readline.m4		\
 	ax_require_defined.m4		\
 	ax_valgrind_check.m4		\
-	guile-2.2.m4			\
+	guile.m4			\
 	lib-ld.m4			\
 	lib-link.m4			\
 	lib-prefix.m4
