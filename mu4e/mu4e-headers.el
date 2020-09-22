@@ -681,12 +681,27 @@ found."
       (:size (mu4e-display-size val))
       (t (mu4e~headers-custom-field-value msg field)))))
 
-(defsubst mu4e~headers-truncate-field (val width)
-  "Truncate VAL to WIDTH."
-  (if width
-      (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
-    val))
-
+(defun mu4e~headers-truncate-field (field val width)
+  "Return VAL truncated to one less than WIDTH, with a trailing 
+space propertized with a 'dislpay text property which expands to
+ the correct column for display."
+  (when width
+    (let ((end-col (cl-loop for (f . w) in mu4e-headers-fields
+                            sum w
+                            until (equal f field))))
+      (setq val (string-trim-right val))
+      (if (> width (length val))
+          (setq val (concat val " "))
+	(setq val
+	      (concat 
+	       (truncate-string-to-width val (1- width) 0 ?\s t)
+	       " ")))
+      (put-text-property (1- (length val))
+			 (length val)
+			 'display
+			 `(space . (:align-to ,end-col))
+			 val)))
+  val)
 
 (defcustom mu4e-headers-field-properties-function nil
   "Function that specifies custom text properties for a header field.
@@ -701,15 +716,13 @@ avoid slowdowns."
   :type 'function
   :group 'mu4e-headers)
 
-
 (defsubst mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
   (let* ((field-id (car f-w))
          (width (cdr f-w))
          (val (mu4e~headers-field-value msg field-id))
-         (val (if width (mu4e~headers-truncate-field val width) val)))
+         (val (if width (mu4e~headers-truncate-field field val width) val)))
     val))
-
 
 (defsubst mu4e~headers-apply-flags (msg fieldval)
   "Adjust LINE's face property based on FLAGS."
