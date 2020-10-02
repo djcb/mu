@@ -122,7 +122,8 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
 
 AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNCS([vasprintf strptime])
-AC_CHECK_FUNC(timegm,[],AC_MSG_ERROR([missing required function timegm]))
+# timegm is no longer used in the source
+# AC_CHECK_FUNC(timegm,[],AC_MSG_ERROR([missing required function timegm]))
 
 # require pkg-config >= 0.28 (release in 2013; should be old enough...)
 # with that version, we don't need the AC_SUBST stuff after PKG_CHECK.
