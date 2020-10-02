@@ -65,7 +65,7 @@ maybe_rotate_logfile ()
                 return true;
 
         GStatBuf statbuf;
-        if (::stat (MuLogPath.c_str(), &statbuf) == -1 ||
+        if (g_stat(MuLogPath.c_str(), &statbuf) == -1 ||
             statbuf.st_size <= MaxLogFileSize)
                 return true;
 
