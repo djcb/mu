@@ -619,6 +619,16 @@ NOT be quoted, since mu4e does this for you."
   :version "1.3.9"
   :group 'mu4e-folders)
 
+(defcustom mu4e-maildir-info-delimiter
+  (if (member system-type '(ms-dos windows-nt cygwin))
+      ";" ":")
+  "Separator character between message identifier and flags.
+It defaults to ':' on most platforms, except on Windows,
+where it is not allowed and we use ';' for compatibility
+with mbsync, offlineimap and other programs."
+  :type 'string
+  :group 'mu4e-folders)
+
 
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format, converting
