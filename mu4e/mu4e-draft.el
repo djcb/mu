@@ -396,10 +396,10 @@ You can append flags."
                       (substring sysname
                                  (string-match "^[^.]+" sysname)
                                  (match-end 0))))))
-    (format "%s.%04x%04x%04x%04x.%s:2,%s"
+    (format "%s.%04x%04x%04x%04x.%s%s2,%s"
             (format-time-string "%s" (current-time))
             (random 65535) (random 65535) (random 65535) (random 65535)
-            hostname (or flagstr ""))))
+            hostname mu4e-maildir-info-delimiter (or flagstr ""))))
 
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
