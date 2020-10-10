@@ -3474,7 +3474,7 @@ or create a new one.
 @section Hydra
 
 People sometimes ask about having multi-character shortcuts for
-bookmarks; and easy way to achieve this, is by using anm emacs package
+bookmarks; and easy way to achieve this, is by using an emacs package
 called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
 
 With Hydra installed, we can add multi-character shortcuts, for instance:
