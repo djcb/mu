@@ -3402,7 +3402,7 @@ fi
 # -mmin -5: consider only messages that were created / changed in the
 # the last 5 minutes
 #
-for f in `find $CHECKDIR -mmin -5 -a -type f`; do
+for f in `find $CHECKDIR -mmin -5 -a -type f -not -iname '.uidvalidity'`; do
   subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'`
   sauron_msg "mail: $subject"
 done
