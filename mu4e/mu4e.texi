@@ -3364,12 +3364,13 @@ After this, you should be able to:
 @section Sauron
 
 The Emacs package @t{sauron}@footnote{Sauron can be found at
-@url{https://github.com/djcb/sauron}, or in the Marmalade package repository
-at @url{https://marmalade-repo.org/}} (by the same author) can be used
-to get notifications about new mails. If you run something like the below
-script from your @t{crontab} (or have some other way of having it execute
-every @emph{n} minutes), you receive notifications in the @t{sauron}-buffer
-when new messages arrive.
+@url{https://github.com/djcb/sauron}, or in the MELPA (Milkypostman’s
+Emacs Lisp Package Archive) package repository at
+@url{https://melpa.org/}} (by the same author) can be used to
+get notifications about new mails. If you run something like the below
+script from your @t{crontab} (or have some other way of having it
+execute every @emph{n} minutes), you receive notifications in the
+@t{sauron}-buffer when new messages arrive.
 
 @verbatim
 #!/bin/sh
