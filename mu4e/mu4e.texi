@@ -3225,6 +3225,15 @@ you can do so by adding the following to your configuration:
 (setq mail-user-agent 'mu4e-user-agent)
 @end lisp
 
+Similarly, to specify @t{mu4e} as your preferred method for reading mail,
+customize the variable @code{read-mail-command}.
+
+@lisp
+(set-variable 'read-mail-command 'mu4e)
+@end lisp
+
+(@pxref{Top,,Emacs,Sending Mail, Mail Methods})
+
 @node Org-mode links
 @section Org-mode links
 
