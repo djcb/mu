@@ -107,6 +107,12 @@ vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
 
+(defcustom mu4e-headers-precise-alignment nil
+  "When set, use precise (but relatively slow) alignment for columns.
+Otherwise, do it in a slightly inaccurate but faster way."
+  :type 'boolean
+  :group 'mu4e-headers)
+
 (defcustom mu4e-headers-auto-update t
   "Whether to automatically update the current headers buffer if an
 indexing operation showed changes."
@@ -681,9 +687,18 @@ found."
       (:size (mu4e-display-size val))
       (t (mu4e~headers-custom-field-value msg field)))))
 
-(defun mu4e~headers-truncate-field (field val width)
+
+(defun mu4e~headers-truncate-field-fast (val width)
+  "Truncate VAL to WIDTH. Fast and somewhat inaccurate."
+  (if width
+      (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
+    val))
+
+
+
+(defun mu4e~headers-truncate-field-precise (field val width)
   "Return VAL truncated to one less than WIDTH, with a trailing
-space propertized with a 'dislpay text property which expands to
+space propertized with a 'display text property which expands to
  the correct column for display."
   (when width
     (let ((end-col (cl-loop for (f . w) in mu4e-headers-fields
@@ -702,6 +717,12 @@ space propertized with a 'dislpay text property which expands to
 			 `(space . (:align-to ,end-col))
 			 val)))
   val)
+
+(defsubst mu4e~headers-truncate-field (field val width)
+  "Truncate VAL to WIDTH."
+  (if mu4e-headers-precise-alignment
+      (mu4e~headers-truncate-field-precise field val width)
+    (mu4e~headers-truncate-field-fast val width)))
 
 (defcustom mu4e-headers-field-properties-function nil
   "Function that specifies custom text properties for a header field.
