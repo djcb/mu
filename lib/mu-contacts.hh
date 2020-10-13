@@ -34,6 +34,7 @@ typedef struct _MuContacts MuContacts;
 #include <string>
 #include <time.h>
 #include <inttypes.h>
+#include <utils/mu-utils.hh>
 
 namespace Mu {
 
@@ -46,25 +47,38 @@ struct ContactInfo {
          * @param _full_address the full email address + name.
          * @param _email email address
          * @param _name name or empty
-         * @param _personal is this a personal contact?
          * @param _last_seen when was this contact last seen?
-         * @param _freq how often was this contact seen?
-         *
-         * @return
          */
         ContactInfo (const std::string& _full_address,
                      const std::string& _email,
                      const std::string& _name,
-                     bool _personal, time_t _last_seen, size_t _freq=1);
+                     time_t _last_seen);
+
+        /**
+         * Construct a new ContactInfo
+         *
+         * @param _full_address the full email address + name.
+         * @param _email email address
+         * @param _name name or empty
+         * @param _personal is this a personal contact?
+         * @param _last_seen when was this contact last seen?
+         * @param _freq how often was this contact seen?
+         */
+        ContactInfo (const std::string& _full_address,
+                     const std::string& _email,
+                     const std::string& _name,
+                     bool personal,
+                     time_t _last_seen,
+                     size_t freq);
 
         std::string full_address; /**< Full name <email> */
         std::string email;        /**< email address */
         std::string name;         /**< name (or empty) */
-        bool        personal;     /**< is this a personal contact? */
-        time_t      last_seen;    /**< when was this contact last seen? */
-        std::size_t freq;         /**< how often was this contact seen? */
+        bool        personal{};   /**< is this a personal contact? */
+        time_t      last_seen{};  /**< when was this contact last seen? */
+        std::size_t freq{};       /**< how often was this contact seen? */
 
-        int64_t     tstamp;       /**< Time-stamp, as per g_get_monotonic_time */
+        int64_t     tstamp{};     /**< Time-stamp, as per g_get_monotonic_time */
 };
 
 /// All contacts
@@ -74,8 +88,10 @@ public:
          * Construct a new contacts objects
          *
          * @param serialized serialized contacts
+         * @param personal personal addresses
          */
-        Contacts (const std::string& serialized = "");
+        Contacts (const std::string& serialized = "",
+                  const StringVec& personal={});
 
         /**
          * DTOR
@@ -117,6 +133,16 @@ public:
          * @return serialized contacts
          */
         std::string serialize() const;
+
+
+        /**
+         * Does this look like a 'personal' address?
+         *
+         * @param addr some e-mail address
+         *
+         * @return true or false
+         */
+        bool is_personal(const std::string& addr) const;
 
         /**
          * Find a contact based on the email address. This is not safe, since

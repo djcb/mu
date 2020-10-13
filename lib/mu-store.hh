@@ -96,15 +96,12 @@ public:
          * @return the metadata
          */
         const Metadata& metadata() const;
-
-
         /**
          * Get the Contacts object for this store
          *
          * @return the Contacts object
          */
         const Contacts& contacts() const;
-
 
         /**
          * Get the Indexer associated with this store. It is an error
@@ -176,7 +173,6 @@ public:
          * @return true if the message exists in the store, false otherwise
          */
         bool contains_message (const std::string& path) const;
-
 
         /**
          * Prototype for the ForEachFunc

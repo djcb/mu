@@ -114,7 +114,7 @@ struct Store::Private {
         Private (const std::string& path, bool readonly):
                 db_{make_xapian(path, readonly ? XapianOpts::ReadOnly : XapianOpts::Open)},
                 mdata_{make_metadata(path)},
-                contacts_{db()->get_metadata(ContactsKey)} {
+                contacts_{db()->get_metadata(ContactsKey), mdata_.personal_addresses} {
 
                 if (!readonly)
                         wdb()->begin_transaction();
@@ -123,7 +123,8 @@ struct Store::Private {
         Private (const std::string& path, const std::string& root_maildir,
                  const StringVec& personal_addresses, const Store::Config& conf):
                 db_{make_xapian(path, XapianOpts::CreateOverwrite)},
-                mdata_{init_metadata(conf, path, root_maildir, personal_addresses)} {
+                mdata_{init_metadata(conf, path, root_maildir, personal_addresses)},
+                contacts_{"", mdata_.personal_addresses} {
 
                 wdb()->begin_transaction();
         }
@@ -307,7 +308,6 @@ Store::metadata() const
 const Contacts&
 Store::contacts() const
 {
-        LOCKED;
         return priv_->contacts_;
 }
 
@@ -1045,32 +1045,11 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
                 contacts.add(Mu::ContactInfo(contact->full_address,
                                              contact->email,
                                              contact->name ? contact->name : "",
-                                             msgdoc->_personal,
                                              mu_msg_get_date(msgdoc->_msg)));
 	}
 
 	return TRUE;
 }
-
-
-static gboolean
-each_contact_check_if_personal (MuMsgContact *contact, MsgDoc *msgdoc)
-{
-	if (msgdoc->_personal || !contact->email)
-		return TRUE;
-
-	for (const auto& cur : *msgdoc->_my_addresses) {
-		if (g_ascii_strcasecmp
-                    (contact->email,
-                     (const char*)cur.c_str()) == 0) {
-			msgdoc->_personal = TRUE;
-			break;
-		}
-	}
-
-	return TRUE;
-}
-
 static Xapian::Document
 new_doc_from_message (MuStore *store, MuMsg *msg)
 {
@@ -1079,17 +1058,20 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 
-	/* determine whether this is 'personal' email, ie. one of my
-	 * e-mail addresses is explicitly mentioned -- it's not a
-	 * mailing list message. Callback will update docinfo->_personal */
-        const auto& personal_addresses = self(store)->metadata().personal_addresses;
-        if (personal_addresses.size()) {
-		docinfo._my_addresses = &personal_addresses;
-		mu_msg_contact_foreach
-			(msg,
-			 (MuMsgContactForeachFunc)each_contact_check_if_personal,
-			 &docinfo);
-	}
+        mu_msg_contact_foreach
+                (msg, [](auto contact, gpointer msgdocptr)->gboolean {
+                        auto msgdoc{reinterpret_cast<MsgDoc*>(msgdocptr)};
+
+                        if (!contact->email)
+                                return FALSE; // invalid contact
+                        else if (msgdoc->_personal)
+                                return TRUE; // already deemed personal
+
+                        if (msgdoc->_store->contacts().is_personal(contact->email))
+                                msgdoc->_personal = true; // this one's personal.
+
+                        return TRUE;
+                }, &docinfo);
 
 	/* also store the contact-info as separate terms, and add it
 	 * to the cache */

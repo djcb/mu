@@ -33,25 +33,21 @@ test_mu_contacts_01()
         g_assert_cmpuint (contacts.size(), ==, 0);
 
         contacts.add(std::move(Mu::ContactInfo ("Foo <foo.bar@example.com>",
-                                                "foo.bar@example.com", "Foo",
-                                                false, 12345)));
+                                                "foo.bar@example.com", "Foo", 12345)));
         g_assert_false (contacts.empty());
         g_assert_cmpuint (contacts.size(), ==, 1);
 
         contacts.add(std::move(Mu::ContactInfo ("Cuux <cuux.fnorb@example.com>",
-                                                "cuux@example.com", "Cuux", true,
-                                                54321)));
+                                                "cuux@example.com", "Cuux", 54321)));
 
         g_assert_cmpuint (contacts.size(), ==, 2);
 
         contacts.add(std::move(Mu::ContactInfo ("foo.bar@example.com",
-                                                "foo.bar@example.com", "Foo",
-                                                false, 77777)));
+                                                "foo.bar@example.com", "Foo", 77777)));
         g_assert_cmpuint (contacts.size(), ==, 2);
 
         contacts.add(std::move(Mu::ContactInfo ("Foo.Bar@Example.Com",
-                                                "Foo.Bar@Example.Com", "Foo",
-                                                false, 88888)));
+                                                "Foo.Bar@Example.Com", "Foo", 88888)));
         g_assert_cmpuint (contacts.size(), ==, 2);
         // note: replaces first.
 
@@ -59,7 +55,6 @@ test_mu_contacts_01()
                 const auto info = contacts._find("bla@example.com");
                 g_assert_false (info);
         }
-
 
         {
                 const auto info = contacts._find("foo.BAR@example.com");
@@ -73,6 +68,27 @@ test_mu_contacts_01()
         g_assert_cmpuint (contacts.size(), ==, 0);
 }
 
+static void
+test_mu_contacts_02()
+{
+        Mu::StringVec personal = {
+                "foo@example.com",
+                "bar@cuux.org",
+                "/bar-.*@fnorb.f./"
+        };
+        Mu::Contacts contacts{"", personal};
+
+        g_assert_true (contacts.is_personal("foo@example.com"));
+        g_assert_true (contacts.is_personal("Bar@CuuX.orG"));
+        g_assert_true (contacts.is_personal("bar-123abc@fnorb.fi"));
+        g_assert_true (contacts.is_personal("bar-zzz@fnorb.fr"));
+
+        g_assert_false (contacts.is_personal("foo@bar.com"));
+        g_assert_false (contacts.is_personal("BÂr@CuuX.orG"));
+        g_assert_false (contacts.is_personal("bar@fnorb.fi"));
+        g_assert_false (contacts.is_personal("bar-zzz@fnorb.xr"));
+}
+
 
 
 int
@@ -81,6 +97,7 @@ main (int argc, char *argv[])
         g_test_init (&argc, &argv, NULL);
 
         g_test_add_func ("/mu-contacts/01", test_mu_contacts_01);
+        g_test_add_func ("/mu-contacts/02", test_mu_contacts_02);
 
         g_log_set_handler (NULL,
                            (GLogLevelFlags)

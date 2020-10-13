@@ -25,6 +25,7 @@
 #include <sstream>
 #include <functional>
 #include <algorithm>
+#include <regex>
 
 #include <utils/mu-utils.hh>
 #include <glib.h>
@@ -34,7 +35,21 @@ using namespace Mu;
 ContactInfo::ContactInfo (const std::string& _full_address,
                           const std::string& _email,
                           const std::string& _name,
-                          bool _personal, time_t _last_seen, size_t _freq):
+                          time_t _last_seen):
+        full_address{_full_address},
+        email{_email},
+        name{_name},
+        last_seen{_last_seen},
+        freq{1},
+        tstamp{g_get_monotonic_time()} {}
+
+
+ContactInfo::ContactInfo (const std::string& _full_address,
+                          const std::string& _email,
+                          const std::string& _name,
+                          bool _personal,
+                          time_t _last_seen,
+                          size_t _freq):
         full_address{_full_address},
         email{_email},
         name{_name},
@@ -42,7 +57,6 @@ ContactInfo::ContactInfo (const std::string& _full_address,
         last_seen{_last_seen},
         freq{_freq},
         tstamp{g_get_monotonic_time()} {}
-
 
 struct EmailHash {
         std::size_t operator()(const std::string& email) const {
@@ -95,18 +109,54 @@ using ContactUMap = std::unordered_map<const std::string, ContactInfo, EmailHash
 using ContactSet  = std::set<std::reference_wrapper<const ContactInfo>, ContactInfoLessThan>;
 
 struct Contacts::Private {
-        Private(const std::string& serialized):
-                contacts_{deserialize(serialized)}
-        {}
+        Private(const std::string& serialized,
+                const StringVec& personal):
+                contacts_{deserialize(serialized)} {
+                make_personal(personal);
+        }
 
+        void make_personal(const StringVec& personal);
         ContactUMap deserialize(const std::string&) const;
         std::string serialize() const;
 
         ContactUMap contacts_;
         std::mutex  mtx_;
+
+        StringVec               personal_plain_;
+        std::vector<std::regex> personal_rx_;
 };
 
 constexpr auto Separator = "\xff"; // Invalid in UTF-8
+
+void
+Contacts::Private::make_personal (const StringVec& personal)
+{
+        for (auto&& p: personal)  {
+
+                if (p.empty())
+                        continue; // invalid
+
+                if (p.size() < 2 || p.at(0) != '/' || p.at(p.length() - 1) != '/')
+                        personal_plain_.emplace_back(p); // normal address
+                else {
+                        // a regex pattern.
+                        try {
+                                const auto rxstr{p.substr(1, p.length()-2)};
+                                personal_rx_.emplace_back(
+                                        std::regex(rxstr,
+                                                   std::regex::basic |
+                                                   std::regex::optimize |
+                                                   std::regex::icase));
+
+                        } catch (const std::regex_error& rex) {
+                                g_warning ("invalid personal address regexp '%s': %s",
+                                           p.c_str(), rex.what());
+                        }
+                }
+        }
+}
+
+
 
 ContactUMap
 Contacts::Private::deserialize(const std::string& serialized) const
@@ -131,15 +181,14 @@ Contacts::Private::deserialize(const std::string& serialized) const
                                (std::size_t)g_ascii_strtoll(parts[5].c_str(), NULL, 10)); // freq
 
                 contacts.emplace(std::move(parts[1]), std::move(ci));
-
         }
 
         return contacts;
 }
 
 
-Contacts::Contacts (const std::string& serialized) :
-        priv_{std::make_unique<Private>(serialized)}
+Contacts::Contacts (const std::string& serialized, const StringVec& personal) :
+        priv_{std::make_unique<Private>(serialized, personal)}
 {}
 
 Contacts::~Contacts() = default;
@@ -170,44 +219,42 @@ Contacts::serialize() const
 }
 
 
-// for now, we only care about _not_ having newlines.
 static void
 wash (std::string& str)
 {
         str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
 }
 
-
 void
 Contacts::add (ContactInfo&& ci)
 {
         std::lock_guard<std::mutex> l_{priv_->mtx_};
 
-        auto down = g_ascii_strdown (ci.email.c_str(), -1);
-        std::string email{down};
-        g_free(down);
+        auto it = priv_->contacts_.find(ci.email);
 
-        auto it = priv_->contacts_.find(email);
-        if (it != priv_->contacts_.end()) {
-                auto& ci2 = it->second;
-                ++ci2.freq;
-                if (ci.last_seen > ci2.last_seen) {
-                        ci2.last_seen = ci.last_seen;
-                        wash(ci.email);
-                        ci2.email = std::move(ci.email);
-                        if (!ci.name.empty()) {
-                                wash(ci.name);
-                                ci2.name = std::move(ci.name);
-                        }
+        if (it == priv_->contacts_.end()) {   // completely new contact
+                wash(ci.name);
+                wash(ci.full_address);
+                ci.freq     = 1;
+                ci.personal = is_personal(ci.email);
+                auto email{ci.email};
+                priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(ci)));
+        } else { // existing contact.
+                auto& ci_existing{it->second};
+                ++ci_existing.freq;
+
+                if (ci.last_seen > ci_existing.last_seen) {
+                        // update.
+                        wash(ci.name);
+                        ci_existing.name = std::move(ci.name);
+
+                        ci_existing.email = std::move(ci.email);
+
+                        wash(ci.full_address);
+                        ci_existing.full_address = std::move(ci.full_address);
+                        ci_existing.tstamp       = g_get_monotonic_time();
                 }
         }
-
-        wash(ci.name);
-        wash(ci.email);
-        wash(ci.full_address);
-
-        priv_->contacts_.emplace(
-                        ContactUMap::value_type(std::move(email), std::move(ci)));
 }
 
 
@@ -216,8 +263,7 @@ Contacts::_find (const std::string& email) const
 {
         std::lock_guard<std::mutex> l_{priv_->mtx_};
 
-        ContactInfo ci{"", email, "", false, 0};
-        const auto it = priv_->contacts_.find(ci.email);
+        const auto it = priv_->contacts_.find(email);
         if (it == priv_->contacts_.end())
                 return {};
         else
@@ -259,6 +305,23 @@ Contacts::for_each(const EachContactFunc& each_contact) const
         for (const auto& ci: sorted)
                 each_contact (ci);
 }
+
+bool
+Contacts::is_personal(const std::string& addr) const
+{
+        for (auto&& p: priv_->personal_plain_)
+                if (g_ascii_strcasecmp(addr.c_str(), p.c_str()) == 0)
+                        return true;
+
+        for (auto&& rx: priv_->personal_rx_) {
+                std::smatch m; // perhaps cache addr in personal_plain_?
+                if (std::regex_match(addr, m, rx))
+                        return true;
+        }
+
+        return false;
+}
+
 
 /// C binding
 

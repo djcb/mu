@@ -79,7 +79,6 @@ test_store_add_count_remove ()
 }
 
 
-
 int
 main (int argc, char *argv[])
 {
