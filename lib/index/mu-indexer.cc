@@ -102,7 +102,6 @@ Indexer::Private::handler (const std::string& fullpath, struct stat *statbuf,
 {
         switch (htype) {
         case Scanner::HandleType::EnterDir: {
-
                 // in lazy-mode, we ignore this dir if its dirstamp suggest it
                 // is up-to-date (this is _not_ always true; hence we call it
                 // lazy-mode)
@@ -134,7 +133,7 @@ Indexer::Private::handler (const std::string& fullpath, struct stat *statbuf,
 
         }
         case Scanner::HandleType::LeaveDir: {
-                store_.set_dirstamp(fullpath, ::time({}));
+                store_.set_dirstamp(fullpath, statbuf->st_mtime);
                 return true;
         }
 
