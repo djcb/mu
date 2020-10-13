@@ -120,12 +120,13 @@ mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
 
         install_sig_handler ();
 
-        store.indexer().start(conf);
-        while (!CaughtSignal && store.indexer().is_running()) {
+        auto& indexer{store.indexer()};
+        indexer.start(conf);
+        while (!CaughtSignal && indexer.is_running()) {
                 if (!opts->quiet)
-                        print_stats (store.indexer().progress(), !opts->nocolor);
+                        print_stats (indexer.progress(), !opts->nocolor);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
                 if (!opts->quiet) {
                         std::cout << "\r";
