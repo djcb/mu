@@ -779,24 +779,24 @@ get_new_basename (void)
 				g_get_host_name ());
 }
 
-static const char*
-get_path_separator(const char *path)
+static char*
+find_path_separator(const char *path)
 {
-    const char *cur;
-    for (cur = &path[strlen(path)-1]; cur > path; --cur) {
-        if ((*cur == ':' || *cur == '!' || *cur == ';') &&
-            (cur[1] == '2' && cur[2] == ',')) {
-            return cur;
+        const char *cur;
+        for (cur = &path[strlen(path)-1]; cur > path; --cur) {
+                if ((*cur == ':' || *cur == '!' || *cur == ';') &&
+                    (cur[1] == '2' && cur[2] == ',')) {
+                        return (char*)cur;
+                }
         }
-    }
-    return NULL;
+        return NULL;
 }
 
 char*
 mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			 MuFlags newflags, gboolean new_name)
 {
-    char *mfile, *mdir, *custom_flags, *newpath, flags_sep = ':';
+        char *mfile, *mdir, *custom_flags, *cur, *newpath, flags_sep = ':';
 
 	g_return_val_if_fail (oldpath, NULL);
 
@@ -807,30 +807,27 @@ mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 	if (!mdir)
 		return NULL;
 
-    /* determine the name of the location of the flag separator */
+        /* determine the name of the location of the flag separator */
 
 	if (new_name) {
-        const char *cur;
 		mfile = get_new_basename ();
-        cur = get_path_separator (oldpath);
-        if (cur) {
-            /* preserve the existing flags separator
-             * in the new file name */
-            flags_sep = *cur;
-        }
-    } else {
-        char *cur;
-        mfile = g_path_get_basename (oldpath);
-        cur = (char*) get_path_separator (mfile);
-        if (cur) {
-            /* get the custom flags (if any) */
-            custom_flags =
-                mu_flags_custom_from_str (cur + 3);
-            /* preserve the existing flags separator
-             * in the new file name */
-            flags_sep = *cur;
-            cur[0] = '\0'; /* strip the flags */
-        }
+                cur = find_path_separator (oldpath);
+                if (cur) {
+                        /* preserve the existing flags separator
+                         * in the new file name */
+                        flags_sep = *cur;
+                }
+        } else {
+                mfile = g_path_get_basename (oldpath);
+                cur = find_path_separator (mfile);
+                if (cur) {
+                        /* get the custom flags (if any) */
+                        custom_flags = mu_flags_custom_from_str (cur + 3);
+                        /* preserve the existing flags separator
+                         * in the new file name */
+                        flags_sep = *cur;
+                        cur[0] = '\0'; /* strip the flags */
+                }
 	}
 
 	newpath = get_new_path (new_mdir ? new_mdir : mdir,
