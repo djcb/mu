@@ -23,11 +23,18 @@
       of multiple cores. Note that for now, indexing in ~mu4e~ is still a blocking
       operation.
 
+    - Portability updates for dealing with non-POSIX systems, and in particular
+      VFAT filesystem, and building using Clang/libc++.
+
+    - The personal addresses (as per ~--my-address=~ for ~mu init~) can now also
+      include regular expressions (basic POSIX); wrap the expression in ~/~, e.g.,
+      ~--my-address='/.*@example.*/~'.
+
 *** mu4e
 
     - Include maildir-shortcuts in the main-view with overall/unread counts,
       similar to bookmarks, and with the same ~:hide~ and ~:hide-unread~ properties.
-      Note that for the latter, you see to update your maildir-shortcuts to the
+      Note that for the latter, you need to update your maildir-shortcuts to the
       new format, as explained in the ~mu4e-maildir-shortcuts~ docstring.
 
       You can set ~mu4e-main-hide-fully-read~ to hide any bookmarks/maildirs that
@@ -41,6 +48,13 @@
 
     - Add a variable ~mu4e-mu-debug~ which, when set to non-~nil~ makes the ~mu~
       server log more verbosely (to ~mu.log~ or the journal)
+
+    - Better alignment in headers-buffers; this looks nicer, but is also a bit
+      slower, hence you need to enable ~mu4e-headers-precise-alignment~ for this.
+
+    - Support mu's new regexp-based personal addresses, and add
+      ~mu4e-personal-address-p~ to check whether a given string matches a personal
+      address.
 
 * 1.4 (released, as of April 18 2020)
 
