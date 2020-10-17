@@ -275,19 +275,17 @@ expressions, in which case any of those are tried for a match."
          (mu4e-message-field msg cfield))))))
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
-  "Does contact-field CFIELD in MSG match me?
-Checks whether any of the of the contacts in field
-CFIELD (either :to, :from, :cc or :bcc) of msg MSG matches *me*,
-that is, any of the e-mail address in
-`(mu4e-personal-addresses)'. Returns the contact cell that
-matched, or nil."
+  "Does contact-field CFIELD in MSG match me?  Checks whether any
+of the of the contacts in field CFIELD (either :to, :from, :cc or
+:bcc) of msg MSG matches *me*, that is, any of the addresses for
+which `mu4e-personal-address-p' return t. Returns the contact
+cell that matched, or nil."
   (cl-find-if
    (lambda (cc-cell)
      (cl-member-if
       (lambda (addr)
-        (string= (downcase addr) (downcase (cdr cc-cell))))
-      (mu4e-personal-addresses)))
-   (mu4e-message-field msg cfield)))
+        (mu4e-personal-address-p (cdr cc-cell)))
+   (mu4e-message-field msg cfield)))))
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some FIELD from MSGPART.

@@ -604,7 +604,7 @@ cdr element the To: prefix.")
 
 (defun mu4e~headers-from-or-to (msg)
   "When the from address for message MSG is one of the the user's addresses,
-\(as per `mu4e-personal-addresses'), show the To address;
+\(as per `mu4e-personal-address-p'), show the To address;
 otherwise ; show the from address; prefixed with the appropriate
 `mu4e-headers-from-or-to-prefix'."
   (let ((addr (cdr-safe (car-safe (mu4e-message-field msg :from)))))

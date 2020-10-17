@@ -1049,9 +1049,14 @@ mu4e-compose.")
       (mu4e-error "database-path unknown; did you start mu4e?"))
     path))
 
-(defun mu4e-personal-addresses()
-  "Get the user's personal addresses, if any."
-  (when mu4e~server-props (plist-get mu4e~server-props :personal-addresses)))
+(defun mu4e-personal-addresses(&optional no-regexp)
+  "Get the list user's personal addresses, as passed to `mu init --my-address=...'.
+ The address are either plain e-mail address or /regular
+ expressions/. When NO_REGEXP is non-nil, do not include regexp
+ address patterns (if any)."
+  (seq-remove
+   (lambda(addr) (and no-regexp (string-match-p "^/.*/" addr)))
+   (when mu4e~server-props (plist-get mu4e~server-props :personal-addresses))))
 
 (defun mu4e-server-version()
   "Get the server version, which should match mu4e's."
@@ -1059,7 +1064,6 @@ mu4e-compose.")
     (unless version
       (mu4e-error "version unknown; did you start mu4e?"))
     version))
-
 
 
 ;;; Handler functions

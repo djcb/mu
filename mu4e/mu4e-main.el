@@ -275,11 +275,11 @@ When REFRESH is non nil refresh infos from server."
          (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (if mu4e-main-buffer-hide-personal-addresses ""
-        (when (and user-mail-address (not (member user-mail-address addrs)))
+        (unless (mu4e-personal-address-p user-mail-address)
           (mu4e-message (concat
-                         "Note: `user-mail-address' ('%s') is not part "
-                         "of mu's addresses; add it with 'mu init --my-address='")
-                        user-mail-address)))
+                         "Tip: `user-mail-address' ('%s') is not part "
+                         "of mu's addresses; add it with 'mu init
+                        --my-address='") user-mail-address)))
       (mu4e-main-mode)
       (goto-char pos))))
 

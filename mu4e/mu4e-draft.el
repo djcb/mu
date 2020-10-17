@@ -36,7 +36,7 @@
 
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, don't include self.
-\(that is, member of `(mu4e-personal-addresses)') in replies."
+(as decided by `mu4e-personal-address-p')"
   :type 'boolean
   :group 'mu4e-compose)
 
@@ -182,10 +182,7 @@ of the original, we simple copy the list form the original."
     (if mu4e-compose-dont-reply-to-self
         (cl-delete-if
          (lambda (to-cell)
-           (cl-member-if
-            (lambda (addr)
-              (string= (downcase addr) (downcase (cdr to-cell))))
-            (mu4e-personal-addresses)))
+           (mu4e-personal-address-p (cdr to-cell)))
          reply-to)
       reply-to)))
 
@@ -246,10 +243,7 @@ REPLY-ALL."
                 cc-lst
               (cl-delete-if
                (lambda (cc-cell)
-                 (cl-member-if
-                  (lambda (addr)
-                    (string= (downcase addr) (downcase (cdr cc-cell))))
-                  (mu4e-personal-addresses)))
+                 (mu4e-personal-address-p (cdr cc-cell)))
                cc-lst))))
       cc-lst)))
 
