@@ -236,11 +236,22 @@ backslashes and double-quotes."
 
 (defun mu4e~proc-start ()
   "Start the mu server process."
+
+  ;; sanity-check 1
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
-     (format
-      "`mu4e-mu-binary' (%S) not found; please set to the mu executable path"
-      mu4e-mu-binary)))
+     "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
+
+  ;; sanity-check 2
+  (let ((version (shell-command-to-string
+                  (format "%s --version | head -1 | sed 's/.*version //' | tr -d '\n'"
+                          mu4e-mu-binary))))
+    (unless (string= version mu4e-mu-version)
+      (mu4e-error
+       (concat
+        "Found mu version %s, but mu4e needs version %s; please set `mu4e-mu-binary' "
+        "accordingly") version mu4e-mu-version)))
+
   (let* ((process-connection-type nil) ;; use a pipe
          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
          (args (if mu4e-mu-debug (cons "--debug" args) args))
