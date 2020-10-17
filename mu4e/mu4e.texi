@@ -1713,8 +1713,8 @@ addresses last seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes old e-mail addresses. The default
 is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen since the start
 of 2010.
-@item @code{mu4e-compose-complete-ignore-address-regexp} --- a regular expression to
-filter out other `junk' e-mail addresses; defaults to ``@t{no-?reply}''.
+@item @code{mu4e-contact-process-function} --- a function to rewrite or
+exclude certain addresses.
 @end itemize
 
 @node Compose hooks
