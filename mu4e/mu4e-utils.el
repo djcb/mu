@@ -710,9 +710,15 @@ completion; for testing/debugging."
     (when mu4e~contacts
       (insert (format "number of contacts cached: %d\n\n"
                       (hash-table-count mu4e~contacts)))
-      (maphash (lambda(key _val)
-                 (insert (format "%S\n" key))) mu4e~contacts)))
-  (pop-to-buffer "*mu4e-contacts-info*"))
+      (let ((contacts))
+        (maphash (lambda (addr rank)
+                   (setq contacts (cons (cons rank addr) contacts))) mu4e~contacts)
+        (setq contacts (sort contacts
+                             (lambda(cell1 cell2) (< (car cell1) (car cell2)))))
+        (dolist (contact contacts)
+          (insert (format "%s\n" (cdr contact))))))
+
+    (pop-to-buffer "*mu4e-contacts-info*")))
 
 (defun mu4e~check-requirements ()
   "Check for the settings required for running mu4e."
