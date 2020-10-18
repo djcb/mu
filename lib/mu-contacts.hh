@@ -47,19 +47,6 @@ struct ContactInfo {
          * @param _full_address the full email address + name.
          * @param _email email address
          * @param _name name or empty
-         * @param _last_seen when was this contact last seen?
-         */
-        ContactInfo (const std::string& _full_address,
-                     const std::string& _email,
-                     const std::string& _name,
-                     time_t _last_seen);
-
-        /**
-         * Construct a new ContactInfo
-         *
-         * @param _full_address the full email address + name.
-         * @param _email email address
-         * @param _name name or empty
          * @param _personal is this a personal contact?
          * @param _last_seen when was this contact last seen?
          * @param _freq how often was this contact seen?
@@ -69,7 +56,7 @@ struct ContactInfo {
                      const std::string& _name,
                      bool personal,
                      time_t _last_seen,
-                     size_t freq);
+                     size_t freq=1);
 
         std::string full_address; /**< Full name <email> */
         std::string email;        /**< email address */

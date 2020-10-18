@@ -35,18 +35,6 @@ using namespace Mu;
 ContactInfo::ContactInfo (const std::string& _full_address,
                           const std::string& _email,
                           const std::string& _name,
-                          time_t _last_seen):
-        full_address{_full_address},
-        email{_email},
-        name{_name},
-        last_seen{_last_seen},
-        freq{1},
-        tstamp{g_get_monotonic_time()} {}
-
-
-ContactInfo::ContactInfo (const std::string& _full_address,
-                          const std::string& _email,
-                          const std::string& _name,
                           bool _personal,
                           time_t _last_seen,
                           size_t _freq):
@@ -233,12 +221,12 @@ Contacts::add (ContactInfo&& ci)
         auto it = priv_->contacts_.find(ci.email);
 
         if (it == priv_->contacts_.end()) {   // completely new contact
+
                 wash(ci.name);
                 wash(ci.full_address);
-                ci.freq     = 1;
-                ci.personal = is_personal(ci.email);
                 auto email{ci.email};
                 priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(ci)));
+
         } else { // existing contact.
                 auto& ci_existing{it->second};
                 ++ci_existing.freq;
@@ -247,12 +235,12 @@ Contacts::add (ContactInfo&& ci)
                         // update.
                         wash(ci.name);
                         ci_existing.name = std::move(ci.name);
-
                         ci_existing.email = std::move(ci.email);
 
                         wash(ci.full_address);
                         ci_existing.full_address = std::move(ci.full_address);
                         ci_existing.tstamp       = g_get_monotonic_time();
+                        ci_existing.last_seen    = ci.last_seen;
                 }
         }
 }

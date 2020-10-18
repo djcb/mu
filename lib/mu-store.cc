@@ -1045,6 +1045,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
                 contacts.add(Mu::ContactInfo(contact->full_address,
                                              contact->email,
                                              contact->name ? contact->name : "",
+                                             msgdoc->_personal,
                                              mu_msg_get_date(msgdoc->_msg)));
 	}
 
