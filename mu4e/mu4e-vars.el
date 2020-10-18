@@ -448,7 +448,10 @@ their canonical counterpart; useful as an example."
 (make-obsolete-variable 'mu4e-compose-complete-ignore-address-regexp
                         "mu4e-contact-process-function (see docstring)" "mu4e 1.3.2")
 
-(defcustom mu4e-contact-process-function nil
+(defcustom mu4e-contact-process-function
+  (lambda(addr) ;; filter-out no-reply addresses
+    (unless (string-match-p "no[t]?[-\\.]?repl\\(y\\|ies\\)" addr)
+      addr))
   "Function for processing contact information for use in auto-completion.
 
 The function receives the contact as a string, e.g
