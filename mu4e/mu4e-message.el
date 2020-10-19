@@ -249,7 +249,7 @@ replace with."
     (buffer-string)))
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
-  "Does MSG's contact-field CFIELD matche rx?
+  "Does MSG's contact-field CFIELD match rx?
 Check if any of the of the CFIELD in MSG matches RX. I.e.
 anything in field CFIELD (either :to, :from, :cc or :bcc, or a
 list of those) of msg MSG matches (with their name or e-mail
@@ -268,7 +268,11 @@ expressions, in which case any of those are tried for a match."
         ;; not a list, check the rx
         (cl-find-if
          (lambda (ct)
-           (let ((name (car ct)) (email (cdr ct)))
+           (let ((name (car ct)) (email (cdr ct))
+                 ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
+                 ;; so let's detect and extract in that case.
+                 (rx (if (string-match-p  "^\\(.*\\)/$" rx)
+                         (substring rx  1 -1) rx)))
              (or
               (and name  (string-match rx name))
               (and email (string-match rx email)))))
@@ -280,12 +284,8 @@ of the of the contacts in field CFIELD (either :to, :from, :cc or
 :bcc) of msg MSG matches *me*, that is, any of the addresses for
 which `mu4e-personal-address-p' return t. Returns the contact
 cell that matched, or nil."
-  (cl-find-if
-   (lambda (cc-cell)
-     (cl-member-if
-      (lambda (addr)
-        (mu4e-personal-address-p (cdr cc-cell)))
-   (mu4e-message-field msg cfield)))))
+  (cl-find-if (lambda (cell) (mu4e-personal-address-p (cdr cell)))
+                (mu4e-message-field msg cfield)))
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some FIELD from MSGPART.
