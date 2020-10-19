@@ -68,14 +68,15 @@
 Evaluate to nil if ADDR matches any of the personal addresses.
 Uses (mu4e-personal-addresses) for the addresses with both the plain
 addresses and /regular expressions/."
-  (seq-find
-   (lambda (m)
-     (if (string-match "/\\(.*\\)/" m)
-         (let ((rx (match-string 1 m))
-               (case-fold-search t))
-           (if (string-match rx addr) t nil))
+  (when addr
+    (seq-find
+     (lambda (m)
+       (if (string-match "/\\(.*\\)/" m)
+           (let ((rx (match-string 1 m))
+                 (case-fold-search t))
+             (if (string-match rx addr) t nil))
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
-   (mu4e-personal-addresses)))
+     (mu4e-personal-addresses))))
 
 (define-obsolete-function-alias 'mu4e-user-mail-address-p
   'mu4e-personal-address-p "1.5.5")

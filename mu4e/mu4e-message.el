@@ -31,6 +31,11 @@
 (require 'flow-fill)
 (require 'shr)
 
+(declare-function mu4e-error "mu4e-utils")
+(declare-function mu4e-warn  "mu4e-utils")
+(declare-function mu4e-personal-address-p "mu4e-utils")
+(declare-function mu4e-make-temp-file  "mu4e-utils")
+
 (defvar mu4e~view-message)
 (defvar shr-inhibit-images)
 
@@ -286,6 +291,19 @@ which `mu4e-personal-address-p' return t. Returns the contact
 cell that matched, or nil."
   (cl-find-if (lambda (cell) (mu4e-personal-address-p (cdr cell)))
                 (mu4e-message-field msg cfield)))
+
+(defun mu4e-message-sent-by-me (msg)
+  "Is this message (to be) sent by me?
+Checks if the from field matches user's personal addresses."
+  (mu4e-message-contact-field-matches-me msg :from))
+
+(defun mu4e-message-personal-p (msg)
+  "Does message have user's personal address in any of the
+contact fields?"
+  (cl-some
+   (lambda (field)
+     (mu4e-message-contact-field-matches-me msg field))
+   '(:from :to :cc :bcc)))
 
 (defsubst mu4e-message-part-field  (msgpart field)
   "Get some FIELD from MSGPART.

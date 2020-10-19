@@ -2766,8 +2766,7 @@ message. An example should clarify this:
       ((mu4e-message-contact-field-matches msg :to
 	 "mu-discuss@@googlegroups.com")
 	"/mu")
-      ;; messages sent directly to me go to /archive
-      ;; also `mu4e-user-mail-address-p' can be used
+      ;; messages sent directly to some spefic address me go to /private
       ((mu4e-message-contact-field-matches msg :to "me@@example.com")
 	"/private")
       ;; messages with football or soccer in the subject go to /football
@@ -2775,9 +2774,7 @@ message. An example should clarify this:
 	 (mu4e-message-field msg :subject))
 	"/football")
       ;; messages sent by me go to the sent folder
-      ((find-if
-	 (lambda (addr)
-	   (mu4e-message-contact-field-matches msg :from addr))
+      ((mu4e-message-sent-by-me msg
 	 (mu4e-personal-addresses))
 	mu4e-sent-folder)
       ;; everything else goes to /archive
