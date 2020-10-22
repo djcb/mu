@@ -77,7 +77,7 @@
          (status (cadr data))
          (event (caddr data))
          (gnus-icalendar-additional-identities (mu4e-personal-addresses 'no-regexp))
-         (reply (gnus-icalendar-with-decoded-handle1
+         (reply (gnus-icalendar-with-decoded-handle
                  handle
                  (let ((gnus-icalendar-find-if (lambda(pred seq) nil)))
                    (gnus-icalendar-event-reply-from-buffer
