@@ -897,11 +897,18 @@ msg_move_check_post (const char *src, const char *dst, GError **err)
 	/* double check -- is the target really there? */
 	if (access (dst, F_OK) != 0)
 		return mu_util_g_set_error
-			(err, MU_ERROR_FILE, "can't find target (%s)",  dst);
+			(err, MU_ERROR_FILE, "can't find target (%s->%s)", src, dst);
 
-	if (access (src, F_OK) == 0)
+	if (access (src, F_OK) == 0) {
+                if (g_strcmp0(src, dst) == 0) {
+                        g_warning ("moved %s to itself", src);
+                        return TRUE;
+                }
+
 		return mu_util_g_set_error
-			(err, MU_ERROR_FILE, "source still there (%s)", src);
+			(err, MU_ERROR_FILE, "source still there (%s->%s)",
+                         src, dst);
+        }
 
 	return TRUE;
 }
@@ -937,7 +944,7 @@ msg_move (const char* src, const char *dst, GError **err)
 
 	if (errno != EXDEV) /* some unrecoverable error occurred */
 		return mu_util_g_set_error
-			(err, MU_ERROR_FILE,"error moving %s to %s", src, dst);
+			(err, MU_ERROR_FILE, "error moving %s -> %s", src, dst);
 
 	/* he EXDEV case -- source and target live on different filesystems */
 	return msg_move_g_file (src, dst, err);
