@@ -3955,8 +3955,14 @@ always agree with @t{mu} about the meaning of various Maildir-flags.
 If you encounter unexpected behavior, it is recommended you check
 before and after a sync-operation. If the problem only shows up
 @emph{after} sync'ing, the problem is with the sync-program, and it's
-most productive to complain there. Otherwise, there have been quite a
-few related queries on the mailing-list; worthwhile to check out.
+most productive to complain there.
+
+Also, you may want to ensure that @t{mu4e-index-lazy-check} is kept at
+its default (@t{nil}) value, since it seems @command{mbsync} can make
+changes that escape a 'lazy' check.
+
+Furthermore, there have been quite a few related queries on the
+mailing-list; worthwhile to check out.
 
 @node Reading messages
 @section Reading messages
