@@ -333,9 +333,17 @@ In the format needed for `mu4e-read-option'.")
 
 ;;; Clear
 
+(defvar mu4e~headers-render-start nil)
+(defvar mu4e~headers-render-time  nil)
+
+(defvar mu4e-headers-report-render-time nil
+  "If non-nil, report on the time it took to render the messages.
+This is mostly useful for profiling.")
+
 (defun mu4e~headers-clear (&optional msg)
   "Clear the header buffer and related data structures."
   (when (buffer-live-p (mu4e-get-headers-buffer))
+    (setq mu4e~headers-render-start (float-time))
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
         (mu4e~mark-clear)
@@ -796,34 +804,47 @@ if provided, or at the end of the buffer otherwise."
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
+
+  (when mu4e~headers-render-start ;; for benchmarking.
+    (setq mu4e~headers-render-time
+          (- (float-time) mu4e~headers-render-start)
+          mu4e~headers-render-start nil))
+  (message "%S" mu4e~headers-render-time)
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
       (save-excursion
         (goto-char (point-max))
         (let ((inhibit-read-only t)
-              (str (if (zerop count) mu4e~no-matches mu4e~end-of-results)))
+              (str (if (zerop count) mu4e~no-matches mu4e~end-of-results))
+              (msg (format "Found %d matching message%s"
+                           count (if (= 1 count) "" "s")))
+              (render-time-ms (when mu4e~headers-render-time
+                                (* mu4e~headers-render-time 1000))))
+          ;; benchmarking.
+          (when (and mu4e-headers-report-render-time (> count 0))
+            (setq msg (concat msg (format " (rendering took %0.1f ms, %0.2f ms/msg)"
+                                          render-time-ms (/ render-time-ms count)))))
           (insert (propertize str 'face 'mu4e-system-face 'intangible t))
           (unless (zerop count)
-            (mu4e-message "Found %d matching message%s"
-                          count (if (= 1 count) "" "s")))))
-      ;; if we need to jump to some specific message, do so now
-      (goto-char (point-min))
-      (when mu4e~headers-msgid-target
-        (if (eq (current-buffer) (window-buffer))
-            (mu4e-headers-goto-message-id mu4e~headers-msgid-target)
-          (let* ((pos (mu4e-headers-goto-message-id mu4e~headers-msgid-target)))
-            (when pos
-              (set-window-point (get-buffer-window) pos)))))
-      (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
-        ;; view the message at point when there is one.
-        (mu4e-headers-view-message))
-      (setq mu4e~headers-view-target nil
-            mu4e~headers-msgid-target nil)
-      (when (mu4e~headers-docid-at-point)
-        (mu4e~headers-highlight (mu4e~headers-docid-at-point))))
+            (mu4e-message "%s" msg))
 
+          ;; if we need to jump to some specific message, do so now
+          (goto-char (point-min))
+          (when mu4e~headers-msgid-target
+            (if (eq (current-buffer) (window-buffer))
+                (mu4e-headers-goto-message-id mu4e~headers-msgid-target)
+              (let* ((pos (mu4e-headers-goto-message-id mu4e~headers-msgid-target)))
+                (when pos
+                  (set-window-point (get-buffer-window) pos)))))
+          (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
+            ;; view the message at point when there is one.
+            (mu4e-headers-view-message))
+          (setq mu4e~headers-view-target nil
+                mu4e~headers-msgid-target nil)
+          (when (mu4e~headers-docid-at-point)
+            (mu4e~headers-highlight (mu4e~headers-docid-at-point)))))
     ;; run-hooks
-    (run-hooks 'mu4e-headers-found-hook)))
+    (run-hooks 'mu4e-headers-found-hook))))
 
 
 ;;; Marking
