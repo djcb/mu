@@ -109,7 +109,10 @@ vertical split-view."
 
 (defcustom mu4e-headers-precise-alignment nil
   "When set, use precise (but relatively slow) alignment for columns.
-Otherwise, do it in a slightly inaccurate but faster way."
+By default, do it in a slightly inaccurate but faster way. To get
+an idea about the difference, In some tests, the rendering time
+was around 5.8 ms per messages for precise alignment, versus 3.3
+for non-precise aligment (for 445 messages)."
   :type 'boolean
   :group 'mu4e-headers)
 
