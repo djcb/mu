@@ -63,17 +63,17 @@ test_list()
         const auto nstr{Sexp::make_string("foo")};
         g_assert_true(nstr.value() == "foo");
         g_assert_true(nstr.type()  == Sexp::Type::String);
-        assert_equal(nstr.to_string(), "\"foo\"");
+        assert_equal(nstr.to_sexp_string(), "\"foo\"");
 
         const auto nnum{Sexp::make_number(123)};
         g_assert_true(nnum.value() == "123");
         g_assert_true(nnum.type()  == Sexp::Type::Number);
-        assert_equal(nnum.to_string(), "123");
+        assert_equal(nnum.to_sexp_string(), "123");
 
         const auto nsym{Sexp::make_symbol("blub")};
         g_assert_true(nsym.value() == "blub");
         g_assert_true(nsym.type()  == Sexp::Type::Symbol);
-        assert_equal(nsym.to_string(), "blub");
+        assert_equal(nsym.to_sexp_string(), "blub");
 
         Sexp::List list;
         list .add(Sexp::make_string("foo"))
@@ -85,7 +85,7 @@ test_list()
         g_assert_true(nlst.type() == Sexp::Type::List);
         g_assert_true(nlst.list().at(1).value() == "123");
 
-        assert_equal(nlst.to_string(),"(\"foo\" 123 blub)");
+        assert_equal(nlst.to_sexp_string(),"(\"foo\" 123 blub)");
 }
 
 
@@ -95,7 +95,7 @@ test_prop_list()
         Sexp::List l1;
         l1.add_prop(":foo", Sexp::make_string("bar"));
         Sexp s2{Sexp::make_list(std::move(l1))};
-        assert_equal(s2.to_string(), "(:foo \"bar\")");
+        assert_equal(s2.to_sexp_string(), "(:foo \"bar\")");
 
 
         Sexp::List l2;
@@ -105,7 +105,7 @@ test_prop_list()
         Sexp::List l3;
         l3.add_prop(":cuux", Sexp::make_list(std::move(l2)));
         Sexp s3{Sexp::make_list(std::move(l3))};
-        assert_equal(s3.to_string(), "(:cuux (:foo \"bar\" :bar 77))");
+        assert_equal(s3.to_sexp_string(), "(:cuux (:foo \"bar\" :bar 77))");
 }
 
 static void
@@ -122,7 +122,7 @@ test_props()
                 ":flub", Sexp::make_symbol("fnord"),
                 ":boo",  std::move(sexp2));
 
-        assert_equal(sexp.to_string(),
+        assert_equal(sexp.to_sexp_string(),
                      "(:foo \"b\303\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
 }
 

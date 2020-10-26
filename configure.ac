@@ -146,14 +146,6 @@ glib_version="$($PKG_CONFIG --modversion glib-2.0)"
 PKG_CHECK_MODULES(GMIME,gmime-3.0)
 gmime_version="$($PKG_CONFIG --modversion gmime-3.0)"
 
-# gmime, version 3.0 or higher
-PKG_CHECK_MODULES(JSON_GLIB,json-glib-1.0 >= 1.4,[have_json_glib=yes],[have_json_glib=no])
-AS_IF([test "x$have_json_glib" = "xyes"],[
-  json_glib_version="$($PKG_CONFIG --modversion json-glib-1.0)"
-  AC_DEFINE(HAVE_JSON_GLIB,[1], [Do we support json-glib?])
-])
-AM_CONDITIONAL(HAVE_JSON_GLIB,[test "x$have_json_glib" = "xyes"])
-
 # xapian checking - we need 1.4 at least
 PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
   have_xapian=yes
@@ -295,10 +287,6 @@ echo
 echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
-
-AM_COND_IF([HAVE_JSON_GLIB],[
-echo "Json-Glib version                    : $json_glib_version"
-])
 
 AM_COND_IF([BUILD_GUI],[
 echo "GTK+ version                         : $gtk_version"

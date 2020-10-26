@@ -595,10 +595,6 @@ char*       mu_str_flags    (MuFlags flags)
 
 struct _MuMsgIterThreadInfo;
 
-#ifdef HAVE_JSON_GLIB
-
-struct _JsonNode; /* forward declaration */
-
 /**
  * convert the msg to json
  *
@@ -612,13 +608,11 @@ struct _JsonNode; /* forward declaration */
  *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
  *      files and include links to those in the sexp
  *
- * @return a string with the sexp (free with g_free) or NULL in case of error
+ * @return a string with the json (free with g_free) or NULL in case of error
  */
-struct _JsonNode* mu_msg_to_json (MuMsg *msg, unsigned docid,
+char* mu_msg_to_json (MuMsg *msg, unsigned docid,
 				  const struct _MuMsgIterThreadInfo *ti,
 				  MuMsgOptions ops) G_GNUC_WARN_UNUSED_RESULT;
-#endif /*HAVE_JSON_GLIB*/
-
 
 /**
  * convert the msg to a Lisp symbolic expression (for further processing in

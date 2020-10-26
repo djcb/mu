@@ -33,7 +33,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
         if (!call.is_call()) {
                 throw Mu::Error{Error::Code::Command,
                                 "expected call-sexpr but got %s",
-                                call.to_string().c_str()};
+                                call.to_sexp_string().c_str()};
         }
 
         const auto& params{call.list()};
@@ -41,7 +41,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
         if (cmd_it == cmap.end())
                 throw Mu::Error{Error::Code::Command,
                                 "unknown command in call %s",
-                                call.to_string().c_str()};
+                                call.to_sexp_string().c_str()};
 
         const auto& cinfo{cmd_it->second};
 
@@ -67,7 +67,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
                         if (arginfo.required)
                                 throw Mu::Error{Error::Code::Command,
                                                 "missing required parameter %s in call %s",
-                                                argname.c_str(), call.to_string().c_str()};
+                                                argname.c_str(), call.to_sexp_string().c_str()};
                         continue; // not required
                 }
 
@@ -78,7 +78,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
                                         "parameter %s expects type %s, but got %s in call %s",
                                         argname.c_str(), to_string(arginfo.type).c_str(),
                                         to_string(param_it->type()).c_str(),
-                                        call.to_string().c_str()};
+                                        call.to_sexp_string().c_str()};
         }
 
         // all passed parameters must be known
@@ -87,7 +87,7 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
                                  [&](auto&& arg) {return params.at(i).value() == arg.first;}))
                         throw Mu::Error{Error::Code::Command,
                                         "unknown parameter %s in call %s",
-                                        params.at(i).value().c_str(), call.to_string().c_str()};
+                                        params.at(i).value().c_str(), call.to_sexp_string().c_str()};
         }
 
         if (cinfo.handler)

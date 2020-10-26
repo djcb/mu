@@ -42,10 +42,6 @@
 #include "mu-cmd.hh"
 #include "mu-threader.h"
 
-#ifdef HAVE_JSON_GLIB
-#include <json-glib/json-glib.h>
-#endif /*HAVE_JSON_GLIB*/
-
 using namespace Mu;
 
 typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
@@ -539,7 +535,6 @@ to_string (const Mu::Sexp& sexp, bool color, size_t level = 0)
 }
 
 
-
 static gboolean
 output_sexp (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
@@ -555,21 +550,15 @@ output_sexp (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 static gboolean
 output_json (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 {
-#ifdef HAVE_JSON_GLIB
-	JsonNode			*node;
 	const MuMsgIterThreadInfo	*ti;
 	char				*s;
 
 	if (mu_msg_iter_is_first(iter))
 		g_print ("[\n");
 
-	ti   = opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL;
-	node = mu_msg_to_json (msg, mu_msg_iter_get_docid (iter),
-			       ti, MU_MSG_OPTION_HEADERS_ONLY);
-
-	s = json_to_string (node, TRUE);
-	json_node_free (node);
-
+	ti = opts->threads ? mu_msg_iter_get_thread_info (iter) : NULL;
+	s  = mu_msg_to_json (msg, mu_msg_iter_get_docid (iter),
+                             ti, MU_MSG_OPTION_HEADERS_ONLY);
 	fputs (s, stdout);
 	g_free (s);
 
@@ -579,12 +568,6 @@ output_json (MuMsg *msg, MuMsgIter *iter, const MuConfig *opts, GError **err)
 		fputs (",\n", stdout);
 
 	return TRUE;
-#else
-	g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-		     "this mu was built without json support");
-	return FALSE;
-#endif /*HAVE_JSON_GLIB*/
-
 }
 
 static void

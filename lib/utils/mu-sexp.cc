@@ -179,7 +179,7 @@ Sexp::make_parse (const std::string& expr)
 
 
 std::string
-Sexp::to_string () const
+Sexp::to_sexp_string () const
 {
         std::stringstream sstrm;
 
@@ -188,7 +188,7 @@ Sexp::to_string () const
                 sstrm << '(';
                 bool first{true};
                 for (auto&& child : list()) {
-                        sstrm << (first ? "" : " ") << child.to_string();
+                        sstrm << (first ? "" : " ") << child.to_sexp_string();
                         first = false;
                 }
                 sstrm << ')';
@@ -199,6 +199,58 @@ Sexp::to_string () const
                 break;
         case Type::Number:
         case Type::Symbol:
+        case Type::Empty:
+        default:
+                sstrm << value();
+        }
+
+        return sstrm.str();
+}
+
+
+std::string
+Sexp::to_json_string () const
+{
+        std::stringstream sstrm;
+
+        switch (type()) {
+        case Type::List: {
+                // property-lists become JSON objects
+                if (is_prop_list()) {
+                        sstrm << "{";
+                        auto it{list().begin()};
+                        bool first{true};
+                        while (it != list().end()) {
+                                sstrm << (first?"":",") << quote(it->value()) << ":";
+                                ++it;
+                                sstrm << it->to_json_string();
+                                ++it;
+                                first = false;
+                        }
+                        sstrm << "}";
+                } else { // other lists become arrays.
+                        sstrm << '[';
+                        bool first{true};
+                        for (auto&& child : list()) {
+                                sstrm << (first ? "" : ", ") << child.to_json_string();
+                                first = false;
+                        }
+                        sstrm << ']';
+                }
+                break;
+        }
+        case Type::String:
+                sstrm << quote(value());
+                break;
+        case Type::Symbol:
+                if (is_nil())
+                        sstrm << "false";
+                else if (is_t())
+                        sstrm << "true";
+                else
+                        sstrm << quote(value());
+                break;
+        case Type::Number:
         case Type::Empty:
         default:
                 sstrm << value();

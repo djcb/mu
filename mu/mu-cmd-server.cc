@@ -147,7 +147,7 @@ print_expr (const char* frm, ...)
 static void
 print_expr (const Sexp& sexp)
 {
-        print_expr ("%s", sexp.to_string().c_str());
+        print_expr ("%s", sexp.to_sexp_string().c_str());
 }
 
 static void

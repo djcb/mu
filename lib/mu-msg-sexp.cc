@@ -478,5 +478,14 @@ mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
 		MuMsgOptions opts)
 {
         return g_strdup (Mu::msg_to_sexp (msg, docid, ti, opts)
-                         .to_string().c_str());
+                         .to_sexp_string().c_str());
+}
+
+
+char*
+mu_msg_to_json (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
+		MuMsgOptions opts)
+{
+        return g_strdup (Mu::msg_to_sexp (msg, docid, ti, opts)
+                         .to_json_string().c_str());
 }

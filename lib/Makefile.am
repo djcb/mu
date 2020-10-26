@@ -20,13 +20,6 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS= utils query index
 
-if HAVE_JSON_GLIB
-json_srcs=							\
-	mu-msg-json.c						\
-	mu-msg-json.h
-json_flag="-DHAVE_JSON_GLIB"
-endif
-
 TESTDEFS=							\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
 	-DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"		\

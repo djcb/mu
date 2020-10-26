@@ -104,11 +104,19 @@ struct Sexp {
         }
 
         /**
-         * Convert a Sexp::Node to its string representation
+         * Convert a Sexp::Node to its S-expression string representation
          *
          * @return the string representation
          */
-        std::string to_string() const;
+        std::string to_sexp_string() const;
+
+
+        /**
+         * Convert a Sexp::Node to its JSON string representation
+         *
+         * @return the string representation
+         */
+        std::string to_json_string() const;
 
         /**
          * Return the type of this Node.
@@ -341,7 +349,7 @@ operator<<(std::ostream& os, Sexp::Type id)
 static inline std::ostream&
 operator<<(std::ostream& os, const Sexp& sexp)
 {
-        os << sexp.to_string();
+        os << sexp.to_sexp_string();
         return os;
 }
 
