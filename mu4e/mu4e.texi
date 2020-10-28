@@ -3222,6 +3222,15 @@ you can do so by adding the following to your configuration:
 (setq mail-user-agent 'mu4e-user-agent)
 @end lisp
 
+Similarly, to specify @t{mu4e} as your preferred method for reading mail,
+customize the variable @code{read-mail-command}.
+
+@lisp
+(set-variable 'read-mail-command 'mu4e)
+@end lisp
+
+(@pxref{Top,,Emacs,Sending Mail, Mail Methods})
+
 @node Org-mode links
 @section Org-mode links
 
@@ -3352,12 +3361,13 @@ After this, you should be able to:
 @section Sauron
 
 The Emacs package @t{sauron}@footnote{Sauron can be found at
-@url{https://github.com/djcb/sauron}, or in the Marmalade package repository
-at @url{https://marmalade-repo.org/}} (by the same author) can be used
-to get notifications about new mails. If you run something like the below
-script from your @t{crontab} (or have some other way of having it execute
-every @emph{n} minutes), you receive notifications in the @t{sauron}-buffer
-when new messages arrive.
+@url{https://github.com/djcb/sauron}, or in the MELPA (Milkypostman’s
+Emacs Lisp Package Archive) package repository at
+@url{https://melpa.org/}} (by the same author) can be used to
+get notifications about new mails. If you run something like the below
+script from your @t{crontab} (or have some other way of having it
+execute every @emph{n} minutes), you receive notifications in the
+@t{sauron}-buffer when new messages arrive.
 
 @verbatim
 #!/bin/sh
@@ -3389,7 +3399,7 @@ fi
 # -mmin -5: consider only messages that were created / changed in the
 # the last 5 minutes
 #
-for f in `find $CHECKDIR -mmin -5 -a -type f`; do
+for f in `find $CHECKDIR -mmin -5 -a -type f -not -iname '.uidvalidity'`; do
   subject=`$MU view $f | grep '^Subject:' | sed 's/^Subject://'`
   sauron_msg "mail: $subject"
 done
@@ -3461,7 +3471,7 @@ or create a new one.
 @section Hydra
 
 People sometimes ask about having multi-character shortcuts for
-bookmarks; and easy way to achieve this, is by using anm emacs package
+bookmarks; an easy way to achieve this, is by using an emacs package
 called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
 
 With Hydra installed, we can add multi-character shortcuts, for instance:
@@ -3879,6 +3889,13 @@ its docstring).
 
 @subsection How can I hide messages from the search results?
 See the variable @code{mu4e-headers-hide-predicate}.
+
+For example, to filter out GMail's spam, set it to:
+@lisp
+(setq mu4e-headers-hide-predicate
+     (lambda (msg)
+       (string-suffix-p "Spam" (mu4e-message-field msg :maildir))))
+@end lisp
 
 @subsection I'm getting an error 'Variable binding depth exceeds max-specpdl-size' when using mu4e -- what can I do about it?
 The error occurs because @t{mu4e} is binding more variables than
