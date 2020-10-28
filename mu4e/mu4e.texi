@@ -3474,7 +3474,7 @@ or create a new one.
 @section Hydra
 
 People sometimes ask about having multi-character shortcuts for
-bookmarks; and easy way to achieve this, is by using an emacs package
+bookmarks; an easy way to achieve this, is by using an emacs package
 called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
 
 With Hydra installed, we can add multi-character shortcuts, for instance:
@@ -3892,6 +3892,13 @@ its docstring).
 
 @subsection How can I hide messages from the search results?
 See the variable @code{mu4e-headers-hide-predicate}.
+
+For example, to filter out GMail's spam, set it to:
+@lisp
+(setq mu4e-headers-hide-predicate
+     (lambda (msg)
+       (string-suffix-p "Spam" (mu4e-message-field msg :maildir))))
+@end lisp
 
 @subsection I'm getting an error 'Variable binding depth exceeds max-specpdl-size' when using mu4e -- what can I do about it?
 The error occurs because @t{mu4e} is binding more variables than
