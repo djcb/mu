@@ -105,6 +105,8 @@ libmu_la_SOURCES=						\
 	mu-runtime.h						\
 	mu-script.c						\
 	mu-script.h						\
+	mu-server.cc						\
+	mu-server.hh						\
 	mu-store.cc						\
 	mu-store.hh						\
 	mu-threader.c						\
