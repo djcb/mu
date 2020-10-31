@@ -53,6 +53,12 @@ AX_CXX_COMPILE_STDCXX_14
 m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
 AX_VALGRIND_CHECK
 
+# i.e,., do we hgave -z muldefs?, if not (MacOS), we can't
+# build the guile backend
+AX_CHECK_LINK_FLAG([-allow-multiple-definition])dnl
+AM_CONDITIONAL([LD_ALLOW_MULTIPLE_DEFINITION],
+	[test "x$ax_cv_check_ldflags___allow_multiple_definition" = xyes])dnl
+
 LT_INIT
 
 AX_CODE_COVERAGE
@@ -214,18 +220,21 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 ###############################################################################
 # build with guile 3.0/2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
-AS_IF([test "x$enable_guile" != "xno"],[
-  PKG_CHECK_MODULES(GUILE, [guile-3.0], [have_guile=yes],[
-    PKG_CHECK_MODULES(GUILE, [guile-2.2], [have_guile=yes], [have_guile=no])])
-  AS_IF([test "x$have_guile" = "xyes"],[
-    GUILE_PKG([3.0 2.2])
-    GUILE_PROGS
-    GUILE_FLAGS
-    AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
-    AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
-    AC_SUBST(GUILE_SNARF, [guile-snarf])
-    guile_version=$($PKG_CONFIG guile-$GUILE_EFFECTIVE_VERSION --modversion)
-  ])
+AM_COND_IF([LD_ALLOW_MULTIPLE_DEFINITION],[
+  AS_IF([test "x$enable_guile" != "xno"],[
+    PKG_CHECK_MODULES(GUILE, [guile-3.0], [have_guile=yes],[
+      PKG_CHECK_MODULES(GUILE, [guile-2.2], [have_guile=yes], [have_guile=no])])
+    AS_IF([test "x$have_guile" = "xyes"],[
+      GUILE_PKG([3.0 2.2])
+      GUILE_PROGS
+      GUILE_FLAGS
+      AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
+      AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
+      AC_SUBST(GUILE_SNARF, [guile-snarf])
+      guile_version=$($PKG_CONFIG guile-$GUILE_EFFECTIVE_VERSION --modversion)
+    ])
+  ])],[
+  AM_MSG_NOTICE(["no guile: need muldef support"])
 ])
 AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes"])
 ###############################################################################

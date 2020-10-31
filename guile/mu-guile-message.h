@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -32,7 +32,6 @@ G_BEGIN_DECLS
  * @return
  */
 void* mu_guile_message_init (void *data);
-
 
 G_END_DECLS
 
