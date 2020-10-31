@@ -234,7 +234,7 @@ AM_COND_IF([LD_ALLOW_MULTIPLE_DEFINITION],[
       guile_version=$($PKG_CONFIG guile-$GUILE_EFFECTIVE_VERSION --modversion)
     ])
   ])],[
-  AM_MSG_NOTICE(["no guile: need muldef support"])
+  AC_MSG_NOTICE([no muldef support, so no guile atm])
 ])
 AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes"])
 ###############################################################################
