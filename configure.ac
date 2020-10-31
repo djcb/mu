@@ -55,9 +55,9 @@ AX_VALGRIND_CHECK
 
 # i.e,., do we hgave -z muldefs?, if not (MacOS), we can't
 # build the guile backend
-AX_CHECK_LINK_FLAG([-allow-multiple-definition])dnl
-AM_CONDITIONAL([LD_ALLOW_MULTIPLE_DEFINITION],
-	[test "x$ax_cv_check_ldflags___allow_multiple_definition" = xyes])dnl
+AX_CHECK_LINK_FLAG([-z muldefs])dnl
+AM_CONDITIONAL([LD_ALLOW_Z_MULDEF],
+	[test "x$ax_cv_check_ldflags___z_muldefs" = xyes])dnl
 
 LT_INIT
 
@@ -220,7 +220,7 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 ###############################################################################
 # build with guile 3.0/2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
-AM_COND_IF([LD_ALLOW_MULTIPLE_DEFINITION],[
+AM_COND_IF([LD_ALLOW_Z_MULDEF],[
   AS_IF([test "x$enable_guile" != "xno"],[
     PKG_CHECK_MODULES(GUILE, [guile-3.0], [have_guile=yes],[
       PKG_CHECK_MODULES(GUILE, [guile-2.2], [have_guile=yes], [have_guile=no])])
