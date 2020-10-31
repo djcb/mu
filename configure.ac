@@ -211,6 +211,15 @@ AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
 ###############################################################################
 
+################################################################################
+# should we try to build an emacs dynamic module?
+AC_CHECK_HEADER([emacs-module.h],[
+  AC_DEFINE([HAVE_EMACS_MODULE_H],[1], [Whether we have the emacs-module header])],
+  AC_MSG_NOTICE([emacs-module.h not found; not building module])
+)
+AM_CONDITIONAL([BUILD_EMACS_MODULE],[test "x$ac_cv_header_emacs_module_h" != "x"])
+################################################################################
+
 ###############################################################################
 # build with guile 3.0/2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
@@ -302,13 +311,13 @@ AM_COND_IF([BUILD_GUILE],[
 echo "Guile version                        : $guile_version"
 ])
 
-if test "x$build_mu4e" = "xyes"; then
+AS_IF([test "x$build_mu4e" = "xyes"],[
+echo "Build mu4e                           : yes"
 echo "Emacs version                        : $emacs_version"
-fi
-
-echo
-echo "Have wordexp                         : $ac_cv_header_wordexp_h"
-echo "Build mu4e emacs frontend            : $build_mu4e"
+AM_COND_IF([BUILD_EMACS_MODULE],[
+echo "Build emacs module                   : yes"],[
+echo "Build emacs module                   : no"
+])])
 
 AM_COND_IF([BUILD_GUI],[
 echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
