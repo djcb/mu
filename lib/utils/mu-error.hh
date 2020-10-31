@@ -30,7 +30,7 @@ namespace Mu {
 struct Error final: public std::exception {
 
         enum struct Code {
-                AccessDenied,
+                AccessDenied = 100, // don't overlap with MuError
                 Command,
                 File,
                 Index,
@@ -127,7 +127,6 @@ struct Error final: public std::exception {
 private:
         const Code   code_;
         std::string  what_;
-
 };
 
 

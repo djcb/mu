@@ -482,9 +482,6 @@ mu_query_count_run (MuQuery *self, const char *searchexpr) try
 
 } MU_XAPIAN_CATCH_BLOCK_RETURN (0);
 
-
-
-
 char*
 mu_query_internal_xapian (MuQuery *self, const char *searchexpr, GError **err)
 {

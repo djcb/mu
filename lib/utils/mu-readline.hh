@@ -21,7 +21,7 @@
 namespace Mu {
 
 /**
- * Setup readline when available & on tty.
+ * Setup readline when available and on tty.
  *
  * @param histpath path to the history file
  * @param max_lines maximum number of history to save

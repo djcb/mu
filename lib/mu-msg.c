@@ -305,13 +305,19 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 const char*
 mu_msg_get_header (MuMsg *self, const char *header)
 {
+        GError *err;
+
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (header, NULL);
 
 	/* if we don't have a file object yet, we need to
 	 * create it from the file on disk */
-	if (!mu_msg_load_msg_file (self, NULL))
-		return NULL;
+        err = NULL;
+	if (!mu_msg_load_msg_file (self, &err)) {
+                g_warning ("failed to load message file: %s",
+                           err ? err->message : "something went wrong");
+                return NULL;
+        }
 
 	return free_later_str
 		(self, mu_msg_file_get_header (self->_file, header));
