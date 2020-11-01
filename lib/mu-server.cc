@@ -162,7 +162,7 @@ Server::Private::make_command_map ()
                                            "document id of parent-message, if any"}},
                                   {":decrypt", ArgInfo{Type::Symbol, false,
                                            "whether to decrypt encrypted parts (if any)" }}},
-                           "get contact information",
+                           "compose a new message",
                            [&](const auto& params){compose_handler(params);}});
 
       cmap.emplace("contacts",
@@ -786,7 +786,7 @@ Server::Private::help_handler (const Parameters& params)
                           << ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
                           << ";; For instance:\n;;  (help :command quit)\n"
                           << ";; to get detailed information about the 'quit'\n;;\n";
-                std::cout << ";; The following commands are available:\n";
+                std::cout << ";; The following commands are available:\n\n";
         }
 
         std::vector<std::string> names;
@@ -804,7 +804,7 @@ Server::Private::help_handler (const Parameters& params)
                         std::cout << ";;   " << format("%-10s -- %s\n", name.c_str(),
                                                        info.docstring.c_str());
                 else
-                        std::cout << ";;  " << name.c_str() << ": "
+                        std::cout << ";;  " << name.c_str() << " -- "
                                   << info.docstring.c_str() << '\n';
                 if (!full)
                         continue;
