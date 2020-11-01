@@ -900,13 +900,15 @@ msg_move_check_post (const char *src, const char *dst, GError **err)
 			(err, MU_ERROR_FILE, "can't find target (%s->%s)", src, dst);
 
 	if (access (src, F_OK) == 0) {
+
                 if (g_strcmp0(src, dst) == 0) {
                         g_warning ("moved %s to itself", src);
                         return TRUE;
                 }
 
-		return mu_util_g_set_error
-			(err, MU_ERROR_FILE, "source still there (%s->%s)",
+                /* this could happen if some other tool (for mail syncing) is
+                 * interfering */
+                g_debug ("the source is still there (%s->%s)",
                          src, dst);
         }
 
@@ -992,6 +994,9 @@ mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 	}
 
 	if (!src_is_target) {
+                g_debug ("moving %s (%s, %x, %d) --> %s",
+                         oldpath, targetmdir, newflags, new_name,
+                         newfullpath);
 		rv = msg_move (oldpath, newfullpath, err);
 		if (!rv) {
 			g_free (newfullpath);
