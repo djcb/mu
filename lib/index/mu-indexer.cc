@@ -140,8 +140,8 @@ Indexer::Private::handler (const std::string& fullpath, struct stat *statbuf,
         case Scanner::HandleType::File: {
 
                 if ((size_t)statbuf->st_size > max_message_size_) {
-                        g_debug ("skip %s (too big: %zu bytes)",
-                                 fullpath.c_str(), statbuf->st_size);
+                        g_debug ("skip %s (too big: %" G_GINT64_FORMAT " bytes)",
+                                 fullpath.c_str(), (gint64)statbuf->st_size);
                         return false;
                 }
 
