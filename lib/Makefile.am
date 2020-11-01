@@ -118,7 +118,6 @@ libmu_la_LIBADD=						\
 	$(GLIB_LIBS)						\
 	$(GUILE_LIBS)						\
 	$(JSON_GLIB_LIBS)					\
-	${builddir}/utils/libmu-utils.la			\
 	${builddir}/query/libmu-query.la			\
 	${builddir}/index/libmu-index.la			\
 	$(CODE_COVERAGE_LIBS)
