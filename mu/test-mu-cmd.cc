@@ -30,9 +30,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-store.hh"
-#include "mu-query.h"
+#include "mu-query.hh"
 
 /* tests for the command line interface, uses testdir2 */
 

@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,9 +28,11 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.h"
-#include "mu-query.h"
+#include "test-mu-common.hh"
+#include "mu-query.hh"
 #include "utils/mu-str.h"
+
+using namespace Mu;
 
 struct _tinfo {
 	const char *threadpath;
@@ -93,72 +93,59 @@ foreach_assert_tinfo_equal (MuMsgIter *iter, const tinfo items[], guint n_items)
 	g_assert (u == n_items);
 }
 
-static gchar*
-fill_database (const char *testdir)
+static std::string
+make_database (const std::string& testdir)
 {
-	gchar *cmdline, *tmpdir, *xpath;
+	char *tmpdir{test_mu_common_get_random_tmpdir()};
+	const auto cmdline{
+		format("/bin/sh -c '"
+		       "%s init  --muhome=%s --maildir=%s --quiet ; "
+		       "%s index --muhome=%s  --quiet'",
+		       MU_PROGRAM,  tmpdir, testdir.c_str(),
+		       MU_PROGRAM,  tmpdir)};
 
-	tmpdir = test_mu_common_get_random_tmpdir();
-	cmdline = g_strdup_printf (
-		"/bin/sh -c '"
-		"%s init  --muhome=%s --maildir=%s --quiet ; "
-		"%s index --muhome=%s  --quiet'",
-		MU_PROGRAM,  tmpdir, testdir,
-		MU_PROGRAM,  tmpdir);
 
 	if (g_test_verbose())
-		g_print ("%s\n", cmdline);
+		g_printerr ("\n%s\n", cmdline.c_str());
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+	g_assert (g_spawn_command_line_sync (cmdline.c_str(), NULL, NULL,
 					     NULL, NULL));
-	g_free (cmdline);
-	xpath= g_strdup_printf ("%s%c%s", tmpdir,
-				G_DIR_SEPARATOR, "xapian");
+	auto xpath= g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
 	g_free (tmpdir);
 
-	return xpath;
+	std::string dbpath{xpath};
+	g_free(xpath);
+
+	return dbpath;
 }
+
+
 
 /* note: this also *moves the iter* */
 static MuMsgIter*
-run_and_get_iter_full (const char *xpath, const char *query,
-		       MuMsgFieldId sort_field, MuQueryFlags flags)
+run_and_get_iter_full (const std::string& xpath, const std::string& expr,
+		       MuMsgFieldId sort_field,
+		       Mu::Query::Flags flags=Mu::Query::Flags::None)
 {
-	MuQuery		*mquery;
-	MuStore		*store;
-	MuMsgIter	*iter;
-	int		 myflags;
+	Mu::Store store{xpath};
+	Mu::Query q{store};
 
-	store = mu_store_new_readable (xpath, NULL);
-	g_assert (store);
-
-	mquery = mu_query_new (store, NULL);
-	mu_store_unref (store);
-	g_assert (query);
-
-	myflags = flags;
-	myflags |= MU_QUERY_FLAG_THREADS;
-	iter = mu_query_run (mquery, query, sort_field, -1,
-			     (MuQueryFlags)myflags, NULL);
-	mu_query_destroy (mquery);
+	const auto myflags{flags | Mu::Query::Flags::Threading};
+	auto iter = q.run (expr, sort_field, myflags);
 	g_assert (iter);
 
 	return iter;
 }
 
 static MuMsgIter*
-run_and_get_iter (const char *xpath, const char *query)
+run_and_get_iter (const std::string& xpath, const char *query)
 {
-	return run_and_get_iter_full (xpath, query, MU_MSG_FIELD_ID_DATE,
-				      MU_QUERY_FLAG_NONE);
+	return run_and_get_iter_full (xpath, query, MU_MSG_FIELD_ID_DATE);
 }
 
 static void
 test_mu_threads_01 (void)
 {
-	gchar *xpath;
-	MuMsgIter *iter;
-
 	const tinfo items [] = {
 		{"0",   "root0@msg.id",  "root0"},
 		{"0:0", "child0.0@msg.id", "Re: child 0.0"},
@@ -176,23 +163,20 @@ test_mu_threads_01 (void)
 		{"4:1", "child4.1@msg.id", "Re: child 4.1"}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR3);
-	g_assert (xpath != NULL);
+	const auto xpath{make_database(MU_TESTMAILDIR3)};
+	g_assert (!xpath.empty());
 
-	iter = run_and_get_iter (xpath, "abc");
+	auto iter = run_and_get_iter (xpath, "abc");
 	g_assert (iter);
 	g_assert (!mu_msg_iter_is_done(iter));
 
 	foreach_assert_tinfo_equal (iter, items, G_N_ELEMENTS (items));
-
-	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
 
 static void
 test_mu_threads_rogue (void)
 {
-	gchar *xpath;
 	MuMsgIter *iter;
 	tinfo *items;
 
@@ -210,8 +194,8 @@ test_mu_threads_rogue (void)
 		{"0:1",   "cycle0.0.0@msg.id", "cycle0.0.0"}
 	};
 
-	xpath = fill_database (MU_TESTMAILDIR3);
-	g_assert (xpath != NULL);
+	const auto xpath{make_database (MU_TESTMAILDIR3)};
+	g_assert_false (xpath.empty());
 
 	iter = run_and_get_iter (xpath, "def");
 	g_assert (iter);
@@ -226,30 +210,20 @@ test_mu_threads_rogue (void)
 		items = items2;
 
 	foreach_assert_tinfo_equal (iter, items, G_N_ELEMENTS (items1));
-
-	g_free (xpath);
 	mu_msg_iter_destroy (iter);
 }
 
 static MuMsgIter*
 query_testdir (const char *query, MuMsgFieldId sort_field,  gboolean descending)
 {
-	MuMsgIter *iter;
-	gchar *xpath;
-	int flags;
+	const auto flags{descending ? Query::Flags::Descending : Query::Flags::None};
+	const auto xpath{make_database(MU_TESTMAILDIR3)};
+	g_assert_false (xpath.empty());
 
-	flags = MU_QUERY_FLAG_NONE;
-	if (descending)
-		flags |= MU_QUERY_FLAG_DESCENDING;
-
-	xpath = fill_database (MU_TESTMAILDIR3);
-	g_assert (xpath != NULL);
-
-	iter = run_and_get_iter_full (xpath, query, sort_field, (MuQueryFlags)flags);
+	auto iter = run_and_get_iter_full (xpath, query, sort_field, flags);
 	g_assert (iter != NULL);
 	g_assert (!mu_msg_iter_is_done (iter));
 
-	g_free (xpath);
 	return iter;
 }
 
@@ -442,6 +416,7 @@ main (int argc, char *argv[])
 
 	g_test_add_func ("/mu-query/test-mu-threads-01", test_mu_threads_01);
 	g_test_add_func ("/mu-query/test-mu-threads-rogue", test_mu_threads_rogue);
+
 	g_test_add_func ("/mu-query/test-mu-threads-sort-1st-child-promotes-thread",
 			 test_mu_threads_sort_1st_child_promotes_thread);
 	g_test_add_func ("/mu-query/test-mu-threads-sort-2nd-child-promotes-thread",

@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -31,40 +29,41 @@
 #include <string.h>
 #include <locale.h>
 
-#include "test-mu-common.h"
-#include "mu-query.h"
+#include "test-mu-common.hh"
+#include "mu-query.hh"
 #include "utils/mu-str.h"
+#include "utils/mu-utils.hh"
 #include "mu-store.hh"
 
-static char* DB_PATH1 = NULL;
-static char* DB_PATH2 = NULL;
+using namespace Mu;
 
-static gchar*
-fill_database (const char *testdir)
+static std::string DB_PATH1;
+static std::string DB_PATH2;
+
+static std::string
+make_database (const std::string& testdir)
 {
-	gchar *cmdline, *tmpdir, *xpath;
-
-	tmpdir = test_mu_common_get_random_tmpdir();
-	cmdline = g_strdup_printf (
-		"/bin/sh -c '"
-		"%s init  --muhome=%s --maildir=%s --quiet ; "
-		"%s index --muhome=%s  --quiet'",
-		MU_PROGRAM,  tmpdir, testdir,
-		MU_PROGRAM,  tmpdir);
+	char *tmpdir{test_mu_common_get_random_tmpdir()};
+	const auto cmdline{
+		format("/bin/sh -c '"
+		       "%s init  --muhome=%s --maildir=%s --quiet ; "
+		       "%s index --muhome=%s  --quiet'",
+		       MU_PROGRAM,  tmpdir, testdir.c_str(),
+		       MU_PROGRAM,  tmpdir)};
 
 
 	if (g_test_verbose())
-		g_printerr ("\n%s\n", cmdline);
+		g_printerr ("\n%s\n", cmdline.c_str());
 
-	g_assert (g_spawn_command_line_sync (cmdline, NULL, NULL,
+	g_assert (g_spawn_command_line_sync (cmdline.c_str(), NULL, NULL,
 					     NULL, NULL));
-	g_free (cmdline);
-
-	xpath= g_strdup_printf ("%s%c%s", tmpdir,
-				G_DIR_SEPARATOR, "xapian");
+	auto xpath= g_strdup_printf ("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
 	g_free (tmpdir);
 
-	return xpath;
+	std::string dbpath{xpath};
+	g_free(xpath);
+
+	return dbpath;
 }
 
 
@@ -94,51 +93,24 @@ assert_no_dups (MuMsgIter *iter)
 
 /* note: this also *moves the iter* */
 static guint
-run_and_count_matches_with_query_flags (const char *xpath, const char *query,
-					MuQueryFlags flags)
+run_and_count_matches (const std::string& xpath, const std::string& expr,
+		       Mu::Query::Flags flags = Mu::Query::Flags::None)
 {
-	MuQuery  *mquery;
 	MuMsgIter *iter;
-	MuStore *store;
 	guint count1, count2;
-	GError *err;
 
-	err = NULL;
-	store = mu_store_new_readable (xpath, &err);
-	if (err) {
-		g_printerr ("error: %s\n", err->message);
-		g_clear_error (&err);
-		err = NULL;
-	}
-	g_assert (store);
-
-	mquery = mu_query_new (store, &err);
-	if (err) {
-		g_printerr ("error: %s\n", err->message);
-		g_clear_error (&err);
-		err = NULL;
-	}
-
-	g_assert (mquery);
-
-	mu_store_unref (store);
+	Mu::Store store{xpath};
+	Mu::Query query{store};
 
 	if (g_test_verbose()) {
-		char *x;
-		g_print ("\n==> query: %s\n", query);
-		x = mu_query_internal (mquery, query, FALSE, NULL);
-		g_print ("==> mquery: '%s'\n", x);
-		g_free (x);
-		x = mu_query_internal_xapian (mquery, query, NULL);
-		g_print ("==> xquery: '%s'\n", x);
-		g_free (x);
+		std::cout << "==> mquery: " << query.parse (expr, false) << "\n";
+		std::cout << "==> xquery: " << query.parse (expr, true) << "\n";
 	}
 
-	iter = mu_query_run (mquery, query, MU_MSG_FIELD_ID_NONE, -1,
-			     flags, NULL);
-	mu_query_destroy (mquery);
-	g_assert (iter);
+	Mu::allow_warnings();
 
+	iter = query.run (expr, MU_MSG_FIELD_ID_NONE, flags);
+	g_assert (iter);
 	assert_no_dups (iter);
 
 	/* run query twice, to test mu_msg_iter_reset */
@@ -157,13 +129,6 @@ run_and_count_matches_with_query_flags (const char *xpath, const char *query,
 	g_assert_cmpuint (count1, ==, count2);
 
 	return count1;
-}
-
-static guint
-run_and_count_matches (const char *xpath, const char *query)
-{
-	return run_and_count_matches_with_query_flags (
-		xpath, query, MU_QUERY_FLAG_NONE);
 }
 
 typedef struct  {
@@ -302,21 +267,15 @@ test_mu_query_logic (void)
 static void
 test_mu_query_accented_chars_01 (void)
 {
-	MuQuery *query;
 	MuMsgIter *iter;
 	MuMsg *msg;
-	MuStore *store;
 	GError *err;
 	gchar *summ;
 
-	store = mu_store_new_readable (DB_PATH1, NULL);
-	g_assert (store);
+	Store store{DB_PATH1};
+	Query q{store};
 
-	query = mu_query_new (store, NULL);
-	mu_store_unref (store);
-
-	iter = mu_query_run (query, "fünkÿ", MU_MSG_FIELD_ID_NONE,
-			     -1, MU_QUERY_FLAG_NONE, NULL);
+	iter = q.run("fünkÿ");
 	err = NULL;
 	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
 	if (!msg) {
@@ -336,7 +295,6 @@ test_mu_query_accented_chars_01 (void)
 	g_free (summ);
 
 	mu_msg_iter_destroy (iter);
-	mu_query_destroy (query);
 }
 
 static void
@@ -410,7 +368,6 @@ test_mu_query_wildcards (void)
 static void
 test_mu_query_dates_helsinki (void)
 {
-	gchar *xpath;
 	int i;
 	const char *old_tz;
 
@@ -424,15 +381,14 @@ test_mu_query_dates_helsinki (void)
 
 	old_tz = set_tz ("Europe/Helsinki");
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
+	const auto xpath{make_database (MU_TESTMAILDIR)};
+	g_assert_false (xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
 
-	g_free (xpath);
 	set_tz (old_tz);
 
 }
@@ -440,10 +396,8 @@ test_mu_query_dates_helsinki (void)
 static void
 test_mu_query_dates_sydney (void)
 {
-	gchar *xpath;
 	int i;
 	const char *old_tz;
-
 	QResults queries[] = {
 		{ "date:20080731..20080804", 5},
 		{ "date:20080731..20080804 s:gcc", 1},
@@ -454,23 +408,19 @@ test_mu_query_dates_sydney (void)
 
 	old_tz = set_tz ("Australia/Sydney");
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
+	const auto xpath{make_database(MU_TESTMAILDIR)};
+	g_assert_false (xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint (run_and_count_matches
 				  (xpath, queries[i].query),
 				  ==, queries[i].count);
-
-	g_free (xpath);
 	set_tz (old_tz);
-
 }
 
 static void
 test_mu_query_dates_la (void)
 {
-	gchar *xpath;
 	int i;
 	const char *old_tz;
 
@@ -486,8 +436,8 @@ test_mu_query_dates_la (void)
 
 	old_tz = set_tz ("America/Los_Angeles");
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
+	const auto xpath = make_database (MU_TESTMAILDIR);
+	g_assert_false (xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		/* g_print ("%s\n", queries[i].query); */
@@ -496,7 +446,6 @@ test_mu_query_dates_la (void)
 				  ==, queries[i].count);
 	}
 
-	g_free (xpath);
 	set_tz (old_tz);
 }
 
@@ -671,25 +620,18 @@ test_mu_query_tags_02 (void)
 static void
 test_mu_query_threads_compilation_error (void)
 {
-	gchar *xpath;
+	const auto xpath = make_database (MU_TESTMAILDIR);
+	g_assert_false (xpath.empty());
 
-	xpath = fill_database (MU_TESTMAILDIR);
-	g_assert (xpath != NULL);
-
-	g_assert_cmpuint (run_and_count_matches_with_query_flags
-			  (xpath, "msgid:uwsireh25.fsf@one.dot.net",
-			  MU_QUERY_FLAG_NONE),
+	g_assert_cmpuint (run_and_count_matches
+			  (xpath, "msgid:uwsireh25.fsf@one.dot.net"),
 			  ==, 1);
 
-	g_assert_cmpuint (run_and_count_matches_with_query_flags
+	g_assert_cmpuint (run_and_count_matches
 			  (xpath, "msgid:uwsireh25.fsf@one.dot.net",
-			   MU_QUERY_FLAG_INCLUDE_RELATED),
+			   Query::Flags::IncludeRelated),
 			  ==, 3);
-
-	g_free (xpath);
 }
-
-
 
 int
 main (int argc, char *argv[])
@@ -700,11 +642,11 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	DB_PATH1 = fill_database (MU_TESTMAILDIR);
-	g_assert (DB_PATH1);
+	DB_PATH1 = make_database (MU_TESTMAILDIR);
+	g_assert_false (DB_PATH1.empty());
 
-	DB_PATH2 = fill_database (MU_TESTMAILDIR2);
-	g_assert (DB_PATH2);
+	DB_PATH2 = make_database (MU_TESTMAILDIR2);
+	g_assert_false (DB_PATH2.empty());
 
 	g_test_add_func ("/mu-query/test-mu-query-01", test_mu_query_01);
 	g_test_add_func ("/mu-query/test-mu-query-02", test_mu_query_02);
@@ -753,15 +695,11 @@ main (int argc, char *argv[])
 			 test_mu_query_threads_compilation_error);
 
 	if (!g_test_verbose())
-	    g_log_set_handler (NULL,
-			       (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
-			       G_LOG_FLAG_RECURSION),
-			       (GLogFunc)black_hole, NULL);
-
+		g_log_set_handler (NULL,
+				   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+						    G_LOG_LEVEL_WARNING|G_LOG_FLAG_RECURSION),
+				   (GLogFunc)black_hole, NULL);
 	rv = g_test_run ();
-
-	g_free (DB_PATH1);
-	g_free (DB_PATH2);
 
 	return rv;
 }

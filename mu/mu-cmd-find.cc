@@ -30,7 +30,7 @@
 
 #include "mu-msg.h"
 #include "mu-maildir.h"
-#include "mu-query.h"
+#include "mu-query.hh"
 #include "mu-msg-iter.h"
 #include "mu-bookmarks.h"
 #include "mu-runtime.h"
@@ -48,22 +48,11 @@ typedef gboolean (OutputFunc) (MuMsg *msg, MuMsgIter *iter,
 			       const MuConfig *opts, GError **err);
 
 static gboolean
-print_internal (MuQuery *query, const gchar *expr, gboolean xapian,
+print_internal (const Query& query, const gchar *expr, gboolean xapian,
 		gboolean warn, GError **err)
 {
-	char *str;
-
-	if (xapian)
-		str = mu_query_internal_xapian (query, expr, err);
-	else
-		str = mu_query_internal (query, expr, warn, err);
-
-	if (str) {
-		g_print ("%s\n", str);
-		g_free (str);
-	}
-
-	return str != NULL;
+        std::cout << query.parse(expr, xapian) << "\n";
+        return TRUE;
 }
 
 
@@ -112,11 +101,10 @@ get_message (MuMsgIter *iter, time_t after)
 }
 
 static MuMsgIter*
-run_query (MuQuery *xapian, const gchar *query, const MuConfig *opts,  GError **err)
+run_query (const Query& q, const std::string& expr, const MuConfig *opts, GError **err)
 {
 	MuMsgIter    *iter;
 	MuMsgFieldId  sortid;
-	int           qflags;
 
 	sortid = MU_MSG_FIELD_ID_NONE;
 	if (opts->sortfield) {
@@ -125,19 +113,17 @@ run_query (MuQuery *xapian, const gchar *query, const MuConfig *opts,  GError **
 			return FALSE;
 	}
 
-	qflags = MU_QUERY_FLAG_NONE;
+	Mu::Query::Flags qflags{Query::Flags::None};
 	if (opts->reverse)
-		qflags |= MU_QUERY_FLAG_DESCENDING;
+		qflags |= Query::Flags::Descending;
 	if (opts->skip_dups)
-		qflags |= MU_QUERY_FLAG_SKIP_DUPS;
+		qflags |= Query::Flags::SkipDups;
 	if (opts->include_related)
-		qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
+		qflags |= Query::Flags::IncludeRelated;
 	if (opts->threads)
-		qflags |= MU_QUERY_FLAG_THREADS;
+		qflags |= Query::Flags::Threading;
 
-	iter = mu_query_run (xapian, query, sortid, opts->maxnum,
-                             (MuQueryFlags)qflags, err);
-	return iter;
+	return q.run(expr, sortid, qflags, opts->maxnum, err);
 }
 
 static gboolean
@@ -216,28 +202,18 @@ get_query (const MuConfig *opts, GError **err)
 	return query;
 }
 
-static MuQuery*
-get_query_obj (MuStore *store, GError **err)
+static Mu::Query
+get_query_obj (const Store& store, GError **err)
 {
-	MuQuery *mquery;
-	unsigned count;
-
-	count = mu_store_count (store, err);
+	const auto count{store.size()};
 
 	if (count == (unsigned)-1)
-		return NULL;
+                throw Mu::Error(Error::Code::Store, "invalid store");
 
-	if (count == 0) {
-		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_NEEDS_REINDEX,
-			     "the database is empty");
-		return NULL;
-	}
+	if (count == 0)
+                throw Mu::Error(Error::Code::Store, "store is empty");
 
-	mquery = mu_query_new (store, err);
-	if (!mquery)
-		return NULL;
-
-	return mquery;
+	return Mu::Query{store};
 }
 
 static gboolean
@@ -671,12 +647,11 @@ output_query_results (MuMsgIter *iter, const MuConfig *opts, GError **err)
 }
 
 static gboolean
-process_query (MuQuery *xapian, const gchar *query, const MuConfig *opts, GError **err)
+process_query (const Query& q, const gchar *expr, const MuConfig *opts, GError **err)
 {
-	MuMsgIter *iter;
 	gboolean rv;
 
-	iter = run_query (xapian, query, opts, err);
+	auto iter = run_query (q, expr, opts, err);
 	if (!iter)
 		return FALSE;
 
@@ -687,34 +662,21 @@ process_query (MuQuery *xapian, const gchar *query, const MuConfig *opts, GError
 }
 
 static gboolean
-execute_find (MuStore *store, const MuConfig *opts, GError **err)
+execute_find (const Store& store, const MuConfig *opts, GError **err)
 {
-	char		*query_str;
-	MuQuery		*oracle;
-	gboolean	 rv;
+	auto q{get_query_obj (store, err)};
 
-	oracle = get_query_obj (store, err);
-	if (!oracle)
+	auto expr{get_query (opts, err)};
+	if (!expr)
 		return FALSE;
-
-	query_str = get_query (opts, err);
-	if (!query_str) {
-		mu_query_destroy (oracle);
-		return FALSE;
-	}
 
 	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		rv = print_internal (oracle, query_str, TRUE, FALSE, err);
+		return print_internal (q, expr, TRUE, FALSE, err);
 	else if (opts->format == MU_CONFIG_FORMAT_MQUERY)
-		rv = print_internal (oracle, query_str, FALSE,
+		return print_internal (q, expr, FALSE,
 				     opts->verbose, err);
 	else
-		rv = process_query (oracle, query_str, opts, err);
-
-	mu_query_destroy (oracle);
-	g_free (query_str);
-
-	return rv;
+		return process_query (q, expr, opts, err);
 }
 
 static gboolean
@@ -780,7 +742,7 @@ query_params_valid (const MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_find (MuStore *store, const MuConfig *opts, GError **err)
+mu_cmd_find (const Store& store, const MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_FIND,

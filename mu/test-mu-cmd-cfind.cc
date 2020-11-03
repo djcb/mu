@@ -1,4 +1,4 @@
-/* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+/*
 **
 ** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
@@ -27,9 +27,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-store.hh"
-#include "mu-query.h"
+#include "mu-query.hh"
 
 static gchar *CONTACTS_CACHE = NULL;
 

@@ -37,7 +37,7 @@ G_BEGIN_DECLS
  * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
  * succeeds but there no matches, some error code for all other errors
  */
-MuError mu_cmd_find (MuStore* store, const MuConfig *opts,
+MuError mu_cmd_find (const Mu::Store& store, const MuConfig *opts,
                      GError **err);
 
 /**
