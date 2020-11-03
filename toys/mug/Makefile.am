@@ -35,7 +35,7 @@ AM_CFLAGS=									\
 	-Wno-deprecated-declarations						\
 	-Wno-switch-enum
 
-AM_CXXFLAGS=$(WARN_CXXFLAGS)
+AM_CXXFLAGS=$(AM_CFLAGS) $(WARN_CXXFLAGS)
 
 #
 # Distributors: this is a _toy_, not for distribution. the "noinst_" says enough
@@ -43,11 +43,9 @@ AM_CXXFLAGS=$(WARN_CXXFLAGS)
 noinst_PROGRAMS=								\
 	mug
 
-# note, mug.cc is '.cc' only because libmu must explicitly
-# be linked as c++, not c.
 mug_SOURCES=									\
 	mug.c									\
-	mug-msg-list-view.c							\
+	mug-msg-list-view.cc							\
 	mug-msg-list-view.h							\
 	mug-msg-view.h								\
 	mug-msg-view.c								\
@@ -57,12 +55,6 @@ mug_SOURCES=									\
 	mug-shortcuts.h								\
 	dummy.cc
 
-# we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=									\
-	dummy.cc
-
-dummy.cc:
-	touch dummy.cc
 
 DISTCLEANFILES=									\
 	$(BUILT_SOURCES)
@@ -70,6 +62,7 @@ DISTCLEANFILES=									\
 mug_LDADD=									\
 	$(ASAN_LDFLAGS)								\
 	${top_builddir}/lib/libmu.la						\
+	${top_builddir}/lib/utils/libmu-utils.la				\
 	libmuwidgets.la								\
 	${GTK_LIBS}
 
