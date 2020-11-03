@@ -28,17 +28,23 @@ AM_CPPFLAGS=						\
 # don't use -Werror, as it might break on other compilers
 # use -Wno-unused-parameters, because some callbacks may not
 # really need all the params they get
-AM_CFLAGS=$(ASAN_CFLAGS) ${WARN_CFLAGS}
-AM_CXXFLAGS=$(ASAN_CXXFLAGS) ${WARN_CXXFLAGS}
+AM_CFLAGS=						\
+	$(ASAN_CFLAGS)					\
+	${WARN_CFLAGS}					\
+	-Wno-suggest-attribute=noreturn			\
+	-Wno-missing-prototypes				\
+	-Wno-missing-declarations
 
 lib_LTLIBRARIES=					\
 	libguile-mu.la
 
 libguile_mu_la_SOURCES=					\
-	mu-guile.c					\
-	mu-guile.h					\
-	mu-guile-message.c				\
-	mu-guile-message.h
+	mu-guile.cc					\
+	mu-guile.hh					\
+	mu-guile-message.cc				\
+	mu-guile-message.hh
+
+libguile_mu_la_CFLAGS=$(AM_CFLAGS)
 
 libguile_mu_la_LIBADD=					\
 	${top_builddir}/lib/libmu.la			\
@@ -61,10 +67,13 @@ mu_guile_TEXINFOS=					\
 
 BUILT_SOURCES=$(XFILES)
 
-snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(AM_CPPFLAGS)
+snarfcppopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 SUFFIXES = .x .doc
 .c.x:
-	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)
+	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcppopts)
+.cc.x:
+	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcppopts)
+
 
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'

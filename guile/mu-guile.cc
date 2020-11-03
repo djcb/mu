@@ -17,9 +17,10 @@
 **
 */
 
+#include "mu-guile.hh"
+
 #include <config.h>
 #include <locale.h>
-
 #include <glib-object.h>
 
 #pragma GCC diagnostic push
@@ -28,14 +29,9 @@
 #pragma GCC diagnostic pop
 
 #include <mu-runtime.h>
-#include <mu-query.h>
-#include <mu-runtime.h>
 #include <mu-store.hh>
-#include <mu-query.h>
+#include <mu-query.hh>
 #include <mu-msg.h>
-
-#include "mu-guile.h"
-
 
 SCM
 mu_guile_scm_from_str (const char *str)
@@ -46,7 +42,6 @@ mu_guile_scm_from_str (const char *str)
 		return scm_from_stringn (str, strlen(str), "UTF-8",
 					 SCM_FAILED_CONVERSION_QUESTION_MARK);
 }
-
 
 SCM
 mu_guile_error (const char *func_name, int status,
@@ -75,68 +70,46 @@ mu_guile_g_error (const char *func_name, GError *err)
 
 /* there can be only one */
 
-static MuGuile *_singleton = NULL;
+static std::unique_ptr<Mu::Query> QuerySingleton;
 
 static gboolean
-mu_guile_init_instance (const char *muhome)
+mu_guile_init_instance (const char *muhome) try
 {
-	MuStore *store;
-	MuQuery *query;
-	GError *err;
-
 	setlocale (LC_ALL, "");
-
 	if (!mu_runtime_init (muhome, "guile", FALSE))
 		return FALSE;
 
-	err = NULL;
-	store = mu_store_new_readable
-		(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
-		 &err);
-	if (!store)
-		goto errexit;
-
-	query = mu_query_new (store, &err);
-	mu_store_unref (store);
-	if (!query)
-		goto errexit;
-
-	_singleton        = g_new0 (MuGuile, 1);
-	_singleton->query = query;
+        Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
+        QuerySingleton = std::make_unique<Mu::Query>(store);
 
 	return TRUE;
 
-errexit:
-	mu_guile_g_error (__func__, err);
-	g_clear_error (&err);
-	return FALSE;
+} catch (...) {
+        return FALSE;
 }
 
 static void
-mu_guile_uninit_instance (void)
+mu_guile_uninit_instance ()
 {
-	g_return_if_fail (_singleton);
-
-	mu_query_destroy (_singleton->query);
-	g_free (_singleton);
-
-	_singleton = NULL;
+        QuerySingleton.reset();
 
 	mu_runtime_uninit ();
 }
 
 
-MuGuile*
-mu_guile_instance (void)
+Mu::Query&
+mu_guile_query ()
 {
-	g_return_val_if_fail (_singleton, NULL);
-	return _singleton;
+        if (!QuerySingleton)
+                g_error("mu guile not initialized");
+
+        return *QuerySingleton.get();
 }
 
 gboolean
-mu_guile_initialized (void)
+mu_guile_initialized ()
 {
-	return _singleton != NULL;
+	return !!QuerySingleton;
 }
 
 
@@ -212,7 +185,7 @@ SCM_DEFINE (log_func, "mu:c:log", 1, 0, 1, (SCM LEVEL, SCM FRM, SCM ARGS),
 		return SCM_UNSPECIFIED;
 
 	output = scm_to_utf8_string (str);
-	g_log (G_LOG_DOMAIN, level, "%s", output);
+	g_log (G_LOG_DOMAIN, (GLogLevelFlags)level, "%s", output);
 	free (output);
 
 	return SCM_UNSPECIFIED;

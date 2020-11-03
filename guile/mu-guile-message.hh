@@ -17,12 +17,8 @@
 **
 */
 
-#ifndef __MU_GUILE_MESSAGE_H__
-#define __MU_GUILE_MESSAGE_H__
-
-#include <glib.h>
-
-G_BEGIN_DECLS
+#ifndef MU_GUILE_MESSAGE_H__
+#define MU_GUILE_MESSAGE_H__
 
 /**
  * Initialize this mu guile module.
@@ -33,6 +29,4 @@ G_BEGIN_DECLS
  */
 void* mu_guile_message_init (void *data);
 
-G_END_DECLS
-
-#endif /*__MU_GUILE_MESSAGE_H__*/
+#endif /*MU_GUILE_MESSAGE_HH__*/

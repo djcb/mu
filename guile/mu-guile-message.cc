@@ -16,21 +16,20 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
-#if HAVE_CONFIG_H
+#include "mu-guile-message.hh"
 #include <config.h>
-#endif /*HAVE_CONFIG_H*/
-
-#include "mu-guile-message.h"
 
 #include <glib-object.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <libguile.h>
+#pragma GCC diagnostic pop
 
-#include "mu-guile.h"
+#include "mu-guile.hh"
 
 #include <mu-runtime.h>
 #include <mu-store.hh>
-#include <mu-query.h>
+#include <mu-query.hh>
 #include <mu-msg.h>
 #include <mu-msg-part.h>
 
@@ -42,7 +41,7 @@ static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
 static SCM SYMB_FLAG_NEW, SYMB_FLAG_PASSED, SYMB_FLAG_REPLIED,
 	SYMB_FLAG_SEEN, SYMB_FLAG_TRASHED, SYMB_FLAG_DRAFT,
 	SYMB_FLAG_FLAGGED, SYMB_FLAG_SIGNED, SYMB_FLAG_ENCRYPTED,
-	SYMB_FLAG_HAS_ATTACH, SYMB_FLAG_UNREAD;
+	SYMB_FLAG_HAS_ATTACH, SYMB_FLAG_UNREAD, SYMB_FLAG_LIST;
 static SCM SYMB_CONTACT_TO, SYMB_CONTACT_CC, SYMB_CONTACT_BCC,
 	SYMB_CONTACT_FROM;
 
@@ -66,7 +65,7 @@ mu_guile_msg_to_scm (MuMsg *msg)
 
 	g_return_val_if_fail (msg, SCM_UNDEFINED);
 
-	msgwrap = scm_gc_malloc (sizeof (MuMsgWrapper), "msg");
+	msgwrap = (MuMsgWrapper*)scm_gc_malloc (sizeof (MuMsgWrapper), "msg");
 	msgwrap->_msg = msg;
 	msgwrap->_unrefme = FALSE;
 
@@ -82,10 +81,11 @@ typedef struct _FlagData FlagData;
 
 #define MU_GUILE_INITIALIZED_OR_ERROR					\
 	do { if (!(mu_guile_initialized()))				\
-		     return mu_guile_error (FUNC_NAME, 0,		\
+                        mu_guile_error (FUNC_NAME, 0,                   \
 			     "mu not initialized; call mu:initialize",	\
 				     SCM_UNDEFINED);			\
-	} while (0)
+                return SCM_UNSPECIFIED;                                 \
+        } while (0)
 
 
 static void
@@ -97,6 +97,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 		return;
 
 	switch (flag) {
+        case MU_FLAG_NONE: break;
 	case MU_FLAG_NEW:        flag_scm = SYMB_FLAG_NEW; break;
 	case MU_FLAG_PASSED:     flag_scm = SYMB_FLAG_PASSED; break;
 	case MU_FLAG_REPLIED:    flag_scm = SYMB_FLAG_REPLIED; break;
@@ -108,6 +109,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 	case MU_FLAG_ENCRYPTED:  flag_scm = SYMB_FLAG_ENCRYPTED; break;
 	case MU_FLAG_HAS_ATTACH: flag_scm = SYMB_FLAG_HAS_ATTACH; break;
 	case MU_FLAG_UNREAD:     flag_scm = SYMB_FLAG_UNREAD; break;
+        case MU_FLAG_LIST:       flag_scm = SYMB_FLAG_LIST; break;
 	default: flag_scm = SCM_UNDEFINED;
 	}
 
@@ -297,10 +299,11 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 			ecdata.ctype = MU_MSG_CONTACT_TYPE_BCC;
 		else if (scm_is_eq (CONTACT_TYPE, SYMB_CONTACT_FROM))
 			ecdata.ctype = MU_MSG_CONTACT_TYPE_FROM;
-		else
-			return mu_guile_error (FUNC_NAME, 0,
-					       "invalid contact type",
+		else {
+			mu_guile_error (FUNC_NAME, 0, "invalid contact type",
 					       SCM_UNDEFINED);
+                        return SCM_UNSPECIFIED;
+                }
 	}
 
 	ecdata.lst = SCM_EOL;
@@ -428,14 +431,12 @@ call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
 
 
 static MuMsgIter*
-get_query_iter (MuQuery *query, const char* expr, int maxnum)
+get_query_iter (Mu::Query& query, const char* expr, int maxnum)
 {
-	MuMsgIter *iter;
-	GError *err;
-
-	err = NULL;
-	iter = mu_query_run (query, expr, MU_MSG_FIELD_ID_NONE, maxnum,
-			     MU_QUERY_FLAG_NONE, &err);
+	GError *err{};
+	auto iter = query.run (expr, MU_MSG_FIELD_ID_NONE,
+                               Mu::Query::Flags::None, maxnum,
+                               &err);
 	if (!iter) {
 		mu_guile_g_error ("<internal error>", err);
 		g_clear_error (&err);
@@ -472,7 +473,7 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 	else
 		expr = scm_to_utf8_string(EXPR);
 
-	iter = get_query_iter (mu_guile_instance()->query, expr,
+	iter = get_query_iter (mu_guile_query(), expr,
 			       scm_to_int(MAXNUM));
 	free (expr);
 	if (!iter)
@@ -525,6 +526,8 @@ define_symbols (void)
 	SYMB_FLAG_ENCRYPTED	= register_symbol ("mu:flag:encrypted");
 	SYMB_FLAG_HAS_ATTACH	= register_symbol ("mu:flag:has-attach");
 	SYMB_FLAG_UNREAD	= register_symbol ("mu:flag:unread");
+
+        SYMB_FLAG_LIST	        = register_symbol ("mu:flag:list");
 }
 
 

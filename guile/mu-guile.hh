@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,22 +21,14 @@
 #define __MU_GUILE_H__
 
 #include <glib.h>
-#include <mu-query.h>
+#include <libguile.h>
+#include <mu-query.hh>
 
-G_BEGIN_DECLS
-
-
-struct _MuGuile {
-	MuQuery *query;
-};
-typedef struct _MuGuile MuGuile;
 
 /**
- * get the single MuGuile instance
- *
- * @return the instance or NULL in case of error
+ * get the singleton Query instance
  */
-MuGuile *mu_guile_instance (void);
+Mu::Query& mu_guile_query (void);
 
 
 /**
@@ -44,7 +36,7 @@ MuGuile *mu_guile_instance (void);
  *
  * @return TRUE if MuGuile is Initialized, FALSE otherwise
  */
-gboolean mu_guile_initialized (void);
+gboolean mu_guile_initialized ();
 
 
 /**
@@ -83,7 +75,6 @@ SCM mu_guile_error   (const char *func_name, int status,
  */
 SCM mu_guile_scm_from_str (const char *str);
 
-
 /**
  * Initialize this mu guile module.
  *
@@ -92,8 +83,5 @@ SCM mu_guile_scm_from_str (const char *str);
  * @return
  */
 void* mu_guile_init (void *data);
-
-
-G_END_DECLS
 
 #endif /*__MU_GUILE_H__*/

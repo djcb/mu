@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+# Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by the
@@ -21,9 +21,9 @@ AM_CPPFLAGS=$(XAPIAN_CXXFLAGS)						\
 	 $(GLIB_CFLAGS)							\
 	-I${top_srcdir}							\
 	-I${top_srcdir}/lib						\
-	-DMU_TESTMAILDIR=\"${top_srcdir}/lib/testdir\"			\
-	-DMU_TESTMAILDIR2=\"${top_srcdir}/lib/testdir2\"		\
-	-DMU_TESTMAILDIR3=\"${top_srcdir}/lib/testdir3\"		\
+	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"		\
+	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"		\
+	-DMU_TESTMAILDIR3=\"${abs_top_srcdir}/lib/testdir3\"		\
 	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"			\
 	-DMU_GUILE_MODULE_PATH=\"${abs_top_srcdir}/guile/\"		\
 	-DMU_GUILE_LIBRARY_PATH=\"${abs_top_builddir}/guile/.libs\"	\
@@ -39,14 +39,8 @@ AM_LDFLAGS=$(ASAN_LDFLAGS)
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
-TEST_PROGS += test-mu-guile
-test_mu_guile_SOURCES= test-mu-guile.c dummy.cc
-test_mu_guile_LDADD=${top_builddir}/lib/libtestmucommon.la
+# TEST_PROGS += test-mu-guile
+# test_mu_guile_SOURCES= test-mu-guile.cc
+# test_mu_guile_LDADD=${top_builddir}/lib/libtestmucommon.la
 
-# we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=								\
-	dummy.cc
-dummy.cc:
-	touch dummy.cc
-
-EXTRA_DIST=test-mu-guile.scm
+EXTRA_DIST=test-mu-guile.scm test-mu-guile.cc
