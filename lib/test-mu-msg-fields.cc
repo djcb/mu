@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -28,7 +28,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-msg-fields.h"
 
 static void
@@ -126,8 +126,8 @@ main (int argc, char *argv[])
 	 * function simply calls mu_msg_field_str */
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
-			   G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
+			   G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();

@@ -24,7 +24,7 @@
 
 #include <glib.h>
 #include "mu-flags.h"
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 
 
 static void
@@ -41,7 +41,7 @@ test_mu_flag_char (void)
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_ENCRYPTED),	==, 'x');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_HAS_ATTACH),	==, 'a');
 	g_assert_cmpuint (mu_flag_char (MU_FLAG_UNREAD),	==, 'u');
-	g_assert_cmpuint (mu_flag_char (12345),			==,  0);
+	g_assert_cmpuint (mu_flag_char ((MuFlags)12345),        ==,  0);
 }
 
 
@@ -60,30 +60,30 @@ test_mu_flag_name (void)
 	g_assert_cmpstr (mu_flag_name (MU_FLAG_ENCRYPTED),	==, "encrypted");
 	g_assert_cmpstr (mu_flag_name (MU_FLAG_HAS_ATTACH),	==, "attach");
 	g_assert_cmpstr (mu_flag_name (MU_FLAG_UNREAD),		==, "unread");
-	g_assert_cmpstr (mu_flag_name (12345),			==,  NULL);
+	g_assert_cmpstr (mu_flag_name ((MuFlags)12345),	        ==,  NULL);
 }
 
 static void
 test_mu_flags_to_str_s (void)
 {
-	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_PASSED|MU_FLAG_SIGNED,
+	g_assert_cmpstr (mu_flags_to_str_s((MuFlags)(MU_FLAG_PASSED|MU_FLAG_SIGNED),
 					   MU_FLAG_TYPE_ANY),
 			 ==, "Pz");
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NEW, MU_FLAG_TYPE_ANY),
 			 ==, "N");
-	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_HAS_ATTACH|MU_FLAG_TRASHED,
+	g_assert_cmpstr (mu_flags_to_str_s((MuFlags)(MU_FLAG_HAS_ATTACH|MU_FLAG_TRASHED),
 					   MU_FLAG_TYPE_ANY),
 			 ==, "Ta");
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NONE, MU_FLAG_TYPE_ANY),
 			 ==, "");
 
-	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_PASSED|MU_FLAG_SIGNED,
+	g_assert_cmpstr (mu_flags_to_str_s((MuFlags)(MU_FLAG_PASSED|MU_FLAG_SIGNED),
 					   MU_FLAG_TYPE_CONTENT),
 			 ==, "z");
 
 	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_NEW, MU_FLAG_TYPE_MAILDIR),
 			 ==, "N");
-	g_assert_cmpstr (mu_flags_to_str_s(MU_FLAG_HAS_ATTACH|MU_FLAG_TRASHED,
+	g_assert_cmpstr (mu_flags_to_str_s((MuFlags)(MU_FLAG_HAS_ATTACH|MU_FLAG_TRASHED),
 					   MU_FLAG_TYPE_MAILFILE),
 			 ==, "T");
 
@@ -100,11 +100,11 @@ test_mu_flags_from_str (void)
 	 */
 
 	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_ANY, TRUE), ==,
-			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
+			 (MuFlags)( MU_FLAG_REPLIED | MU_FLAG_PASSED));
 	g_assert_cmpuint (mu_flags_from_str ("Nz", MU_FLAG_TYPE_ANY, TRUE), ==,
 			  MU_FLAG_NEW | MU_FLAG_SIGNED);
 	g_assert_cmpuint (mu_flags_from_str ("axD", MU_FLAG_TYPE_ANY, TRUE), ==,
-			  MU_FLAG_HAS_ATTACH | MU_FLAG_ENCRYPTED | MU_FLAG_DRAFT);
+			 (MuFlags)( MU_FLAG_HAS_ATTACH | MU_FLAG_ENCRYPTED | MU_FLAG_DRAFT));
 
 	g_assert_cmpuint (mu_flags_from_str ("RP", MU_FLAG_TYPE_MAILFILE, TRUE), ==,
 			  MU_FLAG_REPLIED | MU_FLAG_PASSED);
@@ -124,19 +124,19 @@ static void
 test_mu_flags_from_str_delta (void)
 {
 	g_assert_cmpuint (mu_flags_from_str_delta ("+S-R",
-						   MU_FLAG_REPLIED | MU_FLAG_DRAFT,
+						   (MuFlags)(MU_FLAG_REPLIED | MU_FLAG_DRAFT),
 						   MU_FLAG_TYPE_ANY),==,
-			  MU_FLAG_SEEN | MU_FLAG_DRAFT);
+			  (MuFlags)(MU_FLAG_SEEN | MU_FLAG_DRAFT));
 
 	g_assert_cmpuint (mu_flags_from_str_delta ("",
-						   MU_FLAG_REPLIED | MU_FLAG_DRAFT,
+						   (MuFlags)(MU_FLAG_REPLIED | MU_FLAG_DRAFT),
 						   MU_FLAG_TYPE_ANY),==,
-			  MU_FLAG_REPLIED | MU_FLAG_DRAFT);
+			  (MuFlags)(MU_FLAG_REPLIED | MU_FLAG_DRAFT));
 
 	g_assert_cmpuint (mu_flags_from_str_delta ("-N+P+S-D",
-						   MU_FLAG_SIGNED | MU_FLAG_DRAFT,
+						   (MuFlags)(MU_FLAG_SIGNED | MU_FLAG_DRAFT),
 						   MU_FLAG_TYPE_ANY),==,
-			  MU_FLAG_PASSED | MU_FLAG_SEEN | MU_FLAG_SIGNED);
+			  (MuFlags)(MU_FLAG_PASSED | MU_FLAG_SEEN | MU_FLAG_SIGNED));
 }
 
 
@@ -184,7 +184,8 @@ main (int argc, char *argv[])
 			 test_mu_flags_custom_from_str);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+					    G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();

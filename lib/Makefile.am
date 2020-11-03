@@ -18,7 +18,7 @@
 # before descending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils query index
+SUBDIRS= utils index
 
 TESTDEFS=							\
 	-DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"		\
@@ -34,9 +34,7 @@ AM_CFLAGS=							\
 	$(GMIME_CFLAGS)						\
 	$(GLIB_CFLAGS)						\
 	$(GUILE_CFLAGS)						\
-	$(JSON_GLIB_CFLAGS)					\
 	$(ASAN_CFLAGS)						\
-	$(json_flag)						\
 	$(CODE_COVERAGE_CFLAGS)					\
 	$(TESTDEFS)						\
 	-Wno-format-nonliteral					\
@@ -48,8 +46,6 @@ AM_CXXFLAGS=							\
 	$(GMIME_CFLAGS)						\
 	$(GLIB_CFLAGS)						\
 	$(GUILE_CFLAGS)						\
-	$(JSON_GLIB_CFLAGS)					\
-	$(json_flag)						\
 	$(WARN_CXXFLAGS)					\
 	$(XAPIAN_CXXFLAGS)					\
 	$(ASAN_CXXFLAGS)					\
@@ -58,13 +54,6 @@ AM_CXXFLAGS=							\
 
 AM_CPPFLAGS=							\
 	$(CODE_COVERAGE_CPPFLAGS)
-
-# don't use -Werror, as it might break on other compilers
-# use -Wno-unused-parameters, because some callbacks may not
-# really need all the params they get
-# AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter			\
-# -Wdeclaration-after-statement -Wno-variadic-macros
-# AM_CXXFLAGS=-Wall -Wextra -Wno-unused-parameter
 
 noinst_LTLIBRARIES=						\
 	libmu.la
@@ -76,8 +65,9 @@ libmu_la_SOURCES=						\
 	mu-contacts.hh						\
 	mu-container.c						\
 	mu-container.h						\
-	mu-flags.h						\
+	mu-data.hh						\
 	mu-flags.c						\
+	mu-flags.h						\
 	mu-maildir.c						\
 	mu-maildir.h						\
 	mu-msg-crypto.c						\
@@ -89,7 +79,6 @@ libmu_la_SOURCES=						\
 	mu-msg-file.h						\
 	mu-msg-iter.cc						\
 	mu-msg-iter.h						\
-	$(json_srcs)						\
 	mu-msg-part.c						\
 	mu-msg-part.h						\
 	mu-msg-prio.c						\
@@ -99,8 +88,10 @@ libmu_la_SOURCES=						\
 	mu-msg.c						\
 	mu-msg.h						\
 	mu-msg.h						\
+	mu-parser.cc						\
+	mu-parser.hh						\
 	mu-query.cc						\
-	mu-query.h						\
+	mu-query.hh						\
 	mu-runtime.cc						\
 	mu-runtime.h						\
 	mu-script.c						\
@@ -110,40 +101,54 @@ libmu_la_SOURCES=						\
 	mu-store.cc						\
 	mu-store.hh						\
 	mu-threader.c						\
-	mu-threader.h
+	mu-threader.h						\
+	mu-tokenizer.cc						\
+	mu-tokenizer.hh						\
+	mu-tree.hh						\
+	mu-xapian.cc						\
+	mu-xapian.hh
 
 libmu_la_LIBADD=						\
 	$(XAPIAN_LIBS)						\
 	$(GMIME_LIBS)						\
 	$(GLIB_LIBS)						\
 	$(GUILE_LIBS)						\
-	$(JSON_GLIB_LIBS)					\
-	${builddir}/query/libmu-query.la			\
 	${builddir}/index/libmu-index.la			\
 	$(CODE_COVERAGE_LIBS)
 
 libmu_la_LDFLAGS=						\
 	$(ASAN_LDFLAGS)
 
+noinst_PROGRAMS=						\
+	tokenize
+
+tokenize_SOURCES=						\
+	tokenize.cc
+
+tokenize_LDADD=							\
+	$(WARN_LDFLAGS)						\
+	libmu.la						\
+	utils/libmu-utils.la
+
 EXTRA_DIST=							\
 	mu-msg-crypto.c						\
 	doxyfile.in
 
-noinst_PROGRAMS= $(TEST_PROGS)
+noinst_PROGRAMS+=$(TEST_PROGS)
 
 noinst_LTLIBRARIES+=						\
 	libtestmucommon.la
 
 TEST_PROGS += test-mu-maildir
-test_mu_maildir_SOURCES= test-mu-maildir.c dummy.cc
+test_mu_maildir_SOURCES= test-mu-maildir.cc
 test_mu_maildir_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-msg-fields
-test_mu_msg_fields_SOURCES= test-mu-msg-fields.c dummy.cc
+test_mu_msg_fields_SOURCES= test-mu-msg-fields.cc
 test_mu_msg_fields_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-msg
-test_mu_msg_SOURCES= test-mu-msg.c dummy.cc
+test_mu_msg_SOURCES= test-mu-msg.cc
 test_mu_msg_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-store
@@ -151,29 +156,32 @@ test_mu_store_SOURCES= test-mu-store.cc
 test_mu_store_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-flags
-test_mu_flags_SOURCES= test-mu-flags.c dummy.cc
+test_mu_flags_SOURCES= test-mu-flags.cc
 test_mu_flags_LDADD=  libtestmucommon.la
 
 TEST_PROGS += test-mu-container
-test_mu_container_SOURCES= test-mu-container.c dummy.cc
+test_mu_container_SOURCES= test-mu-container.cc
 test_mu_container_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-contacts
 test_mu_contacts_SOURCES= test-mu-contacts.cc
 test_mu_contacts_LDADD= libtestmucommon.la
 
-# we need to use dummy.cc to enforce c++ linking...
-BUILT_SOURCES=							\
-	dummy.cc
+TEST_PROGS+=test-mu-tokenizer
+test_mu_tokenizer_SOURCES=test-tokenizer.cc
+test_mu_tokenizer_LDADD=libtestmucommon.la
 
-dummy.cc:
-	touch dummy.cc
+# TEST_PROGS+=test-mu-parser
+# test_mu_parser_SOURCES=test-parser.cc
+# test_mu_parser_LDADD=libtestmucommon.la
 
 libtestmucommon_la_SOURCES=					\
-	test-mu-common.c					\
-	test-mu-common.h
+	test-mu-common.cc					\
+	test-mu-common.hh
+
 libtestmucommon_la_LIBADD=					\
-	libmu.la
+	libmu.la						\
+	utils/libmu-utils.la
 
 # note the question marks; make does not like files with ':', so we
 # use the (also supported) version with '!' instead. We could escape

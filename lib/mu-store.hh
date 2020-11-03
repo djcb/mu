@@ -103,6 +103,23 @@ public:
          */
         const Contacts& contacts() const;
 
+
+        /**
+         * Get the underlying Xapian database for this store.
+         *
+         * @return the database
+         */
+        const Xapian::Database& database() const;
+
+        /**
+         * Get the underlying writable Xapian database for this
+         * store. Throws is this store is not writable.
+         *
+         * @return the writable database
+         */
+        Xapian::WritableDatabase& writable_database();
+
+
         /**
          * Get the Indexer associated with this store. It is an error
          * to call this on a read-only store.
@@ -175,24 +192,44 @@ public:
         bool contains_message (const std::string& path) const;
 
         /**
-         * Prototype for the ForEachFunc
+         * Prototype for the ForEachMessageFunc
          *
          * @param id :t store Id for the message
          * @param path: the absolute path to the message
          *
          * @return true if for_each should continue; false to quit
          */
-        using ForEachFunc = std::function<bool(Id, const std::string&)>;
+        using ForEachMessageFunc = std::function<bool(Id, const std::string&)>;
 
         /**
          * Call @param func for each document in the store. This takes a lock on
          * the store, so the func should _not_ call any other Store:: methods.
          *
-         * @param func a functio
+         * @param func a Callable invoked for each message.
          *
          * @return the number of times func was invoked
          */
-        size_t for_each (ForEachFunc func);
+        size_t for_each_message_path (ForEachMessageFunc func) const;
+
+        /**
+         * Prototype for the ForEachTermFunc
+         *
+         * @param term:
+         *
+         * @return true if for_each should continue; false to quit
+         */
+        using ForEachTermFunc = std::function<bool(const std::string&)>;
+
+        /**
+         * Call @param func for each term for the given field in the store. This
+         * takes a lock on the store, so the func should _not_ call any other
+         * Store:: methods.
+         *
+         * @param func a Callable invoked for each message.
+         *
+         * @return the number of times func was invoked
+         */
+        size_t for_each_term (const std::string& field, ForEachTermFunc func) const;
 
         /**
          * Get the timestamp for some message, or 0 if not found
@@ -302,23 +339,6 @@ MuStore* mu_store_ref (MuStore *store);
  * @return NULL
  */
 MuStore* mu_store_unref (MuStore *store);
-
-
-/**
- * we need this when using Xapian::(Writable)Database* from C
- */
-typedef gpointer XapianDatabase;
-
-/**
- * get the underlying read-only database object for this store; not that this
- * pointer becomes in valid after mu_store_destroy
- *
- * @param store a valid store
- *
- * @return a Xapian::Database (you'll need to cast in C++), or
- * NULL in case of error.
- */
-XapianDatabase* mu_store_get_read_only_database (MuStore *store);
 
 /**
  * get the version of the xapian database (ie., the version of the

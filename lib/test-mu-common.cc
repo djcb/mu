@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -31,7 +31,7 @@
 #include <langinfo.h>
 #include <locale.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 
 char*
 test_mu_common_get_random_tmpdir (void)

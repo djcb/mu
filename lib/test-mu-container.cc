@@ -25,7 +25,7 @@
 
 #include <glib.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-container.h"
 
 static gboolean
@@ -76,7 +76,7 @@ main (int argc, char *argv[])
 			 test_mu_container_splice_children_when_parent_has_no_siblings);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();

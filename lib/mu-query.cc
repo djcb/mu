@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <mu-query.hh>
 
 #include <stdexcept>
 #include <string>
@@ -27,7 +28,6 @@
 #include <xapian.h>
 #include <glib/gstdio.h>
 
-#include "mu-query.h"
 #include "mu-msg-fields.h"
 
 #include "mu-msg-iter.h"
@@ -36,273 +36,94 @@
 #include "utils/mu-date.h"
 #include <utils/mu-utils.hh>
 
-#include <query/mu-proc-iface.hh>
-#include <query/mu-xapian.hh>
+#include <mu-xapian.hh>
 
 using namespace Mu;
 
-struct MuProc: public Mu::ProcIface {
+struct Query::Private {
+        Private(const Store& store): store_{store},
+                                     parser_{store_} {}
 
-	MuProc (const Xapian::Database& db): db_{db} {}
+        Xapian::Query   make_query (const std::string& expr, GError **err) const;
+        Xapian::Enquire make_enquire (const std::string& expr, MuMsgFieldId sortfieldid,
+                                      bool descending, GError **err) const;
+        GHashTable* find_thread_ids (MuMsgIter *iter, GHashTable **orig_set) const;
 
-	static MuMsgFieldId field_id (const std::string& field) {
+        Xapian::Query make_related_query (MuMsgIter *iter, GHashTable **orig_set) const;
 
-		if (field.empty())
-			return MU_MSG_FIELD_ID_NONE;
+        void find_related_messages (MuMsgIter **iter, int maxnum,
+                                    MuMsgFieldId sortfieldid, Query::Flags flags,
+                                    Xapian::Query orig_query) const;
 
-		MuMsgFieldId id = mu_msg_field_id_from_name (field.c_str(), FALSE);
-		if (id != MU_MSG_FIELD_ID_NONE)
-			return id;
-		else if (field.length() == 1)
-			return mu_msg_field_id_from_shortcut (field[0], FALSE);
-		else
-			return MU_MSG_FIELD_ID_NONE;
-	}
-
-	std::string
-	process_value (const std::string& field,
-		       const std::string& value) const override {
-		const auto id = field_id (field);
-		if (id == MU_MSG_FIELD_ID_NONE)
-			return value;
-		switch(id) {
-		case MU_MSG_FIELD_ID_PRIO: {
-			if (!value.empty())
-				return std::string(1, value[0]);
-		} break;
-
-		case MU_MSG_FIELD_ID_FLAGS: {
-			const auto flag = mu_flag_char_from_name (value.c_str());
-			if (flag)
-				return std::string(1, tolower(flag));
-		} break;
-
-		default:
-			break;
-		}
-
-		return value; // XXX prio/flags, etc. alias
-	}
-
-	void add_field (std::vector<FieldInfo>& fields, MuMsgFieldId id) const {
-
-		const auto shortcut = mu_msg_field_shortcut(id);
-		if (!shortcut)
-			return; // can't be searched
-
-		const auto name = mu_msg_field_name (id);
-		const auto pfx  = mu_msg_field_xapian_prefix (id);
-
-		if (!name || !pfx)
-			return;
-
-		fields.push_back ({{name}, {pfx},
-				   (bool)mu_msg_field_xapian_index(id),
-				   id});
-	}
-
-	std::vector<FieldInfo>
-	process_field (const std::string& field) const override {
-
-		std::vector<FieldInfo> fields;
-
-		if (field == "contact" || field == "recip") { // multi fields
-			add_field (fields, MU_MSG_FIELD_ID_TO);
-			add_field (fields, MU_MSG_FIELD_ID_CC);
-			add_field (fields, MU_MSG_FIELD_ID_BCC);
-			if (field == "contact")
-				add_field (fields, MU_MSG_FIELD_ID_FROM);
-		} else if (field == "") {
-			add_field (fields, MU_MSG_FIELD_ID_TO);
-			add_field (fields, MU_MSG_FIELD_ID_CC);
-			add_field (fields, MU_MSG_FIELD_ID_BCC);
-			add_field (fields, MU_MSG_FIELD_ID_FROM);
-			add_field (fields, MU_MSG_FIELD_ID_SUBJECT);
-			add_field (fields, MU_MSG_FIELD_ID_BODY_TEXT);
-		} else {
-			const auto id = field_id (field.c_str());
-			if (id != MU_MSG_FIELD_ID_NONE)
-				add_field (fields, id);
-		}
-
-		return fields;
-	}
-
-	bool is_range_field (const std::string& field) const override {
-		const auto id = field_id (field.c_str());
-		if (id == MU_MSG_FIELD_ID_NONE)
-			return false;
-		else
-			return mu_msg_field_is_range_field (id);
-	}
-
-	Range process_range (const std::string& field, const std::string& lower,
-			     const std::string& upper) const override {
-
-		const auto id = field_id (field.c_str());
-		if (id == MU_MSG_FIELD_ID_NONE)
-			return { lower, upper };
-
-		std::string	l2 = lower;
-		std::string	u2 = upper;
-
-		if (id == MU_MSG_FIELD_ID_DATE) {
-			l2 = Mu::date_to_time_t_string (lower, true);
-			u2 = Mu::date_to_time_t_string (upper, false);
-		} else if (id == MU_MSG_FIELD_ID_SIZE) {
-			l2 = Mu::size_to_string (lower, true);
-			u2 = Mu::size_to_string (upper, false);
-		}
-
-		return { l2, u2 };
-	}
-
-	std::vector<std::string>
-	process_regex (const std::string& field, const std::regex& rx) const override {
-
-		const auto id = field_id (field.c_str());
-		if (id == MU_MSG_FIELD_ID_NONE)
-			return {};
-
-		char pfx[] = {  mu_msg_field_xapian_prefix(id), '\0' };
-
-		std::vector<std::string> terms;
-		for (auto it = db_.allterms_begin(pfx); it != db_.allterms_end(pfx); ++it) {
-			if (std::regex_search((*it).c_str() + 1, rx)) // avoid copy
-				terms.push_back(*it);
-		}
-
-		return terms;
-	}
-
-	const Xapian::Database& db_;
+        const Store& store_;
+        const Parser parser_;
 };
 
-struct _MuQuery {
-public:
-	_MuQuery (MuStore *store): _store(mu_store_ref(store)) {}
-	~_MuQuery () { mu_store_unref (_store); }
 
-	Xapian::Database& db() const {
-		const auto db = reinterpret_cast<Xapian::Database*>
-			(mu_store_get_read_only_database (_store));
-		if (!db)
-			throw Mu::Error(Error::Code::NotFound, "no database");
-		return *db;
-	}
-private:
-	MuStore *_store;
-};
-
-static const Xapian::Query
-get_query (MuQuery *mqx, const char* searchexpr, bool raw, GError **err) try {
-
-	Mu::WarningVec warns;
-	const auto tree = Mu::parse (searchexpr, warns,
-				      std::make_unique<MuProc>(mqx->db()));
-	for (auto&& w: warns)
-		std::cerr << w << std::endl;
-
-	return Mu::xapian_query (tree);
-
-} catch (...) {
-	mu_util_g_set_error (err,MU_ERROR_XAPIAN_QUERY,
-			     "parse error in query");
-	throw;
-}
-
-MuQuery*
-mu_query_new (MuStore *store, GError **err)
+static constexpr MuMsgIterFlags
+msg_iter_flags (Query::Flags flags)
 {
-	g_return_val_if_fail (store, NULL);
+	MuMsgIterFlags iflags{MU_MSG_ITER_FLAG_NONE};
 
-	try {
-		return new MuQuery (store);
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
-
-	return 0;
-}
-
-void
-mu_query_destroy (MuQuery *self)
-{
-	try { delete self; } MU_XAPIAN_CATCH_BLOCK;
-}
-
-
-/* this function is for handling the case where a DatabaseModified
- * exception is raised. We try to reopen the database, and run the
- * query again. */
-static MuMsgIter *
-try_requery (MuQuery *self, const char* searchexpr, MuMsgFieldId sortfieldid,
-	     int maxnum, MuQueryFlags flags, GError **err)
-{
-	try {
-		/* let's assume that infinite regression is
-		 * impossible */
-		self->db().reopen();
-		g_message ("reopening db after modification");
-		return mu_query_run (self, searchexpr, sortfieldid,
-				     maxnum, flags, err);
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
-}
-
-
-static MuMsgIterFlags
-msg_iter_flags (MuQueryFlags flags)
-{
-	MuMsgIterFlags iflags;
-
-	iflags = MU_MSG_ITER_FLAG_NONE;
-
-	if (flags & MU_QUERY_FLAG_DESCENDING)
+	if (any_of(flags & Query::Flags::Descending))
 		iflags |= MU_MSG_ITER_FLAG_DESCENDING;
-	if (flags & MU_QUERY_FLAG_SKIP_UNREADABLE)
+	if (any_of(flags & Query::Flags::SkipUnreadable))
 		iflags |= MU_MSG_ITER_FLAG_SKIP_UNREADABLE;
-	if (flags & MU_QUERY_FLAG_SKIP_DUPS)
+	if (any_of(flags & Query::Flags::SkipDups))
 		iflags |= MU_MSG_ITER_FLAG_SKIP_DUPS;
-	if (flags & MU_QUERY_FLAG_THREADS)
+	if (any_of(flags & Query::Flags::Threading))
 		iflags |= MU_MSG_ITER_FLAG_THREADS;
 
 	return iflags;
 }
 
+Xapian::Query
+Query::Private::make_query (const std::string& expr, GError **err) const try {
+
+	Mu::WarningVec warns;
+        const auto tree{parser_.parse(expr, warns)};
+	for (auto&& w: warns)
+                g_warning ("query warning: %s", to_string(w).c_str());
+
+	return Mu::xapian_query (tree);
+
+} catch (...) {
+	mu_util_g_set_error (err, MU_ERROR_XAPIAN_QUERY,
+			     "parse error in query");
+	throw;
+}
 
 
-static Xapian::Enquire
-get_enquire (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
-	     bool descending, bool raw, GError **err)
+Xapian::Enquire
+Query::Private::make_enquire (const std::string& expr, MuMsgFieldId sortfieldid,
+                              bool descending, GError **err) const
 {
-	Xapian::Enquire enq (self->db());
+	Xapian::Enquire enq{store_.database()};
 
-	try {
-		if (raw)
-			enq.set_query(Xapian::Query(Xapian::Query(searchexpr)));
-		else if (!mu_str_is_empty(searchexpr) &&
-		    g_strcmp0 (searchexpr, "\"\"") != 0) /* NULL or "" or """" */
-			enq.set_query(get_query (self, searchexpr, raw, err));
+        try {
+		if (!expr.empty() && expr != R"("")")
+                        enq.set_query(make_query (expr, err));
 		else/* empty or "" means "matchall" */
 			enq.set_query(Xapian::Query::MatchAll);
 	} catch (...) {
-		mu_util_g_set_error (err, MU_ERROR_XAPIAN_QUERY,
-				     "parse error in query");
+		mu_util_g_set_error (err, MU_ERROR_XAPIAN_QUERY, "parse error in query");
 		throw;
 	}
 
 	enq.set_cutoff(0,0);
-	return enq;
+
+        return enq;
 }
 
 /*
- * record all threadids for the messages; also 'orig_set' receives all
+ * record all thread-ids for the messages; also 'orig_set' receives all
  * original matches (a map msgid-->docid), so we can make sure the
  * originals are not seen as 'duplicates' later (when skipping
  * duplicates).  We want to favor the originals over the related
  * messages, when skipping duplicates.
  */
-static GHashTable*
-get_thread_ids (MuMsgIter *iter, GHashTable **orig_set)
+GHashTable*
+Query::Private::find_thread_ids (MuMsgIter *iter, GHashTable **orig_set) const
 {
 	GHashTable *ids;
 
@@ -332,8 +153,8 @@ get_thread_ids (MuMsgIter *iter, GHashTable **orig_set)
 }
 
 
-static Xapian::Query
-get_related_query (MuMsgIter *iter, GHashTable **orig_set)
+Xapian::Query
+Query::Private::make_related_query (MuMsgIter *iter, GHashTable **orig_set) const
 {
 	GHashTable *hash;
 	GList *id_list, *cur;
@@ -343,7 +164,7 @@ get_related_query (MuMsgIter *iter, GHashTable **orig_set)
 
 	/* orig_set receives the hash msgid->docid of the set of
 	 * original matches */
-	hash = get_thread_ids (iter, orig_set);
+	hash = find_thread_ids (iter, orig_set);
 	/* id_list now gets a list of all thread-ids seen in the query
 	 * results; either in the Message-Id field or in
 	 * References. */
@@ -363,18 +184,18 @@ get_related_query (MuMsgIter *iter, GHashTable **orig_set)
 }
 
 
-static void
-get_related_messages (MuQuery *self, MuMsgIter **iter, int maxnum,
-                      MuMsgFieldId sortfieldid, MuQueryFlags flags,
-                      Xapian::Query orig_query)
+void
+Query::Private::find_related_messages (MuMsgIter **iter, int maxnum,
+                                       MuMsgFieldId sortfieldid, Query::Flags flags,
+                                       Xapian::Query orig_query) const
 {
 	GHashTable *orig_set;
-	Xapian::Enquire enq (self->db());
+	Xapian::Enquire enq{store_.database()};
 	MuMsgIter *rel_iter;
-	const bool inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
+	const bool inc_related{any_of(flags & Query::Flags::IncludeRelated)};
 
 	orig_set = NULL;
-	Xapian::Query new_query = get_related_query (*iter, &orig_set);
+	Xapian::Query new_query{make_related_query (*iter, &orig_set)};
 	/* If related message are not desired, filter out messages which would not
 	   have matched the original query.
 	 */
@@ -402,25 +223,28 @@ get_related_messages (MuQuery *self, MuMsgIter **iter, int maxnum,
 	*iter = rel_iter;
 }
 
+Query::Query(const Store& store):
+        priv_{std::make_unique<Private>(store)}
+{}
+
+Query::Query(Query&& other) = default;
+
+Query::~Query() = default;
+
 
 MuMsgIter*
-mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
-	      int maxnum, MuQueryFlags flags, GError **err)
+Query::run (const std::string& expr, MuMsgFieldId sortfieldid, Query::Flags flags,
+            size_t maxnum, GError **err) const
 {
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (searchexpr, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid (sortfieldid)	||
 			      sortfieldid    == MU_MSG_FIELD_ID_NONE,
 			      NULL);
 	try {
 		MuMsgIter *iter;
-		MuQueryFlags first_flags;
-		const bool threads     = flags & MU_QUERY_FLAG_THREADS;
-		const bool inc_related = flags & MU_QUERY_FLAG_INCLUDE_RELATED;
-		const bool descending  = flags & MU_QUERY_FLAG_DESCENDING;
-		const bool raw         = flags & MU_QUERY_FLAG_RAW;
-		Xapian::Enquire enq (get_enquire(self, searchexpr, sortfieldid,
-						 descending, raw, err));
+		const bool threads     = any_of(flags & Flags::Threading);
+		const bool inc_related = any_of(flags & Flags::IncludeRelated);
+		const bool descending  = any_of(flags & Flags::Descending);
+		Xapian::Enquire enq (priv_->make_enquire(expr, sortfieldid, descending, err));
 
 		/* when we're doing a 'include-related query', wea're actually
 		 * doing /two/ queries; one to get the initial matches, and
@@ -429,12 +253,13 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 		 */
 
 		/* get the 'real' maxnum if it was specified as < 0 */
-		maxnum = maxnum < 0 ? self->db().get_doccount() : maxnum;
+		maxnum = maxnum == 0 ? priv_->store_.size(): maxnum;
 		/* Calculating threads involves two queries, so do the calculation only in
 		 * the second query instead of in both.
 		 */
+                Query::Flags first_flags{};
 		if (threads)
-			first_flags = (MuQueryFlags)(flags & ~MU_QUERY_FLAG_THREADS);
+			first_flags = flags & ~Flags::Threading;
 		else
 			first_flags = flags;
 		/* Perform the initial query, returning up to max num results.
@@ -454,68 +279,47 @@ mu_query_run (MuQuery *self, const char *searchexpr, MuMsgFieldId sortfieldid,
 		 * the undesired related messages later.
 		 */
 		if(threads||inc_related)
-			get_related_messages (self, &iter, maxnum, sortfieldid, flags,
-			                      enq.get_query());
+			priv_->find_related_messages (&iter, maxnum, sortfieldid, flags,
+                                                      enq.get_query());
 
-		if (err && *err && (*err)->code == MU_ERROR_XAPIAN_MODIFIED) {
-			g_clear_error (err);
-			return try_requery (self, searchexpr, sortfieldid,
-					    maxnum, flags, err);
-		} else
-			return iter;
+                return iter;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN (err, MU_ERROR_XAPIAN, 0);
 }
 
 
 size_t
-mu_query_count_run (MuQuery *self, const char *searchexpr) try
+Query::count (const std::string& expr) const try
 {
-	g_return_val_if_fail (self, 0);
-	g_return_val_if_fail (searchexpr, 0);
-
-        const auto enq{get_enquire(self, searchexpr,MU_MSG_FIELD_ID_NONE, false, false, NULL)};
-        auto mset(enq.get_mset(0, self->db().get_doccount()));
+        const auto enq{priv_->make_enquire(expr, MU_MSG_FIELD_ID_NONE, false, nullptr)};
+        auto mset{enq.get_mset(0, priv_->store_.size())};
         mset.fetch();
 
         return mset.size();
 
-} MU_XAPIAN_CATCH_BLOCK_RETURN (0);
+}MU_XAPIAN_CATCH_BLOCK_RETURN (0);
 
-char*
-mu_query_internal_xapian (MuQuery *self, const char *searchexpr, GError **err)
+
+
+std::string
+Query::parse(const std::string& expr, bool xapian) const try
 {
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (searchexpr, NULL);
-
-	try {
-		Xapian::Query query (get_query(self, searchexpr, false, err));
-		return g_strdup(query.get_description().c_str());
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
-}
-
-
-char*
-mu_query_internal (MuQuery *self, const char *searchexpr,
-		   gboolean warn, GError **err)
-{
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (searchexpr, NULL);
-
-	try {
+        if (xapian) {
+                GError *err{};
+                const auto descr{priv_->make_query(expr, &err).get_description()};
+                if (err) {
+                        g_warning ("query error: %s", err->message);
+                        g_clear_error(&err);
+                }
+                return descr;
+        } else {
 		Mu::WarningVec warns;
-		const auto tree = Mu::parse (searchexpr, warns,
-					      std::make_unique<MuProc>(self->db()));
-		std::stringstream ss;
-		ss << tree;
+		const auto tree = priv_->parser_.parse (expr, warns);
+                for (auto&& w: warns)
+                        g_warning ("query error: %s", to_string(w).c_str());
 
-		if (warn) {
-			for (auto&& w: warns)
-				std::cerr << w << std::endl;
-		}
+                return to_string(tree);
 
-		return g_strdup(ss.str().c_str());
+	}
 
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
-}
+} MU_XAPIAN_CATCH_BLOCK_RETURN("");

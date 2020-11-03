@@ -21,7 +21,7 @@
 #include "config.h"
 
 #include <glib.h>
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-contacts.hh"
 
 static void

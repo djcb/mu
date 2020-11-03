@@ -37,10 +37,12 @@ using CaseVec = std::vector<Case>;
 static void
 test_cases(const CaseVec& cases)
 {
+        Parser parser;
+
 	for (const auto& casus : cases ) {
 
 		WarningVec warnings;
-		const auto tree = parse (casus.expr, warnings);
+		const auto tree = parser.parse (casus.expr, warnings);
 
 		std::stringstream ss;
 		ss << tree;

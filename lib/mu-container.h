@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <mu-msg.h>
 
+G_BEGIN_DECLS
+
 enum _MuContainerFlag {
 	MU_CONTAINER_FLAG_NONE    = 0,
 	MU_CONTAINER_FLAG_DELETE  = 1 << 0,
@@ -220,5 +222,7 @@ MuContainer* mu_container_sort (MuContainer *c, MuMsgFieldId mfid,
  */
 GHashTable* mu_container_thread_info_hash_new (MuContainer *root_set,
 					       size_t matchnum);
+
+G_END_DECLS
 
 #endif /*__MU_CONTAINER_H__*/

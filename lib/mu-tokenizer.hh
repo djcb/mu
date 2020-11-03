@@ -97,7 +97,7 @@ operator<< (std::ostream& os, Token::Type t)
 	case Token::Type::And:      os << "<and>"; break;
 	case Token::Type::Or:       os << "<or>"; break;
 	case Token::Type::Xor:      os << "<xor>"; break;
-
+        case Token::Type::Empty:    os << "<empty>"; break;
 	default:		// can't happen, but pacify compiler
 		throw std::runtime_error ("<<bug>>");
 	}

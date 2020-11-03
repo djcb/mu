@@ -205,7 +205,7 @@ Indexer::Private::cleanup()
         g_debug ("starting cleanup");
 
         std::vector<Store::Id> orphans_; // store messages without files.
-        store_.for_each([&](Store::Id id, const std::string &path) {
+        store_.for_each_message_path([&](Store::Id id, const std::string &path) {
 
                 if (clean_done_)
                         return false;

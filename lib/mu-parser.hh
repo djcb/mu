@@ -25,9 +25,9 @@
 #include <vector>
 #include <memory>
 
-#include <query/mu-data.hh>
-#include <query/mu-tree.hh>
-#include <query/mu-proc-iface.hh>
+#include <mu-data.hh>
+#include <mu-tree.hh>
+#include <mu-store.hh>
 
 // A simple recursive-descent parser for queries. Follows the Xapian syntax,
 // but better handles non-alphanum; also implements regexp
@@ -53,7 +53,7 @@ struct Warning {
 		return pos == rhs.pos && msg == rhs.msg;
 	}
 };
-
+using WarningVec=std::vector<Warning>;
 
 /**
  * operator<<
@@ -70,19 +70,34 @@ operator<< (std::ostream& os, const Warning& w)
 	return os;
 }
 
-/**
- * Parse a query string
- *
- * @param query a query string
- * @param warnings vec to receive warnings
- * @param proc a Processor object
- *
- * @return a parse-tree
- */
-using WarningVec=std::vector<Warning>;
-using ProcPtr = const std::unique_ptr<ProcIface>&;
-Tree parse (const std::string& query, WarningVec& warnings,
-	    ProcPtr proc = std::make_unique<DummyProc>());
+class Parser {
+public:
+        /**
+         * Construct a query parser object
+         *
+         * @param store a store object ptr, or none
+         */
+        Parser(const Store& store);
+        /**
+         * DTOR
+         *
+         */
+        ~Parser();
+
+        /**
+         * Parse a query string
+         *
+         * @param query a query string
+         * @param warnings vec to receive warnings
+         *
+         * @return a parse-tree
+         */
+
+        Tree parse (const std::string& query, WarningVec& warnings) const;
+private:
+        struct Private;
+        std::unique_ptr<Private> priv_;
+};
 
 } // namespace Mu
 

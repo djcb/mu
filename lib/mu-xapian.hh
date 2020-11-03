@@ -22,7 +22,7 @@
 #define __XAPIAN_HH__
 
 #include <xapian.h>
-#include <query/mu-parser.hh>
+#include <mu-parser.hh>
 
 namespace Mu {
 

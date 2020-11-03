@@ -28,9 +28,10 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-maildir.h"
 #include "utils/mu-util.h"
+
 
 static void
 test_mu_maildir_mkdir_01 (void)
@@ -400,7 +401,7 @@ test_mu_maildir_get_flags_from_path (void)
 	} paths[] = {
 		{
 			"/home/foo/Maildir/test/cur/123456:2,FSR",
-			MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED
+			(MuFlags)(MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED)
 		},
 		{
 			"/home/foo/Maildir/test/new/123456",
@@ -413,8 +414,8 @@ test_mu_maildir_get_flags_from_path (void)
 		},
 		{
 			"/home/foo/Maildir/test/cur/123456:2,DTP",
-			MU_FLAG_DRAFT | MU_FLAG_TRASHED |
-			MU_FLAG_PASSED
+			(MuFlags)(MU_FLAG_DRAFT | MU_FLAG_TRASHED |
+			MU_FLAG_PASSED)
 		},
 		{
 			"/home/foo/Maildir/test/cur/123456:2,S",
@@ -434,7 +435,8 @@ test_mu_maildir_get_flags_from_path (void)
 static void
 assert_matches_regexp (const char *str, const char *rx)
 {
-	if (!g_regex_match_simple (rx, str, 0, 0)) {
+	if (!g_regex_match_simple (rx, str, (GRegexCompileFlags)0,
+                                   (GRegexMatchFlags)0)) {
 		if (g_test_verbose ())
 			g_print ("%s does not match %s", str, rx);
 		g_assert (0);
@@ -463,11 +465,11 @@ test_mu_maildir_get_new_path_new (void)
 			"/home/foo/Maildir/test/new/123456"
 		}, {
 			"/home/foo/Maildir/test/new/123456:2,FR",
-			MU_FLAG_SEEN | MU_FLAG_REPLIED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
 			"/home/foo/Maildir/test/cur/123456:2,RS"
 		}, {
 			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
 			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"
 		}, {
 			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
@@ -513,11 +515,11 @@ test_mu_maildir_get_new_path_01 (void)
 			"/home/foo/Maildir/test/new/123456"
 		}, {
 			"/home/foo/Maildir/test/new/123456:2,FR",
-			MU_FLAG_SEEN | MU_FLAG_REPLIED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
 			"/home/foo/Maildir/test/cur/123456:2,RS"
 		}, {
 			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
 			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"
 		}, {
 			"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
@@ -557,12 +559,12 @@ test_mu_maildir_get_new_path_02 (void)
 			"/home/bar/Maildir/coffee/new/123456"
 		}, {
 			"/home/foo/Maildir/test/new/123456",
-			MU_FLAG_SEEN | MU_FLAG_REPLIED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
 			"/home/cuux/Maildir/tea",
 			"/home/cuux/Maildir/tea/cur/123456:2,RS"
 		}, {
 			"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-			MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED,
+			(MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
 			"/home/boy/Maildir/stuff",
 			"/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"
 		}
@@ -685,8 +687,8 @@ main (int argc, char *argv[])
 			test_mu_maildir_get_maildir_from_path);
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
-			   G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			   G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	return g_test_run ();

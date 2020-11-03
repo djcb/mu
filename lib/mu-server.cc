@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include "mu-msg-fields.h"
 #include "mu-server.hh"
 
 #include <iostream>
@@ -36,7 +37,7 @@
 #include "mu-msg.h"
 #include "mu-runtime.h"
 #include "mu-maildir.h"
-#include "mu-query.h"
+#include "mu-query.hh"
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-msg-part.h"
@@ -59,21 +60,12 @@ struct Server::Private {
                 store_{store},
                 output_{output},
                 command_map_{make_command_map()},
-                query_{make_query(store_)},
-                keep_going_{true} {
-                if (!query_)
-                        throw Error(Error::Code::Query, "failed to create server");
-        }
-
-        ~Private() {
-                g_clear_pointer(&query_, mu_query_destroy);
-        }
-
+                query_{store_},
+                keep_going_{true} {}
         //
         // construction helpers
         //
         CommandMap make_command_map();
-        MuQuery* make_query(Store& store) const;
 
         //
         // acccessors
@@ -81,7 +73,7 @@ struct Server::Private {
         const Store& store() const            { return store_; }
         Indexer& indexer()                    { return store().indexer(); }
         const CommandMap& command_map() const { return command_map_; }
-        MuQuery* query()                      { return query_; }
+        const Query& query() const            { return query_; }
 
         //
         // invoke
@@ -122,24 +114,11 @@ private:
         Store&           store_;
         Server::Output   output_;
         const CommandMap command_map_;
-        MuQuery          *query_{};
+        const Query      query_;
 
         std::atomic<bool> keep_going_{};
 };
 
-MuQuery*
-Server::Private::make_query (Store& store) const
-{
-        GError *gerr{};
-        auto q{mu_query_new (reinterpret_cast<MuStore*>(&store), &gerr)};
-        if (!q) {
-                g_critical("failed to create query: %s",
-                           gerr ? gerr->message : "something went wrong");
-                g_clear_error(&gerr);
-        }
-
-        return q;
-}
 
 CommandMap
 Server::Private::make_command_map ()
@@ -624,22 +603,22 @@ Server::Private::extract_handler (const Parameters& params)
 
 /* get a *list* of all messages with the given message id */
 static std::vector<DocId>
-docids_for_msgid (MuQuery *query, const std::string& msgid, size_t max=100)
+docids_for_msgid (const Query& q, const std::string& msgid, size_t max=100)
 {
         if (msgid.size() > MU_STORE_MAX_TERM_LENGTH - 1) {
                 throw Error(Error::Code::InvalidArgument,
                                   "invalid message-id '%s'", msgid.c_str());
         }
 
-        const auto xprefix{mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_MSGID)};
+        const auto xprefix{mu_msg_field_shortcut(MU_MSG_FIELD_ID_MSGID)};
         /*XXX this is a bit dodgy */
         auto tmp{g_ascii_strdown(msgid.c_str(), -1)};
-        auto rawq{g_strdup_printf("%c%s", xprefix, tmp)};
+        auto expr{g_strdup_printf("%c:%s", xprefix, tmp)};
         g_free(tmp);
 
         GError *gerr{};
-        auto iter{mu_query_run (query, rawq, MU_MSG_FIELD_ID_NONE, max, MU_QUERY_FLAG_RAW, &gerr)};
-        g_free (rawq);
+        auto iter{q.run(expr , MU_MSG_FIELD_ID_NONE, Query::Flags::None, max)};
+        g_free (expr);
         if (!iter)
                 throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
         if (mu_msg_iter_is_done (iter))
@@ -680,7 +659,7 @@ path_from_docid (const Store& store, unsigned docid)
 
 
 static std::vector<DocId>
-determine_docids (MuQuery *query, const Parameters& params)
+determine_docids (const Query& q, const Parameters& params)
 {
         auto docid{get_int_or(params, ":docid", 0)};
         const auto msgid{get_string_or(params, ":msgid")};
@@ -692,7 +671,7 @@ determine_docids (MuQuery *query, const Parameters& params)
         if (docid != 0)
                 return { (unsigned)docid };
         else
-                return docids_for_msgid (query, msgid.c_str());
+                return docids_for_msgid (q, msgid.c_str());
 }
 
 
@@ -739,19 +718,18 @@ Server::Private::find_handler (const Parameters& params)
                                         sortfieldstr.c_str()};
         }
 
-        int qflags{MU_QUERY_FLAG_NONE/*UNREADABLE*/};
+        auto qflags{Query::Flags::None};
         if (descending)
-                qflags |= MU_QUERY_FLAG_DESCENDING;
+                qflags |= Query::Flags::Descending;
         if (skip_dups)
-                qflags |= MU_QUERY_FLAG_SKIP_DUPS;
+                qflags |= Query::Flags::SkipDups;
         if (include_related)
-                qflags |= MU_QUERY_FLAG_INCLUDE_RELATED;
+                qflags |= Query::Flags::IncludeRelated;
         if (threads)
-                qflags |= MU_QUERY_FLAG_THREADS;
+                qflags |= Query::Flags::Threading;
 
         GError *gerr{};
-        auto miter{mu_query_run(query(), q.c_str(), sort_field, maxnum,
-                                (MuQueryFlags)qflags, &gerr)};
+        auto miter{query().run(q, sort_field, qflags, maxnum, &gerr)};
         if (!miter)
                 throw Error(Error::Code::Query, &gerr, "failed to run query");
 
@@ -1023,9 +1001,9 @@ Server::Private::ping_handler (const Parameters& params)
         Sexp::List qresults;
         for (auto&& q: queries) {
 
-                const auto count{mu_query_count_run (query(), q.c_str())};
+                const auto count{query().count(q)};
                 const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
-                const auto unread{mu_query_count_run (query(), unreadq.c_str())};
+                const auto unread{query().count(unreadq)};
 
                 Sexp::List lst;
                 lst.add_prop(":query",  Sexp::make_string(q));

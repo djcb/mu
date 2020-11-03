@@ -32,6 +32,8 @@ xapian_query_op (const Mu::Tree& tree)
 {
 	Xapian::Query::op op;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wswitch-enum"
 	switch (tree.node.type) {
 	case Node::Type::OpNot: // OpNot x ::= <all> AND NOT x
 		  if (tree.children.size() != 1)
@@ -45,7 +47,7 @@ xapian_query_op (const Mu::Tree& tree)
 	case Node::Type::OpAndNot: op = Xapian::Query::OP_AND_NOT; break;
 	default: throw Mu::Error (Error::Code::Internal, "invalid op");	// bug
 	}
-
+#pragma GCC diagnostic pop
 	std::vector<Xapian::Query> childvec;
 	for (const auto& subtree: tree.children)
 		childvec.emplace_back(xapian_query(subtree));
@@ -97,6 +99,8 @@ xapian_query_range (const Mu::Tree& tree)
 Xapian::Query
 Mu::xapian_query (const Mu::Tree& tree)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wswitch-enum"
 	switch (tree.node.type) {
 	case Node::Type::Empty:
 		return Xapian::Query();
@@ -113,4 +117,5 @@ Mu::xapian_query (const Mu::Tree& tree)
 	default:
                 throw Mu::Error (Error::Code::Internal, "invalid query");	// bug
 	}
+#pragma GCC diagnostic pop
 }

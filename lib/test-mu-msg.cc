@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,7 +28,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-msg.h"
 #include "utils/mu-str.h"
 
@@ -250,8 +249,8 @@ test_mu_msg_multimime (void)
 	g_assert_cmpstr (mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE),
 			 ==, "abcdef");
 	g_assert_cmpuint (mu_msg_get_flags(msg),
-			 ==, MU_FLAG_FLAGGED | MU_FLAG_SEEN |
-			 MU_FLAG_HAS_ATTACH);
+			 ==, (MuFlags)(MU_FLAG_FLAGGED | MU_FLAG_SEEN |
+			 MU_FLAG_HAS_ATTACH));
 	mu_msg_unref (msg);
 }
 
@@ -267,8 +266,8 @@ test_mu_msg_flags (void)
 		MuFlags flags;
 	} msgflags [] = {
 		{ MU_TESTMAILDIR4 "/multimime!2,FS",
-		  MU_FLAG_FLAGGED | MU_FLAG_SEEN |
-		  MU_FLAG_HAS_ATTACH },
+		  (MuFlags)(MU_FLAG_FLAGGED | MU_FLAG_SEEN |
+		  MU_FLAG_HAS_ATTACH) },
 		{ MU_TESTMAILDIR4 "/special!2,Sabc",
 		  MU_FLAG_SEEN }
 
@@ -515,7 +514,7 @@ test_mu_str_prio_02 (void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler ((GTestLogFatalFunc)ignore_error, NULL);
-	g_assert_cmpstr (mu_msg_prio_name(666), ==, NULL);
+	g_assert_cmpstr (mu_msg_prio_name((MuMsgPrio)666), ==, NULL);
 }
 
 
@@ -588,8 +587,8 @@ main (int argc, char *argv[])
 
 
 	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
-			   G_LOG_FLAG_RECURSION,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+			   G_LOG_FLAG_RECURSION),
 			   (GLogFunc)black_hole, NULL);
 
 	rv = g_test_run ();

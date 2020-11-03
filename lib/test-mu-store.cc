@@ -26,7 +26,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.h"
+#include "test-mu-common.hh"
 #include "mu-store.hh"
 
 static std::string MuTestMaildir = Mu::canonicalize_filename(MU_TESTMAILDIR, "/");
