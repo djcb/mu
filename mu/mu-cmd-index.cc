@@ -98,6 +98,13 @@ mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
 		return MU_ERROR;
 	}
 
+        const auto mdir{store.metadata().root_maildir};
+        if (G_UNLIKELY(access (mdir.c_str(), R_OK) != 0)) {
+                mu_util_g_set_error(err, MU_ERROR_FILE,
+                                   "'%s' is not readable: %s", mdir.c_str(), strerror (errno));
+                return MU_ERROR;
+        }
+
         MaybeAnsi col{!opts->nocolor};
         using Color = MaybeAnsi::Color;
         if (!opts->quiet) {

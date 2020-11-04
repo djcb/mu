@@ -242,7 +242,7 @@ Indexer::Private::start(const Indexer::Config& conf)
         else
                 max_workers_ = conf.max_threads;
 
-        g_debug ("starting indexer with up to %zu threads", max_workers_);
+        g_debug ("starting indexer with up to %zu worker threads", max_workers_);
 
         scan_done_ = false;
         workers_.emplace_back(std::thread([this]{worker();}));
@@ -255,13 +255,14 @@ Indexer::Private::start(const Indexer::Config& conf)
                 if (conf_.scan) {
                         g_debug("starting scanner");
 
-                        if (!scanner_.start()) {
+                        const auto started{scanner_.start()};
+                        clean_done_ = scan_done_ = true; // so listeners will stop.
+
+                        if (!started) {
                                 g_warning ("failed to start scanner");
                                 return;
-                        }
-
-                        scan_done_ = true;
-                        g_debug ("scanner finished");
+                        } else
+                                g_debug ("scanner finished");
                 }
 
                 if (conf_.cleanup) {
@@ -314,6 +315,12 @@ Indexer::~Indexer() = default;
 bool
 Indexer::start(const Indexer::Config& conf)
 {
+        const auto mdir{priv_->store_.metadata().root_maildir};
+        if (G_UNLIKELY(access (mdir.c_str(), R_OK) != 0)) {
+                g_critical("'%s' is not readable: %s", mdir.c_str(), strerror (errno));
+                return false;
+        }
+
         std::lock_guard<std::mutex> l(priv_->lock_);
         if (is_running())
                 return true;
