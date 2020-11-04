@@ -37,7 +37,7 @@
 
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
-#include "mu-threader.h"
+#include "mu-threader.hh"
 
 struct ltstr {
 	bool operator () (const std::string &s1,

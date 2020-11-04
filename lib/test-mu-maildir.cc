@@ -197,15 +197,15 @@ copy_test_data (void)
 	gchar *dir, *cmd;
 
 	dir = test_mu_common_get_random_tmpdir();
-	cmd = g_strdup_printf ("mkdir -m 0700 %s", dir);
+	cmd = g_strdup_printf ("mkdir -p -m 0700 %s", dir);
 	if (g_test_verbose())
-		g_print ("cmd: %s\n", cmd);
+		g_debug ("cmd: %s\n", cmd);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
 
 	cmd = g_strdup_printf ("cp -R %s %s", MU_TESTMAILDIR, dir);
 	if (g_test_verbose())
-		g_print ("cmd: %s\n", cmd);
+		g_debug ("cmd: %s\n", cmd);
 	g_assert (g_spawn_command_line_sync (cmd, NULL, NULL, NULL, NULL));
 	g_free (cmd);
 
@@ -228,7 +228,7 @@ dir_cb (const char *fullpath, gboolean enter, WalkData *data)
 		++data->_dir_left;
 
 	if (g_test_verbose())
-		g_print ("%s: %s: %s (%u)\n", __func__, enter ? "entering" : "leaving",
+		g_debug ("%s: %s: %s (%u)\n", __func__, enter ? "entering" : "leaving",
 			 fullpath, enter ? data->_dir_entered : data->_dir_left);
 
 	return MU_OK;

@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,13 +17,11 @@
 **
 */
 
-#ifndef __MU_THREADER_H__
-#define __MU_THREADER_H__
+#ifndef MU_THREADER_HH__
+#define MU_THREADER_HH__
 
 #include <glib.h>
 #include <mu-msg-iter.h>
-
-G_BEGIN_DECLS
 
 /**
  * takes an iter and the total number of matches, and from this
@@ -50,7 +46,4 @@ G_BEGIN_DECLS
 GHashTable *mu_threader_calculate (MuMsgIter *iter, size_t matches,
 				   MuMsgFieldId sortfield, gboolean revert);
 
-
-G_END_DECLS
-
-#endif /*__MU_THREADER_H__*/
+#endif /*MU_THREADER_HH__*/

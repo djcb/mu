@@ -49,8 +49,6 @@ static bool
 call (const Command::CommandMap& cmap, const std::string& str) try
 {
         const auto sexp{Sexp::make_parse(str)};
-        g_message ("invoking %s", to_string(sexp).c_str());
-
         invoke (cmap, sexp);
 
         return true;
@@ -74,8 +72,6 @@ test_command()
                                      {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
                             "My command,",
                             {}});
-
-        std::cout << "****** " << cmap << "\n";
 
         g_assert_true(call(cmap, "(my-command :param1 \"hello\")"));
         g_assert_true(call(cmap, "(my-command :param1 \"hello\" :param2 123)"));
@@ -127,6 +123,8 @@ test_command_fail()
 }
 
 
+static void black_hole() {}
+
 int
 main (int argc, char *argv[]) try
 {
@@ -136,6 +134,12 @@ main (int argc, char *argv[]) try
         g_test_add_func ("/utils/command-parser/command", test_command);
         g_test_add_func ("/utils/command-parser/command2", test_command2);
         g_test_add_func ("/utils/command-parser/command-fail", test_command_fail);
+
+	g_log_set_handler (NULL,
+			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL|
+                                            G_LOG_FLAG_RECURSION),
+			   (GLogFunc)black_hole, NULL);
+
 
 	return g_test_run ();
 

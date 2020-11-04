@@ -17,50 +17,47 @@
 **
 */
 
-#ifndef __MU_CONTAINER_H__
-#define __MU_CONTAINER_H__
+#ifndef MU_CONTAINER_HH__
+#define MU_CONTAINER_HH__
 
 #include <glib.h>
 #include <mu-msg.h>
+#include <utils/mu-utils.hh>
 
-G_BEGIN_DECLS
-
-enum _MuContainerFlag {
+enum MuContainerFlag {
 	MU_CONTAINER_FLAG_NONE    = 0,
 	MU_CONTAINER_FLAG_DELETE  = 1 << 0,
 	MU_CONTAINER_FLAG_SPLICE  = 1 << 1,
 	MU_CONTAINER_FLAG_DUP     = 1 << 2
 };
-typedef enum _MuContainerFlag MuContainerFlag;
+MU_ENABLE_BITOPS(MuContainerFlag);
 
 /*
  * MuContainer data structure, as seen in JWZs document:
  *     http://www.jwz.org/doc/threading.html
  */
-struct _MuContainer {
-	struct _MuContainer *parent, *child, *next;
+struct MuContainer {
+	struct MuContainer *parent, *child, *next;
 
 	/* note: we cache the last of the string of next->next->...
 	 * `mu_container_append_siblings' shows up high in the
 	 * profiles since it needs to walk to the end, and this give
 	 * O(n*n) behavior.
 	 * */
-	struct _MuContainer *last;
+	struct MuContainer *last;
 
 	/* Node in the subtree rooted at this node which comes first
 	 * in the descending sort order, e.g. the latest message if
 	 * sorting by date. We compare the leaders when ordering
 	 * subtrees. */
-	struct _MuContainer *leader;
+	struct MuContainer *leader;
 
 	MuMsg               *msg;
 	const char          *msgid;
 
 	unsigned            docid;
 	MuContainerFlag     flags;
-
 };
-typedef struct _MuContainer MuContainer;
 
 
 /**
@@ -223,6 +220,4 @@ MuContainer* mu_container_sort (MuContainer *c, MuMsgFieldId mfid,
 GHashTable* mu_container_thread_info_hash_new (MuContainer *root_set,
 					       size_t matchnum);
 
-G_END_DECLS
-
-#endif /*__MU_CONTAINER_H__*/
+#endif /*MU_CONTAINER_HH__*/

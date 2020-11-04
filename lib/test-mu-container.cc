@@ -1,5 +1,3 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
 ** Copyright (C) 2014  Jakub Sitnicki <jsitnicki@gmail.com>
 **
@@ -19,14 +17,11 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
-
 #include <glib.h>
 
 #include "test-mu-common.hh"
-#include "mu-container.h"
+#include "mu-container.hh"
 
 static gboolean
 container_has_children (const MuContainer *c)

@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,11 +16,12 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include "mu-threader.hh"
+
 #include <math.h>   /* for log, ceil */
 #include <string.h> /* for memset */
 
-#include "mu-threader.h"
-#include "mu-container.h"
+#include "mu-container.hh"
 #include "utils/mu-str.h"
 
 /* msg threading implementation based on JWZ's algorithm, as described in:
@@ -137,7 +137,7 @@ find_or_create_referred (GHashTable *id_table, const char *msgid,
 
 	g_return_val_if_fail (msgid, NULL);
 
-	c = g_hash_table_lookup (id_table, msgid);
+	c = (MuContainer*)g_hash_table_lookup (id_table, msgid);
 	*created = !c;
 	if (!c) {
 		c = mu_container_new (NULL, 0, msgid);
@@ -172,7 +172,7 @@ find_or_create (GHashTable *id_table, MuMsg *msg, guint docid)
 
 	/* XXX the '<none>' works around a crash; find a better
 	 * solution */
-	c = g_hash_table_lookup (id_table, msgid);
+	c = (MuContainer*)g_hash_table_lookup (id_table, msgid);
 
 	/* If id_table contains an empty MuContainer for this ID: * *
 	 * Store this message in the MuContainer's message slot. */

@@ -63,8 +63,8 @@ libmu_la_SOURCES=						\
 	mu-bookmarks.h						\
 	mu-contacts.cc						\
 	mu-contacts.hh						\
-	mu-container.c						\
-	mu-container.h						\
+	mu-container.cc						\
+	mu-container.hh						\
 	mu-data.hh						\
 	mu-flags.c						\
 	mu-flags.h						\
@@ -100,8 +100,8 @@ libmu_la_SOURCES=						\
 	mu-server.hh						\
 	mu-store.cc						\
 	mu-store.hh						\
-	mu-threader.c						\
-	mu-threader.h						\
+	mu-threader.cc						\
+	mu-threader.hh						\
 	mu-tokenizer.cc						\
 	mu-tokenizer.hh						\
 	mu-tree.hh						\

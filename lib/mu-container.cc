@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,11 +16,11 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include "mu-container.hh"
 
 #include <string.h> /* for memset */
 #include <math.h> /* for log, ceil */
 
-#include "mu-container.h"
 #include "mu-msg.h"
 #include "mu-msg-iter.h"
 
@@ -323,7 +323,7 @@ mu_container_from_list (GSList *lst)
 	if (!lst)
 		return NULL;
 
-	tail = list_last_data (lst);
+	tail = (MuContainer*)list_last_data (lst);
 	for (c = cur = (MuContainer*)lst->data; cur; lst = g_slist_next(lst)) {
 		cur->next = lst ? (MuContainer*)lst->data : NULL;
 		cur->last = tail;
@@ -545,7 +545,11 @@ path_to_string (Path *p, const char* frmt)
 	for (u = 0, str = NULL; p->_data[u] != 0; ++u) {
 
 		char segm[16];
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 		g_snprintf (segm, sizeof(segm), frmt, p->_data[u] - 1);
+#pragma GCC diagnostic pop
 
 		if (!str)
 			str = g_strdup (segm);

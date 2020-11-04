@@ -40,7 +40,7 @@
 #include "utils/mu-date.h"
 
 #include "mu-cmd.hh"
-#include "mu-threader.h"
+#include "mu-threader.hh"
 
 using namespace Mu;
 
