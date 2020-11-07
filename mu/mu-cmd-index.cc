@@ -33,7 +33,7 @@
 #include "mu-msg.h"
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
 

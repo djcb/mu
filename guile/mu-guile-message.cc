@@ -27,7 +27,7 @@
 
 #include "mu-guile.hh"
 
-#include <mu-runtime.h>
+#include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
 #include <mu-msg.h>

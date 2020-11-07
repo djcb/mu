@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,7 +18,7 @@
 */
 
 #include "mug-shortcuts.h"
-#include "mu-bookmarks.h"
+#include "mu-bookmarks.hh"
 
 /* include other impl specific header files */
 
@@ -58,7 +58,7 @@ mug_shortcuts_class_init (MugShortcutsClass * klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass *) klass;
 
-	parent_class = g_type_class_peek_parent (klass);
+	parent_class = (GtkBoxClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mug_shortcuts_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof (MugShortcutsPrivate));

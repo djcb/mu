@@ -25,7 +25,7 @@
 
 #include "mu-config.hh"
 #include "mu-cmd.hh"
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 #include "utils/mu-utils.hh"
 
 using namespace Mu;

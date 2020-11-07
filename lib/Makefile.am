@@ -59,17 +59,36 @@ noinst_LTLIBRARIES=						\
 	libmu.la
 
 libmu_la_SOURCES=						\
-	mu-bookmarks.c						\
-	mu-bookmarks.h						\
+	mu-bookmarks.cc						\
+	mu-bookmarks.hh						\
 	mu-contacts.cc						\
 	mu-contacts.hh						\
 	mu-container.cc						\
 	mu-container.hh						\
 	mu-data.hh						\
+	mu-parser.cc						\
+	mu-parser.hh						\
+	mu-query.cc						\
+	mu-query.hh						\
+	mu-runtime.cc						\
+	mu-runtime.hh						\
+	mu-script.cc						\
+	mu-script.hh						\
+	mu-server.cc						\
+	mu-server.hh						\
+	mu-store.cc						\
+	mu-store.hh						\
+	mu-threader.cc						\
+	mu-threader.hh						\
+	mu-tokenizer.cc						\
+	mu-tokenizer.hh						\
+	mu-tree.hh						\
+	mu-xapian.cc						\
+	mu-xapian.hh						\
 	mu-flags.c						\
-	mu-flags.h						\
 	mu-maildir.c						\
 	mu-maildir.h						\
+	mu-flags.h						\
 	mu-msg-crypto.c						\
 	mu-msg-doc.cc						\
 	mu-msg-doc.h						\
@@ -86,27 +105,7 @@ libmu_la_SOURCES=						\
 	mu-msg-priv.h						\
 	mu-msg-sexp.cc						\
 	mu-msg.c						\
-	mu-msg.h						\
-	mu-msg.h						\
-	mu-parser.cc						\
-	mu-parser.hh						\
-	mu-query.cc						\
-	mu-query.hh						\
-	mu-runtime.cc						\
-	mu-runtime.h						\
-	mu-script.c						\
-	mu-script.h						\
-	mu-server.cc						\
-	mu-server.hh						\
-	mu-store.cc						\
-	mu-store.hh						\
-	mu-threader.cc						\
-	mu-threader.hh						\
-	mu-tokenizer.cc						\
-	mu-tokenizer.hh						\
-	mu-tree.hh						\
-	mu-xapian.cc						\
-	mu-xapian.hh
+	mu-msg.h
 
 libmu_la_LIBADD=						\
 	$(XAPIAN_LIBS)						\

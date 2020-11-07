@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ AM_CFLAGS=									\
 	-Wno-deprecated-declarations						\
 	-Wno-switch-enum
 
-AM_CXXFLAGS=$(AM_CFLAGS) $(WARN_CXXFLAGS)
+AM_CXXFLAGS=$(WARN_CXXFLAGS)
 
 #
 # Distributors: this is a _toy_, not for distribution. the "noinst_" says enough
@@ -44,17 +44,15 @@ noinst_PROGRAMS=								\
 	mug
 
 mug_SOURCES=									\
-	mug.c									\
+	mug.cc									\
 	mug-msg-list-view.cc							\
 	mug-msg-list-view.h							\
 	mug-msg-view.h								\
 	mug-msg-view.c								\
 	mug-query-bar.h								\
 	mug-query-bar.c								\
-	mug-shortcuts.c								\
-	mug-shortcuts.h								\
-	dummy.cc
-
+	mug-shortcuts.cc							\
+	mug-shortcuts.h
 
 DISTCLEANFILES=									\
 	$(BUILT_SOURCES)

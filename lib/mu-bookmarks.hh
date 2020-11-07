@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,23 +17,20 @@
 **
 */
 
-#ifndef __MU_BOOKMARKS_H__
-#define __MU_BOOKMARKS_H__
+#ifndef MU_BOOKMARKS_HH__
+#define MU_BOOKMARKS_HH__
 
 #include <glib.h>
-
-G_BEGIN_DECLS
 /**
  * @addtogroup MuBookmarks
  * Functions for dealing with bookmarks
  * @{
  */
 
-struct _MuBookmarks;
 /*! \struct MuBookmarks
  * \brief Opaque structure representing a sequence of bookmarks
  */
-typedef struct _MuBookmarks MuBookmarks;
+struct MuBookmarks;
 
 
 /**
@@ -80,7 +77,5 @@ void         mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
 				   gpointer user_data);
 
 /** @} */
-
-G_END_DECLS
 
 #endif /*__MU_BOOKMARKS_H__*/

@@ -27,7 +27,7 @@
 
 #include "mu-cmd.hh"
 #include "mu-contacts.hh"
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-utils.hh"

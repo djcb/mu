@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,16 +17,13 @@
 **
 */
 
-#ifndef __MU_SCRIPT_H__
-#define __MU_SCRIPT_H__
+#ifndef MU_SCRIPT_HH__
+#define MU_SCRIPT_HH__
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 /* Opaque structure with information about a script */
-struct _MuScriptInfo;
-typedef struct _MuScriptInfo MuScriptInfo;
+struct MuScriptInfo;
 
 /**
  * get the name of the script (sans-extension, if some extension was
@@ -127,6 +124,4 @@ MuScriptInfo* mu_script_find_script_with_name (GSList *lst, const char *name);
 gboolean mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 			      const char **args, GError **err);
 
-G_END_DECLS
-
-#endif /*__MU_SCRIPT_H__*/
+#endif /*MU_SCRIPT_HH__*/

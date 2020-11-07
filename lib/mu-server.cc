@@ -35,7 +35,7 @@
 #include <glib/gprintf.h>
 
 #include "mu-msg.h"
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 #include "mu-maildir.h"
 #include "mu-query.hh"
 #include "index/mu-indexer.hh"

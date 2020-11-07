@@ -24,7 +24,7 @@
 #include <atomic>
 #include <unistd.h>
 
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 #include "mu-cmd.hh"
 #include "mu-server.hh"
 

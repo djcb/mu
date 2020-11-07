@@ -17,9 +17,7 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #ifdef BUILD_GUILE
 
@@ -37,14 +35,14 @@
 #include <unistd.h>
 
 #include "utils/mu-str.h"
-#include "mu-script.h"
+#include "mu-script.hh"
 #include "utils/mu-util.h"
 
 /**
  * Structure with information about a certain script.
  * the values will be *freed* when MuScriptInfo is freed
  */
-struct _MuScriptInfo {
+struct MuScriptInfo {
 	char *_name;    /* filename-sans-extension */
 	char *_path;    /* full path to script */
 	char *_oneline; /* one-line description */
@@ -121,15 +119,17 @@ mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
 	g_return_val_if_fail (msi, FALSE);
 	g_return_val_if_fail (rxstr, FALSE);
 
-	rx = g_regex_new (rxstr, G_REGEX_CASELESS|G_REGEX_OPTIMIZE, 0, err);
+	rx = g_regex_new (rxstr,
+                          (GRegexCompileFlags)(G_REGEX_CASELESS|G_REGEX_OPTIMIZE),
+                          (GRegexMatchFlags)0, err);
 	if (!rx)
 		return FALSE;
 
 	match = FALSE;
 	if (msi->_name)
-		match = g_regex_match (rx, msi->_name, 0, NULL);
+		match = g_regex_match (rx, msi->_name, (GRegexMatchFlags)0, NULL);
 	if (!match && msi->_oneline)
-		match = g_regex_match (rx, msi->_oneline, 0, NULL);
+		match = g_regex_match (rx, msi->_oneline,(GRegexMatchFlags)0, NULL);
 
 	return match;
 }

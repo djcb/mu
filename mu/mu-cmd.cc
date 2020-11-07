@@ -34,7 +34,7 @@
 #include "mu-cmd.hh"
 #include "mu-maildir.h"
 #include "mu-contacts.hh"
-#include "mu-runtime.h"
+#include "mu-runtime.hh"
 #include "mu-flags.h"
 
 #include "utils/mu-util.h"

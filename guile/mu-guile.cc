@@ -28,7 +28,7 @@
 #include <libguile.h>
 #pragma GCC diagnostic pop
 
-#include <mu-runtime.h>
+#include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
 #include <mu-msg.h>

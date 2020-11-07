@@ -32,8 +32,8 @@
 #include "mu-maildir.h"
 #include "mu-query.hh"
 #include "mu-msg-iter.h"
-#include "mu-bookmarks.h"
-#include "mu-runtime.h"
+#include "mu-bookmarks.hh"
+#include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"

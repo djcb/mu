@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2010-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,11 +18,11 @@
 */
 
 #include <glib.h>
-#include "mu-bookmarks.h"
+#include "mu-bookmarks.hh"
 
 #define MU_BOOKMARK_GROUP "mu"
 
-struct _MuBookmarks {
+struct MuBookmarks {
 	char		*_bmpath;
 	GHashTable	*_hash;
 };
@@ -113,7 +112,7 @@ mu_bookmarks_lookup (MuBookmarks *bm, const gchar *name)
 	g_return_val_if_fail (bm, NULL);
 	g_return_val_if_fail (name, NULL);
 
-	return g_hash_table_lookup (bm->_hash, name);
+	return (const char*)g_hash_table_lookup (bm->_hash, name);
 }
 
 struct _BMData {

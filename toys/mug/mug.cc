@@ -25,7 +25,7 @@
 
 #include <utils/mu-util.h>
 #include <mu-store.hh>
-#include <mu-runtime.h>
+#include <mu-runtime.hh>
 
 #include "mug-msg-list-view.h"
 #include "mug-query-bar.h"
