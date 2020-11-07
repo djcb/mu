@@ -215,19 +215,25 @@ AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"
 # build with guile 3.0/2.2 when available and not disabled.
 AC_ARG_ENABLE([guile], AS_HELP_STRING([--disable-guile],[Disable guile]))
 AS_IF([test "x$enable_guile" != "xno"],[
+
   PKG_CHECK_MODULES(GUILE, [guile-3.0], [have_guile=yes],[
     PKG_CHECK_MODULES(GUILE, [guile-2.2], [have_guile=yes], [have_guile=no])])
+
     AS_IF([test "x$have_guile" = "xyes"],[
       GUILE_PKG([3.0 2.2])
       GUILE_PROGS
       GUILE_FLAGS
       AC_DEFINE_UNQUOTED([GUILE_BINARY],"$GUILE",[guile binary])
       AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])
-      AC_SUBST(GUILE_SNARF, [guile-snarf])
+
+      snarf=guile-snarf${GUILE_EFFECTIVE_VERSION}
+      AC_CHECK_PROG(GUILE_SNARF,[${snarf}],[${snarf}], [no])
       guile_version=$($PKG_CONFIG guile-$GUILE_EFFECTIVE_VERSION --modversion)
    ])
 ])
-AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes"])
+
+AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes" -a \
+                                 "x$ac_cv_prog_GUILE_SNARF" != "xno"])
 ###############################################################################
 
 ###############################################################################
