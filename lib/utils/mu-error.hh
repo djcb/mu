@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -129,8 +129,6 @@ private:
         std::string  what_;
 };
 
-
 } // namespace Mu
-
 
 #endif /* MU_ERROR_HH__ */

@@ -45,17 +45,24 @@ AM_LDFLAGS=							\
 noinst_LTLIBRARIES=						\
 	libmu-utils.la
 
+
+third_party=							\
+	optional.hpp						\
+	expected.hpp
+
 libmu_utils_la_SOURCES=						\
 	mu-async-queue.hh					\
+	mu-command-parser.cc					\
+	mu-command-parser.hh					\
 	mu-date.c						\
 	mu-date.h						\
 	mu-error.hh						\
 	mu-logger.cc						\
 	mu-logger.hh						\
-	mu-command-parser.cc					\
-	mu-command-parser.hh					\
+	mu-option.hh						\
 	mu-readline.cc						\
 	mu-readline.hh						\
+	mu-result.hh						\
 	mu-sexp.cc						\
 	mu-sexp.hh						\
 	mu-str.c						\
@@ -63,7 +70,8 @@ libmu_utils_la_SOURCES=						\
 	mu-util.c						\
 	mu-util.h						\
 	mu-utils.cc						\
-	mu-utils.hh
+	mu-utils.hh						\
+	${third_party}
 
 libmu_utils_la_LIBADD=						\
 	$(GLIB_LIBS)						\
