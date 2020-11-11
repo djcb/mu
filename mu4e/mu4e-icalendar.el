@@ -97,7 +97,7 @@
           (delete-region (point-min) (point-max))
           (insert reply)
           (fold-icalendar-buffer)
-          (when (string= (downcase charset) "utf-8")
+          (when (and charset (string= (downcase charset) "utf-8"))
             (decode-coding-region (point-min) (point-max) 'utf-8))
           (mu4e-icalendar-reply-ical msg event status (buffer-name)))
 
