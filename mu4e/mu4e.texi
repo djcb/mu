@@ -3208,6 +3208,7 @@ with other tools.
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
 * Hydra:: Custom shortcut menus
+* iCal integration:: Enabling iCalendar invite processing in mu4e
 @end menu
 
 @node Emacs default
@@ -3493,6 +3494,61 @@ With Hydra installed, we can add multi-character shortcuts, for instance:
 
 Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 @end lisp
+
+@node iCalendar Integration, , Hydra, Other Tools
+@section iCalendar
+
+By default, mu4e presents iCalendar invitations as .vcs file
+attachments. Experimental support is available to parse these
+attachments in order to add the expected ``Accept'', ``Reject'', ``Add
+to Calendar'' buttons. This requires using Gnus' article view, instead
+of mu4e's internal viewer. We do this by setting the value of
+mu4e-view-use-gnus:
+
+@lisp
+(setq mu4e-view-use-gnus t)
+@end lisp
+
+The minimal setup is:
+
+@lisp
+(require 'mu4e-icalendar)
+(mu4e-icalendar-setup)
+@end
+
+To add the event to a diary file of your choice:
+
+@lisp
+(setq mu4e-icalendar-diary-file "/path/to/your/diary")
+@end
+
+To enable optional functionality to capture iCalendar events to your org files:
+
+@lisp
+(require 'org-agenda)
+(setq gnus-icalendar-org-capture-file "~/org/notes.org")
+(setq gnus-icalendar-org-capture-headline '("Calendar"))
+(gnus-icalendar-org-setup)
+@end
+
+NOTE: both the capture file and the headline(s) inside must already
+exist.
+
+These features require the Gnus article viewer. This is currently
+experimental, and doesn't yet support all the features available with
+mu4e's internal viewer. Consequently, you may want a way to toggle
+between the two modes. You can do this with the following:
+
+@lisp
+(defun mu4e-toggle-gnus-view ()
+  (interactive)
+  (mu4e~view-quit-buffer)
+  (setq mu4e-view-use-gnus
+        (not mu4e-view-use-gnus))
+  (mu4e-headers-view-message))
+
+(define-key mu4e-view-mode-map "i" 'mu4e-toggle-gnus-view)
+@end
 
 @node Example configs
 @appendix Example configs
