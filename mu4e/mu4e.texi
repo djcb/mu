@@ -3208,7 +3208,7 @@ with other tools.
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
 * Hydra:: Custom shortcut menus
-* iCal integration:: Enabling iCalendar invite processing in mu4e
+* iCalendar Integration:: Enabling iCalendar invite processing in mu4e
 @end menu
 
 @node Emacs default
@@ -3495,8 +3495,8 @@ With Hydra installed, we can add multi-character shortcuts, for instance:
 Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 @end lisp
 
-@node iCalendar Integration, , Hydra, Other Tools
-@section iCalendar
+@node iCalendar Integration
+@section iCalendar Integration
 
 By default, mu4e presents iCalendar invitations as .vcs file
 attachments. Experimental support is available to parse these
@@ -3514,13 +3514,13 @@ The minimal setup is:
 @lisp
 (require 'mu4e-icalendar)
 (mu4e-icalendar-setup)
-@end
+@end lisp
 
 To add the event to a diary file of your choice:
 
 @lisp
 (setq mu4e-icalendar-diary-file "/path/to/your/diary")
-@end
+@end lisp
 
 To enable optional functionality to capture iCalendar events to your org files:
 
@@ -3529,7 +3529,7 @@ To enable optional functionality to capture iCalendar events to your org files:
 (setq gnus-icalendar-org-capture-file "~/org/notes.org")
 (setq gnus-icalendar-org-capture-headline '("Calendar"))
 (gnus-icalendar-org-setup)
-@end
+@end lisp
 
 NOTE: both the capture file and the headline(s) inside must already
 exist.
@@ -3548,7 +3548,7 @@ between the two modes. You can do this with the following:
   (mu4e-headers-view-message))
 
 (define-key mu4e-view-mode-map "i" 'mu4e-toggle-gnus-view)
-@end
+@end lisp
 
 @node Example configs
 @appendix Example configs
