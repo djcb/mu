@@ -185,8 +185,7 @@ or org-mode (when in the body)."
        ((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
         (org-mode)
         (add-hook 'before-save-hook
-                  (lambda ()
-                    (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
+                  #'org~mu4e-error-before-save-hook-fn
                   nil t)
         (org~mu4e-mime-decorate-headers)
         (local-set-key (kbd "M-m")
@@ -202,6 +201,9 @@ or org-mode (when in the body)."
         (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
       ;; and add the hook
       (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
+
+(defun org~mu4e-error-before-save-hook-fn ()
+  (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
 
 (defun org-mu4e-compose-org-mode ()
   "Defines a pseudo-minor mode for mu4e-compose-mode.

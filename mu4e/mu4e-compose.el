@@ -354,25 +354,32 @@ Just after saving we restore it; thus, the separator should never
 appear on disk. Also update the Date and ensure we have a
 Message-ID."
   (add-hook 'before-save-hook
-            (lambda()
-              ;; replace the date
-              (save-excursion
-                (message-remove-header "Date")
-                (message-generate-headers '(Date Message-ID))
-                (save-match-data
-                  (mu4e~draft-remove-mail-header-separator)))) nil t)
+            #'mu4e~compose-before-save-hook-fn
+            nil t)
   (add-hook 'after-save-hook
-            (lambda ()
-              (save-match-data
-                (mu4e~compose-set-friendly-buffer-name)
-                (mu4e~draft-insert-mail-header-separator)
-                ;; hide some headers again
-                (widen)
-                (mu4e~compose-hide-headers)
-                (set-buffer-modified-p nil)
-                (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
-                ;; update the file on disk -- ie., without the separator
-                (mu4e~proc-add (buffer-file-name)))) nil t))
+            #'mu4e~compose-after-save-hook-fn
+            nil t))
+
+(defun mu4e~compose-before-save-hook-fn ()
+  ;; replace the date
+  (save-excursion
+    (message-remove-header "Date")
+    (message-generate-headers '(Date Message-ID))
+    (save-match-data
+      (mu4e~draft-remove-mail-header-separator))))
+
+(defun mu4e~compose-after-save-hook-fn ()
+  (save-match-data
+    (mu4e~compose-set-friendly-buffer-name)
+    (mu4e~draft-insert-mail-header-separator)
+    ;; hide some headers again
+    (widen)
+    (mu4e~compose-hide-headers)
+    (set-buffer-modified-p nil)
+    (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
+    ;; update the file on disk -- ie., without the separator
+    (mu4e~proc-add (buffer-file-name))))
+
 
 ;;; address completion
 
@@ -563,25 +570,33 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 
     ;; setup the fcc-stuff, if needed
     (add-hook 'message-send-hook
-              (lambda () ;; mu4e~compose-save-before-sending
-                ;; when in-reply-to was removed, remove references as well.
-                (when (eq mu4e-compose-type 'reply)
-                  (mu4e~remove-refs-maybe))
-                (when use-hard-newlines
-                  (mu4e-send-harden-newlines))
-                ;; for safety, always save the draft before sending
-                (set-buffer-modified-p t)
-                (save-buffer)
-                (mu4e~compose-setup-fcc-maybe)
-                (widen)) nil t)
+              #'mu4e~setup-fcc-message-sent-hook-fn
+               nil t)
     ;; when the message has been sent.
     (add-hook 'message-sent-hook
-              (lambda () ;;  mu4e~compose-mark-after-sending
-                (setq mu4e-sent-func 'mu4e-sent-handler)
-                (mu4e~proc-sent (buffer-file-name))) nil t))
+              #'mu4e~set-sent-handler-message-sent-hook-fn
+              nil t))
   ;; mark these two hooks as permanent-local, so they'll survive mode-changes
   ;;  (put 'mu4e~compose-save-before-sending 'permanent-local-hook t)
   (put 'mu4e~compose-mark-after-sending 'permanent-local-hook t))
+
+(defun mu4e~setup-fcc-message-sent-hook-fn ()
+  ;; mu4e~compose-save-before-sending
+  ;; when in-reply-to was removed, remove references as well.
+  (when (eq mu4e-compose-type 'reply)
+    (mu4e~remove-refs-maybe))
+  (when use-hard-newlines
+    (mu4e-send-harden-newlines))
+  ;; for safety, always save the draft before sending
+  (set-buffer-modified-p t)
+  (save-buffer)
+  (mu4e~compose-setup-fcc-maybe)
+  (widen))
+
+(defun mu4e~set-sent-handler-message-sent-hook-fn ()
+  ;;  mu4e~compose-mark-after-sending
+  (setq mu4e-sent-func 'mu4e-sent-handler)
+  (mu4e~proc-sent (buffer-file-name)))
 
 (defun mu4e-send-harden-newlines ()
   "Set the hard property to all newlines."

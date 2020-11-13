@@ -59,16 +59,18 @@
 ;;
 ;;  Allow bookmarking a mu4e buffer in regular emacs bookmarks.
 
+(defun mu4e~view-set-bookmark-make-record-fn ()
+  (set (make-local-variable 'bookmark-make-record-function)
+       'mu4e-view-bookmark-make-record))
+
+(defun mu4e~headers-set-bookmark-make-record-fn ()
+  (set (make-local-variable 'bookmark-make-record-function)
+       'mu4e-view-bookmark-make-record))
+
 ;; Probably this can be moved to mu4e-view.el.
-(add-hook 'mu4e-view-mode-hook
-          (lambda ()
-            (set (make-local-variable 'bookmark-make-record-function)
-                 'mu4e-view-bookmark-make-record)))
+(add-hook 'mu4e-view-mode-hook #'mu4e~view-set-bookmark-make-record-fn)
 ;; And this can be moved to mu4e-headers.el.
-(add-hook 'mu4e-headers-mode-hook
-          (lambda ()
-            (set (make-local-variable 'bookmark-make-record-function)
-                 'mu4e-view-bookmark-make-record)))
+(add-hook 'mu4e-headers-mode-hook #'mu4e~headers-set-bookmark-make-record-fn)
 
 (defun mu4e-view-bookmark-make-record ()
   "Make a bookmark entry for a mu4e buffer. Note that this is an

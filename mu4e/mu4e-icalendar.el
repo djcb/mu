@@ -163,10 +163,12 @@ response in icalendar format."
       ;; also trash the message (thus must be appended to hooks).
       (add-hook
        'message-sent-hook
-       (lambda () (setq mu4e-sent-func
-                   (mu4e~icalendar-trash-message original-msg)))
+       #'mu4e~icalendar-setup-sent-hook-fn
        t t))))
 
+(defun mu4e~icalendar-setup-sent-hook-fn ()
+  (setq mu4e-sent-func
+        (mu4e~icalendar-trash-message original-msg)))
 
 (defun mu4e~icalendar-insert-diary (event reply-status filename)
   "Insert a diary entry for the EVENT in file named FILENAME.
