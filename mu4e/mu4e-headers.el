@@ -1136,7 +1136,8 @@ no user-interaction ongoing."
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
   (add-hook 'mu4e-index-updated-hook
-            (lambda() (run-hooks 'mu4e-message-changed-hook)) t)
+            #'mu4e~headers-index-updated-hook-fn
+            t)
   (setq
    truncate-lines t
    buffer-undo-list t ;; don't record undo information
@@ -1145,6 +1146,9 @@ no user-interaction ongoing."
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
   (hl-line-mode 1))
+
+(defun mu4e~headers-index-updated-hook-fn ()
+  (run-hooks 'mu4e-message-changed-hook))
 
 ;;; Highlighting
 
