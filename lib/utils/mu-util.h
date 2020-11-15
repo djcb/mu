@@ -211,14 +211,11 @@ gboolean mu_util_play (const char *path, gboolean allow_local,
 gboolean mu_util_program_in_path (const char *prog);
 
 
-
 enum _MuFeature {
 	MU_FEATURE_GUILE     = 1 << 0,  /* do we support Guile 2.0? */
 	MU_FEATURE_GNUPLOT   = 1 << 1,  /* do we have gnuplot installed? */
-	MU_FEATURE_CRYPTO    = 1 << 2   /* do we support crypto (Gmime >= 2.6) */
 };
 typedef enum _MuFeature MuFeature;
-
 
 /**
  * Check whether mu supports some particular feature

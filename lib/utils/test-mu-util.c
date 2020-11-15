@@ -186,7 +186,6 @@ test_mu_util_supports (void)
 #endif /*BUILD_GUILE*/
 
 	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GUILE),	== ,has_guile);
-	g_assert_cmpuint (mu_util_supports (MU_FEATURE_CRYPTO),	== ,TRUE);
 
 	path = g_find_program_in_path ("gnuplot");
 	g_free (path);
@@ -195,8 +194,7 @@ test_mu_util_supports (void)
 			  path ? TRUE : FALSE);
 
 	g_assert_cmpuint (
-		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE|
-				  MU_FEATURE_CRYPTO),
+		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE),
 		==,
 		has_guile && path ? TRUE : FALSE);
 }

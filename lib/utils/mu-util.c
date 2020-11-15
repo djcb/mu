@@ -256,7 +256,6 @@ mu_util_is_local_file (const char* path)
 gboolean
 mu_util_supports (MuFeature feature)
 {
-
 	/* check for Guile support */
 #ifndef BUILD_GUILE
 	if (feature & MU_FEATURE_GUILE)
