@@ -94,8 +94,8 @@ mu_msg_new_from_file (const char *path, const char *mdir,
 	self = msg_new ();
 	self->_file = msgfile;
 
-        g_debug ("created msg from file in %" G_GINT64_FORMAT "us",
-                 g_get_monotonic_time() - start);
+        g_debug ("created message from %s in %" G_GINT64_FORMAT " μs",
+                 path, g_get_monotonic_time() - start);
 
 	return self;
 }
