@@ -438,22 +438,6 @@ process_dir_entry (const char* path, const char* mdir, struct dirent *entry,
 }
 
 
-static const size_t DIRENT_ALLOC_SIZE =
-	offsetof (struct dirent, d_name) + PATH_MAX;
-
-static struct dirent*
-dirent_new (void)
-{
-	return (struct dirent*) g_new0(guchar, DIRENT_ALLOC_SIZE);
-}
-
-
-static void
-dirent_destroy (struct dirent *entry)
-{
-	g_slice_free1 (DIRENT_ALLOC_SIZE, entry);
-}
-
 #ifdef HAVE_STRUCT_DIRENT_D_INO
 static int
 dirent_cmp (struct dirent *d1, struct dirent *d2)
@@ -480,20 +464,16 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 	GSList *lst, *c;
 
 	for (lst = NULL;;) {
-		int rv;
 		struct dirent *entry, *res;
-		entry = dirent_new ();
-		rv = readdir_r (dir, entry, &res);
-		if (rv == 0) {
-			if (res)
-				lst = g_slist_prepend (lst, entry);
-			else {
-				dirent_destroy (entry);
-				break; /* last direntry reached */
-			}
+		errno = 0;
+		res = readdir (dir);
+		if (res) {
+			entry = g_memdup (res, sizeof(struct dirent));
+			lst = g_slist_prepend (lst, entry);
+		} else if (errno == 0) {
+			break;
 		} else {
-			dirent_destroy (entry);
-			g_warning ("error scanning dir: %s", strerror(rv));
+			g_warning ("error scanning dir: %s", strerror(errno));
 			return MU_ERROR_FILE;
 		}
 	}
@@ -508,7 +488,7 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		result = process_dir_entry (path, mdir, (struct dirent*)c->data,
 					    msg_cb, dir_cb, full, data);
 
-	g_slist_foreach (lst, (GFunc)dirent_destroy, NULL);
+	g_slist_foreach (lst, (GFunc)g_free, NULL);
 	g_slist_free (lst);
 
 	return result;
