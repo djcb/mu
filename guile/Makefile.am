@@ -36,7 +36,7 @@ AM_CFLAGS=						\
 	-Wno-missing-declarations
 
 AM_CXXFLAGS=						\
-	$(ASAN_CFLAGS)					\
+	$(ASAN_CXXFLAGS)				\
 	${WARN_CXXFLAGS}				\
 	-Wno-redundant-decls				\
 	-Wno-missing-declarations			\
@@ -75,12 +75,9 @@ mu_guile_TEXINFOS=					\
 
 BUILT_SOURCES=$(XFILES)
 
-snarfcopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+export CPP
 snarfcxxopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-
 SUFFIXES = .x .doc
-.c.x:
-	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcopts)
 .cc.x:
 	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcxxopts)
 

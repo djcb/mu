@@ -39,6 +39,7 @@ AC_SUBST(prefix)
 # when a c++ compiler is not found. Weird, huh?
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_CC_STDC
 AC_PROG_CC_C99
 AC_PROG_INSTALL
