@@ -402,11 +402,11 @@ article-mode."
       (gnus-article-prepare-display))
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
     (setq mu4e~view-message msg)
+    ;; `mu4e-view-mode' derive from `gnus-article-mode'. 
     (mu4e-view-mode)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
-    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)
-    (read-only-mode)))
+    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
 
 (defun mu4e~view-kill-buffer-hook-fn ()
   ;; cleanup the mm-* buffers that the view spawns
