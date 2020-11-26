@@ -131,6 +131,25 @@ constexpr int64_t to_s  (Duration d) { return to_unit<std::chrono::seconds>(d); 
 constexpr int64_t to_ms (Duration d) { return to_unit<std::chrono::milliseconds>(d); }
 constexpr int64_t to_us (Duration d) { return to_unit<std::chrono::microseconds>(d); }
 
+struct StopWatch {
+        using Clock = std::chrono::steady_clock;
+        StopWatch (const std::string name):
+                start_{Clock::now()},
+                name_{name} {}
+        ~StopWatch() {
+                const auto us{to_us(Clock::now()-start_)};
+                if (us > 2000000)
+                        g_debug ("%s: finished after %0.1f s", name_.c_str(), us/1000000.0);
+                else if (us > 2000)
+                        g_debug ("%s: finished after %0.1f ms", name_.c_str(), us/1000.0);
+                else
+                        g_debug ("%s: finished after %" G_GINT64_FORMAT " us", name_.c_str(), us);
+        }
+private:
+        Clock::time_point start_;
+        std::string       name_;
+};
+
 /**
  * See g_canonicalize_filename
  *
