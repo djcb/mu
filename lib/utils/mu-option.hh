@@ -19,8 +19,11 @@
 
 namespace Mu {
 
-/// Either a value of type T, or nothing.
+/// Either a value of type T, or None
 template <typename T> using Option=tl::optional<T>;
+
+template <typename T> Option<T> Some(T&& t) { return t; }
+constexpr auto Nothing = tl::nullopt; // 'None' is take already
 
 }
 #endif /*MU_OPTION__*/

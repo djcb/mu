@@ -122,3 +122,4 @@ mu-*-coverage
 mu*tar.xz
 compile_commands.json
 /lib/utils/test-sexp
+/lib/utils/test-option

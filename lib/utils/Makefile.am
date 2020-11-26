@@ -116,6 +116,14 @@ test_command_parser_SOURCES=					\
 test_command_parser_LDADD=					\
 	libmu-utils.la
 
+TEST_PROGS+=							\
+	test-option
+test_option_SOURCES=						\
+	test-option.cc
+test_option_LDADD=						\
+	libmu-utils.la
+
+
 TESTS=$(TEST_PROGS)
 
 include $(top_srcdir)/aminclude_static.am

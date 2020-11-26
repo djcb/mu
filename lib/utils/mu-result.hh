@@ -29,9 +29,18 @@
 namespace Mu {
 /**
  * A Result is _either_ some value of type T, _or_ an error.
- *
  */
 template <typename T> using Result = tl::expected<T, Error>;
+
+template <typename T> typename Result<T>::expected_type
+Ok(T&& t) {
+        return Result<T>::expected(std::move(t));
+}
+
+template <typename T> typename Result<T>::unexpected_type
+Err(Error&& err) {
+        return Result<T>::unexpected(std::move(err));
+}
 
 } // namespace Mu
 
