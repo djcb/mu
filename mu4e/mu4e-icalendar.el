@@ -103,9 +103,12 @@
 
         ;; Back in article buffer
         (setq-local gnus-icalendar-reply-status status)
-        (when gnus-icalendar-org-enabled-p
-          (gnus-icalendar--update-org-event event status))
-        (when mu4e-icalendar-diary-file
+
+	(when gnus-icalendar-org-enabled-p
+	  (if (gnus-icalendar-find-org-event-file event)
+	      (gnus-icalendar--update-org-event event status)
+	      (gnus-icalendar:org-event-save event status)))
+	(when mu4e-icalendar-diary-file
           (mu4e~icalendar-insert-diary event status
                                        mu4e-icalendar-diary-file))))))
 
