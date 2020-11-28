@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,9 +17,12 @@
 **
 */
 
-#include "mu-msg-attach-view.h"
+#include "mu-msg-attach-view.hh"
 #include "mu-widget-util.h"
-#include <mu-msg-part.h>
+#include <mu-msg.hh>
+#include <mu-msg-part.hh>
+
+using namespace Mu;
 
 enum {
 	ICON_COL,
@@ -78,7 +81,7 @@ mu_msg_attach_view_class_init (MuMsgAttachViewClass *klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass*) klass;
 
-	parent_class            = g_type_class_peek_parent (klass);
+	parent_class            = (GtkIconViewClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mu_msg_attach_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgAttachViewPrivate));
@@ -204,7 +207,8 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 	gtk_icon_view_set_selection_mode (GTK_ICON_VIEW(obj),
 					  GTK_SELECTION_MULTIPLE);
 	/* drag & drop */
-	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(obj), 0, NULL, 0,
+	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(obj),
+                                                (GdkModifierType)0, NULL, 0,
 						GDK_ACTION_COPY);
 	gtk_drag_source_add_uri_targets(GTK_WIDGET(obj));
 	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);

@@ -21,7 +21,7 @@
 #define __MU_MSG_BODY_VIEW_H__
 
 #include <webkit2/webkit2.h>
-#include <mu-msg.h>
+#include <mu-msg.hh>
 
 G_BEGIN_DECLS
 
@@ -60,9 +60,9 @@ GType        mu_msg_body_view_get_type    (void) G_GNUC_CONST;
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
 GtkWidget*    mu_msg_body_view_new         (void);
 
-void mu_msg_body_view_set_message (MuMsgBodyView *self, MuMsg *msg);
+void mu_msg_body_view_set_message (MuMsgBodyView *self, Mu::MuMsg *msg);
 void mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html);
-void mu_msg_body_view_set_message_source (MuMsgBodyView *self, MuMsg *msg);
+void mu_msg_body_view_set_message_source (MuMsgBodyView *self, Mu::MuMsg *msg);
 
 G_END_DECLS
 

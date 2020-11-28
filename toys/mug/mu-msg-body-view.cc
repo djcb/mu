@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,8 +17,10 @@
 **
 */
 
-#include "mu-msg-body-view.h"
-#include <mu-msg-part.h>
+#include "mu-msg-body-view.hh"
+#include <mu-msg-part.hh>
+
+using namespace Mu;
 
 enum _ViewMode {
 	VIEW_MODE_MSG,
@@ -79,7 +81,7 @@ mu_msg_body_view_class_init (MuMsgBodyViewClass *klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass*) klass;
 
-	parent_class            = g_type_class_peek_parent (klass);
+	parent_class            = (WebKitWebViewClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mu_msg_body_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgBodyViewPrivate));

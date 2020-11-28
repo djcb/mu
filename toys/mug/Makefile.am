@@ -30,13 +30,17 @@ AM_CPPFLAGS=-I${top_srcdir} -I${top_srcdir}/lib $(GTK_CFLAGS) $(WEBKIT_CFLAGS)	\
 # really need all the params they get
 AM_CFLAGS=									\
 	$(WARN_CFLAGS)								\
-	$(ASAN_CFLAGS)								\
+	$(ASAN_CFLAGS)		   						\
 	-Wno-redundant-decls							\
 	-Wno-deprecated-declarations						\
 	-Wno-switch-enum
 
-AM_CXXFLAGS=$(WARN_CXXFLAGS)
-
+AM_CXXFLAGS=									\
+	$(WARN_CXXFLAGS)							\
+	$(ASAN_CFLAGS)		   						\
+	-Wno-redundant-decls							\
+	-Wno-deprecated-declarations						\
+	-Wno-switch-enum
 #
 # Distributors: this is a _toy_, not for distribution. the "noinst_" says enough
 #
@@ -48,7 +52,7 @@ mug_SOURCES=									\
 	mug-msg-list-view.cc							\
 	mug-msg-list-view.h							\
 	mug-msg-view.h								\
-	mug-msg-view.c								\
+	mug-msg-view.cc								\
 	mug-query-bar.h								\
 	mug-query-bar.c								\
 	mug-shortcuts.cc							\
@@ -70,14 +74,14 @@ noinst_LTLIBRARIES=								\
 libmuwidgets_la_SOURCES=							\
 	mu-widget-util.h							\
 	mu-widget-util.c							\
-	mu-msg-attach-view.c							\
-	mu-msg-attach-view.h							\
-	mu-msg-body-view.c							\
-	mu-msg-body-view.h							\
-	mu-msg-header-view.c							\
-	mu-msg-header-view.h							\
-	mu-msg-view.h								\
-	mu-msg-view.c
+	mu-msg-attach-view.cc							\
+	mu-msg-attach-view.hh							\
+	mu-msg-body-view.cc							\
+	mu-msg-body-view.hh							\
+	mu-msg-header-view.cc							\
+	mu-msg-header-view.hh							\
+	mu-msg-view.hh								\
+	mu-msg-view.cc
 
 libmuwidgets_la_LIBADD=								\
 	${top_builddir}/lib/libmu.la						\

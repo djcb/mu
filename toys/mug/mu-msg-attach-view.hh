@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -22,7 +22,7 @@
 #define __MU_MSG_ATTACH_VIEW_H__
 
 #include <gtk/gtk.h>
-#include <mu-msg.h>
+#include <mu-msg.hh>
 
 G_BEGIN_DECLS
 
@@ -49,7 +49,7 @@ struct _MuMsgAttachView {
 struct _MuMsgAttachViewClass {
 	GtkIconViewClass parent_class;
 	void (* attach_activated) (MuMsgAttachView* obj, guint partnum,
-				   MuMsg *msg);
+				   Mu::MuMsg *msg);
 };
 
 /* member functions */
@@ -60,7 +60,7 @@ GType        mu_msg_attach_view_get_type    (void) G_GNUC_CONST;
 GtkWidget*   mu_msg_attach_view_new         (void);
 
 /* returns # of attachments */
-int  mu_msg_attach_view_set_message (MuMsgAttachView *self, MuMsg *msg);
+int  mu_msg_attach_view_set_message (MuMsgAttachView *self, Mu::MuMsg *msg);
 
 G_END_DECLS
 

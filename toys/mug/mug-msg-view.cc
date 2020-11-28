@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,15 +16,15 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-#ifdef HAVE_CONFIG
 #include "config.h"
-#endif /*HAVE_CONFIG*/
 
 #include <unistd.h>
-#include "mu-msg-view.h"
+#include "mu-msg-view.hh"
 #include "mug-msg-view.h"
-#include "mu-msg.h"
+#include "mu-msg.hh"
 #include "utils/mu-str.h"
+
+using namespace Mu;
 
 /* 'private'/'protected' functions */
 static void mug_msg_view_class_init (MugMsgViewClass * klass);
@@ -58,7 +58,7 @@ mug_msg_view_class_init (MugMsgViewClass * klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass *) klass;
 
-	parent_class = g_type_class_peek_parent (klass);
+	parent_class = (GtkBoxClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mug_msg_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof (MugMsgViewPrivate));
@@ -116,7 +116,7 @@ mug_msg_view_set_msg (MugMsgView * self, const char *msgpath)
 	if (!msgpath)
 		mu_msg_view_set_message (MU_MSG_VIEW(priv->_view), NULL);
 	else {
-		MuMsg *msg;
+		Mu::MuMsg *msg;
 
 		if (access (msgpath, R_OK) == 0) {
 			msg = mu_msg_new_from_file (msgpath, NULL, NULL);

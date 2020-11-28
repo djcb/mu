@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,15 +16,14 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
-#include "mu-msg-header-view.h"
+#include <config.h>
+#include "mu-msg-header-view.hh"
+#include "mu-msg.hh"
 
 #include <utils/mu-str.h>
 #include <utils/mu-date.h>
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
+using namespace Mu;
 
 /* 'private'/'protected' functions */
 static void mu_msg_header_view_class_init (MuMsgHeaderViewClass *klass);
@@ -59,7 +58,7 @@ mu_msg_header_view_class_init (MuMsgHeaderViewClass *klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass*) klass;
 
-	parent_class            = g_type_class_peek_parent (klass);
+	parent_class            = (GtkBoxClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mu_msg_header_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgHeaderViewPrivate));
@@ -115,7 +114,7 @@ get_label (const gchar *txt, gboolean istitle)
 	return label;
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 add_row (GtkWidget *grid, guint row, const char* fieldname, const char *value,
 	 gboolean showempty)
 {
@@ -143,7 +142,7 @@ add_row (GtkWidget *grid, guint row, const char* fieldname, const char *value,
 
 
 static GtkWidget*
-get_grid (MuMsg *msg)
+get_grid (Mu::MuMsg *msg)
 {
 	GtkWidget *grid;
 	int row;
@@ -170,7 +169,7 @@ get_grid (MuMsg *msg)
 }
 
 void
-mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg)
+mu_msg_header_view_set_message (MuMsgHeaderView *self, Mu::MuMsg *msg)
 {
 	g_return_if_fail (MU_IS_MSG_HEADER_VIEW(self));
 

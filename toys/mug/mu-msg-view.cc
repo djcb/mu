@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,16 +17,18 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif /*HAVE_CONFIG_H*/
 
-#include "mu-msg-view.h"
-#include "mu-msg-body-view.h"
-#include "mu-msg-header-view.h"
-#include "mu-msg-attach-view.h"
-#include <mu-msg-part.h>
+#include "mu-msg-view.hh"
+#include "mu-msg-body-view.hh"
+#include "mu-msg-header-view.hh"
+#include "mu-msg-attach-view.hh"
+#include <utils/mu-util.h>
 
+#include <mu-msg.hh>
+#include <mu-msg-part.hh>
+
+using namespace Mu;
 
 /* 'private'/'protected' functions */
 static void mu_msg_view_class_init (MuMsgViewClass *klass);
@@ -42,7 +44,7 @@ enum {
 
 struct _MuMsgViewPrivate {
 	GtkWidget *_headers, *_attach, *_attachexpander, *_body;
-	MuMsg *_msg;
+	Mu::MuMsg *_msg;
 };
 #define MU_MSG_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
                                          MU_TYPE_MSG_VIEW, \
@@ -56,7 +58,7 @@ static GtkBoxClass *parent_class = NULL;
 G_DEFINE_TYPE (MuMsgView, mu_msg_view, GTK_TYPE_BOX);
 
 static void
-set_message (MuMsgView *self, MuMsg *msg)
+set_message (MuMsgView *self, Mu::MuMsg *msg)
 {
 	if (self->_priv->_msg == msg)
 		return; /* nothing to todo */
@@ -77,7 +79,7 @@ mu_msg_view_class_init (MuMsgViewClass *klass)
 	GObjectClass *gobject_class;
 	gobject_class = (GObjectClass*) klass;
 
-	parent_class            = g_type_class_peek_parent (klass);
+	parent_class            = (GtkBoxClass*)g_type_class_peek_parent (klass);
 	gobject_class->finalize = mu_msg_view_finalize;
 
 	g_type_class_add_private (gobject_class, sizeof(MuMsgViewPrivate));
@@ -110,7 +112,7 @@ on_body_action_requested (GtkWidget *w, const char* action,
 }
 
 static void
-on_attach_activated (GtkWidget *w, guint partnum, MuMsg *msg)
+on_attach_activated (GtkWidget *w, guint partnum, Mu::MuMsg *msg)
 {
 	gchar *filepath;
 	GError *err;
@@ -188,7 +190,7 @@ mu_msg_view_new (void)
 }
 
 void
-mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
+mu_msg_view_set_message (MuMsgView *self, Mu::MuMsg *msg)
 {
 	gint attachnum;
 
@@ -212,7 +214,8 @@ mu_msg_view_set_message (MuMsgView *self, MuMsg *msg)
 
 
 void
-mu_msg_view_set_message_source (MuMsgView *self, MuMsg *msg)
+mu_msg_view_set_message_source (MuMsgView *self,
+                                Mu::MuMsg *msg)
 {
 	g_return_if_fail (MU_IS_MSG_VIEW(self));
 

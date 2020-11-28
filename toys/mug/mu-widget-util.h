@@ -22,12 +22,13 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-/** 
+G_BEGIN_DECLS
+/**
  * get a pixbuf (icon) for a certain content-type (ie., 'image/jpeg')
- * 
+ *
  * @param ctype the content-type (MIME-type)
  * @param size the size of the icon
- * 
+ *
  * @return a new GdkPixbuf, or NULL in case of error. Use
  * g_object_unref when the pixbuf is no longer needed.
  */
@@ -35,5 +36,7 @@ GdkPixbuf* mu_widget_util_get_icon_pixbuf_for_content_type (const char *ctype,
 							    size_t size)
       G_GNUC_WARN_UNUSED_RESULT;
 
+
+G_END_DECLS
 
 #endif /*__MU_WIDGET_UTIL_H__*/

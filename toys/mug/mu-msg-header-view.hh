@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,11 +21,7 @@
 #define __MU_MSG_HEADER_VIEW_H__
 
 #include <gtk/gtk.h>
-#include <mu-msg.h>
-
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /*HAVE_CONFIG_H*/
+#include <mu-msg.hh>
 
 G_BEGIN_DECLS
 
@@ -61,7 +57,8 @@ GType        mu_msg_header_view_get_type    (void) G_GNUC_CONST;
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
 GtkWidget*   mu_msg_header_view_new         (void);
 
-void mu_msg_header_view_set_message (MuMsgHeaderView *self, MuMsg *msg);
+struct MuMsg;
+void mu_msg_header_view_set_message (MuMsgHeaderView *self, Mu::MuMsg *msg);
 
 
 G_END_DECLS
