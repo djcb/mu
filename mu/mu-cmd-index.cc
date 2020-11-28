@@ -30,7 +30,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "mu-msg.h"
+#include "mu-msg.hh"
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-runtime.hh"
@@ -81,7 +81,7 @@ print_stats (const Indexer::Progress& stats, bool color)
 
 
 MuError
-mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
+Mu::mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
 {
 	g_return_val_if_fail (opts, MU_ERROR);
 	g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_INDEX, MU_ERROR);

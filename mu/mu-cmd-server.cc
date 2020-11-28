@@ -88,7 +88,7 @@ output_sexp_stdout (Sexp&& sexp)
 }
 
 MuError
-mu_cmd_server (const MuConfig *opts, GError **err) try {
+Mu::mu_cmd_server (const MuConfig *opts, GError **err) try {
 
         Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false/*writable*/};
         Server server{store, output_sexp_stdout};

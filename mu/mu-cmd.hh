@@ -17,15 +17,14 @@
 **
 */
 
-#ifndef __MU_CMD_H__
-#define __MU_CMD_H__
+#ifndef MU_CMD_HH__
+#define MU_CMD_HH__
 
 #include <glib.h>
 #include <mu-config.hh>
 #include <mu-store.hh>
 
-G_BEGIN_DECLS
-
+namespace Mu {
 /**
  * execute the 'find' command
  *
@@ -107,6 +106,7 @@ MuError mu_cmd_index (Mu::Store& store, const MuConfig *opt, GError **err);
  */
 MuError mu_cmd_server (const MuConfig *opts, GError **err);
 
-G_END_DECLS
+
+} // namespace Mu
 
 #endif /*__MU_CMD_H__*/

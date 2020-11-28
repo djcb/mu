@@ -35,6 +35,8 @@
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
 
+using namespace Mu;
+
 /**
  * guess the last name for the given name; clearly,
  * this is just a rough guess for setting an initial value.
@@ -404,7 +406,7 @@ cfind_params_valid (const MuConfig *opts)
 }
 
 MuError
-mu_cmd_cfind (const Mu::Store& store, const MuConfig *opts, GError **err)
+Mu::mu_cmd_cfind (const Mu::Store& store, const MuConfig *opts, GError **err)
 {
         g_return_val_if_fail (opts, MU_ERROR_INTERNAL);
         g_return_val_if_fail (opts->cmd == MU_CONFIG_CMD_CFIND,

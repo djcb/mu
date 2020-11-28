@@ -26,13 +26,12 @@
 
 #include "mu-config.hh"
 #include "mu-cmd.hh"
-#include "mu-msg.h"
 
+using namespace Mu;
 
 static MuConfig MU_CONFIG;
 
 #define color_maybe(C) (MU_CONFIG.nocolor ? "" : (C))
-
 
 static MuConfigFormat
 get_output_format (const char *formatstr)
@@ -627,7 +626,7 @@ get_help_string (MuConfigCmd cmd, gboolean long_help)
 
 
 void
-mu_config_show_help (MuConfigCmd cmd)
+Mu::mu_config_show_help (MuConfigCmd cmd)
 {
 	GOptionContext *ctx;
 	GOptionGroup *group;
@@ -725,15 +724,13 @@ parse_params (int *argcp, char ***argvp, GError **err)
 
 
 MuConfig*
-mu_config_init (int *argcp, char ***argvp, GError **err)
+Mu::mu_config_init (int *argcp, char ***argvp, GError **err)
 {
 	g_return_val_if_fail (argcp && argvp, NULL);
 
 	memset (&MU_CONFIG, 0, sizeof(MU_CONFIG));
 
-	MU_CONFIG.maxnum = -1; /* By default, output all matching entries. */
-
-	if (!parse_cmd (argcp, argvp, err))
+        if (!parse_cmd (argcp, argvp, err))
 		goto errexit;
 
 	if (!parse_params(argcp, argvp, err))
@@ -757,7 +754,7 @@ errexit:
 
 
 void
-mu_config_uninit (MuConfig *opts)
+Mu::mu_config_uninit (MuConfig *opts)
 {
 	if (!opts)
 		return;
@@ -782,7 +779,7 @@ mu_config_uninit (MuConfig *opts)
 }
 
 size_t
-mu_config_param_num (const MuConfig *opts)
+Mu::mu_config_param_num (const MuConfig *opts)
 {
 	size_t n;
 
@@ -794,7 +791,7 @@ mu_config_param_num (const MuConfig *opts)
 
 
 MuMsgOptions
-mu_config_get_msg_options (const MuConfig *muopts)
+Mu::mu_config_get_msg_options (const MuConfig *muopts)
 {
 	int opts;
 

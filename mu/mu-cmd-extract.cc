@@ -22,12 +22,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mu-msg.h"
-#include "mu-msg-part.h"
+#include "mu-msg.hh"
+#include "mu-msg-part.hh"
+
 #include "mu-cmd.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 
+using namespace Mu;
 
 static gboolean
 save_part (MuMsg *msg, const char *targetdir, guint partidx, const MuConfig *opts)
@@ -393,7 +395,7 @@ check_params (const MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_extract (const MuConfig *opts, GError **err)
+Mu::mu_cmd_extract (const MuConfig *opts, GError **err)
 {
 	int rv;
 

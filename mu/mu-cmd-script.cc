@@ -41,6 +41,8 @@
 
 #define COL(C) ((color)?C:"")
 
+using namespace Mu;
+
 static void
 print_script (const char *name, const char *oneline, const char *descr,
 	      gboolean color, gboolean verbose)
@@ -163,7 +165,7 @@ check_params (const MuConfig *opts, GError **err)
 
 
 MuError
-mu_cmd_script (const MuConfig *opts, GError **err)
+Mu::mu_cmd_script (const MuConfig *opts, GError **err)
 {
 	MuScriptInfo *msi;
 	GSList *scripts;

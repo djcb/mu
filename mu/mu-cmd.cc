@@ -29,13 +29,13 @@
 #include <errno.h>
 
 
-#include "mu-msg.h"
-#include "mu-msg-part.h"
+#include "mu-msg.hh"
+#include "mu-msg-part.hh"
 #include "mu-cmd.hh"
-#include "mu-maildir.h"
+#include "mu-maildir.hh"
 #include "mu-contacts.hh"
 #include "mu-runtime.hh"
-#include "mu-flags.h"
+#include "mu-flags.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -45,15 +45,13 @@
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
+using namespace Mu;
+
 static gboolean
 view_msg_sexp (MuMsg *msg, const MuConfig *opts)
 {
-	char *sexp;
-
-	sexp = mu_msg_to_sexp (msg, 0, NULL, mu_config_get_msg_options(opts));
-	fputs (sexp, stdout);
-	g_free (sexp);
-
+        ::fputs(msg_to_sexp(msg,0,{}, mu_config_get_msg_options(opts))
+                .to_sexp_string(). c_str(), stdout);
 	return TRUE;
 }
 
@@ -689,7 +687,7 @@ check_params (const MuConfig *opts, GError **err)
 }
 
 MuError
-mu_cmd_execute (const MuConfig *opts, GError **err) try
+Mu::mu_cmd_execute (const MuConfig *opts, GError **err) try
 {
 	MuError merr;
 

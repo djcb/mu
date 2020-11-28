@@ -17,20 +17,19 @@
 **
 */
 
-#ifndef __MU_CONFIG_H__
-#define __MU_CONFIG_H__
+#ifndef MU_CONFIG_HH__
+#define MU_CONFIG_HH__
 
 #include <glib.h>
 #include <sys/types.h> /* for mode_t */
 #include <mu-msg-fields.h>
-#include <mu-msg.h>
+#include <mu-msg.hh>
 #include <utils/mu-util.h>
 
-G_BEGIN_DECLS
+namespace Mu {
 
 /* env var; if non-empty, color are disabled */
 #define MU_NOCOLOR "MU_NOCOLOR"
-
 
 typedef enum {
 	MU_CONFIG_FORMAT_UNKNOWN = 0,
@@ -257,6 +256,6 @@ MuMsgOptions mu_config_get_msg_options (const MuConfig *opts);
  */
 void mu_config_show_help (const MuConfigCmd cmd);
 
-G_END_DECLS
+} // namespace Mu.
 
 #endif /*__MU_CONFIG_H__*/
