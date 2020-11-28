@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2018 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,24 +17,25 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <string.h>
 
-#include "mu-msg.h"
-#include "mu-msg-priv.h"
-#include "mu-msg-part.h"
+#include "mu-msg.hh"
+#include "mu-msg-priv.hh"
+#include "mu-msg-part.hh"
 #include "utils/mu-date.h"
 
 #include <gmime/gmime.h>
 #include <gmime/gmime-multipart-signed.h>
 
+using namespace Mu;
 
 static const char*
 get_pubkey_algo_name (GMimePubKeyAlgo algo)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wswitch-enum"
 	switch (algo) {
 	case GMIME_PUBKEY_ALGO_DEFAULT:
 		return "default";
@@ -53,11 +54,15 @@ get_pubkey_algo_name (GMimePubKeyAlgo algo)
 	default:
 		return "unknown pubkey algorithm";
 	}
+#pragma GCC diagnostic pop
+
 }
 
 static const gchar*
 get_digestkey_algo_name (GMimeDigestAlgo algo)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wswitch-enum"
 	switch (algo) {
 	case GMIME_DIGEST_ALGO_DEFAULT:
 		return "default";
@@ -86,6 +91,7 @@ get_digestkey_algo_name (GMimeDigestAlgo algo)
 	default:
 		return "unknown digest algorithm";
 	}
+#pragma GCC diagnostic pop
 }
 
 
@@ -196,16 +202,17 @@ get_verdict_report (GMimeSignature *msig)
 static char*
 get_signers (GHashTable *signerhash)
 {
-	GString		*gstr;
-	GHashTableIter	 iter;
-	const char	*name;
+	GString	       *gstr;
+	GHashTableIter	iter;
+	 char          *name;
 
 	if (!signerhash || g_hash_table_size(signerhash) == 0)
 		return NULL;
 
 	gstr = g_string_new (NULL);
 	g_hash_table_iter_init (&iter, signerhash);
-	while (g_hash_table_iter_next (&iter, (gpointer)&name, NULL)) {
+
+	while (g_hash_table_iter_next (&iter, reinterpret_cast<void**>(&name), NULL)) {
 		if (gstr->len != 0)
 			g_string_append_c (gstr, ',');
 		gstr = g_string_append (gstr, name);
@@ -272,7 +279,7 @@ get_status_report (GMimeSignatureList *sigs)
 }
 
 void
-mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
+Mu::mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report)
 {
 	if (!report)
 		return;
@@ -295,7 +302,7 @@ tag_with_sig_status(GObject *part,
 
 
 void
-mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
+Mu::mu_msg_crypto_verify_part (GMimeMultipartSigned *sig, MuMsgOptions opts,
 			   GError **err)
 {
 	/* the signature status */
@@ -349,7 +356,7 @@ check_decrypt_result(GMimeMultipartEncrypted *part, GMimeDecryptResult *res,
 
 
 GMimeObject* /* this is declared in mu-msg-priv.h */
-mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
+Mu::mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
 			    MuMsgPartPasswordFunc func, gpointer user_data,
 			    GError **err)
 {

@@ -17,18 +17,16 @@
 **
 */
 
-#ifndef __MU_MAILDIR_H__
-#define __MU_MAILDIR_H__
+#ifndef MU_MAILDIR_HH__
+#define MU_MAILDIR_HH__
 
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h>          /* for mode_t */
 #include <utils/mu-util.h>
-#include <mu-flags.h>
+#include <mu-flags.hh>
 
-
-G_BEGIN_DECLS
-
+namespace Mu {
 /**
  * create a new maildir. if parts of the maildir already exists, those
  * will simply be ignored. IOW, if you try to create the same maildir
@@ -218,6 +216,6 @@ char* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
                                gboolean new_name, GError **err)
 	G_GNUC_WARN_UNUSED_RESULT;
 
-G_END_DECLS
+} // namespace Mu
 
-#endif /*__MU_MAILDIR_H__*/
+#endif /*MU_MAILDIR_HH__*/

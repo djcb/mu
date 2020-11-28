@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,11 +17,12 @@
 **
 */
 
-#ifndef __MU_MSG_FILE_H__
-#define __MU_MSG_FILE_H__
+#ifndef MU_MSG_FILE_HH__
+#define MU_MSG_FILE_HH__
 
-struct _MuMsgFile;
-typedef struct _MuMsgFile MuMsgFile;
+namespace Mu {
+
+struct MuMsgFile;
 
 /**
  * create a new message from a file
@@ -101,5 +100,6 @@ GSList* mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId msfid)
  */
 gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId mfid);
 
+} // namespace Mu
 
-#endif /*__MU_MSG_FILE_H__*/
+#endif /*MU_MSG_FILE_HH__*/

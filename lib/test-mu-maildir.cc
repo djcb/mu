@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,9 +29,10 @@
 #include <string.h>
 
 #include "test-mu-common.hh"
-#include "mu-maildir.h"
+#include "mu-maildir.hh"
 #include "utils/mu-util.h"
 
+using namespace Mu;
 
 static void
 test_mu_maildir_mkdir_01 (void)

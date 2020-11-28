@@ -27,25 +27,27 @@
 #include <inttypes.h>
 
 #include <gmime/gmime.h>
-#include "mu-maildir.h"
+#include "mu-maildir.hh"
 #include "mu-store.hh"
-#include "mu-msg-priv.h"
+#include "mu-msg-priv.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
+
+using namespace Mu;
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
 				    const char *mdir, GError **err);
 static gboolean init_mime_msg (MuMsgFile *msg, const char *path, GError **err);
 
 MuMsgFile*
-mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
+Mu::mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 {
 	MuMsgFile *self;
 
 	g_return_val_if_fail (filepath, NULL);
 
-	self = g_slice_new0 (MuMsgFile);
+	self = g_new0(MuMsgFile, 1);
 
 	if (!init_file_metadata (self, filepath, mdir, err)) {
 		mu_msg_file_destroy (self);
@@ -61,18 +63,17 @@ mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 }
 
 void
-mu_msg_file_destroy (MuMsgFile *self)
+Mu::mu_msg_file_destroy (MuMsgFile *self)
 {
 	if (!self)
 		return;
 
-	if (self->_mime_msg)
-		g_object_unref (self->_mime_msg);
+        g_clear_object(&self->_mime_msg);
 
 	g_free(self->_path);
 	g_free(self->_maildir);
 
-	g_slice_free (MuMsgFile, self);
+	g_free (self);
 }
 
 static gboolean
@@ -477,7 +478,7 @@ stream_to_string (GMimeStream *stream, size_t buflen)
 }
 
 gchar*
-mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
+Mu::mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
 {
 	GMimeDataWrapper *wrapper;
 	GMimeStream *stream;
@@ -641,7 +642,7 @@ address_type (MuMsgFieldId mfid)
 	case MU_MSG_FIELD_ID_CC	 : return GMIME_ADDRESS_TYPE_CC;
 	case MU_MSG_FIELD_ID_TO	 : return GMIME_ADDRESS_TYPE_TO;
 	case MU_MSG_FIELD_ID_FROM: return GMIME_ADDRESS_TYPE_FROM;
-	default: g_return_val_if_reached (-1);
+	default: g_return_val_if_reached ((GMimeAddressType)-1);
 	}
 }
 
@@ -661,7 +662,7 @@ get_msgid (MuMsgFile *self, gboolean *do_free)
 }
 
 char*
-mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
+Mu::mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 			   gboolean *do_free)
 {
 	g_return_val_if_fail (self, NULL);
@@ -705,7 +706,7 @@ mu_msg_file_get_str_field (MuMsgFile *self, MuMsgFieldId mfid,
 }
 
 GSList*
-mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid)
+Mu::mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
@@ -718,7 +719,7 @@ mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId mfid)
 }
 
 gint64
-mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
+Mu::mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, -1);
 	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
@@ -745,7 +746,7 @@ mu_msg_file_get_num_field (MuMsgFile *self, const MuMsgFieldId mfid)
 }
 
 char*
-mu_msg_file_get_header (MuMsgFile *self, const char *header)
+Mu::mu_msg_file_get_header (MuMsgFile *self, const char *header)
 {
 	const gchar *hdr;
 
@@ -797,8 +798,8 @@ foreach_cb (GMimeObject *parent, GMimeObject *part, ForeachData *fdata)
 }
 
 void
-mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
-			 GMimeObjectForeachFunc func, gpointer user_data)
+Mu::mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
+                             GMimeObjectForeachFunc func, gpointer user_data)
 {
 	ForeachData fdata;
 

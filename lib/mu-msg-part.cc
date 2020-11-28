@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2014 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,17 +17,18 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
 
 #include <string.h>
 #include <unistd.h>
 
+#include "mu-msg.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
-#include "mu-msg-priv.h"
-#include "mu-msg-part.h"
+#include "mu-msg-priv.hh"
+#include "mu-msg-part.hh"
+
+using namespace Mu;
 
 struct _DoData {
 	GMimeObject *mime_obj;
@@ -60,7 +60,7 @@ get_mime_object_at_index (MuMsg *msg, MuMsgOptions opts, unsigned index)
 	ddata.index     = index;
 
 	/* wipe out some irrelevant options */
-	opts &= ~MU_MSG_OPTION_VERIFY;
+	opts &= (MuMsgOptions)~MU_MSG_OPTION_VERIFY;
 	opts &= ~MU_MSG_OPTION_EXTRACT_IMAGES;
 
 	mu_msg_part_foreach (msg, opts,
@@ -192,7 +192,7 @@ get_text_from_mime_msg (MuMsg *msg, GMimeMessage *mmsg, MuMsgOptions opts)
 
 
 char*
-mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
+Mu::mu_msg_part_get_text (MuMsg *msg, MuMsgPart *self, MuMsgOptions opts)
 {
 	GMimeObject  *mobj;
 	GMimeMessage *mime_msg;
@@ -336,7 +336,7 @@ mime_part_get_filename (GMimeObject *mobj, unsigned index,
 
 
 char*
-mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
+Mu::mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 {
 	g_return_val_if_fail (mpart, NULL);
 	g_return_val_if_fail (GMIME_IS_OBJECT(mpart->data), NULL);
@@ -346,7 +346,7 @@ mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 }
 
 const gchar*
-mu_msg_part_get_content_id (MuMsgPart *mpart)
+Mu::mu_msg_part_get_content_id (MuMsgPart *mpart)
 {
 	g_return_val_if_fail (mpart, NULL);
 	g_return_val_if_fail (GMIME_IS_OBJECT(mpart->data), NULL);
@@ -494,7 +494,8 @@ copy_status_report_maybe (GObject *obj)
 {
 	MuMsgPartSigStatusReport *report, *copy;
 
-	report = g_object_get_data (obj, SIG_STATUS_REPORT);
+	report = (MuMsgPartSigStatusReport*)
+		g_object_get_data (obj, SIG_STATUS_REPORT);
 	if (!report)
 		return NULL; /* nothing to copy */
 
@@ -661,7 +662,7 @@ handle_mime_object (MuMsg *msg, GMimeObject *mobj, GMimeObject *parent,
 
 
 gboolean
-mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
+Mu::mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 		     MuMsgPartForeachFunc func, gpointer user_data)
 {
 	unsigned index;
@@ -788,8 +789,8 @@ save_object (GMimeObject *obj, MuMsgOptions opts, const char *fullpath,
 
 
 gchar*
-mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
-		      const char* targetdir, unsigned index, GError **err)
+Mu::mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
+			  const char* targetdir, unsigned index, GError **err)
 {
 	char *fname, *filepath;
 	GMimeObject* mobj;
@@ -821,7 +822,7 @@ mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
 
 
 gchar*
-mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts, guint partid,
+Mu::mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts, guint partid,
 			    GError **err)
 {
 	char *dirname, *filepath;
@@ -856,7 +857,7 @@ mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts, guint partid,
 
 
 gboolean
-mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
+Mu::mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 		  const char *fullpath, guint partidx, GError **err)
 {
 	gboolean	 rv;
@@ -897,7 +898,7 @@ mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
 
 
 gchar*
-mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts, guint partidx,
+Mu::mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts, guint partidx,
 		       GError **err)
 {
 	gchar *filepath;
@@ -925,7 +926,7 @@ match_cid (MuMsgPart *mpart, const char *cid)
 }
 
 int
-mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts,
+Mu::mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts,
 			   const char *sought_cid)
 {
 	const char* cid;
@@ -961,7 +962,7 @@ match_filename_rx (MuMsg *msg, MuMsgPart *mpart, RxMatchData *mdata)
 	if (!fname)
 		return;
 
-	if (g_regex_match (mdata->_rx, fname, 0, NULL))
+	if (g_regex_match (mdata->_rx, fname, (GRegexMatchFlags)0, NULL))
 		mdata->_lst = g_slist_prepend (mdata->_lst,
 					       GUINT_TO_POINTER(mpart->index));
 	g_free (fname);
@@ -969,7 +970,7 @@ match_filename_rx (MuMsg *msg, MuMsgPart *mpart, RxMatchData *mdata)
 
 
 GSList*
-mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern)
+Mu::mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern)
 {
 	RxMatchData mdata;
 
@@ -991,7 +992,7 @@ mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern)
 
 
 gboolean
-mu_msg_part_maybe_attachment (MuMsgPart *part)
+Mu::mu_msg_part_maybe_attachment (MuMsgPart *part)
 {
 	g_return_val_if_fail (part, FALSE);
 

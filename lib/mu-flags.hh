@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,14 +18,15 @@
 */
 
 
-#ifndef __MU_FLAGS_H__
-#define __MU_FLAGS_H__
+#ifndef MU_FLAGS_HH__
+#define MU_FLAGS_HH__
 
 #include <glib.h>
+#include <utils/mu-utils.hh>
 
-G_BEGIN_DECLS
+namespace Mu {
 
-enum _MuFlags {
+enum MuFlags {
 	MU_FLAG_NONE            = 0,
 
 	/* next 6 are seen in the file-info part of maildir message
@@ -56,17 +57,18 @@ enum _MuFlags {
 	/* other content flags */
 	MU_FLAG_LIST            = 1 << 11
 };
-typedef enum _MuFlags MuFlags;
+MU_ENABLE_BITOPS(MuFlags);
+
 
 #define MU_FLAG_INVALID ((MuFlags)-1)
 
-enum _MuFlagType {
+enum MuFlagType {
 	MU_FLAG_TYPE_MAILFILE    = 1 << 0,
 	MU_FLAG_TYPE_MAILDIR     = 1 << 1,
 	MU_FLAG_TYPE_CONTENT     = 1 << 2,
 	MU_FLAG_TYPE_PSEUDO      = 1 << 3
 };
-typedef enum _MuFlagType MuFlagType;
+MU_ENABLE_BITOPS(MuFlagType);
 
 #define MU_FLAG_TYPE_ANY ((MuFlagType)-1)
 #define MU_FLAG_TYPE_INVALID ((MuFlagType)-1)
@@ -179,6 +181,7 @@ typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);
  */
 void mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data);
 
-G_END_DECLS
+} // namespace Mu
+
 
 #endif /*__MU_FLAGS_H__*/

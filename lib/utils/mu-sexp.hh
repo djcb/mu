@@ -21,7 +21,6 @@
 #ifndef MU_SEXP_HH__
 #define MU_SEXP_HH__
 
-#include <iterator>
 #include <string>
 #include <vector>
 #include <type_traits>

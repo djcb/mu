@@ -1,5 +1,4 @@
 /*
-**
 ** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -28,11 +27,13 @@
 
 #include <gmime/gmime.h>
 
-#include "mu-msg-priv.h" /* include before mu-msg.h */
-#include "mu-msg.h"
+#include "mu-msg-priv.hh" /* include before mu-msg.h */
+#include "mu-msg.hh"
 #include "utils/mu-str.h"
 
-#include "mu-maildir.h"
+#include "mu-maildir.hh"
+
+using namespace Mu;
 
 /* note, we do the gmime initialization here rather than in
  * mu-runtime, because this way we don't need mu-runtime for simple
@@ -64,15 +65,15 @@ msg_new (void)
 {
 	MuMsg *self;
 
-	self = g_slice_new0 (MuMsg);
+	self = g_new0 (MuMsg, 1);
 	self->_refcount = 1;
 
 	return self;
 }
 
 MuMsg*
-mu_msg_new_from_file (const char *path, const char *mdir,
-		      GError **err)
+Mu::mu_msg_new_from_file (const char *path, const char *mdir,
+                          GError **err)
 {
 	MuMsg     *self;
 	MuMsgFile *msgfile;
@@ -101,7 +102,7 @@ mu_msg_new_from_file (const char *path, const char *mdir,
 }
 
 MuMsg*
-mu_msg_new_from_doc (XapianDocument *doc, GError **err)
+Mu::mu_msg_new_from_doc (XapianDocument *doc, GError **err)
 {
 	MuMsg    *self;
 	MuMsgDoc *msgdoc;
@@ -139,11 +140,11 @@ mu_msg_destroy (MuMsg *self)
 		g_slist_free (self->_free_later_lst);
 	}
 
-	g_slice_free (MuMsg, self);
+	g_free (self);
 }
 
 MuMsg*
-mu_msg_ref (MuMsg *self)
+Mu::mu_msg_ref (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 
@@ -153,7 +154,7 @@ mu_msg_ref (MuMsg *self)
 }
 
 void
-mu_msg_unref (MuMsg *self)
+Mu::mu_msg_unref (MuMsg *self)
 {
 	g_return_if_fail (self);
 	g_return_if_fail (self->_refcount >= 1);
@@ -210,7 +211,7 @@ get_path (MuMsg *self)
 
 /* for some data, we need to read the message file from disk */
 gboolean
-mu_msg_load_msg_file (MuMsg *self, GError **err)
+Mu::mu_msg_load_msg_file (MuMsg *self, GError **err)
 {
 	const char *path;
 
@@ -231,7 +232,7 @@ mu_msg_load_msg_file (MuMsg *self, GError **err)
 }
 
 void
-mu_msg_unload_msg_file (MuMsg *msg)
+Mu::mu_msg_unload_msg_file (MuMsg *msg)
 {
 	g_return_if_fail (msg);
 
@@ -303,7 +304,7 @@ get_num_field (MuMsg *self, MuMsgFieldId mfid)
 }
 
 const char*
-mu_msg_get_header (MuMsg *self, const char *header)
+Mu::mu_msg_get_header (MuMsg *self, const char *header)
 {
         GError *err;
 
@@ -324,7 +325,7 @@ mu_msg_get_header (MuMsg *self, const char *header)
 }
 
 time_t
-mu_msg_get_timestamp (MuMsg *self)
+Mu::mu_msg_get_timestamp (MuMsg *self)
 {
 	const char *path;
 	struct stat statbuf;
@@ -342,28 +343,28 @@ mu_msg_get_timestamp (MuMsg *self)
 }
 
 const char*
-mu_msg_get_path (MuMsg *self)
+Mu::mu_msg_get_path (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_PATH);
 }
 
 const char*
-mu_msg_get_subject  (MuMsg *self)
+Mu::mu_msg_get_subject  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_SUBJECT);
 }
 
 const char*
-mu_msg_get_msgid  (MuMsg *self)
+Mu::mu_msg_get_msgid  (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_MSGID);
 }
 
 const char*
-mu_msg_get_mailing_list (MuMsg *self)
+Mu::mu_msg_get_mailing_list (MuMsg *self)
 {
 	const char	*ml;
 	char		*decml;
@@ -382,63 +383,63 @@ mu_msg_get_mailing_list (MuMsg *self)
 }
 
 const char*
-mu_msg_get_maildir (MuMsg *self)
+Mu::mu_msg_get_maildir (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_MAILDIR);
 }
 
 const char*
-mu_msg_get_from (MuMsg *self)
+Mu::mu_msg_get_from (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_FROM);
 }
 
 const char*
-mu_msg_get_to (MuMsg *self)
+Mu::mu_msg_get_to (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_TO);
 }
 
 const char*
-mu_msg_get_cc (MuMsg *self)
+Mu::mu_msg_get_cc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_CC);
 }
 
 const char*
-mu_msg_get_bcc (MuMsg *self)
+Mu::mu_msg_get_bcc (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, MU_MSG_FIELD_ID_BCC);
 }
 
 time_t
-mu_msg_get_date (MuMsg *self)
+Mu::mu_msg_get_date (MuMsg *self)
 {
 	g_return_val_if_fail (self, (time_t)-1);
 	return (time_t)get_num_field (self, MU_MSG_FIELD_ID_DATE);
 }
 
 MuFlags
-mu_msg_get_flags (MuMsg *self)
+Mu::mu_msg_get_flags (MuMsg *self)
 {
 	g_return_val_if_fail (self, MU_FLAG_NONE);
 	return (MuFlags)get_num_field (self, MU_MSG_FIELD_ID_FLAGS);
 }
 
 size_t
-mu_msg_get_size (MuMsg *self)
+Mu::mu_msg_get_size (MuMsg *self)
 {
 	g_return_val_if_fail (self, (size_t)-1);
 	return (size_t)get_num_field (self, MU_MSG_FIELD_ID_SIZE);
 }
 
 MuMsgPrio
-mu_msg_get_prio (MuMsg *self)
+Mu::mu_msg_get_prio (MuMsg *self)
 {
 	g_return_val_if_fail (self, MU_MSG_PRIO_NORMAL);
 	return (MuMsgPrio)get_num_field (self, MU_MSG_FIELD_ID_PRIO);
@@ -517,11 +518,11 @@ find_content_type (MuMsg *msg, MuMsgPart *mpart, ContentTypeData *cdata)
 
 	if (!cdata->want_html &&
 	    (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
-		wanted = mpart->data;
+		wanted = (GMimePart*)mpart->data;
 	else if (!(mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT) &&
 		 cdata->want_html &&
 		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
-		wanted = mpart->data;
+		wanted = (GMimePart*)mpart->data;
 	else
 		wanted = NULL;
 
@@ -569,56 +570,56 @@ get_content_type_parameters (MuMsg *self, MuMsgOptions opts, gboolean want_html)
 }
 
 const GSList*
-mu_msg_get_body_text_content_type_parameters (MuMsg *self, MuMsgOptions opts)
+Mu::mu_msg_get_body_text_content_type_parameters (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_content_type_parameters(self, opts, FALSE);
 }
 
 const char*
-mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
+Mu::mu_msg_get_body_html (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
 	return free_later_str (self, get_body (self, opts, TRUE));
 }
 
 const char*
-mu_msg_get_body_text (MuMsg *self, MuMsgOptions opts)
+Mu::mu_msg_get_body_text (MuMsg *self, MuMsgOptions opts)
 {
 	g_return_val_if_fail (self, NULL);
 	return free_later_str (self, get_body (self, opts, FALSE));
 }
 
 const GSList*
-mu_msg_get_references (MuMsg *self)
+Mu::mu_msg_get_references (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_list_field (self, MU_MSG_FIELD_ID_REFS);
 }
 
 const GSList*
-mu_msg_get_tags (MuMsg *self)
+Mu::mu_msg_get_tags (MuMsg *self)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_list_field (self, MU_MSG_FIELD_ID_TAGS);
 }
 
 const char*
-mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_string (MuMsg *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_field (self, mfid);
 }
 
 const GSList*
-mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	return get_str_list_field (self, mfid);
 }
 
 gint64
-mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_numeric (MuMsg *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, -1);
 	return get_num_field (self, mfid);
@@ -744,7 +745,7 @@ msg_contact_foreach_doc (MuMsg *msg, MuMsgContactForeachFunc func,
 }
 
 void
-mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
+Mu::mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
 			gpointer user_data)
 {
 	g_return_if_fail (msg);
@@ -809,7 +810,7 @@ cmp_subject (const char* s1, const char *s2)
 }
 
 int
-mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
+Mu::mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (m1, 0);
 	g_return_val_if_fail (m2, 0);
@@ -834,7 +835,7 @@ mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid)
 }
 
 gboolean
-mu_msg_is_readable (MuMsg *self)
+Mu::mu_msg_is_readable (MuMsg *self)
 {
 	g_return_val_if_fail (self, FALSE);
 
@@ -903,7 +904,7 @@ get_target_mdir (MuMsg *msg, const char *target_maildir, GError **err)
  * super-paranoid here...
  */
 gboolean
-mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
+Mu::mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
 			MuFlags flags, gboolean ignore_dups,
 			gboolean new_name, GError **err)
 {
@@ -947,7 +948,7 @@ mu_msg_move_to_maildir (MuMsg *self, const char *maildir,
  * some 3rd party progs such as mbsync
  */
 gboolean
-mu_msg_tickle (MuMsg *self, GError **err)
+Mu::mu_msg_tickle (MuMsg *self, GError **err)
 {
 	g_return_val_if_fail (self, FALSE);
 
@@ -958,13 +959,13 @@ mu_msg_tickle (MuMsg *self, GError **err)
 }
 
 const char*
-mu_str_flags_s  (MuFlags flags)
+Mu::mu_str_flags_s  (MuFlags flags)
 {
 	return mu_flags_to_str_s (flags, MU_FLAG_TYPE_ANY);
 }
 
 char*
-mu_str_flags  (MuFlags flags)
+Mu::mu_str_flags  (MuFlags flags)
 {
 	return g_strdup (mu_str_flags_s(flags));
 }
@@ -991,7 +992,7 @@ cleanup_contact (char *contact)
 
 /* this is still somewhat simplistic... */
 const char*
-mu_str_display_contact_s (const char *str)
+Mu::mu_str_display_contact_s (const char *str)
 {
 	static gchar contact[255];
 	gchar *c, *c2;
@@ -1017,7 +1018,7 @@ mu_str_display_contact_s (const char *str)
 }
 
 char*
-mu_str_display_contact (const char *str)
+Mu::mu_str_display_contact (const char *str)
 {
 	g_return_val_if_fail (str, NULL);
 

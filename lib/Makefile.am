@@ -63,13 +63,16 @@ libmu_la_SOURCES=						\
 	mu-bookmarks.hh						\
 	mu-contacts.cc						\
 	mu-contacts.hh						\
-	mu-container.cc						\
-	mu-container.hh						\
 	mu-data.hh						\
 	mu-parser.cc						\
 	mu-parser.hh						\
 	mu-query.cc						\
 	mu-query.hh						\
+	mu-query-results.hh					\
+	mu-query-match-deciders.cc				\
+	mu-query-match-deciders.hh				\
+	mu-query-threader.cc					\
+	mu-query-threader.hh					\
 	mu-runtime.cc						\
 	mu-runtime.hh						\
 	mu-script.cc						\
@@ -78,34 +81,30 @@ libmu_la_SOURCES=						\
 	mu-server.hh						\
 	mu-store.cc						\
 	mu-store.hh						\
-	mu-threader.cc						\
-	mu-threader.hh						\
 	mu-tokenizer.cc						\
 	mu-tokenizer.hh						\
 	mu-tree.hh						\
 	mu-xapian.cc						\
 	mu-xapian.hh						\
-	mu-flags.c						\
-	mu-maildir.c						\
-	mu-maildir.h						\
-	mu-flags.h						\
-	mu-msg-crypto.c						\
+	mu-maildir.cc						\
+	mu-maildir.hh						\
+	mu-flags.cc						\
+	mu-flags.hh						\
+	mu-msg-crypto.cc					\
 	mu-msg-doc.cc						\
-	mu-msg-doc.h						\
+	mu-msg-doc.hh						\
 	mu-msg-fields.c						\
 	mu-msg-fields.h						\
-	mu-msg-file.c						\
-	mu-msg-file.h						\
-	mu-msg-iter.cc						\
-	mu-msg-iter.h						\
-	mu-msg-part.c						\
-	mu-msg-part.h						\
+	mu-msg-file.cc						\
+	mu-msg-file.hh						\
+	mu-msg-part.cc						\
+	mu-msg-part.hh						\
 	mu-msg-prio.c						\
 	mu-msg-prio.h						\
-	mu-msg-priv.h						\
+	mu-msg-priv.hh						\
 	mu-msg-sexp.cc						\
-	mu-msg.c						\
-	mu-msg.h
+	mu-msg.cc						\
+	mu-msg.hh
 
 libmu_la_LIBADD=						\
 	$(XAPIAN_LIBS)						\
@@ -130,7 +129,6 @@ tokenize_LDADD=							\
 	utils/libmu-utils.la
 
 EXTRA_DIST=							\
-	mu-msg-crypto.c						\
 	doxyfile.in
 
 noinst_PROGRAMS+=$(TEST_PROGS)
@@ -154,13 +152,13 @@ TEST_PROGS += test-mu-store
 test_mu_store_SOURCES= test-mu-store.cc
 test_mu_store_LDADD= libtestmucommon.la
 
+TEST_PROGS += test-mu-query
+test_mu_query_SOURCES= test-query.cc
+test_mu_query_LDADD= libtestmucommon.la
+
 TEST_PROGS += test-mu-flags
 test_mu_flags_SOURCES= test-mu-flags.cc
 test_mu_flags_LDADD=  libtestmucommon.la
-
-TEST_PROGS += test-mu-container
-test_mu_container_SOURCES= test-mu-container.cc
-test_mu_container_LDADD= libtestmucommon.la
 
 TEST_PROGS += test-mu-contacts
 test_mu_contacts_SOURCES= test-mu-contacts.cc

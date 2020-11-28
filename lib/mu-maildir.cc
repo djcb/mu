@@ -30,8 +30,10 @@
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 
-#include "mu-maildir.h"
+#include "mu-maildir.hh"
 #include "utils/mu-str.h"
+
+using namespace Mu;
 
 #define MU_MAILDIR_NOINDEX_FILE       ".noindex"
 #define MU_MAILDIR_NOUPDATE_FILE      ".noupdate"
@@ -115,7 +117,7 @@ create_noindex (const char *path, GError **err)
 }
 
 gboolean
-mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
+Mu::mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex, GError **err)
 {
 	g_return_val_if_fail (path, FALSE);
 
@@ -181,7 +183,7 @@ get_target_fullpath (const char* src, const char *targetpath, GError **err)
 
 
 gboolean
-mu_maildir_link (const char* src, const char *targetpath, GError **err)
+Mu::mu_maildir_link (const char* src, const char *targetpath, GError **err)
 {
 	char *targetfullpath;
 	int rv;
@@ -248,7 +250,7 @@ process_file (const char* fullpath, const char* mdir,
  * (we're skipping 'tmp' for obvious reasons)
  */
 gboolean
-mu_maildir_is_leaf_dir (const char *path)
+Mu::mu_maildir_is_leaf_dir (const char *path)
 {
 	size_t len;
 
@@ -468,7 +470,7 @@ process_dir_entries (DIR *dir, const char* path, const char* mdir,
 		errno = 0;
 		res = readdir (dir);
 		if (res) {
-			entry = g_memdup (res, sizeof(struct dirent));
+			entry = (struct dirent*)g_memdup (res, sizeof(struct dirent));
 			lst = g_slist_prepend (lst, entry);
 		} else if (errno == 0) {
 			break;
@@ -540,7 +542,7 @@ process_dir (const char* path, const char* mdir,
 
 
 MuError
-mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
+Mu::mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
 		 MuMaildirWalkDirCallback cb_dir, gboolean full,
 		 void *data)
 {
@@ -612,7 +614,7 @@ clear_links (const char *path, DIR *dir)
 }
 
 gboolean
-mu_maildir_clear_links (const char *path, GError **err)
+Mu::mu_maildir_clear_links (const char *path, GError **err)
 {
 	DIR		*dir;
 	gboolean	 rv;
@@ -633,11 +635,8 @@ mu_maildir_clear_links (const char *path, GError **err)
 	return rv;
 }
 
-
-
-
 MuFlags
-mu_maildir_get_flags_from_path (const char *path)
+Mu::mu_maildir_get_flags_from_path (const char *path)
 {
 	g_return_val_if_fail (path, MU_FLAG_INVALID);
 
@@ -678,7 +677,7 @@ mu_maildir_get_flags_from_path (const char *path)
 
 	/*  get the file flags */
 	{
-		char *info;
+		const char *info;
 
 		info = strrchr (path, '2');
 		if (!info || info == path ||
@@ -728,14 +727,15 @@ get_new_path (const char *mdir, const char *mfile, MuFlags flags,
 
 
 char*
-mu_maildir_get_maildir_from_path (const char* path)
+Mu::mu_maildir_get_maildir_from_path (const char* path)
 {
 	char *mdir;
 
 	/* determine the maildir */
 	mdir = g_path_get_dirname (path);
 	if (!g_str_has_suffix (mdir, "cur") &&
-	    !g_str_has_suffix (mdir, "new")) {
+
+            !g_str_has_suffix (mdir, "new")) {
 		g_warning ("%s: not a valid maildir path: %s",
 			   __func__, path);
 		g_free (mdir);
@@ -773,7 +773,7 @@ find_path_separator(const char *path)
 }
 
 char*
-mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
+Mu::mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
 			 MuFlags newflags, gboolean new_name)
 {
 	char *mfile, *mdir, *custom_flags, *cur, *newpath, flags_sep = ':';
@@ -933,7 +933,7 @@ msg_move (const char* src, const char *dst, GError **err)
 }
 
 char*
-mu_maildir_move_message (const char* oldpath, const char* targetmdir,
+Mu::mu_maildir_move_message (const char* oldpath, const char* targetmdir,
 			 MuFlags newflags, gboolean ignore_dups,
 			 gboolean new_name, GError **err)
 {

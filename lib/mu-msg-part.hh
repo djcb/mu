@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,17 +17,18 @@
 **
 */
 
-#ifndef __MU_MSG_PART_H__
-#define __MU_MSG_PART_H__
+#ifndef MU_MSG_PART_HH__
+#define MU_MSG_PART_HH__
 
+#include "utils/mu-utils.hh"
 #include <glib.h>
 #include <unistd.h> /* for ssize_t */
 
+namespace Mu {
+
 #define SIG_STATUS_REPORT "sig-status-report"
 
-G_BEGIN_DECLS
-
-enum _MuMsgPartType {
+enum MuMsgPartType {
 	MU_MSG_PART_TYPE_NONE		= 0,
 
 	/* MIME part without children */
@@ -51,8 +50,7 @@ enum _MuMsgPartType {
 	/* a text/html part? */
 	MU_MSG_PART_TYPE_TEXT_HTML      = 1 << 9
 };
-typedef enum _MuMsgPartType MuMsgPartType;
-
+MU_ENABLE_BITOPS(MuMsgPartType);
 
 /* the signature status */
 enum _MuMsgPartSigStatus {
@@ -112,7 +110,6 @@ typedef struct _MuMsgPart MuMsgPart;
  */
 char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
 	G_GNUC_WARN_UNUSED_RESULT;
-
 
 /**
  * get appropriate content id for the mime-part
@@ -263,6 +260,6 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg *msg, MuMsgPart*, gpointer);
 gboolean mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
 			      MuMsgPartForeachFunc func, gpointer user_data);
 
-G_END_DECLS
+} // namespace Mu
 
-#endif /*__MU_MSG_PART_H__*/
+#endif /*MU_MSG_PART_HH__*/

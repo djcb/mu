@@ -38,7 +38,7 @@
 #include "utils/mu-str.h"
 #include "utils/mu-error.hh"
 
-#include "mu-msg-part.h"
+#include "mu-msg-part.hh"
 #include "utils/mu-utils.hh"
 
 using namespace Mu;
@@ -425,7 +425,7 @@ Store::remove_message (const std::string& path)
 
 	try {
 		const std::string term{(get_uid_term(path.c_str()))};
-                priv()->writable_db().delete_document(term);
+                priv_->writable_db().delete_document(term);
 
 	} MU_XAPIAN_CATCH_BLOCK_RETURN (false);
 
@@ -443,7 +443,7 @@ Store::remove_messages (const std::vector<Store::Id>& ids)
 
 	try {
                 for (auto&& id: ids) {
-                        priv()->writable_db().delete_document(id);
+                        priv_->writable_db().delete_document(id);
                         priv_->dirty();
                 }
 

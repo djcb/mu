@@ -126,3 +126,4 @@ compile_commands.json
 /lib/test-mu-threader
 /lib/test-mu-tokenizer
 /lib/test-mu-parser
+/lib/test-mu-query-threader

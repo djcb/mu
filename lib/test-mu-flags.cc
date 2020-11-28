@@ -1,6 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,9 +22,10 @@
 #endif /*HAVE_CONFIG_H*/
 
 #include <glib.h>
-#include "mu-flags.h"
+#include "mu-flags.hh"
 #include "test-mu-common.hh"
 
+using namespace Mu;
 
 static void
 test_mu_flag_char (void)

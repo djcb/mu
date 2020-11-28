@@ -29,8 +29,10 @@
 #include <locale.h>
 
 #include "test-mu-common.hh"
-#include "mu-msg.h"
+#include "mu-msg.hh"
 #include "utils/mu-str.h"
+
+using namespace Mu;
 
 
 static MuMsg*

@@ -20,7 +20,7 @@
 #ifndef __MU_STORE_HH__
 #define __MU_STORE_HH__
 
-#include <mu-msg.h>
+#include <mu-msg.hh>
 
 #ifdef __cplusplus
 
@@ -51,7 +51,6 @@ public:
          * @param readonly whether to open the database in read-only mode
          */
         Store (const std::string& path, bool readonly=true);
-
 
         struct Config {
                 size_t max_message_size{};
@@ -121,8 +120,8 @@ public:
 
 
         /**
-         * Get the Indexer associated with this store. It is an error
-         * to call this on a read-only store.
+         * Get the Indexer associated with this store. It is an error to call
+         * this on a read-only store.
          *
          * @return the indexer.
          */
@@ -143,7 +142,7 @@ public:
          * @param msg a message
          * @param id the id for this message
          *
-         * @return false in case of failure; true ottherwise.
+         * @return false in case of failure; true otherwise.
          */
         bool update_message (MuMsg *msg, Id id);
 

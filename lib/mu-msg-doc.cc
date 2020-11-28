@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,17 +24,18 @@
 #include <xapian.h>
 
 #include "mu-msg-fields.h"
-#include "mu-msg-doc.h"
+#include "mu-msg-doc.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
 #include "utils/mu-utils.hh"
 
-struct _MuMsgDoc {
+using namespace Mu;
 
-	_MuMsgDoc (Xapian::Document *doc): _doc (doc) { }
-	~_MuMsgDoc () {	delete _doc; }
+struct Mu::MuMsgDoc {
+	MuMsgDoc (Xapian::Document *doc): _doc (doc) { }
+	~MuMsgDoc () {	delete _doc; }
 	const Xapian::Document doc() const { return *_doc; }
 private:
 	Xapian::Document *_doc;
@@ -42,7 +43,7 @@ private:
 
 
 MuMsgDoc*
-mu_msg_doc_new (XapianDocument *doc, GError **err)
+Mu::mu_msg_doc_new (XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
 
@@ -55,7 +56,7 @@ mu_msg_doc_new (XapianDocument *doc, GError **err)
 }
 
 void
-mu_msg_doc_destroy (MuMsgDoc *self)
+Mu::mu_msg_doc_destroy (MuMsgDoc *self)
 {
 	try {
 		delete self;
@@ -65,7 +66,7 @@ mu_msg_doc_destroy (MuMsgDoc *self)
 
 
 gchar*
-mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
@@ -86,7 +87,7 @@ mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
 
 
 GSList*
-mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, NULL);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
@@ -102,7 +103,7 @@ mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
 
 
 gint64
-mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 {
 	g_return_val_if_fail (self, -1);
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);

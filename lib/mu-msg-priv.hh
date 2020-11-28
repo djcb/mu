@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,24 +17,20 @@
 **
 */
 
-#ifndef __MU_MSG_PRIV_H__
-#define __MU_MSG_PRIV_H__
-
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif /*HAVE_CONFIG_H*/
+#ifndef MU_MSG_PRIV_HH__
+#define MU_MSG_PRIV_HH__
 
 #include <gmime/gmime.h>
 #include <stdlib.h>
 
-#include <mu-msg.h>
-#include <mu-msg-file.h>
-#include <mu-msg-doc.h>
-#include "mu-msg-part.h"
+#include <mu-msg.hh>
+#include <mu-msg-file.hh>
+#include <mu-msg-doc.hh>
+#include "mu-msg-part.hh"
 
-G_BEGIN_DECLS
+namespace Mu {
 
-struct _MuMsgFile {
+struct MuMsgFile {
 	GMimeMessage	*_mime_msg;
 	time_t		 _timestamp;
 	size_t		 _size;
@@ -47,7 +41,7 @@ struct _MuMsgFile {
 
 /* we put the the MuMsg definition in this separate -priv file, so we
  * can split the mu_msg implementations over separate files */
-struct _MuMsg {
+struct MuMsg {
 
 	guint		 _refcount;
 
@@ -135,6 +129,6 @@ GMimeObject* mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOpti
 					 GError **err)
 					G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
-G_END_DECLS
+} // namespace Mu
 
-#endif /*__MU_MSG_PRIV_H__*/
+#endif /*MU_MSG_PRIV_HH__*/

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,16 +17,16 @@
 **
 */
 
-#ifndef __MU_MSG_DOC_H__
-#define __MU_MSG_DOC_H__
+#ifndef MU_MSG_DOC_HH__
+#define MU_MSG_DOC_HH__
 
 #include <glib.h>
 #include <utils/mu-util.h>
 
-G_BEGIN_DECLS
 
-struct _MuMsgDoc;
-typedef struct _MuMsgDoc MuMsgDoc;
+namespace Mu {
+
+struct MuMsgDoc;
 
 /**
  * create a new MuMsgDoc instance
@@ -90,7 +90,6 @@ GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
  */
 gint64 mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid);
 
+} // namespace Mu
 
-G_END_DECLS
-
-#endif /*__MU_MSG_DOC_H__*/
+#endif /*MU_MSG_DOC_HH__*/

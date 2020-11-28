@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2012  <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2020  <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,15 +18,16 @@
 */
 
 #include <string.h>
-#include "mu-flags.h"
+#include "mu-flags.hh"
 
-struct _FlagInfo {
+using namespace Mu;
+
+struct FlagInfo {
 	MuFlags		 flag;
 	char		 kar;
 	const char	*name;
 	MuFlagType	 flag_type;
 };
-typedef struct _FlagInfo FlagInfo;
 
 static const FlagInfo FLAG_INFO[] = {
 
@@ -53,7 +54,7 @@ static const FlagInfo FLAG_INFO[] = {
 
 
 MuFlagType
-mu_flag_type (MuFlags flag)
+Mu::mu_flag_type (MuFlags flag)
 {
 	unsigned u;
 
@@ -66,7 +67,7 @@ mu_flag_type (MuFlags flag)
 
 
 char
-mu_flag_char (MuFlags flag)
+Mu::mu_flag_char (MuFlags flag)
 {
 	unsigned u;
 
@@ -78,7 +79,7 @@ mu_flag_char (MuFlags flag)
 
 
 MuFlags
-mu_flag_char_from_name (const char *str)
+Mu::mu_flag_char_from_name (const char *str)
 {
 	unsigned u;
 
@@ -86,9 +87,9 @@ mu_flag_char_from_name (const char *str)
 
 	for (u = 0; u != G_N_ELEMENTS (FLAG_INFO); ++u)
 		if (g_strcmp0(FLAG_INFO[u].name, str) == 0)
-			return FLAG_INFO[u].kar;
+			return (MuFlags)FLAG_INFO[u].kar;
 
-	return 0;
+	return (MuFlags)0;
 }
 
 
@@ -106,7 +107,7 @@ mu_flag_from_char (char kar)
 
 
 const char*
-mu_flag_name (MuFlags flag)
+Mu::mu_flag_name (MuFlags flag)
 {
 	unsigned u;
 
@@ -119,7 +120,7 @@ mu_flag_name (MuFlags flag)
 
 
 const char*
-mu_flags_to_str_s (MuFlags flags, MuFlagType types)
+Mu::mu_flags_to_str_s (MuFlags flags, MuFlagType types)
 {
 	unsigned u,v;
 	static char str[sizeof(FLAG_INFO) + 1];
@@ -135,7 +136,7 @@ mu_flags_to_str_s (MuFlags flags, MuFlagType types)
 
 
 MuFlags
-mu_flags_from_str (const char *str, MuFlagType types,
+Mu::mu_flags_from_str (const char *str, MuFlagType types,
 		   gboolean ignore_invalid)
 {
 	const char	*cur;
@@ -165,7 +166,7 @@ mu_flags_from_str (const char *str, MuFlagType types,
 
 
 char*
-mu_flags_custom_from_str (const char *str)
+Mu::mu_flags_custom_from_str (const char *str)
 {
 	char *custom;
 	const char* cur;
@@ -195,7 +196,7 @@ mu_flags_custom_from_str (const char *str)
 
 
 void
-mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data)
+Mu::mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data)
 {
 	unsigned u;
 
@@ -207,7 +208,7 @@ mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data)
 
 
 MuFlags
-mu_flags_from_str_delta (const char *str, MuFlags oldflags,
+Mu::mu_flags_from_str_delta (const char *str, MuFlags oldflags,
 			 MuFlagType types)
 {
 	const char	*cur;

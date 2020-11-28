@@ -19,11 +19,11 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "mu-query-results.hh"
 #include "utils/mu-str.h"
-#include "mu-msg.h"
-#include "mu-msg-iter.h"
-#include "mu-msg-part.h"
-#include "mu-maildir.h"
+#include "mu-msg.hh"
+#include "mu-msg-part.hh"
+#include "mu-maildir.hh"
 
 using namespace Mu;
 
@@ -31,7 +31,7 @@ static void
 add_prop_nonempty (Sexp::List& list, const char* elm, const GSList *str_lst)
 {
         Sexp::List elms;
-	while (str_lst) {
+        while (str_lst) {
                 elms.add(Sexp::make_string((const char*)str_lst->data));
                 str_lst = g_slist_next(str_lst);
         }
@@ -43,7 +43,7 @@ add_prop_nonempty (Sexp::List& list, const char* elm, const GSList *str_lst)
 static void
 add_prop_nonempty (Sexp::List& list, const char* name, const char *str)
 {
-	if (str && str[0])
+        if (str && str[0])
                 list.add_prop(name, Sexp::make_string(str));
 }
 
@@ -68,22 +68,22 @@ make_contact_sexp (MuMsgContact *c)
 static void
 add_list_post (Sexp::List& list, MuMsg *msg)
 {
-	/* some mailing lists do not set the reply-to; see pull #1278. So for
-	 * those cases, check the List-Post address and use that instead */
+        /* some mailing lists do not set the reply-to; see pull #1278. So for
+         * those cases, check the List-Post address and use that instead */
 
-	GMatchInfo	*minfo;
-	GRegex		*rx;
-	const char*	 list_post;
+        GMatchInfo      *minfo;
+        GRegex          *rx;
+        const char*      list_post;
 
-	list_post = mu_msg_get_header (msg, "List-Post");
-	if (!list_post)
-		return;
+        list_post = mu_msg_get_header (msg, "List-Post");
+        if (!list_post)
+                return;
 
-	rx = g_regex_new ("<?mailto:([a-z0-9%+@._-]+)>?", G_REGEX_CASELESS,
+        rx = g_regex_new ("<?mailto:([a-z0-9%+@._-]+)>?", G_REGEX_CASELESS,
                           (GRegexMatchFlags)0, NULL);
-	g_return_if_fail(rx);
+        g_return_if_fail(rx);
 
-	if (g_regex_match (rx, list_post, (GRegexMatchFlags)0, &minfo)) {
+        if (g_regex_match (rx, list_post, (GRegexMatchFlags)0, &minfo)) {
                 auto address = (char*)g_match_info_fetch (minfo, 1);
                 MuMsgContact contact{NULL,  address};
                 list.add_prop(":list-post",
@@ -91,8 +91,8 @@ add_list_post (Sexp::List& list, MuMsg *msg)
                 g_free(address);
         }
 
-	g_match_info_free (minfo);
-	g_regex_unref (rx);
+        g_match_info_free (minfo);
+        g_regex_unref (rx);
 }
 
 
@@ -105,28 +105,28 @@ typedef struct _ContactData ContactData;
 static gboolean
 each_contact (MuMsgContact *c, ContactData *cdata)
 {
-	switch (mu_msg_contact_type (c)) {
+        switch (mu_msg_contact_type (c)) {
 
-	case MU_MSG_CONTACT_TYPE_FROM:
+        case MU_MSG_CONTACT_TYPE_FROM:
                 cdata->from.add(make_contact_sexp(c));
                 break;
-	case MU_MSG_CONTACT_TYPE_TO:
+        case MU_MSG_CONTACT_TYPE_TO:
                 cdata->to.add(make_contact_sexp(c));
-		break;
-	case MU_MSG_CONTACT_TYPE_CC:
+                break;
+        case MU_MSG_CONTACT_TYPE_CC:
                 cdata->cc.add(make_contact_sexp(c));
-		break;
-	case MU_MSG_CONTACT_TYPE_BCC:
+                break;
+        case MU_MSG_CONTACT_TYPE_BCC:
                 cdata->bcc.add(make_contact_sexp(c));
-		break;
-	case MU_MSG_CONTACT_TYPE_REPLY_TO:
+                break;
+        case MU_MSG_CONTACT_TYPE_REPLY_TO:
                 cdata->reply_to.add(make_contact_sexp(c));
-		break;
-	default:
+                break;
+        default:
                 g_return_val_if_reached (FALSE);
                 return FALSE;
-	}
-	return TRUE;
+        }
+        return TRUE;
 }
 
 static void
@@ -144,9 +144,9 @@ add_prop_nonempty_list(Sexp::List& list, std::string&& name,
 static void
 add_contacts (Sexp::List& list, MuMsg *msg)
 {
-	ContactData cdata{};
-	mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact,
-				&cdata);
+        ContactData cdata{};
+        mu_msg_contact_foreach (msg, (MuMsgContactForeachFunc)each_contact,
+                                &cdata);
 
         add_prop_nonempty_list (list, ":from",     std::move(cdata.from));
         add_prop_nonempty_list (list, ":to",       std::move(cdata.to));
@@ -159,23 +159,23 @@ add_contacts (Sexp::List& list, MuMsg *msg)
 
 typedef struct {
         Sexp::List flaglist;
-	MuFlags    msgflags;
+        MuFlags    msgflags;
 } FlagData;
 
 static void
 each_flag (MuFlags flag, FlagData *fdata)
 {
-	if (flag & fdata->msgflags)
+        if (flag & fdata->msgflags)
                 fdata->flaglist.add(Sexp::make_symbol(mu_flag_name(flag)));
 }
 
 static void
 add_flags (Sexp::List& list, MuMsg *msg)
 {
-	FlagData fdata{};
-	fdata.msgflags = mu_msg_get_flags (msg);
+        FlagData fdata{};
+        fdata.msgflags = mu_msg_get_flags (msg);
 
-	mu_flags_foreach ((MuFlagsForeachFunc)each_flag, &fdata);
+        mu_flags_foreach ((MuFlagsForeachFunc)each_flag, &fdata);
         if (!fdata.flaglist.empty())
                 list.add_prop(":flags",
                               Sexp::make_list(std::move(fdata.flaglist)));
@@ -184,24 +184,24 @@ add_flags (Sexp::List& list, MuMsg *msg)
 static char*
 get_temp_file (MuMsg *msg, MuMsgOptions opts, unsigned index)
 {
-	char *path;
-	GError *err;
+        char *path;
+        GError *err;
 
-	err = NULL;
-	path = mu_msg_part_get_cache_path (msg, opts, index, &err);
-	if (!path)
-		goto errexit;
+        err = NULL;
+        path = mu_msg_part_get_cache_path (msg, opts, index, &err);
+        if (!path)
+                goto errexit;
 
-	if (!mu_msg_part_save (msg, opts, path, index, &err))
-		goto errexit;
+        if (!mu_msg_part_save (msg, opts, path, index, &err))
+                goto errexit;
 
-	return path;
+        return path;
 
 errexit:
-	g_warning ("failed to save mime part: %s",
-		   err->message ? err->message : "something went wrong");
-	g_clear_error (&err);
-	g_free (path);
+        g_warning ("failed to save mime part: %s",
+                   err->message ? err->message : "something went wrong");
+        g_clear_error (&err);
+        g_free (path);
 
         return NULL;
 }
@@ -209,41 +209,41 @@ errexit:
 static gchar*
 get_temp_file_maybe (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
 {
-	opts = (MuMsgOptions)((int)opts | (int)MU_MSG_OPTION_USE_EXISTING);
-	if  (!(opts & MU_MSG_OPTION_EXTRACT_IMAGES) ||
-	     g_ascii_strcasecmp (part->type, "image") != 0)
-		return NULL;
+        opts = (MuMsgOptions)((int)opts | (int)MU_MSG_OPTION_USE_EXISTING);
+        if  (!(opts & MU_MSG_OPTION_EXTRACT_IMAGES) ||
+             g_ascii_strcasecmp (part->type, "image") != 0)
+                return NULL;
         else
                 return get_temp_file (msg, opts, part->index);
 }
 
 struct PartInfo {
-	Sexp::List  parts;
-	MuMsgOptions opts;
+        Sexp::List  parts;
+        MuMsgOptions opts;
 };
 
 static void
 sig_verdict (Sexp::List& partlist, MuMsgPart *mpart)
 {
-	MuMsgPartSigStatusReport *report = mpart->sig_status_report;
-	if (!report)
-		return;
+        MuMsgPartSigStatusReport *report = mpart->sig_status_report;
+        if (!report)
+                return;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored   "-Wswitch-enum"
-	switch (report->verdict) {
-	case MU_MSG_PART_SIG_STATUS_GOOD:
+        switch (report->verdict) {
+        case MU_MSG_PART_SIG_STATUS_GOOD:
                 partlist.add_prop(":signature", Sexp::make_symbol("verified"));
-		break;
-	case MU_MSG_PART_SIG_STATUS_BAD:
+                break;
+        case MU_MSG_PART_SIG_STATUS_BAD:
                 partlist.add_prop(":signature", Sexp::make_symbol("bad"));
-		break;
-	case MU_MSG_PART_SIG_STATUS_ERROR:
+                break;
+        case MU_MSG_PART_SIG_STATUS_ERROR:
                 partlist.add_prop(":signature", Sexp::make_symbol("unverified"));
-		break;
-	default:
-		break;
-	}
+                break;
+        default:
+                break;
+        }
 #pragma GCC diagnostic pop
 
         if (report->signers)
@@ -253,7 +253,7 @@ sig_verdict (Sexp::List& partlist, MuMsgPart *mpart)
 static void
 dec_verdict (Sexp::List& partlist, MuMsgPart *mpart)
 {
-	if (mpart->part_type & MU_MSG_PART_TYPE_DECRYPTED)
+        if (mpart->part_type & MU_MSG_PART_TYPE_DECRYPTED)
                 partlist.add_prop(":decryption", Sexp::make_symbol("succeeded"));
         else if (mpart->part_type & MU_MSG_PART_TYPE_ENCRYPTED)
                 partlist.add_prop(":decryption", Sexp::make_symbol("failed"));
@@ -263,21 +263,21 @@ dec_verdict (Sexp::List& partlist, MuMsgPart *mpart)
 static Sexp
 make_part_types (MuMsgPartType ptype)
 {
-	struct PartTypes {
-		MuMsgPartType ptype;
-		const char*   name;
-	} ptypes[] = {
-		{ MU_MSG_PART_TYPE_LEAF,       "leaf" },
-		{ MU_MSG_PART_TYPE_MESSAGE,    "message" },
-		{ MU_MSG_PART_TYPE_INLINE,     "inline" },
-		{ MU_MSG_PART_TYPE_ATTACHMENT, "attachment" },
-		{ MU_MSG_PART_TYPE_SIGNED,     "signed" },
-		{ MU_MSG_PART_TYPE_ENCRYPTED,  "encrypted" }
-	};
+        struct PartTypes {
+                MuMsgPartType ptype;
+                const char*   name;
+        } ptypes[] = {
+                { MU_MSG_PART_TYPE_LEAF,       "leaf" },
+                { MU_MSG_PART_TYPE_MESSAGE,    "message" },
+                { MU_MSG_PART_TYPE_INLINE,     "inline" },
+                { MU_MSG_PART_TYPE_ATTACHMENT, "attachment" },
+                { MU_MSG_PART_TYPE_SIGNED,     "signed" },
+                { MU_MSG_PART_TYPE_ENCRYPTED,  "encrypted" }
+        };
 
         Sexp::List list;
-	for (auto u = 0U; u!= G_N_ELEMENTS(ptypes); ++u)
-		if (ptype & ptypes[u].ptype)
+        for (auto u = 0U; u!= G_N_ELEMENTS(ptypes); ++u)
+                if (ptype & ptypes[u].ptype)
                         list.add(Sexp::make_symbol(ptypes[u].name));
 
         return Sexp::make_list(std::move(list));
@@ -298,7 +298,6 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
                                part->subtype ? part->subtype : "octet-stream");
         auto maybe_attach = Sexp::make_symbol(mu_msg_part_maybe_attachment (part) ?
                                               "t" : "nil");
-
         Sexp::List  partlist;
 
         partlist.add_prop(":index",     Sexp::make_number(part->index));
@@ -334,31 +333,35 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 static void
 add_parts (Sexp::List& items, MuMsg *msg, MuMsgOptions opts)
 {
-	PartInfo pinfo;
-	pinfo.opts  = opts;
+        PartInfo pinfo;
+        pinfo.opts  = opts;
 
-	if (mu_msg_part_foreach (msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo) &&
+        if (mu_msg_part_foreach (msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo) &&
             !pinfo.parts.empty())
                 items.add_prop(":parts", Sexp::make_list(std::move(pinfo.parts)));
 }
 
 static void
-add_thread_info (Sexp::List& items, const MuMsgIterThreadInfo *ti)
+add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
 {
         Sexp::List info;
 
-        info.add_prop( ":path",  Sexp::make_string(ti->threadpath));
-        info.add_prop( ":level", Sexp::make_number(ti->level));
+        info.add_prop(":path",  Sexp::make_string(qmatch.thread_path));
+        info.add_prop(":level", Sexp::make_number(qmatch.thread_level));
 
-        if (ti->prop & MU_MSG_ITER_THREAD_PROP_FIRST_CHILD)
+        if (any_of(qmatch.flags & QueryMatch::Flags::Root))
+                info.add_prop( ":root", symbol_t());
+        if (any_of(qmatch.flags & QueryMatch::Flags::Related))
+                info.add_prop( ":related", symbol_t());
+        if (any_of(qmatch.flags & QueryMatch::Flags::First))
                 info.add_prop( ":first-child", symbol_t());
-        if (ti->prop & MU_MSG_ITER_THREAD_PROP_LAST_CHILD)
+        if (any_of(qmatch.flags & QueryMatch::Flags::Last))
                 info.add_prop( ":last-child", symbol_t());
-        if (ti->prop & MU_MSG_ITER_THREAD_PROP_EMPTY_PARENT)
+        if (any_of(qmatch.flags & QueryMatch::Flags::Orphan))
                 info.add_prop( ":empty-parent", symbol_t());
-        if (ti->prop & MU_MSG_ITER_THREAD_PROP_DUP)
+        if (any_of(qmatch.flags & QueryMatch::Flags::Duplicate))
                 info.add_prop( ":duplicate", symbol_t());
-        if (ti->prop & MU_MSG_ITER_THREAD_PROP_HAS_CHILD)
+        if (any_of(qmatch.flags & QueryMatch::Flags::HasChild))
                 info.add_prop( ":has-child", symbol_t());
 
         items.add_prop(":thread", Sexp::make_list(std::move(info)));
@@ -369,18 +372,18 @@ static void
 add_message_file_parts (Sexp::List& items, MuMsg *msg, MuMsgOptions opts)
 {
         GError *err{NULL};
-	if (!mu_msg_load_msg_file (msg, &err)) {
-		g_warning ("failed to load message file: %s",
-			   err ? err->message : "some error occurred");
-		g_clear_error (&err);
-		return;
-	}
+        if (!mu_msg_load_msg_file (msg, &err)) {
+                g_warning ("failed to load message file: %s",
+                           err ? err->message : "some error occurred");
+                g_clear_error (&err);
+                return;
+        }
 
-	add_parts    (items, msg, opts);
-	add_contacts (items, msg);
+        add_parts    (items, msg, opts);
+        add_contacts (items, msg);
 
-	/* add the user-agent / x-mailer */
-	auto str = mu_msg_get_header (msg, "User-Agent");
+        /* add the user-agent / x-mailer */
+        auto str = mu_msg_get_header (msg, "User-Agent");
         if (!str)
                 str = mu_msg_get_header (msg, "X-Mailer");
 
@@ -396,8 +399,8 @@ static void
 add_date_and_size (Sexp::List& items, MuMsg *msg)
 {
         auto t = mu_msg_get_date (msg);
-	if (t == (time_t)-1)  /* invalid date? */
-		t = 0;
+        if (t == (time_t)-1)  /* invalid date? */
+                t = 0;
 
         Sexp::List dlist;
         dlist.add(Sexp::make_number((unsigned)(t >> 16)));
@@ -407,8 +410,8 @@ add_date_and_size (Sexp::List& items, MuMsg *msg)
         items.add_prop(":date", Sexp::make_list(std::move(dlist)));
 
         auto s = mu_msg_get_size (msg);
-	if (s == (size_t)-1)   /* invalid size? */
-		s = 0;
+        if (s == (size_t)-1)   /* invalid size? */
+                s = 0;
 
         items.add_prop(":size", Sexp::make_number(s));
 }
@@ -428,64 +431,45 @@ add_tags (Sexp::List& items, MuMsg *msg)
 
 Mu::Sexp
 Mu::msg_to_sexp (MuMsg *msg, unsigned docid,
-                 const struct _MuMsgIterThreadInfo *ti,
-                 MuMsgOptions opts)
+                 const Option<QueryMatch&> qm, MuMsgOptions opts)
 {
         g_return_val_if_fail (msg, Sexp::make_symbol("error"));
-	g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
-	 			(opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
+        g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
+                                (opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
                               Sexp::make_symbol("error"));
         Sexp::List items;
 
         if (docid != 0)
                 items.add_prop(":docid", Sexp::make_number(docid));
 
-        if (ti)
-                add_thread_info (items, ti);
+        if (qm)
+                add_thread_info (items, *qm);
 
-	add_prop_nonempty (items, ":subject",      mu_msg_get_subject (msg));
-	add_prop_nonempty (items, ":message-id",   mu_msg_get_msgid (msg));
-	add_prop_nonempty (items, ":mailing-list", mu_msg_get_mailing_list (msg));
-	add_prop_nonempty (items, ":path",	   mu_msg_get_path (msg));
-	add_prop_nonempty (items, ":maildir",      mu_msg_get_maildir (msg));
+        add_prop_nonempty (items, ":subject",      mu_msg_get_subject (msg));
+        add_prop_nonempty (items, ":message-id",   mu_msg_get_msgid (msg));
+        add_prop_nonempty (items, ":mailing-list", mu_msg_get_mailing_list (msg));
+        add_prop_nonempty (items, ":path",         mu_msg_get_path (msg));
+        add_prop_nonempty (items, ":maildir",      mu_msg_get_maildir (msg));
 
         items.add_prop(":priority", Sexp::make_symbol(mu_msg_prio_name(mu_msg_get_prio(msg))));
 
-	/* in the no-headers-only case (see below) we get a more complete list of contacts, so no
-	 * need to get them here if that's the case */
-	if (opts & MU_MSG_OPTION_HEADERS_ONLY)
-		add_contacts (items, msg);
+        /* in the no-headers-only case (see below) we get a more complete list of contacts, so no
+         * need to get them here if that's the case */
+        if (opts & MU_MSG_OPTION_HEADERS_ONLY)
+                add_contacts (items, msg);
 
         add_prop_nonempty (items, ":references", mu_msg_get_references (msg));
-	add_prop_nonempty (items, ":in-reply-to", mu_msg_get_header (msg, "In-Reply-To"));
+        add_prop_nonempty (items, ":in-reply-to", mu_msg_get_header (msg, "In-Reply-To"));
 
-	add_date_and_size (items, msg);
+        add_date_and_size (items, msg);
         add_flags (items, msg);
-	add_tags (items, msg);
+        add_tags (items, msg);
 
-	/* headers are retrieved from the database, views from the
-	 * message file file attr things can only be gotten from the
-	 * file (ie., mu view), not from the database (mu find).  */
-	if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
-		add_message_file_parts (items, msg, opts);
+        /* headers are retrieved from the database, views from the
+         * message file file attr things can only be gotten from the
+         * file (ie., mu view), not from the database (mu find).  */
+        if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
+                add_message_file_parts (items, msg, opts);
 
         return Sexp::make_list(std::move(items));
-}
-
-
-char*
-mu_msg_to_sexp (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
-		MuMsgOptions opts)
-{
-        return g_strdup (Mu::msg_to_sexp (msg, docid, ti, opts)
-                         .to_sexp_string().c_str());
-}
-
-
-char*
-mu_msg_to_json (MuMsg *msg, unsigned docid, const MuMsgIterThreadInfo *ti,
-		MuMsgOptions opts)
-{
-        return g_strdup (Mu::msg_to_sexp (msg, docid, ti, opts)
-                         .to_json_string().c_str());
 }
