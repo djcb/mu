@@ -31,7 +31,9 @@
 #include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
-#include <mu-msg.h>
+#include <mu-msg.hh>
+
+using namespace Mu;
 
 SCM
 mu_guile_scm_from_str (const char *str)

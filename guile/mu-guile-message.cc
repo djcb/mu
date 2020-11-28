@@ -30,8 +30,10 @@
 #include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
-#include <mu-msg.h>
-#include <mu-msg-part.h>
+#include <mu-msg.hh>
+#include <mu-msg-part.hh>
+
+using namespace Mu;
 
 /* pseudo field, not in Xapian */
 #define MU_GUILE_MSG_FIELD_ID_TIMESTAMP (MU_MSG_FIELD_ID_NUM + 1)
@@ -416,33 +418,11 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 }
 #undef FUNC_NAME
 
-
-static void
-call_func (SCM FUNC, MuMsgIter *iter, const char* func_name)
+static Mu::Option<Mu::QueryResults>
+get_query_results (Mu::Query& query, const char* expr, int maxnum)
 {
-	SCM msgsmob;
-	MuMsg *msg;
-
-	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
-
-	msgsmob = mu_guile_msg_to_scm (mu_msg_ref(msg));
-	scm_call_1 (FUNC, msgsmob);
-}
-
-
-static MuMsgIter*
-get_query_iter (Mu::Query& query, const char* expr, int maxnum)
-{
-	GError *err{};
-	auto iter = query.run (expr, MU_MSG_FIELD_ID_NONE,
-                               Mu::Query::Flags::None, maxnum,
-                               &err);
-	if (!iter) {
-		mu_guile_g_error ("<internal error>", err);
-		g_clear_error (&err);
-	}
-
-	return iter;
+	return query.run(expr, MU_MSG_FIELD_ID_NONE,
+                         Mu::QueryFlags::None, maxnum);
 }
 
 
@@ -455,8 +435,7 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 "none if EXPR equals #f.")
 #define FUNC_NAME s_for_each_message
 {
-	MuMsgIter *iter;
-	char* expr;
+	char* expr{};
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
@@ -473,20 +452,21 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 	else
 		expr = scm_to_utf8_string(EXPR);
 
-	iter = get_query_iter (mu_guile_query(), expr,
-			       scm_to_int(MAXNUM));
+        const auto res{get_query_results(mu_guile_query(), expr,
+                                         scm_to_int(MAXNUM))};
 	free (expr);
-	if (!iter)
+        if (!res)
 		return SCM_UNSPECIFIED;
 
-	while (!mu_msg_iter_is_done(iter)) {
-		call_func (FUNC, iter, FUNC_NAME);
-		mu_msg_iter_next (iter);
-	}
+        for (auto&& mi: *res) {
+                auto msg{mi.floating_msg()};
+                if (msg) {
+                        auto msgsmob{mu_guile_msg_to_scm (mu_msg_ref(msg))};
+                        scm_call_1 (FUNC, msgsmob);
+                }
+        }
 
-	mu_msg_iter_destroy (iter);
-
-	return SCM_UNSPECIFIED;
+        return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
