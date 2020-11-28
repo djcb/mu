@@ -170,10 +170,10 @@ TEST_PROGS+=test-mu-tokenizer
 test_mu_tokenizer_SOURCES=test-tokenizer.cc
 test_mu_tokenizer_LDADD=libtestmucommon.la
 
-# TEST_PROGS+=test-mu-threader
-# test_mu_threader_SOURCES=mu-query-threader.cc
-# test_mu_threader_LDADD=libtestmucommon.la
-# test_mu_threader_CXXFLAGS=$(AM_CXXFLAGS) -DBUILD_THREADER_TEST
+TEST_PROGS+=test-mu-threader
+test_mu_threader_SOURCES=mu-query-threader.cc
+test_mu_threader_LDADD=libtestmucommon.la
+test_mu_threader_CXXFLAGS=$(AM_CXXFLAGS) -DBUILD_THREADER_TEST
 
 TEST_PROGS+=test-mu-parser
 test_mu_parser_SOURCES=test-parser.cc

@@ -17,9 +17,10 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif /*HAVE_CONFIG_H*/
+
+#include <unordered_set>
+#include <string>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -69,36 +70,28 @@ make_database (const std::string& testdir)
 
 
 static void
-assert_no_dups (MuMsgIter *iter)
+assert_no_dups (const QueryResults& qres)
 {
-	GHashTable *hash;
+        std::unordered_set<std::string> msgid_set, path_set;
 
-	hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-				      (GDestroyNotify)g_free, NULL);
+        for (auto&& mi: qres) {
+                g_assert_true(msgid_set.find(mi.message_id().value()) == msgid_set.end());
+                g_assert_true(path_set.find(mi.path().value()) == path_set.end());
 
-	mu_msg_iter_reset (iter);
-	while (!mu_msg_iter_is_done(iter)) {
-		MuMsg *msg;
-		msg = mu_msg_iter_get_msg_floating (iter);
-		/* make sure there are no duplicates */
-		g_assert (!g_hash_table_lookup (hash, mu_msg_get_path (msg)));
-		g_hash_table_insert (hash, g_strdup (mu_msg_get_path(msg)),
-				     GUINT_TO_POINTER(TRUE));
-		mu_msg_iter_next (iter);
-	}
-	mu_msg_iter_reset (iter);
-	g_hash_table_destroy (hash);
+                path_set.emplace(*mi.path());
+                msgid_set.emplace(*mi.message_id());
+
+                g_assert_false(msgid_set.find(mi.message_id().value()) == msgid_set.end());
+                g_assert_false(path_set.find(mi.path().value()) == path_set.end());
+        }
 }
 
 
 /* note: this also *moves the iter* */
 static guint
 run_and_count_matches (const std::string& xpath, const std::string& expr,
-		       Mu::Query::Flags flags = Mu::Query::Flags::None)
+		       Mu::QueryFlags flags = Mu::QueryFlags::None)
 {
-	MuMsgIter *iter;
-	guint count1, count2;
-
 	Mu::Store store{xpath};
 	Mu::Query query{store};
 
@@ -109,22 +102,15 @@ run_and_count_matches (const std::string& xpath, const std::string& expr,
 
 	Mu::allow_warnings();
 
-	iter = query.run (expr, MU_MSG_FIELD_ID_NONE, flags);
-	g_assert (iter);
-	assert_no_dups (iter);
+	auto qres{query.run (expr, MU_MSG_FIELD_ID_NONE, flags)};
+	g_assert_true (!!qres);
+	assert_no_dups (*qres);
 
-	/* run query twice, to test mu_msg_iter_reset */
-	for (count1 = 0; !mu_msg_iter_is_done(iter);
-	     mu_msg_iter_next(iter), ++count1);
+        int count1{0};
+        for (auto&& it: *qres) ++count1;
 
-	mu_msg_iter_reset (iter);
-
-	assert_no_dups (iter);
-
-	for (count2 = 0; !mu_msg_iter_is_done(iter);
-	     mu_msg_iter_next(iter), ++count2);
-
-	mu_msg_iter_destroy (iter);
+        int count2{0};
+        for (auto&& it: *qres) ++count2;
 
 	g_assert_cmpuint (count1, ==, count2);
 
@@ -261,26 +247,23 @@ test_mu_query_logic (void)
 				  ==, queries[i].count);
 }
 
-
-
-
 static void
 test_mu_query_accented_chars_01 (void)
 {
-	MuMsgIter *iter;
-	MuMsg *msg;
 	GError *err;
 	gchar *summ;
 
 	Store store{DB_PATH1};
 	Query q{store};
 
-	iter = q.run("fünkÿ");
-	err = NULL;
-	msg = mu_msg_iter_get_msg_floating (iter); /* don't unref */
+        auto qres{q.run("fünkÿ")};
+        g_assert_true(!!qres);
+        g_assert_false(qres->empty());
+
+        auto begin{qres->begin()};
+        auto msg{begin.floating_msg()};
 	if (!msg) {
-		g_warning ("error getting message: %s", err->message);
-		g_error_free (err);
+		g_warning ("error getting message");
 		g_assert_not_reached ();
 	}
 
@@ -293,8 +276,6 @@ test_mu_query_accented_chars_01 (void)
 	g_assert_cmpstr (summ,==,
 			 "Let's write some fünkÿ text using umlauts. Foo.");
 	g_free (summ);
-
-	mu_msg_iter_destroy (iter);
 }
 
 static void
@@ -629,7 +610,7 @@ test_mu_query_threads_compilation_error (void)
 
 	g_assert_cmpuint (run_and_count_matches
 			  (xpath, "msgid:uwsireh25.fsf@one.dot.net",
-			   Query::Flags::IncludeRelated),
+			   QueryFlags::IncludeRelated),
 			  ==, 3);
 }
 

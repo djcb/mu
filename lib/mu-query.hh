@@ -24,8 +24,9 @@
 
 #include <glib.h>
 #include <mu-store.hh>
-#include <mu-msg-iter.h>
+#include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
+
 
 namespace Mu {
 
@@ -52,39 +53,10 @@ public:
         Query(Query&& other);
 
 
-       enum struct Flags {
-                None           = 0, /**< no flags */
-                Descending     = 1 << 0, /**< sort z->a */
-                SkipUnreadable = 1 << 1, /**< skip unreadable msgs */
-                SkipDups       = 1 << 2, /**< skip duplicate msgs */
-                IncludeRelated = 1 << 3, /**< include related msgs */
-                Threading      = 1 << 4, /**< calculate threading info */
-        };
-
-
-        /**
-         * run a query; for the syntax, please refer to the mu-query manpage
-         *
-         * @param expr the search expression; use "" to match all messages
-         * @param sortfield the field id to sort by or MU_MSG_FIELD_ID_NONE if
-         * sorting is not desired
-         * @param flags bitwise OR'd flags to influence the query (see MuQueryFlags)
-         * @param maxnum maximum number of search results to return, or 0 for
-         * unlimited
-         * @param err receives error information (if there is any); if
-         * function returns non-NULL, err will _not_be set. err can be NULL
-         * possible error (err->code) is MU_ERROR_QUERY,
-         *
-         * @return a MuMsgIter instance you can iterate over, or NULL in
-         * case of error
-         */
-        MuMsgIter* run (const std::string& expr="",
-                        MuMsgFieldId sortfieldid=MU_MSG_FIELD_ID_NONE,
-                        Flags flags=Flags::None,
-                        size_t maxnum=0,
-                        GError **err=nullptr) const
-                G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+        Option<QueryResults> run(const std::string& expr="",
+                                 MuMsgFieldId sortfieldid=MU_MSG_FIELD_ID_NONE,
+                                 QueryFlags flags=QueryFlags::None,
+                                 size_t maxnum=0) const;
 
         /**
          * run a Xapian query to count the number of matches; for the syntax, please
@@ -107,14 +79,11 @@ public:
          * @return the string representation of the query
          */
         std::string parse (const std::string& expr, bool xapian) const;
-
 private:
         struct Private;
         std::unique_ptr<Private> priv_;
 
 };
-MU_ENABLE_BITOPS(Query::Flags);
-
 }
 
 #endif /*__MU_QUERY_HH__*/
