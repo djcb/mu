@@ -660,13 +660,6 @@ from the old format if needed."
   "Face for an unread message header."
   :group 'mu4e-faces)
 
-(defface mu4e-moved-face
-  '((t :inherit font-lock-comment-face :slant italic))
-  "Face for a message header that has been moved to some folder.
-\(It's still visible in the search results, since we cannot
-be sure it no longer matches)."
-  :group 'mu4e-faces)
-
 (defface mu4e-trashed-face
   '((t :inherit font-lock-comment-face :strike-through t))
   "Face for an message header in the trash folder."
