@@ -363,8 +363,8 @@ Message-ID."
 (defun mu4e~compose-before-save-hook-fn ()
   ;; replace the date
   (save-excursion
-    (message-remove-header "Date")
-    (message-generate-headers '(Date Message-ID))
+    (unless (message-fetch-field "Message-ID")
+      (message-generate-headers '(Date Message-ID)))
     (save-match-data
       (mu4e~draft-remove-mail-header-separator))))
 
