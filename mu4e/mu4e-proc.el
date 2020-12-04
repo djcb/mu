@@ -243,9 +243,9 @@ backslashes and double-quotes."
      "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
 
   ;; sanity-check 2
-  (let ((version (shell-command-to-string
-                  (format "%s --version | head -1 | sed 's/.*version //' | tr -d '\n'"
-                          mu4e-mu-binary))))
+  (let ((version (let ((s (shell-command-to-string (concat mu4e-mu-binary " --version"))))
+                   (and (string-match "version \\([.0-9]+\\)" s)
+                        (match-string 1 s)))))
     (unless (string= version mu4e-mu-version)
       (mu4e-error
        (concat
