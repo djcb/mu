@@ -361,10 +361,12 @@ Message-ID."
             nil t))
 
 (defun mu4e~compose-before-save-hook-fn ()
-  ;; replace the date
+  "Add the message-id if necessary and update the date."
   (save-excursion
-    (unless (message-fetch-field "Message-ID")
-      (message-generate-headers '(Date Message-ID)))
+    (save-restriction
+      (message-narrow-to-headers)
+      (unless (message-fetch-field "Message-ID")
+        (message-generate-headers '(Date Message-ID))))
     (save-match-data
       (mu4e~draft-remove-mail-header-separator))))
 
