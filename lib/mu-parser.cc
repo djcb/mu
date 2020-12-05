@@ -212,7 +212,7 @@ Parser::Private::process_regex (const std::string& field, const std::regex& rx) 
         if (id == MU_MSG_FIELD_ID_NONE)
                 return {};
 
-        char pfx[] = {  mu_msg_field_xapian_prefix(id), '\0' };
+        char pfx[] = {  mu_msg_field_shortcut(id), '\0' };
 
         std::vector<std::string> terms;
         store_.for_each_term(pfx,[&](auto&& str){
@@ -347,7 +347,7 @@ Parser::Private::data (Mu::Tokens& tokens, WarningVec& warnings) const
 	}
 
 	// does it look like a regexp?
-	if (val.length() >=2 )
+	if (val.length() >= 2)
 		if (val[0] == '/' && val[val.length()-1] == '/')
 			return regex (fields, val, token.pos, warnings);
 
