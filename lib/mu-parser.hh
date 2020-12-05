@@ -21,6 +21,7 @@
 #ifndef __PARSER_HH__
 #define __PARSER_HH__
 
+#include "utils/mu-utils.hh"
 #include <string>
 #include <vector>
 #include <memory>
@@ -72,12 +73,17 @@ operator<< (std::ostream& os, const Warning& w)
 
 class Parser {
 public:
+        enum struct Flags {
+                None     = 0,
+                UnitTest = 1 << 0
+        };
+
         /**
          * Construct a query parser object
          *
          * @param store a store object ptr, or none
          */
-        Parser(const Store& store);
+        Parser(const Store& store, Flags=Flags::None);
         /**
          * DTOR
          *
@@ -98,6 +104,8 @@ private:
         struct Private;
         std::unique_ptr<Private> priv_;
 };
+
+MU_ENABLE_BITOPS(Parser::Flags);
 
 } // namespace Mu
 

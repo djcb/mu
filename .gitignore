@@ -123,3 +123,6 @@ mu*tar.xz
 compile_commands.json
 /lib/utils/test-sexp
 /lib/utils/test-option
+/lib/test-mu-threader
+/lib/test-mu-tokenizer
+/lib/test-mu-parser

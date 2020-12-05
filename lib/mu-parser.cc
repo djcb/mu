@@ -41,8 +41,6 @@ using namespace Mu;
 #define BUG(...) Mu::Error (Error::Code::Internal, format("%u: BUG: ",__LINE__)	\
 				     + format(__VA_ARGS__))
 
-
-
 /**
  * Get the "shortcut"/internal fields for the the given fieldstr or empty if there is none
  *
@@ -59,8 +57,11 @@ struct FieldInfo {
 };
 using FieldInfoVec = std::vector<FieldInfo>;
 
+using Flags = Parser::Flags;
+
 struct Parser::Private {
-        Private(const Store& store): store_{store} {}
+        Private(const Store& store, Flags flags):
+                store_{store}, flags_{flags} {}
 
         std::vector<std::string> process_regex (const std::string& field,
                                                 const std::regex& rx) const;
@@ -79,6 +80,7 @@ struct Parser::Private {
                         size_t pos, WarningVec& warnings) const;
 private:
         const Store& store_;
+        const Flags flags_;
 };
 
 static MuMsgFieldId
@@ -141,10 +143,13 @@ add_field (std::vector<FieldInfo>& fields, MuMsgFieldId id)
 }
 
 static std::vector<FieldInfo>
-process_field (const std::string& field)
+process_field (const std::string& field, Flags flags)
 {
-
         std::vector<FieldInfo> fields;
+        if (any_of(flags & Flags::UnitTest)) {
+                add_field(fields, MU_MSG_FIELD_ID_MSGID);
+                return fields;
+        }
 
         if (field == "contact" || field == "recip") { // multi fields
                 add_field (fields, MU_MSG_FIELD_ID_TO);
@@ -338,10 +343,10 @@ Parser::Private::data (Mu::Tokens& tokens, WarningVec& warnings) const
 	} else
 		val = token.str;
 
-	auto fields = process_field (field);
+	auto fields = process_field (field, flags_);
 	if (fields.empty()) {// not valid field...
 		warnings.push_back ({token.pos, format ("invalid field '%s'", field.c_str())});
-		fields = process_field ("");
+		fields = process_field ("", flags_);
 		// fallback, treat the whole of foo:bar as a value
 		return value (fields, field + ":" + val, token.pos, warnings);
 	}
@@ -503,8 +508,8 @@ Parser::Private::term_1 (Mu::Tokens& tokens,  WarningVec& warnings) const
 	}
 }
 
-Mu::Parser::Parser(const Store& store):
-        priv_{std::make_unique<Private>(store)}
+Mu::Parser::Parser(const Store& store, Flags flags):
+        priv_{std::make_unique<Private>(store, flags)}
 {}
 
 Mu::Parser::~Parser() = default;
