@@ -65,7 +65,9 @@ AC_DEFUN([AX_LIB_READLINE], [
   AC_CACHE_CHECK([for a readline compatible library],
                  ax_cv_lib_readline, [
     ORIG_LIBS="$LIBS"
-    for readline_lib in readline edit editline; do
+    # djcb: we need the _real_ readline_
+    #for readline_lib in readline edit editline; do
+    for readline_lib in readline; do
       for termcap_lib in "" termcap curses ncurses; do
         if test -z "$termcap_lib"; then
           TRY_LIB="-l$readline_lib"
