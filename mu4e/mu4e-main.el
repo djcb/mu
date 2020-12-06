@@ -117,12 +117,11 @@ clicked."
                        'mouse-face 'highlight newstr)
     newstr))
 
-
 (defun mu4e~main-bookmarks ()
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
   (cl-loop with bmks = (mu4e-bookmarks)
            with longest = (mu4e~longest-of-maildirs-and-bookmarks)
-           with queries = (plist-get mu4e~server-props :queries)
+           with queries = (mu4e-last-query-results)
            for bm in bmks
            for key = (string (plist-get bm :key))
            for name = (plist-get bm :name)
@@ -233,7 +232,7 @@ When REFRESH is non nil refresh infos from server."
        (propertize "mu4e" 'face 'mu4e-header-key-face)
        (propertize " - mu for emacs version " 'face 'mu4e-title-face)
        (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-       "\n\n"
+        "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e~main-action-str
         "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)

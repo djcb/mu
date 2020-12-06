@@ -792,6 +792,28 @@ nothing."
                          (lambda () (mu4e-update-mail-and-index
                                      mu4e-index-update-in-background)))))))
 
+(defun mu4e-last-query-results ()
+  "Get the results (counts) of the last cached queries.
+
+The cached queries are the bookmark / maildir queries that are
+used to populated the read/unread counts in the main view. They
+are refreshed when calling `(mu4e)', i.e., when going to the main
+view.
+
+The results are a list of elements of the form
+   (:query \"query string\"
+            :count  <total number matching count>
+            :unread <number of unread messages in count>)"
+  (plist-get mu4e~server-props :queries))
+
+
+(defun mu4e-last-query-result (query)
+  "Get the last result for some cached query, as per
+  `mu4e-bookmark-query-results' or nil if not found."
+  (cl-find-if
+   (lambda (elm) (string= (plist-get elm :query) query))
+   (mu4e-last-query-results)))
+
 
 (defun mu4e~start (&optional func)
   "If `mu4e-contexts' have been defined, but we don't have a
