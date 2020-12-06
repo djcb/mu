@@ -22,6 +22,8 @@
 #include <string>
 #include <algorithm>
 #include <atomic>
+#include <cstdio>
+
 #include <unistd.h>
 
 #include "mu-runtime.hh"
@@ -115,7 +117,7 @@ mu_cmd_server (const MuConfig *opts, GError **err) try {
 
         bool do_quit{};
         while (!MuTerminate && !do_quit) {
-                ::fflush(::stdout); // Needed for Windows, see issue #1827.
+                std::fflush(stdout); // Needed for Windows, see issue #1827.
                 const auto line{read_line(do_quit)};
                 if (line.find_first_not_of(" \t") == std::string::npos)
                         continue; // skip whitespace-only lines
