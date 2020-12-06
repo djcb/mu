@@ -48,10 +48,13 @@
 (declare-function mu4e-message-field-at-point     "mu4e-proc")
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
+(declare-function mu4e~main-view          "mu4e-main")
 
 (declare-function mu4e~context-autoswitch "mu4e-context")
 (declare-function mu4e-context-determine  "mu4e-context")
 (declare-function mu4e-context-vars       "mu4e-context")
+(declare-function mu4e-context-current    "mu4e-context")
+
 (declare-function show-all "org")
 
 ;;; Various

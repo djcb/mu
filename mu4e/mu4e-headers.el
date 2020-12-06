@@ -807,12 +807,10 @@ if provided, or at the end of the buffer otherwise."
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
-
   (when mu4e~headers-render-start ;; for benchmarking.
     (setq mu4e~headers-render-time
           (- (float-time) mu4e~headers-render-start)
           mu4e~headers-render-start nil))
-  (message "%S" mu4e~headers-render-time)
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
       (save-excursion
