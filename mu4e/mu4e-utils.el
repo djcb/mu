@@ -826,7 +826,9 @@ When successful, call FUNC (if non-nil) afterwards."
   (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
    (mapcar ;; send it a list of queries we'd like to see read/unread info for
-    (lambda (bm) (plist-get bm :query))
+    (lambda (bm)
+      (funcall (or mu4e-query-rewrite-function #'identity)
+               (plist-get bm :query)))
     ;; exclude bookmarks that are not strings, and with certain flags
     (seq-filter (lambda (bm)
                   (and (stringp (plist-get bm :query))
