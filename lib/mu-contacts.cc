@@ -26,6 +26,7 @@
 #include <functional>
 #include <algorithm>
 #include <regex>
+#include <ctime>
 
 #include <utils/mu-utils.hh>
 #include <glib.h>
@@ -76,13 +77,17 @@ struct ContactInfoEqual {
         }
 };
 
+constexpr auto RecentOffset{15 * 24 * 3600};
 struct ContactInfoLessThan {
+
+        ContactInfoLessThan(): recently_{::time({}) - RecentOffset} {}
+
         bool operator()(const Mu::ContactInfo& ci1, const Mu::ContactInfo& ci2) const {
 
                 if (ci1.personal != ci2.personal)
                         return ci1.personal; // personal comes first
 
-                if (ci1.last_seen != ci2.last_seen) // more recent comes first
+                if (ci1.last_seen > recently_)
                         return ci1.last_seen > ci2.last_seen;
 
                 if (ci1.freq != ci2.freq) // more frequent comes first
@@ -90,6 +95,9 @@ struct ContactInfoLessThan {
 
                 return g_ascii_strcasecmp(ci1.email.c_str(), ci2.email.c_str()) < 0;
         }
+        // only sort recently seen contacts by recency; approx 15 days.
+        // this changes during the lifetime, but that's all fine.
+        const time_t recently_;
 };
 
 using ContactUMap = std::unordered_map<const std::string, ContactInfo, EmailHash, EmailEqual>;
@@ -143,8 +151,6 @@ Contacts::Private::make_personal (const StringVec& personal)
                 }
         }
 }
-
-
 
 ContactUMap
 Contacts::Private::deserialize(const std::string& serialized) const
@@ -231,8 +237,7 @@ Contacts::add (ContactInfo&& ci)
                 auto& ci_existing{it->second};
                 ++ci_existing.freq;
 
-                if (ci.last_seen > ci_existing.last_seen) {
-                        // update.
+                if (ci.last_seen > ci_existing.last_seen) { // update.
                         wash(ci.name);
                         ci_existing.name = std::move(ci.name);
                         ci_existing.email = std::move(ci.email);
