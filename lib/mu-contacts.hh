@@ -22,12 +22,6 @@
 
 #include <glib.h>
 #include <time.h>
-
-struct _MuContacts;
-typedef struct _MuContacts MuContacts;
-
-#ifdef __cplusplus
-
 #include <memory>
 #include <functional>
 #include <chrono>
@@ -155,66 +149,11 @@ public:
          */
         void for_each (const EachContactFunc& each_contact) const;
 
-        /**
-         * For C compatiblityy
-         *
-         * @return a MuContacts* referring to this.
-         */
-        const MuContacts* mu_contacts() const {
-                return reinterpret_cast<const MuContacts*>(this);
-        }
-
-
-
 private:
         struct                   Private;
         std::unique_ptr<Private> priv_;
 };
 
 } // namespace Mu
-
-#endif /*__cplusplus*/
-
-G_BEGIN_DECLS
-
-
-/**
- * return the number of contacts
- *
- * @param self a contacts object
- *
- * @return the number of contacts
- */
-size_t mu_contacts_count (const MuContacts *self);
-
-/**
- * Function called for mu_contacts_foreach; returns the e-mail address, name
- * (which may be NULL) , whether the message is 'personal', the timestamp for
- * the address (when it was last seen), and the frequency (in how many message
- * did this contact participate) and the tstamp (last modification)
- *
- */
-typedef void (*MuContactsForeachFunc) (const char *full_address,
-                                       const char *email, const char *name,
-                                       gboolean personal,
-                                       time_t last_seen, unsigned freq,
-                                       gint64 tstamp, gpointer user_data);
-
-/**
- * call a function for either each contact, or each contact satisfying
- * a regular expression,
- *
- * @param self contacts object
- * @param func callback function to be called for each
- * @param user_data user data to pass to the callback
- *
- * @return TRUE if the function succeeded, or FALSE if the provide regular
- * expression was invalid (and not NULL)
- */
-gboolean mu_contacts_foreach (const MuContacts *self,
-                              MuContactsForeachFunc func,
-                              gpointer user_data);
-
-G_END_DECLS
 
 #endif /* __MU_CONTACTS_HH__ */

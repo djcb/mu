@@ -227,7 +227,6 @@ Contacts::add (ContactInfo&& ci)
         auto it = priv_->contacts_.find(ci.email);
 
         if (it == priv_->contacts_.end()) {   // completely new contact
-
                 wash(ci.name);
                 wash(ci.full_address);
                 auto email{ci.email};
@@ -316,40 +315,94 @@ Contacts::is_personal(const std::string& addr) const
 }
 
 
-/// C binding
+#ifdef BUILD_TESTS
+/*
+  * Tests.
+ *
+ */
 
-size_t
-mu_contacts_count (const MuContacts *self)
+#include "test-mu-common.hh"
+
+static void
+test_mu_contacts_01()
 {
-        g_return_val_if_fail (self, 0);
+        Mu::Contacts contacts ("");
 
-        auto myself = reinterpret_cast<const Mu::Contacts*>(self);
+        g_assert_true (contacts.empty());
+        g_assert_cmpuint (contacts.size(), ==, 0);
 
-        return myself->size();
+        contacts.add(Mu::ContactInfo ("Foo <foo.bar@example.com>",
+                                                "foo.bar@example.com", "Foo", false, 12345));
+        g_assert_false (contacts.empty());
+        g_assert_cmpuint (contacts.size(), ==, 1);
+
+        contacts.add(Mu::ContactInfo ("Cuux <cuux.fnorb@example.com>",
+                                                "cuux@example.com", "Cuux", false, 54321));
+
+        g_assert_cmpuint (contacts.size(), ==, 2);
+
+        contacts.add(Mu::ContactInfo ("foo.bar@example.com",
+                                                "foo.bar@example.com", "Foo", false, 77777));
+        g_assert_cmpuint (contacts.size(), ==, 2);
+
+        contacts.add(Mu::ContactInfo ("Foo.Bar@Example.Com",
+                                                "Foo.Bar@Example.Com", "Foo", false, 88888));
+        g_assert_cmpuint (contacts.size(), ==, 2);
+        // note: replaces first.
+
+        {
+                const auto info = contacts._find("bla@example.com");
+                g_assert_false (info);
+        }
+
+        {
+                const auto info = contacts._find("foo.BAR@example.com");
+                g_assert_true (info);
+
+                g_assert_cmpstr(info->email.c_str(), ==, "Foo.Bar@Example.Com");
+        }
+
+        contacts.clear();
+        g_assert_true (contacts.empty());
+        g_assert_cmpuint (contacts.size(), ==, 0);
 }
 
-gboolean
-mu_contacts_foreach (const MuContacts *self, MuContactsForeachFunc func,
-                     gpointer user_data)
+static void
+test_mu_contacts_02()
 {
-        g_return_val_if_fail (self, FALSE);
-        g_return_val_if_fail (func, FALSE);
+        Mu::StringVec personal = {
+                "foo@example.com",
+                "bar@cuux.org",
+                "/bar-.*@fnorb.f./"
+        };
+        Mu::Contacts contacts{"", personal};
 
-        auto myself = reinterpret_cast<const Mu::Contacts*>(self);
+        g_assert_true (contacts.is_personal("foo@example.com"));
+        g_assert_true (contacts.is_personal("Bar@CuuX.orG"));
+        g_assert_true (contacts.is_personal("bar-123abc@fnorb.fi"));
+        g_assert_true (contacts.is_personal("bar-zzz@fnorb.fr"));
 
-        myself->for_each([&](const ContactInfo& ci) {
-                 g_return_if_fail (!ci.email.empty());
-                 func(ci.full_address.c_str(),
-                      ci.email.c_str(),
-                      ci.name.empty() ? NULL : ci.name.c_str(),
-                      ci.personal,
-                      ci.last_seen,
-                      ci.freq,
-                      ci.tstamp,
-                      user_data);
-         });
-
-        return TRUE;
+        g_assert_false (contacts.is_personal("foo@bar.com"));
+        g_assert_false (contacts.is_personal("BÂr@CuuX.orG"));
+        g_assert_false (contacts.is_personal("bar@fnorb.fi"));
+        g_assert_false (contacts.is_personal("bar-zzz@fnorb.xr"));
 }
 
-struct _MuContacts :  public Mu::Contacts {}; /**< c-compat */
+
+
+int
+main (int argc, char *argv[])
+{
+        g_test_init (&argc, &argv, NULL);
+
+        g_test_add_func ("/mu-contacts/01", test_mu_contacts_01);
+        g_test_add_func ("/mu-contacts/02", test_mu_contacts_02);
+
+        g_log_set_handler (NULL,
+                           (GLogLevelFlags)
+                           (G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION),
+                           (GLogFunc)black_hole, NULL);
+
+        return g_test_run ();
+}
+#endif /*BUILD_TESTS*/

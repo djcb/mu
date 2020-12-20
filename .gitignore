@@ -127,3 +127,16 @@ compile_commands.json
 /lib/test-mu-tokenizer
 /lib/test-mu-parser
 /lib/test-mu-query-threader
+/lib/test-contacts
+/lib/test-flags
+/lib/test-maildir
+/lib/test-msg
+/lib/test-msg-fields
+/lib/test-query
+/lib/test-store
+/lib/test-threader
+/mu/test-cmd
+/mu/test-cmd-cfind
+/mu/test-query
+/mu/test-threads
+/lib/test-threads
