@@ -246,10 +246,13 @@ AM_COND_IF([BUILD_GUILE],[AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])])
 
 ###############################################################################
 # optional readline
-saved_libs=$LIBS
-AX_LIB_READLINE
-AC_SUBST(READLINE_LIBS,${LIBS})
-LIBS=$saved_libs
+AC_ARG_ENABLE([readline], AS_HELP_STRING([--disable-readline],[Disable readline]))
+AS_IF([test "x$enable_readline" != "xno"], [
+  saved_libs=$LIBS
+  AX_LIB_READLINE
+  AC_SUBST(READLINE_LIBS,${LIBS})
+  LIBS=$saved_libs
+])
 ###############################################################################
 
 ###############################################################################
