@@ -553,7 +553,7 @@ add text-properties to VAL."
                      (val (if (= (length vals) 1)
                               (car vals)
                             (truncate-string-to-width (car vals)
-                                                      (- (length (car vals)) 1) 0 nil t)))) 
+                                                      (- (length (car vals)) 1) 0 nil t))))
                 (overlay-put o 'mu4e~view-header-field-folded t)
                 (overlay-put o 'display val))))))))
 
