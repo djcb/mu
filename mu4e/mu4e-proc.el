@@ -354,10 +354,10 @@ value)."
                                  &optional path what param)
   "Perform ACTION  on part with DOCID INDEX DECRYPT PATH WHAT PARAM.
 Use a message with DOCID and perform ACTION on it (as symbol,
-either `save', `open', `temp') which mean: * save: save the part
-to PATH (a path) (non-optional for save)$ * open: open the part
-with the default application registered for doing so * temp: save
-to a temporary file, then respond with
+either `save', `open', `temp') which mean:
+* save: save the part to PATH (a path) (non-optional for save)
+* open: open the part with the default application registered for doing so
+* temp: save to a temporary file, then respond with
        (:temp <path> :what <what> :param <param>)."
   (mu4e~call-mu `(extract
                   :action ,action
