@@ -1038,7 +1038,7 @@ in the background; otherwise, pop up a window."
       (kill-process proc t))))
 
 (define-obsolete-function-alias 'mu4e-interrupt-update-mail
-  'mu4e-kill-update-mail)
+  'mu4e-kill-update-mail "1.5.7")
 
 
 ;;; Logging / debugging
