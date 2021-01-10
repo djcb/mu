@@ -184,6 +184,7 @@ or org-mode (when in the body)."
        ;; if so, switch to org-mode
        ((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
         (org-mode)
+        (run-hook-with-args 'org-mu4e-compose-switch-org-mode-hook)
         (add-hook 'before-save-hook
                   #'org~mu4e-error-before-save-hook-fn
                   nil t)
@@ -204,6 +205,11 @@ or org-mode (when in the body)."
 
 (defun org~mu4e-error-before-save-hook-fn ()
   (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving"))
+
+(defcustom org-mu4e-compose-switch-org-mode-hook nil
+  "A hook to run when `org-mu4e-compose-org-mode' switch from
+`mu4e-compose-mode' to `org-mode'."
+  :type 'hook)
 
 (defun org-mu4e-compose-org-mode ()
   "Defines a pseudo-minor mode for mu4e-compose-mode.
