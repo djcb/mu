@@ -49,6 +49,7 @@
 (declare-function mu4e-view-mode "mu4e-view")
 (defvar gnus-icalendar-additional-identities)
 (defvar mu4e~headers-view-win)
+(defvar helm-comp-read-use-marked)
 
 ;;; Options
 
@@ -867,7 +868,7 @@ FUNC should be a function taking two arguments:
           (define-key map "y" 'mu4e-select-other-view)
 
           ;; attachments
-          (define-key map "e" (mu4e~native-def mu4e-view-save-attachment))
+          (define-key map "e" 'mu4e-view-save-attachment)
           (define-key map "o" (mu4e~native-def mu4e-view-open-attachment))
           (define-key map "A" (mu4e~native-def mu4e-view-attachment-action))
 
@@ -1393,7 +1394,53 @@ attachments, but as this is the default, you may not need it."
       (dolist (num attachnums)
         (mu4e-view-save-attachment-single msg num)))))
 
-(defalias #'mu4e-view-save-attachment #'mu4e-view-save-attachment-multi)
+(defun mu4e-view-save-attachment ()
+  "Save mime parts from current mu4e-view buffer."
+  (interactive)
+  (call-interactively
+   (if mu4e-view-use-gnus
+       #'mu4e-view-gnus-save-mime-parts
+     #'mu4e-view-save-attachment-multi)))
+
+(defun mu4e-view-gnus-save-mime-parts (&optional arg)
+  "Save mime parts from current mu4e gnus view buffer.
+
+When helm-mode is enabled provide completion on attachments and
+possibility to mark candidates to save, otherwise completion on
+attachments is done with `completing-read-multiple', in this case use
+\",\" to separate candidate, completion is provided after each \",\"."
+  (interactive "P")
+  (cl-assert (and (eq major-mode 'mu4e-view-mode)
+                  (derived-mode-p 'gnus-article-mode)))
+  (let ((handles '())
+        (files '())
+        (helm-comp-read-use-marked t)
+        (compfn (if helm-mode
+                    #'completing-read
+                  ;; Fallback to `completing-read-multiple' with poor
+                  ;; completion systems.
+                  #'completing-read-multiple))
+        dir)
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((handle (get-text-property (point) 'gnus-data)))
+          (when handle
+            (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr handle))))))
+              (when fname
+                (push `(,fname . ,handle) handles)
+                (push fname files)))))
+        (forward-line 1)))
+    (if files
+        (progn
+          (setq files (funcall compfn "Save part(s): " files)
+                dir (if arg
+                        (read-directory-name "Save to directory: ")
+                      mu4e-attachment-dir))
+          (cl-loop for (f . h) in handles
+                   when (member f files)
+                   do (mm-save-part-to-file h (expand-file-name f dir))))
+      (message "No attached files found"))))
 
 (defun mu4e-view-open-attachment (&optional msg attnum)
   "Open attachment number ATTNUM from MSG.
