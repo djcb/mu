@@ -388,7 +388,7 @@ article-mode."
                                             gnus-buttonized-mime-types)))
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (erase-buffer)
-    (insert-file-contents path)
+    (mm-insert-file-contents path nil nil nil nil t)
     (setq
      gnus-summary-buffer (get-buffer-create " *appease-gnus*")
      gnus-original-article-buffer (current-buffer))
