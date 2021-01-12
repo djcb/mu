@@ -387,12 +387,20 @@ article-mode."
                                                   "multipart/encrypted")
                                             gnus-buttonized-mime-types)))
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
-    (erase-buffer)
-    (mm-insert-file-contents path nil nil nil nil t)
+    (buffer-disable-undo)
+    (insert-file-contents-literally path nil nil nil t)
+    (mm-enable-multibyte)
     (setq
      gnus-summary-buffer (get-buffer-create " *appease-gnus*")
      gnus-original-article-buffer (current-buffer))
-    (run-hooks 'gnus-article-decode-hook)
+    (let* ((ct (mail-fetch-field "Content-Type"))
+           (ct (and ct (mail-header-parse-content-type ct)))
+           (charset (mail-content-type-get ct 'charset))
+           (charset (and charset (intern charset)))
+           (gnus-newsgroup-charset
+            (if (and charset (coding-system-p charset)) charset
+              (detect-coding-region (point-min) (point-max) t))))
+      (run-hooks 'gnus-article-decode-hook))
     (let ((mu4e~view-rendering t) ; customize gnus in mu4e
           (max-specpdl-size mu4e-view-max-specpdl-size)
           (gnus-blocked-images ".") ;; don't load external images.
@@ -403,7 +411,7 @@ article-mode."
       (gnus-article-prepare-display))
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
     (setq mu4e~view-message msg)
-    ;; `mu4e-view-mode' derive from `gnus-article-mode'. 
+    ;; `mu4e-view-mode' derive from `gnus-article-mode'.
     (mu4e-view-mode)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
