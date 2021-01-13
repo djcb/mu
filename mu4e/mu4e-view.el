@@ -996,7 +996,8 @@ FUNC should be a function taking two arguments:
   "Body of the mode-function."
   (use-local-map mu4e-view-mode-map)
   (mu4e-context-in-modeline)
-  (setq buffer-undo-list t);; don't record undo info
+  (buffer-disable-undo)
+  (setq show-trailing-whitespace nil)
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)
