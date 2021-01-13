@@ -1013,6 +1013,8 @@ Gnus' article-mode."
         (define-key mu4e-view-mode-map [menu-bar Article] nil)
         (define-key mu4e-view-mode-map [menu-bar post] nil)
         (define-key mu4e-view-mode-map [menu-bar commands] nil)
+        ;; Restore C-h b default behavior
+        (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
         (setq mu4e~view-buffer-name gnus-article-buffer)
         (mu4e~view-mode-body))
     (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
