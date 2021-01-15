@@ -268,7 +268,24 @@ Indexer::Private::start(const Indexer::Config& conf)
                                 g_warning ("failed to start scanner");
                                 goto leave;
                         }
-                        g_debug ("scanner finished");
+                        g_debug ("scanner finished with %zu file(s) in queue",
+                                 fq_.size());
+                }
+
+
+                {
+                        // now there may still be messages in the work queue...
+                        // finish those, but only for a while.
+                        const auto start{std::chrono::steady_clock::now()};
+                        while (!fq_.empty() && std::chrono::steady_clock::now() - start < 10s) {
+                                std::this_thread::sleep_for(100ms);
+                        }
+                }
+
+                if (!fq_.empty()) {
+                        g_warning ("scan takes too long; dropping %zu file(s) from queue",
+                                   fq_.size());
+                        fq_.clear();
                 }
 
                 if (conf_.cleanup) {

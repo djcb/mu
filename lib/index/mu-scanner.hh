@@ -65,7 +65,7 @@ public:
         ~Scanner();
 
         /**
-         * Start the scan; this is a blocking call than run until
+         * Start the scan; this is a blocking call than runs until
          * finished or (from another thread) stop() is called.
          *
          * @return true if starting worked; false otherwise
@@ -87,8 +87,8 @@ public:
         bool is_running() const;
 
 private:
-        struct				Private;
-        std::unique_ptr<Private>	priv_;
+        struct                          Private;
+        std::unique_ptr<Private>        priv_;
 };
 
 } // namespace Mu
