@@ -1910,9 +1910,16 @@ see @ref{Sorting and threading}.
 
 @t{mu4e} queries are the same as the ones that @t{mu find}
 understands@footnote{with the caveat that command-line queries are
-subject to the shell's interpretation before @t{mu} sees them}. Let's
-look at some examples here; you can consult the @code{mu-query} man page
-for the details.
+subject to the shell's interpretation before @t{mu} sees them}. You can
+consult the @code{mu-query} man page for the details.
+
+Additionally, @t{mu4e} supports @kbd{TAB}-completion for queries. There
+there is completion for all search keywords such as @code{and},
+@code{from:}, or @code{date:} and also for certain values, i.e., the
+possible values for @code{flag:}, @code{prio:}, @code{mime:}, and
+@code{maildir:}.
+
+Let's look at some examples here.
 
 @itemize
 

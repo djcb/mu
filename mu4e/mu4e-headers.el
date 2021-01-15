@@ -1551,6 +1551,43 @@ or `past'."
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
 
+(defconst mu4e--search-query-keywords
+  '("and" "or" "not"
+    "from:" "to:" "cc:" "bcc:" "contact:" "date:" "subject:" "body:"
+    "list:" "maildir:" "flag:" "mime:" "file:" "prio:" "tag:" "msgid:"
+    "size:" "embed:"))
+
+(defun mu4e--search-query-competion-at-point ()
+  (cond
+   ((not (looking-back "[:\"][^ \t]*"))
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (list (or (car bounds) (point))
+            (or (cdr bounds) (point))
+            mu4e--search-query-keywords)))
+   ((looking-back "flag:\\(\\w*\\)")
+    (list (match-beginning 1)
+          (match-end 1)
+          '("attach" "draft" "flagged" "list" "new" "passed" "replied"
+            "seen" "trashed" "unread" "encrypted" "signed")))
+   ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)")
+    (list (match-beginning 1)
+          (match-end 1)
+          (mu4e-get-maildirs)))
+   ((looking-back "prio:\\(\\w*\\)")
+    (list (match-beginning 1)
+          (match-end 1)
+          (list "high" "normal" "low")))
+   ((looking-back "mime:\\([a-zA-Z0-9/-]*\\)")
+    (list (match-beginning 1)
+          (match-end 1)
+          (mailcap-mime-types)))))
+
+(defvar mu4e-minibuffer-search-query-map
+  (let ((map (copy-keymap minibuffer-local-map)))
+    (define-key map (kbd "TAB") #'completion-at-point)
+    map)
+  "The keymap when reading a search query.")
+
 (defun mu4e-headers-search (&optional expr prompt edit
                                       ignore-history msgid show)
   "Search in the mu database for EXPR, and switch to the output
@@ -1570,7 +1607,12 @@ searching. If SHOW is non-nil, show the message with MSGID."
           (if edit
               (read-string prompt expr)
             (or expr
-                (read-string prompt nil 'mu4e~headers-search-hist)))))
+                (minibuffer-with-setup-hook
+                    (lambda ()
+                      (setq-local completion-at-point-functions
+                                  #'mu4e--search-query-competion-at-point)
+                      (use-local-map mu4e-minibuffer-search-query-map))
+                  (read-string prompt nil 'mu4e~headers-search-hist))))))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr ignore-history)
     (setq mu4e~headers-msgid-target msgid
