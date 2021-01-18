@@ -31,7 +31,7 @@
 (require 'cl-lib)
 (require 'fringe)
 (require 'hl-line)
-
+(require 'mailcap)
 (require 'mule-util) ;; seems _some_ people need this for truncate-string-ellipsis
 
 (require 'mu4e-utils)    ;; utility functions
@@ -1559,25 +1559,25 @@ or `past'."
 
 (defun mu4e--search-query-competion-at-point ()
   (cond
-   ((not (looking-back "[:\"][^ \t]*"))
+   ((not (looking-back "[:\"][^ \t]*" nil))
     (let ((bounds (bounds-of-thing-at-point 'word)))
       (list (or (car bounds) (point))
             (or (cdr bounds) (point))
             mu4e--search-query-keywords)))
-   ((looking-back "flag:\\(\\w*\\)")
+   ((looking-back "flag:\\(\\w*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
           '("attach" "draft" "flagged" "list" "new" "passed" "replied"
             "seen" "trashed" "unread" "encrypted" "signed")))
-   ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)")
+   ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
           (mu4e-get-maildirs)))
-   ((looking-back "prio:\\(\\w*\\)")
+   ((looking-back "prio:\\(\\w*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
           (list "high" "normal" "low")))
-   ((looking-back "mime:\\([a-zA-Z0-9/-]*\\)")
+   ((looking-back "mime:\\([a-zA-Z0-9/-]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
           (mailcap-mime-types)))))
