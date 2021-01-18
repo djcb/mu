@@ -115,6 +115,8 @@ it with org)."
   (call-interactively 'org-store-link)
   (org-capture))
 
+(make-obsolete 'org-mu4e-store-and-capture
+               'mu4e-org-store-and-capture "1.3.6")
 
 ;; install mu4e-link support.
 (org-link-set-parameters "mu4e"
