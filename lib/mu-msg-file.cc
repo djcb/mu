@@ -37,29 +37,29 @@
 using namespace Mu;
 
 static gboolean init_file_metadata (MuMsgFile *self, const char* path,
-				    const char *mdir, GError **err);
+                                    const char *mdir, GError **err);
 static gboolean init_mime_msg (MuMsgFile *msg, const char *path, GError **err);
 
 MuMsgFile*
 Mu::mu_msg_file_new (const char* filepath, const char *mdir, GError **err)
 {
-	MuMsgFile *self;
+        MuMsgFile *self;
 
-	g_return_val_if_fail (filepath, NULL);
+        g_return_val_if_fail (filepath, NULL);
 
-	self = g_new0(MuMsgFile, 1);
+        self = g_new0(MuMsgFile, 1);
 
-	if (!init_file_metadata (self, filepath, mdir, err)) {
-		mu_msg_file_destroy (self);
-		return NULL;
-	}
+        if (!init_file_metadata (self, filepath, mdir, err)) {
+                mu_msg_file_destroy (self);
+                return NULL;
+        }
 
-	if (!init_mime_msg (self, filepath, err)) {
-		mu_msg_file_destroy (self);
-		return NULL;
-	}
+        if (!init_mime_msg (self, filepath, err)) {
+                mu_msg_file_destroy (self);
+                return NULL;
+        }
 
-	return self;
+        return self;
 }
 
 void
@@ -116,6 +116,30 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 	return TRUE;
 }
 
+static char*
+calculate_sha1 (FILE *file)
+{
+        std::array<uint8_t, 4096> buf{};
+        char *sha1{};
+        GChecksum *checksum{g_checksum_new(G_CHECKSUM_SHA256)};
+
+        while (true) {
+                const auto n = ::fread(buf.data(), 1, buf.size(), file);
+                if (n == 0)
+                        break;
+                g_checksum_update (checksum, buf.data(), n);
+        }
+
+        if (::ferror(file))
+                g_warning ("error reading file");
+        else
+                sha1 = g_strdup(g_checksum_get_string(checksum));
+
+        g_checksum_free(checksum);
+
+        return sha1;
+}
+
 static GMimeStream*
 get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 {
@@ -140,6 +164,14 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 	}
 
 	return stream;
+        self->_sha1 = calculate_sha1(file);
+        if (!self->_sha1) {
+                ::fclose(file);
+                g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
+                             "failed to get sha-1 for %s", path);
+                return NULL;
+        }
+
 }
 
 static gboolean
@@ -649,16 +681,15 @@ address_type (MuMsgFieldId mfid)
 static gchar*
 get_msgid (MuMsgFile *self, gboolean *do_free)
 {
-	const char *msgid;
-
-	msgid = g_mime_message_get_message_id (self->_mime_msg);
-	if (msgid && strlen(msgid) < MU_STORE_MAX_TERM_LENGTH) {
-		return (char*)msgid;
-	} else { /* if there is none, fake it */
-		*do_free = TRUE;
-		return g_strdup_printf ("%016" PRIx64  "@fake-msgid",
-					mu_util_get_hash (self->_path));
-	}
+        const char *msgid{g_mime_message_get_message_id (self->_mime_msg)};
+        if (msgid && strlen(msgid) < MU_STORE_MAX_TERM_LENGTH) {
+                *do_free = FALSE;
+                return (char*)msgid;
+        }
+        // if there's no valid message-id, synthesize one;
+        // based on the contents so it stays valid if moved around.
+        *do_free = TRUE;
+        return g_strdup_printf ("%s@mu", self->_sha1);
 }
 
 char*

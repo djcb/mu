@@ -36,6 +36,7 @@ struct MuMsgFile {
 	size_t		 _size;
 	char	         *_path;
 	char		 *_maildir;
+        char             *_sha1;
 };
 
 
