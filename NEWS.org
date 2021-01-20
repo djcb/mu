@@ -6,8 +6,8 @@
 *** mu
 
     - Where available (and with suitable ~libglib~), log to the systemd journal
-      instead of a ~~/.cache/mu.log~. The ~--debug~ option to ~mu~ increases the
-      amount that is logged.
+      instead of a ~~/.cache/mu.log~. The ~--debug~ option to ~mu~ much
+      increases the amount that is logged.
 
     - Follow symlinks in maildirs, and support moving messsages across
       filesystems (but note that that is quite a bit slower than the
@@ -29,6 +29,11 @@
     - The personal addresses (as per ~--my-address=~ for ~mu init~) can now also
       include regular expressions (basic POSIX); wrap the expression in ~/~, e.g.,
       ~--my-address='/.*@example.*/~'.
+
+    - Modernized the querying/threading machinery; this is makes some old code a
+      lot easier to understand and maintain, and even while not an explicit
+      goal, is also faster (e.g. the threading seems to be roughly twice as
+      fast)
 
 *** mu4e
 
@@ -52,9 +57,11 @@
     - Better alignment in headers-buffers; this looks nicer, but is also a bit
       slower, hence you need to enable ~mu4e-headers-precise-alignment~ for this.
 
-    - Support mu's new regexp-based personal addresses, and add
+    - Support ~mu~'s new regexp-based personal addresses, and add
       ~mu4e-personal-address-p~ to check whether a given string matches a personal
       address.
+
+    - Completion for writing ~mu~ queries
 
 * 1.4 (released, as of April 18 2020)
 
