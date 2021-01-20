@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -244,28 +244,24 @@ one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 
 ;;;; Graph drawing
 
-(defvar mu4e-headers-thread-child-prefix '("├>" . "┣▶ ")
+(defvar mu4e-headers-thread-root-prefix '("* " . "□ ")
+  "Prefix for root messages.")
+(defvar mu4e-headers-thread-child-prefix '("|>" . "│ ")
   "Prefix for messages in sub threads that do have a following sibling.")
-
-(defvar mu4e-headers-thread-last-child-prefix '("└>" . "┗▶ ")
+(defvar mu4e-headers-thread-first-child-prefix '("o " . "⚬ ")
   "Prefix for messages in sub threads that do not have a following sibling.")
-
-(defvar mu4e-headers-thread-connection-prefix '("│" . "┃ ")
+(defvar mu4e-headers-thread-last-child-prefix '("L" . "└ ")
+  "Prefix for messages in sub threads that do not have a following sibling.")
+(defvar mu4e-headers-thread-connection-prefix '("|" . "│ ")
   "Prefix to connect sibling messages that do not follow each other.
-
 This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.")
-
 (defvar mu4e-headers-thread-blank-prefix '(" " . "  ")
   "Prefix to separate non connected messages.
-
 This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.")
-
-(defvar mu4e-headers-thread-orphan-prefix '("┬>" . "┳▶ ")
+(defvar mu4e-headers-thread-orphan-prefix '("<>" . "♢ ")
   "Prefix for orphan messages with siblings.")
-
-(defvar mu4e-headers-thread-single-orphan-prefix '("─>" . "━▶ ")
+(defvar mu4e-headers-thread-single-orphan-prefix '("<>" . "♢ ")
   "Prefix for orphan messages with no siblings.")
-
 (defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
   "Prefix for duplicate messages.")
 
