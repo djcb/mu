@@ -23,9 +23,11 @@
 #include <config.h>
 #endif /*HAVE_CONFIG_H*/
 
-#include "mu-util.h"
-#define _XOPEN_SOURCE 500
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE (500)
+#endif /*_XOPEN_SOURCE*/
 
+#include "mu-util.h"
 #ifdef HAVE_WORDEXP_H
 #include <wordexp.h> /* for shell-style globbing */
 #endif /*HAVE_WORDEXP_H*/

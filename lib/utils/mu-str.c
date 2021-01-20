@@ -22,6 +22,9 @@
 #include "config.h"
 #endif /*HAVE_CONFIG_H*/
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE (500)
+#endif /*_XOPEN_SOURCE*/
 
 #include <glib.h>
 #include <string.h>
@@ -38,20 +41,13 @@ mu_str_size_s  (size_t s)
 	static char	 buf[32];
 	char		*tmp;
 
-	tmp = g_format_size_for_display ((goffset)s);
+	tmp = g_format_size((goffset)s);
 	strncpy (buf, tmp, sizeof(buf));
 	buf[sizeof(buf) -1] = '\0'; /* just in case */
 	g_free (tmp);
 
 	return buf;
 }
-
-char*
-mu_str_size (size_t s)
-{
-	return g_strdup (mu_str_size_s(s));
-}
-
 
 char*
 mu_str_summarize (const char* str, size_t max_lines)
@@ -93,34 +89,6 @@ mu_str_summarize (const char* str, size_t max_lines)
 	summary[j] = '\0';
 	return summary;
 }
-
-
-
-
-char*
-mu_str_replace (const char *str, const char *substr, const char *repl)
-{
-	GString		*gstr;
-	const char	*cur;
-
-	g_return_val_if_fail (str, NULL);
-	g_return_val_if_fail (substr, NULL);
-	g_return_val_if_fail (repl, NULL);
-
-	gstr = g_string_sized_new (2 * strlen (str));
-
-	for (cur = str; *cur; ++cur) {
-		if (g_str_has_prefix (cur, substr)) {
-			g_string_append (gstr, repl);
-			cur += strlen (substr) - 1;
-		} else
-			g_string_append_c (gstr, *cur);
-	}
-
-	return g_string_free (gstr, FALSE);
-}
-
-
 
 char*
 mu_str_from_list (const GSList *lst, char sepa)
@@ -177,69 +145,6 @@ mu_str_to_list (const char *str, char sepa, gboolean strip)
 	g_strfreev (strs);
 
 	return lst;
-}
-
-GSList*
-mu_str_esc_to_list (const char *strings)
-{
-	GSList *lst;
-	GString *part;
-	unsigned u;
-	gboolean quoted, escaped;
-
-	g_return_val_if_fail (strings, NULL);
-
-	part = g_string_new (NULL);
-
-	for (u = 0, lst = NULL, quoted = FALSE, escaped = FALSE;
-	     u != strlen (strings); ++u) {
-
-		char kar;
-		kar = strings[u];
-
-		if (kar == '\\') {
-			if (escaped)
-				g_string_append_c (part, '\\');
-			escaped = !escaped;
-			continue;
-		}
-
-		if (quoted && kar != '"') {
-			g_string_append_c (part, kar);
-			continue;
-		}
-
-		switch (kar) {
-		case '"':
-			if (!escaped)
-				quoted = !quoted;
-			else
-				g_string_append_c (part, kar);
-			continue;
-		case ' ':
- 			if (part->len > 0) {
-				lst = g_slist_prepend
-					(lst, g_string_free (part, FALSE));
-				part = g_string_new (NULL);
-			}
-			continue;
-		default:
-			g_string_append_c (part, kar);
-		}
-	}
-
-	if (part->len)
-		lst = g_slist_prepend (lst, g_string_free (part, FALSE));
-
-	return g_slist_reverse (lst);
-}
-
-
-void
-mu_str_free_list (GSList *lst)
-{
-	g_slist_foreach (lst, (GFunc)g_free, NULL);
-	g_slist_free (lst);
 }
 
 
@@ -304,34 +209,6 @@ mu_str_fullpath_s (const char* path, const char* name)
 
 	return buf;
 }
-
-
-char*
-mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
-{
-	const char* cur;
-	GString *tmp;
-
-	g_return_val_if_fail (str, NULL);
-
-	tmp = g_string_sized_new (2 * strlen(str));
-
-	if (in_quotes)
-		g_string_append_c (tmp, '"');
-
-	for (cur = str; *cur; ++cur)
-		switch (*cur) {
-		case '\\': tmp = g_string_append   (tmp, "\\\\"); break;
-		case '"':  tmp = g_string_append   (tmp, "\\\""); break;
-		default:   tmp = g_string_append_c (tmp, *cur);
-		}
-
-	if (in_quotes)
-		g_string_append_c (tmp, '"');
-
-	return g_string_free (tmp, FALSE);
-}
-
 
 
 /* turn \0-terminated buf into ascii (which is a utf8 subset); convert

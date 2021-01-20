@@ -116,16 +116,11 @@ search (const char* query, unsigned expected)
 static void
 test_mu_index (void)
 {
-	MuStore *store;
-	gchar *xpath;
-
-	xpath = g_strdup_printf ("%s%c%s", DBPATH, G_DIR_SEPARATOR, "xapian");
+	gchar *xpath{g_strdup_printf ("%s%c%s", DBPATH, G_DIR_SEPARATOR, "xapian")};
 	g_printerr ("*** %s\n", DBPATH);
-	store = mu_store_new_readable (xpath, NULL);
-	g_assert (store);
+	Mu::Store store{xpath, true};
 
-	g_assert_cmpuint (mu_store_count (store, NULL), ==, 13);
-	mu_store_unref (store);
+	g_assert_cmpuint (store.size(), ==, 13);
 
 	g_free (xpath);
 }
@@ -348,8 +343,8 @@ test_mu_extract_01 (void)
 			 ==,
 			 "MIME-parts in this message:\n"
 			 "  1 <none> text/plain [<none>] (27 bytes)\n"
-			 "  2 sittingbull.jpg image/jpeg [inline] (23.3 KB)\n"
-			 "  3 custer.jpg image/jpeg [inline] (21.1 KB)\n");
+			 "  2 sittingbull.jpg image/jpeg [inline] (23.9\302\240kB)\n"
+			 "  3 custer.jpg image/jpeg [inline] (21.6\302\240kB)\n");
 
 	/* we expect zero lines of error output */
 	g_assert_cmpuint (newlines_in_output(erroutput),==,0);

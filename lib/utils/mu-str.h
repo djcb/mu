@@ -40,8 +40,6 @@ G_BEGIN_DECLS
  * 10-based SI units, _not_ the powers-of-2 based ones.
  *
  * mu_str_size_s returns a ptr to a static buffer,
- * while mu_str_size returns dynamically allocated
- * memory that must be freed after use.
  *
  * @param t the size as an size_t
  *
@@ -49,20 +47,6 @@ G_BEGIN_DECLS
  * for what to do with it
  */
 const char* mu_str_size_s  (size_t s);
-char*       mu_str_size    (size_t s) G_GNUC_WARN_UNUSED_RESULT;
-
-
-/**
- * Replace all occurrences of substr in str with repl
- *
- * @param str a string
- * @param substr some string to replace
- * @param repl a replacement string
- *
- * @return a newly allocated string with the substr replaced by repl; free with g_free
- */
-char *mu_str_replace (const char *str, const char *substr, const char *repl);
-
 
 /**
  * get a 'summary' of the string, ie. the first /n/ lines of the
@@ -86,18 +70,6 @@ char* mu_str_summarize (const char* str, size_t max_lines)
  * @return the path as a statically allocated buffer. don't free.
  */
 const char* mu_str_fullpath_s (const char* path, const char* name);
-
-/**
- * escape a string like a string literal in C; ie. replace \ with \\,
- * and " with \"
- *
- * @param str a non-NULL str
- * @param in_quotes whether the result should be enclosed in ""
- *
- * @return the escaped string, newly allocated (free with g_free)
- */
-char* mu_str_escape_c_literal (const gchar* str, gboolean in_quotes)
-	G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * turn a string into plain ascii by replacing each non-ascii
@@ -163,23 +135,11 @@ char* mu_str_from_list (const GSList *lst, char sepa);
 GSList* mu_str_to_list (const char *str, char sepa, gboolean strip);
 
 /**
- * convert a string (with possible escaping) to a list. list items are
- * separated by one or more spaces. list items can be quoted (using
- * '"').
- *
- * @param str a string
- *
- * @return a list of elements or NULL in case of error, free with
- * mu_str_free_list
- */
-GSList* mu_str_esc_to_list (const char *str);
-
-/**
  * free a GSList consisting of allocated strings
  *
  * @param lst a GSList
  */
-void mu_str_free_list (GSList *lst);
+#define mu_str_free_list(lst) g_slist_free_full(lst, g_free)
 
 /**
  * strip the subject of Re:, Fwd: etc.

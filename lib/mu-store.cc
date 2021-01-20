@@ -59,10 +59,6 @@ constexpr auto DefaultMaxMessageSize = 100'000'000U;
 
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 
-extern "C" {
-static unsigned add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err);
-}
-
 /* we cache these prefix strings, so we don't have to allocate them all
  * the time; this should save 10-20 string allocs per message */
 G_GNUC_CONST static const std::string&
@@ -239,6 +235,9 @@ struct Store::Private {
                 return make_metadata(path);
         }
 
+        Xapian::docid add_or_update_msg (Xapian::docid docid, MuMsg *msg, GError **err);
+        Xapian::Document new_doc_from_message (MuMsg *msg);
+
         const bool               read_only_{};
         std::unique_ptr<Xapian::Database> db_;
 
@@ -384,8 +383,7 @@ Store::add_message (const std::string& path)
                 throw Error{Error::Code::Message, "failed to create message: %s",
                                 gerr ? gerr->message : "something went wrong"};
 
-        auto store{reinterpret_cast<MuStore*>(this)}; // yuk.
-	const auto docid{add_or_update_msg (store, 0, msg, &gerr)};
+	const auto docid{priv_->add_or_update_msg (0, msg, &gerr)};
 	mu_msg_unref (msg);
         if (G_UNLIKELY(docid == MU_STORE_INVALID_DOCID))
                 throw Error{Error::Code::Message, "failed to add message: %s",
@@ -401,10 +399,8 @@ Store::add_message (const std::string& path)
 bool
 Store::update_message (MuMsg *msg, unsigned docid)
 {
-        auto store{reinterpret_cast<MuStore*>(this)}; // yuk.
-
         GError *gerr{};
-	const auto docid2{add_or_update_msg (store, docid, msg, &gerr)};
+	const auto docid2{priv_->add_or_update_msg (docid, msg, &gerr)};
 
         if (G_UNLIKELY(docid != docid2))
             throw Error{Error::Code::Internal, "failed to update message",
@@ -587,112 +583,6 @@ Store::commit () try
         priv_->commit();
 
 } MU_XAPIAN_CATCH_BLOCK;
-
-////////////////////////////////////////////////////////////////////////////////
-// C compat
-extern "C" {
-
-
-struct MuStore_ { Mu::Store* self; };
-
-
-static const Mu::Store*
-self (const MuStore *store)
-{
-        if (!store) {
-                g_error ("invalid store"); // terminates
-                return {};
-        }
-
-        return reinterpret_cast<const Mu::Store*>(store);
-}
-
-static Mu::Store*
-mutable_self (MuStore *store)
-{
-        if (!store) {
-                g_error ("invalid store"); // terminates
-                return {};
-        }
-
-        auto s = reinterpret_cast<Mu::Store*>(store);
-        if (s->metadata().read_only) {
-                g_error ("store is read-only"); // terminates
-                return {};
-        }
-
-        return s;
-}
-
-
-MuStore*
-mu_store_new_readable (const char* xpath, GError **err)
-{
-	g_return_val_if_fail (xpath, NULL);
-
-	g_debug ("opening database at %s (read-only)", xpath);
-
-	try {
-		return reinterpret_cast<MuStore*>(new Store (xpath));
-
-        } catch (const Mu::Error& me) {
-                g_warning ("failed to open database: %s", me.what());
-        } catch (const Xapian::Error& dbe) {
-                g_warning ("failed to open database @ %s: %s", xpath,
-                           dbe.get_error_string() ? dbe.get_error_string() : "something went wrong");
-        }
-
-        g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_XAPIAN_CANNOT_OPEN,
-                     "failed to open database @ %s", xpath);
-
-        return NULL;
-}
-
-
-MuStore*
-mu_store_ref (MuStore* store)
-{
-        g_return_val_if_fail (store, NULL);
-        g_return_val_if_fail (self(store)->priv()->ref_count_ > 0, NULL);
-
-        ++self(store)->priv()->ref_count_;
-        return store;
-}
-
-
-MuStore*
-mu_store_unref (MuStore* store)
-{
-        g_return_val_if_fail (store, NULL);
-        g_return_val_if_fail (self(store)->priv()->ref_count_ > 0, NULL);
-
-	auto me = reinterpret_cast<Mu::Store*>(store);
-
-        if (--me->priv()->ref_count_ == 0)
-                delete me;
-
-        return NULL;
-}
-
-unsigned
-mu_store_count (const MuStore *store, GError **err)
-{
-	g_return_val_if_fail (store, (unsigned)-1);
-
-	try {
-		return self(store)->size();
-
- 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN,
-					       (unsigned)-1);
-}
-
-const char*
-mu_store_schema_version (const MuStore *store)
-{
-	g_return_val_if_fail (store, NULL);
-
-	return self(store)->metadata().schema_version.c_str();
-}
 
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -958,7 +848,7 @@ add_terms_values_body (Xapian::Document& doc, MuMsg *msg,
 struct MsgDoc {
 	Xapian::Document *_doc;
 	MuMsg		 *_msg;
-	Store            *_store;
+	Store::Private    *_priv;
 	/* callback data, to determine whether this message is 'personal' */
 	gboolean          _personal;
 	const StringVec  *_my_addresses;
@@ -1085,7 +975,7 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 		add_term(*msgdoc->_doc, pfx + flat);
 		add_address_subfields (*msgdoc->_doc, contact->email, pfx);
 		/* store it also in our contacts cache */
-		auto& contacts = msgdoc->_store->priv()->contacts_;
+		auto& contacts{msgdoc->_priv->contacts_};
                 contacts.add(Mu::ContactInfo(contact->full_address,
                                              contact->email,
                                              contact->name ? contact->name : "",
@@ -1095,11 +985,12 @@ each_contact_info (MuMsgContact *contact, MsgDoc *msgdoc)
 
 	return TRUE;
 }
-static Xapian::Document
-new_doc_from_message (MuStore *store, MuMsg *msg)
+
+Xapian::Document
+Store::Private::new_doc_from_message (MuMsg *msg)
 {
 	Xapian::Document doc;
-	MsgDoc docinfo = {&doc, msg, mutable_self(store), 0, NULL};
+	MsgDoc docinfo = {&doc, msg, this, 0, NULL};
 
 	mu_msg_field_foreach ((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 
@@ -1112,7 +1003,7 @@ new_doc_from_message (MuStore *store, MuMsg *msg)
                         else if (msgdoc->_personal)
                                 return TRUE; // already deemed personal
 
-                        if (msgdoc->_store->contacts().is_personal(contact->email))
+                        if (msgdoc->_priv->contacts_.is_personal(contact->email))
                                 msgdoc->_personal = true; // this one's personal.
 
                         return TRUE;
@@ -1150,19 +1041,14 @@ update_threading_info (MuMsg *msg, Xapian::Document& doc)
 }
 
 
-static unsigned
-add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
+Xapian::docid
+Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg, GError **err)
 {
-	g_return_val_if_fail (store, MU_STORE_INVALID_DOCID);
 	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
 
 	try {
-		Xapian::docid id;
-		Xapian::Document doc (new_doc_from_message(store, msg));
+		Xapian::Document doc (new_doc_from_message(msg));
 		const std::string term (get_uid_term (mu_msg_get_path(msg)));
-
-                auto self = mutable_self(store);
-                auto wdb  = self->priv()->writable_db();
 
 		add_term (doc, term);
 
@@ -1170,18 +1056,14 @@ add_or_update_msg (MuStore *store, unsigned docid, MuMsg *msg, GError **err)
 		if (mu_msg_get_msgid (msg))
 			update_threading_info (msg, doc);
 
-		if (docid == 0)
-			id = wdb.replace_document (term, doc);
-		else {
-			wdb.replace_document (docid, doc);
-			id = docid;
-		}
 
-		return id;
+		if (docid == 0)
+			return writable_db().replace_document (term, doc);
+
+                writable_db().replace_document (docid, doc);
+                return docid;
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
 
 	return MU_STORE_INVALID_DOCID;
 }
-
-} // extern C

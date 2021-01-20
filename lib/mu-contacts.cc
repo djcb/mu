@@ -238,7 +238,7 @@ Contacts::add (ContactInfo&& ci)
 
                 if (ci.last_seen > ci_existing.last_seen) { // update.
                         wash(ci.name);
-                        ci_existing.name = std::move(ci.name);
+                        ci_existing.name  = std::move(ci.name);
                         ci_existing.email = std::move(ci.email);
 
                         wash(ci.full_address);

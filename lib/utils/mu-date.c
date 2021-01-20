@@ -39,7 +39,11 @@ mu_date_str_s (const char* frm, time_t t)
 	g_return_val_if_fail (frm, NULL);
 
 	tmbuf = localtime(&t);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 	len = strftime (buf, sizeof(buf) - 1, frm, tmbuf);
+#pragma GCC diagnostic pop
+
 	if (len == 0)
 		return ""; /* not necessarily an error... */
 

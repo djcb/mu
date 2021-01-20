@@ -32,73 +32,6 @@
 
 #include "mu-str.h"
 
-
-static void
-test_mu_str_size_01 (void)
-{
-	struct lconv *lc;
-	char *tmp2;
-
-	lc = localeconv();
-
-	g_assert_cmpstr (mu_str_size_s (0), ==, "0 bytes");
-
-	tmp2 = g_strdup_printf ("97%s7 KB", lc->decimal_point);
-	g_assert_cmpstr (mu_str_size_s (100000), ==, tmp2);
-	g_free (tmp2);
-
-	tmp2 = g_strdup_printf ("1%s0 MB", lc->decimal_point);
-	g_assert_cmpstr (mu_str_size_s (1100*1000), ==,  tmp2);
-	g_free (tmp2);
-}
-
-
-
-static void
-test_mu_str_size_02 (void)
-{
-	struct lconv *lc;
-	char *tmp1, *tmp2;
-
-	lc = localeconv();
-
-	tmp2 = g_strdup_printf ("1%s0 MB", lc->decimal_point);
-	tmp1 = mu_str_size (999999);
-	g_assert_cmpstr (tmp1, !=, tmp2);
-
-	g_free (tmp1);
-	g_free (tmp2);
-}
-
-static void
-test_mu_str_esc_to_list (void)
-{
-	int			i;
-	struct {
-		const char*  str;
-		const char* strs[3];
-	} strings [] = {
-		{ "maildir:foo",
-		  {"maildir:foo", NULL, NULL}},
-		{ "maildir:sent items",
-		  {"maildir:sent", "items", NULL}},
-		{ "\"maildir:sent items\"",
-		  {"maildir:sent items", NULL, NULL}},
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(strings); ++i) {
-		GSList *lst, *cur;
-		unsigned u;
-		lst = mu_str_esc_to_list (strings[i].str);
-		for (cur = lst, u = 0; cur; cur = g_slist_next(cur), ++u)
-			g_assert_cmpstr ((const char*)cur->data,==,
-					 strings[i].strs[u]);
-		mu_str_free_list (lst);
-	}
-}
-
-
-
 static void
 assert_cmplst (GSList *lst, const char *items[])
 {
@@ -189,33 +122,6 @@ test_mu_str_to_list_strip (void)
 		mu_str_free_list (lst);
 }
 
-
-static void
-test_mu_str_replace (void)
-{
-	unsigned u;
-	struct {
-		const char*  str;
-		const char* sub;
-		const char *repl;
-		const char *exp;
-	} strings [] = {
-		{ "hello", "ll", "xx", "hexxo" },
-		{ "hello", "hello", "hi", "hi" },
-		{ "hello", "foo", "bar", "hello" }
-	};
-
-	for (u = 0; u != G_N_ELEMENTS(strings); ++u) {
-		char *res;
-		res = mu_str_replace (strings[u].str,
-				      strings[u].sub,
-				      strings[u].repl);
-		g_assert_cmpstr (res,==,strings[u].exp);
-		g_free (res);
-	}
-}
-
-
 static void
 test_mu_str_remove_ctrl_in_place (void)
 {
@@ -248,24 +154,12 @@ main (int argc, char *argv[])
 
 	g_test_init (&argc, &argv, NULL);
 
-	/* mu_str_size */
-	g_test_add_func ("/mu-str/mu-str-size-01",
-			 test_mu_str_size_01);
-	g_test_add_func ("/mu-str/mu-str-size-02",
-			 test_mu_str_size_02);
-
 	g_test_add_func ("/mu-str/mu-str-from-list",
 			 test_mu_str_from_list);
 	g_test_add_func ("/mu-str/mu-str-to-list",
 			 test_mu_str_to_list);
 	g_test_add_func ("/mu-str/mu-str-to-list-strip",
 			 test_mu_str_to_list_strip);
-
-	g_test_add_func ("/mu-str/mu-str-replace",
-			 test_mu_str_replace);
-
-	g_test_add_func ("/mu-str/mu-str-esc-to-list",
-			 test_mu_str_esc_to_list);
 
 	g_test_add_func ("/mu-str/mu_str_remove_ctrl_in_place",
 			 test_mu_str_remove_ctrl_in_place);

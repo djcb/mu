@@ -165,7 +165,7 @@ process_field (const std::string& field, Flags flags)
                 add_field (fields, MU_MSG_FIELD_ID_SUBJECT);
                 add_field (fields, MU_MSG_FIELD_ID_BODY_TEXT);
         } else {
-                const auto id = field_id (field.c_str());
+                const auto id = field_id (field);
                 if (id != MU_MSG_FIELD_ID_NONE)
                         add_field (fields, id);
         }
@@ -176,7 +176,7 @@ process_field (const std::string& field, Flags flags)
 static bool
 is_range_field (const std::string& field)
 {
-        const auto id = field_id (field.c_str());
+        const auto id = field_id (field);
         if (id == MU_MSG_FIELD_ID_NONE)
                 return false;
         else
@@ -192,7 +192,7 @@ static MyRange
 process_range (const std::string& field, const std::string& lower,
                const std::string& upper)
 {
-        const auto id = field_id (field.c_str());
+        const auto id = field_id (field);
         if (id == MU_MSG_FIELD_ID_NONE)
                 return { lower, upper };
 
@@ -213,7 +213,7 @@ process_range (const std::string& field, const std::string& lower,
 std::vector<std::string>
 Parser::Private::process_regex (const std::string& field, const std::regex& rx) const
 {
-        const auto id = field_id (field.c_str());
+        const auto id = field_id (field);
         if (id == MU_MSG_FIELD_ID_NONE)
                 return {};
 

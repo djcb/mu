@@ -135,8 +135,8 @@ mu_msg_destroy (MuMsg *self)
 
 	{ /* cleanup the strings / lists we stored */
 	 	mu_str_free_list (self->_free_later_str);
-		g_slist_foreach (self->_free_later_lst,
-				 (GFunc)mu_str_free_list, NULL);
+		for (auto cur = self->_free_later_lst; cur; cur = g_slist_next(cur))
+			g_slist_free_full((GSList*)cur->data, g_free);
 		g_slist_free (self->_free_later_lst);
 	}
 

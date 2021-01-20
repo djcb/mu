@@ -65,57 +65,6 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath,
 			    GError **err);
 
 /**
- * MuMaildirWalkMsgCallback -- callback function for
- * mu_path_walk_maildir; see the documentation there. It will be
- * called for each message found, with fullpath containing the full
- * path to the message, mdir containing the maildir -- that is, when
- * indexing ~/Maildir, a message ~/Maildir/foo/bar/cur/msg would have
- * the maildir "foo/bar". Then, the information from 'stat' of this
- * file (see stat(3)), and a user_data pointer
- */
-typedef MuError (*MuMaildirWalkMsgCallback)
-  (const char* fullpath, const char* mdir, struct stat *statinfo,
-   void *user_data);
-
-/**
- * MuPathWalkDirCallback -- callback function for mu_path_walk_maildir; see the
- * documentation there. It will be called each time a dir is entered or left,
- * with 'enter' being TRUE upon entering, FALSE otherwise
- */
-typedef MuError (*MuMaildirWalkDirCallback)
-     (const char* fullpath, gboolean enter, void *user_data);
-
-/**
- * start a recursive walk of a maildir; for each file found, we call
- * callback with the path (with the Maildir path of scanner_new as
- * root), the filename, the timestamp (mtime) of the file,and the
- * *data pointer, for user data.  dot-files are ignored, as well as
- * files outside cur/ and new/ dirs and unreadable files; however,
- * dotdirs are visited (ie. '.dotdir/cur'), so this enables Maildir++.
- * (http://www.inter7.com/courierimap/README.maildirquota.html, search
- * for 'Mission statement'). In addition, dirs containing a file named
- * '.noindex' are ignored, as are their subdirectories, and dirs
- * containing a file called '.noupdate' are ignored, unless @param
- * full is TRUE.
- *
- * mu_walk_maildir stops if the callbacks return something different
- * from MU_OK. For example, it can return MU_STOP to stop the scan, or
- * some error.
- *
- * @param path the maildir path to scan
- * @param cb_msg the callback function called for each msg
- * @param cb_dir the callback function called for each dir
- * @param full whether do a full scan, i.e., to ignore .noupdate files
- * @param data user data pointer
- *
- * @return a scanner result; MU_OK if everything went ok,
- * MU_STOP if we want to stop, or MU_ERROR in
- * case of error
- */
-MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
-			 MuMaildirWalkDirCallback cb_dir, gboolean full,
-			 void *data);
-/**
  * recursively delete all the symbolic links in a directory tree
  *
  * @param dir top dir
@@ -125,8 +74,6 @@ MuError mu_maildir_walk (const char *path, MuMaildirWalkMsgCallback cb_msg,
  * @return TRUE if it worked, FALSE in case of error
  */
 gboolean mu_maildir_clear_links (const char* dir, GError **err);
-
-
 
 /**
  * whether the directory path ends in '/cur/' or '/new/'
