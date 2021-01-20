@@ -74,7 +74,6 @@ test_cxxflags=                                                  \
 	${AM_CXXFLAGS}                                          \
 	-DMU_TESTMAILDIR=\"${abs_top_srcdir}/lib/testdir\"      \
 	-DMU_TESTMAILDIR2=\"${abs_top_srcdir}/lib/testdir2\"    \
-	-DMU_TESTMAILDIR3=\"${abs_top_srcdir}/lib/testdir3\"    \
 	-DMU_TESTMAILDIR4=\"${abs_top_srcdir}/lib/testdir4\"    \
 	-DMU_PROGRAM=\"${abs_top_builddir}/mu/mu\"              \
 	-DABS_CURDIR=\"${abs_builddir}\"                        \
@@ -94,11 +93,6 @@ TEST_PROGS += test-cmd-cfind
 test_cmd_cfind_SOURCES= test-mu-cmd-cfind.cc
 test_cmd_cfind_CXXFLAGS=$(test_cxxflags)
 test_cmd_cfind_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
-
-TEST_PROGS += test-threads
-test_threads_SOURCES= test-mu-threads.cc
-test_threads_CXXFLAGS=$(test_cxxflags)
-test_threads_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TESTS=$(TEST_PROGS)
 include $(top_srcdir)/aminclude_static.am

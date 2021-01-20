@@ -1,4 +1,4 @@
-## Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2010-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ SUBDIRS= utils index
 TESTDEFS=                                                       \
         -DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"              \
         -DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"            \
-        -DMU_TESTMAILDIR3=\"${abs_srcdir}/testdir3\"            \
         -DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"            \
         -DABS_CURDIR=\"${abs_builddir}\"                        \
         -DABS_SRCDIR=\"${abs_srcdir}\"
@@ -164,11 +163,6 @@ TEST_PROGS+=test-tokenizer
 test_tokenizer_SOURCES=test-tokenizer.cc
 test_tokenizer_LDADD=libtestmucommon.la
 
-TEST_PROGS+=test-threader
-test_threader_SOURCES=mu-query-threader.cc
-test_threader_LDADD=libtestmucommon.la
-test_threader_CXXFLAGS=$(AM_CXXFLAGS) -DBUILD_TESTS
-
 TEST_PROGS+=test-threads
 test_threads_SOURCES=mu-query-threads.cc
 test_threads_LDADD=libtestmucommon.la
@@ -235,50 +229,6 @@ EXTRA_DIST+=                                                    \
         testdir2/wom_bat/cur/atomic                             \
         testdir2/wom_bat/cur/rfc822.1                           \
         testdir2/wom_bat/cur/rfc822.2                           \
-        testdir3/cycle                                          \
-        testdir3/cycle/new/.noindex                             \
-        testdir3/cycle/cur/rogue0                               \
-        testdir3/cycle/cur/cycle0                               \
-        testdir3/cycle/cur/cycle0.0                             \
-        testdir3/cycle/cur/cycle0.0.0                           \
-        testdir3/cycle/tmp/.noindex                             \
-        testdir3/tree/new/.noindex                              \
-        testdir3/tree/cur/child0.0                              \
-        testdir3/tree/cur/child4.0                              \
-        testdir3/tree/cur/root2                                 \
-        testdir3/tree/cur/root1                                 \
-        testdir3/tree/cur/child3.0.0.0.0                        \
-        testdir3/tree/cur/root0                                 \
-        testdir3/tree/cur/child2.0.0                            \
-        testdir3/tree/cur/child0.1                              \
-        testdir3/tree/cur/child0.1.0                            \
-        testdir3/tree/cur/child4.1                              \
-        testdir3/tree/tmp/.noindex                              \
-        testdir3/sort/1st-child-promotes-thread/cur/A           \
-        testdir3/sort/1st-child-promotes-thread/cur/B           \
-        testdir3/sort/1st-child-promotes-thread/cur/C           \
-        testdir3/sort/1st-child-promotes-thread/cur/D           \
-        testdir3/sort/2nd-child-promotes-thread/cur/A           \
-        testdir3/sort/2nd-child-promotes-thread/cur/B           \
-        testdir3/sort/2nd-child-promotes-thread/cur/C           \
-        testdir3/sort/2nd-child-promotes-thread/cur/D           \
-        testdir3/sort/2nd-child-promotes-thread/cur/E           \
-        testdir3/sort/child-does-not-promote-thread/cur/A       \
-        testdir3/sort/child-does-not-promote-thread/cur/X       \
-        testdir3/sort/child-does-not-promote-thread/cur/Y       \
-        testdir3/sort/child-does-not-promote-thread/cur/Z       \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/A  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/B  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/C  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/D  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/E  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/F  \
-        testdir3/sort/grandchild-promotes-only-subthread/cur/G  \
-        testdir3/sort/grandchild-promotes-thread/cur/A          \
-        testdir3/sort/grandchild-promotes-thread/cur/B          \
-        testdir3/sort/grandchild-promotes-thread/cur/C          \
-        testdir3/sort/grandchild-promotes-thread/cur/D          \
-        testdir3/sort/grandchild-promotes-thread/cur/E          \
         testdir4/1220863087.12663_19.mindcrime!2,S              \
         testdir4/1220863042.12663_1.mindcrime!2,S               \
         testdir4/1283599333.1840_11.cthulhu!2,                  \
