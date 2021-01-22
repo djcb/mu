@@ -44,11 +44,13 @@ AC_HEADER_STDC
 
 extra_flags="-Wformat-security                                        \
              -Wstack-protector                                        \
-             -Wstack-protector-all"
+             -Wstack-protector-all                                    \
+             -Wno-cast-function-type                                  \
+             -Wno-bad-function-cast"
 
 AX_CXX_COMPILE_STDCXX_14
 AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
-AX_APPEND_COMPILE_FLAGS([-Wno-inline -Wno-cast-function-type],[CXXFLAGS])
+AX_APPEND_COMPILE_FLAGS([-Wno-inline ],[CXXFLAGS])
 AX_VALGRIND_CHECK
 
 LT_INIT
