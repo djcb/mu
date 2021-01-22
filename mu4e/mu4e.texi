@@ -752,6 +752,13 @@ The main view looks something like the following:
 	* [bw] Last 7 days          (30/126)
 	* [bp] Messages with images (268/2309)
 
+  Maildirs
+
+	* [ja] /archive             (3174/17990)
+	* [ji] /inbox               (0/2)
+	* [jm] /mu                  (1541/14884)
+	* [js] /sent
+
   Misc
 
 	* [;]Switch context
@@ -768,6 +775,7 @@ The main view looks something like the following:
         * database-path       : /home/user/.cache/mu/xapian
         * maildir             : /home/user/Maildir
         * in store            : 78825 messages
+        * personal addresses  : jim@@example.com, bob@@example.com
 @end verbatim
 @end cartouche
 
