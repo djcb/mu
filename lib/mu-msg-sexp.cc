@@ -79,8 +79,8 @@ add_list_post (Sexp::List& list, MuMsg *msg)
         if (!list_post)
                 return;
 
-        rx = g_regex_new ("<?mailto:([a-z0-9%+@._-]+)>?", G_REGEX_CASELESS,
-                          (GRegexMatchFlags)0, NULL);
+        rx = g_regex_new ("<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?",
+                          G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
         g_return_if_fail(rx);
 
         if (g_regex_match (rx, list_post, (GRegexMatchFlags)0, &minfo)) {
