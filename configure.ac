@@ -24,9 +24,6 @@ AC_CONFIG_SRCDIR([mu/mu.cc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-m4_ifdef([AX_IS_RELEASE],[AX_IS_RELEASE([git-directory])])
-m4_ifdef([AX_CHECK_ENABLE_DEBUG],[AX_CHECK_ENABLE_DEBUG([yes])])
-
 AM_INIT_AUTOMAKE([1.14 foreign no-dist-gzip tar-ustar dist-xz])
 
 # silent build if we have a new enough automake
@@ -47,11 +44,11 @@ AC_HEADER_STDC
 
 extra_flags="-Wformat-security                                        \
              -Wstack-protector                                        \
-             -Wstack-protector-all                                    \
-             -Wno-cast-function-type"
+             -Wstack-protector-all"
 
 AX_CXX_COMPILE_STDCXX_14
-m4_ifdef([AX_COMPILER_FLAGS],[AX_COMPILER_FLAGS(,,[yes],${extra_flags})])
+AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
+AX_APPEND_COMPILE_FLAGS([-Wno-inline -Wno-cast-function-type],[CXXFLAGS])
 AX_VALGRIND_CHECK
 
 LT_INIT
@@ -75,6 +72,7 @@ AS_IF([test "x$use_asan" = "xyes"],[
   AC_SUBST(ASAN_CXXFLAGS,"-fsanitize=address -static-libasan -fno-omit-frame-pointer")
   AC_SUBST(ASAN_LDFLAGS, "-fsanitize=address -static-libasan -fno-omit-frame-pointer")
 ])
+
 
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
