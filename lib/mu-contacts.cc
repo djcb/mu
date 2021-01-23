@@ -87,7 +87,7 @@ struct ContactInfoLessThan {
                 if (ci1.personal != ci2.personal)
                         return ci1.personal; // personal comes first
 
-                if (ci1.last_seen > recently_)
+                if ((ci1.last_seen > recently_) != (ci2.last_seen > recently_))
                         return ci1.last_seen > ci2.last_seen;
 
                 if (ci1.freq != ci2.freq) // more frequent comes first
