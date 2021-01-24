@@ -373,7 +373,7 @@ thread_indent (const QueryMatch& info)
         const auto last_child{any_of(info.flags & QueryMatch::Flags::Last)};
         const auto empty_parent{any_of(info.flags & QueryMatch::Flags::Orphan)};
         const auto is_dup{any_of(info.flags & QueryMatch::Flags::Duplicate)};
-        const auto is_related{any_of(info.flags & QueryMatch::Flags::Related)};
+        //const auto is_related{any_of(info.flags & QueryMatch::Flags::Related)};
 
         /* indent */
         for (auto i = info.thread_level; i > 1; --i)
@@ -610,8 +610,6 @@ output_query_results (const QueryResults& qres, const MuConfig *opts, GError **e
 static gboolean
 process_query (const Query& q, const std::string& expr, const MuConfig *opts, GError **err)
 {
-        gboolean rv;
-
         auto qres{run_query (q, expr, opts, err)};
         if (!qres)
                 return FALSE;
