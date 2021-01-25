@@ -162,15 +162,14 @@ struct MatchDeciderRelated: public MatchDecider {
          * - with QueryFlags::SkipDuplicates this will return false for messages
          *   whose message-id was seen before.
          *
-         * Even if we do not skip these messages entirely, we remember whether
-         * they were unreadabld/duplicate (in the QueryMatch::Flags), so we can
-         * quickly find that info when doing the second 'related' query.
+         * Even if we do not skip these messages entirely, we remember whether they were
+         * unreadable/duplicate (in the QueryMatch::Flags), so we can quickly find that info when
+         * doing the second 'related' query.
          *
-         * The "leader" query. Matches here get the Leader flag unless their
-         * duplicates / unreadable. We check the duplicate/readable status
-         * regardless of whether SkipDuplicates/SkipUnreadable was passed
-         * (to gather that information); however those flags
-         * affect our true/false verdict.
+         * The "leader" query. Matches here get the Leader flag unless they are duplicates /
+         * unreadable. We check the duplicate/readable status regardless of whether
+         * SkipDuplicates/SkipUnreadable was passed (to gather that information); however those
+         * flags affect our true/false verdict.
          *
          * @param doc xapian document
          *
