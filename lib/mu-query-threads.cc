@@ -71,7 +71,9 @@ struct Container {
                 assert(children.empty());
         }
         void remove_child (Container& child) {
-                assert(has_child(child));
+                if (!has_child(child))
+                        g_warning("not my child");
+                //assert(has_child(child));
                 child.parent = {};
                 children.erase(&child);
                 assert(!has_child(child));
