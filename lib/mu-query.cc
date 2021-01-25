@@ -186,13 +186,15 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         const auto mset{enq.get_mset(0, maxnum, {},
                                      make_leader_decider(leader_qflags, minfo).get())};
 
-        // Now, determine the "related query"
+        // Now, determine the "related query". In the threaded-case, we search
+        // among _all_ messages, since complete threads are preferred.
         auto r_enq{make_related_enquire(enq.get_query(), minfo.thread_ids,
-                                        threading ? MU_MSG_FIELD_ID_NONE :sortfieldid, qflags)};
-        const auto r_mset{r_enq.get_mset(0, maxnum, {}, make_related_decider(qflags, minfo).get())};
+                                        threading ? MU_MSG_FIELD_ID_NONE : sortfieldid, qflags)};
+        const auto r_mset{r_enq.get_mset(0, threading ? store_.size() : maxnum,
+                                         {}, make_related_decider(qflags, minfo).get())};
 
         auto qres{QueryResults{r_mset, std::move(minfo.matches)}};
-        if (none_of(qflags & QueryFlags::Threading))
+        if (!threading)
                 return qres;
         else
                 return run_threaded(qres, r_enq, sortfieldid, qflags, maxnum);
