@@ -292,8 +292,13 @@ prune_empty_containers (Container& container)
 
         if (container.children.empty()) {
                 // If it is an empty container with no children, nuke it.
-                if (container.parent)
-                        container.parent->remove_child(container);
+                if (container.parent) {
+                        if (!container.parent->has_child(container)) {
+                                container.parent = {};
+                                g_warning ("unexpected parent->child relation");
+                        } else
+                                container.parent->remove_child(container);
+                }
                 container.is_nuked = true;
                 return;
         }
