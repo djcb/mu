@@ -3453,12 +3453,13 @@ You can extract the event time directly, and have the @code{org-capture}
 functions use that to set the @code{datetree} location:
 
 @lisp
-(defun my-catch-event-time (event reply-status)
+(defun my-catch-event-time (orig-fun &rest args)
   "Set org-overriding-default-time to the start time of the capture event"
-  (setq org-overriding-default-time
-        (date-to-time (gnus-icalendar-event:start event))))
+  (let ((org-overriding-default-time (date-to-time
+                                      (gnus-icalendar-event:start (car args)))))
+    (apply orig-fun args)))
 
-(advice-add 'gnus-icalendar:org-event-save :before #'my-catch-event-time)
+(advice-add 'gnus-icalendar:org-event-save :around #'my-catch-event-time)
 @end lisp
 
 If you do this, you'll want to omit the @code{:timeprompt t} setting
