@@ -3414,6 +3414,34 @@ To enable optional iCalendar→Org sync functionality, add the following:
 
 Both the capture file and the headline(s) inside it must already exist.
 
+By default, @code{gnus-icalendar-org-setup} adds a temporary capture
+template to the variable @code{org-capture-templates}, with the
+description ``used by gnus-icalendar-org'', and the shortcut key ``#''.
+If you want to use your own template, create it using the same key
+and description. This will prevent the temporary one from being
+installed next time you @code{gnus-icalendar-org-setup} is called.
+
+The full default capture template is:
+
+@lisp
+("#" "used by gnus-icalendar-org" entry
+   (file+olp ,gnus-icalendar-org-capture-file ,gnus-icalendar-org-capture-headline)
+   "%i" :immediate-finish t)
+@end lisp
+
+where the values of the variables @code{gnus-icalendar-org-capture-file}
+and @code{gnus-icalendar-org-capture-headline} are inserted via macro
+expansion.
+
+If, for example, you wanted to store ical events in a date tree,
+prompting for the date, you could use the following:
+
+@lisp
+("#" "used by gnus-icalendar-org" entry
+   (file+olp+datetree path-to-capture-file)
+   "%i" :immediate-finish t :time-prompt t)
+@end lisp
+
 
 @node Sauron
 @section Sauron
