@@ -3425,7 +3425,8 @@ The full default capture template is:
 
 @lisp
 ("#" "used by gnus-icalendar-org" entry
-   (file+olp ,gnus-icalendar-org-capture-file ,gnus-icalendar-org-capture-headline)
+   (file+olp ,gnus-icalendar-org-capture-file
+             ,gnus-icalendar-org-capture-headline)
    "%i" :immediate-finish t)
 @end lisp
 
@@ -3442,6 +3443,26 @@ prompting for the date, you could use the following:
    "%i" :immediate-finish t :time-prompt t)
 @end lisp
 
+Note that the default behaviour for @code{datetree} targets in this situation
+is to store the event at the date that you capture it, not at the date
+that it is scheduled. That's why I've suggested using the
+@code{:timeprompt t} argument. This gives you an opportunity to set the
+time to the correct value yourself.
+
+You can extract the event time directly, and have the @code{org-capture}
+functions use that to set the @code{datetree} location:
+
+@lisp
+(defun my-catch-event-time (event reply-status)
+  "Set org-overriding-default-time to the start time of the capture event"
+  (setq org-overriding-default-time
+        (date-to-time (gnus-icalendar-event:start event))))
+
+(advice-add 'gnus-icalendar:org-event-save :before #'my-catch-event-time)
+@end lisp
+
+If you do this, you'll want to omit the @code{:timeprompt t} setting
+from your capture template.
 
 @node Sauron
 @section Sauron
