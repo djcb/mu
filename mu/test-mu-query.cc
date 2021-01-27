@@ -88,7 +88,7 @@ assert_no_dups (const QueryResults& qres)
 
 
 /* note: this also *moves the iter* */
-static guint
+static size_t
 run_and_count_matches (const std::string& xpath, const std::string& expr,
 		       Mu::QueryFlags flags = Mu::QueryFlags::None)
 {
@@ -106,15 +106,7 @@ run_and_count_matches (const std::string& xpath, const std::string& expr,
 	g_assert_true (!!qres);
 	assert_no_dups (*qres);
 
-        int count1{0};
-        for (auto&& it: *qres) ++count1;
-
-        int count2{0};
-        for (auto&& it: *qres) ++count2;
-
-	g_assert_cmpuint (count1, ==, count2);
-
-	return count1;
+	return qres->size();
 }
 
 typedef struct  {
@@ -250,9 +242,6 @@ test_mu_query_logic (void)
 static void
 test_mu_query_accented_chars_01 (void)
 {
-	GError *err;
-	gchar *summ;
-
 	Store store{DB_PATH1};
 	Query q{store};
 
@@ -271,7 +260,7 @@ test_mu_query_accented_chars_01 (void)
 			 "Greetings from Lothlórien");
 	/* TODO: fix this again */
 
-	summ = mu_str_summarize (mu_msg_get_body_text
+	auto summ = mu_str_summarize (mu_msg_get_body_text
 				 (msg, MU_MSG_OPTION_NONE), 5);
 	g_assert_cmpstr (summ,==,
 			 "Let's write some fünkÿ text using umlauts. Foo.");
