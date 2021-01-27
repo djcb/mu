@@ -20,6 +20,7 @@
 #include "mu-query-threads.hh"
 
 #include <set>
+#include <unordered_set>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -30,12 +31,11 @@
 using namespace Mu;
 
 struct Container {
-        using children_type  = std::set<Container*, bool(*)(const Container*, const Container*)>;
-
-        Container(): children{&compare} {}
-        Container(Option<QueryMatch&> msg): query_match{msg}, children{&compare} {}
+        using children_type  = std::unordered_set<Container*>;
+        Container() = default;
+        Container(Option<QueryMatch&> msg): query_match{msg} {}
         Container(const Container&) = delete;
-        Container(Container&&) = delete;
+        Container(Container&&) = default;
 
         void set_parent (Container* new_parent) {
                 assert(this != new_parent);
@@ -56,7 +56,6 @@ struct Container {
                new_child.parent = this;
                children.emplace(&new_child);
         }
-
         void promote_children () {
                 for_each_child([&](auto&& child){
                         child->parent = {};
@@ -125,16 +124,6 @@ private:
                 assert(this->parent != this);
                 return parent ? parent->ur_parent() : this;
         }
-
-        static bool compare(const Container *c1, const Container *c2) {
-                if (c1->query_match && c2->query_match) {
-                        const auto cmp{std::strcmp(c1->query_match->date_key.c_str(),
-                                                   c2->query_match->date_key.c_str())};
-                        if (cmp != 0)
-                                return cmp < 0;
-                }
-                return c1 < c2;
-        }
 };
 
 static std::ostream&
@@ -158,6 +147,27 @@ operator<<(std::ostream& os, const Container& container)
 
 
 using IdTable = std::unordered_map<std::string, Container>;
+using DupTable = std::multimap<std::string, Container>;
+//template <typename QueryResultsType> using DupsVec = std::vector<decltype(QueryResultsType::value_type)>;
+
+static void
+handle_duplicates (IdTable& id_table, DupTable& dup_table)
+{
+        size_t n{};
+
+        for (auto&& dup: dup_table) {
+                const auto msgid{dup.first};
+                auto it = id_table.find(msgid);
+                if (it == id_table.end())
+                        continue;
+
+                // add duplicates as fake children
+                char buf[32];
+                ::snprintf(buf, sizeof(buf), "bastard-%zu", ++n);
+                it->second.add_child(
+                        id_table.emplace(buf, std::move(dup.second)).first->second);
+        }
+}
 
 template <typename QueryResultsType>
 static IdTable
@@ -165,35 +175,33 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
 {
         // 1. For each query_match
         IdTable id_table;
+        DupTable dups;
         for (auto&& mi: qres) {
                 const auto msgid{mi.message_id().value_or(*mi.path())};
+                // Step 0 (non-JWZ): filter out dups, handle those at the end
+                if (mi.query_match().has_flag(QueryMatch::Flags::Duplicate)) {
+                        dups.emplace(msgid, mi.query_match());
+                        continue;
+                }
                 // 1.A If id_table contains an empty Container for this ID:
                 // Store this query_match (query_match) in the Container's query_match (value) slot.
+                // Else:
+                //   Create a new Container object holding this query_match (query-match);
+                //  Index the Container by Query_Match-ID
                 auto c_it = id_table.find(msgid);
-                if (c_it != id_table.end()) {
-                        if (!c_it->second.query_match) {
+                auto& container = [&]()->Container& {
+                        if (c_it != id_table.end()) {
+                                assert(!c_it->second.query_match);
                                 c_it->second.query_match = mi.query_match();
-                                c_it->second.query_match->thread_path = "x";
+                                return c_it->second;
                         } else {
-                                /* special case, not in the JWZ algorithm: the container
-                                 * exists already and has a query_match (query-match); this
-                                 * means that we are seeing *another query_match* with a
-                                 * query_match-id we already saw... create this query_match, and
-                                 * mark it as a duplicate; use its path as the fake
-                                 * query_match-id */
-                                c_it = id_table.emplace(*mi.path(), mi.query_match()).first;
-                                c_it->second.query_match->flags |= QueryMatch::Flags::Duplicate;
-                                c_it->second.query_match->thread_path = "c";
-
+                                // Else:
+                                // Create a new Container object holding this query_match (query-match);
+                                // Index the Container by Query_Match-ID
+                                return id_table.emplace(msgid, mi.query_match()).first->second;
                         }
-                } else { // Else:
-                        // Create a new Container object holding this query_match (query-match);
-                        // Index the Container by Query_Match-ID
-                        c_it = id_table.emplace(msgid, mi.query_match()).first;
-                        c_it->second.query_match->thread_path = "y";
-                }
+                }();
 
-                Container& container{c_it->second};
                 // We sort by date (ascending), *except* for the root; we don't
                 // know what query_matchs will be at the root level yet, so remember
                 // both. Moreover, even when sorting the top-level in descending
@@ -241,8 +249,12 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
                 }
         }
 
+        // non-JWZ: add duplicate messages.
+        handle_duplicates (id_table, dups);
+
         return id_table;
 }
+
 
 /// Recursively walk all containers under the root set.
 /// For each container:
@@ -383,7 +395,6 @@ update_container_query_match (Container& container, ThreadPathVec& pvec,
 {
         if (container.is_empty())
                 return false; // nothing to update.
-
         auto& qmatch{*container.query_match};
 
         if (!container.parent)
@@ -417,19 +428,28 @@ sort_siblings (Container::children_type& siblings,
 {
         if (siblings.empty())
                 return;
-        else {
-                const auto first{*siblings.begin()};
-                if (first->query_match)
-                        first->query_match->flags |= QueryMatch::Flags::First;
-                const auto last{*(--siblings.end())};
-                if (last->query_match)
-                        last->query_match->flags |= QueryMatch::Flags::Last;
-        }
+
+        // sort by date.
+        auto compare =[](const Container *c1, const Container *c2) {
+                const auto cmp{std::strcmp(c1->query_match->date_key.c_str(),
+                                           c2->query_match->date_key.c_str())};
+                // sort by date, or, if the same, by addresss
+                return cmp ? cmp < 0 : c1 < c2;
+        };
+        std::set<Container*, decltype(compare)> sorted_siblings{compare};
+        for (auto&& container: siblings)
+                sorted_siblings.emplace(std::move(container));
+
+        const auto first{*sorted_siblings.begin()};
+        if (first->query_match)
+                first->query_match->flags |= QueryMatch::Flags::First;
+        const auto last{*(--sorted_siblings.end())};
+        if (last->query_match)
+                last->query_match->flags |= QueryMatch::Flags::Last;
 
         size_t idx{0};
         ThreadPathVec thread_path_vec{parent_path_vec};
-
-        for (auto&& c: siblings) {
+        for (auto&& c: sorted_siblings) {
                 thread_path_vec.emplace_back(idx++);
                 update_container_query_match (*c, thread_path_vec, segment_size, descending);
                 if (!c->children.empty())
@@ -447,8 +467,6 @@ sort_siblings (IdTable& id_table, bool descending)
                 return;
 
         auto root_vec{determine_root_vec(id_table, descending)}; // sorted
-
-        //std::cerr << "rvs" << root_vec.size() << "\n";
 
         const auto seg_size = static_cast<size_t>(
                 std::ceil(std::log2(id_table.size())/4.0));
@@ -533,11 +551,11 @@ struct MockQueryResult {
         MockQueryResult(const std::string& message_id_arg,
                         const std::vector<std::string>& refs_arg={}):
                 MockQueryResult(message_id_arg, "", "", refs_arg) {}
-        Option<std::string>             message_id() const { return message_id_;}
-        Option<std::string>             path()       const { return path_;}
-        QueryMatch&                     query_match()      { return query_match_;}
+        Option<std::string>             message_id()  const { return message_id_;}
+        Option<std::string>             path()        const { return path_;}
+        QueryMatch&                     query_match()       { return query_match_;}
         const QueryMatch&               query_match() const { return query_match_;}
-        const std::vector<std::string>& references() const { return refs_;}
+        const std::vector<std::string>& references()  const { return refs_;}
 
         Option<std::string>             opt_string(MuMsgFieldId id) const {
                 if (id == MU_MSG_FIELD_ID_DATE)
@@ -577,11 +595,12 @@ using Expected = std::vector<std::pair<std::string, std::string>>;
 
 
 static void
-assert_thread_paths (MockQueryResults& qrs, const Expected& expected)
+assert_thread_paths (const MockQueryResults& qrs, const Expected& expected)
 {
         for (auto&& exp: expected) {
                 auto it = std::find_if(qrs.begin(), qrs.end(), [&](auto&& qr){
-                        return qr.message_id().value_or("") == exp.first;
+                        return qr.message_id().value_or("") == exp.first ||
+                                qr.path().value_or("") == exp.first;
                 });
                 g_assert_true (it != qrs.end());
                 g_assert_cmpstr(exp.second.c_str(), ==, it->query_match().thread_path.c_str());
@@ -589,7 +608,7 @@ assert_thread_paths (MockQueryResults& qrs, const Expected& expected)
 }
 
 static void
-test_basic()
+test_sort_ascending()
 {
         auto results = MockQueryResults {
                 MockQueryResult{ "m1", "a", "1",  {"m2"} },
@@ -606,6 +625,18 @@ test_basic()
                         { "m3", "0"    },
                         { "m4", "1"    }
                 });
+}
+
+
+static void
+test_sort_descending()
+{
+        auto results = MockQueryResults {
+                MockQueryResult{ "m1", "a", "1",  {"m2"} },
+                MockQueryResult{ "m2", "b", "2",  {"m3"} },
+                MockQueryResult{ "m3", "c", "3",  {}},
+                MockQueryResult{ "m4", "d", "4",  {}}
+        };
 
         calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, true);
 
@@ -615,81 +646,6 @@ test_basic()
                         { "m3", "1:z"    },
                         { "m4", "0:z"    }
                 });
-}
-
-
-static void
-test_prune_empty_containers()
-{
-        {
-                // m7 should not be nuked
-                auto results = MockQueryResults {
-                        MockQueryResult{ "x1", "a", "1",  {"m7"} },
-                        MockQueryResult{ "x2", "b", "2",  {"m7"} },
-                };
-
-                calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
-
-                assert_thread_paths (results, {
-                                { "x1", "0:0"},
-                                { "x2", "0:1"  },
-                        });
-        }
-
-        {
-                // m7 should be nuked
-
-                auto results = MockQueryResults {
-                        MockQueryResult{ "m1", "a", "1",  {"m7"} },
-                };
-
-                calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
-
-                assert_thread_paths (results, {
-                                { "m1", "0"},
-                        });
-        }
-
-        {
-                // m6 should be nuked
-
-                auto results = MockQueryResults {
-                        MockQueryResult{ "m1", "a", "1",  {"m7", "m6"} },
-                        MockQueryResult{ "m2", "b", "2",  {"m7", "m6"} },
-                };
-
-                calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
-
-                assert_thread_paths (results, {
-                                { "m1", "0:0"},
-                                { "m2", "0:1"  },
-                        });
-        }
-
-
-        {
-                // m6 should be nuked
-
-                auto results = MockQueryResults {
-                        MockQueryResult{ "m1",
-                                "a", "1",
-                                {"m28uszf59m.fsf@damtp.cam.ac.uk",
-                                 "CAP8THHWFDR9fJynKJHiRLayBo8wNiOCK6ghbgOK6rHboQKjDqA@mail.gmail.com",
-                                 "m2lhwxevpt.fsf@damtp.cam.ac.uk"} },
-                        MockQueryResult{ "m2",
-                                "b", "2",
-                                {"m28uszf59m.fsf@damtp.cam.ac.uk",
-                                 "CAP8THHWFDR9fJynKJHiRLayBo8wNiOCK6ghbgOK6rHboQKjDqA@mail.gmail.com",
-                                 "m2lhwxevpt.fsf@damtp.cam.ac.uk"} },
-                };
-
-                calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
-
-                assert_thread_paths (results, {
-                                { "m1", "0:0"},
-                                { "m2", "0:1"  },
-                        });
-        }
 }
 
 static void
@@ -704,7 +660,6 @@ test_id_table_inconsistent()
         };
 
         calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
-
         assert_thread_paths (results, {
                         { "m2", "0"},
                         { "m1", "0:0" },
@@ -714,14 +669,122 @@ test_id_table_inconsistent()
                 });
 }
 
+static void
+test_dups_dup_last()
+{
+        MockQueryResult r1 { "m1", "a", "1", {} };
+        r1.query_match().flags |= QueryMatch::Flags::Leader;
+        r1.path_ = "/path1";
+
+        MockQueryResult r1_dup { "m1", "a", "1", {} };
+        r1_dup.query_match().flags |= QueryMatch::Flags::Duplicate;
+        r1_dup.path_ = "/path2";
+
+        auto results = MockQueryResults {r1, r1_dup };
+
+        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+
+        assert_thread_paths (results, {
+                        { "/path1", "0"},
+                        { "/path2", "0:0" },
+                });
+}
+
+static void
+test_dups_dup_first()
+{
+        // now dup becomes the leader; this will _demote_
+        // r1.
+
+        MockQueryResult r1_dup { "m1", "a", "1", {} };
+        r1_dup.query_match().flags |= QueryMatch::Flags::Duplicate;
+        r1_dup.path_ = "/path1";
+
+        MockQueryResult r1 { "m1", "a", "1", {} };
+        r1.query_match().flags |= QueryMatch::Flags::Leader;
+        r1.path_ = "/path2";
+
+        auto results = MockQueryResults { r1_dup, r1 };
+
+        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+
+        assert_thread_paths (results, {
+                        { "/path2", "0"},
+                        { "/path1", "0:0" },
+                });
+}
+
+
+static void
+test_do_not_prune_root_empty_with_children()
+{
+        // m7 should not be nuked
+        auto results = MockQueryResults {
+                MockQueryResult{ "x1", "a", "1",  {"m7"} },
+                MockQueryResult{ "x2", "b", "2",  {"m7"} },
+        };
+
+        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+
+        assert_thread_paths (results, {
+                        { "x1", "0:0"},
+                        { "x2", "0:1"  },
+                });
+}
+
+static void
+test_prune_root_empty_with_child()
+{
+        // m7 should be nuked
+        auto results = MockQueryResults {
+                MockQueryResult{ "m1", "a", "1",  {"m7"} },
+        };
+
+        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+
+        assert_thread_paths (results, {
+                        { "m1", "0"},
+                });
+}
+
+
+static void
+test_prune_empty_with_children()
+{
+        // m6 should be nuked
+        auto results = MockQueryResults {
+                MockQueryResult{ "m1", "a", "1",  {"m7", "m6"} },
+                MockQueryResult{ "m2", "b", "2",  {"m7", "m6"} },
+        };
+
+        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+
+        assert_thread_paths (results, {
+                        { "m1", "0:0"},
+                        { "m2", "0:1"  },
+                });
+}
+
 int
 main (int argc, char *argv[]) try
 {
         g_test_init (&argc, &argv, NULL);
 
-        g_test_add_func ("/threader/basic", test_basic);
-        g_test_add_func ("/threader/prune-empty-containers", test_prune_empty_containers);
+        g_test_add_func ("/threader/sort/ascending", test_sort_ascending);
+        g_test_add_func ("/threader/sort/decending", test_sort_descending);
+
         g_test_add_func ("/threader/id-table-inconsistent", test_id_table_inconsistent);
+        g_test_add_func ("/threader/dups/dup-last",  test_dups_dup_last);
+        g_test_add_func ("/threader/dups/dup-first",  test_dups_dup_first);
+
+        g_test_add_func ("/threader/prune/prune-root-empty-with-children",
+                         test_prune_empty_with_children);
+        g_test_add_func ("/threader/prune/do-not-prune-root-empty-with-children",
+                         test_do_not_prune_root_empty_with_children);
+        g_test_add_func ("/threader/prune/prune-root-empty-with-child",
+                         test_prune_root_empty_with_child);
+        g_test_add_func ("/threader/prune/prune-empty-with-child",
+                         test_prune_empty_with_children);
 
         return g_test_run ();
 

@@ -109,9 +109,17 @@ struct QueryMatch {
                 return  date_key < rhs.date_key;
         }
 
+        bool has_flag (Flags flag) const;
 };
 
 MU_ENABLE_BITOPS(QueryMatch::Flags);
+
+inline bool
+QueryMatch::has_flag(QueryMatch::Flags flag) const
+{
+        return any_of(flags & flag);
+}
+
 
 inline std::ostream&
 operator<<(std::ostream& os, QueryMatch::Flags mflags)
