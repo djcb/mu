@@ -442,7 +442,7 @@ output_plain (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError *
 }
 
 
-static std::string
+G_GNUC_UNUSED static std::string
 to_string (const Mu::Sexp& sexp, bool color, size_t level = 0)
 {
         Mu::MaybeAnsi col{color};
@@ -493,9 +493,13 @@ to_string (const Mu::Sexp& sexp, bool color, size_t level = 0)
 static bool
 output_sexp (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **err)
 {
+        if (!msg)
+                return true;
+
         fputs(msg_to_sexp(msg, 0, {}, MU_MSG_OPTION_HEADERS_ONLY)
               .to_sexp_string().c_str(), stdout);
         fputs ("\n", stdout);
+
         return true;
 }
 
