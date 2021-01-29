@@ -601,7 +601,6 @@ struct QueryMatch;
  *
  * @param msg a valid message
  * @param docid the docid for this message, or 0
- * @param qm information about this match
  * @param opts, bitwise OR'ed;
  *    - MU_MSG_OPTION_HEADERS_ONLY: only include message fields which can be
  *      obtained from the database (this is much faster if the MuMsg is
@@ -614,11 +613,10 @@ struct QueryMatch;
  *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
  *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)
  *
- * @return a Sexp::Node representing the message
+ * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
  */
-Mu::Sexp msg_to_sexp (MuMsg *msg, unsigned docid,
-                      const Option<QueryMatch&> qm,
-                      MuMsgOptions ops);
+Mu::Sexp::List  msg_to_sexp_list(MuMsg *msg, unsigned docid, MuMsgOptions ops);
+Mu::Sexp msg_to_sexp(MuMsg *msg, unsigned docid, MuMsgOptions ops);
 }
 
 #endif /*MU_MSG_HH__*/

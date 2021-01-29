@@ -50,7 +50,7 @@ using namespace Mu;
 static gboolean
 view_msg_sexp (MuMsg *msg, const MuConfig *opts)
 {
-        ::fputs(msg_to_sexp(msg,0,{}, mu_config_get_msg_options(opts))
+        ::fputs(msg_to_sexp(msg,0, mu_config_get_msg_options(opts))
                 .to_sexp_string(). c_str(), stdout);
 	return TRUE;
 }

@@ -283,13 +283,6 @@ make_part_types (MuMsgPartType ptype)
         return Sexp::make_list(std::move(list));
 }
 
-static Sexp
-symbol_t()
-{
-        return Sexp::make_symbol("t");
-}
-
-
 static void
 each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
 {
@@ -316,7 +309,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartInfo *pinfo)
         g_free (fname);
 
         if (mu_msg_part_maybe_attachment (part))
-                partlist.add_prop(":attachment", symbol_t());
+                partlist.add_prop(":attachment", Sexp::make_symbol("t"));
         const auto cid{ mu_msg_part_get_content_id(part)};
         if (cid)
                 partlist.add_prop(":cid", Sexp::make_string(cid));
@@ -339,32 +332,6 @@ add_parts (Sexp::List& items, MuMsg *msg, MuMsgOptions opts)
         if (mu_msg_part_foreach (msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo) &&
             !pinfo.parts.empty())
                 items.add_prop(":parts", Sexp::make_list(std::move(pinfo.parts)));
-}
-
-static void
-add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
-{
-        Sexp::List info;
-
-        info.add_prop(":path",  Sexp::make_string(qmatch.thread_path));
-        info.add_prop(":level", Sexp::make_number(qmatch.thread_level));
-
-        if (any_of(qmatch.flags & QueryMatch::Flags::Root))
-                info.add_prop( ":root", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::Related))
-                info.add_prop( ":related", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::First))
-                info.add_prop( ":first-child", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::Last))
-                info.add_prop( ":last-child", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::Orphan))
-                info.add_prop( ":empty-parent", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::Duplicate))
-                info.add_prop( ":duplicate", symbol_t());
-        if (any_of(qmatch.flags & QueryMatch::Flags::HasChild))
-                info.add_prop( ":has-child", symbol_t());
-
-        items.add_prop(":thread", Sexp::make_list(std::move(info)));
 }
 
 
@@ -429,21 +396,17 @@ add_tags (Sexp::List& items, MuMsg *msg)
 }
 
 
-Mu::Sexp
-Mu::msg_to_sexp (MuMsg *msg, unsigned docid,
-                 const Option<QueryMatch&> qm, MuMsgOptions opts)
+Mu::Sexp::List
+Mu::msg_to_sexp_list (MuMsg *msg, unsigned docid, MuMsgOptions opts)
 {
-        g_return_val_if_fail (msg, Sexp::make_symbol("error"));
+        g_return_val_if_fail (msg, Sexp::List());
         g_return_val_if_fail (!((opts & MU_MSG_OPTION_HEADERS_ONLY) &&
                                 (opts & MU_MSG_OPTION_EXTRACT_IMAGES)),
-                              Sexp::make_symbol("error"));
+                              Sexp::List());
         Sexp::List items;
 
         if (docid != 0)
                 items.add_prop(":docid", Sexp::make_number(docid));
-
-        if (qm)
-                add_thread_info (items, *qm);
 
         add_prop_nonempty (items, ":subject",      mu_msg_get_subject (msg));
         add_prop_nonempty (items, ":message-id",   mu_msg_get_msgid (msg));
@@ -471,5 +434,12 @@ Mu::msg_to_sexp (MuMsg *msg, unsigned docid,
         if (!(opts & MU_MSG_OPTION_HEADERS_ONLY))
                 add_message_file_parts (items, msg, opts);
 
-        return Sexp::make_list(std::move(items));
+        return items;
+
+}
+
+Mu::Sexp
+Mu::msg_to_sexp (MuMsg *msg, unsigned docid, MuMsgOptions opts)
+{
+        return Sexp::make_list(msg_to_sexp_list(msg, docid, opts));
 }

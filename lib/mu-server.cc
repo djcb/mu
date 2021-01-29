@@ -109,7 +109,19 @@ struct Server::Private {
         void sent_handler (const Parameters& params);
         void view_handler (const Parameters& params);
 
+
 private:
+        // helpers
+        Sexp build_message_sexp(MuMsg *msg, unsigned docid,
+                                const Option<QueryMatch&> qm,
+                                MuMsgOptions opts);
+
+        Sexp::List move_docid (DocId docid, const std::string& flagstr,
+                               bool new_name, bool no_view);
+        Sexp::List perform_move (DocId docid, MuMsg *msg,
+                                 const std::string& maildirarg,
+                                 MuFlags flags, bool new_name, bool no_view);
+
         Store&           store_;
         Server::Output   output_;
         const CommandMap command_map_;
@@ -118,7 +130,48 @@ private:
         std::atomic<bool> keep_going_{};
 };
 
+static void
+add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
+{
+        Sexp::List info;
 
+        auto symbol_t = []{return Sexp::make_symbol("t");};
+
+        info.add_prop(":path",  Sexp::make_string(qmatch.thread_path));
+        info.add_prop(":level", Sexp::make_number(qmatch.thread_level));
+
+        if (qmatch.has_flag(QueryMatch::Flags::Root))
+                info.add_prop( ":root", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::Related))
+                info.add_prop( ":related", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::First))
+                info.add_prop( ":first-child", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::Last))
+                info.add_prop( ":last-child", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::Orphan))
+                info.add_prop( ":empty-parent", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
+                info.add_prop( ":duplicate", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::HasChild))
+                info.add_prop( ":has-child", symbol_t());
+        if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
+                info.add_prop( ":thread_subject", symbol_t());
+
+        items.add_prop(":thread", Sexp::make_list(std::move(info)));
+}
+
+Sexp
+Server::Private::build_message_sexp (MuMsg *msg, unsigned docid,
+                                     const Option<QueryMatch&> qm,
+                                     MuMsgOptions opts)
+{
+        auto lst{Mu::msg_to_sexp_list(msg, docid, opts)};
+
+        if (qm)
+                add_thread_info(lst, *qm);
+
+        return Sexp::make_list(std::move(lst));
+}
 CommandMap
 Server::Private::make_command_map ()
 {
@@ -358,7 +411,7 @@ Server::Private::add_handler (const Parameters& params)
                             path.c_str(), docid);
 
         Sexp::List update;
-        update.add_prop(":update", Mu::msg_to_sexp(msg, docid, {}, MU_MSG_OPTION_VERIFY));
+        update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_VERIFY));
         output_sexp(Sexp::make_list(std::move(update)));
         mu_msg_unref(msg);
 }
@@ -420,7 +473,7 @@ Server::Private::compose_handler (const Parameters& params)
                         throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
                 const auto opts{message_options(params)};
-                comp_lst.add_prop(":original", Mu::msg_to_sexp(msg, docid, {}, opts));
+                comp_lst.add_prop(":original", build_message_sexp(msg, docid, {}, opts));
 
                 if (ctype == "forward") {
                         PartInfo pinfo{};
@@ -686,8 +739,8 @@ Server::Private::output_sexp (const QueryResults& qres, unsigned maxnum)
                         continue;
 
                 auto qm{mi.query_match()};
-                output_sexp(Mu::msg_to_sexp(msg, mi.doc_id(),
-                                            qm, MU_MSG_OPTION_HEADERS_ONLY));
+                output_sexp(build_message_sexp(msg, mi.doc_id(),
+                                       qm, MU_MSG_OPTION_HEADERS_ONLY));
         }
 
         return n;
@@ -856,9 +909,9 @@ get_flags (const std::string& path, const std::string& flagstr)
         }
 }
 
-static Sexp::List
-perform_move (Store& store, DocId docid, MuMsg *msg, const std::string& maildirarg,
-              MuFlags flags, bool new_name, bool no_view)
+Sexp::List
+Server::Private::perform_move (DocId docid, MuMsg *msg, const std::string& maildirarg,
+                               MuFlags flags, bool new_name, bool no_view)
 {
         bool different_mdir{};
         auto maildir{maildirarg};
@@ -874,11 +927,11 @@ perform_move (Store& store, DocId docid, MuMsg *msg, const std::string& maildira
 
         /* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir fields
          * will be updated as wel */
-        if (!store.update_message (msg, docid))
+        if (!store_.update_message (msg, docid))
                 throw Error{Error::Code::Store, "failed to store updated message"};
 
         Sexp::List seq;
-        seq.add_prop(":update", msg_to_sexp (msg, docid, {}, MU_MSG_OPTION_VERIFY));
+        seq.add_prop(":update", build_message_sexp (msg, docid, {}, MU_MSG_OPTION_VERIFY));
         /* note, the :move t thing is a hint to the frontend that it
          * could remove the particular header */
         if (different_mdir)
@@ -889,14 +942,14 @@ perform_move (Store& store, DocId docid, MuMsg *msg, const std::string& maildira
         return seq;
 }
 
-static Sexp::List
-move_docid (Store& store, DocId docid, const std::string& flagstr,
-            bool new_name, bool no_view)
+Sexp::List
+Server::Private::move_docid (DocId docid, const std::string& flagstr,
+                             bool new_name, bool no_view)
 {
         if (docid == MU_STORE_INVALID_DOCID)
                 throw Error{Error::Code::InvalidArgument, "invalid docid"};
 
-        auto msg{store.find_message(docid)};
+        auto msg{store_.find_message(docid)};
         try {
                 if (!msg)
                         throw Error{Error::Code::Store, "failed to get message from store"};
@@ -907,7 +960,7 @@ move_docid (Store& store, DocId docid, const std::string& flagstr,
                         throw Error{Error::Code::InvalidArgument, "invalid flags '%s'",
                                         flagstr.c_str()};
 
-                auto lst = perform_move(store, docid, msg, "", flags, new_name, no_view);
+                auto lst = perform_move(docid, msg, "", flags, new_name, no_view);
                 mu_msg_unref (msg);
                 return lst;
 
@@ -942,7 +995,7 @@ Server::Private::move_handler (const Parameters& params)
                                         "can't move multiple messages at the same time"};
                 // multi.
                 for (auto&& docid: docids)
-                        output_sexp(move_docid(store(), docid, flagstr, rename, no_view));
+                        output_sexp(move_docid(docid, flagstr, rename, no_view));
                 return;
         }
         auto docid{docids.at(0)};
@@ -972,7 +1025,7 @@ Server::Private::move_handler (const Parameters& params)
         }
 
         try {
-                output_sexp(perform_move(store(), docid, msg, maildir, flags,
+                output_sexp(perform_move(docid, msg, maildir, flags,
                                          rename, no_view));
         } catch (...) {
                 mu_msg_unref(msg);
@@ -1128,7 +1181,7 @@ Server::Private::view_handler (const Parameters& params)
                 maybe_mark_as_read (store(), msg, docid);
 
         Sexp::List seq;
-        seq.add_prop(":view", msg_to_sexp(msg, docid, {}, message_options(params)));
+        seq.add_prop(":view", build_message_sexp(msg, docid, {}, message_options(params)));
 
         mu_msg_unref(msg);
 

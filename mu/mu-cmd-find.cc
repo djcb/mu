@@ -496,7 +496,7 @@ output_sexp (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **
         if (!msg)
                 return true;
 
-        fputs(msg_to_sexp(msg, 0, {}, MU_MSG_OPTION_HEADERS_ONLY)
+        fputs(msg_to_sexp(msg, 0, MU_MSG_OPTION_HEADERS_ONLY)
               .to_sexp_string().c_str(), stdout);
         fputs ("\n", stdout);
 
@@ -516,7 +516,7 @@ output_json (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **
                 return true;
         }
 
-        g_print("%s\n", msg_to_sexp(msg, info.docid, {}, MU_MSG_OPTION_HEADERS_ONLY)
+        g_print("%s\n", msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY)
                 .to_sexp_string().c_str());
 
         return true;
