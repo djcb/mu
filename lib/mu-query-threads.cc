@@ -18,6 +18,7 @@
 */
 
 #include "mu-query-threads.hh"
+#include "mu-msg-fields.h"
 
 #include <set>
 #include <unordered_set>
@@ -211,6 +212,9 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
                         container.query_match->sort_key = mi.opt_string(sortfield_id).value_or("");
                 container.query_match->date_key         = mi.opt_string(MU_MSG_FIELD_ID_DATE).value_or("");
 
+                // remember the subject, we use it to determine the (sub)thread subject
+                container.query_match->subject = mi.opt_string(MU_MSG_FIELD_ID_SUBJECT).value_or("");
+
                 // 1.B
                 // For each element in the query_match's References field:
                 Container* parent_ref_container{};
@@ -389,12 +393,17 @@ determine_root_vec(IdTable& id_table, bool descending)
         return root_vec;
 }
 
+
+
 static bool
-update_container_query_match (Container& container, ThreadPathVec& pvec,
-                              size_t segment_size, bool descending)
+update_container_query_match (Container& container,
+                              ThreadPathVec& pvec,
+                              size_t segment_size, bool descending,
+                              const std::string& prev_subject="")
 {
         if (container.is_empty())
                 return false; // nothing to update.
+
         auto& qmatch{*container.query_match};
 
         if (!container.parent)
@@ -404,6 +413,12 @@ update_container_query_match (Container& container, ThreadPathVec& pvec,
 
         if (!container.children.empty())
                 qmatch.flags |= QueryMatch::Flags::HasChild;
+
+        // calculate the "thread-subject", which is for UI
+        // purposes.
+        if (qmatch.has_flag(QueryMatch::Flags::Root) ||
+            (qmatch.subject.find(prev_subject) > 5))
+            qmatch.flags |= QueryMatch::Flags::ThreadSubject;
 
         if (descending && container.parent) {
                 // trick xapian by giving it "inverse" sorting key so our
@@ -421,10 +436,13 @@ update_container_query_match (Container& container, ThreadPathVec& pvec,
         return true;
 }
 
+
+
 static void
 sort_siblings (Container::children_type& siblings,
                const ThreadPathVec& parent_path_vec,
-               size_t segment_size, bool descending)
+               size_t segment_size, bool descending,
+               const std::string& last_subject="")
 {
         if (siblings.empty())
                 return;
@@ -448,13 +466,20 @@ sort_siblings (Container::children_type& siblings,
                 last->query_match->flags |= QueryMatch::Flags::Last;
 
         size_t idx{0};
+        std::string siblings_last_subject{last_subject};
         ThreadPathVec thread_path_vec{parent_path_vec};
         for (auto&& c: sorted_siblings) {
                 thread_path_vec.emplace_back(idx++);
-                update_container_query_match (*c, thread_path_vec, segment_size, descending);
+                if (update_container_query_match (*c, thread_path_vec,
+                                                  segment_size, descending,
+                                                  siblings_last_subject)) {
+                        siblings_last_subject = c->query_match->subject;
+                }
                 if (!c->children.empty())
                         sort_siblings (c->children, thread_path_vec,
-                                       segment_size, descending);
+                                       segment_size, descending,
+                                       siblings_last_subject);
+
                 thread_path_vec.pop_back();
         }
 }
@@ -747,7 +772,6 @@ test_prune_root_empty_with_child()
                 });
 }
 
-
 static void
 test_prune_empty_with_children()
 {
@@ -764,6 +788,39 @@ test_prune_empty_with_children()
                         { "m2", "0:1"  },
                 });
 }
+
+
+static void
+test_thread_info_ascending()
+{
+        // m6 should be nuked
+        auto results = MockQueryResults {
+                MockQueryResult{ "m1", "a", "1", {}},
+                MockQueryResult{ "m2", "b", "2",  {}},
+                MockQueryResult{ "m3", "c", "3",  {"m2"}},
+                MockQueryResult{ "m4", "d", "4",  {"m2"}},
+
+        };
+        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+
+        assert_thread_paths (results, {
+                        { "m1", "0"},
+                        { "m2", "1"  },
+                        { "m3", "1:0"},
+                        { "m4", "1:1"  },
+                });
+
+        g_assert_true (results[0].query_match().has_flag(
+                               QueryMatch::Flags::Root));
+        g_assert_true (results[1].query_match().has_flag(
+                               QueryMatch::Flags::Root | QueryMatch::Flags::HasChild));
+        g_assert_true (results[2].query_match().has_flag(
+                               QueryMatch::Flags::First));
+        g_assert_true (results[3].query_match().has_flag(
+                               QueryMatch::Flags::Last));
+}
+
+
 
 int
 main (int argc, char *argv[]) try
@@ -785,6 +842,8 @@ main (int argc, char *argv[]) try
                          test_prune_root_empty_with_child);
         g_test_add_func ("/threader/prune/prune-empty-with-child",
                          test_prune_empty_with_children);
+        g_test_add_func ("/threader/thread-info/ascending",
+                         test_thread_info_ascending);
 
         return g_test_run ();
 

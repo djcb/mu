@@ -91,17 +91,26 @@ struct QueryMatch {
                 Related    = 1 << 1, /**< A related message */
                 Unreadable = 1 << 2, /**< No readable file */
                 Duplicate  = 1 << 3, /**< Message-id seen before */
+
                 Root       = 1 << 10, /**< Is this the thread-root? */
                 First      = 1 << 11, /**< Is this the first message in a thread? */
                 Last       = 1 << 12, /**< Is this the last message in a thread? */
                 Orphan     = 1 << 13, /**< Is this message without a parent? */
-                HasChild   = 1 << 14 /**< Does this message have a child? */
-        };
+                HasChild   = 1 << 14, /**< Does this message have a child? */
 
+                ThreadSubject = 1 << 20, /**< Message holds subject for (sub)thread */
+        };
 
         Flags           flags{Flags::None}; /**< Flags */
         std::string     sort_key; /**< The main sort-key (for the root level) */
         std::string     date_key; /**< The date-key (for sorting all sub-root levels) */
+        // the thread subject is the subject of the first message in a thread,
+        // and any message that has a different subject compared to its predecessor
+        // (ignoring prefixes such as Re:)
+        //
+        // otherwise, it is empty.
+        std::string     subject;
+        std::string     thread_subject; /**< the thread subject for this message */
         size_t          thread_level{}; /**< The thread level */
         std::string     thread_path; /**< The hex-numerial path in the thread, ie. '00:01:0a' */
 
@@ -245,6 +254,16 @@ public:
          * @return a filesystem path
          */
         Option<std::string> path() const noexcept { return opt_string(MU_MSG_FIELD_ID_PATH); }
+
+
+        /**
+         * Get the file-system path for the document (message) this iterator is
+         * pointing at.
+         *
+         * @return the subject
+         */
+        Option<std::string> subject() const noexcept { return opt_string(MU_MSG_FIELD_ID_SUBJECT); }
+
 
         /**
          * Get the references for the document (messages) this is iterator is
