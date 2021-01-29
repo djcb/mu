@@ -332,21 +332,21 @@ test_mu_contacts_01()
         g_assert_cmpuint (contacts.size(), ==, 0);
 
         contacts.add(Mu::ContactInfo ("Foo <foo.bar@example.com>",
-                                                "foo.bar@example.com", "Foo", false, 12345));
+                                      "foo.bar@example.com", "Foo", false, 12345));
         g_assert_false (contacts.empty());
         g_assert_cmpuint (contacts.size(), ==, 1);
 
         contacts.add(Mu::ContactInfo ("Cuux <cuux.fnorb@example.com>",
-                                                "cuux@example.com", "Cuux", false, 54321));
+                                      "cuux@example.com", "Cuux", false, 54321));
 
         g_assert_cmpuint (contacts.size(), ==, 2);
 
         contacts.add(Mu::ContactInfo ("foo.bar@example.com",
-                                                "foo.bar@example.com", "Foo", false, 77777));
+                                      "foo.bar@example.com", "Foo", false, 77777));
         g_assert_cmpuint (contacts.size(), ==, 2);
 
         contacts.add(Mu::ContactInfo ("Foo.Bar@Example.Com",
-                                                "Foo.Bar@Example.Com", "Foo", false, 88888));
+                                      "Foo.Bar@Example.Com", "Foo", false, 88888));
         g_assert_cmpuint (contacts.size(), ==, 2);
         // note: replaces first.
 
