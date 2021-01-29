@@ -61,6 +61,13 @@ struct MatchDecider: public Xapian::MatchDecider {
                 return qm;
         }
 
+        /**
+         * Should this message be included in the results?
+         *
+         * @param qm a query match
+         *
+         * @return true or false
+         */
         bool should_include (const QueryMatch& qm) const {
 
                 if (any_of(qflags_ & QueryFlags::SkipDuplicates) &&
@@ -128,14 +135,14 @@ struct MatchDeciderLeader: public MatchDecider {
         bool operator() (const Xapian::Document& doc) const override {
                 // by definition, we haven't seen the docid before,
                 // so no need to search
-                const auto it = decider_info_.matches.emplace(doc.get_docid(),
-                                                         make_query_match(doc));
+                auto it = decider_info_.matches.emplace(doc.get_docid(), make_query_match(doc));
+                it.first->second.flags |= QueryMatch::Flags::Leader;
+
                 if (should_include(it.first->second)) {
                         if (any_of(qflags_ & QueryFlags::GatherThreadIds))
                                 gather_thread_ids(doc);
                         return true;
                 }
-
                 return false;
         }
 };
@@ -177,14 +184,15 @@ struct MatchDeciderRelated: public MatchDecider {
          */
         bool operator() (const Xapian::Document& doc) const override {
                 // we may have seen this match in the "Leader" query.
-                auto it = decider_info_.matches.find(doc.get_docid());
+                const auto it = decider_info_.matches.find(doc.get_docid());
                 if (it != decider_info_.matches.end())
                         return should_include(it->second);
-                else { // nope; create it.
-                        const auto new_it = decider_info_.matches.emplace(
-                                doc.get_docid(), make_query_match(doc));
-                        return should_include(new_it.first->second);
-                }
+
+                // nope; create it.
+                auto new_it = decider_info_.matches.emplace(
+                        doc.get_docid(), make_query_match(doc));
+                new_it.first->second.flags |= QueryMatch::Flags::Related;
+                return should_include(new_it.first->second);
         }
 };
 
