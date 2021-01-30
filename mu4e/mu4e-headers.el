@@ -823,7 +823,7 @@ after the end of the search results."
                                           render-time-ms (/ render-time-ms count)))))
           (insert (propertize str 'face 'mu4e-system-face 'intangible t))
           (unless (zerop count)
-            (mu4e-message "%s" msg))
+            (mu4e-message "%s" msg))))
 
           ;; if we need to jump to some specific message, do so now
           (goto-char (point-min))
@@ -841,7 +841,7 @@ after the end of the search results."
           (when (mu4e~headers-docid-at-point)
             (mu4e~headers-highlight (mu4e~headers-docid-at-point)))))
     ;; run-hooks
-    (run-hooks 'mu4e-headers-found-hook))))
+    (run-hooks 'mu4e-headers-found-hook))
 
 
 ;;; Marking
