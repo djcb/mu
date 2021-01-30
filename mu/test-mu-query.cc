@@ -598,7 +598,7 @@ test_mu_query_threads_compilation_error (void)
 #ifndef __linux__
 	// seems this test fails on MacOS sometimes... cannot investigate right now.
 #warning investigate failing test
-	g_test_skip();
+	g_test_skip("skip test that fails on MacOS");
 	return;
 #endif
 
