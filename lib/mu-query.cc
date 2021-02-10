@@ -141,7 +141,7 @@ Query::Private::run_threaded (QueryResults &qres, Xapian::Enquire& enq,
 {
         const auto descending{any_of(qflags & QueryFlags::Descending)};
 
-        calculate_threads(qres, sortfieldid, descending);
+        calculate_threads(qres, descending);
 
         ThreadKeyMaker key_maker{qres.query_matches()};
         enq.set_sort_by_key(&key_maker, descending);

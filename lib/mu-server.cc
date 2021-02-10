@@ -139,6 +139,7 @@ add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
 
         info.add_prop(":path",  Sexp::make_string(qmatch.thread_path));
         info.add_prop(":level", Sexp::make_number(qmatch.thread_level));
+        info.add_prop(":date",  Sexp::make_string(qmatch.thread_date));
 
         if (qmatch.has_flag(QueryMatch::Flags::Root))
                 info.add_prop( ":root", symbol_t());

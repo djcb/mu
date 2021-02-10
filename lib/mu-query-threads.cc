@@ -22,103 +22,73 @@
 
 #include <set>
 #include <unordered_set>
+#include <list>
 #include <cassert>
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+
 
 #include <utils/mu-option.hh>
 
 using namespace Mu;
 
 struct Container {
-        using children_type  = std::unordered_set<Container*>;
+        using Containers = std::vector<Container*>;
+
         Container() = default;
         Container(Option<QueryMatch&> msg): query_match{msg} {}
         Container(const Container&) = delete;
         Container(Container&&) = default;
 
-        void set_parent (Container* new_parent) {
-                assert(this != new_parent);
-                assert(!new_parent->is_reachable(this));
-                if (new_parent == parent)
-                        return;
-                if (parent)
-                        parent->remove_child(*this);
-                if (new_parent)
-                        new_parent->add_child(*this);
-                else
-                        parent = new_parent;
-                assert(this->parent != this);
-        }
-
         void add_child (Container& new_child) {
-               assert(!new_child.parent);
                new_child.parent = this;
-               children.emplace(&new_child);
-        }
-        void promote_children () {
-                for_each_child([&](auto&& child){
-                        child->parent = {};
-                        if (parent)
-                                parent->add_child(*child);
-                });
-                children.clear();
-                if (parent)
-                        parent->remove_child(*this);
-                is_nuked = true;
-                assert(!parent);
-                assert(children.empty());
+               children.emplace_back(&new_child);
         }
         void remove_child (Container& child) {
-                if (!has_child(child))
-                        g_warning("not my child");
-                //assert(has_child(child));
-                child.parent = {};
-                children.erase(&child);
+                children.erase(find_child(child));
                 assert(!has_child(child));
         }
 
+        Containers::iterator find_child (Container& child) {
+                return std::find_if(children.begin(), children.end(),
+                                 [&](auto&& c){ return c == &child; });
+        }
+        Containers::const_iterator find_child (Container& child) const {
+                return std::find_if(children.begin(), children.end(),
+                                 [&](auto&& c){ return c == &child; });
+        }
         bool has_child (Container& child) const {
-                return children.find(&child) != children.cend();
+                return find_child(child) != children.cend();
         }
 
         bool is_reachable(Container* other) const {
-                return ur_parent() == other->ur_parent();
+                auto up{ur_parent()};
+                return up && up == other->ur_parent();
         }
-
-        void borrow_query_match (Container& other) {
-                assert(!query_match);
-                assert(other.query_match);
-                query_match = other.query_match;
-                is_borrowed_query_match = true;
-                if (parent) { // and renew (for sorting)
-                        auto p{parent};
-                        parent->remove_child(*this);
-                        p->add_child(*this);
-                        assert(parent->has_child(*this));
-                }
-        }
-
         template <typename Func> void for_each_child (Func&& func) {
-                auto it{children.begin()};
-                while (it != children.end()) {
+                auto it{children.rbegin()};
+                while (it != children.rend()) {
                         auto next = std::next(it);
                         func(*it);
                         it = next;
                 }
         }
+        // During sorting, this is the cached value for the (recursive) date-key
+        // of this container -- ie.. either the one from the first of its
+        // children, or from its query-match, if it has no children.
+        //
+        // That the sub-root-levels of thtreas are always sorted
+        // by date, in ascending order.
+        std::string thread_date_key;
+        
 
-        bool is_empty() const {
-                return !query_match || is_borrowed_query_match;
-        }
-
-        Option<QueryMatch&> query_match;
-        bool                is_borrowed_query_match{};
-        bool                is_nuked{};
-
+        Option<QueryMatch&>  query_match;
+        bool                 is_nuked{};
         Container*           parent{};
-        children_type        children;
+        Containers           children;
+
+        using ContainerVec = std::vector<Container*>;
 
 private:
         const Container* ur_parent() const  {
@@ -127,18 +97,21 @@ private:
         }
 };
 
+using Containers   = Container::Containers;
+using ContainerVec = Container::ContainerVec;
+
 static std::ostream&
 operator<<(std::ostream& os, const Container& container)
 {
-        os << "container: " << std::right << std::setw(10) << &container
+        os << "container: " << std::right << std::setw(10) << &container                
            << ": parent: "  << std::right << std::setw(10) << container.parent
+           << " [" << container.thread_date_key << "]"
            << "\n  children: ";
 
         for (auto&& c: container.children)
                 os << std::right << std::setw(10) << c << " ";
 
-        os << (container.is_nuked ? " nuked" : "")
-           << (container.is_borrowed_query_match ? " borrowed" : "");
+        os << (container.is_nuked ? " nuked" : "");
 
         if (container.query_match)
                 os << "\n  " << container.query_match.value();
@@ -172,7 +145,7 @@ handle_duplicates (IdTable& id_table, DupTable& dup_table)
 
 template <typename QueryResultsType>
 static IdTable
-determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
+determine_id_table (QueryResultsType& qres)
 {
         // 1. For each query_match
         IdTable id_table;
@@ -208,12 +181,9 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
                 // both. Moreover, even when sorting the top-level in descending
                 // order, still sort the thread levels below that in ascending
                 // order.
-                if (sortfield_id != MU_MSG_FIELD_ID_NONE)
-                        container.query_match->sort_key = mi.opt_string(sortfield_id).value_or("");
-                container.query_match->date_key         = mi.opt_string(MU_MSG_FIELD_ID_DATE).value_or("");
-
+                container.query_match->date_key = mi.date().value_or("");
                 // remember the subject, we use it to determine the (sub)thread subject
-                container.query_match->subject = mi.opt_string(MU_MSG_FIELD_ID_SUBJECT).value_or("");
+                container.query_match->subject  = mi.subject().value_or("");
 
                 // 1.B
                 // For each element in the query_match's References field:
@@ -239,17 +209,22 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
                         //   reachable, and also search down the children of A to see if B is
                         //   reachable. If either is already reachable as a child of the other,
                         //   don't add the link.
-                        if (parent_ref_container && !ref_container->parent &&
-                            !parent_ref_container->is_reachable(ref_container))
+                        if (parent_ref_container && !ref_container->parent) {
+                                if (!parent_ref_container->is_reachable(ref_container))
                                         parent_ref_container->add_child(*ref_container);
+                                // else
+                                //         g_message ("%u: reachable %s -> %s", __LINE__, msgid.c_str(), ref.c_str());
+                        }
 
                         parent_ref_container = ref_container;
                 }
-
+                
                 // Add the query_match to the chain.
-                if (parent_ref_container && !container.parent &&
-                    !parent_ref_container->is_reachable(&container)) {
-                        parent_ref_container->add_child(container);
+                if (parent_ref_container && !container.parent) {
+                        if (!parent_ref_container->is_reachable(&container))
+                                parent_ref_container->add_child(container);
+                        // else
+                        //         g_message ("%u: reachable %s -> parent", __LINE__, msgid.c_str());
                 }
         }
 
@@ -297,29 +272,44 @@ determine_id_table (QueryResultsType& qres, MuMsgFieldId sortfield_id)
 ///     Do not promote the children if doing so would promote them to the root
 ///     set -- unless there is only one child, in which case, do.
 
-
-
 static void
+prune (Container* child)
+{
+        Container *container{child->parent};
+        
+        for (auto& grandchild: child->children) {
+                grandchild->parent = container;
+                if (container)
+                        container->children.emplace_back(grandchild);
+        }
+        
+        child->children.clear();
+        child->is_nuked = true;
+
+        if (container)
+                container->remove_child(*child);
+}
+
+
+static bool
 prune_empty_containers (Container& container)
 {
-        container.for_each_child([](auto&& child){prune_empty_containers(*child);});
+        Containers to_prune;
+        
+        container.for_each_child([&](auto& child){
+                if (prune_empty_containers(*child))
+                        to_prune.emplace_back(child);
+        });
 
+        for (auto& child: to_prune)
+                prune (child);
+        
         // Never nuke these.
-        if (!container.is_empty())
-                return;
+        if (container.query_match)
+                return false;
 
-        if (container.children.empty()) {
-                // If it is an empty container with no children, nuke it.
-                if (container.parent) {
-                        if (!container.parent->has_child(container)) {
-                                container.parent = {};
-                                g_warning ("unexpected parent->child relation");
-                        } else
-                                container.parent->remove_child(container);
-                }
-                container.is_nuked = true;
-                return;
-        }
+        // If it is an empty container with no children, nuke it.
+        //
         // If the Container is empty, but does have children, remove this
         // container but promote its children to this level (that is, splice them in
         // to the current child list.)
@@ -327,16 +317,10 @@ prune_empty_containers (Container& container)
         // Do not promote the children if doing so would promote them to the root
         // set -- unless there is only one child, in which case, do.
         //const auto rootset_child{!container.parent->parent};
-        if (container.parent || container.children.size() == 1) {
-                container.promote_children();
-                container.is_nuked = true;
-        } else if (!container.children.empty()){
-                // so an empty container with children. Copy the query info of the first
-                // child, for sorting -- so the sort key "bubbles up". Renew
-                // it so the sorting workes out.
-                auto& first_child{*container.children.begin()};
-                container.borrow_query_match(*first_child);
-        }
+        if (container.parent || container.children.size() <= 1)
+                return true; // splice/nuke it.
+
+        return false;
 }
 
 
@@ -344,78 +328,67 @@ static void
 prune_empty_containers (IdTable& id_table)
 {
         for (auto&& item: id_table) {
-                if (!item.second.parent)
-                        prune_empty_containers(item.second);
+                
+                auto& child(item.second);
+                if (child.parent)
+                        continue; // not a root child.
+
+                if (prune_empty_containers(item.second))
+                        prune(&child);
         }
 }
 
-
-/// Sorting.
-///
-/// We start the sorting from the rout-vec, ie. the set of of parentless conainers.
-///
-/// We need to sort the rootset by whatever the sortkey is (subject, date, ...); however under the
-/// rotset we stricly sort in ascending order by date.  Containers with empty query_matchs have the
-/// sort key from the first of their children (recursively).
 //
-// Note, children are already stored in a (sorted) std::set, based on their date. That's correct for
-// all but the top-level (root) containers; so, we just need fix those.
+// Sorting.
 //
 
-// the root_vec is the sorted vec of top-level (parent-less) containers.
-using RootVec = std::vector<Container*>;
-static RootVec
-determine_root_vec(IdTable& id_table, bool descending)
+
+/// Register some information about a match (i.e., message) that we can use for
+/// subsequent queries.
+using ThreadPath = std::vector<unsigned>;
+inline std::string
+to_string (const ThreadPath& tpath, size_t digits)
 {
-        RootVec root_vec;
+        std::string str;
+        str.reserve(tpath.size() * digits);
 
-        for (auto&& item: id_table) {
-                Container* c{&item.second};
-                if (!c || !c->query_match || c->parent || c->is_nuked)
-                        continue;
-                root_vec.emplace_back(c);
+        bool first{true};
+        for (auto&& segm: tpath) {
+                str   += format("%s%0*x", first ? "" : ":", (int)digits, segm);
+                first  = false;
         }
 
-        std::sort(root_vec.begin(), root_vec.end(),
-                  [&](Container*& c1, Container*& c2)->bool {
-#ifdef BUILD_TESTS
-                          if (descending)
-                                  return c2->query_match->sort_key < c1->query_match->sort_key;
-                           else
-                                   return c1->query_match->sort_key < c2->query_match->sort_key;
-#else
-                          // the non-testing case, the "descending" part is handled
-                          // in the "decider"
-                          return c1->query_match->sort_key < c2->query_match->sort_key;
-#endif /*BUILD_TESTS*/
-                  });
-
-        return root_vec;
+        return str;
 }
-
 
 
 static bool
-update_container_query_match (Container& container,
-                              ThreadPathVec& pvec,
-                              size_t segment_size, bool descending,
-                              const std::string& prev_subject="")
+update_container (Container& container, bool descending,
+                  ThreadPath& tpath, size_t seg_size,
+                  const std::string& prev_subject="")
 {
-        if (container.is_empty())
-                return false; // nothing to update.
+        if (!container.query_match)
+                return false; // nothing to do.
 
-        auto& qmatch{*container.query_match};
+        auto& qmatch(*container.query_match);
 
         if (!container.parent)
                 qmatch.flags |= QueryMatch::Flags::Root;
-        else if (container.parent->is_empty())
+        else if (!container.parent->query_match)
                 qmatch.flags |= QueryMatch::Flags::Orphan;
 
-        if (!container.children.empty())
-                qmatch.flags |= QueryMatch::Flags::HasChild;
+        if (!container.children.empty()) {
+                qmatch.flags     |= QueryMatch::Flags::HasChild;
+                Container* first  = container.children.front();
+                if (first->query_match)
+                        first->query_match->flags |= QueryMatch::Flags::First;
+                Container* last   = container.children.back();
+                if (last->query_match)
+                        last->query_match->flags |= QueryMatch::Flags::Last; 
+        }
 
         // calculate the "thread-subject", which is for UI
-        // purposes.
+        // purposes (future use)
         if (qmatch.has_flag(QueryMatch::Flags::Root) ||
             (qmatch.subject.find(prev_subject) > 5))
             qmatch.flags |= QueryMatch::Flags::ThreadSubject;
@@ -423,11 +396,11 @@ update_container_query_match (Container& container,
         if (descending && container.parent) {
                 // trick xapian by giving it "inverse" sorting key so our
                 // ascending-date sorted threads stay in that order
-                pvec.back() = ((1U << (4 * segment_size)) - 1) - pvec.back();
+                tpath.back() = ((1U << (4 * seg_size)) - 1) - tpath.back();
         }
 
-        qmatch.thread_path  = to_string(pvec, segment_size);
-        qmatch.thread_level = pvec.size() - 1;
+        qmatch.thread_path  = to_string(tpath, seg_size);
+        qmatch.thread_level = tpath.size() - 1;
 
         // ensure thread root comes before its children
         if (descending)
@@ -435,53 +408,69 @@ update_container_query_match (Container& container,
 
         return true;
 }
+  
 
+static void
+update_containers (Containers& children, bool descending, ThreadPath& tpath,
+                   size_t seg_size)
+{
+        size_t idx{0};
+
+        for (auto&& c: children) {
+                tpath.emplace_back(idx++);
+
+                if (c->query_match)
+                        update_container(*c, descending, tpath, seg_size);
+
+                update_containers(c->children, descending, tpath, seg_size);
+                tpath.pop_back();
+        }
+}
+
+static void
+update_containers (ContainerVec& root_vec, bool descending, size_t n)
+{
+        ThreadPath tpath;
+        tpath.reserve (n);
+
+        const auto seg_size = static_cast<size_t>(std::ceil(std::log2(n)/4.0));
+        /*note: 4 == std::log2(16)*/
+
+        size_t idx{0};
+        for (auto&& c: root_vec) {
+                tpath.emplace_back(idx++);
+                update_container(*c, descending, tpath, seg_size);
+                update_containers(c->children, descending, tpath, seg_size);
+                tpath.pop_back();
+        }
+}
 
 
 static void
-sort_siblings (Container::children_type& siblings,
-               const ThreadPathVec& parent_path_vec,
-               size_t segment_size, bool descending,
-               const std::string& last_subject="")
+sort_container (Container& container)
 {
-        if (siblings.empty())
+        // 1. childless container.
+        
+        if (container.children.empty()) {
+                container.thread_date_key = container.query_match->date_key;
                 return;
-
-        // sort by date.
-        auto compare =[](const Container *c1, const Container *c2) {
-                const auto cmp{std::strcmp(c1->query_match->date_key.c_str(),
-                                           c2->query_match->date_key.c_str())};
-                // sort by date, or, if the same, by addresss
-                return cmp ? cmp < 0 : c1 < c2;
-        };
-        std::set<Container*, decltype(compare)> sorted_siblings{compare};
-        for (auto&& container: siblings)
-                sorted_siblings.emplace(std::move(container));
-
-        const auto first{*sorted_siblings.begin()};
-        if (first->query_match)
-                first->query_match->flags |= QueryMatch::Flags::First;
-        const auto last{*(--sorted_siblings.end())};
-        if (last->query_match)
-                last->query_match->flags |= QueryMatch::Flags::Last;
-
-        size_t idx{0};
-        std::string siblings_last_subject{last_subject};
-        ThreadPathVec thread_path_vec{parent_path_vec};
-        for (auto&& c: sorted_siblings) {
-                thread_path_vec.emplace_back(idx++);
-                if (update_container_query_match (*c, thread_path_vec,
-                                                  segment_size, descending,
-                                                  siblings_last_subject)) {
-                        siblings_last_subject = c->query_match->subject;
-                }
-                if (!c->children.empty())
-                        sort_siblings (c->children, thread_path_vec,
-                                       segment_size, descending,
-                                       siblings_last_subject);
-
-                thread_path_vec.pop_back();
         }
+
+        // 2. container with children.
+        // recurse, depth-first: sort the children
+
+        for (auto& child: container.children)
+                sort_container(*child);
+
+        // now sort this level.
+        std::sort(container.children.begin(), container.children.end(),
+                  [&](auto&& c1, auto&& c2) {
+                          return c1->thread_date_key < c2->thread_date_key;
+                  });
+
+        // and 'bubble up' the date of the *newest* message*. We reasonably
+        // assume that it's later than its parent.
+        container.thread_date_key = container.children.back()->thread_date_key;
 }
 
 
@@ -491,26 +480,51 @@ sort_siblings (IdTable& id_table, bool descending)
         if (id_table.empty())
                 return;
 
-        auto root_vec{determine_root_vec(id_table, descending)}; // sorted
+        // unsorted vec of root containers. We can
+        // only sort these _after_ sorting the children.
+        ContainerVec root_vec;
+        for (auto&& item: id_table)
+                if (!item.second.parent && !item.second.is_nuked)
+                        root_vec.emplace_back(&item.second);
 
-        const auto seg_size = static_cast<size_t>(
-                std::ceil(std::log2(id_table.size())/4.0));
-        /*note: 4 == std::log2(16)*/
-
-        ThreadPathVec path_vec;
-        auto idx{0U};
-
+        // now sort all threads _under_ the root set (by date/ascending)
         for (auto&& c: root_vec) {
-                path_vec.emplace_back(idx++);
-                update_container_query_match (*c, path_vec, seg_size, descending);
-                sort_siblings (c->children, path_vec, seg_size, descending);
-                path_vec.pop_back();
+                sort_container(*c);
+                if (c->query_match) // for debugging, remember
+                        c->query_match->thread_date = c->thread_date_key;
         }
+        
+        // and then sort the root set.
+        //
+        // The difference with the sub-root containers is that at the top-level,
+        // we can sort either in ascending or descending order, while on the
+        // subroot level it's always in ascending order. 
+        //
+        // Note that unless we're testing, _xapian_ will handle
+        // the ascending/descending of the top level.
+        std::sort(root_vec.begin(), root_vec.end(), [&](auto&& c1, auto&& c2) {
+#ifdef BUILD_TESTS
+                if (descending)
+                        return c2->thread_date_key < c1->thread_date_key;
+                else
+#endif /*BUILD_TESTS*/
+                        return c1->thread_date_key < c2->thread_date_key;
+        });
+
+        // now all is sorted... final step is to determine thread paths and
+        // other flags.
+        update_containers (root_vec, descending, id_table.size());
 }
 
 static std::ostream&
 operator<<(std::ostream& os, const IdTable& id_table)
 {
+        os << "------------------------------------------------\n";
+        for (auto&& item: id_table) {
+                os << item.first << " => " << item.second << "\n";
+        }
+        os << "------------------------------------------------\n";
+        
         std::set<std::string> ids;
         for (auto&& item: id_table) {
                 if (item.second.query_match)
@@ -519,7 +533,8 @@ operator<<(std::ostream& os, const IdTable& id_table)
 
         for (auto&& id: ids) {
                 auto it = std::find_if(id_table.begin(), id_table.end(), [&](auto&& item) {
-                        return item.second.query_match && item.second.query_match->thread_path == id;
+                        return item.second.query_match &&
+                                item.second.query_match->thread_path == id;
                 });
                 assert(it != id_table.end());
                 os << it->first << ": " << it->second << '\n';
@@ -529,11 +544,14 @@ operator<<(std::ostream& os, const IdTable& id_table)
 
 
 template<typename Results> static void
-calculate_threads_real (Results& qres, MuMsgFieldId sort_field,
-                   bool descending)
+calculate_threads_real (Results& qres, bool descending)
 {
         // Step 1: build the id_table
-        auto id_table{determine_id_table(qres, sort_field)};
+        auto id_table{determine_id_table(qres)};
+
+        if (g_test_verbose())
+                std::cout << "*** id-table(1):\n" << id_table << "\n";
+        
 
         // // Step 2: get the root set
         // // Step 3: discard id_table
@@ -550,49 +568,42 @@ calculate_threads_real (Results& qres, MuMsgFieldId sort_field,
         // in the thread-path string (so we can lexically compare them.)
         sort_siblings(id_table, descending);
 
-        if (g_test_verbose())
-                std::cout << "*** id-table:\n" << id_table << "\n";
+        // if (g_test_verbose())
+        //         std::cout << "*** id-table(2):\n" << id_table << "\n";
 }
 
 void
-Mu::calculate_threads (Mu::QueryResults& qres, MuMsgFieldId sort_field,
-                       bool descending)
+Mu::calculate_threads (Mu::QueryResults& qres, bool descending)
 {
-        calculate_threads_real(qres, sort_field, descending);
+        calculate_threads_real(qres, descending);
 }
 
 #ifdef BUILD_TESTS
 
 struct MockQueryResult {
         MockQueryResult(const std::string& message_id_arg,
-                        const std::string& sort_key_arg,
-                        const std::string& date_key_arg,
+                        const std::string& date_arg,
                         const std::vector<std::string>& refs_arg={}):
                 message_id_{message_id_arg},
-                sort_key_{sort_key_arg},
-                date_key_{date_key_arg},
+                date_{date_arg},
                 refs_{refs_arg}
                 {}
         MockQueryResult(const std::string& message_id_arg,
                         const std::vector<std::string>& refs_arg={}):
-                MockQueryResult(message_id_arg, "", "", refs_arg) {}
+                MockQueryResult(message_id_arg, "", refs_arg) {}
         Option<std::string>             message_id()  const { return message_id_;}
         Option<std::string>             path()        const { return path_;}
+        Option<std::string>             date()        const { return date_;}
+        Option<std::string>             subject()     const { return subject_;}
         QueryMatch&                     query_match()       { return query_match_;}
         const QueryMatch&               query_match() const { return query_match_;}
         const std::vector<std::string>& references()  const { return refs_;}
 
-        Option<std::string>             opt_string(MuMsgFieldId id) const {
-                if (id == MU_MSG_FIELD_ID_DATE)
-                        return date_key_;
-                else
-                        return sort_key_;
-        }
-        Option<std::string>      path_{"/"};
+        std::string              path_;
         std::string              message_id_;
         QueryMatch               query_match_{};
-        std::string              sort_key_;
-        std::string              date_key_;
+        std::string              date_;
+        std::string              subject_;
         std::vector<std::string> refs_;
 };
 
@@ -610,10 +621,9 @@ operator<<(std::ostream& os, const MockQueryResults& qrs)
 }
 
 static void
-calculate_threads (MockQueryResults& qres, MuMsgFieldId sort_field,
-                   bool descending)
+calculate_threads (MockQueryResults& qres, bool descending)
 {
-        calculate_threads_real(qres, sort_field, descending);
+        calculate_threads_real(qres, descending);
 }
 
 using Expected = std::vector<std::pair<std::string, std::string>>;
@@ -628,7 +638,8 @@ assert_thread_paths (const MockQueryResults& qrs, const Expected& expected)
                                 qr.path().value_or("") == exp.first;
                 });
                 g_assert_true (it != qrs.end());
-                g_assert_cmpstr(exp.second.c_str(), ==, it->query_match().thread_path.c_str());
+                g_assert_cmpstr(exp.second.c_str(), ==,
+                                it->query_match().thread_path.c_str());
         }
 }
 
@@ -636,13 +647,13 @@ static void
 test_sort_ascending()
 {
         auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1",  {"m2"} },
-                MockQueryResult{ "m2", "b", "2",  {"m3"} },
-                MockQueryResult{ "m3", "c", "3",  {}},
-                MockQueryResult{ "m4", "d", "4",  {}}
+                MockQueryResult{ "m1", "1",  {"m2"} },
+                MockQueryResult{ "m2", "2",  {"m3"} },
+                MockQueryResult{ "m3", "3",  {}},
+                MockQueryResult{ "m4", "4",  {}}
         };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "m1", "0:0:0"},
@@ -652,18 +663,17 @@ test_sort_ascending()
                 });
 }
 
-
 static void
 test_sort_descending()
 {
         auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1",  {"m2"} },
-                MockQueryResult{ "m2", "b", "2",  {"m3"} },
-                MockQueryResult{ "m3", "c", "3",  {}},
-                MockQueryResult{ "m4", "d", "4",  {}}
+                MockQueryResult{ "m1", "1",  {"m2"} },
+                MockQueryResult{ "m2", "2",  {"m3"} },
+                MockQueryResult{ "m3", "3",  {}},
+                MockQueryResult{ "m4", "4",  {}}
         };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, true);
+        calculate_threads(results, true);
 
         assert_thread_paths (results, {
                         { "m1", "1:f:f:z"},
@@ -677,19 +687,19 @@ static void
 test_id_table_inconsistent()
 {
         auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1", {"m2"} },
-                MockQueryResult{ "m2", "b", "2", {"m1"} },
-                MockQueryResult{ "m3", "c", "3", {"m3"} }, // self ref
-                MockQueryResult{ "m4", "d", "4", {"m3", "m5"} },
-                MockQueryResult{ "m5", "e", "5", {"m4", "m4"} }, // dup parent
+                MockQueryResult{ "m1", "1", {"m2"} }, // 1->2
+                MockQueryResult{ "m2", "2", {"m1"} }, // 2->1
+                MockQueryResult{ "m3", "3", {"m3"} }, // self ref
+                MockQueryResult{ "m4", "4", {"m3", "m5"} },
+                MockQueryResult{ "m5", "5", {"m4", "m4"} }, // dup parent
         };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+        calculate_threads(results, false);
         assert_thread_paths (results, {
                         { "m2", "0"},
-                        { "m1", "0:0" },
+                        { "m1", "0:0"},
                         { "m3", "1"},
-                        { "m5", "1:0"  },
+                        { "m5", "1:0"},
                         { "m4", "1:0:0"},
                 });
 }
@@ -697,17 +707,17 @@ test_id_table_inconsistent()
 static void
 test_dups_dup_last()
 {
-        MockQueryResult r1 { "m1", "a", "1", {} };
+        MockQueryResult r1 { "m1", "1", {} };
         r1.query_match().flags |= QueryMatch::Flags::Leader;
         r1.path_ = "/path1";
 
-        MockQueryResult r1_dup { "m1", "a", "1", {} };
+        MockQueryResult r1_dup { "m1", "1", {} };
         r1_dup.query_match().flags |= QueryMatch::Flags::Duplicate;
         r1_dup.path_ = "/path2";
 
         auto results = MockQueryResults {r1, r1_dup };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "/path1", "0"},
@@ -721,17 +731,17 @@ test_dups_dup_first()
         // now dup becomes the leader; this will _demote_
         // r1.
 
-        MockQueryResult r1_dup { "m1", "a", "1", {} };
+        MockQueryResult r1_dup { "m1", "1", {} };
         r1_dup.query_match().flags |= QueryMatch::Flags::Duplicate;
         r1_dup.path_ = "/path1";
 
-        MockQueryResult r1 { "m1", "a", "1", {} };
+        MockQueryResult r1 { "m1", "1", {} };
         r1.query_match().flags |= QueryMatch::Flags::Leader;
         r1.path_ = "/path2";
 
         auto results = MockQueryResults { r1_dup, r1 };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "/path2", "0"},
@@ -745,11 +755,11 @@ test_do_not_prune_root_empty_with_children()
 {
         // m7 should not be nuked
         auto results = MockQueryResults {
-                MockQueryResult{ "x1", "a", "1",  {"m7"} },
-                MockQueryResult{ "x2", "b", "2",  {"m7"} },
+                MockQueryResult{ "x1", "1", {"m7"} },
+                MockQueryResult{ "x2", "2", {"m7"} },
         };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "x1", "0:0"},
@@ -762,10 +772,10 @@ test_prune_root_empty_with_child()
 {
         // m7 should be nuked
         auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1",  {"m7"} },
+                MockQueryResult{ "m1", "1",  {"m7"} },
         };
 
-        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "m1", "0"},
@@ -776,12 +786,12 @@ static void
 test_prune_empty_with_children()
 {
         // m6 should be nuked
-        auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1",  {"m7", "m6"} },
-                MockQueryResult{ "m2", "b", "2",  {"m7", "m6"} },
+        auto results = MockQueryResults { 
+                MockQueryResult{ "m1", "1",  {"m7", "m6"} },
+                MockQueryResult{ "m2", "2",  {"m7", "m6"} },
         };
-
-        calculate_threads(results, MU_MSG_FIELD_ID_SUBJECT, false);
+        
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
                         { "m1", "0:0"},
@@ -793,21 +803,20 @@ test_prune_empty_with_children()
 static void
 test_thread_info_ascending()
 {
-        // m6 should be nuked
         auto results = MockQueryResults {
-                MockQueryResult{ "m1", "a", "1", {}},
-                MockQueryResult{ "m2", "b", "2",  {}},
-                MockQueryResult{ "m3", "c", "3",  {"m2"}},
-                MockQueryResult{ "m4", "d", "4",  {"m2"}},
+                MockQueryResult{ "m1", "5", {}},
+                MockQueryResult{ "m2", "1", {}},
+                MockQueryResult{ "m3", "3", {"m2"}},
+                MockQueryResult{ "m4", "2", {"m2"}},
 
         };
-        calculate_threads(results, MU_MSG_FIELD_ID_DATE, false);
+        calculate_threads(results, false);
 
         assert_thread_paths (results, {
-                        { "m1", "0"},
-                        { "m2", "1"  },
-                        { "m3", "1:0"},
-                        { "m4", "1:1"  },
+                        { "m2", "0"    }, // 2
+                        { "m4", "0:0"  }, //   2
+                        { "m3", "0:1"  }, //   3
+                        { "m1", "1"    }, // 5
                 });
 
         g_assert_true (results[0].query_match().has_flag(
@@ -815,9 +824,39 @@ test_thread_info_ascending()
         g_assert_true (results[1].query_match().has_flag(
                                QueryMatch::Flags::Root | QueryMatch::Flags::HasChild));
         g_assert_true (results[2].query_match().has_flag(
-                               QueryMatch::Flags::First));
-        g_assert_true (results[3].query_match().has_flag(
                                QueryMatch::Flags::Last));
+        g_assert_true (results[3].query_match().has_flag(
+                               QueryMatch::Flags::First));
+}
+
+static void
+test_thread_info_descending()
+{
+        auto results = MockQueryResults {
+                MockQueryResult{ "m1", "5", {}},
+                MockQueryResult{ "m2", "1", {}},
+                MockQueryResult{ "m3", "3", {"m2"}},
+                MockQueryResult{ "m4", "2", {"m2"}},
+
+        };
+        calculate_threads(results, true/*descending*/);
+
+        assert_thread_paths (results, {
+                        { "m1", "0:z"},      // 5
+                        { "m2", "1:z"  },    // 2  
+                        { "m4", "1:f:z"  },  //   2
+                        { "m3", "1:e:z"},    //   3 
+                });
+
+        g_assert_true (results[0].query_match().has_flag(
+                               QueryMatch::Flags::Root));
+        g_assert_true (results[1].query_match().has_flag(
+                               QueryMatch::Flags::Root | QueryMatch::Flags::HasChild));
+        g_assert_true (results[2].query_match().has_flag(
+                               QueryMatch::Flags::Last));
+        g_assert_true (results[3].query_match().has_flag(
+                               QueryMatch::Flags::First));
+        
 }
 
 
@@ -834,19 +873,19 @@ main (int argc, char *argv[]) try
         g_test_add_func ("/threader/dups/dup-last",  test_dups_dup_last);
         g_test_add_func ("/threader/dups/dup-first",  test_dups_dup_first);
 
-        g_test_add_func ("/threader/prune/prune-root-empty-with-children",
-                         test_prune_empty_with_children);
         g_test_add_func ("/threader/prune/do-not-prune-root-empty-with-children",
                          test_do_not_prune_root_empty_with_children);
         g_test_add_func ("/threader/prune/prune-root-empty-with-child",
                          test_prune_root_empty_with_child);
-        g_test_add_func ("/threader/prune/prune-empty-with-child",
+        g_test_add_func ("/threader/prune/prune-empty-with-children",
                          test_prune_empty_with_children);
+
         g_test_add_func ("/threader/thread-info/ascending",
                          test_thread_info_ascending);
+        g_test_add_func ("/threader/thread-info/descending",
+                         test_thread_info_descending);
 
         return g_test_run ();
-
 } catch (const std::runtime_error& re) {
         std::cerr << re.what() << "\n";
         return 1;

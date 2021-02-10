@@ -28,16 +28,13 @@ namespace Mu {
  * thread-paths for each message, so we can let Xapian order them in the correct
  * order.
  *
- * Note - threads are can be order by an arbitrary field for the top level, but
- * the messages below the top level are always sorted in chronologically
- * ascending orde
+ * Note - threads are sorted chronologically, and the messages below the top
+ * level are always sorted in ascending orde
  *
  * @param qres query results
- * @param sort_field the field to sort the top-level by
  * @param descending whether to sort the top-level in descending order
  */
-void calculate_threads (QueryResults& qres, MuMsgFieldId sort_field,
-                        bool descending);
+void calculate_threads (QueryResults& qres, bool descending);
 
 } // namespace Mu
 

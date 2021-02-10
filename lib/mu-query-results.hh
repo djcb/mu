@@ -64,23 +64,6 @@ enum struct QueryFlags {
 MU_ENABLE_BITOPS(QueryFlags);
 
 
-/// Register some information about a match (i.e., message) that we can use for
-/// subsequent queries.
-using ThreadPathVec=std::vector<unsigned>;
-inline std::string
-to_string (const ThreadPathVec& tpath, size_t digits)
-{
-        std::string str;
-        str.reserve(tpath.size() * digits);
-
-        bool first{true};
-        for (auto&& segm: tpath) {
-                str   += format("%s%0*x", first ? "" : ":", (int)digits, segm);
-                first  = false;
-        }
-
-        return str;
-}
 
 /// Stores all the essential information for sorting the results.
 struct QueryMatch {
@@ -102,7 +85,6 @@ struct QueryMatch {
         };
 
         Flags           flags{Flags::None}; /**< Flags */
-        std::string     sort_key; /**< The main sort-key (for the root level) */
         std::string     date_key; /**< The date-key (for sorting all sub-root levels) */
         // the thread subject is the subject of the first message in a thread,
         // and any message that has a different subject compared to its predecessor
@@ -113,6 +95,7 @@ struct QueryMatch {
         std::string     thread_subject; /**< the thread subject for this message */
         size_t          thread_level{}; /**< The thread level */
         std::string     thread_path; /**< The hex-numerial path in the thread, ie. '00:01:0a' */
+        std::string     thread_date{}; /**< date of newest message in thread */
 
         bool operator<(const QueryMatch& rhs) const {
                 return  date_key < rhs.date_key;
@@ -167,8 +150,8 @@ using QueryMatches = std::unordered_map<Xapian::docid, QueryMatch>;
 inline std::ostream&
 operator<<(std::ostream& os, const QueryMatch& qmatch)
 {
-        os << "qm:[" << qmatch.thread_path << "] (" << qmatch.thread_level << "): "
-           << "sort-key:<" << qmatch.sort_key << "> date:<" << qmatch.date_key << "> "
+        os << "qm:[" << qmatch.thread_path << "]: " // " (" << qmatch.thread_level << "): "
+           << "> date:<" << qmatch.date_key << "> "
            << "flags:{" << qmatch.flags << "}";
 
         return os;
@@ -241,7 +224,7 @@ public:
 
         /**
          * Get the thread-id for the document (message) this iterator is
-         * pointing at, or "" when looking at end.
+         * pointing at, or Nothing.
          *
          * @return a message-id
          */
@@ -249,12 +232,19 @@ public:
 
         /**
          * Get the file-system path for the document (message) this iterator is
-         * pointing at, or "" when looking at end.
+         * pointing at, or Nothing.
          *
          * @return a filesystem path
          */
         Option<std::string> path() const noexcept { return opt_string(MU_MSG_FIELD_ID_PATH); }
 
+        /**
+         * Get the date for the document (message) the iterator is pointing at.
+         * pointing at, or Nothing.
+         *
+         * @return a filesystem path
+         */
+        Option<std::string> date() const noexcept { return opt_string(MU_MSG_FIELD_ID_DATE); }
 
         /**
          * Get the file-system path for the document (message) this iterator is
@@ -329,7 +319,7 @@ k         * destroyed.; it's a 'floating' reference.
 private:
         Xapian::MSetIterator mset_it_;
         QueryMatches&        query_matches_;
-        MuMsg *msg_{};
+        MuMsg                *msg_{};
 };
 
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
