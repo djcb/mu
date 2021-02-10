@@ -100,7 +100,6 @@ Query::Private::make_enquire (const std::string& expr,
         return maybe_sort (enq, sortfieldid, qflags);
 }
 
-
 Xapian::Enquire
 Query::Private::make_related_enquire (const Xapian::Query& first_q,
                                       const StringSet& thread_ids,
@@ -158,11 +157,21 @@ Option<QueryResults>
 Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
                               QueryFlags qflags, size_t maxnum) const
 {
+        // i.e. a query _without_ related messages, but still possibly
+        // with threading.
+        //
+        // In the threading case, the sortfield-id is ignored, we always sort by
+        // date (since threading the threading results are always by date.)
+
         const auto singular_qflags{qflags | QueryFlags::Leader};
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
         DeciderInfo minfo{};
-        auto enq{make_enquire(expr, threading ? MU_MSG_FIELD_ID_NONE : sortfieldid, qflags)};
+        #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wextra"
+        auto enq{make_enquire(expr, threading ? MU_MSG_FIELD_ID_DATE : sortfieldid, qflags)};
+        #pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic pop
         auto mset{enq.get_mset(0, maxnum, {}, make_leader_decider(singular_qflags, minfo).get())};
 
         auto qres{QueryResults{mset, std::move(minfo.matches)}};
@@ -177,17 +186,26 @@ Option<QueryResults>
 Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
                              QueryFlags qflags, size_t maxnum) const
 {
-        const auto leader_qflags{qflags | QueryFlags::Leader | QueryFlags::GatherThreadIds};
+        // i.e. a query _with_ related messages and possibly with threading.
+        //
+        // In the threading case, the sortfield-id is ignored, we always sort by
+        // date (since threading the threading results are always by date.);
+        // moreover, in either threaded or non-threaded case, we sort the first
+        // ("leader") query by date, i.e, we prefer the newest or oldest
+        // (descending) messages.
+        const auto leader_qflags{QueryFlags::Leader | QueryFlags::GatherThreadIds};
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
         // Run our first, "leader" query;
         DeciderInfo minfo{};
-        auto enq{make_enquire(expr, MU_MSG_FIELD_ID_NONE, qflags)};
+        auto enq{make_enquire(expr, MU_MSG_FIELD_ID_DATE, leader_qflags)};
         const auto mset{enq.get_mset(0, maxnum, {},
                                      make_leader_decider(leader_qflags, minfo).get())};
 
         // Now, determine the "related query". In the threaded-case, we search
-        // among _all_ messages, since complete threads are preferred.
+        // among _all_ messages, since complete threads are preferred; no need
+        // to sort in that case since the search is unlimited and the sorting
+        // happens during threading.
         auto r_enq{make_related_enquire(enq.get_query(), minfo.thread_ids,
                                         threading ? MU_MSG_FIELD_ID_NONE : sortfieldid, qflags)};
         const auto r_mset{r_enq.get_mset(0, threading ? store_.size() : maxnum,
