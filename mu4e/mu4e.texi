@@ -2157,7 +2157,8 @@ with the difference being that the target is always a maildir --- maildir
 queries provide a `traditional' folder-like interface to a search-based e-mail
 client. By default, maildir searches are available in the @ref{Main view},
 @ref{Headers view}, and @ref{Message view}, with the key @key{j}
-(@code{mu4e-jump-to-maildir}).
+(@code{mu4e-jump-to-maildir}). If a prefix argument is given, the maildir
+query can be refined before execution.
 
 @subsection Setting up maildir shortcuts
 

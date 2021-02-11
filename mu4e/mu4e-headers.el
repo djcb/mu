@@ -1542,7 +1542,16 @@ or `past'."
      (pop mu4e~headers-query-future))))
 
 
-;;; Interactive functions
+;;; Reading queries with completion
+
+(defun mu4e-read-query (prompt &optional initial-input)
+  "Read a search query with completion using PROMPT and INITIAL-INPUT."
+  (minibuffer-with-setup-hook
+      (lambda ()
+        (setq-local completion-at-point-functions
+                    #'mu4e--search-query-competion-at-point)
+        (use-local-map mu4e-minibuffer-search-query-map))
+    (read-string prompt initial-input 'mu4e~headers-search-hist)))
 
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
@@ -1584,6 +1593,9 @@ or `past'."
     map)
   "The keymap when reading a search query.")
 
+
+;;; Interactive functions
+
 (defun mu4e-headers-search (&optional expr prompt edit
                                       ignore-history msgid show)
   "Search in the mu database for EXPR, and switch to the output
@@ -1602,13 +1614,7 @@ searching. If SHOW is non-nil, show the message with MSGID."
          (expr
           (if edit
               (read-string prompt expr)
-            (or expr
-                (minibuffer-with-setup-hook
-                    (lambda ()
-                      (setq-local completion-at-point-functions
-                                  #'mu4e--search-query-competion-at-point)
-                      (use-local-map mu4e-minibuffer-search-query-map))
-                  (read-string prompt nil 'mu4e~headers-search-hist))))))
+            (or expr (mu4e-read-query prompt)))))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr ignore-history)
     (setq mu4e~headers-msgid-target msgid
@@ -1882,15 +1888,19 @@ untrashed)."
   (interactive)
   (mu4e~headers-prev-or-next-unread nil))
 
-(defun mu4e~headers-jump-to-maildir (maildir)
-  "Show the messages in maildir (user is prompted to ask what
-maildir)."
+(defun mu4e~headers-jump-to-maildir (maildir &optional edit)
+  "Show the messages in maildir.
+The user is prompted to ask what maildir.  If prefix arg EDIT is
+given, offer to edit the search query before executing it."
   (interactive
    (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
-     (list maildir)))
+     (list maildir current-prefix-arg)))
   (when maildir
+    (setq query (format "maildir:\"%s\"" maildir))
+    (when edit
+      (setq query (mu4e-read-query "Refine query: " query)))
     (mu4e-mark-handle-when-leaving)
-    (mu4e-headers-search (format "maildir:\"%s\"" maildir))))
+    (mu4e-headers-search query)))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.
