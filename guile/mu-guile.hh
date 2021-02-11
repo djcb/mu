@@ -82,6 +82,5 @@ SCM mu_guile_scm_from_str (const char *str);
  *
  * @return
  */
-void* mu_guile_init (void *data);
-
+extern "C" { void* mu_guile_init (void *data); }
 #endif /*__MU_GUILE_H__*/
