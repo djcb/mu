@@ -35,6 +35,8 @@
       goal, is also faster (e.g. the threading seems to be roughly twice as
       fast)
 
+    - Experimental support for the Meson build system.
+
 *** mu4e
 
     - Include maildir-shortcuts in the main-view with overall/unread counts,
