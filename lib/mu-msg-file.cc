@@ -683,7 +683,7 @@ static gchar*
 get_msgid (MuMsgFile *self, gboolean *do_free)
 {
         const char *msgid{g_mime_message_get_message_id (self->_mime_msg)};
-        if (msgid && strlen(msgid) < MU_STORE_MAX_TERM_LENGTH) {
+        if (msgid && strlen(msgid) < Store::MaxTermLength) {
                 *do_free = FALSE;
                 return (char*)msgid;
         }

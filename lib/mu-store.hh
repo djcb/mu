@@ -35,16 +35,13 @@
 #include <index/mu-indexer.hh>
 
 namespace Mu {
-
-/* http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-#define MU_STORE_MAX_TERM_LENGTH (240)
-#define MU_STORE_INVALID_DOCID 0
-
 class Store {
 public:
-        using Id = unsigned;    /**< Id for a message in the store (internally,
-                                 * corresponds to a Xapian document-id) */
+        using Id = Xapian::docid;          /**< Id for a message in the store */
         static constexpr Id InvalidId = 0; /**< Invalid  store id */
+
+        static constexpr size_t MaxTermLength = 240; /**< Maximum length of a term,
+          http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
 
         /**
          * Construct a store for an existing document database

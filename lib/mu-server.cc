@@ -50,9 +50,6 @@
 using namespace Mu;
 using namespace Command;
 
-using DocId = unsigned;
-
-
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
         Private(Store& store, Output output):
@@ -116,9 +113,9 @@ private:
                                 const Option<QueryMatch&> qm,
                                 MuMsgOptions opts);
 
-        Sexp::List move_docid (DocId docid, const std::string& flagstr,
+        Sexp::List move_docid (Store::Id docid, const std::string& flagstr,
                                bool new_name, bool no_view);
-        Sexp::List perform_move (DocId docid, MuMsg *msg,
+        Sexp::List perform_move (Store::Id docid, MuMsg *msg,
                                  const std::string& maildirarg,
                                  MuFlags flags, bool new_name, bool no_view);
 
@@ -654,10 +651,10 @@ Server::Private::extract_handler (const Parameters& params)
 
 
 /* get a *list* of all messages with the given message id */
-static std::vector<DocId>
+static std::vector<Store::Id>
 docids_for_msgid (const Query& q, const std::string& msgid, size_t max=100)
 {
-        if (msgid.size() > MU_STORE_MAX_TERM_LENGTH - 1) {
+        if (msgid.size() > Store::MaxTermLength) {
                 throw Error(Error::Code::InvalidArgument,
                                   "invalid message-id '%s'", msgid.c_str());
         }
@@ -677,7 +674,7 @@ docids_for_msgid (const Query& q, const std::string& msgid, size_t max=100)
                 throw Error(Error::Code::NotFound,
                             "could not find message(s) for msgid %s", msgid.c_str());
 
-        std::vector<DocId> docids{};
+        std::vector<Store::Id> docids{};
         for(auto&& mi: *res)
                 docids.emplace_back(mi.doc_id());
 
@@ -709,7 +706,7 @@ path_from_docid (const Store& store, unsigned docid)
 }
 
 
-static std::vector<DocId>
+static std::vector<Store::Id>
 determine_docids (const Query& q, const Parameters& params)
 {
         auto docid{get_int_or(params, ":docid", 0)};
@@ -911,7 +908,7 @@ get_flags (const std::string& path, const std::string& flagstr)
 }
 
 Sexp::List
-Server::Private::perform_move (DocId docid, MuMsg *msg, const std::string& maildirarg,
+Server::Private::perform_move (Store::Id docid, MuMsg *msg, const std::string& maildirarg,
                                MuFlags flags, bool new_name, bool no_view)
 {
         bool different_mdir{};
@@ -944,10 +941,10 @@ Server::Private::perform_move (DocId docid, MuMsg *msg, const std::string& maild
 }
 
 Sexp::List
-Server::Private::move_docid (DocId docid, const std::string& flagstr,
+Server::Private::move_docid (Store::Id docid, const std::string& flagstr,
                              bool new_name, bool no_view)
 {
-        if (docid == MU_STORE_INVALID_DOCID)
+        if (docid == Store::InvalidId)
                 throw Error{Error::Code::InvalidArgument, "invalid docid"};
 
         auto msg{store_.find_message(docid)};
@@ -1115,7 +1112,7 @@ Server::Private::sent_handler (const Parameters& params)
 {
         const auto path{get_string_or(params, ":path")};
         const auto docid{store().add_message(path)};
-        if (docid == MU_STORE_INVALID_DOCID)
+        if (docid == Store::InvalidId)
                 throw Error{Error::Code::Store, "failed to add path"};
 
         Sexp::List lst;
@@ -1127,11 +1124,11 @@ Server::Private::sent_handler (const Parameters& params)
 }
 
 static bool
-maybe_mark_as_read (Mu::Store& store, MuMsg *msg, DocId docid)
+maybe_mark_as_read (Mu::Store& store, MuMsg *msg, Store::Id docid)
 {
         if (!msg)
                 throw Error{Error::Code::Store, "missing message"};
-        if (docid == MU_STORE_INVALID_DOCID)
+        if (docid == Store::InvalidId)
                 throw Error{Error::Code::Store, "invalid docid"};
 
         const auto oldflags{mu_msg_get_flags (msg)};
@@ -1160,7 +1157,7 @@ maybe_mark_as_read (Mu::Store& store, MuMsg *msg, DocId docid)
 void
 Server::Private::view_handler (const Parameters& params)
 {
-        DocId docid{MU_STORE_INVALID_DOCID};
+        Store::Id docid{Store::InvalidId};
         const auto path{get_string_or(params,       ":path")};
         const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
 

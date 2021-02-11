@@ -385,7 +385,7 @@ Store::add_message (const std::string& path)
 
 	const auto docid{priv_->add_or_update_msg (0, msg, &gerr)};
 	mu_msg_unref (msg);
-        if (G_UNLIKELY(docid == MU_STORE_INVALID_DOCID))
+        if (G_UNLIKELY(docid == InvalidId))
                 throw Error{Error::Code::Message, "failed to add message: %s",
                                 gerr ? gerr->message : "something went wrong"};
 
@@ -669,10 +669,10 @@ prio_val (MuMsgPrio prio)
 static void // add term, truncate if needed.
 add_term (Xapian::Document& doc, const std::string& term)
 {
-	if (term.length() < MU_STORE_MAX_TERM_LENGTH)
+	if (term.length() < Store::MaxTermLength)
 		doc.add_term(term);
 	else
-		doc.add_term(term.substr(0, MU_STORE_MAX_TERM_LENGTH));
+		doc.add_term(term.substr(0, Store::MaxTermLength));
 }
 
 
@@ -800,7 +800,7 @@ each_part (MuMsg *msg, MuMsgPart *part, PartData *pdata)
 
 	/* save the mime type of any part */
 	if (part->type) {
-		char ctype[MU_STORE_MAX_TERM_LENGTH + 1];
+		char ctype[Store::MaxTermLength + 1];
 		g_snprintf(ctype, sizeof(ctype), "%s/%s", part->type, part->subtype);
 		add_term(pdata->_doc, mime + ctype);
 	}
@@ -1044,7 +1044,7 @@ update_threading_info (MuMsg *msg, Xapian::Document& doc)
 Xapian::docid
 Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg, GError **err)
 {
-	g_return_val_if_fail (msg, MU_STORE_INVALID_DOCID);
+	g_return_val_if_fail (msg, InvalidId);
 
 	try {
 		Xapian::Document doc (new_doc_from_message(msg));
@@ -1065,5 +1065,5 @@ Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg, GError **err)
 
 	} MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
 
-	return MU_STORE_INVALID_DOCID;
+	return InvalidId;
 }
