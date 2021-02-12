@@ -208,7 +208,7 @@ Follows the format of `format-time-string'."
   :type 'string
   :group 'mu4e)
 
-(defcustom mu4e-modeline-max-width 30
+(defcustom mu4e-modeline-max-width 42
   "Determines the maximum length of the modeline string.
 If the string exceeds this limit, it will be truncated to fit."
   :type 'integer

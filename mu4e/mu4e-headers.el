@@ -269,6 +269,15 @@ This prefix should have the same length as `mu4e-headers-thread-connection-prefi
 (defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
   "Prefix for duplicate messages.")
 
+
+
+(defvar mu4e-headers-threaded-label   '("T" . "🎄")
+  "Non-fancy and fancy labels for threaded search in the mode-line.")
+(defvar mu4e-headers-full-label       '("F" . "∀")
+  "Non-fancy and fancy labels for full search in the mode-line.")
+(defvar mu4e-headers-related-label    '("R" . "🤝")
+  "Non-fancy and fancy labels for inclued-related search in the mode-line.")
+
 ;;;; Various
 
 (defvar mu4e-headers-actions
@@ -1259,6 +1268,41 @@ anything about the query, it just does text replacement."
   :type 'function
   :group 'mu4e)
 
+(defvar mu4e~headers-mode-line-label "")
+(defun mu4e~headers-update-mode-line ()
+  "Update mode-line settings."
+    (let* ((flagstr
+            (mapconcat (lambda (flag-cell)
+                         (if (car flag-cell)
+                             (if mu4e-use-fancy-chars
+                                 (cddr flag-cell) (cadr flag-cell) )
+                           ""))
+                       `((,mu4e-headers-full-search     . ,mu4e-headers-full-label)
+                         (,mu4e-headers-include-related . ,mu4e-headers-related-label)
+                         (,mu4e-headers-show-threads    . ,mu4e-headers-threaded-label))
+                       ""))
+           (name "mu4e-headers"))
+
+      (setq mode-name name)
+      (setq mu4e~headers-mode-line-label (concat flagstr " " mu4e~headers-last-query))
+
+      (make-local-variable 'global-mode-string)
+
+      (add-to-list 'global-mode-string
+                   `(:eval
+                     (concat
+                      (propertize
+                       (mu4e~quote-for-modeline ,mu4e~headers-mode-line-label)
+                       'face 'mu4e-modeline-face)
+                      " "
+                      (if (and mu4e-display-update-status-in-modeline
+                               (buffer-live-p mu4e~update-buffer)
+                               (process-live-p (get-buffer-process
+                                                mu4e~update-buffer)))
+                          (propertize " (updating)" 'face 'mu4e-modeline-face)
+                        ""))))))
+
+
 (defun mu4e~headers-search-execute (expr ignore-history)
   "Search in the mu database for EXPR, and switch to the output
 buffer for the results. If IGNORE-HISTORY is true, do *not* update
@@ -1276,23 +1320,8 @@ the query history stack."
         ;; save the old present query to the history list
         (when mu4e~headers-last-query
           (mu4e~headers-push-query mu4e~headers-last-query 'past)))
-      (setq
-       mode-name "mu4e-headers"
-       mu4e~headers-last-query rewritten-expr)
-      (make-local-variable 'global-mode-string)
-      (add-to-list 'global-mode-string
-                   '(:eval
-                     (concat
-                      (propertize
-                       (mu4e~quote-for-modeline mu4e~headers-last-query)
-                       'face 'mu4e-modeline-face)
-                      " "
-                      (if (and mu4e-display-update-status-in-modeline
-                               (buffer-live-p mu4e~update-buffer)
-                               (process-live-p (get-buffer-process
-                                                mu4e~update-buffer)))
-                          (propertize " (updating)" 'face 'mu4e-modeline-face)
-                        "")))))
+      (setq mu4e~headers-last-query rewritten-expr)
+      (mu4e~headers-update-mode-line))
 
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
