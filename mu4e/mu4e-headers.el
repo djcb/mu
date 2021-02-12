@@ -220,7 +220,11 @@ but also manually invoked searches."
 (defvar mu4e-headers-sort-field :date
   "Field to sort the headers by. Must be a symbol,
 one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
-`:list'")
+`:list'.
+
+Note that when threading is enabled (through
+`mu4e-headers-show-threads'), the headers are exclusively sorted
+chronologically (`:date') by the newest message in the thread.")
 
 (defvar mu4e-headers-sort-direction 'descending
   "Direction to sort by; a symbol either `descending' (sorting

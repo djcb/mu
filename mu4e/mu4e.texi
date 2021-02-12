@@ -379,12 +379,24 @@ configuration before trying again:
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
 @end lisp
 
+@subsection Building using the meson build system
+
+As an (experimental) alternative to the @t{autotools}-build, it is possible to use
+the Meson@footnote{@url{https://mesonbuild.com/}} build-system instead.
+
+@example
+$ git clone git://github.com/djcb/mu.git
+$ cd mu
+$ meson build && ninja -C build
+$ sudo ninja -C install
+@end example
+
 @subsection mu4e and emacs customization
 
 There is some support for using the Emacs customization system in
-@t{mu4e}, but for now, we recommend setting the values manually. Please refer
-to @ref{Example configs} for a couple of examples of this; here we go
-through things step-by-step.
+@t{mu4e}, but for now, we recommend setting the values
+manually. Please refer to @ref{Example configs} for a couple of
+examples of this; here we go through things step-by-step.
 
 @node Getting mail
 @section Getting mail
@@ -1046,23 +1058,28 @@ For more information about marking, see @ref{Marking}.
 @node Sorting and threading
 @section Sorting and threading
 
-By default, @t{mu4e} sorts messages by date, in descending order: the most
-recent messages are shown at the top. In addition, the messages are
-@emph{threaded}, i.e., shown in the context of a discussion thread; this also
-affects the sort order.
+By default, @t{mu4e} sorts messages by date, in descending order: the
+most recent messages are shown at the top. In addition, be default
+@t{mu4e} shows the message @emph{threads}, i.e., the tree structure
+representing a discussion thread; this also affects the sort order:
+the top-level messages are sorted by the date of the @emph{newest}
+message in the thread.
 
 The header field used for sorting is indicated by ``@t{V}'' or
 ``@t{^}''@footnote{or you can use little graphical triangles; see variable
 @code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
 ascending, respectively).
 
-You can change the sort order by clicking the corresponding field with the
+You can change the sort order by clicking the corresponding column with the
 mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note that not
 all fields can be used for sorting. You can toggle threading on/off using
 @kbd{M-x mu4e-headers-toggle-threading} or @key{P}. For both of these functions,
 unless you provide a prefix argument (@key{C-u}), the current search is
 updated immediately using the new parameters. You can toggle full-search
 (@ref{Searching}) using @kbd{M-x mu4e-headers-toggle-full-search} or @key{Q}.
+
+Note that with threading enabled, the sorting is exclusively by date,
+regardless of the column clicked.
 
 If you want to change the defaults for these settings, you can use the
 variables @code{mu4e-headers-sort-field} and

@@ -5,13 +5,13 @@
 
 *** mu
 
-    - Where available (and with suitable ~libglib~), log to the systemd journal
-      instead of a ~~/.cache/mu.log~. The ~--debug~ option to ~mu~ much
+    - Where available (and with suitably equiped ~libglib~), log to the ~systemd~
+      journal instead of ~~/.cache/mu.log~. Passing the ~--debug~ option to ~mu~
       increases the amount that is logged.
 
     - Follow symlinks in maildirs, and support moving messsages across
-      filesystems (but note that that is quite a bit slower than the
-      single-filesystem case)
+      filesystems. Obviously, that is typically quite a bit slower than the
+      single-filesystem case, but can be still be useful.
 
     - Optionally provide readline support for the ~mu~ server (when in tty-mode)
 
@@ -32,8 +32,7 @@
 
     - Modernized the querying/threading machinery; this is makes some old code a
       lot easier to understand and maintain, and even while not an explicit
-      goal, is also faster (e.g. the threading seems to be roughly twice as
-      fast)
+      goal, is also faster.
 
     - Experimental support for the Meson build system.
 
@@ -53,7 +52,7 @@
     - Honor ~truncate-string-ellipsis~ so you can now use 'fancy' ellipses for
       truncated strings with ~(setq truncate-string-ellipsis "…")~
 
-    - Add a variable ~mu4e-mu-debug~ which, when set to non-~nil~ makes the ~mu~
+    - Add a variable ~mu4e-mu-debug~ which, when set to non-~nil,~ makes the ~mu~
       server log more verbosely (to ~mu.log~ or the journal)
 
     - Better alignment in headers-buffers; this looks nicer, but is also a bit

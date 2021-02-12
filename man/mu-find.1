@@ -1,10 +1,8 @@
-.TH MU FIND 1 "19 April 2015" "User Manuals"
+.TH MU FIND 1 "12 February 2021" "User Manuals"
 
 .SH NAME
 
 mu find \- find e-mail messages in the \fBmu\fR database.
-
-mu mfind \- find e-mail messages in the \fBmu\fR database with mu4e defaults.
 
 .SH SYNOPSIS
 
@@ -14,9 +12,6 @@ mu mfind \- find e-mail messages in the \fBmu\fR database with mu4e defaults.
 
 \fBmu find\fR is the \fBmu\fR command for searching e-mail message
 that were stored earlier using \fBmu index\fR(1).
-
-\fBmu mfind\fR is a version of \fBmu find\fR that defaults to
-\f--include-related\fR and \fB--skip-dups\fR, just like \fBmu4e\fR does.
 
 .SH SEARCHING MAIL
 
@@ -226,9 +221,10 @@ Gmail-style 'conversations'. Note, finding these related messages make
 searches slower.
 
 .TP
-\fB\-t\fR, \fB\-\-threads\fR show messages in a 'threaded' format -- that is,
-with indentation and arrows showing the conversation threads in the list of
-matching messages.
+\fB\-t\fR, \fB\-\-threads\fR show messages in a 'threaded' format --
+that is, with indentation and arrows showing the conversation threads
+in the list of matching messages. When using this, sorting is
+chronological (by date), based on the newest message in a thread.
 
 Messages in the threaded list are indented based on the depth in the
 discussion, and are prefix with a kind of arrow with thread-related
