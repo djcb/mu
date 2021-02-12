@@ -1548,31 +1548,37 @@ or `past'."
 
 ;;; Reading queries with completion
 
+(defvar mu4e-minibuffer-search-query-map
+  (let ((map (copy-keymap minibuffer-local-map)))
+    (define-key map (kbd "TAB") #'completion-at-point)
+    map)
+
+  "The keymap when reading a search query.")
 (defun mu4e-read-query (prompt &optional initial-input)
   "Read a search query with completion using PROMPT and INITIAL-INPUT."
   (minibuffer-with-setup-hook
       (lambda ()
         (setq-local completion-at-point-functions
-                    #'mu4e--search-query-competion-at-point)
+                    #'mu4e~search-query-competion-at-point)
         (use-local-map mu4e-minibuffer-search-query-map))
     (read-string prompt initial-input 'mu4e~headers-search-hist)))
 
 (defvar mu4e~headers-search-hist nil
   "History list of searches.")
 
-(defconst mu4e--search-query-keywords
+(defconst mu4e~search-query-keywords
   '("and" "or" "not"
     "from:" "to:" "cc:" "bcc:" "contact:" "date:" "subject:" "body:"
     "list:" "maildir:" "flag:" "mime:" "file:" "prio:" "tag:" "msgid:"
     "size:" "embed:"))
 
-(defun mu4e--search-query-competion-at-point ()
+(defun mu4e~search-query-competion-at-point ()
   (cond
    ((not (looking-back "[:\"][^ \t]*" nil))
     (let ((bounds (bounds-of-thing-at-point 'word)))
       (list (or (car bounds) (point))
             (or (cdr bounds) (point))
-            mu4e--search-query-keywords)))
+            mu4e~search-query-keywords)))
    ((looking-back "flag:\\(\\w*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
@@ -1590,12 +1596,6 @@ or `past'."
     (list (match-beginning 1)
           (match-end 1)
           (mailcap-mime-types)))))
-
-(defvar mu4e-minibuffer-search-query-map
-  (let ((map (copy-keymap minibuffer-local-map)))
-    (define-key map (kbd "TAB") #'completion-at-point)
-    map)
-  "The keymap when reading a search query.")
 
 
 ;;; Interactive functions
@@ -1618,7 +1618,13 @@ searching. If SHOW is non-nil, show the message with MSGID."
          (expr
           (if edit
               (read-string prompt expr)
-            (or expr (mu4e-read-query prompt)))))
+            (or expr
+                (minibuffer-with-setup-hook
+                    (lambda ()
+                      (setq-local completion-at-point-functions
+                                  #'mu4e~search-query-competion-at-point)
+                      (use-local-map mu4e-minibuffer-search-query-map))
+                  (read-string prompt nil 'mu4e~headers-search-hist))))))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr ignore-history)
     (setq mu4e~headers-msgid-target msgid
@@ -1900,11 +1906,10 @@ given, offer to edit the search query before executing it."
    (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
      (list maildir current-prefix-arg)))
   (when maildir
-    (setq query (format "maildir:\"%s\"" maildir))
-    (when edit
-      (setq query (mu4e-read-query "Refine query: " query)))
-    (mu4e-mark-handle-when-leaving)
-    (mu4e-headers-search query)))
+    (let* ((query (format "maildir:\"%s\"" maildir))
+           (query (if edit (mu4e-read-query "Refine query: " query) query)))
+      (mu4e-mark-handle-when-leaving)
+      (mu4e-headers-search query))))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.
