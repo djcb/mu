@@ -52,7 +52,16 @@ public:
          */
         Query(Query&& other);
 
-
+        /**
+         * Run a query on the store
+         *
+         * @param expr the search expression
+         * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
+         * @param flags query flags
+         * @param maxnum maximum number of results to return. 0 for 'no limit'
+         *
+         * @return the query-results, or Nothing in case of error.
+         */
         Option<QueryResults> run(const std::string& expr="",
                                  MuMsgFieldId sortfieldid=MU_MSG_FIELD_ID_NONE,
                                  QueryFlags flags=QueryFlags::None,

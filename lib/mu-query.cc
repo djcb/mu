@@ -164,7 +164,7 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
         DeciderInfo minfo{};
-        #pragma GCC diagnostic push
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored   "-Wextra"
         auto enq{make_enquire(expr, threading ? MU_MSG_FIELD_ID_DATE : sortfieldid, qflags)};
         #pragma GCC diagnostic ignored "-Wswitch-default"
@@ -173,10 +173,8 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
         mset.fetch();
 
         auto qres{QueryResults{mset, std::move(minfo.matches)}};
-        if (!threading)
-                return qres;
-        else
-                return run_threaded(qres, enq, qflags);
+
+        return threading ? run_threaded(qres, enq, qflags) : qres;
 }
 
 
@@ -194,26 +192,24 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         const auto leader_qflags{QueryFlags::Leader | QueryFlags::GatherThreadIds};
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
-        // Run our first, "leader" query;
+        // Run our first, "leader" query
         DeciderInfo minfo{};
-        auto enq{make_enquire(expr, MU_MSG_FIELD_ID_DATE, leader_qflags)};
+        auto enq{make_enquire(expr, sortfieldid, leader_qflags)};
         const auto mset{enq.get_mset(0, maxnum, {},
                                      make_leader_decider(leader_qflags, minfo).get())};
 
-        // Now, determine the "related query". In the threaded-case, we search
-        // among _all_ messages, since complete threads are preferred; no need
-        // to sort in that case since the search is unlimited and the sorting
-        // happens during threading.
+        // Now, determine the "related query".
+        //
+        // In the threaded-case, we search among _all_ messages, since complete
+        // threads are preferred; no need to sort in that case since the search
+        // is unlimited and the sorting happens during threading.
         auto r_enq{make_related_enquire(enq.get_query(), minfo.thread_ids,
                                         threading ? MU_MSG_FIELD_ID_NONE : sortfieldid, qflags)};
         const auto r_mset{r_enq.get_mset(0, threading ? store_.size() : maxnum,
                                          {}, make_related_decider(qflags, minfo).get())};
-
         auto qres{QueryResults{r_mset, std::move(minfo.matches)}};
-        if (!threading)
-                return qres;
-        else
-                return run_threaded(qres, r_enq, qflags);
+
+        return threading ? run_threaded(qres, r_enq, qflags) : qres;
 }
 
 Option<QueryResults>
@@ -221,11 +217,15 @@ Query::Private::run (const std::string& expr, MuMsgFieldId sortfieldid,
                      QueryFlags qflags, size_t maxnum) const
 {
         const auto eff_maxnum{maxnum == 0 ? store_.size() : maxnum};
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored   "-Wextra"
+        const auto eff_sortfield{sortfieldid == MU_MSG_FIELD_ID_NONE ?
+                MU_MSG_FIELD_ID_DATE : sortfieldid };
+#pragma GCC diagnostic pop
         if (any_of(qflags & QueryFlags::IncludeRelated))
-                return run_related (expr, sortfieldid, qflags, eff_maxnum);
+                return run_related (expr, eff_sortfield, qflags, eff_maxnum);
         else
-                return run_singular(expr, sortfieldid, qflags, eff_maxnum);
+                return run_singular(expr, eff_sortfield, qflags, eff_maxnum);
 }
 
 
