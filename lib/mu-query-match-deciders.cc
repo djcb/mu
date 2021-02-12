@@ -119,7 +119,7 @@ struct MatchDeciderLeader: public MatchDecider {
          *   whose message-id was seen before.
          *
          * Even if we do not skip these messages entirely, we remember whether
-         * they were unreadabld/duplicate (in the QueryMatch::Flags), so we can
+         * they were unreadable/duplicate (in the QueryMatch::Flags), so we can
          * quickly find that info when doing the second 'related' query.
          *
          * The "leader" query. Matches here get the Leader flag unless their
@@ -135,7 +135,8 @@ struct MatchDeciderLeader: public MatchDecider {
         bool operator() (const Xapian::Document& doc) const override {
                 // by definition, we haven't seen the docid before,
                 // so no need to search
-                auto it = decider_info_.matches.emplace(doc.get_docid(), make_query_match(doc));
+                auto it = decider_info_.matches.emplace(doc.get_docid(),
+                                                        make_query_match(doc));
                 it.first->second.flags |= QueryMatch::Flags::Leader;
 
                 if (should_include(it.first->second)) {
@@ -163,20 +164,14 @@ struct MatchDeciderRelated: public MatchDecider {
          * This receives the documents considered during a Xapian query, and
          * is to return either true (keep) or false (ignore)
          *
-         * We use this to potentiallly avoid certain messages (documents):
+         * We use this to potentially avoid certain messages (documents):
          * - with QueryFlags::SkipUnreadable this will return false for message
          *   that are not readable in the file-system
          * - with QueryFlags::SkipDuplicates this will return false for messages
          *   whose message-id was seen before.
          *
-         * Even if we do not skip these messages entirely, we remember whether they were
-         * unreadable/duplicate (in the QueryMatch::Flags), so we can quickly find that info when
-         * doing the second 'related' query.
-         *
-         * The "leader" query. Matches here get the Leader flag unless they are duplicates /
-         * unreadable. We check the duplicate/readable status regardless of whether
-         * SkipDuplicates/SkipUnreadable was passed (to gather that information); however those
-         * flags affect our true/false verdict.
+         * Unlike in the "leader" decider (scroll up), we don't need to remember
+         * messages we won't include.
          *
          * @param doc xapian document
          *
@@ -188,11 +183,13 @@ struct MatchDeciderRelated: public MatchDecider {
                 if (it != decider_info_.matches.end())
                         return should_include(it->second);
 
-                // nope; create it.
-                auto new_it = decider_info_.matches.emplace(
-                        doc.get_docid(), make_query_match(doc));
-                new_it.first->second.flags |= QueryMatch::Flags::Related;
-                return should_include(new_it.first->second);
+                auto qm{make_query_match(doc)};
+                if (should_include(qm)) {
+                        qm.flags = QueryMatch::Flags::Related;
+                        decider_info_.matches.emplace(doc.get_docid(), std::move(qm));
+                        return true;
+                } else
+                        return false; // nope.
         }
 };
 
@@ -202,7 +199,6 @@ Mu::make_related_decider (QueryFlags qflags, DeciderInfo& info)
 {
         return std::make_unique<MatchDeciderRelated>(qflags, info);
 }
-
 
 struct MatchDeciderFinal: public MatchDecider {
         MatchDeciderFinal(QueryFlags qflags, DeciderInfo& info):
@@ -220,12 +216,12 @@ struct MatchDeciderFinal: public MatchDecider {
          * @return true or false
          */
         bool operator() (const Xapian::Document& doc) const override {
-                // we may have seen this match in the "Leader" query.
-                auto it = decider_info_.matches.find(doc.get_docid());
-                if (G_UNLIKELY(it == decider_info_.matches.end())) {
-                        g_warning ("could not find %u", doc.get_docid());
+                // we may have seen this match in the "Leader" query,
+                // or in the second (unbuounded) related query;
+                const auto it{decider_info_.matches.find(doc.get_docid())};
+                if (it == decider_info_.matches.end())
                         return false;
-                } else
+                else
                         return should_include(it->second);
         }
 };
