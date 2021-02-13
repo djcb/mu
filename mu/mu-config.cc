@@ -102,7 +102,7 @@ config_options_group_mu (void)
 		 "print debug output to standard error (false)", NULL},
 		{"quiet", 'q', 0, G_OPTION_ARG_NONE, &MU_CONFIG.quiet,
 		 "don't give any progress information (false)", NULL},
-		{"version", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
+		{"version", 'V', 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
 		 "display version and copyright information (false)", NULL},
 		{"muhome", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.muhome,
 		 "specify an alternative mu directory", "<dir>"},
