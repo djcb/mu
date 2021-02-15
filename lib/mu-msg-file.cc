@@ -144,8 +144,8 @@ calculate_sha1 (FILE *file)
 static GMimeStream*
 get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 {
-	FILE *file;
-	GMimeStream *stream;
+	FILE		*file;
+	GMimeStream	*stream;
 
 	file = fopen (path, "r");
 	if (!file) {
@@ -164,7 +164,6 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 		return NULL;
 	}
 
-	return stream;
         self->_sha1 = calculate_sha1(file);
         if (!self->_sha1) {
                 ::fclose(file);
@@ -173,6 +172,7 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
                 return NULL;
         }
 
+	return stream;
 }
 
 static gboolean
