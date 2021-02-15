@@ -68,16 +68,16 @@ std::unique_ptr<Xapian::MatchDecider>  make_related_decider(QueryFlags qflags,
 
 
 /**
- * Make a "final" decider, that is, a MatchDecider that removes all but
- * the document excepts for the ones included earlier.
+ * Make a "thread" decider, that is, a MatchDecider that removes all but the
+ * document excepts for the ones found during initial/related searches.
  *
  * @param qflags     query flags
  * @param match_info receives information about the matches.
  *
  * @return a unique_ptr to a match decider.
  */
-std::unique_ptr<Xapian::MatchDecider> make_final_decider (QueryFlags qflags,
-                                                          DeciderInfo& info);
+std::unique_ptr<Xapian::MatchDecider> make_thread_decider (QueryFlags qflags,
+                                                           DeciderInfo& info);
 
 
 } // namepace Mu

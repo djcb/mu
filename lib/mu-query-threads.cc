@@ -81,7 +81,7 @@ struct Container {
         // That the sub-root-levels of thtreas are always sorted
         // by date, in ascending order.
         std::string thread_date_key;
-        
+
 
         Option<QueryMatch&>  query_match;
         bool                 is_nuked{};
@@ -103,7 +103,7 @@ using ContainerVec = Container::ContainerVec;
 static std::ostream&
 operator<<(std::ostream& os, const Container& container)
 {
-        os << "container: " << std::right << std::setw(10) << &container                
+        os << "container: " << std::right << std::setw(10) << &container
            << ": parent: "  << std::right << std::setw(10) << container.parent
            << " [" << container.thread_date_key << "]"
            << "\n  children: ";
@@ -122,7 +122,6 @@ operator<<(std::ostream& os, const Container& container)
 
 using IdTable = std::unordered_map<std::string, Container>;
 using DupTable = std::multimap<std::string, Container>;
-//template <typename QueryResultsType> using DupsVec = std::vector<decltype(QueryResultsType::value_type)>;
 
 static void
 handle_duplicates (IdTable& id_table, DupTable& dup_table)
@@ -165,8 +164,8 @@ determine_id_table (QueryResultsType& qres)
                 auto c_it = id_table.find(msgid);
                 auto& container = [&]()->Container& {
                         if (c_it != id_table.end()) {
-                                assert(!c_it->second.query_match);
-                                c_it->second.query_match = mi.query_match();
+                                if (!c_it->second.query_match) // hmm, dup?
+                                        c_it->second.query_match = mi.query_match();
                                 return c_it->second;
                         } else {
                                 // Else:
@@ -218,7 +217,7 @@ determine_id_table (QueryResultsType& qres)
 
                         parent_ref_container = ref_container;
                 }
-                
+
                 // Add the query_match to the chain.
                 if (parent_ref_container && !container.parent) {
                         if (!parent_ref_container->is_reachable(&container))
@@ -276,13 +275,13 @@ static void
 prune (Container* child)
 {
         Container *container{child->parent};
-        
+
         for (auto& grandchild: child->children) {
                 grandchild->parent = container;
                 if (container)
                         container->children.emplace_back(grandchild);
         }
-        
+
         child->children.clear();
         child->is_nuked = true;
 
@@ -295,7 +294,7 @@ static bool
 prune_empty_containers (Container& container)
 {
         Containers to_prune;
-        
+
         container.for_each_child([&](auto& child){
                 if (prune_empty_containers(*child))
                         to_prune.emplace_back(child);
@@ -303,7 +302,7 @@ prune_empty_containers (Container& container)
 
         for (auto& child: to_prune)
                 prune (child);
-        
+
         // Never nuke these.
         if (container.query_match)
                 return false;
@@ -328,7 +327,7 @@ static void
 prune_empty_containers (IdTable& id_table)
 {
         for (auto&& item: id_table) {
-                
+
                 auto& child(item.second);
                 if (child.parent)
                         continue; // not a root child.
@@ -384,7 +383,7 @@ update_container (Container& container, bool descending,
                         first->query_match->flags |= QueryMatch::Flags::First;
                 Container* last   = container.children.back();
                 if (last->query_match)
-                        last->query_match->flags |= QueryMatch::Flags::Last; 
+                        last->query_match->flags |= QueryMatch::Flags::Last;
         }
 
         // calculate the "thread-subject", which is for UI
@@ -408,7 +407,7 @@ update_container (Container& container, bool descending,
 
         return true;
 }
-  
+
 
 static void
 update_containers (Containers& children, bool descending, ThreadPath& tpath,
@@ -450,7 +449,7 @@ static void
 sort_container (Container& container)
 {
         // 1. childless container.
-        
+
         if (container.children.empty()) {
                 container.thread_date_key = container.query_match->date_key;
                 return;
@@ -493,12 +492,12 @@ sort_siblings (IdTable& id_table, bool descending)
                 if (c->query_match) // for debugging, remember
                         c->query_match->thread_date = c->thread_date_key;
         }
-        
+
         // and then sort the root set.
         //
         // The difference with the sub-root containers is that at the top-level,
         // we can sort either in ascending or descending order, while on the
-        // subroot level it's always in ascending order. 
+        // subroot level it's always in ascending order.
         //
         // Note that unless we're testing, _xapian_ will handle
         // the ascending/descending of the top level.
@@ -524,7 +523,7 @@ operator<<(std::ostream& os, const IdTable& id_table)
                 os << item.first << " => " << item.second << "\n";
         }
         os << "------------------------------------------------\n";
-        
+
         std::set<std::string> ids;
         for (auto&& item: id_table) {
                 if (item.second.query_match)
@@ -551,7 +550,7 @@ calculate_threads_real (Results& qres, bool descending)
 
         if (g_test_verbose())
                 std::cout << "*** id-table(1):\n" << id_table << "\n";
-        
+
 
         // // Step 2: get the root set
         // // Step 3: discard id_table
@@ -786,11 +785,11 @@ static void
 test_prune_empty_with_children()
 {
         // m6 should be nuked
-        auto results = MockQueryResults { 
+        auto results = MockQueryResults {
                 MockQueryResult{ "m1", "1",  {"m7", "m6"} },
                 MockQueryResult{ "m2", "2",  {"m7", "m6"} },
         };
-        
+
         calculate_threads(results, false);
 
         assert_thread_paths (results, {
@@ -843,9 +842,9 @@ test_thread_info_descending()
 
         assert_thread_paths (results, {
                         { "m1", "0:z"},      // 5
-                        { "m2", "1:z"  },    // 2  
+                        { "m2", "1:z"  },    // 2
                         { "m4", "1:f:z"  },  //   2
-                        { "m3", "1:e:z"},    //   3 
+                        { "m3", "1:e:z"},    //   3
                 });
 
         g_assert_true (results[0].query_match().has_flag(
@@ -856,7 +855,7 @@ test_thread_info_descending()
                                QueryMatch::Flags::Last));
         g_assert_true (results[3].query_match().has_flag(
                                QueryMatch::Flags::First));
-        
+
 }
 
 

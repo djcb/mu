@@ -102,7 +102,7 @@ private:
         } MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
 };
 
-struct MatchDeciderLeader: public MatchDecider {
+struct MatchDeciderLeader final: public MatchDecider {
         MatchDeciderLeader (QueryFlags qflags, DeciderInfo& info):
                 MatchDecider(qflags, info)
                 {}
@@ -155,7 +155,7 @@ Mu::make_leader_decider (QueryFlags qflags, DeciderInfo& info)
         return std::make_unique<MatchDeciderLeader>(qflags, info);
 }
 
-struct MatchDeciderRelated: public MatchDecider {
+struct MatchDeciderRelated final: public MatchDecider {
         MatchDeciderRelated(QueryFlags qflags, DeciderInfo& info):
                 MatchDecider(qflags, info) {}
         /**
@@ -200,8 +200,8 @@ Mu::make_related_decider (QueryFlags qflags, DeciderInfo& info)
         return std::make_unique<MatchDeciderRelated>(qflags, info);
 }
 
-struct MatchDeciderFinal: public MatchDecider {
-        MatchDeciderFinal(QueryFlags qflags, DeciderInfo& info):
+struct MatchDeciderThread final: public MatchDecider {
+        MatchDeciderThread(QueryFlags qflags, DeciderInfo& info):
                 MatchDecider{qflags, info} {}
         /**
          * operator()
@@ -219,16 +219,13 @@ struct MatchDeciderFinal: public MatchDecider {
                 // we may have seen this match in the "Leader" query,
                 // or in the second (unbuounded) related query;
                 const auto it{decider_info_.matches.find(doc.get_docid())};
-                if (it == decider_info_.matches.end())
-                        return false;
-                else
-                        return should_include(it->second);
+                return it != decider_info_.matches.end() && !it->second.thread_path.empty();
         }
 };
 
 
 std::unique_ptr<Xapian::MatchDecider>
-Mu::make_final_decider (QueryFlags qflags, DeciderInfo& info)
+Mu::make_thread_decider (QueryFlags qflags, DeciderInfo& info)
 {
-        return std::make_unique<MatchDeciderFinal>(qflags, info);
+        return std::make_unique<MatchDeciderThread>(qflags, info);
 }

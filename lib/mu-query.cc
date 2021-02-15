@@ -49,7 +49,7 @@ struct Query::Private {
                                               const StringSet& thread_ids,
                                               MuMsgFieldId sortfieldid, QueryFlags qflags) const;
 
-        Option<QueryResults> run_threaded (QueryResults &qres, Xapian::Enquire& enq,
+        Option<QueryResults> run_threaded (QueryResults&& qres, Xapian::Enquire& enq,
                                             QueryFlags qflags) const;
         Option<QueryResults> run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
                                            QueryFlags qflags, size_t maxnum) const;
@@ -118,32 +118,31 @@ Query::Private::make_related_enquire (const Xapian::Query& first_q,
 }
 
 struct ThreadKeyMaker: public Xapian::KeyMaker {
-        ThreadKeyMaker (const QueryMatches& matches, bool descending):
-                match_info_(matches),
-                not_found_key_{descending ? "#" : "z"}
-                {}
+        ThreadKeyMaker (const QueryMatches& matches): match_info_(matches) {}
         std::string operator()(const Xapian::Document& doc) const override {
                 const auto it{match_info_.find(doc.get_docid())};
-                return (it == match_info_.end()) ? not_found_key_ : it->second.thread_path;
+                if (it == match_info_.end())
+                        g_warning ("not found! %u", doc.get_docid());
+                return (it == match_info_.end()) ? "" :  it->second.thread_path;
         }
         const QueryMatches& match_info_;
-        const std::string   not_found_key_;
 };
 
 Option<QueryResults>
-Query::Private::run_threaded (QueryResults &qres, Xapian::Enquire& enq,
+Query::Private::run_threaded (QueryResults&& qres, Xapian::Enquire& enq,
                               QueryFlags qflags) const
 {
         const auto descending{any_of(qflags & QueryFlags::Descending)};
 
         calculate_threads(qres, descending);
 
-        ThreadKeyMaker key_maker{qres.query_matches(), descending};
+        ThreadKeyMaker key_maker{qres.query_matches()};
         enq.set_sort_by_key(&key_maker, descending);
 
         DeciderInfo minfo;
         minfo.matches = qres.query_matches();
-        auto mset{enq.get_mset(0, qres.size(), {}, make_final_decider(qflags, minfo).get())};
+        auto mset{enq.get_mset(0, qres.size(), {},
+                               make_thread_decider(qflags, minfo).get())};
         mset.fetch();
 
         return QueryResults{mset, std::move(qres.query_matches())};
@@ -174,7 +173,7 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
 
         auto qres{QueryResults{mset, std::move(minfo.matches)}};
 
-        return threading ? run_threaded(qres, enq, qflags) : qres;
+        return threading ? run_threaded(std::move(qres), enq, qflags) : qres;
 }
 
 
@@ -209,7 +208,7 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
                                          {}, make_related_decider(qflags, minfo).get())};
         auto qres{QueryResults{r_mset, std::move(minfo.matches)}};
 
-        return threading ? run_threaded(qres, r_enq, qflags) : qres;
+        return threading ? run_threaded(std::move(qres), r_enq, qflags) : qres;
 }
 
 Option<QueryResults>
