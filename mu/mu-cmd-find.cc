@@ -366,7 +366,7 @@ print_summary (MuMsg *msg, const MuConfig *opts)
 }
 
 static void
-thread_indent (const QueryMatch& info)
+thread_indent (const QueryMatch& info, const MuConfig *opts)
 {
         const auto is_root{any_of(info.flags & QueryMatch::Flags::Root)};
         const auto first_child{any_of(info.flags & QueryMatch::Flags::First)};
@@ -376,7 +376,11 @@ thread_indent (const QueryMatch& info)
         //const auto is_related{any_of(info.flags & QueryMatch::Flags::Related)};
 
         /* indent */
-        for (auto i = info.thread_level; i > 1; --i)
+        if (opts->debug) {
+                ::fputs (info.thread_path.c_str(), stdout);
+                ::fputs (" ", stdout);
+        } else
+                for (auto i = info.thread_level; i > 1; --i)
                 ::fputs ("  ", stdout);
 
         if (!is_root) {
@@ -431,7 +435,7 @@ output_plain (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError *
          * for message-priority for threads, too */
         ansi_color_maybe (MU_MSG_FIELD_ID_PRIO, !opts->nocolor);
         if (opts->threads && info.match_info)
-                thread_indent (*info.match_info);
+                thread_indent (*info.match_info, opts);
 
         output_plain_fields (msg, opts->fields, !opts->nocolor, opts->threads);
 
