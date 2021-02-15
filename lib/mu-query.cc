@@ -121,8 +121,6 @@ struct ThreadKeyMaker: public Xapian::KeyMaker {
         ThreadKeyMaker (const QueryMatches& matches): match_info_(matches) {}
         std::string operator()(const Xapian::Document& doc) const override {
                 const auto it{match_info_.find(doc.get_docid())};
-                if (it == match_info_.end())
-                        g_warning ("not found! %u", doc.get_docid());
                 return (it == match_info_.end()) ? "" :  it->second.thread_path;
         }
         const QueryMatches& match_info_;
