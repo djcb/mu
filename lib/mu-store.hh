@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -70,6 +70,16 @@ public:
                const StringVec& personal_addresses, const Config& conf);
 
         /**
+         * Construct an in-memory, writeable store for testing
+         *
+         * @param maildir maildir to use for this store
+         * @param personal_addresses addresses that should be recognized as
+         * 'personal' for identifying personal messages.
+         */
+        Store (const std::string& maildir,
+               const StringVec& personal_addresses, const Config& conf);
+
+        /**
          * DTOR
          */
         ~Store();
@@ -81,6 +91,7 @@ public:
 
                 bool        read_only;          /**< Is the database opened read-only? */
                 size_t      batch_size;         /**< Maximum database transaction batch size */
+                bool        in_memory;          /**< Is this an in-memory database (for testing)?*/
 
                 std::string root_maildir;       /**<  Absolute path to the top-level maildir */
 
@@ -116,7 +127,6 @@ public:
          * @return the writable database
          */
         Xapian::WritableDatabase& writable_database();
-
 
         /**
          * Get the Indexer associated with this store. It is an error to call

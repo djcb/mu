@@ -106,7 +106,7 @@ struct Store::Private {
 
 #define LOCKED std::lock_guard<std::mutex> l(lock_);
 
-        enum struct XapianOpts {ReadOnly, Open, CreateOverwrite };
+        enum struct XapianOpts {ReadOnly, Open, CreateOverwrite, InMemory };
 
         Private (const std::string& path, bool readonly):
                 read_only_{readonly},
@@ -128,6 +128,14 @@ struct Store::Private {
                 writable_db().begin_transaction();
         }
 
+        Private (const std::string& root_maildir,
+                 const StringVec& personal_addresses, const Store::Config& conf):
+                read_only_{false},
+                db_{make_xapian_db("", XapianOpts::InMemory)},
+                mdata_{init_metadata(conf, "", root_maildir, personal_addresses)},
+                contacts_{"", mdata_.personal_addresses} {
+        }
+
         ~Private() try {
                 g_debug("closing store @ %s", mdata_.database_path.c_str());
                 if (!read_only_) {
@@ -145,6 +153,8 @@ struct Store::Private {
                         return std::make_unique<Xapian::WritableDatabase>(db_path, Xapian::DB_OPEN);
                 case XapianOpts::CreateOverwrite:
                         return std::make_unique<Xapian::WritableDatabase>(db_path, Xapian::DB_CREATE_OR_OVERWRITE);
+                case XapianOpts::InMemory:
+                        return std::make_unique<Xapian::WritableDatabase>(std::string{}, Xapian::DB_BACKEND_INMEMORY);
                 default:
                         throw std::logic_error ("invalid xapian options");
                 }
@@ -174,6 +184,8 @@ struct Store::Private {
         void commit () try {
                 g_debug("committing %zu modification(s)", dirtiness_);
                 dirtiness_      = 0;
+                if (mdata_.in_memory)
+                        return; // not supported in the in-memory backend.
                 writable_db().commit_transaction();
                 writable_db().begin_transaction();
         } MU_XAPIAN_CATCH_BLOCK;
@@ -200,6 +212,7 @@ struct Store::Private {
 
                 mdata.batch_size          = ::atoll(db().get_metadata(BatchSizeKey).c_str());
                 mdata.max_message_size    = ::atoll(db().get_metadata(MaxMessageSizeKey).c_str());
+                mdata.in_memory           = db_path.empty();
 
                 mdata.root_maildir       = db().get_metadata(RootMaildirKey);
                 mdata.personal_addresses = Mu::split(db().get_metadata(PersonalAddressesKey),",");
@@ -288,6 +301,13 @@ Store::Store (const std::string& path, const std::string& maildir,
         priv_{std::make_unique<Private>(path, maildir, personal_addresses, conf)}
 {}
 
+
+Store::Store (const std::string& maildir,
+              const StringVec& personal_addresses, const Config& conf):
+        priv_{std::make_unique<Private>(maildir, personal_addresses, conf)}
+{}
+
+
 Store::~Store() = default;
 
 const Store::Metadata&
@@ -307,7 +327,6 @@ const Xapian::Database&
 Store::database() const
 {
         return priv_->db();
-
 }
 
 Xapian::WritableDatabase&
@@ -370,7 +389,6 @@ maildir_from_path (const std::string& root, const std::string& path)
         return mdir;
 }
 
-
 unsigned
 Store::add_message (const std::string& path)
 {
@@ -394,7 +412,6 @@ Store::add_message (const std::string& path)
 
 	return docid;
 }
-
 
 bool
 Store::update_message (MuMsg *msg, unsigned docid)
@@ -572,9 +589,6 @@ Store::for_each_term (const std::string& field, Store::ForEachTermFunc func) con
 
         return n;
 }
-
-
-
 
 void
 Store::commit () try

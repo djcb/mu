@@ -79,14 +79,46 @@ test_store_add_count_remove ()
 }
 
 
+static void
+test_store_add_count_remove_in_memory ()
+{
+	Mu::Store store{MuTestMaildir, {}, {}};
+
+        g_assert_true (store.metadata().in_memory);
+
+        const auto id1 = store.add_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,");
+
+        g_assert_cmpuint(id1, !=, Mu::Store::InvalidId);
+
+        g_assert_cmpuint(store.size(), ==, 1);
+        g_assert_true(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
+
+        g_assert_cmpuint(store.add_message(MuTestMaildir2 + "/bar/cur/mail3"),
+                         !=, Mu::Store::InvalidId);
+
+        g_assert_cmpuint(store.size(), ==, 2);
+        g_assert_true(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
+
+        store.remove_message(id1);
+        g_assert_cmpuint(store.size(), ==, 1);
+        g_assert_false(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
+
+        store.remove_message (MuTestMaildir2 + "/bar/cur/mail3");
+        g_assert_true(store.empty());
+        g_assert_false(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
 	g_test_init (&argc, &argv, NULL);
 
 	/* mu_runtime_init/uninit */
-	g_test_add_func ("/mu-store/ctor-dtor", test_store_ctor_dtor);
-	g_test_add_func ("/mu-store/add-count-remove", test_store_add_count_remove);
+	g_test_add_func ("/store/ctor-dtor", test_store_ctor_dtor);
+	g_test_add_func ("/store/add-count-remove", test_store_add_count_remove);
+        g_test_add_func ("/store/in-memory/add-count-remove", test_store_add_count_remove_in_memory);
 
 	// if (!g_test_verbose())
 	// 	g_log_set_handler (NULL,
