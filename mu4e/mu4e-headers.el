@@ -1647,15 +1647,9 @@ searching. If SHOW is non-nil, show the message with MSGID."
   (interactive)
   (let* ((prompt (mu4e-format (or prompt "Search for: ")))
          (expr
-          (if edit
-              (read-string prompt expr)
-            (or expr
-                (minibuffer-with-setup-hook
-                    (lambda ()
-                      (setq-local completion-at-point-functions
-                                  #'mu4e~search-query-competion-at-point)
-                      (use-local-map mu4e-minibuffer-search-query-map))
-                  (read-string prompt nil 'mu4e~headers-search-hist))))))
+          (if (or (null expr) edit)
+              (mu4e-read-query prompt expr)
+            expr)))
     (mu4e-mark-handle-when-leaving)
     (mu4e~headers-search-execute expr ignore-history)
     (setq mu4e~headers-msgid-target msgid
