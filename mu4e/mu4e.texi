@@ -753,34 +753,34 @@ The main view looks something like the following:
 
   Basics
 
-	* [j]ump to some maildir
-	* enter a [s]earch query
-	* [C]ompose a new message
+        * [j]ump to some maildir
+        * enter a [s]earch query
+        * [C]ompose a new message
 
   Bookmarks
 
-	* [bu] Unread messages      (26119/26119)
-	* [bt] Today's messages     (1/7)
-	* [bw] Last 7 days          (30/126)
-	* [bp] Messages with images (268/2309)
+        * [bu] Unread messages      (26119/26119)
+        * [bt] Today's messages     (1/7)
+        * [bw] Last 7 days          (30/126)
+        * [bp] Messages with images (268/2309)
 
   Maildirs
 
-	* [ja] /archive             (3174/17990)
-	* [ji] /inbox               (0/2)
-	* [jm] /mu                  (1541/14884)
-	* [js] /sent
+        * [ja] /archive             (3174/17990)
+        * [ji] /inbox               (0/2)
+        * [jm] /mu                  (1541/14884)
+        * [js] /sent
 
   Misc
 
-	* [;]Switch context
-	* [U]pdate email & database
-	* toggle [m]ail sending mode (currently direct)
+        * [;]Switch context
+        * [U]pdate email & database
+        * toggle [m]ail sending mode (currently direct)
 
-	* [N]ews
-	* [A]bout mu4e
-	* [H]elp
-	* [q]uit
+        * [N]ews
+        * [A]bout mu4e
+        * [H]elp
+        * [q]uit
 
   Info
 
@@ -1508,8 +1508,8 @@ long messages in some external browser (see `browse-url-generic-program')."
   (let ((html (or (mu4e-message-field msg :body-html) "")))
     (if (> (length html) 20000)
       (progn
-	(mu4e-action-view-in-browser msg)
-	"[Viewing message in external browser]")
+        (mu4e-action-view-in-browser msg)
+        "[Viewing message in external browser]")
       (mu4e-shr2text msg))))
 
 (setq mu4e-html2text-command 'my-mu4e-html2text)
@@ -1697,6 +1697,7 @@ C-c C-c      send message
 C-c C-d      save to drafts and leave
 C-c C-k      kill the message buffer (the message remains in the draft folder)
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
+C-c C-;      switch the context
 
 (mu4e-specific)
 C-S-u        update mail & reindex
@@ -1773,13 +1774,13 @@ Let's look at some examples. First, suppose we want to set the
     "Set the From address based on the To address of the original."
     (let ((msg mu4e-compose-parent-message)) ;; msg is shorter...
       (when msg
-	(setq user-mail-address
-	  (cond
-	    ((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
-	      "me@@foo.example.com")
-	    ((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
-	      "me@@bar.example.com")
-	    (t "me@@cuux.example.com")))))))
+        (setq user-mail-address
+          (cond
+            ((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
+              "me@@foo.example.com")
+            ((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
+              "me@@bar.example.com")
+            (t "me@@cuux.example.com")))))))
 @end lisp
 
 Secondly, as mentioned, @code{mu4e-compose-mode-hook} is especially
@@ -1810,12 +1811,12 @@ Or to something context-specific:
 (add-hook 'mu4e-compose-mode-hook
   (lambda()
     (let* ((ctx (mu4e-context-current))
-	    (name (if ctx (mu4e-context-name ctx))))
+            (name (if ctx (mu4e-context-name ctx))))
       (when name
-	(cond
-	  ((string= name "account1")
+        (cond
+          ((string= name "account1")
             (save-excursion (message-add-header "Bcc: account1@@example.com\n")))
-	  ((string= name "account2")
+          ((string= name "account2")
             (save-excursion (message-add-header "Bcc: account2@@example.com\n"))))))))
 @end lisp
 
@@ -2434,7 +2435,7 @@ than @emph{n} recipients --- we could do this with the following recipe:
   '("More than n recipients"
      (lambda (msg n)
        (> (+ (length (mu4e-message-field msg :to))
-	    (length (mu4e-message-field msg :cc))) n))
+            (length (mu4e-message-field msg :cc))) n))
      (lambda ()
        (read-number "Match messages with more recipients than: "))) t)
 @end lisp
@@ -2498,7 +2499,7 @@ loading @t{mu4e}):
      :prompt     "gtag"
      :ask-target (lambda () (read-string "What tag do you want to add?"))
      :action      (lambda (docid msg target)
-		    (mu4e-action-retag-message msg (concat "+" target)))))
+                    (mu4e-action-retag-message msg (concat "+" target)))))
 @end lisp
 
 As another example, suppose we would like to ``archive and mark read''
@@ -2512,10 +2513,10 @@ loading @t{mu4e}):
      :prompt     "Archive"
      :show-target (lambda (target) "archive")
      :action      (lambda (docid msg target)
-		    ;; must come before proc-move since retag runs
-		    ;; 'sed' on the file
-		    (mu4e-action-retag-message msg "-\\Inbox")
-		    (mu4e~proc-move docid nil "+S-u-N"))))
+                    ;; must come before proc-move since retag runs
+                    ;; 'sed' on the file
+                    (mu4e-action-retag-message msg "-\\Inbox")
+                    (mu4e~proc-move docid nil "+S-u-N"))))
 @end lisp
 
 Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
@@ -2666,48 +2667,48 @@ when starting; see the discussion in the previous section.
 
  (setq mu4e-contexts
     `( ,(make-mu4e-context
-	  :name "Private"
-	  :enter-func (lambda () (mu4e-message "Entering Private context"))
+          :name "Private"
+          :enter-func (lambda () (mu4e-message "Entering Private context"))
           :leave-func (lambda () (mu4e-message "Leaving Private context"))
-	  ;; we match based on the contact-fields of the message
-	  :match-func (lambda (msg)
-			(when msg
-			  (mu4e-message-contact-field-matches msg
-			    :to "aliced@@home.example.com")))
-	  :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
-		   ( user-full-name	    . "Alice Derleth" )
-		   ( mu4e-compose-signature .
-		     (concat
-		       "Alice Derleth\n"
-		       "Lauttasaari, Finland\n"))))
+          ;; we match based on the contact-fields of the message
+          :match-func (lambda (msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg
+                            :to "aliced@@home.example.com")))
+          :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
+                   ( user-full-name	    . "Alice Derleth" )
+                   ( mu4e-compose-signature .
+                     (concat
+                       "Alice Derleth\n"
+                       "Lauttasaari, Finland\n"))))
        ,(make-mu4e-context
-	  :name "Work"
-	  :enter-func (lambda () (mu4e-message "Switch to the Work context"))
-	  ;; no leave-func
-	  ;; we match based on the maildir of the message
-	  ;; this matches maildir /Arkham and its sub-directories
-	  :match-func (lambda (msg)
-			(when msg
-			  (string-match-p "^/Arkham" (mu4e-message-field msg :maildir))))
-	  :vars '( ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
-		   ( user-full-name	     . "Alice Derleth" )
-		   ( mu4e-compose-signature  .
-		     (concat
-		       "Prof. Alice Derleth\n"
-		       "Miskatonic University, Dept. of Occult Sciences\n"))))
+          :name "Work"
+          :enter-func (lambda () (mu4e-message "Switch to the Work context"))
+          ;; no leave-func
+          ;; we match based on the maildir of the message
+          ;; this matches maildir /Arkham and its sub-directories
+          :match-func (lambda (msg)
+                        (when msg
+                          (string-match-p "^/Arkham" (mu4e-message-field msg :maildir))))
+          :vars '( ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
+                   ( user-full-name	     . "Alice Derleth" )
+                   ( mu4e-compose-signature  .
+                     (concat
+                       "Prof. Alice Derleth\n"
+                       "Miskatonic University, Dept. of Occult Sciences\n"))))
 
        ,(make-mu4e-context
-	  :name "Cycling"
-	  :enter-func (lambda () (mu4e-message "Switch to the Cycling context"))
-	  ;; no leave-func
-	  ;; we match based on the maildir of the message; assume all
-	  ;; cycling-related messages go into the /cycling maildir
-	  :match-func (lambda (msg)
-			(when msg
-			  (string= (mu4e-message-field msg :maildir) "/cycling")))
-	  :vars '( ( user-mail-address	     . "aderleth@@example.com" )
-		   ( user-full-name	     . "AliceD" )
-		   ( mu4e-compose-signature  . nil)))))
+          :name "Cycling"
+          :enter-func (lambda () (mu4e-message "Switch to the Cycling context"))
+          ;; no leave-func
+          ;; we match based on the maildir of the message; assume all
+          ;; cycling-related messages go into the /cycling maildir
+          :match-func (lambda (msg)
+                        (when msg
+                          (string= (mu4e-message-field msg :maildir) "/cycling")))
+          :vars '( ( user-mail-address	     . "aderleth@@example.com" )
+                   ( user-full-name	     . "AliceD" )
+                   ( mu4e-compose-signature  . nil)))))
 
   ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
   ;; guess or ask the correct context, e.g.
@@ -2797,19 +2798,19 @@ message. An example should clarify this:
     (cond
       ;; messages to the mu mailing list go to the /mu folder
       ((mu4e-message-contact-field-matches msg :to
-	 "mu-discuss@@googlegroups.com")
-	"/mu")
+         "mu-discuss@@googlegroups.com")
+        "/mu")
       ;; messages sent directly to some spefic address me go to /private
       ((mu4e-message-contact-field-matches msg :to "me@@example.com")
-	"/private")
+        "/private")
       ;; messages with football or soccer in the subject go to /football
       ((string-match "football\\|soccer"
-	 (mu4e-message-field msg :subject))
-	"/football")
+         (mu4e-message-field msg :subject))
+        "/football")
       ;; messages sent by me go to the sent folder
       ((mu4e-message-sent-by-me msg
-	 (mu4e-personal-addresses))
-	mu4e-sent-folder)
+         (mu4e-personal-addresses))
+        mu4e-sent-folder)
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
       (t  "/archive"))))
@@ -3126,7 +3127,7 @@ point. Requires the 'formail' tool from procmail."
   (replace-regexp-in-string "\n$" ""
     (shell-command-to-string
       (concat "formail -x " hdr " -c < "
-	(shell-quote-argument (mu4e-message-field-at-point :path))))))
+        (shell-quote-argument (mu4e-message-field-at-point :path))))))
 @end lisp
 
 @subsection Rewriting the message body
@@ -3529,10 +3530,10 @@ well; so put in your configuration:
   (let (buffers)
     (save-current-buffer
       (dolist (buffer (buffer-list t))
-	(set-buffer buffer)
-	(when (and (derived-mode-p 'message-mode)
-		(null message-sent-message-via))
-	  (push (buffer-name buffer) buffers))))
+        (set-buffer buffer)
+        (when (and (derived-mode-p 'message-mode)
+                (null message-sent-message-via))
+          (push (buffer-name buffer) buffers))))
     (nreverse buffers)))
 
 (setq gnus-dired-mail-mode 'mu4e-user-agent)
