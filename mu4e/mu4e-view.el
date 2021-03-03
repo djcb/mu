@@ -1435,7 +1435,7 @@ attachments is done with `completing-read-multiple', in this case use
       (goto-char (point-min))
       (while (not (eobp))
         (let ((handle (get-text-property (point) 'gnus-data)))
-          (when handle
+          (when (consp handle)
             (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr handle))))))
               (when fname
                 (push `(,fname . ,handle) handles)
