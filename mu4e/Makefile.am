@@ -41,7 +41,7 @@ dist_lisp_LISP=			\
 	mu4e-vars.el		\
 	mu4e-view.el		\
 	mu4e.el			\
-	org-mu4e.el
+	obsolete/org-mu4e.el
 
 EXTRA_DIST=			\
 	mu4e-about.org

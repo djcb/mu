@@ -24,6 +24,8 @@
 
 ;;; Commentary:
 
+;; OBSOLETE, UNSUPPORTED.
+
 ;; Support for links to mu4e messages/queries from within org-mode,
 ;; and for writing message in org-mode, sending them as rich-text.
 
