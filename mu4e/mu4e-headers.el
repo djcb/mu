@@ -258,10 +258,10 @@ chronologically (`:date') by the newest message in the thread.")
   "Prefix for messages in sub threads that do not have a following sibling.")
 (defvar mu4e-headers-thread-connection-prefix '("|" . "│ ")
   "Prefix to connect sibling messages that do not follow each other.
-This prefix should have the same length as `mu4e-headers-thread-blank-prefix'.")
+Must have the same length as `mu4e-headers-thread-blank-prefix'.")
 (defvar mu4e-headers-thread-blank-prefix '(" " . "  ")
   "Prefix to separate non connected messages.
-This prefix should have the same length as `mu4e-headers-thread-connection-prefix'.")
+Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 (defvar mu4e-headers-thread-orphan-prefix '("<>" . "♢ ")
   "Prefix for orphan messages with siblings.")
 (defvar mu4e-headers-thread-single-orphan-prefix '("<>" . "♢ ")
@@ -1492,19 +1492,23 @@ descendants."
   (let* ((msg (mu4e-message-at-point))
          (thread-id (mu4e~headers-get-thread-info msg 'thread-id))
          (path      (mu4e~headers-get-thread-info msg 'path))
+         ;; the thread path may have a ':z' suffix for sorting;
+         ;; remove it for subthread matching.
+         (match-path (replace-regexp-in-string ":z$" "" path))
          (last-marked-point))
     (mu4e-headers-for-each
-     (lambda (mymsg)
-       (let ((my-thread-id (mu4e~headers-get-thread-info mymsg 'thread-id)))
+     (lambda (cur-msg)
+       (let ((cur-thread-id   (mu4e~headers-get-thread-info cur-msg 'thread-id))
+             (cur-thread-path (mu4e~headers-get-thread-info cur-msg 'path)))
+         (message "### %S %S %S" path match-path cur-thread-path)
          (if subthread
              ;; subthread matching; mymsg's thread path should have path as its
              ;; prefix
-             (when (string-match (concat "^" path)
-                                 (mu4e~headers-get-thread-info mymsg 'path))
+             (when (string-match (concat "^" match-path) cur-thread-path)
                (mu4e-mark-at-point (car markpair) (cdr markpair))
                (setq last-marked-point (point)))
            ;; nope; not looking for the subthread; looking for the whole thread
-           (when (string= thread-id my-thread-id)
+           (when (string= thread-id cur-thread-id)
              (mu4e-mark-at-point (car markpair) (cdr markpair))
              (setq last-marked-point (point)))))))
     (when last-marked-point
