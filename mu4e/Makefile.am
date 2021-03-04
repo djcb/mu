@@ -40,6 +40,8 @@ dist_lisp_LISP=			\
 	mu4e-utils.el		\
 	mu4e-vars.el		\
 	mu4e-view.el		\
+	mu4e-view-gnus.el	\
+	mu4e-view-old.el	\
 	mu4e.el			\
 	obsolete/org-mu4e.el
 
