@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -27,6 +27,30 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'mu4e-utils) ;; utility functions
+(require 'mu4e-vars)
+(require 'mu4e-mark)
+(require 'mu4e-proc)
+(require 'mu4e-compose)
+(require 'mu4e-actions)
+(require 'mu4e-message)
+
+(eval-when-compile (require 'gnus-art))
+
+(require 'comint)
+(require 'browse-url)
+(require 'button)
+(require 'epa)
+(require 'epg)
+(require 'thingatpt)
+(require 'calendar)
+
+(declare-function mu4e-view-mode "mu4e-view")
+(defvar gnus-icalendar-additional-identities)
+(defvar mu4e~headers-view-win)
+(defvar helm-comp-read-use-marked)
+
 ;;; Options
 
 (defgroup mu4e-view nil
@@ -34,15 +58,8 @@
   :group 'mu4e)
 
 (defcustom mu4e-view-use-gnus t
-  "If non-nil, use the new Gnus-based viewer.
-Otherwise, use the old viewer."
-  :type 'boolean
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-scroll-to-next t
-  "Move to the next message when calling
-`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at
-the end of a message. Otherwise, don't move to the next message."
+  "Whether to use the Gnus-based article view or the mu4e-native
+viewer."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -52,6 +69,49 @@ the end of a message. Otherwise, don't move to the next message."
   "Header fields to display in the message view buffer.
 For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-show-addresses nil
+  "Whether to initially show full e-mail addresses for contacts.
+Otherwise, just show their names."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
+(make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
+
+(defcustom mu4e-view-date-format "%c"
+  "Date format to use in the message view.
+In the format of `format-time-string'."
+  :type 'string
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-image-max-width 800
+  "The maximum width for images to display.
+This is only effective if you're using an Emacs with Imagemagick
+support, and `mu4e-view-show-images' is non-nil."
+  :type 'integer
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-image-max-height 600
+  "The maximum height for images to display.
+This is only effective if you're using an Emacs with Imagemagick
+support, and `mu4e-view-show-images' is non-nil."
+  :type 'integer
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-scroll-to-next t
+  "Move to the next message when calling
+`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at
+the end of a message. Otherwise, don't move to the next message."
+  :type 'boolean
+  :group 'mu4e-view)
+
+
+(defcustom mu4e-save-multiple-attachments-without-asking nil
+  "If non-nil, saving multiple attachments asks once for a
+directory and saves all attachments in the chosen directory."
+  :type 'boolean
   :group 'mu4e-view)
 
 (defcustom mu4e-view-actions
@@ -69,7 +129,197 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+(defcustom mu4e-view-attachment-assoc nil
+  "Alist of (EXTENSION . PROGRAM).
+Specify which PROGRAM to use to open attachment with EXTENSION.
+Args EXTENSION and PROGRAM should be specified as strings."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type string))
 
+(defcustom mu4e-view-attachment-actions
+  '( ("ssave" . mu4e-view-save-attachment-single)
+     ("Ssave multi" . mu4e-view-save-attachment-multi)
+     ("wopen-with" . mu4e-view-open-attachment-with)
+     ("ein-emacs"  . mu4e-view-open-attachment-emacs)
+     ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
+     ("kimport-public-key" . mu4e-view-import-public-key)
+     ("|pipe"      . mu4e-view-pipe-attachment))
+  "List of actions to perform on message attachments.
+The actions are cons-cells of the form:
+ (NAME . FUNC)
+where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* FUNC is a function which receives two arguments: the message
+  plist and the attachment number.
+The first letter of NAME is used as a shortcut character."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type function))
+
+;;; Keymaps
+
+(defvar mu4e-view-header-field-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-header-field-fold)
+    (define-key map (kbd "TAB") 'mu4e~view-header-field-fold)
+    map)
+  "Keymap used for header fields.")
+
+(defvar mu4e-view-contacts-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2] 'mu4e~view-compose-contact)
+    (define-key map "C"  'mu4e~view-compose-contact)
+    (define-key map "c"  'mu4e~view-copy-contact)
+    map)
+  "Keymap used for the contacts in the header fields.")
+
+(defvar mu4e-view-clickable-urls-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
+    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
+    map)
+  "Keymap used for the urls inside the body.")
+
+(defvar mu4e-view-attachments-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
+    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
+    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
+    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
+    map)
+  "Keymap used in the \"Attachments\" header field.")
+
+;;; Variables
+
+;; It's useful to have the current view message available to
+;; `mu4e-view-mode-hooks' functions, and we set up this variable
+;; before calling `mu4e-view-mode'.  However, changing the major mode
+;; clobbers any local variables.  Work around that by declaring the
+;; variable permanent-local.
+(defvar-local mu4e~view-message nil
+  "The message being viewed in view mode.")
+(put 'mu4e~view-message 'permanent-local t)
+
+(defvar mu4e-view-fill-headers t
+  "If non-nil, automatically fill the headers when viewing them.")
+
+(defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
+(put 'mu4e~view-cited-hidden 'permanent-local t)
+
+(defvar mu4e~view-link-map nil
+  "A map of some number->url so we can jump to url by number.")
+(put 'mu4e~view-link-map 'permanent-local t)
+
+(defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
+  "A map of msg paths --> parent-docids.
+This is to determine what is the parent docid for embedded
+message extracted at some path.")
+(put 'mu4e~path-parent-docid-map 'permanent-local t)
+
+(defvar mu4e~view-attach-map nil
+  "A mapping of user-visible attachment number to the actual part index.")
+(put 'mu4e~view-attach-map 'permanent-local t)
+
+(defvar mu4e~view-rendering nil)
+
+(defvar mu4e~view-html-text nil
+  "Should we prefer html or text just this once? A symbol `text'
+or `html' or nil.")
+
+;;; Main
+
+(defun mu4e-view-message-with-message-id (msgid)
+  "View message with message-id MSGID. This (re)creates a
+headers-buffer with a search for MSGID, then open a view for that
+message."
+  (mu4e-headers-search (concat "msgid:" msgid) nil nil t msgid t))
+
+(define-obsolete-function-alias 'mu4e-view-message-with-msgid
+  'mu4e-view-message-with-message-id "0.9.17")
+
+(defun mu4e~view-custom-field (msg field)
+  "Show some custom header field, or raise an error if it is not
+found."
+  (let* ((item (or (assoc field mu4e-header-info-custom)
+                   (mu4e-error "field %S not found" field)))
+         (func (or (plist-get (cdr-safe item) :function)
+                   (mu4e-error "no :function defined for field %S %S"
+                               field (cdr item)))))
+    (funcall func msg)))
+
+(defun mu4e-view-message-text (msg)
+  "Return the message to display (as a string), based on the MSG plist."
+  (concat
+   (mapconcat
+    (lambda (field)
+      (let ((fieldval (mu4e-message-field msg field)))
+        (cl-case field
+          (:subject    (mu4e~view-construct-header field fieldval))
+          (:path       (mu4e~view-construct-header field fieldval))
+          (:maildir    (mu4e~view-construct-header field fieldval))
+          (:user-agent (mu4e~view-construct-header field fieldval))
+          ((:flags :tags) (mu4e~view-construct-flags-tags-header
+                           field fieldval))
+
+          ;; contact fields
+          (:to       (mu4e~view-construct-contacts-header msg field))
+          (:from     (mu4e~view-construct-contacts-header msg field))
+          (:cc       (mu4e~view-construct-contacts-header msg field))
+          (:bcc      (mu4e~view-construct-contacts-header msg field))
+
+          ;; if we (`user-mail-address' are the From, show To, otherwise,
+          ;; show From
+          (:from-or-to
+           (let* ((from (mu4e-message-field msg :from))
+                  (from (and from (cdar from))))
+             (if (mu4e-personal-address-p from)
+                 (mu4e~view-construct-contacts-header msg :to)
+               (mu4e~view-construct-contacts-header msg :from))))
+          ;; date
+          (:date
+           (let ((datestr
+                  (when fieldval (format-time-string mu4e-view-date-format
+                                                     fieldval))))
+             (if datestr (mu4e~view-construct-header field datestr) "")))
+          ;; size
+          (:size
+           (mu4e~view-construct-header field (mu4e-display-size fieldval)))
+          (:mailing-list
+           (mu4e~view-construct-header field fieldval))
+          (:message-id
+           (mu4e~view-construct-header field fieldval))
+          ;; attachments
+          (:attachments (mu4e~view-construct-attachments-header msg))
+          ;; pgp-signatures
+          (:signature   (mu4e~view-construct-signature-header msg))
+          ;; pgp-decryption
+          (:decryption  (mu4e~view-construct-decryption-header msg))
+          (t (mu4e~view-construct-header field
+                                         (mu4e~view-custom-field msg field))))))
+    mu4e-view-fields "")
+   "\n"
+   (let* ((prefer-html
+           (cond
+            ((eq mu4e~view-html-text 'html) t)
+            ((eq mu4e~view-html-text 'text) nil)
+            (t mu4e-view-prefer-html)))
+          (body (mu4e-message-body-text msg prefer-html)))
+     (setq mu4e~view-html-text nil)
+     (when (fboundp 'add-face-text-property)
+       (add-face-text-property 0 (length body) 'mu4e-view-body-face t body))
+     body)))
+
+(defun mu4e~view-embedded-winbuf ()
+  "Get a buffer (shown in a window) for the embedded message."
+  (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
+         (win (or (get-buffer-window buf) (split-window-vertically))))
+    (select-window win)
+    (switch-to-buffer buf)))
+
+(defun mu4e~delete-all-overlays ()
+  "`delete-all-overlays' with compatibility fallback."
+  (if (functionp 'delete-all-overlays)
+      (delete-all-overlays)
+    (remove-overlays)))
 
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -84,90 +334,782 @@ internal display mode, or a display mode based on Gnus'
 article-mode."
   (mu4e~headers-update-handler msg nil nil);; update headers, if necessary.
 
-  ;; sanity check; only one can be active.
+  (mu4e~view-define-mode)
+
+  ;; XXX(djcb): only called for the side-effect of setting up
+  ;; `mu4e~view-attach-map'. Instead, we should split that function
+  ;; into setting up the map, and actually producing the header.
+  (mu4e~view-construct-attachments-header msg)
+
+  ;; When MSG is unread, mu4e~view-mark-as-read-maybe will trigger
+  ;; another call to mu4e-view (via mu4e~headers-update-handler as
+  ;; the reply handler to mu4e~proc-move)
   (if mu4e-view-use-gnus
-      (progn
-        (when (featurep 'mu4e-view-old)
-          (mu4e-error "Cannot load gnus-based view with old one loaded. Restart emacs"))
-        (require 'mu4e-view-gnus)
-        (mu4e~view-gnus msg))
-    (progn
-      (when (featurep 'mu4e-view-gnus)
-        (mu4e-error "Cannot load old view with gnus-based view loaded. Restart emacs"))
-      (require 'mu4e-view-old)
-      (mu4e~view-old msg))))
+      (mu4e~view-gnus msg)
+    (mu4e~view-internal msg)))
 
-
-
-(defun mu4e~view-quit-buffer ()
-  "Quit the mu4e-view buffer.
-This is a rather complex function, to ensure we don't disturb
-other windows."
-  (interactive)
-  (if (eq mu4e-split-view 'single-window)
-      (when (buffer-live-p (mu4e-get-view-buffer))
-        (kill-buffer (mu4e-get-view-buffer)))
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
-    (let ((curbuf (current-buffer))
-          (curwin (selected-window))
-          (headers-win))
-      (walk-windows
-       (lambda (win)
-         ;; check whether the headers buffer window is visible
-         (when (eq (mu4e-get-headers-buffer) (window-buffer win))
-           (setq headers-win win))
-         ;; and kill any _other_ (non-selected) window that shows the current
-         ;; buffer
-         (when
-             (and
-              (eq curbuf (window-buffer win)) ;; does win show curbuf?
-              (not (eq curwin win))         ;; but it's not the curwin?
-              (not (one-window-p))) ;; and not the last one on the frame?
-           (delete-window win))))  ;; delete it!
-      ;; now, all *other* windows should be gone.
-      ;; if the headers view is also visible, kill ourselves + window; otherwise
-      ;; switch to the headers view
-      (if (window-live-p headers-win)
-          ;; headers are visible
-          (progn
-            (kill-buffer-and-window) ;; kill the view win
-            (setq mu4e~headers-view-win nil)
-            (select-window headers-win)) ;; and switch to the headers win...
-        ;; headers are not visible...
-        (progn
-          (kill-buffer)
-          (setq mu4e~headers-view-win nil)
-          (when (buffer-live-p (mu4e-get-headers-buffer))
-            (switch-to-buffer (mu4e-get-headers-buffer))))))))
-
-
-(defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
-  "Name for the raw message view buffer.")
-
-(defun mu4e-view-raw-message ()
-  "Display the raw contents of message at point in a new buffer."
-  (interactive)
-  (let ((path (mu4e-message-field-at-point :path))
-        (buf (get-buffer-create mu4e~view-raw-buffer-name)))
-    (unless (and path (file-readable-p path))
-      (mu4e-error "Not a readable file: %S" path))
+(defun mu4e~view-internal (msg)
+  "Display MSG using mu4e's internal view mode."
+  (let* ((embedded ;; is it as an embedded msg (ie. message/rfc822 att)?
+          (when (gethash (mu4e-message-field msg :path)
+                         mu4e~path-parent-docid-map) t))
+         (buf (if embedded
+                  (mu4e~view-embedded-winbuf)
+                (get-buffer-create mu4e~view-buffer-name))))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert-file-contents path)
-        (view-mode)
-        (goto-char (point-min))))
-    (switch-to-buffer buf)))
+        (mu4e~delete-all-overlays)
+        (insert (mu4e-view-message-text msg))
+        (goto-char (point-min))
+        (mu4e~fontify-cited)
+        (mu4e~fontify-signature)
+        (mu4e~view-make-urls-clickable)
+        (mu4e~view-show-images-maybe msg)
+        (when (not embedded) (setq mu4e~view-message msg))
+        (mu4e-view-mode)
+        (when embedded (local-set-key "q" 'kill-buffer-and-window)))
+      (switch-to-buffer buf))))
 
-(defun mu4e-view-pipe (cmd)
-  "Pipe the message at point through shell command CMD.
-Then, display the results."
-  (interactive "sShell command: ")
-  (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
-    (mu4e-process-file-through-pipe path cmd)))
+;; remember the mime-handles, so we can clean them up when
+;; we quit this buffer.
+(defvar-local mu4e~gnus-article-mime-handles nil)
+(put 'mu4e~gnus-article-mime-handles 'permanent-local t)
+
+(defun mu4e~view-gnus (msg)
+  "View MSG using Gnus' article mode. Experimental."
+  (require 'gnus-art)
+  (let ((path (mu4e-message-field msg :path))
+        (inhibit-read-only t)
+        (mm-decrypt-option 'known)
+        (gnus-article-emulate-mime t)
+        (gnus-buttonized-mime-types (append (list "multipart/signed"
+                                                  "multipart/encrypted")
+                                            gnus-buttonized-mime-types)))
+    (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
+    (buffer-disable-undo)
+    (insert-file-contents-literally path nil nil nil t)
+    (mm-enable-multibyte)
+    (setq
+     gnus-summary-buffer (get-buffer-create " *appease-gnus*")
+     gnus-original-article-buffer (current-buffer))
+    (let* ((ct (mail-fetch-field "Content-Type"))
+           (ct (and ct (mail-header-parse-content-type ct)))
+           (charset (mail-content-type-get ct 'charset))
+           (charset (and charset (intern charset)))
+           (gnus-newsgroup-charset
+            (if (and charset (coding-system-p charset)) charset
+              (detect-coding-region (point-min) (point-max) t))))
+      (run-hooks 'gnus-article-decode-hook))
+    (let ((mu4e~view-rendering t) ; customize gnus in mu4e
+          (max-specpdl-size mu4e-view-max-specpdl-size)
+          (gnus-blocked-images ".") ;; don't load external images.
+          ;; Possibly add headers (before "Attachments")
+          (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
+          (gnus-icalendar-additional-identities
+           (mu4e-personal-addresses 'no-regexp)))
+      (gnus-article-prepare-display))
+    (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
+    (setq mu4e~view-message msg)
+    ;; `mu4e-view-mode' derive from `gnus-article-mode'.
+    (mu4e-view-mode)
+    (setq gnus-article-decoded-p gnus-article-decode-hook)
+    (set-buffer-modified-p nil)
+    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
+
+(defun mu4e~view-kill-buffer-hook-fn ()
+  ;; cleanup the mm-* buffers that the view spawns
+  (when mu4e~gnus-article-mime-handles
+    (mm-destroy-parts mu4e~gnus-article-mime-handles)
+    (setq mu4e~gnus-article-mime-handles nil)))
+
+(defun mu4e~view-gnus-display-mime (msg)
+  "Same as `gnus-display-mime' but add a mu4e headers to MSG."
+  (lambda (&optional ihandles)
+    (gnus-display-mime ihandles)
+    (unless ihandles
+      (save-restriction
+        (article-goto-body)
+        (forward-line -1)
+        (narrow-to-region (point) (point))
+        (dolist (field mu4e-view-fields)
+          (let ((fieldval (mu4e-message-field msg field)))
+            (cl-case field
+              ((:path :maildir :user-agent :mailing-list :message-id)
+               (mu4e~view-gnus-insert-header field fieldval))
+              ((:flags :tags)
+               (let ((flags (mapconcat (lambda (flag)
+                                         (if (symbolp flag)
+	                                     (symbol-name flag)
+	                                   flag)) fieldval ", ")))
+                 (mu4e~view-gnus-insert-header field flags)))
+              (:size (mu4e~view-gnus-insert-header
+                      field (mu4e-display-size fieldval)))
+              ((:subject :to :from :cc :bcc :from-or-to :date :attachments
+                         :signature :decryption)) ; handled by Gnus
+              (t
+               (mu4e~view-gnus-insert-header-custom msg field))
+              )))
+        (let ((gnus-treatment-function-alist
+               '((gnus-treat-highlight-headers
+                  gnus-article-highlight-headers))))
+          (gnus-treat-article 'head))))))
+
+(defun mu4e~view-gnus-insert-header (field val)
+  "Insert a header FIELD with value VAL in Gnus article view."
+  (let* ((info (cdr (assoc field mu4e-header-info)))
+	 (key (plist-get info :name))
+         (help (plist-get info :help)))
+    (if (and val (> (length val) 0))
+        (insert (propertize (concat key ":") 'help-echo help)
+                " " val "\n"))))
+
+(defun mu4e~view-gnus-insert-header-custom (msg field)
+  "Insert the custom FIELD in Gnus article view."
+  (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
+                             (mu4e-error "custom field %S not found" field))))
+	 (key (plist-get info :name))
+         (func (or (plist-get info :function)
+                   (mu4e-error "no :function defined for custom field %S %S"
+		               field info)))
+         (val (funcall func msg))
+         (help (plist-get info :help)))
+    (when (and val (> (length val) 0))
+      (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
+
+(define-advice gnus-icalendar-event-from-handle
+    (:filter-args (handle-attendee) mu4e~view-fix-missing-charset)
+  "Do not trigger an error when displaying an ical attachment
+with no charset."
+  (if (and (boundp 'mu4e~view-rendering) mu4e~view-rendering)
+      (let* ((handle (car handle-attendee))
+             (attendee (cadr handle-attendee))
+             (buf (mm-handle-buffer handle))
+             (ty (mm-handle-type handle))
+             (rest (cddr handle)))
+        ;; Put the fallback at the end:
+        (setq ty (append ty '((charset . "utf-8"))))
+        (setq handle (cons buf (cons ty rest)))
+        (list handle attendee))
+  handle-attendee))
 
 
+(defun mu4e~view-get-property-from-event (prop)
+  "Get the property PROP at point, or the location of the mouse.
+The action is chosen based on the `last-command-event'.
+Meant to be evoked from interactive commands."
+  (if (and (eventp last-command-event)
+           (mouse-event-p last-command-event))
+      (let ((posn (event-end last-command-event)))
+        (when (numberp (posn-point posn))
+          (get-text-property
+           (posn-point posn)
+           prop
+           (window-buffer (posn-window posn)))
+          ))
+    (get-text-property (point) prop)))
+
+(defun mu4e~view-construct-header (field val &optional dont-propertize-val)
+  "Return header field FIELD (as in `mu4e-header-info') with value
+VAL if VAL is non-nil. If DONT-PROPERTIZE-VAL is non-nil, do not
+add text-properties to VAL."
+  (let* ((info (cdr (assoc field
+                           (append mu4e-header-info mu4e-header-info-custom))))
+         (key (plist-get info :name))
+         (val (if val (propertize val 'field 'mu4e-header-field-value
+                                  'front-sticky '(field))))
+         (help (plist-get info :help)))
+    (if (and val (> (length val) 0))
+        (with-temp-buffer
+          (insert (propertize (concat key ":")
+                              'field 'mu4e-header-field-key
+                              'front-sticky '(field)
+                              'keymap mu4e-view-header-field-keymap
+                              'face 'mu4e-header-key-face
+                              'help-echo help) " "
+                              (if dont-propertize-val
+                                  val
+                                (propertize val 'face 'mu4e-header-value-face)) "\n")
+          (when mu4e-view-fill-headers
+            ;; temporarily set the fill column <margin> positions to the right, so
+            ;; we can indent the following lines correctly
+            (let* ((margin 1)
+                   (fill-column (max (- fill-column margin) 0)))
+              (fill-region (point-min) (point-max))
+              (goto-char (point-min))
+              (while (and (zerop (forward-line 1)) (not (looking-at "^$")))
+                (indent-to-column margin))))
+          (buffer-string))
+      "")))
+
+(defun mu4e~view-header-field-fold ()
+  "Fold/unfold headers' value if there is more than one line."
+  (interactive)
+  (let ((name-pos (field-beginning))
+        (value-pos (1+ (field-end))))
+    (if (and name-pos value-pos
+             (eq (get-text-property name-pos 'field) 'mu4e-header-field-key))
+        (save-excursion
+          (let* ((folded))
+            (mapc (lambda (o)
+                    (when (overlay-get o 'mu4e~view-header-field-folded)
+                      (delete-overlay o)
+                      (setq folded t)))
+                  (overlays-at value-pos))
+            (unless folded
+              (let* ((o (make-overlay value-pos (field-end value-pos)))
+                     (vals (split-string (field-string value-pos) "\n" t))
+                     (val (if (= (length vals) 1)
+                              (car vals)
+                            (truncate-string-to-width (car vals)
+                                                      (- (length (car vals)) 1) 0 nil t))))
+                (overlay-put o 'mu4e~view-header-field-folded t)
+                (overlay-put o 'display val))))))))
+
+(defun mu4e~view-compose-contact (&optional point)
+  "Compose a message for the address at point."
+  (interactive)
+  (unless (get-text-property (or point (point)) 'email)
+    (mu4e-error "No address at point"))
+  (mu4e~compose-mail (get-text-property (or point (point)) 'long)))
+
+(defun mu4e~view-copy-contact (&optional full)
+  "Compose a message for the address at (point)."
+  (interactive "P")
+  (let ((email (get-text-property (point) 'email))
+        (long (get-text-property (point) 'long)))
+    (unless email (mu4e-error "No address at point"))
+    (kill-new (if full long email))
+    (mu4e-message "Address copied.")))
+
+(defun mu4e~view-construct-contacts-header (msg field)
+  "Add a header for a contact field (ie., :to, :from, :cc, :bcc)."
+  (mu4e~view-construct-header field
+                              (mapconcat
+                               (lambda(c)
+                                 (let* ((name (when (car c)
+                                                (replace-regexp-in-string "[[:cntrl:]]" "" (car c))))
+                                        (email (when (cdr c)
+                                                 (replace-regexp-in-string "[[:cntrl:]]" "" (cdr c))))
+                                        (short (or name email)) ;; name may be nil
+                                        (long (if name (format "%s <%s>" name email) email)))
+                                   (propertize
+                                    (if mu4e-view-show-addresses long short)
+                                    'long long
+                                    'short short
+                                    'email email
+                                    'keymap mu4e-view-contacts-header-keymap
+                                    'face 'mu4e-contact-face
+                                    'mouse-face 'highlight
+                                    'help-echo (format "<%s>\n%s" email
+                                                       "[mouse-2] or C to compose a mail for this recipient"))))
+                               (mu4e-message-field msg field) ", ") t))
+
+(defun mu4e~view-construct-flags-tags-header (field val)
+  "Construct a Flags: header."
+  (mu4e~view-construct-header
+   field
+   (mapconcat
+    (lambda (flag)
+      (propertize
+       (if (symbolp flag)
+           (symbol-name flag)
+         flag)
+       'face 'mu4e-special-header-value-face))
+    val
+    (propertize ", " 'face 'mu4e-header-value-face)) t))
+
+(defun mu4e~view-construct-signature-header (msg)
+  "Construct a Signature: header, if there are any signed parts."
+  (let* ((parts (mu4e-message-field msg :parts))
+         (verdicts
+          (cl-remove-if 'null
+                        (mapcar (lambda (part) (mu4e-message-part-field part :signature))
+                                parts)))
+         (signers
+          (mapconcat 'identity
+                     (cl-remove-if 'null
+                                   (mapcar (lambda (part) (mu4e-message-part-field part :signers))
+                                           parts)) ", "))
+         (val (when verdicts
+                (mapconcat
+                 (lambda (v)
+                   (propertize (symbol-name v)
+                               'face (if (eq v 'verified)
+                                         'mu4e-ok-face 'mu4e-warning-face)))
+                 verdicts ", ")))
+         (btn (when val
+                (with-temp-buffer
+                  (insert-text-button "Details"
+                                      'action (lambda (b)
+                                                (mu4e-view-verify-msg-popup
+                                                 (button-get b 'msg))))
+                  (buffer-string))))
+         (val (when val (concat val " " signers " (" btn ")"))))
+    (mu4e~view-construct-header :signature val t)))
+
+(defun mu4e~view-construct-decryption-header (msg)
+  "Construct a Decryption: header, if there are any encrypted parts."
+  (let* ((parts (mu4e-message-field msg :parts))
+         (verdicts
+          (cl-remove-if 'null
+                        (mapcar (lambda (part)
+                                  (mu4e-message-part-field part :decryption))
+                                parts)))
+         (succeeded (cl-remove-if (lambda (v) (eq v 'failed)) verdicts))
+         (failed (cl-remove-if (lambda (v) (eq v 'succeeded)) verdicts))
+         (succ (when succeeded
+                 (propertize
+                  (concat (number-to-string (length succeeded))
+                          " part(s) decrypted")
+                  'face 'mu4e-ok-face)))
+         (fail (when failed
+                 (propertize
+                  (concat (number-to-string (length failed))
+                          " part(s) failed")
+                  'face 'mu4e-warning-face)))
+         (val (concat succ fail)))
+    (mu4e~view-construct-header :decryption val t)))
+
+(defun mu4e~view-open-attach-from-binding ()
+  "Open the attachment at point, or click location."
+  (interactive)
+  (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
+         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+    (when (and msg attnum)
+      (mu4e-view-open-attachment msg attnum))))
+
+(defun mu4e~view-save-attach-from-binding ()
+  "Save the attachment at point, or click location."
+  (interactive)
+  (let* (( msg (mu4e~view-get-property-from-event 'mu4e-msg))
+         ( attnum (mu4e~view-get-property-from-event 'mu4e-attnum)))
+    (when (and msg attnum)
+      (mu4e-view-save-attachment-single msg attnum))))
+
+(defun mu4e~view-construct-attachments-header (msg)
+  "Display attachment information; the field looks like something like:
+        :parts ((:index 1 :name \"1.part\" :mime-type \"text/plain\"
+                 :type (leaf) :attachment nil :size 228)
+                (:index 2 :name \"analysis.doc\"
+                 :mime-type \"application/msword\"
+                 :type (leaf attachment) :attachment nil :size 605196))"
+  (setq mu4e~view-attach-map ;; buffer local
+        (make-hash-table :size 64 :weakness nil))
+  (let* ((id 0)
+         (partcount (length (mu4e-message-field msg :parts)))
+         (attachments
+          ;; we only list parts that look like attachments, ie. that have a
+          ;; non-nil :attachment property; we record a mapping between
+          ;; user-visible numbers and the part indices
+          (cl-remove-if-not
+           (lambda (part)
+             (let* ((mtype (or (mu4e-message-part-field part :mime-type)
+                               "application/octet-stream"))
+                    (partsize (or (mu4e-message-part-field part :size) 0))
+                    (attachtype (mu4e-message-part-field part :type))
+                    (isattach
+                     (or ;; we consider parts marked either
+                      ;; "attachment" or "inline" as attachment.
+                      (member 'attachment attachtype)
+                      ;; list inline parts as attachment (so they can be
+                      ;; saved), unless they are text/plain, which are
+                      ;; usually just message footers in mailing lists
+                      ;;
+                      ;; however, slow bigger text parts as attachments,
+                      ;; except when they're the only part... it's
+                      ;; complicated.
+                      (and (member 'inline attachtype)
+                           (or
+                            (and (> partcount 1) (> partsize 256))
+                            (not (string-match "^text/plain" mtype)))))))
+               (or ;; remove if it's not an attach *or* if it's an
+                ;; image/audio/application type (but not a signature)
+                isattach
+                (string-match "^\\(image\\|audio\\)" mtype)
+                (string= "message/rfc822" mtype)
+                (string= "text/calendar" mtype)
+                (and (string-match "^application" mtype)
+                     (not (string-match "signature" mtype))))))
+           (mu4e-message-field msg :parts)))
+         (attstr
+          (mapconcat
+           (lambda (part)
+             (let ((index (mu4e-message-part-field part :index))
+                   (name (mu4e-message-part-field part :name))
+                   (size (mu4e-message-part-field part :size)))
+               (cl-incf id)
+               (puthash id index mu4e~view-attach-map)
+
+               (concat
+                (propertize (format "[%d]" id)
+                            'face 'mu4e-attach-number-face)
+                (propertize name 'face 'mu4e-link-face
+                            'keymap mu4e-view-attachments-header-keymap
+                            'mouse-face 'highlight
+                            'help-echo (concat
+                                        "[mouse-1] or [M-RET] opens the attachment\n"
+                                        "[mouse-2] or [S-RET] offers to save it")
+                            'mu4e-msg msg
+                            'mu4e-attnum id
+                            )
+                (when (and size (> size 0))
+                  (propertize (format "(%s)" (mu4e-display-size size))
+                              'face 'mu4e-header-key-face)))))
+           attachments ", ")))
+    (when attachments
+      (mu4e~view-construct-header :attachments attstr t))))
+
+(defun mu4e-view-for-each-part (msg func)
+  "Apply FUNC to each part in MSG.
+FUNC should be a function taking two arguments:
+ 1. the message MSG, and
+ 2. a plist describing the attachment. The plist looks like:
+         (:index 1 :name \"test123.doc\"
+          :mime-type \"application/msword\" :attachment t :size 1234)."
+  (dolist (part (mu4e-msg-field msg :parts))
+    (funcall func msg part)))
+
+(defmacro mu4e~native-def (def)
+  "Definition DEF only available in 'native' mode."
+  `(lambda(prefix-argument) (interactive "P")
+     (if mu4e-view-use-gnus
+         (mu4e-warn "binding not supported with the gnus-based view")
+       (if prefix-argument (,def prefix-argument) (,def)))))
+
+(defvar mu4e-view-mode-map nil
+  "Keymap for \"*mu4e-view*\" buffers.")
+(unless mu4e-view-mode-map
+  (setq mu4e-view-mode-map
+        (let ((map (make-sparse-keymap)))
+
+          (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+          (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+
+          (define-key map "q" 'mu4e~view-quit-buffer)
+
+          ;; note, 'z' is by-default bound to 'bury-buffer'
+          ;; but that's not very useful in this case
+          (define-key map "z" 'ignore)
+
+          (define-key map "s" 'mu4e-headers-search)
+          (define-key map "S" 'mu4e-view-search-edit)
+          (define-key map "/" 'mu4e-view-search-narrow)
+
+          (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
+          (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
+
+          (define-key map "b" 'mu4e-headers-search-bookmark)
+          (define-key map "B" 'mu4e-headers-search-bookmark-edit)
+
+          (define-key map "%" 'mu4e-view-mark-pattern)
+          (define-key map "t" 'mu4e-view-mark-subthread)
+          (define-key map "T" 'mu4e-view-mark-thread)
+
+          (define-key map "v" 'mu4e-view-verify-msg-popup)
+
+          (define-key map "j" 'mu4e~headers-jump-to-maildir)
+
+          (define-key map "g" (mu4e~native-def mu4e-view-go-to-url))
+          (define-key map "k" (mu4e~native-def mu4e-view-save-url))
+          (define-key map "f" (mu4e~native-def mu4e-view-fetch-url))
+
+          (define-key map "F" 'mu4e-compose-forward)
+          (define-key map "R" 'mu4e-compose-reply)
+          (define-key map "C" 'mu4e-compose-new)
+          (define-key map "E" 'mu4e-compose-edit)
+
+          ;; some gnus things we do not support
+          (define-key map "G" 'ignore)
+          (define-key map "I" 'ignore)
+          (define-key map "J" 'ignore)
+          (define-key map "K" 'ignore)
+          (define-key map "L" 'ignore)
+          (define-key map "N" 'ignore)
+          (define-key map "V" 'ignore)
+          (define-key map "X" 'ignore)
+          (define-key map "Y" 'ignore)
+          (define-key map "Z" 'ignore)
+
+          (define-key map "." 'mu4e-view-raw-message)
+          (define-key map "|" 'mu4e-view-pipe)
+          (define-key map "a" 'mu4e-view-action)
+
+          (define-key map ";" 'mu4e-context-switch)
+
+          ;; toggle header settings
+          (define-key map "O" 'mu4e-headers-change-sorting)
+          (define-key map "P" 'mu4e-headers-toggle-threading)
+          (define-key map "Q" 'mu4e-headers-toggle-full-search)
+          (define-key map "W" 'mu4e-headers-toggle-include-related)
+
+          ;; change the number of headers
+          (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
+          (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
+          (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
+          (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
+
+          ;; intra-message navigation
+          (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
+          (define-key map (kbd "<home>") 'beginning-of-buffer)
+          (define-key map (kbd "<end>") 'end-of-buffer)
+          (define-key map (kbd "RET")
+            (lambda()
+              (interactive)
+              (if (and mu4e-view-use-gnus
+                       (eq (get-text-property (point) 'gnus-callback) 'gnus-button-push))
+                  (widget-button-press (point))
+                (mu4e-scroll-up))))
+          (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
+
+          ;; navigation between messages
+          (define-key map "p" 'mu4e-view-headers-prev)
+          (define-key map "n" 'mu4e-view-headers-next)
+          ;; the same
+          (define-key map (kbd "<M-down>") 'mu4e-view-headers-next)
+          (define-key map (kbd "<M-up>") 'mu4e-view-headers-prev)
+
+          (define-key map (kbd "[") 'mu4e-view-headers-prev-unread)
+          (define-key map (kbd "]") 'mu4e-view-headers-next-unread)
+
+          ;; switching to view mode (if it's visible)
+          (define-key map "y" 'mu4e-select-other-view)
+
+          ;; attachments
+          (define-key map "e" 'mu4e-view-save-attachment)
+          (define-key map "o" (mu4e~native-def mu4e-view-open-attachment))
+          (define-key map "A" (mu4e~native-def mu4e-view-attachment-action))
+
+          ;; marking/unmarking
+          (define-key map "d" 'mu4e-view-mark-for-trash)
+          (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
+          (define-key map (kbd "<deletechar>") 'mu4e-view-mark-for-delete)
+          (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
+          (define-key map (kbd "m") 'mu4e-view-mark-for-move)
+          (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
+
+          (define-key map (kbd "?") 'mu4e-view-mark-for-unread)
+          (define-key map (kbd "!") 'mu4e-view-mark-for-read)
+
+          (define-key map (kbd "+") 'mu4e-view-mark-for-flag)
+          (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
+          (define-key map (kbd "=") 'mu4e-view-mark-for-untrash)
+          (define-key map (kbd "&") 'mu4e-view-mark-custom)
+
+          (define-key map (kbd "*")             'mu4e-view-mark-for-something)
+          (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-something)
+          (define-key map (kbd "<insert>")     'mu4e-view-mark-for-something)
+          (define-key map (kbd "<insertchar>") 'mu4e-view-mark-for-something)
+
+          (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
+
+          ;; misc
+          (define-key map "w" 'visual-line-mode)
+          (define-key map "#" (mu4e~native-def mu4e-view-toggle-hide-cited))
+          (define-key map "h" (mu4e~native-def mu4e-view-toggle-html))
+          (define-key map (kbd "M-q")
+            (lambda()
+              (interactive)
+              (if mu4e-view-use-gnus
+                  (article-fill-long-lines)
+                (mu4e-view-fill-long-lines))))
+
+          ;; next 3 only warn user when attempt in the message view
+          (define-key map "u" 'mu4e-view-unmark)
+          (define-key map "U" 'mu4e-view-unmark-all)
+          (define-key map "x" 'mu4e-view-marked-execute)
+
+          (define-key map "$" 'mu4e-show-log)
+          (define-key map "H" 'mu4e-display-manual)
+
+          ;; menu
+          ;;(define-key map [menu-bar] (make-sparse-keymap))
+          (let ((menumap (make-sparse-keymap)))
+            (define-key map [menu-bar headers] (cons "Mu4e" menumap))
+
+            (define-key menumap [quit-buffer]
+              '("Quit view" . mu4e~view-quit-buffer))
+            (define-key menumap [display-help] '("Help" . mu4e-display-manual))
+
+            (define-key menumap [sepa0] '("--"))
+            (define-key menumap [wrap-lines]
+              '("Toggle wrap lines" . visual-line-mode))
+            (unless mu4e-view-use-gnus
+              (define-key menumap [toggle-html]
+                '("Toggle view-html" . mu4e-view-toggle-html)))
+            (define-key menumap [raw-view]
+              '("View raw message" . mu4e-view-raw-message))
+            (define-key menumap [pipe]
+              '("Pipe through shell" . mu4e-view-pipe))
+
+            (unless mu4e-view-use-gnus
+              (define-key menumap [sepa8] '("--"))
+              (define-key menumap [open-att]
+                '("Open attachment" . mu4e-view-open-attachment))
+              (define-key menumap [extract-att]
+                '("Extract attachment" . mu4e-view-save-attachment))
+              (define-key menumap [save-url]
+                '("Save URL to kill-ring" . mu4e-view-save-url))
+              (define-key menumap [fetch-url]
+                '("Fetch URL" . mu4e-view-fetch-url))
+              (define-key menumap [goto-url]
+                '("Visit URL" . mu4e-view-go-to-url)))
+
+            (define-key menumap [sepa1] '("--"))
+            (define-key menumap [mark-delete]
+              '("Mark for deletion" . mu4e-view-mark-for-delete))
+            (define-key menumap [mark-untrash]
+              '("Mark for untrash" .  mu4e-view-mark-for-untrash))
+            (define-key menumap [mark-trash]
+              '("Mark for trash" .  mu4e-view-mark-for-trash))
+            (define-key menumap [mark-move]
+              '("Mark for move" . mu4e-view-mark-for-move))
+
+            (define-key menumap [sepa2] '("--"))
+            (define-key menumap [resend]  '("Resend" . mu4e-compose-resend))
+            (define-key menumap [forward]  '("Forward" . mu4e-compose-forward))
+            (define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
+            (define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
+            (define-key menumap [sepa3] '("--"))
+
+            (define-key menumap [query-next]
+              '("Next query" . mu4e-headers-query-next))
+            (define-key menumap [query-prev]
+              '("Previous query" . mu4e-headers-query-prev))
+            (define-key menumap [narrow-search]
+              '("Narrow search" . mu4e-headers-search-narrow))
+            (define-key menumap [bookmark]
+              '("Search bookmark" . mu4e-headers-search-bookmark))
+            (define-key menumap [jump]
+              '("Jump to maildir" . mu4e~headers-jump-to-maildir))
+            (define-key menumap [search]
+              '("Search" . mu4e-headers-search))
+
+            (define-key menumap [sepa4]     '("--"))
+            (define-key menumap [next]      '("Next" . mu4e-view-headers-next))
+            (define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
+          map))
+
+  (fset 'mu4e-view-mode-map mu4e-view-mode-map))
+
+(defcustom mu4e-view-mode-hook nil
+  "Hook run when entering Mu4e-View mode."
+  :options '(turn-on-visual-line-mode)
+  :type 'hook
+  :group 'mu4e-view)
+
+(defvar mu4e-view-mode-abbrev-table nil)
+
+(defun mu4e~view-mode-body ()
+  "Body of the mode-function."
+  (use-local-map mu4e-view-mode-map)
+  (mu4e-context-in-modeline)
+  (setq buffer-undo-list t);; don't record undo info
+  ;; autopair mode gives error when pressing RET
+  ;; turn it off
+  (when (boundp 'autopair-dont-activate)
+    (setq autopair-dont-activate t)))
+
+(defun mu4e~view-define-mode ()
+  "Define the major-mode for the mu4e-view."
+  (if mu4e-view-use-gnus
+      (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
+        "Major mode for viewing an e-mail message in mu4e, based on
+Gnus' article-mode."
+        ;; remove some gnus stuff that does not apply
+        (define-key mu4e-view-mode-map [menu-bar Treatment] nil)
+        (define-key mu4e-view-mode-map [menu-bar Article] nil)
+        (define-key mu4e-view-mode-map [menu-bar post] nil)
+        (define-key mu4e-view-mode-map [menu-bar commands] nil)
+        ;; Restore C-h b default behavior
+        (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
+        (setq mu4e~view-buffer-name gnus-article-buffer)
+        (mu4e~view-mode-body))
+    (define-derived-mode mu4e-view-mode special-mode "mu4e:view"
+      "Major mode for viewing an e-mail message in mu4e."
+      (mu4e~view-mode-body))))
+
+(defun mu4e~view-browse-url-func (url)
+  "Return a function that executes `browse-url' with URL.
+The browser that is called depends on
+`browse-url-browser-function' and `browse-url-mailto-function'."
+  (save-match-data
+    (if (string-match "^mailto:" url)
+        (lambda ()
+          (interactive)
+          (browse-url-mail url))
+      (lambda ()
+        (interactive)
+        (browse-url url)))))
+
+(defun mu4e~view-browse-url-from-binding (&optional url)
+  "View in browser the url at point, or click location.
+If the optional argument URL is provided, browse that instead.
+If the url is mailto link, start writing an email to that address."
+  (interactive)
+  (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
+    (when url
+      (if (string-match-p "^mailto:" url)
+          (browse-url-mail url)
+        (browse-url url)))))
+
+(defun mu4e~view-show-images-maybe (msg)
+  "Show attached images, if `mu4e-show-images' is non-nil."
+  (when (and (display-images-p) mu4e-view-show-images)
+    (mu4e-view-for-each-part msg
+                             (lambda (_msg part)
+                               (when (string-match "^image/"
+                                                   (or (mu4e-message-part-field part :mime-type)
+                                                       "application/object-stream"))
+                                 (let ((imgfile (mu4e-message-part-field part :temp)))
+                                   (when (and imgfile (file-exists-p imgfile))
+                                     (save-excursion
+                                       (goto-char (point-max))
+                                       (mu4e-display-image imgfile
+                                                           mu4e-view-image-max-width
+                                                           mu4e-view-image-max-height)))))))))
+
+(defvar mu4e~view-beginning-of-url-regexp
+  "https?\\://\\|mailto:"
+  "Regexp that matches the beginning of http:/https:/mailto:
+URLs; match-string 1 will contain the matched URL, if any.")
+
+;; this is fairly simplistic...
+(defun mu4e~view-make-urls-clickable ()
+  "Turn things that look like URLs into clickable things.
+Also number them so they can be opened using `mu4e-view-go-to-url'."
+  (let ((num 0))
+    (save-excursion
+      (setq mu4e~view-link-map ;; buffer local
+            (make-hash-table :size 32 :weakness nil))
+      (goto-char (point-min))
+      (while (re-search-forward mu4e~view-beginning-of-url-regexp nil t)
+        (let ((bounds (thing-at-point-bounds-of-url-at-point)))
+          (when bounds
+            (let* ((url (thing-at-point-url-at-point))
+                   (ov (make-overlay (car bounds) (cdr bounds))))
+              (puthash (cl-incf num) url mu4e~view-link-map)
+              (add-text-properties
+               (car bounds)
+               (cdr bounds)
+               `(face mu4e-link-face
+                      mouse-face highlight
+                      mu4e-url ,url
+                      keymap ,mu4e-view-clickable-urls-keymap
+                      help-echo
+                      "[mouse-1] or [M-RET] to open the link"))
+              (overlay-put ov 'after-string
+                           (propertize (format "\u200B[%d]" num)
+                                       'face 'mu4e-url-number-face)))))))))
+
+
+(defun mu4e~view-hide-cited ()
+  "Toggle hiding of cited lines in the message body."
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (flush-lines mu4e-cited-regexp)
+      (setq mu4e~view-cited-hidden t))))
 
 (defmacro mu4e~view-in-headers-context (&rest body)
   "Evaluate BODY in the context of the headers buffer connected to
@@ -235,6 +1177,27 @@ the new docid. Otherwise, return nil."
 
 
 ;;; Interactive functions
+
+(defun mu4e-view-toggle-hide-cited ()
+  "Toggle hiding of cited lines in the message body."
+  (interactive)
+  (if mu4e~view-cited-hidden
+      (mu4e-view-refresh)
+    (mu4e~view-hide-cited)))
+
+(defun mu4e-view-toggle-html ()
+  "Toggle html-display of the message body (if any)."
+  (interactive)
+  (setq mu4e~view-html-text
+        (if mu4e~message-body-html 'text 'html))
+  (mu4e-view-refresh))
+
+(defun mu4e-view-refresh ()
+  "Redisplay the current message."
+  (interactive)
+  (mu4e-view mu4e~view-message)
+  (setq mu4e~view-cited-hidden nil))
+
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG, then do it.
 If MSG is nil apply action to message returned
@@ -308,6 +1271,318 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
           (let ((ov (make-overlay beg end)))
             (overlay-put ov 'face 'mu4e-region-code))
           (setq beg nil end nil))))))
+
+;;; Wash functions
+
+(defun mu4e-view-fill-long-lines ()
+  "Fill lines that are wider than the window width or `fill-column'."
+  (interactive)
+  (with-current-buffer (mu4e-get-view-buffer)
+    (save-excursion
+      (let ((inhibit-read-only t)
+            (width (window-width (get-buffer-window (current-buffer)))))
+        (save-restriction
+          (message-goto-body)
+          (while (not (eobp))
+            (end-of-line)
+            (when (>= (current-column) (min fill-column width))
+              (narrow-to-region (min (1+ (point)) (point-max))
+                                (point-at-bol))
+              (let ((goback (point-marker)))
+                (fill-paragraph nil)
+                (goto-char (marker-position goback)))
+              (widen))
+            (forward-line 1)))))))
+
+;;; Attachment handling
+
+(defun mu4e~view-get-attach-num (prompt _msg &optional multi)
+  "Ask the user with PROMPT for an attachment number for MSG, and
+ensure it is valid. The number is [1..n] for attachments
+\[0..(n-1)] in the message. If MULTI is nil, return the number for
+the attachment; otherwise (MULTI is non-nil), accept ranges of
+attachment numbers, as per `mu4e-split-ranges-to-numbers', and
+return the corresponding string."
+  (let* ((count (hash-table-count mu4e~view-attach-map)) (def))
+    (when (zerop count) (mu4e-warn "No attachments for this message"))
+    (if (not multi)
+        (if (= count 1)
+            (read-number (mu4e-format "%s: " prompt) 1)
+          (read-number (mu4e-format "%s (1-%d): " prompt count)))
+      (progn
+        (setq def (if (= count 1) "1" (format "1-%d" count)))
+        (read-string (mu4e-format "%s (default %s): " prompt def)
+                     nil nil def)))))
+
+(defun mu4e~view-get-attach (msg attnum)
+  "Return the attachment plist in MSG corresponding to attachment
+number ATTNUM."
+  (let* ((partid (gethash attnum mu4e~view-attach-map))
+         (attach
+          (cl-find-if
+           (lambda (part)
+             (eq (mu4e-message-part-field part :index) partid))
+           (mu4e-message-field msg :parts))))
+    (or attach (mu4e-error "Not a valid attachment"))))
+
+(defun mu4e~view-request-attachment-path (fname path)
+  "Ask the user where to save FNAME (default is PATH/FNAME)."
+  (let ((fpath (expand-file-name
+                (read-file-name
+                 (mu4e-format "Save as ")
+                 path nil nil fname) path)))
+    (if (file-directory-p fpath)
+        (expand-file-name fname fpath)
+      fpath)))
+
+(defun mu4e~view-request-attachments-dir (path)
+  "Ask the user where to save multiple attachments (default is PATH)."
+  (let ((fpath (expand-file-name
+                (read-directory-name
+                 (mu4e-format "Save in directory ")
+                 path nil nil nil) path)))
+    (if (file-directory-p fpath)
+        fpath)))
+
+(defun mu4e-view-save-attachment-single (&optional msg attnum)
+  "Save attachment number ATTNUM from MSG.
+If MSG is nil use the message returned by `message-at-point'.
+If ATTNUM is nil ask for the attachment number."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (attnum (or attnum
+                     (mu4e~view-get-attach-num "Attachment to save" msg)))
+         (att (mu4e~view-get-attach msg attnum))
+         (fname  (plist-get att :name))
+         (mtype  (plist-get att :mime-type))
+         (path (concat
+                (mu4e~get-attachment-dir fname mtype) "/"))
+         (index (plist-get att :index))
+         (retry t) (fpath))
+    (while retry
+      (setq fpath (mu4e~view-request-attachment-path fname path))
+      (setq retry
+            (and (file-exists-p fpath)
+                 (not (y-or-n-p (mu4e-format "Overwrite '%s'?" fpath))))))
+    (mu4e~proc-extract
+     'save (mu4e-message-field msg :docid)
+     index mu4e-decryption-policy fpath)))
+
+(defun mu4e-view-save-attachment-multi (&optional msg)
+  "Offer to save multiple email attachments from the current message.
+Default is to save all messages, [1..n], where n is the number of
+attachments.  You can type multiple values separated by space, e.g.
+  1 3-6 8
+will save attachments 1,3,4,5,6 and 8.
+
+Furthermore, there is a shortcut \"a\" which so means all
+attachments, but as this is the default, you may not need it."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (attachstr (mu4e~view-get-attach-num
+                     "Attachment number range (or 'a' for 'all')" msg t))
+         (count (hash-table-count mu4e~view-attach-map))
+         (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+    (if mu4e-save-multiple-attachments-without-asking
+        (let* ((path (concat (mu4e~get-attachment-dir) "/"))
+               (attachdir (mu4e~view-request-attachments-dir path)))
+          (dolist (num attachnums)
+            (let* ((att (mu4e~view-get-attach msg num))
+                   (fname  (plist-get att :name))
+                   (index (plist-get att :index))
+                   (retry t)
+                   fpath)
+              (while retry
+                (setq fpath (expand-file-name (concat attachdir fname) path))
+                (setq retry
+                      (and (file-exists-p fpath)
+                           (not (y-or-n-p
+                                 (mu4e-format "Overwrite '%s'?" fpath))))))
+              (mu4e~proc-extract
+               'save (mu4e-message-field msg :docid)
+               index mu4e-decryption-policy fpath))))
+      (dolist (num attachnums)
+        (mu4e-view-save-attachment-single msg num)))))
+
+(defun mu4e-view-save-attachment ()
+  "Save mime parts from current mu4e-view buffer."
+  (interactive)
+  (call-interactively
+   (if mu4e-view-use-gnus
+       #'mu4e-view-gnus-save-mime-parts
+     #'mu4e-view-save-attachment-multi)))
+
+(defun mu4e-view-gnus-save-mime-parts (&optional arg)
+  "Save mime parts from current mu4e gnus view buffer.
+
+When helm-mode is enabled provide completion on attachments and
+possibility to mark candidates to save, otherwise completion on
+attachments is done with `completing-read-multiple', in this case use
+\",\" to separate candidate, completion is provided after each \",\"."
+  (interactive "P")
+  (cl-assert (and (eq major-mode 'mu4e-view-mode)
+                  (derived-mode-p 'gnus-article-mode)))
+  (let ((handles '())
+        (files '())
+        (helm-comp-read-use-marked t)
+        (compfn (if helm-mode
+                    #'completing-read
+                  ;; Fallback to `completing-read-multiple' with poor
+                  ;; completion systems.
+                  #'completing-read-multiple))
+        dir)
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((handle (get-text-property (point) 'gnus-data)))
+          (when (consp handle)
+            (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr handle))))))
+              (when fname
+                (push `(,fname . ,handle) handles)
+                (push fname files)))))
+        (forward-line 1)))
+    (if files
+        (progn
+          (setq files (funcall compfn "Save part(s): " files)
+                dir (if arg
+                        (read-directory-name "Save to directory: ")
+                      mu4e-attachment-dir))
+          (cl-loop for (f . h) in handles
+                   when (member f files)
+                   do (mm-save-part-to-file h (expand-file-name f dir))))
+      (message "No attached files found"))))
+
+(defun mu4e-view-open-attachment (&optional msg attnum)
+  "Open attachment number ATTNUM from MSG.
+If MSG is nil use the message returned by `message-at-point'.  If
+ATTNUM is nil ask for the attachment number."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (attnum (or attnum
+                     (progn
+                       (unless mu4e~view-attach-map
+                         (mu4e~view-construct-attachments-header msg))
+                       (mu4e~view-get-attach-num "Attachment to open" msg))))
+         (att (or (mu4e~view-get-attach msg attnum)))
+         (index (plist-get att :index))
+         (docid (mu4e-message-field msg :docid))
+         (mimetype (plist-get att :mime-type)))
+    (if (and mimetype (string= mimetype "message/rfc822"))
+        ;; special handling for message-attachments; we open them in mu4e. we also
+        ;; send the docid as parameter (4th arg); we'll get this back from the
+        ;; server, and use it to determine the parent message (ie., the current
+        ;; message) when showing the embedded message/rfc822, and return to the
+        ;; current message when quitting that one.
+        (mu4e~view-temp-action docid index 'mu4e (format "%s" docid))
+      ;; otherwise, open with the default program (handled in mu-server
+      (mu4e~proc-extract 'open docid index mu4e-decryption-policy))))
+
+(defun mu4e~view-temp-action (docid index what &optional param)
+  "Open attachment INDEX for message with DOCID, and invoke ACTION."
+  (interactive)
+  (mu4e~proc-extract 'temp docid index mu4e-decryption-policy nil what param ))
+
+(defvar mu4e~view-open-with-hist nil "History list for the open-with argument.")
+
+(defun mu4e-view-open-attachment-with (msg attachnum &optional cmd)
+  "Open MSG's attachment ATTACHNUM with CMD.
+If CMD is nil, ask user for it."
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (ext (file-name-extension (plist-get att :name)))
+         (cmd (or cmd
+                  (read-string
+                   (mu4e-format "Shell command to open it with: ")
+                   (assoc-default ext mu4e-view-attachment-assoc)
+                   'mu4e~view-open-with-hist)))
+         (index (plist-get att :index)))
+    (mu4e~view-temp-action
+     (mu4e-message-field msg :docid) index 'open-with cmd)))
+
+(defvar mu4e~view-pipe-hist nil
+  "History list for the pipe argument.")
+
+(defun mu4e-view-pipe-attachment (msg attachnum &optional pipecmd)
+  "Feed MSG's attachment ATTACHNUM through pipe PIPECMD.
+If PIPECMD is nil, ask user for it."
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (pipecmd (or pipecmd
+                      (read-string
+                       (mu4e-format "Pipe: ")
+                       nil
+                       'mu4e~view-pipe-hist)))
+         (index (plist-get att :index)))
+    (mu4e~view-temp-action
+     (mu4e-message-field msg :docid) index 'pipe pipecmd)))
+
+(defun mu4e-view-open-attachment-emacs (msg attachnum)
+  "Open MSG's attachment ATTACHNUM in the current emacs instance."
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (index (plist-get att :index)))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'emacs)))
+
+(defun mu4e-view-import-attachment-diary (msg attachnum)
+  "Open MSG's attachment ATTACHNUM in the current emacs instance."
+  (interactive)
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (index (plist-get att :index)))
+    (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'diary)))
+
+(defun mu4e-view-import-public-key (msg attachnum)
+  "Import MSG's attachment ATTACHNUM into the gpg-keyring."
+  (interactive)
+  (let* ((att (mu4e~view-get-attach msg attachnum))
+         (index (plist-get att :index))
+         (mime-type (plist-get att :mime-type)))
+    (if (string= "application/pgp-keys" mime-type)
+        (mu4e~view-temp-action (mu4e-message-field msg :docid) index 'gpg)
+      (mu4e-error "Invalid mime-type for a pgp-key: `%s'" mime-type))))
+
+(defun mu4e-view-attachment-action (&optional msg)
+  "Ask user what to do with attachments in MSG
+If MSG is nil use the message returned by `message-at-point'.
+The actions are specified in `mu4e-view-attachment-actions'."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (actionfunc (mu4e-read-option
+                      "Action on attachment: "
+                      mu4e-view-attachment-actions))
+         (multi (eq actionfunc 'mu4e-view-save-attachment-multi))
+         (attnum (unless multi
+                   (mu4e~view-get-attach-num "Which attachment" msg multi))))
+    (cond ((and actionfunc attnum)
+           (funcall actionfunc msg attnum))
+          ((and actionfunc multi)
+           (funcall actionfunc msg)))))
+
+;; handler-function to handle the response we get from the server when we
+;; want to do something with one of the attachments.
+(defun mu4e~view-temp-handler (path what docid param)
+  "Handler function for doing things with temp files (ie.,
+attachments) in response to a (mu4e~proc-extract 'temp ... )."
+  (cond
+   ((string= what "open-with")
+    ;; 'param' will be the program to open-with
+    (start-process "*mu4e-open-with-proc*" "*mu4e-open-with*" param path))
+   ((string= what "pipe")
+    ;; 'param' will be the pipe command, path the infile for this
+    (mu4e-process-file-through-pipe path param))
+   ;; if it's mu4e, it's some embedded message; 'param' may contain the docid
+   ;; of the parent message.
+   ((string= what "mu4e")
+    ;; remember the mapping path->docid, which maps the path of the embedded
+    ;; message to the docid of its parent
+    (puthash path docid mu4e~path-parent-docid-map)
+    (mu4e~proc-view-path path mu4e-view-show-images mu4e-decryption-policy))
+   ((string= what "emacs")
+    (find-file path)
+    ;; make the buffer read-only since it usually does not make
+    ;; sense to edit the temp buffer; use C-x C-q if you insist...
+    (setq buffer-read-only t))
+   ((string= what "diary")
+    (icalendar-import-file path diary-file))
+   ((string= what "gpg")
+    (epa-import-keys path))
+   (t (mu4e-error "Unsupported action %S" what))))
 
 ;;; View Utilities
 
@@ -392,6 +1667,190 @@ list."
   (mu4e~view-in-headers-context
    (mu4e-mark-execute-all)))
 
+;;; URL handling
 
+(defun mu4e~view-get-urls-num (prompt &optional multi)
+  "Ask the user with PROMPT for an URL number for MSG, and ensure
+it is valid. The number is [1..n] for URLs \[0..(n-1)] in the
+message. If MULTI is nil, return the number for the URL;
+otherwise (MULTI is non-nil), accept ranges of URL numbers, as
+per `mu4e-split-ranges-to-numbers', and return the corresponding
+string."
+  (let* ((count (hash-table-count mu4e~view-link-map)) (def))
+    (when (zerop count) (mu4e-error "No links for this message"))
+    (if (not multi)
+        (if (= count 1)
+            (read-number (mu4e-format "%s: " prompt) 1)
+          (read-number (mu4e-format "%s (1-%d): " prompt count)))
+      (progn
+        (setq def (if (= count 1) "1" (format "1-%d" count)))
+        (read-string (mu4e-format "%s (default %s): " prompt def)
+                     nil nil def)))))
+
+(defun mu4e-view-go-to-url (&optional multi)
+  "Offer to go to url(s). If MULTI (prefix-argument) is nil, go to
+a single one, otherwise, offer to go to a range of urls."
+  (interactive "P")
+  (mu4e~view-handle-urls "URL to visit"
+                         multi
+                         (lambda (url) (mu4e~view-browse-url-from-binding url))))
+
+(defun mu4e-view-save-url (&optional multi)
+  "Offer to save urls(s) to the kill-ring. If
+MULTI (prefix-argument) is nil, save a single one, otherwise, offer
+to save a range of URLs."
+  (interactive "P")
+  (mu4e~view-handle-urls "URL to save" multi
+                         (lambda (url)
+                           (kill-new url)
+                           (mu4e-message "Saved %s to the kill-ring" url))))
+
+(defun mu4e-view-fetch-url (&optional multi)
+  "Offer to fetch (download) urls(s). If MULTI (prefix-argument) is nil,
+download a single one, otherwise, offer to fetch a range of
+URLs. The urls are fetched to `mu4e-attachment-dir'."
+  (interactive "P")
+  (mu4e~view-handle-urls "URL to fetch" multi
+                         (lambda (url)
+                           (let ((target (concat (mu4e~get-attachment-dir url) "/"
+                                                 (file-name-nondirectory url))))
+                             (url-copy-file url target)
+                             (mu4e-message "Fetched %s -> %s" url target)))))
+
+(defun mu4e~view-handle-urls (prompt multi urlfunc)
+  "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
+it to a range of uris. PROMPT is the query to present to the user."
+  (if multi
+      (mu4e~view-handle-multi-urls prompt urlfunc)
+    (mu4e~view-handle-single-url prompt urlfunc)))
+
+(defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
+  "Apply URLFUNC to url NUM in the current message, prompting the
+user with PROMPT."
+  (let* ((num (or num (mu4e~view-get-urls-num prompt)))
+         (url (gethash num mu4e~view-link-map)))
+    (unless url (mu4e-warn "Invalid number for URL"))
+    (funcall urlfunc url)))
+
+(defun mu4e~view-handle-multi-urls (prompt urlfunc)
+  "Apply URLFUNC to a a range of urls in the current message,
+prompting the user with PROMPT.
+
+Default is to apply it to all URLs, [1..n], where n is the number
+of urls. You can type multiple values separated by space, e.g.  1
+3-6 8 will visit urls 1,3,4,5,6 and 8.
+
+Furthermore, there is a shortcut \"a\" which means all urls, but as
+this is the default, you may not need it."
+  (let* ((linkstr (mu4e~view-get-urls-num
+                   "URL number range (or 'a' for 'all')" t))
+         (count (hash-table-count mu4e~view-link-map))
+         (linknums (mu4e-split-ranges-to-numbers linkstr count)))
+    (dolist (num linknums)
+      (mu4e~view-handle-single-url prompt urlfunc num))))
+
+(defun mu4e-view-for-each-uri (func)
+  "Evaluate FUNC(uri) for each uri in the current message."
+  (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
+
+;;; Various commands
+
+(defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
+  "Name for the raw message view buffer.")
+
+(defun mu4e-view-raw-message ()
+  "Display the raw contents of message at point in a new buffer."
+  (interactive)
+  (let ((path (mu4e-message-field-at-point :path))
+        (buf (get-buffer-create mu4e~view-raw-buffer-name)))
+    (unless (and path (file-readable-p path))
+      (mu4e-error "Not a readable file: %S" path))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert-file-contents path)
+        (view-mode)
+        (goto-char (point-min))))
+    (switch-to-buffer buf)))
+
+(defun mu4e-view-pipe (cmd)
+  "Pipe the message at point through shell command CMD.
+Then, display the results."
+  (interactive "sShell command: ")
+  (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
+    (mu4e-process-file-through-pipe path cmd)))
+
+(defconst mu4e~verify-buffer-name " *mu4e-verify*")
+
+(defun mu4e-view-verify-msg-popup (&optional msg)
+  "Pop-up a signature verification window for MSG.
+If MSG is nil, use the message at point."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (path (mu4e-message-field msg :path))
+         (cmd (format "%s verify --verbose %s %s"
+                      mu4e-mu-binary
+                      (shell-quote-argument path)
+                      (if mu4e-decryption-policy
+                          "--decrypt --use-agent"
+                        "")))
+         (output (shell-command-to-string cmd))
+         ;; create a new one
+         (buf (get-buffer-create mu4e~verify-buffer-name))
+         (win (or (get-buffer-window buf)
+                  (split-window-vertically (- (window-height) 6)))))
+    (with-selected-window win
+      (let ((inhibit-read-only t))
+        ;; (set-window-dedicated-p win t)
+        (switch-to-buffer buf)
+        (erase-buffer)
+        (insert output)
+        (goto-char (point-min))
+        (local-set-key "q" 'kill-buffer-and-window))
+      (setq buffer-read-only t))
+    (select-window win)))
+
+(defun mu4e~view-quit-buffer ()
+  "Quit the mu4e-view buffer.
+This is a rather complex function, to ensure we don't disturb
+other windows."
+  (interactive)
+  (if (eq mu4e-split-view 'single-window)
+      (when (buffer-live-p (mu4e-get-view-buffer))
+        (kill-buffer (mu4e-get-view-buffer)))
+    (unless (eq major-mode 'mu4e-view-mode)
+      (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
+    (let ((curbuf (current-buffer))
+          (curwin (selected-window))
+          (headers-win))
+      (walk-windows
+       (lambda (win)
+         ;; check whether the headers buffer window is visible
+         (when (eq (mu4e-get-headers-buffer) (window-buffer win))
+           (setq headers-win win))
+         ;; and kill any _other_ (non-selected) window that shows the current
+         ;; buffer
+         (when
+             (and
+              (eq curbuf (window-buffer win)) ;; does win show curbuf?
+              (not (eq curwin win))         ;; but it's not the curwin?
+              (not (one-window-p))) ;; and not the last one on the frame?
+           (delete-window win))))  ;; delete it!
+      ;; now, all *other* windows should be gone.
+      ;; if the headers view is also visible, kill ourselves + window; otherwise
+      ;; switch to the headers view
+      (if (window-live-p headers-win)
+          ;; headers are visible
+          (progn
+            (kill-buffer-and-window) ;; kill the view win
+            (setq mu4e~headers-view-win nil)
+            (select-window headers-win)) ;; and switch to the headers win...
+        ;; headers are not visible...
+        (progn
+          (kill-buffer)
+          (setq mu4e~headers-view-win nil)
+          (when (buffer-live-p (mu4e-get-headers-buffer))
+            (switch-to-buffer (mu4e-get-headers-buffer))))))))
+;;;
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here
