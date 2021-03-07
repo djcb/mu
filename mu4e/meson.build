@@ -47,7 +47,9 @@ mu4e_srcs=[
   'mu4e-utils.el',
   'mu4e-vars.el',
   'mu4e-view.el',
-  'org-mu4e.el',
+  'mu4e-view-gnus.el',
+  'mu4e-view-old.el',
+  'obsolete/org-mu4e.el',
 ]
 
 foreach src : mu4e_srcs
