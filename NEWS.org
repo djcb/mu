@@ -38,6 +38,17 @@
 
 *** mu4e
 
+    - Use the gnus-based message viewer as the default; the new viewer has quite
+      a few features compared to the old, mu4e-specific one, such as faster
+      crypto, support for S/MIME, syntax-highlighting, calendar invitations and
+      more.
+
+      It does not do everything the old viewer does though (e.g., attachment
+      actions), so if you depend on those, you can use:
+      #+begin_example
+      (setq mu4e-view-use-gnus nil)
+      #+end_example
+
     - Include maildir-shortcuts in the main-view with overall/unread counts,
       similar to bookmarks, and with the same ~:hide~ and ~:hide-unread~ properties.
       Note that for the latter, you need to update your maildir-shortcuts to the

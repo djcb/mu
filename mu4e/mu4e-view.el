@@ -33,7 +33,7 @@
   "Settings for the message view."
   :group 'mu4e)
 
-(defcustom mu4e-view-use-gnus nil
+(defcustom mu4e-view-use-gnus t
   "If non-nil, use the new Gnus-based viewer.
 Otherwise, use the old viewer."
   :type 'boolean
