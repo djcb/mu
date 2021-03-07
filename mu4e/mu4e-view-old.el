@@ -45,17 +45,8 @@
 (require 'calendar)
 
 (defvar mu4e~headers-view-win)
-(defvar helm-comp-read-use-marked)
 
 ;;; Options
-(defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
-          :attachments :signature :decryption)
-  "Header fields to display in the message view buffer.
-For the complete list of available headers, see `mu4e-header-info'."
-  :type (list 'symbol)
-  :group 'mu4e-view)
-
 (defcustom mu4e-view-show-addresses nil
   "Whether to initially show full e-mail addresses for contacts.
 Otherwise, just show their names."

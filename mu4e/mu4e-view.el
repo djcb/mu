@@ -46,6 +46,14 @@ the end of a message. Otherwise, don't move to the next message."
   :type 'boolean
   :group 'mu4e-view)
 
+(defcustom mu4e-view-fields
+  '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
+          :attachments :signature :decryption)
+  "Header fields to display in the message view buffer.
+For the complete list of available headers, see `mu4e-header-info'."
+  :type (list 'symbol)
+  :group 'mu4e-view)
+
 (defcustom mu4e-view-actions
   '( ("capture message"  . mu4e-action-capture-message)
      ("view as pdf"      . mu4e-action-view-as-pdf)

@@ -87,68 +87,6 @@ found."
                                field (cdr item)))))
     (funcall func msg)))
 
-(defun mu4e-view-message-text (msg)
-  "Return the message to display (as a string), based on the MSG plist."
-  (concat
-   (mapconcat
-    (lambda (field)
-      (let ((fieldval (mu4e-message-field msg field)))
-        (cl-case field
-          (:subject    (mu4e~view-construct-header field fieldval))
-          (:path       (mu4e~view-construct-header field fieldval))
-          (:maildir    (mu4e~view-construct-header field fieldval))
-          (:user-agent (mu4e~view-construct-header field fieldval))
-          ((:flags :tags) (mu4e~view-construct-flags-tags-header
-                           field fieldval))
-
-          ;; contact fields
-          (:to       (mu4e~view-construct-contacts-header msg field))
-          (:from     (mu4e~view-construct-contacts-header msg field))
-          (:cc       (mu4e~view-construct-contacts-header msg field))
-          (:bcc      (mu4e~view-construct-contacts-header msg field))
-
-          ;; if we (`user-mail-address' are the From, show To, otherwise,
-          ;; show From
-          (:from-or-to
-           (let* ((from (mu4e-message-field msg :from))
-                  (from (and from (cdar from))))
-             (if (mu4e-personal-address-p from)
-                 (mu4e~view-construct-contacts-header msg :to)
-               (mu4e~view-construct-contacts-header msg :from))))
-          ;; date
-          (:date
-           (let ((datestr
-                  (when fieldval (format-time-string mu4e-view-date-format
-                                                     fieldval))))
-             (if datestr (mu4e~view-construct-header field datestr) "")))
-          ;; size
-          (:size
-           (mu4e~view-construct-header field (mu4e-display-size fieldval)))
-          (:mailing-list
-           (mu4e~view-construct-header field fieldval))
-          (:message-id
-           (mu4e~view-construct-header field fieldval))
-          ;; attachments
-          (:attachments (mu4e~view-construct-attachments-header msg))
-          ;; pgp-signatures
-          (:signature   (mu4e~view-construct-signature-header msg))
-          ;; pgp-decryption
-          (:decryption  (mu4e~view-construct-decryption-header msg))
-          (t (mu4e~view-construct-header field
-                                         (mu4e~view-custom-field msg field))))))
-    mu4e-view-fields "")
-   "\n"
-   (let* ((prefer-html
-           (cond
-            ((eq mu4e~view-html-text 'html) t)
-            ((eq mu4e~view-html-text 'text) nil)
-            (t mu4e-view-prefer-html)))
-          (body (mu4e-message-body-text msg prefer-html)))
-     (setq mu4e~view-html-text nil)
-     (when (fboundp 'add-face-text-property)
-       (add-face-text-property 0 (length body) 'mu4e-view-body-face t body))
-     body)))
-
 (defun mu4e~view-embedded-winbuf ()
   "Get a buffer (shown in a window) for the embedded message."
   (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
