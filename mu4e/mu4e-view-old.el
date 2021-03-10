@@ -1,4 +1,4 @@
-;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-view-old.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
@@ -28,23 +28,9 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'mu4e-utils) ;; utility functions
-(require 'mu4e-vars)
-(require 'mu4e-mark)
-(require 'mu4e-proc)
-(require 'mu4e-compose)
-(require 'mu4e-actions)
-(require 'mu4e-message)
+(require 'mu4e-view-common)
 
-(require 'comint)
-(require 'browse-url)
-(require 'button)
-(require 'epa)
-(require 'epg)
-(require 'thingatpt)
-(require 'calendar)
-
-(defvar mu4e~headers-view-win)
+(declare-function mu4e-view "mu4e-view")
 
 ;;; Options
 (defcustom mu4e-view-show-addresses nil
@@ -126,12 +112,6 @@ The first letter of NAME is used as a shortcut character."
     map)
   "Keymap used for the contacts in the header fields.")
 
-(defvar mu4e-view-clickable-urls-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
-    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
-    map)
-  "Keymap used for the urls inside the body.")
 
 (defvar mu4e-view-attachments-header-keymap
   (let ((map (make-sparse-keymap)))
@@ -159,10 +139,6 @@ The first letter of NAME is used as a shortcut character."
 (defvar mu4e~view-cited-hidden nil "Whether cited lines are hidden.")
 (put 'mu4e~view-cited-hidden 'permanent-local t)
 
-(defvar mu4e~view-link-map nil
-  "A map of some number->url so we can jump to url by number.")
-(put 'mu4e~view-link-map 'permanent-local t)
-
 (defvar mu4e~path-parent-docid-map (make-hash-table :test 'equal)
   "A map of msg paths --> parent-docids.
 This is to determine what is the parent docid for embedded
@@ -180,15 +156,6 @@ message extracted at some path.")
 or `html' or nil.")
 
 ;;; Main
-
-(defun mu4e-view-message-with-message-id (msgid)
-  "View message with message-id MSGID. This (re)creates a
-headers-buffer with a search for MSGID, then open a view for that
-message."
-  (mu4e-headers-search (concat "msgid:" msgid) nil nil t msgid t))
-
-(define-obsolete-function-alias 'mu4e-view-message-with-msgid
-  'mu4e-view-message-with-message-id "0.9.17")
 
 (defun mu4e~view-custom-field (msg field)
   "Show some custom header field, or raise an error if it is not
@@ -304,20 +271,6 @@ found."
       (when embedded (local-set-key "q" 'kill-buffer-and-window)))
     (switch-to-buffer buf))))
 
-(defun mu4e~view-get-property-from-event (prop)
-  "Get the property PROP at point, or the location of the mouse.
-The action is chosen based on the `last-command-event'.
-Meant to be evoked from interactive commands."
-  (if (and (eventp last-command-event)
-           (mouse-event-p last-command-event))
-      (let ((posn (event-end last-command-event)))
-        (when (numberp (posn-point posn))
-          (get-text-property
-           (posn-point posn)
-           prop
-           (window-buffer (posn-window posn)))
-          ))
-    (get-text-property (point) prop)))
 
 (defun mu4e~view-construct-header (field val &optional dont-propertize-val)
   "Return header field FIELD (as in `mu4e-header-info') with value
@@ -805,16 +758,6 @@ The browser that is called depends on
         (interactive)
         (browse-url url)))))
 
-(defun mu4e~view-browse-url-from-binding (&optional url)
-  "View in browser the url at point, or click location.
-If the optional argument URL is provided, browse that instead.
-If the url is mailto link, start writing an email to that address."
-  (interactive)
-  (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
-    (when url
-      (if (string-match-p "^mailto:" url)
-          (browse-url-mail url)
-        (browse-url url)))))
 
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-show-images' is non-nil."
@@ -831,39 +774,6 @@ If the url is mailto link, start writing an email to that address."
                                        (mu4e-display-image imgfile
                                                            mu4e-view-image-max-width
                                                            mu4e-view-image-max-height)))))))))
-
-(defvar mu4e~view-beginning-of-url-regexp
-  "https?\\://\\|mailto:"
-  "Regexp that matches the beginning of http:/https:/mailto:
-URLs; match-string 1 will contain the matched URL, if any.")
-
-;; this is fairly simplistic...
-(defun mu4e~view-make-urls-clickable ()
-  "Turn things that look like URLs into clickable things.
-Also number them so they can be opened using `mu4e-view-go-to-url'."
-  (let ((num 0))
-    (save-excursion
-      (setq mu4e~view-link-map ;; buffer local
-            (make-hash-table :size 32 :weakness nil))
-      (goto-char (point-min))
-      (while (re-search-forward mu4e~view-beginning-of-url-regexp nil t)
-        (let ((bounds (thing-at-point-bounds-of-url-at-point)))
-          (when bounds
-            (let* ((url (thing-at-point-url-at-point))
-                   (ov (make-overlay (car bounds) (cdr bounds))))
-              (puthash (cl-incf num) url mu4e~view-link-map)
-              (add-text-properties
-               (car bounds)
-               (cdr bounds)
-               `(face mu4e-link-face
-                      mouse-face highlight
-                      mu4e-url ,url
-                      keymap ,mu4e-view-clickable-urls-keymap
-                      help-echo
-                      "[mouse-1] or [M-RET] to open the link"))
-              (overlay-put ov 'after-string
-                           (propertize (format "\u200B[%d]" num)
-                                       'face 'mu4e-url-number-face)))))))))
 
 
 (defun mu4e~view-hide-cited ()
@@ -1166,92 +1076,6 @@ attachments) in response to a (mu4e~proc-extract 'temp ... )."
     (epa-import-keys path))
    (t (mu4e-error "Unsupported action %S" what))))
 
-
-;;; URL handling
-
-(defun mu4e~view-get-urls-num (prompt &optional multi)
-  "Ask the user with PROMPT for an URL number for MSG, and ensure
-it is valid. The number is [1..n] for URLs \[0..(n-1)] in the
-message. If MULTI is nil, return the number for the URL;
-otherwise (MULTI is non-nil), accept ranges of URL numbers, as
-per `mu4e-split-ranges-to-numbers', and return the corresponding
-string."
-  (let* ((count (hash-table-count mu4e~view-link-map)) (def))
-    (when (zerop count) (mu4e-error "No links for this message"))
-    (if (not multi)
-        (if (= count 1)
-            (read-number (mu4e-format "%s: " prompt) 1)
-          (read-number (mu4e-format "%s (1-%d): " prompt count)))
-      (progn
-        (setq def (if (= count 1) "1" (format "1-%d" count)))
-        (read-string (mu4e-format "%s (default %s): " prompt def)
-                     nil nil def)))))
-
-(defun mu4e-view-go-to-url (&optional multi)
-  "Offer to go to url(s). If MULTI (prefix-argument) is nil, go to
-a single one, otherwise, offer to go to a range of urls."
-  (interactive "P")
-  (mu4e~view-handle-urls "URL to visit"
-                         multi
-                         (lambda (url) (mu4e~view-browse-url-from-binding url))))
-
-(defun mu4e-view-save-url (&optional multi)
-  "Offer to save urls(s) to the kill-ring. If
-MULTI (prefix-argument) is nil, save a single one, otherwise, offer
-to save a range of URLs."
-  (interactive "P")
-  (mu4e~view-handle-urls "URL to save" multi
-                         (lambda (url)
-                           (kill-new url)
-                           (mu4e-message "Saved %s to the kill-ring" url))))
-
-(defun mu4e-view-fetch-url (&optional multi)
-  "Offer to fetch (download) urls(s). If MULTI (prefix-argument) is nil,
-download a single one, otherwise, offer to fetch a range of
-URLs. The urls are fetched to `mu4e-attachment-dir'."
-  (interactive "P")
-  (mu4e~view-handle-urls "URL to fetch" multi
-                         (lambda (url)
-                           (let ((target (concat (mu4e~get-attachment-dir url) "/"
-                                                 (file-name-nondirectory url))))
-                             (url-copy-file url target)
-                             (mu4e-message "Fetched %s -> %s" url target)))))
-
-(defun mu4e~view-handle-urls (prompt multi urlfunc)
-  "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
-it to a range of uris. PROMPT is the query to present to the user."
-  (if multi
-      (mu4e~view-handle-multi-urls prompt urlfunc)
-    (mu4e~view-handle-single-url prompt urlfunc)))
-
-(defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
-  "Apply URLFUNC to url NUM in the current message, prompting the
-user with PROMPT."
-  (let* ((num (or num (mu4e~view-get-urls-num prompt)))
-         (url (gethash num mu4e~view-link-map)))
-    (unless url (mu4e-warn "Invalid number for URL"))
-    (funcall urlfunc url)))
-
-(defun mu4e~view-handle-multi-urls (prompt urlfunc)
-  "Apply URLFUNC to a a range of urls in the current message,
-prompting the user with PROMPT.
-
-Default is to apply it to all URLs, [1..n], where n is the number
-of urls. You can type multiple values separated by space, e.g.  1
-3-6 8 will visit urls 1,3,4,5,6 and 8.
-
-Furthermore, there is a shortcut \"a\" which means all urls, but as
-this is the default, you may not need it."
-  (let* ((linkstr (mu4e~view-get-urls-num
-                   "URL number range (or 'a' for 'all')" t))
-         (count (hash-table-count mu4e~view-link-map))
-         (linknums (mu4e-split-ranges-to-numbers linkstr count)))
-    (dolist (num linknums)
-      (mu4e~view-handle-single-url prompt urlfunc num))))
-
-(defun mu4e-view-for-each-uri (func)
-  "Evaluate FUNC(uri) for each uri in the current message."
-  (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
 
 ;;; Various commands
 

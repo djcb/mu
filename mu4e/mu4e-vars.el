@@ -65,6 +65,17 @@ Setting this to t increases the amount of information in the log."
   :type 'boolean
   :group 'mu4e)
 
+(defgroup mu4e-view nil
+  "Settings for the message view."
+  :group 'mu4e)
+
+(defcustom mu4e-view-use-gnus t
+  "If non-nil, use the new Gnus-based viewer.
+Otherwise, use the old viewer."
+  :type 'boolean
+  :group 'mu4e-view)
+
+
 (defcustom mu4e-speedbar-support nil
   "Support having a speedbar to navigate folders/bookmarks."
   :type 'boolean
@@ -1137,6 +1148,18 @@ sexp received from the server process.")
 (defvar mu4e-temp-func 'mu4e~view-temp-handler
   "A function called for each (:temp <file> <cookie>) sexp.")
 
+;;; Internals
+
+(defvar mu4e~headers-view-win nil
+  "The view window connected to this headers view.")
+
+;; It's useful to have the current view message available to
+;; `mu4e-view-mode-hooks' functions, and we set up this variable
+;; before calling `mu4e-view-mode'.  However, changing the major mode
+;; clobbers any local variables.  Work around that by declaring the
+;; variable permanent-local.
+(defvar mu4e~view-message nil "The message being viewed in view mode.")
+(put 'mu4e~view-message 'permanent-local t)
 ;;; _
 (provide 'mu4e-vars)
 ;;; mu4e-vars.el ends here

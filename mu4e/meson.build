@@ -47,6 +47,7 @@ mu4e_srcs=[
   'mu4e-utils.el',
   'mu4e-vars.el',
   'mu4e-view.el',
+  'mu4e-view-common.el',
   'mu4e-view-gnus.el',
   'mu4e-view-old.el',
   'obsolete/org-mu4e.el',
@@ -57,10 +58,10 @@ foreach src : mu4e_srcs
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
   custom_target(src.underscorify() + '_el',
-                build_by_default: true,
-                input: src,
-                output: target_name,
-                command: [emacs,
+		build_by_default: true,
+		input: src,
+		output: target_name,
+		command: [emacs,
 			  '--no-init-file',
 			  '--batch',
 			  '--eval', target_func,

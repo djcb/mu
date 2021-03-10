@@ -27,79 +27,17 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(require 'mu4e-utils) ;; utility functions
-(require 'mu4e-vars)
-(require 'mu4e-mark)
-(require 'mu4e-proc)
-(require 'mu4e-actions)
-(require 'mu4e-compose)
-(require 'mu4e-message)
-
-(eval-when-compile (require 'gnus-art))
-
-(require 'comint)
-(require 'button)
-(require 'epa)
-(require 'epg)
-(require 'thingatpt)
+(require 'mu4e-view-common)
 (require 'calendar)
-
-(declare-function mu4e-view-mode "mu4e-view")
-(defvar gnus-icalendar-additional-identities)
-(defvar mu4e~headers-view-win)
-(defvar helm-comp-read-use-marked)
-
-;;; Options
+(require 'gnus-art)
 
 ;;; Variables
 
-;; It's useful to have the current view message available to
-;; `mu4e-view-mode-hooks' functions, and we set up this variable
-;; before calling `mu4e-view-mode'.  However, changing the major mode
-;; clobbers any local variables.  Work around that by declaring the
-;; variable permanent-local.
-(defvar-local mu4e~view-message nil
-  "The message being viewed in view mode.")
-(put 'mu4e~view-message 'permanent-local t)
-
-
+(defvar gnus-icalendar-additional-identities)
+(defvar helm-comp-read-use-marked)
 (defvar mu4e~view-rendering nil)
 
 ;;; Main
-
-(defun mu4e-view-message-with-message-id (msgid)
-  "View message with message-id MSGID. This (re)creates a
-headers-buffer with a search for MSGID, then open a view for that
-message."
-  (mu4e-headers-search (concat "msgid:" msgid) nil nil t msgid t))
-
-(define-obsolete-function-alias 'mu4e-view-message-with-msgid
-  'mu4e-view-message-with-message-id "0.9.17")
-
-(defun mu4e~view-custom-field (msg field)
-  "Show some custom header field, or raise an error if it is not
-found."
-  (let* ((item (or (assoc field mu4e-header-info-custom)
-                   (mu4e-error "field %S not found" field)))
-         (func (or (plist-get (cdr-safe item) :function)
-                   (mu4e-error "no :function defined for field %S %S"
-                               field (cdr item)))))
-    (funcall func msg)))
-
-(defun mu4e~view-embedded-winbuf ()
-  "Get a buffer (shown in a window) for the embedded message."
-  (let* ((buf (get-buffer-create mu4e~view-embedded-buffer-name))
-         (win (or (get-buffer-window buf) (split-window-vertically))))
-    (select-window win)
-    (switch-to-buffer buf)))
-
-(defun mu4e~delete-all-overlays ()
-  "`delete-all-overlays' with compatibility fallback."
-  (if (functionp 'delete-all-overlays)
-      (delete-all-overlays)
-    (remove-overlays)))
-
 
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
@@ -108,7 +46,6 @@ found."
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode. Experimental."
-  (require 'gnus-art)
   (let ((path (mu4e-message-field msg :path))
         (inhibit-read-only t)
         (mm-decrypt-option 'known)
@@ -138,11 +75,12 @@ found."
           (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
           (gnus-icalendar-additional-identities
            (mu4e-personal-addresses 'no-regexp)))
+      (mu4e-view-mode)
       (gnus-article-prepare-display))
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
     (setq mu4e~view-message msg)
     ;; `mu4e-view-mode' derive from `gnus-article-mode'.
-    (mu4e-view-mode)
+    (mu4e~view-make-urls-clickable)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
@@ -170,8 +108,8 @@ found."
               ((:flags :tags)
                (let ((flags (mapconcat (lambda (flag)
                                          (if (symbolp flag)
-	                                     (symbol-name flag)
-	                                   flag)) fieldval ", ")))
+                                             (symbol-name flag)
+                                           flag)) fieldval ", ")))
                  (mu4e~view-gnus-insert-header field flags)))
               (:size (mu4e~view-gnus-insert-header
                       field (mu4e-display-size fieldval)))
@@ -188,7 +126,7 @@ found."
 (defun mu4e~view-gnus-insert-header (field val)
   "Insert a header FIELD with value VAL in Gnus article view."
   (let* ((info (cdr (assoc field mu4e-header-info)))
-	 (key (plist-get info :name))
+         (key (plist-get info :name))
          (help (plist-get info :help)))
     (if (and val (> (length val) 0))
         (insert (propertize (concat key ":") 'help-echo help)
@@ -198,10 +136,10 @@ found."
   "Insert the custom FIELD in Gnus article view."
   (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
                              (mu4e-error "custom field %S not found" field))))
-	 (key (plist-get info :name))
+         (key (plist-get info :name))
          (func (or (plist-get info :function)
                    (mu4e-error "no :function defined for custom field %S %S"
-		               field info)))
+                               field info)))
          (val (funcall func msg))
          (help (plist-get info :help)))
     (when (and val (> (length val) 0))
@@ -251,14 +189,11 @@ with no charset."
           (define-key map "%" 'mu4e-view-mark-pattern)
           (define-key map "t" 'mu4e-view-mark-subthread)
           (define-key map "T" 'mu4e-view-mark-thread)
-
-          (define-key map "v" 'mu4e-view-verify-msg-popup)
-
           (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
-          (define-key map "g" 'ignore)
-          (define-key map "k" 'ignore)
-          (define-key map "f" 'ignore)
+          (define-key map "g" 'mu4e-view-go-to-url)
+          (define-key map "k" 'mu4e-view-save-url)
+          (define-key map "f" 'mu4e-view-fetch-url)
 
           (define-key map "F" 'mu4e-compose-forward)
           (define-key map "R" 'mu4e-compose-reply)
@@ -448,6 +383,19 @@ Gnus' article-mode."
   (setq mu4e~view-buffer-name gnus-article-buffer)
   (mu4e~view-mode-body))
 
+(defun mu4e-view-message-text (msg)
+  "Return the message to display (as a string)."
+  (with-temp-buffer
+    (let ((path (mu4e-message-field msg :path))
+          (inhibit-read-only t)
+          (mm-decrypt-option 'known)
+          (gnus-article-emulate-mime t))
+      (buffer-disable-undo)
+      (insert-file-contents-literally path nil nil nil t)
+      (mm-enable-multibyte)
+      (gnus-article-prepare-display)
+      (buffer-string))))
+
 (defun mu4e-view-save-attachment (&optional arg)
   "Save mime parts from current mu4e gnus view buffer.
 
@@ -461,7 +409,7 @@ attachments is done with `completing-read-multiple', in this case use
   (let ((handles '())
         (files '())
         (helm-comp-read-use-marked t)
-        (compfn (if helm-mode
+        (compfn (if (and (boundp 'helm-mode) helm-mode)
                     #'completing-read
                   ;; Fallback to `completing-read-multiple' with poor
                   ;; completion systems.
