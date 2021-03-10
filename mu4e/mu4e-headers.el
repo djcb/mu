@@ -42,8 +42,6 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 
-(eval-when-compile (require 'mu4e-view))
-
 (declare-function mu4e-view       "mu4e-view")
 (declare-function mu4e~main-view  "mu4e-main")
 
@@ -327,9 +325,6 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defconst mu4e~headers-docid-post "\377"
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
 followed by the docid, followed by `mu4e~headers-docid-post'.")
-
-(defvar mu4e~headers-view-win nil
-  "The view window connected to this headers view.")
 
 (defvar mu4e~headers-sort-field-choices
   '( ("date"    . :date)
@@ -727,15 +722,15 @@ space propertized with a 'display text property which expands to
       (setq val (string-trim-right val))
       (if (> width (length val))
           (setq val (concat val " "))
-	(setq val
-	      (concat
-	       (truncate-string-to-width val (1- width) 0 ?\s t)
-	       " ")))
+        (setq val
+              (concat
+               (truncate-string-to-width val (1- width) 0 ?\s t)
+               " ")))
       (put-text-property (1- (length val))
-			 (length val)
-			 'display
-			 `(space . (:align-to ,end-col))
-			 val)))
+                         (length val)
+                         'display
+                         `(space . (:align-to ,end-col))
+                         val)))
   val)
 
 (defsubst mu4e~headers-truncate-field (field val width)
@@ -1249,27 +1244,6 @@ docid is not found."
         (mu4e-error "Cannot find message with docid %S" docid)))))
 
 ;;; Queries & searching
-
-(defcustom mu4e-query-rewrite-function 'identity
-  "Function that takes a search expression string, and returns a
-  possibly changed search expression string.
-
-This function is applied on the search expression just before
-searching, and allows users to modify the query.
-
-For instance, we could change and of workmail into
-\"maildir:/long-path-to-work-related-emails\", by setting the function
-
-(setq mu4e-query-rewrite-function
-  (lambda(expr)
-     (replace-regexp-in-string \"workmail\"
-                   \"maildir:/long-path-to-work-related-emails\" expr)))
-
-It is good to remember that the replacement does not understand
-anything about the query, it just does text replacement."
-  :type 'function
-  :group 'mu4e)
-
 (defvar mu4e~headers-mode-line-label "")
 (defun mu4e~headers-update-mode-line ()
   "Update mode-line settings."

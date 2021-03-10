@@ -667,9 +667,8 @@ process."
 (defun mu4e~update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS.
 Each of the contacts has the form
-  (FULL_EMAIL_ADDRESS . RANK) and fill the hash
-`mu4e~contacts' with it, with each contact mapped to an integer
-for their ranking.
+  (FULL_EMAIL_ADDRESS . RANK) and fill `mu4e~contacts-hash' with
+it, with each contact mapped to an integer for their ranking.
 
 This is used by the completion function in mu4e-compose."
   ;; We have our nicely sorted list, map them to a list
@@ -677,8 +676,8 @@ This is used by the completion function in mu4e-compose."
   ;; to sort them there. It would have been so much easier if emacs
   ;; allowed us to use the sorted-list as-is, but no such luck.
   (let ((n 0))
-    (unless mu4e~contacts
-      (setq mu4e~contacts (make-hash-table :test 'equal :weakness nil
+    (unless mu4e~contacts-hash
+      (setq mu4e~contacts-hash (make-hash-table :test 'equal :weakness nil
                                            :size (length contacts))))
     (dolist (contact contacts)
       (cl-incf n)
@@ -690,13 +689,13 @@ This is used by the completion function in mu4e-compose."
         (when address ;; note the explicit deccode; the strings we get are  utf-8,
           ;; but emacs doesn't know yet.
           (puthash (decode-coding-string address 'utf-8)
-                   (plist-get contact :rank) mu4e~contacts))))
+                   (plist-get contact :rank) mu4e~contacts-hash))))
 
     (setq mu4e~contacts-tstamp (or tstamp "0"))
 
     (unless (zerop n)
       (mu4e-index-message "Contacts updated: %d; total %d"
-                          n (hash-table-count mu4e~contacts)))))
+                          n (hash-table-count mu4e~contacts-hash)))))
 
 (defun mu4e-contacts-info ()
   "Display information about the cache used for contacts
@@ -711,12 +710,13 @@ completion; for testing/debugging."
     (insert (format "only addresses seen after: %s\n"
                     (or mu4e-compose-complete-only-after "no restrictions")))
 
-    (when mu4e~contacts
+    (when mu4e~contacts-hash
       (insert (format "number of contacts cached: %d\n\n"
-                      (hash-table-count mu4e~contacts)))
+                      (hash-table-count mu4e~contacts-hash)))
       (let ((contacts))
         (maphash (lambda (addr rank)
-                   (setq contacts (cons (cons rank addr) contacts))) mu4e~contacts)
+                   (setq contacts (cons (cons rank addr) contacts)))
+                 mu4e~contacts-hash)
         (setq contacts (sort contacts
                              (lambda(cell1 cell2) (< (car cell1) (car cell2)))))
         (dolist (contact contacts)
@@ -837,13 +837,13 @@ When successful, call FUNC (if non-nil) afterwards."
                         (mu4e~maildirs-with-query)))))
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
-  (unless mu4e~contacts (mu4e~request-contacts-maybe)))
+  (unless mu4e~contacts-hash (mu4e~request-contacts-maybe)))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."
   (setq
    mu4e-maildir-list nil
-   mu4e~contacts nil
+   mu4e~contacts-hash nil
    mu4e~contacts-tstamp "0"))
 
 (defun mu4e~stop ()

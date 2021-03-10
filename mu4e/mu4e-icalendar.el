@@ -1,4 +1,4 @@
-;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)  -*- lexical-binding: t; -*- -*- lexical-binding: t -*-
+;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019- Christophe Troestler
 
@@ -52,8 +52,11 @@
 (require 'gnus-icalendar)
 (require 'cl-lib)
 
-(eval-when-compile (require 'mu4e-mark))
-(eval-when-compile (require 'mu4e-vars))
+(require 'mu4e-mark)
+(require 'mu4e-utils)
+(require 'mu4e-headers)
+(require 'mu4e-view)
+(require 'mu4e-vars)
 
 ;;;###autoload
 (defun mu4e-icalendar-setup ()
@@ -79,7 +82,7 @@
          (gnus-icalendar-additional-identities (mu4e-personal-addresses 'no-regexp))
          (reply (gnus-icalendar-with-decoded-handle
                  handle
-                 (let ((gnus-icalendar-find-if (lambda(pred seq) nil)))
+                 (let ((gnus-icalendar-find-if (lambda(_pred _seq) nil)))
                    (gnus-icalendar-event-reply-from-buffer
                     (current-buffer) status (gnus-icalendar-identities)))))
          (msg (mu4e-message-at-point 'noerror))
@@ -104,11 +107,11 @@
         ;; Back in article buffer
         (setq-local gnus-icalendar-reply-status status)
 
-	(when gnus-icalendar-org-enabled-p
-	  (if (gnus-icalendar-find-org-event-file event)
-	      (gnus-icalendar--update-org-event event status)
-	      (gnus-icalendar:org-event-save event status)))
-	(when mu4e-icalendar-diary-file
+        (when gnus-icalendar-org-enabled-p
+          (if (gnus-icalendar-find-org-event-file event)
+              (gnus-icalendar--update-org-event event status)
+              (gnus-icalendar:org-event-save event status)))
+        (when mu4e-icalendar-diary-file
           (mu4e~icalendar-insert-diary event status
                                        mu4e-icalendar-diary-file))))))
 
@@ -141,8 +144,8 @@ See `gnus-icalendar-event-reply-from-buffer' for the possible
 STATUS values.  BUFFER-NAME is the name of the buffer holding the
 response in icalendar format."
   (let ((message-signature nil))
-    (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
-          (mu4e-sent-messages-behavior 'delete)
+    (let ((_mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
+          (_mu4e-sent-messages-behavior 'delete)
           (mu4e-compose-reply-recipients 'sender))
       (mu4e~compose-handler 'reply original-msg))
     ;; Make sure the recipient is the organizer

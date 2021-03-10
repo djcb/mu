@@ -1,11 +1,10 @@
 ;;; mu4e-org -- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Keywords: outlines, hypermedia, calendar, mail
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -29,6 +28,8 @@
 ;;; Code:
 
 (require 'org)
+(require 'mu4e-view)
+(require 'mu4e-utils)
 
 (defgroup mu4e-org nil
   "Settings for the org-mode related functionality in mu4e."

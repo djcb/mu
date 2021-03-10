@@ -279,6 +279,25 @@ differ from the number you get from a 'real' query."
   :version "1.3.9"
   :group 'mu4e)
 
+(defcustom mu4e-query-rewrite-function 'identity
+  "Function that takes a search expression string, and returns a
+  possibly changed search expression string.
+
+This function is applied on the search expression just before
+searching, and allows users to modify the query.
+
+For instance, we could change and of workmail into
+\"maildir:/long-path-to-work-related-emails\", by setting the function
+
+(setq mu4e-query-rewrite-function
+  (lambda(expr)
+     (replace-regexp-in-string \"workmail\"
+                   \"maildir:/long-path-to-work-related-emails\" expr)))
+
+It is good to remember that the replacement does not understand
+anything about the query, it just does text replacement."
+  :type 'function
+  :group 'mu4e)
 
 (defun mu4e-bookmarks ()
   "Get `mu4e-bookmarks' in the (new) format, converting from the
@@ -1031,7 +1050,7 @@ with SPC and therefore is not visible in buffer list.")
 
 ;;;; Other
 
-(defvar mu4e~contacts nil
+(defvar mu4e~contacts-hash nil
   "Hash that maps contacts (ie. 'name <e-mail>') to an integer for sorting.
 We need to keep this information around to quickly re-sort
 subsets of the contacts in the completions function in

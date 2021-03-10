@@ -164,7 +164,7 @@ not a contradiction, but a redundant configuration.
 
 All `sign-*' options have a `encrypt-*' analogue."
   :type '(set :greedy t
-	      (const :tag "Sign all messages" sign-all-messages)
+              (const :tag "Sign all messages" sign-all-messages)
               (const :tag "Encrypt all messages" encrypt-all-messages)
               (const :tag "Sign new messages" sign-new-messages)
               (const :tag "Encrypt new messages" encrypt-new-messages)
@@ -392,9 +392,9 @@ Message-ID."
   "Complete address STR with predication PRED for ACTION."
   (cond
    ((eq action nil)
-    (try-completion str mu4e~contacts pred))
+    (try-completion str mu4e~contacts-hash pred))
    ((eq action t)
-    (all-completions str mu4e~contacts pred))
+    (all-completions str mu4e~contacts-hash pred))
    ((eq action 'metadata)
     ;; our contacts are already sorted - just need to tell the
     ;; completion machinery not to try to undo that...
@@ -511,7 +511,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (set (make-local-variable 'message-send-mail-real-function) nil)
     (make-local-variable 'message-default-charset)
     ;; Set to nil to enable `electric-quote-local-mode' to work:
-    (set (make-variable-buffer-local 'comment-use-syntax) nil)
+    (make-local-variable 'comment-use-syntax)
+    (setq comment-use-syntax nil)
     ;; message-mode has font-locking, but uses its own faces. Let's
     ;; use the mu4e-specific ones instead
     (mu4e~compose-remap-faces)
@@ -521,7 +522,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (mu4e~compose-register-message-save-hooks)
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
-      (unless mu4e~contacts   ;; work-around for https://github.com/djcb/mu/issues/1016
+      (unless mu4e~contacts-hash   ;; work-around for https://github.com/djcb/mu/issues/1016
         (mu4e~request-contacts-maybe))
       (mu4e~compose-setup-completion))
     (if mu4e-compose-format-flowed
