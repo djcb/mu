@@ -459,15 +459,16 @@ separated by blank lines. If variable `use-hard-newlines' is not
 set, this simply executes `fill-paragraph'."
   ;; Inspired by https://www.emacswiki.org/emacs/UnfillParagraph
   (interactive (progn (barf-if-buffer-read-only) '(t)))
-  (if mu4e-compose-format-flowed
-      (let ((fill-column (point-max))
-            (use-hard-newlines nil)); rfill "across" hard newlines
-        (when (use-region-p)
-          (delete-trailing-whitespace (region-beginning) (region-end)))
-        (fill-paragraph nil region))
-    (when (use-region-p)
-      (delete-trailing-whitespace (region-beginning) (region-end)))
-    (fill-paragraph nil region)))
+  (ignore-errors
+    (if mu4e-compose-format-flowed
+        (let ((fill-column (point-max))
+              (use-hard-newlines nil)); rfill "across" hard newlines
+          (when (use-region-p)
+            (delete-trailing-whitespace (region-beginning) (region-end)))
+          (fill-paragraph nil region))
+      (when (use-region-p)
+        (delete-trailing-whitespace (region-beginning) (region-end)))
+      (fill-paragraph nil region))))
 
 (defun mu4e-toggle-use-hard-newlines ()
   (interactive)
