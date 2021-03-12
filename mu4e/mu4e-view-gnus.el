@@ -384,15 +384,23 @@ Gnus' article-mode."
   (mu4e~view-mode-body))
 
 (defun mu4e-view-message-text (msg)
-  "Return the message to display (as a string)."
+  "Return the message as a string, for replying/forwarding etc.."
   (with-temp-buffer
     (let ((path (mu4e-message-field msg :path))
           (inhibit-read-only t)
-          (mm-decrypt-option 'known)
+          (mm-decrypt-option 'never)
           (gnus-article-emulate-mime t))
       (buffer-disable-undo)
       (insert-file-contents-literally path nil nil nil t)
       (mm-enable-multibyte)
+      (let* ((ct (mail-fetch-field "Content-Type"))
+             (ct (and ct (mail-header-parse-content-type ct)))
+             (charset (mail-content-type-get ct 'charset))
+             (charset (and charset (intern charset)))
+             (gnus-newsgroup-charset
+              (if (and charset (coding-system-p charset)) charset
+                (detect-coding-region (point-min) (point-max) t))))
+        (run-hooks 'gnus-article-decode-hook))
       (gnus-article-prepare-display)
       (buffer-string))))
 
