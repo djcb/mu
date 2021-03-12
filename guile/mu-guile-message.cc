@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -83,11 +83,11 @@ typedef struct _FlagData FlagData;
 
 #define MU_GUILE_INITIALIZED_OR_ERROR					\
 	do { if (!(mu_guile_initialized()))				\
-                        mu_guile_error (FUNC_NAME, 0,                   \
+			mu_guile_error (FUNC_NAME, 0,                   \
 			     "mu not initialized; call mu:initialize",	\
 				     SCM_UNDEFINED);			\
-                return SCM_UNSPECIFIED;                                 \
-        } while (0)
+		return SCM_UNSPECIFIED;                                 \
+	} while (0)
 
 
 static void
@@ -99,7 +99,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 		return;
 
 	switch (flag) {
-        case MU_FLAG_NONE: break;
+	case MU_FLAG_NONE: break;
 	case MU_FLAG_NEW:        flag_scm = SYMB_FLAG_NEW; break;
 	case MU_FLAG_PASSED:     flag_scm = SYMB_FLAG_PASSED; break;
 	case MU_FLAG_REPLIED:    flag_scm = SYMB_FLAG_REPLIED; break;
@@ -111,7 +111,7 @@ check_flag (MuFlags flag, FlagData *fdata)
 	case MU_FLAG_ENCRYPTED:  flag_scm = SYMB_FLAG_ENCRYPTED; break;
 	case MU_FLAG_HAS_ATTACH: flag_scm = SYMB_FLAG_HAS_ATTACH; break;
 	case MU_FLAG_UNREAD:     flag_scm = SYMB_FLAG_UNREAD; break;
-        case MU_FLAG_LIST:       flag_scm = SYMB_FLAG_LIST; break;
+	case MU_FLAG_LIST:       flag_scm = SYMB_FLAG_LIST; break;
 	default: flag_scm = SCM_UNDEFINED;
 	}
 
@@ -304,15 +304,19 @@ SCM_DEFINE (get_contacts, "mu:c:get-contacts", 2, 0, 0,
 		else {
 			mu_guile_error (FUNC_NAME, 0, "invalid contact type",
 					       SCM_UNDEFINED);
-                        return SCM_UNSPECIFIED;
-                }
+			return SCM_UNSPECIFIED;
+		}
 	}
 
 	ecdata.lst = SCM_EOL;
 	msgwrap = (MuMsgWrapper*) SCM_CDR(MSG);
+	#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 	mu_msg_contact_foreach (msgwrap->_msg,
 				(MuMsgContactForeachFunc)contacts_to_list,
 				&ecdata);
+#pragma GCC diagnostic pop
+
 	/* explicitly close the file backend, so we won't run out of fds */
 	mu_msg_unload_msg_file (msgwrap->_msg);
 
@@ -422,7 +426,7 @@ static Mu::Option<Mu::QueryResults>
 get_query_results (Mu::Query& query, const char* expr, int maxnum)
 {
 	return query.run(expr, MU_MSG_FIELD_ID_NONE,
-                         Mu::QueryFlags::None, maxnum);
+			 Mu::QueryFlags::None, maxnum);
 }
 
 
@@ -448,25 +452,25 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 		return SCM_UNSPECIFIED; /* nothing to do */
 
 	if (EXPR == SCM_BOOL_T)
-		expr = strdup (""); 	/* note, "" matches *all* messages */
+		expr = strdup ("");	/* note, "" matches *all* messages */
 	else
 		expr = scm_to_utf8_string(EXPR);
 
-        const auto res{get_query_results(mu_guile_query(), expr,
-                                         scm_to_int(MAXNUM))};
+	const auto res{get_query_results(mu_guile_query(), expr,
+					 scm_to_int(MAXNUM))};
 	free (expr);
-        if (!res)
+	if (!res)
 		return SCM_UNSPECIFIED;
 
-        for (auto&& mi: *res) {
-                auto msg{mi.floating_msg()};
-                if (msg) {
-                        auto msgsmob{mu_guile_msg_to_scm (mu_msg_ref(msg))};
-                        scm_call_1 (FUNC, msgsmob);
-                }
-        }
+	for (auto&& mi: *res) {
+		auto msg{mi.floating_msg()};
+		if (msg) {
+			auto msgsmob{mu_guile_msg_to_scm (mu_msg_ref(msg))};
+			scm_call_1 (FUNC, msgsmob);
+		}
+	}
 
-        return SCM_UNSPECIFIED;
+	return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
@@ -507,7 +511,7 @@ define_symbols (void)
 	SYMB_FLAG_HAS_ATTACH	= register_symbol ("mu:flag:has-attach");
 	SYMB_FLAG_UNREAD	= register_symbol ("mu:flag:unread");
 
-        SYMB_FLAG_LIST	        = register_symbol ("mu:flag:list");
+	SYMB_FLAG_LIST		= register_symbol ("mu:flag:list");
 }
 
 

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -137,8 +137,7 @@ mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
 void
 mu_script_info_list_destroy (GSList *lst)
 {
-	g_slist_foreach (lst, (GFunc)script_info_destroy, NULL);
-	g_slist_free    (lst);
+	g_slist_free_full(lst, (GDestroyNotify)script_info_destroy);
 }
 
 
