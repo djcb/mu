@@ -45,7 +45,6 @@
 
 ;;; Options
 
-
 (defcustom mu4e-view-scroll-to-next t
   "Move to the next message when calling
 `mu4e-view-scroll-up-or-next' (typically bound to SPC) when at
@@ -61,7 +60,7 @@ For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
-(defcustom mu4e-view-actions
+(defcustom mu4e-view-action
   '( ("capture message"  . mu4e-action-capture-message)
      ("view as pdf"      . mu4e-action-view-as-pdf)
      ("show this thread" . mu4e-action-show-thread))
@@ -76,6 +75,107 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+
+;;; Old options
+
+;; These don't do anything useful when in "gnus" mode, except for avoid errors
+;; for people that have these in their config.
+
+(defcustom mu4e-view-show-addresses nil
+  "Whether to initially show full e-mail addresses for contacts.
+Otherwise, just show their names. Ignored when using the gnus-based view."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
+(make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
+
+(defcustom mu4e-view-date-format "%c"
+  "Date format to use in the message view.
+In the format of `format-time-string'. Ignored when using the gnus-based view."
+  :type 'string
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-image-max-width 800
+  "The maximum width for images to display.
+This is only effective if you're using an Emacs with Imagemagick
+support, and `mu4e-view-show-images' is non-nil. Ignored when
+using the gnus-based view."
+  :type 'integer
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-image-max-height 600
+  "The maximum height for images to display.
+This is only effective if you're using an Emacs with Imagemagick
+support, and `mu4e-view-show-images' is non-nil.  Ignored when
+using the gnus-based view."
+  :type 'integer
+  :group 'mu4e-view)
+
+
+(defcustom mu4e-save-multiple-attachments-without-asking nil
+  "If non-nil, saving multiple attachments asks once for a
+directory and saves all attachments in the chosen directory.
+Ignored when using the gnus-based view."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-attachment-assoc nil
+  "Alist of (EXTENSION . PROGRAM).
+Specify which PROGRAM to use to open attachment with EXTENSION.
+Args EXTENSION and PROGRAM should be specified as strings.
+Ignored when using the gnus-based view."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type string))
+
+(defcustom mu4e-view-attachment-actions
+  '( ("ssave" . mu4e-view-save-attachment-single)
+     ("Ssave multi" . mu4e-view-save-attachment-multi)
+     ("wopen-with" . mu4e-view-open-attachment-with)
+     ("ein-emacs"  . mu4e-view-open-attachment-emacs)
+     ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
+     ("kimport-public-key" . mu4e-view-import-public-key)
+     ("|pipe"      . mu4e-view-pipe-attachment))
+  "List of actions to perform on message attachments.
+The actions are cons-cells of the form:
+ (NAME . FUNC)
+where:
+* NAME is the name of the action (e.g. \"Count lines\")
+* FUNC is a function which receives two arguments: the message
+  plist and the attachment number.
+The first letter of NAME is used as a shortcut character.
+Ignored when using the gnus-based view."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type function))
+
+;;; Keymaps
+
+(defvar mu4e-view-header-field-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-header-field-fold)
+    (define-key map (kbd "TAB") 'mu4e~view-header-field-fold)
+    map)
+  "Keymap used for header fields. Ignored when using the
+gnus-based view.")
+
+(defvar mu4e-view-contacts-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2] 'mu4e~view-compose-contact)
+    (define-key map "C"  'mu4e~view-compose-contact)
+    (define-key map "c"  'mu4e~view-copy-contact)
+    map)
+  "Keymap used for the contacts in the header fields.
+Ignored when using the gnus-based view.")
+
+(defvar mu4e-view-attachments-header-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
+    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
+    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
+    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
+    map)
+  "Keymap used in the \"Attachments\" header field. Ignored when
+using the gnus-based view.")
 
 ;; Helpers
 
