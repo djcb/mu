@@ -60,7 +60,7 @@ For the complete list of available headers, see `mu4e-header-info'."
   :type (list 'symbol)
   :group 'mu4e-view)
 
-(defcustom mu4e-view-action
+(defcustom mu4e-view-actions
   '( ("capture message"  . mu4e-action-capture-message)
      ("view as pdf"      . mu4e-action-view-as-pdf)
      ("show this thread" . mu4e-action-show-thread))
