@@ -43,10 +43,10 @@ AC_PROG_INSTALL
 AC_HEADER_STDC
 
 extra_flags="-Wformat-security                                        \
-             -Wstack-protector                                        \
-             -Wstack-protector-all                                    \
-             -Wno-cast-function-type                                  \
-             -Wno-bad-function-cast"
+	     -Wstack-protector                                        \
+	     -Wstack-protector-all                                    \
+	     -Wno-cast-function-type                                  \
+	     -Wno-bad-function-cast"
 
 AX_CXX_COMPILE_STDCXX_14
 AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
@@ -68,7 +68,7 @@ AC_SYS_LARGEFILE
 # asan is somewhat similar to valgrind, but has low enough overhead so it
 # can be used during normal operation.
 AC_ARG_ENABLE([asan],[AS_HELP_STRING([--enable-asan],
-              [Enable Address Sanitizer])], [use_asan=$enableval], [use_asan=no])
+	      [Enable Address Sanitizer])], [use_asan=$enableval], [use_asan=no])
 AS_IF([test "x$use_asan" = "xyes"],[
   AC_SUBST(ASAN_CFLAGS,  "-fsanitize=address -static-libasan -fno-omit-frame-pointer")
   AC_SUBST(ASAN_CXXFLAGS,"-fsanitize=address -static-libasan -fno-omit-frame-pointer")
@@ -103,11 +103,11 @@ AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 # testing purposes only
 AC_ARG_ENABLE([dirent-d-type],
     AC_HELP_STRING([--disable-dirent-d-type],
-            [Don't use dirent->d_type, even if you have it]),
+	    [Don't use dirent->d_type, even if you have it]),
     [], [AC_STRUCT_DIRENT_D_TYPE]
 )
 AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
-        [use_dirent_d_type="no"], [use_dirent_d_type="yes"])
+	[use_dirent_d_type="no"], [use_dirent_d_type="yes"])
 
 # support for d_ino (inode) in struct dirent is optional; if it's
 # available we can sort direntries by inode and access them in that
@@ -115,11 +115,11 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
 # Explicitly disabling it is for testing purposes only.
 AC_ARG_ENABLE([dirent-d-ino],
     AC_HELP_STRING([--disable-dirent-d-ino],
-            [Don't use dirent->d_ino, even if you have it]),
+	    [Don't use dirent->d_ino, even if you have it]),
     [], [AC_STRUCT_DIRENT_D_INO]
 )
 AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],
-        [use_dirent_d_ino="no"], [use_dirent_d_ino="yes"])
+	[use_dirent_d_ino="no"], [use_dirent_d_ino="yes"])
 
 AC_CHECK_FUNCS([memset memcpy realpath setlocale strerror getpass setsid])
 AC_CHECK_FUNCS([vasprintf strptime])
@@ -167,8 +167,8 @@ PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
 
   AS_CASE([$xapian_version],
       [1.[[4-9]].[[0-9]]*],
-        [AC_MSG_NOTICE([xapian $xapian_version found.])],
-        [AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
+	[AC_MSG_NOTICE([xapian $xapian_version found.])],
+	[AC_MSG_ERROR([*** xapian version >= 1.4 needed, but version $xapian_version found.])])
 
   XAPIAN_CXXFLAGS="$($XAPIAN_CONFIG --cxxflags)"
   XAPIAN_LIBS="$($XAPIAN_CONFIG --libs)"
@@ -206,7 +206,7 @@ AC_ARG_ENABLE([webkit],AS_HELP_STRING([--disable-webkit],[Disable webkit]))
 AS_IF([test "x$enable_webkit" != "xno"],[
        PKG_CHECK_MODULES(WEBKIT,webkit2gtk-4.0 >= 2.0, [have_webkit=yes],[have_webkit=no])
        AS_IF([test "x$have_webkit" = "xyes"],[
-        webkit_version="$($PKG_CONFIG --modversion webkit2gtk-4.0)"])
+	webkit_version="$($PKG_CONFIG --modversion webkit2gtk-4.0)"])
 ])
 AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
 AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
@@ -240,7 +240,7 @@ AS_IF([test "x$enable_guile" != "xno"],[
 ])
 
 AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes" -a \
-                                 "x$ac_cv_prog_GUILE_SNARF" != "xno"])
+				 "x$ac_cv_prog_GUILE_SNARF" != "xno"])
 AM_COND_IF([BUILD_GUILE],[AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])])
 ###############################################################################
 
@@ -269,7 +269,6 @@ AC_SUBST(MU_DOC_DIR, "${prefix}/share/doc/mu")
 AC_CONFIG_FILES([
 Makefile
 mu/Makefile
-mu/mu-memcheck
 lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
@@ -287,9 +286,9 @@ toys/mug/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile
-],[
- [chmod +x mu/mu-memcheck]
 ])
+AC_CONFIG_FILES([mu/mu-memcheck], [chmod +x mu/mu-memcheck])
+
 AC_OUTPUT
 
 dnl toys/msg2pdf/Makefile
