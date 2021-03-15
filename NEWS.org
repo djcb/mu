@@ -30,7 +30,7 @@
       include regular expressions (basic POSIX); wrap the expression in ~/~, e.g.,
       ~--my-address='/.*@example.*/~'.
 
-    - Modernized the querying/threading machinery; this is makes some old code a
+    - Modernized the querying/threading machinery; this makes some old code a
       lot easier to understand and maintain, and even while not an explicit
       goal, is also faster.
 
@@ -246,7 +246,7 @@
 
       For now this is experimental ("tech preview"), but might replace the
       current message-view in a future release. Enable it with:
-               (setq mu4e-view-use-gnus t)
+	       (setq mu4e-view-use-gnus t)
 
       Thanks to Christophe Troestler for his work on fixing various encoding
       issues.
