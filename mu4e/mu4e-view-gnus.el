@@ -59,7 +59,8 @@
     (mm-enable-multibyte)
     (setq
      gnus-summary-buffer (get-buffer-create " *appease-gnus*")
-     gnus-original-article-buffer (current-buffer))
+     gnus-original-article-buffer (current-buffer)
+     mu4e~view-message msg)
     (let* ((ct (mail-fetch-field "Content-Type"))
            (ct (and ct (mail-header-parse-content-type ct)))
            (charset (mail-content-type-get ct 'charset))
@@ -78,7 +79,6 @@
       (mu4e-view-mode)
       (gnus-article-prepare-display))
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
-    (setq mu4e~view-message msg)
     ;; `mu4e-view-mode' derive from `gnus-article-mode'.
     (mu4e~view-make-urls-clickable)
     (setq gnus-article-decoded-p gnus-article-decode-hook)

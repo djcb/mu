@@ -34,15 +34,6 @@
 
 ;;; Internal variables
 
-;; It's useful to have the current view message available to
-;; `mu4e-view-mode-hooks' functions, and we set up this variable
-;; before calling `mu4e-view-mode'.  However, changing the major mode
-;; clobbers any local variables.  Work around that by declaring the
-;; variable permanent-local.
-(defvar-local mu4e~view-message nil
-  "The message being viewed in view mode.")
-(put 'mu4e~view-message 'permanent-local t)
-
 (defvar mu4e-view-fill-headers t
   "If non-nil, automatically fill the headers when viewing them.")
 
