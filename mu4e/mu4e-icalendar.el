@@ -85,9 +85,8 @@
          (gnus-icalendar-additional-identities (mu4e-personal-addresses 'no-regexp))
          (reply (gnus-icalendar-with-decoded-handle
                  handle
-                 (let ((gnus-icalendar-find-if (lambda(_pred _seq) nil)))
-                   (gnus-icalendar-event-reply-from-buffer
-                    (current-buffer) status (gnus-icalendar-identities)))))
+                 (gnus-icalendar-event-reply-from-buffer
+                  (current-buffer) status (gnus-icalendar-identities))))
          (msg (mu4e-message-at-point 'noerror))
          (charset (cdr (assoc 'charset (mm-handle-type handle)))))
     (when reply
