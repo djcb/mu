@@ -375,7 +375,6 @@ Gnus' article-mode."
   (with-temp-buffer
     (let ((path (mu4e-message-field msg :path))
           (inhibit-read-only t)
-          (mm-decrypt-option 'never)
           (gnus-article-emulate-mime t))
       (buffer-disable-undo)
       (insert-file-contents-literally path nil nil nil t)
