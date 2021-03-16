@@ -79,8 +79,8 @@
       (mu4e-view-mode)
       (gnus-article-prepare-display))
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
-    ;; `mu4e-view-mode' derive from `gnus-article-mode'.
-    (mu4e~view-make-urls-clickable)
+    (mu4e~view-activate-urls)
+    ;; `mu4e-view-mode' derives from `gnus-article-mode'.
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
@@ -226,12 +226,7 @@ with no charset."
     (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
     (define-key map (kbd "<home>") 'beginning-of-buffer)
     (define-key map (kbd "<end>") 'end-of-buffer)
-    (define-key map (kbd "RET")
-      (lambda()
-        (interactive)
-        (if (eq (get-text-property (point) 'gnus-callback) 'gnus-button-push)
-            (widget-button-press (point))
-          (mu4e-scroll-up))))
+    (define-key map (kbd "RET")  'mu4e-scroll-up)
     (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
 
     ;; navigation between messages
@@ -340,6 +335,8 @@ with no charset."
     map)
   "Keymap for mu4e-view mode")
 
+(set-keymap-parent mu4e-view-mode-map button-buffer-map)
+
 (defcustom mu4e-view-mode-hook nil
   "Hook run when entering Mu4e-View mode."
   :options '(turn-on-visual-line-mode)
@@ -390,6 +387,7 @@ Gnus' article-mode."
       (gnus-article-prepare-display)
       (buffer-string))))
 
+
 (defun mu4e-view-save-attachment (&optional arg)
   "Save mime parts from current mu4e gnus view buffer.
 
@@ -429,11 +427,6 @@ attachments is done with `completing-read-multiple', in this case use
                    when (member f files)
                    do (mm-save-part-to-file h (expand-file-name f dir))))
       (message "No attached files found"))))
-
-;;; Actions
-
-
-
 
 ;;;
 (provide 'mu4e-view-gnus)

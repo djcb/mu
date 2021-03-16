@@ -165,7 +165,7 @@ found."
       (goto-char (point-min))
       (mu4e~fontify-cited)
       (mu4e~fontify-signature)
-      (mu4e~view-make-urls-clickable)
+      (mu4e~view-activate-urls)
       (mu4e~view-show-images-maybe msg)
       (when (not embedded) (setq mu4e~view-message msg))
       (mu4e-view-mode)
@@ -645,20 +645,6 @@ FUNC should be a function taking two arguments:
 (define-derived-mode mu4e-view-mode special-mode "mu4e:oldview"
   "Major mode for viewing an e-mail message in mu4e."
   (mu4e~view-mode-body))
-
-(defun mu4e~view-browse-url-func (url)
-  "Return a function that executes `browse-url' with URL.
-The browser that is called depends on
-`browse-url-browser-function' and `browse-url-mailto-function'."
-  (save-match-data
-    (if (string-match "^mailto:" url)
-        (lambda ()
-          (interactive)
-          (browse-url-mail url))
-      (lambda ()
-        (interactive)
-        (browse-url url)))))
-
 
 (defun mu4e~view-show-images-maybe (msg)
   "Show attached images, if `mu4e-show-images' is non-nil."

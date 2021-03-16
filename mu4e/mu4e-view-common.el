@@ -478,10 +478,10 @@ list."
   "A map of some number->url so we can jump to url by number.")
 (put 'mu4e~view-link-map 'permanent-local t)
 
-(defvar mu4e-view-clickable-urls-keymap
+(defvar mu4e-view-active-urls-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
-    (define-key map [?\M-\r] 'mu4e~view-browse-url-from-binding)
+    (define-key map (kbd "M-<return>") 'mu4e~view-browse-url-from-binding)
     map)
   "Keymap used for the urls inside the body.")
 
@@ -514,12 +514,11 @@ Meant to be evoked from interactive commands."
           (get-text-property
            (posn-point posn)
            prop
-           (window-buffer (posn-window posn)))
-          ))
+           (window-buffer (posn-window posn)))))
     (get-text-property (point) prop)))
 
 ;; this is fairly simplistic...
-(defun mu4e~view-make-urls-clickable ()
+(defun mu4e~view-activate-urls ()
   "Turn things that look like URLs into clickable things.
 Also number them so they can be opened using `mu4e-view-go-to-url'."
   (let ((num 0))
@@ -539,7 +538,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
                `(face mu4e-link-face
                       mouse-face highlight
                       mu4e-url ,url
-                      keymap ,mu4e-view-clickable-urls-keymap
+                      keymap ,mu4e-view-active-urls-keymap
                       help-echo
                       "[mouse-1] or [M-RET] to open the link"))
               (overlay-put ov 'after-string
