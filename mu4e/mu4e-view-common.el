@@ -1,4 +1,4 @@
-;;; mu4e-view-utils.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-view-common.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dirk-Jan C. Binnema
 
