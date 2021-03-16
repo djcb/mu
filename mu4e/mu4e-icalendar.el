@@ -147,8 +147,8 @@ See `gnus-icalendar-event-reply-from-buffer' for the possible
 STATUS values.  BUFFER-NAME is the name of the buffer holding the
 response in icalendar format."
   (let ((message-signature nil))
-    (let ((_mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
-          (_mu4e-sent-messages-behavior 'delete)
+    (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
+          (mu4e-sent-messages-behavior 'delete)
           (mu4e-compose-reply-recipients 'sender))
       (mu4e~compose-handler 'reply original-msg))
     ;; Make sure the recipient is the organizer
