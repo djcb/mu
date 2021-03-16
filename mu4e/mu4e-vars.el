@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -686,7 +686,7 @@ from the old format if needed."
   :group 'faces)
 
 (defface mu4e-unread-face
-  '((t :inherit font-lock-keyword-face :bold t))
+  '((t :inherit font-lock-keyword-face :weight bold))
   "Face for an unread message header."
   :group 'mu4e-faces)
 
@@ -702,17 +702,17 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-flagged-face
-  '((t :inherit font-lock-constant-face :bold t))
+  '((t :inherit font-lock-constant-face :weight bold))
   "Face for a flagged message header."
   :group 'mu4e-faces)
 
 (defface mu4e-replied-face
-  '((t :inherit font-lock-builtin-face :bold nil))
+  '((t :inherit font-lock-builtin-face :weight normal))
   "Face for a replied message header."
   :group 'mu4e-faces)
 
 (defface mu4e-forwarded-face
-  '((t :inherit font-lock-builtin-face :bold nil))
+  '((t :inherit font-lock-builtin-face :weight normal))
   "Face for a passed (forwarded) message header."
   :group 'mu4e-faces)
 
@@ -738,7 +738,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-key-face
-  '((t :inherit message-header-name :bold t))
+  '((t :inherit message-header-name :weight bold))
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
   :group 'mu4e-faces)
 
@@ -768,17 +768,17 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-title-face
-  '((t :inherit font-lock-type-face :bold t))
+  '((t :inherit font-lock-type-face :weight bold))
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
 
 (defface mu4e-context-face
-  '((t :inherit mu4e-title-face :bold t))
+  '((t :inherit mu4e-title-face :weight bold))
   "Face for displaying the context in the modeline."
   :group 'mu4e-faces)
 
 (defface mu4e-modeline-face
-  '((t :inherit font-lock-string-face :bold t))
+  '((t :inherit font-lock-string-face :weight bold))
   "Face for the query in the mode-line."
   :group 'mu4e-faces)
 
@@ -793,47 +793,48 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-url-number-face
-  '((t :inherit font-lock-constant-face :bold t))
+  '((t :inherit font-lock-constant-face :weight bold))
   "Face for the number tags for URLs."
   :group 'mu4e-faces)
 
 (defface mu4e-attach-number-face
-  '((t :inherit font-lock-variable-name-face :bold t))
+  '((t :inherit font-lock-variable-name-face :weight bold))
   "Face for the number tags for attachments."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-1-face
-  '((t :inherit font-lock-builtin-face :bold nil :italic t))
+  '((t :inherit font-lock-builtin-face :weight normal :slant italic))
   "Face for cited message parts (level 1)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-2-face
-  '((t :inherit font-lock-preprocessor-face :bold nil :italic t))
+  '((t :inherit font-lock-preprocessor-face :weight normal :slant italic))
   "Face for cited message parts (level 2)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-3-face
-  '((t :inherit font-lock-variable-name-face :bold nil :italic t))
+  '((t :inherit font-lock-variable-name-face :weight normal :slant italic))
   "Face for cited message parts (level 3)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-4-face
-  '((t :inherit font-lock-keyword-face :bold nil :italic t))
+  '((t :inherit font-lock-keyword-face :weight normal :slant italic))
   "Face for cited message parts (level 4)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-5-face
-  '((t :inherit font-lock-comment-face :bold nil :italic t))
+  '((t :inherit font-lock-comment-face :weight normal :slant italic))
   "Face for cited message parts (level 5)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-6-face
-  '((t :inherit font-lock-comment-delimiter-face :bold nil :italic t))
+  '((t :inherit font-lock-comment-delimiter-face :weight normal :slant italic))
   "Face for cited message parts (level 6)."
   :group 'mu4e-faces)
 
 (defface mu4e-cited-7-face
-  '((t :inherit font-lock-type-face :bold nil :italic t))
+  '((t :inherit font-lock-type-face :weight normal :slant italic
+       ))
   "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
 
@@ -843,12 +844,12 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-ok-face
-  '((t :inherit font-lock-comment-face :bold t :slant normal))
+  '((t :inherit font-lock-comment-face :weight bold :slant normal))
   "Face for things that are okay."
   :group 'mu4e-faces)
 
 (defface mu4e-warning-face
-  '((t :inherit font-lock-warning-face :bold t :slant normal))
+  '((t :inherit font-lock-warning-face :weight bold :slant normal))
   "Face for warnings / error."
   :group 'mu4e-faces)
 
