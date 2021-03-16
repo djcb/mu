@@ -78,5 +78,6 @@ if makeinfo.found()
 		install: true,
 		command: [makeinfo,
 			  '-o', join_paths(meson.current_build_dir(), 'mu4e.info'),
-			  join_paths(meson.current_source_dir(), 'mu4e.texi')])
+			  join_paths(meson.current_source_dir(), 'mu4e.texi'),
+			  '-I', join_paths(meson.current_build_dir(), '..')])
 endif

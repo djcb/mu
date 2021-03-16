@@ -157,6 +157,22 @@ config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
 ################################################################################
 
+
+
+################################################################################
+# write out version.texi (for texiinfo builds in mu4e, guile)
+version_texi_data=configuration_data()
+version_texi_data.set('VERSION', meson.project_version())
+version_texi_data.set('EDITION', meson.project_version())
+version_texi_data.set('UPDATED', run_command('date', '+%d %B %Y').stdout().strip())
+version_texi_data.set('UPDATEDMONTH', run_command('date', '+%B %Y').stdout().strip())
+
+configure_file(input: 'version.texi.in',
+	       output: 'version.texi',
+	       configuration: version_texi_data)
+################################################################################
+
+
 ################################################################################
 # subdirs
 subdir('lib')

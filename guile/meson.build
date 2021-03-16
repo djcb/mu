@@ -55,13 +55,14 @@ lib_guile_mu = shared_module(
 
 if makeinfo.found()
   custom_target('mu_guile_info',
-                input: 'mu-guile.texi',
-                output: 'mu-guile.info',
+		input: 'mu-guile.texi',
+		output: 'mu-guile.info',
 		install: true,
 		install_dir: infodir,
-                command: [makeinfo,
-                          '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
-			  join_paths(meson.current_source_dir(), 'mu-guile.texi')])
+		command: [makeinfo,
+			  '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
+			  join_paths(meson.current_source_dir(), 'mu-guile.texi'),
+			  '-I', join_paths(meson.current_build_dir(), '..')])
 endif
 
 guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0', 'mu')
