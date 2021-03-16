@@ -85,9 +85,8 @@
          (gnus-icalendar-additional-identities (mu4e-personal-addresses 'no-regexp))
          (reply (gnus-icalendar-with-decoded-handle
                  handle
-                 (let ((gnus-icalendar-find-if (lambda(_pred _seq) nil)))
-                   (gnus-icalendar-event-reply-from-buffer
-                    (current-buffer) status (gnus-icalendar-identities)))))
+                 (gnus-icalendar-event-reply-from-buffer
+                  (current-buffer) status (gnus-icalendar-identities))))
          (msg (mu4e-message-at-point 'noerror))
          (charset (cdr (assoc 'charset (mm-handle-type handle)))))
     (when reply
@@ -141,14 +140,18 @@
         (or (mu4e-view-headers-next)
             (kill-buffer-and-window))))))
 
+(defun mu4e~icalendar-trash-message-hook (original-msg)
+  (lambda () (setq mu4e-sent-func
+                   (mu4e~icalendar-trash-message original-msg))))
+
 (defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
   "Reply to ORIGINAL-MSG containing invitation EVENT with STATUS.
 See `gnus-icalendar-event-reply-from-buffer' for the possible
 STATUS values.  BUFFER-NAME is the name of the buffer holding the
 response in icalendar format."
   (let ((message-signature nil))
-    (let ((_mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
-          (_mu4e-sent-messages-behavior 'delete)
+    (let ((mu4e-compose-cite-function #'mu4e~icalendar-delete-citation)
+          (mu4e-sent-messages-behavior 'delete)
           (mu4e-compose-reply-recipients 'sender))
       (mu4e~compose-handler 'reply original-msg))
     ;; Make sure the recipient is the organizer
@@ -172,12 +175,8 @@ response in icalendar format."
       ;; also trash the message (thus must be appended to hooks).
       (add-hook
        'message-sent-hook
-       #'mu4e~icalendar-setup-sent-hook-fn
-       t t))))
-
-(defun mu4e~icalendar-setup-sent-hook-fn ()
-  (setq mu4e-sent-func
-        (mu4e~icalendar-trash-message original-msg)))
+       (mu4e~icalendar-trash-message-hook original-msg)
+       90 t))))
 
 (defun mu4e~icalendar-insert-diary (event reply-status filename)
   "Insert a diary entry for the EVENT in file named FILENAME.
