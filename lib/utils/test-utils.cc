@@ -137,6 +137,22 @@ test_flatten ()
 }
 
 static void
+test_remove_ctrl ()
+{
+	CaseVec cases = {
+		{ "Foo\n\nbar", true,  "Foo bar" },
+		{ "",    false, "" },
+		{ "   ",    false, " " },
+		{ "Hello   World   ",    false, "Hello World " },
+		{ "Ångström", false,  "Ångström" },
+	};
+
+	test_cases (cases, [](auto s, auto f){ return remove_ctrl(s); });
+}
+
+
+
+static void
 test_clean ()
 {
 	CaseVec cases = {

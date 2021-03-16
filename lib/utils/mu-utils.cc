@@ -147,6 +147,22 @@ Mu::utf8_clean (const std::string& dirty)
 	clean.erase (clean.find_last_not_of(" ") + 1); // remove trailing space
 
 	return clean;
+std::string
+Mu::remove_ctrl (const std::string& str)
+{
+        char prev{'\0'};
+        std::string result;
+        result.reserve(str.length());
+
+        for (auto&& c: str) {
+                if (::iscntrl(c) || c == ' ') {
+                        if (prev != ' ')
+                                result += prev = ' ';
+                } else
+                        result += prev = c;
+        }
+
+        return result;
 }
 
 std::vector<std::string>
