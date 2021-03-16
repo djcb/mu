@@ -140,6 +140,10 @@
         (or (mu4e-view-headers-next)
             (kill-buffer-and-window))))))
 
+(defun mu4e~icalendar-trash-message-hook (original-msg)
+  (lambda () (setq mu4e-sent-func
+                   (mu4e~icalendar-trash-message original-msg))))
+
 (defun mu4e-icalendar-reply-ical (original-msg event status buffer-name)
   "Reply to ORIGINAL-MSG containing invitation EVENT with STATUS.
 See `gnus-icalendar-event-reply-from-buffer' for the possible
@@ -171,9 +175,8 @@ response in icalendar format."
       ;; also trash the message (thus must be appended to hooks).
       (add-hook
        'message-sent-hook
-       (defun mu4e~icalendar-trash-hook()
-         (setq mu4e-sent-func (mu4e~icalendar-trash-message original-msg)))
-       t t))))
+       (mu4e~icalendar-trash-message-hook original-msg)
+       90 t))))
 
 (defun mu4e~icalendar-insert-diary (event reply-status filename)
   "Insert a diary entry for the EVENT in file named FILENAME.
