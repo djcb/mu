@@ -30,7 +30,8 @@ scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
 
 snarf = find_program('guile-snarf')
 snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
-	    '-I' + meson.current_source_dir() + '/../lib']
+	    '-I' + meson.current_source_dir() + '/../lib',
+	    '-I' + meson.current_build_dir() + '/..']
 
 pkg_config=find_program('pkg-config')
 snarf_args+=run_command(pkg_config, '--cflags', 'glib-2.0', 'guile-3.0').stdout().strip()

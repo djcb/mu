@@ -11,7 +11,7 @@
 @documentencoding UTF-8
 @c %**end of header
 
-@include texi.texi
+@include version.texi
 
 @copying
 Copyright @copyright{} 2012 Dirk-Jan C. Binnema
@@ -28,7 +28,7 @@ Documentation License.''
 
 @titlepage
 @title @t{mu-guile} - extending @t{mu} with Guile Scheme
-@subtitle version  @value{mu-version}
+@subtitle version  @value{VERSION}
 @author Dirk-Jan C. Binnema
 
 @c The following two commands start the copyright page.

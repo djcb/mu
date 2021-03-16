@@ -276,7 +276,6 @@ lib/index/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el
 guile/Makefile
-guile/texi.texi
 guile/mu/Makefile
 guile/examples/Makefile
 guile/tests/Makefile
