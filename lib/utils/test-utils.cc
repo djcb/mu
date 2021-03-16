@@ -179,26 +179,26 @@ MU_ENABLE_BITOPS(Bits);
 static void
 test_define_bitmap()
 {
-        g_assert_cmpuint((guint)Bits::None,==,(guint)0);
-        g_assert_cmpuint((guint)Bits::Bit1,==,(guint)1);
-        g_assert_cmpuint((guint)Bits::Bit2,==,(guint)2);
+	g_assert_cmpuint((guint)Bits::None,==,(guint)0);
+	g_assert_cmpuint((guint)Bits::Bit1,==,(guint)1);
+	g_assert_cmpuint((guint)Bits::Bit2,==,(guint)2);
 
-        g_assert_cmpuint((guint)(Bits::Bit1|Bits::Bit2),==,(guint)3);
-        g_assert_cmpuint((guint)(Bits::Bit1&Bits::Bit2),==,(guint)0);
+	g_assert_cmpuint((guint)(Bits::Bit1|Bits::Bit2),==,(guint)3);
+	g_assert_cmpuint((guint)(Bits::Bit1&Bits::Bit2),==,(guint)0);
 
-        g_assert_cmpuint((guint)(Bits::Bit1&(~Bits::Bit2)),==,(guint)1);
+	g_assert_cmpuint((guint)(Bits::Bit1&(~Bits::Bit2)),==,(guint)1);
 
-        {
-                Bits b{Bits::Bit1};
-                b|=Bits::Bit2;
-                g_assert_cmpuint((guint)b,==,(guint)3);
-        }
+	{
+		Bits b{Bits::Bit1};
+		b|=Bits::Bit2;
+		g_assert_cmpuint((guint)b,==,(guint)3);
+	}
 
-        {
-                Bits b{Bits::Bit1};
-                b&=Bits::Bit1;
-                g_assert_cmpuint((guint)b,==,(guint)1);
-        }
+	{
+		Bits b{Bits::Bit1};
+		b&=Bits::Bit1;
+		g_assert_cmpuint((guint)b,==,(guint)1);
+	}
 
 
 }
@@ -214,9 +214,10 @@ main (int argc, char *argv[])
 	g_test_add_func ("/utils/date-ymwdhMs",  test_date_ymwdhMs);
 	g_test_add_func ("/utils/size",  test_size);
 	g_test_add_func ("/utils/flatten",  test_flatten);
+	g_test_add_func ("/utils/remove-ctrl",  test_remove_ctrl);
 	g_test_add_func ("/utils/clean",  test_clean);
 	g_test_add_func ("/utils/format",  test_format);
-        g_test_add_func ("/utils/define-bitmap",  test_define_bitmap);
+	g_test_add_func ("/utils/define-bitmap",  test_define_bitmap);
 
 	return g_test_run ();
 }
