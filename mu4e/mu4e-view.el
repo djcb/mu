@@ -33,6 +33,7 @@
 (declare-function mu4e-error   "mu4e-utils")
 
 (require 'mu4e-view-common)
+(require (if mu4e-view-use-old 'mu4e-view-old 'mu4e-view-gnus))
 
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
@@ -42,23 +43,21 @@ the the message view affects HDRSBUF, as does marking etc.
 As a side-effect, a message that is being viewed loses its 'unread'
 marking if it still had that.
 
-Depending on the value of `mu4e-view-use-gnus', either use mu4e's
-internal display mode, or a display mode based on Gnus'
-article-mode."
+Depending on the value of `mu4e-view-use-old', either use mu4e's
+internal display mode, or a (by default) display mode based on
+Gnus' article-mode."
+
+  ;; sanity checks.
+  (if (and mu4e-view-use-old (featurep 'mu4e-view-gnus))
+    (error "Cannot use old view when gnus-view is loaded; restart emacs")
+    (if (and (not mu4e-view-use-old) (featurep 'mu4e-view-old))
+        (error "Cannot use gnus-based view with old view loaded; restart emacs")))
+
   (mu4e~headers-update-handler msg nil nil);; update headers, if necessary.
 
-  ;; sanity check; only one can be active.
-  (if mu4e-view-use-gnus
-      (progn
-        (when (featurep 'mu4e-view-old)
-          (mu4e-error "Cannot load gnus-based view with old one loaded. Restart emacs"))
-        (require 'mu4e-view-gnus)
-        (mu4e~view-gnus msg))
-    (progn
-      (when (featurep 'mu4e-view-gnus)
-        (mu4e-error "Cannot load old view with gnus-based view loaded. Restart emacs"))
-      (require 'mu4e-view-old)
-      (mu4e~view-old msg))))
+  (if mu4e-view-use-old
+      (mu4e~view-old msg)
+    (mu4e~view-gnus msg)))
 
 (defun mu4e-view-message-with-message-id (msgid)
   "View message with message-id MSGID. This (re)creates a

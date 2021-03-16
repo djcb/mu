@@ -58,6 +58,9 @@
 (require 'mu4e-view)
 (require 'mu4e-vars)
 
+(when mu4e-view-use-old
+  (mu4e-error "iCalender support is not available with the old viewer"))
+
 ;;;###autoload
 (defun mu4e-icalendar-setup ()
   "Perform the necessary initialization to use mu4e-icalendar."

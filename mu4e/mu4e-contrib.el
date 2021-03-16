@@ -1,6 +1,6 @@
 ;;; mu4e-contrib.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2013-2021 Dirk-Jan C. Binnema
 
 ;; This file is not part of GNU Emacs.
 

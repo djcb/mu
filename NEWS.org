@@ -39,15 +39,20 @@
 *** mu4e
 
     - Use the gnus-based message viewer as the default; the new viewer has quite
-      a few features compared to the old, mu4e-specific one, such as faster
-      crypto, support for S/MIME, syntax-highlighting, calendar invitations and
-      more.
+      a few extra features compared to the old, mu4e-specific one, such as
+      faster crypto, support for S/MIME, syntax-highlighting, calendar
+      invitations and more.
 
       It does not do everything the old viewer does though (e.g., attachment
-      actions), so if you depend on those, you can use:
+      actions), so if you depend on those:
       #+begin_example
-      (setq mu4e-view-use-gnus nil)
+      ;; set *before* loading mu4e; and restart emacs if you want to change it
+      ;; users of use-packag~ should can use the :init section for this.
+      (setq mu4e-view-use-old t)
       #+end_example
+
+      (The older variable ~mu4e-view-use-gnus~ with the opposite meaning is
+      obsolete now, and no longer in use).
 
     - Include maildir-shortcuts in the main-view with overall/unread counts,
       similar to bookmarks, and with the same ~:hide~ and ~:hide-unread~ properties.

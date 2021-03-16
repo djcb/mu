@@ -1329,7 +1329,6 @@ q            leave the message view
 
 For the marking commands, please refer to @ref{Marking messages}.
 
-
 @node MSGV Custom headers
 @section Custom headers
 
@@ -1361,10 +1360,17 @@ Since version 1.6 @t{mu4e} defaults to the new, Gnus-based, message view.
 
 However, the older view is still available, and this chapter is about
 that one. While we recommend using the default one, you can still use
-the old one by configuring it:
+the old one by configuring it @emph{before} @t{require}'ing @t{mu4e}:
 @lisp
-(setq mu4e-view-use-gnus nil)
+(setq mu4e-view-use-old t)
 @end lisp
+
+Users of
+@t{use-package}@footnote{@url{https://jwiegley.github.io/use-package/}}
+can use the @t{:init} section for this.
+
+If you want to change this, you need to fully restart @t{mu4e} (in
+practice, this means you need to restart @t{emacs}.
 
 After selecting a message in the @ref{Headers view}, it appears in a message
 view window, which shows the message headers, followed by the message
@@ -3805,13 +3811,8 @@ Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 By default, mu4e presents iCalendar invitations as .vcs file
 attachments. Experimental support is available to parse these
 attachments in order to add the expected ``Accept'', ``Reject'', ``Add
-to Calendar'' buttons. This requires using Gnus' article view, instead
-of mu4e's internal viewer. We do this by setting the value of
-mu4e-view-use-gnus:
-
-@lisp
-(setq mu4e-view-use-gnus t)
-@end lisp
+to Calendar'' buttons. This requires using Gnus' article view, which
+is the default since @t{mu4e} version 1.6.
 
 The minimal setup is:
 
@@ -3837,22 +3838,6 @@ To enable optional functionality to capture iCalendar events to your org files:
 
 NOTE: both the capture file and the headline(s) inside must already
 exist.
-
-These features require the Gnus article viewer. This is currently
-experimental, and doesn't yet support all the features available with
-mu4e's internal viewer. Consequently, you may want a way to toggle
-between the two modes. You can do this with the following:
-
-@lisp
-(defun mu4e-toggle-gnus-view ()
-  (interactive)
-  (mu4e~view-quit-buffer)
-  (setq mu4e-view-use-gnus
-        (not mu4e-view-use-gnus))
-  (mu4e-headers-view-message))
-
-(define-key mu4e-view-mode-map "i" 'mu4e-toggle-gnus-view)
-@end lisp
 
 @node Example configs
 @appendix Example configs

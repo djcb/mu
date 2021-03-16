@@ -1749,7 +1749,7 @@ _not_ refresh the last search with the new setting for threading."
 
 (defun mu4e~decrypt-p (msg)
   "Should we decrypt this message?"
-  (unless mu4e-view-use-gnus ;; we don't decrypt in the gnus-view case
+  (when mu4e-view-use-old ;; we don't decrypt in the gnus-view case
     (and (member 'encrypted (mu4e-message-field msg :flags))
          (if (eq mu4e-decryption-policy 'ask)
              (yes-or-no-p (mu4e-format "Decrypt message?"))
@@ -1773,7 +1773,7 @@ window                                                      . "
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read))
          (decrypt (mu4e~decrypt-p msg))
-         (verify  (not mu4e-view-use-gnus))
+         (verify  mu4e-view-use-old)
          (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))

@@ -69,12 +69,13 @@ Setting this to t increases the amount of information in the log."
   "Settings for the message view."
   :group 'mu4e)
 
-(defcustom mu4e-view-use-gnus t
-  "If non-nil, use the new Gnus-based viewer.
-Otherwise, use the old viewer."
+(defcustom mu4e-view-use-old nil
+  "If non-nil, use the old viewer.
+Otherwise, use the new, Gnus-based viewer."
   :type 'boolean
   :group 'mu4e-view)
 
+(make-obsolete-variable 'mu4e-view-use-gnus 'mu4e-view-use-old "1.5.10")
 
 (defcustom mu4e-speedbar-support nil
   "Support having a speedbar to navigate folders/bookmarks."
@@ -421,7 +422,7 @@ The setting is a symbol:
  * `ask': ask before decrypting anything
  * nil:   don't try to decrypt anything.
 
-Note that this is not used when `mu4e-view-use-gnus' is enabled."
+Note that this is not used unless `mu4e-view-use-old' is enabled."
   :type '(choice (const :tag "Try to decrypt automatically" t)
                  (const :tag "Ask before decrypting anything" ask)
                  (const :tag "Don't try to decrypt anything" nil))
@@ -1019,10 +1020,9 @@ property, which should point to a function that takes a message
 plist as argument, and returns a string. See the default value of
 `mu4e-header-info-custom for an example.
 
-Note that when using the gnus-based view (see
-`mu4e-view-use-gnus'), you only have access to a limited set of
-message fields: only the ones used in the header-view, not
-including, for instance, the message body.")
+Note that when using the gnus-based view, you only have access to
+a limited set of message fields: only the ones used in the
+header-view, not including, for instance, the message body.")
 
 ;;; Run-time variables / constants
 

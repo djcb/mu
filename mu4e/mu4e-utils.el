@@ -856,9 +856,9 @@ When successful, call FUNC (if non-nil) afterwards."
   ;; kill all mu4e buffers
   (mapc
    (lambda (buf)
-     ;; When using mu4e-view-use-gnus, the view buffer has the kill-buffer-hook
-     ;; function mu4e~view-kill-buffer-hook-fn which kills the mm-* buffers
-     ;; created by Gnus' article mode.  Those have been returned by
+     ;; When using the Gnus-based viewer, the view buffer has the
+     ;; kill-buffer-hook function mu4e~view-kill-buffer-hook-fn which kills the
+     ;; mm-* buffers created by Gnus' article mode.  Those have been returned by
      ;; `buffer-list' but might already be deleted in case the view buffer has
      ;; been killed first.  So we need a `buffer-live-p' check here.
      (when (buffer-live-p buf)
