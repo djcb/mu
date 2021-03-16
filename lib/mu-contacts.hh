@@ -84,8 +84,11 @@ public:
          * Add a contact
          *
          * @param ci A contact-info object
+         *
+         * @return the inserted / updated / washed contact info. Note that
+         * this is return _as copy_ to make it thread-safe.
          */
-        void add(ContactInfo&& ci);
+        const ContactInfo add(ContactInfo&& ci);
 
         /**
          * Clear all contacts

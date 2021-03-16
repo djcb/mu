@@ -212,40 +212,36 @@ Contacts::serialize() const
         return s;
 }
 
-
-static void
-wash (std::string& str)
-{
-        str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-}
-
-void
+const ContactInfo
 Contacts::add (ContactInfo&& ci)
 {
         std::lock_guard<std::mutex> l_{priv_->mtx_};
 
         auto it = priv_->contacts_.find(ci.email);
 
-        if (it == priv_->contacts_.end()) {   // completely new contact
-                wash(ci.name);
-                wash(ci.full_address);
+        if (it == priv_->contacts_.end()) { // completely new contact
+
+                ci.name         = Mu::remove_ctrl(ci.name);
+                ci.full_address = remove_ctrl(ci.full_address);
+
                 auto email{ci.email};
-                priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(ci)));
+                return priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(ci))).first->second;
 
         } else { // existing contact.
                 auto& ci_existing{it->second};
                 ++ci_existing.freq;
 
                 if (ci.last_seen > ci_existing.last_seen) { // update.
-                        wash(ci.name);
-                        ci_existing.name  = std::move(ci.name);
-                        ci_existing.email = std::move(ci.email);
 
-                        wash(ci.full_address);
-                        ci_existing.full_address = std::move(ci.full_address);
+                        ci_existing.email        = std::move(ci.email);
+                        ci_existing.name         = Mu::remove_ctrl(ci.name);
+                        ci_existing.full_address = Mu::remove_ctrl(ci.full_address);
+
                         ci_existing.tstamp       = g_get_monotonic_time();
                         ci_existing.last_seen    = ci.last_seen;
                 }
+
+                return ci;
         }
 }
 
