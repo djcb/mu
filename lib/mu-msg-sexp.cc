@@ -55,12 +55,12 @@ make_contact_sexp (MuMsgContact *c)
 
         Sexp::List contact;
         if (mu_msg_contact_name(c))
-                contact.add(Sexp::make_string(mu_msg_contact_name(c)));
+                contact.add(Sexp::make_string(Mu::remove_ctrl(mu_msg_contact_name(c))));
         else
                 contact.add(Sexp::make_symbol("nil"));
 
         contact.add(Sexp::make_symbol("."));
-        contact.add(Sexp::make_string(mu_msg_contact_email(c)));
+        contact.add(Sexp::make_string(Mu::remove_ctrl(mu_msg_contact_email(c))));
 
         return Sexp::make_list(std::move(contact));
 }
