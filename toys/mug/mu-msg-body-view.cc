@@ -134,50 +134,9 @@ save_file_for_cid (MuMsg *msg, const char* cid)
 	return filepath;
 }
 
-
-static gboolean
-on_navigation_policy_decision_requested (MuMsgBodyView *self,
-					 WebKitPolicyDecision *decision,
-                                         WebKitPolicyDecisionType decision_type,
-					 gpointer data)
-{
-	/* const char* uri; */
-
-	/* uri    = webkit_network_request_get_uri (request); */
-
-	/* XXX if it wasn't a user click, don't navigate */
-	if (decision_type != WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
-                webkit_policy_decision_ignore (decision);
-		return TRUE;
-	}
-
-
-	/* /\* if there are 'cmd:<action>" links in the body text of */
-	/*  * mu-internal messages (ie., notification from mu, not real */
-	/*  * e-mail messages), we emit the 'action requested' */
-	/*  * signal. this allows e.g triggering a database refresh from */
-	/*  * a <a href="cmd:refresh">Refresh</a> link */
-	/*  *\/ */
-	/* if (g_ascii_strncasecmp (uri, "cmd:", 4) == 0)  { */
-	/* 	if (self->_priv->_view_mode == VIEW_MODE_NOTE) { */
-	/* 		g_signal_emit (G_OBJECT(self), */
-	/* 			       signals[ACTION_REQUESTED], 0, */
-	/* 			       uri + 4); */
-	/* 	} */
-	/* 	return TRUE; */
-	/* } */
-
-	/* /\* don't try to play files on our local file system, this is not something */
-	/*  * external content should do.*\/ */
-	/* if (!mu_util_is_local_file(uri)) */
-	/* 	mu_util_play (uri, FALSE, TRUE, NULL); */
-
-	return TRUE;
-}
-
 static void
 on_resource_load_started (MuMsgBodyView *self, WebKitWebResource *resource,
-                           WebKitURIRequest *request, gpointer data)
+			   WebKitURIRequest *request, gpointer data)
 {
 	const char*  uri;
 	MuMsg       *msg;
@@ -311,8 +270,8 @@ set_html (MuMsgBodyView *self, const char* html)
 	g_return_if_fail (MU_IS_MSG_BODY_VIEW(self));
 
 	webkit_web_view_load_html (WEBKIT_WEB_VIEW(self),
-                                   html ? html : "",
-                                   NULL);
+				   html ? html : "",
+				   NULL);
 }
 
 static void

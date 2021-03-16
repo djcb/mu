@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,8 +18,8 @@
 */
 
 
-#ifndef __MU_MSG_ATTACH_VIEW_H__
-#define __MU_MSG_ATTACH_VIEW_H__
+#ifndef MU_MSG_ATTACH_VIEW_HH__
+#define MU_MSG_ATTACH_VIEW_HH__
 
 #include <gtk/gtk.h>
 #include <mu-msg.hh>
@@ -64,4 +64,4 @@ int  mu_msg_attach_view_set_message (MuMsgAttachView *self, Mu::MuMsg *msg);
 
 G_END_DECLS
 
-#endif /* __MU_MSG_ATTACH_VIEW_H__ */
+#endif /*MU_MSG_ATTACH_VIEW_HH__*/

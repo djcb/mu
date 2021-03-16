@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -49,8 +49,8 @@ struct _MuMsgAttachViewPrivate {
 	MuMsg *_msg;
 };
 #define MU_MSG_ATTACH_VIEW_GET_PRIVATE(o)      (G_TYPE_INSTANCE_GET_PRIVATE((o), \
-                                                MU_TYPE_MSG_ATTACH_VIEW, \
-                                                MuMsgAttachViewPrivate))
+						MU_TYPE_MSG_ATTACH_VIEW, \
+						MuMsgAttachViewPrivate))
 /* globals */
 static GtkIconViewClass *parent_class = NULL;
 
@@ -167,14 +167,13 @@ on_drag_data_get (MuMsgAttachView *self, GdkDragContext *drag_context,
 
 	uris = g_new(char*, g_slist_length(lst) + 1);
 	for (cur = lst, i = 0; cur; cur = g_slist_next(cur))
-	 	uris[i++] = (gchar*)cur->data;
+		uris[i++] = (gchar*)cur->data;
 
 	uris[i] = NULL;
 	gtk_selection_data_set_uris (data, uris);
 
 	g_free (uris);
-	g_slist_foreach (lst, (GFunc)g_free, NULL);
-	g_slist_free (lst);
+	g_slist_free_full (lst, g_free);
 }
 
 static void
@@ -199,7 +198,7 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 
 	/* note: only since GTK+ 2.22 */
 	/* gtk_icon_view_set_item_orientation (GTK_ICON_VIEW(obj), */
-	/* 				    GTK_ORIENTATION_HORIZONTAL); */
+	/*				    GTK_ORIENTATION_HORIZONTAL); */
 
 	g_signal_connect (G_OBJECT(obj), "item-activated",
 			  G_CALLBACK(item_activated), NULL);
@@ -208,7 +207,7 @@ mu_msg_attach_view_init (MuMsgAttachView *obj)
 					  GTK_SELECTION_MULTIPLE);
 	/* drag & drop */
 	gtk_icon_view_enable_model_drag_source (GTK_ICON_VIEW(obj),
-                                                (GdkModifierType)0, NULL, 0,
+						(GdkModifierType)0, NULL, 0,
 						GDK_ACTION_COPY);
 	gtk_drag_source_add_uri_targets(GTK_WIDGET(obj));
 	g_signal_connect (obj, "drag-data-get", G_CALLBACK(on_drag_data_get), NULL);

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_MSG_BODY_VIEW_H__
-#define __MU_MSG_BODY_VIEW_H__
+#ifndef MU_MSG_BODY_VIEW_HH__
+#define MU_MSG_BODY_VIEW_HH__
 
 #include <webkit2/webkit2.h>
 #include <mu-msg.hh>
@@ -66,4 +66,4 @@ void mu_msg_body_view_set_message_source (MuMsgBodyView *self, Mu::MuMsg *msg);
 
 G_END_DECLS
 
-#endif /* __MU_MSG_BODY_VIEW_H__ */
+#endif /* MU_MSG_BODY_VIEW_HH__ */
