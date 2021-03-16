@@ -116,8 +116,7 @@
               ((:subject :to :from :cc :bcc :from-or-to :date :attachments
                          :signature :decryption)) ; handled by Gnus
               (t
-               (mu4e~view-gnus-insert-header-custom msg field))
-              )))
+               (mu4e~view-gnus-insert-header-custom msg field)))))
         (let ((gnus-treatment-function-alist
                '((gnus-treat-highlight-headers
                   gnus-article-highlight-headers))))
@@ -161,11 +160,11 @@ with no charset."
         (list handle attendee))
   handle-attendee))
 
-;; We must neuter gnus-set-mode-line
 (defun mu4e~view-nop (func &rest args)
-  "Do nothing."
-  ;;(message "NOP %S %S %S %S" mu4e~view-mode major-mode func args)
-  (unless (derived-mode-p '(mu4e-view-mode))
+  "Do nothing when in mu4e-view-mode. This is useful for advising
+some Gnus-functionality that does not work in mu4e."
+  (unless (or (eq major-mode 'mu4e-view-mode)
+              (derived-mode-p '(mu4e-view-mode)))
     (apply func args)))
 
 (defvar mu4e-view-mode-map
@@ -363,8 +362,8 @@ Gnus' article-mode."
   (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
   (setq mu4e~view-buffer-name gnus-article-buffer)
   ;; ;; turn off gnus modeline changes and menu items
-  (when (fboundp 'gnus-set-mode-line)
-    (advice-add 'gnus-set-mode-line :around #'mu4e~view-nop))
+  (advice-add 'gnus-set-mode-line :around #'mu4e~view-nop)
+  (advice-add 'gnus-button-reply :around #'mu4e~view-nop)
   (mu4e~view-mode-body))
 
 (defun mu4e-view-message-text (msg)
