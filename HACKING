@@ -16,20 +16,21 @@
    attempts to follow the following rules:
 
    1. Basic code layout is like in the Linux kernel coding style. Keep the '{'
-      on the same line as the statement, except for functions. Tabs for
-      indentation, space for alignment; use 8-char tabs.
+      on the same line as the statement, except for functions. We're slowly
+      moving to use SPC for indentation: all new code should use that.
+
+      While TABs are techically better, it seems that using SPCs is harder to
+      get wrong.
 
    2. Lines should not exceed 100 characters
 
-   3. Functions should not exceed 35 lines (with few exceptions). You can easily
-      check if any functions violate this rule with 'make line35', which lists
-      all functions with more than 35 non-comment lines.
+   3. Functions should be kept short.
 
-   4. Source files should not exceed 1000 lines
+   4. Source files should not exceed 1000 lines, with few exceptions.
 
    5. Non-static C-functions have the prefix based on their module, e.g.,
       ~mu-foo.h~ declares a function of 'mu_foo_bar (int a);', mu-foo.c implements
-      this. C++ functions using the Mu namespace
+      this. C++ functions use the Mu namespace
 
    6. Non-global functions *don't* have the module prefix, and are declared
       static.
@@ -49,10 +50,10 @@
 
       In C code, the declaration does *not* initialize the variable. This will
       give the compiler a chance to warn us if the variable is not initialized
-      in a certain code path.
+      in a certain code path. Exception: autoptr & friends.
 
-   9. Returned strings of type char* must be freed by the caller; if they are
-       not to be freed, 'const char*' should be used instead
+   9. Returned strings of type ~char*~ must be freed by the caller; if they are
+      not to be freed, ~const char*~ should be used instead
 
    10. Functions calls have a space between function name and arguments, unless
        there are none, so:
@@ -65,9 +66,8 @@
 
        after a comma, a space should follow.
 
-   11. C-functions that do not take arguments are explicitly declared as
-       f(void) and not f(). Reason: f() means that the arguments are
-       /unspecified/ (in C)
+   11. C-functions that do not take arguments are explicitly declared as f(void)
+       and not f(). Reason: f() means that the arguments are /unspecified/ (in C)
 
    12. C-code should not use ~//~ comments.
 
@@ -78,7 +78,8 @@
    except when logging may not have been initialized.
 
    The logging system redirects most logging to the log file (typically,
-   =~/.cache/mu/mu.log=). ~g_critical~ messages are written to stderr.
+   =~/.cache/mu/mu.log, or to the systemd journal=). ~g_critical~ messages are
+   written to stderr.
 
    - ~g_message~ is for non-error messages the user will see (unless running with
      ~--quiet~)
@@ -99,16 +100,16 @@
     You need to install a few dependencies; e.g. on Debian/Ubuntu:
 #+BEGIN_EXAMPLE
     sudo apt-get install                 \
-        automake                         \
-        autoconf-archive                 \
-        autotools-dev                    \
-        libglib2.0-dev                   \
+	automake                         \
+	autoconf-archive                 \
+	autotools-dev                    \
+	libglib2.0-dev                   \
 	libxapian-dev			 \
 	libgmime-3.0-dev                 \
-        m4                               \
-        make                             \
-        libtool                          \
-        pkg-config
+	m4                               \
+	make                             \
+	libtool                          \
+	pkg-config
 #+END_EXAMPLE
 
    Then, to compile straight from ~git~:
