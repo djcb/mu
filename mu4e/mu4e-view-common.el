@@ -480,6 +480,7 @@ list."
 
 (defvar mu4e-view-active-urls-keymap
   (let ((map (make-sparse-keymap)))
+    (define-key map [down-mouse-1] 'mu4e~view-browse-url-from-binding)
     (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
     (define-key map (kbd "M-<return>") 'mu4e~view-browse-url-from-binding)
     map)
