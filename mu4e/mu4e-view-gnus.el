@@ -45,7 +45,7 @@
 (put 'mu4e~gnus-article-mime-handles 'permanent-local t)
 
 (defun mu4e~view-gnus (msg)
-  "View MSG using Gnus' article mode. Experimental."
+  "View MSG using Gnus' article mode."
   (let ((path (mu4e-message-field msg :path))
         (inhibit-read-only t)
         (mm-decrypt-option 'known)
