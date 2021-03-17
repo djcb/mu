@@ -94,6 +94,7 @@ Query::Private::make_enquire (const std::string& expr,
                 for (auto&& w: warns)
                         g_warning ("query warning: %s", to_string(w).c_str());
                 enq.set_query(xapian_query(tree));
+                g_debug ("qtree: %s", to_string(tree).c_str());
         }
 
         return maybe_sort (enq, sortfieldid, qflags);
@@ -234,7 +235,7 @@ Query::run (const std::string& expr, MuMsgFieldId sortfieldid,
         g_return_val_if_fail (none_of(qflags & QueryFlags::Leader), Nothing);
         g_return_val_if_fail (none_of(qflags & QueryFlags::GatherThreadIds), Nothing);
 
-        StopWatch sw{format("query '%s'; related: %s; threads: %s; max-size: %zu",
+        StopWatch sw{format("ran query '%s'; related: %s; threads: %s; max-size: %zu",
                             expr.c_str(),
                             any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
                             any_of(qflags & QueryFlags::Threading) ? "yes" : "no",
