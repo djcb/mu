@@ -53,6 +53,7 @@
         (gnus-buttonized-mime-types (append (list "multipart/signed"
                                                   "multipart/encrypted")
                                             gnus-buttonized-mime-types)))
+    (setq mu4e~view-buffer-name gnus-article-buffer)
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (buffer-disable-undo)
     (insert-file-contents-literally path nil nil nil t)
@@ -360,7 +361,6 @@ some Gnus-functionality that does not work in mu4e."
 Gnus' article-mode."
   ;; Restore C-h b default behavior
   (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
-  (setq mu4e~view-buffer-name gnus-article-buffer)
   ;; ;; turn off gnus modeline changes and menu items
   (advice-add 'gnus-set-mode-line :around #'mu4e~view-nop)
   (advice-add 'gnus-button-reply :around #'mu4e~view-nop)
