@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -72,46 +72,53 @@ mu_guile_g_error (const char *func_name, GError *err)
 
 /* there can be only one */
 
-static std::unique_ptr<Mu::Query> QuerySingleton;
+static std::unique_ptr<Mu::Store> StoreSingleton;
 
 static gboolean
 mu_guile_init_instance (const char *muhome) try
 {
 	setlocale (LC_ALL, "");
-	if (!mu_runtime_init (muhome, "guile", FALSE))
+	if (!mu_runtime_init (muhome, "guile", true) || StoreSingleton)
 		return FALSE;
 
-        Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
-        QuerySingleton = std::make_unique<Mu::Query>(store);
+	StoreSingleton = std::make_unique<Mu::Store>(
+		mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
+
+	g_debug ("mu-guile: opened store @ %s (n=%zu); maildir: %s",
+		 StoreSingleton->metadata().database_path.c_str(),
+		 StoreSingleton->size(),
+		 StoreSingleton->metadata().root_maildir.c_str());
 
 	return TRUE;
 
 } catch (...) {
-        return FALSE;
+	return FALSE;
 }
 
 static void
 mu_guile_uninit_instance ()
 {
-        QuerySingleton.reset();
+	StoreSingleton.reset();
 
 	mu_runtime_uninit ();
 }
 
 
-Mu::Query&
-mu_guile_query ()
+Mu::Store&
+mu_guile_store ()
 {
-        if (!QuerySingleton)
-                g_error("mu guile not initialized");
+	if (!StoreSingleton)
+		g_error("mu guile not initialized");
 
-        return *QuerySingleton.get();
+	return *StoreSingleton.get();
 }
 
 gboolean
 mu_guile_initialized ()
 {
-	return !!QuerySingleton;
+	g_debug ("initialized ? %u", !!StoreSingleton);
+
+	return !!StoreSingleton;
 }
 
 
@@ -144,6 +151,9 @@ SCM_DEFINE_PUBLIC (mu_initialize, "mu:initialize", 0, 1, 0,
 	if (!rv)
 		return mu_guile_error (FUNC_NAME, 0, "Failed to initialize mu",
 				       SCM_UNSPECIFIED);
+
+	g_debug ("mu-guile: initialized @ %s (%p)",
+		 muhome ? muhome : "<default>", StoreSingleton.get());
 
 	/* cleanup when we're exiting */
 	atexit (mu_guile_uninit_instance);

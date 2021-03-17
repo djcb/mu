@@ -82,11 +82,13 @@ typedef struct _FlagData FlagData;
 
 
 #define MU_GUILE_INITIALIZED_OR_ERROR					\
-	do { if (!(mu_guile_initialized()))				\
+	do {								\
+	    if (!(mu_guile_initialized())) {				\
 			mu_guile_error (FUNC_NAME, 0,                   \
 			     "mu not initialized; call mu:initialize",	\
 				     SCM_UNDEFINED);			\
-		return SCM_UNSPECIFIED;                                 \
+			return SCM_UNSPECIFIED;				\
+	    }								\
 	} while (0)
 
 
@@ -423,8 +425,10 @@ SCM_DEFINE (get_header, "mu:c:get-header", 2, 0, 0,
 #undef FUNC_NAME
 
 static Mu::Option<Mu::QueryResults>
-get_query_results (Mu::Query& query, const char* expr, int maxnum)
+get_query_results (Mu::Store& store, const char* expr, int maxnum)
 {
+	Mu::Query query(store);
+
 	return query.run(expr, MU_MSG_FIELD_ID_NONE,
 			 Mu::QueryFlags::None, maxnum);
 }
@@ -456,7 +460,7 @@ SCM_DEFINE (for_each_message, "mu:c:for-each-message", 3, 0, 0,
 	else
 		expr = scm_to_utf8_string(EXPR);
 
-	const auto res{get_query_results(mu_guile_query(), expr,
+	const auto res{get_query_results(mu_guile_store(), expr,
 					 scm_to_int(MAXNUM))};
 	free (expr);
 	if (!res)

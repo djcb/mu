@@ -26,9 +26,9 @@
 
 
 /**
- * get the singleton Query instance
+ * get the singleton Store instance
  */
-Mu::Query& mu_guile_query (void);
+Mu::Store& mu_guile_store ();
 
 
 /**

@@ -39,8 +39,8 @@ AM_LDFLAGS=$(ASAN_LDFLAGS)
 
 noinst_PROGRAMS= $(TEST_PROGS)
 
-# TEST_PROGS += test-mu-guile
-# test_mu_guile_SOURCES= test-mu-guile.cc
-# test_mu_guile_LDADD=${top_builddir}/lib/libtestmucommon.la
+TEST_PROGS += test-mu-guile
+test_mu_guile_SOURCES= test-mu-guile.cc
+test_mu_guile_LDADD=${top_builddir}/lib/libtestmucommon.la
 
 EXTRA_DIST=test-mu-guile.scm test-mu-guile.cc

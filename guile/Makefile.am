@@ -56,10 +56,11 @@ libguile_mu_la_CXXFLAGS=$(AM_CXXFLAGS)
 
 libguile_mu_la_LIBADD=					\
 	${top_builddir}/lib/libmu.la			\
+	${top_builddir}/lib/utils/libmu-utils.la	\
 	$(READLINE_LIBS)				\
 	${GUILE_LIBS}
 
-libguile_mu_la_LDFLAGS= 				\
+libguile_mu_la_LDFLAGS=					\
 	$(ASAN_LDFLAGS)					\
 	-shared						\
 	-export-dynamic
