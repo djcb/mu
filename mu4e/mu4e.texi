@@ -1879,6 +1879,7 @@ C-c C-c      send message
 C-c C-d      save to drafts and leave
 C-c C-k      kill the message buffer (the message remains in the draft folder)
 C-c C-a      attach a file (pro-tip: drag & drop works as well)
+C-c C-;      switch the context
 
 (mu4e-specific)
 C-S-u        update mail & reindex

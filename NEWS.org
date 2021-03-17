@@ -78,7 +78,10 @@
       ~mu4e-personal-address-p~ to check whether a given string matches a personal
       address.
 
-    - Completion for writing ~mu~ queries
+    - TAB-Completion for writing ~mu~ queries
+
+    - Switch the context for existing draft messages using
+      ~mu4e-compose-context-switch~ or ~C-c C-;~ in ~mu4e-compose-mode~.
 
 * 1.4 (released, as of April 18 2020)
 

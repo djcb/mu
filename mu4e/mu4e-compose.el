@@ -446,6 +446,7 @@ removing the In-Reply-To header."
   (setq mu4e-compose-mode-map
         (let ((map (make-sparse-keymap)))
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
+          (define-key map (kbd "C-c C-;") 'mu4e-compose-context-switch)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
           (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
@@ -789,6 +790,42 @@ tempfile)."
           (switch-to-buffer (mu4e-get-headers-buffer))
         ;; if all else fails, back to the main view
         (when (fboundp 'mu4e) (mu4e))))))
+
+(defun mu4e-compose-context-switch (&optional force name)
+  "Change the context for the current draft message.
+
+Same as `mu4e-context-switch' but does two things after switching
+when the buffer is in `mu4e-compose-mode':
+- Changes the \"From\" field to the email address of the new context
+- Moves the current message to the draft folder of the new context"
+  (interactive "P")
+  (if (derived-mode-p 'mu4e-compose-mode)
+      (let ((old-context (mu4e-context-current))
+            (has-file (file-exists-p (buffer-file-name))))
+        (unless (and name (not force) (eq old-context name))
+          (when (or (not has-file)
+                    (not (buffer-modified-p))
+                    (y-or-n-p "Draft must be saved before switching context. Save?"))
+            (unless (and (not force) (eq old-context (mu4e-context-switch nil name)))
+              ;; Change From field to user-mail-address
+              (message-replace-header "From" (or (mu4e~draft-from-construct) ""))
+              ;; Move message to mu4e-draft-folder
+              (if has-file
+                  (progn (save-buffer)
+                         (let ((msg-id (message-fetch-field "Message-ID"))
+                               (buf (current-buffer)))
+                           ;; Remove the <>
+                           (when (and msg-id (string-match "<\\(.*\\)>" msg-id))
+                             (save-window-excursion
+                               (mu4e~proc-move (match-string 1 msg-id) mu4e-drafts-folder nil t)
+                               (kill-buffer buf))))) ;; Kill previous buffer which points to wrong file
+                ;; No file, just change the buffer file name
+                (setq buffer-file-name
+                      (format "%s/%s/cur/%s"
+                              (mu4e-root-maildir) (mu4e-get-drafts-folder)
+                              (file-name-nondirectory (buffer-file-name)))))))))
+    ;; Just do the standad switch
+    (mu4e-context-switch force name)))
 
 (defun mu4e-sent-handler (docid path)
   "Handler called with DOCID and PATH for the just-sent message.
