@@ -192,7 +192,7 @@ some Gnus-functionality that does not work in mu4e."
 
     (define-key map "q" 'mu4e~view-quit-buffer)
 
-          ;; note, 'z' is by-default bound to 'bury-buffer'
+    ;; note, 'z' is by-default bound to 'bury-buffer'
     ;; but that's not very useful in this case
     (define-key map "z" 'ignore)
 
@@ -223,6 +223,8 @@ some Gnus-functionality that does not work in mu4e."
     (define-key map "." 'mu4e-view-raw-message)
     (define-key map "|" 'mu4e-view-pipe)
     (define-key map "a" 'mu4e-view-action)
+    (define-key map "A" 'mu4e-view-mime-part-action)
+    (define-key map "e" 'mu4e-view-save-attachments)
 
     (define-key map ";" 'mu4e-context-switch)
 
@@ -258,8 +260,6 @@ some Gnus-functionality that does not work in mu4e."
     ;; switching to view mode (if it's visible)
     (define-key map "y" 'mu4e-select-other-view)
 
-    ;; attachments
-    (define-key map "e" 'mu4e-view-save-attachment)
 
     ;; marking/unmarking
     (define-key map "d" 'mu4e-view-mark-for-trash)
@@ -352,6 +352,7 @@ some Gnus-functionality that does not work in mu4e."
   "Keymap for mu4e-view mode")
 
 (set-keymap-parent mu4e-view-mode-map button-buffer-map)
+(suppress-keymap mu4e-view-mode-map)
 
 (defcustom mu4e-view-mode-hook nil
   "Hook run when entering Mu4e-View mode."
@@ -404,45 +405,183 @@ Gnus' article-mode."
       (buffer-string))))
 
 
-(defun mu4e-view-save-attachment (&optional arg)
+
+
+;;; MIME-parts
+
+
+(defun mu4e~view-gather-mime-parts ()
+  "Gather all MIME parts as an alist that uniquely maps the number
+to the gnus-part."
+  (let ((parts '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((part (get-text-property (point) 'gnus-data))
+              (index (get-text-property (point) 'gnus-part)))
+          (when (and part (numberp index) (not (assoc index parts))
+            (push `(,index . ,part) parts)))
+          (goto-char (or (next-single-property-change (point) 'gnus-part)
+                         (point-max))))))
+    parts))
+
+
+(defun mu4e-view-save-attachments (&optional arg)
   "Save mime parts from current mu4e gnus view buffer.
 
 When helm-mode is enabled provide completion on attachments and
 possibility to mark candidates to save, otherwise completion on
-attachments is done with `completing-read-multiple', in this case use
-\",\" to separate candidate, completion is provided after each \",\"."
+attachments is done with `completing-read-multiple', in this case
+use \",\" to separate candidate, completion is provided after
+each \",\".
+
+Note, currently this does not work well with file names
+containing commas."
   (interactive "P")
   (cl-assert (and (eq major-mode 'mu4e-view-mode)
                   (derived-mode-p 'gnus-article-mode)))
-  (let ((handles '())
-        (files '())
-        (helm-comp-read-use-marked t)
-        (compfn (if (and (boundp 'helm-mode) helm-mode)
-                    #'completing-read
-                  ;; Fallback to `completing-read-multiple' with poor
-                  ;; completion systems.
-                  #'completing-read-multiple))
+  (let* ((parts (mu4e~view-gather-mime-parts))
+         (handles '())
+         (files '())
+         (helm-comp-read-use-marked t)
+         (compfn (if (and (boundp 'helm-mode) helm-mode)
+                     #'completing-read
+                   ;; Fallback to `completing-read-multiple' with poor
+                   ;; completion systems.
+                   #'completing-read-multiple))
         dir)
-    (save-excursion
-      (goto-char (point-min))
-      (while (not (eobp))
-        (let ((handle (get-text-property (point) 'gnus-data)))
-          (when (consp handle)
-            (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr handle))))))
-              (when fname
-                (push `(,fname . ,handle) handles)
-                (push fname files)))))
-        (forward-line 1)))
+    (dolist (part parts)
+      (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr part))))))
+        (when fname
+          (push `(,fname . ,(cdr part)) handles)
+          (push fname files))))
     (if files
         (progn
           (setq files (funcall compfn "Save part(s): " files)
-                dir (if arg
-                        (read-directory-name "Save to directory: ")
-                      mu4e-attachment-dir))
+                dir (if arg (read-directory-name "Save to directory: ") mu4e-attachment-dir))
           (cl-loop for (f . h) in handles
                    when (member f files)
                    do (mm-save-part-to-file h (expand-file-name f dir))))
-      (message "No attached files found"))))
+      (mu4e-message "No attached files found"))))
+
+
+(defvar mu4e-view-mime-part-actions
+  '(
+    ;;
+    ;; some basic ones
+    ;;
+
+    ;; save mime-part to a file
+    (:name "save"  :handler gnus-article-save-part :receives index)
+    ;; pipe mime part to some arbitrary shell command
+    (:name "|pipe" :handler gnus-article-pipe-part :receives index)
+    ;; open with the default handler, if any
+    (:name "open" :handler mu4e~view-open-file :receives temp)
+    ;; open with some custom file.
+    (:name "wopen-with" :handler (lambda (file)(mu4e~view-open-file file t))
+           :receives temp)
+
+    ;;
+    ;; some more examples
+    ;;
+
+    ;; import GPG key
+    (:name "gpg" :handler epa-import-keys :receives temp)
+    ;; count the number of lines in a MIME-part
+    (:name "line-count" :handler "wc -l" :receives pipe)
+    ;; open in this emacs instance; tries to use the attachment name,
+    ;; so emacs can use specific modes etc.
+    (:name "emacs" :handler find-file :receives temp)
+    ;; open in this emacs instance, "raw"
+    (:name "raw" :handler (lambda (str)
+                            (let ((tmpbuf (get-buffer-create " *mu4e-raw-mime*")))
+                                  (with-current-buffer tmpbuf
+                                    (insert str)
+                                    (view-mode)
+                                    (goto-char (point-min)))
+                                  (switch-to-buffer tmpbuf)))  :receives pipe))
+
+  "Actions for MIME-parts. Each is a plist with keys
+`(:name <name>         ;; name of the action; shortcut is first letter of name
+
+  :handler             ;; one of:
+                       ;; - a function receiving the index/temp/pipe
+                       ;; - a string, which is taken as a shell command
+
+  :receives            ;;  a symbol specifying what the handler receives
+                       ;; - index: the index number of the mime part (default)
+                       ;; - temp: the full path to the mime part in a
+                       ;;         temporary file, which is deleted immediately
+                       ;;         after invoking handler
+                       ;; - pipe:  the attachment is piped to some shell command
+                       ;;          or as a string parameter to a function
+).")
+
+
+(defun mu4e~view-mime-part-to-temp-file (handle)
+  "Write mime-part N to a temporary file and return the file name.
+The filename is deduced from the MIME-part's filename, or
+otherwise random; the result is placed in temporary directory
+with a unique name.  Returns the full path for the file
+created. The directory and file are self-destructed."
+  (let* ((tmpdir (make-temp-file "mu4e-temp-" t))
+         (fname (cdr-safe (assoc 'filename (assoc "attachment" (cdr handle)))))
+         (fname (if fname
+                    (concat tmpdir "/" (replace-regexp-in-string "/" "-" fname))
+                  (let ((temporary-file-directory tmpdir))
+                    (make-temp-file "mimepart")))))
+    (mm-save-part-to-file handle fname)
+    (run-at-time "30 sec" nil (lambda () (ignore-errors (delete-directory tmpdir t))))
+    fname))
+
+
+(defun mu4e~view-open-file (file &optional force-ask)
+  "Open FILE with default handler, if any. Otherwise, or if FORCE_ASK is set,
+ask user for the program to open with."
+  (let* ((opener
+          (pcase system-type
+            (`darwin "open")
+            ((or 'gnu 'gnu/linux 'gnu/kfreebsd) "xdg-open")))
+         (prog (if (or force-ask (not opener))
+                   (read-shell-command "Open MIME-part with: ")
+                 opener)))
+    (call-process prog nil 0 nil file)))
+
+(defun mu4e-view-mime-part-action (&optional n)
+  "Apply some action on mime-part N in the current messsage. If N
+is not specified, ask for it."
+  (interactive "NNumber of MIME-part: ")
+  (let* ((parts (mu4e~view-gather-mime-parts))
+         (options (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
+                          mu4e-view-mime-part-actions))
+         (handle (or (cdr-safe (cl-find-if (lambda (part) (eq (car part) n)) parts))
+                     (mu4e-error "MIME-part %s not found" n)))
+         (action (or (and options (mu4e-read-option "Action on mime-part: " options))
+                     (mu4e-error "No such action")))
+         (handler (or (plist-get action :handler)
+                      (mu4e-error "No :handler found for action %S" action)))
+         (receives (or (plist-get action :receives)
+                       (mu4e-error "No :receives found for action %S" action))))
+    (save-excursion
+      (cond
+       ((functionp handler)
+        (cond
+         ((eq receives 'index) (funcall handler n))
+         ((eq receives 'pipe)  (funcall handler (mm-with-unibyte-buffer
+                                                  (mm-insert-part handle)
+                                                  (buffer-string))))
+         ((eq receives 'temp)
+          (funcall handler (mu4e~view-mime-part-to-temp-file handle)))
+         (t (mu4e-error "Invalid :receive for %S" action))))
+       ((stringp handler)
+        (cond
+         ((eq receives 'index) (shell-command (concat handler " " (shell-quote-argument n))))
+         ((eq receives 'pipe)  (mm-pipe-part handle handler))
+         ((eq receives 'temp)
+          (shell-command (shell-command (concat handler " "
+                                                (shell-quote-argument
+                                                 (mu4e~view-mime-part-to-temp-file handle))))))
+         (t (mu4e-error "Invalid action %S" action))))))))
 
 ;;;
 (provide 'mu4e-view-gnus)

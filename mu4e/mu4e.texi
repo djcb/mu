@@ -1803,7 +1803,21 @@ attachments. For a general discussion on how to define your own, see
 on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @t{mu4e} defines a number of example actions.
 
+
+@subsection MIME-part actions
+
+Note -- these actions are only available for the new, gnus-based
+message view; see @xref{Message view}.
+
+MIME-part actions allow you to act upon MIME-parts in a message - such
+as attachments.  For now, these actions are defined and documented in
+@code{mu4e-view-mime-part-actions}.
+
 @subsection Attachment actions
+
+Note -- these actions are only available for the old message view; see
+@xref{Old message view}.
+
 Similarly, there is @code{mu4e-view-attachment-action} (@key{A}) for actions
 on attachments, which you can specify with
 @code{mu4e-view-attachment-actions}.

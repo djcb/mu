@@ -43,8 +43,8 @@
       faster crypto, support for S/MIME, syntax-highlighting, calendar
       invitations and more.
 
-      It does not do everything the old viewer does though (e.g., attachment
-      actions), so if you depend on those:
+      The new view is superior in most ways, but if you still depend need
+      something from the old one, you can use:
       #+begin_example
       ;; set *before* loading mu4e; and restart emacs if you want to change it
       ;; users of use-packag~ should can use the :init section for this.
