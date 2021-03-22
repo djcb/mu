@@ -93,7 +93,7 @@
     (setq mu4e~gnus-article-mime-handles nil)))
 
 (defun mu4e~view-gnus-display-mime (msg)
-  "Same as `gnus-display-mime' but add a mu4e headers to MSG."
+  "Same as `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
     (gnus-display-mime ihandles)
     (unless ihandles
@@ -196,105 +196,106 @@ some Gnus-functionality that does not work in mu4e."
     ;; but that's not very useful in this case
     (define-key map "z" 'ignore)
 
-    (define-key map "s" 'mu4e-headers-search)
-    (define-key map "S" 'mu4e-view-search-edit)
-    (define-key map "/" 'mu4e-view-search-narrow)
+    (define-key map "s" #'mu4e-headers-search)
+    (define-key map "S" #'mu4e-view-search-edit)
+    (define-key map "/" #'mu4e-view-search-narrow)
 
-    (define-key map (kbd "<M-left>")  'mu4e-headers-query-prev)
-    (define-key map (kbd "<M-right>") 'mu4e-headers-query-next)
+    (define-key map (kbd "<M-left>")  #'mu4e-headers-query-prev)
+    (define-key map (kbd "<M-right>") #'mu4e-headers-query-next)
 
-    (define-key map "b" 'mu4e-headers-search-bookmark)
-    (define-key map "B" 'mu4e-headers-search-bookmark-edit)
+    (define-key map "b" #'mu4e-headers-search-bookmark)
+    (define-key map "B" #'mu4e-headers-search-bookmark-edit)
 
-    (define-key map "%" 'mu4e-view-mark-pattern)
-    (define-key map "t" 'mu4e-view-mark-subthread)
-    (define-key map "T" 'mu4e-view-mark-thread)
+    (define-key map "%" #'mu4e-view-mark-pattern)
+    (define-key map "t" #'mu4e-view-mark-subthread)
+    (define-key map "T" #'mu4e-view-mark-thread)
     (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
-    (define-key map "g" 'mu4e-view-go-to-url)
-    (define-key map "k" 'mu4e-view-save-url)
-    (define-key map "f" 'mu4e-view-fetch-url)
+    (define-key map "g" #'mu4e-view-go-to-url)
+    (define-key map "k" #'mu4e-view-save-url)
+    (define-key map "f" #'mu4e-view-fetch-url)
 
-    (define-key map "F" 'mu4e-compose-forward)
-    (define-key map "R" 'mu4e-compose-reply)
-    (define-key map "C" 'mu4e-compose-new)
-    (define-key map "E" 'mu4e-compose-edit)
+    (define-key map "F" #'mu4e-compose-forward)
+    (define-key map "R" #'mu4e-compose-reply)
+    (define-key map "C" #'mu4e-compose-new)
+    (define-key map "E" #'mu4e-compose-edit)
 
-    (define-key map "." 'mu4e-view-raw-message)
-    (define-key map "|" 'mu4e-view-pipe)
-    (define-key map "a" 'mu4e-view-action)
-    (define-key map "A" 'mu4e-view-mime-part-action)
-    (define-key map "e" 'mu4e-view-save-attachments)
+    (define-key map "." #'mu4e-view-raw-message)
+    (define-key map "|" #'mu4e-view-pipe)
+    (define-key map "a" #'mu4e-view-action)
+    (define-key map "A" #'mu4e-view-mime-part-action)
+    (define-key map "e" #'mu4e-view-save-attachments)
 
-    (define-key map ";" 'mu4e-context-switch)
+    (define-key map ";" #'mu4e-context-switch)
 
           ;; toggle header settings
-    (define-key map "O" 'mu4e-headers-change-sorting)
-    (define-key map "P" 'mu4e-headers-toggle-threading)
-    (define-key map "Q" 'mu4e-headers-toggle-full-search)
-    (define-key map "W" 'mu4e-headers-toggle-include-related)
+    (define-key map "O" #'mu4e-headers-change-sorting)
+    (define-key map "P" #'mu4e-headers-toggle-threading)
+    (define-key map "Q" #'mu4e-headers-toggle-full-search)
+    (define-key map "W" #'mu4e-headers-toggle-include-related)
 
     ;; change the number of headers
-    (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
-    (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
-    (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
-    (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
+    (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
+    (define-key map (kbd "C--") #'mu4e-headers-split-view-shrink)
+    (define-key map (kbd "<C-kp-add>") #'mu4e-headers-split-view-grow)
+    (define-key map (kbd "<C-kp-subtract>") #'mu4e-headers-split-view-shrink)
 
     ;; intra-message navigation
-    (define-key map (kbd "SPC") 'mu4e-view-scroll-up-or-next)
+    (define-key map (kbd "SPC") #'mu4e-view-scroll-up-or-next)
     (define-key map (kbd "<home>") 'beginning-of-buffer)
     (define-key map (kbd "<end>") 'end-of-buffer)
-    (define-key map (kbd "RET")  'mu4e-scroll-up)
-    (define-key map (kbd "<backspace>") 'mu4e-scroll-down)
+    (define-key map (kbd "RET")  #'mu4e-scroll-up)
+    (define-key map (kbd "<backspace>") #'mu4e-scroll-down)
 
     ;; navigation between messages
-    (define-key map "p" 'mu4e-view-headers-prev)
-    (define-key map "n" 'mu4e-view-headers-next)
+    (define-key map "p" #'mu4e-view-headers-prev)
+    (define-key map "n" #'mu4e-view-headers-next)
     ;; the same
-    (define-key map (kbd "<M-down>") 'mu4e-view-headers-next)
-    (define-key map (kbd "<M-up>") 'mu4e-view-headers-prev)
+    (define-key map (kbd "<M-down>") #'mu4e-view-headers-next)
+    (define-key map (kbd "<M-up>") #'mu4e-view-headers-prev)
 
-    (define-key map (kbd "[") 'mu4e-view-headers-prev-unread)
-    (define-key map (kbd "]") 'mu4e-view-headers-next-unread)
+    (define-key map (kbd "[") #'mu4e-view-headers-prev-unread)
+    (define-key map (kbd "]") #'mu4e-view-headers-next-unread)
 
-    ;; switching to view mode (if it's visible)
-    (define-key map "y" 'mu4e-select-other-view)
-
+    ;; switching from view <-> headers (when visible)
+    (define-key map "y" #'mu4e-select-other-view)
 
     ;; marking/unmarking
-    (define-key map "d" 'mu4e-view-mark-for-trash)
-    (define-key map (kbd "<delete>") 'mu4e-view-mark-for-delete)
-    (define-key map (kbd "<deletechar>") 'mu4e-view-mark-for-delete)
-    (define-key map (kbd "D") 'mu4e-view-mark-for-delete)
-    (define-key map (kbd "m") 'mu4e-view-mark-for-move)
-    (define-key map (kbd "r") 'mu4e-view-mark-for-refile)
+    (define-key map "d" #'mu4e-view-mark-for-trash)
+    (define-key map (kbd "<delete>") #'mu4e-view-mark-for-delete)
+    (define-key map (kbd "<deletechar>") #'mu4e-view-mark-for-delete)
+    (define-key map (kbd "D") #'mu4e-view-mark-for-delete)
+    (define-key map (kbd "m") #'mu4e-view-mark-for-move)
+    (define-key map (kbd "r") #'mu4e-view-mark-for-refile)
 
-    (define-key map (kbd "?") 'mu4e-view-mark-for-unread)
-    (define-key map (kbd "!") 'mu4e-view-mark-for-read)
+    (define-key map (kbd "?") #'mu4e-view-mark-for-unread)
+    (define-key map (kbd "!") #'mu4e-view-mark-for-read)
 
-    (define-key map (kbd "+") 'mu4e-view-mark-for-flag)
-    (define-key map (kbd "-") 'mu4e-view-mark-for-unflag)
-    (define-key map (kbd "=") 'mu4e-view-mark-for-untrash)
-    (define-key map (kbd "&") 'mu4e-view-mark-custom)
+    (define-key map (kbd "+") #'mu4e-view-mark-for-flag)
+    (define-key map (kbd "-") #'mu4e-view-mark-for-unflag)
+    (define-key map (kbd "=") #'mu4e-view-mark-for-untrash)
+    (define-key map (kbd "&") #'mu4e-view-mark-custom)
 
-    (define-key map (kbd "*")             'mu4e-view-mark-for-something)
-    (define-key map (kbd "<kp-multiply>") 'mu4e-view-mark-for-something)
-    (define-key map (kbd "<insert>")     'mu4e-view-mark-for-something)
-    (define-key map (kbd "<insertchar>") 'mu4e-view-mark-for-something)
+    (define-key map (kbd "*")             #'mu4e-view-mark-for-something)
+    (define-key map (kbd "<kp-multiply>") #'mu4e-view-mark-for-something)
+    (define-key map (kbd "<insert>")     #'mu4e-view-mark-for-something)
+    (define-key map (kbd "<insertchar>") #'mu4e-view-mark-for-something)
 
-    (define-key map (kbd "#") 'mu4e-mark-resolve-deferred-marks)
+    (define-key map (kbd "#") #'mu4e-mark-resolve-deferred-marks)
 
     ;; misc
+    (define-key map "M" #'mu4e-view-massage)
+
     (define-key map "w" 'visual-line-mode)
     (define-key map (kbd "M-q") 'article-fill-long-lines)
 
     ;; next 3 only warn user when attempt in the message view
-    (define-key map "u" 'mu4e-view-unmark)
-    (define-key map "U" 'mu4e-view-unmark-all)
-    (define-key map "x" 'mu4e-view-marked-execute)
+    (define-key map "u" #'mu4e-view-unmark)
+    (define-key map "U" #'mu4e-view-unmark-all)
+    (define-key map "x" #'mu4e-view-marked-execute)
 
-    (define-key map "$" 'mu4e-show-log)
-    (define-key map "H" 'mu4e-display-manual)
+    (define-key map "$" #'mu4e-show-log)
+    (define-key map "H" #'mu4e-display-manual)
 
     ;; menu
     ;;(define-key map [menu-bar] (make-sparse-keymap))
