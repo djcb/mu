@@ -1265,7 +1265,7 @@ S-SPC        scroll up
 searching
 ---------
 s            search
-e            edit last query
+S            edit last query
 /            narrow the search
 b            search bookmark
 B            edit bookmark before search
@@ -1274,8 +1274,8 @@ j            jump to maildir
 M-left       previous query
 M-right      next query
 
-marking
--------
+marking messages
+----------------
 d            mark for moving to the trash folder
 =            mark for removing trash flag ('untrash')
 DEL,D        mark for complete deletion
@@ -1312,14 +1312,11 @@ C-u k saves multiple URLs
 e            extract (save) one or more attachments (asks for numbers)
 (or: <mouse-2> or S-RET with point on attachment)
 a            execute some custom action on the message
+A            execute some custom action on the message's MIME-parts
 
 misc
 ----
 ;            switch context
-c            copy address at point (with C-u copy long version)
-
-h            toggle between html/text (if available)
-
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
@@ -1332,9 +1329,9 @@ For the marking commands, please refer to @ref{Marking messages}.
 @node MSGV Custom headers
 @section Custom headers
 
-Sometimes the normal headers that @t{mu4e} offers (Date, From, To,
-Subject etc.) may not be enough. For these cases, @t{mu4e} offers
-@emph{custom headers} in both the headers-view and the message-view.
+Sometimes the normal headers (Date, From, To, Subject etc.) may not be
+enough. For these cases, @t{mu4e} offers @emph{custom headers} in both
+the headers-view and the message-view.
 
 See @ref{HV Custom headers} for an example of this; the difference for
 the message-view is that you should add your custom header to
@@ -1352,11 +1349,17 @@ attachments. For a general discussion on how to define your own, see
 on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @t{mu4e} defines a number of example actions.
 
+@subsection MIME-part actions
+MIME-part actions allow you to act upon MIME-parts in a message - such
+as attachments.  For now, these actions are defined and documented in
+@code{mu4e-view-mime-part-actions}.
 
 @node Old message view
 @chapter The old message view
 
-Since version 1.6 @t{mu4e} defaults to the new, Gnus-based, message view.
+Since version 1.6 @t{mu4e} defaults to the new, Gnus-based, message
+view, as described in @xref{Message view}, and we recommend it for all
+users.
 
 However, the older view is still available, and this chapter is about
 that one. While we recommend using the default one, you can still use
@@ -1803,15 +1806,10 @@ attachments. For a general discussion on how to define your own, see
 on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @t{mu4e} defines a number of example actions.
 
-
 @subsection MIME-part actions
-
-Note -- these actions are only available for the new, gnus-based
-message view; see @xref{Message view}.
-
 MIME-part actions allow you to act upon MIME-parts in a message - such
 as attachments.  For now, these actions are defined and documented in
-@code{mu4e-view-mime-part-actions}.
+@code{mu4e-view-attachment-actions}.
 
 @subsection Attachment actions
 
