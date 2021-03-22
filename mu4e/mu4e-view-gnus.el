@@ -405,8 +405,21 @@ Gnus' article-mode."
       (gnus-article-prepare-display)
       (buffer-string))))
 
+;;; Massaging the message view
 
+(defcustom mu4e-view-massage-options
+  '( ("ctoggle citations" . gnus-article-hide-citation)
+     ("htoggle headers"   . gnus-article-hide-headers)
+     ("ytoggle crypto"    . gnus-article-hide-pem))
+"Various options for 'massaging' the message view. See `(gnus)
+Article Treatment' for more options."
+  :group 'mu4e-view
+  :type '(alist :key-type string :value-type function))
 
+(defun mu4e-view-massage()
+  "Massage current message view as per `mu4e-view-massage-options'."
+  (interactive)
+  (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 ;;; MIME-parts
 
