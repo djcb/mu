@@ -1474,7 +1474,6 @@ descendants."
      (lambda (cur-msg)
        (let ((cur-thread-id   (mu4e~headers-get-thread-info cur-msg 'thread-id))
              (cur-thread-path (mu4e~headers-get-thread-info cur-msg 'path)))
-         (message "### %S %S %S" path match-path cur-thread-path)
          (if subthread
              ;; subthread matching; mymsg's thread path should have path as its
              ;; prefix
