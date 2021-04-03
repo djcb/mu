@@ -1188,7 +1188,7 @@ headers-view to the message-view and vice-versa with
 @chapter The message view
 
 This chapter discusses the new (since version 1.6) Gnus-based message
-view. However, the old one is stil available -- see @ref{Old message
+view. However, the old one is still available -- see @ref{Old message
 view}.
 
 After selecting a message in the @ref{Headers view}, it appears in a
