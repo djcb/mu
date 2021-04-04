@@ -676,7 +676,8 @@ See `mu4e-compose-crypto-policy' for more details."
           (sign (mml-secure-message-sign))
           (encrypt (mml-secure-message-encrypt)))))
 
-(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
+(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes
+                                             switch-function)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -710,7 +711,7 @@ tempfile)."
   ;; this opens (or re-opens) a messages with all the basic headers set.
   (let ((winconf (current-window-configuration)))
     (condition-case nil
-        (mu4e-draft-open compose-type original-msg)
+        (mu4e-draft-open compose-type original-msg switch-function)
       (quit (set-window-configuration winconf)
             (mu4e-message "Operation aborted")
             (cl-return-from mu4e~compose-handler))))
@@ -971,7 +972,7 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers _continue
-                                    _switch-function yank-action _send-actions _return-action)
+                                    switch-function yank-action _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 Start composing a mail message to send.
@@ -1009,7 +1010,7 @@ buffer buried."
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in this case, but
   ;; let's prepare for the re-edit case as well
-  (mu4e~compose-handler 'new)
+  (mu4e~compose-handler 'new nil nil switch-function)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
