@@ -37,6 +37,31 @@
 (defvar helm-comp-read-use-marked)
 (defvar mu4e~view-rendering nil)
 
+(defcustom mu4e-view-blocked-images "."
+  "Regexp matching image URLs to be blocked, or nil meaning not
+to block.  Beware that loading external images may lower your privacy.
+
+This can also be a function that takes a message as argument and
+returns a regexp.  For example, if you want to see the all images
+in Github notifications (which contain no code to personally
+identify you, Github will only be able to tell someone from your
+IP has accessed the image), you can set this variable to the
+following function:
+
+(defun my/mu4e-view-blocked-images (msg)
+  (if (mu4e-message-contact-field-matches
+         msg :from \"notifications@github.com\")
+      nil \".\"))
+
+Note that cid images that are embedded in a message won’t be blocked."
+  :group 'mu4e-view
+  :type '(choice (const :tag "Allow all" nil)
+                 (regexp :tag "Regular expression")
+                 (function :tag "Use a function")))
+
+(defvar mu4e-view-inhibit-images gnus-inhibit-images
+  "Non-nil means inhibit displaying of images inline in the article body.")
+
 ;;; Main
 
 ;; remember the mime-handles, so we can clean them up when
@@ -72,7 +97,8 @@
       (run-hooks 'gnus-article-decode-hook))
     (let ((mu4e~view-rendering t) ; customize gnus in mu4e
           (max-specpdl-size mu4e-view-max-specpdl-size)
-          (gnus-blocked-images ".") ;; don't load external images.
+          (gnus-blocked-images (mu4e-view-blocked-images-fn msg))
+          (gnus-inhibit-images mu4e-view-inhibit-images)
           ;; Possibly add headers (before "Attachments")
           (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
           (gnus-icalendar-additional-identities
@@ -85,6 +111,11 @@
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
+
+(defun mu4e-view-blocked-images-fn (msg)
+  (if (functionp mu4e-view-blocked-images)
+      (funcall mu4e-view-blocked-images msg)
+    mu4e-view-blocked-images))
 
 (defun mu4e~view-kill-buffer-hook-fn ()
   ;; cleanup the mm-* buffers that the view spawns
