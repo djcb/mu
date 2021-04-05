@@ -690,10 +690,15 @@ Optionally (when forwarding, replying) ORIGINAL-MSG is the original
 message we will forward / reply to.
 
 Optionally (when inline forwarding) INCLUDES contains a list of
-   (:file-name <filename> :mime-type <mime-type> :disposition <disposition>)
+   (:file-name <filename> :mime-type <mime-type>
+    :description <description> :disposition <disposition>)
+or
+   (:buffer-name <filename> :mime-type <mime-type>
+    :description <description> :disposition <disposition>)
 for the attachments to include; file-name refers to
 a file which our backend has conveniently saved for us (as a
-tempfile)."
+tempfile).  The properties :mime-type, :description and :disposition
+are optional."
 
   ;; Run the hooks defined for `mu4e-compose-pre-hook'. If compose-type is
   ;; `reply', `forward' or `edit', `mu4e-compose-parent-message' points to the
@@ -743,8 +748,14 @@ tempfile)."
     (if (and (eq compose-type 'forward) mu4e-compose-forward-as-attachment)
         (mu4e-compose-attach-message original-msg)
       (dolist (att includes)
-        (mml-attach-file
-         (plist-get att :file-name) (plist-get att :mime-type)))))
+        (let ((file-name (plist-get att :file-name))
+              (mime (plist-get att :mime-type))
+              (description (plist-get att :description))
+              (disposition (plist-get att :disposition)))
+          (if file-name
+              (mml-attach-file file-name mime description disposition)
+            (mml-attach-buffer (plist-get att :buffer-name)
+                               mime description disposition))))))
 
   (mu4e~compose-set-friendly-buffer-name compose-type)
 
