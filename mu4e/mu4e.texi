@@ -1199,6 +1199,7 @@ from @t{gnus-article-mode}.
 @menu
 * Overview: MSGV Overview. What is the Message View
 * Keybindings: MSGV Keybindings. Do things with your keyboard
+* Viewing images: MSGV Images. Images display inside Emacs
 * Custom headers: MSGV Custom headers. Your own headers
 * Actions: MSGV Actions. Defining and using actions.
 @end menu
@@ -1325,6 +1326,27 @@ q            leave the message view
 @end verbatim
 
 For the marking commands, please refer to @ref{Marking messages}.
+
+@node MSGV Images
+@section Viewing images
+
+When you run Emacs in GUI-mode, images attached to the HTML message will
+be shown inline in the message view buffer.  To disable this, set
+@code{mu4e-view-inhibit-images} to @t{t}.  By default, external images
+in HTML are not retrieved because they may be used to track whether
+you've read the message or not and so lower your privacy.  You can
+specify what URLs to block by setting @code{mu4e-view-blocked-images} to
+a regex or to a function that will receive the message as an argument.
+For example, to enable images in Github notifications, do the following:
+
+@lisp
+(defun my/mu4e-view-blocked-images (msg)
+  (if (mu4e-message-contact-field-matches
+         msg :from "notifications@@github.com")
+      nil "."))
+
+(setq mu4e-view-blocked-images #'my/mu4e-view-blocked-images)
+@end lisp
 
 @node MSGV Custom headers
 @section Custom headers
