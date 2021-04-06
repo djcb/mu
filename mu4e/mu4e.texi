@@ -273,7 +273,7 @@ apply to you, you can follow either @ref{Building from a release tarball} or
 @subsection Dependencies for Debian/Ubuntu
 
 @example
-$ sudo apt-get install libgmime-3.0-dev libxapian-dev
+$ sudo apt-get install libgmime-3.0-dev libxapian-dev texinfo
 
 # get emacs 25 or higher if you don't have it yet
 $ sudo apt-get install emacs
