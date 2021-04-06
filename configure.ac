@@ -79,9 +79,13 @@ AS_IF([test "x$use_asan" = "xyes"],[
 # check for makeinfo
 AC_CHECK_PROG(have_makeinfo,makeinfo,yes,no)
 AM_CONDITIONAL(HAVE_MAKEINFO,test "x$have_makeinfo" = "xyes")
+AM_COND_IF(HAVE_MAKEINFO,[],[
+  # seems build *insists* on trying to makeinfo, erroring out
+  # if it does not exist. Let's work around that.
+  AC_SUBST(MAKEINFO,[true])
+])
 
 # we need emacs for byte-compiling mu4e
-
 build_mu4e=no
 AC_ARG_ENABLE([mu4e],
    AS_HELP_STRING([--disable-mu4e],[Disable building mu4e]))
