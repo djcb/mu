@@ -35,7 +35,7 @@
 
 (defvar gnus-icalendar-additional-identities)
 (defvar helm-comp-read-use-marked)
-(defvar mu4e~view-rendering nil)
+(defvar-local mu4e~view-rendering nil)
 
 (defcustom mu4e-view-blocked-images "."
   "Regexp matching image URLs to be blocked, or nil meaning not
@@ -105,6 +105,7 @@ Note that cid images that are embedded in a message won’t be blocked."
            (mu4e-personal-addresses 'no-regexp)))
       (mu4e-view-mode)
       (gnus-article-prepare-display))
+    (setq mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
     (mu4e~view-activate-urls)
     ;; `mu4e-view-mode' derives from `gnus-article-mode'.
