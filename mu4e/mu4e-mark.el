@@ -389,7 +389,7 @@ flow. Therefore, we hide the message, which in practice seems to
 work well.
 
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
-  (interactive)
+  (interactive "p")
   (mu4e~mark-in-context
    (let* ((marknum (hash-table-count mu4e~mark-map))
           (prompt (format "Are you sure you want to execute %d mark%s?"
