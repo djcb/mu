@@ -377,7 +377,7 @@ user which one)."
         (mu4e-error "Target dir %s does not exist " fulltarget)
       target)))
 
-(defun mu4e-mark-execute-all (&optional no-confirmation)
+(defun mu4e-mark-execute-all (no-confirmation)
   "Execute the actions for all marked messages in this buffer.
 After the actions have been executed successfully, the affected
 messages are *hidden* from the current header list. Since the
@@ -389,7 +389,7 @@ flow. Therefore, we hide the message, which in practice seems to
 work well.
 
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
-  (interactive "p")
+  (interactive "P")
   (mu4e~mark-in-context
    (let* ((marknum (hash-table-count mu4e~mark-map))
           (prompt (format "Are you sure you want to execute %d mark%s?"
