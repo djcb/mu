@@ -75,26 +75,17 @@ Note that cid images that are embedded in a message won’t be blocked."
         (inhibit-read-only t)
         (mm-decrypt-option 'known)
         (gnus-article-emulate-mime t)
-        (gnus-buttonized-mime-types (append (list "multipart/signed"
-                                                  "multipart/encrypted")
-                                            gnus-buttonized-mime-types)))
+        (gnus-buttonized-mime-types
+         (append (list "multipart/signed"
+                       "multipart/encrypted") gnus-buttonized-mime-types)))
     (setq mu4e~view-buffer-name gnus-article-buffer)
     (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
     (buffer-disable-undo)
-    (insert-file-contents-literally path nil nil nil t)
-    (mm-enable-multibyte)
     (setq
      gnus-summary-buffer (get-buffer-create " *appease-gnus*")
      gnus-original-article-buffer (current-buffer)
      mu4e~view-message msg)
-    (let* ((ct (mail-fetch-field "Content-Type"))
-           (ct (and ct (mail-header-parse-content-type ct)))
-           (charset (mail-content-type-get ct 'charset))
-           (charset (and charset (intern charset)))
-           (gnus-newsgroup-charset
-            (if (and charset (coding-system-p charset)) charset
-              (detect-coding-region (point-min) (point-max) t))))
-      (run-hooks 'gnus-article-decode-hook))
+    (mu4e~view-path path)
     (let ((mu4e~view-rendering t) ; customize gnus in mu4e
           (max-specpdl-size mu4e-view-max-specpdl-size)
           (gnus-blocked-images (mu4e-view-blocked-images-fn msg))
@@ -108,10 +99,32 @@ Note that cid images that are embedded in a message won’t be blocked."
     (setq mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
     (mu4e~view-activate-urls)
-    ;; `mu4e-view-mode' derives from `gnus-article-mode'.
-    (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
+
+
+(defun mu4e-view-message-text (msg)
+  "Return the MSG as a string, for replying/forwarding etc.."
+  (with-temp-buffer
+    (mu4e~view-path (mu4e-message-field msg :path))
+    (buffer-string)))
+
+(defun mu4e~view-path (path)
+  "View the message at PATH."
+  (insert-file-contents-literally path nil nil nil t)
+  (mm-enable-multibyte)
+  (let* ((ct (mail-fetch-field "Content-Type"))
+         (ct (and ct (mail-header-parse-content-type ct)))
+         (charset (mail-content-type-get ct 'charset))
+         (charset (and charset (intern charset)))
+         (gnus-newsgroup-charset
+          (if (and charset (coding-system-p charset)) charset
+            (detect-coding-region (point-min) (point-max) t))))
+        (run-hooks 'gnus-article-decode-hook)
+        (mu4e-view-mode)
+        (gnus-article-prepare-display)))
+
+
 
 (defun mu4e-view-blocked-images-fn (msg)
   (if (functionp mu4e-view-blocked-images)
@@ -416,26 +429,6 @@ Gnus' article-mode."
   (advice-add 'gnus-button-reply :around #'mu4e~view-button-reply)
   (advice-add 'gnus-msg-mail :around #'mu4e~view-msg-mail)
   (mu4e~view-mode-body))
-
-(defun mu4e-view-message-text (msg)
-  "Return the message as a string, for replying/forwarding etc.."
-  (with-temp-buffer
-    (let ((path (mu4e-message-field msg :path))
-          (inhibit-read-only t)
-          (gnus-article-emulate-mime t))
-      (buffer-disable-undo)
-      (insert-file-contents-literally path nil nil nil t)
-      (mm-enable-multibyte)
-      (let* ((ct (mail-fetch-field "Content-Type"))
-             (ct (and ct (mail-header-parse-content-type ct)))
-             (charset (mail-content-type-get ct 'charset))
-             (charset (and charset (intern charset)))
-             (gnus-newsgroup-charset
-              (if (and charset (coding-system-p charset)) charset
-                (detect-coding-region (point-min) (point-max) t))))
-        (run-hooks 'gnus-article-decode-hook))
-      (gnus-article-prepare-display)
-      (buffer-string))))
 
 ;;; Massaging the message view
 
