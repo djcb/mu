@@ -490,10 +490,10 @@ containing commas."
          (handles '())
          (files '())
          (helm-comp-read-use-marked t)
-         (compfn (if (or (and (boundp 'helm-mode) helm-mode) (and (boundp 'ivy-mode) ivy-mode))
+         (compfn (if (or (and (boundp 'helm-mode) helm-mode))
                      #'completing-read
                    ;; Fallback to `completing-read-multiple' with poor
-                   ;; completion systems.
+                   ;; completion
                    #'completing-read-multiple))
         dir)
     (dolist (part parts)
