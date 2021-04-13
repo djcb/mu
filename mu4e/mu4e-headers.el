@@ -840,7 +840,7 @@ after the end of the search results."
                 (mu4e-headers-goto-message-id mu4e~headers-msgid-target)
               (let* ((pos (mu4e-headers-goto-message-id mu4e~headers-msgid-target)))
                 (when pos
-                  (set-window-point (get-buffer-window) pos)))))
+                  (set-window-point (get-buffer-window nil t) pos)))))
           (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
             ;; view the message at point when there is one.
             (mu4e-headers-view-message))
