@@ -82,7 +82,7 @@ can customize @t{mu4e} for your special needs.
 
 At the end of the manual, there are some example configurations, to get
 you up to speed quickly: @ref{Example configs}. There's also a
-section with answers to frequenly asked questions, @ref{FAQ}.
+section with answers to frequently asked questions, @ref{FAQ}.
 
 @menu
 * Introduction:: Where to begin
@@ -152,7 +152,7 @@ file-manager for emacs.
 @t{mu4e} keeps all the `state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP}, backup with
 @t{rsync} and so on. The Xapian-database that @t{mu} maintains is
-mererly a @emph{cache}; if you delete it, you won't lose any
+merely a @emph{cache}; if you delete it, you won't lose any
 information.
 
 @node What mu4e does not do
@@ -3229,7 +3229,7 @@ browser, or listening to a message's body-text using text-to-speech.
 @node Extending mu4e
 @chapter Extending mu4e
 
-@t{mu4e} is designed to be easily extendible --- that is, write your own
+@t{mu4e} is designed to be easily extensible --- that is, write your own
 emacs-lisp to make @t{mu4e} behave exactly as you want. Here, we provide some
 guidelines for doing so.
 
@@ -3786,26 +3786,8 @@ It is possible to attach files to @t{mu4e} messages using @t{dired}
 (@inforef{Dired,,emacs}), using the following steps (based on a post on the
 @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
 
-To prepare for this, you need a special version of the
-@code{gnus-dired-mail-buffers} function so it understands @t{mu4e} buffers as
-well; so put in your configuration:
 
 @lisp
-(require 'gnus-dired)
-;; make the `gnus-dired-mail-buffers' function also work on
-;; message-mode derived modes, such as mu4e-compose-mode
-(defun gnus-dired-mail-buffers ()
-  "Return a list of active message buffers."
-  (let (buffers)
-    (save-current-buffer
-      (dolist (buffer (buffer-list t))
-        (set-buffer buffer)
-        (when (and (derived-mode-p 'message-mode)
-                (null message-sent-message-via))
-          (push (buffer-name buffer) buffers))))
-    (nreverse buffers)))
-
-(setq gnus-dired-mail-mode 'mu4e-user-agent)
 (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 @end lisp
 
@@ -4430,7 +4412,7 @@ configuration:
   '("ViewInBrowser" . mu4e-action-view-in-browser) t)
 @end lisp
 Now, when viewing such a difficult message, type @kbd{aV}, and the message
-opens inside a webbrowser. You can influence the browser with
+opens inside a web browser. You can influence the browser with
 @code{browse-url-generic-program}; and see @ref{Privacy aspects}.
 @subsection How can I read encrypted messages that I sent?
 Since you do not own the recipient's key you typically cannot read
@@ -4574,7 +4556,7 @@ have it, your mails mostly look quite bad especially on mobile
 devices) and here's the RFC with all the details:
 @url{https://www.ietf.org/rfc/rfc2646.txt}.
 
-Since version 0.9.17, @t{mu4e} sensd emails with @t{format=flowed} by
+Since version 0.9.17, @t{mu4e} sends emails with @t{format=flowed} by
 setting
 @lisp
 (setq mu4e-compose-format-flowed t)
@@ -4674,10 +4656,9 @@ as replacements are too high.
 To fix this, you can use something like the following workaround (in
 your @t{.emacs}-file):
 @lisp
-(if (equal window-system 'x)
-    (progn
+(when (equal window-system 'x)
       (set-fontset-font "fontset-default" 'unicode "Dejavu Sans Mono")
-      (set-face-font 'default "Inconsolata-10")))
+      (set-face-font 'default "Inconsolata-10"))
 @end lisp
 
 Other fonts with good support for Unicode are @t{unifont} and
