@@ -104,7 +104,7 @@ std::string format (const char *frm, ...) __attribute__((format(printf, 1, 2)));
  *
  * @return a formatted string
  */
-std::string format (const char *frm, va_list args) __attribute__((format(printf, 1, 0)));
+std::string vformat (const char *frm, va_list args) __attribute__((format(printf, 1, 0)));
 
 
 /**

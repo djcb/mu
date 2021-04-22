@@ -32,7 +32,7 @@ parsing_error(size_t pos, const char* frm, ...)
 {
         va_list args;
         va_start(args, frm);
-        auto msg = format(frm, args);
+        auto msg = vformat(frm, args);
         va_end(args);
 
         if (pos == 0)

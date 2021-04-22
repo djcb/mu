@@ -67,7 +67,7 @@ struct Error final: public std::exception {
         Error(Code codearg, const char *frm, ...): code_{codearg} {
                 va_list args;
                 va_start(args, frm);
-                what_ = format(frm, args);
+                what_ = vformat(frm, args);
                 va_end(args);
         }
 
@@ -89,7 +89,7 @@ struct Error final: public std::exception {
 
                 va_list args;
                 va_start(args, frm);
-                what_ = format(frm, args);
+                what_ = vformat(frm, args);
                 va_end(args);
 
                 if (err && *err)

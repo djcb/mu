@@ -204,14 +204,14 @@ Mu::quote (const std::string& str)
          va_list args;
 
          va_start (args, frm);
-         auto str = format(frm, args);
+         auto str = vformat(frm, args);
          va_end (args);
 
          return str;
  }
 
 std::string
-Mu::format (const char *frm, va_list args)
+Mu::vformat (const char *frm, va_list args)
 {
         char *s{};
         const auto res = g_vasprintf (&s, frm, args);
