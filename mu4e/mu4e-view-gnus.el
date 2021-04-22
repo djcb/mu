@@ -490,7 +490,7 @@ containing commas."
          (handles '())
          (files '())
          (helm-comp-read-use-marked t)
-         (compfn (if (or (and (boundp 'helm-mode) helm-mode))
+         (compfn (if (and (boundp 'helm-mode) helm-mode)
                      #'completing-read
                    ;; Fallback to `completing-read-multiple' with poor
                    ;; completion
