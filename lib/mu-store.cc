@@ -481,7 +481,7 @@ Store::set_dirstamp (const std::string& path, time_t tstamp)
         LOCKED;
 
         std::array<char, 2*sizeof(tstamp)+1> data{};
-        const std::size_t len = g_snprintf (data.data(), data.size(), "%zx", tstamp);
+        const std::size_t len = g_snprintf (data.data(), data.size(), "%zx", (size_t)tstamp);
 
         priv_->writable_db().set_metadata(path, std::string{data.data(), len});
         priv_->dirty();
