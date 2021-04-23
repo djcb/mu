@@ -71,10 +71,8 @@
       (let ((inhibit-read-only t))
         (mu4e-speedbar-buttons)))))
 
-;; Make sure our special speedbar major mode is loaded
-(if (featurep 'speedbar)
-    (mu4e-speedbar-install-variables)
-  (add-hook 'speedbar-load-hook 'mu4e-speedbar-install-variables))
+(with-eval-after-load 'speedbar
+  (mu4e-speedbar-install-variables))
 
 (defun mu4e~speedbar-render-maildir-list ()
   "Insert the list of maildirs in the speedbar."
