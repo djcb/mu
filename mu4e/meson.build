@@ -65,6 +65,7 @@ foreach src : mu4e_srcs
 			  '--no-init-file',
 			  '--batch',
 			  '--eval', target_func,
+			  '--directory', meson.current_build_dir(),
 			  '--directory', meson.current_source_dir(),
 			  '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
