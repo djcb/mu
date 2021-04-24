@@ -91,6 +91,28 @@ etc."
     (mu4e~view-render-buffer msg)
     (buffer-string)))
 
+(defun mu4e-action-view-in-browser (msg)
+  "Show current message MSG in browser, if it contains an html body."
+;;  (with-temp-buffer
+  (with-temp-buffer
+    (insert-file-contents-literally
+     (mu4e-message-field msg :path) nil nil nil t)
+    (let ((header (mapconcat 'identity
+            (seq-filter (lambda(hdr) hdr)
+                        (seq-map (lambda(field)
+                                   (when-let ((val (message-fetch-field field)))
+                                     (format "%s: %s" (capitalize field) val)))
+                                 '("from" "to" "cc" "date" "subject"))) "\n"))
+          (parts (mm-dissect-buffer t t)))
+      ;; If singlepart, enforce a list.
+      (when (and (bufferp (car parts))
+                 (stringp (car (mm-handle-type parts))))
+        (setq parts (list parts)))
+      ;; Process the list
+      (unless (gnus-article-browse-html-parts parts header)
+        (mu4e-warn "Mail doesn't contain a \"text/html\" part!"))
+      (mm-destroy-parts parts))))
+
 
 (defun mu4e~view-render-buffer(msg)
   "Render current buffer with MSG using Gnus' article mode in
