@@ -71,47 +71,64 @@ Note that cid images that are embedded in a message won’t be blocked."
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode."
-  (let ((path (mu4e-message-field msg :path))
-        (inhibit-read-only t)
-        (mm-decrypt-option 'known)
-        (gnus-article-emulate-mime t)
-        (gnus-buttonized-mime-types (append (list "multipart/signed"
-                                                  "multipart/encrypted")
-                                            gnus-buttonized-mime-types)))
-    (setq mu4e~view-buffer-name gnus-article-buffer)
-    (switch-to-buffer (get-buffer-create mu4e~view-buffer-name))
-    (buffer-disable-undo)
-    (insert-file-contents-literally path nil nil nil t)
+  (with-current-buffer (get-buffer-create gnus-article-buffer)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert-file-contents-literally
+       (mu4e-message-field msg :path) nil nil nil t)
+      (mu4e~view-render-buffer msg)))
+  (setq mu4e~view-message msg)
+  (switch-to-buffer gnus-article-buffer))
+
+(defun mu4e-view-message-text (msg)
+  "Return the pristine message as a string, for replying/forwarding
+etc."
+  ;; we need this for replying/forwarding, since the mu4e-compose
+  ;; wants it that way.
+  (with-temp-buffer
+    (insert-file-contents-literally
+     (mu4e-message-field msg :path) nil nil nil t)
+    (mu4e~view-render-buffer msg)
+    (buffer-string)))
+
+
+(defun mu4e~view-render-buffer(msg)
+  "Render current buffer with MSG using Gnus' article mode in
+buffer BUF."
+  (let* ((inhibit-read-only t)
+         (max-specpdl-size mu4e-view-max-specpdl-size)
+         (mm-decrypt-option 'known)
+         (ct (mail-fetch-field "Content-Type"))
+         (ct (and ct (mail-header-parse-content-type ct)))
+         (charset (mail-content-type-get ct 'charset))
+         (charset (and charset (intern charset)))
+         (mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
+         (gnus-article-emulate-mime t)
+         (gnus-buttonized-mime-types
+            (append (list "multipart/signed" "multipart/encrypted")
+                    gnus-buttonized-mime-types))
+         (gnus-newsgroup-charset
+          (if (and charset (coding-system-p charset)) charset
+            (detect-coding-region (point-min) (point-max) t)))
+         (gnus-blocked-images
+          (or (mu4e-view-blocked-images-fn msg) gnus-blocked-images))
+         (gnus-inhibit-images
+          (or mu4e-view-inhibit-images gnus-inhibit-images))
+         (gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
+         ;; Possibly add headers (before "Attachments")
+         (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
+         (gnus-icalendar-additional-identities
+          (mu4e-personal-addresses 'no-regexp)))
     (mm-enable-multibyte)
-    (setq
-     gnus-summary-buffer (get-buffer-create " *appease-gnus*")
-     gnus-original-article-buffer (current-buffer)
-     mu4e~view-message msg)
-    (let* ((ct (mail-fetch-field "Content-Type"))
-           (ct (and ct (mail-header-parse-content-type ct)))
-           (charset (mail-content-type-get ct 'charset))
-           (charset (and charset (intern charset)))
-           (gnus-newsgroup-charset
-            (if (and charset (coding-system-p charset)) charset
-              (detect-coding-region (point-min) (point-max) t))))
-      (run-hooks 'gnus-article-decode-hook))
-    (let ((mu4e~view-rendering t) ; customize gnus in mu4e
-          (max-specpdl-size mu4e-view-max-specpdl-size)
-          (gnus-blocked-images (mu4e-view-blocked-images-fn msg))
-          (gnus-inhibit-images mu4e-view-inhibit-images)
-          ;; Possibly add headers (before "Attachments")
-          (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
-          (gnus-icalendar-additional-identities
-           (mu4e-personal-addresses 'no-regexp)))
-      (mu4e-view-mode)
-      (gnus-article-prepare-display))
-    (setq mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
+    (mu4e-view-mode)
+    (run-hooks 'gnus-article-decode-hook)
+    (gnus-article-prepare-display)
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
-    (mu4e~view-activate-urls)
-    ;; `mu4e-view-mode' derives from `gnus-article-mode'.
+    ;;(mu4e~view-activate-urls)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
+
 
 (defun mu4e-view-blocked-images-fn (msg)
   (if (functionp mu4e-view-blocked-images)
@@ -416,26 +433,6 @@ Gnus' article-mode."
   (advice-add 'gnus-button-reply :around #'mu4e~view-button-reply)
   (advice-add 'gnus-msg-mail :around #'mu4e~view-msg-mail)
   (mu4e~view-mode-body))
-
-(defun mu4e-view-message-text (msg)
-  "Return the message as a string, for replying/forwarding etc.."
-  (with-temp-buffer
-    (let ((path (mu4e-message-field msg :path))
-          (inhibit-read-only t)
-          (gnus-article-emulate-mime t))
-      (buffer-disable-undo)
-      (insert-file-contents-literally path nil nil nil t)
-      (mm-enable-multibyte)
-      (let* ((ct (mail-fetch-field "Content-Type"))
-             (ct (and ct (mail-header-parse-content-type ct)))
-             (charset (mail-content-type-get ct 'charset))
-             (charset (and charset (intern charset)))
-             (gnus-newsgroup-charset
-              (if (and charset (coding-system-p charset)) charset
-                (detect-coding-region (point-min) (point-max) t))))
-        (run-hooks 'gnus-article-decode-hook))
-      (gnus-article-prepare-display)
-      (buffer-string))))
 
 ;;; Massaging the message view
 
