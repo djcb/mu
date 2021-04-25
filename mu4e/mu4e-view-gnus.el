@@ -78,6 +78,7 @@ etc."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-field msg :path) nil nil nil t)
+    (run-hooks 'gnus-article-decode-hook)
     (let ((header (mapconcat 'identity
             (seq-filter (lambda(hdr) hdr)
                         (seq-map (lambda(field)
