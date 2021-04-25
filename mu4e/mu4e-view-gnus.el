@@ -37,31 +37,10 @@
 (defvar helm-comp-read-use-marked)
 (defvar-local mu4e~view-rendering nil)
 
-(defcustom mu4e-view-blocked-images "."
-  "Regexp matching image URLs to be blocked, or nil meaning not
-to block.  Beware that loading external images may lower your privacy.
-
-This can also be a function that takes a message as argument and
-returns a regexp.  For example, if you want to see the all images
-in Github notifications (which contain no code to personally
-identify you, Github will only be able to tell someone from your
-IP has accessed the image), you can set this variable to the
-following function:
-
-(defun my/mu4e-view-blocked-images (msg)
-  (if (mu4e-message-contact-field-matches
-         msg :from \"notifications@github.com\")
-      nil \".\"))
-
-Note that cid images that are embedded in a message won’t be blocked."
-  :group 'mu4e-view
-  :type '(choice (const :tag "Allow all" nil)
-                 (regexp :tag "Regular expression")
-                 (function :tag "Use a function")))
-
-(defvar mu4e-view-inhibit-images gnus-inhibit-images
-  "Non-nil means inhibit displaying of images inline in the article body.")
-
+(make-obsolete-variable 'mu4e-view-blocked-images 'gnus-blocked-images
+                        "1.5.12")
+(make-obsolete-variable 'mu4e-view-inhibit-images 'gnus-inhibit-images
+                        "1.5.12")
 ;;; Main
 
 ;; remember the mime-handles, so we can clean them up when
@@ -76,8 +55,8 @@ Note that cid images that are embedded in a message won’t be blocked."
       (erase-buffer)
       (insert-file-contents-literally
        (mu4e-message-field msg :path) nil nil nil t)
+      (setq mu4e~view-message msg)
       (mu4e~view-render-buffer msg)))
-  (setq mu4e~view-message msg)
   (switch-to-buffer gnus-article-buffer))
 
 (defun mu4e-view-message-text (msg)
@@ -110,11 +89,11 @@ etc."
         (setq parts (list parts)))
       ;; Process the list
       (unless (gnus-article-browse-html-parts parts header)
-        (mu4e-warn "Mail doesn't contain a \"text/html\" part!"))
+        (mu4e-warn "Message does not contain a \"text/html\" part"))
       (mm-destroy-parts parts))))
 
 
-(defun mu4e~view-render-buffer(msg)
+(defun mu4e~view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode in
 buffer BUF."
   (let* ((inhibit-read-only t)
@@ -132,10 +111,6 @@ buffer BUF."
          (gnus-newsgroup-charset
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
-         (gnus-blocked-images
-          (or (mu4e-view-blocked-images-fn msg) gnus-blocked-images))
-         (gnus-inhibit-images
-          (or mu4e-view-inhibit-images gnus-inhibit-images))
          (gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
          ;; Possibly add headers (before "Attachments")
          (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
@@ -149,15 +124,9 @@ buffer BUF."
     (mu4e~view-activate-urls)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
-    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
+    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-function)))
 
-
-(defun mu4e-view-blocked-images-fn (msg)
-  (if (functionp mu4e-view-blocked-images)
-      (funcall mu4e-view-blocked-images msg)
-    mu4e-view-blocked-images))
-
-(defun mu4e~view-kill-buffer-hook-fn ()
+(defun mu4e~view-kill-buffer-hook-function ()
   ;; cleanup the mm-* buffers that the view spawns
   (when mu4e~gnus-article-mime-handles
     (mm-destroy-parts mu4e~gnus-article-mime-handles)
@@ -613,8 +582,12 @@ ask user for the program to open with."
     (call-process prog nil 0 nil file)))
 
 (defun mu4e-view-mime-part-action (&optional n)
-  "Apply some action on mime-part N in the current messsage. If N
-is not specified, ask for it."
+  "Apply some action on mime-part N in the current messsage.
+If N is not specified, ask for it. N can be supplied as a
+prefix-argument, and note that one does not need to prefix that
+with C-u.
+
+I.e., '3 A o' opens the third MIME-part."
   (interactive "NNumber of MIME-part: ")
   (let* ((parts (mu4e~view-gather-mime-parts))
          (options (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
