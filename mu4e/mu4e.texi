@@ -1199,8 +1199,8 @@ from @t{gnus-article-mode}.
 @menu
 * Overview: MSGV Overview. What is the Message View
 * Keybindings: MSGV Keybindings. Do things with your keyboard
-* Viewing images: MSGV Images. Images display inside Emacs
-* Custom headers: MSGV Custom headers. Your own headers
+* Rich-text and images: MSGV Rich-text and images. Reading rich-text messages
+* Custom headers: MSGV Custom headers. Your very own headers
 * Actions: MSGV Actions. Defining and using actions.
 @end menu
 
@@ -1327,26 +1327,62 @@ q            leave the message view
 
 For the marking commands, please refer to @ref{Marking messages}.
 
-@node MSGV Images
-@section Viewing images
+@node MSGV Rich-text and images
+@section Reading rich-text messages
 
-When you run Emacs in GUI-mode, images attached to the HTML message will
-be shown inline in the message view buffer.  To disable this, set
-@code{mu4e-view-inhibit-images} to @t{t}.  By default, external images
-in HTML are not retrieved because they may be used to track whether
-you've read the message or not and so lower your privacy.  You can
-specify what URLs to block by setting @code{mu4e-view-blocked-images} to
-a regex or to a function that will receive the message as an argument.
-For example, to enable images in Github notifications, do the following:
+These days, many e-mail messages contain rich-text (typically, HTML);
+either as an alternative to a text-only version, or even as the only
+option.
+
+By default, mu4e tries to display the 'richest' option, which is the
+last MIME-part of the alternatives. You can customize this to prefer
+the text version, if available, with something like the following in
+your configuration (and see the docstring for
+@t{mm-discouraged-alternatives} for details):
 
 @lisp
-(defun my/mu4e-view-blocked-images (msg)
-  (if (mu4e-message-contact-field-matches
-         msg :from "notifications@@github.com")
-      nil "."))
-
-(setq mu4e-view-blocked-images #'my/mu4e-view-blocked-images)
+(with-eval-after-load "mm-decode"
+  (add-to-list 'mm-discouraged-alternatives "text/html")
+  (add-to-list 'mm-discouraged-alternatives "text/richtext"))
 @end lisp
+
+When displaying rich-text messages inline, @t{mu4e} (through @t{gnus})x
+uses the @t{shr} built-in HTML-renderer. If you're using a dark color
+theme, and the messages are hard to read, it can help to change the
+luminosity, e.g.:
+@lisp
+(setq shr-color-visible-luminance-min 80)
+@end lisp
+
+Note that you can switch between the HTML and text versions by
+clicking on the relevant part in the messages headers; you can make it
+even clearer by indicating them in the message itself, using:
+
+@lisp
+(setq gnus-unbuttonized-mime-types nil)
+@end lisp
+
+@subsection Inline images
+When you run Emacs in graphical mode, by default images attached to
+messages are shown inline in the message view buffer.
+
+To disable this, set @code{gnus-inhibit-images} to @t{t}.  By default,
+external images in HTML are not retrieved from external URLs because
+they can be used to track you.
+
+You can specify what URLs to block by setting
+@code{gnus-blocked-images} to a regular exporession or to a function
+that will receive the message as an argument.  For example, to enable
+images in Github notifications, do the following:
+
+@lisp
+(setq gnus-blocked-images
+   (lambda(&optional _ignore)
+     (if (mu4e-message-contact-field-matches
+         (mu4e-message-at-point) :from "notifications@@github.com")
+        nil ".")))
+@end lisp
+
 
 @node MSGV Custom headers
 @section Custom headers
@@ -3440,9 +3476,7 @@ one of the user's e-mail addresses (as per @code{(mu4e-personal-addresses)}).
 see @code{mu4e-toggle-logging}.
 @item @code{mu4e-message}, @code{mu4e-warning}, @code{mu4e-error} are the
 @t{mu4e} equivalents of the normal elisp @code{message},
-@code{user-error}@footnote{@code{user-error} only appears in Emacs
-24.2 and later; in older versions it falls back to @code{error}} and
-@code{error} functions.
+@code{user-error} and @code{error} functions.
 @end itemize
 
 
