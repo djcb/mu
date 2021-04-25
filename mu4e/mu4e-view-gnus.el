@@ -50,6 +50,8 @@
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode."
+  (when gnus-article-buffer
+    (kill-buffer gnus-article-buffer))
   (with-current-buffer (get-buffer-create gnus-article-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
@@ -120,14 +122,13 @@ buffer BUF."
     (mu4e-view-mode)
     (run-hooks 'gnus-article-decode-hook)
     (gnus-article-prepare-display)
-    (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
-    (mu4e~view-activate-urls)
-    (setq gnus-article-decoded-p gnus-article-decode-hook)
+    (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
+          gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
-    (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-function)))
+    (add-hook 'kill-buffer-hook #'mu4e~view-kill-mime-handles)))
 
-(defun mu4e~view-kill-buffer-hook-function ()
-  ;; cleanup the mm-* buffers that the view spawns
+(defun mu4e~view-kill-mime-handles ()
+  "Kill cached MIME-handles, if any."
   (when mu4e~gnus-article-mime-handles
     (mm-destroy-parts mu4e~gnus-article-mime-handles)
     (setq mu4e~gnus-article-mime-handles nil)))
