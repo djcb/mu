@@ -50,7 +50,7 @@
 
 (defun mu4e~view-gnus (msg)
   "View MSG using Gnus' article mode."
-  (when gnus-article-buffer
+  (when (bufferp gnus-article-buffer)
     (kill-buffer gnus-article-buffer))
   (with-current-buffer (get-buffer-create gnus-article-buffer)
     (let ((inhibit-read-only t))

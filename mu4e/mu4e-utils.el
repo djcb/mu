@@ -541,7 +541,11 @@ Or go to the top level if there is none."
       mu4e~headers-last-query)))
 
 (defun mu4e-get-view-buffer ()
-  (get-buffer mu4e~view-buffer-name))
+  "Get the view buffer, if any."
+  (get-buffer
+   (if mu4e-view-use-old
+       mu4e~view-buffer-name
+     gnus-article-buffer)))
 
 (defun mu4e-get-headers-buffer ()
   (get-buffer mu4e~headers-buffer-name))
