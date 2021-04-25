@@ -146,7 +146,7 @@ buffer BUF."
     (run-hooks 'gnus-article-decode-hook)
     (gnus-article-prepare-display)
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles)
-    ;;(mu4e~view-activate-urls)
+    (mu4e~view-activate-urls)
     (setq gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-buffer-hook-fn)))
