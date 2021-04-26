@@ -99,6 +99,7 @@ etc."
 (defun mu4e~view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode in
 buffer BUF."
+  (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
          (max-specpdl-size mu4e-view-max-specpdl-size)
          (mm-decrypt-option 'known)
@@ -114,7 +115,6 @@ buffer BUF."
          (gnus-newsgroup-charset
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
-         (gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
          ;; Possibly add headers (before "Attachments")
          (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
          (gnus-icalendar-additional-identities
@@ -123,6 +123,7 @@ buffer BUF."
     (mu4e-view-mode)
     (run-hooks 'gnus-article-decode-hook)
     (gnus-article-prepare-display)
+    (mu4e~view-activate-urls)
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
           gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
