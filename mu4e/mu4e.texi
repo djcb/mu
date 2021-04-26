@@ -143,7 +143,7 @@ like @t{notmuch}@footnote{@url{https://notmuchmail.org/}} and
 @t{sup}@footnote{@url{https://sup-heliotrope.github.io/}}.
 
 However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
-handling (deleting, moving etc.) is inspired by
+handling (deleting, moving, etc.)@: is inspired by
 Wanderlust@footnote{@url{http://www.gohome.org/wl/}} (another
 Emacs-based e-mail client),
 @t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
@@ -1091,8 +1091,8 @@ search results.
 @node HV Custom headers
 @section Custom headers
 
-Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject
-etc.) may not be enough. For these cases, @t{mu4e} offers @emph{custom
+Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject,
+etc.)@: may not be enough. For these cases, @t{mu4e} offers @emph{custom
 headers} in both the headers-view and the message-view.
 
 You can do so by adding a description of your custom header to
@@ -1346,7 +1346,7 @@ your configuration (and see the docstring for
   (add-to-list 'mm-discouraged-alternatives "text/richtext"))
 @end lisp
 
-When displaying rich-text messages inline, @t{mu4e} (through @t{gnus})x
+When displaying rich-text messages inline, @t{mu4e} (through @t{gnus})
 uses the @t{shr} built-in HTML-renderer. If you're using a dark color
 theme, and the messages are hard to read, it can help to change the
 luminosity, e.g.:
@@ -1387,7 +1387,7 @@ images in Github notifications, do the following:
 @node MSGV Custom headers
 @section Custom headers
 
-Sometimes the normal headers (Date, From, To, Subject etc.) may not be
+Sometimes the normal headers (Date, From, To, Subject, etc.)@: may not be
 enough. For these cases, @t{mu4e} offers @emph{custom headers} in both
 the headers-view and the message-view.
 
@@ -1844,8 +1844,8 @@ For more information, see the @command{mu-verify} manual page.
 @node OMSGV Custom headers
 @section Custom headers
 
-Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject
-etc.) may not be enough. For these cases, @t{mu4e} offers @emph{custom
+Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject,
+etc.)@: may not be enough. For these cases, @t{mu4e} offers @emph{custom
 headers} in both the headers-view and the message-view.
 
 See @ref{HV Custom headers} for an example of this; the difference for the
@@ -4177,7 +4177,7 @@ Next step: let's make a @t{mu4e} configuration for this:
 @end lisp
 
 And that's it --- put the above in your @file{~/.emacs}, change @t{USERNAME}
-etc. to your own, and restart Emacs, and run @kbd{M-x mu4e}.
+etc.@: to your own, and restart Emacs, and run @kbd{M-x mu4e}.
 
 @node CONF Other settings
 @section Other settings
