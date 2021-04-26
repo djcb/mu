@@ -81,6 +81,10 @@ no unread messages.")
   "Keymap for the *mu4e-main* buffer.")
 
 (defvar mu4e-main-mode-abbrev-table nil)
+
+(defvar mu4e-main-bullet-char "*"
+  "Character to use for bullet points in the mu4e-main view.")
+
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."
@@ -146,7 +150,7 @@ clicked."
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
-                    (concat "\t* [b" key "] " name)
+                    (concat "\t" mu4e-main-bullet-char " [b" key "] " name)
                     (concat "b" key))
                    ;; append all/unread numbers, if available.
                    (if qcounts
@@ -185,7 +189,7 @@ clicked."
            concat (concat
                    ;; menu entry
                    (mu4e~main-action-str
-                    (concat "\t* [j" key "] " name)
+                    (concat "\t" mu4e-main-bullet-char " [j" key "] " name)
                     (concat "j" key))
                    ;; append all/unread numbers, if available.
                    (if qcounts
@@ -204,7 +208,7 @@ clicked."
 (defun mu4e~key-val (key val &optional unit)
   "Return a key / value pair."
   (concat
-   "\t* "
+   "\t" mu4e-main-bullet-char " "
    (propertize (format "%-20s" key) 'face 'mu4e-header-title-face)
    ": "
    (propertize val 'face 'mu4e-header-key-face)
@@ -235,18 +239,18 @@ When REFRESH is non nil refresh infos from server."
           (addrs (mu4e-personal-addresses)))
       (erase-buffer)
       (insert
-       "* "
+       mu4e-main-bullet-char " "
        (propertize "mu4e" 'face 'mu4e-header-key-face)
        (propertize " - mu for emacs version " 'face 'mu4e-title-face)
        (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
         "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e~main-action-str
-        "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
+        (concat "\t" mu4e-main-bullet-char " [j]ump to some maildir\n") 'mu4e-jump-to-maildir)
        (mu4e~main-action-str
-        "\t* enter a [s]earch query\n" 'mu4e-search)
+        (concat "\t" mu4e-main-bullet-char " enter a [s]earch query\n") 'mu4e-search)
        (mu4e~main-action-str
-        "\t* [C]ompose a new message\n" 'mu4e-compose-new)
+        (concat "\t" mu4e-main-bullet-char " [C]ompose a new message\n") 'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
        (mu4e~main-bookmarks)
@@ -256,9 +260,9 @@ When REFRESH is non nil refresh infos from server."
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-       (mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [;]Switch context\n") 'mu4e-context-switch)
 
-       (mu4e~main-action-str "\t* [U]pdate email & database\n"
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [U]pdate email & database\n")
                              'mu4e-update-mail-and-index)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
@@ -266,10 +270,10 @@ When REFRESH is non nil refresh infos from server."
            (mu4e~main-view-queue)
          "")
        "\n"
-       (mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
-       (mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
-       (mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
-       (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit)
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [N]ews\n") 'mu4e-news)
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [A]bout mu4e\n") 'mu4e-about)
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [H]elp\n") 'mu4e-display-manual)
+       (mu4e~main-action-str (concat "\t" mu4e-main-bullet-char " [q]uit\n") 'mu4e-quit)
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
@@ -292,7 +296,7 @@ When REFRESH is non nil refresh infos from server."
 (defun mu4e~main-view-queue ()
   "Display queue-related actions in the main view."
   (concat
-   (mu4e~main-action-str "\t* toggle [m]ail sending mode "
+   (mu4e~main-action-str "\t" mu4e-main-bullet-char " toggle [m]ail sending mode "
                          'mu4e~main-toggle-mail-sending-mode)
    "(currently "
    (propertize (if smtpmail-queue-mail "queued" "direct")
@@ -302,7 +306,7 @@ When REFRESH is non nil refresh infos from server."
      (if (zerop queue-size)
          ""
        (mu4e~main-action-str
-        (format "\t* [f]lush %s queued %s\n"
+        (format (concat "\t" mu4e-main-bullet-char " [f]lush %s queued %s\n")
                 (propertize (int-to-string queue-size)
                             'face 'mu4e-header-key-face)
                 (if (> queue-size 1) "mails" "mail"))
