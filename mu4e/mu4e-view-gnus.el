@@ -56,10 +56,10 @@
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert-file-contents-literally
-       (mu4e-message-field msg :path) nil nil nil t)
-      (setq mu4e~view-message msg)
-      (mu4e~view-render-buffer msg)))
-  (switch-to-buffer gnus-article-buffer))
+       (mu4e-message-field msg :path) nil nil nil t)))
+  (switch-to-buffer gnus-article-buffer)
+  (setq mu4e~view-message msg)
+  (mu4e~view-render-buffer msg))
 
 (defun mu4e-view-message-text (msg)
   "Return the pristine message as a string, for replying/forwarding
