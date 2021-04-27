@@ -52,14 +52,13 @@
   "View MSG using Gnus' article mode."
   (when (bufferp gnus-article-buffer)
     (kill-buffer gnus-article-buffer))
-  (with-current-buffer (get-buffer-create gnus-article-buffer)
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert-file-contents-literally
-       (mu4e-message-field msg :path) nil nil nil t)
-      (setq mu4e~view-message msg)
-      (mu4e~view-render-buffer msg)))
-  (switch-to-buffer gnus-article-buffer))
+  (switch-to-buffer (get-buffer-create gnus-article-buffer))
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert-file-contents-literally
+     (mu4e-message-field msg :path) nil nil nil t)
+    (setq mu4e~view-message msg)
+    (mu4e~view-render-buffer msg)))
 
 (defun mu4e-view-message-text (msg)
   "Return the pristine message as a string, for replying/forwarding
