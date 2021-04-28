@@ -67,10 +67,11 @@ etc."
   ;; we need this for replying/forwarding, since the mu4e-compose
   ;; wants it that way.
   (with-temp-buffer
-    (insert-file-contents-literally
-     (mu4e-message-field msg :path) nil nil nil t)
-    (mu4e~view-render-buffer msg)
-    (buffer-string)))
+    (let ((mm-discouraged-alternatives '("text/html")))
+      (insert-file-contents-literally
+       (mu4e-message-field msg :path) nil nil nil t)
+      (mu4e~view-render-buffer msg)
+      (buffer-string))))
 
 (defun mu4e-action-view-in-browser (msg)
   "Show current message MSG in browser, if it contains an html body."
@@ -109,6 +110,7 @@ buffer BUF."
          (charset (and charset (intern charset)))
          (mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime t)
+         (gnus-unbuttonized-mime-types '(".*/.*"))
          (gnus-buttonized-mime-types
             (append (list "multipart/signed" "multipart/encrypted")
                     gnus-buttonized-mime-types))
@@ -123,11 +125,32 @@ buffer BUF."
     (mu4e-view-mode)
     (run-hooks 'gnus-article-decode-hook)
     (gnus-article-prepare-display)
-    (mu4e~view-activate-urls)
+    (remove-overlays)
+    (mu4e~view-urlify)
     (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
           gnus-article-decoded-p gnus-article-decode-hook)
     (set-buffer-modified-p nil)
     (add-hook 'kill-buffer-hook #'mu4e~view-kill-mime-handles)))
+
+
+(defun mu4e~view-urlify ()
+  "Get numbered URLs in the buffer."
+  (let ((num 0) (inhibit-read-only t)
+        (link-map (make-hash-table :size 32 :weakness nil)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-min) (point-max))
+        (goto-char (point-min))
+        (while (re-search-forward gnus-button-url-regexp nil t)
+          (let ((match-string (match-string-no-properties 0)))
+            (when (not (equal (substring match-string 0 4) "file"))
+              (cl-incf num)
+              (let* ((tag (propertize (format "\u200B[%d]" num)
+                                      'face 'mu4e-url-number-face))
+                     (tag-ov (make-overlay (point) (+ (point) (length tag)))))
+                (overlay-put tag-ov 'before-string tag)
+                (puthash num match-string link-map)))))))
+    (setq mu4e~view-link-map link-map)))
 
 (defun mu4e~view-kill-mime-handles ()
   "Kill cached MIME-handles, if any."
@@ -163,6 +186,7 @@ buffer BUF."
                (mu4e~view-gnus-insert-header-custom msg field)))))
         (let ((gnus-treatment-function-alist
                '((gnus-treat-highlight-headers
+                  gnus-article-add-buttons
                   gnus-article-highlight-headers))))
           (gnus-treat-article 'head))))))
 
@@ -203,7 +227,6 @@ with no charset."
         (setq handle (cons buf (cons ty rest)))
         (list handle attendee))
   handle-attendee))
-
 
 (defun mu4e~view-mode-p ()
   (or (eq major-mode 'mu4e-view-mode)
