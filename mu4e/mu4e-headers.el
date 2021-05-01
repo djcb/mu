@@ -461,6 +461,7 @@ into a string."
            (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (cl-case type
       ('child         (funcall get-prefix mu4e-headers-thread-child-prefix))
+      ('first-child   (funcall get-prefix mu4e-headers-thread-first-child-prefix))
       ('last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
       ('connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
       ('blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
@@ -468,6 +469,7 @@ into a string."
       ('single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
       ('duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
       (t              "?"))))
+
 
 ;; headers in the buffer are prefixed by an invisible string with the docid
 ;; followed by an EOT ('end-of-transmission', \004, ^D) non-printable ascii
@@ -533,12 +535,13 @@ with DOCID which must be present in the headers buffer."
 (defun mu4e~headers-thread-prefix (thread)
   "Calculate the thread prefix based on thread info THREAD."
   (when thread
-    (let ((prefix       "")
+    (let* ((prefix       "")
           (level        (plist-get thread :level))
           (has-child    (plist-get thread :has-child))
-          (empty-parent (plist-get thread :empty-parent))
           (first-child  (plist-get thread :first-child))
           (last-child   (plist-get thread :last-child))
+          (orphan       (plist-get thread :orphan))
+          (single-orphan(and orphan first-child last-child))
           (duplicate    (plist-get thread :duplicate)))
       ;; Do not prefix root messages.
       (if (= level 0)
@@ -566,9 +569,11 @@ with DOCID which must be present in the headers buffer."
                     mu4e~headers-thread-state "")
                    ;; Current entry.
                    (mu4e~headers-thread-prefix-map
-                    (if (and empty-parent first-child)
-                        (if last-child 'single-orphan 'orphan)
-                      (if last-child 'last-child 'child)))))))
+                    (if single-orphan 'single-orphan
+                      (if orphan 'orphan
+                        (if last-child 'last-child
+                          (if first-child 'first-child
+                            'child)))))))))
       ;; If a new sub-thread will follow (has-child) and the current
       ;; one is still not done (not last-child), then a new
       ;; connection needs to be added to the tree-state.  It's not
