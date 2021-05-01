@@ -147,7 +147,7 @@ add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
         if (qmatch.has_flag(QueryMatch::Flags::Last))
                 info.add_prop( ":last-child", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Orphan))
-                info.add_prop( ":empty-parent", symbol_t());
+                info.add_prop( ":orphan", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
                 info.add_prop( ":duplicate", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::HasChild))
