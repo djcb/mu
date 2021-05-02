@@ -18,15 +18,15 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.5.12',
-	meson_version: '>= 0.52.0', # debian 10
-	license: 'GPL-3.0-or-later',
-	default_options : [
-	  'buildtype=debugoptimized',
-	  'warning_level=1',
-	  'c_std=c11',
-	  'cpp_std=c++14'
-	]
+        version: '1.5.13',
+        meson_version: '>= 0.52.0', # debian 10
+        license: 'GPL-3.0-or-later',
+        default_options : [
+          'buildtype=debugoptimized',
+          'warning_level=1',
+          'c_std=c11',
+          'cpp_std=c++14'
+        ]
        )
 
 # installation paths
@@ -168,8 +168,8 @@ version_texi_data.set('UPDATED', run_command('date', '+%d %B %Y').stdout().strip
 version_texi_data.set('UPDATEDMONTH', run_command('date', '+%B %Y').stdout().strip())
 
 configure_file(input: 'version.texi.in',
-	       output: 'version.texi',
-	       configuration: version_texi_data)
+               output: 'version.texi',
+               configuration: version_texi_data)
 ################################################################################
 
 
