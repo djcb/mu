@@ -78,8 +78,11 @@ struct Container {
         // of this container -- ie.. either the one from the first of its
         // children, or from its query-match, if it has no children.
         //
-        // That the sub-root-levels of thtreas are always sorted
-        // by date, in ascending order.
+        // Note that the sub-root-levels of threads are always sorted by date,
+        // in ascending order, regardless of whatever sorting was specified for
+        // the root-level.
+
+
         std::string thread_date_key;
 
 
@@ -136,7 +139,7 @@ handle_duplicates (IdTable& id_table, DupTable& dup_table)
 
                 // add duplicates as fake children
                 char buf[32];
-                ::snprintf(buf, sizeof(buf), "bastard-%zu", ++n);
+                ::snprintf(buf, sizeof(buf), "dup-%zu", ++n);
                 it->second.add_child(
                         id_table.emplace(buf, std::move(dup.second)).first->second);
         }
@@ -180,7 +183,11 @@ determine_id_table (QueryResultsType& qres)
                 // both. Moreover, even when sorting the top-level in descending
                 // order, still sort the thread levels below that in ascending
                 // order.
-                container.query_match->date_key = mi.date().value_or("");
+                container.thread_date_key = container.query_match->date_key =
+                        mi.date().value_or("");
+                // initial guess for the thread-date; might be updated
+                // later.
+
                 // remember the subject, we use it to determine the (sub)thread subject
                 container.query_match->subject  = mi.subject().value_or("");
 
@@ -232,7 +239,6 @@ determine_id_table (QueryResultsType& qres)
 
         return id_table;
 }
-
 
 /// Recursively walk all containers under the root set.
 /// For each container:
@@ -451,15 +457,11 @@ static void
 sort_container (Container& container)
 {
         // 1. childless container.
-
-        if (container.children.empty()) {
-                container.thread_date_key = container.query_match->date_key;
-                return;
-        }
+        if (container.children.empty())
+                return; // no children;  nothing to sort.
 
         // 2. container with children.
         // recurse, depth-first: sort the children
-
         for (auto& child: container.children)
                 sort_container(*child);
 
@@ -469,9 +471,11 @@ sort_container (Container& container)
                           return c1->thread_date_key < c2->thread_date_key;
                   });
 
-        // and 'bubble up' the date of the *newest* message*. We reasonably
-        // assume that it's later than its parent.
-        container.thread_date_key = container.children.back()->thread_date_key;
+        // and 'bubble up' the date of the *newest* message with a date. We
+        // reasonably assume that it's later than its parent.
+        const auto& newest_date = container.children.back()->thread_date_key;
+        if (!newest_date.empty())
+                container.thread_date_key = newest_date;
 }
 
 
@@ -484,16 +488,14 @@ sort_siblings (IdTable& id_table, bool descending)
         // unsorted vec of root containers. We can
         // only sort these _after_ sorting the children.
         ContainerVec root_vec;
-        for (auto&& item: id_table)
+        for (auto&& item: id_table) {
                 if (!item.second.parent && !item.second.is_nuked)
                         root_vec.emplace_back(&item.second);
+        }
 
         // now sort all threads _under_ the root set (by date/ascending)
-        for (auto&& c: root_vec) {
+        for (auto&& c: root_vec)
                 sort_container(*c);
-                if (c->query_match) // for debugging, remember
-                        c->query_match->thread_date = c->thread_date_key;
-        }
 
         // and then sort the root set.
         //
@@ -553,7 +555,6 @@ calculate_threads_real (Results& qres, bool descending)
         if (g_test_verbose())
                 std::cout << "*** id-table(1):\n" << id_table << "\n";
 
-
         // // Step 2: get the root set
         // // Step 3: discard id_table
         // Nope: id-table owns the containers.
@@ -569,6 +570,12 @@ calculate_threads_real (Results& qres, bool descending)
         // in the thread-path string (so we can lexically compare them.)
         sort_siblings(id_table, descending);
 
+        // Step 7a:. update querymatches
+        for (auto&& item: id_table) {
+                Container& c{item.second};
+                if (c.query_match)
+                        c.query_match->thread_date = c.thread_date_key;
+        }
         // if (g_test_verbose())
         //         std::cout << "*** id-table(2):\n" << id_table << "\n";
 }

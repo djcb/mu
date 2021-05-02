@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -94,8 +94,8 @@ struct QueryMatch {
         std::string     subject;
         std::string     thread_subject; /**< the thread subject for this message */
         size_t          thread_level{}; /**< The thread level */
-        std::string     thread_path; /**< The hex-numerial path in the thread, ie. '00:01:0a' */
-        std::string     thread_date{}; /**< date of newest message in thread */
+        std::string     thread_path;    /**< The hex-numerial path in the thread, ie. '00:01:0a' */
+        std::string     thread_date{};  /**< date of newest message in thread */
 
         bool operator<(const QueryMatch& rhs) const {
                 return  date_key < rhs.date_key;
