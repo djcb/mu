@@ -79,12 +79,9 @@ etc."
     (insert-file-contents-literally
      (mu4e-message-field msg :path) nil nil nil t)
     (run-hooks 'gnus-article-decode-hook)
-    (let ((header (mapconcat 'identity
-            (seq-filter (lambda(hdr) hdr)
-                        (seq-map (lambda(field)
-                                   (when-let ((val (message-fetch-field field)))
-                                     (format "%s: %s" (capitalize field) val)))
-                                 '("from" "to" "cc" "date" "subject"))) "\n"))
+    (let ((header (cl-loop for field in '("from" "to" "cc" "date" "subject")
+                           when (message-fetch-field field)
+                           concat (format "%s: %s\n" (capitalize field) it)))
           (parts (mm-dissect-buffer t t)))
       ;; If singlepart, enforce a list.
       (when (and (bufferp (car parts))
