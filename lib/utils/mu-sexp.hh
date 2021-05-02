@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -207,7 +207,7 @@ struct Sexp {
         }
 
         /**
-         * Construct a properrty list sexp from a List
+         * Construct a property list sexp from a List
          *
          * @param name the property name; must start wtth ':'
          * @param sexp  a Sexp
@@ -351,6 +351,14 @@ operator<<(std::ostream& os, const Sexp& sexp)
         os << sexp.to_sexp_string();
         return os;
 }
+
+static inline std::ostream&
+operator<<(std::ostream& os, const Sexp::List& sexp)
+{
+        os << Sexp::make_list(Sexp::List(sexp));
+        return os;
+}
+
 
 } // Mu
 
