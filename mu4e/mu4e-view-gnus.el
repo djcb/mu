@@ -106,6 +106,7 @@ buffer BUF."
          (charset (and charset (intern charset)))
          (mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime t)
+         (gnus-unbuttonized-mime-types '(".*/.*"))
          (gnus-buttonized-mime-types
             (append (list "multipart/signed" "multipart/encrypted")
                     gnus-buttonized-mime-types))
