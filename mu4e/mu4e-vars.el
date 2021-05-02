@@ -1005,15 +1005,35 @@ in `mu4e-view-fields.'
 Note, `:sortable' is not supported for custom header fields.")
 
 (defvar mu4e-header-info-custom
-  '( (:recipnum .
-                ( :name "Number of recipients"
-                        :shortname "Recip#"
-                        :help "Number of recipients for this message"
-                        :function
-                        (lambda (msg)
-                          (format "%d"
-                                  (+ (length (mu4e-message-field msg :to))
-                                     (length (mu4e-message-field msg :cc))))))))
+  '(
+    ;; some examples & debug helpers.
+
+    (:thread-path . ;; Shows the internal thread-path
+                  ( :name "Thread-path"
+                    :shortname "Thp"
+                    :help "The thread-path"
+                    :function (lambda (msg)
+                                (let ((thread (mu4e-message-field msg :thread)))
+                                  (or (and thread (plist-get thread :path)) "")))))
+
+    (:thread-date . ;; Shows the internal thread-date
+                  ( :name "Thread-date"
+                    :shortname "Thd"
+                    :help "The thread-date"
+                    :function (lambda (msg)
+                                (let* ((thread (mu4e-message-field msg :thread))
+                                       (tdate (and thread (plist-get thread :date-tstamp))))
+                                  (format-time-string "%F %T " (or tdate 0))))))
+    (:recipnum .
+               ( :name "Number of recipients"
+                 :shortname "Recip#"
+                 :help "Number of recipients for this message"
+                 :function
+                 (lambda (msg)
+                   (format "%d"
+                           (+ (length (mu4e-message-field msg :to))
+                              (length (mu4e-message-field msg :cc))))))))
+
   "A list of custom (user-defined) headers.
 The format is similar to `mu4e-header-info', but adds a :function
 property, which should point to a function that takes a message
