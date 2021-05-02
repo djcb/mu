@@ -70,7 +70,7 @@ etc."
     (insert-file-contents-literally
      (mu4e-message-field msg :path) nil nil nil t)
     (mu4e~view-render-buffer msg)
-    (buffer-string)))
+    (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mu4e-action-view-in-browser (msg)
   "Show current message MSG in browser, if it contains an html body."
