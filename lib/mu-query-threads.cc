@@ -366,8 +366,17 @@ update_container (Container& container, bool descending,
                   ThreadPath& tpath, size_t seg_size,
                   const std::string& prev_subject="")
 {
+        if (!container.children.empty()) {
+                Container* first = container.children.front();
+                if (first->query_match)
+                        first->query_match->flags |= QueryMatch::Flags::First;
+                Container* last  = container.children.back();
+                if (last->query_match)
+                        last->query_match->flags |= QueryMatch::Flags::Last;
+        }
+
         if (!container.query_match)
-                return false; // nothing to do.
+                return false; // nothing else to do.
 
         auto& qmatch(*container.query_match);
 
@@ -376,15 +385,8 @@ update_container (Container& container, bool descending,
         else if (!container.parent->query_match)
                 qmatch.flags |= QueryMatch::Flags::Orphan;
 
-        if (!container.children.empty()) {
-                qmatch.flags     |= QueryMatch::Flags::HasChild;
-                Container* first  = container.children.front();
-                if (first->query_match)
-                        first->query_match->flags |= QueryMatch::Flags::First;
-                Container* last   = container.children.back();
-                if (last->query_match)
-                        last->query_match->flags |= QueryMatch::Flags::Last;
-        }
+        if (!container.children.empty())
+                qmatch.flags |= QueryMatch::Flags::HasChild;
 
         // calculate the "thread-subject", which is for UI
         // purposes (future use)
@@ -807,7 +809,9 @@ test_thread_info_ascending()
                 MockQueryResult{ "m2", "1", {}},
                 MockQueryResult{ "m3", "3", {"m2"}},
                 MockQueryResult{ "m4", "2", {"m2"}},
-
+                // orphan siblings
+                MockQueryResult{ "m10", "6", {"m9"}},
+                MockQueryResult{ "m11", "7", {"m9"}},
         };
         calculate_threads(results, false);
 
@@ -816,6 +820,9 @@ test_thread_info_ascending()
                         { "m4", "0:0"  }, //   2
                         { "m3", "0:1"  }, //   3
                         { "m1", "1"    }, // 5
+
+                        { "m10", "2:0" }, //   6
+                        { "m11", "2:1" }, //   7
                 });
 
         g_assert_true (results[0].query_match().has_flag(
@@ -826,6 +833,10 @@ test_thread_info_ascending()
                                QueryMatch::Flags::Last));
         g_assert_true (results[3].query_match().has_flag(
                                QueryMatch::Flags::First));
+        g_assert_true (results[4].query_match().has_flag(
+                               QueryMatch::Flags::Orphan | QueryMatch::Flags::First));
+        g_assert_true (results[5].query_match().has_flag(
+                               QueryMatch::Flags::Orphan | QueryMatch::Flags::Last));
 }
 
 static void
@@ -836,17 +847,21 @@ test_thread_info_descending()
                 MockQueryResult{ "m2", "1", {}},
                 MockQueryResult{ "m3", "3", {"m2"}},
                 MockQueryResult{ "m4", "2", {"m2"}},
-
+                // orphan siblings
+                MockQueryResult{ "m10", "6", {"m9"}},
+                MockQueryResult{ "m11", "7", {"m9"}},
         };
         calculate_threads(results, true/*descending*/);
 
         assert_thread_paths (results, {
-                        { "m1", "0:z"},      // 5
-                        { "m2", "1:z"  },    // 2
-                        { "m4", "1:f:z"  },  //   2
-                        { "m3", "1:e:z"},    //   3
-                });
+                        { "m1", "1:z"    },  // 5
+                        { "m2", "2:z"    },  // 2
+                        { "m4", "2:f:z"  },  //   2
+                        { "m3", "2:e:z"  },  //   3
 
+                        { "m10", "0:f:z" },  //   6
+                        { "m11", "0:e:z" },  //   7
+                });
         g_assert_true (results[0].query_match().has_flag(
                                QueryMatch::Flags::Root));
         g_assert_true (results[1].query_match().has_flag(
@@ -856,8 +871,12 @@ test_thread_info_descending()
         g_assert_true (results[3].query_match().has_flag(
                                QueryMatch::Flags::First));
 
-}
+        g_assert_true (results[4].query_match().has_flag(
+                               QueryMatch::Flags::Orphan | QueryMatch::Flags::Last));
+        g_assert_true (results[5].query_match().has_flag(
+                               QueryMatch::Flags::Orphan | QueryMatch::Flags::First));
 
+}
 
 
 int
