@@ -138,6 +138,13 @@ add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
         info.add_prop(":level", Sexp::make_number(qmatch.thread_level));
         info.add_prop(":date",  Sexp::make_string(qmatch.thread_date));
 
+        Sexp::List dlist;
+        const auto td {::atoi(qmatch.thread_date.c_str())};
+        dlist.add(Sexp::make_number((unsigned)(td >> 16)));
+        dlist.add(Sexp::make_number((unsigned)(td & 0xffff)));
+        dlist.add(Sexp::make_number(0));
+        info.add_prop(":date-tstamp", Sexp::make_list(std::move(dlist)));
+
         if (qmatch.has_flag(QueryMatch::Flags::Root))
                 info.add_prop( ":root", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Related))
