@@ -659,8 +659,7 @@ show the subject of a thread only once, similar to e.g. 'mutt'."
          (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
      (mu4e~headers-thread-prefix tinfo)
-     (if (or (not tinfo) (zerop (plist-get tinfo :level))
-             (plist-get tinfo :empty-parent))
+     (if (plist-get tinfo :thread-subject)
          (truncate-string-to-width subj 600) ""))))
 
 (defun mu4e~headers-mailing-list (list)
