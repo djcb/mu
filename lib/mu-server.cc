@@ -146,21 +146,21 @@ add_thread_info (Sexp::List& items, const QueryMatch& qmatch)
         info.add_prop(":date-tstamp", Sexp::make_list(std::move(dlist)));
 
         if (qmatch.has_flag(QueryMatch::Flags::Root))
-                info.add_prop( ":root", symbol_t());
+                info.add_prop(":root", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Related))
-                info.add_prop( ":related", symbol_t());
+                info.add_prop(":related", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::First))
-                info.add_prop( ":first-child", symbol_t());
+                info.add_prop(":first-child", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Last))
-                info.add_prop( ":last-child", symbol_t());
+                info.add_prop(":last-child", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Orphan))
-                info.add_prop( ":orphan", symbol_t());
+                info.add_prop(":orphan", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
-                info.add_prop( ":duplicate", symbol_t());
+                info.add_prop(":duplicate", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::HasChild))
-                info.add_prop( ":has-child", symbol_t());
+                info.add_prop(":has-child", symbol_t());
         if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
-                info.add_prop( ":thread_subject", symbol_t());
+                info.add_prop(":thread-subject", symbol_t());
 
         items.add_prop(":thread", Sexp::make_list(std::move(info)));
 }

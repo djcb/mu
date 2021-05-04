@@ -91,11 +91,10 @@ struct QueryMatch {
         // (ignoring prefixes such as Re:)
         //
         // otherwise, it is empty.
-        std::string     subject;
-        std::string     thread_subject; /**< the thread subject for this message */
+        std::string     subject;        /**< subject for this message */
         size_t          thread_level{}; /**< The thread level */
         std::string     thread_path;    /**< The hex-numerial path in the thread, ie. '00:01:0a' */
-        std::string     thread_date{};  /**< date of newest message in thread */
+        std::string     thread_date;    /**< date of newest message in thread */
 
         bool operator<(const QueryMatch& rhs) const {
                 return  date_key < rhs.date_key;

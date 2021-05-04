@@ -394,11 +394,20 @@ update_container (Container& container, bool descending,
         if (!container.children.empty())
                 qmatch.flags |= QueryMatch::Flags::HasChild;
 
-        // calculate the "thread-subject", which is for UI
-        // purposes (future use)
+        // see whether this message has the has the thread
+        // subject, ie.. the first message in this thread with the
+        // given subject.
         if (qmatch.has_flag(QueryMatch::Flags::Root) ||
+            //qmatch.has_flag(QueryMatch::Flags::Orphan) ||
+            prev_subject.empty() ||
             (qmatch.subject.find(prev_subject) > 5))
-            qmatch.flags |= QueryMatch::Flags::ThreadSubject;
+                qmatch.flags |= QueryMatch::Flags::ThreadSubject;
+
+        // g_debug ("%c%c: '%s' vs '%s'",
+        //          any_of(qmatch.flags & QueryMatch::Flags::Root) ? 'r' : 'c',
+        //          any_of(qmatch.flags & QueryMatch::Flags::ThreadSubject) ? 'y' : 'n',
+        //          qmatch.subject.c_str(),
+        //          prev_subject.c_str());
 
         if (descending && container.parent) {
                 // trick xapian by giving it "inverse" sorting key so our
@@ -422,13 +431,16 @@ update_containers (Containers& children, bool descending, ThreadPath& tpath,
                    size_t seg_size)
 {
         size_t idx{0};
+        std::string last_subject;
 
         for (auto&& c: children) {
                 tpath.emplace_back(idx++);
 
-                if (c->query_match)
-                        update_container(*c, descending, tpath, seg_size);
-
+                if (c->query_match) {
+                        update_container(*c, descending, tpath, seg_size,
+                                         last_subject);
+                        last_subject = c->query_match->subject;
+                }
                 update_containers(c->children, descending, tpath, seg_size);
                 tpath.pop_back();
         }
