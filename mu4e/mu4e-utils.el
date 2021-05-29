@@ -540,6 +540,7 @@ Or go to the top level if there is none."
     (with-current-buffer  (mu4e-get-headers-buffer)
       mu4e~headers-last-query)))
 
+(defvar gnus-article-buffer) ;; Fix byte-compiler warning.
 (defun mu4e-get-view-buffer ()
   "Get the view buffer, if any."
   (get-buffer
@@ -1341,6 +1342,38 @@ string will be shortened to fit if its length exceeds
     (erase-buffer)
     (insert (propertize "Loading message..."
                         'face 'mu4e-system-face 'intangible t))))
+
+;;
+;; Bug Reference mode support
+;;
+
+;; This is Emacs 28 stuff but there is no need to guard it with some (f)boundp
+;; checks (which would return nil if bug-reference.el is not loaded before
+;; mu4e) since the function definition doesn't hurt and `add-hook' works fine
+;; for not yet defined variables (by creating them).
+(declare-function bug-reference-maybe-setup-from-mail "ext:bug-reference")
+(defun mu4e-view--try-setup-bug-reference-mode ()
+  "Try to guess bug-reference setup from the current mu4e mail.
+Looks at the maildir and the mail headers List, List-Id, Maildir,
+To, From, Cc, and Subject and tries to guess suitable values for
+`bug-reference-bug-regexp' and `bug-reference-url-format' by
+matching the maildir name against GROUP-REGEXP and each header
+value against HEADER-REGEXP in
+`bug-reference-setup-from-mail-alist'."
+  (when (derived-mode-p 'mu4e-view-mode)
+    (let (header-values)
+      (save-excursion
+        (goto-char (point-min))
+        (dolist (field '("list" "list-id" "to" "from" "cc" "subject"))
+          (let ((val (mail-fetch-field field)))
+            (when val
+              (push val header-values)))))
+      (bug-reference-maybe-setup-from-mail
+       (mail-fetch-field "maildir")
+       header-values))))
+
+(add-hook 'bug-reference-auto-setup-functions
+          #'mu4e-view--try-setup-bug-reference-mode)
 
 ;;; _
 (provide 'mu4e-utils)
