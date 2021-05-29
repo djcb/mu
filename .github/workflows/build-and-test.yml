@@ -30,7 +30,7 @@ jobs:
           brew install autoconf automake libgpg-error libtool pkg-config gettext glib gmime xapian
 
       - name: configure
-        run: ./autogen.sh
+        run: ./autogen.sh --disable-guile
 
       - name: build
         run: make
