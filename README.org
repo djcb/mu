@@ -26,7 +26,7 @@ that one important e-mail you need right now, and quickly file away message for 
 
 ~mu~ is a tool for dealing with e-mail messages stored in the Maildir-format. ~mu~'s purpose in life is
 to help you to quickly find the messages you need; in addition, it allows you to view messages,
-extract attachments, create new maildirs, and so on. See the [mu cheatsheet] for some examples. =mu=
+extract attachments, create new maildirs, and so on. See the [[www/cheatsheet.md][mu cheatsheet]] for some examples. =mu=
 is fully documented.
 
 After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them
