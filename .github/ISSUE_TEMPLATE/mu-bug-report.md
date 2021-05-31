@@ -1,5 +1,5 @@
 ---
-name: Mu4e Bug Report
+name: Mu Bug Report
 about: Create a report to help us improve
 title: "[mu bug]"
 labels: bug, mu, new
