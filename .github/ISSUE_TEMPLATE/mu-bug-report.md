@@ -1,8 +1,8 @@
 ---
 name: Mu4e Bug Report
 about: Create a report to help us improve
-title: "[mu4e bug]"
-labels: bug, mu4e, new
+title: "[mu bug]"
+labels: bug, mu, new
 assignees: ''
 
 ---
