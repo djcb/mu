@@ -147,7 +147,7 @@ config_options_group_init ()
 		 &MU_CONFIG.max_msg_size, "Maximum allowed size for messages",
                  "<size-in-bytes>"},
                 {"batch-size", 0, 0, G_OPTION_ARG_INT,
-		 &MU_CONFIG.max_msg_size,
+		 &MU_CONFIG.batch_size,
                  "Number of changes in a database transaction batch",
                  "<number>"},
                 {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
