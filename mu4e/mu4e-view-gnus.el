@@ -476,7 +476,6 @@ containing commas."
   (let* ((parts (mu4e~view-gather-mime-parts))
          (handles '())
          (files '())
-         (helm-comp-read-use-marked t)
          (compfn (if (and (boundp 'helm-mode) helm-mode)
                      #'completing-read
                    ;; Fallback to `completing-read-multiple' with poor
@@ -490,7 +489,8 @@ containing commas."
           (push fname files))))
     (if files
         (progn
-          (setq files (funcall compfn "Save part(s): " files)
+          (setq files (let ((helm-comp-read-use-marked t))
+                        (funcall compfn "Save part(s): " files))
                 dir (if arg (read-directory-name "Save to directory: ") mu4e-attachment-dir))
           (cl-loop for (f . h) in handles
                    when (member f files)
