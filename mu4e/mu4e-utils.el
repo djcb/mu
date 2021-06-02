@@ -614,6 +614,52 @@ This can be used as a simple way to invoke some action when new
 messages appear, but note that an update in the index does not
 necessarily mean a new message.")
 
+(defvar mu4e-new-incoming-mails-hook nil
+  "Hook run when there are new incoming mails.
+New mails will be passed to functions hooked on this hook.")
+
+(defvar mu4e-new-incoming-mails-max-num-to-process 500
+  "Maximum number of new mails to process.")
+
+(defun mu4e~parse-mails (buffer)
+  "Parse the emails in BUFFER.
+The buffer holds the emails received from mu in sexp format"
+  (read (concat (format "(%s)" (with-current-buffer buffer (buffer-string))))))
+
+(defun mu4e~get-mails-sentinel (callback)
+  "Create sentinel for process to get mails from mu, CALLBACK is called with the unread mails."
+  (lambda (process event-type)
+    ;; If the process has completed successfully parse the mails
+    ;; and execute the callback
+    (when (equal (process-status process) 'exit)
+      (cond ((zerop (process-exit-status process))
+             (funcall callback (mu4e~parse-mails (process-buffer process))))
+            ((= (process-exit-status process) 4)
+             (funcall callback nil))))
+
+    ;; Kill the buffer if the process has terminated
+    (when (memql (process-status process) '(exit signal))
+      (kill-buffer (process-buffer process)))))
+
+(defun mu4e~get-new-incoming-mails-async ()
+  (let ((default-directory (expand-file-name "~")))
+    (set-process-sentinel (apply #'start-process
+                                 "mu4e-new-incoming-mails"
+                                 (with-current-buffer (get-buffer-create "*mu4e-new-incoming-mails*"))
+                                 mu4e-mu-binary
+                                 (append (list "find"
+                                               "--nocolor"
+                                               "-o"
+                                               "sexp"
+                                               "--sortfield=d"
+                                               "-z"
+                                               "-n"
+                                               (format "--maxnum=%d" mu4e-new-incoming-mails-max-num-to-process))
+                                         (when mu4e-headers-skip-duplicates (list "-u"))
+                                         (when mu4e-mu-home (list (concat "--muhome=" mu4e-mu-home)))
+                                         (split-string "flag:unread AND NOT flag:trashed")))
+                          (mu4e~get-mails-sentinel (lambda (mails) (run-hook-with-args 'mu4e-new-incoming-mails-hook mails))))))
+
 (defvar mu4e-message-changed-hook nil
   "Hook run when there is a message changed in db. For new
 messages, it depends on `mu4e-index-updated-hook'. This can be
@@ -648,7 +694,8 @@ process."
            processed updated cleaned-up)
           ;; call the updated hook if anything changed.
           (unless (zerop (+ updated cleaned-up))
-            (run-hooks 'mu4e-index-updated-hook))
+            (run-hooks 'mu4e-index-updated-hook)
+            (mu4e~get-new-incoming-mails-async))
           (unless (and (not (string= mu4e~contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e~request-contacts-maybe))

@@ -638,6 +638,10 @@ updates --- for example when receiving new mail. See
 @code{mu4e-index-updated-hook} and some tips on its usage in the
 @ref{FAQ}.
 
+Also, you can get meta information of newly incoming mails by hooking your
+functions to @code{mu4e-new-incoming-mails-hook}. A list of new mails will
+be passed to your functions through argument.
+
 @node Sending mail
 @section Sending mail
 
@@ -3299,7 +3303,8 @@ see @ref{Message view actions}
 @item Custom function to mark certain messages ---
 see @ref{Custom mark functions}
 @item Using various @emph{mode}-hooks, @code{mu4e-compose-pre-hook} (see
-@ref{Compose hooks}), @code{mu4e-index-updated-hook} (see @ref{FAQ})
+@ref{Compose hooks}), @code{mu4e-index-updated-hook} (see @ref{FAQ}),
+@code{mu4e-new-incoming-mails-hook} (see @ref{FAQ})
 @end itemize
 
 @noindent
@@ -4313,6 +4318,16 @@ To use this hook, put something like the following in your setup
 (add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
     (shell-command "aplay ~/Sounds/boing.wav&")))
+@end lisp
+
+Also, there is @code{mu4e-new-incoming-mails-hook} which passes a list
+of new incoming mails to functions hooked on. You can use this hook to
+implement something like auto tagger etc.
+@lisp
+(add-hook 'mu4e-new-incoming-mails-hook
+          (defun print-subjects (mails)
+            (dolist (m mails)
+              (print (plist-get m :subject)))))
 @end lisp
 
 @subsection Getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
