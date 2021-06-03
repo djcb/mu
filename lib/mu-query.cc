@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -175,6 +175,11 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
         return threading ? run_threaded(std::move(qres), enq, qflags, maxnum) : qres;
 }
 
+static Option<std::string>
+opt_string(const Xapian::Document& doc, MuMsgFieldId id) noexcept try {
+        auto&& val{doc.get_value(id)};
+        return val.empty() ? Nothing : Some(val);
+} MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
 
 Option<QueryResults>
 Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
@@ -196,6 +201,14 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         const auto mset{enq.get_mset(0, maxnum, {},
                                      make_leader_decider(leader_qflags, minfo).get())};
 
+        // Gather the thread-ids we found
+        mset.fetch();
+        for (auto it = mset.begin(); it != mset.end(); ++it) {
+                auto thread_id{opt_string(it.get_document(), MU_MSG_FIELD_ID_THREAD_ID)};
+                if (thread_id)
+                        minfo.thread_ids.emplace(std::move(*thread_id));
+        }
+
         // Now, determine the "related query".
         //
         // In the threaded-case, we search among _all_ messages, since complete
@@ -209,6 +222,7 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
 
         return threading ? run_threaded(std::move(qres), r_enq, qflags, maxnum) : qres;
 }
+
 
 Option<QueryResults>
 Query::Private::run (const std::string& expr, MuMsgFieldId sortfieldid,

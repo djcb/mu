@@ -140,8 +140,8 @@ struct MatchDeciderLeader final: public MatchDecider {
                 it.first->second.flags |= QueryMatch::Flags::Leader;
 
                 if (should_include(it.first->second)) {
-                        if (any_of(qflags_ & QueryFlags::GatherThreadIds))
-                                gather_thread_ids(doc);
+                        // if (any_of(qflags_ & QueryFlags::GatherThreadIds))
+                        //         gather_thread_ids(doc);
                         return true;
                 }
                 return false;
