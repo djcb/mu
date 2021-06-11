@@ -1843,26 +1843,32 @@ backward (if LINES is negative). If this succeeds, return the new
 docid. Otherwise, return nil."
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let* ((_succeeded (zerop (forward-line lines)))
-         (docid (mu4e~headers-docid-at-point)))
-    ;; move point, even if this function is called when this window is not
-    ;; visible
-    (when docid
-      ;; update all windows showing the headers buffer
-      (walk-windows
-       (lambda (win)
-         (when (eq (window-buffer win) (mu4e-get-headers-buffer))
-           (set-window-point win (point))))
-       nil t)
-      (if (eq mu4e-split-view 'single-window)
-          (when (eq (window-buffer) (mu4e-get-view-buffer))
-            (mu4e-headers-view-message))
-        ;; update message view if it was already showing
-        (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
-          (mu4e-headers-view-message)))
-      ;; attempt to highlight the new line, display the message
-      (mu4e~headers-highlight docid)
-      docid)))
+  (cl-flet ((goto-next-line
+             (arg)
+             (condition-case _err
+                 (and (line-move arg) 0)
+               ((beginning-of-buffer end-of-buffer)
+                1))))
+    (let* ((_succeeded (zerop (goto-next-line lines)))
+           (docid (mu4e~headers-docid-at-point)))
+      ;; move point, even if this function is called when this window is not
+      ;; visible
+      (when docid
+        ;; update all windows showing the headers buffer
+        (walk-windows
+         (lambda (win)
+           (when (eq (window-buffer win) (mu4e-get-headers-buffer))
+             (set-window-point win (point))))
+         nil t)
+        (if (eq mu4e-split-view 'single-window)
+            (when (eq (window-buffer) (mu4e-get-view-buffer))
+              (mu4e-headers-view-message))
+          ;; update message view if it was already showing
+          (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
+            (mu4e-headers-view-message)))
+        ;; attempt to highlight the new line, display the message
+        (mu4e~headers-highlight docid)
+        docid))))
 
 (defun mu4e-headers-next (&optional n)
   "Move point to the next message header.
