@@ -1,4 +1,4 @@
-.TH MU FIND 1 "12 February 2021" "User Manuals"
+.TH MU FIND 1 "22 June 2021" "User Manuals"
 
 .SH NAME
 
@@ -74,17 +74,17 @@ The table of replacement characters is superset of the list mentions for
 search parameters; the complete list:
 
 .nf
-	t	\fBt\fRo: recipient
-	c	\fBc\fRc: (carbon-copy) recipient
-	h	Bcc: (blind carbon-copy, \fBh\fRidden) recipient
-	d	Sent \fBd\fRate of the message
-	f	Message sender (\fBf\fRrom:)
-	g	Message flags (fla\fBg\fRs)
-	l	Full path to the message (\fBl\fRocation)
-	p	Message \fBp\fRriority (high, normal, low)
-	s	Message \fBs\fRubject
-	i	Message-\fBi\fRd
-	m	\fBm\fRaildir
+	t       \fBt\fRo: recipient
+	c       \fBc\fRc: (carbon-copy) recipient
+	h       Bcc: (blind carbon-copy, \fBh\fRidden) recipient
+	d       Sent \fBd\fRate of the message
+	f       Message sender (\fBf\fRrom:)
+	g       Message flags (fla\fBg\fRs)
+	l       Full path to the message (\fBl\fRocation)
+	p       Message \fBp\fRriority (high, normal, low)
+	s       Message \fBs\fRubject
+	i       Message-\fBi\fRd
+	m       \fBm\fRaildir
 	v       Mailing-list Id
 .fi
 
@@ -162,7 +162,7 @@ same maildir. However, this option will delete any symlink it finds,
 so be careful.
 
 .nf
-  $ mu find grolsch --linksdir=~/Maildir/search --clearlinks
+  $ mu find grolsch --format=links --linksdir=~/Maildir/search --clearlinks
 .fi
 
 will store links to found messages in \fI~/Maildir/search\fR. If the directory

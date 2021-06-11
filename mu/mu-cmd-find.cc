@@ -45,8 +45,8 @@ using namespace Mu;
 
 struct OutputInfo{
         Xapian::docid       docid{};
-        bool                is_first{};
-        bool                is_last{};
+        bool                header{};
+        bool                footer{};
         Option<QueryMatch&> match_info;
 };
 
@@ -231,8 +231,10 @@ static bool
 output_link (MuMsg *msg, const OutputInfo& info,
              const MuConfig *opts,  GError **err)
 {
-        if (info.is_first && !prepare_links (opts, err))
-                return FALSE;
+        if (info.header)
+                return prepare_links (opts, err);
+        else if (info.footer)
+                return true;
 
         return mu_maildir_link (mu_msg_get_path (msg),
                                 opts->linksdir, err);
@@ -510,12 +512,12 @@ output_sexp (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **
 static bool
 output_json (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **err)
 {
-        if (info.is_first) {
+        if (info.header) {
                 g_print ("[\n");
                 return true;
         }
 
-        if (info.is_last) {
+        if (info.footer) {
                 g_print("]\n");
                 return true;
         }
@@ -542,13 +544,13 @@ print_attr_xml (const char* elm, const char *str)
 static bool
 output_xml (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **err)
 {
-        if (info.is_first) {
+        if (info.header) {
                 g_print ("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
                 g_print ("<messages>\n");
                 return true;
         }
 
-        if (info.is_last) {
+        if (info.footer) {
                 g_print ("</messages>\n");
                 return true;
         }
@@ -594,7 +596,7 @@ output_query_results (const QueryResults& qres, const MuConfig *opts, GError **e
                 return false;
 
         gboolean rv{true};
-        output_func (NULL, FirstOutput, NULL, NULL);
+        output_func (NULL, FirstOutput, opts, NULL);
 
         for (auto&& item: qres) {
 
@@ -610,7 +612,7 @@ output_query_results (const QueryResults& qres, const MuConfig *opts, GError **e
                 if (!rv)
                         break;
         }
-        output_func (NULL, LastOutput, NULL, NULL);
+        output_func (NULL, LastOutput, opts, NULL);
 
         return rv;
 }
