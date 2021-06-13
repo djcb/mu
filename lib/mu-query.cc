@@ -192,7 +192,7 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         // moreover, in either threaded or non-threaded case, we sort the first
         // ("leader") query by date, i.e, we prefer the newest or oldest
         // (descending) messages.
-        const auto leader_qflags{QueryFlags::Leader | QueryFlags::GatherThreadIds};
+        const auto leader_qflags{QueryFlags::Leader};
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
         // Run our first, "leader" query
@@ -247,7 +247,6 @@ Query::run (const std::string& expr, MuMsgFieldId sortfieldid,
 {
         // some flags are for internal use only.
         g_return_val_if_fail (none_of(qflags & QueryFlags::Leader), Nothing);
-        g_return_val_if_fail (none_of(qflags & QueryFlags::GatherThreadIds), Nothing);
 
         StopWatch sw{format("ran query '%s'; related: %s; threads: %s; max-size: %zu",
                             expr.c_str(),

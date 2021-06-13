@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,30 +27,30 @@
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
 
+namespace Mu
+{
 
-namespace Mu {
-
-class Query {
-public:
+class Query
+{
+        public:
         /**
          * Construct a new Query instance.
          *
          * @param store a MuStore object
          */
-        Query (const Store& store);
+        Query (const Store &store);
         /**
          * DTOR
          *
          */
-        ~Query ();
-
+        ~Query();
 
         /**
          * Move CTOR
          *
          * @param other
          */
-        Query(Query&& other);
+        Query (Query &&other);
 
         /**
          * Run a query on the store
@@ -62,10 +62,9 @@ public:
          *
          * @return the query-results, or Nothing in case of error.
          */
-        Option<QueryResults> run(const std::string& expr="",
-                                 MuMsgFieldId sortfieldid=MU_MSG_FIELD_ID_NONE,
-                                 QueryFlags flags=QueryFlags::None,
-                                 size_t maxnum=0) const;
+        Option<QueryResults> run (const std::string &expr        = "",
+                                  MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
+                                  QueryFlags flags = QueryFlags::None, size_t maxnum = 0) const;
 
         /**
          * run a Xapian query to count the number of matches; for the syntax, please
@@ -75,7 +74,7 @@ public:
          *
          * @return the number of matches
          */
-        size_t count (const std::string& expr="") const;
+        size_t count (const std::string &expr = "") const;
 
         /**
          * For debugging, get the internal string representation of the parsed
@@ -87,12 +86,12 @@ public:
 
          * @return the string representation of the query
          */
-        std::string parse (const std::string& expr, bool xapian) const;
-private:
+        std::string parse (const std::string &expr, bool xapian) const;
+
+        private:
         struct Private;
         std::unique_ptr<Private> priv_;
-
 };
-}
+} // namespace Mu
 
 #endif /*__MU_QUERY_HH__*/
