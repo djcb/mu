@@ -28,16 +28,16 @@ using namespace Mu;
 // whether to include them in the results.
 //
 // Note that to include the "related" messages, we need _two_ queries; the first
-// one to get the initial matches (called the Leader-Query) and a Related-Query, to get
-// the Leader matches + all messages that have a thread-id seen in the Leader
-// matches.
+// one to get the initial matches (called the Leader-Query) and a Related-Query,
+// to get the Leader matches + all messages that have a thread-id seen in the
+// Leader matches.
 //
 // We use the MatchDecider to gather information and use it for both queries.
 
-struct MatchDecider: public Xapian::MatchDecider {
-        MatchDecider (QueryFlags qflags, DeciderInfo& info):
-                qflags_{qflags}, decider_info_{info}
-                {}
+struct MatchDecider : public Xapian::MatchDecider {
+        MatchDecider (QueryFlags qflags, DeciderInfo &info) : qflags_{qflags}, decider_info_{info}
+        {
+        }
         /**
          * Update the match structure with unreadable/duplicate flags
          *
@@ -45,17 +45,17 @@ struct MatchDecider: public Xapian::MatchDecider {
          *
          * @return a new QueryMatch object
          */
-        QueryMatch make_query_match (const Xapian::Document& doc) const {
-
+        QueryMatch make_query_match (const Xapian::Document &doc) const
+        {
                 QueryMatch qm{};
 
-                auto msgid {opt_string(doc, MU_MSG_FIELD_ID_MSGID)
-                        .value_or(*opt_string(doc, MU_MSG_FIELD_ID_PATH))};
-                if (!decider_info_.message_ids.emplace(std::move(msgid)).second)
+                auto msgid{opt_string (doc, MU_MSG_FIELD_ID_MSGID)
+                               .value_or (*opt_string (doc, MU_MSG_FIELD_ID_PATH))};
+                if (!decider_info_.message_ids.emplace (std::move (msgid)).second)
                         qm.flags |= QueryMatch::Flags::Duplicate;
 
-                const auto path{opt_string(doc, MU_MSG_FIELD_ID_PATH)};
-                if (!path || ::access(path->c_str(), R_OK) != 0)
+                const auto path{opt_string (doc, MU_MSG_FIELD_ID_PATH)};
+                if (!path || ::access (path->c_str(), R_OK) != 0)
                         qm.flags |= QueryMatch::Flags::Unreadable;
 
                 return qm;
@@ -68,14 +68,14 @@ struct MatchDecider: public Xapian::MatchDecider {
          *
          * @return true or false
          */
-        bool should_include (const QueryMatch& qm) const {
-
-                if (any_of(qflags_ & QueryFlags::SkipDuplicates) &&
-                    any_of(qm.flags & QueryMatch::Flags::Duplicate))
+        bool should_include (const QueryMatch &qm) const
+        {
+                if (any_of (qflags_ & QueryFlags::SkipDuplicates) &&
+                    any_of (qm.flags & QueryMatch::Flags::Duplicate))
                         return false;
 
-                if (any_of(qflags_ & QueryFlags::SkipUnreadable) &&
-                    any_of(qm.flags & QueryMatch::Flags::Unreadable))
+                if (any_of (qflags_ & QueryFlags::SkipUnreadable) &&
+                    any_of (qm.flags & QueryMatch::Flags::Unreadable))
                         return false;
 
                 return true;
@@ -86,26 +86,28 @@ struct MatchDecider: public Xapian::MatchDecider {
          * @param doc the document (message)
          *
          */
-        void gather_thread_ids(const Xapian::Document& doc) const {
-                auto thread_id{opt_string(doc, MU_MSG_FIELD_ID_THREAD_ID)};
+        void gather_thread_ids (const Xapian::Document &doc) const
+        {
+                auto thread_id{opt_string (doc, MU_MSG_FIELD_ID_THREAD_ID)};
                 if (thread_id)
-                        decider_info_.thread_ids.emplace(std::move(*thread_id));
+                        decider_info_.thread_ids.emplace (std::move (*thread_id));
         }
 
-protected:
+        protected:
         const QueryFlags qflags_;
-        DeciderInfo&     decider_info_;
-private:
-        Option<std::string> opt_string(const Xapian::Document& doc, MuMsgFieldId id) const noexcept try {
-                auto&& val{doc.get_value(id)};
-                return val.empty() ? Nothing : Some(val);
-        } MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
+        DeciderInfo &    decider_info_;
+
+        private:
+        Option<std::string> opt_string (const Xapian::Document &doc, MuMsgFieldId id) const noexcept
+        try {
+                auto &&val{doc.get_value (id)};
+                return val.empty() ? Nothing : Some (val);
+        }
+        MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
 };
 
-struct MatchDeciderLeader final: public MatchDecider {
-        MatchDeciderLeader (QueryFlags qflags, DeciderInfo& info):
-                MatchDecider(qflags, info)
-                {}
+struct MatchDeciderLeader final : public MatchDecider {
+        MatchDeciderLeader (QueryFlags qflags, DeciderInfo &info) : MatchDecider (qflags, info) {}
         /**
          * operator()
          *
@@ -132,32 +134,25 @@ struct MatchDeciderLeader final: public MatchDecider {
          *
          * @return true or false
          */
-        bool operator() (const Xapian::Document& doc) const override {
+        bool operator() (const Xapian::Document &doc) const override
+        {
                 // by definition, we haven't seen the docid before,
                 // so no need to search
-                auto it = decider_info_.matches.emplace(doc.get_docid(),
-                                                        make_query_match(doc));
+                auto it = decider_info_.matches.emplace (doc.get_docid(), make_query_match (doc));
                 it.first->second.flags |= QueryMatch::Flags::Leader;
 
-                if (should_include(it.first->second)) {
-                        // if (any_of(qflags_ & QueryFlags::GatherThreadIds))
-                        //         gather_thread_ids(doc);
-                        return true;
-                }
-                return false;
+                return should_include (it.first->second);
         }
 };
 
-
 std::unique_ptr<Xapian::MatchDecider>
-Mu::make_leader_decider (QueryFlags qflags, DeciderInfo& info)
+Mu::make_leader_decider (QueryFlags qflags, DeciderInfo &info)
 {
-        return std::make_unique<MatchDeciderLeader>(qflags, info);
+        return std::make_unique<MatchDeciderLeader> (qflags, info);
 }
 
-struct MatchDeciderRelated final: public MatchDecider {
-        MatchDeciderRelated(QueryFlags qflags, DeciderInfo& info):
-                MatchDecider(qflags, info) {}
+struct MatchDeciderRelated final : public MatchDecider {
+        MatchDeciderRelated (QueryFlags qflags, DeciderInfo &info) : MatchDecider (qflags, info) {}
         /**
          * operator()
          *
@@ -177,32 +172,31 @@ struct MatchDeciderRelated final: public MatchDecider {
          *
          * @return true or false
          */
-        bool operator() (const Xapian::Document& doc) const override {
+        bool operator() (const Xapian::Document &doc) const override
+        {
                 // we may have seen this match in the "Leader" query.
-                const auto it = decider_info_.matches.find(doc.get_docid());
+                const auto it = decider_info_.matches.find (doc.get_docid());
                 if (it != decider_info_.matches.end())
-                        return should_include(it->second);
+                        return should_include (it->second);
 
-                auto qm{make_query_match(doc)};
-                if (should_include(qm)) {
+                auto qm{make_query_match (doc)};
+                if (should_include (qm)) {
                         qm.flags = QueryMatch::Flags::Related;
-                        decider_info_.matches.emplace(doc.get_docid(), std::move(qm));
+                        decider_info_.matches.emplace (doc.get_docid(), std::move (qm));
                         return true;
                 } else
                         return false; // nope.
         }
 };
 
-
 std::unique_ptr<Xapian::MatchDecider>
-Mu::make_related_decider (QueryFlags qflags, DeciderInfo& info)
+Mu::make_related_decider (QueryFlags qflags, DeciderInfo &info)
 {
-        return std::make_unique<MatchDeciderRelated>(qflags, info);
+        return std::make_unique<MatchDeciderRelated> (qflags, info);
 }
 
-struct MatchDeciderThread final: public MatchDecider {
-        MatchDeciderThread(QueryFlags qflags, DeciderInfo& info):
-                MatchDecider{qflags, info} {}
+struct MatchDeciderThread final : public MatchDecider {
+        MatchDeciderThread (QueryFlags qflags, DeciderInfo &info) : MatchDecider{qflags, info} {}
         /**
          * operator()
          *
@@ -215,17 +209,17 @@ struct MatchDeciderThread final: public MatchDecider {
          *
          * @return true or false
          */
-        bool operator() (const Xapian::Document& doc) const override {
+        bool operator() (const Xapian::Document &doc) const override
+        {
                 // we may have seen this match in the "Leader" query,
                 // or in the second (unbuounded) related query;
-                const auto it{decider_info_.matches.find(doc.get_docid())};
+                const auto it{decider_info_.matches.find (doc.get_docid())};
                 return it != decider_info_.matches.end() && !it->second.thread_path.empty();
         }
 };
 
-
 std::unique_ptr<Xapian::MatchDecider>
-Mu::make_thread_decider (QueryFlags qflags, DeciderInfo& info)
+Mu::make_thread_decider (QueryFlags qflags, DeciderInfo &info)
 {
-        return std::make_unique<MatchDeciderThread>(qflags, info);
+        return std::make_unique<MatchDeciderThread> (qflags, info);
 }
