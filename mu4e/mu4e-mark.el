@@ -266,8 +266,8 @@ The following marks are available, and the corresponding props:
         ;; update the hash -- remove everything current, and if add the new
         ;; stuff, unless we're unmarking
         (remhash docid mu4e~mark-map)
-        ;; remove possible overlays
-        (remove-overlays (line-beginning-position) (line-end-position))
+        ;; remove possible mark overlays
+        (remove-overlays (line-beginning-position) (line-end-position) 'mu4e-mark t)
         ;; now, let's set a mark (unless we were unmarking)
         (unless (eql mark 'unmark)
           (puthash docid (cons mark target) mu4e~mark-map)
@@ -282,6 +282,8 @@ The following marks are available, and the corresponding props:
                              (mu4e~headers-goto-docid docid t)))
                    (overlay (make-overlay start (+ start (length targetstr)))))
               (overlay-put overlay 'display targetstr)
+              (overlay-put overlay 'mu4e-mark t)
+              (overlay-put overlay 'evaporate t)
               docid)))))))
 
 (defun mu4e~mark-get-move-target ()
