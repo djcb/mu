@@ -56,7 +56,14 @@ the end of a message. Otherwise, don't move to the next message."
   '(:from :to  :cc :subject :flags :date :maildir :mailing-list :tags
           :attachments :signature :decryption)
   "Header fields to display in the message view buffer.
-For the complete list of available headers, see `mu4e-header-info'."
+For the complete list of available headers, see
+`mu4e-header-info'.
+
+Note, when using the gnus-based viewer you can only use this add
+fields that are otherwise not shows; you can further tweak the
+fields using e.g. `gnus-article-hide-boring-headers',
+`gnus-article-hide-headers' etc., see the gnus documentation for
+details."
   :type (list 'symbol)
   :group 'mu4e-view)
 
