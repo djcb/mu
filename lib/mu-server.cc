@@ -86,7 +86,7 @@ struct Server::Private {
         void output_sexp(Sexp::List&& lst) const {
                 output_sexp(Sexp::make_list(std::move(lst)));
         }
-        size_t output_sexp (const QueryResults& qres, unsigned maxnum);
+        size_t output_sexp (const QueryResults& qres);
 
         //
         // handlers for various commands.
@@ -731,13 +731,10 @@ determine_docids (const Query& q, const Parameters& params)
 
 
 size_t
-Server::Private::output_sexp (const QueryResults& qres, unsigned maxnum)
+Server::Private::output_sexp (const QueryResults& qres)
 {
         size_t n{};
         for (auto&& mi: qres) {
-
-                if (n >= maxnum)
-                        break;
                 ++n;
                 auto msg{mi.floating_msg()};
                 if (!msg)
@@ -745,7 +742,7 @@ Server::Private::output_sexp (const QueryResults& qres, unsigned maxnum)
 
                 auto qm{mi.query_match()};
                 output_sexp(build_message_sexp(msg, mi.doc_id(),
-                                       qm, MU_MSG_OPTION_HEADERS_ONLY));
+                                               qm, MU_MSG_OPTION_HEADERS_ONLY));
         }
 
         return n;
@@ -796,7 +793,7 @@ Server::Private::find_handler (const Parameters& params)
         }
 
         {
-                const auto foundnum{output_sexp (*qres, maxnum)};
+                const auto foundnum{output_sexp (*qres)};
                 Sexp::List lst;
                 lst.add_prop(":found", Sexp::make_number(foundnum));
                 output_sexp(std::move(lst));

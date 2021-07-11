@@ -45,12 +45,11 @@ struct Query::Private {
 
         Xapian::Enquire make_enquire (const std::string& expr,
                                       MuMsgFieldId sortfieldid, QueryFlags qflags) const;
-        Xapian::Enquire make_related_enquire (const Xapian::Query& first_q,
-                                              const StringSet& thread_ids,
+        Xapian::Enquire make_related_enquire (const StringSet& thread_ids,
                                               MuMsgFieldId sortfieldid, QueryFlags qflags) const;
 
         Option<QueryResults> run_threaded (QueryResults&& qres, Xapian::Enquire& enq,
-                                            QueryFlags qflags, size_t max_size) const;
+                                           QueryFlags qflags) const;
         Option<QueryResults> run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
                                            QueryFlags qflags, size_t maxnum) const;
         Option<QueryResults> run_related (const std::string& expr, MuMsgFieldId sortfieldid,
@@ -101,14 +100,13 @@ Query::Private::make_enquire (const std::string& expr,
 }
 
 Xapian::Enquire
-Query::Private::make_related_enquire (const Xapian::Query& first_q,
-                                      const StringSet& thread_ids,
+Query::Private::make_related_enquire (const StringSet& thread_ids,
                                       MuMsgFieldId sortfieldid, QueryFlags qflags)  const
 {
         Xapian::Enquire enq{store_.database()};
         static std::string pfx (1, mu_msg_field_xapian_prefix(MU_MSG_FIELD_ID_THREAD_ID));
 
-        std::vector<Xapian::Query> qvec{first_q};
+        std::vector<Xapian::Query> qvec;
         for (auto&& t: thread_ids)
                 qvec.emplace_back(pfx + t);
         Xapian::Query qr{Xapian::Query::OP_OR, qvec.begin(), qvec.end()};
@@ -129,7 +127,7 @@ struct ThreadKeyMaker: public Xapian::KeyMaker {
 
 Option<QueryResults>
 Query::Private::run_threaded (QueryResults&& qres, Xapian::Enquire& enq,
-                              QueryFlags qflags, size_t max_size) const
+                              QueryFlags qflags) const
 {
         const auto descending{any_of(qflags & QueryFlags::Descending)};
 
@@ -140,7 +138,7 @@ Query::Private::run_threaded (QueryResults&& qres, Xapian::Enquire& enq,
 
         DeciderInfo minfo;
         minfo.matches = qres.query_matches();
-        auto mset{enq.get_mset(0, max_size, {},
+        auto mset{enq.get_mset(0, store_.size(), {},
                                make_thread_decider(qflags, minfo).get())};
         mset.fetch();
 
@@ -172,7 +170,7 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
 
         auto qres{QueryResults{mset, std::move(minfo.matches)}};
 
-        return threading ? run_threaded(std::move(qres), enq, qflags, maxnum) : qres;
+        return threading ? run_threaded(std::move(qres), enq, qflags) : qres;
 }
 
 static Option<std::string>
@@ -192,12 +190,12 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         // moreover, in either threaded or non-threaded case, we sort the first
         // ("leader") query by date, i.e, we prefer the newest or oldest
         // (descending) messages.
-        const auto leader_qflags{QueryFlags::Leader};
+        const auto leader_qflags{QueryFlags::Leader | qflags};
         const auto threading{any_of(qflags & QueryFlags::Threading)};
 
         // Run our first, "leader" query
         DeciderInfo minfo{};
-        auto enq{make_enquire(expr, sortfieldid, leader_qflags)};
+        auto enq{make_enquire(expr, MU_MSG_FIELD_ID_DATE, leader_qflags)};
         const auto mset{enq.get_mset(0, maxnum, {},
                                      make_leader_decider(leader_qflags, minfo).get())};
 
@@ -214,13 +212,12 @@ Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
         // In the threaded-case, we search among _all_ messages, since complete
         // threads are preferred; no need to sort in that case since the search
         // is unlimited and the sorting happens during threading.
-        auto r_enq{make_related_enquire(enq.get_query(), minfo.thread_ids,
+        auto r_enq{make_related_enquire(minfo.thread_ids,
                                         threading ? MU_MSG_FIELD_ID_NONE : sortfieldid, qflags)};
         const auto r_mset{r_enq.get_mset(0, threading ? store_.size() : maxnum,
                                          {}, make_related_decider(qflags, minfo).get())};
         auto qres{QueryResults{r_mset, std::move(minfo.matches)}};
-
-        return threading ? run_threaded(std::move(qres), r_enq, qflags, maxnum) : qres;
+        return threading ? run_threaded(std::move(qres), r_enq, qflags) : qres;
 }
 
 
