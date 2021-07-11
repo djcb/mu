@@ -1846,7 +1846,8 @@ docid. Otherwise, return nil."
   (cl-flet ((goto-next-line
              (arg)
              (condition-case _err
-                 (and (line-move arg) 0)
+                 (and (let (line-move-visual)
+                        (line-move arg)) 0)
                ((beginning-of-buffer end-of-buffer)
                 1))))
     (let* ((_succeeded (zerop (goto-next-line lines)))
