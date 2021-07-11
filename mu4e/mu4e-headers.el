@@ -767,8 +767,12 @@ avoid slowdowns."
 (defsubst mu4e~headers-apply-flags (msg fieldval)
   "Adjust LINE's face property based on FLAGS."
   (let* ((flags (mu4e-message-field msg :flags))
+         (msg-dir (mu4e-message-field msg :maildir))
+         (trash-dir (mu4e-get-trash-folder msg))
          (face (cond
-                ((memq 'trashed flags) 'mu4e-trashed-face)
+                ((or (memq 'trashed flags)
+                     (equal trash-dir msg-dir))
+                 'mu4e-trashed-face)
                 ((memq 'draft flags)   'mu4e-draft-face)
                 ((or (memq 'unread flags) (memq 'new flags))
                  'mu4e-unread-face)
