@@ -1846,8 +1846,13 @@ docid. Otherwise, return nil."
   (cl-flet ((goto-next-line
              (arg)
              (condition-case _err
-                 (and (let (line-move-visual)
-                        (line-move arg)) 0)
+                 (prog1
+                     (let (line-move-visual)
+                       (and (line-move arg) 0))
+                   ;; Skip invisible text at BOL possibly hidden by
+                   ;; the end of another invisible overlay covering
+                   ;; previous EOL.
+                   (move-to-column 2))
                ((beginning-of-buffer end-of-buffer)
                 1))))
     (let* ((_succeeded (zerop (goto-next-line lines)))
