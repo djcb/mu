@@ -403,8 +403,19 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
    (mu4e-headers-mark-custom)))
 
 (defun mu4e~view-split-view-p ()
-  "Return t if we're in split-view, nil otherwise."
-  (member mu4e-split-view '(horizontal vertical)))
+  "Return t if we're in split-view, nil otherwise.
+Split-view means both headers and view buffer are visible in the
+current frame."
+  (let* ((headers (mu4e-get-headers-buffer))
+         (headers-win (and headers (get-buffer-window headers)))
+         (view (mu4e-get-view-buffer))
+         (view-win (and view (get-buffer-window view))))
+    (and headers-win
+         view-win
+         (eq (window-frame headers-win)
+             (window-frame view-win))
+         (eq (selected-frame)
+             (window-frame view-win)))))
 
 ;;; Scroll commands
 
