@@ -398,19 +398,32 @@ and offer to create it if it does not exist yet."
     mdir))
 
 ;;; Bookmarks
- (defun mu4e-ask-bookmark (prompt)
+(defun mu4e-ask-bookmark (prompt)
   "Ask the user for a bookmark (using PROMPT) as defined in
-`mu4e-bookmarks', then return the corresponding query."
+`mu4e-bookmarks', then return the corresponding query. In order
+to have the counts alway up to date, consider adding `mu4e~start'
+to the following hooks `mu4e-message-changed-hook' and
+`mu4e-index-updated-hook' like so:
+  (add-hook 'mu4e-message-changed-hook #'mu4e~start)
+  (add-hook 'mu4e-index-updated-hook #'mu4e~start)"
   (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))
   (let* ((prompt (mu4e-format "%s" prompt))
+         (server-queries (plist-get mu4e~server-props :queries))
          (bmarks
           (mapconcat
            (lambda (bm)
-             (concat
-              "[" (propertize (make-string 1 (plist-get bm :key))
-                              'face 'mu4e-highlight-face)
-              "]"
-              (plist-get bm :name))) (mu4e-bookmarks) ", "))
+             (let ((bm-server-query (seq-find (lambda (q)
+                                                (string= (plist-get q :query)
+                                                         (plist-get bm :query)))
+                                              server-queries)))
+               (format "[%s]%s (%s/%s)"
+                       (propertize (make-string 1 (plist-get bm :key))
+                                   'face 'mu4e-highlight-face)
+                       (plist-get bm :name)
+                       (plist-get bm-server-query :unread)
+                       (plist-get bm-server-query :count))))
+           (mu4e-bookmarks)
+           ", "))
          (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
 
