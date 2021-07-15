@@ -1301,6 +1301,7 @@ the query history stack."
         (when mu4e~headers-last-query
           (mu4e~headers-push-query mu4e~headers-last-query 'past)))
       (setq mu4e~headers-last-query rewritten-expr)
+      (setq list-buffers-directory rewritten-expr)
       (mu4e~headers-update-mode-line))
 
     ;; when the buffer is already visible, select it; otherwise,

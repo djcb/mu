@@ -169,6 +169,7 @@ found."
       (mu4e~view-show-images-maybe msg)
       (when (not embedded) (setq mu4e~view-message msg))
       (mu4e-view-mode)
+      (setq list-buffers-directory (mu4e-message-field msg :subject))
       (when embedded (local-set-key "q" 'kill-buffer-and-window)))
     (switch-to-buffer buf))))
 
