@@ -336,13 +336,10 @@ and `mu4e-headers-visible-columns'."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-show-images nil
-  "If non-nil, automatically display images in the view buffer."
+  "If non-nil, automatically display images in the view
+buffer. Applies only to the _old_ message view."
   :type 'boolean
   :group 'mu4e-view)
-
-(make-obsolete-variable 'mu4e-show-images
-                        'mu4e-view-show-images "0.9.9.x")
-
 
 (defcustom mu4e-view-auto-mark-as-read t
   "Automatically mark messages are 'read' when you read them.
