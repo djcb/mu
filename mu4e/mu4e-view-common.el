@@ -494,9 +494,10 @@ list."
   "Keymap used for the urls inside the body.")
 
 (defvar mu4e~view-beginning-of-url-regexp
-  "https?\\://\\|mailto:"
-  "Regexp that matches the beginning of http:/https:/mailto:
-URLs; match-string 1 will contain the matched URL, if any.")
+  "\\(?:https?\\|gemini\\|gopher\\|finger\\)://\\|mailto:"
+  "Regexp that matches the beginning of http:/https:/mailto: or
+gemini/gopher/finger URLs; match-string 1 will contain the
+matched URL, if any.")
 
 
 (defun mu4e~view-browse-url-from-binding (&optional url)
