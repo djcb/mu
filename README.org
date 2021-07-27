@@ -14,24 +14,27 @@
 
 Welcome to ~mu~!
 
-*Note*: you are looking at the *development* branch, which is where new code is being developed and
-tested, and which may occasionally break.
+*Note*: you are looking at the *development* branch, which is where new
+code is being developed and tested, and which may occasionally break.
 
-Distribution and non-adventurous users are instead recommended to use the 1.4.x Release Branch [[https://github.com/djcb/mu/tree/release/1.4.x][1.4.x
-Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.4.x Releases]].
+Distribution and non-adventurous users are instead recommended to use
+the [[https://github.com/djcb/mu/tree/release/1.6.x][1.6.x Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.4.x Releases]].
 
-Given the enormous amounts of e-mail many people gather and the importance of e-mail message in our
-work-flows, it's essential to quickly deal with all that mail - in particular, to instantly find
-that one important e-mail you need right now, and quickly file away message for later use.
+Given the enormous amounts of e-mail many people gather and the
+importance of e-mail message in our work-flows, it's essential to
+quickly deal with all that mail - in particular, to instantly find
+that one important e-mail you need right now, and quickly file away
+message for later use.
 
-~mu~ is a tool for dealing with e-mail messages stored in the Maildir-format. ~mu~'s purpose in life is
-to help you to quickly find the messages you need; in addition, it allows you to view messages,
-extract attachments, create new maildirs, and so on. See the [[www/cheatsheet.md][mu cheatsheet]] for some examples. =mu=
-is fully documented.
+~mu~ is a tool for dealing with e-mail messages stored in the
+Maildir-format. ~mu~'s purpose in life is to help you to quickly find
+the messages you need; in addition, it allows you to view messages,
+extract attachments, create new maildirs, and so on. See the [[www/cheatsheet.md][mu
+cheatsheet]] for some examples. =mu= is fully documented.
 
-After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them
-using a custom query language. You can use various message fields or words in the body text to find
-the right messages.
+After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search
+them using a custom query language. You can use various message fields
+or words in the body text to find the right messages.
 
 Built on top of ~mu~ are some extensions (included in this package):
 
@@ -39,8 +42,10 @@ Built on top of ~mu~ are some extensions (included in this package):
 
 - mu-guile: bindings for the Guile/Scheme programming language (version 2.2 and later)
 
-~mu~ is written in C and C++; ~mu4e~ is written in elisp, and ~mu-guile~ in a mix of C and Scheme.
+~mu~ is written in C and C++; ~mu4e~ is written in elisp, and ~mu-guile~ in
+a mix of C and Scheme.
 
-Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora) under the name
-~maildir-utils~; apparently because they don't like short names. The all of the code is distributed
-under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License version 3]] (or higher).
+Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and
+Fedora) under the name ~maildir-utils~; apparently because they don't
+like short names. The all of the code is distributed under the terms
+of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License version 3]] (or higher).

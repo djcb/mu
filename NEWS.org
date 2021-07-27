@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.5.x (unreleased, development version)
+* 1.6 (released, as of July 27 2021)
 
 *** mu
 
@@ -43,7 +43,7 @@
       faster crypto, support for S/MIME, syntax-highlighting, calendar
       invitations and more.
 
-      The new view is superior in most ways, but if you still depend need
+      The new view is superior in most ways, but if you still depend on
       something from the old one, you can use:
       #+begin_example
       ;; set *before* loading mu4e; and restart emacs if you want to change it
