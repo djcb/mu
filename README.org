@@ -18,7 +18,7 @@ Welcome to ~mu~!
 code is being developed and tested, and which may occasionally break.
 
 Distribution and non-adventurous users are instead recommended to use
-the [[https://github.com/djcb/mu/tree/release/1.6.x][1.6.x Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.4.x Releases]].
+the [[https://github.com/djcb/mu/tree/release/1.6.x][1.6.x Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.6.x Releases]].
 
 Given the enormous amounts of e-mail many people gather and the
 importance of e-mail message in our work-flows, it's essential to
