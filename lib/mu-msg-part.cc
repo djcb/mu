@@ -739,7 +739,7 @@ write_object_to_fd (GMimeObject *obj, int fd, GError **err)
 	if (write (fd, str, strlen(str)) == -1) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_GMIME,
 			     "failed to write object: %s",
-			     strerror(errno));
+			     g_strerror(errno));
 		return FALSE;
 	}
 
@@ -768,7 +768,7 @@ save_object (GMimeObject *obj, MuMsgOptions opts, const char *fullpath,
 	if (fd == -1) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not open '%s' for writing: %s",
-			     fullpath, errno ? strerror(errno) : "error");
+			     fullpath, errno ? g_strerror(errno) : "error");
 		return FALSE;
 	}
 
@@ -780,7 +780,7 @@ save_object (GMimeObject *obj, MuMsgOptions opts, const char *fullpath,
 	if (close (fd) != 0 && !err) { /* don't write on top of old err */
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "could not close '%s': %s",
-			     fullpath, errno ? strerror(errno) : "error");
+			     fullpath, errno ? g_strerror(errno) : "error");
 		return FALSE;
 	}
 

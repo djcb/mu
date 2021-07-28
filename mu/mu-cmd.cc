@@ -308,7 +308,7 @@ check_file_okay (const char *path, gboolean cmd_add)
 
 	if (cmd_add && access(path, R_OK) != 0) {
 		g_printerr ("path is not readable: %s: %s\n",
-                            path, strerror (errno));
+                            path, g_strerror (errno));
 		return FALSE;
 	}
 

@@ -59,7 +59,7 @@ install_sig_handler (void)
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction (sigs[i], &action, NULL) != 0)
 			g_critical ("set sigaction for %d failed: %s",
-				    sigs[i], strerror (errno));;
+				    sigs[i], g_strerror (errno));;
 }
 
 
@@ -101,7 +101,7 @@ Mu::mu_cmd_index (Mu::Store& store, const MuConfig *opts, GError **err)
         const auto mdir{store.metadata().root_maildir};
         if (G_UNLIKELY(access (mdir.c_str(), R_OK) != 0)) {
                 mu_util_g_set_error(err, MU_ERROR_FILE,
-                                   "'%s' is not readable: %s", mdir.c_str(), strerror (errno));
+                                   "'%s' is not readable: %s", mdir.c_str(), g_strerror (errno));
                 return MU_ERROR;
         }
 

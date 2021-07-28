@@ -250,7 +250,7 @@ mu_script_get_script_info_list (const char *path, const char *ext,
 	if (!dir) {
 		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_OPEN,
 				     "failed to open '%s': %s",
-				     path, strerror(errno));
+				     path, g_strerror(errno));
 		return NULL;
 	}
 
@@ -323,7 +323,7 @@ mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
 	if (access (mu_script_info_path (msi), R_OK) != 0) {
 		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_READ,
 				     "failed to read script: %s",
-				     strerror(errno));
+				     g_strerror(errno));
 		 return FALSE;
 	}
 

@@ -1097,7 +1097,7 @@ Server::Private::remove_handler (const Parameters& params)
 
         if (::unlink (path.c_str()) != 0 && errno != ENOENT)
                 throw Error(Error::Code::File, "could not delete %s: %s",
-                                  path.c_str(), strerror (errno));
+                                  path.c_str(), g_strerror (errno));
 
         if (!store().remove_message (path))
                 g_warning("failed to remove message @ %s (%d) from store",

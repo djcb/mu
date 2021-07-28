@@ -92,14 +92,14 @@ init_file_metadata (MuMsgFile *self, const char* path, const gchar* mdir,
 	if (access (path, R_OK) != 0) {
 		mu_util_g_set_error (err, MU_ERROR_FILE,
 				     "cannot read file %s: %s",
-				     path, strerror(errno));
+				     path, g_strerror(errno));
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) < 0) {
 		mu_util_g_set_error (err, MU_ERROR_FILE,
 				     "cannot stat %s: %s",
-				     path, strerror(errno));
+				     path, g_strerror(errno));
 		return FALSE;
 	}
 
@@ -151,7 +151,7 @@ get_mime_stream (MuMsgFile *self, const char *path, GError **err)
 	if (!file) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 			     "cannot open %s: %s",
-			     path, strerror (errno));
+			     path, g_strerror (errno));
 		return NULL;
 	}
 

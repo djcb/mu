@@ -371,7 +371,7 @@ get_file_size (const char* path)
 
 	rv = stat (path, &statbuf);
 	if (rv != 0) {
-		/* g_warning ("error: %s", strerror (errno)); */
+		/* g_warning ("error: %s", g_strerror (errno)); */
 		return -1;
 	}
 

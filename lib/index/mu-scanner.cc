@@ -91,7 +91,7 @@ Scanner::Private::process_dentry (const std::string& path, struct dirent *dentry
         const auto fullpath{path + "/" + dentry->d_name};
         struct stat statbuf;
         if (::stat(fullpath.c_str(), &statbuf) != 0) {
-                g_warning ("failed to stat %s: %s", fullpath.c_str(), ::strerror(errno));
+                g_warning ("failed to stat %s: %s", fullpath.c_str(), g_strerror(errno));
                 return false;
         }
 
@@ -120,7 +120,7 @@ Scanner::Private::process_dir (const std::string& path, bool is_maildir)
 {
         const auto dir = opendir (path.c_str());
         if (G_UNLIKELY(!dir)) {
-                g_warning("failed to scan dir %s: %s", path.c_str(), strerror(errno));
+                g_warning("failed to scan dir %s: %s", path.c_str(), g_strerror(errno));
                 return false;
         }
 
@@ -137,7 +137,7 @@ Scanner::Private::process_dir (const std::string& path, bool is_maildir)
                 }
 
                 if (errno != 0) {
-                        g_warning("failed to read %s: %s", path.c_str(), strerror(errno));
+                        g_warning("failed to read %s: %s", path.c_str(), g_strerror(errno));
                         continue;
                 }
 
@@ -159,13 +159,13 @@ Scanner::Private::start()
 
         const auto mode{F_OK | R_OK};
         if (G_UNLIKELY(access (path.c_str(), mode) != 0)) {
-                g_warning("'%s' is not readable: %s", path.c_str(), strerror (errno));
+                g_warning("'%s' is not readable: %s", path.c_str(), g_strerror (errno));
                 return false;
         }
 
         struct stat statbuf{};
         if (G_UNLIKELY(stat (path.c_str(), &statbuf) != 0)) {
-                g_warning("'%s' is not stat'able: %s", path.c_str(), strerror (errno));
+                g_warning("'%s' is not stat'able: %s", path.c_str(), g_strerror (errno));
                 return false;
         }
 

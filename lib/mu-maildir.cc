@@ -89,7 +89,7 @@ create_maildir (const char *path, mode_t mode, GError **err)
 			return mu_util_g_set_error
 				(err,MU_ERROR_FILE_CANNOT_MKDIR,
 				 "creating dir failed for %s: %s",
-				 fullpath, strerror (errno));
+				 fullpath, g_strerror (errno));
 	}
 
 	return TRUE;
@@ -112,7 +112,7 @@ create_noindex (const char *path, GError **err)
 	if (fd < 0 || close (fd) != 0)
 		return mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_CREATE,
 					    "error in create_noindex: %s",
-					    strerror (errno));
+					    g_strerror (errno));
 	return TRUE;
 }
 
@@ -200,7 +200,7 @@ Mu::mu_maildir_link (const char* src, const char *targetpath, GError **err)
 	if (rv != 0)
 		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_LINK,
 				     "error creating link %s => %s: %s",
-				     targetfullpath, src, strerror (errno));
+				     targetfullpath, src, g_strerror (errno));
 	g_free (targetfullpath);
 
 	return rv == 0 ? TRUE: FALSE;
@@ -266,7 +266,7 @@ clear_links (const char *path, DIR *dir)
 		if (d_type == DT_LNK) {
 			if (unlink (fullpath) != 0 ) {
 				g_warning ("error unlinking %s: %s",
-					   fullpath, strerror(errno));
+					   fullpath, g_strerror(errno));
 				rv = FALSE;
 			}
 		} else if (d_type == DT_DIR) {
@@ -274,7 +274,7 @@ clear_links (const char *path, DIR *dir)
 			subdir = opendir (fullpath);
 			if (!subdir) {
 				g_warning ("failed to open dir %s: %s",
-					   fullpath, strerror(errno));
+					   fullpath, g_strerror(errno));
 				rv = FALSE;
 				goto next;
 			}
@@ -303,7 +303,7 @@ Mu::mu_maildir_clear_links (const char *path, GError **err)
 	dir = opendir (path);
 	if (!dir) {
 		g_set_error (err, MU_ERROR_DOMAIN, MU_ERROR_FILE_CANNOT_OPEN,
-			     "failed to open %s: %s", path, strerror(errno));
+			     "failed to open %s: %s", path, g_strerror(errno));
 		return FALSE;
 	}
 
@@ -507,7 +507,7 @@ get_file_size (const char* path)
 
 	rv = stat (path, &statbuf);
 	if (rv != 0) {
-		/* g_warning ("error: %s", strerror (errno)); */
+		/* g_warning ("error: %s", g_strerror (errno)); */
 		return -1;
 	}
 

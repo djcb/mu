@@ -110,7 +110,7 @@ mu_util_dir_expand (const char *path)
 	/* now resolve any symlinks, .. etc. */
 	if (realpath (dir, resolved) == NULL) {
 		/* g_debug ("%s: could not get realpath for '%s': %s", */
-		/* 	 __func__, dir, strerror(errno)); */
+		/* 	 __func__, dir, g_strerror(errno)); */
 		g_free (dir);
 		return NULL;
 	} else
@@ -157,12 +157,12 @@ mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
 	mode = F_OK | (readable ? R_OK : 0) | (writeable ? W_OK : 0);
 
 	if (access (path, mode) != 0) {
-		/* g_debug ("Cannot access %s: %s", path, strerror (errno)); */
+		/* g_debug ("Cannot access %s: %s", path, g_strerror (errno)); */
 		return FALSE;
 	}
 
 	if (stat (path, &statbuf) != 0) {
-		/* g_debug ("Cannot stat %s: %s", path, strerror (errno)); */
+		/* g_debug ("Cannot stat %s: %s", path, g_strerror (errno)); */
 		return FALSE;
 	}
 
@@ -217,7 +217,7 @@ mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
 	if (g_mkdir_with_parents (path, mode) != 0) {
 		if (!nowarn)
 			g_warning ("failed to create %s: %s",
-				   path, strerror(errno));
+				   path, g_strerror(errno));
 		return FALSE;
 	}
 
@@ -355,7 +355,7 @@ mu_util_get_dtype (const char *path, gboolean use_lstat)
 
 	if (res != 0) {
 		g_warning ("%sstat failed on %s: %s",
-			   use_lstat ? "l" : "", path, strerror(errno));
+			   use_lstat ? "l" : "", path, g_strerror(errno));
 		return DT_UNKNOWN;
 	}
 
@@ -496,7 +496,7 @@ mu_util_read_password (const char *prompt)
 	pass = getpass (prompt); /* returns static mem, don't free */
 	if (!pass) {
 		if (errno)
-			g_warning ("error: %s", strerror(errno));
+			g_warning ("error: %s", g_strerror(errno));
 		return NULL;
 	}
 

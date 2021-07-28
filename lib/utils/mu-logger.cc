@@ -48,7 +48,7 @@ maybe_open_logfile ()
         MuStream.open (MuLogPath, std::ios::out | std::ios::app );
         if (!MuStream.is_open()) {
                 std::cerr << "opening " << MuLogPath << " failed:"
-                          << strerror(errno) << std::endl;
+                          << g_strerror(errno) << std::endl;
                 return false;
         }
 
@@ -78,7 +78,7 @@ maybe_rotate_logfile ()
         if (g_rename(MuLogPath.c_str(), old.c_str()) != 0)
                 std::cerr << "failed to rename "
                           << MuLogPath << " -> " << old.c_str()
-                          << ": " << ::strerror(errno) << std::endl;
+                          << ": " << g_strerror(errno) << std::endl;
 
         return maybe_open_logfile();
 }

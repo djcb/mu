@@ -338,7 +338,7 @@ Indexer::start(const Indexer::Config& conf)
 {
         const auto mdir{priv_->store_.metadata().root_maildir};
         if (G_UNLIKELY(access (mdir.c_str(), R_OK) != 0)) {
-                g_critical("'%s' is not readable: %s", mdir.c_str(), strerror (errno));
+                g_critical("'%s' is not readable: %s", mdir.c_str(), g_strerror (errno));
                 return false;
         }
 

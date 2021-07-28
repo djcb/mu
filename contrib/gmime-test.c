@@ -229,7 +229,7 @@ test_file (const char *path)
 	file = fopen (path, "r");
 	if (!file) {
 		g_warning ("cannot open file '%s': %s", path,
-			   strerror(errno));
+			   g_strerror(errno));
 		rv = FALSE;
 		goto leave;
 	}
