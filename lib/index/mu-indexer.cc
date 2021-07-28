@@ -275,11 +275,10 @@ Indexer::Private::start(const Indexer::Config& conf)
 
                 {
                         // now there may still be messages in the work queue...
-                        // finish those, but only for a while.
-                        const auto start{std::chrono::steady_clock::now()};
-                        while (!fq_.empty() && std::chrono::steady_clock::now() - start < 10s) {
+                        // finish those; this is a bit ugly; perhaps we should
+                        // handle SIGTERM etc.
+                        while (!fq_.empty())
                                 std::this_thread::sleep_for(100ms);
-                        }
                 }
 
                 if (!fq_.empty()) {
