@@ -47,5 +47,5 @@ a mix of C and Scheme.
 
 Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and
 Fedora) under the name ~maildir-utils~; apparently because they don't
-like short names. The all of the code is distributed under the terms
+like short names. All of the code is distributed under the terms
 of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License version 3]] (or higher).
