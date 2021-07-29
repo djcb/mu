@@ -1,6 +1,6 @@
 ;;; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2015-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>

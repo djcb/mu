@@ -70,7 +70,8 @@ no unread messages.")
 
     (define-key map "S" 'mu4e-kill-update-mail)
     (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-    (define-key map ";" 'mu4e-context-switch)
+    (define-key map ";"
+      (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
 
     (define-key map "$" 'mu4e-show-log)
     (define-key map "A" 'mu4e-about)
@@ -256,7 +257,8 @@ When REFRESH is non nil refresh infos from server."
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-       (mu4e~main-action-str "\t* [;]Switch context\n" 'mu4e-context-switch)
+       (mu4e~main-action-str "\t* [;]Switch context\n"
+                             (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
 
        (mu4e~main-action-str "\t* [U]pdate email & database\n"
                              'mu4e-update-mail-and-index)
