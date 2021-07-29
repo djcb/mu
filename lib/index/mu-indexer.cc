@@ -233,8 +233,8 @@ Indexer::Private::cleanup()
         });
 
         g_debug("remove %zu message(s) from store", orphans.size());
-
         store_.remove_messages (orphans);
+        progress_.removed += orphans.size();
 
         return true;
 }
@@ -273,19 +273,11 @@ Indexer::Private::start(const Indexer::Config& conf)
                 }
 
 
-                {
-                        // now there may still be messages in the work queue...
-                        // finish those; this is a bit ugly; perhaps we should
-                        // handle SIGTERM etc.
-                        while (!fq_.empty())
-                                std::this_thread::sleep_for(100ms);
-                }
-
-                if (!fq_.empty()) {
-                        g_warning ("scan takes too long; dropping %zu file(s) from queue",
-                                   fq_.size());
-                        fq_.clear();
-                }
+                // now there may still be messages in the work queue...
+                // finish those; this is a bit ugly; perhaps we should
+                // handle SIGTERM etc.
+                while (!fq_.empty())
+                        std::this_thread::sleep_for(100ms);
 
                 if (conf_.cleanup) {
                         g_debug ("starting cleanup");
