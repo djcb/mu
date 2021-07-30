@@ -743,18 +743,8 @@ space propertized with a 'display text property which expands to
       (mu4e~headers-truncate-field-precise field val width)
     (mu4e~headers-truncate-field-fast val width)))
 
-(defcustom mu4e-headers-field-properties-function nil
-  "Function that specifies custom text properties for a header field.
-
-The function takes a message-plist and a field-id, and is expected to
-return either nil or a property-list with text-properties to apply.
-
-This allows for turning the list of message headers into an angry
-fruit salad. Note that this function is called for each relevant
-field of each message and thus should you should be careful to
-avoid slowdowns."
-  :type 'function
-  :group 'mu4e-headers)
+(make-obsolete-variable 'mu4e-headers-field-properties-function
+                        "not used" "1.6.1")
 
 (defsubst mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
