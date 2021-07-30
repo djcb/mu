@@ -3,6 +3,10 @@
 
 * 1.6 (released, as of July 27 2021)
 
+  NOTE: After upgrading, you need to call ~mu init~, with your prefered parameters
+  before you can use ~mu~ / ~mu4e~. This is because the underlying database-schema
+  has changed.
+
 *** mu
 
     - Where available (and with suitably equiped ~libglib~), log to the ~systemd~
