@@ -87,6 +87,17 @@ output_sexp_stdout (Sexp&& sexp)
         }
 }
 
+static void
+report_error(const Mu::Error& err) noexcept
+{
+        Sexp::List e;
+
+        e.add_prop(":error",   Sexp::make_number(static_cast<size_t>(err.code())));
+        e.add_prop(":message", Sexp::make_string(err.what()));
+
+        output_sexp_stdout(Sexp::make_list(std::move(e)));
+}
+
 MuError
 Mu::mu_cmd_server (const MuConfig *opts, GError **err) try {
 
@@ -130,9 +141,10 @@ Mu::mu_cmd_server (const MuConfig *opts, GError **err) try {
         return MU_OK;
 
 } catch (const Error& er) {
-        g_critical ("server caught exception: %s", er.what());
-        g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", er.what());
-        return MU_ERROR;
+        /* note: user-level error, "OK" for mu */
+        report_error(er);
+        g_warning ("server caught exception: %s", er.what());
+        return MU_OK;
 } catch (...) {
         g_critical ("server caught exception");
         g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
