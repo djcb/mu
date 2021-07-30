@@ -292,6 +292,8 @@ Store::Store (const std::string& path, bool readonly):
         if (metadata().schema_version != ExpectedSchemaVersion)
                 throw Mu::Error(Error::Code::SchemaMismatch,
                                 "expected schema-version %s, but got %s",
+                                "expected schema-version %s, but got %s; "
+                                "please use 'mu init'",
                                 ExpectedSchemaVersion,
                                 metadata().schema_version.c_str());
 }
