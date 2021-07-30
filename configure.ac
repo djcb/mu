@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.6.0],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.6.1],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2020 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
@@ -189,7 +189,7 @@ PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
 # note that MU_STORE_SCHEMA_VERSION does not follow mu versioning, as we
 # hopefully don't have updates for each version; also, this has nothing to do
 # with Xapian's software version
-AC_DEFINE(MU_STORE_SCHEMA_VERSION,["451"],['Schema' version of the database])
+AC_DEFINE(MU_STORE_SCHEMA_VERSION,["452"],['Schema' version of the database])
 ###############################################################################
 
 ###############################################################################
