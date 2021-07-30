@@ -664,6 +664,7 @@ process."
   ;; don't use mu4e-error here; it's running in the process filter context
   (cl-case errcode
     (4 (user-error "No matches for this search query."))
+    (110 (display-warning 'mu4e errmsg :error)) ;; schema version.
     (t (error "Error %d: %s" errcode errmsg))))
 
 
