@@ -274,7 +274,7 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 (defvar mu4e-headers-full-label       '("F" . "∀")
   "Non-fancy and fancy labels for full search in the mode-line.")
 (defvar mu4e-headers-related-label    '("R" . "🤝")
-  "Non-fancy and fancy labels for inclued-related search in the mode-line.")
+  "Non-fancy and fancy labels for include-related search in the mode-line.")
 
 ;;;; Various
 
