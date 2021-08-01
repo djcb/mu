@@ -245,8 +245,7 @@ replace with."
   (with-temp-buffer
     (insert body)
     (goto-char (point-min))
-    (while (re-search-forward "[
- ]" nil t)
+    (while (re-search-forward "\015 ]" nil t)
       (replace-match
        (cond
         ((string= (match-string 0) "") "'")
