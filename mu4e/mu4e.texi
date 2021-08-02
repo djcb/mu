@@ -1370,10 +1370,17 @@ To disable this, set @code{gnus-inhibit-images} to @t{t}.  By default,
 external images in HTML are not retrieved from external URLs because
 they can be used to track you.
 
+Apart from that, you can also control whether to load remote images;
+since loading remote images is often used for privacy violations, by
+default this is not allowed.
+
 You can specify what URLs to block by setting
-@code{gnus-blocked-images} to a regular exporession or to a function
-that will receive the message as an argument.  For example, to enable
-images in Github notifications, do the following:
+@code{gnus-blocked-images} to a regular expression or to a function
+that will receive a single parameter which is not meaningful for
+@t{mu4e}.
+
+For example, to enable images in Github notifications, you could use
+the following:
 
 @lisp
 (setq gnus-blocked-images
@@ -1383,6 +1390,11 @@ images in Github notifications, do the following:
         nil ".")))
 @end lisp
 
+@code{mu4e} inherits the default @t{gnus-blocked-images} from Gnus and
+ensures that it works with @t{mu4e} too. However, mu4e is not Gnus, so
+if you have Gnus-specific settings for @t{gnus-blocked-images}, you
+should verify that they have the desired effect in @code{mu4e} as
+well.
 
 @node MSGV Custom headers
 @section Custom headers

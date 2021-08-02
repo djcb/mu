@@ -422,6 +422,13 @@ Gnus' article-mode."
   (advice-add 'gnus-set-mode-line :around #'mu4e~view-nop)
   (advice-add 'gnus-button-reply :around #'mu4e~view-button-reply)
   (advice-add 'gnus-msg-mail :around #'mu4e~view-msg-mail)
+
+  ;; advice gnus-block-private-groups to always return "."
+  ;; so that by default we block images.
+  (advice-add 'gnus-block-private-groups :around
+              (lambda(func &rest args)
+                (if (mu4e~view-mode-p)
+                    "." (apply func args))))
   (mu4e~view-mode-body))
 
 ;;; Massaging the message view
