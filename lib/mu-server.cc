@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include "mu-msg-fields.h"
+#include "mu-msg.hh"
 #include "mu-server.hh"
 
 #include <iostream>
@@ -106,7 +107,6 @@ struct Server::Private {
         void sent_handler (const Parameters& params);
         void view_handler (const Parameters& params);
 
-
 private:
         // helpers
         Sexp build_message_sexp(MuMsg *msg, unsigned docid,
@@ -118,6 +118,9 @@ private:
         Sexp::List perform_move (Store::Id docid, MuMsg *msg,
                                  const std::string& maildirarg,
                                  MuFlags flags, bool new_name, bool no_view);
+
+        bool maybe_mark_as_read (MuMsg *msg, Store::Id docid);
+        bool maybe_mark_msgid_as_read (const  Mu::Query& query, const char* msgid);
 
         Store&           store_;
         Server::Output   output_;
@@ -1127,13 +1130,12 @@ Server::Private::sent_handler (const Parameters& params)
         output_sexp (std::move(lst));
 }
 
-static bool
-maybe_mark_as_read (Mu::Store& store, MuMsg *msg, Store::Id docid)
+
+bool
+Server::Private::maybe_mark_as_read (MuMsg *msg, Store::Id docid)
 {
         if (!msg)
                 throw Error{Error::Code::Store, "missing message"};
-        if (docid == Store::InvalidId)
-                throw Error{Error::Code::Store, "invalid docid"};
 
         const auto oldflags{mu_msg_get_flags (msg)};
         const auto newflags{get_flags (mu_msg_get_path(msg), "+S-u-N")};
@@ -1149,48 +1151,77 @@ maybe_mark_as_read (Mu::Store& store, MuMsg *msg, Store::Id docid)
                                      &gerr))
                 throw Error{Error::Code::File, &gerr, "failed to move message"};
 
-        /* after mu_msg_move_to_maildir, path will be the *new* path, and flags
-         * and maildir fields will be updated as wel */
-        if (!store.update_message (msg, docid))
+        /* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir fields
+         * will be updated as wel */
+        if (!store().update_message (msg, docid))
                 throw Error{Error::Code::Store, "failed to store updated message"};
 
+        /* send an update */
+        Sexp::List update;
+        update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_NONE));
+        output_sexp(Sexp::make_list(std::move(update)));
+
         g_debug ("marked message %d as read => %s", docid, mu_msg_get_path(msg));
+
+        return true;
+}
+
+
+bool
+Server::Private::maybe_mark_msgid_as_read (const  Mu::Query& query, const char* msgid)
+{
+        if (!msgid)
+                return false; // nothing to do.
+
+        const auto docids{docids_for_msgid(query, std::string{msgid})};
+        for (auto&& docid: docids) {
+                MuMsg *msg = store().find_message(docid);
+                if (!msg)
+                        continue;
+                try {
+                        maybe_mark_as_read(msg, docid);
+                } catch (...) {
+                        mu_msg_unref(msg);
+                        throw;
+                }
+        }
+
         return true;
 }
 
 void
 Server::Private::view_handler (const Parameters& params)
 {
-        std::vector<Store::Id> docids;
+        Store::Id docid{Store::InvalidId};
         const auto path{get_string_or(params,       ":path")};
         const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
 
         GError *gerr{};
         MuMsg *msg{};
 
-        if (!path.empty()) {
-                /* only use for old view (embedded msgs) */
-                msg    = mu_msg_new_from_file (path.c_str(), NULL, &gerr);
+        if (!path.empty()) { /* only use for old view (embedded msgs) */
+                docid = Store::InvalidId;
+                msg   = mu_msg_new_from_file (path.c_str(), NULL, &gerr);
         } else {
-                docids = determine_docids(query(), params);
-                msg    = store().find_message(docids.at(0));
+                docid = determine_docids(query(), params).at(0);
+                msg   = store().find_message(docid);
         }
 
         if (!msg)
                 throw Error{Error::Code::Store, &gerr,
-                                "failed to find message for view"};
+                        "failed to find message for view"};
 
         if (mark_as_read) {
-                /* mark _all_ messsage with given docid as read. */
-                for (auto&& docid: docids)
-                        maybe_mark_as_read (store(), msg, docid);
+                // maybe mark the main message as read.
+                maybe_mark_as_read(msg, docid);
+                /* maybe mark _all_ messsage with same message-id as read */
+                maybe_mark_msgid_as_read(query(), mu_msg_get_msgid(msg));
         }
 
         Sexp::List seq;
         seq.add_prop(":view", build_message_sexp(
-                             msg, docids.at(0), {}, message_options(params)));
+                             msg, docid, {}, message_options(params)));
         mu_msg_unref(msg);
-
         output_sexp (std::move(seq));
 }
 
