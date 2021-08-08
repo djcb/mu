@@ -69,7 +69,7 @@ details."
 
 (defcustom mu4e-view-actions
   '( ("capture message"  . mu4e-action-capture-message)
-     ("view as pdf"      . mu4e-action-view-as-pdf)
+     ("view in browser"  . mu4e-action-view-in-browser)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in view mode.
 The actions are cons-cells of the form:

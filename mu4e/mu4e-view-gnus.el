@@ -73,8 +73,10 @@ etc."
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mu4e-action-view-in-browser (msg)
-  "Show current message MSG in browser, if it contains an html body."
-;;  (with-temp-buffer
+  "Show current MSG in browser if it includes an HTML-part.
+The variables `browse-url-browser-function',
+`browse-url-handlers', and `browse-url-default-handlers'
+determine which browser function to use."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-field msg :path) nil nil nil t)
