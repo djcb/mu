@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
 /*
-**
-** Copyright (C) 2008-2016 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,13 +17,11 @@
 **
 */
 
-#if HAVE_CONFIG_H
 #include <config.h>
-#endif /*HAVE_CONFIG_H*/
 
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE (500)
-#endif /*_XOPEN_SOURCE*/
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif /*_GNU_SOURCE*/
 
 #include "mu-util.h"
 #ifdef HAVE_WORDEXP_H
