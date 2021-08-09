@@ -36,6 +36,25 @@
   :group 'mu4e
   :group 'org)
 
+(defcustom mu4e-org-link-desc-func
+  (lambda (msg) (or (plist-get msg :subject) "No subject"))
+  "Function that takes a msg and returns a description.
+This can be used in org capture templates and storing links.
+
+Example usage:
+
+  (defun my-link-descr (msg)
+    (let ((subject (or (plist-get msg :subject)
+                       \"No subject\"))
+          (date (or (format-time-string mu4e-headers-date-format
+                    (mu4e-msg-field msg :date))
+                    \"No date\")))
+      (concat subject \" \" date)))
+
+  (setq org-mu4e-link-desc-func 'my-link-descr)"
+  :type '(function)
+  :group 'mu4e-org)
+
 (defvar mu4e-org-link-query-in-headers-mode nil
   "Prefer linking to the query rather than to the message.
 If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
@@ -79,7 +98,7 @@ the current query; otherwise, it links to the message at point.")
      :to                       (when to
                                  (mu4e~org-address to))
      :link                     (concat "mu4e:msgid:" msgid)
-     :description              (or (plist-get msg :subject) "No subject"))))
+     :description              (funcall mu4e-org-link-desc-func msg))))
 
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.

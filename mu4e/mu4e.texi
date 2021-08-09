@@ -3544,7 +3544,8 @@ You can use the normal @t{org-mode} mechanisms to store links:
 you are in @ref{Message view}. When you are in @ref{Headers view},
 @kbd{M-x org-store-link} links to the @emph{query} if
 @code{mu4e-org-link-query-in-headers-mode} is non-@code{nil}, and to
-the particular message otherwise (which is the default).
+the particular message otherwise (which is the default). You can
+customize the link description using @code{mu4e-org-link-desc-func}.
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
 @t{org-mode}, you can go to the query or message the link points to
