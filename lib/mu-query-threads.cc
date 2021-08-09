@@ -394,9 +394,8 @@ update_container (Container& container, bool descending,
         if (!container.children.empty())
                 qmatch.flags |= QueryMatch::Flags::HasChild;
 
-        // see whether this message has the has the thread
-        // subject, ie.. the first message in this thread with the
-        // given subject.
+        // see whether this message has the thread subject, i.e., the
+        // first message in this thread with the given subject.
         if (qmatch.has_flag(QueryMatch::Flags::Root) ||
             //qmatch.has_flag(QueryMatch::Flags::Orphan) ||
             prev_subject.empty() ||
@@ -428,20 +427,20 @@ update_container (Container& container, bool descending,
 
 static void
 update_containers (Containers& children, bool descending, ThreadPath& tpath,
-                   size_t seg_size)
+                   size_t seg_size, const std::string& prev_subject)
 {
         size_t idx{0};
-        std::string last_subject;
+        std::string last_subject = prev_subject;
 
         for (auto&& c: children) {
                 tpath.emplace_back(idx++);
-
                 if (c->query_match) {
-                        update_container(*c, descending, tpath, seg_size,
+			update_container(*c, descending, tpath, seg_size,
                                          last_subject);
                         last_subject = c->query_match->subject;
                 }
-                update_containers(c->children, descending, tpath, seg_size);
+                update_containers(c->children, descending, tpath, seg_size,
+				  last_subject);
                 tpath.pop_back();
         }
 }
@@ -457,9 +456,12 @@ update_containers (ContainerVec& root_vec, bool descending, size_t n)
 
         size_t idx{0};
         for (auto&& c: root_vec) {
-                tpath.emplace_back(idx++);
-                update_container(*c, descending, tpath, seg_size);
-                update_containers(c->children, descending, tpath, seg_size);
+		tpath.emplace_back(idx++);
+		std::string prev_subject;
+		if (update_container(*c, descending, tpath, seg_size))
+			prev_subject = c->query_match->subject;
+		update_containers(c->children, descending, tpath, seg_size,
+				  prev_subject);
                 tpath.pop_back();
         }
 }
