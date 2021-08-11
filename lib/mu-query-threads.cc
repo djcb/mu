@@ -366,15 +366,17 @@ to_string (const ThreadPath& tpath, size_t digits)
         return str;
 }
 
-static bool // compare subjects, ignore anything before ':'
+static bool // compare subjects, ignore anything before the last ':<space>*'
 subject_matches (const std::string& sub1, const std::string& sub2)
 {
 	auto search_str =[](const std::string&s) -> const char* {
-		const auto pos = s.find_first_of(':');
+		const auto pos = s.find_last_of(':');
 		if (pos == std::string::npos)
 			return s.c_str();
-		else
-			return s.c_str() + pos + 1;
+		else {
+			const auto pos2 = s.find_first_not_of(' ', pos + 1);
+			return s.c_str() + (pos2 == std::string::npos ? pos : pos2);
+		}
 	};
 
 	//g_debug ("'%s' '%s'", search_str(sub1), search_str(sub2));
