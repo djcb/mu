@@ -611,8 +611,12 @@ following:
 @end lisp
 
 In many cases, the mentioned thoroughness might not be needed, and
-these settings give a very significant speed-up. Note that you can of
-course occasionally run a thorough indexing round.
+these settings give a very significant speed-up. If it does not work
+for you (e.g., @t{mu4e} fails to find some new messages), simply leave
+at the default.
+
+Note that you can occasionally run a thorough indexing round using
+@code{mu4e-update-index-nonlazy}.
 
 For further details, please refer to the @t{mu-index} manpage; in
 particular, see @t{.noindex} and @t{.noupdate} which can help reducing

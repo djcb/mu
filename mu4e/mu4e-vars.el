@@ -138,7 +138,12 @@ limitations: since directory timestamp changes do not traverse
 upwards and therefore this does not see changes in
 sub-directories: a change in 'bar' in 'Maildir/foo/bar/...' is
 not detected, only a change in 'foo'. In that case, this option
-should not be set."
+should not be set.
+
+Note: if no updated/new message were found during the lazy check,
+mu4e will suggest using `mu4e-update-index-nonlazy'; if you do
+not wish to see that suggestion, set `mu4e-index-lazy-check' to the
+symbol `lazy'."
   :type 'boolean
   :group 'mu4e
   :safe 'booleanp)
