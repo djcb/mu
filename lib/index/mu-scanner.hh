@@ -42,7 +42,12 @@ namespace Mu {
 ///
 class Scanner {
 public:
-        enum struct HandleType { File, EnterDir, LeaveDir };
+        enum struct HandleType {
+                File,
+                EnterNewCur, /* cur/ or new/ */
+                EnterDir, /* some other directory */
+                LeaveDir
+        };
 
         /// Prototype for a handler function
         using Handler     = std::function<bool(const std::string& fullpath,

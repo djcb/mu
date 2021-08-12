@@ -96,14 +96,15 @@ Scanner::Private::process_dentry (const std::string& path, struct dirent *dentry
         }
 
         if (S_ISDIR(statbuf.st_mode)) {
-
-                const auto res = handler_(fullpath, &statbuf, Scanner::HandleType::EnterDir);
-                if (!res) {
-                        //g_debug ("skipping dir %s", fullpath.c_str());
+                const auto new_cur = is_new_cur(dentry->d_name);
+                const auto htype   = new_cur ?
+                        Scanner::HandleType::EnterNewCur :
+                        Scanner::HandleType::EnterDir;
+                const auto res     = handler_(fullpath, &statbuf, htype);
+                if (!res)
                         return true; // skip
-                }
 
-                process_dir (fullpath, is_new_cur(dentry->d_name));
+                process_dir (fullpath, new_cur);
 
                 return handler_(fullpath, &statbuf, Scanner::HandleType::LeaveDir);
 
