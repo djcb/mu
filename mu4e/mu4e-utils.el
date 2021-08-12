@@ -644,13 +644,9 @@ process."
            "Indexing... processed %d, updated %d" processed updated)
         (progn
           (mu4e-index-message
-           "%s completed; processed %d, updated %d, cleaned-up %d%s"
+           "%s completed; processed %d, updated %d, cleaned-up %d"
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
-           processed updated cleaned-up
-           (if (and mu4e-index-lazy-check
-                    (not (eq mu4e-index-lazy-check 'lazy))
-                    (= 0 updated))
-               " (consider M-x mu4e-update-nonlazy)" ""))
+           processed updated cleaned-up)
           ;; call the updated hook if anything changed.
           (unless (zerop (+ updated cleaned-up))
             (run-hooks 'mu4e-index-updated-hook))
@@ -957,7 +953,7 @@ Also scrolls to the final line, and update the progress throbber."
 This is just a convenience wrapper for indexing the non-lazy way
 if you otherwise want to use `mu4e-index-lazy-check'."
   (interactive)
-  (let ((mu4e-index-cleanup nil) (mu4e-index-lazy-check nil))
+  (let ((mu4e-index-cleanup t) (mu4e-index-lazy-check nil))
     (mu4e-update-index)))
 
 

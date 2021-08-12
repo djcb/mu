@@ -133,17 +133,9 @@ needs (re)indexing or not.
 
 When this is set to non-nil, mu only uses the directory
 timestamps to decide whether it needs to check the messages
-beneath it. This makes indexing much faster, but has some
-limitations: since directory timestamp changes do not traverse
-upwards and therefore this does not see changes in
-sub-directories: a change in 'bar' in 'Maildir/foo/bar/...' is
-not detected, only a change in 'foo'. In that case, this option
-should not be set.
-
-Note: if no updated/new message were found during the lazy check,
-mu4e will suggest using `mu4e-update-index-nonlazy'; if you do
-not wish to see that suggestion, set `mu4e-index-lazy-check' to the
-symbol `lazy'."
+beneath it. This makes indexing much faster, but might miss some
+changes. For this, you might want to occasionally call
+`mu4e-update-index-nonlazy'."
   :type 'boolean
   :group 'mu4e
   :safe 'booleanp)
