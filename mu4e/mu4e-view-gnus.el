@@ -328,6 +328,7 @@ some Gnus-functionality that does not work in mu4e."
     (define-key map "M" #'mu4e-view-massage)
 
     (define-key map "w" 'visual-line-mode)
+    (define-key map "h" #'mu4e-view-toggle-html)
     (define-key map (kbd "M-q") 'article-fill-long-lines)
 
     ;; next 3 only warn user when attempt in the message view
@@ -628,6 +629,19 @@ I.e., '3 A o' opens the third MIME-part."
                                                 (shell-quote-argument
                                                  (mu4e~view-mime-part-to-temp-file handle))))))
          (t (mu4e-error "Invalid action %S" action))))))))
+
+(defun mu4e-view-toggle-html ()
+  "Toggle html-display of the first HTML body found, if any."
+  (interactive)
+  (let ((html-part
+         (catch :found
+           ;; This function assume `gnus-article-mime-handle-alist' is sorted
+           ;; by pertinence, i.e. the first HTML part found in it is the most
+           ;; important one.
+           (dolist (part-handle gnus-article-mime-handle-alist)
+             (when (equal (mm-handle-media-type (cdr part-handle)) "text/html")
+               (throw :found (car part-handle)))))))
+    (when html-part (gnus-article-inline-part html-part))))
 
 ;;;
 (provide 'mu4e-view-gnus)
