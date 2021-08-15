@@ -631,18 +631,17 @@ I.e., '3 A o' opens the third MIME-part."
          (t (mu4e-error "Invalid action %S" action))))))))
 
 (defun mu4e-view-toggle-html ()
-  "Toggle html-display of the first HTML body found, if any."
+  "Toggle html-display of the first html-part found."
   (interactive)
-  (let ((html-part
-         (catch :found
-           ;; This function assume `gnus-article-mime-handle-alist' is sorted
-           ;; by pertinence, i.e. the first HTML part found in it is the most
-           ;; important one.
-           (dolist (part-handle gnus-article-mime-handle-alist)
-             (when (equal (mm-handle-media-type (cdr part-handle)) "text/html")
-               (throw :found (car part-handle)))))))
-    (when html-part (gnus-article-inline-part html-part))))
+  ;; This function assumes `gnus-article-mime-handle-alist' is sorted by
+  ;; pertinence, i.e. the first HTML part found in it is the most important one.
+  (if-let ((html-part
+            (seq-find (lambda (handle)
+                        (equal (mm-handle-media-type (cdr handle)) "text/html"))
+                      gnus-article-mime-handle-alist)))
+      (gnus-article-inline-part (car html-part))
+    (mu4e-warn "No html part in this message")))
 
-;;;
+
 (provide 'mu4e-view-gnus)
 ;;; mu4e-view.el ends here
