@@ -62,8 +62,7 @@
   (mu4e~view-render-buffer msg))
 
 (defun mu4e-view-message-text (msg)
-  "Return the pristine message as a string, for replying/forwarding
-etc."
+  "Return the pristine MSG as a string."
   ;; we need this for replying/forwarding, since the mu4e-compose
   ;; wants it that way.
   (with-temp-buffer
@@ -96,8 +95,7 @@ determine which browser function to use."
 
 
 (defun mu4e~view-render-buffer (msg)
-  "Render current buffer with MSG using Gnus' article mode in
-buffer BUF."
+  "Render current buffer with MSG using Gnus' article mode."
   (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
          (max-specpdl-size mu4e-view-max-specpdl-size)
@@ -136,7 +134,7 @@ buffer BUF."
     (setq mu4e~gnus-article-mime-handles nil)))
 
 (defun mu4e~view-gnus-display-mime (msg)
-  "Same as `gnus-display-mime' but include mu4e headers to MSG."
+  "Like `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
     (gnus-display-mime ihandles)
     (unless ihandles
@@ -167,7 +165,7 @@ buffer BUF."
           (gnus-treat-article 'head))))))
 
 (defun mu4e~view-gnus-insert-header (field val)
-  "Insert a header FIELD with value VAL in Gnus article view."
+  "Insert a header FIELD with value VAL."
   (let* ((info (cdr (assoc field mu4e-header-info)))
          (key (plist-get info :name))
          (help (plist-get info :help)))
@@ -176,12 +174,12 @@ buffer BUF."
                 " " val "\n"))))
 
 (defun mu4e~view-gnus-insert-header-custom (msg field)
-  "Insert the custom FIELD in Gnus article view."
+  "Insert MSG's custom FIELD."
   (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
-                             (mu4e-error "custom field %S not found" field))))
+                             (mu4e-error "Custom field %S not found" field))))
          (key (plist-get info :name))
          (func (or (plist-get info :function)
-                   (mu4e-error "no :function defined for custom field %S %S"
+                   (mu4e-error "No :function defined for custom field %S %S"
                                field info)))
          (val (funcall func msg))
          (help (plist-get info :help)))
@@ -190,8 +188,7 @@ buffer BUF."
 
 (define-advice gnus-icalendar-event-from-handle
     (:filter-args (handle-attendee) mu4e~view-fix-missing-charset)
-  "Do not trigger an error when displaying an ical attachment
-with no charset."
+  "Avoid error when displaying an ical attachment without a charset."
   (if (and (boundp 'mu4e~view-rendering) mu4e~view-rendering)
       (let* ((handle (car handle-attendee))
              (attendee (cadr handle-attendee))
@@ -204,25 +201,25 @@ with no charset."
         (list handle attendee))
   handle-attendee))
 
-
 (defun mu4e~view-mode-p ()
+  "Is the buffer in mu4e-view-mode or one of its descendants?"
   (or (eq major-mode 'mu4e-view-mode)
       (derived-mode-p '(mu4e-view-mode))))
 
 (defun mu4e~view-nop (func &rest args)
-  "Do nothing when in mu4e-view-mode. This is useful for advising
-some Gnus-functionality that does not work in mu4e."
+  "Do not invoke FUNC with ARGS when in mu4e-view-mode.
+This is useful for advising some Gnus-functionality that does not work in mu4e."
   (unless (mu4e~view-mode-p)
     (apply func args)))
 
 (defun mu4e~view-button-reply (func &rest args)
-  "Advice to make `gnus-button-reply' links work in mu4e."
+  "Advise FUNC with ARGS to make `gnus-button-reply' links work in mu4e."
   (if (mu4e~view-mode-p)
       (mu4e-compose-reply)
     (apply func args)))
 
 (defun mu4e~view-msg-mail (func &rest args)
-  "Advice to make `gnus-msg-mail' links compose with mu4e."
+  "Advise FUNC with ARGS  to make `gnus-msg-mail' links compose with mu4e."
   (if (mu4e~view-mode-p)
       (apply 'mu4e~compose-mail args)
     (apply func args)))
@@ -392,7 +389,7 @@ some Gnus-functionality that does not work in mu4e."
 
     (set-keymap-parent map special-mode-map)
     map)
-  "Keymap for mu4e-view mode")
+  "Keymap for mu4e-view mode.")
 
 (set-keymap-parent mu4e-view-mode-map button-buffer-map)
 (suppress-keymap mu4e-view-mode-map)
@@ -417,8 +414,8 @@ some Gnus-functionality that does not work in mu4e."
 
 ;;  "Define the major-mode for the mu4e-view."
 (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
-  "Major mode for viewing an e-mail message in mu4e, based on
-Gnus' article-mode."
+  "Major mode for viewing an e-mail message in mu4e.
+Based on Gnus' article-mode."
   ;; Restore C-h b default behavior
   (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
   ;; ;; turn off gnus modeline changes and menu items
@@ -452,10 +449,9 @@ Article Treatment' for more options."
 
 ;;; MIME-parts
 
-
 (defun mu4e~view-gather-mime-parts ()
-  "Gather all MIME parts as an alist that uniquely maps the number
-to the gnus-part."
+  "Gather all MIME parts as an alist.
+The alist uniquely maps the number to the gnus-part."
   (let ((parts '()))
     (save-excursion
       (goto-char (point-min))
@@ -469,7 +465,7 @@ to the gnus-part."
     parts))
 
 
-(defun mu4e-view-save-attachments (&optional arg)
+(defun mu4e-view-save-attachments (&optional _arg)
   "Save mime parts from current mu4e gnus view buffer.
 
 When helm-mode is enabled provide completion on attachments and
@@ -504,7 +500,7 @@ containing commas."
                 dir (if arg (read-directory-name "Save to directory: ") mu4e-attachment-dir))
           (cl-loop for (f . h) in handles
                    when (member f files)
-                   do (mm-save-part-to-file h (expand-file-name f dir))))
+                   do (mm-save-part h (expand-file-name f dir))))
       (mu4e-message "No attached files found"))))
 
 
@@ -514,9 +510,9 @@ containing commas."
     ;; some basic ones
     ;;
 
-    ;; save mime-part to a file
+    ;; save MIME-part to a file
     (:name "save"  :handler gnus-article-save-part :receives index)
-    ;; pipe mime part to some arbitrary shell command
+    ;; pipe MIME-part to some arbitrary shell command
     (:name "|pipe" :handler gnus-article-pipe-part :receives index)
     ;; open with the default handler, if any
     (:name "open" :handler mu4e~view-open-file :receives temp)
@@ -544,7 +540,9 @@ containing commas."
                                     (goto-char (point-min)))
                                   (switch-to-buffer tmpbuf)))  :receives pipe))
 
-  "Actions for MIME-parts. Each is a plist with keys
+  "Specifies actions for MIME-parts.
+
+Each of the actions is a plist with keys
 `(:name <name>         ;; name of the action; shortcut is first letter of name
 
   :handler             ;; one of:
@@ -562,11 +560,11 @@ containing commas."
 
 
 (defun mu4e~view-mime-part-to-temp-file (handle)
-  "Write mime-part N to a temporary file and return the file name.
+  "Write MIME-part HANDLE to a temporary file and return the file name.
 The filename is deduced from the MIME-part's filename, or
-otherwise random; the result is placed in temporary directory
-with a unique name.  Returns the full path for the file
-created. The directory and file are self-destructed."
+otherwise random; the result is placed in a temporary directory
+with a unique name. Returns the full path for the file created.
+The directory and file are self-destructed."
   (let* ((tmpdir (make-temp-file "mu4e-temp-" t))
          (fname (cdr-safe (assoc 'filename (assoc "attachment" (cdr handle)))))
          (fname (if fname
@@ -579,8 +577,9 @@ created. The directory and file are self-destructed."
 
 
 (defun mu4e~view-open-file (file &optional force-ask)
-  "Open FILE with default handler, if any. Otherwise, or if FORCE_ASK is set,
-ask user for the program to open with."
+  "Open FILE with default handler, if any.
+Otherwise, or if FORCE-ASK is set, ask user for the program to
+open with."
   (let* ((opener
           (pcase system-type
             (`darwin "open")
@@ -591,24 +590,21 @@ ask user for the program to open with."
     (call-process prog nil 0 nil file)))
 
 (defun mu4e-view-mime-part-action (&optional n)
-  "Apply some action on mime-part N in the current messsage.
-If N is not specified, ask for it. N can be supplied as a
-prefix-argument, and note that one does not need to prefix that
-with C-u.
-
-I.e., '3 A o' opens the third MIME-part."
+  "Apply some action to MIME-part N in the current messsage.
+If N is not specified, ask for it. For instance, '3 A o' opens
+the third MIME-part."
   (interactive "NNumber of MIME-part: ")
   (let* ((parts (mu4e~view-gather-mime-parts))
          (options (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
                           mu4e-view-mime-part-actions))
          (handle (or (cdr-safe (cl-find-if (lambda (part) (eq (car part) n)) parts))
                      (mu4e-error "MIME-part %s not found" n)))
-         (action (or (and options (mu4e-read-option "Action on mime-part: " options))
+         (action (or (and options (mu4e-read-option "Action on MIME-part: " options))
                      (mu4e-error "No such action")))
          (handler (or (plist-get action :handler)
-                      (mu4e-error "No :handler found for action %S" action)))
+                      (mu4e-error "No :handler item found for action %S" action)))
          (receives (or (plist-get action :receives)
-                       (mu4e-error "No :receives found for action %S" action))))
+                       (mu4e-error "No :receives item found for action %S" action))))
     (save-excursion
       (cond
        ((functionp handler)
@@ -644,4 +640,4 @@ I.e., '3 A o' opens the third MIME-part."
 
 
 (provide 'mu4e-view-gnus)
-;;; mu4e-view.el ends here
+;;; mu4e-view-gnus.el ends here
