@@ -506,13 +506,14 @@ containing commas."
                    do (mm-save-part-to-file
                        h (let ((file (expand-file-name f dir)))
                            (if (file-exists-p file)
-                               (let (newname
-                                     (count 1))
-                                 (while (progn
-                                          (setq newname (concat (file-name-sans-extension file)
-                                                                (format "(%s)" count)
-                                                                (file-name-extension file t)))
-                                          (file-exists-p newname))
+                               (let (newname (count 1))
+                                 (while (and
+                                         (setq newname
+                                               (concat
+                                                (file-name-sans-extension file)
+                                                (format "(%s)" count)
+                                                (file-name-extension file t)))
+                                         (file-exists-p newname))
                                    (cl-incf count))
                                  newname)
                              file)))))
