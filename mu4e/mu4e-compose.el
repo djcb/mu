@@ -366,7 +366,8 @@ Message-ID."
     (save-restriction
       (message-narrow-to-headers)
       (unless (message-fetch-field "Message-ID")
-        (message-generate-headers '(Date Message-ID))))
+        (message-generate-headers '(Message-ID)))
+      (message-generate-headers '(Date)))
     (save-match-data
       (mu4e~draft-remove-mail-header-separator))))
 
