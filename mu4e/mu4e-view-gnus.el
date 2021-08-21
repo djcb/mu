@@ -500,7 +500,20 @@ containing commas."
                 dir (if arg (read-directory-name "Save to directory: ") mu4e-attachment-dir))
           (cl-loop for (f . h) in handles
                    when (member f files)
-                   do (mm-save-part h (expand-file-name f dir))))
+                   do (mm-save-part-to-file
+                       h (let ((file (expand-file-name f dir)))
+                           (if (file-exists-p file)
+                               (let (newname (count 1))
+                                 (while (and
+                                         (setq newname
+                                               (concat
+                                                (file-name-sans-extension file)
+                                                (format "(%s)" count)
+                                                (file-name-extension file t)))
+                                         (file-exists-p newname))
+                                   (cl-incf count))
+                                 newname)
+                             file)))))
       (mu4e-message "No attached files found"))))
 
 
