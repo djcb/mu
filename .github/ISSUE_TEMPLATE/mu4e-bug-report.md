@@ -20,4 +20,4 @@ Please describe the versions of OS, Emacs, mu/mu4e etc. you are using.
 **Checklist**
 - [ ] you are running vanilla emacs (i.e. without Doom, Evil, Spacemacs etc.) (otherwise, please try to reproduce without those
 - [ ] you are running mu4e without any third-party extensions (otherwise, please try to reproduce without those)
-- [ ] you are running either the latest 1.4.x release, or a 1.5.11+ development release (otherwise, please upgrade).
+- [ ] you are running either the latest 1.6.x release, or a 1.7.x development release (otherwise, please upgrade).
