@@ -620,6 +620,12 @@ messages, it depends on `mu4e-index-updated-hook'. This can be
 used as a simple way to invoke some action when a message
 changed.")
 
+(defvar mu4e-processing-finished-hook nil
+  "Hook run when mu4e has finished processing data from the mu
+server. This can be used as a simple way to be certain something
+is run every single time mu4e finishes processing mu server
+data.")
+
 (make-obsolete-variable 'mu4e-msg-changed-hook
                         'mu4e-message-changed-hook "0.9.19")
 
@@ -653,6 +659,8 @@ process."
           (unless (and (not (string= mu4e~contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e~request-contacts-maybe))
+          ;; call the processing finished hook.
+          (run-hooks 'mu4e-processing-finished-hook)
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
             (save-window-excursion
               (select-window (get-buffer-window mainbuf))
