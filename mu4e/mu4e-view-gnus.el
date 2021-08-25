@@ -465,7 +465,7 @@ The alist uniquely maps the number to the gnus-part."
     parts))
 
 
-(defun mu4e-view-save-attachments (&optional _arg)
+(defun mu4e-view-save-attachments (&optional arg)
   "Save mime parts from current mu4e gnus view buffer.
 
 When helm-mode is enabled provide completion on attachments and
