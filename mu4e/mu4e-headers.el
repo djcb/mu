@@ -383,8 +383,8 @@ headers."
       (let* ((docid (mu4e-message-field msg :docid))
              (initial-message-at-point (mu4e~headers-docid-at-point))
              (initial-column (current-column))
-             (point (mu4e~headers-docid-pos docid)))
-
+             (point (mu4e~headers-docid-pos docid))
+             (markinfo (gethash docid mu4e~mark-map)))
         (when point ;; is the message present in this list?
 
           ;; if it's marked, unmark it now
@@ -414,6 +414,10 @@ headers."
           ;; was only a flag-change, show the message with its updated flags.
           (unless is-move
             (mu4e~headers-header-handler msg point))
+
+          ;; restore the mark, if any. See #2076.
+          (when (and markinfo (mu4e~headers-goto-docid docid))
+            (mu4e-mark-at-point (car markinfo) (cdr markinfo)))
 
           (if (and initial-message-at-point
                    (mu4e~headers-goto-docid initial-message-at-point))
