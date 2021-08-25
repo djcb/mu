@@ -364,8 +364,12 @@ all maildirs under `mu4e-maildir'."
     (if (not (mu4e-maildir-shortcuts))
         (substring-no-properties
          (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs)))
-      (let* ((mlist (append (mu4e-maildir-shortcuts)
-                            '((:maildir "ther"  :key ?o))))
+      (let* ((mlist
+              (append (remove nil (mapcar (lambda (item)
+                                            (when (plist-get item :key)
+                                              item))
+                                          mu4e-maildir-shortcuts))
+                      '((:maildir "ther" :key ?o))))
              (fnames
               (mapconcat
                (lambda (item)
