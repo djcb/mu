@@ -281,6 +281,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map (kbd "<C-kp-subtract>") #'mu4e-headers-split-view-shrink)
 
     ;; intra-message navigation
+    (define-key map (kbd "S-SPC") #'scroll-down)
     (define-key map (kbd "SPC") #'mu4e-view-scroll-up-or-next)
     (define-key map (kbd "RET")  #'mu4e-scroll-up)
     (define-key map (kbd "<backspace>") #'mu4e-scroll-down)
