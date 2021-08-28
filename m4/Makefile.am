@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ EXTRA_DIST=				\
 	ax_compiler_flags_ldflags.m4	\
 	ax_cxx_compile_stdcxx.m4	\
 	ax_cxx_compile_stdcxx_14.m4	\
+	ax_cxx_compile_stdcxx_17.m4	\
 	ax_file_escapes.m4		\
 	ax_is_release.m4		\
 	ax_lib_readline.m4		\

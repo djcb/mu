@@ -25,7 +25,7 @@ project('mu', ['c', 'cpp'],
 	  'buildtype=debugoptimized',
 	  'warning_level=1',
 	  'c_std=c11',
-	  'cpp_std=c++14'
+	  'cpp_std=c++17'
 	]
        )
 
@@ -51,7 +51,6 @@ extra_flags = [
   '-Winit-self',
   '-Wmissing-include-dirs',
   '-Wpointer-arith',
-  #'-Wswitch-enum',
   '-Wswitch-default',
 ]
 
