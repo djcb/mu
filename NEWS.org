@@ -1,6 +1,35 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
+* 1.7 (unreleased, development)
+
+*** mu
+
+    - ~mu~ switched to use the [[https://mesonbuild.com][meson]] build system by default. The existing
+      ~autotools~ is still avaiable, but is to be removed after the 1.8 release.
+
+      Using ~meson~ (which you need to install), you can use something like in the
+      mu top directory:
+#+begin example
+	$ meson build && ninja -C build
+#+end example
+
+      After that, ~ninja -C build~ should be enough. ~autogen.sh~ has been updated
+      to use ~meson~ instead, and and even delivers a ~Makefile~ with some useful
+      targets that invoke the corresponding ~meson~ / ~ninja~ targets.
+
+*** mu4e
+
+    - ~mu4e~ is slowly moving from using the ~~~ to the more common ~--~ separator for
+      private functions; i.e., ~mu4e~foo~ becomes ~mu4e--foo~.
+
+
+*** guile
+
+    - the guile interface has been deprecated. It may be revamped at some point,
+      but will be different from the curren one. To be removed after 1.8.x
+
+
 * 1.6 (released, as of July 27 2021)
 
   NOTE: After upgrading, you need to call ~mu init~, with your prefered parameters
