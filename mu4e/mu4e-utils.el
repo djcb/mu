@@ -32,7 +32,9 @@
 (require 'mu4e-vars)
 (require 'mu4e-message)
 (require 'mu4e-meta)
+(require 'mu4e-helpers)
 (require 'mu4e-lists)
+(require 'mu4e-context)
 (require 'doc-view)
 
 ;; keep the byte-compiler happy
@@ -49,13 +51,16 @@
 (declare-function mu4e~proc-running-p "mu4e-proc")
 
 (declare-function mu4e~main-view          "mu4e-main")
-
-(declare-function mu4e~context-autoswitch "mu4e-context")
-(declare-function mu4e-context-determine  "mu4e-context")
-(declare-function mu4e-context-vars       "mu4e-context")
-(declare-function mu4e-context-current    "mu4e-context")
-
 (declare-function show-all "org")
+
+
+(defun mu4e-index-message (frm &rest args)
+  "Display FRM with ARGS like `mu4e-message' for index messages.
+index-messages. Doesn't display anything if
+`mu4e-hide-index-messages' is non-nil. "
+  (unless mu4e-hide-index-messages
+    (apply 'mu4e-message frm args)))
+
 
 ;;; Various
 
@@ -196,119 +201,6 @@ an absolute path."
     (mu4e~proc-mkdir dir) t)
    (t nil)))
 
-;;; Messages, warnings and errors
-
-(defun mu4e-format (frm &rest args)
-  "Create [mu4e]-prefixed string based on format FRM and ARGS."
-  (concat
-   "[" (propertize "mu4e" 'face 'mu4e-title-face) "] "
-   (apply 'format frm
-          (mapcar (lambda (x)
-                    (if (stringp x)
-                        (decode-coding-string x 'utf-8)
-                      x))
-                  args))))
-
-(defun mu4e-message (frm &rest args)
-  "Like `message', but prefixed with mu4e.
-If we're waiting for user-input or if there's some message in the
-echo area, don't show anything."
-  (unless (or (active-minibuffer-window))
-    (message "%s" (apply 'mu4e-format frm args))))
-
-(defun mu4e-index-message (frm &rest args)
-  "Like `mu4e-message', but specifically for
-index-messages. Doesn't display anything if
-`mu4e-hide-index-messages' is non-nil. "
-  (unless mu4e-hide-index-messages
-    (apply 'mu4e-message frm args)))
-
-(defun mu4e-error (frm &rest args)
-  "Create [mu4e]-prefixed error based on format FRM and ARGS.
-Does a local-exit and does not return, and raises a
-debuggable (backtrace) error."
-  (mu4e-log 'error (apply 'mu4e-format frm args))
-  (error "%s" (apply 'mu4e-format frm args)))
-
-;; the user-error function is only available in emacs-trunk
-(unless (fboundp 'user-error)
-  (defalias 'user-error 'error))
-
-(defun mu4e-warn (frm &rest args)
-  "Create [mu4e]-prefixed warning based on format FRM and ARGS.
-Does a local-exit and does not return. In emacs versions below
-24.2, the functions is the same as `mu4e-error'."
-  (mu4e-log 'error (apply 'mu4e-format frm args))
-  (user-error "%s" (apply 'mu4e-format frm args)))
-
-;;; Reading user input
-
-(defun mu4e~read-char-choice (prompt choices)
-  "Read and return one of CHOICES, prompting for PROMPT.
-Any input that is not one of CHOICES is ignored. This mu4e's
-version of `read-char-choice', that becomes case-insentive after
-trying an exact match."
-  (let ((choice) (chosen) (inhibit-quit nil))
-    (while (not chosen)
-      (message nil);; this seems needed...
-      (setq choice (read-char-exclusive prompt))
-      (if (eq choice 27) (keyboard-quit)) ;; quit if ESC is pressed
-      (setq chosen (or (member choice choices)
-                       (member (downcase choice) choices)
-                       (member (upcase choice) choices))))
-    (car chosen)))
-
-(defun mu4e-read-option (prompt options)
-  "Ask user for an option from a list on the input area.
-PROMPT describes a multiple-choice question to the user.
-OPTIONS describe the options, and is a list of cells describing
-particular options. Cells have the following structure:
-
-   (OPTIONSTRING . RESULT)
-
-where OPTIONSTRING is a non-empty string describing the
-option. The first character of OPTIONSTRING is used as the
-shortcut, and obviously all shortcuts must be different, so you
-can prefix the string with an uniquifying character.
-
-The options are provided as a list for the user to choose from;
-user can then choose by typing CHAR.  Example:
-  (mu4e-read-option \"Choose an animal: \"
-              '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
-
-User now will be presented with a list: \"Choose an animal:
-   [M]onkey, [G]nu, [x]Moose\".
-
-Function will return the cdr of the list element."
-  (let* ((prompt (mu4e-format "%s" prompt))
-         (optionsstr
-          (mapconcat
-           (lambda (option)
-             ;; try to detect old-style options, and warn
-             (when (characterp (car-safe (cdr-safe option)))
-               (mu4e-error
-                (concat "Please use the new format for options/actions; "
-                        "see the manual")))
-             (let ((kar (substring (car option) 0 1)))
-               (concat
-                "[" (propertize kar 'face 'mu4e-highlight-face) "]"
-                (substring (car option) 1))))
-           options ", "))
-         (response
-          (mu4e~read-char-choice
-           (concat prompt optionsstr
-                   " [" (propertize "C-g" 'face 'mu4e-highlight-face)
-                   " to cancel]")
-           ;; the allowable chars
-           (cl-map 'list (lambda(elm) (string-to-char (car elm))) options)))
-         (chosen
-          (cl-find-if
-           (lambda (option) (eq response (string-to-char (car option))))
-           options)))
-    (if chosen
-        (cdr chosen)
-      (mu4e-warn "Unknown shortcut '%c'" response))))
-
 ;;; Maildir (1/2)
 
 (defun mu4e~get-maildirs-1 (path mdir)
@@ -445,82 +337,6 @@ replaces any existing bookmark with KEY."
                        :query ,query
                        :key   ,key)
               mu4e-bookmarks :test 'equal))
-
-
-;;; Converting flags->string and vice-versa
-
-(defun mu4e~flags-to-string-raw (flags)
-  "Convert a list of flags into a string as seen in Maildir
-message files; flags are symbols draft, flagged, new, passed,
-replied, seen, trashed and the string is the concatenation of the
-uppercased first letters of these flags, as per [1]. Other flags
-than the ones listed here are ignored.
-Also see `mu4e-flags-to-string'.
-\[1\]: http://cr.yp.to/proto/maildir.html"
-  (when flags
-    (let ((kar (cl-case (car flags)
-                 ('draft     ?D)
-                 ('flagged   ?F)
-                 ('new       ?N)
-                 ('passed    ?P)
-                 ('replied   ?R)
-                 ('seen      ?S)
-                 ('trashed   ?T)
-                 ('attach    ?a)
-                 ('encrypted ?x)
-                 ('signed    ?s)
-                 ('unread    ?u))))
-      (concat (and kar (string kar))
-              (mu4e~flags-to-string-raw (cdr flags))))))
-
-(defun mu4e-flags-to-string (flags)
-  "Remove duplicates and sort the output of `mu4e~flags-to-string-raw'."
-  (concat
-   (sort (cl-remove-duplicates
-          (append (mu4e~flags-to-string-raw flags) nil)) '>)))
-
-(defun mu4e~string-to-flags-1 (str)
-  "Convert a string with message flags as seen in Maildir
-messages into a list of flags in; flags are symbols draft,
-flagged, new, passed, replied, seen, trashed and the string is
-the concatenation of the uppercased first letters of these flags,
-as per [1]. Other letters than the ones listed here are ignored.
-Also see `mu4e-flags-to-string'.
-\[1\]: http://cr.yp.to/proto/maildir.html."
-  (when (/= 0 (length str))
-    (let ((flag
-           (cl-case (string-to-char str)
-             (?D   'draft)
-             (?F   'flagged)
-             (?P   'passed)
-             (?R   'replied)
-             (?S   'seen)
-             (?T   'trashed))))
-      (append (when flag (list flag))
-              (mu4e~string-to-flags-1 (substring str 1))))))
-
-(defun mu4e-string-to-flags (str)
-  "Convert a string with message flags as seen in Maildir messages
-into a list of flags in; flags are symbols draft, flagged, new,
-passed, replied, seen, trashed and the string is the concatenation
-of the uppercased first letters of these flags, as per [1]. Other
-letters than the ones listed here are ignored.  Also see
-`mu4e-flags-to-string'.  \[1\]:
-http://cr.yp.to/proto/maildir.html "
-  ;;  "Remove duplicates from the output of `mu4e~string-to-flags-1'"
-  (cl-remove-duplicates (mu4e~string-to-flags-1 str)))
-
-;;; Various
-
-(defun mu4e-display-size (size)
-  "Get a string representation of SIZE (in bytes)."
-  (cond
-   ((>= size 1000000) (format "%2.1fM" (/ size 1000000.0)))
-   ((and (>= size 1000) (< size 1000000))
-    (format "%2.1fK" (/ size 1000.0)))
-   ((< size 1000) (format "%d" size))
-   (t (propertize "?" 'face 'mu4e-system-face))))
-
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode.
@@ -829,7 +645,7 @@ first. If mu4e is already running, execute function FUNC (if
 non-nil). Otherwise, check various requireme`'nts, then start mu4e.
 When successful, call FUNC (if non-nil) afterwards."
   (unless (mu4e-context-current)
-    (mu4e~context-autoswitch nil mu4e-context-policy))
+    (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e~pong-handler info func)))
   (mu4e~proc-ping
    (mapcar ;; send it a list of queries we'd like to see read/unread info for
@@ -1057,114 +873,6 @@ in the background; otherwise, pop up a window."
 (define-obsolete-function-alias 'mu4e-interrupt-update-mail
   'mu4e-kill-update-mail "1.0-alpha0")
 
-
-;;; Logging / debugging
-
-(defconst mu4e~log-max-size 1000000
-  "Max number of characters to keep around in the log buffer.")
-(defconst mu4e~log-buffer-name "*mu4e-log*"
-  "*internal* Name of the logging buffer.")
-
-(defun mu4e~get-log-buffer ()
-  "Fetch (and maybe create) the log buffer."
-  (unless (get-buffer mu4e~log-buffer-name)
-    (with-current-buffer (get-buffer-create mu4e~log-buffer-name)
-      (view-mode)
-
-      (when (fboundp 'so-long-mode)
-        (unless (eq major-mode 'so-long-mode)
-          (eval '(so-long-mode))))
-
-      (setq buffer-undo-list t)))
-  mu4e~log-buffer-name)
-
-(defun mu4e-log (type frm &rest args)
-  "Write a message of TYPE with format-string FRM and ARGS in
-*mu4e-log* buffer, if the variable mu4e-debug is non-nil. Type is
-either 'to-server, 'from-server or 'misc. This function is meant for debugging."
-  (when mu4e-debug
-    (with-current-buffer (mu4e~get-log-buffer)
-      (let* ((inhibit-read-only t)
-             (tstamp (propertize (format-time-string "%Y-%m-%d %T.%3N"
-                                                     (current-time))
-                                 'face 'font-lock-string-face))
-             (msg-face
-              (cl-case type
-                (from-server 'font-lock-type-face)
-                (to-server   'font-lock-function-name-face)
-                (misc        'font-lock-variable-name-face)
-                (error       'font-lock-warning-face)
-                (otherwise   (mu4e-error "Unsupported log type"))))
-             (msg (propertize (apply 'format frm args) 'face msg-face)))
-        (save-excursion
-          (goto-char (point-max))
-          (insert tstamp
-                  (cl-case type
-                    (from-server " <- ")
-                    (to-server   " -> ")
-                    (error       " !! ")
-                    (otherwise   " "))
-                  msg "\n")
-
-          ;; if `mu4e-log-max-lines is specified and exceeded, clearest the oldest
-          ;; lines
-          (when (> (buffer-size) mu4e~log-max-size)
-            (goto-char (- (buffer-size) mu4e~log-max-size))
-            (beginning-of-line)
-            (delete-region (point-min) (point))))))))
-
-(defun mu4e-toggle-logging ()
-  "Toggle between enabling/disabling debug-mode (in debug-mode,
-mu4e logs some of its internal workings to a log-buffer. See
-`mu4e-visit-log'."
-  (interactive)
-  (mu4e-log 'misc "logging disabled")
-  (setq mu4e-debug (not mu4e-debug))
-  (mu4e-message "debug logging has been %s"
-                (if mu4e-debug "enabled" "disabled"))
-  (mu4e-log 'misc "logging enabled"))
-
-(defun mu4e-show-log ()
-  "Visit the mu4e debug log."
-  (interactive)
-  (unless mu4e-debug (mu4e-toggle-logging))
-  (let ((buf (get-buffer mu4e~log-buffer-name)))
-    (unless (buffer-live-p buf)
-      (mu4e-warn "No debug log available"))
-    (switch-to-buffer buf)))
-
-
-(defun mu4e-split-ranges-to-numbers (str n)
-  "Convert STR containing attachment numbers into a list of numbers.
-STR is a string; N is the highest possible number in the list.
-This includes expanding e.g. 3-5 into 3,4,5.  If the letter
-\"a\" ('all')) is given, that is expanded to a list with numbers [1..n]."
-  (let ((str-split (split-string str))
-        beg end list)
-    (dolist (elem str-split list)
-      ;; special number "a" converts into all attachments 1-N.
-      (when (equal elem "a")
-        (setq elem (concat "1-" (int-to-string n))))
-      (if (string-match "\\([0-9]+\\)-\\([0-9]+\\)" elem)
-          ;; we have found a range A-B, which needs converting
-          ;; into the numbers A, A+1, A+2, ... B.
-          (progn
-            (setq beg (string-to-number (match-string 1 elem))
-                  end (string-to-number (match-string 2 elem)))
-            (while (<= beg end)
-              (cl-pushnew beg list :test 'equal)
-              (setq beg (1+ beg))))
-        ;; else just a number
-        (cl-pushnew (string-to-number elem) list :test 'equal)))
-    ;; Check that all numbers are valid.
-    (mapc
-     (lambda (x)
-       (cond
-        ((> x n)
-         (mu4e-warn "Attachment %d bigger than maximum (%d)" x n))
-        ((< x 1)
-         (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
-     list)))
 
 ;;; Misc 2
 
@@ -1231,13 +939,6 @@ displaying it). Do _not_ bury the current buffer, though."
                 (when (eq t (window-deletable-p win))
                   (delete-window win))))))) t)))
 
-
-(defun mu4e-get-time-date (prompt)
-  "Determine the emacs time value for the time/date entered by user
-  after PROMPT. Formats are all that are accepted by
-  `parse-time-string'."
-  (let ((timestr (read-string (mu4e-format "%s" prompt))))
-    (apply 'encode-time (org-parse-time-string timestr))))
 
 
 ;;; Mu4e-org-mode
@@ -1310,14 +1011,6 @@ the view and compose modes and will color each signature in digest messages adhe
 
 ;;; Misc 4
 
-(defun mu4e~quote-for-modeline (str)
-  "Quote a string to be used literally in the modeline. The
-string will be shortened to fit if its length exceeds
-`mu4e-modeline-max-width'."
-  (replace-regexp-in-string
-   "%" "%%"
-   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
-
 (defun mu4e~active-composition-buffers ()
   "Return all active mu4e composition buffers"
   (let (buffers)
@@ -1327,7 +1020,6 @@ string will be shortened to fit if its length exceeds
         (when (eq major-mode 'mu4e-compose-mode)
           (push (buffer-name buffer) buffers))))
     (nreverse buffers)))
-
 
 ;;
 ;; Loading messages
@@ -1387,6 +1079,6 @@ value against HEADER-REGEXP in
 (add-hook 'bug-reference-auto-setup-functions
           #'mu4e-view--try-setup-bug-reference-mode)
 
-;;; _
+;;;
 (provide 'mu4e-utils)
 ;;; mu4e-utils.el ends here

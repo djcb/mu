@@ -223,15 +223,6 @@ Follows the format of `format-time-string'."
   :type 'string
   :group 'mu4e)
 
-(defcustom mu4e-modeline-max-width 42
-  "Determines the maximum length of the modeline string.
-If the string exceeds this limit, it will be truncated to fit."
-  :type 'integer
-  :group 'mu4e)
-
-(defvar mu4e-debug nil
-  "When set to non-nil, log debug information to the *mu4e-log* buffer.")
-
 ;; for backward compatibility, when a bookmark was defined with defstruct.
 (cl-defun make-mu4e-bookmark (&key name query key)
   "Create a mu4e proplist with the following elements:

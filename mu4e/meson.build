@@ -35,6 +35,7 @@ mu4e_srcs=[
   'mu4e-draft.el',
   'mu4e.el',
   'mu4e-headers.el',
+  'mu4e-helpers.el',
   'mu4e-icalendar.el',
   'mu4e-lists.el',
   'mu4e-main.el',
