@@ -266,38 +266,20 @@ details depend on your distribution. If you're using another
 distribution (or another OS), the below can at least be helpful in
 identifying the packages to install.
 
-We provide some instructions for Debian, Ubuntu and Fedora; if those do not
-apply to you, you can follow either @ref{Building from a release tarball} or
-@ref{Building from git}.
+We provide some instructions for Debian, Ubuntu and Fedora; if those
+do not apply to you, you can follow either @ref{Building from a
+release tarball} or @ref{Building from git}.
 
 @subsection Dependencies for Debian/Ubuntu
 
 @example
-$ sudo apt-get install libgmime-3.0-dev libxapian-dev
-
-# get emacs 25 or higher if you don't have it yet
-$ sudo apt-get install emacs
-
-# optional
-$ sudo apt-get install guile-2.2-dev html2text xdg-utils
-
-# optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-$ sudo apt-get install libwebkitgtk-3.0-dev
+$ sudo apt-get install libgmime-3.0-dev libxapian-dev emacs
 @end example
 
 @subsection Dependencies for Fedora
 
 @example
-$ sudo yum install gmime30-devel xapian-core-devel
-
-# get emacs 25 or higher if you don't have it yet
-$ sudo yum install emacs
-
-# optional
-$ sudo yum install html2text xdg-utils guile22-devel
-
-# optional: only needed for msg2pdf and mug (toy gtk+ frontend)
-$ sudo yum install webkitgtk3-devel
+$ sudo yum install gmime30-devel xapian-core-devel emacs
 @end example
 
 @subsection Building on Msys2
@@ -348,10 +330,18 @@ Xapian, GMime and their dependencies must be installed.
 @subsection Building from git
 @anchor{Building from git}
 
-Alternatively, if you build from the git repository or use a tarball
-like the ones that @t{github} produces, the instructions are slightly
-different, and require you to have autotools (@t{autoconf},
-@t{automake}, @t{libtool}, @t{texinfo}) installed:
+By default, @t{mu} use the Meson@footnote{@url{https://mesonbuild.com/}} build-system.
+
+@example
+$ git clone git://github.com/djcb/mu.git
+$ cd mu
+$ meson build && ninja -C build
+$ sudo ninja -C install
+@end example
+
+For now, you can also use the (deprecated) @t{autotools} build setup,
+assuming you have autotools (@t{autoconf}, @t{automake}, @t{libtool},
+@t{texinfo}) installed:
 
 @example
 # get from git (alternatively, use a github tarball)
@@ -368,29 +358,18 @@ $ sudo make install
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's
 a hard dependency between versions of @t{mu4e} and @t{mu} --- you
 cannot combine different versions} on your system, and be available
-from the command line and in  Emacs.
+from the command line and in Emacs.
 
 You may need to restart Emacs, so it can find @t{mu4e} in its
 @code{load-path}. If, even after restarting, Emacs cannot find
-@t{mu4e}, you may need to add it to your @code{load-path} explicitly; check
-where @t{mu4e} is installed, and add something like the following to your
-configuration before trying again:
+@t{mu4e}, you may need to add it to your @code{load-path} explicitly;
+check where @t{mu4e} is installed, and add something like the
+following to your configuration before trying again:
 @lisp
 ;; the exact path may differ --- check it
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
 @end lisp
 
-@subsection Building using the meson build system
-
-As an (experimental) alternative to the @t{autotools}-build, it is possible to use
-the Meson@footnote{@url{https://mesonbuild.com/}} build-system instead.
-
-@example
-$ git clone git://github.com/djcb/mu.git
-$ cd mu
-$ meson build && ninja -C build
-$ sudo ninja -C install
-@end example
 
 @subsection mu4e and emacs customization
 

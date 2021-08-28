@@ -363,6 +363,10 @@ AS_IF([test "x$ac_cv_header_wordexp_h" != "xyes"],[
    echo "    --maildir=/home/user/Maildir"
 ])
 
+
+echo "NOTE: autotools support has been deprecated and will be removed"
+echo "      after the next stable release. use the meson build instead"
+
 echo
 echo "Now, type 'make' (or 'gmake') to build mu"
 echo

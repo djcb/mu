@@ -23,7 +23,7 @@ mu4e_meta = configure_file(
       'VERSION'         : meson.project_version(),
       # project_build_root() with meson >= 0.56
       'abs_top_builddir': join_paths(meson.build_root()),
-      'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu')
+      'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
     })
 
 
@@ -53,6 +53,13 @@ mu4e_srcs=[
   'obsolete/org-mu4e.el',
 ]
 
+
+#
+# with (development) emacs 28.50 / native compilation this doesn't
+# _quite_ work; see: https://debbugs.gnu.org/db/47/47987.html
+#
+lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
+
 foreach src : mu4e_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
@@ -61,6 +68,8 @@ foreach src : mu4e_srcs
 		build_by_default: true,
 		input: src,
 		output: target_name,
+                install_dir: lispdir,
+                install: true,
 		command: [emacs,
 			  '--no-init-file',
 			  '--batch',
@@ -69,6 +78,9 @@ foreach src : mu4e_srcs
 			  '--directory', meson.current_source_dir(),
 			  '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
+
+# also install the sources.
+install_data(mu4e_srcs, install_dir: lispdir)
 
 
 if makeinfo.found()
