@@ -27,7 +27,9 @@
 (require 'smtpmail)      ;; the queueing stuff (silence elint)
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
+(require 'mu4e-search)
 (require 'mu4e-vars)     ;; mu-wide variables
+
 (require 'cl-lib)
 
 ;;; Mode
@@ -50,10 +52,6 @@ no unread messages.")
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "b" 'mu4e-headers-search-bookmark)
-    (define-key map "B" 'mu4e-headers-search-bookmark-edit)
-
-    (define-key map "s" 'mu4e-headers-search)
     (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e~headers-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
@@ -86,6 +84,7 @@ no unread messages.")
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
   (mu4e-context-minor-mode)
+  (mu4e-search-minor-mode)
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 
@@ -165,7 +164,7 @@ clicked."
   "Return a string of maildirs with their counts."
   (cl-loop with mds = (mu4e~maildirs-with-query)
            with longest = (mu4e~longest-of-maildirs-and-bookmarks)
-           with queries = (plist-get mu4e~server-props :queries)
+           with queries = (plist-get mu4e--server-props :queries)
            for m in mds
            for key = (string (plist-get m :key))
            for name = (plist-get m :name)
@@ -276,7 +275,7 @@ When REFRESH is non nil refresh infos from server."
        (mu4e~key-val "database-path" (mu4e-database-path))
        (mu4e~key-val "maildir" (mu4e-root-maildir))
        (mu4e~key-val "in store"
-                     (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
+                     (format "%d" (plist-get mu4e--server-props :doccount)) "messages")
        (if mu4e-main-hide-personal-addresses ""
          (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 

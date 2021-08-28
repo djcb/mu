@@ -29,6 +29,7 @@
 
 (require 'mu4e-view-common)
 (require 'mu4e-context)
+(require 'mu4e-search)
 (require 'calendar)
 (require 'gnus-art)
 
@@ -237,16 +238,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     ;; but that's not very useful in this case
     (define-key map "z" 'ignore)
 
-    (define-key map "s" #'mu4e-headers-search)
-    (define-key map "S" #'mu4e-view-search-edit)
-    (define-key map "/" #'mu4e-view-search-narrow)
-
-    (define-key map (kbd "<M-left>")  #'mu4e-headers-query-prev)
-    (define-key map (kbd "<M-right>") #'mu4e-headers-query-next)
-
-    (define-key map "b" #'mu4e-headers-search-bookmark)
-    (define-key map "B" #'mu4e-headers-search-bookmark-edit)
-
     (define-key map "%" #'mu4e-view-mark-pattern)
     (define-key map "t" #'mu4e-view-mark-subthread)
     (define-key map "T" #'mu4e-view-mark-thread)
@@ -320,7 +311,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map (kbd "<insertchar>") #'mu4e-view-mark-for-something)
 
     (define-key map (kbd "#") #'mu4e-mark-resolve-deferred-marks)
-
     ;; misc
     (define-key map "M" #'mu4e-view-massage)
 
@@ -421,6 +411,7 @@ Based on Gnus' article-mode."
                     "." (apply func args))))
   (use-local-map mu4e-view-mode-map)
   (mu4e-context-minor-mode)
+  (mu4e-search-minor-mode)
   (setq buffer-undo-list t);; don't record undo info
   ;; autopair mode gives error when pressing RET
   ;; turn it off
