@@ -35,31 +35,6 @@
   "mu4e - mu for emacs"
   :group 'mail)
 
-(defcustom mu4e-mu-home nil
-  "Location of an alternate mu home dir. If not set, use the
-defaults, based on the XDG Base Directory Specification."
-  :group 'mu4e
-  :type '(choice (const :tag "Default location" nil)
-                 (directory :tag "Specify location"))
-  :safe 'stringp)
-
-(defcustom mu4e-mu-binary (executable-find "mu")
-  "Name of the mu-binary to use.
-If it cannot be found in your PATH, you can specify the full
-path."
-  :type 'file
-  :group 'mu4e
-  :safe 'stringp)
-
-(defcustom mu4e-mu-debug nil
-  "Whether to run the mu binary in debug-mode.
-Setting this to t increases the amount of information in the log."
-  :type 'boolean
-  :group 'mu4e)
-
-(make-obsolete-variable 'mu4e-maildir
-                        "determined by server; see `mu4e-root-maildir'." "1.3.8")
-
 (defcustom mu4e-org-support t
   "Support org-mode links."
   :type 'boolean
@@ -1062,41 +1037,6 @@ with SPC and therefore is not visible in buffer list.")
 We need to keep this information around to quickly re-sort
 subsets of the contacts in the completions function in
 mu4e-compose.")
-
-(defvar mu4e~server-props nil
-  "Information  we receive from the mu4e server process \(in the 'pong-handler').")
-
-(defun mu4e-root-maildir()
-  "Get the root maildir."
-  (let ((root-maildir (and mu4e~server-props
-                           (plist-get mu4e~server-props :root-maildir))))
-    (unless root-maildir
-      (mu4e-error "root maildir unknown; did you start mu4e?"))
-    root-maildir))
-
-(defun mu4e-database-path()
-  "Get the mu4e database path"
-  (let ((path (and mu4e~server-props
-                   (plist-get mu4e~server-props :database-path))))
-    (unless path
-      (mu4e-error "database-path unknown; did you start mu4e?"))
-    path))
-
-(defun mu4e-personal-addresses(&optional no-regexp)
-  "Get the list user's personal addresses, as passed to `mu init --my-address=...'.
- The address are either plain e-mail address or /regular
- expressions/. When NO_REGEXP is non-nil, do not include regexp
- address patterns (if any)."
-  (seq-remove
-   (lambda(addr) (and no-regexp (string-match-p "^/.*/" addr)))
-   (when mu4e~server-props (plist-get mu4e~server-props :personal-addresses))))
-
-(defun mu4e-server-version()
-  "Get the server version, which should match mu4e's."
-  (let ((version (and mu4e~server-props (plist-get mu4e~server-props :version))))
-    (unless version
-      (mu4e-error "version unknown; did you start mu4e?"))
-    version))
 
 
 ;;; Handler functions

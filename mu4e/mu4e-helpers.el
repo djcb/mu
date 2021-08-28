@@ -149,6 +149,63 @@ Function will return the cdr of the list element."
 
 
 
+;;; Server properties
+(defvar mu4e--server-props nil
+  "Metadata we receive from the mu4e server.")
+
+(defun mu4e-server-properties ()
+  "Get the server metadata plist."
+  mu4e--server-props)
+
+(defun mu4e-root-maildir()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :root-maildir))
+      (mu4e-error "Root maildir unknown; did you start mu4e?")))
+
+(defun mu4e-database-path()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :database-path))
+      (mu4e-error "Root maildir unknown; did you start mu4e?")))
+
+(defun mu4e-server-version()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :version))
+      (mu4e-error "Version unknown; did you start mu4e?")))
+
+(defun mu4e-personal-addresses(&optional no-regexp)
+  "Get the list user's personal addresses, as passed to mu init.
+The address are either plain e-mail address or /regular
+ expressions/. When NO-REGEXP is non-nil, do not include regexp
+ address patterns (if any)."
+  (seq-remove
+   (lambda(addr) (and no-regexp (string-match-p "^/.*/" addr)))
+   (when mu4e--server-props
+     (plist-get mu4e--server-props :personal-addresses))))
+
+(defun mu4e-last-query-results ()
+  "Get the results (counts) of the last cached queries.
+
+The cached queries are the bookmark / maildir queries that are
+used to populated the read/unread counts in the main view. They
+are refreshed when calling `(mu4e)', i.e., when going to the main
+view.
+
+The results are a list of elements of the form
+   (:query \"query string\"
+            :count  <total number matching count>
+            :unread <number of unread messages in count>)"
+  (plist-get mu4e--server-props :queries))
+
+(defun mu4e-last-query-result (query)
+  "Get the last result for some QUERY or nil if not found."
+  (seq-find
+   (lambda (elm) (string= (plist-get elm :query) query))
+   (mu4e-last-query-results)))
+
+
 ;;; Logging / debugging
 
 (defconst mu4e--log-max-size 1000000

@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(require 'mu4e-vars)
+(require 'mu4e-helpers)
 (require 'mu4e-utils)
 (require 'mu4e-meta)
 
@@ -177,6 +177,7 @@ The server output is as follows:
 
          ;; received a pong message
          ((plist-get sexp :pong)
+	  (setq mu4e--server-props (plist-get sexp :props))
           (funcall mu4e-pong-func sexp))
 
          ;; received a contacts message
@@ -243,7 +244,8 @@ backslashes and double-quotes."
      "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
 
   ;; sanity-check 2
-  (let ((version (let ((s (shell-command-to-string (concat mu4e-mu-binary " --version"))))
+  (let ((version (let ((s (shell-command-to-string
+			   (concat mu4e-mu-binary " --version"))))
                    (and (string-match "version \\([.0-9]+\\)" s)
                         (match-string 1 s)))))
     (unless (string= version mu4e-mu-version)

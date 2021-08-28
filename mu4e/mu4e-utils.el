@@ -175,8 +175,9 @@ see its docstring)."
         (expand-file-name dir)
       (mu4e-error "mu4e-attachment-dir evaluates to nil"))))
 
-;;; Maildir (1/2)
 
+
+;;; Maildirs
 (defun mu4e~guess-maildir (path)
   "Guess the maildir for some path, or nil if cannot find it."
   (let ((idx (string-match (mu4e-root-maildir) path)))
@@ -200,8 +201,6 @@ an absolute path."
    ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
     (mu4e~proc-mkdir dir) t)
    (t nil)))
-
-;;; Maildir (1/2)
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs under path, recursively, as a list of relative paths."
@@ -289,6 +288,7 @@ and offer to create it if it does not exist yet."
            (mu4e~proc-mkdir fullpath)))
     mdir))
 
+
 ;;; Bookmarks
  (defun mu4e-ask-bookmark (prompt)
   "Ask the user for a bookmark (using PROMPT) as defined in
@@ -551,7 +551,7 @@ completion; for testing/debugging."
   "Check for the settings required for running mu4e."
   (unless (>= emacs-major-version 25)
     (mu4e-error "Emacs >= 25.x is required for mu4e"))
-  (when mu4e~server-props
+  (when mu4e--server-props
     (unless (string= (mu4e-server-version) mu4e-mu-version)
       (mu4e-error "mu server has version %s, but we need %s"
                   (mu4e-server-version) mu4e-mu-version)))
@@ -602,8 +602,7 @@ nothing."
 
 (defun mu4e~pong-handler (data func)
   "Handle 'pong' responses from the mu server."
-  (setq mu4e~server-props (plist-get data :props)) ;; save info from the server
-  (let ((doccount (plist-get mu4e~server-props :doccount)))
+  (let ((doccount (plist-get mu4e--server-props :doccount)))
     (mu4e~check-requirements)
     (when func (funcall func))
     (when (zerop doccount)
@@ -614,29 +613,6 @@ nothing."
             (run-at-time 0 mu4e-update-interval
                          (lambda () (mu4e-update-mail-and-index
                                      mu4e-index-update-in-background)))))))
-
-(defun mu4e-last-query-results ()
-  "Get the results (counts) of the last cached queries.
-
-The cached queries are the bookmark / maildir queries that are
-used to populated the read/unread counts in the main view. They
-are refreshed when calling `(mu4e)', i.e., when going to the main
-view.
-
-The results are a list of elements of the form
-   (:query \"query string\"
-            :count  <total number matching count>
-            :unread <number of unread messages in count>)"
-  (plist-get mu4e~server-props :queries))
-
-
-(defun mu4e-last-query-result (query)
-  "Get the last result for some cached query, as per
-  `mu4e-bookmark-query-results' or nil if not found."
-  (cl-find-if
-   (lambda (elm) (string= (plist-get elm :query) query))
-   (mu4e-last-query-results)))
-
 
 (defun mu4e~start (&optional func)
   "If `mu4e-contexts' have been defined, but we don't have a
@@ -670,7 +646,7 @@ When successful, call FUNC (if non-nil) afterwards."
    mu4e~contacts-tstamp "0"))
 
 (defun mu4e~stop ()
-  "Stop the mu4e session."
+  "Stop the mu4e se ssion."
   (when mu4e~update-timer
     (cancel-timer mu4e~update-timer)
     (setq mu4e~update-timer nil))
@@ -714,6 +690,8 @@ This is meant to be the exact same data structure as
   (cl-loop for b in (append (mu4e-bookmarks)
                             (mu4e~maildirs-with-query))
            maximize (string-width (plist-get b :name))))
+
+
 
 
 ;;; Indexing & Updating
@@ -771,8 +749,6 @@ if you otherwise want to use `mu4e-index-lazy-check'."
   (interactive)
   (let ((mu4e-index-cleanup t) (mu4e-index-lazy-check nil))
     (mu4e-update-index)))
-
-
 
 (defvar mu4e~update-buffer nil
   "Internal, store the buffer of the update process when
