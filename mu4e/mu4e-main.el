@@ -1,6 +1,6 @@
 ;;; mu4e-main.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -42,8 +42,6 @@
 
   This also hides the warning if your `user-mail-address' is not
 part of the personal addresses.")
-
-
 
 (defvar mu4e-main-hide-fully-read nil
   "When set to t, do not hide bookmarks or maildirs that have
@@ -87,7 +85,7 @@ no unread messages.")
 \\{mu4e-main-mode-map}."
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
-  (mu4e-context-in-modeline)
+  (mu4e-context-minor-mode)
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 

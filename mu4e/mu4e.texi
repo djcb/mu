@@ -1005,7 +1005,6 @@ E            edit (only allowed for draft messages)
 
 misc
 ----
-;            switch context
 a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
@@ -1014,6 +1013,10 @@ C-S-u        update mail & reindex
 q            leave the headers buffer
 @end verbatim
 
+Furthermore, a number of keybindings are available through minor modes:
+@itemize
+@item Context; see @pxref{Contexts}.
+@end itemize
 
 @node HV Marking
 @section Marking
@@ -1300,13 +1303,17 @@ A            execute some custom action on the message's MIME-parts
 
 misc
 ----
-;            switch context
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
 C-S-u        update mail & reindex
 q            leave the message view
 @end verbatim
+
+Furthermore, a number of keybindings are available through minor modes:
+@itemize
+@item Context; see @pxref{Contexts}.
+@end itemize
 
 For the marking commands, please refer to @ref{Marking messages}.
 

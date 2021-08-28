@@ -38,6 +38,7 @@
 (require 'mu4e-proc)
 (require 'mu4e-vars)
 (require 'mu4e-mark)
+(require 'mu4e-context)
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 (require 'mu4e-message)
@@ -929,8 +930,6 @@ after the end of the search results."
           (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
           (define-key map (kbd "<C-kp-subtract>") 'mu4e-headers-split-view-shrink)
 
-          (define-key map ";" 'mu4e-context-switch)
-
           ;; switching to view mode (if it's visible)
           (define-key map "y" 'mu4e-select-other-view)
 
@@ -1133,8 +1132,6 @@ no user-interaction ongoing."
   (make-local-variable 'mu4e~highlighted-docid)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
-  (mu4e-context-in-modeline)
-
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
   (add-hook 'mu4e-index-updated-hook
@@ -1147,6 +1144,7 @@ no user-interaction ongoing."
    header-line-format (mu4e~header-line-format))
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
+  (mu4e-context-minor-mode)
   (hl-line-mode 1))
 
 (defun mu4e~headers-index-updated-hook-fn ()
@@ -1266,7 +1264,7 @@ docid is not found."
                    `(:eval
                      (concat
                       (propertize
-                       (mu4e~quote-for-modeline ,mu4e~headers-mode-line-label)
+                       (mu4e-quote-for-modeline ,mu4e~headers-mode-line-label)
                        'face 'mu4e-modeline-face)
                       " "
                       (if (and mu4e-display-update-status-in-modeline

@@ -447,7 +447,6 @@ removing the In-Reply-To header."
   (setq mu4e-compose-mode-map
         (let ((map (make-sparse-keymap)))
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
-          (define-key map (kbd "C-c C-;") 'mu4e-compose-context-switch)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
           (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
@@ -508,7 +507,12 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 \\{message-mode-map}."
   (progn
     (use-local-map mu4e-compose-mode-map)
-    (mu4e-context-in-modeline)
+
+    (mu4e-context-minor-mode)
+    (define-key mu4e-context-minor-mode-map (kbd ";") nil)
+    (define-key mu4e-context-minor-mode-map (kbd "C-c C-;")
+      #'mu4e-compose-context-switch)
+    
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
@@ -710,8 +714,8 @@ are optional."
   (set (make-local-variable 'mu4e-compose-type) compose-type)
   (put 'mu4e-compose-type 'permanent-local t)
   ;; maybe switch the context
-  (mu4e~context-autoswitch mu4e-compose-parent-message
-                           mu4e-compose-context-policy)
+  (mu4e--context-autoswitch mu4e-compose-parent-message
+                            mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
 
   ;; this opens (or re-opens) a messages with all the basic headers set.

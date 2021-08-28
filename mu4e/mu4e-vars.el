@@ -764,11 +764,6 @@ I.e. a message with the draft flag set."
   "Face for a header title in the headers view."
   :group 'mu4e-faces)
 
-(defface mu4e-context-face
-  '((t :inherit mu4e-title-face :weight bold))
-  "Face for displaying the context in the modeline."
-  :group 'mu4e-faces)
-
 (defface mu4e-modeline-face
   '((t :inherit font-lock-string-face :weight bold))
   "Face for the query in the mode-line."

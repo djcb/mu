@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'mu4e-view-common)
+(require 'mu4e-context)
 (require 'calendar)
 (require 'gnus-art)
 
@@ -266,9 +267,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "A" #'mu4e-view-mime-part-action)
     (define-key map "e" #'mu4e-view-save-attachments)
 
-    (define-key map ";" #'mu4e-context-switch)
-
-          ;; toggle header settings
+    ;; toggle header settings
     (define-key map "O" #'mu4e-headers-change-sorting)
     (define-key map "P" #'mu4e-headers-toggle-threading)
     (define-key map "Q" #'mu4e-headers-toggle-full-search)
@@ -403,16 +402,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 
 (defvar mu4e-view-mode-abbrev-table nil)
 
-(defun mu4e~view-mode-body ()
-  "Body of the mode-function."
-  (use-local-map mu4e-view-mode-map)
-  (mu4e-context-in-modeline)
-  (setq buffer-undo-list t);; don't record undo info
-  ;; autopair mode gives error when pressing RET
-  ;; turn it off
-  (when (boundp 'autopair-dont-activate)
-    (setq autopair-dont-activate t)))
-
 ;;  "Define the major-mode for the mu4e-view."
 (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
@@ -430,7 +419,13 @@ Based on Gnus' article-mode."
               (lambda(func &rest args)
                 (if (mu4e~view-mode-p)
                     "." (apply func args))))
-  (mu4e~view-mode-body))
+  (use-local-map mu4e-view-mode-map)
+  (mu4e-context-minor-mode)
+  (setq buffer-undo-list t);; don't record undo info
+  ;; autopair mode gives error when pressing RET
+  ;; turn it off
+  (when (boundp 'autopair-dont-activate)
+    (setq autopair-dont-activate t)))
 
 ;;; Massaging the message view
 
