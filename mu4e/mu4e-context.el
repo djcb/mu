@@ -33,15 +33,15 @@
 (defvar smtpmail-smtp-user)
 (defvar mu4e-view-date-format)
 
-(defvar mu4e-contexts nil "The list of `mu4e-context' objects
-describing mu4e's contexts.")
+(defvar mu4e-contexts nil
+  "The list of `mu4e-context' objects describing mu4e's contexts.")
 
 (defvar mu4e-context-changed-hook nil
   "Hook run just *after* the context changed.")
 
 (defvar mu4e~context-current nil
-  "The current context; for internal use. Use
-  `mu4e-context-switch' to change it.")
+  "The current context; for internal use.
+Use `mu4e-context-switch' to change it.")
 
 (defun mu4e-context-current (&optional output)
   "Get the currently active context, or nil if there is none.
@@ -55,8 +55,8 @@ none."
     ctx))
 
 (defun mu4e-context-label ()
-  "Propertized string with the current context name, or \"\" if
-  there is none."
+  "Propertized string with the current context name.
+An empty string \"\" if there is none."
   (if (mu4e-context-current)
       (concat "[" (propertize (mu4e~quote-for-modeline
                                (mu4e-context-name (mu4e-context-current)))
@@ -84,7 +84,7 @@ none."
 
 
 (defun mu4e~context-ask-user (prompt)
-  "Let user choose some context based on its name."
+  "Let user choose some context based on its name with PROMPT."
   (when mu4e-contexts
     (let* ((names (cl-map 'list (lambda (context)
                                   (cons (mu4e-context-name context) context))
@@ -93,8 +93,8 @@ none."
       (or context (mu4e-error "No such context")))))
 
 (defun mu4e-context-switch (&optional force name)
-  "Switch context to a context with NAME which is part of
-`mu4e-contexts'; if NAME is nil, query user.
+  "Switch to a context with NAME.
+Context must be part of `mu4e-contexts'; if NAME is nil, query user.
 
 If the new context is the same and the current context, only
 switch (run associated functions) when prefix argument FORCE is
@@ -130,18 +130,22 @@ non-nil."
     context))
 
 (defun mu4e~context-autoswitch (&optional msg policy)
-  "When contexts are defined but there is no context yet, switch
-to the first whose :match-func return non-nil. If none of them
-match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
+  "Automatically switch to some context.
+
+When contexts are defined but there is no context yet, switch to
+the first whose :match-func return non-nil. If none of them
+match, return the first. For MSG and POLICY, see
+`mu4e-context-determine'."
   (when mu4e-contexts
     (let ((context (mu4e-context-determine msg policy)))
       (when context (mu4e-context-switch
                      nil (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
-  "Return the first context with a match-func that returns t. MSG
-points to the plist for the message replied to or forwarded, or
-nil if there is no such MSG; similar to what
+  "Return the first context where match-func evaluate to non-nil.
+
+MSG points to the plist for the message replied to or forwarded,
+or nil if there is no such MSG; similar to what
 `mu4e-compose-pre-hook' does.
 
 POLICY specifies how to do the determination. If POLICY is
