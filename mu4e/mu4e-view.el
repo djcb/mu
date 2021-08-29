@@ -328,6 +328,7 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 	      ov-inv (make-overlay ov-beg ov-end)
 	      beg    ov-end)
 	(overlay-put ov-inv 'invisible t)
+	(overlay-put ov-inv 'mu4e-overlay t)
 	(when (re-search-forward
 	       (concat "^" message-mark-insert-end) nil t)
 	  (setq ov-beg (match-beginning 0)
@@ -337,6 +338,7 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 	  (overlay-put ov-inv 'invisible t))
 	(when (and beg end)
 	  (let ((ov (make-overlay beg end)))
+	    (overlay-put ov 'mu4e-overlay t)
 	    (overlay-put ov 'face 'mu4e-region-code))
 	  (setq beg nil end nil))))))
 
@@ -494,6 +496,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 		      keymap ,mu4e-view-active-urls-keymap
 		      help-echo
 		      "[mouse-1] or [M-RET] to open the link"))
+	      (overlay-put ov 'mu4e-overlay t)
 	      (overlay-put ov 'after-string
 			   (propertize (format "\u200B[%d]" num)
 				       'face 'mu4e-url-number-face)))))))))
@@ -621,6 +624,7 @@ marking if it still had that."
     (kill-buffer gnus-article-buffer))
   (with-current-buffer (get-buffer-create gnus-article-buffer)
     (let ((inhibit-read-only t))
+      (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
       (erase-buffer)
       (insert-file-contents-literally
        (mu4e-message-field msg :path) nil nil nil t)))
@@ -1203,7 +1207,6 @@ the third MIME-part."
       (gnus-article-inline-part (car html-part))
     (mu4e-warn "No html part in this message")))
 
-
 (defun mu4e-process-file-through-pipe (path pipecmd)
   "Process file at PATH through a pipe with PIPECMD."
   (let ((buf (get-buffer-create "*mu4e-output")))
@@ -1213,7 +1216,6 @@ the third MIME-part."
         (call-process-shell-command pipecmd path t t)
         (view-mode)))
     (switch-to-buffer buf)))
-
 
 ;;; Bug Reference mode support
 
