@@ -25,9 +25,114 @@
 ;;; Code:
 
 (require 'mu4e-helpers)
-(require 'mu4e-utils)
 (require 'mu4e-meta)
 
+
+;;; Configuration
+(defcustom mu4e-mu-home nil
+  "Location of an alternate mu home dir.
+If not set, use the defaults, based on the XDG Base Directory
+Specification."
+  :group 'mu4e
+  :type '(choice (const :tag "Default location" nil)
+                 (directory :tag "Specify location"))
+  :safe 'stringp)
+
+(defcustom mu4e-mu-binary (executable-find "mu")
+  "Name of the mu-binary to use.
+If it cannot be found in your PATH, you can specify the full
+path."
+  :type 'file
+  :group 'mu4e
+  :safe 'stringp)
+
+(defcustom mu4e-mu-debug nil
+  "Whether to run the mu binary in debug-mode.
+Setting this to t increases the amount of information in the log."
+  :type 'boolean
+  :group 'mu4e)
+
+(make-obsolete-variable
+ 'mu4e-maildir
+ "determined by server; see `mu4e-root-maildir'." "1.3.8")
+
+(defcustom mu4e-change-filenames-when-moving nil
+  "Change message file names when moving them.
+When moving messages to different folders, normally mu/mu4e keep
+the base filename the same (the flags-part of the filename may
+change still). With this option set to non-nil, mu4e instead
+changes the filename. This latter behavior works better with some
+IMAP-synchronization programs such as mbsync; the default works
+better with e.g. offlineimap."
+  :type 'boolean
+  :group 'mu4e
+  :safe 'booleanp)
+
+
+;; Handlers are not strictly internal, but are not meant
+;; for overriding outside mu4e. The are mainly for breaking
+;; dependency cycles.
+
+(defvar mu4e-error-func nil
+  "Function called for each error received.
+The function is passed an error plist as argument. See
+`mu4e~proc-filter' for the format.")
+
+(defvar mu4e-update-func nil
+  "Function called for each :update sexp returned.
+The function is passed a msg sexp as argument.
+See `mu4e~proc-filter' for the format.")
+
+(defvar mu4e-remove-func nil
+  "Function called for each :remove sexp returned.
+This happens when some message has been deleted. The function is
+passed the docid of the removed message.")
+
+(defvar mu4e-sent-func  nil
+  "Function called for each :sent sexp received.
+This happens when some message has been sent. The function is
+passed the docid and the draft-path of the sent message.")
+
+(defvar mu4e-view-func  nil
+  "Function called for each single-message sexp.
+The function is passed a message sexp as argument. See
+`mu4e~proc-filter' for the format.")
+
+(defvar mu4e-header-func nil
+  "Function called for each message-header received.
+The function is passed a msg plist as argument. See
+`mu4e~proc-filter' for the format.")
+
+(defvar mu4e-found-func nil
+  "Function called for when we received a :found sexp.
+This happens after the headers have been returned, to report on
+the number of matches. See `mu4e~proc-filter' for the format.")
+
+(defvar mu4e-erase-func nil
+  "Function called we receive an :erase sexp.
+This before new headers are displayed, to clear the current
+headers buffer. See `mu4e~proc-filter' for the format.")
+
+(defvar mu4e-compose-func nil
+  "Function called for each compose message received.
+I.e., the original message that is used as basis for composing a
+new message (i.e., either a reply or a forward); the function is
+passed msg and a symbol (either reply or forward). See
+`mu4e~proc-filter' for the format of <msg-plist>.")
+
+(defvar mu4e-info-func nil
+  "Function called for each (:info type ....) sexp received.
+from the server process.")
+
+(defvar mu4e-pong-func nil
+  "Function called for each (:pong type ....) sexp received.")
+
+(defvar mu4e-contacts-func nil
+  "A function called for each (:contacts (<list-of-contacts>)
+sexp received from the server process.")
+
+(make-obsolete-variable 'mu4e-temp-func "No longer used" "1.7.0")
+
 ;;; Internal vars
 
 (defvar mu4e~proc-buf nil
@@ -48,11 +153,10 @@
   (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
-
-;;; Functions
-
-(defun mu4e~proc-running-p  ()
-  "Whether the mu process is running."
+
+(defun mu4e-running-p ()
+  "Whether mu4e is running.
+Checks whether the server process is live."
   (and mu4e~proc-process
        (memq (process-status mu4e~proc-process)
              '(run open listen connect stop))
@@ -205,15 +309,6 @@ The server output is as follows:
                    (plist-get sexp :original)
                    (plist-get sexp :include)))
 
-         ;; do something with a temporary file
-         ((plist-get sexp :temp)
-          (funcall mu4e-temp-func
-                   (plist-get sexp :temp)   ;; name of the temp file
-                   (plist-get sexp :what)   ;; what to do with it
-                   ;; (pipe|emacs|open-with...)
-                   (plist-get sexp :docid)  ;; docid of the message
-                   (plist-get sexp :param)));; parameter for the action
-
          ;; get some info
          ((plist-get sexp :info)
           (funcall mu4e-info-func sexp))
@@ -310,7 +405,7 @@ backslashes and double-quotes."
 
 (defun mu4e~call-mu (form)
   "Call 'mu' with some command."
-  (unless (mu4e~proc-running-p) (mu4e~proc-start))
+  (unless (mu4e-running-p) (mu4e~proc-start))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
@@ -482,9 +577,9 @@ the function registered as `mu4e-view-func'."
                   :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
                   :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
                   :mark-as-read ,mark-as-read
-                  :extract-images ,(if mu4e-view-show-images t nil)
-                  :decrypt ,(and decrypt t)
-                  :verify  ,(and verify t))))
+                  :extract-images nil ;; XXX remove
+                  :decrypt ,(and decrypt t) ;; XXX remove
+                  :verify  ,(and verify t)))) ;; XXX remove
 
 (defun mu4e~proc-view-path (path &optional images decrypt verify)
   "View message at PATH..

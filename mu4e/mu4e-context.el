@@ -31,6 +31,30 @@
 
 
 ;;; Configuration
+(defcustom mu4e-context-policy 'ask-if-none
+  "The policy to determine the context when entering the mu4e main view.
+
+If the value is `always-ask', ask the user unconditionally.
+
+In all other cases, if any context matches (using its match
+function), this context is used. Otherwise, if none of the
+contexts match, we have the following choices:
+
+- `pick-first': pick the first of the contexts available (ie. the default)
+- `ask': ask the user
+- `ask-if-none': ask if there is no context yet, otherwise leave it as it is
+-  nil: return nil; leaves the current context as is.
+
+Also see `mu4e-compose-context-policy'."
+  :type '(choice
+          (const :tag "Always ask what context to use, even if one matches"
+                 always-ask)
+          (const :tag "Ask if none of the contexts match" ask)
+          (const :tag "Ask when there's no context yet" ask-if-none)
+          (const :tag "Pick the first context if none match" pick-first)
+          (const :tag "Don't change the context when none match" nil))
+  :group 'mu4e)
+
 
 (defvar mu4e-contexts nil
   "The list of `mu4e-context' objects describing mu4e's contexts.")
@@ -42,12 +66,10 @@
   '((t :inherit mu4e-title-face :weight bold))
   "Face for displaying the context in the modeline."
   :group 'mu4e-faces)
-
 
 (defvar mu4e--context-current nil
   "The current context.
 Internal; use `mu4e-context-switch' to change it.")
-
 
 (defun mu4e-context-current (&optional output)
   "Get the currently active context, or nil if there is none.
@@ -187,6 +209,16 @@ global-mode-line."
   (add-to-list
    (make-local-variable 'global-mode-string)
    '(:eval (mu4e-context-label))))
+
+(defmacro with-mu4e-context-vars (context &rest body)
+  "Evaluate BODY, with variables let-bound for CONTEXT (if any).
+`funcall'."
+  (declare (indent 2))
+  `(let* ((vars (and ,context (mu4e-context-vars ,context))))
+     (cl-progv ;; XXX: perhaps use eval's lexical environment instead of progv?
+         (mapcar (lambda(cell) (car cell)) vars)
+         (mapcar (lambda(cell) (cdr cell)) vars)
+       (eval ,@body))))
 
 (define-minor-mode mu4e-context-minor-mode
   "Mode for switching the mu4e context."

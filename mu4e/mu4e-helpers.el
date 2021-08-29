@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'seq)
+(require 'ido)
 (require 'cl-lib)
 
 
@@ -43,6 +44,126 @@
 If the string exceeds this limit, it will be truncated to fit."
   :type 'integer
   :group 'mu4e)
+
+(defcustom mu4e-completing-read-function 'ido-completing-read
+  "Function to be used to receive user-input during completion.
+Suggested possible values are:
+ * `completing-read':      built-in completion method
+ * `ido-completing-read':  dynamic completion within the minibuffer."
+  :type 'function
+  :options '(completing-read ido-completing-read)
+  :group 'mu4e)
+
+(defcustom mu4e-use-fancy-chars nil
+  "When set, allow fancy (Unicode) characters for marks/threads.
+You can customize the exact fancy characters used with
+`mu4e-marks' and various `mu4e-headers-..-mark' and
+`mu4e-headers..-prefix' variables."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-display-update-status-in-modeline nil
+  "Non-nil value will display the update status in the modeline."
+  :group 'mu4e
+  :type 'boolean)
+
+;; maybe move the next ones... but they're convenient
+;; here because they're needed in multiple buffers.
+
+(defcustom mu4e-view-auto-mark-as-read t
+  "Automatically mark messages are 'read' when you read them.
+This is the default behavior, but can be turned off, for example
+when using a read-only file-system.
+
+This can also be set to a function; if so, receives a message
+plist which should evaluate to nil if the message should *not* be
+marked as read-only, or non-nil otherwise."
+  :type '(choice
+          boolean
+          function)
+  :group 'mu4e-view)
+
+
+(defcustom mu4e-split-view 'horizontal
+  "How to show messages / headers.
+A symbol which is either:
+ * `horizontal':    split horizontally (headers on top)
+ * `vertical':      split vertically (headers on the left).
+ * `single-window': view and headers in one window (mu4e will try not to
+        touch your window layout), main view in minibuffer
+ * anything else:   don't split (show either headers or messages,
+        not both)
+Also see `mu4e-headers-visible-lines'
+and `mu4e-headers-visible-columns'."
+  :type '(choice (const :tag "Split horizontally" horizontal)
+                 (const :tag "Split vertically" vertical)
+                 (const :tag "Single window" single-window)
+                 (const :tag "Don't split" nil))
+  :group 'mu4e-headers)
+
+;;; Buffers
+
+(defconst mu4e-main-buffer-name " *mu4e-main*"
+  "Name of the mu4e main buffer.
+The default name starts with SPC and therefore is not visible in
+buffer list.")
+(defconst mu4e-headers-buffer-name "*mu4e-headers*"
+  "Name of the buffer for message headers.")
+(defconst mu4e-embedded-buffer-name " *mu4e-embedded*"
+  "Name for the embedded message view buffer.")
+
+(defun mu4e-get-headers-buffer()
+  "Get the name of the headers buffer."
+  (get-buffer mu4e-headers-buffer-name))
+
+(defun mu4e-get-view-buffer()
+  "Get the name of the view buffer."
+  ;; avoid a 'require.
+  (when (boundp 'gnus-article-buffer) gnus-article-buffer))
+
+(defun mu4e-select-other-view ()
+  "Switch between headers view and message view."
+  (interactive)
+  (let* ((other-buf
+          (cond
+           ((eq major-mode 'mu4e-headers-mode)
+            (mu4e-get-view-buffer))
+           ((eq major-mode 'mu4e-view-mode)
+            (mu4e-get-headers-buffer))))
+         (other-win (and other-buf (get-buffer-window other-buf))))
+    (if (window-live-p other-win)
+        (select-window other-win)
+      (mu4e-message "No window to switch to"))))
+
+
+;;; Windows
+(defun mu4e-hide-other-mu4e-buffers ()
+  "Bury mu4e buffers.
+Hide (main, headers, view) (and delete all windows displaying
+it). Do _not_ bury the current buffer, though."
+  (interactive)
+  (unless (eq mu4e-split-view 'single-window)
+    (let ((curbuf (current-buffer)))
+      ;; note: 'walk-windows' does not seem to work correctly when modifying
+      ;; windows; therefore, the doloops here
+      (dolist (frame (frame-list))
+        (dolist (win (window-list frame nil))
+          (with-current-buffer (window-buffer win)
+            (unless (eq curbuf (current-buffer))
+              (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
+                (when (eq t (window-deletable-p win))
+                  (delete-window win))))))) t)))
+
+;;; Modeline
+
+(defun mu4e-quote-for-modeline (str)
+  "Quote STR to be used literally in the modeline.
+The string will be shortened to fit if its length exceeds
+`mu4e-modeline-max-width'."
+  (replace-regexp-in-string
+   "%" "%%"
+   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
+
 
 
 ;;; Messages, warnings and errors
@@ -175,16 +296,6 @@ Function will return the cdr of the list element."
            (plist-get mu4e--server-props :version))
       (mu4e-error "Version unknown; did you start mu4e?")))
 
-(defun mu4e-personal-addresses(&optional no-regexp)
-  "Get the list user's personal addresses, as passed to mu init.
-The address are either plain e-mail address or /regular
- expressions/. When NO-REGEXP is non-nil, do not include regexp
- address patterns (if any)."
-  (seq-remove
-   (lambda(addr) (and no-regexp (string-match-p "^/.*/" addr)))
-   (when mu4e--server-props
-     (plist-get mu4e--server-props :personal-addresses))))
-
 (defun mu4e-last-query-results ()
   "Get the results (counts) of the last cached queries.
 
@@ -279,17 +390,9 @@ log-buffer. See `mu4e-show-log'."
       (mu4e-warn "No debug log available"))
     (switch-to-buffer buf)))
 
+
 
-;;; Misc
-
-(defun mu4e-quote-for-modeline (str)
-  "Quote STR to be used literally in the modeline.
-The string will be shortened to fit if its length exceeds
-`mu4e-modeline-max-width'."
-  (replace-regexp-in-string
-   "%" "%%"
-   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
-
+;;; Flags
 ;; Converting flags->string and vice-versa
 
 (defun mu4e-flags-to-string (flags)
@@ -337,6 +440,8 @@ http://cr.yp.to/proto/maildir.html."
 	  (_     nil))))
      str))))
 
+
+;;; Misc
 (defun mu4e-display-size (size)
   "Get a human-friendly string representation of SIZE (in bytes)."
   (cond
@@ -382,6 +487,31 @@ This includes expanding e.g. 3-5 into 3,4,5. If the letter
         ((< x 1)
          (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
      list)))
+
+(defun mu4e-make-temp-file (ext)
+  "Create a self-destructing temporary file with extension EXT.
+The file will self-destruct in a short while, enough to open it
+in an external program."
+  (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
+    (run-at-time "30 sec" nil
+		 (lambda () (ignore-errors (delete-file tmpfile))))
+    tmpfile))
+
+(defun mu4e-display-manual ()
+  "Display the mu4e manual page for the current mode.
+Or go to the top level if there is none."
+  (interactive)
+  (info (cl-case major-mode
+          ('mu4e-main-mode    "(mu4e)Main view")
+          ('mu4e-headers-mode "(mu4e)Headers view")
+          ('mu4e-view-mode    "(mu4e)Message view")
+          (t                  "mu4e"))))
+
+;;; Macros
+
+(defmacro mu4e-setq-if-nil (var val)
+  "Set VAR to VAL if VAR is nil."
+  `(unless ,var (setq ,var ,val)))
 
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here

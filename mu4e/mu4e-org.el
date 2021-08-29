@@ -122,7 +122,7 @@ the query (for links starting with 'query:')."
    ((string-match "^msgid:\\(.+\\)" link)
     (mu4e-view-message-with-message-id (match-string 1 link)))
    ((string-match "^query:\\(.+\\)" link)
-    (mu4e-headers-search (match-string 1 link) current-prefix-arg))
+    (mu4e-search (match-string 1 link) current-prefix-arg))
    (t (mu4e-error "Unrecognized link type '%s'" link))))
 
 (make-obsolete 'org-mu4e-open 'mu4e-org-open "1.3.6")

@@ -46,6 +46,7 @@
 (require 'mu4e-proc)
 (require 'mu4e-search)
 (require 'mu4e-utils) ;; utility functions
+(require 'mu4e-contacts)
 (require 'mu4e-vars)
 
 ;;; Options
@@ -87,108 +88,49 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+(defcustom mu4e-view-max-specpdl-size 4096
+  "The value of `max-specpdl-size' for displaying messages with Gnus."
+  :type 'integer
+  :group 'mu4e-view)
 
+
 ;;; Old options
 
-;; These don't do anything useful when in "gnus" mode, except for avoid errors
-;; for people that have these in their config.
-
-(defcustom mu4e-view-show-addresses nil
-  "Whether to initially show full e-mail addresses for contacts.
-Otherwise, just show their names. Ignored when using the gnus-based view."
-  :type 'boolean
-  :group 'mu4e-view)
-
+;; Options from the old message view.
+(make-obsolete-variable 'mu4e-view-show-addresses
+			"Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
 (make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
+(make-obsolete-variable 'mu4e-view-date-format
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-image-max-width
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-image-max-height
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-save-multiple-attachments-without-asking
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-attachment-assoc
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-attachment-actions
+			"See mu4e-view-mime-part-actions" "1.7.0")
+(make-obsolete-variable 'mu4e-view-header-field-keymap
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-header-field-keymap
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-contacts-header-keymap
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-view-attachments-header-keymap
+			"Unused with the new message view" "1.7.0")
+(make-obsolete-variable 'mu4e-imagemagick-identify nil "1.7.0")
+(make-obsolete-variable 'mu4e-view-show-images
+			"No longer used" "1.7.0")
+(make-obsolete-variable 'mu4e-view-gnus     "Old view is gone" "1.7.0")
+(make-obsolete-variable 'mu4e-view-use-gnus "Gnus view is the default" "1.5.10")
 
-(defcustom mu4e-view-date-format "%c"
-  "Date format to use in the message view.
-In the format of `format-time-string'. Ignored when using the gnus-based view."
-  :type 'string
-  :group 'mu4e-view)
+(make-obsolete-variable 'mu4e-cited-regexp "No longer used" "1.7.0")
 
-(defcustom mu4e-view-image-max-width 800
-  "The maximum width for images to display.
-This is only effective if you're using an Emacs with Imagemagick
-support, and `mu4e-view-show-images' is non-nil. Ignored when
-using the gnus-based view."
-  :type 'integer
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-image-max-height 600
-  "The maximum height for images to display.
-This is only effective if you're using an Emacs with Imagemagick
-support, and `mu4e-view-show-images' is non-nil.  Ignored when
-using the gnus-based view."
-  :type 'integer
-  :group 'mu4e-view)
-
-
-(defcustom mu4e-save-multiple-attachments-without-asking nil
-  "If non-nil, saving multiple attachments asks once for a
-directory and saves all attachments in the chosen directory.
-Ignored when using the gnus-based view."
-  :type 'boolean
-  :group 'mu4e-view)
-
-(defcustom mu4e-view-attachment-assoc nil
-  "Alist of (EXTENSION . PROGRAM).
-Specify which PROGRAM to use to open attachment with EXTENSION.
-Args EXTENSION and PROGRAM should be specified as strings.
-Ignored when using the gnus-based view."
-  :group 'mu4e-view
-  :type '(alist :key-type string :value-type string))
-
-(defcustom mu4e-view-attachment-actions
-  '( ("ssave" . mu4e-view-save-attachment-single)
-     ("Ssave multi" . mu4e-view-save-attachment-multi)
-     ("wopen-with" . mu4e-view-open-attachment-with)
-     ("ein-emacs"  . mu4e-view-open-attachment-emacs)
-     ("dimport-in-diary"  . mu4e-view-import-attachment-diary)
-     ("kimport-public-key" . mu4e-view-import-public-key)
-     ("|pipe"      . mu4e-view-pipe-attachment))
-  "List of actions to perform on message attachments.
-The actions are cons-cells of the form:
- (NAME . FUNC)
-where:
-* NAME is the name of the action (e.g. \"Count lines\")
-* FUNC is a function which receives two arguments: the message
-  plist and the attachment number.
-The first letter of NAME is used as a shortcut character.
-Ignored when using the gnus-based view."
-  :group 'mu4e-view
-  :type '(alist :key-type string :value-type function))
-
-;;; Keymaps
-
-(defvar mu4e-view-header-field-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-header-field-fold)
-    (define-key map (kbd "TAB") 'mu4e~view-header-field-fold)
-    map)
-  "Keymap used for header fields. Ignored when using the
-gnus-based view.")
-
-(defvar mu4e-view-contacts-header-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-2] 'mu4e~view-compose-contact)
-    (define-key map "C"  'mu4e~view-compose-contact)
-    (define-key map "c"  'mu4e~view-copy-contact)
-    map)
-  "Keymap used for the contacts in the header fields.
-Ignored when using the gnus-based view.")
-
-(defvar mu4e-view-attachments-header-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'mu4e~view-open-attach-from-binding)
-    (define-key map  [?\M-\r] 'mu4e~view-open-attach-from-binding)
-    (define-key map [mouse-2] 'mu4e~view-save-attach-from-binding)
-    (define-key map (kbd "<S-return>") 'mu4e~view-save-attach-from-binding)
-    map)
-  "Keymap used in the \"Attachments\" header field. Ignored when
-using the gnus-based view.")
-
+
+			
 ;; Helpers
 
 (defun mu4e~view-quit-buffer ()
@@ -1262,5 +1204,48 @@ the third MIME-part."
       (gnus-article-inline-part (car html-part))
     (mu4e-warn "No html part in this message")))
 
+
+(defun mu4e-process-file-through-pipe (path pipecmd)
+  "Process file at PATH through a pipe with PIPECMD."
+  (let ((buf (get-buffer-create "*mu4e-output")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (call-process-shell-command pipecmd path t t)
+        (view-mode)))
+    (switch-to-buffer buf)))
+
+
+;;; Bug Reference mode support
+
+;; This is Emacs 28 stuff but there is no need to guard it with some (f)boundp
+;; checks (which would return nil if bug-reference.el is not loaded before
+;; mu4e) since the function definition doesn't hurt and `add-hook' works fine
+;; for not yet defined variables (by creating them).
+(declare-function bug-reference-maybe-setup-from-mail "ext:bug-reference")
+(defun mu4e--view-try-setup-bug-reference-mode ()
+  "Try to guess bug-reference setup from the current mu4e mail.
+Looks at the maildir and the mail headers List, List-Id, Maildir,
+To, From, Cc, and Subject and tries to guess suitable values for
+`bug-reference-bug-regexp' and `bug-reference-url-format' by
+matching the maildir name against GROUP-REGEXP and each header
+value against HEADER-REGEXP in
+`bug-reference-setup-from-mail-alist'."
+  (when (derived-mode-p 'mu4e-view-mode)
+    (let (header-values)
+      (save-excursion
+        (goto-char (point-min))
+        (dolist (field '("list" "list-id" "to" "from" "cc" "subject"))
+          (let ((val (mail-fetch-field field)))
+            (when val
+              (push val header-values)))))
+      (bug-reference-maybe-setup-from-mail
+       (mail-fetch-field "maildir")
+       header-values))))
+
+(add-hook 'bug-reference-auto-setup-functions
+	  #'mu4e--view-try-setup-bug-reference-mode)
+
+
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here

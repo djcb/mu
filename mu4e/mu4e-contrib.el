@@ -96,7 +96,7 @@ BOOKMARK is a bookmark name or a bookmark record."
          (docid (cdr path))
          (query (car path)))
     (call-interactively 'mu4e)
-    (mu4e-headers-search query)
+    (mu4e-search query)
     (sit-for 0.5)
     (mu4e~headers-goto-docid docid)
     (mu4e~headers-highlight docid)
@@ -171,6 +171,17 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
 ;; Code for `gnus-dired-attached' modified to run from eshell,
 ;; allowing files to be attached to an email via mu4e using the
 ;; eshell.  Does not depend on gnus.
+
+
+(defun mu4e~active-composition-buffers ()
+  "Return all active mu4e composition buffers"
+  (let (buffers)
+    (save-excursion
+      (dolist (buffer (buffer-list t))
+        (set-buffer buffer)
+        (when (eq major-mode 'mu4e-compose-mode)
+          (push (buffer-name buffer) buffers))))
+    (nreverse buffers)))
 
 (defun eshell/mu4e-attach (&rest args)
   "Attach files to a mu4e message using eshell. If no mu4e

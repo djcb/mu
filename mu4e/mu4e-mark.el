@@ -31,6 +31,7 @@
 (require 'mu4e-proc)
 (require 'mu4e-utils)
 (require 'mu4e-message)
+(require 'mu4e-folders)
 
 ;; keep byte-compiler happy
 (declare-function mu4e~headers-mark "mu4e-headers")

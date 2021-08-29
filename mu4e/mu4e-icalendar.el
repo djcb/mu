@@ -53,14 +53,31 @@
 (require 'cl-lib)
 
 (require 'mu4e-mark)
-(require 'mu4e-utils)
+(require 'mu4e-helpers)
+(require 'mu4e-contacts)
 (require 'mu4e-headers)
 (require 'mu4e-view)
-(require 'mu4e-vars)
 
-(when mu4e-view-use-old
-  (mu4e-error "iCalender support is not available with the old viewer"))
+
+;;; Configuration
+;;;; Calendar
 
+(defgroup mu4e-icalendar nil
+  "Icalendar related settings."
+  :group 'mu4e)
+
+(defcustom mu4e-icalendar-trash-after-reply nil
+  "If non-nil, trash the icalendar invitation after replying."
+  :type 'boolean
+  :group 'mu4e-icalendar)
+
+(defcustom mu4e-icalendar-diary-file nil
+  "If non-nil, the file in which to add events upon reply."
+  :type '(choice (const :tag "Do not insert a diary entry" nil)
+                 (string :tag "Insert a diary entry in this file"))
+  :group 'mu4e-icalendar)
+
+
 ;;;###autoload
 (defun mu4e-icalendar-setup ()
   "Perform the necessary initialization to use mu4e-icalendar."

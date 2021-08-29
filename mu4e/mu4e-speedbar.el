@@ -1,6 +1,6 @@
 ;;; mu4e-speedbar --- Speedbar support for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2020 Antono Vasiljev, Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2021 Antono Vasiljev, Dirk-Jan C. Binnema
 
 ;; Author: Antono Vasiljev <self@antono.info>
 ;; Version: 0.1
@@ -35,7 +35,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-headers)
 (require 'mu4e-context)
-(require 'mu4e-utils)
+(require 'mu4e-bookmarks)
 
 (defvar mu4e-main-speedbar-key-map nil
   "Keymap used when in mu4e display mode.")
@@ -91,8 +91,7 @@
 (defun mu4e~speedbar-maildir (&optional _text token _ident)
   "Jump to maildir TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
-   (mu4e-headers-search (concat "\"maildir:" token "\"")
-                        current-prefix-arg)))
+   (mu4e-search (concat "\"maildir:" token "\"") current-prefix-arg)))
 
 (defun mu4e~speedbar-render-bookmark-list ()
   "Insert the list of bookmarks in the speedbar"
@@ -110,7 +109,7 @@
 (defun mu4e~speedbar-bookmark (&optional _text token _ident)
   "Run bookmarked query TOKEN. TEXT and INDENT are not used."
   (dframe-with-attached-buffer
-   (mu4e-headers-search token current-prefix-arg)))
+   (mu4e-search token current-prefix-arg)))
 
 ;;;###autoload
 (defun mu4e-speedbar-buttons (&optional _buffer)

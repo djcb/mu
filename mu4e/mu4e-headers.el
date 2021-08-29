@@ -34,6 +34,8 @@
 (require 'mailcap)
 (require 'mule-util) ;; seems _some_ people need this for truncate-string-ellipsis
 
+(require 'mu4e-update)
+
 (require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-proc)
 (require 'mu4e-vars)
@@ -43,11 +45,14 @@
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 (require 'mu4e-message)
+(require 'mu4e-folders)
 
 (declare-function mu4e-view       "mu4e-view")
 (declare-function mu4e~main-view  "mu4e-main")
 
-;;; Options
+
+
+;;; Configuration
 
 (defgroup mu4e-headers nil
   "Settings for the headers view."
@@ -175,7 +180,7 @@ one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 `:list'.
 
 Note that when threading is enabled (through
-`mu4e-headers-show-threads'), the headers are exclusively sorted
+`mu4e-search-threads'), the headers are exclusively sorted
 chronologically (`:date') by the newest message in the thread.")
 
 (defvar mu4e-headers-sort-direction 'descending
@@ -284,6 +289,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
   "List of cells describing the various sort-options.
 In the format needed for `mu4e-read-option'.")
 
+
 ;;; Clear
 
 (defvar mu4e~headers-render-start nil)
@@ -293,6 +299,11 @@ In the format needed for `mu4e-read-option'.")
   "If non-nil, report on the time it took to render the messages.
 This is mostly useful for profiling.")
 
+
+
+
+
+
 (defun mu4e~headers-clear (&optional msg)
   "Clear the header buffer and related data structures."
   (when (buffer-live-p (mu4e-get-headers-buffer))
@@ -744,14 +755,19 @@ if provided, or at the end of the buffer otherwise."
 
 
 ;;; Performing queries (internal)
+(defconst mu4e~search-message "Searching...")
+(defconst mu4e~no-matches     "No matching messages found")
+(defconst mu4e~end-of-results "End of search results")
+
+
 (defun mu4e--search-execute (expr ignore-history)
   "Search for query EXPR.
 
 Switch to the output buffer for the results. If IGNORE-HISTORY is
 true, do *not* update the query history stack."
-  (let* ((buf (get-buffer-create mu4e~headers-buffer-name))
+  (let* ((buf (get-buffer-create mu4e-headers-buffer-name))
          (inhibit-read-only t)
-         (rewritten-expr (funcall mu4e-query-rewrite-function expr))
+         (rewritten-expr (funcall mu4e-search-query-rewrite-function expr))
          (maxnum (unless mu4e-search-full mu4e-search-results-limit)))
     (with-current-buffer buf
       (mu4e-headers-mode)
@@ -770,16 +786,12 @@ true, do *not* update the query history stack."
     (mu4e~headers-clear mu4e~search-message)
     (mu4e~proc-find
      rewritten-expr
-     mu4e-headers-show-threads
+     mu4e-search-threads
      mu4e-headers-sort-field
      mu4e-headers-sort-direction
      maxnum
      mu4e-headers-skip-duplicates
      mu4e-headers-include-related)))
-
-(defconst mu4e~search-message "Searching...")
-(defconst mu4e~no-matches     "No matching messages found")
-(defconst mu4e~end-of-results "End of search results")
 
 (defvar mu4e~headers-view-target nil
   "Whether to automatically view (open) the target message (as
@@ -865,10 +877,6 @@ after the end of the search results."
 (unless mu4e-headers-mode-map
   (setq mu4e-headers-mode-map
         (let ((map (make-sparse-keymap)))
-
-          (define-key map  (kbd "C-S-u")   'mu4e-update-mail-and-index)
-          ;; for terminal users
-          (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
 
           (define-key map "j" 'mu4e~headers-jump-to-maildir)
 
@@ -968,8 +976,8 @@ after the end of the search results."
             (define-key menumap [toggle-threading]
               '(menu-item "Toggle threading" mu4e-headers-toggle-threading
                           :button (:toggle .
-                                           (and (boundp 'mu4e-headers-show-threads)
-                                                mu4e-headers-show-threads))))
+                                           (and (boundp 'mu4e-search-threads)
+                                                mu4e-search-threads))))
 
             (define-key menumap "|" '("Pipe through shell" . mu4e-view-pipe))
             (define-key menumap [sepa1] '("--"))
@@ -1036,7 +1044,7 @@ after the end of the search results."
      (mapcar
       (lambda (item)
         (let* ( ;; with threading enabled, we're necessarily sorting by date.
-               (sort-field (if mu4e-headers-show-threads :date mu4e-headers-sort-field))
+               (sort-field (if mu4e-search-threads :date mu4e-headers-sort-field))
                (field (car item)) (width (cdr item))
                (info (cdr (assoc field
                                  (append mu4e-header-info mu4e-header-info-custom))))
@@ -1115,6 +1123,7 @@ no user-interaction ongoing."
 
   (mu4e~mark-initialize) ;; initialize the marking subsystem
   (mu4e-context-minor-mode)
+  (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
   (hl-line-mode 1))
 
@@ -1220,9 +1229,9 @@ docid is not found."
                              (if mu4e-use-fancy-chars
                                  (cddr flag-cell) (cadr flag-cell) )
                            ""))
-                       `((,mu4e-headers-full-search     . ,mu4e-headers-full-label)
+                       `((,mu4e-search-full     . ,mu4e-headers-full-label)
                          (,mu4e-headers-include-related . ,mu4e-headers-related-label)
-                         (,mu4e-headers-show-threads    . ,mu4e-headers-threaded-label))
+                         (,mu4e-search-threads    . ,mu4e-headers-threaded-label))
                        ""))
            (name "mu4e-headers"))
 
@@ -1491,17 +1500,17 @@ re-run the last search."
     (mu4e-search-rerun)))
 
 (defun mu4e-headers-toggle-threading (&optional dont-refresh)
-  "Toggle `mu4e-headers-show-threads'. With prefix-argument, do
+  "Toggle `mu4e-search-threads'. With prefix-argument, do
 _not_ refresh the last search with the new setting for threading."
   (interactive "P")
-  (mu4e~headers-toggle "Threading" 'mu4e-headers-show-threads dont-refresh))
+  (mu4e~headers-toggle "Threading" 'mu4e-search-threads dont-refresh))
 
 (defun mu4e-headers-toggle-full-search (&optional dont-refresh)
-  "Toggle `mu4e-headers-full-search'. With prefix-argument, do
+  "Toggle `mu4e-search-full'. With prefix-argument, do
 _not_ refresh the last search with the new setting for threading."
   (interactive "P")
   (mu4e~headers-toggle "Full-search"
-                       'mu4e-headers-full-search dont-refresh))
+                       'mu4e-search-full dont-refresh))
 
 (defun mu4e-headers-toggle-include-related (&optional dont-refresh)
   "Toggle `mu4e-headers-include-related'. With prefix-argument, do
@@ -1520,14 +1529,6 @@ _not_ refresh the last search with the new setting for threading."
 (defvar mu4e~headers-loading-buf nil
   "A buffer for loading a message view.")
 
-(defun mu4e~decrypt-p (msg)
-  "Should we decrypt this message?"
-  (when mu4e-view-use-old ;; we don't decrypt in the gnus-view case
-    (and (member 'encrypted (mu4e-message-field msg :flags))
-         (if (eq mu4e-decryption-policy 'ask)
-             (yes-or-no-p (mu4e-format "Decrypt message?"))
-           mu4e-decryption-policy))))
-
 (defun mu4e-headers-view-message ()
   "View message at point                                    .
 If there's an existing window for the view, re-use that one . If
@@ -1545,8 +1546,8 @@ window                                                      . "
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read))
-         (decrypt (mu4e~decrypt-p msg))
-         (verify  mu4e-view-use-old)
+         (decrypt nil) ;; XXX remove
+         (verify  nil) ;; XXX remove
          (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
@@ -1740,6 +1741,32 @@ other windows."
       ;; to the main view
       (kill-buffer)
       (mu4e~main-view 'refresh))))
+
+
+;;; Loading messages
+;;
+(defvar mu4e-loading-mode-map nil  "Keymap for *mu4e-loading* buffers.")
+(unless mu4e-loading-mode-map
+  (setq mu4e-loading-mode-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map "n" 'ignore)
+          (define-key map "p" 'ignore)
+          (define-key map "q"
+            (lambda()(interactive)
+              (if (eq mu4e-split-view 'single-window)
+                  'kill-buffer
+                'kill-buffer-and-window)))
+          map)))
+(fset 'mu4e-loading-mode-map mu4e-loading-mode-map)
+
+(define-derived-mode mu4e-loading-mode special-mode
+  "mu4e:loading"
+  (use-local-map mu4e-loading-mode-map)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert (propertize "Loading message..."
+                        'face 'mu4e-system-face 'intangible t))))
+
 
 ;;; _
 (provide 'mu4e-headers)

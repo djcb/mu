@@ -1,6 +1,6 @@
-;;; mu4e-lists.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-lists.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2016 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -27,7 +27,10 @@
 
 ;;; Code:
 
-(defvar mu4e~mailing-lists
+(require 'cl-lib)
+
+;;; Configuration
+(defvar mu4e-mailing-lists
   '( ("bbdb-info.lists.sourceforge.net"                       . "BBDB")
      ("boost-announce.lists.boost.org"                        . "BoostA")
      ("boost-interest.lists.boost.org"                        . "BoostI")
@@ -81,22 +84,50 @@
      ("wl-en.ml.gentei.org"                                   . "WdrLust")
      ("xapian-devel.lists.xapian.org"                         . "Xapian")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
-  "AList of cells (MAILING-LIST-ID . SHORTNAME)")
+  "AList of cells (MAILING-LIST-ID . SHORTNAME).")
 
 (defcustom mu4e-user-mailing-lists nil
-  "An alist with cells (MAILING-LIST-ID . SHORTNAME); these are
-used in addition to the built-in list `mu4e~mailing-lists'."
+  "An alist with cells (MAILING-LIST-ID . SHORTNAME).
+These are used in addition to the built-in list `mu4e~mailing-lists'."
   :group 'mu4e-headers
   :type '(repeat (cons string string)))
 
-
 (defcustom mu4e-mailing-list-patterns nil
-  "A list of regex patterns to capture a shortname out of a list
-ID. For the first regex that matches, its first matchgroup will
-be used as the shortname."
+  "A list of regexps to capture a shortname out of a list-id.
+For the first regex that matches, its first matchgroup will be
+used as the shortname."
   :group 'mu4e-headers
   :type '(repeat (regexp)))
+
 
+(defvar mu4e--lists-hash nil
+  "Hashtable of mailing-list-id => shortname.
+Based on `mu4e-mailing-lists' and `mu4e-user-mailing-lists'.")
+
+
+(defun mu4e-get-mailing-list-shortname (list-id)
+  "Get the shortname for a mailing-list with list-id LIST-ID.
+Based on `mu4e-mailing-lists', `mu4e-user-mailing-lists', and
+`mu4e-mailing-list-patterns'."
+  (unless mu4e--lists-hash
+    (setq mu4e--lists-hash (make-hash-table :test 'equal))
+    (dolist (cell mu4e-mailing-lists)
+      (puthash (car cell) (cdr cell) mu4e--lists-hash))
+    (dolist (cell mu4e-user-mailing-lists)
+      (puthash (car cell) (cdr cell) mu4e--lists-hash)))
+  (or
+   (gethash list-id mu4e--lists-hash)
+   (and (boundp 'mu4e-mailing-list-patterns)
+        (cl-member-if
+         (lambda (pattern)
+           (string-match pattern list-id))
+         mu4e-mailing-list-patterns)
+        (match-string 1 list-id))
+   ;; if it's not in the db, take the part until the first dot if there is one;
+   ;; otherwise just return the whole thing
+   (if (string-match "\\([^.]*\\)\\." list-id)
+       (match-string 1 list-id)
+     list-id)))
 ;;; _
 (provide 'mu4e-lists)
 ;;; mu4e-lists.el ends here
