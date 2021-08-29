@@ -72,7 +72,7 @@
 (require 'smtpmail)
 (require 'rfc2368)
 
-(require 'mu4e-proc)
+(require 'mu4e-server)
 (require 'mu4e-actions)
 (require 'mu4e-message)
 (require 'mu4e-draft)
@@ -153,12 +153,12 @@ If needed, set the Fcc header, and register the handler function."
                 (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
                 (let ((mdir-path (concat (mu4e-root-maildir) maildir)))
                   ;; Create the full maildir structure for the sent folder if it doesn't exist.
-                  ;; `mu4e~proc-mkdir` runs asynchronously but no matter whether it runs before or after
+                  ;; `mu4e--server-mkdir` runs asynchronously but no matter whether it runs before or after
                   ;; `write-file`, the sent maildir ends up in the correct state.
                   (unless (file-exists-p mdir-path)
-                    (mu4e~proc-mkdir mdir-path)))
+                    (mu4e--server-mkdir mdir-path)))
                 (write-file file) ;; writing maildirs files is easy
-                (mu4e~proc-add file))))))) ;; update the database
+                (mu4e--server-add file))))))) ;; update the database
 
 (defvar mu4e-compose-hidden-headers
   `("^References:" "^Face:" "^X-Face:"
@@ -206,7 +206,7 @@ Message-ID."
     (set-buffer-modified-p nil)
     (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
     ;; update the file on disk -- ie., without the separator
-    (mu4e~proc-add (buffer-file-name))))
+    (mu4e--server-add (buffer-file-name))))
 
 
 ;;; address completion
@@ -432,7 +432,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 (defun mu4e~set-sent-handler-message-sent-hook-fn ()
   ;;  mu4e~compose-mark-after-sending
   (setq mu4e-sent-func 'mu4e-sent-handler)
-  (mu4e~proc-sent (buffer-file-name)))
+  (mu4e--server-sent (buffer-file-name)))
 
 (defun mu4e-send-harden-newlines ()
   "Set the hard property to all newlines."
@@ -660,7 +660,7 @@ when the buffer is in `mu4e-compose-mode':
                            ;; Remove the <>
                            (when (and msg-id (string-match "<\\(.*\\)>" msg-id))
                              (save-window-excursion
-                               (mu4e~proc-move (match-string 1 msg-id) mu4e-drafts-folder nil t)
+                               (mu4e--server-move (match-string 1 msg-id) mu4e-drafts-folder nil t)
                                (kill-buffer buf))))) ;; Kill previous buffer which points to wrong file
                 ;; No file, just change the buffer file name
                 (setq buffer-file-name
@@ -676,7 +676,7 @@ For Forwarded ('Passed') and Replied messages, try to set the
 appropriate flag at the message forwarded or replied-to."
   (mu4e~compose-set-parent-flag path)
   (when (file-exists-p path) ;; maybe the draft was not saved at all
-    (mu4e~proc-remove docid))
+    (mu4e--server-remove docid))
   ;; kill any remaining buffers for the draft file, or they will hang around...
   ;; this seems a bit hamfisted...
   (when message-kill-buffer-on-exit
@@ -738,9 +738,9 @@ buffer."
                   (setq forwarded-from (cl-first refs))))))
           ;; remove the <>
           (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-            (mu4e~proc-move (match-string 1 in-reply-to) nil "+R-N"))
+            (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))
           (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-            (mu4e~proc-move (match-string 1 forwarded-from) nil "+P-N")))))))
+            (mu4e--server-move (match-string 1 forwarded-from) nil "+P-N")))))))
 
 (defun mu4e-compose (compose-type)
   "Start composing a message of COMPOSE-TYPE.
@@ -778,7 +778,7 @@ Symbol `edit' is only allowed for draft messages."
             (when (window-live-p viewwin)
               (select-window viewwin))))
         ;; talk to the backend
-        (mu4e~proc-compose compose-type decrypt docid)))))
+        (mu4e--server-compose compose-type decrypt docid)))))
 
 (defun mu4e-compose-reply ()
   "Compose a reply for the message at point in the headers buffer."

@@ -36,7 +36,7 @@
 (require 'mu4e-bookmarks)
 (require 'mu4e-update)
 (require 'mu4e-main)
-(require 'mu4e-proc)     ;; communication with backend
+(require 'mu4e-server)     ;; communication with backend
 
 
 
@@ -136,7 +136,7 @@ successful, call FUNC (if non-nil) afterwards."
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e--pong-handler info func)))
-  (mu4e~proc-ping
+  (mu4e--server-ping
    (mapcar ;; send it a list of queries we'd like to see read/unread info for
     (lambda (bm)
       (funcall (or mu4e-search-query-rewrite-function #'identity)
@@ -158,7 +158,7 @@ successful, call FUNC (if non-nil) afterwards."
     (cancel-timer mu4e--update-timer)
     (setq mu4e--update-timer nil))
   (mu4e-clear-caches)
-  (mu4e~proc-kill)
+  (mu4e--server-kill)
   ;; kill all mu4e buffers
   (mapc
    (lambda (buf)

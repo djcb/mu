@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'mu4e-proc)
+(require 'mu4e-server)
 (require 'mu4e-utils)
 (require 'mu4e-message)
 (require 'mu4e-folders)
@@ -133,50 +133,50 @@ The current buffer must be either a headers or view buffer."
      :prompt "refile"
      :dyn-target (lambda (target msg) (mu4e-get-refile-folder msg))
      :action (lambda (docid msg target)
-               (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
+               (mu4e--server-move docid (mu4e~mark-check-target target) "-N")))
     (delete
      :char ("D" . "x")
      :prompt "Delete"
      :show-target (lambda (target) "delete")
-     :action (lambda (docid msg target) (mu4e~proc-remove docid)))
+     :action (lambda (docid msg target) (mu4e--server-remove docid)))
     (flag
      :char ("+" . "✚")
      :prompt "+flag"
      :show-target (lambda (target) "flag")
      :action (lambda (docid msg target)
-               (mu4e~proc-move docid nil "+F-u-N")))
+               (mu4e--server-move docid nil "+F-u-N")))
     (move
      :char ("m" . "▷")
      :prompt "move"
      :ask-target  mu4e~mark-get-move-target
      :action (lambda (docid msg target)
-               (mu4e~proc-move docid (mu4e~mark-check-target target) "-N")))
+               (mu4e--server-move docid (mu4e~mark-check-target target) "-N")))
     (read
      :char    ("!" . "◼")
      :prompt "!read"
      :show-target (lambda (target) "read")
-     :action (lambda (docid msg target) (mu4e~proc-move docid nil "+S-u-N")))
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "+S-u-N")))
     (trash
      :char ("d" . "▼")
      :prompt "dtrash"
      :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-     :action (lambda (docid msg target) (mu4e~proc-move docid
+     :action (lambda (docid msg target) (mu4e--server-move docid
                                                         (mu4e~mark-check-target target) "+T-N")))
     (unflag
      :char    ("-" . "➖")
      :prompt "-unflag"
      :show-target (lambda (target) "unflag")
-     :action (lambda (docid msg target) (mu4e~proc-move docid nil "-F-N")))
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "-F-N")))
     (untrash
      :char   ("=" . "▲")
      :prompt "=untrash"
      :show-target (lambda (target) "untrash")
-     :action (lambda (docid msg target) (mu4e~proc-move docid nil "-T")))
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "-T")))
     (unread
      :char    ("?" . "◻")
      :prompt "?unread"
      :show-target (lambda (target) "unread")
-     :action (lambda (docid msg target) (mu4e~proc-move docid nil "-S+u-N")))
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "-S+u-N")))
     (unmark
      :char  " "
      :prompt "unmark"
@@ -299,7 +299,7 @@ The following marks are available, and the corresponding props:
     (when (or (file-directory-p fulltarget)
               (and (yes-or-no-p
                     (format "%s does not exist.  Create now?" fulltarget))
-                   (mu4e~proc-mkdir fulltarget)))
+                   (mu4e--server-mkdir fulltarget)))
       target)))
 
 (defun mu4e~mark-ask-target (mark)

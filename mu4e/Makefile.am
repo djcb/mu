@@ -38,7 +38,7 @@ dist_lisp_LISP=			\
 	mu4e-message.el		\
 	mu4e-meta.el		\
 	mu4e-org.el		\
-	mu4e-proc.el		\
+	mu4e-server.el		\
 	mu4e-speedbar.el	\
 	mu4e-update.el		\
 	mu4e-vars.el		\

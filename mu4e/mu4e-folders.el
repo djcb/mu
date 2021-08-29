@@ -28,7 +28,7 @@
 (require 'cl-lib)
 (require 'mu4e-helpers)
 (require 'mu4e-context)
-(require 'mu4e-proc)
+(require 'mu4e-server)
 
 ;;; Customization
 (defgroup mu4e-folders nil
@@ -234,7 +234,7 @@ an absolute path."
   (cond
    ((file-directory-p dir) t)
    ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
-    (mu4e~proc-mkdir dir) t)
+    (mu4e--server-mkdir dir) t)
    (t nil)))
 
 (defun mu4e~get-maildirs-1 (path mdir)
@@ -326,7 +326,7 @@ Offer to create it if it does not exist yet."
     (unless (file-directory-p fullpath)
       (and (yes-or-no-p
             (mu4e-format "%s does not exist. Create now?" fullpath))
-           (mu4e~proc-mkdir fullpath)))
+           (mu4e--server-mkdir fullpath)))
     mdir))
 
 ;; mu4e-attachment-dir is either a string or a function that takes a

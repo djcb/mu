@@ -2287,7 +2287,7 @@ loading @t{mu4e}):
                     ;; must come before proc-move since retag runs
                     ;; 'sed' on the file
                     (mu4e-action-retag-message msg "-\\Inbox")
-                    (mu4e~proc-move docid nil "+S-u-N"))))
+                    (mu4e--server-move docid nil "+S-u-N"))))
 @end lisp
 
 Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
@@ -5058,15 +5058,15 @@ to provide this information (this is implemented in
 @file{mu-cmd-server.c}).
 
 We start this sequence when @t{mu4e} is invoked (when the program is
-started). It calls @t{mu4e-proc-ping}, and registers a (lambda) function for
-@t{mu4e-proc-pong-func}, to handle the response.
+started). It calls @t{mu4e-server-ping}, and registers a (lambda) function for
+@t{mu4e-server-pong-func}, to handle the response.
 
 @verbatim
 -> (ping)
 <-<prefix>(:pong "mu" :props (:version "x.x.x" :doccount 78545))
 @end verbatim
 
-When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda
+When we receive such a @t{pong} (in @file{mu4e-server.el}), the lambda
 function we registered is called, and it compares the version we got
 from the @t{pong} with the version we expected, and raises an error if
 they differ.

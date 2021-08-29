@@ -37,7 +37,7 @@
 (require 'mu4e-update)
 
 (require 'mu4e-utils)    ;; utility functions
-(require 'mu4e-proc)
+(require 'mu4e-server)
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-context)
@@ -784,7 +784,7 @@ true, do *not* update the query history stack."
       (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
-    (mu4e~proc-find
+    (mu4e--server-find
      rewritten-expr
      mu4e-search-threads
      mu4e-headers-sort-field
@@ -1546,8 +1546,6 @@ window                                                      . "
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read))
-         (decrypt nil) ;; XXX remove
-         (verify  nil) ;; XXX remove
          (viewwin (mu4e~headers-redraw-get-view-window)))
     (unless (window-live-p viewwin)
       (mu4e-error "Cannot get a message view"))
@@ -1568,8 +1566,8 @@ window                                                      . "
 
     ;; (if mu4e-view-use-gnus
     ;;     (mu4e-view msg)
-    ;;   (mu4e~proc-view dowcid decrypt))
-    (mu4e~proc-view docid mark-as-read decrypt verify)))
+    ;;   (mu4e--server-view dowcid decrypt))
+    (mu4e--server-view docid mark-as-read)))
 
 
 (defun mu4e~headers-move (lines)

@@ -215,14 +215,14 @@ For testing/debugging."
 
     (pop-to-buffer "*mu4e-contacts-info*")))
 
-(declare-function mu4e~proc-contacts  "mu4e-proc")
+(declare-function mu4e--server-contacts  "mu4e-server")
 
 (defun mu4e--request-contacts-maybe ()
   "If `mu4e-compose-complete-addresses' is non-nil, get/update
 the list of contacts we use for autocompletion; otherwise, do
 nothing."
   (when mu4e-compose-complete-addresses
-    (mu4e~proc-contacts
+    (mu4e--server-contacts
      mu4e-compose-complete-only-personal
      mu4e-compose-complete-only-after
      mu4e--contacts-tstamp)))

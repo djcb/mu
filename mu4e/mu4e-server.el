@@ -1,6 +1,6 @@
-;;; mu4e-proc.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-server.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -76,12 +76,12 @@ better with e.g. offlineimap."
 (defvar mu4e-error-func nil
   "Function called for each error received.
 The function is passed an error plist as argument. See
-`mu4e~proc-filter' for the format.")
+`mu4e--server-filter' for the format.")
 
 (defvar mu4e-update-func nil
   "Function called for each :update sexp returned.
 The function is passed a msg sexp as argument.
-See `mu4e~proc-filter' for the format.")
+See `mu4e--server-filter' for the format.")
 
 (defvar mu4e-remove-func nil
   "Function called for each :remove sexp returned.
@@ -96,29 +96,29 @@ passed the docid and the draft-path of the sent message.")
 (defvar mu4e-view-func  nil
   "Function called for each single-message sexp.
 The function is passed a message sexp as argument. See
-`mu4e~proc-filter' for the format.")
+`mu4e--server-filter' for the format.")
 
 (defvar mu4e-header-func nil
   "Function called for each message-header received.
 The function is passed a msg plist as argument. See
-`mu4e~proc-filter' for the format.")
+`mu4e--server-filter' for the format.")
 
 (defvar mu4e-found-func nil
   "Function called for when we received a :found sexp.
 This happens after the headers have been returned, to report on
-the number of matches. See `mu4e~proc-filter' for the format.")
+the number of matches. See `mu4e--server-filter' for the format.")
 
 (defvar mu4e-erase-func nil
   "Function called we receive an :erase sexp.
 This before new headers are displayed, to clear the current
-headers buffer. See `mu4e~proc-filter' for the format.")
+headers buffer. See `mu4e--server-filter' for the format.")
 
 (defvar mu4e-compose-func nil
   "Function called for each compose message received.
 I.e., the original message that is used as basis for composing a
 new message (i.e., either a reply or a forward); the function is
 passed msg and a symbol (either reply or forward). See
-`mu4e~proc-filter' for the format of <msg-plist>.")
+`mu4e--server-filter' for the format of <msg-plist>.")
 
 (defvar mu4e-info-func nil
   "Function called for each (:info type ....) sexp received.
@@ -135,65 +135,64 @@ sexp received from the server process.")
 
 ;;; Internal vars
 
-(defvar mu4e~proc-buf nil
+(defvar mu4e--server-buf nil
   "Buffer (string) for data received from the backend.")
-(defconst mu4e~proc-name " *mu4e-proc*"
+(defconst mu4e--server-name " *mu4e-server*"
   "Name of the server process, buffer.")
-(defvar mu4e~proc-process nil
+(defvar mu4e--server-process nil
   "The mu-server process.")
 
 ;; dealing with the length cookie that precedes expressions
-(defconst mu4e~cookie-pre "\376"
+(defconst mu4e--server-cookie-pre "\376"
   "Each expression starts with a length cookie:
-<`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
-(defconst mu4e~cookie-post "\377"
+<`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>.")
+(defconst mu4e--server-cookie-post "\377"
   "Each expression starts with a length cookie:
-<`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>.")
-(defconst mu4e~cookie-matcher-rx
-  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)" mu4e~cookie-post)
+<`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>.")
+(defconst mu4e--server-cookie-matcher-rx
+  (concat mu4e--server-cookie-pre "\\([[:xdigit:]]+\\)"
+	  mu4e--server-cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
 
 (defun mu4e-running-p ()
   "Whether mu4e is running.
 Checks whether the server process is live."
-  (and mu4e~proc-process
-       (memq (process-status mu4e~proc-process)
+  (and mu4e--server-process
+       (memq (process-status mu4e--server-process)
              '(run open listen connect stop))
        t))
 
-(defsubst mu4e~proc-eat-sexp-from-buf ()
-  "'Eat' the next s-expression from `mu4e~proc-buf'.
-Note: this is a string, not an emacs-buffer. `mu4e~proc-buf gets
+(defsubst mu4e--server-eat-sexp-from-buf ()
+  "'Eat' the next s-expression from `mu4e--server-buf'.
+Note: this is a string, not an emacs-buffer. `mu4e--server-buf gets
 its contents from the mu-servers in the following form:
-   <`mu4e~cookie-pre'><length-in-hex><`mu4e~cookie-post'>
+   <`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>
 Function returns this sexp, or nil if there was none.
-`mu4e~proc-buf' is updated as well, with all processed sexp data
+`mu4e--server-buf' is updated as well, with all processed sexp data
 removed."
   (ignore-errors ;; the server may die in the middle...
-    ;; mu4e~cookie-matcher-rx:
-    ;;  (concat mu4e~cookie-pre "\\([[:xdigit:]]+\\)]" mu4e~cookie-post)
-    (let ((b (string-match mu4e~cookie-matcher-rx mu4e~proc-buf))
+    (let ((b (string-match mu4e--server-cookie-matcher-rx mu4e--server-buf))
           (sexp-len) (objcons))
       (when b
-        (setq sexp-len (string-to-number (match-string 1 mu4e~proc-buf) 16))
-        ;; does mu4e~proc-buf contain the full sexp?
-        (when (>= (length mu4e~proc-buf) (+ sexp-len (match-end 0)))
+        (setq sexp-len (string-to-number (match-string 1 mu4e--server-buf) 16))
+        ;; does mu4e--server-buf contain the full sexp?
+        (when (>= (length mu4e--server-buf) (+ sexp-len (match-end 0)))
           ;; clear-up start
-          (setq mu4e~proc-buf (substring mu4e~proc-buf (match-end 0)))
+          (setq mu4e--server-buf (substring mu4e--server-buf (match-end 0)))
           ;; note: we read the input in binary mode -- here, we take the part
           ;; that is the sexp, and convert that to utf-8, before we interpret
           ;; it.
           (setq objcons (read-from-string
                          (decode-coding-string
-                          (substring mu4e~proc-buf 0 sexp-len)
+                          (substring mu4e--server-buf 0 sexp-len)
                           'utf-8 t)))
           (when objcons
-            (setq mu4e~proc-buf (substring mu4e~proc-buf sexp-len))
+            (setq mu4e--server-buf (substring mu4e--server-buf sexp-len))
             (car objcons)))))))
 
 
-(defun mu4e~proc-filter (_proc str)
+(defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
 This processes the 'mu server' output. It accumulates the
 strings into valid sexps by checking of the ';;eox' `end-of-sexp'
@@ -251,8 +250,8 @@ The server output is as follows:
   (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
   `mu4e-compose-func'."
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
-  (setq mu4e~proc-buf (concat mu4e~proc-buf str)) ;; update our buffer
-  (let ((sexp (mu4e~proc-eat-sexp-from-buf)))
+  (setq mu4e--server-buf (concat mu4e--server-buf str)) ;; update our buffer
+  (let ((sexp (mu4e--server-eat-sexp-from-buf)))
     (with-local-quit
       (while sexp
         (mu4e-log 'from-server "%S" sexp)
@@ -321,18 +320,10 @@ The server output is as follows:
 
          (t (mu4e-message "Unexpected data from server [%S]" sexp)))
 
-        (setq sexp (mu4e~proc-eat-sexp-from-buf))))))
+        (setq sexp (mu4e--server-eat-sexp-from-buf))))))
 
-(defun mu4e~escape (str)
-  "Escape string STR for transport.
-Put it in quotes, and escape existing quotation. In particular,
-backslashes and double-quotes."
-  (let ((esc (replace-regexp-in-string "\\\\" "\\\\\\\\" str)))
-    (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" esc))))
-
-(defun mu4e~proc-start ()
+(defun mu4e--server-start ()
   "Start the mu server process."
-
   ;; sanity-check 1
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
@@ -346,47 +337,48 @@ backslashes and double-quotes."
     (unless (string= version mu4e-mu-version)
       (mu4e-error
        (concat
-        "Found mu version %s, but mu4e needs version %s; please set `mu4e-mu-binary' "
+        "Found mu version %s, but mu4e needs version %s"
+	"; please set `mu4e-mu-binary' "
         "accordingly") version mu4e-mu-version)))
 
   (let* ((process-connection-type nil) ;; use a pipe
          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
          (args (if mu4e-mu-debug (cons "--debug" args) args))
          (args (cons "server" args)))
-    (setq mu4e~proc-buf "")
-    (setq mu4e~proc-process (apply 'start-process
-                                   mu4e~proc-name mu4e~proc-name
-                                   mu4e-mu-binary args))
+    (setq mu4e--server-buf "")
+    (setq mu4e--server-process (apply 'start-process
+                                      mu4e--server-name mu4e--server-name
+                                      mu4e-mu-binary args))
     ;; register a function for (:info ...) sexps
-    (unless mu4e~proc-process
+    (unless mu4e--server-process
       (mu4e-error "Failed to start the mu4e backend"))
-    (set-process-query-on-exit-flag mu4e~proc-process nil)
-    (set-process-coding-system mu4e~proc-process 'binary 'utf-8-unix)
-    (set-process-filter mu4e~proc-process 'mu4e~proc-filter)
-    (set-process-sentinel mu4e~proc-process 'mu4e~proc-sentinel)))
+    (set-process-query-on-exit-flag mu4e--server-process nil)
+    (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
+    (set-process-filter mu4e--server-process 'mu4e--server-filter)
+    (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel)))
 
-(defun mu4e~proc-kill ()
+(defun mu4e--server-kill ()
   "Kill the mu server process."
-  (let* ((buf (get-buffer mu4e~proc-name))
+  (let* ((buf (get-buffer mu4e--server-name))
          (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
       (let ((delete-exited-processes t))
-        (mu4e~call-mu '(quit)))
+        (mu4e--server-call-mu '(quit)))
       ;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
         (signal-process proc 'SIGINT))))
   (setq
-   mu4e~proc-process nil
-   mu4e~proc-buf nil))
+   mu4e--server-process nil
+   mu4e--server-buf nil))
 
 ;; error codes are defined in src/mu-util
 ;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
 
-(defun mu4e~proc-sentinel (proc _msg)
+(defun mu4e--server-sentinel (proc _msg)
   "Function called when the server process PROC terminates with MSG."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (setq mu4e~proc-process nil)
-    (setq mu4e~proc-buf "") ;; clear any half-received sexps
+    (setq mu4e--server-process nil)
+    (setq mu4e--server-buf "") ;; clear any half-received sexps
     (cond
      ((eq status 'signal)
       (cond
@@ -403,27 +395,21 @@ backslashes and double-quotes."
      (t
       (error "Something bad happened to the mu server process")))))
 
-(defun mu4e~call-mu (form)
-  "Call 'mu' with some command."
-  (unless (mu4e-running-p) (mu4e~proc-start))
+(defun mu4e--server-call-mu (form)
+  "Call the mu server with some command FORM."
+  (unless (mu4e-running-p) (mu4e--server-start))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
-    (process-send-string mu4e~proc-process (concat cmd "\n"))))
+    (process-send-string mu4e--server-process (concat cmd "\n"))))
 
-(defun mu4e~docid-msgid-param (docid-or-msgid)
-  "Construct a backend parameter based on DOCID-OR-MSGID."
-  (if (stringp docid-or-msgid)
-      `(:msgid ,(mu4e~escape docid-or-msgid))
-    `(:docid ,docid-or-msgid)))
-
-(defun mu4e~proc-add (path)
+(defun mu4e--server-add (path)
   "Add the message at PATH to the database.
 On success, we receive `'(:info add :path <path> :docid <docid>)'
 as well as `'(:update <msg-sexp>)`'; otherwise, we receive an error."
-  (mu4e~call-mu `(add :path ,path)))
+  (mu4e--server-call-mu `(add :path ,path)))
 
-(defun mu4e~proc-compose (type decrypt &optional docid)
+(defun mu4e--server-compose (type decrypt &optional docid)
   "Compose a message of TYPE, DECRYPT it and use DOCID.
 TYPE is a symbol, either `forward', `reply', `edit', `resend' or
 `new', based on an original message (ie, replying to, forwarding,
@@ -431,42 +417,26 @@ editing, resending) with DOCID or nil for type `new'.
 
 The result is delivered to the function registered as
 `mu4e-compose-func'."
-  (mu4e~call-mu `(compose
-                  :type ,type
-                  :decrypt ,(and decrypt t)
-                  :docid   ,docid)))
+  (mu4e--server-call-mu
+   `(compose
+     :type ,type
+     :decrypt ,(and decrypt t)
+     :docid   ,docid)))
 
-(defun mu4e~proc-contacts (personal after tstamp)
+(defun mu4e--server-contacts (personal after tstamp)
   "Ask for contacts with PERSONAL AFTER TSTAMP.
 S-expression (:contacts (<list>) :tstamp \"<tstamp>\") is expected in
 response. If PERSONAL is non-nil, only get personal contacts, if
 AFTER is non-nil, get only contacts seen AFTER (the time_t
 value)."
-  (mu4e~call-mu `(contacts
-                  :personal ,(and personal t)
-                  :after    ,(or after nil)
-                  :tstamp   ,(or tstamp nil))))
+  (mu4e--server-call-mu
+   `(contacts
+     :personal ,(and personal t)
+     :after    ,(or after nil)
+     :tstamp   ,(or tstamp nil))))
 
-(defun mu4e~proc-extract (action docid index decrypt
-                                 &optional path what param)
-  "Perform ACTION  on part with DOCID INDEX DECRYPT PATH WHAT PARAM.
-Use a message with DOCID and perform ACTION on it (as symbol,
-either `save', `open', `temp') which mean:
-* save: save the part to PATH (a path) (non-optional for save)
-* open: open the part with the default application registered for doing so
-* temp: save to a temporary file, then respond with
-       (:temp <path> :what <what> :param <param>)."
-  (mu4e~call-mu `(extract
-                  :action ,action
-                  :docid ,docid
-                  :index ,index
-                  :decrypt ,(and decrypt t)
-                  :path ,path
-                  :what ,what
-                  :param ,param)))
-
-(defun mu4e~proc-find (query threads sortfield sortdir maxnum skip-dups
-                             include-related)
+(defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
+				include-related)
   "Run QUERY with THREADS SORTFIELD SORTDIR MAXNUM SKIP-DUPS INCLUDE-RELATED.
 If THREADS is non-nil, show results in threaded fashion, SORTFIELD
 is a symbol describing the field to sort by (or nil); see
@@ -482,26 +452,25 @@ For each result found, a function is called, depending on the
 kind of result. The variables `mu4e-error-func' contain the
 function that will be called for, resp., a message (header row)
 or an error."
-  (mu4e~call-mu `(find
-                  :query ,query
-                  :threads ,threads
-                  :sortfield ,sortfield
-                  :descending ,(if (eq sortdir 'descending) t nil)
-                  :maxnum ,maxnum
-                  :skip-dups ,skip-dups
-                  :include-related ,include-related)))
+  (mu4e--server-call-mu
+   `(find
+     :query ,query
+     :threads ,threads
+     :sortfield ,sortfield
+     :descending ,(if (eq sortdir 'descending) t nil)
+     :maxnum ,maxnum
+     :skip-dups ,skip-dups
+     :include-related ,include-related)))
 
-(defun mu4e~proc-index (&optional cleanup lazy-check)
+(defun mu4e--server-index (&optional cleanup lazy-check)
   "Index messages with possible CLEANUP and LAZY-CHECK."
-  (mu4e~call-mu `(index :cleanup ,cleanup :lazy-check ,lazy-check)))
+  (mu4e--server-call-mu `(index :cleanup ,cleanup :lazy-check ,lazy-check)))
 
-(defun mu4e~proc-mkdir (path)
+(defun mu4e--server-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
-  ;;(mu4e~proc-send-command "cmd:mkdir path:%s"  (mu4e~escape path))
-  (mu4e~call-mu `(mkdir :path ,path)))
+  (mu4e--server-call-mu `(mkdir :path ,path)))
 
-
-(defun mu4e~proc-move (docid-or-msgid &optional maildir flags no-view)
+(defun mu4e--server-move (docid-or-msgid &optional maildir flags no-view)
   "Move message identified by DOCID-OR-MSGID.
 Optionally to MAILDIR and optionally setting FLAGS. If MAILDIR is
 nil, message will be moved within the same maildir.
@@ -539,60 +508,46 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
   (unless (or (not maildir)
               (file-exists-p (concat (mu4e-root-maildir) "/" maildir "/")))
     (mu4e-error "Target dir does not exist"))
-  (mu4e~call-mu `(move
-                  :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
-                  :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-                  :flags ,(or flags nil)
-                  :maildir ,(or maildir nil)
-                  :rename  ,(and maildir mu4e-change-filenames-when-moving t)
-                  :no-view ,(and no-view t))))
+  (mu4e--server-call-mu
+   `(move
+     :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
+     :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
+     :flags ,(or flags nil)
+     :maildir ,(or maildir nil)
+     :rename  ,(and maildir mu4e-change-filenames-when-moving t)
+     :no-view ,(and no-view t))))
 
-(defun mu4e~proc-ping (&optional queries)
+(defun mu4e--server-ping (&optional queries)
   "Sends a ping to the mu server, expecting a (:pong ...) in response.
 QUERIES is a list of queries for the number of results with read/unread status
 are returned in the 'pong' response."
-  (mu4e~call-mu `(ping :queries ,queries)))
+  (mu4e--server-call-mu `(ping :queries ,queries)))
 
-(defun mu4e~proc-remove (docid)
+(defun mu4e--server-remove (docid)
   "Remove message  with DOCID.
 The results are reporter through either (:update ... )
 or (:error) sexp, which are handled my `mu4e-error-func',
 respectively."
-  (mu4e~call-mu `(remove :docid ,docid)))
+  (mu4e--server-call-mu `(remove :docid ,docid)))
 
-(defun mu4e~proc-sent (path)
-  "Add the message at PATH to the database.
-
- if this works, we will receive (:info add :path <path> :docid
+(defun mu4e--server-sent (path)
+  "Tell the mu server we sent a message at PATH.
+If this works, we will receive (:info add :path <path> :docid
 <docid> :fcc <path>)."
-  (mu4e~call-mu `(sent :path ,path)))
+  (mu4e--server-call-mu `(sent :path ,path)))
 
-(defun mu4e~proc-view (docid-or-msgid &optional mark-as-read decrypt verify)
+(defun mu4e--server-view (docid-or-msgid &optional mark-as-read)
   "Get a message DOCID-OR-MSGID.
-Optionally, if MARK-AS-READ is non-nil, the backend marks the message as
-read before returning, if it was not already unread.
- DECRYPT and VERIFY if necessary. The result will be delivered to
-the function registered as `mu4e-view-func'."
-  (mu4e~call-mu `(view
-                  :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
-                  :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-                  :mark-as-read ,mark-as-read
-                  :extract-images nil ;; XXX remove
-                  :decrypt ,(and decrypt t) ;; XXX remove
-                  :verify  ,(and verify t)))) ;; XXX remove
+Optionally, if MARK-AS-READ is non-nil, the backend marks the
+message as read before returning, if it was not already unread.
+The result will be delivered to the function registered as
+`mu4e-view-func'."
+  (mu4e--server-call-mu
+   `(view
+     :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
+     :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
+     :mark-as-read ,mark-as-read)))
 
-(defun mu4e~proc-view-path (path &optional images decrypt verify)
-  "View message at PATH..
-Optionally, if IMAGES is non-nil, backend will any images
-attached to the message, and return them as temp files. The
-result will be delivered to the function registered as
-`mu4e-view-func'. Optionally DECRYPT and VERIFY."
-  (mu4e~call-mu `(view
-                  :path ,path
-                  :extract-images ,(if  images t nil)
-                  :decrypt        ,(and decrypt t)
-                  :verify         ,(and verify t))))
-
-;;; _
-(provide 'mu4e-proc)
-;;; mu4e-proc.el ends here
+
+(provide 'mu4e-server)
+;;; mu4e-server.el ends here

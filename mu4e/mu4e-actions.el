@@ -170,13 +170,13 @@ Otherwise return nil."
       (if (re-search-forward regexp nil t)
           (replace-match to-string nil nil)))))
 
-(declare-function mu4e~proc-add "mu4e-proc")
+(declare-function mu4e--server-add "mu4e-server")
 (defun mu4e--refresh-message (path)
   "Re-parse message at PATH.
 if this works, we will
 receive (:info add :path <path> :docid <docid>) as well as (:update
 <msg-sexp>)."
-  (mu4e~proc-add path))
+  (mu4e--server-add path))
 
 (defun mu4e-action-retag-message (msg &optional retag-arg)
   "Change tags of MSG with RETAG-ARG.

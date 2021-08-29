@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'mu4e-helpers)
-(require 'mu4e-proc)
+(require 'mu4e-server)
 
 ;;; Customization
 
@@ -194,7 +194,7 @@ However, if `mu4e-hide-index-messages' is non-nil, do not display anything."
 (defun mu4e-update-index ()
   "Update the mu4e index."
   (interactive)
-  (mu4e~proc-index mu4e-index-cleanup mu4e-index-lazy-check))
+  (mu4e--server-index mu4e-index-cleanup mu4e-index-lazy-check))
 
 (defun mu4e-update-index-nonlazy ()
   "Update the mu4e index non-lazily.

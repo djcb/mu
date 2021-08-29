@@ -43,7 +43,7 @@
 (require 'mu4e-headers)
 (require 'mu4e-mark)
 (require 'mu4e-message)
-(require 'mu4e-proc)
+(require 'mu4e-server)
 (require 'mu4e-search)
 (require 'mu4e-utils) ;; utility functions
 (require 'mu4e-contacts)
@@ -200,7 +200,6 @@ Then, display the results."
   (interactive "sShell command: ")
   (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
     (mu4e-process-file-through-pipe path cmd)))
-
 
 (defmacro mu4e~view-in-headers-context (&rest body)
   "Evaluate BODY in the context of the headers buffer connected to
