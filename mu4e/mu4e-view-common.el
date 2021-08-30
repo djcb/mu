@@ -549,6 +549,7 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
                       keymap ,mu4e-view-active-urls-keymap
                       help-echo
                       "[mouse-1] or [M-RET] to open the link"))
+              (overlay-put ov 'mu4e-overlay t)
               (overlay-put ov 'after-string
                            (propertize (format "\u200B[%d]" num)
                                        'face 'mu4e-url-number-face)))))))))

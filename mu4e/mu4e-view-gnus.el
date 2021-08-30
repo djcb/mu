@@ -54,6 +54,7 @@
     (kill-buffer gnus-article-buffer))
   (with-current-buffer (get-buffer-create gnus-article-buffer)
     (let ((inhibit-read-only t))
+      (remove-overlays (point-min) (point-max) 'mu4e-overlay t)
       (erase-buffer)
       (insert-file-contents-literally
        (mu4e-message-field msg :path) nil nil nil t)))
