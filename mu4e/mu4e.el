@@ -175,14 +175,17 @@ successful, call FUNC (if non-nil) afterwards."
    (buffer-list)))
 
 ;;; Handlers
+(defun mu4e--default-handler (&rest args)
+  "Dummy handler function with arbitrary ARGS."
+  (mu4e-error "Not handled: %S" args))
+
 (defun mu4e--error-handler (errcode errmsg)
   "Handler function for showing an error with ERRCODE and ERRMSG."
   ;; don't use mu4e-error here; it's running in the process filter context
   (cl-case errcode
     (4 (mu4e-warn "No matches for this search query."))
     (110 (display-warning 'mu4e errmsg :error)) ;; schema version.
-    (t (error "Error %d: %s" errcode errmsg))))
-
+    (t (mu4e-error "Error %d: %s" errcode errmsg))))
 
 (defun mu4e--info-handler (info)
   "Handler function for (:INFO ...) sexps received from server."
