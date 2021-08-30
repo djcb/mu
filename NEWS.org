@@ -15,7 +15,7 @@
 	$ meson build && ninja -C build
 #+END_SRC
 
-      After that, =ninja -C build= should be enough. =autogen.sh= has been updated
+    - After that, =ninja -C build= should be enough. =autogen.sh= has been updated
       to use =meson= instead, and and even delivers a =Makefile= with some useful
       targets that invoke the corresponding =meson= / =ninja= targets.
 
@@ -31,18 +31,24 @@
 
       - =mu4e= is slowly moving from using the =~= to the more common =--= separator for
 	private functions; i.e., =mu4e-foo= becomes =mu4e--foo=.
+
       - =mu4e-utils.el= had become a bit of a dumping ground for bits of code;
 	it's gone now, with the functionality move to topic-specific files --
 	=mu4e-folders.el=, =mu4e-bookmarks.el=, =mu4e-update.el=, and included in
 	existing files.
+
       - the remaining common functionality has ended up in =mu4e-helpers.el=
+
       - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=, and
 	adds a minor-mode for the keybindings.
+
       - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
 	keybindings, which saves a lot of code in the various views, since they
 	don't need explicitly bind all those function.
+
       - also =mu4e-vars.el= had become very big, we're refactoring the =defvar= /
 	=defcustom= declarations to the topic-specific files.
+
       - =mu4e-proc.el= has been renamed =mu4e-server.el=.
 
 *** guile
@@ -60,7 +66,7 @@
 *** mu
 
     - Where available (and with suitably equiped ~libglib~), log to the ~systemd~
-      journal instead of ~~/.cache/mu.log~. Passing the ~--debug~ option to ~mu~
+      journal instead of =~/.cache/mu.log=. Passing the ~--debug~ option to ~mu~
       increases the amount that is logged.
 
     - Follow symlinks in maildirs, and support moving messsages across
