@@ -32,7 +32,7 @@
 
 
 (defgroup mu4e-org nil
-  "Settings for the org-mode related functionality in mu4e."
+  "Settings for the Org mode related functionality in mu4e."
   :group 'mu4e
   :group 'org)
 
@@ -60,7 +60,7 @@ Example usage:
 If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
 
-(defun mu4e~org-store-link-query ()
+(defun mu4e--org-store-link-query ()
   "Store a link to a mu4e query."
   (setq org-store-link-plist nil) ; reset
   (org-store-link-props
@@ -70,14 +70,14 @@ the current query; otherwise, it links to the message at point.")
    :link        (concat "mu4e:query:" (mu4e-last-query))
    :description (format "[%s]" (mu4e-last-query))))
 
-(defun mu4e~org-address (cell)
-  "Get address field FIELD from MSG as a string or nil."
+(defun mu4e--org-address (cell)
+  "Get an address from CELL."
   (let ((name (car cell)) (addr (cdr cell)))
     (if name
         (format "%s <%s>" name addr)
       (format "%s" addr))))
 
-(defun mu4e~org-store-link-message ()
+(defun mu4e--org-store-link-message ()
   "Store a link to a mu4e message."
   (setq org-store-link-plist nil)
   (let* ((msg      (mu4e-message-at-point))
@@ -90,13 +90,13 @@ the current query; otherwise, it links to the message at point.")
      :type                     "mu4e"
      :date                     date
      :from                     (when from
-                                 (mu4e~org-address from))
+                                 (mu4e--org-address from))
      :maildir                  (plist-get msg :maildir)
      :message-id               msgid
      :path                     (plist-get msg :path)
      :subject                  (plist-get msg :subject)
      :to                       (when to
-                                 (mu4e~org-address to))
+                                 (mu4e--org-address to))
      :link                     (concat "mu4e:msgid:" msgid)
      :description              (funcall mu4e-org-link-desc-func msg))))
 
@@ -109,9 +109,9 @@ valid even after moving the message around."
   (when (derived-mode-p 'mu4e-view-mode 'mu4e-headers-mode)
     (if (and (derived-mode-p 'mu4e-headers-mode)
              mu4e-org-link-query-in-headers-mode)
-        (mu4e~org-store-link-query)
+        (mu4e--org-store-link-query)
       (when (mu4e-message-at-point)
-        (mu4e~org-store-link-message)))))
+        (mu4e--org-store-link-message)))))
                                          ;
 (defun mu4e-org-open (link)
   "Open the org LINK.

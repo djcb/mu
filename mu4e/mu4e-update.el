@@ -1,6 +1,6 @@
 ;;; mu4e-update.el -- part of mu4e, -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -22,8 +22,8 @@
 
 ;;; Commentary:
 
-;; Updating the mu4e message: calling a mail retrieval program
-;; and re-running the index.
+;; Updating the mu4e message store: calling a mail retrieval program and
+;; re-running the index.
 
 ;;; Code:
 

@@ -70,7 +70,6 @@
 (require 'message)
 (require 'mail-parse)
 (require 'smtpmail)
-(require 'rfc2368)
 
 (require 'mu4e-server)
 (require 'mu4e-actions)
@@ -337,7 +336,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key mu4e-context-minor-mode-map (kbd ";") nil)
     (define-key mu4e-context-minor-mode-map (kbd "C-c C-;")
       #'mu4e-compose-context-switch)
-    
+
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
