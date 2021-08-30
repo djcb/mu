@@ -266,20 +266,38 @@ details depend on your distribution. If you're using another
 distribution (or another OS), the below can at least be helpful in
 identifying the packages to install.
 
-We provide some instructions for Debian, Ubuntu and Fedora; if those
-do not apply to you, you can follow either @ref{Building from a
-release tarball} or @ref{Building from git}.
+We provide some instructions for Debian, Ubuntu and Fedora; if those do not
+apply to you, you can follow either @ref{Building from a release tarball} or
+@ref{Building from git}.
 
 @subsection Dependencies for Debian/Ubuntu
 
 @example
-$ sudo apt-get install libgmime-3.0-dev libxapian-dev emacs
+$ sudo apt-get install libgmime-3.0-dev libxapian-dev
+
+# get emacs 25 or higher if you don't have it yet
+$ sudo apt-get install emacs
+
+# optional
+$ sudo apt-get install guile-2.2-dev html2text xdg-utils
+
+# optional: only needed for msg2pdf and mug (toy gtk+ frontend)
+$ sudo apt-get install libwebkitgtk-3.0-dev
 @end example
 
 @subsection Dependencies for Fedora
 
 @example
-$ sudo yum install gmime30-devel xapian-core-devel emacs
+$ sudo yum install gmime30-devel xapian-core-devel
+
+# get emacs 25 or higher if you don't have it yet
+$ sudo yum install emacs
+
+# optional
+$ sudo yum install html2text xdg-utils guile22-devel
+
+# optional: only needed for msg2pdf and mug (toy gtk+ frontend)
+$ sudo yum install webkitgtk3-devel
 @end example
 
 @subsection Building on Msys2
@@ -330,18 +348,10 @@ Xapian, GMime and their dependencies must be installed.
 @subsection Building from git
 @anchor{Building from git}
 
-By default, @t{mu} use the Meson@footnote{@url{https://mesonbuild.com/}} build-system.
-
-@example
-$ git clone git://github.com/djcb/mu.git
-$ cd mu
-$ meson build && ninja -C build
-$ sudo ninja -C install
-@end example
-
-For now, you can also use the (deprecated) @t{autotools} build setup,
-assuming you have autotools (@t{autoconf}, @t{automake}, @t{libtool},
-@t{texinfo}) installed:
+Alternatively, if you build from the git repository or use a tarball
+like the ones that @t{github} produces, the instructions are slightly
+different, and require you to have autotools (@t{autoconf},
+@t{automake}, @t{libtool}, @t{texinfo}) installed:
 
 @example
 # get from git (alternatively, use a github tarball)
@@ -358,18 +368,29 @@ $ sudo make install
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's
 a hard dependency between versions of @t{mu4e} and @t{mu} --- you
 cannot combine different versions} on your system, and be available
-from the command line and in Emacs.
+from the command line and in  Emacs.
 
 You may need to restart Emacs, so it can find @t{mu4e} in its
 @code{load-path}. If, even after restarting, Emacs cannot find
-@t{mu4e}, you may need to add it to your @code{load-path} explicitly;
-check where @t{mu4e} is installed, and add something like the
-following to your configuration before trying again:
+@t{mu4e}, you may need to add it to your @code{load-path} explicitly; check
+where @t{mu4e} is installed, and add something like the following to your
+configuration before trying again:
 @lisp
 ;; the exact path may differ --- check it
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
 @end lisp
 
+@subsection Building using the meson build system
+
+As an (experimental) alternative to the @t{autotools}-build, it is possible to use
+the Meson@footnote{@url{https://mesonbuild.com/}} build-system instead.
+
+@example
+$ git clone git://github.com/djcb/mu.git
+$ cd mu
+$ meson build && ninja -C build
+$ sudo ninja -C install
+@end example
 
 @subsection mu4e and emacs customization
 
@@ -1005,6 +1026,7 @@ E            edit (only allowed for draft messages)
 
 misc
 ----
+;            switch context
 a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
@@ -1013,10 +1035,6 @@ C-S-u        update mail & reindex
 q            leave the headers buffer
 @end verbatim
 
-Furthermore, a number of keybindings are available through minor modes:
-@itemize
-@item Context; see @pxref{Contexts}.
-@end itemize
 
 @node HV Marking
 @section Marking
@@ -1303,17 +1321,13 @@ A            execute some custom action on the message's MIME-parts
 
 misc
 ----
+;            switch context
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
 C-S-u        update mail & reindex
 q            leave the message view
 @end verbatim
-
-Furthermore, a number of keybindings are available through minor modes:
-@itemize
-@item Context; see @pxref{Contexts}.
-@end itemize
 
 For the marking commands, please refer to @ref{Marking messages}.
 
@@ -2287,7 +2301,7 @@ loading @t{mu4e}):
                     ;; must come before proc-move since retag runs
                     ;; 'sed' on the file
                     (mu4e-action-retag-message msg "-\\Inbox")
-                    (mu4e--server-move docid nil "+S-u-N"))))
+                    (mu4e~proc-move docid nil "+S-u-N"))))
 @end lisp
 
 Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
@@ -5058,15 +5072,15 @@ to provide this information (this is implemented in
 @file{mu-cmd-server.c}).
 
 We start this sequence when @t{mu4e} is invoked (when the program is
-started). It calls @t{mu4e-server-ping}, and registers a (lambda) function for
-@t{mu4e-server-pong-func}, to handle the response.
+started). It calls @t{mu4e-proc-ping}, and registers a (lambda) function for
+@t{mu4e-proc-pong-func}, to handle the response.
 
 @verbatim
 -> (ping)
 <-<prefix>(:pong "mu" :props (:version "x.x.x" :doccount 78545))
 @end verbatim
 
-When we receive such a @t{pong} (in @file{mu4e-server.el}), the lambda
+When we receive such a @t{pong} (in @file{mu4e-proc.el}), the lambda
 function we registered is called, and it compares the version we got
 from the @t{pong} with the version we expected, and raises an error if
 they differ.

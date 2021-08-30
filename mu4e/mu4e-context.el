@@ -27,66 +27,38 @@
 
 ;;; Code:
 
-(require 'mu4e-helpers)
+(require 'cl-lib)
+(require 'mu4e-utils)
 
-
-;;; Configuration
-(defcustom mu4e-context-policy 'ask-if-none
-  "The policy to determine the context when entering the mu4e main view.
+(defvar smtpmail-smtp-user)
+(defvar mu4e-view-date-format)
 
-If the value is `always-ask', ask the user unconditionally.
-
-In all other cases, if any context matches (using its match
-function), this context is used. Otherwise, if none of the
-contexts match, we have the following choices:
-
-- `pick-first': pick the first of the contexts available (ie. the default)
-- `ask': ask the user
-- `ask-if-none': ask if there is no context yet, otherwise leave it as it is
--  nil: return nil; leaves the current context as is.
-
-Also see `mu4e-compose-context-policy'."
-  :type '(choice
-          (const :tag "Always ask what context to use, even if one matches"
-                 always-ask)
-          (const :tag "Ask if none of the contexts match" ask)
-          (const :tag "Ask when there's no context yet" ask-if-none)
-          (const :tag "Pick the first context if none match" pick-first)
-          (const :tag "Don't change the context when none match" nil))
-  :group 'mu4e)
-
-
-(defvar mu4e-contexts nil
-  "The list of `mu4e-context' objects describing mu4e's contexts.")
+(defvar mu4e-contexts nil "The list of `mu4e-context' objects
+describing mu4e's contexts.")
 
 (defvar mu4e-context-changed-hook nil
   "Hook run just *after* the context changed.")
 
-(defface mu4e-context-face
-  '((t :inherit mu4e-title-face :weight bold))
-  "Face for displaying the context in the modeline."
-  :group 'mu4e-faces)
+(defvar mu4e~context-current nil
+  "The current context; for internal use. Use
+  `mu4e-context-switch' to change it.")
 
-(defvar mu4e--context-current nil
-  "The current context.
-Internal; use `mu4e-context-switch' to change it.")
-
 (defun mu4e-context-current (&optional output)
   "Get the currently active context, or nil if there is none.
 When OUTPUT is non-nil, echo the name of the current context or
 none."
   (interactive "p")
-  (let ((ctx mu4e--context-current))
+  (let ((ctx mu4e~context-current))
     (when output
       (mu4e-message "Current context: %s"
                     (if ctx (mu4e-context-name ctx) "<none>")))
     ctx))
 
 (defun mu4e-context-label ()
-  "Propertized string with the current context name.
-An empty string \"\" if there is none."
+  "Propertized string with the current context name, or \"\" if
+  there is none."
   (if (mu4e-context-current)
-      (concat "[" (propertize (mu4e-quote-for-modeline
+      (concat "[" (propertize (mu4e~quote-for-modeline
                                (mu4e-context-name (mu4e-context-current)))
                               'face 'mu4e-context-face) "]") ""))
 
@@ -111,8 +83,8 @@ An empty string \"\" if there is none."
   vars) ;; alist of variables.
 
 
-(defun mu4e--context-ask-user (prompt)
-  "Let user choose some context based on its name with PROMPT."
+(defun mu4e~context-ask-user (prompt)
+  "Let user choose some context based on its name."
   (when mu4e-contexts
     (let* ((names (cl-map 'list (lambda (context)
                                   (cons (mu4e-context-name context) context))
@@ -121,8 +93,8 @@ An empty string \"\" if there is none."
       (or context (mu4e-error "No such context")))))
 
 (defun mu4e-context-switch (&optional force name)
-  "Switch to a context with NAME.
-Context must be part of `mu4e-contexts'; if NAME is nil, query user.
+  "Switch context to a context with NAME which is part of
+`mu4e-contexts'; if NAME is nil, query user.
 
 If the new context is the same and the current context, only
 switch (run associated functions) when prefix argument FORCE is
@@ -136,13 +108,13 @@ non-nil."
          (context
           (if name
               (cdr-safe (assoc name names))
-            (mu4e--context-ask-user "Switch to context: "))))
+            (mu4e~context-ask-user "Switch to context: "))))
     (unless context (mu4e-error "No such context"))
     ;; if new context is same as old one one switch with FORCE is set.
     (when (or force (not (eq context (mu4e-context-current))))
       (when (and (mu4e-context-current)
-                 (mu4e-context-leave-func mu4e--context-current))
-        (funcall (mu4e-context-leave-func mu4e--context-current)))
+                 (mu4e-context-leave-func mu4e~context-current))
+        (funcall (mu4e-context-leave-func mu4e~context-current)))
       ;; enter the new context
       (when (mu4e-context-enter-func context)
         (funcall (mu4e-context-enter-func context)))
@@ -150,30 +122,26 @@ non-nil."
         (mapc (lambda (cell)
                 (set (car cell) (cdr cell)))
               (mu4e-context-vars context)))
-      (setq mu4e--context-current context)
+      (setq mu4e~context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
       (mu4e-message "Switched context to %s" (mu4e-context-name context))
       (force-mode-line-update))
     context))
 
-(defun mu4e--context-autoswitch (&optional msg policy)
-  "Automatically switch to some context.
-
-When contexts are defined but there is no context yet, switch to
-the first whose :match-func return non-nil. If none of them
-match, return the first. For MSG and POLICY, see
-`mu4e-context-determine'."
+(defun mu4e~context-autoswitch (&optional msg policy)
+  "When contexts are defined but there is no context yet, switch
+to the first whose :match-func return non-nil. If none of them
+match, return the first. For MSG and POLICY, see `mu4e-context-determine'."
   (when mu4e-contexts
     (let ((context (mu4e-context-determine msg policy)))
       (when context (mu4e-context-switch
                      nil (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
-  "Return the first context where match-func evaluate to non-nil.
-
-MSG points to the plist for the message replied to or forwarded,
-or nil if there is no such MSG; similar to what
+  "Return the first context with a match-func that returns t. MSG
+points to the plist for the message replied to or forwarded, or
+nil if there is no such MSG; similar to what
 `mu4e-compose-pre-hook' does.
 
 POLICY specifies how to do the determination. If POLICY is
@@ -189,7 +157,7 @@ match, POLICY determines what to do:
 - otherwise, return nil. Effectively, this leaves the current context as it is."
   (when mu4e-contexts
     (if (eq policy 'always-ask)
-        (mu4e--context-ask-user "Select context: ")
+        (mu4e~context-ask-user "Select context: ")
       (or ;; is there a matching one?
        (cl-find-if (lambda (context)
                      (when (mu4e-context-match-func context)
@@ -198,9 +166,9 @@ match, POLICY determines what to do:
        ;; no context found yet; consult policy
        (cl-case policy
          (pick-first (car mu4e-contexts))
-         (ask (mu4e--context-ask-user "Select context: "))
+         (ask (mu4e~context-ask-user "Select context: "))
          (ask-if-none (or (mu4e-context-current)
-                          (mu4e--context-ask-user "Select context: ")))
+                          (mu4e~context-ask-user "Select context: ")))
          (otherwise nil))))))
 
 (defun mu4e-context-in-modeline ()
@@ -210,28 +178,6 @@ global-mode-line."
    (make-local-variable 'global-mode-string)
    '(:eval (mu4e-context-label))))
 
-(defmacro with-mu4e-context-vars (context &rest body)
-  "Evaluate BODY, with variables let-bound for CONTEXT (if any).
-`funcall'."
-  (declare (indent 2))
-  `(let* ((vars (and ,context (mu4e-context-vars ,context))))
-     (cl-progv ;; XXX: perhaps use eval's lexical environment instead of progv?
-         (mapcar (lambda(cell) (car cell)) vars)
-         (mapcar (lambda(cell) (cdr cell)) vars)
-       (eval ,@body))))
-
-(define-minor-mode mu4e-context-minor-mode
-  "Mode for switching the mu4e context."
-  :global nil
-  :init-value nil ;; disabled by default
-  :group 'mu4e
-  :lighter ""
-  :keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd";") #'mu4e-context-switch)
-    map)
-  (mu4e-context-in-modeline))
-
-;;; 
+;;; _
 (provide 'mu4e-context)
 ;;; mu4e-context.el ends here

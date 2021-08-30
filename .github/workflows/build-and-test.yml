@@ -22,12 +22,12 @@ jobs:
         name: ubuntu-deps
         run: |
           sudo apt update
-          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev pkg-config
+          sudo apt-get install automake autoconf-archive autotools-dev libglib2.0-dev libxapian-dev libgmime-3.0-dev m4 make libtool pkg-config
 
       - if: contains(matrix.os, 'macos')
         name: macos-deps
         run: |
-          brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian
+          brew install autoconf automake libgpg-error libtool pkg-config gettext glib gmime xapian
 
       - name: configure
         run: ./autogen.sh --disable-guile

@@ -18,14 +18,14 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.7.0',
+	version: '1.6.5',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
 	  'buildtype=debugoptimized',
 	  'warning_level=1',
 	  'c_std=c11',
-	  'cpp_std=c++17'
+	  'cpp_std=c++14'
 	]
        )
 
@@ -51,6 +51,7 @@ extra_flags = [
   '-Winit-self',
   '-Wmissing-include-dirs',
   '-Wpointer-arith',
+  #'-Wswitch-enum',
   '-Wswitch-default',
 ]
 

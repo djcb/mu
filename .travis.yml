@@ -1,0 +1,35 @@
+language: c
+sudo: required
+compiler:
+  - gcc
+env:
+  global:
+    - BUILD_PKGS="libtool autoconf autoconf-archive automake texinfo"
+    - BUILD_LIBS="libgmime-2.6-dev libxapian-dev guile-2.0-dev libwebkitgtk-dev"
+    - TEST_PKGS="pmccabe"
+  matrix:
+    - EVM_EMACS=emacs-24.1-bin
+    - EVM_EMACS=emacs-24.2-bin
+    - EVM_EMACS=emacs-24.3-bin
+    # - EVM_EMACS=emacs-24.5-travis
+    # - EVM_EMACS=emacs-25.1-travis
+before_install:
+  - git submodule update --init --recursive
+  # The Ubuntu version on travis is way too old, need Autoconf 2.69
+  - sudo add-apt-repository ppa:dns/gnu -y
+  - sudo apt-get -qq update
+  - sudo apt-get install -qq ${BUILD_PKGS} ${BUILD_LIBS} ${TEST_PKGS}
+install:
+  - sudo mkdir /usr/local/evm
+  - sudo chown $(id -u):$(id -g) /usr/local/evm
+  - curl -fsSkL https://raw.github.com/rejeep/evm/master/go | bash
+  - export PATH="$HOME/.evm/bin:$PATH"
+  - evm install $EVM_EMACS --use
+script:
+  # Need recent version of autoconf-archive
+  - curl http://nl.mirror.babylon.network/gnu/autoconf-archive/autoconf-archive-2016.09.16.tar.xz -o /tmp/aa.tar.xz && tar xf /tmp/aa.tar.xz
+  - cp autoconf-archive-2016.09.16/m4/*.m4 m4/
+  - ./autogen.sh
+  - ./configure
+  - make
+  - make check

@@ -23,26 +23,26 @@ mu4e_TEXINFOS=fdl.texi
 
 dist_lisp_LISP=			\
 	mu4e-actions.el		\
-	mu4e-bookmarks.el	\
 	mu4e-compose.el		\
 	mu4e-context.el		\
 	mu4e-contrib.el		\
 	mu4e-draft.el		\
-	mu4e-folders.el		\
 	mu4e-headers.el		\
 	mu4e-icalendar.el	\
 	mu4e-lists.el		\
-	mu4e-helpers.el		\
 	mu4e-main.el		\
 	mu4e-mark.el		\
 	mu4e-message.el		\
 	mu4e-meta.el		\
 	mu4e-org.el		\
-	mu4e-server.el		\
+	mu4e-proc.el		\
 	mu4e-speedbar.el	\
-	mu4e-update.el		\
+	mu4e-utils.el		\
 	mu4e-vars.el		\
 	mu4e-view.el		\
+	mu4e-view-common.el	\
+	mu4e-view-gnus.el	\
+	mu4e-view-old.el	\
 	mu4e.el			\
 	obsolete/org-mu4e.el
 

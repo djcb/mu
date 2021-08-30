@@ -27,232 +27,12 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'mu4e-vars)
+(require 'mu4e-utils)
 (require 'mu4e-message)
-(require 'mu4e-contacts)
-(require 'mu4e-folders)
 (require 'message) ;; mail-header-separator
 
-
-;;; Configuration
-(defgroup mu4e-compose nil
-  "Customizations for composing/sending messages."
-  :group 'mu4e)
-
-(defcustom mu4e-compose-reply-recipients 'ask
-  "Which recipients to use when replying to a message.
-May be 'ask, 'all, 'sender. Note that that only applies to
-non-mailing-list message; for those, mu4e always asks."
-  :type '(choice ask
-                 all
-                 sender)
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-reply-to-address nil
-  "The Reply-To address.
-Useful when this is not equal to the From: address."
-  :type 'string
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-forward-as-attachment nil
-  "Whether to forward messages as attachments instead of inline."
-  :type 'boolean
-  :group 'mu4e-compose)
-
-;; backward compatibility
-(make-obsolete-variable 'mu4e-reply-to-address
-                        'mu4e-compose-reply-to-address
-                        "v0.9.9")
-
-(defcustom mu4e-compose-keep-self-cc nil
-  "When non-nil. keep your e-mail address in Cc: when replying."
-  :type 'boolean
-  :group 'mu4e-compose)
-
-(defvar mu4e-compose-parent-message nil
-  "The parent message plist.
-This is the message being replied to, forwarded or edited; used
-in `mu4e-compose-pre-hook'. For new messages, it is nil.")
- 
-(make-obsolete-variable 'mu4e-auto-retrieve-keys  "no longer used." "1.3.1")
-
-(defcustom mu4e-decryption-policy t
-  "Policy for dealing with replying/forwarding encrypted parts.
-The setting is a symbol:
- * t:     try to decrypt automatically
- * `ask': ask before decrypting anything
- * nil:   don't try to decrypt anything."
-  :type '(choice (const :tag "Try to decrypt automatically" t)
-                 (const :tag "Ask before decrypting anything" ask)
-                 (const :tag "Don't try to decrypt anything" nil))
-  :group 'mu4e-compose)
-
-;;; Composing / Sending messages
-
-(defcustom mu4e-sent-messages-behavior 'sent
-  "Determines what mu4e does with sent messages.
-
-This is one of the symbols:
-* `sent'    move the sent message to the Sent-folder (`mu4e-sent-folder')
-* `trash'   move the sent message to the Trash-folder (`mu4e-trash-folder')
-* `delete'  delete the sent message.
-
-Note, when using GMail/IMAP, you should set this to either
-`trash' or `delete', since GMail already takes care of keeping
-copies in the sent folder.
-
-Alternatively, `mu4e-sent-messages-behavior' can be a function
-which takes no arguments, and which should return one of the mentioned
-symbols, for example:
-
-  (setq mu4e-sent-messages-behavior (lambda ()
-  (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
-       'delete 'sent)))
-
-The various `message-' functions from `message-mode' are available
-for querying the message information."
-  :type '(choice (const :tag "move message to mu4e-sent-folder" sent)
-                 (const :tag "move message to mu4e-trash-folder" trash)
-                 (const :tag "delete message" delete))
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-context-policy 'ask
-  "Policy for determining the context when composing a new message.
-
-If the value is `always-ask', ask the user unconditionally.
-
-In all other cases, if any context matches (using its match
-function), this context is used. Otherwise, if none of the
-contexts match, we have the following choices:
-
-- `pick-first': pick the first of the contexts available (ie. the default)
-- `ask': ask the user
-- `ask-if-none': ask if there is no context yet, otherwise leave it as it is
--  nil: return nil; leaves the current context as is.
-
-Also see `mu4e-context-policy'."
-  :type '(choice
-          (const :tag "Always ask what context to use" always-ask)
-          (const :tag "Ask if none of the contexts match" ask)
-          (const :tag "Ask when there's no context yet" ask-if-none)
-          (const :tag "Pick the first context if none match" pick-first)
-          (const :tag "Don't change the context when none match" nil))
-  :safe 'symbolp
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-crypto-policy
-  '(encrypt-encrypted-replies sign-encrypted-replies)
-  "Policy to control when messages will be signed/encrypted.
-
-The value is a list, whose members determine the behaviour of
-`mu4e~compose-crypto-message'. Specifically, it might contain:
-
-- `sign-all-messages': Always add a signature.
-- `sign-new-messages': Add a signature to new message, ie.
-  messages that aren't responses to another message.
-- `sign-forwarded-messages': Add a signature when forwarding
-  a message
-- `sign-edited-messages': Add a signature to drafts
-- `sign-all-replies': Add a signature when responding to
-  another message.
-- `sign-plain-replies': Add a signature when responding to
-  non-encrypted messages.
-- `sign-encrypted-replies': Add a signature when responding
-  to encrypted messages.
-
-It should be noted that certain symbols have priorities over one
-another. So `sign-all-messages' implies `sign-all-replies', which
-in turn implies `sign-plain-replies'. Adding both to the set, is
-not a contradiction, but a redundant configuration.
-
-All `sign-*' options have a `encrypt-*' analogue."
-  :type '(set :greedy t
-              (const :tag "Sign all messages" sign-all-messages)
-              (const :tag "Encrypt all messages" encrypt-all-messages)
-              (const :tag "Sign new messages" sign-new-messages)
-              (const :tag "Encrypt new messages" encrypt-new-messages)
-              (const :tag "Sign forwarded messages" sign-forwarded-messages)
-              (const :tag "Encrypt forwarded messages" encrypt-forwarded-messages)
-              (const :tag "Sign edited messages" sign-edited-messages)
-              (const :tag "Encrypt edited messages" edited-forwarded-messages)
-              (const :tag "Sign all replies" sign-all-replies)
-              (const :tag "Encrypt all replies" encrypt-all-replies)
-              (const :tag "Sign replies to plain messages" sign-plain-replies)
-              (const :tag "Encrypt replies to plain messages" encrypt-plain-replies)
-              (const :tag "Sign replies to encrypted messages" sign-encrypted-replies)
-              (const :tag "Encrypt replies to encrypted messages" encrypt-encrypted-replies))
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-crypto-reply-encrypted-policy nil
-  "Policy for signing/encrypting replies to encrypted messages.
-We have the following choices:
-
-- `sign': sign the reply
-- `sign-and-encrypt': sign and encrypt the reply
-- `encrypt': encrypt the reply, but don't sign it.
--  anything else: do nothing."
-  :type '(choice
-          (const :tag "Sign the reply" sign)
-          (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-          (const :tag "Encrypt the reply" encrypt)
-          (const :tag "Don't do anything" nil))
-  :safe 'symbolp
-  :group 'mu4e-compose)
-
-(make-obsolete-variable 'mu4e-compose-crypto-reply-encrypted-policy "The use of the
- 'mu4e-compose-crypto-reply-encrypted-policy' variable is deprecated.
- 'mu4e-compose-crypto-policy' should be used instead"
-                        "2020-03-06")
-
-(defcustom mu4e-compose-crypto-reply-plain-policy nil
-  "Policy for signing/encrypting replies to messages received unencrypted.
-We have the following choices:
-
-- `sign': sign the reply
-- `sign-and-encrypt': sign and encrypt the reply
-- `encrypt': encrypt the reply, but don't sign it.
--  anything else: do nothing."
-  :type '(choice
-          (const :tag "Sign the reply" sign)
-          (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-          (const :tag "Encrypt the reply" encrypt)
-          (const :tag "Don't do anything" nil))
-  :safe 'symbolp
-  :group 'mu4e-compose)
-
-(make-obsolete-variable 'mu4e-compose-crypto-reply-plain-policy "The use of the
- 'mu4e-compose-crypto-reply-plain-policy' variable is deprecated.
- 'mu4e-compose-crypto-policy' should be used instead"
-                        "2020-03-06")
-
-(make-obsolete-variable 'mu4e-compose-crypto-reply-policy "The use of the
- 'mu4e-compose-crypto-reply-policy' variable is deprecated.
- 'mu4e-compose-crypto-reply-plain-policy' and
- 'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
-                        "2017-09-02")
-
-(defcustom mu4e-compose-format-flowed nil
-  "Whether to compose messages to be sent as format=flowed.
-\(Or with long lines if variable `use-hard-newlines' is set to
-nil). The variable `fill-flowed-encode-column' lets you customize
-the width beyond which format=flowed lines are wrapped."
-  :type 'boolean
-  :safe 'booleanp
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-pre-hook nil
-  "Hook run just *before* message composition starts.
-If the compose-type is either 'reply' or 'forward', the variable
-`mu4e-compose-parent-message' points to the message replied to /
-being forwarded / edited, and `mu4e-compose-type' contains the
-type of message to be composed.
-
-Note that there is no draft message yet when this hook runs, it
-is meant for influencing the how mu4e constructs the draft
-message. If you want to do something with the draft messages after
-it has been constructed, `mu4e-compose-mode-hook' would be the
-place to do that."
-  :type 'hook
-  :group 'mu4e-compose)
+;;; Options
 
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, don't include self.
@@ -299,11 +79,6 @@ mu4e-specific version of `message-signature'."
 
 (defvar mu4e-view-date-format)
 
-(defvar mu4e-compose-type nil
-  "The compose-type for this buffer.
-This is a symbol, `new', `forward', `reply' or `edit'.")
-
-
 (defun mu4e~draft-cite-original (msg)
   "Return a cited version of the original message MSG as a plist.
 This function uses `mu4e-compose-cite-function', and as such all
@@ -343,22 +118,6 @@ Beginning with CUTth
 one. Code borrowed from `message-shorten-1'."
   (setcdr (nthcdr (- cut 2) list)
           (nthcdr (+ (- cut 2) surplus 1) list)))
-
-
-
-(defun mu4e~fontify-signature ()
-  "Give the message signatures a distinctive color. This is used in
-the view and compose modes and will color each signature in digest messages adhering to RFC 1153."
-  (let ((inhibit-read-only t))
-    (save-excursion
-      ;; give the footer a different color...
-      (goto-char (point-min))
-      (while (re-search-forward "^-- *$" nil t)
-        (let ((p (point))
-              (end (or
-                    (re-search-forward "\\(^-\\{30\\}.*$\\)" nil t) ;; 30 by RFC1153
-                    (point-max))))
-          (add-text-properties p end '(face mu4e-footer-face)))))))
 
 (defun mu4e~draft-references-construct (msg)
   "Construct the value of the References: header based on MSG.
@@ -799,13 +558,13 @@ will be created from either `mu4e~draft-reply-construct', or
        ;; case-1: re-editing a draft messages. in this case, we do know the
        ;; full path, but we cannot really know 'drafts folder'... we make a
        ;; guess
-       (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
+       (setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
        (mu4e~draft-open-file (mu4e-message-field msg :path) switch-function))
 
       (resend
        ;; case-2: copy some exisisting message to a draft message, then edit
        ;; that.
-       (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
+       (setq draft-dir (mu4e~guess-maildir (mu4e-message-field msg :path)))
        (let ((draft-path (mu4e~draft-determine-path draft-dir)))
          (copy-file (mu4e-message-field msg :path) draft-path)
          (mu4e~draft-open-file draft-path switch-function)))

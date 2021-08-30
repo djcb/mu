@@ -1,29 +1,34 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
-echo "*** meson build setup"
-
 test -f mu/mu.cc || {
     echo "*** Run this script from the top-level mu source directory"
     exit 1
 }
 
-BUILDDIR=build
+# opportunistically; usually not needed, but occasionally it'll
+# avoid build errors that would otherwise confuse users.
+test -f Makefile && {
+    echo "*** clear out old things"
+    make distclean 2> /dev/null
+}
 
-command -v meson 2> /dev/null
+
+command -V autoreconf > /dev/null
 if [ $? != 0 ]; then
-    echo "*** No meson found, please install it ***"
+    echo "*** No autoreconf found, please install it ***"
     exit 1
 fi
 
-# we could remove build/ but let's avoid rm -rf risks...
-if test -d ${BUILDDIR}; then
-    meson --reconfigure ${BUILDDIR}
+rm -f config.cache
+rm -rf autom4te.cache
+
+autoreconf --force --install --verbose || exit $?
+
+if test -z "$*"; then
+    echo "# Configuring without parameters"
 else
-    meson ${BUILDDIR} $@
+   echo "# Configure with parameters $*"
 fi
 
-# Add a Makefile with some useful target
-cp Makefile.meson Makefile
-
-echo "*** Now run 'ninja -C ${BUILDDIR}' to build mu"
+./configure --config-cache $@

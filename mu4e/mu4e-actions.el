@@ -30,10 +30,17 @@
 (require 'cl-lib)
 (require 'ido)
 
-(require 'mu4e-helpers)
+(require 'mu4e-utils)
 (require 'mu4e-message)
-(require 'mu4e-search)
 (require 'mu4e-meta)
+
+(declare-function mu4e~proc-extract     "mu4e-proc")
+(declare-function mu4e-headers-search   "mu4e-headers")
+
+(defvar mu4e-headers-include-related)
+(defvar mu4e-headers-show-threads)
+(defvar mu4e-view-show-addresses)
+(defvar mu4e-view-date-format)
 
 
 ;;; Count lines
@@ -170,14 +177,6 @@ Otherwise return nil."
       (if (re-search-forward regexp nil t)
           (replace-match to-string nil nil)))))
 
-(declare-function mu4e--server-add "mu4e-server")
-(defun mu4e--refresh-message (path)
-  "Re-parse message at PATH.
-if this works, we will
-receive (:info add :path <path> :docid <docid>) as well as (:update
-<msg-sexp>)."
-  (mu4e--server-add path))
-
 (defun mu4e-action-retag-message (msg &optional retag-arg)
   "Change tags of MSG with RETAG-ARG.
 
@@ -232,7 +231,7 @@ would add 'tag' and 'long tag', and remove 'oldtag'."
        path))
 
     (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
-    (mu4e--refresh-message path)))
+    (mu4e-refresh-message path)))
 
 (defun mu4e-action-show-thread (msg)
   "Show thread for message at point with point remaining on MSG.
@@ -241,13 +240,14 @@ action was invoked. If invoked in view mode, continue to display
 the message."
   (let ((msgid (mu4e-message-field msg :message-id)))
     (when msgid
-      (let ((mu4e-search-threads t)
+      (let ((mu4e-headers-show-threads t)
             (mu4e-headers-include-related t))
-        (mu4e-search
+        (mu4e-headers-search
          (format "msgid:%s" msgid)
          nil nil nil
          msgid (and (eq major-mode 'mu4e-view-mode)
                     (not (eq mu4e-split-view 'single-window))))))))
+
 ;;; _
 (provide 'mu4e-actions)
 ;;; mu4e-actions.el ends here

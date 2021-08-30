@@ -1,54 +1,6 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.7 (unreleased, development)
-
-*** mu
-
-    - ~mu~ switched to use the [[https://mesonbuild.com][meson]] build system by default. The existing
-      ~autotools~ is still avaiable, but is to be removed after the 1.8 release.
-
-      Using ~meson~ (which you need to install), you can use something like in the
-      mu top directory:
-#+begin example
-	$ meson build && ninja -C build
-#+end example
-
-      After that, ~ninja -C build~ should be enough. ~autogen.sh~ has been updated
-      to use ~meson~ instead, and and even delivers a ~Makefile~ with some useful
-      targets that invoke the corresponding ~meson~ / ~ninja~ targets.
-
-    - ~mu~ now require C++17 support for building (this is in preparation for code
-      that actually _uses_ C++17)
-
-*** mu4e
-
-    - the old mu4e-view is gone; only the gnus-based one remains, this allowed
-      for removing quite a bit of old code.
-
-    - a lot of the internals have been changed:
-
-      - ~mu4e~ is slowly moving from using the ~~~ to the more common ~--~ separator for
-	private functions; i.e., ~mu4e~foo~ becomes ~mu4e--foo~.
-      - ~mu4e-utils.el~ had become a bit of a dumping ground for bits of code;
-	it's gone now, with the functionality move to topic-specific files --
-	~mu4e-folders.el~, ~mu4e-bookmarks.el~, ~mu4e-update.el~, and included in
-	existing files.
-      - the remaining common functionality has ended up in ~mu4e-helpers.el~
-      - ~mu4e-search.el~ takes the search-specific code from ~mu4e-headers.el~, and
-	adds a minor-mode for the keybindings.
-      - ~mu4e-context.el~ and ~mu4e-update.el~ also define minor modes with
-	keybindings, which saves a lot of code in the various views, since they
-	don't need explicitly bind all those function.
-      - also ~mu4e-vars.el~ had become very big, we're refactoring the factories
-	~defvar~ / ~defcustom~ declarations to the topic-specific files.
-
-*** guile
-
-    - the guile interface has been deprecated. It may be revamped at some point,
-      but will be different from the curren one. To be removed after 1.8.x
-
-
 * 1.6 (released, as of July 27 2021)
 
   NOTE: After upgrading, you need to call ~mu init~, with your prefered parameters

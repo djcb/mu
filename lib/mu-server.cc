@@ -95,6 +95,7 @@ struct Server::Private {
         void add_handler (const Parameters& params);
         void compose_handler (const Parameters& params);
         void contacts_handler (const Parameters& params);
+        void extract_handler (const Parameters& params);
         void find_handler (const Parameters& params);
         void help_handler (const Parameters& params);
         void index_handler (const Parameters& params);
@@ -213,6 +214,23 @@ Server::Private::make_command_map ()
                                             "return changes since tstamp" }}},
                            "get contact information",
                            [&](const auto& params){contacts_handler(params);}});
+
+      cmap.emplace("extract",
+                   CommandInfo{
+                           ArgMap{{":docid",    ArgInfo{Type::Number, true,  "document for the message" }},
+                                   {":index",   ArgInfo{Type::Number, true,
+                                            "index for the part to operate on" }},
+                                   {":action",  ArgInfo{Type::Symbol, true, "what to do with the part" }},
+                                   {":decrypt", ArgInfo{Type::Symbol, false,
+                                            "whether to decrypt encrypted parts (if any)" }},
+                                   {":path",    ArgInfo{Type::String, false,
+                                            "part for saving (for action: save)" }},
+                                   {":what",    ArgInfo{Type::Symbol, false,
+                                            "what to do with the part (feedback)" }},
+                                   {":param",   ArgInfo{Type::String, false, "parameter for 'what'" }}},
+                           "extract mime-parts from a message",
+                           [&](const auto& params){extract_handler(params);}});
+
       cmap.emplace("find",
                    CommandInfo{
                            ArgMap{ {":query",   ArgInfo{Type::String, true, "search expression" }},
@@ -303,6 +321,13 @@ Server::Private::make_command_map ()
                                    {":path",           ArgInfo{Type::String, false, "message filesystem path"}},
                                    {":mark-as-read",   ArgInfo{Type::Symbol, false,
                                             "mark message as read (if not already)"}},
+                                   {":extract-images", ArgInfo{Type::Symbol, false,
+                                            "whether to extract images for this messages (if any)"}},
+                                   {":decrypt",        ArgInfo{Type::Symbol, false,
+                                            "whether to decrypt encrypted parts (if any)" }},
+                                   {":verify",         ArgInfo{Type::Symbol, false,
+                                            "whether to verify signatures (if any)" }}
+
                            },
                            "view a message. exactly one of docid/msgid/path must be specified",
                            [&](const auto& params){view_handler(params);}});
@@ -354,10 +379,15 @@ Server::Private::invoke (const std::string& expr) noexcept
 static MuMsgOptions
 message_options (const Parameters& params)
 {
+        const auto extract_images{get_bool_or(params, ":extract-images", false)};
         const auto decrypt{get_bool_or(params, ":decrypt", false)};
+        const auto verify{get_bool_or(params, ":verify", false)};
 
         int opts{MU_MSG_OPTION_NONE};
-
+        if (extract_images)
+                opts |= MU_MSG_OPTION_EXTRACT_IMAGES;
+        if (verify)
+                opts |= MU_MSG_OPTION_VERIFY  | MU_MSG_OPTION_USE_AGENT;
         if (decrypt)
                 opts |= MU_MSG_OPTION_DECRYPT | MU_MSG_OPTION_USE_AGENT;
 
@@ -512,6 +542,123 @@ Server::Private::contacts_handler (const Parameters& params)
         /* dump the contacts cache as a giant sexp */
         output_sexp(std::move(seq));
 }
+
+
+static Sexp::List
+save_part (MuMsg *msg, unsigned docid, unsigned index,
+           MuMsgOptions opts, const Parameters& params)
+{
+        const auto path{get_string_or(params, ":path")};
+        if (path.empty())
+                throw Error{Error::Code::Command, "missing path"};
+
+        GError *gerr{};
+        if (!mu_msg_part_save (msg, (MuMsgOptions)(opts | (int)MU_MSG_OPTION_OVERWRITE),
+                               path.c_str(), index, &gerr))
+                throw Error{Error::Code::File, &gerr, "failed to save part"};
+
+        Sexp::List seq;
+        seq.add_prop(":info", Sexp::make_symbol("save"));
+        seq.add_prop(":message", Sexp::make_string(format("%s has been saved", path.c_str())));
+
+        return seq;
+}
+
+
+static Sexp::List
+open_part (MuMsg *msg, unsigned docid, unsigned index, MuMsgOptions opts)
+{
+        GError *gerr{};
+        char *targetpath{mu_msg_part_get_cache_path (msg, opts, index, &gerr)};
+        if (!targetpath)
+                throw Error{Error::Code::File, &gerr, "failed to get cache-path"};
+
+        if (!mu_msg_part_save (msg, (MuMsgOptions)(opts | MU_MSG_OPTION_USE_EXISTING),
+                                targetpath, index, &gerr)) {
+                g_free(targetpath);
+                throw Error{Error::Code::File, &gerr, "failed to save to cache-path"};
+        }
+
+        if (!mu_util_play (targetpath, TRUE,/*allow local*/
+                           FALSE/*allow remote*/, &gerr)) {
+                g_free(targetpath);
+                throw Error{Error::Code::File, &gerr, "failed to play"};
+        }
+
+        Sexp::List seq;
+        seq.add_prop(":info",    Sexp::make_symbol("open"));
+        seq.add_prop(":message", Sexp::make_string(format("%s has been opened", targetpath)));
+        g_free (targetpath);
+
+        return seq;
+}
+
+static Sexp::List
+temp_part (MuMsg *msg, unsigned docid, unsigned index,
+           MuMsgOptions opts, const Parameters& params)
+{
+        const auto what{get_symbol_or(params, ":what")};
+        if (what.empty())
+                throw Error{Error::Code::Command, "missing 'what'"};
+
+        const auto param{get_string_or(params, ":param")};
+
+        GError *gerr{};
+        char *path{mu_msg_part_get_cache_path (msg, opts, index, &gerr)};
+        if (!path)
+                throw Error{Error::Code::File, &gerr, "could not get cache path"};
+
+        if (!mu_msg_part_save (msg, (MuMsgOptions)(opts | MU_MSG_OPTION_USE_EXISTING),
+                               path, index, &gerr)) {
+                g_free(path);
+                throw Error{Error::Code::File, &gerr, "saving failed"};
+        }
+
+        Sexp::List lst;
+        lst.add_prop(":temp",  Sexp::make_string(path));
+        lst.add_prop(":what",  Sexp::make_string(what));
+        lst.add_prop(":docid", Sexp::make_number(docid));
+
+        if (!param.empty())
+                lst.add_prop(":param", Sexp::make_string(param));
+
+        g_free(path);
+        return lst;
+}
+
+
+
+/* 'extract' extracts some mime part from a message */
+void
+Server::Private::extract_handler (const Parameters& params)
+{
+        const auto docid{get_int_or(params, ":docid")};
+        const auto index{get_int_or(params, ":index")};
+        const auto opts{message_options(params)};
+
+        auto msg{store().find_message(docid)};
+        if (!msg)
+                throw Error{Error::Code::Store, "failed to get message"};
+
+        try {
+                const auto action{get_symbol_or(params, ":action")};
+                if (action == "save")
+                        output_sexp(save_part (msg, docid, index, opts, params));
+                else if (action == "open")
+                        output_sexp(open_part (msg, docid, index, opts));
+                else if (action == "temp")
+                        output_sexp(temp_part (msg, docid, index, opts, params));
+                else {
+                        throw Error{Error::Code::InvalidArgument,
+                                        "unknown action '%s'", action.c_str()};
+                }
+
+        } catch (...) {
+                mu_msg_unref (msg);
+                throw;
+        }
+}
+
 
 /* get a *list* of all messages with the given message id */
 static std::vector<Store::Id>
@@ -1073,7 +1220,7 @@ Server::Private::view_handler (const Parameters& params)
 
         Sexp::List seq;
         seq.add_prop(":view", build_message_sexp(
-                             msg, docid, {}, MU_MSG_OPTION_NONE));
+                             msg, docid, {}, message_options(params)));
         mu_msg_unref(msg);
         output_sexp (std::move(seq));
 }

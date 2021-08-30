@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.7.0],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.6.5],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2021 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
@@ -42,15 +42,15 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
 
-extra_flags="-Wformat-security                                    \
+extra_flags="-Wformat-security                                        \
          -Wstack-protector                                        \
          -Wstack-protector-all                                    \
          -Wno-cast-function-type                                  \
          -Wno-bad-function-cast"
 
-AX_CXX_COMPILE_STDCXX_17
+AX_CXX_COMPILE_STDCXX_14
 AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
-AX_APPEND_COMPILE_FLAGS([-Wno-inline],[CXXFLAGS])
+AX_APPEND_COMPILE_FLAGS([-Wno-inline ],[CXXFLAGS])
 AX_VALGRIND_CHECK
 
 LT_INIT
@@ -362,10 +362,6 @@ AS_IF([test "x$ac_cv_header_wordexp_h" != "xyes"],[
    echo "  you should use the complete path, something like:"
    echo "    --maildir=/home/user/Maildir"
 ])
-
-
-echo "NOTE: autotools support has been deprecated and will be removed"
-echo "      after the next stable release. use the meson build instead"
 
 echo
 echo "Now, type 'make' (or 'gmake') to build mu"

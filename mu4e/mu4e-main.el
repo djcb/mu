@@ -1,6 +1,6 @@
 ;;; mu4e-main.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -25,20 +25,12 @@
 ;;; Code:
 
 (require 'smtpmail)      ;; the queueing stuff (silence elint)
-(require 'mu4e-helpers)    ;; utility functions
+(require 'mu4e-utils)    ;; utility functions
 (require 'mu4e-context)  ;; the context
-(require 'mu4e-bookmarks)
-(require 'mu4e-folders)
-(require 'mu4e-update)
-(require 'mu4e-contacts)
-(require 'mu4e-search)
 (require 'mu4e-vars)     ;; mu-wide variables
-
 (require 'cl-lib)
 
-
-
-;; Configuration
+;;; Mode
 
 (define-obsolete-variable-alias
   'mu4e-main-buffer-hide-personal-addresses
@@ -51,44 +43,19 @@
   This also hides the warning if your `user-mail-address' is not
 part of the personal addresses.")
 
+
+
 (defvar mu4e-main-hide-fully-read nil
   "When set to t, do not hide bookmarks or maildirs that have
 no unread messages.")
 
-
-;;; Mode
-(define-derived-mode mu4e-org-mode org-mode "mu4e:org"
-  "Major mode for mu4e documents, derived from
-  `org-mode'.")
-
-(defun mu4e-info (path)
-  "Show a buffer with the information (an org-file) at PATH."
-  (unless (file-exists-p path)
-    (mu4e-error "Cannot find %s" path))
-  (let ((curbuf (current-buffer)))
-    (find-file path)
-    (mu4e-org-mode)
-    (setq buffer-read-only t)
-    (define-key mu4e-org-mode-map (kbd "q")
-      `(lambda ()
-         (interactive)
-         (bury-buffer)
-         (switch-to-buffer ,curbuf)))))
-
-(defun mu4e-about ()
-  "Show the mu4e 'about' page."
-  (interactive)
-  (mu4e-info (concat mu4e-doc-dir "/mu4e-about.org")))
-
-(defun mu4e-news ()
-  "Show the mu4e 'about' page."
-  (interactive)
-  (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
-
-
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
+    (define-key map "b" 'mu4e-headers-search-bookmark)
+    (define-key map "B" 'mu4e-headers-search-bookmark-edit)
+
+    (define-key map "s" 'mu4e-headers-search)
     (define-key map "q" 'mu4e-quit)
     (define-key map "j" 'mu4e~headers-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
@@ -120,9 +87,7 @@ no unread messages.")
 \\{mu4e-main-mode-map}."
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
-  (mu4e-context-minor-mode)
-  (mu4e-search-minor-mode)
-  (mu4e-update-minor-mode)
+  (mu4e-context-in-modeline)
   (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
 
 
@@ -159,23 +124,15 @@ clicked."
                        'mouse-face 'highlight newstr)
     newstr))
 
-
-
-(defun mu4e--longest-of-maildirs-and-bookmarks ()
-  "Return the length of longest name of bookmarks and maildirs."
-  (cl-loop for b in (append (mu4e-bookmarks)
-                            (mu4e--maildirs-with-query))
-           maximize (string-width (plist-get b :name))))
-
 (defun mu4e~main-bookmarks ()
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
   (cl-loop with bmks = (mu4e-bookmarks)
-           with longest = (mu4e--longest-of-maildirs-and-bookmarks)
+           with longest = (mu4e~longest-of-maildirs-and-bookmarks)
            with queries = (mu4e-last-query-results)
            for bm in bmks
            for key = (string (plist-get bm :key))
            for name = (plist-get bm :name)
-           for query = (funcall (or mu4e-search-query-rewrite-function #'identity)
+           for query = (funcall (or mu4e-query-rewrite-function #'identity)
                                 (plist-get bm :query))
            for qcounts = (and (stringp query)
                               (cl-loop for q in queries
@@ -208,9 +165,9 @@ clicked."
 
 (defun mu4e~main-maildirs ()
   "Return a string of maildirs with their counts."
-  (cl-loop with mds = (mu4e--maildirs-with-query)
-           with longest = (mu4e--longest-of-maildirs-and-bookmarks)
-           with queries = (plist-get mu4e--server-props :queries)
+  (cl-loop with mds = (mu4e~maildirs-with-query)
+           with longest = (mu4e~longest-of-maildirs-and-bookmarks)
+           with queries = (plist-get mu4e~server-props :queries)
            for m in mds
            for key = (string (plist-get m :key))
            for name = (plist-get m :name)
@@ -263,15 +220,13 @@ clicked."
   "The revert buffer function for `mu4e-main-mode'."
   (mu4e~main-view-real-1 'refresh))
 
-(declare-function mu4e--start "mu4e")
-
 (defun mu4e~main-view-real-1 (&optional refresh)
   "Create `mu4e-main-buffer-name' and set it up.
 When REFRESH is non nil refresh infos from server."
   (let ((inhibit-read-only t))
     ;; Maybe refresh infos from server.
     (if refresh
-        (mu4e--start 'mu4e~main-redraw-buffer)
+        (mu4e~start 'mu4e~main-redraw-buffer)
       (mu4e~main-redraw-buffer))))
 
 (defun mu4e~main-redraw-buffer ()
@@ -323,7 +278,7 @@ When REFRESH is non nil refresh infos from server."
        (mu4e~key-val "database-path" (mu4e-database-path))
        (mu4e~key-val "maildir" (mu4e-root-maildir))
        (mu4e~key-val "in store"
-                     (format "%d" (plist-get mu4e--server-props :doccount)) "messages")
+                     (format "%d" (plist-get mu4e~server-props :doccount)) "messages")
        (if mu4e-main-hide-personal-addresses ""
          (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
