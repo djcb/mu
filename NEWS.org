@@ -10,9 +10,10 @@
 
       Using ~meson~ (which you need to install), you can use something like in the
       mu top directory:
-#+begin example
+
+#+begin src sh
 	$ meson build && ninja -C build
-#+end example
+#+end src
 
       After that, ~ninja -C build~ should be enough. ~autogen.sh~ has been updated
       to use ~meson~ instead, and and even delivers a ~Makefile~ with some useful
@@ -23,7 +24,7 @@
 
 *** mu4e
 
-    - the old mu4e-view is gone; only the gnus-based one remains, this allowed
+    - the old mu4e-view is *gone*; only the gnus-based one remains, this allowed
       for removing quite a bit of old code.
 
     - a lot of the internals have been changed:
@@ -40,8 +41,9 @@
       - ~mu4e-context.el~ and ~mu4e-update.el~ also define minor modes with
 	keybindings, which saves a lot of code in the various views, since they
 	don't need explicitly bind all those function.
-      - also ~mu4e-vars.el~ had become very big, we're refactoring the factories
-	~defvar~ / ~defcustom~ declarations to the topic-specific files.
+      - also ~mu4e-vars.el~ had become very big, we're refactoring the ~defvar~ /
+	~defcustom~ declarations to the topic-specific files.
+      - ~mu4e-proc.el~ has been renamed ~mu4e-server.el~.
 
 *** guile
 
