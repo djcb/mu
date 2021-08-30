@@ -45,6 +45,7 @@
 (require 'mu4e-compose)
 (require 'mu4e-actions)
 (require 'mu4e-message)
+(require 'mu4e-lists)
 (require 'mu4e-folders)
 
 (declare-function mu4e-view       "mu4e-view")
