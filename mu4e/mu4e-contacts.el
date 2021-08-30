@@ -27,6 +27,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'mu4e-helpers)
+(require 'mu4e-update)
 
 
 ;;; Configuration
