@@ -316,14 +316,13 @@ or `past'."
        (mu4e-warn "No more next queries"))
      (pop mu4e--search-query-future))))
 
-
 (defun mu4e-search-rerun ()
   "Re-run the search for the last search expression."
   (interactive)
   ;; if possible, try to return to the same message
   (let* ((msg (mu4e-message-at-point t))
 	 (msgid (and msg (mu4e-message-field msg :message-id))))
-    (mu4e-headers-search mu4e~headers-last-query nil nil t msgid)))
+    (mu4e-search mu4e--search-last-query nil nil t msgid)))
 
 (define-obsolete-function-alias 'mu4e-headers-rerun-search
   'mu4e-search-rerun "1.7.0")
