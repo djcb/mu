@@ -29,7 +29,7 @@
 
 (require 'org)
 (require 'mu4e-view)
-(require 'mu4e-utils)
+
 
 (defgroup mu4e-org nil
   "Settings for the org-mode related functionality in mu4e."

@@ -29,7 +29,7 @@
 
 (require 'cl-lib)
 (require 'mu4e-server)
-(require 'mu4e-utils)
+
 (require 'mu4e-message)
 (require 'mu4e-folders)
 

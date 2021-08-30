@@ -36,7 +36,7 @@
 
 (require 'mu4e-update)
 
-(require 'mu4e-utils)    ;; utility functions
+    ;; utility functions
 (require 'mu4e-server)
 (require 'mu4e-vars)
 (require 'mu4e-mark)
@@ -751,14 +751,11 @@ if provided, or at the end of the buffer otherwise."
           (mu4e~headers-add-header line (mu4e-message-field msg :docid)
                                    point msg))))))
 
-
-
 
 ;;; Performing queries (internal)
 (defconst mu4e~search-message "Searching...")
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
-
 
 (defun mu4e--search-execute (expr ignore-history)
   "Search for query EXPR.

@@ -45,7 +45,7 @@
 (require 'mu4e-message)
 (require 'mu4e-server)
 (require 'mu4e-search)
-(require 'mu4e-utils) ;; utility functions
+ ;; utility functions
 (require 'mu4e-contacts)
 (require 'mu4e-vars)
 
