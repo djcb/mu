@@ -25,6 +25,7 @@ dist_lisp_LISP=			\
 	mu4e-actions.el		\
 	mu4e-bookmarks.el	\
 	mu4e-compose.el		\
+	mu4e-contacts.el	\
 	mu4e-context.el		\
 	mu4e-contrib.el		\
 	mu4e-draft.el		\
@@ -38,6 +39,7 @@ dist_lisp_LISP=			\
 	mu4e-message.el		\
 	mu4e-meta.el		\
 	mu4e-org.el		\
+	mu4e-search.el		\
 	mu4e-server.el		\
 	mu4e-speedbar.el	\
 	mu4e-update.el		\
