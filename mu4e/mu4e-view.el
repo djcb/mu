@@ -1045,7 +1045,10 @@ containing commas."
 		   #'completing-read-multiple))
 	dir)
     (dolist (part parts)
-      (let ((fname (cdr (assoc 'filename (assoc "attachment" (cdr part))))))
+      (let ((fname (or (cdr (assoc 'filename (assoc "attachment" (cdr part))))
+                       (cl-loop for item in part
+                                for name = (and (listp item) (assoc-default 'name item))
+                                thereis (and (stringp name) name)))))
 	(when fname
 	  (push `(,fname . ,(cdr part)) handles)
 	  (push fname files))))
