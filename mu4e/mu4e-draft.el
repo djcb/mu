@@ -294,11 +294,7 @@ its settings apply."
 (defun mu4e~draft-header (hdr val)
   "Return a header line of the form \"HDR: VAL\".
 If VAL is nil, return nil."
-  ;; note: the propertize here is currently useless, since gnus sets its own
-  ;; later.
-  (when val (format "%s: %s\n"
-                    (propertize hdr 'face 'mu4e-header-key-face)
-                    (propertize val 'face 'mu4e-header-value-face))))
+  (when val (format "%s: %s\n" hdr val)))
 
 (defconst mu4e~max-reference-num 21
   "Specifies the maximum number of References:.

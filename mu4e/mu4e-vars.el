@@ -126,23 +126,8 @@ I.e. a message with the draft flag set."
   "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
   :group 'mu4e-faces)
 
-(defface mu4e-header-value-face
-  '((t :inherit font-lock-type-face))
-  "Face for a header value (such as \"Re: Hello!\")."
-  :group 'mu4e-faces)
-
-(defface mu4e-special-header-value-face
-  '((t :inherit font-lock-builtin-face))
-  "Face for special header values."
-  :group 'mu4e-faces)
-
 (defface mu4e-link-face
   '((t :inherit link))
-  "Face for showing URLs and attachments in the message view."
-  :group 'mu4e-faces)
-
-(defface mu4e-contact-face
-  '((t :inherit font-lock-variable-name-face))
   "Face for showing URLs and attachments in the message view."
   :group 'mu4e-faces)
 
