@@ -330,16 +330,24 @@ Xapian, GMime and their dependencies must be installed.
 @subsection Building from git
 @anchor{Building from git}
 
-By default, @t{mu} use the Meson@footnote{@url{https://mesonbuild.com/}} build-system.
+By default, @t{mu} uses the
+Meson@footnote{@url{https://mesonbuild.com/}} build-system. For
+ease-of-use, we also provide a Makefile though. You can of course also
+just use the corresponding @t{meson}/@t{ninja} commands.
 
 @example
 $ git clone git://github.com/djcb/mu.git
 $ cd mu
-$ meson build && ninja -C build
-$ sudo ninja -C install
+$ ./autogen.sh
+$ make
+$ make install install
+# ^^^ perhaps with 'sudo'
 @end example
 
-For now, you can also use the (deprecated) @t{autotools} build setup,
+After that, @t{make} (which is just @t{ninja -C build} under the
+covers) should be enough for rebuilding.
+
+Alternatively, you can also use the (deprecated) @t{autotools} build setup,
 assuming you have autotools (@t{autoconf}, @t{automake}, @t{libtool},
 @t{texinfo}) installed:
 
