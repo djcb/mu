@@ -37,9 +37,6 @@ mandir	  = join_paths(prefixdir, get_option('mandir'))
 infodir	  = join_paths(prefixdir, get_option('infodir'))
 
 ################################################################################
-
-
-################################################################################
 # compilers / flags
 #
 extra_flags = [
@@ -68,8 +65,6 @@ foreach extra_arg : extra_flags
   endif
 
 endforeach
-################################################################################
-
 
 
 ################################################################################
@@ -78,7 +73,8 @@ endforeach
 config_h_data=configuration_data()
 config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '452')
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
-config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' + meson.project_version())
+config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
+                                           meson.project_version())
 config_h_data.set_quoted('VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_NAME', meson.project_name())
 
@@ -91,8 +87,6 @@ foreach f : functions
     config_h_data.set(define, 1)
   endif
 endforeach
-################################################################################
-
 
 
 ################################################################################
@@ -120,8 +114,8 @@ if not makeinfo.found()
   message('makeinfo (texinfo) not found; not building info documentation')
 endif
 
-# readline. annoyingly, macos has incompatible libedit claiming to be readline.
-# this only a dev/debug convenience for the mu4e repl.
+# readline. annoyingly, macos has an incompatible libedit claiming to be
+# readline. this only a dev/debug convenience for the mu4e repl.
 readline_dep=[]
 if get_option('readline').enabled()
   readline_dep = dependency('readline', version:'>= 8.0')
@@ -144,18 +138,15 @@ if get_option('toys').enabled()
   gtk_dep = dependency('gtk+-3.0')
   webkit_dep = dependency('webkit2gtk-4.0')
 endif
-################################################################################
 
 
 ################################################################################
-# write-out config. h.
+# write-out config.h.
 configure_file(output : 'config.h', configuration : config_h_data)
 add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
 add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
-################################################################################
-
 
 
 ################################################################################
@@ -163,14 +154,21 @@ config_h_dep=declare_dependency(
 version_texi_data=configuration_data()
 version_texi_data.set('VERSION', meson.project_version())
 version_texi_data.set('EDITION', meson.project_version())
-version_texi_data.set('UPDATED', run_command('date', '+%d %B %Y').stdout().strip())
-version_texi_data.set('UPDATEDMONTH', run_command('date', '+%B %Y').stdout().strip())
+version_texi_data.set('UPDATED',
+                      run_command('date', '+%d %B %Y').stdout().strip())
+version_texi_data.set('UPDATEDMONTH',
+                      run_command('date', '+%B %Y').stdout().strip())
 
 configure_file(input: 'version.texi.in',
 	       output: 'version.texi',
 	       configuration: version_texi_data)
-################################################################################
 
+
+
+################################################################################
+# install some data files
+install_data('NEWS.org',
+            install_dir : join_paths(datadir,'doc', 'mu'))
 
 ################################################################################
 # subdirs
