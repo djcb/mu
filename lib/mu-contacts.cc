@@ -241,7 +241,7 @@ Contacts::add (ContactInfo&& ci)
                         ci_existing.last_seen    = ci.last_seen;
                 }
 
-                return ci;
+                return std::move(ci);
         }
 }
 

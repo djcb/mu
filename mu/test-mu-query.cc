@@ -584,23 +584,13 @@ test_mu_query_tags_02 (void)
 
 /* Tests for https://github.com/djcb/mu/issues/380
 
-   On certain platforms, something goes wrong during compilation and
-   the --related option doesn't work.
-
-
+   On certain platforms, something goes wrong during compilation and the
+   --related option doesn't work.
 */
 static void
 test_mu_query_threads_compilation_error (void)
 {
 	const auto xpath = make_database (MU_TESTMAILDIR);
-	g_assert_false (xpath.empty());
-
-#ifndef __linux__
-	// seems this test fails on MacOS sometimes... cannot investigate right now.
-#warning investigate failing test
-	g_test_skip("skip test that fails on MacOS");
-	return;
-#endif
 
 	g_assert_cmpuint (run_and_count_matches
 			  (xpath, "msgid:uwsireh25.fsf@one.dot.net"),
