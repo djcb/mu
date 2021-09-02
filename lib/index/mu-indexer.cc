@@ -123,7 +123,7 @@ Indexer::Private::handler (const std::string& fullpath, struct stat *statbuf,
                 // tstamps may not bubble up.
                 dirstamp_ = store_.dirstamp(fullpath);
                 if (conf_.lazy_check &&
-                    dirstamp_ == statbuf->st_mtime &&
+                    dirstamp_ >= statbuf->st_mtime &&
                     htype == Scanner::HandleType::EnterNewCur) {
                         g_debug("skip %s (seems up-to-date)", fullpath.c_str());
                         return false;
@@ -151,7 +151,7 @@ Indexer::Private::handler (const std::string& fullpath, struct stat *statbuf,
 
         }
         case Scanner::HandleType::LeaveDir: {
-                store_.set_dirstamp(fullpath, statbuf->st_mtime);
+                store_.set_dirstamp(fullpath, ::time(NULL));
                 return true;
         }
 
