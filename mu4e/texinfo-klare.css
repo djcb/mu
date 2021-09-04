@@ -1,0 +1,228 @@
+/*
+   Custom CSS for HTML documents generated with Texinfo's makeinfo.
+   Public domain 2016 sirgazil. All rights waived.
+*/
+
+
+
+/* NATIVE ELEMENTS */
+a:link,
+a:visited {
+    color: #245C8A;
+    text-decoration: none;
+}
+
+a:active,
+a:focus,
+a:hover {
+    text-decoration: underline;
+}
+
+abbr,
+acronym {
+    cursor: help;
+}
+
+blockquote {
+    color: #555753;
+    font-style: oblique;
+    margin: 30px 0px;
+    padding-left: 3em;
+}
+
+body {
+    background-color: white;
+    box-shadow: 0 0 2px gray;
+    box-sizing: border-box;
+    color: #333;
+    font-family: sans-serif;
+    font-size: 16px;
+    margin: 50px auto;
+    max-width: 960px;
+    padding: 50px;
+}
+
+code,
+samp,
+tt,
+var {
+    color: purple;
+    font-size: 0.8em;
+}
+
+div.example,
+div.lisp {
+    margin: 0px;
+}
+
+dl {
+    margin: 3em 0em;
+}
+
+dl dl {
+    margin: 0em;
+}
+
+dt {
+    background-color: #F5F5F5;
+    padding: 0.5em;
+}
+
+h1,
+h2,
+h2.contents-heading,
+h3,
+h4 {
+    padding: 20px 0px 0px 0px;
+    font-weight: normal;
+}
+
+h1 {
+    font-size: 2.4em;
+}
+
+h2 {
+    font-size: 2.2em;
+    font-weight: bold;
+}
+
+h3 {
+    font-size: 1.8em;
+}
+
+h4 {
+    font-size: 1.4em;
+}
+
+hr {
+    background-color: silver;
+    border-style: none;
+    height: 1px;
+    margin: 0px;
+}
+
+html {
+    background-color: #F5F5F5;
+}
+
+img {
+    max-width: 100%;
+}
+
+li {
+    padding: 5px;
+}
+
+pre.display,
+pre.example,
+pre.format,
+pre.lisp,
+pre.verbatim{
+    overflow: auto;
+}
+
+pre.example,
+pre.lisp,
+pre.verbatim {
+    background-color: #2D3743;
+    border-color: #000;
+    border-style: solid;
+    border-width: thin;
+    color: #E1E1E1;
+    font-size: smaller;
+    padding: 1em;
+}
+
+pre.menu-comment {
+    border-color: #E4E4E4;
+    border-bottom-style: solid;
+    border-width: thin;
+    font-family: sans;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 40px 0px;
+}
+
+table.index-cp *,
+table.index-fn *,
+table.index-ky *,
+table.index-pg *,
+table.index-tp *,
+table.index-vr * {
+    background-color: inherit;
+    border-style: none;
+}
+
+td,
+th {
+    border-color: silver;
+    border-style: solid;
+    border-width: thin;
+    padding: 10px;
+}
+
+th {
+    background-color: #F5F5F5;
+}
+/* END NATIVE ELEMENTS */
+
+
+
+/* CLASSES */
+.contents {
+    margin-bottom: 4em;
+}
+
+.float {
+    margin: 3em 0em;
+}
+
+.float-caption {
+    font-size: smaller;
+    text-align: center;
+}
+
+.float > img {
+    display: block;
+    margin: auto;
+}
+
+.footnote {
+    font-size: smaller;
+    margin: 5em 0em;
+}
+
+.footnote h3 {
+    display: inline;
+    font-size: small;
+}
+
+.header {
+    background-color: #F2F2F2;
+    font-size: small;
+    padding: 0.2em 1em;
+}
+
+.key {
+    color: purple;
+    font-size: 0.8em;
+}
+
+.menu * {
+    border-style: none;
+}
+
+.menu td {
+    padding: 0.5em 0em;
+}
+
+.menu td:last-child {
+    width: 60%;
+}
+
+.menu th {
+    background-color: inherit;
+}
+/* END CLASSES */

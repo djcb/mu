@@ -14,7 +14,6 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 # Makefile with some useful targets for meson/ninja
 
 NINJA    ?= ninja
@@ -41,3 +40,7 @@ install: $(BUILDDIR)
 clean:
 	@test -d $(BUILDDIR) && $(NINJA) -C $(BUILDDIR) clean
 
+HTMLPATH=${BUILDDIR}/mu4e/mu4e
+mu4e-doc-html:
+	@mkdir -p ${HTMLPATH} && cp mu4e/texinfo-klare.css ${HTMLPATH}
+	@makeinfo --html --css-ref=texinfo-klare.css -o ${HTMLPATH} mu4e/mu4e.texi
