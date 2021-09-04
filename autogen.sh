@@ -24,8 +24,7 @@ else
 fi
 
 # Add a Makefile with some useful target
-echo -e "# generated file: see Makefile.meson\n" > Makefile
-cat Makefile.meson >> Makefile
+cp Makefile.meson Makefile
 
 echo "*** Now run 'ninja -C ${BUILDDIR}' to build mu"
 echo "*** Or check the Makefile for some useful targets"
