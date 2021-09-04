@@ -441,8 +441,7 @@ following command:
   $ mu init --maildir=~/Maildir
 @end example
 
-Optionally, you can add some e-mail addresses, so @t{mu} recognizes
-them as yours:
+You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 
 @example
   $ mu init --maildir=~/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
@@ -451,6 +450,9 @@ them as yours:
 @t{mu} remembers the maildir and your addresses and uses them when
 indexing messages. If you want to change them, you need to @t{init}
 once again.
+
+The addresses can also be basic POSIX regular expressions, wrapped in
+slashes, such as @t{/foo-.*@@example\\.com/}.
 
 If you want to see the current values, you can use @command{mu info}.
 
