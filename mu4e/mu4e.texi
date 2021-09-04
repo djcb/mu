@@ -439,8 +439,11 @@ indexing messages. If you want to change them, you need to @t{init}
 once again.
 
 The addresses can also be basic POSIX regular expressions, wrapped in
-slashes, such as @t{/foo-.*@@example\\.com/}. Depending on your shell
-program, the argument may need to b quoted.
+slashes, for example:
+
+@example
+  $ mu init --maildir=~/Maildir '--my-address=/foo-.*@@example\.com/'
+@end example
 
 If you want to see the current values, you can use @command{mu info}.
 
