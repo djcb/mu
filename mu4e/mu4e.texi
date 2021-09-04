@@ -434,6 +434,11 @@ You can add some e-mail addresses, so @t{mu} recognizes them as yours:
   $ mu init --maildir=~/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
 @end example
 
+Note that you can also use Perl regular expressions: the following
+option @t{--my-address='/foo-.*@@example\.com/'} will recognize as yours
+addresses whose username starts with @t{foo-} and domain name is
+@t{example.com}.
+
 @t{mu} remembers the maildir and your addresses and uses them when
 indexing messages. If you want to change them, you need to @t{init}
 once again.
