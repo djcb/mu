@@ -15,16 +15,23 @@
 	$ meson build && ninja -C build
 #+END_SRC
 
-    - After that, =ninja -C build= should be enough. =autogen.sh= has been updated
-      to use =meson= instead, and and even delivers a =Makefile= with some useful
-      targets that invoke the corresponding =meson= / =ninja= targets.
+    - However, note that =autogen.sh= has been updated, and there's a convenience
+      =Makefile= with some useful targets, so you can also do:
+#+BEGIN_SRC sh
+       $ ./autogen.sh && make # and optionally, 'sudo make install'
+#+END_SRC
 
-    - =mu= now require C++17 support for building (this is in preparation for code
+   - After that, either =ninja -C build= or =make= should be enough to rebuild
+
+  - Before installing, it is recommended that you *remove* any older versions of
+    ~mu~ and especiall ~mu4e~, since they may conflict with the newere ones.
+
+    - =mu= now requires C++17 support for building (this is in preparation for code
       that actually _uses_ C++17)
 
 *** mu4e
 
-    - the old mu4e-view is *gone*; only the gnus-based one remains, this allowed
+    - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
       for removing quite a bit of old code.
 
     - a lot of the internals have been changed:
@@ -50,6 +57,9 @@
 	=defcustom= declarations to the topic-specific files.
 
       - =mu4e-proc.el= has been renamed =mu4e-server.el=.
+
+    - Because of all these changes, it is recommended you remove older version
+      of ~mu4e~ before reinstalling.
 
 *** guile
 
