@@ -88,6 +88,10 @@ foreach f : functions
   endif
 endforeach
 
+if cc.has_function('wordexp')
+  config_h_data.set('HAVE_WORDEXP_H',1)
+endif
+
 
 ################################################################################
 # hard dependencies
