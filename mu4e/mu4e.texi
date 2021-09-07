@@ -424,13 +424,13 @@ pass that to the other commands as well.
 Assuming that your maildir is at @file{~/Maildir}, we issue the
 following command:
 @example
-  $ mu init --maildir=~/Maildir
+  $ mu init --maildir=$HOME/Maildir
 @end example
 
 You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 
 @example
-  $ mu init --maildir=~/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
+  $ mu init --maildir=$HOME/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
 @end example
 
 @t{mu} remembers the maildir and your addresses and uses them when
@@ -441,7 +441,7 @@ The addresses can also be basic POSIX regular expressions, wrapped in
 slashes, for example:
 
 @example
-  $ mu init --maildir=~/Maildir '--my-address=/foo-.*@@example\.com/'
+  $ mu init --maildir=$HOME/Maildir '--my-address=/foo-.*@@example\.com/'
 @end example
 
 If you want to see the current values, you can use @command{mu info}.
