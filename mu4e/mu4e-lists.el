@@ -88,7 +88,7 @@
 
 (defcustom mu4e-user-mailing-lists nil
   "An alist with cells (MAILING-LIST-ID . SHORTNAME).
-These are used in addition to the built-in list `mu4e~mailing-lists'."
+These are used in addition to the built-in list `mu4e-mailing-lists'."
   :group 'mu4e-headers
   :type '(repeat (cons string string)))
 
