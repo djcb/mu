@@ -885,7 +885,7 @@ after the end of the search results."
           (define-key map "V" 'mu4e-headers-toggle-skip-duplicates)
 
           (define-key map "q" 'mu4e~headers-quit-buffer)
-          (define-key map "g" 'mu4e-headers-rerun-search) ;; for compatibility
+          (define-key map "g" 'mu4e-search-rerun) ;; for compatibility
 
           (define-key map "%" 'mu4e-headers-mark-pattern)
           (define-key map "t" 'mu4e-headers-mark-subthread)
@@ -1020,7 +1020,7 @@ after the end of the search results."
                                               mu4e-headers-search-bookmark))
             (define-key menumap [jump]  '("Jump to maildir" .
                                           mu4e~headers-jump-to-maildir))
-            (define-key menumap [refresh]  '("Refresh" . mu4e-headers-rerun-search))
+            (define-key menumap [refresh]  '("Refresh" . mu4e-search-rerun))
             (define-key menumap [search]  '("Search" . mu4e-headers-search))
 
             (define-key menumap [sepa4] '("--"))
