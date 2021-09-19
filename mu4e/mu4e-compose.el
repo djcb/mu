@@ -1,4 +1,4 @@
-;;; mu4e-compose.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
+;;; mu4e-compose.el -- part of mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
 
@@ -104,6 +104,7 @@ Messages are captured with `mu4e-action-capture-message'."
 ;;; Misc
 
 ;; 'fcc' refers to saving a copy of a sent message to a certain folder. that's
+
 ;; what these 'Sent mail' folders are for!
 ;;
 ;; We let message mode take care of this by adding a field
@@ -149,11 +150,13 @@ If needed, set the Fcc header, and register the handler function."
             (let ((maildir mdir)
                   (old-handler message-fcc-handler-function))
               (lambda (file)
-                (setq message-fcc-handler-function old-handler) ;; reset the fcc handler
+                (setq message-fcc-handler-function old-handler)
+		;; reset the fcc handler
                 (let ((mdir-path (concat (mu4e-root-maildir) maildir)))
-                  ;; Create the full maildir structure for the sent folder if it doesn't exist.
-                  ;; `mu4e--server-mkdir` runs asynchronously but no matter whether it runs before or after
-                  ;; `write-file`, the sent maildir ends up in the correct state.
+                  ;; Create the full maildir structure for the sent folder if it
+                  ;; doesn't exist. `mu4e--server-mkdir` runs asynchronously but
+                  ;; no matter whether it runs before or after `write-file`, the
+                  ;; sent maildir ends up in the correct state.
                   (unless (file-exists-p mdir-path)
                     (mu4e--server-mkdir mdir-path)))
                 (write-file file) ;; writing maildirs files is easy
@@ -453,7 +456,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                     (forward     "*forward*")
                     (otherwise   "*draft*")))))
     (rename-buffer (generate-new-buffer-name
-                    (truncate-string-to-width str mu4e~compose-buffer-max-name-length)
+                    (truncate-string-to-width
+		     str mu4e~compose-buffer-max-name-length)
                     (buffer-name)))))
 
 (defun mu4e-compose-crypto-message (parent compose-type)
@@ -480,7 +484,8 @@ See `mu4e-compose-crypto-policy' for more details."
                    (memq 'encrypt-plain-replies mu4e-compose-crypto-policy))
               ;; encrypted replies
               (and (eq compose-type 'reply) encrypted-p
-                   (memq 'encrypt-encrypted-replies mu4e-compose-crypto-policy))))
+                   (memq 'encrypt-encrypted-replies
+			 mu4e-compose-crypto-policy))))
          (sign
           (or (memq 'sign-all-messages mu4e-compose-crypto-policy)
               ;; new messages
@@ -542,8 +547,7 @@ are optional."
   (mu4e--context-autoswitch mu4e-compose-parent-message
                             mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
-
-  ;; this opens (or re-opens) a messages with all the basic headers set.
+  ;; this opens (or re-opens) a message with all the basic headers set.
   (let ((winconf (current-window-configuration)))
     (condition-case nil
         (mu4e-draft-open compose-type original-msg switch-function)
@@ -647,10 +651,13 @@ when the buffer is in `mu4e-compose-mode':
         (unless (and name (not force) (eq old-context name))
           (when (or (not has-file)
                     (not (buffer-modified-p))
-                    (y-or-n-p "Draft must be saved before switching context. Save?"))
-            (unless (and (not force) (eq old-context (mu4e-context-switch nil name)))
+                    (y-or-n-p
+		     "Draft must be saved before switching context. Save?"))
+            (unless (and (not force)
+			 (eq old-context (mu4e-context-switch nil name)))
               ;; Change From field to user-mail-address
-              (message-replace-header "From" (or (mu4e~draft-from-construct) ""))
+              (message-replace-header "From"
+				      (or (mu4e~draft-from-construct) ""))
               ;; Move message to mu4e-draft-folder
               (if has-file
                   (progn (save-buffer)
@@ -659,9 +666,13 @@ when the buffer is in `mu4e-compose-mode':
                            ;; Remove the <>
                            (when (and msg-id (string-match "<\\(.*\\)>" msg-id))
                              (save-window-excursion
-                               (mu4e--server-move (match-string 1 msg-id) mu4e-drafts-folder nil t)
-                               (kill-buffer buf))))) ;; Kill previous buffer which points to wrong file
-                ;; No file, just change the buffer file name
+                               (mu4e--server-move (match-string 1 msg-id)
+						  mu4e-drafts-folder nil t)
+                               (kill-buffer buf))))) ;; Kill previous buffer
+						     ;; which points to wrong
+						     ;; file No file, just
+						     ;; change the buffer file
+						     ;; name
                 (setq buffer-file-name
                       (format "%s/%s/cur/%s"
                               (mu4e-root-maildir) (mu4e-get-drafts-folder)
@@ -815,7 +826,8 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers _continue
-                                    switch-function yank-action _send-actions _return-action)
+                                    switch-function yank-action
+				    _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 Start composing a mail message to send.
@@ -851,8 +863,8 @@ buffer buried."
    (unless (mu4e-running-p)
      (mu4e))
 
-  ;; create a new draft message 'resetting' (as below) is not actually needed in this case, but
-  ;; let's prepare for the re-edit case as well
+  ;; create a new draft message 'resetting' (as below) is not actually needed in
+  ;; this case, but let's prepare for the re-edit case as well
   (mu4e~compose-handler 'new nil nil switch-function)
 
   (when (message-goto-to) ;; reset to-address, if needed
