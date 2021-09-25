@@ -1269,16 +1269,16 @@ of `mu4e-split-view', and return a window for the message view."
       (kill-buffer (mu4e-get-view-buffer)))
     ;; get a new view window
     (setq mu4e~headers-view-win
-          (let* ((new-win-func
-                  (cond
-                   ((eq mu4e-split-view 'horizontal) ;; split horizontally
-                    '(split-window-vertically mu4e-headers-visible-lines))
-                   ((eq mu4e-split-view 'vertical) ;; split vertically
-                    '(split-window-horizontally mu4e-headers-visible-columns)))))
-            (cond ((with-demoted-errors "Unable to split window: %S"
-                     (eval new-win-func)))
-                  (t ;; no splitting; just use the currently selected one
-                   (selected-window)))))))
+          (with-demoted-errors "Unable to split window: %S"
+            (cond
+             ((eq mu4e-split-view 'horizontal) ;; split horizontally
+              (split-window-vertically mu4e-headers-visible-lines))
+             ((eq mu4e-split-view 'vertical) ;; split vertically
+              (split-window-horizontally mu4e-headers-visible-columns))
+             ((functionp mu4e-split-view)
+              (funcall mu4e-split-view))
+             (t ;; no splitting; just use the currently selected one
+              (selected-window)))))))
 
 ;;; Search-based marking
 

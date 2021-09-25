@@ -91,8 +91,10 @@ A symbol which is either:
  * `vertical':      split vertically (headers on the left).
  * `single-window': view and headers in one window (mu4e will try not to
         touch your window layout), main view in minibuffer
+ * a function:      the function is responsible to return some window for
+        the view.
  * anything else:   don't split (show either headers or messages,
-        not both)
+        not both).
 Also see `mu4e-headers-visible-lines'
 and `mu4e-headers-visible-columns'."
   :type '(choice (const :tag "Split horizontally" horizontal)
@@ -515,4 +517,3 @@ Or go to the top level if there is none."
 
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here
-
