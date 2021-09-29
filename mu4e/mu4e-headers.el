@@ -1246,9 +1246,9 @@ docid is not found."
                        'face 'mu4e-modeline-face)
                       " "
                       (if (and mu4e-display-update-status-in-modeline
-                               (buffer-live-p mu4e~update-buffer)
+                               (buffer-live-p mu4e--update-buffer)
                                (process-live-p (get-buffer-process
-                                                mu4e~update-buffer)))
+                                                mu4e--update-buffer)))
                           (propertize " (updating)" 'face 'mu4e-modeline-face)
                         ""))))))
 
