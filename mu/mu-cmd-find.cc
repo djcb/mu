@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -47,6 +47,7 @@ struct OutputInfo{
         Xapian::docid       docid{};
         bool                header{};
         bool                footer{};
+        bool                last{};
         Option<QueryMatch&> match_info;
 };
 
@@ -522,8 +523,8 @@ output_json (MuMsg *msg, const OutputInfo& info, const MuConfig *opts, GError **
                 return true;
         }
 
-        g_print("%s\n", msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY)
-                .to_sexp_string().c_str());
+        g_print("%s%s\n", msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY)
+                .to_json_string().c_str(), info.last ? "" : ",");
 
         return true;
 }
@@ -598,8 +599,10 @@ output_query_results (const QueryResults& qres, const MuConfig *opts, GError **e
         gboolean rv{true};
         output_func (NULL, FirstOutput, opts, NULL);
 
+	size_t n{0};
         for (auto&& item: qres) {
 
+		n++;
                 auto msg{item.floating_msg()};
                 if (!msg)
                         continue;
@@ -607,7 +610,9 @@ output_query_results (const QueryResults& qres, const MuConfig *opts, GError **e
                 if (opts->after != 0 && mu_msg_get_timestamp(msg) < opts->after)
                         continue;
 
-                rv = output_func (msg, {item.doc_id(), false, false, item.query_match()},
+                rv = output_func (msg, {item.doc_id(), false, false,
+				n == qres.size(), /* last? */
+				item.query_match()},
                                   opts, err);
                 if (!rv)
                         break;
