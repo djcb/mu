@@ -40,7 +40,7 @@
 (declare-function mu4e-message-at-point             "mu4e-message")
 (declare-function mu4e-view-message-with-message-id "mu4e-view")
 (declare-function mu4e-headers-search               "mu4e-headers")
-(declare-function mu4e-error                        "mu4e-utils")
+(declare-function mu4e-error                        "mu4e-helpers")
 (declare-function mu4e-message                      "mu4e-message")
 (declare-function mu4e-compose-mode                 "mu4e-compose")
 

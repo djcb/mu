@@ -31,21 +31,21 @@
 (require 'flow-fill)
 (require 'shr)
 
-(declare-function mu4e-error "mu4e-utils")
-(declare-function mu4e-warn  "mu4e-utils")
-(declare-function mu4e-personal-address-p "mu4e-utils")
-(declare-function mu4e-make-temp-file  "mu4e-utils")
+(declare-function mu4e-error "mu4e-helpers")
+(declare-function mu4e-warn  "mu4e-helpers")
+(declare-function mu4e-personal-address-p "mu4e-contacts")
+(declare-function mu4e-make-temp-file  "mu4e-helpers")
 
 (defvar mu4e~view-message)
 (defvar shr-inhibit-images)
- 
+
 (make-obsolete-variable 'mu4e-html2text-command "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-view-prefer-html "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-view-html-plaintext-ratio-heuristic
 			"No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-message-body-rewrite-functions
 			"No longer in use" "1.7.0")
- 
+
 ;;; Message fields
 
 (defsubst mu4e-message-field-raw (msg field)
@@ -135,7 +135,7 @@ This is equivalent to:
   "Get the body in text form for message MSG."
   "" ;; not implemented for Gnus mode.
 )
-  
+
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Does MSG's contact-field CFIELD match rx?
