@@ -111,15 +111,16 @@ buffer list.")
   "Name of the buffer for message headers.")
 (defconst mu4e-embedded-buffer-name " *mu4e-embedded*"
   "Name for the embedded message view buffer.")
+(defconst mu4e-view-buffer-name "*Article*"
+  "Name of the view buffer.")
 
-(defun mu4e-get-headers-buffer()
-  "Get the name of the headers buffer."
+(defun mu4e-get-headers-buffer ()
+  "Get the buffer object from `mu4e-headers-buffer-name'."
   (get-buffer mu4e-headers-buffer-name))
 
-(defun mu4e-get-view-buffer()
-  "Get the name of the view buffer."
-  ;; avoid a 'require.
-  (when (boundp 'gnus-article-buffer) gnus-article-buffer))
+(defun mu4e-get-view-buffer ()
+  "Get the buffer object from `mu4e-view-buffer-name'."
+  (get-buffer mu4e-view-buffer-name))
 
 (defun mu4e-select-other-view ()
   "Switch between headers view and message view."
