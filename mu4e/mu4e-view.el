@@ -310,7 +310,7 @@ selection."
   (mu4e~view-in-headers-context (mu4e-search-narrow)))
 
 (defun mu4e-view-search-edit ()
-  "Run `mu4e-headers-search-edit' in the headers buffer."
+  "Run `mu4e-search-edit' in the headers buffer."
   (interactive)
   (mu4e~view-in-headers-context (mu4e-search-edit)))
 
