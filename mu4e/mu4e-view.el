@@ -960,8 +960,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
   :type 'hook
   :group 'mu4e-view)
 
-(defvar mu4e-view-mode-abbrev-table nil)
-
 ;;  "Define the major-mode for the mu4e-view."
 (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.

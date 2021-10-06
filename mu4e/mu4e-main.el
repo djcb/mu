@@ -111,10 +111,8 @@ no unread messages.")
     (define-key map "N" 'mu4e-news)
     (define-key map "H" 'mu4e-display-manual)
     map)
-
   "Keymap for the *mu4e-main* buffer.")
 
-(defvar mu4e-main-mode-abbrev-table nil)
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."

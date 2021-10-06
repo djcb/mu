@@ -1083,9 +1083,6 @@ after the end of the search results."
             'field field) " ")))
       mu4e-headers-fields))))
 
-
-(defvar mu4e-headers-mode-abbrev-table nil)
-
 (defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there is
