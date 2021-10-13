@@ -164,7 +164,7 @@ show the message with MSGID."
   (interactive)
   (mu4e-search mu4e--search-last-query nil t))
 
-(define-obsolete-variable-alias 'mu4e-headers-search-edit
+(define-obsolete-function-alias 'mu4e-headers-search-edit
   'mu4e-search-edit "1.7.0")
 
 (defun mu4e-search-bookmark (&optional expr edit)
