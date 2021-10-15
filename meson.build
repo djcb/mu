@@ -78,6 +78,11 @@ config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
 config_h_data.set_quoted('VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_NAME', meson.project_name())
 
+add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
+add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
+config_h_dep=declare_dependency(
+  include_directories: include_directories(['.']))
+
 functions=[
   'setsid'
 ]
@@ -102,6 +107,14 @@ gio_dep        = dependency('gio-2.0', version: '>= 2.50')
 gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
 xapian_dep     = dependency('xapian-core', version:'>= 1.4')
 thread_dep     = dependency('threads')
+
+# soft dependencies
+guile_dep = dependency('guile-3.0', required: get_option('guile'))
+
+if get_option('toys').enabled()
+  gtk_dep = dependency('gtk+-3.0')
+  webkit_dep = dependency('webkit2gtk-4.0')
+endif
 
 awk=find_program(['gawk', 'awk'])
 
@@ -128,29 +141,6 @@ if get_option('readline').enabled()
   config_h_data.set('HAVE_READLINE_HISTORY', 1)
   config_h_data.set('HAVE_READLINE_HISTORY_H', 1)
 endif
-
-# guile
-guile_deps=[]
-if get_option('guile').enabled()
-  guile_dep = dependency('guile-3.0')
-endif
-
-# toys.
-gtk_dep=[]
-webkit_dep=[]
-if get_option('toys').enabled()
-  gtk_dep = dependency('gtk+-3.0')
-  webkit_dep = dependency('webkit2gtk-4.0')
-endif
-
-
-################################################################################
-# write-out config.h.
-configure_file(output : 'config.h', configuration : config_h_data)
-add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
-add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
-config_h_dep=declare_dependency(
-  include_directories: include_directories(['.']))
 
 
 ################################################################################
@@ -184,7 +174,9 @@ if emacs.found()
    subdir('mu4e')
 endif
 
-if get_option('guile').enabled()
+if not get_option('guile').disabled() and guile_dep.found()
+  config_h_data.set('BUILD_GUILE', 1)
+  config_h_data.set('GUILE_BINARY', '"guile"')
   subdir('guile')
 endif
 
@@ -192,3 +184,8 @@ if get_option('toys').enabled()
   subdir('toys/mug')
 endif
 ################################################################################
+
+################################################################################
+# write-out config.h
+configure_file(output : 'config.h', configuration : config_h_data)
+
