@@ -186,8 +186,10 @@ struct Store::Private {
                 dirtiness_      = 0;
                 if (mdata_.in_memory)
                         return; // not supported in the in-memory backend.
-                writable_db().commit_transaction();
+		if (in_transaction_)
+			writable_db().commit_transaction();
                 writable_db().begin_transaction();
+		in_transaction_ = true;
         } MU_XAPIAN_CATCH_BLOCK;
 
         void add_synonyms () {
