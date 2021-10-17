@@ -347,16 +347,17 @@ one. Code borrowed from `message-shorten-1'."
 
 
 (defun mu4e~fontify-signature ()
-  "Give the message signatures a distinctive color. This is used in
-the view and compose modes and will color each signature in digest messages adhering to RFC 1153."
+  "Give the message signatures a distinctive color. This is used
+in the view and compose modes and will color each signature in
+digest messages adhering to RFC 1153."
   (let ((inhibit-read-only t))
     (save-excursion
       ;; give the footer a different color...
       (goto-char (point-min))
       (while (re-search-forward "^-- *$" nil t)
         (let ((p (point))
-              (end (or
-                    (re-search-forward "\\(^-\\{30\\}.*$\\)" nil t) ;; 30 by RFC1153
+              (end (or ;; 30 by RFC1153
+                    (re-search-forward "\\(^-\\{30\\}.*$\\)" nil t)
                     (point-max))))
           (add-text-properties p end '(face mu4e-footer-face)))))))
 

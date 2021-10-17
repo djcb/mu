@@ -1,4 +1,4 @@
-;;; mu4e-message.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-message.el -- part of mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2020 Dirk-Jan C. Binnema
 
@@ -97,7 +97,8 @@ Like `mu4e-message-field-nil', but will sanitize nil values:
 - all string field except body-txt/body-html: nil -> \"\"
 - numeric fields + dates                    : nil -> 0
 - all others                                : return the value
-Thus, function will return nil for empty lists, non-existing body-txt or body-html."
+Thus, function will return nil for empty lists, non-existing body-txt
+or body-html."
   (let ((val (mu4e-message-field-raw msg field)))
     (cond
      (val
