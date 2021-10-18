@@ -30,7 +30,7 @@ jobs:
           brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian
 
       - name: configure
-        run: ./autogen.sh --disable-guile
+        run: ./autogen.sh -Dguile=disabled
 
       - name: build
         run: make
