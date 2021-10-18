@@ -102,6 +102,15 @@ print_scripts (GSList *scripts, gboolean color,
 	return TRUE;
 }
 
+static char*
+get_userpath (const char *muhome)
+{
+	if (muhome)
+		return g_build_path (G_DIR_SEPARATOR_S, muhome, "scripts", NULL);
+	else
+		return g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir(),
+				     "mu", "scripts", NULL);
+}
 
 static GSList*
 get_script_info_list (const char *muhome, GError **err)
@@ -117,8 +126,7 @@ get_script_info_list (const char *muhome, GError **err)
 	if (err && *err)
 		return NULL;
 
-	userpath = g_strdup_printf ("%s%c%s",
-				    muhome, G_DIR_SEPARATOR, "scripts");
+	userpath = get_userpath(muhome);
 
 	/* is there are userdir for scripts? */
 	if (!mu_util_check_dir (userpath, TRUE, FALSE)) {
