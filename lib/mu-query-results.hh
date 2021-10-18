@@ -280,12 +280,14 @@ class QueryResultsIterator
          *
          * @return the value
          */
-        Option<std::string> opt_string (MuMsgFieldId id) const noexcept
-        try {
-                auto &&val{document().get_value (id)};
-                return val.empty() ? Nothing : Some (val);
-        }
-        MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
+	Option<std::string> opt_string (MuMsgFieldId id) const noexcept {
+		std::string empty;
+		std::string val = xapian_try([&]{ return document().get_value (id);}, empty);
+		if (val.empty())
+			return Nothing;
+		else
+			return Some(std::move(val));
+	}
 
         /**
          * Get the Query match info for this message.
@@ -306,27 +308,27 @@ class QueryResultsIterator
         /**
          * get the corresponding MuMsg for this iter; this instance is owned by
          * @this, and becomes invalid when iterating to the next, or @this is
-k         * destroyed.; it's a 'floating' reference.
+	 * destroyed.; it's a 'floating' reference.
          *
          * @return a MuMsg*  or NUL in case of error
          */
-        MuMsg *floating_msg() G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-        try {
-                auto docp{reinterpret_cast<XapianDocument *> (new Xapian::Document (document()))};
-                GError *err{};
-                g_clear_pointer (&msg_, mu_msg_unref);
-                if (!(msg_ = mu_msg_new_from_doc (docp, &err))) {
-                        delete docp;
-                        g_warning ("failed to crate message for %s: %s",
-                                   path().value_or ("<none>").c_str(),
-                                   err ? err->message : "somethng went wrong");
-                        g_clear_error (&err);
-                }
-
-                return msg_;
-        }
-        MU_XAPIAN_CATCH_BLOCK_RETURN (NULL);
-
+        MuMsg *floating_msg() G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT {
+		return xapian_try([&]{
+			auto docp{reinterpret_cast<XapianDocument *> (
+					new Xapian::Document (document()))};
+			GError *err{};
+			g_clear_pointer (&msg_, mu_msg_unref);
+			if (!(msg_ = mu_msg_new_from_doc (docp, &err))) {
+				delete docp;
+				g_warning ("failed to crate message for %s: %s",
+					   path().value_or ("<none>").c_str(),
+					   err ? err->message : "somethng went wrong");
+				g_clear_error (&err);
+			}
+			return msg_;
+		}, (MuMsg*)NULL);
+	}
+	
         private:
         Xapian::MSetIterator mset_it_;
         QueryMatches &       query_matches_;

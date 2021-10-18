@@ -28,6 +28,8 @@
 #include <glib.h>
 #include <ostream>
 #include <iostream>
+#include <type_traits>
+#include <xapian.h>
 
 namespace Mu {
 
@@ -62,8 +64,6 @@ std::string utf8_clean (const std::string& dirty);
  * @return the string without control characters
  */
 std::string remove_ctrl (const std::string& str);
-
-
 
 
 /**
@@ -245,78 +245,31 @@ private:
         const bool color_;
 };
 
-/**
- *
- * don't repeat these catch blocks everywhere...
- *
- */
+template <typename Func> void xapian_try(Func&& func) noexcept try {
+		func();
+} catch (const Xapian::Error &xerr) {
+	g_critical ("%s: xapian error '%s'",
+		    __func__, xerr.get_msg().c_str());
+} catch (const std::runtime_error& re) {
+	g_critical ("%s: error: %s", __func__, re.what());
+} catch (...) {
+	g_critical ("%s: caught exception", __func__);
+}
 
-#define MU_XAPIAN_CATCH_BLOCK						\
-        catch (const Xapian::Error &xerr) {				\
-                g_critical ("%s: xapian error '%s'",			\
-                            __func__, xerr.get_msg().c_str());		\
-        } catch (const std::runtime_error& re) {			\
-                g_critical ("%s: error: %s", __func__, re.what());	\
-        } catch (...) {							\
-                g_critical ("%s: caught exception", __func__);		\
-        }
-
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR(GE,E)					\
-        catch (const Xapian::DatabaseLockError &xerr) {				\
-                mu_util_g_set_error ((GE),					\
-                                     MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK,	\
-                                     "%s: xapian error '%s'",			\
-                                     __func__, xerr.get_msg().c_str());		\
-        } catch (const Xapian::DatabaseError &xerr) {				\
-                 mu_util_g_set_error ((GE),MU_ERROR_XAPIAN,			\
-                                       "%s: xapian error '%s'",			\
-                                       __func__, xerr.get_msg().c_str());	\
-        } catch (const Xapian::Error &xerr) {					\
-                mu_util_g_set_error ((GE),(E),					\
-                                         "%s: xapian error '%s'",		\
-                                         __func__, xerr.get_msg().c_str());	\
-        } catch (const std::runtime_error& ex) {				\
-                mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
-                                     "%s: error: %s", __func__, ex.what());	\
-                                                                                \
-        } catch (...) {								\
-                mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
-                                     "%s: caught exception", __func__);		\
-        }
-
-
-#define MU_XAPIAN_CATCH_BLOCK_RETURN(R)						\
-        catch (const Xapian::Error &xerr) {					\
-                g_critical ("%s: xapian error '%s'",				\
-                            __func__, xerr.get_msg().c_str());			\
-                return (R);							\
-        } catch (const std::runtime_error& ex) {				\
-                g_critical("%s: error: %s", __func__, ex.what());               \
-                return (R);							\
-        } catch (...) {								\
-                g_critical ("%s: caught exception", __func__);			\
-                return (R);							\
-        }
-
-#define MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(GE,E,R)				\
-        catch (const Xapian::Error &xerr) {					\
-                mu_util_g_set_error ((GE),(E),					\
-                                     "%s: xapian error '%s'",			\
-                                     __func__, xerr.get_msg().c_str());		\
-                return (R);							\
-        } catch (const std::runtime_error& ex) {                                \
-                mu_util_g_set_error ((GE),(MU_ERROR_INTERNAL),			\
-                                     "%s: error: %s", __func__, ex.what());	\
-                return (R);							\
-        } catch (...) {								\
-                if ((GE)&&!(*(GE)))						\
-                        mu_util_g_set_error ((GE),				\
-                                             (MU_ERROR_INTERNAL),		\
-                                             "%s: caught exception", __func__);	\
-                return (R);							\
-          }
-
-
+template <typename Func, typename Default=std::invoke_result<Func>>
+auto xapian_try(Func&& func, Default&& def) noexcept -> std::decay_t<decltype(func())>  try {
+		return func();
+} catch (const Xapian::Error &xerr) {
+	g_critical ("%s: xapian error '%s'",
+		    __func__, xerr.get_msg().c_str());
+	return static_cast<Default>(def);
+} catch (const std::runtime_error& re) {
+	g_critical ("%s: error: %s", __func__, re.what());
+	return static_cast<Default>(def);
+} catch (...) {
+	g_critical ("%s: caught exception", __func__);
+	return static_cast<Default>(def);
+}
 
 
 /// Allow using enum structs as bitflags

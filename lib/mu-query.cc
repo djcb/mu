@@ -174,10 +174,14 @@ Query::Private::run_singular (const std::string& expr, MuMsgFieldId sortfieldid,
 }
 
 static Option<std::string>
-opt_string(const Xapian::Document& doc, MuMsgFieldId id) noexcept try {
-        auto&& val{doc.get_value(id)};
-        return val.empty() ? Nothing : Some(val);
-} MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
+opt_string (const Xapian::Document &doc, MuMsgFieldId id) noexcept
+{
+	std::string val = xapian_try([&]{ return doc.get_value (id);}, std::string{""});
+	if (val.empty())
+		return Nothing;
+	else
+		return Some(std::move(val));
+}
 
 Option<QueryResults>
 Query::Private::run_related (const std::string& expr, MuMsgFieldId sortfieldid,
@@ -259,15 +263,15 @@ Query::run (const std::string& expr, MuMsgFieldId sortfieldid,
 
 
 size_t
-Query::count (const std::string& expr) const try
+Query::count (const std::string& expr) const
 {
-        const auto enq{priv_->make_enquire(expr, MU_MSG_FIELD_ID_NONE, {})};
-        auto mset{enq.get_mset(0, priv_->store_.size())};
-        mset.fetch();
-
-        return mset.size();
-
-}MU_XAPIAN_CATCH_BLOCK_RETURN (0);
+	return xapian_try([&] {
+		const auto enq{priv_->make_enquire(expr, MU_MSG_FIELD_ID_NONE, {})};
+		auto mset{enq.get_mset(0, priv_->store_.size())};
+		mset.fetch();
+		return mset.size();
+	}, 0);
+}
 
 
 

@@ -98,12 +98,14 @@ struct MatchDecider : public Xapian::MatchDecider {
         DeciderInfo &    decider_info_;
 
         private:
-        Option<std::string> opt_string (const Xapian::Document &doc, MuMsgFieldId id) const noexcept
-        try {
-                auto &&val{doc.get_value (id)};
-                return val.empty() ? Nothing : Some (val);
-        }
-        MU_XAPIAN_CATCH_BLOCK_RETURN (Nothing);
+        Option<std::string> opt_string (const Xapian::Document &doc, MuMsgFieldId id)
+		const noexcept {
+		std::string val = xapian_try([&]{ return doc.get_value (id);}, std::string{""});
+		if (val.empty())
+			return Nothing;
+		else
+			return Some(std::move(val));
+	}
 };
 
 struct MatchDeciderLeader final : public MatchDecider {

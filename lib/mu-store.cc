@@ -115,7 +115,7 @@ struct Store::Private {
                 contacts_{db().get_metadata(ContactsKey), mdata_.personal_addresses} {
 
                 if (!readonly)
-                        writable_db().begin_transaction();
+			begin_transaction();
         }
 
         Private (const std::string& path, const std::string& root_maildir,
@@ -125,7 +125,7 @@ struct Store::Private {
                 mdata_{init_metadata(conf, path, root_maildir, personal_addresses)},
                 contacts_{"", mdata_.personal_addresses} {
 
-                writable_db().begin_transaction();
+                begin_transaction();
         }
 
         Private (const std::string& root_maildir,
@@ -136,25 +136,32 @@ struct Store::Private {
                 contacts_{"", mdata_.personal_addresses} {
         }
 
-        ~Private() try {
+        ~Private() {
                 g_debug("closing store @ %s", mdata_.database_path.c_str());
                 if (!read_only_) {
-                        writable_db().set_metadata (ContactsKey, contacts_.serialize());
-                        commit();
+			xapian_try([&]{
+				writable_db().set_metadata (ContactsKey, contacts_.serialize());
+				commit();
+			});
                 }
-        } MU_XAPIAN_CATCH_BLOCK;
+        }
 
-        std::unique_ptr<Xapian::Database> make_xapian_db (const std::string db_path, XapianOpts opts) try {
+        std::unique_ptr<Xapian::Database> make_xapian_db (
+		const std::string db_path, XapianOpts opts) try {
 
+		in_transaction_ = false;
+		
                 switch (opts) {
                 case XapianOpts::ReadOnly:
                         return std::make_unique<Xapian::Database>(db_path);
                 case XapianOpts::Open:
                         return std::make_unique<Xapian::WritableDatabase>(db_path, Xapian::DB_OPEN);
                 case XapianOpts::CreateOverwrite:
-                        return std::make_unique<Xapian::WritableDatabase>(db_path, Xapian::DB_CREATE_OR_OVERWRITE);
+                        return std::make_unique<Xapian::WritableDatabase>(
+				db_path, Xapian::DB_CREATE_OR_OVERWRITE);
                 case XapianOpts::InMemory:
-                        return std::make_unique<Xapian::WritableDatabase>(std::string{}, Xapian::DB_BACKEND_INMEMORY);
+                        return std::make_unique<Xapian::WritableDatabase>(
+				std::string{}, Xapian::DB_BACKEND_INMEMORY);
                 default:
                         throw std::logic_error ("invalid xapian options");
                 }
@@ -176,22 +183,32 @@ struct Store::Private {
                 return dynamic_cast<Xapian::WritableDatabase&>(*db_.get());
         }
 
-        void dirty () try {
+        void dirty () {
                 if (++dirtiness_ > mdata_.batch_size)
-                        commit();
-        } MU_XAPIAN_CATCH_BLOCK;
+                        xapian_try([this]{commit();});
+        }
 
-        void commit () try {
+	void begin_transaction() noexcept {
+		g_return_if_fail (!in_transaction_);
+		xapian_try([this]{
+			writable_db().begin_transaction();
+			in_transaction_ = true;
+		});
+	}
+	
+        void commit () noexcept {
                 g_debug("committing %zu modification(s)", dirtiness_);
                 dirtiness_      = 0;
                 if (mdata_.in_memory)
                         return; // not supported in the in-memory backend.
-		if (in_transaction_)
-			writable_db().commit_transaction();
-                writable_db().begin_transaction();
-		in_transaction_ = true;
-        } MU_XAPIAN_CATCH_BLOCK;
-
+		xapian_try([this]{
+			if (in_transaction_)
+				writable_db().commit_transaction();
+			in_transaction_ = false;
+			begin_transaction();
+		});
+        }
+	
         void add_synonyms () {
                 mu_flags_foreach ((MuFlagsForeachFunc)add_synonym_for_flag,
                                   &writable_db());
@@ -250,7 +267,7 @@ struct Store::Private {
                 return make_metadata(path);
         }
 
-        Xapian::docid add_or_update_msg (Xapian::docid docid, MuMsg *msg, GError **err);
+        Xapian::docid add_or_update_msg (Xapian::docid docid, MuMsg *msg);
         Xapian::Document new_doc_from_message (MuMsg *msg);
 
         const bool               read_only_{};
@@ -404,11 +421,11 @@ Store::add_message (const std::string& path)
                 throw Error{Error::Code::Message, "failed to create message: %s",
                                 gerr ? gerr->message : "something went wrong"};
 
-        const auto docid{priv_->add_or_update_msg (0, msg, &gerr)};
+        const auto docid{priv_->add_or_update_msg (0, msg)};
         mu_msg_unref (msg);
-        if (G_UNLIKELY(docid == InvalidId))
-                throw Error{Error::Code::Message, "failed to add message: %s",
-                                gerr ? gerr->message : "something went wrong"};
+
+	if (G_UNLIKELY(docid == InvalidId))
+                throw Error{Error::Code::Message, "failed to add message"};
 
         g_debug ("added message @ %s; docid = %u", path.c_str(), docid);
         priv_->dirty();
@@ -419,14 +436,12 @@ Store::add_message (const std::string& path)
 bool
 Store::update_message (MuMsg *msg, unsigned docid)
 {
-        GError *gerr{};
-        const auto docid2{priv_->add_or_update_msg (docid, msg, &gerr)};
+        const auto docid2{priv_->add_or_update_msg (docid, msg)};
 
         if (G_UNLIKELY(docid != docid2))
-            throw Error{Error::Code::Internal, "failed to update message",
-                    gerr ? gerr->message : "something went wrong"};
+            throw Error{Error::Code::Internal, "failed to update message"};
 
-        g_debug ("updated message @ %s; docid = %u",
+	g_debug ("updated message @ %s; docid = %u",
                  mu_msg_get_path(msg), docid);
         priv_->dirty();
 
@@ -437,33 +452,29 @@ Store::update_message (MuMsg *msg, unsigned docid)
 bool
 Store::remove_message (const std::string& path)
 {
-        LOCKED;
-
-        try {
+	return xapian_try([&]{
+		LOCKED;
                 const std::string term{(get_uid_term(path.c_str()))};
                 priv_->writable_db().delete_document(term);
 
-        } MU_XAPIAN_CATCH_BLOCK_RETURN (false);
+		g_debug ("deleted message @ %s from store", path.c_str());
+		priv_->dirty();
 
-        g_debug ("deleted message @ %s from store", path.c_str());
-        priv_->dirty();
-
-        return true;
+		return true;
+	}, false);
 }
 
 
 void
 Store::remove_messages (const std::vector<Store::Id>& ids)
 {
-        LOCKED;
-
-        try {
+	xapian_try([&]{
+		LOCKED;
                 for (auto&& id: ids) {
                         priv_->writable_db().delete_document(id);
                         priv_->dirty();
                 }
-
-        } MU_XAPIAN_CATCH_BLOCK;
+        });
 }
 
 time_t
@@ -494,9 +505,8 @@ Store::set_dirstamp (const std::string& path, time_t tstamp)
 MuMsg*
 Store::find_message (unsigned docid) const
 {
-        LOCKED;
-
-        try {
+	return xapian_try([&]{
+		LOCKED;
                 Xapian::Document *doc{new Xapian::Document{priv_->db().get_document (docid)}};
                 GError *gerr{};
                 auto msg{mu_msg_new_from_doc (reinterpret_cast<XapianDocument*>(doc), &gerr)};
@@ -505,48 +515,40 @@ Store::find_message (unsigned docid) const
                                    "something went wrong");
                         g_clear_error(&gerr);
                 }
-
                 return msg;
-
-        } MU_XAPIAN_CATCH_BLOCK_RETURN (nullptr);
+        }, (MuMsg*)nullptr);
 }
 
 
 bool
 Store::contains_message (const std::string& path) const
 {
-        LOCKED;
-
-        try {
+	return xapian_try([&]{
+		LOCKED;		
                 const std::string term (get_uid_term(path.c_str()));
                 return priv_->db().term_exists (term);
-
-        } MU_XAPIAN_CATCH_BLOCK_RETURN(false);
+        }, false);
 }
 
 
 std::size_t
-Store::for_each_message_path (Store::ForEachMessageFunc func) const
+Store::for_each_message_path (Store::ForEachMessageFunc msg_func) const
 {
-        LOCKED;
-
-        size_t n{};
-
-        try {
-                Xapian::Enquire enq{priv_->db()};
-
+	size_t n{};
+	
+	xapian_try([&]{
+		LOCKED;
+		Xapian::Enquire enq{priv_->db()};
                 enq.set_query  (Xapian::Query::MatchAll);
                 enq.set_cutoff (0,0);
 
                 Xapian::MSet matches(enq.get_mset (0, priv_->db().get_doccount()));
-
                 for (auto&& it = matches.begin(); it != matches.end(); ++it, ++n)
-                        if (!func (*it, it.get_document().get_value(MU_MSG_FIELD_ID_PATH)))
+                        if (!msg_func (*it, it.get_document().get_value(MU_MSG_FIELD_ID_PATH)))
                                 break;
+        });
 
-        } MU_XAPIAN_CATCH_BLOCK;
-
-        return n;
+	return n;
 }
 
 static MuMsgFieldId
@@ -570,36 +572,31 @@ field_id (const std::string& field)
 std::size_t
 Store::for_each_term (const std::string& field, Store::ForEachTermFunc func) const
 {
-        LOCKED;
-
         size_t n{};
-
-        try {
+	
+	xapian_try([&]{
+		LOCKED;
                 const auto id = field_id (field.c_str());
                 if (id == MU_MSG_FIELD_ID_NONE)
-                        return {};
-
+			return;
+		
                 char pfx[] = {  mu_msg_field_xapian_prefix(id), '\0' };
-
                 std::vector<std::string> terms;
                 for (auto it = priv_->db().allterms_begin(pfx);
                      it != priv_->db().allterms_end(pfx); ++it) {
                         if (!func(*it))
                                 break;
                 }
-
-        } MU_XAPIAN_CATCH_BLOCK;
+        });
 
         return n;
 }
 
 void
-Store::commit () try
+Store::commit ()
 {
-        LOCKED;
-        priv_->commit();
-
-} MU_XAPIAN_CATCH_BLOCK;
+	xapian_try([&]{ LOCKED; priv_->commit(); });
+} 
 
 static void
 add_terms_values_date (Xapian::Document& doc, MuMsg *msg, MuMsgFieldId mfid)
@@ -1059,11 +1056,11 @@ update_threading_info (MuMsg *msg, Xapian::Document& doc)
 
 
 Xapian::docid
-Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg, GError **err)
+Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg)
 {
         g_return_val_if_fail (msg, InvalidId);
-
-        try {
+	
+	return xapian_try([&]{
                 Xapian::Document doc (new_doc_from_message(msg));
                 const std::string term (get_uid_term (mu_msg_get_path(msg)));
 
@@ -1080,7 +1077,5 @@ Store::Private::add_or_update_msg (unsigned docid, MuMsg *msg, GError **err)
                 writable_db().replace_document (docid, doc);
                 return docid;
 
-        } MU_XAPIAN_CATCH_BLOCK_G_ERROR (err, MU_ERROR_XAPIAN_STORE_FAILED);
-
-        return InvalidId;
+        }, InvalidId);
 }

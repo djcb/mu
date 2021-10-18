@@ -46,24 +46,21 @@ MuMsgDoc*
 Mu::mu_msg_doc_new (XapianDocument *doc, GError **err)
 {
 	g_return_val_if_fail (doc, NULL);
-
-	try {
+	MuMsgDoc *mdoc = xapian_try([&]{
 		return new MuMsgDoc ((Xapian::Document*)doc);
+	}, (MuMsgDoc*)nullptr);
 
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
-
-	return FALSE;
+	if (!mdoc)
+		mu_util_g_set_error (err, MU_ERROR_INTERNAL,
+				     "failed to create message doc");
+	return mdoc;
 }
 
 void
 Mu::mu_msg_doc_destroy (MuMsgDoc *self)
 {
-	try {
-		delete self;
-
-	} MU_XAPIAN_CATCH_BLOCK;
+	xapian_try([&]{delete self;});
 }
-
 
 gchar*
 Mu::mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
@@ -78,13 +75,11 @@ Mu::mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	// have to convert to numbers first, esp. when it's a date
 	// time_t)
 
-	try {
+	return xapian_try([&]{
 		const std::string s (self->doc().get_value(mfid));
 		return s.empty() ? NULL : g_strdup (s.c_str());
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	},(gchar*)nullptr);
 }
-
 
 GSList*
 Mu::mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
@@ -93,12 +88,11 @@ Mu::mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
 	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
 
-	try {
+	return xapian_try([&]{
 		/* return a comma-separated string as a GSList */
 		const std::string s (self->doc().get_value(mfid));
 		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',',TRUE);
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	},(GSList*)nullptr);
 }
 
 
@@ -109,17 +103,16 @@ Mu::mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);
 	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
 
-	try {
+	return xapian_try([&]{
 		const std::string s (self->doc().get_value(mfid));
 		if (s.empty())
-			return 0;
+			return (gint64)0;
 		else if (mfid == MU_MSG_FIELD_ID_DATE ||
 			 mfid == MU_MSG_FIELD_ID_SIZE)
-			return strtol (s.c_str(), NULL, 10);
+			return static_cast<gint64>(strtol (s.c_str(), NULL, 10));
 		else {
 			return static_cast<gint64>
 				(Xapian::sortable_unserialise(s));
 		}
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
+	}, (gint64)-1);
 }
