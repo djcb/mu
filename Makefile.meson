@@ -31,6 +31,9 @@ check: test
 test: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) test
 
+test-valgrind: $(BUILDDIR)
+	@cd $(BUILDDIR); $(MESON) test --wrap='valgrind --leak-check=full --error-exitcode=1'
+
 dist: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) dist
 
