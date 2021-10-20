@@ -134,7 +134,7 @@ struct Server::Private {
 static Sexp
 build_metadata(const QueryMatch& qmatch, unsigned docid)
 {
-        Sexp::List info;
+	Sexp::List mdata;
 
 	auto symbol_t = [] { return Sexp::make_symbol("t"); };
 
@@ -167,7 +167,7 @@ build_metadata(const QueryMatch& qmatch, unsigned docid)
 	if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
 		mdata.add_prop(":thread-subject", symbol_t());
 
-        items.add_prop(":thread", Sexp::make_list(std::move(info)));
+	return Sexp::make_list(std::move(mdata));
 }
 
 /* a full message-sexp consists looks something like:
@@ -191,6 +191,7 @@ Server::Private::build_message_sexp(MuMsg*                    msg,
 
 	return Sexp::make_list(std::move(msexp));
 }
+
 CommandMap
 Server::Private::make_command_map()
 {
@@ -632,7 +633,6 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 
 	return n;
 }
-
 
 void
 Server::Private::find_handler(const Parameters& params)
