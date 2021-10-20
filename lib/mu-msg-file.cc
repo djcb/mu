@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -73,6 +73,7 @@ Mu::mu_msg_file_destroy(MuMsgFile* self)
 
 	g_free(self->_path);
 	g_free(self->_maildir);
+	g_free(self->_sha1);
 
 	g_free(self);
 }

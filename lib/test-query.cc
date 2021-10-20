@@ -37,8 +37,12 @@ static void
 test_query()
 {
 	allow_warnings();
+	char* tdir;
 
-	Store  store{test_mu_common_get_random_tmpdir(), std::string{MU_TESTMAILDIR}, {}, {}};
+	tdir = test_mu_common_get_random_tmpdir();
+	Store store{tdir, std::string{MU_TESTMAILDIR}, {}, {}};
+	g_free(tdir);
+
 	auto&& idx{store.indexer()};
 
 	g_assert_true(idx.start(Indexer::Config{}));
