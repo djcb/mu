@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.7.2',
+	version: '1.7.3',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
@@ -188,4 +188,3 @@ endif
 ################################################################################
 # write-out config.h
 configure_file(output : 'config.h', configuration : config_h_data)
-
