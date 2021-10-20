@@ -17,7 +17,6 @@
 **  02110-1301, USA.
 */
 
-
 #ifndef __PARSER_HH__
 #define __PARSER_HH__
 
@@ -40,8 +39,8 @@ namespace Mu {
  *
  */
 struct Warning {
-	size_t			pos{}; /**< pos in string */
-	const std::string	msg;   /**< warning message */
+	size_t            pos{}; /**< pos in string */
+	const std::string msg;   /**< warning message */
 
 	/**
 	 * operator==
@@ -50,11 +49,9 @@ struct Warning {
 	 *
 	 * @return true if rhs is equal to this; false otherwise
 	 */
-	bool operator==(const Warning& rhs) const {
-		return pos == rhs.pos && msg == rhs.msg;
-	}
+	bool operator==(const Warning& rhs) const { return pos == rhs.pos && msg == rhs.msg; }
 };
-using WarningVec=std::vector<Warning>;
+using WarningVec = std::vector<Warning>;
 
 /**
  * operator<<
@@ -65,44 +62,42 @@ using WarningVec=std::vector<Warning>;
  * @return the updated output stream
  */
 inline std::ostream&
-operator<< (std::ostream& os, const Warning& w)
+operator<<(std::ostream& os, const Warning& w)
 {
 	os << w.pos << ":" << w.msg;
 	return os;
 }
 
 class Parser {
-public:
-        enum struct Flags {
-                None     = 0,
-                UnitTest = 1 << 0
-        };
+      public:
+	enum struct Flags { None = 0, UnitTest = 1 << 0 };
 
-        /**
-         * Construct a query parser object
-         *
-         * @param store a store object ptr, or none
-         */
-        Parser(const Store& store, Flags=Flags::None);
-        /**
-         * DTOR
-         *
-         */
-        ~Parser();
+	/**
+	 * Construct a query parser object
+	 *
+	 * @param store a store object ptr, or none
+	 */
+	Parser(const Store& store, Flags = Flags::None);
+	/**
+	 * DTOR
+	 *
+	 */
+	~Parser();
 
-        /**
-         * Parse a query string
-         *
-         * @param query a query string
-         * @param warnings vec to receive warnings
-         *
-         * @return a parse-tree
-         */
+	/**
+	 * Parse a query string
+	 *
+	 * @param query a query string
+	 * @param warnings vec to receive warnings
+	 *
+	 * @return a parse-tree
+	 */
 
-        Tree parse (const std::string& query, WarningVec& warnings) const;
-private:
-        struct Private;
-        std::unique_ptr<Private> priv_;
+	Tree parse(const std::string& query, WarningVec& warnings) const;
+
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
 
 MU_ENABLE_BITOPS(Parser::Flags);

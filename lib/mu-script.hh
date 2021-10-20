@@ -33,8 +33,7 @@ struct MuScriptInfo;
  *
  * @return the name
  */
-const char* mu_script_info_name (MuScriptInfo *msi);
-
+const char* mu_script_info_name(MuScriptInfo* msi);
 
 /**
  * get the full filesystem path of the script
@@ -43,7 +42,7 @@ const char* mu_script_info_name (MuScriptInfo *msi);
  *
  * @return the path
  */
-const char* mu_script_info_path (MuScriptInfo *msi);
+const char* mu_script_info_path(MuScriptInfo* msi);
 
 /**
  * get a one-line description for the script
@@ -52,7 +51,7 @@ const char* mu_script_info_path (MuScriptInfo *msi);
  *
  * @return the description, or NULL if there was none
  */
-const char* mu_script_info_one_line (MuScriptInfo *msi);
+const char* mu_script_info_one_line(MuScriptInfo* msi);
 
 /**
  * get a full description for the script
@@ -61,7 +60,7 @@ const char* mu_script_info_one_line (MuScriptInfo *msi);
  *
  * @return the description, or NULL if there was none
  */
-const char* mu_script_info_description (MuScriptInfo *msi);
+const char* mu_script_info_description(MuScriptInfo* msi);
 
 /**
  * check whether either the name or one-line description of a
@@ -73,8 +72,7 @@ const char* mu_script_info_description (MuScriptInfo *msi);
  *
  * @return TRUE if it matches, FALSE if not or in case of error
  */
-gboolean mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
-				       GError **err);
+gboolean mu_script_info_matches_regex(MuScriptInfo* msi, const char* rxstr, GError** err);
 
 /**
  * Get the list of all scripts in path with extension ext
@@ -87,16 +85,17 @@ gboolean mu_script_info_matches_regex (MuScriptInfo *msi, const char *rxstr,
  *
  * @return a list of Mu
  */
-GSList *mu_script_get_script_info_list (const char *path, const char *ext,
-					const char *descprefix, GError **err);
+GSList* mu_script_get_script_info_list(const char* path,
+                                       const char* ext,
+                                       const char* descprefix,
+                                       GError**    err);
 
 /**
  * destroy a list of MuScriptInfo* objects
  *
  * @param scriptslst a list of MuScriptInfo* objects
  */
-void mu_script_info_list_destroy (GSList *lst);
-
+void mu_script_info_list_destroy(GSList* lst);
 
 /**
  * find the MuScriptInfo object for the first script with a certain
@@ -107,8 +106,7 @@ void mu_script_info_list_destroy (GSList *lst);
  *
  * @return a MuScriptInfo* object, or NULL if not found.
  */
-MuScriptInfo* mu_script_find_script_with_name (GSList *lst, const char *name);
-
+MuScriptInfo* mu_script_find_script_with_name(GSList* lst, const char* name);
 
 /**
  * run the guile script at path
@@ -121,7 +119,7 @@ MuScriptInfo* mu_script_find_script_with_name (GSList *lst, const char *name);
  * @return FALSE in case of error -- otherwise, this function will
  * _not return_
  */
-gboolean mu_script_guile_run (MuScriptInfo *msi, const char *muhome,
-			      const char **args, GError **err);
+gboolean
+mu_script_guile_run(MuScriptInfo* msi, const char* muhome, const char** args, GError** err);
 
 #endif /*MU_SCRIPT_HH__*/

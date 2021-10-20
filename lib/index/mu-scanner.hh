@@ -41,59 +41,58 @@ namespace Mu {
 ///  - directories '.' and '..'
 ///
 class Scanner {
-public:
-        enum struct HandleType {
-                File,
-                EnterNewCur, /* cur/ or new/ */
-                EnterDir, /* some other directory */
-                LeaveDir
-        };
+      public:
+	enum struct HandleType {
+		File,
+		EnterNewCur, /* cur/ or new/ */
+		EnterDir,    /* some other directory */
+		LeaveDir
+	};
 
-        /// Prototype for a handler function
-        using Handler     = std::function<bool(const std::string& fullpath,
-                                               struct stat* statbuf,
-                                               HandleType htype)>;
-        /**
-         * Construct a scanner object for scanning a directory, recursively.
-         *
-         * If handler is a directory
-         *
-         *
-         * @param root_dir root dir to start scanning
-         * @param handler handler function for some direntry
-         */
-        Scanner (const std::string& root_dir, Handler handler);
+	/// Prototype for a handler function
+	using Handler = std::function<
+	    bool(const std::string& fullpath, struct stat* statbuf, HandleType htype)>;
+	/**
+	 * Construct a scanner object for scanning a directory, recursively.
+	 *
+	 * If handler is a directory
+	 *
+	 *
+	 * @param root_dir root dir to start scanning
+	 * @param handler handler function for some direntry
+	 */
+	Scanner(const std::string& root_dir, Handler handler);
 
-        /**
-         * DTOR
-         */
-        ~Scanner();
+	/**
+	 * DTOR
+	 */
+	~Scanner();
 
-        /**
-         * Start the scan; this is a blocking call than runs until
-         * finished or (from another thread) stop() is called.
-         *
-         * @return true if starting worked; false otherwise
-         */
-        bool start();
+	/**
+	 * Start the scan; this is a blocking call than runs until
+	 * finished or (from another thread) stop() is called.
+	 *
+	 * @return true if starting worked; false otherwise
+	 */
+	bool start();
 
-        /**
-         * Stop the scan
-         *
-         * @return true if stopping worked; false otherwi%sse
-         */
-        bool stop();
+	/**
+	 * Stop the scan
+	 *
+	 * @return true if stopping worked; false otherwi%sse
+	 */
+	bool stop();
 
-        /**
-         * Is a scan currently running?
-         *
-         * @return true or false
-         */
-        bool is_running() const;
+	/**
+	 * Is a scan currently running?
+	 *
+	 * @return true or false
+	 */
+	bool is_running() const;
 
-private:
-        struct                          Private;
-        std::unique_ptr<Private>        priv_;
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
 
 } // namespace Mu

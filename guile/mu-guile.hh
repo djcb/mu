@@ -24,20 +24,17 @@
 #include <libguile.h>
 #include <mu-query.hh>
 
-
 /**
  * get the singleton Store instance
  */
-Mu::Store& mu_guile_store ();
-
+Mu::Store& mu_guile_store();
 
 /**
  * whether mu-guile is initialized
  *
  * @return TRUE if MuGuile is Initialized, FALSE otherwise
  */
-gboolean mu_guile_initialized ();
-
+gboolean mu_guile_initialized();
 
 /**
  * raise a guile error (based on a GError)
@@ -47,8 +44,7 @@ gboolean mu_guile_initialized ();
  *
  * @return SCM_UNSPECIFIED
  */
-SCM mu_guile_g_error (const char *func_name, GError *err);
-
+SCM mu_guile_g_error(const char* func_name, GError* err);
 
 /**
  * raise a guile error
@@ -60,9 +56,7 @@ SCM mu_guile_g_error (const char *func_name, GError *err);
  *
  * @return SCM_UNSPECIFIED
  */
-SCM mu_guile_error   (const char *func_name, int status,
-		      const char *fmt, SCM args);
-
+SCM mu_guile_error(const char* func_name, int status, const char* fmt, SCM args);
 
 /**
  * convert a const char* into an SCM -- either a string or, if str ==
@@ -73,7 +67,7 @@ SCM mu_guile_error   (const char *func_name, int status,
  *
  * @return a guile string or #f
  */
-SCM mu_guile_scm_from_str (const char *str);
+SCM mu_guile_scm_from_str(const char* str);
 
 /**
  * Initialize this mu guile module.
@@ -82,5 +76,7 @@ SCM mu_guile_scm_from_str (const char *str);
  *
  * @return
  */
-extern "C" { void* mu_guile_init (void *data); }
+extern "C" {
+void* mu_guile_init(void* data);
+}
 #endif /*__MU_GUILE_H__*/

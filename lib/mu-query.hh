@@ -27,70 +27,69 @@
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
 
-namespace Mu
-{
+namespace Mu {
 
-class Query
-{
-        public:
-        /**
-         * Construct a new Query instance.
-         *
-         * @param store a MuStore object
-         */
-        Query (const Store &store);
-        /**
-         * DTOR
-         *
-         */
-        ~Query();
+class Query {
+      public:
+	/**
+	 * Construct a new Query instance.
+	 *
+	 * @param store a MuStore object
+	 */
+	Query(const Store& store);
+	/**
+	 * DTOR
+	 *
+	 */
+	~Query();
 
-        /**
-         * Move CTOR
-         *
-         * @param other
-         */
-        Query (Query &&other);
+	/**
+	 * Move CTOR
+	 *
+	 * @param other
+	 */
+	Query(Query&& other);
 
-        /**
-         * Run a query on the store
-         *
-         * @param expr the search expression
-         * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
-         * @param flags query flags
-         * @param maxnum maximum number of results to return. 0 for 'no limit'
-         *
-         * @return the query-results, or Nothing in case of error.
-         */
-        Option<QueryResults> run (const std::string &expr        = "",
-                                  MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
-                                  QueryFlags flags = QueryFlags::None, size_t maxnum = 0) const;
+	/**
+	 * Run a query on the store
+	 *
+	 * @param expr the search expression
+	 * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
+	 * @param flags query flags
+	 * @param maxnum maximum number of results to return. 0 for 'no limit'
+	 *
+	 * @return the query-results, or Nothing in case of error.
+	 */
+	Option<QueryResults> run(const std::string& expr        = "",
+	                         MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
+	                         QueryFlags         flags       = QueryFlags::None,
+	                         size_t             maxnum      = 0) const;
 
-        /**
-         * run a Xapian query to count the number of matches; for the syntax, please
-         * refer to the mu-query manpage
-         *
-         * @param expr the search expression; use "" to match all messages
-         *
-         * @return the number of matches
-         */
-        size_t count (const std::string &expr = "") const;
+	/**
+	 * run a Xapian query to count the number of matches; for the syntax, please
+	 * refer to the mu-query manpage
+	 *
+	 * @param expr the search expression; use "" to match all messages
+	 *
+	 * @return the number of matches
+	 */
+	size_t count(const std::string& expr = "") const;
 
-        /**
-         * For debugging, get the internal string representation of the parsed
-         * query
-         *
-         * @param expr a xapian search expression
-         * @param xapian if true, show Xapian's internal representation,
-         * otherwise, mu's.
+	/**
+	 * For debugging, get the internal string representation of the parsed
+	 * query
+	 *
+	 * @param expr a xapian search expression
+	 * @param xapian if true, show Xapian's internal representation,
+	 * otherwise, mu's.
 
-         * @return the string representation of the query
-         */
-        std::string parse (const std::string &expr, bool xapian) const;
+	 * @return the string representation of the query
+	 */
+	std::string parse(const std::string& expr, bool xapian) const;
 
-        private:
-        struct Private;
-        std::unique_ptr<Private> priv_;
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
 } // namespace Mu
 

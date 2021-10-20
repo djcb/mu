@@ -31,40 +31,39 @@
 using namespace Mu;
 
 static void
-test_index_maildir ()
+test_index_maildir()
 {
-        allow_warnings();
+	allow_warnings();
 
-	Store store{test_mu_common_get_random_tmpdir(), std::string{MU_TESTMAILDIR}};
+	Store   store{test_mu_common_get_random_tmpdir(), std::string{MU_TESTMAILDIR}};
 	Indexer idx{Indexer::Config{}, store};
 
-	g_assert_true (idx.start());
-        while (idx.is_running()) {
-                sleep(1);
-        }
+	g_assert_true(idx.start());
+	while (idx.is_running()) {
+		sleep(1);
+	}
 
-        g_print ("again!\n");
+	g_print("again!\n");
 
-        g_assert_true (idx.start());
-        while (idx.is_running()) {
-                sleep(1);
-        }
+	g_assert_true(idx.start());
+	while (idx.is_running()) {
+		sleep(1);
+	}
 }
 
 int
-main (int argc, char *argv[]) try
-{
-	g_test_init (&argc, &argv, NULL);
+main(int argc, char* argv[])
+try {
+	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func ("/indexer/index-maildir", test_index_maildir);
+	g_test_add_func("/indexer/index-maildir", test_index_maildir);
 
-	return g_test_run ();
-
+	return g_test_run();
 
 } catch (const std::runtime_error& re) {
 	std::cerr << re.what() << "\n";
 	return 1;
 } catch (...) {
-        std::cerr << "caught exception\n";
-        return 1;
+	std::cerr << "caught exception\n";
+	return 1;
 }

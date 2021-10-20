@@ -26,14 +26,13 @@ namespace Mu {
  * @param histpath path to the history file
  * @param max_lines maximum number of history to save
  */
-void setup_readline(const std::string &histpath, size_t max_lines);
+void setup_readline(const std::string& histpath, size_t max_lines);
 
 /**
  * Shutdown readline
-*
+ *
  */
 void shutdown_readline();
-
 
 /**
  * Read a command line
@@ -42,13 +41,13 @@ void shutdown_readline();
  *
  * @return the string read or empty
  */
-std::string read_line(bool &do_quit);
+std::string read_line(bool& do_quit);
 
 /**
  * Save a line to history (or do nothing when readline is not active)
  *
  * @param line a line.
  */
-void save_line(const std::string &line);
+void save_line(const std::string& line);
 
 } // namespace Mu

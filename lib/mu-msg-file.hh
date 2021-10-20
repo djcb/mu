@@ -33,18 +33,16 @@ struct MuMsgFile;
  *
  * @return a new MuMsg, or NULL in case of error
  */
-MuMsgFile *mu_msg_file_new (const char *path,
-			    const char* mdir, GError **err)
-                            G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+MuMsgFile* mu_msg_file_new(const char* path,
+                           const char* mdir,
+                           GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsgFile object
  *
  * @param self object to destroy, or NULL
  */
-void mu_msg_file_destroy (MuMsgFile *self);
-
-
+void mu_msg_file_destroy(MuMsgFile* self);
 
 /**
  * get a specific header
@@ -54,8 +52,7 @@ void mu_msg_file_destroy (MuMsgFile *self);
  *
  * @return the value of the header or NULL if not found; free with g_free
  */
-char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
-
+char* mu_msg_file_get_header(MuMsgFile* self, const char* header);
 
 /**
  * get a string value for this message
@@ -70,11 +67,9 @@ char* mu_msg_file_get_header (MuMsgFile *self, const char *header);
  *
  * @return a string, or NULL
  */
-char* mu_msg_file_get_str_field (MuMsgFile *self,
-				 MuMsgFieldId msfid,
-				 gboolean *do_free)
-	                         G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_msg_file_get_str_field(MuMsgFile*   self,
+                                MuMsgFieldId msfid,
+                                gboolean*    do_free) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string-list value for this message
@@ -84,10 +79,8 @@ char* mu_msg_file_get_str_field (MuMsgFile *self,
  *
  * @return a GSList*, or NULL; free with mu_str_free_list
  */
-GSList* mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId msfid)
-					G_GNUC_WARN_UNUSED_RESULT;
-
-
+GSList* mu_msg_file_get_str_list_field(MuMsgFile*   self,
+                                       MuMsgFieldId msfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a numeric value for this message -- the return value should be
@@ -98,7 +91,7 @@ GSList* mu_msg_file_get_str_list_field (MuMsgFile *self, MuMsgFieldId msfid)
  *
  * @return the numeric value, or -1 in case of error
  */
-gint64 mu_msg_file_get_num_field (MuMsgFile *self, MuMsgFieldId mfid);
+gint64 mu_msg_file_get_num_field(MuMsgFile* self, MuMsgFieldId mfid);
 
 } // namespace Mu
 

@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_QUERY_MATCH_DECIDERS_HH__
 #define MU_QUERY_MATCH_DECIDERS_HH__
 
@@ -29,30 +28,26 @@
 
 #include "mu-query-results.hh"
 
-
 namespace Mu {
 using StringSet = std::unordered_set<std::string>;
 
-
 struct DeciderInfo {
-        QueryMatches matches;
-        StringSet    thread_ids;
-        StringSet    message_ids;
+	QueryMatches matches;
+	StringSet    thread_ids;
+	StringSet    message_ids;
 };
 
 /**
  * Make a "leader" decider, that is, a MatchDecider for either a singular or the
  * first query in the leader/related pair of queries. Gather information for
  * threading, and the subsequent "related" query.
-*
+ *
  * @param qflags     query flags
  * @param match_info receives information about the matches.
  *
  * @return a unique_ptr to a match decider.
  */
-std::unique_ptr<Xapian::MatchDecider>  make_leader_decider(QueryFlags qflags,
-                                                           DeciderInfo& info);
-
+std::unique_ptr<Xapian::MatchDecider> make_leader_decider(QueryFlags qflags, DeciderInfo& info);
 
 /**
  * Make a "related" decider, that is, a MatchDecider for the second query
@@ -63,9 +58,7 @@ std::unique_ptr<Xapian::MatchDecider>  make_leader_decider(QueryFlags qflags,
  *
  * @return a unique_ptr to a match decider.
  */
-std::unique_ptr<Xapian::MatchDecider>  make_related_decider(QueryFlags qflags,
-                                                            DeciderInfo& info);
-
+std::unique_ptr<Xapian::MatchDecider> make_related_decider(QueryFlags qflags, DeciderInfo& info);
 
 /**
  * Make a "thread" decider, that is, a MatchDecider that removes all but the
@@ -76,10 +69,8 @@ std::unique_ptr<Xapian::MatchDecider>  make_related_decider(QueryFlags qflags,
  *
  * @return a unique_ptr to a match decider.
  */
-std::unique_ptr<Xapian::MatchDecider> make_thread_decider (QueryFlags qflags,
-                                                           DeciderInfo& info);
+std::unique_ptr<Xapian::MatchDecider> make_thread_decider(QueryFlags qflags, DeciderInfo& info);
 
-
-} // namepace Mu
+} // namespace Mu
 
 #endif /* MU_QUERY_MATCH_DECIDERS_HH__ */

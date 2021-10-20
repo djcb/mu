@@ -35,22 +35,20 @@ G_BEGIN_DECLS
  *
  * @return TRUE if succeeded, FALSE in case of error
  */
-gboolean mu_runtime_init (const char *muhome, const char *name,
-			  gboolean debug);
+gboolean mu_runtime_init(const char* muhome, const char* name, gboolean debug);
 
 /**
  * free all resources
  *
  */
-void mu_runtime_uninit (void);
-
+void mu_runtime_uninit(void);
 
 typedef enum {
-	MU_RUNTIME_PATH_XAPIANDB,   /* mu xapian db path */
-	MU_RUNTIME_PATH_BOOKMARKS,  /* mu bookmarks file path */
-	MU_RUNTIME_PATH_CACHE,      /* mu cache path */
-	MU_RUNTIME_PATH_MIMECACHE,  /* mu cache path for attachments etc. */
-	MU_RUNTIME_PATH_LOGDIR,     /* mu path for log files */
+	MU_RUNTIME_PATH_XAPIANDB,  /* mu xapian db path */
+	MU_RUNTIME_PATH_BOOKMARKS, /* mu bookmarks file path */
+	MU_RUNTIME_PATH_CACHE,     /* mu cache path */
+	MU_RUNTIME_PATH_MIMECACHE, /* mu cache path for attachments etc. */
+	MU_RUNTIME_PATH_LOGDIR,    /* mu path for log files */
 
 	MU_RUNTIME_PATH_NUM
 } MuRuntimePath;
@@ -61,7 +59,7 @@ typedef enum {
  * @return ma string which should be not be modified/freed, or NULL in
  * case of error.
  */
-const char* mu_runtime_path (MuRuntimePath path);
+const char* mu_runtime_path(MuRuntimePath path);
 
 G_END_DECLS
 

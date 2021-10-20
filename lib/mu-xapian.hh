@@ -17,7 +17,6 @@
 **  02110-1301, USA.
 */
 
-
 #ifndef __XAPIAN_HH__
 #define __XAPIAN_HH__
 
@@ -33,7 +32,7 @@ namespace Mu {
  *
  * @return a Xapian query object
  */
-Xapian::Query xapian_query (const Mu::Tree& tree);
+Xapian::Query xapian_query(const Mu::Tree& tree);
 
 } // namespace Mu
 

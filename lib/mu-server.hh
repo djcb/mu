@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_SERVER_HH__
 #define MU_SERVER_HH__
 
@@ -34,35 +33,35 @@ namespace Mu {
  *
  */
 class Server {
-public:
-        using Output = std::function<void(Sexp&& sexp)>;
+      public:
+	using Output = std::function<void(Sexp&& sexp)>;
 
-        /**
-         * Construct a new server
-         *
-         * @param store a message store object
-         * @param output callable for the server responses.
-         */
-        Server(Store& store, Output output);
+	/**
+	 * Construct a new server
+	 *
+	 * @param store a message store object
+	 * @param output callable for the server responses.
+	 */
+	Server(Store& store, Output output);
 
-        /**
-         * DTOR
-         */
-        ~Server();
+	/**
+	 * DTOR
+	 */
+	~Server();
 
-        /**
-         * Invoke a call on the server.
-         *
-         * @param expr the s-expression to call
-         *
-         * @return true if we the server is still ready for more
-         * calls, false when it should quit.
-         */
-        bool invoke(const std::string& expr) noexcept;
+	/**
+	 * Invoke a call on the server.
+	 *
+	 * @param expr the s-expression to call
+	 *
+	 * @return true if we the server is still ready for more
+	 * calls, false when it should quit.
+	 */
+	bool invoke(const std::string& expr) noexcept;
 
-private:
-        struct                   Private;
-        std::unique_ptr<Private> priv_;
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
 } // namespace Mu
 

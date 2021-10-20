@@ -16,14 +16,18 @@
 
 #include "optional.hpp"
 
-
 namespace Mu {
 
 /// Either a value of type T, or None
-template <typename T> using Option=tl::optional<T>;
+template <typename T> using Option = tl::optional<T>;
 
-template <typename T> Option<T> Some(T&& t) { return std::move(t); }
+template <typename T>
+Option<T>
+Some(T&& t)
+{
+	return std::move(t);
+}
 constexpr auto Nothing = tl::nullopt; // 'None' is take already
 
-}
+} // namespace Mu
 #endif /*MU_OPTION__*/

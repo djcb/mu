@@ -33,61 +33,46 @@
 #include "test-mu-common.h"
 #include "mu-date.h"
 
-
-
-
-
 static void
-test_mu_date_interpret_begin (void)
+test_mu_date_interpret_begin(void)
 {
 	time_t now;
-	now = time (NULL);
+	now = time(NULL);
 
-	g_assert_cmpstr (mu_date_interpret_s ("now", TRUE) , ==,
-			 mu_date_str_s("%Y%m%d%H%M%S", now));
+	g_assert_cmpstr(mu_date_interpret_s("now", TRUE), ==, mu_date_str_s("%Y%m%d%H%M%S", now));
 
-	g_assert_cmpstr (mu_date_interpret_s ("today", TRUE) , ==,
-			 mu_date_str_s("%Y%m%d000000", now));
+	g_assert_cmpstr(mu_date_interpret_s("today", TRUE), ==, mu_date_str_s("%Y%m%d000000", now));
 }
 
 static void
-test_mu_date_interpret_end (void)
+test_mu_date_interpret_end(void)
 {
 	time_t now;
-	now = time (NULL);
+	now = time(NULL);
 
-	g_assert_cmpstr (mu_date_interpret_s ("now", FALSE) , ==,
-			 mu_date_str_s("%Y%m%d%H%M%S", now));
+	g_assert_cmpstr(mu_date_interpret_s("now", FALSE), ==, mu_date_str_s("%Y%m%d%H%M%S", now));
 
-	g_assert_cmpstr (mu_date_interpret_s ("today", FALSE) , ==,
-			 mu_date_str_s("%Y%m%d235959", now));
+	g_assert_cmpstr(mu_date_interpret_s("today", FALSE),
+	                ==,
+	                mu_date_str_s("%Y%m%d235959", now));
 }
-
-
-
-
 
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func ("/mu-str/mu_date_parse_hdwmy",
-			 test_mu_date_parse_hdwmy);
-	g_test_add_func ("/mu-str/mu_date_complete_begin",
-			 test_mu_date_complete_begin);
-	g_test_add_func ("/mu-str/mu_date_complete_end",
-			 test_mu_date_complete_end);
+	g_test_add_func("/mu-str/mu_date_parse_hdwmy", test_mu_date_parse_hdwmy);
+	g_test_add_func("/mu-str/mu_date_complete_begin", test_mu_date_complete_begin);
+	g_test_add_func("/mu-str/mu_date_complete_end", test_mu_date_complete_end);
 
-	g_test_add_func ("/mu-str/mu_date_interpret_begin",
-			 test_mu_date_interpret_begin);
-	g_test_add_func ("/mu-str/mu_date_interpret_end",
-			 test_mu_date_interpret_end);
+	g_test_add_func("/mu-str/mu_date_interpret_begin", test_mu_date_interpret_begin);
+	g_test_add_func("/mu-str/mu_date_interpret_end", test_mu_date_interpret_end);
 
+	g_log_set_handler(NULL,
+	                  G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION,
+	                  (GLogFunc)black_hole,
+	                  NULL);
 
-	g_log_set_handler (NULL,
-			   G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-			   (GLogFunc)black_hole, NULL);
-
-	return g_test_run ();
+	return g_test_run();
 }

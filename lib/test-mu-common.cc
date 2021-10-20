@@ -34,60 +34,56 @@
 #include "test-mu-common.hh"
 
 char*
-test_mu_common_get_random_tmpdir (void)
+test_mu_common_get_random_tmpdir(void)
 {
-	char*dir;
-	int  res;
+	char* dir;
+	int   res;
 
-	dir = g_strdup_printf (
-		"%s%cmu-test-%d%ctest-%x",
-		g_get_tmp_dir(),
-		G_DIR_SEPARATOR,
-		getuid(),
-		G_DIR_SEPARATOR,
-		(int)random()*getpid()*(int)time(NULL));
+	dir = g_strdup_printf("%s%cmu-test-%d%ctest-%x",
+	                      g_get_tmp_dir(),
+	                      G_DIR_SEPARATOR,
+	                      getuid(),
+	                      G_DIR_SEPARATOR,
+	                      (int)random() * getpid() * (int)time(NULL));
 
-	res = g_mkdir_with_parents (dir, 0700);
-	g_assert (res != -1);
+	res = g_mkdir_with_parents(dir, 0700);
+	g_assert(res != -1);
 
 	return dir;
 }
 
-
 const char*
-set_tz (const char* tz)
+set_tz(const char* tz)
 {
 	static const char* oldtz;
 
-	oldtz = getenv ("TZ");
+	oldtz = getenv("TZ");
 	if (tz)
-		setenv ("TZ", tz, 1);
+		setenv("TZ", tz, 1);
 	else
-		unsetenv ("TZ");
+		unsetenv("TZ");
 
-	tzset ();
+	tzset();
 	return oldtz;
 }
 
-
 gboolean
-set_en_us_utf8_locale (void)
+set_en_us_utf8_locale(void)
 {
-	setenv ("LC_ALL", "en_US.UTF-8", 1);
-	setlocale (LC_ALL, "en_US.UTF-8");
+	setenv("LC_ALL", "en_US.UTF-8", 1);
+	setlocale(LC_ALL, "en_US.UTF-8");
 
-	if (strcmp (nl_langinfo(CODESET), "UTF-8") != 0) {
-		g_print ("Note: Unit tests require the en_US.utf8 locale. "
-			 "Ignoring test cases.\n");
+	if (strcmp(nl_langinfo(CODESET), "UTF-8") != 0) {
+		g_print("Note: Unit tests require the en_US.utf8 locale. "
+		        "Ignoring test cases.\n");
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-
 void
-black_hole (void)
+black_hole(void)
 {
 	return; /* do nothing */
 }

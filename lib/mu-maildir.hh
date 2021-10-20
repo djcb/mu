@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <time.h>
-#include <sys/types.h>          /* for mode_t */
+#include <sys/types.h> /* for mode_t */
 #include <utils/mu-util.h>
 #include <mu-flags.hh>
 
@@ -45,9 +45,7 @@ namespace Mu {
  *
  * @return TRUE if creation succeeded (or already existed), FALSE otherwise
  */
-gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
-			   GError **err);
-
+gboolean mu_maildir_mkdir(const char* path, mode_t mode, gboolean noindex, GError** err);
 
 /**
  * create a symbolic link to a mail message
@@ -61,8 +59,7 @@ gboolean mu_maildir_mkdir (const char* path, mode_t mode, gboolean noindex,
  *
  * @return
  */
-gboolean mu_maildir_link   (const char* src, const char *targetpath,
-			    GError **err);
+gboolean mu_maildir_link(const char* src, const char* targetpath, GError** err);
 
 /**
  * recursively delete all the symbolic links in a directory tree
@@ -73,15 +70,14 @@ gboolean mu_maildir_link   (const char* src, const char *targetpath,
  *
  * @return TRUE if it worked, FALSE in case of error
  */
-gboolean mu_maildir_clear_links (const char* dir, GError **err);
+gboolean mu_maildir_clear_links(const char* dir, GError** err);
 
 /**
  * whether the directory path ends in '/cur/' or '/new/'
  *
  * @param path some path
  */
-gboolean mu_maildir_is_leaf_dir (const char *path);
-
+gboolean mu_maildir_is_leaf_dir(const char* path);
 
 /**
  * get the Maildir flags from the full path of a mailfile. The flags
@@ -95,7 +91,7 @@ gboolean mu_maildir_is_leaf_dir (const char *path);
  *
  * @return the flags, or MU_MSG_FILE_FLAG_UNKNOWN in case of error
  */
-MuFlags mu_maildir_get_flags_from_path (const char* pathname);
+MuFlags mu_maildir_get_flags_from_path(const char* pathname);
 
 /**
  * get the new pathname for a message, based on the old path and the
@@ -120,9 +116,10 @@ MuFlags mu_maildir_get_flags_from_path (const char* pathname);
  * @return a new path name; use g_free when done with. NULL in case of
  * error.
  */
-char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
-			       MuFlags new_flags, gboolean new_name)
-	G_GNUC_WARN_UNUSED_RESULT;
+char* mu_maildir_get_new_path(const char* oldpath,
+                              const char* new_mdir,
+                              MuFlags     new_flags,
+                              gboolean    new_name) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
@@ -132,9 +129,7 @@ char* mu_maildir_get_new_path (const char *oldpath, const char *new_mdir,
  *
  * @return the maildir (free with g_free), or NULL in case of error
  */
-char* mu_maildir_get_maildir_from_path (const char* path)
-	G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_maildir_get_maildir_from_path(const char* path) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * move a message file to another maildir; the function returns the full path to
@@ -158,10 +153,12 @@ char* mu_maildir_get_maildir_from_path (const char* path)
  * @return return the full path name of the target file (g_free) if
  * the move succeeded, NULL otherwise
  */
-char* mu_maildir_move_message (const char* oldpath, const char* targetmdir,
-                               MuFlags newflags, gboolean ignore_dups,
-                               gboolean new_name, GError **err)
-	G_GNUC_WARN_UNUSED_RESULT;
+char* mu_maildir_move_message(const char* oldpath,
+                              const char* targetmdir,
+                              MuFlags     newflags,
+                              gboolean    ignore_dups,
+                              gboolean    new_name,
+                              GError**    err) G_GNUC_WARN_UNUSED_RESULT;
 
 } // namespace Mu
 

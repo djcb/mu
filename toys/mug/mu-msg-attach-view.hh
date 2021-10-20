@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_MSG_ATTACH_VIEW_HH__
 #define MU_MSG_ATTACH_VIEW_HH__
 
@@ -27,40 +26,43 @@
 G_BEGIN_DECLS
 
 /* convenience macros */
-#define MU_TYPE_MSG_ATTACH_VIEW             (mu_msg_attach_view_get_type())
-#define MU_MSG_ATTACH_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),MU_TYPE_MSG_ATTACH_VIEW,MuMsgAttachView))
-#define MU_MSG_ATTACH_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),MU_TYPE_MSG_ATTACH_VIEW,MuMsgAttachViewClass))
-#define MU_IS_MSG_ATTACH_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),MU_TYPE_MSG_ATTACH_VIEW))
-#define MU_IS_MSG_ATTACH_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),MU_TYPE_MSG_ATTACH_VIEW))
-#define MU_MSG_ATTACH_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),MU_TYPE_MSG_ATTACH_VIEW,MuMsgAttachViewClass))
+#define MU_TYPE_MSG_ATTACH_VIEW (mu_msg_attach_view_get_type())
+#define MU_MSG_ATTACH_VIEW(obj)                                                                    \
+	(G_TYPE_CHECK_INSTANCE_CAST((obj), MU_TYPE_MSG_ATTACH_VIEW, MuMsgAttachView))
+#define MU_MSG_ATTACH_VIEW_CLASS(klass)                                                            \
+	(G_TYPE_CHECK_CLASS_CAST((klass), MU_TYPE_MSG_ATTACH_VIEW, MuMsgAttachViewClass))
+#define MU_IS_MSG_ATTACH_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), MU_TYPE_MSG_ATTACH_VIEW))
+#define MU_IS_MSG_ATTACH_VIEW_CLASS(klass)                                                         \
+	(G_TYPE_CHECK_CLASS_TYPE((klass), MU_TYPE_MSG_ATTACH_VIEW))
+#define MU_MSG_ATTACH_VIEW_GET_CLASS(obj)                                                          \
+	(G_TYPE_INSTANCE_GET_CLASS((obj), MU_TYPE_MSG_ATTACH_VIEW, MuMsgAttachViewClass))
 
-typedef struct _MuMsgAttachView      MuMsgAttachView;
-typedef struct _MuMsgAttachViewClass MuMsgAttachViewClass;
-typedef struct _MuMsgAttachViewPrivate         MuMsgAttachViewPrivate;
+typedef struct _MuMsgAttachView        MuMsgAttachView;
+typedef struct _MuMsgAttachViewClass   MuMsgAttachViewClass;
+typedef struct _MuMsgAttachViewPrivate MuMsgAttachViewPrivate;
 
 struct _MuMsgAttachView {
-	 GtkIconView parent;
+	GtkIconView parent;
 	/* insert public members, if any */
 
 	/* private */
-	MuMsgAttachViewPrivate *_priv;
+	MuMsgAttachViewPrivate* _priv;
 };
 
 struct _MuMsgAttachViewClass {
 	GtkIconViewClass parent_class;
-	void (* attach_activated) (MuMsgAttachView* obj, guint partnum,
-				   Mu::MuMsg *msg);
+	void (*attach_activated)(MuMsgAttachView* obj, guint partnum, Mu::MuMsg* msg);
 };
 
 /* member functions */
-GType        mu_msg_attach_view_get_type    (void) G_GNUC_CONST;
+GType mu_msg_attach_view_get_type(void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget*   mu_msg_attach_view_new         (void);
+GtkWidget* mu_msg_attach_view_new(void);
 
 /* returns # of attachments */
-int  mu_msg_attach_view_set_message (MuMsgAttachView *self, Mu::MuMsg *msg);
+int mu_msg_attach_view_set_message(MuMsgAttachView* self, Mu::MuMsg* msg);
 
 G_END_DECLS
 

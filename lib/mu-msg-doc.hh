@@ -23,7 +23,6 @@
 #include <glib.h>
 #include <utils/mu-util.h>
 
-
 namespace Mu {
 
 struct MuMsgDoc;
@@ -40,8 +39,7 @@ struct MuMsgDoc;
  * @return a new MuMsgDoc instance (free with mu_msg_doc_destroy), or
  * NULL in case of error.
  */
-MuMsgDoc* mu_msg_doc_new (XapianDocument *doc, GError **err)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+MuMsgDoc* mu_msg_doc_new(XapianDocument* doc, GError** err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsgDoc instance -- free all the resources. Note, after
@@ -50,8 +48,7 @@ MuMsgDoc* mu_msg_doc_new (XapianDocument *doc, GError **err)
  *
  * @param self a MuMsgDoc instance
  */
-void mu_msg_doc_destroy (MuMsgDoc *self);
-
+void mu_msg_doc_destroy(MuMsgDoc* self);
 
 /**
  * get a string parameter from the msgdoc
@@ -62,8 +59,7 @@ void mu_msg_doc_destroy (MuMsgDoc *self);
  * @return a string for the given field (see do_free), or NULL in case of error.
  * free with g_free
  */
-gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
-          G_GNUC_WARN_UNUSED_RESULT;
+gchar* mu_msg_doc_get_str_field(MuMsgDoc* self, MuMsgFieldId mfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string-list parameter from the msgdoc
@@ -74,9 +70,7 @@ gchar* mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
  * @return a list for the given field (see do_free), or NULL in case
  * of error. free with mu_str_free_list
  */
-GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
-    G_GNUC_WARN_UNUSED_RESULT;
-
+GSList* mu_msg_doc_get_str_list_field(MuMsgDoc* self, MuMsgFieldId mfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  *
@@ -88,7 +82,7 @@ GSList* mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
  * @return the numerical value, or -1 in case of error. You'll need to
  * cast this value to the actual type (e.g. time_t for MU_MSG_FIELD_ID_DATE)
  */
-gint64 mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid);
+gint64 mu_msg_doc_get_num_field(MuMsgDoc* self, MuMsgFieldId mfid);
 
 } // namespace Mu
 

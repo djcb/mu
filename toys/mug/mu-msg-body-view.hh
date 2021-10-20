@@ -26,43 +26,45 @@
 G_BEGIN_DECLS
 
 /* convenience macros */
-#define MU_TYPE_MSG_BODY_VIEW             (mu_msg_body_view_get_type())
-#define MU_MSG_BODY_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),MU_TYPE_MSG_BODY_VIEW,MuMsgBodyView))
-#define MU_MSG_BODY_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),MU_TYPE_MSG_BODY_VIEW,MuMsgBodyViewClass))
-#define MU_IS_MSG_BODY_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),MU_TYPE_MSG_BODY_VIEW))
-#define MU_IS_MSG_BODY_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),MU_TYPE_MSG_BODY_VIEW))
-#define MU_MSG_BODY_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),MU_TYPE_MSG_BODY_VIEW,MuMsgBodyViewClass))
+#define MU_TYPE_MSG_BODY_VIEW (mu_msg_body_view_get_type())
+#define MU_MSG_BODY_VIEW(obj)                                                                      \
+	(G_TYPE_CHECK_INSTANCE_CAST((obj), MU_TYPE_MSG_BODY_VIEW, MuMsgBodyView))
+#define MU_MSG_BODY_VIEW_CLASS(klass)                                                              \
+	(G_TYPE_CHECK_CLASS_CAST((klass), MU_TYPE_MSG_BODY_VIEW, MuMsgBodyViewClass))
+#define MU_IS_MSG_BODY_VIEW(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), MU_TYPE_MSG_BODY_VIEW))
+#define MU_IS_MSG_BODY_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), MU_TYPE_MSG_BODY_VIEW))
+#define MU_MSG_BODY_VIEW_GET_CLASS(obj)                                                            \
+	(G_TYPE_INSTANCE_GET_CLASS((obj), MU_TYPE_MSG_BODY_VIEW, MuMsgBodyViewClass))
 
-typedef struct _MuMsgBodyView      MuMsgBodyView;
-typedef struct _MuMsgBodyViewClass MuMsgBodyViewClass;
-typedef struct _MuMsgBodyViewPrivate         MuMsgBodyViewPrivate;
-
+typedef struct _MuMsgBodyView        MuMsgBodyView;
+typedef struct _MuMsgBodyViewClass   MuMsgBodyViewClass;
+typedef struct _MuMsgBodyViewPrivate MuMsgBodyViewPrivate;
 
 struct _MuMsgBodyView {
-	 WebKitWebView parent;
+	WebKitWebView parent;
 	/* insert public members, if any */
 
 	/* private */
-	MuMsgBodyViewPrivate *_priv;
+	MuMsgBodyViewPrivate* _priv;
 };
 
 struct _MuMsgBodyViewClass {
 	WebKitWebViewClass parent_class;
 
 	/* supported actions: "reindex", "view-source" */
-	void (* action_requested) (MuMsgBodyView* self, const char* action);
+	void (*action_requested)(MuMsgBodyView* self, const char* action);
 };
 
 /* member functions */
-GType        mu_msg_body_view_get_type    (void) G_GNUC_CONST;
+GType mu_msg_body_view_get_type(void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget*    mu_msg_body_view_new         (void);
+GtkWidget* mu_msg_body_view_new(void);
 
-void mu_msg_body_view_set_message (MuMsgBodyView *self, Mu::MuMsg *msg);
-void mu_msg_body_view_set_note (MuMsgBodyView *self, const gchar *html);
-void mu_msg_body_view_set_message_source (MuMsgBodyView *self, Mu::MuMsg *msg);
+void mu_msg_body_view_set_message(MuMsgBodyView* self, Mu::MuMsg* msg);
+void mu_msg_body_view_set_note(MuMsgBodyView* self, const gchar* html);
+void mu_msg_body_view_set_message_source(MuMsgBodyView* self, Mu::MuMsg* msg);
 
 G_END_DECLS
 

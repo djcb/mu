@@ -28,94 +28,91 @@
 using namespace Mu;
 
 static Xapian::Query
-xapian_query_op (const Mu::Tree& tree)
+xapian_query_op(const Mu::Tree& tree)
 {
 	Xapian::Query::op op;
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored   "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 	switch (tree.node.type) {
 	case Node::Type::OpNot: // OpNot x ::= <all> AND NOT x
-		  if (tree.children.size() != 1)
-			  throw std::runtime_error ("invalid # of children");
-		  return Xapian::Query (Xapian::Query::OP_AND_NOT,
-					Xapian::Query::MatchAll,
-					xapian_query(tree.children.front()));
-	case Node::Type::OpAnd: op    = Xapian::Query::OP_AND; break;
-	case Node::Type::OpOr:  op    = Xapian::Query::OP_OR; break;
-	case Node::Type::OpXor: op    = Xapian::Query::OP_XOR; break;
+		if (tree.children.size() != 1)
+			throw std::runtime_error("invalid # of children");
+		return Xapian::Query(Xapian::Query::OP_AND_NOT,
+		                     Xapian::Query::MatchAll,
+		                     xapian_query(tree.children.front()));
+	case Node::Type::OpAnd: op = Xapian::Query::OP_AND; break;
+	case Node::Type::OpOr: op = Xapian::Query::OP_OR; break;
+	case Node::Type::OpXor: op = Xapian::Query::OP_XOR; break;
 	case Node::Type::OpAndNot: op = Xapian::Query::OP_AND_NOT; break;
-	default: throw Mu::Error (Error::Code::Internal, "invalid op");	// bug
+	default: throw Mu::Error(Error::Code::Internal, "invalid op"); // bug
 	}
 #pragma GCC diagnostic pop
 	std::vector<Xapian::Query> childvec;
-	for (const auto& subtree: tree.children)
+	for (const auto& subtree : tree.children)
 		childvec.emplace_back(xapian_query(subtree));
 
 	return Xapian::Query(op, childvec.begin(), childvec.end());
 }
 
 static Xapian::Query
-make_query (const Value* val, const std::string& str, bool maybe_wildcard)
+make_query(const Value* val, const std::string& str, bool maybe_wildcard)
 {
 	const auto vlen{str.length()};
 	if (!maybe_wildcard || vlen <= 1 || str[vlen - 1] != '*')
 		return Xapian::Query(val->prefix + str);
 	else
 		return Xapian::Query(Xapian::Query::OP_WILDCARD,
-				     val->prefix + str.substr(0, vlen - 1));
+		                     val->prefix + str.substr(0, vlen - 1));
 }
 
 static Xapian::Query
-xapian_query_value (const Mu::Tree& tree)
+xapian_query_value(const Mu::Tree& tree)
 {
-	const auto v = dynamic_cast<Value*> (tree.node.data.get());
+	const auto v = dynamic_cast<Value*>(tree.node.data.get());
 	if (!v->phrase)
-		return make_query(v, v->value, true/*maybe-wildcard*/);
+		return make_query(v, v->value, true /*maybe-wildcard*/);
 
-	const auto parts = split (v->value, " ");
+	const auto parts = split(v->value, " ");
 	if (parts.empty())
 		return Xapian::Query::MatchNothing; // shouldn't happen
 
 	if (parts.size() == 1)
-		return make_query(v, parts.front(), true/*maybe-wildcard*/);
+		return make_query(v, parts.front(), true /*maybe-wildcard*/);
 
 	std::vector<Xapian::Query> phvec;
-	for (const auto& p: parts)
-		phvec.emplace_back(make_query(v, p, false/*no wildcards*/));
+	for (const auto& p : parts)
+		phvec.emplace_back(make_query(v, p, false /*no wildcards*/));
 
-        return Xapian::Query (Xapian::Query::OP_PHRASE, phvec.begin(), phvec.end());
+	return Xapian::Query(Xapian::Query::OP_PHRASE, phvec.begin(), phvec.end());
 }
 
 static Xapian::Query
-xapian_query_range (const Mu::Tree& tree)
+xapian_query_range(const Mu::Tree& tree)
 {
-	const auto r { dynamic_cast<Range *>(tree.node.data.get()) };
+	const auto r{dynamic_cast<Range*>(tree.node.data.get())};
 
-	return Xapian::Query(Xapian::Query::OP_VALUE_RANGE, (Xapian::valueno)r->id,
-			     r->lower, r->upper);
+	return Xapian::Query(Xapian::Query::OP_VALUE_RANGE,
+	                     (Xapian::valueno)r->id,
+	                     r->lower,
+	                     r->upper);
 }
 
 Xapian::Query
-Mu::xapian_query (const Mu::Tree& tree)
+Mu::xapian_query(const Mu::Tree& tree)
 {
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored   "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 	switch (tree.node.type) {
-	case Node::Type::Empty:
-		return Xapian::Query();
+	case Node::Type::Empty: return Xapian::Query();
 	case Node::Type::OpNot:
 	case Node::Type::OpAnd:
 	case Node::Type::OpOr:
 	case Node::Type::OpXor:
-	case Node::Type::OpAndNot:
-		return xapian_query_op (tree);
-	case Node::Type::Value:
-		return xapian_query_value (tree);
-	case Node::Type::Range:
-		return xapian_query_range (tree);
-	default:
-                throw Mu::Error (Error::Code::Internal, "invalid query");	// bug
+	case Node::Type::OpAndNot: return xapian_query_op(tree);
+	case Node::Type::Value: return xapian_query_value(tree);
+	case Node::Type::Range: return xapian_query_range(tree);
+	default: throw Mu::Error(Error::Code::Internal, "invalid query"); // bug
 	}
 #pragma GCC diagnostic pop
 }

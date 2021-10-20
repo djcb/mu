@@ -30,31 +30,30 @@
 #include "mu-cmd.hh"
 #include "mu-server.hh"
 
-
 #include "utils/mu-utils.hh"
 #include "utils/mu-command-parser.hh"
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
 static std::atomic<bool> MuTerminate{false};
-static bool tty;
+static bool              tty;
 
 static void
-install_sig_handler (void)
+install_sig_handler(void)
 {
-        struct sigaction action;
-        int i, sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGPIPE };
+	struct sigaction action;
+	int              i, sigs[] = {SIGINT, SIGHUP, SIGTERM, SIGPIPE};
 
-        MuTerminate = false;
+	MuTerminate = false;
 
-        action.sa_handler = [](int sig){ MuTerminate = true; };
-        sigemptyset(&action.sa_mask);
-        action.sa_flags   = SA_RESETHAND;
+	action.sa_handler = [](int sig) { MuTerminate = true; };
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = SA_RESETHAND;
 
-        for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
-                if (sigaction (sigs[i], &action, NULL) != 0)
-                        g_critical ("set sigaction for %d failed: %s",
-                                    sigs[i], g_strerror (errno));;
+	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
+		if (sigaction(sigs[i], &action, NULL) != 0)
+			g_critical("set sigaction for %d failed: %s", sigs[i], g_strerror(errno));
+	;
 }
 
 /*
@@ -68,85 +67,86 @@ install_sig_handler (void)
 static void
 cookie(size_t n)
 {
-        const auto num{static_cast<unsigned>(n)};
+	const auto num{static_cast<unsigned>(n)};
 
-        if (tty) // for testing.
-                ::printf ("[%x]", num);
-        else
-                ::printf (COOKIE_PRE "%x" COOKIE_POST, num);
+	if (tty) // for testing.
+		::printf("[%x]", num);
+	else
+		::printf(COOKIE_PRE "%x" COOKIE_POST, num);
 }
 
 static void
-output_sexp_stdout (Sexp&& sexp)
+output_sexp_stdout(Sexp&& sexp)
 {
-        const auto str{sexp.to_sexp_string()};
-        cookie(str.size() + 1);
-        if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
-                g_critical ("failed to write output '%s'", str.c_str());
-                ::raise (SIGTERM); /* terminate ourselves */
-        }
+	const auto str{sexp.to_sexp_string()};
+	cookie(str.size() + 1);
+	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
+		g_critical("failed to write output '%s'", str.c_str());
+		::raise(SIGTERM); /* terminate ourselves */
+	}
 }
 
 static void
 report_error(const Mu::Error& err) noexcept
 {
-        Sexp::List e;
+	Sexp::List e;
 
-        e.add_prop(":error",   Sexp::make_number(static_cast<size_t>(err.code())));
-        e.add_prop(":message", Sexp::make_string(err.what()));
+	e.add_prop(":error", Sexp::make_number(static_cast<size_t>(err.code())));
+	e.add_prop(":message", Sexp::make_string(err.what()));
 
-        output_sexp_stdout(Sexp::make_list(std::move(e)));
+	output_sexp_stdout(Sexp::make_list(std::move(e)));
 }
 
 MuError
-Mu::mu_cmd_server (const MuConfig *opts, GError **err) try {
+Mu::mu_cmd_server(const MuConfig* opts, GError** err)
+try {
+	Store  store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false /*writable*/};
+	Server server{store, output_sexp_stdout};
 
-        Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false/*writable*/};
-        Server server{store, output_sexp_stdout};
+	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
+	          store.metadata().database_path.c_str(),
+	          store.metadata().root_maildir.c_str(),
+	          opts->debug ? "yes" : "no");
 
-        g_message ("created server with store @ %s; maildir @ %s; debug-mode %s",
-                   store.metadata().database_path.c_str(),
-                   store.metadata().root_maildir.c_str(),
-                   opts->debug ? "yes" : "no");
+	tty = ::isatty(::fileno(stdout));
 
-        tty = ::isatty(::fileno(stdout));
+	const auto eval = std::string{opts->commands ? "(help :full t)"
+	                              : opts->eval   ? opts->eval
+	                                             : ""};
+	if (!eval.empty()) {
+		server.invoke(eval);
+		return MU_OK;
+	}
 
-        const auto eval = std::string {
-                opts->commands ? "(help :full t)" : opts->eval ? opts->eval : ""};
-        if (!eval.empty()) {
-                server.invoke(eval);
-                return MU_OK;
-        }
+	// Note, the readline stuff is inactive unless on a tty.
+	const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
+	setup_readline(histpath, 50);
 
-        // Note, the readline stuff is inactive unless on a tty.
-        const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
-        setup_readline(histpath, 50);
+	install_sig_handler();
+	std::cout << ";; Welcome to the " << PACKAGE_STRING << " command-server\n"
+		  << ";; Use (help) to get a list of commands, (quit) to quit.\n";
 
-        install_sig_handler();
-        std::cout << ";; Welcome to the "  << PACKAGE_STRING << " command-server\n"
-                  << ";; Use (help) to get a list of commands, (quit) to quit.\n";
+	bool do_quit{};
+	while (!MuTerminate && !do_quit) {
+		std::fflush(stdout); // Needed for Windows, see issue #1827.
+		const auto line{read_line(do_quit)};
+		if (line.find_first_not_of(" \t") == std::string::npos)
+			continue; // skip whitespace-only lines
 
-        bool do_quit{};
-        while (!MuTerminate && !do_quit) {
-                std::fflush(stdout); // Needed for Windows, see issue #1827.
-                const auto line{read_line(do_quit)};
-                if (line.find_first_not_of(" \t") == std::string::npos)
-                        continue; // skip whitespace-only lines
+		do_quit = server.invoke(line) ? false : true;
+		save_line(line);
+	}
+	shutdown_readline();
 
-                do_quit = server.invoke(line) ? false : true;
-                save_line(line);
-        }
-        shutdown_readline();
-
-        return MU_OK;
+	return MU_OK;
 
 } catch (const Error& er) {
-        /* note: user-level error, "OK" for mu */
-        report_error(er);
-        g_warning ("server caught exception: %s", er.what());
-        return MU_OK;
+	/* note: user-level error, "OK" for mu */
+	report_error(er);
+	g_warning("server caught exception: %s", er.what());
+	return MU_OK;
 } catch (...) {
-        g_critical ("server caught exception");
-        g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
-        return MU_ERROR;
+	g_critical("server caught exception");
+	g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
+	return MU_ERROR;
 }

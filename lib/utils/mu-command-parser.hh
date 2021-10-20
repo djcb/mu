@@ -30,7 +30,6 @@
 #include "utils/mu-error.hh"
 #include "utils/mu-sexp.hh"
 
-
 namespace Mu {
 namespace Command {
 
@@ -46,63 +45,66 @@ namespace Command {
 ///    for specify a non-required parameter to be absent; this is for convenience on the
 ///    call side.
 
-
 /// Information about a function argument
 struct ArgInfo {
-        ArgInfo (Sexp::Type typearg, bool requiredarg, std::string&& docarg):
-                type{typearg}, required{requiredarg},docstring{std::move(docarg)}
-                {}
-        const Sexp::Type type; /**< Sexp::Type of the argument */
-        const bool             required; /**< Is this argument required? */
-        const std::string      docstring; /**< Documentation */
+	ArgInfo(Sexp::Type typearg, bool requiredarg, std::string&& docarg)
+	    : type{typearg}, required{requiredarg}, docstring{std::move(docarg)}
+	{
+	}
+	const Sexp::Type  type;      /**< Sexp::Type of the argument */
+	const bool        required;  /**< Is this argument required? */
+	const std::string docstring; /**< Documentation */
 };
 
 /// The arguments for a function, which maps their names to the information.
-using ArgMap     = std::unordered_map<std::string, ArgInfo>;
+using ArgMap = std::unordered_map<std::string, ArgInfo>;
 // The parameters to a Handler.
 using Parameters = Sexp::Seq;
 
-int                get_int_or    (const Parameters& parms, const std::string& argname, int alt=0);
-bool               get_bool_or   (const Parameters& parms, const std::string& argname, bool alt=false);
-const std::string& get_string_or (const Parameters& parms, const std::string& argname, const std::string& alt="");
-const std::string& get_symbol_or (const Parameters& parms, const std::string& argname, const std::string& alt="nil");
+int  get_int_or(const Parameters& parms, const std::string& argname, int alt = 0);
+bool get_bool_or(const Parameters& parms, const std::string& argname, bool alt = false);
+const std::string&
+get_string_or(const Parameters& parms, const std::string& argname, const std::string& alt = "");
+const std::string&
+get_symbol_or(const Parameters& parms, const std::string& argname, const std::string& alt = "nil");
 
-
-std::vector<std::string> get_string_vec  (const Parameters& params, const std::string& argname);
-
+std::vector<std::string> get_string_vec(const Parameters& params, const std::string& argname);
 
 // A handler function
-using Handler    = std::function<void(const Parameters&)>;
+using Handler = std::function<void(const Parameters&)>;
 
 /// Information about some command
 struct CommandInfo {
-        CommandInfo(ArgMap&& argmaparg, std::string&& docarg, Handler&& handlerarg):
-                args{std::move(argmaparg)}, docstring{std::move(docarg)}, handler{std::move(handlerarg)}
-                {}
-        const ArgMap      args;
-        const std::string docstring;
-        const Handler     handler;
+	CommandInfo(ArgMap&& argmaparg, std::string&& docarg, Handler&& handlerarg)
+	    : args{std::move(argmaparg)}, docstring{std::move(docarg)}, handler{
+									    std::move(handlerarg)}
+	{
+	}
+	const ArgMap      args;
+	const std::string docstring;
+	const Handler     handler;
 
-        /**
-         * Get a sorted list of argument names, for display. Required args come
-         * first, then alphabetical.
-         *
-         * @return vec with the sorted names.
-         */
-        std::vector<std::string> sorted_argnames() const { // sort args -- by required, then alphabetical.
-                std::vector<std::string> names;
-                for (auto&& arg: args)
-                        names.emplace_back(arg.first);
-                std::sort(names.begin(), names.end(), [&](const auto& name1, const auto& name2) {
-                        const auto& arg1{args.find(name1)->second};
-                        const auto& arg2{args.find(name2)->second};
-                        if (arg1.required != arg2.required)
-                                return arg1.required;
-                        else
-                                return name1 < name2;
-                });
-                return names;
-        }
+	/**
+	 * Get a sorted list of argument names, for display. Required args come
+	 * first, then alphabetical.
+	 *
+	 * @return vec with the sorted names.
+	 */
+	std::vector<std::string> sorted_argnames() const
+	{ // sort args -- by required, then alphabetical.
+		std::vector<std::string> names;
+		for (auto&& arg : args)
+			names.emplace_back(arg.first);
+		std::sort(names.begin(), names.end(), [&](const auto& name1, const auto& name2) {
+			const auto& arg1{args.find(name1)->second};
+			const auto& arg2{args.find(name2)->second};
+			if (arg1.required != arg2.required)
+				return arg1.required;
+			else
+				return name1 < name2;
+		});
+		return names;
+	}
 };
 /// All commands, mapping their name to information about them.
 using CommandMap = std::unordered_map<std::string, CommandInfo>;
@@ -120,37 +122,34 @@ using CommandMap = std::unordered_map<std::string, CommandInfo>;
  */
 void invoke(const Command::CommandMap& cmap, const Sexp& call);
 
-
 static inline std::ostream&
 operator<<(std::ostream& os, const Command::ArgInfo& info)
 {
-        os << info.type
-           << " (" << ( info.required ? "required" : "optional" ) << ")";
+	os << info.type << " (" << (info.required ? "required" : "optional") << ")";
 
-        return os;
+	return os;
 }
 
 static inline std::ostream&
 operator<<(std::ostream& os, const Command::CommandInfo& info)
 {
-        for (auto&& arg: info.args)
-                os << "  " << arg.first << " " << arg.second << '\n'
-                   << "    " << arg.second.docstring << "\n";
+	for (auto&& arg : info.args)
+		os << "  " << arg.first << " " << arg.second << '\n'
+		   << "    " << arg.second.docstring << "\n";
 
-        return os;
+	return os;
 }
 
 static inline std::ostream&
 operator<<(std::ostream& os, const Command::CommandMap& map)
 {
-        for (auto&& c: map)
-                os << c.first << '\n' << c.second;
+	for (auto&& c : map)
+		os << c.first << '\n' << c.second;
 
-        return os;
+	return os;
 }
 
 } // namespace Command
 } // namespace Mu
-
 
 #endif /* MU_COMMAND_PARSER_HH__ */

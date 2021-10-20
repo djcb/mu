@@ -27,18 +27,17 @@
 using namespace Mu;
 
 static bool
-is_separator (char c)
+is_separator(char c)
 {
 	if (isblank(c))
 		return true;
 
-	const auto seps = std::string ("()");
+	const auto seps = std::string("()");
 	return seps.find(c) != std::string::npos;
 }
 
-
 static Mu::Token
-op_or_value (size_t pos, const std::string& val)
+op_or_value(size_t pos, const std::string& val)
 {
 	auto s = val;
 	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -56,21 +55,20 @@ op_or_value (size_t pos, const std::string& val)
 }
 
 static void
-unread_char (std::string& food, char kar, size_t& pos)
+unread_char(std::string& food, char kar, size_t& pos)
 {
 	food = kar + food;
 	--pos;
 }
 
 static Mu::Token
-eat_token (std::string& food, size_t& pos)
+eat_token(std::string& food, size_t& pos)
 {
-	bool quoted{};
-	bool escaped{};
-	std::string value {};
+	bool        quoted{};
+	bool        escaped{};
+	std::string value{};
 
 	while (!food.empty()) {
-
 		const auto kar = food[0];
 		food.erase(0, 1);
 		++pos;
@@ -91,9 +89,8 @@ eat_token (std::string& food, size_t& pos)
 		}
 
 		if (!quoted && !escaped && is_separator(kar)) {
-
 			if (!value.empty() && kar != ':') {
-				unread_char (food, kar, pos);
+				unread_char(food, kar, pos);
 				return op_or_value(pos, value);
 			}
 
@@ -102,32 +99,31 @@ eat_token (std::string& food, size_t& pos)
 
 			switch (kar) {
 			case '(': return {pos, Token::Type::Open, "("};
-			case ')': return {pos, Token::Type::Close,")"};
+			case ')': return {pos, Token::Type::Close, ")"};
 			default: break;
 			}
 		}
 
-		value	+= kar;
-		escaped	 = false;
+		value += kar;
+		escaped = false;
 	}
 
 	return {pos, Token::Type::Data, value};
 }
 
-
 Mu::Tokens
-Mu::tokenize (const std::string& s)
+Mu::tokenize(const std::string& s)
 {
 	Tokens tokens{};
 
 	std::string food = utf8_clean(s);
-	size_t pos{0};
+	size_t      pos{0};
 
 	if (s.empty())
 		return {};
 
 	while (!food.empty())
-		tokens.emplace_back(eat_token (food, pos));
+		tokens.emplace_back(eat_token(food, pos));
 
 	return tokens;
 }

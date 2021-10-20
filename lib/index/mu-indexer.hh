@@ -29,86 +29,82 @@ class Store;
 
 /// An object abstracting the index process.
 class Indexer {
-public:
-         /**
-         * Construct an indexer object
-         *
-         * @param store the message store to use
-         */
-        Indexer (Store& store);
+      public:
+	/**
+	 * Construct an indexer object
+	 *
+	 * @param store the message store to use
+	 */
+	Indexer(Store& store);
 
-        /**
-         * DTOR
-         */
-        ~Indexer();
+	/**
+	 * DTOR
+	 */
+	~Indexer();
 
-               /// A configuration object for the indexer
-        struct Config {
-                bool scan{true};
-                /**< scan for new messages */
-                bool cleanup{true};
-                /**< clean messages no longer in the file system */
-                size_t max_threads{};
-                /**< maximum # of threads to use */
-                bool ignore_noupdate{};
-                /**< ignore .noupdate files */
-                bool lazy_check{};
-                /**< whether to skip directories that don't have a changed
-                 * mtime */
-        };
+	/// A configuration object for the indexer
+	struct Config {
+		bool scan{true};
+		/**< scan for new messages */
+		bool cleanup{true};
+		/**< clean messages no longer in the file system */
+		size_t max_threads{};
+		/**< maximum # of threads to use */
+		bool ignore_noupdate{};
+		/**< ignore .noupdate files */
+		bool lazy_check{};
+		/**< whether to skip directories that don't have a changed
+		 * mtime */
+	};
 
+	/**
+	 * Start indexing. If already underway, do nothing.
+	 *
+	 * @param conf a configuration object
+	 *
+	 * @return true if starting worked or an indexing process was already
+	 * underway; false otherwise.
+	 *
+	 */
+	bool start(const Config& conf);
 
-        /**
-         * Start indexing. If already underway, do nothing.
-         *
-         * @param conf a configuration object
-         *
-         * @return true if starting worked or an indexing process was already
-         * underway; false otherwise.
-         *
-         */
-        bool start(const Config& conf);
+	/**
+	 * Stop indexing. If not indexing, do nothing.
+	 *
+	 *
+	 * @return true if we stopped indexing, or indexing was not underway.
+	 * False otherwise.
+	 */
+	bool stop();
 
-        /**
-         * Stop indexing. If not indexing, do nothing.
-         *
-         *
-         * @return true if we stopped indexing, or indexing was not underway.
-         * False otherwise.
-         */
-        bool stop();
+	/**
+	 * Is an indexing process running?
+	 *
+	 * @return true or false.
+	 */
+	bool is_running() const;
 
-        /**
-         * Is an indexing process running?
-         *
-         * @return true or false.
-         */
-        bool is_running() const;
+	// Object describing current progress
+	struct Progress {
+		bool   running{};   /**< Is an index operation in progress? */
+		size_t processed{}; /**< Number of messages processed */
+		size_t updated{};   /**< Number of messages added/updated to store */
+		size_t removed{};   /**< Number of message removed from store */
+	};
 
+	/**
+	 * Get an object describing the current progress. The progress object
+	 * describes the most recent indexing job, and is reset up a fresh
+	 * start().
+	 *
+	 * @return a progress object.
+	 */
+	Progress progress() const;
 
-        // Object describing current progress
-        struct Progress {
-                bool   running{};   /**< Is an index operation in progress? */
-                size_t processed{}; /**< Number of messages processed */
-                size_t updated{};   /**< Number of messages added/updated to store */
-                size_t removed{};   /**< Number of message removed from store */
-        };
-
-        /**
-         * Get an object describing the current progress. The progress object
-         * describes the most recent indexing job, and is reset up a fresh
-         * start().
-         *
-         * @return a progress object.
-         */
-        Progress progress() const;
-
-private:
-        struct                   Private;
-        std::unique_ptr<Private> priv_;
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
-
-
 
 } // namespace Mu
 #endif /* MU_INDEXER_HH__ */
