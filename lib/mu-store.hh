@@ -279,11 +279,17 @@ class Store {
 	bool empty() const;
 
 	/**
-	 * Commit the current group of modifications (i.e., transaction) to disk;
-	 * This rarely needs to be called explicitly, as Store will take care of
-	 * it.
+	 * Start a Xapian transaction, opportunistically. If a transaction
+	 * is already underway, do nothing.
 	 */
-	void commit();
+	void begin_transaction();
+
+	/**
+	 * Commit the current group of modifications (i.e., transaction) to
+	 * disk, opportunistically. If no transaction is underway, do
+	 * nothing.
+	 */
+	void commit_transaction();
 
 	/**
 	 * Get a reference to the private data. For internal use.

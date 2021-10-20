@@ -110,8 +110,6 @@ struct Store::Private {
 	      mdata_{make_metadata(path)}, contacts_{db().get_metadata(ContactsKey),
 	                                             mdata_.personal_addresses}
 	{
-		if (!readonly)
-			begin_transaction();
 	}
 
 	Private(const std::string&   path,
@@ -122,7 +120,6 @@ struct Store::Private {
 	      mdata_{init_metadata(conf, path, root_maildir, personal_addresses)},
 	      contacts_{"", mdata_.personal_addresses}
 	{
-		begin_transaction();
 	}
 
 	Private(const std::string&   root_maildir,
@@ -140,15 +137,14 @@ struct Store::Private {
 		if (!read_only_) {
 			xapian_try([&] {
 				writable_db().set_metadata(ContactsKey, contacts_.serialize());
-				commit();
 			});
+			if (in_transaction_)
+				commit_transaction();
 		}
 	}
 
 	std::unique_ptr<Xapian::Database> make_xapian_db(const std::string db_path, XapianOpts opts)
 	try {
-		in_transaction_ = false;
-
 		switch (opts) {
 		case XapianOpts::ReadOnly: return std::make_unique<Xapian::Database>(db_path);
 		case XapianOpts::Open:
@@ -184,32 +180,30 @@ struct Store::Private {
 		return dynamic_cast<Xapian::WritableDatabase&>(*db_.get());
 	}
 
-	void dirty()
-	{
-		if (++dirtiness_ > mdata_.batch_size)
-			xapian_try([this] { commit(); });
-	}
-
 	void begin_transaction() noexcept
 	{
+		if (mdata_.in_memory)
+			return; // not supported in the in-memory backend.
+
 		g_return_if_fail(!in_transaction_);
+		g_debug("starting transaction");
 		xapian_try([this] {
 			writable_db().begin_transaction();
 			in_transaction_ = true;
 		});
 	}
 
-	void commit() noexcept
+	void commit_transaction() noexcept
 	{
-		g_debug("committing %zu modification(s)", dirtiness_);
-		dirtiness_ = 0;
 		if (mdata_.in_memory)
 			return; // not supported in the in-memory backend.
+
+		g_return_if_fail(in_transaction_);
+		g_debug("committing modification(s)");
 		xapian_try([this] {
 			if (in_transaction_)
 				writable_db().commit_transaction();
 			in_transaction_ = false;
-			begin_transaction();
 		});
 	}
 
@@ -286,9 +280,6 @@ struct Store::Private {
 
 	std::atomic<bool> in_transaction_{};
 	std::mutex        lock_;
-	size_t            dirtiness_{};
-
-	mutable std::atomic<std::size_t> ref_count_{1};
 };
 
 static void
@@ -433,7 +424,6 @@ Store::add_message(const std::string& path)
 		throw Error{Error::Code::Message, "failed to add message"};
 
 	g_debug("added message @ %s; docid = %u", path.c_str(), docid);
-	priv_->dirty();
 
 	return docid;
 }
@@ -447,7 +437,6 @@ Store::update_message(MuMsg* msg, unsigned docid)
 		throw Error{Error::Code::Internal, "failed to update message"};
 
 	g_debug("updated message @ %s; docid = %u", mu_msg_get_path(msg), docid);
-	priv_->dirty();
 
 	return true;
 }
@@ -462,7 +451,6 @@ Store::remove_message(const std::string& path)
 		    priv_->writable_db().delete_document(term);
 
 		    g_debug("deleted message @ %s from store", path.c_str());
-		    priv_->dirty();
 
 		    return true;
 	    },
@@ -472,13 +460,16 @@ Store::remove_message(const std::string& path)
 void
 Store::remove_messages(const std::vector<Store::Id>& ids)
 {
+	begin_transaction();
+
 	xapian_try([&] {
 		LOCKED;
 		for (auto&& id : ids) {
 			priv_->writable_db().delete_document(id);
-			priv_->dirty();
 		}
 	});
+
+	commit_transaction();
 }
 
 time_t
@@ -502,7 +493,6 @@ Store::set_dirstamp(const std::string& path, time_t tstamp)
 	const std::size_t len = g_snprintf(data.data(), data.size(), "%zx", (size_t)tstamp);
 
 	priv_->writable_db().set_metadata(path, std::string{data.data(), len});
-	priv_->dirty();
 }
 
 MuMsg*
@@ -595,11 +585,22 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 }
 
 void
-Store::commit()
+Store::begin_transaction()
 {
 	xapian_try([&] {
 		LOCKED;
-		priv_->commit();
+		if (!priv_->in_transaction_)
+			priv_->begin_transaction();
+	});
+}
+
+void
+Store::commit_transaction()
+{
+	xapian_try([&] {
+		LOCKED;
+		if (priv_->in_transaction_)
+			priv_->commit_transaction();
 	});
 }
 
