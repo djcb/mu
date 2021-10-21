@@ -35,13 +35,13 @@ namespace Mu {
 /// Scans maildir (trees) recursively, and calls the Handler callback for
 /// directories & files.
 ///
-/// It filters out (i.e., does call the handler for):
+/// It filters out (i.e., does *not* call the handler for):
 ///  - files starting with '.'
 ///  - files that do not live in a cur / new leaf maildir
-///  - directories '.' and '..'
+///  - directories '.' and '..' and 'tmp'
 ///
 class Scanner {
-      public:
+	public:
 	enum struct HandleType {
 		File,
 		EnterNewCur, /* cur/ or new/ */
@@ -90,7 +90,7 @@ class Scanner {
 	 */
 	bool is_running() const;
 
-      private:
+	private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };

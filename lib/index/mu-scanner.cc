@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -58,43 +58,34 @@ struct Scanner::Private {
 };
 
 static bool
-is_special_dir(const struct dirent* dentry)
+is_special_dir(const char* d_name)
 {
-	const auto d_name{dentry->d_name};
 	return d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
 	       (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.');
-}
-
-static bool
-is_new_cur(const char* dirname)
-{
-	if (dirname[0] == 'c' && dirname[1] == 'u' && dirname[2] == 'r' && dirname[3] == '\0')
-		return true;
-
-	if (dirname[0] == 'n' && dirname[1] == 'e' && dirname[2] == 'w' && dirname[3] == '\0')
-		return true;
-
-	return false;
 }
 
 bool
 Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry, bool is_maildir)
 {
-	if (is_special_dir(dentry))
+	const auto d_name{dentry->d_name};
+
+	if (is_special_dir(d_name) || std::strcmp(d_name, "tmp") == 0)
 		return true; // ignore.
 
-	const auto  fullpath{path + "/" + dentry->d_name};
-	struct stat statbuf;
+	const auto  fullpath{path + "/" + d_name};
+	struct stat statbuf {
+	};
 	if (::stat(fullpath.c_str(), &statbuf) != 0) {
 		g_warning("failed to stat %s: %s", fullpath.c_str(), g_strerror(errno));
 		return false;
 	}
 
 	if (S_ISDIR(statbuf.st_mode)) {
-		const auto new_cur = is_new_cur(dentry->d_name);
-		const auto htype   = new_cur ? Scanner::HandleType::EnterNewCur
-		                             : Scanner::HandleType::EnterDir;
-		const auto res     = handler_(fullpath, &statbuf, htype);
+		const auto new_cur =
+		    std::strcmp(d_name, "cur") == 0 || std::strcmp(d_name, "new") == 0;
+		const auto htype = new_cur ? Scanner::HandleType::EnterNewCur
+		                           : Scanner::HandleType::EnterDir;
+		const auto res   = handler_(fullpath, &statbuf, htype);
 		if (!res)
 			return true; // skip
 
