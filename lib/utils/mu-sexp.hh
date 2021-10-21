@@ -179,6 +179,11 @@ struct Sexp {
 		}
 
 		/**
+		 * Remove all elements from the list.
+		 */
+		void clear() { seq_.clear(); }
+
+		/**
 		 * Get the number of elements in the list
 		 *
 		 * @return number
@@ -192,7 +197,7 @@ struct Sexp {
 		 */
 		size_t empty() const { return seq_.empty(); }
 
-	      private:
+		private:
 		friend struct Sexp;
 		Seq seq_;
 	};
@@ -292,7 +297,7 @@ struct Sexp {
 			return is_prop_list(list().begin() + 1, list().end());
 	};
 
-      private:
+	private:
 	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)}
 	{
 		if (is_list())

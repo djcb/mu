@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -104,7 +104,7 @@ struct Server::Private {
 	void sent_handler(const Parameters& params);
 	void view_handler(const Parameters& params);
 
-      private:
+	private:
 	// helpers
 	Sexp build_message_sexp(MuMsg*                    msg,
 	                        unsigned                  docid,
@@ -132,13 +132,12 @@ struct Server::Private {
 };
 
 static Sexp
-build_metadata(const QueryMatch& qmatch, unsigned docid)
+build_metadata(const QueryMatch& qmatch)
 {
 	Sexp::List mdata;
 
 	auto symbol_t = [] { return Sexp::make_symbol("t"); };
 
-	mdata.add_prop(":docid", Sexp::make_number(docid));
 	mdata.add_prop(":path", Sexp::make_string(qmatch.thread_path));
 	mdata.add_prop(":level", Sexp::make_number(qmatch.thread_level));
 	mdata.add_prop(":date", Sexp::make_string(qmatch.thread_date));
@@ -170,12 +169,9 @@ build_metadata(const QueryMatch& qmatch, unsigned docid)
 	return Sexp::make_list(std::move(mdata));
 }
 
-/* a full message-sexp consists looks something like:
- *     (:meta (<thread-info etc>) :message (<mesage-info>))
- *
- * before, we stuffed the meta-data in the message; however,
- * keeping the message 'pristine' allows us to cache the message
- * sexps (TBI).
+/*
+ * A message here is a Sexp::List consists of a message s-expression with
+ * optionally a :meta expression added.
  */
 Sexp
 Server::Private::build_message_sexp(MuMsg*                    msg,
@@ -183,13 +179,11 @@ Server::Private::build_message_sexp(MuMsg*                    msg,
                                     const Option<QueryMatch&> qm,
                                     MuMsgOptions              opts) const
 {
-	Sexp::List msexp;
-
-	msexp.add_prop(":message", Sexp::make_list(Mu::msg_to_sexp_list(msg, docid, opts)));
+	auto msgsexp{Mu::msg_to_sexp_list(msg, docid, opts)};
 	if (qm)
-		msexp.add_prop(":meta", build_metadata(*qm, docid));
+		msgsexp.add_prop(":meta", build_metadata(*qm));
 
-	return Sexp::make_list(std::move(msexp));
+	return Sexp::make_list(std::move(msgsexp));
 }
 
 CommandMap
@@ -617,19 +611,36 @@ determine_docids(const Query& q, const Parameters& params)
 size_t
 Server::Private::output_results(const QueryResults& qres, size_t batch_size) const
 {
-	size_t n{};
+	size_t     n{};
+	Sexp::List headers;
+
+	const auto output_batch = [&](Sexp::List&& hdrs) {
+		Sexp::List batch;
+		batch.add_prop(":headers", Sexp::make_list(std::move(hdrs)));
+		output_sexp(std::move(batch));
+	};
 
 	for (auto&& mi : qres) {
 		auto msg{mi.floating_msg()};
 		if (!msg)
 			continue;
 		++n;
-		auto       qm{mi.query_match()};
-		Sexp::List lst;
-		lst.add_prop(":header",
-		             build_message_sexp(msg, mi.doc_id(), qm, MU_MSG_OPTION_HEADERS_ONLY));
-		output_sexp(std::move(lst));
+
+		// construct sexp for a single header.
+		auto qm{mi.query_match()};
+		headers.add(build_message_sexp(msg, mi.doc_id(), qm, MU_MSG_OPTION_HEADERS_ONLY));
+		// we output up-to-batch-size lists of messages. It's much
+		// faster (on the emacs side) to handle such batches than single
+		// headers.
+		if (headers.size() % batch_size == 0) {
+			output_batch(std::move(headers));
+			headers.clear();
+		};
 	}
+
+	// remaining.
+	if (!headers.empty())
+		output_batch(std::move(headers));
 
 	return n;
 }
@@ -639,7 +650,8 @@ Server::Private::find_handler(const Parameters& params)
 {
 	const auto q{get_string_or(params, ":query")};
 	const auto threads{get_bool_or(params, ":threads", false)};
-	const auto batch_size{get_int_or(params, ":batch-size", 60)};
+	// perhaps let mu4e set this as frame-lines of the appropriate frame.
+	const auto batch_size{get_int_or(params, ":batch-size", 110)};
 	const auto sortfieldstr{get_symbol_or(params, ":sortfield", "")};
 	const auto descending{get_bool_or(params, ":descending", false)};
 	const auto maxnum{get_int_or(params, ":maxnum", -1 /*unlimited*/)};
@@ -820,8 +832,8 @@ Server::Private::perform_move(Store::Id          docid,
 	if (!mu_msg_move_to_maildir(msg, maildir.c_str(), flags, TRUE, new_name, &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 
-	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir fields
-	 * will be updated as wel */
+	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
+	 * fields will be updated as wel */
 	if (!store_.update_message(msg, docid))
 		throw Error{Error::Code::Store, "failed to store updated message"};
 
@@ -1037,8 +1049,8 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid)
 	                            &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 
-	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir fields
-	 * will be updated as wel */
+	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
+	 * fields will be updated as wel */
 	if (!store().update_message(msg, docid))
 		throw Error{Error::Code::Store, "failed to store updated message"};
 
