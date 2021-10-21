@@ -64,7 +64,6 @@
 ;; desktop-save-mode; so let's turn that off.
 (with-eval-after-load 'desktop
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
-
 
 ;;;###autoload
 (defun mu4e (&optional background)
@@ -232,13 +231,13 @@ successful, call FUNC (if non-nil) afterwards."
   "Initialize the server message handlers.
 Only set set them if they were nil before, so overriding has a
 chance."
-  (mu4e-setq-if-nil mu4e-error-func    #'mu4e--error-handler)
-  (mu4e-setq-if-nil mu4e-update-func   #'mu4e~headers-update-handler)
-  (mu4e-setq-if-nil mu4e-remove-func   #'mu4e~headers-remove-handler)
-  (mu4e-setq-if-nil mu4e-view-func     #'mu4e~headers-view-handler)
-  (mu4e-setq-if-nil mu4e-header-func   #'mu4e~headers-header-handler)
-  (mu4e-setq-if-nil mu4e-found-func    #'mu4e~headers-found-handler)
-  (mu4e-setq-if-nil mu4e-erase-func    #'mu4e~headers-clear)
+  (mu4e-setq-if-nil mu4e-error-func            #'mu4e--error-handler)
+  (mu4e-setq-if-nil mu4e-update-func           #'mu4e~headers-update-handler)
+  (mu4e-setq-if-nil mu4e-remove-func           #'mu4e~headers-remove-handler)
+  (mu4e-setq-if-nil mu4e-view-func             #'mu4e~headers-view-handler)
+  (mu4e-setq-if-nil mu4e-headers-append-func   #'mu4e~headers-append-handler)
+  (mu4e-setq-if-nil mu4e-found-func            #'mu4e~headers-found-handler)
+  (mu4e-setq-if-nil mu4e-erase-func            #'mu4e~headers-clear)
 
   (mu4e-setq-if-nil mu4e-sent-func     #'mu4e--default-handler)
   (mu4e-setq-if-nil mu4e-compose-func  #'mu4e~compose-handler)

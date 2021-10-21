@@ -318,93 +318,10 @@ This is mostly useful for profiling.")
           (goto-char (point-min))
           (insert (propertize msg 'face 'mu4e-system-face 'intangible t)))))))
 
-;;; Handler functions
 
-;; next are a bunch of handler functions; those will be called from mu4e~proc in
-;; response to output from the server process
 
-(defun mu4e~headers-view-handler (msg)
-  "Handler function for displaying a message."
-  (mu4e-view msg))
 
-(defun mu4e~headers-view-this-message-p (docid)
-  "Is DOCID currently being viewed?"
-  (when (buffer-live-p (mu4e-get-view-buffer))
-    (with-current-buffer (mu4e-get-view-buffer)
-      (eq docid (plist-get mu4e~view-message :docid)))))
 
-(defun mu4e~headers-update-handler (msg is-move maybe-view)
-  "Update handler, will be called when a message has been updated
-in the database. This function will update the current list of
-headers."
-  (when (buffer-live-p (mu4e-get-headers-buffer))
-    (with-current-buffer (mu4e-get-headers-buffer)
-      (let* ((docid (mu4e-message-field msg :docid))
-             (initial-message-at-point (mu4e~headers-docid-at-point))
-             (initial-column (current-column))
-             (point (mu4e~headers-docid-pos docid))
-             (markinfo (gethash docid mu4e~mark-map)))
-        (when point ;; is the message present in this list?
-
-          ;; if it's marked, unmark it now
-          (when (mu4e-mark-docid-marked-p docid)
-            (mu4e-mark-set 'unmark))
-
-          ;; re-use the thread info from the old one; this is needed because
-          ;; *update* messages don't have thread info by themselves (unlike
-          ;; search results)
-          ;; since we still have the search results, re-use
-          ;; those
-          (plist-put msg :meta
-                     (mu4e~headers-field-for-docid docid :meta))
-
-          ;; first, remove the old one (otherwise, we'd have two headers with
-          ;; the same docid...
-          (mu4e~headers-remove-header docid t)
-
-          ;; if we're actually viewing this message (in mu4e-view mode), we
-          ;; update it; that way, the flags can be updated, as well as the path
-          ;; (which is useful for viewing the raw message)
-          (when (and maybe-view (mu4e~headers-view-this-message-p docid))
-            (mu4e-view msg))
-          ;; now, if this update was about *moving* a message, we don't show it
-          ;; anymore (of course, we cannot be sure if the message really no
-          ;; longer matches the query, but this seem a good heuristic.  if it
-          ;; was only a flag-change, show the message with its updated flags.
-          (unless is-move
-            (mu4e~headers-header-handler msg point))
-
-          ;; restore the mark, if any. See #2076.
-          (when (and markinfo (mu4e~headers-goto-docid docid))
-            (mu4e-mark-at-point (car markinfo) (cdr markinfo)))
-
-          (if (and initial-message-at-point
-                   (mu4e~headers-goto-docid initial-message-at-point))
-              (progn
-                (move-to-column initial-column)
-                (mu4e~headers-highlight initial-message-at-point))
-            ;; attempt to highlight the corresponding line and make it visible
-            (mu4e~headers-highlight docid))
-          (run-hooks 'mu4e-message-changed-hook))))))
-
-(defun mu4e~headers-remove-handler (docid &optional skip-hook)
-  "Remove handler, will be called when a message with DOCID has
-been removed from the database. This function will hide the removed
-message from the current list of headers. If the message is not
-present, don't do anything.
-
-If SKIP-HOOK is absent or nil, `mu4e-message-changed-hook' will be invoked."
-  (when (buffer-live-p (mu4e-get-headers-buffer))
-    (mu4e~headers-remove-header docid t))
-  ;; if we were viewing this message, close it now.
-  (when (and (mu4e~headers-view-this-message-p docid)
-             (buffer-live-p (mu4e-get-view-buffer)))
-    (unless (eq mu4e-split-view 'single-window)
-      (mapc #'delete-window (get-buffer-window-list
-                             (mu4e-get-view-buffer) nil t)))
-    (kill-buffer (mu4e-get-view-buffer)))
-  (unless skip-hook
-    (run-hooks 'mu4e-message-changed-hook)))
 
 
 ;;; Misc
@@ -462,6 +379,7 @@ nil. Returns the docid, or nil if there is none."
     (when point
       (goto-char point))
     (get-text-property (line-beginning-position) 'docid)))
+
 
 
 (defun mu4e~headers-goto-docid (docid &optional to-mark)
@@ -669,14 +587,11 @@ found."
       (:size (mu4e-display-size val))
       (t (mu4e~headers-custom-field-value msg field)))))
 
-
 (defun mu4e~headers-truncate-field-fast (val width)
   "Truncate VAL to WIDTH. Fast and somewhat inaccurate."
   (if width
       (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
     val))
-
-
 
 (defun mu4e~headers-truncate-field-precise (field val width)
   "Return VAL truncated to one less than WIDTH, with a trailing
@@ -742,16 +657,131 @@ displaying in the header view."
      (mapconcat (lambda (f-w) (mu4e~headers-field-handler f-w msg))
                 mu4e-headers-fields " "))))
 
+
+(defsubst mu4e~headers-insert-header (msg pos)
+  "Insert a header for MSG at point POS."
+  (when-let ((line (mu4e~message-header-line msg))
+	     (docid (plist-get msg :docid)))
+    (goto-char pos)
+    (insert
+     (propertize
+      (concat
+       (mu4e~headers-docid-cookie docid)
+       mu4e~mark-fringe line "\n")
+      'docid docid 'msg msg))))
+
+(defun mu4e~headers-remove-header (docid &optional ignore-missing)
+  "Remove header with DOCID at point.
+When IGNORE-MISSING is non-nill, don't raise an error when the
+docid is not found."
+  (with-current-buffer (mu4e-get-headers-buffer)
+    (if (mu4e~headers-goto-docid docid)
+        (let ((inhibit-read-only t))
+          (delete-region (line-beginning-position) (line-beginning-position 2)))
+      (unless ignore-missing
+        (mu4e-error "Cannot find message with docid %S" docid)))))
+
+
+;;; Handler functions
+
+;; next are a bunch of handler functions; those will be called from mu4e~proc in
+;; response to output from the server process
+
+(defun mu4e~headers-view-handler (msg)
+  "Handler function for displaying a message."
+  (mu4e-view msg))
+
+(defun mu4e~headers-view-this-message-p (docid)
+  "Is DOCID currently being viewed?"
+  (when (buffer-live-p (mu4e-get-view-buffer))
+    (with-current-buffer (mu4e-get-view-buffer)
+      (eq docid (plist-get mu4e~view-message :docid)))))
+
 ;; note: this function is very performance-sensitive
-(defun mu4e~headers-header-handler (msg &optional point)
-  "Create a one line description of MSG in this buffer, at POINT,
-if provided, or at the end of the buffer otherwise."
+(defun mu4e~headers-append-handler (msglst)
+  "Append one-line descriptions of messages in MSGLIST.
+Do this at the end of the headers-buffer."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
-      (let ((line (mu4e~message-header-line msg)))
-        (when line
-          (mu4e~headers-add-header line (mu4e-message-field msg :docid)
-                                   point msg))))))
+      (save-excursion
+	(let ((inhibit-read-only t))
+	  (seq-do
+	   (lambda (msg)
+	     (mu4e~headers-insert-header msg (point-max)))
+	   msglst))))))
+
+
+(defun mu4e~headers-update-handler (msg is-move maybe-view)
+  "Update handler, will be called when a message has been updated
+in the database. This function will update the current list of
+headers."
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (with-current-buffer (mu4e-get-headers-buffer)
+      (let* ((docid (mu4e-message-field msg :docid))
+             (initial-message-at-point (mu4e~headers-docid-at-point))
+             (initial-column (current-column))
+	     (inhibit-read-only t)
+             (point (mu4e~headers-docid-pos docid))
+             (markinfo (gethash docid mu4e~mark-map)))
+        (when point ;; is the message present in this list?
+
+          ;; if it's marked, unmark it now
+          (when (mu4e-mark-docid-marked-p docid)
+            (mu4e-mark-set 'unmark))
+
+          ;; re-use the thread info from the old one; this is needed because
+          ;; *update* messages don't have thread info by themselves (unlike
+          ;; search results)
+          ;; since we still have the search results, re-use
+          ;; those
+          (plist-put msg :meta
+                     (mu4e~headers-field-for-docid docid :meta))
+
+          ;; first, remove the old one (otherwise, we'd have two headers with
+          ;; the same docid...
+          (mu4e~headers-remove-header docid t)
+
+          ;; if we're actually viewing this message (in mu4e-view mode), we
+          ;; update it; that way, the flags can be updated, as well as the path
+          ;; (which is useful for viewing the raw message)
+          (when (and maybe-view (mu4e~headers-view-this-message-p docid))
+            (mu4e-view msg))
+          ;; now, if this update was about *moving* a message, we don't show it
+          ;; anymore (of course, we cannot be sure if the message really no
+          ;; longer matches the query, but this seem a good heuristic.  if it
+          ;; was only a flag-change, show the message with its updated flags.
+          (unless is-move
+	    (save-excursion
+	      (mu4e~headers-insert-header msg point)))
+
+          ;; restore the mark, if any. See #2076.
+          (when (and markinfo (mu4e~headers-goto-docid docid))
+            (mu4e-mark-at-point (car markinfo) (cdr markinfo)))
+
+          (if (and initial-message-at-point
+                   (mu4e~headers-goto-docid initial-message-at-point))
+              (progn
+                (move-to-column initial-column)
+                (mu4e~headers-highlight initial-message-at-point))
+            ;; attempt to highlight the corresponding line and make it visible
+            (mu4e~headers-highlight docid))
+          (run-hooks 'mu4e-message-changed-hook))))))
+
+(defun mu4e~headers-remove-handler (docid)
+  "Remove handler, will be called when a message with DOCID has
+been removed from the database. This function will hide the removed
+message from the current list of headers. If the message is not
+present, don't do anything."
+  (when (buffer-live-p (mu4e-get-headers-buffer))
+    (mu4e~headers-remove-header docid t))
+  ;; if we were viewing this message, close it now.
+  (when (and (mu4e~headers-view-this-message-p docid)
+             (buffer-live-p (mu4e-get-view-buffer)))
+    (unless (eq mu4e-split-view 'single-window)
+      (mapc #'delete-window (get-buffer-window-list
+                             (mu4e-get-view-buffer) nil t)))
+    (kill-buffer (mu4e-get-view-buffer))))
+
 
 
 ;;; Performing queries (internal)
@@ -1087,7 +1117,7 @@ after the end of the search results."
 (defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there
-isno user-interaction ongoing."
+is no user-interaction ongoing."
   (when (and mu4e-headers-auto-update          ;; must be set
 	     mu4e-index-update-status
 	     (> 0 (plist-get mu4e-index-update-status :updated))
@@ -1183,33 +1213,6 @@ message plist, or nil if not found."
                  'msg msg)))
       (goto-char oldpoint))))
 
-(defun mu4e~headers-add-header (str docid point &optional msg)
-  "Add header STR with DOCID to the buffer at POINT if non-nil, or
-at (point-max) otherwise. If MSG is not nil, add it as the
-text-property `msg'."
-  (when (buffer-live-p (mu4e-get-headers-buffer))
-    (with-current-buffer (mu4e-get-headers-buffer)
-      (let ((inhibit-read-only t))
-        (save-excursion
-          (goto-char (if point point (point-max)))
-          (insert
-           (propertize
-            (concat
-             (mu4e~headers-docid-cookie docid)
-             mu4e~mark-fringe
-             str "\n")
-            'docid docid 'msg msg)))))))
-
-(defun mu4e~headers-remove-header (docid &optional ignore-missing)
-  "Remove header with DOCID at point.
-When IGNORE-MISSING is non-nill, don't raise an error when the
-docid is not found."
-  (with-current-buffer (mu4e-get-headers-buffer)
-    (if (mu4e~headers-goto-docid docid)
-        (let ((inhibit-read-only t))
-          (delete-region (line-beginning-position) (line-beginning-position 2)))
-      (unless ignore-missing
-        (mu4e-error "Cannot find message with docid %S" docid)))))
 
 ;;; Queries & searching
 (defvar mu4e~headers-mode-line-label "")

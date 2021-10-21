@@ -98,10 +98,12 @@ passed the docid and the draft-path of the sent message.")
 The function is passed a message sexp as argument. See
 `mu4e--server-filter' for the format.")
 
-(defvar mu4e-header-func nil
-  "Function called for each message-header received.
-The function is passed a msg plist as argument. See
-`mu4e--server-filter' for the format.")
+(make-obsolete-variable 'mu4e-header-func "mu4e-headers-append-func" "1.7.4")
+
+(defvar mu4e-headers-append-func nil
+  "Function called with a list of headers to append.
+The function is passed a list of message plists as argument. See
+See `mu4e--server-filter' for the details.")
 
 (defvar mu4e-found-func nil
   "Function called for when we received a :found sexp.
@@ -191,17 +193,6 @@ removed."
             (setq mu4e--server-buf (substring mu4e--server-buf sexp-len))
             (car objcons)))))))
 
-
-(defsubst mu4e--message (msgdata)
-  "Convert MSGDATA into a msg plist.
-This receives a 'message-data' blob of the form
- (:meta (...) :message (...))
-and turns it into (:message :meta (...)  ... ).
-
-The former version is what the server is optimized for,
-but the latter is what the header wants."
-  (plist-put (plist-get msgdata :message) :meta (plist-get msgdata :meta)))
-
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
 This processes the 'mu server' output. It accumulates the
@@ -216,9 +207,8 @@ The server output is as follows:
    => passed to `mu4e-error-func'.
 
    2a. a header exp looks something like:
-  (:header
-      :meta (....)
-      :message (
+  (:headers
+      ( ;; message 1
         :docid 1585
         :from ((\"Donald Duck\" . \"donald@example.com\"))
         :to ((\"Mickey Mouse\" . \"mickey@example.com\"))
@@ -231,9 +221,13 @@ The server output is as follows:
         :maildir: \"/archive\"
         :path \"/home/mickey/Maildir/inbox/cur/1312_3.32282.pluto,4cd5bd4e9:2,\"
         :priority high
-        :flags (new unread)))
+        :flags (new unread)
+        :meta <meta-data>
+       )
+       (  .... more messages  )
+)
 ;; eox
-   => this will be passed to `mu4e-header-func'.
+   => this will be passed to `mu4e-headers-append-func'.
 
   2b. After the list of headers has been returned (see 2a.),
   we'll receive a sexp that looks like
@@ -243,7 +237,7 @@ The server output is as follows:
   3. a view looks like:
   (:view <msg-sexp>)
   => the <msg-sexp> (see 2.) will be passed to `mu4e-view-func'.
-    like :header, but the :message also contains :body-txt and/or :body-html
+     the <msg-sexp> also contains :body-txt and/or :body-html
 
   4. a database update looks like:
   (:update <msg-sexp> :move <nil-or-t>)
@@ -268,8 +262,8 @@ The server output is as follows:
         (mu4e-log 'from-server "%S" sexp)
         (cond
          ;; a header plist can be recognized by the existence of a :date field
-         ((plist-get sexp :header)
-          (funcall mu4e-header-func (mu4e--message (plist-get sexp :header))))
+         ((plist-get sexp :headers)
+          (funcall mu4e-headers-append-func (plist-get sexp :headers)))
 
          ;; the found sexp, we receive after getting all the headers
          ((plist-get sexp :found)
@@ -277,7 +271,7 @@ The server output is as follows:
 
          ;; viewing a specific message
          ((plist-get sexp :view)
-          (funcall mu4e-view-func (mu4e--message (plist-get sexp :view))))
+          (funcall mu4e-view-func (plist-get sexp :view)))
 
          ;; receive an erase message
          ((plist-get sexp :erase)
@@ -304,7 +298,7 @@ The server output is as follows:
          ;; something got moved/flags changed
          ((plist-get sexp :update)
           (funcall mu4e-update-func
-                   (mu4e--message (plist-get sexp :update))
+                   (plist-get sexp :update)
                    (plist-get sexp :move)
                    (plist-get sexp :maybe-view)))
 
@@ -316,7 +310,7 @@ The server output is as follows:
          ((plist-get sexp :compose)
           (funcall mu4e-compose-func
                    (plist-get sexp :compose)
-                   (mu4e--message (plist-get sexp :original))
+                   (plist-get sexp :original)
                    (plist-get sexp :include)))
 
          ;; get some info

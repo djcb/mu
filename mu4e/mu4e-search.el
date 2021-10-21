@@ -39,7 +39,6 @@
   "Search-related settings."
   :group 'mu4e)
 
-
 (define-obsolete-variable-alias 'mu4e-headers-results-limit
   'mu4e-search-results-limit "1.7.0")
 (defcustom mu4e-search-results-limit 500
@@ -130,8 +129,12 @@ but also manually invoked searches."
   "Maximum size for the query stacks.")
 (defvar mu4e--search-last-query nil
   "The present (most recent) query.")
+
+
 
 ;;; Interactive functions
+(declare-function mu4e--search-execute "mu4e-headers")
+
 (defun mu4e-search (&optional expr prompt edit ignore-history msgid show)
   "Search for query EXPR.
 
