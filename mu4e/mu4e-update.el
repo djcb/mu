@@ -85,7 +85,8 @@ When this is set to non-nil, mu only uses the directory
 timestamps to decide whether it needs to check the messages
 beneath it. This makes indexing much faster, but might miss some
 changes. For this, you might want to occasionally call
-`mu4e-update-index-nonlazy'."
+`mu4e-update-index-nonlazy'; `mu4e-update-pre-hook' can be used
+to automate this."
   :type 'boolean
   :group 'mu4e
   :safe 'booleanp)
@@ -109,22 +110,26 @@ some specific setting.")
   :type 'boolean
   :group 'mu4e)
 
-
 (defvar mu4e-index-updated-hook nil
-  "Hook run when the indexing process had one or more updated messages.
-This can be used as a simple way to invoke some action when new
-messages appear, but note that an update in the index does not
-necessarily mean a new message.")
-
+  "Hook run when the indexing process has completed.
+The variable `mu4e-index-update-status' can be used to get
+information about what changed.")
 
 (defvar mu4e-message-changed-hook nil
-  "Hook run when there is a message changed in db.
+  "Hook run when there is a message changed in the data store.
 For new messages, it depends on `mu4e-index-updated-hook'. This
 can be used as a simple way to invoke some action when a message
-changed.")
+changed")
 
-(make-obsolete-variable 'mu4e-msg-changed-hook
-                        'mu4e-message-changed-hook "0.9.19")
+(defvar mu4e-index-update-status nil
+  "Last-seen completed update status, based on server status messages.
+
+If non-nil, this is a plist of the form:
+\(
+:processed   <number of messages processed>
+:updated     <number of messages updated (incl. new messages)
+:cleaned-up  <number of stale messages removed from store
+:stamp       <emacs (current-time) timestamp for the status)")
 
 
 

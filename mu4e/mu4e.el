@@ -187,6 +187,14 @@ successful, call FUNC (if non-nil) afterwards."
     (110 (display-warning 'mu4e errmsg :error)) ;; schema version.
     (t (mu4e-error "Error %d: %s" errcode errmsg))))
 
+(defun mu4e--update-status (info)
+  "Update the status message."
+  (setq mu4e-index-update-status
+	`(:tstamp ,(current-time)
+          :updated  ,(plist-get info :updated)
+	  :processed ,(plist-get info :processed)
+	  :cleaned-up ,(plist-get info :cleaned-up))))
+
 (defun mu4e--info-handler (info)
   "Handler function for (:INFO ...) sexps received from server."
   (let* ((type (plist-get info :info))
@@ -200,15 +208,17 @@ successful, call FUNC (if non-nil) afterwards."
       (if (eq (plist-get info :status) 'running)
           (mu4e-index-message
            "Indexing... processed %d, updated %d" processed updated)
-        (progn
+        (progn ;; i.e. 'complete
+	  (mu4e--update-status info)
           (mu4e-index-message
            "%s completed; processed %d, updated %d, cleaned-up %d"
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
            processed updated cleaned-up)
-          ;; call the updated hook if anything changed.
-          (unless (zerop (+ updated cleaned-up))
-            (run-hooks 'mu4e-index-updated-hook))
-          (unless (and (not (string= mu4e--contacts-tstamp "0"))
+          (run-hooks 'mu4e-index-updated-hook)
+	  ;; backward compatibility...
+	  (unless (zerop (+ updated cleaned-up))
+	    mu4e-message-changed-hook)
+	  (unless (and (not (string= mu4e--contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e--request-contacts-maybe))
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))

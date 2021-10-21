@@ -46,6 +46,7 @@
 (require 'mu4e-actions)
 (require 'mu4e-message)
 (require 'mu4e-lists)
+(require 'mu4e-update)
 (require 'mu4e-folders)
 
 (declare-function mu4e-view       "mu4e-view")
@@ -1085,9 +1086,11 @@ after the end of the search results."
 
 (defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
-some changes, `mu4e-headers-auto-update' is non-nil and there is
-no user-interaction ongoing."
-  (when (and mu4e-headers-auto-update       ;; must be set
+some changes, `mu4e-headers-auto-update' is non-nil and there
+isno user-interaction ongoing."
+  (when (and mu4e-headers-auto-update          ;; must be set
+	     mu4e-index-update-status
+	     (> 0 (plist-get mu4e-index-update-status :updated))
              (zerop (mu4e-mark-marks-num))     ;; non active marks
              (not (active-minibuffer-window))) ;; no user input only
     ;; rerun search if there's a live window with search results;
@@ -1106,10 +1109,7 @@ no user-interaction ongoing."
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; maybe update the current headers upon indexing changes
-  (add-hook 'mu4e-index-updated-hook 'mu4e~headers-maybe-auto-update)
-  (add-hook 'mu4e-index-updated-hook
-            #'mu4e~headers-index-updated-hook-fn
-            t)
+  (add-hook 'mu4e-index-updated-hook #'mu4e~headers-maybe-auto-update)
   (setq
    truncate-lines t
    buffer-undo-list t ;; don't record undo information
@@ -1121,9 +1121,6 @@ no user-interaction ongoing."
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
   (hl-line-mode 1))
-
-(defun mu4e~headers-index-updated-hook-fn ()
-  (run-hooks 'mu4e-message-changed-hook))
 
 ;;; Highlighting
 
