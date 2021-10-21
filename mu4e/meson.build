@@ -27,7 +27,7 @@ mu4e_meta = configure_file(
     })
 
 
-mu4e_srcs=[
+mu4e_plain_srcs=[
   'mu4e-actions.el',
   'mu4e-bookmarks.el',
   'mu4e-compose.el',
@@ -44,7 +44,6 @@ mu4e_srcs=[
   'mu4e-main.el',
   'mu4e-mark.el',
   'mu4e-message.el',
-  join_paths(meson.current_build_dir(), 'mu4e-meta.el'),
   'mu4e-org.el',
   'mu4e-search.el',
   'mu4e-server.el',
@@ -55,17 +54,41 @@ mu4e_srcs=[
   'obsolete/org-mu4e.el',
 ]
 
+mu4e_gen_srcs=[
+  join_paths(meson.current_build_dir(), 'mu4e-meta.el'),
+]
+
+mu4e_all_srcs =  mu4e_plain_srcs
+mu4e_all_srcs += mu4e_gen_srcs
 
 #
 # with (development) emacs 28.50 / native compilation this doesn't
 # _quite_ work; see: https://debbugs.gnu.org/db/47/47987.html
+
 #
 lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
 
-foreach src : mu4e_srcs
+# hack-around for ^^^ native compile issue: copy sources to builddir.
+cp = find_program(['cp'], required:true)
+foreach src : mu4e_plain_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
+  custom_target(src.underscorify() + '_el_copy',
+		build_by_default: true,
+		input: src,
+		output:  '@BASENAME@.el',
+                install_dir: lispdir,
+                install: true,
+		command: [cp, '@INPUT@', '@OUTPUT@'])
+endforeach
+
+
+foreach src : mu4e_all_srcs
+  target_name= '@BASENAME@.elc'
+  target_path = join_paths(meson.current_build_dir(), target_name)
+  target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
+
   custom_target(src.underscorify() + '_el',
 		build_by_default: true,
 		input: src,
@@ -82,8 +105,7 @@ foreach src : mu4e_srcs
 endforeach
 
 # also install the sources.
-install_data(mu4e_srcs, install_dir: lispdir)
-
+install_data(mu4e_all_srcs, install_dir: lispdir)
 
 if makeinfo.found()
   custom_target('mu4e_info',
