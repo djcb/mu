@@ -72,7 +72,7 @@ Useful when this is not equal to the From: address."
   "The parent message plist.
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new messages, it is nil.")
- 
+
 (make-obsolete-variable 'mu4e-auto-retrieve-keys  "no longer used." "1.3.1")
 
 (defcustom mu4e-decryption-policy t
@@ -182,42 +182,9 @@ All `sign-*' options have a `encrypt-*' analogue."
               (const :tag "Encrypt replies to encrypted messages" encrypt-encrypted-replies))
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-crypto-reply-encrypted-policy nil
-  "Policy for signing/encrypting replies to encrypted messages.
-We have the following choices:
-
-- `sign': sign the reply
-- `sign-and-encrypt': sign and encrypt the reply
-- `encrypt': encrypt the reply, but don't sign it.
--  anything else: do nothing."
-  :type '(choice
-          (const :tag "Sign the reply" sign)
-          (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-          (const :tag "Encrypt the reply" encrypt)
-          (const :tag "Don't do anything" nil))
-  :safe 'symbolp
-  :group 'mu4e-compose)
-
 (make-obsolete-variable 'mu4e-compose-crypto-reply-encrypted-policy "The use of the
  'mu4e-compose-crypto-reply-encrypted-policy' variable is deprecated.
- 'mu4e-compose-crypto-policy' should be used instead"
-                        "2020-03-06")
-
-(defcustom mu4e-compose-crypto-reply-plain-policy nil
-  "Policy for signing/encrypting replies to messages received unencrypted.
-We have the following choices:
-
-- `sign': sign the reply
-- `sign-and-encrypt': sign and encrypt the reply
-- `encrypt': encrypt the reply, but don't sign it.
--  anything else: do nothing."
-  :type '(choice
-          (const :tag "Sign the reply" sign)
-          (const :tag "Sign and encrypt the reply" sign-and-encrypt)
-          (const :tag "Encrypt the reply" encrypt)
-          (const :tag "Don't do anything" nil))
-  :safe 'symbolp
-  :group 'mu4e-compose)
+ 'mu4e-compose-crypto-policy' should be used instead" "2020-03-06")
 
 (make-obsolete-variable 'mu4e-compose-crypto-reply-plain-policy "The use of the
  'mu4e-compose-crypto-reply-plain-policy' variable is deprecated.
@@ -768,7 +735,7 @@ This is based on `mu4e-drafts-folder', which is evaluated once.")
 (defun mu4e~draft-open-file (path switch-function)
   "Open the the draft file at PATH."
   (let ((buf (find-file-noselect path)))
-    (funcall (or 
+    (funcall (or
               switch-function
               (and mu4e-compose-in-new-frame 'switch-to-buffer-other-frame)
               'switch-to-buffer)

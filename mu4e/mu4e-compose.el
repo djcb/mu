@@ -343,16 +343,12 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (set (make-local-variable 'message-signature) mu4e-compose-signature)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
-    (make-local-variable 'message-default-charset)
     ;; Set to nil to enable `electric-quote-local-mode' to work:
     (make-local-variable 'comment-use-syntax)
     (setq comment-use-syntax nil)
     ;; message-mode has font-locking, but uses its own faces. Let's
     ;; use the mu4e-specific ones instead
     (mu4e~compose-remap-faces)
-    ;; if the default charset is not set, use UTF-8
-    (unless message-default-charset
-      (setq message-default-charset 'utf-8))
     (mu4e~compose-register-message-save-hooks)
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
@@ -559,20 +555,7 @@ are optional."
   (mu4e~draft-insert-mail-header-separator)
 
   ;; maybe encrypt/sign replies
-  (let ((mu4e-compose-crypto-policy     ; backwards compatibility
-         (append
-          (cl-case mu4e-compose-crypto-reply-encrypted-policy
-            (sign '(sign-encrypted-replies))
-            (encrypt '(encrypt-encrypted-replies))
-            (sign-and-encrypt
-             '(sign-encrypted-replies encrypt-encrypted-replies)))
-          (cl-case mu4e-compose-crypto-reply-plain-policy
-            (sign '(sign-plain-replies))
-            (encrypt '(encrypt-plain-replies))
-            (sign-and-encrypt
-             '(sign-plain-replies encrypt-plain-replies)))
-          mu4e-compose-crypto-policy)))
-    (mu4e-compose-crypto-message original-msg compose-type))
+  (mu4e-compose-crypto-message original-msg compose-type)
 
   ;; include files -- e.g. when inline forwarding a message with
   ;; attachments, we take those from the original.
