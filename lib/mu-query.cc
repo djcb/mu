@@ -48,8 +48,10 @@ struct Query::Private {
 	                                     MuMsgFieldId     sortfieldid,
 	                                     QueryFlags       qflags) const;
 
-	Option<QueryResults>
-	run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFlags qflags) const;
+	Option<QueryResults> run_threaded(QueryResults&&   qres,
+	                                  Xapian::Enquire& enq,
+	                                  QueryFlags       qflags,
+	                                  size_t           max_size) const;
 	Option<QueryResults> run_singular(const std::string& expr,
 	                                  MuMsgFieldId       sortfieldid,
 	                                  QueryFlags         qflags,
@@ -131,7 +133,10 @@ struct ThreadKeyMaker : public Xapian::KeyMaker {
 };
 
 Option<QueryResults>
-Query::Private::run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFlags qflags) const
+Query::Private::run_threaded(QueryResults&&   qres,
+                             Xapian::Enquire& enq,
+                             QueryFlags       qflags,
+                             size_t           maxnum) const
 {
 	const auto descending{any_of(qflags & QueryFlags::Descending)};
 
@@ -142,7 +147,7 @@ Query::Private::run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFla
 
 	DeciderInfo minfo;
 	minfo.matches = qres.query_matches();
-	auto mset{enq.get_mset(0, store_.size(), {}, make_thread_decider(qflags, minfo).get())};
+	auto mset{enq.get_mset(0, maxnum, {}, make_thread_decider(qflags, minfo).get())};
 	mset.fetch();
 
 	return QueryResults{mset, std::move(qres.query_matches())};
@@ -174,7 +179,7 @@ Query::Private::run_singular(const std::string& expr,
 
 	auto qres{QueryResults{mset, std::move(minfo.matches)}};
 
-	return threading ? run_threaded(std::move(qres), enq, qflags) : qres;
+	return threading ? run_threaded(std::move(qres), enq, qflags, maxnum) : qres;
 }
 
 static Option<std::string>
@@ -230,7 +235,7 @@ Query::Private::run_related(const std::string& expr,
 	                                 {},
 	                                 make_related_decider(qflags, minfo).get())};
 	auto       qres{QueryResults{r_mset, std::move(minfo.matches)}};
-	return threading ? run_threaded(std::move(qres), r_enq, qflags) : qres;
+	return threading ? run_threaded(std::move(qres), r_enq, qflags, maxnum) : qres;
 }
 
 Option<QueryResults>
