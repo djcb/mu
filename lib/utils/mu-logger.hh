@@ -30,9 +30,9 @@ namespace Mu {
  *
  */
 enum struct LogOptions {
-        None       = 0,         /**< Nothing specific */
-        StdOutErr  = 1 << 1,    /**< Log to stdout/stderr */
-        Debug      = 1 << 2,    /**< Include debug-level logs */
+	None      = 0,      /**< Nothing specific */
+	StdOutErr = 1 << 1, /**< Log to stdout/stderr */
+	Debug     = 1 << 2, /**< Include debug-level logs */
 };
 
 /**
@@ -43,7 +43,7 @@ enum struct LogOptions {
  * @param path path to the log file
  * @param opts logging options
  */
-void log_init (const std::string& path, LogOptions opts);
+void log_init(const std::string& path, LogOptions opts);
 
 /**
  * Uninitialize the logging system
@@ -56,15 +56,14 @@ void log_uninit();
  *
  * @param opts options
  */
-void log_set_options (LogOptions opts);
+void log_set_options(LogOptions opts);
 
 /**
  * Get the current log options
  *
  * @return the log options
  */
-LogOptions log_get_options ();
-
+LogOptions log_get_options();
 
 } // namespace Mu
 MU_ENABLE_BITOPS(Mu::LogOptions);

@@ -40,17 +40,16 @@ using CaseVec = std::vector<Case>;
 static void
 test_cases(const CaseVec& cases)
 {
-	char *tmpdir = test_mu_common_get_random_tmpdir();
-	g_assert (tmpdir);
+	char* tmpdir = test_mu_common_get_random_tmpdir();
+	g_assert(tmpdir);
 	Mu::Store dummy_store{tmpdir, "/tmp", {}, {}};
-	g_free (tmpdir);
+	g_free(tmpdir);
 
-        Parser parser{dummy_store, Parser::Flags::UnitTest};
+	Parser parser{dummy_store, Parser::Flags::UnitTest};
 
-	for (const auto& casus : cases ) {
-
+	for (const auto& casus : cases) {
 		WarningVec warnings;
-		const auto tree = parser.parse (casus.expr, warnings);
+		const auto tree = parser.parse(casus.expr, warnings);
 
 		std::stringstream ss;
 		ss << tree;
@@ -62,88 +61,76 @@ test_cases(const CaseVec& cases)
 			std::cout << "got:" << ss.str() << std::endl;
 		}
 
-                assert_equal (casus.expected, ss.str());
+		assert_equal(casus.expected, ss.str());
 	}
 }
 
 static void
-test_basic ()
+test_basic()
 {
 	CaseVec cases = {
-		//{ "", R"#((atom :value ""))#"},
-		{ "foo",  R"#((value "msgid" "foo"))#", },
-		{ "foo       or         bar",
-		  R"#((or(value "msgid" "foo")(value "msgid" "bar")))#" },
-		{ "foo and bar",
-		  R"#((and(value "msgid" "foo")(value "msgid" "bar")))#"},
+	    //{ "", R"#((atom :value ""))#"},
+	    {
+		"foo",
+		R"#((value "msgid" "foo"))#",
+	    },
+	    {"foo       or         bar", R"#((or(value "msgid" "foo")(value "msgid" "bar")))#"},
+	    {"foo and bar", R"#((and(value "msgid" "foo")(value "msgid" "bar")))#"},
 	};
 
-	test_cases (cases);
+	test_cases(cases);
 }
 
 static void
-test_complex ()
+test_complex()
 {
 	CaseVec cases = {
-		{ "foo and bar or cuux",
-		  R"#((or(and(value "msgid" "foo")(value "msgid" "bar")))#" +
-		  std::string(R"#((value "msgid" "cuux")))#") },
-		{ "a and not b",
-		  R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"
-		},
-		{ "a and b and c",
-		  R"#((and(value "msgid" "a")(and(value "msgid" "b")(value "msgid" "c"))))#"
-		},
-		{ "(a or b) and c",
-		  R"#((and(or(value "msgid" "a")(value "msgid" "b"))(value "msgid" "c")))#"
-		},
-		{ "a b", // implicit and
-		  R"#((and(value "msgid" "a")(value "msgid" "b")))#"
-		},
-		{ "a not b", // implicit and not
-		  R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"
-		},
-		{ "not b", // implicit and not
-		  R"#((not(value "msgid" "b")))#"
-		}
-	};
+	    {"foo and bar or cuux",
+	     R"#((or(and(value "msgid" "foo")(value "msgid" "bar")))#" +
+	         std::string(R"#((value "msgid" "cuux")))#")},
+	    {"a and not b", R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"},
+	    {"a and b and c",
+	     R"#((and(value "msgid" "a")(and(value "msgid" "b")(value "msgid" "c"))))#"},
+	    {"(a or b) and c",
+	     R"#((and(or(value "msgid" "a")(value "msgid" "b"))(value "msgid" "c")))#"},
+	    {"a b", // implicit and
+	     R"#((and(value "msgid" "a")(value "msgid" "b")))#"},
+	    {"a not b", // implicit and not
+	     R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"},
+	    {"not b", // implicit and not
+	     R"#((not(value "msgid" "b")))#"}};
 
-	test_cases (cases);
+	test_cases(cases);
 }
-
 
 G_GNUC_UNUSED static void
-test_range ()
+test_range()
 {
 	CaseVec cases = {
-		{ "range:a..b", // implicit and
-		  R"#((range "range" "a" "b"))#"
-		},
+	    {"range:a..b", // implicit and
+	     R"#((range "range" "a" "b"))#"},
 	};
 
-	test_cases (cases);
+	test_cases(cases);
 }
 
-
 static void
-test_flatten ()
+test_flatten()
 {
-	CaseVec cases = {
-		{ " Mötørhęåđ", R"#((value "msgid" "motorhead"))#" }
-	};
+	CaseVec cases = {{" Mötørhęåđ", R"#((value "msgid" "motorhead"))#"}};
 
-	test_cases (cases);
+	test_cases(cases);
 }
 
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func ("/parser/basic",    test_basic);
-	g_test_add_func ("/parser/complex",  test_complex);
-	//g_test_add_func ("/parser/range",    test_range);
-	g_test_add_func ("/parser/flatten",  test_flatten);
+	g_test_add_func("/parser/basic", test_basic);
+	g_test_add_func("/parser/complex", test_complex);
+	// g_test_add_func ("/parser/range",    test_range);
+	g_test_add_func("/parser/flatten", test_flatten);
 
-	return g_test_run ();
+	return g_test_run();
 }

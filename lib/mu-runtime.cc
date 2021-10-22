@@ -27,96 +27,91 @@
 #include <unordered_map>
 static std::unordered_map<MuRuntimePath, std::string> RuntimePaths;
 
-constexpr auto PartsDir      = "parts";
-constexpr auto LogDir        = "log";
-constexpr auto XapianDir     = "xapian";
-constexpr auto MuName        = "mu";
-constexpr auto Bookmarks     = "bookmarks";
+constexpr auto PartsDir  = "parts";
+constexpr auto LogDir    = "log";
+constexpr auto XapianDir = "xapian";
+constexpr auto MuName    = "mu";
+constexpr auto Bookmarks = "bookmarks";
 
 static const std::string Sepa{G_DIR_SEPARATOR_S};
 
-
 static void
-init_paths_xdg ()
+init_paths_xdg()
 {
-        RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB, g_get_user_cache_dir() +
-                             Sepa + MuName + Sepa + XapianDir);
-        RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, g_get_user_cache_dir() +
-                             Sepa + MuName);
-        RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE, g_get_user_cache_dir() +
-                             Sepa + MuName + Sepa + PartsDir);
-        RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR, g_get_user_cache_dir() +
-                             Sepa + MuName);
-        RuntimePaths.emplace(MU_RUNTIME_PATH_BOOKMARKS, g_get_user_config_dir() +
-                             Sepa + MuName);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB,
+	                     g_get_user_cache_dir() + Sepa + MuName + Sepa + XapianDir);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, g_get_user_cache_dir() + Sepa + MuName);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE,
+	                     g_get_user_cache_dir() + Sepa + MuName + Sepa + PartsDir);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR, g_get_user_cache_dir() + Sepa + MuName);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_BOOKMARKS, g_get_user_config_dir() + Sepa + MuName);
 }
 
 static void
-init_paths_muhome (const char *muhome)
+init_paths_muhome(const char* muhome)
 {
-        RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB,  muhome + Sepa + XapianDir);
-        RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, muhome);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_XAPIANDB, muhome + Sepa + XapianDir);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_CACHE, muhome);
 	RuntimePaths.emplace(MU_RUNTIME_PATH_MIMECACHE, muhome + Sepa + PartsDir);
-	RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR,    muhome + Sepa + LogDir);
+	RuntimePaths.emplace(MU_RUNTIME_PATH_LOGDIR, muhome + Sepa + LogDir);
 	RuntimePaths.emplace(MU_RUNTIME_PATH_BOOKMARKS, muhome + Sepa + Bookmarks);
 }
 
 gboolean
-mu_runtime_init (const char* muhome, const char *name, gboolean debug)
+mu_runtime_init(const char* muhome, const char* name, gboolean debug)
 {
-        g_return_val_if_fail (RuntimePaths.empty(), FALSE);
-	g_return_val_if_fail (name, FALSE);
+	g_return_val_if_fail(RuntimePaths.empty(), FALSE);
+	g_return_val_if_fail(name, FALSE);
 
-	setlocale (LC_ALL, "");
+	setlocale(LC_ALL, "");
 
-        if (muhome)
-                init_paths_muhome (muhome);
-        else
-                init_paths_xdg();
+	if (muhome)
+		init_paths_muhome(muhome);
+	else
+		init_paths_xdg();
 
-        for (const auto& d: RuntimePaths ) {
-                char* dir;
-                if (d.first == MU_RUNTIME_PATH_BOOKMARKS) // special case
-                        dir = g_path_get_dirname (d.second.c_str());
-                else
-                        dir = g_strdup (d.second.c_str());
+	for (const auto& d : RuntimePaths) {
+		char* dir;
+		if (d.first == MU_RUNTIME_PATH_BOOKMARKS) // special case
+			dir = g_path_get_dirname(d.second.c_str());
+		else
+			dir = g_strdup(d.second.c_str());
 
-                auto ok = mu_util_create_dir_maybe (dir, 0700, TRUE);
-                if (!ok) {
-                        g_critical ("failed to create %s", dir);
-                        g_free (dir);
-                        mu_runtime_uninit();
-                        return FALSE;
-                }
-                g_free (dir);
-        }
+		auto ok = mu_util_create_dir_maybe(dir, 0700, TRUE);
+		if (!ok) {
+			g_critical("failed to create %s", dir);
+			g_free(dir);
+			mu_runtime_uninit();
+			return FALSE;
+		}
+		g_free(dir);
+	}
 
-        const auto log_path = RuntimePaths[MU_RUNTIME_PATH_LOGDIR] +
-                Sepa + name + ".log";
+	const auto log_path = RuntimePaths[MU_RUNTIME_PATH_LOGDIR] + Sepa + name + ".log";
 
-        using namespace Mu;
-        LogOptions opts{LogOptions::None};
-        if (debug)
-                opts |= (LogOptions::Debug | LogOptions::None);
+	using namespace Mu;
+	LogOptions opts{LogOptions::None};
+	if (debug)
+		opts |= (LogOptions::Debug | LogOptions::None);
 
-        Mu::log_init(log_path, opts);
+	Mu::log_init(log_path, opts);
 
-        return TRUE;
+	return TRUE;
 }
 
 void
-mu_runtime_uninit (void)
+mu_runtime_uninit(void)
 {
-        RuntimePaths.clear();
-        Mu::log_uninit();
+	RuntimePaths.clear();
+	Mu::log_uninit();
 }
 
 const char*
-mu_runtime_path (MuRuntimePath path)
+mu_runtime_path(MuRuntimePath path)
 {
-        const auto it = RuntimePaths.find (path);
-        if (it == RuntimePaths.end())
-                return NULL;
-        else
-                return it->second.c_str();
+	const auto it = RuntimePaths.find(path);
+	if (it == RuntimePaths.end())
+		return NULL;
+	else
+		return it->second.c_str();
 }

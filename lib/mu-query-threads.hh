@@ -34,7 +34,7 @@ namespace Mu {
  * @param qres query results
  * @param descending whether to sort the top-level in descending order
  */
-void calculate_threads (QueryResults& qres, bool descending);
+void calculate_threads(QueryResults& qres, bool descending);
 
 } // namespace Mu
 

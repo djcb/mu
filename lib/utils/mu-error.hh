@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_ERROR_HH__
 #define MU_ERROR_HH__
 
@@ -27,106 +26,101 @@
 
 namespace Mu {
 
-struct Error final: public std::exception {
+struct Error final : public std::exception {
+	enum struct Code {
+		AccessDenied = 100, // don't overlap with MuError
+		Command,
+		File,
+		Index,
+		Internal,
+		InvalidArgument,
+		Message,
+		NotFound,
+		Parsing,
+		Query,
+		SchemaMismatch,
+		Store,
+	};
 
-        enum struct Code {
-                AccessDenied = 100, // don't overlap with MuError
-                Command,
-                File,
-                Index,
-                Internal,
-                InvalidArgument,
-                Message,
-                NotFound,
-                Parsing,
-                Query,
-                SchemaMismatch,
-                Store,
-        };
+	/**
+	 * Construct an error
+	 *
+	 * @param codearg error-code
+	 * #param msgarg the error diecription
+	 */
+	Error(Code codearg, const std::string& msgarg) : code_{codearg}, what_{msgarg} {}
 
-        /**
-         * Construct an error
-         *
-         * @param codearg error-code
-         * #param msgarg the error diecription
-         */
-        Error(Code codearg, const std::string& msgarg):
-                code_{codearg}, what_{msgarg}
-                {}
+	/**
+	 * Build an error from an error-code and a format string
+	 *
+	 * @param code error-code
+	 * @param frm format string
+	 * @param ... format parameters
+	 *
+	 * @return an Error object
+	 */
+	__attribute__((format(printf, 3, 0))) Error(Code codearg, const char* frm, ...)
+	    : code_{codearg}
+	{
+		va_list args;
+		va_start(args, frm);
+		what_ = vformat(frm, args);
+		va_end(args);
+	}
 
-        /**
-         * Build an error from an error-code and a format string
-         *
-         * @param code error-code
-         * @param frm format string
-         * @param ... format parameters
-         *
-         * @return an Error object
-         */
-        __attribute__((format(printf, 3, 0)))
-        Error(Code codearg, const char *frm, ...): code_{codearg} {
-                va_list args;
-                va_start(args, frm);
-                what_ = vformat(frm, args);
-                va_end(args);
-        }
+	Error(Error&& rhs)      = default;
+	Error(const Error& rhs) = delete;
 
-        Error(Error&& rhs)      = default;
-        Error(const Error& rhs) = delete;
+	/**
+	 * Build an error from a GError an error-code and a format string
+	 *
+	 * @param code error-code
+	 * @param gerr a GError or {}, which is consumed
+	 * @param frm format string
+	 * @param ... format parameters
+	 *
+	 * @return an Error object
+	 */
+	__attribute__((format(printf, 4, 0)))
+	Error(Code codearg, GError** err, const char* frm, ...)
+	    : code_{codearg}
+	{
+		va_list args;
+		va_start(args, frm);
+		what_ = vformat(frm, args);
+		va_end(args);
 
-        /**
-         * Build an error from a GError an error-code and a format string
-         *
-         * @param code error-code
-         * @param gerr a GError or {}, which is consumed
-         * @param frm format string
-         * @param ... format parameters
-         *
-         * @return an Error object
-         */
-        __attribute__((format(printf, 4, 0)))
-        Error(Code codearg, GError **err, const char *frm, ...): code_{codearg} {
+		if (err && *err)
+			what_ += format(": %s", (*err)->message);
+		else
+			what_ += ": something went wrong";
 
-                va_list args;
-                va_start(args, frm);
-                what_ = vformat(frm, args);
-                va_end(args);
+		g_clear_error(err);
+	}
 
-                if (err && *err)
-                        what_ += format (": %s", (*err)->message);
-                else
-                        what_ += ": something went wrong";
+	/**
+	 * DTOR
+	 *
+	 */
+	virtual ~Error() = default;
 
-                g_clear_error(err);
-        }
+	/**
+	 * Get the descriptiove message.
+	 *
+	 * @return
+	 */
+	virtual const char* what() const noexcept override { return what_.c_str(); }
 
-        /**
-         * DTOR
-         *
-         */
-        virtual ~Error() = default;
+	/**
+	 * Get the error-code for this error
+	 *
+	 * @return the error-code
+	 */
+	Code code() const { return code_; }
 
-        /**
-         * Get the descriptiove message.
-         *
-         * @return
-         */
-        virtual const char* what() const noexcept override {
-                return what_.c_str();
-        }
-
-        /**
-         * Get the error-code for this error
-         *
-         * @return the error-code
-         */
-        Code code() const { return code_; }
-
-
-
-private:
-        const Code   code_;
-        std::string  what_;
+      private:
+	const Code  code_;
+	std::string what_;
 };
 
 } // namespace Mu

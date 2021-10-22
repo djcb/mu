@@ -354,8 +354,8 @@ headers."
           ;; search results)
           ;; since we still have the search results, re-use
           ;; those
-          (plist-put msg :thread
-                     (mu4e~headers-field-for-docid docid :thread))
+          (plist-put msg :meta
+                     (mu4e~headers-field-for-docid docid :meta))
 
           ;; first, remove the old one (otherwise, we'd have two headers with
           ;; the same docid...
@@ -617,7 +617,7 @@ date. The formats used for date and time are
   "Get the subject if it is the first one in a thread; otherwise,
 return the thread-prefix without the subject-text. In other words,
 show the subject of a thread only once, similar to e.g. 'mutt'."
-  (let* ((tinfo  (mu4e-message-field msg :thread))
+  (let* ((tinfo  (mu4e-message-field msg :meta))
          (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
      (mu4e~headers-thread-prefix tinfo)
@@ -645,8 +645,8 @@ found."
     (cl-case field
       (:subject
        (concat ;; prefix subject with a thread indicator
-        (mu4e~headers-thread-prefix (mu4e-message-field msg :thread))
-        ;;  "["(plist-get (mu4e-message-field msg :thread) :path) "] "
+        (mu4e~headers-thread-prefix (mu4e-message-field msg :meta))
+        ;;  "["(plist-get (mu4e-message-field msg :meta) :path) "] "
         ;; work-around: emacs' display gets really slow when lines are too long;
         ;; so limit subject length to 600
         (truncate-string-to-width val 600)))
@@ -1376,9 +1376,9 @@ matching messages with that mark."
 
 (defun mu4e~headers-get-thread-info (msg what)
   "Get WHAT (a symbol, either path or thread-id) for MSG."
-  (let* ((thread (or (mu4e-message-field msg :thread)
+  (let* ((meta (or (mu4e-message-field msg :meta)
                      (mu4e-error "No thread info found")))
-         (path  (or (plist-get thread :path)
+         (path  (or (plist-get meta :path)
                     (mu4e-error "No threadpath found"))))
     (cl-case what
       (path path)

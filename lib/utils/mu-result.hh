@@ -17,14 +17,11 @@
 **
 */
 
-
 #ifndef MU_RESULT_HH__
 #define MU_RESULT_HH__
 
-
 #include "expected.hpp"
 #include "utils/mu-error.hh"
-
 
 namespace Mu {
 /**
@@ -32,17 +29,20 @@ namespace Mu {
  */
 template <typename T> using Result = tl::expected<T, Error>;
 
-template <typename T> typename Result<T>::expected_type
-Ok(T&& t) {
-        return Result<T>::expected(std::move(t));
+template <typename T>
+typename Result<T>::expected_type
+Ok(T&& t)
+{
+	return Result<T>::expected(std::move(t));
 }
 
-template <typename T> typename Result<T>::unexpected_type
-Err(Error&& err) {
-        return Result<T>::unexpected(std::move(err));
+template <typename T>
+typename Result<T>::unexpected_type
+Err(Error&& err)
+{
+	return Result<T>::unexpected(std::move(err));
 }
 
 } // namespace Mu
-
 
 #endif /* MU_ERROR_HH__ */

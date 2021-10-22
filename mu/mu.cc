@@ -31,110 +31,105 @@
 using namespace Mu;
 
 static void
-show_version (void)
+show_version(void)
 {
-        const char* blurb =
-                "mu (mail indexer/searcher) version " VERSION "\n"
-                "Copyright (C) 2008-2021 Dirk-Jan C. Binnema\n"
-                "License GPLv3+: GNU GPL version 3 or later "
-                "<http://gnu.org/licenses/gpl.html>.\n"
-                "This is free software: you are free to change "
-                "and redistribute it.\n"
-                "There is NO WARRANTY, to the extent permitted by law.";
+	const char* blurb = "mu (mail indexer/searcher) version " VERSION "\n"
+			    "Copyright (C) 2008-2021 Dirk-Jan C. Binnema\n"
+			    "License GPLv3+: GNU GPL version 3 or later "
+			    "<http://gnu.org/licenses/gpl.html>.\n"
+			    "This is free software: you are free to change "
+			    "and redistribute it.\n"
+			    "There is NO WARRANTY, to the extent permitted by law.";
 
-        g_print ("%s\n", blurb);
+	g_print("%s\n", blurb);
 }
-
 
 static void
-handle_error (MuConfig *conf, MuError merr, GError **err)
+handle_error(MuConfig* conf, MuError merr, GError** err)
 {
-        if (!(err && *err))
-                return;
+	if (!(err && *err))
+		return;
 
-        using Color = MaybeAnsi::Color;
-        MaybeAnsi col{conf ? !conf->nocolor : false};
+	using Color = MaybeAnsi::Color;
+	MaybeAnsi col{conf ? !conf->nocolor : false};
 
-        if (*err)
-                std::cerr << col.fg(Color::Red)	<< "error" << col.reset() << ": "
-                          << col.fg(Color::BrightYellow)
-                          << ((*err) ? (*err)->message : "something when wrong")
-                          << "\n";
+	if (*err)
+		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
+			  << col.fg(Color::BrightYellow)
+			  << ((*err) ? (*err)->message : "something when wrong") << "\n";
 
-        std::cerr << col.fg(Color::Green);
+	std::cerr << col.fg(Color::Green);
 
-        switch ((*err)->code) {
-        case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-                std::cerr << "Maybe mu is already running?\n";
-                break;
+	switch ((*err)->code) {
+	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
+		std::cerr << "Maybe mu is already running?\n";
+		break;
 
-        case MU_ERROR_XAPIAN_NEEDS_REINDEX:
-                std::cerr << "Database needs (re)indexing.\n"
-                          << "try 'mu index' "
-                          << "(see mu-index(1) for details)\n";
-                return;
-        case MU_ERROR_IN_PARAMETERS:
-                if (conf && mu_config_cmd_is_valid(conf->cmd))
-                        mu_config_show_help (conf->cmd);
-                break;
-        case MU_ERROR_SCRIPT_NOT_FOUND:
-                std::cerr << "See the mu manpage for commands, or "
-                          << "'mu script' for the scripts\n";
-                break;
-        case MU_ERROR_XAPIAN_CANNOT_OPEN:
-                std::cerr << "Please (re)initialize mu with 'mu init' "
-                          << "see mu-init(1) for details\n";
-                return;
-        case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
-                std::cerr << "Please (re)initialize mu with 'mu init' "
-                          << "see mu-init(1) for details\n";
-                return;
-        default:
-                break; /* nothing to do */
-        }
+	case MU_ERROR_XAPIAN_NEEDS_REINDEX:
+		std::cerr << "Database needs (re)indexing.\n"
+			  << "try 'mu index' "
+			  << "(see mu-index(1) for details)\n";
+		return;
+	case MU_ERROR_IN_PARAMETERS:
+		if (conf && mu_config_cmd_is_valid(conf->cmd))
+			mu_config_show_help(conf->cmd);
+		break;
+	case MU_ERROR_SCRIPT_NOT_FOUND:
+		std::cerr << "See the mu manpage for commands, or "
+			  << "'mu script' for the scripts\n";
+		break;
+	case MU_ERROR_XAPIAN_CANNOT_OPEN:
+		std::cerr << "Please (re)initialize mu with 'mu init' "
+			  << "see mu-init(1) for details\n";
+		return;
+	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
+		std::cerr << "Please (re)initialize mu with 'mu init' "
+			  << "see mu-init(1) for details\n";
+		return;
+	default: break; /* nothing to do */
+	}
 
-        std::cerr << col.reset();
+	std::cerr << col.reset();
 }
 
-
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
-        GError	 *err;
-        MuError	  rv;
-        MuConfig *conf;
+	GError*   err;
+	MuError   rv;
+	MuConfig* conf;
 
-        setlocale (LC_ALL, "");
+	setlocale(LC_ALL, "");
 
-        err = NULL;
-        rv  = MU_OK;
+	err = NULL;
+	rv  = MU_OK;
 
-        conf = mu_config_init (&argc, &argv, &err);
-        if (!conf) {
-                rv = err ? (MuError)err->code : MU_ERROR;
-                goto cleanup;
-        } else if (conf->version) {
-                show_version ();
-                goto cleanup;
-        }
+	conf = mu_config_init(&argc, &argv, &err);
+	if (!conf) {
+		rv = err ? (MuError)err->code : MU_ERROR;
+		goto cleanup;
+	} else if (conf->version) {
+		show_version();
+		goto cleanup;
+	}
 
-        /* nothing to do */
-        if (conf->cmd == MU_CONFIG_CMD_NONE)
-                return 0;
+	/* nothing to do */
+	if (conf->cmd == MU_CONFIG_CMD_NONE)
+		return 0;
 
-        if (!mu_runtime_init (conf->muhome, PACKAGE_NAME, conf->debug)) {
-                mu_config_uninit (conf);
-                return 1;
-        }
+	if (!mu_runtime_init(conf->muhome, PACKAGE_NAME, conf->debug)) {
+		mu_config_uninit(conf);
+		return 1;
+	}
 
-        rv = mu_cmd_execute (conf, &err);
+	rv = mu_cmd_execute(conf, &err);
 
 cleanup:
-        handle_error (conf, rv, &err);
-        g_clear_error (&err);
+	handle_error(conf, rv, &err);
+	g_clear_error(&err);
 
-        mu_config_uninit (conf);
-        mu_runtime_uninit ();
+	mu_config_uninit(conf);
+	mu_runtime_uninit();
 
-        return rv;
+	return rv;
 }

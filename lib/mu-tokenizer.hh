@@ -41,26 +41,26 @@ namespace Mu {
 // A token
 struct Token {
 	enum class Type {
-		Data,		/**< e .g., banana or date:..456 */
+		Data, /**< e .g., banana or date:..456 */
 
 		// Brackets
-		Open,		/**< ( */
-		Close,		/**< ) */
+		Open,  /**< ( */
+		Close, /**< ) */
 
 		// Unops
-		Not,		/**< logical not*/
+		Not, /**< logical not*/
 
 		// Binops
-		And,		/**< logical and */
-		Or,             /**< logical not */
-		Xor,            /**< logical xor */
+		And, /**< logical and */
+		Or,  /**< logical not */
+		Xor, /**< logical xor */
 
-		Empty,		/**< nothing */
+		Empty, /**< nothing */
 	};
 
-	size_t		  pos{};    /**< position in string */
-	Type		  type{};   /**< token type */
-	const std::string str{};   /**< data for this token */
+	size_t            pos{};  /**< position in string */
+	Type              type{}; /**< token type */
+	const std::string str{};  /**< data for this token */
 
 	/**
 	 * operator==
@@ -69,10 +69,9 @@ struct Token {
 	 *
 	 * @return true if rhs is equal to this; false otherwise
 	 */
-	bool operator==(const Token& rhs) const {
-		return  pos == rhs.pos &&
-			type == rhs.type &&
-			str == rhs.str;
+	bool operator==(const Token& rhs) const
+	{
+		return pos == rhs.pos && type == rhs.type && str == rhs.str;
 	}
 };
 
@@ -85,21 +84,21 @@ struct Token {
  * @return the updated output stream
  */
 inline std::ostream&
-operator<< (std::ostream& os, Token::Type t)
+operator<<(std::ostream& os, Token::Type t)
 {
-	switch (t)  {
-	case Token::Type::Data:     os << "<data>"; break;
+	switch (t) {
+	case Token::Type::Data: os << "<data>"; break;
 
-	case Token::Type::Open:     os << "<open>"; break;
-	case Token::Type::Close:    os << "<close>";break;
+	case Token::Type::Open: os << "<open>"; break;
+	case Token::Type::Close: os << "<close>"; break;
 
-	case Token::Type::Not:      os << "<not>"; break;
-	case Token::Type::And:      os << "<and>"; break;
-	case Token::Type::Or:       os << "<or>"; break;
-	case Token::Type::Xor:      os << "<xor>"; break;
-        case Token::Type::Empty:    os << "<empty>"; break;
-	default:		// can't happen, but pacify compiler
-		throw std::runtime_error ("<<bug>>");
+	case Token::Type::Not: os << "<not>"; break;
+	case Token::Type::And: os << "<and>"; break;
+	case Token::Type::Or: os << "<or>"; break;
+	case Token::Type::Xor: os << "<xor>"; break;
+	case Token::Type::Empty: os << "<empty>"; break;
+	default: // can't happen, but pacify compiler
+		throw std::runtime_error("<<bug>>");
 	}
 
 	return os;
@@ -114,7 +113,7 @@ operator<< (std::ostream& os, Token::Type t)
  * @return the updated output stream
  */
 inline std::ostream&
-operator<< (std::ostream& os, const Token& t)
+operator<<(std::ostream& os, const Token& t)
 {
 	os << t.pos << ": " << t.type;
 
@@ -133,7 +132,7 @@ operator<< (std::ostream& os, const Token& t)
  * @return a deque of tokens
  */
 using Tokens = std::deque<Token>;
-Tokens tokenize (const std::string& s);
+Tokens tokenize(const std::string& s);
 
 } // namespace Mu
 

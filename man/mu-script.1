@@ -1,8 +1,8 @@
-.TH MU SCRIPT 1 "June 2013" "User Manuals"
+.TH MU SCRIPT 1 "October 2021" "User Manuals"
 
 .SH NAME
 
-mu script\- show the available mu scripts, and run them.
+mu script\- show the available mu scripts, and/or run them.
 
 .SH SYNOPSIS
 
@@ -58,8 +58,9 @@ code when this is not the case.
 .SH FILES
 
 You can make your own Scheme scripts accessible through \fBmu script\fR by
-putting them in \fI<muhome>/scripts\fR (which is typically
-\fI~/.mu/scripts\fR). It is a good idea to document the scripts by using some
+putting them in either \fI<XDG_DATA_HOME>/mu/scripts\fR (e.g., \fI~/.local/share/mu/scripts\fR) or, if \fImuhome\fR is specified, in 
+
+It is a good idea to document the scripts by using some
 special comments in the source code:
 .nf
 ;; INFO: this is my script -- one-line description

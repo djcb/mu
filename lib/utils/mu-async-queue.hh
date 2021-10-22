@@ -29,163 +29,166 @@ namespace Mu {
 
 constexpr std::size_t UnlimitedAsyncQueueSize{0};
 
-template <typename    ItemType, /**< the type of Item to queue */
+template <typename ItemType,                             /**< the type of Item to queue */
           std::size_t MaxSize = UnlimitedAsyncQueueSize, /**< maximum size for the queue */
           typename Allocator  = std::allocator<ItemType>> /**< allocator the items */
 
 class AsyncQueue {
-public:
-        using value_type      = ItemType;
-        using allocator_type  = Allocator;
-        using size_type       = std::size_t;
-        using reference       = value_type&;
-        using const_reference = const value_type&;
-        using pointer         = typename std::allocator_traits<allocator_type>::pointer;
-        using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
+      public:
+	using value_type      = ItemType;
+	using allocator_type  = Allocator;
+	using size_type       = std::size_t;
+	using reference       = value_type&;
+	using const_reference = const value_type&;
+	using pointer         = typename std::allocator_traits<allocator_type>::pointer;
+	using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
 
-        using Timeout         = std::chrono::steady_clock::duration;
+	using Timeout = std::chrono::steady_clock::duration;
 
-        #define LOCKED std::unique_lock<std::mutex> lock(m_);
+#define LOCKED std::unique_lock<std::mutex> lock(m_);
 
-        bool push (const value_type& item, Timeout timeout = {}) {
-                return push(std::move(value_type(item)));
-        }
+	bool push(const value_type& item, Timeout timeout = {})
+	{
+		return push(std::move(value_type(item)));
+	}
 
-        /**
-         * Push an item to the end of the queue by moving it
-         *
-         * @param item the item to move to the end of the queue
-         * @param timeout and optional timeout
-         *
-         * @return true if the item was pushed; false otherwise.
-         */
-        bool push (value_type&& item, Timeout timeout = {}) {
+	/**
+	 * Push an item to the end of the queue by moving it
+	 *
+	 * @param item the item to move to the end of the queue
+	 * @param timeout and optional timeout
+	 *
+	 * @return true if the item was pushed; false otherwise.
+	 */
+	bool push(value_type&& item, Timeout timeout = {})
+	{
+		LOCKED;
 
-                LOCKED;
+		if (!unlimited()) {
+			const auto rv = cv_full_.wait_for(lock, timeout, [&]() {
+				return !full_unlocked();
+			}) && !full_unlocked();
+			if (!rv)
+				return false;
+		}
 
-                if (!unlimited()) {
-                        const auto rv = cv_full_.wait_for(lock, timeout,[&](){
-                                 return !full_unlocked();}) && !full_unlocked();
-                        if (!rv)
-                                return false;
-                }
+		q_.emplace_back(std::move(item));
+		lock.unlock();
 
-                q_.emplace_back(std::move(item));
-                lock.unlock();
+		cv_empty_.notify_one();
+		return true;
+	}
 
-                cv_empty_.notify_one();
-                return true;
+	/**
+	 * Pop an item from the queue
+	 *
+	 * @param receives the value if the function returns true
+	 * @param timeout optional time to wait for an item to become available
+	 *
+	 * @return true if an item was popped (into val), false otherwise.
+	 */
+	bool pop(value_type& val, Timeout timeout = {})
+	{
+		LOCKED;
 
-        }
+		if (timeout != Timeout{}) {
+			const auto rv = cv_empty_.wait_for(lock, timeout, [&]() {
+				return !q_.empty();
+			}) && !q_.empty();
+			if (!rv)
+				return false;
 
-        /**
-         * Pop an item from the queue
-         *
-         * @param receives the value if the function returns true
-         * @param timeout optional time to wait for an item to become available
-         *
-         * @return true if an item was popped (into val), false otherwise.
-         */
-        bool pop (value_type& val, Timeout timeout = {}) {
+		} else if (q_.empty())
+			return false;
 
-                LOCKED;
+		val = std::move(q_.front());
+		q_.pop_front();
+		lock.unlock();
+		cv_full_.notify_one();
 
-                if (timeout != Timeout{}) {
-                        const auto rv = cv_empty_.wait_for(lock, timeout,[&](){
-                                 return !q_.empty(); }) && !q_.empty();
-                        if (!rv)
-                                return false;
+		return true;
+	}
 
-                } else if (q_.empty())
-                        return false;
+	/**
+	 * Clear the queue
+	 *
+	 */
+	void clear()
+	{
+		LOCKED;
+		q_.clear();
+		lock.unlock();
+		cv_full_.notify_one();
+	}
 
-                val = std::move(q_.front());
-                q_.pop_front();
-                lock.unlock();
-                cv_full_.notify_one();
+	/**
+	 * Size of the queue
+	 *
+	 *
+	 * @return the size
+	 */
+	size_type size() const
+	{
+		LOCKED;
+		return q_.size();
+	}
 
-                return true;
-        }
+	/**
+	 * Maximum size of the queue if specified through the template
+	 * parameter; otherwise the (theoretical) max_size of the inner
+	 * container.
+	 *
+	 * @return the maximum size
+	 */
+	size_type max_size() const
+	{
+		if (unlimited())
+			return q_.max_size();
+		else
+			return MaxSize;
+	}
 
-        /**
-         * Clear the queue
-         *
-         */
-        void clear() {
-                LOCKED;
-                q_.clear();
-                lock.unlock();
-                cv_full_.notify_one();
-        }
+	/**
+	 * Is the queue empty?
+	 *
+	 * @return true or false
+	 */
+	bool empty() const
+	{
+		LOCKED;
+		return q_.empty();
+	}
 
-        /**
-         * Size of the queue
-         *
-         *
-         * @return the size
-         */
-        size_type size() const {
-                LOCKED;
-                return q_.size();
-        }
+	/**
+	 * Is the queue full? Returns false unless a maximum size was specified
+	 * (as a template argument)
+	 *
+	 * @return true or false.
+	 */
+	bool full() const
+	{
+		if (unlimited())
+			return false;
 
-        /**
-         * Maximum size of the queue if specified through the template
-         * parameter; otherwise the (theoretical) max_size of the inner
-         * container.
-         *
-         * @return the maximum size
-         */
-        size_type max_size() const {
-                if (unlimited())
-                        return q_.max_size();
-                else
-                        return MaxSize;
-        }
+		LOCKED;
+		return full_unlocked();
+	}
 
-        /**
-         * Is the queue empty?
-         *
-         * @return true or false
-         */
-        bool empty() const {
-                LOCKED;
-                return q_.empty();
-        }
+	/**
+	 * Is this queue (theoretically) unlimited in size?
+	 *
+	 * @return true or false
+	 */
+	constexpr static bool unlimited() { return MaxSize == UnlimitedAsyncQueueSize; }
 
-        /**
-         * Is the queue full? Returns false unless a maximum size was specified
-         * (as a template argument)
-         *
-         * @return true or false.
-         */
-        bool full() const {
-                if (unlimited())
-                        return false;
+      private:
+	bool full_unlocked() const { return q_.size() >= max_size(); }
 
-                LOCKED;
-                return full_unlocked();
-        }
-
-        /**
-         * Is this queue (theoretically) unlimited in size?
-         *
-         * @return true or false
-         */
-        constexpr static bool unlimited() {
-                return MaxSize == UnlimitedAsyncQueueSize;
-        }
-
-private:
-        bool full_unlocked() const {
-                return q_.size() >= max_size();
-        }
-
-        std::deque<ItemType, Allocator> q_;
-        mutable std::mutex              m_;
-        std::condition_variable         cv_full_, cv_empty_;
+	std::deque<ItemType, Allocator> q_;
+	mutable std::mutex              m_;
+	std::condition_variable         cv_full_, cv_empty_;
 };
 
-} // namespace mu
+} // namespace Mu
 
 #endif /* __MU_ASYNC_QUEUE_HH__ */

@@ -27,6 +27,8 @@
  *
  * @return
  */
-extern "C" { void* mu_guile_message_init (void *data);}
+extern "C" {
+void* mu_guile_message_init(void* data);
+}
 
 #endif /*MU_GUILE_MESSAGE_HH__*/

@@ -34,42 +34,37 @@
 using namespace Mu;
 
 struct Mu::MuMsgDoc {
-	MuMsgDoc (Xapian::Document *doc): _doc (doc) { }
-	~MuMsgDoc () {	delete _doc; }
+	MuMsgDoc(Xapian::Document* doc) : _doc(doc) {}
+	~MuMsgDoc() { delete _doc; }
 	const Xapian::Document doc() const { return *_doc; }
-private:
-	Xapian::Document *_doc;
+
+      private:
+	Xapian::Document* _doc;
 };
 
-
 MuMsgDoc*
-Mu::mu_msg_doc_new (XapianDocument *doc, GError **err)
+Mu::mu_msg_doc_new(XapianDocument* doc, GError** err)
 {
-	g_return_val_if_fail (doc, NULL);
+	g_return_val_if_fail(doc, NULL);
+	MuMsgDoc* mdoc =
+	    xapian_try([&] { return new MuMsgDoc((Xapian::Document*)doc); }, (MuMsgDoc*)nullptr);
 
-	try {
-		return new MuMsgDoc ((Xapian::Document*)doc);
-
-	} MU_XAPIAN_CATCH_BLOCK_G_ERROR_RETURN(err, MU_ERROR_XAPIAN, NULL);
-
-	return FALSE;
+	if (!mdoc)
+		mu_util_g_set_error(err, MU_ERROR_INTERNAL, "failed to create message doc");
+	return mdoc;
 }
 
 void
-Mu::mu_msg_doc_destroy (MuMsgDoc *self)
+Mu::mu_msg_doc_destroy(MuMsgDoc* self)
 {
-	try {
-		delete self;
-
-	} MU_XAPIAN_CATCH_BLOCK;
+	xapian_try([&] { delete self; });
 }
 
-
 gchar*
-Mu::mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_field(MuMsgDoc* self, MuMsgFieldId mfid)
 {
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
+	g_return_val_if_fail(self, NULL);
+	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), NULL);
 
 	// disable this check:
 	//    g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
@@ -78,48 +73,47 @@ Mu::mu_msg_doc_get_str_field (MuMsgDoc *self, MuMsgFieldId mfid)
 	// have to convert to numbers first, esp. when it's a date
 	// time_t)
 
-	try {
-		const std::string s (self->doc().get_value(mfid));
-		return s.empty() ? NULL : g_strdup (s.c_str());
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	return xapian_try(
+	    [&] {
+		    const std::string s(self->doc().get_value(mfid));
+		    return s.empty() ? NULL : g_strdup(s.c_str());
+	    },
+	    (gchar*)nullptr);
 }
-
 
 GSList*
-Mu::mu_msg_doc_get_str_list_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_list_field(MuMsgDoc* self, MuMsgFieldId mfid)
 {
-	g_return_val_if_fail (self, NULL);
-	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), NULL);
-	g_return_val_if_fail (mu_msg_field_is_string_list(mfid), NULL);
+	g_return_val_if_fail(self, NULL);
+	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), NULL);
+	g_return_val_if_fail(mu_msg_field_is_string_list(mfid), NULL);
 
-	try {
-		/* return a comma-separated string as a GSList */
-		const std::string s (self->doc().get_value(mfid));
-		return s.empty() ? NULL : mu_str_to_list(s.c_str(),',',TRUE);
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(NULL);
+	return xapian_try(
+	    [&] {
+		    /* return a comma-separated string as a GSList */
+		    const std::string s(self->doc().get_value(mfid));
+		    return s.empty() ? NULL : mu_str_to_list(s.c_str(), ',', TRUE);
+	    },
+	    (GSList*)nullptr);
 }
 
-
 gint64
-Mu::mu_msg_doc_get_num_field (MuMsgDoc *self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_num_field(MuMsgDoc* self, MuMsgFieldId mfid)
 {
-	g_return_val_if_fail (self, -1);
-	g_return_val_if_fail (mu_msg_field_id_is_valid(mfid), -1);
-	g_return_val_if_fail (mu_msg_field_is_numeric(mfid), -1);
+	g_return_val_if_fail(self, -1);
+	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), -1);
+	g_return_val_if_fail(mu_msg_field_is_numeric(mfid), -1);
 
-	try {
-		const std::string s (self->doc().get_value(mfid));
-		if (s.empty())
-			return 0;
-		else if (mfid == MU_MSG_FIELD_ID_DATE ||
-			 mfid == MU_MSG_FIELD_ID_SIZE)
-			return strtol (s.c_str(), NULL, 10);
-		else {
-			return static_cast<gint64>
-				(Xapian::sortable_unserialise(s));
-		}
-
-	} MU_XAPIAN_CATCH_BLOCK_RETURN(-1);
+	return xapian_try(
+	    [&] {
+		    const std::string s(self->doc().get_value(mfid));
+		    if (s.empty())
+			    return (gint64)0;
+		    else if (mfid == MU_MSG_FIELD_ID_DATE || mfid == MU_MSG_FIELD_ID_SIZE)
+			    return static_cast<gint64>(strtol(s.c_str(), NULL, 10));
+		    else {
+			    return static_cast<gint64>(Xapian::sortable_unserialise(s));
+		    }
+	    },
+	    (gint64)-1);
 }

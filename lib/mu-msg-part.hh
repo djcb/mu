@@ -29,32 +29,32 @@ namespace Mu {
 #define SIG_STATUS_REPORT "sig-status-report"
 
 enum MuMsgPartType {
-	MU_MSG_PART_TYPE_NONE		= 0,
+	MU_MSG_PART_TYPE_NONE = 0,
 
 	/* MIME part without children */
-	MU_MSG_PART_TYPE_LEAF		= 1 << 1,
+	MU_MSG_PART_TYPE_LEAF = 1 << 1,
 	/* an RFC822 message part? */
-	MU_MSG_PART_TYPE_MESSAGE	= 1 << 2,
+	MU_MSG_PART_TYPE_MESSAGE = 1 << 2,
 	/* disposition inline? */
-	MU_MSG_PART_TYPE_INLINE		= 1 << 3,
+	MU_MSG_PART_TYPE_INLINE = 1 << 3,
 	/* disposition attachment? */
-	MU_MSG_PART_TYPE_ATTACHMENT	= 1 << 4,
+	MU_MSG_PART_TYPE_ATTACHMENT = 1 << 4,
 	/* a signed part? */
-	MU_MSG_PART_TYPE_SIGNED		= 1 << 5,
+	MU_MSG_PART_TYPE_SIGNED = 1 << 5,
 	/* an encrypted part? */
-	MU_MSG_PART_TYPE_ENCRYPTED	= 1 << 6,
+	MU_MSG_PART_TYPE_ENCRYPTED = 1 << 6,
 	/* a decrypted part? */
-	MU_MSG_PART_TYPE_DECRYPTED	= 1 << 7,
+	MU_MSG_PART_TYPE_DECRYPTED = 1 << 7,
 	/* a text/plain part? */
-	MU_MSG_PART_TYPE_TEXT_PLAIN     = 1 << 8,
+	MU_MSG_PART_TYPE_TEXT_PLAIN = 1 << 8,
 	/* a text/html part? */
-	MU_MSG_PART_TYPE_TEXT_HTML      = 1 << 9
+	MU_MSG_PART_TYPE_TEXT_HTML = 1 << 9
 };
 MU_ENABLE_BITOPS(MuMsgPartType);
 
 /* the signature status */
 enum _MuMsgPartSigStatus {
-	MU_MSG_PART_SIG_STATUS_UNSIGNED         = 0,
+	MU_MSG_PART_SIG_STATUS_UNSIGNED = 0,
 
 	MU_MSG_PART_SIG_STATUS_GOOD,
 	MU_MSG_PART_SIG_STATUS_BAD,
@@ -64,9 +64,9 @@ enum _MuMsgPartSigStatus {
 typedef enum _MuMsgPartSigStatus MuMsgPartSigStatus;
 
 typedef struct {
-	MuMsgPartSigStatus	 verdict;
-	const char		*report;
-	const char		*signers;
+	MuMsgPartSigStatus verdict;
+	const char*        report;
+	const char*        signers;
 } MuMsgPartSigStatusReport;
 
 /**
@@ -74,29 +74,27 @@ typedef struct {
  *
  * @param report a MuMsgPartSignatureStatusReport object
  */
-void mu_msg_part_sig_status_report_destroy (MuMsgPartSigStatusReport *report);
-
+void mu_msg_part_sig_status_report_destroy(MuMsgPartSigStatusReport* report);
 
 struct _MuMsgPart {
-
 	/* index of this message part */
-	unsigned         index;
+	unsigned index;
 
 	/* cid */
 	/* const char       *content_id; */
 
 	/* content-type: type/subtype, ie. text/plain */
-	const char       *type;
-	const char       *subtype;
+	const char* type;
+	const char* subtype;
 
 	/* size of the part; or < 0 if unknown */
-	ssize_t		 size;
+	ssize_t size;
 
-	gpointer         data; /* opaque data */
+	gpointer data; /* opaque data */
 
-	MuMsgPartType            part_type;
-	MuMsgPartSigStatusReport *sig_status_report;
- };
+	MuMsgPartType             part_type;
+	MuMsgPartSigStatusReport* sig_status_report;
+};
 typedef struct _MuMsgPart MuMsgPart;
 
 /**
@@ -108,8 +106,8 @@ typedef struct _MuMsgPart MuMsgPart;
  *
  * @return the file name (free with g_free)
  */
-char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
-	G_GNUC_WARN_UNUSED_RESULT;
+char* mu_msg_part_get_filename(MuMsgPart* mpart,
+                               gboolean   construct_if_needed) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get appropriate content id for the mime-part
@@ -118,9 +116,7 @@ char *mu_msg_part_get_filename (MuMsgPart *mpart, gboolean construct_if_needed)
  *
  * @return const content id
  */
-const gchar*
-mu_msg_part_get_content_id (MuMsgPart *mpart)
-	G_GNUC_WARN_UNUSED_RESULT;
+const gchar* mu_msg_part_get_content_id(MuMsgPart* mpart) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the text in the MuMsgPart (ie. in its GMimePart)
@@ -131,9 +127,8 @@ mu_msg_part_get_content_id (MuMsgPart *mpart)
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
-	G_GNUC_WARN_UNUSED_RESULT;
-
+char*
+mu_msg_part_get_text(MuMsg* msg, MuMsgPart* part, MuMsgOptions opts) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * does this msg part look like an attachment?
@@ -142,8 +137,7 @@ char* mu_msg_part_get_text (MuMsg *msg, MuMsgPart *part, MuMsgOptions opts)
  *
  * @return TRUE if it looks like an attachment, FALSE otherwise
  */
-gboolean mu_msg_part_maybe_attachment (MuMsgPart *part);
-
+gboolean mu_msg_part_maybe_attachment(MuMsgPart* part);
 
 /**
  * save a specific attachment to some targetdir
@@ -157,10 +151,8 @@ gboolean mu_msg_part_maybe_attachment (MuMsgPart *part);
  * @return full path to the message part saved or NULL in case or
  * error; free with g_free
  */
-gboolean mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
-			   const char *filepath, guint partidx,
-			   GError **err);
-
+gboolean
+mu_msg_part_save(MuMsg* msg, MuMsgOptions opts, const char* filepath, guint partidx, GError** err);
 
 /**
  * save a message part to a temporary file and return the full path to
@@ -173,11 +165,8 @@ gboolean mu_msg_part_save (MuMsg *msg, MuMsgOptions opts,
  *
  * @return the full path to the temp file, or NULL in case of error
  */
-gchar* mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts,
-			      guint partidx, GError **err)
-	G_GNUC_WARN_UNUSED_RESULT;
-
-
+gchar* mu_msg_part_save_temp(MuMsg* msg, MuMsgOptions opts, guint partidx, GError** err)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a filename for the saving the message part; try the filename
@@ -192,11 +181,11 @@ gchar* mu_msg_part_save_temp (MuMsg *msg, MuMsgOptions opts,
  *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
-gchar* mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
-			     const char* targetdir,
-			     guint partidx, GError **err)
-	G_GNUC_WARN_UNUSED_RESULT;
-
+gchar* mu_msg_part_get_path(MuMsg*       msg,
+                            MuMsgOptions opts,
+                            const char*  targetdir,
+                            guint        partidx,
+                            GError**     err) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a full path name for a file for saving the message part INDEX;
@@ -212,10 +201,8 @@ gchar* mu_msg_part_get_path (MuMsg *msg, MuMsgOptions opts,
  *
  * @return a filepath (g_free when done with it) or NULL in case of error
  */
-gchar* mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts,
-				   guint partidx, GError **err)
-	G_GNUC_WARN_UNUSED_RESULT;
-
+gchar* mu_msg_part_get_cache_path(MuMsg* msg, MuMsgOptions opts, guint partidx, GError** err)
+    G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get the part index for the message part with a certain content-id
@@ -225,9 +212,7 @@ gchar* mu_msg_part_get_cache_path (MuMsg *msg, MuMsgOptions opts,
  *
  * @return the part index number of the found part, or -1 if it was not found
  */
-int mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts, const char* content_id);
-
-
+int mu_msg_find_index_for_cid(MuMsg* msg, MuMsgOptions opts, const char* content_id);
 
 /**
  * retrieve a list of indices for mime-parts with filenames matching a regex
@@ -240,11 +225,9 @@ int mu_msg_find_index_for_cid (MuMsg *msg, MuMsgOptions opts, const char* conten
  * indices are the GPOINTER_TO_UINT(lst->data) of the list. They must
  * be freed with g_slist_free
  */
-GSList* mu_msg_find_files (MuMsg *msg, MuMsgOptions opts, const GRegex *pattern);
+GSList* mu_msg_find_files(MuMsg* msg, MuMsgOptions opts, const GRegex* pattern);
 
-
-typedef void (*MuMsgPartForeachFunc) (MuMsg *msg, MuMsgPart*, gpointer);
-
+typedef void (*MuMsgPartForeachFunc)(MuMsg* msg, MuMsgPart*, gpointer);
 
 /**
  * call a function for each of the mime part in a message
@@ -257,8 +240,8 @@ typedef void (*MuMsgPartForeachFunc) (MuMsg *msg, MuMsgPart*, gpointer);
  *
  * @return FALSE in case of error, TRUE otherwise
  */
-gboolean mu_msg_part_foreach (MuMsg *msg, MuMsgOptions opts,
-			      MuMsgPartForeachFunc func, gpointer user_data);
+gboolean
+mu_msg_part_foreach(MuMsg* msg, MuMsgOptions opts, MuMsgPartForeachFunc func, gpointer user_data);
 
 } // namespace Mu
 

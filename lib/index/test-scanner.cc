@@ -28,39 +28,36 @@
 
 using namespace Mu;
 
-
 static void
-test_scan_maildir ()
+test_scan_maildir()
 {
 	allow_warnings();
 
-	Scanner scanner{"/home/djcb/Maildir",
-                [](const dirent* dentry)->bool {
-                        g_print ("%02x %s\n", dentry->d_type, dentry->d_name);
-                        return true;
-                },
-                [](const std::string& fullpath, const struct stat* statbuf,
-                   auto&& info)->bool {
-                        g_print ("%s %zu\n", fullpath.c_str(), statbuf->st_size);
-                        return true;
-                }
-        };
-	g_assert_true (scanner.start());
+	Scanner scanner{
+	    "/home/djcb/Maildir",
+	    [](const dirent* dentry) -> bool {
+		    g_print("%02x %s\n", dentry->d_type, dentry->d_name);
+		    return true;
+	    },
+	    [](const std::string& fullpath, const struct stat* statbuf, auto&& info) -> bool {
+		    g_print("%s %zu\n", fullpath.c_str(), statbuf->st_size);
+		    return true;
+	    }};
+	g_assert_true(scanner.start());
 
-        while (scanner.is_running()) {
-                sleep(1);
-        }
+	while (scanner.is_running()) {
+		sleep(1);
+	}
 }
 
 int
-main (int argc, char *argv[]) try
-{
-	g_test_init (&argc, &argv, NULL);
+main(int argc, char* argv[])
+try {
+	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func ("/utils/scanner/scan-maildir", test_scan_maildir);
+	g_test_add_func("/utils/scanner/scan-maildir", test_scan_maildir);
 
-	return g_test_run ();
-
+	return g_test_run();
 
 } catch (const std::runtime_error& re) {
 	std::cerr << re.what() << "\n";

@@ -43,40 +43,40 @@ struct Node {
 		Invalid
 	};
 
-	Node(Type _type, std::unique_ptr<Data>&& _data):
-		type{_type}, data{std::move(_data)} {}
-	Node(Type _type): type{_type} {}
+	Node(Type _type, std::unique_ptr<Data>&& _data) : type{_type}, data{std::move(_data)} {}
+	Node(Type _type) : type{_type} {}
 	Node(Node&& rhs) = default;
 
-	Type			type;
-	std::unique_ptr<Data>   data;
+	Type                  type;
+	std::unique_ptr<Data> data;
 
-	static const char* type_name (Type t) {
+	static const char* type_name(Type t)
+	{
 		switch (t) {
-		case Type::Empty:    return ""; break;
-		case Type::OpAnd:    return "and"; break;
-		case Type::OpOr:     return "or"; break;
-		case Type::OpXor:    return "xor"; break;
+		case Type::Empty: return ""; break;
+		case Type::OpAnd: return "and"; break;
+		case Type::OpOr: return "or"; break;
+		case Type::OpXor: return "xor"; break;
 		case Type::OpAndNot: return "andnot"; break;
-		case Type::OpNot:    return "not"; break;
-		case Type::Value:    return "value"; break;
-		case Type::Range:    return "range"; break;
-		case Type::Invalid:  return "<invalid>"; break;
-		default:
-			throw Mu::Error(Error::Code::Internal, "unexpected type");
+		case Type::OpNot: return "not"; break;
+		case Type::Value: return "value"; break;
+		case Type::Range: return "range"; break;
+		case Type::Invalid: return "<invalid>"; break;
+		default: throw Mu::Error(Error::Code::Internal, "unexpected type");
 		}
 	}
 
-	static constexpr bool is_binop(Type t) {
-		return t == Type::OpAnd || t == Type::OpAndNot ||
-			t == Type::OpOr || t == Type::OpXor;
+	static constexpr bool is_binop(Type t)
+	{
+		return t == Type::OpAnd || t == Type::OpAndNot || t == Type::OpOr ||
+		       t == Type::OpXor;
 	}
 };
 
 inline std::ostream&
-operator<< (std::ostream& os, const Node& t)
+operator<<(std::ostream& os, const Node& t)
 {
- 	os << Node::type_name(t.type);
+	os << Node::type_name(t.type);
 	if (t.data)
 		os << t.data;
 
@@ -84,18 +84,18 @@ operator<< (std::ostream& os, const Node& t)
 }
 
 struct Tree {
-	Tree(Node&& _node): node(std::move(_node)) {}
+	Tree(Node&& _node) : node(std::move(_node)) {}
 	Tree(Tree&& rhs) = default;
 
-	void add_child (Tree&& child) { children.emplace_back(std::move(child)); }
+	void add_child(Tree&& child) { children.emplace_back(std::move(child)); }
 	bool empty() const { return node.type == Node::Type::Empty; }
 
-	Node			node;
-	std::vector<Tree>	children;
+	Node              node;
+	std::vector<Tree> children;
 };
 
 inline std::ostream&
-operator<< (std::ostream& os, const Tree& tree)
+operator<<(std::ostream& os, const Tree& tree)
 {
 	os << '(' << tree.node;
 	for (const auto& subtree : tree.children)
@@ -106,6 +106,5 @@ operator<< (std::ostream& os, const Tree& tree)
 }
 
 } // namespace Mu
-
 
 #endif /* TREE_HH__ */

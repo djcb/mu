@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_FLAGS_HH__
 #define MU_FLAGS_HH__
 
@@ -27,52 +26,50 @@
 namespace Mu {
 
 enum MuFlags {
-	MU_FLAG_NONE            = 0,
+	MU_FLAG_NONE = 0,
 
 	/* next 6 are seen in the file-info part of maildir message
 	 * file names, ie., in a name like "1234345346:2,<fileinfo>",
 	 * <fileinfo> consists of zero or more of the following
 	 * characters (in ascii order) */
-	MU_FLAG_DRAFT		= 1 << 0,
-	MU_FLAG_FLAGGED		= 1 << 1,
-	MU_FLAG_PASSED		= 1 << 2,
-	MU_FLAG_REPLIED		= 1 << 3,
-	MU_FLAG_SEEN		= 1 << 4,
-	MU_FLAG_TRASHED		= 1 << 5,
+	MU_FLAG_DRAFT   = 1 << 0,
+	MU_FLAG_FLAGGED = 1 << 1,
+	MU_FLAG_PASSED  = 1 << 2,
+	MU_FLAG_REPLIED = 1 << 3,
+	MU_FLAG_SEEN    = 1 << 4,
+	MU_FLAG_TRASHED = 1 << 5,
 
 	/* decides on cur/ or new/ in the maildir */
-	MU_FLAG_NEW		= 1 << 6,
+	MU_FLAG_NEW = 1 << 6,
 
 	/* content flags -- not visible in the filename, but used for
 	 * searching */
-	MU_FLAG_SIGNED		= 1 << 7,
-	MU_FLAG_ENCRYPTED	= 1 << 8,
-	MU_FLAG_HAS_ATTACH	= 1 << 9,
+	MU_FLAG_SIGNED     = 1 << 7,
+	MU_FLAG_ENCRYPTED  = 1 << 8,
+	MU_FLAG_HAS_ATTACH = 1 << 9,
 
 	/* pseudo-flag, only for queries, so we can search for
 	 * flag:unread, which is equivalent to 'flag:new OR NOT
 	 * flag:seen' */
-	MU_FLAG_UNREAD          = 1 << 10,
+	MU_FLAG_UNREAD = 1 << 10,
 
 	/* other content flags */
-	MU_FLAG_LIST            = 1 << 11
+	MU_FLAG_LIST = 1 << 11
 };
 MU_ENABLE_BITOPS(MuFlags);
-
 
 #define MU_FLAG_INVALID ((MuFlags)-1)
 
 enum MuFlagType {
-	MU_FLAG_TYPE_MAILFILE    = 1 << 0,
-	MU_FLAG_TYPE_MAILDIR     = 1 << 1,
-	MU_FLAG_TYPE_CONTENT     = 1 << 2,
-	MU_FLAG_TYPE_PSEUDO      = 1 << 3
+	MU_FLAG_TYPE_MAILFILE = 1 << 0,
+	MU_FLAG_TYPE_MAILDIR  = 1 << 1,
+	MU_FLAG_TYPE_CONTENT  = 1 << 2,
+	MU_FLAG_TYPE_PSEUDO   = 1 << 3
 };
 MU_ENABLE_BITOPS(MuFlagType);
 
-#define MU_FLAG_TYPE_ANY ((MuFlagType)-1)
+#define MU_FLAG_TYPE_ANY     ((MuFlagType)-1)
 #define MU_FLAG_TYPE_INVALID ((MuFlagType)-1)
-
 
 /**
  * Get the type of flag (mailfile, maildir, pseudo or content)
@@ -81,8 +78,7 @@ MU_ENABLE_BITOPS(MuFlagType);
  *
  * @return the flag type or MU_FLAG_TYPE_INVALID in case of error
  */
-MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
-
+MuFlagType mu_flag_type(MuFlags flag) G_GNUC_CONST;
 
 /**
  * Get the flag character
@@ -91,8 +87,7 @@ MuFlagType mu_flag_type (MuFlags flag) G_GNUC_CONST;
  *
  * @return the character, or 0 if it's not a valid flag
  */
-char mu_flag_char (MuFlags flag) G_GNUC_CONST;
-
+char mu_flag_char(MuFlags flag) G_GNUC_CONST;
 
 /**
  * Get the flag name
@@ -101,8 +96,7 @@ char mu_flag_char (MuFlags flag) G_GNUC_CONST;
  *
  * @return the name (don't free) as string or NULL in case of error
  */
-const char* mu_flag_name (MuFlags flag) G_GNUC_CONST;
-
+const char* mu_flag_name(MuFlags flag) G_GNUC_CONST;
 
 /**
  * Get the string representation of an OR'ed set of flags
@@ -113,8 +107,7 @@ const char* mu_flag_name (MuFlags flag) G_GNUC_CONST;
  * @return The string representation (static, don't free), or NULL in
  * case of error
  */
-const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
-
+const char* mu_flags_to_str_s(MuFlags flags, MuFlagType types);
 
 /**
  * Get the (OR'ed) flags corresponding to a string representation
@@ -126,11 +119,7 @@ const char* mu_flags_to_str_s (MuFlags flags, MuFlagType types);
  *
  * @return the (OR'ed) flags
  */
-MuFlags mu_flags_from_str (const char *str, MuFlagType types,
-			   gboolean ignore_invalid);
-
-
-
+MuFlags mu_flags_from_str(const char* str, MuFlagType types, gboolean ignore_invalid);
 
 /**
  * Get the MuFlag char for some flag name
@@ -139,8 +128,7 @@ MuFlags mu_flags_from_str (const char *str, MuFlagType types,
  *
  * @return a flag character, or 0
  */
-MuFlags mu_flag_char_from_name (const char *str);
-
+MuFlags mu_flag_char_from_name(const char* str);
 
 /**
  * return the concatenation of all non-standard file flags in str
@@ -151,8 +139,7 @@ MuFlags mu_flag_char_from_name (const char *str);
  * @return concatenation of all non-standard flags, as a string; free
  * with g_free when done. If there are no such flags, return NULL.
  */
-char* mu_flags_custom_from_str (const char *str) G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_flags_custom_from_str(const char* str) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Update #oldflags with the flags in #str, where #str consists of the
@@ -167,11 +154,9 @@ char* mu_flags_custom_from_str (const char *str) G_GNUC_WARN_UNUSED_RESULT;
  *
  * @return
  */
-MuFlags mu_flags_from_str_delta (const char *str, MuFlags oldflags,
-				 MuFlagType types);
+MuFlags mu_flags_from_str_delta(const char* str, MuFlags oldflags, MuFlagType types);
 
-
-typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);
+typedef void (*MuFlagsForeachFunc)(MuFlags flag, gpointer user_data);
 
 /**
  * call a function for each available flag
@@ -179,9 +164,8 @@ typedef void (*MuFlagsForeachFunc) (MuFlags flag, gpointer user_data);
  * @param func a function to call
  * @param user_data a user pointer to pass to the function
  */
-void mu_flags_foreach (MuFlagsForeachFunc func, gpointer user_data);
+void mu_flags_foreach(MuFlagsForeachFunc func, gpointer user_data);
 
 } // namespace Mu
-
 
 #endif /*__MU_FLAGS_H__*/

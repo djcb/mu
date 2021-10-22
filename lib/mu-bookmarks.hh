@@ -32,7 +32,6 @@
  */
 struct MuBookmarks;
 
-
 /**
  * create a new bookmarks object. when it's no longer needed, use
  * mu_bookmarks_destroy
@@ -41,16 +40,14 @@ struct MuBookmarks;
  *
  * @return a new BookMarks object, or NULL in case of error
  */
-MuBookmarks *mu_bookmarks_new (const gchar *bmpath)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+MuBookmarks* mu_bookmarks_new(const gchar* bmpath) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a bookmarks object
  *
  * @param bm a bookmarks object, or NULL
  */
-void         mu_bookmarks_destroy (MuBookmarks *bm);
-
+void mu_bookmarks_destroy(MuBookmarks* bm);
 
 /**
  * get the value for some bookmark
@@ -61,10 +58,9 @@ void         mu_bookmarks_destroy (MuBookmarks *bm);
  * @return the value of the bookmark or NULL in case in error, e.g. if
  * the bookmark was not found
  */
-const gchar* mu_bookmarks_lookup (MuBookmarks *bm, const gchar *name);
+const gchar* mu_bookmarks_lookup(MuBookmarks* bm, const gchar* name);
 
-typedef void (*MuBookmarksForeachFunc) (const gchar *key, const gchar *val,
-					gpointer user_data);
+typedef void (*MuBookmarksForeachFunc)(const gchar* key, const gchar* val, gpointer user_data);
 
 /**
  * call a function for each bookmark
@@ -73,8 +69,7 @@ typedef void (*MuBookmarksForeachFunc) (const gchar *key, const gchar *val,
  * @param func a callback function to be called for each bookmarks
  * @param user_data a user pointer passed to the callback
  */
-void         mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
-				   gpointer user_data);
+void mu_bookmarks_foreach(MuBookmarks* bm, MuBookmarksForeachFunc func, gpointer user_data);
 
 /** @} */
 

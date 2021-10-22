@@ -23,14 +23,14 @@
 #include "mu-tokenizer.hh"
 
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
 	std::string s;
 
 	for (auto i = 1; i < argc; ++i)
 		s += " " + std::string(argv[i]);
 
-	const auto tvec = Mu::tokenize (s);
+	const auto tvec = Mu::tokenize(s);
 	for (const auto& t : tvec)
 		std::cout << t << std::endl;
 

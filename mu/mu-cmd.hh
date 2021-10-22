@@ -36,8 +36,7 @@ namespace Mu {
  * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
  * succeeds but there no matches, some error code for all other errors
  */
-MuError mu_cmd_find (const Mu::Store& store, const MuConfig *opts,
-                     GError **err);
+MuError mu_cmd_find(const Mu::Store& store, const MuConfig* opts, GError** err);
 
 /**
  * execute the 'extract' command
@@ -48,8 +47,7 @@ MuError mu_cmd_find (const Mu::Store& store, const MuConfig *opts,
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_extract (const MuConfig *opts, GError **err);
-
+MuError mu_cmd_extract(const MuConfig* opts, GError** err);
 
 /**
  * execute the 'script' command
@@ -60,7 +58,7 @@ MuError mu_cmd_extract (const MuConfig *opts, GError **err);
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_script (const MuConfig *opts, GError **err);
+MuError mu_cmd_script(const MuConfig* opts, GError** err);
 
 /**
  * execute the cfind command
@@ -72,8 +70,7 @@ MuError mu_cmd_script (const MuConfig *opts, GError **err);
  * @return MU_OK (0) if the command succeeds,
  * some error code otherwise
  */
-MuError mu_cmd_cfind (const Mu::Store& store, const MuConfig *opts,
-                      GError **err);
+MuError mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err);
 
 /**
  * execute some mu command, based on 'opts'
@@ -83,7 +80,7 @@ MuError mu_cmd_cfind (const Mu::Store& store, const MuConfig *opts,
  *
  * @return MU_OK if all went wall, some error code otherwise
  */
-MuError mu_cmd_execute (const MuConfig *opts, GError **err);
+MuError mu_cmd_execute(const MuConfig* opts, GError** err);
 
 /**
  * execute the 'index' command
@@ -95,7 +92,7 @@ MuError mu_cmd_execute (const MuConfig *opts, GError **err);
  * @return MU_OK (0) if the command succeeded,
  * some error code otherwise
  */
-MuError mu_cmd_index (Mu::Store& store, const MuConfig *opt, GError **err);
+MuError mu_cmd_index(Mu::Store& store, const MuConfig* opt, GError** err);
 
 /**
  * execute the server command
@@ -104,8 +101,7 @@ MuError mu_cmd_index (Mu::Store& store, const MuConfig *opt, GError **err);
  *
  * @return MU_OK (0) if the command succeeds, some error code otherwise
  */
-MuError mu_cmd_server (const MuConfig *opts, GError **err);
-
+MuError mu_cmd_server(const MuConfig* opts, GError** err);
 
 } // namespace Mu
 

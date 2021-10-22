@@ -32,103 +32,95 @@
 #include "mu-msg-fields.h"
 
 static void
-test_mu_msg_field_body (void)
+test_mu_msg_field_body(void)
 {
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_BODY_TEXT;
 
-	g_assert_cmpstr (mu_msg_field_name(field),==, "body");
-	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'b');
-	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'B');
+	g_assert_cmpstr(mu_msg_field_name(field), ==, "body");
+	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'b');
+	g_assert_cmpuint(mu_msg_field_xapian_prefix(field), ==, 'B');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==, FALSE);
+	g_assert_cmpuint(mu_msg_field_is_numeric(field), ==, FALSE);
 }
 
 static void
-test_mu_msg_field_subject (void)
+test_mu_msg_field_subject(void)
 {
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_SUBJECT;
 
-	g_assert_cmpstr (mu_msg_field_name(field),==, "subject");
-	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 's');
-	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'S');
+	g_assert_cmpstr(mu_msg_field_name(field), ==, "subject");
+	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 's');
+	g_assert_cmpuint(mu_msg_field_xapian_prefix(field), ==, 'S');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==,FALSE);
+	g_assert_cmpuint(mu_msg_field_is_numeric(field), ==, FALSE);
 }
 
 static void
-test_mu_msg_field_to (void)
+test_mu_msg_field_to(void)
 {
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_TO;
 
-	g_assert_cmpstr (mu_msg_field_name(field),==, "to");
-	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 't');
-	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'T');
+	g_assert_cmpstr(mu_msg_field_name(field), ==, "to");
+	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 't');
+	g_assert_cmpuint(mu_msg_field_xapian_prefix(field), ==, 'T');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==, FALSE);
+	g_assert_cmpuint(mu_msg_field_is_numeric(field), ==, FALSE);
 }
 
-
 static void
-test_mu_msg_field_prio (void)
+test_mu_msg_field_prio(void)
 {
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_PRIO;
 
-	g_assert_cmpstr (mu_msg_field_name(field),==, "prio");
-	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'p');
-	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'P');
+	g_assert_cmpstr(mu_msg_field_name(field), ==, "prio");
+	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'p');
+	g_assert_cmpuint(mu_msg_field_xapian_prefix(field), ==, 'P');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field), ==, TRUE);
+	g_assert_cmpuint(mu_msg_field_is_numeric(field), ==, TRUE);
 }
 
 static void
-test_mu_msg_field_flags (void)
+test_mu_msg_field_flags(void)
 {
 	MuMsgFieldId field;
 
 	field = MU_MSG_FIELD_ID_FLAGS;
 
-	g_assert_cmpstr (mu_msg_field_name(field),==, "flag");
-	g_assert_cmpuint (mu_msg_field_shortcut(field),==, 'g');
-	g_assert_cmpuint (mu_msg_field_xapian_prefix(field),==, 'G');
+	g_assert_cmpstr(mu_msg_field_name(field), ==, "flag");
+	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'g');
+	g_assert_cmpuint(mu_msg_field_xapian_prefix(field), ==, 'G');
 
-	g_assert_cmpuint (mu_msg_field_is_numeric(field),==, TRUE);
+	g_assert_cmpuint(mu_msg_field_is_numeric(field), ==, TRUE);
 }
 
-
-
-
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	g_test_init(&argc, &argv, NULL);
 
 	/* mu_msg_str_date */
-	g_test_add_func ("/mu-msg-fields/mu-msg-field-body",
-			 test_mu_msg_field_body);
-	g_test_add_func ("/mu-msg-fields/mu-msg-field-subject",
-			 test_mu_msg_field_subject);
-	g_test_add_func ("/mu-msg-fields/mu-msg-field-to",
-			 test_mu_msg_field_to);
-	g_test_add_func ("/mu-msg-fields/mu-msg-field-prio",
-			 test_mu_msg_field_prio);
-	g_test_add_func ("/mu-msg-fields/mu-msg-field-flags",
-			 test_mu_msg_field_flags);
+	g_test_add_func("/mu-msg-fields/mu-msg-field-body", test_mu_msg_field_body);
+	g_test_add_func("/mu-msg-fields/mu-msg-field-subject", test_mu_msg_field_subject);
+	g_test_add_func("/mu-msg-fields/mu-msg-field-to", test_mu_msg_field_to);
+	g_test_add_func("/mu-msg-fields/mu-msg-field-prio", test_mu_msg_field_prio);
+	g_test_add_func("/mu-msg-fields/mu-msg-field-flags", test_mu_msg_field_flags);
 
 	/* FIXME: add tests for mu_msg_str_flags; but note the
 	 * function simply calls mu_msg_field_str */
 
-	g_log_set_handler (NULL,
-			   (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
-			   G_LOG_FLAG_RECURSION),
-			   (GLogFunc)black_hole, NULL);
+	g_log_set_handler(
+	    NULL,
+	    (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+	    (GLogFunc)black_hole,
+	    NULL);
 
-	return g_test_run ();
+	return g_test_run();
 }

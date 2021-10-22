@@ -164,7 +164,7 @@ show the message with MSGID."
   (interactive)
   (mu4e-search mu4e--search-last-query nil t))
 
-(define-obsolete-variable-alias 'mu4e-headers-search-edit
+(define-obsolete-function-alias 'mu4e-headers-search-edit
   'mu4e-search-edit "1.7.0")
 
 (defun mu4e-search-bookmark (&optional expr edit)
@@ -412,10 +412,10 @@ either `future' or `past'."
 	  (match-end 1)
 	  '("attach" "draft" "flagged" "list" "new" "passed" "replied"
 	    "seen" "trashed" "unread" "encrypted" "signed")))
-   ;; ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
-   ;;  (list (match-beginning 1)
-   ;;        (match-end 1)
-   ;;        (mu4e-get-maildirs)))
+   ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
+    (list (match-beginning 1)
+          (match-end 1)
+          (mu4e-get-maildirs)))
    ((looking-back "prio:\\(\\w*\\)" nil)
     (list (match-beginning 1)
 	  (match-end 1)

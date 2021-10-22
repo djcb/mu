@@ -36,56 +36,60 @@ using namespace Mu;
 static void
 test_query()
 {
-        allow_warnings();
+	allow_warnings();
+	char* tdir;
 
-	Store store{test_mu_common_get_random_tmpdir(), std::string{MU_TESTMAILDIR}, {},{}};
-        auto&& idx{store.indexer()};
+	tdir = test_mu_common_get_random_tmpdir();
+	Store store{tdir, std::string{MU_TESTMAILDIR}, {}, {}};
+	g_free(tdir);
 
-	g_assert_true (idx.start(Indexer::Config{}));
-        while (idx.is_running()) {
-                sleep(1);
-        }
+	auto&& idx{store.indexer()};
 
-        auto dump_matches=[](const QueryResults& res) {
-                size_t n{};
-                for (auto&& item: res)
-                        g_debug ("%02zu %s %s", ++n, item.path().value_or("<none>").c_str(),
-                                 item.message_id().value_or("<none>").c_str());
-        };
+	g_assert_true(idx.start(Indexer::Config{}));
+	while (idx.is_running()) {
+		sleep(1);
+	}
 
+	auto dump_matches = [](const QueryResults& res) {
+		size_t n{};
+		for (auto&& item : res)
+			g_debug("%02zu %s %s",
+			        ++n,
+			        item.path().value_or("<none>").c_str(),
+			        item.message_id().value_or("<none>").c_str());
+	};
 
-        Query q{store};
-        g_assert_cmpuint(store.size(),==,19);
+	Query q{store};
+	g_assert_cmpuint(store.size(), ==, 19);
 
-        {
-                const auto res = q.run("", MU_MSG_FIELD_ID_NONE, QueryFlags::None);
-                g_assert_true(!!res);
-                g_assert_cmpuint(res->size(),==,19);
-                dump_matches(*res);
-        }
+	{
+		const auto res = q.run("", MU_MSG_FIELD_ID_NONE, QueryFlags::None);
+		g_assert_true(!!res);
+		g_assert_cmpuint(res->size(), ==, 19);
+		dump_matches(*res);
+	}
 
-        {
-                const auto res = q.run("", MU_MSG_FIELD_ID_PATH, QueryFlags::None, 11);
-                g_assert_true(!!res);
-                g_assert_cmpuint(res->size(),==,11);
-                dump_matches(*res);
-        }
+	{
+		const auto res = q.run("", MU_MSG_FIELD_ID_PATH, QueryFlags::None, 11);
+		g_assert_true(!!res);
+		g_assert_cmpuint(res->size(), ==, 11);
+		dump_matches(*res);
+	}
 }
 
 int
-main (int argc, char *argv[]) try
-{
-	g_test_init (&argc, &argv, NULL);
+main(int argc, char* argv[])
+try {
+	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func ("/query", test_query);
+	g_test_add_func("/query", test_query);
 
-	return g_test_run ();
-
+	return g_test_run();
 
 } catch (const std::runtime_error& re) {
 	std::cerr << re.what() << "\n";
 	return 1;
 } catch (...) {
-        std::cerr << "caught exception\n";
-        return 1;
+	std::cerr << "caught exception\n";
+	return 1;
 }

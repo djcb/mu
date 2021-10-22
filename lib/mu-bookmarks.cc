@@ -23,123 +23,114 @@
 #define MU_BOOKMARK_GROUP "mu"
 
 struct MuBookmarks {
-	char		*_bmpath;
-	GHashTable	*_hash;
+	char*       _bmpath;
+	GHashTable* _hash;
 };
 
-
 static void
-fill_hash (GHashTable *hash, GKeyFile *kfile)
+fill_hash(GHashTable* hash, GKeyFile* kfile)
 {
 	gchar **keys, **cur;
 
-	keys = g_key_file_get_keys (kfile, MU_BOOKMARK_GROUP, NULL, NULL);
+	keys = g_key_file_get_keys(kfile, MU_BOOKMARK_GROUP, NULL, NULL);
 	if (!keys)
 		return;
 
 	for (cur = keys; *cur; ++cur) {
-		gchar *val;
-		val = g_key_file_get_string (kfile, MU_BOOKMARK_GROUP,
-					     *cur, NULL);
+		gchar* val;
+		val = g_key_file_get_string(kfile, MU_BOOKMARK_GROUP, *cur, NULL);
 		if (val)
-			g_hash_table_insert (hash, *cur, val);
+			g_hash_table_insert(hash, *cur, val);
 	}
 
 	/* don't use g_strfreev, because we put them in the hash table;
 	 * only free the gchar** itself */
-	g_free (keys);
+	g_free(keys);
 }
 
 static GHashTable*
-create_hash_from_key_file (const gchar *bmpath)
+create_hash_from_key_file(const gchar* bmpath)
 {
-	GKeyFile *kfile;
-	GHashTable *hash;
+	GKeyFile*   kfile;
+	GHashTable* hash;
 
-	kfile = g_key_file_new ();
+	kfile = g_key_file_new();
 
-	if (!g_key_file_load_from_file (kfile, bmpath, G_KEY_FILE_NONE, NULL)) {
-		g_key_file_free (kfile);
+	if (!g_key_file_load_from_file(kfile, bmpath, G_KEY_FILE_NONE, NULL)) {
+		g_key_file_free(kfile);
 		return NULL;
 	}
 
-	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	fill_hash (hash, kfile);
+	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	fill_hash(hash, kfile);
 
-	g_key_file_free (kfile);
+	g_key_file_free(kfile);
 
 	return hash;
 }
 
-
-
 MuBookmarks*
-mu_bookmarks_new (const gchar *bmpath)
+mu_bookmarks_new(const gchar* bmpath)
 {
-	MuBookmarks *bookmarks;
-	GHashTable *hash;
+	MuBookmarks* bookmarks;
+	GHashTable*  hash;
 
-	g_return_val_if_fail (bmpath, NULL);
+	g_return_val_if_fail(bmpath, NULL);
 
-	hash = create_hash_from_key_file (bmpath);
+	hash = create_hash_from_key_file(bmpath);
 	if (!hash)
 		return NULL;
 
-	bookmarks	   = g_new (MuBookmarks, 1);
+	bookmarks = g_new(MuBookmarks, 1);
 
-	bookmarks->_bmpath = g_strdup (bmpath);
+	bookmarks->_bmpath = g_strdup(bmpath);
 	bookmarks->_hash   = hash;
 
 	return bookmarks;
 }
 
-
-
 void
-mu_bookmarks_destroy (MuBookmarks *bm)
+mu_bookmarks_destroy(MuBookmarks* bm)
 {
 	if (!bm)
 		return;
 
-	g_free (bm->_bmpath);
-	g_hash_table_destroy (bm->_hash);
-	g_free (bm);
+	g_free(bm->_bmpath);
+	g_hash_table_destroy(bm->_hash);
+	g_free(bm);
 }
 
 const gchar*
-mu_bookmarks_lookup (MuBookmarks *bm, const gchar *name)
+mu_bookmarks_lookup(MuBookmarks* bm, const gchar* name)
 {
-	g_return_val_if_fail (bm, NULL);
-	g_return_val_if_fail (name, NULL);
+	g_return_val_if_fail(bm, NULL);
+	g_return_val_if_fail(name, NULL);
 
-	return (const char*)g_hash_table_lookup (bm->_hash, name);
+	return (const char*)g_hash_table_lookup(bm->_hash, name);
 }
 
 struct _BMData {
 	MuBookmarksForeachFunc _func;
-	gpointer _user_data;
+	gpointer               _user_data;
 };
 typedef struct _BMData BMData;
 
-
 static void
-each_bookmark (const gchar* key, const gchar *val, BMData *bmdata)
+each_bookmark(const gchar* key, const gchar* val, BMData* bmdata)
 {
-	bmdata->_func (key, val, bmdata->_user_data);
+	bmdata->_func(key, val, bmdata->_user_data);
 }
 
-
 void
-mu_bookmarks_foreach (MuBookmarks *bm, MuBookmarksForeachFunc func,
-		      gpointer user_data)
+mu_bookmarks_foreach(MuBookmarks* bm, MuBookmarksForeachFunc func, gpointer user_data)
 {
 	BMData bmdata;
 
-	g_return_if_fail (bm);
-	g_return_if_fail (func);
+	g_return_if_fail(bm);
+	g_return_if_fail(func);
 
-	bmdata._func	  = func;
+	bmdata._func      = func;
 	bmdata._user_data = user_data;
 
-	g_hash_table_foreach (bm->_hash, (GHFunc)each_bookmark, &bmdata);
+	g_hash_table_foreach(bm->_hash, (GHFunc)each_bookmark, &bmdata);
 }

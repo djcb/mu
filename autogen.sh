@@ -18,7 +18,7 @@ fi
 
 # we could remove build/ but let's avoid rm -rf risks...
 if test -d ${BUILDDIR}; then
-    meson --reconfigure ${BUILDDIR}
+    meson --reconfigure ${BUILDDIR} $@
 else
     meson ${BUILDDIR} $@
 fi

@@ -35,126 +35,124 @@ namespace Mu {
 /// Data-structure representing information about some contact.
 
 struct ContactInfo {
-        /**
-         * Construct a new ContactInfo
-         *
-         * @param _full_address the full email address + name.
-         * @param _email email address
-         * @param _name name or empty
-         * @param _personal is this a personal contact?
-         * @param _last_seen when was this contact last seen?
-         * @param _freq how often was this contact seen?
-         */
-        ContactInfo (const std::string& _full_address,
-                     const std::string& _email,
-                     const std::string& _name,
-                     bool personal,
-                     time_t _last_seen,
-                     size_t freq=1);
+	/**
+	 * Construct a new ContactInfo
+	 *
+	 * @param _full_address the full email address + name.
+	 * @param _email email address
+	 * @param _name name or empty
+	 * @param _personal is this a personal contact?
+	 * @param _last_seen when was this contact last seen?
+	 * @param _freq how often was this contact seen?
+	 */
+	ContactInfo(const std::string& _full_address,
+	            const std::string& _email,
+	            const std::string& _name,
+	            bool               personal,
+	            time_t             _last_seen,
+	            size_t             freq = 1);
 
-        std::string full_address; /**< Full name <email> */
-        std::string email;        /**< email address */
-        std::string name;         /**< name (or empty) */
-        bool        personal{};   /**< is this a personal contact? */
-        time_t      last_seen{};  /**< when was this contact last seen? */
-        std::size_t freq{};       /**< how often was this contact seen? */
+	std::string full_address; /**< Full name <email> */
+	std::string email;        /**< email address */
+	std::string name;         /**< name (or empty) */
+	bool        personal{};   /**< is this a personal contact? */
+	time_t      last_seen{};  /**< when was this contact last seen? */
+	std::size_t freq{};       /**< how often was this contact seen? */
 
-        int64_t     tstamp{};     /**< Time-stamp, as per g_get_monotonic_time */
+	int64_t tstamp{}; /**< Time-stamp, as per g_get_monotonic_time */
 };
 
 /// All contacts
 class Contacts {
-public:
-        /**
-         * Construct a new contacts objects
-         *
-         * @param serialized serialized contacts
-         * @param personal personal addresses
-         */
-        Contacts (const std::string& serialized = "",
-                  const StringVec& personal={});
+      public:
+	/**
+	 * Construct a new contacts objects
+	 *
+	 * @param serialized serialized contacts
+	 * @param personal personal addresses
+	 */
+	Contacts(const std::string& serialized = "", const StringVec& personal = {});
 
-        /**
-         * DTOR
-         *
-         */
-        ~Contacts ();
+	/**
+	 * DTOR
+	 *
+	 */
+	~Contacts();
 
-        /**
-         * Add a contact
-         *
-         * @param ci A contact-info object
-         *
-         * @return the inserted / updated / washed contact info. Note that
-         * this is return _as copy_ to make it thread-safe.
-         */
-        const ContactInfo add(ContactInfo&& ci);
+	/**
+	 * Add a contact
+	 *
+	 * @param ci A contact-info object
+	 *
+	 * @return the inserted / updated / washed contact info. Note that
+	 * this is return _as copy_ to make it thread-safe.
+	 */
+	const ContactInfo add(ContactInfo&& ci);
 
-        /**
-         * Clear all contacts
-         *
-         */
-        void clear();
+	/**
+	 * Clear all contacts
+	 *
+	 */
+	void clear();
 
-        /**
-         * Get the number of contacts
-         *
+	/**
+	 * Get the number of contacts
+	 *
 
-         * @return number of contacts
-         */
-        std::size_t size() const;
+	 * @return number of contacts
+	 */
+	std::size_t size() const;
 
-        /**
-         * Are there no contacts?
-         *
-         * @return true or false
-         */
-        bool empty() const { return size() == 0; }
+	/**
+	 * Are there no contacts?
+	 *
+	 * @return true or false
+	 */
+	bool empty() const { return size() == 0; }
 
-        /**
-         * Get the contacts, serialized.
-         *
-         * @return serialized contacts
-         */
-        std::string serialize() const;
+	/**
+	 * Get the contacts, serialized.
+	 *
+	 * @return serialized contacts
+	 */
+	std::string serialize() const;
 
+	/**
+	 * Does this look like a 'personal' address?
+	 *
+	 * @param addr some e-mail address
+	 *
+	 * @return true or false
+	 */
+	bool is_personal(const std::string& addr) const;
 
-        /**
-         * Does this look like a 'personal' address?
-         *
-         * @param addr some e-mail address
-         *
-         * @return true or false
-         */
-        bool is_personal(const std::string& addr) const;
+	/**
+	 * Find a contact based on the email address. This is not safe, since
+	 * the returned ptr can be invalidated at any time; only for unit-tests.
+	 *
+	 * @param email email address
+	 *
+	 * @return contact info, or {} if not found
+	 */
+	const ContactInfo* _find(const std::string& email) const;
 
-        /**
-         * Find a contact based on the email address. This is not safe, since
-         * the returned ptr can be invalidated at any time; only for unit-tests.
-         *
-         * @param email email address
-         *
-         * @return contact info, or {} if not found
-         */
-        const ContactInfo* _find (const std::string& email) const;
+	/**
+	 * Prototype for a callable that receives a contact
+	 *
+	 * @param contact some contact
+	 */
+	using EachContactFunc = std::function<void(const ContactInfo& contact_info)>;
 
-        /**
-         * Prototype for a callable that receives a contact
-         *
-         * @param contact some contact
-         */
-        using EachContactFunc = std::function<void (const ContactInfo& contact_info)>;
+	/**
+	 * Invoke some callable for each contact, in order of rank.
+	 *
+	 * @param each_contact
+	 */
+	void for_each(const EachContactFunc& each_contact) const;
 
-        /**
-         * Invoke some callable for each contact, in order of rank.
-         *
-         * @param each_contact
-         */
-        void for_each (const EachContactFunc& each_contact) const;
-
-private:
-        struct                   Private;
-        std::unique_ptr<Private> priv_;
+      private:
+	struct Private;
+	std::unique_ptr<Private> priv_;
 };
 
 } // namespace Mu

@@ -29,15 +29,13 @@ G_BEGIN_DECLS
  *
  * @return a random dir name, g_free when it's no longer needed
  */
-char* test_mu_common_get_random_tmpdir (void);
-
-
+char* test_mu_common_get_random_tmpdir(void);
 
 /**
  * set the output to /dev/null
  *
  */
-void black_hole (void);
+void black_hole(void);
 
 /**
  * set the timezone
@@ -46,15 +44,14 @@ void black_hole (void);
  *
  * @return the old timezone
  */
-const char* set_tz (const char* tz);
-
+const char* set_tz(const char* tz);
 
 /**
  * switch the locale to en_US.utf8, return TRUE if it succeeds
  *
  * @return TRUE if the switch succeeds, FALSE otherwise
  */
-gboolean  set_en_us_utf8_locale (void);
+gboolean set_en_us_utf8_locale(void);
 
 G_END_DECLS
 

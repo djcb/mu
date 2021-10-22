@@ -34,31 +34,31 @@ struct MuMsg;
 
 /* options for various functions */
 enum MuMsgOptions {
-	MU_MSG_OPTION_NONE              = 0,
-/* 1 << 0 is still free! */
+	MU_MSG_OPTION_NONE = 0,
+	/* 1 << 0 is still free! */
 
 	/* for -> sexp conversion */
-	MU_MSG_OPTION_HEADERS_ONLY      = 1 << 1,
-	MU_MSG_OPTION_EXTRACT_IMAGES    = 1 << 2,
+	MU_MSG_OPTION_HEADERS_ONLY   = 1 << 1,
+	MU_MSG_OPTION_EXTRACT_IMAGES = 1 << 2,
 
 	/* below options are for checking signatures; only effective
 	 * if mu was built with crypto support */
-	MU_MSG_OPTION_VERIFY            = 1 << 4,
-	MU_MSG_OPTION_AUTO_RETRIEVE     = 1 << 5,
-	MU_MSG_OPTION_USE_AGENT         = 1 << 6,
+	MU_MSG_OPTION_VERIFY        = 1 << 4,
+	MU_MSG_OPTION_AUTO_RETRIEVE = 1 << 5,
+	MU_MSG_OPTION_USE_AGENT     = 1 << 6,
 	/* MU_MSG_OPTION_USE_PKCS7         = 1 << 7,   /\* gpg is the default *\/ */
 
 	/* get password from console if needed */
-	MU_MSG_OPTION_CONSOLE_PASSWORD  = 1 << 7,
+	MU_MSG_OPTION_CONSOLE_PASSWORD = 1 << 7,
 
-	MU_MSG_OPTION_DECRYPT           = 1 << 8,
+	MU_MSG_OPTION_DECRYPT = 1 << 8,
 
 	/* misc */
-	MU_MSG_OPTION_OVERWRITE         = 1 << 9,
-	MU_MSG_OPTION_USE_EXISTING      = 1 << 10,
+	MU_MSG_OPTION_OVERWRITE    = 1 << 9,
+	MU_MSG_OPTION_USE_EXISTING = 1 << 10,
 
 	/* recurse into submessages */
-	MU_MSG_OPTION_RECURSE_RFC822    = 1 << 11
+	MU_MSG_OPTION_RECURSE_RFC822 = 1 << 11
 };
 MU_ENABLE_BITOPS(MuMsgOptions);
 
@@ -78,10 +78,9 @@ MU_ENABLE_BITOPS(MuMsgOptions);
  * @return a new MuMsg instance or NULL in case of error; call
  * mu_msg_unref when done with this message
  */
-MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
-			     GError **err)
-			     G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+MuMsg* mu_msg_new_from_file(const char* filepath,
+                            const char* maildir,
+                            GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * create a new MuMsg* instance based on a Xapian::Document
@@ -96,9 +95,8 @@ MuMsg *mu_msg_new_from_file (const char* filepath, const char *maildir,
  * @return a new MuMsg instance or NULL in case of error; call
  * mu_msg_unref when done with this message
  */
-MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+MuMsg* mu_msg_new_from_doc(XapianDocument* doc,
+                           GError**        err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  *  if we don't have a message file yet (because this message is
@@ -109,8 +107,7 @@ MuMsg *mu_msg_new_from_doc (XapianDocument* doc, GError **err)
  *
  * @return TRUE if this succeeded, FALSE in case of error
  */
-gboolean mu_msg_load_msg_file (MuMsg *msg, GError **err);
-
+gboolean mu_msg_load_msg_file(MuMsg* msg, GError** err);
 
 /**
  * close the file-backend, if any; this function is for the use case
@@ -122,7 +119,7 @@ gboolean mu_msg_load_msg_file (MuMsg *msg, GError **err);
  *
  * @param msg a message object
  */
-void mu_msg_unload_msg_file (MuMsg *msg);
+void mu_msg_unload_msg_file(MuMsg* msg);
 
 /**
  * increase the reference count for this message
@@ -132,7 +129,7 @@ void mu_msg_unload_msg_file (MuMsg *msg);
  * @return the message with its reference count increased, or NULL in
  * case of error.
  */
-MuMsg *mu_msg_ref (MuMsg *msg);
+MuMsg* mu_msg_ref(MuMsg* msg);
 
 /**
  * decrease the reference count for this message. if the reference
@@ -140,7 +137,7 @@ MuMsg *mu_msg_ref (MuMsg *msg);
  *
  * @param msg a message
  */
-void mu_msg_unref (MuMsg *msg);
+void mu_msg_unref(MuMsg* msg);
 
 /**
  * cache the values from the backend (file or db), so we don't the
@@ -148,8 +145,7 @@ void mu_msg_unref (MuMsg *msg);
  *
  * @param self a message
  */
-void mu_msg_cache_values (MuMsg *self);
-
+void mu_msg_cache_values(MuMsg* self);
 
 /**
  * get the plain text body of this message
@@ -161,8 +157,7 @@ void mu_msg_cache_values (MuMsg *self);
  * such body. the returned string should *not* be modified or freed.
  * The returned data is in UTF8 or NULL.
  */
-const char*     mu_msg_get_body_text       (MuMsg *msg, MuMsgOptions opts);
-
+const char* mu_msg_get_body_text(MuMsg* msg, MuMsgOptions opts);
 
 /**
  * get the content type parameters for the text body part
@@ -174,8 +169,7 @@ const char*     mu_msg_get_body_text       (MuMsg *msg, MuMsgOptions opts);
  * NULL in case of error or if there is no such body. the returned string
  * should *not* be modified or freed. The returned data is in UTF8 or NULL.
  */
-const GSList*	mu_msg_get_body_text_content_type_parameters	(MuMsg *self, MuMsgOptions opts);
-
+const GSList* mu_msg_get_body_text_content_type_parameters(MuMsg* self, MuMsgOptions opts);
 
 /**
  * get the html body of this message
@@ -186,7 +180,7 @@ const GSList*	mu_msg_get_body_text_content_type_parameters	(MuMsg *self, MuMsgOp
  * @return the html body or NULL in case of error or if there is no
  * such body. the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_body_html       (MuMsg *msgMu, MuMsgOptions opts);
+const char* mu_msg_get_body_html(MuMsg* msgMu, MuMsgOptions opts);
 
 /**
  * get the sender (From:) of this message
@@ -196,8 +190,7 @@ const char*     mu_msg_get_body_html       (MuMsg *msgMu, MuMsgOptions opts);
  * @return the sender of this Message or NULL in case of error or if there
  * is no sender. the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_from	   (MuMsg *msg);
-
+const char* mu_msg_get_from(MuMsg* msg);
 
 /**
  * get the recipients (To:) of this message
@@ -207,8 +200,7 @@ const char*     mu_msg_get_from	   (MuMsg *msg);
  * @return the sender of this Message or NULL in case of error or if there
  * are no recipients. the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_to	   (MuMsg *msg);
-
+const char* mu_msg_get_to(MuMsg* msg);
 
 /**
  * get the carbon-copy recipients (Cc:) of this message
@@ -219,7 +211,7 @@ const char*     mu_msg_get_to	   (MuMsg *msg);
  * there are no such recipients. the returned string should *not* be modified
  * or freed.
  */
-const char*     mu_msg_get_cc	     (MuMsg *msg);
+const char* mu_msg_get_cc(MuMsg* msg);
 
 /**
  * get the blind carbon-copy recipients (Bcc:) of this message; this
@@ -231,7 +223,7 @@ const char*     mu_msg_get_cc	     (MuMsg *msg);
  * error or if there are no such recipients. the returned string
  * should *not* be modified or freed.
  */
-const char*     mu_msg_get_bcc	     (MuMsg *msg);
+const char* mu_msg_get_bcc(MuMsg* msg);
 
 /**
  * get the file system path of this message
@@ -241,8 +233,7 @@ const char*     mu_msg_get_bcc	     (MuMsg *msg);
  * @return the path of this Message or NULL in case of error.
  * the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_path            (MuMsg *msg);
-
+const char* mu_msg_get_path(MuMsg* msg);
 
 /**
  * get the maildir this message lives in; ie, if the path is
@@ -253,8 +244,7 @@ const char*     mu_msg_get_path            (MuMsg *msg);
  * @return the maildir requested or NULL in case of error. The returned
  * string should *not* be modified or freed.
  */
-const char*    mu_msg_get_maildir        (MuMsg *msg);
-
+const char* mu_msg_get_maildir(MuMsg* msg);
 
 /**
  * get the subject of this message
@@ -264,7 +254,7 @@ const char*    mu_msg_get_maildir        (MuMsg *msg);
  * @return the subject of this Message or NULL in case of error or if there
  * is no subject. the returned string should *not* be modified or freed.
  */
-const char*     mu_msg_get_subject         (MuMsg *msg);
+const char* mu_msg_get_subject(MuMsg* msg);
 
 /**
  * get the Message-Id of this message
@@ -275,8 +265,7 @@ const char*     mu_msg_get_subject         (MuMsg *msg);
  * or a fake message-id for messages that don't have them, or NULL in
  * case of error.
  */
-const char*     mu_msg_get_msgid           (MuMsg *msg);
-
+const char* mu_msg_get_msgid(MuMsg* msg);
 
 /**
  * get the mailing list for a message, i.e. the mailing-list
@@ -288,8 +277,7 @@ const char*     mu_msg_get_msgid           (MuMsg *msg);
  * or NULL in case of error or if there is none. the returned string
  * should *not* be modified or freed.
  */
-const char*     mu_msg_get_mailing_list            (MuMsg *msg);
-
+const char* mu_msg_get_mailing_list(MuMsg* msg);
 
 /**
  * get the message date/time (the Date: field) as time_t, using UTC
@@ -299,7 +287,7 @@ const char*     mu_msg_get_mailing_list            (MuMsg *msg);
  * @return message date/time or 0 in case of error or if there
  * is no such header.
  */
-time_t          mu_msg_get_date            (MuMsg *msg);
+time_t mu_msg_get_date(MuMsg* msg);
 
 /**
  * get the flags for this message
@@ -309,8 +297,7 @@ time_t          mu_msg_get_date            (MuMsg *msg);
  * @return the file/content flags as logically OR'd #MuMsgFlags or 0
  * if there are none. Non-standard flags are ignored.
  */
-MuFlags     mu_msg_get_flags      (MuMsg *msg);
-
+MuFlags mu_msg_get_flags(MuMsg* msg);
 
 /**
  * get the file size in bytes of this message
@@ -319,8 +306,7 @@ MuFlags     mu_msg_get_flags      (MuMsg *msg);
  *
  * @return the filesize
  */
-size_t mu_msg_get_size (MuMsg *msg);
-
+size_t mu_msg_get_size(MuMsg* msg);
 
 /**
  * get some field value as string
@@ -330,8 +316,7 @@ size_t mu_msg_get_size (MuMsg *msg);
  *
  * @return a string that should not be freed
  */
-const char*  mu_msg_get_field_string  (MuMsg *msg, MuMsgFieldId mfid);
-
+const char* mu_msg_get_field_string(MuMsg* msg, MuMsgFieldId mfid);
 
 /**
  * get some field value as string-list
@@ -341,7 +326,7 @@ const char*  mu_msg_get_field_string  (MuMsg *msg, MuMsgFieldId mfid);
  *
  * @return a list that should not be freed
  */
-const GSList* mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid);
+const GSList* mu_msg_get_field_string_list(MuMsg* self, MuMsgFieldId mfid);
 
 /**
  * get some field value as string
@@ -351,7 +336,7 @@ const GSList* mu_msg_get_field_string_list (MuMsg *self, MuMsgFieldId mfid);
  *
  * @return a string that should not be freed
  */
-gint64      mu_msg_get_field_numeric (MuMsg *msg, MuMsgFieldId mfid);
+gint64 mu_msg_get_field_numeric(MuMsg* msg, MuMsgFieldId mfid);
 
 /**
  * get the message priority for this message (MU_MSG_PRIO_LOW,
@@ -364,7 +349,7 @@ gint64      mu_msg_get_field_numeric (MuMsg *msg, MuMsgFieldId mfid);
  *
  * @return the message priority (!= 0) or 0 in case of error
  */
-MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
+MuMsgPrio mu_msg_get_prio(MuMsg* msg);
 
 /**
  * get the timestamp (mtime) for the file containing this message
@@ -373,8 +358,7 @@ MuMsgPrio   mu_msg_get_prio        (MuMsg *msg);
  *
  * @return the timestamp or 0 in case of error
  */
-time_t     mu_msg_get_timestamp       (MuMsg *msg);
-
+time_t mu_msg_get_timestamp(MuMsg* msg);
 
 /**
  * get a specific header from the message. This value will _not_ be
@@ -385,8 +369,7 @@ time_t     mu_msg_get_timestamp       (MuMsg *msg);
  *
  * @return a header string which is valid as long as this MuMsg is
  */
-const char* mu_msg_get_header (MuMsg *self, const char *header);
-
+const char* mu_msg_get_header(MuMsg* self, const char* header);
 
 /**
  * get the list of references (consisting of both the References and
@@ -398,7 +381,7 @@ const char* mu_msg_get_header (MuMsg *self, const char *header);
  *
  * @return a list with the references for this msg. Don't modify/free
  */
-const GSList* mu_msg_get_references (MuMsg *msg);
+const GSList* mu_msg_get_references(MuMsg* msg);
 
 /**
  * get the list of tags (ie., X-Label)
@@ -407,8 +390,7 @@ const GSList* mu_msg_get_references (MuMsg *msg);
  *
  * @return a list with the tags for this msg. Don't modify/free
  */
-const GSList* mu_msg_get_tags (MuMsg *self);
-
+const GSList* mu_msg_get_tags(MuMsg* self);
 
 /**
  * compare two messages for sorting
@@ -420,8 +402,7 @@ const GSList* mu_msg_get_tags (MuMsg *self);
  * @return negative if m1 is smaller, positive if m1 is smaller, 0 if
  * they are equal
  */
-int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
-
+int mu_msg_cmp(MuMsg* m1, MuMsg* m2, MuMsgFieldId mfid);
 
 /**
  * check whether there there's a readable file behind this message
@@ -430,8 +411,7 @@ int mu_msg_cmp (MuMsg *m1, MuMsg *m2, MuMsgFieldId mfid);
  *
  * @return TRUE if the message file is readable, FALSE otherwise
  */
-gboolean mu_msg_is_readable (MuMsg *self);
-
+gboolean mu_msg_is_readable(MuMsg* self);
 
 /**
  * move a message to another maildir; note that this does _not_ update
@@ -451,10 +431,12 @@ gboolean mu_msg_is_readable (MuMsg *self);
  *
  * @return TRUE if it worked, FALSE otherwise
  */
-gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
-				 MuFlags flags, gboolean ignore_dups,
-				 gboolean new_name,
-				 GError **err);
+gboolean mu_msg_move_to_maildir(MuMsg*      msg,
+                                const char* maildir,
+                                MuFlags     flags,
+                                gboolean    ignore_dups,
+                                gboolean    new_name,
+                                GError**    err);
 
 /**
  * Tickle a message -- ie., rename a message to some new semi-random name,while
@@ -469,34 +451,31 @@ gboolean mu_msg_move_to_maildir (MuMsg *msg, const char *maildir,
  *
  * @return TRUE if it worked, FALSE otherwise
  */
-gboolean mu_msg_tickle (MuMsg *msg, GError **err);
+gboolean mu_msg_tickle(MuMsg* msg, GError** err);
 
+enum _MuMsgContactType { /* Reply-To:? */
+	                 MU_MSG_CONTACT_TYPE_TO = 0,
+	                 MU_MSG_CONTACT_TYPE_FROM,
+	                 MU_MSG_CONTACT_TYPE_CC,
+	                 MU_MSG_CONTACT_TYPE_BCC,
+	                 MU_MSG_CONTACT_TYPE_REPLY_TO,
 
-enum _MuMsgContactType {  /* Reply-To:? */
-	MU_MSG_CONTACT_TYPE_TO    = 0,
-	MU_MSG_CONTACT_TYPE_FROM,
-	MU_MSG_CONTACT_TYPE_CC,
-	MU_MSG_CONTACT_TYPE_BCC,
-	MU_MSG_CONTACT_TYPE_REPLY_TO,
-
-	MU_MSG_CONTACT_TYPE_NUM
+	                 MU_MSG_CONTACT_TYPE_NUM
 };
 typedef guint MuMsgContactType;
 
 /* not a 'real' contact type */
 #define MU_MSG_CONTACT_TYPE_ALL (MU_MSG_CONTACT_TYPE_NUM + 1)
 
-#define mu_msg_contact_type_is_valid(MCT)\
-	((MCT) < MU_MSG_CONTACT_TYPE_NUM)
+#define mu_msg_contact_type_is_valid(MCT) ((MCT) < MU_MSG_CONTACT_TYPE_NUM)
 
 typedef struct {
-	const char		*name;	       /**< Foo Bar */
-	const char		*email;        /**< foo@bar.cuux */
-	const char              *full_address; /**< Foo Bar <foo@bar.cuux> */
-	MuMsgContactType	 type;	       /**< MU_MSG_CONTACT_TYPE_{ TO,
-						  CC, BCC, FROM, REPLY_TO} */
+	const char*      name;         /**< Foo Bar */
+	const char*      email;        /**< foo@bar.cuux */
+	const char*      full_address; /**< Foo Bar <foo@bar.cuux> */
+	MuMsgContactType type;         /**< MU_MSG_CONTACT_TYPE_{ TO,
+	                                  CC, BCC, FROM, REPLY_TO} */
 } MuMsgContact;
-
 
 /**
  * macro to get the name of a contact
@@ -505,7 +484,7 @@ typedef struct {
  *
  * @return the name
  */
-#define mu_msg_contact_name(ct)    ((ct)->name)
+#define mu_msg_contact_name(ct) ((ct)->name)
 
 /**
  * macro to get the email address of a contact
@@ -523,8 +502,7 @@ typedef struct {
  *
  * @return the contact type
  */
-#define mu_msg_contact_type(ct)    ((ct)->type)
-
+#define mu_msg_contact_type(ct) ((ct)->type)
 
 /**
  * callback function
@@ -534,8 +512,7 @@ typedef struct {
  *
  * @return TRUE if we should continue the foreach, FALSE otherwise
  */
-typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
-					      gpointer user_data);
+typedef gboolean (*MuMsgContactForeachFunc)(MuMsgContact* contact, gpointer user_data);
 
 /**
  * call a function for each of the contacts in a message; the order is:
@@ -547,10 +524,7 @@ typedef gboolean  (*MuMsgContactForeachFunc) (MuMsgContact* contact,
  * @param user_data a user-provide pointer that will be passed to the callback
  *
  */
-void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
-			     gpointer user_data);
-
-
+void mu_msg_contact_foreach(MuMsg* msg, MuMsgContactForeachFunc func, gpointer user_data);
 
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
@@ -570,8 +544,8 @@ void mu_msg_contact_foreach (MuMsg *msg, MuMsgContactForeachFunc func,
  *
  * @return a newly allocated string with a display contact
  */
-const char* mu_str_display_contact_s (const char *str) G_GNUC_CONST;
-char *mu_str_display_contact (const char *str) G_GNUC_WARN_UNUSED_RESULT;
+const char* mu_str_display_contact_s(const char* str) G_GNUC_CONST;
+char*       mu_str_display_contact(const char* str) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a display string for a given set of flags, OR'ed in
@@ -588,10 +562,8 @@ char *mu_str_display_contact (const char *str) G_GNUC_WARN_UNUSED_RESULT;
  * @return a string representation of the flags; see above
  * for what to do with it
  */
-const char* mu_str_flags_s  (MuFlags flags) G_GNUC_CONST;
-char*       mu_str_flags    (MuFlags flags)
-    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+const char* mu_str_flags_s(MuFlags flags) G_GNUC_CONST;
+char*       mu_str_flags(MuFlags flags) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 struct QueryMatch;
 
@@ -615,8 +587,8 @@ struct QueryMatch;
  *
  * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
  */
-Mu::Sexp::List  msg_to_sexp_list(MuMsg *msg, unsigned docid, MuMsgOptions ops);
-Mu::Sexp msg_to_sexp(MuMsg *msg, unsigned docid, MuMsgOptions ops);
-}
+Mu::Sexp::List msg_to_sexp_list(MuMsg* msg, unsigned docid, MuMsgOptions ops);
+Mu::Sexp       msg_to_sexp(MuMsg* msg, unsigned docid, MuMsgOptions ops);
+} // namespace Mu
 
 #endif /*MU_MSG_HH__*/

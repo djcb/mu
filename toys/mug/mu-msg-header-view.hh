@@ -26,22 +26,26 @@
 G_BEGIN_DECLS
 
 /* convenience macros */
-#define MU_TYPE_MSG_HEADER_VIEW             (mu_msg_header_view_get_type())
-#define MU_MSG_HEADER_VIEW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),MU_TYPE_MSG_HEADER_VIEW,MuMsgHeaderView))
-#define MU_MSG_HEADER_VIEW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),MU_TYPE_MSG_HEADER_VIEW,MuMsgHeaderViewClass))
-#define MU_IS_MSG_HEADER_VIEW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),MU_TYPE_MSG_HEADER_VIEW))
-#define MU_IS_MSG_HEADER_VIEW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),MU_TYPE_MSG_HEADER_VIEW))
-#define MU_MSG_HEADER_VIEW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),MU_TYPE_MSG_HEADER_VIEW,MuMsgHeaderViewClass))
+#define MU_TYPE_MSG_HEADER_VIEW (mu_msg_header_view_get_type())
+#define MU_MSG_HEADER_VIEW(obj)                                                                    \
+	(G_TYPE_CHECK_INSTANCE_CAST((obj), MU_TYPE_MSG_HEADER_VIEW, MuMsgHeaderView))
+#define MU_MSG_HEADER_VIEW_CLASS(klass)                                                            \
+	(G_TYPE_CHECK_CLASS_CAST((klass), MU_TYPE_MSG_HEADER_VIEW, MuMsgHeaderViewClass))
+#define MU_IS_MSG_HEADER_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), MU_TYPE_MSG_HEADER_VIEW))
+#define MU_IS_MSG_HEADER_VIEW_CLASS(klass)                                                         \
+	(G_TYPE_CHECK_CLASS_TYPE((klass), MU_TYPE_MSG_HEADER_VIEW))
+#define MU_MSG_HEADER_VIEW_GET_CLASS(obj)                                                          \
+	(G_TYPE_INSTANCE_GET_CLASS((obj), MU_TYPE_MSG_HEADER_VIEW, MuMsgHeaderViewClass))
 
-typedef struct _MuMsgHeaderView      MuMsgHeaderView;
-typedef struct _MuMsgHeaderViewClass MuMsgHeaderViewClass;
-typedef struct _MuMsgHeaderViewPrivate         MuMsgHeaderViewPrivate;
+typedef struct _MuMsgHeaderView        MuMsgHeaderView;
+typedef struct _MuMsgHeaderViewClass   MuMsgHeaderViewClass;
+typedef struct _MuMsgHeaderViewPrivate MuMsgHeaderViewPrivate;
 
 struct _MuMsgHeaderView {
 	GtkBox parent;
 	/* insert public members, if any */
 	/* private */
-	MuMsgHeaderViewPrivate *_priv;
+	MuMsgHeaderViewPrivate* _priv;
 };
 
 struct _MuMsgHeaderViewClass {
@@ -51,15 +55,14 @@ struct _MuMsgHeaderViewClass {
 };
 
 /* member functions */
-GType        mu_msg_header_view_get_type    (void) G_GNUC_CONST;
+GType mu_msg_header_view_get_type(void) G_GNUC_CONST;
 
 /* parameter-less _new function (constructor) */
 /* if this is a kind of GtkWidget, it should probably return at GtkWidget* */
-GtkWidget*   mu_msg_header_view_new         (void);
+GtkWidget* mu_msg_header_view_new(void);
 
 struct MuMsg;
-void mu_msg_header_view_set_message (MuMsgHeaderView *self, Mu::MuMsg *msg);
-
+void mu_msg_header_view_set_message(MuMsgHeaderView* self, Mu::MuMsg* msg);
 
 G_END_DECLS
 

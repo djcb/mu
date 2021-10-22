@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.7.0],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.7.3],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2021 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
@@ -97,7 +97,7 @@ AS_IF([test "x$enable_mu4e" != "xno"], [
   ])
   AS_CASE([$emacs_version],
     [*25.3*],[build_mu4e=yes],
-    [*26*|*27*|*28*],[build_mu4e=yes],
+    [*26*|*27*|*28*|*29*],[build_mu4e=yes],
     [AC_WARN([emacs is too old to build mu4e (need emacs >= 25.3)])])
 ])
 AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")

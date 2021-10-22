@@ -31,33 +31,30 @@
 namespace Mu {
 
 struct MuMsgFile {
-	GMimeMessage	*_mime_msg;
-	time_t		 _timestamp;
-	size_t		 _size;
-	char	         *_path;
-	char		 *_maildir;
-        char             *_sha1;
+	GMimeMessage* _mime_msg;
+	time_t        _timestamp;
+	size_t        _size;
+	char*         _path;
+	char*         _maildir;
+	char*         _sha1;
 };
-
 
 /* we put the the MuMsg definition in this separate -priv file, so we
  * can split the mu_msg implementations over separate files */
 struct MuMsg {
-
-	guint		 _refcount;
+	guint _refcount;
 
 	/* our two backend */
-	MuMsgFile	*_file; /* based on GMime, ie. a file on disc */
-	MuMsgDoc        *_doc;  /* based on Xapian::Document */
+	MuMsgFile* _file; /* based on GMime, ie. a file on disc */
+	MuMsgDoc*  _doc;  /* based on Xapian::Document */
 
 	/* lists where we push allocated strings / GSLists of string
 	 * so we can free them when the struct gets destroyed (and we
 	 * can return them as 'const to callers)
 	 */
-	GSList          *_free_later_str;
-	GSList          *_free_later_lst;
+	GSList* _free_later_str;
+	GSList* _free_later_lst;
 };
-
 
 /**
  * convert a GMimePart to a string
@@ -68,9 +65,8 @@ struct MuMsg {
  *
  * @return utf8 string for this MIME part, to be freed by caller
  */
-gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
-      G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+gchar* mu_msg_mime_part_to_string(GMimePart* part,
+                                  gboolean*  err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Like g_mime_message_foreach, but will recurse into encrypted parts
@@ -83,9 +79,10 @@ gchar* mu_msg_mime_part_to_string (GMimePart *part, gboolean *err)
  * @param err receives error information
  *
  */
-void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
-			      GMimeObjectForeachFunc func,
-			      gpointer user_data);
+void mu_mime_message_foreach(GMimeMessage*          msg,
+                             gboolean               decrypt,
+                             GMimeObjectForeachFunc func,
+                             gpointer               user_data);
 
 /**
  * callback function to retrieve a password from the user
@@ -97,9 +94,10 @@ void mu_mime_message_foreach (GMimeMessage *msg, gboolean decrypt,
  *
  * @return a newly allocated (g_free'able) string
  */
-typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *prompt_ctx,
-					  gboolean reprompt, gpointer user_data);
-
+typedef char* (*MuMsgPartPasswordFunc)(const char* user_id,
+                                       const char* prompt_ctx,
+                                       gboolean    reprompt,
+                                       gpointer    user_data);
 
 /**
  * verify the signature of a signed message part
@@ -110,9 +108,7 @@ typedef char* (*MuMsgPartPasswordFunc)   (const char *user_id, const char *promp
  *
  * @return a status report object, free with mu_msg_part_sig_status_report_destroy
  */
-void mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
-                                MuMsgOptions opts,
-                                GError **err);
+void mu_msg_crypto_verify_part(GMimeMultipartSigned* sig, MuMsgOptions opts, GError** err);
 
 /**
  * decrypt the given encrypted mime multipart
@@ -125,10 +121,11 @@ void mu_msg_crypto_verify_part (GMimeMultipartSigned *sig,
  *
  * @return the decrypted part, or NULL in case of error
  */
-GMimeObject* mu_msg_crypto_decrypt_part (GMimeMultipartEncrypted *enc, MuMsgOptions opts,
-					 MuMsgPartPasswordFunc func, gpointer user_data,
-					 GError **err)
-					G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+GMimeObject* mu_msg_crypto_decrypt_part(GMimeMultipartEncrypted* enc,
+                                        MuMsgOptions             opts,
+                                        MuMsgPartPasswordFunc    func,
+                                        gpointer                 user_data,
+                                        GError** err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 } // namespace Mu
 

@@ -73,6 +73,7 @@ lib_mu=static_library(
     gio_dep,
     gmime_dep,
     xapian_dep,
+    guile_dep,
     config_h_dep,
     lib_mu_utils_dep,
     lib_mu_index_dep
