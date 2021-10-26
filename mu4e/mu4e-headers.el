@@ -1116,11 +1116,11 @@ after the end of the search results."
 
 (defun mu4e~headers-maybe-auto-update ()
   "Update the current headers buffer after indexing has brought
-some changes, `mu4e-headers-auto-update' is non-nil and there
-is no user-interaction ongoing."
+some changes, `mu4e-headers-auto-update' is non-nil and there is
+no user-interaction ongoing."
   (when (and mu4e-headers-auto-update          ;; must be set
 	     mu4e-index-update-status
-	     (> 0 (plist-get mu4e-index-update-status :updated))
+	     (not (zerop (plist-get mu4e-index-update-status :updated)))
              (zerop (mu4e-mark-marks-num))     ;; non active marks
              (not (active-minibuffer-window))) ;; no user input only
     ;; rerun search if there's a live window with search results;
