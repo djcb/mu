@@ -389,7 +389,7 @@ either `future' or `past'."
   (minibuffer-with-setup-hook
       (lambda ()
 	(setq-local completion-at-point-functions
-		    #'mu4e--search-query-competion-at-point)
+		    #'mu4e--search-query-completion-at-point)
 	(use-local-map mu4e-minibuffer-search-query-map))
     (read-string prompt initial-input 'mu4e--search-hist)))
 
@@ -398,11 +398,20 @@ either `future' or `past'."
 
 (defconst mu4e--search-query-keywords
   '("and" "or" "not"
-    "from:" "to:" "cc:" "bcc:" "contact:" "date:" "subject:" "body:"
+    "from:" "to:" "cc:" "bcc:" "contact:" "recip:" "date:" "subject:" "body:"
     "list:" "maildir:" "flag:" "mime:" "file:" "prio:" "tag:" "msgid:"
     "size:" "embed:"))
 
-(defun mu4e--search-query-competion-at-point ()
+(defun mu4e--search-completion-contacts-action (match _status)
+  "Delete contact alias from contact autocompletion, leaving just email address.
+Implements 'completion-extra-properties' :exit-function which
+requires a function with arguments string MATCH and completion
+status, STATUS."
+  (let ((contact-email (replace-regexp-in-string "^.*<\\|>$" "" match)))
+    (delete-char (- (length match)))
+    (insert contact-email)))
+
+(defun mu4e--search-query-completion-at-point ()
   "Provide completion when entering search expressions."
   (cond
    ((not (looking-back "[:\"][^ \t]*" nil))
@@ -426,7 +435,13 @@ either `future' or `past'."
    ((looking-back "mime:\\([a-zA-Z0-9/-]*\\)" nil)
     (list (match-beginning 1)
 	  (match-end 1)
-	  (mailcap-mime-types)))))
+          (mailcap-mime-types)))
+   ((looking-back "\\(from\\|to\\|cc\\|bcc\\|contact\\|recip\\):\\([a-zA-Z0-9/.@]*\\)" nil)
+    (list (match-beginning 2)
+          (match-end 2)
+          mu4e--contacts-hash
+          :exit-function
+          #'mu4e--search-completion-contacts-action))))
 
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
