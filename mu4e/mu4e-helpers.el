@@ -207,7 +207,7 @@ Does a local-exit and does not return."
 
 (defun mu4e--read-char-choice (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
-Any input that is not one of CHOICES is ignored. This mu4e's
+Any input that is not one of CHOICES is ignored. This is mu4e's
 version of `read-char-choice' which becomes case-insentive after
 trying an exact match."
   (let ((choice) (chosen) (inhibit-quit nil))
