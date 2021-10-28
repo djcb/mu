@@ -366,6 +366,20 @@ Parser::Private::data(Mu::Tokens& tokens, WarningVec& warnings) const
 		if (val[0] == '/' && val[val.length() - 1] == '/')
 			return regex(fields, val, token.pos, warnings);
 
+        // does it look like it contains '-', which xapian treats as word separators
+	const char xapianWordSeparator = '-';
+	auto pos = val.find(xapianWordSeparator);
+	if (pos != std::string::npos) {
+		const std::string wordSeparatorRegexp = "[-]";
+		auto wordSeparatorRegexpLen = wordSeparatorRegexp.length();
+		do {
+			val.replace(pos, sizeof(xapianWordSeparator), wordSeparatorRegexp);
+			pos = val.find(xapianWordSeparator, pos + wordSeparatorRegexpLen);
+		} while (pos != std::string::npos);
+		val = "/" + val + "/";
+		return regex(fields, val, token.pos, warnings);
+	}
+
 	// does it look like a range?
 	const auto dotdot = val.find("..");
 	if (dotdot != std::string::npos)
