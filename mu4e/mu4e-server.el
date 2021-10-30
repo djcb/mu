@@ -32,7 +32,10 @@
 (defcustom mu4e-mu-home nil
   "Location of an alternate mu home dir.
 If not set, use the defaults, based on the XDG Base Directory
-Specification."
+Specification.
+
+Important: any changes to `mu4e-mu-home' only take affect
+after (re)starting the mu session."
   :group 'mu4e
   :type '(choice (const :tag "Default location" nil)
                  (directory :tag "Specify location"))
