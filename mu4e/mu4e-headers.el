@@ -745,7 +745,7 @@ headers."
           ;; update it; that way, the flags can be updated, as well as the path
           ;; (which is useful for viewing the raw message)
           (when (and maybe-view (mu4e~headers-view-this-message-p docid))
-            (mu4e-view msg))
+            (save-excursion (mu4e-view msg)))
           ;; now, if this update was about *moving* a message, we don't show it
           ;; anymore (of course, we cannot be sure if the message really no
           ;; longer matches the query, but this seem a good heuristic.  if it
