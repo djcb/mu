@@ -129,9 +129,11 @@ Invoke FUNC if non-nil."
   "Start mu4e.
 If `mu4e-contexts' have been defined, but we don't have a context
 yet, switch to the matching one, or none matches, the first. If
-mu4e is already running, execute function FUNC (if non-nil).
-Otherwise, check various requireme`'nts, then start mu4e. When
-successful, call FUNC (if non-nil) afterwards."
+mu4e is already running, invoke FUNC (if non-nil).
+
+Otherwise, check requirements, then start mu4e. When successful,
+invoke
+ FUNC (if non-nil) afterwards."
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e--pong-handler info func)))
