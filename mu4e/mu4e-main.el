@@ -173,7 +173,7 @@ clicked."
            for bm in bmks
            for key = (string (plist-get bm :key))
            for name = (plist-get bm :name)
-           for query = (funcall (or mu4e-search-query-rewrite-function #'identity)
+           for query = (funcall (or mu4e-query-rewrite-function #'identity)
                                 (plist-get bm :query))
            for qcounts = (and (stringp query)
                               (cl-loop for q in queries

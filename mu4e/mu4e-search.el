@@ -62,10 +62,7 @@ If this is nil, search for up to `mu4e-search-results-limit')")
 (defvar mu4e-search-threads t
   "Whether to calculate threads for the search results.")
 
-
-(define-obsolete-variable-alias 'mu4e-query-rewrite-function
-  'mu4e-search-query-rewrite-function "1.7.0")
-(defcustom mu4e-search-query-rewrite-function 'identity
+(defcustom mu4e-query-rewrite-function 'identity
   "Function to rewrite a query.
 
 It takes a search expression string, and returns a possibly
@@ -86,7 +83,6 @@ It is good to remember that the replacement does not understand
 anything about the query, it just does text replacement."
   :type 'function
   :group 'mu4e-search)
-
 
 (define-obsolete-variable-alias
   'mu4e-headers-search-bookmark-hook

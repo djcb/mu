@@ -796,7 +796,7 @@ Switch to the output buffer for the results. If IGNORE-HISTORY is
 true, do *not* update the query history stack."
   (let* ((buf (get-buffer-create mu4e-headers-buffer-name))
          (inhibit-read-only t)
-         (rewritten-expr (funcall mu4e-search-query-rewrite-function expr))
+         (rewritten-expr (funcall mu4e-query-rewrite-function expr))
          (maxnum (unless mu4e-search-full mu4e-search-results-limit)))
     (with-current-buffer buf
       (mu4e-headers-mode)
