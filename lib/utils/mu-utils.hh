@@ -130,6 +130,23 @@ std::string date_to_time_t_string(const std::string& date, bool first);
  */
 std::string date_to_time_t_string(int64_t t);
 
+/**
+ * Create a std::string by consuming a gchar* array; this takes ownership
+ * of str which should no longer be used.
+ *
+ * @param str a gchar* or NULL (latter taken as "")
+ *
+ * @return a std::string
+ */
+static inline std::string
+from_gchars(gchar*&& str)
+{
+	std::string s{str ? str : ""};
+	g_free(str);
+
+	return s;
+}
+
 using Clock    = std::chrono::steady_clock;
 using Duration = Clock::duration;
 
@@ -171,7 +188,7 @@ struct StopWatch {
 			g_debug("%s: finished after %" G_GINT64_FORMAT " us", name_.c_str(), us);
 	}
 
-      private:
+private:
 	Clock::time_point start_;
 	std::string       name_;
 };
@@ -251,7 +268,7 @@ struct MaybeAnsi {
 
 	std::string reset() const { return color_ ? "\x1b[0m" : ""; }
 
-      private:
+private:
 	std::string ansi(Color c, bool fg = true) const
 	{
 		return color_ ? format("\x1b[%dm", static_cast<int>(c) + (fg ? 0 : 10)) : "";
