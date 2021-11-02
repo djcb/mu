@@ -538,7 +538,7 @@ config_options_group_view()
                                    G_OPTION_ARG_NONE,
                                    &MU_CONFIG.terminator,
                                    "terminate messages with ascii-0x07 (\\f, form-feed)",
-                                   "<term>"},
+                                   NULL},
                                   {"format",
                                    'o',
                                    0,
