@@ -46,22 +46,7 @@ G_BEGIN_DECLS
  * @return the expanded path as a newly allocated string, or NULL in
  * case of error
  */
-char* mu_util_dir_expand (const char* path)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
-
-/**
- * See g_canonicalize_filename
- *
- * @param filename
- * @param relative_to
- *
- * @return
- */
-char *mu_canonicalize_filename (const gchar *filename,
-                                const gchar *relative_to)
-        G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
-
+char* mu_util_dir_expand(const char* path) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * guess the maildir; first try $MAILDIR; if it is unset or

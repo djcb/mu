@@ -458,8 +458,8 @@ Mu::size_to_string(const std::string& val, bool is_first)
 std::string
 Mu::canonicalize_filename(const std::string& path, const std::string& relative_to)
 {
-	char* fname = mu_canonicalize_filename(path.c_str(),
-	                                       relative_to.empty() ? NULL : relative_to.c_str());
+	char* fname =
+	    g_canonicalize_filename(path.c_str(), relative_to.empty() ? NULL : relative_to.c_str());
 
 	std::string rv{fname};
 	g_free(fname);
