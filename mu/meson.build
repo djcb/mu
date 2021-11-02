@@ -49,7 +49,7 @@ testmaildir=join_paths(meson.current_source_dir(),'../lib')
 
 test('test_cmd',
      executable('test-cmd',
-		'test-mu-cmd.cc',
+		'tests/test-mu-cmd.cc',
 		install: false,
 		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
 			   '-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"',
@@ -57,7 +57,7 @@ test('test_cmd',
 		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
 test('test_cmd_cfind',
      executable('test-cmd-cfind',
-		'test-mu-cmd-cfind.cc',
+		'tests/test-mu-cmd-cfind.cc',
 		install: false,
 		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
 			   '-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
@@ -65,10 +65,17 @@ test('test_cmd_cfind',
 		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep]))
 test('test_cmd_query',
      executable('test-cmd-query',
-		'test-mu-query.cc',
+		'tests/test-mu-query.cc',
 		install: false,
 		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
 			   '-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
 			   '-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"'
 			  ],
 		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+
+gmime_test = executable(
+  'gmime-test', [
+  'tests/gmime-test.c'
+],
+  dependencies: [ glib_dep, gmime_dep ],
+  install: false)

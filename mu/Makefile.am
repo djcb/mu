@@ -68,6 +68,10 @@ EXTRA_DIST=                                                     \
 	mu-help-strings.awk                                     \
 	mu-help-strings.txt
 
+#
+# Tests
+#
+
 noinst_PROGRAMS= $(TEST_PROGS)
 
 test_cxxflags=                                                  \
@@ -80,17 +84,17 @@ test_cxxflags=                                                  \
 	-DABS_SRCDIR=\"${abs_srcdir}\"
 
 TEST_PROGS += test-query
-test_query_SOURCES= test-mu-query.cc
+test_query_SOURCES= tests/test-mu-query.cc
 test_query_CXXFLAGS=$(test_cxxflags)
 test_query_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TEST_PROGS += test-cmd
-test_cmd_SOURCES= test-mu-cmd.cc
+test_cmd_SOURCES= tests/test-mu-cmd.cc
 test_cmd_CXXFLAGS=$(test_cxxflags)
 test_cmd_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
 TEST_PROGS += test-cmd-cfind
-test_cmd_cfind_SOURCES= test-mu-cmd-cfind.cc
+test_cmd_cfind_SOURCES= tests/test-mu-cmd-cfind.cc
 test_cmd_cfind_CXXFLAGS=$(test_cxxflags)
 test_cmd_cfind_LDADD=${top_builddir}/lib/libtestmucommon.la $(CODE_COVERAGE_LIBS)
 
