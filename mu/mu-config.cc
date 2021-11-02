@@ -371,24 +371,34 @@ crypto_option_entries ()
 	return entries;
 }
 
-static GOptionGroup *
-config_options_group_view ()
+static GOptionGroup*
+config_options_group_view()
 {
-	GOptionGroup *og;
-	GOptionEntry entries[] = {
-		{"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
-		 "use up to <n> lines for the summary, or 0 for none (0)",
-		 "<len>"},
-		{"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
-		 "terminate messages with ascii-0x07 (\\f, form-feed)",
-		 "<term>"},
-		{"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
-		 "output format ('plain'(*), 'sexp')", "<format>"},
-		{NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}
-	};
+	GOptionGroup* og;
+	GOptionEntry  entries[] = {{"summary-len",
+                                   0,
+                                   0,
+                                   G_OPTION_ARG_INT,
+                                   &MU_CONFIG.summary_len,
+                                   "use up to <n> lines for the summary, or 0 for none (0)",
+                                   "<len>"},
+                                  {"terminate",
+                                   0,
+                                   0,
+                                   G_OPTION_ARG_NONE,
+                                   &MU_CONFIG.terminator,
+                                   "terminate messages with ascii-0x07 (\\f, form-feed)",
+                                   NULL},
+                                  {"format",
+                                   'o',
+                                   0,
+                                   G_OPTION_ARG_STRING,
+                                   &MU_CONFIG.formatstr,
+                                   "output format ('plain'(*), 'sexp')",
+                                   "<format>"},
+                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
-	og = g_option_group_new("view", "Options for the 'view' command",
-				"", NULL, NULL);
+	og = g_option_group_new("view", "Options for the 'view' command", "", NULL, NULL);
 
 	g_option_group_add_entries(og, entries);
 	g_option_group_add_entries(og, crypto_option_entries());
