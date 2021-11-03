@@ -62,7 +62,7 @@ test('test_cmd_cfind',
 		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
 			   '-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
 			  ],
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep]))
+		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
 test('test_cmd_query',
      executable('test-cmd-query',
 		'tests/test-mu-query.cc',

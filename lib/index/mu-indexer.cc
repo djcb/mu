@@ -31,8 +31,6 @@
 #include <chrono>
 using namespace std::chrono_literals;
 
-#include <xapian.h>
-
 #include "mu-scanner.hh"
 #include "utils/mu-async-queue.hh"
 #include "utils/mu-error.hh"
@@ -62,7 +60,7 @@ struct IndexState {
 		state_ = new_state;
 	}
 
-      private:
+private:
 	State state_{Idle};
 };
 
