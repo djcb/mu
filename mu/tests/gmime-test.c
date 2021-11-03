@@ -17,7 +17,7 @@
 **
 */
 
-#define _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 1
 
 #include <gmime/gmime.h>
 #include <stdio.h>

@@ -98,7 +98,7 @@ check_flag(MuFlags flag, FlagData* fdata)
 		return;
 
 	switch (flag) {
-	case MU_FLAG_NONE: break;
+	case MU_FLAG_NONE: flag_scm = SCM_UNDEFINED; break;
 	case MU_FLAG_NEW: flag_scm = SYMB_FLAG_NEW; break;
 	case MU_FLAG_PASSED: flag_scm = SYMB_FLAG_PASSED; break;
 	case MU_FLAG_REPLIED: flag_scm = SYMB_FLAG_REPLIED; break;
