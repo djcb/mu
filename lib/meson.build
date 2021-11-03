@@ -80,11 +80,12 @@ lib_mu=static_library(
   ],
   install: false)
 
+# some of the libme headers include xapian
+xapian_incs = xapian_dep.get_pkgconfig_variable('includedir')
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
-  include_directories: include_directories(['.', '..'])
-)
-
+  include_directories:
+    include_directories(['.', '..', xapian_incs]))
 
 #
 # tests

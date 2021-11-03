@@ -30,6 +30,7 @@
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
 #include "utils/mu-utils.hh"
+#include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
 
@@ -38,7 +39,7 @@ struct Mu::MuMsgDoc {
 	~MuMsgDoc() { delete _doc; }
 	const Xapian::Document doc() const { return *_doc; }
 
-      private:
+private:
 	Xapian::Document* _doc;
 };
 

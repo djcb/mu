@@ -36,6 +36,7 @@ lib_mu_utils=static_library('mu-utils', [
 		  'mu-util.h',
 		  'mu-utils.cc',
 		  'mu-utils.hh',
+                  'mu-xapian-utils.hh',
 		  # third party
 		  'optional.hpp',
 		  'expected.hpp'],

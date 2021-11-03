@@ -36,6 +36,7 @@
 
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
+#include <utils/mu-xapian-utils.hh>
 
 #include "mu-msg.hh"
 
@@ -157,7 +158,7 @@ operator<<(std::ostream& os, const QueryMatch& qmatch)
 /// skipped ones do _not_ count towards the max_size
 ///
 class QueryResultsIterator {
-      public:
+public:
 	using iterator_category = std::output_iterator_tag;
 	using value_type        = MuMsg*;
 	using difference_type   = void;
@@ -328,7 +329,7 @@ class QueryResultsIterator {
 		    (MuMsg*)NULL);
 	}
 
-      private:
+private:
 	Xapian::MSetIterator mset_it_;
 	QueryMatches&        query_matches_;
 	MuMsg*               msg_{};
@@ -337,7 +338,7 @@ class QueryResultsIterator {
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
 
 class QueryResults {
-      public:
+public:
 	/// Helper types
 	using iterator       = QueryResultsIterator;
 	using const_iterator = const iterator;
@@ -391,7 +392,7 @@ class QueryResults {
 	const QueryMatches& query_matches() const { return query_matches_; }
 	QueryMatches&       query_matches() { return query_matches_; }
 
-      private:
+private:
 	const Xapian::MSet   mset_;
 	mutable QueryMatches query_matches_;
 };

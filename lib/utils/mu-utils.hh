@@ -29,7 +29,6 @@
 #include <ostream>
 #include <iostream>
 #include <type_traits>
-#include <xapian.h>
 
 namespace Mu {
 
@@ -276,35 +275,6 @@ private:
 
 	const bool color_;
 };
-
-template <typename Func>
-void
-xapian_try(Func&& func) noexcept
-try {
-	func();
-} catch (const Xapian::Error& xerr) {
-	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
-} catch (const std::runtime_error& re) {
-	g_critical("%s: error: %s", __func__, re.what());
-} catch (...) {
-	g_critical("%s: caught exception", __func__);
-}
-
-template <typename Func, typename Default = std::invoke_result<Func>>
-auto
-xapian_try(Func&& func, Default&& def) noexcept -> std::decay_t<decltype(func())>
-try {
-	return func();
-} catch (const Xapian::Error& xerr) {
-	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
-	return static_cast<Default>(def);
-} catch (const std::runtime_error& re) {
-	g_critical("%s: error: %s", __func__, re.what());
-	return static_cast<Default>(def);
-} catch (...) {
-	g_critical("%s: caught exception", __func__);
-	return static_cast<Default>(def);
-}
 
 /// Allow using enum structs as bitflags
 #define MU_TO_NUM(ET, ELM)  std::underlying_type_t<ET>(ELM)

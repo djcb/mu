@@ -71,6 +71,7 @@ libmu_utils_la_SOURCES=						\
 	mu-util.h						\
 	mu-utils.cc						\
 	mu-utils.hh						\
+	mu-xapian-utils.hh					\
 	${third_party}
 
 libmu_utils_la_LIBADD=						\

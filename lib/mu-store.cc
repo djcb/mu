@@ -39,6 +39,7 @@
 
 #include "mu-msg-part.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
 

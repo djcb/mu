@@ -34,14 +34,14 @@
 #include <index/mu-indexer.hh>
 
 namespace Mu {
+
 class Store {
-      public:
+public:
 	using Id                      = Xapian::docid; /**< Id for a message in the store */
 	static constexpr Id InvalidId = 0;             /**< Invalid  store id */
 
 	static constexpr size_t MaxTermLength = 240; /**< Maximum length of a term,
 	  http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
-
 	/**
 	 * Construct a store for an existing document database
 	 *
@@ -300,7 +300,7 @@ class Store {
 	std::unique_ptr<Private>&       priv() { return priv_; }
 	const std::unique_ptr<Private>& priv() const { return priv_; }
 
-      private:
+private:
 	std::unique_ptr<Private> priv_;
 };
 
