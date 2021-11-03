@@ -1,7 +1,5 @@
-/* -*-mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-*/
-
 /*
-** Copyright (C) 2011-2017 Dirk-Jan C. Binnema <djcb@cthulhu>
+** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,10 +17,7 @@
 **
 */
 
-/* gmime-test; compile with:
-       gcc -o gmime-test gmime-test.c -Wall -O0 -ggdb \
-	   `pkg-config --cflags --libs gmime-2.6`
- */
+#define _POSIX_C_SOURCE
 
 #include <gmime/gmime.h>
 #include <stdio.h>
@@ -31,16 +26,16 @@
 #include <locale.h>
 
 static gchar*
-get_recip (GMimeMessage *msg, GMimeAddressType atype)
+get_recip(GMimeMessage* msg, GMimeAddressType atype)
 {
-	char *recep;
-	InternetAddressList *receps;
+	char*                recep;
+	InternetAddressList* receps;
 
-	receps = g_mime_message_get_addresses (msg, atype);
-	recep = (char*)internet_address_list_to_string (receps, NULL, FALSE);
+	receps = g_mime_message_get_addresses(msg, atype);
+	recep  = (char*)internet_address_list_to_string(receps, NULL, FALSE);
 
 	if (!recep || !*recep) {
-		g_free (recep);
+		g_free(recep);
 		return NULL;
 	}
 
@@ -48,85 +43,80 @@ get_recip (GMimeMessage *msg, GMimeAddressType atype)
 }
 
 static gchar*
-get_refs_str (GMimeMessage *msg)
+get_refs_str(GMimeMessage* msg)
 {
-	const gchar *str;
-	GMimeReferences *mime_refs;
-	int i, refs_len;
-	gchar *rv;
+	const gchar*     str;
+	GMimeReferences* mime_refs;
+	int              i, refs_len;
+	gchar*           rv;
 
-	str = g_mime_object_get_header (GMIME_OBJECT(msg), "References");
+	str = g_mime_object_get_header(GMIME_OBJECT(msg), "References");
 	if (!str)
 		return NULL;
 
-	mime_refs = g_mime_references_parse (NULL, str);
-	refs_len = g_mime_references_length (mime_refs);
+	mime_refs = g_mime_references_parse(NULL, str);
+	refs_len  = g_mime_references_length(mime_refs);
 	for (rv = NULL, i = 0; i < refs_len; ++i) {
 		const char* msgid;
-		msgid = g_mime_references_get_message_id (mime_refs, i);
-		rv = g_strdup_printf ("%s%s%s",
-				      rv ? rv : "",
-				      rv ? "," : "",
-				      msgid);
+		msgid = g_mime_references_get_message_id(mime_refs, i);
+		rv    = g_strdup_printf("%s%s%s", rv ? rv : "", rv ? "," : "", msgid);
 	}
-	g_mime_references_free (mime_refs);
+	g_mime_references_free(mime_refs);
 
 	return rv;
 }
 
 static void
-print_date (GMimeMessage *msg)
+print_date(GMimeMessage* msg)
 {
-	GDateTime       *dt;
-	gchar           *buf;
+	GDateTime* dt;
+	gchar*     buf;
 
-	dt = g_mime_message_get_date (msg);
+	dt = g_mime_message_get_date(msg);
 	if (!dt)
 		return;
 
-	dt = g_date_time_to_local (dt);
-	buf = g_date_time_format (dt, "%c");
-	g_date_time_unref (dt);
+	dt  = g_date_time_to_local(dt);
+	buf = g_date_time_format(dt, "%c");
+	g_date_time_unref(dt);
 
 	if (buf) {
-		g_print ("Date   : %s\n", buf);
-		g_free (buf);
+		g_print("Date   : %s\n", buf);
+		g_free(buf);
 	}
 }
 
-
 static void
-print_body (GMimeMessage *msg)
+print_body(GMimeMessage* msg)
 {
-	GMimeObject		*body;
-	GMimeDataWrapper	*wrapper;
-	GMimeStream		*stream;
+	GMimeObject*      body;
+	GMimeDataWrapper* wrapper;
+	GMimeStream*      stream;
 
-	body = g_mime_message_get_body (msg);
+	body = g_mime_message_get_body(msg);
 
 	if (GMIME_IS_MULTIPART(body))
-		body = g_mime_multipart_get_part (GMIME_MULTIPART(body), 0);
-
+		body = g_mime_multipart_get_part(GMIME_MULTIPART(body), 0);
 	if (!GMIME_IS_PART(body))
 		return;
 
-	wrapper = g_mime_part_get_content (GMIME_PART(body));
+	wrapper = g_mime_part_get_content(GMIME_PART(body));
 	if (!GMIME_IS_DATA_WRAPPER(wrapper))
 		return;
 
-	stream = g_mime_data_wrapper_get_stream (wrapper);
+	stream = g_mime_data_wrapper_get_stream(wrapper);
 	if (!GMIME_IS_STREAM(stream))
 		return;
 
 	do {
-		char	buf[512];
-		ssize_t	len;
+		char    buf[512];
+		ssize_t len;
 
-		len = g_mime_stream_read (stream, buf, sizeof(buf));
+		len = g_mime_stream_read(stream, buf, sizeof(buf));
 		if (len == -1)
 			break;
 
-		if (write (fileno(stdout), buf, len) == -1)
+		if (write(fileno(stdout), buf, len) == -1)
 			break;
 
 		if (len < (int)sizeof(buf))
@@ -136,140 +126,135 @@ print_body (GMimeMessage *msg)
 }
 
 static gboolean
-test_message (GMimeMessage *msg)
+test_message(GMimeMessage* msg)
 {
-	gchar		*val;
-	const gchar	*str;
+	gchar*       val;
+	const gchar* str;
 
-	val = get_recip (msg, GMIME_ADDRESS_TYPE_FROM);
-	g_print ("From   : %s\n", val ? val : "<none>" );
-	g_free (val);
+	val = get_recip(msg, GMIME_ADDRESS_TYPE_FROM);
+	g_print("From   : %s\n", val ? val : "<none>");
+	g_free(val);
 
-	val = get_recip (msg, GMIME_ADDRESS_TYPE_TO);
-	g_print ("To     : %s\n", val ? val : "<none>" );
-	g_free (val);
+	val = get_recip(msg, GMIME_ADDRESS_TYPE_TO);
+	g_print("To     : %s\n", val ? val : "<none>");
+	g_free(val);
 
-	val = get_recip (msg, GMIME_ADDRESS_TYPE_CC);
-	g_print ("Cc     : %s\n", val ? val : "<none>" );
-	g_free (val);
+	val = get_recip(msg, GMIME_ADDRESS_TYPE_CC);
+	g_print("Cc     : %s\n", val ? val : "<none>");
+	g_free(val);
 
-	val = get_recip (msg, GMIME_ADDRESS_TYPE_BCC);
-	g_print ("Bcc    : %s\n", val ? val : "<none>" );
-	g_free (val);
+	val = get_recip(msg, GMIME_ADDRESS_TYPE_BCC);
+	g_print("Bcc    : %s\n", val ? val : "<none>");
+	g_free(val);
 
-	str = g_mime_message_get_subject (msg);
-	g_print ("Subject: %s\n", str ? str : "<none>");
+	str = g_mime_message_get_subject(msg);
+	g_print("Subject: %s\n", str ? str : "<none>");
 
-	print_date (msg);
+	print_date(msg);
 
-	str = g_mime_message_get_message_id (msg);
-	g_print ("Msg-id : %s\n", str ? str : "<none>");
+	str = g_mime_message_get_message_id(msg);
+	g_print("Msg-id : %s\n", str ? str : "<none>");
 
 	{
-		gchar	*refsstr;
-		refsstr = get_refs_str (msg);
-		g_print ("Refs   : %s\n", refsstr ? refsstr : "<none>");
-		g_free (refsstr);
+		gchar* refsstr;
+		refsstr = get_refs_str(msg);
+		g_print("Refs   : %s\n", refsstr ? refsstr : "<none>");
+		g_free(refsstr);
 	}
 
-	print_body (msg);
+	print_body(msg);
 
 	return TRUE;
 }
 
-
-
 static gboolean
-test_stream (GMimeStream *stream)
+test_stream(GMimeStream* stream)
 {
-	GMimeParser *parser;
-	GMimeMessage *msg;
-	gboolean rv;
+	GMimeParser*  parser;
+	GMimeMessage* msg;
+	gboolean      rv;
 
 	parser = NULL;
 	msg    = NULL;
 
-	parser = g_mime_parser_new_with_stream (stream);
+	parser = g_mime_parser_new_with_stream(stream);
 	if (!parser) {
-		g_warning ("failed to create parser");
+		g_warning("failed to create parser");
 		rv = FALSE;
 		goto leave;
 	}
 
-	msg = g_mime_parser_construct_message (parser, NULL);
+	msg = g_mime_parser_construct_message(parser, NULL);
 	if (!msg) {
-		g_warning ("failed to construct message");
+		g_warning("failed to construct message");
 		rv = FALSE;
 		goto leave;
 	}
 
-	rv = test_message (msg);
+	rv = test_message(msg);
 
 leave:
 	if (parser)
-		g_object_unref (parser);
+		g_object_unref(parser);
 
 	if (msg)
-		g_object_unref (msg);
+		g_object_unref(msg);
 
 	return rv;
 }
 
-
 static gboolean
-test_file (const char *path)
+test_file(const char* path)
 {
-	FILE *file;
-	GMimeStream *stream;
-	gboolean rv;
+	FILE*        file;
+	GMimeStream* stream;
+	gboolean     rv;
 
 	stream = NULL;
 	file   = NULL;
 
-	file = fopen (path, "r");
+	file = fopen(path, "r");
 	if (!file) {
-		g_warning ("cannot open file '%s': %s", path,
-			   g_strerror(errno));
+		g_warning("cannot open file '%s': %s", path, g_strerror(errno));
 		rv = FALSE;
 		goto leave;
 	}
 
-	stream = g_mime_stream_file_new (file);
+	stream = g_mime_stream_file_new(file);
 	if (!stream) {
-		g_warning ("cannot open stream for '%s'", path);
+		g_warning("cannot open stream for '%s'", path);
 		rv = FALSE;
 		goto leave;
 	}
 
-	rv = test_stream (stream);
-	g_object_unref (stream);
+	rv = test_stream(stream);
+	g_object_unref(stream);
 	return rv;
 
 leave:
 	if (file)
-		fclose (file);
+		fclose(file);
 
 	return rv;
 }
 
-
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
 	gboolean rv;
 
 	if (argc != 2) {
-		g_printerr ("usage: %s <msg-file>\n", argv[0]);
+		g_printerr("usage: %s <msg-file>\n", argv[0]);
 		return 1;
 	}
 
-	setlocale (LC_ALL, "");
+	setlocale(LC_ALL, "");
 
 	g_mime_init();
 
-	rv = test_file (argv[1]);
+	rv = test_file(argv[1]);
 
-	g_mime_shutdown ();
+	g_mime_shutdown();
 
 	return rv ? 0 : 1;
 }
