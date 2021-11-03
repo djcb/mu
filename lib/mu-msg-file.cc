@@ -752,7 +752,7 @@ Mu::mu_msg_file_get_num_field(MuMsgFile* self, const MuMsgFieldId mfid)
 	case MU_MSG_FIELD_ID_DATE: {
 		GDateTime* dt;
 		dt = g_mime_message_get_date(self->_mime_msg);
-		return dt ? g_date_time_to_unix(dt) : 0;
+		return dt ? g_date_time_to_unix(dt) : self->_timestamp;
 	}
 
 	case MU_MSG_FIELD_ID_FLAGS: return (gint64)get_flags(self);
