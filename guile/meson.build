@@ -35,7 +35,6 @@ snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/.
 
 pkg_config=find_program('pkg-config')
 snarf_args+=run_command(pkg_config, '--cflags', 'glib-2.0', 'guile-3.0').stdout().strip()
-message(snarf_args)
 snarf_gen=generator(snarf,
 		    output: '@BASENAME@.x',
 		    arguments: snarf_args)
