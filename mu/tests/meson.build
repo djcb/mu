@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -14,13 +14,28 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-include $(top_srcdir)/gtest.mk
+#
+# tests
+#
+test('test_cmd',
+     executable('test-cmd',
+		'test-mu-cmd.cc',
+		install: false,
+		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+test('test_cmd_cfind',
+     executable('test-cmd-cfind',
+		'test-mu-cmd-cfind.cc',
+		install: false,
+		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+test('test_cmd_query',
+     executable('test-cmd-query',
+		'test-mu-query.cc',
+		install: false,
+		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
 
-AM_CPPFLAGS=$(GMIME_CFLAGS) $(GLIB_CFLAGS) -I${prefix}/include
-AM_CFLAGS=-Wall -Wextra -Wno-unused-parameter -Wdeclaration-after-statement -pedantic
-
-
-EXTRA_DIST=			\
-	mu-completion.zsh	\
-	mu-sexp-convert		\
-	mu.spec
+gmime_test = executable(
+  'gmime-test', [
+  'gmime-test.c'
+],
+  dependencies: [ glib_dep, gmime_dep ],
+  install: false)

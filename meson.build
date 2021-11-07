@@ -66,7 +66,6 @@ foreach extra_arg : extra_flags
 
 endforeach
 
-
 ################################################################################
 # config.h setup
 #
@@ -97,6 +96,10 @@ if cc.has_function('wordexp')
   config_h_data.set('HAVE_WORDEXP_H',1)
 endif
 
+testmaildir=join_paths(meson.current_source_dir(), 'lib', 'tests')
+config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
+config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
+config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
 
 ################################################################################
 # hard dependencies
@@ -157,8 +160,6 @@ configure_file(input: 'version.texi.in',
 	       output: 'version.texi',
 	       configuration: version_texi_data)
 
-
-
 ################################################################################
 # install some data files
 install_data('NEWS.org',
@@ -176,9 +177,12 @@ endif
 
 if not get_option('guile').disabled() and guile_dep.found()
   config_h_data.set('BUILD_GUILE', 1)
-  config_h_data.set('GUILE_BINARY', '"guile"')
+  config_h_data.set_quoted('GUILE_BINARY', 'guile')
   subdir('guile')
 endif
+
+config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
+
 
 if get_option('toys').enabled()
   subdir('toys/mug')

@@ -53,41 +53,4 @@ lib_mu_utils_dep = declare_dependency(
   include_directories: include_directories(['.', '..'])
 )
 
-
-################################################################################
-# tests
-#
-testmaildir=join_paths(meson.current_source_dir(),'..')
-
-test('test_command_parser',
-     executable('test-command-parser',
-		'test-command-parser.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_mu_str',
-     executable('test-mu-str',
-		'test-mu-str.c',
-		install: false,
-		dependencies: [glib_dep, config_h_dep,lib_mu_utils_dep]))
-test('test_mu_util',
-     executable('test-mu-util',
-		'test-mu-util.c',
-		install: false,
-		dependencies: [glib_dep,config_h_dep, lib_mu_utils_dep],
-		c_args: ['-DMU_TESTMAILDIR="' + join_paths(testmaildir, 'testdir') + '"',
-			 '-DMU_TESTMAILDIR2="' + join_paths(testmaildir, 'testdir2') + '"']))
-test('test_option',
-     executable('test-option',
-		'test-option.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_mu_utils',
-     executable('test-mu-utils',
-		'test-utils.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_sexp',
-     executable('test-sexp',
-		'test-sexp.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep] ))
+subdir('tests')

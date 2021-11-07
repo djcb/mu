@@ -87,79 +87,15 @@ lib_mu_dep = declare_dependency(
   include_directories:
     include_directories(['.', '..', xapian_incs]))
 
-#
-# tests
-#
-lib_test_mu_common_inc_dep = declare_dependency(
-  include_directories: include_directories(['.', '..']))
+# test helpers
 lib_test_mu_common=static_library('mu-test-common', [
-				   'test-mu-common.cc',
-				   'test-mu-common.hh'],
+				   'tests/test-mu-common.cc',
+				   'tests/test-mu-common.hh'],
 				  dependencies: [ glib_dep, thread_dep,
-						  lib_test_mu_common_inc_dep])
+                                                  config_h_dep])
 lib_test_mu_common_dep=declare_dependency(
   link_with: lib_test_mu_common,
-  include_directories: include_directories(['.']))
+  include_directories: include_directories(['tests']))
 
-
-testmaildir=join_paths(meson.current_source_dir(),'.')
-
-test('test_maildir',
-     executable('test-maildir',
-		'test-mu-maildir.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_msg_fields',
-     executable('test-msg-fields',
-		'test-mu-msg-fields.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_msg',
-     executable('test-msg',
-		'test-mu-msg.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep],
-		cpp_args:['-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"',
-			  '-DMU_TESTMAILDIR4="'+ join_paths(testmaildir, 'testdir4') + '"' ]))
-test('test_store',
-     executable('test-store',
-		'test-mu-store.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep],
-		cpp_args:['-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
-			  '-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"',
-			  '-DMU_TESTMAILDIR4="'+ join_paths(testmaildir, 'testdir4') + '"']))
-test('test_query',
-     executable('test-query',
-		'test-query.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep],
-		cpp_args:['-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"']))
-test('test_flags',
-     executable('test-flags',
-		'test-mu-flags.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-
-test('test_tokenizer',
-     executable('test-tokenizer',
-		'test-tokenizer.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_threads',
-     executable('test-threads',
-		'mu-query-threads.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_contacts',
-     executable('test-contacts',
-		'mu-contacts.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_parser',
-     executable('test-parser',
-		'test-parser.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+# actual tests
+subdir('tests')

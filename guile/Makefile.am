@@ -18,7 +18,7 @@ include $(top_srcdir)/gtest.mk
 
 # note, we need top_builddir for snarfing with 'make distcheck' (ie.,
 # with separate builddir)
-SUBDIRS= . mu scripts examples tests
+SUBDIRS= . mu scripts examples
 
 AM_CPPFLAGS=						\
 	-I. -I${top_builddir} -I${top_srcdir}/lib	\

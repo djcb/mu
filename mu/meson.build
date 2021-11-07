@@ -14,7 +14,6 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 awk_script=join_paths(meson.current_source_dir(), 'mu-help-strings.awk')
 mu_help_strings_h=custom_target('mu_help',
 				input: 'mu-help-strings.txt',
@@ -40,42 +39,4 @@ mu = executable(
   cpp_args: ['-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
   install: true)
 
-#
-# tests
-#
-
-mu_binary = mu.full_path()
-testmaildir=join_paths(meson.current_source_dir(),'../lib')
-
-test('test_cmd',
-     executable('test-cmd',
-		'tests/test-mu-cmd.cc',
-		install: false,
-		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
-			   '-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"',
-			   '-DMU_TESTMAILDIR4="'+ join_paths(testmaildir, 'testdir4') + '"'],
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
-test('test_cmd_cfind',
-     executable('test-cmd-cfind',
-		'tests/test-mu-cmd-cfind.cc',
-		install: false,
-		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
-			   '-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
-			  ],
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
-test('test_cmd_query',
-     executable('test-cmd-query',
-		'tests/test-mu-query.cc',
-		install: false,
-		cpp_args: ['-DMU_PROGRAM="' + mu_binary + '"',
-			   '-DMU_TESTMAILDIR="'+ join_paths(testmaildir, 'testdir') + '"',
-			   '-DMU_TESTMAILDIR2="'+ join_paths(testmaildir, 'testdir2') + '"'
-			  ],
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
-
-gmime_test = executable(
-  'gmime-test', [
-  'tests/gmime-test.c'
-],
-  dependencies: [ glib_dep, gmime_dep ],
-  install: false)
+subdir('tests')

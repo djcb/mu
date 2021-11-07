@@ -52,7 +52,6 @@ lib_guile_mu = shared_module(
   dependencies: [guile_dep, glib_dep, lib_mu_dep, config_h_dep, thread_dep ],
   install: true)
 
-
 if makeinfo.found()
   custom_target('mu_guile_info',
 		input: 'mu-guile.texi',
@@ -68,3 +67,7 @@ endif
 guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0', 'mu')
 install_data(['mu.scm','mu/script.scm', 'mu/message.scm', 'mu/stats.scm', 'mu/plot.scm'],
 	     install_dir: guile_scm_dir)
+
+guile_builddir=meson.current_build_dir()
+
+subdir('tests')

@@ -282,7 +282,6 @@ mu4e/mu4e-meta.el
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile
-guile/tests/Makefile
 guile/scripts/Makefile
 toys/Makefile
 toys/mug/Makefile
