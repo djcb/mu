@@ -187,8 +187,12 @@ Message-ID."
             #'mu4e~compose-after-save-hook-fn
             nil t))
 
+(defvar-local mu4e~compose-undo nil
+  "Remember the undo-state.")
+
 (defun mu4e~compose-before-save-hook-fn ()
   "Add the message-id if necessary and update the date."
+  (setq mu4e~compose-undo buffer-undo-list)
   (save-excursion
     (save-restriction
       (message-narrow-to-headers)
@@ -208,7 +212,8 @@ Message-ID."
     (set-buffer-modified-p nil)
     (mu4e-message "Saved (%d lines)" (count-lines (point-min) (point-max)))
     ;; update the file on disk -- ie., without the separator
-    (mu4e--server-add (buffer-file-name))))
+    (mu4e--server-add (buffer-file-name)))
+  (setq buffer-undo-list mu4e~compose-undo))
 
 
 ;;; address completion
