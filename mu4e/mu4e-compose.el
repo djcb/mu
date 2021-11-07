@@ -281,6 +281,7 @@ removing the In-Reply-To header."
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
+	  (define-key map (kbd "C-c ;")   'mu4e-compose-context-switch)
           (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
           map)))
 
@@ -643,10 +644,14 @@ when the buffer is in `mu4e-compose-mode':
 		     "Draft must be saved before switching context. Save?"))
             (unless (and (not force)
 			 (eq old-context (mu4e-context-switch nil name)))
-              ;; Change From field to user-mail-address
+	      ;; Change From / Organization if needed.
+	      (message-replace-header "Organization"
+				      (or (message-make-organization) "")
+				      '("Subject")) ;; keep in same place
               (message-replace-header "From"
 				      (or (mu4e~draft-from-construct) ""))
-              ;; Move message to mu4e-draft-folder
+
+	      ;; Move message to mu4e-draft-folder
               (if has-file
                   (progn (save-buffer)
                          (let ((msg-id (message-fetch-field "Message-ID"))

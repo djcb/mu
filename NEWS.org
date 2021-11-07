@@ -45,6 +45,11 @@
       your hook-functions (or elsewhere) you can check if anything changed using
       the new variable ~mu4e-index-update-status~.
 
+    - `message-user-organization` can now be used to set the `Organization:`
+      header. See its docstring for details.
+
+    - undo is now supported across message-saves
+
     - a lot of the internals have been changed:
 
       - =mu4e= is slowly moving from using the =~= to the more common =--= separator

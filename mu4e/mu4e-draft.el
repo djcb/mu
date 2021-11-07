@@ -607,6 +607,8 @@ You can append flags."
 (defun mu4e~draft-common-construct ()
   "Construct the common headers for each message."
   (concat
+   (when-let ((organization (message-make-organization)))
+     (mu4e~draft-header "Organization" organization))
    (when mu4e-user-agent-string
      (mu4e~draft-header "User-agent" mu4e-user-agent-string))
    (mu4e~draft-header "Date" (message-make-date))))

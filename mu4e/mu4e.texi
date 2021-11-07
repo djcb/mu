@@ -2458,6 +2458,7 @@ when starting; see the discussion in the previous section.
                             :to "aliced@@home.example.com")))
           :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
                    ( user-full-name	    . "Alice Derleth" )
+                   ( message-user-organization . "Homebase" )
                    ( mu4e-compose-signature .
                      (concat
                        "Alice Derleth\n"
@@ -2473,6 +2474,7 @@ when starting; see the discussion in the previous section.
                           (string-match-p "^/Arkham" (mu4e-message-field msg :maildir))))
           :vars '( ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
                    ( user-full-name	     . "Alice Derleth" )
+                   ( message-user-organization . "Miskatonic University" )
                    ( mu4e-compose-signature  .
                      (concat
                        "Prof. Alice Derleth\n"
