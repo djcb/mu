@@ -70,13 +70,12 @@ struct Indexer::Private {
 	                              [this](auto&& path, auto&& statbuf, auto&& info) {
 					      return handler(path, statbuf, info);
 				      }},
-	      max_message_size_{store_.metadata().max_message_size},
-	      batch_size_{store_.metadata().batch_size}
+	      max_message_size_{store_.metadata().max_message_size}
 	{
 		g_message("created indexer for %s -> %s (batch-size: %zu)",
 		          store.metadata().root_maildir.c_str(),
 		          store.metadata().database_path.c_str(),
-		          batch_size_);
+		          store.metadata().batch_size);
 	}
 
 	~Private() { stop(); }
@@ -104,10 +103,8 @@ struct Indexer::Private {
 
 	AsyncQueue<std::string> fq_;
 
-	Progress     progress_;
-	IndexState   state_;
-	const size_t batch_size_; /**< Max number of messages added before
-	                           * committing */
+	Progress   progress_;
+	IndexState state_;
 
 	std::mutex lock_, wlock_;
 };
@@ -194,11 +191,6 @@ Indexer::Private::worker()
 
 	g_debug("started worker");
 
-	/* note that transaction starting/committing is opportunistic,
-	 * and are NOPs if we are already/not in a transaction */
-
-	store_.begin_transaction();
-
 	while (state_ == IndexState::Scanning || !fq_.empty()) {
 		if (!fq_.pop(item, 250ms))
 			continue;
@@ -209,13 +201,8 @@ Indexer::Private::worker()
 		try {
 			std::unique_lock lock{lock_};
 
-			store_.add_message(item);
+			store_.add_message(item, true /*use-transaction*/);
 			++progress_.updated;
-
-			if (progress_.updated % batch_size_ == 0) {
-				store_.commit_transaction();
-				store_.begin_transaction();
-			}
 
 		} catch (const Mu::Error& er) {
 			g_warning("error adding message @ %s: %s", item.c_str(), er.what());
@@ -223,8 +210,6 @@ Indexer::Private::worker()
 
 		maybe_start_worker();
 	}
-
-	store_.commit_transaction();
 }
 
 bool
@@ -246,7 +231,6 @@ Indexer::Private::cleanup()
 		return state_ == IndexState::Cleaning;
 	});
 
-	// No need for transactions here, remove_messages does that for us.
 	if (orphans.empty())
 		g_debug("nothing to clean up");
 	else {
@@ -294,6 +278,8 @@ Indexer::Private::start(const Indexer::Config& conf)
 		// handle SIGTERM etc.
 		while (!fq_.empty())
 			std::this_thread::sleep_for(100ms);
+
+		store_.commit();
 
 		if (conf_.cleanup) {
 			g_debug("starting cleanup");

@@ -139,8 +139,7 @@ struct Store::Private {
 			xapian_try([&] {
 				writable_db().set_metadata(ContactsKey, contacts_.serialize());
 			});
-			if (in_transaction_)
-				commit_transaction();
+			transaction_maybe_commit(true /*force*/);
 		}
 	}
 
@@ -181,31 +180,33 @@ struct Store::Private {
 		return dynamic_cast<Xapian::WritableDatabase&>(*db_.get());
 	}
 
-	void begin_transaction() noexcept
+	// If not started yet, start a transaction. Otherwise, just update the transaction size.
+	void transaction_inc() noexcept
 	{
 		if (mdata_.in_memory)
-			return; // not supported in the in-memory backend.
+			return; // not supported
 
-		g_return_if_fail(!in_transaction_);
-		g_debug("starting transaction");
-		xapian_try([this] {
-			writable_db().begin_transaction();
-			in_transaction_ = true;
-		});
+		if (transaction_size_ == 0) {
+			g_debug("starting transaction");
+			xapian_try([this] { writable_db().begin_transaction(); });
+		}
+		++transaction_size_;
 	}
 
-	void commit_transaction() noexcept
+	// Opportunistically commit a transaction if the transaction size
+	// filled up a batch, or with force.
+	void transaction_maybe_commit(bool force = false) noexcept
 	{
-		if (mdata_.in_memory)
-			return; // not supported in the in-memory backend.
+		if (mdata_.in_memory || transaction_size_ == 0)
+			return; // not supported or not in transaction
 
-		g_return_if_fail(in_transaction_);
-		g_debug("committing modification(s)");
-		xapian_try([this] {
-			if (in_transaction_)
+		if (force || transaction_size_ >= mdata_.batch_size) {
+			g_debug("committing transaction (n=%zu)", transaction_size_);
+			xapian_try([this] {
 				writable_db().commit_transaction();
-			in_transaction_ = false;
-		});
+				transaction_size_ = 0;
+			});
+		}
 	}
 
 	void add_synonyms()
@@ -279,8 +280,8 @@ struct Store::Private {
 	Contacts                 contacts_;
 	std::unique_ptr<Indexer> indexer_;
 
-	std::atomic<bool> in_transaction_{};
-	std::mutex        lock_;
+	size_t     transaction_size_{};
+	std::mutex lock_;
 };
 
 static void
@@ -406,7 +407,7 @@ maildir_from_path(const std::string& root, const std::string& path)
 }
 
 unsigned
-Store::add_message(const std::string& path)
+Store::add_message(const std::string& path, bool use_transaction)
 {
 	LOCKED;
 
@@ -418,7 +419,14 @@ Store::add_message(const std::string& path)
 		            "failed to create message: %s",
 		            gerr ? gerr->message : "something went wrong"};
 
+	if (use_transaction)
+		priv_->transaction_inc();
+
 	const auto docid{priv_->add_or_update_msg(0, msg)};
+
+	if (use_transaction) /* commit if batch is full */
+		priv_->transaction_maybe_commit();
+
 	mu_msg_unref(msg);
 
 	if (G_UNLIKELY(docid == InvalidId))
@@ -461,16 +469,17 @@ Store::remove_message(const std::string& path)
 void
 Store::remove_messages(const std::vector<Store::Id>& ids)
 {
-	begin_transaction();
+	LOCKED;
+
+	priv_->transaction_inc();
 
 	xapian_try([&] {
-		LOCKED;
 		for (auto&& id : ids) {
 			priv_->writable_db().delete_document(id);
 		}
 	});
 
-	commit_transaction();
+	priv_->transaction_maybe_commit(true /*force*/);
 }
 
 time_t
@@ -547,6 +556,13 @@ Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
 	return n;
 }
 
+void
+Store::commit()
+{
+	LOCKED;
+	priv_->transaction_maybe_commit(true /*force*/);
+}
+
 static MuMsgFieldId
 field_id(const std::string& field)
 {
@@ -583,26 +599,6 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 	});
 
 	return n;
-}
-
-void
-Store::begin_transaction()
-{
-	xapian_try([&] {
-		LOCKED;
-		if (!priv_->in_transaction_)
-			priv_->begin_transaction();
-	});
-}
-
-void
-Store::commit_transaction()
-{
-	xapian_try([&] {
-		LOCKED;
-		if (priv_->in_transaction_)
-			priv_->commit_transaction();
-	});
 }
 
 static void

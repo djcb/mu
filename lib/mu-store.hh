@@ -136,13 +136,16 @@ public:
 	Indexer& indexer();
 
 	/**
-	 * Add a message to the store.
+	 * Add a message to the store. When planning to write many messages,
+	 * it's much faster to do so in a transaction. If so, set
+	 * @in_transaction to true. When done with adding messages, call commit().
 	 *
 	 * @param path the message path.
+	 * @param whether to bundle up to batch_size changes in a transaction
 	 *
 	 * @return the doc id of the added message
 	 */
-	Id add_message(const std::string& path);
+	Id add_message(const std::string& path, bool use_transaction = false);
 
 	/**
 	 * Update a message in the store.
@@ -279,17 +282,10 @@ public:
 	bool empty() const;
 
 	/**
-	 * Start a Xapian transaction, opportunistically. If a transaction
-	 * is already underway, do nothing.
+	 * Commit the current batch of modifications to disk, opportunistically.
+	 * If no transaction is underway, do nothing.
 	 */
-	void begin_transaction();
-
-	/**
-	 * Commit the current group of modifications (i.e., transaction) to
-	 * disk, opportunistically. If no transaction is underway, do
-	 * nothing.
-	 */
-	void commit_transaction();
+	void commit();
 
 	/**
 	 * Get a reference to the private data. For internal use.
