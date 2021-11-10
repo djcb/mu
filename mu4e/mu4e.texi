@@ -3621,10 +3621,10 @@ We can now run @command{mu} to make sure things work:
 @verbatim
 $ mu index
 mu: indexing messages under /home/foo/Maildir [/home/foo/.cache/mu/xapian]
-| processing mail; processed: 520; updated/new: 520, cleaned-up: 0
+| processing mail; checked: 520; updated/new: 520, cleaned-up: 0
 mu: elapsed: 3 second(s), ~ 173 msg/s
 mu: cleaning up messages [/home/foo/.cache/mu/xapian]
-/ processing mail; processed: 520; updated/new: 0, cleaned-up: 0
+/ processing mail; checked: 520; updated/new: 0, cleaned-up: 0
 mu: elapsed: 0 second(s)
 @end verbatim
 

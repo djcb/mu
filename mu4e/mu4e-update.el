@@ -33,14 +33,14 @@
 ;;; Customization
 
 (defcustom mu4e-get-mail-command "true"
-  "Shell command to run to retrieve new mail.
+  "Shell command for retrieving new mail.
 Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
 arbitrary shell-commands can be used.
 
 When set to the literal string \"true\" (the default), the
 command simply finishes successfully (running the 'true' command)
 without retrieving any mail. This can be useful when mail is
-already retrieved in another way."
+already retrieved in another way, such as a local MDA."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
@@ -126,8 +126,8 @@ changed")
 
 If non-nil, this is a plist of the form:
 \(
-:processed   <number of messages processed>
-:updated     <number of messages updated (incl. new messages)
+:checked     <number of messages processed> (checked whether up-to-date)
+:updated     <number of messages updated/added
 :cleaned-up  <number of stale messages removed from store
 :stamp       <emacs (current-time) timestamp for the status)")
 
@@ -188,7 +188,6 @@ throbber."
                  (not (eq (selected-window) procwin)))
         (with-selected-window procwin
           (goto-char (point-max)))))))
-
 
 (defun mu4e-index-message (frm &rest args)
   "Display FRM with ARGS like `mu4e-message' for index messages.

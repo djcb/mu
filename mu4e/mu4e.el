@@ -192,14 +192,14 @@ invoke
   "Update the status message."
   (setq mu4e-index-update-status
 	`(:tstamp ,(current-time)
+	  :checked ,(plist-get info :checked)
           :updated  ,(plist-get info :updated)
-	  :processed ,(plist-get info :processed)
 	  :cleaned-up ,(plist-get info :cleaned-up))))
 
 (defun mu4e--info-handler (info)
   "Handler function for (:INFO ...) sexps received from server."
   (let* ((type (plist-get info :info))
-         (processed (plist-get info :processed))
+         (checked (plist-get info :checked))
          (updated (plist-get info :updated))
          (cleaned-up (plist-get info :cleaned-up))
          (mainbuf (get-buffer mu4e-main-buffer-name)))
@@ -208,13 +208,13 @@ invoke
      ((eq type 'index)
       (if (eq (plist-get info :status) 'running)
           (mu4e-index-message
-           "Indexing... processed %d, updated %d" processed updated)
+           "Indexing... checked %d, updated %d" checked updated)
         (progn ;; i.e. 'complete
 	  (mu4e--update-status info)
           (mu4e-index-message
-           "%s completed; processed %d, updated %d, cleaned-up %d"
+           "%s completed; checked %d, updated %d, cleaned-up %d"
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
-           processed updated cleaned-up)
+           checked updated cleaned-up)
           (run-hooks 'mu4e-index-updated-hook)
 	  ;; backward compatibility...
 	  (unless (zerop (+ updated cleaned-up))
