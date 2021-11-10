@@ -124,7 +124,10 @@ Indexer::Private::handler(const std::string&  fullpath,
 		dirstamp_ = store_.dirstamp(fullpath);
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_mtime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
-			g_debug("skip %s (seems up-to-date)", fullpath.c_str());
+			g_debug("skip %s (seems up-to-date: %s >= %s)",
+			        fullpath.c_str(),
+			        time_to_string("%FT%T", dirstamp_).c_str(),
+			        time_to_string("%FT%T", statbuf->st_mtime).c_str());
 			return false;
 		}
 
@@ -145,7 +148,7 @@ Indexer::Private::handler(const std::string&  fullpath,
 			}
 		}
 
-		g_debug("process %s", fullpath.c_str());
+		g_debug("checked %s", fullpath.c_str());
 		return true;
 	}
 	case Scanner::HandleType::LeaveDir: {
@@ -154,6 +157,8 @@ Indexer::Private::handler(const std::string&  fullpath,
 	}
 
 	case Scanner::HandleType::File: {
+		++progress_.checked;
+
 		if ((size_t)statbuf->st_size > max_message_size_) {
 			g_debug("skip %s (too big: %" G_GINT64_FORMAT " bytes)",
 			        fullpath.c_str(),
@@ -168,6 +173,8 @@ Indexer::Private::handler(const std::string&  fullpath,
 			return false;
 		}
 
+		// push the remaining messages to our "todo" queue for
+		// (re)parsing and adding/updating to the database.
 		fq_.push(std::string{fullpath});
 		return true;
 	}
@@ -194,10 +201,6 @@ Indexer::Private::worker()
 	while (state_ == IndexState::Scanning || !fq_.empty()) {
 		if (!fq_.pop(item, 250ms))
 			continue;
-
-		// g_debug ("popped (n=%zu) path %s", fq_.size(), item.c_str());
-		++progress_.processed;
-
 		try {
 			std::unique_lock lock{lock_};
 

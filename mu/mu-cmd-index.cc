@@ -72,7 +72,7 @@ print_stats(const Indexer::Progress& stats, bool color)
 	using Color = MaybeAnsi::Color;
 
 	std::cout << col.fg(Color::Yellow) << kars[++i % 4] << col.reset() << " indexing messages; "
-		  << "processed: " << col.fg(Color::Green) << stats.processed << col.reset()
+		  << "checked: " << col.fg(Color::Green) << stats.checked << col.reset()
 		  << "; updated/new: " << col.fg(Color::Green) << stats.updated << col.reset()
 		  << "; cleaned-up: " << col.fg(Color::Green) << stats.removed << col.reset();
 }

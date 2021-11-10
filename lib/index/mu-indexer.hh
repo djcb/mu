@@ -29,7 +29,7 @@ class Store;
 
 /// An object abstracting the index process.
 class Indexer {
-      public:
+public:
 	/**
 	 * Construct an indexer object
 	 *
@@ -86,10 +86,10 @@ class Indexer {
 
 	// Object describing current progress
 	struct Progress {
-		bool   running{};   /**< Is an index operation in progress? */
-		size_t processed{}; /**< Number of messages processed */
-		size_t updated{};   /**< Number of messages added/updated to store */
-		size_t removed{};   /**< Number of message removed from store */
+		bool   running{}; /**< Is an index operation in progress? */
+		size_t checked{}; /**< Number of messages checked for changes */
+		size_t updated{}; /**< Number of messages (re)parsed &  added/updated to store */
+		size_t removed{}; /**< Number of message removed from store */
 	};
 
 	/**
@@ -101,7 +101,7 @@ class Indexer {
 	 */
 	Progress progress() const;
 
-      private:
+private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };

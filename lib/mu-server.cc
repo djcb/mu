@@ -104,7 +104,7 @@ struct Server::Private {
 	void sent_handler(const Parameters& params);
 	void view_handler(const Parameters& params);
 
-	private:
+private:
 	// helpers
 	Sexp build_message_sexp(MuMsg*                    msg,
 	                        unsigned                  docid,
@@ -754,7 +754,7 @@ get_stats(const Indexer::Progress& stats, const std::string& state)
 
 	lst.add_prop(":info", Sexp::make_symbol("index"));
 	lst.add_prop(":status", Sexp::make_symbol(std::string{state}));
-	lst.add_prop(":processed", Sexp::make_number(stats.processed));
+	lst.add_prop(":checked", Sexp::make_number(stats.checked));
 	lst.add_prop(":updated", Sexp::make_number(stats.updated));
 	lst.add_prop(":cleaned-up", Sexp::make_number(stats.removed));
 
