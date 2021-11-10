@@ -1,6 +1,6 @@
 ;;; mu4e-compose.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -629,49 +629,40 @@ are optional."
 (defun mu4e-compose-context-switch (&optional force name)
   "Change the context for the current draft message.
 
-Same as `mu4e-context-switch' but does two things after switching
-when the buffer is in `mu4e-compose-mode':
-- Changes the \"From\" field to the email address of the new context
-- Moves the current message to the draft folder of the new context"
-  (interactive "P")
-  (if (derived-mode-p 'mu4e-compose-mode)
-      (let ((old-context (mu4e-context-current))
-            (has-file (file-exists-p (buffer-file-name))))
-        (unless (and name (not force) (eq old-context name))
-          (when (or (not has-file)
-                    (not (buffer-modified-p))
-                    (y-or-n-p
-		     "Draft must be saved before switching context. Save?"))
-            (unless (and (not force)
-			 (eq old-context (mu4e-context-switch nil name)))
-	      ;; Change From / Organization if needed.
-	      (message-replace-header "Organization"
-				      (or (message-make-organization) "")
-				      '("Subject")) ;; keep in same place
-              (message-replace-header "From"
-				      (or (mu4e~draft-from-construct) ""))
+With NAME, switch to the context with NAME, and with FORCE non-nil,
+switch even if the switch is to the same context.
 
-	      ;; Move message to mu4e-draft-folder
-              (if has-file
-                  (progn (save-buffer)
-                         (let ((msg-id (message-fetch-field "Message-ID"))
-                               (buf (current-buffer)))
-                           ;; Remove the <>
-                           (when (and msg-id (string-match "<\\(.*\\)>" msg-id))
-                             (save-window-excursion
-                               (mu4e--server-move (match-string 1 msg-id)
-						  mu4e-drafts-folder nil t)
-                               (kill-buffer buf))))) ;; Kill previous buffer
-						     ;; which points to wrong
-						     ;; file No file, just
-						     ;; change the buffer file
-						     ;; name
-                (setq buffer-file-name
-                      (format "%s/%s/cur/%s"
-                              (mu4e-root-maildir) (mu4e-get-drafts-folder)
-                              (file-name-nondirectory (buffer-file-name)))))))))
-    ;; Just do the standad switch
-    (mu4e-context-switch force name)))
+Like `mu4e-context-switch' but with some changes after switching:
+1. Update the From and Organization headers as per the new context
+2. Update the message-signature as per the new context.
+
+Unlike some earlier version of this function, does _not_ update
+the draft folder for the messages, as that would require changing
+the file under our feet, which is a bit fragile."
+  (interactive "P")
+
+  (unless (derived-mode-p 'mu4e-compose-mode)
+    (mu4e-error "Only available in mu4e compose buffers"))
+
+  (let ((old-context (mu4e-context-current)))
+    (unless (and name (not force) (eq old-context name))
+      (unless (and (not force)
+		   (eq old-context (mu4e-context-switch nil name)))
+	(save-excursion
+	  ;; Change From / Organization if needed.
+	  (message-replace-header "Organization"
+				  (or (message-make-organization) "")
+				  '("Subject")) ;; keep in same place
+	  (message-replace-header "From"
+				  (or (mu4e~draft-from-construct) ""))
+	  ;; Update signature.
+	  (when (message-goto-signature) ;; delete old signature.
+	    (if message-signature-insert-empty-line
+		(forward-line -2) (forward-line -1))
+	    (delete-region (point) (point-max)))
+	  (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
+	      (let ((message-signature mu4e-compose-signature))
+		(save-excursion (message-insert-signature)))))))))
 
 (defun mu4e-sent-handler (docid path)
   "Handler called with DOCID and PATH for the just-sent message.
