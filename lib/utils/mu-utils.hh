@@ -130,6 +130,19 @@ std::string date_to_time_t_string(const std::string& date, bool first);
 std::string date_to_time_t_string(int64_t t);
 
 /**
+ * Get a string for a given time_t and format
+ * memory that must be freed after use.
+ *
+ * @param frm the format of the string (in strftime(3) format)
+ * @param t the time as time_t
+ * @param utc whether to display as UTC(if true) or local time
+ *
+ * @return a string representation of the time in UTF8-format, or empty in case
+ * of error.
+ */
+std::string time_to_string(const std::string& frm, time_t t, bool utc = false) G_GNUC_CONST;
+
+/**
  * Create a std::string by consuming a gchar* array; this takes ownership
  * of str which should no longer be used.
  *

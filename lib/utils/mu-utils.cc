@@ -242,6 +242,37 @@ Mu::date_to_time_t_string(int64_t t)
 	return buf;
 }
 
+std::string
+Mu::time_to_string(const std::string& frm, time_t t, bool utc)
+{
+	GDateTime* dt = [&] {
+		if (utc)
+			return g_date_time_new_from_unix_utc(t);
+		else
+			return g_date_time_new_from_unix_local(t);
+	}();
+
+	char* str = g_date_time_format(dt, frm.c_str());
+	g_date_time_unref(dt);
+	if (!str) {
+		g_warning("failed to format time");
+		return {};
+	}
+
+	/* ensure it's utf8 */
+	char* utf8_str = g_locale_to_utf8(str, -1, NULL, NULL, NULL);
+	g_free(str);
+	if (!utf8_str) {
+		g_warning("failed to convert date to utf8");
+		return {};
+	}
+
+	std::string res{utf8_str};
+	g_free(utf8_str);
+
+	return res;
+}
+
 static std::string
 delta_ymwdhMs(const std::string& expr)
 {
