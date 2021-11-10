@@ -23,13 +23,21 @@
 
    - After that, either =ninja -C build= or =make= should be enough to rebuild
 
-  - Before installing, it is recommended that you *remove* any older versions of
-    ~mu~ and especiall ~mu4e~, since they may conflict with the newere ones.
+   - Before installing, it is recommended that you *remove* any older versions of
+     ~mu~ and especiall ~mu4e~, since they may conflict with the newere ones.
 
-    - =mu= now requires C++17 support for building
+   - =mu= now requires C++17 support for building
 
-    - The server protocol (as used my mu4e) has seen a number of updates, to
-      allow for faster rendering.
+   - The server protocol (as used my mu4e) has seen a number of updates, to
+     allow for faster rendering.
+
+   - The ~processed~ number in the indexing statistics has been renamed into
+     ~checked~ and describes the number of message files considered for
+     updating, which is a bit more useful that the old value, which was
+     more-or-less synonymous with the ~updated~ number (which are the message that
+     got (re)parsed / (re)added to the database.
+
+     Basically, it counts all the messages for which we checked their timestamp.
 
 *** mu4e
 
@@ -43,10 +51,17 @@
     - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
       whether anything changed (before, it fired only is something changed). In
       your hook-functions (or elsewhere) you can check if anything changed using
-      the new variable ~mu4e-index-update-status~.
+      the new variable ~mu4e-index-update-status~. And note that ~processed~ has
+      been renamed into ~checked~, with a slightly different meaning, see the mu
+      section.
 
-    - `message-user-organization` can now be used to set the `Organization:`
+    - ~message-user-organization~ can now be used to set the ~Organization:~
       header. See its docstring for details.
+
+    - ~mu4e-compose-context-switch~ no longer attempts to update the draft folder
+      (which turned out to be a little fragile). However, it has been updated to
+      automatically change the ~Organization:~ header, and attempts to update the
+      message signature. Also, there's a key-binding now: ~C-c ;~
 
     - undo is now supported across message-saves
 
