@@ -34,24 +34,28 @@
 If not set, use the defaults, based on the XDG Base Directory
 Specification.
 
-Important: any changes to `mu4e-mu-home' only take affect
-after (re)starting the mu session."
+Changes to this value only take effect after (re)starting the mu
+session."
   :group 'mu4e
   :type '(choice (const :tag "Default location" nil)
                  (directory :tag "Specify location"))
   :safe 'stringp)
 
 (defcustom mu4e-mu-binary (executable-find "mu")
-  "Name of the mu-binary to use.
-If it cannot be found in your PATH, you can specify the full
-path."
+  "Path to the mu-binary to use.
+
+Changes to this value only take effect after (re)starting the mu
+session."
   :type 'file
   :group 'mu4e
   :safe 'stringp)
 
 (defcustom mu4e-mu-debug nil
   "Whether to run the mu binary in debug-mode.
-Setting this to t increases the amount of information in the log."
+Setting this to t increases the amount of information in the log.
+
+Changes to this value only take effect after (re)starting the mu
+session."
   :type 'boolean
   :group 'mu4e)
 
@@ -61,10 +65,13 @@ Setting this to t increases the amount of information in the log."
 
 (defcustom mu4e-change-filenames-when-moving nil
   "Change message file names when moving them.
+
 When moving messages to different folders, normally mu/mu4e keep
 the base filename the same (the flags-part of the filename may
 change still). With this option set to non-nil, mu4e instead
-changes the filename. This latter behavior works better with some
+changes the filename.
+
+This latter behavior works better with some
 IMAP-synchronization programs such as mbsync; the default works
 better with e.g. offlineimap."
   :type 'boolean
