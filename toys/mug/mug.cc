@@ -233,7 +233,7 @@ on_list_view_error (MugMsgListView * mlist, MugError err, MugData * mugdata)
 	switch (err) {
 	case MUG_ERROR_XAPIAN_NOT_UPTODATE:
 		msg = "The Xapian Database has the wrong version\n"
-		    "Please run 'mu index --rebuild'";
+		      "Please run 'mu init'";
 		break;
 	case MUG_ERROR_XAPIAN_DIR:
 		msg = "Cannot find the Xapian database dir\n"

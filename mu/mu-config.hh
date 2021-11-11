@@ -116,7 +116,6 @@ struct _MuConfig {
 	/* options for indexing */
 
 	gboolean        nocleanup;	/* don't cleanup del'd mails from db */
-	gboolean        rebuild;	/* empty the database before indexing */
 	gboolean        lazycheck;      /* don't check dirs with up-to-date
 					 * timestamps */
 
