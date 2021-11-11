@@ -767,6 +767,8 @@ Server::Private::index_handler(const Parameters& params)
 	Mu::Indexer::Config conf{};
 	conf.cleanup    = get_bool_or(params, ":cleanup");
 	conf.lazy_check = get_bool_or(params, ":lazy-check");
+	// ignore .noupdate with an empty store.
+	conf.ignore_noupdate = store().empty();
 
 	indexer().stop();
 

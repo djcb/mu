@@ -120,6 +120,8 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 	Mu::Indexer::Config conf{};
 	conf.cleanup    = !opts->nocleanup;
 	conf.lazy_check = opts->lazycheck;
+	// ignore .noupdate with an empty store.
+	conf.ignore_noupdate = store.empty();
 
 	install_sig_handler();
 
