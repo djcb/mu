@@ -31,6 +31,7 @@ TESTDEFS=                                                       \
 AM_CFLAGS=                                                      \
         $(WARN_CFLAGS)                                          \
         $(GMIME_CFLAGS)                                         \
+        $(XAPIAN_CFLAGS)                                        \
         $(GLIB_CFLAGS)                                          \
         $(GUILE_CFLAGS)                                         \
         $(ASAN_CFLAGS)                                          \

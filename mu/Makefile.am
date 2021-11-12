@@ -19,6 +19,7 @@ include $(top_srcdir)/gtest.mk
 AM_CPPFLAGS=                                                    \
 	-I${top_srcdir}/lib                                     \
 	$(GLIB_CFLAGS)                                          \
+	$(XAPIAN_CFLAGS)                                        \
 	$(CODE_COVERAGE_CFLAGS)
 
 AM_CXXFLAGS=                                                    \
@@ -61,6 +62,7 @@ mu_LDADD=                                                       \
 	${top_builddir}/lib/libmu.la                            \
 	${top_builddir}/lib/utils/libmu-utils.la                \
 	$(GLIB_LIBS)                                            \
+	$(XAPIAN_LIBS)                                          \
 	$(READLINE_LIBS)                                        \
 	$(CODE_COVERAGE_LIBS)
 
