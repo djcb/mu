@@ -22,6 +22,7 @@ AM_CPPFLAGS=							\
 AM_CXXFLAGS=							\
 	$(WARN_CXXFLAGS)					\
 	$(GLIB_CFLAGS)						\
+	$(XAPIAN_CFLAGS)					\
 	$(ASAN_CXXFLAGS)					\
 	$(CODE_COVERAGE_CFLAGS)					\
 	-I${top_srcdir}/lib
