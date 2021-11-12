@@ -70,13 +70,6 @@ the current query; otherwise, it links to the message at point.")
    :link        (concat "mu4e:query:" (mu4e-last-query))
    :description (format "[%s]" (mu4e-last-query))))
 
-(defun mu4e--org-address (cell)
-  "Get an address from CELL."
-  (let ((name (car cell)) (addr (cdr cell)))
-    (if name
-        (format "%s <%s>" name addr)
-      (format "%s" addr))))
-
 (defun mu4e--org-store-link-message ()
   "Store a link to a mu4e message."
   (setq org-store-link-plist nil)
@@ -85,18 +78,24 @@ the current query; otherwise, it links to the message at point.")
          (to       (car-safe (plist-get msg :to)))
          (date     (format-time-string "%FT%T" (plist-get msg :date)))
          (msgid    (or (plist-get msg :message-id)
-                       (mu4e-error "Cannot link message without message-id"))))
+                       (mu4e-error "Cannot link message without message-id")))
+	 (name-or-addr (lambda (addr) (or (car-safe addr) (cdr-safe addr))))
+	 (full-address (lambda(addr)
+			 (when addr
+			   (if-let ((name (car addr)))
+			       (format "%s <%s>" name (cdr addr))
+			     (format "%s" (cdr addr)))))))
     (org-store-link-props
      :type                     "mu4e"
      :date                     date
-     :from                     (when from
-                                 (mu4e--org-address from))
+     :from                     (funcall full-address from)
+     :fromnameoraddress        (funcall name-or-addr from) ;; mu4e-specific
      :maildir                  (plist-get msg :maildir)
      :message-id               msgid
      :path                     (plist-get msg :path)
      :subject                  (plist-get msg :subject)
-     :to                       (when to
-                                 (mu4e--org-address to))
+     :to                       (funcall full-address to)
+     :tonameoraddress          (funcall name-or-addr to) ;; mu4e-specific
      :link                     (concat "mu4e:msgid:" msgid)
      :description              (funcall mu4e-org-link-desc-func msg))))
 
@@ -111,8 +110,9 @@ valid even after moving the message around."
              mu4e-org-link-query-in-headers-mode)
         (mu4e--org-store-link-query)
       (when (mu4e-message-at-point)
+	(message "%S" (mu4e--org-store-link-message))
         (mu4e--org-store-link-message)))))
-                                         ;
+
 (defun mu4e-org-open (link)
   "Open the org LINK.
 Open the mu4e message (for links starting with 'msgid:') or run
