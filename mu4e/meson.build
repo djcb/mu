@@ -98,6 +98,7 @@ foreach src : mu4e_all_srcs
 		command: [emacs,
 			  '--no-init-file',
 			  '--batch',
+			  '--eval', '(setq load-prefer-newer t)',
 			  '--eval', target_func,
 			  '--directory', meson.current_build_dir(),
 			  '--directory', meson.current_source_dir(),
