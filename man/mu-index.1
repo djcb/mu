@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "May 2020" "User Manuals"
+.TH MU-INDEX 1 "November 2021" "User Manuals"
 
 .SH NAME
 
@@ -40,7 +40,7 @@ If there is a file called \fI.noupdate\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored, unless we do a full
 rebuild (with \fBmu init\fR). This can be useful to speed up things you have
 some maildirs that never change. Note that you can still search for these
-messages, this only affects updating the database.
+messages, this only affects updating the database. \fI.noupdate\fR is ignored when you start indexing with an empty database (such as directly after \fImu init\fR.
 
 There also the \fB--lazy-check\fR which can greatly speed up indexing;
 see below for details.
