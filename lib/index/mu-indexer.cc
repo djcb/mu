@@ -198,13 +198,14 @@ Indexer::Private::worker()
 
 	g_debug("started worker");
 
-	while (state_ == IndexState::Scanning || !fq_.empty()) {
+	while (state_ == IndexState::Scanning) {
+
 		if (!fq_.pop(item, 250ms))
 			continue;
 		try {
 			std::unique_lock lock{lock_};
 
-			store_.add_message(item, true /*use-transaction*/);
+ 			store_.add_message(item, true /*use-transaction*/);
 			++progress_.updated;
 
 		} catch (const Mu::Error& er) {
@@ -261,9 +262,12 @@ Indexer::Private::start(const Indexer::Config& conf)
 	        conf_.scan ? "yes" : "no",
 	        conf_.cleanup ? "yes" : "no");
 
-	workers_.emplace_back(std::thread([this] { worker(); }));
-
 	state_.change_to(IndexState::Scanning);
+	{
+		/* kick off the first worker, which will spawn more if needed. */
+		std::lock_guard<std::mutex> wlock{wlock_};
+		workers_.emplace_back(std::thread([this] { worker(); }));
+	}
 	scanner_worker_ = std::thread([this] {
 		progress_ = {};
 
