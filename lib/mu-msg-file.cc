@@ -83,11 +83,6 @@ init_file_metadata(MuMsgFile* self, const char* path, const gchar* mdir, GError*
 {
 	struct stat statbuf;
 
-	if (!g_path_is_absolute(path)) {
-		mu_util_g_set_error(err, MU_ERROR_FILE, "path '%s' is not absolute", path);
-		return FALSE;
-	}
-
 	if (access(path, R_OK) != 0) {
 		mu_util_g_set_error(err,
 		                    MU_ERROR_FILE,
