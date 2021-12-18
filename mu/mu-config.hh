@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -112,7 +112,7 @@ struct _MuConfig {
 	/* options for indexing */
 
 	gboolean nocleanup; /* don't cleanup del'd mails from db */
-	gboolean lazycheck; /* don't check dirs with up-to-date
+ 	gboolean lazycheck; /* don't check dirs with up-to-date
 	                     * timestamps */
 
 	/* options for querying 'find' (and view-> 'summary') */
@@ -122,7 +122,6 @@ struct _MuConfig {
 	gboolean reverse;   /* sort in revers order (z->a) */
 	gboolean threads;   /* show message threads */
 
-	gboolean summary;     /* OBSOLETE: use summary_len */
 	int      summary_len; /* max # of lines for summary */
 
 	gchar* bookmark;          /* use bookmark */
