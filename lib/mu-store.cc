@@ -487,11 +487,14 @@ Store::dirstamp(const std::string& path) const
 {
 	LOCKED;
 
-	const auto ts = priv_->db().get_metadata(path);
-	if (ts.empty())
-		return 0;
-	else
-		return (time_t)strtoll(ts.c_str(), NULL, 16);
+	constexpr auto epoch = static_cast<time_t>(0);
+	return xapian_try([&] {
+		const auto ts = priv_->db().get_metadata(path);
+		if (ts.empty())
+			return epoch;
+		else
+			return static_cast<time_t>(strtoll(ts.c_str(), NULL, 16));
+	}, epoch);
 }
 
 void
@@ -500,9 +503,11 @@ Store::set_dirstamp(const std::string& path, time_t tstamp)
 	LOCKED;
 
 	std::array<char, 2 * sizeof(tstamp) + 1> data{};
-	const std::size_t len = g_snprintf(data.data(), data.size(), "%zx", (size_t)tstamp);
+	const auto len = static_cast<size_t>(g_snprintf(data.data(), data.size(), "%zx", tstamp));
 
-	priv_->writable_db().set_metadata(path, std::string{data.data(), len});
+	xapian_try([&] {
+		priv_->writable_db().set_metadata(path, std::string{data.data(), len});
+	});
 }
 
 MuMsg*
