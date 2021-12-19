@@ -1129,6 +1129,36 @@ no user-interaction ongoing."
                (window-live-p (get-buffer-window (mu4e-get-headers-buffer) t)))
       (mu4e-search-rerun))))
 
+(defcustom mu4e-headers-eldoc-format "“%s” from %f on %d"
+  "Format for the `eldoc' string for the current message in the headers buffer.
+The following specs are supported:
+- %s: the message Subject
+- %f: the message From
+- %t: the message To
+- %c: the message Cc
+- %d: the message Date
+- %p: the message priority
+- %m: the maildir containing the message
+- %F: the message’s flags
+- %M: the Message-Id"
+  :type 'string
+  :group 'mu4e-headers)
+
+(defun mu4e-headers-eldoc-function (&rest _args)
+  (let ((msg (get-text-property (point) 'msg)))
+    (when msg
+      (format-spec
+       mu4e-headers-eldoc-format
+       `((?s . ,(mu4e-message-field msg :subject))
+         (?f . ,(mu4e~headers-contact-str (mu4e-message-field msg :from)))
+         (?t . ,(mu4e~headers-contact-str (mu4e-message-field msg :to)))
+         (?c . ,(mu4e~headers-contact-str (mu4e-message-field msg :cc)))
+         (?d . ,(mu4e~headers-human-date msg))
+         (?p . ,(mu4e-message-field msg :priority))
+         (?m . ,(mu4e-message-field msg :maildir))
+         (?F . ,(mu4e-message-field msg :flags))
+         (?M . ,(mu4e-message-field msg :message-id)))))))
+
 (define-derived-mode mu4e-headers-mode special-mode
   "mu4e:headers"
   "Major mode for displaying mu4e search results.
@@ -1137,6 +1167,17 @@ no user-interaction ongoing."
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
+
+  ;; Eldoc support
+  (when (featurep 'eldoc)
+    (if (boundp 'eldoc-documentation-functions)
+        ;; Emacs 28 or newer
+        (add-hook 'eldoc-documentation-functions
+                  #'mu4e-headers-eldoc-function nil t)
+      ;; Emacs 27 or older
+      (when (fboundp 'add-function) ;; add-function was added in 24.4.
+        (add-function :before-until (local 'eldoc-documentation-function)
+                      #'mu4e-headers-eldoc-function))))
 
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook #'mu4e~headers-maybe-auto-update)
