@@ -144,7 +144,6 @@ mime-type are nill."
   :group 'mu4e-folders
   :safe 'stringp)
 
-
 
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
@@ -261,10 +260,10 @@ Do so recursively and produce a list of relative paths."
 
 (defvar mu4e-cache-maildir-list nil
   "Whether to cache the list of maildirs.
-Set it to t if you find
-that generating the list on the fly is too slow. If you do, you
-can set `(mu4e-root-maildir)-list' to nil to force regenerating the
-cache the next time `mu4e-get-maildirs' gets called.")
+Set it to t if you find that generating the list on the fly is
+too slow. If you do, you can set `mu4e-maildir-list' to nil to
+force regenerating the cache the next time `mu4e-get-maildirs'
+gets called.")
 
 (defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
