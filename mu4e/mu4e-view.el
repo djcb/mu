@@ -705,6 +705,20 @@ determine which browser function to use."
     (mm-destroy-parts mu4e~gnus-article-mime-handles)
     (setq mu4e~gnus-article-mime-handles nil)))
 
+(defun mu4e-view-refresh ()
+  "Refresh the message view."
+  (interactive)
+  (when (derived-mode-p 'mu4e-view-mode)
+    (kill-buffer)
+    (mu4e-view mu4e~view-message)))
+
+(defun mu4e-view-toggle-show-mime-parts()
+  "Toggle whether to show all MIME-parts."
+  (interactive)
+  (setq gnus-inhibit-mime-unbuttonizing
+	(not gnus-inhibit-mime-unbuttonizing))
+  (mu4e-view-refresh))
+
 (defun mu4e~view-gnus-display-mime (msg)
   "Like `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
@@ -991,7 +1005,8 @@ Based on Gnus' article-mode."
 (defcustom mu4e-view-massage-options
   '( ("ctoggle citations" . gnus-article-hide-citation)
      ("htoggle headers"   . gnus-article-hide-headers)
-     ("ytoggle crypto"    . gnus-article-hide-pem))
+     ("ytoggle crypto"    . gnus-article-hide-pem)
+     ("mtoggle show all MIME parts" . mu4e-view-toggle-show-mime-parts))
 "Various options for 'massaging' the message view. See `(gnus)
 Article Treatment' for more options."
   :group 'mu4e-view
@@ -1003,6 +1018,8 @@ Article Treatment' for more options."
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 ;;; MIME-parts
+(defvar-local mu4e~view-mime-parts nil
+  "MIME parts for this message.")
 
 (defun mu4e~view-gather-mime-parts ()
   "Gather all MIME parts as an alist.
