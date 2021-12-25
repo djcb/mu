@@ -33,6 +33,7 @@
 
 #include "mu-utils.hh"
 #include "mu-util.h"
+#include "mu-str.h"
 
 using namespace Mu;
 
@@ -128,8 +129,9 @@ std::string
 Mu::utf8_clean(const std::string& dirty)
 {
 	GString* gstr = g_string_sized_new(dirty.length());
+	auto cstr = mu_str_utf8ify(dirty.c_str());
 
-	for (auto cur = dirty.c_str(); cur && *cur; cur = g_utf8_next_char(cur)) {
+	for (auto cur = cstr; cur && *cur; cur = g_utf8_next_char(cur)) {
 		const gunichar uc = g_utf8_get_char(cur);
 		if (g_unichar_iscntrl(uc))
 			g_string_append_c(gstr, ' ');
@@ -137,6 +139,7 @@ Mu::utf8_clean(const std::string& dirty)
 			g_string_append_unichar(gstr, uc);
 	}
 
+	g_free(cstr);
 	std::string clean(gstr->str, gstr->len);
 	g_string_free(gstr, TRUE);
 
