@@ -719,6 +719,12 @@ determine which browser function to use."
 	(not gnus-inhibit-mime-unbuttonizing))
   (mu4e-view-refresh))
 
+(defun mu4e-view-toggle-fill-flowed()
+  "Toggle flowed-message text filling."
+  (interactive)
+  (setq mm-fill-flowed (not mm-fill-flowed))
+  (mu4e-view-refresh))
+
 (defun mu4e~view-gnus-display-mime (msg)
   "Like `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
@@ -1003,9 +1009,10 @@ Based on Gnus' article-mode."
 ;;; Massaging the message view
 
 (defcustom mu4e-view-massage-options
-  '( ("ctoggle citations" . gnus-article-hide-citation)
-     ("htoggle headers"   . gnus-article-hide-headers)
-     ("ytoggle crypto"    . gnus-article-hide-pem)
+  '( ("ctoggle citations"           . gnus-article-hide-citation)
+     ("htoggle headers"             . gnus-article-hide-headers)
+     ("ytoggle crypto"              . gnus-article-hide-pem)
+     ("ftoggle fill-flowed"         . mu4e-view-toggle-fill-flowed)
      ("mtoggle show all MIME parts" . mu4e-view-toggle-show-mime-parts))
 "Various options for 'massaging' the message view. See `(gnus)
 Article Treatment' for more options."
