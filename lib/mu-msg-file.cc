@@ -354,6 +354,24 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MuFlags* flags)
 	if (GMIME_IS_MULTIPART_ENCRYPTED(part))
 		*flags |= MU_FLAG_ENCRYPTED;
 
+	/* smime */
+	if (GMIME_IS_APPLICATION_PKCS7_MIME(part)) {
+		GMimeApplicationPkcs7Mime *pkcs7;
+		pkcs7 = GMIME_APPLICATION_PKCS7_MIME(part);
+		if (pkcs7) {
+			switch(pkcs7->smime_type) {
+			case GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA:
+				*flags |= MU_FLAG_ENCRYPTED;
+				break;
+			case GMIME_SECURE_MIME_TYPE_SIGNED_DATA:
+				*flags |= MU_FLAG_SIGNED;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
 	if (*flags & MU_FLAG_HAS_ATTACH)
 		return;
 
@@ -367,6 +385,7 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MuFlags* flags)
 		*flags |= MU_FLAG_HAS_ATTACH;
 }
 
+
 static MuFlags
 get_content_flags(MuMsgFile* self)
 {
@@ -375,11 +394,15 @@ get_content_flags(MuMsgFile* self)
 
 	flags = MU_FLAG_NONE;
 
-	if (GMIME_IS_MESSAGE(self->_mime_msg))
+	if (GMIME_IS_MESSAGE(self->_mime_msg)) {
+		/* toplevel */
+		msg_cflags_cb(NULL, GMIME_OBJECT(self->_mime_msg), &flags);
+		/* parts */
 		mu_mime_message_foreach(self->_mime_msg,
 		                        FALSE, /* never decrypt for this */
 		                        (GMimeObjectForeachFunc)msg_cflags_cb,
 		                        &flags);
+	}
 
 	ml = get_mailing_list(self);
 	if (ml) {
