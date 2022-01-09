@@ -1,4 +1,4 @@
-.TH MU-INIT 1 "October 2020" "User Manuals"
+.TH MU-INIT 1 "January 2022" "User Manuals"
 
 .SH NAME
 
@@ -30,8 +30,7 @@ this defaults to \fI~/.cache/mu\fR, \fI~/.config/mu\fR). Earlier versions of
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
 starts searching at \fI<maildir>\fR. By default, \fBmu\fR uses whatever the
 \fBMAILDIR\fR environment variable is set to; if it is not set, it tries
-\fI~/Maildir\fR. The maildir must be on a single file-system; and symbolic links
-are not supported.
+\fI~/Maildir\fR if it already exists.
 
 .TP
 \fB\-\-my-address\fR=\fI<my-email-address>\fR
