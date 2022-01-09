@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -689,15 +689,20 @@ determine which browser function to use."
 	 (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
 	 (gnus-icalendar-additional-identities
 	  (mu4e-personal-addresses 'no-regexp)))
-    (mm-enable-multibyte)
-    (mu4e-view-mode)
-    (run-hooks 'gnus-article-decode-hook)
-    (gnus-article-prepare-display)
-    (mu4e~view-activate-urls)
-    (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
-	  gnus-article-decoded-p gnus-article-decode-hook)
-    (set-buffer-modified-p nil)
-    (add-hook 'kill-buffer-hook #'mu4e~view-kill-mime-handles)))
+    (condition-case err
+	(progn
+	  (mm-enable-multibyte)
+	  (mu4e-view-mode)
+	  (run-hooks 'gnus-article-decode-hook)
+	  (gnus-article-prepare-display)
+	  (mu4e~view-activate-urls)
+	  (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
+		gnus-article-decoded-p gnus-article-decode-hook)
+	  (set-buffer-modified-p nil)
+	  (add-hook 'kill-buffer-hook #'mu4e~view-kill-mime-handles))
+      (epg-error
+       (mu4e-warn "EPG error: %s; fall back to raw view"
+		  (error-message-string err))))))
 
 (defun mu4e~view-kill-mime-handles ()
   "Kill cached MIME-handles, if any."
