@@ -74,9 +74,12 @@ details."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-actions
-  '( ("capture message"  . mu4e-action-capture-message)
-     ("view in browser"  . mu4e-action-view-in-browser)
-     ("show this thread" . mu4e-action-show-thread))
+  (seq-filter 'identity
+	      `( ("capture message"  . mu4e-action-capture-message)
+		 ("view in browser"  . mu4e-action-view-in-browser)
+		 ,(when (fboundp 'xwidget-webkit-browse-url)
+		    '("xview in xwidget" . mu4e-action-view-in-xwidget))
+		 ("show this thread" . mu4e-action-show-thread)))
   "List of actions to perform on messages in view mode.
 The actions are cons-cells of the form:
   (NAME . FUNC)
@@ -643,8 +646,9 @@ marking if it still had that."
     (mu4e~view-render-buffer msg)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun mu4e-action-view-in-browser (msg)
+(defun mu4e-action-view-in-browser (msg &optional skip-headers)
   "Show current MSG in browser if it includes an HTML-part.
+If SKIP-HEADERS is set, do not show include message headers.
 The variables `browse-url-browser-function',
 `browse-url-handlers', and `browse-url-default-handlers'
 determine which browser function to use."
@@ -652,9 +656,10 @@ determine which browser function to use."
     (insert-file-contents-literally
      (mu4e-message-field msg :path) nil nil nil t)
     (run-hooks 'gnus-article-decode-hook)
-    (let ((header (cl-loop for field in '("from" "to" "cc" "date" "subject")
-			   when (message-fetch-field field)
-			   concat (format "%s: %s\n" (capitalize field) it)))
+    (let ((header (unless skip-headers
+		       (cl-loop for field in '("from" "to" "cc" "date" "subject")
+				when (message-fetch-field field)
+				concat (format "%s: %s\n" (capitalize field) it))))
 	  (parts (mm-dissect-buffer t t)))
       ;; If singlepart, enforce a list.
       (when (and (bufferp (car parts))
@@ -665,6 +670,17 @@ determine which browser function to use."
 	(mu4e-warn "Message does not contain a \"text/html\" part"))
       (mm-destroy-parts parts))))
 
+(defun mu4e-action-view-in-xwidget (msg)
+  "Show current MSG in an embedded xwidget, if available.
+
+This is an experimental feature; this appear to work for all
+messages."
+  (unless (fboundp 'xwidget-webkit-browse-url)
+    (mu4e-error "No xwidget support available"))
+  (let ((browse-url-browser-function
+	 (lambda (url &optional _rest)
+	   (xwidget-webkit-browse-url url))))
+    (mu4e-action-view-in-browser msg)))
 
 (defun mu4e~view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode."
