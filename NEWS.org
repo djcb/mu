@@ -44,9 +44,9 @@
     - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
       for removing quite a bit of old code.
 
-    - the mu4e message rendering is much faster (a factor of 3+), which
-      makes displaying big results snappier. This required some updates in the
-      headers handling and in the server protocol.
+    - the mu4e headers rendering is much faster (a factor of 3+), which makes
+      displaying big results snappier. This required some updates in the headers
+      handling and in the server protocol.
 
     - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
       whether anything changed (before, it fired only is something changed). In
@@ -62,6 +62,10 @@
       (which turned out to be a little fragile). However, it has been updated to
       automatically change the ~Organization:~ header, and attempts to update the
       message signature. Also, there's a key-binding now: ~C-c ;~
+
+    - A new ~defcustom~, ~mu4e-view-open-program~ for starting the appropriate
+      program for a give file (e.g., ~xdg-open~). There are some reasonable
+      defaults for various systems.
 
     - undo is now supported across message-saves
 

@@ -91,10 +91,21 @@ The first letter of NAME is used as a shortcut character."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
 
+(defcustom mu4e-view-open-program
+  (pcase system-type
+    ('darwin "open")
+    ('cygwin "cygstart")
+    (_ "xdg-open"))
+  "Tool to open the correct program for a given file."
+  :type 'string
+  :group 'mu4e-view)
+
 (defcustom mu4e-view-max-specpdl-size 4096
   "The value of `max-specpdl-size' for displaying messages with Gnus."
   :type 'integer
   :group 'mu4e-view)
+
+
 
 
 ;;; Old options
@@ -671,10 +682,7 @@ determine which browser function to use."
       (mm-destroy-parts parts))))
 
 (defun mu4e-action-view-in-xwidget (msg)
-  "Show current MSG in an embedded xwidget, if available.
-
-This is an experimental feature; this appear to work for all
-messages."
+  "Show current MSG in an embedded xwidget, if available."
   (unless (fboundp 'xwidget-webkit-browse-url)
     (mu4e-error "No xwidget support available"))
   (let ((browse-url-browser-function
@@ -1196,14 +1204,11 @@ The directory and file are self-destructed."
   "Open FILE with default handler, if any.
 Otherwise, or if FORCE-ASK is set, ask user for the program to
 open with."
-  (let* ((opener
-	  (pcase system-type
-	    (`darwin "open")
-	    ((or 'gnu 'gnu/linux 'gnu/kfreebsd) "xdg-open")))
-	 (prog (if (or force-ask (not opener))
-		   (read-shell-command "Open MIME-part with: ")
-		 opener)))
-    (call-process prog nil 0 nil file)))
+  (let ((opener
+	 (or (and (not force-ask) mu4e-view-open-program
+		  (executable-find mu4e-view-open-program))
+	     (read-shell-command "Open MIME-part with: "))))
+    (call-process opener nil 0 nil file)))
 
 (defun mu4e-view-mime-part-action (&optional n)
   "Apply some action to MIME-part N in the current messsage.
