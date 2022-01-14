@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -59,7 +59,7 @@ install_sig_handler(void)
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
 			g_critical("set sigaction for %d failed: %s", sigs[i], g_strerror(errno));
-	;
+
 }
 
 static void
