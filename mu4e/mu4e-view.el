@@ -96,8 +96,15 @@ The first letter of NAME is used as a shortcut character."
     ('darwin "open")
     ('cygwin "cygstart")
     (_ "xdg-open"))
-  "Tool to open the correct program for a given file."
-  :type 'string
+  "Tool to open the correct program for a given file.
+May also be a function of a single argument, the file to be
+opened.
+
+In the function-valued case a likely candidate is
+`mailcap-view-file' although note that there was an Emacs bug up
+to Emacs 29 which prevented opening a file if `mailcap-mime-data'
+specified a function as viewer."
+  :type '(choice string function)
   :group 'mu4e-view)
 
 (defcustom mu4e-view-max-specpdl-size 4096
@@ -144,7 +151,7 @@ The first letter of NAME is used as a shortcut character."
 (make-obsolete-variable 'mu4e-cited-regexp "No longer used" "1.7.0")
 
 
-			
+
 ;; Helpers
 
 (defun mu4e~view-quit-buffer ()
@@ -1216,11 +1223,14 @@ The directory and file are self-destructed."
   "Open FILE with default handler, if any.
 Otherwise, or if FORCE-ASK is set, ask user for the program to
 open with."
-  (let ((opener
-	 (or (and (not force-ask) mu4e-view-open-program
-		  (executable-find mu4e-view-open-program))
-	     (read-shell-command "Open MIME-part with: "))))
-    (call-process opener nil 0 nil file)))
+  (if (and (not force-ask)
+           (functionp mu4e-view-open-program))
+      (funcall mu4e-view-open-program file)
+    (let ((opener
+	   (or (and (not force-ask) mu4e-view-open-program
+		    (executable-find mu4e-view-open-program))
+	       (read-shell-command "Open MIME-part with: "))))
+      (call-process opener nil 0 nil file))))
 
 (defun mu4e-view-mime-part-action (&optional n)
   "Apply some action to MIME-part N in the current messsage.
