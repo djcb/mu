@@ -136,7 +136,7 @@ if not makeinfo.found()
 endif
 
 # readline. annoyingly, macos has an incompatible libedit claiming to be
-# readline. this only a dev/debug convenience for the mu4e repl.
+# readline. this is only a dev/debug convenience for the mu4e repl.
 readline_dep=[]
 if get_option('readline').enabled()
   readline_dep = dependency('readline', version:'>= 8.0')
