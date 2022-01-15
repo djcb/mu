@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -80,7 +80,8 @@ struct ContactInfoEqual {
 
 constexpr auto RecentOffset{15 * 24 * 3600};
 struct ContactInfoLessThan {
-	ContactInfoLessThan() : recently_{::time({}) - RecentOffset} {}
+	ContactInfoLessThan()
+	    : recently_{::time({}) - RecentOffset} {}
 
 	bool operator()(const Mu::ContactInfo& ci1, const Mu::ContactInfo& ci2) const
 	{
@@ -106,7 +107,7 @@ using ContactSet = std::set<std::reference_wrapper<const ContactInfo>, ContactIn
 
 struct Contacts::Private {
 	Private(const std::string& serialized, const StringVec& personal)
-	    : contacts_{deserialize(serialized)}
+	    : contacts_{deserialize(serialized)}, dirty_{0}
 	{
 		make_personal(personal);
 	}
@@ -120,6 +121,8 @@ struct Contacts::Private {
 
 	StringVec               personal_plain_;
 	std::vector<std::regex> personal_rx_;
+
+	size_t dirty_;
 };
 
 constexpr auto Separator = "\xff"; // Invalid in UTF-8
@@ -164,11 +167,11 @@ Contacts::Private::deserialize(const std::string& serialized) const
 			continue;
 		}
 
-		ContactInfo ci(std::move(parts[0]),                                 // full address
-		               parts[1],                                            // email
-		               std::move(parts[2]),                                 // name
-		               parts[3][0] == '1' ? true : false,                   // personal
-		               (time_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10), // last_seen
+		ContactInfo ci(std::move(parts[0]),                                       // full address
+		               parts[1],                                                  // email
+		               std::move(parts[2]),                                       // name
+		               parts[3][0] == '1' ? true : false,                         // personal
+		               (time_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),       // last_seen
 		               (std::size_t)g_ascii_strtoll(parts[5].c_str(), NULL, 10)); // freq
 
 		contacts.emplace(std::move(parts[1]), std::move(ci));
@@ -183,7 +186,6 @@ Contacts::Contacts(const std::string& serialized, const StringVec& personal)
 }
 
 Contacts::~Contacts() = default;
-
 std::string
 Contacts::serialize() const
 {
@@ -211,13 +213,23 @@ Contacts::serialize() const
 		                (gint64)ci.freq);
 	}
 
+	priv_->dirty_ = 0;
+
 	return s;
+}
+
+bool
+Contacts::dirty() const
+{
+	return priv_->dirty_;
 }
 
 const ContactInfo
 Contacts::add(ContactInfo&& ci)
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
+
+	++priv_->dirty_;
 
 	auto it = priv_->contacts_.find(ci.email);
 
@@ -264,6 +276,8 @@ void
 Contacts::clear()
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
+
+	++priv_->dirty_;
 
 	priv_->contacts_.clear();
 }

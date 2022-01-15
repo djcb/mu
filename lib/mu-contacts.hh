@@ -64,7 +64,7 @@ struct ContactInfo {
 
 /// All contacts
 class Contacts {
-      public:
+public:
 	/**
 	 * Construct a new contacts objects
 	 *
@@ -111,11 +111,20 @@ class Contacts {
 	bool empty() const { return size() == 0; }
 
 	/**
-	 * Get the contacts, serialized.
+	 * Get the contacts, serialized. This all marks the data as
+	 * non-dirty (see dirty())
 	 *
 	 * @return serialized contacts
 	 */
 	std::string serialize() const;
+
+	/**
+	 * Has the contacts database change since the last
+	 * call to serialize()?
+	 *
+	 * @return true or false
+	 */
+	bool dirty() const;
 
 	/**
 	 * Does this look like a 'personal' address?
@@ -150,7 +159,7 @@ class Contacts {
 	 */
 	void for_each(const EachContactFunc& each_contact) const;
 
-      private:
+private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };
