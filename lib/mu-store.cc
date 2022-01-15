@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -102,7 +102,10 @@ add_synonym_for_prio(MuMsgPrio prio, Xapian::WritableDatabase* db)
 struct Store::Private {
 #define LOCKED std::lock_guard<std::mutex> l(lock_);
 
-	enum struct XapianOpts { ReadOnly, Open, CreateOverwrite, InMemory };
+	enum struct XapianOpts { ReadOnly,
+		                 Open,
+		                 CreateOverwrite,
+		                 InMemory };
 
 	Private(const std::string& path, bool readonly)
 	    : read_only_{readonly}, db_{make_xapian_db(path,
@@ -136,9 +139,6 @@ struct Store::Private {
 	{
 		g_debug("closing store @ %s", mdata_.database_path.c_str());
 		if (!read_only_) {
-			xapian_try([&] {
-				writable_db().set_metadata(ContactsKey, contacts_.serialize());
-			});
 			transaction_maybe_commit(true /*force*/);
 		}
 	}
@@ -201,6 +201,12 @@ struct Store::Private {
 			return; // not supported or not in transaction
 
 		if (force || transaction_size_ >= mdata_.batch_size) {
+			if (contacts_.dirty()) {
+				xapian_try([&] {
+					writable_db().set_metadata(ContactsKey,
+					                           contacts_.serialize());
+				});
+			}
 			g_debug("committing transaction (n=%zu)", transaction_size_);
 			xapian_try([this] {
 				writable_db().commit_transaction();
@@ -494,7 +500,8 @@ Store::dirstamp(const std::string& path) const
 			return epoch;
 		else
 			return static_cast<time_t>(strtoll(ts.c_str(), NULL, 16));
-	}, epoch);
+	},
+	                  epoch);
 }
 
 void
@@ -503,7 +510,7 @@ Store::set_dirstamp(const std::string& path, time_t tstamp)
 	LOCKED;
 
 	std::array<char, 2 * sizeof(tstamp) + 1> data{};
-	const auto len = static_cast<size_t>(g_snprintf(data.data(), data.size(), "%zx", tstamp));
+	const auto                               len = static_cast<size_t>(g_snprintf(data.data(), data.size(), "%zx", tstamp));
 
 	xapian_try([&] {
 		priv_->writable_db().set_metadata(path, std::string{data.data(), len});
@@ -518,7 +525,7 @@ Store::find_message(unsigned docid) const
 		    LOCKED;
 		    Xapian::Document* doc{new Xapian::Document{priv_->db().get_document(docid)}};
 		    GError*           gerr{};
-		    auto msg{mu_msg_new_from_doc(reinterpret_cast<XapianDocument*>(doc), &gerr)};
+		    auto              msg{mu_msg_new_from_doc(reinterpret_cast<XapianDocument*>(doc), &gerr)};
 		    if (!msg) {
 			    g_warning("could not create message: %s",
 			              gerr ? gerr->message : "something went wrong");
@@ -763,7 +770,8 @@ add_terms_values_string_list(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfi
 }
 
 struct PartData {
-	PartData(Xapian::Document& doc, MuMsgFieldId mfid) : _doc(doc), _mfid(mfid) {}
+	PartData(Xapian::Document& doc, MuMsgFieldId mfid)
+	    : _doc(doc), _mfid(mfid) {}
 	Xapian::Document _doc;
 	MuMsgFieldId     _mfid;
 };
