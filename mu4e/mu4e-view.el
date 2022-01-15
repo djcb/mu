@@ -52,9 +52,9 @@
 ;;; Options
 
 (defcustom mu4e-view-scroll-to-next t
-  "Move to the next message when calling
-`mu4e-view-scroll-up-or-next' (typically bound to SPC) when at
-the end of a message. Otherwise, don't move to the next message."
+  "Move to the next message with `mu4e-view-scroll-up-or-next'.
+When at the end of a message, move to the next one, if any.
+Otherwise, don't move to the next message."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -214,43 +214,43 @@ Then, display the results."
     (mu4e-process-file-through-pipe path cmd)))
 
 (defmacro mu4e~view-in-headers-context (&rest body)
-  "Evaluate BODY in the context of the headers buffer connected to
-this view."
+  "Evaluate BODY in the context of the headers buffer."
   `(progn
      (unless (buffer-live-p (mu4e-get-headers-buffer))
-       (mu4e-error "no headers buffer connected"))
+       (mu4e-error "No headers buffer connected"))
      (let* ((msg (mu4e-message-at-point))
 	    (docid (mu4e-message-field msg :docid)))
        (unless docid
-	 (mu4e-error "message without docid: action is not possible."))
+	 (mu4e-error "Message without docid: action is not possible"))
        (with-current-buffer (mu4e-get-headers-buffer)
 	 (unless (eq mu4e-split-view 'single-window)
 	   (when (get-buffer-window)
 	     (select-window (get-buffer-window))))
 	 (if (mu4e~headers-goto-docid docid)
 	     ,@body
-	   (mu4e-error "cannot find message in headers buffer."))))))
+	   (mu4e-error "Cannot find message in headers buffer"))))))
 
 (defun mu4e-view-headers-next (&optional n)
-  "Move point to the next message header in the headers buffer
-connected with this message view. If this succeeds, return the new
-docid. Otherwise, return nil. Optionally, takes an integer
-N (prefix argument), to the Nth next header."
+  "Move point to the next message header.
+If this succeeds, return the new docid. Otherwise, return nil.
+Optionally, takes an integer N (prefix argument), to the Nth next
+header."
   (interactive "P")
   (mu4e~view-in-headers-context
    (mu4e~headers-move (or n 1))))
 
 (defun mu4e-view-headers-prev (&optional n)
-  "Move point to the previous message header in the headers buffer
-connected with this message view. If this succeeds, return the new
-docid. Otherwise, return nil. Optionally, takes an integer
-N (prefix argument), to the Nth previous header."
+  "Move point to the previous message header.
+If this succeeds, return the new docid. Otherwise, return nil.
+Optionally, takes an integer N (prefix argument), to the Nth
+previous header."
   (interactive "P")
   (mu4e~view-in-headers-context
    (mu4e~headers-move (- (or n 1)))))
 
 (defun mu4e~view-prev-or-next-unread (backwards)
-  "Move point to the next or previous (when BACKWARDS is non-`nil')
+  "Move point to the next or previous message.
+Go to the previous message if BACKWARDS is non-nil.
 unread message header in the headers buffer connected with this
 message view. If this succeeds, return the new docid. Otherwise,
 return nil."
@@ -264,16 +264,14 @@ return nil."
     (mu4e-headers-view-message)))
 
 (defun mu4e-view-headers-prev-unread ()
-  "Move point to the previous unread message header in the headers
-buffer connected with this message view. If this succeeds, return
-the new docid. Otherwise, return nil."
+  "Move point to the previous unread message header.
+If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
   (mu4e~view-prev-or-next-unread t))
 
 (defun mu4e-view-headers-next-unread ()
-  "Move point to the next unread message header in the headers
-buffer connected with this message view. If this succeeds, return
-the new docid. Otherwise, return nil."
+  "Move point to the next unread message header.
+If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
   (mu4e~view-prev-or-next-unread nil))
 
@@ -290,14 +288,16 @@ bymessage-at-point.  The actions are specified in
     (funcall actionfunc msg)))
 
 (defun mu4e-view-mark-pattern ()
-  "Ask user for a kind of mark (move, delete etc.), a field to
+  "Mark messages that match a certain pattern.
+Ask user for a kind of mark, (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
   (mu4e~view-in-headers-context (mu4e-headers-mark-pattern)))
 
 (defun mu4e-view-mark-thread (&optional markpair)
-  "Ask user for a kind of mark (move, delete etc.), and apply it
+  "Mark whole thread with a certain mark.
+Ask user for a kind of mark (move, delete etc.), and apply it
 to all messages in the thread at point in the headers view. The
 optional MARKPAIR can also be used to provide the mark
 selection."
@@ -307,7 +307,8 @@ selection."
      (call-interactively 'mu4e-headers-mark-thread))))
 
 (defun mu4e-view-mark-subthread (&optional markpair)
-  "Ask user for a kind of mark (move, delete etc.), and apply it
+  "Mark subthread with a certain mark.
+Ask user for a kind of mark (move, delete etc.), and apply it
 to all messages in the subthread at point in the headers view.
 The optional MARKPAIR can also be used to provide the mark
 selection."
@@ -369,8 +370,8 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 
 (defun mu4e-view-scroll-up-or-next ()
   "Scroll-up the current message.
-If `mu4e-view-scroll-to-next' is non-nil, and we can't scroll-up
-anymore, go the next message."
+If `mu4e-view-scroll-to-next' is non-nil, and we cannot scroll up
+any further, go the next message."
   (interactive)
   (condition-case nil
       (scroll-up)
@@ -409,7 +410,7 @@ list."
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defmacro mu4e~view-defun-mark-for (mark)
-  "Define a function mu4e-view-mark-for-MARK."
+  "Define a function mu4e-view-mark-for- MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
 	(docstring (format "Mark the current message for %s." mark)))
     `(progn
@@ -454,8 +455,8 @@ list."
 
 (defvar mu4e~view-beginning-of-url-regexp
   "https?\\://\\|mailto:"
-  "Regexp that matches the beginning of http:/https:/mailto:
-URLs; match-string 1 will contain the matched URL, if any.")
+  "Regexp that matches the beginning of certain URLs.
+Match-string 1 will contain the matched URL, if any.")
 
 
 (defun mu4e~view-browse-url-from-binding (&optional url)
@@ -515,11 +516,11 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
 
 
 (defun mu4e~view-get-urls-num (prompt &optional multi)
-  "Ask the user with PROMPT for an URL number for MSG, and ensure
-it is valid. The number is [1..n] for URLs \[0..(n-1)] in the
-message. If MULTI is nil, return the number for the URL;
-otherwise (MULTI is non-nil), accept ranges of URL numbers, as
-per `mu4e-split-ranges-to-numbers', and return the corresponding
+  "Ask the user with PROMPT for an URL number for MSG.
+The number is [1..n] for URLs \[0..(n-1)] in the message. If
+MULTI is nil, return the number for the URL; otherwise (MULTI is
+non-nil), accept ranges of URL numbers, as per
+`mu4e-split-ranges-to-numbers', and return the corresponding
 string."
   (let* ((count (hash-table-count mu4e~view-link-map)) (def))
     (when (zerop count) (mu4e-error "No links for this message"))
@@ -533,16 +534,16 @@ string."
 		     nil nil def)))))
 
 (defun mu4e-view-go-to-url (&optional multi)
-  "Offer to go to url(s). If MULTI (prefix-argument) is nil, go to
-a single one, otherwise, offer to go to a range of urls."
+  "Offer to go visit one or more URLs.
+If MULTI (prefix-argument) is non-nil, offer to go to a range of URLs."
   (interactive "P")
   (mu4e~view-handle-urls "URL to visit"
 			 multi
 			 (lambda (url) (mu4e~view-browse-url-from-binding url))))
 
 (defun mu4e-view-save-url (&optional multi)
-  "Offer to save urls(s) to the kill-ring. If
-MULTI (prefix-argument) is nil, save a single one, otherwise, offer
+  "Offer to save URLs to the kill ring.
+If MULTI (prefix-argument) is nil, save a single one, otherwise, offer
 to save a range of URLs."
   (interactive "P")
   (mu4e~view-handle-urls "URL to save" multi
@@ -551,35 +552,39 @@ to save a range of URLs."
 			   (mu4e-message "Saved %s to the kill-ring" url))))
 
 (defun mu4e-view-fetch-url (&optional multi)
-  "Offer to fetch (download) urls(s). If MULTI (prefix-argument) is nil,
+  "Offer to fetch (download) URLs.
+If MULTI (prefix-argument) is nil,
 download a single one, otherwise, offer to fetch a range of
 URLs. The urls are fetched to `mu4e-attachment-dir'."
   (interactive "P")
-  (mu4e~view-handle-urls "URL to fetch" multi
-			 (lambda (url)
-			   (let ((target (concat (mu4e~get-attachment-dir url) "/"
-						 (file-name-nondirectory url))))
-			     (url-copy-file url target)
-			     (mu4e-message "Fetched %s -> %s" url target)))))
+  (mu4e~view-handle-urls
+   "URL to fetch" multi
+   (lambda (url)
+     (let ((target (concat (mu4e~get-attachment-dir url) "/"
+			   (file-name-nondirectory url))))
+       (url-copy-file url target)
+       (mu4e-message "Fetched %s -> %s" url target)))))
 
 (defun mu4e~view-handle-urls (prompt multi urlfunc)
-  "If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
+  "Handle URLs.
+If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
 it to a range of uris. PROMPT is the query to present to the user."
   (if multi
       (mu4e~view-handle-multi-urls prompt urlfunc)
     (mu4e~view-handle-single-url prompt urlfunc)))
 
 (defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
-  "Apply URLFUNC to url NUM in the current message, prompting the
-user with PROMPT."
+  "Apply URLFUNC to some URL with NUM in the current message.
+Prompting the user with PROMPT for the number."
   (let* ((num (or num (mu4e~view-get-urls-num prompt)))
 	 (url (gethash num mu4e~view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall urlfunc url)))
 
 (defun mu4e~view-handle-multi-urls (prompt urlfunc)
-  "Apply URLFUNC to a a range of urls in the current message,
-prompting the user with PROMPT.
+  "Apply URLFUNC to a a range of URLs in the current message.
+
+Prompting the user with PROMPT for the numbers.
 
 Default is to apply it to all URLs, [1..n], where n is the number
 of urls. You can type multiple values separated by space, e.g.  1
@@ -599,7 +604,8 @@ this is the default, you may not need it."
   (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
 
 (defun mu4e-view-message-with-message-id (msgid)
-  "View message with message-id MSGID. This (re)creates a
+  "View message with message-id MSGID.
+This (re)creates a
 headers-buffer with a search for MSGID, then open a view for that
 message."
   (mu4e-search (concat "msgid:" msgid) nil nil t msgid t))
@@ -667,9 +673,9 @@ determine which browser function to use."
      (mu4e-message-readable-path msg) nil nil nil t)
     (run-hooks 'gnus-article-decode-hook)
     (let ((header (unless skip-headers
-		       (cl-loop for field in '("from" "to" "cc" "date" "subject")
-				when (message-fetch-field field)
-				concat (format "%s: %s\n" (capitalize field) it))))
+		    (cl-loop for field in '("from" "to" "cc" "date" "subject")
+			     when (message-fetch-field field)
+			     concat (format "%s: %s\n" (capitalize field) it))))
 	  (parts (mm-dissect-buffer t t)))
       ;; If singlepart, enforce a list.
       (when (and (bufferp (car parts))
@@ -1073,13 +1079,15 @@ The alist uniquely maps the number to the gnus-part."
 
 
 (defun mu4e-view-save-attachments (&optional arg)
-  "Save mime parts from current mu4e gnus view buffer.
+  "Save MIME-parts from current mu4e gnus view buffer.
 
 When helm-mode is enabled provide completion on attachments and
 possibility to mark candidates to save, otherwise completion on
 attachments is done with `completing-read-multiple', in this case
 use \",\" to separate candidate, completion is provided after
 each \",\".
+
+ARG is specific for the handler, see below.
 
 Note, currently this does not work well with file names
 containing commas."
@@ -1098,7 +1106,8 @@ containing commas."
     (dolist (part parts)
       (let ((fname (or (cdr (assoc 'filename (assoc "attachment" (cdr part))))
                        (cl-loop for item in part
-                                for name = (and (listp item) (assoc-default 'name item))
+                                for name = (and (listp item)
+						(assoc-default 'name item))
                                 thereis (and (stringp name) name)))))
 	(when fname
 	  (push `(,fname . ,(cdr part)) handles)
@@ -1107,7 +1116,8 @@ containing commas."
 	(progn
 	  (setq files (let ((helm-comp-read-use-marked t))
 			(funcall compfn "Save part(s): " files))
-		dir (if arg (read-directory-name "Save to directory: ") mu4e-attachment-dir))
+		dir (if arg (read-directory-name "Save to directory: ")
+		      mu4e-attachment-dir))
 	  (cl-loop for (f . h) in handles
 		   when (member f files)
 		   do (mm-save-part-to-file
@@ -1156,7 +1166,8 @@ containing commas."
     (:name "emacs" :handler find-file :receives temp)
     ;; open in this emacs instance, "raw"
     (:name "raw" :handler (lambda (str)
-			    (let ((tmpbuf (get-buffer-create " *mu4e-raw-mime*")))
+			    (let ((tmpbuf
+				   (get-buffer-create " *mu4e-raw-mime*")))
 				  (with-current-buffer tmpbuf
 				    (insert str)
 				    (view-mode)
@@ -1195,7 +1206,8 @@ The directory and file are self-destructed."
 		  (let ((temporary-file-directory tmpdir))
 		    (make-temp-file "mimepart")))))
     (mm-save-part-to-file handle fname)
-    (run-at-time "30 sec" nil (lambda () (ignore-errors (delete-directory tmpdir t))))
+    (run-at-time "30 sec" nil
+		 (lambda () (ignore-errors (delete-directory tmpdir t))))
     fname))
 
 
@@ -1215,16 +1227,21 @@ If N is not specified, ask for it. For instance, '3 A o' opens
 the third MIME-part."
   (interactive "NNumber of MIME-part: ")
   (let* ((parts (mu4e~view-gather-mime-parts))
-	 (options (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
-			  mu4e-view-mime-part-actions))
-	 (handle (or (cdr-safe (cl-find-if (lambda (part) (eq (car part) n)) parts))
-		     (mu4e-error "MIME-part %s not found" n)))
-	 (action (or (and options (mu4e-read-option "Action on MIME-part: " options))
-		     (mu4e-error "No such action")))
-	 (handler (or (plist-get action :handler)
-		      (mu4e-error "No :handler item found for action %S" action)))
-	 (receives (or (plist-get action :receives)
-		       (mu4e-error "No :receives item found for action %S" action))))
+	 (options
+	  (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
+		  mu4e-view-mime-part-actions))
+	 (handle
+	  (or (cdr-safe (cl-find-if (lambda (part) (eq (car part) n)) parts))
+	      (mu4e-error "MIME-part %s not found" n)))
+	 (action
+	  (or (and options (mu4e-read-option "Action on MIME-part: " options))
+	      (mu4e-error "No such action")))
+	 (handler
+	  (or (plist-get action :handler)
+	      (mu4e-error "No :handler item found for action %S" action)))
+	 (receives
+	  (or (plist-get action :receives)
+	      (mu4e-error "No :receives item found for action %S" action))))
     (save-excursion
       (cond
        ((functionp handler)
@@ -1238,12 +1255,14 @@ the third MIME-part."
 	 (t (mu4e-error "Invalid :receive for %S" action))))
        ((stringp handler)
 	(cond
-	 ((eq receives 'index) (shell-command (concat handler " " (shell-quote-argument n))))
+	 ((eq receives 'index)
+	  (shell-command (concat handler " " (shell-quote-argument n))))
 	 ((eq receives 'pipe)  (mm-pipe-part handle handler))
 	 ((eq receives 'temp)
-	  (shell-command (shell-command (concat handler " "
-						(shell-quote-argument
-						 (mu4e~view-mime-part-to-temp-file handle))))))
+	  (shell-command
+	   (shell-command (concat handler " "
+				  (shell-quote-argument
+				   (mu4e~view-mime-part-to-temp-file handle))))))
 	 (t (mu4e-error "Invalid action %S" action))))))))
 
 (defun mu4e-view-toggle-html ()
