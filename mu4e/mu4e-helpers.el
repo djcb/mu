@@ -188,6 +188,8 @@ echo area, don't show anything."
   (unless (or (active-minibuffer-window))
     (message "%s" (apply 'mu4e-format frm args))))
 
+(declare-function mu4e~loading-close "mu4e-headers")
+
 (defun mu4e-error (frm &rest args)
   "Display an error with FRM and ARGS like `mu4e-message'.
 
@@ -195,6 +197,8 @@ Create [mu4e]-prefixed error based on format FRM and ARGS. Does a
 local-exit and does not return, and raises a
 debuggable (backtrace) error."
   (mu4e-log 'error (apply 'mu4e-format frm args))
+  ;; opportunistically close the "loading" window.
+  (mu4e~loading-close)
   (error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e-warn (frm &rest args)

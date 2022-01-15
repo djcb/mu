@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -1779,19 +1779,13 @@ other windows."
 
 ;;; Loading messages
 ;;
-(defvar mu4e-loading-mode-map nil  "Keymap for *mu4e-loading* buffers.")
-(unless mu4e-loading-mode-map
-  (setq mu4e-loading-mode-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map "n" 'ignore)
-          (define-key map "p" 'ignore)
-          (define-key map "q"
-            (lambda()(interactive)
-              (if (eq mu4e-split-view 'single-window)
-                  'kill-buffer
-                'kill-buffer-and-window)))
-          map)))
-(fset 'mu4e-loading-mode-map mu4e-loading-mode-map)
+(defvar mu4e-loading-mode-map
+  (let ((map (make-sparse-keymap)))
+          (define-key map "n" #'ignore)
+          (define-key map "p" #'ignore)
+          (define-key map "q" #'bury-buffer)
+          map)
+  "Keymap for *mu4e-loading* buffers.")
 
 (define-derived-mode mu4e-loading-mode special-mode
   "mu4e:loading"
@@ -1801,7 +1795,12 @@ other windows."
     (insert (propertize "Loading message..."
                         'face 'mu4e-system-face 'intangible t))))
 
+(defun mu4e~loading-close ()
+  "Bury the mu4e Loading... buffer, if any."
+  (let* ((buf mu4e~headers-loading-buf)
+	 (win (and (buffer-live-p buf) (get-buffer-window buf t))))
+    (when (window-live-p win)
+      (delete-window win))))
 
-;;; _
 (provide 'mu4e-headers)
 ;;; mu4e-headers.el ends here
