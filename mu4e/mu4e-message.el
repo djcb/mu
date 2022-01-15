@@ -137,7 +137,6 @@ This is equivalent to:
   "" ;; not implemented for Gnus mode.
 )
 
-
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Does MSG's contact-field CFIELD match rx?
 Check if any of the of the CFIELD in MSG matches RX. I.e.
@@ -210,6 +209,15 @@ symbol, see `mu4e-header-info'."
 
 ;;; Html2Text
 (make-obsolete 'mu4e-shr2text "No longer in use" "1.7.0")
+
+(defun mu4e-message-readable-path (&optional msg)
+  "Get a readable path to MSG or raise an error.
+If MSG is nil, use mu4e-message-at-point.
+"
+  (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
+    (unless (file-readable-p path)
+      (mu4e-error "No readable message at %s; database outdated?" path))
+    path))
 
 (defun mu4e-copy-message-path ()
   "Copy the message-path of message at point to the kill ring."

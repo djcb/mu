@@ -196,10 +196,8 @@ other windows."
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."
   (interactive)
-  (let ((path (mu4e-message-field-at-point :path))
+  (let ((path (mu4e-message-readable-path))
 	(buf (get-buffer-create mu4e~view-raw-buffer-name)))
-    (unless (and path (file-readable-p path))
-      (mu4e-error "Not a readable file: %S" path))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
 	(erase-buffer)
@@ -212,7 +210,7 @@ other windows."
   "Pipe the message at point through shell command CMD.
 Then, display the results."
   (interactive "sShell command: ")
-  (let ((path (mu4e-message-field (mu4e-message-at-point) :path)))
+  (let ((path (mu4e-message-readable-path)))
     (mu4e-process-file-through-pipe path cmd)))
 
 (defmacro mu4e~view-in-headers-context (&rest body)
@@ -642,7 +640,7 @@ marking if it still had that."
       (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
       (erase-buffer)
       (insert-file-contents-literally
-       (mu4e-message-field msg :path) nil nil nil t)))
+       (mu4e-message-readable-path msg) nil nil nil t)))
   (switch-to-buffer gnus-article-buffer)
   (setq mu4e~view-message msg)
   (mu4e~view-render-buffer msg))
@@ -651,9 +649,10 @@ marking if it still had that."
   "Return the pristine MSG as a string."
   ;; we need this for replying/forwarding, since the mu4e-compose
   ;; wants it that way.
+
   (with-temp-buffer
     (insert-file-contents-literally
-     (mu4e-message-field msg :path) nil nil nil t)
+     (mu4e-message-readable-path msg) nil nil nil t)
     (mu4e~view-render-buffer msg)
     (buffer-substring-no-properties (point-min) (point-max))))
 
@@ -665,7 +664,7 @@ The variables `browse-url-browser-function',
 determine which browser function to use."
   (with-temp-buffer
     (insert-file-contents-literally
-     (mu4e-message-field msg :path) nil nil nil t)
+     (mu4e-message-readable-path msg) nil nil nil t)
     (run-hooks 'gnus-article-decode-hook)
     (let ((header (unless skip-headers
 		       (cl-loop for field in '("from" "to" "cc" "date" "subject")
