@@ -669,7 +669,7 @@ Server::Private::find_handler(const Parameters& params)
 	if (batch_size < 1)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
 
-	auto qflags{QueryFlags::None};
+	auto qflags{QueryFlags::SkipUnreadable}; // don't show unreadables.
 	if (descending)
 		qflags |= QueryFlags::Descending;
 	if (skip_dups)
