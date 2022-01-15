@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it under
 ** the terms of the GNU General Public License as published by the Free Software
@@ -186,8 +186,11 @@ print_header(const MuConfigFormat format)
 		g_print(";; -*-coding: utf-8-emacs;-*-\n"
 		        ";;; file-version: 6\n");
 		break;
-	case MU_CONFIG_FORMAT_MUTT_AB: g_print("Matching addresses in the mu database:\n"); break;
-	default: break;
+	case MU_CONFIG_FORMAT_MUTT_AB:
+		g_print("Matching addresses in the mu database:\n");
+		break;
+	default:
+		break;
 	}
 }
 
@@ -216,18 +219,23 @@ each_contact_bbdb(const std::string& email, const std::string& name, time_t tsta
 }
 
 static void
-each_contact_mutt_alias(const std::string& email, const std::string& name, GHashTable* nicks)
+each_contact_mutt_alias(const std::string& email,
+                        const std::string& name,
+                        GHashTable*        nicks)
 {
 	if (name.empty())
 		return;
 
 	char* nick = guess_nick(name.c_str(), nicks);
 	mu_util_print_encoded("alias %s %s <%s>\n", nick, name.c_str(), email.c_str());
+
 	g_free(nick);
 }
 
 static void
-each_contact_wl(const std::string& email, const std::string& name, GHashTable* nicks)
+each_contact_wl(const std::string& email,
+                const std::string& name,
+                GHashTable*        nicks)
 {
 	if (name.empty())
 		return;
@@ -276,7 +284,8 @@ each_contact(const Mu::ContactInfo& ci, ECData& ecdata)
 	if (ci.tstamp < ecdata.after)
 		return;
 
-	if (ecdata.rx && !g_regex_match(ecdata.rx, ci.email.c_str(), (GRegexMatchFlags)0, NULL) &&
+	if (ecdata.rx &&
+	    !g_regex_match(ecdata.rx, ci.email.c_str(), (GRegexMatchFlags)0, NULL) &&
 	    !g_regex_match(ecdata.rx,
 	                   ci.name.empty() ? "" : ci.name.c_str(),
 	                   (GRegexMatchFlags)0,
@@ -335,10 +344,12 @@ run_cmd_cfind(const Mu::Store&     store,
 	memset(&ecdata, 0, sizeof(ecdata));
 
 	if (pattern) {
-		ecdata.rx = g_regex_new(pattern,
-		                        (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
-		                        (GRegexMatchFlags)0,
-		                        err);
+		ecdata.rx = g_regex_new(
+		    pattern,
+		    (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
+		    (GRegexMatchFlags)0,
+		    err);
+
 		if (!ecdata.rx)
 			return MU_ERROR_CONTACTS;
 	}
@@ -401,7 +412,8 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err)
 	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_CFIND, MU_ERROR_INTERNAL);
 
 	if (!cfind_params_valid(opts))
-		throw Mu::Error(Mu::Error::Code::InvalidArgument, "invalid parameters");
+		throw Mu::Error(Mu::Error::Code::InvalidArgument,
+		                "invalid parameters");
 
 	auto res = run_cmd_cfind(store,
 	                         opts->params[1],
@@ -410,7 +422,11 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err)
 	                         opts->format,
 	                         !opts->nocolor,
 	                         err);
-	if (res != MU_OK)
-		throw Mu::Error(Mu::Error::Code::Internal, err /*consumes*/, "error in cfind");
-	return MU_OK;
+
+	if (res != MU_OK && res != MU_ERROR_NO_MATCHES)
+		throw Mu::Error(Mu::Error::Code::Internal,
+		                err /*consumes*/,
+		                "error in cfind");
+
+	return res;
 }
