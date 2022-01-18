@@ -822,14 +822,6 @@ true, do *not* update the query history stack."
      mu4e-headers-skip-duplicates
      mu4e-headers-include-related)))
 
-(defvar mu4e~headers-view-target nil
-  "Whether to automatically view (open) the target message (as
-  per `mu4e~headers-msgid-target').")
-
-(defvar mu4e~headers-msgid-target nil
-  "Message-id to jump to after the search has finished.")
-
-
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
@@ -857,17 +849,17 @@ after the end of the search results."
 
           ;; if we need to jump to some specific message, do so now
           (goto-char (point-min))
-          (when mu4e~headers-msgid-target
+          (when mu4e--search-msgid-target
             (if (eq (current-buffer) (window-buffer))
-                (mu4e-headers-goto-message-id mu4e~headers-msgid-target)
-              (let* ((pos (mu4e-headers-goto-message-id mu4e~headers-msgid-target)))
+                (mu4e-headers-goto-message-id mu4e--search-msgid-target)
+              (let* ((pos (mu4e-headers-goto-message-id mu4e--search-msgid-target)))
                 (when pos
                   (set-window-point (get-buffer-window nil t) pos)))))
-          (when (and mu4e~headers-view-target (mu4e-message-at-point 'noerror))
+          (when (and mu4e--search-view-target (mu4e-message-at-point 'noerror))
             ;; view the message at point when there is one.
             (mu4e-headers-view-message))
-          (setq mu4e~headers-view-target nil
-                mu4e~headers-msgid-target nil)
+          (setq mu4e--search-view-target nil
+                mu4e--search-msgid-target nil)
           (when (mu4e~headers-docid-at-point)
             (mu4e~headers-highlight (mu4e~headers-docid-at-point)))))
     ;; run-hooks

@@ -1,6 +1,6 @@
 ;;; mu4e-search.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2021,2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -31,6 +31,7 @@
 (require 'mu4e-helpers)
 (require 'mu4e-message)
 (require 'mu4e-bookmarks)
+(require 'mu4e-contacts)
 (require 'mu4e-mark)
 
 
@@ -131,6 +132,12 @@ but also manually invoked searches."
 ;;; Interactive functions
 (declare-function mu4e--search-execute "mu4e-headers")
 
+(defvar mu4e--search-view-target nil
+  "Whether to automatically view (open) the target message.")
+(defvar mu4e--search-msgid-target nil
+  "Message-id to jump to after the search has finished.")
+
+
 (defun mu4e-search (&optional expr prompt edit ignore-history msgid show)
   "Search for query EXPR.
 
@@ -152,9 +159,8 @@ show the message with MSGID."
 	    expr)))
     (mu4e-mark-handle-when-leaving)
     (mu4e--search-execute expr ignore-history)
-    ;;(setq mu4e~headers-msgid-target msgid
-    ;;	  mu4e~headers-view-target show)
-    ))
+    (setq mu4e--search-msgid-target msgid
+    	  mu4e--search-view-target show)))
 
 (define-obsolete-function-alias 'mu4e-headers-search 'mu4e-search "1.7.0")
 
