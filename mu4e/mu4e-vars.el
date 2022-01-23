@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -34,7 +34,8 @@
   :group 'mail)
 
 (defcustom mu4e-headers-include-related t
-  "With this option set to non-nil, not just return the matches for
+  "Wether to include 'related' messages in queries.
+With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
 references) to these messages. This can be useful e.g. to include
 sent messages into message threads."
@@ -42,7 +43,8 @@ sent messages into message threads."
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-skip-duplicates t
-  "With this option set to non-nil, show only one of duplicate
+  "Whether to skip duplicate messages.
+With this option set to non-nil, show only one of duplicate
 messages. This is useful when you have multiple copies of the same
 message, which is a common occurrence for example when using Gmail
 and offlineimap."
@@ -75,7 +77,7 @@ Follows the format of `format-time-string'."
 
 (defface mu4e-draft-face
   '((t :inherit font-lock-string-face))
-  "Face for a draft message header
+  "Face for a draft message header.
 I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
@@ -155,11 +157,6 @@ I.e. a message with the draft flag set."
   "Face for the query in the mode-line."
   :group 'mu4e-faces)
 
-(defface mu4e-view-body-face
-  '((t :inherit default))
-  "Face for the body in the message-view."
-  :group 'mu4e-faces)
-
 (defface mu4e-footer-face
   '((t :inherit font-lock-comment-face))
   "Face for message footers (signatures)."
@@ -168,47 +165,6 @@ I.e. a message with the draft flag set."
 (defface mu4e-url-number-face
   '((t :inherit font-lock-constant-face :weight bold))
   "Face for the number tags for URLs."
-  :group 'mu4e-faces)
-
-(defface mu4e-attach-number-face
-  '((t :inherit font-lock-variable-name-face :weight bold))
-  "Face for the number tags for attachments."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-1-face
-  '((t :inherit font-lock-builtin-face :weight normal :slant italic))
-  "Face for cited message parts (level 1)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-2-face
-  '((t :inherit font-lock-preprocessor-face :weight normal :slant italic))
-  "Face for cited message parts (level 2)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-3-face
-  '((t :inherit font-lock-variable-name-face :weight normal :slant italic))
-  "Face for cited message parts (level 3)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-4-face
-  '((t :inherit font-lock-keyword-face :weight normal :slant italic))
-  "Face for cited message parts (level 4)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-5-face
-  '((t :inherit font-lock-comment-face :weight normal :slant italic))
-  "Face for cited message parts (level 5)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-6-face
-  '((t :inherit font-lock-comment-delimiter-face :weight normal :slant italic))
-  "Face for cited message parts (level 6)."
-  :group 'mu4e-faces)
-
-(defface mu4e-cited-7-face
-  '((t :inherit font-lock-type-face :weight normal :slant italic
-       ))
-  "Face for cited message parts (level 7)."
   :group 'mu4e-faces)
 
 (defface mu4e-system-face
@@ -228,14 +184,7 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-compose-separator-face
   '((t :inherit message-separator :slant italic))
-  "Face for the separator between headers / message in
-mu4e-compose-mode."
-  :group 'mu4e-faces)
-
-(defface mu4e-compose-header-face
-  '((t :inherit message-separator :slant italic))
-  "Face for the separator between headers / message in
-mu4e-compose-mode."
+  "Face for the headers/message separator in mu4e-compose-mode."
   :group 'mu4e-faces)
 
 (defface mu4e-region-code
@@ -380,31 +329,34 @@ Note, `:sortable' is not supported for custom header fields.")
   '(
     ;; some examples & debug helpers.
 
-    (:thread-path . ;; Shows the internal thread-path
-                  ( :name "Thread-path"
-                    :shortname "Thp"
-                    :help "The thread-path"
-                    :function (lambda (msg)
-                                (let ((thread (mu4e-message-field msg :thread)))
-                                  (or (and thread (plist-get thread :path)) "")))))
+    (:thread-path
+     . ;; Shows the internal thread-path
+     ( :name "Thread-path"
+       :shortname "Thp"
+       :help "The thread-path"
+       :function (lambda (msg)
+                   (let ((thread (mu4e-message-field msg :thread)))
+                     (or (and thread (plist-get thread :path)) "")))))
 
-    (:thread-date . ;; Shows the internal thread-date
-                  ( :name "Thread-date"
-                    :shortname "Thd"
-                    :help "The thread-date"
-                    :function (lambda (msg)
-                                (let* ((thread (mu4e-message-field msg :thread))
-                                       (tdate (and thread (plist-get thread :date-tstamp))))
-                                  (format-time-string "%F %T " (or tdate 0))))))
-    (:recipnum .
-               ( :name "Number of recipients"
-                 :shortname "Recip#"
-                 :help "Number of recipients for this message"
-                 :function
-                 (lambda (msg)
-                   (format "%d"
-                           (+ (length (mu4e-message-field msg :to))
-                              (length (mu4e-message-field msg :cc))))))))
+    (:thread-date
+     . ;; Shows the internal thread-date
+     ( :name "Thread-date"
+       :shortname "Thd"
+       :help "The thread-date"
+       :function (lambda (msg)
+                   (let* ((thread (mu4e-message-field msg :thread))
+                          (tdate (and thread (plist-get thread :date-tstamp))))
+                     (format-time-string "%F %T " (or tdate 0))))))
+    (:recipnum
+     .
+     ( :name "Number of recipients"
+       :shortname "Recip#"
+       :help "Number of recipients for this message"
+       :function
+       (lambda (msg)
+         (format "%d"
+                 (+ (length (mu4e-message-field msg :to))
+                    (length (mu4e-message-field msg :cc))))))))
 
   "A list of custom (user-defined) headers.
 The format is similar to `mu4e-header-info', but adds a :function

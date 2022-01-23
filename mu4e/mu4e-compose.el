@@ -1,6 +1,6 @@
 ;;; mu4e-compose.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -129,14 +129,13 @@ If needed, set the Fcc header, and register the handler function."
                 (funcall mu4e-sent-messages-behavior)
               mu4e-sent-messages-behavior)))
          (mdir
-          (cl-case sent-behavior
-            (delete nil)
-            (trash (mu4e-get-trash-folder mu4e-compose-parent-message))
-            (sent (mu4e-get-sent-folder mu4e-compose-parent-message))
-            (otherwise
-             (mu4e-error "Unsupported value '%S'
-      `mu4e-sent-messages-behavior'"
-                         mu4e-sent-messages-behavior))))
+          (pcase sent-behavior
+            ('delete nil)
+            ('trash (mu4e-get-trash-folder mu4e-compose-parent-message))
+            ('sent (mu4e-get-sent-folder mu4e-compose-parent-message))
+            (_ (mu4e-error
+		"Unsupported value %S for `mu4e-sent-messages-behavior'"
+                mu4e-sent-messages-behavior))))
          (fccfile (and mdir
                        (concat (mu4e-root-maildir) mdir "/cur/"
                                (mu4e~draft-message-filename-construct "S")))))
@@ -453,10 +452,10 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (let* ((subj (message-field-value "subject"))
          (subj (unless (and subj (string-match "^[:blank:]*$" subj)) subj))
          (str (or subj
-                  (cl-case compose-type
-                    (reply       "*reply*")
-                    (forward     "*forward*")
-                    (otherwise   "*draft*")))))
+                  (pcase compose-type
+                    ('reply       "*reply*")
+                    ('forward     "*forward*")
+                    (_             "*draft*")))))
     (rename-buffer (generate-new-buffer-name
                     (truncate-string-to-width
 		     str mu4e~compose-buffer-max-name-length)
@@ -586,12 +585,9 @@ are optional."
   (if (member compose-type '(new forward))
       (message-goto-to)
     ;; otherwise, it depends...
-    (cl-case message-cite-reply-position
-      ((above traditional)
-       (message-goto-body))
-      (t
-       (when (message-goto-signature)
-         (forward-line -2)))))
+    (pcase message-cite-reply-position
+      ((or 'above 'traditional) (message-goto-body))
+      (_ (when (message-goto-signature) (forward-line -2)))))
 
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
@@ -729,7 +725,7 @@ buffer."
                   (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
                     (push (match-string 0) refs))
                   ;; the last will be the first
-                  (setq forwarded-from (cl-first refs))))))
+                  (setq forwarded-from (car refs))))))
           ;; remove the <>
           (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
             (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))

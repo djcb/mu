@@ -73,7 +73,7 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
-  (mu4e--start (unless background 'mu4e~main-view)))
+  (mu4e--start (unless background 'mu4e--main-view)))
 
 (defun mu4e-quit()
   "Quit the mu4e session."
@@ -183,13 +183,13 @@ invoke
 (defun mu4e--error-handler (errcode errmsg)
   "Handler function for showing an error with ERRCODE and ERRMSG."
   ;; don't use mu4e-error here; it's running in the process filter context
-  (cl-case errcode
-    (4 (mu4e-warn "No matches for this search query."))
-    (110 (display-warning 'mu4e errmsg :error)) ;; schema version.
-    (t (mu4e-error "Error %d: %s" errcode errmsg))))
+  (pcase errcode
+    ('4 (mu4e-warn "No matches for this search query."))
+    ('110 (display-warning 'mu4e errmsg :error)) ;; schema version.
+    (_ (mu4e-error "Error %d: %s" errcode errmsg))))
 
 (defun mu4e--update-status (info)
-  "Update the status message."
+  "Update the status message with INFO."
   (setq mu4e-index-update-status
 	`(:tstamp ,(current-time)
 	  :checked ,(plist-get info :checked)
@@ -225,7 +225,7 @@ invoke
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
             (save-window-excursion
               (select-window (get-buffer-window mainbuf))
-              (mu4e~main-view 'refresh))))))
+              (mu4e--main-view 'refresh))))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 

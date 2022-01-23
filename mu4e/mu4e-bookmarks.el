@@ -1,6 +1,6 @@
-;;; mu4e-bookmarks.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-bookmarks.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -23,7 +23,6 @@
 ;;; Commentary:
 
 ;;; Code:
-(require 'cl-lib)
 (require 'mu4e-helpers)
 
 
@@ -32,18 +31,6 @@
 (defgroup mu4e-bookmarks nil
   "Settings for bookmarks."
   :group 'mu4e)
-
-;; for backward compatibility, when a bookmark was defined with defstruct.
-(cl-defun make-mu4e-bookmark (&key name query key)
-  "Create a mu4e plist.
-It has has  with the following elements:
-- NAME: the user-visible name of the bookmark
-- KEY: a single key to search for this bookmark
-- QUERY: the query for this bookmark. Either a literal string or a function
-   that evaluates to a string."
-  `(:name ,name :query ,query :key ,key))
-(make-obsolete 'make-mu4e-bookmark "`unneeded; `mu4e-bookmarks'
-are plists" "1.3.7")
 
 (defcustom mu4e-bookmarks
   '(( :name  "Unread messages"
@@ -68,21 +55,20 @@ Each of the list elements is a plist with at least:
 
 Note that the :query parameter can be a function/lambda.
 
-Optionally, you can add the following:
-`:hide'  - if t, the bookmark is hidden from the main-view and
- speedbar.
-`:hide-unread' - do not show the counts of unread/total number
- of matches for the query in the main-view. This can be useful
-if a bookmark uses  a very slow query. :hide-unread
-is implied from :hide. Furthermore, it is implied if
-`:query' is a function.
+Optionally, you can add the following: `:hide' - if t, the
+bookmark is hidden from the main-view and speedbar.
+`:hide-unread' - do not show the counts of unread/total number of
+matches for the query in the main-view. This can be useful if a
+bookmark uses a very slow query.
 
-Queries used to determine the unread/all counts do _not_ apply
-`mu4e-query-rewrite-function'; nor do they discard duplicate or
-unreadable messages (for efficiency). Thus, the numbers shown may
-differ from the number you get from a 'real' query."
+`:hide-unread' is implied from `:hide'. Furthermore, it is
+implied when `:query' is a function.
+
+Note: for efficiency, queries used to determine the unread/all
+counts do not apply `mu4e-query-rewrite-function', nor do they
+discard duplicate or unreadable messages. Thus, the numbers shown
+may differ from the number you get from a 'real' query."
   :type '(repeat (plist))
-  :version "1.3.9"
   :group 'mu4e-bookmarks)
 
 
@@ -106,7 +92,7 @@ differ from the number you get from a 'real' query."
   "Get the corresponding bookmarked query for shortcut KAR.
 Raise an error if none is found."
   (let* ((chosen-bm
-          (or (cl-find-if
+          (or (seq-find
                (lambda (bm)
                  (= kar (plist-get bm :key)))
                (mu4e-bookmarks))
@@ -125,7 +111,7 @@ Raise an error if none is found."
 Append it to `mu4e-bookmarks'. Replaces any existing bookmark
 with KEY."
   (setq mu4e-bookmarks
-        (cl-remove-if
+        (seq-remove
          (lambda (bm)
            (= (plist-get bm :key) key))
          (mu4e-bookmarks)))
@@ -137,14 +123,11 @@ with KEY."
 (defun mu4e-bookmarks ()
   "Get `mu4e-bookmarks' in the (new) format.
 Convert from the old format if needed."
-  (cl-map 'list
-          (lambda (item)
-            (if (and (listp item) (= (length item) 3))
-                `(:name  ,(nth 1 item)
-                         :query ,(nth 0 item)
-                         :key   ,(nth 2 item))
-              item))
-          mu4e-bookmarks))
+  (seq-map (lambda (item)
+             (if (and (listp item) (= (length item) 3))
+                 `(:name  ,(nth 1 item) :query ,(nth 0 item)
+                          :key   ,(nth 2 item))
+               item)) mu4e-bookmarks))
 
 (provide 'mu4e-bookmarks)
 ;;; mu4e-bookmarks.el ends here

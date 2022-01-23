@@ -1,6 +1,6 @@
 ;;; mu4e-main.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -36,7 +36,6 @@
 
 (require 'cl-lib)
 
-
 
 ;; Configuration
 
@@ -45,21 +44,19 @@
   'mu4e-main-hide-personal-addresses "1.5.7")
 
 (defvar mu4e-main-hide-personal-addresses nil
-  "Whether to hide the personal address in the main view. This
-  can be useful to avoid the noise when there are many.
+  "Whether to hide the personal address in the main view.
 
-  This also hides the warning if your `user-mail-address' is not
-part of the personal addresses.")
+This can be useful to avoid the noise when there are many, and
+also hides the warning if your `user-mail-address' is not part of
+the personal addresses.")
 
 (defvar mu4e-main-hide-fully-read nil
-  "When set to t, do not hide bookmarks or maildirs that have
-no unread messages.")
+  "Whether to hide bookmarks or maildirs without unread messages.")
 
 
 ;;; Mode
 (define-derived-mode mu4e-org-mode org-mode "mu4e:org"
-  "Major mode for mu4e documents, derived from
-  `org-mode'.")
+  "Major mode for mu4e documents.")
 
 (defun mu4e-info (path)
   "Show a buffer with the information (an org-file) at PATH."
@@ -90,10 +87,10 @@ no unread messages.")
   (let ((map (make-sparse-keymap)))
 
     (define-key map "q" 'mu4e-quit)
-    (define-key map "j" 'mu4e~headers-jump-to-maildir)
+    (define-key map "j" 'mu4e--headers-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
 
-    (define-key map "m" 'mu4e~main-toggle-mail-sending-mode)
+    (define-key map "m" 'mu4e--main-toggle-mail-sending-mode)
     (define-key map "f" 'smtpmail-send-queued-mail)
     ;;
     (define-key map "U" 'mu4e-update-mail-and-index)
@@ -121,10 +118,10 @@ no unread messages.")
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (mu4e-update-minor-mode)
-  (set (make-local-variable 'revert-buffer-function) #'mu4e~main-view-real))
+  (set (make-local-variable 'revert-buffer-function) #'mu4e--main-view-real))
 
 
-(defun mu4e~main-action-str (str &optional func-or-shortcut)
+(defun mu4e--main-action-str (str &optional func-or-shortcut)
   "Highlight the first occurrence of [.] in STR.
 If FUNC-OR-SHORTCUT is non-nil and if it is a function, call it
 when STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is
@@ -165,7 +162,8 @@ clicked."
                             (mu4e--maildirs-with-query))
            maximize (string-width (plist-get b :name))))
 
-(defun mu4e~main-bookmarks ()
+(defun mu4e--main-bookmarks ()
+  "Return the entries for the bookmarks menu."
   ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
   (cl-loop with bmks = (mu4e-bookmarks)
            with longest = (mu4e--longest-of-maildirs-and-bookmarks)
@@ -187,7 +185,7 @@ clicked."
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
-                   (mu4e~main-action-str
+                   (mu4e--main-action-str
                     (concat "\t* [b" key "] " name)
                     (concat "b" key))
                    ;; append all/unread numbers, if available.
@@ -204,7 +202,7 @@ clicked."
                    "\n")))
 
 
-(defun mu4e~main-maildirs ()
+(defun mu4e--main-maildirs ()
   "Return a string of maildirs with their counts."
   (cl-loop with mds = (mu4e--maildirs-with-query)
            with longest = (mu4e--longest-of-maildirs-and-bookmarks)
@@ -226,7 +224,7 @@ clicked."
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
-                   (mu4e~main-action-str
+                   (mu4e--main-action-str
                     (concat "\t* [j" key "] " name)
                     (concat "j" key))
                    ;; append all/unread numbers, if available.
@@ -243,8 +241,8 @@ clicked."
                    "\n")))
 
 
-(defun mu4e~key-val (key val &optional unit)
-  "Return a key / value pair."
+(defun mu4e--key-val (key val &optional unit)
+  "Show a KEY / VAL pair, with optional UNIT."
   (concat
    "\t* "
    (propertize (format "%-20s" key) 'face 'mu4e-header-title-face)
@@ -255,24 +253,24 @@ clicked."
      "")
    "\n"))
 
-;; NEW This is the old `mu4e~main-view' function but without
+;; NEW This is the old `mu4e--main-view' function but without
 ;; buffer switching at the end.
-(defun mu4e~main-view-real (_ignore-auto _noconfirm)
+(defun mu4e--main-view-real (_ignore-auto _noconfirm)
   "The revert buffer function for `mu4e-main-mode'."
-  (mu4e~main-view-real-1 'refresh))
+  (mu4e--main-view-real-1 'refresh))
 
 (declare-function mu4e--start "mu4e")
 
-(defun mu4e~main-view-real-1 (&optional refresh)
+(defun mu4e--main-view-real-1 (&optional refresh)
   "Create `mu4e-main-buffer-name' and set it up.
 When REFRESH is non nil refresh infos from server."
   (let ((inhibit-read-only t))
     ;; Maybe refresh infos from server.
     (if refresh
-        (mu4e--start 'mu4e~main-redraw-buffer)
-      (mu4e~main-redraw-buffer))))
+        (mu4e--start 'mu4e--main-redraw-buffer)
+      (mu4e--main-redraw-buffer))))
 
-(defun mu4e~main-redraw-buffer ()
+(defun mu4e--main-redraw-buffer ()
   (with-current-buffer mu4e-main-buffer-name
     (let ((inhibit-read-only t)
           (pos (point))
@@ -285,45 +283,48 @@ When REFRESH is non nil refresh infos from server."
        (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
         "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
-       (mu4e~main-action-str
+       (mu4e--main-action-str
         "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
-       (mu4e~main-action-str
+       (mu4e--main-action-str
         "\t* enter a [s]earch query\n" 'mu4e-search)
-       (mu4e~main-action-str
+       (mu4e--main-action-str
         "\t* [C]ompose a new message\n" 'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-       (mu4e~main-bookmarks)
+       (mu4e--main-bookmarks)
        "\n"
        (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-       (mu4e~main-maildirs)
+       (mu4e--main-maildirs)
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-       (mu4e~main-action-str "\t* [;]Switch context\n"
-                             (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
+       (mu4e--main-action-str "\t* [;]Switch context\n"
+                             (lambda()(interactive)
+			       (mu4e-context-switch)(revert-buffer)))
 
-       (mu4e~main-action-str "\t* [U]pdate email & database\n"
+       (mu4e--main-action-str "\t* [U]pdate email & database\n"
                              'mu4e-update-mail-and-index)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)
-           (mu4e~main-view-queue)
+           (mu4e--main-view-queue)
          "")
        "\n"
-       (mu4e~main-action-str "\t* [N]ews\n" 'mu4e-news)
-       (mu4e~main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
-       (mu4e~main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
-       (mu4e~main-action-str "\t* [q]uit\n" 'mu4e-quit)
+       (mu4e--main-action-str "\t* [N]ews\n" 'mu4e-news)
+       (mu4e--main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
+       (mu4e--main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
+       (mu4e--main-action-str "\t* [q]uit\n" 'mu4e-quit)
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
-       (mu4e~key-val "database-path" (mu4e-database-path))
-       (mu4e~key-val "maildir" (mu4e-root-maildir))
-       (mu4e~key-val "in store"
-                     (format "%d" (plist-get mu4e--server-props :doccount)) "messages")
+       (mu4e--key-val "database-path" (mu4e-database-path))
+       (mu4e--key-val "maildir" (mu4e-root-maildir))
+       (mu4e--key-val "in store"
+                     (format "%d" (plist-get mu4e--server-props :doccount))
+		     "messages")
        (if mu4e-main-hide-personal-addresses ""
-         (mu4e~key-val "personal addresses" (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
+         (mu4e--key-val "personal addresses"
+		       (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (if mu4e-main-hide-personal-addresses ""
         (unless (mu4e-personal-address-p user-mail-address)
@@ -334,26 +335,26 @@ When REFRESH is non nil refresh infos from server."
       (mu4e-main-mode)
       (goto-char pos))))
 
-(defun mu4e~main-view-queue ()
+(defun mu4e--main-view-queue ()
   "Display queue-related actions in the main view."
   (concat
-   (mu4e~main-action-str "\t* toggle [m]ail sending mode "
-                         'mu4e~main-toggle-mail-sending-mode)
+   (mu4e--main-action-str "\t* toggle [m]ail sending mode "
+                         'mu4e--main-toggle-mail-sending-mode)
    "(currently "
    (propertize (if smtpmail-queue-mail "queued" "direct")
                'face 'mu4e-header-key-face)
    ")\n"
-   (let ((queue-size (mu4e~main-queue-size)))
+   (let ((queue-size (mu4e--main-queue-size)))
      (if (zerop queue-size)
          ""
-       (mu4e~main-action-str
+       (mu4e--main-action-str
         (format "\t* [f]lush %s queued %s\n"
                 (propertize (int-to-string queue-size)
                             'face 'mu4e-header-key-face)
                 (if (> queue-size 1) "mails" "mail"))
         'smtpmail-send-queued-mail)))))
 
-(defun mu4e~main-queue-size ()
+(defun mu4e--main-queue-size ()
   "Return, as an int, the number of emails in the queue."
   (condition-case nil
       (with-temp-buffer
@@ -362,7 +363,7 @@ When REFRESH is non nil refresh infos from server."
         (count-lines (point-min) (point-max)))
     (error 0)))
 
-(defun mu4e~main-view (&optional refresh)
+(defun mu4e--main-view (&optional refresh)
   "Create the mu4e main-view, and switch to it.
 
 When REFRESH is non nil refresh infos from server."
@@ -370,20 +371,20 @@ When REFRESH is non nil refresh infos from server."
     (if (eq mu4e-split-view 'single-window)
         (if (buffer-live-p (mu4e-get-headers-buffer))
             (switch-to-buffer (mu4e-get-headers-buffer))
-          (mu4e~main-menu))
-      ;; `mu4e~main-view' is called from `mu4e~start', so don't call it
+          (mu4e--main-menu))
+      ;; `mu4e--main-view' is called from `mu4e--start', so don't call it
       ;; a second time here i.e. do not refresh unless specified
       ;; explicitly with REFRESH arg.
       (switch-to-buffer buf)
       (with-current-buffer buf
-        (mu4e~main-view-real-1 refresh))
+        (mu4e--main-view-real-1 refresh))
       (goto-char (point-min)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
 ;; NEW
 ;; Toggle mail sending mode without switching
-(defun mu4e~main-toggle-mail-sending-mode ()
+(defun mu4e--main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
   (unless (file-directory-p smtpmail-queue-dir)
@@ -396,23 +397,23 @@ When REFRESH is non nil refresh infos from server."
     (with-current-buffer mu4e-main-buffer-name
       (revert-buffer))))
 
-(defun mu4e~main-menu ()
-  "mu4e main view in the minibuffer."
+(defun mu4e--main-menu ()
+  "The mu4e main menu."
   (interactive)
   (let ((key
          (read-key
           (mu4e-format
            "%s"
            (concat
-            (mu4e~main-action-str "[j]ump " 'mu4e-jump-to-maildir)
-            (mu4e~main-action-str "[s]earch " 'mu4e-search)
-            (mu4e~main-action-str "[C]ompose " 'mu4e-compose-new)
-            (mu4e~main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
-            (mu4e~main-action-str "[;]Switch context " 'mu4e-context-switch)
-            (mu4e~main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
-            (mu4e~main-action-str "[N]ews " 'mu4e-news)
-            (mu4e~main-action-str "[A]bout " 'mu4e-about)
-            (mu4e~main-action-str "[H]elp " 'mu4e-display-manual))))))
+            (mu4e--main-action-str "[j]ump " 'mu4e-jump-to-maildir)
+            (mu4e--main-action-str "[s]earch " 'mu4e-search)
+            (mu4e--main-action-str "[C]ompose " 'mu4e-compose-new)
+            (mu4e--main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
+            (mu4e--main-action-str "[;]Switch context " 'mu4e-context-switch)
+            (mu4e--main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
+            (mu4e--main-action-str "[N]ews " 'mu4e-news)
+            (mu4e--main-action-str "[A]bout " 'mu4e-about)
+            (mu4e--main-action-str "[H]elp " 'mu4e-display-manual))))))
     (unless (member key '(?\C-g ?\C-\[))
       (let ((mu4e-command (lookup-key mu4e-main-mode-map (string key) t)))
         (if mu4e-command
@@ -423,7 +424,7 @@ When REFRESH is non nil refresh infos from server."
           (message (mu4e-format "key %s not bound to a command" (string key))))
         (when (or (not mu4e-command) (eq mu4e-command 'mu4e-context-switch))
           (sit-for 1)
-          (mu4e~main-menu))))))
+          (mu4e--main-menu))))))
 
 ;;; _
 (provide 'mu4e-main)

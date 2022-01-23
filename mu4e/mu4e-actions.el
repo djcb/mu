@@ -1,6 +1,6 @@
 ;;; mu4e-actions.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'ido)
 
 (require 'mu4e-helpers)

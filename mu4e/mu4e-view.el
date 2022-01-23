@@ -770,20 +770,21 @@ determine which browser function to use."
 	(narrow-to-region (point) (point))
 	(dolist (field mu4e-view-fields)
 	  (let ((fieldval (mu4e-message-field msg field)))
-	    (cl-case field
-	      ((:path :maildir :user-agent :mailing-list :message-id)
+	    (pcase field
+	      ((or ':path ':maildir ':user-agent ':mailing-list ':message-id)
 	       (mu4e~view-gnus-insert-header field fieldval))
-	      ((:flags :tags)
+	      ((or ':flags ':tags)
 	       (let ((flags (mapconcat (lambda (flag)
 					 (if (symbolp flag)
 					     (symbol-name flag)
 					   flag)) fieldval ", ")))
 		 (mu4e~view-gnus-insert-header field flags)))
-	      (:size (mu4e~view-gnus-insert-header
+	      (':size (mu4e~view-gnus-insert-header
 		      field (mu4e-display-size fieldval)))
-	      ((:subject :to :from :cc :bcc :from-or-to :date :attachments
-			 :signature :decryption)) ; handled by Gnus
-	      (t
+	      ((or ':subject ':to ':from ':cc ':bcc ':from-or-to
+		   ':date :attachments ':signature
+		   ':decryption)) ; handled by Gnus
+	      (_
 	       (mu4e~view-gnus-insert-header-custom msg field)))))
 	(let ((gnus-treatment-function-alist
 	       '((gnus-treat-highlight-headers
@@ -1231,7 +1232,7 @@ the third MIME-part."
 	  (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
 		  mu4e-view-mime-part-actions))
 	 (handle
-	  (or (cdr-safe (cl-find-if (lambda (part) (eq (car part) n)) parts))
+	  (or (cdr-safe (seq-find (lambda (part) (eq (car part) n)) parts))
 	      (mu4e-error "MIME-part %s not found" n)))
 	 (action
 	  (or (and options (mu4e-read-option "Action on MIME-part: " options))

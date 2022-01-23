@@ -1,6 +1,6 @@
 ;;; mu4e-folders.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -25,7 +25,6 @@
 ;; Dealing with maildirs & folders
 
 ;;; Code:
-(require 'cl-lib)
 (require 'mu4e-helpers)
 (require 'mu4e-context)
 (require 'mu4e-server)
@@ -148,31 +147,22 @@ mime-type are nill."
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
 Converts from the old format if needed."
-  (cl-map 'list
-          (lambda (item) ;; convert from old format?
-            (if (and (consp item) (not (consp (cdr item))))
-                `(:maildir  ,(car item) :key ,(cdr item))
-              item))
-          mu4e-maildir-shortcuts))
+  (seq-map (lambda (item) ;; convert from old format?
+             (if (and (consp item) (not (consp (cdr item))))
+                 `(:maildir  ,(car item) :key ,(cdr item))
+               item))
+           mu4e-maildir-shortcuts))
 
 (defun mu4e--maildirs-with-query ()
-  "Llike `mu4e-maildir-shortcuts', but with :query populated.
-
-This is meant to be the exact same data structure as
-`mu4e-bookmarks'."
-  (cl-mapcar
-   (lambda (m)
-     (append
-      ;; we want to change the :maildir key to :name, and add a :query key
-      (list :name (plist-get m :maildir)
-            :query (format "maildir:\"%s\"" (plist-get m :maildir)))
-      ;; next we want to append any other keys to our previous list (e.g. :hide,
-      ;; :key, etc) but skipping :maildir (since it's renamed to :name)
-      (cl-loop for (key value) on m by 'cddr
-               when (not (equal key :maildir))
-               append (list key value))))
+  "Like `mu4e-maildir-shortcuts', but with :query populated.
+This is compatibile with `mu4e-bookmarks'."
+  (seq-map
+   (lambda (item)
+     (let* ((maildir (plist-get item :maildir))
+	    (item (plist-put item :name maildir))
+	    (item (plist-put item :query (format "maildir:\"%s\"" maildir))))
+       item)) ;; we don't need ":maildir", but it's harmless.
    (mu4e-maildir-shortcuts)))
-
 
 ;; the standard folders can be functions too
 (defun mu4e--get-folder (foldervar msg)
@@ -313,8 +303,8 @@ all maildirs under `mu4e-maildir'."
              (funcall mu4e-completing-read-function prompt
                       (mu4e-get-maildirs) nil nil "/"))
           (or (plist-get
-               (cl-find-if (lambda (item) (= kar (plist-get item :key)))
-                           (mu4e-maildir-shortcuts)) :maildir)
+               (seq-find (lambda (item) (= kar (plist-get item :key)))
+                         (mu4e-maildir-shortcuts)) :maildir)
               (mu4e-warn "Unknown shortcut '%c'" kar)))))))
 
 (defun mu4e-ask-maildir-check-exists (prompt)
@@ -333,21 +323,19 @@ Offer to create it if it does not exist yet."
 ;; be nil
 
 (defun mu4e~get-attachment-dir (&optional fname mimetype)
-  "Get the directory for saving attachments from
-`mu4e-attachment-dir' (which can be either a string or a function,
-see its docstring)."
-  (let
-      ((dir
-        (cond
-         ((stringp mu4e-attachment-dir)
-          mu4e-attachment-dir)
-         ((functionp mu4e-attachment-dir)
-          (funcall mu4e-attachment-dir fname mimetype))
-         (t
-          (mu4e-error "unsupported type for mu4e-attachment-dir" )))))
+  "Get the directory for saving attachments from `mu4e-attachment-dir'.
+This is optionally based on the file-name FNAME and its MIMETYPE."
+  (let ((dir
+         (cond
+          ((stringp mu4e-attachment-dir)
+           mu4e-attachment-dir)
+          ((functionp mu4e-attachment-dir)
+           (funcall mu4e-attachment-dir fname mimetype))
+          (t
+          (mu4e-error "Unsupported type for mu4e-attachment-dir" )))))
     (if dir
         (expand-file-name dir)
-      (mu4e-error "mu4e-attachment-dir evaluates to nil"))))
+      (mu4e-error "Mu4e-attachment-dir evaluates to nil"))))
 
 (provide 'mu4e-folders)
 ;;; mu4e-folders.el ends here

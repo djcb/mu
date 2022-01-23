@@ -50,7 +50,7 @@
 (require 'mu4e-folders)
 
 (declare-function mu4e-view       "mu4e-view")
-(declare-function mu4e~main-view  "mu4e-main")
+(declare-function mu4e--main-view  "mu4e-main")
 
 
 
@@ -312,7 +312,7 @@ This is mostly useful for profiling.")
     (setq mu4e~headers-render-start (float-time))
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
-        (mu4e~mark-clear)
+        (mu4e--mark-clear)
         (erase-buffer)
         (when msg
           (goto-char (point-min))
@@ -667,7 +667,7 @@ displaying in the header view."
      (propertize
       (concat
        (mu4e~headers-docid-cookie docid)
-       mu4e~mark-fringe line "\n")
+       mu4e--mark-fringe line "\n")
       'docid docid 'msg msg))))
 
 (defun mu4e~headers-remove-header (docid &optional ignore-missing)
@@ -722,7 +722,7 @@ headers."
              (initial-column (current-column))
 	     (inhibit-read-only t)
              (point (mu4e~headers-docid-pos docid))
-             (markinfo (gethash docid mu4e~mark-map)))
+             (markinfo (gethash docid mu4e--mark-map)))
         (when point ;; is the message present in this list?
 
           ;; if it's marked, unmark it now
@@ -1061,7 +1061,7 @@ after the end of the search results."
         (downarrow (if mu4e-use-fancy-chars " ▼" " V")))
     (cons
      (make-string
-      (+ mu4e~mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
+      (+ mu4e--mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
      (mapcar
       (lambda (item)
         (let* ( ;; with threading enabled, we're necessarily sorting by date.
@@ -1179,7 +1179,7 @@ The following specs are supported:
    overwrite-mode nil
    header-line-format (mu4e~header-line-format))
 
-  (mu4e~mark-initialize) ;; initialize the marking subsystem
+  (mu4e--mark-initialize) ;; initialize the marking subsystem
   (mu4e-context-minor-mode)
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
@@ -1238,9 +1238,9 @@ message plist, or nil if not found."
 
       ;; clear old marks, and add the new ones.
       (let ((msg (get-text-property (point) 'msg)))
-        (delete-char mu4e~mark-fringe-len)
+        (delete-char mu4e--mark-fringe-len)
         (insert (propertize
-                 (format mu4e~mark-fringe-format mark)
+                 (format mu4e--mark-fringe-format mark)
                  'face 'mu4e-header-marks-face
                  'docid docid
                  'msg msg)))
@@ -1376,7 +1376,7 @@ parameter). MARKPAIR is a cell (MARK . TARGET); see
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (let ((markpair (mu4e~mark-get-markpair "Mark matched messages with: " t))
+  (let ((markpair (mu4e--mark-get-markpair "Mark matched messages with: " t))
         (field (mu4e-read-option "Field to match: "
                                  '( ("subject" . :subject)
                                     ("from"    . :from)
@@ -1404,7 +1404,7 @@ matching messages with that mark."
   (let* ((pred (mu4e-read-option "Match function: "
                                  mu4e-headers-custom-markers))
          (param (when (cdr pred) (eval (cdr pred))))
-         (markpair (mu4e~mark-get-markpair "Mark matched messages with: " t)))
+         (markpair (mu4e--mark-get-markpair "Mark matched messages with: " t)))
     (mu4e-headers-mark-for-each-if markpair (car pred) param)))
 
 (defun mu4e~headers-get-thread-info (msg what)
@@ -1464,7 +1464,7 @@ descendants."
      (list current-prefix-arg
            ;; FIXME: e.g., for refiling we should evaluate this
            ;; for each line separately
-           (mu4e~mark-get-markpair
+           (mu4e--mark-get-markpair
             (if subthread "Mark subthread with: " "Mark whole thread with: ")
             t))))
   (mu4e-headers-mark-thread-using-markpair markpair subthread))
@@ -1766,7 +1766,7 @@ other windows."
       ;; now, all *other* windows should be gone. kill ourselves, and return
       ;; to the main view
       (kill-buffer)
-      (mu4e~main-view 'refresh))))
+      (mu4e--main-view 'refresh))))
 
 
 ;;; Loading messages

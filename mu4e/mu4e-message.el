@@ -1,6 +1,6 @@
 ;;; mu4e-message.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'mu4e-vars)
 (require 'flow-fill)
 (require 'shr)
@@ -35,9 +34,6 @@
 (declare-function mu4e-warn  "mu4e-helpers")
 (declare-function mu4e-personal-address-p "mu4e-contacts")
 (declare-function mu4e-make-temp-file  "mu4e-helpers")
-
-(defvar mu4e~view-message)
-(defvar shr-inhibit-images)
 
 (make-obsolete-variable 'mu4e-html2text-command "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-view-prefer-html "No longer in use" "1.7.0")
@@ -151,11 +147,11 @@ expressions, in which case any of those are tried for a match."
     (when cfield
       (if (listp rx)
           ;; if rx is a list, try each one of them for a match
-          (cl-find-if
+          (seq-find
            (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
            rx)
         ;; not a list, check the rx
-        (cl-find-if
+        (seq-find
          (lambda (ct)
            (let ((name (car ct)) (email (cdr ct))
                  ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
@@ -174,8 +170,8 @@ of the of the contacts in field CFIELD (either :to, :from, :cc or
 :bcc) of msg MSG matches *me*, that is, any of the addresses for
 which `mu4e-personal-address-p' return t. Returns the contact
 cell that matched, or nil."
-  (cl-find-if (lambda (cell) (mu4e-personal-address-p (cdr cell)))
-                (mu4e-message-field msg cfield)))
+  (seq-find (lambda (cell) (mu4e-personal-address-p (cdr cell)))
+            (mu4e-message-field msg cfield)))
 
 (defun mu4e-message-sent-by-me (msg)
   "Is this MSG (to be) sent by me?
@@ -186,7 +182,7 @@ Checks if the from field matches user's personal addresses."
   "Does MSG have user's personal address?
 In any of the contact
  fields?"
-  (cl-some
+  (seq-some
    (lambda (field)
      (mu4e-message-contact-field-matches-me msg field))
    '(:from :to :cc :bcc)))
@@ -212,8 +208,7 @@ symbol, see `mu4e-header-info'."
 
 (defun mu4e-message-readable-path (&optional msg)
   "Get a readable path to MSG or raise an error.
-If MSG is nil, use mu4e-message-at-point.
-"
+If MSG is nil, use `mu4e-message-at-point'."
   (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
     (unless (file-readable-p path)
       (mu4e-error "No readable message at %s; database outdated?" path))
@@ -226,6 +221,6 @@ If MSG is nil, use mu4e-message-at-point.
     (kill-new path)
     (mu4e-message "Saved '%s' to kill-ring" path)))
 
-;;; _
+;;;
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here

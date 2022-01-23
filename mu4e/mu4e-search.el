@@ -27,7 +27,6 @@
 ;;; Code:
 
 (require 'seq)
-(require 'cl-lib)
 (require 'mu4e-helpers)
 (require 'mu4e-message)
 (require 'mu4e-bookmarks)
@@ -295,9 +294,9 @@ WHERE is a symbol telling us where to push; it's a symbol, either
 'future or 'past. Functional also removes duplicates, limits the
 stack size."
   (let ((stack
-	 (cl-case where
-	   (past   mu4e--search-query-past)
-	   (future mu4e--search-query-future))))
+	 (pcase where
+	   ('past   mu4e--search-query-past)
+	   ('future mu4e--search-query-future))))
     ;; only add if not the same item
     (unless (and stack (string= (car stack) query))
       (push query stack)
@@ -305,22 +304,22 @@ stack size."
       (when (> (length stack) mu4e--search-query-stack-size)
 	(setq stack (cl-subseq stack 0 mu4e--search-query-stack-size)))
       ;; remove all duplicates of the new element
-      (cl-remove-if (lambda (elm) (string= elm (car stack))) (cdr stack))
+      (seq-remove (lambda (elm) (string= elm (car stack))) (cdr stack))
       ;; update the stacks
-      (cl-case where
-	(past   (setq mu4e--search-query-past   stack))
-	(future (setq mu4e--search-query-future stack))))))
+      (pcase where
+	('past   (setq mu4e--search-query-past   stack))
+	('future (setq mu4e--search-query-future stack))))))
 
 (defun mu4e--search-pop-query (whence)
   "Pop a query from the stack.
 WHENCE is a symbol telling us where to get it from, either `future'
 or `past'."
-  (cl-case whence
-    (past
+  (pcase whence
+    ('past
      (unless mu4e--search-query-past
        (mu4e-warn "No more previous queries"))
      (pop mu4e--search-query-past))
-    (future
+    ('future
      (unless mu4e--search-query-future
        (mu4e-warn "No more next queries"))
      (pop mu4e--search-query-future))))

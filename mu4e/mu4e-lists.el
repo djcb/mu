@@ -26,8 +26,6 @@
 ;; The shortname (friendly) should a at most 8 characters, camel-case
 
 ;;; Code:
-
-(require 'cl-lib)
 
 ;;; Configuration
 (defvar mu4e-mailing-lists
@@ -118,9 +116,9 @@ Based on `mu4e-mailing-lists', `mu4e-user-mailing-lists', and
   (or
    (gethash list-id mu4e--lists-hash)
    (and (boundp 'mu4e-mailing-list-patterns)
-        (cl-member-if
+        (seq-drop-while
          (lambda (pattern)
-           (string-match pattern list-id))
+           (not (string-match pattern list-id)))
          mu4e-mailing-list-patterns)
         (match-string 1 list-id))
    ;; if it's not in the db, take the part until the first dot if there is one;

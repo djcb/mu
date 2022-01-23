@@ -1,6 +1,6 @@
 ;;; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2015-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -114,8 +114,8 @@ An empty string \"\" if there is none."
 (defun mu4e--context-ask-user (prompt)
   "Let user choose some context based on its name with PROMPT."
   (when mu4e-contexts
-    (let* ((names (cl-map 'list (lambda (context)
-                                  (cons (mu4e-context-name context) context))
+    (let* ((names (seq-map (lambda (context)
+                             (cons (mu4e-context-name context) context))
                           mu4e-contexts))
            (context (mu4e-read-option prompt names)))
       (or context (mu4e-error "No such context")))))
@@ -130,8 +130,8 @@ non-nil."
   (interactive "P")
   (unless mu4e-contexts
     (mu4e-error "No contexts defined"))
-  (let* ((names (cl-map 'list (lambda (context)
-                                (cons (mu4e-context-name context) context))
+  (let* ((names (seq-map (lambda (context)
+                           (cons (mu4e-context-name context) context))
                         mu4e-contexts))
          (context
           (if name
@@ -191,17 +191,17 @@ match, POLICY determines what to do:
     (if (eq policy 'always-ask)
         (mu4e--context-ask-user "Select context: ")
       (or ;; is there a matching one?
-       (cl-find-if (lambda (context)
-                     (when (mu4e-context-match-func context)
-                       (funcall (mu4e-context-match-func context) msg)))
-                   mu4e-contexts)
+       (seq-find (lambda (context)
+                   (when (mu4e-context-match-func context)
+                     (funcall (mu4e-context-match-func context) msg)))
+                 mu4e-contexts)
        ;; no context found yet; consult policy
-       (cl-case policy
-         (pick-first (car mu4e-contexts))
-         (ask (mu4e--context-ask-user "Select context: "))
-         (ask-if-none (or (mu4e-context-current)
+       (pcase policy
+         ('pick-first (car mu4e-contexts))
+         ('ask (mu4e--context-ask-user "Select context: "))
+         ('ask-if-none (or (mu4e-context-current)
                           (mu4e--context-ask-user "Select context: ")))
-         (otherwise nil))))))
+         (_ nil))))))
 
 (defun mu4e-context-in-modeline ()
   "Display the mu4e-context (if any) in a (buffer-specific)

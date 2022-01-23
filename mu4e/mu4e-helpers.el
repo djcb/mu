@@ -354,21 +354,21 @@ function is meant for debugging."
                                                      (current-time))
                                  'face 'font-lock-string-face))
              (msg-face
-              (cl-case type
-                (from-server 'font-lock-type-face)
-                (to-server   'font-lock-function-name-face)
-                (misc        'font-lock-variable-name-face)
-                (error       'font-lock-warning-face)
-                (otherwise   (mu4e-error "Unsupported log type"))))
+              (pcase type
+                ('from-server 'font-lock-type-face)
+                ('to-server   'font-lock-function-name-face)
+                ('misc        'font-lock-variable-name-face)
+                ('error       'font-lock-warning-face)
+                (_            (mu4e-error "Unsupported log type"))))
              (msg (propertize (apply 'format frm args) 'face msg-face)))
         (save-excursion
           (goto-char (point-max))
           (insert tstamp
-                  (cl-case type
-                    (from-server " <- ")
-                    (to-server   " -> ")
-                    (error       " !! ")
-                    (otherwise   " "))
+                  (pcase type
+                    ('from-server " <- ")
+                    ('to-server   " -> ")
+                    ('error       " !! ")
+                    (_            " "))
                   msg "\n")
           ;; if `mu4e-log-max-lines is specified and exceeded, clearest the
           ;; oldest lines
@@ -508,11 +508,11 @@ in an external program."
   "Display the mu4e manual page for the current mode.
 Or go to the top level if there is none."
   (interactive)
-  (info (cl-case major-mode
+  (info (pcase major-mode
           ('mu4e-main-mode    "(mu4e)Main view")
           ('mu4e-headers-mode "(mu4e)Headers view")
           ('mu4e-view-mode    "(mu4e)Message view")
-          (t                  "mu4e"))))
+          (_                  "mu4e"))))
 
 ;;; Macros
 
