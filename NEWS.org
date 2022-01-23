@@ -67,6 +67,8 @@
       program for a give file (e.g., ~xdg-open~). There are some reasonable
       defaults for various systems.
 
+    - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
+
     - undo is now supported across message-saves
 
     - a lot of the internals have been changed:
