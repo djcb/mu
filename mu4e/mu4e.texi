@@ -929,13 +929,13 @@ it shows @t{To:} (prefixed by @t{To}@footnote{You can customize this by
 changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
 in the example above).
 @item The `List' field shows the mailing-list a message is sent to;
-@code{mu4e} tries to create a convenient shortcut for the mailing-list name;
-the variable @code{mu4e-user-mailing-lists} can be used to add your
+@code{mu4e} tries to create a convenient shortcut for the mailing-list
+name; the variable @code{mu4e-user-mailing-lists} can be used to add
 your own shortcuts. You can use @code{mu4e-mailing-list-patterns} to
-to specify generic shortcuts, e.g. to shorten list names which contain
-dots (@t{mu4e} defaults to shortening up to the first dot):
+specify generic shortcuts. For instance, to shorten list names to the
+part before @t{-list}, you could use:
 @lisp
-(setq mu4e-mailing-list-patterns '(``\\([-_a-z0-9.]+\\)\.lists\.company\.com'')))
+(setq mu4e-mailing-list-patterns '("\\`\\([-_a-z0-9.]+\\)-list"))
 @end lisp
 @item The letters in the `Flags' field correspond to the following: D=@emph{draft},
 F=@emph{flagged} (i.e., `starred'), N=@emph{new}, P=@emph{passed} (i.e.,
