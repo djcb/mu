@@ -1164,7 +1164,7 @@ containing commas."
     (:name "line-count" :handler "wc -l" :receives pipe)
     ;; open in this emacs instance; tries to use the attachment name,
     ;; so emacs can use specific modes etc.
-    (:name "emacs" :handler find-file :receives temp)
+    (:name "emacs" :handler find-file-read-only :receives temp)
     ;; open in this emacs instance, "raw"
     (:name "raw" :handler (lambda (str)
 			    (let ((tmpbuf
