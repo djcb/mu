@@ -87,7 +87,7 @@ the personal addresses.")
   (let ((map (make-sparse-keymap)))
 
     (define-key map "q" 'mu4e-quit)
-    (define-key map "j" 'mu4e--headers-jump-to-maildir)
+    (define-key map "j" 'mu4e~headers-jump-to-maildir)
     (define-key map "C" 'mu4e-compose-new)
 
     (define-key map "m" 'mu4e--main-toggle-mail-sending-mode)
@@ -284,7 +284,7 @@ When REFRESH is non nil refresh infos from server."
         "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e--main-action-str
-        "\t* [j]ump to some maildir\n" 'mu4e-jump-to-maildir)
+        "\t* [j]ump to some maildir\n" 'mu4e~jump-to-maildir)
        (mu4e--main-action-str
         "\t* enter a [s]earch query\n" 'mu4e-search)
        (mu4e--main-action-str
