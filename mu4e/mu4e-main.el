@@ -34,6 +34,10 @@
 (require 'mu4e-search)
 (require 'mu4e-vars)     ;; mu-wide variables
 
+(declare-function mu4e-compose-new  "mu4e-compose")
+(declare-function mu4e~headers-jump-to-maildir  "mu4e-headers")
+(declare-function mu4e-quit "mu4e")
+
 (require 'cl-lib)
 
 
@@ -86,27 +90,27 @@ the personal addresses.")
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "q" 'mu4e-quit)
-    (define-key map "j" 'mu4e~headers-jump-to-maildir)
-    (define-key map "C" 'mu4e-compose-new)
+    (define-key map "q" #'mu4e-quit)
+    (define-key map "j" #'mu4e~headers-jump-to-maildir)
+    (define-key map "C" #'mu4e-compose-new)
 
-    (define-key map "m" 'mu4e--main-toggle-mail-sending-mode)
-    (define-key map "f" 'smtpmail-send-queued-mail)
+    (define-key map "m" #'mu4e--main-toggle-mail-sending-mode)
+    (define-key map "f" #'smtpmail-send-queued-mail)
     ;;
-    (define-key map "U" 'mu4e-update-mail-and-index)
-    (define-key map  (kbd "C-S-u")   'mu4e-update-mail-and-index)
+    (define-key map "U" #'mu4e-update-mail-and-index)
+    (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
-    (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
+    (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
 
-    (define-key map "S" 'mu4e-kill-update-mail)
-    (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
+    (define-key map "S" #'mu4e-kill-update-mail)
+    (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map ";"
       (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
 
-    (define-key map "$" 'mu4e-show-log)
-    (define-key map "A" 'mu4e-about)
-    (define-key map "N" 'mu4e-news)
-    (define-key map "H" 'mu4e-display-manual)
+    (define-key map "$" #'mu4e-show-log)
+    (define-key map "A" #'mu4e-about)
+    (define-key map "N" #'mu4e-news)
+    (define-key map "H" #'mu4e-display-manual)
     map)
   "Keymap for the *mu4e-main* buffer.")
 
@@ -284,11 +288,11 @@ When REFRESH is non nil refresh infos from server."
         "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e--main-action-str
-        "\t* [j]ump to some maildir\n" 'mu4e~jump-to-maildir)
+        "\t* [j]ump to some maildir\n" #'mu4e~headers-jump-to-maildir)
        (mu4e--main-action-str
-        "\t* enter a [s]earch query\n" 'mu4e-search)
+        "\t* enter a [s]earch query\n" #'mu4e-search)
        (mu4e--main-action-str
-        "\t* [C]ompose a new message\n" 'mu4e-compose-new)
+        "\t* [C]ompose a new message\n" #'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
        (mu4e--main-bookmarks)
@@ -310,10 +314,10 @@ When REFRESH is non nil refresh infos from server."
            (mu4e--main-view-queue)
          "")
        "\n"
-       (mu4e--main-action-str "\t* [N]ews\n" 'mu4e-news)
-       (mu4e--main-action-str "\t* [A]bout mu4e\n" 'mu4e-about)
-       (mu4e--main-action-str "\t* [H]elp\n" 'mu4e-display-manual)
-       (mu4e--main-action-str "\t* [q]uit\n" 'mu4e-quit)
+       (mu4e--main-action-str "\t* [N]ews\n" #'mu4e-news)
+       (mu4e--main-action-str "\t* [A]bout mu4e\n" #'mu4e-about)
+       (mu4e--main-action-str "\t* [H]elp\n" #'mu4e-display-manual)
+       (mu4e--main-action-str "\t* [q]uit\n" #'mu4e-quit)
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
