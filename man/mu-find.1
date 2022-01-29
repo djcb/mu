@@ -1,4 +1,4 @@
-.TH MU FIND 1 "22 June 2021" "User Manuals"
+.TH MU FIND 1 "29 January 2022" "User Manuals"
 
 .SH NAME
 
@@ -35,8 +35,8 @@ would find all messages in 2017 with 'snow' in the subject field, e.g:
 
 Note, this the default, plain-text output, which is the default, so you don't
 have to use \fB--format=plain\fR. For other types of output (such as symlinks,
-XML or s-expressions), see the discussion in the \fBOPTIONS\fR-section
-below about \fB--format\fR.
+XML or s-expressions), see the discussion in the \fBOPTIONS\fR-section below
+about \fB--format\fR.
 
 The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
@@ -300,50 +300,6 @@ VFolders {
 
 After restarting Wanderlust, the virtual folders should appear.
 
-
-\fBWanderlust (old)\fR
-
-Another way to integrate \fBmu\fR and \fBwanderlust\fR is shown below; the
-aforementioned method is recommended, but if that does not work for some
-reason, the below can be an alternative.
-
-.nf
-(defvar mu-wl-mu-program     "/usr/local/bin/mu")
-(defvar mu-wl-search-folder  "search")
-
-(defun mu-wl-search ()
-  "search for messages with `mu', and jump to the results"
-   (let* ((muexpr (read-string "Find messages matching: "))
-	  (sfldr  (concat elmo-maildir-folder-path "/"
-		    mu-wl-search-folder))
-	  (cmdline (concat mu-wl-mu-program " find "
-		      "--clearlinks --format=links --linksdir='" sfldr "' "
-		     muexpr))
-	  (rv (shell-command cmdline)))
-    (cond
-      ((= rv 0)  (message "Query succeeded"))
-      ((= rv 2)  (message "No matches found"))
-      (t (message "Error running query")))
-  (= rv 0)))
-
-(defun mu-wl-search-and-goto ()
-  "search and jump to the folder with the results"
-  (interactive)
-  (when (mu-wl-search)
-    (wl-summary-goto-folder-subr
-      (concat "." mu-wl-search-folder)
-      'force-update nil nil t)
-    (wl-summary-sort-by-date)))
-
-;; querying both in summary and folder
-(define-key wl-summary-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto)))
-(define-key wl-folder-mode-map (kbd "Q") ;; => query
-  '(lambda()(interactive)(mu-wl-search-and-goto)))
-
-.fi
-
-
 .SH RETURN VALUE
 
 \fBmu find\fR returns 0 upon successful completion; if the search was
@@ -355,8 +311,7 @@ non-zero return value, for example:
 |------+--------------------------------|
 |    0 | ok                             |
 |    1 | general error                  |
-|    2 | no matches (for 'mu find')     |
-|    4 | database is corrupted          |
+|    4 | no matches (for 'mu find')     |
 .fi
 
 
