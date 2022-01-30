@@ -39,21 +39,27 @@ static std::atomic<bool> MuTerminate{false};
 static bool              tty;
 
 static void
+sig_handler(int sig)
+{
+	MuTerminate = true;
+}
+
+static void
 install_sig_handler(void)
 {
-	struct sigaction action;
-	int              i, sigs[] = {SIGINT, SIGHUP, SIGTERM, SIGPIPE};
+	static struct sigaction action;
+	int                     i, sigs[] = {SIGINT, SIGHUP, SIGTERM, SIGPIPE};
 
 	MuTerminate = false;
 
-	action.sa_handler = [](int sig) { MuTerminate = true; };
+	action.sa_handler = sig_handler;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = SA_RESETHAND;
 
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
-			g_critical("set sigaction for %d failed: %s", sigs[i], g_strerror(errno));
-	;
+			g_critical("set sigaction for %d failed: %s",
+			           sigs[i], g_strerror(errno));
 }
 
 /*
