@@ -32,6 +32,8 @@
 
 #include <utils/mu-utils.hh>
 #include <index/mu-indexer.hh>
+#include <mu-query-results.hh>
+#include <utils/mu-utils.hh>
 
 namespace Mu {
 
@@ -134,6 +136,43 @@ public:
 	 * @return the indexer.
 	 */
 	Indexer& indexer();
+
+	/**
+	 * Run a query; see the `mu-query` man page for the syntax.
+	 *
+	 * @param expr the search expression
+	 * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
+	 * @param flags query flags
+	 * @param maxnum maximum number of results to return. 0 for 'no limit'
+	 *
+	 * @return the query-results, or Nothing in case of error.
+	 */
+	Option<QueryResults> run_query(const std::string& expr        = "",
+	                               MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
+	                               QueryFlags         flags       = QueryFlags::None,
+	                               size_t             maxnum      = 0) const;
+
+	/**
+	 * run a Xapian query merely to count the number of matches; for the
+	 * syntax, please refer to the mu-query manpage
+	 *
+	 * @param expr the search expression; use "" to match all messages
+	 *
+	 * @return the number of matches
+	 */
+	size_t count_query(const std::string& expr = "") const;
+
+	/**
+	 * For debugging, get the internal string representation of the parsed
+	 * query
+	 *
+	 * @param expr a xapian search expression
+	 * @param xapian if true, show Xapian's internal representation,
+	 * otherwise, mu's.
+
+	 * @return the string representation of the query
+	 */
+	std::string parse_query(const std::string& expr, bool xapian) const;
 
 	/**
 	 * Add a message to the store. When planning to write many messages,

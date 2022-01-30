@@ -34,6 +34,7 @@
 #include <xapian.h>
 
 #include "mu-store.hh"
+#include "mu-query.hh"
 #include "utils/mu-str.h"
 #include "utils/mu-error.hh"
 
@@ -100,8 +101,6 @@ add_synonym_for_prio(MuMsgPrio prio, Xapian::WritableDatabase* db)
 }
 
 struct Store::Private {
-#define LOCKED std::lock_guard<std::mutex> l(lock_);
-
 	enum struct XapianOpts { ReadOnly,
 		                 Open,
 		                 CreateOverwrite,
@@ -306,9 +305,6 @@ get_uid_term(const char* path)
 	return std::string{uid_term, sizeof(uid_term)};
 }
 
-#undef LOCKED
-#define LOCKED std::lock_guard<std::mutex> l__(priv_->lock_)
-
 Store::Store(const std::string& path, bool readonly)
     : priv_{std::make_unique<Private>(path, readonly)}
 {
@@ -362,7 +358,7 @@ Store::writable_database()
 Indexer&
 Store::indexer()
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 
 	if (metadata().read_only)
 		throw Error{Error::Code::Store, "no indexer for read-only store"};
@@ -375,7 +371,7 @@ Store::indexer()
 std::size_t
 Store::size() const
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 	return priv_->db().get_doccount();
 }
 
@@ -415,7 +411,7 @@ maildir_from_path(const std::string& root, const std::string& path)
 unsigned
 Store::add_message(const std::string& path, bool use_transaction)
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 
 	GError*    gerr{};
 	const auto maildir{maildir_from_path(metadata().root_maildir, path)};
@@ -461,7 +457,7 @@ Store::remove_message(const std::string& path)
 {
 	return xapian_try(
 	    [&] {
-		    LOCKED;
+		    std::lock_guard   guard{priv_->lock_};
 		    const std::string term{(get_uid_term(path.c_str()))};
 		    priv_->writable_db().delete_document(term);
 
@@ -475,7 +471,7 @@ Store::remove_message(const std::string& path)
 void
 Store::remove_messages(const std::vector<Store::Id>& ids)
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 
 	priv_->transaction_inc();
 
@@ -491,7 +487,7 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 time_t
 Store::dirstamp(const std::string& path) const
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 
 	constexpr auto epoch = static_cast<time_t>(0);
 	return xapian_try([&] {
@@ -507,10 +503,12 @@ Store::dirstamp(const std::string& path) const
 void
 Store::set_dirstamp(const std::string& path, time_t tstamp)
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 
 	std::array<char, 2 * sizeof(tstamp) + 1> data{};
-	const auto                               len = static_cast<size_t>(g_snprintf(data.data(), data.size(), "%zx", tstamp));
+
+	const auto len = static_cast<size_t>(
+	    g_snprintf(data.data(), data.size(), "%zx", tstamp));
 
 	xapian_try([&] {
 		priv_->writable_db().set_metadata(path, std::string{data.data(), len});
@@ -522,10 +520,11 @@ Store::find_message(unsigned docid) const
 {
 	return xapian_try(
 	    [&] {
-		    LOCKED;
+		    std::lock_guard   guard{priv_->lock_};
 		    Xapian::Document* doc{new Xapian::Document{priv_->db().get_document(docid)}};
 		    GError*           gerr{};
-		    auto              msg{mu_msg_new_from_doc(reinterpret_cast<XapianDocument*>(doc), &gerr)};
+		    auto              msg{mu_msg_new_from_doc(
+				     reinterpret_cast<XapianDocument*>(doc), &gerr)};
 		    if (!msg) {
 			    g_warning("could not create message: %s",
 			              gerr ? gerr->message : "something went wrong");
@@ -541,7 +540,7 @@ Store::contains_message(const std::string& path) const
 {
 	return xapian_try(
 	    [&] {
-		    LOCKED;
+		    std::lock_guard   guard{priv_->lock_};
 		    const std::string term(get_uid_term(path.c_str()));
 		    return priv_->db().term_exists(term);
 	    },
@@ -554,8 +553,9 @@ Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
 	size_t n{};
 
 	xapian_try([&] {
-		LOCKED;
+		std::lock_guard guard{priv_->lock_};
 		Xapian::Enquire enq{priv_->db()};
+
 		enq.set_query(Xapian::Query::MatchAll);
 		enq.set_cutoff(0, 0);
 
@@ -571,7 +571,7 @@ Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
 void
 Store::commit()
 {
-	LOCKED;
+	std::lock_guard guard{priv_->lock_};
 	priv_->transaction_maybe_commit(true /*force*/);
 }
 
@@ -596,8 +596,8 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 	size_t n{};
 
 	xapian_try([&] {
-		LOCKED;
-		const auto id = field_id(field.c_str());
+		std::lock_guard guard{priv_->lock_};
+		const auto      id = field_id(field.c_str());
 		if (id == MU_MSG_FIELD_ID_NONE)
 			return;
 
@@ -611,6 +611,43 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 	});
 
 	return n;
+}
+
+Option<QueryResults>
+Store::run_query(const std::string& expr, MuMsgFieldId sortfieldid,
+                 QueryFlags flags, size_t maxnum) const
+{
+	return xapian_try([&] {
+		std::lock_guard guard{priv_->lock_};
+		Query           q{*this};
+
+		return q.run(expr, sortfieldid, flags, maxnum);
+	},
+	                  Nothing);
+}
+
+size_t
+Store::count_query(const std::string& expr) const
+{
+	return xapian_try([&] {
+		std::lock_guard guard{priv_->lock_};
+		Query           q{*this};
+
+		return q.count(expr);
+	},
+	                  0);
+}
+
+std::string
+Store::parse_query(const std::string& expr, bool xapian) const
+{
+	return xapian_try([&] {
+		std::lock_guard guard{priv_->lock_};
+		Query           q{*this};
+
+		return q.parse(expr, xapian);
+	},
+	                  std::string{});
 }
 
 static void
@@ -884,8 +921,12 @@ add_terms_values(MuMsgFieldId mfid, MsgDoc* msgdoc)
 		return;
 
 	switch (mfid) {
-	case MU_MSG_FIELD_ID_DATE: add_terms_values_date(*msgdoc->_doc, msgdoc->_msg, mfid); break;
-	case MU_MSG_FIELD_ID_SIZE: add_terms_values_size(*msgdoc->_doc, msgdoc->_msg, mfid); break;
+	case MU_MSG_FIELD_ID_DATE:
+		add_terms_values_date(*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
+	case MU_MSG_FIELD_ID_SIZE:
+		add_terms_values_size(*msgdoc->_doc, msgdoc->_msg, mfid);
+		break;
 	case MU_MSG_FIELD_ID_BODY_TEXT:
 		add_terms_values_body(*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
@@ -895,10 +936,13 @@ add_terms_values(MuMsgFieldId mfid, MsgDoc* msgdoc)
 		add_terms_values_attach(*msgdoc->_doc, msgdoc->_msg, mfid);
 		break;
 	case MU_MSG_FIELD_ID_MIME:
-	case MU_MSG_FIELD_ID_EMBEDDED_TEXT: break;
+	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
+		break;
 	case MU_MSG_FIELD_ID_THREAD_ID:
-	case MU_MSG_FIELD_ID_UID: break; /* already taken care of elsewhere */
-	default: return add_terms_values_default(mfid, msgdoc);
+	case MU_MSG_FIELD_ID_UID:
+		break; /* already taken care of elsewhere */
+	default:
+		return add_terms_values_default(mfid, msgdoc);
 	}
 }
 
@@ -909,11 +953,17 @@ xapian_pfx(MuMsgContact* contact)
 
 	/* use ptr to string to prevent copy... */
 	switch (contact->type) {
-	case MU_MSG_CONTACT_TYPE_TO: return prefix(MU_MSG_FIELD_ID_TO);
-	case MU_MSG_CONTACT_TYPE_FROM: return prefix(MU_MSG_FIELD_ID_FROM);
-	case MU_MSG_CONTACT_TYPE_CC: return prefix(MU_MSG_FIELD_ID_CC);
-	case MU_MSG_CONTACT_TYPE_BCC: return prefix(MU_MSG_FIELD_ID_BCC);
-	default: g_warning("unsupported contact type %u", (unsigned)contact->type); return empty;
+	case MU_MSG_CONTACT_TYPE_TO:
+		return prefix(MU_MSG_FIELD_ID_TO);
+	case MU_MSG_CONTACT_TYPE_FROM:
+		return prefix(MU_MSG_FIELD_ID_FROM);
+	case MU_MSG_CONTACT_TYPE_CC:
+		return prefix(MU_MSG_FIELD_ID_CC);
+	case MU_MSG_CONTACT_TYPE_BCC:
+		return prefix(MU_MSG_FIELD_ID_BCC);
+	default:
+		g_warning("unsupported contact type %u", (unsigned)contact->type);
+		return empty;
 	}
 }
 

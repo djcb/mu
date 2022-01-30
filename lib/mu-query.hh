@@ -30,26 +30,7 @@
 namespace Mu {
 
 class Query {
-      public:
-	/**
-	 * Construct a new Query instance.
-	 *
-	 * @param store a MuStore object
-	 */
-	Query(const Store& store);
-	/**
-	 * DTOR
-	 *
-	 */
-	~Query();
-
-	/**
-	 * Move CTOR
-	 *
-	 * @param other
-	 */
-	Query(Query&& other);
-
+public:
 	/**
 	 * Run a query on the store
 	 *
@@ -87,7 +68,28 @@ class Query {
 	 */
 	std::string parse(const std::string& expr, bool xapian) const;
 
-      private:
+private:
+	friend class Store;
+
+	/**
+	 * Construct a new Query instance.
+	 *
+	 * @param store a MuStore object
+	 */
+	Query(const Store& store);
+	/**
+	 * DTOR
+	 *
+	 */
+	~Query();
+
+	/**
+	 * Move CTOR
+	 *
+	 * @param other
+	 */
+	Query(Query&& other);
+
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };

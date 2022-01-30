@@ -38,12 +38,13 @@
 using namespace Mu;
 
 struct Query::Private {
-	Private(const Store& store) : store_{store}, parser_{store_} {}
+	Private(const Store& store)
+	    : store_{store}, parser_{store_} {}
 	// New
 	// bool calculate_threads (Xapian::Enquire& enq, size maxnum);
 
 	Xapian::Enquire
-	make_enquire(const std::string& expr, MuMsgFieldId sortfieldid, QueryFlags qflags) const;
+			make_enquire(const std::string& expr, MuMsgFieldId sortfieldid, QueryFlags qflags) const;
 	Xapian::Enquire make_related_enquire(const StringSet& thread_ids,
 	                                     MuMsgFieldId     sortfieldid,
 	                                     QueryFlags       qflags) const;
@@ -65,11 +66,17 @@ struct Query::Private {
 	                         QueryFlags         qflags,
 	                         size_t             maxnum) const;
 
+	size_t store_size() const
+	{
+		return store_.database().get_doccount();
+	}
+
 	const Store& store_;
 	const Parser parser_;
 };
 
-Query::Query(const Store& store) : priv_{std::make_unique<Private>(store)} {}
+Query::Query(const Store& store)
+    : priv_{std::make_unique<Private>(store)} {}
 
 Query::Query(Query&& other) = default;
 
@@ -123,7 +130,8 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 }
 
 struct ThreadKeyMaker : public Xapian::KeyMaker {
-	ThreadKeyMaker(const QueryMatches& matches) : match_info_(matches) {}
+	ThreadKeyMaker(const QueryMatches& matches)
+	    : match_info_(matches) {}
 	std::string operator()(const Xapian::Document& doc) const override
 	{
 		const auto it{match_info_.find(doc.get_docid())};
@@ -229,9 +237,9 @@ Query::Private::run_related(const std::string& expr,
 	// is unlimited and the sorting happens during threading.
 	auto       r_enq{make_related_enquire(minfo.thread_ids,
                                         threading ? MU_MSG_FIELD_ID_NONE : sortfieldid,
-                                        qflags)};
+	                                      qflags)};
 	const auto r_mset{r_enq.get_mset(0,
-	                                 threading ? store_.size() : maxnum,
+	                                 threading ? store_size() : maxnum,
 	                                 {},
 	                                 make_related_decider(qflags, minfo).get())};
 	auto       qres{QueryResults{r_mset, std::move(minfo.matches)}};
@@ -244,7 +252,7 @@ Query::Private::run(const std::string& expr,
                     QueryFlags         qflags,
                     size_t             maxnum) const
 {
-	const auto eff_maxnum{maxnum == 0 ? store_.size() : maxnum};
+	const auto eff_maxnum{maxnum == 0 ? store_size() : maxnum};
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wextra"
 	const auto eff_sortfield{sortfieldid == MU_MSG_FIELD_ID_NONE ? MU_MSG_FIELD_ID_DATE
@@ -283,7 +291,7 @@ Query::count(const std::string& expr) const
 	return xapian_try(
 	    [&] {
 		    const auto enq{priv_->make_enquire(expr, MU_MSG_FIELD_ID_NONE, {})};
-		    auto       mset{enq.get_mset(0, priv_->store_.size())};
+		    auto       mset{enq.get_mset(0, priv_->store_size())};
 		    mset.fetch();
 		    return mset.size();
 	    },
