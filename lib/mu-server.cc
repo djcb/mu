@@ -54,7 +54,7 @@ using namespace Command;
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
 	Private(Store& store, Output output)
-	    : store_{store}, output_{output}, command_map_{make_command_map()}, query_{store_},
+	    : store_{store}, output_{output}, command_map_{make_command_map()},
 	      keep_going_{true}
 	{
 	}
@@ -69,7 +69,6 @@ struct Server::Private {
 	const Store&      store() const { return store_; }
 	Indexer&          indexer() { return store().indexer(); }
 	const CommandMap& command_map() const { return command_map_; }
-	const Query&      query() const { return query_; }
 
 	//
 	// invoke
@@ -112,7 +111,7 @@ private:
 	                        MuMsgOptions              opts) const;
 
 	Sexp::List
-	move_docid(Store::Id docid, const std::string& flagstr, bool new_name, bool no_view);
+		   move_docid(Store::Id docid, const std::string& flagstr, bool new_name, bool no_view);
 	Sexp::List perform_move(Store::Id          docid,
 	                        MuMsg*             msg,
 	                        const std::string& maildirarg,
@@ -121,13 +120,11 @@ private:
 	                        bool               no_view);
 
 	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid);
-	bool maybe_mark_msgid_as_read(const Mu::Query& query, const char* msgid);
+	bool maybe_mark_msgid_as_read(const char* msgid);
 
-	Store&           store_;
-	Server::Output   output_;
-	const CommandMap command_map_;
-	const Query      query_;
-
+	Store&            store_;
+	Server::Output    output_;
+	const CommandMap  command_map_;
 	std::atomic<bool> keep_going_{};
 };
 
@@ -336,7 +333,9 @@ Server::Private::make_command_map()
 	return cmap;
 }
 
-G_GNUC_PRINTF(2, 3) static Sexp make_error(Error::Code errcode, const char* frm, ...)
+G_GNUC_PRINTF(2, 3)
+static Sexp
+make_error(Error::Code errcode, const char* frm, ...)
 {
 	char*   msg{};
 	va_list ap;
@@ -540,7 +539,7 @@ Server::Private::contacts_handler(const Parameters& params)
 
 /* get a *list* of all messages with the given message id */
 static std::vector<Store::Id>
-docids_for_msgid(const Query& q, const std::string& msgid, size_t max = 100)
+docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 {
 	if (msgid.size() > Store::MaxTermLength) {
 		throw Error(Error::Code::InvalidArgument, "invalid message-id '%s'", msgid.c_str());
@@ -553,7 +552,7 @@ docids_for_msgid(const Query& q, const std::string& msgid, size_t max = 100)
 	g_free(tmp);
 
 	GError*    gerr{};
-	const auto res{q.run(expr, MU_MSG_FIELD_ID_NONE, QueryFlags::None, max)};
+	const auto res{store.run_query(expr, MU_MSG_FIELD_ID_NONE, QueryFlags::None, max)};
 	g_free(expr);
 	if (!res)
 		throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
@@ -593,7 +592,7 @@ path_from_docid(const Store& store, unsigned docid)
 }
 
 static std::vector<Store::Id>
-determine_docids(const Query& q, const Parameters& params)
+determine_docids(const Store& store, const Parameters& params)
 {
 	auto       docid{get_int_or(params, ":docid", 0)};
 	const auto msgid{get_string_or(params, ":msgid")};
@@ -605,7 +604,7 @@ determine_docids(const Query& q, const Parameters& params)
 	if (docid != 0)
 		return {(unsigned)docid};
 	else
-		return docids_for_msgid(q, msgid.c_str());
+		return docids_for_msgid(store, msgid.c_str());
 }
 
 size_t
@@ -679,7 +678,7 @@ Server::Private::find_handler(const Parameters& params)
 	if (threads)
 		qflags |= QueryFlags::Threading;
 
-	auto qres{query().run(q, sort_field, qflags, maxnum)};
+	auto qres{store_.run_query(q, sort_field, qflags, maxnum)};
 	if (!qres)
 		throw Error(Error::Code::Query, "failed to run query");
 
@@ -899,7 +898,7 @@ Server::Private::move_handler(const Parameters& params)
 	const auto flagstr{get_string_or(params, ":flags")};
 	const auto rename{get_bool_or(params, ":rename")};
 	const auto no_view{get_bool_or(params, ":noupdate")};
-	const auto docids{determine_docids(query(), params)};
+	const auto docids{determine_docids(store_, params)};
 
 	if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
@@ -955,9 +954,9 @@ Server::Private::ping_handler(const Parameters& params)
 	const auto queries = get_string_vec(params, ":queries");
 	Sexp::List qresults;
 	for (auto&& q : queries) {
-		const auto count{query().count(q)};
+		const auto count{store_.count_query(q)};
 		const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
-		const auto unread{query().count(unreadq)};
+		const auto unread{store_.count_query(unreadq)};
 
 		Sexp::List lst;
 		lst.add_prop(":query", Sexp::make_string(q));
@@ -1067,12 +1066,12 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid)
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const Mu::Query& query, const char* msgid)
+Server::Private::maybe_mark_msgid_as_read(const char* msgid)
 {
 	if (!msgid)
 		return false; // nothing to do.
 
-	const auto docids{docids_for_msgid(query, std::string{msgid})};
+	const auto docids{docids_for_msgid(store_, std::string{msgid})};
 	for (auto&& docid : docids) {
 		MuMsg* msg = store().find_message(docid);
 		if (!msg)
@@ -1102,7 +1101,7 @@ Server::Private::view_handler(const Parameters& params)
 		docid = Store::InvalidId;
 		msg   = mu_msg_new_from_file(path.c_str(), NULL, &gerr);
 	} else {
-		docid = determine_docids(query(), params).at(0);
+		docid = determine_docids(store(), params).at(0);
 		msg   = store().find_message(docid);
 	}
 
@@ -1113,7 +1112,7 @@ Server::Private::view_handler(const Parameters& params)
 		// maybe mark the main message as read.
 		maybe_mark_as_read(msg, docid);
 		/* maybe mark _all_ messsage with same message-id as read */
-		maybe_mark_msgid_as_read(query(), mu_msg_get_msgid(msg));
+		maybe_mark_msgid_as_read(mu_msg_get_msgid(msg));
 	}
 
 	Sexp::List seq;

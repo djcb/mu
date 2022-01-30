@@ -91,16 +91,15 @@ run_and_count_matches(const std::string& xpath,
                       Mu::QueryFlags     flags = Mu::QueryFlags::None)
 {
 	Mu::Store store{xpath};
-	Mu::Query query{store};
 
 	if (g_test_verbose()) {
-		std::cout << "==> mquery: " << query.parse(expr, false) << "\n";
-		std::cout << "==> xquery: " << query.parse(expr, true) << "\n";
+		std::cout << "==> mquery: " << store.parse_query(expr, false) << "\n";
+		std::cout << "==> xquery: " << store.parse_query(expr, true) << "\n";
 	}
 
 	Mu::allow_warnings();
 
-	auto qres{query.run(expr, MU_MSG_FIELD_ID_NONE, flags)};
+	auto qres{store.run_query(expr, MU_MSG_FIELD_ID_NONE, flags)};
 	g_assert_true(!!qres);
 	assert_no_dups(*qres);
 
@@ -236,9 +235,8 @@ static void
 test_mu_query_accented_chars_01(void)
 {
 	Store store{DB_PATH1};
-	Query q{store};
 
-	auto qres{q.run("fünkÿ")};
+	auto qres{store.run_query("fünkÿ")};
 	g_assert_true(!!qres);
 	g_assert_false(qres->empty());
 
@@ -571,30 +569,28 @@ test_mu_query_cjk(void)
 		g_unsetenv("XAPIAN_CJK_NGRAM");
 		const auto xpath = make_database(MU_TESTMAILDIR_CJK);
 		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバがダウンしました",
-						       QueryFlags::None),
-				 ==, 1);
+		                                       "サーバがダウンしました",
+		                                       QueryFlags::None),
+		                 ==, 1);
 		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバ",
-						       QueryFlags::None),
-				 ==, 0);
+		                                       "サーバ",
+		                                       QueryFlags::None),
+		                 ==, 0);
 	}
-
 
 	{
 		g_setenv("XAPIAN_CJK_NGRAM", "1", TRUE);
 		const auto xpath = make_database(MU_TESTMAILDIR_CJK);
 		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバがダウンしました",
-						       QueryFlags::None),
-				 ==, 0);
+		                                       "サーバがダウンしました",
+		                                       QueryFlags::None),
+		                 ==, 0);
 		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバ",
-						       QueryFlags::None),
-				 ==, 0);
+		                                       "サーバ",
+		                                       QueryFlags::None),
+		                 ==, 0);
 	}
 }
-
 
 int
 main(int argc, char* argv[])

@@ -59,18 +59,17 @@ test_query()
 			        item.message_id().value_or("<none>").c_str());
 	};
 
-	Query q{store};
 	g_assert_cmpuint(store.size(), ==, 19);
 
 	{
-		const auto res = q.run("", MU_MSG_FIELD_ID_NONE, QueryFlags::None);
+		const auto res = store.run_query("", MU_MSG_FIELD_ID_NONE, QueryFlags::None);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 19);
 		dump_matches(*res);
 	}
 
 	{
-		const auto res = q.run("", MU_MSG_FIELD_ID_PATH, QueryFlags::None, 11);
+		const auto res = store.run_query("", MU_MSG_FIELD_ID_PATH, QueryFlags::None, 11);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 11);
 		dump_matches(*res);

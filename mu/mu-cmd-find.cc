@@ -57,13 +57,14 @@ constexpr auto LastOutput{OutputInfo{0, false, true}};
 using OutputFunc = std::function<bool(MuMsg*, const OutputInfo&, const MuConfig*, GError**)>;
 
 static gboolean
-print_internal(const Query&       query,
+print_internal(const Store&       store,
                const std::string& expr,
                gboolean           xapian,
                gboolean           warn,
                GError**           err)
 {
-	std::cout << query.parse(expr, xapian) << "\n";
+	std::cout << store.parse_query(expr, xapian) << "\n";
+
 	return TRUE;
 }
 
@@ -88,7 +89,7 @@ sort_field_from_string(const char* fieldstr, GError** err)
 }
 
 static Option<QueryResults>
-run_query(const Query& q, const std::string& expr, const MuConfig* opts, GError** err)
+run_query(const Store& store, const std::string& expr, const MuConfig* opts, GError** err)
 {
 	MuMsgFieldId sortid;
 
@@ -109,7 +110,7 @@ run_query(const Query& q, const std::string& expr, const MuConfig* opts, GError*
 	if (opts->threads)
 		qflags |= QueryFlags::Threading;
 
-	return q.run(expr, sortid, qflags, opts->maxnum);
+	return store.run_query(expr, sortid, qflags, opts->maxnum);
 }
 
 static gboolean
@@ -194,20 +195,6 @@ get_query(const MuConfig* opts, GError** err)
 	g_free(query);
 
 	return q;
-}
-
-static Mu::Query
-get_query_obj(const Store& store, GError** err)
-{
-	const auto count{store.size()};
-
-	if (count == (unsigned)-1)
-		throw Mu::Error(Error::Code::Store, "invalid store");
-
-	if (count == 0)
-		throw Mu::Error(Error::Code::Store, "store is empty");
-
-	return Mu::Query{store};
 }
 
 static gboolean
@@ -391,7 +378,9 @@ thread_indent(const QueryMatch& info, const MuConfig* opts)
 			::fputs("/", stdout);
 		else
 			::fputs(" ", stdout);
-		::fputs(empty_parent ? "*> " : is_dup ? "=> " : "-> ", stdout);
+		::fputs(empty_parent ? "*> " : is_dup ? "=> "
+		                                      : "-> ",
+		        stdout);
 	}
 }
 
@@ -616,9 +605,9 @@ output_query_results(const QueryResults& qres, const MuConfig* opts, GError** er
 }
 
 static gboolean
-process_query(const Query& q, const std::string& expr, const MuConfig* opts, GError** err)
+process_query(const Store& store, const std::string& expr, const MuConfig* opts, GError** err)
 {
-	auto qres{run_query(q, expr, opts, err)};
+	auto qres{run_query(store, expr, opts, err)};
 	if (!qres)
 		return FALSE;
 
@@ -633,17 +622,16 @@ process_query(const Query& q, const std::string& expr, const MuConfig* opts, GEr
 static gboolean
 execute_find(const Store& store, const MuConfig* opts, GError** err)
 {
-	auto q{get_query_obj(store, err)};
 	auto expr{get_query(opts, err)};
 	if (!expr)
 		return FALSE;
 
 	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		return print_internal(q, *expr, TRUE, FALSE, err);
+		return print_internal(store, *expr, TRUE, FALSE, err);
 	else if (opts->format == MU_CONFIG_FORMAT_MQUERY)
-		return print_internal(q, *expr, FALSE, opts->verbose, err);
+		return print_internal(store, *expr, FALSE, opts->verbose, err);
 	else
-		return process_query(q, *expr, opts, err);
+		return process_query(store, *expr, opts, err);
 }
 
 static gboolean
