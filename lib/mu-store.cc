@@ -31,6 +31,7 @@
 #include <iostream>
 #include <cstring>
 
+#include <vector>
 #include <xapian.h>
 
 #include "mu-store.hh"
@@ -206,9 +207,12 @@ struct Store::Private {
 					                           contacts_.serialize());
 				});
 			}
-			g_debug("committing transaction (n=%zu)", transaction_size_);
+			g_debug("committing transaction (n=%zu,%zu)",
+			        transaction_size_, metadatas_.size());
 			xapian_try([this] {
 				writable_db().commit_transaction();
+				for (auto&& mdata : metadatas_)
+					writable_db().set_metadata(mdata.first, mdata.second);
 				transaction_size_ = 0;
 			});
 		}
@@ -277,6 +281,10 @@ struct Store::Private {
 
 	Xapian::docid    add_or_update_msg(Xapian::docid docid, MuMsg* msg);
 	Xapian::Document new_doc_from_message(MuMsg* msg);
+
+	/* metadata to write as part of a transaction commit */
+	using StringPair = std::pair<std::string, std::string>;
+	std::vector<StringPair> metadatas_;
 
 	const bool                        read_only_{};
 	std::unique_ptr<Xapian::Database> db_;
@@ -501,7 +509,7 @@ Store::dirstamp(const std::string& path) const
 }
 
 void
-Store::set_dirstamp(const std::string& path, time_t tstamp)
+Store::set_dirstamp(const std::string& path, time_t tstamp, bool use_transaction)
 {
 	std::lock_guard guard{priv_->lock_};
 
@@ -510,9 +518,15 @@ Store::set_dirstamp(const std::string& path, time_t tstamp)
 	const auto len = static_cast<size_t>(
 	    g_snprintf(data.data(), data.size(), "%zx", tstamp));
 
-	xapian_try([&] {
-		priv_->writable_db().set_metadata(path, std::string{data.data(), len});
-	});
+	/* set_metadata is not otherwise part of a "transaction" but we want it
+	 * to be so, so a dirstamp _only_ gets updated when the messages in the
+	 * dir are commited */
+
+	Private::StringPair item{path, std::string{data.data(), len}};
+	if (use_transaction)
+		priv_->metadatas_.emplace_back(std::move(item));
+	else
+		xapian_try([&] { priv_->writable_db().set_metadata(item.first, item.second); });
 }
 
 MuMsg*

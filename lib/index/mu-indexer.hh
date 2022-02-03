@@ -58,7 +58,9 @@ public:
 	};
 
 	/**
-	 * Start indexing. If already underway, do nothing.
+	 * Start indexing. If already underway, do nothing. This returns
+	 * immediately after starting, with the work being done in the
+	 * background.
 	 *
 	 * @param conf a configuration object
 	 *

@@ -303,8 +303,10 @@ public:
 	 *
 	 * @param path a filesystem path
 	 * @param tstamp the timestamp for that path
+	 * @param whether to do this as part of a transaction
 	 */
-	void set_dirstamp(const std::string& path, time_t tstamp);
+	void set_dirstamp(const std::string& path, time_t tstamp,
+	                  bool use_transaction = false);
 
 	/**
 	 * Get the number of documents in the document database

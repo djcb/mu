@@ -44,7 +44,10 @@ struct Scanner::Private {
 		if (!handler_)
 			throw Mu::Error{Error::Code::Internal, "missing handler"};
 	}
-	~Private() { stop(); }
+	~Private()
+	{
+		stop();
+	}
 
 	bool start();
 	bool stop();
@@ -65,7 +68,8 @@ is_special_dir(const char* d_name)
 }
 
 bool
-Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry, bool is_maildir)
+Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry,
+                                 bool is_maildir)
 {
 	const auto d_name{dentry->d_name};
 
@@ -83,9 +87,9 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry,
 	if (S_ISDIR(statbuf.st_mode)) {
 		const auto new_cur =
 		    std::strcmp(d_name, "cur") == 0 || std::strcmp(d_name, "new") == 0;
-		const auto htype = new_cur ? Scanner::HandleType::EnterNewCur
-		                           : Scanner::HandleType::EnterDir;
-		const auto res   = handler_(fullpath, &statbuf, htype);
+		const auto htype =
+		    new_cur ? Scanner::HandleType::EnterNewCur : Scanner::HandleType::EnterDir;
+		const auto res = handler_(fullpath, &statbuf, htype);
 		if (!res)
 			return true; // skip
 
@@ -97,12 +101,16 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry,
 		return handler_(fullpath, &statbuf, Scanner::HandleType::File);
 
 	g_debug("skip %s (neither maildir-file nor directory)", fullpath.c_str());
+
 	return true;
 }
 
 bool
 Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 {
+	if (!running_)
+		return true; /* we're done */
+
 	const auto dir = opendir(path.c_str());
 	if (G_UNLIKELY(!dir)) {
 		g_warning("failed to scan dir %s: %s", path.c_str(), g_strerror(errno));
@@ -171,8 +179,7 @@ Scanner::Private::start()
 	const auto start{std::chrono::steady_clock::now()};
 	process_dir(root_dir_, is_maildir);
 	const auto elapsed = std::chrono::steady_clock::now() - start;
-	g_debug("finished scan of %s in %" G_GINT64_FORMAT " ms",
-	        root_dir_.c_str(),
+	g_debug("finished scan of %s in %" G_GINT64_FORMAT " ms", root_dir_.c_str(),
 	        to_ms(elapsed));
 	running_ = false;
 
@@ -201,15 +208,10 @@ Scanner::~Scanner() = default;
 bool
 Scanner::start()
 {
-	{
-		std::lock_guard<std::mutex> l(priv_->lock_);
-		if (priv_->running_)
-			return true; // nothing to do
+	if (priv_->running_)
+		return true; // nothing to do
 
-		priv_->running_ = true;
-	}
-
-	const auto res  = priv_->start();
+	const auto res  = priv_->start(); /* blocks */
 	priv_->running_ = false;
 
 	return res;
@@ -218,7 +220,7 @@ Scanner::start()
 bool
 Scanner::stop()
 {
-	std::lock_guard<std::mutex> l(priv_->lock_);
+	std::lock_guard l(priv_->lock_);
 
 	return priv_->stop();
 }
