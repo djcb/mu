@@ -269,7 +269,7 @@ The server output is as follows:
   (let ((sexp (mu4e--server-eat-sexp-from-buf)))
     (with-local-quit
       (while sexp
-        (mu4e-log 'from-server "%S" sexp)
+        (mu4e-log 'from-server "%s" sexp)
         (cond
          ;; a header plist can be recognized by the existence of a :date field
          ((plist-get sexp :headers)
@@ -343,7 +343,6 @@ The server output is as follows:
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
      "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
-
   ;; sanity-check 2
   (let ((version (let ((s (shell-command-to-string
 			   (concat mu4e-mu-binary " --version"))))
@@ -377,6 +376,9 @@ The server output is as follows:
   (let* ((buf (get-buffer mu4e--server-name))
          (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
+      (message "shutting down mu4e")
+      (set-process-filter mu4e--server-process nil)
+      (set-process-sentinel mu4e--server-process nil)
       (let ((delete-exited-processes t))
         (mu4e--server-call-mu '(quit)))
       ;; try sending SIGINT (C-c) to process, so it can exit gracefully
