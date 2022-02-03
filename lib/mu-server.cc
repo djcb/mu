@@ -58,6 +58,13 @@ struct Server::Private {
 	      keep_going_{true}
 	{
 	}
+
+	~Private()
+	{
+		indexer().stop();
+		if (index_thread_.joinable())
+			index_thread_.join();
+	}
 	//
 	// construction helpers
 	//
@@ -129,6 +136,7 @@ private:
 	Server::Output    output_;
 	const CommandMap  command_map_;
 	std::atomic<bool> keep_going_{};
+	std::thread       index_thread_;
 };
 
 static Sexp
@@ -773,13 +781,18 @@ Server::Private::index_handler(const Parameters& params)
 	conf.ignore_noupdate = store().empty();
 
 	indexer().stop();
+	if (index_thread_.joinable())
+		index_thread_.join();
 
-	indexer().start(conf);
-	while (indexer().is_running()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		output_sexp(get_stats(indexer().progress(), "running"));
-	}
-	output_sexp(get_stats(indexer().progress(), "complete"));
+	// start a background track.
+	index_thread_ = std::thread([this, conf = std::move(conf)] {
+		indexer().start(conf);
+		while (indexer().is_running()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+			output_sexp(get_stats(indexer().progress(), "running"), true);
+		}
+		output_sexp(get_stats(indexer().progress(), "complete"));
+	});
 }
 
 void
