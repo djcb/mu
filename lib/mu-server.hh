@@ -33,8 +33,8 @@ namespace Mu {
  *
  */
 class Server {
-      public:
-	using Output = std::function<void(Sexp&& sexp)>;
+public:
+	using Output = std::function<void(Sexp&& sexp, bool flush)>;
 
 	/**
 	 * Construct a new server
@@ -59,7 +59,7 @@ class Server {
 	 */
 	bool invoke(const std::string& expr) noexcept;
 
-      private:
+private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };

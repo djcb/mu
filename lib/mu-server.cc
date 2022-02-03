@@ -78,12 +78,15 @@ struct Server::Private {
 	//
 	// output
 	//
-	void output_sexp(Sexp&& sexp) const
+	void output_sexp(Sexp&& sexp, bool flush = false) const
 	{
 		if (output_)
-			output_(std::move(sexp));
+			output_(std::move(sexp), flush);
 	}
-	void   output_sexp(Sexp::List&& lst) const { output_sexp(Sexp::make_list(std::move(lst))); }
+	void output_sexp(Sexp::List&& lst, bool flush = false) const
+	{
+		output_sexp(Sexp::make_list(std::move(lst)), flush);
+	}
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
 
 	//

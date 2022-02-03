@@ -82,7 +82,7 @@ cookie(size_t n)
 }
 
 static void
-output_sexp_stdout(Sexp&& sexp)
+output_sexp_stdout(Sexp&& sexp, bool flush = false)
 {
 	const auto str{sexp.to_sexp_string()};
 	cookie(str.size() + 1);
@@ -90,6 +90,9 @@ output_sexp_stdout(Sexp&& sexp)
 		g_critical("failed to write output '%s'", str.c_str());
 		::raise(SIGTERM); /* terminate ourselves */
 	}
+
+	if (flush)
+		::fflush(::stdout);
 }
 
 static void
@@ -100,7 +103,7 @@ report_error(const Mu::Error& err) noexcept
 	e.add_prop(":error", Sexp::make_number(static_cast<size_t>(err.code())));
 	e.add_prop(":message", Sexp::make_string(err.what()));
 
-	output_sexp_stdout(Sexp::make_list(std::move(e)));
+	output_sexp_stdout(Sexp::make_list(std::move(e)), true /*flush*/);
 }
 
 MuError
