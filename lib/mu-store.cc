@@ -610,8 +610,10 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 	size_t n{};
 
 	xapian_try([&] {
-		std::lock_guard guard{priv_->lock_};
-		const auto      id = field_id(field.c_str());
+		/*
+		 * Do _not_ take a lock; this is only called from
+		 * the message parser which already has the lock */
+		const auto id = field_id(field.c_str());
 		if (id == MU_MSG_FIELD_ID_NONE)
 			return;
 
