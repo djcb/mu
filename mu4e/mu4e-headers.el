@@ -207,6 +207,11 @@ chronologically (`:date') by the newest message in the thread.")
 
 ;;;; Graph drawing
 
+(defvar mu4e-headers-thread-mark-as-orphan 'all
+  "Define which messages should be prefixed with the orphan mark.
+`all' marks all the messages without a parent as orphan, `first' only
+marks the first message in the thread.")
+
 (defvar mu4e-headers-thread-root-prefix '("* " . "□ ")
   "Prefix for root messages.")
 (defvar mu4e-headers-thread-child-prefix '("|>" . "│ ")
@@ -451,7 +456,10 @@ with DOCID which must be present in the headers buffer."
                    ;; Current entry.
                    (mu4e~headers-thread-prefix-map
                     (if single-orphan 'single-orphan
-                      (if orphan 'orphan
+                      (if (and orphan
+			       (or first-child
+				   (not (eq mu4e-headers-thread-mark-as-orphan 'first))))
+			       'orphan
                         (if last-child 'last-child
                           (if first-child 'first-child
                             'child)))))))))
