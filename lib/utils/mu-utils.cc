@@ -131,8 +131,8 @@ Mu::utf8_flatten(const char* str)
 std::string
 Mu::utf8_clean(const std::string& dirty)
 {
-	GString* gstr = g_string_sized_new(dirty.length());
-	auto cstr = mu_str_utf8ify(dirty.c_str());
+	g_autoptr(GString) gstr = g_string_sized_new(dirty.length());
+	g_autofree char *cstr	= mu_str_utf8ify(dirty.c_str());
 
 	for (auto cur = cstr; cur && *cur; cur = g_utf8_next_char(cur)) {
 		const gunichar uc = g_utf8_get_char(cur);
@@ -142,9 +142,7 @@ Mu::utf8_clean(const std::string& dirty)
 			g_string_append_unichar(gstr, uc);
 	}
 
-	g_free(cstr);
 	std::string clean(gstr->str, gstr->len);
-	g_string_free(gstr, TRUE);
 
 	clean.erase(0, clean.find_first_not_of(" "));
 	clean.erase(clean.find_last_not_of(" ") + 1); // remove trailing space
