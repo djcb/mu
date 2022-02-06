@@ -48,6 +48,10 @@
       displaying big results snappier. This required some updates in the headers
       handling and in the server protocol.
 
+    - indexing happens in the background now and mu4e can interact with the
+      server while it is ongoing; this allows for using mu4e during lengthy
+      indexing operations.
+
     - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
       whether anything changed (before, it fired only is something changed). In
       your hook-functions (or elsewhere) you can check if anything changed using
