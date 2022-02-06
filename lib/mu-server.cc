@@ -791,7 +791,7 @@ Server::Private::index_handler(const Parameters& params)
 			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 			output_sexp(get_stats(indexer().progress(), "running"), true);
 		}
-		output_sexp(get_stats(indexer().progress(), "complete"));
+		output_sexp(get_stats(indexer().progress(), "complete"), true);
 	});
 }
 
