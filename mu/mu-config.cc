@@ -925,6 +925,7 @@ Mu::mu_config_uninit(MuConfig* opts)
 	g_free(opts->script);
 	g_free(opts->eval);
 
+	g_strfreev(opts->my_addresses);
 	g_strfreev(opts->params);
 
 	memset(opts, 0, sizeof(MU_CONFIG));
