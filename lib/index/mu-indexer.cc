@@ -284,7 +284,7 @@ Indexer::Private::cleanup()
 void
 Indexer::Private::scan_worker()
 {
-	progress_ = {};
+	progress_.reset();
 
 	if (conf_.scan) {
 		g_debug("starting scanner");
@@ -410,7 +410,7 @@ Indexer::is_running() const
 	return priv_->state_ != IndexState::Idle;
 }
 
-Indexer::Progress
+const Indexer::Progress&
 Indexer::progress() const
 {
 	priv_->progress_.running = priv_->state_ == IndexState::Idle ? false : true;

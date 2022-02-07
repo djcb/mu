@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,6 +20,7 @@
 #ifndef MU_INDEXER_HH__
 #define MU_INDEXER_HH__
 
+#include <atomic>
 #include <memory>
 #include <chrono>
 
@@ -88,20 +89,26 @@ public:
 
 	// Object describing current progress
 	struct Progress {
-		bool   running{}; /**< Is an index operation in progress? */
-		size_t checked{}; /**< Number of messages checked for changes */
-		size_t updated{}; /**< Number of messages (re)parsed &  added/updated to store */
-		size_t removed{}; /**< Number of message removed from store */
+		void reset()
+		{
+			running = false;
+			checked = updated = removed = 0;
+		}
+
+		std::atomic<bool>   running{}; /**< Is an index operation in progress? */
+		std::atomic<size_t> checked{}; /**< Number of messages checked for changes */
+		std::atomic<size_t> updated{}; /**< Number of messages (re)parsed/added/updated */
+		std::atomic<size_t> removed{}; /**< Number of message removed from store */
 	};
 
 	/**
 	 * Get an object describing the current progress. The progress object
-	 * describes the most recent indexing job, and is reset up a fresh
+	 * describes the most recent indexing job, and is reset upon a fresh
 	 * start().
 	 *
 	 * @return a progress object.
 	 */
-	Progress progress() const;
+	const Progress& progress() const;
 
 private:
 	struct Private;
