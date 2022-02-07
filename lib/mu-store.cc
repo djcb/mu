@@ -136,11 +136,13 @@ struct Store::Private {
 	}
 
 	~Private()
-	{
+	try {
 		g_debug("closing store @ %s", mdata_.database_path.c_str());
 		if (!read_only_) {
 			transaction_maybe_commit(true /*force*/);
 		}
+	} catch (...) {
+		g_critical("caught exception in store dtor");
 	}
 
 	std::unique_ptr<Xapian::Database> make_xapian_db(const std::string db_path, XapianOpts opts)
