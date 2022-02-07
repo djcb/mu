@@ -282,20 +282,15 @@ get_str_field(MuMsg* self, MuMsgFieldId mfid)
 static gint64
 get_num_field(MuMsg* self, MuMsgFieldId mfid)
 {
-	guint64 val;
-
-	val = -1;
 	if (self->_doc && mu_msg_field_xapian_value(mfid))
-		val = mu_msg_doc_get_num_field(self->_doc, mfid);
-	else {
-		/* if we don't have a file object yet, we need to
-		 * create it from the file on disk */
-		if (!mu_msg_load_msg_file(self, NULL))
-			return -1;
-		val = mu_msg_file_get_num_field(self->_file, mfid);
-	}
+		return mu_msg_doc_get_num_field(self->_doc, mfid);
 
-	return val;
+	/* if we don't have a file object yet, we need to
+	 * create it from the file on disk */
+	if (!mu_msg_load_msg_file(self, NULL))
+		return -1;
+
+	return mu_msg_file_get_num_field(self->_file, mfid);
 }
 
 const char*

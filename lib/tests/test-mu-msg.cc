@@ -283,7 +283,6 @@ test_mu_msg_references(void)
 	g_assert_cmpstr((char*)refs->data, ==, "non-exist-03@msg.id");
 	refs = g_slist_next(refs);
 	g_assert_cmpstr((char*)refs->data, ==, "non-exist-04@msg.id");
-	refs = g_slist_next(refs);
 
 	mu_msg_unref(msg);
 }
@@ -313,7 +312,6 @@ test_mu_msg_references_dups(void)
 	g_assert_cmpstr((char*)refs->data, ==, "439A1E03.3090604@euler.org");
 	refs = g_slist_next(refs);
 	g_assert_cmpstr((char*)refs->data, ==, "20051211184308.GB13513@gauss.org");
-	refs = g_slist_next(refs);
 
 	mlist = mu_msg_get_mailing_list(msg);
 	g_assert_cmpstr(mlist, ==, "Example of List Id");

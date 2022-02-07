@@ -31,216 +31,205 @@
 #include "mu-util.h"
 
 static void
-test_mu_util_dir_expand_00 (void)
+test_mu_util_dir_expand_00(void)
 {
 #ifdef HAVE_WORDEXP_H
 	gchar *got, *expected;
 
-	got = mu_util_dir_expand ("~/IProbablyDoNotExist");
-	expected = g_strdup_printf ("%s%cIProbablyDoNotExist",
-				    getenv("HOME"), G_DIR_SEPARATOR);
+	got      = mu_util_dir_expand("~/IProbablyDoNotExist");
+	expected = g_strdup_printf("%s%cIProbablyDoNotExist",
+	                           getenv("HOME"), G_DIR_SEPARATOR);
 
-	g_assert_cmpstr (got,==,expected);
+	g_assert_cmpstr(got, ==, expected);
 
-	g_free (got);
-	g_free (expected);
+	g_free(got);
+	g_free(expected);
 #endif /*HAVE_WORDEXP_H*/
 }
 
 static void
-test_mu_util_dir_expand_01 (void)
+test_mu_util_dir_expand_01(void)
 {
 	/* XXXX: the testcase does not work when using some dir
 	 * setups; (see issue #585), although the code should still
 	 * work. Turn of the test for now */
 	return;
 
-
 #ifdef HAVE_WORDEXP_H
 	{
-	gchar *got, *expected;
+		gchar *got, *expected;
 
-	got = mu_util_dir_expand ("~/Desktop");
-	expected = g_strdup_printf ("%s%cDesktop",
-				    getenv("HOME"), G_DIR_SEPARATOR);
+		got      = mu_util_dir_expand("~/Desktop");
+		expected = g_strdup_printf("%s%cDesktop",
+		                           getenv("HOME"), G_DIR_SEPARATOR);
 
-	g_assert_cmpstr (got,==,expected);
+		g_assert_cmpstr(got, ==, expected);
 
-	g_free (got);
-	g_free (expected);
+		g_free(got);
+		g_free(expected);
 	}
 #endif /*HAVE_WORDEXP_H*/
 }
 
-
-
 static void
-test_mu_util_guess_maildir_01 (void)
+test_mu_util_guess_maildir_01(void)
 {
-	char *got;
-	const char *expected;
+	char*       got;
+	const char* expected;
 
 	/* skip the test if there's no /tmp */
-	if (access ("/tmp", F_OK))
+	if (access("/tmp", F_OK))
 		return;
 
-	g_setenv ("MAILDIR", "/tmp", TRUE);
+	g_setenv("MAILDIR", "/tmp", TRUE);
 
-	got = mu_util_guess_maildir ();
+	got      = mu_util_guess_maildir();
 	expected = "/tmp";
 
-	g_assert_cmpstr (got,==,expected);
-	g_free (got);
+	g_assert_cmpstr(got, ==, expected);
+	g_free(got);
 }
 
-
 static void
-test_mu_util_guess_maildir_02 (void)
+test_mu_util_guess_maildir_02(void)
 {
 	char *got, *mdir;
 
-	g_unsetenv ("MAILDIR");
+	g_unsetenv("MAILDIR");
 
-	mdir = g_strdup_printf ("%s%cMaildir",
-				getenv("HOME"), G_DIR_SEPARATOR);
-	got = mu_util_guess_maildir ();
+	mdir = g_strdup_printf("%s%cMaildir",
+	                       getenv("HOME"), G_DIR_SEPARATOR);
+	got  = mu_util_guess_maildir();
 
-	if (access (mdir, F_OK) == 0)
-		g_assert_cmpstr (got, ==, mdir);
+	if (access(mdir, F_OK) == 0)
+		g_assert_cmpstr(got, ==, mdir);
 	else
-		g_assert_cmpstr (got, == , NULL);
+		g_assert_cmpstr(got, ==, NULL);
 
-	g_free (got);
-	g_free (mdir);
+	g_free(got);
+	g_free(mdir);
 }
 
-
 static void
-test_mu_util_check_dir_01 (void)
+test_mu_util_check_dir_01(void)
 {
-	if (g_access ("/usr/bin", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir ("/usr/bin", TRUE, FALSE) == TRUE,
-			==,
-			g_access ("/usr/bin", R_OK) == 0);
+	if (g_access("/usr/bin", F_OK) == 0) {
+		g_assert_cmpuint(
+		    mu_util_check_dir("/usr/bin", TRUE, FALSE) == TRUE,
+		    ==,
+		    g_access("/usr/bin", R_OK) == 0);
 	}
 }
 
-
 static void
-test_mu_util_check_dir_02 (void)
+test_mu_util_check_dir_02(void)
 {
-	if (g_access ("/tmp", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir ("/tmp", FALSE, TRUE) == TRUE,
-			==,
-			g_access ("/tmp", W_OK) == 0);
+	if (g_access("/tmp", F_OK) == 0) {
+		g_assert_cmpuint(
+		    mu_util_check_dir("/tmp", FALSE, TRUE) == TRUE,
+		    ==,
+		    g_access("/tmp", W_OK) == 0);
 	}
 }
 
-
 static void
-test_mu_util_check_dir_03 (void)
+test_mu_util_check_dir_03(void)
 {
-	if (g_access (".", F_OK) == 0) {
-		g_assert_cmpuint (
-			mu_util_check_dir (".", TRUE, TRUE) == TRUE,
-			==,
-			g_access (".", W_OK | R_OK) == 0);
+	if (g_access(".", F_OK) == 0) {
+		g_assert_cmpuint(
+		    mu_util_check_dir(".", TRUE, TRUE) == TRUE,
+		    ==,
+		    g_access(".", W_OK | R_OK) == 0);
 	}
 }
 
-
 static void
-test_mu_util_check_dir_04 (void)
+test_mu_util_check_dir_04(void)
 {
 	/* not a dir, so it must be false */
-	g_assert_cmpuint (
-		mu_util_check_dir ("test-util.c", TRUE, TRUE),
-		==,
-		FALSE);
+	g_assert_cmpuint(
+	    mu_util_check_dir("test-util.c", TRUE, TRUE),
+	    ==,
+	    FALSE);
 }
 
 static void
-test_mu_util_get_dtype_with_lstat (void)
+test_mu_util_get_dtype_with_lstat(void)
 {
-	g_assert_cmpuint (
-		mu_util_get_dtype (MU_TESTMAILDIR, TRUE), ==, DT_DIR);
-	g_assert_cmpuint (
-		mu_util_get_dtype (MU_TESTMAILDIR2, TRUE), ==, DT_DIR);
-	g_assert_cmpuint (
-		mu_util_get_dtype (MU_TESTMAILDIR2 "/Foo/cur/mail5", TRUE),
-		==, DT_REG);
+	g_assert_cmpuint(
+	    mu_util_get_dtype(MU_TESTMAILDIR, TRUE), ==, DT_DIR);
+	g_assert_cmpuint(
+	    mu_util_get_dtype(MU_TESTMAILDIR2, TRUE), ==, DT_DIR);
+	g_assert_cmpuint(
+	    mu_util_get_dtype(MU_TESTMAILDIR2 "/Foo/cur/mail5", TRUE),
+	    ==, DT_REG);
 }
 
-
 static void
-test_mu_util_supports (void)
+test_mu_util_supports(void)
 {
 	gboolean has_guile;
-	gchar *path;
+	gchar*   path;
 
-	has_guile = FALSE;
 #ifdef BUILD_GUILE
 	has_guile = TRUE;
+#else
+	has_guile = FALSE;
 #endif /*BUILD_GUILE*/
 
-	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GUILE),	== ,has_guile);
+	g_assert_cmpuint(mu_util_supports(MU_FEATURE_GUILE), ==, has_guile);
 
-	path = g_find_program_in_path ("gnuplot");
-	g_free (path);
+	path = g_find_program_in_path("gnuplot");
+	g_free(path);
 
-	g_assert_cmpuint (mu_util_supports (MU_FEATURE_GNUPLOT),==,
-			  path ? TRUE : FALSE);
+	g_assert_cmpuint(mu_util_supports(MU_FEATURE_GNUPLOT), ==,
+	                 path ? TRUE : FALSE);
 
-	g_assert_cmpuint (
-		mu_util_supports (MU_FEATURE_GNUPLOT|MU_FEATURE_GUILE),
-		==,
-		has_guile && path ? TRUE : FALSE);
+	g_assert_cmpuint(
+	    mu_util_supports(MU_FEATURE_GNUPLOT | MU_FEATURE_GUILE),
+	    ==,
+	    has_guile && path ? TRUE : FALSE);
 }
-
 
 static void
-test_mu_util_program_in_path (void)
+test_mu_util_program_in_path(void)
 {
-	g_assert_cmpuint (mu_util_program_in_path("ls"),==,TRUE);
+	g_assert_cmpuint(mu_util_program_in_path("ls"), ==, TRUE);
 }
 
-
-
 int
-main (int argc, char *argv[])
+main(int argc, char* argv[])
 {
-	g_test_init (&argc, &argv, NULL);
+	g_test_init(&argc, &argv, NULL);
 
 	/* mu_util_dir_expand */
-	g_test_add_func ("/mu-util/mu-util-dir-expand-00",
-			 test_mu_util_dir_expand_00);
-	g_test_add_func ("/mu-util/mu-util-dir-expand-01",
-			 test_mu_util_dir_expand_01);
+	g_test_add_func("/mu-util/mu-util-dir-expand-00",
+	                test_mu_util_dir_expand_00);
+	g_test_add_func("/mu-util/mu-util-dir-expand-01",
+	                test_mu_util_dir_expand_01);
 
 	/* mu_util_guess_maildir */
-	g_test_add_func ("/mu-util/mu-util-guess-maildir-01",
-			 test_mu_util_guess_maildir_01);
-	g_test_add_func ("/mu-util/mu-util-guess-maildir-02",
-			 test_mu_util_guess_maildir_02);
+	g_test_add_func("/mu-util/mu-util-guess-maildir-01",
+	                test_mu_util_guess_maildir_01);
+	g_test_add_func("/mu-util/mu-util-guess-maildir-02",
+	                test_mu_util_guess_maildir_02);
 
 	/* mu_util_check_dir */
-	g_test_add_func ("/mu-util/mu-util-check-dir-01",
-			 test_mu_util_check_dir_01);
-	g_test_add_func ("/mu-util/mu-util-check-dir-02",
-			 test_mu_util_check_dir_02);
-	g_test_add_func ("/mu-util/mu-util-check-dir-03",
-			 test_mu_util_check_dir_03);
-	g_test_add_func ("/mu-util/mu-util-check-dir-04",
-			 test_mu_util_check_dir_04);
+	g_test_add_func("/mu-util/mu-util-check-dir-01",
+	                test_mu_util_check_dir_01);
+	g_test_add_func("/mu-util/mu-util-check-dir-02",
+	                test_mu_util_check_dir_02);
+	g_test_add_func("/mu-util/mu-util-check-dir-03",
+	                test_mu_util_check_dir_03);
+	g_test_add_func("/mu-util/mu-util-check-dir-04",
+	                test_mu_util_check_dir_04);
 
-	g_test_add_func ("/mu-util/mu-util-get-dtype-with-lstat",
-			 test_mu_util_get_dtype_with_lstat);
+	g_test_add_func("/mu-util/mu-util-get-dtype-with-lstat",
+	                test_mu_util_get_dtype_with_lstat);
 
-	g_test_add_func ("/mu-util/mu-util-supports", test_mu_util_supports);
-	g_test_add_func ("/mu-util/mu-util-program-in-path",
-			 test_mu_util_program_in_path);
+	g_test_add_func("/mu-util/mu-util-supports", test_mu_util_supports);
+	g_test_add_func("/mu-util/mu-util-program-in-path",
+	                test_mu_util_program_in_path);
 
-	return g_test_run ();
+	return g_test_run();
 }

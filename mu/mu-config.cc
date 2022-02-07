@@ -62,14 +62,14 @@ get_output_format(const char* formatstr)
 	return MU_CONFIG_FORMAT_UNKNOWN;
 }
 
-#define expand_dir(D)                                                                              \
-	if ((D)) {                                                                                 \
-		char* exp;                                                                         \
-		exp = mu_util_dir_expand((D));                                                     \
-		if (exp) {                                                                         \
-			g_free((D));                                                               \
-			(D) = exp;                                                                 \
-		}                                                                                  \
+#define expand_dir(D)                          \
+	if ((D)) {                             \
+		char* exp;                     \
+		exp = mu_util_dir_expand((D)); \
+		if (exp) {                     \
+			g_free((D));           \
+			(D) = exp;             \
+		}                              \
 	}
 
 static void
@@ -612,7 +612,7 @@ config_options_group_extract()
                                    "try to 'play' (open) the extracted parts",
                                    NULL},
                                   {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
-	og = g_option_group_new("extract", "Options for the 'extract' command", "", NULL, NULL);
+	og                      = g_option_group_new("extract", "Options for the 'extract' command", "", NULL, NULL);
 	g_option_group_add_entries(og, entries);
 	g_option_group_add_entries(og, crypto_option_entries());
 
@@ -758,7 +758,7 @@ massage_help(const char* help)
 	GRegex* rx;
 	char*   str;
 
-	rx = g_regex_new("^Usage:.*\n.*\n", (GRegexCompileFlags)0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
+	rx  = g_regex_new("^Usage:.*\n.*\n", (GRegexCompileFlags)0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
 	str = g_regex_replace(rx, help, -1, 0, "", G_REGEX_MATCH_NEWLINE_ANY, NULL);
 	g_regex_unref(rx);
 	return str;
@@ -841,8 +841,6 @@ parse_params(int* argcp, char*** argvp, GError** err)
 	context = g_option_context_new("- mu general options");
 
 	g_option_context_set_help_enabled(context, TRUE);
-	rv = TRUE;
-
 	g_option_context_set_main_group(context, config_options_group_mu());
 	g_option_context_set_ignore_unknown_options(context, FALSE);
 

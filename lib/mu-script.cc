@@ -306,10 +306,6 @@ mu_script_guile_run(MuScriptInfo* msi, const char* muhome, const char** args, GE
 	g_return_val_if_fail(msi, FALSE);
 	g_return_val_if_fail(muhome, FALSE);
 
-	argv    = g_new0(char*, 6);
-	argv[0] = g_strdup(GUILE_BINARY);
-	argv[1] = g_strdup("-l");
-
 	if (access(mu_script_info_path(msi), R_OK) != 0) {
 		mu_util_g_set_error(err,
 		                    MU_ERROR_FILE_CANNOT_READ,
@@ -318,13 +314,17 @@ mu_script_guile_run(MuScriptInfo* msi, const char* muhome, const char** args, GE
 		return FALSE;
 	}
 
+	argv    = g_new0(char*, 6);
+	argv[0] = g_strdup(GUILE_BINARY);
+	argv[1] = g_strdup("-l");
+
 	s       = mu_script_info_path(msi);
 	argv[2] = g_strdup(s ? s : "");
 
 	mainargs = mu_str_quoted_from_strv(args);
 	expr     = g_strdup_printf("(main '(\"%s\" \"--muhome=%s\" %s))",
-                               mu_script_info_name(msi),
-                               muhome,
+	                           mu_script_info_name(msi),
+	                           muhome,
                                mainargs ? mainargs : "");
 
 	g_free(mainargs);

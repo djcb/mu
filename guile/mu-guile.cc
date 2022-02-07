@@ -149,14 +149,14 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 		muhome = scm_to_utf8_string(MUHOME);
 
 	rv = mu_guile_init_instance(muhome);
-	free(muhome);
-
-	if (!rv)
-		return mu_guile_error(FUNC_NAME, 0, "Failed to initialize mu", SCM_UNSPECIFIED);
+	if (!rv) {
+		free(muhome);
+		mu_guile_error(FUNC_NAME, 0, "Failed to initialize mu", SCM_UNSPECIFIED);
+	}
 
 	g_debug("mu-guile: initialized @ %s (%p)",
-	        muhome ? muhome : "<default>",
-	        StoreSingleton.get());
+	        muhome ? muhome : "<default>", StoreSingleton.get());
+	free(muhome);
 
 	/* cleanup when we're exiting */
 	atexit(mu_guile_uninit_instance);
