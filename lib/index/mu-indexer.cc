@@ -298,11 +298,17 @@ Indexer::Private::scan_worker()
 	// now there may still be messages in the work queue...
 	// finish those; this is a bit ugly; perhaps we should
 	// handle SIGTERM etc.
-	if (!todos_.empty())
-		g_debug("process %zu remaining message(s) with %zu worker(s)", todos_.size(),
-		        workers_.size());
-	while (!todos_.empty())
-		std::this_thread::sleep_for(100ms);
+
+	if (!todos_.empty()) {
+		const auto workers_size = std::invoke([this] {
+			std::lock_guard lock{w_lock_};
+			return workers_.size();
+		});
+		g_debug("process %zu remaining message(s) with %zu worker(s)",
+		        todos_.size(), workers_size);
+		while (!todos_.empty())
+			std::this_thread::sleep_for(100ms);
+	}
 
 	store_.commit();
 
