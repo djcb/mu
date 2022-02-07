@@ -39,7 +39,13 @@
 
 using namespace Mu;
 
-static std::atomic<bool> CaughtSignal{};
+static std::atomic<bool> caught_signal;
+
+static void
+sig_handler(int _sig)
+{
+	caught_signal = true;
+}
 
 static void
 install_sig_handler(void)
@@ -49,17 +55,12 @@ install_sig_handler(void)
 
 	sigemptyset(&action.sa_mask);
 	action.sa_flags   = SA_RESETHAND;
-	action.sa_handler = [](int sig) {
-		if (!CaughtSignal && sig == SIGINT) /* Ctrl-C */
-			g_print("\nshutting down gracefully, "
-			        "press again to kill immediately");
-		CaughtSignal = true;
-	};
+	action.sa_handler = sig_handler;
 
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
-			g_critical("set sigaction for %d failed: %s", sigs[i], g_strerror(errno));
-
+			g_critical("set sigaction for %d failed: %s",
+			           sigs[i], g_strerror(errno));
 }
 
 static void
@@ -127,7 +128,7 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 
 	auto& indexer{store.indexer()};
 	indexer.start(conf);
-	while (!CaughtSignal && indexer.is_running()) {
+	while (!caught_signal && indexer.is_running()) {
 		if (!opts->quiet)
 			print_stats(indexer.progress(), !opts->nocolor);
 
