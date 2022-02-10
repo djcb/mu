@@ -1576,6 +1576,9 @@ window                                                      . "
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((msg (mu4e-message-at-point))
+	 (path (mu4e-message-field msg :path))
+	 (_exists (or (file-readable-p  path)
+		     (mu4e-warn "No message at %s" path)))
          (docid (or (mu4e-message-field msg :docid)
                     (mu4e-warn "No message at point")))
          (mark-as-read
@@ -1594,15 +1597,6 @@ window                                                      . "
         (mu4e-loading-mode)))
 
     (switch-to-buffer mu4e~headers-loading-buf)
-    ;; Note, ideally in the 'gnus' case, we don't need to call the server to get
-    ;; the body etc., we only need the path which we already have.
-    ;;
-    ;; However, for now we still need the body for e.g. view-in-browser so let's
-    ;; not yet do that.
-
-    ;; (if mu4e-view-use-gnus
-    ;;     (mu4e-view msg)
-    ;;   (mu4e--server-view dowcid decrypt))
     (mu4e--server-view docid mark-as-read)))
 
 
