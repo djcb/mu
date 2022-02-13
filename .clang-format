@@ -20,7 +20,7 @@ BraceWrapping:
 BinPackArguments: 'true'
 BinPackParameters: 'true'
 BreakBeforeBraces: 'WebKit'
-ColumnLimit: '0'
+ColumnLimit: '90'
 Cpp11BracedListStyle: 'true'
 DerivePointerAlignment: 'false'
 IndentCaseLabels: 'false'

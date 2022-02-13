@@ -16,7 +16,7 @@ trim_trailing_whitespace    = true
 [*.{cc,cpp,hh,hpp}]
 indent_style                = tab
 indent_size                 = 8
-max_line_length             = 100
+max_line_length             = 90
 
 [*.{c,h}]
 indent_style                = tab
