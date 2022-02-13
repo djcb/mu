@@ -563,7 +563,10 @@ The result will be delivered to the function registered as
    `(view
      :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
      :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-     :mark-as-read ,mark-as-read)))
+     :mark-as-read ,mark-as-read
+     ;; when moving (due to mark-as-read), change filenames
+     ;; if so configured.
+     :rename  ,mu4e-change-filenames-when-moving)))
 
 
 (provide 'mu4e-server)

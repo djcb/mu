@@ -120,8 +120,7 @@ private:
 	                        const Option<QueryMatch&> qm,
 	                        MuMsgOptions              opts) const;
 
-	Sexp::List
-		   move_docid(Store::Id docid, const std::string& flagstr, bool new_name, bool no_view);
+	Sexp::List move_docid(Store::Id docid, const std::string& flagstr, bool new_name, bool no_view);
 	Sexp::List perform_move(Store::Id          docid,
 	                        MuMsg*             msg,
 	                        const std::string& maildirarg,
@@ -129,8 +128,8 @@ private:
 	                        bool               new_name,
 	                        bool               no_view);
 
-	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid);
-	bool maybe_mark_msgid_as_read(const char* msgid);
+	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename);
+	bool maybe_mark_msgid_as_read(const char* msgid, bool rename);
 
 	Store&            store_;
 	Server::Output    output_;
@@ -338,6 +337,7 @@ Server::Private::make_command_map()
 			    {":path", ArgInfo{Type::String, false, "message filesystem path"}},
 			    {":mark-as-read",
 	                     ArgInfo{Type::Symbol, false, "mark message as read (if not already)"}},
+			    {":rename", ArgInfo{Type::Symbol, false, "change filename when moving"}},
 			},
 	                "view a message. exactly one of docid/msgid/path must be specified",
 	                [&](const auto& params) { view_handler(params); }});
@@ -613,7 +613,7 @@ determine_docids(const Store& store, const Parameters& params)
 		            "precisely one of docid and msgid must be specified");
 
 	if (docid != 0)
-		return {(unsigned)docid};
+		return {static_cast<Store::Id>(docid)};
 	else
 		return docids_for_msgid(store, msgid.c_str());
 }
@@ -1047,7 +1047,7 @@ Server::Private::sent_handler(const Parameters& params)
 }
 
 bool
-Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid)
+Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
 {
 	if (!msg)
 		throw Error{Error::Code::Store, "missing message"};
@@ -1062,7 +1062,7 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid)
 	                            mu_msg_get_maildir(msg),
 	                            newflags,
 	                            TRUE,
-	                            FALSE, /*new_name,*/
+	                            rename ? TRUE : FALSE,
 	                            &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 
@@ -1082,7 +1082,7 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid)
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const char* msgid)
+Server::Private::maybe_mark_msgid_as_read(const char* msgid, bool rename)
 {
 	if (!msgid)
 		return false; // nothing to do.
@@ -1093,7 +1093,7 @@ Server::Private::maybe_mark_msgid_as_read(const char* msgid)
 		if (!msg)
 			continue;
 		try {
-			maybe_mark_as_read(msg, docid);
+			maybe_mark_as_read(msg, docid, rename);
 		} catch (...) {
 			mu_msg_unref(msg);
 			throw;
@@ -1106,29 +1106,23 @@ Server::Private::maybe_mark_msgid_as_read(const char* msgid)
 void
 Server::Private::view_handler(const Parameters& params)
 {
-	Store::Id  docid{Store::InvalidId};
-	const auto path{get_string_or(params, ":path")};
 	const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
+	const auto rename{get_bool_or(params, ":rename")};
+	const auto docids{determine_docids(store(), params)};
 
-	GError* gerr{};
-	MuMsg*  msg{};
+	if (docids.empty())
+		throw Error{Error::Code::Store, "failed to find message for view"};
 
-	if (!path.empty()) { /* only use for old view (embedded msgs) */
-		docid = Store::InvalidId;
-		msg   = mu_msg_new_from_file(path.c_str(), NULL, &gerr);
-	} else {
-		docid = determine_docids(store(), params).at(0);
-		msg   = store().find_message(docid);
-	}
-
+	const auto docid{docids.at(0)};
+	MuMsg*     msg{store().find_message(docid)};
 	if (!msg)
-		throw Error{Error::Code::Store, &gerr, "failed to find message for view"};
+		throw Error{Error::Code::Store, "failed to find message for view"};
 
 	if (mark_as_read) {
 		// maybe mark the main message as read.
-		maybe_mark_as_read(msg, docid);
+		maybe_mark_as_read(msg, docid, rename);
 		/* maybe mark _all_ messsage with same message-id as read */
-		maybe_mark_msgid_as_read(mu_msg_get_msgid(msg));
+		maybe_mark_msgid_as_read(mu_msg_get_msgid(msg), rename);
 	}
 
 	Sexp::List seq;
