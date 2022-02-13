@@ -983,7 +983,7 @@ Server::Private::ping_handler(const Parameters& params)
 	}
 
 	Sexp::List addrs;
-	for (auto&& addr : store().metadata().personal_addresses)
+	for (auto&& addr : store().properties().personal_addresses)
 		addrs.add(Sexp::make_string(addr));
 
 	Sexp::List lst;
@@ -992,8 +992,8 @@ Server::Private::ping_handler(const Parameters& params)
 	Sexp::List proplst;
 	proplst.add_prop(":version", Sexp::make_string(VERSION));
 	proplst.add_prop(":personal-addresses", Sexp::make_list(std::move(addrs)));
-	proplst.add_prop(":database-path", Sexp::make_string(store().metadata().database_path));
-	proplst.add_prop(":root-maildir", Sexp::make_string(store().metadata().root_maildir));
+	proplst.add_prop(":database-path", Sexp::make_string(store().properties().database_path));
+	proplst.add_prop(":root-maildir", Sexp::make_string(store().properties().root_maildir));
 	proplst.add_prop(":doccount", Sexp::make_number(storecount));
 	proplst.add_prop(":queries", Sexp::make_list(std::move(qresults)));
 

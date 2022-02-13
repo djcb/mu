@@ -113,8 +113,8 @@ try {
 	Server server{store, output_sexp_stdout};
 
 	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
-	          store.metadata().database_path.c_str(),
-	          store.metadata().root_maildir.c_str(),
+	          store.properties().database_path.c_str(),
+	          store.properties().root_maildir.c_str(),
 	          opts->debug ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));

@@ -79,15 +79,15 @@ private:
 
 struct Indexer::Private {
 	Private(Mu::Store& store)
-	    : store_{store}, scanner_{store_.metadata().root_maildir,
+	    : store_{store}, scanner_{store_.properties().root_maildir,
 	                              [this](auto&& path, auto&& statbuf, auto&& info) {
 					      return handler(path, statbuf, info);
 				      }},
-	      max_message_size_{store_.metadata().max_message_size}
+	      max_message_size_{store_.properties().max_message_size}
 	{
 		g_message("created indexer for %s -> %s (batch-size: %zu)",
-		          store.metadata().root_maildir.c_str(),
-		          store.metadata().database_path.c_str(), store.metadata().batch_size);
+		          store.properties().root_maildir.c_str(),
+		          store.properties().database_path.c_str(), store.properties().batch_size);
 	}
 
 	~Private()
@@ -379,7 +379,7 @@ Indexer::~Indexer() = default;
 bool
 Indexer::start(const Indexer::Config& conf)
 {
-	const auto mdir{priv_->store_.metadata().root_maildir};
+	const auto mdir{priv_->store_.properties().root_maildir};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0)) {
 		g_critical("'%s' is not readable: %s", mdir.c_str(), g_strerror(errno));
 		return false;

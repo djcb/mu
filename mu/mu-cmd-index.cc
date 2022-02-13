@@ -96,7 +96,7 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 		return MU_ERROR;
 	}
 
-	const auto mdir{store.metadata().root_maildir};
+	const auto mdir{store.properties().root_maildir};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0)) {
 		mu_util_g_set_error(err,
 		                    MU_ERROR_FILE,
@@ -113,8 +113,8 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 			std::cout << "lazily ";
 
 		std::cout << "indexing maildir " << col.fg(Color::Green)
-			  << store.metadata().root_maildir << col.reset() << " -> store "
-			  << col.fg(Color::Green) << store.metadata().database_path << col.reset()
+			  << store.properties().root_maildir << col.reset() << " -> store "
+			  << col.fg(Color::Green) << store.properties().database_path << col.reset()
 			  << std::endl;
 	}
 

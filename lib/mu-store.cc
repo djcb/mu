@@ -52,6 +52,7 @@ constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir
 constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
+constexpr auto LastIndexKey         = "last-index"; /* time of last index */
 constexpr auto BatchSizeKey         = "batch-size";
 constexpr auto DefaultBatchSize     = 250'000U;
 
@@ -88,27 +89,24 @@ add_synonym_for_flag(MuFlags flag, Xapian::WritableDatabase* db)
 }
 
 struct Store::Private {
-	enum struct XapianOpts { ReadOnly,
-		                 Open,
-		                 CreateOverwrite,
-		                 InMemory };
+	enum struct XapianOpts { ReadOnly, Open, CreateOverwrite, InMemory };
 
 	Private(const std::string& path, bool readonly)
 	    : read_only_{readonly}, db_{make_xapian_db(path,
 	                                               read_only_ ? XapianOpts::ReadOnly
 	                                                          : XapianOpts::Open)},
-	      mdata_{make_metadata(path)}, contacts_{db().get_metadata(ContactsKey),
-	                                             mdata_.personal_addresses}
+	      properties_{make_properties(path)}, contacts_{db().get_metadata(ContactsKey),
+	                                             properties_.personal_addresses}
 	{
 	}
 
-	Private(const std::string&   path,
-	        const std::string&   root_maildir,
-	        const StringVec&     personal_addresses,
+	Private(const std::string& path,
+	        const std::string& root_maildir,
+	        const StringVec& personal_addresses,
 	        const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db(path, XapianOpts::CreateOverwrite)},
-	      mdata_{init_metadata(conf, path, root_maildir, personal_addresses)},
-	      contacts_{"", mdata_.personal_addresses}
+	      properties_{init_metadata(conf, path, root_maildir, personal_addresses)},
+	      contacts_{"", properties_.personal_addresses}
 	{
 	}
 
@@ -116,14 +114,14 @@ struct Store::Private {
 	        const StringVec&     personal_addresses,
 	        const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db("", XapianOpts::InMemory)},
-	      mdata_{init_metadata(conf, "", root_maildir, personal_addresses)},
-	      contacts_{"", mdata_.personal_addresses}
+	      properties_{init_metadata(conf, "", root_maildir, personal_addresses)},
+	      contacts_{"", properties_.personal_addresses}
 	{
 	}
 
 	~Private()
 	try {
-		g_debug("closing store @ %s", mdata_.database_path.c_str());
+		g_debug("closing store @ %s", properties_.database_path.c_str());
 		if (!read_only_) {
 			transaction_maybe_commit(true /*force*/);
 		}
@@ -171,7 +169,7 @@ struct Store::Private {
 	// If not started yet, start a transaction. Otherwise, just update the transaction size.
 	void transaction_inc() noexcept
 	{
-		if (mdata_.in_memory)
+		if (properties_.in_memory)
 			return; // not supported
 
 		if (transaction_size_ == 0) {
@@ -185,10 +183,10 @@ struct Store::Private {
 	// filled up a batch, or with force.
 	void transaction_maybe_commit(bool force = false) noexcept
 	{
-		if (mdata_.in_memory || transaction_size_ == 0)
+		if (properties_.in_memory || transaction_size_ == 0)
 			return; // not supported or not in transaction
 
-		if (force || transaction_size_ >= mdata_.batch_size) {
+		if (force || transaction_size_ >= properties_.batch_size) {
 			if (contacts_.dirty()) {
 				xapian_try([&] {
 					writable_db().set_metadata(ContactsKey,
@@ -227,26 +225,24 @@ struct Store::Private {
 		return (time_t)atoll(db().get_metadata(key).c_str());
 	}
 
-	Store::Metadata make_metadata(const std::string& db_path)
+	Store::Properties make_properties(const std::string& db_path)
 	{
-		Store::Metadata mdata;
+		Store::Properties props;
 
-		mdata.database_path  = db_path;
-		mdata.schema_version = db().get_metadata(SchemaVersionKey);
-		mdata.created        = ::atoll(db().get_metadata(CreatedKey).c_str());
-		mdata.read_only      = read_only_;
+		props.database_path	 = db_path;
+		props.schema_version	 = db().get_metadata(SchemaVersionKey);
+		props.created		 = ::atoll(db().get_metadata(CreatedKey).c_str());
+		props.read_only		 = read_only_;
+		props.batch_size	 = ::atoll(db().get_metadata(BatchSizeKey).c_str());
+		props.max_message_size	 = ::atoll(db().get_metadata(MaxMessageSizeKey).c_str());
+		props.in_memory		 = db_path.empty();
+		props.root_maildir       = db().get_metadata(RootMaildirKey);
+		props.personal_addresses = Mu::split(db().get_metadata(PersonalAddressesKey), ",");
 
-		mdata.batch_size       = ::atoll(db().get_metadata(BatchSizeKey).c_str());
-		mdata.max_message_size = ::atoll(db().get_metadata(MaxMessageSizeKey).c_str());
-		mdata.in_memory        = db_path.empty();
-
-		mdata.root_maildir       = db().get_metadata(RootMaildirKey);
-		mdata.personal_addresses = Mu::split(db().get_metadata(PersonalAddressesKey), ",");
-
-		return mdata;
+		return props;
 	}
 
-	Store::Metadata init_metadata(const Store::Config& conf,
+	Store::Properties init_metadata(const Store::Config& conf,
 	                              const std::string&   path,
 	                              const std::string&   root_maildir,
 	                              const StringVec&     personal_addresses)
@@ -273,7 +269,7 @@ struct Store::Private {
 		}
 		writable_db().set_metadata(PersonalAddressesKey, addrs);
 
-		return make_metadata(path);
+		return make_properties(path);
 	}
 
 	Xapian::docid    add_or_update_msg(Xapian::docid docid, MuMsg* msg);
@@ -286,7 +282,7 @@ struct Store::Private {
 	const bool                        read_only_{};
 	std::unique_ptr<Xapian::Database> db_;
 
-	const Store::Metadata    mdata_;
+	const Store::Properties properties_;
 	Contacts                 contacts_;
 	std::unique_ptr<Indexer> indexer_;
 
@@ -313,12 +309,12 @@ get_uid_term(const char* path)
 Store::Store(const std::string& path, bool readonly)
     : priv_{std::make_unique<Private>(path, readonly)}
 {
-	if (metadata().schema_version != ExpectedSchemaVersion)
+	if (properties().schema_version != ExpectedSchemaVersion)
 		throw Mu::Error(Error::Code::SchemaMismatch,
 		                "expected schema-version %s, but got %s; "
 		                "please use 'mu init'",
 		                ExpectedSchemaVersion,
-		                metadata().schema_version.c_str());
+		                properties().schema_version.c_str());
 }
 
 Store::Store(const std::string&   path,
@@ -336,10 +332,10 @@ Store::Store(const std::string& maildir, const StringVec& personal_addresses, co
 
 Store::~Store() = default;
 
-const Store::Metadata&
-Store::metadata() const
+const Store::Properties&
+Store::properties() const
 {
-	return priv_->mdata_;
+	return priv_->properties_;
 }
 
 const Contacts&
@@ -365,7 +361,7 @@ Store::indexer()
 {
 	std::lock_guard guard{priv_->lock_};
 
-	if (metadata().read_only)
+	if (properties().read_only)
 		throw Error{Error::Code::Store, "no indexer for read-only store"};
 	else if (!priv_->indexer_)
 		priv_->indexer_ = std::make_unique<Indexer>(*this);
@@ -419,7 +415,7 @@ Store::add_message(const std::string& path, bool use_transaction)
 	std::lock_guard guard{priv_->lock_};
 
 	GError*    gerr{};
-	const auto maildir{maildir_from_path(metadata().root_maildir, path)};
+	const auto maildir{maildir_from_path(properties().root_maildir, path)};
 	auto       msg{mu_msg_new_from_file(path.c_str(), maildir.c_str(), &gerr)};
 	if (G_UNLIKELY(!msg))
 		throw Error{Error::Code::Message,

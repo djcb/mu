@@ -85,9 +85,9 @@ try {
 	StoreSingleton = std::make_unique<Mu::Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
 
 	g_debug("mu-guile: opened store @ %s (n=%zu); maildir: %s",
-	        StoreSingleton->metadata().database_path.c_str(),
+	        StoreSingleton->properties().database_path.c_str(),
 	        StoreSingleton->size(),
-	        StoreSingleton->metadata().root_maildir.c_str());
+	        StoreSingleton->properties().root_maildir.c_str());
 
 	return TRUE;
 

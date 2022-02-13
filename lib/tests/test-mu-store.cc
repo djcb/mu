@@ -43,7 +43,7 @@ test_store_ctor_dtor()
 	g_assert_true(store.empty());
 	g_assert_cmpuint(0, ==, store.size());
 
-	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==, store.metadata().schema_version.c_str());
+	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==, store.properties().schema_version.c_str());
 }
 
 static void
@@ -84,7 +84,7 @@ test_store_add_count_remove_in_memory()
 {
 	Mu::Store store{MuTestMaildir, {}, {}};
 
-	g_assert_true(store.metadata().in_memory);
+	g_assert_true(store.properties().in_memory);
 
 	const auto id1 = store.add_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,");
 

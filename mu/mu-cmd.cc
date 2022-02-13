@@ -518,14 +518,14 @@ cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 {
 	Mu::MaybeAnsi col{!opts->nocolor};
 
-	key_val(col, "maildir", store.metadata().root_maildir);
-	key_val(col, "database-path", store.metadata().database_path);
-	key_val(col, "schema-version", store.metadata().schema_version);
-	key_val(col, "max-message-size", store.metadata().max_message_size);
-	key_val(col, "batch-size", store.metadata().batch_size);
+	key_val(col, "maildir", store.properties().root_maildir);
+	key_val(col, "database-path", store.properties().database_path);
+	key_val(col, "schema-version", store.properties().schema_version);
+	key_val(col, "max-message-size", store.properties().max_message_size);
+	key_val(col, "batch-size", store.properties().batch_size);
 	key_val(col, "messages in store", store.size());
 
-	const auto created{store.metadata().created};
+	const auto created{store.properties().created};
 	const auto tstamp{::localtime(&created)};
 
 #pragma GCC diagnostic push
@@ -536,7 +536,7 @@ cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 
 	key_val(col, "created", tbuf);
 
-	const auto addrs{store.metadata().personal_addresses};
+	const auto addrs{store.properties().personal_addresses};
 	if (addrs.empty())
 		key_val(col, "personal-address", "<none>");
 	else

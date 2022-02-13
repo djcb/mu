@@ -86,7 +86,10 @@ public:
 	 */
 	~Store();
 
-	struct Metadata {
+	/**
+	 * Store properties
+	 */
+	struct Properties {
 		std::string database_path;  /**< Full path to the Xapian database */
 		std::string schema_version; /**< Database schema version */
 		std::time_t created;        /**<  database creation time */
@@ -102,11 +105,11 @@ public:
 	};
 
 	/**
-	 * Get metadata about this store.
+	 * Get properties about this store.
 	 *
 	 * @return the metadata
 	 */
-	const Metadata& metadata() const;
+	const Properties& properties() const;
 	/**
 	 * Get the Contacts object for this store
 	 *
