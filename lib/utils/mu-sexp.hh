@@ -76,6 +76,7 @@ struct Sexp {
 			throw Error(Error::Code::InvalidArgument, "symbol must be non-empty");
 		return Sexp{Type::Symbol, std::move(val)};
 	}
+	static Sexp make_symbol_sv(std::string_view val) { return make_symbol(std::string{val}); }
 
 	/**
 	 *

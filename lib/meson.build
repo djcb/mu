@@ -61,12 +61,13 @@ lib_mu=static_library(
     'mu-msg-file.hh',
     'mu-msg-part.cc',
     'mu-msg-part.hh',
-    'mu-msg-prio.c',
-    'mu-msg-prio.h',
     'mu-msg-priv.hh',
     'mu-msg-sexp.cc',
     'mu-msg.cc',
-    'mu-msg.hh'
+    'mu-msg.hh',
+    'mu-message-priority.hh'
+    'mu-message-priority.hh',
+    'mu-message-priority.cc'
   ],
   dependencies: [
     glib_dep,

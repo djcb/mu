@@ -261,10 +261,10 @@ make_part_types(MuMsgPartType ptype)
 static void
 each_part(MuMsg* msg, MuMsgPart* part, PartInfo* pinfo)
 {
-	auto mimetype     = format("%s/%s",
+	auto       mimetype     = format("%s/%s",
                                part->type ? part->type : "application",
                                part->subtype ? part->subtype : "octet-stream");
-	auto maybe_attach = Sexp::make_symbol(mu_msg_part_maybe_attachment(part) ? "t" : "nil");
+	auto       maybe_attach = Sexp::make_symbol(mu_msg_part_maybe_attachment(part) ? "t" : "nil");
 	Sexp::List partlist;
 
 	partlist.add_prop(":index", Sexp::make_number(part->index));
@@ -385,7 +385,8 @@ Mu::msg_to_sexp_list(MuMsg* msg, unsigned docid, MuMsgOptions opts)
 	add_prop_nonempty(items, ":path", mu_msg_get_path(msg));
 	add_prop_nonempty(items, ":maildir", mu_msg_get_maildir(msg));
 
-	items.add_prop(":priority", Sexp::make_symbol(mu_msg_prio_name(mu_msg_get_prio(msg))));
+	items.add_prop(":priority",
+	               Sexp::make_symbol_sv(message_priority_name(mu_msg_get_prio(msg))));
 
 	/* in the no-headers-only case (see below) we get a more complete list of contacts, so no
 	 * need to get them here if that's the case */

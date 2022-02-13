@@ -307,8 +307,9 @@ display_field(MuMsg* msg, MuMsgFieldId mfid)
 	case MU_MSG_FIELD_TYPE_INT:
 
 		if (mfid == MU_MSG_FIELD_ID_PRIO) {
-			val = mu_msg_get_field_numeric(msg, mfid);
-			return mu_msg_prio_name((MuMsgPrio)val);
+			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, mfid));
+			const auto prio = message_priority_from_char(val);
+			return message_priority_name_c_str(prio);
 		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_get_field_numeric(msg, mfid);
 			return mu_str_flags_s((MuFlags)val);

@@ -87,20 +87,6 @@ add_synonym_for_flag(MuFlags flag, Xapian::WritableDatabase* db)
 	                pfx + (std::string(1, (char)(tolower(mu_flag_char(flag))))));
 }
 
-static void
-add_synonym_for_prio(MuMsgPrio prio, Xapian::WritableDatabase* db)
-{
-	static const std::string pfx(prefix(MU_MSG_FIELD_ID_PRIO));
-
-	std::string s1(pfx + mu_msg_prio_name(prio));
-	std::string s2(pfx + (std::string(1, mu_msg_prio_char(prio))));
-
-	db->clear_synonyms(s1);
-	db->clear_synonyms(s2);
-
-	db->add_synonym(s1, s2);
-}
-
 struct Store::Private {
 	enum struct XapianOpts { ReadOnly,
 		                 Open,
@@ -222,8 +208,17 @@ struct Store::Private {
 
 	void add_synonyms()
 	{
-		mu_flags_foreach((MuFlagsForeachFunc)add_synonym_for_flag, &writable_db());
-		mu_msg_prio_foreach((MuMsgPrioForeachFunc)add_synonym_for_prio, &writable_db());
+		mu_flags_foreach((MuFlagsForeachFunc)add_synonym_for_flag,
+		                 &writable_db());
+
+		for (auto&& prio : AllMessagePriorities) {
+			const auto s1{prefix(MU_MSG_FIELD_ID_PRIO) + to_string(prio)};
+			const auto s2{prefix(MU_MSG_FIELD_ID_PRIO) +
+			              std::string{1, to_char(prio)}};
+			writable_db().clear_synonyms(s1);
+			writable_db().clear_synonyms(s2);
+			writable_db().add_synonym(s1, s2);
+		}
 	}
 
 	time_t metadata_time_t(const std::string& key) const
@@ -722,20 +717,18 @@ flag_val(char flagchar)
 	}
 }
 
-/* pre-calculate; optimization */
-G_GNUC_CONST static const std::string&
-prio_val(MuMsgPrio prio)
+static const std::string&
+prio_val(MessagePriority prio)
 {
 	static const std::string pfx(prefix(MU_MSG_FIELD_ID_PRIO));
-
-	static const std::string low(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_LOW))),
-	    norm(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_NORMAL))),
-	    high(pfx + std::string(1, mu_msg_prio_char(MU_MSG_PRIO_HIGH)));
+	static const std::string low(pfx + std::string(1, to_char(MessagePriority::Low))),
+	    norm(pfx + std::string(1, to_char(MessagePriority::Normal))),
+	    high(pfx + std::string(1, to_char(MessagePriority::High)));
 
 	switch (prio) {
-	case MU_MSG_PRIO_LOW: return low;
-	case MU_MSG_PRIO_NORMAL: return norm;
-	case MU_MSG_PRIO_HIGH: return high;
+	case MessagePriority::Low: return low;
+	case MessagePriority::Normal: return norm;
+	case MessagePriority::High: return high;
 	default: g_return_val_if_reached(norm); return norm;
 	}
 }
@@ -766,7 +759,7 @@ add_terms_values_number(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 		}
 
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO)
-		add_term(doc, prio_val((MuMsgPrio)num));
+		add_term(doc, prio_val(static_cast<MessagePriority>(num)));
 }
 
 /* for string and string-list */

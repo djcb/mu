@@ -438,41 +438,41 @@ get_size(MuMsgFile* self)
 	return self->_size;
 }
 
-static MuMsgPrio
+static MessagePriority
 parse_prio_str(const char* priostr)
 {
 	int i;
 	struct {
-		const char* _str;
-		MuMsgPrio   _prio;
-	} str_prio[] = {{"high", MU_MSG_PRIO_HIGH},
-	                {"1", MU_MSG_PRIO_HIGH},
-	                {"2", MU_MSG_PRIO_HIGH},
+		const char*     _str;
+		MessagePriority _prio;
+	} str_prio[] = {{"high", MessagePriority::High},
+	                {"1", MessagePriority::High},
+	                {"2", MessagePriority::High},
 
-	                {"normal", MU_MSG_PRIO_NORMAL},
-	                {"3", MU_MSG_PRIO_NORMAL},
+	                {"normal", MessagePriority::Normal},
+	                {"3", MessagePriority::Normal},
 
-	                {"low", MU_MSG_PRIO_LOW},
-	                {"list", MU_MSG_PRIO_LOW},
-	                {"bulk", MU_MSG_PRIO_LOW},
-	                {"4", MU_MSG_PRIO_LOW},
-	                {"5", MU_MSG_PRIO_LOW}};
+	                {"low", MessagePriority::Low},
+	                {"list", MessagePriority::Low},
+	                {"bulk", MessagePriority::Low},
+	                {"4", MessagePriority::Low},
+	                {"5", MessagePriority::Low}};
 
 	for (i = 0; i != G_N_ELEMENTS(str_prio); ++i)
 		if (g_ascii_strcasecmp(priostr, str_prio[i]._str) == 0)
 			return str_prio[i]._prio;
 
 	/* e.g., last-fm uses 'fm-user'... as precedence */
-	return MU_MSG_PRIO_NORMAL;
+	return MessagePriority::Normal;
 }
 
-static MuMsgPrio
+static MessagePriority
 get_prio(MuMsgFile* self)
 {
 	GMimeObject* obj;
 	const char*  priostr;
 
-	g_return_val_if_fail(self, MU_MSG_PRIO_NONE);
+	g_return_val_if_fail(self, MessagePriority::Normal);
 
 	obj = GMIME_OBJECT(self->_mime_msg);
 
@@ -481,8 +481,10 @@ get_prio(MuMsgFile* self)
 		priostr = g_mime_object_get_header(obj, "X-Priority");
 	if (!priostr)
 		priostr = g_mime_object_get_header(obj, "Importance");
-
-	return priostr ? parse_prio_str(priostr) : MU_MSG_PRIO_NORMAL;
+	if (!priostr)
+		return MessagePriority::Normal;
+	else
+		return parse_prio_str(priostr);
 }
 
 /* NOTE: buffer will be *freed* or returned unchanged */

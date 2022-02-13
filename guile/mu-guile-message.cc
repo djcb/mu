@@ -134,9 +134,9 @@ static SCM
 get_prio_scm(MuMsg* msg)
 {
 	switch (mu_msg_get_prio(msg)) {
-	case MU_MSG_PRIO_LOW: return SYMB_PRIO_LOW;
-	case MU_MSG_PRIO_NORMAL: return SYMB_PRIO_NORMAL;
-	case MU_MSG_PRIO_HIGH: return SYMB_PRIO_HIGH;
+	case MessagePriority::Low: return SYMB_PRIO_LOW;
+	case MessagePriority::Normal: return SYMB_PRIO_NORMAL;
+	case MessagePriority::High: return SYMB_PRIO_HIGH;
 
 	default: g_return_val_if_reached(SCM_UNDEFINED);
 	}

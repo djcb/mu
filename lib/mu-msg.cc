@@ -427,11 +427,13 @@ Mu::mu_msg_get_size(MuMsg* self)
 	return (size_t)get_num_field(self, MU_MSG_FIELD_ID_SIZE);
 }
 
-MuMsgPrio
+Mu::MessagePriority
 Mu::mu_msg_get_prio(MuMsg* self)
 {
-	g_return_val_if_fail(self, MU_MSG_PRIO_NORMAL);
-	return (MuMsgPrio)get_num_field(self, MU_MSG_FIELD_ID_PRIO);
+	g_return_val_if_fail(self, MessagePriority{});
+
+	return message_priority_from_char(
+	    static_cast<char>(get_num_field(self, MU_MSG_FIELD_ID_PRIO)));
 }
 
 struct _BodyData {

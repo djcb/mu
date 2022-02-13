@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include <mu-flags.hh>
 #include <mu-msg-fields.h>
-#include <mu-msg-prio.h>
+#include <mu-message-priority.hh>
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
@@ -339,17 +339,15 @@ const GSList* mu_msg_get_field_string_list(MuMsg* self, MuMsgFieldId mfid);
 gint64 mu_msg_get_field_numeric(MuMsg* msg, MuMsgFieldId mfid);
 
 /**
- * get the message priority for this message (MU_MSG_PRIO_LOW,
- * MU_MSG_PRIO_NORMAL or MU_MSG_PRIO_HIGH) the X-Priority,
- * X-MSMailPriority, Importance and Precedence header are checked, in
- * that order.  if no known or explicit priority is set,
- * MU_MSG_PRIO_NORMAL is assumed
+ * get the message priority for this message. The X-Priority, X-MSMailPriority,
+ * Importance and Precedence header are checked, in that order. if no known or
+ * explicit priority is set, MessagePriority::Id::Normal is assumed
  *
  * @param msg a valid MuMsg* instance
  *
- * @return the message priority (!= 0) or 0 in case of error
+ * @return the message priority
  */
-MuMsgPrio mu_msg_get_prio(MuMsg* msg);
+MessagePriority mu_msg_get_prio(MuMsg* msg);
 
 /**
  * get the timestamp (mtime) for the file containing this message

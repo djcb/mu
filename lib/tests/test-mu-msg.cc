@@ -94,9 +94,7 @@ test_mu_msg_01(void)
 	g_assert_cmpstr(mu_msg_get_header(msg, "Mailing-List"),
 	                ==,
 	                "contact gcc-help-help@gcc.gnu.org; run by ezmlm");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'klub' */
-	                 ==,
-	                 MU_MSG_PRIO_NORMAL);
+	g_assert_true(mu_msg_get_prio(msg) == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1217530645);
 
 	i = 0;
@@ -140,9 +138,8 @@ test_mu_msg_02(void)
 	g_assert_cmpstr(mu_msg_get_header(msg, "Errors-To"),
 	                ==,
 	                "help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_LOW);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::Low);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1218051515);
 
 	i = 0;
@@ -163,9 +160,8 @@ test_mu_msg_03(void)
 	g_assert_cmpstr(mu_msg_get_to(msg), ==, "Bilbo Baggins <bilbo@anotherexample.com>");
 	g_assert_cmpstr(mu_msg_get_subject(msg), ==, "Greetings from Lothlórien");
 	g_assert_cmpstr(mu_msg_get_from(msg), ==, "Frodo Baggins <frodo@example.com>");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_NORMAL);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 0);
 	g_assert_cmpstr(mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE),
 	                ==,
@@ -192,9 +188,8 @@ test_mu_msg_04(void)
 	g_assert_cmpstr(mu_msg_get_to(msg), ==, "George Custer <gac@example.com>");
 	g_assert_cmpstr(mu_msg_get_subject(msg), ==, "pics for you");
 	g_assert_cmpstr(mu_msg_get_from(msg), ==, "Sitting Bull <sb@example.com>");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_NORMAL);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 0);
 	g_assert_cmpuint(mu_msg_get_flags(msg), ==, MU_FLAG_HAS_ATTACH | MU_FLAG_UNREAD);
 	mu_msg_unref(msg);
@@ -257,9 +252,8 @@ test_mu_msg_umlaut(void)
 	g_assert_cmpstr(mu_msg_get_to(msg), ==, "Helmut Kröger <hk@testmu.xxx>");
 	g_assert_cmpstr(mu_msg_get_subject(msg), ==, "Motörhead");
 	g_assert_cmpstr(mu_msg_get_from(msg), ==, "Mü <testmu@testmu.xx>");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_NORMAL);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 0);
 
 	mu_msg_unref(msg);
@@ -366,9 +360,8 @@ test_mu_msg_tags(void)
 	                ==,
 	                "Fere libenter homines id quod volunt credunt");
 	g_assert_cmpstr(mu_msg_get_from(msg), ==, "John Milton <jm@example.com>");
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_HIGH);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::High);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1217530645);
 
 	tags = mu_msg_get_tags(msg);
@@ -414,9 +407,8 @@ test_mu_msg_comp_unix_programmer(void)
 	g_free(refs);
 
 	//"jimbo@slp53.sl.home (Jimbo Foobarcuux)";
-	g_assert_cmpuint(mu_msg_get_prio(msg), /* 'low' */
-	                 ==,
-	                 MU_MSG_PRIO_NORMAL);
+	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
+	              == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1299603860);
 
 	mu_msg_unref(msg);
@@ -425,23 +417,15 @@ test_mu_msg_comp_unix_programmer(void)
 static void
 test_mu_str_prio_01(void)
 {
-	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_LOW), ==, "low");
-	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_NORMAL), ==, "normal");
-	g_assert_cmpstr(mu_msg_prio_name(MU_MSG_PRIO_HIGH), ==, "high");
+	g_assert_true(message_priority_name(Mu::MessagePriority::Low) == "low");
+	g_assert_true(message_priority_name(Mu::MessagePriority::Normal) == "normal");
+	g_assert_true(message_priority_name(Mu::MessagePriority::High) == "high");
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 ignore_error(const char* log_domain, GLogLevelFlags log_level, const gchar* msg, gpointer user_data)
 {
 	return FALSE; /* don't abort */
-}
-
-static void
-test_mu_str_prio_02(void)
-{
-	/* this must fail */
-	g_test_log_set_fatal_handler((GTestLogFatalFunc)ignore_error, NULL);
-	g_assert_cmpstr(mu_msg_prio_name((MuMsgPrio)666), ==, NULL);
 }
 
 static void
@@ -486,7 +470,6 @@ main(int argc, char* argv[])
 
 	/* mu_str_prio */
 	g_test_add_func("/mu-str/mu-str-prio-01", test_mu_str_prio_01);
-	g_test_add_func("/mu-str/mu-str-prio-02", test_mu_str_prio_02);
 
 	g_test_add_func("/mu-str/mu-str-display_contact", test_mu_str_display_contact);
 
