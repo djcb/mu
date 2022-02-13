@@ -283,6 +283,25 @@ public:
 	 */
 	size_t for_each_term(const std::string& field, ForEachTermFunc func) const;
 
+
+	/**
+	 * Get the store metadata for @p key
+	 *
+	 * @param key the metadata key
+	 *
+	 * @return the metadata value or empty for none.
+	 */
+	std::string metadata(const std::string& key) const;
+
+
+	/**
+	 * Write metadata to the store.
+	 *
+	 * @param key key
+	 * @param val value
+	 */
+	void set_metadata(const std::string& key, const std::string& val);
+
 	/**
 	 * Get the timestamp for some message, or 0 if not found
 	 *
@@ -306,10 +325,8 @@ public:
 	 *
 	 * @param path a filesystem path
 	 * @param tstamp the timestamp for that path
-	 * @param whether to do this as part of a transaction
 	 */
-	void set_dirstamp(const std::string& path, time_t tstamp,
-	                  bool use_transaction = false);
+	void set_dirstamp(const std::string& path, time_t tstamp);
 
 	/**
 	 * Get the number of documents in the document database

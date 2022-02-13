@@ -25,6 +25,7 @@
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <atomic>
 #include <type_traits>
@@ -194,10 +195,10 @@ struct Store::Private {
 				});
 			}
 			g_debug("committing transaction (n=%zu,%zu)",
-			        transaction_size_, metadatas_.size());
+			        transaction_size_, metadata_cache_.size());
 			xapian_try([this] {
 				writable_db().commit_transaction();
-				for (auto&& mdata : metadatas_)
+				for (auto&& mdata : metadata_cache_)
 					writable_db().set_metadata(mdata.first, mdata.second);
 				transaction_size_ = 0;
 			});
@@ -276,8 +277,7 @@ struct Store::Private {
 	Xapian::Document new_doc_from_message(MuMsg* msg);
 
 	/* metadata to write as part of a transaction commit */
-	using StringPair = std::pair<std::string, std::string>;
-	std::vector<StringPair> metadatas_;
+	std::unordered_map<std::string, std::string> metadata_cache_;
 
 	const bool                        read_only_{};
 	std::unique_ptr<Xapian::Database> db_;
@@ -485,41 +485,54 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 	priv_->transaction_maybe_commit(true /*force*/);
 }
 
-time_t
-Store::dirstamp(const std::string& path) const
+
+std::string
+Store::metadata(const std::string& key) const
 {
+	// get metadata either from the (uncommitted) cache or from the store.
+
 	std::lock_guard guard{priv_->lock_};
 
-	constexpr auto epoch = static_cast<time_t>(0);
-	return xapian_try([&] {
-		const auto ts = priv_->db().get_metadata(path);
-		if (ts.empty())
-			return epoch;
-		else
-			return static_cast<time_t>(strtoll(ts.c_str(), NULL, 16));
-	},
-	                  epoch);
+	const auto it = priv_->metadata_cache_.find(key);
+	if (it != priv_->metadata_cache_.end())
+		return it->second;
+	else
+		return xapian_try([&] {
+			return priv_->db().get_metadata(key);
+		}, "");
 }
 
 void
-Store::set_dirstamp(const std::string& path, time_t tstamp, bool use_transaction)
+Store::set_metadata(const std::string& key, const std::string& val)
 {
+	// get metadata either from the (uncommitted) cache or from the store.
+
 	std::lock_guard guard{priv_->lock_};
 
-	std::array<char, 2 * sizeof(tstamp) + 1> data{};
+	priv_->metadata_cache_.erase(key);
+	priv_->metadata_cache_.emplace(key, val);
+}
 
+
+time_t
+Store::dirstamp(const std::string& path) const
+{
+	constexpr auto epoch = static_cast<time_t>(0);
+	const auto ts{metadata(path)};
+	if (ts.empty())
+		return epoch;
+	else
+		return static_cast<time_t>(strtoll(ts.c_str(), NULL, 16));
+}
+
+void
+Store::set_dirstamp(const std::string& path, time_t tstamp)
+{
+	std::array<char, 2 * sizeof(tstamp) + 1> data{};
 	const auto len = static_cast<size_t>(
 	    g_snprintf(data.data(), data.size(), "%zx", tstamp));
 
-	/* set_metadata is not otherwise part of a "transaction" but we want it
-	 * to be so, so a dirstamp _only_ gets updated when the messages in the
-	 * dir are commited */
-
-	Private::StringPair item{path, std::string{data.data(), len}};
-	if (use_transaction)
-		priv_->metadatas_.emplace_back(std::move(item));
-	else
-		xapian_try([&] { priv_->writable_db().set_metadata(item.first, item.second); });
+	set_metadata(path, std::string{data.data(), len});
 }
 
 MuMsg*

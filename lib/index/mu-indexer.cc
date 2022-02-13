@@ -235,8 +235,7 @@ Indexer::Private::item_worker()
 				++progress_.updated;
 				break;
 			case WorkItem::Type::Dir:
-				store_.set_dirstamp(item.full_path, ::time(NULL),
-				                    true /*use-transaction*/);
+				store_.set_dirstamp(item.full_path, ::time(NULL));
 				break;
 			default:
 				g_warn_if_reached();
