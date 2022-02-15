@@ -196,20 +196,6 @@ mu_str_subject_normalize (const gchar* str)
 }
 
 
-/* note: this function is *not* re-entrant, it returns a static buffer */
-const char*
-mu_str_fullpath_s (const char* path, const char* name)
-{
-	static char buf[PATH_MAX + 1];
-
-	g_return_val_if_fail (path, NULL);
-
-	g_snprintf (buf, sizeof(buf), "%s%c%s", path, G_DIR_SEPARATOR,
-		  name ? name : "");
-
-	return buf;
-}
-
 
 /* turn \0-terminated buf into ascii (which is a utf8 subset); convert
  *   any non-ascii into '.'
