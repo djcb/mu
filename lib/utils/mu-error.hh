@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include "mu-utils.hh"
+#include "mu-util.h"
 #include <glib.h>
 
 namespace Mu {
@@ -69,7 +70,7 @@ struct Error final : public std::exception {
 	}
 
 	Error(Error&& rhs)      = default;
-	Error(const Error& rhs) = delete;
+	Error(const Error& rhs) = default;
 
 	/**
 	 * Build an error from a GError an error-code and a format string
@@ -118,7 +119,18 @@ struct Error final : public std::exception {
 	 */
 	Code code() const { return code_; }
 
-      private:
+
+	/**
+	 * Fill a GError with the error information
+	 *
+	 * @param err GError** (or NULL)
+	 */
+	void fill_g_error(GError **err) {
+		g_set_error(err, MU_ERROR_DOMAIN, static_cast<int>(code_),
+			    "%s", what_.c_str());
+	}
+
+private:
 	const Code  code_;
 	std::string what_;
 };
