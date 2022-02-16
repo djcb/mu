@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -47,9 +47,17 @@ class AsyncQueue {
 
 #define LOCKED std::unique_lock<std::mutex> lock(m_);
 
+	/**
+	 * Push an item to the end of the queue by moving it
+	 *
+	 * @param item the item to move to the end of the queue
+	 * @param timeout and optional timeout
+	 *
+	 * @return true if the item was pushed; false otherwise.
+	 */
 	bool push(const value_type& item, Timeout timeout = {})
 	{
-		return push(std::move(value_type(item)));
+		return push(std::move(value_type(item)), timeout);
 	}
 
 	/**
@@ -62,7 +70,7 @@ class AsyncQueue {
 	 */
 	bool push(value_type&& item, Timeout timeout = {})
 	{
-		LOCKED;
+		std::unique_lock lock{m_};
 
 		if (!unlimited()) {
 			const auto rv = cv_full_.wait_for(lock, timeout, [&]() {
@@ -73,9 +81,8 @@ class AsyncQueue {
 		}
 
 		q_.emplace_back(std::move(item));
-		lock.unlock();
-
 		cv_empty_.notify_one();
+
 		return true;
 	}
 
@@ -89,7 +96,7 @@ class AsyncQueue {
 	 */
 	bool pop(value_type& val, Timeout timeout = {})
 	{
-		LOCKED;
+		std::unique_lock lock{m_};
 
 		if (timeout != Timeout{}) {
 			const auto rv = cv_empty_.wait_for(lock, timeout, [&]() {
@@ -103,7 +110,6 @@ class AsyncQueue {
 
 		val = std::move(q_.front());
 		q_.pop_front();
-		lock.unlock();
 		cv_full_.notify_one();
 
 		return true;
@@ -115,9 +121,8 @@ class AsyncQueue {
 	 */
 	void clear()
 	{
-		LOCKED;
+		std::unique_lock lock{m_};
 		q_.clear();
-		lock.unlock();
 		cv_full_.notify_one();
 	}
 
@@ -129,7 +134,7 @@ class AsyncQueue {
 	 */
 	size_type size() const
 	{
-		LOCKED;
+		std::unique_lock lock{m_};
 		return q_.size();
 	}
 
@@ -155,7 +160,7 @@ class AsyncQueue {
 	 */
 	bool empty() const
 	{
-		LOCKED;
+		std::unique_lock lock{m_};
 		return q_.empty();
 	}
 
@@ -170,7 +175,7 @@ class AsyncQueue {
 		if (unlimited())
 			return false;
 
-		LOCKED;
+		std::unique_lock lock{m_};
 		return full_unlocked();
 	}
 
@@ -181,7 +186,7 @@ class AsyncQueue {
 	 */
 	constexpr static bool unlimited() { return MaxSize == UnlimitedAsyncQueueSize; }
 
-      private:
+private:
 	bool full_unlocked() const { return q_.size() >= max_size(); }
 
 	std::deque<ItemType, Allocator> q_;
