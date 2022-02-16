@@ -374,29 +374,6 @@ cmd_remove(Mu::Store& store, const MuConfig* opts, GError** err)
 	return foreach_msg_file(store, opts, remove_path_func, err);
 }
 
-static bool
-tickle_func(Mu::Store& store, const char* path, GError** err)
-{
-	MuMsg* msg{mu_msg_new_from_file(path, NULL, err)};
-	if (!msg)
-		return false;
-
-	const auto res = mu_msg_tickle(msg, err);
-	g_debug("tickled %s (%s)", path, res ? "ok" : "failed");
-	mu_msg_unref(msg);
-
-	return res == TRUE;
-}
-
-static MuError
-cmd_tickle(Mu::Store& store, const MuConfig* opts, GError** err)
-{
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_TICKLE, MU_ERROR_INTERNAL);
-
-	return foreach_msg_file(store, opts, tickle_func, err);
-}
-
 struct _VData {
 	MuMsgPartSigStatus combined_status;
 	char*              report;
@@ -672,7 +649,6 @@ try {
 
 	case MU_CONFIG_CMD_ADD: merr = with_writable_store(cmd_add, opts, err); break;
 	case MU_CONFIG_CMD_REMOVE: merr = with_writable_store(cmd_remove, opts, err); break;
-	case MU_CONFIG_CMD_TICKLE: merr = with_writable_store(cmd_tickle, opts, err); break;
 	case MU_CONFIG_CMD_INDEX: merr = with_writable_store(mu_cmd_index, opts, err); break;
 
 	/* commands instantiate store themselves */

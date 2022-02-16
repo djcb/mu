@@ -674,7 +674,6 @@ cmd_from_string(const char* str)
 	               {"remove", MU_CONFIG_CMD_REMOVE},
 	               {"script", MU_CONFIG_CMD_SCRIPT},
 	               {"server", MU_CONFIG_CMD_SERVER},
-	               {"tickle", MU_CONFIG_CMD_TICKLE},
 	               {"verify", MU_CONFIG_CMD_VERIFY},
 	               {"view", MU_CONFIG_CMD_VIEW}};
 

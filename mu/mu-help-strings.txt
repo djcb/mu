@@ -189,10 +189,3 @@ mu view is the mu command for displaying e-mail message files. It
 works on message files and does not require the message to be
 indexed in the database.
 #END
-
-#BEGIN MU_CONFIG_CMD_TICKLE
-#STRING
-mu tickle [options] <file>
-#STRING
-Give a message a new unique name. Useful for some external tools.
-#END
