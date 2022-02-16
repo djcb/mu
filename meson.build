@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.7.7',
+	version: '1.7.8',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
