@@ -20,9 +20,12 @@
 #ifndef MU_MSG_HH__
 #define MU_MSG_HH__
 
-#include <mu-flags.hh>
-#include <mu-msg-fields.h>
+#include <utils/mu-result.hh>
+
+#include <mu-message-flags.hh>
 #include <mu-message-priority.hh>
+
+#include <mu-msg-fields.h>
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
@@ -294,10 +297,10 @@ time_t mu_msg_get_date(MuMsg* msg);
  *
  * @param msg valid MuMsg* instance
  *
- * @return the file/content flags as logically OR'd #MuMsgFlags or 0
- * if there are none. Non-standard flags are ignored.
+ * @return the file/content flags as logically OR'd #Mu::MessageFlags.
+ * Non-standard flags are ignored.
  */
-MuFlags mu_msg_get_flags(MuMsg* msg);
+MessageFlags mu_msg_get_flags(MuMsg* msg);
 
 /**
  * get the file size in bytes of this message
@@ -417,39 +420,25 @@ gboolean mu_msg_is_readable(MuMsg* self);
  *
  * @param msg a message with an existing file system path in an actual
  * maildir
- * @param maildir the subdir where the message should go, relative to
+ * @param root_maildir_path file system path for the root-maildir for this message
+ * e.g., /home/user/Maildir
+ * @param target_maildir the subdir where the message should go, relative to
  * rootmaildir. e.g. "/archive"
  * @param flags to set for the target (influences the filename, path)
  * @param silently ignore the src=target case (return TRUE)
  * @param new_name whether to create a new unique name, or keep the
  * old one
- * @param err (may be NULL) may contain error information; note if the
- * function return FALSE, err is not set for all error condition
- * (ie. not for parameter error
+ * @param err receives error information
  *
  * @return TRUE if it worked, FALSE otherwise
  */
-gboolean mu_msg_move_to_maildir(MuMsg*      msg,
-                                const char* maildir,
-                                MuFlags     flags,
-                                gboolean    ignore_dups,
-                                gboolean    new_name,
-                                GError**    err);
-
-/**
- * Tickle a message -- ie., rename a message to some new semi-random name,while
- * maintaining the maildir and flags. This can be useful when dealing with
- * third-party tools such as mbsync that depend on changed filenames.
- *
- * @param msg a message with an existing file system path in an actual
- * maildir
- * @param err (may be NULL) may contain error information; note if the
- * function return FALSE, err is not set for all error condition
- * (ie. not for parameter error
- *
- * @return TRUE if it worked, FALSE otherwise
- */
-gboolean mu_msg_tickle(MuMsg* msg, GError** err);
+bool mu_msg_move_to_maildir(MuMsg*		msg,
+			    const std::string&	root_maildir_path,
+			    const std::string&	target_maildir,
+			    MessageFlags	flags,
+			    bool		ignore_dups,
+			    bool		new_name,
+			    GError**		err);
 
 enum _MuMsgContactType { /* Reply-To:? */
 	                 MU_MSG_CONTACT_TYPE_TO = 0,
@@ -544,24 +533,6 @@ void mu_msg_contact_foreach(MuMsg* msg, MuMsgContactForeachFunc func, gpointer u
  */
 const char* mu_str_display_contact_s(const char* str) G_GNUC_CONST;
 char*       mu_str_display_contact(const char* str) G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * get a display string for a given set of flags, OR'ed in
- * @param flags; one character per flag:
- * D=draft,F=flagged,N=new,P=passed,R=replied,S=seen,T=trashed
- * a=has-attachment,s=signed, x=encrypted
- *
- * mu_str_file_flags_s  returns a ptr to a static buffer,
- * while mu_str_file_flags returns dynamically allocated
- * memory that must be freed after use.
- *
- * @param flags file flags
- *
- * @return a string representation of the flags; see above
- * for what to do with it
- */
-const char* mu_str_flags_s(MuFlags flags) G_GNUC_CONST;
-char*       mu_str_flags(MuFlags flags) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 struct QueryMatch;
 

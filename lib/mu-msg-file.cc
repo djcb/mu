@@ -344,15 +344,15 @@ looks_like_attachment(GMimeObject* part)
 }
 
 static void
-msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MuFlags* flags)
+msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MessageFlags* flags)
 {
 	if (GMIME_IS_MULTIPART_SIGNED(part))
-		*flags |= MU_FLAG_SIGNED;
+		*flags |= MessageFlags::Signed;
 
 	/* FIXME: An encrypted part might be signed at the same time.
 	 *        In that case the signed flag is lost. */
 	if (GMIME_IS_MULTIPART_ENCRYPTED(part))
-		*flags |= MU_FLAG_ENCRYPTED;
+		*flags |= MessageFlags::Encrypted;
 
 	/* smime */
 	if (GMIME_IS_APPLICATION_PKCS7_MIME(part)) {
@@ -361,10 +361,10 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MuFlags* flags)
 		if (pkcs7) {
 			switch(pkcs7->smime_type) {
 			case GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA:
-				*flags |= MU_FLAG_ENCRYPTED;
+				*flags |= MessageFlags::Encrypted;
 				break;
 			case GMIME_SECURE_MIME_TYPE_SIGNED_DATA:
-				*flags |= MU_FLAG_SIGNED;
+				*flags |= MessageFlags::Signed;
 				break;
 			default:
 				break;
@@ -372,27 +372,20 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MuFlags* flags)
 		}
 	}
 
-	if (*flags & MU_FLAG_HAS_ATTACH)
+	if (any_of(*flags & MessageFlags::HasAttachment))
 		return;
 
 	if (!GMIME_IS_PART(part))
 		return;
 
-	if (*flags & MU_FLAG_HAS_ATTACH)
-		return;
-
 	if (looks_like_attachment(part))
-		*flags |= MU_FLAG_HAS_ATTACH;
+		*flags |= MessageFlags::HasAttachment;
 }
 
-
-static MuFlags
+static MessageFlags
 get_content_flags(MuMsgFile* self)
 {
-	MuFlags flags;
-	char*   ml;
-
-	flags = MU_FLAG_NONE;
+	MessageFlags flags{MessageFlags::None};
 
 	if (GMIME_IS_MESSAGE(self->_mime_msg)) {
 		/* toplevel */
@@ -404,29 +397,29 @@ get_content_flags(MuMsgFile* self)
 		                        &flags);
 	}
 
-	ml = get_mailing_list(self);
+	char *ml{get_mailing_list(self)};
 	if (ml) {
-		flags |= MU_FLAG_LIST;
+		flags |= MessageFlags::MailingList;
 		g_free(ml);
 	}
 
 	return flags;
 }
 
-static MuFlags
+static MessageFlags
 get_flags(MuMsgFile* self)
 {
-	MuFlags flags;
+	g_return_val_if_fail(self, MessageFlags::None);
 
-	g_return_val_if_fail(self, MU_FLAG_INVALID);
-
-	flags = mu_maildir_get_flags_from_path(self->_path);
+	auto flags{mu_maildir_flags_from_path(self->_path)
+		.value_or(MessageFlags::None)};
 	flags |= get_content_flags(self);
 
 	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
 	 * for searching convenience */
-	if ((flags & MU_FLAG_NEW) || !(flags & MU_FLAG_SEEN))
-		flags |= MU_FLAG_UNREAD;
+	if (any_of(flags & MessageFlags::New) ||
+	    none_of(flags & MessageFlags::Seen))
+		flags |= MessageFlags::Unread;
 
 	return flags;
 }

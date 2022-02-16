@@ -145,7 +145,8 @@ test_mu_msg_02(void)
 	i = 0;
 	mu_msg_contact_foreach(msg, (MuMsgContactForeachFunc)check_contact_02, &i);
 	g_assert_cmpint(i, ==, 2);
-	g_assert_cmpuint(mu_msg_get_flags(msg), ==, MU_FLAG_SEEN | MU_FLAG_LIST);
+	g_print("flags: %s\n", Mu::message_flags_to_string(mu_msg_get_flags(msg)).c_str());
+	g_assert_true(mu_msg_get_flags(msg) == (MessageFlags::Seen|MessageFlags::MailingList));
 
 	mu_msg_unref(msg);
 }
@@ -173,9 +174,7 @@ test_mu_msg_03(void)
 	g_assert_cmpstr((char*)params->data, ==, "charset");
 	params = g_slist_next(params);
 	g_assert_cmpstr((char*)params->data, ==, "UTF-8");
-
-	g_assert_cmpuint(mu_msg_get_flags(msg), ==, MU_FLAG_UNREAD); /* not seen => unread */
-
+	g_assert_true(mu_msg_get_flags(msg) == (MessageFlags::Unread));
 	mu_msg_unref(msg);
 }
 
@@ -191,7 +190,11 @@ test_mu_msg_04(void)
 	g_assert_true(mu_msg_get_prio(msg) /* 'low' */
 	              == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 0);
-	g_assert_cmpuint(mu_msg_get_flags(msg), ==, MU_FLAG_HAS_ATTACH | MU_FLAG_UNREAD);
+	g_assert_true(mu_msg_get_flags(msg) ==
+		      (MessageFlags::HasAttachment|MessageFlags::Unread));
+
+	g_assert_true(mu_msg_get_flags(msg) ==
+		      (MessageFlags::HasAttachment|MessageFlags::Unread));
 	mu_msg_unref(msg);
 }
 
@@ -204,9 +207,9 @@ test_mu_msg_multimime(void)
 	/* ie., are text parts properly concatenated? */
 	g_assert_cmpstr(mu_msg_get_subject(msg), ==, "multimime");
 	g_assert_cmpstr(mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE), ==, "abcdef");
-	g_assert_cmpuint(mu_msg_get_flags(msg),
-	                 ==,
-	                 (MuFlags)(MU_FLAG_FLAGGED | MU_FLAG_SEEN | MU_FLAG_HAS_ATTACH));
+	g_assert_true(mu_msg_get_flags(msg) ==
+		      (MessageFlags::HasAttachment|MessageFlags::Flagged|MessageFlags::Seen));
+
 	mu_msg_unref(msg);
 }
 
@@ -216,29 +219,21 @@ test_mu_msg_flags(void)
 	unsigned u;
 
 	struct {
-		const char* path;
-		MuFlags     flags;
+		const char*	path;
+		MessageFlags    flags;
 	} msgflags[] = {{MU_TESTMAILDIR4 "/multimime!2,FS",
-	                 (MuFlags)(MU_FLAG_FLAGGED | MU_FLAG_SEEN | MU_FLAG_HAS_ATTACH)},
-	                {MU_TESTMAILDIR4 "/special!2,Sabc", MU_FLAG_SEEN}
-
+	                 (MessageFlags::Flagged | MessageFlags::Seen |
+			  MessageFlags::HasAttachment)},
+	                {MU_TESTMAILDIR4 "/special!2,Sabc",
+			 (MessageFlags::Seen|MessageFlags::HasAttachment)}
 	};
 
 	for (u = 0; u != G_N_ELEMENTS(msgflags); ++u) {
 		MuMsg*  msg;
-		MuFlags flags;
-
 		g_assert((msg = get_msg(msgflags[u].path)));
-		flags = mu_msg_get_flags(msg);
-
-		if (g_test_verbose())
-			g_print("=> %s [ %s, %u] <=> [ %s, %u]\n",
-			        msgflags[u].path,
-			        mu_flags_to_str_s(msgflags[u].flags, MU_FLAG_TYPE_ANY),
-			        (unsigned)msgflags[u].flags,
-			        mu_flags_to_str_s(flags, MU_FLAG_TYPE_ANY),
-			        (unsigned)flags);
-		g_assert_cmpuint(flags, ==, msgflags[u].flags);
+		const auto flags{mu_msg_get_flags(msg)};
+		//g_print("flags: %s\n", Mu::message_flags_to_string(flags).c_str());
+		g_assert_true(flags == msgflags[u].flags);
 		mu_msg_unref(msg);
 	}
 }

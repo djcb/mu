@@ -116,13 +116,13 @@ process_value(const std::string& field, const std::string& value)
 			return std::string(1, value[0]);
 	} break;
 
-	case MU_MSG_FIELD_ID_FLAGS: {
-		const auto flag = mu_flag_char_from_name(value.c_str());
-		if (flag)
-			return std::string(1, tolower(flag));
-	} break;
+	case MU_MSG_FIELD_ID_FLAGS:
+		if (const auto info{message_flag_info(value)}; info)
+			return std::string(1, ::tolower(info->shortcut));
+		break;
 
-	default: break;
+	default:
+		break;
 	}
 
 	return value; // XXX prio/flags, etc. alias

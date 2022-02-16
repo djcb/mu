@@ -43,11 +43,6 @@ test('test_query',
 		'test-query.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_flags',
-     executable('test-flags',
-		'test-mu-flags.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
 
 test('test_tokenizer',
      executable('test-tokenizer',

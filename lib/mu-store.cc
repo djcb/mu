@@ -35,6 +35,8 @@
 #include <vector>
 #include <xapian.h>
 
+#include "mu-message-flags.hh"
+#include "mu-msg-fields.h"
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "utils/mu-str.h"
@@ -62,6 +64,36 @@ constexpr auto DefaultMaxMessageSize = 100'000'000U;
 
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 
+
+/**
+ * calculate a 64-bit hash for the given string, based on a combination of the
+ * DJB and BKDR hash functions.
+ *
+ * @param a string
+ *
+ * @return the hash
+ */
+size_t get_hash64 (const char* str)
+{
+	guint32 djbhash;
+        guint32 bkdrhash;
+        guint32 bkdrseed;
+        guint64 hash;
+
+        djbhash  = 5381;
+        bkdrhash = 0;
+        bkdrseed = 1313;
+
+        for(unsigned u = 0U; str[u]; ++u) {
+		djbhash  = ((djbhash << 5) + djbhash) + str[u];
+		bkdrhash = bkdrhash * bkdrseed + str[u];
+	}
+
+        hash = djbhash;
+        return (hash<<32) | bkdrhash;
+}
+
+
 /* we cache these prefix strings, so we don't have to allocate them all
  * the time; this should save 10-20 string allocs per message */
 G_GNUC_CONST static const std::string&
@@ -77,16 +109,6 @@ prefix(MuMsgFieldId mfid)
 	}
 
 	return fields[mfid];
-}
-
-static void
-add_synonym_for_flag(MuFlags flag, Xapian::WritableDatabase* db)
-{
-	static const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
-
-	db->clear_synonyms(pfx + mu_flag_name(flag));
-	db->add_synonym(pfx + mu_flag_name(flag),
-	                pfx + (std::string(1, (char)(tolower(mu_flag_char(flag))))));
 }
 
 struct Store::Private {
@@ -207,8 +229,13 @@ struct Store::Private {
 
 	void add_synonyms()
 	{
-		mu_flags_foreach((MuFlagsForeachFunc)add_synonym_for_flag,
-		                 &writable_db());
+		for (auto&& info: AllMessageFlagInfos) {
+			const auto s1{prefix(MU_MSG_FIELD_ID_FLAGS) + std::string{info.name}};
+			const auto s2{prefix(MU_MSG_FIELD_ID_FLAGS) + std::string{1,info.shortcut}};
+			writable_db().clear_synonyms(s1);
+			writable_db().clear_synonyms(s2);
+			writable_db().add_synonym(s1, s2);
+		}
 
 		for (auto&& prio : AllMessagePriorities) {
 			const auto s1{prefix(MU_MSG_FIELD_ID_PRIO) + to_string(prio)};
@@ -293,7 +320,7 @@ struct Store::Private {
 static void
 hash_str(char* buf, size_t buf_size, const char* data)
 {
-	g_snprintf(buf, buf_size, "016%" PRIx64, mu_util_get_hash(data));
+	g_snprintf(buf, buf_size, "016%" PRIx64, get_hash64(data));
 }
 
 static std::string
@@ -687,45 +714,6 @@ add_terms_values_size(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 	doc.add_value((Xapian::valueno)mfid, szstr);
 }
 
-G_GNUC_CONST
-static const std::string&
-flag_val(char flagchar)
-{
-	static const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS)),
-	    draftstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_DRAFT))),
-	    flaggedstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_FLAGGED))),
-	    passedstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_PASSED))),
-	    repliedstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_REPLIED))),
-	    seenstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_SEEN))),
-	    trashedstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_TRASHED))),
-	    newstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_NEW))),
-	    signedstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_SIGNED))),
-	    cryptstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_ENCRYPTED))),
-	    attachstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_HAS_ATTACH))),
-	    unreadstr(pfx + (char)tolower(mu_flag_char(MU_FLAG_UNREAD))),
-	    liststr(pfx + (char)tolower(mu_flag_char(MU_FLAG_LIST)));
-
-	switch (flagchar) {
-	case 'D': return draftstr;
-	case 'F': return flaggedstr;
-	case 'P': return passedstr;
-	case 'R': return repliedstr;
-	case 'S': return seenstr;
-	case 'T': return trashedstr;
-
-	case 'N': return newstr;
-
-	case 'z': return signedstr;
-	case 'x': return cryptstr;
-	case 'a': return attachstr;
-	case 'l': return liststr;
-
-	case 'u': return unreadstr;
-
-	default: g_return_val_if_reached(flaggedstr); return flaggedstr;
-	}
-}
-
 static const std::string&
 prio_val(MessagePriority prio)
 {
@@ -760,13 +748,12 @@ add_terms_values_number(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 	doc.add_value((Xapian::valueno)mfid, numstr);
 
 	if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-		const char* cur = mu_flags_to_str_s((MuFlags)num, (MuFlagType)MU_FLAG_TYPE_ANY);
-		g_return_if_fail(cur);
-		while (*cur) {
-			add_term(doc, flag_val(*cur));
-			++cur;
+		static const std::string pfx(prefix(MU_MSG_FIELD_ID_FLAGS));
+		const auto flags{static_cast<MessageFlags>(num)};
+		for (auto&& info: AllMessageFlagInfos) {
+			if (any_of(info.flag & flags))
+				add_term(doc, pfx + static_cast<char>(::tolower(info.shortcut)));
 		}
-
 	} else if (mfid == MU_MSG_FIELD_ID_PRIO)
 		add_term(doc, prio_val(static_cast<MessagePriority>(num)));
 }
@@ -893,7 +880,7 @@ add_terms_values_attach(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 static void
 add_terms_values_body(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 {
-	if (mu_msg_get_flags(msg) & MU_FLAG_ENCRYPTED)
+	if (any_of(mu_msg_get_flags(msg) & MessageFlags::Encrypted))
 		return; /* ignore encrypted bodies */
 
 	auto str = mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE);

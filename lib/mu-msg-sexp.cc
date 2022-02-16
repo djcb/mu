@@ -19,6 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "mu-message-flags.hh"
 #include "mu-query-results.hh"
 #include "utils/mu-str.h"
 #include "mu-msg.hh"
@@ -138,27 +139,19 @@ add_contacts(Sexp::List& list, MuMsg* msg)
 	add_list_post(list, msg);
 }
 
-typedef struct {
-	Sexp::List flaglist;
-	MuFlags    msgflags;
-} FlagData;
 
-static void
-each_flag(MuFlags flag, FlagData* fdata)
-{
-	if (flag & fdata->msgflags)
-		fdata->flaglist.add(Sexp::make_symbol(mu_flag_name(flag)));
-}
 
 static void
 add_flags(Sexp::List& list, MuMsg* msg)
 {
-	FlagData fdata{};
-	fdata.msgflags = mu_msg_get_flags(msg);
+	Sexp::List flaglist;
+	const auto flags{mu_msg_get_flags(msg)};
+	for (auto&& info: AllMessageFlagInfos)
+		if (any_of(flags & info.flag))
+			flaglist.add(Sexp::make_symbol_sv(info.name));
 
-	mu_flags_foreach((MuFlagsForeachFunc)each_flag, &fdata);
-	if (!fdata.flaglist.empty())
-		list.add_prop(":flags", Sexp::make_list(std::move(fdata.flaglist)));
+	if (!flaglist.empty())
+		list.add_prop(":flags", Sexp::make_list(std::move(flaglist)));
 }
 
 static char*

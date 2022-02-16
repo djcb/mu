@@ -17,6 +17,7 @@
 **
 */
 #include "mu-guile-message.hh"
+#include "mu-message-flags.hh"
 #include <config.h>
 
 #include <glib-object.h>
@@ -40,9 +41,7 @@ using namespace Mu;
 
 /* some symbols */
 static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
-static SCM SYMB_FLAG_NEW, SYMB_FLAG_PASSED, SYMB_FLAG_REPLIED, SYMB_FLAG_SEEN, SYMB_FLAG_TRASHED,
-    SYMB_FLAG_DRAFT, SYMB_FLAG_FLAGGED, SYMB_FLAG_SIGNED, SYMB_FLAG_ENCRYPTED, SYMB_FLAG_HAS_ATTACH,
-    SYMB_FLAG_UNREAD, SYMB_FLAG_LIST;
+static std::array<SCM, AllMessageFlagInfos.size()> SYMB_FLAGS;
 static SCM SYMB_CONTACT_TO, SYMB_CONTACT_CC, SYMB_CONTACT_BCC, SYMB_CONTACT_FROM;
 
 struct _MuMsgWrapper {
@@ -72,11 +71,10 @@ mu_guile_msg_to_scm(MuMsg* msg)
 	SCM_RETURN_NEWSMOB(MSG_TAG, msgwrap);
 }
 
-struct _FlagData {
-	MuFlags flags;
-	SCM     lst;
-};
-typedef struct _FlagData FlagData;
+typedef struct {
+	MessageFlags		flags;
+	SCM			lst;
+} FlagData;
 
 #define MU_GUILE_INITIALIZED_OR_ERROR                                            \
 	do {                                                                     \
@@ -89,45 +87,20 @@ typedef struct _FlagData FlagData;
 		}                                                                \
 	} while (0)
 
-static void
-check_flag(MuFlags flag, FlagData* fdata)
-{
-	SCM flag_scm;
-
-	if (!(fdata->flags & flag))
-		return;
-
-	switch (flag) {
-	case MU_FLAG_NONE: flag_scm = SCM_UNDEFINED; break;
-	case MU_FLAG_NEW: flag_scm = SYMB_FLAG_NEW; break;
-	case MU_FLAG_PASSED: flag_scm = SYMB_FLAG_PASSED; break;
-	case MU_FLAG_REPLIED: flag_scm = SYMB_FLAG_REPLIED; break;
-	case MU_FLAG_SEEN: flag_scm = SYMB_FLAG_SEEN; break;
-	case MU_FLAG_TRASHED: flag_scm = SYMB_FLAG_TRASHED; break;
-	case MU_FLAG_SIGNED: flag_scm = SYMB_FLAG_SIGNED; break;
-	case MU_FLAG_DRAFT: flag_scm = SYMB_FLAG_DRAFT; break;
-	case MU_FLAG_FLAGGED: flag_scm = SYMB_FLAG_FLAGGED; break;
-	case MU_FLAG_ENCRYPTED: flag_scm = SYMB_FLAG_ENCRYPTED; break;
-	case MU_FLAG_HAS_ATTACH: flag_scm = SYMB_FLAG_HAS_ATTACH; break;
-	case MU_FLAG_UNREAD: flag_scm = SYMB_FLAG_UNREAD; break;
-	case MU_FLAG_LIST: flag_scm = SYMB_FLAG_LIST; break;
-	default: flag_scm = SCM_UNDEFINED;
-	}
-
-	fdata->lst = scm_append_x(scm_list_2(fdata->lst, scm_list_1(flag_scm)));
-}
 
 static SCM
 get_flags_scm(MuMsg* msg)
 {
-	FlagData fdata;
+	SCM lst{SCM_EOL};
+	const auto flags{mu_msg_get_flags(msg)};
 
-	fdata.flags = mu_msg_get_flags(msg);
-	fdata.lst   = SCM_EOL;
+	for (auto i = 0; i != AllMessageFlagInfos.size(); ++i) {
+		const auto& info{AllMessageFlagInfos.at(i)};
+		if (any_of(info.flag & flags))
+			scm_append_x(scm_list_2(lst, scm_list_1(SYMB_FLAGS.at(i))));
+	}
 
-	mu_flags_foreach((MuFlagsForeachFunc)check_flag, &fdata);
-
-	return fdata.lst;
+	return lst;
 }
 
 static SCM
@@ -488,19 +461,11 @@ define_symbols(void)
 	SYMB_PRIO_NORMAL = register_symbol("mu:prio:normal");
 	SYMB_PRIO_HIGH   = register_symbol("mu:prio:high");
 
-	SYMB_FLAG_NEW        = register_symbol("mu:flag:new");
-	SYMB_FLAG_PASSED     = register_symbol("mu:flag:passed");
-	SYMB_FLAG_REPLIED    = register_symbol("mu:flag:replied");
-	SYMB_FLAG_SEEN       = register_symbol("mu:flag:seen");
-	SYMB_FLAG_TRASHED    = register_symbol("mu:flag:trashed");
-	SYMB_FLAG_DRAFT      = register_symbol("mu:flag:draft");
-	SYMB_FLAG_FLAGGED    = register_symbol("mu:flag:flagged");
-	SYMB_FLAG_SIGNED     = register_symbol("mu:flag:signed");
-	SYMB_FLAG_ENCRYPTED  = register_symbol("mu:flag:encrypted");
-	SYMB_FLAG_HAS_ATTACH = register_symbol("mu:flag:has-attach");
-	SYMB_FLAG_UNREAD     = register_symbol("mu:flag:unread");
-
-	SYMB_FLAG_LIST = register_symbol("mu:flag:list");
+	for (auto i = 0U; i != AllMessageFlagInfos.size(); ++i) {
+		const auto& info{AllMessageFlagInfos.at(i)};
+		const auto name = "mu:flag:" + std::string{info.name};
+		SYMB_FLAGS[i] = register_symbol(name.c_str());
+	}
 }
 
 static struct {
