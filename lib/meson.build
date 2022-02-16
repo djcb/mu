@@ -50,8 +50,6 @@ lib_mu=static_library(
     'mu-xapian.hh',
     'mu-maildir.cc',
     'mu-maildir.hh',
-    'mu-flags.cc',
-    'mu-flags.hh',
     'mu-msg-crypto.cc',
     'mu-msg-doc.cc',
     'mu-msg-doc.hh',
@@ -65,7 +63,8 @@ lib_mu=static_library(
     'mu-msg-sexp.cc',
     'mu-msg.cc',
     'mu-msg.hh',
-    'mu-message-priority.hh'
+    'mu-message-flags.hh',
+    'mu-message-flags.cc',
     'mu-message-priority.hh',
     'mu-message-priority.cc'
   ],
