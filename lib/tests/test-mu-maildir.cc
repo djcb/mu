@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,16 +17,13 @@
 **
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif /*HAVE_CONFIG_H*/
-
 #include <glib.h>
 #include <glib/gstdio.h>
 
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <vector>
 
 #include "test-mu-common.hh"
 #include "mu-maildir.hh"
@@ -44,7 +41,7 @@ test_mu_maildir_mkdir_01(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
 
-	g_assert_cmpuint(mu_maildir_mkdir(mdir, 0755, FALSE, NULL), ==, TRUE);
+	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, FALSE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -73,7 +70,7 @@ test_mu_maildir_mkdir_02(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
 
-	g_assert_cmpuint(mu_maildir_mkdir(mdir, 0755, TRUE, NULL), ==, TRUE);
+	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, TRUE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -112,7 +109,7 @@ test_mu_maildir_mkdir_03(void)
 	}
 
 	/* this should still work */
-	g_assert_cmpuint(mu_maildir_mkdir(mdir, 0755, FALSE, NULL), ==, TRUE);
+	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, FALSE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -149,9 +146,9 @@ test_mu_maildir_mkdir_04(void)
 	}
 
 	/* this should fail now, because cur is not read/writable  */
-	g_assert_cmpuint(mu_maildir_mkdir(mdir, 0755, FALSE, NULL),
-	                 ==,
-	                 (geteuid() == 0 ? TRUE : FALSE));
+	if (geteuid() != 0)
+		g_assert_false(!!mu_maildir_mkdir(mdir, 0755, false));
+
 	g_free(tmpdir);
 	g_free(mdir);
 }
@@ -168,30 +165,34 @@ test_mu_maildir_mkdir_05(void)
 	/* this must fail */
 	g_test_log_set_fatal_handler((GTestLogFatalFunc)ignore_error, NULL);
 
-	g_assert_cmpuint(mu_maildir_mkdir(NULL, 0755, TRUE, NULL), ==, FALSE);
+	g_assert_false(!!mu_maildir_mkdir({}, 0755, true));
 }
 
 static void
-test_mu_maildir_get_flags_from_path(void)
+test_mu_maildir_flags_from_path(void)
 {
 	int i;
 	struct {
-		const char* path;
-		MuFlags     flags;
-	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FSR",
-	              (MuFlags)(MU_FLAG_REPLIED | MU_FLAG_SEEN | MU_FLAG_FLAGGED)},
-	             {"/home/foo/Maildir/test/new/123456", MU_FLAG_NEW},
-	             {/* NOTE: when in new/, the :2,.. stuff is ignored */
-	              "/home/foo/Maildir/test/new/123456:2,FR",
-	              MU_FLAG_NEW},
-	             {"/home/foo/Maildir/test/cur/123456:2,DTP",
-	              (MuFlags)(MU_FLAG_DRAFT | MU_FLAG_TRASHED | MU_FLAG_PASSED)},
-	             {"/home/foo/Maildir/test/cur/123456:2,S", MU_FLAG_SEEN}};
+		const char*  path;
+		MessageFlags flags;
+	} paths[] = {
+		{"/home/foo/Maildir/test/cur/123456:2,FSR",
+		 (MessageFlags::Replied | MessageFlags::Seen | MessageFlags::Flagged)},
+		{"/home/foo/Maildir/test/new/123456", MessageFlags::New},
+		{/* NOTE: when in new/, the :2,.. stuff is ignored */
+			"/home/foo/Maildir/test/new/123456:2,FR",
+			MessageFlags::New},
+		{"/home/foo/Maildir/test/cur/123456:2,DTP",
+		 (MessageFlags::Draft | MessageFlags::Trashed | MessageFlags::Passed)},
+		{"/home/foo/Maildir/test/cur/123456:2,S", MessageFlags::Seen}};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		MuFlags flags;
-		flags = mu_maildir_get_flags_from_path(paths[i].path);
-		g_assert_cmpuint(flags, ==, paths[i].flags);
+		auto res{mu_maildir_flags_from_path(paths[i].path)};
+		g_assert_true(!!res);
+		if (g_test_verbose())
+			g_print("%s -> <%s>\n", paths[i].path,
+				message_flags_to_string(res.value()).c_str());
+		g_assert_true(res.value() == paths[i].flags);
 	}
 }
 
@@ -205,166 +206,242 @@ assert_matches_regexp(const char* str, const char* rx)
 	}
 }
 
+
 static void
-test_mu_maildir_get_new_path_new(void)
+test_determine_target_ok(void)
 {
-	int i;
+	struct TestCase {
+		std::string old_path;
+		std::string root_maildir;
+		std::string target_maildir;
+		MessageFlags new_flags;
+		bool new_name;
+		std::string expected;
+	};
+	const std::vector<TestCase> testcases = {
+		 TestCase{ /* change some flags */
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			"/home/foo/Maildir",
+			{},
+			MessageFlags::Seen | MessageFlags::Passed,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,PS"
+		},
 
-	struct {
-		const char* oldpath;
-		MuFlags     flags;
-		const char* newpath;
-	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_REPLIED,
-	              "/home/foo/Maildir/test/cur/123456:2,R"},
-	             {"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_NEW,
-	              "/home/foo/Maildir/test/new/123456"},
-	             {"/home/foo/Maildir/test/new/123456:2,FR",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
-	              "/home/foo/Maildir/test/cur/123456:2,RS"},
-	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
-	              "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
-	             {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
-	              MU_FLAG_SEEN,
-	              "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
+		 TestCase{ /* from cur -> new */
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			"/home/foo/Maildir",
+			{},
+			MessageFlags::New,
+			false,
+			"/home/foo/Maildir/test/new/123456"
+		},
 
-	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		char *str, *newbase;
-		str     = mu_maildir_get_new_path(paths[i].oldpath, NULL, paths[i].flags, TRUE);
-		newbase = g_path_get_basename(str);
-		assert_matches_regexp(newbase,
-		                      "\\d+\\."
-		                      "[[:xdigit:]]{16}\\."
-		                      "[[:alnum:]][[:alnum:]-]+(:2,.*)?");
-		g_free(newbase);
-		g_free(str);
+		 TestCase{ /* from new->cur */
+			"/home/foo/Maildir/test/cur/123456",
+			"/home/foo/Maildir",
+			{},
+			MessageFlags::Seen | MessageFlags::Flagged,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,FS"
+		 },
+
+		 TestCase{ /* change maildir */
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			"/home/foo/Maildir",
+			"/test2",
+			MessageFlags::Flagged | MessageFlags::Replied,
+			false,
+			"/home/foo/Maildir/test2/cur/123456:2,FR"
+		},
+		 TestCase{ /* remove all flags */
+			"/home/foo/Maildir/test/new/123456",
+			"/home/foo/Maildir",
+			{},
+			MessageFlags::None,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,"
+		},
+	};
+
+	for (auto&& testcase: testcases) {
+		const auto res = mu_maildir_determine_target(
+			testcase.old_path,
+			testcase.root_maildir,
+			testcase.target_maildir,
+			testcase.new_flags,
+			testcase.new_name);
+		g_assert_true(!!res);
+		g_assert_cmpstr(testcase.expected.c_str(), ==,
+				res.value().c_str());
 	}
 }
 
-static void
-test_mu_maildir_get_new_path_01(void)
-{
-	int i;
 
-	struct {
-		const char* oldpath;
-		MuFlags     flags;
-		const char* newpath;
-	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_REPLIED,
-	              "/home/foo/Maildir/test/cur/123456:2,R"},
-	             {"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_NEW,
-	              "/home/foo/Maildir/test/new/123456"},
-	             {"/home/foo/Maildir/test/new/123456:2,FR",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
-	              "/home/foo/Maildir/test/cur/123456:2,RS"},
-	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
-	              "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
-	             {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
-	              MU_FLAG_SEEN,
-	              "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
 
-	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		gchar* str;
-		str = mu_maildir_get_new_path(paths[i].oldpath, NULL, paths[i].flags, FALSE);
-		g_assert_cmpstr(str, ==, paths[i].newpath);
-		g_free(str);
-	}
-}
 
-static void
-test_mu_maildir_get_new_path_02(void)
-{
-	int i;
 
-	struct {
-		const char* oldpath;
-		MuFlags     flags;
-		const char* targetdir;
-		const char* newpath;
-	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_REPLIED,
-	              "/home/foo/Maildir/blabla",
-	              "/home/foo/Maildir/blabla/cur/123456:2,R"},
-	             {"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_NEW,
-	              "/home/bar/Maildir/coffee",
-	              "/home/bar/Maildir/coffee/new/123456"},
-	             {"/home/foo/Maildir/test/new/123456",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_REPLIED),
-	              "/home/cuux/Maildir/tea",
-	              "/home/cuux/Maildir/tea/cur/123456:2,RS"},
-	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-	              (MuFlags)(MU_FLAG_SEEN | MU_FLAG_FLAGGED | MU_FLAG_PASSED),
-	              "/home/boy/Maildir/stuff",
-	              "/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"}};
 
-	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		gchar* str;
-		str = mu_maildir_get_new_path(paths[i].oldpath,
-		                              paths[i].targetdir,
-		                              paths[i].flags,
-		                              FALSE);
-		g_assert_cmpstr(str, ==, paths[i].newpath);
-		g_free(str);
-	}
-}
 
-static void
-test_mu_maildir_get_new_path_custom(void)
-{
-	int i;
 
-	struct {
-		const char* oldpath;
-		MuFlags     flags;
-		const char* targetdir;
-		const char* newpath;
-	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-	              MU_FLAG_REPLIED,
-	              "/home/foo/Maildir/blabla",
-	              "/home/foo/Maildir/blabla/cur/123456:2,R"},
-	             {"/home/foo/Maildir/test/cur/123456:2,hFeRllo123",
-	              MU_FLAG_FLAGGED,
-	              "/home/foo/Maildir/blabla",
-	              "/home/foo/Maildir/blabla/cur/123456:2,Fhello123"},
-	             {"/home/foo/Maildir/test/cur/123456:2,abc",
-	              MU_FLAG_PASSED,
-	              "/home/foo/Maildir/blabla",
-	              "/home/foo/Maildir/blabla/cur/123456:2,Pabc"}};
 
-	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		gchar* str;
-		str = mu_maildir_get_new_path(paths[i].oldpath,
-		                              paths[i].targetdir,
-		                              paths[i].flags,
-		                              FALSE);
-		g_assert_cmpstr(str, ==, paths[i].newpath);
-		g_free(str);
-	}
-}
 
-static void
-test_mu_maildir_get_maildir_from_path(void)
-{
-	unsigned u;
 
-	struct {
-		const char *path, *exp;
-	} cases[] = {{"/home/foo/Maildir/test/cur/123456:2,FR", "/home/foo/Maildir/test"},
-	             {"/home/foo/Maildir/lala/new/1313038887_0.697:2,", "/home/foo/Maildir/lala"}};
+// static void
+// test_mu_maildir_determine_target(void)
+// {
+// 	int i;
 
-	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
-		gchar* mdir;
-		mdir = mu_maildir_get_maildir_from_path(cases[u].path);
-		g_assert_cmpstr(mdir, ==, cases[u].exp);
-		g_free(mdir);
-	}
-}
+// 	struct {
+// 		std::string	oldpath;
+// 		MessageFlags    flags;
+// 		std::string	newpath;
+// 	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::Replied,
+// 	              "/home/foo/Maildir/test/cur/123456:2,R"},
+// 	             {"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::New,
+// 	              "/home/foo/Maildir/test/new/123456"},
+// 	             {"/home/foo/Maildir/test/new/123456:2,FR",
+// 	              (MessageFlags::Seen | MessageFlags::Replied),
+// 	              "/home/foo/Maildir/test/cur/123456:2,RS"},
+// 	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+// 	              (MessageFlags::Seen | MessageFlags::Flagged | MessageFlags::Passed),
+// 	              "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
+// 	             {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
+// 	              MessageFlags::Seen,
+// 	              "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
+
+// 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
+// 		const auto res{mu_maildir_determine_target(paths[i].oldpath,
+// 							   "/home/foo/Maildir",
+// 							   {},
+// 							   paths[i].flags, false)};
+// 		g_assert_true(res && res.value() == paths[i].newpath);
+// 		char *newbase = g_path_get_basename(newpath->c_str());
+// 		assert_matches_regexp(newbase,
+// 		                      "\\d+\\."
+// 		                      "[[:xdigit:]]{16}\\."
+// 		                      "[[:alnum:]][[:alnum:]-]+(:2,.*)?");
+// 		g_free(newbase);
+// 	}
+// }
+
+// static void
+// test_mu_maildir_get_new_path_01(void)
+// {
+// 	struct {
+// 		std::string	oldpath;
+// 		MessageFlags    flags;
+// 		std::string	newpath;
+// 	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::Replied,
+// 	              "/home/foo/Maildir/test/cur/123456:2,R"},
+// 	             {"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::New,
+// 	              "/home/foo/Maildir/test/new/123456"},
+// 	             {"/home/foo/Maildir/test/new/123456:2,FR",
+// 	              (MessageFlags::Seen | MessageFlags::Replied),
+// 	              "/home/foo/Maildir/test/cur/123456:2,RS"},
+// 	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+// 	              (MessageFlags::Seen | MessageFlags::Flagged | MessageFlags::Passed),
+// 	              "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
+// 	             {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
+// 	              MessageFlags::Seen,
+// 	              "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
+
+// 	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+// 		const auto newpath{mu_maildir_determine_target(
+// 				paths[i].oldpath,
+// 				"/home/foo/maildir",
+// 				{}, paths[i].flags, false)};
+// 		g_assert_true(newpath.has_value());
+// 		g_assert_true(*newpath == paths[i].newpath);
+// 	}
+// }
+
+// static void
+// test_mu_maildir_get_new_path_02(void)
+// {
+// 	struct {
+// 		std::string	oldpath;
+// 		MessageFlags    flags;
+// 		std::string	targetdir;
+// 		std::string	newpath;
+// 	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::Replied,
+// 	              "/home/foo/Maildir/blabla",
+// 	              "/home/foo/Maildir/blabla/cur/123456:2,R"},
+// 	             {"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::New,
+// 	              "/home/bar/Maildir/coffee",
+// 	              "/home/bar/Maildir/coffee/new/123456"},
+// 	             {"/home/foo/Maildir/test/new/123456",
+// 	              (MessageFlags::Seen | MessageFlags::Replied),
+// 	              "/home/cuux/Maildir/tea",
+// 	              "/home/cuux/Maildir/tea/cur/123456:2,RS"},
+// 	             {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+// 	              (MessageFlags::Seen | MessageFlags::Flagged | MessageFlags::Passed),
+// 	              "/home/boy/Maildir/stuff",
+// 	              "/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"}};
+
+// 	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+// 		auto newpath{mu_maildir_determine_target(paths[i].oldpath,
+// 							 paths[i].targetdir,
+// 							 paths[i].flags,
+// 							 false)};
+// 		g_assert_true(newpath.has_value());
+// 		g_assert_true(*newpath == paths[i].newpath);
+// 	}
+// }
+
+// static void
+// test_mu_maildir_get_new_path_custom(void)
+// {
+// 	struct {
+// 		std::string	oldpath;
+// 		MessageFlags    flags;
+// 		std::string	targetdir;
+// 		std::string	newpath;
+// 	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+// 	              MessageFlags::Replied,
+// 	              "/home/foo/Maildir/blabla",
+// 	              "/home/foo/Maildir/blabla/cur/123456:2,R"},
+// 	             {"/home/foo/Maildir/test/cur/123456:2,hFeRllo123",
+// 	              MessageFlags::Flagged,
+// 	              "/home/foo/Maildir/blabla",
+// 	              "/home/foo/Maildir/blabla/cur/123456:2,Fhello123"},
+// 	             {"/home/foo/Maildir/test/cur/123456:2,abc",
+// 	              MessageFlags::Passed,
+// 	              "/home/foo/Maildir/blabla",
+// 	              "/home/foo/Maildir/blabla/cur/123456:2,Pabc"}};
+
+// 	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+// 		auto newpath{mu_maildir_get_new_path(paths[i].oldpath,
+// 		                              paths[i].targetdir,
+// 		                              paths[i].flags,
+// 		                              FALSE)};
+// 		g_assert_true(newpath);
+// 		g_assert_true(*newpath == paths[i].newpath);
+// 	}
+// }
+
+// static void
+// test_mu_maildir_from_path(void)
+// {
+// 	unsigned u;
+
+// 	struct {
+// 		std::string path, exp;
+// 	} cases[] = {{"/home/foo/Maildir/test/cur/123456:2,FR", "/home/foo/Maildir/test"},
+// 	             {"/home/foo/Maildir/lala/new/1313038887_0.697:2,", "/home/foo/Maildir/lala"}};
+
+// 	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
+// 		auto mdir{mu_maildir_from_path(cases[u].path)};
+// 		g_assert_true(mdir.has_value());
+// 		g_assert_true(*mdir == cases[u].exp);
+// 	}
+// }
 
 int
 main(int argc, char* argv[])
@@ -378,19 +455,27 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-maildir/mu-maildir-mkdir-04", test_mu_maildir_mkdir_04);
 	g_test_add_func("/mu-maildir/mu-maildir-mkdir-05", test_mu_maildir_mkdir_05);
 
-	/* get/set flags */
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-new",
-	                test_mu_maildir_get_new_path_new);
+	g_test_add_func("/mu-maildir/mu-maildir-flags-from-path",
+			test_mu_maildir_flags_from_path);
 
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_mu_maildir_get_new_path_01);
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_mu_maildir_get_new_path_02);
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
-	                test_mu_maildir_get_new_path_custom);
-	g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
-	                test_mu_maildir_get_flags_from_path);
 
-	g_test_add_func("/mu-maildir/mu-maildir-get-maildir-from-path",
-	                test_mu_maildir_get_maildir_from_path);
+	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
+			test_determine_target_ok);
+
+
+	// /* get/set flags */
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-new",
+	//                 test_mu_maildir_get_new_path_new);
+
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_mu_maildir_get_new_path_01);
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_mu_maildir_get_new_path_02);
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
+	//                 test_mu_maildir_get_new_path_custom);
+	// g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
+	//                 test_mu_maildir_get_flags_from_path);
+
+	// g_test_add_func("/mu-maildir/mu-maildir-from-path",
+	//                 test_mu_maildir_from_path);
 
 	g_log_set_handler(
 	    NULL,

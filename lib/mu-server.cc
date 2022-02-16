@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include "mu-message-flags.hh"
 #include "mu-msg-fields.h"
 #include "mu-msg.hh"
 #include "mu-server.hh"
@@ -120,13 +121,15 @@ private:
 	                        const Option<QueryMatch&> qm,
 	                        MuMsgOptions              opts) const;
 
-	Sexp::List move_docid(Store::Id docid, const std::string& flagstr, bool new_name, bool no_view);
-	Sexp::List perform_move(Store::Id          docid,
-	                        MuMsg*             msg,
-	                        const std::string& maildirarg,
-	                        MuFlags            flags,
-	                        bool               new_name,
-	                        bool               no_view);
+	Sexp::List move_docid(Store::Id docid, std::optional<std::string> flagstr,
+			      bool new_name, bool no_view);
+
+	Sexp::List perform_move(Store::Id		docid,
+	                        MuMsg*			msg,
+	                        const std::string&	maildirarg,
+				MessageFlags		flags,
+	                        bool			new_name,
+	                        bool			no_view);
 
 	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename);
 	bool maybe_mark_msgid_as_read(const char* msgid, bool rename);
@@ -799,10 +802,8 @@ void
 Server::Private::mkdir_handler(const Parameters& params)
 {
 	const auto path{get_string_or(params, ":path")};
-
-	GError* gerr{};
-	if (!mu_maildir_mkdir(path.c_str(), 0755, FALSE, &gerr))
-		throw Error{Error::Code::File, &gerr, "failed to create maildir"};
+	if (auto&& res = mu_maildir_mkdir(path, 0755, FALSE); !res)
+		throw res.error();
 
 	Sexp::List lst;
 	lst.add_prop(":info", Sexp::make_string("mkdir"));
@@ -811,31 +812,13 @@ Server::Private::mkdir_handler(const Parameters& params)
 	output_sexp(std::move(lst));
 }
 
-static MuFlags
-get_flags(const std::string& path, const std::string& flagstr)
-{
-	if (flagstr.empty())
-		return MU_FLAG_NONE; /* ie., ignore flags */
-	else {
-		/* if there's a '+' or '-' sign in the string, it must
-		 * be a flag-delta */
-		if (strstr(flagstr.c_str(), "+") || strstr(flagstr.c_str(), "-")) {
-			auto oldflags = mu_maildir_get_flags_from_path(path.c_str());
-			return mu_flags_from_str_delta(flagstr.c_str(), oldflags, MU_FLAG_TYPE_ANY);
-		} else
-			return mu_flags_from_str(flagstr.c_str(),
-			                         MU_FLAG_TYPE_ANY,
-			                         TRUE /*ignore invalid*/);
-	}
-}
-
 Sexp::List
-Server::Private::perform_move(Store::Id          docid,
-                              MuMsg*             msg,
-                              const std::string& maildirarg,
-                              MuFlags            flags,
-                              bool               new_name,
-                              bool               no_view)
+Server::Private::perform_move(Store::Id                 docid,
+                              MuMsg*                    msg,
+                              const std::string&	maildirarg,
+                              MessageFlags		flags,
+                              bool                      new_name,
+                              bool                      no_view)
 {
 	bool different_mdir{};
 	auto maildir{maildirarg};
@@ -846,7 +829,10 @@ Server::Private::perform_move(Store::Id          docid,
 		different_mdir = maildir != mu_msg_get_maildir(msg);
 
 	GError* gerr{};
-	if (!mu_msg_move_to_maildir(msg, maildir.c_str(), flags, TRUE, new_name, &gerr))
+
+	if (!mu_msg_move_to_maildir(msg,
+				    store().properties().root_maildir,
+				    maildir, flags, true, new_name, &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 
 	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
@@ -866,11 +852,30 @@ Server::Private::perform_move(Store::Id          docid,
 	return seq;
 }
 
+
+static MessageFlags
+calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
+{	
+	const auto flags = std::invoke([&]()->std::optional<MessageFlags>{
+			auto msgflags{mu_msg_get_flags(msg)};
+			if (!flagopt)
+				return mu_msg_get_flags(msg);
+			else
+				return message_flags_from_expr(*flagopt, msgflags);
+		});
+
+	if (!flags)
+		throw Error{Error::Code::InvalidArgument,
+			"invalid flags '%s'", flagopt.value_or("").c_str()};
+	else
+		return flags.value();
+}
+
 Sexp::List
-Server::Private::move_docid(Store::Id          docid,
-                            const std::string& flagstr,
-                            bool               new_name,
-                            bool               no_view)
+Server::Private::move_docid(Store::Id			docid,
+                            std::optional<std::string>	flagopt,
+                            bool			new_name,
+                            bool			no_view)
 {
 	if (docid == Store::InvalidId)
 		throw Error{Error::Code::InvalidArgument, "invalid docid"};
@@ -880,13 +885,7 @@ Server::Private::move_docid(Store::Id          docid,
 		if (!msg)
 			throw Error{Error::Code::Store, "failed to get message from store"};
 
-		const auto flags = flagstr.empty() ? mu_msg_get_flags(msg)
-		                                   : get_flags(mu_msg_get_path(msg), flagstr);
-		if (flags == MU_FLAG_INVALID)
-			throw Error{Error::Code::InvalidArgument,
-			            "invalid flags '%s'",
-			            flagstr.c_str()};
-
+		const auto flags = calculate_message_flags(msg, flagopt);
 		auto lst = perform_move(docid, msg, "", flags, new_name, no_view);
 		mu_msg_unref(msg);
 		return lst;
@@ -911,7 +910,7 @@ void
 Server::Private::move_handler(const Parameters& params)
 {
 	auto       maildir{get_string_or(params, ":maildir")};
-	const auto flagstr{get_string_or(params, ":flags")};
+	const auto flagopt{get_string(params, ":flags")};
 	const auto rename{get_bool_or(params, ":rename")};
 	const auto no_view{get_bool_or(params, ":noupdate")};
 	const auto docids{determine_docids(store_, params)};
@@ -922,7 +921,8 @@ Server::Private::move_handler(const Parameters& params)
 			                "can't move multiple messages at the same time"};
 		// multi.
 		for (auto&& docid : docids)
-			output_sexp(move_docid(docid, flagstr, rename, no_view));
+			output_sexp(move_docid(docid, flagopt,
+					       rename, no_view));
 		return;
 	}
 	auto docid{docids.at(0)};
@@ -939,17 +939,7 @@ Server::Private::move_handler(const Parameters& params)
 	/* determine the real target flags, which come from the flags-parameter
 	 * we received (ie., flagstr), if any, plus the existing message
 	 * flags. */
-	MuFlags flags{};
-	if (!flagstr.empty())
-		flags = get_flags(mu_msg_get_path(msg), flagstr.c_str());
-	else
-		flags = mu_msg_get_flags(msg);
-
-	if (flags == MU_FLAG_INVALID) {
-		mu_msg_unref(msg);
-		throw Error{Error::Code::InvalidArgument, "invalid flags"};
-	}
-
+	const auto flags = calculate_message_flags(msg, flagopt);
 	try {
 		output_sexp(perform_move(docid, msg, maildir, flags, rename, no_view));
 	} catch (...) {
@@ -967,7 +957,7 @@ Server::Private::ping_handler(const Parameters& params)
 	if (storecount == (unsigned)-1)
 		throw Error{Error::Code::Store, "failed to read store"};
 
-	const auto queries = get_string_vec(params, ":queries");
+	const auto queries{get_string_vec(params, ":queries")};
 	Sexp::List qresults;
 	for (auto&& q : queries) {
 		const auto count{store_.count_query(q)};
@@ -1053,16 +1043,17 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
 		throw Error{Error::Code::Store, "missing message"};
 
 	const auto oldflags{mu_msg_get_flags(msg)};
-	const auto newflags{get_flags(mu_msg_get_path(msg), "+S-u-N")};
-	if (oldflags == newflags)
+	const auto newflags{message_flags_from_delta_expr("+S-u-N", oldflags)};
+	if (!newflags || oldflags == *newflags)
 		return false; // nothing to do.
 
 	GError* gerr{};
 	if (!mu_msg_move_to_maildir(msg,
+				    store().properties().root_maildir,
 	                            mu_msg_get_maildir(msg),
-	                            newflags,
-	                            TRUE,
-	                            rename ? TRUE : FALSE,
+	                            *newflags,
+	                            true,
+	                            rename,
 	                            &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 

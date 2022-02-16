@@ -413,11 +413,11 @@ Mu::mu_msg_get_date(MuMsg* self)
 	return (time_t)get_num_field(self, MU_MSG_FIELD_ID_DATE);
 }
 
-MuFlags
+MessageFlags
 Mu::mu_msg_get_flags(MuMsg* self)
 {
-	g_return_val_if_fail(self, MU_FLAG_NONE);
-	return (MuFlags)get_num_field(self, MU_MSG_FIELD_ID_FLAGS);
+	g_return_val_if_fail(self, MessageFlags::None);
+	return static_cast<MessageFlags>(get_num_field(self, MU_MSG_FIELD_ID_FLAGS));
 }
 
 size_t
@@ -742,140 +742,47 @@ Mu::mu_msg_is_readable(MuMsg* self)
 	return access(mu_msg_get_path(self), R_OK) == 0 ? TRUE : FALSE;
 }
 
-/* we need do to determine the
- *   /home/foo/Maildir/bar
- * from the /bar
- * that we got
- */
-static char*
-get_target_mdir(MuMsg* msg, const char* target_maildir, GError** err)
-{
-	char *      rootmaildir, *rv;
-	const char* maildir;
-	gboolean    not_top_level;
-
-	/* maildir is the maildir stored in the message, e.g. '/foo' */
-	maildir = mu_msg_get_maildir(msg);
-	if (!maildir) {
-		mu_util_g_set_error(err, MU_ERROR_GMIME, "message without maildir");
-		return NULL;
-	}
-
-	/* the 'rootmaildir' is the filesystem path from root to
-	 * maildir, ie.  /home/user/Maildir/foo */
-	rootmaildir = mu_maildir_get_maildir_from_path(mu_msg_get_path(msg));
-	if (!rootmaildir) {
-		mu_util_g_set_error(err, MU_ERROR_GMIME, "cannot determine maildir");
-		return NULL;
-	}
-
-	/* we do a sanity check: verify that that maildir is a suffix of
-	 * rootmaildir;*/
-	not_top_level = TRUE;
-	if (!g_str_has_suffix(rootmaildir, maildir) &&
-	    /* special case for the top-level '/' maildir, and
-	     * remember not_top_level */
-	    (not_top_level = (g_strcmp0(maildir, "/") != 0))) {
-		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_FILE,
-		            "path is '%s', but maildir is '%s' ('%s')",
-		            rootmaildir,
-		            mu_msg_get_maildir(msg),
-		            mu_msg_get_path(msg));
-		g_free(rootmaildir);
-		return NULL;
-	}
-
-	/* if we're not at the top-level, remove the final '/' from
-	 * the rootmaildir */
-	if (not_top_level)
-		rootmaildir[strlen(rootmaildir) - strlen(mu_msg_get_maildir(msg))] = '\0';
-
-	rv = g_strconcat(rootmaildir, target_maildir, NULL);
-	g_free(rootmaildir);
-
-	return rv;
-}
 
 /*
  * move a msg to another maildir, trying to maintain 'integrity',
  * ie. msg in 'new/' will go to new/, one in cur/ goes to cur/. be
  * super-paranoid here...
  */
-gboolean
-Mu::mu_msg_move_to_maildir(MuMsg*      self,
-                           const char* maildir,
-                           MuFlags     flags,
-                           gboolean    ignore_dups,
-                           gboolean    new_name,
-                           GError**    err)
+bool
+Mu::mu_msg_move_to_maildir(MuMsg*		self,
+			   const std::string&	root_maildir_path,
+                           const std::string&	target_maildir,
+			   MessageFlags		flags,
+                           bool			ignore_dups,
+                           bool			new_name,
+                           GError**		err)
 {
-	char* newfullpath;
-	char* targetmdir;
+	g_return_val_if_fail(self, false);
 
-	g_return_val_if_fail(self, FALSE);
-	g_return_val_if_fail(maildir, FALSE); /* i.e. "/inbox" */
 
-	/* targetmdir is the full path to maildir, i.e.,
-	 * /home/foo/Maildir/inbox */
-	targetmdir = get_target_mdir(self, maildir, err);
-	if (!targetmdir)
-		return FALSE;
+	const auto srcpath{mu_msg_get_path(self)};
+	const auto dstpath{mu_maildir_determine_target(srcpath,
+						       root_maildir_path,
+						       target_maildir,
+						       flags,
+						       new_name)};
+	if (!dstpath)
+		return false;
 
-	newfullpath = mu_maildir_move_message(mu_msg_get_path(self),
-	                                      targetmdir,
-	                                      flags,
-	                                      ignore_dups,
-	                                      new_name,
-	                                      err);
-	if (!newfullpath) {
-		g_free(targetmdir);
-		return FALSE;
-	}
+	if (!mu_maildir_move_message(srcpath, *dstpath, ignore_dups))
+		return false;
 
 	/* clear the old backends */
 	mu_msg_doc_destroy(self->_doc);
 	self->_doc = NULL;
-
 	mu_msg_file_destroy(self->_file);
 
 	/* and create a new one */
-	self->_file = mu_msg_file_new(newfullpath, maildir, err);
-	g_free(targetmdir);
-	g_free(newfullpath);
+	self->_file = mu_msg_file_new(dstpath->c_str(), target_maildir.c_str(), err);
 
-	return self->_file ? TRUE : FALSE;
+	return !!self->_file;
 }
 
-/*
- * Rename a message-file, keeping the same flags. This is useful for tricking
- * some 3rd party progs such as mbsync
- */
-gboolean
-Mu::mu_msg_tickle(MuMsg* self, GError** err)
-{
-	g_return_val_if_fail(self, FALSE);
-
-	return mu_msg_move_to_maildir(self,
-	                              mu_msg_get_maildir(self),
-	                              mu_msg_get_flags(self),
-	                              FALSE,
-	                              TRUE,
-	                              err);
-}
-
-const char*
-Mu::mu_str_flags_s(MuFlags flags)
-{
-	return mu_flags_to_str_s(flags, MU_FLAG_TYPE_ANY);
-}
-
-char*
-Mu::mu_str_flags(MuFlags flags)
-{
-	return g_strdup(mu_str_flags_s(flags));
-}
 
 static void
 cleanup_contact(char* contact)

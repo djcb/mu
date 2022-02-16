@@ -126,48 +126,48 @@ wrong_type(Sexp::Type expected, Sexp::Type got)
 	             to_string(got).c_str());
 }
 
-const std::string&
-Command::get_string_or(const Parameters& params, const std::string& argname, const std::string& alt)
+std::optional<std::string>
+Command::get_string(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return alt;
+		return std::nullopt;
 	else if (!it->is_string())
 		throw wrong_type(Sexp::Type::String, it->type());
 	else
 		return it->value();
 }
 
-const std::string&
-Command::get_symbol_or(const Parameters& params, const std::string& argname, const std::string& alt)
+std::optional<std::string>
+Command::get_symbol(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return alt;
+		return std::nullopt;
 	else if (!it->is_symbol())
 		throw wrong_type(Sexp::Type::Symbol, it->type());
 	else
 		return it->value();
 }
 
-int
-Command::get_int_or(const Parameters& params, const std::string& argname, int alt)
+std::optional<int>
+Command::get_int(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return alt;
+		return std::nullopt;
 	else if (!it->is_number())
 		throw wrong_type(Sexp::Type::Number, it->type());
 	else
 		return ::atoi(it->value().c_str());
 }
 
-bool
-Command::get_bool_or(const Parameters& params, const std::string& argname, bool alt)
+std::optional<bool>
+Command::get_bool(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end())
-		return alt;
+		return std::nullopt;
 	else if (!it->is_symbol())
 		throw wrong_type(Sexp::Type::Symbol, it->type());
 	else

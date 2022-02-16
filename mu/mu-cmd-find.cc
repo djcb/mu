@@ -202,20 +202,16 @@ prepare_links(const MuConfig* opts, GError** err)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
-
-	if (!mu_maildir_mkdir(opts->linksdir, 0700, TRUE, err)) {
-		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE_CANNOT_MKDIR,
-		                    "error creating %s",
-		                    opts->linksdir);
+	if (auto&& res = mu_maildir_mkdir(opts->linksdir, 0700, true); !res) {
+		res.error().fill_g_error(err);
 		return FALSE;
 	}
 
-	if (opts->clearlinks && !mu_maildir_clear_links(opts->linksdir, err)) {
-		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE,
-		                    "error clearing links under %s",
-		                    opts->linksdir);
+	if (!opts->clearlinks)
+		return TRUE;
+
+	if (auto&& res = mu_maildir_clear_links(opts->linksdir); !res) {
+		res.error().fill_g_error(err);
 		return FALSE;
 	}
 
@@ -229,8 +225,12 @@ output_link(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** e
 		return prepare_links(opts, err);
 	else if (info.footer)
 		return true;
-
-	return mu_maildir_link(mu_msg_get_path(msg), opts->linksdir, err);
+	if (auto&& res = mu_maildir_link(
+		    mu_msg_get_path(msg), opts->linksdir); !res) {
+		res.error().fill_g_error(err);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static void
@@ -293,6 +293,18 @@ field_string_list(MuMsg* msg, MuMsgFieldId mfid)
 	return NULL;
 }
 
+/* ugly... for backward compat */
+static const char*
+flags_s(MessageFlags flags)
+{
+	static char buf[64];
+	const auto flagstr{message_flags_to_string(flags)};
+
+	::strncpy(buf, flagstr.c_str(), sizeof(buf) - 1);
+
+	return buf;
+}
+
 static const char*
 display_field(MuMsg* msg, MuMsgFieldId mfid)
 {
@@ -305,14 +317,13 @@ display_field(MuMsg* msg, MuMsgFieldId mfid)
 		return str ? str : "";
 	}
 	case MU_MSG_FIELD_TYPE_INT:
-
 		if (mfid == MU_MSG_FIELD_ID_PRIO) {
 			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, mfid));
 			const auto prio = message_priority_from_char(val);
 			return message_priority_name_c_str(prio);
 		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
 			val = mu_msg_get_field_numeric(msg, mfid);
-			return mu_str_flags_s((MuFlags)val);
+			return flags_s(static_cast<MessageFlags>(val));
 		} else /* as string */
 			return mu_msg_get_field_string(msg, mfid);
 

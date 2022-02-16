@@ -34,7 +34,7 @@
 #include "mu-maildir.hh"
 #include "mu-contacts.hh"
 #include "mu-runtime.hh"
-#include "mu-flags.hh"
+#include "mu-message-flags.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -122,7 +122,7 @@ body_or_summary(MuMsg* msg, const MuConfig* opts)
 	color = !opts->nocolor;
 	body  = mu_msg_get_body_text(msg, (MuMsgOptions)my_opts);
 	if (!body) {
-		if (mu_msg_get_flags(msg) & MU_FLAG_ENCRYPTED) {
+		if (any_of(mu_msg_get_flags(msg) & MessageFlags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
 			g_print("[No body found; "
 			        "message has encrypted parts]\n");
@@ -268,9 +268,15 @@ cmd_mkdir(const MuConfig* opts, GError** err)
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
-	for (i = 1; opts->params[i]; ++i)
-		if (!mu_maildir_mkdir(opts->params[i], opts->dirmode, FALSE, err))
-			return err && *err ? (MuError)(*err)->code : MU_ERROR_FILE_CANNOT_MKDIR;
+	for (i = 1; opts->params[i]; ++i) {
+		if (auto&& res{mu_maildir_mkdir(opts->params[i],
+						opts->dirmode, FALSE)}; !res) {
+			g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
+				    "%s", res.error().what());
+			return MU_ERROR_FILE_CANNOT_MKDIR;
+		}
+	}
+
 	return MU_OK;
 }
 

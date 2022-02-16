@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
+#include <optional>
 
 #include "utils/mu-error.hh"
 #include "utils/mu-sexp.hh"
@@ -61,14 +62,36 @@ using ArgMap = std::unordered_map<std::string, ArgInfo>;
 // The parameters to a Handler.
 using Parameters = Sexp::Seq;
 
-int  get_int_or(const Parameters& parms, const std::string& argname, int alt = 0);
-bool get_bool_or(const Parameters& parms, const std::string& argname, bool alt = false);
-const std::string&
-get_string_or(const Parameters& parms, const std::string& argname, const std::string& alt = "");
-const std::string&
-get_symbol_or(const Parameters& parms, const std::string& argname, const std::string& alt = "nil");
+std::optional<int>          get_int(const Parameters& parms, const std::string& argname);
+std::optional<bool>         get_bool(const Parameters& parms, const std::string& argname);
+std::optional<std::string>  get_string(const Parameters& parms, const std::string& argname);
+std::optional<std::string>  get_symbol(const Parameters& parms, const std::string& argname);
 
 std::vector<std::string> get_string_vec(const Parameters& params, const std::string& argname);
+
+/*
+ * backward compat
+ */
+static inline int
+get_int_or(const Parameters& parms, const std::string& arg, int alt = 0) {
+	return get_int(parms, arg).value_or(alt);
+}
+static inline bool
+get_bool_or(const Parameters& parms, const std::string& arg, bool alt = false) {
+	return get_bool(parms, arg).value_or(alt);
+}
+static inline std::string
+get_string_or(const Parameters& parms, const std::string& arg, const std::string& alt = ""){
+	return get_string(parms, arg).value_or(alt);
+}
+		
+static inline std::string
+get_symbol_or(const Parameters& parms, const std::string& arg, const std::string& alt = "nil") {
+	return get_symbol(parms, arg).value_or(alt);
+}
+
+
+
 
 // A handler function
 using Handler = std::function<void(const Parameters&)>;
