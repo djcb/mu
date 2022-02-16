@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,6 +19,8 @@
 
 #include "config.h"
 
+#include <optional>
+#include <string>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,8 +32,11 @@
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 
+#include "glibconfig.h"
 #include "mu-maildir.hh"
-#include "utils/mu-str.h"
+#include "mu-message-flags.hh"
+#include "utils/mu-utils.hh"
+#include "utils/mu-util.h"
 
 using namespace Mu;
 
@@ -45,7 +50,7 @@ using namespace Mu;
  * and return it in the d_type parameter
  */
 static unsigned char
-get_dtype(struct dirent* dentry, const char* path, gboolean use_lstat)
+get_dtype(struct dirent* dentry, const std::string& path, bool use_lstat)
 {
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
 
@@ -58,612 +63,505 @@ get_dtype(struct dirent* dentry, const char* path, gboolean use_lstat)
 
 slowpath:
 #endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
-	return mu_util_get_dtype(path, use_lstat);
+	return mu_util_get_dtype(path.c_str(), use_lstat);
 }
 
-static gboolean
-create_maildir(const char* path, mode_t mode, GError** err)
+static Mu::Result<void>
+create_maildir(const std::string& path, mode_t mode)
 {
-	int         i;
-	const char* subdirs[] = {"new", "cur", "tmp"};
+	std::array<std::string,3> subdirs = {"new", "cur", "tmp"};
+	for (auto&& subdir: subdirs) {
 
-	for (i = 0; i != G_N_ELEMENTS(subdirs); ++i) {
-		const char* fullpath;
-		int         rv;
-
-		/* static buffer */
-		fullpath = mu_str_fullpath_s(path, subdirs[i]);
+		const auto fullpath{path + G_DIR_SEPARATOR_S + subdir};
 
 		/* if subdir already exists, don't try to re-create
 		 * it */
-		if (mu_util_check_dir(fullpath, TRUE, TRUE))
+		if (mu_util_check_dir(fullpath.c_str(), TRUE, TRUE))
 			continue;
 
-		rv = g_mkdir_with_parents(fullpath, (int)mode);
+		int rv{g_mkdir_with_parents(fullpath.c_str(), static_cast<int>(mode))};
 
 		/* note, g_mkdir_with_parents won't detect an error if
 		 * there's already such a dir, but with the wrong
 		 * permissions; so we need to check */
-		if (rv != 0 || !mu_util_check_dir(fullpath, TRUE, TRUE))
-			return mu_util_g_set_error(err,
-			                           MU_ERROR_FILE_CANNOT_MKDIR,
-			                           "creating dir failed for %s: %s",
-			                           fullpath,
-			                           g_strerror(errno));
+		if (rv != 0 || !mu_util_check_dir(fullpath.c_str(), TRUE, TRUE))
+			return Err(Error{Error::Code::File,
+					"creating dir failed for %s: %s",
+					fullpath.c_str(), g_strerror(errno)});
 	}
 
-	return TRUE;
+	return Ok();
 }
 
-static gboolean
-create_noindex(const char* path, GError** err)
+static Mu::Result<void> 	/* create a noindex file if requested */
+create_noindex(const std::string& path)
 {
-	/* create a noindex file if requested */
-	int         fd;
-	const char* noindexpath;
+	const auto noindexpath{path + G_DIR_SEPARATOR_S MU_MAILDIR_NOINDEX_FILE};
 
-	/* static buffer */
-	noindexpath = mu_str_fullpath_s(path, MU_MAILDIR_NOINDEX_FILE);
-
-	fd = creat(noindexpath, 0644);
-
-	/* note, if the 'close' failed, creation may still have
-	 * succeeded...*/
-	if (fd < 0 || close(fd) != 0)
-		return mu_util_g_set_error(err,
-		                           MU_ERROR_FILE_CANNOT_CREATE,
-		                           "error in create_noindex: %s",
-		                           g_strerror(errno));
-	return TRUE;
+	/* note, if the 'close' failed, creation may still have succeeded...*/
+	int fd = ::creat(noindexpath.c_str(), 0644);
+	if (fd < 0 || ::close(fd) != 0)
+		return Err(Error{Error::Code::File,
+				"error creating .noindex: %s", g_strerror(errno)});
+	else
+		return Ok();
 }
 
-gboolean
-Mu::mu_maildir_mkdir(const char* path, mode_t mode, gboolean noindex, GError** err)
+Mu::Result<void>
+Mu::mu_maildir_mkdir(const std::string& path, mode_t mode, bool noindex)
 {
-	g_return_val_if_fail(path, FALSE);
+	if (auto&& created{create_maildir(path, mode)}; !created)
+		return created; // fail.
+	else if (!noindex)
+		return Ok();
 
-	if (!create_maildir(path, mode, err))
-		return FALSE;
+	if (auto&& created{create_noindex(path)}; !created)
+		return created; //fail
 
-	if (noindex && !create_noindex(path, err))
-		return FALSE;
-
-	return TRUE;
+	return Ok();
 }
 
 /* determine whether the source message is in 'new' or in 'cur';
  * we ignore messages in 'tmp' for obvious reasons */
-static gboolean
-check_subdir(const char* src, gboolean* in_cur, GError** err)
+static Mu::Result<void>
+check_subdir(const std::string& src, bool& in_cur)
 {
-	gboolean rv;
-	char*    srcpath;
+	char *srcpath{g_path_get_dirname(src.c_str())};
 
-	srcpath = g_path_get_dirname(src);
-	*in_cur = FALSE;
-	rv      = TRUE;
-
+	bool invalid{};
 	if (g_str_has_suffix(srcpath, "cur"))
-		*in_cur = TRUE;
-	else if (!g_str_has_suffix(srcpath, "new"))
-		rv = mu_util_g_set_error(err,
-		                         MU_ERROR_FILE_INVALID_SOURCE,
-		                         "invalid source message '%s'",
-		                         src);
+		in_cur = true;
+	else if (g_str_has_suffix(srcpath, "new"))
+		in_cur = false;
+	else
+		invalid = true;
+
 	g_free(srcpath);
-	return rv;
+
+	if (invalid)
+		return Err(Error{Error::Code::File, "invalid source message '%s'",
+				src.c_str()});
+	else
+		return Ok();
 }
 
-static char*
-get_target_fullpath(const char* src, const char* targetpath, GError** err)
+static Mu::Result<std::string>
+get_target_fullpath(const std::string& src, const std::string& targetpath)
 {
-	char *   targetfullpath, *srcfile;
-	gboolean in_cur;
+	bool in_cur{};
+	if (auto&& res = check_subdir(src, in_cur); !res)
+		return Err(std::move(res.error()));
 
-	if (!check_subdir(src, &in_cur, err))
-		return NULL;
+	char *srcfile{g_path_get_basename(src.c_str())};
 
-	srcfile = g_path_get_basename(src);
-
-	/* create targetpath; note: make the filename *cough* unique
-	 * by including a hash of the srcname in the targetname. This
-	 * helps if there are copies of a message (which all have the
-	 * same basename)
+	/* create targetpath; note: make the filename *cough* unique by
+	 * including a hash of the srcname in the targetname. This helps if
+	 * there are copies of a message (which all have the same basename)
 	 */
-	targetfullpath = g_strdup_printf("%s%c%s%c%u_%s",
-	                                 targetpath,
-	                                 G_DIR_SEPARATOR,
-	                                 in_cur ? "cur" : "new",
-	                                 G_DIR_SEPARATOR,
-	                                 g_str_hash(src),
-	                                 srcfile);
+	auto targetfullpath = format("%s%c%s%c%u_%s",
+				     targetpath.c_str(),
+				     G_DIR_SEPARATOR, in_cur ? "cur" : "new",
+				     G_DIR_SEPARATOR,
+				     g_str_hash(src.c_str()),
+				     srcfile);
 	g_free(srcfile);
 
 	return targetfullpath;
 }
 
-gboolean
-Mu::mu_maildir_link(const char* src, const char* targetpath, GError** err)
+Result<void>
+Mu::mu_maildir_link(const std::string& src, const std::string& targetpath)
 {
-	char* targetfullpath;
-	int   rv;
+	auto path_res{get_target_fullpath(src, targetpath)};
+	if (!path_res)
+		return Err(std::move(path_res.error()));
 
-	g_return_val_if_fail(src, FALSE);
-	g_return_val_if_fail(targetpath, FALSE);
-
-	targetfullpath = get_target_fullpath(src, targetpath, err);
-	if (!targetfullpath)
-		return FALSE;
-
-	rv = symlink(src, targetfullpath);
-
+	auto rv{::symlink(src.c_str(), path_res->c_str())};
 	if (rv != 0)
-		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE_CANNOT_LINK,
-		                    "error creating link %s => %s: %s",
-		                    targetfullpath,
-		                    src,
-		                    g_strerror(errno));
-	g_free(targetfullpath);
+		return Err(Error{Error::Code::File,
+				"error creating link %s => %s: %s",
+				path_res->c_str(),
+				src.c_str(),
+				g_strerror(errno)});
 
-	return rv == 0 ? TRUE : FALSE;
+	return Ok();
 }
 
-/*
- * determine if path is a maildir leaf-dir; ie. if it's 'cur' or 'new'
- * (we're skipping 'tmp' for obvious reasons)
- */
-gboolean
-Mu::mu_maildir_is_leaf_dir(const char* path)
+static bool
+clear_links(const std::string& path, DIR* dir)
 {
-	size_t len;
-
-	/* path is the full path; it cannot possibly be shorter
-	 * than 4 for a maildir (/cur or /new) */
-	len = path ? strlen(path) : 0;
-	if (G_UNLIKELY(len < 4))
-		return FALSE;
-
-	/* optimization; one further idea would be cast the 4 bytes to an
-	 * integer and compare that -- need to think about alignment,
-	 * endianness */
-
-	if (path[len - 4] == G_DIR_SEPARATOR && path[len - 3] == 'c' && path[len - 2] == 'u' &&
-	    path[len - 1] == 'r')
-		return TRUE;
-
-	if (path[len - 4] == G_DIR_SEPARATOR && path[len - 3] == 'n' && path[len - 2] == 'e' &&
-	    path[len - 1] == 'w')
-		return TRUE;
-
-	return FALSE;
-}
-
-static gboolean
-clear_links(const char* path, DIR* dir)
-{
-	gboolean       rv;
+	bool res;
 	struct dirent* dentry;
 
-	rv    = TRUE;
+	res   = true;
 	errno = 0;
 
-	while ((dentry = readdir(dir))) {
-		guint8 d_type;
-		char*  fullpath;
+	while ((dentry = ::readdir(dir))) {
 
 		if (dentry->d_name[0] == '.')
 			continue; /* ignore .,.. other dotdirs */
 
-		fullpath = g_build_path("/", path, dentry->d_name, NULL);
-		d_type   = get_dtype(dentry, fullpath, TRUE /*lstat*/);
-
-		if (d_type == DT_LNK) {
-			if (unlink(fullpath) != 0) {
-				g_warning("error unlinking %s: %s", fullpath, g_strerror(errno));
-				rv = FALSE;
+		const auto fullpath{
+			format("%s" G_DIR_SEPARATOR_S "%s",path.c_str(), dentry->d_name)};
+		const auto d_type   = get_dtype(dentry, fullpath.c_str(), true/*lstat*/);
+		switch(d_type) {
+		case DT_LNK:
+			if (::unlink(fullpath.c_str()) != 0) {
+				g_warning("error unlinking %s: %s",
+					  fullpath.c_str(), g_strerror(errno));
+				res = false;
 			}
-		} else if (d_type == DT_DIR) {
-			DIR* subdir;
-			subdir = opendir(fullpath);
+			break;
+		case  DT_DIR: {
+			DIR* subdir{::opendir(fullpath.c_str())};
 			if (!subdir) {
-				g_warning("failed to open dir %s: %s", fullpath, g_strerror(errno));
-				rv = FALSE;
-				goto next;
+				g_warning("failed to open dir %s: %s", fullpath.c_str(),
+					  g_strerror(errno));
+				res = false;
 			}
-
 			if (!clear_links(fullpath, subdir))
-				rv = FALSE;
-
-			closedir(subdir);
+				res = false;
+			::closedir(subdir);
 		}
-
-	next:
-		g_free(fullpath);
+			break;
+		default:
+			break;
+		}
 	}
 
-	return rv;
+	return res;
 }
 
-gboolean
-Mu::mu_maildir_clear_links(const char* path, GError** err)
+Mu::Result<void>
+Mu::mu_maildir_clear_links(const std::string& path)
 {
-	DIR*     dir;
-	gboolean rv;
+	const auto dir{::opendir(path.c_str())};
+	if (!dir)
+		return Err(Error{Error::Code::File, "failed to open %s: %s",
+				path.c_str(), g_strerror(errno)});
 
-	g_return_val_if_fail(path, FALSE);
+	clear_links(path, dir);
+	::closedir(dir);
 
-	dir = opendir(path);
-	if (!dir) {
-		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_FILE_CANNOT_OPEN,
-		            "failed to open %s: %s",
-		            path,
-		            g_strerror(errno));
-		return FALSE;
-	}
-
-	rv = clear_links(path, dir);
-
-	closedir(dir);
-
-	return rv;
+	return Ok();
 }
 
-MuFlags
-Mu::mu_maildir_get_flags_from_path(const char* path)
-{
-	g_return_val_if_fail(path, MU_FLAG_INVALID);
-
-	/* try to find the info part */
-	/* note that we can use either the ':', ';', or '!' as separator;
-	 * the former is the official, but as it does not work on e.g. VFAT
-	 * file systems, some Maildir implementations use the latter instead
-	 * (or both). For example, Tinymail/modest does this. The python
-	 * documentation at http://docs.python.org/lib/mailbox-maildir.html
-	 * mentions the '!' as well as a 'popular choice'. Isync uses ';' by
-	 * default on Windows.
-	 */
-
-	/* we check the dir -- */
-	if (strstr(path, G_DIR_SEPARATOR_S "new" G_DIR_SEPARATOR_S)) {
-		char *  dir, *dir2;
-		MuFlags flags;
-
-		dir  = g_path_get_dirname(path);
-		dir2 = g_path_get_basename(dir);
-
-		flags = MU_FLAG_NONE;
-
-		if (g_strcmp0(dir2, "new") == 0)
-			flags = MU_FLAG_NEW;
-
-		g_free(dir);
-		g_free(dir2);
-
-		/* NOTE: new/ message should not have :2,-stuff, as
-		 * per http://cr.yp.to/proto/maildir.html. If they, do
-		 * we ignore it
-		 */
-		if (flags == MU_FLAG_NEW)
-			return flags;
-	}
-
-	/*  get the file flags */
-	{
-		const char* info;
-
-		info = strrchr(path, '2');
-		if (!info || info == path ||
-		    (info[-1] != ':' && info[-1] != '!' && info[-1] != ';') || (info[1] != ','))
-			return MU_FLAG_NONE;
-		else
-			return mu_flags_from_str(&info[2],
-			                         MU_FLAG_TYPE_MAILFILE,
-			                         TRUE /*ignore invalid */);
-	}
-}
 
 /*
- * take an existing message path, and return a new path, based on
- * whether it should be in 'new' or 'cur'; ie.
- *
- * /home/user/Maildir/foo/bar/cur/abc:2,F  and flags == MU_FLAG_NEW
- *     => /home/user/Maildir/foo/bar/new
- * and
- * /home/user/Maildir/foo/bar/new/abc  and flags == MU_FLAG_REPLIED
- *    => /home/user/Maildir/foo/bar/cur
- *
- * so the difference is whether MU_FLAG_NEW is set or not; and in the
- * latter case, no other flags are allowed.
- *
+ * The file-components, ie.
+ *     1631819685.fb7b279bbb0a7b66.evergrey:2,RS
+ *     => {
+ *       "1631819685.fb7b279bbb0a7b66.evergrey",
+ *       ':',
+ *       "2,",
+ *       "RS"
+ *     }
  */
-static char*
-get_new_path(const char* mdir,
-             const char* mfile,
-             MuFlags     flags,
-             const char* custom_flags,
-             char        flags_sep)
-{
-	if (flags & MU_FLAG_NEW)
-		return g_strdup_printf("%s%cnew%c%s",
-		                       mdir,
-		                       G_DIR_SEPARATOR,
-		                       G_DIR_SEPARATOR,
-		                       mfile);
-	else {
-		const char* flagstr;
-		flagstr = mu_flags_to_str_s(flags, MU_FLAG_TYPE_MAILFILE);
+struct FileParts {
+	std::string	base;
+	char		separator;
+	std::string	flags_suffix;;
+};
 
-		return g_strdup_printf("%s%ccur%c%s%c2,%s%s",
-		                       mdir,
-		                       G_DIR_SEPARATOR,
-		                       G_DIR_SEPARATOR,
-		                       mfile,
-		                       flags_sep,
-		                       flagstr,
-		                       custom_flags ? custom_flags : "");
-	}
+static FileParts
+message_file_parts(const std::string& file)
+{
+	const auto pos{file.find_last_of(":!;")};
+
+	/* no suffix at all? */
+	if (pos == std::string::npos ||
+	    pos >= file.length() - 3 ||
+	    file[pos + 1] != '2' ||
+	    file[pos + 2] != ',')
+		return FileParts{ file, ':', {}};
+
+	return FileParts {
+		file.substr(0, pos),
+		file[pos],
+		file.substr(pos + 3)
+	};
 }
 
-char*
-Mu::mu_maildir_get_maildir_from_path(const char* path)
+struct DirFile {
+	std::string dir;
+	std::string file;
+	bool is_new;
+};
+
+static Result<DirFile>
+base_message_dir_file(const std::string& path)
 {
-	char* mdir;
+	constexpr auto newdir{ G_DIR_SEPARATOR_S "new"};
 
-	/* determine the maildir */
-	mdir = g_path_get_dirname(path);
-	if (!g_str_has_suffix(mdir, "cur") &&
+	char *dirname{g_path_get_dirname(path.c_str())};
+	bool is_new{!!g_str_has_suffix(dirname, newdir)};
 
-	    !g_str_has_suffix(mdir, "new")) {
-		g_warning("%s: not a valid maildir path: %s", __func__, path);
-		g_free(mdir);
-		return NULL;
-	}
+	std::string mdir{dirname, ::strlen(dirname) - 4};
+	g_free(dirname);
 
-	/* remove the 'cur' or 'new' */
-	mdir[strlen(mdir) - 4] = '\0';
+	char *basename{g_path_get_basename(path.c_str())};
+	std::string bname{basename};
+	g_free(basename);
 
-	return mdir;
+	return Ok(DirFile{std::move(mdir), std::move(bname), is_new});
 }
 
-static char*
-get_new_basename(void)
-{
-	return g_strdup_printf("%u.%08x%08x.%s",
-	                       (guint)time(NULL),
-	                       g_random_int(),
-	                       (gint32)g_get_monotonic_time(),
-	                       g_get_host_name());
+
+
+
+Mu::Result<Mu::MessageFlags>
+Mu::mu_maildir_flags_from_path(const std::string& path)
+{	/*
+	 * this gets us the source maildir filesystem path, the directory
+	 * in which new/ & cur/ lives, and the source file
+	 */
+	auto dirfile{base_message_dir_file(path)};
+	if (!dirfile)
+		return Err(std::move(dirfile.error()));
+
+	/* a message under new/ is just.. New. Filename is not considered */
+	if (dirfile->is_new)
+		return Ok(MessageFlags::New);
+
+	/* it's cur/ message, so parse the file name */
+	const auto parts{message_file_parts(dirfile->file)};
+	auto flags{message_flags_from_absolute_expr(parts.flags_suffix,
+						    true/*ignore invalid*/)};
+	if (!flags)
+		return Err(Error{Error::Code::InvalidArgument,
+				"invalid flags ('%s')", parts.flags_suffix.c_str()});
+	else
+		return Ok(std::move(flags.value()));
 }
 
-static char*
-find_path_separator(const char* path)
-{
-	const char* cur;
-	for (cur = &path[strlen(path) - 1]; cur > path; --cur) {
-		if ((*cur == ':' || *cur == '!' || *cur == ';') &&
-		    (cur[1] == '2' && cur[2] == ',')) {
-			return (char*)cur;
-		}
-	}
-	return NULL;
-}
 
-char*
-Mu::mu_maildir_get_new_path(const char* oldpath,
-                            const char* new_mdir,
-                            MuFlags     newflags,
-                            gboolean    new_name)
-{
-	char *mfile, *mdir, *custom_flags, *cur, *newpath, flags_sep = ':';
-
-	g_return_val_if_fail(oldpath, NULL);
-
-	mfile = newpath = custom_flags = NULL;
-
-	/* determine the maildir */
-	mdir = mu_maildir_get_maildir_from_path(oldpath);
-	if (!mdir)
-		return NULL;
-
-	/* determine the name of the location of the flag separator */
-
-	if (new_name) {
-		mfile = get_new_basename();
-		cur   = find_path_separator(oldpath);
-		if (cur) {
-			/* preserve the existing flags separator
-			 * in the new file name */
-			flags_sep = *cur;
-		}
-	} else {
-		mfile = g_path_get_basename(oldpath);
-		cur   = find_path_separator(mfile);
-		if (cur) {
-			/* get the custom flags (if any) */
-			custom_flags = mu_flags_custom_from_str(cur + 3);
-			/* preserve the existing flags separator
-			 * in the new file name */
-			flags_sep = *cur;
-			cur[0]    = '\0'; /* strip the flags */
-		}
-	}
-
-	newpath =
-	    get_new_path(new_mdir ? new_mdir : mdir, mfile, newflags, custom_flags, flags_sep);
-	g_free(mfile);
-	g_free(mdir);
-	g_free(custom_flags);
-
-	return newpath;
-}
-
-static gint64
-get_file_size(const char* path)
+static size_t
+get_file_size(const std::string& path)
 {
 	int         rv;
 	struct stat statbuf;
 
-	rv = stat(path, &statbuf);
+	rv = ::stat(path.c_str(), &statbuf);
 	if (rv != 0) {
 		/* g_warning ("error: %s", g_strerror (errno)); */
 		return -1;
 	}
 
-	return (gint64)statbuf.st_size;
+	return static_cast<size_t>(statbuf.st_size);
 }
 
-static gboolean
-msg_move_check_pre(const char* src, const char* dst, GError** err)
+static Mu::Result<void>
+msg_move_check_pre(const std::string& src, const std::string& dst)
 {
-	gint size1, size2;
+	if (::access(src.c_str(), R_OK) != 0)
+		return Err(Error{Error::Code::File, "cannot read %s", src.c_str()});
 
-	if (!g_path_is_absolute(src))
-		return mu_util_g_set_error(err,
-		                           MU_ERROR_FILE,
-		                           "source is not an absolute path: '%s'",
-		                           src);
-
-	if (!g_path_is_absolute(dst))
-		return mu_util_g_set_error(err,
-		                           MU_ERROR_FILE,
-		                           "target is not an absolute path: '%s'",
-		                           dst);
-
-	if (access(src, R_OK) != 0)
-		return mu_util_g_set_error(err, MU_ERROR_FILE, "cannot read %s", src);
-
-	if (access(dst, F_OK) != 0)
-		return TRUE;
+	if (::access(dst.c_str(), F_OK) != 0)
+		return Ok();
 
 	/* target exist; we simply overwrite it, unless target has a different
 	 * size. ignore the exceedingly rare case where have duplicate message
 	 * file names with different content yet the same length. (md5 etc. is a
 	 * bit slow) */
-	size1 = get_file_size(src);
-	size2 = get_file_size(dst);
-	if (size1 != size2)
-		return mu_util_g_set_error(err, MU_ERROR_FILE, "%s already exists", dst);
+	if (get_file_size(src) != get_file_size(dst))
+		return Err(Error{Error::Code::File, "%s already exists", dst.c_str()});
 
-	return TRUE;
-}
+	return Ok();
+ }
 
-static gboolean
-msg_move_check_post(const char* src, const char* dst, GError** err)
+static Mu::Result<void>
+msg_move_check_post(const std::string& src, const std::string& dst)
 {
 	/* double check -- is the target really there? */
-	if (access(dst, F_OK) != 0)
-		return mu_util_g_set_error(err,
-		                           MU_ERROR_FILE,
-		                           "can't find target (%s->%s)",
-		                           src,
-		                           dst);
+	if (::access(dst.c_str(), F_OK) != 0)
+		return Err(Error{Error::Code::File,
+				"can't find target (%s->%s)",
+				src.c_str(), dst.c_str()});
 
-	if (access(src, F_OK) == 0) {
-		if (g_strcmp0(src, dst) == 0) {
-			g_warning("moved %s to itself", src);
-			return TRUE;
+	if (::access(src.c_str(), F_OK) == 0) {
+		if (src ==  dst) {
+			g_warning("moved %s to itself", src.c_str());
 		}
-
 		/* this could happen if some other tool (for mail syncing) is
 		 * interfering */
-		g_debug("the source is still there (%s->%s)", src, dst);
+		g_debug("the source is still there (%s->%s)", src.c_str(), dst.c_str());
 	}
 
-	return TRUE;
+	return Ok();
 }
 
 /* use GIO to move files; this is slower than rename() so only use
  * this when needed: when moving across filesystems */
-static gboolean
-msg_move_g_file(const char* src, const char* dst, GError** err)
+static Mu::Result<void>
+msg_move_g_file(const std::string& src, const std::string& dst)
 {
-	GFile *  srcfile, *dstfile;
-	gboolean res;
+	GFile *srcfile{g_file_new_for_path(src.c_str())};
+	GFile *dstfile{g_file_new_for_path(dst.c_str())};
 
-	srcfile = g_file_new_for_path(src);
-	dstfile = g_file_new_for_path(dst);
-
-	res = g_file_move(srcfile, dstfile, G_FILE_COPY_NONE, NULL, NULL, NULL, err);
+	GError* err{};
+	auto res = g_file_move(srcfile, dstfile, G_FILE_COPY_NONE,
+			       NULL, NULL, NULL, &err);
 
 	g_clear_object(&srcfile);
 	g_clear_object(&dstfile);
 
-	return res;
+	if (res)
+		return Ok();
+	else
+		return Err(Error{Error::Code::File, &err,
+				"error moving %s -> %s",
+				src.c_str(), dst.c_str()});
 }
 
-static gboolean
-msg_move(const char* src, const char* dst, GError** err)
+static Mu::Result<void>
+msg_move(const std::string& src, const std::string& dst)
 {
-	if (!msg_move_check_pre(src, dst, err))
-		return FALSE;
+	if (auto&& res = msg_move_check_pre(src, dst); !res)
+		return res;
 
-	if (rename(src, dst) == 0) /* seems it worked. */
-		return msg_move_check_post(src, dst, err);
+	if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
+		return msg_move_check_post(src, dst);
 
 	if (errno != EXDEV) /* some unrecoverable error occurred */
-		return mu_util_g_set_error(err, MU_ERROR_FILE, "error moving %s -> %s", src, dst);
+		return Err(Error{Error::Code::File, "error moving %s -> %s",
+					   src.c_str(), dst.c_str()});
 
-	/* he EXDEV case -- source and target live on different filesystems */
-	return msg_move_g_file(src, dst, err);
+	/* the EXDEV case -- source and target live on different filesystems */
+	return msg_move_g_file(src, dst);
 }
 
-char*
-Mu::mu_maildir_move_message(const char* oldpath,
-                            const char* targetmdir,
-                            MuFlags     newflags,
-                            gboolean    ignore_dups,
-                            gboolean    new_name,
-                            GError**    err)
+
+Mu::Result<void>
+Mu::mu_maildir_move_message(const std::string&	oldpath,
+                            const std::string&	newpath,
+                            bool		ignore_dups)
 {
-	char*    newfullpath;
-	gboolean rv;
-	gboolean src_is_target;
-
-	g_return_val_if_fail(oldpath, FALSE);
-
-	/* first try *without* changing the name (as per new_name), since
-	 * src_is_target shouldn't use a changed name */
-	newfullpath = mu_maildir_get_new_path(oldpath, targetmdir, newflags, FALSE);
-	if (!newfullpath) {
-		mu_util_g_set_error(err, MU_ERROR_FILE, "failed to determine targetpath");
-		return NULL;
+	if (oldpath == newpath) {
+		if (ignore_dups)
+			return Ok();
+		else
+			return Err(Error{Error::Code::InvalidArgument,
+					"target equals source"});
 	}
 
-	src_is_target = (g_strcmp0(oldpath, newfullpath) == 0);
-	if (!ignore_dups && src_is_target) {
-		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE_TARGET_EQUALS_SOURCE,
-		                    "target equals source");
-		return NULL;
-	}
+	g_debug("moving %s --> %s", oldpath.c_str(), newpath.c_str());
+	return msg_move(oldpath, newpath);
+}
 
-	/* if we generated file is not the same (modulo flags), create a fully
-	 * new name in the new_name case */
-	if (!src_is_target && new_name) {
-		g_free(newfullpath);
-		newfullpath = mu_maildir_get_new_path(oldpath, targetmdir, newflags, new_name);
-		if (!newfullpath) {
-			mu_util_g_set_error(err, MU_ERROR_FILE, "failed to determine targetpath");
-			return NULL;
-		}
-	}
+static std::string
+reinvent_filename_base()
+{
+	return format("%u.%08x%08x.%s",
+		      static_cast<unsigned>(::time(NULL)),
+		      g_random_int(),
+		      static_cast<uint32_t>(g_get_monotonic_time()),
+		      g_get_host_name());
+}
 
-	if (!src_is_target) {
-		g_debug("moving %s (%s, %x, %d) --> %s",
-		        oldpath,
-		        targetmdir,
-		        newflags,
-		        new_name,
-		        newfullpath);
-		rv = msg_move(oldpath, newfullpath, err);
-		if (!rv) {
-			g_free(newfullpath);
-			return NULL;
-		}
-	}
+/**
+ * Determine the destination filename
+ *
+ * @param file a filename
+ * @param flags flags for the destination
+ * @param new_name whether to change the basename
+ *
+ * @return the destion filename.
+ */
+static std::string
+determine_dst_filename(const std::string& file, MessageFlags flags,
+		       bool new_name)
+{
+	/* Recalculate a unique new base file name */
+	auto&& parts{message_file_parts(file)};
+	if (new_name)
+		parts.base = reinvent_filename_base();
 
-	return newfullpath;
+	/* for a New message, there are no flags etc.; so we only return the
+	 * name sans suffix */
+	if (any_of(flags & MessageFlags::New))
+		return std::move(parts.base);
+
+	const auto flagstr{
+		message_flags_to_string(
+			message_flags_filter(
+				flags, MessageFlagCategory::Mailfile))};
+
+	return parts.base + parts.separator + "2," + flagstr;
+}
+
+
+/*
+ * sanity checks
+ */
+static Mu::Result<void>
+check_determine_target_params (const std::string&       old_path,
+			       const std::string&       root_maildir_path,
+			       const std::string&       target_maildir,
+			       MessageFlags		newflags)
+{
+	if (!g_path_is_absolute(old_path.c_str()))
+		return Err(Error{Error::Code::File,
+				"old_path is not absolute (%s)", old_path.c_str()});
+
+	if (!g_path_is_absolute(root_maildir_path.c_str()))
+		return Err(Error{Error::Code::File,
+				"root maildir path is not absolute",
+				root_maildir_path.c_str()});
+
+	if (!target_maildir.empty() && target_maildir[0] != '/')
+		return Err(Error{Error::Code::File,
+				"target maildir must be empty or start with / (%s)",
+				target_maildir.c_str()});
+
+	if (old_path.find(root_maildir_path) != 0)
+		return Err(Error{Error::Code::File,
+				"old-path must be below root-maildir (%s) (%s)",
+				old_path.c_str(), root_maildir_path.c_str()});
+
+	if (any_of(newflags & MessageFlags::New) && newflags != MessageFlags::New)
+		return Err(Error{Error::Code::File,
+					"if ::New is specified, "
+					"it must be the only flag"});
+	return Ok();
+}
+
+
+Mu::Result<std::string>
+Mu::mu_maildir_determine_target(const std::string&	old_path,
+				const std::string&      root_maildir_path,
+				const std::string&	target_maildir,
+				MessageFlags		newflags,
+				bool			new_name)
+{
+	/* sanity checks */
+	if (const auto checked{check_determine_target_params(
+		old_path, root_maildir_path, target_maildir, newflags)}; !checked)
+		return Err(Error{std::move(checked.error())});
+
+	/*
+	 * this gets us the source maildir filesystem path, the directory
+	 * in which new/ & cur/ lives, and the source file
+	 */
+	const auto src{base_message_dir_file(old_path)};
+	if (!src)
+		return Err(src.error());
+	const auto& [src_mdir, src_file, is_new] = *src;
+
+	/* if target_mdir is empty, we use the src_dir does not change
+	 * (though cur/ maybe become new or vice-versa) */
+	const auto dst_mdir{target_maildir.empty() ? src_mdir :
+		root_maildir_path + target_maildir};
+
+	/* now calculate the message name (incl. its immediate parent dir) */
+	const auto dst_file{determine_dst_filename(src_file, newflags, new_name)};
+
+	/* and the complete path name. */
+	const auto subdir = std::invoke([&]()->std::string {
+		if (none_of(newflags & MessageFlags::New))
+			return "cur";
+		else
+			return "new";
+	});
+
+	return dst_mdir + G_DIR_SEPARATOR_S + subdir + G_DIR_SEPARATOR_S + dst_file;
 }
