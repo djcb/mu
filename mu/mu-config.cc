@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -62,14 +62,14 @@ get_output_format(const char* formatstr)
 	return MU_CONFIG_FORMAT_UNKNOWN;
 }
 
-#define expand_dir(D)                          \
-	if ((D)) {                             \
-		char* exp;                     \
-		exp = mu_util_dir_expand((D)); \
-		if (exp) {                     \
-			g_free((D));           \
-			(D) = exp;             \
-		}                              \
+#define expand_dir(D)                                                                    \
+	if ((D)) {                                                                       \
+		char* exp;                                                               \
+		exp = mu_util_dir_expand((D));                                           \
+		if (exp) {                                                               \
+			g_free((D));                                                     \
+			(D) = exp;                                                       \
+		}                                                                        \
 	}
 
 static void
@@ -93,64 +93,25 @@ static GOptionGroup*
 config_options_group_mu()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"debug",
-                                   'd',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.debug,
-                                   "print debug output to standard error (false)",
-                                   NULL},
-                                  {"quiet",
-                                   'q',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.quiet,
-                                   "don't give any progress information (false)",
-                                   NULL},
-                                  {"version",
-                                   'V',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.version,
-                                   "display version and copyright information (false)",
-                                   NULL},
-                                  {"muhome",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_FILENAME,
-                                   &MU_CONFIG.muhome,
-                                   "specify an alternative mu directory",
-                                   "<dir>"},
-                                  {"log-stderr",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.log_stderr,
-                                   "log to standard error (false)",
-                                   NULL},
-                                  {"nocolor",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.nocolor,
-                                   "don't use ANSI-colors in output (false)",
-                                   NULL},
-                                  {"verbose",
-                                   'v',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.verbose,
-                                   "verbose output (false)",
-                                   NULL},
+	GOptionEntry  entries[] = {
+            {"debug", 'd', 0, G_OPTION_ARG_NONE, &MU_CONFIG.debug,
+             "print debug output to standard error (false)", NULL},
+            {"quiet", 'q', 0, G_OPTION_ARG_NONE, &MU_CONFIG.quiet,
+             "don't give any progress information (false)", NULL},
+            {"version", 'V', 0, G_OPTION_ARG_NONE, &MU_CONFIG.version,
+             "display version and copyright information (false)", NULL},
+            {"muhome", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.muhome,
+             "specify an alternative mu directory", "<dir>"},
+            {"log-stderr", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.log_stderr,
+             "log to standard error (false)", NULL},
+            {"nocolor", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocolor,
+             "don't use ANSI-colors in output (false)", NULL},
+            {"verbose", 'v', 0, G_OPTION_ARG_NONE, &MU_CONFIG.verbose,
+             "verbose output (false)", NULL},
 
-                                  {G_OPTION_REMAINING,
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_STRING_ARRAY,
-                                   &MU_CONFIG.params,
-                                   "parameters",
-                                   NULL},
-                                  {NULL, 0, 0, (GOptionArg)0, NULL, NULL, NULL}};
+            {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &MU_CONFIG.params,
+             "parameters", NULL},
+            {NULL, 0, 0, (GOptionArg)0, NULL, NULL, NULL}};
 
 	og = g_option_group_new("mu", "general mu options", "", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -171,35 +132,16 @@ static GOptionGroup*
 config_options_group_init()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"maildir",
-                                   'm',
-                                   0,
-                                   G_OPTION_ARG_FILENAME,
-                                   &MU_CONFIG.maildir,
-                                   "top of the maildir",
-                                   "<maildir>"},
-                                  {"my-address",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_STRING_ARRAY,
-                                   &MU_CONFIG.my_addresses,
-                                   "my e-mail address; can be used multiple times",
-                                   "<address>"},
-                                  {"max-message-size",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.max_msg_size,
-                                   "Maximum allowed size for messages",
-                                   "<size-in-bytes>"},
-                                  {"batch-size",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.batch_size,
-                                   "Number of changes in a database transaction batch",
-                                   "<number>"},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	GOptionEntry  entries[] = {
+            {"maildir", 'm', 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.maildir,
+             "top of the maildir", "<maildir>"},
+            {"my-address", 0, 0, G_OPTION_ARG_STRING_ARRAY, &MU_CONFIG.my_addresses,
+             "my e-mail address; can be used multiple times", "<address>"},
+            {"max-message-size", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.max_msg_size,
+             "Maximum allowed size for messages", "<size-in-bytes>"},
+            {"batch-size", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.batch_size,
+             "Number of changes in a database transaction batch", "<number>"},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
 	og = g_option_group_new("init", "Options for the 'init' command", "", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -208,18 +150,19 @@ config_options_group_init()
 }
 
 static gboolean
-index_post_parse_func(GOptionContext* context, GOptionGroup* group, gpointer data, GError** error)
+index_post_parse_func(GOptionContext* context, GOptionGroup* group, gpointer data,
+                      GError** error)
 {
 	if (!MU_CONFIG.maildir && !MU_CONFIG.my_addresses)
 		return TRUE;
 
 	g_printerr("%sNOTE%s: as of mu 1.3.8, 'mu index' no longer uses the\n"
 	           "--maildir/-m or --my-address options.\n\n",
-	           color_maybe(MU_COLOR_RED),
-	           color_maybe(MU_COLOR_DEFAULT));
+	           color_maybe(MU_COLOR_RED), color_maybe(MU_COLOR_DEFAULT));
 	g_printerr("Instead, these options should be passed to 'mu init'.\n");
-	g_printerr("See the mu-init(1) or the mu4e reference manual,\n'Initializing the message "
-	           "store' for details.\n\n");
+	g_printerr(
+	    "See the mu-init(1) or the mu4e reference manual,\n'Initializing the message "
+	    "store' for details.\n\n");
 
 	return TRUE;
 }
@@ -228,39 +171,22 @@ static GOptionGroup*
 config_options_group_index()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {/* only here so we can tell users they are deprecated */
-                                  {"maildir",
-                                   'm',
-                                   G_OPTION_FLAG_HIDDEN,
-                                   G_OPTION_ARG_FILENAME,
-                                   &MU_CONFIG.maildir,
-                                   "top of the maildir",
-                                   "<maildir>"},
-                                  {"my-address",
-                                   0,
-                                   G_OPTION_FLAG_HIDDEN,
-                                   G_OPTION_ARG_STRING_ARRAY,
-                                   &MU_CONFIG.my_addresses,
-                                   "my e-mail address; can be used multiple times",
-                                   "<address>"},
+	GOptionEntry  entries[] = {
+            /* only here so we can tell users they are deprecated */
+            {"maildir", 'm', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME,
+             &MU_CONFIG.maildir, "top of the maildir", "<maildir>"},
+            {"my-address", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY,
+             &MU_CONFIG.my_addresses, "my e-mail address; can be used multiple times",
+             "<address>"},
 
-                                  {"lazy-check",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.lazycheck,
-                                   "only check dir-timestamps (false)",
-                                   NULL},
-                                  {"nocleanup",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.nocleanup,
-                                   "don't clean up the database after indexing (false)",
-                                   NULL},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+            {"lazy-check", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.lazycheck,
+             "only check dir-timestamps (false)", NULL},
+            {"nocleanup", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.nocleanup,
+             "don't clean up the database after indexing (false)", NULL},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
-	og = g_option_group_new("index", "Options for the 'index' command", "", NULL, NULL);
+	og = g_option_group_new("index", "Options for the 'index' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, entries);
 	g_option_group_set_parse_hooks(og, NULL, (GOptionParseFunc)index_post_parse_func);
 
@@ -290,106 +216,38 @@ static GOptionGroup*
 config_options_group_find()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"fields",
-                                   'f',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.fields,
-                                   "fields to display in the output",
-                                   "<fields>"},
-                                  {"sortfield",
-                                   's',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.sortfield,
-                                   "field to sort on",
-                                   "<field>"},
-                                  {"maxnum",
-                                   'n',
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.maxnum,
-                                   "number of entries to display in the output",
-                                   "<number>"},
-                                  {"threads",
-                                   't',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.threads,
-                                   "show message threads",
-                                   NULL},
-                                  {"bookmark",
-                                   'b',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.bookmark,
-                                   "use a bookmarked query",
-                                   "<bookmark>"},
-                                  {"reverse",
-                                   'z',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.reverse,
-                                   "sort in reverse (descending) order (z -> a)",
-                                   NULL},
-                                  {"skip-dups",
-                                   'u',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.skip_dups,
-                                   "show only the first of messages duplicates (false)",
-                                   NULL},
-                                  {"include-related",
-                                   'r',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.include_related,
-                                   "include related messages in results (false)",
-                                   NULL},
-                                  {"linksdir",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.linksdir,
-                                   "output as symbolic links to a target maildir",
-                                   "<dir>"},
-                                  {"clearlinks",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.clearlinks,
-                                   "clear old links before filling a linksdir (false)",
-                                   NULL},
-                                  {"format",
-                                   'o',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.formatstr,
-                                   "output format ('plain'(*), 'links', 'xml',"
-	                            "'sexp', 'xquery')",
-                                   "<format>"},
-                                  {"summary-len",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.summary_len,
-                                   "use up to <n> lines for the summary, or 0 for none (0)",
-                                   "<len>"},
-                                  {"exec",
-                                   'e',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.exec,
-                                   "execute command on each match message",
-                                   "<command>"},
-                                  {"after",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.after,
-                                   "only show messages whose m_time > T (t_time)",
-                                   "<timestamp>"},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	GOptionEntry  entries[] = {
+            {"fields", 'f', 0, G_OPTION_ARG_STRING, &MU_CONFIG.fields,
+             "fields to display in the output", "<fields>"},
+            {"sortfield", 's', 0, G_OPTION_ARG_STRING, &MU_CONFIG.sortfield,
+             "field to sort on", "<field>"},
+            {"maxnum", 'n', 0, G_OPTION_ARG_INT, &MU_CONFIG.maxnum,
+             "number of entries to display in the output", "<number>"},
+            {"threads", 't', 0, G_OPTION_ARG_NONE, &MU_CONFIG.threads,
+             "show message threads", NULL},
+            {"bookmark", 'b', 0, G_OPTION_ARG_STRING, &MU_CONFIG.bookmark,
+             "use a bookmarked query", "<bookmark>"},
+            {"reverse", 'z', 0, G_OPTION_ARG_NONE, &MU_CONFIG.reverse,
+             "sort in reverse (descending) order (z -> a)", NULL},
+            {"skip-dups", 'u', 0, G_OPTION_ARG_NONE, &MU_CONFIG.skip_dups,
+             "show only the first of messages duplicates (false)", NULL},
+            {"include-related", 'r', 0, G_OPTION_ARG_NONE, &MU_CONFIG.include_related,
+             "include related messages in results (false)", NULL},
+            {"linksdir", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.linksdir,
+             "output as symbolic links to a target maildir", "<dir>"},
+            {"clearlinks", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.clearlinks,
+             "clear old links before filling a linksdir (false)", NULL},
+            {"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
+             "output format ('plain'(*), 'links', 'xml',"
+	      "'sexp', 'xquery')",
+             "<format>"},
+            {"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+             "use up to <n> lines for the summary, or 0 for none (0)", "<len>"},
+            {"exec", 'e', 0, G_OPTION_ARG_STRING, &MU_CONFIG.exec,
+             "execute command on each match message", "<command>"},
+            {"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
+             "only show messages whose m_time > T (t_time)", "<timestamp>"},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
 	og = g_option_group_new("find", "Options for the 'find' command", "", NULL, NULL);
 	g_option_group_add_entries(og, entries);
@@ -401,11 +259,7 @@ static GOptionGroup*
 config_options_group_mkdir()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"mode",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.dirmode,
+	GOptionEntry  entries[] = {{"mode", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.dirmode,
                                    "set the mode (as in chmod), in octal notation",
                                    "<mode>"},
                                   {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
@@ -413,7 +267,8 @@ config_options_group_mkdir()
 	/* set dirmode before, because '0000' is a valid mode */
 	MU_CONFIG.dirmode = 0755;
 
-	og = g_option_group_new("mkdir", "Options for the 'mkdir' command", "", NULL, NULL);
+	og = g_option_group_new("mkdir", "Options for the 'mkdir' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, entries);
 
 	return og;
@@ -432,31 +287,19 @@ static GOptionGroup*
 config_options_group_cfind()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"format",
-                                   'o',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.formatstr,
-                                   "output format (plain(*), mutt-alias, mutt-ab, wl, "
-	                            "org-contact, bbdb, csv)",
-                                   "<format>"},
-                                  {"personal",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.personal,
-                                   "whether to only get 'personal' contacts",
-                                   NULL},
-                                  {"after",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.after,
-                                   "only get addresses last seen after T",
-                                   "<timestamp>"},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	GOptionEntry  entries[] = {
+            {"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
+             "output format (plain(*), mutt-alias, mutt-ab, wl, "
+	      "org-contact, bbdb, csv)",
+             "<format>"},
+            {"personal", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.personal,
+             "whether to only get 'personal' contacts", NULL},
+            {"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
+             "only get addresses last seen after T", "<timestamp>"},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
-	og = g_option_group_new("cfind", "Options for the 'cfind' command", "", NULL, NULL);
+	og = g_option_group_new("cfind", "Options for the 'cfind' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, entries);
 
 	return og;
@@ -466,16 +309,12 @@ static GOptionGroup*
 config_options_group_script()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{G_OPTION_REMAINING,
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_STRING_ARRAY,
-                                   &MU_CONFIG.params,
-                                   "script parameters",
-                                   NULL},
+	GOptionEntry  entries[] = {{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY,
+                                   &MU_CONFIG.params, "script parameters", NULL},
                                   {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
-	og = g_option_group_new("script", "Options for the 'script' command", "", NULL, NULL);
+	og = g_option_group_new("script", "Options for the 'script' command", "", NULL,
+	                        NULL);
 
 	g_option_group_add_entries(og, entries);
 
@@ -495,28 +334,14 @@ set_group_view_defaults()
 static GOptionEntry*
 crypto_option_entries()
 {
-	static GOptionEntry entries[] = {{"auto-retrieve",
-	                                  'r',
-	                                  0,
-	                                  G_OPTION_ARG_NONE,
-	                                  &MU_CONFIG.auto_retrieve,
-	                                  "attempt to retrieve keys online (false)",
-	                                  NULL},
-	                                 {"use-agent",
-	                                  'a',
-	                                  0,
-	                                  G_OPTION_ARG_NONE,
-	                                  &MU_CONFIG.use_agent,
-	                                  "attempt to use the GPG agent (false)",
-	                                  NULL},
-	                                 {"decrypt",
-	                                  0,
-	                                  0,
-	                                  G_OPTION_ARG_NONE,
-	                                  &MU_CONFIG.decrypt,
-	                                  "attempt to decrypt the message",
-	                                  NULL},
-	                                 {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	static GOptionEntry entries[] = {
+	    {"auto-retrieve", 'r', 0, G_OPTION_ARG_NONE, &MU_CONFIG.auto_retrieve,
+	     "attempt to retrieve keys online (false)", NULL},
+	    {"use-agent", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.use_agent,
+	     "attempt to use the GPG agent (false)", NULL},
+	    {"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
+	     "attempt to decrypt the message", NULL},
+	    {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
 	return entries;
 }
@@ -525,28 +350,14 @@ static GOptionGroup*
 config_options_group_view()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"summary-len",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_INT,
-                                   &MU_CONFIG.summary_len,
-                                   "use up to <n> lines for the summary, or 0 for none (0)",
-                                   "<len>"},
-                                  {"terminate",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.terminator,
-                                   "terminate messages with ascii-0x07 (\\f, form-feed)",
-                                   NULL},
-                                  {"format",
-                                   'o',
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.formatstr,
-                                   "output format ('plain'(*), 'sexp')",
-                                   "<format>"},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	GOptionEntry  entries[] = {
+            {"summary-len", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.summary_len,
+             "use up to <n> lines for the summary, or 0 for none (0)", "<len>"},
+            {"terminate", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.terminator,
+             "terminate messages with ascii-0x07 (\\f, form-feed)", NULL},
+            {"format", 'o', 0, G_OPTION_ARG_STRING, &MU_CONFIG.formatstr,
+             "output format ('plain'(*), 'sexp')", "<format>"},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
 	og = g_option_group_new("view", "Options for the 'view' command", "", NULL, NULL);
 
@@ -569,50 +380,22 @@ static GOptionGroup*
 config_options_group_extract()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"save-attachments",
-                                   'a',
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.save_attachments,
-                                   "save all attachments (false)",
-                                   NULL},
-                                  {"save-all",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.save_all,
-                                   "save all parts (incl. non-attachments) (false)",
-                                   NULL},
-                                  {"parts",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.parts,
-                                   "save specific parts (comma-separated list)",
-                                   "<parts>"},
-                                  {"target-dir",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_FILENAME,
-                                   &MU_CONFIG.targetdir,
-                                   "target directory for saving",
-                                   "<dir>"},
-                                  {"overwrite",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.overwrite,
-                                   "overwrite existing files (false)",
-                                   NULL},
-                                  {"play",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.play,
-                                   "try to 'play' (open) the extracted parts",
-                                   NULL},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
-	og                      = g_option_group_new("extract", "Options for the 'extract' command", "", NULL, NULL);
+	GOptionEntry  entries[] = {
+            {"save-attachments", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.save_attachments,
+             "save all attachments (false)", NULL},
+            {"save-all", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.save_all,
+             "save all parts (incl. non-attachments) (false)", NULL},
+            {"parts", 0, 0, G_OPTION_ARG_STRING, &MU_CONFIG.parts,
+             "save specific parts (comma-separated list)", "<parts>"},
+            {"target-dir", 0, 0, G_OPTION_ARG_FILENAME, &MU_CONFIG.targetdir,
+             "target directory for saving", "<dir>"},
+            {"overwrite", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.overwrite,
+             "overwrite existing files (false)", NULL},
+            {"play", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.play,
+             "try to 'play' (open) the extracted parts", NULL},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	og = g_option_group_new("extract", "Options for the 'extract' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, entries);
 	g_option_group_add_entries(og, crypto_option_entries());
 
@@ -623,7 +406,8 @@ static GOptionGroup*
 config_options_group_verify()
 {
 	GOptionGroup* og;
-	og = g_option_group_new("verify", "Options for the 'verify' command", "", NULL, NULL);
+	og = g_option_group_new("verify", "Options for the 'verify' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, crypto_option_entries());
 
 	return og;
@@ -633,23 +417,15 @@ static GOptionGroup*
 config_options_group_server()
 {
 	GOptionGroup* og;
-	GOptionEntry  entries[] = {{"commands",
-                                   0,
-                                   0,
-                                   G_OPTION_ARG_NONE,
-                                   &MU_CONFIG.commands,
-                                   "list the available command and their parameters, then exit",
-                                   NULL},
-                                  {"eval",
-                                   'e',
-                                   G_OPTION_FLAG_HIDDEN,
-                                   G_OPTION_ARG_STRING,
-                                   &MU_CONFIG.eval,
-                                   "expression to evaluate",
-                                   "<expr>"},
-                                  {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
+	GOptionEntry  entries[] = {
+            {"commands", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.commands,
+             "list the available command and their parameters, then exit", NULL},
+            {"eval", 'e', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &MU_CONFIG.eval,
+             "expression to evaluate", "<expr>"},
+            {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
-	og = g_option_group_new("server", "Options for the 'server' command", "", NULL, NULL);
+	og = g_option_group_new("server", "Options for the 'server' command", "", NULL,
+	                        NULL);
 	g_option_group_add_entries(og, entries);
 
 	return og;
@@ -662,20 +438,14 @@ cmd_from_string(const char* str)
 	struct {
 		const gchar* name;
 		MuConfigCmd  cmd;
-	} cmd_map[] = {{"add", MU_CONFIG_CMD_ADD},
-	               {"cfind", MU_CONFIG_CMD_CFIND},
-	               {"extract", MU_CONFIG_CMD_EXTRACT},
-	               {"find", MU_CONFIG_CMD_FIND},
-	               {"help", MU_CONFIG_CMD_HELP},
-	               {"index", MU_CONFIG_CMD_INDEX},
-	               {"info", MU_CONFIG_CMD_INFO},
-	               {"init", MU_CONFIG_CMD_INIT},
-	               {"mkdir", MU_CONFIG_CMD_MKDIR},
-	               {"remove", MU_CONFIG_CMD_REMOVE},
-	               {"script", MU_CONFIG_CMD_SCRIPT},
-	               {"server", MU_CONFIG_CMD_SERVER},
-	               {"verify", MU_CONFIG_CMD_VERIFY},
-	               {"view", MU_CONFIG_CMD_VIEW}};
+	} cmd_map[] = {
+	    {"add", MU_CONFIG_CMD_ADD},         {"cfind", MU_CONFIG_CMD_CFIND},
+	    {"extract", MU_CONFIG_CMD_EXTRACT}, {"find", MU_CONFIG_CMD_FIND},
+	    {"help", MU_CONFIG_CMD_HELP},       {"index", MU_CONFIG_CMD_INDEX},
+	    {"info", MU_CONFIG_CMD_INFO},       {"init", MU_CONFIG_CMD_INIT},
+	    {"mkdir", MU_CONFIG_CMD_MKDIR},     {"remove", MU_CONFIG_CMD_REMOVE},
+	    {"script", MU_CONFIG_CMD_SCRIPT},   {"server", MU_CONFIG_CMD_SERVER},
+	    {"verify", MU_CONFIG_CMD_VERIFY},   {"view", MU_CONFIG_CMD_VIEW}};
 
 	if (!str)
 		return MU_CONFIG_CMD_UNKNOWN;
@@ -712,16 +482,15 @@ parse_cmd(int* argcp, char*** argvp, GError** err)
 
 #ifndef BUILD_GUILE
 	if (MU_CONFIG.cmd == MU_CONFIG_CMD_SCRIPT) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "command 'script' not supported");
+		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS,
+		                    "command 'script' not supported");
 		return FALSE;
 	}
 #endif /*!BUILD_GUILE*/
 
 	if (MU_CONFIG.cmdstr && MU_CONFIG.cmdstr[0] != '-' &&
 	    MU_CONFIG.cmd == MU_CONFIG_CMD_UNKNOWN) {
-		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "unknown command '%s'",
+		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "unknown command '%s'",
 		                    MU_CONFIG.cmdstr);
 		return FALSE;
 	}
@@ -757,30 +526,32 @@ massage_help(const char* help)
 	GRegex* rx;
 	char*   str;
 
-	rx  = g_regex_new("^Usage:.*\n.*\n", (GRegexCompileFlags)0, G_REGEX_MATCH_NEWLINE_ANY, NULL);
+	rx  = g_regex_new("^Usage:.*\n.*\n", (GRegexCompileFlags)0,
+	                  G_REGEX_MATCH_NEWLINE_ANY, NULL);
 	str = g_regex_replace(rx, help, -1, 0, "", G_REGEX_MATCH_NEWLINE_ANY, NULL);
 	g_regex_unref(rx);
 	return str;
 }
 
-static const gchar*
-get_help_string(MuConfigCmd cmd, gboolean long_help)
+static const char*
+get_help_string(MuConfigCmd cmd, bool long_help)
 {
-	unsigned u;
+	struct Help {
+		MuConfigCmd cmd;
+		const char* usage;
+		const char* long_help;
+	};
+	constexpr std::array all_help = {
+#include "mu-help-strings.inc"
+	};
 
-	/* this include gets us MU_HELP_STRINGS */
-#include "mu-help-strings.h"
-
-	for (u = 0; u != G_N_ELEMENTS(MU_HELP_STRINGS); ++u)
-		if (cmd == MU_HELP_STRINGS[u].cmd) {
-			if (long_help)
-				return MU_HELP_STRINGS[u].long_help;
-			else
-				return MU_HELP_STRINGS[u].usage;
-		}
-
-	g_return_val_if_reached("");
-	return "";
+	const auto help_it = std::find_if(all_help.begin(), all_help.end(),
+	                                  [&](auto&& info) { return info.cmd == cmd; });
+	if (help_it == all_help.end()) {
+		g_critical("cannot find info for %u", cmd);
+		return "";
+	} else
+		return long_help ? help_it->long_help : help_it->usage;
 }
 
 void

@@ -1,4 +1,4 @@
-## Copyright (C) 2012 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -20,20 +20,12 @@
 BEGIN {
 	in_def=0;
 	in_string=0;
-#	srand();
-#	guard=int(100000*rand());
-#	print "#ifndef __" guard "__"
 	print "/* Do not edit - auto-generated. */"
-	print "static const struct {"
-	print "\tMuConfigCmd cmd;"
-	print "\tconst char *usage;"
-	print "\tconst char *long_help;"
-	print "} MU_HELP_STRINGS[] = {"
 }
 
 
 /^#BEGIN/ {
-	print "\t{ " $2 ","    # e.g., MU_CONFIG_CMD_ADD
+	printf "\tHelp {\n\t\t" $2 ","    # e.g., MU_CONFIG_CMD_ADD
 	in_def=1
 }
 
@@ -51,19 +43,16 @@ BEGIN {
 		in_string=0;
 	}
 	in_def=0;
-	print "\n\t},\n"
+	printf "\n\t},\n"
 }
 
 
 !/^#/  {
 	if (in_string==1) {
-		printf "\n\t\"" $0 "\\n\""
+		printf "\n\t\t\"" $0 "\\n\""
 	}
 }
 
-
 END {
-	print "};"
-#	print "#endif /*" guard "*/"
 	print "/* the end */"
 }

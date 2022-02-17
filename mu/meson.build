@@ -17,7 +17,7 @@
 awk_script=join_paths(meson.current_source_dir(), 'mu-help-strings.awk')
 mu_help_strings_h=custom_target('mu_help',
 				input: 'mu-help-strings.txt',
-				output: 'mu-help-strings.h',
+				output: 'mu-help-strings.inc',
 				command: [awk, '-f', awk_script, '@INPUT@'],
 				capture: true)
 mu = executable(
