@@ -143,6 +143,9 @@ public:
 	/**
 	 * Run a query; see the `mu-query` man page for the syntax.
 	 *
+	 * Multi-threaded callers must aquire the lock and keep it
+	 * at least as long as the return value.
+	 *
 	 * @param expr the search expression
 	 * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
 	 * @param flags query flags
@@ -150,6 +153,7 @@ public:
 	 *
 	 * @return the query-results, or Nothing in case of error.
 	 */
+	std::mutex& lock() const;
 	Option<QueryResults> run_query(const std::string& expr        = "",
 	                               MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
 	                               QueryFlags         flags       = QueryFlags::None,

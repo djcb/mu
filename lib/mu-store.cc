@@ -662,14 +662,18 @@ Store::for_each_term(const std::string& field, Store::ForEachTermFunc func) cons
 	return n;
 }
 
+std::mutex&
+Store::lock() const
+{
+	return priv_->lock_;
+}
+
 Option<QueryResults>
 Store::run_query(const std::string& expr, MuMsgFieldId sortfieldid,
                  QueryFlags flags, size_t maxnum) const
 {
 	return xapian_try([&] {
-		std::lock_guard guard{priv_->lock_};
 		Query           q{*this};
-
 		return q.run(expr, sortfieldid, flags, maxnum);
 	},
 	                  Nothing);
