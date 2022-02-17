@@ -566,6 +566,7 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 	g_free(tmp);
 
 	GError*    gerr{};
+	std::lock_guard l{store.lock()};
 	const auto res{store.run_query(expr, MU_MSG_FIELD_ID_NONE, QueryFlags::None, max)};
 	g_free(expr);
 	if (!res)
@@ -692,6 +693,7 @@ Server::Private::find_handler(const Parameters& params)
 	if (threads)
 		qflags |= QueryFlags::Threading;
 
+	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field, qflags, maxnum)};
 	if (!qres)
 		throw Error(Error::Code::Query, "failed to run query");
