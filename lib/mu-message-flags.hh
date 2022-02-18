@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <optional>
 #include <string_view>
+#include <array>
 #include "utils/mu-utils.hh"
 
 namespace Mu {
@@ -55,14 +56,13 @@ enum struct MessageFlags {
 	Encrypted     = 1 << 8, /**< Encrypted */
 	HasAttachment = 1 << 9, /**< Has an attachment */
 
-	Unread = 1 << 10, /**< Unread; pseudo-flag, only for queries, so
-	                   * we can search for flag:unread, which is
-	                   * equivalent to 'flag:new OR NOT
-	                   * flag:seen' */
+	Unread = 1 << 10, /**< Unread; pseudo-flag, only for queries, so we can
+			   * search for flag:unread, which is equivalent to
+			   * 'flag:new OR NOT flag:seen' */
 	/**
 	 * other content flags
 	 */
-	MailingList = 1 << 11,/**< A mailing-list message */
+	MailingList = 1 << 11, /**< A mailing-list message */
 
 	/*
 	 * <private>
@@ -76,46 +76,46 @@ MU_ENABLE_BITOPS(MessageFlags);
  *
  */
 enum struct MessageFlagCategory {
-	None,			/**< Nothing */
-	Mailfile,		/**< Flag for a message file */
-	Maildir,		/**< Flag for message file's location */
-	Content,		/**< Message content flag */
-	Pseudo			/**< Pseuodo flag */
+	None,     /**< Nothing */
+	Mailfile, /**< Flag for a message file */
+	Maildir,  /**< Flag for message file's location */
+	Content,  /**< Message content flag */
+	Pseudo    /**< Pseuodo flag */
 };
-
 
 /**
  * Info about invidual message flags
  *
  */
 struct MessageFlagInfo {
-	MessageFlags flag;	/**< The message flag */
-	char shortcut;		/**< Shortcut character */
-	std::string_view name;	/**< Name of the flag */
-	MessageFlagCategory category;	/**< Flag category */
+	MessageFlags        flag;     /**< The message flag */
+	char                shortcut; /**< Shortcut character */
+	std::string_view    name;     /**< Name of the flag */
+	MessageFlagCategory category; /**< Flag category */
 };
 
 /**
  * Array of all flag information.
  */
-constexpr std::array<MessageFlagInfo, 12>
-AllMessageFlagInfos = {{
-	{MessageFlags::Draft,         'D', "draft",     MessageFlagCategory::Mailfile},
-	{MessageFlags::Flagged,       'F', "flagged",   MessageFlagCategory::Mailfile},
-	{MessageFlags::Passed,        'P', "passed",    MessageFlagCategory::Mailfile},
-	{MessageFlags::Replied,       'R', "replied",   MessageFlagCategory::Mailfile},
-	{MessageFlags::Seen,          'S', "seen",      MessageFlagCategory::Mailfile},
-	{MessageFlags::Trashed,       'T', "trashed",   MessageFlagCategory::Mailfile},
+constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
+    MessageFlagInfo{MessageFlags::Draft, 'D', "draft", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Flagged, 'F', "flagged", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Passed, 'P', "passed", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Replied, 'R', "replied", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Seen, 'S', "seen", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Trashed, 'T', "trashed", MessageFlagCategory::Mailfile},
 
-	{MessageFlags::New,           'N', "new",       MessageFlagCategory::Maildir},
+    MessageFlagInfo{MessageFlags::New, 'N', "new", MessageFlagCategory::Maildir},
 
-	{MessageFlags::Signed,        'z', "signed",    MessageFlagCategory::Content},
-	{MessageFlags::Encrypted,     'x', "encrypted", MessageFlagCategory::Content},
-	{MessageFlags::HasAttachment, 'a', "attach",    MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::Signed, 'z', "signed", MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::Encrypted, 'x', "encrypted",
+		    MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::HasAttachment, 'a', "attach",
+		    MessageFlagCategory::Content},
 
-	{MessageFlags::Unread,        'u', "unread",    MessageFlagCategory::Pseudo},
+    MessageFlagInfo{MessageFlags::Unread, 'u', "unread", MessageFlagCategory::Pseudo},
 
-	{MessageFlags::MailingList,   'l', "list",      MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::MailingList, 'l', "list", MessageFlagCategory::Content},
 }};
 
 /**
@@ -129,14 +129,13 @@ constexpr const std::optional<MessageFlagInfo>
 message_flag_info(MessageFlags flag)
 {
 	constexpr auto upper = static_cast<unsigned>(MessageFlags::_final_);
-	const auto val = static_cast<unsigned>(flag);
-	
+	const auto     val   = static_cast<unsigned>(flag);
+
 	if (__builtin_popcount(val) != 1 || val >= upper)
 		return std::nullopt;
 
 	return AllMessageFlagInfos[static_cast<unsigned>(__builtin_ctz(val))];
 }
-
 
 /**
  * Get flag info for some flag
@@ -148,7 +147,7 @@ message_flag_info(MessageFlags flag)
 constexpr const std::optional<MessageFlagInfo>
 message_flag_info(char shortcut)
 {
-	for (auto&& info: AllMessageFlagInfos)
+	for (auto&& info : AllMessageFlagInfos)
 		if (info.shortcut == shortcut)
 			return info;
 
@@ -165,13 +164,12 @@ message_flag_info(char shortcut)
 constexpr const std::optional<MessageFlagInfo>
 message_flag_info(std::string_view name)
 {
-	for (auto&& info: AllMessageFlagInfos)
+	for (auto&& info : AllMessageFlagInfos)
 		if (info.name == name)
 			return info;
 
 	return std::nullopt;
 }
-
 
 /**
  * There are two string-based expression types for flags:
@@ -189,12 +187,11 @@ message_flag_info(std::string_view name)
  * @return the (OR'ed) flags or MessageFlags::None
  */
 constexpr std::optional<MessageFlags>
-message_flags_from_absolute_expr(std::string_view expr,
-				 bool ignore_invalid=false)
+message_flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
 {
 	MessageFlags flags{MessageFlags::None};
 
-	for (auto&& kar: expr) {
+	for (auto&& kar : expr) {
 		if (const auto& info{message_flag_info(kar)}; !info) {
 			if (!ignore_invalid)
 				return std::nullopt;
@@ -224,24 +221,19 @@ message_flags_from_absolute_expr(std::string_view expr,
  */
 constexpr std::optional<MessageFlags>
 message_flags_from_delta_expr(std::string_view expr, MessageFlags flags,
-			      bool ignore_invalid=false)
+			      bool ignore_invalid = false)
 {
 	if (expr.size() % 2 != 0)
 		return std::nullopt;
 
-	for (auto u = 0U; u != expr.size(); u+=2) {
-		
-		if (const auto& info{message_flag_info(expr[u+1])}; !info) {
+	for (auto u = 0U; u != expr.size(); u += 2) {
+		if (const auto& info{message_flag_info(expr[u + 1])}; !info) {
 			if (!ignore_invalid)
 				return std::nullopt;
-		} else  {
-			switch(expr[u]) {
-			case '+':
-				flags |= info->flag;
-				break;
-			case '-':
-				flags &= ~info->flag;
-				break;
+		} else {
+			switch (expr[u]) {
+			case '+': flags |= info->flag; break;
+			case '-': flags &= ~info->flag; break;
 			default:
 				if (!ignore_invalid)
 					return std::nullopt;
@@ -253,26 +245,24 @@ message_flags_from_delta_expr(std::string_view expr, MessageFlags flags,
 	return flags;
 }
 
-
-
-/** 
+/**
  * Calculate the flags from either 'absolute' or 'delta' expressions
  *
  * @param expr a flag expression, either 'delta' or 'absolute'
  * @param flags optional: existing flags or none. Required for delta.
- * 
+ *
  * @return either messages flags or std::nullopt in case of error.
  */
 constexpr std::optional<MessageFlags>
-message_flags_from_expr(std::string_view expr,
-			std::optional<MessageFlags> flags=std::nullopt)
+message_flags_from_expr(std::string_view            expr,
+			std::optional<MessageFlags> flags = std::nullopt)
 {
 	if (expr.empty())
 		return std::nullopt;
-	
+
 	if (expr[0] == '+' || expr[0] == '-')
 		return message_flags_from_delta_expr(
-			expr, flags.value_or(MessageFlags::None), true);
+		    expr, flags.value_or(MessageFlags::None), true);
 	else
 		return message_flags_from_absolute_expr(expr, true);
 }
@@ -288,7 +278,7 @@ message_flags_from_expr(std::string_view expr,
 constexpr MessageFlags
 message_flags_filter(MessageFlags flags, MessageFlagCategory cat)
 {
-	for (auto&& info: AllMessageFlagInfos)
+	for (auto&& info : AllMessageFlagInfos)
 		if (info.category != cat)
 			flags &= ~info.flag;
 	return flags;
@@ -303,6 +293,6 @@ message_flags_filter(MessageFlags flags, MessageFlagCategory cat)
  */
 std::string message_flags_to_string(MessageFlags flags);
 
-} // namepace Mu
+} // namespace Mu
 
 #endif /* MU_MESSAGE_FLAGS_HH__ */
