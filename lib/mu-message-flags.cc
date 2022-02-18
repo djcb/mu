@@ -75,6 +75,9 @@ static_assert(message_flag_info("attach")->flag == MessageFlags::HasAttachment);
 static_assert(!message_flag_info("fnorb"));
 
 
+static_assert(message_flag_info('D')->shortcut_lower() == 'd');
+static_assert(message_flag_info('u')->shortcut_lower() == 'u');
+
 /*
  * message_flags_from_expr
  */

@@ -118,7 +118,7 @@ process_value(const std::string& field, const std::string& value)
 
 	case MU_MSG_FIELD_ID_FLAGS:
 		if (const auto info{message_flag_info(value)}; info)
-			return std::string(1, ::tolower(info->shortcut));
+			return std::string(1, info->shortcut_lower());
 		break;
 
 	default:

@@ -63,6 +63,7 @@ using ArgMap = std::unordered_map<std::string, ArgInfo>;
 using Parameters = Sexp::Seq;
 
 std::optional<int>          get_int(const Parameters& parms, const std::string& argname);
+std::optional<unsigned>     get_unsigned(const Parameters& parms, const std::string& argname);
 std::optional<bool>         get_bool(const Parameters& parms, const std::string& argname);
 std::optional<std::string>  get_string(const Parameters& parms, const std::string& argname);
 std::optional<std::string>  get_symbol(const Parameters& parms, const std::string& argname);
@@ -76,6 +77,7 @@ static inline int
 get_int_or(const Parameters& parms, const std::string& arg, int alt = 0) {
 	return get_int(parms, arg).value_or(alt);
 }
+
 static inline bool
 get_bool_or(const Parameters& parms, const std::string& arg, bool alt = false) {
 	return get_bool(parms, arg).value_or(alt);

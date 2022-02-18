@@ -32,7 +32,7 @@ using namespace Mu;
 struct Case {
 	const std::string expr;
 	const std::string expected;
-	WarningVec        warnings;
+	WarningVec        warnings{};
 };
 
 using CaseVec = std::vector<Case>;

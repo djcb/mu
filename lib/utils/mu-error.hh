@@ -103,7 +103,7 @@ struct Error final : public std::exception {
 	 * DTOR
 	 *
 	 */
-	virtual ~Error() = default;
+	virtual ~Error() override = default;
 
 	/**
 	 * Get the descriptiove message.

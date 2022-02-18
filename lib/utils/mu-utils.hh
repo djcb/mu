@@ -191,13 +191,13 @@ struct StopWatch {
 	StopWatch(const std::string name) : start_{Clock::now()}, name_{name} {}
 	~StopWatch()
 	{
-		const auto us{to_us(Clock::now() - start_)};
+		const auto us{static_cast<double>(to_us(Clock::now() - start_))};
 		if (us > 2000000)
-			g_debug("%s: finished after %0.1f s", name_.c_str(), us / 1000000.0);
+			g_debug("%s: finished after %0.1f s", name_.c_str(), us / 1000000);
 		else if (us > 2000)
-			g_debug("%s: finished after %0.1f ms", name_.c_str(), us / 1000.0);
+			g_debug("%s: finished after %0.1f ms", name_.c_str(), us / 1000);
 		else
-			g_debug("%s: finished after %" G_GINT64_FORMAT " us", name_.c_str(), us);
+			g_debug("%s: finished after %g us", name_.c_str(), us);
 	}
 
 private:
@@ -304,8 +304,8 @@ private:
 	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }          \
 	constexpr bool    any_of(ET e) { return MU_TO_NUM(ET, e) != 0; }                           \
 	constexpr bool    none_of(ET e) { return MU_TO_NUM(ET, e) == 0; }                          \
-	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                       \
-	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }
+	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                           \
+	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }                           \
 
 /**
  * For unit tests, assert two std::string's are equal.

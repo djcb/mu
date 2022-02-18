@@ -196,7 +196,7 @@ test_mu_maildir_flags_from_path(void)
 	}
 }
 
-static void
+[[maybe_unused]] static void
 assert_matches_regexp(const char* str, const char* rx)
 {
 	if (!g_regex_match_simple(rx, str, (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {

@@ -92,6 +92,16 @@ struct MessageFlagInfo {
 	char                shortcut; /**< Shortcut character */
 	std::string_view    name;     /**< Name of the flag */
 	MessageFlagCategory category; /**< Flag category */
+
+	/** 
+	 * Get the lower-case version of shortcut
+	 * 
+	 * @return lower-case shortcut
+	 */
+	constexpr char shortcut_lower() const {
+		return shortcut >= 'A' && shortcut <= 'Z' ?
+			shortcut +  ('a' - 'A') : shortcut;
+	}
 };
 
 /**

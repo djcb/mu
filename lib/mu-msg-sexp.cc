@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -87,7 +87,7 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 
 	if (g_regex_match(rx, list_post, (GRegexMatchFlags)0, &minfo)) {
 		auto         address = (char*)g_match_info_fetch(minfo, 1);
-		MuMsgContact contact{NULL, address};
+		MuMsgContact contact{NULL, address, {}, {}};
 		list.add_prop(":list-post", Sexp::make_list(make_contact_sexp(&contact)));
 		g_free(address);
 	}

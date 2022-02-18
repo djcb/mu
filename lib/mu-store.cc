@@ -55,7 +55,6 @@ constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir
 constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
-constexpr auto LastIndexKey         = "last-index"; /* time of last index */
 constexpr auto BatchSizeKey         = "batch-size";
 constexpr auto DefaultBatchSize     = 250'000U;
 
@@ -73,7 +72,7 @@ constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
  *
  * @return the hash
  */
-size_t get_hash64 (const char* str)
+uint64_t get_hash64 (const char* str)
 {
 	guint32 djbhash;
         guint32 bkdrhash;

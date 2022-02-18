@@ -162,6 +162,16 @@ Command::get_int(const Parameters& params, const std::string& argname)
 		return ::atoi(it->value().c_str());
 }
 
+std::optional<unsigned>
+Command::get_unsigned(const Parameters& params, const std::string& argname)
+{
+	if (auto val = get_int(params, argname); val && *val >= 0)
+		return val;
+	else
+		return std::nullopt;
+}
+
+
 std::optional<bool>
 Command::get_bool(const Parameters& params, const std::string& argname)
 {

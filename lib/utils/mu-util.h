@@ -401,8 +401,8 @@ mu_util_get_hash (const char* str)
         bkdrseed = 1313;
 
         for(unsigned u = 0U; str[u]; ++u) {
-		djbhash  = ((djbhash << 5) + djbhash) + str[u];
-		bkdrhash = bkdrhash * bkdrseed + str[u];
+		djbhash  = ((djbhash << 5) + djbhash) + (unsigned)str[u];
+		bkdrhash = bkdrhash * bkdrseed + (unsigned)str[u];
 	}
 
         hash = djbhash;

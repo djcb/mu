@@ -49,7 +49,7 @@ struct EmailHash {
 	{
 		std::size_t djb = 5381; // djb hash
 		for (const auto c : email)
-			djb = ((djb << 5) + djb) + g_ascii_tolower(c);
+			djb = ((djb << 5) + djb) + static_cast<size_t>(g_ascii_tolower(c));
 		return djb;
 	}
 };
@@ -66,7 +66,7 @@ struct ContactInfoHash {
 	{
 		std::size_t djb = 5381; // djb hash
 		for (const auto c : ci.email)
-			djb = ((djb << 5) + djb) + g_ascii_tolower(c);
+			djb = ((djb << 5) + djb) + static_cast<size_t>(g_ascii_tolower(c));
 		return djb;
 	}
 };

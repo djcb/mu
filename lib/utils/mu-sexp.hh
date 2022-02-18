@@ -296,7 +296,7 @@ struct Sexp {
 			return false;
 		else
 			return is_prop_list(list().begin() + 1, list().end());
-	};
+	}
 
 	private:
 	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)}

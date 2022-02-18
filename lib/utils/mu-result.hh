@@ -38,7 +38,9 @@ template <typename T> using Result = tl::expected<T, Error>;
  * @return a success Result<T>
  */
 template <typename T>
-typename Result<T>::expected
+class Result<T>::expected
+// note: "class", not "typename";
+// https://stackoverflow.com/questions/46412754/class-name-injection-and-constructors
 Ok(T&& t)
 {
 	return std::move(t);

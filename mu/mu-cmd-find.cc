@@ -51,8 +51,8 @@ struct OutputInfo {
 	Option<QueryMatch&> match_info;
 };
 
-constexpr auto FirstOutput{OutputInfo{0, true, false}};
-constexpr auto LastOutput{OutputInfo{0, false, true}};
+constexpr auto FirstOutput{OutputInfo{0, true, false, {}, {}}};
+constexpr auto LastOutput{OutputInfo{0, false, true, {}, {}}};
 
 using OutputFunc = std::function<bool(MuMsg*, const OutputInfo&, const MuConfig*, GError**)>;
 
