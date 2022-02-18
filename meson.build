@@ -23,7 +23,7 @@ project('mu', ['c', 'cpp'],
 	license: 'GPL-3.0-or-later',
 	default_options : [
 	  'buildtype=debugoptimized',
-	  'warning_level=1',
+	  'warning_level=2',
 	  'c_std=c11',
 	  'cpp_std=c++17'
 	]
@@ -40,15 +40,9 @@ infodir	  = join_paths(prefixdir, get_option('infodir'))
 # compilers / flags
 #
 extra_flags = [
-  '-Wundef',
-  '-Wwrite-strings',
-  '-Wformat',
-  '-Wformat-nonliteral',
-  '-Wformat-security',
-  '-Winit-self',
-  '-Wmissing-include-dirs',
-  '-Wpointer-arith',
-  '-Wswitch-default',
+  '-Wno-unused-parameter',
+  '-Wno-cast-function-type',
+  '-Wno-#warnings'
 ]
 
 # compilers
