@@ -24,6 +24,7 @@
 
 #include <mu-message-flags.hh>
 #include <mu-message-priority.hh>
+#include <mu-message-contact.hh>
 
 #include <mu-msg-fields.h>
 #include <utils/mu-util.h>
@@ -439,80 +440,17 @@ bool mu_msg_move_to_maildir(MuMsg*		msg,
 			    bool		ignore_dups,
 			    bool		new_name,
 			    GError**		err);
-
-enum _MuMsgContactType { /* Reply-To:? */
-	                 MU_MSG_CONTACT_TYPE_TO = 0,
-	                 MU_MSG_CONTACT_TYPE_FROM,
-	                 MU_MSG_CONTACT_TYPE_CC,
-	                 MU_MSG_CONTACT_TYPE_BCC,
-	                 MU_MSG_CONTACT_TYPE_REPLY_TO,
-
-	                 MU_MSG_CONTACT_TYPE_NUM
-};
-typedef guint MuMsgContactType;
-
-/* not a 'real' contact type */
-#define MU_MSG_CONTACT_TYPE_ALL (MU_MSG_CONTACT_TYPE_NUM + 1)
-
-#define mu_msg_contact_type_is_valid(MCT) ((MCT) < MU_MSG_CONTACT_TYPE_NUM)
-
-typedef struct {
-	const char*      name;         /**< Foo Bar */
-	const char*      email;        /**< foo@bar.cuux */
-	const char*      full_address; /**< Foo Bar <foo@bar.cuux> */
-	MuMsgContactType type;         /**< MU_MSG_CONTACT_TYPE_{ TO,
-	                                  CC, BCC, FROM, REPLY_TO} */
-} MuMsgContact;
-
-/**
- * macro to get the name of a contact
+/** 
+ * Get a sequence with contacts of the given type for this message.
  *
- * @param ct a MuMsgContact
- *
- * @return the name
+ * @param msg a valid MuMsg* instance
+ * @param mtype the contact type; with Type::Unknown, get _all_ types.
+ * 
+ * @return a sequence
  */
-#define mu_msg_contact_name(ct) ((ct)->name)
-
-/**
- * macro to get the email address of a contact
- *
- * @param ct a MuMsgContact
- *
- * @return the address
- */
-#define mu_msg_contact_email(ct) ((ct)->email)
-
-/**
- * macro to get the contact type
- *
- * @param ct a MuMsgContact
- *
- * @return the contact type
- */
-#define mu_msg_contact_type(ct) ((ct)->type)
-
-/**
- * callback function
- *
- * @param contact
- * @param user_data a user provided data pointer
- *
- * @return TRUE if we should continue the foreach, FALSE otherwise
- */
-typedef gboolean (*MuMsgContactForeachFunc)(MuMsgContact* contact, gpointer user_data);
-
-/**
- * call a function for each of the contacts in a message; the order is:
- * from to cc bcc (of each there are zero or more)
- *
- * @param msg a valid MuMsgGMime* instance
- * @param func a callback function to call for each contact; when
- * the callback does not return TRUE, it won't be called again
- * @param user_data a user-provide pointer that will be passed to the callback
- *
- */
-void mu_msg_contact_foreach(MuMsg* msg, MuMsgContactForeachFunc func, gpointer user_data);
-
+Mu::MessageContacts mu_msg_get_contacts (MuMsg *self,
+					 MessageContact::Type mtype=MessageContact::Type::Unknown);
+	
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn
@@ -533,6 +471,8 @@ void mu_msg_contact_foreach(MuMsg* msg, MuMsgContactForeachFunc func, gpointer u
  */
 const char* mu_str_display_contact_s(const char* str) G_GNUC_CONST;
 char*       mu_str_display_contact(const char* str) G_GNUC_WARN_UNUSED_RESULT;
+
+
 
 struct QueryMatch;
 

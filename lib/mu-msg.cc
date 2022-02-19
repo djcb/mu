@@ -17,6 +17,7 @@
 **
 */
 
+#include <functional>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,7 +27,12 @@
 #include <ctype.h>
 
 #include <gmime/gmime.h>
+#include <vector>
+#include <array>
 
+
+#include "gmime/gmime-message.h"
+#include "mu-message-contact.hh"
 #include "mu-msg-priv.hh" /* include before mu-msg.h */
 #include "mu-msg.hh"
 #include "utils/mu-str.h"
@@ -608,131 +614,66 @@ Mu::mu_msg_get_field_numeric(MuMsg* self, MuMsgFieldId mfid)
 	return get_num_field(self, mfid);
 }
 
-static gboolean
-fill_contact(MuMsgContact* self, InternetAddress* addr, MuMsgContactType ctype)
+
+static Mu::MessageContacts
+get_all_contacts(MuMsg *self)
 {
-	if (!addr)
-		return FALSE;
+	MessageContacts contacts;
 
-	self->full_address = internet_address_to_string(addr, NULL, FALSE);
-
-	self->name = internet_address_get_name(addr);
-	if (mu_str_is_empty(self->name)) {
-		self->name = NULL;
+	for (auto&& mtype : { MessageContact::Type::From, MessageContact::Type::To,
+			      MessageContact::Type::Cc, MessageContact::Type::ReplyTo,
+			      MessageContact::Type::Bcc}) {
+		auto type_contacts{mu_msg_get_contacts(self, mtype)};
+		
+		contacts.reserve(contacts.size() + type_contacts.size());
+		contacts.insert(contacts.end(), type_contacts.begin(), type_contacts.end());
 	}
 
-	self->type = ctype;
-
-	/* we only support internet mailbox addresses; if we don't
-	 * check, g_mime hits an assert
-	 */
-	if (INTERNET_ADDRESS_IS_MAILBOX(addr))
-		self->email = internet_address_mailbox_get_addr(INTERNET_ADDRESS_MAILBOX(addr));
-	else
-		self->email = NULL;
-
-	/* if there's no address, just a name, it's probably a local
-	 * address (without @) */
-	if (self->name && !self->email)
-		self->email = self->name;
-
-	/* note, the address could be NULL e.g. when the recipient is something
-	 * like 'Undisclosed recipients'
-	 */
-	return self->email != NULL;
+	return contacts;
 }
-
-static void
-address_list_foreach(InternetAddressList*    addrlist,
-                     MuMsgContactType        ctype,
-                     MuMsgContactForeachFunc func,
-                     gpointer                user_data)
+			
+Mu::MessageContacts
+Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
 {
-	int i, len;
+	typedef const char*(*AddressFunc)(MuMsg*);
+	using	AddressInfo = std::pair<GMimeAddressType, AddressFunc>;
 
-	if (!addrlist)
-		return;
+	g_return_val_if_fail(self, MessageContacts{});
 
-	len = internet_address_list_length(addrlist);
+	if (mtype == MessageContact::Type::Unknown)
+		return get_all_contacts(self);
+	
+	const auto info = std::invoke([&]()->AddressInfo {
+		switch (mtype) {
+		case MessageContact::Type::From:
+			return { GMIME_ADDRESS_TYPE_FROM, mu_msg_get_from };
+		case MessageContact::Type::To:
+			return { GMIME_ADDRESS_TYPE_TO, mu_msg_get_to };
+		case MessageContact::Type::Cc:
+			return { GMIME_ADDRESS_TYPE_CC, mu_msg_get_cc };
+		case MessageContact::Type::ReplyTo:
+			return { GMIME_ADDRESS_TYPE_REPLY_TO, {} };
+		case MessageContact::Type::Bcc:
+			return { GMIME_ADDRESS_TYPE_BCC, mu_msg_get_bcc };
+		default:
+			throw std::logic_error("bug");
+		}
+	});
 
-	for (i = 0; i != len; ++i) {
-		MuMsgContact contact;
-		gboolean     keep_going;
-
-		if (!fill_contact(&contact, internet_address_list_get_address(addrlist, i), ctype))
-			continue;
-
-		keep_going = func(&contact, user_data);
-		g_free((char*)contact.full_address);
-
-		if (!keep_going)
-			break;
+	const auto mdate{mu_msg_get_date(self)};
+	if (self->_file) {
+		if (auto&& lst{g_mime_message_get_addresses(
+					self->_file->_mime_msg, info.first)}; lst)
+			return make_message_contacts(lst, mtype, mdate);
+	} else if (info.second) {
+		if (auto&& lst_str{info.second(self)}; lst_str) 
+			return make_message_contacts(lst_str, mtype, mdate);
 	}
+	
+	return {};
+		
 }
 
-static void
-addresses_foreach(const char*             addrs,
-                  MuMsgContactType        ctype,
-                  MuMsgContactForeachFunc func,
-                  gpointer                user_data)
-{
-	InternetAddressList* addrlist;
-
-	if (!addrs)
-		return;
-
-	addrlist = internet_address_list_parse(NULL, addrs);
-	if (addrlist) {
-		address_list_foreach(addrlist, ctype, func, user_data);
-		g_object_unref(addrlist);
-	}
-}
-
-static void
-msg_contact_foreach_file(MuMsg* msg, MuMsgContactForeachFunc func, gpointer user_data)
-{
-	int i;
-	struct {
-		GMimeAddressType _gmime_type;
-		MuMsgContactType _type;
-	} ctypes[] = {
-	    {GMIME_ADDRESS_TYPE_FROM, MU_MSG_CONTACT_TYPE_FROM},
-	    {GMIME_ADDRESS_TYPE_REPLY_TO, MU_MSG_CONTACT_TYPE_REPLY_TO},
-	    {GMIME_ADDRESS_TYPE_TO, MU_MSG_CONTACT_TYPE_TO},
-	    {GMIME_ADDRESS_TYPE_CC, MU_MSG_CONTACT_TYPE_CC},
-	    {GMIME_ADDRESS_TYPE_BCC, MU_MSG_CONTACT_TYPE_BCC},
-	};
-
-	for (i = 0; i != G_N_ELEMENTS(ctypes); ++i) {
-		InternetAddressList* addrlist;
-		addrlist =
-		    g_mime_message_get_addresses(msg->_file->_mime_msg, ctypes[i]._gmime_type);
-		address_list_foreach(addrlist, ctypes[i]._type, func, user_data);
-	}
-}
-
-static void
-msg_contact_foreach_doc(MuMsg* msg, MuMsgContactForeachFunc func, gpointer user_data)
-{
-	addresses_foreach(mu_msg_get_from(msg), MU_MSG_CONTACT_TYPE_FROM, func, user_data);
-	addresses_foreach(mu_msg_get_to(msg), MU_MSG_CONTACT_TYPE_TO, func, user_data);
-	addresses_foreach(mu_msg_get_cc(msg), MU_MSG_CONTACT_TYPE_CC, func, user_data);
-	addresses_foreach(mu_msg_get_bcc(msg), MU_MSG_CONTACT_TYPE_BCC, func, user_data);
-}
-
-void
-Mu::mu_msg_contact_foreach(MuMsg* msg, MuMsgContactForeachFunc func, gpointer user_data)
-{
-	g_return_if_fail(msg);
-	g_return_if_fail(func);
-
-	if (msg->_file)
-		msg_contact_foreach_file(msg, func, user_data);
-	else if (msg->_doc)
-		msg_contact_foreach_doc(msg, func, user_data);
-	else
-		g_return_if_reached();
-}
 
 gboolean
 Mu::mu_msg_is_readable(MuMsg* self)

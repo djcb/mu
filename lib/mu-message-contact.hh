@@ -77,9 +77,10 @@ struct MessageContact {
 	 *
 	 * @param email_ email address
 	 * @param name_ name or empty
+	 * @param message_date_ date of message this contact originate from
 	 * @param personal_ is this a personal contact?
-	 * @param last_seen_ when was this contact last seen?
 	 * @param freq_ how often was this contact seen?
+	 * @param tstamp_ timestamp for last change
 	 */
 	MessageContact(const std::string& email_, const std::string& name_,
 	               time_t message_date_, bool personal_, size_t freq_,

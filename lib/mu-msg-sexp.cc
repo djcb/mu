@@ -48,21 +48,17 @@ add_prop_nonempty(Sexp::List& list, const char* name, const char* str)
 		list.add_prop(name, Sexp::make_string(str));
 }
 
-static Sexp
-make_contact_sexp(MuMsgContact* c)
+
+static Mu::Sexp
+make_contact_sexp(const MessageContact& contact)
 {
-	// a cons-pair...perhaps make this a plist too?
-
-	Sexp::List contact;
-	if (mu_msg_contact_name(c))
-		contact.add(Sexp::make_string(Mu::remove_ctrl(mu_msg_contact_name(c))));
-	else
-		contact.add(Sexp::make_symbol("nil"));
-
-	contact.add(Sexp::make_symbol("."));
-	contact.add(Sexp::make_string(Mu::remove_ctrl(mu_msg_contact_email(c))));
-
-	return Sexp::make_list(std::move(contact));
+	return Sexp::make_list(
+		/* name */
+		Sexp::make_string(contact.name, true/*?nil*/),
+		/* dot */
+		Sexp::make_symbol("."),
+		/* email */
+		Sexp::make_string(contact.email));
 }
 
 static void
@@ -86,9 +82,8 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 	g_return_if_fail(rx);
 
 	if (g_regex_match(rx, list_post, (GRegexMatchFlags)0, &minfo)) {
-		auto         address = (char*)g_match_info_fetch(minfo, 1);
-		MuMsgContact contact{NULL, address, {}, {}};
-		list.add_prop(":list-post", Sexp::make_list(make_contact_sexp(&contact)));
+		auto    address = (char*)g_match_info_fetch(minfo, 1);
+		list.add_prop(":list-post", make_contact_sexp(MessageContact{address}));
 		g_free(address);
 	}
 
@@ -96,47 +91,31 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 	g_regex_unref(rx);
 }
 
-struct _ContactData {
-	Sexp::List from, to, cc, bcc, reply_to;
-};
-typedef struct _ContactData ContactData;
-
-static gboolean
-each_contact(MuMsgContact* c, ContactData* cdata)
-{
-	switch (mu_msg_contact_type(c)) {
-	case MU_MSG_CONTACT_TYPE_FROM: cdata->from.add(make_contact_sexp(c)); break;
-	case MU_MSG_CONTACT_TYPE_TO: cdata->to.add(make_contact_sexp(c)); break;
-	case MU_MSG_CONTACT_TYPE_CC: cdata->cc.add(make_contact_sexp(c)); break;
-	case MU_MSG_CONTACT_TYPE_BCC: cdata->bcc.add(make_contact_sexp(c)); break;
-	case MU_MSG_CONTACT_TYPE_REPLY_TO: cdata->reply_to.add(make_contact_sexp(c)); break;
-	default: g_return_val_if_reached(FALSE); return FALSE;
-	}
-	return TRUE;
-}
-
-static void
-add_prop_nonempty_list(Sexp::List& list, std::string&& name, Sexp::List&& sexp)
-{
-	if (sexp.empty())
-		return;
-
-	list.add_prop(std::move(name), Sexp::make_list(std::move(sexp)));
-}
-
 static void
 add_contacts(Sexp::List& list, MuMsg* msg)
 {
-	ContactData cdata{};
-	mu_msg_contact_foreach(msg, (MuMsgContactForeachFunc)each_contact, &cdata);
+	using ContactPair = std::pair<MessageContact::Type, std::string_view>;
+	constexpr std::array<ContactPair, 5> contact_types = {{
+		{ MessageContact::Type::From,    ":from" }, 
+		{ MessageContact::Type::To,      ":to" },
+		{ MessageContact::Type::Cc,      ":cc" },
+		{ MessageContact::Type::ReplyTo, ":reply-to" },
+		{ MessageContact::Type::Bcc,     ":bcc" },
+	}};
+	
+	for (auto&& contact_type : contact_types) {
+		
+		const auto contacts{mu_msg_get_contacts(msg, contact_type.first)};
+		if (contacts.empty())
+			continue;
 
-	add_prop_nonempty_list(list, ":from", std::move(cdata.from));
-	add_prop_nonempty_list(list, ":to", std::move(cdata.to));
-	add_prop_nonempty_list(list, ":cc", std::move(cdata.cc));
-	add_prop_nonempty_list(list, ":bcc", std::move(cdata.bcc));
-	add_prop_nonempty_list(list, ":reply-to", std::move(cdata.reply_to));
+		Sexp::List c_list;		
+		for (auto&& contact: contacts)
+			c_list.add(make_contact_sexp(contact));
 
-	add_list_post(list, msg);
+		list.add_prop(std::string{contact_type.second},
+			      Sexp::make_list(std::move(c_list)));
+	}
 }
 
 
@@ -383,8 +362,10 @@ Mu::msg_to_sexp_list(MuMsg* msg, unsigned docid, MuMsgOptions opts)
 
 	/* in the no-headers-only case (see below) we get a more complete list of contacts, so no
 	 * need to get them here if that's the case */
-	if (opts & MU_MSG_OPTION_HEADERS_ONLY)
+	if (opts & MU_MSG_OPTION_HEADERS_ONLY) {
 		add_contacts(items, msg);
+		add_list_post(items, msg);
+	}
 
 	add_prop_nonempty(items, ":references", mu_msg_get_references(msg));
 	add_prop_nonempty(items, ":in-reply-to", mu_msg_get_header(msg, "In-Reply-To"));

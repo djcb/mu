@@ -31,6 +31,7 @@
 #include "test-mu-common.hh"
 #include "mu-msg.hh"
 #include "utils/mu-str.h"
+#include "utils/mu-utils.hh"
 
 using namespace Mu;
 
@@ -57,30 +58,11 @@ get_msg(const char* path)
 	return msg;
 }
 
-static gboolean
-check_contact_01(MuMsgContact* contact, int* idx)
-{
-	switch (*idx) {
-	case 0:
-		g_assert_cmpstr(mu_msg_contact_name(contact), ==, "Mickey Mouse");
-		g_assert_cmpstr(mu_msg_contact_email(contact), ==, "anon@example.com");
-		break;
-	case 1:
-		g_assert_cmpstr(mu_msg_contact_name(contact), ==, "Donald Duck");
-		g_assert_cmpstr(mu_msg_contact_email(contact), ==, "gcc-help@gcc.gnu.org");
-		break;
-	default: g_assert_not_reached();
-	}
-	++(*idx);
-
-	return TRUE;
-}
 
 static void
 test_mu_msg_01(void)
 {
 	MuMsg* msg;
-	gint   i;
 
 	msg = get_msg(MU_TESTMAILDIR4 "/1220863042.12663_1.mindcrime!2,S");
 
@@ -96,38 +78,21 @@ test_mu_msg_01(void)
 	                "contact gcc-help-help@gcc.gnu.org; run by ezmlm");
 	g_assert_true(mu_msg_get_prio(msg) == Mu::MessagePriority::Normal);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1217530645);
-
-	i = 0;
-	mu_msg_contact_foreach(msg, (MuMsgContactForeachFunc)check_contact_01, &i);
-	g_assert_cmpint(i, ==, 2);
-
+	
+	const auto contacts{mu_msg_get_contacts(msg)};
+	g_assert_cmpuint(contacts.size(), == , 2);
+	g_assert_true(contacts[0].name	 == "Mickey Mouse");
+	g_assert_true(contacts[0].email == "anon@example.com");
+	g_assert_true(contacts[1].name == "Donald Duck");
+	g_assert_true(contacts[1].email == "gcc-help@gcc.gnu.org");
+	
 	mu_msg_unref(msg);
-}
-
-static gboolean
-check_contact_02(MuMsgContact* contact, int* idx)
-{
-	switch (*idx) {
-	case 0:
-		g_assert_cmpstr(mu_msg_contact_name(contact), ==, NULL);
-		g_assert_cmpstr(mu_msg_contact_email(contact), ==, "anon@example.com");
-		break;
-	case 1:
-		g_assert_cmpstr(mu_msg_contact_name(contact), ==, NULL);
-		g_assert_cmpstr(mu_msg_contact_email(contact), ==, "help-gnu-emacs@gnu.org");
-		break;
-	default: g_assert_not_reached();
-	}
-	++(*idx);
-
-	return TRUE;
 }
 
 static void
 test_mu_msg_02(void)
 {
 	MuMsg* msg;
-	int    i;
 
 	msg = get_msg(MU_TESTMAILDIR4 "/1220863087.12663_19.mindcrime!2,S");
 
@@ -142,9 +107,13 @@ test_mu_msg_02(void)
 	              == Mu::MessagePriority::Low);
 	g_assert_cmpuint(mu_msg_get_date(msg), ==, 1218051515);
 
-	i = 0;
-	mu_msg_contact_foreach(msg, (MuMsgContactForeachFunc)check_contact_02, &i);
-	g_assert_cmpint(i, ==, 2);
+	const auto contacts{mu_msg_get_contacts(msg)};
+	g_assert_cmpuint(contacts.size(), == , 2);
+	g_assert_true(contacts[0].name.empty());
+	g_assert_true(contacts[0].email == "anon@example.com");
+	g_assert_true(contacts[1].name.empty());
+	g_assert_true(contacts[1].email == "help-gnu-emacs@gnu.org");
+
 	g_print("flags: %s\n", Mu::message_flags_to_string(mu_msg_get_flags(msg)).c_str());
 	g_assert_true(mu_msg_get_flags(msg) == (MessageFlags::Seen|MessageFlags::MailingList));
 
