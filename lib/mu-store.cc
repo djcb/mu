@@ -1007,12 +1007,7 @@ add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
 		termgen.index_text_without_positions(contact.email, 1, pfx);
 
 		/* and add to the contact store.*/
-		contacts_cache.add(ContactInfo{
-				contact.display_name(),
-				contact.email,
-				contact.name,
-				contacts_cache.is_personal(contact.email),
-				contact.message_date});
+		contacts_cache.add(std::move(contact));
 	}
 }
 

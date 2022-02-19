@@ -276,7 +276,7 @@ struct ECData {
 };
 
 static void
-each_contact(const Mu::ContactInfo& ci, ECData& ecdata)
+each_contact(const Mu::MessageContact& ci, ECData& ecdata)
 {
 	if (ecdata.personal && ci.personal)
 		return;
@@ -308,7 +308,7 @@ each_contact(const Mu::ContactInfo& ci, ECData& ecdata)
 			                      ci.name.c_str(),
 			                      ci.email.c_str());
 		break;
-	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.last_seen); break;
+	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.message_date); break;
 	case MU_CONFIG_FORMAT_CSV:
 		mu_util_print_encoded("%s,%s\n",
 		                      ci.name.empty() ? "" : Mu::quote(ci.name).c_str(),
@@ -316,14 +316,14 @@ each_contact(const Mu::ContactInfo& ci, ECData& ecdata)
 		break;
 	case MU_CONFIG_FORMAT_DEBUG: {
 		char datebuf[32];
-		strftime(datebuf, sizeof(datebuf), "%F %T", gmtime(&ci.last_seen));
+		strftime(datebuf, sizeof(datebuf), "%F %T", gmtime(&ci.message_date));
 		g_print("%s\n\tname: %s\n\t%s\n\tpersonal: %s\n\tfreq: %zu\n"
 		        "\tlast-seen: %s\n",
 		        ci.email.c_str(),
 		        ci.name.empty() ? "<none>" : ci.name.c_str(),
-		        ci.full_address.c_str(),
+		        ci.display_name().c_str(),
 		        ci.personal ? "yes" : "no",
-		        ci.freq,
+		        ci.frequency,
 		        datebuf);
 	} break;
 	default: print_plain(ci.email, ci.name, ecdata.color);

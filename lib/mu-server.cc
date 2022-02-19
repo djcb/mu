@@ -522,7 +522,7 @@ Server::Private::contacts_handler(const Parameters& params)
 
 	auto       rank{0};
 	Sexp::List contacts;
-	store().contacts_cache().for_each([&](const ContactInfo& ci) {
+	store().contacts_cache().for_each([&](const MessageContact& ci) {
 		rank++;
 
 		/* since the last time we got some contacts */
@@ -532,11 +532,12 @@ Server::Private::contacts_handler(const Parameters& params)
 		if (personal && !ci.personal)
 			return;
 		/* only include newer-than-x contacts */
-		if (after > ci.last_seen)
+		if (after > ci.message_date)
 			return;
 
 		Sexp::List contact;
-		contact.add_prop(":address", Sexp::make_string(ci.full_address));
+		contact.add_prop(":address",
+				 Sexp::make_string(ci.display_name()));
 		contact.add_prop(":rank", Sexp::make_number(rank));
 
 		contacts.add(Sexp::make_list(std::move(contact)));
