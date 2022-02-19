@@ -37,6 +37,7 @@
 
 #include "mu-message-flags.hh"
 #include "mu-msg-fields.h"
+#include "mu-msg.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "utils/mu-str.h"
@@ -75,21 +76,21 @@ constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 static uint64_t get_hash64 (const char* str)
 {
 	guint32 djbhash;
-        guint32 bkdrhash;
-        guint32 bkdrseed;
-        guint64 hash;
+	guint32 bkdrhash;
+	guint32 bkdrseed;
+	guint64 hash;
 
-        djbhash  = 5381;
-        bkdrhash = 0;
-        bkdrseed = 1313;
+	djbhash  = 5381;
+	bkdrhash = 0;
+	bkdrseed = 1313;
 
-        for(unsigned u = 0U; str[u]; ++u) {
+	for(unsigned u = 0U; str[u]; ++u) {
 		djbhash  = ((djbhash << 5) + djbhash) + str[u];
 		bkdrhash = bkdrhash * bkdrseed + str[u];
 	}
 
-        hash = djbhash;
-        return (hash<<32) | bkdrhash;
+	hash = djbhash;
+	return (hash<<32) | bkdrhash;
 }
 
 
@@ -115,17 +116,17 @@ struct Store::Private {
 
 	Private(const std::string& path, bool readonly)
 	    : read_only_{readonly}, db_{make_xapian_db(path,
-	                                               read_only_ ? XapianOpts::ReadOnly
-	                                                          : XapianOpts::Open)},
+						       read_only_ ? XapianOpts::ReadOnly
+								  : XapianOpts::Open)},
 	      properties_{make_properties(path)}, contacts_{db().get_metadata(ContactsKey),
-	                                             properties_.personal_addresses}
+						     properties_.personal_addresses}
 	{
 	}
 
 	Private(const std::string& path,
-	        const std::string& root_maildir,
-	        const StringVec& personal_addresses,
-	        const Store::Config& conf)
+		const std::string& root_maildir,
+		const StringVec& personal_addresses,
+		const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db(path, XapianOpts::CreateOverwrite)},
 	      properties_{init_metadata(conf, path, root_maildir, personal_addresses)},
 	      contacts_{"", properties_.personal_addresses}
@@ -133,8 +134,8 @@ struct Store::Private {
 	}
 
 	Private(const std::string&   root_maildir,
-	        const StringVec&     personal_addresses,
-	        const Store::Config& conf)
+		const StringVec&     personal_addresses,
+		const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db("", XapianOpts::InMemory)},
 	      properties_{init_metadata(conf, "", root_maildir, personal_addresses)},
 	      contacts_{"", properties_.personal_addresses}
@@ -170,13 +171,13 @@ struct Store::Private {
 
 	} catch (const Xapian::DatabaseError& xde) {
 		throw Mu::Error(Error::Code::Store,
-		                "failed to open store @ %s: %s",
-		                db_path.c_str(),
-		                xde.get_msg().c_str());
+				"failed to open store @ %s: %s",
+				db_path.c_str(),
+				xde.get_msg().c_str());
 	} catch (...) {
 		throw Mu::Error(Error::Code::Internal,
-		                "something went wrong when opening store @ %s",
-		                db_path.c_str());
+				"something went wrong when opening store @ %s",
+				db_path.c_str());
 	}
 
 	const Xapian::Database& db() const { return *db_.get(); }
@@ -212,11 +213,11 @@ struct Store::Private {
 			if (contacts_.dirty()) {
 				xapian_try([&] {
 					writable_db().set_metadata(ContactsKey,
-					                           contacts_.serialize());
+								   contacts_.serialize());
 				});
 			}
 			g_debug("committing transaction (n=%zu,%zu)",
-			        transaction_size_, metadata_cache_.size());
+				transaction_size_, metadata_cache_.size());
 			xapian_try([this] {
 				writable_db().commit_transaction();
 				for (auto&& mdata : metadata_cache_)
@@ -239,7 +240,7 @@ struct Store::Private {
 		for (auto&& prio : AllMessagePriorities) {
 			const auto s1{prefix(MU_MSG_FIELD_ID_PRIO) + to_string(prio)};
 			const auto s2{prefix(MU_MSG_FIELD_ID_PRIO) +
-			              std::string{1, to_char(prio)}};
+				      std::string{1, to_char(prio)}};
 			writable_db().clear_synonyms(s1);
 			writable_db().clear_synonyms(s2);
 			writable_db().add_synonym(s1, s2);
@@ -270,9 +271,9 @@ struct Store::Private {
 	}
 
 	Store::Properties init_metadata(const Store::Config& conf,
-	                              const std::string&   path,
-	                              const std::string&   root_maildir,
-	                              const StringVec&     personal_addresses)
+				      const std::string&   path,
+				      const std::string&   root_maildir,
+				      const StringVec&     personal_addresses)
 	{
 		writable_db().set_metadata(SchemaVersionKey, ExpectedSchemaVersion);
 		writable_db().set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)::time({})));
@@ -281,7 +282,7 @@ struct Store::Private {
 		writable_db().set_metadata(BatchSizeKey, Mu::format("%zu", batch_size));
 
 		const size_t max_msg_size = conf.max_message_size ? conf.max_message_size
-		                                                  : DefaultMaxMessageSize;
+								  : DefaultMaxMessageSize;
 		writable_db().set_metadata(MaxMessageSizeKey, Mu::format("%zu", max_msg_size));
 
 		writable_db().set_metadata(RootMaildirKey, root_maildir);
@@ -290,8 +291,8 @@ struct Store::Private {
 		for (const auto& addr : personal_addresses) { // _very_ minimal check.
 			if (addr.find(",") != std::string::npos)
 				throw Mu::Error(Error::Code::InvalidArgument,
-				                "e-mail address '%s' contains comma",
-				                addr.c_str());
+						"e-mail address '%s' contains comma",
+						addr.c_str());
 			addrs += (addrs.empty() ? "" : ",") + addr;
 		}
 		writable_db().set_metadata(PersonalAddressesKey, addrs);
@@ -337,16 +338,16 @@ Store::Store(const std::string& path, bool readonly)
 {
 	if (properties().schema_version != ExpectedSchemaVersion)
 		throw Mu::Error(Error::Code::SchemaMismatch,
-		                "expected schema-version %s, but got %s; "
-		                "please use 'mu init'",
-		                ExpectedSchemaVersion,
-		                properties().schema_version.c_str());
+				"expected schema-version %s, but got %s; "
+				"please use 'mu init'",
+				ExpectedSchemaVersion,
+				properties().schema_version.c_str());
 }
 
 Store::Store(const std::string&   path,
-             const std::string&   maildir,
-             const StringVec&     personal_addresses,
-             const Store::Config& conf)
+	     const std::string&   maildir,
+	     const StringVec&     personal_addresses,
+	     const Store::Config& conf)
     : priv_{std::make_unique<Private>(path, maildir, personal_addresses, conf)}
 {
 }
@@ -413,9 +414,9 @@ maildir_from_path(const std::string& root, const std::string& path)
 {
 	if (G_UNLIKELY(root.empty()) || root.length() >= path.length() || path.find(root) != 0)
 		throw Mu::Error{Error::Code::InvalidArgument,
-		                "root '%s' is not a proper suffix of path '%s'",
-		                root.c_str(),
-		                path.c_str()};
+				"root '%s' is not a proper suffix of path '%s'",
+				root.c_str(),
+				path.c_str()};
 
 	auto mdir{path.substr(root.length())};
 	auto slash{mdir.rfind('/')};
@@ -426,8 +427,8 @@ maildir_from_path(const std::string& root, const std::string& path)
 	auto subdir = mdir.data() + slash - 4;
 	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 && strncmp(subdir, "/new", 4)))
 		throw Mu::Error{Error::Code::InvalidArgument,
-		                "cannot find '/new' or '/cur' - invalid path: %s",
-		                path.c_str()};
+				"cannot find '/new' or '/cur' - invalid path: %s",
+				path.c_str()};
 	if (mdir.length() == 4)
 		return "/";
 
@@ -445,8 +446,8 @@ Store::add_message(const std::string& path, bool use_transaction)
 	auto       msg{mu_msg_new_from_file(path.c_str(), maildir.c_str(), &gerr)};
 	if (G_UNLIKELY(!msg))
 		throw Error{Error::Code::Message,
-		            "failed to create message: %s",
-		            gerr ? gerr->message : "something went wrong"};
+			    "failed to create message: %s",
+			    gerr ? gerr->message : "something went wrong"};
 
 	if (use_transaction)
 		priv_->transaction_inc();
@@ -573,7 +574,7 @@ Store::find_message(unsigned docid) const
 				     reinterpret_cast<XapianDocument*>(doc), &gerr)};
 		    if (!msg) {
 			    g_warning("could not create message: %s",
-			              gerr ? gerr->message : "something went wrong");
+				      gerr ? gerr->message : "something went wrong");
 			    g_clear_error(&gerr);
 		    }
 		    return msg;
@@ -669,13 +670,13 @@ Store::lock() const
 
 Option<QueryResults>
 Store::run_query(const std::string& expr, MuMsgFieldId sortfieldid,
-                 QueryFlags flags, size_t maxnum) const
+		 QueryFlags flags, size_t maxnum) const
 {
 	return xapian_try([&] {
 		Query           q{*this};
 		return q.run(expr, sortfieldid, flags, maxnum);
 	},
-	                  Nothing);
+			  Nothing);
 }
 
 size_t
@@ -687,7 +688,7 @@ Store::count_query(const std::string& expr) const
 
 		return q.count(expr);
 	},
-	                  0);
+			  0);
 }
 
 std::string
@@ -699,7 +700,7 @@ Store::parse_query(const std::string& expr, bool xapian) const
 
 		return q.parse(expr, xapian);
 	},
-	                  std::string{});
+			  std::string{});
 }
 
 static void
@@ -875,9 +876,9 @@ add_terms_values_attach(Xapian::Document& doc, MuMsg* msg, MuMsgFieldId mfid)
 {
 	PartData pdata(doc, mfid);
 	mu_msg_part_foreach(msg,
-	                    MU_MSG_OPTION_RECURSE_RFC822,
-	                    (MuMsgPartForeachFunc)each_part,
-	                    &pdata);
+			    MU_MSG_OPTION_RECURSE_RFC822,
+			    (MuMsgPartForeachFunc)each_part,
+			    &pdata);
 }
 
 static void
@@ -956,79 +957,63 @@ add_terms_values(MuMsgFieldId mfid, MsgDoc* msgdoc)
 	}
 }
 
+
 static const std::string&
-xapian_pfx(MuMsgContact* contact)
+xapian_pfx(const MessageContact& contact)
 {
 	static const std::string empty;
 
 	/* use ptr to string to prevent copy... */
-	switch (contact->type) {
-	case MU_MSG_CONTACT_TYPE_TO:
+	switch (contact.type) {
+	case MessageContact::Type::To:
 		return prefix(MU_MSG_FIELD_ID_TO);
-	case MU_MSG_CONTACT_TYPE_FROM:
+	case MessageContact::Type::From:
 		return prefix(MU_MSG_FIELD_ID_FROM);
-	case MU_MSG_CONTACT_TYPE_CC:
+	case MessageContact::Type::Cc:
 		return prefix(MU_MSG_FIELD_ID_CC);
-	case MU_MSG_CONTACT_TYPE_BCC:
+	case MessageContact::Type::Bcc:
 		return prefix(MU_MSG_FIELD_ID_BCC);
-	default:
-		g_warning("unsupported contact type %u", (unsigned)contact->type);
+	default: /* REPLY_TO  not supported */
 		return empty;
 	}
 }
 
 static void
-add_address_subfields(Xapian::Document& doc, const char* addr, const std::string& pfx)
+add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
+			  Contacts& contacts_store)
 {
-	const char *at, *domain_part;
-	char*       name_part;
+	Xapian::TermGenerator termgen;
+	termgen.set_document(doc);
 
-	/* add "foo" and "bar.com" as terms as well for
-	 * "foo@bar.com" */
-	if (G_UNLIKELY(!(at = (g_strstr_len(addr, -1, "@")))))
-		return;
+	for (auto&& contact: mu_msg_get_contacts(msg)) {
 
-	name_part   = g_strndup(addr, at - addr); // foo
-	domain_part = at + 1;
+		const std::string pfx{xapian_pfx(contact)};
+		if (pfx.empty())
+			continue; // not supported
 
-	add_term(doc, pfx + name_part);
-	add_term(doc, pfx + domain_part);
+		if (!contact.name.empty()) {
+			const auto flat = Mu::utf8_flatten(contact.name.c_str());
+			termgen.index_text(flat, 1, pfx);
+		}
 
-	g_free(name_part);
-}
+		add_term(doc, pfx + contact.email);
 
-static gboolean
-each_contact_info(MuMsgContact* contact, MsgDoc* msgdoc)
-{
-	/* for now, don't store reply-to addresses */
-	if (mu_msg_contact_type(contact) == MU_MSG_CONTACT_TYPE_REPLY_TO)
-		return TRUE;
+		// index name / domain separately, too.
+		if (auto at = contact.email.find('@'); at != std::string::npos) {
+			add_term(doc, pfx + contact.email.substr(0, at));
+			add_term(doc, pfx + contact.email.substr(at));
+		}
 
-	const std::string pfx(xapian_pfx(contact));
-	if (pfx.empty())
-		return TRUE; /* unsupported contact type */
+		termgen.index_text_without_positions(contact.email, 1, pfx);
 
-	if (!mu_str_is_empty(contact->name)) {
-		Xapian::TermGenerator termgen;
-		termgen.set_document(*msgdoc->_doc);
-		const auto flat = Mu::utf8_flatten(contact->name);
-		termgen.index_text(flat, 1, pfx);
+		/* and add to the contact store.*/
+		contacts_store.add(ContactInfo{
+				contact.display_name(),
+				contact.email,
+				contact.name,
+				contacts_store.is_personal(contact.email),
+				contact.message_date});
 	}
-
-	if (!mu_str_is_empty(contact->email)) {
-		const auto flat = Mu::utf8_flatten(contact->email);
-		add_term(*msgdoc->_doc, pfx + flat);
-		add_address_subfields(*msgdoc->_doc, contact->email, pfx);
-		/* store it also in our contacts cache */
-		auto& contacts{msgdoc->_priv->contacts_};
-		contacts.add(Mu::ContactInfo(contact->full_address,
-		                             contact->email,
-		                             contact->name ? contact->name : "",
-		                             msgdoc->_personal,
-		                             mu_msg_get_date(msgdoc->_msg)));
-	}
-
-	return TRUE;
 }
 
 Xapian::Document
@@ -1037,29 +1022,8 @@ Store::Private::new_doc_from_message(MuMsg* msg)
 	Xapian::Document doc;
 	MsgDoc           docinfo = {&doc, msg, this, 0, NULL};
 
+	add_contacts_terms_values(doc, msg, contacts_);
 	mu_msg_field_foreach((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
-
-	mu_msg_contact_foreach(
-	    msg,
-	    [](auto contact, gpointer msgdocptr) -> gboolean {
-		    auto msgdoc{reinterpret_cast<MsgDoc*>(msgdocptr)};
-
-		    if (!contact->email)
-			    return FALSE; // invalid contact
-		    else if (msgdoc->_personal)
-			    return TRUE; // already deemed personal
-
-		    if (msgdoc->_priv->contacts_.is_personal(contact->email))
-			    msgdoc->_personal = true; // this one's personal.
-
-		    return TRUE;
-	    },
-	    &docinfo);
-
-	/* also store the contact-info as separate terms, and add it
-	 * to the cache */
-	mu_msg_contact_foreach(msg, (MuMsgContactForeachFunc)each_contact_info, &docinfo);
-
 	// g_printerr ("\n--%s\n--\n", doc.serialise().c_str());
 
 	return doc;
@@ -1080,8 +1044,8 @@ update_threading_info(MuMsg* msg, Xapian::Document& doc)
 
 	char thread_id[16 + 1];
 	hash_str(thread_id,
-	         sizeof(thread_id),
-	         refs ? (const char*)refs->data : mu_msg_get_msgid(msg));
+		 sizeof(thread_id),
+		 refs ? (const char*)refs->data : mu_msg_get_msgid(msg));
 
 	add_term(doc, prefix(MU_MSG_FIELD_ID_THREAD_ID) + thread_id);
 	doc.add_value((Xapian::valueno)MU_MSG_FIELD_ID_THREAD_ID, thread_id);
