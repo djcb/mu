@@ -17,6 +17,7 @@
 **
 */
 #include "mu-guile-message.hh"
+#include "libguile/scm.h"
 #include "mu-message-flags.hh"
 #include <config.h>
 
@@ -80,9 +81,9 @@ typedef struct {
 	do {                                                                     \
 		if (!(mu_guile_initialized())) {                                 \
 			mu_guile_error(FUNC_NAME,                                \
-			               0,                                        \
-			               "mu not initialized; call mu:initialize", \
-			               SCM_UNDEFINED);                           \
+				       0,                                        \
+				       "mu not initialized; call mu:initialize", \
+				       SCM_UNDEFINED);                           \
 			return SCM_UNSPECIFIED;                                  \
 		}                                                                \
 	} while (0)
@@ -158,12 +159,12 @@ get_body(MuMsg* msg, gboolean html)
 }
 
 SCM_DEFINE(get_field,
-           "mu:c:get-field",
-           2,
-           0,
-           0,
-           (SCM MSG, SCM FIELD),
-           "Get the field FIELD from message MSG.\n")
+	   "mu:c:get-field",
+	   2,
+	   0,
+	   0,
+	   (SCM MSG, SCM FIELD),
+	   "Get the field FIELD from message MSG.\n")
 #define FUNC_NAME s_get_field
 {
 	MuMsgWrapper* msgwrap;
@@ -177,9 +178,9 @@ SCM_DEFINE(get_field,
 
 	mfid = scm_to_int(FIELD);
 	SCM_ASSERT(mfid < MU_MSG_FIELD_ID_NUM || mfid == MU_GUILE_MSG_FIELD_ID_TIMESTAMP,
-	           FIELD,
-	           SCM_ARG2,
-	           FUNC_NAME);
+		   FIELD,
+		   SCM_ARG2,
+		   FUNC_NAME);
 
 	switch (mfid) {
 	case MU_MSG_FIELD_ID_PRIO: return get_prio_scm(msgwrap->_msg);
@@ -196,8 +197,7 @@ SCM_DEFINE(get_field,
 
 	switch (mu_msg_field_type(mfid)) {
 	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg, mfid));
-	case MU_MSG_FIELD_TYPE_BYTESIZE:
+		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg, mfid));	case MU_MSG_FIELD_TYPE_BYTESIZE:
 	case MU_MSG_FIELD_TYPE_TIME_T:
 		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, mfid));
 	case MU_MSG_FIELD_TYPE_INT:
@@ -208,77 +208,74 @@ SCM_DEFINE(get_field,
 }
 #undef FUNC_NAME
 
-struct _EachContactData {
-	SCM              lst;
-	MuMsgContactType ctype;
-};
-typedef struct _EachContactData EachContactData;
-
-static void
-contacts_to_list(MuMsgContact* contact, EachContactData* ecdata)
+static SCM
+contacts_to_list(MuMsg *msg, Mu::MessageContact::Type mtype)
 {
-	SCM item;
+	SCM list{SCM_EOL};
 
-	if (ecdata->ctype != MU_MSG_CONTACT_TYPE_ALL &&
-	    mu_msg_contact_type(contact) != ecdata->ctype)
-		return;
+	const auto contacts{mu_msg_get_contacts(msg, mtype)};
+	for (auto&& contact: mu_msg_get_contacts(msg, mtype)) {
+		SCM item{scm_list_1(
+				scm_cons(mu_guile_scm_from_str(contact.name.c_str()),
+					 mu_guile_scm_from_str(contact.email.c_str())))};
+		list = scm_append_x(scm_list_2(list, item));
+	}
 
-	item = scm_list_1(scm_cons(mu_guile_scm_from_str(mu_msg_contact_name(contact)),
-	                           mu_guile_scm_from_str(mu_msg_contact_email(contact))));
-
-	ecdata->lst = scm_append_x(scm_list_2(ecdata->lst, item));
+	return list;
 }
 
 SCM_DEFINE(get_contacts,
-           "mu:c:get-contacts",
-           2,
-           0,
-           0,
-           (SCM MSG, SCM CONTACT_TYPE),
-           "Get a list of contact information pairs.\n")
+	   "mu:c:get-contacts",
+	   2,
+	   0,
+	   0,
+	   (SCM MSG, SCM CONTACT_TYPE),
+	   "Get a list of contact information pairs.\n")
 #define FUNC_NAME s_get_contacts
 {
-	MuMsgWrapper*   msgwrap;
-	EachContactData ecdata;
+	MuMsgWrapper*			msgwrap;
+	SCM				list;
+	Mu::MessageContact::Type	mtype;
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
 	SCM_ASSERT(mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT(scm_symbol_p(CONTACT_TYPE) || scm_is_bool(CONTACT_TYPE),
-	           CONTACT_TYPE,
-	           SCM_ARG2,
-	           FUNC_NAME);
+		   CONTACT_TYPE,
+		   SCM_ARG2,
+		   FUNC_NAME);
 
 	if (CONTACT_TYPE == SCM_BOOL_F)
 		return SCM_UNSPECIFIED; /* nothing to do */
-	else if (CONTACT_TYPE == SCM_BOOL_T)
-		ecdata.ctype = MU_MSG_CONTACT_TYPE_ALL;
+
+	if (CONTACT_TYPE == SCM_BOOL_T)
+		mtype = Mu::MessageContact::Type::Unknown; /* get all */
 	else {
 		if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_TO))
-			ecdata.ctype = MU_MSG_CONTACT_TYPE_TO;
+			mtype = Mu::MessageContact::Type::To;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_CC))
-			ecdata.ctype = MU_MSG_CONTACT_TYPE_CC;
+			mtype = Mu::MessageContact::Type::Cc;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_BCC))
-			ecdata.ctype = MU_MSG_CONTACT_TYPE_BCC;
+			mtype = Mu::MessageContact::Type::Bcc;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_FROM))
-			ecdata.ctype = MU_MSG_CONTACT_TYPE_FROM;
+			mtype = Mu::MessageContact::Type::From;
 		else {
 			mu_guile_error(FUNC_NAME, 0, "invalid contact type", SCM_UNDEFINED);
 			return SCM_UNSPECIFIED;
 		}
 	}
 
-	ecdata.lst = SCM_EOL;
 	msgwrap    = (MuMsgWrapper*)SCM_CDR(MSG);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-	mu_msg_contact_foreach(msgwrap->_msg, (MuMsgContactForeachFunc)contacts_to_list, &ecdata);
+	list = contacts_to_list(msgwrap->_msg, mtype);
 #pragma GCC diagnostic pop
 
 	/* explicitly close the file backend, so we won't run out of fds */
 	mu_msg_unload_msg_file(msgwrap->_msg);
 
-	return ecdata.lst;
+	return list;
 }
 #undef FUNC_NAME
 
@@ -321,14 +318,14 @@ each_part(MuMsg* msg, MuMsgPart* part, AttInfo* attinfo)
 }
 
 SCM_DEFINE(get_parts,
-           "mu:c:get-parts",
-           1,
-           1,
-           0,
-           (SCM MSG, SCM ATTS_ONLY),
-           "Get the list of mime-parts for MSG. If ATTS_ONLY is #t, only"
-           "get parts that are (look like) attachments. The resulting list has "
-           "elements which are list of the form (index name mime-type size).\n")
+	   "mu:c:get-parts",
+	   1,
+	   1,
+	   0,
+	   (SCM MSG, SCM ATTS_ONLY),
+	   "Get the list of mime-parts for MSG. If ATTS_ONLY is #t, only"
+	   "get parts that are (look like) attachments. The resulting list has "
+	   "elements which are list of the form (index name mime-type size).\n")
 #define FUNC_NAME s_get_parts
 {
 	MuMsgWrapper* msgwrap;
@@ -344,9 +341,9 @@ SCM_DEFINE(get_parts,
 
 	msgwrap = (MuMsgWrapper*)SCM_CDR(MSG);
 	mu_msg_part_foreach(msgwrap->_msg,
-	                    MU_MSG_OPTION_NONE,
-	                    (MuMsgPartForeachFunc)each_part,
-	                    &attinfo);
+			    MU_MSG_OPTION_NONE,
+			    (MuMsgPartForeachFunc)each_part,
+			    &attinfo);
 
 	/* explicitly close the file backend, so we won't run of fds */
 	mu_msg_unload_msg_file(msgwrap->_msg);
@@ -356,12 +353,12 @@ SCM_DEFINE(get_parts,
 #undef FUNC_NAME
 
 SCM_DEFINE(get_header,
-           "mu:c:get-header",
-           2,
-           0,
-           0,
-           (SCM MSG, SCM HEADER),
-           "Get an arbitrary HEADER from MSG.\n")
+	   "mu:c:get-header",
+	   2,
+	   0,
+	   0,
+	   (SCM MSG, SCM HEADER),
+	   "Get an arbitrary HEADER from MSG.\n")
 #define FUNC_NAME s_get_header
 {
 	MuMsgWrapper* msgwrap;
@@ -392,16 +389,16 @@ get_query_results(Mu::Store& store, const char* expr, int maxnum)
 }
 
 SCM_DEFINE(for_each_message,
-           "mu:c:for-each-message",
-           3,
-           0,
-           0,
-           (SCM FUNC, SCM EXPR, SCM MAXNUM),
-           "Call FUNC for each msg in the message store matching EXPR. EXPR is"
-           "either a string containing a mu search expression or a boolean; in the former "
-           "case, limit the messages to only those matching the expression, in the "
-           "latter case, match /all/ messages if the EXPR equals #t, and match "
-           "none if EXPR equals #f.")
+	   "mu:c:for-each-message",
+	   3,
+	   0,
+	   0,
+	   (SCM FUNC, SCM EXPR, SCM MAXNUM),
+	   "Call FUNC for each msg in the message store matching EXPR. EXPR is"
+	   "either a string containing a mu search expression or a boolean; in the former "
+	   "case, limit the messages to only those matching the expression, in the "
+	   "latter case, match /all/ messages if the EXPR equals #t, and match "
+	   "none if EXPR equals #f.")
 #define FUNC_NAME s_for_each_message
 {
 	char* expr{};
