@@ -25,7 +25,7 @@
 using namespace Mu;
 
 std::string
-to_string(MessagePriority prio)
+Mu::to_string(MessagePriority prio)
 {
 	return std::string{message_priority_name(prio)};
 }
