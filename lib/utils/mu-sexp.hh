@@ -61,14 +61,25 @@ struct Sexp {
 	 * Make a node for a string/integer/symbol/list value
 	 *
 	 * @param val some value
+	 * @param empty_is_nil turn empty string into a 'nil' symbol
 	 *
 	 * @return a node
 	 */
-	static Sexp make_string(std::string&& val) { return Sexp{Type::String, std::move(val)}; }
-	static Sexp make_string(const std::string& val)
+	static Sexp make_string(std::string&& val, bool empty_is_nil=false)
 	{
-		return Sexp{Type::String, std::string(val)};
+		if (empty_is_nil && val.empty())
+			return make_symbol("nil");
+		else
+			return Sexp{Type::String, std::move(val)};
 	}
+	static Sexp make_string(const std::string& val, bool empty_is_nil=false)
+	{
+		if (empty_is_nil && val.empty())
+			return make_symbol("nil");
+		else
+			return Sexp{Type::String, std::string(val)};
+	}
+
 	static Sexp make_number(int val) { return Sexp{Type::Number, format("%d", val)}; }
 	static Sexp make_symbol(std::string&& val)
 	{
@@ -165,8 +176,8 @@ struct Sexp {
 		{
 			if (!is_prop_name(name))
 				throw Error{Error::Code::InvalidArgument,
-				            "invalid property name ('%s')",
-				            name.c_str()};
+					    "invalid property name ('%s')",
+					    name.c_str()};
 			seq_.emplace_back(make_symbol(std::move(name)));
 			seq_.emplace_back(std::move(sexp));
 			return *this;
@@ -344,9 +355,9 @@ struct Sexp {
 
 	const Type        type_;  /**<  Type of node */
 	const std::string value_; /**< String value of node (only for
-	                           * non-Type::Lst)*/
+				   * non-Type::Lst)*/
 	const Seq seq_;           /**< Children of node (only for
-	                           * Type::Lst) */
+				   * Type::Lst) */
 };
 
 static inline std::ostream&
