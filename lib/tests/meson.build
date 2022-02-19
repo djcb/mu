@@ -61,6 +61,14 @@ test('test_contacts',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+
+test('test_message_contact',
+     executable('test-message-contact',
+		'../mu-message-contact.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
+
 test('test_parser',
      executable('test-parser',
 		'test-parser.cc',
