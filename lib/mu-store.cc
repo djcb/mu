@@ -72,7 +72,7 @@ constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
  *
  * @return the hash
  */
-uint64_t get_hash64 (const char* str)
+static uint64_t get_hash64 (const char* str)
 {
 	guint32 djbhash;
         guint32 bkdrhash;

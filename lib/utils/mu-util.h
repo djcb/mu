@@ -380,40 +380,6 @@ typedef enum _MuError MuError;
 gboolean mu_util_g_set_error (GError **err, MuError errcode, const char *frm, ...)
 	G_GNUC_PRINTF(3,4);
 
-/**
- * calculate a 64-bit hash for the given string, based on a combination of the
- * DJB and BKDR hash functions.
- *
- * @param a string
- *
- * @return the hash
- */
-static inline guint64
-mu_util_get_hash (const char* str)
-{
-	guint32 djbhash;
-        guint32 bkdrhash;
-        guint32 bkdrseed;
-        guint64 hash;
-
-        djbhash  = 5381;
-        bkdrhash = 0;
-        bkdrseed = 1313;
-
-        for(unsigned u = 0U; str[u]; ++u) {
-		djbhash  = ((djbhash << 5) + djbhash) + (unsigned)str[u];
-		bkdrhash = bkdrhash * bkdrseed + (unsigned)str[u];
-	}
-
-        hash = djbhash;
-        return (hash<<32) | bkdrhash;
-}
-
-
-
-
-
-
 #define MU_COLOR_RED		"\x1b[31m"
 #define MU_COLOR_GREEN		"\x1b[32m"
 #define MU_COLOR_YELLOW		"\x1b[33m"
