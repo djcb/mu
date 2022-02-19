@@ -17,17 +17,17 @@
 #
 # tests
 #
-test('test_cmd',
+test('test-cmd',
      executable('test-cmd',
 		'test-mu-cmd.cc',
 		install: false,
 		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
-test('test_cmd_cfind',
+test('test-cmd-cfind',
      executable('test-cmd-cfind',
 		'test-mu-cmd-cfind.cc',
 		install: false,
 		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
-test('test_cmd_query',
+test('test-cmd-query',
      executable('test-cmd-query',
 		'test-mu-query.cc',
 		install: false,

@@ -35,7 +35,7 @@ $(BUILDDIR):
 
 check: test
 
-test: $(BUILDDIR)
+test: all
 	@cd $(BUILDDIR); $(MESON) test
 
 test-valgrind: $(BUILDDIR)

@@ -18,51 +18,51 @@
 # tests
 #
 
-test('test_maildir',
+test('test-maildir',
      executable('test-maildir',
 		'test-mu-maildir.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_msg_fields',
+test('test-msg-fields',
      executable('test-msg-fields',
 		'test-mu-msg-fields.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_msg',
+test('test-msg',
      executable('test-msg',
 		'test-mu-msg.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_store',
+test('test-store',
      executable('test-store',
 		'test-mu-store.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_query',
+test('test-query',
      executable('test-query',
 		'test-query.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
 
-test('test_tokenizer',
+test('test-tokenizer',
      executable('test-tokenizer',
 		'test-tokenizer.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_threads',
+test('test-threads',
      executable('test-threads',
 		'../mu-query-threads.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
-test('test_contacts-cache',
+test('test-contacts-cache',
      executable('test-contacts',
 		'../mu-contacts-cache.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
 
-test('test_message_contact',
+test('test-message-contact',
      executable('test-message-contact',
 		'../mu-message-contact.cc',
 		install: false,
@@ -70,7 +70,7 @@ test('test_message_contact',
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
                                lib_test_mu_common_dep]))
 
-test('test_parser',
+test('test-parser',
      executable('test-parser',
 		'test-parser.cc',
 		install: false,
