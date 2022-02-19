@@ -23,8 +23,8 @@ lib_mu=static_library(
   [
     'mu-bookmarks.cc',
     'mu-bookmarks.hh',
-    'mu-contacts.cc',
-    'mu-contacts.hh',
+    'mu-contacts-cache.cc',
+    'mu-contacts-cache.hh',
     'mu-data.hh',
     'mu-parser.cc',
     'mu-parser.hh',

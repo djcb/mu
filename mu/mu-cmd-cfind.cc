@@ -26,7 +26,7 @@
 #include <ctype.h>
 
 #include "mu-cmd.hh"
-#include "mu-contacts.hh"
+#include "mu-contacts-cache.hh"
 #include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
@@ -363,7 +363,7 @@ run_cmd_cfind(const Mu::Store&     store,
 
 	print_header(format);
 
-	store.contacts().for_each([&](const auto& ci) { each_contact(ci, ecdata); });
+	store.contacts_cache().for_each([&](const auto& ci) { each_contact(ci, ecdata); });
 
 	g_hash_table_unref(ecdata.nicks);
 

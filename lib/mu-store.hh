@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,7 +27,7 @@
 #include <mutex>
 #include <ctime>
 
-#include "mu-contacts.hh"
+#include "mu-contacts-cache.hh"
 #include <xapian.h>
 
 #include <utils/mu-utils.hh>
@@ -111,11 +111,11 @@ public:
 	 */
 	const Properties& properties() const;
 	/**
-	 * Get the Contacts object for this store
+	 * Get the ContactsCache object for this store
 	 *
 	 * @return the Contacts object
 	 */
-	const Contacts& contacts() const;
+	const ContactsCache& contacts_cache() const;
 
 	/**
 	 * Get the underlying Xapian database for this store.

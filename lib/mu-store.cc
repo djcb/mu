@@ -118,7 +118,7 @@ struct Store::Private {
 	    : read_only_{readonly}, db_{make_xapian_db(path,
 						       read_only_ ? XapianOpts::ReadOnly
 								  : XapianOpts::Open)},
-	      properties_{make_properties(path)}, contacts_{db().get_metadata(ContactsKey),
+	      properties_{make_properties(path)}, contacts_cache_{db().get_metadata(ContactsKey),
 						     properties_.personal_addresses}
 	{
 	}
@@ -129,7 +129,7 @@ struct Store::Private {
 		const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db(path, XapianOpts::CreateOverwrite)},
 	      properties_{init_metadata(conf, path, root_maildir, personal_addresses)},
-	      contacts_{"", properties_.personal_addresses}
+	      contacts_cache_{"", properties_.personal_addresses}
 	{
 	}
 
@@ -138,7 +138,7 @@ struct Store::Private {
 		const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db("", XapianOpts::InMemory)},
 	      properties_{init_metadata(conf, "", root_maildir, personal_addresses)},
-	      contacts_{"", properties_.personal_addresses}
+	      contacts_cache_{"", properties_.personal_addresses}
 	{
 	}
 
@@ -210,10 +210,10 @@ struct Store::Private {
 			return; // not supported or not in transaction
 
 		if (force || transaction_size_ >= properties_.batch_size) {
-			if (contacts_.dirty()) {
+			if (contacts_cache_.dirty()) {
 				xapian_try([&] {
 					writable_db().set_metadata(ContactsKey,
-								   contacts_.serialize());
+								   contacts_cache_.serialize());
 				});
 			}
 			g_debug("committing transaction (n=%zu,%zu)",
@@ -310,7 +310,7 @@ struct Store::Private {
 	std::unique_ptr<Xapian::Database> db_;
 
 	const Store::Properties properties_;
-	Contacts                 contacts_;
+	ContactsCache            contacts_cache_;
 	std::unique_ptr<Indexer> indexer_;
 
 	size_t     transaction_size_{};
@@ -365,10 +365,10 @@ Store::properties() const
 	return priv_->properties_;
 }
 
-const Contacts&
-Store::contacts() const
+const ContactsCache&
+Store::contacts_cache() const
 {
-	return priv_->contacts_;
+	return priv_->contacts_cache_;
 }
 
 const Xapian::Database&
@@ -980,7 +980,7 @@ xapian_pfx(const MessageContact& contact)
 
 static void
 add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
-			  Contacts& contacts_store)
+			  ContactsCache& contacts_cache)
 {
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
@@ -1007,11 +1007,11 @@ add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
 		termgen.index_text_without_positions(contact.email, 1, pfx);
 
 		/* and add to the contact store.*/
-		contacts_store.add(ContactInfo{
+		contacts_cache.add(ContactInfo{
 				contact.display_name(),
 				contact.email,
 				contact.name,
-				contacts_store.is_personal(contact.email),
+				contacts_cache.is_personal(contact.email),
 				contact.message_date});
 	}
 }
@@ -1022,7 +1022,7 @@ Store::Private::new_doc_from_message(MuMsg* msg)
 	Xapian::Document doc;
 	MsgDoc           docinfo = {&doc, msg, this, 0, NULL};
 
-	add_contacts_terms_values(doc, msg, contacts_);
+	add_contacts_terms_values(doc, msg, contacts_cache_);
 	mu_msg_field_foreach((MuMsgFieldForeachFunc)add_terms_values, &docinfo);
 	// g_printerr ("\n--%s\n--\n", doc.serialise().c_str());
 

@@ -20,116 +20,116 @@ include $(top_srcdir)/gtest.mk
 
 SUBDIRS= utils index
 
-TESTDEFS=                                                       \
-        -DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"              \
-        -DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"            \
-        -DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"            \
-        -DABS_CURDIR=\"${abs_builddir}\"                        \
+TESTDEFS=                                               \
+        -DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"      \
+        -DMU_TESTMAILDIR2=\"${abs_srcdir}/testdir2\"    \
+        -DMU_TESTMAILDIR4=\"${abs_srcdir}/testdir4\"    \
+        -DABS_CURDIR=\"${abs_builddir}\"                \
         -DABS_SRCDIR=\"${abs_srcdir}\"
 
 
-AM_CFLAGS=                                                      \
-        $(WARN_CFLAGS)                                          \
-        $(GMIME_CFLAGS)                                         \
-        $(XAPIAN_CFLAGS)                                        \
-        $(GLIB_CFLAGS)                                          \
-        $(GUILE_CFLAGS)                                         \
-        $(ASAN_CFLAGS)                                          \
-        $(CODE_COVERAGE_CFLAGS)                                 \
-        $(TESTDEFS)                                             \
-        -Wno-format-nonliteral                                  \
-        -Wno-switch-enum                                        \
-        -Wno-deprecated-declarations                            \
+AM_CFLAGS=                                              \
+        $(WARN_CFLAGS)                                  \
+        $(GMIME_CFLAGS)                                 \
+        $(XAPIAN_CFLAGS)                                \
+        $(GLIB_CFLAGS)                                  \
+        $(GUILE_CFLAGS)                                 \
+        $(ASAN_CFLAGS)                                  \
+        $(CODE_COVERAGE_CFLAGS)                         \
+        $(TESTDEFS)                                     \
+        -Wno-format-nonliteral                          \
+        -Wno-switch-enum                                \
+        -Wno-deprecated-declarations                    \
         -Wno-inline
 
-AM_CXXFLAGS=                                                    \
-        $(GMIME_CFLAGS)                                         \
-        $(GLIB_CFLAGS)                                          \
-        $(GUILE_CFLAGS)                                         \
-        $(WARN_CXXFLAGS)                                        \
-        $(XAPIAN_CXXFLAGS)                                      \
-        $(ASAN_CXXFLAGS)                                        \
-        $(CODE_COVERAGE_CFLAGS)                                 \
+AM_CXXFLAGS=                                            \
+        $(GMIME_CFLAGS)                                 \
+        $(GLIB_CFLAGS)                                  \
+        $(GUILE_CFLAGS)                                 \
+        $(WARN_CXXFLAGS)                                \
+        $(XAPIAN_CXXFLAGS)                              \
+        $(ASAN_CXXFLAGS)                                \
+        $(CODE_COVERAGE_CFLAGS)                         \
         $(TESTDEFS)
 
-AM_CPPFLAGS=                                                    \
+AM_CPPFLAGS=                                            \
         $(CODE_COVERAGE_CPPFLAGS)
 
-noinst_LTLIBRARIES=                                             \
+noinst_LTLIBRARIES=                                     \
         libmu.la
 
-libmu_la_SOURCES=                                               \
-        mu-bookmarks.cc                                         \
-        mu-bookmarks.hh                                         \
-        mu-contacts.cc                                          \
-        mu-contacts.hh                                          \
-        mu-data.hh                                              \
-        mu-parser.cc                                            \
-        mu-parser.hh                                            \
-        mu-query.cc                                             \
-        mu-query.hh                                             \
-        mu-query-results.hh                                     \
-        mu-query-match-deciders.cc                              \
-        mu-query-match-deciders.hh                              \
-        mu-query-threads.cc                                     \
-        mu-query-threads.hh                                     \
-        mu-runtime.cc                                           \
-        mu-runtime.hh                                           \
-        mu-script.cc                                            \
-        mu-script.hh                                            \
-        mu-server.cc                                            \
-        mu-server.hh                                            \
-        mu-store.cc                                             \
-        mu-store.hh                                             \
-        mu-tokenizer.cc                                         \
-        mu-tokenizer.hh                                         \
-        mu-tree.hh                                              \
-        mu-xapian.cc                                            \
-        mu-xapian.hh                                            \
-        mu-maildir.cc                                           \
-        mu-maildir.hh                                           \
-        mu-msg-crypto.cc                                        \
-        mu-msg-doc.cc                                           \
-        mu-msg-doc.hh                                           \
-        mu-msg-fields.c                                         \
-        mu-msg-fields.h                                         \
-        mu-msg-file.cc                                          \
-        mu-msg-file.hh                                          \
-        mu-msg-part.cc                                          \
-        mu-msg-part.hh                                          \
-	mu-msg-priv.hh                                          \
-	mu-msg-sexp.cc                                          \
-	mu-msg.cc                                               \
-	mu-msg.hh                                               \
-	mu-message-flags.hh                                     \
-	mu-message-flags.cc                                     \
-	mu-message-priority.hh                                  \
+libmu_la_SOURCES=                                       \
+        mu-bookmarks.cc                                 \
+        mu-bookmarks.hh                                 \
+        mu-contacts-cache.cc                            \
+        mu-contacts-cache.hh                            \
+        mu-data.hh                                      \
+        mu-parser.cc                                    \
+        mu-parser.hh                                    \
+        mu-query.cc                                     \
+        mu-query.hh                                     \
+        mu-query-results.hh                             \
+        mu-query-match-deciders.cc                      \
+        mu-query-match-deciders.hh                      \
+        mu-query-threads.cc                             \
+        mu-query-threads.hh                             \
+        mu-runtime.cc                                   \
+        mu-runtime.hh                                   \
+        mu-script.cc                                    \
+        mu-script.hh                                    \
+        mu-server.cc                                    \
+        mu-server.hh                                    \
+        mu-store.cc                                     \
+        mu-store.hh                                     \
+        mu-tokenizer.cc                                 \
+        mu-tokenizer.hh                                 \
+        mu-tree.hh                                      \
+        mu-xapian.cc                                    \
+        mu-xapian.hh                                    \
+        mu-maildir.cc                                   \
+        mu-maildir.hh                                   \
+        mu-msg-crypto.cc                                \
+        mu-msg-doc.cc                                   \
+        mu-msg-doc.hh                                   \
+        mu-msg-fields.c                                 \
+        mu-msg-fields.h                                 \
+        mu-msg-file.cc                                  \
+        mu-msg-file.hh                                  \
+        mu-msg-part.cc                                  \
+        mu-msg-part.hh                                  \
+	mu-msg-priv.hh                                  \
+	mu-msg-sexp.cc                                  \
+	mu-msg.cc                                       \
+	mu-msg.hh                                       \
+	mu-message-flags.hh                             \
+	mu-message-flags.cc                             \
+	mu-message-priority.hh                          \
 	mu-message-priority.cc
 
 
-libmu_la_LIBADD=                                                \
-        $(XAPIAN_LIBS)                                          \
-        $(GMIME_LIBS)                                           \
-        $(GLIB_LIBS)                                            \
-        $(GUILE_LIBS)                                           \
-        ${builddir}/index/libmu-index.la                        \
+libmu_la_LIBADD=                                        \
+        $(XAPIAN_LIBS)                                  \
+        $(GMIME_LIBS)                                   \
+        $(GLIB_LIBS)                                    \
+        $(GUILE_LIBS)                                   \
+        ${builddir}/index/libmu-index.la                \
         $(CODE_COVERAGE_LIBS)
 
-libmu_la_LDFLAGS=                                               \
+libmu_la_LDFLAGS=                                       \
         $(ASAN_LDFLAGS)
 
-noinst_PROGRAMS=                                                \
+noinst_PROGRAMS=                                        \
         tokenize
 
-tokenize_SOURCES=                                               \
+tokenize_SOURCES=                                       \
         tokenize.cc
 
-tokenize_LDADD=                                                 \
-        $(WARN_LDFLAGS)                                         \
-        libmu.la                                                \
+tokenize_LDADD=                                         \
+        $(WARN_LDFLAGS)                                 \
+        libmu.la                                        \
         utils/libmu-utils.la
 
-EXTRA_DIST=                                                     \
+EXTRA_DIST=                                             \
         doxyfile.in
 
 CLEANFILES=*.log *.trs *core* *vgdump* *.gcda *.gcno

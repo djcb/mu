@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_CONTACTS_HH__
-#define __MU_CONTACTS_HH__
+#ifndef __MU_CONTACTS_CACHE_HH__
+#define __MU_CONTACTS_CACHE_HH__
 
 #include <glib.h>
 #include <time.h>
@@ -62,22 +62,21 @@ struct ContactInfo {
 	int64_t tstamp{}; /**< Time-stamp, as per g_get_monotonic_time */
 };
 
-/// All contacts
-class Contacts {
+class ContactsCache {
 public:
 	/**
-	 * Construct a new contacts objects
+	 * Construct a new ContactsCache object
 	 *
 	 * @param serialized serialized contacts
 	 * @param personal personal addresses
 	 */
-	Contacts(const std::string& serialized = "", const StringVec& personal = {});
+	ContactsCache(const std::string& serialized = "", const StringVec& personal = {});
 
 	/**
 	 * DTOR
 	 *
 	 */
-	~Contacts();
+	~ContactsCache();
 
 	/**
 	 * Add a contact
@@ -166,4 +165,4 @@ private:
 
 } // namespace Mu
 
-#endif /* __MU_CONTACTS_HH__ */
+#endif /* __MU_CONTACTS_CACHE_HH__ */

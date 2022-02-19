@@ -17,7 +17,7 @@
 **
 */
 
-#include "mu-contacts.hh"
+#include "mu-contacts-cache.hh"
 
 #include <mutex>
 #include <unordered_map>
@@ -105,7 +105,7 @@ using ContactUMap = std::unordered_map<const std::string, ContactInfo, EmailHash
 // using ContactUSet = std::unordered_set<ContactInfo, ContactInfoHash, ContactInfoEqual>;
 using ContactSet = std::set<std::reference_wrapper<const ContactInfo>, ContactInfoLessThan>;
 
-struct Contacts::Private {
+struct ContactsCache::Private {
 	Private(const std::string& serialized, const StringVec& personal)
 	    : contacts_{deserialize(serialized)}, dirty_{0}
 	{
@@ -128,7 +128,7 @@ struct Contacts::Private {
 constexpr auto Separator = "\xff"; // Invalid in UTF-8
 
 void
-Contacts::Private::make_personal(const StringVec& personal)
+ContactsCache::Private::make_personal(const StringVec& personal)
 {
 	for (auto&& p : personal) {
 		if (p.empty())
@@ -154,7 +154,7 @@ Contacts::Private::make_personal(const StringVec& personal)
 }
 
 ContactUMap
-Contacts::Private::deserialize(const std::string& serialized) const
+ContactsCache::Private::deserialize(const std::string& serialized) const
 {
 	ContactUMap       contacts;
 	std::stringstream ss{serialized, std::ios_base::in};
@@ -180,14 +180,14 @@ Contacts::Private::deserialize(const std::string& serialized) const
 	return contacts;
 }
 
-Contacts::Contacts(const std::string& serialized, const StringVec& personal)
+ContactsCache::ContactsCache(const std::string& serialized, const StringVec& personal)
     : priv_{std::make_unique<Private>(serialized, personal)}
 {
 }
 
-Contacts::~Contacts() = default;
+ContactsCache::~ContactsCache() = default;
 std::string
-Contacts::serialize() const
+ContactsCache::serialize() const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 	std::string                 s;
@@ -219,13 +219,13 @@ Contacts::serialize() const
 }
 
 bool
-Contacts::dirty() const
+ContactsCache::dirty() const
 {
 	return priv_->dirty_;
 }
 
 const ContactInfo
-Contacts::add(ContactInfo&& ci)
+ContactsCache::add(ContactInfo&& ci)
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -261,7 +261,7 @@ Contacts::add(ContactInfo&& ci)
 }
 
 const ContactInfo*
-Contacts::_find(const std::string& email) const
+ContactsCache::_find(const std::string& email) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -273,7 +273,7 @@ Contacts::_find(const std::string& email) const
 }
 
 void
-Contacts::clear()
+ContactsCache::clear()
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -283,7 +283,7 @@ Contacts::clear()
 }
 
 std::size_t
-Contacts::size() const
+ContactsCache::size() const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -291,7 +291,7 @@ Contacts::size() const
 }
 
 void
-Contacts::for_each(const EachContactFunc& each_contact) const
+ContactsCache::for_each(const EachContactFunc& each_contact) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -308,7 +308,7 @@ Contacts::for_each(const EachContactFunc& each_contact) const
 }
 
 bool
-Contacts::is_personal(const std::string& addr) const
+ContactsCache::is_personal(const std::string& addr) const
 {
 	for (auto&& p : priv_->personal_plain_)
 		if (g_ascii_strcasecmp(addr.c_str(), p.c_str()) == 0)
@@ -334,7 +334,7 @@ Contacts::is_personal(const std::string& addr) const
 static void
 test_mu_contacts_01()
 {
-	Mu::Contacts contacts("");
+	Mu::ContactsCache contacts("");
 
 	g_assert_true(contacts.empty());
 	g_assert_cmpuint(contacts.size(), ==, 0);
@@ -385,7 +385,7 @@ static void
 test_mu_contacts_02()
 {
 	Mu::StringVec personal = {"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"};
-	Mu::Contacts  contacts{"", personal};
+	Mu::ContactsCache  contacts{"", personal};
 
 	g_assert_true(contacts.is_personal("foo@example.com"));
 	g_assert_true(contacts.is_personal("Bar@CuuX.orG"));

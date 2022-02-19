@@ -32,7 +32,7 @@
 #include "mu-msg-part.hh"
 #include "mu-cmd.hh"
 #include "mu-maildir.hh"
-#include "mu-contacts.hh"
+#include "mu-contacts-cache.hh"
 #include "mu-runtime.hh"
 #include "mu-message-flags.hh"
 

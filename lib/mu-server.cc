@@ -42,7 +42,6 @@
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-msg-part.hh"
-#include "mu-contacts.hh"
 
 #include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
@@ -523,7 +522,7 @@ Server::Private::contacts_handler(const Parameters& params)
 
 	auto       rank{0};
 	Sexp::List contacts;
-	store().contacts().for_each([&](const ContactInfo& ci) {
+	store().contacts_cache().for_each([&](const ContactInfo& ci) {
 		rank++;
 
 		/* since the last time we got some contacts */
