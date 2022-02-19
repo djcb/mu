@@ -18,6 +18,7 @@
 */
 
 #include "mug-msg-list-view.h"
+#include "mu-message-flags.hh"
 #include "mu-query.hh"
 #include "utils/mu-str.h"
 #include "utils/mu-date.h"
@@ -72,26 +73,26 @@ mug_msg_list_view_class_init(MugMsgListViewClass* klass)
 	g_type_class_add_private(gobject_class, sizeof(MugMsgListViewPrivate));
 
 	signals[MUG_MSG_SELECTED] = g_signal_new("msg-selected",
-	                                         G_TYPE_FROM_CLASS(gobject_class),
-	                                         G_SIGNAL_RUN_FIRST,
-	                                         G_STRUCT_OFFSET(MugMsgListViewClass, msg_selected),
-	                                         NULL,
-	                                         NULL,
-	                                         g_cclosure_marshal_VOID__STRING,
-	                                         G_TYPE_NONE,
-	                                         1,
-	                                         G_TYPE_STRING);
+						 G_TYPE_FROM_CLASS(gobject_class),
+						 G_SIGNAL_RUN_FIRST,
+						 G_STRUCT_OFFSET(MugMsgListViewClass, msg_selected),
+						 NULL,
+						 NULL,
+						 g_cclosure_marshal_VOID__STRING,
+						 G_TYPE_NONE,
+						 1,
+						 G_TYPE_STRING);
 	signals[MUG_ERROR_OCCURED] =
 	    g_signal_new("error-occured",
-	                 G_TYPE_FROM_CLASS(gobject_class),
-	                 G_SIGNAL_RUN_FIRST,
-	                 G_STRUCT_OFFSET(MugMsgListViewClass, error_occured),
-	                 NULL,
-	                 NULL,
-	                 g_cclosure_marshal_VOID__UINT,
-	                 G_TYPE_NONE,
-	                 1,
-	                 G_TYPE_UINT);
+			 G_TYPE_FROM_CLASS(gobject_class),
+			 G_SIGNAL_RUN_FIRST,
+			 G_STRUCT_OFFSET(MugMsgListViewClass, error_occured),
+			 NULL,
+			 NULL,
+			 g_cclosure_marshal_VOID__UINT,
+			 G_TYPE_NONE,
+			 1,
+			 G_TYPE_UINT);
 }
 
 static void
@@ -116,24 +117,25 @@ on_cursor_changed(GtkTreeView* tview, MugMsgListView* lst)
 
 static void
 treecell_func(GtkTreeViewColumn* tree_column,
-              GtkCellRenderer*   renderer,
-              GtkTreeModel*      tree_model,
-              GtkTreeIter*       iter,
-              gpointer           data)
+	      GtkCellRenderer*   renderer,
+	      GtkTreeModel*      tree_model,
+	      GtkTreeIter*       iter,
+	      gpointer           data)
 {
-	MuFlags   flags;
-	MuMsgPrio prio;
+
+	MessageFlags flags;
+	MessagePriority prio;
 
 	gtk_tree_model_get(tree_model, iter, MUG_COL_FLAGS, &flags, MUG_COL_PRIO, &prio, -1);
 
 	g_object_set(G_OBJECT(renderer),
-	             "weight",
-	             (flags & MU_FLAG_NEW) ? 800 : 400,
-	             "weight",
-	             (flags & MU_FLAG_SEEN) ? 400 : 800,
-	             "foreground",
-	             prio == MU_MSG_PRIO_HIGH ? "red" : NULL,
-	             NULL);
+		     "weight",
+		     any_of(flags & MessageFlags::New) ? 800 : 400,
+		     "weight",
+		     any_of(flags & MessageFlags::Seen) ? 400 : 800,
+		     "foreground",
+		     prio == MessagePriority::High ? "red" : NULL,
+		     NULL);
 }
 
 /* sortcolidx == -1 means 'sortcolidx = colidx' */
@@ -163,10 +165,10 @@ append_col(GtkTreeView* treeview, const char* label, int colidx, int sortcolidx,
 		gtk_tree_view_column_set_expand(col, TRUE);
 
 	gtk_tree_view_column_set_cell_data_func(col,
-	                                        renderer,
-	                                        (GtkTreeCellDataFunc)treecell_func,
-	                                        NULL,
-	                                        NULL);
+						renderer,
+						(GtkTreeCellDataFunc)treecell_func,
+						NULL,
+						NULL);
 
 	gtk_tree_view_append_column(treeview, col);
 
@@ -184,16 +186,16 @@ mug_msg_list_view_init(MugMsgListView* obj)
 
 	priv->_xpath = priv->_query = NULL;
 	priv->_store                = gtk_tree_store_new(MUG_N_COLS,
-                                          G_TYPE_STRING, /* date */
-                                          G_TYPE_STRING, /* folder */
-                                          G_TYPE_STRING, /* flagstr */
-                                          G_TYPE_STRING, /* from */
-                                          G_TYPE_STRING, /* to */
-                                          G_TYPE_STRING, /* subject */
-                                          G_TYPE_STRING, /* path */
-                                          G_TYPE_UINT,   /* prio */
-                                          G_TYPE_UINT,   /* flags */
-                                          G_TYPE_INT);   /* timeval */
+					  G_TYPE_STRING, /* date */
+					  G_TYPE_STRING, /* folder */
+					  G_TYPE_STRING, /* flagstr */
+					  G_TYPE_STRING, /* from */
+					  G_TYPE_STRING, /* to */
+					  G_TYPE_STRING, /* subject */
+					  G_TYPE_STRING, /* path */
+					  G_TYPE_UINT,   /* prio */
+					  G_TYPE_UINT,   /* flags */
+					  G_TYPE_INT);   /* timeval */
 
 	tview = GTK_TREE_VIEW(obj);
 	gtk_tree_view_set_model(tview, GTK_TREE_MODEL(priv->_store));
@@ -304,27 +306,28 @@ static Mu::Option<Mu::QueryResults>
 run_query(const char* xpath, const char* expr, MugMsgListView* self)
 {
 	Mu::Store store{xpath};
-	Mu::Query query{store};
 
-	return query.run(expr,
-	                 MU_MSG_FIELD_ID_DATE,
-	                 Mu::QueryFlags::Descending | Mu::QueryFlags::SkipUnreadable |
-	                     Mu::QueryFlags::SkipDuplicates | Mu::QueryFlags::IncludeRelated |
-	                     Mu::QueryFlags::Threading);
+	return store.run_query(expr,
+				MU_MSG_FIELD_ID_DATE,
+				Mu::QueryFlags::Descending | Mu::QueryFlags::SkipUnreadable |
+				Mu::QueryFlags::SkipDuplicates | Mu::QueryFlags::IncludeRelated |
+				Mu::QueryFlags::Threading);
 }
 
 static void
 add_row(GtkTreeStore* store, MuMsg* msg, GtkTreeIter* treeiter)
 {
-	const gchar *datestr, *flagstr;
+	const gchar *datestr;
 	gchar *      from, *to;
 	time_t       timeval;
+	std::string  flag_str;
 
 	timeval = mu_msg_get_date(msg);
 	datestr = timeval == 0 ? "-" : mu_date_display_s(timeval);
 	from    = empty_or_display_contact(mu_msg_get_from(msg));
 	to      = empty_or_display_contact(mu_msg_get_to(msg));
-	flagstr = mu_flags_to_str_s(mu_msg_get_flags(msg), MU_FLAG_TYPE_ANY);
+
+	flag_str =  message_flags_to_string(mu_msg_get_flags(msg));
 
 	/* if (0) { */
 	/*      GtkTreeIter myiter; */
@@ -335,28 +338,28 @@ add_row(GtkTreeStore* store, MuMsg* msg, GtkTreeIter* treeiter)
 	/* } */
 
 	gtk_tree_store_set(store,
-	                   treeiter,
-	                   MUG_COL_DATESTR,
-	                   datestr,
-	                   MUG_COL_MAILDIR,
-	                   mu_msg_get_maildir(msg),
-	                   MUG_COL_FLAGSSTR,
-	                   flagstr,
-	                   MUG_COL_FROM,
-	                   from,
-	                   MUG_COL_TO,
-	                   to,
-	                   MUG_COL_SUBJECT,
-	                   mu_msg_get_subject(msg),
-	                   MUG_COL_PATH,
-	                   mu_msg_get_path(msg),
-	                   MUG_COL_PRIO,
-	                   mu_msg_get_prio(msg),
-	                   MUG_COL_FLAGS,
-	                   mu_msg_get_flags(msg),
-	                   MUG_COL_TIME,
-	                   timeval,
-	                   -1);
+			   treeiter,
+			   MUG_COL_DATESTR,
+			   datestr,
+			   MUG_COL_MAILDIR,
+			   mu_msg_get_maildir(msg),
+			   MUG_COL_FLAGSSTR,
+			   flag_str.c_str(),
+			   MUG_COL_FROM,
+			   from,
+			   MUG_COL_TO,
+			   to,
+			   MUG_COL_SUBJECT,
+			   mu_msg_get_subject(msg),
+			   MUG_COL_PATH,
+			   mu_msg_get_path(msg),
+			   MUG_COL_PRIO,
+			   mu_msg_get_prio(msg),
+			   MUG_COL_FLAGS,
+			   mu_msg_get_flags(msg),
+			   MUG_COL_TIME,
+			   timeval,
+			   -1);
 	g_free(from);
 	g_free(to);
 }
