@@ -53,7 +53,7 @@ mu_SOURCES=                                                     \
 	mu-cmd.hh
 
 BUILT_SOURCES=                                                  \
-	mu-help-strings.h
+	mu-help-strings.inc
 
 mu-help-strings.inc: mu-help-strings.txt mu-help-strings.awk
 	 $(AM_V_GEN) $(AWK) -f ${top_srcdir}/mu/mu-help-strings.awk < $< > $@

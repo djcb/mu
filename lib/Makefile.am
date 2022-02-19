@@ -88,8 +88,6 @@ libmu_la_SOURCES=                                               \
         mu-xapian.hh                                            \
         mu-maildir.cc                                           \
         mu-maildir.hh                                           \
-        mu-flags.cc                                             \
-        mu-flags.hh                                             \
         mu-msg-crypto.cc                                        \
         mu-msg-doc.cc                                           \
         mu-msg-doc.hh                                           \
@@ -99,12 +97,15 @@ libmu_la_SOURCES=                                               \
         mu-msg-file.hh                                          \
         mu-msg-part.cc                                          \
         mu-msg-part.hh                                          \
-        mu-msg-prio.c                                           \
-        mu-msg-prio.h                                           \
-        mu-msg-priv.hh                                          \
-        mu-msg-sexp.cc                                          \
-        mu-msg.cc                                               \
-        mu-msg.hh
+	mu-msg-priv.hh                                          \
+	mu-msg-sexp.cc                                          \
+	mu-msg.cc                                               \
+	mu-msg.hh                                               \
+	mu-message-flags.hh                                     \
+	mu-message-flags.cc                                     \
+	mu-message-priority.hh                                  \
+	mu-message-priority.cc
+
 
 libmu_la_LIBADD=                                                \
         $(XAPIAN_LIBS)                                          \
