@@ -30,37 +30,9 @@
 #include <inttypes.h>
 #include <utils/mu-utils.hh>
 
+#include "mu-message-contact.hh"
+
 namespace Mu {
-
-/// Data-structure representing information about some contact.
-
-struct ContactInfo {
-	/**
-	 * Construct a new ContactInfo
-	 *
-	 * @param _full_address the full email address + name.
-	 * @param _email email address
-	 * @param _name name or empty
-	 * @param _personal is this a personal contact?
-	 * @param _last_seen when was this contact last seen?
-	 * @param _freq how often was this contact seen?
-	 */
-	ContactInfo(const std::string& _full_address,
-	            const std::string& _email,
-	            const std::string& _name,
-	            bool               personal,
-	            time_t             _last_seen,
-	            size_t             freq = 1);
-
-	std::string full_address; /**< Full name <email> */
-	std::string email;        /**< email address */
-	std::string name;         /**< name (or empty) */
-	bool        personal{};   /**< is this a personal contact? */
-	time_t      last_seen{};  /**< when was this contact last seen? */
-	std::size_t freq{};       /**< how often was this contact seen? */
-
-	int64_t tstamp{}; /**< Time-stamp, as per g_get_monotonic_time */
-};
 
 class ContactsCache {
 public:
@@ -83,10 +55,10 @@ public:
 	 *
 	 * @param ci A contact-info object
 	 *
-	 * @return the inserted / updated / washed contact info. Note that
-	 * this is return _as copy_ to make it thread-safe.
+	 // * @return the inserted / updated / washed contact info. Note that
+	 // * this is return _as copy_ to make it thread-safe.
 	 */
-	const ContactInfo add(ContactInfo&& ci);
+	void add(MessageContact&& ci);
 
 	/**
 	 * Clear all contacts
@@ -142,14 +114,14 @@ public:
 	 *
 	 * @return contact info, or {} if not found
 	 */
-	const ContactInfo* _find(const std::string& email) const;
+	const MessageContact* _find(const std::string& email) const;
 
 	/**
 	 * Prototype for a callable that receives a contact
 	 *
 	 * @param contact some contact
 	 */
-	using EachContactFunc = std::function<void(const ContactInfo& contact_info)>;
+	using EachContactFunc = std::function<void(const MessageContact& contact_info)>;
 
 	/**
 	 * Invoke some callable for each contact, in order of rank.
