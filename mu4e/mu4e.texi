@@ -1612,8 +1612,7 @@ mu4e}.
 @section Signing and encrypting
 
 Signing and encrypting of messages is possible using @t{emacs-mime}
-(@inforef{Composing,,emacs-mime}), most easily accessed through the
-@t{Attachments}-menu while composing a message, or with @kbd{M-x
+(See @t{(emacs-mime)Composing}@footnote{@url{https://www.gnu.org/software/texinfo/manual/texinfo/html_node/HTML-Xref-Configuration.html}}), most easily accessed through the @t{Attachments}-menu while composing a message, or with @kbd{M-x
 mml-secure-message-encrypt-pgp}, @kbd{M-x mml-secure-message-sign-pgp}.
 
 Important note: the messages are encrypted when they are @emph{sent}:
