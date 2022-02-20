@@ -25,7 +25,7 @@ compile_scm=configure_file(
   configuration: compile_scm_conf,
   install: false
 )
-run_command('chmod', '+x', compile_scm)
+run_command('chmod', '+x', compile_scm, check: true)
 scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
 
 snarf = find_program('guile-snarf')
@@ -34,7 +34,8 @@ snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/.
 	    '-I' + meson.current_build_dir() + '/..']
 
 pkg_config=find_program('pkg-config')
-snarf_args+=run_command(pkg_config, '--cflags', 'glib-2.0', 'guile-3.0').stdout().strip()
+snarf_args+=run_command(pkg_config, '--cflags', 'glib-2.0', 'guile-3.0',
+                        check:true).stdout().strip()
 snarf_gen=generator(snarf,
 		    output: '@BASENAME@.x',
 		    arguments: snarf_args)

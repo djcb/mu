@@ -147,9 +147,9 @@ version_texi_data=configuration_data()
 version_texi_data.set('VERSION', meson.project_version())
 version_texi_data.set('EDITION', meson.project_version())
 version_texi_data.set('UPDATED',
-                      run_command('date', '+%d %B %Y').stdout().strip())
+                      run_command('date', '+%d %B %Y', check:true).stdout().strip())
 version_texi_data.set('UPDATEDMONTH',
-                      run_command('date', '+%B %Y').stdout().strip())
+                      run_command('date', '+%B %Y', check:true).stdout().strip())
 
 configure_file(input: 'version.texi.in',
 	       output: 'version.texi',

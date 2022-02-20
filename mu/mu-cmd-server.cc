@@ -92,7 +92,7 @@ output_sexp_stdout(Sexp&& sexp, bool flush = false)
 	}
 
 	if (flush)
-		::fflush(::stdout);
+		std::fflush(stdout);
 }
 
 static void

@@ -84,7 +84,13 @@ foreach src : mu4e_plain_srcs
 endforeach
 
 
-foreach src : mu4e_all_srcs
+# we'd like to compile mu4e-meta.el, too, but using mu4e_all_srcs here
+# yields:
+# mu4e/meson.build:105: WARNING: Source item '.../mu4e/mu4e-meta.el' cannot be
+# converted to File object, because it is a generated file. This will become a
+# hard error in the future.
+
+foreach src : mu4e_plain_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
