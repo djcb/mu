@@ -313,14 +313,23 @@ private:
  * @param s1 string1
  * @param s2 string2
  */
-void assert_equal(const std::string& s1, const std::string& s2);
+#define assert_equal(s1__,s2__) do {					\
+		std::string s1s__(s1__), s2s__(s2__);		    	\
+		g_assert_cmpstr(s1s__.c_str(), ==, s2s__.c_str());	\
+	} while(0)
+
+
 /**
  * For unit tests, assert that to containers are the same.
  *
  * @param c1 container1
  * @param c2 container2
  */
-void assert_equal(const StringVec& v1, const StringVec& v2);
+#define assert_equal_svec(svec1__,svec2__) do {						\
+		g_assert_cmpuint((svec1__).size(), ==, (svec2__).size());		\
+	for (auto i = 0U; i != (svec1__).size(); ++i)					\
+		g_assert_cmpstr((svec1__)[i].c_str(), ==, (svec2__)[i].c_str());	\
+	} while (0)
 
 /**
  * For unit-tests, allow warnings in the current function.
