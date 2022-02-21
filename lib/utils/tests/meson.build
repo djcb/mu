@@ -18,32 +18,32 @@
 ################################################################################
 # tests
 #
-test('test_command_parser',
+test('test-command-parser',
      executable('test-command-parser',
 		'test-command-parser.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_mu_str',
+test('test-mu-str',
      executable('test-mu-str',
 		'test-mu-str.c',
 		install: false,
 		dependencies: [glib_dep, config_h_dep,lib_mu_utils_dep]))
-test('test_mu_util',
+test('test-mu-util',
      executable('test-mu-util',
 		'test-mu-util.c',
 		install: false,
 		dependencies: [glib_dep,config_h_dep, lib_mu_utils_dep]))
-test('test_option',
+test('test-option',
      executable('test-option',
 		'test-option.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_mu_utils',
+test('test-mu-utils',
      executable('test-mu-utils',
 		'test-utils.cc',
 		install: false,
 		dependencies: [glib_dep, lib_mu_utils_dep]))
-test('test_sexp',
+test('test-sexp',
      executable('test-sexp',
 		'test-sexp.cc',
 		install: false,

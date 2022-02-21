@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-test('test_mu_guile',
+test('test-mu-guile',
      executable('test-mu-guile',
 		'test-mu-guile.cc',
 		install: false,
