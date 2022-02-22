@@ -33,7 +33,6 @@
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
 #include "utils/mu-str.h"
-#include "utils/mu-date.h"
 
 using namespace Mu;
 
@@ -184,7 +183,7 @@ print_header(const MuConfigFormat format)
 	switch (format) {
 	case MU_CONFIG_FORMAT_BBDB:
 		g_print(";; -*-coding: utf-8-emacs;-*-\n"
-		        ";;; file-version: 6\n");
+			";;; file-version: 6\n");
 		break;
 	case MU_CONFIG_FORMAT_MUTT_AB:
 		g_print("Matching addresses in the mu database:\n");
@@ -197,31 +196,30 @@ print_header(const MuConfigFormat format)
 static void
 each_contact_bbdb(const std::string& email, const std::string& name, time_t tstamp)
 {
-	char *fname, *lname, *now, *timestamp;
+	char *fname, *lname;
 
-	fname     = guess_first_name(name.c_str());
-	lname     = guess_last_name(name.c_str());
-	now       = mu_date_str("%Y-%m-%d", time(NULL));
-	timestamp = mu_date_str("%Y-%m-%d", tstamp);
+	fname = guess_first_name(name.c_str());
+	lname = guess_last_name(name.c_str());
+
+	const auto now{time_to_string("%Y-%m-%d", time(NULL))};
+	const auto timestamp{time_to_string("%Y-%m-%d", tstamp)};
 
 	g_print("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
-	        "((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
-	        fname,
-	        lname,
-	        email.c_str(),
-	        now,
-	        timestamp);
+		"((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
+		fname,
+		lname,
+		email.c_str(),
+		now.c_str(),
+		timestamp.c_str());
 
-	g_free(now);
-	g_free(timestamp);
 	g_free(fname);
 	g_free(lname);
 }
 
 static void
 each_contact_mutt_alias(const std::string& email,
-                        const std::string& name,
-                        GHashTable*        nicks)
+			const std::string& name,
+			GHashTable*        nicks)
 {
 	if (name.empty())
 		return;
@@ -234,8 +232,8 @@ each_contact_mutt_alias(const std::string& email,
 
 static void
 each_contact_wl(const std::string& email,
-                const std::string& name,
-                GHashTable*        nicks)
+		const std::string& name,
+		GHashTable*        nicks)
 {
 	if (name.empty())
 		return;
@@ -287,9 +285,9 @@ each_contact(const Mu::MessageContact& ci, ECData& ecdata)
 	if (ecdata.rx &&
 	    !g_regex_match(ecdata.rx, ci.email.c_str(), (GRegexMatchFlags)0, NULL) &&
 	    !g_regex_match(ecdata.rx,
-	                   ci.name.empty() ? "" : ci.name.c_str(),
-	                   (GRegexMatchFlags)0,
-	                   NULL))
+			   ci.name.empty() ? "" : ci.name.c_str(),
+			   (GRegexMatchFlags)0,
+			   NULL))
 		return;
 
 	++ecdata.n;
@@ -305,26 +303,26 @@ each_contact(const Mu::MessageContact& ci, ECData& ecdata)
 	case MU_CONFIG_FORMAT_ORG_CONTACT:
 		if (!ci.name.empty())
 			mu_util_print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
-			                      ci.name.c_str(),
-			                      ci.email.c_str());
+					      ci.name.c_str(),
+					      ci.email.c_str());
 		break;
 	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.message_date); break;
 	case MU_CONFIG_FORMAT_CSV:
 		mu_util_print_encoded("%s,%s\n",
-		                      ci.name.empty() ? "" : Mu::quote(ci.name).c_str(),
-		                      Mu::quote(ci.email).c_str());
+				      ci.name.empty() ? "" : Mu::quote(ci.name).c_str(),
+				      Mu::quote(ci.email).c_str());
 		break;
 	case MU_CONFIG_FORMAT_DEBUG: {
 		char datebuf[32];
 		strftime(datebuf, sizeof(datebuf), "%F %T", gmtime(&ci.message_date));
 		g_print("%s\n\tname: %s\n\t%s\n\tpersonal: %s\n\tfreq: %zu\n"
-		        "\tlast-seen: %s\n",
-		        ci.email.c_str(),
-		        ci.name.empty() ? "<none>" : ci.name.c_str(),
-		        ci.display_name().c_str(),
-		        ci.personal ? "yes" : "no",
-		        ci.frequency,
-		        datebuf);
+			"\tlast-seen: %s\n",
+			ci.email.c_str(),
+			ci.name.empty() ? "<none>" : ci.name.c_str(),
+			ci.display_name().c_str(),
+			ci.personal ? "yes" : "no",
+			ci.frequency,
+			datebuf);
 	} break;
 	default: print_plain(ci.email, ci.name, ecdata.color);
 	}
@@ -332,12 +330,12 @@ each_contact(const Mu::MessageContact& ci, ECData& ecdata)
 
 static MuError
 run_cmd_cfind(const Mu::Store&     store,
-              const char*          pattern,
-              gboolean             personal,
-              time_t               after,
-              const MuConfigFormat format,
-              gboolean             color,
-              GError**             err)
+	      const char*          pattern,
+	      gboolean             personal,
+	      time_t               after,
+	      const MuConfigFormat format,
+	      gboolean             color,
+	      GError**             err)
 {
 	ECData ecdata{};
 
@@ -392,7 +390,7 @@ cfind_params_valid(const MuConfig* opts)
 	case MU_CONFIG_FORMAT_DEBUG: break;
 	default:
 		g_printerr("invalid output format %s\n",
-		           opts->formatstr ? opts->formatstr : "<none>");
+			   opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 
@@ -413,20 +411,20 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err)
 
 	if (!cfind_params_valid(opts))
 		throw Mu::Error(Mu::Error::Code::InvalidArgument,
-		                "invalid parameters");
+				"invalid parameters");
 
 	auto res = run_cmd_cfind(store,
-	                         opts->params[1],
-	                         opts->personal,
-	                         opts->after,
-	                         opts->format,
-	                         !opts->nocolor,
-	                         err);
+				 opts->params[1],
+				 opts->personal,
+				 opts->after,
+				 opts->format,
+				 !opts->nocolor,
+				 err);
 
 	if (res != MU_OK && res != MU_ERROR_NO_MATCHES)
 		throw Mu::Error(Mu::Error::Code::Internal,
-		                err /*consumes*/,
-		                "error in cfind");
+				err /*consumes*/,
+				"error in cfind");
 
 	return res;
 }

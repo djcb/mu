@@ -54,8 +54,6 @@ libmu_utils_la_SOURCES=						\
 	mu-async-queue.hh					\
 	mu-command-parser.cc					\
 	mu-command-parser.hh					\
-	mu-date.c						\
-	mu-date.h						\
 	mu-error.hh						\
 	mu-logger.cc						\
 	mu-logger.hh						\

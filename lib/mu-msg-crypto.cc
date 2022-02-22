@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,11 +20,12 @@
 #include "config.h"
 
 #include <string.h>
+#include <utils/mu-utils.hh>
 
+#include "gmime/gmime-signature.h"
 #include "mu-msg.hh"
 #include "mu-msg-priv.hh"
 #include "mu-msg-part.hh"
-#include "utils/mu-date.h"
 
 #include <gmime/gmime.h>
 #include <gmime/gmime-multipart-signed.h>
@@ -96,12 +97,12 @@ get_cert_data(GMimeCertificate* cert)
 	}
 
 	return g_strdup_printf("signer:%s, key:%s (%s,%s), trust:%s",
-	                       name ? name : "?",
-	                       /* email ? email : "?", */
-	                       keyid,
-	                       pubkey_algo,
-	                       digest_algo,
-	                       trust);
+			       name ? name : "?",
+			       /* email ? email : "?", */
+			       keyid,
+			       pubkey_algo,
+			       digest_algo,
+			       trust);
 }
 
 static char*
@@ -134,9 +135,9 @@ get_signature_status(GMimeSignatureStatus status)
 			continue;
 
 		g_string_append_printf(descr,
-		                       "%s%s",
-		                       descr->len > 0 ? ", " : "",
-		                       status_info[n].name);
+				       "%s%s",
+				       descr->len > 0 ? ", " : "",
+				       status_info[n].name);
 	}
 
 	return g_string_free(descr, FALSE);
@@ -146,26 +147,28 @@ get_signature_status(GMimeSignatureStatus status)
 static char*
 get_verdict_report(GMimeSignature* msig)
 {
-	time_t               t;
-	const char *         created, *expires;
-	gchar *              certdata, *report, *status;
-	GMimeSignatureStatus sigstat;
+	gchar *			certdata, *report, *status;
+	GMimeSignatureStatus	sigstat;
 
 	sigstat = g_mime_signature_get_status(msig);
 	status  = get_signature_status(sigstat);
 
-	t       = g_mime_signature_get_created(msig);
-	created = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s("%x", t);
+	auto date_str = [](time_t t)->std::string {
+		if (t == 0 || t == static_cast<time_t>(-1))
+			return "?";
+		else
+			return time_to_string("%x", t);
+	};
 
-	t       = g_mime_signature_get_expires(msig);
-	expires = (t == 0 || t == (time_t)-1) ? "?" : mu_date_str_s("%x", t);
+	const auto created = date_str(g_mime_signature_get_created(msig));
+	const auto expires = date_str(g_mime_signature_get_expires(msig));
 
 	certdata = get_cert_data(g_mime_signature_get_certificate(msig));
 	report   = g_strdup_printf("%s; created:%s, expires:%s, %s",
-                                 status,
-                                 created,
-                                 expires,
-                                 certdata ? certdata : "?");
+				   status,
+				   created.c_str(),
+				   expires.c_str(),
+				   certdata ? certdata : "?");
 	g_free(certdata);
 	g_free(status);
 
@@ -220,15 +223,15 @@ get_status_report(GMimeSignatureList* sigs)
 		    status != MU_MSG_PART_SIG_STATUS_ERROR)
 			status = MU_MSG_PART_SIG_STATUS_ERROR;
 		else if ((sigstat & GMIME_SIGNATURE_STATUS_RED) &&
-		         status == MU_MSG_PART_SIG_STATUS_GOOD)
+			 status == MU_MSG_PART_SIG_STATUS_GOOD)
 			status = MU_MSG_PART_SIG_STATUS_BAD;
 
 		rep    = get_verdict_report(msig);
 		report = g_strdup_printf("%s%s%d: %s",
-		                         report ? report : "",
-		                         report ? "; " : "",
-		                         i + 1,
-		                         rep);
+					 report ? report : "",
+					 report ? "; " : "",
+					 i + 1,
+					 rep);
 		g_free(rep);
 
 		cert = g_mime_signature_get_certificate(msig);
@@ -263,9 +266,9 @@ static inline void
 tag_with_sig_status(GObject* part, MuMsgPartSigStatusReport* report)
 {
 	g_object_set_data_full(part,
-	                       SIG_STATUS_REPORT,
-	                       report,
-	                       (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
+			       SIG_STATUS_REPORT,
+			       report,
+			       (GDestroyNotify)mu_msg_part_sig_status_report_destroy);
 }
 
 void
@@ -316,10 +319,10 @@ check_decrypt_result(GMimeMultipartEncrypted* part, GMimeDecryptResult* res, GEr
 
 GMimeObject* /* this is declared in mu-msg-priv.h */
 Mu::mu_msg_crypto_decrypt_part(GMimeMultipartEncrypted* enc,
-                               MuMsgOptions             opts,
-                               MuMsgPartPasswordFunc    func,
-                               gpointer                 user_data,
-                               GError**                 err)
+			       MuMsgOptions             opts,
+			       MuMsgPartPasswordFunc    func,
+			       gpointer                 user_data,
+			       GError**                 err)
 {
 	GMimeObject*        dec;
 	GMimeDecryptResult* res;

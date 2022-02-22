@@ -37,9 +37,9 @@
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
-#include "utils/mu-date.h"
 
 #include "mu-cmd.hh"
+#include "utils/mu-utils.hh"
 
 using namespace Mu;
 
@@ -58,10 +58,10 @@ using OutputFunc = std::function<bool(MuMsg*, const OutputInfo&, const MuConfig*
 
 static gboolean
 print_internal(const Store&       store,
-               const std::string& expr,
-               gboolean           xapian,
-               gboolean           warn,
-               GError**           err)
+	       const std::string& expr,
+	       gboolean           xapian,
+	       gboolean           warn,
+	       GError**           err)
 {
 	std::cout << store.parse_query(expr, xapian) << "\n";
 
@@ -81,10 +81,10 @@ sort_field_from_string(const char* fieldstr, GError** err)
 		mfid = mu_msg_field_id_from_shortcut(fieldstr[0], FALSE);
 	if (mfid == MU_MSG_FIELD_ID_NONE)
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_IN_PARAMETERS,
-		            "not a valid sort field: '%s'\n",
-		            fieldstr);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_IN_PARAMETERS,
+			    "not a valid sort field: '%s'\n",
+			    fieldstr);
 	return mfid;
 }
 
@@ -142,20 +142,20 @@ resolve_bookmark(const MuConfig* opts, GError** err)
 	bm     = mu_bookmarks_new(bmfile);
 	if (!bm) {
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_FILE_CANNOT_OPEN,
-		            "failed to open bookmarks file '%s'",
-		            bmfile);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_FILE_CANNOT_OPEN,
+			    "failed to open bookmarks file '%s'",
+			    bmfile);
 		return FALSE;
 	}
 
 	val = (gchar*)mu_bookmarks_lookup(bm, opts->bookmark);
 	if (!val)
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_NO_MATCHES,
-		            "bookmark '%s' not found",
-		            opts->bookmark);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_NO_MATCHES,
+			    "bookmark '%s' not found",
+			    opts->bookmark);
 	else
 		val = g_strdup(val);
 
@@ -305,7 +305,7 @@ flags_s(MessageFlags flags)
 	return buf;
 }
 
-static const char*
+static std::string
 display_field(MuMsg* msg, MuMsgFieldId mfid)
 {
 	gint64 val;
@@ -328,9 +328,8 @@ display_field(MuMsg* msg, MuMsgFieldId mfid)
 			return mu_msg_get_field_string(msg, mfid);
 
 	case MU_MSG_FIELD_TYPE_TIME_T:
-		val = mu_msg_get_field_numeric(msg, mfid);
-		return mu_date_str_s("%c", (time_t)val);
-
+		return time_to_string(
+			"%c", static_cast<::time_t>(mu_msg_get_field_numeric(msg, mfid)));
 	case MU_MSG_FIELD_TYPE_BYTESIZE:
 		val = mu_msg_get_field_numeric(msg, mfid);
 		return mu_str_size_s((unsigned)val);
@@ -391,8 +390,8 @@ thread_indent(const QueryMatch& info, const MuConfig* opts)
 		else
 			::fputs(" ", stdout);
 		::fputs(empty_parent ? "*> " : is_dup ? "=> "
-		                                      : "-> ",
-		        stdout);
+						      : "-> ",
+			stdout);
 	}
 }
 
@@ -414,7 +413,8 @@ output_plain_fields(MuMsg* msg, const char* fields, gboolean color, gboolean thr
 
 		else {
 			ansi_color_maybe(mfid, color);
-			nonempty += mu_util_fputs_encoded(display_field(msg, mfid), stdout);
+			nonempty += mu_util_fputs_encoded(display_field(msg, mfid).c_str(),
+							  stdout);
 			ansi_reset_maybe(mfid, color);
 		}
 	}
@@ -482,7 +482,7 @@ to_string(const Mu::Sexp& sexp, bool color, size_t level = 0)
 		break;
 	case Sexp::Type::Symbol:
 		sstrm << (col.fg(sexp.value().at(0) == ':' ? Color::BrightGreen
-		                                           : Color::BrightBlue))
+							   : Color::BrightBlue))
 		      << sexp.value() << col.reset();
 		break;
 	default: throw std::logic_error("invalid type");
@@ -517,8 +517,8 @@ output_json(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** e
 	}
 
 	g_print("%s%s\n",
-	        msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY).to_json_string().c_str(),
-	        info.last ? "" : ",");
+		msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY).to_json_string().c_str(),
+		info.last ? "" : ",");
 
 	return true;
 }
@@ -601,13 +601,13 @@ output_query_results(const QueryResults& qres, const MuConfig* opts, GError** er
 			continue;
 
 		rv = output_func(msg,
-		                 {item.doc_id(),
-		                  false,
-		                  false,
-		                  n == qres.size(), /* last? */
-		                  item.query_match()},
-		                 opts,
-		                 err);
+				 {item.doc_id(),
+				  false,
+				  false,
+				  n == qres.size(), /* last? */
+				  item.query_match()},
+				 opts,
+				 err);
 		if (!rv)
 			break;
 	}
@@ -660,16 +660,16 @@ format_params_valid(const MuConfig* opts, GError** err)
 	case MU_CONFIG_FORMAT_MQUERY:
 		if (opts->exec) {
 			mu_util_g_set_error(err,
-			                    MU_ERROR_IN_PARAMETERS,
-			                    "--exec and --format cannot be combined");
+					    MU_ERROR_IN_PARAMETERS,
+					    "--exec and --format cannot be combined");
 			return FALSE;
 		}
 		break;
 	default:
 		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "invalid output format %s",
-		                    opts->formatstr ? opts->formatstr : "<none>");
+				    MU_ERROR_IN_PARAMETERS,
+				    "invalid output format %s",
+				    opts->formatstr ? opts->formatstr : "<none>");
 		return FALSE;
 	}
 
@@ -680,8 +680,8 @@ format_params_valid(const MuConfig* opts, GError** err)
 
 	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "--linksdir is only valid with --format=links");
+				    MU_ERROR_IN_PARAMETERS,
+				    "--linksdir is only valid with --format=links");
 		return FALSE;
 	}
 
@@ -703,9 +703,9 @@ query_params_valid(const MuConfig* opts, GError** err)
 		return TRUE;
 
 	mu_util_g_set_error(err,
-	                    MU_ERROR_FILE_CANNOT_READ,
-	                    "'%s' is not a readable Xapian directory",
-	                    xpath);
+			    MU_ERROR_FILE_CANNOT_READ,
+			    "'%s' is not a readable Xapian directory",
+			    xpath);
 	return FALSE;
 }
 

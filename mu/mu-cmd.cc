@@ -38,7 +38,6 @@
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
-#include "utils/mu-date.h"
 
 #include "utils/mu-error.hh"
 
@@ -164,8 +163,10 @@ view_msg_plain(MuMsg* msg, const MuConfig* opts)
 	print_field("Bcc", mu_msg_get_bcc(msg), color);
 	print_field("Subject", mu_msg_get_subject(msg), color);
 
-	if ((date = mu_msg_get_date(msg)))
-		print_field("Date", mu_date_str_s("%c", date), color);
+	if ((date = mu_msg_get_date(msg))) {
+		const auto dstr{time_to_string("%c", date)};
+		print_field("Date", dstr.c_str(), color);
+	}
 
 	if ((lst = mu_msg_get_tags(msg))) {
 		gchar* tags;
