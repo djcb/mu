@@ -70,6 +70,23 @@ test('test-message-contact',
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
                                lib_test_mu_common_dep]))
 
+
+test('test-message-flags',
+     executable('test-message-flags',
+		'../mu-message-flags.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
+                               lib_test_mu_common_dep]))
+test('test-message-priority',
+     executable('test-message-priority',
+		'../mu-message-priority.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
+                               lib_test_mu_common_dep]))
+
+
 test('test-parser',
      executable('test-parser',
 		'test-parser.cc',

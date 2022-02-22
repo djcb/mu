@@ -30,19 +30,53 @@ Mu::to_string(MessagePriority prio)
 	return std::string{message_priority_name(prio)};
 }
 
+/*
+ * tests... also build as runtime-tests, so we can get coverage info
+ */
+#ifdef BUILD_TESTS
+#include <glib.h>
+#define static_assert g_assert_true
+#endif /*BUILD_TESTS*/
 
-static_assert(to_char(MessagePriority::Low) == 'l');
-static_assert(to_char(MessagePriority::Normal) == 'n');
-static_assert(to_char(MessagePriority::High) == 'h');
+[[maybe_unused]] static void
+test_priority_to_char()
+{
+	static_assert(to_char(MessagePriority::Low) == 'l');
+	static_assert(to_char(MessagePriority::Normal) == 'n');
+	static_assert(to_char(MessagePriority::High) == 'h');
+}
 
-static_assert(message_priority_from_char('l') == MessagePriority::Low);
-static_assert(message_priority_from_char('n') == MessagePriority::Normal);
-static_assert(message_priority_from_char('h') == MessagePriority::High);
-static_assert(message_priority_from_char('x') == MessagePriority::Normal);
+[[maybe_unused]] static void
+test_priority_from_char()
+{
+	static_assert(message_priority_from_char('l') == MessagePriority::Low);
+	static_assert(message_priority_from_char('n') == MessagePriority::Normal);
+	static_assert(message_priority_from_char('h') == MessagePriority::High);
+	static_assert(message_priority_from_char('x') == MessagePriority::Normal);
+}
 
-static_assert(message_priority_name(MessagePriority::Low) == "low");
-static_assert(message_priority_name(MessagePriority::Normal) == "normal");
-static_assert(message_priority_name(MessagePriority::High) == "high");
+[[maybe_unused]] static void
+test_priority_name()
+{
+	static_assert(message_priority_name(MessagePriority::Low) == "low");
+	static_assert(message_priority_name(MessagePriority::Normal) == "normal");
+	static_assert(message_priority_name(MessagePriority::High) == "high");
+}
+
+
+#ifdef BUILD_TESTS
+int
+main(int argc, char* argv[])
+{
+	g_test_init(&argc, &argv, NULL);
+
+	g_test_add_func("/message/priority/to-char", test_priority_to_char);
+	g_test_add_func("/message/priority/from-char", test_priority_from_char);
+	g_test_add_func("/message/priority/name", test_priority_name);
+
+	return g_test_run();
+}
+#endif /*BUILD_TESTS*/
 
 
 #endif /* MU_MESSAGE_PRIORITY_CC__ */

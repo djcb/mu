@@ -53,70 +53,118 @@ validate_message_info_flags()
 	return true;
 }
 
-static_assert(AllMessageFlagInfos.size() ==
-	      __builtin_ctz(static_cast<unsigned>(MessageFlags::_final_)));
-static_assert(validate_message_info_flags());
 
-static_assert(!!message_flag_info(MessageFlags::Encrypted));
-static_assert(!message_flag_info(MessageFlags::None));
-static_assert(!message_flag_info(static_cast<MessageFlags>(0)));
-static_assert(!message_flag_info(static_cast<MessageFlags>(1<<AllMessageFlagInfos.size())),
-	      "should be invalid");
+/*
+ * tests... also build as runtime-tests, so we can get coverage info
+ */
+#ifdef BUILD_TESTS
+#define static_assert g_assert_true
+#endif /*BUILD_TESTS*/
+
+[[maybe_unused]] static void
+test_basic()
+{
+	static_assert(AllMessageFlagInfos.size() ==
+		      __builtin_ctz(static_cast<unsigned>(MessageFlags::_final_)));
+	static_assert(validate_message_info_flags());
+
+	static_assert(!!message_flag_info(MessageFlags::Encrypted));
+	static_assert(!message_flag_info(MessageFlags::None));
+	static_assert(!message_flag_info(static_cast<MessageFlags>(0)));
+	static_assert(!message_flag_info(static_cast<MessageFlags>(1<<AllMessageFlagInfos.size())));
+}
 
 /*
  * message_flag_info
  */
-static_assert(message_flag_info('D')->flag == MessageFlags::Draft);
-static_assert(message_flag_info('l')->flag == MessageFlags::MailingList);
-static_assert(!message_flag_info('q'));
+[[maybe_unused]] static void
+test_message_flag_info()
+{
+	static_assert(message_flag_info('D')->flag == MessageFlags::Draft);
+	static_assert(message_flag_info('l')->flag == MessageFlags::MailingList);
+	static_assert(!message_flag_info('q'));
 
-static_assert(message_flag_info("trashed")->flag == MessageFlags::Trashed);
-static_assert(message_flag_info("attach")->flag == MessageFlags::HasAttachment);
-static_assert(!message_flag_info("fnorb"));
+	static_assert(message_flag_info("trashed")->flag == MessageFlags::Trashed);
+	static_assert(message_flag_info("attach")->flag == MessageFlags::HasAttachment);
+	static_assert(!message_flag_info("fnorb"));
 
 
-static_assert(message_flag_info('D')->shortcut_lower() == 'd');
-static_assert(message_flag_info('u')->shortcut_lower() == 'u');
+	static_assert(message_flag_info('D')->shortcut_lower() == 'd');
+	static_assert(message_flag_info('u')->shortcut_lower() == 'u');
+}
 
 /*
  * message_flags_from_expr
  */
-static_assert(message_flags_from_absolute_expr("SRP").value() ==
-	      (MessageFlags::Seen | MessageFlags::Replied | MessageFlags::Passed));
-static_assert(message_flags_from_absolute_expr("Faul").value() ==
-	      (MessageFlags::Flagged | MessageFlags::Unread |
-	       MessageFlags::HasAttachment | MessageFlags::MailingList));
+[[maybe_unused]] static void
+test_message_flags_from_expr()
+{
+	static_assert(message_flags_from_absolute_expr("SRP").value() ==
+		      (MessageFlags::Seen | MessageFlags::Replied | MessageFlags::Passed));
+	static_assert(message_flags_from_absolute_expr("Faul").value() ==
+		      (MessageFlags::Flagged | MessageFlags::Unread |
+		       MessageFlags::HasAttachment | MessageFlags::MailingList));
 
-static_assert(!message_flags_from_absolute_expr("DRT?"));
-static_assert(message_flags_from_absolute_expr("DRT?", true/*ignore invalid*/).value() ==
-	      (MessageFlags::Draft | MessageFlags::Replied |
-	       MessageFlags::Trashed));
-static_assert(message_flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
-	      (MessageFlags::Draft|MessageFlags::Flagged|MessageFlags::Passed|
-	       MessageFlags::New | MessageFlags::Encrypted |
-	       MessageFlags::Unread | MessageFlags::MailingList |
-	       MessageFlags::HasAttachment));
+	static_assert(!message_flags_from_absolute_expr("DRT?"));
+	static_assert(message_flags_from_absolute_expr("DRT?", true/*ignore invalid*/).value() ==
+		      (MessageFlags::Draft | MessageFlags::Replied |
+		       MessageFlags::Trashed));
+	static_assert(message_flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
+		      (MessageFlags::Draft|MessageFlags::Flagged|MessageFlags::Passed|
+		       MessageFlags::New | MessageFlags::Encrypted |
+		       MessageFlags::Unread | MessageFlags::MailingList |
+		       MessageFlags::HasAttachment));
+}
+
 
 /*
  * message_flags_from_delta_expr
  */
-static_assert(message_flags_from_delta_expr(
-		      "+S-u-N", MessageFlags::New|MessageFlags::Unread).value() ==
-	      MessageFlags::Seen);
-static_assert(message_flags_from_delta_expr("+R+P-F", MessageFlags::Seen).value() ==
-	      (MessageFlags::Seen|MessageFlags::Passed|MessageFlags::Replied));
-/* '-B' is invalid */
-static_assert(!message_flags_from_delta_expr("+R+P-B", MessageFlags::Seen));
-/* '-B' is invalid, but ignore invalid */
-static_assert(message_flags_from_delta_expr("+R+P-B", MessageFlags::Seen, true) == 
-	      (MessageFlags::Replied|MessageFlags::Passed|MessageFlags::Seen));
-static_assert(message_flags_from_delta_expr("+F+T-S", MessageFlags::None, true).value() ==
-	      (MessageFlags::Flagged|MessageFlags::Trashed));
+[[maybe_unused]] static void
+test_message_flags_from_delta_expr()
+{
+	static_assert(message_flags_from_delta_expr(
+			      "+S-u-N", MessageFlags::New|MessageFlags::Unread).value() ==
+		      MessageFlags::Seen);
+	static_assert(message_flags_from_delta_expr("+R+P-F", MessageFlags::Seen).value() ==
+		      (MessageFlags::Seen|MessageFlags::Passed|MessageFlags::Replied));
+	/* '-B' is invalid */
+	static_assert(!message_flags_from_delta_expr("+R+P-B", MessageFlags::Seen));
+	/* '-B' is invalid, but ignore invalid */
+	static_assert(message_flags_from_delta_expr("+R+P-B", MessageFlags::Seen, true) ==
+		      (MessageFlags::Replied|MessageFlags::Passed|MessageFlags::Seen));
+	static_assert(message_flags_from_delta_expr("+F+T-S", MessageFlags::None, true).value() ==
+		      (MessageFlags::Flagged|MessageFlags::Trashed));
+}
 
 /*
  * message_flags_filter
  */
-static_assert(message_flags_filter(message_flags_from_absolute_expr(
-					   "DFPNxulabcdef", true/*ignore invalid*/).value(),
-				   MessageFlagCategory::Mailfile) ==
-	      (MessageFlags::Draft|MessageFlags::Flagged|MessageFlags::Passed));
+[[maybe_unused]] static void
+test_message_flags_filter()
+{
+	static_assert(message_flags_filter(message_flags_from_absolute_expr(
+						   "DFPNxulabcdef", true/*ignore invalid*/).value(),
+					   MessageFlagCategory::Mailfile) ==
+		      (MessageFlags::Draft|MessageFlags::Flagged|MessageFlags::Passed));
+}
+
+
+#ifdef BUILD_TESTS
+int
+main(int argc, char* argv[])
+{
+	g_test_init(&argc, &argv, NULL);
+
+	g_test_add_func("/message/flags/basic", test_basic);
+	g_test_add_func("/message/flags/flag-info", test_message_flag_info);
+	g_test_add_func("/message/flags/flags-from-absolute-expr",
+			test_message_flags_from_expr);
+	g_test_add_func("/message/flags/flags-from-delta-expr",
+			test_message_flags_from_delta_expr);
+	g_test_add_func("/message/flags/flags-filter",
+			test_message_flags_filter);
+
+	return g_test_run();
+}
+#endif /*BUILD_TESTS*/
