@@ -41,6 +41,7 @@ struct Error final : public std::exception {
 		Query,
 		SchemaMismatch,
 		Store,
+		AssertionFailure
 	};
 
 	/**
@@ -50,6 +51,7 @@ struct Error final : public std::exception {
 	 * #param msgarg the error diecription
 	 */
 	Error(Code codearg, const std::string& msgarg) : code_{codearg}, what_{msgarg} {}
+	Error(Code codearg, std::string&& msgarg) : code_{codearg}, what_{std::move(msgarg)} {}
 
 	/**
 	 * Build an error from an error-code and a format string

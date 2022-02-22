@@ -76,7 +76,29 @@ Err(const Error& err)
 	return tl::unexpected(err);
 }
 
-} // namespace Mu
 
+/*
+ * convenience
+ */
+
+static inline tl::unexpected<Error>
+Err(Error::Code errcode, std::string&& msg="")
+{
+	return Err(Error{errcode, std::move(msg)});
+}
+
+__attribute__((format(printf, 2, 0)))
+static inline tl::unexpected<Error>
+Err(Error::Code errcode, const char* frm, ...)
+{
+	va_list args;
+	va_start(args, frm);
+	auto str{vformat(frm, args)};
+	va_end(args);
+
+	return Err(errcode, std::move(str));
+}
+
+}// namespace Mu
 
 #endif /* MU_RESULT_HH__ */
