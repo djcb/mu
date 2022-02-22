@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2020-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -68,7 +68,8 @@ std::string utf8_clean(const std::string& dirty);
 std::string remove_ctrl(const std::string& str);
 
 /**
- * Split a string in parts
+ * Split a string in parts. As a special case, splitting an empty string
+ * yields an empty vector (not a vector with a single empty element)
  *
  * @param str a string
  * @param sepa the separator
@@ -314,22 +315,10 @@ private:
  * @param s2 string2
  */
 #define assert_equal(s1__,s2__) do {					\
-		std::string s1s__(s1__), s2s__(s2__);		    	\
+		std::string s1s__(s1__), s2s__(s2__);			\
 		g_assert_cmpstr(s1s__.c_str(), ==, s2s__.c_str());	\
 	} while(0)
 
-
-/**
- * For unit tests, assert that to containers are the same.
- *
- * @param c1 container1
- * @param c2 container2
- */
-#define assert_equal_svec(svec1__,svec2__) do {						\
-		g_assert_cmpuint((svec1__).size(), ==, (svec2__).size());		\
-	for (auto i = 0U; i != (svec1__).size(); ++i)					\
-		g_assert_cmpstr((svec1__)[i].c_str(), ==, (svec2__)[i].c_str());	\
-	} while (0)
 
 /**
  * For unit-tests, allow warnings in the current function.

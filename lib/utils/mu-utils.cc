@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2017-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -171,15 +171,32 @@ Mu::remove_ctrl(const std::string& str)
 std::vector<std::string>
 Mu::split(const std::string& str, const std::string& sepa)
 {
-	char**                   parts = g_strsplit(str.c_str(), sepa.c_str(), -1);
 	std::vector<std::string> vec;
-	for (auto part = parts; part && *part; ++part)
-		vec.push_back(*part);
+	size_t b = 0, e = 0;
 
-	g_strfreev(parts);
+	/* special cases */
+	if (str.empty())
+		return vec;
+	else if (sepa.empty()) {
+		for (auto&& c: str)
+			vec.emplace_back(1, c);
+		return vec;
+	}
+
+	while (true) {
+		if (e = str.find(sepa, b); e != std::string::npos) {
+			vec.emplace_back(str.substr(b, e - b));
+			b = e + sepa.length();
+		} else {
+			vec.emplace_back(str.substr(b));
+			break;
+		}
+	}
 
 	return vec;
 }
+
+
 
 std::string
 Mu::quote(const std::string& str)
@@ -331,12 +348,12 @@ special_date(const std::string& d, bool is_first)
 		}
 
 		midnight = g_date_time_add_full(dt,
-		                                0,
-		                                0,
-		                                0,
-		                                -g_date_time_get_hour(dt),
-		                                -g_date_time_get_minute(dt),
-		                                -g_date_time_get_second(dt));
+						0,
+						0,
+						0,
+						-g_date_time_get_hour(dt),
+						-g_date_time_get_minute(dt),
+						-g_date_time_get_second(dt));
 		time_t t = MAX(0, (gint64)g_date_time_to_unix(midnight));
 		g_date_time_unref(dt);
 		g_date_time_unref(midnight);
@@ -409,11 +426,11 @@ Mu::date_to_time_t_string(const std::string& dstr, bool is_first)
 	fixup_month(&tbuf);
 
 	dtime = g_date_time_new_local(tbuf.tm_year + 1900,
-	                              tbuf.tm_mon + 1,
-	                              tbuf.tm_mday,
-	                              tbuf.tm_hour,
-	                              tbuf.tm_min,
-	                              tbuf.tm_sec);
+				      tbuf.tm_mon + 1,
+				      tbuf.tm_mday,
+				      tbuf.tm_hour,
+				      tbuf.tm_min,
+				      tbuf.tm_sec);
 	if (!dtime) {
 		g_warning("invalid %s date '%s'", is_first ? "lower" : "upper", date.c_str());
 		return date_boundary(is_first);

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2017-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -58,19 +58,19 @@ test_date_basic()
 	g_setenv("TZ", "Europe/Helsinki", TRUE);
 
 	CaseVec cases = {{"2015-09-18T09:10:23", true, "1442556623"},
-	                 {"1972-12-14T09:10:23", true, "0093165023"},
-	                 {"1854-11-18T17:10:23", true, "0000000000"},
+			 {"1972-12-14T09:10:23", true, "0093165023"},
+			 {"1854-11-18T17:10:23", true, "0000000000"},
 
-	                 {"2000-02-31T09:10:23", true, "0951861599"},
-	                 {"2000-02-29T23:59:59", true, "0951861599"},
+			 {"2000-02-31T09:10:23", true, "0951861599"},
+			 {"2000-02-29T23:59:59", true, "0951861599"},
 
-	                 {"2016", true, "1451599200"},
-	                 {"2016", false, "1483221599"},
+			 {"2016", true, "1451599200"},
+			 {"2016", false, "1483221599"},
 
-	                 {"fnorb", true, "0000000000"},
-	                 {"fnorb", false, "9999999999"},
-	                 {"", false, "9999999999"},
-	                 {"", true, "0000000000"}};
+			 {"fnorb", true, "0000000000"},
+			 {"fnorb", false, "9999999999"},
+			 {"", false, "9999999999"},
+			 {"", true, "0000000000"}};
 
 	test_cases(cases, [](auto s, auto f) { return date_to_time_t_string(s, f); });
 }
@@ -83,11 +83,11 @@ test_date_ymwdhMs(void)
 		long        diff;
 		int         tolerance;
 	} tests[] = {{"3h", 3 * 60 * 60, 1},
-	             {"21d", 21 * 24 * 60 * 60, 3600 + 1},
-	             {"2w", 2 * 7 * 24 * 60 * 60, 3600 + 1},
+		     {"21d", 21 * 24 * 60 * 60, 3600 + 1},
+		     {"2w", 2 * 7 * 24 * 60 * 60, 3600 + 1},
 
-	             {"2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1},
-	             {"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}};
+		     {"2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1},
+		     {"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}};
 
 	for (auto i = 0; i != G_N_ELEMENTS(tests); ++i) {
 		const auto diff =
@@ -160,6 +160,26 @@ test_format()
 	g_assert_true(format("hello %s, %u", "world", 123) == "hello world, 123");
 }
 
+static void
+
+test_split()
+{
+	using svec = std::vector<std::string>;
+	auto assert_equal_svec=[](const svec& sv1, const svec& sv2) {
+		g_assert_cmpuint(sv1.size(),==,sv2.size());
+		for (auto i = 0U; i != sv1.size(); ++i)
+			g_assert_cmpstr(sv1[i].c_str(),==,sv2[i].c_str());
+	};
+
+
+	assert_equal_svec(split("axbxc", "x"), {"a", "b", "c"});
+	assert_equal_svec(split("axbxcx", "x"), {"a", "b", "c", ""});
+	assert_equal_svec(split("", "boo"), {});
+	assert_equal_svec(split("ayybyyc", "yy"), {"a", "b", "c"});
+	assert_equal_svec(split("abc", ""), {"a", "b", "c"});
+	assert_equal_svec(split("", "boo"), {});
+}
+
 enum struct Bits { None = 0, Bit1 = 1 << 0, Bit2 = 1 << 1 };
 MU_ENABLE_BITOPS(Bits);
 
@@ -188,6 +208,7 @@ test_define_bitmap()
 	}
 }
 
+
 int
 main(int argc, char* argv[])
 {
@@ -200,6 +221,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/remove-ctrl", test_remove_ctrl);
 	g_test_add_func("/utils/clean", test_clean);
 	g_test_add_func("/utils/format", test_format);
+	g_test_add_func("/utils/split", test_split);
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 
 	return g_test_run();
