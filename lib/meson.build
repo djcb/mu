@@ -65,6 +65,8 @@ lib_mu=static_library(
     'mu-msg.hh',
     'mu-message-contact.hh',
     'mu-message-contact.cc',
+    'mu-message-fields.hh',
+    'mu-message-fields.cc',
     'mu-message-flags.hh',
     'mu-message-flags.cc',
     'mu-message-priority.hh',
