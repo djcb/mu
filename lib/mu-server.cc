@@ -116,19 +116,19 @@ struct Server::Private {
 private:
 	// helpers
 	Sexp build_message_sexp(MuMsg*                    msg,
-	                        unsigned                  docid,
-	                        const Option<QueryMatch&> qm,
-	                        MuMsgOptions              opts) const;
+				unsigned                  docid,
+				const Option<QueryMatch&> qm,
+				MuMsgOptions              opts) const;
 
 	Sexp::List move_docid(Store::Id docid, std::optional<std::string> flagstr,
 			      bool new_name, bool no_view);
 
 	Sexp::List perform_move(Store::Id		docid,
-	                        MuMsg*			msg,
-	                        const std::string&	maildirarg,
+				MuMsg*			msg,
+				const std::string&	maildirarg,
 				MessageFlags		flags,
-	                        bool			new_name,
-	                        bool			no_view);
+				bool			new_name,
+				bool			no_view);
 
 	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename);
 	bool maybe_mark_msgid_as_read(const char* msgid, bool rename);
@@ -184,9 +184,9 @@ build_metadata(const QueryMatch& qmatch)
  */
 Sexp
 Server::Private::build_message_sexp(MuMsg*                    msg,
-                                    unsigned                  docid,
-                                    const Option<QueryMatch&> qm,
-                                    MuMsgOptions              opts) const
+				    unsigned                  docid,
+				    const Option<QueryMatch&> qm,
+				    MuMsgOptions              opts) const
 {
 	auto msgsexp{Mu::msg_to_sexp_list(msg, docid, opts)};
 	if (qm)
@@ -214,13 +214,13 @@ Server::Private::make_command_map()
 	    CommandInfo{
 		ArgMap{
 		    {":type",
-	             ArgInfo{Type::Symbol,
-	                     true,
-	                     "type of composition: reply/forward/edit/resend/new"}},
+		     ArgInfo{Type::Symbol,
+			     true,
+			     "type of composition: reply/forward/edit/resend/new"}},
 		    {":docid",
-	             ArgInfo{Type::Number, false, "document id of parent-message, if any"}},
+		     ArgInfo{Type::Number, false, "document id of parent-message, if any"}},
 		    {":decrypt",
-	             ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)"}}},
+		     ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)"}}},
 		"compose a new message",
 		[&](const auto& params) { compose_handler(params); }});
 
@@ -228,30 +228,30 @@ Server::Private::make_command_map()
 	    "contacts",
 	    CommandInfo{
 		ArgMap{{":personal", ArgInfo{Type::Symbol, false, "only personal contacts"}},
-	               {":after",
-	                ArgInfo{Type::String, false, "only contacts seen after time_t string"}},
-	               {":tstamp", ArgInfo{Type::String, false, "return changes since tstamp"}}},
+		       {":after",
+			ArgInfo{Type::String, false, "only contacts seen after time_t string"}},
+		       {":tstamp", ArgInfo{Type::String, false, "return changes since tstamp"}}},
 		"get contact information",
 		[&](const auto& params) { contacts_handler(params); }});
 	cmap.emplace(
 	    "find",
 	    CommandInfo{
 		ArgMap{{":query", ArgInfo{Type::String, true, "search expression"}},
-	               {":threads",
-	                ArgInfo{Type::Symbol, false, "whether to include threading information"}},
-	               {":sortfield", ArgInfo{Type::Symbol, false, "the field to sort results by"}},
-	               {":descending",
-	                ArgInfo{Type::Symbol, false, "whether to sort in descending order"}},
-	               {":batch-size", ArgInfo{Type::Number, false, "batch size for result"}},
-	               {":maxnum", ArgInfo{Type::Number, false, "maximum number of result (hint)"}},
-	               {":skip-dups",
-	                ArgInfo{Type::Symbol,
-	                        false,
-	                        "whether to skip messages with duplicate message-ids"}},
-	               {":include-related",
-	                ArgInfo{Type::Symbol,
-	                        false,
-	                        "whether to include other message related to matching ones"}}},
+		       {":threads",
+			ArgInfo{Type::Symbol, false, "whether to include threading information"}},
+		       {":sortfield", ArgInfo{Type::Symbol, false, "the field to sort results by"}},
+		       {":descending",
+			ArgInfo{Type::Symbol, false, "whether to sort in descending order"}},
+		       {":batch-size", ArgInfo{Type::Number, false, "batch size for result"}},
+		       {":maxnum", ArgInfo{Type::Number, false, "maximum number of result (hint)"}},
+		       {":skip-dups",
+			ArgInfo{Type::Symbol,
+				false,
+				"whether to skip messages with duplicate message-ids"}},
+		       {":include-related",
+			ArgInfo{Type::Symbol,
+				false,
+				"whether to include other message related to matching ones"}}},
 		"query the database for messages",
 		[&](const auto& params) { find_handler(params); }});
 
@@ -259,21 +259,21 @@ Server::Private::make_command_map()
 	    "help",
 	    CommandInfo{
 		ArgMap{{":command", ArgInfo{Type::Symbol, false, "command to get information for"}},
-	               {":full", ArgInfo{Type::Symbol, false, "show full descriptions"}}},
+		       {":full", ArgInfo{Type::Symbol, false, "show full descriptions"}}},
 		"get information about one or all commands",
 		[&](const auto& params) { help_handler(params); }});
 	cmap.emplace(
 	    "index",
 	    CommandInfo{
 		ArgMap{{":my-addresses", ArgInfo{Type::List, false, "list of 'my' addresses"}},
-	               {":cleanup",
-	                ArgInfo{Type::Symbol,
-	                        false,
-	                        "whether to remove stale messages from the store"}},
-	               {":lazy-check",
-	                ArgInfo{Type::Symbol,
-	                        false,
-	                        "whether to avoid indexing up-to-date directories"}}},
+		       {":cleanup",
+			ArgInfo{Type::Symbol,
+				false,
+				"whether to remove stale messages from the store"}},
+		       {":lazy-check",
+			ArgInfo{Type::Symbol,
+				false,
+				"whether to avoid indexing up-to-date directories"}}},
 		"scan maildir for new/updated/removed messages",
 		[&](const auto& params) { index_handler(params); }});
 
@@ -287,7 +287,7 @@ Server::Private::make_command_map()
 		    {":maildir", ArgInfo{Type::String, false, "the target maildir"}},
 		    {":rename", ArgInfo{Type::Symbol, false, "change filename when moving"}},
 		    {":no-view",
-	             ArgInfo{Type::Symbol, false, "if set, do not hint at updating the view"}},
+		     ArgInfo{Type::Symbol, false, "if set, do not hint at updating the view"}},
 		},
 		"move messages and/or change their flags",
 
@@ -304,11 +304,11 @@ Server::Private::make_command_map()
 	    CommandInfo{
 		ArgMap{
 		    {":queries",
-	             ArgInfo{Type::List, false, "queries for which to get read/unread numbers"}},
+		     ArgInfo{Type::List, false, "queries for which to get read/unread numbers"}},
 		    {":skip-dups",
-	             ArgInfo{Type::Symbol,
-	                     false,
-	                     "whether to exclude messages with duplicate message-ids"}},
+		     ArgInfo{Type::Symbol,
+			     false,
+			     "whether to exclude messages with duplicate message-ids"}},
 		},
 		"ping the mu-server and get information in response",
 		[&](const auto& params) { ping_handler(params); }});
@@ -321,15 +321,15 @@ Server::Private::make_command_map()
 	    "remove",
 	    CommandInfo{
 		ArgMap{{":docid",
-	                ArgInfo{Type::Number, true, "document-id for the message to remove"}}},
+			ArgInfo{Type::Number, true, "document-id for the message to remove"}}},
 		"remove a message from filesystem and database",
 		[&](const auto& params) { remove_handler(params); }});
 
 	cmap.emplace(
 	    "sent",
 	    CommandInfo{ArgMap{{":path", ArgInfo{Type::String, true, "path to the message file"}}},
-	                "tell mu about a message that was sent",
-	                [&](const auto& params) { sent_handler(params); }});
+			"tell mu about a message that was sent",
+			[&](const auto& params) { sent_handler(params); }});
 
 	cmap.emplace(
 	    "view",
@@ -338,11 +338,11 @@ Server::Private::make_command_map()
 			    {":msgid", ArgInfo{Type::String, false, "message-id"}},
 			    {":path", ArgInfo{Type::String, false, "message filesystem path"}},
 			    {":mark-as-read",
-	                     ArgInfo{Type::Symbol, false, "mark message as read (if not already)"}},
+			     ArgInfo{Type::Symbol, false, "mark message as read (if not already)"}},
 			    {":rename", ArgInfo{Type::Symbol, false, "change filename when moving"}},
 			},
-	                "view a message. exactly one of docid/msgid/path must be specified",
-	                [&](const auto& params) { view_handler(params); }});
+			"view a message. exactly one of docid/msgid/path must be specified",
+			[&](const auto& params) { view_handler(params); }});
 	return cmap;
 }
 
@@ -422,9 +422,9 @@ Server::Private::add_handler(const Parameters& params)
 	auto msg{store().find_message(docid)};
 	if (!msg)
 		throw Error(Error::Code::Store,
-		            "failed to get message at %s (docid=%u)",
-		            path.c_str(),
-		            docid);
+			    "failed to get message at %s (docid=%u)",
+			    path.c_str(),
+			    docid);
 
 	Sexp::List update;
 	update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_VERIFY));
@@ -447,9 +447,9 @@ each_part(MuMsg* msg, MuMsgPart* part, PartInfo* pinfo)
 	GError* gerr{};
 	char*   cachefile =
 	    mu_msg_part_save_temp(msg,
-	                          (MuMsgOptions)(pinfo->opts | MU_MSG_OPTION_OVERWRITE),
-	                          part->index,
-	                          &gerr);
+				  (MuMsgOptions)(pinfo->opts | MU_MSG_OPTION_OVERWRITE),
+				  part->index,
+				  &gerr);
 	if (!cachefile)
 		throw Error(Error::Code::File, &gerr, "failed to save part");
 
@@ -495,14 +495,14 @@ Server::Private::compose_handler(const Parameters& params)
 			mu_msg_part_foreach(msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo);
 			if (!pinfo.attseq.empty())
 				comp_lst.add_prop(":include",
-				                  Sexp::make_list(std::move(pinfo.attseq)));
+						  Sexp::make_list(std::move(pinfo.attseq)));
 		}
 		mu_msg_unref(msg);
 
 	} else if (ctype != "new")
 		throw Error(Error::Code::InvalidArgument,
-		            "invalid compose type '%s'",
-		            ctype.c_str());
+			    "invalid compose type '%s'",
+			    ctype.c_str());
 
 	output_sexp(std::move(comp_lst));
 }
@@ -546,7 +546,7 @@ Server::Private::contacts_handler(const Parameters& params)
 	Sexp::List seq;
 	seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
 	seq.add_prop(":tstamp",
-	             Sexp::make_string(format("%" G_GINT64_FORMAT, g_get_monotonic_time())));
+		     Sexp::make_string(format("%" G_GINT64_FORMAT, g_get_monotonic_time())));
 	/* dump the contacts cache as a giant sexp */
 	output_sexp(std::move(seq));
 }
@@ -573,8 +573,8 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 		throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
 	else if (res->empty())
 		throw Error(Error::Code::NotFound,
-		            "could not find message(s) for msgid %s",
-		            msgid.c_str());
+			    "could not find message(s) for msgid %s",
+			    msgid.c_str());
 
 	std::vector<Store::Id> docids{};
 	for (auto&& mi : *res)
@@ -614,7 +614,7 @@ determine_docids(const Store& store, const Parameters& params)
 
 	if ((docid == 0) == msgid.empty())
 		throw Error(Error::Code::InvalidArgument,
-		            "precisely one of docid and msgid must be specified");
+			    "precisely one of docid and msgid must be specified");
 
 	if (docid != 0)
 		return {static_cast<Store::Id>(docid)};
@@ -677,8 +677,8 @@ Server::Private::find_handler(const Parameters& params)
 		sort_field = mu_msg_field_id_from_name(sortfieldstr.c_str() + 1, FALSE); // skip ':'
 		if (sort_field == MU_MSG_FIELD_ID_NONE)
 			throw Error{Error::Code::InvalidArgument,
-			            "invalid sort field %s",
-			            sortfieldstr.c_str()};
+				    "invalid sort field %s",
+				    sortfieldstr.c_str()};
 	}
 	if (batch_size < 1)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
@@ -754,8 +754,8 @@ Server::Private::help_handler(const Parameters& params)
 			const auto& arg{info.args.find(argname)};
 			std::cout << ";;        "
 				  << format("%-17s  : %-24s ",
-			                    arg->first.c_str(),
-			                    to_string(arg->second).c_str());
+					    arg->first.c_str(),
+					    to_string(arg->second).c_str());
 			std::cout << "  " << arg->second.docstring << "\n";
 		}
 		std::cout << ";;\n";
@@ -816,11 +816,11 @@ Server::Private::mkdir_handler(const Parameters& params)
 
 Sexp::List
 Server::Private::perform_move(Store::Id                 docid,
-                              MuMsg*                    msg,
-                              const std::string&	maildirarg,
-                              MessageFlags		flags,
-                              bool                      new_name,
-                              bool                      no_view)
+			      MuMsg*                    msg,
+			      const std::string&	maildirarg,
+			      MessageFlags		flags,
+			      bool                      new_name,
+			      bool                      no_view)
 {
 	bool different_mdir{};
 	auto maildir{maildirarg};
@@ -857,7 +857,7 @@ Server::Private::perform_move(Store::Id                 docid,
 
 static MessageFlags
 calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
-{	
+{
 	const auto flags = std::invoke([&]()->std::optional<MessageFlags>{
 			auto msgflags{mu_msg_get_flags(msg)};
 			if (!flagopt)
@@ -875,9 +875,9 @@ calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
 
 Sexp::List
 Server::Private::move_docid(Store::Id			docid,
-                            std::optional<std::string>	flagopt,
-                            bool			new_name,
-                            bool			no_view)
+			    std::optional<std::string>	flagopt,
+			    bool			new_name,
+			    bool			no_view)
 {
 	if (docid == Store::InvalidId)
 		throw Error{Error::Code::InvalidArgument, "invalid docid"};
@@ -920,7 +920,7 @@ Server::Private::move_handler(const Parameters& params)
 	if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
 			throw Mu::Error{Error::Code::Store,
-			                "can't move multiple messages at the same time"};
+					"can't move multiple messages at the same time"};
 		// multi.
 		for (auto&& docid : docids)
 			output_sexp(move_docid(docid, flagopt,
@@ -1008,9 +1008,9 @@ Server::Private::remove_handler(const Parameters& params)
 
 	if (::unlink(path.c_str()) != 0 && errno != ENOENT)
 		throw Error(Error::Code::File,
-		            "could not delete %s: %s",
-		            path.c_str(),
-		            g_strerror(errno));
+			    "could not delete %s: %s",
+			    path.c_str(),
+			    g_strerror(errno));
 
 	if (!store().remove_message(path))
 		g_warning("failed to remove message @ %s (%d) from store", path.c_str(), docid);
@@ -1052,11 +1052,11 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
 	GError* gerr{};
 	if (!mu_msg_move_to_maildir(msg,
 				    store().properties().root_maildir,
-	                            mu_msg_get_maildir(msg),
-	                            *newflags,
-	                            true,
-	                            rename,
-	                            &gerr))
+				    mu_msg_get_maildir(msg),
+				    *newflags,
+				    true,
+				    rename,
+				    &gerr))
 		throw Error{Error::Code::File, &gerr, "failed to move message"};
 
 	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
@@ -1100,7 +1100,10 @@ void
 Server::Private::view_handler(const Parameters& params)
 {
 	const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
-	const auto rename{get_bool_or(params, ":rename")};
+	/* for now, do _not_ rename, as it seems to confuse mbsync */
+	const auto rename{false};
+	//const auto rename{get_bool_or(params, ":rename")};
+
 	const auto docids{determine_docids(store(), params)};
 
 	if (docids.empty())
