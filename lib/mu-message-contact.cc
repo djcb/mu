@@ -139,10 +139,31 @@ test_ctor_02()
 	g_assert_true(c.personal);
 	g_assert_cmpuint(c.frequency,==,13);
 	g_assert_cmpuint(c.tstamp,==,12345);
-	assert_equal(c.name, "Blinky");
 	g_assert_cmpuint(c.message_date,==,1645215014);
 
 	assert_equal(c.display_name(), "Blinky <bar@example.com>");
+}
+
+static void
+test_ctor_03()
+{
+	MessageContact c{
+		"bar@example.com",
+		"Bli\nky",
+		1645215014,
+		true, /* personal */
+		13, /*freq*/
+		12345 /* tstamp */
+	};
+
+	assert_equal(c.email, "bar@example.com");
+	assert_equal(c.name, "Bli ky");
+	g_assert_true(c.personal);
+	g_assert_cmpuint(c.frequency,==,13);
+	g_assert_cmpuint(c.tstamp,==,12345);
+	g_assert_cmpuint(c.message_date,==,1645215014);
+
+	assert_equal(c.display_name(), "Bli ky <bar@example.com>");
 }
 
 
@@ -173,6 +194,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/lib/message-contacts/ctor-01", test_ctor_01);
 	g_test_add_func("/lib/message-contacts/ctor-02", test_ctor_02);
+	g_test_add_func("/lib/message-contacts/ctor-cleanup", test_ctor_cleanup);
 	g_test_add_func("/lib/message-contacts/make-contacts", test_make_contacts);
 
 	return g_test_run();
