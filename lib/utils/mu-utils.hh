@@ -21,6 +21,7 @@
 #define __MU_UTILS_HH__
 
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <vector>
 #include <chrono>
@@ -252,6 +253,11 @@ to_string(const T& val)
 
 	return sstr.str();
 }
+
+/**
+ * Convert string view in something printable with %*s
+ */
+#define STR_V(sv__) static_cast<int>((sv__).size()), (sv__).data()
 
 struct MaybeAnsi {
 	explicit MaybeAnsi(bool use_color) : color_{use_color} {}
