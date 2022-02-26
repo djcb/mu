@@ -104,7 +104,7 @@ Mu::lowercase_hash(const std::string& s)
 #include "utils/mu-utils.hh"
 
 static void
-test_ctor_01()
+test_ctor_foo()
 {
 	MessageContact c{
 		"foo@example.com",
@@ -123,7 +123,7 @@ test_ctor_01()
 
 
 static void
-test_ctor_02()
+test_ctor_blinky()
 {
 	MessageContact c{
 		"bar@example.com",
@@ -145,7 +145,7 @@ test_ctor_02()
 }
 
 static void
-test_ctor_03()
+test_ctor_cleanup()
 {
 	MessageContact c{
 		"bar@example.com",
@@ -192,10 +192,10 @@ main(int argc, char* argv[])
 	g_test_init(&argc, &argv, NULL);
 	g_mime_init();
 
-	g_test_add_func("/lib/message-contacts/ctor-01", test_ctor_01);
-	g_test_add_func("/lib/message-contacts/ctor-02", test_ctor_02);
-	g_test_add_func("/lib/message-contacts/ctor-cleanup", test_ctor_cleanup);
-	g_test_add_func("/lib/message-contacts/make-contacts", test_make_contacts);
+	g_test_add_func("/message-contacts/ctor-foo", test_ctor_foo);
+	g_test_add_func("/message-contacts/ctor-blinky", test_ctor_blinky);
+	g_test_add_func("/message-contacts/ctor-cleanup", test_ctor_cleanup);
+	g_test_add_func("/message-contacts/make-contacts", test_make_contacts);
 
 	return g_test_run();
 }
