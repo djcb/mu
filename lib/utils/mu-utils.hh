@@ -299,20 +299,21 @@ private:
 /// Allow using enum structs as bitflags
 #define MU_TO_NUM(ET, ELM)  std::underlying_type_t<ET>(ELM)
 #define MU_TO_ENUM(ET, NUM) static_cast<ET>(NUM)
-#define MU_ENABLE_BITOPS(ET)                                                                       \
-	constexpr ET operator&(ET e1, ET e2)                                                       \
-	{                                                                                          \
-		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) & MU_TO_NUM(ET, e2));                      \
-	}                                                                                          \
-	constexpr ET operator|(ET e1, ET e2)                                                       \
-	{                                                                                          \
-		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) | MU_TO_NUM(ET, e2));                      \
-	}                                                                                          \
-	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }          \
-	constexpr bool    any_of(ET e) { return MU_TO_NUM(ET, e) != 0; }                           \
-	constexpr bool    none_of(ET e) { return MU_TO_NUM(ET, e) == 0; }                          \
-	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                           \
-	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }                           \
+#define MU_ENABLE_BITOPS(ET)                                                                    \
+	constexpr ET operator&(ET e1, ET e2)                                                    \
+	{                                                                                       \
+		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) & MU_TO_NUM(ET, e2));                   \
+	}                                                                                       \
+	constexpr ET operator|(ET e1, ET e2)                                                    \
+	{                                                                                       \
+		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) | MU_TO_NUM(ET, e2));                   \
+	}                                                                                       \
+	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }       \
+	constexpr bool    any_of(ET e) { return MU_TO_NUM(ET, e) != 0; }                        \
+	constexpr bool    none_of(ET e) { return MU_TO_NUM(ET, e) == 0; }                       \
+	constexpr bool    has_flag(ET e1, ET e2) { return (e1 & e2) == e2; }			\
+	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                        \
+	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }
 
 /**
  * For unit tests, assert two std::string's are equal.
