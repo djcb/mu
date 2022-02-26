@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -14,18 +14,15 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 mu4e_meta = configure_file(
   input: 'mu4e-meta.el.in',
   output: 'mu4e-meta.el',
-  configuration:
-    {
+  configuration: {
       'VERSION'         : meson.project_version(),
       # project_build_root() with meson >= 0.56
-      'abs_top_builddir': join_paths(meson.build_root()),
+      'abs_top_builddir': join_paths(meson.current_build_dir()),
       'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
     })
-
 
 mu4e_plain_srcs=[
   'mu4e-actions.el',
@@ -61,36 +58,20 @@ mu4e_gen_srcs=[
 mu4e_all_srcs =  mu4e_plain_srcs
 mu4e_all_srcs += mu4e_gen_srcs
 
-#
-# with (development) emacs 28.50 / native compilation this doesn't
-# _quite_ work; see: https://debbugs.gnu.org/db/47/47987.html
-
-#
-lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
-
-# hack-around for ^^^ native compile issue: copy sources to builddir.
-cp = find_program(['cp'], required:true)
+# hack-around for native compile issue: copy sources to builddir.
+# see: https://debbugs.gnu.org/db/47/47987.html
 foreach src : mu4e_plain_srcs
-  target_name= '@BASENAME@.elc'
-  target_path = join_paths(meson.current_build_dir(), target_name)
-  target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
-  custom_target(src.underscorify() + '_el_copy',
-		build_by_default: true,
-		input: src,
-		output:  '@BASENAME@.el',
-                install_dir: lispdir,
-                install: true,
-		command: [cp, '@INPUT@', '@OUTPUT@'])
+  configure_file(input: src, output:'@BASENAME@.el', copy:true)
 endforeach
 
 
-# we'd like to compile mu4e-meta.el, too, but using mu4e_all_srcs here
-# yields:
-# mu4e/meson.build:105: WARNING: Source item '.../mu4e/mu4e-meta.el' cannot be
-# converted to File object, because it is a generated file. This will become a
-# hard error in the future.
+# XXX: this yields a warning: mu4e/meson.build:86: WARNING: Source item
+#   '[...]/build/mu4e/mu4e-meta.el' cannot be converted to File object, because
+#   it is a generated file. This will become a hard error in the future.
+# unsure how to best avoid that.
 
-foreach src : mu4e_plain_srcs
+lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
+foreach src : mu4e_all_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
