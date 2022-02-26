@@ -38,6 +38,9 @@ check: test
 test: all
 	@cd $(BUILDDIR); $(MESON) test
 
+test-verbose-if-fail: all
+	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
+
 test-valgrind: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) test --wrap='valgrind --leak-check=full --error-exitcode=1'
 
