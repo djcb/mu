@@ -583,10 +583,10 @@ test_mu_view_01(void)
 	 * Added 350 as 'okay', which comes with gmime 2.4.24 (ubuntu 10.04)
 	 */
 	len = strlen(output);
-	if (len < 349) {
+	if (len < 339) {
 		g_print ("\n[%s] (%d)\n", output, len);
 	}
-	g_assert_cmpuint(len, >,  349);
+	g_assert_cmpuint(len, >=,  339);
 	g_free(output);
 	g_free(cmdline);
 	g_free(tmpdir);
