@@ -17,12 +17,18 @@
 **  02110-1301, USA.
 */
 #include "mu-parser.hh"
+
+#include <algorithm>
+#include <optional>
+
+
 #include "mu-tokenizer.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
-#include <algorithm>
+#include "mu-message.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 // 3 precedence levels: units (NOT,()) > factors (OR) > terms (AND)
 
@@ -52,17 +58,14 @@ struct FieldInfo {
 	const std::string field;
 	const std::string prefix;
 	bool              supports_phrase;
-	unsigned          id;
+	Field::Id         id;
 };
 using FieldInfoVec = std::vector<FieldInfo>;
-
-using Flags = Parser::Flags;
-
 struct Parser::Private {
-	Private(const Store& store, Flags flags) : store_{store}, flags_{flags} {}
+	Private(const Store& store, Parser::Flags flags) : store_{store}, flags_{flags} {}
 
 	std::vector<std::string> process_regex(const std::string& field,
-	                                       const std::regex&  rx) const;
+					       const std::regex&  rx) const;
 
 	Mu::Tree term_1(Mu::Tokens& tokens, WarningVec& warnings) const;
 	Mu::Tree term_2(Mu::Tokens& tokens, Node::Type& op, WarningVec& warnings) const;
@@ -71,118 +74,92 @@ struct Parser::Private {
 	Mu::Tree unit(Mu::Tokens& tokens, WarningVec& warnings) const;
 	Mu::Tree data(Mu::Tokens& tokens, WarningVec& warnings) const;
 	Mu::Tree range(const FieldInfoVec& fields,
-	               const std::string&  lower,
-	               const std::string&  upper,
-	               size_t              pos,
-	               WarningVec&         warnings) const;
+		       const std::string&  lower,
+		       const std::string&  upper,
+		       size_t              pos,
+		       WarningVec&         warnings) const;
 	Mu::Tree regex(const FieldInfoVec& fields,
-	               const std::string&  v,
-	               size_t              pos,
-	               WarningVec&         warnings) const;
+		       const std::string&  v,
+		       size_t              pos,
+		       WarningVec&         warnings) const;
 	Mu::Tree value(const FieldInfoVec& fields,
-	               const std::string&  v,
-	               size_t              pos,
-	               WarningVec&         warnings) const;
+		       const std::string&  v,
+		       size_t              pos,
+		       WarningVec&         warnings) const;
 
       private:
 	const Store& store_;
-	const Flags  flags_;
+	const Parser::Flags  flags_;
 };
-
-static MuMsgFieldId
-field_id(const std::string& field)
-{
-	if (field.empty())
-		return MU_MSG_FIELD_ID_NONE;
-
-	MuMsgFieldId id = mu_msg_field_id_from_name(field.c_str(), FALSE);
-	if (id != MU_MSG_FIELD_ID_NONE)
-		return id;
-	else if (field.length() == 1)
-		return mu_msg_field_id_from_shortcut(field[0], FALSE);
-	else
-		return MU_MSG_FIELD_ID_NONE;
-}
 
 static std::string
 process_value(const std::string& field, const std::string& value)
 {
-	const auto id = field_id(field);
-	if (id == MU_MSG_FIELD_ID_NONE)
-		return value;
-	switch (id) {
-	case MU_MSG_FIELD_ID_PRIO: {
-		if (!value.empty())
-			return std::string(1, value[0]);
-	} break;
-
-	case MU_MSG_FIELD_ID_FLAGS:
-		if (const auto info{message_flag_info(value)}; info)
-			return std::string(1, info->shortcut_lower());
-		break;
-
-	default:
-		break;
+	const auto id_opt{message_field_id(field)};
+	if (id_opt) {
+		switch (*id_opt) {
+		case Field::Id::Priority: {
+			if (!value.empty())
+				return std::string(1, value[0]);
+		} break;
+		case Field::Id::Flags:
+			if (const auto info{message_flag_info(value)}; info)
+				return std::string(1, info->shortcut_lower());
+			break;
+		default:
+			break;
+		}
 	}
 
 	return value; // XXX prio/flags, etc. alias
 }
 
 static void
-add_field(std::vector<FieldInfo>& fields, MuMsgFieldId id)
+add_field(std::vector<FieldInfo>& fields, Field::Id field_id)
 {
-	const auto shortcut = mu_msg_field_shortcut(id);
-	if (!shortcut)
+	const auto field{message_field(field_id)};
+	if (!field.shortcut)
 		return; // can't be searched
 
-	const auto name = mu_msg_field_name(id);
-	const auto pfx  = mu_msg_field_xapian_prefix(id);
-
-	if (!name || !pfx)
-		return;
-
-	fields.push_back({{name}, {pfx}, (bool)mu_msg_field_xapian_index(id), id});
+	fields.emplace_back(FieldInfo{std::string{field.name}, field.xapian_term(),
+			    field.is_full_text(), field_id});
 }
 
 static std::vector<FieldInfo>
-process_field(const std::string& field, Flags flags)
+process_field(const std::string& field_str, Parser::Flags flags)
 {
 	std::vector<FieldInfo> fields;
-	if (any_of(flags & Flags::UnitTest)) {
-		add_field(fields, MU_MSG_FIELD_ID_MSGID);
+	if (any_of(flags & Parser::Flags::UnitTest)) {
+		add_field(fields, Field::Id::MessageId);
 		return fields;
 	}
 
-	if (field == "contact" || field == "recip") { // multi fields
-		add_field(fields, MU_MSG_FIELD_ID_TO);
-		add_field(fields, MU_MSG_FIELD_ID_CC);
-		add_field(fields, MU_MSG_FIELD_ID_BCC);
-		if (field == "contact")
-			add_field(fields, MU_MSG_FIELD_ID_FROM);
-	} else if (field == "") {
-		add_field(fields, MU_MSG_FIELD_ID_TO);
-		add_field(fields, MU_MSG_FIELD_ID_CC);
-		add_field(fields, MU_MSG_FIELD_ID_BCC);
-		add_field(fields, MU_MSG_FIELD_ID_FROM);
-		add_field(fields, MU_MSG_FIELD_ID_SUBJECT);
-		add_field(fields, MU_MSG_FIELD_ID_BODY_TEXT);
-	} else {
-		const auto id = field_id(field);
-		if (id != MU_MSG_FIELD_ID_NONE)
-			add_field(fields, id);
-	}
+	if (field_str == "contact" || field_str == "recip") { // multi fields
+		add_field(fields, Field::Id::To);
+		add_field(fields, Field::Id::Cc);
+		add_field(fields, Field::Id::Bcc);
+		if (field_str == "contact")
+			add_field(fields, Field::Id::From);
+	} else if (field_str.empty()) {
+		add_field(fields, Field::Id::To);
+		add_field(fields, Field::Id::Cc);
+		add_field(fields, Field::Id::Bcc);
+		add_field(fields, Field::Id::From);
+		add_field(fields, Field::Id::Subject);
+		add_field(fields, Field::Id::BodyText);
+	} else if (const auto id_opt{message_field_id(field_str)}; id_opt)
+		add_field(fields, *id_opt);
 
 	return fields;
 }
 
 static bool
-is_range_field(const std::string& field)
+is_range_field(const std::string& field_str)
 {
-	const auto id = field_id(field);
-	if (id == MU_MSG_FIELD_ID_NONE)
+	if (const auto field_id_opt{message_field_id(field_str)}; !field_id_opt)
 		return false;
 	else
-		return mu_msg_field_is_range_field(id);
+		return message_field(*field_id_opt).is_range();
 }
 
 struct MyRange {
@@ -191,19 +168,20 @@ struct MyRange {
 };
 
 static MyRange
-process_range(const std::string& field, const std::string& lower, const std::string& upper)
+process_range(const std::string& field_str,
+	      const std::string& lower, const std::string& upper)
 {
-	const auto id = field_id(field);
-	if (id == MU_MSG_FIELD_ID_NONE)
+	const auto id_opt{message_field_id(field_str)};
+	if (!id_opt)
 		return {lower, upper};
 
 	std::string l2 = lower;
 	std::string u2 = upper;
 
-	if (id == MU_MSG_FIELD_ID_DATE) {
+	if (*id_opt == Field::Id::Date) {
 		l2 = Mu::date_to_time_t_string(lower, true);
 		u2 = Mu::date_to_time_t_string(upper, false);
-	} else if (id == MU_MSG_FIELD_ID_SIZE) {
+	} else if (*id_opt == Field::Id::Size) {
 		l2 = Mu::size_to_string(lower, true);
 		u2 = Mu::size_to_string(upper, false);
 	}
@@ -212,16 +190,17 @@ process_range(const std::string& field, const std::string& lower, const std::str
 }
 
 std::vector<std::string>
-Parser::Private::process_regex(const std::string& field, const std::regex& rx) const
+Parser::Private::process_regex(const std::string& field_str,
+			       const std::regex& rx) const
 {
-	const auto id = field_id(field);
-	if (id == MU_MSG_FIELD_ID_NONE)
+	const auto id_opt{message_field_id(field_str)};
+	if (!id_opt)
 		return {};
 
-	char pfx[] = {mu_msg_field_shortcut(id), '\0'};
-
+	const auto field{message_field(*id_opt)};
+	const auto prefix{field.xapian_term()};
 	std::vector<std::string> terms;
-	store_.for_each_term(pfx, [&](auto&& str) {
+	store_.for_each_term(prefix, [&](auto&& str) {
 		if (std::regex_search(str.c_str() + 1, rx)) // avoid copy
 			terms.emplace_back(str);
 		return true;
@@ -244,9 +223,9 @@ empty()
 
 Mu::Tree
 Parser::Private::value(const FieldInfoVec& fields,
-                       const std::string&  v,
-                       size_t              pos,
-                       WarningVec&         warnings) const
+		       const std::string&  v,
+		       size_t              pos,
+		       WarningVec&         warnings) const
 {
 	auto val = utf8_flatten(v);
 
@@ -256,30 +235,30 @@ Parser::Private::value(const FieldInfoVec& fields,
 	if (fields.size() == 1) {
 		const auto item = fields.front();
 		return Tree({Node::Type::Value,
-		             std::make_unique<Value>(item.field,
-		                                     item.prefix,
-		                                     item.id,
-		                                     process_value(item.field, val),
-		                                     item.supports_phrase)});
+			     std::make_unique<Value>(item.field,
+						     item.prefix,
+						     item.id,
+						     process_value(item.field, val),
+						     item.supports_phrase)});
 	}
 
 	// a 'multi-field' such as "recip:"
 	Tree tree(Node{Node::Type::OpOr});
 	for (const auto& item : fields)
 		tree.add_child(Tree({Node::Type::Value,
-		                     std::make_unique<Value>(item.field,
-		                                             item.prefix,
-		                                             item.id,
-		                                             process_value(item.field, val),
-		                                             item.supports_phrase)}));
+				     std::make_unique<Value>(item.field,
+							     item.prefix,
+							     item.id,
+							     process_value(item.field, val),
+							     item.supports_phrase)}));
 	return tree;
 }
 
 Mu::Tree
 Parser::Private::regex(const FieldInfoVec& fields,
-                       const std::string&  v,
-                       size_t              pos,
-                       WarningVec&         warnings) const
+		       const std::string&  v,
+		       size_t              pos,
+		       WarningVec&         warnings) const
 {
 	if (v.length() < 2)
 		throw BUG("expected regexp, got '%s'", v.c_str());
@@ -312,10 +291,10 @@ Parser::Private::regex(const FieldInfoVec& fields,
 
 Mu::Tree
 Parser::Private::range(const FieldInfoVec& fields,
-                       const std::string&  lower,
-                       const std::string&  upper,
-                       size_t              pos,
-                       WarningVec&         warnings) const
+		       const std::string&  lower,
+		       const std::string&  upper,
+		       size_t              pos,
+		       WarningVec&         warnings) const
 {
 	if (fields.empty())
 		throw BUG("expected field");
@@ -329,11 +308,11 @@ Parser::Private::range(const FieldInfoVec& fields,
 		prange = process_range(field.field, upper, lower);
 
 	return Tree({Node::Type::Range,
-	             std::make_unique<Range>(field.field,
-	                                     field.prefix,
-	                                     field.id,
-	                                     prange.lower,
-	                                     prange.upper)});
+		     std::make_unique<Range>(field.field,
+					     field.prefix,
+					     field.id,
+					     prange.lower,
+					     prange.upper)});
 }
 
 Mu::Tree
@@ -370,10 +349,10 @@ Parser::Private::data(Mu::Tokens& tokens, WarningVec& warnings) const
 	const auto dotdot = val.find("..");
 	if (dotdot != std::string::npos)
 		return range(fields,
-		             val.substr(0, dotdot),
-		             val.substr(dotdot + 2),
-		             token.pos,
-		             warnings);
+			     val.substr(0, dotdot),
+			     val.substr(dotdot + 2),
+			     token.pos,
+			     warnings);
 	else if (is_range_field(fields.front().field)) {
 		// range field without a range - treat as field:val..val
 		return range(fields, val, val, token.pos, warnings);
@@ -511,7 +490,8 @@ Parser::Private::term_1(Mu::Tokens& tokens, WarningVec& warnings) const
 	}
 }
 
-Mu::Parser::Parser(const Store& store, Flags flags) : priv_{std::make_unique<Private>(store, flags)}
+Mu::Parser::Parser(const Store& store, Parser::Flags flags) :
+	priv_{std::make_unique<Private>(store, flags)}
 {
 }
 

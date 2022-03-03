@@ -73,7 +73,7 @@ class QueryResultsIterator {
 
 	QueryResultsIterator(Xapian::MSetIterator it,
 	                     size_t               max_num,
-	                     MuMsgFieldId         sort_field,
+	                     Message::Field::Id         sort_field,
 	                     MuMsgIterFlags       flags,
 	                     MatchInfo&           minfo)
 	    : it_{it}, match_info_{minfo}
@@ -124,7 +124,7 @@ class QueryResultsIterator {
 	std::string message_id() const
 	{
 		g_return_val_if_fail(it_ != Xapian::MSetIterator::end(), "");
-		return document().get_value(MU_MSG_FIELD_ID_MSGID);
+		return document().get_value(Field::Id::MessageId);
 	}
 
 	/**
@@ -136,7 +136,7 @@ class QueryResultsIterator {
 	std::string path() const
 	{
 		g_return_val_if_fail(it_ != Xapian::MSetIterator::end(), "");
-		return document().get_value(MU_MSG_FIELD_ID_PATH);
+		return document().get_value(Field::Id::Path);
 	}
 
 	/**
@@ -149,7 +149,7 @@ class QueryResultsIterator {
 	std::vector<std::string> references() const
 	{
 		g_return_val_if_fail(it_ != Xapian::MSetIterator::end(), {});
-		return split(document().get_value(MU_MSG_FIELD_ID_REFS), ",");
+		return split(document().get_value(Field::Id::References), ",");
 	}
 
       private:

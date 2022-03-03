@@ -23,6 +23,7 @@
 #include "utils/mu-option.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 // We use a MatchDecider to gather information about the matches, and decide
 // whether to include them in the results.
@@ -47,12 +48,12 @@ struct MatchDecider : public Xapian::MatchDecider {
 	{
 		QueryMatch qm{};
 
-		auto msgid{opt_string(doc, MU_MSG_FIELD_ID_MSGID)
-		               .value_or(*opt_string(doc, MU_MSG_FIELD_ID_PATH))};
+		auto msgid{opt_string(doc, Field::Id::MessageId)
+			       .value_or(*opt_string(doc, Field::Id::Path))};
 		if (!decider_info_.message_ids.emplace(std::move(msgid)).second)
 			qm.flags |= QueryMatch::Flags::Duplicate;
 
-		const auto path{opt_string(doc, MU_MSG_FIELD_ID_PATH)};
+		const auto path{opt_string(doc, Field::Id::Path)};
 		if (!path || ::access(path->c_str(), R_OK) != 0)
 			qm.flags |= QueryMatch::Flags::Unreadable;
 
@@ -86,7 +87,7 @@ struct MatchDecider : public Xapian::MatchDecider {
 	 */
 	void gather_thread_ids(const Xapian::Document& doc) const
 	{
-		auto thread_id{opt_string(doc, MU_MSG_FIELD_ID_THREAD_ID)};
+		auto thread_id{opt_string(doc, Field::Id::ThreadId)};
 		if (thread_id)
 			decider_info_.thread_ids.emplace(std::move(*thread_id));
 	}
@@ -95,10 +96,10 @@ struct MatchDecider : public Xapian::MatchDecider {
 	const QueryFlags qflags_;
 	DeciderInfo&     decider_info_;
 
-      private:
-	Option<std::string> opt_string(const Xapian::Document& doc, MuMsgFieldId id) const noexcept
-	{
-		std::string val = xapian_try([&] { return doc.get_value(id); }, std::string{""});
+private:
+	Option<std::string> opt_string(const Xapian::Document& doc, Field::Id id) const noexcept {
+		const auto value_no{message_field(id).value_no()};
+		std::string val = xapian_try([&] { return doc.get_value(value_no); }, std::string{""});
 		if (val.empty())
 			return Nothing;
 		else

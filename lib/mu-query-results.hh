@@ -59,7 +59,7 @@ enum struct QueryFlags {
 	Threading      = 1 << 4, /**< calculate threading info */
 	// internal
 	Leader = 1 << 5, /**< This is the leader query (for internal use
-	                  * only)*/
+			  * only)*/
 };
 MU_ENABLE_BITOPS(QueryFlags);
 
@@ -219,7 +219,7 @@ public:
 	 */
 	Option<std::string> message_id() const noexcept
 	{
-		return opt_string(MU_MSG_FIELD_ID_MSGID);
+		return opt_string(Message::Field::Id::MessageId);
 	}
 
 	/**
@@ -230,7 +230,7 @@ public:
 	 */
 	Option<std::string> thread_id() const noexcept
 	{
-		return opt_string(MU_MSG_FIELD_ID_THREAD_ID);
+		return opt_string(Message::Field::Id::ThreadId);
 	}
 
 	/**
@@ -239,7 +239,7 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> path() const noexcept { return opt_string(MU_MSG_FIELD_ID_PATH); }
+	Option<std::string> path() const noexcept { return opt_string(Message::Field::Id::Path); }
 
 	/**
 	 * Get the date for the document (message) the iterator is pointing at.
@@ -247,7 +247,7 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> date() const noexcept { return opt_string(MU_MSG_FIELD_ID_DATE); }
+	Option<std::string> date() const noexcept { return opt_string(Message::Field::Id::Date); }
 
 	/**
 	 * Get the file-system path for the document (message) this iterator is
@@ -255,7 +255,7 @@ public:
 	 *
 	 * @return the subject
 	 */
-	Option<std::string> subject() const noexcept { return opt_string(MU_MSG_FIELD_ID_SUBJECT); }
+	Option<std::string> subject() const noexcept { return opt_string(Message::Field::Id::Subject); }
 
 	/**
 	 * Get the references for the document (messages) this is iterator is
@@ -266,7 +266,7 @@ public:
 	 */
 	std::vector<std::string> references() const noexcept
 	{
-		return split(document().get_value(MU_MSG_FIELD_ID_REFS), ",");
+		return split(opt_string(Message::Field::Id::References).value_or(""), ",");
 	}
 
 	/**
@@ -276,10 +276,11 @@ public:
 	 *
 	 * @return the value
 	 */
-	Option<std::string> opt_string(MuMsgFieldId id) const noexcept
+	Option<std::string> opt_string(Message::Field::Id id) const noexcept
 	{
 		std::string empty;
-		std::string val = xapian_try([&] { return document().get_value(id); }, empty);
+		const auto value_no{message_field(id).value_no()};
+		std::string val = xapian_try([&] {return document().get_value(value_no);}, empty);
 		if (val.empty())
 			return Nothing;
 		else
@@ -314,14 +315,14 @@ public:
 		return xapian_try(
 		    [&] {
 			    auto    docp{reinterpret_cast<XapianDocument*>(
-                                new Xapian::Document(document()))};
+				new Xapian::Document(document()))};
 			    GError* err{};
 			    g_clear_pointer(&msg_, mu_msg_unref);
 			    if (!(msg_ = mu_msg_new_from_doc(docp, &err))) {
 				    delete docp;
 				    g_warning("failed to crate message for %s: %s",
-				              path().value_or("<none>").c_str(),
-				              err ? err->message : "somethng went wrong");
+					      path().value_or("<none>").c_str(),
+					      err ? err->message : "somethng went wrong");
 				    g_clear_error(&err);
 			    }
 			    return msg_;

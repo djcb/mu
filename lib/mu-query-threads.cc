@@ -18,7 +18,7 @@
 */
 
 #include "mu-query-threads.hh"
-#include "mu-msg-fields.h"
+#include "mu-message-fields.hh"
 
 #include <set>
 #include <unordered_set>

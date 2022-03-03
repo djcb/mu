@@ -24,6 +24,7 @@
 #include <iostream>
 #include <regex>
 
+#include <mu-message.hh>
 #include <utils/mu-utils.hh>
 
 namespace Mu {
@@ -34,13 +35,14 @@ struct Data {
 	enum class Type { Value, Range };
 	virtual ~Data() = default;
 
-	Type        type;   /**< type of data */
-	std::string field;  /**< full name of the field */
-	std::string prefix; /**< Xapian prefix for thef field */
-	unsigned    id;     /**< Xapian value no for the field  */
+	Type               type;   /**< type of data */
+	std::string        field;  /**< full name of the field */
+	std::string        prefix; /**< Xapian prefix for thef field */
+	Message::Field::Id id;     /**< Xapian value no for the field  */
 
       protected:
-	Data(Type _type, const std::string& _field, const std::string& _prefix, unsigned _id)
+	Data(Type _type, const std::string& _field, const std::string& _prefix,
+	     Message::Field::Id _id)
 	    : type(_type), field(_field), prefix(_prefix), id(_id)
 	{
 	}
@@ -80,7 +82,7 @@ struct Range : public Data {
 	 */
 	Range(const std::string& _field,
 	      const std::string& _prefix,
-	      unsigned           _id,
+	      Message::Field::Id _id,
 	      const std::string& _lower,
 	      const std::string& _upper)
 	    :
@@ -103,12 +105,12 @@ struct Value : public Data {
 	 *
 	 * @param _field the field
 	 * @param _prefix the xapian prefix
-	 * @param _id xapian value number
+	 * @param _id field id
 	 * @param _value the value
 	 */
 	Value(const std::string& _field,
 	      const std::string& _prefix,
-	      unsigned           _id,
+	      Message::Field::Id _id,
 	      const std::string& _value,
 	      bool               _phrase = false)
 	    : Data(Value::Type::Value, _field, _prefix, _id), value(_value), phrase(_phrase)
