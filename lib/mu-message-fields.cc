@@ -21,22 +21,23 @@
 
 using namespace Mu;
 
-std::optional<MessageField::Id>
-message_field_id(const std::string& name_or_shortcut)
+std::string
+MessageField::xapian_term(const std::string& s) const
 {
-	const auto it = std::find_if(
-		MessageFields.begin(), MessageFields.end(),
-		[&](auto&& field)->bool {
-			return field.name == name_or_shortcut ||
-				(name_or_shortcut.size() == 1 &&
-				   name_or_shortcut[0] == field.shortcut);
-		});
-
-	if (it == MessageFields.end())
-		return std::nullopt;
-	else
-		return it->id;
+	return std::string(1U, xapian_prefix()) + s;
 }
+
+std::string
+MessageField::xapian_term(std::string_view sv) const
+{
+	return std::string(1U, xapian_prefix()) + std::string{sv};
+}
+std::string
+MessageField::xapian_term(char c) const
+{
+	return std::string(1U, xapian_prefix()) + c;
+}
+
 
 
 /**
@@ -65,9 +66,6 @@ validate_message_field_shortcuts()
 	}
 	return true;
 }
-
-
-
 /*
  * tests... also build as runtime-tests, so we can get coverage info
  */
@@ -90,7 +88,29 @@ test_shortcuts()
 	static_assert(validate_message_field_shortcuts());
 }
 
+[[maybe_unused]]
+static void
+test_prefix()
+{
+	static_assert(message_field(MessageField::Id::Subject).xapian_prefix() == 'S');
+	static_assert(message_field(MessageField::Id::BodyHtml).xapian_prefix() == 0);
+}
+
 #ifdef BUILD_TESTS
+
+static void
+test_xapian_term()
+{
+	using namespace std::string_literals;
+	using namespace std::literals;
+
+	assert_equal(message_field(MessageField::Id::Subject).xapian_term(""s), "S");
+	assert_equal(message_field(MessageField::Id::Subject).xapian_term("boo"s), "Sboo");
+
+	assert_equal(message_field(MessageField::Id::From).xapian_term('x'), "Fx");
+	assert_equal(message_field(MessageField::Id::To).xapian_term("boo"sv), "Tboo");
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -98,6 +118,8 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/message/fields/ids", test_ids);
 	g_test_add_func("/message/fields/shortcuts", test_shortcuts);
+	g_test_add_func("/message/fields/prefix", test_prefix);
+	g_test_add_func("/message/fields/xapian-term", test_xapian_term);
 
 	return g_test_run();
 }

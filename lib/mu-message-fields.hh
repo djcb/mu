@@ -89,6 +89,11 @@ struct MessageField {
 		return static_cast<size_t>(Id::_count_);
 	}
 
+
+	constexpr Xapian::valueno value_no() const {
+		return static_cast<Xapian::valueno>(id);
+	}
+
 	/**
 	 * Field types
 	 *
@@ -100,6 +105,13 @@ struct MessageField {
 		TimeT,      /**< A time_t value */
 		Integer,    /**< An integer */
 	};
+
+	constexpr bool is_string() const { return type == Type::String; }
+	constexpr bool is_string_list() const { return type == Type::StringList; }
+	constexpr bool is_byte_size() const { return type == Type::ByteSize; }
+	constexpr bool is_time_t() const { return type == Type::TimeT; }
+	constexpr bool is_integer() const { return type == Type::Integer; }
+	constexpr bool is_numerical() const { return is_byte_size() || is_time_t() || is_integer(); }
 
 	/**
 	 * Field flags
@@ -118,17 +130,30 @@ struct MessageField {
 		/**< Field-text is indexed in xapian (i.e., the text is processed */
 		Searchable    = 1 << 2,
 		/**< Field is a searchable term */
-		Value      = 1 << 3,
+		Value	      = 1 << 3,
 		/**< Field value is stored (so the literal value can be retrieved) */
-		Contact = 1 << 4,
+		Contact	      = 1 << 4,
 		/**< field contains one or more * e-mail-addresses */
 		XapianBoolean = 1 << 5,
-		/**< use 'add_boolean_prefix' for Xapian queries; wildcards do NOT WORK for such
+		/**< use 'add_boolean_prefix' for Xapian	queries; wildcards do NOT WORK for such
 		 * fields */
 		DoNotCache    = 1 << 6,
 		/**< don't cache this field in * the MuMsg cache */
 		Range	      = 1 << 7	/**< whether this is a range field (e.g., date, size)*/
 	};
+
+	constexpr bool any_of(Flag some_flag) const{
+		return (static_cast<int>(some_flag) & static_cast<int>(flags)) != 0;
+	}
+
+	constexpr bool is_gmime() const { return any_of(Flag::Value); }
+	constexpr bool is_full_text() const { return any_of(Flag::FullText); }
+	constexpr bool is_searchable() const { return any_of(Flag::Searchable); }
+	constexpr bool is_value() const { return any_of(Flag::Value); }
+	constexpr bool is_contact() const { return any_of(Flag::Contact); }
+	constexpr bool is_xapian_boolean() const { return any_of(Flag::XapianBoolean); }
+	constexpr bool is_range() const { return any_of(Flag::Range); }
+	constexpr bool do_not_cache() const { return any_of(Flag::DoNotCache); }
 
 	/**
 	 * Field members
@@ -152,16 +177,9 @@ struct MessageField {
 		return shortcut == 0 ? 0 : shortcut - ('a' - 'A');
 	}
 
-	constexpr Xapian::valueno value_no() const {
-		return static_cast<Xapian::valueno>(id);
-	}
-
-	constexpr bool is_numeric() const
-	{
-		return type == Type::ByteSize ||
-		       type == Type::TimeT ||
-		       type == Type::Integer;
-	}
+	std::string xapian_term(const std::string& s="") const;
+	std::string xapian_term(std::string_view sv) const;
+	std::string xapian_term(char c) const;
 };
 
 MU_ENABLE_BITOPS(MessageField::Flag);
@@ -282,7 +300,7 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"path",
 		"File system path to message",
 		{},
-		'i',
+		'p',
 		MessageField::Flag::GMime |
 		MessageField::Flag::XapianBoolean |
 		MessageField::Flag::Value},
@@ -304,7 +322,7 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 	    {
 		MessageField::Id::To,
 		MessageField::Type::String,
-		"To",
+		"to",
 		"Message recipient",
 		"to:flimflam@example.com",
 		't',
@@ -429,13 +447,70 @@ message_field(MessageField::Id id)
 }
 
 /**
+ * Invoke func for each message-field
+ *
+ * @param func some callable
+ */
+template <typename Func>
+void message_field_for_each(Func&& func) {
+	for (const auto& field: MessageFields)
+		func(field);
+}
+
+/**
+ * Find a message field that satisfies some predicate
+ *
+ * @param pred the predicate (a callable)
+ *
+ * @return a message-field id, or nullopt if not found.
+ */
+template <typename Pred>
+std::optional<MessageField::Id> message_field_find_if(Pred&& pred) {
+	for (auto&& field: MessageFields)
+		if (pred(field))
+			return field.id;
+	return std::nullopt;
+}
+
+/**
  * Get the the message-field id for the given name or shortcut
  *
  * @param name_or_shortcut
  *
  * @return the message-field-id or nullopt.
  */
-std::optional<MessageField::Id> message_field_id(const std::string& name_or_shortcut);
+static inline
+std::optional<MessageField::Id> message_field_id(char shortcut) {
+	return message_field_find_if([&](auto&& field ){
+		return field.shortcut == shortcut;
+	});
+}
+static inline
+std::optional<MessageField::Id> message_field_id(const std::string& name) {
+	if (name.length() == 1)
+		return message_field_id(name[0]);
+	else
+		return message_field_find_if([&](auto&& field){
+			return field.name == name;
+	});
+}
+
+/**
+ * Get the MessageField::Id for some	number, or nullopt if it does not match
+ *
+ * @param id an id number
+ *
+ * @return MessageField::Id  or nullopt
+ */
+static inline
+std::optional<MessageField::Id> message_field_id(size_t id)
+{
+	if (id >= static_cast<size_t>(MessageField::Id::_count_))
+		return std::nullopt;
+	else
+		return static_cast<MessageField::Id>(id);
+}
+
 
 } // namespace Mu
 #endif /* MU_MESSAGE_FIELDS_HH__ */

@@ -26,9 +26,10 @@
 #include <functional>
 #include <cctype>
 #include <cstring>
-
 #include <cstdlib>
 #include <ctime>
+
+#include "mu-message-fields.hh"
 
 struct _InternetAddressList;
 
@@ -123,6 +124,27 @@ struct MessageContact {
 			cached_hash = lowercase_hash(email);
 		}
 		return  cached_hash;
+	}
+
+
+	/**
+	 * Get the MessageField for this contact-type, if any.
+	 *
+	 * @return the message-field or nullopt.
+	 */
+	constexpr std::optional<MessageField> const field() {
+		switch(type){
+		case Type::From:
+			return message_field(MessageField::Id::From);
+		case Type::To:
+			return message_field(MessageField::Id::To);
+		case Type::Cc:
+			return message_field(MessageField::Id::Cc);
+		case Type::Bcc:
+			return message_field(MessageField::Id::Bcc);
+		default:
+			return std::nullopt;
+		}
 	}
 
 	/*

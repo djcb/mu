@@ -92,7 +92,7 @@ libmu_la_SOURCES=                                       \
         mu-msg-doc.cc                                   \
         mu-msg-doc.hh                                   \
         mu-msg-fields.c                                 \
-        mu-msg-fields.h                                 \
+        mu-message-fields.hh                                 \
         mu-msg-file.cc                                  \
         mu-msg-file.hh                                  \
         mu-msg-part.cc                                  \

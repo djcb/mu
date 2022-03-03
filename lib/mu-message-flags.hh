@@ -93,9 +93,9 @@ struct MessageFlagInfo {
 	std::string_view    name;     /**< Name of the flag */
 	MessageFlagCategory category; /**< Flag category */
 
-	/** 
+	/**
 	 * Get the lower-case version of shortcut
-	 * 
+	 *
 	 * @return lower-case shortcut
 	 */
 	constexpr char shortcut_lower() const {
@@ -108,25 +108,38 @@ struct MessageFlagInfo {
  * Array of all flag information.
  */
 constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
-    MessageFlagInfo{MessageFlags::Draft, 'D', "draft", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Flagged, 'F', "flagged", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Passed, 'P', "passed", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Replied, 'R', "replied", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Seen, 'S', "seen", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Trashed, 'T', "trashed", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Draft,         'D', "draft",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Flagged,	 'F', "flagged", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Passed,	 'P', "passed",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Replied,	 'R', "replied", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Seen,		 'S', "seen",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{MessageFlags::Trashed,	 'T', "trashed", MessageFlagCategory::Mailfile},
 
-    MessageFlagInfo{MessageFlags::New, 'N', "new", MessageFlagCategory::Maildir},
+    MessageFlagInfo{MessageFlags::New,		 'N', "new",	 MessageFlagCategory::Maildir},
 
-    MessageFlagInfo{MessageFlags::Signed, 'z', "signed", MessageFlagCategory::Content},
-    MessageFlagInfo{MessageFlags::Encrypted, 'x', "encrypted",
-		    MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::Signed,	 'z', "signed",	 MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::Encrypted,	 'x', "encrypted",
+								 MessageFlagCategory::Content},
     MessageFlagInfo{MessageFlags::HasAttachment, 'a', "attach",
-		    MessageFlagCategory::Content},
+								 MessageFlagCategory::Content},
 
-    MessageFlagInfo{MessageFlags::Unread, 'u', "unread", MessageFlagCategory::Pseudo},
+    MessageFlagInfo{MessageFlags::Unread,	 'u', "unread",	 MessageFlagCategory::Pseudo},
 
-    MessageFlagInfo{MessageFlags::MailingList, 'l', "list", MessageFlagCategory::Content},
+    MessageFlagInfo{MessageFlags::MailingList,	 'l', "list",	 MessageFlagCategory::Content},
 }};
+
+
+/**
+ * Invoke some callable Func for each flag info
+ *
+ * @param func some callable
+ */
+template<typename Func>
+constexpr void message_flag_infos_for_each(Func&& func)
+{
+	for (auto&& info: AllMessageFlagInfos)
+		func(info);
+}
 
 /**
  * Get flag info for some flag
