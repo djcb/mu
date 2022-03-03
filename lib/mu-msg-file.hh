@@ -20,6 +20,8 @@
 #ifndef MU_MSG_FILE_HH__
 #define MU_MSG_FILE_HH__
 
+#include "mu-message.hh"
+
 namespace Mu {
 
 struct MuMsgFile;
@@ -34,8 +36,8 @@ struct MuMsgFile;
  * @return a new MuMsg, or NULL in case of error
  */
 MuMsgFile* mu_msg_file_new(const char* path,
-                           const char* mdir,
-                           GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			   const char* mdir,
+			   GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * destroy a MuMsgFile object
@@ -68,8 +70,8 @@ char* mu_msg_file_get_header(MuMsgFile* self, const char* header);
  * @return a string, or NULL
  */
 char* mu_msg_file_get_str_field(MuMsgFile*   self,
-                                MuMsgFieldId msfid,
-                                gboolean*    do_free) G_GNUC_WARN_UNUSED_RESULT;
+				Message::Field::Id msfid,
+				gboolean*    do_free) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string-list value for this message
@@ -80,7 +82,7 @@ char* mu_msg_file_get_str_field(MuMsgFile*   self,
  * @return a GSList*, or NULL; free with mu_str_free_list
  */
 GSList* mu_msg_file_get_str_list_field(MuMsgFile*   self,
-                                       MuMsgFieldId msfid) G_GNUC_WARN_UNUSED_RESULT;
+				       Message::Field::Id msfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a numeric value for this message -- the return value should be
@@ -91,7 +93,7 @@ GSList* mu_msg_file_get_str_list_field(MuMsgFile*   self,
  *
  * @return the numeric value, or -1 in case of error
  */
-gint64 mu_msg_file_get_num_field(MuMsgFile* self, MuMsgFieldId mfid);
+gint64 mu_msg_file_get_num_field(MuMsgFile* self, Message::Field::Id mfid);
 
 } // namespace Mu
 

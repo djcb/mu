@@ -40,6 +40,7 @@
 #include "mu-maildir.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 /* note, we do the gmime initialization here rather than in
  * mu-runtime, because this way we don't need mu-runtime for simple
@@ -101,8 +102,8 @@ Mu::mu_msg_new_from_file(const char* path, const char* mdir, GError** err)
 	self->_file = msgfile;
 
 	g_debug("created message from %s in %" G_GINT64_FORMAT " μs",
-	        path,
-	        g_get_monotonic_time() - start);
+		path,
+		g_get_monotonic_time() - start);
 
 	return self;
 }
@@ -197,12 +198,12 @@ get_path(MuMsg* self)
 	val     = NULL;
 
 	if (self->_doc)
-		val = mu_msg_doc_get_str_field(self->_doc, MU_MSG_FIELD_ID_PATH);
+		val = mu_msg_doc_get_str_field(self->_doc, Field::Id::Path);
 
 	/* not in the cache yet? try to get it from the file backend,
 	 * in case we are using that */
 	if (!val && self->_file)
-		val = mu_msg_file_get_str_field(self->_file, MU_MSG_FIELD_ID_PATH, &do_free);
+		val = mu_msg_file_get_str_field(self->_file, Field::Id::Path, &do_free);
 
 	/* shouldn't happen */
 	if (!val)
@@ -242,27 +243,28 @@ Mu::mu_msg_unload_msg_file(MuMsg* msg)
 }
 
 static const GSList*
-get_str_list_field(MuMsg* self, MuMsgFieldId mfid)
+get_str_list_field(MuMsg* self, Field::Id field_id)
 {
 	GSList* val;
 
 	val = NULL;
 
-	if (self->_doc && mu_msg_field_xapian_value(mfid))
-		val = mu_msg_doc_get_str_list_field(self->_doc, mfid);
-	else if (mu_msg_field_gmime(mfid)) {
+	if (self->_doc &&
+	    any_of(message_field(field_id).flags & Field::Flag::Value))
+		val = mu_msg_doc_get_str_list_field(self->_doc, field_id);
+	else if (any_of(message_field(field_id).flags & Field::Flag::GMime)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file(self, NULL))
 			return NULL;
-		val = mu_msg_file_get_str_list_field(self->_file, mfid);
+		val = mu_msg_file_get_str_list_field(self->_file, field_id);
 	}
 
 	return free_later_lst(self, val);
 }
 
 static const char*
-get_str_field(MuMsg* self, MuMsgFieldId mfid)
+get_str_field(MuMsg* self, Field::Id field_id)
 {
 	char*    val;
 	gboolean do_free;
@@ -270,15 +272,16 @@ get_str_field(MuMsg* self, MuMsgFieldId mfid)
 	do_free = TRUE;
 	val     = NULL;
 
-	if (self->_doc && mu_msg_field_xapian_value(mfid))
-		val = mu_msg_doc_get_str_field(self->_doc, mfid);
+	if (self->_doc &&
+	    any_of(message_field(field_id).flags & Field::Flag::Value))
+		val = mu_msg_doc_get_str_field(self->_doc, field_id);
 
-	else if (mu_msg_field_gmime(mfid)) {
+	else if (any_of(message_field(field_id).flags & Field::Flag::GMime)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file(self, NULL))
 			return NULL;
-		val = mu_msg_file_get_str_field(self->_file, mfid, &do_free);
+		val = mu_msg_file_get_str_field(self->_file, field_id, &do_free);
 	} else
 		val = NULL;
 
@@ -286,17 +289,18 @@ get_str_field(MuMsg* self, MuMsgFieldId mfid)
 }
 
 static gint64
-get_num_field(MuMsg* self, MuMsgFieldId mfid)
+get_num_field(MuMsg* self, Field::Id field_id)
 {
-	if (self->_doc && mu_msg_field_xapian_value(mfid))
-		return mu_msg_doc_get_num_field(self->_doc, mfid);
+	if (self->_doc &&
+	    any_of(message_field(field_id).flags & Field::Flag::Value))
+		return mu_msg_doc_get_num_field(self->_doc, field_id);
 
 	/* if we don't have a file object yet, we need to
 	 * create it from the file on disk */
 	if (!mu_msg_load_msg_file(self, NULL))
 		return -1;
 
-	return mu_msg_file_get_num_field(self->_file, mfid);
+	return mu_msg_file_get_num_field(self->_file, field_id);
 }
 
 const char*
@@ -312,7 +316,7 @@ Mu::mu_msg_get_header(MuMsg* self, const char* header)
 	err = NULL;
 	if (!mu_msg_load_msg_file(self, &err)) {
 		g_warning("failed to load message file: %s",
-		          err ? err->message : "something went wrong");
+			  err ? err->message : "something went wrong");
 		return NULL;
 	}
 
@@ -341,21 +345,21 @@ const char*
 Mu::mu_msg_get_path(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_PATH);
+	return get_str_field(self, Field::Id::Path);
 }
 
 const char*
 Mu::mu_msg_get_subject(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_SUBJECT);
+	return get_str_field(self, Field::Id::Subject);
 }
 
 const char*
 Mu::mu_msg_get_msgid(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_MSGID);
+	return get_str_field(self, Field::Id::MessageId);
 }
 
 const char*
@@ -366,7 +370,7 @@ Mu::mu_msg_get_mailing_list(MuMsg* self)
 
 	g_return_val_if_fail(self, NULL);
 
-	ml = get_str_field(self, MU_MSG_FIELD_ID_MAILING_LIST);
+	ml = get_str_field(self, Field::Id::MailingList);
 	if (!ml)
 		return NULL;
 
@@ -381,56 +385,56 @@ const char*
 Mu::mu_msg_get_maildir(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_MAILDIR);
+	return get_str_field(self, Field::Id::Maildir);
 }
 
 const char*
 Mu::mu_msg_get_from(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_FROM);
+	return get_str_field(self, Field::Id::From);
 }
 
 const char*
 Mu::mu_msg_get_to(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_TO);
+	return get_str_field(self, Field::Id::To);
 }
 
 const char*
 Mu::mu_msg_get_cc(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_CC);
+	return get_str_field(self, Field::Id::Cc);
 }
 
 const char*
 Mu::mu_msg_get_bcc(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, MU_MSG_FIELD_ID_BCC);
+	return get_str_field(self, Field::Id::Bcc);
 }
 
 time_t
 Mu::mu_msg_get_date(MuMsg* self)
 {
 	g_return_val_if_fail(self, (time_t)-1);
-	return (time_t)get_num_field(self, MU_MSG_FIELD_ID_DATE);
+	return (time_t)get_num_field(self, Field::Id::Date);
 }
 
 MessageFlags
 Mu::mu_msg_get_flags(MuMsg* self)
 {
 	g_return_val_if_fail(self, MessageFlags::None);
-	return static_cast<MessageFlags>(get_num_field(self, MU_MSG_FIELD_ID_FLAGS));
+	return static_cast<MessageFlags>(get_num_field(self, Field::Id::Flags));
 }
 
 size_t
 Mu::mu_msg_get_size(MuMsg* self)
 {
 	g_return_val_if_fail(self, (size_t)-1);
-	return (size_t)get_num_field(self, MU_MSG_FIELD_ID_SIZE);
+	return (size_t)get_num_field(self, Field::Id::Size);
 }
 
 Mu::MessagePriority
@@ -439,7 +443,7 @@ Mu::mu_msg_get_prio(MuMsg* self)
 	g_return_val_if_fail(self, MessagePriority{});
 
 	return message_priority_from_char(
-	    static_cast<char>(get_num_field(self, MU_MSG_FIELD_ID_PRIO)));
+	    static_cast<char>(get_num_field(self, Field::Id::Priority)));
 }
 
 struct _BodyData {
@@ -514,7 +518,7 @@ find_content_type(MuMsg* msg, MuMsgPart* mpart, ContentTypeData* cdata)
 	if (!cdata->want_html && (mpart->part_type & MU_MSG_PART_TYPE_TEXT_PLAIN))
 		wanted = (GMimePart*)mpart->data;
 	else if (!(mpart->part_type & MU_MSG_PART_TYPE_ATTACHMENT) && cdata->want_html &&
-	         (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
+		 (mpart->part_type & MU_MSG_PART_TYPE_TEXT_HTML))
 		wanted = (GMimePart*)mpart->data;
 	else
 		wanted = NULL;
@@ -583,35 +587,35 @@ const GSList*
 Mu::mu_msg_get_references(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_list_field(self, MU_MSG_FIELD_ID_REFS);
+	return get_str_list_field(self, Field::Id::References);
 }
 
 const GSList*
 Mu::mu_msg_get_tags(MuMsg* self)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_list_field(self, MU_MSG_FIELD_ID_TAGS);
+	return get_str_list_field(self, Field::Id::Tags);
 }
 
 const char*
-Mu::mu_msg_get_field_string(MuMsg* self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_string(MuMsg* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_field(self, mfid);
+	return get_str_field(self, field_id);
 }
 
 const GSList*
-Mu::mu_msg_get_field_string_list(MuMsg* self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_string_list(MuMsg* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	return get_str_list_field(self, mfid);
+	return get_str_list_field(self, field_id);
 }
 
 gint64
-Mu::mu_msg_get_field_numeric(MuMsg* self, MuMsgFieldId mfid)
+Mu::mu_msg_get_field_numeric(MuMsg* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, -1);
-	return get_num_field(self, mfid);
+	return get_num_field(self, field_id);
 }
 
 
@@ -624,14 +628,14 @@ get_all_contacts(MuMsg *self)
 			      MessageContact::Type::Cc, MessageContact::Type::ReplyTo,
 			      MessageContact::Type::Bcc}) {
 		auto type_contacts{mu_msg_get_contacts(self, mtype)};
-		
+
 		contacts.reserve(contacts.size() + type_contacts.size());
 		contacts.insert(contacts.end(), type_contacts.begin(), type_contacts.end());
 	}
 
 	return contacts;
 }
-			
+
 Mu::MessageContacts
 Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
 {
@@ -642,7 +646,7 @@ Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
 
 	if (mtype == MessageContact::Type::Unknown)
 		return get_all_contacts(self);
-	
+
 	const auto info = std::invoke([&]()->AddressInfo {
 		switch (mtype) {
 		case MessageContact::Type::From:
@@ -666,12 +670,12 @@ Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
 					self->_file->_mime_msg, info.first)}; lst)
 			return make_message_contacts(lst, mtype, mdate);
 	} else if (info.second) {
-		if (auto&& lst_str{info.second(self)}; lst_str) 
+		if (auto&& lst_str{info.second(self)}; lst_str)
 			return make_message_contacts(lst_str, mtype, mdate);
 	}
-	
+
 	return {};
-		
+
 }
 
 
@@ -692,11 +696,11 @@ Mu::mu_msg_is_readable(MuMsg* self)
 bool
 Mu::mu_msg_move_to_maildir(MuMsg*		self,
 			   const std::string&	root_maildir_path,
-                           const std::string&	target_maildir,
+			   const std::string&	target_maildir,
 			   MessageFlags		flags,
-                           bool			ignore_dups,
-                           bool			new_name,
-                           GError**		err)
+			   bool			ignore_dups,
+			   bool			new_name,
+			   GError**		err)
 {
 	g_return_val_if_fail(self, false);
 
@@ -763,7 +767,7 @@ Mu::mu_str_display_contact_s(const char* str)
 		for (c2 = contact; c2 < c && !(isalnum(*c2)); ++c2)
 			;
 		if (c2 != c) /* apparently, there was something,
-		              * so we can remove the <... part*/
+			      * so we can remove the <... part*/
 			*c = '\0';
 	}
 

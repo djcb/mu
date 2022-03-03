@@ -33,9 +33,11 @@
 #include "mu-msg-priv.hh"
 
 #include "utils/mu-util.h"
+#include "utils/mu-utils.hh"
 #include "utils/mu-str.h"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 static gboolean
 init_file_metadata(MuMsgFile* self, const char* path, const char* mdir, GError** err);
@@ -85,19 +87,19 @@ init_file_metadata(MuMsgFile* self, const char* path, const gchar* mdir, GError*
 
 	if (access(path, R_OK) != 0) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE,
-		                    "cannot read file %s: %s",
-		                    path,
-		                    g_strerror(errno));
+				    MU_ERROR_FILE,
+				    "cannot read file %s: %s",
+				    path,
+				    g_strerror(errno));
 		return FALSE;
 	}
 
 	if (stat(path, &statbuf) < 0) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE,
-		                    "cannot stat %s: %s",
-		                    path,
-		                    g_strerror(errno));
+				    MU_ERROR_FILE,
+				    "cannot stat %s: %s",
+				    path,
+				    g_strerror(errno));
 		return FALSE;
 	}
 
@@ -147,21 +149,21 @@ get_mime_stream(MuMsgFile* self, const char* path, GError** err)
 	file = fopen(path, "r");
 	if (!file) {
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_FILE,
-		            "cannot open %s: %s",
-		            path,
-		            g_strerror(errno));
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_FILE,
+			    "cannot open %s: %s",
+			    path,
+			    g_strerror(errno));
 		return NULL;
 	}
 
 	stream = g_mime_stream_file_new(file);
 	if (!stream) {
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_GMIME,
-		            "cannot create mime stream for %s",
-		            path);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_GMIME,
+			    "cannot create mime stream for %s",
+			    path);
 		fclose(file);
 		return NULL;
 	}
@@ -170,10 +172,10 @@ get_mime_stream(MuMsgFile* self, const char* path, GError** err)
 	if (!self->_sha1) {
 		::fclose(file);
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_FILE,
-		            "failed to get sha-1 for %s",
-		            path);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_FILE,
+			    "failed to get sha-1 for %s",
+			    path);
 		return NULL;
 	}
 
@@ -194,10 +196,10 @@ init_mime_msg(MuMsgFile* self, const char* path, GError** err)
 	g_object_unref(stream);
 	if (!parser) {
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_GMIME,
-		            "cannot create mime parser for %s",
-		            path);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_GMIME,
+			    "cannot create mime parser for %s",
+			    path);
 		return FALSE;
 	}
 
@@ -205,10 +207,10 @@ init_mime_msg(MuMsgFile* self, const char* path, GError** err)
 	g_object_unref(parser);
 	if (!self->_mime_msg) {
 		g_set_error(err,
-		            MU_ERROR_DOMAIN,
-		            MU_ERROR_GMIME,
-		            "message seems invalid, ignoring (%s)",
-		            path);
+			    MU_ERROR_DOMAIN,
+			    MU_ERROR_GMIME,
+			    "message seems invalid, ignoring (%s)",
+			    path);
 		return FALSE;
 	}
 
@@ -307,9 +309,9 @@ looks_like_attachment(GMimeObject* part)
 		const char* type;
 		const char* sub_type;
 	} att_types[] = {{"image", "*"},
-	                 {"audio", "*"},
-	                 {"application", "*"},
-	                 {"application", "x-patch"}};
+			 {"audio", "*"},
+			 {"application", "*"},
+			 {"application", "x-patch"}};
 
 	disp = g_mime_object_get_content_disposition(part);
 
@@ -392,9 +394,9 @@ get_content_flags(MuMsgFile* self)
 		msg_cflags_cb(NULL, GMIME_OBJECT(self->_mime_msg), &flags);
 		/* parts */
 		mu_mime_message_foreach(self->_mime_msg,
-		                        FALSE, /* never decrypt for this */
-		                        (GMimeObjectForeachFunc)msg_cflags_cb,
-		                        &flags);
+					FALSE, /* never decrypt for this */
+					(GMimeObjectForeachFunc)msg_cflags_cb,
+					&flags);
 	}
 
 	char *ml{get_mailing_list(self)};
@@ -439,17 +441,17 @@ parse_prio_str(const char* priostr)
 		const char*     _str;
 		MessagePriority _prio;
 	} str_prio[] = {{"high", MessagePriority::High},
-	                {"1", MessagePriority::High},
-	                {"2", MessagePriority::High},
+			{"1", MessagePriority::High},
+			{"2", MessagePriority::High},
 
-	                {"normal", MessagePriority::Normal},
-	                {"3", MessagePriority::Normal},
+			{"normal", MessagePriority::Normal},
+			{"3", MessagePriority::Normal},
 
-	                {"low", MessagePriority::Low},
-	                {"list", MessagePriority::Low},
-	                {"bulk", MessagePriority::Low},
-	                {"4", MessagePriority::Low},
-	                {"5", MessagePriority::Low}};
+			{"low", MessagePriority::Low},
+			{"list", MessagePriority::Low},
+			{"bulk", MessagePriority::Low},
+			{"4", MessagePriority::Low},
+			{"5", MessagePriority::Low}};
 
 	for (i = 0; i != G_N_ELEMENTS(str_prio); ++i)
 		if (g_ascii_strcasecmp(priostr, str_prio[i]._str) == 0)
@@ -682,13 +684,13 @@ cleanup_maybe(const char* str, gboolean* do_free)
 }
 
 G_GNUC_CONST static GMimeAddressType
-address_type(MuMsgFieldId mfid)
+address_type(Field::Id field_id)
 {
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_BCC: return GMIME_ADDRESS_TYPE_BCC;
-	case MU_MSG_FIELD_ID_CC: return GMIME_ADDRESS_TYPE_CC;
-	case MU_MSG_FIELD_ID_TO: return GMIME_ADDRESS_TYPE_TO;
-	case MU_MSG_FIELD_ID_FROM: return GMIME_ADDRESS_TYPE_FROM;
+	switch (field_id) {
+	case Field::Id::Bcc: return GMIME_ADDRESS_TYPE_BCC;
+	case Field::Id::Cc: return GMIME_ADDRESS_TYPE_CC;
+	case Field::Id::To: return GMIME_ADDRESS_TYPE_TO;
+	case Field::Id::From: return GMIME_ADDRESS_TYPE_FROM;
 	default: g_return_val_if_reached((GMimeAddressType)-1);
 	}
 }
@@ -708,34 +710,35 @@ get_msgid(MuMsgFile* self, gboolean* do_free)
 }
 
 char*
-Mu::mu_msg_file_get_str_field(MuMsgFile* self, MuMsgFieldId mfid, gboolean* do_free)
+Mu::mu_msg_file_get_str_field(MuMsgFile* self, Field::Id field_id, gboolean* do_free)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(mu_msg_field_is_string(mfid), NULL);
+	g_return_val_if_fail(message_field(field_id).is_string(), NULL);
 
 	*do_free = FALSE; /* default */
 
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_BCC:
-	case MU_MSG_FIELD_ID_CC:
-	case MU_MSG_FIELD_ID_FROM:
-	case MU_MSG_FIELD_ID_TO: *do_free = TRUE; return get_recipient(self, address_type(mfid));
+	switch (field_id) {
+	case Field::Id::Bcc:
+	case Field::Id::Cc:
+	case Field::Id::From:
+	case Field::Id::To: *do_free = TRUE; return get_recipient(self, address_type(field_id));
 
-	case MU_MSG_FIELD_ID_PATH: return self->_path;
+	case Field::Id::Path: return self->_path;
 
-	case MU_MSG_FIELD_ID_MAILING_LIST: *do_free = TRUE; return (char*)get_mailing_list(self);
+	case Field::Id::MailingList: *do_free = TRUE; return (char*)get_mailing_list(self);
 
-	case MU_MSG_FIELD_ID_SUBJECT:
+	case Field::Id::Subject:
 		return (char*)cleanup_maybe(g_mime_message_get_subject(self->_mime_msg), do_free);
 
-	case MU_MSG_FIELD_ID_MSGID: return get_msgid(self, do_free);
+	case Field::Id::MessageId: return get_msgid(self, do_free);
 
-	case MU_MSG_FIELD_ID_MAILDIR: return self->_maildir;
+	case Field::Id::Maildir: return self->_maildir;
 
-	case MU_MSG_FIELD_ID_BODY_TEXT: /* use mu_msg_get_body_text */
-	case MU_MSG_FIELD_ID_BODY_HTML: /* use mu_msg_get_body_html */
-	case MU_MSG_FIELD_ID_EMBEDDED_TEXT:
-		g_warning("%s is not retrievable through: %s", mu_msg_field_name(mfid), __func__);
+	case Field::Id::BodyText: /* use mu_msg_get_body_text */
+	case Field::Id::BodyHtml: /* use mu_msg_get_body_html */
+	case Field::Id::EmbeddedText:
+		g_warning("%*s is not retrievable through: %s",
+			  STR_V(message_field(field_id).name), __func__);
 		return NULL;
 
 	default: g_return_val_if_reached(NULL);
@@ -743,36 +746,36 @@ Mu::mu_msg_file_get_str_field(MuMsgFile* self, MuMsgFieldId mfid, gboolean* do_f
 }
 
 GSList*
-Mu::mu_msg_file_get_str_list_field(MuMsgFile* self, MuMsgFieldId mfid)
+Mu::mu_msg_file_get_str_list_field(MuMsgFile* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(mu_msg_field_is_string_list(mfid), NULL);
+	g_return_val_if_fail(message_field(field_id).is_string_list(), NULL);
 
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_REFS: return get_references(self);
-	case MU_MSG_FIELD_ID_TAGS: return get_tags(self);
+	switch (field_id) {
+	case Field::Id::References: return get_references(self);
+	case Field::Id::Tags: return get_tags(self);
 	default: g_return_val_if_reached(NULL);
 	}
 }
 
 gint64
-Mu::mu_msg_file_get_num_field(MuMsgFile* self, const MuMsgFieldId mfid)
+Mu::mu_msg_file_get_num_field(MuMsgFile* self, const Field::Id field_id)
 {
 	g_return_val_if_fail(self, -1);
-	g_return_val_if_fail(mu_msg_field_is_numeric(mfid), -1);
+	g_return_val_if_fail(message_field(field_id).is_numerical(), -1);
 
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_DATE: {
+	switch (field_id) {
+	case Field::Id::Date: {
 		GDateTime* dt;
 		dt = g_mime_message_get_date(self->_mime_msg);
 		return dt ? g_date_time_to_unix(dt) : 0;
 	}
 
-	case MU_MSG_FIELD_ID_FLAGS: return (gint64)get_flags(self);
+	case Field::Id::Flags: return (gint64)get_flags(self);
 
-	case MU_MSG_FIELD_ID_PRIO: return (gint64)get_prio(self);
+	case Field::Id::Priority: return (gint64)get_prio(self);
 
-	case MU_MSG_FIELD_ID_SIZE: return (gint64)get_size(self);
+	case Field::Id::Size: return (gint64)get_size(self);
 
 	default: g_return_val_if_reached(-1);
 	}
@@ -811,17 +814,17 @@ foreach_cb(GMimeObject* parent, GMimeObject* part, ForeachData* fdata)
 	if (fdata->decrypt && GMIME_IS_MULTIPART_ENCRYPTED(part)) {
 		GMimeObject* dec;
 		dec = mu_msg_crypto_decrypt_part(GMIME_MULTIPART_ENCRYPTED(part),
-		                                 MU_MSG_OPTION_NONE,
-		                                 NULL,
-		                                 NULL,
-		                                 NULL);
+						 MU_MSG_OPTION_NONE,
+						 NULL,
+						 NULL,
+						 NULL);
 		if (!dec)
 			return;
 
 		if (GMIME_IS_MULTIPART(dec))
 			g_mime_multipart_foreach((GMIME_MULTIPART(dec)),
-			                         (GMimeObjectForeachFunc)foreach_cb,
-			                         fdata);
+						 (GMimeObjectForeachFunc)foreach_cb,
+						 fdata);
 		else
 			foreach_cb(parent, dec, fdata);
 
@@ -831,9 +834,9 @@ foreach_cb(GMimeObject* parent, GMimeObject* part, ForeachData* fdata)
 
 void
 Mu::mu_mime_message_foreach(GMimeMessage*          msg,
-                            gboolean               decrypt,
-                            GMimeObjectForeachFunc func,
-                            gpointer               user_data)
+			    gboolean               decrypt,
+			    GMimeObjectForeachFunc func,
+			    gpointer               user_data)
 {
 	ForeachData fdata;
 

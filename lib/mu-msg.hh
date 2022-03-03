@@ -22,11 +22,8 @@
 
 #include <utils/mu-result.hh>
 
-#include <mu-message-flags.hh>
-#include <mu-message-priority.hh>
-#include <mu-message-contact.hh>
+#include <mu-message.hh>
 
-#include <mu-msg-fields.h>
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
@@ -83,8 +80,8 @@ MU_ENABLE_BITOPS(MuMsgOptions);
  * mu_msg_unref when done with this message
  */
 MuMsg* mu_msg_new_from_file(const char* filepath,
-                            const char* maildir,
-                            GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			    const char* maildir,
+			    GError**    err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * create a new MuMsg* instance based on a Xapian::Document
@@ -100,7 +97,7 @@ MuMsg* mu_msg_new_from_file(const char* filepath,
  * mu_msg_unref when done with this message
  */
 MuMsg* mu_msg_new_from_doc(XapianDocument* doc,
-                           GError**        err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+			   GError**        err) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  *  if we don't have a message file yet (because this message is
@@ -320,7 +317,7 @@ size_t mu_msg_get_size(MuMsg* msg);
  *
  * @return a string that should not be freed
  */
-const char* mu_msg_get_field_string(MuMsg* msg, MuMsgFieldId mfid);
+const char* mu_msg_get_field_string(MuMsg* msg, Message::Field::Id mfid);
 
 /**
  * get some field value as string-list
@@ -330,7 +327,7 @@ const char* mu_msg_get_field_string(MuMsg* msg, MuMsgFieldId mfid);
  *
  * @return a list that should not be freed
  */
-const GSList* mu_msg_get_field_string_list(MuMsg* self, MuMsgFieldId mfid);
+const GSList* mu_msg_get_field_string_list(MuMsg* self, Message::Field::Id mfid);
 
 /**
  * get some field value as string
@@ -340,7 +337,7 @@ const GSList* mu_msg_get_field_string_list(MuMsg* self, MuMsgFieldId mfid);
  *
  * @return a string that should not be freed
  */
-gint64 mu_msg_get_field_numeric(MuMsg* msg, MuMsgFieldId mfid);
+gint64 mu_msg_get_field_numeric(MuMsg* msg, Message::Field::Id mfid);
 
 /**
  * get the message priority for this message. The X-Priority, X-MSMailPriority,
@@ -404,7 +401,7 @@ const GSList* mu_msg_get_tags(MuMsg* self);
  * @return negative if m1 is smaller, positive if m1 is smaller, 0 if
  * they are equal
  */
-int mu_msg_cmp(MuMsg* m1, MuMsg* m2, MuMsgFieldId mfid);
+int mu_msg_cmp(MuMsg* m1, MuMsg* m2, Message::Field::Id mfid);
 
 /**
  * check whether there there's a readable file behind this message
@@ -440,17 +437,17 @@ bool mu_msg_move_to_maildir(MuMsg*		msg,
 			    bool		ignore_dups,
 			    bool		new_name,
 			    GError**		err);
-/** 
+/**
  * Get a sequence with contacts of the given type for this message.
  *
  * @param msg a valid MuMsg* instance
  * @param mtype the contact type; with Type::Unknown, get _all_ types.
- * 
+ *
  * @return a sequence
  */
 Mu::MessageContacts mu_msg_get_contacts (MuMsg *self,
 					 MessageContact::Type mtype=MessageContact::Type::Unknown);
-	
+
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn
@@ -489,7 +486,7 @@ struct QueryMatch;
  *    - MU_MSG_OPTION_EXTRACT_IMAGES: extract image attachments as temporary
  *      files and include links to those in the sexp
  *  and for message parts:
- *  	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
+ *	MU_MSG_OPTION_CHECK_SIGNATURES: check signatures
  *	MU_MSG_OPTION_AUTO_RETRIEVE_KEY: attempt to retrieve keys online
  *	MU_MSG_OPTION_USE_AGENT: attempt to use GPG-agent
  *	MU_MSG_OPTION_USE_PKCS7: attempt to use PKCS (instead of gpg)

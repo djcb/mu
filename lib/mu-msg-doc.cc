@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <xapian.h>
 
-#include "mu-msg-fields.h"
+#include "mu-message.hh"
 #include "mu-msg-doc.hh"
 
 #include "utils/mu-util.h"
@@ -32,6 +32,7 @@
 #include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 struct Mu::MuMsgDoc {
 	MuMsgDoc(Xapian::Document* doc) : _doc(doc) {}
@@ -61,13 +62,12 @@ Mu::mu_msg_doc_destroy(MuMsgDoc* self)
 }
 
 gchar*
-Mu::mu_msg_doc_get_str_field(MuMsgDoc* self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_field(MuMsgDoc* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), NULL);
 
 	// disable this check:
-	//    g_return_val_if_fail (mu_msg_field_is_string(mfid), NULL);
+	//    g_return_val_if_fail (mu_msg_field_is_string(field_id), NULL);
 	// because it's useful to get numerical field as strings,
 	// for example when sorting (which is much faster if don't
 	// have to convert to numbers first, esp. when it's a date
@@ -75,41 +75,42 @@ Mu::mu_msg_doc_get_str_field(MuMsgDoc* self, MuMsgFieldId mfid)
 
 	return xapian_try(
 	    [&] {
-		    const std::string s(self->doc().get_value(mfid));
+		    const auto value_no{message_field(field_id).value_no()};
+		    const std::string s(self->doc().get_value(value_no));
 		    return s.empty() ? NULL : g_strdup(s.c_str());
 	    },
 	    (gchar*)nullptr);
 }
 
 GSList*
-Mu::mu_msg_doc_get_str_list_field(MuMsgDoc* self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_str_list_field(MuMsgDoc* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), NULL);
-	g_return_val_if_fail(mu_msg_field_is_string_list(mfid), NULL);
+	g_return_val_if_fail(message_field(field_id).type == Field::Type::StringList, NULL);
 
 	return xapian_try(
 	    [&] {
 		    /* return a comma-separated string as a GSList */
-		    const std::string s(self->doc().get_value(mfid));
+		    const auto value_no{message_field(field_id).value_no()};
+		    const std::string s(self->doc().get_value(value_no));
 		    return s.empty() ? NULL : mu_str_to_list(s.c_str(), ',', TRUE);
 	    },
 	    (GSList*)nullptr);
 }
 
 gint64
-Mu::mu_msg_doc_get_num_field(MuMsgDoc* self, MuMsgFieldId mfid)
+Mu::mu_msg_doc_get_num_field(MuMsgDoc* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, -1);
-	g_return_val_if_fail(mu_msg_field_id_is_valid(mfid), -1);
-	g_return_val_if_fail(mu_msg_field_is_numeric(mfid), -1);
+	g_return_val_if_fail(message_field(field_id).is_numerical(), -1);
 
 	return xapian_try(
 	    [&] {
-		    const std::string s(self->doc().get_value(mfid));
+		    const auto value_no{message_field(field_id).value_no()};
+		    const std::string s(self->doc().get_value(value_no));
 		    if (s.empty())
 			    return (gint64)0;
-		    else if (mfid == MU_MSG_FIELD_ID_DATE || mfid == MU_MSG_FIELD_ID_SIZE)
+		    else if (field_id == Field::Id::Date || field_id == Field::Id::Size)
 			    return static_cast<gint64>(strtol(s.c_str(), NULL, 10));
 		    else {
 			    return static_cast<gint64>(Xapian::sortable_unserialise(s));
