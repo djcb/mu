@@ -32,6 +32,7 @@
 #include "test-mu-common.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 static void
 test_query()
@@ -54,22 +55,22 @@ test_query()
 		size_t n{};
 		for (auto&& item : res)
 			g_debug("%02zu %s %s",
-			        ++n,
-			        item.path().value_or("<none>").c_str(),
-			        item.message_id().value_or("<none>").c_str());
+				++n,
+				item.path().value_or("<none>").c_str(),
+				item.message_id().value_or("<none>").c_str());
 	};
 
 	g_assert_cmpuint(store.size(), ==, 19);
 
 	{
-		const auto res = store.run_query("", MU_MSG_FIELD_ID_NONE, QueryFlags::None);
+		const auto res = store.run_query("", {}, QueryFlags::None);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 19);
 		dump_matches(*res);
 	}
 
 	{
-		const auto res = store.run_query("", MU_MSG_FIELD_ID_PATH, QueryFlags::None, 11);
+		const auto res = store.run_query("", Field::Id::Path, QueryFlags::None, 11);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 11);
 		dump_matches(*res);

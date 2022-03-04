@@ -182,9 +182,48 @@ test_make_contacts()
 	g_object_unref(lst);
 
 	g_assert_cmpuint(addrs.size(),==,3);
+
+	const auto addrs2{make_message_contacts(str, MessageContact::Type::To, 12345 )};
+	g_assert_cmpuint(addrs2.size(),==,3);
+
+	assert_equal(addrs2[0].name, "Abc");
+	assert_equal(addrs2[0].email, "boo@example.com");
+	assert_equal(addrs2[1].name, "Def");
+	assert_equal(addrs2[1].email, "baa@example.com");
+	assert_equal(addrs2[2].name, "Ghi");
+	assert_equal(addrs2[2].email, "zzz@example.com");
+}
+
+static void
+test_make_contacts_2()
+{
+	const auto str = "Äbc <boo@example.com>, "
+		"De\nf <baa@example.com>, "
+		"\tGhi <zzz@example.com>";
+
+	const auto addrs2{make_message_contacts(str, MessageContact::Type::Bcc, 12345 )};
+	g_assert_cmpuint(addrs2.size(),==,3);
+
+	assert_equal(addrs2[0].name, "Äbc");
+	assert_equal(addrs2[0].email, "boo@example.com");
+	assert_equal(addrs2[1].name, "De f");
+	assert_equal(addrs2[1].email, "baa@example.com");
+	assert_equal(addrs2[2].name, "Ghi");
+	assert_equal(addrs2[2].email, "zzz@example.com");
 }
 
 
+static void
+test_make_contacts_err()
+{
+	allow_warnings();
+
+	InternetAddressList *lst{ internet_address_list_parse(NULL, "")};
+	g_assert_false(lst);
+
+	const auto addrs{make_message_contacts("", MessageContact::Type::To, 77777)};
+	g_assert_true(addrs.empty());
+}
 
 int
 main(int argc, char* argv[])
@@ -196,6 +235,8 @@ main(int argc, char* argv[])
 	g_test_add_func("/message-contacts/ctor-blinky", test_ctor_blinky);
 	g_test_add_func("/message-contacts/ctor-cleanup", test_ctor_cleanup);
 	g_test_add_func("/message-contacts/make-contacts", test_make_contacts);
+	g_test_add_func("/message-contacts/make-contacts-2", test_make_contacts_2);
+	g_test_add_func("/message-contacts/make-contacts-err", test_make_contacts_err);
 
 	return g_test_run();
 }

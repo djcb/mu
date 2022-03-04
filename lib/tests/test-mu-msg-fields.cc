@@ -29,14 +29,14 @@
 #include <locale.h>
 
 #include "test-mu-common.hh"
-#include "mu-msg-fields.h"
+#include "mu-message-fields.hh"
 
 static void
 test_mu_msg_field_body(void)
 {
-	MuMsgFieldId field;
+	Field::Id field;
 
-	field = MU_MSG_FIELD_ID_BODY_TEXT;
+	field = Field::Id::BodyText;
 
 	g_assert_cmpstr(mu_msg_field_name(field), ==, "body");
 	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'b');
@@ -48,9 +48,9 @@ test_mu_msg_field_body(void)
 static void
 test_mu_msg_field_subject(void)
 {
-	MuMsgFieldId field;
+	Field::Id field;
 
-	field = MU_MSG_FIELD_ID_SUBJECT;
+	field = Field::Id::Subject;
 
 	g_assert_cmpstr(mu_msg_field_name(field), ==, "subject");
 	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 's');
@@ -62,9 +62,9 @@ test_mu_msg_field_subject(void)
 static void
 test_mu_msg_field_to(void)
 {
-	MuMsgFieldId field;
+	Field::Id field;
 
-	field = MU_MSG_FIELD_ID_TO;
+	field = Field::Id::To;
 
 	g_assert_cmpstr(mu_msg_field_name(field), ==, "to");
 	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 't');
@@ -76,9 +76,9 @@ test_mu_msg_field_to(void)
 static void
 test_mu_msg_field_prio(void)
 {
-	MuMsgFieldId field;
+	Field::Id field;
 
-	field = MU_MSG_FIELD_ID_PRIO;
+	field = Field::Id::Priority;
 
 	g_assert_cmpstr(mu_msg_field_name(field), ==, "prio");
 	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'p');
@@ -90,9 +90,9 @@ test_mu_msg_field_prio(void)
 static void
 test_mu_msg_field_flags(void)
 {
-	MuMsgFieldId field;
+	Field::Id field;
 
-	field = MU_MSG_FIELD_ID_FLAGS;
+	field = Field::Id::Flags;
 
 	g_assert_cmpstr(mu_msg_field_name(field), ==, "flag");
 	g_assert_cmpuint(mu_msg_field_shortcut(field), ==, 'g');

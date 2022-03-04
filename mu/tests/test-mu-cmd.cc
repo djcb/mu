@@ -149,6 +149,7 @@ test_mu_find_02(void)
 	search("bull m:foo", 0);
 	search("bull m:/foo", 1);
 	search("bull m:/Foo", 1);
+	search("bull flag:attach", 1);
 	search("bull flag:a", 1);
 	search("g:x", 0);
 	search("flag:encrypted", 0);

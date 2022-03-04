@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -63,8 +63,8 @@ test_store_add_count_remove()
 	g_assert_true(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
 
 	g_assert_cmpuint(store.add_message(MuTestMaildir2 + "/bar/cur/mail3"),
-	                 !=,
-	                 Mu::Store::InvalidId);
+			 !=,
+			 Mu::Store::InvalidId);
 
 	g_assert_cmpuint(store.size(), ==, 2);
 	g_assert_true(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
@@ -94,8 +94,8 @@ test_store_add_count_remove_in_memory()
 	g_assert_true(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
 
 	g_assert_cmpuint(store.add_message(MuTestMaildir2 + "/bar/cur/mail3"),
-	                 !=,
-	                 Mu::Store::InvalidId);
+			 !=,
+			 Mu::Store::InvalidId);
 
 	g_assert_cmpuint(store.size(), ==, 2);
 	g_assert_true(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
@@ -121,9 +121,9 @@ main(int argc, char* argv[])
 	g_test_add_func("/store/in-memory/add-count-remove", test_store_add_count_remove_in_memory);
 
 	// if (!g_test_verbose())
-	// 	g_log_set_handler (NULL,
-	// 	G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
-	// 	(GLogFunc)black_hole, NULL);
+	//	g_log_set_handler (NULL,
+	//	G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL| G_LOG_FLAG_RECURSION,
+	//	(GLogFunc)black_hole, NULL);
 
 	return g_test_run();
 }
