@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <sys/types.h> /* for mode_t */
-#include <mu-msg-fields.h>
+#include <mu-message.hh>
 #include <mu-msg.hh>
 #include <utils/mu-util.h>
 
@@ -87,9 +87,9 @@ typedef enum {
 
 struct _MuConfig {
 	MuConfigCmd cmd; /* the command, or
-	                  * MU_CONFIG_CMD_NONE */
+			  * MU_CONFIG_CMD_NONE */
 	char* cmdstr;    /* cmd string, for user
-	                  * info */
+			  * info */
 	/* general options */
 	gboolean quiet;      /* don't give any output */
 	gboolean debug;      /* log debug-level info */
@@ -98,21 +98,21 @@ struct _MuConfig {
 	gboolean log_stderr; /* log to stderr (not logfile) */
 	gchar**  params;     /* parameters (for querying) */
 	gboolean nocolor;    /* don't use use ansi-colors
-	                      * in some output */
+			      * in some output */
 	gboolean verbose;    /* verbose output */
 
 	/* options for init */
 	gchar* maildir;      /* where the mails are */
 	char** my_addresses; /* 'my e-mail address', for mu cfind;
-	                      * can be use multiple times */
+			      * can be use multiple times */
 	int max_msg_size;    /* maximum size for message files */
 	int batch_size;      /* database transaction batch size */
 
 	/* options for indexing */
 
 	gboolean nocleanup; /* don't cleanup del'd mails from db */
- 	gboolean lazycheck; /* don't check dirs with up-to-date
-	                     * timestamps */
+	gboolean lazycheck; /* don't check dirs with up-to-date
+			     * timestamps */
 
 	/* options for querying 'find' (and view-> 'summary') */
 	gchar*   fields;    /* fields to show in output */
@@ -125,36 +125,36 @@ struct _MuConfig {
 
 	gchar* bookmark;          /* use bookmark */
 	gchar* formatstr;         /* output type for find
-	                           * (plain,links,xml,json,sexp)
-	                           * and view (plain, sexp) and cfind
-	                           */
+				   * (plain,links,xml,json,sexp)
+				   * and view (plain, sexp) and cfind
+				   */
 	MuConfigFormat format;    /* the decoded formatstr */
 	gchar*         exec;      /* command to execute on the
-	                           * files for the matched
-	                           * messages */
+				   * files for the matched
+				   * messages */
 	gboolean skip_dups;       /* if there are multiple
-	                           * messages with the same
-	                           * msgid, show only the first
-	                           * one */
+				   * messages with the same
+				   * msgid, show only the first
+				   * one */
 	gboolean include_related; /* included related messages
-	                           * in results */
+				   * in results */
 	/* for find and cind */
 	time_t after; /* only show messages or
-	               * addresses last seen after
-	               * T */
+		       * addresses last seen after
+		       * T */
 	/* options for crypto
 	 * ie, 'view', 'extract' */
 	gboolean auto_retrieve; /* assume we're online */
 	gboolean use_agent;     /* attempt to use the gpg-agent */
 	gboolean decrypt;       /* try to decrypt the
-	                         * message body, if any */
+				 * message body, if any */
 	gboolean verify;        /* try to crypto-verify the
-	                         * message */
+				 * message */
 
 	/* options for view */
 	gboolean terminator; /* add separator \f between
-	                      * multiple messages in mu
-	                      * view */
+			      * multiple messages in mu
+			      * view */
 
 	/* options for cfind (and 'find' --> "after") */
 	gboolean personal; /* only show 'personal' addresses */
@@ -169,14 +169,14 @@ struct _MuConfig {
 	gboolean save_all;         /* extract all parts */
 	gboolean save_attachments; /* extract all attachment parts */
 	gchar*   parts;            /* comma-sep'd list of parts
-	                            * to save /  open */
+				    * to save /  open */
 	gchar*   targetdir;        /* where to save the attachments */
 	gboolean overwrite;        /* should we overwrite same-named files */
 	gboolean play;             /* after saving, try to 'play'
-	                            * (open) the attmnt using xdgopen */
+				    * (open) the attmnt using xdgopen */
 	/* for server */
 	gboolean commands; /* dump documentations for server
-	                    * commands */
+			    * commands */
 	gchar* eval;       /* command to evaluate */
 
 	/* options for mu-script */
