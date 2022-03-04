@@ -36,9 +36,10 @@
 #include <mu-msg-part.hh>
 
 using namespace Mu;
+using namespace Mu::Message;
 
 /* pseudo field, not in Xapian */
-#define MU_GUILE_MSG_FIELD_ID_TIMESTAMP (MU_MSG_FIELD_ID_NUM + 1)
+constexpr auto MU_GUILE_MSG_FIELD_ID_TIMESTAMP = MessageField::id_size() + 1;
 
 /* some symbols */
 static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
@@ -117,12 +118,12 @@ get_prio_scm(MuMsg* msg)
 }
 
 static SCM
-msg_string_list_field(MuMsg* msg, MuMsgFieldId mfid)
+msg_string_list_field(MuMsg* msg, Field::Id field_id)
 {
 	SCM           scmlst;
 	const GSList* lst;
 
-	lst = mu_msg_get_field_string_list(msg, mfid);
+	lst = mu_msg_get_field_string_list(msg, field_id);
 
 	for (scmlst = SCM_EOL; lst; lst = g_slist_next(lst)) {
 		SCM item;
@@ -168,7 +169,7 @@ SCM_DEFINE(get_field,
 #define FUNC_NAME s_get_field
 {
 	MuMsgWrapper* msgwrap;
-	MuMsgFieldId  mfid;
+	size_t field_id;
 	msgwrap = (MuMsgWrapper*)SCM_CDR(MSG);
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
@@ -176,33 +177,36 @@ SCM_DEFINE(get_field,
 	SCM_ASSERT(mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT(scm_integer_p(FIELD), FIELD, SCM_ARG2, FUNC_NAME);
 
-	mfid = scm_to_int(FIELD);
-	SCM_ASSERT(mfid < MU_MSG_FIELD_ID_NUM || mfid == MU_GUILE_MSG_FIELD_ID_TIMESTAMP,
-		   FIELD,
-		   SCM_ARG2,
-		   FUNC_NAME);
-
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_PRIO: return get_prio_scm(msgwrap->_msg);
-	case MU_MSG_FIELD_ID_FLAGS: return get_flags_scm(msgwrap->_msg);
-
-	case MU_MSG_FIELD_ID_BODY_HTML: return get_body(msgwrap->_msg, TRUE);
-	case MU_MSG_FIELD_ID_BODY_TEXT: return get_body(msgwrap->_msg, FALSE);
-
-	/* our pseudo-field; we get it from the message file */
-	case MU_GUILE_MSG_FIELD_ID_TIMESTAMP:
+	field_id = scm_to_int(FIELD);
+	if (field_id == MU_GUILE_MSG_FIELD_ID_TIMESTAMP)
 		return scm_from_uint((unsigned)mu_msg_get_timestamp(msgwrap->_msg));
+
+	const auto opt_id{message_field_id(static_cast<size_t>(field_id))};
+	SCM_ASSERT(!!opt_id, FIELD, SCM_ARG2, FUNC_NAME);
+
+	switch (*opt_id) {
+	case Field::Id::Priority:
+		return get_prio_scm(msgwrap->_msg);
+	case Field::Id::Flags:
+		return get_flags_scm(msgwrap->_msg);
+	case Field::Id::BodyHtml:
+		return get_body(msgwrap->_msg, TRUE);
+	case Field::Id::BodyText:
+		return get_body(msgwrap->_msg, FALSE);
+
 	default: break;
 	}
 
-	switch (mu_msg_field_type(mfid)) {
-	case MU_MSG_FIELD_TYPE_STRING:
-		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg, mfid));	case MU_MSG_FIELD_TYPE_BYTESIZE:
-	case MU_MSG_FIELD_TYPE_TIME_T:
-		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, mfid));
-	case MU_MSG_FIELD_TYPE_INT:
-		return scm_from_int(mu_msg_get_field_numeric(msgwrap->_msg, mfid));
-	case MU_MSG_FIELD_TYPE_STRING_LIST: return msg_string_list_field(msgwrap->_msg, mfid);
+	switch (message_field(*opt_id).type) {
+	case Field::Type::String:
+		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg, *opt_id));
+	case Field::Type::ByteSize:
+	case Field::Type::TimeT:
+		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, *opt_id));
+	case Field::Type::Integer:
+		return scm_from_int(mu_msg_get_field_numeric(msgwrap->_msg, *opt_id));
+	case Field::Type::StringList:
+		return msg_string_list_field(msgwrap->_msg, *opt_id);
 	default: SCM_ASSERT(0, FIELD, SCM_ARG2, FUNC_NAME);
 	}
 }
@@ -385,7 +389,7 @@ SCM_DEFINE(get_header,
 static Mu::Option<Mu::QueryResults>
 get_query_results(Mu::Store& store, const char* expr, int maxnum)
 {
-	return store.run_query(expr, MU_MSG_FIELD_ID_NONE, Mu::QueryFlags::None, maxnum);
+	return store.run_query(expr, {}, Mu::QueryFlags::None, maxnum);
 }
 
 SCM_DEFINE(for_each_message,
@@ -464,40 +468,20 @@ define_symbols(void)
 		SYMB_FLAGS[i] = register_symbol(name.c_str());
 	}
 }
-
-static struct {
-	const char* name;
-	unsigned    val;
-} VAR_PAIRS[] = {
-
-    {"mu:field:bcc", MU_MSG_FIELD_ID_BCC},
-    {"mu:field:body-html", MU_MSG_FIELD_ID_BODY_HTML},
-    {"mu:field:body-txt", MU_MSG_FIELD_ID_BODY_TEXT},
-    {"mu:field:cc", MU_MSG_FIELD_ID_CC},
-    {"mu:field:date", MU_MSG_FIELD_ID_DATE},
-    {"mu:field:flags", MU_MSG_FIELD_ID_FLAGS},
-    {"mu:field:from", MU_MSG_FIELD_ID_FROM},
-    {"mu:field:maildir", MU_MSG_FIELD_ID_MAILDIR},
-    {"mu:field:message-id", MU_MSG_FIELD_ID_MSGID},
-    {"mu:field:path", MU_MSG_FIELD_ID_PATH},
-    {"mu:field:prio", MU_MSG_FIELD_ID_PRIO},
-    {"mu:field:refs", MU_MSG_FIELD_ID_REFS},
-    {"mu:field:size", MU_MSG_FIELD_ID_SIZE},
-    {"mu:field:subject", MU_MSG_FIELD_ID_SUBJECT},
-    {"mu:field:tags", MU_MSG_FIELD_ID_TAGS},
-    {"mu:field:to", MU_MSG_FIELD_ID_TO},
-
-    /* non-Xapian field: timestamp */
-    {"mu:field:timestamp", MU_GUILE_MSG_FIELD_ID_TIMESTAMP}};
-
 static void
 define_vars(void)
 {
-	unsigned u;
-	for (u = 0; u != G_N_ELEMENTS(VAR_PAIRS); ++u) {
-		scm_c_define(VAR_PAIRS[u].name, scm_from_uint(VAR_PAIRS[u].val));
-		scm_c_export(VAR_PAIRS[u].name, NULL);
-	}
+	message_field_for_each([](auto&& field){
+		const auto name{"mu:field:" + std::string{field.name}};
+		scm_c_define(name.c_str(), scm_from_uint(field.value_no()));
+		scm_c_export(name.c_str(), NULL);
+	});
+
+	/* non-Xapian field: timestamp */
+	scm_c_define("mu:field:timestamp",
+		     scm_from_uint(MU_GUILE_MSG_FIELD_ID_TIMESTAMP));
+	scm_c_export("mu:field:timestamp", NULL);
+
 }
 
 static SCM
