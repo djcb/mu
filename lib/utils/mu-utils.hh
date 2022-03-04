@@ -311,7 +311,7 @@ private:
 	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }       \
 	constexpr bool    any_of(ET e) { return MU_TO_NUM(ET, e) != 0; }                        \
 	constexpr bool    none_of(ET e) { return MU_TO_NUM(ET, e) == 0; }                       \
-	constexpr bool    has_flag(ET e1, ET e2) { return (e1 & e2) == e2; }			\
+	constexpr bool    one_of(ET e1, ET e2) { return (e1 & e2) == e2; }			\
 	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                        \
 	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }
 
