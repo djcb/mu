@@ -20,7 +20,7 @@
 #include "config.h"
 
 #include "mu-message-flags.hh"
-#include "mu-msg-fields.h"
+#include "mu-message-fields.hh"
 #include "mu-msg.hh"
 #include "mu-server.hh"
 
@@ -49,6 +49,7 @@
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 using namespace Command;
 
 /// @brief object to manage the server-context for all commands.
@@ -559,7 +560,7 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 		throw Error(Error::Code::InvalidArgument, "invalid message-id '%s'", msgid.c_str());
 	}
 
-	const auto xprefix{mu_msg_field_shortcut(MU_MSG_FIELD_ID_MSGID)};
+	const auto xprefix{message_field(Field::Id::MessageId).shortcut};
 	/*XXX this is a bit dodgy */
 	auto tmp{g_ascii_strdown(msgid.c_str(), -1)};
 	auto expr{g_strdup_printf("%c:%s", xprefix, tmp)};
@@ -567,7 +568,7 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 
 	GError*    gerr{};
 	std::lock_guard l{store.lock()};
-	const auto res{store.run_query(expr, MU_MSG_FIELD_ID_NONE, QueryFlags::None, max)};
+	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
 	g_free(expr);
 	if (!res)
 		throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
@@ -672,14 +673,11 @@ Server::Private::find_handler(const Parameters& params)
 	const auto skip_dups{get_bool_or(params, ":skip-dups", false)};
 	const auto include_related{get_bool_or(params, ":include-related", false)};
 
-	MuMsgFieldId sort_field{MU_MSG_FIELD_ID_NONE};
-	if (!sortfieldstr.empty()) {
-		sort_field = mu_msg_field_id_from_name(sortfieldstr.c_str() + 1, FALSE); // skip ':'
-		if (sort_field == MU_MSG_FIELD_ID_NONE)
-			throw Error{Error::Code::InvalidArgument,
-				    "invalid sort field %s",
-				    sortfieldstr.c_str()};
-	}
+
+	auto sort_field = message_field_id(sortfieldstr);
+	if (!sort_field && sortfieldstr.empty())
+		throw Error{Error::Code::InvalidArgument, "invalid sort field %s",
+			sortfieldstr.c_str()};
 	if (batch_size < 1)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
 
