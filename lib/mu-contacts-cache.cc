@@ -47,51 +47,71 @@ struct EmailEqual {
 using ContactUMap = std::unordered_map<const std::string, MessageContact, EmailHash, EmailEqual>;
 struct ContactsCache::Private {
 	Private(const std::string& serialized, const StringVec& personal)
-	    : contacts_{deserialize(serialized)}, dirty_{0}
-	{
-		make_personal(personal);
-	}
+		: contacts_{deserialize(serialized)},
+		  personal_plain_{make_personal_plain(personal)},
+		  personal_rx_{make_personal_rx(personal)},
+		  dirty_{0}
+	{}
 
-	void        make_personal(const StringVec& personal);
 	ContactUMap deserialize(const std::string&) const;
 	std::string serialize() const;
 
 	ContactUMap contacts_;
 	std::mutex  mtx_;
 
-	StringVec               personal_plain_;
-	std::vector<std::regex> personal_rx_;
+	const StringVec               personal_plain_;
+	const std::vector<std::regex> personal_rx_;
 
 	size_t dirty_;
-};
 
-constexpr auto Separator = "\xff"; // Invalid in UTF-8
+private:
+	/**
+	 * Return the non-regex addresses
+	 *
+	 * @param personal
+	 *
+	 * @return
+	 */
+	StringVec make_personal_plain(const StringVec& personal) const {
+		StringVec svec;
+		std::copy_if(personal.begin(),  personal.end(),
+			     std::back_inserter(svec), [&](auto&& p) {
+				     return p.size() < 2
+					     || p.at(0) != '/' || p.at(p.length() - 1) != '/';
+			     });
+		return svec;
+	}
 
-void
-ContactsCache::Private::make_personal(const StringVec& personal)
-{
-	for (auto&& p : personal) {
-		if (p.empty())
-			continue; // invalid
-
-		if (p.size() < 2 || p.at(0) != '/' || p.at(p.length() - 1) != '/')
-			personal_plain_.emplace_back(p); // normal address
-		else {
+	/**
+	 * Return regexps for the regex-addresses
+	 *
+	 * @param personal
+	 *
+	 * @return
+	 */
+	std::vector<std::regex> make_personal_rx(const StringVec& personal) const {
+		std::vector<std::regex> rxvec;
+		for(auto&& p: personal) {
+			if (p.size() < 2 || p[0] != '/' || p[p.length()- 1] != '/')
+				continue;
 			// a regex pattern.
 			try {
 				const auto rxstr{p.substr(1, p.length() - 2)};
-				personal_rx_.emplace_back(std::regex(
-				    rxstr,
-				    std::regex::basic | std::regex::optimize | std::regex::icase));
-
+				rxvec.emplace_back(std::regex(
+				    rxstr, std::regex::basic | std::regex::optimize |
+				    std::regex::icase));
 			} catch (const std::regex_error& rex) {
 				g_warning("invalid personal address regexp '%s': %s",
 					  p.c_str(),
 					  rex.what());
 			}
 		}
+		return rxvec;
 	}
-}
+};
+
+constexpr auto Separator = "\xff"; // Invalid in UTF-8
+
 
 ContactUMap
 ContactsCache::Private::deserialize(const std::string& serialized) const
