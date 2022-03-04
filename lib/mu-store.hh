@@ -34,6 +34,7 @@
 #include <index/mu-indexer.hh>
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
+#include <mu-message.hh>
 
 namespace Mu {
 
@@ -141,7 +142,7 @@ public:
 	Indexer& indexer();
 
 	/**
-	 * Run a query; see the `mu-query` man page for the syntax.
+	 * Run a						query; see the `mu-query` man page for the syntax.
 	 *
 	 * Multi-threaded callers must aquire the lock and keep it
 	 * at least as long as the return value.
@@ -154,10 +155,10 @@ public:
 	 * @return the query-results, or Nothing in case of error.
 	 */
 	std::mutex& lock() const;
-	Option<QueryResults> run_query(const std::string& expr        = "",
-	                               MuMsgFieldId       sortfieldid = MU_MSG_FIELD_ID_NONE,
-	                               QueryFlags         flags       = QueryFlags::None,
-	                               size_t             maxnum      = 0) const;
+	Option<QueryResults> run_query(const std::string&	expr        = "",
+				       std::optional<Message::Field::Id>    sortfield_id = {},
+				       QueryFlags		flags       = QueryFlags::None,
+				       size_t			maxnum      = 0) const;
 
 	/**
 	 * run a Xapian query merely to count the number of matches; for the
@@ -281,11 +282,12 @@ public:
 	 * takes a lock on the store, so the func should _not_ call any other
 	 * Store:: methods.
 	 *
+	 * @param a prefix
 	 * @param func a Callable invoked for each message.
 	 *
 	 * @return the number of times func was invoked
 	 */
-	size_t for_each_term(const std::string& field, ForEachTermFunc func) const;
+	size_t for_each_term(const std::string& prefix, ForEachTermFunc func) const;
 
 
 	/**
