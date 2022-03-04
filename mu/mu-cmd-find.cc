@@ -34,6 +34,7 @@
 #include "mu-query.hh"
 #include "mu-bookmarks.hh"
 #include "mu-runtime.hh"
+#include "mu-message.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -42,6 +43,7 @@
 #include "utils/mu-utils.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 struct OutputInfo {
 	Xapian::docid       docid{};
@@ -68,36 +70,15 @@ print_internal(const Store&       store,
 	return TRUE;
 }
 
-/* returns MU_MSG_FIELD_ID_NONE if there is an error */
-static MuMsgFieldId
-sort_field_from_string(const char* fieldstr, GError** err)
-{
-	MuMsgFieldId mfid;
-
-	mfid = mu_msg_field_id_from_name(fieldstr, FALSE);
-
-	/* not found? try a shortcut */
-	if (mfid == MU_MSG_FIELD_ID_NONE && strlen(fieldstr) == 1)
-		mfid = mu_msg_field_id_from_shortcut(fieldstr[0], FALSE);
-	if (mfid == MU_MSG_FIELD_ID_NONE)
-		g_set_error(err,
-			    MU_ERROR_DOMAIN,
-			    MU_ERROR_IN_PARAMETERS,
-			    "not a valid sort field: '%s'\n",
-			    fieldstr);
-	return mfid;
-}
-
 static Option<QueryResults>
-run_query(const Store& store, const std::string& expr, const MuConfig* opts, GError** err)
+run_query(const Store& store, const std::string& expr, const MuConfig* opts,
+	  GError** err)
 {
-	MuMsgFieldId sortid;
-
-	sortid = MU_MSG_FIELD_ID_NONE;
-	if (opts->sortfield) {
-		sortid = sort_field_from_string(opts->sortfield, err);
-		if (sortid == MU_MSG_FIELD_ID_NONE) /* error occurred? */
-			return Nothing;
+	const auto sortfield_id{message_field_id(opts->sortfield ? opts->sortfield : "")};
+	if (!sortfield_id && opts->sortfield) {
+		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+			    "invvalid sort field: '%s'\n", opts->sortfield);
+		return Nothing;
 	}
 
 	Mu::QueryFlags qflags{QueryFlags::None};
@@ -110,7 +91,7 @@ run_query(const Store& store, const std::string& expr, const MuConfig* opts, GEr
 	if (opts->threads)
 		qflags |= QueryFlags::Threading;
 
-	return store.run_query(expr, sortid, qflags, opts->maxnum);
+	return store.run_query(expr, sortfield_id, qflags, opts->maxnum);
 }
 
 static gboolean
@@ -170,7 +151,8 @@ get_query(const MuConfig* opts, GError** err)
 
 	/* params[0] is 'find', actual search params start with [1] */
 	if (!opts->bookmark && !opts->params[1]) {
-		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS, "error in parameters");
+		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
+			    "error in parameters");
 		return Nothing;
 	}
 
@@ -234,26 +216,24 @@ output_link(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** e
 }
 
 static void
-ansi_color_maybe(MuMsgFieldId mfid, gboolean color)
+ansi_color_maybe(Field::Id field_id, gboolean color)
 {
 	const char* ansi;
 
 	if (!color)
 		return; /* nothing to do */
 
-	switch (mfid) {
-	case MU_MSG_FIELD_ID_FROM: ansi = MU_COLOR_CYAN; break;
+	switch (field_id) {
+	case Field::Id::From: ansi = MU_COLOR_CYAN; break;
 
-	case MU_MSG_FIELD_ID_TO:
-	case MU_MSG_FIELD_ID_CC:
-	case MU_MSG_FIELD_ID_BCC: ansi = MU_COLOR_BLUE; break;
-
-	case MU_MSG_FIELD_ID_SUBJECT: ansi = MU_COLOR_GREEN; break;
-
-	case MU_MSG_FIELD_ID_DATE: ansi = MU_COLOR_MAGENTA; break;
+	case Field::Id::To:
+	case Field::Id::Cc:
+	case Field::Id::Bcc: ansi     = MU_COLOR_BLUE; break;
+	case Field::Id::Subject: ansi = MU_COLOR_GREEN; break;
+	case Field::Id::Date: ansi    = MU_COLOR_MAGENTA; break;
 
 	default:
-		if (mu_msg_field_type(mfid) == MU_MSG_FIELD_TYPE_STRING)
+		if (message_field(field_id).type != Field::Type::String)
 			ansi = MU_COLOR_YELLOW;
 		else
 			ansi = MU_COLOR_RED;
@@ -263,7 +243,7 @@ ansi_color_maybe(MuMsgFieldId mfid, gboolean color)
 }
 
 static void
-ansi_reset_maybe(MuMsgFieldId mfid, gboolean color)
+ansi_reset_maybe(Field::Id field_id, gboolean color)
 {
 	if (!color)
 		return; /* nothing to do */
@@ -272,13 +252,13 @@ ansi_reset_maybe(MuMsgFieldId mfid, gboolean color)
 }
 
 static const char*
-field_string_list(MuMsg* msg, MuMsgFieldId mfid)
+field_string_list(MuMsg* msg, Field::Id field_id)
 {
 	char*         str;
 	const GSList* lst;
 	static char   buf[80];
 
-	lst = mu_msg_get_field_string_list(msg, mfid);
+	lst = mu_msg_get_field_string_list(msg, field_id);
 	if (!lst)
 		return NULL;
 
@@ -306,36 +286,36 @@ flags_s(MessageFlags flags)
 }
 
 static std::string
-display_field(MuMsg* msg, MuMsgFieldId mfid)
+display_field(MuMsg* msg, Field::Id field_id)
 {
 	gint64 val;
 
-	switch (mu_msg_field_type(mfid)) {
-	case MU_MSG_FIELD_TYPE_STRING: {
+	switch (message_field(field_id).type) {
+	case Field::Type::String: {
 		const gchar* str;
-		str = mu_msg_get_field_string(msg, mfid);
+		str = mu_msg_get_field_string(msg, field_id);
 		return str ? str : "";
 	}
-	case MU_MSG_FIELD_TYPE_INT:
-		if (mfid == MU_MSG_FIELD_ID_PRIO) {
-			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, mfid));
+	case Field::Type::Integer:
+		if (field_id == Field::Id::Priority) {
+			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, field_id));
 			const auto prio = message_priority_from_char(val);
 			return message_priority_name_c_str(prio);
-		} else if (mfid == MU_MSG_FIELD_ID_FLAGS) {
-			val = mu_msg_get_field_numeric(msg, mfid);
+		} else if (field_id == Field::Id::Flags) {
+			val = mu_msg_get_field_numeric(msg, field_id);
 			return flags_s(static_cast<MessageFlags>(val));
 		} else /* as string */
-			return mu_msg_get_field_string(msg, mfid);
+			return mu_msg_get_field_string(msg, field_id);
 
-	case MU_MSG_FIELD_TYPE_TIME_T:
+	case Field::Type::TimeT:
 		return time_to_string(
-			"%c", static_cast<::time_t>(mu_msg_get_field_numeric(msg, mfid)));
-	case MU_MSG_FIELD_TYPE_BYTESIZE:
-		val = mu_msg_get_field_numeric(msg, mfid);
+			"%c", static_cast<::time_t>(mu_msg_get_field_numeric(msg, field_id)));
+	case Field::Type::ByteSize:
+		val = mu_msg_get_field_numeric(msg, field_id);
 		return mu_str_size_s((unsigned)val);
-	case MU_MSG_FIELD_TYPE_STRING_LIST: {
+	case Field::Type::StringList: {
 		const char* str;
-		str = field_string_list(msg, mfid);
+		str = field_string_list(msg, field_id);
 		return str ? str : "";
 	}
 	default: g_return_val_if_reached(NULL);
@@ -404,18 +384,16 @@ output_plain_fields(MuMsg* msg, const char* fields, gboolean color, gboolean thr
 	g_return_if_fail(fields);
 
 	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
-		MuMsgFieldId mfid;
-		mfid = mu_msg_field_id_from_shortcut(*myfields, FALSE);
-
-		if (mfid == MU_MSG_FIELD_ID_NONE ||
-		    (!mu_msg_field_xapian_value(mfid) && !mu_msg_field_xapian_contact(mfid)))
+		const auto id_opt{message_field_id(*myfields)};
+		if (!id_opt || (!message_field(*id_opt).is_value() &&
+				!message_field(*id_opt).is_contact()))
 			nonempty += printf("%c", *myfields);
 
 		else {
-			ansi_color_maybe(mfid, color);
-			nonempty += mu_util_fputs_encoded(display_field(msg, mfid).c_str(),
+			ansi_color_maybe(*id_opt, color);
+			nonempty += mu_util_fputs_encoded(display_field(msg, *id_opt).c_str(),
 							  stdout);
-			ansi_reset_maybe(mfid, color);
+			ansi_reset_maybe(*id_opt, color);
 		}
 	}
 
@@ -431,7 +409,7 @@ output_plain(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** 
 
 	/* we reuse the color (whatever that may be)
 	 * for message-priority for threads, too */
-	ansi_color_maybe(MU_MSG_FIELD_ID_PRIO, !opts->nocolor);
+	ansi_color_maybe(Field::Id::Priority, !opts->nocolor);
 	if (opts->threads && info.match_info)
 		thread_indent(*info.match_info, opts);
 
