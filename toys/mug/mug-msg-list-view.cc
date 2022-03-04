@@ -308,7 +308,7 @@ run_query(const char* xpath, const char* expr, MugMsgListView* self)
 	Mu::Store store{xpath};
 
 	return store.run_query(expr,
-				MU_MSG_FIELD_ID_DATE,
+				Field::Id::Date,
 				Mu::QueryFlags::Descending | Mu::QueryFlags::SkipUnreadable |
 				Mu::QueryFlags::SkipDuplicates | Mu::QueryFlags::IncludeRelated |
 				Mu::QueryFlags::Threading);
