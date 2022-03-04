@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.7.9',
+	version: '1.7.10',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
@@ -44,6 +44,14 @@ extra_flags = [
   '-Wno-cast-function-type',
   '-Wno-#warnings'
 ]
+
+
+if get_option('buildtype') == 'debug'
+  extra_flags += [
+    '-ggdb',
+    '-fvar-tracking',
+    '-fvar-tracking-assignments']
+endif
 
 # compilers
 cc = meson.get_compiler('c')
