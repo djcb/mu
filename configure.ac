@@ -189,7 +189,7 @@ PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
 # note that MU_STORE_SCHEMA_VERSION does not follow mu versioning, as we
 # hopefully don't have updates for each version; also, this has nothing to do
 # with Xapian's software version
-AC_DEFINE(MU_STORE_SCHEMA_VERSION,["452"],['Schema' version of the database])
+AC_DEFINE(MU_STORE_SCHEMA_VERSION,["453"],['Schema' version of the database])
 ###############################################################################
 
 ###############################################################################
