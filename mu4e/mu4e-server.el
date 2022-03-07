@@ -339,6 +339,7 @@ The server output is as follows:
 
 (defun mu4e--server-start ()
   "Start the mu server process."
+  (let ((default-directory temporary-file-directory)) ;;ensure it's local.
   ;; sanity-check 1
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
@@ -369,7 +370,7 @@ The server output is as follows:
     (set-process-query-on-exit-flag mu4e--server-process nil)
     (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
     (set-process-filter mu4e--server-process 'mu4e--server-filter)
-    (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel)))
+    (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel))))
 
 (defun mu4e--server-kill ()
   "Kill the mu server process."
