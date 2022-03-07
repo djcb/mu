@@ -266,12 +266,18 @@ Mu::date_to_time_t_string(int64_t t)
 std::string
 Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 {
-	GDateTime* dt = [&] {
+	GDateTime* dt = std::invoke([&] {
 		if (utc)
 			return g_date_time_new_from_unix_utc(t);
 		else
 			return g_date_time_new_from_unix_local(t);
-	}();
+	});
+
+	if (!dt) {
+		g_warning("time_t out of range: <%" G_GUINT64_FORMAT ">",
+			  static_cast<guint64>(t));
+		return {};
+	}
 
 	char* str = g_date_time_format(dt, frm.c_str());
 	g_date_time_unref(dt);
