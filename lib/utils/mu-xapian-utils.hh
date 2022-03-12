@@ -34,6 +34,8 @@ try {
 	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
 } catch (const std::runtime_error& re) {
 	g_critical("%s: error: %s", __func__, re.what());
+} catch (const std::exception& e) {
+	g_critical("%s: caught exception: %s", __func__, e.what());
 } catch (...) {
 	g_critical("%s: caught exception", __func__);
 }
@@ -48,6 +50,9 @@ try {
 	return static_cast<Default>(def);
 } catch (const std::runtime_error& re) {
 	g_critical("%s: error: %s", __func__, re.what());
+	return static_cast<Default>(def);
+} catch (const std::exception& e) {
+	g_critical("%s: caught exception: %s", __func__, e.what());
 	return static_cast<Default>(def);
 } catch (...) {
 	g_critical("%s: caught exception", __func__);
