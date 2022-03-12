@@ -122,6 +122,9 @@ Mu::log_init(const std::string& path, Mu::LogOptions opts)
 		return;
 	}
 
+	if (g_getenv("MU_LOG_STDOUTERR"))
+		opts |= LogOptions::StdOutErr;
+
 	MuLogOptions = opts;
 	MuLogPath    = path;
 
@@ -129,12 +132,12 @@ Mu::log_init(const std::string& path, Mu::LogOptions opts)
 	    [](GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpointer user_data) {
 		    // filter out debug-level messages?
 		    if (level == G_LOG_LEVEL_DEBUG &&
-		        (none_of(MuLogOptions & Mu::LogOptions::Debug)))
+			(none_of(MuLogOptions & Mu::LogOptions::Debug)))
 			    return G_LOG_WRITER_HANDLED;
 
 		    // log criticals to stdout / err or if asked
 		    if (level == G_LOG_LEVEL_CRITICAL ||
-		        any_of(MuLogOptions & Mu::LogOptions::StdOutErr)) {
+			any_of(MuLogOptions & Mu::LogOptions::StdOutErr)) {
 			    log_stdouterr(level, fields, n_fields, user_data);
 		    }
 
@@ -148,8 +151,8 @@ Mu::log_init(const std::string& path, Mu::LogOptions opts)
 	    NULL);
 
 	g_message("logging initialized; debug: %s, stdout/stderr: %s",
-	          any_of(log_get_options() & LogOptions::Debug) ? "yes" : "no",
-	          any_of(log_get_options() & LogOptions::StdOutErr) ? "yes" : "no");
+		  any_of(log_get_options() & LogOptions::Debug) ? "yes" : "no",
+		  any_of(log_get_options() & LogOptions::StdOutErr) ? "yes" : "no");
 
 	MuLogInitialized = true;
 }

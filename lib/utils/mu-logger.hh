@@ -40,6 +40,9 @@ enum struct LogOptions {
  * logging fails -- practically, it goes to the file if there's
  * systemd/journald.
  *
+ * if the environment variable MU_LOG_STDOUTERR is set, LogOptions::StdoutErr is
+ * implied.
+ *
  * @param path path to the log file
  * @param opts logging options
  */
