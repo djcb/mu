@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -40,13 +40,13 @@ fill_database(void)
 
 	tmpdir  = test_mu_common_get_random_tmpdir();
 	cmdline = g_strdup_printf("/bin/sh -c '"
-	                          "%s init  --muhome=%s --maildir=%s --quiet; "
-	                          "%s index --muhome=%s  --quiet'",
-	                          MU_PROGRAM,
-	                          tmpdir,
-	                          MU_TESTMAILDIR2,
-	                          MU_PROGRAM,
-	                          tmpdir);
+				  "%s init  --muhome=%s --maildir=%s --quiet; "
+				  "%s index --muhome=%s  --quiet'",
+				  MU_PROGRAM,
+				  tmpdir,
+				  MU_TESTMAILDIR2,
+				  MU_PROGRAM,
+				  tmpdir);
 
 	if (g_test_verbose())
 		g_print("%s\n", cmdline);
@@ -67,17 +67,17 @@ test_something(const char* what)
 	char *dir, *cmdline;
 	gint  result;
 
+
+	g_setenv("GUILE_AUTO_COMPILE", "0", TRUE);
+	g_setenv("GUILE_LOAD_PATH", GUILE_LOAD_PATH, TRUE);
+
 	dir     = fill_database();
-	cmdline = g_strdup_printf("GUILE_AUTO_COMPILE=0 "
-	                          "LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH "
-	                          "%s -q -L %s -e main %s/test-mu-guile.scm "
-	                          "--muhome=%s --test=%s",
-	                          MU_GUILE_LIBRARY_PATH,
-	                          GUILE_BINARY,
-	                          MU_GUILE_MODULE_PATH,
-	                          ABS_SRCDIR,
-	                          dir,
-	                          what);
+	cmdline = g_strdup_printf("%s -q -e main %s/test-mu-guile.scm "
+				  "--muhome=%s --test=%s",
+				  GUILE_BINARY,
+				  ABS_SRCDIR,
+				  dir,
+				  what);
 
 	if (g_test_verbose())
 		g_print("cmdline: %s\n", cmdline);
@@ -121,10 +121,10 @@ main(int argc, char* argv[])
 	g_test_add_func("/guile/stats", test_mu_guile_stats);
 
 	g_log_set_handler(NULL,
-	                  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
-	                                   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-	                  (GLogFunc)black_hole,
-	                  NULL);
+			  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
+					   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+			  (GLogFunc)black_hole,
+			  NULL);
 
 	rv = g_test_run();
 

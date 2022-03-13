@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -15,13 +15,16 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+guile_load_path=':'.join([
+    join_paths(meson.source_root(), 'guile'),
+    join_paths(meson.current_build_dir(), '..')])
+
 test('test-mu-guile',
      executable('test-mu-guile',
 		'test-mu-guile.cc',
 		install: false,
                 cpp_args: [
                   '-DABS_SRCDIR="' + meson.current_source_dir() + '"',
-                  '-DMU_GUILE_LIBRARY_PATH="' + guile_builddir + '"',
-                  '-DMU_GUILE_MODULE_PATH="' + guile_builddir + '"'
+                  '-DGUILE_LOAD_PATH="' + guile_load_path + '"'
                 ],
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
