@@ -282,12 +282,12 @@ public:
 	 * takes a lock on the store, so the func should _not_ call any other
 	 * Store:: methods.
 	 *
-	 * @param a prefix
+	 * @param id the field id
 	 * @param func a Callable invoked for each message.
 	 *
 	 * @return the number of times func was invoked
 	 */
-	size_t for_each_term(const std::string& prefix, ForEachTermFunc func) const;
+	size_t for_each_term(Message::Field::Id id, ForEachTermFunc func) const;
 
 
 	/**

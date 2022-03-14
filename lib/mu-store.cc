@@ -604,7 +604,7 @@ Store::commit()
 }
 
 std::size_t
-Store::for_each_term(const std::string& field_name, Store::ForEachTermFunc func) const
+Store::for_each_term(Message::Field::Id field_id, Store::ForEachTermFunc func) const
 {
 	size_t n{};
 
@@ -613,20 +613,8 @@ Store::for_each_term(const std::string& field_name, Store::ForEachTermFunc func)
 		 * Do _not_ take a lock; this is only called from
 		 * the message parser which already has the lock
 		 */
-
-		/* get id from name or shortcut */
-		const auto id_opt = std::invoke([&]()->std::optional<MessageField::Id> {
-				if (field_name.length() == 1)
-					return message_field_id(field_name[0]);
-				else
-					return message_field_id(field_name);
-			});
-
-		if (!id_opt)
-			return;
-
-		const auto prefix{std::string{1, message_field(*id_opt).xapian_prefix()}};
 		std::vector<std::string> terms;
+		const auto prefix{message_field(field_id).xapian_term()};
 		for (auto it = priv_->db().allterms_begin(prefix);
 		     it != priv_->db().allterms_end(prefix); ++it) {
 			if (!func(*it))

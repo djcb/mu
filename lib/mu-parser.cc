@@ -200,7 +200,7 @@ Parser::Private::process_regex(const std::string& field_str,
 	const auto field{message_field(*id_opt)};
 	const auto prefix{field.xapian_term()};
 	std::vector<std::string> terms;
-	store_.for_each_term(prefix, [&](auto&& str) {
+	store_.for_each_term(field.id, [&](auto&& str) {
 		if (std::regex_search(str.c_str() + 1, rx)) // avoid copy
 			terms.emplace_back(str);
 		return true;
