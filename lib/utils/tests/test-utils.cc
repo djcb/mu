@@ -161,7 +161,6 @@ test_format()
 }
 
 static void
-
 test_split()
 {
 	using svec = std::vector<std::string>;
@@ -178,7 +177,22 @@ test_split()
 	assert_equal_svec(split("ayybyyc", "yy"), {"a", "b", "c"});
 	assert_equal_svec(split("abc", ""), {"a", "b", "c"});
 	assert_equal_svec(split("", "boo"), {});
+
+
+	assert_equal_svec(split("axbxc", 'x'), {"a", "b", "c"});
+	assert_equal_svec(split("axbxcx", 'x'), {"a", "b", "c", ""});
+	assert_equal_svec(split("", "boo"), {});
 }
+
+static void
+test_join()
+{
+	assert_equal(join({"a", "b", "c"}, "x"), "axbxc");
+	assert_equal(join({"a", "b", "c"}, ""), "abc");
+	assert_equal(join({},"foo"), "");
+	assert_equal(join({"d", "e", "f"}, "foo"), "dfooefoof");
+}
+
 
 enum struct Bits { None = 0, Bit1 = 1 << 0, Bit2 = 1 << 1 };
 MU_ENABLE_BITOPS(Bits);
@@ -222,6 +236,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/clean", test_clean);
 	g_test_add_func("/utils/format", test_format);
 	g_test_add_func("/utils/split", test_split);
+	g_test_add_func("/utils/join", test_join);
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 
 	return g_test_run();

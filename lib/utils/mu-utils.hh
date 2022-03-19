@@ -79,6 +79,32 @@ std::string remove_ctrl(const std::string& str);
  */
 std::vector<std::string> split(const std::string& str, const std::string& sepa);
 
+
+/**
+ * Split a string in parts. As a special case, splitting an empty string
+ * yields an empty vector (not a vector with a single empty element)
+ *
+ * @param str a string
+ * @param sepa the separator
+ *
+ * @return the parts.
+ */
+std::vector<std::string> split(const std::string& str, char sepa);
+
+
+/**
+ * Join the strings in svec into a string, separated by sepa
+ *
+ * @param svec a string vector
+ * @param sepa separator
+ *
+ * @return string
+ */
+std::string join(const std::vector<std::string>& svec, const std::string& sepa);
+static inline std::string join(const std::vector<std::string>& svec, char sepa) {
+	return join(svec, std::string(1, sepa));
+}
+
 /**
  * Quote & escape a string for " and \
  *

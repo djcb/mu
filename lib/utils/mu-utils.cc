@@ -30,6 +30,7 @@
 #include <string.h>
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -196,7 +197,61 @@ Mu::split(const std::string& str, const std::string& sepa)
 	return vec;
 }
 
+std::vector<std::string>
+Mu::split(const std::string& str, char sepa)
+{
 
+	std::vector<std::string> vec;
+	size_t b = 0, e = 0;
+
+	/* special case */
+	if (str.empty())
+		return vec;
+
+	while (true) {
+		if (e = str.find(sepa, b); e != std::string::npos) {
+			vec.emplace_back(str.substr(b, e - b));
+			b = e + sizeof(sepa);
+		} else {
+			vec.emplace_back(str.substr(b));
+			break;
+		}
+	}
+
+	return vec;
+}
+
+
+std::string
+Mu::join(const std::vector<std::string>& svec, const std::string& sepa)
+{
+	if (svec.empty())
+		return {};
+
+
+	/* calculate the overall size beforehand, to avoid re-allocations. */
+	size_t value_len =
+		std::accumulate(svec.cbegin(), svec.cend(), 0,
+				[](size_t size, const std::string& s) {
+					return size + s.size();
+				}) + (svec.size() - 1) * sepa.length();
+
+	std::string value;
+	value.reserve(value_len);
+
+	std::accumulate(svec.cbegin(), svec.cend(), std::ref(value),
+			[&](std::string& s1, const std::string& s2)->std::string& {
+				if (s1.empty())
+					s1 = s2;
+				else {
+					s1.append(sepa);
+					s1.append(s2);
+				}
+				return s1;
+			});
+
+	return value;
+}
 
 std::string
 Mu::quote(const std::string& str)
