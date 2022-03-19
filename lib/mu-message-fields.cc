@@ -18,6 +18,7 @@
 */
 
 #include "mu-message-fields.hh"
+#include "mu-message-flags.hh"
 
 using namespace Mu;
 
@@ -66,6 +67,35 @@ validate_message_field_shortcuts()
 	}
 	return true;
 }
+
+
+constexpr /*static*/ bool
+validate_message_field_flags()
+{
+	for (auto&& field: MessageFields) {
+		/* - A field has at most one of Indexable, HasTerms, IsXapianBoolean and
+		   IsContact. */
+		size_t flagnum{};
+		if (field.is_indexable_term())
+			++flagnum;
+		if (field.is_boolean_term())
+			++flagnum;
+		if (field.is_normal_term())
+			++flagnum;
+		if (field.is_contact())
+			++flagnum;
+
+		if (flagnum > 1) {
+			//g_warning("invalid field %*s", STR_V(field.name));
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+
 /*
  * tests... also build as runtime-tests, so we can get coverage info
  */
@@ -96,6 +126,13 @@ test_prefix()
 	static_assert(message_field(MessageField::Id::BodyHtml).xapian_prefix() == 0);
 }
 
+[[maybe_unused]]
+static void
+test_field_flags()
+{
+	static_assert(validate_message_field_flags());
+}
+
 #ifdef BUILD_TESTS
 
 static void
@@ -120,6 +157,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/message/fields/shortcuts", test_shortcuts);
 	g_test_add_func("/message/fields/prefix", test_prefix);
 	g_test_add_func("/message/fields/xapian-term", test_xapian_term);
+	g_test_add_func("/message/fields/flags", test_field_flags);
 
 	return g_test_run();
 }

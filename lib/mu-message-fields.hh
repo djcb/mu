@@ -55,7 +55,6 @@ struct MessageField {
 		Path,         /**< File-system Path */
 		Subject,      /**< Message subject */
 		To,           /**< To: recipient */
-		Uid,          /**< Unique id for message (based on path) */
 		/*
 		 * string list items...
 		 */
@@ -89,7 +88,6 @@ struct MessageField {
 		return static_cast<size_t>(Id::_count_);
 	}
 
-
 	constexpr Xapian::valueno value_no() const {
 		return static_cast<Xapian::valueno>(id);
 	}
@@ -121,39 +119,58 @@ struct MessageField {
 	 * can be multiple terms, each containing e.g. one of the To:
 	 * addresses - searching uses terms, but to display some field, it
 	 * must be in the value (at least when using MuMsgIter)
+	 *
+	 * Rules (build-time enforced):
+	 * - A field has at most one of Indexable, HasTerms, IsXapianBoolean and IsContact.
 	 */
 
 	enum struct Flag {
-		GMime	      = 1 << 0,
+		GMime	       = 1 << 0,
 		/**< Field retrieved through gmime */
-		FullText      = 1 << 1,
-		/**< Field-text is indexed in xapian (i.e., the text is processed */
-		Searchable    = 1 << 2,
+
+		/*
+		 * Different kind of terms; at most one is true,
+		 * and cannot be combined with IsContact. Compile-time enforced.
+		 */
+		NormalTerm	= 1 << 2,
 		/**< Field is a searchable term */
-		Value	      = 1 << 3,
+		BooleanTerm	= 1 << 5,
+		/**< Field is a boolean search-term; wildcards do not work */
+		IndexableTerm = 1 << 1,
+		/**< Field has indexable text as term */
+
+		/*
+		 * Contact flag cannot be combined with any of the term flags.
+		 * This is compile-time enforced.
+		 */
+		Contact      = 1 << 4,
+		/**< field contains one or more e-mail-addresses */
+
+		Value       = 1 << 3,
 		/**< Field value is stored (so the literal value can be retrieved) */
-		Contact	      = 1 << 4,
-		/**< field contains one or more * e-mail-addresses */
-		XapianBoolean = 1 << 5,
-		/**< use 'add_boolean_prefix' for Xapian	queries; wildcards do NOT WORK for such
-		 * fields */
-		DoNotCache    = 1 << 6,
+
+		DoNotCache     = 1 << 6,
 		/**< don't cache this field in * the MuMsg cache */
-		Range	      = 1 << 7	/**< whether this is a range field (e.g., date, size)*/
+		Range	       = 1 << 7
+		/**< whether this is a range field (e.g., date, size)*/
 	};
 
 	constexpr bool any_of(Flag some_flag) const{
 		return (static_cast<int>(some_flag) & static_cast<int>(flags)) != 0;
 	}
 
-	constexpr bool is_gmime() const { return any_of(Flag::Value); }
-	constexpr bool is_full_text() const { return any_of(Flag::FullText); }
-	constexpr bool is_searchable() const { return any_of(Flag::Searchable); }
-	constexpr bool is_value() const { return any_of(Flag::Value); }
-	constexpr bool is_contact() const { return any_of(Flag::Contact); }
-	constexpr bool is_xapian_boolean() const { return any_of(Flag::XapianBoolean); }
-	constexpr bool is_range() const { return any_of(Flag::Range); }
-	constexpr bool do_not_cache() const { return any_of(Flag::DoNotCache); }
+	constexpr bool is_gmime() const { return any_of(Flag::GMime); }
+
+	constexpr bool is_indexable_term()	const { return any_of(Flag::IndexableTerm); }
+	constexpr bool is_boolean_term()	const { return any_of(Flag::BooleanTerm); }
+	constexpr bool is_normal_term()		const { return any_of(Flag::NormalTerm); }
+
+	constexpr bool is_value()		const { return any_of(Flag::Value); }
+
+	constexpr bool is_contact()		const { return any_of(Flag::Contact); }
+	constexpr bool is_range()		const { return any_of(Flag::Range); }
+	constexpr bool do_not_cache()		const { return any_of(Flag::DoNotCache); }
+
 
 	/**
 	 * Field members
@@ -190,7 +207,6 @@ MU_ENABLE_BITOPS(MessageField::Flag);
 static constexpr std::array<MessageField, MessageField::id_size()>
     MessageFields = {
 	{
-
 	    // Bcc
 	    {
 		MessageField::Id::Bcc,
@@ -199,8 +215,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Blind carbon-copy recipient",
 		"bcc:foo@example.com",
 		'h',
-		MessageField::Flag::GMime | MessageField::Flag::Contact |
-		MessageField::Flag::Value},
+		MessageField::Flag::GMime |
+		MessageField::Flag::Contact |
+		MessageField::Flag::Value
+	    },
 	    // HTML Body
 	    {
 		MessageField::Id::BodyHtml,
@@ -209,7 +227,9 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message html body",
 		{},
 		{},
-		MessageField::Flag::GMime | MessageField::Flag::DoNotCache},
+		MessageField::Flag::GMime |
+		MessageField::Flag::DoNotCache
+	    },
 	    // Body
 	    {
 		MessageField::Id::BodyText,
@@ -218,9 +238,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message plain-text body",
 		"body:capybara", // example
 		'b',
-		MessageField::Flag::GMime | MessageField::Flag::FullText |
-		MessageField::Flag::DoNotCache},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::IndexableTerm |
+		MessageField::Flag::DoNotCache
+	    },
 	    // Cc
 	    {
 		MessageField::Id::Cc,
@@ -229,7 +250,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Carbon-copy recipient",
 		"cc:quinn@example.com",
 		'c',
-		MessageField::Flag::GMime | MessageField::Flag::Contact |
+		MessageField::Flag::GMime |
+		MessageField::Flag::Contact |
 		MessageField::Flag::Value},
 
 	    // Embed
@@ -240,7 +262,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Embedded text",
 		"embed:war OR embed:peace",
 		'e',
-		MessageField::Flag::GMime | MessageField::Flag::FullText |
+		MessageField::Flag::GMime |
+		MessageField::Flag::IndexableTerm |
 		MessageField::Flag::DoNotCache},
 	    // File
 	    {
@@ -250,7 +273,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Attachment file name",
 		"file:/image\\.*.jpg/",
 		'j',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
+		MessageField::Flag::GMime |
+		MessageField::Flag::NormalTerm |
 		MessageField::Flag::DoNotCache},
 
 	    // From
@@ -261,7 +285,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message sender",
 		"from:jimbo",
 		'f',
-		MessageField::Flag::GMime | MessageField::Flag::Contact |
+		MessageField::Flag::GMime |
+		MessageField::Flag::Contact |
 		MessageField::Flag::Value},
 	    // Maildir
 	    {
@@ -271,7 +296,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Maildir path for message",
 		"maildir:/private/archive",
 		'm',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
+		MessageField::Flag::GMime |
+		MessageField::Flag::NormalTerm |
 		MessageField::Flag::Value},
 	    // MIME
 	    {
@@ -281,7 +307,7 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Attachment MIME-type",
 		"mime:image/jpeg",
 		'y',
-		MessageField::Flag::Searchable},
+		MessageField::Flag::NormalTerm},
 	    // Message-ID
 	    {
 		MessageField::Id::MessageId,
@@ -291,7 +317,7 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"mime:image/jpeg",
 		'i',
 		MessageField::Flag::GMime |
-		MessageField::Flag::Searchable |
+		MessageField::Flag::NormalTerm |
 		MessageField::Flag::Value},
 	    // Path
 	    {
@@ -302,7 +328,7 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		{},
 		'p',
 		MessageField::Flag::GMime |
-		MessageField::Flag::XapianBoolean |
+		MessageField::Flag::BooleanTerm |
 		MessageField::Flag::Value},
 
 	    // Subject
@@ -314,9 +340,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"subject:wombat",
 		's',
 		MessageField::Flag::GMime |
-		MessageField::Flag::Searchable |
 		MessageField::Flag::Value |
-		MessageField::Flag::FullText},
+		MessageField::Flag::IndexableTerm},
 
 	    // To
 	    {
@@ -326,19 +351,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message recipient",
 		"to:flimflam@example.com",
 		't',
-		MessageField::Flag::GMime | MessageField::Flag::Contact |
-		MessageField::Flag::Value},
-
-	    // UID (internal)
-	    {
-		MessageField::Id::Uid,
-		MessageField::Type::String,
-		"uid",
-		"Message recipient",
-		{},
-		'u',
-		MessageField::Flag::Searchable},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::Contact |
+		MessageField::Flag::Value
+	    },
 	    // References
 	    {
 		MessageField::Id::References,
@@ -347,8 +363,9 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message references to other messages",
 		{},
 		'r',
-		MessageField::Flag::GMime | MessageField::Flag::Value},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::Value
+	    },
 	    // Tags
 	    {
 		MessageField::Id::Tags,
@@ -357,9 +374,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message tags",
 		"tag:projectx",
 		'x',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
-		MessageField::Flag::Value},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::NormalTerm |
+		MessageField::Flag::Value
+	    },
 	    // Date
 	    {
 		MessageField::Id::Date,
@@ -368,10 +386,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message date",
 		"date:20220101..20220505",
 		'd',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
-		    MessageField::Flag::Value | MessageField::Flag::XapianBoolean |
-		    MessageField::Flag::Range},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::Value |
+		MessageField::Flag::Range
+	    },
 	    // Flags
 	    {
 		MessageField::Id::Flags,
@@ -380,8 +398,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Message properties",
 		"flag:unread",
 		'g',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
-		    MessageField::Flag::Value},
+		MessageField::Flag::GMime |
+		MessageField::Flag::NormalTerm |
+		MessageField::Flag::Value
+	    },
 	    // Priority
 	    {
 		MessageField::Id::Priority,
@@ -391,9 +411,9 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"prio:high",
 		'p',
 		MessageField::Flag::GMime |
-		MessageField::Flag::Searchable |
-		MessageField::Flag::Value},
-
+		MessageField::Flag::NormalTerm |
+		MessageField::Flag::Value
+	    },
 	    // Size
 	    {
 		MessageField::Id::Size,
@@ -403,10 +423,9 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"size:1M..5M",
 		'z',
 		MessageField::Flag::GMime |
-		MessageField::Flag::Searchable |
 		MessageField::Flag::Value |
-		MessageField::Flag::Range},
-
+		MessageField::Flag::Range
+	    },
 	    // Mailing List
 	    {
 		MessageField::Id::MailingList,
@@ -415,9 +434,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Mailing list (List-Id:)",
 		"list:mu-discuss.googlegroups.com",
 		'v',
-		MessageField::Flag::GMime | MessageField::Flag::Searchable |
-		MessageField::Flag::Value},
-
+		MessageField::Flag::GMime |
+		MessageField::Flag::NormalTerm |
+		MessageField::Flag::Value
+	    },
 	    // ThreadId
 	    {
 		MessageField::Id::ThreadId,
@@ -426,7 +446,8 @@ static constexpr std::array<MessageField, MessageField::id_size()>
 		"Thread a message belongs to",
 		{},
 		'w',
-		MessageField::Flag::Searchable},
+		MessageField::Flag::NormalTerm
+	    },
 	}};
 
 /*

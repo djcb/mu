@@ -122,7 +122,7 @@ add_field(std::vector<FieldInfo>& fields, Field::Id field_id)
 		return; // can't be searched
 
 	fields.emplace_back(FieldInfo{std::string{field.name}, field.xapian_term(),
-			    field.is_full_text(), field_id});
+			    field.is_indexable_term(), field_id});
 }
 
 static std::vector<FieldInfo>

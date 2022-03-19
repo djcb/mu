@@ -36,6 +36,7 @@
 #include <xapian.h>
 
 #include "mu-message-flags.hh"
+#include "mu-message.hh"
 #include "mu-msg.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
@@ -716,13 +717,13 @@ static void
 add_terms_values_str(Xapian::Document& doc, const char* val, const Field& field)
 {
 	const auto flat = Mu::utf8_flatten(val);
-	if (field.is_full_text()) {
+	if (field.is_indexable_term()) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document(doc);
 		termgen.index_text(flat, 1, field.xapian_term());
 	}
 
-	if (field.is_searchable())
+	if (field.is_normal_term())
 		add_term(doc, field.xapian_term(flat));
 }
 
@@ -758,7 +759,7 @@ add_terms_values_string_list(Xapian::Document& doc, MuMsg* msg, const Field& fie
 		g_free(str);
 	}
 
-	if (field.is_searchable()) {
+	if (field.is_normal_term()) {
 		for (; lst; lst = g_slist_next((GSList*)lst))
 			add_terms_values_str(doc, (const gchar*)lst->data, field);
 	}
