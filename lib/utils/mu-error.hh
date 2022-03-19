@@ -108,7 +108,7 @@ struct Error final : public std::exception {
 	virtual ~Error() override = default;
 
 	/**
-	 * Get the descriptiove message.
+	 * Get the descriptive message.
 	 *
 	 * @return
 	 */
