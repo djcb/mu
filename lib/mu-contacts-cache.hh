@@ -53,12 +53,22 @@ public:
 	/**
 	 * Add a contact
 	 *
-	 * @param ci A contact-info object
+	 * @param contact a MessageContact object
 	 *
-	 // * @return the inserted / updated / washed contact info. Note that
-	 // * this is return _as copy_ to make it thread-safe.
 	 */
-	void add(MessageContact&& ci);
+	void add(MessageContact&& contact);
+
+
+	/**
+	 * Add a contacts sequemce
+	 *
+	 * @param contacts a MessageContact object sequence
+	 *
+	 */
+	void add(MessageContacts&& contacts) {
+		for (auto&& contact: contacts)
+			add(std::move(contact));
+	}
 
 	/**
 	 * Clear all contacts
