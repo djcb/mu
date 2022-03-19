@@ -18,11 +18,13 @@
 */
 
 #include "mu-message-contact.hh"
+#include "mu-message.hh"
+
 #include <gmime/gmime.h>
 #include <glib.h>
 
 using namespace Mu;
-
+using namespace Mu::Message;
 
 std::string
 MessageContact::display_name() const
@@ -35,8 +37,7 @@ MessageContact::display_name() const
 
 Mu::MessageContacts
 Mu::make_message_contacts(InternetAddressList* addr_lst,
-			  MessageContact::Type type,
-			  ::time_t message_date)
+			  Field::Id field_id, ::time_t message_date)
 {
 	MessageContacts contacts;
 	size_t num{};
@@ -59,7 +60,7 @@ Mu::make_message_contacts(InternetAddressList* addr_lst,
 			continue;
 
 		contacts.push_back(MessageContact{email, name ? name : "",
-				type, message_date});
+				field_id, message_date});
 		++num;
 	}
 
@@ -69,7 +70,7 @@ Mu::make_message_contacts(InternetAddressList* addr_lst,
 
 Mu::MessageContacts
 Mu::make_message_contacts(const std::string& addrs,
-			  MessageContact::Type type,
+			  Field::Id field_id,
 			  ::time_t message_date)
 {
 	auto addr_list = internet_address_list_parse(NULL, addrs.c_str());
@@ -78,7 +79,7 @@ Mu::make_message_contacts(const std::string& addrs,
 		return {};
 	}
 
-	auto contacts{make_message_contacts(addr_list, type, message_date)};
+	auto contacts{make_message_contacts(addr_list, field_id, message_date)};
 	g_object_unref(addr_list);
 
 	return contacts;
@@ -109,13 +110,13 @@ test_ctor_foo()
 	MessageContact c{
 		"foo@example.com",
 		"Foo Bar",
-		MessageContact::Type::Bcc,
+		Field::Id::Bcc,
 		1645214647
 	};
 
 	assert_equal(c.email, "foo@example.com");
 	assert_equal(c.name, "Foo Bar");
-	g_assert_true(c.type == MessageContact::Type::Bcc);
+	g_assert_true(c.field_id == Field::Id::Bcc);
 	g_assert_cmpuint(c.message_date,==,1645214647);
 
 	assert_equal(c.display_name(), "Foo Bar <foo@example.com>");
@@ -178,12 +179,12 @@ test_make_contacts()
 		internet_address_list_parse(NULL, str)};
 
 	g_assert_true(lst);
-	const auto addrs{make_message_contacts(lst, MessageContact::Type::Cc, 54321 )};
+	const auto addrs{make_message_contacts(lst, Field::Id::Cc, 54321 )};
 	g_object_unref(lst);
 
 	g_assert_cmpuint(addrs.size(),==,3);
 
-	const auto addrs2{make_message_contacts(str, MessageContact::Type::To, 12345 )};
+	const auto addrs2{make_message_contacts(str, Field::Id::To, 12345 )};
 	g_assert_cmpuint(addrs2.size(),==,3);
 
 	assert_equal(addrs2[0].name, "Abc");
@@ -201,7 +202,7 @@ test_make_contacts_2()
 		"De\nf <baa@example.com>, "
 		"\tGhi <zzz@example.com>";
 
-	const auto addrs2{make_message_contacts(str, MessageContact::Type::Bcc, 12345 )};
+	const auto addrs2{make_message_contacts(str, Field::Id::Bcc, 12345 )};
 	g_assert_cmpuint(addrs2.size(),==,3);
 
 	assert_equal(addrs2[0].name, "Äbc");
@@ -221,7 +222,7 @@ test_make_contacts_err()
 	InternetAddressList *lst{ internet_address_list_parse(NULL, "")};
 	g_assert_false(lst);
 
-	const auto addrs{make_message_contacts("", MessageContact::Type::To, 77777)};
+	const auto addrs{make_message_contacts("", Field::Id::To, 77777)};
 	g_assert_true(addrs.empty());
 }
 

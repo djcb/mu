@@ -44,31 +44,19 @@ namespace Mu {
  */
 size_t lowercase_hash(const std::string& s);
 
-
 struct MessageContact {
-	/**
-	 * Contact types
-	 */
-	enum struct Type {
-		To,      /**< To recipient */
-		From,    /**< Sender */
-		Cc,      /**< Cc recipient */
-		Bcc,     /**< Bcc recipient */
-		ReplyTo, /**< Reply-To wannabe recipient */
-		Unknown, /**< Unknown type */
-	};
-
 	/**
 	 * Construct a new MessageContact
 	 *
 	 * @param email_ email address
 	 * @param name_ name or empty
-	 * @param type_ contact type
+	 * @param field_id_ contact field id, or {}
 	 * @param message_date_ data for the message for this contact
 	 */
 	MessageContact(const std::string& email_, const std::string& name_ = "",
-		       Type type_ = Type::Unknown, time_t message_date_ = 0)
-	    : email{email_}, name{name_}, type{type_},
+		       std::optional<MessageField::Id> field_id_ = {},
+		       time_t message_date_ = 0)
+	    : email{email_}, name{name_}, field_id{field_id_},
 	      message_date{message_date_}, personal{}, frequency{1}, tstamp{}
 		{ cleanup_name(); }
 
@@ -85,7 +73,7 @@ struct MessageContact {
 	MessageContact(const std::string& email_, const std::string& name_,
 		       time_t message_date_, bool personal_, size_t freq_,
 		       int64_t tstamp_)
-	    : email{email_}, name{name_}, type{Type::Unknown},
+	    : email{email_}, name{name_}, field_id{},
 	      message_date{message_date_}, personal{personal_}, frequency{freq_},
 	      tstamp{tstamp_}
 	{ cleanup_name();}
@@ -126,39 +114,18 @@ struct MessageContact {
 		return  cached_hash;
 	}
 
-
-	/**
-	 * Get the MessageField for this contact-type, if any.
-	 *
-	 * @return the message-field or nullopt.
-	 */
-	constexpr std::optional<MessageField> const field() {
-		switch(type){
-		case Type::From:
-			return message_field(MessageField::Id::From);
-		case Type::To:
-			return message_field(MessageField::Id::To);
-		case Type::Cc:
-			return message_field(MessageField::Id::Cc);
-		case Type::Bcc:
-			return message_field(MessageField::Id::Bcc);
-		default:
-			return std::nullopt;
-		}
-	}
-
 	/*
 	 * data members
 	 */
 
-	std::string email;               /**< Email address for this contact.Not empty */
-	std::string name;                /**< Name for this contact; can be empty. */
-	Type        type{Type::Unknown}; /**< Type of contact */
-	::time_t    message_date;        /**< date of the message from which the
-					  * contact originates */
-	bool    personal;                /**<  A personal message? */
-	size_t  frequency;               /**< Frequency of this contact */
-	int64_t tstamp;                  /**< Timestamp for this contact */
+	std::string email;                        /**< Email address for this contact.Not empty */
+	std::string name;                         /**< Name for this contact; can be empty. */
+	std::optional<MessageField::Id> field_id;  /**< Field Id of contact or nullopt */
+	::time_t    message_date;                 /**< date of the message from which the
+						     * contact originates */
+	bool    personal;                         /**<  A personal message? */
+	size_t  frequency;                        /**< Frequency of this contact */
+	int64_t tstamp;                           /**< Timestamp for this contact */
 
 private:
 	void cleanup_name() { // replace control characters by spaces.
@@ -174,7 +141,7 @@ using MessageContacts = std::vector<MessageContact>;
  * Create a sequence of MessageContact objects from an InternetAddressList
  *
  * @param addr_lst an address list
- * @param type the type of addresses
+ * @param field_id the field_id for message field for these addresses
  * @param message_date the date of the message from which the InternetAddressList
  * originates.
  *
@@ -182,20 +149,20 @@ using MessageContacts = std::vector<MessageContact>;
  */
 MessageContacts
 make_message_contacts(/*const*/ struct _InternetAddressList* addr_lst,
-			 MessageContact::Type type, ::time_t message_date);
+		      MessageField::Id field_id, ::time_t message_date);
 
 /**
  * Create a sequence of MessageContact objects from an InternetAddressList
  *
  * @param addrs a string with one more valid addresses (as per internet_address_list_parse())
- * @param type the type of addresses
+ * @param field_id the field_id for message field for these addresses
  * @param message_date the date of the message from which the addresses originate
  *
  * @return a sequence of MessageContact objects.
  */
 MessageContacts
 make_message_contacts(const std::string& addrs,
-		      MessageContact::Type type, ::time_t message_date);
+		      MessageField::Id field_id, ::time_t message_date);
 } // namespace Mu
 
 /**
@@ -206,8 +173,5 @@ template<> struct std::hash<Mu::MessageContact> {
 		return c.hash();
 	}
 };
-
-
-
 
 #endif /* MU_MESSAGE_CONTACT_HH__ */

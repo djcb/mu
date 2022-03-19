@@ -441,13 +441,12 @@ bool mu_msg_move_to_maildir(MuMsg*		msg,
  * Get a sequence with contacts of the given type for this message.
  *
  * @param msg a valid MuMsg* instance
- * @param mtype the contact type; with Type::Unknown, get _all_ types.
+ * @param field_id the contact field or none; if none get _all_ contact types.
  *
  * @return a sequence
  */
 Mu::MessageContacts mu_msg_get_contacts (MuMsg *self,
-					 MessageContact::Type mtype=MessageContact::Type::Unknown);
-
+					 std::optional<MessageField::Id> field_id={});
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn

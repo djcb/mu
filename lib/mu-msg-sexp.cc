@@ -19,7 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "mu-message-flags.hh"
+#include "mu-message.hh"
 #include "mu-query-results.hh"
 #include "utils/mu-str.h"
 #include "mu-msg.hh"
@@ -27,6 +27,7 @@
 #include "mu-maildir.hh"
 
 using namespace Mu;
+using namespace Mu::Message;
 
 static void
 add_prop_nonempty(Sexp::List& list, const char* elm, const GSList* str_lst)
@@ -76,9 +77,9 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 		return;
 
 	rx = g_regex_new("<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?",
-	                 G_REGEX_CASELESS,
-	                 (GRegexMatchFlags)0,
-	                 NULL);
+			 G_REGEX_CASELESS,
+			 (GRegexMatchFlags)0,
+			 NULL);
 	g_return_if_fail(rx);
 
 	if (g_regex_match(rx, list_post, (GRegexMatchFlags)0, &minfo)) {
@@ -94,22 +95,22 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 static void
 add_contacts(Sexp::List& list, MuMsg* msg)
 {
-	using ContactPair = std::pair<MessageContact::Type, std::string_view>;
+	using ContactPair = std::pair<Field::Id, std::string_view>;
 	constexpr std::array<ContactPair, 5> contact_types = {{
-		{ MessageContact::Type::From,    ":from" }, 
-		{ MessageContact::Type::To,      ":to" },
-		{ MessageContact::Type::Cc,      ":cc" },
-		{ MessageContact::Type::ReplyTo, ":reply-to" },
-		{ MessageContact::Type::Bcc,     ":bcc" },
+		{ Field::Id::From,    ":from" },
+		{ Field::Id::To,      ":to" },
+		{ Field::Id::Cc,      ":cc" },
+		// { Field::Id::ReplyTo, ":reply-to" },
+		{ Field::Id::Bcc,     ":bcc" },
 	}};
-	
+
 	for (auto&& contact_type : contact_types) {
-		
+
 		const auto contacts{mu_msg_get_contacts(msg, contact_type.first)};
 		if (contacts.empty())
 			continue;
 
-		Sexp::List c_list;		
+		Sexp::List c_list;
 		for (auto&& contact: contacts)
 			c_list.add(make_contact_sexp(contact));
 
@@ -151,7 +152,7 @@ get_temp_file(MuMsg* msg, MuMsgOptions opts, unsigned index)
 
 errexit:
 	g_warning("failed to save mime part: %s",
-	          err->message ? err->message : "something went wrong");
+		  err->message ? err->message : "something went wrong");
 	g_clear_error(&err);
 	g_free(path);
 
@@ -216,11 +217,11 @@ make_part_types(MuMsgPartType ptype)
 		MuMsgPartType ptype;
 		const char*   name;
 	} ptypes[] = {{MU_MSG_PART_TYPE_LEAF, "leaf"},
-	              {MU_MSG_PART_TYPE_MESSAGE, "message"},
-	              {MU_MSG_PART_TYPE_INLINE, "inline"},
-	              {MU_MSG_PART_TYPE_ATTACHMENT, "attachment"},
-	              {MU_MSG_PART_TYPE_SIGNED, "signed"},
-	              {MU_MSG_PART_TYPE_ENCRYPTED, "encrypted"}};
+		      {MU_MSG_PART_TYPE_MESSAGE, "message"},
+		      {MU_MSG_PART_TYPE_INLINE, "inline"},
+		      {MU_MSG_PART_TYPE_ATTACHMENT, "attachment"},
+		      {MU_MSG_PART_TYPE_SIGNED, "signed"},
+		      {MU_MSG_PART_TYPE_ENCRYPTED, "encrypted"}};
 
 	Sexp::List list;
 	for (auto u = 0U; u != G_N_ELEMENTS(ptypes); ++u)
@@ -234,8 +235,8 @@ static void
 each_part(MuMsg* msg, MuMsgPart* part, PartInfo* pinfo)
 {
 	auto       mimetype     = format("%s/%s",
-                               part->type ? part->type : "application",
-                               part->subtype ? part->subtype : "octet-stream");
+			       part->type ? part->type : "application",
+			       part->subtype ? part->subtype : "octet-stream");
 	auto       maybe_attach = Sexp::make_symbol(mu_msg_part_maybe_attachment(part) ? "t" : "nil");
 	Sexp::List partlist;
 
@@ -285,7 +286,7 @@ add_message_file_parts(Sexp::List& items, MuMsg* msg, MuMsgOptions opts)
 	GError* err{NULL};
 	if (!mu_msg_load_msg_file(msg, &err)) {
 		g_warning("failed to load message file: %s",
-		          err ? err->message : "some error occurred");
+			  err ? err->message : "some error occurred");
 		g_clear_error(&err);
 		return;
 	}
@@ -301,8 +302,8 @@ add_message_file_parts(Sexp::List& items, MuMsg* msg, MuMsgOptions opts)
 	add_prop_nonempty(items, ":user-agent", str);
 
 	add_prop_nonempty(items,
-	                  ":body-txt-params",
-	                  mu_msg_get_body_text_content_type_parameters(msg, opts));
+			  ":body-txt-params",
+			  mu_msg_get_body_text_content_type_parameters(msg, opts));
 	add_prop_nonempty(items, ":body-txt", mu_msg_get_body_text(msg, opts));
 	add_prop_nonempty(items, ":body-html", mu_msg_get_body_html(msg, opts));
 }
@@ -358,7 +359,7 @@ Mu::msg_to_sexp_list(MuMsg* msg, unsigned docid, MuMsgOptions opts)
 	add_prop_nonempty(items, ":maildir", mu_msg_get_maildir(msg));
 
 	items.add_prop(":priority",
-	               Sexp::make_symbol_sv(message_priority_name(mu_msg_get_prio(msg))));
+		       Sexp::make_symbol_sv(message_priority_name(mu_msg_get_prio(msg))));
 
 	/* in the no-headers-only case (see below) we get a more complete list of contacts, so no
 	 * need to get them here if that's the case */

@@ -624,40 +624,40 @@ get_all_contacts(MuMsg *self)
 {
 	MessageContacts contacts;
 
-	for (auto&& mtype : { MessageContact::Type::From, MessageContact::Type::To,
-			      MessageContact::Type::Cc, MessageContact::Type::ReplyTo,
-			      MessageContact::Type::Bcc}) {
-		auto type_contacts{mu_msg_get_contacts(self, mtype)};
+	message_field_for_each([&](const auto& field){
+		if (!field.is_contact())
+			return;
+		auto type_contacts{mu_msg_get_contacts(self, field.id)};
 
 		contacts.reserve(contacts.size() + type_contacts.size());
-		contacts.insert(contacts.end(), type_contacts.begin(), type_contacts.end());
-	}
+		contacts.insert(contacts.end(), type_contacts.begin(),
+				type_contacts.end());
+	});
 
 	return contacts;
 }
 
 Mu::MessageContacts
-Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
+Mu::mu_msg_get_contacts(MuMsg *self, std::optional<MessageField::Id> field_id)
 {
 	typedef const char*(*AddressFunc)(MuMsg*);
 	using	AddressInfo = std::pair<GMimeAddressType, AddressFunc>;
 
 	g_return_val_if_fail(self, MessageContacts{});
-
-	if (mtype == MessageContact::Type::Unknown)
+	g_return_val_if_fail(!field_id || message_field(*field_id).is_contact(),
+			     MessageContacts{});
+	if (!field_id)
 		return get_all_contacts(self);
 
 	const auto info = std::invoke([&]()->AddressInfo {
-		switch (mtype) {
-		case MessageContact::Type::From:
+		switch (*field_id) {
+		case MessageField::Id::From:
 			return { GMIME_ADDRESS_TYPE_FROM, mu_msg_get_from };
-		case MessageContact::Type::To:
+		case MessageField::Id::To:
 			return { GMIME_ADDRESS_TYPE_TO, mu_msg_get_to };
-		case MessageContact::Type::Cc:
+		case MessageField::Id::Cc:
 			return { GMIME_ADDRESS_TYPE_CC, mu_msg_get_cc };
-		case MessageContact::Type::ReplyTo:
-			return { GMIME_ADDRESS_TYPE_REPLY_TO, {} };
-		case MessageContact::Type::Bcc:
+		case MessageField::Id::Bcc:
 			return { GMIME_ADDRESS_TYPE_BCC, mu_msg_get_bcc };
 		default:
 			throw std::logic_error("bug");
@@ -668,10 +668,10 @@ Mu::mu_msg_get_contacts(MuMsg *self, MessageContact::Type mtype)
 	if (self->_file) {
 		if (auto&& lst{g_mime_message_get_addresses(
 					self->_file->_mime_msg, info.first)}; lst)
-			return make_message_contacts(lst, mtype, mdate);
+			return make_message_contacts(lst, *field_id, mdate);
 	} else if (info.second) {
 		if (auto&& lst_str{info.second(self)}; lst_str)
-			return make_message_contacts(lst_str, mtype, mdate);
+			return make_message_contacts(lst_str, *field_id, mdate);
 	}
 
 	return {};
