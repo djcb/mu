@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -54,10 +54,11 @@ test_query()
 	auto dump_matches = [](const QueryResults& res) {
 		size_t n{};
 		for (auto&& item : res)
-			g_debug("%02zu %s %s",
-				++n,
-				item.path().value_or("<none>").c_str(),
-				item.message_id().value_or("<none>").c_str());
+			if (g_test_verbose())
+				g_debug("%02zu %s %s",
+					++n,
+					item.path().value_or("<none>").c_str(),
+					item.message_id().value_or("<none>").c_str());
 	};
 
 	g_assert_cmpuint(store.size(), ==, 19);
