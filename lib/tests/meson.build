@@ -18,17 +18,18 @@
 # tests
 #
 
-
-test('test-message-flags',
-     executable('test-message-flags',
-		'../mu-message-flags.cc',
+test('test-message-contact',
+     executable('test-message-contact',
+		'../mu-message-contact.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
                                lib_test_mu_common_dep]))
-test('test-message-priority',
-     executable('test-message-priority',
-		'../mu-message-priority.cc',
+
+
+test('test-message-document',
+     executable('test-message-document',
+		'../mu-message-document.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
@@ -42,9 +43,16 @@ test('test-message-fields',
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
                                lib_test_mu_common_dep]))
 
-test('test-message-contact',
-     executable('test-message-contact',
-		'../mu-message-contact.cc',
+test('test-message-flags',
+     executable('test-message-flags',
+		'../mu-message-flags.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
+                               lib_test_mu_common_dep]))
+test('test-message-priority',
+     executable('test-message-priority',
+		'../mu-message-priority.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep,

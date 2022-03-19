@@ -17,7 +17,7 @@
 **
 */
 
-#include "mu-message-document.hh"
+#include "mu-document.hh"
 #include "mu-message.hh"
 
 #include <cstdint>
@@ -31,11 +31,9 @@
 
 
 using namespace Mu;
-using namespace Mu::Message;
 
 constexpr char SepaChar1 = 0xfe;
 constexpr char SepaChar2 = 0xff;
-
 
 static void
 add_index_term(Xapian::Document& doc, const Field& field, const std::string& val)
@@ -58,39 +56,39 @@ maybe_add_term(Xapian::Document& doc, const Field& field, const std::string& val
 }
 
 void
-MessageDocument::add(Field::Id id, const std::string& val)
+Document::add(Field::Id id, const std::string& val)
 {
-	const auto field{message_field(id)};
+	const auto field{field_from_id(id)};
 
 	if (field.is_value())
-		doc_.add_value(field.value_no(), val);
+		xdoc_.add_value(field.value_no(), val);
 
-	maybe_add_term(doc_, field, val);
+	maybe_add_term(xdoc_, field, val);
 }
 
 void
-MessageDocument::add(Field::Id id, const std::vector<std::string>& vals)
+Document::add(Field::Id id, const std::vector<std::string>& vals)
 {
-	const auto field{message_field(id)};
+	const auto field{field_from_id(id)};
 
 	if (field.is_value())
-		doc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
+		xdoc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
 
 	std::for_each(vals.begin(), vals.end(),
-		      [&](const auto& val) { maybe_add_term(doc_, field, val); });
+		      [&](const auto& val) { maybe_add_term(xdoc_, field, val); });
 }
 
 
 std::vector<std::string>
-MessageDocument::string_vec_value(MessageField::Id field_id) const noexcept
+Document::string_vec_value(Field::Id field_id) const noexcept
 {
 	return Mu::split(string_value(field_id), SepaChar1);
 }
 
 void
-MessageDocument::add(Field::Id id, const Contacts& contacts)
+Document::add(Field::Id id, const Contacts& contacts)
 {
-	const auto field{message_field(id)};
+	const auto field{field_from_id(id)};
 	std::vector<std::string> cvec;
 
 	const std::string sepa2(1, SepaChar2);
@@ -99,19 +97,19 @@ MessageDocument::add(Field::Id id, const Contacts& contacts)
 		if (!contact.field_id || *contact.field_id != id)
 			continue;
 
-		doc_.add_term(contact.email);
+		xdoc_.add_term(contact.email);
 		if (!contact.name.empty())
-			add_index_term(doc_, field, contact.name);
+			add_index_term(xdoc_, field, contact.name);
 
 		cvec.emplace_back(contact.email + sepa2 + contact.name);
 	}
 
 	if (!cvec.empty())
-		doc_.add_value(field.value_no(), join(cvec, SepaChar1));
+		xdoc_.add_value(field.value_no(), join(cvec, SepaChar1));
 }
 
 Contacts
-MessageDocument::contacts_value(Field::Id id) const noexcept
+Document::contacts_value(Field::Id id) const noexcept
 {
 	const auto vals{string_vec_value(id)};
 	Contacts contacts;
@@ -152,7 +150,7 @@ string_to_integer(const std::string& str)
 }
 
 void
-MessageDocument::add(Field::Id id, int64_t val)
+Document::add(Field::Id id, int64_t val)
 {
 	/*
 	 * Xapian stores everything (incl. numbers) as strings.
@@ -161,51 +159,51 @@ MessageDocument::add(Field::Id id, int64_t val)
 	 * length; such that the strings are sorted in the numerical order.
 	 */
 
-	const auto field{message_field(id)};
+	const auto field{field_from_id(id)};
 
 	if (field.is_value())
-		doc_.add_value(field.value_no(), integer_to_string(val));
+		xdoc_.add_value(field.value_no(), integer_to_string(val));
 
 	/* terms are not supported for numerical fields */
 }
 
 int64_t
-MessageDocument::integer_value(MessageField::Id field_id) const noexcept
+Document::integer_value(Field::Id field_id) const noexcept
 {
 	return string_to_integer(string_value(field_id));
 }
 
 void
-MessageDocument::add(Priority prio)
+Document::add(Priority prio)
 {
-	constexpr auto field{message_field(Field::Id::Priority)};
+	constexpr auto field{field_from_id(Field::Id::Priority)};
 
-	doc_.add_value(field.value_no(), std::string(1, to_char(prio)));
-	doc_.add_boolean_term(field.xapian_term(to_char(prio)));
+	xdoc_.add_value(field.value_no(), std::string(1, to_char(prio)));
+	xdoc_.add_boolean_term(field.xapian_term(to_char(prio)));
 }
 
 
 Priority
-MessageDocument::priority_value() const noexcept
+Document::priority_value() const noexcept
 {
 	const auto val{string_value(Field::Id::Priority)};
-	return message_priority_from_char(val.empty() ? 'n' : val[0]);
+	return priority_from_char(val.empty() ? 'n' : val[0]);
 }
 
 void
-MessageDocument::add(Flags flags)
+Document::add(Flags flags)
 {
-	constexpr auto field{message_field(Field::Id::Flags)};
+	constexpr auto field{field_from_id(Field::Id::Flags)};
 
-	doc_.add_value(field.value_no(), integer_to_string(static_cast<int64_t>(flags)));
-	message_flag_infos_for_each([&](auto&& flag_info) {
+	xdoc_.add_value(field.value_no(), integer_to_string(static_cast<int64_t>(flags)));
+	flag_infos_for_each([&](auto&& flag_info) {
 		if (any_of(flag_info.flag & flags))
-			doc_.add_boolean_term(field.xapian_term(flag_info.shortcut_lower()));
+			xdoc_.add_boolean_term(field.xapian_term(flag_info.shortcut_lower()));
 	});
 }
 
 Flags
-MessageDocument::flags_value() const noexcept
+Document::flags_value() const noexcept
 {
 	return static_cast<Flags>(integer_value(Field::Id::Flags));
 }
@@ -227,37 +225,37 @@ MessageDocument::flags_value() const noexcept
 
 
 
-static const MessageContacts test_contacts = {{
-		MessageContact{"john@example.com", "John", Field::Id::Bcc},
-		MessageContact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
-		MessageContact{"paul@example.com", "Paul", Field::Id::Cc},
-		MessageContact{"george@example.com", "George",  Field::Id::Cc},
-		MessageContact{"james@example.com", "James", Field::Id::From},
-		MessageContact{"lars@example.com", "Lars",  Field::Id::To},
-		MessageContact{"kirk@example.com", "Kirk", Field::Id::To},
-		MessageContact{"jason@example.com", "Jason",  Field::Id::To}
+static const Contacts test_contacts = {{
+		Contact{"john@example.com", "John", Field::Id::Bcc},
+		Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
+		Contact{"paul@example.com", "Paul", Field::Id::Cc},
+		Contact{"george@example.com", "George",  Field::Id::Cc},
+		Contact{"james@example.com", "James", Field::Id::From},
+		Contact{"lars@example.com", "Lars",  Field::Id::To},
+		Contact{"kirk@example.com", "Kirk", Field::Id::To},
+		Contact{"jason@example.com", "Jason",  Field::Id::To}
 	}};
 
 static void
 test_bcc()
 {
 	{
-		MessageDocument doc;
+		Document doc;
 		doc.add(Field::Id::Bcc, test_contacts);
 
-		MessageContacts expected_contacts = {{
-				MessageContact{"john@example.com", "John", Field::Id::Bcc},
-				MessageContact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
+		Contacts expected_contacts = {{
+				Contact{"john@example.com", "John", Field::Id::Bcc},
+				Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
 			}};
 		const auto actual_contacts = doc.contacts_value(Field::Id::Bcc);
 		assert_same_contacts(expected_contacts, actual_contacts);
 	}
 
 	{
-		MessageDocument doc;
-		MessageContacts contacts = {{
-				MessageContact{"john@example.com", "John Lennon", Field::Id::Bcc},
-				MessageContact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
+		Document doc;
+		Contacts contacts = {{
+				Contact{"john@example.com", "John Lennon", Field::Id::Bcc},
+				Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
 			}};
 		doc.add(Field::Id::Bcc, contacts);
 		auto db = Xapian::InMemory::open();
@@ -271,12 +269,12 @@ test_bcc()
 static void
 test_cc()
 {
-	MessageDocument doc;
+	Document doc;
 	doc.add(Field::Id::Cc, test_contacts);
 
-	MessageContacts expected_contacts = {{
-			MessageContact{"paul@example.com", "Paul", Field::Id::Cc},
-			MessageContact{"george@example.com", "George",  Field::Id::Cc}
+	Contacts expected_contacts = {{
+			Contact{"paul@example.com", "Paul", Field::Id::Cc},
+			Contact{"george@example.com", "George",  Field::Id::Cc}
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::Cc);
 
@@ -287,11 +285,11 @@ test_cc()
 static void
 test_from()
 {
-	MessageDocument doc;
+	Document doc;
 	doc.add(Field::Id::From, test_contacts);
 
-	MessageContacts expected_contacts = {{
-			MessageContact{"james@example.com", "James", Field::Id::From},
+	Contacts expected_contacts = {{
+			Contact{"james@example.com", "James", Field::Id::From},
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::From);
 
@@ -301,13 +299,13 @@ test_from()
 static void
 test_to()
 {
-	MessageDocument doc;
+	Document doc;
 	doc.add(Field::Id::To, test_contacts);
 
-	MessageContacts expected_contacts = {{
-		MessageContact{"lars@example.com", "Lars",  Field::Id::To},
-		MessageContact{"kirk@example.com", "Kirk", Field::Id::To},
-		MessageContact{"jason@example.com", "Jason",  Field::Id::To}
+	Contacts expected_contacts = {{
+		Contact{"lars@example.com", "Lars",  Field::Id::To},
+		Contact{"kirk@example.com", "Kirk", Field::Id::To},
+		Contact{"jason@example.com", "Jason",  Field::Id::To}
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::To);
 
@@ -319,13 +317,13 @@ static void
 test_size()
 {
 	{
-		MessageDocument doc;
+		Document doc;
 		doc.add(Field::Id::Size, 12345);
 		g_assert_cmpuint(doc.integer_value(Field::Id::Size),==,12345);
 	}
 
 	{
-		MessageDocument doc;
+		Document doc;
 		g_assert_cmpuint(doc.integer_value(Field::Id::Size),==,0);
 	}
 }

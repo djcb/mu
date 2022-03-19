@@ -17,17 +17,16 @@
 **
 */
 
-#include "mu-message-contact.hh"
+#include "mu-contact.hh"
 #include "mu-message.hh"
 
 #include <gmime/gmime.h>
 #include <glib.h>
 
 using namespace Mu;
-using namespace Mu::Message;
 
 std::string
-MessageContact::display_name() const
+Contact::display_name() const
 {
 	if (name.empty())
 		return email;
@@ -35,11 +34,11 @@ MessageContact::display_name() const
 		return name + " <" + email + '>';
 }
 
-Mu::MessageContacts
-Mu::make_message_contacts(InternetAddressList* addr_lst,
-			  Field::Id field_id, ::time_t message_date)
+Mu::Contacts
+Mu::make_contacts(InternetAddressList* addr_lst,
+		  Field::Id field_id, ::time_t message_date)
 {
-	MessageContacts contacts;
+	Contacts contacts;
 	size_t num{};
 
 	g_return_val_if_fail(addr_lst, contacts);
@@ -59,7 +58,7 @@ Mu::make_message_contacts(InternetAddressList* addr_lst,
 		if (G_UNLIKELY(!email))
 			continue;
 
-		contacts.push_back(MessageContact{email, name ? name : "",
+		contacts.push_back(Contact{email, name ? name : "",
 				field_id, message_date});
 		++num;
 	}
@@ -68,10 +67,10 @@ Mu::make_message_contacts(InternetAddressList* addr_lst,
 }
 
 
-Mu::MessageContacts
-Mu::make_message_contacts(const std::string& addrs,
-			  Field::Id field_id,
-			  ::time_t message_date)
+Mu::Contacts
+Mu::make_contacts(const std::string& addrs,
+		  Field::Id field_id,
+		  ::time_t message_date)
 {
 	auto addr_list = internet_address_list_parse(NULL, addrs.c_str());
 	if (!addr_list) {
@@ -79,7 +78,7 @@ Mu::make_message_contacts(const std::string& addrs,
 		return {};
 	}
 
-	auto contacts{make_message_contacts(addr_list, field_id, message_date)};
+	auto contacts{make_contacts(addr_list, field_id, message_date)};
 	g_object_unref(addr_list);
 
 	return contacts;
@@ -107,7 +106,7 @@ Mu::lowercase_hash(const std::string& s)
 static void
 test_ctor_foo()
 {
-	MessageContact c{
+	Contact c{
 		"foo@example.com",
 		"Foo Bar",
 		Field::Id::Bcc,
@@ -126,7 +125,7 @@ test_ctor_foo()
 static void
 test_ctor_blinky()
 {
-	MessageContact c{
+	Contact c{
 		"bar@example.com",
 		"Blinky",
 		1645215014,
@@ -148,7 +147,7 @@ test_ctor_blinky()
 static void
 test_ctor_cleanup()
 {
-	MessageContact c{
+	Contact c{
 		"bar@example.com",
 		"Bli\nky",
 		1645215014,
@@ -179,12 +178,12 @@ test_make_contacts()
 		internet_address_list_parse(NULL, str)};
 
 	g_assert_true(lst);
-	const auto addrs{make_message_contacts(lst, Field::Id::Cc, 54321 )};
+	const auto addrs{make_contacts(lst, Field::Id::Cc, 54321 )};
 	g_object_unref(lst);
 
 	g_assert_cmpuint(addrs.size(),==,3);
 
-	const auto addrs2{make_message_contacts(str, Field::Id::To, 12345 )};
+	const auto addrs2{make_contacts(str, Field::Id::To, 12345 )};
 	g_assert_cmpuint(addrs2.size(),==,3);
 
 	assert_equal(addrs2[0].name, "Abc");
@@ -202,7 +201,7 @@ test_make_contacts_2()
 		"De\nf <baa@example.com>, "
 		"\tGhi <zzz@example.com>";
 
-	const auto addrs2{make_message_contacts(str, Field::Id::Bcc, 12345 )};
+	const auto addrs2{make_contacts(str, Field::Id::Bcc, 12345 )};
 	g_assert_cmpuint(addrs2.size(),==,3);
 
 	assert_equal(addrs2[0].name, "Äbc");
@@ -222,7 +221,7 @@ test_make_contacts_err()
 	InternetAddressList *lst{ internet_address_list_parse(NULL, "")};
 	g_assert_false(lst);
 
-	const auto addrs{make_message_contacts("", Field::Id::To, 77777)};
+	const auto addrs{make_contacts("", Field::Id::To, 77777)};
 	g_assert_true(addrs.empty());
 }
 
@@ -232,12 +231,12 @@ main(int argc, char* argv[])
 	g_test_init(&argc, &argv, NULL);
 	g_mime_init();
 
-	g_test_add_func("/message-contacts/ctor-foo", test_ctor_foo);
-	g_test_add_func("/message-contacts/ctor-blinky", test_ctor_blinky);
-	g_test_add_func("/message-contacts/ctor-cleanup", test_ctor_cleanup);
-	g_test_add_func("/message-contacts/make-contacts", test_make_contacts);
-	g_test_add_func("/message-contacts/make-contacts-2", test_make_contacts_2);
-	g_test_add_func("/message-contacts/make-contacts-err", test_make_contacts_err);
+	g_test_add_func("/message/contact/ctor-foo", test_ctor_foo);
+	g_test_add_func("/message/contact/ctor-blinky", test_ctor_blinky);
+	g_test_add_func("/message/contact/ctor-cleanup", test_ctor_cleanup);
+	g_test_add_func("/message/contact/make-contacts", test_make_contacts);
+	g_test_add_func("/message/contact/make-contacts-2", test_make_contacts_2);
+	g_test_add_func("/message/contact/make-contacts-err", test_make_contacts_err);
 
 	return g_test_run();
 }

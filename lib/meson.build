@@ -16,6 +16,7 @@
 
 
 subdir('utils')
+subdir('message')
 subdir('index')
 
 lib_mu=static_library(
@@ -61,16 +62,6 @@ lib_mu=static_library(
     'mu-msg-sexp.cc',
     'mu-msg.cc',
     'mu-msg.hh',
-    'mu-message-contact.hh',
-    'mu-message-contact.cc',
-    'mu-message-document.cc',
-    'mu-message-document.hh',
-    'mu-message-fields.hh',
-    'mu-message-fields.cc',
-    'mu-message-flags.hh',
-    'mu-message-flags.cc',
-    'mu-message-priority.hh',
-    'mu-message-priority.cc'
   ],
   dependencies: [
     glib_dep,
@@ -80,6 +71,7 @@ lib_mu=static_library(
     guile_dep,
     config_h_dep,
     lib_mu_utils_dep,
+    lib_mu_message_dep,
     lib_mu_index_dep
   ],
   install: false)

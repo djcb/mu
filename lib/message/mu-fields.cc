@@ -17,24 +17,24 @@
 **
 */
 
-#include "mu-message-fields.hh"
-#include "mu-message-flags.hh"
+#include "mu-fields.hh"
+#include "mu-flags.hh"
 
 using namespace Mu;
 
 std::string
-MessageField::xapian_term(const std::string& s) const
+Field::xapian_term(const std::string& s) const
 {
 	return std::string(1U, xapian_prefix()) + s;
 }
 
 std::string
-MessageField::xapian_term(std::string_view sv) const
+Field::xapian_term(std::string_view sv) const
 {
 	return std::string(1U, xapian_prefix()) + std::string{sv};
 }
 std::string
-MessageField::xapian_term(char c) const
+Field::xapian_term(char c) const
 {
 	return std::string(1U, xapian_prefix()) + c;
 }
@@ -45,22 +45,22 @@ MessageField::xapian_term(char c) const
  * compile-time checks
  */
 constexpr bool
-validate_message_field_ids()
+validate_field_ids()
 {
-	for (auto id = 0U; id != MessageField::id_size(); ++id) {
-		const auto field_id = static_cast<MessageField::Id>(id);
-		if (message_field(field_id).id != field_id)
+	for (auto id = 0U; id != Field::id_size(); ++id) {
+		const auto field_id = static_cast<Field::Id>(id);
+		if (field_from_id(field_id).id != field_id)
 			return false;
 	}
 	return true;
 }
 
 constexpr bool
-validate_message_field_shortcuts()
+validate_field_shortcuts()
 {
-	for (auto id = 0U; id != MessageField::id_size(); ++id) {
-		const auto field_id = static_cast<MessageField::Id>(id);
-		const auto shortcut = message_field(field_id).shortcut;
+	for (auto id = 0U; id != Field::id_size(); ++id) {
+		const auto field_id = static_cast<Field::Id>(id);
+		const auto shortcut = field_from_id(field_id).shortcut;
 		if (shortcut != 0 &&
 		    (shortcut < 'a' || shortcut > 'z'))
 			return false;
@@ -70,9 +70,9 @@ validate_message_field_shortcuts()
 
 
 constexpr /*static*/ bool
-validate_message_field_flags()
+validate_field_flags()
 {
-	for (auto&& field: MessageFields) {
+	for (auto&& field: Fields) {
 		/* - A field has at most one of Indexable, HasTerms, IsXapianBoolean and
 		   IsContact. */
 		size_t flagnum{};
@@ -108,29 +108,29 @@ validate_message_field_flags()
 static void
 test_ids()
 {
-	static_assert(validate_message_field_ids());
+	static_assert(validate_field_ids());
 }
 
 [[maybe_unused]]
 static void
 test_shortcuts()
 {
-	static_assert(validate_message_field_shortcuts());
+	static_assert(validate_field_shortcuts());
 }
 
 [[maybe_unused]]
 static void
 test_prefix()
 {
-	static_assert(message_field(MessageField::Id::Subject).xapian_prefix() == 'S');
-	static_assert(message_field(MessageField::Id::BodyHtml).xapian_prefix() == 0);
+	static_assert(field_from_id(Field::Id::Subject).xapian_prefix() == 'S');
+	static_assert(field_from_id(Field::Id::BodyHtml).xapian_prefix() == 0);
 }
 
 [[maybe_unused]]
 static void
 test_field_flags()
 {
-	static_assert(validate_message_field_flags());
+	static_assert(validate_field_flags());
 }
 
 #ifdef BUILD_TESTS
@@ -141,11 +141,11 @@ test_xapian_term()
 	using namespace std::string_literals;
 	using namespace std::literals;
 
-	assert_equal(message_field(MessageField::Id::Subject).xapian_term(""s), "S");
-	assert_equal(message_field(MessageField::Id::Subject).xapian_term("boo"s), "Sboo");
+	assert_equal(field_from_id(Field::Id::Subject).xapian_term(""s), "S");
+	assert_equal(field_from_id(Field::Id::Subject).xapian_term("boo"s), "Sboo");
 
-	assert_equal(message_field(MessageField::Id::From).xapian_term('x'), "Fx");
-	assert_equal(message_field(MessageField::Id::To).xapian_term("boo"sv), "Tboo");
+	assert_equal(field_from_id(Field::Id::From).xapian_term('x'), "Fx");
+	assert_equal(field_from_id(Field::Id::To).xapian_term("boo"sv), "Tboo");
 }
 
 int

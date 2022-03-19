@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <ctime>
 
-#include "mu-message-fields.hh"
+#include "mu-fields.hh"
 
 struct _InternetAddressList;
 
@@ -44,24 +44,24 @@ namespace Mu {
  */
 size_t lowercase_hash(const std::string& s);
 
-struct MessageContact {
+struct Contact {
 	/**
-	 * Construct a new MessageContact
+	 * Construct a new Contact
 	 *
 	 * @param email_ email address
 	 * @param name_ name or empty
 	 * @param field_id_ contact field id, or {}
 	 * @param message_date_ data for the message for this contact
 	 */
-	MessageContact(const std::string& email_, const std::string& name_ = "",
-		       std::optional<MessageField::Id> field_id_ = {},
+	Contact(const std::string& email_, const std::string& name_ = "",
+		       std::optional<Field::Id> field_id_ = {},
 		       time_t message_date_ = 0)
 	    : email{email_}, name{name_}, field_id{field_id_},
 	      message_date{message_date_}, personal{}, frequency{1}, tstamp{}
 		{ cleanup_name(); }
 
 	/**
-	 * Construct a new MessageContact
+	 * Construct a new Contact
 	 *
 	 * @param email_ email address
 	 * @param name_ name or empty
@@ -70,7 +70,7 @@ struct MessageContact {
 	 * @param freq_ how often was this contact seen?
 	 * @param tstamp_ timestamp for last change
 	 */
-	MessageContact(const std::string& email_, const std::string& name_,
+	Contact(const std::string& email_, const std::string& name_,
 		       time_t message_date_, bool personal_, size_t freq_,
 		       int64_t tstamp_)
 	    : email{email_}, name{name_}, field_id{},
@@ -91,11 +91,11 @@ struct MessageContact {
 	/**
 	 * Operator==; based on the hash values (ie. lowercase e-mail address)
 	 *
-	 * @param rhs some other MessageContact
+	 * @param rhs some other Contact
 	 *
 	 * @return true orf false.
 	 */
-	bool operator== (const MessageContact& rhs) const noexcept {
+	bool operator== (const Contact& rhs) const noexcept {
 		return hash() == rhs.hash();
 	}
 
@@ -120,7 +120,7 @@ struct MessageContact {
 
 	std::string email;                        /**< Email address for this contact.Not empty */
 	std::string name;                         /**< Name for this contact; can be empty. */
-	std::optional<MessageField::Id> field_id;  /**< Field Id of contact or nullopt */
+	std::optional<Field::Id> field_id;  /**< Field Id of contact or nullopt */
 	::time_t    message_date;                 /**< date of the message from which the
 						     * contact originates */
 	bool    personal;                         /**<  A personal message? */
@@ -135,43 +135,43 @@ private:
 	}
 };
 
-using MessageContacts = std::vector<MessageContact>;
+using Contacts = std::vector<Contact>;
 
 /**
- * Create a sequence of MessageContact objects from an InternetAddressList
+ * Create a sequence of Contact objects from an InternetAddressList
  *
  * @param addr_lst an address list
  * @param field_id the field_id for message field for these addresses
  * @param message_date the date of the message from which the InternetAddressList
  * originates.
  *
- * @return a sequence of MessageContact objects.
+ * @return a sequence of Contact objects.
  */
-MessageContacts
-make_message_contacts(/*const*/ struct _InternetAddressList* addr_lst,
-		      MessageField::Id field_id, ::time_t message_date);
+Contacts
+make_contacts(/*const*/ struct _InternetAddressList* addr_lst,
+	      Field::Id field_id, ::time_t message_date);
 
 /**
- * Create a sequence of MessageContact objects from an InternetAddressList
+ * Create a sequence of Contact objects from an InternetAddressList
  *
  * @param addrs a string with one more valid addresses (as per internet_address_list_parse())
  * @param field_id the field_id for message field for these addresses
  * @param message_date the date of the message from which the addresses originate
  *
- * @return a sequence of MessageContact objects.
+ * @return a sequence of Contact objects.
  */
-MessageContacts
-make_message_contacts(const std::string& addrs,
-		      MessageField::Id field_id, ::time_t message_date);
+Contacts
+make_contacts(const std::string& addrs,
+	      Field::Id field_id, ::time_t message_date);
 } // namespace Mu
 
 /**
  * Implement our hash int std::
  */
-template<> struct std::hash<Mu::MessageContact> {
-	std::size_t operator()(const Mu::MessageContact& c) const noexcept {
+template<> struct std::hash<Mu::Contact> {
+	std::size_t operator()(const Mu::Contact& c) const noexcept {
 		return c.hash();
 	}
 };
 
-#endif /* MU_MESSAGE_CONTACT_HH__ */
+#endif /* MU_CONTACT_HH__ */

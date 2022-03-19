@@ -18,7 +18,7 @@
 */
 #include "mu-guile-message.hh"
 #include "libguile/scm.h"
-#include "mu-message-flags.hh"
+#include "mu-message.hh"
 #include <config.h>
 
 #include <glib-object.h>
@@ -213,12 +213,12 @@ SCM_DEFINE(get_field,
 #undef FUNC_NAME
 
 static SCM
-contacts_to_list(MuMsg *msg, Mu::MessageContact::Type mtype)
+contacts_to_list(MuMsg *msg, std::optional<Field::Id> field_id)
 {
 	SCM list{SCM_EOL};
 
-	const auto contacts{mu_msg_get_contacts(msg, mtype)};
-	for (auto&& contact: mu_msg_get_contacts(msg, mtype)) {
+	const auto contacts{mu_msg_get_contacts(msg, field_id)};
+	for (auto&& contact: mu_msg_get_contacts(msg, field_id)) {
 		SCM item{scm_list_1(
 				scm_cons(mu_guile_scm_from_str(contact.name.c_str()),
 					 mu_guile_scm_from_str(contact.email.c_str())))};
@@ -239,7 +239,7 @@ SCM_DEFINE(get_contacts,
 {
 	MuMsgWrapper*			msgwrap;
 	SCM				list;
-	Mu::MessageContact::Type	mtype;
+
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
@@ -252,17 +252,18 @@ SCM_DEFINE(get_contacts,
 	if (CONTACT_TYPE == SCM_BOOL_F)
 		return SCM_UNSPECIFIED; /* nothing to do */
 
+	std::optional<Field::Id> field_id;
 	if (CONTACT_TYPE == SCM_BOOL_T)
-		mtype = Mu::MessageContact::Type::Unknown; /* get all */
+		field_id = {}; /* get all */
 	else {
 		if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_TO))
-			mtype = Mu::MessageContact::Type::To;
+			field_id = Field::Id::To;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_CC))
-			mtype = Mu::MessageContact::Type::Cc;
+			field_id = Field::Id::Cc;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_BCC))
-			mtype = Mu::MessageContact::Type::Bcc;
+			field_id = Field::Id::Bcc;
 		else if (scm_is_eq(CONTACT_TYPE, SYMB_CONTACT_FROM))
-			mtype = Mu::MessageContact::Type::From;
+			field_id = Field::Id::From;
 		else {
 			mu_guile_error(FUNC_NAME, 0, "invalid contact type", SCM_UNDEFINED);
 			return SCM_UNSPECIFIED;
@@ -273,7 +274,7 @@ SCM_DEFINE(get_contacts,
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-	list = contacts_to_list(msgwrap->_msg, mtype);
+	list = contacts_to_list(msgwrap->_msg, field_id);
 #pragma GCC diagnostic pop
 
 	/* explicitly close the file backend, so we won't run out of fds */

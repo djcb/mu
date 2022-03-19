@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef MU_MESSAGE_FLAGS_HH__
-#define MU_MESSAGE_FLAGS_HH__
+#ifndef MU_FLAGS_HH__
+#define MU_FLAGS_HH__
 
 #include <algorithm>
 #include <optional>
@@ -28,7 +28,7 @@
 
 namespace Mu {
 
-enum struct MessageFlags {
+enum struct Flags {
 	None = 0, /**< No flags */
 	/**
 	 * next 6 are seen in the file-info part of maildir message file
@@ -69,7 +69,7 @@ enum struct MessageFlags {
 	 */
 	_final_ = 1 << 12
 };
-MU_ENABLE_BITOPS(MessageFlags);
+MU_ENABLE_BITOPS(Flags);
 
 /**
  * Message flags category
@@ -88,7 +88,7 @@ enum struct MessageFlagCategory {
  *
  */
 struct MessageFlagInfo {
-	MessageFlags        flag;     /**< The message flag */
+	Flags        flag;     /**< The message flag */
 	char                shortcut; /**< Shortcut character */
 	std::string_view    name;     /**< Name of the flag */
 	MessageFlagCategory category; /**< Flag category */
@@ -108,24 +108,24 @@ struct MessageFlagInfo {
  * Array of all flag information.
  */
 constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
-    MessageFlagInfo{MessageFlags::Draft,         'D', "draft",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Flagged,	 'F', "flagged", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Passed,	 'P', "passed",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Replied,	 'R', "replied", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Seen,		 'S', "seen",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{MessageFlags::Trashed,	 'T', "trashed", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Draft,         'D', "draft",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Flagged,	 'F', "flagged", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Passed,	 'P', "passed",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Replied,	 'R', "replied", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Seen,		 'S', "seen",	 MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Trashed,	 'T', "trashed", MessageFlagCategory::Mailfile},
 
-    MessageFlagInfo{MessageFlags::New,		 'N', "new",	 MessageFlagCategory::Maildir},
+    MessageFlagInfo{Flags::New,		 'N', "new",	 MessageFlagCategory::Maildir},
 
-    MessageFlagInfo{MessageFlags::Signed,	 'z', "signed",	 MessageFlagCategory::Content},
-    MessageFlagInfo{MessageFlags::Encrypted,	 'x', "encrypted",
+    MessageFlagInfo{Flags::Signed,	 'z', "signed",	 MessageFlagCategory::Content},
+    MessageFlagInfo{Flags::Encrypted,	 'x', "encrypted",
 								 MessageFlagCategory::Content},
-    MessageFlagInfo{MessageFlags::HasAttachment, 'a', "attach",
+    MessageFlagInfo{Flags::HasAttachment, 'a', "attach",
 								 MessageFlagCategory::Content},
 
-    MessageFlagInfo{MessageFlags::Unread,	 'u', "unread",	 MessageFlagCategory::Pseudo},
+    MessageFlagInfo{Flags::Unread,	 'u', "unread",	 MessageFlagCategory::Pseudo},
 
-    MessageFlagInfo{MessageFlags::MailingList,	 'l', "list",	 MessageFlagCategory::Content},
+    MessageFlagInfo{Flags::MailingList,	 'l', "list",	 MessageFlagCategory::Content},
 }};
 
 
@@ -135,7 +135,7 @@ constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
  * @param func some callable
  */
 template<typename Func>
-constexpr void message_flag_infos_for_each(Func&& func)
+constexpr void flag_infos_for_each(Func&& func)
 {
 	for (auto&& info: AllMessageFlagInfos)
 		func(info);
@@ -149,9 +149,9 @@ constexpr void message_flag_infos_for_each(Func&& func)
  * @return the MessageFlagInfo, or std::nullopt in case of error.
  */
 constexpr const std::optional<MessageFlagInfo>
-message_flag_info(MessageFlags flag)
+flag_info(Flags flag)
 {
-	constexpr auto upper = static_cast<unsigned>(MessageFlags::_final_);
+	constexpr auto upper = static_cast<unsigned>(Flags::_final_);
 	const auto     val   = static_cast<unsigned>(flag);
 
 	if (__builtin_popcount(val) != 1 || val >= upper)
@@ -168,7 +168,7 @@ message_flag_info(MessageFlags flag)
  * @return the MessageFlagInfo
  */
 constexpr const std::optional<MessageFlagInfo>
-message_flag_info(char shortcut)
+flag_info(char shortcut)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.shortcut == shortcut)
@@ -185,7 +185,7 @@ message_flag_info(char shortcut)
  * @return the MessageFlagInfo
  */
 constexpr const std::optional<MessageFlagInfo>
-message_flag_info(std::string_view name)
+flag_info(std::string_view name)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.name == name)
@@ -207,15 +207,15 @@ message_flag_info(std::string_view name)
  * @param ignore_invalid if @true, ignore invalid flags, otherwise return
  * nullopt if an invalid flag is encountered
  *
- * @return the (OR'ed) flags or MessageFlags::None
+ * @return the (OR'ed) flags or Flags::None
  */
-constexpr std::optional<MessageFlags>
-message_flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
+constexpr std::optional<Flags>
+flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
 {
-	MessageFlags flags{MessageFlags::None};
+	Flags flags{Flags::None};
 
 	for (auto&& kar : expr) {
-		if (const auto& info{message_flag_info(kar)}; !info) {
+		if (const auto& info{flag_info(kar)}; !info) {
 			if (!ignore_invalid)
 				return std::nullopt;
 		} else
@@ -242,15 +242,15 @@ message_flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = fa
  *
  * @return new flags, or nullopt in case of error
  */
-constexpr std::optional<MessageFlags>
-message_flags_from_delta_expr(std::string_view expr, MessageFlags flags,
+constexpr std::optional<Flags>
+flags_from_delta_expr(std::string_view expr, Flags flags,
 			      bool ignore_invalid = false)
 {
 	if (expr.size() % 2 != 0)
 		return std::nullopt;
 
 	for (auto u = 0U; u != expr.size(); u += 2) {
-		if (const auto& info{message_flag_info(expr[u + 1])}; !info) {
+		if (const auto& info{flag_info(expr[u + 1])}; !info) {
 			if (!ignore_invalid)
 				return std::nullopt;
 		} else {
@@ -276,18 +276,18 @@ message_flags_from_delta_expr(std::string_view expr, MessageFlags flags,
  *
  * @return either messages flags or std::nullopt in case of error.
  */
-constexpr std::optional<MessageFlags>
-message_flags_from_expr(std::string_view            expr,
-			std::optional<MessageFlags> flags = std::nullopt)
+constexpr std::optional<Flags>
+flags_from_expr(std::string_view            expr,
+			std::optional<Flags> flags = std::nullopt)
 {
 	if (expr.empty())
 		return std::nullopt;
 
 	if (expr[0] == '+' || expr[0] == '-')
-		return message_flags_from_delta_expr(
-		    expr, flags.value_or(MessageFlags::None), true);
+		return flags_from_delta_expr(
+		    expr, flags.value_or(Flags::None), true);
 	else
-		return message_flags_from_absolute_expr(expr, true);
+		return flags_from_absolute_expr(expr, true);
 }
 
 /**
@@ -298,8 +298,8 @@ message_flags_from_expr(std::string_view            expr,
  *
  * @return filter flags
  */
-constexpr MessageFlags
-message_flags_filter(MessageFlags flags, MessageFlagCategory cat)
+constexpr Flags
+flags_filter(Flags flags, MessageFlagCategory cat)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.category != cat)
@@ -314,8 +314,8 @@ message_flags_filter(MessageFlags flags, MessageFlagCategory cat)
  *
  * @return string as a sequence of message-flag shortcuts
  */
-std::string message_flags_to_string(MessageFlags flags);
+std::string flags_to_string(Flags flags);
 
 } // namespace Mu
 
-#endif /* MU_MESSAGE_FLAGS_HH__ */
+#endif /* MU_FLAGS_HH__ */

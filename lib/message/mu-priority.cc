@@ -17,17 +17,14 @@
 **
 */
 
-#ifndef MU_MESSAGE_PRIORITY_CC__
-#define MU_MESSAGE_PRIORITY_CC__
-
-#include "mu-message-priority.hh"
+#include "mu-priority.hh"
 
 using namespace Mu;
 
 std::string
-Mu::to_string(MessagePriority prio)
+Mu::to_string(Priority prio)
 {
-	return std::string{message_priority_name(prio)};
+	return std::string{priority_name(prio)};
 }
 
 /*
@@ -41,26 +38,26 @@ Mu::to_string(MessagePriority prio)
 [[maybe_unused]] static void
 test_priority_to_char()
 {
-	static_assert(to_char(MessagePriority::Low) == 'l');
-	static_assert(to_char(MessagePriority::Normal) == 'n');
-	static_assert(to_char(MessagePriority::High) == 'h');
+	static_assert(to_char(Priority::Low) == 'l');
+	static_assert(to_char(Priority::Normal) == 'n');
+	static_assert(to_char(Priority::High) == 'h');
 }
 
 [[maybe_unused]] static void
 test_priority_from_char()
 {
-	static_assert(message_priority_from_char('l') == MessagePriority::Low);
-	static_assert(message_priority_from_char('n') == MessagePriority::Normal);
-	static_assert(message_priority_from_char('h') == MessagePriority::High);
-	static_assert(message_priority_from_char('x') == MessagePriority::Normal);
+	static_assert(priority_from_char('l') == Priority::Low);
+	static_assert(priority_from_char('n') == Priority::Normal);
+	static_assert(priority_from_char('h') == Priority::High);
+	static_assert(priority_from_char('x') == Priority::Normal);
 }
 
 [[maybe_unused]] static void
 test_priority_name()
 {
-	static_assert(message_priority_name(MessagePriority::Low) == "low");
-	static_assert(message_priority_name(MessagePriority::Normal) == "normal");
-	static_assert(message_priority_name(MessagePriority::High) == "high");
+	static_assert(priority_name(Priority::Low) == "low");
+	static_assert(priority_name(Priority::Normal) == "normal");
+	static_assert(priority_name(Priority::High) == "high");
 }
 
 
@@ -77,6 +74,3 @@ main(int argc, char* argv[])
 	return g_test_run();
 }
 #endif /*BUILD_TESTS*/
-
-
-#endif /* MU_MESSAGE_PRIORITY_CC__ */

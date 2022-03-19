@@ -1,5 +1,4 @@
-/*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,8 +16,8 @@
 **
 */
 
-#ifndef MU_MESSAGE_DOCUMENT_HH__
-#define MU_MESSAGE_DOCUMENT_HH__
+#ifndef MU_DOCUMENT_HH__
+#define MU_DOCUMENT_HH__
 
 #include <xapian.h>
 #include <utility>
@@ -26,49 +25,73 @@
 #include <vector>
 #include "utils/mu-xapian-utils.hh"
 
-#include "mu-message-fields.hh"
-#include "mu-message-priority.hh"
-#include "mu-message-flags.hh"
-#include "mu-message-contact.hh"
+#include "mu-fields.hh"
+#include "mu-priority.hh"
+#include "mu-flags.hh"
+#include "mu-contact.hh"
 
 namespace Mu {
 
 /**
- * A MessageDocument describes the information about a message that is
+ * A Document describes the information about a message that is
  * or can be stored in the database.
  *
  */
-class MessageDocument {
+class Document {
 public:
 	/**
 	 * Construct a message for a new Xapian Document
 	 *
 	 */
-	MessageDocument() {}
+	Document() {}
 
 	/**
 	 * Construct a message document based on on existing Xapian document.
 	 *
 	 * @param doc
 	 */
-	MessageDocument(const Xapian::Document& doc): doc_{doc} {}
+	Document(const Xapian::Document& doc): xdoc_{doc} {}
 
 	/**
 	 * Copy CTOR
 	 */
-	MessageDocument(const MessageDocument&) = default;
-
+	Document(const Document& rhs) { *this = rhs; }
 	/**
 	 * Move CTOR
 	 *
 	 */
-	MessageDocument(MessageDocument&&) = default;
+	Document(Document&& rhs) {*this = std::move(rhs); }
 
 	/**
 	 * Get a reference to the underlying Xapian document.
 	 *
 	 */
-	const Xapian::Document& xapian_document() const { return doc_; }
+	const Xapian::Document& xapian_document() const { return xdoc_; }
+
+	/* Copy assignment operator
+	 *
+	 * @param rhs some message
+	 *
+	 * @return a message ref
+	 */
+	Document& operator=(const Document& rhs) {
+		if (this != &rhs)
+			xdoc_ = rhs.xdoc_;
+		return *this;
+	}
+
+	/**
+	 * Move assignment operator
+	 *
+	 * @param rhs some message
+	 *
+	 * @return a message ref
+	 */
+	Document& operator=(Document&& rhs) {
+		if (this != &rhs)
+			xdoc_ = std::move(rhs.xdoc_);
+		return *this;
+	}
 
 
 	/*
@@ -81,7 +104,7 @@ public:
 	 * @param field_id field id
 	 * @param val string value
 	 */
-	void	add(MessageField::Id field_id, const std::string& val);
+	void	add(Field::Id field_id, const std::string& val);
 
 	/**
 	 * Add a string-vec value to the document
@@ -89,7 +112,7 @@ public:
 	 * @param field_id field id
 	 * @param val string-vec value
 	 */
-	void	add(MessageField::Id field_id, const std::vector<std::string>& vals);
+	void	add(Field::Id field_id, const std::vector<std::string>& vals);
 
 
 	/**
@@ -98,7 +121,7 @@ public:
 	 * @param field_id field id
 	 * @param contacts message contacts
 	 */
-	void    add(MessageField::Id id, const MessageContacts& contacts);
+	void    add(Field::Id id, const Contacts& contacts);
 
 	/**
 	 * Add an integer value to the document
@@ -106,14 +129,14 @@ public:
 	 * @param field_id field id
 	 * @param val integer value
 	 */
-	void	add(MessageField::Id field_id, int64_t val);
+	void	add(Field::Id field_id, int64_t val);
 
 	/**
 	 * Add a message priority to the document
 	 *
 	 * @param prio priority
 	 */
-	void	add(MessagePriority prio);
+	void	add(Priority prio);
 
 
 	/**
@@ -121,7 +144,7 @@ public:
 	 *
 	 * @param flags mesage flags.
 	 */
-	void	add(MessageFlags flags);
+	void	add(Flags flags);
 
 	/*
 	 * Retrieving values
@@ -135,9 +158,9 @@ public:
 	 *
 	 * @return a string (empty if not found)
 	 */
-	std::string string_value(MessageField::Id field_id) const noexcept {
+	std::string string_value(Field::Id field_id) const noexcept {
 		return xapian_try([&]{
-			return doc_.get_value(message_field(field_id).value_no());
+			return xdoc_.get_value(field_from_id(field_id).value_no());
 		}, std::string{});
 	}
 	/**
@@ -147,7 +170,7 @@ public:
 	 *
 	 * @return a string list
 	 */
-	std::vector<std::string> string_vec_value(MessageField::Id field_id) const noexcept;
+	std::vector<std::string> string_vec_value(Field::Id field_id) const noexcept;
 
 
 	/**
@@ -157,7 +180,7 @@ public:
 	 *
 	 * @return an integer or 0 if not found.
 	 */
-	int64_t integer_value(MessageField::Id field_id) const noexcept;
+	int64_t integer_value(Field::Id field_id) const noexcept;
 
 
 	/**
@@ -167,15 +190,14 @@ public:
 	 *
 	 * @return an integer or 0 if not found.
 	 */
-	MessageContacts contacts_value(MessageField::Id id) const noexcept;
-
+	Contacts contacts_value(Field::Id id) const noexcept;
 
 	/**
 	 * Get the priority
 	 *
 	 * @return the message priority
 	 */
-	MessagePriority priority_value() const noexcept;
+	Priority priority_value() const noexcept;
 
 	/**
 	 * Get the message flags
@@ -183,18 +205,12 @@ public:
 	 *
 	 * @return flags
 	 */
-	MessageFlags    flags_value() const noexcept;
-
+	Flags    flags_value() const noexcept;
 
 private:
-	Xapian::Document doc_;
+	Xapian::Document xdoc_;
 };
-
-
 
 } // namepace Mu
 
-
-
-
-#endif /* MU_MESSAGE_DOCUMENT_HH__ */
+#endif /* MU_DOCUMENT_HH__ */

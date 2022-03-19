@@ -17,13 +17,13 @@
 **
 */
 
-#ifndef MU_MESSAGE_PRIORITY_HH__
-#define MU_MESSAGE_PRIORITY_HH__
+#ifndef MU_PRIORITY_HH__
+#define MU_PRIORITY_HH__
 
 #include <array>
 #include <string>
 #include <string_view>
-#include "mu-message-fields.hh"
+#include "mu-fields.hh"
 
 namespace Mu {
 /**
@@ -35,7 +35,7 @@ namespace Mu {
  * The priority ids
  *
  */
-enum struct MessagePriority : char {
+enum struct Priority : char {
 	Low    = 'l', /**< Low priority */
 	Normal = 'n', /**< Normal priority */
 	High   = 'h', /**< High priority */
@@ -44,8 +44,8 @@ enum struct MessagePriority : char {
 /**
  * Sequence of all message priorities.
  */
-static constexpr std::array<MessagePriority, 3> AllMessagePriorities = {
-    MessagePriority::Low, MessagePriority::Normal, MessagePriority::High};
+static constexpr std::array<Priority, 3> AllMessagePriorities = {
+    Priority::Low, Priority::Normal, Priority::High};
 
 /**
  * Get the char for some priority
@@ -55,7 +55,7 @@ static constexpr std::array<MessagePriority, 3> AllMessagePriorities = {
  * @return the char
  */
 constexpr char
-to_char(MessagePriority prio)
+to_char(Priority prio)
 {
 	return static_cast<char>(prio);
 }
@@ -66,17 +66,17 @@ to_char(MessagePriority prio)
  *
  * @param c some character
  */
-constexpr MessagePriority
-message_priority_from_char(char c)
+constexpr Priority
+priority_from_char(char c)
 {
 	switch (c) {
 	case 'l':
-		return MessagePriority::Low;
+		return Priority::Low;
 	case 'h':
-		return MessagePriority::High;
+		return Priority::High;
 	case 'n':
 	default:
-		return MessagePriority::Normal;
+		return Priority::Normal;
 	}
 }
 
@@ -86,14 +86,14 @@ message_priority_from_char(char c)
  * @return the name
  */
 constexpr std::string_view
-message_priority_name(MessagePriority prio)
+priority_name(Priority prio)
 {
 	switch (prio) {
-	case MessagePriority::Low:
+	case Priority::Low:
 		return "low";
-	case MessagePriority::High:
+	case Priority::High:
 		return "high";
-	case MessagePriority::Normal:
+	case Priority::Normal:
 	default:
 		return "normal";
 	}
@@ -105,12 +105,12 @@ message_priority_name(MessagePriority prio)
  * @return the name
  */
 constexpr const char*
-message_priority_name_c_str(MessagePriority prio)
+priority_name_c_str(Priority prio)
 {
 	switch (prio) {
-	case MessagePriority::Low: return "low";
-	case MessagePriority::High: return "high";
-	case MessagePriority::Normal:
+	case Priority::Low: return "low";
+	case Priority::High: return "high";
+	case Priority::Normal:
 	default: return "normal";
 	}
 }
@@ -122,8 +122,8 @@ message_priority_name_c_str(MessagePriority prio)
  *
  * @return a string
  */
-std::string to_string(MessagePriority prio);
+std::string to_string(Priority prio);
 
 } // namespace Mu
 
-#endif /*MU_MESSAGE_PRIORITY_HH_*/
+#endif /*MU_PRIORITY_HH_*/

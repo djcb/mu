@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef MU_MESSAGE_FIELDS_HH__
-#define MU_MESSAGE_FIELDS_HH__
+#ifndef MU_FIELDS_HH__
+#define MU_FIELDS_HH__
 
 #include <cstdint>
 #include <string_view>
@@ -30,11 +30,11 @@
 
 namespace Mu {
 
-struct MessageField {
+struct Field {
 	/**
 	 * Field Ids.
 	 *
-	 * Note, the Ids are also used as indices in the MessageFields array,
+	 * Note, the Ids are also used as indices in the Fields array,
 	 * so their numerical values must be 0...Count.
 	 *
 	 */
@@ -55,6 +55,7 @@ struct MessageField {
 		Path,         /**< File-system Path */
 		Subject,      /**< Message subject */
 		To,           /**< To: recipient */
+		Uid,          /**< Unique id for message (based on path) */
 		/*
 		 * string list items...
 		 */
@@ -75,7 +76,7 @@ struct MessageField {
 		/*
 		 * <private>
 		 */
-		_count_ /**< Number of MessageFieldIds */
+		_count_ /**< Number of FieldIds */
 	};
 
 	/**
@@ -165,11 +166,16 @@ struct MessageField {
 	constexpr bool is_boolean_term()	const { return any_of(Flag::BooleanTerm); }
 	constexpr bool is_normal_term()		const { return any_of(Flag::NormalTerm); }
 
+	constexpr bool is_searchable()          const { return is_indexable_term() ||
+							       is_boolean_term() ||
+							       is_normal_term(); }
+
 	constexpr bool is_value()		const { return any_of(Flag::Value); }
 
 	constexpr bool is_contact()		const { return any_of(Flag::Contact); }
 	constexpr bool is_range()		const { return any_of(Flag::Range); }
 	constexpr bool do_not_cache()		const { return any_of(Flag::DoNotCache); }
+
 
 
 	/**
@@ -199,254 +205,264 @@ struct MessageField {
 	std::string xapian_term(char c) const;
 };
 
-MU_ENABLE_BITOPS(MessageField::Flag);
+MU_ENABLE_BITOPS(Field::Flag);
 
 /**
  * Sequence of _all_ message fields
  */
-static constexpr std::array<MessageField, MessageField::id_size()>
-    MessageFields = {
+static constexpr std::array<Field, Field::id_size()>
+    Fields = {
 	{
 	    // Bcc
 	    {
-		MessageField::Id::Bcc,
-		MessageField::Type::String,
+		Field::Id::Bcc,
+		Field::Type::String,
 		"bcc",
 		"Blind carbon-copy recipient",
 		"bcc:foo@example.com",
 		'h',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Contact |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::Contact |
+		Field::Flag::Value
 	    },
 	    // HTML Body
 	    {
-		MessageField::Id::BodyHtml,
-		MessageField::Type::String,
+		Field::Id::BodyHtml,
+		Field::Type::String,
 		"body",
 		"Message html body",
 		{},
 		{},
-		MessageField::Flag::GMime |
-		MessageField::Flag::DoNotCache
+		Field::Flag::GMime |
+		Field::Flag::DoNotCache
 	    },
 	    // Body
 	    {
-		MessageField::Id::BodyText,
-		MessageField::Type::String,
+		Field::Id::BodyText,
+		Field::Type::String,
 		"body",
 		"Message plain-text body",
 		"body:capybara", // example
 		'b',
-		MessageField::Flag::GMime |
-		MessageField::Flag::IndexableTerm |
-		MessageField::Flag::DoNotCache
+		Field::Flag::GMime |
+		Field::Flag::IndexableTerm |
+		Field::Flag::DoNotCache
 	    },
 	    // Cc
 	    {
-		MessageField::Id::Cc,
-		MessageField::Type::String,
+		Field::Id::Cc,
+		Field::Type::String,
 		"cc",
 		"Carbon-copy recipient",
 		"cc:quinn@example.com",
 		'c',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Contact |
-		MessageField::Flag::Value},
+		Field::Flag::GMime |
+		Field::Flag::Contact |
+		Field::Flag::Value},
 
 	    // Embed
 	    {
-		MessageField::Id::EmbeddedText,
-		MessageField::Type::String,
+		Field::Id::EmbeddedText,
+		Field::Type::String,
 		"embed",
 		"Embedded text",
 		"embed:war OR embed:peace",
 		'e',
-		MessageField::Flag::GMime |
-		MessageField::Flag::IndexableTerm |
-		MessageField::Flag::DoNotCache},
+		Field::Flag::GMime |
+		Field::Flag::IndexableTerm |
+		Field::Flag::DoNotCache},
 	    // File
 	    {
-		MessageField::Id::File,
-		MessageField::Type::String,
+		Field::Id::File,
+		Field::Type::String,
 		"file",
 		"Attachment file name",
 		"file:/image\\.*.jpg/",
 		'j',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::DoNotCache},
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::DoNotCache},
 
 	    // From
 	    {
-		MessageField::Id::From,
-		MessageField::Type::String,
+		Field::Id::From,
+		Field::Type::String,
 		"from",
 		"Message sender",
 		"from:jimbo",
 		'f',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Contact |
-		MessageField::Flag::Value},
+		Field::Flag::GMime |
+		Field::Flag::Contact |
+		Field::Flag::Value},
 	    // Maildir
 	    {
-		MessageField::Id::Maildir,
-		MessageField::Type::String,
+		Field::Id::Maildir,
+		Field::Type::String,
 		"maildir",
 		"Maildir path for message",
 		"maildir:/private/archive",
 		'm',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value},
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value},
 	    // MIME
 	    {
-		MessageField::Id::Mime,
-		MessageField::Type::String,
+		Field::Id::Mime,
+		Field::Type::String,
 		"mime",
 		"Attachment MIME-type",
 		"mime:image/jpeg",
 		'y',
-		MessageField::Flag::NormalTerm},
+		Field::Flag::NormalTerm},
 	    // Message-ID
 	    {
-		MessageField::Id::MessageId,
-		MessageField::Type::String,
+		Field::Id::MessageId,
+		Field::Type::String,
 		"msgid",
 		"Attachment MIME-type",
 		"mime:image/jpeg",
 		'i',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value},
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value},
 	    // Path
 	    {
-		MessageField::Id::Path,
-		MessageField::Type::String,
+		Field::Id::Path,
+		Field::Type::String,
 		"path",
 		"File system path to message",
 		{},
 		'p',
-		MessageField::Flag::GMime |
-		MessageField::Flag::BooleanTerm |
-		MessageField::Flag::Value},
+		Field::Flag::GMime |
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value},
 
 	    // Subject
 	    {
-		MessageField::Id::Subject,
-		MessageField::Type::String,
+		Field::Id::Subject,
+		Field::Type::String,
 		"subject",
 		"Message subject",
 		"subject:wombat",
 		's',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Value |
-		MessageField::Flag::IndexableTerm},
+		Field::Flag::GMime |
+		Field::Flag::Value |
+		Field::Flag::IndexableTerm},
 
 	    // To
 	    {
-		MessageField::Id::To,
-		MessageField::Type::String,
+		Field::Id::To,
+		Field::Type::String,
 		"to",
 		"Message recipient",
 		"to:flimflam@example.com",
 		't',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Contact |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::Contact |
+		Field::Flag::Value
 	    },
+	    // UID (internal)
+	    {
+		Field::Id::Uid,
+		Field::Type::String,
+		"uid",
+		"Message recipient",
+		{},
+		'u',
+		Field::Flag::NormalTerm},
+
 	    // References
 	    {
-		MessageField::Id::References,
-		MessageField::Type::StringList,
+		Field::Id::References,
+		Field::Type::StringList,
 		"refs",
 		"Message references to other messages",
 		{},
 		'r',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::Value
 	    },
 	    // Tags
 	    {
-		MessageField::Id::Tags,
-		MessageField::Type::StringList,
+		Field::Id::Tags,
+		Field::Type::StringList,
 		"tag",
 		"Message tags",
 		"tag:projectx",
 		'x',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value
 	    },
 	    // Date
 	    {
-		MessageField::Id::Date,
-		MessageField::Type::TimeT,
+		Field::Id::Date,
+		Field::Type::TimeT,
 		"date",
 		"Message date",
 		"date:20220101..20220505",
 		'd',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Value |
-		MessageField::Flag::Range
+		Field::Flag::GMime |
+		Field::Flag::Value |
+		Field::Flag::Range
 	    },
 	    // Flags
 	    {
-		MessageField::Id::Flags,
-		MessageField::Type::Integer,
+		Field::Id::Flags,
+		Field::Type::Integer,
 		"flag",
 		"Message properties",
 		"flag:unread",
 		'g',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value
 	    },
 	    // Priority
 	    {
-		MessageField::Id::Priority,
-		MessageField::Type::Integer,
+		Field::Id::Priority,
+		Field::Type::Integer,
 		"prio",
 		"Priority",
 		"prio:high",
 		'p',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value
 	    },
 	    // Size
 	    {
-		MessageField::Id::Size,
-		MessageField::Type::ByteSize,
+		Field::Id::Size,
+		Field::Type::ByteSize,
 		"size",
 		"Message size in bytes",
 		"size:1M..5M",
 		'z',
-		MessageField::Flag::GMime |
-		MessageField::Flag::Value |
-		MessageField::Flag::Range
+		Field::Flag::GMime |
+		Field::Flag::Value |
+		Field::Flag::Range
 	    },
 	    // Mailing List
 	    {
-		MessageField::Id::MailingList,
-		MessageField::Type::String,
+		Field::Id::MailingList,
+		Field::Type::String,
 		"list",
 		"Mailing list (List-Id:)",
 		"list:mu-discuss.googlegroups.com",
 		'v',
-		MessageField::Flag::GMime |
-		MessageField::Flag::NormalTerm |
-		MessageField::Flag::Value
+		Field::Flag::GMime |
+		Field::Flag::NormalTerm |
+		Field::Flag::Value
 	    },
 	    // ThreadId
 	    {
-		MessageField::Id::ThreadId,
-		MessageField::Type::String,
+		Field::Id::ThreadId,
+		Field::Type::String,
 		"thread",
 		"Thread a message belongs to",
 		{},
 		'w',
-		MessageField::Flag::NormalTerm
+		Field::Flag::NormalTerm
 	    },
 	}};
 
@@ -461,10 +477,10 @@ static constexpr std::array<MessageField, MessageField::id_size()>
  *
  * @return ref of the message field.
  */
-constexpr const MessageField&
-message_field(MessageField::Id id)
+constexpr const Field&
+field_from_id(Field::Id id)
 {
-	return MessageFields.at(static_cast<size_t>(id));
+	return Fields.at(static_cast<size_t>(id));
 }
 
 /**
@@ -473,8 +489,8 @@ message_field(MessageField::Id id)
  * @param func some callable
  */
 template <typename Func>
-void message_field_for_each(Func&& func) {
-	for (const auto& field: MessageFields)
+void field_for_each(Func&& func) {
+	for (const auto& field: Fields)
 		func(field);
 }
 
@@ -486,10 +502,10 @@ void message_field_for_each(Func&& func) {
  * @return a message-field id, or nullopt if not found.
  */
 template <typename Pred>
-std::optional<MessageField::Id> message_field_find_if(Pred&& pred) {
-	for (auto&& field: MessageFields)
+std::optional<Field> field_find_if(Pred&& pred) {
+	for (auto&& field: Fields)
 		if (pred(field))
-			return field.id;
+			return field;
 	return std::nullopt;
 }
 
@@ -501,37 +517,37 @@ std::optional<MessageField::Id> message_field_find_if(Pred&& pred) {
  * @return the message-field-id or nullopt.
  */
 static inline
-std::optional<MessageField::Id> message_field_id(char shortcut) {
-	return message_field_find_if([&](auto&& field ){
+std::optional<Field> field_from_shortcut(char shortcut) {
+	return field_find_if([&](auto&& field){
 		return field.shortcut == shortcut;
 	});
 }
 static inline
-std::optional<MessageField::Id> message_field_id(const std::string& name) {
+std::optional<Field> field_from_name(const std::string& name) {
 	if (name.length() == 1)
-		return message_field_id(name[0]);
+		return field_from_shortcut(name[0]);
 	else
-		return message_field_find_if([&](auto&& field){
+		return field_find_if([&](auto&& field){
 			return field.name == name;
 	});
 }
 
 /**
- * Get the MessageField::Id for some	number, or nullopt if it does not match
+ * Get the Field::Id for some number, or nullopt if it does not match
  *
  * @param id an id number
  *
- * @return MessageField::Id  or nullopt
+ * @return Field::Id  or nullopt
  */
 static inline
-std::optional<MessageField::Id> message_field_id(size_t id)
+std::optional<Field> field_from_number(size_t id)
 {
-	if (id >= static_cast<size_t>(MessageField::Id::_count_))
+	if (id >= static_cast<size_t>(Field::Id::_count_))
 		return std::nullopt;
 	else
-		return static_cast<MessageField::Id>(id);
+		return field_from_id(static_cast<Field::Id>(id));
 }
 
 
 } // namespace Mu
-#endif /* MU_MESSAGE_FIELDS_HH__ */
+#endif /* MU_FIELDS_HH__ */
