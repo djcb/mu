@@ -80,7 +80,7 @@ enum struct MessageFlagCategory {
 	Mailfile, /**< Flag for a message file */
 	Maildir,  /**< Flag for message file's location */
 	Content,  /**< Message content flag */
-	Pseudo    /**< Pseuodo flag */
+	Pseudo    /**< Pseudo flag */
 };
 
 /**
