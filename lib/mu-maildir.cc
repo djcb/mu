@@ -34,7 +34,6 @@
 
 #include "glibconfig.h"
 #include "mu-maildir.hh"
-#include "mu-message-flags.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-util.h"
 
@@ -93,7 +92,7 @@ create_maildir(const std::string& path, mode_t mode)
 	return Ok();
 }
 
-static Mu::Result<void> 	/* create a noindex file if requested */
+static Mu::Result<void>		/* create a noindex file if requested */
 create_noindex(const std::string& path)
 {
 	const auto noindexpath{path + G_DIR_SEPARATOR_S MU_MAILDIR_NOINDEX_FILE};
@@ -309,7 +308,7 @@ base_message_dir_file(const std::string& path)
 
 
 
-Mu::Result<Mu::MessageFlags>
+Mu::Result<Mu::Flags>
 Mu::mu_maildir_flags_from_path(const std::string& path)
 {	/*
 	 * this gets us the source maildir filesystem path, the directory
@@ -321,11 +320,11 @@ Mu::mu_maildir_flags_from_path(const std::string& path)
 
 	/* a message under new/ is just.. New. Filename is not considered */
 	if (dirfile->is_new)
-		return Ok(MessageFlags::New);
+		return Ok(Flags::New);
 
 	/* it's cur/ message, so parse the file name */
 	const auto parts{message_file_parts(dirfile->file)};
-	auto flags{message_flags_from_absolute_expr(parts.flags_suffix,
+	auto flags{flags_from_absolute_expr(parts.flags_suffix,
 						    true/*ignore invalid*/)};
 	if (!flags)
 		return Err(Error{Error::Code::InvalidArgument,
@@ -433,8 +432,8 @@ msg_move(const std::string& src, const std::string& dst)
 
 Mu::Result<void>
 Mu::mu_maildir_move_message(const std::string&	oldpath,
-                            const std::string&	newpath,
-                            bool		ignore_dups)
+			    const std::string&	newpath,
+			    bool		ignore_dups)
 {
 	if (oldpath == newpath) {
 		if (ignore_dups)
@@ -468,7 +467,7 @@ reinvent_filename_base()
  * @return the destion filename.
  */
 static std::string
-determine_dst_filename(const std::string& file, MessageFlags flags,
+determine_dst_filename(const std::string& file, Flags flags,
 		       bool new_name)
 {
 	/* Recalculate a unique new base file name */
@@ -478,12 +477,12 @@ determine_dst_filename(const std::string& file, MessageFlags flags,
 
 	/* for a New message, there are no flags etc.; so we only return the
 	 * name sans suffix */
-	if (any_of(flags & MessageFlags::New))
+	if (any_of(flags & Flags::New))
 		return std::move(parts.base);
 
 	const auto flagstr{
-		message_flags_to_string(
-			message_flags_filter(
+		flags_to_string(
+			flags_filter(
 				flags, MessageFlagCategory::Mailfile))};
 
 	return parts.base + parts.separator + "2," + flagstr;
@@ -497,7 +496,7 @@ static Mu::Result<void>
 check_determine_target_params (const std::string&       old_path,
 			       const std::string&       root_maildir_path,
 			       const std::string&       target_maildir,
-			       MessageFlags		newflags)
+			       Flags		newflags)
 {
 	if (!g_path_is_absolute(old_path.c_str()))
 		return Err(Error{Error::Code::File,
@@ -518,7 +517,7 @@ check_determine_target_params (const std::string&       old_path,
 				"old-path must be below root-maildir (%s) (%s)",
 				old_path.c_str(), root_maildir_path.c_str()});
 
-	if (any_of(newflags & MessageFlags::New) && newflags != MessageFlags::New)
+	if (any_of(newflags & Flags::New) && newflags != Flags::New)
 		return Err(Error{Error::Code::File,
 					"if ::New is specified, "
 					"it must be the only flag"});
@@ -530,7 +529,7 @@ Mu::Result<std::string>
 Mu::mu_maildir_determine_target(const std::string&	old_path,
 				const std::string&      root_maildir_path,
 				const std::string&	target_maildir,
-				MessageFlags		newflags,
+				Flags		newflags,
 				bool			new_name)
 {
 	/* sanity checks */
@@ -557,7 +556,7 @@ Mu::mu_maildir_determine_target(const std::string&	old_path,
 
 	/* and the complete path name. */
 	const auto subdir = std::invoke([&]()->std::string {
-		if (none_of(newflags & MessageFlags::New))
+		if (none_of(newflags & Flags::New))
 			return "cur";
 		else
 			return "new";

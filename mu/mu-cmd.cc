@@ -34,7 +34,7 @@
 #include "mu-maildir.hh"
 #include "mu-contacts-cache.hh"
 #include "mu-runtime.hh"
-#include "mu-message-flags.hh"
+#include "message/mu-message.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -49,7 +49,7 @@ static gboolean
 view_msg_sexp(MuMsg* msg, const MuConfig* opts)
 {
 	::fputs(msg_to_sexp(msg, 0, mu_config_get_msg_options(opts)).to_sexp_string().c_str(),
-	        stdout);
+		stdout);
 	return TRUE;
 }
 
@@ -121,10 +121,10 @@ body_or_summary(MuMsg* msg, const MuConfig* opts)
 	color = !opts->nocolor;
 	body  = mu_msg_get_body_text(msg, (MuMsgOptions)my_opts);
 	if (!body) {
-		if (any_of(mu_msg_get_flags(msg) & MessageFlags::Encrypted)) {
+		if (any_of(mu_msg_get_flags(msg) & Flags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
 			g_print("[No body found; "
-			        "message has encrypted parts]\n");
+				"message has encrypted parts]\n");
 		} else {
 			color_maybe(MU_COLOR_MAGENTA);
 			g_print("[No body found]\n");
@@ -308,7 +308,7 @@ foreach_msg_file(Mu::Store& store, const MuConfig* opts, ForeachMsgFunc foreach_
 	/* note: params[0] will be 'add' */
 	if (!opts->params[0] || !opts->params[1]) {
 		g_print("usage: mu %s <file> [<files>]\n",
-		        opts->params[0] ? opts->params[0] : "<cmd>");
+			opts->params[0] ? opts->params[0] : "<cmd>");
 		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing parameters");
 		return MU_ERROR_IN_PARAMETERS;
 	}
@@ -327,8 +327,8 @@ foreach_msg_file(Mu::Store& store, const MuConfig* opts, ForeachMsgFunc foreach_
 		if (!foreach_func(store, path, err)) {
 			all_ok = FALSE;
 			g_printerr("error with %s: %s\n",
-			           path,
-			           (err && *err) ? (*err)->message : "something went wrong");
+				   path,
+				   (err && *err) ? (*err)->message : "something went wrong");
 			g_clear_error(err);
 			continue;
 		}
@@ -336,9 +336,9 @@ foreach_msg_file(Mu::Store& store, const MuConfig* opts, ForeachMsgFunc foreach_
 
 	if (!all_ok) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_XAPIAN_STORE_FAILED,
-		                    "%s failed for some message(s)",
-		                    opts->params[0]);
+				    MU_ERROR_XAPIAN_STORE_FAILED,
+				    "%s failed for some message(s)",
+				    opts->params[0]);
 		return MU_ERROR_XAPIAN_STORE_FAILED;
 	}
 
@@ -399,14 +399,14 @@ each_sig(MuMsg* msg, MuMsgPart* part, VData* vdata)
 
 	if (vdata->oneline)
 		vdata->report = g_strdup_printf("%s%s%s",
-		                                vdata->report ? vdata->report : "",
-		                                vdata->report ? "; " : "",
-		                                report->report);
+						vdata->report ? vdata->report : "",
+						vdata->report ? "; " : "",
+						report->report);
 	else
 		vdata->report = g_strdup_printf("%s%s\t%s",
-		                                vdata->report ? vdata->report : "",
-		                                vdata->report ? "\n" : "",
-		                                report->report);
+						vdata->report ? vdata->report : "",
+						vdata->report ? "\n" : "",
+						report->report);
 
 	if (vdata->combined_status == MU_MSG_PART_SIG_STATUS_BAD ||
 	    vdata->combined_status == MU_MSG_PART_SIG_STATUS_ERROR)
@@ -536,16 +536,16 @@ cmd_init(const MuConfig* opts, GError** err)
 	/* not provided, nor could we find a good default */
 	if (!opts->maildir) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "missing --maildir parameter and could "
-		                    "not determine default");
+				    MU_ERROR_IN_PARAMETERS,
+				    "missing --maildir parameter and could "
+				    "not determine default");
 		return MU_ERROR_IN_PARAMETERS;
 	}
 
 	if (opts->max_msg_size < 0) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "invalid value for max-message-size");
+				    MU_ERROR_IN_PARAMETERS,
+				    "invalid value for max-message-size");
 		return MU_ERROR_IN_PARAMETERS;
 	} else if (opts->batch_size < 0) {
 		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "invalid value for batch-size");
@@ -585,9 +585,9 @@ show_usage(void)
 {
 	g_print("usage: mu command [options] [parameters]\n");
 	g_print("where command is one of index, find, cfind, view, mkdir, "
-	        "extract, add, remove, script, verify or server\n");
+		"extract, add, remove, script, verify or server\n");
 	g_print("see the mu, mu-<command> or mu-easy manpages for "
-	        "more information\n");
+		"more information\n");
 }
 
 typedef MuError (*readonly_store_func)(const Mu::Store&, const MuConfig*, GError** err);

@@ -55,35 +55,35 @@ void mu_msg_doc_destroy(MuMsgDoc* self);
  * get a string parameter from the msgdoc
  *
  * @param self a MuMsgDoc instance
- * @param mfid a Message::Field::Id for a string field
+ * @param mfid a Field::Id for a string field
  *
  * @return a string for the given field (see do_free), or NULL in case of error.
  * free with g_free
  */
-gchar* mu_msg_doc_get_str_field(MuMsgDoc* self, Message::Field::Id mfid) G_GNUC_WARN_UNUSED_RESULT;
+gchar* mu_msg_doc_get_str_field(MuMsgDoc* self, Field::Id mfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a string-list parameter from the msgdoc
  *
  * @param self a MuMsgDoc instance
- * @param mfid a Message::Field::Id for a string-list field
+ * @param mfid a Field::Id for a string-list field
  *
  * @return a list for the given field (see do_free), or NULL in case
  * of error. free with mu_str_free_list
  */
-GSList* mu_msg_doc_get_str_list_field(MuMsgDoc* self, Message::Field::Id mfid) G_GNUC_WARN_UNUSED_RESULT;
+GSList* mu_msg_doc_get_str_list_field(MuMsgDoc* self, Field::Id mfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  *
  * get a numeric parameter from the msgdoc
  *
  * @param self a MuMsgDoc instance
- * @param mfid a Message::Field::Id for a numeric field
+ * @param mfid a Field::Id for a numeric field
  *
  * @return the numerical value, or -1 in case of error. You'll need to
  * cast this value to the actual type (e.g. time_t for Field::Id::Date)
  */
-gint64 mu_msg_doc_get_num_field(MuMsgDoc* self, Message::Field::Id mfid);
+gint64 mu_msg_doc_get_num_field(MuMsgDoc* self, Field::Id mfid);
 
 } // namespace Mu
 

@@ -18,7 +18,7 @@
 */
 
 #include "mu-query-threads.hh"
-#include "mu-message-fields.hh"
+#include <message/mu-message.hh>
 
 #include <set>
 #include <unordered_set>
@@ -385,10 +385,10 @@ subject_matches(const std::string& sub1, const std::string& sub2)
 
 static bool
 update_container(Container&         container,
-                 bool               descending,
-                 ThreadPath&        tpath,
-                 size_t             seg_size,
-                 const std::string& prev_subject = "")
+		 bool               descending,
+		 ThreadPath&        tpath,
+		 size_t             seg_size,
+		 const std::string& prev_subject = "")
 {
 	if (!container.children.empty()) {
 		Container* first = container.children.front();
@@ -433,10 +433,10 @@ update_container(Container&         container,
 
 static void
 update_containers(Containers&  children,
-                  bool         descending,
-                  ThreadPath&  tpath,
-                  size_t       seg_size,
-                  std::string& prev_subject)
+		  bool         descending,
+		  ThreadPath&  tpath,
+		  size_t       seg_size,
+		  std::string& prev_subject)
 {
 	size_t idx{0};
 
@@ -606,13 +606,13 @@ Mu::calculate_threads(Mu::QueryResults& qres, bool descending)
 
 struct MockQueryResult {
 	MockQueryResult(const std::string&              message_id_arg,
-	                const std::string&              date_arg,
-	                const std::vector<std::string>& refs_arg = {})
+			const std::string&              date_arg,
+			const std::vector<std::string>& refs_arg = {})
 	    : message_id_{message_id_arg}, date_{date_arg}, refs_{refs_arg}
 	{
 	}
 	MockQueryResult(const std::string&              message_id_arg,
-	                const std::vector<std::string>& refs_arg = {})
+			const std::vector<std::string>& refs_arg = {})
 	    : MockQueryResult(message_id_arg, "", refs_arg)
 	{
 	}
@@ -669,9 +669,9 @@ static void
 test_sort_ascending()
 {
 	auto results = MockQueryResults{MockQueryResult{"m1", "1", {"m2"}},
-	                                MockQueryResult{"m2", "2", {"m3"}},
-	                                MockQueryResult{"m3", "3", {}},
-	                                MockQueryResult{"m4", "4", {}}};
+					MockQueryResult{"m2", "2", {"m3"}},
+					MockQueryResult{"m3", "3", {}},
+					MockQueryResult{"m4", "4", {}}};
 
 	calculate_threads(results, false);
 
@@ -682,14 +682,14 @@ static void
 test_sort_descending()
 {
 	auto results = MockQueryResults{MockQueryResult{"m1", "1", {"m2"}},
-	                                MockQueryResult{"m2", "2", {"m3"}},
-	                                MockQueryResult{"m3", "3", {}},
-	                                MockQueryResult{"m4", "4", {}}};
+					MockQueryResult{"m2", "2", {"m3"}},
+					MockQueryResult{"m3", "3", {}},
+					MockQueryResult{"m4", "4", {}}};
 
 	calculate_threads(results, true);
 
 	assert_thread_paths(results,
-	                    {{"m1", "1:f:f:z"}, {"m2", "1:f:z"}, {"m3", "1:z"}, {"m4", "0:z"}});
+			    {{"m1", "1:f:f:z"}, {"m2", "1:f:z"}, {"m3", "1:z"}, {"m4", "0:z"}});
 }
 
 static void
@@ -705,7 +705,7 @@ test_id_table_inconsistent()
 
 	calculate_threads(results, false);
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"m2", "0"},
 				{"m1", "0:0"},
 				{"m3", "1"},
@@ -730,7 +730,7 @@ test_dups_dup_last()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"/path1", "0"},
 				{"/path2", "0:0"},
 			    });
@@ -755,7 +755,7 @@ test_dups_dup_first()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"/path2", "0"},
 				{"/path1", "0:0"},
 			    });
@@ -773,7 +773,7 @@ test_do_not_prune_root_empty_with_children()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"x1", "0:0"},
 				{"x2", "0:1"},
 			    });
@@ -790,7 +790,7 @@ test_prune_root_empty_with_child()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"m1", "0"},
 			    });
 }
@@ -807,7 +807,7 @@ test_prune_empty_with_children()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"m1", "0:0"},
 				{"m2", "0:1"},
 			    });
@@ -828,7 +828,7 @@ test_thread_info_ascending()
 	calculate_threads(results, false);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"m2", "0"},   // 2
 				{"m4", "0:0"}, //   2
 				{"m3", "0:1"}, //   3
@@ -840,11 +840,11 @@ test_thread_info_ascending()
 
 	g_assert_true(results[0].query_match().has_flag(QueryMatch::Flags::Root));
 	g_assert_true(results[1].query_match().has_flag(QueryMatch::Flags::Root |
-	                                                QueryMatch::Flags::HasChild));
+							QueryMatch::Flags::HasChild));
 	g_assert_true(results[2].query_match().has_flag(QueryMatch::Flags::Last));
 	g_assert_true(results[3].query_match().has_flag(QueryMatch::Flags::First));
 	g_assert_true(results[4].query_match().has_flag(QueryMatch::Flags::Orphan |
-	                                                QueryMatch::Flags::First));
+							QueryMatch::Flags::First));
 	g_assert_true(
 	    results[5].query_match().has_flag(QueryMatch::Flags::Orphan | QueryMatch::Flags::Last));
 }
@@ -864,7 +864,7 @@ test_thread_info_descending()
 	calculate_threads(results, true /*descending*/);
 
 	assert_thread_paths(results,
-	                    {
+			    {
 				{"m1", "1:z"},   // 5
 				{"m2", "2:z"},   // 2
 				{"m4", "2:f:z"}, //   2
@@ -875,14 +875,14 @@ test_thread_info_descending()
 			    });
 	g_assert_true(results[0].query_match().has_flag(QueryMatch::Flags::Root));
 	g_assert_true(results[1].query_match().has_flag(QueryMatch::Flags::Root |
-	                                                QueryMatch::Flags::HasChild));
+							QueryMatch::Flags::HasChild));
 	g_assert_true(results[2].query_match().has_flag(QueryMatch::Flags::Last));
 	g_assert_true(results[3].query_match().has_flag(QueryMatch::Flags::First));
 
 	g_assert_true(
 	    results[4].query_match().has_flag(QueryMatch::Flags::Orphan | QueryMatch::Flags::Last));
 	g_assert_true(results[5].query_match().has_flag(QueryMatch::Flags::Orphan |
-	                                                QueryMatch::Flags::First));
+							QueryMatch::Flags::First));
 }
 
 int
@@ -898,11 +898,11 @@ try {
 	g_test_add_func("/threader/dups/dup-first", test_dups_dup_first);
 
 	g_test_add_func("/threader/prune/do-not-prune-root-empty-with-children",
-	                test_do_not_prune_root_empty_with_children);
+			test_do_not_prune_root_empty_with_children);
 	g_test_add_func("/threader/prune/prune-root-empty-with-child",
-	                test_prune_root_empty_with_child);
+			test_prune_root_empty_with_child);
 	g_test_add_func("/threader/prune/prune-empty-with-children",
-	                test_prune_empty_with_children);
+			test_prune_empty_with_children);
 
 	g_test_add_func("/threader/thread-info/ascending", test_thread_info_ascending);
 	g_test_add_func("/threader/thread-info/descending", test_thread_info_descending);

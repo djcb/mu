@@ -30,7 +30,7 @@
 #include <inttypes.h>
 #include <utils/mu-utils.hh>
 
-#include "mu-message-contact.hh"
+#include <message/mu-message.hh>
 
 namespace Mu {
 
@@ -53,19 +53,19 @@ public:
 	/**
 	 * Add a contact
 	 *
-	 * @param contact a MessageContact object
+	 * @param contact a Contact object
 	 *
 	 */
-	void add(MessageContact&& contact);
+	void add(Contact&& contact);
 
 
 	/**
 	 * Add a contacts sequemce
 	 *
-	 * @param contacts a MessageContact object sequence
+	 * @param contacts a Contact object sequence
 	 *
 	 */
-	void add(MessageContacts&& contacts) {
+	void add(Contacts&& contacts) {
 		for (auto&& contact: contacts)
 			add(std::move(contact));
 	}
@@ -124,14 +124,14 @@ public:
 	 *
 	 * @return contact info, or {} if not found
 	 */
-	const MessageContact* _find(const std::string& email) const;
+	const Contact* _find(const std::string& email) const;
 
 	/**
 	 * Prototype for a callable that receives a contact
 	 *
 	 * @param contact some contact
 	 */
-	using EachContactFunc = std::function<void(const MessageContact& contact_info)>;
+	using EachContactFunc = std::function<void(const Contact& contact_info)>;
 
 	/**
 	 * Invoke some callable for each contact, in order of rank.

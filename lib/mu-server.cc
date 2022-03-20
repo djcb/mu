@@ -19,8 +19,7 @@
 
 #include "config.h"
 
-#include "mu-message-flags.hh"
-#include "mu-message-fields.hh"
+#include "mu-message.hh"
 #include "mu-msg.hh"
 #include "mu-server.hh"
 
@@ -49,7 +48,6 @@
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 using namespace Command;
 
 /// @brief object to manage the server-context for all commands.
@@ -127,7 +125,7 @@ private:
 	Sexp::List perform_move(Store::Id		docid,
 				MuMsg*			msg,
 				const std::string&	maildirarg,
-				MessageFlags		flags,
+				Flags		flags,
 				bool			new_name,
 				bool			no_view);
 
@@ -523,7 +521,7 @@ Server::Private::contacts_handler(const Parameters& params)
 
 	auto       rank{0};
 	Sexp::List contacts;
-	store().contacts_cache().for_each([&](const MessageContact& ci) {
+	store().contacts_cache().for_each([&](const Contact& ci) {
 		rank++;
 
 		/* since the last time we got some contacts */
@@ -560,7 +558,7 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 		throw Error(Error::Code::InvalidArgument, "invalid message-id '%s'", msgid.c_str());
 	}
 
-	const auto xprefix{message_field(Field::Id::MessageId).shortcut};
+	const auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
 	/*XXX this is a bit dodgy */
 	auto tmp{g_ascii_strdown(msgid.c_str(), -1)};
 	auto expr{g_strdup_printf("%c:%s", xprefix, tmp)};
@@ -674,7 +672,7 @@ Server::Private::find_handler(const Parameters& params)
 	const auto include_related{get_bool_or(params, ":include-related", false)};
 
 
-	auto sort_field = message_field_id(sortfieldstr);
+	auto sort_field = field_from_name(sortfieldstr);
 	if (!sort_field && sortfieldstr.empty())
 		throw Error{Error::Code::InvalidArgument, "invalid sort field %s",
 			sortfieldstr.c_str()};
@@ -692,7 +690,7 @@ Server::Private::find_handler(const Parameters& params)
 		qflags |= QueryFlags::Threading;
 
 	std::lock_guard l{store_.lock()};
-	auto qres{store_.run_query(q, sort_field, qflags, maxnum)};
+	auto qres{store_.run_query(q, sort_field->id, qflags, maxnum)};
 	if (!qres)
 		throw Error(Error::Code::Query, "failed to run query");
 
@@ -816,7 +814,7 @@ Sexp::List
 Server::Private::perform_move(Store::Id                 docid,
 			      MuMsg*                    msg,
 			      const std::string&	maildirarg,
-			      MessageFlags		flags,
+			      Flags		flags,
 			      bool                      new_name,
 			      bool                      no_view)
 {
@@ -853,15 +851,15 @@ Server::Private::perform_move(Store::Id                 docid,
 }
 
 
-static MessageFlags
+static Flags
 calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
 {
-	const auto flags = std::invoke([&]()->std::optional<MessageFlags>{
+	const auto flags = std::invoke([&]()->std::optional<Flags>{
 			auto msgflags{mu_msg_get_flags(msg)};
 			if (!flagopt)
 				return mu_msg_get_flags(msg);
 			else
-				return message_flags_from_expr(*flagopt, msgflags);
+				return flags_from_expr(*flagopt, msgflags);
 		});
 
 	if (!flags)
@@ -1043,7 +1041,7 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
 		throw Error{Error::Code::Store, "missing message"};
 
 	const auto oldflags{mu_msg_get_flags(msg)};
-	const auto newflags{message_flags_from_delta_expr("+S-u-N", oldflags)};
+	const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
 	if (!newflags || oldflags == *newflags)
 		return false; // nothing to do.
 

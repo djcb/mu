@@ -18,7 +18,7 @@
 */
 #include "mu-guile-message.hh"
 #include "libguile/scm.h"
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 #include <config.h>
 
 #include <glib-object.h>
@@ -36,10 +36,9 @@
 #include <mu-msg-part.hh>
 
 using namespace Mu;
-using namespace Mu::Message;
 
 /* pseudo field, not in Xapian */
-constexpr auto MU_GUILE_MSG_FIELD_ID_TIMESTAMP = MessageField::id_size() + 1;
+constexpr auto MU_GUILE_MSG_FIELD_ID_TIMESTAMP = Field::id_size() + 1;
 
 /* some symbols */
 static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
@@ -74,8 +73,8 @@ mu_guile_msg_to_scm(MuMsg* msg)
 }
 
 typedef struct {
-	MessageFlags		flags;
-	SCM			lst;
+	Flags	flags;
+	SCM	lst;
 } FlagData;
 
 #define MU_GUILE_INITIALIZED_OR_ERROR                                            \
@@ -109,9 +108,9 @@ static SCM
 get_prio_scm(MuMsg* msg)
 {
 	switch (mu_msg_get_prio(msg)) {
-	case MessagePriority::Low: return SYMB_PRIO_LOW;
-	case MessagePriority::Normal: return SYMB_PRIO_NORMAL;
-	case MessagePriority::High: return SYMB_PRIO_HIGH;
+	case Priority::Low: return SYMB_PRIO_LOW;
+	case Priority::Normal: return SYMB_PRIO_NORMAL;
+	case Priority::High: return SYMB_PRIO_HIGH;
 
 	default: g_return_val_if_reached(SCM_UNDEFINED);
 	}
@@ -181,10 +180,10 @@ SCM_DEFINE(get_field,
 	if (field_id == MU_GUILE_MSG_FIELD_ID_TIMESTAMP)
 		return scm_from_uint((unsigned)mu_msg_get_timestamp(msgwrap->_msg));
 
-	const auto opt_id{message_field_id(static_cast<size_t>(field_id))};
-	SCM_ASSERT(!!opt_id, FIELD, SCM_ARG2, FUNC_NAME);
+	const auto field_opt{field_from_number(static_cast<size_t>(field_id))};
+	SCM_ASSERT(!!field_opt, FIELD, SCM_ARG2, FUNC_NAME);
 
-	switch (*opt_id) {
+	switch (field_opt->id) {
 	case Field::Id::Priority:
 		return get_prio_scm(msgwrap->_msg);
 	case Field::Id::Flags:
@@ -197,16 +196,17 @@ SCM_DEFINE(get_field,
 	default: break;
 	}
 
-	switch (message_field(*opt_id).type) {
+	switch (field_opt->type) {
 	case Field::Type::String:
-		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg, *opt_id));
+		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg,
+								     field_opt->id));
 	case Field::Type::ByteSize:
 	case Field::Type::TimeT:
-		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, *opt_id));
+		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, field_opt->id));
 	case Field::Type::Integer:
-		return scm_from_int(mu_msg_get_field_numeric(msgwrap->_msg, *opt_id));
+		return scm_from_int(mu_msg_get_field_numeric(msgwrap->_msg, field_opt->id));
 	case Field::Type::StringList:
-		return msg_string_list_field(msgwrap->_msg, *opt_id);
+		return msg_string_list_field(msgwrap->_msg, field_opt->id);
 	default: SCM_ASSERT(0, FIELD, SCM_ARG2, FUNC_NAME);
 	}
 }
@@ -472,7 +472,7 @@ define_symbols(void)
 static void
 define_vars(void)
 {
-	message_field_for_each([](auto&& field){
+	field_for_each([](auto&& field){
 		const auto name{"mu:field:" + std::string{field.name}};
 		scm_c_define(name.c_str(), scm_from_uint(field.value_no()));
 		scm_c_export(name.c_str(), NULL);

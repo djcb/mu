@@ -70,7 +70,7 @@ char* mu_msg_file_get_header(MuMsgFile* self, const char* header);
  * @return a string, or NULL
  */
 char* mu_msg_file_get_str_field(MuMsgFile*   self,
-				Message::Field::Id msfid,
+				Field::Id msfid,
 				gboolean*    do_free) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
@@ -82,7 +82,7 @@ char* mu_msg_file_get_str_field(MuMsgFile*   self,
  * @return a GSList*, or NULL; free with mu_str_free_list
  */
 GSList* mu_msg_file_get_str_list_field(MuMsgFile*   self,
-				       Message::Field::Id msfid) G_GNUC_WARN_UNUSED_RESULT;
+				       Field::Id msfid) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * get a numeric value for this message -- the return value should be
@@ -93,7 +93,7 @@ GSList* mu_msg_file_get_str_list_field(MuMsgFile*   self,
  *
  * @return the numeric value, or -1 in case of error
  */
-gint64 mu_msg_file_get_num_field(MuMsgFile* self, Message::Field::Id mfid);
+gint64 mu_msg_file_get_num_field(MuMsgFile* self, Field::Id mfid);
 
 } // namespace Mu
 

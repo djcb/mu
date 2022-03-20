@@ -28,13 +28,14 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include "message/mu-fields.hh"
 #include "mu-msg.hh"
 #include "mu-maildir.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query.hh"
 #include "mu-bookmarks.hh"
 #include "mu-runtime.hh"
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -43,7 +44,6 @@
 #include "utils/mu-utils.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 struct OutputInfo {
 	Xapian::docid       docid{};
@@ -74,8 +74,8 @@ static Option<QueryResults>
 run_query(const Store& store, const std::string& expr, const MuConfig* opts,
 	  GError** err)
 {
-	const auto sortfield_id{message_field_id(opts->sortfield ? opts->sortfield : "")};
-	if (!sortfield_id && opts->sortfield) {
+	const auto sortfield{field_from_name(opts->sortfield ? opts->sortfield : "")};
+	if (!sortfield && opts->sortfield) {
 		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
 			    "invvalid sort field: '%s'\n", opts->sortfield);
 		return Nothing;
@@ -91,7 +91,7 @@ run_query(const Store& store, const std::string& expr, const MuConfig* opts,
 	if (opts->threads)
 		qflags |= QueryFlags::Threading;
 
-	return store.run_query(expr, sortfield_id, qflags, opts->maxnum);
+	return store.run_query(expr, sortfield->id, qflags, opts->maxnum);
 }
 
 static gboolean
@@ -233,7 +233,7 @@ ansi_color_maybe(Field::Id field_id, gboolean color)
 	case Field::Id::Date: ansi    = MU_COLOR_MAGENTA; break;
 
 	default:
-		if (message_field(field_id).type != Field::Type::String)
+		if (field_from_id(field_id).type != Field::Type::String)
 			ansi = MU_COLOR_YELLOW;
 		else
 			ansi = MU_COLOR_RED;
@@ -275,10 +275,10 @@ field_string_list(MuMsg* msg, Field::Id field_id)
 
 /* ugly... for backward compat */
 static const char*
-flags_s(MessageFlags flags)
+flags_s(Flags flags)
 {
 	static char buf[64];
-	const auto flagstr{message_flags_to_string(flags)};
+	const auto flagstr{flags_to_string(flags)};
 
 	::strncpy(buf, flagstr.c_str(), sizeof(buf) - 1);
 
@@ -290,7 +290,7 @@ display_field(MuMsg* msg, Field::Id field_id)
 {
 	gint64 val;
 
-	switch (message_field(field_id).type) {
+	switch (field_from_id(field_id).type) {
 	case Field::Type::String: {
 		const gchar* str;
 		str = mu_msg_get_field_string(msg, field_id);
@@ -299,11 +299,11 @@ display_field(MuMsg* msg, Field::Id field_id)
 	case Field::Type::Integer:
 		if (field_id == Field::Id::Priority) {
 			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, field_id));
-			const auto prio = message_priority_from_char(val);
-			return message_priority_name_c_str(prio);
+			const auto prio = priority_from_char(val);
+			return priority_name_c_str(prio);
 		} else if (field_id == Field::Id::Flags) {
 			val = mu_msg_get_field_numeric(msg, field_id);
-			return flags_s(static_cast<MessageFlags>(val));
+			return flags_s(static_cast<Flags>(val));
 		} else /* as string */
 			return mu_msg_get_field_string(msg, field_id);
 
@@ -384,16 +384,15 @@ output_plain_fields(MuMsg* msg, const char* fields, gboolean color, gboolean thr
 	g_return_if_fail(fields);
 
 	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
-		const auto id_opt{message_field_id(*myfields)};
-		if (!id_opt || (!message_field(*id_opt).is_value() &&
-				!message_field(*id_opt).is_contact()))
+		const auto field_opt{field_from_shortcut(*myfields)};
+		if (!field_opt || (!field_opt->is_value() && !field_opt->is_contact()))
 			nonempty += printf("%c", *myfields);
 
 		else {
-			ansi_color_maybe(*id_opt, color);
-			nonempty += mu_util_fputs_encoded(display_field(msg, *id_opt).c_str(),
-							  stdout);
-			ansi_reset_maybe(*id_opt, color);
+			ansi_color_maybe(field_opt->id, color);
+			nonempty += mu_util_fputs_encoded(
+				display_field(msg, field_opt->id).c_str(), stdout);
+			ansi_reset_maybe(field_opt->id, color);
 		}
 	}
 

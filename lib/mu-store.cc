@@ -35,8 +35,6 @@
 #include <vector>
 #include <xapian.h>
 
-#include "mu-message-flags.hh"
-#include "mu-message.hh"
 #include "mu-msg.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
@@ -48,7 +46,6 @@
 #include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 static_assert(std::is_same<Store::Id, Xapian::docid>::value, "wrong type for Store::Id");
 
@@ -213,7 +210,7 @@ struct Store::Private {
 	void add_synonyms()
 	{
 		for (auto&& info: AllMessageFlagInfos) {
-			constexpr auto field{message_field(Field::Id::Flags)};
+			constexpr auto field{field_from_id(Field::Id::Flags)};
 			const auto s1{field.xapian_term(info.name)};
 			const auto s2{field.xapian_term(info.shortcut)};
 			writable_db().clear_synonyms(s1);
@@ -222,7 +219,7 @@ struct Store::Private {
 		}
 
 		for (auto&& prio : AllMessagePriorities) {
-			constexpr auto field{message_field(Field::Id::Priority)};
+			constexpr auto field{field_from_id(Field::Id::Priority)};
 			const auto s1{field.xapian_term(to_string(prio))};
 			const auto s2{field.xapian_term(to_char(prio))};
 			writable_db().clear_synonyms(s1);
@@ -310,7 +307,7 @@ hash_str(char* buf, size_t buf_size, const char* data)
 static std::string
 get_uid_term(const char* path)
 {
-	return message_field(Field::Id::Uid).xapian_term(
+	return field_from_id(Field::Id::Uid).xapian_term(
 		format("016%" PRIx64, get_hash64(path)));
 }
 
@@ -588,7 +585,7 @@ Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
 		enq.set_cutoff(0, 0);
 
 		Xapian::MSet matches(enq.get_mset(0, priv_->db().get_doccount()));
-		constexpr auto path_no{message_field(Field::Id::Path).value_no()};
+		constexpr auto path_no{field_from_id(Field::Id::Path).value_no()};
 		for (auto&& it = matches.begin(); it != matches.end(); ++it, ++n)
 			if (!msg_func(*it, it.get_document().get_value(path_no)))
 				break;
@@ -605,7 +602,7 @@ Store::commit()
 }
 
 std::size_t
-Store::for_each_term(Message::Field::Id field_id, Store::ForEachTermFunc func) const
+Store::for_each_term(Field::Id field_id, Store::ForEachTermFunc func) const
 {
 	size_t n{};
 
@@ -615,7 +612,7 @@ Store::for_each_term(Message::Field::Id field_id, Store::ForEachTermFunc func) c
 		 * the message parser which already has the lock
 		 */
 		std::vector<std::string> terms;
-		const auto prefix{message_field(field_id).xapian_term()};
+		const auto prefix{field_from_id(field_id).xapian_term()};
 		for (auto it = priv_->db().allterms_begin(prefix);
 		     it != priv_->db().allterms_end(prefix); ++it) {
 			if (!func(*it))
@@ -666,7 +663,7 @@ Store::parse_query(const std::string& expr, bool xapian) const
 static void
 add_terms_values_date(Xapian::Document& doc, MuMsg* msg)
 {
-	constexpr auto value_no{message_field(Field::Id::Date).value_no()};
+	constexpr auto value_no{field_from_id(Field::Id::Date).value_no()};
 	const auto dstr = Mu::date_to_time_t_string(
 		static_cast<time_t>(mu_msg_get_field_numeric(msg, Field::Id::Date)));
 
@@ -676,7 +673,7 @@ add_terms_values_date(Xapian::Document& doc, MuMsg* msg)
 static void
 add_terms_values_size(Xapian::Document& doc, MuMsg* msg)
 {
-	constexpr auto value_no{message_field(Field::Id::Size).value_no()};
+	constexpr auto value_no{field_from_id(Field::Id::Size).value_no()};
 	const auto szstr = Mu::size_to_string(mu_msg_get_field_numeric(
 						      msg, Field::Id::Size));
 	doc.add_value(value_no, szstr);
@@ -701,15 +698,15 @@ add_terms_values_number(Xapian::Document& doc, MuMsg* msg, const Field& field)
 	}
 
 	if (field.id == Field::Id::Flags) {
-		g_return_if_fail(num < static_cast<int64_t>(MessageFlags::_final_));
-		const auto msgflag{static_cast<MessageFlags>(num)};
-		message_flag_infos_for_each([&](auto&& info) {
+		g_return_if_fail(num < static_cast<int64_t>(Flags::_final_));
+		const auto msgflag{static_cast<Flags>(num)};
+		flag_infos_for_each([&](auto&& info) {
 			if (any_of(info.flag & msgflag))
 				add_term(doc, field.xapian_term(info.shortcut_lower()));
 		});
 	} else if (field.id == Field::Id::Priority)
 		add_term(doc,
-			 field.xapian_term(to_char(static_cast<MessagePriority>(num))));
+			 field.xapian_term(to_char(static_cast<Priority>(num))));
 }
 
 /* for string and string-list */
@@ -787,7 +784,7 @@ maybe_index_text_part(Xapian::Document& doc, MuMsg* msg, MuMsgPart* part)
 	const auto str = Mu::utf8_flatten(txt);
 	g_free(txt);
 
-	static const auto pfx{message_field(Field::Id::EmbeddedText).xapian_term()};
+	static const auto pfx{field_from_id(Field::Id::EmbeddedText).xapian_term()};
 	termgen.index_text(str, 1, pfx);
 }
 
@@ -802,13 +799,13 @@ each_part(MuMsg* msg, MuMsgPart* part, DocHolder* doc_holder)
 
 	/* save the mime type of any part */
 	if (part->type)
-		add_term(doc, message_field(Field::Id::Mime)
+		add_term(doc, field_from_id(Field::Id::Mime)
 			 .xapian_term(format("%s/%s", part->type, part->subtype)));
 
 	if (char *fname = mu_msg_part_get_filename(part, FALSE); fname) {
 		const auto flat{Mu::utf8_flatten(fname)};
 		g_free(fname);
-		add_term(doc, message_field(Field::Id::File).xapian_term(flat));
+		add_term(doc, field_from_id(Field::Id::File).xapian_term(flat));
 	}
 
 	maybe_index_text_part(doc, msg, part);
@@ -828,7 +825,7 @@ add_terms_values_attach(Xapian::Document& doc, MuMsg* msg)
 static void
 add_terms_values_body(Xapian::Document& doc, MuMsg* msg, const Field& field)
 {
-	if (any_of(mu_msg_get_flags(msg) & MessageFlags::Encrypted))
+	if (any_of(mu_msg_get_flags(msg) & Flags::Encrypted))
 		return; /* ignore encrypted bodies */
 
 	Xapian::TermGenerator termgen;
@@ -866,29 +863,34 @@ add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
 	Xapian::TermGenerator termgen;
 	termgen.set_document(doc);
 
-	for (auto&& contact: mu_msg_get_contacts(msg)) {
+	auto contacts{mu_msg_get_contacts(msg)};
+
+	for (auto&& contact: contacts) {
 
 		// e.g. Reply-To doesn't have a field connected.
-		const auto field_opt{contact.field()};
+		const auto field_opt{contact.field_id};
 		if (!field_opt)
-			goto next;
+			continue;
 
-		doc.add_value(field_opt->value_no(), contact.display_name());
-		add_term(doc, field_opt->xapian_term(contact.email));
+		const auto field{field_from_id(*field_opt)};
+		doc.add_value(field.value_no(), contact.display_name());
+		add_term(doc, field.xapian_term(contact.email));
 
 		if (!contact.name.empty())
 			termgen.index_text(utf8_flatten(contact.name),
-					   1, field_opt->xapian_term());
+					   1, field.xapian_term());
 
 
 		// index name / domain separately, too.
 		if (const auto at = contact.email.find('@'); at != std::string::npos) {
-			add_term(doc, field_opt->xapian_term(contact.email.substr(0, at)));
-			add_term(doc, field_opt->xapian_term(contact.email.substr(at)));
+			add_term(doc, field.xapian_term(contact.email.substr(0, at)));
+			add_term(doc, field.xapian_term(contact.email.substr(at)));
 		}
-	next:
-		contacts_cache.add(std::move(contact));
 	}
+
+	contacts_cache.add(std::move(contacts));
+
+
 }
 
 Xapian::Document
@@ -897,9 +899,9 @@ Store::Private::new_doc_from_message(MuMsg* msg)
 	Xapian::Document doc;
 
 	add_contacts_terms_values(doc, msg, this->contacts_cache_);
-	message_field_for_each([&](auto&& field) {
+	field_for_each([&](auto&& field) {
 
-		if (!field.is_full_text() && !field.is_searchable() && !field.is_value())
+		if (!field.is_searchable() && !field.is_value())
 			return;
 
 		if (field.is_contact())
@@ -939,7 +941,7 @@ static void
 update_threading_info(MuMsg* msg, Xapian::Document& doc)
 {
 	const GSList* refs;
-	const auto field{message_field(Field::Id::ThreadId)};
+	const auto field{field_from_id(Field::Id::ThreadId)};
 
 	// refs contains a list of parent messages, with the oldest
 	// one first until the last one, which is the direct parent of

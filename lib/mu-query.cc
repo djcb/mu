@@ -35,7 +35,6 @@
 #include <mu-xapian.hh>
 
 using namespace Mu;
-using namespace Mu::Message;
 
 struct Query::Private {
 	Private(const Store& store) : store_{store}, parser_{store_} {}
@@ -77,7 +76,7 @@ Query::~Query() = default;
 static Xapian::Enquire&
 sort_enquire(Xapian::Enquire& enq, Field::Id sortfield_id, QueryFlags qflags)
 {
-	const auto value_no{message_field(sortfield_id).value_no()};
+	const auto value_no{field_from_id(sortfield_id).value_no()};
 	enq.set_sort_by_value(value_no, any_of(qflags & QueryFlags::Descending));
 
 	return enq;
@@ -115,7 +114,7 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 	Xapian::Enquire            enq{store_.database()};
 	std::vector<Xapian::Query> qvec;
 	for (auto&& t : thread_ids)
-		qvec.emplace_back(message_field(Field::Id::ThreadId).xapian_term(t));
+		qvec.emplace_back(field_from_id(Field::Id::ThreadId).xapian_term(t));
 
 	Xapian::Query qr{Xapian::Query::OP_OR, qvec.begin(), qvec.end()};
 	enq.set_query(qr);
@@ -187,7 +186,7 @@ Query::Private::run_singular(const std::string& expr,
 static Option<std::string>
 opt_string(const Xapian::Document& doc, Field::Id id) noexcept
 {
-	const auto  value_no{message_field(id).value_no()};
+	const auto  value_no{field_from_id(id).value_no()};
 	std::string val =
 	    xapian_try([&] { return doc.get_value(value_no); }, std::string{""});
 	if (val.empty())
@@ -245,7 +244,7 @@ Query::Private::run_related(const std::string& expr,
 
 Option<QueryResults>
 Query::Private::run(const std::string&                expr,
-		    std::optional<Message::Field::Id> sortfield_id, QueryFlags qflags,
+		    std::optional<Field::Id> sortfield_id, QueryFlags qflags,
 		    size_t maxnum) const
 {
 	const auto eff_maxnum{maxnum == 0 ? store_size() : maxnum};
@@ -260,7 +259,7 @@ Query::Private::run(const std::string&                expr,
 }
 
 Option<QueryResults>
-Query::run(const std::string& expr, std::optional<Message::Field::Id> sortfield_id,
+Query::run(const std::string& expr, std::optional<Field::Id> sortfield_id,
 	   QueryFlags qflags, size_t maxnum) const
 try {
 	// some flags are for internal use only.

@@ -44,7 +44,7 @@ struct EmailEqual {
 	}
 };
 
-using ContactUMap = std::unordered_map<const std::string, MessageContact, EmailHash, EmailEqual>;
+using ContactUMap = std::unordered_map<const std::string, Contact, EmailHash, EmailEqual>;
 struct ContactsCache::Private {
 	Private(const std::string& serialized, const StringVec& personal)
 		: contacts_{deserialize(serialized)},
@@ -126,7 +126,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 			g_warning("error: '%s'", line.c_str());
 			continue;
 		}
-		MessageContact ci(parts[1],                                                  // email
+		Contact ci(parts[1],                                                  // email
 				  std::move(parts[2]),                                       // name
 				  (time_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),       // message_date
 				  parts[3][0] == '1' ? true : false,                         // personal
@@ -182,9 +182,9 @@ ContactsCache::dirty() const
 	return priv_->dirty_;
 }
 
-//const MessageContact
+//const Contact
 void
-ContactsCache::add(MessageContact&& contact)
+ContactsCache::add(Contact&& contact)
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -219,7 +219,7 @@ ContactsCache::add(MessageContact&& contact)
 	}
 }
 
-const MessageContact*
+const Contact*
 ContactsCache::_find(const std::string& email) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
@@ -251,19 +251,19 @@ ContactsCache::size() const
 
 
 /**
- * This is used for sorting the MessageContacts in order of relevance. A highly
+ * This is used for sorting the Contacts in order of relevance. A highly
  * specific algorithm, but the details don't matter _too_ much.
  *
  * This is currently used for the ordering in mu-cfind and auto-completion in
  * mu4e, if the various completion methods don't override it...
  */
 constexpr auto RecentOffset{15 * 24 * 3600};
-struct MessageContactLessThan {
-	MessageContactLessThan()
+struct ContactLessThan {
+	ContactLessThan()
 	    : recently_{::time({}) - RecentOffset} {}
 
 
-	bool operator()(const Mu::MessageContact& ci1, const Mu::MessageContact& ci2) const
+	bool operator()(const Mu::Contact& ci1, const Mu::Contact& ci2) const
 	{
 		// non-personal is less relevant.
 		if (ci1.personal != ci2.personal)
@@ -286,8 +286,8 @@ struct MessageContactLessThan {
 	const time_t recently_;
 };
 
-using ContactSet = std::set<std::reference_wrapper<const MessageContact>,
-			    MessageContactLessThan>;
+using ContactSet = std::set<std::reference_wrapper<const Contact>,
+			    ContactLessThan>;
 
 void
 ContactsCache::for_each(const EachContactFunc& each_contact) const
@@ -338,22 +338,22 @@ test_mu_contacts_cache_base()
 	g_assert_true(contacts.empty());
 	g_assert_cmpuint(contacts.size(), ==, 0);
 
-	contacts.add(Mu::MessageContact("foo.bar@example.com",
+	contacts.add(Mu::Contact("foo.bar@example.com",
 					"Foo", {}, 12345));
 	g_assert_false(contacts.empty());
 	g_assert_cmpuint(contacts.size(), ==, 1);
 
-	contacts.add(Mu::MessageContact("cuux@example.com", "Cuux", {},
+	contacts.add(Mu::Contact("cuux@example.com", "Cuux", {},
 					54321));
 
 	g_assert_cmpuint(contacts.size(), ==, 2);
 
 	contacts.add(
-	    Mu::MessageContact("foo.bar@example.com", "Foo", {}, 77777));
+	    Mu::Contact("foo.bar@example.com", "Foo", {}, 77777));
 	g_assert_cmpuint(contacts.size(), ==, 2);
 
 	contacts.add(
-	    Mu::MessageContact("Foo.Bar@Example.Com", "Foo", {}, 88888));
+	    Mu::Contact("Foo.Bar@Example.Com", "Foo", {}, 88888));
 	g_assert_cmpuint(contacts.size(), ==, 2);
 	// note: replaces first.
 
@@ -417,31 +417,31 @@ test_mu_contacts_cache_sort()
 	{ /* recent messages, older comes first */
 
 		Mu::ContactsCache ccache("");
-		ccache.add(Mu::MessageContact{"a@example.com", "a", now, true, 1000, 0});
-		ccache.add(Mu::MessageContact{"b@example.com", "b", now-1, true, 1000, 0});
+		ccache.add(Mu::Contact{"a@example.com", "a", now, true, 1000, 0});
+		ccache.add(Mu::Contact{"b@example.com", "b", now-1, true, 1000, 0});
 		assert_equal(result_chars(ccache), "ba");
 	}
 
 	{ /* non-recent messages, less frequent comes first */
 
 		Mu::ContactsCache ccache("");
-		ccache.add(Mu::MessageContact{"a@example.com", "a", now-2*RecentOffset, true, 1000, 0});
-		ccache.add(Mu::MessageContact{"b@example.com", "b", now-3*RecentOffset, true, 2000, 0});
+		ccache.add(Mu::Contact{"a@example.com", "a", now-2*RecentOffset, true, 1000, 0});
+		ccache.add(Mu::Contact{"b@example.com", "b", now-3*RecentOffset, true, 2000, 0});
 		assert_equal(result_chars(ccache), "ab");
 	}
 
 	{ /* non-personal comes first */
 
 		Mu::ContactsCache ccache("");
-		ccache.add(Mu::MessageContact{"a@example.com", "a", now-5*RecentOffset, true, 1000, 0});
-		ccache.add(Mu::MessageContact{"b@example.com", "b", now, false, 8000, 0});
+		ccache.add(Mu::Contact{"a@example.com", "a", now-5*RecentOffset, true, 1000, 0});
+		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 8000, 0});
 		assert_equal(result_chars(ccache), "ba");
 	}
 
 	{ /* if all else fails, alphabetically */
 		Mu::ContactsCache ccache("");
-		ccache.add(Mu::MessageContact{"a@example.com", "a", now, false, 1000, 0});
-		ccache.add(Mu::MessageContact{"b@example.com", "b", now, false, 1000, 0});
+		ccache.add(Mu::Contact{"a@example.com", "a", now, false, 1000, 0});
+		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 1000, 0});
 		g_assert_cmpuint(ccache.size(),==,2);
 		assert_equal(result_chars(ccache), "ab");
 	}

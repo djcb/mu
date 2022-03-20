@@ -22,7 +22,7 @@
 
 #include <utils/mu-result.hh>
 
-#include <mu-message.hh>
+#include <message/mu-message.hh>
 
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
@@ -295,10 +295,10 @@ time_t mu_msg_get_date(MuMsg* msg);
  *
  * @param msg valid MuMsg* instance
  *
- * @return the file/content flags as logically OR'd #Mu::MessageFlags.
+ * @return the file/content flags as logically OR'd #Mu::Flags.
  * Non-standard flags are ignored.
  */
-MessageFlags mu_msg_get_flags(MuMsg* msg);
+Flags mu_msg_get_flags(MuMsg* msg);
 
 /**
  * get the file size in bytes of this message
@@ -317,7 +317,7 @@ size_t mu_msg_get_size(MuMsg* msg);
  *
  * @return a string that should not be freed
  */
-const char* mu_msg_get_field_string(MuMsg* msg, Message::Field::Id mfid);
+const char* mu_msg_get_field_string(MuMsg* msg, Field::Id mfid);
 
 /**
  * get some field value as string-list
@@ -327,7 +327,7 @@ const char* mu_msg_get_field_string(MuMsg* msg, Message::Field::Id mfid);
  *
  * @return a list that should not be freed
  */
-const GSList* mu_msg_get_field_string_list(MuMsg* self, Message::Field::Id mfid);
+const GSList* mu_msg_get_field_string_list(MuMsg* self, Field::Id mfid);
 
 /**
  * get some field value as string
@@ -337,7 +337,7 @@ const GSList* mu_msg_get_field_string_list(MuMsg* self, Message::Field::Id mfid)
  *
  * @return a string that should not be freed
  */
-gint64 mu_msg_get_field_numeric(MuMsg* msg, Message::Field::Id mfid);
+gint64 mu_msg_get_field_numeric(MuMsg* msg, Field::Id mfid);
 
 /**
  * get the message priority for this message. The X-Priority, X-MSMailPriority,
@@ -348,7 +348,7 @@ gint64 mu_msg_get_field_numeric(MuMsg* msg, Message::Field::Id mfid);
  *
  * @return the message priority
  */
-MessagePriority mu_msg_get_prio(MuMsg* msg);
+Priority mu_msg_get_prio(MuMsg* msg);
 
 /**
  * get the timestamp (mtime) for the file containing this message
@@ -401,7 +401,7 @@ const GSList* mu_msg_get_tags(MuMsg* self);
  * @return negative if m1 is smaller, positive if m1 is smaller, 0 if
  * they are equal
  */
-int mu_msg_cmp(MuMsg* m1, MuMsg* m2, Message::Field::Id mfid);
+int mu_msg_cmp(MuMsg* m1, MuMsg* m2, Field::Id mfid);
 
 /**
  * check whether there there's a readable file behind this message
@@ -433,7 +433,7 @@ gboolean mu_msg_is_readable(MuMsg* self);
 bool mu_msg_move_to_maildir(MuMsg*		msg,
 			    const std::string&	root_maildir_path,
 			    const std::string&	target_maildir,
-			    MessageFlags	flags,
+			    Flags		flags,
 			    bool		ignore_dups,
 			    bool		new_name,
 			    GError**		err);
@@ -445,8 +445,8 @@ bool mu_msg_move_to_maildir(MuMsg*		msg,
  *
  * @return a sequence
  */
-Mu::MessageContacts mu_msg_get_contacts (MuMsg *self,
-					 std::optional<MessageField::Id> field_id={});
+Mu::Contacts mu_msg_get_contacts (MuMsg *self,
+				  std::optional<Field::Id> field_id={});
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn

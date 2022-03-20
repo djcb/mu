@@ -37,7 +37,6 @@
 #include "utils/mu-str.h"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 static gboolean
 init_file_metadata(MuMsgFile* self, const char* path, const char* mdir, GError** err);
@@ -346,15 +345,15 @@ looks_like_attachment(GMimeObject* part)
 }
 
 static void
-msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MessageFlags* flags)
+msg_cflags_cb(GMimeObject* parent, GMimeObject* part, Flags* flags)
 {
 	if (GMIME_IS_MULTIPART_SIGNED(part))
-		*flags |= MessageFlags::Signed;
+		*flags |= Flags::Signed;
 
 	/* FIXME: An encrypted part might be signed at the same time.
 	 *        In that case the signed flag is lost. */
 	if (GMIME_IS_MULTIPART_ENCRYPTED(part))
-		*flags |= MessageFlags::Encrypted;
+		*flags |= Flags::Encrypted;
 
 	/* smime */
 	if (GMIME_IS_APPLICATION_PKCS7_MIME(part)) {
@@ -363,10 +362,10 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MessageFlags* flags)
 		if (pkcs7) {
 			switch(pkcs7->smime_type) {
 			case GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA:
-				*flags |= MessageFlags::Encrypted;
+				*flags |= Flags::Encrypted;
 				break;
 			case GMIME_SECURE_MIME_TYPE_SIGNED_DATA:
-				*flags |= MessageFlags::Signed;
+				*flags |= Flags::Signed;
 				break;
 			default:
 				break;
@@ -374,20 +373,20 @@ msg_cflags_cb(GMimeObject* parent, GMimeObject* part, MessageFlags* flags)
 		}
 	}
 
-	if (any_of(*flags & MessageFlags::HasAttachment))
+	if (any_of(*flags & Flags::HasAttachment))
 		return;
 
 	if (!GMIME_IS_PART(part))
 		return;
 
 	if (looks_like_attachment(part))
-		*flags |= MessageFlags::HasAttachment;
+		*flags |= Flags::HasAttachment;
 }
 
-static MessageFlags
+static Flags
 get_content_flags(MuMsgFile* self)
 {
-	MessageFlags flags{MessageFlags::None};
+	Flags flags{Flags::None};
 
 	if (GMIME_IS_MESSAGE(self->_mime_msg)) {
 		/* toplevel */
@@ -401,27 +400,27 @@ get_content_flags(MuMsgFile* self)
 
 	char *ml{get_mailing_list(self)};
 	if (ml) {
-		flags |= MessageFlags::MailingList;
+		flags |= Flags::MailingList;
 		g_free(ml);
 	}
 
 	return flags;
 }
 
-static MessageFlags
+static Flags
 get_flags(MuMsgFile* self)
 {
-	g_return_val_if_fail(self, MessageFlags::None);
+	g_return_val_if_fail(self, Flags::None);
 
 	auto flags{mu_maildir_flags_from_path(self->_path)
-		.value_or(MessageFlags::None)};
+		.value_or(Flags::None)};
 	flags |= get_content_flags(self);
 
 	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
 	 * for searching convenience */
-	if (any_of(flags & MessageFlags::New) ||
-	    none_of(flags & MessageFlags::Seen))
-		flags |= MessageFlags::Unread;
+	if (any_of(flags & Flags::New) ||
+	    none_of(flags & Flags::Seen))
+		flags |= Flags::Unread;
 
 	return flags;
 }
@@ -433,41 +432,41 @@ get_size(MuMsgFile* self)
 	return self->_size;
 }
 
-static MessagePriority
+static Priority
 parse_prio_str(const char* priostr)
 {
 	int i;
 	struct {
 		const char*     _str;
-		MessagePriority _prio;
-	} str_prio[] = {{"high", MessagePriority::High},
-			{"1", MessagePriority::High},
-			{"2", MessagePriority::High},
+		Priority _prio;
+	} str_prio[] = {{"high", Priority::High},
+			{"1", Priority::High},
+			{"2", Priority::High},
 
-			{"normal", MessagePriority::Normal},
-			{"3", MessagePriority::Normal},
+			{"normal", Priority::Normal},
+			{"3", Priority::Normal},
 
-			{"low", MessagePriority::Low},
-			{"list", MessagePriority::Low},
-			{"bulk", MessagePriority::Low},
-			{"4", MessagePriority::Low},
-			{"5", MessagePriority::Low}};
+			{"low", Priority::Low},
+			{"list", Priority::Low},
+			{"bulk", Priority::Low},
+			{"4", Priority::Low},
+			{"5", Priority::Low}};
 
 	for (i = 0; i != G_N_ELEMENTS(str_prio); ++i)
 		if (g_ascii_strcasecmp(priostr, str_prio[i]._str) == 0)
 			return str_prio[i]._prio;
 
 	/* e.g., last-fm uses 'fm-user'... as precedence */
-	return MessagePriority::Normal;
+	return Priority::Normal;
 }
 
-static MessagePriority
+static Priority
 get_prio(MuMsgFile* self)
 {
 	GMimeObject* obj;
 	const char*  priostr;
 
-	g_return_val_if_fail(self, MessagePriority::Normal);
+	g_return_val_if_fail(self, Priority::Normal);
 
 	obj = GMIME_OBJECT(self->_mime_msg);
 
@@ -477,7 +476,7 @@ get_prio(MuMsgFile* self)
 	if (!priostr)
 		priostr = g_mime_object_get_header(obj, "Importance");
 	if (!priostr)
-		return MessagePriority::Normal;
+		return Priority::Normal;
 	else
 		return parse_prio_str(priostr);
 }
@@ -713,7 +712,7 @@ char*
 Mu::mu_msg_file_get_str_field(MuMsgFile* self, Field::Id field_id, gboolean* do_free)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(message_field(field_id).is_string(), NULL);
+	g_return_val_if_fail(field_from_id(field_id).is_string(), NULL);
 
 	*do_free = FALSE; /* default */
 
@@ -738,7 +737,7 @@ Mu::mu_msg_file_get_str_field(MuMsgFile* self, Field::Id field_id, gboolean* do_
 	case Field::Id::BodyHtml: /* use mu_msg_get_body_html */
 	case Field::Id::EmbeddedText:
 		g_warning("%*s is not retrievable through: %s",
-			  STR_V(message_field(field_id).name), __func__);
+			  STR_V(field_from_id(field_id).name), __func__);
 		return NULL;
 
 	default: g_return_val_if_reached(NULL);
@@ -749,7 +748,7 @@ GSList*
 Mu::mu_msg_file_get_str_list_field(MuMsgFile* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(message_field(field_id).is_string_list(), NULL);
+	g_return_val_if_fail(field_from_id(field_id).is_string_list(), NULL);
 
 	switch (field_id) {
 	case Field::Id::References: return get_references(self);
@@ -762,7 +761,7 @@ gint64
 Mu::mu_msg_file_get_num_field(MuMsgFile* self, const Field::Id field_id)
 {
 	g_return_val_if_fail(self, -1);
-	g_return_val_if_fail(message_field(field_id).is_numerical(), -1);
+	g_return_val_if_fail(field_from_id(field_id).is_numerical(), -1);
 
 	switch (field_id) {
 	case Field::Id::Date: {

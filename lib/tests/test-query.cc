@@ -32,7 +32,6 @@
 #include "test-mu-common.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 static void
 test_query()

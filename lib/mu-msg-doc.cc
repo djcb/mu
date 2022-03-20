@@ -32,7 +32,6 @@
 #include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 struct Mu::MuMsgDoc {
 	MuMsgDoc(Xapian::Document* doc) : _doc(doc) {}
@@ -75,7 +74,7 @@ Mu::mu_msg_doc_get_str_field(MuMsgDoc* self, Field::Id field_id)
 
 	return xapian_try(
 	    [&] {
-		    const auto value_no{message_field(field_id).value_no()};
+		    const auto value_no{field_from_id(field_id).value_no()};
 		    const std::string s(self->doc().get_value(value_no));
 		    return s.empty() ? NULL : g_strdup(s.c_str());
 	    },
@@ -86,12 +85,12 @@ GSList*
 Mu::mu_msg_doc_get_str_list_field(MuMsgDoc* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, NULL);
-	g_return_val_if_fail(message_field(field_id).type == Field::Type::StringList, NULL);
+	g_return_val_if_fail(field_from_id(field_id).type == Field::Type::StringList, NULL);
 
 	return xapian_try(
 	    [&] {
 		    /* return a comma-separated string as a GSList */
-		    const auto value_no{message_field(field_id).value_no()};
+		    const auto value_no{field_from_id(field_id).value_no()};
 		    const std::string s(self->doc().get_value(value_no));
 		    return s.empty() ? NULL : mu_str_to_list(s.c_str(), ',', TRUE);
 	    },
@@ -102,11 +101,11 @@ gint64
 Mu::mu_msg_doc_get_num_field(MuMsgDoc* self, Field::Id field_id)
 {
 	g_return_val_if_fail(self, -1);
-	g_return_val_if_fail(message_field(field_id).is_numerical(), -1);
+	g_return_val_if_fail(field_from_id(field_id).is_numerical(), -1);
 
 	return xapian_try(
 	    [&] {
-		    const auto value_no{message_field(field_id).value_no()};
+		    const auto value_no{field_from_id(field_id).value_no()};
 		    const std::string s(self->doc().get_value(value_no));
 		    if (s.empty())
 			    return (gint64)0;

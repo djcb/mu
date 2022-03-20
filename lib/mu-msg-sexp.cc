@@ -19,7 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 #include "mu-query-results.hh"
 #include "utils/mu-str.h"
 #include "mu-msg.hh"
@@ -27,7 +27,6 @@
 #include "mu-maildir.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 static void
 add_prop_nonempty(Sexp::List& list, const char* elm, const GSList* str_lst)
@@ -51,7 +50,7 @@ add_prop_nonempty(Sexp::List& list, const char* name, const char* str)
 
 
 static Mu::Sexp
-make_contact_sexp(const MessageContact& contact)
+make_contact_sexp(const Contact& contact)
 {
 	return Sexp::make_list(
 		/* name */
@@ -84,7 +83,7 @@ add_list_post(Sexp::List& list, MuMsg* msg)
 
 	if (g_regex_match(rx, list_post, (GRegexMatchFlags)0, &minfo)) {
 		auto    address = (char*)g_match_info_fetch(minfo, 1);
-		list.add_prop(":list-post", make_contact_sexp(MessageContact{address}));
+		list.add_prop(":list-post", make_contact_sexp(Contact{address}));
 		g_free(address);
 	}
 
@@ -359,7 +358,7 @@ Mu::msg_to_sexp_list(MuMsg* msg, unsigned docid, MuMsgOptions opts)
 	add_prop_nonempty(items, ":maildir", mu_msg_get_maildir(msg));
 
 	items.add_prop(":priority",
-		       Sexp::make_symbol_sv(message_priority_name(mu_msg_get_prio(msg))));
+		       Sexp::make_symbol_sv(priority_name(mu_msg_get_prio(msg))));
 
 	/* in the no-headers-only case (see below) we get a more complete list of contacts, so no
 	 * need to get them here if that's the case */

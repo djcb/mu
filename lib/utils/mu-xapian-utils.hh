@@ -21,6 +21,7 @@
 #define MU_XAPIAN_UTILS_HH__
 
 #include <xapian.h>
+#include <glib.h>
 
 namespace Mu {
 

@@ -28,7 +28,6 @@
 #include "mu-message.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 // 3 precedence levels: units (NOT,()) > factors (OR) > terms (AND)
 
@@ -95,15 +94,15 @@ struct Parser::Private {
 static std::string
 process_value(const std::string& field, const std::string& value)
 {
-	const auto id_opt{message_field_id(field)};
+	const auto id_opt{field_from_name(field)};
 	if (id_opt) {
-		switch (*id_opt) {
+		switch (id_opt->id) {
 		case Field::Id::Priority: {
 			if (!value.empty())
 				return std::string(1, value[0]);
 		} break;
 		case Field::Id::Flags:
-			if (const auto info{message_flag_info(value)}; info)
+			if (const auto info{flag_info(value)}; info)
 				return std::string(1, info->shortcut_lower());
 			break;
 		default:
@@ -117,7 +116,7 @@ process_value(const std::string& field, const std::string& value)
 static void
 add_field(std::vector<FieldInfo>& fields, Field::Id field_id)
 {
-	const auto field{message_field(field_id)};
+	const auto field{field_from_id(field_id)};
 	if (!field.shortcut)
 		return; // can't be searched
 
@@ -147,8 +146,8 @@ process_field(const std::string& field_str, Parser::Flags flags)
 		add_field(fields, Field::Id::From);
 		add_field(fields, Field::Id::Subject);
 		add_field(fields, Field::Id::BodyText);
-	} else if (const auto id_opt{message_field_id(field_str)}; id_opt)
-		add_field(fields, *id_opt);
+	} else if (const auto field_opt{field_from_name(field_str)}; field_opt)
+		add_field(fields, field_opt->id);
 
 	return fields;
 }
@@ -156,10 +155,10 @@ process_field(const std::string& field_str, Parser::Flags flags)
 static bool
 is_range_field(const std::string& field_str)
 {
-	if (const auto field_id_opt{message_field_id(field_str)}; !field_id_opt)
+	if (const auto field_opt{field_from_name(field_str)}; !field_opt)
 		return false;
 	else
-		return message_field(*field_id_opt).is_range();
+		return field_opt->is_range();
 }
 
 struct MyRange {
@@ -171,17 +170,17 @@ static MyRange
 process_range(const std::string& field_str,
 	      const std::string& lower, const std::string& upper)
 {
-	const auto id_opt{message_field_id(field_str)};
-	if (!id_opt)
+	const auto field_opt{field_from_name(field_str)};
+	if (!field_opt)
 		return {lower, upper};
 
 	std::string l2 = lower;
 	std::string u2 = upper;
 
-	if (*id_opt == Field::Id::Date) {
+	if (field_opt->id == Field::Id::Date) {
 		l2 = Mu::date_to_time_t_string(lower, true);
 		u2 = Mu::date_to_time_t_string(upper, false);
-	} else if (*id_opt == Field::Id::Size) {
+	} else if (field_opt->id == Field::Id::Size) {
 		l2 = Mu::size_to_string(lower, true);
 		u2 = Mu::size_to_string(upper, false);
 	}
@@ -193,14 +192,13 @@ std::vector<std::string>
 Parser::Private::process_regex(const std::string& field_str,
 			       const std::regex& rx) const
 {
-	const auto id_opt{message_field_id(field_str)};
-	if (!id_opt)
+	const auto field_opt{field_from_name(field_str)};
+	if (!field_opt)
 		return {};
 
-	const auto field{message_field(*id_opt)};
-	const auto prefix{field.xapian_term()};
+	const auto prefix{field_opt->xapian_term()};
 	std::vector<std::string> terms;
-	store_.for_each_term(field.id, [&](auto&& str) {
+	store_.for_each_term(field_opt->id, [&](auto&& str) {
 		if (std::regex_search(str.c_str() + 1, rx)) // avoid copy
 			terms.emplace_back(str);
 		return true;

@@ -17,47 +17,6 @@
 #
 # tests
 #
-
-test('test-message-contact',
-     executable('test-message-contact',
-		'../mu-message-contact.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
-                               lib_test_mu_common_dep]))
-
-
-test('test-message-document',
-     executable('test-message-document',
-		'../mu-message-document.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
-                               lib_test_mu_common_dep]))
-
-test('test-message-fields',
-     executable('test-message-fields',
-		'../mu-message-fields.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
-                               lib_test_mu_common_dep]))
-
-test('test-message-flags',
-     executable('test-message-flags',
-		'../mu-message-flags.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
-                               lib_test_mu_common_dep]))
-test('test-message-priority',
-     executable('test-message-priority',
-		'../mu-message-priority.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep,
-                               lib_test_mu_common_dep]))
-
 test('test-maildir',
      executable('test-maildir',
 		'test-mu-maildir.cc',
@@ -77,7 +36,7 @@ test('test-query',
      executable('test-query',
 		'test-query.cc',
 		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
 
 test('test-tokenizer',
      executable('test-tokenizer',
@@ -101,4 +60,4 @@ test('test-parser',
      executable('test-parser',
 		'test-parser.cc',
 		install: false,
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))

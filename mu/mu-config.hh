@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <sys/types.h> /* for mode_t */
-#include <mu-message.hh>
+#include <message/mu-message.hh>
 #include <mu-msg.hh>
 #include <utils/mu-util.h>
 

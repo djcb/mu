@@ -274,7 +274,7 @@ struct ECData {
 };
 
 static void
-each_contact(const Mu::MessageContact& ci, ECData& ecdata)
+each_contact(const Mu::Contact& ci, ECData& ecdata)
 {
 	if (ecdata.personal && ci.personal)
 		return;

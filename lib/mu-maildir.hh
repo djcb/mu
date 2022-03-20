@@ -27,7 +27,7 @@
 #include <glib.h>
 #include <time.h>
 #include <sys/types.h> /* for mode_t */
-#include <mu-message-flags.hh>
+#include <message/mu-message.hh>
 
 namespace Mu {
 
@@ -81,7 +81,7 @@ Result<void> mu_maildir_clear_links(const std::string& dir);
  *
  * @return the message flags or an error
  */
-Result<MessageFlags> mu_maildir_flags_from_path(const std::string& pathname);
+Result<Flags> mu_maildir_flags_from_path(const std::string& pathname);
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
@@ -135,7 +135,7 @@ Result<std::string>
 mu_maildir_determine_target(const std::string&	old_path,
 			    const std::string&  root_maildir_path,
 			    const std::string&	target_maildir,
-			    MessageFlags	newflags,
+			    Flags		newflags,
 			    bool		new_name);
 
 } // namespace Mu

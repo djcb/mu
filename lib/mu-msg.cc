@@ -32,7 +32,6 @@
 
 
 #include "gmime/gmime-message.h"
-#include "mu-message-contact.hh"
 #include "mu-msg-priv.hh" /* include before mu-msg.h */
 #include "mu-msg.hh"
 #include "utils/mu-str.h"
@@ -40,7 +39,6 @@
 #include "mu-maildir.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
 
 /* note, we do the gmime initialization here rather than in
  * mu-runtime, because this way we don't need mu-runtime for simple
@@ -250,9 +248,9 @@ get_str_list_field(MuMsg* self, Field::Id field_id)
 	val = NULL;
 
 	if (self->_doc &&
-	    any_of(message_field(field_id).flags & Field::Flag::Value))
+	    any_of(field_from_id(field_id).flags & Field::Flag::Value))
 		val = mu_msg_doc_get_str_list_field(self->_doc, field_id);
-	else if (any_of(message_field(field_id).flags & Field::Flag::GMime)) {
+	else if (any_of(field_from_id(field_id).flags & Field::Flag::GMime)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file(self, NULL))
@@ -273,10 +271,10 @@ get_str_field(MuMsg* self, Field::Id field_id)
 	val     = NULL;
 
 	if (self->_doc &&
-	    any_of(message_field(field_id).flags & Field::Flag::Value))
+	    any_of(field_from_id(field_id).flags & Field::Flag::Value))
 		val = mu_msg_doc_get_str_field(self->_doc, field_id);
 
-	else if (any_of(message_field(field_id).flags & Field::Flag::GMime)) {
+	else if (any_of(field_from_id(field_id).flags & Field::Flag::GMime)) {
 		/* if we don't have a file object yet, we need to
 		 * create it from the file on disk */
 		if (!mu_msg_load_msg_file(self, NULL))
@@ -292,7 +290,7 @@ static gint64
 get_num_field(MuMsg* self, Field::Id field_id)
 {
 	if (self->_doc &&
-	    any_of(message_field(field_id).flags & Field::Flag::Value))
+	    any_of(field_from_id(field_id).flags & Field::Flag::Value))
 		return mu_msg_doc_get_num_field(self->_doc, field_id);
 
 	/* if we don't have a file object yet, we need to
@@ -423,11 +421,11 @@ Mu::mu_msg_get_date(MuMsg* self)
 	return (time_t)get_num_field(self, Field::Id::Date);
 }
 
-MessageFlags
+Flags
 Mu::mu_msg_get_flags(MuMsg* self)
 {
-	g_return_val_if_fail(self, MessageFlags::None);
-	return static_cast<MessageFlags>(get_num_field(self, Field::Id::Flags));
+	g_return_val_if_fail(self, Flags::None);
+	return static_cast<Flags>(get_num_field(self, Field::Id::Flags));
 }
 
 size_t
@@ -437,12 +435,12 @@ Mu::mu_msg_get_size(MuMsg* self)
 	return (size_t)get_num_field(self, Field::Id::Size);
 }
 
-Mu::MessagePriority
+Mu::Priority
 Mu::mu_msg_get_prio(MuMsg* self)
 {
-	g_return_val_if_fail(self, MessagePriority{});
+	g_return_val_if_fail(self, Priority{});
 
-	return message_priority_from_char(
+	return priority_from_char(
 	    static_cast<char>(get_num_field(self, Field::Id::Priority)));
 }
 
@@ -619,12 +617,12 @@ Mu::mu_msg_get_field_numeric(MuMsg* self, Field::Id field_id)
 }
 
 
-static Mu::MessageContacts
+static Mu::Contacts
 get_all_contacts(MuMsg *self)
 {
-	MessageContacts contacts;
+	Contacts contacts;
 
-	message_field_for_each([&](const auto& field){
+	field_for_each([&](const auto& field){
 		if (!field.is_contact())
 			return;
 		auto type_contacts{mu_msg_get_contacts(self, field.id)};
@@ -637,27 +635,27 @@ get_all_contacts(MuMsg *self)
 	return contacts;
 }
 
-Mu::MessageContacts
-Mu::mu_msg_get_contacts(MuMsg *self, std::optional<MessageField::Id> field_id)
+Mu::Contacts
+Mu::mu_msg_get_contacts(MuMsg *self, std::optional<Field::Id> field_id)
 {
 	typedef const char*(*AddressFunc)(MuMsg*);
 	using	AddressInfo = std::pair<GMimeAddressType, AddressFunc>;
 
-	g_return_val_if_fail(self, MessageContacts{});
-	g_return_val_if_fail(!field_id || message_field(*field_id).is_contact(),
-			     MessageContacts{});
+	g_return_val_if_fail(self, Contacts{});
+	g_return_val_if_fail(!field_id || field_from_id(*field_id).is_contact(),
+			     Contacts{});
 	if (!field_id)
 		return get_all_contacts(self);
 
 	const auto info = std::invoke([&]()->AddressInfo {
 		switch (*field_id) {
-		case MessageField::Id::From:
+		case Field::Id::From:
 			return { GMIME_ADDRESS_TYPE_FROM, mu_msg_get_from };
-		case MessageField::Id::To:
+		case Field::Id::To:
 			return { GMIME_ADDRESS_TYPE_TO, mu_msg_get_to };
-		case MessageField::Id::Cc:
+		case Field::Id::Cc:
 			return { GMIME_ADDRESS_TYPE_CC, mu_msg_get_cc };
-		case MessageField::Id::Bcc:
+		case Field::Id::Bcc:
 			return { GMIME_ADDRESS_TYPE_BCC, mu_msg_get_bcc };
 		default:
 			throw std::logic_error("bug");
@@ -668,14 +666,13 @@ Mu::mu_msg_get_contacts(MuMsg *self, std::optional<MessageField::Id> field_id)
 	if (self->_file) {
 		if (auto&& lst{g_mime_message_get_addresses(
 					self->_file->_mime_msg, info.first)}; lst)
-			return make_message_contacts(lst, *field_id, mdate);
+			return make_contacts(lst, *field_id, mdate);
 	} else if (info.second) {
 		if (auto&& lst_str{info.second(self)}; lst_str)
-			return make_message_contacts(lst_str, *field_id, mdate);
+			return make_contacts(lst_str, *field_id, mdate);
 	}
 
 	return {};
-
 }
 
 
@@ -697,7 +694,7 @@ bool
 Mu::mu_msg_move_to_maildir(MuMsg*		self,
 			   const std::string&	root_maildir_path,
 			   const std::string&	target_maildir,
-			   MessageFlags		flags,
+			   Flags		flags,
 			   bool			ignore_dups,
 			   bool			new_name,
 			   GError**		err)

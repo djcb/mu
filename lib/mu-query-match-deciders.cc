@@ -23,7 +23,7 @@
 #include "utils/mu-option.hh"
 
 using namespace Mu;
-using namespace Mu::Message;
+
 
 // We use a MatchDecider to gather information about the matches, and decide
 // whether to include them in the results.
@@ -98,7 +98,7 @@ struct MatchDecider : public Xapian::MatchDecider {
 
 private:
 	Option<std::string> opt_string(const Xapian::Document& doc, Field::Id id) const noexcept {
-		const auto value_no{message_field(id).value_no()};
+		const auto value_no{field_from_id(id).value_no()};
 		std::string val = xapian_try([&] { return doc.get_value(value_no); }, std::string{""});
 		if (val.empty())
 			return Nothing;

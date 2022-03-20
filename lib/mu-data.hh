@@ -24,7 +24,7 @@
 #include <iostream>
 #include <regex>
 
-#include <mu-message.hh>
+#include <message/mu-message.hh>
 #include <utils/mu-utils.hh>
 
 namespace Mu {
@@ -38,11 +38,11 @@ struct Data {
 	Type               type;   /**< type of data */
 	std::string        field;  /**< full name of the field */
 	std::string        prefix; /**< Xapian prefix for thef field */
-	Message::Field::Id id;     /**< Xapian value no for the field  */
+	Field::Id          id;     /**< The field */
 
       protected:
 	Data(Type _type, const std::string& _field, const std::string& _prefix,
-	     Message::Field::Id _id)
+	     Field::Id _id)
 	    : type(_type), field(_field), prefix(_prefix), id(_id)
 	{
 	}
@@ -82,7 +82,7 @@ struct Range : public Data {
 	 */
 	Range(const std::string& _field,
 	      const std::string& _prefix,
-	      Message::Field::Id _id,
+	      Field::Id _id,
 	      const std::string& _lower,
 	      const std::string& _upper)
 	    :
@@ -110,7 +110,7 @@ struct Value : public Data {
 	 */
 	Value(const std::string& _field,
 	      const std::string& _prefix,
-	      Message::Field::Id _id,
+	      Field::Id _id,
 	      const std::string& _value,
 	      bool               _phrase = false)
 	    : Data(Value::Type::Value, _field, _prefix, _id), value(_value), phrase(_phrase)

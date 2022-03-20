@@ -27,7 +27,7 @@
 #include <mu-store.hh>
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
-#include <mu-message.hh>
+#include <message/mu-message.hh>
 
 namespace Mu {
 
@@ -44,10 +44,10 @@ public:
 	 * @return the query-results, or Nothing in case of error.
 	 */
 
-	Option<QueryResults> run(const std::string&			expr	     = "",
-				 std::optional<Message::Field::Id>	sortfield_id = {},
-				 QueryFlags				flags	     = QueryFlags::None,
-				 size_t					maxnum	     = 0) const;
+	Option<QueryResults> run(const std::string&		expr	     = "",
+				 std::optional<Field::Id>	sortfield_id = {},
+				 QueryFlags			flags	     = QueryFlags::None,
+				 size_t				maxnum	     = 0) const;
 
 	/**
 	 * run a Xapian query to count the number of matches; for the syntax, please

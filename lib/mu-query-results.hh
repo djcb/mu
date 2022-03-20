@@ -219,7 +219,7 @@ public:
 	 */
 	Option<std::string> message_id() const noexcept
 	{
-		return opt_string(Message::Field::Id::MessageId);
+		return opt_string(Field::Id::MessageId);
 	}
 
 	/**
@@ -230,7 +230,7 @@ public:
 	 */
 	Option<std::string> thread_id() const noexcept
 	{
-		return opt_string(Message::Field::Id::ThreadId);
+		return opt_string(Field::Id::ThreadId);
 	}
 
 	/**
@@ -239,7 +239,7 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> path() const noexcept { return opt_string(Message::Field::Id::Path); }
+	Option<std::string> path() const noexcept { return opt_string(Field::Id::Path); }
 
 	/**
 	 * Get the date for the document (message) the iterator is pointing at.
@@ -247,7 +247,7 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> date() const noexcept { return opt_string(Message::Field::Id::Date); }
+	Option<std::string> date() const noexcept { return opt_string(Field::Id::Date); }
 
 	/**
 	 * Get the file-system path for the document (message) this iterator is
@@ -255,7 +255,7 @@ public:
 	 *
 	 * @return the subject
 	 */
-	Option<std::string> subject() const noexcept { return opt_string(Message::Field::Id::Subject); }
+	Option<std::string> subject() const noexcept { return opt_string(Field::Id::Subject); }
 
 	/**
 	 * Get the references for the document (messages) this is iterator is
@@ -266,7 +266,7 @@ public:
 	 */
 	std::vector<std::string> references() const noexcept
 	{
-		return split(opt_string(Message::Field::Id::References).value_or(""), ",");
+		return split(opt_string(Field::Id::References).value_or(""), ",");
 	}
 
 	/**
@@ -276,10 +276,10 @@ public:
 	 *
 	 * @return the value
 	 */
-	Option<std::string> opt_string(Message::Field::Id id) const noexcept
+	Option<std::string> opt_string(Field::Id id) const noexcept
 	{
 		std::string empty;
-		const auto value_no{message_field(id).value_no()};
+		const auto value_no{field_from_id(id).value_no()};
 		std::string val = xapian_try([&] {return document().get_value(value_no);}, empty);
 		if (val.empty())
 			return Nothing;
