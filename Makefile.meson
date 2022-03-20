@@ -36,7 +36,10 @@ $(BUILDDIR):
 check: test
 
 test: all
-	@cd $(BUILDDIR); $(MESON) test
+	$(MESON) test -C $(BUILDDIR)
+
+test-verbose: all
+	$(MESON) test --verbose -C $(BUILDDIR)
 
 test-verbose-if-fail: all
 	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
