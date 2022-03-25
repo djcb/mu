@@ -30,6 +30,7 @@
 #include <string.h>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 #include <glib.h>
 #include <glib/gprintf.h>
