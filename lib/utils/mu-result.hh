@@ -99,6 +99,23 @@ Err(Error::Code errcode, const char* frm, ...)
 	return Err(errcode, std::move(str));
 }
 
+__attribute__((format(printf, 3, 0)))
+static inline tl::unexpected<Error>
+Err(Error::Code errcode, GError **err, const char* frm, ...)
+{
+	va_list args;
+	va_start(args, frm);
+	auto str{vformat(frm, args)};
+	va_end(args);
+
+	if (err && *err)
+		str += format(" (%s)", (*err)->message ? (*err)->message : "");
+	g_clear_error(err);
+
+	return Err(errcode, std::move(str));
+}
+
+
 }// namespace Mu
 
 #endif /* MU_RESULT_HH__ */
