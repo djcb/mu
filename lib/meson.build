@@ -77,18 +77,18 @@ lib_mu=static_library(
   install: false)
 
 # some of the libme headers include xapian
-xapian_incs = xapian_dep.get_pkgconfig_variable('includedir')
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
+  dependencies: [ lib_mu_message_dep ],
   include_directories:
-    include_directories(['.', '..', xapian_incs]))
+    include_directories(['.', '..']))
 
 # test helpers
 lib_test_mu_common=static_library('mu-test-common', [
 				   'tests/test-mu-common.cc',
 				   'tests/test-mu-common.hh'],
 				  dependencies: [ glib_dep, thread_dep,
-                                                  config_h_dep])
+                                                  config_h_dep ])
 lib_test_mu_common_dep=declare_dependency(
   link_with: lib_test_mu_common,
   include_directories: include_directories(['tests']))
