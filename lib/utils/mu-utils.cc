@@ -21,6 +21,8 @@
 #define _XOPEN_SOURCE
 #endif /*_XOPEN_SOURCE*/
 
+#include <array>
+
 #include <time.h>
 
 #define GNU_SOURCE

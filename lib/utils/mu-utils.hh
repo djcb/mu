@@ -30,6 +30,8 @@
 #include <ostream>
 #include <iostream>
 #include <type_traits>
+#include <algorithm>
+#include <numeric>
 
 namespace Mu {
 
@@ -170,6 +172,7 @@ std::string date_to_time_t_string(int64_t t);
  */
 std::string time_to_string(const std::string& frm, time_t t, bool utc = false) G_GNUC_CONST;
 
+
 /**
  * Create a std::string by consuming a gchar* array; this takes ownership
  * of str which should no longer be used.
@@ -279,6 +282,74 @@ to_string(const T& val)
 
 	return sstr.str();
 }
+
+
+/**
+ * Like std::find_if, but using sequence instead of a range.
+ *
+ * @param seq some std::find_if compatible sequence
+ * @param pred a predicate
+ *
+ * @return an iterator
+ */
+template<typename Sequence, typename UnaryPredicate>
+typename Sequence::const_iterator seq_find_if(const Sequence& seq, UnaryPredicate pred) {
+	return std::find_if(seq.cbegin(), seq.cend(), pred);
+}
+
+/**
+ * Create a sequence that has all element of seq for which pred is true
+ *
+ * @param seq sequence
+ * @param pred false
+ *
+ * @return sequence
+ */
+template<typename Sequence, typename UnaryPredicate>
+Sequence seq_filter(const Sequence& seq, UnaryPredicate pred) {
+	Sequence res;
+	std::copy_if(seq.begin(), seq.end(), std::back_inserter(res), pred);
+	return res;
+}
+
+/**
+ * Create a sequence that has all element of seq for which pred is false
+ *
+ * @param seq sequence
+ * @param pred false
+ *
+ * @return sequence
+ */
+template<typename Sequence, typename UnaryPredicate>
+Sequence seq_remove(const Sequence& seq, UnaryPredicate pred) {
+	Sequence res;
+	std::remove_copy_if(seq.begin(), seq.end(), std::back_inserter(res), pred);
+	return res;
+}
+
+template<typename Sequence, typename Compare>
+void seq_sort(Sequence& seq, Compare cmp) { std::sort(seq.begin(), seq.end(), cmp); }
+
+
+/**
+ * Like std::accumulate, but using a sequence instead of a range.
+ *
+ * @param seq some std::accumulate compatible sequence
+ * @param init the initial value
+ * @param op binary operation to calculate the next element
+ *
+ * @return the result value.
+ */
+template<typename Sequence, typename ResultType,  typename BinaryOp>
+ResultType seq_fold(const Sequence& seq, ResultType init, BinaryOp op) {
+	return std::accumulate(seq.cbegin(), seq.cend(), init, op);
+}
+
+template<typename Sequence, typename UnaryOp>
+void seq_for_each(const Sequence& seq, UnaryOp op) {
+	std::for_each(seq.cbegin(), seq.cend(), op);
+}
+
 
 /**
  * Convert string view in something printable with %*s
