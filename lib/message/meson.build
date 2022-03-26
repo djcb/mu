@@ -20,6 +20,8 @@ lib_mu_message=static_library(
   [
     'mu-message.cc',
     'mu-message.hh',
+    'mu-message-part.cc',
+    'mu-message-part.hh',
     'mu-contact.hh',
     'mu-contact.cc',
     'mu-document.cc',
@@ -29,7 +31,9 @@ lib_mu_message=static_library(
     'mu-flags.hh',
     'mu-flags.cc',
     'mu-priority.hh',
-    'mu-priority.cc'
+    'mu-priority.cc',
+    'mu-mime-object.cc',
+    'mu-mime-object.hh'
   ],
   dependencies: [
     glib_dep,
@@ -39,12 +43,11 @@ lib_mu_message=static_library(
     lib_mu_utils_dep],
   install: false)
 
-# some of the libme headers include xapian
-xapian_incs = xapian_dep.get_pkgconfig_variable('includedir')
 lib_mu_message_dep = declare_dependency(
   link_with: lib_mu_message,
+  dependencies: [ xapian_dep, gmime_dep ],
   include_directories:
-    include_directories(['.', '..', xapian_incs]))
+    include_directories(['.', '..']))
 
 #
 # tests
@@ -77,6 +80,14 @@ test('test-flags',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+
+test('test-message',
+     executable('test-message',
+		'mu-message.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+
 test('test-priority',
      executable('test-priority',
 		'mu-priority.cc',

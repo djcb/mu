@@ -23,19 +23,27 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include "utils/mu-option.hh"
 #include "mu-contact.hh"
 #include "mu-priority.hh"
 #include "mu-flags.hh"
 #include "mu-fields.hh"
 #include "mu-document.hh"
+#include "mu-message-part.hh"
 
-struct _GMimeMessage;
+#include "utils/mu-result.hh"
 
 namespace Mu {
 
 class Message {
 public:
+	/**
+	 * Move CTOR
+	 *
+	 * @param some other message
+	 */
+	Message(Message&& msg);
+
 	/**
 	 * Construct a message based on a path
 	 *
@@ -44,57 +52,52 @@ public:
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
 	 * pass NULL for this parameter, in which case some maildir-specific
 	 * information is not available.
+	 *
+	 * @return a message or an error
 	 */
-	Message(const std::string& path, const std::string& mdir);
+	static Result<Message> make_from_path(const std::string& path, const std::string& mdir) try {
+		return Ok(Message{path, mdir});
+	} catch (Error& err) {
+		return Err(err);
+	} catch (...) {
+		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
+	}
+
 
 	/**
 	 * Construct a message based on a Message::Document
 	 *
 	 * @param doc
-	 */
-	Message(Document& doc): doc_{doc} {}
-
-	/**
-	 * Copy CTOR
 	 *
-	 * @param rhs a Message
+	 * @return a message or an error
 	 */
-	Message(const Message& rhs) {
-		*this = rhs;
+	static Result<Message> make_from_document(Document& doc) try {
+		return Ok(Message{doc});
+	} catch (Error& err) {
+		return Err(err);
+	} catch (...) {
+		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
 
 	/**
-	 * Move CTOR
+	 * Construct a message from a string. This is mostly useful for testing.
 	 *
-	 * @param rhs a Message
+	 * @param text message text
+	 *
+	 * @return a message or an error
 	 */
-
-	Message(Message&& rhs) {
-		*this = std::move(rhs);
+	static Result<Message> make_from_string(const std::string& text) try {
+		return Ok(Message{text});
+	} catch (Error& err) {
+		return Err(err);
+	} catch (...) {
+		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
 
 	/**
 	 * DTOR
-	 *
 	 */
 	~Message();
-/**
-	 * Copy assignment operator
-	 *
-	 * @param rhs some message
-	 *
-	 * @return a message ref
-	 */
-	Message& operator=(const Message& rhs);
-
-	/**
-	 * Move assignment operator
-	 *
-	 * @param rhs some message
-	 *
-	 * @return a message ref
-	 */
-	Message& operator=(Message&& rhs);
 
 	/**
 	 * Get the document.
@@ -102,7 +105,7 @@ public:
 	 *
 	 * @return document
 	 */
-	const Document& document() const { return doc_; }
+	const Document& document() const;
 
 	/**
 	 * Get the file system path of this message
@@ -110,50 +113,50 @@ public:
 	 * @return the path of this Message or NULL in case of error.
 	 * the returned string should *not* be modified or freed.
 	 */
-	std::string path() const { return doc_.string_value(Field::Id::Path); }
+	std::string path() const { return document().string_value(Field::Id::Path); }
 
 	/**
 	 * Get the sender (From:) of this message
 	 *
 	 * @return the sender(s) of this Message
 	 */
-	Contacts from() const { return doc_.contacts_value(Field::Id::From); }
+	Contacts from() const { return document().contacts_value(Field::Id::From); }
 
 	/**
 	 * Get the recipient(s) (To:) for this message
 	 *
 	 * @return recipients
 	 */
-	Contacts to() const { return doc_.contacts_value(Field::Id::To); }
+	Contacts to() const { return document().contacts_value(Field::Id::To); }
 
 	/**
 	 * Get the recipient(s) (Cc:) for this message
 	 *
 	 * @return recipients
 	 */
-	Contacts cc() const { return doc_.contacts_value(Field::Id::Cc); }
-
+	Contacts cc() const { return document().contacts_value(Field::Id::Cc); }
 
 	/**
 	 * Get the recipient(s) (Bcc:) for this message
 	 *
 	 * @return recipients
 	 */
-	Contacts bcc() const { return doc_.contacts_value(Field::Id::Bcc); }
+	Contacts bcc() const { return document().contacts_value(Field::Id::Bcc); }
+
 
 	/**
 	 * Get the maildir this message lives in; ie, if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
 	 *
 	 * @return the maildir requested or empty */
-	std::string maildir() const  { return doc_.string_value(Field::Id::Maildir); }
+	std::string maildir() const  { return document().string_value(Field::Id::Maildir); }
 
 	/**
 	 * Get the subject of this message
 	 *
 	 * @return the subject of this Message
 	 */
-	std::string subject() const  { return doc_.string_value(Field::Id::Subject); }
+	std::string subject() const  { return document().string_value(Field::Id::Subject); }
 
 	/**
 	 * Get the Message-Id of this message
@@ -161,7 +164,7 @@ public:
 	 * @return the Message-Id of this message (without the enclosing <>), or
 	 * a fake message-id for messages that don't have them
 	 */
-	std::string message_id() const { return doc_.string_value(Field::Id::MessageId);}
+	std::string message_id() const { return document().string_value(Field::Id::MessageId);}
 
 	/**
 	 * get the mailing list for a message, i.e. the mailing-list
@@ -170,7 +173,7 @@ public:
 	 * @return the mailing list id for this message (without the enclosing <>)
 	 * or NULL in case of error or if there is none.
 	 */
-	std::string mailing_list() const { return doc_.string_value(Field::Id::MailingList);}
+	std::string mailing_list() const { return document().string_value(Field::Id::MailingList);}
 
 	/**
 	 * get the message date/time (the Date: field) as time_t, using UTC
@@ -178,14 +181,14 @@ public:
 	 * @return message date/time or 0 in case of error or if there
 	 * is no such header.
 	 */
-	time_t date() const { return static_cast<time_t>(doc_.integer_value(Field::Id::Date)); }
+	::time_t date() const { return static_cast<time_t>(document().integer_value(Field::Id::Date)); }
 
 	/**
 	 * get the flags for this message
 	 *
 	 * @return the file/content flags
 	 */
-	Flags flags() const { return doc_.flags_value(); }
+	Flags flags() const { return document().flags_value(); }
 
 	/**
 	 * get the message priority for this message. The X-Priority, X-MSMailPriority,
@@ -194,14 +197,14 @@ public:
 	 *
 	 * @return the message priority
 	 */
-	Priority priority() const { return doc_.priority_value(); }
+	Priority priority() const { return document().priority_value(); }
 
 	/**
 	 * get the file size in bytes of this message
 	 *
 	 * @return the filesize
 	 */
-	size_t size() const { return static_cast<size_t>(doc_.integer_value(Field::Id::Size)); }
+	size_t size() const { return static_cast<size_t>(document().integer_value(Field::Id::Size)); }
 
 	/**
 	 * get the list of references (consisting of both the References and
@@ -212,7 +215,7 @@ public:
 	 * @return a vec with the references for this msg.
 	 */
 	std::vector<std::string> references() const {
-		return doc_.string_vec_value(Field::Id::References);
+		return document().string_vec_value(Field::Id::References);
 	}
 
 	/**
@@ -223,22 +226,82 @@ public:
 	 * @return a list with the tags for this msg. Don't modify/free
 	 */
 	std::vector<std::string> tags() const {
-		return doc_.string_vec_value(Field::Id::References);
+		return document().string_vec_value(Field::Id::References);
 	}
+
+
+	/*
+	 * Below require a file-backed message, which is a relatively slow
+	 * if there isn't one already ()
+	 *
+	 */
+
+
+	/**
+	 * Get the text body
+	 *
+	 * @return text body
+	 */
+	Option<std::string> body_text() const;
+
+	/**
+	 * Get the HTML body
+	 *
+	 * @return text body
+	 */
+	Option<std::string> body_html() const;
 
 	/**
 	 * Get some message-header
 	 *
 	 * @param header_field name of the header
 	 *
-	 * @return the value
+	 * @return the value (UTF-8), or Nothing.
 	 */
-	std::string header(const std::string& header_field) const;
+	Option<std::string> header(const std::string& header_field) const;
 
+	/**
+	 * Get all contacts for this message.
+	 *
+	 * @return contacts
+	 */
+	Contacts all_contacts() const;
+
+	/**
+	 * Get information about MIME-parts in this message.
+	 *
+	 * @return mime-part info.
+	 */
+	using Part = MessagePart;
+	const std::vector<Part>& parts() const;
+
+	/**
+	 * Load the GMime (file) message (for a database-backed message),
+	 * if not already (but see @param reload).
+	 *
+	 * Affects cached-state only, so we still mark this as 'const'
+	 *
+	 * @param reload whether to force reloading (even if already)
+	 *
+	 * @return true if loading worked; false otherwise.
+	 */
+	bool load_mime_message(bool reload=false) const;
+
+	/**
+	 * Clear the GMime message.
+	 *
+	 * Affects cached-state only, so we still mark this as 'const'
+	 */
+	void unload_mime_message() const;
+
+	struct Private;
 private:
-	Document doc_;
-	mutable struct _GMimeMessage *mime_msg_{};
+	Message(const std::string& path, const std::string& mdir);
+	Message(const std::string& str);
+	Message(Document& doc);
 
+
+	std::unique_ptr<Private>        priv_;
 }; // Message
 } // Mu
 #endif /* MU_MESSAGE_HH__ */

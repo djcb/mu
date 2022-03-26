@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <utils/mu-option.hh>
 #include "mu-fields.hh"
 
 struct _InternetAddressList;
@@ -54,7 +55,7 @@ struct Contact {
 	 * @param message_date_ data for the message for this contact
 	 */
 	Contact(const std::string& email_, const std::string& name_ = "",
-		       std::optional<Field::Id> field_id_ = {},
+		       Option<Field::Id> field_id_ = {},
 		       time_t message_date_ = 0)
 	    : email{email_}, name{name_}, field_id{field_id_},
 	      message_date{message_date_}, personal{}, frequency{1}, tstamp{}
@@ -101,7 +102,7 @@ struct Contact {
 
 	/**
 	 * Get a hash-value for this contact, which gets lazily calculated. This
-	 * is for use with container classes. This uses the _lowercase_ email
+	 * * is for use with container classes. This uses the _lowercase_ email
 	 * address.
 	 *
 	 * @return the hash
@@ -118,14 +119,14 @@ struct Contact {
 	 * data members
 	 */
 
-	std::string email;                        /**< Email address for this contact.Not empty */
-	std::string name;                         /**< Name for this contact; can be empty. */
-	std::optional<Field::Id> field_id;  /**< Field Id of contact or nullopt */
-	::time_t    message_date;                 /**< date of the message from which the
-						     * contact originates */
-	bool    personal;                         /**<  A personal message? */
-	size_t  frequency;                        /**< Frequency of this contact */
-	int64_t tstamp;                           /**< Timestamp for this contact */
+	std::string		email;	/**< Email address for this contact.Not empty */
+	std::string		name;	/**< Name for this contact; can be empty. */
+	Option<Field::Id>	field_id;	/**< Field Id of contact or nullopt */
+	int64_t			message_date; /**< date of the message from which the
+							   * contact originates (or 0) */
+	bool			personal;	/**<  A personal message? */
+	size_t			frequency;	/**< Frequency of this contact */
+	int64_t			tstamp;	/**< Timestamp for this contact (internal use) */
 
 private:
 	void cleanup_name() { // replace control characters by spaces.
@@ -149,7 +150,7 @@ using Contacts = std::vector<Contact>;
  */
 Contacts
 make_contacts(/*const*/ struct _InternetAddressList* addr_lst,
-	      Field::Id field_id, ::time_t message_date);
+	      Field::Id field_id, int64_t message_date);
 
 /**
  * Create a sequence of Contact objects from an InternetAddressList
@@ -162,7 +163,7 @@ make_contacts(/*const*/ struct _InternetAddressList* addr_lst,
  */
 Contacts
 make_contacts(const std::string& addrs,
-	      Field::Id field_id, ::time_t message_date);
+	      Field::Id field_id, int64_t message_date);
 } // namespace Mu
 
 /**

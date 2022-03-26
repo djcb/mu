@@ -24,9 +24,9 @@
 #include <string_view>
 #include <algorithm>
 #include <array>
-#include <optional>
 #include <xapian.h>
 #include <utils/mu-utils.hh>
+#include <utils/mu-option.hh>
 
 namespace Mu {
 
@@ -320,7 +320,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::String,
 		"msgid",
 		"Attachment MIME-type",
-		"mime:image/jpeg",
+		"msgid:abc@123",
 		'i',
 		Field::Flag::GMime |
 		Field::Flag::NormalTerm |
@@ -502,11 +502,11 @@ void field_for_each(Func&& func) {
  * @return a message-field id, or nullopt if not found.
  */
 template <typename Pred>
-std::optional<Field> field_find_if(Pred&& pred) {
+Option<Field> field_find_if(Pred&& pred) {
 	for (auto&& field: Fields)
 		if (pred(field))
 			return field;
-	return std::nullopt;
+	return Nothing;
 }
 
 /**
@@ -517,13 +517,13 @@ std::optional<Field> field_find_if(Pred&& pred) {
  * @return the message-field-id or nullopt.
  */
 static inline
-std::optional<Field> field_from_shortcut(char shortcut) {
+Option<Field> field_from_shortcut(char shortcut) {
 	return field_find_if([&](auto&& field){
 		return field.shortcut == shortcut;
 	});
 }
 static inline
-std::optional<Field> field_from_name(const std::string& name) {
+Option<Field> field_from_name(const std::string& name) {
 	if (name.length() == 1)
 		return field_from_shortcut(name[0]);
 	else
@@ -540,10 +540,10 @@ std::optional<Field> field_from_name(const std::string& name) {
  * @return Field::Id  or nullopt
  */
 static inline
-std::optional<Field> field_from_number(size_t id)
+Option<Field> field_from_number(size_t id)
 {
 	if (id >= static_cast<size_t>(Field::Id::_count_))
-		return std::nullopt;
+		return Nothing;
 	else
 		return field_from_id(static_cast<Field::Id>(id));
 }

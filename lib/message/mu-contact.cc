@@ -36,7 +36,7 @@ Contact::display_name() const
 
 Mu::Contacts
 Mu::make_contacts(InternetAddressList* addr_lst,
-		  Field::Id field_id, ::time_t message_date)
+		  Field::Id field_id, int64_t message_date)
 {
 	Contacts contacts;
 	size_t num{};
@@ -70,7 +70,7 @@ Mu::make_contacts(InternetAddressList* addr_lst,
 Mu::Contacts
 Mu::make_contacts(const std::string& addrs,
 		  Field::Id field_id,
-		  ::time_t message_date)
+		  int64_t message_date)
 {
 	auto addr_list = internet_address_list_parse(NULL, addrs.c_str());
 	if (!addr_list) {

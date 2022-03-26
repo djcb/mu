@@ -29,6 +29,7 @@
 #include "mu-priority.hh"
 #include "mu-flags.hh"
 #include "mu-contact.hh"
+#include <utils/mu-option.hh>
 
 namespace Mu {
 
@@ -93,7 +94,6 @@ public:
 		return *this;
 	}
 
-
 	/*
 	 * updating a document with terms & values
 	 */
@@ -107,7 +107,7 @@ public:
 	void	add(Field::Id field_id, const std::string& val);
 
 	/**
-	 * Add a string-vec value to the document
+	 * Add a string-vec value to the document, if non-empty
 	 *
 	 * @param field_id field id
 	 * @param val string-vec value
@@ -116,12 +116,13 @@ public:
 
 
 	/**
-	 * Add message-contacts to the document
+	 * Add message-contacts to the document, if non-empty
 	 *
 	 * @param field_id field id
 	 * @param contacts message contacts
 	 */
 	void    add(Field::Id id, const Contacts& contacts);
+
 
 	/**
 	 * Add an integer value to the document
@@ -140,16 +141,26 @@ public:
 
 
 	/**
-	 * Add message flags to the document
+	 *  Add message flags to the document
 	 *
 	 * @param flags mesage flags.
 	 */
 	void	add(Flags flags);
 
+	/**
+	 * Generically adds an optional value, if set, to the document
+	 *
+	 * @param id the field 0d
+	 * @param an optional value
+	 */
+	template<typename T> void add(Field::Id id, const Option<T>& val) {
+		if (val)
+			add(id, val.value());
+	}
+
 	/*
 	 * Retrieving values
 	 */
-
 
 	/**
 	 * Get a message-field as a string-value

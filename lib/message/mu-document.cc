@@ -69,8 +69,10 @@ Document::add(Field::Id id, const std::string& val)
 void
 Document::add(Field::Id id, const std::vector<std::string>& vals)
 {
-	const auto field{field_from_id(id)};
+	if (vals.empty())
+		return;
 
+	const auto field{field_from_id(id)};
 	if (field.is_value())
 		xdoc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
 
@@ -88,6 +90,9 @@ Document::string_vec_value(Field::Id field_id) const noexcept
 void
 Document::add(Field::Id id, const Contacts& contacts)
 {
+	if (contacts.empty())
+		return;
+
 	const auto field{field_from_id(id)};
 	std::vector<std::string> cvec;
 
