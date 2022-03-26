@@ -889,8 +889,6 @@ add_contacts_terms_values(Xapian::Document& doc, MuMsg *msg,
 	}
 
 	contacts_cache.add(std::move(contacts));
-
-
 }
 
 Xapian::Document

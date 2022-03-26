@@ -206,7 +206,7 @@ public:
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
-	 * fromt he file system.
+	 * from the file system.
 	 *
 	 * @param path the message path.
 	 *
@@ -216,7 +216,7 @@ public:
 
 	/**
 	 * Remove a number if messages from the store. It will _not_ remove the
-	 * message fromt he file system.
+	 * message from the file system.
 	 *
 	 * @param ids vector with store ids for the message
 	 */
@@ -224,7 +224,7 @@ public:
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
-	 * fromt he file system.
+	 * from the file system.
 	 *
 	 * @param id the store id for the message
 	 */
