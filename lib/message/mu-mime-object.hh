@@ -50,7 +50,7 @@ public:
 	 *
 	 * @param obj a gobject. A ref is added.
 	 */
-	Object(GObject* &&obj): self_{g_object_ref(obj)} {
+	Object(GObject* &&obj): self_{G_OBJECT(g_object_ref(obj))} {
 		if (!G_IS_OBJECT(obj))
 			throw std::runtime_error("not a g-object");
 	}
@@ -80,7 +80,8 @@ public:
 
 		if (this != &other) {
 			auto oldself = self_;
-			self_ = other.self_ ? g_object_ref(other.self_) : nullptr;
+			self_ = other.self_ ?
+				G_OBJECT(g_object_ref(other.self_)) : nullptr;
 			if (oldself)
 				g_object_unref(oldself);
 		}
@@ -137,7 +138,11 @@ private:
 	mutable GObject *self_{};
 };
 
-
+
+/**
+ * Thin wrapper around a GMimeOContentType
+ *
+ */
 struct MimeContentType: public Object {
 
 	MimeContentType(GMimeContentType *ctype) : Object{G_OBJECT(ctype)} {

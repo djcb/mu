@@ -28,7 +28,7 @@
 
 namespace Mu {
 
-struct MimeObject; // forward declaration
+class MimeObject; // forward declaration
 
 class MessagePart {
 public:

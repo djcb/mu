@@ -81,7 +81,7 @@ Message::Message(const std::string& path, const std::string& mdir):
 			    g_strerror(errno));
 
 	if (!S_ISREG(statbuf.st_mode))
-		throw Error(Error::Code::File, "not a regular file: %s", path);
+		throw Error(Error::Code::File, "not a regular file: %s", path.c_str());
 
 	init_gmime();
 	if (auto msg{MimeMessage::make_from_file(path)}; !msg)
