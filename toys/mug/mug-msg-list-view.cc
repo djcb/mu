@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,10 +18,9 @@
 */
 
 #include "mug-msg-list-view.h"
-#include "mu-message-flags.hh"
+#include "message/mu-message.hh"
 #include "mu-query.hh"
 #include "utils/mu-str.h"
-#include "utils/mu-date.h"
 
 using namespace Mu;
 
@@ -123,18 +122,18 @@ treecell_func(GtkTreeViewColumn* tree_column,
 	      gpointer           data)
 {
 
-	MessageFlags flags;
-	MessagePriority prio;
+	Flags flags;
+	Priority prio;
 
 	gtk_tree_model_get(tree_model, iter, MUG_COL_FLAGS, &flags, MUG_COL_PRIO, &prio, -1);
 
 	g_object_set(G_OBJECT(renderer),
 		     "weight",
-		     any_of(flags & MessageFlags::New) ? 800 : 400,
+		     any_of(flags & Flags::New) ? 800 : 400,
 		     "weight",
-		     any_of(flags & MessageFlags::Seen) ? 400 : 800,
+		     any_of(flags & Flags::Seen) ? 400 : 800,
 		     "foreground",
-		     prio == MessagePriority::High ? "red" : NULL,
+		     prio == Priority::High ? "red" : NULL,
 		     NULL);
 }
 
@@ -317,17 +316,17 @@ run_query(const char* xpath, const char* expr, MugMsgListView* self)
 static void
 add_row(GtkTreeStore* store, MuMsg* msg, GtkTreeIter* treeiter)
 {
-	const gchar *datestr;
 	gchar *      from, *to;
 	time_t       timeval;
 	std::string  flag_str;
 
 	timeval = mu_msg_get_date(msg);
-	datestr = timeval == 0 ? "-" : mu_date_display_s(timeval);
+	const auto datestr{timeval == 0 ?
+		std::string{"-"} : time_to_string("%c", timeval)};
 	from    = empty_or_display_contact(mu_msg_get_from(msg));
 	to      = empty_or_display_contact(mu_msg_get_to(msg));
 
-	flag_str =  message_flags_to_string(mu_msg_get_flags(msg));
+	flag_str =  flags_to_string(mu_msg_get_flags(msg));
 
 	/* if (0) { */
 	/*      GtkTreeIter myiter; */
@@ -358,7 +357,7 @@ add_row(GtkTreeStore* store, MuMsg* msg, GtkTreeIter* treeiter)
 			   MUG_COL_FLAGS,
 			   mu_msg_get_flags(msg),
 			   MUG_COL_TIME,
-			   timeval,
+			   datestr.c_str(),
 			   -1);
 	g_free(from);
 	g_free(to);

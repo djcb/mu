@@ -20,7 +20,7 @@
 
 #include "mu-mime-object.hh"
 #include "gmime/gmime-message.h"
-#include "mu-utils.hh"
+#include "utils/mu-utils.hh"
 #include <mutex>
 #include <fcntl.h>
 

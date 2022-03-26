@@ -18,7 +18,7 @@
 # before descending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils index
+SUBDIRS= utils message index
 
 TESTDEFS=                                               \
         -DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"      \
@@ -91,8 +91,6 @@ libmu_la_SOURCES=                                       \
         mu-msg-crypto.cc                                \
         mu-msg-doc.cc                                   \
         mu-msg-doc.hh                                   \
-        mu-msg-fields.c                                 \
-        mu-message-fields.hh                                 \
         mu-msg-file.cc                                  \
         mu-msg-file.hh                                  \
         mu-msg-part.cc                                  \
@@ -100,18 +98,14 @@ libmu_la_SOURCES=                                       \
 	mu-msg-priv.hh                                  \
 	mu-msg-sexp.cc                                  \
 	mu-msg.cc                                       \
-	mu-msg.hh                                       \
-	mu-message-flags.hh                             \
-	mu-message-flags.cc                             \
-	mu-message-priority.hh                          \
-	mu-message-priority.cc
-
+	mu-msg.hh
 
 libmu_la_LIBADD=                                        \
         $(XAPIAN_LIBS)                                  \
         $(GMIME_LIBS)                                   \
         $(GLIB_LIBS)                                    \
         $(GUILE_LIBS)                                   \
+        ${builddir}/message/libmu-message.la            \
         ${builddir}/index/libmu-index.la                \
         $(CODE_COVERAGE_LIBS)
 

@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 #include "mu-msg.hh"
 #include "mu-server.hh"
 

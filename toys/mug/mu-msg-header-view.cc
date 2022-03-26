@@ -21,7 +21,7 @@
 #include "mu-msg.hh"
 
 #include <utils/mu-str.h>
-#include <utils/mu-date.h>
+#include <utils/mu-utils.hh>
 
 using namespace Mu;
 
@@ -62,17 +62,17 @@ mu_msg_header_view_class_init(MuMsgHeaderViewClass* klass)
 	g_type_class_add_private(gobject_class, sizeof(MuMsgHeaderViewPrivate));
 
 	/* signal definitions go here, e.g.: */
-	/* 	signals[MY_SIGNAL_1] = */
-	/* 		g_signal_new ("my_signal_1",....); */
-	/* 	signals[MY_SIGNAL_2] = */
-	/* 		g_signal_new ("my_signal_2",....); */
-	/* 	etc. */
+	/*	signals[MY_SIGNAL_1] = */
+	/*		g_signal_new ("my_signal_1",....); */
+	/*	signals[MY_SIGNAL_2] = */
+	/*		g_signal_new ("my_signal_2",....); */
+	/*	etc. */
 }
 
 static void
 mu_msg_header_view_init(MuMsgHeaderView* obj)
 {
-	/* 	static GtkBoxClass *parent_class = NULL; */
+	/*	static GtkBoxClass *parent_class = NULL; */
 	obj->_priv        = MU_MSG_HEADER_VIEW_GET_PRIVATE(obj);
 	obj->_priv->_grid = NULL;
 }
@@ -155,7 +155,8 @@ get_grid(Mu::MuMsg* msg)
 		++row;
 	if (add_row(grid, row, "Subject", mu_msg_get_subject(msg), TRUE))
 		++row;
-	if (add_row(grid, row, "Date", mu_date_str_s("%c", mu_msg_get_date(msg)), TRUE))
+	if (add_row(grid, row, "Date",
+		    time_to_string("%c", mu_msg_get_date(msg)).c_str(), TRUE))
 		++row;
 
 	return grid;

@@ -42,11 +42,12 @@ AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_HEADER_STDC
 
-extra_flags="-Wformat-security                                    \
-         -Wstack-protector                                        \
-         -Wstack-protector-all                                    \
-         -Wno-cast-function-type                                  \
-         -Wno-bad-function-cast"
+extra_flags="-Wformat-security      \
+         -Wstack-protector          \
+         -Wstack-protector-all      \
+         -Wno-cast-function-type    \
+         -Wno-bad-function-cast		\
+		 -Wno-switch-enum"
 
 AX_CXX_COMPILE_STDCXX_17
 AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
@@ -276,6 +277,7 @@ mu/Makefile
 lib/Makefile
 lib/doxyfile
 lib/utils/Makefile
+lib/message/Makefile
 lib/index/Makefile
 mu4e/Makefile
 mu4e/mu4e-meta.el

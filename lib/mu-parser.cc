@@ -19,13 +19,11 @@
 #include "mu-parser.hh"
 
 #include <algorithm>
-#include <optional>
-
 
 #include "mu-tokenizer.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 
 using namespace Mu;
 

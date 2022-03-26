@@ -20,7 +20,7 @@
 #ifndef MU_MSG_FILE_HH__
 #define MU_MSG_FILE_HH__
 
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 
 namespace Mu {
 

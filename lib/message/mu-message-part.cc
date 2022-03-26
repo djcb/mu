@@ -20,7 +20,7 @@
 
 #include "mu-message-part.hh"
 #include "mu-mime-object.hh"
-#include "mu-utils.hh"
+#include "utils/mu-utils.hh"
 
 using namespace Mu;
 

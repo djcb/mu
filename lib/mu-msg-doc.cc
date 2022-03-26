@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <xapian.h>
 
-#include "mu-message.hh"
+#include "message/mu-message.hh"
 #include "mu-msg-doc.hh"
 
 #include "utils/mu-util.h"

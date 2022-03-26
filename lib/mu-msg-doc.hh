@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <utils/mu-util.h>
-#include "mu-message.hh"
+#include <message/mu-message.hh>
 
 namespace Mu {
 
