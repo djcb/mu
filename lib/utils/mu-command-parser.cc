@@ -32,16 +32,16 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
 {
 	if (!call.is_call()) {
 		throw Mu::Error{Error::Code::Command,
-		                "expected call-sexpr but got %s",
-		                call.to_sexp_string().c_str()};
+				"expected call-sexpr but got %s",
+				call.to_sexp_string().c_str()};
 	}
 
 	const auto& params{call.list()};
 	const auto  cmd_it = cmap.find(params.at(0).value());
 	if (cmd_it == cmap.end())
 		throw Mu::Error{Error::Code::Command,
-		                "unknown command in call %s",
-		                call.to_sexp_string().c_str()};
+				"unknown command in call %s",
+				call.to_sexp_string().c_str()};
 
 	const auto& cinfo{cmd_it->second};
 
@@ -65,9 +65,9 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
 		if (param_it == params.end()) {
 			if (arginfo.required)
 				throw Mu::Error{Error::Code::Command,
-				                "missing required parameter %s in call %s",
-				                argname.c_str(),
-				                call.to_sexp_string().c_str()};
+						"missing required parameter %s in call %s",
+						argname.c_str(),
+						call.to_sexp_string().c_str()};
 			continue; // not required
 		}
 
@@ -75,11 +75,11 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
 		// "no value"
 		if (param_it->type() != arginfo.type && !(param_it->is_nil()))
 			throw Mu::Error{Error::Code::Command,
-			                "parameter %s expects type %s, but got %s in call %s",
-			                argname.c_str(),
-			                to_string(arginfo.type).c_str(),
-			                to_string(param_it->type()).c_str(),
-			                call.to_sexp_string().c_str()};
+					"parameter %s expects type %s, but got %s in call %s",
+					argname.c_str(),
+					to_string(arginfo.type).c_str(),
+					to_string(param_it->type()).c_str(),
+					call.to_sexp_string().c_str()};
 	}
 
 	// all passed parameters must be known
@@ -88,9 +88,9 @@ Command::invoke(const Command::CommandMap& cmap, const Sexp& call)
 			    return params.at(i).value() == arg.first;
 		    }))
 			throw Mu::Error{Error::Code::Command,
-			                "unknown parameter %s in call %s",
-			                params.at(i).value().c_str(),
-			                call.to_sexp_string().c_str()};
+					"unknown parameter %s in call %s",
+					params.at(i).value().c_str(),
+					call.to_sexp_string().c_str()};
 	}
 
 	if (cinfo.handler)
@@ -105,8 +105,8 @@ find_param_node(const Parameters& params, const std::string& argname)
 
 	if (argname.empty() || argname.at(0) != ':')
 		throw Error(Error::Code::InvalidArgument,
-		            "property key must start with ':' but got '%s')",
-		            argname.c_str());
+			    "property key must start with ':' but got '%s')",
+			    argname.c_str());
 
 	for (size_t i = 1; i < params.size(); i += 2) {
 		if (i + 1 != params.size() && params.at(i).is_symbol() &&
@@ -121,63 +121,63 @@ static Error
 wrong_type(Sexp::Type expected, Sexp::Type got)
 {
 	return Error(Error::Code::InvalidArgument,
-	             "expected <%s> but got <%s>",
-	             to_string(expected).c_str(),
-	             to_string(got).c_str());
+		     "expected <%s> but got <%s>",
+		     to_string(expected).c_str(),
+		     to_string(got).c_str());
 }
 
-std::optional<std::string>
+Option<std::string>
 Command::get_string(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return std::nullopt;
+		return Nothing;
 	else if (!it->is_string())
 		throw wrong_type(Sexp::Type::String, it->type());
 	else
 		return it->value();
 }
 
-std::optional<std::string>
+Option<std::string>
 Command::get_symbol(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return std::nullopt;
+		return Nothing;
 	else if (!it->is_symbol())
 		throw wrong_type(Sexp::Type::Symbol, it->type());
 	else
 		return it->value();
 }
 
-std::optional<int>
+Option<int>
 Command::get_int(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end() || it->is_nil())
-		return std::nullopt;
+		return Nothing;
 	else if (!it->is_number())
 		throw wrong_type(Sexp::Type::Number, it->type());
 	else
 		return ::atoi(it->value().c_str());
 }
 
-std::optional<unsigned>
+Option<unsigned>
 Command::get_unsigned(const Parameters& params, const std::string& argname)
 {
 	if (auto val = get_int(params, argname); val && *val >= 0)
 		return val;
 	else
-		return std::nullopt;
+		return Nothing;
 }
 
 
-std::optional<bool>
+Option<bool>
 Command::get_bool(const Parameters& params, const std::string& argname)
 {
 	const auto it = find_param_node(params, argname);
 	if (it == params.end())
-		return std::nullopt;
+		return Nothing;
 	else if (!it->is_symbol())
 		throw wrong_type(Sexp::Type::Symbol, it->type());
 	else

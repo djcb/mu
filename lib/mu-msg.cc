@@ -636,7 +636,7 @@ get_all_contacts(MuMsg *self)
 }
 
 Mu::Contacts
-Mu::mu_msg_get_contacts(MuMsg *self, std::optional<Field::Id> field_id)
+Mu::mu_msg_get_contacts(MuMsg *self, Option<Field::Id> field_id)
 {
 	typedef const char*(*AddressFunc)(MuMsg*);
 	using	AddressInfo = std::pair<GMimeAddressType, AddressFunc>;

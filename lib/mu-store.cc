@@ -631,7 +631,7 @@ Store::lock() const
 
 Option<QueryResults>
 Store::run_query(const std::string& expr,
-		 std::optional<Field::Id> sortfield_id,
+		 Option<Field::Id> sortfield_id,
 		 QueryFlags flags, size_t maxnum) const
 {
 	return xapian_try([&] {

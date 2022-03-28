@@ -44,6 +44,7 @@
 
 #include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
+#include "utils/mu-option.hh"
 #include "utils/mu-command-parser.hh"
 #include "utils/mu-readline.hh"
 
@@ -119,7 +120,7 @@ private:
 				const Option<QueryMatch&> qm,
 				MuMsgOptions              opts) const;
 
-	Sexp::List move_docid(Store::Id docid, std::optional<std::string> flagstr,
+	Sexp::List move_docid(Store::Id docid, Option<std::string> flagstr,
 			      bool new_name, bool no_view);
 
 	Sexp::List perform_move(Store::Id		docid,
@@ -814,7 +815,7 @@ Sexp::List
 Server::Private::perform_move(Store::Id                 docid,
 			      MuMsg*                    msg,
 			      const std::string&	maildirarg,
-			      Flags		flags,
+			      Flags			flags,
 			      bool                      new_name,
 			      bool                      no_view)
 {
@@ -852,9 +853,9 @@ Server::Private::perform_move(Store::Id                 docid,
 
 
 static Flags
-calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
+calculate_message_flags(MuMsg* msg, Option<std::string> flagopt)
 {
-	const auto flags = std::invoke([&]()->std::optional<Flags>{
+	const auto flags = std::invoke([&]()->Option<Flags>{
 			auto msgflags{mu_msg_get_flags(msg)};
 			if (!flagopt)
 				return mu_msg_get_flags(msg);
@@ -870,10 +871,10 @@ calculate_message_flags(MuMsg* msg, std::optional<std::string> flagopt)
 }
 
 Sexp::List
-Server::Private::move_docid(Store::Id			docid,
-			    std::optional<std::string>	flagopt,
-			    bool			new_name,
-			    bool			no_view)
+Server::Private::move_docid(Store::Id		docid,
+			    Option<std::string>	flagopt,
+			    bool		new_name,
+			    bool		no_view)
 {
 	if (docid == Store::InvalidId)
 		throw Error{Error::Code::InvalidArgument, "invalid docid"};

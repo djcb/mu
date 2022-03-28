@@ -26,10 +26,10 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
-#include <optional>
 
 #include "utils/mu-error.hh"
 #include "utils/mu-sexp.hh"
+#include "utils/mu-option.hh"
 
 namespace Mu {
 namespace Command {
@@ -62,11 +62,11 @@ using ArgMap = std::unordered_map<std::string, ArgInfo>;
 // The parameters to a Handler.
 using Parameters = Sexp::Seq;
 
-std::optional<int>          get_int(const Parameters& parms, const std::string& argname);
-std::optional<unsigned>     get_unsigned(const Parameters& parms, const std::string& argname);
-std::optional<bool>         get_bool(const Parameters& parms, const std::string& argname);
-std::optional<std::string>  get_string(const Parameters& parms, const std::string& argname);
-std::optional<std::string>  get_symbol(const Parameters& parms, const std::string& argname);
+Option<int>		get_int(const Parameters& parms, const std::string& argname);
+Option<unsigned>	get_unsigned(const Parameters& parms, const std::string& argname);
+Option<bool>		get_bool(const Parameters& parms, const std::string& argname);
+Option<std::string>	get_string(const Parameters& parms, const std::string& argname);
+Option<std::string>	get_symbol(const Parameters& parms, const std::string& argname);
 
 std::vector<std::string> get_string_vec(const Parameters& params, const std::string& argname);
 
@@ -86,7 +86,7 @@ static inline std::string
 get_string_or(const Parameters& parms, const std::string& arg, const std::string& alt = ""){
 	return get_string(parms, arg).value_or(alt);
 }
-		
+
 static inline std::string
 get_symbol_or(const Parameters& parms, const std::string& arg, const std::string& alt = "nil") {
 	return get_symbol(parms, arg).value_or(alt);

@@ -446,7 +446,7 @@ bool mu_msg_move_to_maildir(MuMsg*		msg,
  * @return a sequence
  */
 Mu::Contacts mu_msg_get_contacts (MuMsg *self,
-				  std::optional<Field::Id> field_id={});
+				  Option<Field::Id> field_id={});
 /**
  * create a 'display contact' from an email header To/Cc/Bcc/From-type address
  * ie., turn

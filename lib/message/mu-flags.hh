@@ -24,7 +24,8 @@
 #include <optional>
 #include <string_view>
 #include <array>
-#include "utils/mu-utils.hh"
+#include <utils/mu-utils.hh>
+#include <utils/mu-option.hh>
 
 namespace Mu {
 
@@ -146,16 +147,16 @@ constexpr void flag_infos_for_each(Func&& func)
  *
  * @param flag a singular flag
  *
- * @return the MessageFlagInfo, or std::nullopt in case of error.
+ * @return the MessageFlagInfo, or Nothing in case of error.
  */
-constexpr const std::optional<MessageFlagInfo>
+constexpr const Option<MessageFlagInfo>
 flag_info(Flags flag)
 {
 	constexpr auto upper = static_cast<unsigned>(Flags::_final_);
 	const auto     val   = static_cast<unsigned>(flag);
 
 	if (__builtin_popcount(val) != 1 || val >= upper)
-		return std::nullopt;
+		return Nothing;
 
 	return AllMessageFlagInfos[static_cast<unsigned>(__builtin_ctz(val))];
 }
@@ -167,14 +168,14 @@ flag_info(Flags flag)
  *
  * @return the MessageFlagInfo
  */
-constexpr const std::optional<MessageFlagInfo>
+constexpr const Option<MessageFlagInfo>
 flag_info(char shortcut)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.shortcut == shortcut)
 			return info;
 
-	return std::nullopt;
+	return Nothing;
 }
 
 /**
@@ -184,14 +185,14 @@ flag_info(char shortcut)
  *
  * @return the MessageFlagInfo
  */
-constexpr const std::optional<MessageFlagInfo>
+constexpr const Option<MessageFlagInfo>
 flag_info(std::string_view name)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.name == name)
 			return info;
 
-	return std::nullopt;
+	return Nothing;
 }
 
 /**
@@ -209,7 +210,7 @@ flag_info(std::string_view name)
  *
  * @return the (OR'ed) flags or Flags::None
  */
-constexpr std::optional<Flags>
+constexpr Option<Flags>
 flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
 {
 	Flags flags{Flags::None};
@@ -217,7 +218,7 @@ flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
 	for (auto&& kar : expr) {
 		if (const auto& info{flag_info(kar)}; !info) {
 			if (!ignore_invalid)
-				return std::nullopt;
+				return Nothing;
 		} else
 			flags |= info->flag;
 	}
@@ -242,24 +243,24 @@ flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
  *
  * @return new flags, or nullopt in case of error
  */
-constexpr std::optional<Flags>
+constexpr Option<Flags>
 flags_from_delta_expr(std::string_view expr, Flags flags,
-			      bool ignore_invalid = false)
+		      bool ignore_invalid = false)
 {
 	if (expr.size() % 2 != 0)
-		return std::nullopt;
+		return Nothing;
 
 	for (auto u = 0U; u != expr.size(); u += 2) {
 		if (const auto& info{flag_info(expr[u + 1])}; !info) {
 			if (!ignore_invalid)
-				return std::nullopt;
+				return Nothing;
 		} else {
 			switch (expr[u]) {
 			case '+': flags |= info->flag; break;
 			case '-': flags &= ~info->flag; break;
 			default:
 				if (!ignore_invalid)
-					return std::nullopt;
+					return Nothing;
 				break;
 			}
 		}
@@ -274,14 +275,14 @@ flags_from_delta_expr(std::string_view expr, Flags flags,
  * @param expr a flag expression, either 'delta' or 'absolute'
  * @param flags optional: existing flags or none. Required for delta.
  *
- * @return either messages flags or std::nullopt in case of error.
+ * @return either messages flags or Nothing in case of error.
  */
-constexpr std::optional<Flags>
+constexpr Option<Flags>
 flags_from_expr(std::string_view            expr,
-			std::optional<Flags> flags = std::nullopt)
+		Option<Flags> flags = Nothing)
 {
 	if (expr.empty())
-		return std::nullopt;
+		return Nothing;
 
 	if (expr[0] == '+' || expr[0] == '-')
 		return flags_from_delta_expr(

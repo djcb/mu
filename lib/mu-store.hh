@@ -34,6 +34,8 @@
 #include <index/mu-indexer.hh>
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
+#include <utils/mu-option.hh>
+
 #include <message/mu-message.hh>
 
 namespace Mu {
@@ -155,10 +157,10 @@ public:
 	 * @return the query-results, or Nothing in case of error.
 	 */
 	std::mutex& lock() const;
-	Option<QueryResults> run_query(const std::string&	expr        = "",
-				       std::optional<Field::Id>    sortfield_id = {},
-				       QueryFlags		flags       = QueryFlags::None,
-				       size_t			maxnum      = 0) const;
+	Option<QueryResults> run_query(const std::string&	expr	     = "",
+				       Option<Field::Id>	sortfield_id = {},
+				       QueryFlags		flags	     = QueryFlags::None,
+				       size_t			maxnum	     = 0) const;
 
 	/**
 	 * run a Xapian query merely to count the number of matches; for the

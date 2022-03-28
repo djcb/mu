@@ -213,7 +213,7 @@ SCM_DEFINE(get_field,
 #undef FUNC_NAME
 
 static SCM
-contacts_to_list(MuMsg *msg, std::optional<Field::Id> field_id)
+contacts_to_list(MuMsg *msg, Option<Field::Id> field_id)
 {
 	SCM list{SCM_EOL};
 
@@ -252,7 +252,7 @@ SCM_DEFINE(get_contacts,
 	if (CONTACT_TYPE == SCM_BOOL_F)
 		return SCM_UNSPECIFIED; /* nothing to do */
 
-	std::optional<Field::Id> field_id;
+	Option<Field::Id> field_id;
 	if (CONTACT_TYPE == SCM_BOOL_T)
 		field_id = {}; /* get all */
 	else {
