@@ -66,7 +66,7 @@ struct Message::Private {
 
 static void fill_document(Message::Private& priv);
 
-Message::Message(const std::string& path, const std::string& mdir):
+Message::Message(const std::string& path, Option<const std::string&> mdir):
 	priv_{std::make_unique<Private>()}
 {
 	if (!g_path_is_absolute(path.c_str()))
@@ -102,7 +102,6 @@ Message::Message(const std::string& text):
 	priv_{std::make_unique<Private>()}
 {
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(text.size()));
-	priv_->doc.add(Field::Id::Path, "");
 
 	init_gmime();
 	if (auto msg{MimeMessage::make_from_string(text)}; !msg)
@@ -297,9 +296,6 @@ process_part(const MimePart& part, Message::Private& info)
 
 	// if there are text parts, gather.
 	accumulate_text(part, info, *ctype);
-
-	//MimePart mypart(part);
-	info.parts.emplace_back(part);
 }
 
 /**
@@ -314,7 +310,7 @@ static void
 process_message(const MimeMessage& mime_msg, const std::string& path,
 		Message::Private& info)
 {
-	info.flags = Flags::None; //mu_maildir_flags_from_path(path).value_or(Flags::None);
+	info.flags = flags_from_path(path).value_or(Flags::None);
 
 	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
 	 * for searching convenience */
@@ -323,6 +319,9 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 
 	// parts
 	mime_msg.for_each([&](auto&& parent, auto&& part) {
+
+		if (part.is_part() || part.is_message_part())
+			info.parts.emplace_back(part);
 
 		if (part.is_part())
 			process_part(part, info);
@@ -700,8 +699,7 @@ World!
 
 	g_assert_true(message->bcc().empty());
 	g_assert_true(!message->body_html());
-	assert_equal(message->body_text().value_or(""),
-R"(Hello,World!)");
+	assert_equal(message->body_text().value_or(""), R"(Hello,World!)");
 
 	g_assert_true(message->cc().empty());
 	g_assert_cmpuint(message->date(), ==, 1648145079);

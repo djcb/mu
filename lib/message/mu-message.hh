@@ -23,7 +23,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "utils/mu-option.hh"
 #include "mu-contact.hh"
 #include "mu-priority.hh"
 #include "mu-flags.hh"
@@ -31,6 +30,7 @@
 #include "mu-document.hh"
 #include "mu-message-part.hh"
 
+#include "utils/mu-option.hh"
 #include "utils/mu-result.hh"
 
 namespace Mu {
@@ -45,17 +45,21 @@ public:
 	Message(Message&& msg);
 
 	/**
-	 * Construct a message based on a path
+	 * Construct a message based on a path. The maildir is optional; however
+	 * messages without maildir cannot be stored in the database
 	 *
 	 * @param path path to message
-	 * @param mdir the maildir for this message; ie, if the path is
+	 * @param mdir the maildir for this message; i.e, if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
 	 * pass NULL for this parameter, in which case some maildir-specific
 	 * information is not available.
 	 *
+	 *
+	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_path(const std::string& path, const std::string& mdir) try {
+	static Result<Message> make_from_path(const std::string& path,
+					      Option<const std::string&> mdir={}) try {
 		return Ok(Message{path, mdir});
 	} catch (Error& err) {
 		return Err(err);
@@ -296,7 +300,7 @@ public:
 
 	struct Private;
 private:
-	Message(const std::string& path, const std::string& mdir);
+	Message(const std::string& path, Option<const std::string&> mdir);
 	Message(const std::string& str);
 	Message(Document& doc);
 
