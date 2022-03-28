@@ -95,7 +95,7 @@ static void
 add_contacts(Sexp::List& list, MuMsg* msg)
 {
 	using ContactPair = std::pair<Field::Id, std::string_view>;
-	constexpr std::array<ContactPair, 5> contact_types = {{
+	constexpr std::array<ContactPair, 4> contact_types = {{
 		{ Field::Id::From,    ":from" },
 		{ Field::Id::To,      ":to" },
 		{ Field::Id::Cc,      ":cc" },
