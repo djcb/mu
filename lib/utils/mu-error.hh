@@ -41,6 +41,8 @@ struct Error final : public std::exception {
 		Query,
 		SchemaMismatch,
 		Store,
+		User,
+		Play,
 		AssertionFailure
 	};
 
@@ -119,15 +121,14 @@ struct Error final : public std::exception {
 	 *
 	 * @return the error-code
 	 */
-	Code code() const { return code_; }
-
+	Code code() const noexcept { return code_; }
 
 	/**
 	 * Fill a GError with the error information
 	 *
 	 * @param err GError** (or NULL)
 	 */
-	void fill_g_error(GError **err) {
+	void fill_g_error(GError **err) const noexcept{
 		g_set_error(err, MU_ERROR_DOMAIN, static_cast<int>(code_),
 			    "%s", what_.c_str());
 	}
