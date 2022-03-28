@@ -298,6 +298,19 @@ typename Sequence::const_iterator seq_find_if(const Sequence& seq, UnaryPredicat
 }
 
 /**
+ * Is at least pred(element) true for at least one element of sequence
+ *
+ * @param seq sequence
+ * @param pred a predicate
+ *
+ * @return true or false
+ */
+template<typename Sequence, typename UnaryPredicate>
+bool seq_some(const Sequence& seq, UnaryPredicate pred) {
+	return seq_find_if(seq, pred) != seq.cend();
+}
+
+/**
  * Create a sequence that has all element of seq for which pred is true
  *
  * @param seq sequence
