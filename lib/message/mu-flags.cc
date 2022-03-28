@@ -39,6 +39,90 @@ Mu::flags_to_string(Flags flags)
 }
 
 
+
+/*
+ * The file-components, ie.
+ *     1631819685.fb7b279bbb0a7b66.evergrey:2,RS
+ *     => {
+ *       "1631819685.fb7b279bbb0a7b66.evergrey",
+ *       ':',
+ *       "2,",
+ *       "RS"
+ *     }
+ */
+struct FileParts {
+	std::string	base;
+	char		separator;
+	std::string	flags_suffix;;
+};
+
+static FileParts
+message_file_parts(const std::string& file)
+{
+	const auto pos{file.find_last_of(":!;")};
+
+	/* no suffix at all? */
+	if (pos == std::string::npos ||
+	    pos >= file.length() - 3 ||
+	    file[pos + 1] != '2' ||
+	    file[pos + 2] != ',')
+		return FileParts{ file, ':', {}};
+
+	return FileParts {
+		file.substr(0, pos),
+		file[pos],
+		file.substr(pos + 3)
+	};
+}
+
+
+struct DirFile {
+	std::string dir;
+	std::string file;
+	bool is_new;
+};
+
+static Option<DirFile>
+base_message_dir_file(const std::string& path)
+{
+	constexpr auto newdir{ G_DIR_SEPARATOR_S "new"};
+
+	if (path.empty())
+		return Nothing;
+
+	char *dirname{g_path_get_dirname(path.c_str())};
+	bool is_new{!!g_str_has_suffix(dirname, newdir)};
+
+	std::string mdir{dirname, ::strlen(dirname) - 4};
+	g_free(dirname);
+
+	char *basename{g_path_get_basename(path.c_str())};
+	std::string bname{basename};
+	g_free(basename);
+
+	return DirFile{std::move(mdir), std::move(bname), is_new};
+}
+
+Mu::Option<Mu::Flags>
+Mu::flags_from_path(const std::string& path)
+{	/*
+	 * this gets us the source maildir filesystem path, the directory
+	 * in which new/ & cur/ lives, and the source file
+	 */
+	auto dirfile{base_message_dir_file(path)};
+	if (!dirfile)
+		return Nothing;
+
+	/* a message under new/ is just.. New. Filename is not considered */
+	if (dirfile->is_new)
+		return Flags::New;
+
+	/* it's cur/ message, so parse the file name */
+	const auto parts{message_file_parts(dirfile->file)};
+	return flags_from_absolute_expr(parts.flags_suffix, true/*ignore invalid*/);
+}
+
+
 /*
  * flags & flag-info
  */

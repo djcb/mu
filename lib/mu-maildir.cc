@@ -305,8 +305,7 @@ base_message_dir_file(const std::string& path)
 	return Ok(DirFile{std::move(mdir), std::move(bname), is_new});
 }
 
-
-
+// refactor: we have the same code in mu-flags.cc
 
 Mu::Result<Mu::Flags>
 Mu::mu_maildir_flags_from_path(const std::string& path)
