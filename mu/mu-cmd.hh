@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <mu-config.hh>
 #include <mu-store.hh>
+#include <utils/mu-result.hh>
 
 namespace Mu {
 /**
@@ -42,12 +43,10 @@ MuError mu_cmd_find(const Mu::Store& store, const MuConfig* opts, GError** err);
  * execute the 'extract' command
  *
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeds,
- * some error code otherwise
+ * @return Ok() or some error
  */
-MuError mu_cmd_extract(const MuConfig* opts, GError** err);
+Result<void> mu_cmd_extract(const MuConfig* opts);
 
 /**
  * execute the 'script' command

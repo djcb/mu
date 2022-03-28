@@ -641,9 +641,12 @@ try {
 	case MU_CONFIG_CMD_VIEW: merr = cmd_view(opts, err); break;
 	case MU_CONFIG_CMD_VERIFY: merr = cmd_verify(opts, err); break;
 	case MU_CONFIG_CMD_EXTRACT:
-		merr = mu_cmd_extract(opts, err);
+		if (const auto res{mu_cmd_extract(opts)}; !res) {
+			res.error().fill_g_error(err);
+			merr = MU_ERROR;
+		} else
+			merr = MU_OK;
 		break;
-
 		/* read-only store */
 
 	case MU_CONFIG_CMD_CFIND: merr = with_readonly_store(mu_cmd_cfind, opts, err); break;
