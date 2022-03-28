@@ -19,6 +19,7 @@
 
 
 #include "mu-message-part.hh"
+#include "glibconfig.h"
 #include "mu-mime-object.hh"
 #include "utils/mu-utils.hh"
 
@@ -36,13 +37,49 @@ MessagePart::~MessagePart() = default;
 
 
 Option<std::string>
-MessagePart::filename() const noexcept
+MessagePart::cooked_filename() const noexcept
+{
+	// make a bit more pallatble.
+	auto cleanup = [](const std::string& name)->std::string {
+		std::string clean;
+		clean.reserve(name.length());
+		for (auto& c: name) {
+			auto taboo{(::iscntrl(c) || c == G_DIR_SEPARATOR ||
+				    c == ' ' || c == '\\' || c == ':')};
+			clean += (taboo ? '-' : c);
+		}
+		if (clean.size() > 1 && clean[0] == '-')
+			clean.erase(0, 1);
+
+		return clean;
+	};
+
+	// a MimePart... use the name if there is one.
+	if (mime_obj->is_part())
+		return MimePart(*mime_obj).filename().map(cleanup);
+
+	// MimeMessagepart. Construct a name based on subject.
+	if (mime_obj->is_message_part()) {
+		auto msg{MimeMessagePart(*mime_obj).get_message()};
+		return msg.subject()
+			.map(cleanup)
+			.value_or("no-subject") + ".eml";
+	}
+
+return Nothing;
+
+}
+
+Option<std::string>
+MessagePart::raw_filename() const noexcept
 {
 	if (!mime_obj->is_part())
 		return Nothing;
 	else
 		return MimePart(*mime_obj).filename();
 }
+
+
 
 Option<std::string>
 MessagePart::mime_type() const noexcept
@@ -60,6 +97,15 @@ MessagePart::size() const noexcept
 		return 0;
 	else
 		return MimePart(*mime_obj).size();
+}
+
+bool
+MessagePart::is_attachment() const noexcept
+{
+	if (!mime_obj->is_part())
+		return false;
+	else
+		return MimePart(*mime_obj).is_attachment();
 }
 
 

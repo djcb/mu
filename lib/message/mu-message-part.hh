@@ -53,11 +53,23 @@ public:
 	~MessagePart();
 
 	/**
-	 * Filename for the mime-part
+	 * Filename for the mime-part file. This is a "cooked" filename with
+	 * unallowed characters removed. If there's no filename specified,
+	 * construct one (such as in the case of MimeMessagePart).
+	 *
+	 * @see raw_filename()
+	 *
+	 * @return the name
+	 */
+	Option<std::string> cooked_filename() const noexcept;
+
+	/**
+	 * Name for the mime-part file, i.e., MimePart::filename
 	 *
 	 * @return the filename or Nothing if there is none
 	 */
-	Option<std::string> filename() const noexcept;
+	Option<std::string> raw_filename() const noexcept;
+
 
 	/**
 	 * Mime-type for the mime-part (e.g. "text/plain")
@@ -74,12 +86,20 @@ public:
 	size_t size() const noexcept;
 
 	/**
+	 * Does this part have an "attachment" disposition? Otherwise it is
+	 * "inline". Note that does *not* map 1:1 to a message's HasAttachment
+	 * flag.
+	 *
+	 * @return true or false.
+	 */
+	bool is_attachment() const noexcept;
+
+	/**
 	 * Write (decoded) mime-part contents to string
 	 *
 	 * @return a string or nothing if there is no contemt
 	 */
 	Option<std::string> to_string() const noexcept;
-
 
 	/**
 	 * Write (decoded) mime part to a file

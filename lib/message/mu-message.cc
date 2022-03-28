@@ -438,7 +438,7 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::File:
 			for (auto&& part: priv.parts)
-				doc.add(field.id, part.filename());
+				doc.add(field.id, part.raw_filename());
 			break;
 		case Field::Id::Flags:
 			doc.add(priv.flags);
@@ -684,7 +684,7 @@ Content-Description: test file 1
 MDAwAQID
 --=-=-=
 Content-Type: audio/ogg
-Content-Disposition: inline; filename=file-02.bin
+Content-Disposition: inline; filename=/tmp/file-02.bin
 Content-Transfer-Encoding: base64
 
 MDA0BQYH
@@ -721,27 +721,28 @@ R"(Hello,World!)");
 	g_assert_cmpuint(message->parts().size(),==,4);
 	{
 		auto&& part{message->parts().at(0)};
-		g_assert_false(!!part.filename());
+		g_assert_false(!!part.raw_filename());
 		assert_equal(part.mime_type().value(), "text/plain");
 		assert_equal(part.to_string().value(), "Hello,");
 	}
 	{
 		auto&& part{message->parts().at(1)};
-		assert_equal(part.filename().value(), "file-01.bin");
+		assert_equal(part.raw_filename().value(), "file-01.bin");
 		assert_equal(part.mime_type().value(), "image/jpeg");
 		// file consist of 6 bytes "000" 0x01,0x02.0x03.
 		assert_equal(part.to_string().value(), "000\001\002\003");
 	}
 	{
 		auto&& part{message->parts().at(2)};
-		assert_equal(part.filename().value(), "file-02.bin");
+		assert_equal(part.raw_filename().value(), "/tmp/file-02.bin");
+		assert_equal(part.cooked_filename().value(), "tmp-file-02.bin");
 		assert_equal(part.mime_type().value(), "audio/ogg");
 		// file consist of the string "004" followed by 0x5,0x6,0x7.
 		assert_equal(part.to_string().value(), "004\005\006\007");
 	}
 	{
 		auto&& part{message->parts().at(3)};
-		g_assert_false(!!part.filename());
+		g_assert_false(!!part.raw_filename());
 		g_assert_true(!!part.mime_type());
 		assert_equal(part.mime_type().value(), "text/plain");
 		assert_equal(part.to_string().value(), "World!");
