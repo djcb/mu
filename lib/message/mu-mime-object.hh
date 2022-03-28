@@ -341,7 +341,6 @@ public:
 		return maybe_string(g_mime_message_get_message_id(self()));
 	}
 
-
 	/**
 	 * Gets the message-id if it exists, or nullopt otherwise.
 	 *
@@ -560,6 +559,38 @@ private:
 };
 
 
+
+/**
+ * Thin wrapper around a GMimeMessagePart.
+ *
+ */
+class MimeMessagePart: public MimeObject {
+public:
+	/**
+	 * Construct a MimeMessagePart
+	 *
+	 * @param obj an Object of the right type
+	 */
+	MimeMessagePart(const Object& obj): MimeObject(obj) {
+		if (!is_message_part())
+			throw std::runtime_error("not a mime-message-part");
+	}
+
+	/**
+	 * Get the MimeMessage for this MimeMessagePart.
+	 *
+	 * @return the MimeMessage
+	 */
+	MimeMessage get_message() const {
+		return MimeMessage(
+			Object(G_OBJECT(g_mime_message_part_get_message(self()))));
+	}
+private:
+	GMimeMessagePart* self() const {
+		return reinterpret_cast<GMimeMessagePart*>(object());
+	}
+
+};
 /**
  * Thin wrapper around a GMimeApplicationPkcs7Mime
  *
