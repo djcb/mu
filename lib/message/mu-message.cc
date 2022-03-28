@@ -660,7 +660,7 @@ Received: from pop.gmail.com [256.85.129.309]
 	by evergrey with POP3 (fetchmail-6.4.29)
 	for <djcb@localhost> (single-drop); Thu, 24 Mar 2022 20:12:40 +0200 (EET)
 Sender: "Foo, Example" <foo@example.com>
-User-agent: mu4e 1.7.10; emacs 29.0.50
+User-agent: mu4e 1.7.11; emacs 29.0.50
 From: "Foo Example" <foo@example.com>
 To: bar@example.com
 Subject: =?utf-8?B?w6R0dMOkY2htZcOxdHM=?=
@@ -678,15 +678,26 @@ Hello,
 Content-Type: image/jpeg
 Content-Disposition: attachment; filename=file-01.bin
 Content-Transfer-Encoding: base64
-Content-Description: test file 1
 
-MDAwAQID
+AAECAw==
 --=-=-=
 Content-Type: audio/ogg
 Content-Disposition: inline; filename=/tmp/file-02.bin
 Content-Transfer-Encoding: base64
 
-MDA0BQYH
+BAUGBw==
+--=-=-=
+Content-Type: message/rfc822
+Content-Disposition: attachment;
+ filename="message.eml"
+
+From: "Fnorb" <fnorb@example.com>
+To: Bob <bob@example.com>
+Subject: news for you
+Date: Mon, 28 Mar 2022 22:53:26 +0300
+
+Attached message!
+
 --=-=-=
 Content-Type: text/plain
 
@@ -716,7 +727,7 @@ World!
 
 	assert_equal(message->subject(), "ättächmeñts");
 
-	g_assert_cmpuint(message->parts().size(),==,4);
+	g_assert_cmpuint(message->parts().size(),==,5);
 	{
 		auto&& part{message->parts().at(0)};
 		g_assert_false(!!part.raw_filename());
@@ -727,19 +738,28 @@ World!
 		auto&& part{message->parts().at(1)};
 		assert_equal(part.raw_filename().value(), "file-01.bin");
 		assert_equal(part.mime_type().value(), "image/jpeg");
-		// file consist of 6 bytes "000" 0x01,0x02.0x03.
-		assert_equal(part.to_string().value(), "000\001\002\003");
+		// file consists of 4 bytes 0...3
+		g_assert_cmpuint(part.to_string()->at(0), ==, 0);
+		g_assert_cmpuint(part.to_string()->at(1), ==, 1);
+		g_assert_cmpuint(part.to_string()->at(2), ==, 2);
+		g_assert_cmpuint(part.to_string()->at(3), ==, 3);
 	}
 	{
 		auto&& part{message->parts().at(2)};
 		assert_equal(part.raw_filename().value(), "/tmp/file-02.bin");
 		assert_equal(part.cooked_filename().value(), "tmp-file-02.bin");
 		assert_equal(part.mime_type().value(), "audio/ogg");
-		// file consist of the string "004" followed by 0x5,0x6,0x7.
-		assert_equal(part.to_string().value(), "004\005\006\007");
+		// file consistso of 4 bytes 4..7
+		assert_equal(part.to_string().value(), "\004\005\006\007");
 	}
+
 	{
 		auto&& part{message->parts().at(3)};
+		g_assert_true(part.mime_type() == "message/rfc822");
+	}
+
+	{
+		auto&& part{message->parts().at(4)};
 		g_assert_false(!!part.raw_filename());
 		g_assert_true(!!part.mime_type());
 		assert_equal(part.mime_type().value(), "text/plain");
