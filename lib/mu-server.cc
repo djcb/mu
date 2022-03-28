@@ -672,10 +672,14 @@ Server::Private::find_handler(const Parameters& params)
 	const auto skip_dups{get_bool_or(params, ":skip-dups", false)};
 	const auto include_related{get_bool_or(params, ":include-related", false)};
 
-
-	auto sort_field = field_from_name(sortfieldstr);
-	if (!sort_field && sortfieldstr.empty())
-		throw Error{Error::Code::InvalidArgument, "invalid sort field %s",
+	auto sort_field = std::invoke([&]()->Option<Field>{
+		if (sortfieldstr.size() < 2)
+			return Nothing;
+		else
+			return field_from_name(sortfieldstr.substr(1));
+	});
+	if (!sort_field && !sortfieldstr.empty())
+		throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
 			sortfieldstr.c_str()};
 	if (batch_size < 1)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
