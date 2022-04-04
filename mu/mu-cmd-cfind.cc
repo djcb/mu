@@ -316,8 +316,8 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 		break;
 	case MU_CONFIG_FORMAT_DEBUG: {
 		char datebuf[32];
-		::strftime(datebuf, sizeof(datebuf), "%F %T",
-			   gmtime(static_cast<const ::time_t*>(&ci.message_date)));
+		const auto mdate(static_cast<::time_t>(ci.message_date));
+		::strftime(datebuf, sizeof(datebuf), "%F %T", ::gmtime(&mdate));
 		g_print("%s\n\tname: %s\n\t%s\n\tpersonal: %s\n\tfreq: %zu\n"
 			"\tlast-seen: %s\n",
 			ci.email.c_str(),
