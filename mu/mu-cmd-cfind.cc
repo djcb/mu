@@ -299,14 +299,16 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 	case MU_CONFIG_FORMAT_MUTT_AB:
 		mu_util_print_encoded("%s\t%s\t\n", ci.email.c_str(), ci.name.c_str());
 		break;
-	case MU_CONFIG_FORMAT_WL: each_contact_wl(ci.email, ci.name, ecdata.nicks); break;
+	case MU_CONFIG_FORMAT_WL: each_contact_wl(ci.email, ci.name, ecdata.nicks);
+		break;
 	case MU_CONFIG_FORMAT_ORG_CONTACT:
 		if (!ci.name.empty())
 			mu_util_print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
 					      ci.name.c_str(),
 					      ci.email.c_str());
 		break;
-	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.message_date); break;
+	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.message_date);
+		break;
 	case MU_CONFIG_FORMAT_CSV:
 		mu_util_print_encoded("%s,%s\n",
 				      ci.name.empty() ? "" : Mu::quote(ci.name).c_str(),
@@ -314,7 +316,8 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 		break;
 	case MU_CONFIG_FORMAT_DEBUG: {
 		char datebuf[32];
-		strftime(datebuf, sizeof(datebuf), "%F %T", gmtime(&ci.message_date));
+		::strftime(datebuf, sizeof(datebuf), "%F %T",
+			   gmtime(static_cast<const ::time_t*>(&ci.message_date)));
 		g_print("%s\n\tname: %s\n\t%s\n\tpersonal: %s\n\tfreq: %zu\n"
 			"\tlast-seen: %s\n",
 			ci.email.c_str(),
@@ -323,8 +326,10 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 			ci.personal ? "yes" : "no",
 			ci.frequency,
 			datebuf);
-	} break;
-	default: print_plain(ci.email, ci.name, ecdata.color);
+	}
+		break;
+	default:
+		print_plain(ci.email, ci.name, ecdata.color);
 	}
 }
 
