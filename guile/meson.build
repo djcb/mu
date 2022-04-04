@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -29,13 +29,16 @@ run_command('chmod', '+x', compile_scm, check: true)
 scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
 
 snarf = find_program('guile-snarf')
+# there must be a better way of feeding the include paths to snarf...
 snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
 	    '-I' + meson.current_source_dir() + '/../lib',
 	    '-I' + meson.current_build_dir() + '/..']
-
-pkg_config=find_program('pkg-config')
-snarf_args+=run_command(pkg_config, '--cflags', 'glib-2.0', 'guile-3.0',
-                        check:true).stdout().strip()
+snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('includedir'),
+                                'glib-2.0')
+snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('libdir'),
+                                'glib-2.0', 'include')
+snarf_args += '-I' + join_paths(guile_dep.get_pkgconfig_variable('includedir'),
+                                'guile', '3.0')
 snarf_gen=generator(snarf,
 		    output: '@BASENAME@.x',
 		    arguments: snarf_args)
