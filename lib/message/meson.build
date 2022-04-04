@@ -22,6 +22,7 @@ lib_mu_message=static_library(
     'mu-message.hh',
     'mu-message-part.cc',
     'mu-message-part.hh',
+    'mu-message-sexp.cc',
     'mu-contact.hh',
     'mu-contact.cc',
     'mu-document.cc',

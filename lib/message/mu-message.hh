@@ -32,6 +32,7 @@
 
 #include "utils/mu-option.hh"
 #include "utils/mu-result.hh"
+#include "utils/mu-sexp.hh"
 
 namespace Mu {
 
@@ -147,7 +148,6 @@ public:
 	 */
 	Contacts bcc() const { return document().contacts_value(Field::Id::Bcc); }
 
-
 	/**
 	 * Get the maildir this message lives in; ie, if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
@@ -235,11 +235,24 @@ public:
 
 
 	/*
-	 * Below require a file-backed message, which is a relatively slow
-	 * if there isn't one already ()
-	 *
+	 * Convert to Sexp
 	 */
 
+	/**
+	 * convert the message to a Lisp symbolic expression (for further
+	 * processing in e.g. emacs)
+	 *
+	 *
+	 * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
+	 */
+	Mu::Sexp::List to_sexp_list() const;
+	Mu::Sexp       to_sexp() const;
+
+	/*
+	 * Below require a file-backed message, which is a relatively slow
+	 * if there isn't one already; see load_mime_message()
+	 *
+	 */
 
 	/**
 	 * Get the text body
@@ -297,6 +310,15 @@ public:
 	 * Affects cached-state only, so we still mark this as 'const'
 	 */
 	void unload_mime_message() const;
+
+	/**
+	 * Has a (file-base) GMime message been loaded?
+	 *
+	 *
+	 * @return true or false
+	 */
+	bool has_mime_message() const;
+
 
 	struct Private;
 private:

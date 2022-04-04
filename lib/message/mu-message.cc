@@ -149,6 +149,14 @@ Message::unload_mime_message() const
 {
 	priv_->mime_msg = Nothing;
 }
+
+bool
+Message::has_mime_message() const
+{
+	return !!priv_->mime_msg;
+}
+
+
 static Priority
 get_priority(const MimeMessage& mime_msg)
 {
