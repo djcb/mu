@@ -19,6 +19,7 @@
 
 #include "mu-contact.hh"
 #include "mu-message.hh"
+#include "utils/mu-utils.hh"
 
 #include <gmime/gmime.h>
 #include <glib.h>
@@ -84,6 +85,21 @@ Mu::make_contacts(const std::string& addrs,
 	return contacts;
 }
 
+
+std::string
+Mu::to_string(const Mu::Contacts& contacts)
+{
+	std::string res;
+
+	seq_for_each(contacts, [&](auto&& contact) {
+		if (res.empty())
+			res = contact.display_name();
+		else
+			res += ", " + contact.display_name();
+	});
+
+	return res;
+}
 
 size_t
 Mu::lowercase_hash(const std::string& s)

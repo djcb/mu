@@ -164,6 +164,17 @@ make_contacts(/*const*/ struct _InternetAddressList* addr_lst,
 Contacts
 make_contacts(const std::string& addrs,
 	      Field::Id field_id, int64_t message_date);
+
+
+/**
+ * Get contacts as a comma-separated list.
+ *
+ * @param contacts contacs
+ *
+ * @return string with contacts.
+ */
+std::string to_string(const Contacts& contacts);
+
 } // namespace Mu
 
 /**
