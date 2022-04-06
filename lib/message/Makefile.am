@@ -1,0 +1,49 @@
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software Foundation,
+## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+AM_CXXFLAGS=			\
+	$(WARN_CXXFLAGS)	\
+	$(GLIB_CFLAGS)		\
+	$(GMIME_CFLAGS)		\
+	$(XAPIAN_CFLAGS)	\
+	-I${top_srcdir}/lib
+
+noinst_LTLIBRARIES=		\
+	libmu-message.la
+
+libmu_message_la_SOURCES=	\
+        mu-message.cc		\
+        mu-message.hh		\
+        mu-message-part.cc	\
+        mu-message-part.hh	\
+	mu-message-sexp.cc	\
+        mu-contact.hh		\
+        mu-contact.cc		\
+        mu-document.cc		\
+        mu-document.hh		\
+        mu-fields.hh		\
+        mu-fields.cc		\
+        mu-flags.hh		\
+        mu-flags.cc		\
+        mu-priority.hh		\
+        mu-priority.cc		\
+        mu-mime-object.cc	\
+        mu-mime-object.hh
+
+libmu_message_la_LIBADD=	\
+	$(GLIB_LIBS)		\
+	$(GMIME_LIBS)		\
+	$(XAPIAN_LIBS)
