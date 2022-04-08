@@ -52,15 +52,13 @@ public:
 	 * @param path path to message
 	 * @param mdir the maildir for this message; i.e, if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
-	 * pass NULL for this parameter, in which case some maildir-specific
+	 * pass Nothing for this parameter, in which case some maildir-specific
 	 * information is not available.
-	 *
-	 *
 	 *
 	 * @return a message or an error
 	 */
 	static Result<Message> make_from_path(const std::string& path,
-					      Option<const std::string&> mdir={}) try {
+					      const std::string& mdir={}) try {
 		return Ok(Message{path, mdir});
 	} catch (Error& err) {
 		return Err(err);
@@ -88,15 +86,21 @@ public:
 	 * Construct a message from a string. This is mostly useful for testing.
 	 *
 	 * @param text message text
+	 * @param path path to message - optional; path does not have to exist.
+	 * this is useful for testing.
+	 * @param mdir the maildir for this message; optional, useful for testing.
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_string(const std::string& text) try {
-		return Ok(Message{text});
+	static Result<Message> make_from_text(const std::string& text,
+					      const std::string& path={},
+					      const std::string& mdir={}) try {
+		return Ok(Message{text, path, mdir});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
-		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
+		return Err(Mu::Error(Error::Code::Message,
+				     "failed to create message from text"));
 	}
 
 	/**
@@ -166,7 +170,11 @@ public:
 	 * Get the Message-Id of this message
 	 *
 	 * @return the Message-Id of this message (without the enclosing <>), or
-	 * a fake message-id for messages that don't have them
+	 * a fake message-id for messages that don't have them.
+	 *
+	 * For file-backed message, this fake message-id is based on a hash of the
+	 * message contents. For non-file-backed (test) messages, some other value
+	 * is concocted.
 	 */
 	std::string message_id() const { return document().string_value(Field::Id::MessageId);}
 
@@ -188,7 +196,7 @@ public:
 	::time_t date() const { return static_cast<time_t>(document().integer_value(Field::Id::Date)); }
 
 	/**
-	 * get the flags for this message
+	 * get the flags for this message.
 	 *
 	 * @return the file/content flags
 	 */
@@ -322,8 +330,9 @@ public:
 
 	struct Private;
 private:
-	Message(const std::string& path, Option<const std::string&> mdir);
-	Message(const std::string& str);
+	Message(const std::string& path, const std::string& mdir);
+	Message(const std::string& str,  const std::string& path,
+		const std::string& mdir);
 	Message(Document& doc);
 
 

@@ -1,5 +1,5 @@
 /*
-	** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -66,7 +66,7 @@ struct Message::Private {
 
 static void fill_document(Message::Private& priv);
 
-Message::Message(const std::string& path, Option<const std::string&> mdir):
+Message::Message(const std::string& path, const std::string& mdir):
 	priv_{std::make_unique<Private>()}
 {
 	if (!g_path_is_absolute(path.c_str()))
@@ -91,20 +91,29 @@ Message::Message(const std::string& path, Option<const std::string&> mdir):
 
 	priv_->doc.add(Field::Id::Path,
 		       Mu::from_gchars(g_canonicalize_filename(path.c_str(), NULL)));
-	priv_->doc.add(Field::Id::Maildir, mdir);
+	if (!mdir.empty())
+		priv_->doc.add(Field::Id::Maildir, mdir);
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf.st_size));
 
 	// rest of the fields
 	fill_document(*priv_);
 }
 
-Message::Message(const std::string& text):
+Message::Message(const std::string& text, const std::string& path,
+		 const std::string& mdir):
 	priv_{std::make_unique<Private>()}
 {
+	if (!path.empty())
+		priv_->doc.add(Field::Id::Path,
+			       Mu::from_gchars(
+				       g_canonicalize_filename(path.c_str(), NULL)));
+	if (!mdir.empty())
+		priv_->doc.add(Field::Id::Maildir, mdir);
+
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(text.size()));
 
 	init_gmime();
-	if (auto msg{MimeMessage::make_from_string(text)}; !msg)
+	if (auto msg{MimeMessage::make_from_text(text)}; !msg)
 		throw msg.error();
 	else
 		priv_->mime_msg = std::move(msg.value());
@@ -318,17 +327,21 @@ static void
 process_message(const MimeMessage& mime_msg, const std::string& path,
 		Message::Private& info)
 {
-	info.flags = flags_from_path(path).value_or(Flags::None);
-
-	/* pseudo-flag --> unread means either NEW or NOT SEEN, just
-	 * for searching convenience */
-	if (any_of(info.flags & Flags::New) || none_of(info.flags & Flags::Seen))
-		info.flags |= Flags::Unread;
+	/* only have file-flags when there's a path. */
+	if (!path.empty()) {
+		info.flags = flags_from_path(path).value_or(Flags::None);
+		/* pseudo-flag --> unread means either NEW or NOT SEEN, just
+		 * for searching convenience */
+		if (any_of(info.flags & Flags::New) || none_of(info.flags & Flags::Seen))
+			info.flags |= Flags::Unread;
+	}
 
 	// parts
 	mime_msg.for_each([&](auto&& parent, auto&& part) {
 
-		if (part.is_part() || part.is_message_part())
+		if (part.is_part() ||
+		    part.is_message_part() ||
+		    part.is_multipart_signed())
 			info.parts.emplace_back(part);
 
 		if (part.is_part())
@@ -388,20 +401,24 @@ calculate_sha256(const std::string& path)
 	return Ok(g_checksum_get_string(checksum));
 }
 
-
+/**
+ * Get a fake-message-id for a message without one.
+ *
+ * @param path message path
+ *
+ * @return a fake message-id
+ */
 static std::string
-fake_message_id(const std::string path)
+fake_message_id(const std::string& path)
 {
 	constexpr auto mu_suffix{"@mu.id"};
 
-	if (path.empty())
-		return  format("12345@%s", mu_suffix);
-	else if (const auto sha256_res{calculate_sha256(path)}; !sha256_res) {
-		g_warning("failed to get sha-256: %s", sha256_res.error().what());
-		// fallback... not a very good message-id, but should
-		// not happen in practice.
+	// not a very good message-id, only for testing.
+	if (path.empty() || ::access(path.c_str(), R_OK) != 0)
 		return format("%08x%s", g_str_hash(path.c_str()), mu_suffix);
-	} else
+	if (const auto sha256_res{calculate_sha256(path)}; !sha256_res)
+		return format("%08x%s", g_str_hash(path.c_str()), mu_suffix);
+	else
 		return format("%s%s", sha256_res.value().c_str(), mu_suffix);
 }
 
