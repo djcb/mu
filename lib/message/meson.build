@@ -84,9 +84,8 @@ test('test-flags',
 
 test('test-message',
      executable('test-message',
-		'mu-message.cc',
+		'test-mu-message.cc',
 		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
 test('test-priority',
