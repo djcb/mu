@@ -23,10 +23,14 @@
 #include <stdexcept>
 #include <string>
 #include <functional>
+#include <array>
+#include <vector>
 #include <gmime/gmime.h>
 #include "gmime/gmime-application-pkcs7-mime.h"
+#include "gmime/gmime-crypto-context.h"
 #include "utils/mu-option.hh"
 #include "utils/mu-result.hh"
+#include "utils/mu-utils.hh"
 #include "mu-contact.hh"
 
 namespace Mu {
@@ -140,7 +144,7 @@ private:
 
 
 /**
- * Thin wrapper around a GMimeOContentType
+ * Thin wrapper around a GMimeContentType
  *
  */
 struct MimeContentType: public Object {
@@ -162,6 +166,394 @@ struct MimeContentType: public Object {
 private:
 	GMimeContentType* self() const {
 		return reinterpret_cast<GMimeContentType*>(object());
+	}
+};
+
+
+
+
+/**
+ * Thin wrapper around a GMimeStream
+ *
+ */
+struct MimeStream: public Object {
+	MimeStream(GMimeStream *stream): Object(G_OBJECT(stream)) {
+		if (!GMIME_IS_STREAM(self()))
+			throw std::runtime_error("not a mime-stream");
+	};
+
+	ssize_t write(const char* buf, ::size_t size) {
+		return g_mime_stream_write(self(), buf, size);
+	}
+
+	GMimeStream* self() const {
+		return reinterpret_cast<GMimeStream*>(object());
+	}
+};
+
+template<typename S, typename T>
+constexpr Option<std::string_view> to_string_view(const S& seq, T t) {
+	auto&& it = seq_find_if(seq, [&](auto&& item){return item.first == t;});
+	if (it == seq.cend())
+		return Nothing;
+	else
+		return it->second;
+}
+
+
+/**
+ * Thin wrapper around a GMimeCertifcate
+ *
+ */
+struct MimeCertificate: public Object {
+	MimeCertificate(GMimeCertificate *cert) : Object{G_OBJECT(cert)} {
+		if (!GMIME_IS_CERTIFICATE(self()))
+			throw std::runtime_error("not a certificate");
+	}
+
+	enum struct PubkeyAlgo {
+		Default = GMIME_PUBKEY_ALGO_DEFAULT,
+		Rsa	= GMIME_PUBKEY_ALGO_RSA,
+		RsaE	= GMIME_PUBKEY_ALGO_RSA_E,
+		RsaS	= GMIME_PUBKEY_ALGO_RSA_S,
+		ElgE	= GMIME_PUBKEY_ALGO_ELG_E,
+		Dsa	= GMIME_PUBKEY_ALGO_DSA,
+		Ecc	= GMIME_PUBKEY_ALGO_ECC,
+		Elg	= GMIME_PUBKEY_ALGO_ELG,
+		EcDsa	= GMIME_PUBKEY_ALGO_ECDSA,
+		EcDh	= GMIME_PUBKEY_ALGO_ECDH,
+		EdDsa	= GMIME_PUBKEY_ALGO_EDDSA,
+	};
+
+	enum struct DigestAlgo {
+		Default	     = GMIME_DIGEST_ALGO_DEFAULT,
+		Md5	     = GMIME_DIGEST_ALGO_MD5,
+		Sha1	     = GMIME_DIGEST_ALGO_SHA1,
+		RipEmd160    = GMIME_DIGEST_ALGO_RIPEMD160,
+		Md2	     = GMIME_DIGEST_ALGO_MD2,
+		Tiger192     = GMIME_DIGEST_ALGO_TIGER192,
+		Haval5160    = GMIME_DIGEST_ALGO_HAVAL5160,
+		Sha256	     = GMIME_DIGEST_ALGO_SHA256,
+		Sha384	     = GMIME_DIGEST_ALGO_SHA384,
+		Sha512	     = GMIME_DIGEST_ALGO_SHA512,
+		Sha224	     = GMIME_DIGEST_ALGO_SHA224,
+		Md4	     = GMIME_DIGEST_ALGO_MD4,
+		Crc32	     = GMIME_DIGEST_ALGO_CRC32,
+		Crc32Rfc1510 = GMIME_DIGEST_ALGO_CRC32_RFC1510,
+		Crc32Rfc2440 = GMIME_DIGEST_ALGO_CRC32_RFC2440,
+	};
+
+	enum struct Trust {
+		Unknown	      = GMIME_TRUST_UNKNOWN,
+		Undefined     = GMIME_TRUST_UNDEFINED,
+		Never	      = GMIME_TRUST_NEVER,
+		Marginal      = GMIME_TRUST_MARGINAL,
+		TrustFull     = GMIME_TRUST_FULL,
+		TrustUltimate = GMIME_TRUST_ULTIMATE,
+	};
+
+	enum struct Validity {
+		Unknown	  = GMIME_VALIDITY_UNKNOWN,
+		Undefined = GMIME_VALIDITY_UNDEFINED,
+		Never	  = GMIME_VALIDITY_NEVER,
+		Marginal  = GMIME_VALIDITY_MARGINAL,
+		Full	  = GMIME_VALIDITY_FULL,
+		Ultimate  = GMIME_VALIDITY_ULTIMATE,
+	};
+
+	PubkeyAlgo pubkey_algo() const {
+		return static_cast<PubkeyAlgo>(
+			g_mime_certificate_get_pubkey_algo(self()));
+	}
+
+	DigestAlgo digest_algo() const {
+		return static_cast<DigestAlgo>(
+			g_mime_certificate_get_digest_algo(self()));
+	}
+
+	Validity id_validity() const {
+		return static_cast<Validity>(
+			g_mime_certificate_get_id_validity(self()));
+	}
+
+	Trust trust() const {
+		return static_cast<Trust>(
+			g_mime_certificate_get_trust(self()));
+	}
+
+	Option<std::string> issuer_serial() const {
+		return maybe_string(g_mime_certificate_get_issuer_serial(self()));
+	}
+	Option<std::string> issuer_name() const {
+		return maybe_string(g_mime_certificate_get_issuer_name(self()));
+	}
+
+	Option<std::string> fingerprint() const {
+		return maybe_string(g_mime_certificate_get_fingerprint(self()));
+	}
+
+	Option<std::string> key_id() const {
+		return maybe_string(g_mime_certificate_get_key_id(self()));
+	}
+
+
+	Option<std::string> name() const {
+		return maybe_string(g_mime_certificate_get_name(self()));
+	}
+
+	Option<std::string> user_id() const {
+		return maybe_string(g_mime_certificate_get_user_id(self()));
+	}
+
+	Option<::time_t> created() const {
+		if (auto t = g_mime_certificate_get_created(self()); t >= 0)
+			return t;
+		else
+			return Nothing;
+	}
+
+	Option<::time_t> expires() const {
+		if (auto t = g_mime_certificate_get_expires(self()); t >= 0)
+			return t;
+		else
+			return Nothing;
+	}
+
+private:
+	GMimeCertificate* self() const {
+		return reinterpret_cast<GMimeCertificate*>(object());
+	}
+};
+
+constexpr std::array<std::pair<MimeCertificate::PubkeyAlgo, std::string_view>, 11>
+AllPubkeyAlgos = {{
+		{ MimeCertificate::PubkeyAlgo::Default,	"default"},
+		{ MimeCertificate::PubkeyAlgo::Rsa,	"rsa"},
+		{ MimeCertificate::PubkeyAlgo::RsaE,	"rsa-encryption-only"},
+		{ MimeCertificate::PubkeyAlgo::RsaS,	"rsa-signing-only"},
+		{ MimeCertificate::PubkeyAlgo::ElgE,	"el-gamal-encryption-only"},
+		{ MimeCertificate::PubkeyAlgo::Dsa,	"dsa"},
+		{ MimeCertificate::PubkeyAlgo::Ecc,	"elliptic curve"},
+		{ MimeCertificate::PubkeyAlgo::Elg,	"el-gamal"},
+		{ MimeCertificate::PubkeyAlgo::EcDsa,	"elliptic-curve+dsa"},
+		{ MimeCertificate::PubkeyAlgo::EcDh,	"elliptic-curve+diffie-helman"},
+		{ MimeCertificate::PubkeyAlgo::EdDsa,	"elliptic-curve+dsa-2"}
+		}};
+
+constexpr Option<std::string_view> to_string_view(MimeCertificate::PubkeyAlgo algo) {
+	return to_string_view(AllPubkeyAlgos, algo);
+};
+
+
+constexpr std::array<std::pair<MimeCertificate::DigestAlgo, std::string_view>, 15>
+AllDigestAlgos = {{
+		{ MimeCertificate::DigestAlgo::Default,		"default"},
+		{ MimeCertificate::DigestAlgo::Md5,		"md5"},
+		{ MimeCertificate::DigestAlgo::Sha1,		"sha1"},
+		{ MimeCertificate::DigestAlgo::RipEmd160,	"ripemd-160"},
+		{ MimeCertificate::DigestAlgo::Md2,		"md2"},
+		{ MimeCertificate::DigestAlgo::Tiger192,	"tiger-192"},
+		{ MimeCertificate::DigestAlgo::Haval5160,	"haval-5-160"},
+		{ MimeCertificate::DigestAlgo::Sha256,		"sha-256"},
+		{ MimeCertificate::DigestAlgo::Sha384,		"sha-384"},
+		{ MimeCertificate::DigestAlgo::Sha512,		"sha-512"},
+		{ MimeCertificate::DigestAlgo::Sha224,		"sha-224"},
+		{ MimeCertificate::DigestAlgo::Md4,		"md4"},
+		{ MimeCertificate::DigestAlgo::Crc32,		"crc32"},
+		{ MimeCertificate::DigestAlgo::Crc32Rfc1510,	"crc32-rfc1510"},
+		{ MimeCertificate::DigestAlgo::Crc32Rfc2440,	"crc32-rfc2440"},
+	}};
+
+constexpr Option<std::string_view> to_string_view(MimeCertificate::DigestAlgo algo) {
+	return to_string_view(AllDigestAlgos, algo);
+};
+
+constexpr std::array<std::pair<MimeCertificate::Trust, std::string_view>, 6>
+AllTrusts = {{
+		{ MimeCertificate::Trust::Unknown,	"unknown" },
+		{ MimeCertificate::Trust::Undefined,	"undefined" },
+		{ MimeCertificate::Trust::Never,	"never" },
+		{ MimeCertificate::Trust::Marginal,	"marginal" },
+		{ MimeCertificate::Trust::TrustFull,	"trust-full" },
+		{ MimeCertificate::Trust::TrustUltimate,"trust-ultimate" },
+	}};
+
+constexpr Option<std::string_view> to_string_view(MimeCertificate::Trust trust) {
+	return to_string_view(AllTrusts, trust);
+};
+
+constexpr std::array<std::pair<MimeCertificate::Validity, std::string_view>, 6>
+AllValidities = {{
+		{ MimeCertificate::Validity::Unknown,	"unknown" },
+		{ MimeCertificate::Validity::Undefined, "undefined" },
+		{ MimeCertificate::Validity::Never,	"never" },
+		{ MimeCertificate::Validity::Marginal,	"marginal" },
+		{ MimeCertificate::Validity::Full,	"full" },
+		{ MimeCertificate::Validity::Ultimate,	"ultimate" },
+	}};
+
+constexpr Option<std::string_view> to_string_view(MimeCertificate::Validity val) {
+	return to_string_view(AllValidities, val);
+};
+
+
+
+/**
+ * Thin wrapper around a GMimeSignature
+ *
+ */
+struct MimeSignature: public Object {
+	MimeSignature(GMimeSignature *sig) : Object{G_OBJECT(sig)} {
+		if (!GMIME_IS_SIGNATURE(self()))
+			throw std::runtime_error("not a signature");
+	}
+
+	/**
+	 * Signature status
+	 *
+	 */
+	enum struct Status {
+		Valid	     = GMIME_SIGNATURE_STATUS_VALID,
+		Green	     = GMIME_SIGNATURE_STATUS_GREEN,
+		Red	     = GMIME_SIGNATURE_STATUS_RED,
+		KeyRevoked   = GMIME_SIGNATURE_STATUS_KEY_REVOKED,
+		KeyExpired   = GMIME_SIGNATURE_STATUS_KEY_EXPIRED,
+		SigExpired   = GMIME_SIGNATURE_STATUS_SIG_EXPIRED,
+		KeyMissing   = GMIME_SIGNATURE_STATUS_KEY_MISSING,
+		CrlMissing   = GMIME_SIGNATURE_STATUS_CRL_MISSING,
+		CrlTooOld    = GMIME_SIGNATURE_STATUS_CRL_TOO_OLD,
+		BadPolicy    = GMIME_SIGNATURE_STATUS_BAD_POLICY,
+		SysError     = GMIME_SIGNATURE_STATUS_SYS_ERROR,
+		TofuConflict = GMIME_SIGNATURE_STATUS_TOFU_CONFLICT
+	};
+
+	Status status() const { return static_cast<Status>(
+			g_mime_signature_get_status(self())); }
+
+	::time_t created() const { return g_mime_signature_get_created(self()); }
+	::time_t expires() const { return g_mime_signature_get_expires(self()); }
+
+
+	const MimeCertificate certificate() const {
+		return MimeCertificate{g_mime_signature_get_certificate(self())};
+	}
+
+private:
+	GMimeSignature* self() const {
+		return reinterpret_cast<GMimeSignature*>(object());
+	}
+};
+
+constexpr std::array<std::pair<MimeSignature::Status, std::string_view>, 12>
+AllMimeSignatureStatuses= {{
+		{ MimeSignature::Status::Valid,         "valid" },
+		{ MimeSignature::Status::Green,         "green" },
+		{ MimeSignature::Status::Red,		"red" },
+		{ MimeSignature::Status::KeyRevoked,	"key-revoked" },
+		{ MimeSignature::Status::KeyExpired,	"key-expired" },
+		{ MimeSignature::Status::SigExpired,	"sig-expired" },
+		{ MimeSignature::Status::KeyMissing,	"key-missing" },
+		{ MimeSignature::Status::CrlMissing,	"crl-missing" },
+		{ MimeSignature::Status::CrlTooOld,	"crl-too-old" },
+		{ MimeSignature::Status::BadPolicy,	"bad-policy" },
+		{ MimeSignature::Status::SysError,	"sys-error" },
+		{ MimeSignature::Status::TofuConflict,	"tofu-confict" },
+	}};
+MU_ENABLE_BITOPS(MimeSignature::Status);
+
+static inline std::string to_string(MimeSignature::Status status) {
+	std::string str;
+	for (auto&& item: AllMimeSignatureStatuses) {
+		if (none_of(item.first & status))
+			continue;
+		if (!str.empty())
+			str += ", ";
+		str += item.second;
+	}
+	if (str.empty())
+		str = "none";
+
+	return str;
+}
+
+
+
+/**
+ * Thin wrapper around a GMimeCryptoContext
+ *
+ */
+struct MimeCryptoContext : public Object {
+
+	/**
+	 * Make a new PGP crypto context.
+	 *
+	 * For 'test-mode', pass a test-path; in this mode GPG will be setup
+	 * in an isolated mode so it does not affect normal usage.
+	 *
+	 * @param testpath (for unit-tests) pass a path to an existing dir to
+	 * create a pgp setup. For normal use, leave empty.
+	 *
+	 * @return A MimeCryptoContext or an error
+	 */
+	static Result<MimeCryptoContext>
+	make_gpg(const std::string& testpath={}) try {
+		if (!testpath.empty()) {
+			if (auto&& res = setup_gpg_test(testpath); !res)
+				return Err(res.error());
+		}
+		return Ok(MimeCryptoContext(g_mime_gpg_context_new()));
+	} catch (...) {
+		return Err(Error::Code::Crypto, "failed to create crypto context");
+	}
+
+	/**
+	 * Imports a stream of keys/certificates contained within stream into
+	 * the key/certificate database controlled by @this.
+	 *
+	 * @param stream
+	 *
+	 * @return number of keys imported, or an error.
+	 */
+	Result<size_t> import_keys(MimeStream& stream);
+
+	/**
+	 * Prototype for a request-password function.
+	 *
+	 * @param ctx the MimeCryptoContext making the request
+	 * @param user_id the user_id of the password being requested
+	 * @param prompt a string containing some helpful context for the prompt
+	 * @param reprompt true if this password request is a reprompt due to a
+	 * previously bad password response
+	 * @param response a stream for the application to write the password to
+	 * (followed by a newline '\n' character)
+	 *
+	 * @return nothing (Ok) or an error,
+	 */
+	using PasswordRequestFunc =
+		std::function<Result<void>(
+		const MimeCryptoContext& ctx,
+			const std::string& user_id,
+			const std::string& prompt,
+			bool reprompt,
+			MimeStream& response)>;
+	/**
+	 * Set a function to request a password.
+	 *
+	 * @param pw_func password function.
+	 */
+	void set_password_request_function(PasswordRequestFunc pw_func);
+
+
+private:
+	MimeCryptoContext(GMimeCryptoContext *ctx): Object{G_OBJECT(ctx)} {
+		if (!GMIME_IS_CRYPTO_CONTEXT(self()))
+			throw std::runtime_error("not a crypto-context");
+	}
+
+	static Result<void> setup_gpg_test(const std::string& testpath);
+
+	GMimeCryptoContext* self() const {
+		return reinterpret_cast<GMimeCryptoContext*>(object());
 	}
 };
 
@@ -314,7 +706,7 @@ public:
 	 *
 	 * @return a MimeMessage or an error.
 	 */
-	static Result<MimeMessage> make_from_string (const std::string& text);
+	static Result<MimeMessage> make_from_text (const std::string& text);
 
 
 	/**
@@ -688,6 +1080,15 @@ public:
 		if (!is_multipart_signed())
 			throw std::runtime_error("not a mime-multipart-signed");
 	}
+
+	enum struct VerifyFlags {
+		None			      = GMIME_VERIFY_NONE,
+		EnableKeyserverLookups	      = GMIME_VERIFY_ENABLE_KEYSERVER_LOOKUPS,
+		EnableOnlineCertificateChecks = GMIME_VERIFY_ENABLE_ONLINE_CERTIFICATE_CHECKS
+	};
+
+	Result<std::vector<MimeSignature>>
+	verify(VerifyFlags vflags=VerifyFlags::None) const noexcept;
 
 private:
 	GMimeMultipartSigned* self() const {

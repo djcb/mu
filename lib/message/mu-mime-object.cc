@@ -23,7 +23,7 @@
 #include "utils/mu-utils.hh"
 #include <mutex>
 #include <fcntl.h>
-
+#include <errno.h>
 
 using namespace Mu;
 
@@ -113,6 +113,90 @@ MimeObject::object_to_string() const noexcept
 
 
 /*
+ * MimeCryptoContext
+ */
+
+Result<size_t>
+MimeCryptoContext::import_keys(MimeStream& stream)
+{
+	GError *err{};
+	auto res = g_mime_crypto_context_import_keys(
+		self(), stream.self(), &err);
+
+	if (res < 0)
+		return Err(Error::Code::File, &err,
+			   "error importing keys");
+
+	return Ok(static_cast<size_t>(res));
+}
+
+void
+MimeCryptoContext::set_password_request_function(PasswordRequestFunc pw_func)
+{
+	static auto request_func = pw_func;
+
+	g_mime_crypto_context_set_request_password(
+		self(),
+		[](GMimeCryptoContext *ctx,
+		   const char *user_id,
+		   const char *prompt,
+		   gboolean reprompt,
+		   GMimeStream *response,
+		   GError **err) -> gboolean {
+			MimeStream mstream{response};
+			auto res = request_func(MimeCryptoContext(ctx),
+						std::string{user_id ? user_id : ""},
+						std::string{prompt ? prompt : ""},
+						!!reprompt,
+						mstream);
+			if (res)
+				return TRUE;
+
+			res.error().fill_g_error(err);
+			return FALSE;
+		});
+
+}
+
+Result<void>
+MimeCryptoContext::setup_gpg_test(const std::string& testpath)
+{
+	/* setup clean environment for testing; inspired by gmime */
+
+	g_setenv ("GNUPGHOME", format("%s/.gnupg", testpath.c_str()).c_str(), 1);
+
+	/* disable environment variables that gpg-agent uses for pinentry */
+	g_unsetenv ("DBUS_SESSION_BUS_ADDRESS");
+	g_unsetenv ("DISPLAY");
+	g_unsetenv ("GPG_TTY");
+
+	if (g_mkdir_with_parents((testpath + "/.gnupg").c_str(), 700) != 0)
+		return Err(Error::Code::File,
+			   "failed to create gnupg dir; err=%d", errno);
+
+	auto write_gpgfile=[&](const std::string& fname, const std::string& data)
+		-> Result<void> {
+
+		GError *err{};
+		std::string path{format("%s/%s", testpath.c_str(), fname.c_str())};
+		if (!g_file_set_contents(path.c_str(), data.c_str(), data.size(), &err))
+			return Err(Error::Code::File, &err,
+				   "failed to write %s", path.c_str());
+		else
+			return Ok();
+	};
+
+	// some more elegant way?
+	if (auto&& res = write_gpgfile("gpg.conf", "pinentry-mode loopback\n"); !res)
+		return res;
+	if (auto&& res = write_gpgfile("gpgsm.conf", "disable-crl-checks\n"))
+		return res;
+
+	return Ok();
+}
+
+
+/*
  * MimeMessage
  */
 
@@ -149,7 +233,7 @@ MimeMessage::make_from_file(const std::string& path)
 }
 
 Result<MimeMessage>
-MimeMessage::make_from_string(const std::string& text)
+MimeMessage::make_from_text(const std::string& text)
 {
 	if (auto&& stream{g_mime_stream_mem_new_with_buffer(
 				text.c_str(), text.length())}; !stream)
@@ -258,7 +342,6 @@ MimeMessage::references() const noexcept
 	return refs;
 }
 
-
 void
 MimeMessage::for_each(const ForEachFunc& func) const noexcept
 {
@@ -268,8 +351,8 @@ MimeMessage::for_each(const ForEachFunc& func) const noexcept
 	g_mime_message_foreach(
 		self(),
 		[] (GMimeObject *parent, GMimeObject *part, gpointer user_data) {
-			auto cbd{reinterpret_cast<CallbackData*>(user_data)};
-			cbd->func(MimeObject{parent}, MimeObject{part});
+			auto cb_data{reinterpret_cast<CallbackData*>(user_data)};
+			cb_data->func(MimeObject{parent}, MimeObject{part});
 		}, &cbd);
 }
 
@@ -360,4 +443,30 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 	}
 
 	return Ok(static_cast<size_t>(written));
+}
+
+
+Result<std::vector<MimeSignature>>
+MimeMultipartSigned::verify(VerifyFlags vflags) const noexcept
+{
+	GError *err{};
+	GMimeSignatureList *siglist = g_mime_multipart_signed_verify(
+		self(),
+		static_cast<GMimeVerifyFlags>(vflags),
+		&err);
+
+	if (!siglist)
+		return Err(Error::Code::Crypto, &err, "failed to verify");
+
+	std::vector<MimeSignature> sigs;
+	for (auto i = 0; i != g_mime_signature_list_length(siglist); ++i) {
+		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
+		g_object_ref(sig);
+		sigs.emplace_back(MimeSignature(sig));
+	}
+
+	g_object_unref(siglist);
+
+	return sigs;
+
 }
