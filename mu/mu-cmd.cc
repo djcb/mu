@@ -36,6 +36,7 @@
 #include "mu-contacts-cache.hh"
 #include "mu-runtime.hh"
 #include "message/mu-message.hh"
+#include "message/mu-mime-object.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
@@ -335,109 +336,6 @@ cmd_remove(Mu::Store& store, const MuConfig* opts, GError** err)
 	return foreach_msg_file(store, opts, remove_path_func, err);
 }
 
-struct _VData {
-	MuMsgPartSigStatus combined_status;
-	char*              report;
-	gboolean           oneline;
-};
-typedef struct _VData VData;
-
-static void
-each_sig(MuMsg* msg, MuMsgPart* part, VData* vdata)
-{
-	MuMsgPartSigStatusReport* report;
-
-	report = part->sig_status_report;
-	if (!report)
-		return;
-
-	if (vdata->oneline)
-		vdata->report = g_strdup_printf("%s%s%s",
-						vdata->report ? vdata->report : "",
-						vdata->report ? "; " : "",
-						report->report);
-	else
-		vdata->report = g_strdup_printf("%s%s\t%s",
-						vdata->report ? vdata->report : "",
-						vdata->report ? "\n" : "",
-						report->report);
-
-	if (vdata->combined_status == MU_MSG_PART_SIG_STATUS_BAD ||
-	    vdata->combined_status == MU_MSG_PART_SIG_STATUS_ERROR)
-		return;
-
-	vdata->combined_status = report->verdict;
-}
-
-static void
-print_verdict(VData* vdata, gboolean color, gboolean verbose)
-{
-	g_print("verdict: ");
-
-	switch (vdata->combined_status) {
-	case MU_MSG_PART_SIG_STATUS_UNSIGNED: g_print("no signature found"); break;
-	case MU_MSG_PART_SIG_STATUS_GOOD:
-		color_maybe(MU_COLOR_GREEN);
-		g_print("signature(s) verified");
-		break;
-	case MU_MSG_PART_SIG_STATUS_BAD:
-		color_maybe(MU_COLOR_RED);
-		g_print("bad signature");
-		break;
-	case MU_MSG_PART_SIG_STATUS_ERROR:
-		color_maybe(MU_COLOR_RED);
-		g_print("verification failed");
-		break;
-	case MU_MSG_PART_SIG_STATUS_FAIL:
-		color_maybe(MU_COLOR_RED);
-		g_print("error in verification process");
-		break;
-	default: g_return_if_reached();
-	}
-
-	color_maybe(MU_COLOR_DEFAULT);
-	if (vdata->report && verbose)
-		g_print("%s%s\n", (vdata->oneline) ? ";" : "\n", vdata->report);
-	else
-		g_print("\n");
-}
-
-static MuError
-cmd_verify(const MuConfig* opts, GError** err)
-{
-	MuMsg* msg;
-	int    msgopts;
-	VData  vdata;
-
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_VERIFY, MU_ERROR_INTERNAL);
-
-	if (!opts->params[1]) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing message-file parameter");
-		return MU_ERROR_IN_PARAMETERS;
-	}
-
-	msg = mu_msg_new_from_file(opts->params[1], NULL, err);
-	if (!msg)
-		return MU_ERROR;
-
-	msgopts =
-	    mu_config_get_msg_options(opts) | MU_MSG_OPTION_VERIFY | MU_MSG_OPTION_CONSOLE_PASSWORD;
-
-	vdata.report          = NULL;
-	vdata.combined_status = MU_MSG_PART_SIG_STATUS_UNSIGNED;
-	vdata.oneline         = FALSE;
-
-	mu_msg_part_foreach(msg, (MuMsgOptions)msgopts, (MuMsgPartForeachFunc)each_sig, &vdata);
-
-	if (!opts->quiet)
-		print_verdict(&vdata, !opts->nocolor, opts->verbose);
-
-	mu_msg_unref(msg);
-	g_free(vdata.report);
-
-	return vdata.combined_status == MU_MSG_PART_SIG_STATUS_GOOD ? MU_OK : MU_ERROR;
-}
 
 template <typename T>
 static void
@@ -449,6 +347,110 @@ key_val(const Mu::MaybeAnsi& col, const std::string& key, T val)
 		  << ": ";
 
 	std::cout << col.fg(Color::Green) << val << col.reset() << "\n";
+}
+
+
+static void
+print_signature(const Mu::MimeSignature& sig, const MuConfig *opts)
+{
+	Mu::MaybeAnsi col{!opts->nocolor};
+
+	const auto created{sig.created()};
+	key_val(col, "created",
+		created == 0 ? "unknown" :
+		time_to_string("%c", sig.created()).c_str());
+
+	const auto expires{sig.expires()};
+	key_val(col, "expires", expires==0 ? "never" :
+		time_to_string("%c", sig.expires()).c_str());
+
+	const auto cert{sig.certificate()};
+	key_val(col, "public-key algo",
+		to_string_view(cert.pubkey_algo()).value_or("unknown"));
+	key_val(col, "digest algo",
+		to_string_view(cert.digest_algo()).value_or("unknown"));
+	key_val(col, "id-validity",
+		to_string_view(cert.id_validity()).value_or("unknown"));
+	key_val(col, "trust",
+		to_string_view(cert.trust()).value_or("unknown"));
+	key_val(col, "issuer-serial", cert.issuer_serial().value_or("unknown"));
+	key_val(col, "issuer-name", cert.issuer_name().value_or("unknown"));
+	key_val(col, "finger-print", cert.fingerprint().value_or("unknown"));
+	key_val(col, "key-id", cert.key_id().value_or("unknown"));
+	key_val(col, "name", cert.name().value_or("unknown"));
+	key_val(col, "user-id", cert.user_id().value_or("unknown"));
+}
+
+
+static bool
+verify(const MimeMultipartSigned& sigpart, const MuConfig *opts)
+{
+	const auto sigs{sigpart.verify()};
+	Mu::MaybeAnsi col{!opts->nocolor};
+
+	if (!sigs || sigs->empty()) {
+
+		if (!opts->quiet)
+			g_print("cannot find signatures in part\n");
+
+		return true;
+	}
+
+	bool valid{true};
+	for (auto&& sig: *sigs) {
+
+		const auto status{sig.status()};
+
+		if (!opts->quiet)
+			key_val(col, "status", to_string(status));
+
+		if (opts->verbose)
+			print_signature(sig, opts);
+
+		if (none_of(sig.status() & MimeSignature::Status::Green))
+			valid = false;
+	}
+
+	return valid;
+}
+
+
+static Mu::Result<MuError>
+cmd_verify(const MuConfig* opts)
+{
+	if (!opts || opts->cmd != MU_CONFIG_CMD_VERIFY)
+		return Err(Error::Code::Internal, "error in parameters");
+
+	if (!opts->params[1])
+		return Err(Error::Code::InvalidArgument,
+			   "missing message-file parameter");
+
+	auto message{Message::make_from_path(opts->params[1])};
+	if (!message)
+		return Err(message.error());
+
+
+	if (none_of(message->flags() & Flags::Signed)) {
+		if (!opts->quiet)
+			g_print("no signed parts found\n");
+		return Ok(MU_ERROR);
+	}
+
+	bool verified{true}; /* innocent until proven guilty */
+	for(auto&& part: message->parts()) {
+
+		if (!part.is_signed())
+			continue;
+
+		const auto& mobj{part.mime_object()};
+		if (!mobj.is_multipart_signed())
+			continue;
+
+		if (!verify(MimeMultipartSigned(mobj), opts))
+			verified = false;
+	}
+
+	return Ok(verified ? MU_OK : MU_ERROR);
 }
 
 static MuError
@@ -566,7 +568,8 @@ check_params(const MuConfig* opts, GError** err)
 {
 	if (!opts->params || !opts->params[0]) { /* no command? */
 		show_usage();
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "error in parameters");
+		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS,
+				    "error in parameters");
 		return FALSE;
 	}
 
@@ -574,7 +577,6 @@ check_params(const MuConfig* opts, GError** err)
 }
 
 MuError
-Mu::mu_cmd_execute(const MuConfig* opts, GError** err)
 Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 
 	MuError merr;
@@ -596,21 +598,23 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	case MU_CONFIG_CMD_HELP:
 		return MU_OK;
 
-		/* no store needed */
+	/*
+	 * no store needed
+	 */
 
 	case MU_CONFIG_CMD_MKDIR: merr = cmd_mkdir(opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT: merr = mu_cmd_script(opts, err); break;
-	case MU_CONFIG_CMD_VIEW: merr = cmd_view(opts, err); break;
-	case MU_CONFIG_CMD_VERIFY: merr = cmd_verify(opts, err); break;
-	case MU_CONFIG_CMD_EXTRACT:
-		if (const auto res{mu_cmd_extract(opts)}; !res) {
 	case MU_CONFIG_CMD_VIEW:
 		merr = mu_error_from_result(cmd_view(opts), err);
 		break;
+	case MU_CONFIG_CMD_VERIFY: {
+		if (const auto res = cmd_verify(opts); !res) {
 			res.error().fill_g_error(err);
 			merr = MU_ERROR;
 		} else
-			merr = MU_OK;
+			merr = res.value();
+		break;
+	}
 
 	case MU_CONFIG_CMD_EXTRACT:
 		merr = mu_error_from_result(mu_cmd_extract(opts), err);
@@ -625,7 +629,7 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 		merr = with_readonly_store(cmd_info, opts, err);
 		break;
 
-		/* writable store */
+	/* writable store */
 
 	case MU_CONFIG_CMD_ADD: merr = with_writable_store(cmd_add, opts, err); break;
 	case MU_CONFIG_CMD_REMOVE: merr = with_writable_store(cmd_remove, opts, err); break;
