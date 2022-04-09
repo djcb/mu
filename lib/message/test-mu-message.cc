@@ -18,6 +18,7 @@
 */
 
 #include "mu-message.hh"
+#include "mu-mime-object.hh"
 #include <glib.h>
 
 using namespace Mu;
@@ -243,7 +244,7 @@ World!
  * some test keys.
  */
 
-constexpr const char* pub_key =
+constexpr std::string_view  pub_key =
 R"(-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mDMEYkycYxYJKwYBBAHaRw8BAQdAiE6rRtXjh1u8ZNVB02k1d3divvp0qrifJSe2
@@ -256,9 +257,10 @@ AQgHiHgEGBYKACACGwwWIQT0f3WQZJn/X54Jqiz74qC0xbNsqgUCYkysvgAKCRD7
 4qC0xbNsqsQOAPkBi4cDuf0Yk6PmDb10ARuL4E8plQTO8Ehqp/+O5JeIFQD/f3mi
 KTUVweCNFi/1aZ/ViQ4umui3RTmCi+M91A7bRQg=
 =3Xa7
------END PGP PUBLIC KEY BLOCK-----)";
+-----END PGP PUBLIC KEY BLOCK-----
+)";
 
-constexpr const char* priv_key =
+constexpr std::string_view priv_key =
 R"(-----BEGIN PGP PRIVATE KEY BLOCK-----
 
 lIYEYkycYxYJKwYBBAHaRw8BAQdAiE6rRtXjh1u8ZNVB02k1d3divvp0qrifJSe2
@@ -275,7 +277,8 @@ Caos++KgtMWzbKoFAmJMrL4ACgkQ++KgtMWzbKrEDgD5AYuHA7n9GJOj5g29dAEb
 i+BPKZUEzvBIaqf/juSXiBUA/395oik1FcHgjRYv9Wmf1YkOLprot0U5govjPdQO
 20UI
 =hlnL
------END PGP PRIVATE KEY BLOCK-----)";
+-----END PGP PRIVATE KEY BLOCK-----
+)";
 
 static void
 test_message_signed(void)
@@ -316,6 +319,27 @@ ZnR3YXJlLm5sAAoJEPvioLTFs2yqhuwBANzT0Lrex/1ohZ5t3GrAfykkbZPZUHDW
 	g_assert_true(message->bcc().empty());
 	assert_equal(message->body_text().value_or(""), "Sapperdeflap\n");
 	g_assert_true(message->flags() == (Flags::Signed|Flags::Seen|Flags::Replied));
+
+	size_t n{};
+	for (auto&& part: message->parts()) {
+		if (!part.is_signed())
+			continue;
+
+		const auto& mobj{part.mime_object()};
+		if (!mobj.is_multipart_signed())
+			continue;
+
+		const auto mpart{MimeMultipartSigned(mobj)};
+		const auto sigs{mpart.verify()};
+		g_assert_true(!!sigs && sigs->size() == 1);
+
+		g_print("status: %s\n", to_string(sigs->at(0).status()).c_str());
+
+		++n;
+	}
+
+
+	g_assert_cmpuint(n, ==, 1);
 }
 
 
