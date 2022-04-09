@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "mu-config.hh"
 #include "mu-msg.hh"
 #include "mu-msg-part.hh"
 #include "mu-cmd.hh"
@@ -40,48 +41,36 @@
 #include "utils/mu-str.h"
 
 #include "utils/mu-error.hh"
+#include "utils/mu-utils.hh"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
 using namespace Mu;
 
-static gboolean
-view_msg_sexp(MuMsg* msg, const MuConfig* opts)
+static Mu::Result<void>
+view_msg_sexp(const Message& message, const MuConfig* opts)
 {
-	::fputs(msg_to_sexp(msg, 0, mu_config_get_msg_options(opts)).to_sexp_string().c_str(),
-		stdout);
-	return TRUE;
+	::fputs(message.to_sexp().to_sexp_string().c_str(), stdout);
+	::fputs("\n", stdout);
+
+	return Ok();
 }
 
-static void
-each_part(MuMsg* msg, MuMsgPart* part, gchar** attach)
+
+static std::string /* return comma-sep'd list of attachments */
+get_attach_str(const Message& message, const MuConfig* opts)
 {
-	char *fname, *tmp;
+	std::string str;
+	seq_for_each(message.parts(), [&](auto&& part) {
+		if (auto fname = part.raw_filename(); fname) {
+			if (str.empty())
+				str = fname.value();
+			else
+				str += ", " + fname.value();
+		}
+	});
 
-	if (!mu_msg_part_maybe_attachment(part))
-		return;
-
-	fname = mu_msg_part_get_filename(part, FALSE);
-	if (!fname)
-		return;
-
-	tmp     = *attach;
-	*attach = g_strdup_printf("%s%s'%s'", *attach ? *attach : "", *attach ? ", " : "", fname);
-	g_free(tmp);
-}
-
-/* return comma-sep'd list of attachments */
-static gchar*
-get_attach_str(MuMsg* msg, const MuConfig* opts)
-{
-	gchar* attach;
-
-	const auto msgopts =
-	    (MuMsgOptions)(mu_config_get_msg_options(opts) | MU_MSG_OPTION_CONSOLE_PASSWORD);
-
-	attach = NULL;
-	mu_msg_part_foreach(msg, msgopts, (MuMsgPartForeachFunc)each_part, &attach);
-	return attach;
+	return str;
 }
 
 #define color_maybe(C)                                                                             \
@@ -91,20 +80,18 @@ get_attach_str(MuMsg* msg, const MuConfig* opts)
 	} while (0)
 
 static void
-print_field(const char* field, const char* val, gboolean color)
+print_field(const std::string& field, const std::string& val, bool color)
 {
-	if (!val)
+	if (val.empty())
 		return;
 
 	color_maybe(MU_COLOR_MAGENTA);
-	mu_util_fputs_encoded(field, stdout);
+	mu_util_fputs_encoded(field.c_str(), stdout);
 	color_maybe(MU_COLOR_DEFAULT);
 	fputs(": ", stdout);
 
-	if (val) {
-		color_maybe(MU_COLOR_GREEN);
-		mu_util_fputs_encoded(val, stdout);
-	}
+	color_maybe(MU_COLOR_GREEN);
+	mu_util_fputs_encoded(val.c_str(), stdout);
 
 	color_maybe(MU_COLOR_DEFAULT);
 	fputs("\n", stdout);
@@ -112,16 +99,16 @@ print_field(const char* field, const char* val, gboolean color)
 
 /* a summary_len of 0 mean 'don't show summary, show body */
 static void
-body_or_summary(MuMsg* msg, const MuConfig* opts)
+body_or_summary(const Message& message, const MuConfig* opts)
 {
-	const char* body;
 	gboolean    color;
-	int         my_opts = mu_config_get_msg_options(opts) | MU_MSG_OPTION_CONSOLE_PASSWORD;
+	//int         my_opts = mu_config_get_msg_options(opts) | MU_MSG_OPTION_CONSOLE_PASSWORD;
 
 	color = !opts->nocolor;
-	body  = mu_msg_get_body_text(msg, (MuMsgOptions)my_opts);
-	if (!body) {
-		if (any_of(mu_msg_get_flags(msg) & Flags::Encrypted)) {
+
+	const auto body{message.body_text()};
+	if (!body || body->empty()) {
+		if (any_of(message.flags() & Flags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
 			g_print("[No body found; "
 				"message has encrypted parts]\n");
@@ -135,125 +122,92 @@ body_or_summary(MuMsg* msg, const MuConfig* opts)
 
 	if (opts->summary_len != 0) {
 		gchar* summ;
-		summ = mu_str_summarize(body, opts->summary_len);
+		summ = mu_str_summarize(body->c_str(), opts->summary_len);
 		print_field("Summary", summ, color);
 		g_free(summ);
 	} else {
-		mu_util_print_encoded("%s", body);
-		if (!g_str_has_suffix(body, "\n"))
+		mu_util_print_encoded("%s", body->c_str());
+		if (!g_str_has_suffix(body->c_str(), "\n"))
 			g_print("\n");
 	}
 }
 
 /* we ignore fields for now */
 /* summary_len == 0 means "no summary */
-static gboolean
-view_msg_plain(MuMsg* msg, const MuConfig* opts)
+static Mu::Result<void>
+view_msg_plain(const Message& message, const MuConfig* opts)
 {
-	gchar*        attachs;
-	time_t        date;
-	const GSList* lst;
-	gboolean      color;
+	const auto color{!opts->nocolor};
 
-	color = !opts->nocolor;
+	print_field("From",    to_string(message.from()), color);
+	print_field("To",      to_string(message.to()), color);
+	print_field("Cc",      to_string(message.cc()), color);
+	print_field("Bcc",     to_string(message.bcc()), color);
+	print_field("Subject", message.subject(), color);
 
-	print_field("From", mu_msg_get_from(msg), color);
-	print_field("To", mu_msg_get_to(msg), color);
-	print_field("Cc", mu_msg_get_cc(msg), color);
-	print_field("Bcc", mu_msg_get_bcc(msg), color);
-	print_field("Subject", mu_msg_get_subject(msg), color);
+	if (auto&& date = message.date(); date != 0)
+		print_field("Date", time_to_string("%c", date), color);
 
-	if ((date = mu_msg_get_date(msg))) {
-		const auto dstr{time_to_string("%c", date)};
-		print_field("Date", dstr.c_str(), color);
-	}
+	print_field("Tags", join(message.tags(), ", "), color);
 
-	if ((lst = mu_msg_get_tags(msg))) {
-		gchar* tags;
-		tags = mu_str_from_list(lst, ',');
-		print_field("Tags", tags, color);
-		g_free(tags);
-	}
+	print_field("Attachments",get_attach_str(message, opts), color);
+	body_or_summary(message, opts);
 
-	if ((attachs = get_attach_str(msg, opts))) {
-		print_field("Attachments", attachs, color);
-		g_free(attachs);
-	}
-
-	body_or_summary(msg, opts);
-
-	return TRUE;
+	return Ok();
 }
 
-static gboolean
-handle_msg(const char* fname, const MuConfig* opts, GError** err)
+static Mu::Result<void>
+handle_msg(const std::string& fname, const MuConfig* opts)
 {
-	MuMsg*   msg;
-	gboolean rv;
-
-	msg = mu_msg_new_from_file(fname, NULL, err);
-	if (!msg)
-		return FALSE;
+	auto message{Message::make_from_path(fname)};
+	if (!message)
+		return Err(message.error());
 
 	switch (opts->format) {
-	case MU_CONFIG_FORMAT_PLAIN: rv = view_msg_plain(msg, opts); break;
-	case MU_CONFIG_FORMAT_SEXP: rv = view_msg_sexp(msg, opts); break;
-	default: g_critical("bug: should not be reached"); rv = FALSE;
+	case MU_CONFIG_FORMAT_PLAIN:
+		return view_msg_plain(*message, opts);
+	case MU_CONFIG_FORMAT_SEXP:
+		return view_msg_sexp(*message, opts);
+	default:
+		g_critical("bug: should not be reached");
+		return Err(Error::Code::Internal, "error");
 	}
-
-	mu_msg_unref(msg);
-
-	return rv;
 }
 
-static gboolean
-view_params_valid(const MuConfig* opts, GError** err)
+static Mu::Result<void>
+view_params_valid(const MuConfig* opts)
 {
 	/* note: params[0] will be 'view' */
-	if (!opts->params[0] || !opts->params[1]) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "error in parameters");
-		return FALSE;
-	}
+	if (!opts->params[0] || !opts->params[1])
+		return Err(Error::Code::InvalidArgument, "error in parameters");
 
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
 	case MU_CONFIG_FORMAT_SEXP: break;
 	default:
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "invalid output format");
-		return FALSE;
+		return Err(Error::Code::InvalidArgument, "invalid output format");
 	}
 
-	return TRUE;
+	return Ok();
 }
 
-static MuError
-cmd_view(const MuConfig* opts, GError** err)
+Mu::Result<void>
+cmd_view(const MuConfig* opts)
 {
-	int      i;
-	gboolean rv;
+	if (!opts || opts->cmd != Mu::MU_CONFIG_CMD_VIEW)
+		return Err(Error::Code::InvalidArgument, "invalid parameters");
+	if (auto res = view_params_valid(opts); !res)
+		return res;
 
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_VIEW, MU_ERROR_INTERNAL);
-
-	rv = view_params_valid(opts, err);
-	if (!rv)
-		goto leave;
-
-	for (i = 1; opts->params[i]; ++i) {
-		rv = handle_msg(opts->params[i], opts, err);
-		if (!rv)
-			break;
-
+	for (auto i = 1; opts->params[i]; ++i) {
+		if (auto res = handle_msg(opts->params[i], opts); !res)
+			return res;
 		/* add a separator between two messages? */
 		if (opts->terminator)
 			g_print("%c", VIEW_TERMINATOR);
 	}
 
-leave:
-	if (!rv)
-		return err && *err ? (MuError)(*err)->code : MU_ERROR;
-
-	return MU_OK;
+	return Ok();
 }
 
 static MuError
@@ -621,13 +575,21 @@ check_params(const MuConfig* opts, GError** err)
 
 MuError
 Mu::mu_cmd_execute(const MuConfig* opts, GError** err)
-try {
+Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
+
 	MuError merr;
 
 	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-
 	if (!check_params(opts, err))
 		return MU_G_ERROR_CODE(err);
+
+	auto mu_error_from_result = [](auto&& result, GError **err) {
+		if (!result) {
+			result.error().fill_g_error(err);
+			return MU_ERROR;
+		} else
+			return MU_OK;
+	};
 
 	switch (opts->cmd) {
 		/* already handled in mu-config.c */
@@ -642,12 +604,20 @@ try {
 	case MU_CONFIG_CMD_VERIFY: merr = cmd_verify(opts, err); break;
 	case MU_CONFIG_CMD_EXTRACT:
 		if (const auto res{mu_cmd_extract(opts)}; !res) {
+	case MU_CONFIG_CMD_VIEW:
+		merr = mu_error_from_result(cmd_view(opts), err);
+		break;
 			res.error().fill_g_error(err);
 			merr = MU_ERROR;
 		} else
 			merr = MU_OK;
+
+	case MU_CONFIG_CMD_EXTRACT:
+		merr = mu_error_from_result(mu_cmd_extract(opts), err);
 		break;
-		/* read-only store */
+	/*
+	 * read-only store
+	 */
 
 	case MU_CONFIG_CMD_CFIND: merr = with_readonly_store(mu_cmd_cfind, opts, err); break;
 	case MU_CONFIG_CMD_FIND: merr = cmd_find(opts, err); break;
