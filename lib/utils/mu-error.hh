@@ -31,6 +31,7 @@ struct Error final : public std::exception {
 	enum struct Code {
 		AccessDenied = 100, // don't overlap with MuError
 		Command,
+		Crypto,
 		File,
 		Index,
 		Internal,
