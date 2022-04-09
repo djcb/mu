@@ -44,6 +44,17 @@ all kinds of statistics
 
 ## News
 
+### 2021-07-27: mu/mu4e 1.6 is available
+
+A new release is available;  [release notes](https://github.com/djcb/mu/releases/tag/1.6) and
+grab the [tarball](https://github.com/djcb/mu/releases/download/1.6.10/mu-1.6.10.tar.xz) (latest 1.6.x release).
+
+### 2020-04-18: mu/mu4e 1.4 is available
+
+A new release is available;  [release notes](https://github.com/djcb/mu/releases/tag/1.4) and
+grab the [tarball](https://github.com/djcb/mu/releases/download/1.4.15/mu-1.4.15.tar.xz) (latest 1.4.x release).
+
+
 ### 2019-04-07: mu/mu4e 1.2 is available
 
 A new release is available; see the [release notes](https://github.com/djcb/mu/releases/tag/1.2) and
