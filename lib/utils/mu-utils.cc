@@ -33,6 +33,7 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <functional>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -40,6 +41,7 @@
 #include "mu-utils.hh"
 #include "mu-util.h"
 #include "mu-str.h"
+#include "mu-error.hh"
 
 using namespace Mu;
 
@@ -582,10 +584,39 @@ Mu::canonicalize_filename(const std::string& path, const std::string& relative_t
 	return rv;
 }
 
+
 void
 Mu::allow_warnings()
 {
 	g_test_log_set_fatal_handler(
 	    [](const char*, GLogLevelFlags, const char*, gpointer) { return FALSE; },
 	    {});
+}
+
+
+
+Mu::TempDir::TempDir()
+{
+	GError *err{};
+	gchar *tmpdir = g_dir_make_tmp("mu-tmp-XXXXXX", &err);
+	if (!tmpdir)
+		throw Mu::Error(Error::Code::File, &err,
+				"failed to create temporary directory");
+
+	path_ = tmpdir;
+	g_free(tmpdir);
+
+	g_debug("created '%s'", path_.c_str());
+}
+
+Mu::TempDir::~TempDir()
+{
+	if (::access(path_.c_str(), F_OK) != 0)
+		return; /* nothing to do */
+
+	/* ugly */
+	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};
+	::system(cmd.c_str());
+
+	g_debug("removed '%s'", path_.c_str());
 }

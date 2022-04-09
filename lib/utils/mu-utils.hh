@@ -443,6 +443,37 @@ private:
  */
 void allow_warnings();
 
+
+/**
+ * For unit-tests, a RAII tempdir.
+ *
+ */
+struct TempDir {
+	/**
+	 * Construct a temporary directory
+	 */
+	TempDir();
+
+	/**
+	 * DTOR; removes the temporary directory
+	 *
+	 *
+	 * @return
+	 */
+	~TempDir();
+
+	/**
+	 * Path to the temporary directory
+	 *
+	 * @return the path.
+	 *
+	 *
+	 */
+	const std::string& path() {return path_; }
+private:
+	std::string path_;
+};
+
 } // namespace Mu
 
 #endif /* __MU_UTILS_HH__ */
