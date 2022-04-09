@@ -28,7 +28,8 @@
 
 namespace Mu {
 
-class MimeObject; // forward declaration
+class MimeObject; // forward declaration; don't want to include for build-time
+		  // reasons.
 
 class MessagePart {
 public:
@@ -52,6 +53,15 @@ public:
 	 */
 	~MessagePart();
 
+
+	/**
+	 * Get the underlying MimeObject; you need to include mu-mime-object.hh
+	 * to do anything useful with it.
+	 *
+	 * @return reference to the mime-object
+	 */
+	const MimeObject& mime_object() const noexcept;
+
 	/**
 	 * Filename for the mime-part file. This is a "cooked" filename with
 	 * unallowed characters removed. If there's no filename specified,
@@ -69,7 +79,6 @@ public:
 	 * @return the filename or Nothing if there is none
 	 */
 	Option<std::string> raw_filename() const noexcept;
-
 
 	/**
 	 * Mime-type for the mime-part (e.g. "text/plain")
@@ -94,6 +103,14 @@ public:
 	 */
 	bool is_attachment() const noexcept;
 
+
+	/**
+	 * Is this part signed?
+	 *
+	 * @return true or false
+	 */
+	bool is_signed() const noexcept;
+
 	/**
 	 * Write (decoded) mime-part contents to string
 	 *
@@ -113,7 +130,7 @@ public:
 
 	struct Private;
 private:
-	std::unique_ptr<MimeObject> mime_obj;
+	const std::unique_ptr<MimeObject> mime_obj;
 };
 
 } // namespace Mu

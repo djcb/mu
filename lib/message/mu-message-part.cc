@@ -35,6 +35,14 @@ MessagePart::MessagePart(const MessagePart& other):
 
 MessagePart::~MessagePart() = default;
 
+const MimeObject&
+MessagePart::mime_object() const noexcept
+{
+	return *mime_obj;
+}
+
+
+
 
 Option<std::string>
 MessagePart::cooked_filename() const noexcept
@@ -55,12 +63,12 @@ MessagePart::cooked_filename() const noexcept
 	};
 
 	// a MimePart... use the name if there is one.
-	if (mime_obj->is_part())
-		return MimePart(*mime_obj).filename().map(cleanup);
+	if (mime_object().is_part())
+		return MimePart{mime_object()}.filename().map(cleanup);
 
 	// MimeMessagepart. Construct a name based on subject.
-	if (mime_obj->is_message_part()) {
-		auto msg{MimeMessagePart(*mime_obj).get_message()};
+	if (mime_object().is_message_part()) {
+		auto msg{MimeMessagePart{mime_object()}.get_message()};
 		return msg.subject()
 			.map(cleanup)
 			.value_or("no-subject") + ".eml";
@@ -73,10 +81,10 @@ return Nothing;
 Option<std::string>
 MessagePart::raw_filename() const noexcept
 {
-	if (!mime_obj->is_part())
+	if (!mime_object().is_part())
 		return Nothing;
 	else
-		return MimePart(*mime_obj).filename();
+		return MimePart{mime_object()}.filename();
 }
 
 
@@ -84,7 +92,7 @@ MessagePart::raw_filename() const noexcept
 Option<std::string>
 MessagePart::mime_type() const noexcept
 {
-	if (const auto ctype{mime_obj->content_type()}; ctype)
+	if (const auto ctype{mime_object().content_type()}; ctype)
 		return ctype->media_type() + "/" + ctype->media_subtype();
 	else
 		return Nothing;
@@ -93,29 +101,29 @@ MessagePart::mime_type() const noexcept
 size_t
 MessagePart::size() const noexcept
 {
-	if (!mime_obj->is_part())
+	if (!mime_object().is_part())
 		return 0;
 	else
-		return MimePart(*mime_obj).size();
+		return MimePart{mime_object()}.size();
 }
 
 bool
 MessagePart::is_attachment() const noexcept
 {
-	if (!mime_obj->is_part())
+	if (!mime_object().is_part())
 		return false;
 	else
-		return MimePart(*mime_obj).is_attachment();
+		return MimePart{mime_object()}.is_attachment();
 }
 
 
 Option<std::string>
 MessagePart::to_string() const noexcept
 {
-	if (mime_obj->is_part())
-		return MimePart(*mime_obj).to_string();
+	if (mime_object().is_part())
+		return MimePart{mime_object()}.to_string();
 	else
-		return mime_obj->object_to_string();
+		return mime_object().object_to_string();
 }
 
 
@@ -123,9 +131,15 @@ MessagePart::to_string() const noexcept
 Result<size_t>
 MessagePart::to_file(const std::string& path, bool overwrite) const noexcept
 {
-	if (!mime_obj->is_part())
+	if (!mime_object().is_part())
 		return Err(Error::Code::InvalidArgument,
 			   "not a part");
 	else
-		return MimePart(*mime_obj).to_file(path, overwrite);
+		return MimePart{mime_object()}.to_file(path, overwrite);
+}
+
+bool
+MessagePart::is_signed() const noexcept
+{
+	return mime_object().is_multipart_signed();
 }
