@@ -1,4 +1,4 @@
-.TH MU VERIFY 1 "June 2015" "User Manuals"
+.TH MU VERIFY 1 "April 2022" "User Manuals"
 
 .SH NAME
 
@@ -15,10 +15,6 @@ as PGP/GPG signatures) and displaying information about them. The sub-command
 works on message files, and does not require the message to be indexed in the
 database.
 
-\fBmu verify\fR depends on \fBgpg\fR, and uses the one it finds in your
-\fBPATH\fR. If you want to use another one, you need to set \fBMU_GPG_PATH\fB
-to the full path to the desired \fBgpg\fR.
-
 .SH OPTIONS
 
 .TP
@@ -26,17 +22,10 @@ to the full path to the desired \fBgpg\fR.
 attempt to find keys online (see the \fBauto-key-retrieve\fR option in the
 \fBgnupg(1)\fR documentation).
 
-\" .TP
-\" \fB\-u\fR, \fB\-\-use\-agent\fR attempt to use the GPG-agent (see the the
-\" \fBgnupg-agent(1)\fR documentation). Note that GPG-agent is running many
-\" desktop-evironment; you can check whether this is the case using:
-\" .nf
-\"    $ env | grep GPG_AGENT_INFO
-\" .fi
-
 .SH EXAMPLES
 
-To display aggregated (one-line) information about the signatures in a message:
+To display aggregated (one-line) information about the verification status in a
+message:
 .nf
    $ mu verify msgfile
 .fi
@@ -50,12 +39,14 @@ If you only want to use the exit code, you can use:
 .nf
    $ mu verify --quiet msgfile
 .fi
-which does not give any output.
+which does not give any output unless there is an error.
 
 .SH RETURN VALUE
 
-\fBmu verify\fR returns 0 when all signatures could be verified to be good,
-and returns some non-zero error code when this is not the case.
+\fBmu verify\fR returns 0 when all signatures could be verified to be good, and
+returns some non-zero error code when this is not the case.
+
+When there are no signatures, returns 0 as well.
 
 .nf
 | code | meaning                        |
@@ -75,5 +66,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu (1),
-.BR gpg (1)
+.BR mu (1)
