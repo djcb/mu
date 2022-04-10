@@ -170,7 +170,7 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 	g_unsetenv ("DISPLAY");
 	g_unsetenv ("GPG_TTY");
 
-	if (g_mkdir_with_parents((testpath + "/.gnupg").c_str(), 700) != 0)
+	if (g_mkdir_with_parents((testpath + "/.gnupg").c_str(), 0700) != 0)
 		return Err(Error::Code::File,
 			   "failed to create gnupg dir; err=%d", errno);
 
@@ -461,7 +461,6 @@ MimeMultipartSigned::verify(VerifyFlags vflags) const noexcept
 	std::vector<MimeSignature> sigs;
 	for (auto i = 0; i != g_mime_signature_list_length(siglist); ++i) {
 		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
-		g_object_ref(sig);
 		sigs.emplace_back(MimeSignature(sig));
 	}
 
@@ -469,4 +468,161 @@ MimeMultipartSigned::verify(VerifyFlags vflags) const noexcept
 
 	return sigs;
 
+}
+
+/*
+ * we need to be able to pass a crypto-context to the verify(), but
+ * g_mime_multipart_signed_verify() doesn't offer that anymore in GMime 3.x.
+ *
+ * So, add that by reimplementing it a bit (follow the upstream impl)
+ */
+
+
+static bool
+mime_types_equal (const std::string& mime_type, const std::string& official_type)
+{
+	if (g_ascii_strcasecmp(mime_type.c_str(), official_type.c_str()))
+		return true;
+
+	const auto slash_pos = official_type.find("/");
+	if (slash_pos == std::string::npos || slash_pos == 0)
+		return false;
+
+	/* If the official mime-type's subtype already begins with "x-", then there's
+	 * nothing else to check. */
+	const auto subtype{official_type.substr(slash_pos + 1)};
+	if (g_ascii_strncasecmp (subtype.c_str(), "x-", 2) == 0)
+		return false;
+	const auto supertype{official_type.substr(0, slash_pos - 1)};
+	const auto xtype{official_type.substr(0, slash_pos - 1) + "x-" + subtype};
+
+	/* Check if the "x-" version of the official mime-type matches the
+	 * supplied mime-type. For example, if the official mime-type is
+	 * "application/pkcs7-signature", then we also want to match
+	 * "application/x-pkcs7-signature". */
+	return g_ascii_strcasecmp(mime_type.c_str(), xtype.c_str()) == 0;
+}
+
+
+
+
+// Result<std::vector<MimeSignature>>
+// MimeMultipartSigned::verify(VerifyFlags vflags, const CryptoContext& ctx) const noexcept
+// {
+//	if (g_mime_multipart_get_count(self()) < 2)
+//		return Err(Error::Code::Crypto, "cannot verify, not enough subparts");
+
+//	const auto proto{content_type_parameter("protocol")};
+//	const auto sign_proto{ctx.signature_prototol().value_or("<unknown>")};
+
+//	if (!proto || !sign_proto || !mime_types_equal(*proto, sign_proto))
+//		return Err(Error::Code::Crypto, "unsupported protocol");
+
+//	const auto sig{MimeObject(g_mime_multipart_get_part(self(), GMIME_MULTIPART_SIGNED_SIGNATURE))};
+//	if (!sig || !mime_types_equal(sig.mime_type().value_or("<none>"), sign_proto))
+//		return Err(Error::Code::Crypto, "failed to find matching signature part");
+
+//	MimeObject content{g_mime_multipart_get_part(self(), GMIME_MULTIPART_SIGNED_CONTENT)};
+//	if (!content)
+//		return Err(Error::Code::Crypto, "cannot find content part");
+
+//	MimeFormatOptions fopts{format_options_new()};
+//	g_mime_format_options_set_newline_format(*fopts, GMIME_NEWLINE_FORMAT_DOS);
+
+//	MimeStream stream{g_mime_stream_mem_new()};
+//	g_mime_object_write_to_stream (content, *fopts, stream);
+//	g_mime_stream_reset (stream);
+
+//	GMimeDataWrapper *wrapper = g_mime_part_get_content(static_cast<GMimePart*>(sig));
+
+
+
+
+//	GError *err{};
+//	GMimeSignatureList *siglist = g_mime_multipart_signed_verify(
+//		self(),
+//		static_cast<GMimeVerifyFlags>(vflags),
+//		&err);
+
+//	if (!siglist)
+//		return Err(Error::Code::Crypto, &err, "failed to verify");
+
+//	std::vector<MimeSignature> sigs;
+//	for (auto i = 0; i != g_mime_signature_list_length(siglist); ++i) {
+//		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
+//		sigs.emplace_back(MimeSignature(sig));
+//	}
+
+//	g_object_unref(siglist);
+
+//	return sigs;
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+std::vector<MimeCertificate>
+MimeDecryptResult::recipients() const noexcept
+{
+	GMimeCertificateList *lst{g_mime_decrypt_result_get_recipients(self())};
+	if (!lst)
+		return {};
+
+	std::vector<MimeCertificate> certs;
+	for (int i = 0; i != g_mime_certificate_list_length(lst); ++i)
+		certs.emplace_back(
+			MimeCertificate(
+				g_mime_certificate_list_get_certificate(lst, i)));
+
+	return certs;
+}
+
+std::vector<MimeSignature>
+MimeDecryptResult::signatures() const noexcept
+{
+	GMimeSignatureList *lst{g_mime_decrypt_result_get_signatures(self())};
+	if (!lst)
+		return {};
+
+	std::vector<MimeSignature> sigs;
+	for (auto i = 0; i != g_mime_signature_list_length(lst); ++i) {
+		GMimeSignature *sig = g_mime_signature_list_get_signature(lst, i);
+		sigs.emplace_back(MimeSignature(sig));
+	}
+
+	return sigs;
+}
+
+
+
+
+Mu::Result<MimeMultipartEncrypted::Decrypted>
+MimeMultipartEncrypted::decrypt(DecryptFlags flags,
+				const std::string& session_key) const noexcept
+{
+	GError *err{};
+	GMimeDecryptResult *dres{};
+	GMimeObject *obj = g_mime_multipart_encrypted_decrypt(
+		self(),
+		static_cast<GMimeDecryptFlags>(flags),
+		session_key.empty() ? NULL : session_key.c_str(),
+		&dres,
+		&err);
+
+	if (!obj)
+		return Err(Error::Code::Crypto, &err, "failed to decrypt");
+
+	return Ok(Decrypted{MimeObject{obj}, MimeDecryptResult(dres)});
 }

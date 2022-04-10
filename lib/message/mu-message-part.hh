@@ -111,6 +111,15 @@ public:
 	 */
 	bool is_signed() const noexcept;
 
+
+	/**
+	 * Is this part encrypted?
+	 *
+	 * @return true or false
+	 */
+	bool is_encrypted() const noexcept;
+
+
 	/**
 	 * Write (decoded) mime-part contents to string
 	 *

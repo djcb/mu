@@ -143,3 +143,9 @@ MessagePart::is_signed() const noexcept
 {
 	return mime_object().is_multipart_signed();
 }
+
+bool
+MessagePart::is_encrypted() const noexcept
+{
+	return mime_object().is_multipart_encrypted();
+}

@@ -101,8 +101,7 @@ public:
 	 */
 	Object& operator=(Object&& other) noexcept {
 
-		if (this != &other) {
-			auto oldself = self_;
+		if (this != &other) {			auto oldself = self_;
 			self_ = other.self_;
 			other.self_ = nullptr;
 			if (oldself)
@@ -130,13 +129,6 @@ public:
 protected:
 	GObject* object() const { return self(); }
 
-	static Option<std::string> maybe_string(const char *str) noexcept {
-		if (!str)
-			return Nothing;
-		else
-			return std::string(str);
-	}
-
 private:
 	GObject *self() const { return self_; }
 	mutable GObject *self_{};
@@ -153,12 +145,17 @@ struct MimeContentType: public Object {
 		if (!GMIME_IS_CONTENT_TYPE(self()))
 			throw std::runtime_error("not a content-type");
 	}
-	std::string media_type() const {
+	std::string media_type() const noexcept {
 		return g_mime_content_type_get_media_type(self());
 	}
-	std::string media_subtype() const {
+	std::string media_subtype() const noexcept {
 		return g_mime_content_type_get_media_subtype(self());
 	}
+
+	Option<std::string> mime_type() const noexcept {
+		return to_option_string(g_mime_content_type_get_mime_type(self()));
+	}
+
 	bool is_type(const std::string& type, const std::string& subtype) const {
 		return g_mime_content_type_is_type(self(), type.c_str(),
 						   subtype.c_str());
@@ -168,7 +165,6 @@ private:
 		return reinterpret_cast<GMimeContentType*>(object());
 	}
 };
-
 
 
 
@@ -185,6 +181,11 @@ struct MimeStream: public Object {
 	ssize_t write(const char* buf, ::size_t size) {
 		return g_mime_stream_write(self(), buf, size);
 	}
+
+	bool reset() {
+		return g_mime_stream_reset(self()) < 0 ? false : true;
+	}
+
 
 	GMimeStream* self() const {
 		return reinterpret_cast<GMimeStream*>(object());
@@ -282,27 +283,27 @@ struct MimeCertificate: public Object {
 	}
 
 	Option<std::string> issuer_serial() const {
-		return maybe_string(g_mime_certificate_get_issuer_serial(self()));
+		return to_option_string(g_mime_certificate_get_issuer_serial(self()));
 	}
 	Option<std::string> issuer_name() const {
-		return maybe_string(g_mime_certificate_get_issuer_name(self()));
+		return to_option_string(g_mime_certificate_get_issuer_name(self()));
 	}
 
 	Option<std::string> fingerprint() const {
-		return maybe_string(g_mime_certificate_get_fingerprint(self()));
+		return to_option_string(g_mime_certificate_get_fingerprint(self()));
 	}
 
 	Option<std::string> key_id() const {
-		return maybe_string(g_mime_certificate_get_key_id(self()));
+		return to_option_string(g_mime_certificate_get_key_id(self()));
 	}
 
 
 	Option<std::string> name() const {
-		return maybe_string(g_mime_certificate_get_name(self()));
+		return to_option_string(g_mime_certificate_get_name(self()));
 	}
 
 	Option<std::string> user_id() const {
-		return maybe_string(g_mime_certificate_get_user_id(self()));
+		return to_option_string(g_mime_certificate_get_user_id(self()));
 	}
 
 	Option<::time_t> created() const {
@@ -477,6 +478,78 @@ static inline std::string to_string(MimeSignature::Status status) {
 }
 
 
+
+
+/**
+* Thin wrapper around a GMimeDecryptResult
+ *
+ */
+struct MimeDecryptResult: public Object {
+	MimeDecryptResult (GMimeDecryptResult *decres) : Object{G_OBJECT(decres)} {
+		if (!GMIME_IS_DECRYPT_RESULT(self()))
+			throw std::runtime_error("not a decrypt-result");
+	}
+
+	std::vector<MimeCertificate> recipients() const noexcept;
+	std::vector<MimeSignature>   signatures() const noexcept;
+
+	enum struct CipherAlgo {
+		Default	    = GMIME_CIPHER_ALGO_DEFAULT,
+		Idea	    = GMIME_CIPHER_ALGO_IDEA,
+		Des3	    = GMIME_CIPHER_ALGO_3DES,
+		Cast5	    = GMIME_CIPHER_ALGO_CAST5,
+		Blowfish    = GMIME_CIPHER_ALGO_BLOWFISH,
+		Aes	    = GMIME_CIPHER_ALGO_AES,
+		Aes192	    = GMIME_CIPHER_ALGO_AES192,
+		Aes256	    = GMIME_CIPHER_ALGO_AES256,
+		TwoFish	    = GMIME_CIPHER_ALGO_TWOFISH,
+		Camellia128 = GMIME_CIPHER_ALGO_CAMELLIA128,
+		Camellia192 = GMIME_CIPHER_ALGO_CAMELLIA192,
+		Camellia256 = GMIME_CIPHER_ALGO_CAMELLIA256
+	};
+
+	CipherAlgo cipher() const noexcept {
+		return static_cast<CipherAlgo>(
+			g_mime_decrypt_result_get_cipher(self()));
+	}
+
+	using DigestAlgo = MimeCertificate::DigestAlgo;
+	DigestAlgo mdc() const noexcept {
+		return static_cast<DigestAlgo>(
+			g_mime_decrypt_result_get_mdc(self()));
+	}
+
+	Option<std::string> session_key() const noexcept {
+		return to_option_string(g_mime_decrypt_result_get_session_key(self()));
+	}
+
+
+private:
+	GMimeDecryptResult* self() const {
+		return reinterpret_cast<GMimeDecryptResult*>(object());
+	}
+};
+
+constexpr std::array<std::pair<MimeDecryptResult::CipherAlgo, std::string_view>, 12>
+AllCipherAlgos= {{
+		{ MimeDecryptResult::CipherAlgo::Default    , "default"},
+		{ MimeDecryptResult::CipherAlgo::Idea	, "idea"},
+		{ MimeDecryptResult::CipherAlgo::Des3	, "3des"},
+		{ MimeDecryptResult::CipherAlgo::Cast5	, "cast5"},
+		{ MimeDecryptResult::CipherAlgo::Blowfish	, "blowfish"},
+		{ MimeDecryptResult::CipherAlgo::Aes	, "aes"},
+		{ MimeDecryptResult::CipherAlgo::Aes192	, "aes192"},
+		{ MimeDecryptResult::CipherAlgo::Aes256	, "aes256"},
+		{ MimeDecryptResult::CipherAlgo::TwoFish	, "twofish"},
+		{ MimeDecryptResult::CipherAlgo::Camellia128, "camellia128"},
+		{ MimeDecryptResult::CipherAlgo::Camellia192, "camellia192"},
+		{ MimeDecryptResult::CipherAlgo::Camellia256, "camellia256"},
+	}};
+
+constexpr Option<std::string_view> to_string_view(MimeDecryptResult::CipherAlgo algo) {
+	return to_string_view(AllCipherAlgos, algo);
+};
+
 
 /**
  * Thin wrapper around a GMimeCryptoContext
@@ -504,6 +577,17 @@ struct MimeCryptoContext : public Object {
 		return Ok(MimeCryptoContext(g_mime_gpg_context_new()));
 	} catch (...) {
 		return Err(Error::Code::Crypto, "failed to create crypto context");
+	}
+
+
+	Option<std::string> encryption_protocol() {
+		return to_option_string(g_mime_crypto_context_get_encryption_protocol(self()));
+	}
+	Option<std::string> signature_protocol() {
+		return to_option_string(g_mime_crypto_context_get_signature_protocol(self()));
+	}
+	Option<std::string> key_exchange_protocol() {
+		return to_option_string(g_mime_crypto_context_get_key_exchange_protocol(self()));
 	}
 
 	/**
@@ -574,7 +658,7 @@ public:
 			throw std::runtime_error("not a mime-object");
 	}
 	MimeObject(GMimeObject *mobj): Object{G_OBJECT(mobj)}  {
-		if (!GMIME_IS_OBJECT(self()))
+		if (mobj && !GMIME_IS_OBJECT(self()))
 			throw std::runtime_error("not a mime-object");
 	}
 
@@ -600,6 +684,24 @@ public:
 			return MimeContentType(ct);
 	}
 
+	Option<std::string> content_type_parameter(const std::string& param) const noexcept {
+		return to_option_string(
+			g_mime_object_get_content_type_parameter(self(), param.c_str()));
+	}
+
+
+	using MimeFormatOptions =
+		deletable_unique_ptr<GMimeFormatOptions, g_mime_format_options_free>;
+
+
+	Option<size_t> write_to_stream(const MimeFormatOptions& f_opts,
+				       MimeStream& stream) {
+		auto written = g_mime_object_write_to_stream(self(), f_opts.get(), stream.self());
+		if (written < 0)
+			return Nothing;
+		else
+			return static_cast<size_t>(written);
+	}
 
 	/**
 	 * Write the object to a string.
@@ -730,7 +832,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> message_id() const noexcept {
-		return maybe_string(g_mime_message_get_message_id(self()));
+		return to_option_string(g_mime_message_get_message_id(self()));
 	}
 
 	/**
@@ -739,7 +841,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> subject() const noexcept {
-		return maybe_string(g_mime_message_get_subject(self()));
+		return to_option_string(g_mime_message_get_subject(self()));
 	}
 
 	/**
@@ -764,7 +866,7 @@ public:
 	 *
 	 */
 	using ForEachFunc = std::function<void(const MimeObject& parent,
-					       const MimeObject& part)>;
+		const MimeObject& part)>;
 
 	/**
 	 * Recursively apply func tol all parts of this message
@@ -812,7 +914,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_description() const noexcept {
-		return maybe_string(g_mime_part_get_content_description(self()));
+		return to_option_string(g_mime_part_get_content_description(self()));
 	}
 
 	/**
@@ -822,7 +924,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_id() const noexcept {
-		return maybe_string(g_mime_part_get_content_id(self()));
+		return to_option_string(g_mime_part_get_content_id(self()));
 	}
 
 	/**
@@ -832,7 +934,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_md5() const noexcept {
-		return maybe_string(g_mime_part_get_content_md5(self()));
+		return to_option_string(g_mime_part_get_content_md5(self()));
 
 	}
 
@@ -853,7 +955,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_location() const noexcept {
-		return maybe_string(g_mime_part_get_content_location(self()));
+		return to_option_string(g_mime_part_get_content_location(self()));
 	}
 
 	/**
@@ -863,7 +965,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> filename() const noexcept {
-		return maybe_string(g_mime_part_get_filename(self()));
+		return to_option_string(g_mime_part_get_filename(self()));
 	}
 
 	/**
@@ -1058,11 +1160,29 @@ public:
 			throw std::runtime_error("not a mime-multipart-encrypted");
 	}
 
+	enum struct DecryptFlags {
+		None			      = GMIME_DECRYPT_NONE,
+		ExportSessionKey	      = GMIME_DECRYPT_EXPORT_SESSION_KEY,
+		NoVerify		      = GMIME_DECRYPT_NO_VERIFY,
+		EnableKeyserverLookups	      = GMIME_DECRYPT_ENABLE_KEYSERVER_LOOKUPS,
+		EnableOnlineCertificateChecks = GMIME_DECRYPT_ENABLE_ONLINE_CERTIFICATE_CHECKS
+	};
+
+	struct Decrypted {
+		MimeObject		decrypted_object;
+		MimeDecryptResult	decrypte_result;
+	};
+
+	Result<Decrypted> decrypt(DecryptFlags flags=DecryptFlags::None,
+				  const std::string& session_key = {}) const noexcept;
+
 private:
 	GMimeMultipartEncrypted* self() const {
 		return reinterpret_cast<GMimeMultipartEncrypted*>(object());
 	}
 };
+
+MU_ENABLE_BITOPS(MimeMultipartEncrypted::DecryptFlags);
 
 
 /**
@@ -1095,6 +1215,9 @@ private:
 		return reinterpret_cast<GMimeMultipartSigned*>(object());
 	}
 };
+
+
+MU_ENABLE_BITOPS(MimeMultipartSigned::VerifyFlags);
 
 } // namespace Mu
 

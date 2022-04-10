@@ -247,48 +247,50 @@ World!
 constexpr std::string_view  pub_key =
 R"(-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-mDMEYkycYxYJKwYBBAHaRw8BAQdAiE6rRtXjh1u8ZNVB02k1d3divvp0qrifJSe2
-/vcCLDm0HE11IFRlc3QgPG11QGRqY2Jzb2Z0d2FyZS5ubD6IlAQTFgoAPAIbAwUL
-CQgHAgMiAgEGFQoJCAsCBBYCAwECHgcCF4AWIQT0f3WQZJn/X54Jqiz74qC0xbNs
-qgUCYkysVAAKCRD74qC0xbNsquJ0AP95o557wp8GoCn4Fn6RA4mX8QOVv9lGrGRu
-D42pFNyFmgD+LinWJR973YEGaGSamGwjc0vKY8nXiuY21noN+RMBYQm4OARiTJxj
-EgorBgEEAZdVAQUBAQdAdfnXbQAAgQ/2zDKh1kn0EeTZnzEgC0y+VCz+VQOhXDMD
-AQgHiHgEGBYKACACGwwWIQT0f3WQZJn/X54Jqiz74qC0xbNsqgUCYkysvgAKCRD7
-4qC0xbNsqsQOAPkBi4cDuf0Yk6PmDb10ARuL4E8plQTO8Ehqp/+O5JeIFQD/f3mi
-KTUVweCNFi/1aZ/ViQ4umui3RTmCi+M91A7bRQg=
-=3Xa7
+mDMEYlbaNhYJKwYBBAHaRw8BAQdAEgxZnlN3mIwqV89zchjFlEby8OgrbrkT+yRN
+hQhc+A+0LU11IFRlc3QgKG11IHRlc3Rpbmcga2V5KSA8bXVAZGpjYnNvZnR3YXJl
+Lm5sPoiUBBMWCgA8FiEE/HZRT+2bPjARz29Cw7FsU49t3vAFAmJW2jYCGwMFCwkI
+BwIDIgIBBhUKCQgLAgQWAgMBAh4HAheAAAoJEMOxbFOPbd7wJ2kBAIGmUDWYEPtn
+qYTwhZIdZtTa4KJ3UdtTqey9AnxJ9mzAAQDRJOoVppj5wW2xRhgYP+ysN2iBUYGE
+MhahOcNgxodbCLg4BGJW2jYSCisGAQQBl1UBBQEBB0D4Sp+GTVre7Cx5a8D3SwLJ
+/bRAVGDwqI7PL9B/cMmCTwMBCAeIeAQYFgoAIBYhBPx2UU/tmz4wEc9vQsOxbFOP
+bd7wBQJiVto2AhsMAAoJEMOxbFOPbd7w1tYA+wdfYCcwOP0QoNZZz2Yk12YkDk2R
+FsRrZZpb0GKC/a2VAP4qFceeSegcUCBTQaoeFE9vq9XiUVOO98QI8r9C8QwvBw==
+=jM/g
 -----END PGP PUBLIC KEY BLOCK-----
 )";
 
-constexpr std::string_view priv_key =
+constexpr std::string_view priv_key = // "test1234"
 R"(-----BEGIN PGP PRIVATE KEY BLOCK-----
 
-lIYEYkycYxYJKwYBBAHaRw8BAQdAiE6rRtXjh1u8ZNVB02k1d3divvp0qrifJSe2
-/vcCLDn+BwMCMFZr+icelQr/nHyufC4ON2PZG1WTURyap1CAXvV8Jgg8KAtG2olp
-Ftp22lSko5JL791GuWe5SnQaIT2I0FNVYPJiuwtcoLxT6vCutam4GLQcTXUgVGVz
-dCA8bXVAZGpjYnNvZnR3YXJlLm5sPoiUBBMWCgA8AhsDBQsJCAcCAyICAQYVCgkI
-CwIEFgIDAQIeBwIXgBYhBPR/dZBkmf9fngmqLPvioLTFs2yqBQJiTKxUAAoJEPvi
-oLTFs2yq4nQA/3mjnnvCnwagKfgWfpEDiZfxA5W/2UasZG4PjakU3IWaAP4uKdYl
-H3vdgQZoZJqYbCNzS8pjydeK5jbWeg35EwFhCZyLBGJMnGMSCisGAQQBl1UBBQEB
-B0B1+ddtAACBD/bMMqHWSfQR5NmfMSALTL5ULP5VA6FcMwMBCAf+BwMCEaDNUrOs
-FLX/HOOPlvFb4zh7IkWYnpCRX1HEWheJIlhYAtzS/EU+Ebc11ricUleyM3mKIeYb
-st5PE8NNcm40ep3RtBwNNMt/TGht4/iLfIh4BBgWCgAgAhsMFiEE9H91kGSZ/1+e
-Caos++KgtMWzbKoFAmJMrL4ACgkQ++KgtMWzbKrEDgD5AYuHA7n9GJOj5g29dAEb
-i+BPKZUEzvBIaqf/juSXiBUA/395oik1FcHgjRYv9Wmf1YkOLprot0U5govjPdQO
-20UI
-=hlnL
+lIYEYlbaNhYJKwYBBAHaRw8BAQdAEgxZnlN3mIwqV89zchjFlEby8OgrbrkT+yRN
+hQhc+A/+BwMCz6T2uBpk6a7/rXyE7C1bRbGjP6YSFcyRFz8VRV3Xlm7z6rdbdKZr
+8R15AtLvXA4DOK5GiZRB2VbIxi8B9CtZ9qQx6YbQPkAmRzISGAjECrQtTXUgVGVz
+dCAobXUgdGVzdGluZyBrZXkpIDxtdUBkamNic29mdHdhcmUubmw+iJQEExYKADwW
+IQT8dlFP7Zs+MBHPb0LDsWxTj23e8AUCYlbaNgIbAwULCQgHAgMiAgEGFQoJCAsC
+BBYCAwECHgcCF4AACgkQw7FsU49t3vAnaQEAgaZQNZgQ+2ephPCFkh1m1NrgondR
+21Op7L0CfEn2bMABANEk6hWmmPnBbbFGGBg/7Kw3aIFRgYQyFqE5w2DGh1sInIsE
+YlbaNhIKKwYBBAGXVQEFAQEHQPhKn4ZNWt7sLHlrwPdLAsn9tEBUYPCojs8v0H9w
+yYJPAwEIB/4HAwI9MZDWcsoiJ/9oV5DRiAedeo3Ta/1M+aKfeNV36Ch1VGLwQF3E
+V77qIrJlsT8CwOZHWUksUBENvG3ak3vd84awHHaHoTmoFwtISfvQrFK0iHgEGBYK
+ACAWIQT8dlFP7Zs+MBHPb0LDsWxTj23e8AUCYlbaNgIbDAAKCRDDsWxTj23e8NbW
+APsHX2AnMDj9EKDWWc9mJNdmJA5NkRbEa2WaW9Bigv2tlQD+KhXHnknoHFAgU0Gq
+HhRPb6vV4lFTjvfECPK/QvEMLwc=
+=w1Nc
 -----END PGP PRIVATE KEY BLOCK-----
 )";
+
 
 static void
 test_message_signed(void)
 {
 	constexpr const char *msgtext =
-R"(From: Mu Test <mu@djcbsoftware.nl>
-To: boo@example.com
-Subject: object
-Date: Thu, 07 Apr 2022 00:04:26 +0300
-Message-ID: <87bkxdyl8i.fsf@djcbsoftware.nl>
+R"(Return-Path: <diggler@gmail.com>
+From: Mu Test <mu@djcbsoftware.nl>
+To: Mu Test <mu@djcbsoftware.nl>
+Subject: boo
+Date: Wed, 13 Apr 2022 17:19:08 +0300
+Message-ID: <878rs9ysin.fsf@djcbsoftware.nl>
 MIME-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha512; protocol="application/pgp-signature"
@@ -303,13 +305,24 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iIkEARYKADEWIQT0f3WQZJn/X54Jqiz74qC0xbNsqgUCYk4BBRMcbXVAZGpjYnNv
-ZnR3YXJlLm5sAAoJEPvioLTFs2yqhuwBANzT0Lrex/1ohZ5t3GrAfykkbZPZUHDW
-1fhWrQ9GIP+8AQCqlgXEteQjQC0VLPNuV4Iz1wOq/e+Hn0KEBNr230v9AQ==
-=PeYV
+iIkEARYKADEWIQT8dlFP7Zs+MBHPb0LDsWxTj23e8AUCYlbcLhMcbXVAZGpjYnNv
+ZnR3YXJlLm5sAAoJEMOxbFOPbd7waIkA/jK1oY7OL8vrDoubNYxamy8HHmwtvO01
+Q46aYjxe0As6AP90bcAZ3dcn5RcTJaM0UhZssguawZ+tnriD3+5DPkMMCg==
+=e32+
 -----END PGP SIGNATURE-----
 --=-=-=--
 )";
+	TempDir tempdir;
+	auto ctx{MimeCryptoContext::make_gpg(tempdir.path())};
+	g_assert_true(!!ctx);
+
+	MimeStream stream{g_mime_stream_mem_new()};
+	stream.write(pub_key.data(), pub_key.size());
+	stream.reset();
+
+	auto imported = ctx->import_keys(stream);
+	g_assert_cmpuint(*imported, ==, 1);
+
 	auto message{Message::make_from_text(
 			msgtext,
 			"/home/test/Maildir/inbox/cur/1649279777.107710_1.mindcrime:2,RS",
@@ -331,13 +344,99 @@ ZnR3YXJlLm5sAAoJEPvioLTFs2yqhuwBANzT0Lrex/1ohZ5t3GrAfykkbZPZUHDW
 
 		const auto mpart{MimeMultipartSigned(mobj)};
 		const auto sigs{mpart.verify()};
+
 		g_assert_true(!!sigs && sigs->size() == 1);
-
-		g_print("status: %s\n", to_string(sigs->at(0).status()).c_str());
-
 		++n;
 	}
 
+	g_assert_cmpuint(n, ==, 1);
+}
+
+
+static void
+test_message_signed_encrypted(void)
+{
+	constexpr const char *msgtext =
+R"(From: "Mu Test" <mu@djcbsoftware.nl>
+To: mu@djcbsoftware.nl
+Subject: encrypted and signed
+Date: Wed, 13 Apr 2022 17:32:30 +0300
+Message-ID: <87lew9xddt.fsf@djcbsoftware.nl>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DeEerj6WhdZASAQdAKdZwmugAlQA8c06Q5iQw4rwSADgfEWBTWlI6tDw7hEAw
+0qSSeeQbA802qjG5TesaDVbFoPp1gOESt67HkJBABj9niwZLnjbzVRXKFoPTYabu
+1MBWAQkCEO6kS0N73XQeJ9+nDkUacRX6sSgVM0j+nRdCGcrCQ8MOfLd9KUUBxpXy
+r/rIBMpZGOIpKJnoZ2x75VsQIp/ADHLe9zzXVe0tkahXJqvLo26w3gn4NSEIEDp6
+4T/zMZImqGrENaixNmRiRSAnwPkLt95qJGOIqYhuW3X6hMRZyU4zDNwkAvnK+2Fv
+Wjd+EmiFzh5tvCmPOSj556YFMV7UpFWO9VznXX/T5+f4i+95Lsm9Uotv/SiNtNQG
+DPU3wiL347SzmPFXckknjlzSzDL1XbdbHdmoJs0uNnbaZxRwhkuTYbLHdpBZrBgR
+C0bdoCx44QVU8HaZ2x91h3GoM/0q5bqM/rvCauwbokiJgAUrznecNPY=
+=Ado7
+-----END PGP MESSAGE-----
+--=-=-=--
+)";
+	TempDir tempdir;
+	auto ctx{MimeCryptoContext::make_gpg(tempdir.path())};
+	g_assert_true(!!ctx);
+
+	/// test1234
+	ctx->set_password_request_function(
+		[](const MimeCryptoContext& ctx,
+		   const std::string& user_id,
+		   const std::string& prompt,
+		   bool reprompt,
+		   MimeStream& response)->Result<void> {
+
+			return Err(Error::Code::Internal, "boo");
+
+			g_warning("boo!");
+
+			return Ok();
+		});
+
+	{
+		MimeStream stream{g_mime_stream_mem_new()};
+		stream.write(priv_key.data(), priv_key.size());
+		stream.reset();
+		g_assert_cmpint(ctx->import_keys(stream).value_or(-1),==,1);
+	}
+
+	auto message{Message::make_from_text(
+			msgtext,
+			"/home/test/Maildir/inbox/cur/1649279888.107710_1.mindcrime:2,FS",
+			"/archive")};
+	g_assert_true(!!message);
+	g_assert_true(message->flags() == (Flags::Encrypted|Flags::Seen|Flags::Flagged));
+
+	size_t n{};
+	for (auto&& part: message->parts()) {
+
+		if (!part.is_encrypted())
+			continue;
+
+		const auto& mobj{part.mime_object()};
+		if (!mobj.is_multipart_encrypted())
+			continue;
+
+		const auto mpart{MimeMultipartEncrypted(mobj)};
+		const auto decres = mpart.decrypt();
+		g_assert_true(!!decres);
+
+		++n;
+	}
 
 	g_assert_cmpuint(n, ==, 1);
 }
@@ -355,6 +454,8 @@ main(int argc, char* argv[])
 			test_message_attachments);
 	g_test_add_func("/message/message/signed",
 			test_message_signed);
+	g_test_add_func("/message/message/signed-encrypted",
+			test_message_signed_encrypted);
 
 	return g_test_run();
 }
