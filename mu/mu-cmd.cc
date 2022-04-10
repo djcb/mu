@@ -385,7 +385,11 @@ print_signature(const Mu::MimeSignature& sig, const MuConfig *opts)
 static bool
 verify(const MimeMultipartSigned& sigpart, const MuConfig *opts)
 {
-	const auto sigs{sigpart.verify()};
+	using VFlags = MimeMultipartSigned::VerifyFlags;
+	const auto vflags{opts->auto_retrieve ?
+		VFlags::EnableKeyserverLookups: VFlags::None};
+
+	const auto sigs{sigpart.verify(vflags)};
 	Mu::MaybeAnsi col{!opts->nocolor};
 
 	if (!sigs || sigs->empty()) {
