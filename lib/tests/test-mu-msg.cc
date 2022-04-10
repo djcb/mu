@@ -114,7 +114,7 @@ test_mu_msg_02(void)
 	g_assert_true(contacts[1].name.empty());
 	g_assert_true(contacts[1].email == "help-gnu-emacs@gnu.org");
 
-	g_print("flags: %s\n", Mu::flags_to_string(mu_msg_get_flags(msg)).c_str());
+	g_print("flags: %s\n", Mu::to_string(mu_msg_get_flags(msg)).c_str());
 	g_assert_true(mu_msg_get_flags(msg) == (Flags::Seen|Flags::MailingList));
 
 	mu_msg_unref(msg);

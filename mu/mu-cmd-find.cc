@@ -278,7 +278,7 @@ static const char*
 flags_s(Flags flags)
 {
 	static char buf[64];
-	const auto flagstr{flags_to_string(flags)};
+	const auto flagstr{to_string(flags)};
 
 	::strncpy(buf, flagstr.c_str(), sizeof(buf) - 1);
 

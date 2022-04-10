@@ -326,7 +326,7 @@ add_row(GtkTreeStore* store, MuMsg* msg, GtkTreeIter* treeiter)
 	from    = empty_or_display_contact(mu_msg_get_from(msg));
 	to      = empty_or_display_contact(mu_msg_get_to(msg));
 
-	flag_str =  flags_to_string(mu_msg_get_flags(msg));
+	flag_str =  to_string(mu_msg_get_flags(msg));
 
 	/* if (0) { */
 	/*      GtkTreeIter myiter; */

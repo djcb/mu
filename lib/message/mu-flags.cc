@@ -27,7 +27,7 @@
 using namespace Mu;
 
 std::string
-Mu::flags_to_string(Flags flags)
+Mu::to_string(Flags flags)
 {
 	std::string str;
 

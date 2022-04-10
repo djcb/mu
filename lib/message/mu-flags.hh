@@ -328,7 +328,7 @@ flags_filter(Flags flags, MessageFlagCategory cat)
  *
  * @return string as a sequence of message-flag shortcuts
  */
-std::string flags_to_string(Flags flags);
+std::string to_string(Flags flags);
 
 } // namespace Mu
 

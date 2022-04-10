@@ -480,7 +480,7 @@ determine_dst_filename(const std::string& file, Flags flags,
 		return std::move(parts.base);
 
 	const auto flagstr{
-		flags_to_string(
+		to_string(
 			flags_filter(
 				flags, MessageFlagCategory::Mailfile))};
 

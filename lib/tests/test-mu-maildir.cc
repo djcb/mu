@@ -191,7 +191,7 @@ test_mu_maildir_flags_from_path(void)
 		g_assert_true(!!res);
 		if (g_test_verbose())
 			g_print("%s -> <%s>\n", paths[i].path,
-				flags_to_string(res.value()).c_str());
+				to_string(res.value()).c_str());
 		g_assert_true(res.value() == paths[i].flags);
 	}
 }
