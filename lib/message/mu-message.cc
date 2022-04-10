@@ -250,7 +250,8 @@ get_mailing_list(const MimeMessage& mime_msg)
 }
 
 static bool /* heuristic */
-looks_like_attachment(const MimePart& part, const Option<MimeContentType>& ctype)
+looks_like_attachment(const MimeObject& parent,
+		      const MimePart& part, const MimeContentType& ctype)
 {
 	constexpr std::array<std::pair<const char*, const char*>, 4> att_types = {{
 			{"image", "*"},
@@ -259,22 +260,30 @@ looks_like_attachment(const MimePart& part, const Option<MimeContentType>& ctype
 			{"application", "x-patch"}
 		}};
 
-	if (part.is_attachment()) /* explicity set as attachment */
-		return true;
-	else if (!ctype)
-		return false;
+	if (parent) { /* crypto multipart children are not considered attachments */
+		if (const auto parent_ctype{parent.content_type()}; parent_ctype) {
+			if (parent_ctype->is_type("multipart", "signed") ||
+			    parent_ctype->is_type("multipart", "encrypted"))
+				return false;
+		}
+	}
 
 	/* we also consider patches, images, audio, and non-pgp-signature
 	 * application attachments to be attachments... */
-	if (ctype->is_type("*", "pgp-signature"))
+	if (ctype.is_type("*", "pgp-signature"))
 		return false; /* don't consider as a signature */
 
-	if (ctype->is_type("text", "*") &&
-	    (ctype->is_type("*", "plain") || ctype->is_type("*", "html")))
+	if (ctype.is_type("text", "*") &&
+	    (ctype.is_type("*", "plain") || ctype.is_type("*", "html")))
 		return false; /* not a signature */
 
+	/* if not one of those special types, consider it any attachment
+	 * if it says so */
+	if (part.is_attachment())
+		return true;
+
 	const auto it = seq_find_if(att_types, [&](auto&& item){
-		return ctype->is_type(item.first, item.second);
+		return ctype.is_type(item.first, item.second);
 	});
 	return it != att_types.cend(); /* if found, it's an attachment */
 }
@@ -302,13 +311,14 @@ accumulate_text(const MimePart& part, Message::Private& info,
 }
 
 static void
-process_part(const MimePart& part, Message::Private& info)
+process_part(const MimeObject& parent, const MimePart& part,
+	     Message::Private& info)
 {
 	const auto ctype{part.content_type()};
 	if (!ctype)
 		return;
 
-	if (looks_like_attachment(part, ctype))
+	if (looks_like_attachment(parent, part, *ctype))
 		info.flags |= Flags::HasAttachment;
 
 	// if there are text parts, gather.
@@ -341,11 +351,12 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 
 		if (part.is_part() ||
 		    part.is_message_part() ||
-		    part.is_multipart_signed())
+		    part.is_multipart_signed() ||
+		    part.is_multipart_encrypted())
 			info.parts.emplace_back(part);
 
 		if (part.is_part())
-			process_part(part, info);
+			process_part(parent, part, info);
 
 		if (part.is_multipart_signed())
 			info.flags |= Flags::Signed;
