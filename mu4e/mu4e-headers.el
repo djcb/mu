@@ -297,8 +297,7 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 In the format needed for `mu4e-read-option'.")
 
 
-;;; Clear
-
+(defvar mu4e~headers-search-start nil)
 (defvar mu4e~headers-render-start nil)
 (defvar mu4e~headers-render-time  nil)
 
@@ -311,6 +310,9 @@ This is mostly useful for profiling.")
 
 
 
+
+;;; Clear
+
 (defun mu4e~headers-clear (&optional msg)
   "Clear the header buffer and related data structures."
   (when (buffer-live-p (mu4e-get-headers-buffer))
@@ -322,11 +324,6 @@ This is mostly useful for profiling.")
         (when msg
           (goto-char (point-min))
           (insert (propertize msg 'face 'mu4e-system-face 'intangible t)))))))
-
-
-
-
-
 
 
 ;;; Misc
@@ -821,6 +818,7 @@ true, do *not* update the query history stack."
       (switch-to-buffer buf))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
+    (setq mu4e~headers-search-start (float-time))
     (mu4e--server-find
      rewritten-expr
      mu4e-search-threads
@@ -830,27 +828,34 @@ true, do *not* update the query history stack."
      mu4e-headers-skip-duplicates
      mu4e-headers-include-related)))
 
+(defun mu4e~headers-benchmark-message (count)
+  "Get some report message for messaging search and rendering speed."
+  (if (and mu4e-headers-report-render-time
+	   mu4e~headers-search-start
+	   mu4e~headers-render-start
+	   (> count 0))
+      (let ((render-time-ms (* 1000(- (float-time) mu4e~headers-render-start)))
+	    (search-time-ms (* 1000(- (float-time) mu4e~headers-search-start))))
+	(format (concat
+		 "; search: %0.1f ms (%0.2f ms/msg)"
+		 "; render: %0.1f ms (%0.2f ms/msg)")
+		search-time-ms (/ search-time-ms count)
+		render-time-ms (/ render-time-ms count)))
+    ""))
+
 (defun mu4e~headers-found-handler (count)
   "Create a one line description of the number of headers found
 after the end of the search results."
-  (when mu4e~headers-render-start ;; for benchmarking.
-    (setq mu4e~headers-render-time
-          (- (float-time) mu4e~headers-render-start)
-          mu4e~headers-render-start nil))
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
       (save-excursion
         (goto-char (point-max))
         (let ((inhibit-read-only t)
               (str (if (zerop count) mu4e~no-matches mu4e~end-of-results))
-              (msg (format "Found %d matching message%s"
-                           count (if (= 1 count) "" "s")))
-              (render-time-ms (when mu4e~headers-render-time
-                                (* mu4e~headers-render-time 1000))))
-          ;; benchmarking.
-          (when (and mu4e-headers-report-render-time (> count 0))
-            (setq msg (concat msg (format " (rendering took %0.1f ms, %0.2f ms/msg)"
-                                          render-time-ms (/ render-time-ms count)))))
+              (msg (format "Found %d matching message%s%s"
+                           count (if (= 1 count) "" "s")
+			   (mu4e~headers-benchmark-message count))))
+
           (insert (propertize str 'face 'mu4e-system-face 'intangible t))
           (unless (zerop count)
             (mu4e-message "%s" msg))))
