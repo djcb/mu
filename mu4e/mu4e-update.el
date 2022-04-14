@@ -170,8 +170,10 @@ throbber."
         (process-send-string proc
                              (concat (read-passwd mu4e--get-mail-ask-password)
                                      "\n"))
-      ;; TODO kill process?
-      (mu4e-error "Unrecognized password request")))
+      (setq mu4e~update-status
+            (format "authorisation failed @ %s" (format-time-string "%H:%M")))
+      (mu4e-error "Unrecognized password request")
+      (kill-process proc)))
   (when (process-buffer proc)
     (let ((inhibit-read-only t)
           (procwin (get-buffer-window (process-buffer proc))))
@@ -281,6 +283,8 @@ run in the background; otherwise, pop up a window."
             (make-progress-reporter
              (mu4e-format "Retrieving mail..."))))
     (set-process-sentinel proc 'mu4e--update-sentinel-func)
+    (setq mu4e~update-status
+          (concat "started update @ " (format-time-string "%H:%M")))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))

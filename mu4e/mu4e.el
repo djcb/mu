@@ -216,6 +216,8 @@ invoke
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
            checked updated cleaned-up)
           (run-hooks 'mu4e-index-updated-hook)
+          (setq mu4e~update-status (format "index complete @ %s"
+                                           (format-time-string "%H:%M")))
 	  ;; backward compatibility...
 	  (unless (zerop (+ updated cleaned-up))
 	    mu4e-message-changed-hook)

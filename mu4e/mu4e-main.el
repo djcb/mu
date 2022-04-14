@@ -306,8 +306,12 @@ When REFRESH is non nil refresh infos from server."
                              (lambda()(interactive)
 			       (mu4e-context-switch)(revert-buffer)))
 
-       (mu4e--main-action-str "\t* [U]pdate email & database\n"
-                             'mu4e-update-mail-and-index)
+       (mu4e--main-action-str (concat
+                               "\t* [U]pdate email & database "
+                               (when mu4e~update-status
+                                   (format "(%s)" mu4e~update-status))
+                                   "\n")
+                              'mu4e-update-mail-and-index)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)

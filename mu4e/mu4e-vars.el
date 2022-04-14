@@ -371,6 +371,8 @@ header-view, not including, for instance, the message body.")
 ;;; Run-time variables / constants
 
 ;;;; Main
+(defvar mu4e~update-status nil
+  "The current update status of the mail collection.")
 
 ;;;; Other
 
