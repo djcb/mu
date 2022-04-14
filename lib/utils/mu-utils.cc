@@ -28,6 +28,7 @@
 #define GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include <string.h>
 #include <iostream>
