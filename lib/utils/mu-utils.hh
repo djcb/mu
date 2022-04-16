@@ -25,6 +25,7 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
+#include <memory>
 #include <cstdarg>
 #include <glib.h>
 #include <ostream>
@@ -190,6 +191,19 @@ from_gchars(gchar*&& str)
 	return s;
 }
 
+// https://stackoverflow.com/questions/19053351/how-do-i-use-a-custom-deleter-with-a-stdunique-ptr-member
+template <auto fn>
+struct deleter_from_fn {
+	template <typename T>
+	constexpr void operator()(T* arg) const {
+		fn(arg);
+	}
+};
+template <typename T, auto fn>
+using deletable_unique_ptr = std::unique_ptr<T, deleter_from_fn<fn>>;
+
+
+
 using Clock    = std::chrono::steady_clock;
 using Duration = Clock::duration;
 
@@ -282,7 +296,6 @@ to_string(const T& val)
 
 	return sstr.str();
 }
-
 
 /**
  * Like std::find_if, but using sequence instead of a range.
