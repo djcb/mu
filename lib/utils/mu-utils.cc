@@ -326,6 +326,19 @@ Mu::date_to_time_t_string(int64_t t)
 std::string
 Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 {
+	/* Temporary... https://github.com/djcb/mu/issues/2230 */
+	{
+		const char *end{};
+		if (!g_utf8_validate(frm.c_str(), frm.length(), &end)) {
+			std::string hex{};
+			for (auto i = 0; i != end - frm.c_str(); ++i)
+				hex += format("%02x", frm[i]);
+			g_critical("%s: non-utf8 format (%s)",
+				   __func__, hex.c_str());
+			return {};
+		}
+	}
+
 	GDateTime* dt = std::invoke([&] {
 		if (utc)
 			return g_date_time_new_from_unix_utc(t);
@@ -339,25 +352,14 @@ Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 		return {};
 	}
 
-	char* str = g_date_time_format(dt, frm.c_str());
+	char* str = g_date_time_format(dt, frm.c_str()); /* always utf8 */
 	g_date_time_unref(dt);
 	if (!str) {
-		g_warning("failed to format time");
+		g_warning("failed to format time with format '%s'", frm.c_str());
 		return {};
 	}
 
-	/* ensure it's utf8 */
-	char* utf8_str = g_locale_to_utf8(str, -1, NULL, NULL, NULL);
-	g_free(str);
-	if (!utf8_str) {
-		g_warning("failed to convert date to utf8");
-		return {};
-	}
-
-	std::string res{utf8_str};
-	g_free(utf8_str);
-
-	return res;
+	return from_gchars(std::move(str)/*consumed*/);
 }
 
 static std::string
