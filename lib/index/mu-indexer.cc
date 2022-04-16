@@ -276,12 +276,18 @@ Indexer::Private::start(const Indexer::Config& conf)
                                  fq_.size());
                 }
 
-
                 // now there may still be messages in the work queue...
-                // finish those; this is a bit ugly; perhaps we should
-                // handle SIGTERM etc.
-                while (!fq_.empty())
-                        std::this_thread::sleep_for(100ms);
+                // finish those; it's possible that the thread has already
+                // stopped, so stop when there's no progress. A bit ugly, fixed
+                // in >= 1.7
+                {
+                        while (!fq_.empty()) {
+                                const auto n = fq_.size();
+                                std::this_thread::sleep_for(250ms);
+                                if (fq_.size() >= n)
+                                        break; // no progress.
+                        }
+                }
 
                 if (conf_.cleanup) {
                         g_debug ("starting cleanup");
