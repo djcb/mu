@@ -58,6 +58,7 @@ libmu_utils_la_SOURCES=						\
 	mu-logger.cc						\
 	mu-logger.hh						\
 	mu-option.hh						\
+	mu-option.cc						\
 	mu-readline.cc						\
 	mu-readline.hh						\
 	mu-result.hh						\

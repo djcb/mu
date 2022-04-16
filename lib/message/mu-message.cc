@@ -89,8 +89,10 @@ Message::Message(const std::string& path, const std::string& mdir):
 	else
 		priv_->mime_msg = std::move(msg.value());
 
-	priv_->doc.add(Field::Id::Path,
-		       Mu::from_gchars(g_canonicalize_filename(path.c_str(), NULL)));
+	auto xpath{to_string_opt_gchar(g_canonicalize_filename(path.c_str(), NULL))};
+	if (xpath)
+		priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
+
 	if (!mdir.empty())
 		priv_->doc.add(Field::Id::Maildir, mdir);
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf.st_size));
@@ -103,10 +105,10 @@ Message::Message(const std::string& text, const std::string& path,
 		 const std::string& mdir):
 	priv_{std::make_unique<Private>()}
 {
-	if (!path.empty())
-		priv_->doc.add(Field::Id::Path,
-			       Mu::from_gchars(
-				       g_canonicalize_filename(path.c_str(), NULL)));
+	auto xpath{to_string_opt_gchar(g_canonicalize_filename(path.c_str(), NULL))};
+	if (xpath)
+		priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
+
 	if (!mdir.empty())
 		priv_->doc.add(Field::Id::Maildir, mdir);
 
@@ -246,7 +248,7 @@ get_mailing_list(const MimeMessage& mime_msg)
 
 	g_free(dechdr);
 
-	return from_gchars(std::move(res));
+	return to_string_opt_gchar(std::move(res));
 }
 
 static bool /* heuristic */

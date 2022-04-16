@@ -41,9 +41,6 @@ MessagePart::mime_object() const noexcept
 	return *mime_obj;
 }
 
-
-
-
 Option<std::string>
 MessagePart::cooked_filename() const noexcept
 {
@@ -123,7 +120,7 @@ MessagePart::to_string() const noexcept
 	if (mime_object().is_part())
 		return MimePart{mime_object()}.to_string();
 	else
-		return mime_object().object_to_string();
+		return mime_object().to_string_opt();
 }
 
 

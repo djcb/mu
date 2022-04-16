@@ -153,7 +153,7 @@ struct MimeContentType: public Object {
 	}
 
 	Option<std::string> mime_type() const noexcept {
-		return to_option_string(g_mime_content_type_get_mime_type(self()));
+		return to_string_opt(g_mime_content_type_get_mime_type(self()));
 	}
 
 	bool is_type(const std::string& type, const std::string& subtype) const {
@@ -193,7 +193,7 @@ struct MimeStream: public Object {
 };
 
 template<typename S, typename T>
-constexpr Option<std::string_view> to_string_view(const S& seq, T t) {
+constexpr Option<std::string_view> to_string_view_opt(const S& seq, T t) {
 	auto&& it = seq_find_if(seq, [&](auto&& item){return item.first == t;});
 	if (it == seq.cend())
 		return Nothing;
@@ -283,27 +283,27 @@ struct MimeCertificate: public Object {
 	}
 
 	Option<std::string> issuer_serial() const {
-		return to_option_string(g_mime_certificate_get_issuer_serial(self()));
+		return to_string_opt(g_mime_certificate_get_issuer_serial(self()));
 	}
 	Option<std::string> issuer_name() const {
-		return to_option_string(g_mime_certificate_get_issuer_name(self()));
+		return to_string_opt(g_mime_certificate_get_issuer_name(self()));
 	}
 
 	Option<std::string> fingerprint() const {
-		return to_option_string(g_mime_certificate_get_fingerprint(self()));
+		return to_string_opt(g_mime_certificate_get_fingerprint(self()));
 	}
 
 	Option<std::string> key_id() const {
-		return to_option_string(g_mime_certificate_get_key_id(self()));
+		return to_string_opt(g_mime_certificate_get_key_id(self()));
 	}
 
 
 	Option<std::string> name() const {
-		return to_option_string(g_mime_certificate_get_name(self()));
+		return to_string_opt(g_mime_certificate_get_name(self()));
 	}
 
 	Option<std::string> user_id() const {
-		return to_option_string(g_mime_certificate_get_user_id(self()));
+		return to_string_opt(g_mime_certificate_get_user_id(self()));
 	}
 
 	Option<::time_t> created() const {
@@ -341,8 +341,8 @@ AllPubkeyAlgos = {{
 		{ MimeCertificate::PubkeyAlgo::EdDsa,	"elliptic-curve+dsa-2"}
 		}};
 
-constexpr Option<std::string_view> to_string_view(MimeCertificate::PubkeyAlgo algo) {
-	return to_string_view(AllPubkeyAlgos, algo);
+constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::PubkeyAlgo algo) {
+	return to_string_view_opt(AllPubkeyAlgos, algo);
 };
 
 
@@ -365,8 +365,8 @@ AllDigestAlgos = {{
 		{ MimeCertificate::DigestAlgo::Crc32Rfc2440,	"crc32-rfc2440"},
 	}};
 
-constexpr Option<std::string_view> to_string_view(MimeCertificate::DigestAlgo algo) {
-	return to_string_view(AllDigestAlgos, algo);
+constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::DigestAlgo algo) {
+	return to_string_view_opt(AllDigestAlgos, algo);
 };
 
 constexpr std::array<std::pair<MimeCertificate::Trust, std::string_view>, 6>
@@ -379,8 +379,8 @@ AllTrusts = {{
 		{ MimeCertificate::Trust::TrustUltimate,"trust-ultimate" },
 	}};
 
-constexpr Option<std::string_view> to_string_view(MimeCertificate::Trust trust) {
-	return to_string_view(AllTrusts, trust);
+constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Trust trust) {
+	return to_string_view_opt(AllTrusts, trust);
 };
 
 constexpr std::array<std::pair<MimeCertificate::Validity, std::string_view>, 6>
@@ -393,8 +393,8 @@ AllValidities = {{
 		{ MimeCertificate::Validity::Ultimate,	"ultimate" },
 	}};
 
-constexpr Option<std::string_view> to_string_view(MimeCertificate::Validity val) {
-	return to_string_view(AllValidities, val);
+constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Validity val) {
+	return to_string_view_opt(AllValidities, val);
 };
 
 
@@ -520,7 +520,7 @@ struct MimeDecryptResult: public Object {
 	}
 
 	Option<std::string> session_key() const noexcept {
-		return to_option_string(g_mime_decrypt_result_get_session_key(self()));
+		return to_string_opt(g_mime_decrypt_result_get_session_key(self()));
 	}
 
 
@@ -532,22 +532,22 @@ private:
 
 constexpr std::array<std::pair<MimeDecryptResult::CipherAlgo, std::string_view>, 12>
 AllCipherAlgos= {{
-		{ MimeDecryptResult::CipherAlgo::Default    , "default"},
-		{ MimeDecryptResult::CipherAlgo::Idea	, "idea"},
-		{ MimeDecryptResult::CipherAlgo::Des3	, "3des"},
-		{ MimeDecryptResult::CipherAlgo::Cast5	, "cast5"},
-		{ MimeDecryptResult::CipherAlgo::Blowfish	, "blowfish"},
-		{ MimeDecryptResult::CipherAlgo::Aes	, "aes"},
-		{ MimeDecryptResult::CipherAlgo::Aes192	, "aes192"},
-		{ MimeDecryptResult::CipherAlgo::Aes256	, "aes256"},
-		{ MimeDecryptResult::CipherAlgo::TwoFish	, "twofish"},
-		{ MimeDecryptResult::CipherAlgo::Camellia128, "camellia128"},
-		{ MimeDecryptResult::CipherAlgo::Camellia192, "camellia192"},
-		{ MimeDecryptResult::CipherAlgo::Camellia256, "camellia256"},
+		{MimeDecryptResult::CipherAlgo::Default,	"default"},
+		{MimeDecryptResult::CipherAlgo::Idea,		"idea"},
+		{MimeDecryptResult::CipherAlgo::Des3,		"3des"},
+		{MimeDecryptResult::CipherAlgo::Cast5,		"cast5"},
+		{MimeDecryptResult::CipherAlgo::Blowfish,	"blowfish"},
+		{MimeDecryptResult::CipherAlgo::Aes,		"aes"},
+		{MimeDecryptResult::CipherAlgo::Aes192,		"aes192"},
+		{MimeDecryptResult::CipherAlgo::Aes256,		"aes256"},
+		{MimeDecryptResult::CipherAlgo::TwoFish,	"twofish"},
+		{MimeDecryptResult::CipherAlgo::Camellia128,	"camellia128"},
+		{MimeDecryptResult::CipherAlgo::Camellia192,	"camellia192"},
+		{MimeDecryptResult::CipherAlgo::Camellia256,	"camellia256"},
 	}};
 
-constexpr Option<std::string_view> to_string_view(MimeDecryptResult::CipherAlgo algo) {
-	return to_string_view(AllCipherAlgos, algo);
+constexpr Option<std::string_view> to_string_view_opt(MimeDecryptResult::CipherAlgo algo) {
+	return to_string_view_opt(AllCipherAlgos, algo);
 };
 
 
@@ -581,13 +581,13 @@ struct MimeCryptoContext : public Object {
 
 
 	Option<std::string> encryption_protocol() {
-		return to_option_string(g_mime_crypto_context_get_encryption_protocol(self()));
+		return to_string_opt(g_mime_crypto_context_get_encryption_protocol(self()));
 	}
 	Option<std::string> signature_protocol() {
-		return to_option_string(g_mime_crypto_context_get_signature_protocol(self()));
+		return to_string_opt(g_mime_crypto_context_get_signature_protocol(self()));
 	}
 	Option<std::string> key_exchange_protocol() {
-		return to_option_string(g_mime_crypto_context_get_key_exchange_protocol(self()));
+		return to_string_opt(g_mime_crypto_context_get_key_exchange_protocol(self()));
 	}
 
 	/**
@@ -685,7 +685,7 @@ public:
 	}
 
 	Option<std::string> content_type_parameter(const std::string& param) const noexcept {
-		return to_option_string(
+		return to_string_opt(
 			g_mime_object_get_content_type_parameter(self(), param.c_str()));
 	}
 
@@ -832,7 +832,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> message_id() const noexcept {
-		return to_option_string(g_mime_message_get_message_id(self()));
+		return to_string_opt(g_mime_message_get_message_id(self()));
 	}
 
 	/**
@@ -841,7 +841,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> subject() const noexcept {
-		return to_option_string(g_mime_message_get_subject(self()));
+		return to_string_opt(g_mime_message_get_subject(self()));
 	}
 
 	/**
@@ -914,7 +914,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_description() const noexcept {
-		return to_option_string(g_mime_part_get_content_description(self()));
+		return to_string_opt(g_mime_part_get_content_description(self()));
 	}
 
 	/**
@@ -924,7 +924,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_id() const noexcept {
-		return to_option_string(g_mime_part_get_content_id(self()));
+		return to_string_opt(g_mime_part_get_content_id(self()));
 	}
 
 	/**
@@ -934,7 +934,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_md5() const noexcept {
-		return to_option_string(g_mime_part_get_content_md5(self()));
+		return to_string_opt(g_mime_part_get_content_md5(self()));
 
 	}
 
@@ -955,7 +955,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> content_location() const noexcept {
-		return to_option_string(g_mime_part_get_content_location(self()));
+		return to_string_opt(g_mime_part_get_content_location(self()));
 	}
 
 	/**
@@ -965,7 +965,7 @@ public:
 	 * @return string or nullopt
 	 */
 	Option<std::string> filename() const noexcept {
-		return to_option_string(g_mime_part_get_filename(self()));
+		return to_string_opt(g_mime_part_get_filename(self()));
 	}
 
 	/**

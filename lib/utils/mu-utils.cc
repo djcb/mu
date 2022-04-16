@@ -43,6 +43,7 @@
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-error.hh"
+#include "mu-option.hh"
 
 using namespace Mu;
 
@@ -352,14 +353,12 @@ Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 		return {};
 	}
 
-	char* str = g_date_time_format(dt, frm.c_str()); /* always utf8 */
+	auto datestr{to_string_opt_gchar(g_date_time_format(dt, frm.c_str()))};
 	g_date_time_unref(dt);
-	if (!str) {
+	if (!datestr)
 		g_warning("failed to format time with format '%s'", frm.c_str());
-		return {};
-	}
 
-	return from_gchars(std::move(str)/*consumed*/);
+	return datestr.value_or("");
 }
 
 static std::string

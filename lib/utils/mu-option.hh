@@ -15,6 +15,7 @@
 #define MU_OPTION__
 
 #include "optional.hpp"
+#include <string>
 
 namespace Mu {
 
@@ -28,6 +29,32 @@ Some(T&& t)
 	return std::move(t);
 }
 constexpr auto Nothing = tl::nullopt; // 'None' is take already
+
+/**
+ * Maybe create a string from a const char pointer.
+ *
+ * @param str a char pointer or NULL
+ *
+ * @return option with either the string or nothing if str was NULL.
+ */
+Option<std::string>
+static inline to_string_opt(const char* str) {
+	if (str)
+		return std::string{str};
+	else
+		return Nothing;
+}
+
+/**
+ * Like maybe_string that takes a const char*, but additionally,
+ * g_free() the string.
+ *
+ * @param str char pointer or NULL (consumed)
+ *
+ * @return option with either the string or nothing if str was NULL.
+ */
+Option<std::string> to_string_opt_gchar(char*&& str);
+
 
 } // namespace Mu
 #endif /*MU_OPTION__*/

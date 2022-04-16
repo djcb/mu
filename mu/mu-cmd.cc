@@ -366,13 +366,13 @@ print_signature(const Mu::MimeSignature& sig, const MuConfig *opts)
 
 	const auto cert{sig.certificate()};
 	key_val(col, "public-key algo",
-		to_string_view(cert.pubkey_algo()).value_or("unknown"));
+		to_string_view_opt(cert.pubkey_algo()).value_or("unknown"));
 	key_val(col, "digest algo",
-		to_string_view(cert.digest_algo()).value_or("unknown"));
+		to_string_view_opt(cert.digest_algo()).value_or("unknown"));
 	key_val(col, "id-validity",
-		to_string_view(cert.id_validity()).value_or("unknown"));
+		to_string_view_opt(cert.id_validity()).value_or("unknown"));
 	key_val(col, "trust",
-		to_string_view(cert.trust()).value_or("unknown"));
+		to_string_view_opt(cert.trust()).value_or("unknown"));
 	key_val(col, "issuer-serial", cert.issuer_serial().value_or("unknown"));
 	key_val(col, "issuer-name", cert.issuer_name().value_or("unknown"));
 	key_val(col, "finger-print", cert.fingerprint().value_or("unknown"));
