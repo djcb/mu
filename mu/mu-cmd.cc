@@ -160,7 +160,7 @@ view_msg_plain(const Message& message, const MuConfig* opts)
 static Mu::Result<void>
 handle_msg(const std::string& fname, const MuConfig* opts)
 {
-	auto message{Message::make_from_path(fname)};
+	auto message{Message::make_from_path(mu_config_message_options(opts), fname)};
 	if (!message)
 		return Err(message.error());
 
@@ -389,7 +389,11 @@ verify(const MimeMultipartSigned& sigpart, const MuConfig *opts)
 	const auto vflags{opts->auto_retrieve ?
 		VFlags::EnableKeyserverLookups: VFlags::None};
 
-	const auto sigs{sigpart.verify(vflags)};
+	auto ctx{MimeCryptoContext::make_gpg()};
+	if (!ctx)
+		return false;
+
+	const auto sigs{sigpart.verify(*ctx, vflags)};
 	Mu::MaybeAnsi col{!opts->nocolor};
 
 	if (!sigs || sigs->empty()) {
@@ -429,7 +433,8 @@ cmd_verify(const MuConfig* opts)
 		return Err(Error::Code::InvalidArgument,
 			   "missing message-file parameter");
 
-	auto message{Message::make_from_path(opts->params[1])};
+	auto message{Message::make_from_path(mu_config_message_options(opts),
+					     opts->params[1])};
 	if (!message)
 		return Err(message.error());
 
