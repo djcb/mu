@@ -19,7 +19,11 @@
 NINJA    ?= ninja
 BUILDDIR ?= $(CURDIR)/build
 MESON    ?= meson
+V        ?= 0
 
+ifneq ($(V),0)
+  VERBOSE=--verbose
+endif
 
 # MESON_FLAGS, e.g. "-Dreadline=enabled"
 
@@ -28,7 +32,7 @@ MESON    ?= meson
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
 
 all: $(BUILDDIR)
-	$(NINJA) -C $(BUILDDIR)
+	$(NINJA) -C $(BUILDDIR) $(VERBOSE)
 
 $(BUILDDIR):
 	$(MESON) $(MESON_FLAGS) $(BUILDDIR)
@@ -36,10 +40,7 @@ $(BUILDDIR):
 check: test
 
 test: all
-	$(MESON) test -C $(BUILDDIR)
-
-test-verbose: all
-	$(MESON) test --verbose -C $(BUILDDIR)
+	$(MESON) test $(VERBOSE) -C $(BUILDDIR)
 
 test-verbose-if-fail: all
 	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose

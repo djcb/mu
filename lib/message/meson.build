@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,22 +19,14 @@ lib_mu_message=static_library(
   'mu-message',
   [
     'mu-message.cc',
-    'mu-message.hh',
     'mu-message-part.cc',
-    'mu-message-part.hh',
     'mu-message-sexp.cc',
-    'mu-contact.hh',
     'mu-contact.cc',
     'mu-document.cc',
-    'mu-document.hh',
-    'mu-fields.hh',
     'mu-fields.cc',
-    'mu-flags.hh',
     'mu-flags.cc',
-    'mu-priority.hh',
     'mu-priority.cc',
     'mu-mime-object.cc',
-    'mu-mime-object.hh'
   ],
   dependencies: [
     glib_dep,
