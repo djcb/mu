@@ -387,8 +387,12 @@ test_mu_extract_02(void)
 	att2 = g_strdup_printf("%s%csittingbull.jpg", tmpdir, G_DIR_SEPARATOR);
 
 	size = get_file_size(att1);
-	g_assert_true(size >= 15958 && size <= 15960);
-	g_assert_cmpint(get_file_size(att2), ==, 17674);
+	g_assert_cmpuint(size, >=, 15955);
+	g_assert_cmpuint(size, <=, 15960);
+
+	size = get_file_size(att2);
+	g_assert_cmpint(size, ==, 17674);
+
 
 	g_free(output);
 	g_free(tmpdir);
@@ -429,7 +433,8 @@ test_mu_extract_03(void)
 	att2 = g_strdup_printf("%s%csittingbull.jpg", tmpdir, G_DIR_SEPARATOR);
 
 	size = get_file_size(att1);
-	g_assert_true(size >= 15958 && size <= 15960);
+	g_assert_cmpuint(size, >=, 15955);
+	g_assert_cmpuint(size, <=, 15960);
 	g_assert_cmpint(get_file_size(att2), ==, -1);
 
 	g_free(output);
