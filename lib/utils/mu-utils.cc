@@ -618,7 +618,7 @@ Mu::TempDir::~TempDir()
 
 	/* ugly */
 	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};
-	::system(cmd.c_str());
+	(void)::system(cmd.c_str());
 
 	g_debug("removed '%s'", path_.c_str());
 }
