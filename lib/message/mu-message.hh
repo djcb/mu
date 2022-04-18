@@ -30,6 +30,7 @@
 #include "mu-document.hh"
 #include "mu-message-part.hh"
 
+#include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-sexp.hh"
@@ -38,6 +39,14 @@ namespace Mu {
 
 class Message {
 public:
+	enum struct Options {
+		None	     = 0,	/**< Defaults */
+		Decrypt	     = 1 << 0,	/**< Attempt to decrypt */
+		RetrieveKeys = 1 << 1, /**< Auto-retrieve crypto keys (implies network
+					* access) */
+	};
+
+
 	/**
 	 * Move CTOR
 	 *
@@ -49,6 +58,7 @@ public:
 	 * Construct a message based on a path. The maildir is optional; however
 	 * messages without maildir cannot be stored in the database
 	 *
+	 * @param opts options
 	 * @param path path to message
 	 * @param mdir the maildir for this message; i.e, if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
@@ -57,9 +67,10 @@ public:
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_path(const std::string& path,
+	static Result<Message> make_from_path(Options opts,
+					      const std::string& path,
 					      const std::string& mdir={}) try {
-		return Ok(Message{path, mdir});
+		return Ok(Message{opts, path, mdir});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
@@ -85,6 +96,7 @@ public:
 	/**
 	 * Construct a message from a string. This is mostly useful for testing.
 	 *
+	 * @param opts options
 	 * @param text message text
 	 * @param path path to message - optional; path does not have to exist.
 	 * this is useful for testing.
@@ -92,10 +104,11 @@ public:
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_text(const std::string& text,
+	static Result<Message> make_from_text(Options opts,
+					      const std::string& text,
 					      const std::string& path={},
 					      const std::string& mdir={}) try {
-		return Ok(Message{text, path, mdir});
+		return Ok(Message{opts, text, path, mdir});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
@@ -330,13 +343,14 @@ public:
 
 	struct Private;
 private:
-	Message(const std::string& path, const std::string& mdir);
-	Message(const std::string& str,  const std::string& path,
+	Message(Options opts, const std::string& path, const std::string& mdir);
+	Message(Options opts, const std::string& str,  const std::string& path,
 		const std::string& mdir);
 	Message(Document& doc);
 
-
 	std::unique_ptr<Private>        priv_;
 }; // Message
+MU_ENABLE_BITOPS(Message::Options);
+
 } // Mu
 #endif /* MU_MESSAGE_HH__ */

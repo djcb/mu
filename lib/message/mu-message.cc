@@ -44,7 +44,10 @@
 using namespace Mu;
 
 struct Message::Private {
+	Private(Message::Options options=Message::Options::None):
+		opts{options} {}
 
+	Message::Options                opts;
 	Document			doc;
 	mutable Option<MimeMessage>	mime_msg;
 
@@ -66,8 +69,8 @@ struct Message::Private {
 
 static void fill_document(Message::Private& priv);
 
-Message::Message(const std::string& path, const std::string& mdir):
-	priv_{std::make_unique<Private>()}
+Message::Message(Message::Options opts, const std::string& path, const std::string& mdir):
+	priv_{std::make_unique<Private>(opts)}
 {
 	if (!g_path_is_absolute(path.c_str()))
 		throw Error(Error::Code::File, "path '%s' is not absolute", path.c_str());
@@ -95,19 +98,22 @@ Message::Message(const std::string& path, const std::string& mdir):
 
 	if (!mdir.empty())
 		priv_->doc.add(Field::Id::Maildir, mdir);
+
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf.st_size));
 
 	// rest of the fields
 	fill_document(*priv_);
 }
 
-Message::Message(const std::string& text, const std::string& path,
+Message::Message(Message::Options opts, const std::string& text, const std::string& path,
 		 const std::string& mdir):
-	priv_{std::make_unique<Private>()}
+	priv_{std::make_unique<Private>(opts)}
 {
-	auto xpath{to_string_opt_gchar(g_canonicalize_filename(path.c_str(), NULL))};
-	if (xpath)
-		priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
+	if (!path.empty()) {
+		auto xpath{to_string_opt_gchar(g_canonicalize_filename(path.c_str(), {}))};
+		if (xpath)
+			priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
+	}
 
 	if (!mdir.empty())
 		priv_->doc.add(Field::Id::Maildir, mdir);
@@ -327,6 +333,83 @@ process_part(const MimeObject& parent, const MimePart& part,
 	accumulate_text(part, info, *ctype);
 }
 
+
+static void
+handle_object(const MimeObject& parent,
+	      const MimeObject& obj, Message::Private& info);
+
+
+static void
+handle_encrypted(const MimeMultipartEncrypted& part, Message::Private& info)
+{
+	if (!any_of(info.opts & Message::Options::Decrypt)) {
+		/* just added to the list */
+		info.parts.emplace_back(part);
+		return;
+	}
+
+	const auto proto{part.content_type_parameter("protocol").value_or("unknown")};
+	const auto ctx = MimeCryptoContext::make(proto);
+	if (!ctx) {
+		g_warning("failed to create context for protocol <%s>",
+			  proto.c_str());
+		return;
+	}
+
+	auto res{part.decrypt(*ctx)};
+	if (!res) {
+		g_warning("failed to decrypt: %s", res.error().what());
+		return;
+	}
+
+	if (res->first.is_multipart()) {
+		MimeMultipart{res->first}.for_each(
+			[&](auto&& parent, auto&& child_obj) {
+				handle_object(parent, child_obj, info);
+			});
+
+	} else
+		handle_object(part, res->first, info);
+}
+
+
+static void
+handle_object(const MimeObject& parent,
+	      const MimeObject& obj, Message::Private& info)
+{
+	/* if it's an encrypted part we should decrypt, recurse */
+	if (obj.is_multipart_encrypted())
+		handle_encrypted(MimeMultipartEncrypted{obj}, info);
+	else if (obj.is_part() ||
+		 obj.is_message_part() ||
+		 obj.is_multipart_signed() ||
+		 obj.is_multipart_encrypted())
+		info.parts.emplace_back(obj);
+
+	if (obj.is_part())
+		process_part(parent, obj, info);
+
+	if (obj.is_multipart_signed())
+		info.flags |= Flags::Signed;
+	else if (obj.is_multipart_encrypted()) {
+		/* FIXME: An encrypted part might be signed at the same time.
+		 *        In that case the signed flag is lost. */
+		info.flags |= Flags::Encrypted;
+	} else if (obj.is_mime_application_pkcs7_mime()) {
+		MimeApplicationPkcs7Mime smime(obj);
+		switch (smime.smime_type()) {
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
+			info.flags |= Flags::Signed;
+			break;
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::EnvelopedData:
+			info.flags |= Flags::Encrypted;
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 /**
  * This message -- recursively walk through message, and initialize some
  * other values that depend on another.
@@ -349,36 +432,8 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	}
 
 	// parts
-	mime_msg.for_each([&](auto&& parent, auto&& part) {
-
-		if (part.is_part() ||
-		    part.is_message_part() ||
-		    part.is_multipart_signed() ||
-		    part.is_multipart_encrypted())
-			info.parts.emplace_back(part);
-
-		if (part.is_part())
-			process_part(parent, part, info);
-
-		if (part.is_multipart_signed())
-			info.flags |= Flags::Signed;
-		else if (part.is_multipart_encrypted()) {
-			/* FIXME: An encrypted part might be signed at the same time.
-			 *        In that case the signed flag is lost. */
-			info.flags |= Flags::Encrypted;
-		} else if (part.is_mime_application_pkcs7_mime()) {
-			MimeApplicationPkcs7Mime smime(part);
-			switch (smime.smime_type()) {
-			case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
-				info.flags |= Flags::Signed;
-				break;
-			case Mu::MimeApplicationPkcs7Mime::SecureMimeType::EnvelopedData:
-				info.flags |= Flags::Encrypted;
-				break;
-			default:
-				break;
-			}
-		}
+	mime_msg.for_each([&](auto&& parent, auto&& child_obj) {
+		handle_object(parent, child_obj, info);
 	});
 
 	// get the mailing here, and use it do update flags, too.

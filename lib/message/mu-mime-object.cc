@@ -81,16 +81,29 @@ MimeObject::header(const std::string& hdr) const noexcept
 }
 
 
-Option<std::string>
-MimeObject::object_to_string() const noexcept
+Result<size_t>
+MimeObject::write_to_stream(const MimeFormatOptions& f_opts,
+			    MimeStream& stream) const
 {
-	GMimeStream *stream{g_mime_stream_mem_new()};
+	auto written = g_mime_object_write_to_stream(self(), f_opts.get(),
+						     GMIME_STREAM(stream.object()));
+	if (written < 0)
+		return Err(Error::Code::File, "failed to write mime-object to stream");
+	else
+		return Ok(static_cast<size_t>(written));
+}
+
+Option<std::string>
+MimeObject::to_string_opt() const noexcept
+{
+	auto stream{MimeStream::make_mem()};
 	if (!stream) {
 		g_warning("failed to create mem stream");
 		return Nothing;
 	}
 
-	const auto written = g_mime_object_write_to_stream(self(), {}, stream);
+	const auto written = g_mime_object_write_to_stream(
+		self(), {}, GMIME_STREAM(stream.object()));
 	if (written < 0) {
 		g_warning("failed to write object to stream");
 		return Nothing;
@@ -98,10 +111,10 @@ MimeObject::object_to_string() const noexcept
 
 	std::string buffer;
 	buffer.resize(written + 1);
-	g_mime_stream_reset(stream);
+	stream.reset();
 
-	auto bytes{g_mime_stream_read(stream, buffer.data(), written)};
-	g_object_unref(stream);
+	auto bytes{g_mime_stream_read(GMIME_STREAM(stream.object()),
+				      buffer.data(), written)};
 	if (bytes < 0)
 		return Nothing;
 
@@ -121,7 +134,7 @@ MimeCryptoContext::import_keys(MimeStream& stream)
 {
 	GError *err{};
 	auto res = g_mime_crypto_context_import_keys(
-		self(), stream.self(), &err);
+		self(), GMIME_STREAM(stream.object()), &err);
 
 	if (res < 0)
 		return Err(Error::Code::File, &err,
@@ -131,7 +144,7 @@ MimeCryptoContext::import_keys(MimeStream& stream)
 }
 
 void
-MimeCryptoContext::set_password_request_function(PasswordRequestFunc pw_func)
+MimeCryptoContext::set_request_password(PasswordRequestFunc pw_func)
 {
 	static auto request_func = pw_func;
 
@@ -143,7 +156,8 @@ MimeCryptoContext::set_password_request_function(PasswordRequestFunc pw_func)
 		   gboolean reprompt,
 		   GMimeStream *response,
 		   GError **err) -> gboolean {
-			MimeStream mstream{response};
+			MimeStream mstream{MimeStream::make_from_stream(response)};
+
 			auto res = request_func(MimeCryptoContext(ctx),
 						std::string{user_id ? user_id : ""},
 						std::string{prompt ? prompt : ""},
@@ -420,23 +434,23 @@ MimePart::to_string() const noexcept
 Result<size_t>
 MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 {
-	GMimeDataWrapper *wrapper{g_mime_part_get_content(self())};
+	MimeDataWrapper wrapper{g_mime_part_get_content(self())};
 	if (!wrapper)  /* this happens with invalid mails */
 		return Err(Error::Code::File, "failed to create data wrapper");
 
-
 	GError *err{};
-	GMimeStream *stream{g_mime_stream_fs_open(
-			path.c_str(),
-			O_WRONLY | O_CREAT | O_TRUNC |(overwrite ? 0 : O_EXCL),
-			S_IRUSR|S_IWUSR,
-			&err)};
-	if (!stream)
-		return Err(Error::Code::File, &err,
-			   "failed to open '%s'", path.c_str());
+	auto strm{g_mime_stream_fs_open(path.c_str(),
+					O_WRONLY | O_CREAT | O_TRUNC |(overwrite ? 0 : O_EXCL),
+					S_IRUSR|S_IWUSR,
+					&err)};
+	if (!strm)
+		return Err(Error::Code::File, &err, "failed to open '%s'", path.c_str());
 
-	ssize_t written{g_mime_data_wrapper_write_to_stream(wrapper, stream)};
-	g_object_unref(stream);
+	MimeStream stream{MimeStream::make_from_stream(strm)};
+	ssize_t written{g_mime_data_wrapper_write_to_stream(
+			GMIME_DATA_WRAPPER(wrapper.object()),
+			GMIME_STREAM(stream.object()))};
+
 	if (written < 0) {
 		return Err(Error::Code::File, &err,
 			   "failed to write to '%s'", path.c_str());
@@ -446,29 +460,22 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 }
 
 
-Result<std::vector<MimeSignature>>
-MimeMultipartSigned::verify(VerifyFlags vflags) const noexcept
+
+
+void
+MimeMultipart::for_each(const ForEachFunc& func) const noexcept
 {
-	GError *err{};
-	GMimeSignatureList *siglist = g_mime_multipart_signed_verify(
+	struct CallbackData { const ForEachFunc& func; };
+	CallbackData cbd{func};
+
+	g_mime_multipart_foreach(
 		self(),
-		static_cast<GMimeVerifyFlags>(vflags),
-		&err);
-
-	if (!siglist)
-		return Err(Error::Code::Crypto, &err, "failed to verify");
-
-	std::vector<MimeSignature> sigs;
-	for (auto i = 0; i != g_mime_signature_list_length(siglist); ++i) {
-		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
-		sigs.emplace_back(MimeSignature(sig));
-	}
-
-	g_object_unref(siglist);
-
-	return sigs;
-
+		[] (GMimeObject *parent, GMimeObject *part, gpointer user_data) {
+			auto cb_data{reinterpret_cast<CallbackData*>(user_data)};
+			cb_data->func(MimeObject{parent}, MimeObject{part});
+		}, &cbd);
 }
+
 
 /*
  * we need to be able to pass a crypto-context to the verify(), but
@@ -481,7 +488,7 @@ MimeMultipartSigned::verify(VerifyFlags vflags) const noexcept
 static bool
 mime_types_equal (const std::string& mime_type, const std::string& official_type)
 {
-	if (g_ascii_strcasecmp(mime_type.c_str(), official_type.c_str()))
+	if (g_ascii_strcasecmp(mime_type.c_str(), official_type.c_str()) == 0)
 		return true;
 
 	const auto slash_pos = official_type.find("/");
@@ -504,73 +511,70 @@ mime_types_equal (const std::string& mime_type, const std::string& official_type
 }
 
 
+/**
+ * A bit of a monster, this impl.
+ *
+ * It's the transliteration of the g_mime_multipart_signed_verify() which
+ * adds the feature of passing in the CryptoContext.
+ *
+ */
+Result<std::vector<MimeSignature>>
+MimeMultipartSigned::verify(const MimeCryptoContext& ctx, VerifyFlags vflags) const noexcept
+{
+	if (g_mime_multipart_get_count(GMIME_MULTIPART(self())) < 2)
+		return Err(Error::Code::Crypto, "cannot verify, not enough subparts");
 
+	const auto proto{content_type_parameter("protocol")};
+	const auto sign_proto{ctx.signature_protocol()};
 
-// Result<std::vector<MimeSignature>>
-// MimeMultipartSigned::verify(VerifyFlags vflags, const CryptoContext& ctx) const noexcept
-// {
-//	if (g_mime_multipart_get_count(self()) < 2)
-//		return Err(Error::Code::Crypto, "cannot verify, not enough subparts");
+	if (!proto || !sign_proto || !mime_types_equal(*proto, *sign_proto))
+		return Err(Error::Code::Crypto, "unsupported protocol " +
+			   proto.value_or("<unknown>"));
 
-//	const auto proto{content_type_parameter("protocol")};
-//	const auto sign_proto{ctx.signature_prototol().value_or("<unknown>")};
+	const auto sig{signed_signature_part()};
+	const auto content{signed_content_part()};
+	if (!sig || !content)
+		return Err(Error::Code::Crypto, "cannot find part");
 
-//	if (!proto || !sign_proto || !mime_types_equal(*proto, sign_proto))
-//		return Err(Error::Code::Crypto, "unsupported protocol");
+	const auto sig_mime_type{sig->mime_type()};
+	if (!sig || !mime_types_equal(sig_mime_type.value_or("<none>"), *sign_proto))
+		return Err(Error::Code::Crypto, "failed to find matching signature part");
 
-//	const auto sig{MimeObject(g_mime_multipart_get_part(self(), GMIME_MULTIPART_SIGNED_SIGNATURE))};
-//	if (!sig || !mime_types_equal(sig.mime_type().value_or("<none>"), sign_proto))
-//		return Err(Error::Code::Crypto, "failed to find matching signature part");
+	MimeFormatOptions fopts{g_mime_format_options_new()};
+	g_mime_format_options_set_newline_format(fopts.get(), GMIME_NEWLINE_FORMAT_DOS);
 
-//	MimeObject content{g_mime_multipart_get_part(self(), GMIME_MULTIPART_SIGNED_CONTENT)};
-//	if (!content)
-//		return Err(Error::Code::Crypto, "cannot find content part");
+	MimeStream stream{MimeStream::make_mem()};
+	if (auto&& res = content->write_to_stream(fopts, stream); !res)
+		return Err(res.error());
+	stream.reset();
 
-//	MimeFormatOptions fopts{format_options_new()};
-//	g_mime_format_options_set_newline_format(*fopts, GMIME_NEWLINE_FORMAT_DOS);
+	MimeDataWrapper wrapper{g_mime_part_get_content(GMIME_PART(sig->object()))};
+	MimeStream sigstream{MimeStream::make_mem()};
+	if (auto&& res = wrapper.write_to_stream(sigstream); !res)
+		return Err(res.error());
+	sigstream.reset();
 
-//	MimeStream stream{g_mime_stream_mem_new()};
-//	g_mime_object_write_to_stream (content, *fopts, stream);
-//	g_mime_stream_reset (stream);
+	GError *err{};
+	GMimeSignatureList *siglist{g_mime_crypto_context_verify(
+			GMIME_CRYPTO_CONTEXT(ctx.object()),
+			static_cast<GMimeVerifyFlags>(vflags),
+			GMIME_STREAM(stream.object()),
+			GMIME_STREAM(sigstream.object()),
+			{},
+			&err)};
+	if (!siglist)
+		return Err(Error::Code::Crypto, &err, "failed to verify");
 
-//	GMimeDataWrapper *wrapper = g_mime_part_get_content(static_cast<GMimePart*>(sig));
+	std::vector<MimeSignature> sigs;
+	for (auto i = 0;
+	     i != g_mime_signature_list_length(siglist); ++i) {
+		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
+		sigs.emplace_back(MimeSignature(sig));
+	}
+	g_object_unref(siglist);
 
-
-
-
-//	GError *err{};
-//	GMimeSignatureList *siglist = g_mime_multipart_signed_verify(
-//		self(),
-//		static_cast<GMimeVerifyFlags>(vflags),
-//		&err);
-
-//	if (!siglist)
-//		return Err(Error::Code::Crypto, &err, "failed to verify");
-
-//	std::vector<MimeSignature> sigs;
-//	for (auto i = 0; i != g_mime_signature_list_length(siglist); ++i) {
-//		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
-//		sigs.emplace_back(MimeSignature(sig));
-//	}
-
-//	g_object_unref(siglist);
-
-//	return sigs;
-
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return sigs;
+}
 
 
 std::vector<MimeCertificate>
@@ -604,25 +608,85 @@ MimeDecryptResult::signatures() const noexcept
 
 	return sigs;
 }
-
-
-
+/**
+ * Like verify, a bit of a monster, this impl.
+ *
+ * It's the transliteration of the g_mime_multipart_encrypted_decrypt() which
+ * adds the feature of passing in the CryptoContext.
+ *
+ */
 
 Mu::Result<MimeMultipartEncrypted::Decrypted>
-MimeMultipartEncrypted::decrypt(DecryptFlags flags,
+MimeMultipartEncrypted::decrypt(const MimeCryptoContext& ctx, DecryptFlags dflags,
 				const std::string& session_key) const noexcept
 {
+	if (g_mime_multipart_get_count(GMIME_MULTIPART(self())) < 2)
+		return Err(Error::Code::Crypto, "cannot decrypted, not enough subparts");
+
+	const auto proto{content_type_parameter("protocol")};
+	const auto enc_proto{ctx.encryption_protocol()};
+
+	if (!proto || !enc_proto || !mime_types_equal(*proto, *enc_proto))
+		return Err(Error::Code::Crypto, "unsupported protocol " +
+			   proto.value_or("<unknown>"));
+
+	const auto version{encrypted_version_part()};
+	const auto encrypted{encrypted_content_part()};
+	if (!version || !encrypted)
+		return Err(Error::Code::Crypto, "cannot find part");
+
+	if (!mime_types_equal(version->mime_type().value_or(""), proto.value()))
+		return Err(Error::Code::Crypto,
+			   "cannot decrypt; unexpected version content-type '%s' != '%s'",
+			   version->mime_type().value_or("").c_str(),
+			   proto.value().c_str());
+
+	if (!mime_types_equal(encrypted->mime_type().value_or(""), "application/octet-stream"))
+		return Err(Error::Code::Crypto,
+			   "cannot decrypt; unexpected encrypted content-type '%s'",
+			   encrypted->mime_type().value_or("").c_str());
+
+	const auto content{encrypted->content()};
+	auto ciphertext{MimeStream::make_mem()};
+	content.write_to_stream(ciphertext);
+	ciphertext.reset();
+
+	auto stream{MimeStream::make_mem()};
+	auto filtered{MimeStream::make_filtered(stream)};
+	auto filter{g_mime_filter_dos2unix_new(FALSE)};
+	g_mime_stream_filter_add(GMIME_STREAM_FILTER(filtered.object()),
+				 filter);
+	g_object_unref(filter);
+
 	GError *err{};
-	GMimeDecryptResult *dres{};
-	GMimeObject *obj = g_mime_multipart_encrypted_decrypt(
-		self(),
-		static_cast<GMimeDecryptFlags>(flags),
-		session_key.empty() ? NULL : session_key.c_str(),
-		&dres,
-		&err);
+	GMimeDecryptResult *dres =
+		g_mime_crypto_context_decrypt(GMIME_CRYPTO_CONTEXT(ctx.object()),
+					      static_cast<GMimeDecryptFlags>(dflags),
+					      session_key.empty() ?
+					      NULL : session_key.c_str(),
+					      GMIME_STREAM(ciphertext.object()),
+					      GMIME_STREAM(filtered.object()),
+					      &err);
+	if (!dres)
+		return Err(Error::Code::Crypto, &err, "decryption failed");
 
-	if (!obj)
-		return Err(Error::Code::Crypto, &err, "failed to decrypt");
+	filtered.flush();
+	stream.reset();
 
-	return Ok(Decrypted{MimeObject{obj}, MimeDecryptResult(dres)});
+	auto parser{g_mime_parser_new()};
+	g_mime_parser_init_with_stream(parser, GMIME_STREAM(stream.object()));
+
+	auto decrypted{g_mime_parser_construct_part(parser, NULL)};
+	g_object_unref(parser);
+	if (!decrypted) {
+		g_object_unref(dres);
+		return Err(Error::Code::Crypto, "failed to parse decrypted part");
+	}
+
+	Decrypted result = { MimeObject{decrypted}, MimeDecryptResult{dres} };
+
+	g_object_unref(decrypted);
+	g_object_unref(dres);
+
+	return Ok(std::move(result));
 }
