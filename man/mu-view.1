@@ -1,4 +1,4 @@
-.TH MU VIEW 1 "June 2013" "User Manuals"
+.TH MU VIEW 1 "April 2022" "User Manuals"
 
 .SH NAME
 
@@ -33,9 +33,11 @@ them. This is useful when you want to further process them.
 .TP
 \fB\-\-decrypt\fR
 attempt to decrypt encrypted message bodies. This is only possible if \fBmu\fR
-was built with crypto-support. Users are strongly recommended to use
-\fBgpg-agent\fR; however, if needed, \fBmu\fR will request the user password
-from the console.
+was built with crypto-support.
+
+.TP
+\fB\-\-auto-retrieve\fR
+attempt to retrieve crypto-keys automatically from the network, when needed.
 
 .SH BUGS
 
@@ -48,7 +50,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 
 .SH "SEE ALSO"
 
-.BR mu (1),
-.BR mu-index (1),
-.BR gpg (1),
-.BR gpg-agent (1)
+.BR mu (1)
