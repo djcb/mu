@@ -28,6 +28,7 @@
 
 using namespace Mu;
 
+
 static Result<void>
 save_part(const Message::Part& part, size_t idx, const MuConfig* opts)
 {
@@ -56,7 +57,7 @@ static Result<void>
 save_parts(const std::string& path, Option<std::string>& filename_rx,
 	   const MuConfig* opts)
 {
-	auto message{Message::make_from_path(path, {})};
+	auto message{Message::make_from_path(mu_config_message_options(opts), path, {})};
 	if (!message)
 		return Err(std::move(message.error()));
 
@@ -149,7 +150,8 @@ show_parts(const char* path, const MuConfig* opts)
 {
 	//msgopts = mu_config_get_msg_options(opts);
 
-	auto msg_res{Message::make_from_path(path)};
+	auto msg_res{Message::make_from_path(mu_config_message_options(opts),
+					     path)};
 	if (!msg_res)
 		return Err(std::move(msg_res.error()));
 
