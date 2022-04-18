@@ -115,6 +115,14 @@ Err(Error::Code errcode, GError **err, const char* frm, ...)
 	return Err(errcode, std::move(str));
 }
 
+#define assert_valid_result(R) do {					\
+	if(!R) {							\
+		g_critical("error-result: %s", (R).error().what());	\
+	}								\
+	}								\
+	while(0)
+
+
 
 }// namespace Mu
 
