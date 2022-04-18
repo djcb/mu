@@ -1076,8 +1076,8 @@ Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const char* msgid, bool rename)
-{
+Server::Private::maybe_mark_msgid_as_read(const char* msgid, bool rename) try {
+
 	if (!msgid)
 		return false; // nothing to do.
 
@@ -1095,6 +1095,9 @@ Server::Private::maybe_mark_msgid_as_read(const char* msgid, bool rename)
 	}
 
 	return true;
+} catch (...) { /* not fatal */
+	g_warning("failed to mark <%s> as read", msgid);
+	return false;
 }
 
 void

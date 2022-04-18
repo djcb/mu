@@ -137,7 +137,7 @@ To: bar@example.com
 Subject: =?utf-8?B?w6R0dMOkY2htZcOxdHM=?=
 Date: Thu, 24 Mar 2022 20:04:39 +0200
 Organization: ACME Inc.
-Message-ID: <87a6dfw7bg.fsf@example.com>
+Message-Id: <3144HPOJ0VC77.3H1XTAG2AMTLH@"@WILSONB.COM>
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="=-=-="
 
@@ -194,6 +194,10 @@ World!
 	g_assert_cmpuint(from.size(),==,1);
 	assert_equal(from.at(0).name, "Foo Example");
 	assert_equal(from.at(0).email, "foo@example.com");
+
+	// problem case: https://github.com/djcb/mu/issues/2232o
+	assert_equal(message->message_id(),
+		"3144HPOJ0VC77.3H1XTAG2AMTLH@\"@WILSONB.COM");
 
 	g_assert_true(message->path().empty());
 	g_assert_true(message->priority() == Priority::Normal);
@@ -448,8 +452,6 @@ C0bdoCx44QVU8HaZ2x91h3GoM/0q5bqM/rvCauwbokiJgAUrznecNPY=
 
 	g_assert_cmpuint(n, ==, 1);
 }
-
-
 
 int
 main(int argc, char* argv[])
