@@ -192,7 +192,7 @@ view_params_valid(const MuConfig* opts)
 	return Ok();
 }
 
-Mu::Result<void>
+static Mu::Result<void>
 cmd_view(const MuConfig* opts)
 {
 	if (!opts || opts->cmd != Mu::MU_CONFIG_CMD_VIEW)

@@ -23,13 +23,12 @@ AM_CPPFLAGS=                                                    \
 	$(CODE_COVERAGE_CFLAGS)
 
 AM_CXXFLAGS=                                                    \
-	$(JSON_GLIB_CFLAGS)                                     \
-	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""
+	$(GMIME_CFLAGS)                                         \
+	-DMU_SCRIPTS_DIR="\"$(pkgdatadir)/scripts/\""           \
 	$(ASAN_CXXCFLAGS)                                       \
 	$(WARN_CXXFLAGS)                                        \
 	$(CODE_COVERAGE_CFLAGS)                                 \
 	-Wno-switch-enum
-
 
 AM_LDFLAGS=                                                     \
 	$(ASAN_LDFLAGS)
