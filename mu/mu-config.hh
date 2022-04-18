@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -145,11 +145,8 @@ struct _MuConfig {
 	/* options for crypto
 	 * ie, 'view', 'extract' */
 	gboolean auto_retrieve; /* assume we're online */
-	gboolean use_agent;     /* attempt to use the gpg-agent */
 	gboolean decrypt;       /* try to decrypt the
 				 * message body, if any */
-	gboolean verify;        /* try to crypto-verify the
-				 * message */
 
 	/* options for view */
 	gboolean terminator; /* add separator \f between
@@ -236,6 +233,15 @@ size_t mu_config_param_num(const MuConfig* conf);
  * @return the corresponding MuMsgOptions
  */
 MuMsgOptions mu_config_get_msg_options(const MuConfig* opts);
+
+/**
+ * determine Message::Options from command line args
+ *
+ * @param opts a MuConfig struct
+ *
+ * @return the corresponding Message::Options
+ */
+Message::Options mu_config_message_options(const MuConfig* opts);
 
 /**
  * print help text for the current command

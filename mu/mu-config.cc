@@ -337,8 +337,6 @@ crypto_option_entries()
 	static GOptionEntry entries[] = {
 	    {"auto-retrieve", 'r', 0, G_OPTION_ARG_NONE, &MU_CONFIG.auto_retrieve,
 	     "attempt to retrieve keys online (false)", NULL},
-	    {"use-agent", 'a', 0, G_OPTION_ARG_NONE, &MU_CONFIG.use_agent,
-	     "attempt to use the GPG agent (false)", NULL},
 	    {"decrypt", 0, 0, G_OPTION_ARG_NONE, &MU_CONFIG.decrypt,
 	     "attempt to decrypt the message", NULL},
 	    {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
@@ -722,14 +720,23 @@ Mu::mu_config_get_msg_options(const MuConfig* muopts)
 
 	if (muopts->decrypt)
 		opts |= MU_MSG_OPTION_DECRYPT;
-	if (muopts->verify)
-		opts |= MU_MSG_OPTION_VERIFY;
-	if (muopts->use_agent)
-		opts |= MU_MSG_OPTION_USE_AGENT;
 	if (muopts->auto_retrieve)
 		opts |= MU_MSG_OPTION_AUTO_RETRIEVE;
 	if (muopts->overwrite)
 		opts |= MU_MSG_OPTION_OVERWRITE;
 
 	return (MuMsgOptions)opts;
+}
+
+Message::Options
+Mu::mu_config_message_options(const MuConfig *conf)
+{
+	Message::Options opts{};
+
+	if (conf->decrypt)
+		opts |= Message::Options::Decrypt;
+	if (conf->auto_retrieve)
+		opts |= Message::Options::RetrieveKeys;
+
+	return opts;
 }
