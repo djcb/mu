@@ -20,7 +20,6 @@
 #include "config.h"
 
 #include "message/mu-message.hh"
-#include "mu-msg.hh"
 #include "mu-server.hh"
 
 #include <iostream>
@@ -40,7 +39,6 @@
 #include "mu-query.hh"
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
-#include "mu-msg-part.hh"
 
 #include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
@@ -115,23 +113,22 @@ struct Server::Private {
 
 private:
 	// helpers
-	Sexp build_message_sexp(MuMsg*                    msg,
-				unsigned                  docid,
-				const Option<QueryMatch&> qm,
-				MuMsgOptions              opts) const;
+	Sexp build_message_sexp(const Message&            msg,
+				Store::Id                 docid,
+				const Option<QueryMatch&> qm) const;
 
 	Sexp::List move_docid(Store::Id docid, Option<std::string> flagstr,
 			      bool new_name, bool no_view);
 
 	Sexp::List perform_move(Store::Id		docid,
-				MuMsg*			msg,
+				const Message&		msg,
 				const std::string&	maildirarg,
-				Flags		flags,
+				Flags			flags,
 				bool			new_name,
 				bool			no_view);
 
-	bool maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename);
-	bool maybe_mark_msgid_as_read(const char* msgid, bool rename);
+	bool maybe_mark_as_read(Message& msg, Store::Id docid, bool rename);
+	bool maybe_mark_msgid_as_read(const std::string& msgid, bool rename);
 
 	Store&            store_;
 	Server::Output    output_;
@@ -183,12 +180,11 @@ build_metadata(const QueryMatch& qmatch)
  * optionally a :meta expression added.
  */
 Sexp
-Server::Private::build_message_sexp(MuMsg*                    msg,
+Server::Private::build_message_sexp(const Message&            msg,
 				    unsigned                  docid,
-				    const Option<QueryMatch&> qm,
-				    MuMsgOptions              opts) const
+				    const Option<QueryMatch&> qm) const
 {
-	auto msgsexp{Mu::msg_to_sexp_list(msg, docid, opts)};
+	auto msgsexp{msg.to_sexp_list()};
 	if (qm)
 		msgsexp.add_prop(":meta", build_metadata(*qm));
 
@@ -388,17 +384,15 @@ Server::Private::invoke(const std::string& expr) noexcept
 	return keep_going_;
 }
 
-static MuMsgOptions
+static Message::Options
 message_options(const Parameters& params)
 {
-	const auto decrypt{get_bool_or(params, ":decrypt", false)};
+	Message::Options opts{};
 
-	int opts{MU_MSG_OPTION_NONE};
+	if (get_bool_or(params, ":decrypt", false))
+		opts |= Message::Options::Decrypt;
 
-	if (decrypt)
-		opts |= MU_MSG_OPTION_DECRYPT | MU_MSG_OPTION_USE_AGENT;
-
-	return (MuMsgOptions)opts;
+	return opts;
 }
 
 /* 'add' adds a message to the database, and takes two parameters: 'path', which
@@ -410,7 +404,12 @@ void
 Server::Private::add_handler(const Parameters& params)
 {
 	auto       path{get_string_or(params, ":path")};
-	const auto docid{store().add_message(path)};
+	const auto docid_res{store().add_message(path)};
+
+	if (!docid_res)
+		throw Error(Error::Code::Store, "failed to add message to store");
+
+	const auto docid{docid_res.value()};
 
 	Sexp::List expr;
 	expr.add_prop(":info", Sexp::make_symbol("add"));
@@ -419,46 +418,44 @@ Server::Private::add_handler(const Parameters& params)
 
 	output_sexp(Sexp::make_list(std::move(expr)));
 
-	auto msg{store().find_message(docid)};
-	if (!msg)
+	auto msg_res{store().find_message(docid)};
+	if (!msg_res)
 		throw Error(Error::Code::Store,
 			    "failed to get message at %s (docid=%u)",
-			    path.c_str(),
-			    docid);
+			    path.c_str(), docid);
 
 	Sexp::List update;
-	update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_VERIFY));
+	update.add_prop(":update", build_message_sexp(msg_res.value(), docid, {}));
 	output_sexp(Sexp::make_list(std::move(update)));
-	mu_msg_unref(msg);
 }
 
-struct PartInfo {
-	Sexp::List   attseq;
-	MuMsgOptions opts;
-};
+// struct PartInfo {
+//	Sexp::List   attseq;
+//	MuMsgOptions opts;
+// };
 
-static void
-each_part(MuMsg* msg, MuMsgPart* part, PartInfo* pinfo)
-{
-	/* exclude things that don't look like proper attachments, unless they're images */
-	if (!mu_msg_part_maybe_attachment(part))
-		return;
+// static void
+// each_part(const Message& msg, MuMsgPart* part, PartInfo* pinfo)
+// {
+//	/* exclude things that don't look like proper attachments, unless they're images */
+//	if (!mu_msg_part_maybe_attachment(part))
+//		return;
 
-	GError* gerr{};
-	char*   cachefile =
-	    mu_msg_part_save_temp(msg,
-				  (MuMsgOptions)(pinfo->opts | MU_MSG_OPTION_OVERWRITE),
-				  part->index,
-				  &gerr);
-	if (!cachefile)
-		throw Error(Error::Code::File, &gerr, "failed to save part");
+//	GError* gerr{};
+//	char*   cachefile =
+//	    mu_msg_part_save_temp(msg,
+//				  (MuMsgOptions)(pinfo->opts | MU_MSG_OPTION_OVERWRITE),
+//				  part->index,
+//				  &gerr);
+//	if (!cachefile)
+//		throw Error(Error::Code::File, &gerr, "failed to save part");
 
-	Sexp::List pi;
-	pi.add_prop(":file-name", Sexp::make_string(cachefile));
-	pi.add_prop(":mime-type", Sexp::make_string(format("%s/%s", part->type, part->subtype)));
-	pinfo->attseq.add(Sexp::make_list(std::move(pi)));
-	g_free(cachefile);
-}
+//	Sexp::List pi;
+//	pi.add_prop(":file-name", Sexp::make_string(cachefile));
+//	pi.add_prop(":mime-type", Sexp::make_string(format("%s/%s", part->type, part->subtype)));
+//	pinfo->attseq.add(Sexp::make_list(std::move(pi)));
+//	g_free(cachefile);
+// }
 
 /* 'compose' produces the un-changed *original* message sexp (ie., the message
  * to reply to, forward or edit) for a new message to compose). It takes two
@@ -479,29 +476,33 @@ Server::Private::compose_handler(const Parameters& params)
 	Sexp::List comp_lst;
 	comp_lst.add_prop(":compose", Sexp::make_symbol(std::string(ctype)));
 
-	if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
-		GError*        gerr{};
-		const unsigned docid{(unsigned)get_int_or(params, ":docid")};
-		auto           msg{store().find_message(docid)};
-		if (!msg)
-			throw Error{Error::Code::Store, &gerr, "failed to get message %u", docid};
 
-		const auto opts{message_options(params)};
-		comp_lst.add_prop(":original", build_message_sexp(msg, docid, {}, opts));
+	if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
+		const unsigned docid{(unsigned)get_int_or(params, ":docid")};
+		auto  msg{store().find_message(docid)};
+		if (!msg)
+			throw Error{Error::Code::Store, "failed to get message %u", docid};
+
+		comp_lst.add_prop(":original", build_message_sexp(msg.value(), docid, {}));
 
 		if (ctype == "forward") {
-			PartInfo pinfo{};
-			pinfo.opts = opts;
-			mu_msg_part_foreach(msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo);
-			if (!pinfo.attseq.empty())
-				comp_lst.add_prop(":include",
-						  Sexp::make_list(std::move(pinfo.attseq)));
+			// for (auto&& part: msg->parts()) {
+			//	if (!part.is_attachment())
+			//		continue;
+
+
+
+
+			// PartInfo pinfo{};
+			// pinfo.opts = opts;
+			// mu_msg_part_foreach(msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo);
+			// if (!pinfo.attseq.empty())
+			//	comp_lst.add_prop(":include",
+			//			  Sexp::make_list(std::move(pinfo.attseq)));
 		}
-		mu_msg_unref(msg);
 
 	} else if (ctype != "new")
-		throw Error(Error::Code::InvalidArgument,
-			    "invalid compose type '%s'",
+		throw Error(Error::Code::InvalidArgument, "invalid compose type '%s'",
 			    ctype.c_str());
 
 	output_sexp(std::move(comp_lst));
@@ -588,22 +589,17 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
  * mu_store_get_path could be added if this turns out to be a problem
  */
 static std::string
-path_from_docid(const Store& store, unsigned docid)
+path_from_docid(const Store& store, Store::Id docid)
 {
 	auto msg{store.find_message(docid)};
 	if (!msg)
 		throw Error(Error::Code::Store, "could not get message from store");
 
-	auto p{mu_msg_get_path(msg)};
-	if (!p) {
-		mu_msg_unref(msg);
-		throw Error(Error::Code::Store, "could not get path for message %u", docid);
-	}
-
-	std::string msgpath{p};
-	mu_msg_unref(msg);
-
-	return msgpath;
+	if (auto path{msg->path()}; path.empty())
+		throw Error(Error::Code::Store, "could not get path for message %u",
+			    docid);
+	else
+		return path;
 }
 
 static std::vector<Store::Id>
@@ -635,14 +631,14 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 	};
 
 	for (auto&& mi : qres) {
-		auto msg{mi.floating_msg()};
+		auto msg{mi.message()};
 		if (!msg)
 			continue;
 		++n;
 
 		// construct sexp for a single header.
 		auto qm{mi.query_match()};
-		headers.add(build_message_sexp(msg, mi.doc_id(), qm, MU_MSG_OPTION_HEADERS_ONLY));
+		headers.add(build_message_sexp(*msg, mi.doc_id(), qm));
 		// we output up-to-batch-size lists of messages. It's much
 		// faster (on the emacs side) to handle such batches than single
 		// headers.
@@ -817,7 +813,7 @@ Server::Private::mkdir_handler(const Parameters& params)
 
 Sexp::List
 Server::Private::perform_move(Store::Id                 docid,
-			      MuMsg*                    msg,
+			      const Message&            msg,
 			      const std::string&	maildirarg,
 			      Flags			flags,
 			      bool                      new_name,
@@ -826,17 +822,16 @@ Server::Private::perform_move(Store::Id                 docid,
 	bool different_mdir{};
 	auto maildir{maildirarg};
 	if (maildir.empty()) {
-		maildir        = mu_msg_get_maildir(msg);
+		maildir        = msg.maildir();
 		different_mdir = false;
 	} else /* are we moving to a different mdir, or is it just flags? */
-		different_mdir = maildir != mu_msg_get_maildir(msg);
+		different_mdir = maildir != msg.maildir();
 
-	GError* gerr{};
-
-	if (!mu_msg_move_to_maildir(msg,
-				    store().properties().root_maildir,
-				    maildir, flags, true, new_name, &gerr))
-		throw Error{Error::Code::File, &gerr, "failed to move message"};
+#warning implement me
+	// if (!mu_msg_move_to_maildir(msg,
+	//			    store().properties().root_maildir,
+	//			    maildir, flags, true, new_name, &gerr))
+	//	throw Error{Error::Code::File, &gerr, "failed to move message"};
 
 	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
 	 * fields will be updated as wel */
@@ -844,7 +839,7 @@ Server::Private::perform_move(Store::Id                 docid,
 		throw Error{Error::Code::Store, "failed to store updated message"};
 
 	Sexp::List seq;
-	seq.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_VERIFY));
+	seq.add_prop(":update", build_message_sexp(msg, docid, {}));
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	if (different_mdir)
@@ -857,14 +852,13 @@ Server::Private::perform_move(Store::Id                 docid,
 
 
 static Flags
-calculate_message_flags(MuMsg* msg, Option<std::string> flagopt)
+calculate_message_flags(const Message& msg, Option<std::string> flagopt)
 {
 	const auto flags = std::invoke([&]()->Option<Flags>{
-			auto msgflags{mu_msg_get_flags(msg)};
 			if (!flagopt)
-				return mu_msg_get_flags(msg);
+				return msg.flags();
 			else
-				return flags_from_expr(*flagopt, msgflags);
+				return flags_from_expr(*flagopt, msg.flags());
 		});
 
 	if (!flags)
@@ -884,20 +878,12 @@ Server::Private::move_docid(Store::Id		docid,
 		throw Error{Error::Code::InvalidArgument, "invalid docid"};
 
 	auto msg{store_.find_message(docid)};
-	try {
-		if (!msg)
-			throw Error{Error::Code::Store, "failed to get message from store"};
+	if (!msg)
+		throw Error{Error::Code::Store, "failed to get message from store"};
 
-		const auto flags = calculate_message_flags(msg, flagopt);
-		auto lst = perform_move(docid, msg, "", flags, new_name, no_view);
-		mu_msg_unref(msg);
-		return lst;
-
-	} catch (...) {
-		if (msg)
-			mu_msg_unref(msg);
-		throw;
-	}
+	const auto flags = calculate_message_flags(msg.value(), flagopt);
+	auto lst = perform_move(docid, *msg, "", flags, new_name, no_view);
+	return lst;
 }
 
 /*
@@ -929,28 +915,19 @@ Server::Private::move_handler(const Parameters& params)
 		return;
 	}
 	auto docid{docids.at(0)};
-
-	GError* gerr{};
-	auto    msg{store().find_message(docid)};
-	if (!msg)
-		throw Error{Error::Code::InvalidArgument, &gerr, "could not create message"};
+	auto    msg = store().find_message(docid)
+		.or_else([]{throw Error{Error::Code::InvalidArgument,
+					"could not create message"};}).value();
 
 	/* if maildir was not specified, take the current one */
 	if (maildir.empty())
-		maildir = mu_msg_get_maildir(msg);
+		maildir = msg.maildir();
 
 	/* determine the real target flags, which come from the flags-parameter
 	 * we received (ie., flagstr), if any, plus the existing message
 	 * flags. */
 	const auto flags = calculate_message_flags(msg, flagopt);
-	try {
-		output_sexp(perform_move(docid, msg, maildir, flags, rename, no_view));
-	} catch (...) {
-		mu_msg_unref(msg);
-		throw;
-	}
-
-	mu_msg_unref(msg);
+	output_sexp(perform_move(docid, msg, maildir, flags, rename, no_view));
 }
 
 void
@@ -1027,76 +1004,66 @@ void
 Server::Private::sent_handler(const Parameters& params)
 {
 	const auto path{get_string_or(params, ":path")};
-	const auto docid{store().add_message(path)};
-	if (docid == Store::InvalidId)
+	const auto docid = store().add_message(path);
+	if (!docid)
 		throw Error{Error::Code::Store, "failed to add path"};
+
 
 	Sexp::List lst;
 	lst.add_prop(":sent", Sexp::make_symbol("t"));
 	lst.add_prop(":path", Sexp::make_string(path));
-	lst.add_prop(":docid", Sexp::make_number(docid));
+	lst.add_prop(":docid", Sexp::make_number(docid.value()));
 
 	output_sexp(std::move(lst));
 }
 
 bool
-Server::Private::maybe_mark_as_read(MuMsg* msg, Store::Id docid, bool rename)
+Server::Private::maybe_mark_as_read(Message& msg, Store::Id docid, bool rename)
 {
-	if (!msg)
-		throw Error{Error::Code::Store, "missing message"};
+	// const auto oldflags{msg.flags()};
+	// const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
+	// if (!newflags || oldflags == *newflags)
+	//	return false; // nothing to do.
 
-	const auto oldflags{mu_msg_get_flags(msg)};
-	const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
-	if (!newflags || oldflags == *newflags)
-		return false; // nothing to do.
+	// GError* gerr{};
+	// if (!mu_msg_move_to_maildir(msg,
+	//			    store().properties().root_maildir,
+	//			    mu_msg_get_maildir(msg),
+	//			    *newflags,
+	//			    true,
+	//			    rename,
+	//			    &gerr))
+	//	throw Error{Error::Code::File, &gerr, "failed to move message"};
 
-	GError* gerr{};
-	if (!mu_msg_move_to_maildir(msg,
-				    store().properties().root_maildir,
-				    mu_msg_get_maildir(msg),
-				    *newflags,
-				    true,
-				    rename,
-				    &gerr))
-		throw Error{Error::Code::File, &gerr, "failed to move message"};
+	// /* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
+	//  * fields will be updated as wel */
+	// if (!store().update_message(msg, docid))
+	//	throw Error{Error::Code::Store, "failed to store updated message"};
 
-	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
-	 * fields will be updated as wel */
-	if (!store().update_message(msg, docid))
-		throw Error{Error::Code::Store, "failed to store updated message"};
+	// /* send an update */
+	// Sexp::List update;
+	// update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_NONE));
+	// output_sexp(Sexp::make_list(std::move(update)));
 
-	/* send an update */
-	Sexp::List update;
-	update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_NONE));
-	output_sexp(Sexp::make_list(std::move(update)));
+	// g_debug("marked message %d as read => %s", docid, mu_msg_get_path(msg));
 
-	g_debug("marked message %d as read => %s", docid, mu_msg_get_path(msg));
-
+#warning implement me
 	return true;
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const char* msgid, bool rename) try {
-
-	if (!msgid)
+Server::Private::maybe_mark_msgid_as_read(const std::string& msgid,
+					  bool rename) try {
+	if (!msgid.empty())
 		return false; // nothing to do.
 
-	const auto docids{docids_for_msgid(store_, std::string{msgid})};
-	for (auto&& docid : docids) {
-		MuMsg* msg = store().find_message(docid);
-		if (!msg)
-			continue;
-		try {
-			maybe_mark_as_read(msg, docid, rename);
-		} catch (...) {
-			mu_msg_unref(msg);
-			throw;
-		}
-	}
+	for (auto&& docid: docids_for_msgid(store_, msgid))
+		if (auto msg{store().find_message(docid)}; msg)
+			maybe_mark_as_read(msg.value(), docid, rename);
 
 	return true;
 } catch (...) { /* not fatal */
-	g_warning("failed to mark <%s> as read", msgid);
+	g_warning("failed to mark <%s> as read", msgid.c_str());
 	return false;
 }
 
@@ -1114,20 +1081,19 @@ Server::Private::view_handler(const Parameters& params)
 		throw Error{Error::Code::Store, "failed to find message for view"};
 
 	const auto docid{docids.at(0)};
-	MuMsg*     msg{store().find_message(docid)};
-	if (!msg)
-		throw Error{Error::Code::Store, "failed to find message for view"};
+	auto msg = store().find_message(docid)
+		.or_else([]{throw Error{Error::Code::Store,
+					"failed to find message for view"};}).value();
 
 	if (mark_as_read) {
 		// maybe mark the main message as read.
 		maybe_mark_as_read(msg, docid, rename);
 		/* maybe mark _all_ messsage with same message-id as read */
-		maybe_mark_msgid_as_read(mu_msg_get_msgid(msg), rename);
+		maybe_mark_msgid_as_read(msg.message_id(), rename);
 	}
 
 	Sexp::List seq;
-	seq.add_prop(":view", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_NONE));
-	mu_msg_unref(msg);
+	seq.add_prop(":view", build_message_sexp(msg, docid, {}));
 	output_sexp(std::move(seq));
 }
 
