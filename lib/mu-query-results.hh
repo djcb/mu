@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -38,7 +38,7 @@
 #include <utils/mu-option.hh>
 #include <utils/mu-xapian-utils.hh>
 
-#include "mu-msg.hh"
+#include <message/mu-message.hh>
 
 namespace Mu {
 
@@ -160,7 +160,7 @@ operator<<(std::ostream& os, const QueryMatch& qmatch)
 class QueryResultsIterator {
 public:
 	using iterator_category = std::output_iterator_tag;
-	using value_type        = MuMsg*;
+	using value_type        = Message;
 	using difference_type   = void;
 	using pointer           = void;
 	using reference         = void;
@@ -169,7 +169,6 @@ public:
 	    : mset_it_{mset_it}, query_matches_{query_matches}
 	{
 	}
-	~QueryResultsIterator() { g_clear_pointer(&msg_, mu_msg_unref); }
 
 	/**
 	 * Increment the iterator (we don't support post-increment)
@@ -304,36 +303,26 @@ public:
 	}
 
 	/**
-	 * get the corresponding MuMsg for this iter; this instance is owned by
-	 * @this, and becomes invalid when iterating to the next, or @this is
+	 * get the corresponding Message for this iter; this instance is owned
+	 * by @this, and becomes invalid when iterating to the next, or @this is
 	 * destroyed.; it's a 'floating' reference.
 	 *
-	 * @return a MuMsg*  or NUL in case of error
+	 * @return a Message or Nothing
 	 */
-	MuMsg* floating_msg() G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-	{
+	Option<Message> message() const {
 		return xapian_try(
-		    [&] {
-			    auto    docp{reinterpret_cast<XapianDocument*>(
-				new Xapian::Document(document()))};
-			    GError* err{};
-			    g_clear_pointer(&msg_, mu_msg_unref);
-			    if (!(msg_ = mu_msg_new_from_doc(docp, &err))) {
-				    delete docp;
-				    g_warning("failed to crate message for %s: %s",
-					      path().value_or("<none>").c_str(),
-					      err ? err->message : "somethng went wrong");
-				    g_clear_error(&err);
-			    }
-			    return msg_;
+		    [&]()->Option<Message> {
+			    if (auto&& msg{Message::make_from_document(document())}; msg)
+				    return Some(std::move(msg.value()));
+			    else
+				    return Nothing;
 		    },
-		    (MuMsg*)NULL);
+		    Nothing);
 	}
 
 private:
 	Xapian::MSetIterator mset_it_;
 	QueryMatches&        query_matches_;
-	MuMsg*               msg_{};
 };
 
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();

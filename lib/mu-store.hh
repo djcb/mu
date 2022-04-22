@@ -20,8 +20,6 @@
 #ifndef __MU_STORE_HH__
 #define __MU_STORE_HH__
 
-#include <mu-msg.hh>
-
 #include <string>
 #include <vector>
 #include <mutex>
@@ -74,15 +72,6 @@ public:
 	      const std::string& maildir,
 	      const StringVec&   personal_addresses,
 	      const Config&      conf);
-
-	/**
-	 * Construct an in-memory, writeable store for testing
-	 *
-	 * @param maildir maildir to use for this store
-	 * @param personal_addresses addresses that should be recognized as
-	 * 'personal' for identifying personal messages.
-	 */
-	Store(const std::string& maildir, const StringVec& personal_addresses, const Config& conf);
 
 	/**
 	 * DTOR
@@ -187,14 +176,15 @@ public:
 	/**
 	 * Add a message to the store. When planning to write many messages,
 	 * it's much faster to do so in a transaction. If so, set
-	 * @in_transaction to true. When done with adding messages, call commit().
+	 * @in_transaction to true. When done with adding messages, call
+	 * commit().
 	 *
 	 * @param path the message path.
 	 * @param whether to bundle up to batch_size changes in a transaction
 	 *
-	 * @return the doc id of the added message
+	 * @return the doc id of the added message or an error.
 	 */
-	Id add_message(const std::string& path, bool use_transaction = false);
+	Result<Id> add_message(const std::string& path, bool use_transaction = false);
 
 	/**
 	 * Update a message in the store.
@@ -204,7 +194,7 @@ public:
 	 *
 	 * @return false in case of failure; true otherwise.
 	 */
-	bool update_message(MuMsg* msg, Id id);
+	bool update_message(const Message& msg, Id id);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
@@ -237,9 +227,9 @@ public:
 	 *
 	 * @param id doc id for the message to find
 	 *
-	 * @return a message (owned by caller), or nullptr
+	 * @return a message (if found) or Nothing
 	 */
-	MuMsg* find_message(Id id) const;
+	Option<Message> find_message(Id id) const;
 
 	/**
 	 * does a certain message exist in the store already?
@@ -249,6 +239,22 @@ public:
 	 * @return true if the message exists in the store, false otherwise
 	 */
 	bool contains_message(const std::string& path) const;
+
+	/**
+	 * Move a message both in the filesystem and in the store.
+	 * After a successful move, the message is updated.
+	 *
+	 * @param id the id for some message
+	 * @param target_mdir the target maildir (if any)
+	 * @param new_flags new flags (if any)
+	 * @param change_name whether to change the name
+	 *
+	 * @return Result, either the moved message or some error.
+	 */
+	Result<Message> move_message(Store::Id id,
+				     Option<const std::string&> target_mdir = Nothing,
+				     Option<Flags> new_flags = Nothing,
+				     bool change_name = false);
 
 	/**
 	 * Prototype for the ForEachMessageFunc
@@ -300,7 +306,6 @@ public:
 	 * @return the metadata value or empty for none.
 	 */
 	std::string metadata(const std::string& key) const;
-
 
 	/**
 	 * Write metadata to the store.
