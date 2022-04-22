@@ -32,8 +32,6 @@
 #include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
-#include <mu-msg.hh>
-#include <mu-msg-part.hh>
 
 using namespace Mu;
 
@@ -45,12 +43,14 @@ static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
 static std::array<SCM, AllMessageFlagInfos.size()> SYMB_FLAGS;
 static SCM SYMB_CONTACT_TO, SYMB_CONTACT_CC, SYMB_CONTACT_BCC, SYMB_CONTACT_FROM;
 
-struct _MuMsgWrapper {
-	MuMsg*   _msg;
-	gboolean _unrefme;
+struct MuMsgWrapper {
+	MuMsgWrapper(const Message& msg, bool unrefme):
+		_msg{msg}, _unrefme(unrefme)
+		{}
+	Message _msg;
+	bool	_unrefme;
 };
-typedef struct _MuMsgWrapper MuMsgWrapper;
-static long                  MSG_TAG;
+static long	MSG_TAG;
 
 static gboolean
 mu_guile_scm_is_msg(SCM scm)
@@ -59,11 +59,9 @@ mu_guile_scm_is_msg(SCM scm)
 }
 
 SCM
-mu_guile_msg_to_scm(MuMsg* msg)
+mu_guile_msg_to_scm(const Message& msg)
 {
 	MuMsgWrapper* msgwrap;
-
-	g_return_val_if_fail(msg, SCM_UNDEFINED);
 
 	msgwrap           = (MuMsgWrapper*)scm_gc_malloc(sizeof(MuMsgWrapper), "msg");
 	msgwrap->_msg     = msg;
@@ -90,10 +88,10 @@ typedef struct {
 
 
 static SCM
-get_flags_scm(MuMsg* msg)
+get_flags_scm(const Message& msg)
 {
 	SCM lst{SCM_EOL};
-	const auto flags{mu_msg_get_flags(msg)};
+	const auto flags{msg.flags()};
 
 	for (auto i = 0; i != AllMessageFlagInfos.size(); ++i) {
 		const auto& info{AllMessageFlagInfos.at(i)};
@@ -105,9 +103,9 @@ get_flags_scm(MuMsg* msg)
 }
 
 static SCM
-get_prio_scm(MuMsg* msg)
+get_prio_scm(const Message& msg)
 {
-	switch (mu_msg_get_prio(msg)) {
+	switch (msg.priority()) {
 	case Priority::Low: return SYMB_PRIO_LOW;
 	case Priority::Normal: return SYMB_PRIO_NORMAL;
 	case Priority::High: return SYMB_PRIO_HIGH;
@@ -117,16 +115,12 @@ get_prio_scm(MuMsg* msg)
 }
 
 static SCM
-msg_string_list_field(MuMsg* msg, Field::Id field_id)
+msg_string_list_field(const Message& msg, Field::Id field_id)
 {
-	SCM           scmlst;
-	const GSList* lst;
-
-	lst = mu_msg_get_field_string_list(msg, field_id);
-
-	for (scmlst = SCM_EOL; lst; lst = g_slist_next(lst)) {
+	SCM           scmlst{SCM_EOL};
+	for (auto&& val: msg.document().string_vec_value(field_id)) {
 		SCM item;
-		item   = scm_list_1(mu_guile_scm_from_str((const char*)lst->data));
+		item   = scm_list_1(mu_guile_scm_from_str(val.c_str()));
 		scmlst = scm_append_x(scm_list_2(scmlst, item));
 	}
 
@@ -134,28 +128,12 @@ msg_string_list_field(MuMsg* msg, Field::Id field_id)
 }
 
 static SCM
-get_body(MuMsg* msg, gboolean html)
+get_body(const Message& msg, bool html)
 {
-	SCM          data;
-	const char*  body;
-	MuMsgOptions opts;
-
-	opts = MU_MSG_OPTION_NONE;
-
-	if (html)
-		body = mu_msg_get_body_html(msg, opts);
+	if (const auto body = html ? msg.body_html() : msg.body_text(); body)
+		return mu_guile_scm_from_str(body->c_str());
 	else
-		body = mu_msg_get_body_text(msg, opts);
-
-	if (body)
-		data = mu_guile_scm_from_str(body);
-	else
-		data = SCM_BOOL_F;
-
-	/* explicitly close the file backend, so we won't run of fds */
-	mu_msg_unload_msg_file(msg);
-
-	return data;
+		return SCM_BOOL_F;
 }
 
 SCM_DEFINE(get_field,
@@ -170,6 +148,7 @@ SCM_DEFINE(get_field,
 	MuMsgWrapper* msgwrap;
 	size_t field_id;
 	msgwrap = (MuMsgWrapper*)SCM_CDR(MSG);
+	const auto& msg{msgwrap->_msg};
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
@@ -178,47 +157,48 @@ SCM_DEFINE(get_field,
 
 	field_id = scm_to_int(FIELD);
 	if (field_id == MU_GUILE_MSG_FIELD_ID_TIMESTAMP)
-		return scm_from_uint((unsigned)mu_msg_get_timestamp(msgwrap->_msg));
+		return scm_from_uint((unsigned)msgwrap->_msg.date());
 
 	const auto field_opt{field_from_number(static_cast<size_t>(field_id))};
 	SCM_ASSERT(!!field_opt, FIELD, SCM_ARG2, FUNC_NAME);
 
 	switch (field_opt->id) {
 	case Field::Id::Priority:
-		return get_prio_scm(msgwrap->_msg);
+		return get_prio_scm(msg);
 	case Field::Id::Flags:
-		return get_flags_scm(msgwrap->_msg);
+		return get_flags_scm(msg);
 	case Field::Id::BodyHtml:
-		return get_body(msgwrap->_msg, TRUE);
+		return get_body(msg, true);
 	case Field::Id::BodyText:
-		return get_body(msgwrap->_msg, FALSE);
+		return get_body(msg, false);
 
 	default: break;
 	}
 
 	switch (field_opt->type) {
 	case Field::Type::String:
-		return mu_guile_scm_from_str(mu_msg_get_field_string(msgwrap->_msg,
-								     field_opt->id));
+		return mu_guile_scm_from_str(msg.document().string_value(field_opt->id).c_str());
 	case Field::Type::ByteSize:
 	case Field::Type::TimeT:
-		return scm_from_uint(mu_msg_get_field_numeric(msgwrap->_msg, field_opt->id));
 	case Field::Type::Integer:
-		return scm_from_int(mu_msg_get_field_numeric(msgwrap->_msg, field_opt->id));
+		return scm_from_uint(msg.document().integer_value(field_opt->id));
 	case Field::Type::StringList:
-		return msg_string_list_field(msgwrap->_msg, field_opt->id);
+		return msg_string_list_field(msg, field_opt->id);
 	default: SCM_ASSERT(0, FIELD, SCM_ARG2, FUNC_NAME);
 	}
 }
 #undef FUNC_NAME
 
 static SCM
-contacts_to_list(MuMsg *msg, Option<Field::Id> field_id)
+contacts_to_list(const Message& msg, Option<Field::Id> field_id)
 {
 	SCM list{SCM_EOL};
 
-	const auto contacts{mu_msg_get_contacts(msg, field_id)};
-	for (auto&& contact: mu_msg_get_contacts(msg, field_id)) {
+	const auto contacts{field_id ?
+		msg.document().contacts_value(*field_id) :
+		msg.all_contacts()};
+
+	for (auto&& contact: contacts) {
 		SCM item{scm_list_1(
 				scm_cons(mu_guile_scm_from_str(contact.name.c_str()),
 					 mu_guile_scm_from_str(contact.email.c_str())))};
@@ -278,7 +258,7 @@ SCM_DEFINE(get_contacts,
 #pragma GCC diagnostic pop
 
 	/* explicitly close the file backend, so we won't run out of fds */
-	mu_msg_unload_msg_file(msgwrap->_msg);
+	msg.u
 
 	return list;
 }
@@ -428,9 +408,8 @@ SCM_DEFINE(for_each_message,
 		return SCM_UNSPECIFIED;
 
 	for (auto&& mi : *res) {
-		auto msg{mi.floating_msg()};
-		if (msg) {
-			auto msgsmob{mu_guile_msg_to_scm(mu_msg_ref(msg))};
+		if (auto msg{mi.message()}; msg) {
+			auto msgsmob{mu_guile_msg_to_scm(msg)};
 			scm_call_1(FUNC, msgsmob);
 		}
 	}

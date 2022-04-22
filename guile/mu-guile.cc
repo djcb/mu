@@ -31,7 +31,6 @@
 #include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
-#include <mu-msg.hh>
 
 using namespace Mu;
 
@@ -42,19 +41,19 @@ mu_guile_scm_from_str(const char* str)
 		return SCM_BOOL_F;
 	else
 		return scm_from_stringn(str,
-		                        strlen(str),
-		                        "UTF-8",
-		                        SCM_FAILED_CONVERSION_QUESTION_MARK);
+					strlen(str),
+					"UTF-8",
+					SCM_FAILED_CONVERSION_QUESTION_MARK);
 }
 
 SCM
 mu_guile_error(const char* func_name, int status, const char* fmt, SCM args)
 {
 	scm_error_scm(scm_from_locale_symbol("MuError"),
-	              scm_from_utf8_string(func_name ? func_name : "<nameless>"),
-	              scm_from_utf8_string(fmt),
-	              args,
-	              scm_list_1(scm_from_int(status)));
+		      scm_from_utf8_string(func_name ? func_name : "<nameless>"),
+		      scm_from_utf8_string(fmt),
+		      args,
+		      scm_list_1(scm_from_int(status)));
 
 	return SCM_UNSPECIFIED;
 }
@@ -63,10 +62,10 @@ SCM
 mu_guile_g_error(const char* func_name, GError* err)
 {
 	scm_error_scm(scm_from_locale_symbol("MuError"),
-	              scm_from_utf8_string(func_name),
-	              scm_from_utf8_string(err ? err->message : "error"),
-	              SCM_UNDEFINED,
-	              SCM_UNDEFINED);
+		      scm_from_utf8_string(func_name),
+		      scm_from_utf8_string(err ? err->message : "error"),
+		      SCM_UNDEFINED,
+		      SCM_UNDEFINED);
 
 	return SCM_UNSPECIFIED;
 }
@@ -85,9 +84,9 @@ try {
 	StoreSingleton = std::make_unique<Mu::Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
 
 	g_debug("mu-guile: opened store @ %s (n=%zu); maildir: %s",
-	        StoreSingleton->properties().database_path.c_str(),
-	        StoreSingleton->size(),
-	        StoreSingleton->properties().root_maildir.c_str());
+		StoreSingleton->properties().database_path.c_str(),
+		StoreSingleton->size(),
+		StoreSingleton->properties().root_maildir.c_str());
 
 	return TRUE;
 
@@ -121,24 +120,24 @@ mu_guile_initialized()
 }
 
 SCM_DEFINE_PUBLIC(mu_initialize,
-                  "mu:initialize",
-                  0,
-                  1,
-                  0,
-                  (SCM MUHOME),
-                  "Initialize mu - needed before you call any of the other "
-                  "functions. Optionally, you can provide MUHOME which should be an "
-                  "absolute path to your mu home directory "
-                  "-- typically, the default, ~/.cache/mu, should be just fine.")
+		  "mu:initialize",
+		  0,
+		  1,
+		  0,
+		  (SCM MUHOME),
+		  "Initialize mu - needed before you call any of the other "
+		  "functions. Optionally, you can provide MUHOME which should be an "
+		  "absolute path to your mu home directory "
+		  "-- typically, the default, ~/.cache/mu, should be just fine.")
 #define FUNC_NAME s_mu_initialize
 {
 	char*    muhome;
 	gboolean rv;
 
 	SCM_ASSERT(scm_is_string(MUHOME) || MUHOME == SCM_BOOL_F || SCM_UNBNDP(MUHOME),
-	           MUHOME,
-	           SCM_ARG1,
-	           FUNC_NAME);
+		   MUHOME,
+		   SCM_ARG1,
+		   FUNC_NAME);
 
 	if (mu_guile_initialized())
 		return mu_guile_error(FUNC_NAME, 0, "Already initialized", SCM_UNSPECIFIED);
@@ -155,7 +154,7 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 	}
 
 	g_debug("mu-guile: initialized @ %s (%p)",
-	        muhome ? muhome : "<default>", StoreSingleton.get());
+		muhome ? muhome : "<default>", StoreSingleton.get());
 	free(muhome);
 
 	/* cleanup when we're exiting */
@@ -166,12 +165,12 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 #undef FUNC_NAME
 
 SCM_DEFINE_PUBLIC(mu_initialized_p,
-                  "mu:initialized?",
-                  0,
-                  0,
-                  0,
-                  (void),
-                  "Whether mu is initialized or not.\n")
+		  "mu:initialized?",
+		  0,
+		  0,
+		  0,
+		  (void),
+		  "Whether mu is initialized or not.\n")
 #define FUNC_NAME s_mu_initialized_p
 {
 	return mu_guile_initialized() ? SCM_BOOL_T : SCM_BOOL_F;
@@ -179,13 +178,13 @@ SCM_DEFINE_PUBLIC(mu_initialized_p,
 #undef FUNC_NAME
 
 SCM_DEFINE(log_func,
-           "mu:c:log",
-           1,
-           0,
-           1,
-           (SCM LEVEL, SCM FRM, SCM ARGS),
-           "log some message at LEVEL using a list of ARGS applied to FRM"
-           "(in 'simple-format' notation).\n")
+	   "mu:c:log",
+	   1,
+	   0,
+	   1,
+	   (SCM LEVEL, SCM FRM, SCM ARGS),
+	   "log some message at LEVEL using a list of ARGS applied to FRM"
+	   "(in 'simple-format' notation).\n")
 #define FUNC_NAME s_log_func
 {
 	gchar* output;
