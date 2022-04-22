@@ -29,6 +29,7 @@
 #include "mu-fields.hh"
 #include "mu-document.hh"
 #include "mu-message-part.hh"
+#include <xapian.h>
 
 #include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
@@ -86,7 +87,6 @@ public:
 	} catch (...) {
 		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
-
 
 	/**
 	 * Construct a message based on a Message::Document
@@ -265,7 +265,6 @@ public:
 		return document().string_vec_value(Field::Id::References);
 	}
 
-
 	/*
 	 * Convert to Sexp
 	 */
@@ -281,9 +280,19 @@ public:
 	Mu::Sexp       to_sexp() const;
 
 	/*
+	 * And some non-const message, for updating an existing
+	 * message after a file-system move.
+	 *
+	 * @return Ok or an error.
+	 */
+	Result<void> update_after_move(const std::string& new_path,
+				       const std::string& new_maildir,
+				       Flags new_flags);
+
+
+	/*
 	 * Below require a file-backed message, which is a relatively slow
 	 * if there isn't one already; see load_mime_message()
-	 *
 	 */
 
 	/**

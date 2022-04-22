@@ -687,3 +687,20 @@ Message::mtime() const
 }
 
 
+
+
+Result<void>
+Message::update_after_move(const std::string& new_path,
+			   const std::string& new_maildir,
+			   Flags new_flags)
+{
+	const auto statbuf{get_statbuf(new_path)};
+	if (!statbuf)
+		return Err(statbuf.error());
+
+	priv_->doc.add(Field::Id::Path, new_path);
+	priv_->doc.add(Field::Id::Maildir, new_maildir);
+	priv_->doc.add(new_flags);
+
+	return Ok();
+}
