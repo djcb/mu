@@ -30,7 +30,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "mu-msg.hh"
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
 #include "mu-runtime.hh"
@@ -60,7 +59,7 @@ install_sig_handler(void)
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
 			g_critical("set sigaction for %d failed: %s",
-			           sigs[i], g_strerror(errno));
+				   sigs[i], g_strerror(errno));
 }
 
 static void
@@ -91,18 +90,18 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 	}
 	if (opts->max_msg_size < 0) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "the maximum message size must be >= 0");
+				    MU_ERROR_IN_PARAMETERS,
+				    "the maximum message size must be >= 0");
 		return MU_ERROR;
 	}
 
 	const auto mdir{store.properties().root_maildir};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0)) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE,
-		                    "'%s' is not readable: %s",
-		                    mdir.c_str(),
-		                    g_strerror(errno));
+				    MU_ERROR_FILE,
+				    "'%s' is not readable: %s",
+				    mdir.c_str(),
+				    g_strerror(errno));
 		return MU_ERROR;
 	}
 

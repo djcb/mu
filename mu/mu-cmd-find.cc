@@ -28,8 +28,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "message/mu-fields.hh"
-#include "mu-msg.hh"
+#include "message/mu-message.hh"
 #include "mu-maildir.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query.hh"
@@ -56,7 +55,8 @@ struct OutputInfo {
 constexpr auto FirstOutput{OutputInfo{0, true, false, {}, {}}};
 constexpr auto LastOutput{OutputInfo{0, false, true, {}, {}}};
 
-using OutputFunc = std::function<bool(MuMsg*, const OutputInfo&, const MuConfig*, GError**)>;
+using OutputFunc = std::function<bool(const Option<Message>& msg, const OutputInfo&,
+				      const MuConfig*, GError**)>;
 
 static gboolean
 print_internal(const Store&       store,
@@ -95,13 +95,16 @@ run_query(const Store& store, const std::string& expr, const MuConfig* opts,
 }
 
 static gboolean
-exec_cmd(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+exec_cmd(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
+	if (!msg)
+		return TRUE;
+
 	gint     status;
 	char *   cmdline, *escpath;
 	gboolean rv;
 
-	escpath = g_shell_quote(mu_msg_get_path(msg));
+	escpath = g_shell_quote(msg->path().c_str());
 	cmdline = g_strdup_printf("%s %s", opts->exec, escpath);
 
 	rv = g_spawn_command_line_sync(cmdline, NULL, NULL, &status, err);
@@ -201,14 +204,16 @@ prepare_links(const MuConfig* opts, GError** err)
 }
 
 static bool
-output_link(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_link(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
+	if (msg)
+		return true;
+
 	if (info.header)
 		return prepare_links(opts, err);
 	else if (info.footer)
 		return true;
-	if (auto&& res = mu_maildir_link(
-		    mu_msg_get_path(msg), opts->linksdir); !res) {
+	if (auto&& res = mu_maildir_link(msg->path(), opts->linksdir); !res) {
 		res.error().fill_g_error(err);
 		return FALSE;
 	}
@@ -251,97 +256,46 @@ ansi_reset_maybe(Field::Id field_id, gboolean color)
 	fputs(MU_COLOR_DEFAULT, stdout);
 }
 
-static const char*
-field_string_list(MuMsg* msg, Field::Id field_id)
-{
-	char*         str;
-	const GSList* lst;
-	static char   buf[80];
-
-	lst = mu_msg_get_field_string_list(msg, field_id);
-	if (!lst)
-		return NULL;
-
-	str = mu_str_from_list(lst, ',');
-	if (str) {
-		strncpy(buf, str, sizeof(buf) - 1);
-		buf[sizeof(buf) - 1] = '\0';
-		g_free(str);
-		return buf;
-	}
-
-	return NULL;
-}
-
-/* ugly... for backward compat */
-static const char*
-flags_s(Flags flags)
-{
-	static char buf[64];
-	const auto flagstr{to_string(flags)};
-
-	::strncpy(buf, flagstr.c_str(), sizeof(buf) - 1);
-
-	return buf;
-}
-
 static std::string
-display_field(MuMsg* msg, Field::Id field_id)
+display_field(const Message& msg, Field::Id field_id)
 {
-	gint64 val;
-
 	switch (field_from_id(field_id).type) {
-	case Field::Type::String: {
-		const gchar* str;
-		str = mu_msg_get_field_string(msg, field_id);
-		return str ? str : "";
-	}
+	case Field::Type::String:
+		return msg.document().string_value(field_id);
 	case Field::Type::Integer:
 		if (field_id == Field::Id::Priority) {
-			const auto val  = static_cast<char>(mu_msg_get_field_numeric(msg, field_id));
-			const auto prio = priority_from_char(val);
-			return priority_name_c_str(prio);
+			return to_string(msg.priority());
 		} else if (field_id == Field::Id::Flags) {
-			val = mu_msg_get_field_numeric(msg, field_id);
-			return flags_s(static_cast<Flags>(val));
+			return to_string(msg.flags());
 		} else /* as string */
-			return mu_msg_get_field_string(msg, field_id);
-
+			return msg.document().string_value(field_id);
 	case Field::Type::TimeT:
 		return time_to_string(
-			"%c", static_cast<::time_t>(mu_msg_get_field_numeric(msg, field_id)));
+			"%c", static_cast<::time_t>(msg.document().integer_value(field_id)));
 	case Field::Type::ByteSize:
-		val = mu_msg_get_field_numeric(msg, field_id);
-		return mu_str_size_s((unsigned)val);
-	case Field::Type::StringList: {
-		const char* str;
-		str = field_string_list(msg, field_id);
-		return str ? str : "";
-	}
-	default: g_return_val_if_reached(NULL);
+		return to_string(msg.document().integer_value(field_id));
+	case Field::Type::StringList:
+		return join(msg.document().string_vec_value(field_id), ',');
+	default:
+		g_return_val_if_reached("");
+		return "";
 	}
 }
 
 static void
-print_summary(MuMsg* msg, const MuConfig* opts)
+print_summary(const Message& msg, const MuConfig* opts)
 {
-	const char*  body;
-	char*        summ;
-	MuMsgOptions msgopts;
+	const auto body{msg.body_text()};
+	if (!body)
+		return;
 
-	msgopts = mu_config_get_msg_options(opts);
-	body    = mu_msg_get_body_text(msg, msgopts);
-
-	if (body)
-		summ = mu_str_summarize(body, (unsigned)opts->summary_len);
-	else
-		summ = NULL;
+	const auto summ{to_string_opt_gchar(
+			mu_str_summarize(body->c_str(),
+					 opts->summary_len))};
 
 	g_print("Summary: ");
-	mu_util_fputs_encoded(summ ? summ : "<none>", stdout);
+	mu_util_fputs_encoded(summ ? summ->c_str() : "<none>", stdout);
 	g_print("\n");
-
-	g_free(summ);
 }
 
 static void
@@ -376,7 +330,8 @@ thread_indent(const QueryMatch& info, const MuConfig* opts)
 }
 
 static void
-output_plain_fields(MuMsg* msg, const char* fields, gboolean color, gboolean threads)
+output_plain_fields(const Message& msg, const char* fields,
+		    gboolean color, gboolean threads)
 {
 	const char* myfields;
 	int         nonempty;
@@ -401,7 +356,8 @@ output_plain_fields(MuMsg* msg, const char* fields, gboolean color, gboolean thr
 }
 
 static gboolean
-output_plain(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_plain(const Option<Message>& msg, const OutputInfo& info,
+	     const MuConfig* opts, GError** err)
 {
 	if (!msg)
 		return true;
@@ -412,10 +368,10 @@ output_plain(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** 
 	if (opts->threads && info.match_info)
 		thread_indent(*info.match_info, opts);
 
-	output_plain_fields(msg, opts->fields, !opts->nocolor, opts->threads);
+	output_plain_fields(*msg, opts->fields, !opts->nocolor, opts->threads);
 
 	if (opts->summary_len > 0)
-		print_summary(msg, opts);
+		print_summary(*msg, opts);
 
 	return TRUE;
 }
@@ -462,27 +418,28 @@ to_string(const Mu::Sexp& sexp, bool color, size_t level = 0)
 							   : Color::BrightBlue))
 		      << sexp.value() << col.reset();
 		break;
-	default: throw std::logic_error("invalid type");
+	default:
+		throw std::logic_error("invalid type");
 	}
 
 	return sstrm.str();
 }
 
 static bool
-output_sexp(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
-	if (!msg)
-		return true;
-
-	fputs(msg_to_sexp(msg, 0, MU_MSG_OPTION_HEADERS_ONLY).to_sexp_string().c_str(), stdout);
+	fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
 	fputs("\n", stdout);
 
 	return true;
 }
 
 static bool
-output_json(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_json(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
+	if (!msg)
+		return true;
+
 	if (info.header) {
 		g_print("[\n");
 		return true;
@@ -494,27 +451,24 @@ output_json(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** e
 	}
 
 	g_print("%s%s\n",
-		msg_to_sexp(msg, info.docid, MU_MSG_OPTION_HEADERS_ONLY).to_json_string().c_str(),
+		msg->to_sexp().to_json_string().c_str(),
 		info.last ? "" : ",");
 
 	return true;
 }
 
 static void
-print_attr_xml(const char* elm, const char* str)
+print_attr_xml(const std::string& elm, const std::string& str)
 {
-	gchar* esc;
-
-	if (mu_str_is_empty(str))
+	if (str.empty())
 		return; /* empty: don't include */
 
-	esc = g_markup_escape_text(str, -1);
-	g_print("\t\t<%s>%s</%s>\n", elm, esc, elm);
-	g_free(esc);
+	auto&& esc{to_string_opt_gchar(g_markup_escape_text(str.c_str(), -1))};
+	g_print("\t\t<%s>%s</%s>\n", elm.c_str(), esc.value_or("").c_str(), elm.c_str());
 }
 
 static bool
-output_xml(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_xml(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
 	if (info.header) {
 		g_print("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
@@ -528,15 +482,15 @@ output_xml(MuMsg* msg, const OutputInfo& info, const MuConfig* opts, GError** er
 	}
 
 	g_print("\t<message>\n");
-	print_attr_xml("from", mu_msg_get_from(msg));
-	print_attr_xml("to", mu_msg_get_to(msg));
-	print_attr_xml("cc", mu_msg_get_cc(msg));
-	print_attr_xml("subject", mu_msg_get_subject(msg));
-	g_print("\t\t<date>%u</date>\n", (unsigned)mu_msg_get_date(msg));
-	g_print("\t\t<size>%u</size>\n", (unsigned)mu_msg_get_size(msg));
-	print_attr_xml("msgid", mu_msg_get_msgid(msg));
-	print_attr_xml("path", mu_msg_get_path(msg));
-	print_attr_xml("maildir", mu_msg_get_maildir(msg));
+	print_attr_xml("from", to_string(msg->from()));
+	print_attr_xml("to", to_string(msg->to()));
+	print_attr_xml("cc", to_string(msg->cc()));
+	print_attr_xml("subject", msg->subject());
+	g_print("\t\t<date>%u</date>\n", (unsigned)msg->date());
+	g_print("\t\t<size>%u</size>\n", (unsigned)msg->size());
+	print_attr_xml("msgid", msg->message_id());
+	print_attr_xml("path", msg->path());
+	print_attr_xml("maildir", msg->maildir());
 	g_print("\t</message>\n");
 
 	return true;
@@ -565,16 +519,16 @@ output_query_results(const QueryResults& qres, const MuConfig* opts, GError** er
 		return false;
 
 	gboolean rv{true};
-	output_func(NULL, FirstOutput, opts, NULL);
+	output_func(Nothing, FirstOutput, opts, {});
 
 	size_t n{0};
 	for (auto&& item : qres) {
 		n++;
-		auto msg{item.floating_msg()};
+		auto msg{item.message()};
 		if (!msg)
 			continue;
 
-		if (opts->after != 0 && mu_msg_get_timestamp(msg) < opts->after)
+		if (opts->after != 0 && msg->mtime() < opts->after)
 			continue;
 
 		rv = output_func(msg,
@@ -588,7 +542,7 @@ output_query_results(const QueryResults& qres, const MuConfig* opts, GError** er
 		if (!rv)
 			break;
 	}
-	output_func(NULL, LastOutput, opts, NULL);
+	output_func(Nothing, LastOutput, opts, {});
 
 	return rv;
 }

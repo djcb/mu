@@ -246,19 +246,19 @@ test_mu_query_accented_chars_01(void)
 	g_assert_true(!!qres);
 	g_assert_false(qres->empty());
 
-	auto begin{qres->begin()};
-	auto msg{begin.floating_msg()};
+	const auto msg{qres->begin().message()};
 	if (!msg) {
 		g_warning("error getting message");
 		g_assert_not_reached();
 	}
 
-	g_assert_cmpstr(mu_msg_get_subject(msg), ==, "Greetings from Lothlórien");
+	assert_equal(msg->subject(), "Greetings from Lothlórien");
 	/* TODO: fix this again */
 
-	auto summ = mu_str_summarize(mu_msg_get_body_text(msg, MU_MSG_OPTION_NONE), 5);
-	g_assert_cmpstr(summ, ==, "Let's write some fünkÿ text using umlauts. Foo.");
-	g_free(summ);
+	const auto summ{to_string_opt_gchar(
+			mu_str_summarize(msg->body_text().value_or("").c_str(), 5))};
+	g_assert_true(!!summ);
+	assert_equal(*summ,  "Let's write some fünkÿ text using umlauts. Foo.");
 }
 
 static void

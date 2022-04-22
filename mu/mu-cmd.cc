@@ -29,8 +29,6 @@
 #include <errno.h>
 
 #include "mu-config.hh"
-#include "mu-msg.hh"
-#include "mu-msg-part.hh"
 #include "mu-cmd.hh"
 #include "mu-maildir.hh"
 #include "mu-contacts-cache.hh"
@@ -43,6 +41,7 @@
 
 #include "utils/mu-error.hh"
 #include "utils/mu-utils.hh"
+#include "message/mu-message.hh"
 
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
@@ -303,8 +302,8 @@ foreach_msg_file(Mu::Store& store, const MuConfig* opts, ForeachMsgFunc foreach_
 static bool
 add_path_func(Mu::Store& store, const char* path, GError** err)
 {
-	const auto docid = store.add_message(path);
-	g_debug("added message @ %s, docid=%u", path, docid);
+	const auto docid{store.add_message(path)};
+	g_debug("added message @ %s, docid=%u", path, docid.value());
 
 	return true;
 }

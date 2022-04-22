@@ -23,7 +23,6 @@
 #include <glib.h>
 #include <sys/types.h> /* for mode_t */
 #include <message/mu-message.hh>
-#include <mu-msg.hh>
 #include <utils/mu-util.h>
 
 namespace Mu {
@@ -224,15 +223,6 @@ MuError mu_config_execute(const MuConfig* conf);
  * @return the number of non-option parameters, or 0 in case of error
  */
 size_t mu_config_param_num(const MuConfig* conf);
-
-/**
- * determine MuMsgOptions for command line args
- *
- * @param opts a MuConfig struct
- *
- * @return the corresponding MuMsgOptions
- */
-MuMsgOptions mu_config_get_msg_options(const MuConfig* opts);
 
 /**
  * determine Message::Options from command line args
