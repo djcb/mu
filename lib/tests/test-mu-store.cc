@@ -28,6 +28,10 @@
 
 #include "test-mu-common.hh"
 #include "mu-store.hh"
+#include "utils/mu-result.hh"
+#include <utils/mu-utils.hh>
+
+using namespace Mu;
 
 static std::string MuTestMaildir  = Mu::canonicalize_filename(MU_TESTMAILDIR, "/");
 static std::string MuTestMaildir2 = Mu::canonicalize_filename(MU_TESTMAILDIR2, "/");
@@ -35,72 +39,35 @@ static std::string MuTestMaildir2 = Mu::canonicalize_filename(MU_TESTMAILDIR2, "
 static void
 test_store_ctor_dtor()
 {
-	char* tmpdir = test_mu_common_get_random_tmpdir();
-	g_assert(tmpdir);
+	TempDir tempdir;
+	Mu::Store store{tempdir.path(), "/tmp", {}, {}};
 
-	Mu::Store store{tmpdir, "/tmp", {}, {}};
-	g_free(tmpdir);
 	g_assert_true(store.empty());
 	g_assert_cmpuint(0, ==, store.size());
 
-	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==, store.properties().schema_version.c_str());
+	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==,
+			store.properties().schema_version.c_str());
 }
 
 static void
 test_store_add_count_remove()
 {
-	char* tmpdir = test_mu_common_get_random_tmpdir();
-	g_assert(tmpdir);
-
-	Mu::Store store{tmpdir, MuTestMaildir, {}, {}};
-	g_free(tmpdir);
+	TempDir tempdir;
+	Mu::Store store{tempdir.path(), MuTestMaildir, {}, {}};
 
 	const auto id1 = store.add_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,");
-
-	g_assert_cmpuint(id1, !=, Mu::Store::InvalidId);
+	assert_valid_result(id1);
 
 	g_assert_cmpuint(store.size(), ==, 1);
 	g_assert_true(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
 
-	g_assert_cmpuint(store.add_message(MuTestMaildir2 + "/bar/cur/mail3"),
-			 !=,
-			 Mu::Store::InvalidId);
+	const auto id2 = store.add_message(MuTestMaildir2 + "/bar/cur/mail3");
+	assert_valid_result(id2);
 
 	g_assert_cmpuint(store.size(), ==, 2);
 	g_assert_true(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
 
-	store.remove_message(id1);
-	g_assert_cmpuint(store.size(), ==, 1);
-	g_assert_false(
-	    store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
-
-	store.remove_message(MuTestMaildir2 + "/bar/cur/mail3");
-	g_assert_true(store.empty());
-	g_assert_false(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
-}
-
-static void
-test_store_add_count_remove_in_memory()
-{
-	Mu::Store store{MuTestMaildir, {}, {}};
-
-	g_assert_true(store.properties().in_memory);
-
-	const auto id1 = store.add_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,");
-
-	g_assert_cmpuint(id1, !=, Mu::Store::InvalidId);
-
-	g_assert_cmpuint(store.size(), ==, 1);
-	g_assert_true(store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
-
-	g_assert_cmpuint(store.add_message(MuTestMaildir2 + "/bar/cur/mail3"),
-			 !=,
-			 Mu::Store::InvalidId);
-
-	g_assert_cmpuint(store.size(), ==, 2);
-	g_assert_true(store.contains_message(MuTestMaildir2 + "/bar/cur/mail3"));
-
-	store.remove_message(id1);
+	store.remove_message(id1.value());
 	g_assert_cmpuint(store.size(), ==, 1);
 	g_assert_false(
 	    store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
@@ -118,7 +85,6 @@ main(int argc, char* argv[])
 	/* mu_runtime_init/uninit */
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
-	g_test_add_func("/store/in-memory/add-count-remove", test_store_add_count_remove_in_memory);
 
 	// if (!g_test_verbose())
 	//	g_log_set_handler (NULL,

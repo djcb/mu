@@ -450,6 +450,24 @@ private:
 	} while(0)
 
 
+#define assert_equal_seq(seq1__, seq2__) do {				\
+		g_assert_cmpuint(seq1__.size(), ==, seq2__.size());	\
+		size_t n__{};						\
+		for (auto&& item__: seq1__) {				\
+			g_assert_true(item__ == seq2__.at(n__));	\
+			++n__;						\
+		}							\
+		} while(0)
+
+#define assert_equal_seq_str(seq1__, seq2__) do {			\
+		g_assert_cmpuint(seq1__.size(), ==, seq2__.size());	\
+		size_t n__{};						\
+		for (auto&& item__: seq1__) {				\
+			assert_equal(item__, seq2__.at(n__));		\
+			++n__;						\
+		}							\
+		} while(0)
+
 /**
  * For unit-tests, allow warnings in the current function.
  *

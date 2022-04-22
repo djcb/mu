@@ -149,12 +149,7 @@ Mu::utf8_clean(const std::string& dirty)
 			g_string_append_unichar(gstr, uc);
 	}
 
-	std::string clean(gstr->str, gstr->len);
-
-	clean.erase(0, clean.find_first_not_of(" "));
-	clean.erase(clean.find_last_not_of(" ") + 1); // remove trailing space
-
-	return clean;
+	return std::string{g_strstrip(gstr->str)};
 }
 
 std::string
