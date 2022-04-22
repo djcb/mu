@@ -52,7 +52,17 @@ public:
 	 *
 	 * @param some other message
 	 */
-	Message(Message&& msg);
+	Message(Message&& other) noexcept;
+
+
+	/**
+	 * operator=
+	 *
+	 * @param other move some object object
+	 *
+	 * @return
+	 */
+	Message& operator=(Message&& other) noexcept;
 
 	/**
 	 * Construct a message based on a path. The maildir is optional; however
@@ -85,13 +95,14 @@ public:
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_document(Document& doc) try {
-		return Ok(Message{doc});
+	static Result<Message> make_from_document(Xapian::Document&& doc) try {
+		return Ok(Message{Mu::Document{std::move(doc)}});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
 		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
+
 
 	/**
 	 * Construct a message from a string. This is mostly useful for testing.
@@ -340,13 +351,12 @@ public:
 	 */
 	bool has_mime_message() const;
 
-
 	struct Private;
 private:
 	Message(Options opts, const std::string& path, const std::string& mdir);
 	Message(Options opts, const std::string& str,  const std::string& path,
 		const std::string& mdir);
-	Message(Document& doc);
+	Message(Document&& doc);
 
 	std::unique_ptr<Private>        priv_;
 }; // Message

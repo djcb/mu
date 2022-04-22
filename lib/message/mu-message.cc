@@ -129,12 +129,27 @@ Message::Message(Message::Options opts, const std::string& text, const std::stri
 	fill_document(*priv_);
 }
 
-Message::Message(Message&& msg)	       = default;
-Message::Message(Document& doc):
+
+Message::Message(Message&& other) noexcept
+{
+	*this = std::move(other);
+}
+
+Message&
+Message::operator=(Message&& other) noexcept
+{
+	if (this != &other)
+		priv_ = std::move(other.priv_);
+
+	return *this;
+}
+
+Message::Message(Document&& doc):
 	priv_{std::make_unique<Private>()}
 {
-	priv_->doc = doc;
+	priv_->doc = std::move(doc);
 }
+
 
 Message::~Message() = default;
 
