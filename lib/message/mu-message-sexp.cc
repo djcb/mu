@@ -22,8 +22,6 @@
 #include "mu-message.hh"
 #include "mu-query-results.hh"
 #include "utils/mu-str.h"
-#include "mu-msg.hh"
-#include "mu-msg-part.hh"
 #include "mu-maildir.hh"
 #include "utils/mu-utils.hh"
 

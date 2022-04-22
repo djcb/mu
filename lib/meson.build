@@ -34,13 +34,7 @@ lib_mu=static_library(
     'mu-store.cc',
     'mu-tokenizer.cc',
     'mu-xapian.cc',
-    'mu-maildir.cc',
-    'mu-msg-crypto.cc',
-    'mu-msg-doc.cc',
-    'mu-msg-file.cc',
-    'mu-msg-part.cc',
-    'mu-msg-sexp.cc',
-    'mu-msg.cc',
+    'mu-maildir.cc'
   ],
   dependencies: [
     glib_dep,
