@@ -309,6 +309,14 @@ public:
 	 */
 	Option<std::string> header(const std::string& header_field) const;
 
+
+	/**
+	 * Get the mtime for the message file.
+	 *
+	 * @return the mtime
+	 */
+	::time_t mtime() const;
+
 	/**
 	 * Get all contacts for this message.
 	 *

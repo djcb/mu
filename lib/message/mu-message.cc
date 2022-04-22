@@ -39,7 +39,6 @@
 
 #include "gmime/gmime-message.h"
 #include "mu-mime-object.hh"
-#include "mu-msg-priv.hh"
 
 using namespace Mu;
 
@@ -56,6 +55,8 @@ struct Message::Private {
 	std::vector<std::string>        references;
 	std::vector<Part>               parts;
 
+	::time_t                        mtime{};
+
 	/*
 	 * we only need to index these, so we don't
 	 * really need these copy if we re-arrange things
@@ -69,22 +70,38 @@ struct Message::Private {
 
 static void fill_document(Message::Private& priv);
 
-Message::Message(Message::Options opts, const std::string& path, const std::string& mdir):
-	priv_{std::make_unique<Private>(opts)}
+static Result<struct stat>
+get_statbuf(const std::string& path)
 {
 	if (!g_path_is_absolute(path.c_str()))
-		throw Error(Error::Code::File, "path '%s' is not absolute", path.c_str());
-
+		return Err(Error::Code::File, "path '%s' is not absolute",
+			   path.c_str());
 	if (::access(path.c_str(), R_OK) != 0)
-		throw Error(Error::Code::File, "file @ '%s' is not readable", path.c_str());
+		return Err(Error::Code::File, "file @ '%s' is not readable",
+			   path.c_str());
 
 	struct stat statbuf{};
 	if (::stat(path.c_str(), &statbuf) < 0)
-		throw Error(Error::Code::File, "cannot stat %s: %s", path.c_str(),
+		return Err(Error::Code::File, "cannot stat %s: %s", path.c_str(),
 			    g_strerror(errno));
 
 	if (!S_ISREG(statbuf.st_mode))
-		throw Error(Error::Code::File, "not a regular file: %s", path.c_str());
+		return Err(Error::Code::File, "not a regular file: %s", path.c_str());
+
+	return Ok(std::move(statbuf));
+}
+
+
+Message::Message(Message::Options opts, const std::string& path,
+		 const std::string& mdir):
+	priv_{std::make_unique<Private>(opts)}
+{
+
+	const auto statbuf{get_statbuf(path)};
+	if (!statbuf)
+		throw statbuf.error();
+
+	priv_->mtime = statbuf->st_mtime;
 
 	init_gmime();
 	if (auto msg{MimeMessage::make_from_file(path)}; !msg)
@@ -99,7 +116,7 @@ Message::Message(Message::Options opts, const std::string& path, const std::stri
 	if (!mdir.empty())
 		priv_->doc.add(Field::Id::Maildir, mdir);
 
-	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf.st_size));
+	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf->st_size));
 
 	// rest of the fields
 	fill_document(*priv_);
@@ -233,7 +250,8 @@ get_tags(const MimeMessage& mime_msg)
 
 	std::vector<std::string> tags;
 	seq_for_each(tag_headers, [&](auto&& item) {
-		if (auto hdr{mime_msg.header(item.first)}; hdr) {
+		if (auto&& hdr{mime_msg.header(item.first)}; hdr) {
+
 			auto lst = split(*hdr, item.second);
 			tags.reserve(tags.size() + lst.size());
 			tags.insert(tags.end(), lst.begin(), lst.end());
@@ -658,3 +676,14 @@ Message::parts() const
 
 	return priv_->parts;
 }
+
+::time_t
+Message::mtime() const
+{
+	if (!load_mime_message())
+		return 0;
+
+	return priv_->mtime;
+}
+
+
