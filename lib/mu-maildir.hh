@@ -107,7 +107,7 @@ Result<std::string> mu_maildir_from_path(const std::string& path);
  * @return  * @return a valid result (!!result) or an Error
  */
 Result<void> mu_maildir_move_message(const std::string& oldpath,
-				     const std::string& targetmdir,
+				     const std::string& newpath,
 				     bool               ignore_dups);
 
 /**
