@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,7 +21,7 @@
 #define MU_ERROR_HH__
 
 #include <stdexcept>
-#include "mu-utils.hh"
+#include "mu-utils-format.hh"
 #include "mu-util.h"
 #include <glib.h>
 
@@ -30,6 +30,7 @@ namespace Mu {
 struct Error final : public std::exception {
 	enum struct Code {
 		AccessDenied = 100, // don't overlap with MuError
+		AssertionFailure,
 		Command,
 		Crypto,
 		File,
@@ -37,14 +38,16 @@ struct Error final : public std::exception {
 		Internal,
 		InvalidArgument,
 		Message,
+		NoMatches,
 		NotFound,
 		Parsing,
+		Play,
 		Query,
 		SchemaMismatch,
 		Store,
+		UnverifiedSignature,
 		User,
-		Play,
-		AssertionFailure
+		Xapian,
 	};
 
 	/**
