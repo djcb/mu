@@ -19,6 +19,7 @@
 #include "mu-parser.hh"
 
 #include <algorithm>
+#include <limits>
 
 #include "mu-tokenizer.hh"
 #include "utils/mu-utils.hh"
@@ -174,13 +175,14 @@ process_range(const std::string& field_str,
 
 	std::string l2 = lower;
 	std::string u2 = upper;
+	constexpr auto upper_limit = std::numeric_limits<int64_t>::max();
 
 	if (field_opt->id == Field::Id::Date) {
-		l2 = Mu::date_to_time_t_string(lower, true);
-		u2 = Mu::date_to_time_t_string(upper, false);
+		l2 = to_lexnum(parse_date_time(lower, true).value_or(0));
+		u2 = to_lexnum(parse_date_time(upper, false).value_or(upper_limit));
 	} else if (field_opt->id == Field::Id::Size) {
-		l2 = Mu::size_to_string(lower, true);
-		u2 = Mu::size_to_string(upper, false);
+		l2 = to_lexnum(parse_size(lower, true).value_or(0));
+		u2 = to_lexnum(parse_size(upper, false).value_or(upper_limit));
 	}
 
 	return {l2, u2};
