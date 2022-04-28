@@ -133,7 +133,7 @@ public:
 	Indexer& indexer();
 
 	/**
-	 * Run a						query; see the `mu-query` man page for the syntax.
+	 * Run a query; see the `mu-query` man page for the syntax.
 	 *
 	 * Multi-threaded callers must aquire the lock and keep it
 	 * at least as long as the return value.
@@ -143,11 +143,11 @@ public:
 	 * @param flags query flags
 	 * @param maxnum maximum number of results to return. 0 for 'no limit'
 	 *
-	 * @return the query-results, or Nothing in case of error.
+	 * @return the query-results or an error.
 	 */
 	std::mutex& lock() const;
-	Option<QueryResults> run_query(const std::string&	expr	     = "",
-				       Option<Field::Id>	sortfield_id = {},
+	Result<QueryResults> run_query(const std::string&	expr,
+				       Field::Id		sortfield_id = Field::Id::Date,
 				       QueryFlags		flags	     = QueryFlags::None,
 				       size_t			maxnum	     = 0) const;
 
@@ -185,6 +185,19 @@ public:
 	 * @return the doc id of the added message or an error.
 	 */
 	Result<Id> add_message(const std::string& path, bool use_transaction = false);
+
+	/**
+	 * Add a message to the store. When planning to write many messages,
+	 * it's much faster to do so in a transaction. If so, set
+	 * @in_transaction to true. When done with adding messages, call
+	 * commit().
+	 *
+	 * @param msg a message
+	 * @param whether to bundle up to batch_size changes in a transaction
+	 *
+	 * @return the doc id of the added message or an error.
+	 */
+	Result<Id> add_message(Message& msg, bool use_transaction = false);
 
 	/**
 	 * Update a message in the store.

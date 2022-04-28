@@ -69,8 +69,9 @@ struct Store::Private {
 	    : read_only_{readonly}, db_{make_xapian_db(path,
 						       read_only_ ? XapianOpts::ReadOnly
 								  : XapianOpts::Open)},
-	      properties_{make_properties(path)}, contacts_cache_{db().get_metadata(ContactsKey),
-						     properties_.personal_addresses}
+	      properties_{make_properties(path)},
+	      contacts_cache_{db().get_metadata(ContactsKey),
+		properties_.personal_addresses}
 	{}
 
 	Private(const std::string& path,
@@ -204,10 +205,10 @@ struct Store::Private {
 	}
 
 	Store::Properties init_metadata(const Store::Config& conf,
-				      const std::string&   path,
-				      const std::string&   root_maildir,
-				      const StringVec&     personal_addresses)
-	{
+					const std::string&   path,
+					const std::string&   root_maildir,
+					const StringVec&     personal_addresses)
+		{
 		writable_db().set_metadata(SchemaVersionKey, ExpectedSchemaVersion);
 		writable_db().set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)::time({})));
 
@@ -218,7 +219,7 @@ struct Store::Private {
 								  : DefaultMaxMessageSize;
 		writable_db().set_metadata(MaxMessageSizeKey, Mu::format("%zu", max_msg_size));
 
-		writable_db().set_metadata(RootMaildirKey, root_maildir);
+		writable_db().set_metadata(RootMaildirKey, canonicalize_filename(root_maildir, {}));
 
 		std::string addrs;
 		for (const auto& addr : personal_addresses) { // _very_ minimal check.
@@ -318,59 +319,53 @@ Store::empty() const
 	return size() == 0;
 }
 
-static std::string
-maildir_from_path(const std::string& root, const std::string& path)
-{
-	if (G_UNLIKELY(root.empty()) || root.length() >= path.length() || path.find(root) != 0)
-		throw Mu::Error{Error::Code::InvalidArgument,
-				"root '%s' is not a proper suffix of path '%s'",
-				root.c_str(),
-				path.c_str()};
-
-	auto mdir{path.substr(root.length())};
-	auto slash{mdir.rfind('/')};
-
-	if (G_UNLIKELY(slash == std::string::npos) || slash < 4)
-		throw Mu::Error{Error::Code::InvalidArgument, "invalid path: %s", path.c_str()};
-	mdir.erase(slash);
-	auto subdir = mdir.data() + slash - 4;
-	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 && strncmp(subdir, "/new", 4)))
-		throw Mu::Error{Error::Code::InvalidArgument,
-				"cannot find '/new' or '/cur' - invalid path: %s",
-				path.c_str()};
-	if (mdir.length() == 4)
-		return "/";
-
-	mdir.erase(mdir.length() - 4);
-	return mdir;
-}
-
 Result<Store::Id>
 Store::add_message(const std::string& path, bool use_transaction)
 {
-	const auto maildir{maildir_from_path(properties().root_maildir, path)};
-	auto msg{Message::make_from_path(Message::Options::None, path, maildir)};
-	if (G_UNLIKELY(!msg))
+	if (auto msg{Message::make_from_path(path)}; !msg)
 		return Err(msg.error());
+	else
+		return add_message(msg.value(), use_transaction);
+}
+
+Result<Store::Id>
+Store::add_message(Message& msg, bool use_transaction)
+{
+	const auto mdir{mu_maildir_from_path(msg.path(),
+					     properties().root_maildir)};
+	if (!mdir)
+		return Err(mdir.error());
+
+	if (auto&& res = msg.set_maildir(mdir.value()); !res)
+		return Err(res.error());
 
 	std::lock_guard guard{priv_->lock_};
 
-	if (use_transaction)
-		priv_->transaction_inc();
+	priv_->contacts_cache_.add(msg.all_contacts());
 
-	const auto docid = priv_->writable_db().add_document(
-		msg->document().xapian_document());
+	const auto docid = xapian_try([&]{
 
-	if (use_transaction) /* commit if batch is full */
-		priv_->transaction_maybe_commit();
+		if (use_transaction)
+			priv_->transaction_inc();
+
+		const auto docid = priv_->writable_db().add_document(
+			msg.document().xapian_document());
+
+		if (use_transaction) /* commit if batch is full */
+			priv_->transaction_maybe_commit();
+
+		return docid;
+	}, InvalidId);
 
 	if (G_UNLIKELY(docid == InvalidId))
 		return Err(Error::Code::Message, "failed to add message");
 
-	g_debug("added message @ %s; docid = %u", path.c_str(), docid);
+	g_debug("added message @ %s; docid = %u", msg.path().c_str(), docid);
+	g_debug("%s", msg.document().xapian_document().get_description().c_str());
 
 	return Ok(static_cast<Store::Id>(docid));
 }
+
 
 bool
 Store::update_message(const Message& msg, unsigned docid)
@@ -379,8 +374,8 @@ Store::update_message(const Message& msg, unsigned docid)
 		[&]{
 			priv_->writable_db().replace_document(
 				docid, msg.document().xapian_document());
-
-			g_debug("updated message %u @ %s", docid, msg.path().c_str());
+			g_debug("updated message @ %s; docid = %u",
+				msg.path().c_str(), docid);
 			return true;
 	}, false);
 }
@@ -461,9 +456,6 @@ Store::move_message(Store::Id id,
 	/* 5. Profit! */
 	return Ok(std::move(msg.value()));
 }
-
-
-
 
 std::string
 Store::metadata(const std::string& key) const
@@ -598,14 +590,12 @@ Store::lock() const
 	return priv_->lock_;
 }
 
-Option<QueryResults>
+Result<QueryResults>
 Store::run_query(const std::string& expr,
-		 Option<Field::Id> sortfield_id,
+		 Field::Id sortfield_id,
 		 QueryFlags flags, size_t maxnum) const
 {
-	return xapian_try([&] {
-		Query q{*this};
-		return q.run(expr, sortfield_id, flags, maxnum);}, Nothing);
+	return Query{*this}.run(expr, sortfield_id, flags, maxnum);
 }
 
 size_t

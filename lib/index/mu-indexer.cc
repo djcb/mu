@@ -69,7 +69,7 @@ struct IndexState {
 	void change_to(State new_state)
 	{
 		g_debug("changing indexer state %s->%s", name((State)state_),
-		        name((State)new_state));
+			name((State)new_state));
 		state_ = new_state;
 	}
 
@@ -80,14 +80,14 @@ private:
 struct Indexer::Private {
 	Private(Mu::Store& store)
 	    : store_{store}, scanner_{store_.properties().root_maildir,
-	                              [this](auto&& path, auto&& statbuf, auto&& info) {
+				      [this](auto&& path, auto&& statbuf, auto&& info) {
 					      return handler(path, statbuf, info);
 				      }},
 	      max_message_size_{store_.properties().max_message_size}
 	{
 		g_message("created indexer for %s -> %s (batch-size: %zu)",
-		          store.properties().root_maildir.c_str(),
-		          store.properties().database_path.c_str(), store.properties().batch_size);
+			  store.properties().root_maildir.c_str(),
+			  store.properties().database_path.c_str(), store.properties().batch_size);
 	}
 
 	~Private()
@@ -135,7 +135,7 @@ struct Indexer::Private {
 
 bool
 Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
-                          Scanner::HandleType htype)
+			  Scanner::HandleType htype)
 {
 	switch (htype) {
 	case Scanner::HandleType::EnterDir:
@@ -148,8 +148,8 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_mtime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
 			g_debug("skip %s (seems up-to-date: %s >= %s)", fullpath.c_str(),
-			        time_to_string("%FT%T", dirstamp_).c_str(),
-			        time_to_string("%FT%T", statbuf->st_mtime).c_str());
+				time_to_string("%FT%T", dirstamp_).c_str(),
+				time_to_string("%FT%T", statbuf->st_mtime).c_str());
 			return false;
 		}
 
@@ -183,7 +183,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 
 		if ((size_t)statbuf->st_size > max_message_size_) {
 			g_debug("skip %s (too big: %" G_GINT64_FORMAT " bytes)", fullpath.c_str(),
-			        (gint64)statbuf->st_size);
+				(gint64)statbuf->st_size);
 			return false;
 		}
 
@@ -216,6 +216,26 @@ Indexer::Private::maybe_start_worker()
 	}
 }
 
+static bool
+add_message(Store& store, const std::string& path)
+{
+	auto msg{Message::make_from_path(path)};
+	if (!msg) {
+		g_warning("failed to create message from %s: %s",
+			  path.c_str(), msg.error().what());
+		return false;
+	}
+
+	auto res = store.add_message(msg.value(), true /*use-transaction*/);
+	if (!res) {
+		g_warning("failed to add message @ %s: %s",
+			  path.c_str(), res.error().what());
+		return false;
+	}
+
+	return true;
+}
+
 void
 Indexer::Private::item_worker()
 {
@@ -230,9 +250,8 @@ Indexer::Private::item_worker()
 			std::lock_guard lock{w_lock_};
 			switch (item.type) {
 			case WorkItem::Type::File:
-				store_.add_message(item.full_path,
-				                   true /*use-transaction*/);
-				++progress_.updated;
+				if (add_message(store_, item.full_path))
+					++progress_.updated;
 				break;
 			case WorkItem::Type::Dir:
 				store_.set_dirstamp(item.full_path, ::time(NULL));
@@ -243,7 +262,7 @@ Indexer::Private::item_worker()
 			}
 		} catch (const Mu::Error& er) {
 			g_warning("error adding message @ %s: %s",
-			          item.full_path.c_str(), er.what());
+				  item.full_path.c_str(), er.what());
 		}
 
 		maybe_start_worker();
@@ -262,7 +281,7 @@ Indexer::Private::cleanup()
 		++n;
 		if (::access(path.c_str(), R_OK) != 0) {
 			g_debug("cannot read %s (id=%u); queueing for removal from store",
-			        path.c_str(), id);
+				path.c_str(), id);
 			orphans.emplace_back(id);
 		}
 
@@ -304,7 +323,7 @@ Indexer::Private::scan_worker()
 			return workers_.size();
 		});
 		g_debug("process %zu remaining message(s) with %zu worker(s)",
-		        todos_.size(), workers_size);
+			todos_.size(), workers_size);
 		while (!todos_.empty())
 			std::this_thread::sleep_for(100ms);
 	}
@@ -328,16 +347,15 @@ Indexer::Private::start(const Indexer::Config& conf)
 
 	conf_ = conf;
 	if (conf_.max_threads == 0) {
-		/* we're blocked mostly by a) filesystem and b) database;
-		 * so it's not very useful to start many threads */
-		max_workers_ = std::max(
-		    4U, std::thread::hardware_concurrency());
+		/* note, most time is spent in the (single) db thread
+		 * but creating messages in parallel still helps a bit */
+		max_workers_ = std::thread::hardware_concurrency()/2;
 	} else
 		max_workers_ = conf.max_threads;
 
 	g_debug("starting indexer with <= %zu worker thread(s)", max_workers_);
 	g_debug("indexing: %s; clean-up: %s", conf_.scan ? "yes" : "no",
-	        conf_.cleanup ? "yes" : "no");
+		conf_.cleanup ? "yes" : "no");
 
 	state_.change_to(IndexState::Scanning);
 	/* kick off the first worker, which will spawn more if needed. */
