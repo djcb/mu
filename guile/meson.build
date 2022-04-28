@@ -49,9 +49,7 @@ snarf_x=snarf_gen.process(snarf_srcs)
 lib_guile_mu = shared_module(
   'guile-mu',
   [ 'mu-guile.cc',
-    'mu-guile.hh',
     'mu-guile-message.cc',
-    'mu-guile-message.hh',
     snarf_x ],
   dependencies: [guile_dep, glib_dep, lib_mu_dep, config_h_dep, thread_dep ],
   install: true)

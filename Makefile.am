@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 
 include $(top_srcdir)/gtest.mk
 
-if BUILD_GUILE
-guile=guile
-else
+#if BUILD_GUILE
+#guile=guile
+#else
 guile=
-endif
+#endif
 
 if BUILD_MU4E
 mu4e=mu4e

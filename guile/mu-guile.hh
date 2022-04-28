@@ -59,15 +59,14 @@ SCM mu_guile_g_error(const char* func_name, GError* err);
 SCM mu_guile_error(const char* func_name, int status, const char* fmt, SCM args);
 
 /**
- * convert a const char* into an SCM -- either a string or, if str ==
- * NULL, #f. It assumes str is in UTF8 encoding, and replace
- * characters with '?' if needed.
+ * convert a string into an SCM -- . It assumes str is in UTF8 encoding, and
+ * replace characters with '?' if needed.
  *
- * @param str a string or NULL
+ * @param str a string
  *
- * @return a guile string or #f
+ * @return a guile string or #f for empty
  */
-SCM mu_guile_scm_from_str(const char* str);
+SCM mu_guile_scm_from_string(const std::string& str);
 
 /**
  * Initialize this mu guile module.

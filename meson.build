@@ -180,7 +180,7 @@ endif
 if not get_option('guile').disabled() and guile_dep.found()
   config_h_data.set('BUILD_GUILE', 1)
   config_h_data.set_quoted('GUILE_BINARY', 'guile')
-  subdir('guile')
+  #3subdir('guile')
 endif
 
 config_h_data.set_quoted('MU_PROGRAM', mu.full_path())

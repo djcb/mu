@@ -35,13 +35,12 @@
 using namespace Mu;
 
 SCM
-mu_guile_scm_from_str(const char* str)
+mu_guile_scm_from_string(const std::string& str)
 {
-	if (!str)
+	if (str.empty())
 		return SCM_BOOL_F;
 	else
-		return scm_from_stringn(str,
-					strlen(str),
+		return scm_from_stringn(str.c_str(), str.size(),
 					"UTF-8",
 					SCM_FAILED_CONVERSION_QUESTION_MARK);
 }

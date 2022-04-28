@@ -39,17 +39,9 @@ using namespace Mu;
 constexpr auto MU_GUILE_MSG_FIELD_ID_TIMESTAMP = Field::id_size() + 1;
 
 /* some symbols */
-static SCM SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
+static SCM	SYMB_PRIO_LOW, SYMB_PRIO_NORMAL, SYMB_PRIO_HIGH;
 static std::array<SCM, AllMessageFlagInfos.size()> SYMB_FLAGS;
-static SCM SYMB_CONTACT_TO, SYMB_CONTACT_CC, SYMB_CONTACT_BCC, SYMB_CONTACT_FROM;
-
-struct MuMsgWrapper {
-	MuMsgWrapper(const Message& msg, bool unrefme):
-		_msg{msg}, _unrefme(unrefme)
-		{}
-	Message _msg;
-	bool	_unrefme;
-};
+static SCM	SYMB_CONTACT_TO, SYMB_CONTACT_CC, SYMB_CONTACT_BCC, SYMB_CONTACT_FROM;
 static long	MSG_TAG;
 
 static gboolean
@@ -59,21 +51,23 @@ mu_guile_scm_is_msg(SCM scm)
 }
 
 SCM
-mu_guile_msg_to_scm(const Message& msg)
+mu_guile_msg_to_scm(Message&& msg)
 {
-	MuMsgWrapper* msgwrap;
+	void *data{scm_gc_malloc(sizeof(Message), "msg")};
+	auto msgptr = reinterpret_cast<MuMsgWrapper*>(
+		scm_gc_malloc(sizeof(MuMsgWrapper), "msg"));
+	msgwrap->_msg     = std::move(msg);
+	msgwrap->_unrefme = false;
 
-	msgwrap           = (MuMsgWrapper*)scm_gc_malloc(sizeof(MuMsgWrapper), "msg");
-	msgwrap->_msg     = msg;
-	msgwrap->_unrefme = FALSE;
+	SCM_RETURN_NEWSMOB(MSG_TAG,
 
-	SCM_RETURN_NEWSMOB(MSG_TAG, msgwrap);
+			   msgwrap);
 }
 
-typedef struct {
+struct FlagData {
 	Flags	flags;
 	SCM	lst;
-} FlagData;
+};
 
 #define MU_GUILE_INITIALIZED_OR_ERROR                                            \
 	do {                                                                     \
@@ -120,7 +114,7 @@ msg_string_list_field(const Message& msg, Field::Id field_id)
 	SCM           scmlst{SCM_EOL};
 	for (auto&& val: msg.document().string_vec_value(field_id)) {
 		SCM item;
-		item   = scm_list_1(mu_guile_scm_from_str(val.c_str()));
+		item   = scm_list_1(mu_guile_scm_from_string(val));
 		scmlst = scm_append_x(scm_list_2(scmlst, item));
 	}
 
@@ -131,7 +125,7 @@ static SCM
 get_body(const Message& msg, bool html)
 {
 	if (const auto body = html ? msg.body_html() : msg.body_text(); body)
-		return mu_guile_scm_from_str(body->c_str());
+		return mu_guile_scm_from_string(*body);
 	else
 		return SCM_BOOL_F;
 }
@@ -177,7 +171,7 @@ SCM_DEFINE(get_field,
 
 	switch (field_opt->type) {
 	case Field::Type::String:
-		return mu_guile_scm_from_str(msg.document().string_value(field_opt->id).c_str());
+		return mu_guile_scm_from_string(msg.document().string_value(field_opt->id));
 	case Field::Type::ByteSize:
 	case Field::Type::TimeT:
 	case Field::Type::Integer:
@@ -200,8 +194,8 @@ contacts_to_list(const Message& msg, Option<Field::Id> field_id)
 
 	for (auto&& contact: contacts) {
 		SCM item{scm_list_1(
-				scm_cons(mu_guile_scm_from_str(contact.name.c_str()),
-					 mu_guile_scm_from_str(contact.email.c_str())))};
+				scm_cons(mu_guile_scm_from_string(contact.name),
+					 mu_guile_scm_from_string(contact.email)))};
 		list = scm_append_x(scm_list_2(list, item));
 	}
 
@@ -258,49 +252,11 @@ SCM_DEFINE(get_contacts,
 #pragma GCC diagnostic pop
 
 	/* explicitly close the file backend, so we won't run out of fds */
-	msg.u
+
 
 	return list;
 }
 #undef FUNC_NAME
-
-struct _AttInfo {
-	SCM      attlist;
-	gboolean attachments_only;
-};
-typedef struct _AttInfo AttInfo;
-
-static void
-each_part(MuMsg* msg, MuMsgPart* part, AttInfo* attinfo)
-{
-	char *mime_type, *filename;
-	SCM   elm;
-
-	if (!part->type)
-		return;
-	if (attinfo->attachments_only && !mu_msg_part_maybe_attachment(part))
-		return;
-
-	mime_type = g_strdup_printf("%s/%s", part->type, part->subtype);
-	filename  = mu_msg_part_get_filename(part, FALSE);
-
-	elm = scm_list_5(
-	    /* msg */
-	    mu_guile_scm_from_str(mu_msg_get_path(msg)),
-	    /* index */
-	    scm_from_uint(part->index),
-	    /* filename or #f */
-	    filename ? mu_guile_scm_from_str(filename) : SCM_BOOL_F,
-	    /* mime-type */
-	    mime_type ? mu_guile_scm_from_str(mime_type) : SCM_BOOL_F,
-	    /* size */
-	    part->size > 0 ? scm_from_uint(part->size) : SCM_BOOL_F);
-
-	g_free(mime_type);
-	g_free(filename);
-
-	attinfo->attlist = scm_cons(elm, attinfo->attlist);
-}
 
 SCM_DEFINE(get_parts,
 	   "mu:c:get-parts",
@@ -314,26 +270,44 @@ SCM_DEFINE(get_parts,
 #define FUNC_NAME s_get_parts
 {
 	MuMsgWrapper* msgwrap;
-	AttInfo       attinfo;
 
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
 	SCM_ASSERT(mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT(scm_is_bool(ATTS_ONLY), ATTS_ONLY, SCM_ARG2, FUNC_NAME);
 
-	attinfo.attlist          = SCM_EOL; /* empty list */
-	attinfo.attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
+	SCM	attlist          = SCM_EOL;	/* empty list */
+	bool	attachments_only = ATTS_ONLY == SCM_BOOL_T ? TRUE : FALSE;
 
-	msgwrap = (MuMsgWrapper*)SCM_CDR(MSG);
-	mu_msg_part_foreach(msgwrap->_msg,
-			    MU_MSG_OPTION_NONE,
-			    (MuMsgPartForeachFunc)each_part,
-			    &attinfo);
+	const Message& msg{reinterpret_cast<MuMsgWrapper*>(SCM_CDR(MSG))->_msg};
+	size_t n{};
+	for (auto&& part: msg.parts()) {
+
+		if (attachments_only && !part.is_attachment())
+			continue;
+
+		const auto mime_type{part.mime_type()};
+		const auto filename{part.cooked_filename()};
+
+		SCM elm = scm_list_5(
+			/* msg */
+			mu_guile_scm_from_string(msgwrap->_msg.path()),
+			/* index */
+			scm_from_uint(n++),
+			/* filename or #f */
+			filename ? mu_guile_scm_from_string(*filename) : SCM_BOOL_F,
+			/* mime-type */
+			mime_type ? mu_guile_scm_from_string(*mime_type) : SCM_BOOL_F,
+			/* size */
+			part.size() > 0 ? scm_from_uint(part.size()) : SCM_BOOL_F);
+
+		attlist = scm_cons(elm, attlist);
+	}
 
 	/* explicitly close the file backend, so we won't run of fds */
-	mu_msg_unload_msg_file(msgwrap->_msg);
+	msg.unload_mime_message();
 
-	return attinfo.attlist;
+	return attlist;
 }
 #undef FUNC_NAME
 
@@ -346,22 +320,19 @@ SCM_DEFINE(get_header,
 	   "Get an arbitrary HEADER from MSG.\n")
 #define FUNC_NAME s_get_header
 {
-	MuMsgWrapper* msgwrap;
-	char*         header;
-	SCM           val;
-
 	MU_GUILE_INITIALIZED_OR_ERROR;
 
 	SCM_ASSERT(mu_guile_scm_is_msg(MSG), MSG, SCM_ARG1, FUNC_NAME);
 	SCM_ASSERT(scm_is_string(HEADER) || HEADER == SCM_UNDEFINED, HEADER, SCM_ARG2, FUNC_NAME);
 
-	msgwrap = (MuMsgWrapper*)SCM_CDR(MSG);
-	header  = scm_to_utf8_string(HEADER);
-	val     = mu_guile_scm_from_str(mu_msg_get_header(msgwrap->_msg, header));
+	const Message& msg{reinterpret_cast<MuMsgWrapper*>(SCM_CDR(MSG))->_msg};
+
+	char *header  = scm_to_utf8_string(HEADER);
+	SCM val     = mu_guile_scm_from_string(msg.header(header).value_or(""));
 	free(header);
 
 	/* explicitly close the file backend, so we won't run of fds */
-	mu_msg_unload_msg_file(msgwrap->_msg);
+	msg.unload_mime_message();
 
 	return val;
 }
@@ -409,7 +380,7 @@ SCM_DEFINE(for_each_message,
 
 	for (auto&& mi : *res) {
 		if (auto msg{mi.message()}; msg) {
-			auto msgsmob{mu_guile_msg_to_scm(msg)};
+			auto msgsmob{mu_guile_msg_to_scm(std::move(msg.value()))};
 			scm_call_1(FUNC, msgsmob);
 		}
 	}
@@ -464,17 +435,6 @@ define_vars(void)
 
 }
 
-static SCM
-msg_mark(SCM msg_smob)
-{
-	MuMsgWrapper* msgwrap;
-	msgwrap = (MuMsgWrapper*)SCM_CDR(msg_smob);
-
-	msgwrap->_unrefme = TRUE;
-
-	return SCM_UNSPECIFIED;
-}
-
 static size_t
 msg_free(SCM msg_smob)
 {
@@ -510,7 +470,6 @@ mu_guile_message_init(void* data)
 {
 	MSG_TAG = scm_make_smob_type("msg", sizeof(MuMsgWrapper));
 
-	scm_set_smob_mark(MSG_TAG, msg_mark);
 	scm_set_smob_free(MSG_TAG, msg_free);
 	scm_set_smob_print(MSG_TAG, msg_print);
 
