@@ -27,6 +27,7 @@
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
+#include <utils/mu-result.hh>
 #include <message/mu-message.hh>
 
 namespace Mu {
@@ -37,15 +38,14 @@ public:
 	 * Run a query on the store
 	 *
 	 * @param expr the search expression
-	 * @param sortfieldid the sortfield-id. If the field is NONE, sort by DATE
+	 * @param sortfield_id the sortfield-id. Default to Date
 	 * @param flags query flags
 	 * @param maxnum maximum number of results to return. 0 for 'no limit'
 	 *
-	 * @return the query-results, or Nothing in case of error.
+	 * @return the query-results or an error
 	 */
-
-	Option<QueryResults> run(const std::string&	expr	     = "",
-				 Option<Field::Id>	sortfield_id = {},
+	Result<QueryResults> run(const std::string&	expr,
+				 Field::Id		sortfield_id = Field::Id::Date,
 				 QueryFlags		flags	     = QueryFlags::None,
 				 size_t			maxnum	     = 0) const;
 

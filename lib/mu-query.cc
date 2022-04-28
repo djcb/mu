@@ -29,10 +29,12 @@
 #include <xapian.h>
 #include <glib/gstdio.h>
 
+#include "expected.hpp"
 #include "mu-query-results.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query-threads.hh"
 #include <mu-xapian.hh>
+#include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;
 
@@ -41,24 +43,23 @@ struct Query::Private {
 	// New
 	// bool calculate_threads (Xapian::Enquire& enq, size maxnum);
 
-	Xapian::Enquire make_enquire(const std::string&       expr,
-				     Option<Field::Id> sortfield_id,
-				     QueryFlags               qflags) const;
-	Xapian::Enquire make_related_enquire(const StringSet&         thread_ids,
-					     Option<Field::Id> sortfield_id,
-					     QueryFlags               qflags) const;
+	Xapian::Enquire make_enquire(const std::string& expr, Field::Id sortfield_id,
+				     QueryFlags qflags) const;
+	Xapian::Enquire make_related_enquire(const StringSet& thread_ids,
+					     Field::Id sortfield_id,
+					     QueryFlags qflags) const;
 
 	Option<QueryResults> run_threaded(QueryResults&& qres, Xapian::Enquire& enq,
 					  QueryFlags qflags, size_t max_size) const;
 	Option<QueryResults> run_singular(const std::string&       expr,
-					  Option<Field::Id> sortfield_id,
+					  Field::Id sortfield_id,
 					  QueryFlags qflags, size_t maxnum) const;
 	Option<QueryResults> run_related(const std::string&       expr,
-					 Option<Field::Id> sortfield_id,
+					 Field::Id sortfield_id,
 					 QueryFlags qflags, size_t maxnum) const;
 
-	Option<QueryResults> run(const std::string&       expr,
-				 Option<Field::Id> sortfield_id, QueryFlags qflags,
+	Option<QueryResults> run(const std::string& expr,
+				 Field::Id sortfield_id, QueryFlags qflags,
 				 size_t maxnum) const;
 
 	size_t store_size() const { return store_.database().get_doccount(); }
@@ -83,9 +84,9 @@ sort_enquire(Xapian::Enquire& enq, Field::Id sortfield_id, QueryFlags qflags)
 }
 
 Xapian::Enquire
-Query::Private::make_enquire(const std::string&       expr,
-			     Option<Field::Id> sortfield_id,
-			     QueryFlags               qflags) const
+Query::Private::make_enquire(const std::string& expr,
+			     Field::Id		sortfield_id,
+			     QueryFlags         qflags) const
 {
 	Xapian::Enquire enq{store_.database()};
 
@@ -100,15 +101,14 @@ Query::Private::make_enquire(const std::string&       expr,
 		g_debug("qtree: %s", to_string(tree).c_str());
 	}
 
-	if (sortfield_id)
-		sort_enquire(enq, *sortfield_id, qflags);
+	sort_enquire(enq, sortfield_id, qflags);
 
 	return enq;
 }
 
 Xapian::Enquire
 Query::Private::make_related_enquire(const StringSet& thread_ids,
-				     Option<Field::Id> sortfield_id,
+				     Field::Id sortfield_id,
 				     QueryFlags qflags) const
 {
 	Xapian::Enquire            enq{store_.database()};
@@ -119,8 +119,7 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 	Xapian::Query qr{Xapian::Query::OP_OR, qvec.begin(), qvec.end()};
 	enq.set_query(qr);
 
-	if (sortfield_id)
-		sort_enquire(enq, *sortfield_id, qflags);
+	sort_enquire(enq, sortfield_id, qflags);
 
 	return enq;
 }
@@ -156,7 +155,7 @@ Query::Private::run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFla
 
 Option<QueryResults>
 Query::Private::run_singular(const std::string& expr,
-			     Option<Field::Id> sortfield_id,
+			     Field::Id sortfield_id,
 			     QueryFlags qflags, size_t maxnum) const
 {
 	// i.e. a query _without_ related messages, but still possibly
@@ -197,7 +196,7 @@ opt_string(const Xapian::Document& doc, Field::Id id) noexcept
 
 Option<QueryResults>
 Query::Private::run_related(const std::string& expr,
-			    Option<Field::Id> sortfield_id,
+			    Field::Id sortfield_id,
 			    QueryFlags qflags, size_t maxnum) const
 {
 	// i.e. a query _with_ related messages and possibly with threading.
@@ -231,7 +230,8 @@ Query::Private::run_related(const std::string& expr,
 	// is unlimited and the sorting happens during threading.
 	auto r_enq = std::invoke([&]{
 		if (threading)
-			return make_related_enquire(minfo.thread_ids, Nothing, qflags);
+			return make_related_enquire(minfo.thread_ids, Field::Id::Date,
+						    qflags );
 		else
 			return make_related_enquire(minfo.thread_ids, sortfield_id, qflags);
 	});
@@ -243,37 +243,38 @@ Query::Private::run_related(const std::string& expr,
 }
 
 Option<QueryResults>
-Query::Private::run(const std::string&                expr,
-		    Option<Field::Id> sortfield_id, QueryFlags qflags,
+Query::Private::run(const std::string&  expr, Field::Id sortfield_id, QueryFlags qflags,
 		    size_t maxnum) const
 {
 	const auto eff_maxnum{maxnum == 0 ? store_size() : maxnum};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wextra"
-	const auto eff_sortfield{sortfield_id.value_or(Field::Id::Date)};
-#pragma GCC diagnostic pop
+
 	if (any_of(qflags & QueryFlags::IncludeRelated))
-		return run_related(expr, eff_sortfield, qflags, eff_maxnum);
+		return run_related(expr, sortfield_id, qflags, eff_maxnum);
 	else
-		return run_singular(expr, eff_sortfield, qflags, eff_maxnum);
+		return run_singular(expr, sortfield_id, qflags, eff_maxnum);
 }
 
-Option<QueryResults>
-Query::run(const std::string& expr, Option<Field::Id> sortfield_id,
+Result<QueryResults>
+Query::run(const std::string& expr, Field::Id sortfield_id,
 	   QueryFlags qflags, size_t maxnum) const
-try {
+{
 	// some flags are for internal use only.
-	g_return_val_if_fail(none_of(qflags & QueryFlags::Leader), Nothing);
+	g_return_val_if_fail(none_of(qflags & QueryFlags::Leader),
+			     Err(Error::Code::InvalidArgument, "cannot pass Leader flag"));
 
 	StopWatch sw{format(
 	    "ran query '%s'; related: %s; threads: %s; max-size: %zu", expr.c_str(),
 	    any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
 	    any_of(qflags & QueryFlags::Threading) ? "yes" : "no", maxnum)};
 
-	return priv_->run(expr, sortfield_id, qflags, maxnum);
+	return xapian_try_result([&]{
+		if (auto&& res = priv_->run(expr, sortfield_id, qflags, maxnum); res)
+			return Result<QueryResults>(Ok(std::move(res.value())));
+		else
+			return Result<QueryResults>(Err(Error::Code::Query,
+							"failed to run query"));
+	});
 
-} catch (...) {
-	return Nothing;
 }
 
 size_t
@@ -290,7 +291,8 @@ Query::count(const std::string& expr) const
 }
 
 std::string
-Query::parse(const std::string& expr, bool xapian) const
+Query::parse(const std::
+	     string& expr, bool xapian) const
 {
 	WarningVec warns;
 	const auto tree{priv_->parser_.parse(expr, warns)};

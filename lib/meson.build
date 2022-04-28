@@ -24,17 +24,17 @@ lib_mu=static_library(
   [
     'mu-bookmarks.cc',
     'mu-contacts-cache.cc',
+    'mu-maildir.cc',
     'mu-parser.cc',
-    'mu-query.cc',
     'mu-query-match-deciders.cc',
     'mu-query-threads.cc',
+    'mu-query.cc',
     'mu-runtime.cc',
     'mu-script.cc',
     'mu-server.cc',
     'mu-store.cc',
     'mu-tokenizer.cc',
-    'mu-xapian.cc',
-    'mu-maildir.cc'
+    'mu-xapian.cc'
   ],
   dependencies: [
     glib_dep,

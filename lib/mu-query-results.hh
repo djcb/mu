@@ -28,6 +28,7 @@
 #include <limits>
 #include <ostream>
 #include <cmath>
+#include <memory>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -303,9 +304,7 @@ public:
 	}
 
 	/**
-	 * get the corresponding Message for this iter; this instance is owned
-	 * by @this, and becomes invalid when iterating to the next, or @this is
-	 * destroyed.; it's a 'floating' reference.
+	 * get the corresponding Message for this iter
 	 *
 	 * @return a Message or Nothing
 	 */
@@ -319,6 +318,19 @@ public:
 		    },
 		    Nothing);
 	}
+
+	/**
+	 * get the corresponding Message for this iter a heap-allocated ptr;
+	 *
+	 * @return a unique ptr to a Message or P{}
+	 */
+	std::unique_ptr<Message> unique_message_ptr() const {
+		return xapian_try(
+		    [&]()->std::unique_ptr<Message> {
+			    return std::make_unique<Message>(Message(document()));
+		    }, nullptr);
+	}
+
 
 private:
 	Xapian::MSetIterator mset_it_;
