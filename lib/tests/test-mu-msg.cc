@@ -44,11 +44,13 @@ assert_contacts_equal(const Contacts& contacts,
 		      const ExpectedContacts& expected)
 {
 	g_assert_cmpuint(contacts.size(), ==, expected.size());
+
 	size_t n{};
 	for (auto&& contact: contacts) {
-		g_print ("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
-		///assert_equal(contact.name, expected.at(n).first);
-		///assert_equal(contact.email, expected.at(n).second);
+		if (g_test_verbose())
+			g_print ("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
+		// assert_equal(contact.name, expected.at(n).first);
+		// assert_equal(contact.email, expected.at(n).second);
 		++n;
 	}
 	g_print("\n");
@@ -58,13 +60,11 @@ assert_contacts_equal(const Contacts& contacts,
 static void
 test_mu_msg_01(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1220863042.12663_1.mindcrime!2,S")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1220863042.12663_1.mindcrime!2,S")
 		.value()};
 
 	assert_contacts_equal(msg.to(), {{ "Donald Duck", "gcc-help@gcc.gnu.org" }});
 	assert_contacts_equal(msg.from(), {{ "Mickey Mouse", "anon@example.com" }});
-
-
 
 	assert_equal(msg.subject(), "gcc include search order");
 	assert_equal(msg.message_id(),
@@ -86,7 +86,7 @@ test_mu_msg_01(void)
 static void
 test_mu_msg_02(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1220863087.12663_19.mindcrime!2,S")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1220863087.12663_19.mindcrime!2,S")
 		.value()};
 
 	assert_equal(msg.to().at(0).email, "help-gnu-emacs@gnu.org");
@@ -102,9 +102,9 @@ test_mu_msg_02(void)
 	g_assert_true(msg.flags() == (Flags::Seen|Flags::MailingList));
 
 	assert_contacts_equal(msg.all_contacts(), {
-			{ "", "gcc-help-owner@gcc.gnu.org" },
-			{ "Mickey Mouse", "anon@example.com" },
-			{ "Donald Duck", "gcc-help@gcc.gnu.org" },
+			{ "", "help-gnu-emacs-bounces+xxxx.klub=gmail.com@gnu.org"},
+			{ "", "anon@example.com"},
+			{ "", "help-gnu-emacs@gnu.org"},
 		});
 
 }
@@ -114,7 +114,7 @@ test_mu_msg_03(void)
 {
 	//const GSList* params;
 
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1283599333.1840_11.cthulhu!2,")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1283599333.1840_11.cthulhu!2,")
 		.value()};
 
 	assert_equal(msg.to().at(0).display_name(), "Bilbo Baggins <bilbo@anotherexample.com>");
@@ -125,7 +125,6 @@ test_mu_msg_03(void)
 	assert_equal(msg.body_text().value_or(""),
 		     "\nLet's write some fünkÿ text\nusing umlauts.\n\nFoo.\n");
 
-#warning fixme
 	// params = mu_msg_get_body_text_content_type_parameters(msg, MU_MSG_OPTION_NONE);
 	// g_assert_cmpuint(g_slist_length((GSList*)params), ==, 2);
 
@@ -138,7 +137,7 @@ test_mu_msg_03(void)
 static void
 test_mu_msg_04(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/mail5").value()};
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/mail5").value()};
 
 	assert_equal(msg.to().at(0).display_name(), "George Custer <gac@example.com>");
 	assert_equal(msg.subject(), "pics for you");
@@ -155,7 +154,7 @@ test_mu_msg_04(void)
 static void
 test_mu_msg_multimime(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/multimime!2,FS").value()};
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/multimime!2,FS").value()};
 
 	/* ie., are text parts properly concatenated? */
 	assert_equal(msg.subject(), "multimime");
@@ -175,7 +174,7 @@ test_mu_msg_flags(void)
 		}};
 
 	for (auto&& test: tests) {
-		 auto msg = Message::make_from_path({}, test.first);
+		 auto msg = Message::make_from_path(test.first);
 		 assert_valid_result(msg);
 		 g_assert_true(msg->flags() == test.second);
 	}
@@ -184,11 +183,11 @@ test_mu_msg_flags(void)
 static void
 test_mu_msg_umlaut(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
 		.value()};
 
 	assert_contacts_equal(msg.to(), { { "Helmut Kröger", "hk@testmu.xxx"}});
-	assert_contacts_equal(msg.from(), { { "Helmut Kröger", "hk@testmu.xxx"}});
+	assert_contacts_equal(msg.from(), { { "Mü", "testmu@testmu.xxx"}});
 
 	assert_equal(msg.subject(), "Motörhead");
 	assert_equal(msg.from().at(0).display_name(), "Mü <testmu@testmu.xx>");
@@ -199,7 +198,7 @@ test_mu_msg_umlaut(void)
 static void
 test_mu_msg_references(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
 		.value()};
 
 	std::array<std::string, 4> expected_refs = {
@@ -220,7 +219,7 @@ test_mu_msg_references(void)
 static void
 test_mu_msg_references_dups(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/1252168370_3.14675.cthulhu!2,S")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1252168370_3.14675.cthulhu!2,S")
 		.value()};
 
 	std::array<std::string, 6> expected_refs = {
@@ -243,7 +242,7 @@ test_mu_msg_references_dups(void)
 static void
 test_mu_msg_references_many(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR2 "/bar/cur/181736.eml")
+	auto msg{Message::make_from_path(MU_TESTMAILDIR2 "/bar/cur/181736.eml")
 		.value()};
 
 	std::array<std::string, 11> expected_refs = {
@@ -271,7 +270,7 @@ test_mu_msg_references_many(void)
 static void
 test_mu_msg_tags(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/mail1").value()};
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/mail1").value()};
 
 	assert_contacts_equal(msg.to(), {{ "Julius Caesar", "jc@example.com" }});
 	assert_contacts_equal(msg.from(), {{ "John Milton", "jm@example.com" }});
@@ -293,7 +292,7 @@ test_mu_msg_tags(void)
 static void
 test_mu_msg_comp_unix_programmer(void)
 {
-	auto msg{Message::make_from_path({}, MU_TESTMAILDIR4 "/181736.eml").value()};
+	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/181736.eml").value()};
 
 	g_assert_true(msg.to().empty());
 	assert_equal(msg.subject(),
