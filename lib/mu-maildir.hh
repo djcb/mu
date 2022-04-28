@@ -21,7 +21,6 @@
 #define MU_MAILDIR_HH__
 
 #include <string>
-#include <optional>
 #include <utils/mu-result.hh>
 
 #include <glib.h>
@@ -85,13 +84,15 @@ Result<Flags> mu_maildir_flags_from_path(const std::string& pathname);
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
- * cur/ or new/
+ * cur/ or new/ and *after* the root.
  *
  * @param path path for some message
+ * @param root filesystem root for the maildir
  *
  * @return the maildir or an Error
  */
-Result<std::string> mu_maildir_from_path(const std::string& path);
+Result<std::string> mu_maildir_from_path(const std::string& path,
+					 const std::string& root);
 
 /**
  * Move a message file to another maildir. If the target file already exists, it

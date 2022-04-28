@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#include <optional>
 #include <string>
 #include <unistd.h>
 #include <sys/types.h>
@@ -243,6 +242,38 @@ Mu::mu_maildir_clear_links(const std::string& path)
 	::closedir(dir);
 
 	return Ok();
+}
+
+
+
+Result<std::string>
+Mu::mu_maildir_from_path(const std::string& path, const std::string& root)
+{
+	const auto pos = path.find(root);
+	if (pos != 0 || path[root.length()] != '/')
+		return Err(Error{Error::Code::InvalidArgument,
+				"root '%s' is not a root for path '%s'",
+				root.c_str(), path.c_str()});
+
+	auto mdir{path.substr(root.length())};
+	auto slash{mdir.rfind('/')};
+
+	if (G_UNLIKELY(slash == std::string::npos) || slash < 4)
+		return Err(Error{Error::Code::InvalidArgument,
+				"invalid path: %s", path.c_str()});
+	mdir.erase(slash);
+	auto subdir = mdir.data() + slash - 4;
+	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 && strncmp(subdir, "/new", 4)))
+		return Err(Error::Code::InvalidArgument,
+			   "cannot find '/new' or '/cur' - invalid path: %s",
+			   path.c_str());
+
+	if (mdir.length() == 4)
+		return "/";
+
+	mdir.erase(mdir.length() - 4);
+
+	return Ok(std::move(mdir));
 }
 
 
