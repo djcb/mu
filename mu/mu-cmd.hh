@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -31,13 +31,10 @@ namespace Mu {
  *
  * @param store store object to use
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeds and
- * >MU_OK (0) results, MU_EXITCODE_NO_MATCHES if the command
- * succeeds but there no matches, some error code for all other errors
+ * @return Ok() or some error
  */
-MuError mu_cmd_find(const Mu::Store& store, const MuConfig* opts, GError** err);
+Result<void> mu_cmd_find(const Mu::Store& store, const MuConfig* opts);
 
 /**
  * execute the 'extract' command

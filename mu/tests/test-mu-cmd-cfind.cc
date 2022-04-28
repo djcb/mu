@@ -30,36 +30,34 @@
 #include "test-mu-common.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
+#include "utils/mu-utils.hh"
 
-static gchar* CONTACTS_CACHE = NULL;
+static std::string CONTACTS_CACHE;
 
-static gchar*
-fill_contacts_cache(void)
+using namespace Mu;
+
+static std::string
+fill_contacts_cache(const std::string& path)
 {
-	gchar * cmdline, *tmpdir;
-	GError* err;
-
-	tmpdir  = test_mu_common_get_random_tmpdir();
-	cmdline = g_strdup_printf("/bin/sh -c '"
-	                          "%s init  --muhome=%s --maildir=%s --quiet; "
-	                          "%s index --muhome=%s  --quiet'",
-	                          MU_PROGRAM,
-	                          tmpdir,
-	                          MU_TESTMAILDIR,
-	                          MU_PROGRAM,
-	                          tmpdir);
+	auto cmdline = format("/bin/sh -c '"
+			      "%s init  --muhome=%s --maildir=%s --quiet; "
+			      "%s index --muhome=%s  --quiet'",
+			      MU_PROGRAM,
+			      path.c_str(),
+			      MU_TESTMAILDIR,
+			      MU_PROGRAM,
+			      path.c_str());
 
 	if (g_test_verbose())
-		g_print("%s\n", cmdline);
+		g_print("%s\n", cmdline.c_str());
 
-	err = NULL;
-	if (!g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, &err)) {
+	GError *err{};
+	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, &err)) {
 		g_printerr("Error: %s\n", err ? err->message : "?");
 		g_assert(0);
 	}
 
-	g_free(cmdline);
-	return tmpdir;
+	return path;
 }
 
 static void
@@ -68,9 +66,9 @@ test_mu_cfind_plain(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=plain "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 	if (g_test_verbose())
 		g_print("%s\n", cmdline);
 
@@ -81,14 +79,14 @@ test_mu_cfind_plain(void)
 	g_assert(output);
 	if (output[0] == 'H')
 		g_assert_cmpstr(output,
-		                ==,
-		                "Helmut Kröger hk@testmu.xxx\n"
-		                "Mü testmu@testmu.xx\n");
+				==,
+				"Helmut Kröger hk@testmu.xxx\n"
+				"Mü testmu@testmu.xx\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "Mü testmu@testmu.xx\n"
-		                "Helmut Kröger hk@testmu.xxx\n");
+				==,
+				"Mü testmu@testmu.xx\n"
+				"Helmut Kröger hk@testmu.xxx\n");
 	g_free(cmdline);
 	g_free(output);
 	g_free(erroutput);
@@ -106,9 +104,9 @@ test_mu_cfind_bbdb(void)
 	old_tz = set_tz("Europe/Helsinki");
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=bbdb "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	output = erroutput = NULL;
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
@@ -159,9 +157,9 @@ test_mu_cfind_wl(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=wl "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	output = erroutput = NULL;
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
@@ -169,14 +167,14 @@ test_mu_cfind_wl(void)
 	g_assert(output);
 	if (output[0] == 'h')
 		g_assert_cmpstr(output,
-		                ==,
-		                "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n"
-		                "testmu@testmu.xx \"Mü\" \"Mü\"\n");
+				==,
+				"hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n"
+				"testmu@testmu.xx \"Mü\" \"Mü\"\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "testmu@testmu.xx \"Mü\" \"Mü\"\n"
-		                "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n");
+				==,
+				"testmu@testmu.xx \"Mü\" \"Mü\"\n"
+				"hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n");
 
 	g_free(cmdline);
 	g_free(output);
@@ -189,9 +187,9 @@ test_mu_cfind_mutt_alias(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=mutt-alias "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	output = erroutput = NULL;
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
@@ -201,14 +199,14 @@ test_mu_cfind_mutt_alias(void)
 
 	if (output[6] == 'H')
 		g_assert_cmpstr(output,
-		                ==,
-		                "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n"
-		                "alias Mü Mü <testmu@testmu.xx>\n");
+				==,
+				"alias HelmutK Helmut Kröger <hk@testmu.xxx>\n"
+				"alias Mü Mü <testmu@testmu.xx>\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "alias Mü Mü <testmu@testmu.xx>\n"
-		                "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n");
+				==,
+				"alias Mü Mü <testmu@testmu.xx>\n"
+				"alias HelmutK Helmut Kröger <hk@testmu.xxx>\n");
 
 	g_free(cmdline);
 	g_free(output);
@@ -221,9 +219,9 @@ test_mu_cfind_mutt_ab(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=mutt-ab "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	if (g_test_verbose())
 		g_print("%s\n", cmdline);
@@ -234,16 +232,16 @@ test_mu_cfind_mutt_ab(void)
 
 	if (output[39] == 'h')
 		g_assert_cmpstr(output,
-		                ==,
-		                "Matching addresses in the mu database:\n"
-		                "hk@testmu.xxx\tHelmut Kröger\t\n"
-		                "testmu@testmu.xx\tMü\t\n");
+				==,
+				"Matching addresses in the mu database:\n"
+				"hk@testmu.xxx\tHelmut Kröger\t\n"
+				"testmu@testmu.xx\tMü\t\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "Matching addresses in the mu database:\n"
-		                "testmu@testmu.xx\tMü\t\n"
-		                "hk@testmu.xxx\tHelmut Kröger\t\n");
+				==,
+				"Matching addresses in the mu database:\n"
+				"testmu@testmu.xx\tMü\t\n"
+				"hk@testmu.xxx\tHelmut Kröger\t\n");
 
 	g_free(cmdline);
 	g_free(output);
@@ -256,9 +254,9 @@ test_mu_cfind_org_contact(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=org-contact "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	output = erroutput = NULL;
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
@@ -267,26 +265,26 @@ test_mu_cfind_org_contact(void)
 
 	if (output[2] == 'H')
 		g_assert_cmpstr(output,
-		                ==,
-		                "* Helmut Kröger\n"
-		                ":PROPERTIES:\n"
-		                ":EMAIL: hk@testmu.xxx\n"
-		                ":END:\n\n"
-		                "* Mü\n"
-		                ":PROPERTIES:\n"
-		                ":EMAIL: testmu@testmu.xx\n"
-		                ":END:\n\n");
+				==,
+				"* Helmut Kröger\n"
+				":PROPERTIES:\n"
+				":EMAIL: hk@testmu.xxx\n"
+				":END:\n\n"
+				"* Mü\n"
+				":PROPERTIES:\n"
+				":EMAIL: testmu@testmu.xx\n"
+				":END:\n\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "* Mü\n"
-		                ":PROPERTIES:\n"
-		                ":EMAIL: testmu@testmu.xx\n"
-		                ":END:\n\n"
-		                "* Helmut Kröger\n"
-		                ":PROPERTIES:\n"
-		                ":EMAIL: hk@testmu.xxx\n"
-		                ":END:\n\n");
+				==,
+				"* Mü\n"
+				":PROPERTIES:\n"
+				":EMAIL: testmu@testmu.xx\n"
+				":END:\n\n"
+				"* Helmut Kröger\n"
+				":PROPERTIES:\n"
+				":EMAIL: hk@testmu.xxx\n"
+				":END:\n\n");
 
 	g_free(cmdline);
 	g_free(output);
@@ -299,9 +297,9 @@ test_mu_cfind_csv(void)
 	gchar *cmdline, *output, *erroutput;
 
 	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=csv "
-	                          "'testmu\\.xxx?'",
-	                          MU_PROGRAM,
-	                          CONTACTS_CACHE);
+				  "'testmu\\.xxx?'",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
 
 	if (g_test_verbose())
 		g_print("%s\n", cmdline);
@@ -311,14 +309,14 @@ test_mu_cfind_csv(void)
 	g_assert(output);
 	if (output[1] == 'H')
 		g_assert_cmpstr(output,
-		                ==,
-		                "\"Helmut Kröger\",\"hk@testmu.xxx\"\n"
-		                "\"Mü\",\"testmu@testmu.xx\"\n");
+				==,
+				"\"Helmut Kröger\",\"hk@testmu.xxx\"\n"
+				"\"Mü\",\"testmu@testmu.xx\"\n");
 	else
 		g_assert_cmpstr(output,
-		                ==,
-		                "\"Mü\",\"testmu@testmu.xx\"\n"
-		                "\"Helmut Kröger\",\"hk@testmu.xxx\"\n");
+				==,
+				"\"Mü\",\"testmu@testmu.xx\"\n"
+				"\"Helmut Kröger\",\"hk@testmu.xxx\"\n");
 	g_free(cmdline);
 	g_free(output);
 	g_free(erroutput);
@@ -327,13 +325,13 @@ test_mu_cfind_csv(void)
 int
 main(int argc, char* argv[])
 {
-	int rv;
 	g_test_init(&argc, &argv, NULL);
 
 	if (!set_en_us_utf8_locale())
 		return 0; /* don't error out... */
 
-	CONTACTS_CACHE = fill_contacts_cache();
+	TempDir tmpdir{};
+	CONTACTS_CACHE = fill_contacts_cache(tmpdir.path());
 
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-plain", test_mu_cfind_plain);
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-bbdb", test_mu_cfind_bbdb);
@@ -344,15 +342,10 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-csv", test_mu_cfind_csv);
 
 	g_log_set_handler(NULL,
-	                  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
-	                                   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-	                  (GLogFunc)black_hole,
-	                  NULL);
+			  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
+					   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+			  (GLogFunc)black_hole,
+			  NULL);
 
-	rv = g_test_run();
-
-	g_free(CONTACTS_CACHE);
-	CONTACTS_CACHE = NULL;
-
-	return rv;
+	return g_test_run();
 }

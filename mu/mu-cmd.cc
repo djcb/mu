@@ -159,7 +159,7 @@ view_msg_plain(const Message& message, const MuConfig* opts)
 static Mu::Result<void>
 handle_msg(const std::string& fname, const MuConfig* opts)
 {
-	auto message{Message::make_from_path(mu_config_message_options(opts), fname)};
+	auto message{Message::make_from_path(fname, mu_config_message_options(opts))};
 	if (!message)
 		return Err(message.error());
 
@@ -421,8 +421,7 @@ verify(const MimeMultipartSigned& sigpart, const MuConfig *opts)
 	return valid;
 }
 
-
-static Mu::Result<MuError>
+static Mu::Result<void>
 cmd_verify(const MuConfig* opts)
 {
 	if (!opts || opts->cmd != MU_CONFIG_CMD_VERIFY)
@@ -432,8 +431,8 @@ cmd_verify(const MuConfig* opts)
 		return Err(Error::Code::InvalidArgument,
 			   "missing message-file parameter");
 
-	auto message{Message::make_from_path(mu_config_message_options(opts),
-					     opts->params[1])};
+	auto message{Message::make_from_path(opts->params[1],
+					     mu_config_message_options(opts))};
 	if (!message)
 		return Err(message.error());
 
@@ -441,7 +440,7 @@ cmd_verify(const MuConfig* opts)
 	if (none_of(message->flags() & Flags::Signed)) {
 		if (!opts->quiet)
 			g_print("no signed parts found\n");
-		return Ok(MU_ERROR);
+		return Ok();
 	}
 
 	bool verified{true}; /* innocent until proven guilty */
@@ -458,7 +457,11 @@ cmd_verify(const MuConfig* opts)
 			verified = false;
 	}
 
-	return Ok(verified ? MU_OK : MU_ERROR);
+	if (verified)
+		return Ok();
+	else
+		return Err(Error::Code::UnverifiedSignature,
+			   "failed to verify one or more signatures");
 }
 
 static MuError
@@ -536,12 +539,12 @@ cmd_init(const MuConfig* opts, GError** err)
 	return MU_OK;
 }
 
-static MuError
-cmd_find(const MuConfig* opts, GError** err)
+static Result<void>
+cmd_find(const MuConfig* opts)
 {
 	Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), true /*readonly*/};
 
-	return mu_cmd_find(store, opts, err);
+	return mu_cmd_find(store, opts);
 }
 
 static void
@@ -594,11 +597,20 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 		return MU_G_ERROR_CODE(err);
 
 	auto mu_error_from_result = [](auto&& result, GError **err) {
-		if (!result) {
-			result.error().fill_g_error(err);
-			return MU_ERROR;
-		} else
+		if (result)
 			return MU_OK;
+
+		result.error().fill_g_error(err);
+		switch(result.error().code()) {
+		case Error::Code::NoMatches:
+			return MU_ERROR_NO_MATCHES;
+		case Error::Code::UnverifiedSignature:
+			return MU_ERROR_CRYPTO;
+		default:
+			break;
+		}
+
+		return MU_ERROR;
 	};
 
 	switch (opts->cmd) {
@@ -610,17 +622,13 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	 * no store needed
 	 */
 
-	case MU_CONFIG_CMD_MKDIR: merr = cmd_mkdir(opts, err); break;
+	case MU_CONFIG_CMD_MKDIR: merr	= cmd_mkdir(opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT: merr = mu_cmd_script(opts, err); break;
 	case MU_CONFIG_CMD_VIEW:
 		merr = mu_error_from_result(cmd_view(opts), err);
 		break;
 	case MU_CONFIG_CMD_VERIFY: {
-		if (const auto res = cmd_verify(opts); !res) {
-			res.error().fill_g_error(err);
-			merr = MU_ERROR;
-		} else
-			merr = res.value();
+		merr =  mu_error_from_result(cmd_verify(opts), err);
 		break;
 	}
 
@@ -632,7 +640,9 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	 */
 
 	case MU_CONFIG_CMD_CFIND: merr = with_readonly_store(mu_cmd_cfind, opts, err); break;
-	case MU_CONFIG_CMD_FIND: merr = cmd_find(opts, err); break;
+	case MU_CONFIG_CMD_FIND:
+		merr = mu_error_from_result(cmd_find(opts), err);
+		break;
 	case MU_CONFIG_CMD_INFO:
 		merr = with_readonly_store(cmd_info, opts, err);
 		break;

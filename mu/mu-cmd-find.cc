@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -36,6 +36,7 @@
 #include "mu-runtime.hh"
 #include "message/mu-message.hh"
 
+#include "utils/mu-option.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-str.h"
 
@@ -58,28 +59,23 @@ constexpr auto LastOutput{OutputInfo{0, false, true, {}, {}}};
 using OutputFunc = std::function<bool(const Option<Message>& msg, const OutputInfo&,
 				      const MuConfig*, GError**)>;
 
-static gboolean
+static Result<void>
 print_internal(const Store&       store,
 	       const std::string& expr,
 	       gboolean           xapian,
-	       gboolean           warn,
-	       GError**           err)
+	       gboolean           warn)
 {
 	std::cout << store.parse_query(expr, xapian) << "\n";
-
-	return TRUE;
+	return Ok();
 }
 
-static Option<QueryResults>
-run_query(const Store& store, const std::string& expr, const MuConfig* opts,
-	  GError** err)
+static Result<QueryResults>
+run_query(const Store& store, const std::string& expr, const MuConfig* opts)
 {
 	const auto sortfield{field_from_name(opts->sortfield ? opts->sortfield : "")};
-	if (!sortfield && opts->sortfield) {
-		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			    "invvalid sort field: '%s'\n", opts->sortfield);
-		return Nothing;
-	}
+	if (!sortfield && opts->sortfield)
+		return Err(Error::Code::InvalidArgument,
+			   "invalid sort field: '%s'", opts->sortfield);
 
 	Mu::QueryFlags qflags{QueryFlags::None};
 	if (opts->reverse)
@@ -91,7 +87,8 @@ run_query(const Store& store, const std::string& expr, const MuConfig* opts,
 	if (opts->threads)
 		qflags |= QueryFlags::Threading;
 
-	return store.run_query(expr, sortfield->id, qflags, opts->maxnum);
+	return store.run_query(expr, sortfield.value_or(field_from_id(Field::Id::Date)).id,
+			       qflags, opts->maxnum);
 }
 
 static gboolean
@@ -147,23 +144,22 @@ resolve_bookmark(const MuConfig* opts, GError** err)
 	return val;
 }
 
-static Option<std::string>
-get_query(const MuConfig* opts, GError** err)
+static Result<std::string>
+get_query(const MuConfig* opts)
 {
+	GError *err{};
 	gchar *query, *bookmarkval;
 
 	/* params[0] is 'find', actual search params start with [1] */
-	if (!opts->bookmark && !opts->params[1]) {
-		g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_IN_PARAMETERS,
-			    "error in parameters");
-		return Nothing;
-	}
+	if (!opts->bookmark && !opts->params[1])
+		return Err(Error::Code::InvalidArgument, "error in parameters");
 
-	bookmarkval = NULL;
+	bookmarkval = {};
 	if (opts->bookmark) {
-		bookmarkval = resolve_bookmark(opts, err);
+		bookmarkval = resolve_bookmark(opts, &err);
 		if (!bookmarkval)
-			return Nothing;
+			return Err(Error::Code::Command, &err,
+				   "failed to resolve bookmark");
 	}
 
 	query = g_strjoinv(" ", &opts->params[1]);
@@ -173,13 +169,9 @@ get_query(const MuConfig* opts, GError** err)
 		g_free(query);
 		query = tmp;
 	}
-
 	g_free(bookmarkval);
 
-	std::string q{query};
-	g_free(query);
-
-	return q;
+	return Ok(to_string_gchar(std::move(query)));
 }
 
 static gboolean
@@ -276,6 +268,8 @@ display_field(const Message& msg, Field::Id field_id)
 		return to_string(msg.document().integer_value(field_id));
 	case Field::Type::StringList:
 		return join(msg.document().string_vec_value(field_id), ',');
+	case Field::Type::ContactList:
+		return to_string(msg.document().contacts_value(field_id));
 	default:
 		g_return_val_if_reached("");
 		return "";
@@ -376,60 +370,13 @@ output_plain(const Option<Message>& msg, const OutputInfo& info,
 	return TRUE;
 }
 
-G_GNUC_UNUSED static std::string
-to_string(const Mu::Sexp& sexp, bool color, size_t level = 0)
-{
-	Mu::MaybeAnsi col{color};
-	using Color = Mu::MaybeAnsi::Color;
-
-	// clang/libc++ don't allow constexpr here
-	const std::array<Color, 6> rainbow = {
-	    Color::BrightBlue,
-	    Color::Green,
-	    Color::Yellow,
-	    Color::Magenta,
-	    Color::Cyan,
-	    Color::BrightGreen,
-	};
-
-	std::stringstream sstrm;
-
-	switch (sexp.type()) {
-	case Sexp::Type::List: {
-		const auto bracecol{col.fg(rainbow[level % rainbow.size()])};
-		sstrm << bracecol << "(";
-
-		bool first{true};
-		for (auto&& child : sexp.list()) {
-			sstrm << (first ? "" : " ") << to_string(child, color, level + 1);
-			first = false;
-		}
-		sstrm << bracecol << ")";
-		break;
-	}
-	case Sexp::Type::String:
-		sstrm << col.fg(Color::BrightCyan) << Mu::quote(sexp.value()) << col.reset();
-		break;
-	case Sexp::Type::Number:
-		sstrm << col.fg(Color::BrightMagenta) << sexp.value() << col.reset();
-		break;
-	case Sexp::Type::Symbol:
-		sstrm << (col.fg(sexp.value().at(0) == ':' ? Color::BrightGreen
-							   : Color::BrightBlue))
-		      << sexp.value() << col.reset();
-		break;
-	default:
-		throw std::logic_error("invalid type");
-	}
-
-	return sstrm.str();
-}
-
 static bool
 output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
-	fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
-	fputs("\n", stdout);
+	if (msg) {
+		fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
+		fputs("\n", stdout);
+	}
 
 	return true;
 }
@@ -511,12 +458,13 @@ get_output_func(const MuConfig* opts, GError** err)
 	}
 }
 
-static bool
-output_query_results(const QueryResults& qres, const MuConfig* opts, GError** err)
+static Result<void>
+output_query_results(const QueryResults& qres, const MuConfig* opts)
 {
-	const auto output_func{get_output_func(opts, err)};
+	GError* err{};
+	const auto output_func{get_output_func(opts, &err)};
 	if (!output_func)
-		return false;
+		return Err(Error::Code::Query, &err, "failed to find output function");
 
 	gboolean rv{true};
 	output_func(Nothing, FirstOutput, opts, {});
@@ -538,43 +486,45 @@ output_query_results(const QueryResults& qres, const MuConfig* opts, GError** er
 				  n == qres.size(), /* last? */
 				  item.query_match()},
 				 opts,
-				 err);
+				 &err);
 		if (!rv)
 			break;
 	}
 	output_func(Nothing, LastOutput, opts, {});
 
-	return rv;
+
+	if (rv)
+		return Ok();
+	else
+		return Err(Error::Code::Query, &err, "error in query results output");
 }
 
-static gboolean
-process_query(const Store& store, const std::string& expr, const MuConfig* opts, GError** err)
+static Result<void>
+process_query(const Store& store, const std::string& expr, const MuConfig* opts)
 {
-	auto qres{run_query(store, expr, opts, err)};
+	auto qres{run_query(store, expr, opts)};
 	if (!qres)
-		return FALSE;
+		return Err(qres.error());
 
-	if (qres->empty()) {
-		mu_util_g_set_error(err, MU_ERROR_NO_MATCHES, "no matches for search expression");
-		return false;
-	}
+	if (qres->empty())
+		return Err(Error::Code::NoMatches,  "no matches for search expression");
 
-	return output_query_results(*qres, opts, err);
+	return output_query_results(*qres, opts);
 }
 
-static gboolean
-execute_find(const Store& store, const MuConfig* opts, GError** err)
+static Result<void>
+execute_find(const Store& store, const MuConfig* opts)
 {
-	auto expr{get_query(opts, err)};
+	auto expr{get_query(opts)};
 	if (!expr)
-		return FALSE;
+		return Err(expr.error());
 
 	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		return print_internal(store, *expr, TRUE, FALSE, err);
+		return print_internal(store, *expr, TRUE, FALSE);
 	else if (opts->format == MU_CONFIG_FORMAT_MQUERY)
-		return print_internal(store, *expr, FALSE, opts->verbose, err);
+		return print_internal(store, *expr, FALSE, opts->verbose);
 	else
-		return process_query(store, *expr, opts, err);
+		return process_query(store, *expr, opts);
 }
 
 static gboolean
@@ -640,22 +590,20 @@ query_params_valid(const MuConfig* opts, GError** err)
 	return FALSE;
 }
 
-MuError
-Mu::mu_cmd_find(const Store& store, const MuConfig* opts, GError** err)
+Result<void>
+Mu::mu_cmd_find(const Store& store, const MuConfig* opts)
 {
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_FIND, MU_ERROR_INTERNAL);
-
+	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
+	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_FIND, Err(Error::Code::Internal,
+								  "wrong command"));
 	MuConfig myopts{*opts};
 
 	if (myopts.exec)
 		myopts.format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
 
-	if (!query_params_valid(&myopts, err) || !format_params_valid(&myopts, err))
-		return MU_G_ERROR_CODE(err);
-
-	if (!execute_find(store, &myopts, err))
-		return MU_G_ERROR_CODE(err);
+	GError *err{};
+	if (!query_params_valid(&myopts, &err) || !format_params_valid(&myopts, &err))
+		return Err(Error::Code::InvalidArgument, &err, "invalid argument");
 	else
-		return MU_OK;
+		return execute_find(store, &myopts);
 }
