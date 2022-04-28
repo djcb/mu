@@ -62,14 +62,13 @@ statement you can use something like:
 goto * instructions[pOp->opcode];
 )";
 	auto message{Message::make_from_text(
-			{}, test_message_1,
-			"/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S",
-			"/inbox")};
+			test_message_1,
+			"/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S")};
 	g_assert_true(!!message);
 
 	assert_equal(message->path(),
 		     "/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S");
-	assert_equal(message->maildir(), "/inbox");
+	g_assert_true(message->maildir().empty());
 
 	g_assert_true(message->bcc().empty());
 
@@ -176,7 +175,7 @@ World!
 --=-=-=--
 )";
 
-	auto message{Message::make_from_text({}, msg_text)};
+	auto message{Message::make_from_text(msg_text)};
 	g_assert_true(!!message);
 
 	g_assert_true(message->path().empty());
@@ -330,10 +329,8 @@ Q46aYjxe0As6AP90bcAZ3dcn5RcTJaM0UhZssguawZ+tnriD3+5DPkMMCg==
 	g_assert_cmpuint(*imported, ==, 1);
 
 	auto message{Message::make_from_text(
-			{},
 			msgtext,
-			"/home/test/Maildir/inbox/cur/1649279777.107710_1.mindcrime:2,RS",
-			"/inbox")};
+			"/home/test/Maildir/inbox/cur/1649279777.107710_1.mindcrime:2,RS")};
 	g_assert_true(!!message);
 
 	g_assert_true(message->bcc().empty());
@@ -423,10 +420,8 @@ C0bdoCx44QVU8HaZ2x91h3GoM/0q5bqM/rvCauwbokiJgAUrznecNPY=
 	}
 
 	auto message{Message::make_from_text(
-			{},
 			msgtext,
-			"/home/test/Maildir/inbox/cur/1649279888.107710_1.mindcrime:2,FS",
-			"/archive")};
+			"/home/test/Maildir/inbox/cur/1649279888.107710_1.mindcrime:2,FS")};
 	g_assert_true(!!message);
 	g_assert_true(message->flags() == (Flags::Encrypted|Flags::Seen|Flags::Flagged));
 

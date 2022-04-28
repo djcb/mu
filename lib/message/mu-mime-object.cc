@@ -22,6 +22,7 @@
 #include "gmime/gmime-message.h"
 #include "utils/mu-utils.hh"
 #include <mutex>
+#include <regex>
 #include <fcntl.h>
 #include <errno.h>
 
@@ -71,13 +72,12 @@ Mu::init_gmime(void)
 Option<std::string>
 MimeObject::header(const std::string& hdr) const noexcept
 {
-	const char *val{g_mime_object_get_header(self(), hdr.c_str())};
-	if (!val)
+	if (auto val{g_mime_object_get_header(self(), hdr.c_str())}; !val)
 		return Nothing;
-	if (!g_utf8_validate(val, -1, {}))
-		return utf8_clean(hdr);
+	else if (!g_utf8_validate(val, -1, {}))
+		return utf8_clean(val);
 	else
-		return val;
+		return std::string{val};
 }
 
 
@@ -328,7 +328,7 @@ MimeMessage::references() const noexcept
 	// is ref already in the list?
 	auto is_dup = [](auto&& seq, const std::string& ref) {
 		return seq_find_if(seq, [&](auto&& str) { return ref == str; })
-			== seq.cend();
+			!= seq.cend();
 	};
 
 	std::vector<std::string> refs;

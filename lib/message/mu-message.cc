@@ -24,8 +24,8 @@
 #include "mu-maildir.hh"
 
 #include <array>
-#include <optional>
 #include <string>
+#include <regex>
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
 #include <utils/mu-error.hh>
@@ -43,8 +43,7 @@
 using namespace Mu;
 
 struct Message::Private {
-	Private(Message::Options options=Message::Options::None):
-		opts{options} {}
+	Private(Message::Options options): opts{options} {}
 
 	Message::Options                opts;
 	Document			doc;
@@ -52,7 +51,6 @@ struct Message::Private {
 
 	Flags                           flags{};
 	Option<std::string>		mailing_list;
-	std::vector<std::string>        references;
 	std::vector<Part>               parts;
 
 	::time_t                        mtime{};
@@ -92,11 +90,9 @@ get_statbuf(const std::string& path)
 }
 
 
-Message::Message(Message::Options opts, const std::string& path,
-		 const std::string& mdir):
+Message::Message(const std::string& path,  Message::Options opts):
 	priv_{std::make_unique<Private>(opts)}
 {
-
 	const auto statbuf{get_statbuf(path)};
 	if (!statbuf)
 		throw statbuf.error();
@@ -113,17 +109,14 @@ Message::Message(Message::Options opts, const std::string& path,
 	if (xpath)
 		priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
 
-	if (!mdir.empty())
-		priv_->doc.add(Field::Id::Maildir, mdir);
-
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(statbuf->st_size));
 
 	// rest of the fields
 	fill_document(*priv_);
 }
 
-Message::Message(Message::Options opts, const std::string& text, const std::string& path,
-		 const std::string& mdir):
+Message::Message(const std::string& text, const std::string& path,
+		 Message::Options opts):
 	priv_{std::make_unique<Private>(opts)}
 {
 	if (!path.empty()) {
@@ -131,9 +124,6 @@ Message::Message(Message::Options opts, const std::string& text, const std::stri
 		if (xpath)
 			priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
 	}
-
-	if (!mdir.empty())
-		priv_->doc.add(Field::Id::Maildir, mdir);
 
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(text.size()));
 
@@ -162,7 +152,7 @@ Message::operator=(Message&& other) noexcept
 }
 
 Message::Message(Document&& doc):
-	priv_{std::make_unique<Private>()}
+	priv_{std::make_unique<Private>(Message::Options::None)}
 {
 	priv_->doc = std::move(doc);
 }
@@ -174,6 +164,28 @@ const Mu::Document&
 Message::document() const
 {
 	return priv_->doc;
+}
+
+Result<void>
+Message::set_maildir(const std::string& maildir)
+{
+	/* sanity check a little bit */
+
+	if (maildir.empty() ||
+	    maildir.at(0) != '/' ||
+	    (maildir.size() > 1 && maildir.at(maildir.length()-1) == '/'))
+		return Err(Error::Code::Message,
+"'%s' is not a valid maildir", maildir.c_str());
+
+	const auto path{document().string_value(Field::Id::Path)};
+	if (path == maildir || path.find(maildir) == std::string::npos)
+		return Err(Error::Code::Message,
+			   "'%s' is not a valid maildir for message @ %s",
+			   maildir.c_str(), path.c_str());
+
+	priv_->doc.add(Field::Id::Maildir, maildir);
+
+	return Ok();
 }
 
 bool
@@ -242,19 +254,20 @@ get_priority(const MimeMessage& mime_msg)
 
 /* see: http://does-not-exist.org/mail-archives/mutt-dev/msg08249.html */
 static std::vector<std::string>
-get_tags(const MimeMessage& mime_msg)
+extract_tags(const MimeMessage& mime_msg)
 {
 	constexpr std::array<std::pair<const char*, char>, 3> tag_headers = {{
 		{"X-Label", ' '}, {"X-Keywords", ','}, {"Keywords", ' '}
 	}};
+	static const auto strip_rx{std::regex("^\\s+| +$|( )\\s+")};
 
 	std::vector<std::string> tags;
 	seq_for_each(tag_headers, [&](auto&& item) {
-		if (auto&& hdr{mime_msg.header(item.first)}; hdr) {
-
-			auto lst = split(*hdr, item.second);
-			tags.reserve(tags.size() + lst.size());
-			tags.insert(tags.end(), lst.begin(), lst.end());
+		if (auto&& hdr = mime_msg.header(item.first); hdr) {
+			for (auto&& item : split(*hdr, item.second)) {
+				tags.emplace_back(
+					std::regex_replace(item, strip_rx, "$1"));
+			}
 		}
 	});
 
@@ -589,7 +602,8 @@ fill_document(Message::Private& priv)
 			doc.add(get_priority(mime_msg));
 			break;
 		case Field::Id::References:
-			doc.add(field.id, refs);
+			if (!refs.empty())
+				doc.add(field.id, refs);
 			break;
 		case Field::Id::Size: /* already */
 			break;
@@ -597,7 +611,8 @@ fill_document(Message::Private& priv)
 			doc.add(field.id, mime_msg.subject());
 			break;
 		case Field::Id::Tags:
-			doc.add(field.id, get_tags(mime_msg));
+			if (auto&& tags{extract_tags(mime_msg)}; !tags.empty())
+				doc.add(field.id, tags);
 			break;
 		case Field::Id::ThreadId:
 			// either the oldest reference, or otherwise the message id
@@ -605,9 +620,6 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::To:
 			doc.add(field.id, mime_msg.addresses(AddrType::To));
-			break;
-		case Field::Id::Uid:
-			doc.add(field.id, path); // just a synonym for now.
 			break;
 		case Field::Id::_count_:
 			break;
@@ -686,9 +698,6 @@ Message::mtime() const
 	return priv_->mtime;
 }
 
-
-
-
 Result<void>
 Message::update_after_move(const std::string& new_path,
 			   const std::string& new_maildir,
@@ -699,8 +708,10 @@ Message::update_after_move(const std::string& new_path,
 		return Err(statbuf.error());
 
 	priv_->doc.add(Field::Id::Path, new_path);
-	priv_->doc.add(Field::Id::Maildir, new_maildir);
 	priv_->doc.add(new_flags);
+
+	if (const auto res = set_maildir(new_maildir); !res)
+		return res;
 
 	return Ok();
 }

@@ -47,7 +47,6 @@ public:
 					* access) */
 	};
 
-
 	/**
 	 * Move CTOR
 	 *
@@ -66,22 +65,16 @@ public:
 	Message& operator=(Message&& other) noexcept;
 
 	/**
-	 * Construct a message based on a path. The maildir is optional; however
-	 * messages without maildir cannot be stored in the database
+	 * Construct a message based on a path
 	 *
-	 * @param opts options
 	 * @param path path to message
-	 * @param mdir the maildir for this message; i.e, if the path is
-	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar; you can
-	 * pass Nothing for this parameter, in which case some maildir-specific
-	 * information is not available.
+	 * @param opts options
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_path(Options opts,
-					      const std::string& path,
-					      const std::string& mdir={}) try {
-		return Ok(Message{opts, path, mdir});
+	static Result<Message> make_from_path(const std::string& path,
+					      Options opts={}) try {
+		return Ok(Message{path,opts});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
@@ -103,23 +96,19 @@ public:
 		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
 
-
 	/**
 	 * Construct a message from a string. This is mostly useful for testing.
-	 *
-	 * @param opts options
+
 	 * @param text message text
 	 * @param path path to message - optional; path does not have to exist.
-	 * this is useful for testing.
-	 * @param mdir the maildir for this message; optional, useful for testing.
+	 * @param opts options
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_text(Options opts,
-					      const std::string& text,
+	static Result<Message> make_from_text(const std::string& text,
 					      const std::string& path={},
-					      const std::string& mdir={}) try {
-		return Ok(Message{opts, text, path, mdir});
+					      Options opts={}) try {
+		return Ok(Message{text, path, opts});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
@@ -177,11 +166,26 @@ public:
 	Contacts bcc() const { return document().contacts_value(Field::Id::Bcc); }
 
 	/**
-	 * Get the maildir this message lives in; ie, if the path is
-	 * ~/Maildir/foo/bar/cur/msg, the maildir would be foo/bar
+	 * Get the maildir this message lives in; i.e., if the path is
+	 * ~/Maildir/foo/bar/cur/msg, the maildir would typically be foo/bar
+	 *
+	 * Note that that only messages that live in the store (i.e., are
+	 * constructed use make_from_document() have a non-empty value for
+	 * this.) until set_maildir() is used.
 	 *
 	 * @return the maildir requested or empty */
 	std::string maildir() const  { return document().string_value(Field::Id::Maildir); }
+
+	/**
+	 * Set the maildir for this message. This is for use by the _store_ when
+	 * it has determined the maildir for this message from the message's path and
+	 * the root-maildir known by the store.
+	 *
+	 * @param maildir the maildir for this message
+	 *
+	 * @return Ok() or some error if the maildir is invalid
+	 */
+	Result<void> set_maildir(const std::string& maildir);
 
 	/**
 	 * Get the subject of this message
@@ -262,9 +266,8 @@ public:
 	 * @return a list with the tags for this msg. Don't modify/free
 	 */
 	std::vector<std::string> tags() const {
-		return document().string_vec_value(Field::Id::References);
+		return document().string_vec_value(Field::Id::Tags);
 	}
-
 	/*
 	 * Convert to Sexp
 	 */
@@ -288,8 +291,6 @@ public:
 	Result<void> update_after_move(const std::string& new_path,
 				       const std::string& new_maildir,
 				       Flags new_flags);
-
-
 	/*
 	 * Below require a file-backed message, which is a relatively slow
 	 * if there isn't one already; see load_mime_message()
@@ -369,11 +370,12 @@ public:
 	bool has_mime_message() const;
 
 	struct Private;
+
+	Message(Document&& doc); // XXX: make private
+
 private:
-	Message(Options opts, const std::string& path, const std::string& mdir);
-	Message(Options opts, const std::string& str,  const std::string& path,
-		const std::string& mdir);
-	Message(Document&& doc);
+	Message(const std::string& path, Options opts);
+	Message(const std::string& str,  const std::string& path, Options opt);
 
 	std::unique_ptr<Private>        priv_;
 }; // Message
