@@ -71,7 +71,7 @@ endforeach
 # config.h setup
 #
 config_h_data=configuration_data()
-config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '453')
+config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '454')
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
                                            meson.project_version())
