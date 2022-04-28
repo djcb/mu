@@ -127,7 +127,7 @@ private:
 				bool			new_name,
 				bool			no_view);
 
-	bool maybe_mark_as_read(Message& msg, Store::Id docid, bool rename);
+	bool maybe_mark_as_read(Store::Id docid, Flags old_flags, bool rename);
 	bool maybe_mark_msgid_as_read(const std::string& msgid, bool rename);
 
 	Store&            store_;
@@ -181,7 +181,7 @@ build_metadata(const QueryMatch& qmatch)
  */
 Sexp
 Server::Private::build_message_sexp(const Message&            msg,
-				    unsigned                  docid,
+				    Store::Id                 docid,
 				    const Option<QueryMatch&> qm) const
 {
 	auto msgsexp{msg.to_sexp_list()};
@@ -384,17 +384,6 @@ Server::Private::invoke(const std::string& expr) noexcept
 	return keep_going_;
 }
 
-static Message::Options
-message_options(const Parameters& params)
-{
-	Message::Options opts{};
-
-	if (get_bool_or(params, ":decrypt", false))
-		opts |= Message::Options::Decrypt;
-
-	return opts;
-}
-
 /* 'add' adds a message to the database, and takes two parameters: 'path', which
  * is the full path to the message, and 'maildir', which is the maildir this
  * message lives in (e.g. "/inbox"). response with an (:info ...) message with
@@ -515,10 +504,7 @@ Server::Private::contacts_handler(const Parameters& params)
 	const auto afterstr  = get_string_or(params, ":after");
 	const auto tstampstr = get_string_or(params, ":tstamp");
 
-	const auto after{
-	    afterstr.empty()
-		? 0
-		: g_ascii_strtoll(date_to_time_t_string(afterstr, true).c_str(), {}, 10)};
+	const auto after{afterstr.empty() ? 0 : parse_date_time(afterstr, true)};
 	const auto tstamp = g_ascii_strtoll(tstampstr.c_str(), NULL, 10);
 
 	auto       rank{0};
@@ -827,19 +813,12 @@ Server::Private::perform_move(Store::Id                 docid,
 	} else /* are we moving to a different mdir, or is it just flags? */
 		different_mdir = maildir != msg.maildir();
 
-#warning implement me
-	// if (!mu_msg_move_to_maildir(msg,
-	//			    store().properties().root_maildir,
-	//			    maildir, flags, true, new_name, &gerr))
-	//	throw Error{Error::Code::File, &gerr, "failed to move message"};
-
-	/* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
-	 * fields will be updated as wel */
-	if (!store_.update_message(msg, docid))
-		throw Error{Error::Code::Store, "failed to store updated message"};
+	const auto new_msg = store().move_message(docid, maildir, flags, new_name);
+	if (!new_msg)
+		throw new_msg.error();
 
 	Sexp::List seq;
-	seq.add_prop(":update", build_message_sexp(msg, docid, {}));
+	seq.add_prop(":update", build_message_sexp(new_msg.value(), docid, {}));
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	if (different_mdir)
@@ -1018,36 +997,23 @@ Server::Private::sent_handler(const Parameters& params)
 }
 
 bool
-Server::Private::maybe_mark_as_read(Message& msg, Store::Id docid, bool rename)
+Server::Private::maybe_mark_as_read(Store::Id docid, Flags oldflags, bool rename)
 {
-	// const auto oldflags{msg.flags()};
-	// const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
-	// if (!newflags || oldflags == *newflags)
-	//	return false; // nothing to do.
+	const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
+	if (!newflags || oldflags == *newflags)
+		return false; // nothing to do.
 
-	// GError* gerr{};
-	// if (!mu_msg_move_to_maildir(msg,
-	//			    store().properties().root_maildir,
-	//			    mu_msg_get_maildir(msg),
-	//			    *newflags,
-	//			    true,
-	//			    rename,
-	//			    &gerr))
-	//	throw Error{Error::Code::File, &gerr, "failed to move message"};
+	const auto msg = store().move_message(docid, {}, newflags, rename);
+	if (!msg)
+		throw msg.error();
 
-	// /* after mu_msg_move_to_maildir, path will be the *new* path, and flags and maildir
-	//  * fields will be updated as wel */
-	// if (!store().update_message(msg, docid))
-	//	throw Error{Error::Code::Store, "failed to store updated message"};
+	/* send an update */
+	Sexp::List update;
+	update.add_prop(":update", build_message_sexp(*msg, docid, {}));
+	output_sexp(Sexp::make_list(std::move(update)));
 
-	// /* send an update */
-	// Sexp::List update;
-	// update.add_prop(":update", build_message_sexp(msg, docid, {}, MU_MSG_OPTION_NONE));
-	// output_sexp(Sexp::make_list(std::move(update)));
+	g_debug("marked message %d as read => %s", docid, msg->path().c_str());
 
-	// g_debug("marked message %d as read => %s", docid, mu_msg_get_path(msg));
-
-#warning implement me
 	return true;
 }
 
@@ -1059,7 +1025,7 @@ Server::Private::maybe_mark_msgid_as_read(const std::string& msgid,
 
 	for (auto&& docid: docids_for_msgid(store_, msgid))
 		if (auto msg{store().find_message(docid)}; msg)
-			maybe_mark_as_read(msg.value(), docid, rename);
+			maybe_mark_as_read(docid, msg->flags(), rename);
 
 	return true;
 } catch (...) { /* not fatal */
@@ -1087,7 +1053,7 @@ Server::Private::view_handler(const Parameters& params)
 
 	if (mark_as_read) {
 		// maybe mark the main message as read.
-		maybe_mark_as_read(msg, docid, rename);
+		maybe_mark_as_read(docid, msg.flags(), rename);
 		/* maybe mark _all_ messsage with same message-id as read */
 		maybe_mark_msgid_as_read(msg.message_id(), rename);
 	}
