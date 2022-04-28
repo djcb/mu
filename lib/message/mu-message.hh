@@ -279,8 +279,8 @@ public:
 	 *
 	 * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
 	 */
-	Mu::Sexp::List to_sexp_list() const;
-	Mu::Sexp       to_sexp() const;
+	Mu::Sexp::List to_sexp_list(unsigned docid=0) const;
+	Mu::Sexp       to_sexp(unsigned docid=0) const;
 
 	/*
 	 * And some non-const message, for updating an existing

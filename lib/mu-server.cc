@@ -184,7 +184,7 @@ Server::Private::build_message_sexp(const Message&            msg,
 				    Store::Id                 docid,
 				    const Option<QueryMatch&> qm) const
 {
-	auto msgsexp{msg.to_sexp_list()};
+	auto msgsexp{msg.to_sexp_list(docid)};
 	if (qm)
 		msgsexp.add_prop(":meta", build_metadata(*qm));
 

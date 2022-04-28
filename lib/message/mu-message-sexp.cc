@@ -140,12 +140,12 @@ add_date_and_size(Sexp::List& items, const Message& message)
 }
 
 Mu::Sexp::List
-Message::to_sexp_list() const
+Message::to_sexp_list(unsigned docid) const
 {
 	Sexp::List items;
 
-	// if (docid != 0)
-	//	items.add_prop(":docid", Sexp::make_number(docid));
+	if (docid != 0)
+		items.add_prop(":docid", Sexp::make_number(docid));
 
 	add_prop_nonempty(items, ":subject", subject());
 	add_prop_nonempty(items, ":message-id", message_id());
@@ -169,7 +169,7 @@ Message::to_sexp_list() const
 }
 
 Mu::Sexp
-Message::to_sexp() const
+Message::to_sexp(unsigned docid) const
 {
 	return Sexp::make_list(to_sexp_list());
 }
