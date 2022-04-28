@@ -55,7 +55,6 @@ struct Field {
 		Path,         /**< File-system Path */
 		Subject,      /**< Message subject */
 		To,           /**< To: recipient */
-		Uid,          /**< Unique id for message (based on path) */
 		/*
 		 * string list items...
 		 */
@@ -98,11 +97,12 @@ struct Field {
 	 *
 	 */
 	enum struct Type {
-		String,     /**< String */
-		StringList, /**< List of strings */
-		ByteSize,   /**< Size in bytes */
-		TimeT,      /**< A time_t value */
-		Integer,    /**< An integer */
+		String,		/**< String */
+		StringList,	/**< List of strings */
+		ContactList,	/**< List of contacts */
+		ByteSize,	/**< Size in bytes */
+		TimeT,		/**< A time_t value */
+		Integer,	/**< An integer */
 	};
 
 	constexpr bool is_string() const { return type == Type::String; }
@@ -126,33 +126,29 @@ struct Field {
 	 */
 
 	enum struct Flag {
-		GMime	       = 1 << 0,
-		/**< Field retrieved through gmime */
-
 		/*
 		 * Different kind of terms; at most one is true,
 		 * and cannot be combined with IsContact. Compile-time enforced.
 		 */
-		NormalTerm	= 1 << 2,
+		NormalTerm    = 1 << 0,
 		/**< Field is a searchable term */
-		BooleanTerm	= 1 << 5,
-		/**< Field is a boolean search-term; wildcards do not work */
-		IndexableTerm = 1 << 1,
+		BooleanTerm   = 1 << 1,
+		/**< Field is a boolean search-term (i.e. at most one per message);
+		 * wildcards do not work */
+		IndexableTerm = 1 << 2,
 		/**< Field has indexable text as term */
-
 		/*
 		 * Contact flag cannot be combined with any of the term flags.
 		 * This is compile-time enforced.
 		 */
-		Contact      = 1 << 4,
+		Contact = 1 << 10,
 		/**< field contains one or more e-mail-addresses */
-
-		Value       = 1 << 3,
+		Value   = 1 << 11,
 		/**< Field value is stored (so the literal value can be retrieved) */
 
-		DoNotCache     = 1 << 6,
+		DoNotCache = 1 << 20,
 		/**< don't cache this field in * the MuMsg cache */
-		Range	       = 1 << 7
+		Range	   = 1 << 21
 		/**< whether this is a range field (e.g., date, size)*/
 	};
 
@@ -160,12 +156,9 @@ struct Field {
 		return (static_cast<int>(some_flag) & static_cast<int>(flags)) != 0;
 	}
 
-	constexpr bool is_gmime() const { return any_of(Flag::GMime); }
-
 	constexpr bool is_indexable_term()	const { return any_of(Flag::IndexableTerm); }
 	constexpr bool is_boolean_term()	const { return any_of(Flag::BooleanTerm); }
 	constexpr bool is_normal_term()		const { return any_of(Flag::NormalTerm); }
-
 	constexpr bool is_searchable()          const { return is_indexable_term() ||
 							       is_boolean_term() ||
 							       is_normal_term(); }
@@ -174,9 +167,6 @@ struct Field {
 
 	constexpr bool is_contact()		const { return any_of(Flag::Contact); }
 	constexpr bool is_range()		const { return any_of(Flag::Range); }
-	constexpr bool do_not_cache()		const { return any_of(Flag::DoNotCache); }
-
-
 
 	/**
 	 * Field members
@@ -200,9 +190,21 @@ struct Field {
 		return shortcut == 0 ? 0 : shortcut - ('a' - 'A');
 	}
 
+	/**
+	 * Get the xapian term; truncated to MaxTermLength and
+	 * utf8-flattened.
+	 *
+	 * @param s
+	 *
+	 * @return the xapian term
+	 */
 	std::string xapian_term(const std::string& s="") const;
-	std::string xapian_term(std::string_view sv) const;
-	std::string xapian_term(char c) const;
+	std::string xapian_term(std::string_view sv) const {
+		return xapian_term(std::string{sv});
+	}
+	std::string xapian_term(char c) const {
+		return xapian_term(std::string(1, c));
+	}
 };
 
 MU_ENABLE_BITOPS(Field::Flag);
@@ -216,12 +218,11 @@ static constexpr std::array<Field, Field::id_size()>
 	    // Bcc
 	    {
 		Field::Id::Bcc,
-		Field::Type::String,
+		Field::Type::ContactList,
 		"bcc",
 		"Blind carbon-copy recipient",
 		"bcc:foo@example.com",
 		'h',
-		Field::Flag::GMime |
 		Field::Flag::Contact |
 		Field::Flag::Value
 	    },
@@ -233,8 +234,7 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message html body",
 		{},
 		{},
-		Field::Flag::GMime |
-		Field::Flag::DoNotCache
+		{}
 	    },
 	    // Body
 	    {
@@ -244,22 +244,19 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message plain-text body",
 		"body:capybara", // example
 		'b',
-		Field::Flag::GMime |
-		Field::Flag::IndexableTerm |
-		Field::Flag::DoNotCache
+		Field::Flag::IndexableTerm,
 	    },
 	    // Cc
 	    {
 		Field::Id::Cc,
-		Field::Type::String,
+		Field::Type::ContactList,
 		"cc",
 		"Carbon-copy recipient",
 		"cc:quinn@example.com",
 		'c',
-		Field::Flag::GMime |
 		Field::Flag::Contact |
-		Field::Flag::Value},
-
+		Field::Flag::Value
+	    },
 	    // Embed
 	    {
 		Field::Id::EmbeddedText,
@@ -268,9 +265,8 @@ static constexpr std::array<Field, Field::id_size()>
 		"Embedded text",
 		"embed:war OR embed:peace",
 		'e',
-		Field::Flag::GMime |
-		Field::Flag::IndexableTerm |
-		Field::Flag::DoNotCache},
+		Field::Flag::IndexableTerm
+	    },
 	    // File
 	    {
 		Field::Id::File,
@@ -279,21 +275,19 @@ static constexpr std::array<Field, Field::id_size()>
 		"Attachment file name",
 		"file:/image\\.*.jpg/",
 		'j',
-		Field::Flag::GMime |
-		Field::Flag::NormalTerm |
-		Field::Flag::DoNotCache},
-
+		Field::Flag::NormalTerm
+	    },
 	    // From
 	    {
 		Field::Id::From,
-		Field::Type::String,
+		Field::Type::ContactList,
 		"from",
 		"Message sender",
 		"from:jimbo",
 		'f',
-		Field::Flag::GMime |
 		Field::Flag::Contact |
-		Field::Flag::Value},
+		Field::Flag::Value
+	    },
 	    // Maildir
 	    {
 		Field::Id::Maildir,
@@ -302,9 +296,9 @@ static constexpr std::array<Field, Field::id_size()>
 		"Maildir path for message",
 		"maildir:/private/archive",
 		'm',
-		Field::Flag::GMime |
-		Field::Flag::NormalTerm |
-		Field::Flag::Value},
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
 	    // MIME
 	    {
 		Field::Id::Mime,
@@ -313,7 +307,8 @@ static constexpr std::array<Field, Field::id_size()>
 		"Attachment MIME-type",
 		"mime:image/jpeg",
 		'y',
-		Field::Flag::NormalTerm},
+		Field::Flag::NormalTerm
+	    },
 	    // Message-ID
 	    {
 		Field::Id::MessageId,
@@ -322,9 +317,9 @@ static constexpr std::array<Field, Field::id_size()>
 		"Attachment MIME-type",
 		"msgid:abc@123",
 		'i',
-		Field::Flag::GMime |
-		Field::Flag::NormalTerm |
-		Field::Flag::Value},
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
 	    // Path
 	    {
 		Field::Id::Path,
@@ -332,11 +327,10 @@ static constexpr std::array<Field, Field::id_size()>
 		"path",
 		"File system path to message",
 		{},
-		'p',
-		Field::Flag::GMime |
+		'l',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value},
-
+		Field::Flag::Value
+	    },
 	    // Subject
 	    {
 		Field::Id::Subject,
@@ -345,32 +339,20 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message subject",
 		"subject:wombat",
 		's',
-		Field::Flag::GMime |
 		Field::Flag::Value |
-		Field::Flag::IndexableTerm},
-
+		Field::Flag::IndexableTerm
+	    },
 	    // To
 	    {
 		Field::Id::To,
-		Field::Type::String,
+		Field::Type::ContactList,
 		"to",
 		"Message recipient",
 		"to:flimflam@example.com",
 		't',
-		Field::Flag::GMime |
 		Field::Flag::Contact |
 		Field::Flag::Value
 	    },
-	    // UID (internal)
-	    {
-		Field::Id::Uid,
-		Field::Type::String,
-		"uid",
-		"Message recipient",
-		{},
-		'u',
-		Field::Flag::NormalTerm},
-
 	    // References
 	    {
 		Field::Id::References,
@@ -379,7 +361,6 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message references to other messages",
 		{},
 		'r',
-		Field::Flag::GMime |
 		Field::Flag::Value
 	    },
 	    // Tags
@@ -390,7 +371,6 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message tags",
 		"tag:projectx",
 		'x',
-		Field::Flag::GMime |
 		Field::Flag::NormalTerm |
 		Field::Flag::Value
 	    },
@@ -402,7 +382,6 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message date",
 		"date:20220101..20220505",
 		'd',
-		Field::Flag::GMime |
 		Field::Flag::Value |
 		Field::Flag::Range
 	    },
@@ -414,7 +393,6 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message properties",
 		"flag:unread",
 		'g',
-		Field::Flag::GMime |
 		Field::Flag::NormalTerm |
 		Field::Flag::Value
 	    },
@@ -426,8 +404,7 @@ static constexpr std::array<Field, Field::id_size()>
 		"Priority",
 		"prio:high",
 		'p',
-		Field::Flag::GMime |
-		Field::Flag::NormalTerm |
+		Field::Flag::BooleanTerm |
 		Field::Flag::Value
 	    },
 	    // Size
@@ -438,7 +415,6 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message size in bytes",
 		"size:1M..5M",
 		'z',
-		Field::Flag::GMime |
 		Field::Flag::Value |
 		Field::Flag::Range
 	    },
@@ -450,8 +426,7 @@ static constexpr std::array<Field, Field::id_size()>
 		"Mailing list (List-Id:)",
 		"list:mu-discuss.googlegroups.com",
 		'v',
-		Field::Flag::GMime |
-		Field::Flag::NormalTerm |
+		Field::Flag::BooleanTerm |
 		Field::Flag::Value
 	    },
 	    // ThreadId
@@ -462,7 +437,8 @@ static constexpr std::array<Field, Field::id_size()>
 		"Thread a message belongs to",
 		{},
 		'w',
-		Field::Flag::NormalTerm
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
 	    },
 	}};
 
@@ -489,7 +465,7 @@ field_from_id(Field::Id id)
  * @param func some callable
  */
 template <typename Func>
-void field_for_each(Func&& func) {
+constexpr void field_for_each(Func&& func) {
 	for (const auto& field: Fields)
 		func(field);
 }
@@ -502,7 +478,7 @@ void field_for_each(Func&& func) {
  * @return a message-field id, or nullopt if not found.
  */
 template <typename Pred>
-Option<Field> field_find_if(Pred&& pred) {
+constexpr Option<Field> field_find_if(Pred&& pred) {
 	for (auto&& field: Fields)
 		if (pred(field))
 			return field;
@@ -547,7 +523,6 @@ Option<Field> field_from_number(size_t id)
 	else
 		return field_from_id(static_cast<Field::Id>(id));
 }
-
 
 } // namespace Mu
 #endif /* MU_FIELDS_HH__ */

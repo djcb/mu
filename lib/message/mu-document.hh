@@ -199,7 +199,7 @@ public:
 	 *
 	 * @param field_id id of the contacts field to get
 	 *
-	 * @return an integer or 0 if not found.
+	 * @return a contacts list
 	 */
 	Contacts contacts_value(Field::Id id) const noexcept;
 

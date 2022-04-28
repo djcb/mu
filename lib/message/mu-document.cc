@@ -36,23 +36,24 @@ constexpr char SepaChar1 = 0xfe;
 constexpr char SepaChar2 = 0xff;
 
 static void
-add_index_term(Xapian::Document& doc, const Field& field, const std::string& val)
+add_search_term(Xapian::Document& doc, const Field& field, const std::string& val)
 {
-	std::string flatval{utf8_flatten(val)};
-	Xapian::TermGenerator termgen;
-	termgen.set_document(doc);
-	termgen.index_text(flatval);
-}
-
-static void
-maybe_add_term(Xapian::Document& doc, const Field& field, const std::string& val)
-{
-	if (field.is_normal_term())
-		doc.add_term(field.xapian_term());
-	else if (field.is_indexable_term()) {
-		add_index_term(doc, field, val);
-	} else if (field.is_boolean_term())
+	if (field.is_normal_term()) {
+		doc.add_term(field.xapian_term(val));
+	} else if (field.is_boolean_term()) {
 		doc.add_boolean_term(field.xapian_term(val));
+	} else if (field.is_indexable_term()) {
+		Xapian::TermGenerator termgen;
+		termgen.set_document(doc);
+		termgen.index_text(utf8_flatten(val),1,field.xapian_term());
+	} else
+		throw std::logic_error("not a search term");
+
+
+	if (field.id == Field::Id::Tags)
+		for (auto tag = doc.termlist_begin(); tag != doc.termlist_end(); ++tag)
+			if ((*tag)[0] == 'X')
+				g_message("%u: %s", doc.get_docid(), (*tag).c_str());
 }
 
 void
@@ -63,7 +64,8 @@ Document::add(Field::Id id, const std::string& val)
 	if (field.is_value())
 		xdoc_.add_value(field.value_no(), val);
 
-	maybe_add_term(xdoc_, field, val);
+	if (field.is_searchable())
+		add_search_term(xdoc_, field, val);
 }
 
 void
@@ -76,8 +78,10 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 	if (field.is_value())
 		xdoc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
 
-	std::for_each(vals.begin(), vals.end(),
-		      [&](const auto& val) { maybe_add_term(xdoc_, field, val); });
+	if (field.is_searchable())
+		std::for_each(vals.begin(), vals.end(),
+			      [&](const auto& val) {
+				      add_search_term(xdoc_, field, val); });
 }
 
 
@@ -98,13 +102,19 @@ Document::add(Field::Id id, const Contacts& contacts)
 
 	const std::string sepa2(1, SepaChar2);
 
+	Xapian::TermGenerator termgen;
+	termgen.set_document(xdoc_);
+
 	for (auto&& contact: contacts) {
+
 		if (!contact.field_id || *contact.field_id != id)
 			continue;
 
-		xdoc_.add_term(contact.email);
+		xdoc_.add_term(field.xapian_term(contact.email));
+
 		if (!contact.name.empty())
-			add_index_term(xdoc_, field, contact.name);
+			termgen.index_text(utf8_flatten(contact.name), 1,
+					   field.xapian_term());
 
 		cvec.emplace_back(contact.email + sepa2 + contact.name);
 	}
@@ -134,26 +144,6 @@ Document::contacts_value(Field::Id id) const noexcept
 	return contacts;
 }
 
-static std::string
-integer_to_string(int64_t val)
-{
-	char buf[18];
-	buf[0] = 'f' + ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64, val);
-	return buf;
-}
-
-static int64_t
-string_to_integer(const std::string& str)
-{
-	if (str.empty())
-		return 0;
-
-	int64_t val{};
-	std::from_chars(str.c_str() + 1, str.c_str() + str.size(), val, 16);
-
-	return val;
-}
-
 void
 Document::add(Field::Id id, int64_t val)
 {
@@ -167,15 +157,16 @@ Document::add(Field::Id id, int64_t val)
 	const auto field{field_from_id(id)};
 
 	if (field.is_value())
-		xdoc_.add_value(field.value_no(), integer_to_string(val));
-
-	/* terms are not supported for numerical fields */
+		xdoc_.add_value(field.value_no(), to_lexnum(val));
 }
 
 int64_t
 Document::integer_value(Field::Id field_id) const noexcept
 {
-	return string_to_integer(string_value(field_id));
+	if (auto&& v{string_value(field_id)}; v.empty())
+		return 0;
+	else
+		return from_lexnum(v);
 }
 
 void
@@ -200,10 +191,11 @@ Document::add(Flags flags)
 {
 	constexpr auto field{field_from_id(Field::Id::Flags)};
 
-	xdoc_.add_value(field.value_no(), integer_to_string(static_cast<int64_t>(flags)));
+	xdoc_.add_value(field.value_no(), to_lexnum(static_cast<int64_t>(flags)));
 	flag_infos_for_each([&](auto&& flag_info) {
 		if (any_of(flag_info.flag & flags))
-			xdoc_.add_boolean_term(field.xapian_term(flag_info.shortcut_lower()));
+			xdoc_.add_boolean_term(field.xapian_term(
+						       flag_info.shortcut_lower()));
 	});
 }
 
@@ -263,10 +255,13 @@ test_bcc()
 				Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
 			}};
 		doc.add(Field::Id::Bcc, contacts);
-		auto db = Xapian::InMemory::open();
 
+		TempDir tempdir;
+		auto db = Xapian::WritableDatabase(tempdir.path());
 		db.add_document(doc.xapian_document());
 
+		auto contacts2 = doc.contacts_value(Field::Id::Bcc);
+		assert_same_contacts(contacts, contacts2);
 	}
 
 }

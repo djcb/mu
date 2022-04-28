@@ -21,7 +21,6 @@
 #define MU_FLAGS_HH__
 
 #include <algorithm>
-#include <optional>
 #include <string_view>
 #include <array>
 #include <utils/mu-utils.hh>

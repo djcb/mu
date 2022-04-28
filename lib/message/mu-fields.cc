@@ -22,24 +22,32 @@
 
 using namespace Mu;
 
+// Xapian does not like terms much longer than this
+constexpr auto MaxTermLength = 240;
+
 std::string
 Field::xapian_term(const std::string& s) const
 {
-	return std::string(1U, xapian_prefix()) + s;
-}
+	const auto start{std::string(1U, xapian_prefix())};
+	if (const auto& size = s.size(); size == 0)
+		return start;
 
-std::string
-Field::xapian_term(std::string_view sv) const
-{
-	return std::string(1U, xapian_prefix()) + std::string{sv};
-}
-std::string
-Field::xapian_term(char c) const
-{
-	return std::string(1U, xapian_prefix()) + c;
-}
+	std::string res{start};
+	res.reserve(s.size() + 10);
 
+	/* slightly optimized common pure-ascii. */
+	if (G_LIKELY(g_str_is_ascii(s.c_str()))) {
+		res += s;
+		for (auto i = 1; res[i]; ++i)
+			res[i] = g_ascii_tolower(res[i]);
+	} else
+		res += utf8_flatten(s);
 
+	if (G_UNLIKELY(res.size() > MaxTermLength))
+		res.erase(MaxTermLength);
+
+	return res;
+}
 
 /**
  * compile-time checks
@@ -58,13 +66,26 @@ validate_field_ids()
 constexpr bool
 validate_field_shortcuts()
 {
+#ifdef BUILD_TESTS
+	std::array<size_t, 26> no_dups = {0};
+#endif /*BUILD_TESTS*/
 	for (auto id = 0U; id != Field::id_size(); ++id) {
 		const auto field_id = static_cast<Field::Id>(id);
 		const auto shortcut = field_from_id(field_id).shortcut;
 		if (shortcut != 0 &&
 		    (shortcut < 'a' || shortcut > 'z'))
 			return false;
+#ifdef BUILD_TESTS
+		if (shortcut != 0) {
+			if (++no_dups[static_cast<size_t>(shortcut-'a')] > 1) {
+				g_critical("shortcut '%c' is duplicated",
+					   shortcut);
+				return false;
+			}
+		}
+#endif
 	}
+
 	return true;
 }
 
@@ -93,8 +114,6 @@ validate_field_flags()
 
 	return true;
 }
-
-
 
 /*
  * tests... also build as runtime-tests, so we can get coverage info
@@ -135,6 +154,20 @@ test_field_flags()
 
 #ifdef BUILD_TESTS
 
+
+static void
+test_field_from_name()
+{
+	g_assert_true(field_from_name("s")->id == Field::Id::Subject);
+	g_assert_true(field_from_name("subject")->id == Field::Id::Subject);
+	g_assert_false(!!field_from_name("8"));
+	g_assert_false(!!field_from_name(""));
+
+	g_assert_true(field_from_name("").value_or(field_from_id(Field::Id::Bcc)).id ==
+		      Field::Id::Bcc);
+}
+
+
 static void
 test_xapian_term()
 {
@@ -146,6 +179,10 @@ test_xapian_term()
 
 	assert_equal(field_from_id(Field::Id::From).xapian_term('x'), "Fx");
 	assert_equal(field_from_id(Field::Id::To).xapian_term("boo"sv), "Tboo");
+
+	auto s1 = field_from_id(Field::Id::Subject).xapian_term(std::string(MaxTermLength - 1, 'x'));
+	auto s2 = field_from_id(Field::Id::Subject).xapian_term(std::string(MaxTermLength, 'x'));
+	g_assert_cmpuint(s1.length(), ==, s2.length());
 }
 
 int
@@ -155,6 +192,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/message/fields/ids", test_ids);
 	g_test_add_func("/message/fields/shortcuts", test_shortcuts);
+	g_test_add_func("/message/fields/from-name", test_field_from_name);
 	g_test_add_func("/message/fields/prefix", test_prefix);
 	g_test_add_func("/message/fields/xapian-term", test_xapian_term);
 	g_test_add_func("/message/fields/flags", test_field_flags);
