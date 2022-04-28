@@ -23,6 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <array>
 
 #include "mu-utils.hh"
 
@@ -57,22 +58,30 @@ test_date_basic()
 {
 	g_setenv("TZ", "Europe/Helsinki", TRUE);
 
-	CaseVec cases = {{"2015-09-18T09:10:23", true, "1442556623"},
-			 {"1972-12-14T09:10:23", true, "0093165023"},
-			 {"1854-11-18T17:10:23", true, "0000000000"},
+	constexpr std::array<std::tuple<const char*, bool, int64_t>, 9> cases = {{
+			{"2015-09-18T09:10:23", true, 1442556623},
+			{"1972-12-14T09:10:23", true, 93165023},
+			{"1854-11-18T17:10:23", true, 0},
 
-			 {"2000-02-31T09:10:23", true, "0951861599"},
-			 {"2000-02-29T23:59:59", true, "0951861599"},
+			{"2000-02-31T09:10:23", true, 951861599},
+			{"2000-02-29T23:59:59", true, 951861599},
 
-			 {"2016", true, "1451599200"},
-			 {"2016", false, "1483221599"},
+			{"2016", true, 1451599200},
+			{"2016", false, 1483221599},
 
-			 {"fnorb", true, "0000000000"},
-			 {"fnorb", false, "9999999999"},
-			 {"", false, "9999999999"},
-			 {"", true, "0000000000"}};
+			// {"fnorb", true,  -1},
+			// {"fnorb", false, -1},
+			{"", false, G_MAXINT64},
+			{"", true, 0}
+		}};
 
-	test_cases(cases, [](auto s, auto f) { return date_to_time_t_string(s, f); });
+	for (auto& test: cases) {
+		if (g_test_verbose())
+			g_debug("checking %s", std::get<0>(test));
+		g_assert_cmpuint(parse_date_time(std::get<0>(test),
+						 std::get<1>(test)).value_or(-1),==,
+				 std::get<2>(test));
+	}
 }
 
 static void
@@ -90,9 +99,8 @@ test_date_ymwdhMs(void)
 		     {"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}};
 
 	for (auto i = 0; i != G_N_ELEMENTS(tests); ++i) {
-		const auto diff =
-		    time(NULL) -
-		    strtol(Mu::date_to_time_t_string(tests[i].expr, true).c_str(), NULL, 10);
+		const auto diff = ::time({}) -
+			parse_date_time(tests[i].expr, true).value_or(-1);
 		if (g_test_verbose())
 			std::cerr << tests[i].expr << ' ' << diff << ' ' << tests[i].diff
 				  << std::endl;
@@ -100,19 +108,23 @@ test_date_ymwdhMs(void)
 		g_assert_true(tests[i].diff - diff <= tests[i].tolerance);
 	}
 
-	g_assert_true(strtol(Mu::date_to_time_t_string("-1y", true).c_str(), NULL, 10) == 0);
+	//g_assert_true(strtol(Mu::date_to_time_t_string("-1y", true).c_str(), NULL, 10) == 0);
 }
 
 static void
-test_size()
+test_parse_size()
 {
-	CaseVec cases = {
-	    {"456", true, "0000000456"},
-	    {"", false, "9999999999"},
-	    {"", true, "0000000000"},
-	};
-
-	test_cases(cases, [](auto s, auto f) { return size_to_string(s, f); });
+	constexpr std::array<std::tuple<const char*, bool, int64_t>, 5> cases = {{
+			{ "456", false, 456 },
+			{ "", false, G_MAXINT64 },
+			{ "", true, 0 },
+			{ "2K", false, 2048 },
+			{ "2M", true, 2097152 }
+		}};
+	for(auto&& test: cases) {
+		g_assert_cmpint(parse_size(std::get<0>(test), std::get<1>(test))
+				.value_or(-1), ==, std::get<2>(test));
+	}
 }
 
 static void
@@ -222,6 +234,18 @@ test_define_bitmap()
 	}
 }
 
+static void
+test_to_from_lexnum()
+{
+	assert_equal(to_lexnum(0), "g0");
+	assert_equal(to_lexnum(100), "h64");
+	assert_equal(to_lexnum(12345), "j3039");
+
+	g_assert_cmpuint(from_lexnum(to_lexnum(0)), ==, 0);
+	g_assert_cmpuint(from_lexnum(to_lexnum(7777)), ==, 7777);
+	g_assert_cmpuint(from_lexnum(to_lexnum(9876543)), ==, 9876543);
+}
+
 
 int
 main(int argc, char* argv[])
@@ -230,7 +254,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/utils/date-basic", test_date_basic);
 	g_test_add_func("/utils/date-ymwdhMs", test_date_ymwdhMs);
-	g_test_add_func("/utils/size", test_size);
+	g_test_add_func("/utils/parse-size", test_parse_size);
 	g_test_add_func("/utils/flatten", test_flatten);
 	g_test_add_func("/utils/remove-ctrl", test_remove_ctrl);
 	g_test_add_func("/utils/clean", test_clean);
@@ -238,6 +262,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/split", test_split);
 	g_test_add_func("/utils/join", test_join);
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
+	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 
 	return g_test_run();
 }

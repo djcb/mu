@@ -76,6 +76,25 @@ Err(const Error& err)
 	return tl::unexpected(err);
 }
 
+template<typename T>
+static inline tl::unexpected<Error>
+Err(const Result<T>& res)
+{
+	return res.error();
+}
+
+
+
+template <typename T>
+static inline Result<void>
+Ok(const T& t)
+{
+	if (t)
+		return Ok();
+	else
+		return Err(t.error());
+}
+
 
 /*
  * convenience
@@ -114,6 +133,9 @@ Err(Error::Code errcode, GError **err, const char* frm, ...)
 
 	return Err(errcode, std::move(str));
 }
+
+
+
 
 #define assert_valid_result(R) do {					\
 	if(!R) {							\

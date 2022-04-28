@@ -35,11 +35,15 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <cinttypes>
+#include <charconv>
+#include <limits>
 
 #include <glib.h>
 #include <glib/gprintf.h>
 
 #include "mu-utils.hh"
+#include "mu-utils-format.hh"
 #include "mu-util.h"
 #include "mu-str.h"
 #include "mu-error.hh"
@@ -118,7 +122,7 @@ Mu::utf8_flatten(const char* str)
 
 	// the pure-ascii case
 	if (g_str_is_ascii(str)) {
-		auto        l = g_ascii_strdown(str, -1);
+		auto    l = g_ascii_strdown(str, -1);
 		std::string s{l};
 		g_free(l);
 		return s;
@@ -298,27 +302,6 @@ Mu::vformat(const char* frm, va_list args)
 	return str;
 }
 
-constexpr const auto InternalDateFormat = "%010" G_GINT64_FORMAT;
-constexpr const char InternalDateMin[]  = "0000000000";
-constexpr const char InternalDateMax[]  = "9999999999";
-static_assert(sizeof(InternalDateMin) == 10 + 1, "invalid");
-static_assert(sizeof(InternalDateMax) == 10 + 1, "invalid");
-
-static std::string
-date_boundary(bool is_first)
-{
-	return is_first ? InternalDateMin : InternalDateMax;
-}
-
-std::string
-Mu::date_to_time_t_string(int64_t t)
-{
-	char buf[sizeof(InternalDateMax)];
-	g_snprintf(buf, sizeof(buf), InternalDateFormat, t);
-
-	return buf;
-}
-
 std::string
 Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 {
@@ -356,13 +339,13 @@ Mu::time_to_string(const std::string& frm, time_t t, bool utc)
 	return datestr.value_or("");
 }
 
-static std::string
+static Option<int64_t>
 delta_ymwdhMs(const std::string& expr)
 {
 	char* endptr;
 	auto  num = strtol(expr.c_str(), &endptr, 10);
 	if (num <= 0 || num > 9999 || !endptr || !*endptr)
-		return date_boundary(true);
+		return Nothing;
 
 	int years, months, weeks, days, hours, minutes, seconds;
 	years = months = weeks = days = hours = minutes = seconds = 0;
@@ -375,7 +358,8 @@ delta_ymwdhMs(const std::string& expr)
 	case 'w': weeks = num; break;
 	case 'm': months = num; break;
 	case 'y': years = num; break;
-	default: return date_boundary(true);
+	default:
+		return Nothing;
 	}
 
 	GDateTime *then, *now = g_date_time_new_now_local();
@@ -385,21 +369,21 @@ delta_ymwdhMs(const std::string& expr)
 		then =
 		    g_date_time_add_full(now, -years, -months, -days, -hours, -minutes, -seconds);
 
-	time_t t = MAX(0, (gint64)g_date_time_to_unix(then));
+	auto  t = std::max<int64_t>(0, g_date_time_to_unix(then));
 
 	g_date_time_unref(then);
 	g_date_time_unref(now);
 
-	return date_to_time_t_string(t);
+	return t;
 }
 
-static std::string
-special_date(const std::string& d, bool is_first)
+static Option<int64_t>
+special_date_time(const std::string& d, bool is_first)
 {
 	if (d == "now")
-		return date_to_time_t_string(time(NULL));
+		return ::time({});
 
-	else if (d == "today") {
+	if (d == "today") {
 		GDateTime *dt, *midnight;
 		dt = g_date_time_new_now_local();
 
@@ -419,10 +403,11 @@ special_date(const std::string& d, bool is_first)
 		time_t t = MAX(0, (gint64)g_date_time_to_unix(midnight));
 		g_date_time_unref(dt);
 		g_date_time_unref(midnight);
-		return date_to_time_t_string((time_t)t);
 
-	} else
-		return date_boundary(is_first);
+		return t;
+	}
+
+	return Nothing;
 }
 
 // if a date has a month day greater than the number of days in that month,
@@ -431,8 +416,8 @@ static void
 fixup_month(struct tm* tbuf)
 {
 	decltype(tbuf->tm_mday) max_days;
-	const auto              month = tbuf->tm_mon + 1;
-	const auto              year  = tbuf->tm_year + 1900;
+	const auto		month = tbuf->tm_mon + 1;
+	const auto		year  = tbuf->tm_year + 1900;
 
 	switch (month) {
 	case 2:
@@ -444,8 +429,12 @@ fixup_month(struct tm* tbuf)
 	case 4:
 	case 6:
 	case 9:
-	case 11: max_days = 30; break;
-	default: max_days = 31; break;
+	case 11:
+		max_days = 30;
+		break;
+	default:
+		max_days = 31;
+		break;
 	}
 
 	if (tbuf->tm_mday > max_days) {
@@ -454,21 +443,21 @@ fixup_month(struct tm* tbuf)
 		tbuf->tm_min  = 59;
 		tbuf->tm_sec  = 59;
 	}
-}
+ }
 
-std::string
-Mu::date_to_time_t_string(const std::string& dstr, bool is_first)
+
+Option<int64_t>
+Mu::parse_date_time(const std::string& dstr, bool is_first)
 {
-	gint64     t;
-	struct tm  tbuf;
-	GDateTime* dtime;
+	struct tm tbuf{};
+	GDateTime *dtime{};
+	int64_t t;
 
 	/* one-sided dates */
 	if (dstr.empty())
-		return date_boundary(is_first);
+		return is_first ? 0 : G_MAXINT64;
 	else if (dstr == "today" || dstr == "now")
-		return special_date(dstr, is_first);
-
+		return special_date_time(dstr, is_first);
 	else if (dstr.find_first_of("ymdwhMs") != std::string::npos)
 		return delta_ymwdhMs(dstr);
 
@@ -478,74 +467,45 @@ Mu::date_to_time_t_string(const std::string& dstr, bool is_first)
 	std::string date(is_first ? UserDateMin : UserDateMax);
 	std::copy_if(dstr.begin(), dstr.end(), date.begin(), [](auto c) { return isdigit(c); });
 
-	memset(&tbuf, 0, sizeof tbuf);
-	if (!strptime(date.c_str(), "%Y%m%d%H%M%S", &tbuf) &&
-	    !strptime(date.c_str(), "%Y%m%d%H%M", &tbuf) &&
-	    !strptime(date.c_str(), "%Y%m%d", &tbuf) && !strptime(date.c_str(), "%Y%m", &tbuf) &&
-	    !strptime(date.c_str(), "%Y", &tbuf))
-		return date_boundary(is_first);
+	if (!::strptime(date.c_str(), "%Y%m%d%H%M%S", &tbuf) &&
+	    !::strptime(date.c_str(), "%Y%m%d%H%M", &tbuf) &&
+	    !::strptime(date.c_str(), "%Y%m%d%H", &tbuf) &&
+	    !::strptime(date.c_str(), "%Y%m%d", &tbuf) &&
+	    !::strptime(date.c_str(), "%Y%m", &tbuf) &&
+	    !::strptime(date.c_str(), "%Y", &tbuf))
+		return Nothing;
 
 	fixup_month(&tbuf);
-
 	dtime = g_date_time_new_local(tbuf.tm_year + 1900,
 				      tbuf.tm_mon + 1,
 				      tbuf.tm_mday,
 				      tbuf.tm_hour,
 				      tbuf.tm_min,
 				      tbuf.tm_sec);
-	if (!dtime) {
-		g_warning("invalid %s date '%s'", is_first ? "lower" : "upper", date.c_str());
-		return date_boundary(is_first);
-	}
-
 	t = g_date_time_to_unix(dtime);
 	g_date_time_unref(dtime);
 
-	if (t < 0 || t > 9999999999)
-		return date_boundary(is_first);
-	else
-		return date_to_time_t_string(t);
+	return std::max<int64_t>(t, 0);
 }
 
-constexpr const auto SizeFormat = "%010" G_GINT64_FORMAT;
 
-constexpr const char SizeMin[] = "0000000000";
-constexpr const char SizeMax[] = "9999999999";
-static_assert(sizeof(SizeMin) == 10 + 1, "invalid");
-static_assert(sizeof(SizeMax) == 10 + 1, "invalid");
-
-static std::string
-size_boundary(bool is_first)
+Option<int64_t>
+Mu::parse_size(const std::string& val, bool is_first)
 {
-	return is_first ? SizeMin : SizeMax;
-}
-
-std::string
-Mu::size_to_string(int64_t size)
-{
-	char buf[sizeof(SizeMax)];
-	g_snprintf(buf, sizeof(buf), SizeFormat, size);
-
-	return buf;
-}
-
-std::string
-Mu::size_to_string(const std::string& val, bool is_first)
-{
-	std::string str;
-	GRegex*     rx;
-	GMatchInfo* minfo;
+	int64_t		size{-1};
+	std::string	str;
+	GRegex*		rx;
+	GMatchInfo*	minfo;
 
 	/* one-sided ranges */
 	if (val.empty())
-		return size_boundary(is_first);
+		return is_first ? 0 : std::numeric_limits<int64_t>::max();
 
 	rx = g_regex_new("(\\d+)(b|k|kb|m|mb|g|gb)?", G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
 	minfo = NULL;
 	if (g_regex_match(rx, val.c_str(), (GRegexMatchFlags)0, &minfo)) {
-		gint64 size;
-		char*  s;
 
+		char*  s;
 		s    = g_match_info_fetch(minfo, 1);
 		size = atoll(s);
 		g_free(s);
@@ -559,26 +519,50 @@ Mu::size_to_string(const std::string& val, bool is_first)
 		}
 
 		g_free(s);
-		str = size_to_string(size);
-	} else
-		str = size_boundary(is_first);
+	}
 
 	g_regex_unref(rx);
 	g_match_info_unref(minfo);
 
-	return str;
+	if (size < 0)
+		return Nothing;
+	else
+		return size;
+
 }
+
+std::string
+Mu::to_lexnum(int64_t val)
+{
+	char buf[18]; /* 1 byte prefix + hex + \0 */
+	buf[0] = 'f' + ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64, val);
+	return buf;
+}
+
+int64_t
+Mu::from_lexnum(const std::string& str)
+{
+	int64_t val{};
+	std::from_chars(str.c_str() + 1, str.c_str() + str.size(), val, 16);
+
+	return val;
+}
+
+
 
 std::string
 Mu::canonicalize_filename(const std::string& path, const std::string& relative_to)
 {
-	char* fname =
-	    g_canonicalize_filename(path.c_str(), relative_to.empty() ? NULL : relative_to.c_str());
+	auto str{to_string_opt_gchar(
+		g_canonicalize_filename(
+			path.c_str(),
+			relative_to.empty() ? nullptr : relative_to.c_str())).value()};
 
-	std::string rv{fname};
-	g_free(fname);
+	// remove trailing '/'... is this needed?
+	if (str[str.length()-1] == G_DIR_SEPARATOR)
+		str.erase(str.length() - 1);
 
-	return rv;
+	return str;
 }
 
 
@@ -592,7 +576,7 @@ Mu::allow_warnings()
 
 
 
-Mu::TempDir::TempDir()
+Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete}
 {
 	GError *err{};
 	gchar *tmpdir = g_dir_make_tmp("mu-tmp-XXXXXX", &err);
@@ -610,6 +594,11 @@ Mu::TempDir::~TempDir()
 {
 	if (::access(path_.c_str(), F_OK) != 0)
 		return; /* nothing to do */
+
+	if (!autodelete_) {
+		g_debug("_not_ deleting %s", path_.c_str());
+		return;
+	}
 
 	/* ugly */
 	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};

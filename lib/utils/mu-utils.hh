@@ -34,6 +34,9 @@
 #include <algorithm>
 #include <numeric>
 
+#include "mu-utils-format.hh"
+#include "mu-option.hh"
+
 namespace Mu {
 
 using StringVec = std::vector<std::string>;
@@ -109,46 +112,16 @@ static inline std::string join(const std::vector<std::string>& svec, char sepa) 
 }
 
 /**
- * Quote & escape a string for " and \
- *
- * @param str a string
- *
- * @return quoted string
- */
-std::string quote(const std::string& str);
-
-/**
- * Format a string, printf style
- *
- * @param frm format string
- * @param ... parameters
- *
- * @return a formatted string
- */
-std::string format(const char* frm, ...) __attribute__((format(printf, 1, 2)));
-
-/**
- * Format a string, printf style
- *
- * @param frm format string
- * @param ... parameters
- *
- * @return a formatted string
- */
-std::string vformat(const char* frm, va_list args) __attribute__((format(printf, 1, 0)));
-
-/**
- * Convert an date to the corresponding time expressed as a string with a
- * 10-digit time_t
- *
+ * Parse a date string to the corresponding time_t
+ * *
  * @param date the date expressed a YYYYMMDDHHMMSS or any n... of the first
- * characters.
+ * characters, using the local timezone.
  * @param first whether to fill out incomplete dates to the start or the end;
  * ie. either 1972 -> 197201010000 or 1972 -> 197212312359
  *
- * @return the corresponding time_t expressed as a string
+ * @return the corresponding time_t or Nothing if parsing failed.
  */
-std::string date_to_time_t_string(const std::string& date, bool first);
+Option<int64_t> parse_date_time(const std::string& date, bool first);
 
 /**
  * 64-bit incarnation of time_t expressed as a 10-digit string. Uses 64-bit for the time-value,
@@ -266,9 +239,9 @@ std::string canonicalize_filename(const std::string& path, const std::string& re
  * @param sizestr the size string
  * @param first
  *
- * @return the size expressed as a string with the decimal number of bytes
+ * @return the size or Nothing if parsing failed
  */
-std::string size_to_string(const std::string& sizestr, bool first);
+Option<int64_t> parse_size(const std::string& sizestr, bool first);
 
 /**
  * Convert a size into a size in bytes string
@@ -296,6 +269,37 @@ to_string(const T& val)
 
 	return sstr.str();
 }
+
+/**
+ * Consume a gchar and return a std::string
+ *
+ * @param str a gchar* (consumed/freed)
+ *
+ * @return a std::string, empty if gchar was {}
+ */
+static inline std::string
+to_string_gchar(gchar*&& str)
+{
+	std::string s(str?str:"");
+	g_free(str);
+	return s;
+}
+
+
+/*
+ * Lexicals Number are lexicographically sortable string representations
+ * of numbers. Start with 'g' + length of number in hex, followed by
+ * the ascii for the hex represntation. So,
+ *
+ * 0  -> 'g0'
+ * 1  -> 'g1'
+ * 10 -> 'ga'
+ * 16 -> 'h10'
+ *
+ * etc.
+ */
+std::string to_lexnum(int64_t val);
+int64_t from_lexnum(const std::string& str);
 
 /**
  * Like std::find_if, but using sequence instead of a range.
@@ -483,7 +487,7 @@ struct TempDir {
 	/**
 	 * Construct a temporary directory
 	 */
-	TempDir();
+	TempDir(bool autodelete=true);
 
 	/**
 	 * DTOR; removes the temporary directory
@@ -503,6 +507,7 @@ struct TempDir {
 	const std::string& path() {return path_; }
 private:
 	std::string path_;
+	const bool autodelete_;
 };
 
 } // namespace Mu

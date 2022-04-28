@@ -22,6 +22,7 @@
 
 #include <xapian.h>
 #include <glib.h>
+#include "mu-result.hh"
 
 namespace Mu {
 
@@ -59,6 +60,25 @@ try {
 	g_critical("%s: caught exception", __func__);
 	return static_cast<Default>(def);
 }
+
+
+template <typename Func>
+auto
+xapian_try_result(Func&& func) noexcept -> std::decay_t<decltype(func())>
+try {
+	return func();
+} catch (const Xapian::Error& xerr) {
+	return Err(Error::Code::Xapian, "%s", xerr.get_error_string());
+} catch (const std::runtime_error& re) {
+	return Err(Error::Code::Internal, "runtime error: %s", re.what());
+} catch (const std::exception& e) {
+	return Err(Error::Code::Internal, "caught exception: %s", e.what());
+} catch (...) {
+	return Err(Error::Code::Internal, "caught exception");
+}
+
+
+
 
 } // namespace Mu
 
