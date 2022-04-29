@@ -20,7 +20,7 @@
 #ifndef MU_RESULT_HH__
 #define MU_RESULT_HH__
 
-#include "expected.hpp"
+#include "thirdparty/expected.hpp"
 #include "utils/mu-error.hh"
 
 namespace Mu {

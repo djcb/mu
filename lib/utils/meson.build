@@ -16,29 +16,16 @@
 
 
 lib_mu_utils=static_library('mu-utils', [
-		  'mu-async-queue.hh',
 		  'mu-command-parser.cc',
-		  'mu-command-parser.hh',
-		  'mu-error.hh',
 		  'mu-logger.cc',
-		  'mu-logger.hh',
-		  'mu-option.hh',
                   'mu-option.cc',
 		  'mu-readline.cc',
-		  'mu-readline.hh',
-		  'mu-result.hh',
 		  'mu-sexp.cc',
-		  'mu-sexp.hh',
 		  'mu-str.c',
 		  'mu-str.h',
 		  'mu-util.c',
 		  'mu-util.h',
-		  'mu-utils.cc',
-		  'mu-utils.hh',
-                  'mu-xapian-utils.hh',
-		  # third party
-		  'optional.hpp',
-		  'expected.hpp'],
+		  'mu-utils.cc'],
 		 dependencies: [
 		   glib_dep,
 		   config_h_dep,

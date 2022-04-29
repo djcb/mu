@@ -29,7 +29,6 @@
 #include <xapian.h>
 #include <glib/gstdio.h>
 
-#include "expected.hpp"
 #include "mu-query-results.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query-threads.hh"
