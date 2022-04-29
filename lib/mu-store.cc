@@ -71,8 +71,12 @@ struct Store::Private {
 								  : XapianOpts::Open)},
 	      properties_{make_properties(path)},
 	      contacts_cache_{db().get_metadata(ContactsKey),
-		properties_.personal_addresses}
-	{}
+		properties_.personal_addresses} {
+		/* we do our own flushing, set Xapian's internal one as the backstop*/
+		g_setenv("XAPIAN_FLUSH_THRESHOLD",
+			 format("%zu", properties_.batch_size + 100).c_str(), 1);
+
+	}
 
 	Private(const std::string& path,
 		const std::string& root_maildir,
@@ -80,8 +84,11 @@ struct Store::Private {
 		const Store::Config& conf)
 	    : read_only_{false}, db_{make_xapian_db(path, XapianOpts::CreateOverwrite)},
 	      properties_{init_metadata(conf, path, root_maildir, personal_addresses)},
-	      contacts_cache_{"", properties_.personal_addresses}
-	{}
+	      contacts_cache_{"", properties_.personal_addresses} {
+				/* we do our own flushing, set Xapian's internal one as the backstop*/
+		g_setenv("XAPIAN_FLUSH_THRESHOLD",
+			 format("%zu", properties_.batch_size + 100).c_str(), 1);
+	}
 
 	~Private()
 	try {
@@ -214,7 +221,6 @@ struct Store::Private {
 
 		const size_t batch_size = conf.batch_size ? conf.batch_size : DefaultBatchSize;
 		writable_db().set_metadata(BatchSizeKey, Mu::format("%zu", batch_size));
-
 		const size_t max_msg_size = conf.max_message_size ? conf.max_message_size
 								  : DefaultMaxMessageSize;
 		writable_db().set_metadata(MaxMessageSizeKey, Mu::format("%zu", max_msg_size));
