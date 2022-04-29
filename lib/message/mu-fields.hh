@@ -39,39 +39,28 @@ struct Field {
 	 *
 	 */
 	enum struct Id {
-		/*
-		 * first all the string-based ones
-		 */
-		Bcc = 0,      /**< Blind Carbon-Copy */
-		BodyHtml,     /**< HTML Body */
-		BodyText,     /**< Text body */
-		Cc,           /**< Carbon-Copy */
-		EmbeddedText, /**< Embedded text in message */
-		File,         /**< Filename */
-		From,         /**< Message sender */
-		Maildir,      /**< Maildir path */
-		Mime,         /**< MIME-Type */
-		MessageId,    /**< Message Id */
-		Path,         /**< File-system Path */
-		Subject,      /**< Message subject */
-		To,           /**< To: recipient */
-		/*
-		 * string list items...
-		 */
-		References, /**< All references (incl. Reply-To:) */
-		Tags,       /**< Message Tags */
-		/*
-		 * then the numerical ones
-		 */
-		Date,     /**< Message date */
-		Flags,    /**< Message flags */
-		Priority, /**< Message priority */
-		Size,     /**< Message size (in bytes) */
-
-		/* add new ones here... */
-		MailingList, /**< Mailing list */
-		ThreadId,    /**< Thread Id */
-
+		Bcc = 0,	/**< Blind Carbon-Copy */
+		BodyHtml,	/**< HTML Body */
+		BodyText,	/**< Text body */
+		Cc,		/**< Carbon-Copy */
+		Date,		/**< Message date */
+		EmbeddedText,	/**< Embedded text in message */
+		File,		/**< Filename */
+		Flags,		/**< Message flags */
+		From,		/**< Message sender */
+		Maildir,	/**< Maildir path */
+		MailingList,	/**< Mailing list */
+		MessageId,	/**< Message Id */
+		Mime,		/**< MIME-Type */
+		Modified,       /**< Last modification time */
+		Path,		/**< File-system Path */
+		Priority,	/**< Message priority */
+		References,	/**< All references (incl. Reply-To:) */
+		Size,		/**< Message size (in bytes) */
+		Subject,	/**< Message subject */
+		Tags,		/**< Message Tags */
+		ThreadId,	/**< Thread Id */
+		To,		/**< To: recipient */
 		/*
 		 * <private>
 		 */
@@ -146,10 +135,9 @@ struct Field {
 		Value   = 1 << 11,
 		/**< Field value is stored (so the literal value can be retrieved) */
 
-		DoNotCache = 1 << 20,
-		/**< don't cache this field in * the MuMsg cache */
-		Range	   = 1 << 21
+		Range	   = 1 << 21,
 		/**< whether this is a range field (e.g., date, size)*/
+		Internal   = 1 << 26
 	};
 
 	constexpr bool any_of(Flag some_flag) const{
@@ -164,6 +152,7 @@ struct Field {
 							       is_normal_term(); }
 
 	constexpr bool is_value()		const { return any_of(Flag::Value); }
+	constexpr bool is_internal()		const { return any_of(Flag::Internal); }
 
 	constexpr bool is_contact()		const { return any_of(Flag::Contact); }
 	constexpr bool is_range()		const { return any_of(Flag::Range); }
@@ -215,7 +204,6 @@ MU_ENABLE_BITOPS(Field::Flag);
 static constexpr std::array<Field, Field::id_size()>
     Fields = {
 	{
-	    // Bcc
 	    {
 		Field::Id::Bcc,
 		Field::Type::ContactList,
@@ -226,7 +214,6 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value
 	    },
-	    // HTML Body
 	    {
 		Field::Id::BodyHtml,
 		Field::Type::String,
@@ -234,19 +221,17 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message html body",
 		{},
 		{},
-		{}
+		Field::Flag::Internal
 	    },
-	    // Body
 	    {
 		Field::Id::BodyText,
 		Field::Type::String,
 		"body",
 		"Message plain-text body",
-		"body:capybara", // example
+		"body:capybara",
 		'b',
 		Field::Flag::IndexableTerm,
 	    },
-	    // Cc
 	    {
 		Field::Id::Cc,
 		Field::Type::ContactList,
@@ -257,124 +242,6 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value
 	    },
-	    // Embed
-	    {
-		Field::Id::EmbeddedText,
-		Field::Type::String,
-		"embed",
-		"Embedded text",
-		"embed:war OR embed:peace",
-		'e',
-		Field::Flag::IndexableTerm
-	    },
-	    // File
-	    {
-		Field::Id::File,
-		Field::Type::String,
-		"file",
-		"Attachment file name",
-		"file:/image\\.*.jpg/",
-		'j',
-		Field::Flag::NormalTerm
-	    },
-	    // From
-	    {
-		Field::Id::From,
-		Field::Type::ContactList,
-		"from",
-		"Message sender",
-		"from:jimbo",
-		'f',
-		Field::Flag::Contact |
-		Field::Flag::Value
-	    },
-	    // Maildir
-	    {
-		Field::Id::Maildir,
-		Field::Type::String,
-		"maildir",
-		"Maildir path for message",
-		"maildir:/private/archive",
-		'm',
-		Field::Flag::BooleanTerm |
-		Field::Flag::Value
-	    },
-	    // MIME
-	    {
-		Field::Id::Mime,
-		Field::Type::String,
-		"mime",
-		"Attachment MIME-type",
-		"mime:image/jpeg",
-		'y',
-		Field::Flag::NormalTerm
-	    },
-	    // Message-ID
-	    {
-		Field::Id::MessageId,
-		Field::Type::String,
-		"msgid",
-		"Attachment MIME-type",
-		"msgid:abc@123",
-		'i',
-		Field::Flag::BooleanTerm |
-		Field::Flag::Value
-	    },
-	    // Path
-	    {
-		Field::Id::Path,
-		Field::Type::String,
-		"path",
-		"File system path to message",
-		{},
-		'l',
-		Field::Flag::BooleanTerm |
-		Field::Flag::Value
-	    },
-	    // Subject
-	    {
-		Field::Id::Subject,
-		Field::Type::String,
-		"subject",
-		"Message subject",
-		"subject:wombat",
-		's',
-		Field::Flag::Value |
-		Field::Flag::IndexableTerm
-	    },
-	    // To
-	    {
-		Field::Id::To,
-		Field::Type::ContactList,
-		"to",
-		"Message recipient",
-		"to:flimflam@example.com",
-		't',
-		Field::Flag::Contact |
-		Field::Flag::Value
-	    },
-	    // References
-	    {
-		Field::Id::References,
-		Field::Type::StringList,
-		"refs",
-		"Message references to other messages",
-		{},
-		'r',
-		Field::Flag::Value
-	    },
-	    // Tags
-	    {
-		Field::Id::Tags,
-		Field::Type::StringList,
-		"tag",
-		"Message tags",
-		"tag:projectx",
-		'x',
-		Field::Flag::NormalTerm |
-		Field::Flag::Value
-	    },
-	    // Date
 	    {
 		Field::Id::Date,
 		Field::Type::TimeT,
@@ -385,7 +252,24 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Value |
 		Field::Flag::Range
 	    },
-	    // Flags
+	    {
+		Field::Id::EmbeddedText,
+		Field::Type::String,
+		"embed",
+		"Embedded text",
+		"embed:war OR embed:peace",
+		'e',
+		Field::Flag::IndexableTerm
+	    },
+	    {
+		Field::Id::File,
+		Field::Type::String,
+		"file",
+		"Attachment file name",
+		"file:/image\\.*.jpg/",
+		'j',
+		Field::Flag::NormalTerm
+	    },
 	    {
 		Field::Id::Flags,
 		Field::Type::Integer,
@@ -396,7 +280,75 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::NormalTerm |
 		Field::Flag::Value
 	    },
-	    // Priority
+	    {
+		Field::Id::From,
+		Field::Type::ContactList,
+		"from",
+		"Message sender",
+		"from:jimbo",
+		'f',
+		Field::Flag::Contact |
+		Field::Flag::Value
+	    },
+	    {
+		Field::Id::Maildir,
+		Field::Type::String,
+		"maildir",
+		"Maildir path for message",
+		"maildir:/private/archive",
+		'm',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
+	    {
+		Field::Id::MailingList,
+		Field::Type::String,
+		"list",
+		"Mailing list (List-Id:)",
+		"list:mu-discuss.example.com",
+		'v',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
+	    {
+		Field::Id::MessageId,
+		Field::Type::String,
+		"msgid",
+		"Attachment MIME-type",
+		"msgid:abc@123",
+		'i',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
+	    {
+		Field::Id::Mime,
+		Field::Type::String,
+		"mime",
+		"Attachment MIME-type",
+		"mime:image/jpeg",
+		'y',
+		Field::Flag::NormalTerm
+	    },
+	    {
+		Field::Id::Modified,
+		Field::Type::TimeT,
+		"modified",
+		"Last modification time",
+		"modified:30m..now",
+		'k',
+		Field::Flag::Value |
+		Field::Flag::Range
+	    },
+	    {
+		Field::Id::Path,
+		Field::Type::String,
+		"path",
+		"File system path to message",
+		"path:/a/b/Maildir/cur/msg:2,S",
+		'l',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
 	    {
 		Field::Id::Priority,
 		Field::Type::Integer,
@@ -407,7 +359,15 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::BooleanTerm |
 		Field::Flag::Value
 	    },
-	    // Size
+	    {
+		Field::Id::References,
+		Field::Type::StringList,
+		"refs",
+		"References to related messages",
+		{},
+		'r',
+		Field::Flag::Value
+	    },
 	    {
 		Field::Id::Size,
 		Field::Type::ByteSize,
@@ -418,18 +378,26 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Value |
 		Field::Flag::Range
 	    },
-	    // Mailing List
 	    {
-		Field::Id::MailingList,
+		Field::Id::Subject,
 		Field::Type::String,
-		"list",
-		"Mailing list (List-Id:)",
-		"list:mu-discuss.googlegroups.com",
-		'v',
-		Field::Flag::BooleanTerm |
+		"subject",
+		"Message subject",
+		"subject:wombat",
+		's',
+		Field::Flag::Value |
+		Field::Flag::IndexableTerm
+	    },
+	    {
+		Field::Id::Tags,
+		Field::Type::StringList,
+		"tag",
+		"Message tags",
+		"tag:projectx",
+		'x',
+		Field::Flag::NormalTerm |
 		Field::Flag::Value
 	    },
-	    // ThreadId
 	    {
 		Field::Id::ThreadId,
 		Field::Type::String,
@@ -438,6 +406,16 @@ static constexpr std::array<Field, Field::id_size()>
 		{},
 		'w',
 		Field::Flag::BooleanTerm |
+		Field::Flag::Value
+	    },
+	    {
+		Field::Id::To,
+		Field::Type::ContactList,
+		"to",
+		"Message recipient",
+		"to:flimflam@example.com",
+		't',
+		Field::Flag::Contact |
 		Field::Flag::Value
 	    },
 	}};

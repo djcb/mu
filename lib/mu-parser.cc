@@ -177,7 +177,7 @@ process_range(const std::string& field_str,
 	std::string u2 = upper;
 	constexpr auto upper_limit = std::numeric_limits<int64_t>::max();
 
-	if (field_opt->id == Field::Id::Date) {
+	if (field_opt->id == Field::Id::Date || field_opt->id == Field::Id::Modified) {
 		l2 = to_lexnum(parse_date_time(lower, true).value_or(0));
 		u2 = to_lexnum(parse_date_time(upper, false).value_or(upper_limit));
 	} else if (field_opt->id == Field::Id::Size) {
@@ -420,7 +420,8 @@ Parser::Private::factor_2(Mu::Tokens& tokens, Node::Type& op, WarningVec& warnin
 		op = Node::Type::OpAnd; // implicit AND
 		break;
 
-	default: return empty();
+	default:
+		return empty();
 	}
 #pragma GCC diagnostic pop
 

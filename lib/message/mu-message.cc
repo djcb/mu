@@ -596,6 +596,9 @@ fill_document(Message::Private& priv)
 			for (auto&& part: priv.parts)
 				doc.add(field.id, part.mime_type());
 			break;
+		case Field::Id::Modified:
+			doc.add(field.id, priv.mtime);
+			break;
 		case Field::Id::Path: /* already */
 			break;
 		case Field::Id::Priority:
@@ -708,7 +711,9 @@ Message::update_after_move(const std::string& new_path,
 		return Err(statbuf.error());
 
 	priv_->doc.add(Field::Id::Path, new_path);
+	priv_->doc.add(Field::Id::Modified, statbuf->st_mtime);
 	priv_->doc.add(new_flags);
+
 
 	if (const auto res = set_maildir(new_maildir); !res)
 		return res;

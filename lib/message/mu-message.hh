@@ -84,16 +84,27 @@ public:
 	/**
 	 * Construct a message based on a Message::Document
 	 *
-	 * @param doc
+	 * @param doc a Mu Document
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_document(Xapian::Document&& doc) try {
-		return Ok(Message{Mu::Document{std::move(doc)}});
+	static Result<Message> make_from_document(Mu::Document&& doc) try {
+		return Ok(Message{std::move(doc)});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
 		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
+	}
+
+	/**
+	 * Construct a message based on a Xapian::Document
+	 *
+	 * @param doc a xapian document
+	 *
+	 * @return a message or an error
+	 */
+	static Result<Message> make_from_document(Xapian::Document&& doc) noexcept {
+		return make_from_document(Mu::Document{std::move(doc)});
 	}
 
 	/**
@@ -216,12 +227,24 @@ public:
 	std::string mailing_list() const { return document().string_value(Field::Id::MailingList);}
 
 	/**
-	 * get the message date/time (the Date: field) as time_t, using UTC
+	 * get the message date/time (the Date: field) as time_t
 	 *
 	 * @return message date/time or 0 in case of error or if there
 	 * is no such header.
 	 */
-	::time_t date() const { return static_cast<time_t>(document().integer_value(Field::Id::Date)); }
+	::time_t date() const {
+		return static_cast<::time_t>(document().integer_value(Field::Id::Date));
+	}
+
+	/**
+	 * get the last modification or creation time for this message
+	 *
+	 * @return message date/time or 0 if unknown
+	 */
+	::time_t modified() const {
+		return static_cast<::time_t>(document().integer_value(Field::Id::Modified));
+	}
+
 
 	/**
 	 * get the flags for this message.
