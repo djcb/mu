@@ -39,6 +39,20 @@
 
      Basically, it counts all the messages for which we checked their timestamp.
 
+   - The internals of the message handling in ~mu~ have been heavily reworked;
+     much of this is not immediately visible but is an enabler for some new
+     features.
+
+   - the ~verify~ command for checking signatures has been updated, and is more
+     informative
+
+   - new commands ~fields~ and ~flags~ give information about the message fields and
+     flags for use in queries. The information is the same information that ~mu~
+     uses and so stays up to date.
+
+   - a new message field ~modified~ which is the time/date of the last time a
+     message was modified or created (the file ~mtime~).
+
 *** mu4e
 
     - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
@@ -70,6 +84,10 @@
     - A new ~defcustom~, ~mu4e-view-open-program~ for starting the appropriate
       program for a give file (e.g., ~xdg-open~). There are some reasonable
       defaults for various systems.
+
+    - For performance testing, you can set the variable
+      ~mu4e-headers-report-render-time~ to ~t~ and ~mu4e~ will report the
+      search/rendering speed of each query operation.
 
     - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
 
