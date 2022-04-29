@@ -36,6 +36,7 @@ AM_CFLAGS=						\
 	-Wno-missing-declarations
 
 AM_CXXFLAGS=						\
+	$(XAPIAN_CXXFLAGS)                              \
 	$(ASAN_CXXFLAGS)				\
 	${WARN_CXXFLAGS}				\
 	-Wno-redundant-decls				\
