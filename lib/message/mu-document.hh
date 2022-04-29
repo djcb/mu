@@ -59,7 +59,6 @@ public:
 	Document(const Document& rhs) { *this = rhs; }
 	/**
 	 * Move CTOR
-	 *
 	 */
 	Document(Document&& rhs) {*this = std::move(rhs); }
 
@@ -93,6 +92,13 @@ public:
 			xdoc_ = std::move(rhs.xdoc_);
 		return *this;
 	}
+
+	/**
+	 * Get the doc-id for this document
+	 *
+	 * @return the docid
+	 */
+	Xapian::docid docid() const { return xdoc_.get_docid(); }
 
 	/*
 	 * updating a document with terms & values

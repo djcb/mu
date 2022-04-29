@@ -167,8 +167,7 @@ public:
 	using reference         = void;
 
 	QueryResultsIterator(Xapian::MSetIterator mset_it, QueryMatches& query_matches)
-	    : mset_it_{mset_it}, query_matches_{query_matches}
-	{
+		: mset_it_{mset_it}, query_matches_{query_matches} {
 	}
 
 	/**
@@ -176,9 +175,9 @@ public:
 	 *
 	 * @return an updated iterator, or end() if we were already at end()
 	 */
-	QueryResultsIterator& operator++()
-	{
+	QueryResultsIterator& operator++() {
 		++mset_it_;
+		document_.reset();
 		return *this;
 	}
 
@@ -196,12 +195,17 @@ public:
 	const QueryResultsIterator& operator*() const { return *this; }
 
 	/**
-	 * Get the Xapian document this iterator is pointing at,
+	 * Get the Mu::Document this iterator is pointing at,
 	 * or an empty document when looking at end().
 	 *
 	 * @return a document
 	 */
-	Xapian::Document document() const { return mset_it_.get_document(); }
+	 const Mu::Document& document() const {
+		if (!document_)
+			document_.emplace(mset_it_.get_document());
+		return *document_;
+	}
+
 
 	/**
 	 * Get the doc-id for the document this iterator is pointing at, or 0
@@ -264,9 +268,8 @@ public:
 	 *
 	 * @return references
 	 */
-	std::vector<std::string> references() const noexcept
-	{
-		return split(opt_string(Field::Id::References).value_or(""), ",");
+	std::vector<std::string> references() const noexcept {
+		return document().string_vec_value(Field::Id::References);
 	}
 
 	/**
@@ -276,12 +279,8 @@ public:
 	 *
 	 * @return the value
 	 */
-	Option<std::string> opt_string(Field::Id id) const noexcept
-	{
-		std::string empty;
-		const auto value_no{field_from_id(id).value_no()};
-		std::string val = xapian_try([&] {return document().get_value(value_no);}, empty);
-		if (val.empty())
+	Option<std::string> opt_string(Field::Id id) const noexcept {
+		if (auto&& val{document().string_value(id)}; val.empty())
 			return Nothing;
 		else
 			return Some(std::move(val));
@@ -292,15 +291,13 @@ public:
 	 *
 	 * @return the match info.
 	 */
-	QueryMatch& query_match()
-	{
-		g_assert(query_matches_.find(document().get_docid()) != query_matches_.end());
-		return query_matches_.find(document().get_docid())->second;
+	QueryMatch& query_match() {
+		g_assert(query_matches_.find(document().docid()) != query_matches_.end());
+		return query_matches_.find(document().docid())->second;
 	}
-	const QueryMatch& query_match() const
-	{
-		g_assert(query_matches_.find(document().get_docid()) != query_matches_.end());
-		return query_matches_.find(document().get_docid())->second;
+	const QueryMatch& query_match() const {
+		g_assert(query_matches_.find(document().docid()) != query_matches_.end());
+		return query_matches_.find(document().docid())->second;
 	}
 
 	/**
@@ -311,7 +308,8 @@ public:
 	Option<Message> message() const {
 		return xapian_try(
 		    [&]()->Option<Message> {
-			    if (auto&& msg{Message::make_from_document(document())}; msg)
+			    auto msg{Message::make_from_document(mset_it_.get_document())};
+			    if (msg)
 				    return Some(std::move(msg.value()));
 			    else
 				    return Nothing;
@@ -327,14 +325,15 @@ public:
 	std::unique_ptr<Message> unique_message_ptr() const {
 		return xapian_try(
 		    [&]()->std::unique_ptr<Message> {
-			    return std::make_unique<Message>(Message(document()));
+			    return std::make_unique<Message>(mset_it_.get_document());
 		    }, nullptr);
 	}
 
 
 private:
-	Xapian::MSetIterator mset_it_;
-	QueryMatches&        query_matches_;
+	Xapian::MSetIterator		mset_it_;
+	QueryMatches&			query_matches_;
+	mutable Option<Mu::Document>	document_;
 };
 
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
