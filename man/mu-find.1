@@ -1,4 +1,4 @@
-.TH MU FIND 1 "29 January 2022" "User Manuals"
+.TH MU FIND 1 "29 April 2022" "User Manuals"
 
 .SH NAME
 
@@ -23,10 +23,10 @@ some search pattern. The search patterns are described in detail in
 For example:
 
 .nf
-   $ mu find subject:snow and date:2017..
+   $ mu find subject:snow and date:2009..
 .fi
 
-would find all messages in 2017 with 'snow' in the subject field, e.g:
+would find all messages in 2009 with 'snow' in the subject field, e.g:
 
 .nf
   2009-03-05 17:57:33 EET Lucia  <lucia@example.com> running in the snow
@@ -71,23 +71,20 @@ would list the date, subject and sender of all messages with 'snow' in the
 their subject.
 
 The table of replacement characters is superset of the list mentions for
-search parameters; the complete list:
-
+search parameters, such as:
 .nf
 	t       \fBt\fRo: recipient
-	c       \fBc\fRc: (carbon-copy) recipient
-	h       Bcc: (blind carbon-copy, \fBh\fRidden) recipient
 	d       Sent \fBd\fRate of the message
 	f       Message sender (\fBf\fRrom:)
 	g       Message flags (fla\fBg\fRs)
 	l       Full path to the message (\fBl\fRocation)
-	p       Message \fBp\fRriority (high, normal, low)
 	s       Message \fBs\fRubject
 	i       Message-\fBi\fRd
 	m       \fBm\fRaildir
-	v       Mailing-list Id
 .fi
 
+For the complete, up-to-date list, see:
+.BR mu-fields(1)
 
 The message flags are described in \fBmu-query\fR(7). As an example, a
 message which is 'seen', has an attachment and is signed would
@@ -97,12 +94,10 @@ message would have 'nx'.
 .TP
 \fB\-s\fR, \fB\-\-sortfield\fR \fR=\fI<field>\fR and \fB\-z\fR,
 \fB\-\-reverse\fR specifies the field to sort the search results by, and the
-direction (i.e., 'reverse' means that the sort should be reverted - Z-A). The
-following fields are supported:
+direction (i.e., 'reverse' means that the sort should be reverted - Z-A). Examples include:
 
 .nf
 	cc,c            Cc (carbon-copy) recipient(s)
-	bcc,h           Bcc (blind-carbon-copy) recipient(s)
 	date,d          Message sent date
 	from,f          Message sender
 	maildir,m       Maildir
@@ -110,8 +105,10 @@ following fields are supported:
 	prio,p          Nessage priority
 	subject,s       Message subject
 	to,t            To:-recipient(s)
-	list,v          Mailing-list id
 .fi
+
+For the complete, up-to-date list, see:
+.BR mu-fields(1)
 
 Thus, for example, to sort messages by date, you could specify:
 
@@ -338,3 +335,4 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .BR mu (1),
 .BR mu-index (1),
 .BR mu-query (7)
+.BR mu-fields (1)

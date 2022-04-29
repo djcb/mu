@@ -443,7 +443,9 @@ cmd_from_string(const char* str)
 	    {"info", MU_CONFIG_CMD_INFO},       {"init", MU_CONFIG_CMD_INIT},
 	    {"mkdir", MU_CONFIG_CMD_MKDIR},     {"remove", MU_CONFIG_CMD_REMOVE},
 	    {"script", MU_CONFIG_CMD_SCRIPT},   {"server", MU_CONFIG_CMD_SERVER},
-	    {"verify", MU_CONFIG_CMD_VERIFY},   {"view", MU_CONFIG_CMD_VIEW}};
+	    {"verify", MU_CONFIG_CMD_VERIFY},   {"view", MU_CONFIG_CMD_VIEW},
+	    {"fields", MU_CONFIG_CMD_FIELDS},   {"flags", MU_CONFIG_CMD_FLAGS}
+	};
 
 	if (!str)
 		return MU_CONFIG_CMD_UNKNOWN;

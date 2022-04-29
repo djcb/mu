@@ -22,7 +22,9 @@ dist_man_MANS =		\
 	mu-cfind.1	\
 	mu-easy.1	\
 	mu-extract.1	\
+	mu-fields.1     \
 	mu-find.1	\
+	mu-flags.1	\
 	mu-help.1	\
 	mu-index.1	\
 	mu-info.1	\

@@ -43,6 +43,8 @@
 #include "utils/mu-utils.hh"
 #include "message/mu-message.hh"
 
+#include <thirdparty/tabulate.hpp>
+
 #define VIEW_TERMINATOR '\f' /* form-feed */
 
 using namespace Mu;
@@ -467,14 +469,18 @@ cmd_verify(const MuConfig* opts)
 static MuError
 cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 {
-	Mu::MaybeAnsi col{!opts->nocolor};
+	using namespace tabulate;
 
-	key_val(col, "maildir", store.properties().root_maildir);
-	key_val(col, "database-path", store.properties().database_path);
-	key_val(col, "schema-version", store.properties().schema_version);
-	key_val(col, "max-message-size", store.properties().max_message_size);
-	key_val(col, "batch-size", store.properties().batch_size);
-	key_val(col, "messages in store", store.size());
+	Table info;
+
+	//Mu::MaybeAnsi col{!opts->nocolor};
+
+	info.add_row({"maildir", store.properties().root_maildir});
+	info.add_row({"database-path", store.properties().database_path});
+	info.add_row({"schema-version", store.properties().schema_version});
+	info.add_row({"max-message-size", format("%zu", store.properties().max_message_size)});
+	info.add_row({"batch-size", format("%zu", store.properties().batch_size)});
+	info.add_row({"messages in store", format("%zu", store.size())});
 
 	const auto created{store.properties().created};
 	const auto tstamp{::localtime(&created)};
@@ -485,14 +491,27 @@ cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 	strftime(tbuf, sizeof(tbuf), "%c", tstamp);
 #pragma GCC diagnostic pop
 
-	key_val(col, "created", tbuf);
+	info.add_row({"created", tbuf});
 
 	const auto addrs{store.properties().personal_addresses};
 	if (addrs.empty())
-		key_val(col, "personal-address", "<none>");
+		info.add_row({"personal-address", "<none>"});
 	else
 		for (auto&& c : addrs)
-			key_val(col, "personal-address", c);
+			info.add_row({"personal-address", c});
+
+	if (!opts->nocolor) {
+		for (auto&& row: info) {
+			row.cells().at(0)->format().font_style({FontStyle::bold})
+				.font_color({Color::green});
+			row.cells().at(1)->format().font_color({Color::blue});
+		}
+	}
+
+	std::cout << info << std::endl;
+
+
+
 
 	return MU_OK;
 }
@@ -621,7 +640,12 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	/*
 	 * no store needed
 	 */
-
+	case MU_CONFIG_CMD_FIELDS:
+		merr = mu_error_from_result(mu_cmd_fields(opts), err);
+		break;
+	case MU_CONFIG_CMD_FLAGS:
+		merr = mu_error_from_result(mu_cmd_flags(opts), err);
+		break;
 	case MU_CONFIG_CMD_MKDIR: merr	= cmd_mkdir(opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT: merr = mu_cmd_script(opts, err); break;
 	case MU_CONFIG_CMD_VIEW:

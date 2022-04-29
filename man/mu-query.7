@@ -1,25 +1,24 @@
-.TH MU QUERY 7 "28 December 2017" "User Manuals"
+.TH MU QUERY 7 "22 April 2022" "User Manuals"
 
 .SH NAME
 
-mu query language \- a language for finding messages in \fBmu\fR
-databases.
+mu query language \- a language for finding messages in \fBmu\fR databases.
 
 .SH DESCRIPTION
 
-The mu query language is a language used by \fBmu find\fR and
-\fBmu4e\fR to find messages in \fBmu\fR's Xapian databases. The
-language is quite similar to Xapian's default query-parser, but is an
-independent implementation that is customized for the mu/mu4e
-use-case.
+The mu query language is a language used by \fBmu find\fR and \fBmu4e\fR to find
+messages in \fBmu\fR's Xapian databases. The language is quite similar to
+Xapian's default query-parser, but is an independent implementation that is
+customized for the mu/mu4e use-case.
 
-In this article, we give a structured but informal overview of the
-query language and provide examples.
+In this article, we give a structured but informal overview of the query
+language and provide examples.
 
-\fBNOTE:\fR if you use queries on the command-line (say, for \fBmu
-find\fR), you need to quote any characters that would otherwise be
-interpreted by the shell, such as \fB""\fR, \fB(\fR and \fB)\fR and
-whitespace.
+As a companion to this, we recommend the \fBmu fields\fR command to get an up-to-date list of the available fields.
+
+\fBNOTE:\fR if you use queries on the command-line (say, for \fBmu find\fR), you
+need to quote any characters that would otherwise be interpreted by the shell,
+such as \fB""\fR, \fB(\fR and \fB)\fR and whitespace.
 
 .de EX1
 .nf
@@ -132,8 +131,7 @@ take quite a bit longer than 'normal' queries.
 .SH FIELDS
 
 We already saw a number of search fields, such as \fBsubject:\fR and
-\fBbody:\fR. Here is the full table, a shortcut character and a
-description.
+\fBbody:\fR. Here is the full table, a shortcut character and a description.
 .EX1
 	cc,c            Cc (carbon-copy) recipient(s)
 	bcc,h           Bcc (blind-carbon-copy) recipient(s)
@@ -142,6 +140,7 @@ description.
 	subject,s       Message subject
 	body,b          Message body
 	maildir,m       Maildir
+	modified,k      Last modification time
 	msgid,i         Message-ID
 	prio,p          Message priority (\fIlow\fR, \fInormal\fR or \fIhigh\fR)
 	flag,g          Message Flags
@@ -152,6 +151,8 @@ description.
 	mime,y          MIME-type of one or more message parts
 	tag,x           Tags for the message
 	list,v          Mailing list (e.g. the List-Id value)
+
+The \fBmu fields\fR command is recommended to get the latest version.
 .EX2
 The shortcut character can be used instead of the full name:
 .EX1

@@ -25,6 +25,7 @@ mu = executable(
   'mu.cc',
   'mu-cmd-cfind.cc',
   'mu-cmd-extract.cc',
+  'mu-cmd-fields.cc',
   'mu-cmd-find.cc',
   'mu-cmd-index.cc',
   'mu-cmd-script.cc',

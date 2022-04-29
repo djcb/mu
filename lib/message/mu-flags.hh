@@ -88,10 +88,12 @@ enum struct MessageFlagCategory {
  *
  */
 struct MessageFlagInfo {
-	Flags        flag;     /**< The message flag */
-	char                shortcut; /**< Shortcut character */
-	std::string_view    name;     /**< Name of the flag */
-	MessageFlagCategory category; /**< Flag category */
+
+	Flags			flag;		/**< The message flag */
+	char			shortcut;	/**< Shortcut character */
+	std::string_view	name;		/**< Name of the flag */
+	MessageFlagCategory	category;	/**< Flag category */
+	std::string_view        description;    /**< Description */
 
 	/**
 	 * Get the lower-case version of shortcut
@@ -108,24 +110,43 @@ struct MessageFlagInfo {
  * Array of all flag information.
  */
 constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
-    MessageFlagInfo{Flags::Draft,         'D', "draft",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{Flags::Flagged,	 'F', "flagged", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{Flags::Passed,	 'P', "passed",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{Flags::Replied,	 'R', "replied", MessageFlagCategory::Mailfile},
-    MessageFlagInfo{Flags::Seen,		 'S', "seen",	 MessageFlagCategory::Mailfile},
-    MessageFlagInfo{Flags::Trashed,	 'T', "trashed", MessageFlagCategory::Mailfile},
+    MessageFlagInfo{Flags::Draft,        'D', "draft",		MessageFlagCategory::Mailfile,
+	    "Draft (in progress)"
+    },
+    MessageFlagInfo{Flags::Flagged,	 'F', "flagged",	MessageFlagCategory::Mailfile,
+	    "User-flagged"
+    },
+    MessageFlagInfo{Flags::Passed,	 'P', "passed",		MessageFlagCategory::Mailfile,
+	    "Forwarded message"
+    },
+    MessageFlagInfo{Flags::Replied,	 'R', "replied",	MessageFlagCategory::Mailfile,
+	    "Replied-to"
+    },
+    MessageFlagInfo{Flags::Seen,	 'S', "seen",		MessageFlagCategory::Mailfile,
+	    "Viewed at least once"
+    },
+    MessageFlagInfo{Flags::Trashed,	 'T', "trashed",	MessageFlagCategory::Mailfile,
+	    "Marked for deletion"
+    },
+    MessageFlagInfo{Flags::New,		 'N', "new",		MessageFlagCategory::Maildir,
+	    "New message"
+    },
+    MessageFlagInfo{Flags::Signed,	 'z', "signed",		MessageFlagCategory::Content,
+	    "Cryptographically signed"
+    },
+    MessageFlagInfo{Flags::Encrypted,	 'x', "encrypted",      MessageFlagCategory::Content,
+	    "Encrypted"
+    },
+    MessageFlagInfo{Flags::HasAttachment,'a', "attach",        MessageFlagCategory::Content,
+	    "Has at least one attachment"
+    },
 
-    MessageFlagInfo{Flags::New,		 'N', "new",	 MessageFlagCategory::Maildir},
-
-    MessageFlagInfo{Flags::Signed,	 'z', "signed",	 MessageFlagCategory::Content},
-    MessageFlagInfo{Flags::Encrypted,	 'x', "encrypted",
-								 MessageFlagCategory::Content},
-    MessageFlagInfo{Flags::HasAttachment, 'a', "attach",
-								 MessageFlagCategory::Content},
-
-    MessageFlagInfo{Flags::Unread,	 'u', "unread",	 MessageFlagCategory::Pseudo},
-
-    MessageFlagInfo{Flags::MailingList,	 'l', "list",	 MessageFlagCategory::Content},
+    MessageFlagInfo{Flags::Unread,	 'u', "unread",		MessageFlagCategory::Pseudo,
+	    "New or not seen message"
+    },
+    MessageFlagInfo{Flags::MailingList,	 'l', "list",		MessageFlagCategory::Content,
+	    "Mailing list message"
+    },
 }};
 
 
