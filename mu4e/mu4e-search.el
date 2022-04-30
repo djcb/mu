@@ -442,7 +442,11 @@ status, STATUS."
           (match-end 2)
           mu4e--contacts-hash
           :exit-function
-          #'mu4e--search-completion-contacts-action))))
+          #'mu4e--search-completion-contacts-action))
+   ((looking-back "list:\\([a-zA-Z0-9/.@]*\\)" nil)
+    (list (match-beginning 1)
+          (match-end 1)
+          mu4e--lists-hash))))
 
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
