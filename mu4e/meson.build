@@ -95,6 +95,9 @@ endforeach
 # also install the sources.
 install_data(mu4e_all_srcs, install_dir: lispdir)
 
+# install mu4e-about.org
+install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))
+
 if makeinfo.found()
   custom_target('mu4e_info',
 		input: 'mu4e.texi',
