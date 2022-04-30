@@ -194,10 +194,10 @@ ContactsCache::add(Contact&& contact)
 
 	if (it == priv_->contacts_.end()) { // completely new contact
 
-		contact.name         = contact.name;
+		contact.name		 = contact.name;
 		if (!contact.personal)
 			contact.personal = is_personal(contact.email);
-		contact.tstamp       = g_get_monotonic_time();
+		contact.tstamp		 = g_get_monotonic_time();
 
 		auto email{contact.email};
 		// return priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)))
@@ -218,6 +218,20 @@ ContactsCache::add(Contact&& contact)
 		}
 	}
 }
+
+
+void
+ContactsCache::add(Contacts&& contacts)
+{
+	const auto personal = seq_find_if(contacts,[&](auto&& c){
+		return is_personal(c.email); }) != contacts.cend();
+
+	for (auto&& contact: contacts) {
+		contact.personal = personal;
+		add(std::move(contact));
+	}
+}
+
 
 const Contact*
 ContactsCache::_find(const std::string& email) const

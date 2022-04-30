@@ -60,15 +60,14 @@ public:
 
 
 	/**
-	 * Add a contacts sequemce
+	 * Add a contacts sequence; this should be used for the contacts of a
+	 * specific message, and determines if it is a "personal" message:
+	 * if any of the contacts matches one of the personal addresses,
+	 * any of the senders/recipients are considered "personal"
 	 *
 	 * @param contacts a Contact object sequence
-	 *
 	 */
-	void add(Contacts&& contacts) {
-		for (auto&& contact: contacts)
-			add(std::move(contact));
-	}
+	void add(Contacts&& contacts);
 
 	/**
 	 * Clear all contacts
