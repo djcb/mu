@@ -267,31 +267,64 @@ MimeMessage::date() const noexcept
 		return g_date_time_to_unix(dt);
 }
 
-Mu::Contacts
-MimeMessage::addresses(AddressType atype) const noexcept
+constexpr Option<GMimeAddressType>
+address_type(Contact::Type ctype)
 {
-	auto addrs{g_mime_message_get_addresses(
-			self(), static_cast<GMimeAddressType>(atype))};
+	switch(ctype) {
+	case Contact::Type::Bcc:
+		return GMIME_ADDRESS_TYPE_BCC;
+	case Contact::Type::Cc:
+		return GMIME_ADDRESS_TYPE_CC;
+	case Contact::Type::From:
+		return GMIME_ADDRESS_TYPE_FROM;
+	case Contact::Type::To:
+		return GMIME_ADDRESS_TYPE_TO;
+	case Contact::Type::ReplyTo:
+		return GMIME_ADDRESS_TYPE_REPLY_TO;
+	case Contact::Type::Sender:
+		return GMIME_ADDRESS_TYPE_SENDER;
+	default:
+		return Nothing;
+	}
+}
+
+static Mu::Contacts
+all_contacts(const MimeMessage& msg)
+{
+	Contacts contacts;
+
+	for (auto&& cctype: {
+			Contact::Type::Sender,
+			Contact::Type::From,
+			Contact::Type::ReplyTo,
+			Contact::Type::To,
+			Contact::Type::Cc,
+			Contact::Type::Bcc
+		}) {
+		auto addrs{msg.contacts(cctype)};
+		std::move(addrs.begin(), addrs.end(),
+			  std::back_inserter(contacts));
+	}
+
+	return contacts;
+}
+
+Mu::Contacts
+MimeMessage::contacts(Contact::Type ctype) const noexcept
+{
+	/* special case: get all */
+	if (ctype == Contact::Type::None)
+		return all_contacts(*this);
+
+	const auto atype{address_type(ctype)};
+	if (!atype)
+		return {};
+
+	auto addrs{g_mime_message_get_addresses(self(), *atype)};
 	if (!addrs)
 		return {};
 
-
 	const auto msgtime{date().value_or(0)};
-	const auto opt_field_id = std::invoke(
-		[&]()->Option<Field::Id>{
-			switch(atype) {
-			case AddressType::To:
-				return Field::Id::To;
-			case AddressType::From:
-				return Field::Id::From;
-			case AddressType::Bcc:
-				return Field::Id::Bcc;
-			case AddressType::Cc:
-				return Field::Id::Cc;
-			default:
-				return Nothing;
-			}
-		});
 
 	Contacts contacts;
 	auto lst_len{internet_address_list_length(addrs)};
@@ -309,8 +342,7 @@ MimeMessage::addresses(AddressType atype) const noexcept
 		if (G_UNLIKELY(!email))
 			continue;
 
-		contacts.push_back(Contact{email, name ? name : "",
-				opt_field_id, msgtime});
+		contacts.emplace_back(email, name ? name : "", ctype, msgtime);
 	}
 
 	return contacts;
@@ -343,12 +375,11 @@ MimeMessage::references() const noexcept
 
 		for (auto i = 0; i != g_mime_references_length(mime_refs); ++i) {
 
-			if (auto&& msgid{g_mime_references_get_message_id(mime_refs, i)}; !msgid)
-				continue; // invalid
-			else if (is_dup(refs, msgid))
-				continue; // skip dups
-			else
-				refs.emplace_back(msgid);
+			const auto msgid{g_mime_references_get_message_id(mime_refs, i)};
+			if (!msgid || is_dup(refs, msgid))
+				continue; // invalid or skip dups
+
+			refs.emplace_back(msgid);
 		}
 		g_mime_references_free(mime_refs);
 	}

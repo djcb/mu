@@ -46,19 +46,22 @@ namespace Mu {
 size_t lowercase_hash(const std::string& s);
 
 struct Contact {
+	enum struct Type {
+		None, Sender, From, ReplyTo, To, Cc, Bcc
+	};
+
 	/**
 	 * Construct a new Contact
 	 *
 	 * @param email_ email address
 	 * @param name_ name or empty
-	 * @param field_id_ contact field id, or {}
+	 * @param type_ contact field type
 	 * @param message_date_ data for the message for this contact
 	 */
 	Contact(const std::string& email_, const std::string& name_ = "",
-		       Option<Field::Id> field_id_ = {},
-		       time_t message_date_ = 0)
-	    : email{email_}, name{name_}, field_id{field_id_},
-	      message_date{message_date_}, personal{}, frequency{1}, tstamp{}
+		Type type_ = Type::None, ::time_t message_date_ = 0)
+		: email{email_}, name{name_}, type{type_},
+		  message_date{message_date_}, personal{}, frequency{1}, tstamp{}
 		{ cleanup_name(); }
 
 	/**
@@ -74,7 +77,7 @@ struct Contact {
 	Contact(const std::string& email_, const std::string& name_,
 		       time_t message_date_, bool personal_, size_t freq_,
 		       int64_t tstamp_)
-	    : email{email_}, name{name_}, field_id{},
+	    : email{email_}, name{name_}, type{Type::None},
 	      message_date{message_date_}, personal{personal_}, frequency{freq_},
 	      tstamp{tstamp_}
 	{ cleanup_name();}
@@ -115,18 +118,39 @@ struct Contact {
 		return  cached_hash;
 	}
 
+	/**
+	 * Get the corresponding Field::Id (if any)
+	 * for this contact.
+	 *
+	 * @return the field-id or Nothing.
+	 */
+	constexpr Option<Field::Id> field_id() const noexcept {
+		switch(type) {
+		case Type::Bcc:
+			return Field::Id::Bcc;
+		case Type::Cc:
+			return Field::Id::Cc;
+		case Type::From:
+			return Field::Id::From;
+		case Type::To:
+			return Field::Id::To;
+		default:
+			return Nothing;
+		}
+	}
+
+
 	/*
 	 * data members
 	 */
 
-	std::string		email;	/**< Email address for this contact.Not empty */
-	std::string		name;	/**< Name for this contact; can be empty. */
-	Option<Field::Id>	field_id;	/**< Field Id of contact or nullopt */
-	int64_t			message_date; /**< date of the message from which the
-							   * contact originates (or 0) */
+	std::string		email;		/**< Email address for this contact.Not empty */
+	std::string		name;		/**< Name for this contact; can be empty. */
+	Type			type;		/**< Type of contact */
+	int64_t			message_date;	/**< date of the contact's message */
 	bool			personal;	/**<  A personal message? */
 	size_t			frequency;	/**< Frequency of this contact */
-	int64_t			tstamp;	/**< Timestamp for this contact (internal use) */
+	int64_t			tstamp;		/**< Timestamp for this contact (internal use) */
 
 private:
 	void cleanup_name() { // replace control characters by spaces.
@@ -136,34 +160,26 @@ private:
 	}
 };
 
+
+constexpr Option<Contact::Type>
+contact_type_from_field_id(Field::Id id) noexcept {
+
+	switch(id) {
+	case Field::Id::Bcc:
+		return Contact::Type::Bcc;
+	case Field::Id::Cc:
+		return Contact::Type::Cc;
+	case Field::Id::From:
+		return Contact::Type::From;
+	case Field::Id::To:
+		return Contact::Type::To;
+	default:
+		return Nothing;
+	}
+}
+
+
 using Contacts = std::vector<Contact>;
-
-/**
- * Create a sequence of Contact objects from an InternetAddressList
- *
- * @param addr_lst an address list
- * @param field_id the field_id for message field for these addresses
- * @param message_date the date of the message from which the InternetAddressList
- * originates.
- *
- * @return a sequence of Contact objects.
- */
-Contacts
-make_contacts(/*const*/ struct _InternetAddressList* addr_lst,
-	      Field::Id field_id, int64_t message_date);
-
-/**
- * Create a sequence of Contact objects from an InternetAddressList
- *
- * @param addrs a string with one more valid addresses (as per internet_address_list_parse())
- * @param field_id the field_id for message field for these addresses
- * @param message_date the date of the message from which the addresses originate
- *
- * @return a sequence of Contact objects.
- */
-Contacts
-make_contacts(const std::string& addrs,
-	      Field::Id field_id, int64_t message_date);
 
 
 /**

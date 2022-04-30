@@ -107,7 +107,8 @@ Document::add(Field::Id id, const Contacts& contacts)
 
 	for (auto&& contact: contacts) {
 
-		if (!contact.field_id || *contact.field_id != id)
+		const auto cfield_id{contact.field_id()};
+		if (!cfield_id || *cfield_id != id)
 			continue;
 
 		xdoc_.add_term(field.xapian_term(contact.email));
@@ -130,6 +131,13 @@ Document::contacts_value(Field::Id id) const noexcept
 	Contacts contacts;
 	contacts.reserve(vals.size());
 
+	const auto ctype{contact_type_from_field_id(id)};
+	if (G_UNLIKELY(!ctype)) {
+		g_critical("invalid field-id for contact-type: <%zu>",
+			   static_cast<size_t>(id));
+		return {};
+	}
+
 	for (auto&& s: vals) {
 
 		const auto pos = s.find(SepaChar2);
@@ -138,7 +146,7 @@ Document::contacts_value(Field::Id id) const noexcept
 			break;
 		}
 
-		contacts.emplace_back(s.substr(0, pos), s.substr(pos + 1), id);
+		contacts.emplace_back(s.substr(0, pos), s.substr(pos + 1), *ctype);
 	}
 
 	return contacts;
@@ -223,14 +231,14 @@ Document::flags_value() const noexcept
 
 
 static const Contacts test_contacts = {{
-		Contact{"john@example.com", "John", Field::Id::Bcc},
-		Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
-		Contact{"paul@example.com", "Paul", Field::Id::Cc},
-		Contact{"george@example.com", "George",  Field::Id::Cc},
-		Contact{"james@example.com", "James", Field::Id::From},
-		Contact{"lars@example.com", "Lars",  Field::Id::To},
-		Contact{"kirk@example.com", "Kirk", Field::Id::To},
-		Contact{"jason@example.com", "Jason",  Field::Id::To}
+		Contact{"john@example.com", "John", Contact::Type::Bcc},
+		Contact{"ringo@example.com", "Ringo",  Contact::Type::Bcc},
+		Contact{"paul@example.com", "Paul", Contact::Type::Cc},
+		Contact{"george@example.com", "George",  Contact::Type::Cc},
+		Contact{"james@example.com", "James", Contact::Type::From},
+		Contact{"lars@example.com", "Lars",  Contact::Type::To},
+		Contact{"kirk@example.com", "Kirk", Contact::Type::To},
+		Contact{"jason@example.com", "Jason",  Contact::Type::To}
 	}};
 
 static void
@@ -241,8 +249,8 @@ test_bcc()
 		doc.add(Field::Id::Bcc, test_contacts);
 
 		Contacts expected_contacts = {{
-				Contact{"john@example.com", "John", Field::Id::Bcc},
-				Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
+				Contact{"john@example.com", "John", Contact::Type::Bcc},
+				Contact{"ringo@example.com", "Ringo",  Contact::Type::Bcc},
 			}};
 		const auto actual_contacts = doc.contacts_value(Field::Id::Bcc);
 		assert_same_contacts(expected_contacts, actual_contacts);
@@ -251,8 +259,8 @@ test_bcc()
 	{
 		Document doc;
 		Contacts contacts = {{
-				Contact{"john@example.com", "John Lennon", Field::Id::Bcc},
-				Contact{"ringo@example.com", "Ringo",  Field::Id::Bcc},
+				Contact{"john@example.com", "John Lennon", Contact::Type::Bcc},
+				Contact{"ringo@example.com", "Ringo",  Contact::Type::Bcc},
 			}};
 		doc.add(Field::Id::Bcc, contacts);
 
@@ -273,8 +281,8 @@ test_cc()
 	doc.add(Field::Id::Cc, test_contacts);
 
 	Contacts expected_contacts = {{
-			Contact{"paul@example.com", "Paul", Field::Id::Cc},
-			Contact{"george@example.com", "George",  Field::Id::Cc}
+			Contact{"paul@example.com", "Paul", Contact::Type::Cc},
+			Contact{"george@example.com", "George",  Contact::Type::Cc}
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::Cc);
 
@@ -289,7 +297,7 @@ test_from()
 	doc.add(Field::Id::From, test_contacts);
 
 	Contacts expected_contacts = {{
-			Contact{"james@example.com", "James", Field::Id::From},
+			Contact{"james@example.com", "James", Contact::Type::From},
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::From);
 
@@ -303,9 +311,9 @@ test_to()
 	doc.add(Field::Id::To, test_contacts);
 
 	Contacts expected_contacts = {{
-		Contact{"lars@example.com", "Lars",  Field::Id::To},
-		Contact{"kirk@example.com", "Kirk", Field::Id::To},
-		Contact{"jason@example.com", "Jason",  Field::Id::To}
+		Contact{"lars@example.com", "Lars",  Contact::Type::To},
+		Contact{"kirk@example.com", "Kirk", Contact::Type::To},
+		Contact{"jason@example.com", "Jason",  Contact::Type::To}
 		}};
 	const auto actual_contacts = doc.contacts_value(Field::Id::To);
 

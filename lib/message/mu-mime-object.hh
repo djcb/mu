@@ -914,21 +914,14 @@ public:
 	 */
 	static Result<MimeMessage> make_from_text (const std::string& text);
 
-
 	/**
-	 * Address types
+	 * Get the contacts of a given type, or None for _all_
 	 *
+	 * @param ctype contact type
+	 *
+	 * @return contacts
 	 */
-	enum struct AddressType {
-		Sender	= GMIME_ADDRESS_TYPE_SENDER,
-		From	= GMIME_ADDRESS_TYPE_FROM,
-		ReplyTo = GMIME_ADDRESS_TYPE_REPLY_TO,
-		To	= GMIME_ADDRESS_TYPE_TO,
-		Cc	= GMIME_ADDRESS_TYPE_CC,
-		Bcc	= GMIME_ADDRESS_TYPE_BCC
-	};
-
-	Contacts addresses(AddressType atype) const noexcept;
+	Contacts contacts(Contact::Type ctype) const noexcept;
 
 	/**
 	 * Gets the message-id if it exists, or nullopt otherwise.
