@@ -321,6 +321,7 @@ When REFRESH is non nil refresh infos from server."
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
+       (mu4e--key-val "last updated" (current-time-string (plist-get mu4e-index-update-status :tstamp)))
        (mu4e--key-val "database-path" (mu4e-database-path))
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"
