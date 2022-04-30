@@ -344,6 +344,9 @@ Store::add_message(Message& msg, bool use_transaction)
 
 	if (auto&& res = msg.set_maildir(mdir.value()); !res)
 		return Err(res.error());
+	/* now, we're done with all the fields; generate the sexp string for this
+	 * message */
+	msg.update_cached_sexp();
 
 	std::lock_guard guard{priv_->lock_};
 
@@ -374,8 +377,12 @@ Store::add_message(Message& msg, bool use_transaction)
 
 
 bool
-Store::update_message(const Message& msg, unsigned docid)
+Store::update_message(Message& msg, unsigned docid)
 {
+	msg.update_cached_sexp();
+
+	std::lock_guard guard{priv_->lock_};
+
 	return xapian_try(
 		[&]{
 			priv_->writable_db().replace_document(

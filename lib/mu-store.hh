@@ -207,7 +207,7 @@ public:
 	 *
 	 * @return false in case of failure; true otherwise.
 	 */
-	bool update_message(const Message& msg, Id id);
+	bool update_message(Message& msg, Id id);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message

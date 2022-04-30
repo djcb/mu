@@ -40,7 +40,6 @@ struct Field {
 	 */
 	enum struct Id {
 		Bcc = 0,	/**< Blind Carbon-Copy */
-		BodyHtml,	/**< HTML Body */
 		BodyText,	/**< Text body */
 		Cc,		/**< Carbon-Copy */
 		Date,		/**< Message date */
@@ -64,6 +63,9 @@ struct Field {
 		/*
 		 * <private>
 		 */
+		XBodyHtml,	/**< HTML Body */
+		XCachedSexp,    /**< Cached message s-expression */
+
 		_count_ /**< Number of FieldIds */
 	};
 
@@ -215,15 +217,6 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Value
 	    },
 	    {
-		Field::Id::BodyHtml,
-		Field::Type::String,
-		"body",
-		"Message html body",
-		{},
-		{},
-		Field::Flag::Internal
-	    },
-	    {
 		Field::Id::BodyText,
 		Field::Type::String,
 		"body",
@@ -314,7 +307,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Id::MessageId,
 		Field::Type::String,
 		"msgid",
-		"Attachment MIME-type",
+		"Message-Id",
 		"msgid:abc@123",
 		'i',
 		Field::Flag::BooleanTerm |
@@ -416,6 +409,30 @@ static constexpr std::array<Field, Field::id_size()>
 		"to:flimflam@example.com",
 		't',
 		Field::Flag::Contact |
+		Field::Flag::Value
+	    },
+
+
+
+	    /* internal */
+	    {
+		Field::Id::XBodyHtml,
+		Field::Type::String,
+		"htmlbody",
+		"Message html body",
+		{},
+		{},
+		Field::Flag::Internal
+	    },
+
+	    {
+		Field::Id::XCachedSexp,
+		Field::Type::String,
+		"sexp",
+		"Cached message s-expression",
+		{},
+		{},
+		Field::Flag::Internal |
 		Field::Flag::Value
 	    },
 	}};

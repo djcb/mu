@@ -177,12 +177,11 @@ public:
 	Contacts bcc() const { return document().contacts_value(Field::Id::Bcc); }
 
 	/**
-	 * Get the maildir this message lives in; i.e., if the path is
+	 * Get the maildir this message resides in; i.e., if the path is
 	 * ~/Maildir/foo/bar/cur/msg, the maildir would typically be foo/bar
 	 *
-	 * Note that that only messages that live in the store (i.e., are
-	 * constructed use make_from_document() have a non-empty value for
-	 * this.) until set_maildir() is used.
+	 * This is determined when _storing_ the message (which uses
+	 * set_maildir())
 	 *
 	 * @return the maildir requested or empty */
 	std::string maildir() const  { return document().string_value(Field::Id::Maildir); }
@@ -245,7 +244,6 @@ public:
 		return static_cast<::time_t>(document().integer_value(Field::Id::Modified));
 	}
 
-
 	/**
 	 * get the flags for this message.
 	 *
@@ -291,6 +289,16 @@ public:
 	std::vector<std::string> tags() const {
 		return document().string_vec_value(Field::Id::Tags);
 	}
+
+	/**
+	 * Get the cached s-expression for this message, or {} if not available.
+	 *
+	 * @return sexp or empty.
+	 */
+	std::string cached_sexp() const {
+		return document().string_value(Field::Id::XCachedSexp);
+	}
+
 	/*
 	 * Convert to Sexp
 	 */
@@ -299,11 +307,19 @@ public:
 	 * convert the message to a Lisp symbolic expression (for further
 	 * processing in e.g. emacs)
 	 *
-	 *
 	 * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
 	 */
-	Mu::Sexp::List to_sexp_list(unsigned docid=0) const;
-	Mu::Sexp       to_sexp(unsigned docid=0) const;
+	Mu::Sexp::List to_sexp_list() const;
+	Mu::Sexp       to_sexp() const;
+
+
+	/**
+	 * Update the cached sexp for this message which is stored in the
+	 * document.This should be done when the document is complete,
+	 * i.e., immediately before storing it in the database.
+	 *
+	 */
+	void update_cached_sexp();
 
 	/*
 	 * And some non-const message, for updating an existing

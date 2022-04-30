@@ -134,6 +134,9 @@ Message::Message(const std::string& text, const std::string& path,
 		priv_->mime_msg = std::move(msg.value());
 
 	fill_document(*priv_);
+
+	/* cache the sexp */
+	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
 }
 
 
@@ -166,6 +169,13 @@ Message::document() const
 	return priv_->doc;
 }
 
+
+void
+Message::update_cached_sexp()
+{
+	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
+}
+
 Result<void>
 Message::set_maildir(const std::string& maildir)
 {
@@ -175,7 +185,7 @@ Message::set_maildir(const std::string& maildir)
 	    maildir.at(0) != '/' ||
 	    (maildir.size() > 1 && maildir.at(maildir.length()-1) == '/'))
 		return Err(Error::Code::Message,
-"'%s' is not a valid maildir", maildir.c_str());
+			   "'%s' is not a valid maildir", maildir.c_str());
 
 	const auto path{document().string_value(Field::Id::Path)};
 	if (path == maildir || path.find(maildir) == std::string::npos)
@@ -554,19 +564,15 @@ fill_document(Message::Private& priv)
 		/* insist on expliclity handling each */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
-		using AddrType = MimeMessage::AddressType;
 		switch(field.id) {
 		case Field::Id::Bcc:
-			doc.add(field.id, mime_msg.addresses(AddrType::Bcc));
-			break;
-		case Field::Id::BodyHtml:
-			doc.add(field.id, priv.body_html);
+			doc.add(field.id, mime_msg.contacts(Contact::Type::Bcc));
 			break;
 		case Field::Id::BodyText:
 			doc.add(field.id, priv.body_txt);
 			break;
 		case Field::Id::Cc:
-			doc.add(field.id, mime_msg.addresses(AddrType::Cc));
+			doc.add(field.id, mime_msg.contacts(Contact::Type::Cc));
 			break;
 		case Field::Id::Date:
 			doc.add(field.id, mime_msg.date());
@@ -582,7 +588,7 @@ fill_document(Message::Private& priv)
 			doc.add(priv.flags);
 			break;
 		case Field::Id::From:
-			doc.add(field.id, mime_msg.addresses(AddrType::From));
+			doc.add(field.id, mime_msg.contacts(Contact::Type::From));
 			break;
 		case Field::Id::Maildir: /* already */
 			break;
@@ -622,8 +628,16 @@ fill_document(Message::Private& priv)
 			doc.add(field.id, refs.empty() ? message_id : refs.at(0));
 			break;
 		case Field::Id::To:
-			doc.add(field.id, mime_msg.addresses(AddrType::To));
+			doc.add(field.id, mime_msg.contacts(Contact::Type::To));
 			break;
+
+			/* internal fields */
+		case Field::Id::XBodyHtml:
+			doc.add(field.id, priv.body_html);
+			break;
+		case Field::Id::XCachedSexp:
+			break;
+			/* ignore */
 		case Field::Id::_count_:
 			break;
 		}
@@ -667,18 +681,7 @@ Message::all_contacts() const
 	if (!load_mime_message())
 		return contacts; /* empty */
 
-	for (auto&& ctype: {
-			MimeMessage::AddressType::Sender,
-			MimeMessage::AddressType::From,
-			MimeMessage::AddressType::ReplyTo,
-			MimeMessage::AddressType::To,
-			MimeMessage::AddressType::Cc,
-			MimeMessage::AddressType::Bcc}) {
-		auto addrs{priv_->mime_msg->addresses(ctype)};
-		std::move(addrs.begin(), addrs.end(), std::back_inserter(contacts));
-	}
-
-	return contacts;
+	return priv_->mime_msg->contacts(Contact::Type::None); /* get all types */
 }
 
 const std::vector<Message::Part>&
@@ -714,9 +717,10 @@ Message::update_after_move(const std::string& new_path,
 	priv_->doc.add(Field::Id::Modified, statbuf->st_mtime);
 	priv_->doc.add(new_flags);
 
-
 	if (const auto res = set_maildir(new_maildir); !res)
 		return res;
+
+	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
 
 	return Ok();
 }
