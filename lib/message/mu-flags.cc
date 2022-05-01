@@ -166,7 +166,7 @@ test_flag_info()
 {
 	static_assert(flag_info('D')->flag == Flags::Draft);
 	static_assert(flag_info('l')->flag == Flags::MailingList);
-	static_assert(!flag_info('q'));
+	static_assert(!flag_info('y'));
 
 	static_assert(flag_info("trashed")->flag == Flags::Trashed);
 	static_assert(flag_info("attach")->flag == Flags::HasAttachment);

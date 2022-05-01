@@ -221,9 +221,9 @@ ContactsCache::add(Contact&& contact)
 
 
 void
-ContactsCache::add(Contacts&& contacts)
+ContactsCache::add(Contacts&& contacts, bool& personal)
 {
-	const auto personal = seq_find_if(contacts,[&](auto&& c){
+	personal = seq_find_if(contacts,[&](auto&& c){
 		return is_personal(c.email); }) != contacts.cend();
 
 	for (auto&& contact: contacts) {

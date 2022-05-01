@@ -66,8 +66,15 @@ public:
 	 * any of the senders/recipients are considered "personal"
 	 *
 	 * @param contacts a Contact object sequence
+	 * @param is_personal receives true if any of the contacts was personal;
+	 * false otherwise
 	 */
-	void add(Contacts&& contacts);
+	void add(Contacts&& contacts, bool& is_personal);
+	void add(Contacts&& contacts) {
+		bool _ignore;
+		add(std::move(contacts), _ignore);
+	}
+
 
 	/**
 	 * Clear all contacts

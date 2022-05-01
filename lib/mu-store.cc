@@ -344,13 +344,23 @@ Store::add_message(Message& msg, bool use_transaction)
 
 	if (auto&& res = msg.set_maildir(mdir.value()); !res)
 		return Err(res.error());
+	/* add contacts from this message to cache; this cache
+	 * also determines whether those contacts are _personal_, i.e. match
+	 * our personal addresses.
+	 *
+	 * if a message has any personal contacts, mark it as personal; do
+	 * this by updating the message flags.
+	 */
+	bool is_personal{};
+	priv_->contacts_cache_.add(msg.all_contacts(), is_personal);
+	if (is_personal)
+		msg.set_flags(msg.flags() | Flags::Personal);
+
 	/* now, we're done with all the fields; generate the sexp string for this
 	 * message */
 	msg.update_cached_sexp();
 
 	std::lock_guard guard{priv_->lock_};
-
-	priv_->contacts_cache_.add(msg.all_contacts());
 
 	const auto docid = xapian_try([&]{
 

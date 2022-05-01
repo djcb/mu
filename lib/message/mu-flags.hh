@@ -63,11 +63,12 @@ enum struct Flags {
 	 * other content flags
 	 */
 	MailingList = 1 << 11, /**< A mailing-list message */
-
+	Personal    = 1 << 12, /**< A personal message (i.e., at least one of the
+				* contact fields contains a personal address) */
 	/*
 	 * <private>
 	 */
-	_final_ = 1 << 12
+	_final_ = 1 << 13
 };
 MU_ENABLE_BITOPS(Flags);
 
@@ -90,7 +91,9 @@ enum struct MessageFlagCategory {
 struct MessageFlagInfo {
 
 	Flags			flag;		/**< The message flag */
-	char			shortcut;	/**< Shortcut character */
+	char			shortcut;	/**< Shortcut character;
+						 * tolower(shortcut) must be
+						 * unique for all flags */
 	std::string_view	name;		/**< Name of the flag */
 	MessageFlagCategory	category;	/**< Flag category */
 	std::string_view        description;    /**< Description */
@@ -109,7 +112,7 @@ struct MessageFlagInfo {
 /**
  * Array of all flag information.
  */
-constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
+constexpr std::array<MessageFlagInfo, 13> AllMessageFlagInfos = {{
     MessageFlagInfo{Flags::Draft,        'D', "draft",		MessageFlagCategory::Mailfile,
 	    "Draft (in progress)"
     },
@@ -146,6 +149,9 @@ constexpr std::array<MessageFlagInfo, 12> AllMessageFlagInfos = {{
     },
     MessageFlagInfo{Flags::MailingList,	 'l', "list",		MessageFlagCategory::Content,
 	    "Mailing list message"
+    },
+    MessageFlagInfo{Flags::Personal,	 'q', "personal",	MessageFlagCategory::Content,
+	    "Personal message"
     },
 }};
 
