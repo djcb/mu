@@ -106,7 +106,9 @@ add_contacts(Sexp::List& list, const Message& message)
 	add_contact_type(message.cc(),  ":cc");
 	add_contact_type(message.bcc(), ":bcc");
 
-	// FIXME: reply-to.
+	const auto reply_to = seq_filter(message.all_contacts(),[](auto &&c) {
+		return c.type == Contact::Type::ReplyTo; });
+	add_contact_type(reply_to, ":reply-to");
 }
 
 static void
@@ -125,14 +127,16 @@ add_flags(Sexp::List& list, const Message& message)
 static void
 add_date_and_size(Sexp::List& items, const Message& message)
 {
-	auto t{message.date()};
-	if (t != 0) {
+	auto emacs_tstamp = [](::time_t t) {
 		Sexp::List dlist;
-		dlist.add(Sexp::make_number((unsigned)(t >> 16)));
-		dlist.add(Sexp::make_number((unsigned)(t & 0xffff)));
+		dlist.add(Sexp::make_number(static_cast<unsigned>(t >> 16)));
+		dlist.add(Sexp::make_number(static_cast<unsigned>(t & 0xffff)));
 		dlist.add(Sexp::make_number(0));
-		items.add_prop(":date", Sexp::make_list(std::move(dlist)));
-	}
+		return Sexp::make_list(std::move(dlist));
+	};
+
+	items.add_prop(":date", emacs_tstamp(message.date()));
+	items.add_prop(":modified", emacs_tstamp(message.modified()));
 
 	auto size{message.size()};
 	if (size != 0)
