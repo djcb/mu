@@ -198,6 +198,14 @@ Message::set_maildir(const std::string& maildir)
 	return Ok();
 }
 
+
+
+void
+Message::set_flags(Flags flags)
+{
+	priv_->doc.add(flags);
+}
+
 bool
 Message::load_mime_message(bool reload) const
 {

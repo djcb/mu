@@ -198,12 +198,18 @@ void
 Document::add(Flags flags)
 {
 	constexpr auto field{field_from_id(Field::Id::Flags)};
+	const auto old_flags{flags_value()};
 
 	xdoc_.add_value(field.value_no(), to_lexnum(static_cast<int64_t>(flags)));
 	flag_infos_for_each([&](auto&& flag_info) {
+		auto term=[&](){return field.xapian_term(flag_info.shortcut_lower());};
 		if (any_of(flag_info.flag & flags))
-			xdoc_.add_boolean_term(field.xapian_term(
-						       flag_info.shortcut_lower()));
+			xdoc_.add_boolean_term(term());
+		else if(any_of(flag_info.flag & old_flags)) {
+			/* field can be _updated_, so clear out any removed flags */
+			xdoc_.remove_term(term());
+		}
+
 	});
 }
 

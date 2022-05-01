@@ -251,6 +251,16 @@ public:
 	 */
 	Flags flags() const { return document().flags_value(); }
 
+
+	/**
+	 * Update the flags for this message. This is useful for flags
+	 * that can only be determined after the message has been created already,
+	 * such as the 'personal' flag.
+	 *
+	 * @param flags new flags.
+	 */
+	void set_flags(Flags flags);
+
 	/**
 	 * get the message priority for this message. The X-Priority, X-MSMailPriority,
 	 * Importance and Precedence header are checked, in that order. if no known or
