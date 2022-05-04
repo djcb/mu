@@ -219,6 +219,7 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 static Result<MimeMessage>
 make_from_stream(GMimeStream* &&stream/*consume*/)
 {
+	init_gmime();
 	GMimeParser *parser{g_mime_parser_new_with_stream(stream)};
 	g_object_unref(stream);
 	if (!parser)
@@ -239,6 +240,7 @@ Result<MimeMessage>
 MimeMessage::make_from_file(const std::string& path)
 {
 	GError* err{};
+	init_gmime();
 	if (auto&& stream{g_mime_stream_file_open(path.c_str(), "r", &err)}; !stream)
 		return Err(Error::Code::Message, &err,
 			   "failed to open stream for %s", path.c_str());
@@ -249,6 +251,7 @@ MimeMessage::make_from_file(const std::string& path)
 Result<MimeMessage>
 MimeMessage::make_from_text(const std::string& text)
 {
+	init_gmime();
 	if (auto&& stream{g_mime_stream_mem_new_with_buffer(
 				text.c_str(), text.length())}; !stream)
 		return Err(Error::Code::Message,
