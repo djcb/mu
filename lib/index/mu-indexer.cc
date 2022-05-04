@@ -145,11 +145,11 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		// lazy-mode); only for actual message dirs, since the dir
 		// tstamps may not bubble up.
 		dirstamp_ = store_.dirstamp(fullpath);
-		if (conf_.lazy_check && dirstamp_ >= statbuf->st_mtime &&
+		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
 			g_debug("skip %s (seems up-to-date: %s >= %s)", fullpath.c_str(),
 				time_to_string("%FT%T", dirstamp_).c_str(),
-				time_to_string("%FT%T", statbuf->st_mtime).c_str());
+				time_to_string("%FT%T", statbuf->st_ctime).c_str());
 			return false;
 		}
 
@@ -189,7 +189,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 
 		// if the message is not in the db yet, or not up-to-date, queue
 		// it for updating/inserting.
-		if (statbuf->st_mtime <= dirstamp_ && store_.contains_message(fullpath)) {
+		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath)) {
 			// g_debug ("skip %s: already up-to-date");
 			return false;
 		}
