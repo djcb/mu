@@ -374,7 +374,12 @@ static bool
 output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
 	if (msg) {
-		fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
+
+		if (const auto sexp{msg->cached_sexp()}; !sexp.empty())
+			fputs(sexp.c_str(), stdout);
+		else
+			fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
+
 		fputs("\n", stdout);
 	}
 
@@ -476,7 +481,7 @@ output_query_results(const QueryResults& qres, const MuConfig* opts)
 		if (!msg)
 			continue;
 
-		if (opts->after != 0 && msg->mtime() < opts->after)
+		if (opts->after != 0 && msg->changed() < opts->after)
 			continue;
 
 		rv = output_func(msg,

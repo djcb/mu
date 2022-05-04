@@ -190,7 +190,12 @@ Sexp::to_sexp_string() const
 		sstrm << ')';
 		break;
 	}
-	case Type::String: sstrm << quote(value()); break;
+	case Type::String:
+		sstrm << quote(value());
+		break;
+	case Type::Raw:
+		sstrm << value();
+		break;
 	case Type::Number:
 	case Type::Symbol:
 	case Type::Empty:
@@ -231,7 +236,12 @@ Sexp::to_json_string() const
 		}
 		break;
 	}
-	case Type::String: sstrm << quote(value()); break;
+	case Type::String:
+		sstrm << quote(value());
+		break;
+	case Type::Raw: // FIXME: implement this.
+		break;
+
 	case Type::Symbol:
 		if (is_nil())
 			sstrm << "false";

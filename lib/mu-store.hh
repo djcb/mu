@@ -67,6 +67,7 @@ public:
 	 * @param maildir maildir to use for this store
 	 * @param personal_addresses addresses that should be recognized as
 	 * 'personal' for identifying personal messages.
+	 * @param config a configuration object
 	 */
 	Store(const std::string& path,
 	      const std::string& maildir,
@@ -115,14 +116,6 @@ public:
 	 * @return the database
 	 */
 	const Xapian::Database& database() const;
-
-	/**
-	 * Get the underlying writable Xapian database for this
-	 * store. Throws is this store is not writable.
-	 *
-	 * @return the writable database
-	 */
-	Xapian::WritableDatabase& writable_database();
 
 	/**
 	 * Get the Indexer associated with this store. It is an error to call
@@ -205,9 +198,9 @@ public:
 	 * @param msg a message
 	 * @param id the id for this message
 	 *
-	 * @return false in case of failure; true otherwise.
+	 * @return Ok() or an error.
 	 */
-	bool update_message(Message& msg, Id id);
+	Result<Store::Id> update_message(Message& msg, Id id);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
@@ -384,6 +377,7 @@ public:
 	const std::unique_ptr<Private>& priv() const { return priv_; }
 
 private:
+
 	std::unique_ptr<Private> priv_;
 };
 

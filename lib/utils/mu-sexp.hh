@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -37,7 +37,7 @@ namespace Mu {
 /// Parse node
 struct Sexp {
 	/// Node type
-	enum struct Type { Empty, List, String, Number, Symbol };
+	enum struct Type { Empty, List, String, Number, Symbol, Raw };
 
 	/**
 	 * Default CTOR
@@ -81,13 +81,30 @@ struct Sexp {
 	}
 
 	static Sexp make_number(int val) { return Sexp{Type::Number, format("%d", val)}; }
-	static Sexp make_symbol(std::string&& val)
-	{
+	static Sexp make_symbol(std::string&& val) {
 		if (val.empty())
-			throw Error(Error::Code::InvalidArgument, "symbol must be non-empty");
+			throw Error(Error::Code::InvalidArgument,
+				    "symbol must be non-empty");
 		return Sexp{Type::Symbol, std::move(val)};
 	}
-	static Sexp make_symbol_sv(std::string_view val) { return make_symbol(std::string{val}); }
+	static Sexp make_symbol_sv(std::string_view val) {
+		return make_symbol(std::string{val});
+	}
+
+	/**
+	 * Add a raw string sexp.
+	 *
+	 * @param val value
+	 *
+	 * @return A sexp
+	 */
+	static Sexp make_raw(std::string&& val) {
+		return Sexp{Type::Raw, std::string{val}};
+	}
+	static Sexp make_raw(const std::string& val) {
+		return make_raw(std::string{val});
+	}
+
 
 	/**
 	 *
@@ -96,8 +113,7 @@ struct Sexp {
 	 *
 	 * @return
 	 */
-	const std::string& value() const
-	{
+	const std::string& value() const {
 		if (is_list())
 			throw Error(Error::Code::InvalidArgument, "no value for list");
 		if (is_empty())
@@ -110,15 +126,14 @@ struct Sexp {
 	 *
 	 * @return
 	 */
-	const Seq& list() const
-	{
+	const Seq& list() const {
 		if (!is_list())
 			throw Error(Error::Code::InvalidArgument, "not a list");
 		return seq_;
 	}
 
 	/**
-	 * Convert a Sexp::Node to its S-expression string representation
+	 * Convert a Sexp to its S-expression string representation
 	 *
 	 * @return the string representation
 	 */
@@ -142,6 +157,9 @@ struct Sexp {
 	/// Helper struct to build mutable lists.
 	///
 	struct List {
+		List () = default;
+		List (const Seq& seq): seq_{seq} {}
+
 		/**
 		 * Add a sexp to the list
 		 *
@@ -164,7 +182,8 @@ struct Sexp {
 		}
 
 		/**
-		 * Add a property (i.e., :key sexp ) to the list
+		 * Add a property (i.e., :key sexp ) to the list. Remove any
+		 * prop with the same name
 		 *
 		 * @param name a property-name. Must start with ':', length > 1
 		 * @param sexp a sexp
@@ -172,8 +191,8 @@ struct Sexp {
 		 *
 		 * @return a ref to this List (for chaining)
 		 */
-		List& add_prop(std::string&& name, Sexp&& sexp)
-		{
+		List& add_prop(std::string&& name, Sexp&& sexp) {
+			remove_prop(name);
 			if (!is_prop_name(name))
 				throw Error{Error::Code::InvalidArgument,
 					    "invalid property name ('%s')",
@@ -183,11 +202,25 @@ struct Sexp {
 			return *this;
 		}
 		template <typename... Args>
-		List& add_prop(std::string&& name, Sexp&& sexp, Args... args)
-		{
+		List& add_prop(std::string&& name, Sexp&& sexp, Args... args) {
+			remove_prop(name);
 			add_prop(std::move(name), std::move(sexp));
 			add_prop(std::forward<Args>(args)...);
 			return *this;
+		}
+
+		void remove_prop(const std::string& name) {
+			if (!is_prop_name(name))
+				throw Error{Error::Code::InvalidArgument,
+					"invalid property name ('%s')", name.c_str()};
+			auto it = std::find_if(seq_.begin(), seq_.end(), [&](auto&& elm) {
+				return elm.type() == Sexp::Type::Symbol &&
+					elm.value() == name;
+			});
+			if (it != seq_.cend() && it + 1 != seq_.cend()) {
+				/* erase propname and value.*/
+				seq_.erase(it, it + 2);
+			}
 		}
 
 		/**
@@ -209,7 +242,7 @@ struct Sexp {
 		 */
 		size_t empty() const { return seq_.empty(); }
 
-		private:
+	private:
 		friend struct Sexp;
 		Seq seq_;
 	};
@@ -309,16 +342,14 @@ struct Sexp {
 			return is_prop_list(list().begin() + 1, list().end());
 	}
 
-	private:
-	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)}
-	{
+private:
+	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)} {
 		if (is_list())
 			throw Error{Error::Code::InvalidArgument, "cannot be a list type"};
 		if (is_empty())
 			throw Error{Error::Code::InvalidArgument, "cannot be an empty type"};
 	}
-	Sexp(Type typearg, Seq&& seq) : type_{Type::List}, seq_{std::move(seq)}
-	{
+	Sexp(Type typearg, Seq&& seq) : type_{Type::List}, seq_{std::move(seq)} {
 		if (!is_list())
 			throw Error{Error::Code::InvalidArgument, "must be a list type"};
 		if (is_empty())
@@ -353,10 +384,10 @@ struct Sexp {
 		return b == e;
 	}
 
-	const Type        type_;  /**<  Type of node */
-	const std::string value_; /**< String value of node (only for
-				   * non-Type::Lst)*/
-	const Seq seq_;           /**< Children of node (only for
+	Type	    type_;  /**<  Type of node */
+	std::string value_; /**< String value of node (only for
+			       * non-Type::Lst)*/
+	Seq seq_;	    /**< Children of node (only for
 				   * Type::Lst) */
 };
 

@@ -20,7 +20,6 @@ lib_mu_message=static_library(
   [
     'mu-message.cc',
     'mu-message-part.cc',
-    'mu-message-sexp.cc',
     'mu-contact.cc',
     'mu-document.cc',
     'mu-fields.cc',

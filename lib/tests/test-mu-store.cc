@@ -21,8 +21,10 @@
 
 #include <glib.h>
 #include <stdlib.h>
+#include <thread>
 #include <unistd.h>
 #include <time.h>
+#include <fstream>
 
 #include <locale.h>
 
@@ -30,6 +32,7 @@
 #include "mu-store.hh"
 #include "utils/mu-result.hh"
 #include <utils/mu-utils.hh>
+#include "mu-maildir.hh"
 
 using namespace Mu;
 
@@ -224,6 +227,93 @@ World!
 }
 
 
+static void
+test_index_move()
+{
+	using namespace std::chrono_literals;
+
+	 const std::string msg_text =
+R"(From: Valentine Michael Smith <mike@example.com>
+To: Raul Endymion <raul@example.com>
+Cc: emacs-devel@gnu.org
+Subject: Re: multi-eq hash tables
+Date: Tue, 03 May 2022 20:58:02 +0200
+Message-ID: <87h766tzzz.fsf@gnus.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+Precedence: list
+List-Id: "Emacs development discussions." <emacs-devel.gnu.org>
+List-Post: <mailto:emacs-devel@gnu.org>
+
+Raul Endymion <raul@example.com> writes:
+
+> Maybe we should introduce something like:
+>
+>     (define-hash-table-test shallow-equal
+>       (lambda (x1 x2) (while (and (consp x1) (consp x2) (eql (car x1) (car x2)))
+>                         (setq x1 (cdr x1)) (setq x2 (cdr x2)))
+>                       (equal x1 x2)))
+>       ...)
+
+Yes, that would be excellent.
+)";
+
+	 TempDir tempdir2;
+
+	 { // create a message file.
+		 const auto res1 = mu_maildir_mkdir(tempdir2.path() + "/Maildir/a");
+		 assert_valid_result(res1);
+
+		 std::ofstream output{tempdir2.path() + "/Maildir/a/new/msg"};
+		 output.write(msg_text.c_str(), msg_text.size());
+		 output.close();
+		 g_assert_true(output.good());
+	 }
+
+	 // Index it into a store.
+	 TempDir tempdir;
+	 Store store{tempdir.path(), tempdir2.path() + "/Maildir", {}, {}};
+	 store.indexer().start({});
+	 size_t n{};
+	 while (store.indexer().is_running()) {
+		 std::this_thread::sleep_for(100ms);
+		 g_assert_cmpuint(n++,<=,25);
+	 }
+	 g_assert_true(!store.indexer().is_running());
+	 const auto& prog{store.indexer().progress()};
+	 g_assert_cmpuint(prog.updated,==,1);
+	 g_assert_cmpuint(store.size(), ==, 1);
+	 g_assert_false(store.empty());
+
+	 // Find the message
+	 auto qr = store.run_query("path:" + tempdir2.path() + "/Maildir/a/new/msg");
+	 assert_valid_result(qr);
+	 g_assert_cmpuint(qr->size(),==,1);
+
+	 const auto msg = qr->begin().message();
+	 g_assert_true(!!msg);
+
+	 // Check the message
+	 const auto oldpath{msg->path()};
+	 assert_equal(msg->subject(), "Re: multi-eq hash tables");
+	 g_assert_true(msg->docid() != 0);
+	 g_debug("%s", msg->to_sexp().to_sexp_string().c_str());
+
+	 // Move the message from new->cur
+	 std::this_thread::sleep_for(1s); /* ctime should change */
+	 const auto msg3 = store.move_message(msg->docid(), {}, Flags::Seen);
+	 assert_valid_result(msg3);
+	 assert_equal(msg3->maildir(), "/a");
+	 assert_equal(msg3->path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
+	 g_assert_true(::access(msg3->path().c_str(), R_OK)==0);
+	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
+
+	 g_debug("%s", msg3->to_sexp().to_sexp_string().c_str());
+	 g_assert_cmpuint(store.size(), ==, 1);
+}
+
+
+
 int
 main(int argc, char* argv[])
 {
@@ -236,6 +326,8 @@ main(int argc, char* argv[])
 			test_message_mailing_list);
 	g_test_add_func("/store/message/attachments",
 			test_message_attachments);
+	g_test_add_func("/store/index/move",
+			test_index_move);
 
 	return g_test_run();
 }

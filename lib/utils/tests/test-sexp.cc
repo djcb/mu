@@ -55,7 +55,7 @@ test_parser()
 
 	check_parse(R"("foo
 bar")",
-	            "\"foo\nbar\"");
+		    "\"foo\nbar\"");
 }
 
 static void
@@ -111,20 +111,47 @@ static void
 test_props()
 {
 	auto sexp2 = Sexp::make_list(Sexp::make_string("foo"),
-	                             Sexp::make_number(123),
-	                             Sexp::make_symbol("blub"));
+				     Sexp::make_number(123),
+				     Sexp::make_symbol("blub"));
 
 	auto sexp = Sexp::make_prop_list(":foo",
-	                                 Sexp::make_string("bär"),
-	                                 ":cuux",
-	                                 Sexp::make_number(123),
-	                                 ":flub",
-	                                 Sexp::make_symbol("fnord"),
-	                                 ":boo",
-	                                 std::move(sexp2));
+					 Sexp::make_string("bär"),
+					 ":cuux",
+					 Sexp::make_number(123),
+					 ":flub",
+					 Sexp::make_symbol("fnord"),
+					 ":boo",
+					 std::move(sexp2));
 
 	assert_equal(sexp.to_sexp_string(),
-	             "(:foo \"b\303\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
+		     "(:foo \"b\303\244r\" :cuux 123 :flub fnord :boo (\"foo\" 123 blub))");
+}
+
+static void
+test_prop_list_remove()
+{
+	{
+		Sexp::List lst;
+		lst.add_prop(":foo", Sexp::make_string("123"))
+			.add_prop(":bar", Sexp::make_number(123));
+
+		assert_equal(Sexp::make_list(std::move(lst)).to_sexp_string(),
+			     R"((:foo "123" :bar 123))");
+	}
+
+	{
+		Sexp::List lst;
+		lst.add_prop(":foo", Sexp::make_string("123"))
+			.add_prop(":bar", Sexp::make_number(123));
+
+		assert_equal(Sexp::make_list(Sexp::List{lst}).to_sexp_string(),
+			     R"((:foo "123" :bar 123))");
+
+		lst.remove_prop(":bar");
+
+		assert_equal(Sexp::make_list(Sexp::List{lst}).to_sexp_string(),
+			     R"((:foo "123"))");
+	}
 }
 
 int
@@ -140,6 +167,7 @@ try {
 	g_test_add_func("/utils/sexp/parser", test_parser);
 	g_test_add_func("/utils/sexp/list", test_list);
 	g_test_add_func("/utils/sexp/proplist", test_prop_list);
+	g_test_add_func("/utils/sexp/proplist-remove", test_prop_list_remove);
 	g_test_add_func("/utils/sexp/props", test_props);
 
 	return g_test_run();
