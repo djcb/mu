@@ -14,7 +14,8 @@ customized for the mu/mu4e use-case.
 In this article, we give a structured but informal overview of the query
 language and provide examples.
 
-As a companion to this, we recommend the \fBmu fields\fR command to get an up-to-date list of the available fields.
+As a companion to this, we recommend the \fBmu fields\fR and \fBmu flags\fR
+commands to get an up-to-date list of the available fields and flags.
 
 \fBNOTE:\fR if you use queries on the command-line (say, for \fBmu find\fR), you
 need to quote any characters that would otherwise be interpreted by the shell,
@@ -131,26 +132,27 @@ take quite a bit longer than 'normal' queries.
 .SH FIELDS
 
 We already saw a number of search fields, such as \fBsubject:\fR and
-\fBbody:\fR. Here is the full table, a shortcut character and a description.
+\fBbody:\fR. For the full table, see \fBmu fields\fR.
 .EX1
-	cc,c            Cc (carbon-copy) recipient(s)
 	bcc,h           Bcc (blind-carbon-copy) recipient(s)
-	from,f          Message sender
-	to,t            To: recipient(s)
-	subject,s       Message subject
 	body,b          Message body
-	maildir,m       Maildir
-	modified,k      Last modification time
-	msgid,i         Message-ID
-	prio,p          Message priority (\fIlow\fR, \fInormal\fR or \fIhigh\fR)
-	flag,g          Message Flags
-	date,d          Date range
-	size,z          Message size range
+	cc,c            Cc (carbon-copy) recipient(s)
+	changed,k       Last change to message file (range)
+	date,d          Send date (range)
 	embed,e         Search inside embedded text parts
 	file,j          Attachment filename
-	mime,y          MIME-type of one or more message parts
-	tag,x           Tags for the message
+	flag,g          Message Flags
+	from,f          Message sender
 	list,v          Mailing list (e.g. the List-Id value)
+	maildir,m       Maildir
+	mime,y          MIME-type of one or more message parts
+	msgid,i         Message-ID
+	prio,p          Message priority (\fIlow\fR, \fInormal\fR or \fIhigh\fR)
+	size,z          Message size range
+	subject,s       Message subject
+	tag,x           Tags for the message
+	thread,w        Thread a message belongs to
+	to,t            To: recipient(s)
 
 The \fBmu fields\fR command is recommended to get the latest version.
 .EX2
@@ -313,9 +315,9 @@ Find all messages with either Frodo or Sam:
 Frodo OR Sam
 .EX2
 
-Find all messages with the 'wombat' as subject, and 'capibara' anywhere:
+Find all messages with the 'wombat' as subject, and 'capybara' anywhere:
 .EX1
-subject:wombat and capibara
+subject:wombat and capybara
 .EX2
 
 Find all messages in the 'Archive' folder from Fred:
@@ -341,14 +343,13 @@ mime:image/*
 
 .SH CAVEATS
 
-With current Xapian versions, the apostroph character is considered
-part of a word. Thus, you cannot find \fID'Artagnan\fR by searching
-for \fIArtagnan\fR. So, include the apostroph in search or use a
-regexp search.
+With current Xapian versions, the apostroph character is considered part of a
+word. Thus, you cannot find \fID'Artagnan\fR by searching for \fIArtagnan\fR.
+So, include the apostroph in search or use a regexp search.
 
-Matching on spaces has changed compared to the old query-parser; this
-applies e.g. to Maildirs that have spaces in their name, such as
-\fISent Items\fR. See \fBMAILDIR\fR above.
+Matching on spaces has changed compared to the old query-parser; this applies
+e.g. to Maildirs that have spaces in their name, such as \fISent Items\fR. See
+\fBMAILDIR\fR above.
 
 .SH AUTHOR
 
@@ -357,3 +358,5 @@ Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 .SH "SEE ALSO"
 
 .BR mu-find (1)
+.BR mu-flags (1)
+.BR mu-fields (1)

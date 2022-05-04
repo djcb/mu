@@ -49,27 +49,28 @@ you have, the speed of your computer, hard drive etc. Usually,
 indexing should be able to reach a speed of a few hundred messages per
 second.
 
-\fBmu index\fR guesses the top-level Maildir to do its job; if it
-guesses wrongly, you can use the \fI--maildir\fR option to specify the
-top-level directory that should be processed. See the \fBmu-index\fR(1)
-man page for more details.
+\fBmu index\fR guesses the top-level Maildir to do its job; if it guesses wrong,
+you can use the \fI--maildir\fR option to specify the top-level directory that
+should be processed. See the \fBmu-index\fR(1) man page for more details.
 
-Normally, \fBmu index\fR visits all the directories under the
-top-level Maildir; however, you can exclude certain directories (say,
-the 'trash' or 'spam' folders) by creating a file called
-\fI.noindex\fR in the directory. When \fBmu\fR sees such a file, it
-will exclude this directory and its sub-directories from indexing.
-Also see \fB.noupdate\fR in the \fBmu-index\fR(1) manpage.
+Normally, \fBmu index\fR visits all the directories under the top-level Maildir;
+however, you can exclude certain directories (say, the 'trash' or 'spam'
+folders) by creating a file called \fI.noindex\fR in the directory. When
+\fBmu\fR sees such a file, it will exclude this directory and its
+sub-directories from indexing. Also see \fB.noupdate\fR in the \fBmu-index\fR(1)
+manpage.
 
 .SH SEARCHING YOUR E-MAIL
 
-After you have indexed your mail, you can start searching it. By
-default, the search results are printed on standard output.
-Alternatively, the output can take the form of Maildir with symbolic
-links to the found messages. This enables integration with e-mail
-clients; see the \fBmu-find\fR(1) man page for details, the syntax of the
-search parameters and so on. Here, we just give some examples for
-common cases.
+After you have indexed your mail, you can start searching it. By default, the
+search results are printed on standard output. Alternatively, the output can
+take the form of Maildir with symbolic links to the found messages. This enables
+integration with e-mail clients; see the \fBmu-find\fR(1) man page for details,
+the syntax of the search parameters and so on. Here, we just give some examples
+for common cases.
+
+You can use the \fBmu fields\fR and \fBmu flags\fR command to get information
+about all possible fields and flags.
 
 First, let's search for all messages sent to Julius (Caesar) regarding
 fruit:
@@ -84,15 +85,14 @@ This should return something like:
   2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
 .fi
 
-This means there is a message to 'julius' with 'fruit' somewhere in
-the message. In this case, it's a message from John Milton. Note that
-the date format depends on your the language/locale you are using.
+This means there is a message to 'julius' with 'fruit' somewhere in the message.
+In this case, it's a message from John Milton. Note that the date format depends
+on your the language/locale you are using.
 
-How do we know that the message was sent to Julius Caesar? Well, it's
-not visible from the results above, because the default fields that
-are shown are date/sender/subject. However, we can change this using
-the \fI--fields\fR parameter (see the \fBmu-find\fR(1) man page for the
-details):
+How do we know that the message was sent to Julius Caesar? Well, it's not
+visible from the results above, because the default fields that are shown are
+date/sender/subject. However, we can change this using the \fI--fields\fR
+parameter (try \fBmu fields\fR to see all the details):
 
 .nf
   \fB$ mu find --fields="t s" t:julius fruit\fR
