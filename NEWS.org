@@ -50,8 +50,11 @@
      flags for use in queries. The information is the same information that ~mu~
      uses and so stays up to date.
 
-   - a new message field ~modified~ which is the time/date of the last time a
-     message was modified or created (the file ~mtime~).
+   - a new message field ~changed~, which refers to the time/date of the last time
+     a message was changed (the file ~ctime~).
+
+   - message sexps are now cached in the store, which makes delivering
+     sexp-based search results (as used by ~mu4e~) much faster.
 
 *** mu4e
 
@@ -60,7 +63,9 @@
 
     - the mu4e headers rendering is much faster (a factor of 3+), which makes
       displaying big results snappier. This required some updates in the headers
-      handling and in the server protocol.
+      handling and in the server protocol. Separate from that, the cached
+      message sexps (see the ~mu~ section) make getting the results much faster.
+      This becomes esp. clear when there are a lot of query results.
 
     - indexing happens in the background now and mu4e can interact with the
       server while it is ongoing; this allows for using mu4e during lengthy
@@ -116,6 +121,11 @@
 	=defcustom= declarations to the topic-specific files.
 
       - =mu4e-proc.el= has been renamed =mu4e-server.el=.
+
+      - Between =mu= and =mu4e=, contact cells are now represented as a plist ~(:name
+        "Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
+        Bar" . "foobar@example.com").~
+
 
     - Because of all these changes, it is recommended you remove older version
       of ~mu4e~ before reinstalling.
