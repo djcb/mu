@@ -184,11 +184,13 @@ Server::Private::build_message_sexp(const Message&            msg,
 				    Store::Id                 docid,
 				    const Option<QueryMatch&> qm) const
 {
-	auto msgsexp{msg.to_sexp_list(docid)};
+	auto sexp_list = msg.to_sexp_list();
+	if (docid != 0)
+		sexp_list.add_prop(":docid", Sexp::make_number(docid));
 	if (qm)
-		msgsexp.add_prop(":meta", build_metadata(*qm));
+		sexp_list.add_prop(":meta", build_metadata(*qm));
 
-	return Sexp::make_list(std::move(msgsexp));
+	return Sexp::make_list(std::move(sexp_list));
 }
 
 CommandMap
@@ -373,6 +375,11 @@ Server::Private::invoke(const std::string& expr) noexcept
 
 	} catch (const Mu::Error& me) {
 		output_sexp(make_error(me.code(), "%s", me.what()));
+		keep_going_ = true;
+	} catch (const Xapian::Error& xerr) {
+		output_sexp(make_error(Error::Code::Internal, "xapian error: %s: %s",
+				       xerr.get_type(), xerr.get_description().c_str()));
+		keep_going_ = false;
 	} catch (const std::runtime_error& re) {
 		output_sexp(make_error(Error::Code::Internal, "caught exception: %s", re.what()));
 		keep_going_ = false;
@@ -418,34 +425,6 @@ Server::Private::add_handler(const Parameters& params)
 	output_sexp(Sexp::make_list(std::move(update)));
 }
 
-// struct PartInfo {
-//	Sexp::List   attseq;
-//	MuMsgOptions opts;
-// };
-
-// static void
-// each_part(const Message& msg, MuMsgPart* part, PartInfo* pinfo)
-// {
-//	/* exclude things that don't look like proper attachments, unless they're images */
-//	if (!mu_msg_part_maybe_attachment(part))
-//		return;
-
-//	GError* gerr{};
-//	char*   cachefile =
-//	    mu_msg_part_save_temp(msg,
-//				  (MuMsgOptions)(pinfo->opts | MU_MSG_OPTION_OVERWRITE),
-//				  part->index,
-//				  &gerr);
-//	if (!cachefile)
-//		throw Error(Error::Code::File, &gerr, "failed to save part");
-
-//	Sexp::List pi;
-//	pi.add_prop(":file-name", Sexp::make_string(cachefile));
-//	pi.add_prop(":mime-type", Sexp::make_string(format("%s/%s", part->type, part->subtype)));
-//	pinfo->attseq.add(Sexp::make_list(std::move(pi)));
-//	g_free(cachefile);
-// }
-
 /* 'compose' produces the un-changed *original* message sexp (ie., the message
  * to reply to, forward or edit) for a new message to compose). It takes two
  * parameters: 'type' with the compose type (either reply, forward or
@@ -457,6 +436,33 @@ Server::Private::add_handler(const Parameters& params)
  *
  * Note ':include' t or nil determines whether to include attachments
  */
+
+static Option<Sexp>
+maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
+{
+	if (!part.is_attachment())
+		return Nothing;
+
+	const auto cache_path{message.cache_path()};
+	if (!cache_path)
+		throw cache_path.error();
+
+	const auto fname{format("%s/%zu-%s", cache_path->c_str(),
+				index, part.cooked_filename()
+				.value_or("part").c_str())};
+
+	const auto res = part.to_file(fname, true);
+	if (!res)
+		throw res.error();
+
+	Sexp::List pi;
+	pi.add_prop(":file-name", Sexp::make_string(*cache_path));
+	pi.add_prop(":mime-type", Sexp::make_string(part.mime_type()
+						    .value_or("application/data")));
+	return Some(Sexp::make_list(std::move(pi)));
+}
+
+
 void
 Server::Private::compose_handler(const Parameters& params)
 {
@@ -466,7 +472,9 @@ Server::Private::compose_handler(const Parameters& params)
 	comp_lst.add_prop(":compose", Sexp::make_symbol(std::string(ctype)));
 
 
-	if (ctype == "reply" || ctype == "forward" || ctype == "edit" || ctype == "resend") {
+	if (ctype == "reply" || ctype == "forward" ||
+	    ctype == "edit" || ctype == "resend") {
+
 		const unsigned docid{(unsigned)get_int_or(params, ":docid")};
 		auto  msg{store().find_message(docid)};
 		if (!msg)
@@ -475,19 +483,19 @@ Server::Private::compose_handler(const Parameters& params)
 		comp_lst.add_prop(":original", build_message_sexp(msg.value(), docid, {}));
 
 		if (ctype == "forward") {
-			// for (auto&& part: msg->parts()) {
-			//	if (!part.is_attachment())
-			//		continue;
-
-
-
-
-			// PartInfo pinfo{};
-			// pinfo.opts = opts;
-			// mu_msg_part_foreach(msg, opts, (MuMsgPartForeachFunc)each_part, &pinfo);
-			// if (!pinfo.attseq.empty())
-			//	comp_lst.add_prop(":include",
-			//			  Sexp::make_list(std::move(pinfo.attseq)));
+			// when forwarding, attach any attachment in the orig
+			size_t index{};
+			Sexp::List attseq;
+			for (auto&& part: msg->parts()) {
+				if (auto attsexp = maybe_add_attachment(
+					    *msg, part, index); attsexp) {
+					attseq.add(std::move(*attsexp));
+					++index;
+				}
+			}
+			if (!attseq.empty())
+				comp_lst.add_prop(":include",
+						  Sexp::make_list(std::move(attseq)));
 		}
 
 	} else if (ctype != "new")
@@ -504,13 +512,18 @@ Server::Private::contacts_handler(const Parameters& params)
 	const auto afterstr  = get_string_or(params, ":after");
 	const auto tstampstr = get_string_or(params, ":tstamp");
 
-	const auto after{afterstr.empty() ? 0 : parse_date_time(afterstr, true)};
+	const auto after{afterstr.empty() ? 0 :
+		parse_date_time(afterstr, true).value_or(0)};
 	const auto tstamp = g_ascii_strtoll(tstampstr.c_str(), NULL, 10);
+
+	g_debug("find %s contacts last seen >= %s (tstamp: %zu)",
+		personal ? "personal" : "any",
+		time_to_string("%c", after).c_str(),
+		static_cast<size_t>(tstamp));
 
 	auto       rank{0};
 	Sexp::List contacts;
 	store().contacts_cache().for_each([&](const Contact& ci) {
-		rank++;
 
 		/* since the last time we got some contacts */
 		if (tstamp > ci.tstamp)
@@ -521,6 +534,8 @@ Server::Private::contacts_handler(const Parameters& params)
 		/* only include newer-than-x contacts */
 		if (after > ci.message_date)
 			return;
+
+		rank++;
 
 		Sexp::List contact;
 		contact.add_prop(":address",
@@ -533,8 +548,10 @@ Server::Private::contacts_handler(const Parameters& params)
 	Sexp::List seq;
 	seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
 	seq.add_prop(":tstamp",
-		     Sexp::make_string(format("%" G_GINT64_FORMAT, g_get_monotonic_time())));
+		     Sexp::make_string(format("%" G_GINT64_FORMAT,
+					      g_get_monotonic_time())));
 	/* dump the contacts cache as a giant sexp */
+	g_debug("sending %d of %zu contact(s)", rank, store().contacts_cache().size());
 	output_sexp(std::move(seq));
 }
 
@@ -543,7 +560,8 @@ static std::vector<Store::Id>
 docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 {
 	if (msgid.size() > Store::MaxTermLength) {
-		throw Error(Error::Code::InvalidArgument, "invalid message-id '%s'", msgid.c_str());
+		throw Error(Error::Code::InvalidArgument,
+			    "invalid message-id '%s'", msgid.c_str());
 	}
 
 	const auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
@@ -986,7 +1004,6 @@ Server::Private::sent_handler(const Parameters& params)
 	const auto docid = store().add_message(path);
 	if (!docid)
 		throw Error{Error::Code::Store, "failed to add path"};
-
 
 	Sexp::List lst;
 	lst.add_prop(":sent", Sexp::make_symbol("t"));
