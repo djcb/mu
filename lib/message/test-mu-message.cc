@@ -204,6 +204,9 @@ World!
 
 	assert_equal(message->subject(), "ättächmeñts");
 
+	const auto cache_path{message->cache_path()};
+	g_assert_true(!!cache_path);
+
 	g_assert_cmpuint(message->parts().size(),==,5);
 	{
 		auto&& part{message->parts().at(0)};
@@ -228,6 +231,11 @@ World!
 		assert_equal(part.mime_type().value(), "audio/ogg");
 		// file consistso of 4 bytes 4..7
 		assert_equal(part.to_string().value(), "\004\005\006\007");
+		const auto fpath{*cache_path + part.cooked_filename().value()};
+		const auto res = part.to_file(fpath, true);
+
+		g_assert_cmpuint(*res,==,4);
+		g_assert_cmpuint(::access(fpath.c_str(), R_OK), ==, 0);
 	}
 
 	{

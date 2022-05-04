@@ -140,6 +140,14 @@ public:
 	 */
 	const Document& document() const;
 
+
+	/**
+	 * Get the document-id, or 0 if non-existent.
+	 *
+	 * @return document id
+	 */
+	unsigned docid() const;
+
 	/**
 	 * Get the file system path of this message
 	 *
@@ -236,12 +244,12 @@ public:
 	}
 
 	/**
-	 * get the last modification or creation time for this message
+	 * get the last change-time (ctime) for this message
 	 *
-	 * @return message date/time or 0 if unknown
+	 * @return chnage time or 0 if unknown
 	 */
-	::time_t modified() const {
-		return static_cast<::time_t>(document().integer_value(Field::Id::Modified));
+	::time_t changed() const {
+		return static_cast<::time_t>(document().integer_value(Field::Id::Changed));
 	}
 
 	/**
@@ -297,7 +305,8 @@ public:
 	 * @return a list with the tags for this msg. Don't modify/free
 	 */
 	std::vector<std::string> tags() const {
-		return document().string_vec_value(Field::Id::Tags);
+		return document()
+			.string_vec_value(Field::Id::Tags);
 	}
 
 	/**
@@ -306,7 +315,7 @@ public:
 	 * @return sexp or empty.
 	 */
 	std::string cached_sexp() const {
-		return document().string_value(Field::Id::XCachedSexp);
+		return document().cached_sexp();
 	}
 
 	/*
@@ -314,19 +323,20 @@ public:
 	 */
 
 	/**
-	 * convert the message to a Lisp symbolic expression (for further
-	 * processing in e.g. emacs)
+	 * Get the s-expression for this message. Stays valid as long
+	 * as this message is.
 	 *
-	 * @return a Mu::Sexp or a Mu::Sexp::List representing the message.
+	 * @return a Mu::Sexp::List representing the message.
 	 */
-	Mu::Sexp::List to_sexp_list() const;
-	Mu::Sexp       to_sexp() const;
-
+	const Mu::Sexp::List& to_sexp_list() const;
+	Mu::Sexp to_sexp() const {
+		return Sexp::make_list(Sexp::List(to_sexp_list()));
+	}
 
 	/**
 	 * Update the cached sexp for this message which is stored in the
-	 * document.This should be done when the document is complete,
-	 * i.e., immediately before storing it in the database.
+	 * document. This should be done immediately before storing it in the
+	 * database.
 	 *
 	 */
 	void update_cached_sexp();
@@ -370,13 +380,6 @@ public:
 
 
 	/**
-	 * Get the mtime for the message file.
-	 *
-	 * @return the mtime
-	 */
-	::time_t mtime() const;
-
-	/**
 	 * Get all contacts for this message.
 	 *
 	 * @return contacts
@@ -390,6 +393,16 @@ public:
 	 */
 	using Part = MessagePart;
 	const std::vector<Part>& parts() const;
+
+
+	/**
+	 * Get the path to a cche directory for this message, which
+	 * is useful for temporarily saving attachments
+	 *
+	 * @return path to a (created) cache directory, or an error.
+	 */
+	Result<std::string> cache_path() const;
+
 
 	/**
 	 * Load the GMime (file) message (for a database-backed message),

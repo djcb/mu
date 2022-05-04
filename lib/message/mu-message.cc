@@ -39,6 +39,7 @@
 
 #include "gmime/gmime-message.h"
 #include "mu-mime-object.hh"
+#include "mu-option.hh"
 
 using namespace Mu;
 
@@ -98,7 +99,7 @@ Message::Message(const std::string& path,  Message::Options opts):
 	if (!statbuf)
 		throw statbuf.error();
 
-	priv_->mtime = statbuf->st_mtime;
+	priv_->ctime = statbuf->st_ctime;
 
 	init_gmime();
 	if (auto msg{MimeMessage::make_from_file(path)}; !msg)
@@ -204,16 +205,16 @@ Message::set_maildir(const std::string& maildir)
 			   "'%s' is not a valid maildir for message @ %s",
 			   maildir.c_str(), path.c_str());
 
+	priv_->doc.remove(Field::Id::Maildir);
 	priv_->doc.add(Field::Id::Maildir, maildir);
 
 	return Ok();
 }
 
-
-
 void
 Message::set_flags(Flags flags)
 {
+	priv_->doc.remove(Field::Id::Flags);
 	priv_->doc.add(flags);
 }
 
@@ -694,12 +695,9 @@ fill_document(Message::Private& priv)
 		case Field::Id::To:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::To));
 			break;
-
 			/* internal fields */
 		case Field::Id::XBodyHtml:
 			doc.add(field.id, priv.body_html);
-			break;
-		case Field::Id::XCachedSexp:
 			break;
 			/* ignore */
 		case Field::Id::_count_:
@@ -759,14 +757,23 @@ Message::parts() const
 	return priv_->parts;
 }
 
-::time_t
-Message::mtime() const
+Result<std::string>
+Message::cache_path() const
 {
-	if (!load_mime_message())
-		return 0;
+	/* create tmpdir for this message, if needed */
+	if (priv_->cache_path.empty()) {
+		GError *err{};
+		auto tpath{to_string_opt_gchar(
+				g_dir_make_tmp("mu-message-part-XXXXXX", &err))};
+		if (!tpath)
+			return Err(Error::Code::File, &err,
+				   "failed to create temp dir");
+		priv_->cache_path = std::move(tpath.value());
+	}
 
-	return priv_->mtime;
+	return Ok(std::string{priv_->cache_path});
 }
+
 
 Result<void>
 Message::update_after_move(const std::string& new_path,

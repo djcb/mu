@@ -22,6 +22,7 @@
 #include "glibconfig.h"
 #include "mu-mime-object.hh"
 #include "utils/mu-utils.hh"
+#include <string>
 
 using namespace Mu;
 
@@ -71,8 +72,7 @@ MessagePart::cooked_filename() const noexcept
 			.value_or("no-subject") + ".eml";
 	}
 
-return Nothing;
-
+	return Nothing;
 }
 
 Option<std::string>
