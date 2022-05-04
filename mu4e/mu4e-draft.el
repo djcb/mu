@@ -1,6 +1,6 @@
 ;;; mu4e-draft.el -- part of mu4e, the mu mail user agent for emacs -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2020 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -312,7 +312,6 @@ one. Code borrowed from `message-shorten-1'."
           (nthcdr (+ (- cut 2) surplus 1) list)))
 
 
-
 (defun mu4e~fontify-signature ()
   "Give the message signatures a distinctive color. This is used
 in the view and compose modes and will color each signature in
@@ -360,13 +359,7 @@ This is specified as a comma-separated list of e-mail addresses.
 If LST is nil, returns nil."
   (when lst
     (mapconcat
-     (lambda (addrcell)
-       (let ((name (car addrcell))
-             (email (cdr addrcell)))
-         (if name
-             (format "%s <%s>" (mu4e~rfc822-quoteit name) email)
-           (format "%s" email))))
-     lst ", ")))
+     (lambda (contact) (mu4e-contact-full contact)) lst ", ")))
 
 (defun mu4e~draft-address-cell-equal (cell1 cell2)
   "Return t if CELL1 and CELL2 have the same e-mail address.
@@ -374,8 +367,8 @@ The comparison is done case-insensitively. If the cells done
 match return nil. CELL1 and CELL2 are cons cells of the
 form (NAME . EMAIL)."
   (string=
-   (downcase (or (cdr cell1) ""))
-   (downcase (or (cdr cell2) ""))))
+   (downcase (or (mu4e-contact-email cell1) ""))
+   (downcase (or (mu4e-contact-email cell2) ""))))
 
 
 (defun mu4e~draft-create-to-lst (origmsg)
@@ -391,7 +384,7 @@ of the original, we simple copy the list form the original."
     (if mu4e-compose-dont-reply-to-self
         (cl-delete-if
          (lambda (to-cell)
-           (mu4e-personal-address-p (cdr to-cell)))
+           (mu4e-personal-address-p (mu4e-contact-email to-cell)))
          reply-to)
       reply-to)))
 
@@ -406,7 +399,7 @@ I.e. return all the addresses in ADDRS not matching
    ((functionp mu4e-compose-reply-ignore-address)
     (cl-remove-if
      (lambda (elt)
-       (funcall mu4e-compose-reply-ignore-address (cdr elt)))
+       (funcall mu4e-compose-reply-ignore-address (mu4e-contact-email elt)))
      addrs))
    (t
     ;; regexp or list of regexps
@@ -417,7 +410,7 @@ I.e. return all the addresses in ADDRS not matching
                      regexp)))
       (cl-remove-if
        (lambda (elt)
-         (string-match regexp (cdr elt)))
+         (string-match regexp (mu4e-contact-email elt)))
        addrs)))))
 
 (defun mu4e~draft-create-cc-lst (origmsg &optional reply-all include-from)
@@ -452,7 +445,7 @@ REPLY-ALL."
                 cc-lst
               (cl-delete-if
                (lambda (cc-cell)
-                 (mu4e-personal-address-p (cdr cc-cell)))
+                 (mu4e-personal-address-p (mu4e-contact-email cc-cell)))
                cc-lst))))
       cc-lst)))
 
@@ -470,53 +463,14 @@ message. Return nil if there are no recipients for the particular field."
      (otherwise
       (mu4e-error "Unsupported field")))))
 
-;;; RFC2822 handling of phrases in mail-addresses
-;;
-;; The optional display-name contains a phrase, it sits before the
-;; angle-addr as specified in RFC2822 for email-addresses in header
-;; fields.  Contributed by jhelberg.
-
-(defun mu4e~rfc822-phrase-type (ph)
-  "Return an atom or quoted-string for the phrase PH.
-This checks for empty string first. Then quotes around the phrase
-\(returning 'rfc822-quoted-string). Then whether there is a quote
-inside the phrase (returning 'rfc822-containing-quote).
-The reverse of the RFC atext definition is then tested.
-If it matches, nil is returned, if not, it is an 'rfc822-atom, which
-is returned."
-  (cond
-   ((= (length ph) 0) 'rfc822-empty)
-   ((= (aref ph 0) ?\")
-    (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
-        'rfc822-quoted-string
-      'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
-   ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
-   ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
-   (t 'rfc822-atom)))
-
-(defun mu4e~rfc822-quoteit (ph)
-  "Quote an RFC822 phrase PH only if necessary.
-Atoms and quoted strings don't need quotes. The rest do.  In
-case a phrase contains a quote, it will be escaped."
-  (let ((type (mu4e~rfc822-phrase-type ph)))
-    (cond
-     ((eq type 'rfc822-atom) ph)
-     ((eq type 'rfc822-quoted-string) ph)
-     ((eq type 'rfc822-containing-quote)
-      (format "\"%s\""
-              (replace-regexp-in-string "\"" "\\\\\"" ph)))
-     (t (format "\"%s\"" ph)))))
-
-
 (defun mu4e~draft-from-construct ()
   "Construct a value for the From:-field of the reply.
 This is based on the variable `user-full-name' and
 `user-mail-address'; if the latter is nil, function returns nil."
   (when user-mail-address
-    (if user-full-name
-        (format "%s <%s>" (mu4e~rfc822-quoteit user-full-name) user-mail-address)
-      (format "%s" user-mail-address))))
-
+    (mu4e-contact-full (mu4e-contact-make
+                        user-full-name
+			user-mail-address))))
 
 ;;; Header separators
 
@@ -527,34 +481,34 @@ the body starts. Note, in `mu4e-compose-mode', we use
 `before-save-hook' and `after-save-hook' to ensure that this
 separator is never written to the message file. Also see
 `mu4e-remove-mail-header-separator'."
-  ;; we set this here explicitly, since (as it has happened) a wrong
-  ;; value for this (such as "") breaks address completion and other things
-  (set (make-local-variable 'mail-header-separator) "--text follows this line--")
-  (put 'mail-header-separator 'permanent-local t)
-  (save-excursion
-    ;; make sure there's not one already
-    (mu4e~draft-remove-mail-header-separator)
-    (let ((sepa (propertize mail-header-separator
-                            'intangible t
-                            ;; don't make this read-only, message-mode
-                            ;; seems to require it being writable in some cases
-                            ;;'read-only "Can't touch this"
-                            'rear-nonsticky t
-                            'font-lock-face 'mu4e-compose-separator-face)))
-      (widen)
-      ;; search for the first empty line
-      (goto-char (point-min))
-      (if (search-forward-regexp "^$" nil t)
-          (progn
-            (replace-match sepa)
-            ;; `message-narrow-to-headers` searches for a
-            ;; `mail-header-separator` followed by a new line. Therefore, we
-            ;; must insert a newline if on the last line of the buffer.
-            (when (= (point) (point-max))
-              (insert "\n")))
-        (progn ;; no empty line? then prepend one
-          (goto-char (point-max))
-          (insert "\n" sepa))))))
+    ;; we set this here explicitly, since (as it has happened) a wrong
+    ;; value for this (such as "") breaks address completion and other things
+    (set (make-local-variable 'mail-header-separator) "--text follows this line--")
+    (put 'mail-header-separator 'permanent-local t)
+    (save-excursion
+      ;; make sure there's not one already
+      (mu4e~draft-remove-mail-header-separator)
+      (let ((sepa (propertize mail-header-separator
+                              'intangible t
+                              ;; don't make this read-only, message-mode
+                              ;; seems to require it being writable in some cases
+                              ;;'read-only "Can't touch this"
+                              'rear-nonsticky t
+                              'font-lock-face 'mu4e-compose-separator-face)))
+	(widen)
+	;; search for the first empty line
+	(goto-char (point-min))
+	(if (search-forward-regexp "^$" nil t)
+            (progn
+              (replace-match sepa)
+              ;; `message-narrow-to-headers` searches for a
+              ;; `mail-header-separator` followed by a new line. Therefore, we
+              ;; must insert a newline if on the last line of the buffer.
+              (when (= (point) (point-max))
+		(insert "\n")))
+          (progn ;; no empty line? then prepend one
+            (goto-char (point-max))
+            (insert "\n" sepa))))))
 
 (defun mu4e~draft-remove-mail-header-separator ()
   "Remove `mail-header-separator'.

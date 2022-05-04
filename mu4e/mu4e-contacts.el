@@ -1,6 +1,6 @@
 ;;; mu4e-contacts.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -44,14 +44,14 @@ These addresses are the ones specified with `mu init'."
   :type 'boolean
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-complete-only-after "2014-01-01"
+(defcustom mu4e-compose-complete-only-after "2018-01-01"
   "Consider only contacts last seen after this date.
 
-Date must be a string of the form YYY-MM-DD.
+Date must be a string of the form YYYY-MM-DD.
 
 This is useful for limiting a potentially enormous set of
 contacts for auto-completion to just those that are present in
-the e-mail corpus in recent timses. Set to nil to not have any
+the e-mail corpus in recent times. Set to nil to not have any
 time-based restriction."
   :type 'string
   :group 'mu4e-compose)
@@ -156,6 +156,73 @@ addresses and /regular expressions/."
 			"1.3.8")
 
 
+;; Helpers
+
+
+;;; RFC2822 handling of phrases in mail-addresses
+;;
+;; The optional display-name contains a phrase, it sits before the
+;; angle-addr as specified in RFC2822 for email-addresses in header
+;; fields.  Contributed by jhelberg.
+
+(defun mu4e--rfc822-phrase-type (ph)
+  "Return an atom or quoted-string for the phrase PH.
+This checks for empty string first. Then quotes around the phrase
+\(returning 'rfc822-quoted-string). Then whether there is a quote
+inside the phrase (returning 'rfc822-containing-quote). The
+reverse of the RFC atext definition is then tested. If it
+matches, nil is returned, if not, it is an 'rfc822-atom, which is
+returned."
+  (cond
+   ((= (length ph) 0) 'rfc822-empty)
+   ((= (aref ph 0) ?\")
+    (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
+        'rfc822-quoted-string
+      'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
+   ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
+   ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
+   (t 'rfc822-atom)))
+
+(defun mu4e--rfc822-quote-phrase (ph)
+  "Quote an RFC822 phrase PH only if necessary.
+Atoms and quoted strings don't need quotes. The rest do.  In
+case a phrase contains a quote, it will be escaped."
+  (let ((type (mu4e--rfc822-phrase-type ph)))
+    (cond
+     ((eq type 'rfc822-atom) ph)
+     ((eq type 'rfc822-quoted-string) ph)
+     ((eq type 'rfc822-containing-quote)
+      (format "\"%s\""
+              (replace-regexp-in-string "\"" "\\\\\"" ph)))
+     (t (format "\"%s\"" ph)))))
+
+(defsubst mu4e-contact-name (contact)
+  "Get the name of this CONTACT, or nil."
+  (plist-get contact :name))
+
+(defsubst mu4e-contact-email (contact)
+  "Get the name of this CONTACT, or nil."
+  (plist-get contact :email))
+
+(defsubst mu4e-contact-cons (contact)
+  "Convert a CONTACT plist into a old-style (name . email)."
+    (cons
+     (mu4e-contact-name contact)
+     (mu4e-contact-email contact)))
+
+(defsubst mu4e-contact-make (name email)
+  "Creata contact plist from NAME and EMAIL."
+    `(:name ,name :email ,email))
+
+(defun mu4e-contact-full (contact)
+  "Get the full combination of name and email address from CONTACT."
+  (let* ((email (mu4e-contact-email contact))
+	 (name (mu4e-contact-name contact)))
+    (if (and name (> (length name) 0))
+	(format "%s <%s>" (mu4e--rfc822-quote-phrase name) email)
+      email)))
+
+
 (defun mu4e--update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS newer than TSTAMP.
 Each of the contacts has the form
@@ -212,7 +279,7 @@ For testing/debugging."
         (setq contacts (sort contacts
                              (lambda(cell1 cell2) (< (car cell1) (car cell2)))))
         (dolist (contact contacts)
-          (insert (format "%s\n" (cdr contact))))))
+          (insert (format "%s\n" (mu4e-contact-email contact))))))
 
     (pop-to-buffer "*mu4e-contacts-info*")))
 

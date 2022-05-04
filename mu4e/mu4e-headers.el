@@ -1,4 +1,4 @@
-;;; mu4e-headers.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
+;;; mu4e-headers.el -- part of mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
@@ -41,6 +41,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-mark)
 (require 'mu4e-context)
+(require 'mu4e-contacts)
 (require 'mu4e-search)
 (require 'mu4e-compose)
 (require 'mu4e-actions)
@@ -177,7 +178,7 @@ query have been received and are displayed."
 ;;; Public variables
 
 (defvar mu4e-headers-sort-field :date
-  "Field to sort the headers by. Must be a symbol,
+  "Field to sort the headers by. A symbol:
 one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
 `:list'.
 
@@ -305,10 +306,6 @@ In the format needed for `mu4e-read-option'.")
   "If non-nil, report on the time it took to render the messages.
 This is mostly useful for profiling.")
 
-
-
-
-
 
 
 ;;; Clear
@@ -332,8 +329,9 @@ This is mostly useful for profiling.")
   "Turn the list of contacts CONTACTS (with elements (NAME . EMAIL)
 into a string."
   (mapconcat
-   (lambda (ct)
-     (let ((name (car ct)) (email (cdr ct)))
+   (lambda (contact)
+     (let ((name (mu4e-contact-name contact))
+	   (email (mu4e-contact-email contact)))
        (or name email "?"))) contacts ", "))
 
 (defun mu4e~headers-thread-prefix-map (type)
@@ -503,23 +501,20 @@ while our display may be different)."
 
 ;;; Special headers
 
-(defconst mu4e-headers-from-or-to-prefix '("" . "To ")
-  "Prefix for the :from-or-to field.
-It's a cons cell with the car element being the From: prefix, the
-cdr element the To: prefix.")
-
 (defun mu4e~headers-from-or-to (msg)
-  "When the from address for message MSG is one of the the user's addresses,
+  "Get the From: address from MSG if not one of user's; otherwise get To:.
+When the from address for message MSG is one of the the user's addresses,
 \(as per `mu4e-personal-address-p'), show the To address;
 otherwise ; show the from address; prefixed with the appropriate
 `mu4e-headers-from-or-to-prefix'."
-  (let ((addr (cdr-safe (car-safe (mu4e-message-field msg :from)))))
-    (if (and addr (mu4e-personal-address-p addr))
-        (concat (cdr mu4e-headers-from-or-to-prefix)
-                (mu4e~headers-contact-str (mu4e-message-field msg :to)))
-      (concat (car mu4e-headers-from-or-to-prefix)
-              (mu4e~headers-contact-str (mu4e-message-field msg :from))))))
+  (let* ((from1 (car-safe (mu4e-message-field msg :from)))
+	 (from1-addr (and from1 (mu4e-contact-email from1)))
+	 (is-user (and from1-addr (mu4e-personal-address-p from1-addr))))
+    (if is-user
+     (concat "To " (mu4e~headers-contact-str (mu4e-message-field msg :to)))
+     (mu4e~headers-contact-str (mu4e-message-field msg :from)))))
 
+ 
 (defun mu4e~headers-human-date (msg)
   "Show a 'human' date.
 If the date is today, show the time, otherwise, show the
@@ -1406,7 +1401,8 @@ matching messages with that mark."
        (let* ((value (mu4e-msg-field msg field)))
          (if (member field '(:to :from :cc :bcc :reply-to))
              (cl-find-if (lambda (contact)
-                           (let ((name (car contact)) (email (cdr contact)))
+                           (let ((name (mu4e-contact-name contact))
+				 (email (mu4e-contact-email contact)))
                              (or (and name (string-match pattern name))
                                  (and email (string-match pattern email))))) value)
            (string-match pattern (or value ""))))))))

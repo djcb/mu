@@ -96,7 +96,7 @@
 (defun mu4e~icalendar-has-email (email list)
   "Check that EMAIL is in LIST."
   (let ((email (downcase email)))
-    (cl-find-if (lambda (c) (let ((e (cdr c)))
+    (cl-find-if (lambda (c) (let ((e (mu4e-contact-email c)))
                               (and (stringp e) (string= email (downcase e)))))
                 list)))
 

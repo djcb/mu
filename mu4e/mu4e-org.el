@@ -1,6 +1,6 @@
 ;;; mu4e-org -- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -29,6 +29,7 @@
 
 (require 'org)
 (require 'mu4e-view)
+(require 'mu4e-contacts)
 
 
 (defgroup mu4e-org nil
@@ -79,25 +80,23 @@ the current query; otherwise, it links to the message at point.")
          (date     (format-time-string "%FT%T" (plist-get msg :date)))
          (msgid    (or (plist-get msg :message-id)
                        (mu4e-error "Cannot link message without message-id")))
-	 (name-or-addr (lambda (addr) (or (car-safe addr) (cdr-safe addr))))
-	 (full-address (lambda(addr)
-			 (when addr
-			   (if-let ((name (car addr)))
-			       (format "%s <%s>" name (cdr addr))
-			     (format "%s" (cdr addr)))))))
-    (org-store-link-props
-     :type                     "mu4e"
-     :date                     date
-     :from                     (funcall full-address from)
-     :fromnameoraddress        (funcall name-or-addr from) ;; mu4e-specific
-     :maildir                  (plist-get msg :maildir)
-     :message-id               msgid
-     :path                     (plist-get msg :path)
-     :subject                  (plist-get msg :subject)
-     :to                       (funcall full-address to)
-     :tonameoraddress          (funcall name-or-addr to) ;; mu4e-specific
-     :link                     (concat "mu4e:msgid:" msgid)
-     :description              (funcall mu4e-org-link-desc-func msg))))
+	 (props `(:type  "mu4e"
+		  :date              ,date
+		  :from              ,(mu4e-contact-full from)
+		  :fromname          ,(mu4e-contact-name from)
+		  :fromnameoraddress ,(or (mu4e-contact-name from)
+				    	(mu4e-contact-email from)) ;; mu4e-specific
+		  :maildir           ,(plist-get msg :maildir)
+		  :message-id        ,msgid
+		  :path              ,(plist-get msg :path)
+		  :subject           ,(plist-get msg :subject)
+		  :to                ,(mu4e-contact-full to)
+		  :tonameoraddress   ,(or (mu4e-contact-name to)
+				    	(mu4e-contact-email to)) ;; mu4e-specific
+		  :link              ,(concat "mu4e:msgid:" msgid)
+		  :description       ,(funcall mu4e-org-link-desc-func msg))))
+    (message "PROPS %S" props)
+    (apply #'org-store-link-props props)))
 
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.
@@ -105,13 +104,15 @@ It links to the last known query when in `mu4e-headers-mode' with
 `mu4e-org-link-query-in-headers-mode' set; otherwise it links to
 a specific message, based on its message-id, so that links stay
 valid even after moving the message around."
-  (when (derived-mode-p 'mu4e-view-mode 'mu4e-headers-mode)
-    (if (and (derived-mode-p 'mu4e-headers-mode)
-             mu4e-org-link-query-in-headers-mode)
-        (mu4e--org-store-link-query)
-      (when (mu4e-message-at-point)
-	(message "%S" (mu4e--org-store-link-message))
-        (mu4e--org-store-link-message)))))
+  (let ((view-mode-p (mu4e-is-mode-or-derived-p 'mu4e-view-mode))
+	(headers-mode-p (mu4e-is-mode-or-derived-p 'mu4e-headers-mode))
+	(message-p (mu4e-message-at-point)))
+    (if view-mode-p
+	(mu4e--org-store-link-message)
+      (if headers-mode-p
+	  (if (or (not message-p) mu4e-org-link-query-in-headers-mode)
+	      (mu4e--org-store-link-query)
+	    (mu4e--org-store-link-message))))))
 
 (defun mu4e-org-open (link)
   "Open the org LINK.

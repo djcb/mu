@@ -859,8 +859,8 @@ buffer buried."
   (when other-headers
     (dolist (h other-headers other-headers)
       (if (symbolp (car h)) (setcar h (symbol-name (car h))))
-      (message-add-header (concat (capitalize (car h)) ": " (cdr h) "\n"  ))
-      ))
+      (message-add-header
+       (concat (capitalize (car h)) ": " (cdr h) "\n"  ))))
 
   ;; yank message
   (if (bufferp yank-action)

@@ -211,15 +211,20 @@ I.e. a message with the draft flag set."
         :shortname "Cc"
         :help "Carbon-Copy recipients for the message"
         :sortable t))
+    (:changed
+     . (:name "Changed"
+        :shortname "Chg"
+        :help "Date/time when the message was changed most recently"
+        :sortable t))
     (:date
      . (:name "Date"
         :shortname "Date"
-        :help "Date/time when the message was written"
+        :help "Date/time when the message was sent"
         :sortable t))
     (:human-date
      . (:name "Date"
         :shortname "Date"
-        :help "Date/time when the message was written."
+        :help "Date/time when the message was sent"
         :sortable :date))
     (:flags
      . (:name "Flags"
@@ -314,7 +319,7 @@ one of the addresses in `(mu4e-personal-addresses)', in which
 case it will be equal to `:to'.
 
 Furthermore, the property `:sortable' determines whether we can
-sort by this field.  This can be either a boolean (nil or t), or a
+sort by this field. This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
 

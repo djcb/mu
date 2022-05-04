@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'mu4e-vars)
+(require 'mu4e-contacts)
 (require 'flow-fill)
 (require 'shr)
 
@@ -54,9 +55,9 @@ Returns nil if the field does not exist.
 
 A message plist looks something like:
 \(:docid 32461
- :from ((\"Nikola Tesla\" . \"niko@example.com\"))
- :to ((\"Thomas Edison\" . \"tom@example.com\"))
- :cc ((\"Rupert The Monkey\" . \"rupert@example.com\"))
+ :from ((:name \"Nikola Tesla\" :email \"niko@example.com\"))
+ :to ((:name \"Thomas Edison\" :email \"tom@example.com\"))
+ :cc ((:name \"Rupert The Monkey\" :email \"rupert@example.com\"))
  :subject \"RE: what about the 50K?\"
  :date (20369 17624 0)
  :size 4337
@@ -74,7 +75,9 @@ A message plist looks something like:
  :body-txt \"Hi Tom, ...\"
 \)).
 Some notes on the format:
-- The address fields are lists of pairs (NAME . EMAIL), where NAME can be nil.
+- The address fields are lists of plist (:name NAME :email EMAIL),
+  where the :name part can be absent. The `mu4e-contact-name' and
+  `mu4e-contact-email' accessors can be useful for this.
 - The date is in format emacs uses in `current-time'
 - Attachments are a list of elements with fields :index (the number of
   the MIME-part), :name (the file name, if any), :mime-type (the
@@ -134,7 +137,7 @@ This is equivalent to:
 )
 
 (defun mu4e-message-contact-field-matches (msg cfield rx)
-  "Does MSG's contact-field CFIELD match rx?
+  "Does MSG's contact-field CFIELD match regexp RX?
 Check if any of the of the CFIELD in MSG matches RX. I.e.
 anything in field CFIELD (either :to, :from, :cc or :bcc, or a
 list of those) of msg MSG matches (with their name or e-mail
@@ -142,8 +145,10 @@ address) regular expressions RX. If there is a match, return
 non-nil; otherwise return nil. RX can also be a list of regular
 expressions, in which case any of those are tried for a match."
   (if (and cfield (listp cfield))
-      (or (mu4e-message-contact-field-matches msg (car cfield) rx)
-          (mu4e-message-contact-field-matches msg (cdr cfield) rx))
+      (or (mu4e-message-contact-field-matches
+	   msg (mu4e-contact-name cfield) rx)
+          (mu4e-message-contact-field-matches
+	   msg (mu4e-contact-email cfield) rx))
     (when cfield
       (if (listp rx)
           ;; if rx is a list, try each one of them for a match
@@ -153,7 +158,8 @@ expressions, in which case any of those are tried for a match."
         ;; not a list, check the rx
         (seq-find
          (lambda (ct)
-           (let ((name (car ct)) (email (cdr ct))
+           (let ((name (mu4e-contact-name ct))
+		 (email (mu4e-contact-email ct))
                  ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
                  ;; so let's detect and extract in that case.
                  (rx (if (string-match-p  "^\\(.*\\)/$" rx)
@@ -170,7 +176,8 @@ of the of the contacts in field CFIELD (either :to, :from, :cc or
 :bcc) of msg MSG matches *me*, that is, any of the addresses for
 which `mu4e-personal-address-p' return t. Returns the contact
 cell that matched, or nil."
-  (seq-find (lambda (cell) (mu4e-personal-address-p (cdr cell)))
+  (seq-find (lambda (cell)
+	      (mu4e-personal-address-p (mu4e-contact-email cell)))
             (mu4e-message-field msg cfield)))
 
 (defun mu4e-message-sent-by-me (msg)
