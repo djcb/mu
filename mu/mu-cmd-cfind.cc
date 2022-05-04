@@ -279,7 +279,7 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 	if (ecdata.personal && ci.personal)
 		return;
 
-	if (ci.tstamp < ecdata.after)
+	if (ci.message_date < ecdata.after)
 		return;
 
 	if (ecdata.rx &&
