@@ -46,7 +46,8 @@ namespace Mu {
  *
  * @return a valid result (!!result) or an Error
  */
-Result<void> mu_maildir_mkdir(const std::string& path, mode_t mode, bool noindex);
+Result<void> mu_maildir_mkdir(const std::string& path, mode_t mode=0700,
+			      bool noindex=false);
 
 /**
  * Create a symbolic link to a mail message
