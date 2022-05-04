@@ -266,16 +266,11 @@ test_mu_query_accented_chars_02(void)
 {
 	int i;
 
-	g_test_skip("fix me");
-	return;
-
 	QResults queries[] = {{"f:mü", 1},
-			      //{"s:motörhead", 1},
-			      {"t:Helmut", 1},
-			      {"t:Kröger", 1},
-			      //{"s:MotorHeäD", 1},
-			      {"tag:queensryche", 1},
-			      {"tag:Queensrÿche", 1}
+		{ "s:motörhead", 1},
+		{"t:Helmut", 1},
+		{"t:Kröger", 1},
+		{"s:MotorHeäD", 1},
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
@@ -475,6 +470,8 @@ test_mu_query_tags(void)
 	    {"tag:lost tag:paradise", 1},
 	    {"tag:lost tag:horizon", 0},
 	    {"tag:lost OR tag:horizon", 1},
+	    {"tag:queensryche", 1},
+	    {"tag:Queensrÿche", 1},
 	    {"x:paradise,lost", 0},
 	    {"x:paradise AND x:lost", 1},
 	    {"x:\\\\backslash", 1},

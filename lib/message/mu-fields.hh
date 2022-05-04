@@ -42,6 +42,7 @@ struct Field {
 		Bcc = 0,	/**< Blind Carbon-Copy */
 		BodyText,	/**< Text body */
 		Cc,		/**< Carbon-Copy */
+		Changed,        /**< Last change time (think 'ctime') */
 		Date,		/**< Message date */
 		EmbeddedText,	/**< Embedded text in message */
 		File,		/**< Filename */
@@ -50,8 +51,7 @@ struct Field {
 		Maildir,	/**< Maildir path */
 		MailingList,	/**< Mailing list */
 		MessageId,	/**< Message Id */
-		Mime,		/**< MIME-Type */
-		Modified,       /**< Last modification time */
+		MimeType,	/**< MIME-Type */
 		Path,		/**< File-system Path */
 		Priority,	/**< Message priority */
 		References,	/**< All references (incl. Reply-To:) */
@@ -64,7 +64,6 @@ struct Field {
 		 * <private>
 		 */
 		XBodyHtml,	/**< HTML Body */
-		XCachedSexp,    /**< Cached message s-expression */
 
 		_count_ /**< Number of FieldIds */
 	};
@@ -138,8 +137,12 @@ struct Field {
 		/**< Field value is stored (so the literal value can be retrieved) */
 
 		Range	   = 1 << 21,
+
+		IncludeInSexp = 1 << 24,
+		/**< whether to include this field in the cached sexp. */
+
 		/**< whether this is a range field (e.g., date, size)*/
-		Internal   = 1 << 26
+		Internal      = 1 << 26
 	};
 
 	constexpr bool any_of(Flag some_flag) const{
@@ -159,6 +162,8 @@ struct Field {
 	constexpr bool is_contact()		const { return any_of(Flag::Contact); }
 	constexpr bool is_range()		const { return any_of(Flag::Range); }
 
+	constexpr bool include_in_sexp()        const { return any_of(Flag::IncludeInSexp);}
+
 	/**
 	 * Field members
 	 *
@@ -166,6 +171,7 @@ struct Field {
 	Id               id;            /**< Id of the message field */
 	Type             type;          /**< Type of the message field */
 	std::string_view name;          /**< Name of the message field */
+	std::string_view alias;         /**< Alternative name for the message field */
 	std::string_view description;   /**< Decription of the message field */
 	std::string_view example_query; /**< Example query */
 	char             shortcut;      /**< Shortcut for the message field; a..z */
@@ -209,17 +215,18 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::Bcc,
 		Field::Type::ContactList,
-		"bcc",
+		"bcc", {},
 		"Blind carbon-copy recipient",
 		"bcc:foo@example.com",
 		'h',
 		Field::Flag::Contact |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::BodyText,
 		Field::Type::String,
-		"body",
+		"body", {},
 		"Message plain-text body",
 		"body:capybara",
 		'b',
@@ -228,27 +235,41 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::Cc,
 		Field::Type::ContactList,
-		"cc",
+		"cc", {},
 		"Carbon-copy recipient",
 		"cc:quinn@example.com",
 		'c',
 		Field::Flag::Contact |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
+	    },
+
+	    {
+		Field::Id::Changed,
+		Field::Type::TimeT,
+		"changed", {},
+		"Last change time",
+		"change:30m..now",
+		'k',
+		Field::Flag::Value |
+		Field::Flag::Range |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Date,
 		Field::Type::TimeT,
-		"date",
+		"date", {},
 		"Message date",
 		"date:20220101..20220505",
 		'd',
 		Field::Flag::Value |
-		Field::Flag::Range
+		Field::Flag::Range |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::EmbeddedText,
 		Field::Type::String,
-		"embed",
+		"embed", {},
 		"Embedded text",
 		"embed:war OR embed:peace",
 		'e',
@@ -257,105 +278,102 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::File,
 		Field::Type::String,
-		"file",
+		"file", {},
 		"Attachment file name",
 		"file:/image\\.*.jpg/",
 		'j',
-		Field::Flag::NormalTerm
+		Field::Flag::BooleanTerm
 	    },
 	    {
 		Field::Id::Flags,
 		Field::Type::Integer,
-		"flag",
+		"flags", "flag",
 		"Message properties",
 		"flag:unread",
 		'g',
-		Field::Flag::NormalTerm |
-		Field::Flag::Value
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::From,
 		Field::Type::ContactList,
-		"from",
+		"from", {},
 		"Message sender",
 		"from:jimbo",
 		'f',
 		Field::Flag::Contact |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Maildir,
 		Field::Type::String,
-		"maildir",
+		"maildir", {},
 		"Maildir path for message",
 		"maildir:/private/archive",
 		'm',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::MailingList,
 		Field::Type::String,
-		"list",
+		"list", {},
 		"Mailing list (List-Id:)",
 		"list:mu-discuss.example.com",
 		'v',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::MessageId,
 		Field::Type::String,
-		"msgid",
-		"Message-Id",
+		"message-id", "msgid",
+		"message-Id",
 		"msgid:abc@123",
 		'i',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
-		Field::Id::Mime,
+		Field::Id::MimeType,
 		Field::Type::String,
-		"mime",
+		"mime", "mime-type",
 		"Attachment MIME-type",
 		"mime:image/jpeg",
 		'y',
-		Field::Flag::NormalTerm
-	    },
-	    {
-		Field::Id::Modified,
-		Field::Type::TimeT,
-		"modified",
-		"Last modification time",
-		"modified:30m..now",
-		'k',
-		Field::Flag::Value |
-		Field::Flag::Range
+		Field::Flag::BooleanTerm
 	    },
 	    {
 		Field::Id::Path,
 		Field::Type::String,
-		"path",
+		"path", {},
 		"File system path to message",
 		"path:/a/b/Maildir/cur/msg:2,S",
 		'l',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Priority,
 		Field::Type::Integer,
-		"prio",
+		"priority", "prio",
 		"Priority",
 		"prio:high",
 		'p',
 		Field::Flag::BooleanTerm |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::References,
 		Field::Type::StringList,
-		"refs",
+		"references", "refs",
 		"References to related messages",
 		{},
 		'r',
@@ -364,37 +382,40 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::Size,
 		Field::Type::ByteSize,
-		"size",
+		"size", {},
 		"Message size in bytes",
 		"size:1M..5M",
 		'z',
 		Field::Flag::Value |
-		Field::Flag::Range
+		Field::Flag::Range |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Subject,
 		Field::Type::String,
-		"subject",
+		"subject", {},
 		"Message subject",
 		"subject:wombat",
 		's',
 		Field::Flag::Value |
-		Field::Flag::IndexableTerm
+		Field::Flag::IndexableTerm |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Tags,
 		Field::Type::StringList,
-		"tag",
+		"tags", "tag",
 		"Message tags",
 		"tag:projectx",
 		'x',
-		Field::Flag::NormalTerm |
-		Field::Flag::Value
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::ThreadId,
 		Field::Type::String,
-		"thread",
+		"thread", {},
 		"Thread a message belongs to",
 		{},
 		'w',
@@ -404,36 +425,24 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::To,
 		Field::Type::ContactList,
-		"to",
+		"to", {},
 		"Message recipient",
 		"to:flimflam@example.com",
 		't',
 		Field::Flag::Contact |
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
-
-
 
 	    /* internal */
 	    {
 		Field::Id::XBodyHtml,
 		Field::Type::String,
-		"htmlbody",
+		"htmlbody", {},
 		"Message html body",
 		{},
 		{},
 		Field::Flag::Internal
-	    },
-
-	    {
-		Field::Id::XCachedSexp,
-		Field::Type::String,
-		"sexp",
-		"Cached message s-expression",
-		{},
-		{},
-		Field::Flag::Internal |
-		Field::Flag::Value
 	    },
 	}};
 
@@ -495,12 +504,16 @@ Option<Field> field_from_shortcut(char shortcut) {
 }
 static inline
 Option<Field> field_from_name(const std::string& name) {
-	if (name.length() == 1)
+	switch(name.length()) {
+	case 0:
+		return Nothing;
+	case 1:
 		return field_from_shortcut(name[0]);
-	else
+	default:
 		return field_find_if([&](auto&& field){
-			return field.name == name;
-	});
+			return name == field.name || name == field.alias;
+		});
+	}
 }
 
 /**

@@ -72,10 +72,10 @@ test_basic()
 	    //{ "", R"#((atom :value ""))#"},
 	    {
 		"foo",
-		R"#((value "msgid" "foo"))#",
+		R"#((value "message-id" "foo"))#",
 	    },
-	    {"foo       or         bar", R"#((or(value "msgid" "foo")(value "msgid" "bar")))#"},
-	    {"foo and bar", R"#((and(value "msgid" "foo")(value "msgid" "bar")))#"},
+	    {"foo       or         bar", R"#((or(value "message-id" "foo")(value "message-id" "bar")))#"},
+	    {"foo and bar", R"#((and(value "message-id" "foo")(value "message-id" "bar")))#"},
 	};
 
 	test_cases(cases);
@@ -86,19 +86,19 @@ test_complex()
 {
 	CaseVec cases = {
 	    {"foo and bar or cuux",
-	     R"#((or(and(value "msgid" "foo")(value "msgid" "bar")))#" +
-	         std::string(R"#((value "msgid" "cuux")))#")},
-	    {"a and not b", R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"},
+	     R"#((or(and(value "message-id" "foo")(value "message-id" "bar")))#" +
+		 std::string(R"#((value "message-id" "cuux")))#")},
+	    {"a and not b", R"#((and(value "message-id" "a")(not(value "message-id" "b"))))#"},
 	    {"a and b and c",
-	     R"#((and(value "msgid" "a")(and(value "msgid" "b")(value "msgid" "c"))))#"},
+	     R"#((and(value "message-id" "a")(and(value "message-id" "b")(value "message-id" "c"))))#"},
 	    {"(a or b) and c",
-	     R"#((and(or(value "msgid" "a")(value "msgid" "b"))(value "msgid" "c")))#"},
+	     R"#((and(or(value "message-id" "a")(value "message-id" "b"))(value "message-id" "c")))#"},
 	    {"a b", // implicit and
-	     R"#((and(value "msgid" "a")(value "msgid" "b")))#"},
+	     R"#((and(value "message-id" "a")(value "message-id" "b")))#"},
 	    {"a not b", // implicit and not
-	     R"#((and(value "msgid" "a")(not(value "msgid" "b"))))#"},
+	     R"#((and(value "message-id" "a")(not(value "message-id" "b"))))#"},
 	    {"not b", // implicit and not
-	     R"#((not(value "msgid" "b")))#"}};
+	     R"#((not(value "message-id" "b")))#"}};
 
 	test_cases(cases);
 }
@@ -117,7 +117,7 @@ test_range()
 static void
 test_flatten()
 {
-	CaseVec cases = {{" Mötørhęåđ", R"#((value "msgid" "motorhead"))#"}};
+	CaseVec cases = {{" Mötørhęåđ", R"#((value "message-id" "motorhead"))#"}};
 
 	test_cases(cases);
 }

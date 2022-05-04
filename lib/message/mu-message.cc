@@ -53,8 +53,9 @@ struct Message::Private {
 	Option<std::string>		mailing_list;
 	std::vector<Part>               parts;
 
-	::time_t                        mtime{};
+	::time_t                        ctime{};
 
+	std::string                     cache_path;
 	/*
 	 * we only need to index these, so we don't
 	 * really need these copy if we re-arrange things
@@ -134,9 +135,6 @@ Message::Message(const std::string& text, const std::string& path,
 		priv_->mime_msg = std::move(msg.value());
 
 	fill_document(*priv_);
-
-	/* cache the sexp */
-	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
 }
 
 
@@ -170,10 +168,23 @@ Message::document() const
 }
 
 
+unsigned
+Message::docid() const
+{
+	return priv_->doc.xapian_document().get_docid();
+}
+
+
+const Mu::Sexp::List&
+Message::to_sexp_list() const
+{
+	return priv_->doc.sexp_list();
+}
+
 void
 Message::update_cached_sexp()
 {
-	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
+	priv_->doc.update_cached_sexp();
 }
 
 Result<void>
@@ -554,6 +565,47 @@ fake_message_id(const std::string& path)
 		return format("%s%s", sha256_res.value().c_str(), mu_suffix);
 }
 
+/* many of the doc.add(fiels ....) automatically update the sexp-list as well;
+ * however, there are some _extra_ values in the sexp-list that are not
+ * based on a field. So we add them here.
+ */
+
+
+
+static void
+doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
+{
+	/* some mailing lists do not set the reply-to; see pull #1278. So for
+	 * those cases, check the List-Post address and use that instead */
+
+	GMatchInfo* minfo;
+	GRegex*     rx;
+	const auto list_post{mime_msg.header("List-Post")};
+	if (!list_post)
+		return;
+
+	rx = g_regex_new("<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?",
+			 G_REGEX_CASELESS, (GRegexMatchFlags)0, {});
+	g_return_if_fail(rx);
+
+	Contacts contacts;
+	if (g_regex_match(rx, list_post->c_str(), (GRegexMatchFlags)0, &minfo)) {
+		auto    address = (char*)g_match_info_fetch(minfo, 1);
+		contacts.push_back(Contact(address));
+		g_free(address);
+	}
+
+	g_match_info_free(minfo);
+	g_regex_unref(rx);
+
+	doc.add_extra_contacts(":list-post", contacts);
+}
+
+static void
+doc_add_reply_to(Document& doc, const MimeMessage& mime_msg)
+{
+	doc.add_extra_contacts(":reply-to", mime_msg.contacts(Contact::Type::ReplyTo));
+}
 
 static void
 fill_document(Message::Private& priv)
@@ -568,6 +620,9 @@ fill_document(Message::Private& priv)
 
 	process_message(mime_msg, path, priv);
 
+	doc_add_list_post(doc, mime_msg); /* only in sexp */
+	doc_add_reply_to(doc, mime_msg);  /* only in sexp */
+
 	field_for_each([&](auto&& field) {
 		/* insist on expliclity handling each */
 #pragma GCC diagnostic push
@@ -578,9 +633,13 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::BodyText:
 			doc.add(field.id, priv.body_txt);
+
 			break;
 		case Field::Id::Cc:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::Cc));
+			break;
+		case Field::Id::Changed:
+			doc.add(field.id, priv.ctime);
 			break;
 		case Field::Id::Date:
 			doc.add(field.id, mime_msg.date());
@@ -606,12 +665,9 @@ fill_document(Message::Private& priv)
 		case Field::Id::MessageId:
 			doc.add(field.id, message_id);
 			break;
-		case Field::Id::Mime:
+		case Field::Id::MimeType:
 			for (auto&& part: priv.parts)
 				doc.add(field.id, part.mime_type());
-			break;
-		case Field::Id::Modified:
-			doc.add(field.id, priv.mtime);
 			break;
 		case Field::Id::Path: /* already */
 			break;
@@ -720,15 +776,19 @@ Message::update_after_move(const std::string& new_path,
 	const auto statbuf{get_statbuf(new_path)};
 	if (!statbuf)
 		return Err(statbuf.error());
+	else
+		priv_->ctime = statbuf->st_ctime;
+
+	priv_->doc.remove(Field::Id::Path);
+	priv_->doc.remove(Field::Id::Changed);
 
 	priv_->doc.add(Field::Id::Path, new_path);
-	priv_->doc.add(Field::Id::Modified, statbuf->st_mtime);
-	priv_->doc.add(new_flags);
+	priv_->doc.add(Field::Id::Changed, priv_->ctime);
+
+	set_flags(new_flags);
 
 	if (const auto res = set_maildir(new_maildir); !res)
 		return res;
-
-	priv_->doc.add(Field::Id::XCachedSexp, to_sexp().to_sexp_string());
 
 	return Ok();
 }

@@ -30,6 +30,7 @@
 #include "mu-flags.hh"
 #include "mu-contact.hh"
 #include <utils/mu-option.hh>
+#include <utils/mu-sexp.hh>
 
 namespace Mu {
 
@@ -54,44 +55,10 @@ public:
 	Document(const Xapian::Document& doc): xdoc_{doc} {}
 
 	/**
-	 * Copy CTOR
-	 */
-	Document(const Document& rhs) { *this = rhs; }
-	/**
-	 * Move CTOR
-	 */
-	Document(Document&& rhs) {*this = std::move(rhs); }
-
-	/**
 	 * Get a reference to the underlying Xapian document.
 	 *
 	 */
 	const Xapian::Document& xapian_document() const { return xdoc_; }
-
-	/* Copy assignment operator
-	 *
-	 * @param rhs some message
-	 *
-	 * @return a message ref
-	 */
-	Document& operator=(const Document& rhs) {
-		if (this != &rhs)
-			xdoc_ = rhs.xdoc_;
-		return *this;
-	}
-
-	/**
-	 * Move assignment operator
-	 *
-	 * @param rhs some message
-	 *
-	 * @return a message ref
-	 */
-	Document& operator=(Document&& rhs) {
-		if (this != &rhs)
-			xdoc_ = std::move(rhs.xdoc_);
-		return *this;
-	}
 
 	/**
 	 * Get the doc-id for this document
@@ -129,6 +96,17 @@ public:
 	 */
 	void    add(Field::Id id, const Contacts& contacts);
 
+	/**
+	 * Addd some extra contacts with the given propname;
+	 * this is useful for ":reply-to" and ":list-post" which don't
+	 * have a Field::Id and are only present in the sexp,
+	 * not in the terms/values
+	 *
+	 * @param propname property name (e.g.,. ":reply-to")
+	 * @param contacts contacts for this property.
+	 */
+	void add_extra_contacts(const std::string& propname,
+				const Contacts& contacts);
 
 	/**
 	 * Add an integer value to the document
@@ -152,6 +130,33 @@ public:
 	 * @param flags mesage flags.
 	 */
 	void	add(Flags flags);
+
+	/**
+	 * Remove values and terms for some field.
+	 *
+	 * @param field_id
+	 */
+	void remove(Field::Id field_id);
+
+	/**
+	 * Update the cached sexp from the sexp_list_
+	 */
+	void update_cached_sexp();
+
+	/**
+	 * Get the cached s-expression
+	 *
+	 * @return a string
+	 */
+	std::string cached_sexp() const;
+
+	/**
+	 * Get the cached s-expressionl useful for changing
+	 * it (call update_sexp_cache() when done)
+	 *
+	 * @return the cache s-expression
+	 */
+	Sexp::List& sexp_list();
 
 	/**
 	 * Generically adds an optional value, if set, to the document
@@ -225,7 +230,9 @@ public:
 	Flags    flags_value() const noexcept;
 
 private:
-	Xapian::Document xdoc_;
+	Xapian::Document	xdoc_;
+	Sexp::List		sexp_list_;
+
 };
 
 } // namepace Mu
