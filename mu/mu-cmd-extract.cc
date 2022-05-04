@@ -72,11 +72,6 @@ save_parts(const std::string& path, Option<std::string>& filename_rx,
 		});
 
 
-	g_warning("partnums");
-	for (auto&& p: partnums)
-		g_warning ("%zu", p);
-
-
 	for (auto&& part: message->parts()) {
 
 		++partnum;
