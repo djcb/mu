@@ -29,7 +29,6 @@ libmu_message_la_SOURCES=	\
         mu-message.hh		\
         mu-message-part.cc	\
         mu-message-part.hh	\
-	mu-message-sexp.cc	\
         mu-contact.hh		\
         mu-contact.cc		\
         mu-document.cc		\

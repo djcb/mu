@@ -48,6 +48,7 @@ mu_SOURCES=                                                     \
 	mu-cmd-index.cc                                         \
 	mu-cmd-server.cc                                        \
 	mu-cmd-script.cc                                        \
+	mu-cmd-fields.cc                                        \
 	mu-cmd.cc                                               \
 	mu-cmd.hh
 

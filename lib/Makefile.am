@@ -87,18 +87,7 @@ libmu_la_SOURCES=                                       \
         mu-xapian.cc                                    \
         mu-xapian.hh                                    \
         mu-maildir.cc                                   \
-        mu-maildir.hh                                   \
-        mu-msg-crypto.cc                                \
-        mu-msg-doc.cc                                   \
-        mu-msg-doc.hh                                   \
-        mu-msg-file.cc                                  \
-        mu-msg-file.hh                                  \
-        mu-msg-part.cc                                  \
-        mu-msg-part.hh                                  \
-	mu-msg-priv.hh                                  \
-	mu-msg-sexp.cc                                  \
-	mu-msg.cc                                       \
-	mu-msg.hh
+        mu-maildir.hh
 
 libmu_la_LIBADD=                                        \
         $(XAPIAN_LIBS)                                  \
