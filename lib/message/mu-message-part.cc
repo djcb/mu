@@ -95,6 +95,15 @@ MessagePart::mime_type() const noexcept
 		return Nothing;
 }
 
+Option<std::string>
+MessagePart::content_description() const noexcept
+{
+	if (!mime_object().is_part())
+		return Nothing;
+	else
+		return MimePart{mime_object()}.content_description();
+}
+
 size_t
 MessagePart::size() const noexcept
 {

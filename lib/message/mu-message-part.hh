@@ -87,6 +87,14 @@ public:
 	 */
 	Option<std::string> mime_type() const noexcept;
 
+
+	/**
+	 * Get the content description for this part, or Nothing
+	 *
+	 * @return the content description
+	 */
+	Option<std::string> content_description() const noexcept;
+
 	/**
 	 * Get the length of the (unencoded) MIME-part.
 	 *

@@ -456,9 +456,14 @@ maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
 		throw res.error();
 
 	Sexp::List pi;
-	pi.add_prop(":file-name", Sexp::make_string(*cache_path));
-	pi.add_prop(":mime-type", Sexp::make_string(part.mime_type()
-						    .value_or("application/data")));
+
+	if (auto cdescr = part.content_description(); cdescr)
+		pi.add_prop(":description", Sexp::make_string(*cdescr));
+
+	pi.add_prop(":file-name", Sexp::make_string(fname));
+	pi.add_prop(":mime-type", Sexp::make_string(
+			    part.mime_type().value_or("application/octet-stream")));
+
 	return Some(Sexp::make_list(std::move(pi)));
 }
 
@@ -493,9 +498,12 @@ Server::Private::compose_handler(const Parameters& params)
 					++index;
 				}
 			}
-			if (!attseq.empty())
+			if (!attseq.empty()) {
 				comp_lst.add_prop(":include",
 						  Sexp::make_list(std::move(attseq)));
+				comp_lst.add_prop(":cache-path",
+						  Sexp::make_string(*msg->cache_path()));
+			}
 		}
 
 	} else if (ctype != "new")
