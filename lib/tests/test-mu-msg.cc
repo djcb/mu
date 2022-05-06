@@ -48,7 +48,7 @@ assert_contacts_equal(const Contacts& contacts,
 	size_t n{};
 	for (auto&& contact: contacts) {
 		if (g_test_verbose())
-			g_print ("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
+			g_message("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
 		// assert_equal(contact.name, expected.at(n).first);
 		// assert_equal(contact.email, expected.at(n).second);
 		++n;

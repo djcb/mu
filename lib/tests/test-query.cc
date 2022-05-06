@@ -84,6 +84,16 @@ try {
 
 	g_test_add_func("/query", test_query);
 
+
+	if (!g_test_verbose())
+		g_log_set_handler(
+			NULL,
+			(GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
+					 G_LOG_FLAG_RECURSION),
+			(GLogFunc)black_hole,
+			NULL);
+
+
 	return g_test_run();
 
 } catch (const std::runtime_error& re) {

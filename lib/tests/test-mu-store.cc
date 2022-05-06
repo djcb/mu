@@ -319,7 +319,6 @@ main(int argc, char* argv[])
 {
 	g_test_init(&argc, &argv, NULL);
 
-	/* mu_runtime_init/uninit */
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
 	g_test_add_func("/store/message/mailing-list",
@@ -328,6 +327,14 @@ main(int argc, char* argv[])
 			test_message_attachments);
 	g_test_add_func("/store/index/move",
 			test_index_move);
+
+	if (!g_test_verbose())
+		g_log_set_handler(
+			NULL,
+			(GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
+					 G_LOG_FLAG_RECURSION),
+			(GLogFunc)black_hole,
+			NULL);
 
 	return g_test_run();
 }
