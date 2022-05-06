@@ -23,7 +23,6 @@ install_man(
    'mu-extract.1',
    'mu-fields.1',
    'mu-find.1',
-   'mu-flags.1',
    'mu-help.1',
    'mu-index.1',
    'mu-info.1',
