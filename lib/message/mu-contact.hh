@@ -88,9 +88,13 @@ struct Contact {
 	 *     Jane Doe <email@example.com>
 	 * otherwise it's just the e-mail address.
 	 *
+	 * @param quote_if_needed if true, handle quoting of the name-part as well. This
+	 * is useful when the address is to be used directly in emails.
+	 *
 	 * @return the display name
 	 */
-	std::string display_name() const;
+	std::string display_name(bool quote_if_needed=false) const;
+
 
 	/**
 	 * Operator==; based on the hash values (ie. lowercase e-mail address)
@@ -159,7 +163,6 @@ private:
 				c = ' ';
 	}
 };
-
 
 constexpr Option<Contact::Type>
 contact_type_from_field_id(Field::Id id) noexcept {

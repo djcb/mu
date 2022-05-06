@@ -20,19 +20,33 @@
 #include "mu-contact.hh"
 #include "mu-message.hh"
 #include "utils/mu-utils.hh"
+#include "mu-mime-object.hh"
 
 #include <gmime/gmime.h>
 #include <glib.h>
+#include <string>
 
 using namespace Mu;
 
-std::string
-Contact::display_name() const
+static bool
+needs_quoting(const std::string& name)
 {
+	for (auto& c: name)
+		if (c == ',' || c == '"')
+			return true;
+	return false;
+}
+
+std::string
+Contact::display_name(bool quote) const
+{
+
 	if (name.empty())
 		return email;
-	else
+	else if (!quote || !needs_quoting(name))
 		return name + " <" + email + '>';
+	else
+		return address_rfc2047(*this);
 }
 
 std::string
@@ -131,6 +145,29 @@ test_ctor_cleanup()
 	assert_equal(c.display_name(), "Bli ky <bar@example.com>");
 }
 
+static void
+test_encode()
+{
+	Contact c{
+		"cassius@example.com",
+		"Ali, Muhammad \"The Greatest\"",
+		345,
+		false, /* personal */
+		333, /*freq*/
+		768 /* tstamp */
+	};
+
+	assert_equal(c.email, "cassius@example.com");
+	assert_equal(c.name, "Ali, Muhammad \"The Greatest\"");
+	g_assert_false(c.personal);
+	g_assert_cmpuint(c.frequency,==,333);
+	g_assert_cmpuint(c.tstamp,==,768);
+	g_assert_cmpuint(c.message_date,==,345);
+
+	assert_equal(c.display_name(true),
+		     "\"Ali, Muhammad \\\"The Greatest\\\"\" <cassius@example.com>");
+}
+
 
 int
 main(int argc, char* argv[])
@@ -141,6 +178,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/message/contact/ctor-foo", test_ctor_foo);
 	g_test_add_func("/message/contact/ctor-blinky", test_ctor_blinky);
 	g_test_add_func("/message/contact/ctor-cleanup", test_ctor_cleanup);
+	g_test_add_func("/message/contact/encode", test_encode);
 
 	return g_test_run();
 }

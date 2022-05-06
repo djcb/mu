@@ -547,7 +547,7 @@ Server::Private::contacts_handler(const Parameters& params)
 
 		Sexp::List contact;
 		contact.add_prop(":address",
-				 Sexp::make_string(ci.display_name()));
+				 Sexp::make_string(ci.display_name(true/*encode-if-needed*/)));
 		contact.add_prop(":rank", Sexp::make_number(rank));
 
 		contacts.add(Sexp::make_list(std::move(contact)));
