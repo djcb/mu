@@ -56,6 +56,17 @@ time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-complete-max 2000
+  "Consider only the top-n contacts.
+After considering the other
+constraints (`mu4e-compose-complete-addresses' and
+`mu4e-compose-complete-only-after'), pick only the highest-ranked n.
+
+This reduce start-up time and memory usage. Set to nil for no
+limits."
+  :type 'string
+  :group 'mu4e-compose)
+
 ;; names and mail-addresses can be mapped onto their canonical
 ;; counterpart.  use the customizeable function
 ;; mu4e-canonical-contact-function to do that.  below the identity
@@ -293,6 +304,7 @@ nothing."
     (mu4e--server-contacts
      mu4e-compose-complete-only-personal
      mu4e-compose-complete-only-after
+     mu4e-compose-complete-max
      mu4e--contacts-tstamp)))
 
 (provide 'mu4e-contacts)

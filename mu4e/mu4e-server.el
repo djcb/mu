@@ -441,17 +441,21 @@ The result is delivered to the function registered as
      :decrypt ,(and decrypt t)
      :docid   ,docid)))
 
-(defun mu4e--server-contacts (personal after tstamp)
-  "Ask for contacts with PERSONAL AFTER TSTAMP.
-S-expression (:contacts (<list>) :tstamp \"<tstamp>\") is expected in
-response. If PERSONAL is non-nil, only get personal contacts, if
-AFTER is non-nil, get only contacts seen AFTER (the time_t
-value)."
+(defun mu4e--server-contacts (personal after maxnum tstamp)
+  "Ask for contacts with PERSONAL AFTER MAXNUM TSTAMP.
+
+S-expression (:contacts (<list>) :tstamp \"<tstamp>\")
+is expected in response.
+
+If PERSONAL is non-nil, only get personal contacts, if AFTER is
+non-nil, get only contacts seen AFTER (the time_t value). If MAX is non-nil,
+get at most MAX contacts."
   (mu4e--server-call-mu
    `(contacts
      :personal ,(and personal t)
      :after    ,(or after nil)
-     :tstamp   ,(or tstamp nil))))
+     :tstamp   ,(or tstamp nil)
+     :maxnum   ,(or maxnum nil))))
 
 (defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
 				include-related)

@@ -304,7 +304,7 @@ using ContactSet = std::set<std::reference_wrapper<const Contact>,
 			    ContactLessThan>;
 
 void
-ContactsCache::for_each(const EachContactFunc& each_contact) const
+ContactsCache::for_each(const EachContactFunc& each_contact, size_t max_num) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -316,8 +316,13 @@ ContactsCache::for_each(const EachContactFunc& each_contact) const
 	for (const auto& item : priv_->contacts_)
 		sorted.emplace(item.second);
 
-	for (const auto& ci : sorted)
+	// sadly, there's no set::resize
+	size_t n{};
+	for (const auto& ci : sorted) {
+		if (max_num > 0 && n++ >= max_num)
+			break;
 		each_contact(ci);
+	}
 }
 
 bool

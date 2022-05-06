@@ -228,7 +228,8 @@ Server::Private::make_command_map()
 		ArgMap{{":personal", ArgInfo{Type::Symbol, false, "only personal contacts"}},
 		       {":after",
 			ArgInfo{Type::String, false, "only contacts seen after time_t string"}},
-		       {":tstamp", ArgInfo{Type::String, false, "return changes since tstamp"}}},
+		       {":tstamp", ArgInfo{Type::String, false, "return changes since tstamp"}},
+		       {":maxnum", ArgInfo{Type::Number, false, "max number of contacts to return"}}},
 		"get contact information",
 		[&](const auto& params) { contacts_handler(params); }});
 	cmap.emplace(

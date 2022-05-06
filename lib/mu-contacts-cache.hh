@@ -142,9 +142,10 @@ public:
 	/**
 	 * Invoke some callable for each contact, in order of rank.
 	 *
-	 * @param each_contact
+	 * @param each_contact function invoked for each contact
+	 * @param max_num stop after at most so many contacts, or 0 for no limit
 	 */
-	void for_each(const EachContactFunc& each_contact) const;
+	void for_each(const EachContactFunc& each_contact, size_t max_num=0) const;
 
 private:
 	struct Private;
