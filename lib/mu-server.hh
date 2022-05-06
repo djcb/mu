@@ -24,17 +24,32 @@
 #include <functional>
 
 #include <utils/mu-sexp.hh>
+#include <utils/mu-utils.hh>
 #include <mu-store.hh>
 
 namespace Mu {
 
 /**
- * @brief Implements the mu server, as used by mu4e.
+ * @brief Implements the mu	server, as used by mu4e.
  *
  */
 class Server {
 public:
-	using Output = std::function<void(Sexp&& sexp, bool flush)>;
+	enum struct OutputFlags {
+		None	  = 0,
+		SplitList = 1 << 0,
+		/**< insert newlines between list items */
+		Flush	  = 1 << 1,
+		/**< flush output buffer after */
+	};
+
+	/**
+	 * Prototype for output function
+	 *
+	 * @param sexp an s-expression
+	 * @param flags flags that influence the behavior
+	 */
+	using Output = std::function<void(Sexp&& sexp, OutputFlags flags)>;
 
 	/**
 	 * Construct a new server
@@ -63,6 +78,9 @@ private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };
+MU_ENABLE_BITOPS(Server::OutputFlags);
+
 } // namespace Mu
+
 
 #endif /* MU_SERVER_HH__ */

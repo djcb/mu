@@ -83,14 +83,15 @@ struct Server::Private {
 	//
 	// output
 	//
-	void output_sexp(Sexp&& sexp, bool flush = false) const
+	void output_sexp(Sexp&& sexp,Server::OutputFlags flags = {}) const
 	{
 		if (output_)
-			output_(std::move(sexp), flush);
+			output_(std::move(sexp), flags);
 	}
-	void output_sexp(Sexp::List&& lst, bool flush = false) const
+
+	void output_sexp(Sexp::List&& lst, Server::OutputFlags flags = {}) const
 	{
-		output_sexp(Sexp::make_list(std::move(lst)), flush);
+		output_sexp(Sexp::make_list(std::move(lst)), flags);
 	}
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
 
@@ -520,6 +521,7 @@ Server::Private::contacts_handler(const Parameters& params)
 	const auto personal  = get_bool_or(params, ":personal");
 	const auto afterstr  = get_string_or(params, ":after");
 	const auto tstampstr = get_string_or(params, ":tstamp");
+	const auto maxnum    = get_int_or(params, ":maxnum", 0 /*unlimited*/);
 
 	const auto after{afterstr.empty() ? 0 :
 		parse_date_time(afterstr, true).value_or(0)};
@@ -550,18 +552,20 @@ Server::Private::contacts_handler(const Parameters& params)
 		contact.add_prop(":address",
 				 Sexp::make_string(ci.display_name(true/*encode-if-needed*/)));
 		contact.add_prop(":rank", Sexp::make_number(rank));
-
-		contacts.add(Sexp::make_list(std::move(contact)));
-	});
+		auto contacts_sexp{Sexp::make_list(std::move(contact))};
+		contacts_sexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
+		contacts.add(std::move(contacts_sexp));
+	}, static_cast<size_t>(maxnum));
 
 	Sexp::List seq;
 	seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
 	seq.add_prop(":tstamp",
 		     Sexp::make_string(format("%" G_GINT64_FORMAT,
 					      g_get_monotonic_time())));
+
 	/* dump the contacts cache as a giant sexp */
 	g_debug("sending %d of %zu contact(s)", rank, store().contacts_cache().size());
-	output_sexp(std::move(seq));
+	output_sexp(std::move(seq), Server::OutputFlags::SplitList);
 }
 
 /* get a *list* of all messages with the given message id */
@@ -651,7 +655,9 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 
 		// construct sexp for a single header.
 		auto qm{mi.query_match()};
-		headers.add(build_message_sexp(*msg, mi.doc_id(), qm));
+		auto msgsexp{build_message_sexp(*msg, mi.doc_id(), qm)};
+		msgsexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
+		headers.add(std::move(msgsexp));
 		// we output up-to-batch-size lists of messages. It's much
 		// faster (on the emacs side) to handle such batches than single
 		// headers.
@@ -804,9 +810,11 @@ Server::Private::index_handler(const Parameters& params)
 		indexer().start(conf);
 		while (indexer().is_running()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-			output_sexp(get_stats(indexer().progress(), "running"), true);
+			output_sexp(get_stats(indexer().progress(), "running"),
+				    Server::OutputFlags::Flush);
 		}
-		output_sexp(get_stats(indexer().progress(), "complete"), true);
+		output_sexp(get_stats(indexer().progress(), "complete"),
+			    Server::OutputFlags::Flush);
 	});
 }
 

@@ -188,6 +188,9 @@ Sexp::to_sexp_string() const
 			first = false;
 		}
 		sstrm << ')';
+
+		if (any_of(formatting_opts & FormattingOptions::SplitList))
+			sstrm << '\n';
 		break;
 	}
 	case Type::String:
@@ -225,6 +228,8 @@ Sexp::to_json_string() const
 				first = false;
 			}
 			sstrm << "}";
+			if (any_of(formatting_opts & FormattingOptions::SplitList))
+			sstrm << '\n';
 		} else { // other lists become arrays.
 			sstrm << '[';
 			bool first{true};
@@ -233,6 +238,8 @@ Sexp::to_json_string() const
 				first = false;
 			}
 			sstrm << ']';
+			if (any_of(formatting_opts & FormattingOptions::SplitList))
+				sstrm << '\n';
 		}
 		break;
 	}

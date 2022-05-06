@@ -342,6 +342,14 @@ struct Sexp {
 			return is_prop_list(list().begin() + 1, list().end());
 	}
 
+	enum struct FormattingOptions {
+		Default	  = 0,	/**< Nothing in particular */
+		SplitList = 1 << 0,	/**< Insert newline after list item */
+	};
+
+	FormattingOptions formatting_opts{}; /**< Formatting option for the
+					      * string output */
+
 private:
 	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)} {
 		if (is_list())
@@ -395,11 +403,21 @@ static inline std::ostream&
 operator<<(std::ostream& os, Sexp::Type id)
 {
 	switch (id) {
-	case Sexp::Type::List: os << "list"; break;
-	case Sexp::Type::String: os << "string"; break;
-	case Sexp::Type::Number: os << "number"; break;
-	case Sexp::Type::Symbol: os << "symbol"; break;
-	case Sexp::Type::Empty: os << "empty"; break;
+	case Sexp::Type::List:
+		os << "list";
+		break;
+	case Sexp::Type::String:
+		os << "string";
+		break;
+	case Sexp::Type::Number:
+		os << "number";
+		break;
+	case Sexp::Type::Symbol:
+		os << "symbol";
+		break;
+	case Sexp::Type::Empty:
+		os << "empty";
+		break;
 	default: throw std::runtime_error("unknown node type");
 	}
 
@@ -419,6 +437,7 @@ operator<<(std::ostream& os, const Sexp::List& sexp)
 	os << Sexp::make_list(Sexp::List(sexp));
 	return os;
 }
+MU_ENABLE_BITOPS(Sexp::FormattingOptions);
 
 } // namespace Mu
 

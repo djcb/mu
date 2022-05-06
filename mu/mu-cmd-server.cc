@@ -59,7 +59,7 @@ install_sig_handler(void)
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
 			g_critical("set sigaction for %d failed: %s",
-			           sigs[i], g_strerror(errno));
+				   sigs[i], g_strerror(errno));
 }
 
 /*
@@ -82,16 +82,22 @@ cookie(size_t n)
 }
 
 static void
-output_sexp_stdout(Sexp&& sexp, bool flush = false)
+output_sexp_stdout(Sexp&& sexp, Server::OutputFlags flags)
 {
+	/* if requested, insert \n between list elements; note:
+	 * is _not_ inherited by children */
+	if (any_of(flags & Server::OutputFlags::SplitList))
+		sexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
+
 	const auto str{sexp.to_sexp_string()};
+
 	cookie(str.size() + 1);
 	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
 		g_critical("failed to write output '%s'", str.c_str());
 		::raise(SIGTERM); /* terminate ourselves */
 	}
 
-	if (flush)
+	if (any_of(flags & Server::OutputFlags::Flush))
 		std::fflush(stdout);
 }
 
@@ -103,7 +109,8 @@ report_error(const Mu::Error& err) noexcept
 	e.add_prop(":error", Sexp::make_number(static_cast<size_t>(err.code())));
 	e.add_prop(":message", Sexp::make_string(err.what()));
 
-	output_sexp_stdout(Sexp::make_list(std::move(e)), true /*flush*/);
+	output_sexp_stdout(Sexp::make_list(std::move(e)),
+			   Server::OutputFlags::Flush);
 }
 
 MuError
@@ -113,15 +120,15 @@ try {
 	Server server{store, output_sexp_stdout};
 
 	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
-	          store.properties().database_path.c_str(),
-	          store.properties().root_maildir.c_str(),
-	          opts->debug ? "yes" : "no");
+		  store.properties().database_path.c_str(),
+		  store.properties().root_maildir.c_str(),
+		  opts->debug ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));
 
 	const auto eval = std::string{opts->commands ? "(help :full t)"
-	                              : opts->eval   ? opts->eval
-	                                             : ""};
+				      : opts->eval   ? opts->eval
+						     : ""};
 	if (!eval.empty()) {
 		server.invoke(eval);
 		return MU_OK;
