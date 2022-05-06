@@ -29,6 +29,7 @@
 #include <utils/mu-util.h>
 #include <utils/mu-utils.hh>
 #include <utils/mu-error.hh>
+#include <utils/mu-option.hh>
 
 #include <atomic>
 #include <mutex>
@@ -39,7 +40,6 @@
 
 #include "gmime/gmime-message.h"
 #include "mu-mime-object.hh"
-#include "mu-option.hh"
 
 using namespace Mu;
 
@@ -373,25 +373,27 @@ looks_like_attachment(const MimeObject& parent,
 }
 
 static void
+append_text(Option<std::string>& str, Option<std::string> app)
+{
+	if (!str)
+		str = app;
+	else if (app)
+		str.value() += app.value();
+}
+
+static void
 accumulate_text(const MimePart& part, Message::Private& info,
 		const MimeContentType& ctype)
 {
 	if (!ctype.is_type("text", "*"))
 		return; /* not a text type */
 
-	auto append = [](Option<std::string>& str, Option<std::string> app) {
-		if (!str)
-			str = app;
-		else if (app)
-			str.value() += app.value();
-	};
-
 	if (part.is_attachment())
-		append(info.embedded, part.to_string());
+		append_text(info.embedded, part.to_string());
 	else if (ctype.is_type("text", "plain"))
-		append(info.body_txt, part.to_string());
+		append_text(info.body_txt, part.to_string());
 	else if (ctype.is_type("text", "html"))
-		append(info.body_html, part.to_string());
+		append_text(info.body_html, part.to_string());
 }
 
 static void
@@ -409,6 +411,26 @@ process_part(const MimeObject& parent, const MimePart& part,
 	accumulate_text(part, info, *ctype);
 }
 
+
+static void
+process_message_part(const MimeMessagePart& msg_part,
+		     Message::Private& info)
+{
+	auto submsg{msg_part.get_message()};
+	submsg.for_each([&](auto&& parent, auto&& child_obj) {
+
+		/* XXX: we only handle one level */
+
+		if (!child_obj.is_part())
+			return;
+
+		const auto ctype{child_obj.content_type()};
+		if (!ctype || !ctype->is_type("text", "*"))
+			return;
+
+		append_text(info.embedded, MimePart{child_obj}.to_string());
+	});
+}
 
 static void
 handle_object(const MimeObject& parent,
@@ -464,8 +486,9 @@ handle_object(const MimeObject& parent,
 
 	if (obj.is_part())
 		process_part(parent, obj, info);
-
-	if (obj.is_multipart_signed())
+	else if (obj.is_message_part())
+		process_message_part(obj, info);
+	else if (obj.is_multipart_signed())
 		info.flags |= Flags::Signed;
 	else if (obj.is_multipart_encrypted()) {
 		/* FIXME: An encrypted part might be signed at the same time.
