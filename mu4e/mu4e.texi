@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012-2020 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2022 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -55,7 +55,7 @@ Documentation License.''
 Welcome to @t{mu4e} @value{VERSION}.
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version
-24.4 or higher, built on top of the
+25.3 or newer, built on top of the
 @t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search
 engine. @t{mu4e} is optimized for quickly processing large amounts of
 e-mail.
@@ -63,8 +63,8 @@ e-mail.
 Some of its highlights:
 @itemize
 @item Fully search-based: there are no folders@footnote{that is, instead of
-folders, you use queries that match messages in a particular folder}, only
-queries.
+folders, you use queries that match messages in a particular folder},
+only queries.
 @item Fully documented, with example configurations
 @item User-interface optimized for speed, with quick key strokes for common actions
 @item Support for non-English languages (so ``angstrom''  matches ``Ångström'')
@@ -81,8 +81,8 @@ basic configuration and explain its daily use. We also show you how you
 can customize @t{mu4e} for your special needs.
 
 At the end of the manual, there are some example configurations, to get
-you up to speed quickly: @ref{Example configs}. There's also a
-section with answers to frequently asked questions, @ref{FAQ}.
+you up to speed quickly: @ref{Example configs}. There's also a section
+with answers to frequently asked questions, @ref{FAQ}.
 
 @menu
 * Introduction:: Where to begin
@@ -167,9 +167,7 @@ delegated to other tools, such as
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}; As long as
 the messages end up in a maildir, @t{mu4e} and @t{mu} are happy to
 deal with them.
-@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it
-depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of
-Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor;
+@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor;
 @inforef{Top,,message}.
 @end itemize
 
@@ -218,6 +216,7 @@ After these steps, @t{mu4e} should be ready to go!
 
 @menu
 * Requirements:: What is needed
+* Versions:: Available stable and development versions
 * Installation:: How to install @t{mu} and @t{mu4e}
 * Getting mail:: Getting mail from a server
 * Initializing the message store:: Settings things up
@@ -234,10 +233,9 @@ After these steps, @t{mu4e} should be ready to go!
 @section Requirements
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
-Unix-like systems, including many Linux distributions, OS X and
-FreeBSD, and even on MS-Windows (with Cygwin). Emacs 24 or
-higher is required, as well as
-Xapian@footnote{@url{https://xapian.org/}} and
+Unix-like systems, including many Linux distributions, OS X and FreeBSD,
+and even on MS-Windows (with Cygwin). Emacs 25.3 or higher is required,
+as well as Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 @t{mu} has optional support for both versions 2.2 and 3.0 of the Guile
@@ -245,17 +243,32 @@ GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 require GTK+ 3.x and Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
-development tools, such as C and C++ compilers (both @command{gcc} and
-@command{clang} should work), GNU Autotools and @command{make}, and
-the development packages for GMime 3.x, GLib and Xapian. Optionally,
-you also need the development packages for GTK+, Webkit and Guile.
+development tools, such as C and C++17 compilers (both @command{gcc} and
+@command{clang} should work), @command{meson} and @command{make}, and
+the development packages for GMime 3.x, GLib and Xapian. Optionally, you
+also need the development packages for GTK+, Webkit and Guile.
+
+@node Versions
+@section Versions
+
+The stable (release) versions have even minor version numbers, while the
+development versions have odd ones. So, for example, 1.6.10 is a stable
+version, while the 1.7.15 is the development version.
+
+The stable versions only receive bug fixes after being released, while
+the development versions get new features, fixes, and, perhaps, bugs,
+and are meant for people with a tolerance for that.
+
+There is support for one release branch; so, when the 1.8 release is
+available (and a new 1.9 development series start), no more changes are
+expected for the 1.6 releases.
 
 @node Installation
 @section Installation
 
 @t{mu4e} is part of @t{mu} --- by installing the latter, the former is
-installed as well. Some Linux distributions provide packaged versions
-of @t{mu}/@t{mu4e}; if you can use those, there is no need to compile
+installed as well. Some Linux distributions provide packaged versions of
+@t{mu}/@t{mu4e}; if you can use those, there is no need to compile
 anything yourself. However, if there are no packages for your
 distribution, if they are outdated, or if you want to use the latest
 development versions, you can follow the steps below.
@@ -279,34 +292,6 @@ $ sudo apt-get install libgmime-3.0-dev libxapian-dev emacs
 
 @example
 $ sudo yum install gmime30-devel xapian-core-devel emacs
-@end example
-
-@subsection Building on Msys2
-@example
-# 1) install makepkg tool
-
-pacman -S base-devel msys-devel gcc git
-
-# 2) clone packages repo
-
-cd ~
-git clone https://github.com/msys2-unofficial/MSYS2-packages.git --depth=1
-
-# make and install dependencies
-
-cd ~/MSYS2-packages/xapian-core
-makepkg -s
-pacman -U xapian-core-1.4.15-1-x86_64.pkg.tar.xz
-
-cd ~/MSYS2-packages/gmime3
-makepkg -s
-pacman -U gmime3-devel-3.2.6-1-x86_64.pkg.tar.xz
-
-# 4) make and install mu from git (changes versions as needed)
-
-cd ~/MSYS2-packages/mu
-makepkg -sfp PKGBUILD-git
-pacman -U mu-git-2020-03-01-r4854.17f38dc4-1-x86_64.pkg.tar.xz
 @end example
 
 @subsection Building from a release tarball
@@ -339,16 +324,15 @@ $ git clone git://github.com/djcb/mu.git
 $ cd mu
 $ ./autogen.sh
 $ make
-$ make install install
-# ^^^ perhaps with 'sudo'
+$ make install
 @end example
 
-After that, @t{make} (which is just @t{ninja -C build} under the
-covers) should be enough for rebuilding.
+After that, @t{make} (which is just @t{ninja -C build} under the covers)
+should be enough for rebuilding.
 
-Alternatively, you can also use the (deprecated) @t{autotools} build setup,
-assuming you have autotools (@t{autoconf}, @t{automake}, @t{libtool},
-@t{texinfo}) installed:
+Alternatively, you can also use the (now deprecated) @t{autotools} build
+setup, assuming you have autotools (@t{autoconf}, @t{automake},
+@t{libtool}, @t{texinfo}) installed:
 
 @example
 # get from git (alternatively, use a github tarball)
@@ -362,16 +346,16 @@ $ sudo make install
 
 (Xapian, GMime and their dependencies must be installed).
 
-After this, @t{mu} and @t{mu4e} should be installed @footnote{there's
-a hard dependency between versions of @t{mu4e} and @t{mu} --- you
-cannot combine different versions} on your system, and be available
-from the command line and in Emacs.
+After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a
+hard dependency between versions of @t{mu4e} and @t{mu} --- you cannot
+combine different versions} on your system, and be available from the
+command line and in Emacs.
 
 You may need to restart Emacs, so it can find @t{mu4e} in its
-@code{load-path}. If, even after restarting, Emacs cannot find
-@t{mu4e}, you may need to add it to your @code{load-path} explicitly;
-check where @t{mu4e} is installed, and add something like the
-following to your configuration before trying again:
+@code{load-path}. If, even after restarting, Emacs cannot find @t{mu4e},
+you may need to add it to your @code{load-path} explicitly; check where
+@t{mu4e} is installed, and add something like the following to your
+configuration before trying again:
 @lisp
 ;; the exact path may differ --- check it
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
@@ -404,14 +388,14 @@ is required:
 into a maildir (@file{~/Maildir}, often). Because it is such a common
 case, there is a full example of setting @t{mu4e} up with
 @t{offlineimap} and Gmail; @pxref{Gmail configuration}.
-@item @emph{Using a local mail server} --- if you are using a local mail-server
+@item @emph{Using a local mail server} --- if you are using a local mail- server
 (such as @t{postfix} or @t{qmail}), you can teach them to deliver into
 a maildir as well, maybe in combination with @t{procmail}. A bit of
 googling should be able to provide you with the details.
 @end itemize
 
-The maildir must be on a single file-system; and symbolic links are
-not supported.
+While a @t{mu} only supports a single Maildir, it can be spread across
+different file-systems; and symbolic links are supported.
 
 @node Initializing the message store
 @section Initializing the message store
@@ -437,7 +421,7 @@ You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 indexing messages. If you want to change them, you need to @t{init}
 once again.
 
-The addresses can also be basic POSIX regular expressions, wrapped in
+The addresses may also be basic POSIX regular expressions, wrapped in
 slashes, for example:
 
 @example
@@ -458,8 +442,8 @@ We can do that from @t{mu4e} --- @ref{Main view}, but the first time,
 it is a good idea to run it from the command line, which makes it
 easier to verify that everything works correctly.
 
-Assuming that your maildir is at @file{~/Maildir}, we issue the following
-command:
+Assuming that your maildir is at @file{~/Maildir}, we issue the
+following command:
 @example
   $ mu index
 @end example
@@ -472,16 +456,16 @@ The indexing process may take a few minutes the first time you do it
 only scans messages that are new or have changed. Indexing is discussed
 in full detail in the @t{mu-index} man-page.
 
-After the indexing process has finished, you can quickly test if everything
-worked, by trying some command-line searches, for example
+After the indexing process has finished, you can quickly test if
+everything worked, by trying some command-line searches, for example
 @example
   $ mu find hello
 @end example
 
-which lists all messages that match @t{hello}. For more examples of searches,
-see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy} man pages. If all
-of this worked well, we are well on our way setting things up; the next step
-is to do some basic configuration for @t{mu4e}.
+which lists all messages that match @t{hello}. For more examples of
+searches, see @ref{Queries}, or check the @t{mu-find} and @t{mu-easy}
+man pages. If all of this worked well, we are well on our way setting
+things up; the next step is to do some basic configuration for @t{mu4e}.
 
 @node Basic configuration
 @section Basic configuration
@@ -495,8 +479,8 @@ it. So, add to your @file{~/.emacs} (or its moral equivalent, such as
 @end lisp
 
 If Emacs complains that it cannot find @t{mu4e}, check your
-@code{load-path} and make sure that @t{mu4e}'s installation directory is part
-of it. If not, you can add it:
+@code{load-path} and make sure that @t{mu4e}'s installation directory is
+part of it. If not, you can add it:
 
 @lisp
 (add-to-list 'load-path MU4E-PATH)
@@ -524,10 +508,10 @@ situation. See @ref{Dynamic folders} for details.}:
   mu4e-refile-folder "/archive")   ;; saved messages
 @end lisp
 
-Note, the folder names are all relative to the root-maildir (see the
+The folder (maildir) names are all relative to the root-maildir (see the
 output of @command{mu info}). If you use @t{mu4e-context}, see
-@ref{Contexts and special folders} for what that means for these
-special folders.
+@ref{Contexts and special folders} for what that means for these special
+folders.
 
 @node Retrieval and indexing
 @section Retrieval and indexing with mu4e
@@ -657,25 +641,27 @@ A very minimal setup:
 (setq smtpmail-smtp-server "smtp.example.org")
 @end lisp
 
-Since @t{mu4e} (re)uses the same @t{message mode} and @t{smtpmail} that Gnus
-uses, many settings for those also apply to @t{mu4e}.
+Since @t{mu4e} (re)uses the same @t{message mode} and @t{smtpmail} that
+Gnus uses, many settings for those also apply to @t{mu4e}.
 
 @subsection Dealing with sent messages
 
-By default, @t{mu4e} puts a copy of messages you sent in the folder determined
-by @code{mu4e-sent-folder}.  In some cases, this may not be what you want -
-for example, when using Gmail-over-@abbr{IMAP}, this interferes with Gmail's
-handling of the sent messages folder, and you may end up with duplicate
-messages.
+By default, @t{mu4e} puts a copy of messages you sent in the folder
+determined by @code{mu4e-sent-folder}. In some cases, this may not be
+what you want - for example, when using Gmail-over-@abbr{IMAP}, this
+interferes with Gmail's handling of the sent messages folder, and you
+may end up with duplicate messages.
 
-You can use the variable @code{mu4e-sent-messages-behavior} to customize what
-happens with sent messages. The default is the symbol @code{sent} which, as
-mentioned, causes the message to be copied to your sent-messages folder. Other
-possible values are the symbols @code{trash} (the sent message is moved to the
-trash-folder (@code{mu4e-trash-folder}), and @code{delete} to simply discard
-the sent message altogether (so Gmail can deal with it).
+You can use the variable @code{mu4e-sent-messages-behavior} to customize
+what happens with sent messages. The default is the symbol @code{sent}
+which, as mentioned, causes the message to be copied to your
+sent-messages folder. Other possible values are the symbols @code{trash}
+(the sent message is moved to the trash-folder
+(@code{mu4e-trash-folder}), and @code{delete} to simply discard the sent
+message altogether (so Gmail can deal with it).
 
-For Gmail-over-@abbr{IMAP}, you could add the following to your settings:
+For Gmail-over-@abbr{IMAP}, you could add the following to your
+settings:
 @verbatim
 ;; don't save messages to Sent Messages, Gmail/IMAP takes care of this
 (setq mu4e-sent-messages-behavior 'delete)
@@ -822,8 +808,9 @@ bookmarked query first before invoking it, use @key{B}.
 Next to each bookmark there is the number of (unread/all) messages
 that match.
 
-Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add your
-own and/or replace the default ones; @xref{Bookmarks}. For instance:
+Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
+your own and/or replace the default ones; @xref{Bookmarks}. For
+instance:
 @lisp
 (add-to-list 'mu4e-bookmarks
   ;; add bookmark for recent messages on the Mu mailing list.
@@ -846,12 +833,14 @@ which would be disruptive in this case.
 Finally, there are some @emph{Misc} (miscellaneous) actions:
 @itemize
 @item @t{[U]pdate email & database} executes the shell-command in the variable
-@code{mu4e-get-mail-command}, and afterwards updates the @t{mu} database;
-see @ref{Indexing your messages} and @ref{Getting mail} for details.
+@code{mu4e-get-mail-command}, and afterwards updates the @t{mu}
+database; see @ref{Indexing your messages} and @ref{Getting mail} for
+details.
 @item @t{toggle [m]ail sending mode (direct)} toggles between sending
-mail directly, and queuing it first (for example, when you are offline), and
-@t{[f]lush queued mail} flushes any queued mail. This item is visible only
-if you have actually set up mail-queuing. @ref{Queuing mail}
+mail directly, and queuing it first (for example, when you are offline),
+and @t{[f]lush queued mail} flushes any queued mail. This item is
+visible only if you have actually set up mail-queuing. @ref{Queuing
+mail}
 @item @t{[A]bout mu4e} provides general information about the program
 @item @t{[H]elp} shows help information for this view
 @item Finally, @t{[q]uit mu4e} quits your @t{mu4e}-session
@@ -900,14 +889,14 @@ Some notes to explain what you see in the example:
 
 @itemize
 @item The fields shown in the headers view can be influenced by customizing
-the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for the
-list of built-in fields. Apart from the built-in fields, you can also create
-custom fields using @code{mu4e-header-info-custom}; see @ref{HV Custom
-headers} for details.
+the variable @code{mu4e-headers-fields}; see @code{mu4e-header-info} for
+the list of built-in fields. Apart from the built-in fields, you can
+also create custom fields using @code{mu4e-header-info-custom}; see
+@ref{HV Custom headers} for details.
 @item By default, the date is shown with the @t{:human-date} field, which
-shows the @emph{time} for today's messages, and the @emph{date} for older
-messages. If you do not want to distinguish between `today' and `older', you can use
-the @t{:date} field instead.
+shows the @emph{time} for today's messages, and the @emph{date} for
+older messages. If you do not want to distinguish between `today' and
+`older', you can use the @t{:date} field instead.
 @item You can customize the date and time formats with the variable
 @code{mu4e-headers-date-format} and @code{mu4e-headers-time-format},
 respectively. In the example, we use @code{:human-date}, which shows the
@@ -924,10 +913,11 @@ mouse click, or @key{O}. Not all fields allow sorting.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
 can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
-@emph{except} when the e-mail was sent by the user (i.e., you) --- in that case
-it shows @t{To:} (prefixed by @t{To}@footnote{You can customize this by
-changing the variable @code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as
-in the example above).
+@emph{except} when the e-mail was sent by the user (i.e., you) --- in
+that case it shows @t{To:} (prefixed by @t{To}@footnote{You can
+customize this by changing the variable
+@code{mu4e-headers-from-or-to-prefix} (a cons cell)}, as in the example
+above).
 @item The `List' field shows the mailing-list a message is sent to;
 @code{mu4e} tries to create a convenient shortcut for the mailing-list
 name; the variable @code{mu4e-user-mailing-lists} can be used to add
@@ -960,9 +950,9 @@ headers-view.
 @node Keybindings
 @section Keybindings
 
-Using the below key bindings, you can do various things with these messages;
-these actions are also listed in the @t{Mu4e} menu in the Emacs
-menu bar.
+Using the below key bindings, you can do various things with these
+messages; these actions are also listed in the @t{Mu4e} menu in the
+Emacs menu bar.
 
 @verbatim
 key          description
@@ -1040,18 +1030,19 @@ move. After one or more messages are marked, you can then execute
 mark-execute sequence is similar to what e.g. @t{dired} does. It is how
 @t{mu4e} tries to be as quick as possible, while avoiding accidents.
 
-The mark/unmark commands support the @emph{region} (i.e., ``selection'') ---
-so, for example, if you select some messages and press @key{DEL}, all messages
-in the region are marked for deletion.
+The mark/unmark commands support the @emph{region} (i.e., ``selection'')
+--- so, for example, if you select some messages and press @key{DEL},
+all messages in the region are marked for deletion.
 
 You can mark all messages that match a certain pattern with @key{%}. In
 addition, you can mark all messages in the current thread (@key{T}) or
 sub-thread (@key{t}).
 
-When you do a new search or refresh the headers buffer while you still have
-marked messages, you are asked what to do with those marks --- whether to
-@emph{apply} them before leaving, or @emph{ignore} them. This behavior can be
-influenced with the variable @code{mu4e-headers-leave-behavior}.
+When you do a new search or refresh the headers buffer while you still
+have marked messages, you are asked what to do with those marks ---
+whether to @emph{apply} them before leaving, or @emph{ignore} them. This
+behavior can be influenced with the variable
+@code{mu4e-headers-leave-behavior}.
 
 For more information about marking, see @ref{Marking}.
 
@@ -1066,17 +1057,18 @@ the top-level messages are sorted by the date of the @emph{newest}
 message in the thread.
 
 The header field used for sorting is indicated by ``@t{V}'' or
-``@t{^}''@footnote{or you can use little graphical triangles; see variable
-@code{mu4e-use-fancy-chars}}, indicating the sort order (descending or
-ascending, respectively).
+``@t{^}''@footnote{or you can use little graphical triangles; see
+variable @code{mu4e-use-fancy-chars}}, indicating the sort order
+(descending or ascending, respectively).
 
-You can change the sort order by clicking the corresponding column with the
-mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note that not
-all fields can be used for sorting. You can toggle threading on/off using
-@kbd{M-x mu4e-headers-toggle-threading} or @key{P}. For both of these functions,
-unless you provide a prefix argument (@key{C-u}), the current search is
-updated immediately using the new parameters. You can toggle full-search
-(@ref{Searching}) using @kbd{M-x mu4e-headers-toggle-full-search} or @key{Q}.
+You can change the sort order by clicking the corresponding column with
+the mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note
+that not all fields can be used for sorting. You can toggle threading
+on/off using @kbd{M-x mu4e-headers-toggle-threading} or @key{P}. For
+both of these functions, unless you provide a prefix argument
+(@key{C-u}), the current search is updated immediately using the new
+parameters. You can toggle full-search (@ref{Searching}) using @kbd{M-x
+mu4e-headers-toggle-full-search} or @key{Q}.
 
 Note that with threading enabled, the sorting is exclusively by date,
 regardless of the column clicked.
@@ -1090,9 +1082,9 @@ search results.
 @node HV Custom headers
 @section Custom headers
 
-Sometimes the normal headers that @t{mu4e} offers (Date, From, To, Subject,
-etc.)@: may not be enough. For these cases, @t{mu4e} offers @emph{custom
-headers} in both the headers-view and the message-view.
+Sometimes the normal headers that @t{mu4e} offers (Date, From, To,
+Subject, etc.)@: may not be enough. For these cases, @t{mu4e} offers
+@emph{custom headers} in both the headers-view and the message-view.
 
 You can do so by adding a description of your custom header to
 @code{mu4e-header-info-custom}, which is a list of custom headers.
@@ -1154,21 +1146,22 @@ actions.
 
 Using the @emph{Split view}, we can see the @ref{Headers view} and the
 @ref{Message view} next to each other, with the message selected in the
-former, visible in the latter. You can influence the way the splitting is done
-by customizing the variable @code{mu4e-split-view}. Possible values are:
+former, visible in the latter. You can influence the way the splitting
+is done by customizing the variable @code{mu4e-split-view}. Possible
+values are:
 
 @itemize
 @item @t{horizontal} (this is the default): display the message view below the
-header view. Use @code{mu4e-headers-visible-lines} the set the number of lines
-shown (default: 8).
+header view. Use @code{mu4e-headers-visible-lines} the set the number of
+lines shown (default: 8).
 @item @t{vertical}: display the message view on the
 right side of the header view. Use @code{mu4e-headers-visible-columns} to set
 the number of visible columns (default: 30).
 @item @t{single-window}: single window mode. Single-window mode tries to
-minimize mu4e window operations (opening, killing, resizing, etc) and buffer
-changes, while still retaining the view and headers buffers. In addition, it
-replaces mu4e main view with a minibuffer prompt containing the same
-information.
+minimize mu4e window operations (opening, killing, resizing, etc) and
+buffer changes, while still retaining the view and headers buffers. In
+addition, it replaces mu4e main view with a minibuffer prompt containing
+the same information.
 @item anything else: don't do any splitting
 @end itemize
 
@@ -1234,20 +1227,21 @@ An example message view:
 Some notes:
 @itemize
 @item The variable @code{mu4e-view-fields} determines the header fields to be
-shown; see @code{mu4e-header-info} for a list of built-in fields. Apart from
-the built-in fields, you can also create custom fields using
+shown; see @code{mu4e-header-info} for a list of built-in fields. Apart
+from the built-in fields, you can also create custom fields using
 @code{mu4e-header-info-custom}; see @ref{MSGV Custom headers}.
 @item For search-related operations, see @ref{Searching}.
 @item You can scroll down the message using @key{SPC}; if you do this at the
-end of a message,it automatically takes you to the next one. If you want to
-prevent this behavior, set @code{mu4e-view-scroll-to-next} to @code{nil}.
+end of a message,it automatically takes you to the next one. If you want
+to prevent this behavior, set @code{mu4e-view-scroll-to-next} to
+@code{nil}.
 @end itemize
 
 @node MSGV Keybindings
 @section Keybindings
 
-You can find most things you can do with this message in the @emph{Mu4e} menu,
-or by using the keyboard; the default bindings are:
+You can find most things you can do with this message in the @emph{Mu4e}
+menu, or by using the keyboard; the default bindings are:
 
 @verbatim
 key          description
@@ -3742,11 +3736,10 @@ answers.
 @node General
 @section General
 
-@subsection Results from @command{mu} and @t{mu4e} differ - why?
-@anchor{mu-mu4e-differ}
-In general, the same queries for @command{mu} and @t{mu4e} should
-yield the same results. If they differ, this is usually because one of
-the following reasons:
+@subsection Results from @t {mu} and @t{mu4e} differ - why?
+@anchor{mu-mu4e-differ} In general, the same queries for @command{mu}
+and @t{mu4e} should yield the same results. If they differ, this is
+usually because one of the following reasons:
 @itemize
 @item different options:
 @t{mu4e} defaults to having @t{mu4e-headers-include-related}, and
@@ -3916,15 +3909,20 @@ However, if you experience slowdowns, here are some things to consider:
 @item opening messages while indexing:
 @t{mu4e} corresponds with the @t{mu} server synchronously; this means
 that you can do only one thing at a time. The one operation that
-potentially does take a bit of time is indexing of mail, during which
-you have to wait for messages to open. For some strategies to reduce
-that time, see the next question.
+potentially does take a bit of time is indexing of mail. Since the 1.7.x
+series you don't have to wait for the indexing to complete, but it can
+be still be a bit slower because @t{mu} is very busy at that time.
+
+For some strategies to reduce that time, see the next question.
 @item getting contact information can take some time:
 especially when opening @t{mu4e} the first time and you have a
-@emph{lot} of contacts, it can take a few seconds to process those.
-Note that @t{mu4e} 1.3 and higher only get @emph{changed} contacts in
+@emph{lot} of contacts, it can take a few seconds to process those. Note
+that @t{mu4e} 1.3 and higher only get @emph{changed} contacts in
 subsequent updates (after and indexing operation), so this should be
-less of a concern.
+less of a concern. And you can tweak what contacts you get using
+@var{mu4e-compose-complete-only-personal},
+@var{mu4e-compose-complete-only-after} and
+@var{mu4e-compose-complete-max}.
 @item decryption / sign verification:
 encrypted / signed messages sometimes require network access, and this
 may take a while; certainly if the needed servers cannot be found.
@@ -4009,9 +4007,8 @@ See @ref{(emacs) Mail Aliases}.
 See @ref{Compose hooks}.
 
 @subsection How can I influence the way the original message looks when replying/forwarding?
-Since @code{mu4e-compose-mode} derives from @code{message-mode}, you
-can re-use many of its facilities. @inforef{Insertion
-Variables,,message}.
+Since @code{mu4e-compose-mode} derives from @code{message-mode}, you can
+re-use many of its facilities. @inforef{Insertion Variables,,message}.
 
 @subsection How can I easily include attachments in the messages I write?
 You can drag-and-drop from your desktop; alternatively, you can use
@@ -4048,9 +4045,14 @@ and encrypting}.
 
 @subsection Address auto-completion does not work?
 If you have set @code{mu4e-compose-complete-only-personal} to non-nil,
-@t{mu4e} only completes 'personal' addresses - so you tell it about
-your e-mail addresses when setting up the database (@t{mu init});
+@t{mu4e} only completes 'personal' addresses - so you tell it about your
+e-mail addresses when setting up the database (@t{mu init});
 @ref{Initializing the message store}.
+
+If you cannot find specific addresses you'd expect to find, inspect the
+values of @var{mu4e-compose-complete-only-personal},
+@var{mu4e-compose-complete-only-after} and
+@var{mu4e-compose-complete-max}.
 
 @subsection Can I use @t{BBDB} with @t{mu4e}?
 Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
@@ -4063,8 +4065,8 @@ Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
 @subsection Sending big messages is slow and blocks emacs --- what can I do about it?
 
 For this, there's @url{https://github.com/jwiegley/emacs-async} (also
-available from the Emacs package repository); add the following
-snippet to your configuration:
+available from the Emacs package repository); add the following snippet
+to your configuration:
 @lisp
 (require 'smtpmail-async)
 (setq
@@ -4074,9 +4076,9 @@ snippet to your configuration:
 With this, messages are sent using a background Emacs instance.
 
 A word of warning though, this tends to not be as reliable as sending
-the message in the normal, synchronous fashion, and people have
-reported silent failures, where mail sending fails for some reason
-without any indication of that.
+the message in the normal, synchronous fashion, and people have reported
+silent failures, where mail sending fails for some reason without any
+indication of that.
 
 You can check the progress of the background by checking the
 @t{*Messages*}-buffer, which should show something like:
@@ -4116,11 +4118,11 @@ setting
 
 @noindent
 in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}).
-The transformation of your message into the proper format is
-done at the time of sending.  For this to happen properly, you should
-write each paragraph of your message of as a long line (i.e. without
-carriage return).  If you introduce unwanted newlines in your paragraph,
-use @kbd{M-q} to reformat it as a single line.
+The transformation of your message into the proper format is done at the
+time of sending. For this to happen properly, you should write each
+paragraph of your message of as a long line (i.e. without carriage
+return). If you introduce unwanted newlines in your paragraph, use
+@kbd{M-q} to reformat it as a single line.
 
 If you want to send the message with paragraphs on single lines but
 without @t{format=flowed} (because, say, the receiver does not
@@ -4145,18 +4147,18 @@ User Marcin Borkowski has a solution:
 
 @subsection How can I avoid Outlook display issues?
 
-Limited testing shows that certain Outlook clients do not work well
-with inline replies, and the entire message including-and-below the
-first quoted section is collapsed. This means recipients may not even
-notice important inline text, especially if there is some top-posted
-content. This has been observed on OS X, Windows, and Web-based
-Outlook clients accessing Office 365.
+Limited testing shows that certain Outlook clients do not work well with
+inline replies, and the entire message including-and-below the first
+quoted section is collapsed. This means recipients may not even notice
+important inline text, especially if there is some top-posted content.
+This has been observed on OS X, Windows, and Web-based Outlook clients
+accessing Office 365.
 
 It appears the bug is triggered by the standard reply regex "On ...
-wrote:". Changing "On", or removing the trailing ":" appears to fix
-the bug (in limited testing). Therefore, a simple work-around is to
-set `message-citation-line-format` to something slightly non-standard,
-such as:
+wrote:". Changing "On", or removing the trailing ":" appears to fix the
+bug (in limited testing). Therefore, a simple work-around is to set
+`message-citation-line-format` to something slightly non-standard, such
+as:
 @lisp
 (setq  message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
 @end lisp
@@ -4313,12 +4315,13 @@ another variable:
 @node Saving outgoing messages
 @section Saving outgoing messages
 
-Like @code{mu4e-refile-folder}, the variable @code{mu4e-sent-folder} can also
-be set to a function, in order to dynamically determine the save folder. One
-might, for example, wish to automatically put messages going to mailing lists
-into the trash (because you'll receive them back from the list anyway). If you
-have set up the variable @code{my-mu4e-mailing-lists} as mentioned, you can
-use the following function to determine a save folder:
+Like @code{mu4e-refile-folder}, the variable @code{mu4e-sent-folder} can
+also be set to a function, in order to dynamically determine the save
+folder. One might, for example, wish to automatically put messages going
+to mailing lists into the trash (because you'll receive them back from
+the list anyway). If you have set up the variable
+@code{my-mu4e-mailing-lists} as mentioned, you can use the following
+function to determine a 'sent'-folder:
 
 @lisp
 (defun my-mu4e-sent-folder-function (msg)
@@ -4511,13 +4514,17 @@ log using @kbd{M-x mu4e-show-log} (@key{$}).
 @node The message s-expression
 @section The message s-expression
 
+As a word of warning, the details of the s-expression are internal to
+the mu4e - mu communications, and are subject to change between
+versions.
+
 A typical message s-expression looks something like the following:
 
 @lisp
 (:docid 32461
- :from (("Nikola Tesla" . "niko@@example.com"))
- :to (("Thomas Edison" . "tom@@example.com"))
- :cc (("Rupert The Monkey" . "rupert@@example.com"))
+ :from ((:name "Nikola Tesla" :email "niko@@example.com"))
+ :to ((:name "Thomas Edison" :email "tom@@example.com"))
+ :cc ((:name "Rupert The Monkey" :email "rupert@@example.com"))
  :subject "RE: what about the 50K?"
  :date (20369 17624 0)
  :size 4337
@@ -4525,42 +4532,27 @@ A typical message s-expression looks something like the following:
  :path  "/home/tom/Maildir/INBOX/cur/133443243973_1.10027.atlas:2,S"
  :maildir "/INBOX"
  :priority normal
- :flags (seen)
- :parts ( (:index 1 :mime-type "text/plain" :size 12345 :attachment nil)
-          (:index 2 :name "photo.jpg" :mime-type "image/jpeg"
-           :size 147331 :attachment t)
-          (:index 3 :name "book.pdf" :mime-type "application/pdf"
-           :size 192220 :attachment t))
- :references  ("C8384574032D81EE81AF0114E4E74@@123213.mail.example.com"
- "38203498230942D81EE81AF0114E4E74@@123213.mail.example.com")
- :in-reply-to "38203498230942D81EE81AF0114E4E74@@123213.mail.example.com"
- :body-txt "Hi Tom,
+ :flags (seen attach)
  ....
 ")
 @end lisp
 
-This s-expression forms a property list (@t{plist}), and we can get values
-from it using @t{plist-get}; for example @code{(plist-get msg :subject)} would
-get you the message subject. However, it's better to use the function
-@code{mu4e-message-field} to shield you from some of the implementation
-details that are subject to change; and see the other convenience functions in
-@file{mu4e-message.el}.
+This s-expression forms a property list (@t{plist}), and we can get
+values from it using @t{plist-get}; for example @code{(plist-get msg
+:subject)} would get you the message subject. However, it's better to
+use the function @code{mu4e-message-field} to shield you from some of
+the implementation details that are subject to change; and see the other
+convenience functions in @file{mu4e-message.el}.
 
 Some notes on the format:
 @itemize
-@item The address fields are @emph{lists} of pairs @code{(name . email)},
+@item The address fields are @emph{lists} of @t{plists} of the form @code{(:name <name>   :email <email>)},
 where @t{name} can be @t{nil}.
 @item The date is in format Emacs uses (for example in
 @code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
-available for the actual number; the other bits are use by
-Emacs for internal purposes. Therefore, we need to split
-@t{time_t} in two numbers.}
-@item Attachments are a list of elements with fields @t{:index} (the number of
-the MIME-part), @t{:name} (the file name, if any), @t{:mime-type} (the
-MIME-type, if any) and @t{:size} (the size in bytes, if any).
-@item Messages in the @ref{Headers view} come from the database and do not have
-@t{:attachments}. @t{:body-txt} or @t{:body-html} fields. Message in the
-@ref{Message view} use the actual message file, and do include these fields.
+available for the actual number; the other bits are use by Emacs for
+internal purposes. Therefore, we need to split @t{time_t} in two
+numbers.}
 @end itemize
 
 @subsection Example: ping-pong
@@ -4573,8 +4565,8 @@ to provide this information (this is implemented in
 @file{mu-cmd-server.c}).
 
 We start this sequence when @t{mu4e} is invoked (when the program is
-started). It calls @t{mu4e-server-ping}, and registers a (lambda) function for
-@t{mu4e-server-pong-func}, to handle the response.
+started). It calls @t{mu4e-server-ping}, and registers a (lambda)
+function for @t{mu4e-server-pong-func}, to handle the response.
 
 @verbatim
 -> (ping)
@@ -4589,8 +4581,9 @@ they differ.
 @node Debugging
 @appendix Debugging
 
-As explained in @ref{How it works}, @t{mu4e} communicates with its backend
-(@t{mu server}) by sending commands and receiving responses (s-expressions).
+As explained in @ref{How it works}, @t{mu4e} communicates with its
+backend (@t{mu server}) by sending commands and receiving responses
+(s-expressions).
 
 For debugging purposes, it can be very useful to see this data. For
 this reason, @t{mu4e} can log all these messages. Note that the

@@ -1,6 +1,6 @@
 #-*-mode:org-*-
 #
-# Copyright (C) 2012-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+# Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -62,6 +62,15 @@ mu extract is the mu command to display and save message parts
 (attachments), and open them with other tools.
 #END
 
+#BEGIN MU_CONFIG_CMD_FIELDS
+#STRING
+mu fields
+#STRING
+mu fields produces a table with all messages fields and flags. This
+is useful for writing query expressions.
+#END
+
+
 #BEGIN MU_CONFIG_CMD_FIND
 #STRING
 mu find [options] <search expression>
@@ -91,6 +100,7 @@ is one of:
   add     - add message to database
   cfind   - find a contact
   extract - extract parts/attachments from messages
+  fields  - show table of all query fields and flags
   find    - query the message database
   help    - get help
   index   - index messages
@@ -169,7 +179,6 @@ List all available scripts matching 'month' (long descriptions):
 Run the 'msgs-per-month' script, and pass it the '--textonly' parameter:
   $ mu msgs-per-month --textonly
 #END
-
 
 #BEGIN MU_CONFIG_CMD_VERIFY
 #STRING
