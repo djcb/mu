@@ -33,8 +33,8 @@
 
 using namespace Mu;
 
-constexpr char SepaChar1 = 0xfe;
-constexpr char SepaChar2 = 0xff;
+constexpr uint8_t SepaChar1 = 0xfe;
+constexpr uint8_t SepaChar2 = 0xff;
 
 static void
 add_search_term(Xapian::Document& doc, const Field& field, const std::string& val)
@@ -329,8 +329,8 @@ Document::remove(Field::Id field_id)
 	xapian_try([&]{
 
 		if (auto&& val{xdoc_.get_value(field.value_no())}; !val.empty()) {
-			g_debug("removing value<%u>: '%s'", field.value_no(),
-				val.c_str());
+			// g_debug("removing value<%u>: '%s'", field.value_no(),
+			//	val.c_str());
 			xdoc_.remove_value(field.value_no());
 		}
 
@@ -343,7 +343,7 @@ Document::remove(Field::Id field_id)
 		}
 
 		for (auto&& term: kill_list) {
-			g_debug("removing term '%s'", term.c_str());
+			// g_debug("removing term '%s'", term.c_str());
 			try {
 				xdoc_.remove_term(term);
 			} catch(const Xapian::InvalidArgumentError& xe) {

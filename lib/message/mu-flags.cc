@@ -38,8 +38,6 @@ Mu::to_string(Flags flags)
 	return str;
 }
 
-
-
 /*
  * The file-components, ie.
  *     1631819685.fb7b279bbb0a7b66.evergrey:2,RS
@@ -53,7 +51,7 @@ Mu::to_string(Flags flags)
 struct FileParts {
 	std::string	base;
 	char		separator;
-	std::string	flags_suffix;;
+	std::string	flags_suffix;
 };
 
 static FileParts
