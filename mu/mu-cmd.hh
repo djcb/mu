@@ -45,7 +45,6 @@ Result<void> mu_cmd_find(const Mu::Store& store, const MuConfig* opts);
  */
 Result<void> mu_cmd_extract(const MuConfig* opts);
 
-
 /**
  * execute the 'fields' command
  *
@@ -54,16 +53,6 @@ Result<void> mu_cmd_extract(const MuConfig* opts);
  * @return Ok() or some error
  */
 Result<void> mu_cmd_fields(const MuConfig* opts);
-
-/**
- * execute the 'flags' command
- *
- * @param opts configuration options
- *
- * @return Ok() or some error
- */
-Result<void> mu_cmd_flags(const MuConfig* opts);
-
 
 /**
  * execute the 'script' command

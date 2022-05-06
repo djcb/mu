@@ -444,7 +444,7 @@ cmd_from_string(const char* str)
 	    {"mkdir", MU_CONFIG_CMD_MKDIR},     {"remove", MU_CONFIG_CMD_REMOVE},
 	    {"script", MU_CONFIG_CMD_SCRIPT},   {"server", MU_CONFIG_CMD_SERVER},
 	    {"verify", MU_CONFIG_CMD_VERIFY},   {"view", MU_CONFIG_CMD_VIEW},
-	    {"fields", MU_CONFIG_CMD_FIELDS},   {"flags", MU_CONFIG_CMD_FLAGS}
+	    {"fields", MU_CONFIG_CMD_FIELDS},
 	};
 
 	if (!str)

@@ -615,11 +615,11 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	if (!check_params(opts, err))
 		return MU_G_ERROR_CODE(err);
 
-	auto mu_error_from_result = [](auto&& result, GError **err) {
+	auto mu_error_from_result = [](auto&& result, GError **gerr) {
 		if (result)
 			return MU_OK;
 
-		result.error().fill_g_error(err);
+		result.error().fill_g_error(gerr);
 		switch(result.error().code()) {
 		case Error::Code::NoMatches:
 			return MU_ERROR_NO_MATCHES;
@@ -642,9 +642,6 @@ Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
 	 */
 	case MU_CONFIG_CMD_FIELDS:
 		merr = mu_error_from_result(mu_cmd_fields(opts), err);
-		break;
-	case MU_CONFIG_CMD_FLAGS:
-		merr = mu_error_from_result(mu_cmd_flags(opts), err);
 		break;
 	case MU_CONFIG_CMD_MKDIR: merr	= cmd_mkdir(opts, err); break;
 	case MU_CONFIG_CMD_SCRIPT: merr = mu_cmd_script(opts, err); break;

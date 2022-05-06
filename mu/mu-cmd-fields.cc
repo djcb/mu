@@ -15,31 +15,40 @@
 ** Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <iostream>
+#include <functional>
 
 #include "mu-cmd.hh"
 #include <message/mu-message.hh>
-#include <iostream>
-#include "mu-flags.hh"
 #include "utils/mu-utils.hh"
+
 #include "thirdparty/tabulate.hpp"
 
+
 using namespace Mu;
+using namespace tabulate;
+
+
+static void
+table_header(Table& table, const MuConfig* opts)
+{
+	if (opts->nocolor)
+		return;
+
+	(*table.begin()).format()
+		.font_style({FontStyle::bold})
+		.font_color({Color::blue});
+
+}
 
 static void
 show_fields(const MuConfig* opts)
 {
-	using namespace tabulate;
 	using namespace std::string_literals;
 
 	Table fields;
 	fields.add_row({"field-name", "alias", "short", "search",
 			"value", "example", "description"});
-
-	if (!opts->nocolor) {
-		(*fields.begin()).format()
-			.font_style({FontStyle::bold})
-			.font_color({Color::blue});
-	}
 
 	auto disp= [&](std::string_view sv)->std::string {
 		if (sv.empty())
@@ -77,6 +86,8 @@ show_fields(const MuConfig* opts)
 		++row;
 	});
 
+	table_header(fields, opts);
+
 	std::cout << fields << '\n';
 }
 
@@ -89,19 +100,31 @@ show_flags(const MuConfig* opts)
 	Table flags;
 	flags.add_row({"flag", "shortcut", "category", "description"});
 
-	if (!opts->nocolor) {
-		(*flags.begin()).format()
-			.font_style({FontStyle::bold})
-			.font_color({Color::green});
-	}
-
 	flag_infos_for_each([&](const MessageFlagInfo& info) {
+
+		const auto catname = std::invoke(
+			[](MessageFlagCategory cat)->std::string {
+				switch(cat){
+				case MessageFlagCategory::Mailfile:
+					return "file";
+				case MessageFlagCategory::Maildir:
+					return "maildir";
+				case MessageFlagCategory::Content:
+					return "content";
+				case MessageFlagCategory::Pseudo:
+					return "pseudo";
+				default:
+					return {};
+				}
+			}, info.category);
 
 		flags.add_row({format("%*s", STR_V(info.name)),
 				format("%c", info.shortcut),
-				"<cat>"s,
+				catname,
 				std::string{info.description}});
 	});
+
+	table_header(flags, opts);
 
 	std::cout << flags << '\n';
 }
@@ -113,17 +136,9 @@ Mu::mu_cmd_fields(const MuConfig* opts)
 {
 	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
 
+	std::cout << "#\n# message fields\n#\n";
 	show_fields(opts);
-
-	return Ok();
-
-}
-
-Result<void>
-Mu::mu_cmd_flags(const MuConfig* opts)
-{
-	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
-
+	std::cout << "\n#\n# message flags\n#\n";
 	show_flags(opts);
 
 	return Ok();

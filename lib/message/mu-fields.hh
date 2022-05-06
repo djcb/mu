@@ -249,7 +249,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::TimeT,
 		"changed", {},
 		"Last change time",
-		"change:30m..now",
+		"changed:30M..",
 		'k',
 		Field::Flag::Value |
 		Field::Flag::Range |
