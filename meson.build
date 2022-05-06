@@ -23,7 +23,7 @@ project('mu', ['c', 'cpp'],
 	license: 'GPL-3.0-or-later',
 	default_options : [
 	  'buildtype=debugoptimized',
-	  'warning_level=2',
+	  'warning_level=3',
 	  'c_std=c11',
 	  'cpp_std=c++17'
 	]
@@ -40,6 +40,7 @@ infodir	  = join_paths(prefixdir, get_option('infodir'))
 # compilers / flags
 #
 extra_flags = [
+  '-Wextra',
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
   '-Wno-#warnings'
@@ -180,14 +181,16 @@ endif
 if not get_option('guile').disabled() and guile_dep.found()
   config_h_data.set('BUILD_GUILE', 1)
   config_h_data.set_quoted('GUILE_BINARY', 'guile')
-  #3subdir('guile')
+  message('guile is disabled for now')
+  #subdir('guile')
 endif
 
 config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
 
 
 if get_option('toys').enabled()
-  subdir('toys/mug')
+  message('toys are disabled for now')
+  #subdir('toys/mug')
 endif
 ################################################################################
 

@@ -46,13 +46,14 @@ test-verbose-if-fail: all
 	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
 
 test-valgrind: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) test \
-		--wrap='valgrind --leak-check=full --error-exitcode=1' \
+	@cd $(BUILDDIR); $(MESON) test					\
+		--wrap='valgrind --leak-check=full --error-exitcode=1'	\
 		--timeout-multiplier 100
 
 test-helgrind: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) test --wrap='valgrind --tool=helgrind --error-exitcode=1'
-
+	@cd $(BUILDDIR); $(MESON) test					\
+	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
+	--timeout-multiplier 100
 
 dist: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) dist

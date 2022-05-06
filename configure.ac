@@ -47,7 +47,7 @@ extra_flags="-Wformat-security      \
          -Wstack-protector-all      \
          -Wno-cast-function-type    \
          -Wno-bad-function-cast		\
-		 -Wno-switch-enum"
+	 -Wno-switch-enum"
 
 AX_CXX_COMPILE_STDCXX_17
 AX_COMPILER_FLAGS_CXXFLAGS([],[],[${extra_cflags}])
