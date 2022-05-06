@@ -81,21 +81,22 @@ newlines_in_output(const char* str)
 	return count;
 }
 
-static void
-search(const char* query, unsigned expected)
+static size_t
+search_func(const char* query, unsigned expected)
 {
+	size_t lines;
 	gchar *cmdline, *output, *erroutput;
 
-	cmdline = g_strdup_printf("%s find --muhome=%s %s", MU_PROGRAM, DBPATH.c_str(), query);
+	cmdline = g_strdup_printf("%s find --muhome=%s %s", MU_PROGRAM,
+				  DBPATH.c_str(), query);
 
-	if (g_test_verbose())
-		g_printerr("\n$ %s\n", cmdline);
+	g_message("[%u] %s", expected, query);
 
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
 	if (g_test_verbose())
 		g_print("\nOutput:\n%s", output);
 
-	g_assert_cmpuint(newlines_in_output(output), ==, expected);
+	lines = newlines_in_output(output);
 
 	/* we expect zero lines of error output if there is a match;
 	 * otherwise there should be one line 'No matches found' */
@@ -105,7 +106,15 @@ search(const char* query, unsigned expected)
 	g_free(output);
 	g_free(erroutput);
 	g_free(cmdline);
+
+	return lines;
 }
+
+#define search(Q,EXP) do {			\
+       unsigned lines = search_func(Q, EXP);	\
+	g_assert_cmpuint(lines, ==, EXP);	\
+} while(0)
+
 
 /* index testdir2, and make sure it adds two documents */
 static void
@@ -173,9 +182,6 @@ test_mu_find_mime(void)
 static void
 test_mu_find_text_in_rfc822(void)
 {
-#warning fixme
-	return;
-
 	search("embed:dancing", 1);
 	search("e:curious", 1);
 	search("embed:with", 2);

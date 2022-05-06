@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -225,7 +225,6 @@ test_mu_query_logic(void)
 			      {"subject:gcc OR subject:lisp", 2},
 			      {"subject:gcc or subject:lisp", 2},
 			      {"subject:gcc AND subject:lisp", 0},
-
 			      {"subject:gcc OR (subject:scheme AND subject:elisp)", 2},
 			      {"(subject:gcc OR subject:scheme) AND subject:elisp", 1}};
 
@@ -253,8 +252,6 @@ test_mu_query_accented_chars_01(void)
 	}
 
 	assert_equal(msg->subject(), "Greetings from Lothlórien");
-	/* TODO: fix this again */
-
 	const auto summ{to_string_opt_gchar(
 			mu_str_summarize(msg->body_text().value_or("").c_str(), 5))};
 	g_assert_true(!!summ);
@@ -276,7 +273,7 @@ test_mu_query_accented_chars_02(void)
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		auto count = run_and_count_matches(DB_PATH1, queries[i].query);
 		if (count != queries[i].count)
-			g_warning("query '%s'; expect %zu but got %d",
+			g_warning("query '%s'; expect %zu but got %zu",
 				  queries[i].query, queries[i].count, count);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
 				 ==,

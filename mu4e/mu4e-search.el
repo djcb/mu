@@ -31,6 +31,7 @@
 (require 'mu4e-message)
 (require 'mu4e-bookmarks)
 (require 'mu4e-contacts)
+(require 'mu4e-lists)
 (require 'mu4e-mark)
 
 

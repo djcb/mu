@@ -290,7 +290,7 @@ Mu::mu_maildir_from_path(const std::string& path, const std::string& root)
 struct FileParts {
 	std::string	base;
 	char		separator;
-	std::string	flags_suffix;;
+	std::string	flags_suffix;
 };
 
 static FileParts
