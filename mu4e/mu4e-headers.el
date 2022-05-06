@@ -1602,24 +1602,25 @@ window                                                      . "
 
 
 (defun mu4e~headers-move (lines)
-  "Move point LINES lines forward (if LINES is positive) or
-backward (if LINES is negative). If this succeeds, return the new
-docid. Otherwise, return nil."
+  "Move point LINES lines.
+Move foward if LINES is positive or backwards if LINES is
+negative. If this succeeds, return the new docid. Otherwise,
+return nil."
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (cl-flet ((goto-next-line
-             (arg)
-             (condition-case _err
-                 (prog1
-                     (let (line-move-visual)
-                       (and (line-move arg) 0))
-                   ;; Skip invisible text at BOL possibly hidden by
-                   ;; the end of another invisible overlay covering
-                   ;; previous EOL.
-                   (move-to-column 2))
-               ((beginning-of-buffer end-of-buffer)
-                1))))
-    (let* ((_succeeded (zerop (goto-next-line lines)))
+              (arg)
+              (condition-case _err
+                  (prog1
+                      (let (line-move-visual)
+			(and (line-move arg) 0))
+                    ;; Skip invisible text at BOL possibly hidden by
+                    ;; the end of another invisible overlay covering
+                    ;; previous EOL.
+                    (move-to-column 2))
+		((beginning-of-buffer end-of-buffer)
+                 1))))
+    (let* ((succeeded (zerop (goto-next-line lines)))
            (docid (mu4e~headers-docid-at-point)))
       ;; move point, even if this function is called when this window is not
       ;; visible
@@ -1638,7 +1639,9 @@ docid. Otherwise, return nil."
             (mu4e-headers-view-message)))
         ;; attempt to highlight the new line, display the message
         (mu4e~headers-highlight docid)
-        docid))))
+        (if succeeded
+	    docid
+	  nil)))))
 
 (defun mu4e-headers-next (&optional n)
   "Move point to the next message header.
