@@ -45,6 +45,16 @@ using MimeFormatOptions = deletable_unique_ptr<GMimeFormatOptions, g_mime_format
  */
 void init_gmime(void);
 
+
+/**
+ * Get a RFC2047-compatible address for the given contact
+ *
+ * @param contact a contact
+ *
+ * @return an address string
+ */
+std::string address_rfc2047(const Contact& contact);
+
 class Object {
 public:
 	/**
@@ -159,6 +169,10 @@ public:
 private:
 	mutable GObject *self_{};
 };
+
+
+
+
 
 
 /**

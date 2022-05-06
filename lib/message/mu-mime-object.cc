@@ -64,6 +64,23 @@ Mu::init_gmime(void)
 }
 
 
+std::string
+Mu::address_rfc2047(const Contact& contact)
+{
+	init_gmime();
+
+	InternetAddress *addr =
+		internet_address_mailbox_new(contact.name.c_str(),
+					     contact.email.c_str());
+
+	std::string encoded = to_string_gchar(
+		internet_address_to_string(addr, {}, true));
+
+	g_object_unref(addr);
+
+	return encoded;
+}
+
 
 /*
  * MimeObject
@@ -602,8 +619,8 @@ MimeMultipartSigned::verify(const MimeCryptoContext& ctx, VerifyFlags vflags) co
 	std::vector<MimeSignature> sigs;
 	for (auto i = 0;
 	     i != g_mime_signature_list_length(siglist); ++i) {
-		GMimeSignature *sig = g_mime_signature_list_get_signature(siglist, i);
-		sigs.emplace_back(MimeSignature(sig));
+		GMimeSignature *msig = g_mime_signature_list_get_signature(siglist, i);
+		sigs.emplace_back(MimeSignature(msig));
 	}
 	g_object_unref(siglist);
 

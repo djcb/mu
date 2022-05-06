@@ -322,7 +322,7 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 			"\tlast-seen: %s\n",
 			ci.email.c_str(),
 			ci.name.empty() ? "<none>" : ci.name.c_str(),
-			ci.display_name().c_str(),
+			ci.display_name(true).c_str(),
 			ci.personal ? "yes" : "no",
 			ci.frequency,
 			datebuf);
