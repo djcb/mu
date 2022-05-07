@@ -1192,7 +1192,11 @@ The following specs are supported:
   (mu4e-context-minor-mode)
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
-  (hl-line-mode 1))
+  (hl-line-mode 1)
+
+  (setq mu4e-use-fancy-chars nil) ;; FIXME / temporary
+
+  )
 
 ;;; Highlighting
 
