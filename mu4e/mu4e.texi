@@ -736,41 +736,47 @@ The main view looks something like the following:
 
   Basics
 
-        * [j]ump to some maildir
-        * enter a [s]earch query
-        * [C]ompose a new message
+	* [j]ump to some maildir
+	* enter a [s]earch query
+	* [C]ompose a new message
 
   Bookmarks
 
-        * [bu] Unread messages      (26119/26119)
-        * [bt] Today's messages     (1/7)
-        * [bw] Last 7 days          (30/126)
-        * [bp] Messages with images (268/2309)
+	* [bu] Unread messages      (13085/13085)
+	* [bt] Today's messages
+	* [bw] Last 7 days          (53/128)
+	* [bp] Messages with images (75/2441)
 
   Maildirs
 
-        * [ja] /archive             (3174/17990)
-        * [ji] /inbox               (0/2)
-        * [jm] /mu                  (1541/14884)
-        * [js] /sent
+	* [ja] /archive             (2101/18837)
+	* [ji] /inbox               (1/2)
+	* [jb] /bulk                (33/35)
+	* [jB] /bulkarchive         (179/2090)
+	* [jm] /mu                  (694/17687)
+	* [jn] /sauron
+	* [js] /sent
 
   Misc
 
-        * [;]Switch context
-        * [U]pdate email & database
-        * toggle [m]ail sending mode (currently direct)
+	* [;]Switch context
+	* [U]pdate email & database
+	* toggle [m]ail sending mode (currently direct)
+	* [f]lush 1 queued mail
 
-        * [N]ews
-        * [A]bout mu4e
-        * [H]elp
-        * [q]uit
+	* [N]ews
+	* [A]bout mu4e
+	* [H]elp
+	* [q]uit
 
   Info
 
-        * database-path       : /home/user/.cache/mu/xapian
-        * maildir             : /home/user/Maildir
-        * in store            : 78825 messages
-        * personal addresses  : jim@@example.com, bob@@example.com
+	* last updated        : Sat May  7 20:37:37 2022
+	* database-path       : /home/pam/.cache/mu/xapian
+	* maildir             : /home/pam/Maildir
+	* in store            : 86179 messages
+	* personal addresses  : /.*example.com/, pam@fo
+
 @end verbatim
 @end cartouche
 
@@ -1514,9 +1520,10 @@ define what is considered `my e-mail address' using the
 
 @item @code{mu4e-compose-complete-only-after} --- only consider e-mail
 addresses last seen after some date. Parameter is a string, parseable by
-@code{org-parse-time-string}. This excludes old e-mail addresses. The default
-is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen since the start
-of 2010.
+@code{org-parse-time-string}. This excludes old e-mail addresses. The
+default is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen
+since the start of 2010.
+@item @code{mu4e-compose-complete-max} -- the maximum number of contacts to use. This adds a hard limit to the 2000 (default) contacts; those are sorted by recency /frequency etc. so should include the ones you most likely need.
 @item @code{mu4e-contact-process-function} --- a function to rewrite or
 exclude certain addresses.
 @end itemize
@@ -2737,14 +2744,15 @@ recipients for the message at point.
 @node Message view actions
 @section Message view actions
 
-As another example, suppose we would like to search for messages by the sender
-of the message at point:
+As another example, suppose we would like to search for messages by the
+sender of the message at point:
 
 @lisp
 (defun search-for-sender (msg)
   "Search for messages sent by the sender of the message at point."
   (mu4e-headers-search
-    (concat "from:" (cdar (mu4e-message-field msg :from)))))
+    (concat "from:"
+      (mu4e-contact-email (car (mu4e-message-field msg :from))))))
 
 ;; define 'x' as the shortcut
 (add-to-list 'mu4e-view-actions
@@ -2752,10 +2760,10 @@ of the message at point:
 @end lisp
 
 @indent
-If you wonder why we use @code{cdar}, remember that the @t{From:}-field is a
-list of @code{(NAME . EMAIL)} cells; thus, @code{cdar} gets us the e-mail
-address of the first in the list. @t{From:}-fields rarely contain multiple
-cells.
+If you wonder why we use @code{car}, remember that the @t{From:}-field
+is a list of @code{(:name NAME :email EMAIL)} plists; so this code gets
+us the e-mail address of the first in the list. @t{From:}-fields rarely
+have more that one address.
 
 @node Attachment actions
 @section Attachment actions
