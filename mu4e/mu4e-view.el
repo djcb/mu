@@ -778,8 +778,11 @@ determine which browser function to use."
 	(dolist (field mu4e-view-fields)
 	  (let ((fieldval (mu4e-message-field msg field)))
 	    (pcase field
-	      ((or ':path ':maildir ':user-agent ':mailing-list ':message-id)
+	      ((or ':path ':maildir :list ':user-agent ':message-id)
 	       (mu4e~view-gnus-insert-header field fieldval))
+	      (':mailing-list
+	       (let ((list (plist-get msg :list)))
+		 (if list (mu4e-get-mailing-list-shortname list) "")))
 	      ((or ':flags ':tags)
 	       (let ((flags (mapconcat (lambda (flag)
 					 (if (symbolp flag)

@@ -561,7 +561,7 @@ found."
         ;; so limit subject length to 600
         (truncate-string-to-width val 600)))
       (:thread-subject (mu4e~headers-thread-subject msg))
-      ((:maildir :path :message-id) val)
+      ((:maildir :path :message-id :list) val)
       ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
       ;; if we (ie. `user-mail-address' is the 'From', show
       ;; 'To', otherwise show From
@@ -1387,7 +1387,7 @@ matching messages with that mark."
                                     ("to"      . :to)
                                     ("cc"      . :cc)
                                     ("bcc"     . :bcc)
-                                    ("list"    . :mailing-list))))
+                                    ("list"    . :list))))
         (pattern (read-string
                   (mu4e-format "Regexp:")
                   nil 'mu4e~headers-regexp-hist)))
