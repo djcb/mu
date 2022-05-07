@@ -40,7 +40,6 @@ infodir	  = join_paths(prefixdir, get_option('infodir'))
 # compilers / flags
 #
 extra_flags = [
-  '-Wextra',
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
   '-Wno-#warnings'
