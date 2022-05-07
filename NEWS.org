@@ -98,7 +98,13 @@
       for auto-completions, there's ~mu4e-compose-complete-max~, which by default
       is set to *2000*, so you can auto-complete your 2000 closest friends.
 
+    - Updated the "fancy" characters for some header fields. Added new ones for
+      personal and list messages.
+
     - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
+
+    - Removed header-fields ~:attachments~, ~:signature~, ~:encryption~ and
+      ~:user-agent~. They're obsolete with the Gnus-based message viewer.
 
     - undo is now supported across message-saves
 
@@ -130,6 +136,9 @@
 	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
 	Bar" . "foobar@example.com").~
 
+	If you have scripts depending on the old format, there's the
+        ~mu4e-contact-cons~ function which takes a news-style contact and yields
+        the old form.
 
     - Because of all these changes, it is recommended you remove older version
       of ~mu4e~ before reinstalling.
