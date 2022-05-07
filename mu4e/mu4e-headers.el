@@ -1,4 +1,4 @@
-;;; mu4e-headers.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-headers.el -- part of mu4e -*- lexical-binding: t; coding:utf-8 -*-
 
 ;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
@@ -151,10 +151,12 @@ Example that hides all 'trashed' messages:
 Note that this is merely a display filter.")
 
 (defcustom mu4e-headers-visible-flags
-  '(draft flagged new passed replied seen trashed attach encrypted signed unread)
-  "An ordered list of flags to show in the headers buffer. Each
-element is a symbol in the list (DRAFT FLAGGED NEW PASSED
-REPLIED SEEN TRASHED ATTACH ENCRYPTED SIGNED UNREAD)."
+  '(draft flagged new passed replied trashed attach encrypted signed list personal)
+  "An ordered list of flags to show in the headers buffer.
+Each element is a symbol in the list.
+
+By default, we leave out `unread' and `seen', since those are
+mostly covered by `new', and the display gets cluttered otherwise."
   :type '(set
           (const :tag "Draft" draft)
           (const :tag "Flagged" flagged)
@@ -166,7 +168,8 @@ REPLIED SEEN TRASHED ATTACH ENCRYPTED SIGNED UNREAD)."
           (const :tag "Attach" attach)
           (const :tag "Encrypted" encrypted)
           (const :tag "Signed" signed)
-          (const :tag "Unread" unread))
+	  (const :tag "List" list)
+	  (const :tag "Personal" personal))
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-found-hook nil
@@ -473,31 +476,19 @@ with DOCID which must be present in the headers buffer."
                   (mu4e~headers-thread-prefix-map 'duplicate) "")))))
 
 (defun mu4e~headers-flags-str (flags)
-  "Get a display string for the flags.
+  "Get a display string for FLAGS.
 Note that `mu4e-flags-to-string' is for internal use only; this
 function is for display. (This difference is significant, since
 internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
-  (let ((str "")
-        (get-prefix
-         (lambda (cell)  (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
-    (dolist (flag mu4e-headers-visible-flags)
-      (when (member flag flags)
-        (setq str
-              (concat str
-                      (cl-case flag
-                        ('draft     (funcall get-prefix mu4e-headers-draft-mark))
-                        ('flagged   (funcall get-prefix mu4e-headers-flagged-mark))
-                        ('new       (funcall get-prefix mu4e-headers-new-mark))
-                        ('passed    (funcall get-prefix mu4e-headers-passed-mark))
-                        ('replied   (funcall get-prefix mu4e-headers-replied-mark))
-                        ('seen      (funcall get-prefix mu4e-headers-seen-mark))
-                        ('trashed   (funcall get-prefix mu4e-headers-trashed-mark))
-                        ('attach    (funcall get-prefix mu4e-headers-attach-mark))
-                        ('encrypted (funcall get-prefix mu4e-headers-encrypted-mark))
-                        ('signed    (funcall get-prefix mu4e-headers-signed-mark))
-                        ('unread    (funcall get-prefix mu4e-headers-unread-mark)))))))
-    str))
+  (or  (mapconcat
+	(lambda (flag)
+	  (when (member flag mu4e-headers-visible-flags)
+	    (if-let* ((mark (intern-soft
+			     (format "mu4e-headers-%s-mark" (symbol-name flag))))
+		      (cell (symbol-value mark)))
+		(if mu4e-use-fancy-chars (cdr cell) (car cell))
+	      ""))) flags) ""))
 
 ;;; Special headers
 
