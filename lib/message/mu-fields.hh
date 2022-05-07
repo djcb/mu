@@ -320,7 +320,7 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::MailingList,
 		Field::Type::String,
-		"list", {},
+		"mailing-list", "list",
 		"Mailing list (List-Id:)",
 		"list:mu-discuss.example.com",
 		'v',

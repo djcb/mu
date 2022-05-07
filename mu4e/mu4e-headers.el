@@ -567,7 +567,7 @@ found."
       ;; 'To', otherwise show From
       (:from-or-to (mu4e~headers-from-or-to msg))
       (:date (format-time-string mu4e-headers-date-format val))
-      (:mailing-list (mu4e~headers-mailing-list (plist-get msg :list)))
+      (:mailing-list (mu4e~headers-mailing-list val))
       (:human-date (propertize (mu4e~headers-human-date msg)
                                'help-echo (format-time-string
                                            mu4e-headers-long-date-format
