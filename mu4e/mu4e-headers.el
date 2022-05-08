@@ -208,6 +208,10 @@ chronologically (`:date') by the newest message in the thread.")
 (defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
 (defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
 (defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
+(defvar mu4e-headers-list-mark      '("s" . "Ⓛ") "Mailing list.")
+(defvar mu4e-headers-personal-mark  '("p" . "Ⓟ") "Personal.")
+
+
 
 ;;;; Graph drawing
 
@@ -561,13 +565,14 @@ found."
         ;; so limit subject length to 600
         (truncate-string-to-width val 600)))
       (:thread-subject (mu4e~headers-thread-subject msg))
-      ((:maildir :path :message-id :list) val)
+      ((:maildir :path :message-id) val)
       ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
       ;; if we (ie. `user-mail-address' is the 'From', show
       ;; 'To', otherwise show From
       (:from-or-to (mu4e~headers-from-or-to msg))
       (:date (format-time-string mu4e-headers-date-format val))
-      (:mailing-list (mu4e~headers-mailing-list val))
+      (:list (or val ""))
+      (:mailing-list (mu4e~headers-mailing-list (mu4e-msg-field msg :list)))
       (:human-date (propertize (mu4e~headers-human-date msg)
                                'help-echo (format-time-string
                                            mu4e-headers-long-date-format
@@ -620,7 +625,7 @@ space propertized with a 'display text property which expands to
   (let* ((field (car f-w))
          (width (cdr f-w))
          (val (mu4e~headers-field-value msg field))
-         (val (if width (mu4e~headers-truncate-field field val width) val)))
+         (val (and val (if width (mu4e~headers-truncate-field field val width) val))))
     val))
 
 (defsubst mu4e~headers-apply-flags (msg fieldval)
@@ -1069,8 +1074,7 @@ after the end of the search results."
                (field (car item)) (width (cdr item))
                (info (cdr (assoc field
                                  (append mu4e-header-info mu4e-header-info-custom))))
-               (require-full (plist-get info :require-full))
-               (sortable (plist-get info :sortable))
+	       (sortable (plist-get info :sortable))
                ;; if sortable, it is either t (when field is sortable itself)
                ;; or a symbol (if another field is used for sorting)
                (this-field (when sortable (if (booleanp sortable) field sortable)))
@@ -1081,8 +1085,6 @@ after the end of the search results."
                   (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
                (name (concat (plist-get info :shortname) arrow))
                (map (make-sparse-keymap)))
-          (when require-full
-            (mu4e-error "Field %S is not supported in mu4e-headers-mode" field))
           (when sortable
             (define-key map [header-line mouse-1]
               (lambda (&optional e)
@@ -1183,11 +1185,7 @@ The following specs are supported:
   (mu4e-context-minor-mode)
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
-  (hl-line-mode 1)
-
-  (setq mu4e-use-fancy-chars nil) ;; FIXME / temporary
-
-  )
+  (hl-line-mode 1))
 
 ;;; Highlighting
 
