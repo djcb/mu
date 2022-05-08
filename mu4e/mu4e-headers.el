@@ -492,7 +492,9 @@ while our display may be different)."
 			     (format "mu4e-headers-%s-mark" (symbol-name flag))))
 		      (cell (symbol-value mark)))
 		(if mu4e-use-fancy-chars (cdr cell) (car cell))
-	      ""))) flags) ""))
+	      "")))
+	flags "")
+       ""))
 
 ;;; Special headers
 
