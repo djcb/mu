@@ -195,13 +195,7 @@ I.e. a message with the draft flag set."
 ;;; Header information
 
 (defconst mu4e-header-info
-  '((:attachments
-     . (:name "Attachments"
-        :shortname "Atts"
-        :help "Message attachments"
-        :require-full t
-        :sortable nil))
-    (:bcc
+  '((:bcc
      . (:name "Bcc"
         :shortname "Bcc"
         :help "Blind Carbon-Copy recipients for the message"
@@ -266,18 +260,6 @@ I.e. a message with the draft flag set."
         :shortname "Path"
         :help "Full filesystem path to the message"
         :sortable t))
-    (:signature
-     . (:name "Signature"
-        :shortname "Sgn"
-        :help "Check for the cryptographic signature"
-        :require-full t
-        :sortable nil))
-    (:decryption
-     . (:name "Decryption"
-        :shortname "Dec"
-        :help "Check the cryptographic decryption status"
-        :require-full t
-        :sortable nil))
     (:size
      . (:name "Size"
         :shortname "Size"
@@ -302,12 +284,6 @@ I.e. a message with the draft flag set."
      . (:name "To"
         :shortname "To"
         :help "Recipient of the message"
-        :sortable t))
-    (:user-agent
-     . (:name "User-Agent"
-        :shortname "UA"
-        :help "Program used for writing this message"
-        :require-full t
         :sortable t)))
   "An alist of all possible header fields and information about them.
 This is used in the user-interface (the column headers in the header list, and
@@ -322,11 +298,6 @@ Furthermore, the property `:sortable' determines whether we can
 sort by this field. This can be either a boolean (nil or t), or a
 symbol for /another/ field. For example, the `:human-date' field
 uses `:date' for that.
-
-Fields which have the property `:require-full' set to
-non-nil require a full message; in practice this means that you
-cannot use such fieds as part of `mu4e-headers-fields', but only
-in `mu4e-view-fields.'
 
 Note, `:sortable' is not supported for custom header fields.")
 
