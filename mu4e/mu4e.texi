@@ -3744,7 +3744,7 @@ answers.
 @node General
 @section General
 
-@subsection Results from @t {mu} and @t{mu4e} differ - why?
+@subsection Results from @t{mu} and @t{mu4e} differ - why?
 @anchor{mu-mu4e-differ} In general, the same queries for @command{mu}
 and @t{mu4e} should yield the same results. If they differ, this is
 usually because one of the following reasons:
