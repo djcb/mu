@@ -144,7 +144,11 @@ If non-nil, this is a plist of the form:
   "Height of the mu4e message retrieval/update buffer.")
 (defvar mu4e--get-mail-ask-password "mu4e get-mail: Enter password: "
   "Query string for `mu4e-get-mail-command' password.")
-(defvar mu4e--get-mail-password-regexp "^Remote: Enter password: $"
+(defvar mu4e--get-mail-password-regexp
+  (rx (: bol
+         (zero-or-more (in alnum "_: "))
+         (or "P" "p") "ass" (or "word" "phrase") ":"
+         (zero-or-one " ") eol))
   "Regexp for a `mu4e-get-mail-command' password query.")
 
 
@@ -153,7 +157,7 @@ If non-nil, this is a plist of the form:
 
 Currently the filter only checks if the command asks for a
 password by matching the output against
-`mu4e~get-mail-password-regexp'. The messages are inserted into
+`mu4e--get-mail-password-regexp'. The messages are inserted into
 the process buffer.
 
 Also scrolls to the final line, and update the progress
@@ -166,8 +170,10 @@ throbber."
         (process-send-string proc
                              (concat (read-passwd mu4e--get-mail-ask-password)
                                      "\n"))
-      ;; TODO kill process?
-      (mu4e-error "Unrecognized password request")))
+      (setq mu4e~update-status
+            (format "authorisation failed @ %s" (format-time-string "%H:%M")))
+      (mu4e-error "Unrecognized password request")
+      (kill-process proc)))
   (when (process-buffer proc)
     (let ((inhibit-read-only t)
           (procwin (get-buffer-window (process-buffer proc))))
@@ -277,6 +283,8 @@ run in the background; otherwise, pop up a window."
             (make-progress-reporter
              (mu4e-format "Retrieving mail..."))))
     (set-process-sentinel proc 'mu4e--update-sentinel-func)
+    (setq mu4e~update-status
+          (concat "started update @ " (format-time-string "%H:%M")))
     ;; if we're running in the foreground, handle password requests
     (unless run-in-background
       (process-put proc 'x-interactive (not run-in-background))
