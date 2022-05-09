@@ -43,8 +43,6 @@ public:
 	using Id                      = Xapian::docid; /**< Id for a message in the store */
 	static constexpr Id InvalidId = 0;             /**< Invalid  store id */
 
-	static constexpr size_t MaxTermLength = 240; /**< Maximum length of a term,
-	  http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
 	/**
 	 * Construct a store for an existing document database
 	 *

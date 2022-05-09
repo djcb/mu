@@ -22,9 +22,6 @@
 
 using namespace Mu;
 
-// Xapian does not like terms much longer than this
-constexpr auto MaxTermLength = 240;
-
 std::string
 Field::xapian_term(const std::string& s) const
 {

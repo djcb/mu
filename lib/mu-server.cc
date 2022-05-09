@@ -572,7 +572,7 @@ Server::Private::contacts_handler(const Parameters& params)
 static std::vector<Store::Id>
 docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 {
-	if (msgid.size() > Store::MaxTermLength) {
+	if (msgid.size() > MaxTermLength) {
 		throw Error(Error::Code::InvalidArgument,
 			    "invalid message-id '%s'", msgid.c_str());
 	}

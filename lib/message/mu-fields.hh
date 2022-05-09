@@ -30,6 +30,10 @@
 
 namespace Mu {
 
+// Xapian does not like terms much longer than this
+constexpr auto MaxTermLength = 240;
+// http://article.gmane.org/gmane.comp.search.xapian.general/3656 */
+
 struct Field {
 	/**
 	 * Field Ids.
