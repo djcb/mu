@@ -425,7 +425,7 @@ status, STATUS."
     (list (match-beginning 1)
 	  (match-end 1)
 	  '("attach" "draft" "flagged" "list" "new" "passed" "replied"
-	    "seen" "trashed" "unread" "encrypted" "signed")))
+	    "seen" "trashed" "unread" "encrypted" "signed" "personal")))
    ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
