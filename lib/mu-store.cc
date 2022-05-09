@@ -370,7 +370,7 @@ Store::add_message(Message& msg, bool use_transaction)
 {
 	std::lock_guard guard{priv_->lock_};
 
-	const auto mdir{mu_maildir_from_path(msg.path(),
+	const auto mdir{maildir_from_path(msg.path(),
 					     properties().root_maildir)};
 	if (!mdir)
 		return Err(mdir.error());
@@ -471,13 +471,13 @@ Store::move_message(Store::Id id,
 
 	/* 1. first determine the file system path of the target */
 	const auto target_path =
-		mu_maildir_determine_target(msg->path(), properties().root_maildir,
+		maildir_determine_target(msg->path(), properties().root_maildir,
 					    target_maildir,target_flags, change_name);
 	if (!target_path)
 		return Err(target_path.error());
 
 	/* 2. let's move it */
-	if (const auto res = mu_maildir_move_message(
+	if (const auto res = maildir_move_message(
 		    msg->path(), target_path.value(), true/*ignore dups*/); !res)
 		return Err(res.error());
 

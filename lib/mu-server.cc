@@ -822,7 +822,7 @@ void
 Server::Private::mkdir_handler(const Parameters& params)
 {
 	const auto path{get_string_or(params, ":path")};
-	if (auto&& res = mu_maildir_mkdir(path, 0755, FALSE); !res)
+	if (auto&& res = maildir_mkdir(path, 0755, FALSE); !res)
 		throw res.error();
 
 	Sexp::List lst;

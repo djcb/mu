@@ -261,7 +261,7 @@ Yes, that would be excellent.
 	 TempDir tempdir2;
 
 	 { // create a message file.
-		 const auto res1 = mu_maildir_mkdir(tempdir2.path() + "/Maildir/a");
+		 const auto res1 = maildir_mkdir(tempdir2.path() + "/Maildir/a");
 		 assert_valid_result(res1);
 
 		 std::ofstream output{tempdir2.path() + "/Maildir/a/new/msg"};

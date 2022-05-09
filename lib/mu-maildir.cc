@@ -106,7 +106,7 @@ create_noindex(const std::string& path)
 }
 
 Mu::Result<void>
-Mu::mu_maildir_mkdir(const std::string& path, mode_t mode, bool noindex)
+Mu::maildir_mkdir(const std::string& path, mode_t mode, bool noindex)
 {
 	if (auto&& created{create_maildir(path, mode)}; !created)
 		return created; // fail.
@@ -168,7 +168,7 @@ get_target_fullpath(const std::string& src, const std::string& targetpath)
 }
 
 Result<void>
-Mu::mu_maildir_link(const std::string& src, const std::string& targetpath)
+Mu::maildir_link(const std::string& src, const std::string& targetpath)
 {
 	auto path_res{get_target_fullpath(src, targetpath)};
 	if (!path_res)
@@ -231,7 +231,7 @@ clear_links(const std::string& path, DIR* dir)
 }
 
 Mu::Result<void>
-Mu::mu_maildir_clear_links(const std::string& path)
+Mu::maildir_clear_links(const std::string& path)
 {
 	const auto dir{::opendir(path.c_str())};
 	if (!dir)
@@ -247,7 +247,7 @@ Mu::mu_maildir_clear_links(const std::string& path)
 
 
 Result<std::string>
-Mu::mu_maildir_from_path(const std::string& path, const std::string& root)
+Mu::maildir_from_path(const std::string& path, const std::string& root)
 {
 	const auto pos = path.find(root);
 	if (pos != 0 || path[root.length()] != '/')
@@ -339,7 +339,7 @@ base_message_dir_file(const std::string& path)
 // refactor: we have the same code in mu-flags.cc
 
 Mu::Result<Mu::Flags>
-Mu::mu_maildir_flags_from_path(const std::string& path)
+Mu::maildir_flags_from_path(const std::string& path)
 {	/*
 	 * this gets us the source maildir filesystem path, the directory
 	 * in which new/ & cur/ lives, and the source file
@@ -461,7 +461,7 @@ msg_move(const std::string& src, const std::string& dst)
 
 
 Mu::Result<void>
-Mu::mu_maildir_move_message(const std::string&	oldpath,
+Mu::maildir_move_message(const std::string&	oldpath,
 			    const std::string&	newpath,
 			    bool		ignore_dups)
 {
@@ -526,7 +526,7 @@ static Mu::Result<void>
 check_determine_target_params (const std::string&       old_path,
 			       const std::string&       root_maildir_path,
 			       const std::string&       target_maildir,
-			       Flags		newflags)
+			       Flags			newflags)
 {
 	if (!g_path_is_absolute(old_path.c_str()))
 		return Err(Error{Error::Code::File,
@@ -556,10 +556,10 @@ check_determine_target_params (const std::string&       old_path,
 
 
 Mu::Result<std::string>
-Mu::mu_maildir_determine_target(const std::string&	old_path,
+Mu::maildir_determine_target(const std::string&		old_path,
 				const std::string&      root_maildir_path,
 				const std::string&	target_maildir,
-				Flags		newflags,
+				Flags			newflags,
 				bool			new_name)
 {
 	/* sanity checks */

@@ -179,7 +179,7 @@ prepare_links(const MuConfig* opts, GError** err)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
-	if (auto&& res = mu_maildir_mkdir(opts->linksdir, 0700, true); !res) {
+	if (auto&& res = maildir_mkdir(opts->linksdir, 0700, true); !res) {
 		res.error().fill_g_error(err);
 		return FALSE;
 	}
@@ -187,7 +187,7 @@ prepare_links(const MuConfig* opts, GError** err)
 	if (!opts->clearlinks)
 		return TRUE;
 
-	if (auto&& res = mu_maildir_clear_links(opts->linksdir); !res) {
+	if (auto&& res = maildir_clear_links(opts->linksdir); !res) {
 		res.error().fill_g_error(err);
 		return FALSE;
 	}
@@ -205,7 +205,7 @@ output_link(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 		return prepare_links(opts, err);
 	else if (info.footer)
 		return true;
-	if (auto&& res = mu_maildir_link(msg->path(), opts->linksdir); !res) {
+	if (auto&& res = maildir_link(msg->path(), opts->linksdir); !res) {
 		res.error().fill_g_error(err);
 		return FALSE;
 	}

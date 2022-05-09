@@ -46,7 +46,7 @@ namespace Mu {
  *
  * @return a valid result (!!result) or an Error
  */
-Result<void> mu_maildir_mkdir(const std::string& path, mode_t mode=0700,
+Result<void> maildir_mkdir(const std::string& path, mode_t mode=0700,
 			      bool noindex=false);
 
 /**
@@ -59,7 +59,7 @@ Result<void> mu_maildir_mkdir(const std::string& path, mode_t mode=0700,
  *
  * @return a valid result (!!result) or an Error
  */
-Result<void> mu_maildir_link(const std::string& src, const std::string& targetpath);
+Result<void> maildir_link(const std::string& src, const std::string& targetpath);
 
 /**
  * Recursively delete all the symbolic links in a directory tree
@@ -68,11 +68,11 @@ Result<void> mu_maildir_link(const std::string& src, const std::string& targetpa
  *
  * @return a valid result (!!result) or an Error
  */
-Result<void> mu_maildir_clear_links(const std::string& dir);
+Result<void> maildir_clear_links(const std::string& dir);
 
 /**
  * Get the Maildir flags from the full path of a mailfile. The flags are as
- * specified in http://cr.yp.to/proto/maildir.html, plus MU_MSG_FLAG_NEW for new
+ * specified in http://cr.yp.to/proto/maildir.html, plus Flag::New for new
  * messages, ie the ones that live in new/. The flags are logically OR'ed. Note
  * that the file does not have to exist; the flags are based on the path only.
  *
@@ -81,7 +81,7 @@ Result<void> mu_maildir_clear_links(const std::string& dir);
  *
  * @return the message flags or an error
  */
-Result<Flags> mu_maildir_flags_from_path(const std::string& pathname);
+Result<Flags> maildir_flags_from_path(const std::string& pathname);
 
 /**
  * get the maildir for a certain message path, ie, the path *before*
@@ -92,7 +92,7 @@ Result<Flags> mu_maildir_flags_from_path(const std::string& pathname);
  *
  * @return the maildir or an Error
  */
-Result<std::string> mu_maildir_from_path(const std::string& path,
+Result<std::string> maildir_from_path(const std::string& path,
 					 const std::string& root);
 
 /**
@@ -108,7 +108,7 @@ Result<std::string> mu_maildir_from_path(const std::string& path,
  *
  * @return  * @return a valid result (!!result) or an Error
  */
-Result<void> mu_maildir_move_message(const std::string& oldpath,
+Result<void> maildir_move_message(const std::string& oldpath,
 				     const std::string& newpath,
 				     bool               ignore_dups);
 
@@ -134,7 +134,7 @@ Result<void> mu_maildir_move_message(const std::string& oldpath,
  * of error
  */
 Result<std::string>
-mu_maildir_determine_target(const std::string&	old_path,
+maildir_determine_target(const std::string&	old_path,
 			    const std::string&  root_maildir_path,
 			    const std::string&	target_maildir,
 			    Flags		newflags,

@@ -226,7 +226,7 @@ cmd_mkdir(const MuConfig* opts, GError** err)
 	}
 
 	for (i = 1; opts->params[i]; ++i) {
-		if (auto&& res{mu_maildir_mkdir(opts->params[i],
+		if (auto&& res{maildir_mkdir(opts->params[i],
 						opts->dirmode, FALSE)}; !res) {
 			g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
 				    "%s", res.error().what());

@@ -32,7 +32,7 @@
 using namespace Mu;
 
 static void
-test_mu_maildir_mkdir_01(void)
+test_maildir_mkdir_01(void)
 {
 	int          i;
 	gchar *      tmpdir, *mdir, *tmp;
@@ -41,7 +41,7 @@ test_mu_maildir_mkdir_01(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
 
-	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, FALSE));
+	g_assert_true(!!maildir_mkdir(mdir, 0755, FALSE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -61,7 +61,7 @@ test_mu_maildir_mkdir_01(void)
 }
 
 static void
-test_mu_maildir_mkdir_02(void)
+test_maildir_mkdir_02(void)
 {
 	int          i;
 	gchar *      tmpdir, *mdir, *tmp;
@@ -70,7 +70,7 @@ test_mu_maildir_mkdir_02(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
 
-	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, TRUE));
+	g_assert_true(!!maildir_mkdir(mdir, 0755, TRUE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -91,7 +91,7 @@ test_mu_maildir_mkdir_02(void)
 }
 
 static void
-test_mu_maildir_mkdir_03(void)
+test_maildir_mkdir_03(void)
 {
 	int          i;
 	gchar *      tmpdir, *mdir, *tmp;
@@ -109,7 +109,7 @@ test_mu_maildir_mkdir_03(void)
 	}
 
 	/* this should still work */
-	g_assert_true(!!mu_maildir_mkdir(mdir, 0755, FALSE));
+	g_assert_true(!!maildir_mkdir(mdir, 0755, FALSE));
 
 	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
 		gchar* dir;
@@ -129,7 +129,7 @@ test_mu_maildir_mkdir_03(void)
 }
 
 static void
-test_mu_maildir_mkdir_04(void)
+test_maildir_mkdir_04(void)
 {
 	gchar *tmpdir, *mdir;
 
@@ -147,7 +147,7 @@ test_mu_maildir_mkdir_04(void)
 
 	/* this should fail now, because cur is not read/writable  */
 	if (geteuid() != 0)
-		g_assert_false(!!mu_maildir_mkdir(mdir, 0755, false));
+		g_assert_false(!!maildir_mkdir(mdir, 0755, false));
 
 	g_free(tmpdir);
 	g_free(mdir);
@@ -160,16 +160,16 @@ ignore_error(const char* log_domain, GLogLevelFlags log_level, const gchar* msg,
 }
 
 static void
-test_mu_maildir_mkdir_05(void)
+test_maildir_mkdir_05(void)
 {
 	/* this must fail */
 	g_test_log_set_fatal_handler((GTestLogFatalFunc)ignore_error, NULL);
 
-	g_assert_false(!!mu_maildir_mkdir({}, 0755, true));
+	g_assert_false(!!maildir_mkdir({}, 0755, true));
 }
 
 static void
-test_mu_maildir_flags_from_path(void)
+test_maildir_flags_from_path(void)
 {
 	int i;
 	struct {
@@ -187,7 +187,7 @@ test_mu_maildir_flags_from_path(void)
 		{"/home/foo/Maildir/test/cur/123456:2,S", Flags::Seen}};
 
 	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		auto res{mu_maildir_flags_from_path(paths[i].path)};
+		auto res{maildir_flags_from_path(paths[i].path)};
 		g_assert_true(!!res);
 		if (g_test_verbose())
 			g_print("%s -> <%s>\n", paths[i].path,
@@ -265,7 +265,7 @@ test_determine_target_ok(void)
 	};
 
 	for (auto&& testcase: testcases) {
-		const auto res = mu_maildir_determine_target(
+		const auto res = maildir_determine_target(
 			testcase.old_path,
 			testcase.root_maildir,
 			testcase.target_maildir,
@@ -288,7 +288,7 @@ test_determine_target_ok(void)
 
 
 // static void
-// test_mu_maildir_determine_target(void)
+// test_maildir_determine_target(void)
 // {
 //	int i;
 
@@ -313,7 +313,7 @@ test_determine_target_ok(void)
 //		      "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
 
 //	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		const auto res{mu_maildir_determine_target(paths[i].oldpath,
+//		const auto res{maildir_determine_target(paths[i].oldpath,
 //							   "/home/foo/Maildir",
 //							   {},
 //							   paths[i].flags, false)};
@@ -328,7 +328,7 @@ test_determine_target_ok(void)
 // }
 
 // static void
-// test_mu_maildir_get_new_path_01(void)
+// test_maildir_get_new_path_01(void)
 // {
 //	struct {
 //		std::string	oldpath;
@@ -351,7 +351,7 @@ test_determine_target_ok(void)
 //		      "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
 
 //	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		const auto newpath{mu_maildir_determine_target(
+//		const auto newpath{maildir_determine_target(
 //				paths[i].oldpath,
 //				"/home/foo/maildir",
 //				{}, paths[i].flags, false)};
@@ -361,7 +361,7 @@ test_determine_target_ok(void)
 // }
 
 // static void
-// test_mu_maildir_get_new_path_02(void)
+// test_maildir_get_new_path_02(void)
 // {
 //	struct {
 //		std::string	oldpath;
@@ -386,7 +386,7 @@ test_determine_target_ok(void)
 //		      "/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"}};
 
 //	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		auto newpath{mu_maildir_determine_target(paths[i].oldpath,
+//		auto newpath{maildir_determine_target(paths[i].oldpath,
 //							 paths[i].targetdir,
 //							 paths[i].flags,
 //							 false)};
@@ -396,7 +396,7 @@ test_determine_target_ok(void)
 // }
 
 // static void
-// test_mu_maildir_get_new_path_custom(void)
+// test_maildir_get_new_path_custom(void)
 // {
 //	struct {
 //		std::string	oldpath;
@@ -417,7 +417,7 @@ test_determine_target_ok(void)
 //		      "/home/foo/Maildir/blabla/cur/123456:2,Pabc"}};
 
 //	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		auto newpath{mu_maildir_get_new_path(paths[i].oldpath,
+//		auto newpath{maildir_get_new_path(paths[i].oldpath,
 //					      paths[i].targetdir,
 //					      paths[i].flags,
 //					      FALSE)};
@@ -427,7 +427,7 @@ test_determine_target_ok(void)
 // }
 
 // static void
-// test_mu_maildir_from_path(void)
+// test_maildir_from_path(void)
 // {
 //	unsigned u;
 
@@ -437,7 +437,7 @@ test_determine_target_ok(void)
 //		     {"/home/foo/Maildir/lala/new/1313038887_0.697:2,", "/home/foo/Maildir/lala"}};
 
 //	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
-//		auto mdir{mu_maildir_from_path(cases[u].path)};
+//		auto mdir{maildir_from_path(cases[u].path)};
 //		g_assert_true(mdir.has_value());
 //		g_assert_true(*mdir == cases[u].exp);
 //	}
@@ -449,14 +449,14 @@ main(int argc, char* argv[])
 	g_test_init(&argc, &argv, NULL);
 
 	/* mu_util_maildir_mkmdir */
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-01", test_mu_maildir_mkdir_01);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-02", test_mu_maildir_mkdir_02);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-03", test_mu_maildir_mkdir_03);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-04", test_mu_maildir_mkdir_04);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-05", test_mu_maildir_mkdir_05);
+	g_test_add_func("/mu-maildir/mu-maildir-mkdir-01", test_maildir_mkdir_01);
+	g_test_add_func("/mu-maildir/mu-maildir-mkdir-02", test_maildir_mkdir_02);
+	g_test_add_func("/mu-maildir/mu-maildir-mkdir-03", test_maildir_mkdir_03);
+	g_test_add_func("/mu-maildir/mu-maildir-mkdir-04", test_maildir_mkdir_04);
+	g_test_add_func("/mu-maildir/mu-maildir-mkdir-05", test_maildir_mkdir_05);
 
 	g_test_add_func("/mu-maildir/mu-maildir-flags-from-path",
-			test_mu_maildir_flags_from_path);
+			test_maildir_flags_from_path);
 
 
 	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
@@ -465,17 +465,17 @@ main(int argc, char* argv[])
 
 	// /* get/set flags */
 	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-new",
-	//                 test_mu_maildir_get_new_path_new);
+	//                 test_maildir_get_new_path_new);
 
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_mu_maildir_get_new_path_01);
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_mu_maildir_get_new_path_02);
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_maildir_get_new_path_01);
+	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_maildir_get_new_path_02);
 	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
-	//                 test_mu_maildir_get_new_path_custom);
+	//                 test_maildir_get_new_path_custom);
 	// g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
-	//                 test_mu_maildir_get_flags_from_path);
+	//                 test_maildir_get_flags_from_path);
 
 	// g_test_add_func("/mu-maildir/mu-maildir-from-path",
-	//                 test_mu_maildir_from_path);
+	//                 test_maildirx_from_path);
 
 	g_log_set_handler(
 	    NULL,
