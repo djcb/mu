@@ -44,12 +44,35 @@ public:
 	static constexpr Id InvalidId = 0;             /**< Invalid  store id */
 
 	/**
-	 * Construct a store for an existing document database
+	 * Configuration options.
+	 *
+	 * @param path
+	 * @param readonly
+	 */
+	enum struct Options {
+		None	    = 0,	/**< No specific options */
+		Writable    = 1 << 0,	/**< Open in writable mode */
+		AutoUpgrade = 1 << 1,	/**< automatically re-initialize
+					 * versions do not match */
+	};
+
+	/**
+	 * Make a store for an existing document database
 	 *
 	 * @param path path to the database
-	 * @param readonly whether to open the database in read-only mode
+	 * @param options startup options
+	 *
+	 * A store or an error.
 	 */
-	Store(const std::string& path, bool readonly = true);
+	static Result<Store> make(const std::string& path,
+				  Options opts=Options::None) noexcept try {
+		return Ok(Store{path, opts});
+
+	} catch (const Mu::Error& me) {
+		return Err(me);
+	} catch (...) {
+		return Err(Error::Code::Internal, "failed to create store");
+	}
 
 	struct Config {
 		size_t max_message_size{};
@@ -67,10 +90,24 @@ public:
 	 * 'personal' for identifying personal messages.
 	 * @param config a configuration object
 	 */
-	Store(const std::string& path,
-	      const std::string& maildir,
-	      const StringVec&   personal_addresses,
-	      const Config&      conf);
+	static Result<Store> make_new(const std::string& path,
+				      const std::string& maildir,
+				      const StringVec&   personal_addresses,
+				      const Config&      conf) noexcept try {
+
+		return Ok(Store(path, maildir, personal_addresses, conf));
+
+	} catch (const Mu::Error& me) {
+		return Err(me);
+	} catch (...) {
+		return Err(Error::Code::Internal, "failed to create store");
+	}
+
+	/**
+	 * Move CTOR
+	 *
+	 */
+	Store(Store&&);
 
 	/**
 	 * DTOR
@@ -159,7 +196,7 @@ public:
 	 * @param expr a xapian search expression
 	 * @param xapian if true, show Xapian's internal representation,
 	 * otherwise, mu's.
-
+	 *
 	 * @return the string representation of the query
 	 */
 	std::string parse_query(const std::string& expr, bool xapian) const;
@@ -375,9 +412,32 @@ public:
 	const std::unique_ptr<Private>& priv() const { return priv_; }
 
 private:
+	/**
+	 * Construct a store for an existing document database
+	 *
+	 * @param path path to the database
+	 * @param options startup options
+	 */
+	Store(const std::string& path, Options opts=Options::None);
+
+	/**
+	 * Construct a store for a not-yet-existing document database
+	 *
+	 * @param path path to the database
+	 * @param maildir maildir to use for this store
+	 * @param personal_addresses addresses that should be recognized as
+	 * 'personal' for identifying personal messages.
+	 * @param config a configuration object
+	 */
+	Store(const std::string& path,
+	      const std::string& maildir,
+	      const StringVec&   personal_addresses,
+	      const Config&      conf);
 
 	std::unique_ptr<Private> priv_;
 };
+
+MU_ENABLE_BITOPS(Store::Options);
 
 } // namespace Mu
 

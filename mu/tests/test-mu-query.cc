@@ -32,6 +32,7 @@
 
 #include "test-mu-common.hh"
 #include "mu-query.hh"
+#include "utils/mu-result.hh"
 #include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 #include "mu-store.hh"
@@ -90,7 +91,8 @@ run_and_count_matches(const std::string& xpath,
 		      const std::string& expr,
 		      Mu::QueryFlags     flags = Mu::QueryFlags::None)
 {
-	Mu::Store store{xpath};
+	auto store{Store::make(xpath)};
+	assert_valid_result(store);
 
 	// if (g_test_verbose()) {
 	//	std::cout << "==> mquery: " << store.parse_query(expr, false) << "\n";
@@ -99,7 +101,7 @@ run_and_count_matches(const std::string& xpath,
 
 	Mu::allow_warnings();
 
-	auto qres{store.run_query(expr, {}, flags)};
+	auto qres{store->run_query(expr, {}, flags)};
 	g_assert_true(!!qres);
 	assert_no_dups(*qres);
 
@@ -237,11 +239,10 @@ test_mu_query_logic(void)
 static void
 test_mu_query_accented_chars_01(void)
 {
-	return;
+	auto store = Store::make(DB_PATH1);
+	assert_valid_result(store);
 
-	Store store{DB_PATH1};
-
-	auto qres{store.run_query("fünkÿ")};
+	auto qres{store->run_query("fünkÿ")};
 	g_assert_true(!!qres);
 	g_assert_false(qres->empty());
 
@@ -252,10 +253,6 @@ test_mu_query_accented_chars_01(void)
 	}
 
 	assert_equal(msg->subject(), "Greetings from Lothlórien");
-	const auto summ{to_string_opt_gchar(
-			mu_str_summarize(msg->body_text().value_or("").c_str(), 5))};
-	g_assert_true(!!summ);
-	assert_equal(*summ,  "Let's write some fünkÿ text using umlauts. Foo.");
 }
 
 static void

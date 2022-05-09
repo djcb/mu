@@ -116,16 +116,17 @@ report_error(const Mu::Error& err) noexcept
 MuError
 Mu::mu_cmd_server(const MuConfig* opts, GError** err)
 try {
-	Store  store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false /*writable*/};
-	Server server{store, output_sexp_stdout};
+	auto store = Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),			 Store::Options::Writable);
+	if (!store)
+		throw store.error();
 
+	Server server{*store, output_sexp_stdout};
 	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
-		  store.properties().database_path.c_str(),
-		  store.properties().root_maildir.c_str(),
+		  store->properties().database_path.c_str(),
+		  store->properties().root_maildir.c_str(),
 		  opts->debug ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));
-
 	const auto eval = std::string{opts->commands ? "(help :full t)"
 				      : opts->eval   ? opts->eval
 						     : ""};

@@ -43,13 +43,14 @@ static void
 test_store_ctor_dtor()
 {
 	TempDir tempdir;
-	Mu::Store store{tempdir.path(), "/tmp", {}, {}};
+	auto store{Store::make_new(tempdir.path(), "/tmp", {}, {})};
+	assert_valid_result(store);
 
-	g_assert_true(store.empty());
-	g_assert_cmpuint(0, ==, store.size());
+	g_assert_true(store->empty());
+	g_assert_cmpuint(0, ==, store->size());
 
 	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==,
-			store.properties().schema_version.c_str());
+			store->properties().schema_version.c_str());
 }
 
 static void
@@ -57,37 +58,38 @@ test_store_add_count_remove()
 {
 	TempDir tempdir{false};
 
-	Mu::Store store{tempdir.path() + "/xapian", MuTestMaildir, {}, {}};
+	auto store{Store::make_new(tempdir.path() + "/xapian", MuTestMaildir, {}, {})};
+	assert_valid_result(store);
 
 	const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
-	const auto id1 = store.add_message(msgpath);
+	const auto id1 = store->add_message(msgpath);
 	assert_valid_result(id1);
-	store.commit();
+	store->commit();
 
-	g_assert_cmpuint(store.size(), ==, 1);
-	g_assert_true(store.contains_message(msgpath));
+	g_assert_cmpuint(store->size(), ==, 1);
+	g_assert_true(store->contains_message(msgpath));
 
-	g_assert_true(store.contains_message(msgpath));
+	g_assert_true(store->contains_message(msgpath));
 
-	const auto id2 = store.add_message(MuTestMaildir2 + "/bar/cur/mail3");
+	const auto id2 = store->add_message(MuTestMaildir2 + "/bar/cur/mail3");
 	g_assert_false(!!id2); // wrong maildir.
-	store.commit();
+	store->commit();
 
 	const auto msg3path{MuTestMaildir + "/cur/1252168370_3.14675.cthulhu!2,S"};
-	const auto id3 = store.add_message(msg3path);
+	const auto id3 = store->add_message(msg3path);
 	assert_valid_result(id3);
 
-	g_assert_cmpuint(store.size(), ==, 2);
-	g_assert_true(store.contains_message(msg3path));
+	g_assert_cmpuint(store->size(), ==, 2);
+	g_assert_true(store->contains_message(msg3path));
 
-	store.remove_message(id1.value());
-	g_assert_cmpuint(store.size(), ==, 1);
+	store->remove_message(id1.value());
+	g_assert_cmpuint(store->size(), ==, 1);
 	g_assert_false(
-	    store.contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
+	    store->contains_message(MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"));
 
-	store.remove_message(msg3path);
-	g_assert_true(store.empty());
-	g_assert_false(store.contains_message(msg3path));
+	store->remove_message(msg3path);
+	g_assert_true(store->empty());
+	g_assert_false(store->contains_message(msg3path));
 }
 
 
@@ -126,23 +128,24 @@ statement you can use something like:
 goto * instructions[pOp->opcode];
 )";
 	TempDir tempdir;
-	Mu::Store store{tempdir.path(), "/home/test/Maildir", {}, {}};
+	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir", {}, {})};
+	assert_valid_result(store);
 
 	const auto msgpath{"/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S"};
 	auto message{Message::make_from_text(test_message_1, msgpath)};
 	assert_valid_result(message);
 
-	const auto docid = store.add_message(*message);
+	const auto docid = store->add_message(*message);
 	assert_valid_result(docid);
-	g_assert_cmpuint(store.size(),==, 1);
+	g_assert_cmpuint(store->size(),==, 1);
 
-	auto msg2{store.find_message(*docid)};
+	auto msg2{store->find_message(*docid)};
 	g_assert_true(!!msg2);
 	assert_equal(message->path(), msg2->path());
 
-	g_assert_true(store.contains_message(message->path()));
+	g_assert_true(store->contains_message(message->path()));
 
-	const auto qr = store.run_query("to:sqlite-dev@sqlite.org");
+	const auto qr = store->run_query("to:sqlite-dev@sqlite.org");
 	g_assert_true(!!qr);
 	g_assert_cmpuint(qr->size(), ==, 1);
 }
@@ -204,22 +207,23 @@ World!
 )";
 
 	TempDir tempdir;
-	Mu::Store store{tempdir.path(), "/home/test/Maildir", {}, {}};
+	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir", {}, {})};
+	assert_valid_result(store);
 
 	auto message{Message::make_from_text(
 			msg_text,
 			"/home/test/Maildir/inbox/cur/1649279256.abcde_1.evergrey:2,S")};
 	assert_valid_result(message);
 
-	const auto docid = store.add_message(*message);
+	const auto docid = store->add_message(*message);
 	assert_valid_result(docid);
-	store.commit();
+	store->commit();
 
-	auto msg2{store.find_message(*docid)};
+	auto msg2{store->find_message(*docid)};
 	g_assert_true(!!msg2);
 	assert_equal(message->path(), msg2->path());
 
-	g_assert_true(store.contains_message(message->path()));
+	g_assert_true(store->contains_message(message->path()));
 
 	// for (auto&& term = msg2->document().xapian_document().termlist_begin();
 	//      term != msg2->document().xapian_document().termlist_end(); ++term)
@@ -272,21 +276,23 @@ Yes, that would be excellent.
 
 	 // Index it into a store.
 	 TempDir tempdir;
-	 Store store{tempdir.path(), tempdir2.path() + "/Maildir", {}, {}};
-	 store.indexer().start({});
+	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir", {}, {})};
+	 assert_valid_result(store);
+
+	 store->indexer().start({});
 	 size_t n{};
-	 while (store.indexer().is_running()) {
+	 while (store->indexer().is_running()) {
 		 std::this_thread::sleep_for(100ms);
 		 g_assert_cmpuint(n++,<=,25);
 	 }
-	 g_assert_true(!store.indexer().is_running());
-	 const auto& prog{store.indexer().progress()};
+	 g_assert_true(!store->indexer().is_running());
+	 const auto& prog{store->indexer().progress()};
 	 g_assert_cmpuint(prog.updated,==,1);
-	 g_assert_cmpuint(store.size(), ==, 1);
-	 g_assert_false(store.empty());
+	 g_assert_cmpuint(store->size(), ==, 1);
+	 g_assert_false(store->empty());
 
 	 // Find the message
-	 auto qr = store.run_query("path:" + tempdir2.path() + "/Maildir/a/new/msg");
+	 auto qr = store->run_query("path:" + tempdir2.path() + "/Maildir/a/new/msg");
 	 assert_valid_result(qr);
 	 g_assert_cmpuint(qr->size(),==,1);
 
@@ -301,7 +307,7 @@ Yes, that would be excellent.
 
 	 // Move the message from new->cur
 	 std::this_thread::sleep_for(1s); /* ctime should change */
-	 const auto msg3 = store.move_message(msg->docid(), {}, Flags::Seen);
+	 const auto msg3 = store->move_message(msg->docid(), {}, Flags::Seen);
 	 assert_valid_result(msg3);
 	 assert_equal(msg3->maildir(), "/a");
 	 assert_equal(msg3->path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
@@ -309,7 +315,7 @@ Yes, that would be excellent.
 	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
 
 	 g_debug("%s", msg3->to_sexp().to_sexp_string().c_str());
-	 g_assert_cmpuint(store.size(), ==, 1);
+	 g_assert_cmpuint(store->size(), ==, 1);
 }
 
 

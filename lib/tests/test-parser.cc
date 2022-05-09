@@ -26,6 +26,7 @@
 #include "test-mu-common.hh"
 
 #include "mu-parser.hh"
+#include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
 using namespace Mu;
 
@@ -42,10 +43,12 @@ test_cases(const CaseVec& cases)
 {
 	char* tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(tmpdir);
-	Mu::Store dummy_store{tmpdir, "/tmp", {}, {}};
+	auto dummy_store{Store::make_new(tmpdir, "/tmp", {}, {})};
+	assert_valid_result(dummy_store);
+
 	g_free(tmpdir);
 
-	Parser parser{dummy_store, Parser::Flags::UnitTest};
+	Parser parser{*dummy_store, Parser::Flags::UnitTest};
 
 	for (const auto& casus : cases) {
 		WarningVec warnings;

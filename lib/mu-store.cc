@@ -291,15 +291,47 @@ Store::Private::find_message_unlocked(Store::Id docid) const
 
 
 
-Store::Store(const std::string& path, bool readonly)
-    : priv_{std::make_unique<Private>(path, readonly)}
+Store::Store(const std::string& path, Store::Options opts)
+    : priv_{std::make_unique<Private>(path, none_of(opts & Store::Options::Writable))}
 {
-	if (properties().schema_version != ExpectedSchemaVersion)
+	if (properties().schema_version == ExpectedSchemaVersion)
+		return; // all is good.
+
+	// Now, it seems the schema versions do not match; shall we automatically
+	// update?
+
+	if (none_of(opts & Store::Options::AutoUpgrade)) {
+		// not allowed to auto-upgrade, so we give up.
 		throw Mu::Error(Error::Code::SchemaMismatch,
 				"expected schema-version %s, but got %s; "
-				"please use 'mu init'",
+				"cannot auto-upgrade; please use 'mu init'",
 				ExpectedSchemaVersion,
 				properties().schema_version.c_str());
+	}
+
+	// Okay, let's attempt an auto-upgrade.
+	g_info("attempt reinit database from schema %s --> %s",
+	       properties().schema_version.c_str(), ExpectedSchemaVersion);
+
+	Config	conf;
+	conf.batch_size	      = properties().batch_size;
+	conf.max_message_size = properties().max_message_size;
+
+	priv_.reset();
+	priv_ = std::make_unique<Private>(path,
+					  properties().root_maildir,
+					  properties().personal_addresses,
+					  conf);
+	// Now let's try again.
+	priv_.reset();
+	priv_ = std::make_unique<Private>(path, none_of(opts & Store::Options::Writable));
+	if (properties().schema_version != ExpectedSchemaVersion)
+		// Nope, we failed.
+		throw Mu::Error(Error::Code::SchemaMismatch,
+				"failed to auto-upgrade from %s to %s; "
+				"please use 'mu init'",
+				properties().schema_version.c_str(),
+				ExpectedSchemaVersion);
 }
 
 Store::Store(const std::string&   path,
@@ -309,6 +341,8 @@ Store::Store(const std::string&   path,
     : priv_{std::make_unique<Private>(path, maildir, personal_addresses, conf)}
 {
 }
+
+Store::Store(Store&&) = default;
 
 Store::~Store() = default;
 

@@ -549,9 +549,13 @@ cmd_init(const MuConfig* opts, GError** err)
 		++addrs;
 	}
 
-	Mu::Store store(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), opts->maildir, my_addrs, conf);
+	auto store = Store::make_new(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+				     opts->maildir, my_addrs, conf);
+	if (!store)
+		throw store.error();
+
 	if (!opts->quiet) {
-		cmd_info(store, opts, NULL);
+		cmd_info(*store, opts, NULL);
 		std::cout << "\nstore created; use the 'index' command to fill/update it.\n";
 	}
 
@@ -561,9 +565,11 @@ cmd_init(const MuConfig* opts, GError** err)
 static Result<void>
 cmd_find(const MuConfig* opts)
 {
-	Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), true /*readonly*/};
-
-	return mu_cmd_find(store, opts);
+	auto store{Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB))};
+	if (!store)
+		return Err(store.error());
+	else
+		return mu_cmd_find(*store, opts);
 }
 
 static void
@@ -582,15 +588,22 @@ typedef MuError (*writable_store_func)(Mu::Store&, const MuConfig*, GError** err
 static MuError
 with_readonly_store(readonly_store_func func, const MuConfig* opts, GError** err)
 {
-	const Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), true /*readonly*/};
-	return func(store, opts, err);
+	auto store{Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB))};
+	if (!store)
+		throw store.error();
+
+	return func(*store, opts, err);
 }
 
 static MuError
 with_writable_store(writable_store_func func, const MuConfig* opts, GError** err)
 {
-	Mu::Store store{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB), false /*!readonly*/};
-	return func(store, opts, err);
+	auto store{Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+			       Store::Options::Writable)};
+	if (!store)
+		throw store.error();
+
+	return func(*store, opts, err);
 }
 
 static gboolean

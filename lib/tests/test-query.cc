@@ -28,6 +28,7 @@
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "index/mu-indexer.hh"
+#include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
 #include "test-mu-common.hh"
 
@@ -40,10 +41,11 @@ test_query()
 	char* tdir;
 
 	tdir = test_mu_common_get_random_tmpdir();
-	Store store{tdir, std::string{MU_TESTMAILDIR}, {}, {}};
+	auto store = Store::make_new(tdir, std::string{MU_TESTMAILDIR}, {}, {});
+	assert_valid_result(store);
 	g_free(tdir);
 
-	auto&& idx{store.indexer()};
+	auto&& idx{store->indexer()};
 
 	g_assert_true(idx.start(Indexer::Config{}));
 	while (idx.is_running()) {
@@ -60,17 +62,17 @@ test_query()
 					item.message_id().value_or("<none>").c_str());
 	};
 
-	g_assert_cmpuint(store.size(), ==, 19);
+	g_assert_cmpuint(store->size(), ==, 19);
 
 	{
-		const auto res = store.run_query("", {}, QueryFlags::None);
+		const auto res = store->run_query("", {}, QueryFlags::None);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 19);
 		dump_matches(*res);
 	}
 
 	{
-		const auto res = store.run_query("", Field::Id::Path, QueryFlags::None, 11);
+		const auto res = store->run_query("", Field::Id::Path, QueryFlags::None, 11);
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 11);
 		dump_matches(*res);
