@@ -290,7 +290,7 @@ For testing/debugging."
         (setq contacts (sort contacts
                              (lambda(cell1 cell2) (< (car cell1) (car cell2)))))
         (dolist (contact contacts)
-          (insert (format "%s\n" (mu4e-contact-email contact))))))
+          (insert (format "%s\n" (cdr contact))))))
 
     (pop-to-buffer "*mu4e-contacts-info*")))
 
