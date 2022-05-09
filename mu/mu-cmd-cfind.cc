@@ -265,18 +265,19 @@ print_plain(const std::string& email, const std::string& name, bool color)
 }
 
 struct ECData {
-	MuConfigFormat format;
-	gboolean       color, personal;
-	time_t         after;
-	GRegex*        rx;
-	GHashTable*    nicks;
-	size_t         n;
+	MuConfigFormat	format;
+	gboolean	color, personal;
+	time_t		after;
+	GRegex*		rx;
+	GHashTable*	nicks;
+	size_t		maxnum;
+	size_t		n;
 };
 
 static void
 each_contact(const Mu::Contact& ci, ECData& ecdata)
 {
-	if (ecdata.personal && ci.personal)
+	if (ecdata.personal && !ci.personal)
 		return;
 
 	if (ci.message_date < ecdata.after)
@@ -334,13 +335,14 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 }
 
 static MuError
-run_cmd_cfind(const Mu::Store&     store,
-	      const char*          pattern,
-	      gboolean             personal,
-	      time_t               after,
-	      const MuConfigFormat format,
-	      gboolean             color,
-	      GError**             err)
+run_cmd_cfind(const Mu::Store&		store,
+	      const char*		pattern,
+	      gboolean			personal,
+	      time_t			after,
+	      int			maxnum,
+	      const MuConfigFormat	format,
+	      gboolean			color,
+	      GError**			err)
 {
 	ECData ecdata{};
 
@@ -360,14 +362,17 @@ run_cmd_cfind(const Mu::Store&     store,
 	ecdata.personal = personal;
 	ecdata.n        = 0;
 	ecdata.after    = after;
+	ecdata.maxnum   = maxnum;
 	ecdata.format   = format;
 	ecdata.color    = color;
 	ecdata.nicks    = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 	print_header(format);
 
-	store.contacts_cache().for_each([&](const auto& ci) { each_contact(ci, ecdata); });
-
+	store.contacts_cache().for_each([&](const auto& ci) {
+		each_contact(ci, ecdata);
+		return ecdata.maxnum == 0 || ecdata.n < ecdata.maxnum;
+	});
 	g_hash_table_unref(ecdata.nicks);
 
 	if (ecdata.rx)
@@ -422,6 +427,7 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err)
 				 opts->params[1],
 				 opts->personal,
 				 opts->after,
+				 opts->maxnum,
 				 opts->format,
 				 !opts->nocolor,
 				 err);

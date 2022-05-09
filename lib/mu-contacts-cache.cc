@@ -304,7 +304,7 @@ using ContactSet = std::set<std::reference_wrapper<const Contact>,
 			    ContactLessThan>;
 
 void
-ContactsCache::for_each(const EachContactFunc& each_contact, size_t max_num) const
+ContactsCache::for_each(const EachContactFunc& each_contact) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
@@ -316,12 +316,10 @@ ContactsCache::for_each(const EachContactFunc& each_contact, size_t max_num) con
 	for (const auto& item : priv_->contacts_)
 		sorted.emplace(item.second);
 
-	// sadly, there's no set::resize
-	size_t n{};
-	for (const auto& ci : sorted) {
-		if (max_num > 0 && n++ >= max_num)
+	// return in _reverse_ order, so we get the most relevant ones first.
+	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+		if (!each_contact(*it))
 			break;
-		each_contact(ci);
 	}
 }
 
@@ -424,6 +422,7 @@ test_mu_contacts_cache_sort()
 			if (g_test_verbose())
 				g_print("\t- %s\n", contact.display_name().c_str());
 			str += contact.name;
+			return true;
 		});
 		return str;
 	};
@@ -431,38 +430,38 @@ test_mu_contacts_cache_sort()
 
 	const auto now{std::time({})};
 
-	// "first" means less relevant
+	// "first" means more relevant
 
-	{ /* recent messages, older comes first */
+	{ /* recent messages, newer comes first */
 
 		Mu::ContactsCache ccache("");
 		ccache.add(Mu::Contact{"a@example.com", "a", now, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now-1, true, 1000, 0});
-		assert_equal(result_chars(ccache), "ba");
+		assert_equal(result_chars(ccache), "ab");
 	}
 
-	{ /* non-recent messages, less frequent comes first */
+	{ /* non-recent messages, more frequent comes first */
 
 		Mu::ContactsCache ccache("");
 		ccache.add(Mu::Contact{"a@example.com", "a", now-2*RecentOffset, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now-3*RecentOffset, true, 2000, 0});
-		assert_equal(result_chars(ccache), "ab");
+		assert_equal(result_chars(ccache), "ba");
 	}
 
-	{ /* non-personal comes first */
+	{ /* personal comes first */
 
 		Mu::ContactsCache ccache("");
 		ccache.add(Mu::Contact{"a@example.com", "a", now-5*RecentOffset, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 8000, 0});
-		assert_equal(result_chars(ccache), "ba");
+		assert_equal(result_chars(ccache), "ab");
 	}
 
-	{ /* if all else fails, alphabetically */
+	{ /* if all else fails, reverse-alphabetically */
 		Mu::ContactsCache ccache("");
 		ccache.add(Mu::Contact{"a@example.com", "a", now, false, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 1000, 0});
 		g_assert_cmpuint(ccache.size(),==,2);
-		assert_equal(result_chars(ccache), "ab");
+		assert_equal(result_chars(ccache), "ba");
 	}
 }
 

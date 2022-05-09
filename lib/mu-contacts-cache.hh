@@ -136,16 +136,18 @@ public:
 	 * Prototype for a callable that receives a contact
 	 *
 	 * @param contact some contact
+	 *
+	 * @return to get more contacts; false otherwise
 	 */
-	using EachContactFunc = std::function<void(const Contact& contact_info)>;
+	using EachContactFunc = std::function<bool(const Contact& contact_info)>;
 
 	/**
-	 * Invoke some callable for each contact, in order of rank.
+	 * Invoke some callable for each contact, in _descending_ order of rank (i.e., the
+	 * highest ranked contacts come first).
 	 *
 	 * @param each_contact function invoked for each contact
-	 * @param max_num stop after at most so many contacts, or 0 for no limit
 	 */
-	void for_each(const EachContactFunc& each_contact, size_t max_num=0) const;
+	void for_each(const EachContactFunc& each_contact) const;
 
 private:
 	struct Private;

@@ -532,30 +532,25 @@ Server::Private::contacts_handler(const Parameters& params)
 		time_to_string("%c", after).c_str(),
 		static_cast<size_t>(tstamp));
 
-	auto       rank{0};
+	auto       n{0};
 	Sexp::List contacts;
 	store().contacts_cache().for_each([&](const Contact& ci) {
 
 		/* since the last time we got some contacts */
 		if (tstamp > ci.tstamp)
-			return;
+			return true;
 		/* (maybe) only include 'personal' contacts */
 		if (personal && !ci.personal)
-			return;
+			return true;
 		/* only include newer-than-x contacts */
 		if (after > ci.message_date)
-			return;
+			return true;
 
-		rank++;
+		n++;
 
-		Sexp::List contact;
-		contact.add_prop(":address",
-				 Sexp::make_string(ci.display_name(true/*encode-if-needed*/)));
-		contact.add_prop(":rank", Sexp::make_number(rank));
-		auto contacts_sexp{Sexp::make_list(std::move(contact))};
-		contacts_sexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
-		contacts.add(std::move(contacts_sexp));
-	}, static_cast<size_t>(maxnum));
+		contacts.add(Sexp::make_string(ci.display_name(true/*encode-if-needed*/)));
+		return maxnum == 0 || n < maxnum;
+	});
 
 	Sexp::List seq;
 	seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
@@ -564,7 +559,7 @@ Server::Private::contacts_handler(const Parameters& params)
 					      g_get_monotonic_time())));
 
 	/* dump the contacts cache as a giant sexp */
-	g_debug("sending %d of %zu contact(s)", rank, store().contacts_cache().size());
+	g_debug("sending %d of %zu contact(s)", n, store().contacts_cache().size());
 	output_sexp(std::move(seq), Server::OutputFlags::SplitList);
 }
 

@@ -296,6 +296,8 @@ config_options_group_cfind()
 	     "whether to only get 'personal' contacts", NULL},
 	    {"after", 0, 0, G_OPTION_ARG_INT, &MU_CONFIG.after,
 	     "only get addresses last seen after T", "<timestamp>"},
+	    {"maxnum", 'n', 0, G_OPTION_ARG_INT, &MU_CONFIG.maxnum,
+	     "maximum number of contacts", "<number>"},
 	    {NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL}};
 
 	og = g_option_group_new("cfind", "Options for the 'cfind' command", "", NULL,
