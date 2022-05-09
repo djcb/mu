@@ -151,7 +151,7 @@ invoke
                         (mu4e--maildirs-with-query)))))
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
-  (unless mu4e--contacts-hash (mu4e--request-contacts-maybe)))
+  (unless mu4e--contacts-set (mu4e--request-contacts-maybe)))
 
 (defun mu4e--stop ()
   "Stop mu4e."
@@ -251,7 +251,7 @@ chance."
   "Clear any cached resources."
   (setq
    mu4e-maildir-list nil
-   mu4e--contacts-hash nil
+   mu4e--contacts-set nil
    mu4e--contacts-tstamp "0"))
 ;;; _
 (provide 'mu4e)

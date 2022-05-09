@@ -441,7 +441,7 @@ status, STATUS."
    ((looking-back "\\(from\\|to\\|cc\\|bcc\\|contact\\|recip\\):\\([a-zA-Z0-9/.@]*\\)" nil)
     (list (match-beginning 2)
           (match-end 2)
-          mu4e--contacts-hash
+          mu4e--contacts-set
           :exit-function
           #'mu4e--search-completion-contacts-action))
    ((looking-back "list:\\([a-zA-Z0-9/.@]*\\)" nil)

@@ -224,9 +224,9 @@ Message-ID."
   "Complete address STR with predication PRED for ACTION."
   (cond
    ((eq action nil)
-    (try-completion str mu4e--contacts-hash pred))
+    (try-completion str mu4e--contacts-set pred))
    ((eq action t)
-    (all-completions str mu4e--contacts-hash pred))
+    (all-completions str mu4e--contacts-set pred))
    ((eq action 'metadata)
     ;; our contacts are already sorted - just need to tell the
     ;; completion machinery not to try to undo that...
@@ -357,7 +357,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (mu4e~compose-register-message-save-hooks)
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
-      (unless mu4e--contacts-hash
+      (unless mu4e--contacts-set
 	;; work-around for https://github.com/djcb/mu/issues/1016
         (mu4e--request-contacts-maybe))
       (mu4e~compose-setup-completion))
