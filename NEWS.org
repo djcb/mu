@@ -24,7 +24,7 @@
    - After that, either =ninja -C build= or =make= should be enough to rebuild
 
    - Before installing, it is recommended that you *remove* any older versions of
-     ~mu~ and especiall ~mu4e~, since they may conflict with the newere ones.
+     ~mu~ and especiall ~mu4e~, since they may conflict with the newer ones.
 
    - =mu= now requires C++17 support for building
 
@@ -43,102 +43,108 @@
      much of this is not immediately visible but is an enabler for some new
      features.
 
+   - the ~info~ command now includes information about the last indexing operation
+     and the last database change that took place; note that the information may
+     be slightly delayed due to database caching.
+
    - the ~verify~ command for checking signatures has been updated, and is more
      informative
 
-   - a new command ~mu fields~ provides information about the message fields and
+   - a new command ~fields~ provides information about the message fields and
      flags for use in queries. The information is the same information that ~mu~
      uses and so stays up to date.
 
    - a new message field ~changed~, which refers to the time/date of the last time
-     a message was changed (the file ~ctime~).
+     a message was changed (the file ~ctime~) and a new flag ~personal~ to search
+     for "personal" messages, which are defined as a message with at least one
+     personal contact.
 
    - message sexps are now cached in the store, which makes delivering
      sexp-based search results (as used by ~mu4e~) much faster.
 
 *** mu4e
 
-    - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
-      for removing quite a bit of old code.
+   - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
+     for removing quite a bit of old code.
 
-    - the mu4e headers rendering is much faster (a factor of 3+), which makes
-      displaying big results snappier. This required some updates in the headers
-      handling and in the server protocol. Separate from that, the cached
-      message sexps (see the ~mu~ section) make getting the results much faster.
-      This becomes esp. clear when there are a lot of query results.
+   - the mu4e headers rendering is much faster (a factor of 3+), which makes
+     displaying big results snappier. This required some updates in the headers
+     handling and in the server protocol. Separate from that, the cached
+     message sexps (see the ~mu~ section) make getting the results much faster.
+     This becomes esp. clear when there are a lot of query results.
 
-    - indexing happens in the background now and mu4e can interact with the
-      server while it is ongoing; this allows for using mu4e during lengthy
-      indexing operations.
+   - indexing happens in the background now and mu4e can interact with the
+     server while it is ongoing; this allows for using mu4e during lengthy
+     indexing operations.
 
-    - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
-      whether anything changed (before, it fired only is something changed). In
-      your hook-functions (or elsewhere) you can check if anything changed using
-      the new variable ~mu4e-index-update-status~. And note that ~processed~ has
-      been renamed into ~checked~, with a slightly different meaning, see the mu
-      section.
+   - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
+     whether anything changed (before, it fired only is something changed). In
+     your hook-functions (or elsewhere) you can check if anything changed using
+     the new variable ~mu4e-index-update-status~. And note that ~processed~ has
+     been renamed into ~checked~, with a slightly different meaning, see the mu
+     section.
 
-    - ~message-user-organization~ can now be used to set the ~Organization:~
-      header. See its docstring for details.
+   - ~message-user-organization~ can now be used to set the ~Organization:~
+     header. See its docstring for details.
 
-    - ~mu4e-compose-context-switch~ no longer attempts to update the draft folder
-      (which turned out to be a little fragile). However, it has been updated to
-      automatically change the ~Organization:~ header, and attempts to update the
-      message signature. Also, there's a key-binding now: ~C-c ;~
+   - ~mu4e-compose-context-switch~ no longer attempts to update the draft folder
+     (which turned out to be a little fragile). However, it has been updated to
+     automatically change the ~Organization:~ header, and attempts to update the
+     message signature. Also, there's a key-binding now: ~C-c ;~
 
-    - A new ~defcustom~, ~mu4e-view-open-program~ for starting the appropriate
-      program for a give file (e.g., ~xdg-open~). There are some reasonable
-      defaults for various systems. This can also be set to a function.
+   - A new ~defcustom~, ~mu4e-view-open-program~ for starting the appropriate
+     program for a give file (e.g., ~xdg-open~). There are some reasonable
+     defaults for various systems. This can also be set to a function.
 
-    - For performance testing, you can set the variable
-      ~mu4e-headers-report-render-time~ to ~t~ and ~mu4e~ will report the
-      search/rendering speed of each query operation.
+   - For performance testing, you can set the variable
+     ~mu4e-headers-report-render-time~ to ~t~ and ~mu4e~ will report the
+     search/rendering speed of each query operation.
 
-    - As an additional measure to limit the number of contacts that mu4e loads
-      for auto-completions, there's ~mu4e-compose-complete-max~, which by default
-      is set to *2000*, so you can auto-complete your 2000 closest friends.
+   - As an additional measure to limit the number of contacts that mu4e loads
+     for auto-completions, there's ~mu4e-compose-complete-max~, which by default
+     is set to *2000*, so you can auto-complete your 2000 closest friends.
 
-    - Updated the "fancy" characters for some header fields. Added new ones for
-      personal and list messages.
+   - Updated the "fancy" characters for some header fields. Added new ones for
+     personal and list messages.
 
-    - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
+   - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
 
-    - Removed header-fields ~:attachments~, ~:signature~, ~:encryption~ and
-      ~:user-agent~. They're obsolete with the Gnus-based message viewer.
+   - Removed header-fields ~:attachments~, ~:signature~, ~:encryption~ and
+     ~:user-agent~. They're obsolete with the Gnus-based message viewer.
 
-    - undo is now supported across message-saves
+   - undo is now supported across message-saves
 
-    - a lot of the internals have been changed:
+   - a lot of the internals have been changed:
 
-      - =mu4e= is slowly moving from using the =~= to the more common =--= separator
-	for private functions; i.e., =mu4e-foo= becomes =mu4e--foo=.
+     - =mu4e= is slowly moving from using the =~= to the more common =--= separator
+   	for private functions; i.e., =mu4e-foo= becomes =mu4e--foo=.
 
-      - =mu4e-utils.el= had become a bit of a dumping ground for bits of code;
-	it's gone now, with the functionality move to topic-specific files --
-	=mu4e-folders.el=, =mu4e-bookmarks.el=, =mu4e-update.el=, and included in
-	existing files.
+     - =mu4e-utils.el= had become a bit of a dumping ground for bits of code;
+   	it's gone now, with the functionality move to topic-specific files --
+   	=mu4e-folders.el=, =mu4e-bookmarks.el=, =mu4e-update.el=, and included in
+   	existing files.
 
-      - the remaining common functionality has ended up in =mu4e-helpers.el=
+     - the remaining common functionality has ended up in =mu4e-helpers.el=
 
-      - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=, and
-	adds a minor-mode for the keybindings.
+     - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=, and
+   	adds a minor-mode for the keybindings.
 
-      - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
-	keybindings, which saves a lot of code in the various views, since they
-	don't need explicitly bind all those function.
+     - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
+   	keybindings, which saves a lot of code in the various views, since they
+   	don't need explicitly bind all those function.
 
-      - also =mu4e-vars.el= had become very big, we're refactoring the =defvar= /
-	=defcustom= declarations to the topic-specific files.
+     - also =mu4e-vars.el= had become very big, we're refactoring the =defvar= /
+   	=defcustom= declarations to the topic-specific files.
 
-      - =mu4e-proc.el= has been renamed =mu4e-server.el=.
+     - =mu4e-proc.el= has been renamed =mu4e-server.el=.
 
-      - Between =mu= and =mu4e=, contact cells are now represented as a plist ~(:name
-	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
-	Bar" . "foobar@example.com").~
+     - Between =mu= and =mu4e=, contact cells are now represented as a plist ~(:name
+   	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
+   	Bar" . "foobar@example.com").~
 
-	If you have scripts depending on the old format, there's the
-        ~mu4e-contact-cons~ function which takes a news-style contact and yields
-        the old form.
+   	If you have scripts depending on the old format, there's the
+       ~mu4e-contact-cons~ function which takes a news-style contact and yields
+       the old form.
 
     - Because of all these changes, it is recommended you remove older version
       of ~mu4e~ before reinstalling.
