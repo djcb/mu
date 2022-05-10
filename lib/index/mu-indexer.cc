@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -57,17 +57,14 @@ struct IndexState {
 		}
 	}
 
-	bool operator==(State rhs) const
-	{
+	bool operator==(State rhs) const {
 		return state_ == rhs;
 	}
-	bool operator!=(State rhs) const
-	{
+	bool operator!=(State rhs) const {
 		return state_ != rhs;
 	}
 
-	void change_to(State new_state)
-	{
+	void change_to(State new_state) {
 		g_debug("changing indexer state %s->%s", name((State)state_),
 			name((State)new_state));
 		state_ = new_state;
@@ -332,11 +329,14 @@ Indexer::Private::scan_worker()
 
 	if (conf_.cleanup) {
 		g_debug("starting cleanup");
+
 		state_.change_to(IndexState::Cleaning);
 		cleanup();
 		g_debug("cleanup finished");
 	}
+
 leave:
+	store_.index_complete();
 	state_.change_to(IndexState::Idle);
 }
 
@@ -377,6 +377,7 @@ Indexer::Private::stop()
 	if (scanner_worker_.joinable())
 		scanner_worker_.join();
 
+	store_.index_complete();
 	state_.change_to(IndexState::Idle);
 	for (auto&& w : workers_)
 		if (w.joinable())

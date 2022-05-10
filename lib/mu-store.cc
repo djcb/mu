@@ -48,6 +48,7 @@ using namespace Mu;
 
 static_assert(std::is_same<Store::Id, Xapian::docid>::value, "wrong type for Store::Id");
 
+// Properties
 constexpr auto SchemaVersionKey     = "schema-version";
 constexpr auto RootMaildirKey       = "maildir"; // XXX: make this 'root-maildir'
 constexpr auto ContactsKey          = "contacts";
@@ -58,9 +59,26 @@ constexpr auto DefaultBatchSize     = 250'000U;
 
 constexpr auto MaxMessageSizeKey     = "max-message-size";
 constexpr auto DefaultMaxMessageSize = 100'000'000U;
-
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 
+// Stats.
+constexpr auto ChangedKey           = "changed";
+constexpr auto IndexedKey           = "indexed";
+
+
+static std::string
+tstamp_to_string(::time_t t)
+{
+	char buf[17];
+	::snprintf(buf, sizeof(buf), "%" PRIx64, static_cast<int64_t>(t));
+	return std::string(buf);
+}
+
+static ::time_t
+string_to_tstamp(const std::string& str)
+{
+	return static_cast<::time_t>(::strtoll(str.c_str(), {}, 16));
+}
 
 struct Store::Private {
 	enum struct XapianOpts { ReadOnly, Open, CreateOverwrite };
@@ -81,20 +99,6 @@ struct Store::Private {
 	    : read_only_{false}, db_{make_xapian_db(path, XapianOpts::CreateOverwrite)},
 	      properties_{init_metadata(conf, path, root_maildir, personal_addresses)},
 	      contacts_cache_{"", properties_.personal_addresses} {
-
-		/* add synonym */
-		for (auto&& info: AllMessageFlagInfos) {
-			constexpr auto field{field_from_id(Field::Id::Flags)};
-			const auto s1{field.xapian_term(info.name)};
-			const auto s2{field.xapian_term(info.shortcut)};
-			writable_db().add_synonym(s1, s2);
-		}
-		for (auto&& prio : AllMessagePriorities) {
-			constexpr auto field{field_from_id(Field::Id::Priority)};
-			const auto s1{field.xapian_term(to_string(prio))};
-			const auto s2{field.xapian_term(to_char(prio))};
-			writable_db().add_synonym(s1, s2);
-		}
 	}
 
 	~Private()
@@ -193,7 +197,7 @@ struct Store::Private {
 
 		props.database_path	 = db_path;
 		props.schema_version	 = db().get_metadata(SchemaVersionKey);
-		props.created		 = ::atoll(db().get_metadata(CreatedKey).c_str());
+		props.created		 = string_to_tstamp(db().get_metadata(CreatedKey));
 		props.read_only		 = read_only_;
 		props.batch_size	 = ::atoll(db().get_metadata(BatchSizeKey).c_str());
 		props.max_message_size	 = ::atoll(db().get_metadata(MaxMessageSizeKey).c_str());
@@ -209,7 +213,7 @@ struct Store::Private {
 					const StringVec&     personal_addresses) {
 
 		writable_db().set_metadata(SchemaVersionKey, ExpectedSchemaVersion);
-		writable_db().set_metadata(CreatedKey, Mu::format("%" PRId64, (int64_t)::time({})));
+		writable_db().set_metadata(CreatedKey, tstamp_to_string(::time({})));
 
 		const size_t batch_size = conf.batch_size ? conf.batch_size : DefaultBatchSize;
 		writable_db().set_metadata(BatchSizeKey, Mu::format("%zu", batch_size));
@@ -258,6 +262,7 @@ Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
 	return xapian_try_result([&]{
 		writable_db().replace_document(docid, msg.document().xapian_document());
 		g_debug("updated message @ %s; docid = %u", msg.path().c_str(), docid);
+		writable_db().set_metadata(ChangedKey, tstamp_to_string(::time({})));
 		return Ok(std::move(docid));
 	});
 }
@@ -272,6 +277,7 @@ Store::Private::update_message_unlocked(Message& msg, const std::string& path_to
 			field_from_id(Field::Id::Path).xapian_term(path_to_replace),
 			msg.document().xapian_document());
 
+		writable_db().set_metadata(ChangedKey, tstamp_to_string(::time({})));
 		return Ok(std::move(id));
 	});
 }
@@ -287,8 +293,6 @@ Store::Private::find_message_unlocked(Store::Id docid) const
 			return Nothing;
 		}, Nothing);
 }
-
-
 
 
 Store::Store(const std::string& path, Store::Options opts)
@@ -351,6 +355,20 @@ Store::properties() const
 {
 	return priv_->properties_;
 }
+
+Store::Statistics
+Store::statistics() const
+{
+	Statistics stats{};
+
+	stats.size = size();
+	stats.last_change = string_to_tstamp(priv_->db().get_metadata(ChangedKey));
+	stats.last_index = string_to_tstamp(priv_->db().get_metadata(IndexedKey));
+
+	return stats;
+}
+
+
 
 const ContactsCache&
 Store::contacts_cache() const
@@ -455,6 +473,8 @@ Store::remove_message(const std::string& path)
 		    std::lock_guard   guard{priv_->lock_};
 		    const auto term{field_from_id(Field::Id::Path).xapian_term(path)};
 		    priv_->writable_db().delete_document(term);
+		    priv_->writable_db().set_metadata(
+			    ChangedKey, tstamp_to_string(::time({})));
 		    g_debug("deleted message @ %s from store", path.c_str());
 
 		    return true;
@@ -473,6 +493,8 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 		for (auto&& id : ids) {
 			priv_->writable_db().delete_document(id);
 		}
+		priv_->writable_db().set_metadata(
+			ChangedKey, tstamp_to_string(::time({})));
 	});
 
 	priv_->transaction_maybe_commit(true /*force*/);
@@ -617,6 +639,15 @@ Store::commit()
 	std::lock_guard guard{priv_->lock_};
 	priv_->transaction_maybe_commit(true /*force*/);
 }
+
+
+void
+Store::index_complete()
+{
+	g_debug("marking index complete");
+	priv_->writable_db().set_metadata(IndexedKey, tstamp_to_string(::time({})));
+}
+
 
 std::size_t
 Store::for_each_term(Field::Id field_id, Store::ForEachTermFunc func) const

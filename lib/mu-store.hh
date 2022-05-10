@@ -138,6 +138,27 @@ public:
 	 * @return the metadata
 	 */
 	const Properties& properties() const;
+
+
+	/**
+	 * Store statistics. Unlike the properties, these can change
+	 * during the lifetime of a store.
+	 *
+	 */
+	struct Statistics {
+		size_t   size;	/**< number of messages in store */
+		::time_t last_change; /**< last time any update happened */
+		::time_t last_index; /**< last time an indexing op was performed */
+	};
+
+	/**
+	 * Get store statistics
+	 *
+	 * @return statistics
+	 */
+	Statistics statistics() const;
+
+
 	/**
 	 * Get the ContactsCache object for this store
 	 *
@@ -433,6 +454,13 @@ private:
 	      const std::string& maildir,
 	      const StringVec&   personal_addresses,
 	      const Config&      conf);
+
+
+	/**
+	 * Call with indexing has completed to update metadata.
+	 */
+	friend class Indexer;
+	void index_complete();
 
 	std::unique_ptr<Private> priv_;
 };

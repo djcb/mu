@@ -471,47 +471,44 @@ cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 {
 	using namespace tabulate;
 
+	auto colorify = [](Table& table) {
+		for (auto&& row: table) {
+
+			if (row.cells().size() < 2)
+				continue;
+
+			row.cells().at(0)->format().font_style({FontStyle::bold})
+				.font_color({Color::green});
+			row.cells().at(1)->format().font_color({Color::blue});
+		}
+	};
+
+	auto tstamp = [](::time_t t)->std::string {
+		if (t == 0)
+			return "never";
+		else
+			return time_to_string("%c", t);
+
+	};
+
 	Table info;
-
-	//Mu::MaybeAnsi col{!opts->nocolor};
-
 	info.add_row({"maildir", store.properties().root_maildir});
 	info.add_row({"database-path", store.properties().database_path});
 	info.add_row({"schema-version", store.properties().schema_version});
 	info.add_row({"max-message-size", format("%zu", store.properties().max_message_size)});
 	info.add_row({"batch-size", format("%zu", store.properties().batch_size)});
-	info.add_row({"messages in store", format("%zu", store.size())});
-
-	const auto created{store.properties().created};
-	const auto tstamp{::localtime(&created)};
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-y2k"
-	char tbuf[64];
-	strftime(tbuf, sizeof(tbuf), "%c", tstamp);
-#pragma GCC diagnostic pop
-
-	info.add_row({"created", tbuf});
-
-	const auto addrs{store.properties().personal_addresses};
-	if (addrs.empty())
-		info.add_row({"personal-address", "<none>"});
-	else
-		for (auto&& c : addrs)
+	info.add_row({"created", tstamp(store.properties().created)});
+	for (auto&& c : store.properties().personal_addresses)
 			info.add_row({"personal-address", c});
 
-	if (!opts->nocolor) {
-		for (auto&& row: info) {
-			row.cells().at(0)->format().font_style({FontStyle::bold})
-				.font_color({Color::green});
-			row.cells().at(1)->format().font_color({Color::blue});
-		}
-	}
+	info.add_row({"messages in store", format("%zu", store.size())});
+	info.add_row({"last-change", tstamp(store.statistics().last_change)});
+	info.add_row({"last-index",  tstamp(store.statistics().last_index)});
 
-	std::cout << info << std::endl;
+	if (!opts->nocolor)
+		colorify(info);
 
-
-
+	std::cout << info << '\n';
 
 	return MU_OK;
 }
