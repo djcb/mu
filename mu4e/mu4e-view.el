@@ -862,21 +862,20 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (apply func args)))
 
 (defvar mu4e-view-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-keymap)))
+    (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
+    (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
 
-    (define-key map  (kbd "C-S-u") 'mu4e-update-mail-and-index)
-    (define-key map  (kbd "C-c C-u") 'mu4e-update-mail-and-index)
-
-    (define-key map "q" 'mu4e~view-quit-buffer)
+    (define-key map "q" #'mu4e~view-quit-buffer)
 
     ;; note, 'z' is by-default bound to 'bury-buffer'
     ;; but that's not very useful in this case
-    (define-key map "z" 'ignore)
+    (define-key map "z" #'ignore)
 
     (define-key map "%" #'mu4e-view-mark-pattern)
     (define-key map "t" #'mu4e-view-mark-subthread)
     (define-key map "T" #'mu4e-view-mark-thread)
-    (define-key map "j" 'mu4e~headers-jump-to-maildir)
+    (define-key map "j" #'mu4e~headers-jump-to-maildir)
 
     (define-key map "g" #'mu4e-view-go-to-url)
     (define-key map "k" #'mu4e-view-save-url)
@@ -967,26 +966,26 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
       (define-key menumap [quit-buffer]
-	'("Quit view" . mu4e~view-quit-buffer))
+	          '("Quit view" . mu4e~view-quit-buffer))
       (define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
       (define-key menumap [sepa0] '("--"))
       (define-key menumap [wrap-lines]
-	'("Toggle wrap lines" . visual-line-mode))
+	          '("Toggle wrap lines" . visual-line-mode))
       (define-key menumap [raw-view]
-	'("View raw message" . mu4e-view-raw-message))
+	          '("View raw message" . mu4e-view-raw-message))
       (define-key menumap [pipe]
-	'("Pipe through shell" . mu4e-view-pipe))
+	          '("Pipe through shell" . mu4e-view-pipe))
 
       (define-key menumap [sepa1] '("--"))
       (define-key menumap [mark-delete]
-	'("Mark for deletion" . mu4e-view-mark-for-delete))
+	          '("Mark for deletion" . mu4e-view-mark-for-delete))
       (define-key menumap [mark-untrash]
-	'("Mark for untrash" .  mu4e-view-mark-for-untrash))
+	          '("Mark for untrash" .  mu4e-view-mark-for-untrash))
       (define-key menumap [mark-trash]
-	'("Mark for trash" .  mu4e-view-mark-for-trash))
+	          '("Mark for trash" .  mu4e-view-mark-for-trash))
       (define-key menumap [mark-move]
-	'("Mark for move" . mu4e-view-mark-for-move))
+	          '("Mark for move" . mu4e-view-mark-for-move))
 
       (define-key menumap [sepa2] '("--"))
       (define-key menumap [resend]  '("Resend" . mu4e-compose-resend))
@@ -996,28 +995,34 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (define-key menumap [sepa3] '("--"))
 
       (define-key menumap [query-next]
-	'("Next query" . mu4e-headers-query-next))
+	          '("Next query" . mu4e-headers-query-next))
       (define-key menumap [query-prev]
-	'("Previous query" . mu4e-headers-query-prev))
+	          '("Previous query" . mu4e-headers-query-prev))
       (define-key menumap [narrow-search]
-	'("Narrow search" . mu4e-headers-search-narrow))
+	          '("Narrow search" . mu4e-headers-search-narrow))
       (define-key menumap [bookmark]
-	'("Search bookmark" . mu4e-headers-search-bookmark))
+	          '("Search bookmark" . mu4e-headers-search-bookmark))
       (define-key menumap [jump]
-	'("Jump to maildir" . mu4e~headers-jump-to-maildir))
+	          '("Jump to maildir" . mu4e~headers-jump-to-maildir))
       (define-key menumap [search]
-	'("Search" . mu4e-headers-search))
+	          '("Search" . mu4e-headers-search))
 
       (define-key menumap [sepa4]     '("--"))
       (define-key menumap [next]      '("Next" . mu4e-view-headers-next))
       (define-key menumap [previous]  '("Previous" . mu4e-view-headers-prev)))
+
+    ;; Make 0..9 shortcuts for digit-argument.  Actually, none of the bound
+    ;; functions seem to use a prefix arg but those bindings existed because we
+    ;; used to use `suppress-keymap'.  And possibly users added their own
+    ;; prefix arg consuming commands.
+    (dotimes (i 10)
+      (define-key map (kbd (format "%d" i)) #'digit-argument))
 
     (set-keymap-parent map special-mode-map)
     map)
   "Keymap for mu4e-view mode.")
 
 (set-keymap-parent mu4e-view-mode-map button-buffer-map)
-(suppress-keymap mu4e-view-mode-map)
 
 (defcustom mu4e-view-mode-hook nil
   "Hook run when entering Mu4e-View mode."
