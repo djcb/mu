@@ -193,6 +193,13 @@ chronologically (`:date') by the newest message in the thread.")
   "Direction to sort by; a symbol either `descending' (sorting
   Z->A) or `ascending' (sorting A->Z).")
 
+(defcustom mu4e-headers-from-or-to-prefix '("" . "To ")
+  "Prefix for the :from-or-to field when it is showing,
+  respectively, From: or To:.  It is a cons cell with the car
+  element being the From: prefix, the cdr element the To: prefix."
+  :type '(cons string string)
+  :group 'mu4e-headers)
+
 ;;;; Fancy marks
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
@@ -508,8 +515,10 @@ otherwise ; show the from address; prefixed with the appropriate
 	 (from1-addr (and from1 (mu4e-contact-email from1)))
 	 (is-user (and from1-addr (mu4e-personal-address-p from1-addr))))
     (if is-user
-     (concat "To " (mu4e~headers-contact-str (mu4e-message-field msg :to)))
-     (mu4e~headers-contact-str (mu4e-message-field msg :from)))))
+        (concat (cdr mu4e-headers-from-or-to-prefix)
+                (mu4e~headers-contact-str (mu4e-message-field msg :to)))
+      (concat (car mu4e-headers-from-or-to-prefix)
+              (mu4e~headers-contact-str (mu4e-message-field msg :from))))))
 
  
 (defun mu4e~headers-human-date (msg)
