@@ -28,27 +28,39 @@
 namespace Mu {
 
 struct Error final : public std::exception {
-	enum struct Code {
-		AccessDenied = 100, // don't overlap with MuError
-		AssertionFailure,
-		Command,
-		Crypto,
-		File,
-		Index,
-		Internal,
-		InvalidArgument,
-		Message,
-		NoMatches,
-		NotFound,
-		Parsing,
-		Play,
-		Query,
-		SchemaMismatch,
-		Store,
-		UnverifiedSignature,
-		User,
-		Xapian,
+
+	// 16 lower bits are for the error code the next 8 bits is for the return code
+	// upper byte is for flags
+
+	static constexpr uint32_t SoftError = 1 << 23;
+
+#define ERROR_ENUM(RV,CAT) \
+	static_cast<uint32_t>(__LINE__ | ((RV) << 15) | (CAT))
+
+	enum struct Code: uint32_t {
+		AccessDenied	    = ERROR_ENUM(1,0),
+		AssertionFailure    = ERROR_ENUM(1,0),
+		Command		    = ERROR_ENUM(1,0),
+		ContactNotFound     = ERROR_ENUM(2,SoftError),
+		Crypto		    = ERROR_ENUM(1,0),
+		File		    = ERROR_ENUM(1,0),
+		Index		    = ERROR_ENUM(1,0),
+		Internal	    = ERROR_ENUM(1,0),
+		InvalidArgument	    = ERROR_ENUM(1,0),
+		Message		    = ERROR_ENUM(1,0),
+		NoMatches	    = ERROR_ENUM(4,SoftError),
+		NotFound	    = ERROR_ENUM(1,0),
+		Parsing		    = ERROR_ENUM(1,0),
+		Play		    = ERROR_ENUM(1,0),
+		Query		    = ERROR_ENUM(1,0),
+		SchemaMismatch	    = ERROR_ENUM(1,0),
+		Store		    = ERROR_ENUM(1,0),
+		StoreLock           = ERROR_ENUM(19,0),
+		UnverifiedSignature = ERROR_ENUM(1,0),
+		User		    = ERROR_ENUM(1,0),
+		Xapian		    = ERROR_ENUM(1,0),
 	};
+
 
 	/**
 	 * Construct an error
@@ -126,6 +138,21 @@ struct Error final : public std::exception {
 	 * @return the error-code
 	 */
 	Code code() const noexcept { return code_; }
+
+
+	/**
+	 * Is this is a 'soft error'?
+	 *
+	 * @return true or false
+	 */
+	constexpr bool is_soft_error() const {
+		return (static_cast<uint32_t>(code_) & SoftError) != 0;
+	}
+
+	constexpr uint8_t exit_code() const {
+		return ((static_cast<uint32_t>(code_) >> 15) & 0xf);
+	}
+
 
 	/**
 	 * Fill a GError with the error information
