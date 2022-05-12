@@ -24,7 +24,7 @@
    - After that, either =ninja -C build= or =make= should be enough to rebuild
 
    - Before installing, it is recommended that you *remove* any older versions of
-     ~mu~ and especiall ~mu4e~, since they may conflict with the newer ones.
+     ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
 
    - =mu= now requires C++17 support for building
 
@@ -73,6 +73,9 @@
      message sexps (see the ~mu~ section) make getting the results much faster.
      This becomes esp. clear when there are a lot of query results.
 
+   - "related" messages are now recognizable as such in the headers-view, with
+     their own face, ~mu4e-related-face~; by default with an italic slant.
+
    - indexing happens in the background now and mu4e can interact with the
      server while it is ongoing; this allows for using mu4e during lengthy
      indexing operations.
@@ -100,9 +103,13 @@
      ~mu4e-headers-report-render-time~ to ~t~ and ~mu4e~ will report the
      search/rendering speed of each query operation.
 
+   - Changed the default for ~mu4e-compose-complete-only-after~ to 2018-01-01, to
+     filter out contacts not seen after that date.
+
    - As an additional measure to limit the number of contacts that mu4e loads
-     for auto-completions, there's ~mu4e-compose-complete-max~, which by default
-     is set to *2000*, so you can auto-complete your 2000 closest friends.
+     for auto-completions, there's ~mu4e-compose-complete-max~, to set a precise
+     numerical match (*before* any possible filtering). Set to ~nil~ (no maximum by
+     default).
 
    - Updated the "fancy" characters for some header fields. Added new ones for
      personal and list messages.
@@ -116,13 +123,13 @@
 
    - a lot of the internals have been changed:
 
-     - =mu4e= is slowly moving from using the =~= to the more common =--= separator
-   	for private functions; i.e., =mu4e-foo= becomes =mu4e--foo=.
+     - =mu4e= is slowly moving from using the '=~'= to the more common '=--'=
+       separator for private functions; i.e., =mu4e-foo= becomes =mu4e--foo=.
 
      - =mu4e-utils.el= had become a bit of a dumping ground for bits of code;
-   	it's gone now, with the functionality move to topic-specific files --
-   	=mu4e-folders.el=, =mu4e-bookmarks.el=, =mu4e-update.el=, and included in
-   	existing files.
+       it's gone now, with the functionality move to topic-specific files --
+       =mu4e-folders.el=, =mu4e-bookmarks.el=, =mu4e-update.el=, and included in
+       existing files.
 
      - the remaining common functionality has ended up in =mu4e-helpers.el=
 
