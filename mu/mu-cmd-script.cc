@@ -43,20 +43,20 @@ using namespace Mu;
 
 static void
 print_script(const char* name,
-             const char* oneline,
-             const char* descr,
-             gboolean    color,
-             gboolean    verbose)
+	     const char* oneline,
+	     const char* descr,
+	     gboolean    color,
+	     gboolean    verbose)
 {
 	g_print("%s%s%s%s%s%s%s%s",
-	        verbose ? "\n" : "  * ",
-	        COL(MU_COLOR_GREEN),
-	        name,
-	        COL(MU_COLOR_DEFAULT),
-	        oneline ? ": " : "",
-	        COL(MU_COLOR_BLUE),
-	        oneline ? oneline : "",
-	        MU_COLOR_DEFAULT);
+		verbose ? "\n" : "  * ",
+		COL(MU_COLOR_GREEN),
+		name,
+		COL(MU_COLOR_DEFAULT),
+		oneline ? ": " : "",
+		COL(MU_COLOR_BLUE),
+		oneline ? oneline : "",
+		MU_COLOR_DEFAULT);
 
 	if (verbose && descr)
 		g_print("%s%s%s", COL(MU_COLOR_MAGENTA), descr, COL(MU_COLOR_DEFAULT));
@@ -109,10 +109,10 @@ get_userpath(const char* muhome)
 		return g_build_path(G_DIR_SEPARATOR_S, muhome, "scripts", NULL);
 	else
 		return g_build_path(G_DIR_SEPARATOR_S,
-		                    g_get_user_data_dir(),
-		                    "mu",
-		                    "scripts",
-		                    NULL);
+				    g_get_user_data_dir(),
+				    "mu",
+				    "scripts",
+				    NULL);
 }
 
 static GSList*
@@ -122,9 +122,9 @@ get_script_info_list(const char* muhome, GError** err)
 	char*   userpath;
 
 	scripts = mu_script_get_script_info_list(MU_SCRIPTS_DIR,
-	                                         MU_GUILE_EXT,
-	                                         MU_GUILE_DESCR_PREFIX,
-	                                         err);
+						 MU_GUILE_EXT,
+						 MU_GUILE_DESCR_PREFIX,
+						 err);
 
 	if (err && *err)
 		return NULL;
@@ -158,51 +158,44 @@ get_script_info_list(const char* muhome, GError** err)
 		return userscripts; /* apparently, scripts was NULL */
 }
 
-static gboolean
-check_params(const MuConfig* opts, GError** err)
+Mu::Result<void>
+Mu::mu_cmd_script(const MuConfig* opts)
 {
-	if (!mu_util_supports(MU_FEATURE_GUILE)) {
-		mu_util_g_set_error(err,
-		                    MU_ERROR_IN_PARAMETERS,
-		                    "the 'script' command is not available "
-		                    "in this version of mu");
-		return FALSE;
-	}
+	GError         *err{};
+	MuScriptInfo*	msi;
+	GSList*		scripts;
 
-	return TRUE;
-}
+	if (!mu_util_supports(MU_FEATURE_GUILE))
+		return Err(Error::Code::InvalidArgument,
+			   "<script> sub-command not available (requires guile)");
 
-MuError
-Mu::mu_cmd_script(const MuConfig* opts, GError** err)
-{
-	MuScriptInfo* msi;
-	GSList*       scripts;
-
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_SCRIPT, MU_ERROR_INTERNAL);
-
-	if (!check_params(opts, err))
-		return MU_ERROR;
-
-	scripts = get_script_info_list(opts->muhome, err);
-	if (err && *err)
+	scripts = get_script_info_list(opts->muhome, &err);
+	if (err)
 		goto leave;
 
 	if (g_strcmp0(opts->cmdstr, "script") == 0) {
-		print_scripts(scripts, !opts->nocolor, opts->verbose, opts->script_params[0], err);
+		print_scripts(scripts, !opts->nocolor, opts->verbose,
+			      opts->script_params[0], &err);
 		goto leave;
 	}
 
 	msi = mu_script_find_script_with_name(scripts, opts->script);
 	if (!msi) {
-		mu_util_g_set_error(err, MU_ERROR_SCRIPT_NOT_FOUND, "command or script not found");
+		mu_util_g_set_error(&err, MU_ERROR_SCRIPT_NOT_FOUND,
+				    "command or script not found");
 		goto leave;
 	}
 
 	/* do it! */
-	mu_script_guile_run(msi, mu_runtime_path(MU_RUNTIME_PATH_CACHE), opts->script_params, err);
+	mu_script_guile_run(msi, mu_runtime_path(MU_RUNTIME_PATH_CACHE),
+			    opts->script_params, &err);
 leave:
 	/* this won't be reached, unless there is some error */
 	mu_script_info_list_destroy(scripts);
-	return (err && *err) ? MU_ERROR : MU_OK;
+
+	if (err)
+		return Err(Error::Code::InvalidArgument, &err,
+			   "error running script");
+	else
+		return Ok();
 }

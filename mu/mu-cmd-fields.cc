@@ -48,7 +48,7 @@ show_fields(const MuConfig* opts)
 
 	Table fields;
 	fields.add_row({"field-name", "alias", "short", "search",
-			"value", "example", "description"});
+			"value", "example query", "description"});
 
 	auto disp= [&](std::string_view sv)->std::string {
 		if (sv.empty())

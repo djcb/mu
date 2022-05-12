@@ -75,10 +75,10 @@ get_attach_str(const Message& message, const MuConfig* opts)
 	return str;
 }
 
-#define color_maybe(C)                                                                             \
-	do {                                                                                       \
-		if (color)                                                                         \
-			fputs((C), stdout);                                                        \
+#define color_maybe(C)                          \
+	do {                                    \
+		if (color)                      \
+			fputs((C), stdout);     \
 	} while (0)
 
 static void
@@ -212,129 +212,64 @@ cmd_view(const MuConfig* opts)
 	return Ok();
 }
 
-static MuError
-cmd_mkdir(const MuConfig* opts, GError** err)
+static Mu::Result<void>
+cmd_mkdir(const MuConfig* opts)
 {
 	int i;
 
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_MKDIR, MU_ERROR_INTERNAL);
-
-	if (!opts->params[1]) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing directory parameter");
-		return MU_ERROR_IN_PARAMETERS;
-	}
+	if (!opts->params[1])
+		return Err(Error::Code::InvalidArgument,
+			   "missing directory parameter");
 
 	for (i = 1; opts->params[i]; ++i) {
-		if (auto&& res{maildir_mkdir(opts->params[i],
-						opts->dirmode, FALSE)}; !res) {
-			g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR_FILE,
-				    "%s", res.error().what());
-			return MU_ERROR_FILE_CANNOT_MKDIR;
-		}
+		if (auto&& res =
+		    maildir_mkdir(opts->params[i], opts->dirmode, FALSE); !res)
+			return res;
 	}
 
-	return MU_OK;
+	return Ok();
 }
 
-static gboolean
-check_file_okay(const char* path, gboolean cmd_add)
+static Result<void>
+cmd_add(Mu::Store& store, const MuConfig* opts)
 {
-	if (!g_path_is_absolute(path)) {
-		g_printerr("path is not absolute: %s\n", path);
-		return FALSE;
-	}
-
-	if (cmd_add && access(path, R_OK) != 0) {
-		g_printerr("path is not readable: %s: %s\n", path, g_strerror(errno));
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-typedef bool (*ForeachMsgFunc)(Mu::Store& store, const char* path, GError** err);
-
-static MuError
-foreach_msg_file(Mu::Store& store, const MuConfig* opts, ForeachMsgFunc foreach_func, GError** err)
-{
-	unsigned u;
-	gboolean all_ok;
-
 	/* note: params[0] will be 'add' */
-	if (!opts->params[0] || !opts->params[1]) {
-		g_print("usage: mu %s <file> [<files>]\n",
-			opts->params[0] ? opts->params[0] : "<cmd>");
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing parameters");
-		return MU_ERROR_IN_PARAMETERS;
+	if (!opts->params[0] || !opts->params[1])
+		return Err(Error::Code::InvalidArgument,
+			   "expected some files to add");
+
+	for (auto u = 1; opts->params[u]; ++u) {
+
+		const auto docid{store.add_message(opts->params[u])};
+		if (!docid)
+			return Err(docid.error());
+		else
+			g_debug("added message @ %s, docid=%u",
+				opts->params[u], docid.value());
 	}
 
-	for (u = 1, all_ok = TRUE; opts->params[u]; ++u) {
-		const char* path;
+	return Ok();
+}
 
-		path = opts->params[u];
+static Result<void>
+cmd_remove(Mu::Store& store, const MuConfig* opts)
+{
+	/* note: params[0] will be 'remove' */
+	if (!opts->params[0] || !opts->params[1])
+		return Err(Error::Code::InvalidArgument,
+			   "expected some files to remove");
 
-		if (!check_file_okay(path, TRUE)) {
-			all_ok = FALSE;
-			g_printerr("not a valid message file: %s\n", path);
-			continue;
-		}
+	for (auto u = 1; opts->params[u]; ++u) {
 
-		if (!foreach_func(store, path, err)) {
-			all_ok = FALSE;
-			g_printerr("error with %s: %s\n",
-				   path,
-				   (err && *err) ? (*err)->message : "something went wrong");
-			g_clear_error(err);
-			continue;
-		}
+		const auto res = store.remove_message(opts->params[u]);
+		if (!res)
+			return Err(Error::Code::File, "failed to remove %s",
+				   opts->params[u]);
+		else
+			g_debug("removed message @ %s", opts->params[u]);
 	}
 
-	if (!all_ok) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_XAPIAN_STORE_FAILED,
-				    "%s failed for some message(s)",
-				    opts->params[0]);
-		return MU_ERROR_XAPIAN_STORE_FAILED;
-	}
-
-	return MU_OK;
-}
-
-static bool
-add_path_func(Mu::Store& store, const char* path, GError** err)
-{
-	const auto docid{store.add_message(path)};
-	g_debug("added message @ %s, docid=%u", path, docid.value());
-
-	return true;
-}
-
-static MuError
-cmd_add(Mu::Store& store, const MuConfig* opts, GError** err)
-{
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_ADD, MU_ERROR_INTERNAL);
-
-	return foreach_msg_file(store, opts, add_path_func, err);
-}
-
-static bool
-remove_path_func(Mu::Store& store, const char* path, GError** err)
-{
-	const auto res = store.remove_message(path);
-	g_debug("removed %s (%s)", path, res ? "yes" : "no");
-
-	return true;
-}
-
-static MuError
-cmd_remove(Mu::Store& store, const MuConfig* opts, GError** err)
-{
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_REMOVE, MU_ERROR_INTERNAL);
-
-	return foreach_msg_file(store, opts, remove_path_func, err);
+	return Ok();
 }
 
 
@@ -466,8 +401,8 @@ cmd_verify(const MuConfig* opts)
 			   "failed to verify one or more signatures");
 }
 
-static MuError
-cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
+static Result<void>
+cmd_info(const Mu::Store& store, const MuConfig* opts)
 {
 	using namespace tabulate;
 
@@ -510,30 +445,24 @@ cmd_info(const Mu::Store& store, const MuConfig* opts, GError** err)
 
 	std::cout << info << '\n';
 
-	return MU_OK;
+	return Ok();
 }
 
-static MuError
-cmd_init(const MuConfig* opts, GError** err)
+static Result<void>
+cmd_init(const MuConfig* opts)
 {
 	/* not provided, nor could we find a good default */
-	if (!opts->maildir) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_IN_PARAMETERS,
-				    "missing --maildir parameter and could "
-				    "not determine default");
-		return MU_ERROR_IN_PARAMETERS;
-	}
+	if (!opts->maildir)
+		return Err(Error::Code::InvalidArgument,
+			   "missing --maildir parameter and could "
+			   "not determine default");
 
-	if (opts->max_msg_size < 0) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_IN_PARAMETERS,
-				    "invalid value for max-message-size");
-		return MU_ERROR_IN_PARAMETERS;
-	} else if (opts->batch_size < 0) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "invalid value for batch-size");
-		return MU_ERROR_IN_PARAMETERS;
-	}
+	if (opts->max_msg_size < 0)
+		return Err(Error::Code::InvalidArgument,
+			   "invalid value for max-message-size");
+	else if (opts->batch_size < 0)
+		return Err(Error::Code::InvalidArgument,
+			   "invalid value for batch-size");
 
 	Mu::Store::Config conf{};
 	conf.max_message_size = opts->max_msg_size;
@@ -549,14 +478,14 @@ cmd_init(const MuConfig* opts, GError** err)
 	auto store = Store::make_new(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 				     opts->maildir, my_addrs, conf);
 	if (!store)
-		throw store.error();
+		return Err(store.error());
 
 	if (!opts->quiet) {
-		cmd_info(*store, opts, NULL);
+		cmd_info(*store, opts);
 		std::cout << "\nstore created; use the 'index' command to fill/update it.\n";
 	}
 
-	return MU_OK;
+	return Ok();
 }
 
 static Result<void>
@@ -579,124 +508,95 @@ show_usage(void)
 		"more information\n");
 }
 
-typedef MuError (*readonly_store_func)(const Mu::Store&, const MuConfig*, GError** err);
-typedef MuError (*writable_store_func)(Mu::Store&, const MuConfig*, GError** err);
 
-static MuError
-with_readonly_store(readonly_store_func func, const MuConfig* opts, GError** err)
+using ReadOnlyStoreFunc = std::function<Result<void>(const Store&, const MuConfig*)>;
+using WritableStoreFunc = std::function<Result<void>(Store&, const MuConfig*)>;
+
+static Result<void>
+with_readonly_store(const ReadOnlyStoreFunc& func, const MuConfig* opts)
 {
 	auto store{Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB))};
 	if (!store)
-		throw store.error();
+		return Err(store.error());
 
-	return func(*store, opts, err);
+	return func(store.value(), opts);
 }
 
-static MuError
-with_writable_store(writable_store_func func, const MuConfig* opts, GError** err)
+static Result<void>
+with_writable_store(const WritableStoreFunc func, const MuConfig* opts)
 {
 	auto store{Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
 			       Store::Options::Writable)};
 	if (!store)
-		throw store.error();
+		return Err(store.error());
 
-	return func(*store, opts, err);
+	return func(store.value(), opts);
 }
 
-static gboolean
-check_params(const MuConfig* opts, GError** err)
-{
-	if (!opts->params || !opts->params[0]) { /* no command? */
-		show_usage();
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS,
-				    "error in parameters");
-		return FALSE;
-	}
+Result<void>
+Mu::mu_cmd_execute(const MuConfig* opts) try {
 
-	return TRUE;
-}
-
-MuError
-Mu::mu_cmd_execute(const MuConfig* opts, GError** err) try {
-
-	MuError merr;
-
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	if (!check_params(opts, err))
-		return MU_G_ERROR_CODE(err);
-
-	auto mu_error_from_result = [](auto&& result, GError **gerr) {
-		if (result)
-			return MU_OK;
-
-		result.error().fill_g_error(gerr);
-		switch(result.error().code()) {
-		case Error::Code::NoMatches:
-			return MU_ERROR_NO_MATCHES;
-		case Error::Code::UnverifiedSignature:
-			return MU_ERROR_CRYPTO;
-		default:
-			break;
-		}
-
-		return MU_ERROR;
-	};
+	if (!opts || !opts->params || !opts->params[0])
+		return Err(Error::Code::InvalidArgument, "error in parameters");
 
 	switch (opts->cmd) {
-		/* already handled in mu-config.c */
-	case MU_CONFIG_CMD_HELP:
-		return MU_OK;
+	case MU_CONFIG_CMD_HELP: /* already handled in mu-config.c */
+		return Ok();
 
 	/*
 	 * no store needed
 	 */
 	case MU_CONFIG_CMD_FIELDS:
-		merr = mu_error_from_result(mu_cmd_fields(opts), err);
-		break;
-	case MU_CONFIG_CMD_MKDIR: merr	= cmd_mkdir(opts, err); break;
-	case MU_CONFIG_CMD_SCRIPT: merr = mu_cmd_script(opts, err); break;
+		return mu_cmd_fields(opts);
+	case MU_CONFIG_CMD_MKDIR:
+		return cmd_mkdir(opts);
+	case MU_CONFIG_CMD_SCRIPT:
+		return mu_cmd_script(opts);
 	case MU_CONFIG_CMD_VIEW:
-		merr = mu_error_from_result(cmd_view(opts), err);
-		break;
-	case MU_CONFIG_CMD_VERIFY: {
-		merr =  mu_error_from_result(cmd_verify(opts), err);
-		break;
-	}
-
+		return cmd_view(opts);
+	case MU_CONFIG_CMD_VERIFY:
+		return cmd_verify(opts);
 	case MU_CONFIG_CMD_EXTRACT:
-		merr = mu_error_from_result(mu_cmd_extract(opts), err);
-		break;
+		return mu_cmd_extract(opts);
 	/*
 	 * read-only store
 	 */
 
-	case MU_CONFIG_CMD_CFIND: merr = with_readonly_store(mu_cmd_cfind, opts, err); break;
-	case MU_CONFIG_CMD_FIND:
-		merr = mu_error_from_result(cmd_find(opts), err);
+	case MU_CONFIG_CMD_CFIND:
+		return with_readonly_store(mu_cmd_cfind, opts);
 		break;
+	case MU_CONFIG_CMD_FIND:
+		return cmd_find(opts);
 	case MU_CONFIG_CMD_INFO:
-		merr = with_readonly_store(cmd_info, opts, err);
+		return with_readonly_store(cmd_info, opts);
 		break;
 
 	/* writable store */
 
-	case MU_CONFIG_CMD_ADD: merr = with_writable_store(cmd_add, opts, err); break;
-	case MU_CONFIG_CMD_REMOVE: merr = with_writable_store(cmd_remove, opts, err); break;
-	case MU_CONFIG_CMD_INDEX: merr = with_writable_store(mu_cmd_index, opts, err); break;
+	case MU_CONFIG_CMD_ADD:
+		return with_writable_store(cmd_add, opts);
+	case MU_CONFIG_CMD_REMOVE:
+		return with_writable_store(cmd_remove, opts);
+	case MU_CONFIG_CMD_INDEX:
+		return with_writable_store(mu_cmd_index, opts);
 
 	/* commands instantiate store themselves */
-	case MU_CONFIG_CMD_INIT: merr = cmd_init(opts, err); break;
-	case MU_CONFIG_CMD_SERVER: merr = mu_cmd_server(opts, err); break;
+	case MU_CONFIG_CMD_INIT:
+		return cmd_init(opts);
+	case MU_CONFIG_CMD_SERVER:
+		return mu_cmd_server(opts);
 
-	default: merr = MU_ERROR_IN_PARAMETERS; break;
+	default:
+		show_usage();
+		return Ok();
 	}
 
-	return merr;
-
 } catch (const Mu::Error& er) {
-	g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", er.what());
-	return MU_ERROR;
+	return Err(er);
+} catch (const std::runtime_error& re) {
+	return Err(Error::Code::Internal, "runtime-error: %s", re.what());
+} catch (const std::exception& ex) {
+	return Err(Error::Code::Internal, "error: %s", ex.what());
 } catch (...) {
-	g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
-	return MU_ERROR;
+	return Err(Error::Code::Internal, "caught exception");
 }

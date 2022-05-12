@@ -334,17 +334,17 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 	}
 }
 
-static MuError
+static Result<void>
 run_cmd_cfind(const Mu::Store&		store,
 	      const char*		pattern,
 	      gboolean			personal,
 	      time_t			after,
 	      int			maxnum,
 	      const MuConfigFormat	format,
-	      gboolean			color,
-	      GError**			err)
+	      gboolean			color)
 {
 	ECData ecdata{};
+	GError *err{};
 
 	memset(&ecdata, 0, sizeof(ecdata));
 
@@ -352,11 +352,10 @@ run_cmd_cfind(const Mu::Store&		store,
 		ecdata.rx = g_regex_new(
 		    pattern,
 		    (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
-		    (GRegexMatchFlags)0,
-		    err);
+		    (GRegexMatchFlags)0, &err);
 
 		if (!ecdata.rx)
-			return MU_ERROR_CONTACTS;
+			return Err(Error::Code::Internal, &err, "invalid cfind regexp");
 	}
 
 	ecdata.personal = personal;
@@ -378,17 +377,18 @@ run_cmd_cfind(const Mu::Store&		store,
 	if (ecdata.rx)
 		g_regex_unref(ecdata.rx);
 
-	if (ecdata.n == 0) {
-		g_printerr("no matching contacts found\n");
-		return MU_ERROR_NO_MATCHES;
-	}
-
-	return MU_OK;
+	if (ecdata.n == 0)
+		return Err(Error::Code::ContactNotFound, "no matching contacts found");
+	else
+		return Ok();
 }
 
 static gboolean
 cfind_params_valid(const MuConfig* opts)
 {
+	if (!opts || opts->cmd != MU_CONFIG_CMD_CFIND)
+		return FALSE;
+
 	switch (opts->format) {
 	case MU_CONFIG_FORMAT_PLAIN:
 	case MU_CONFIG_FORMAT_MUTT_ALIAS:
@@ -413,29 +413,17 @@ cfind_params_valid(const MuConfig* opts)
 	return TRUE;
 }
 
-MuError
-Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err)
+Result<void>
+Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts)
 {
-	g_return_val_if_fail(opts, MU_ERROR_INTERNAL);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_CFIND, MU_ERROR_INTERNAL);
-
 	if (!cfind_params_valid(opts))
-		throw Mu::Error(Mu::Error::Code::InvalidArgument,
-				"invalid parameters");
-
-	auto res = run_cmd_cfind(store,
-				 opts->params[1],
-				 opts->personal,
-				 opts->after,
-				 opts->maxnum,
-				 opts->format,
-				 !opts->nocolor,
-				 err);
-
-	if (res != MU_OK && res != MU_ERROR_NO_MATCHES)
-		throw Mu::Error(Mu::Error::Code::Internal,
-				err /*consumes*/,
-				"error in cfind");
-
-	return res;
+		return Err(Error::Code::InvalidArgument, "error in parameters");
+	else
+		return run_cmd_cfind(store,
+				     opts->params[1],
+				     opts->personal,
+				     opts->after,
+				     opts->maxnum,
+				     opts->format,
+				      !opts->nocolor);
 }

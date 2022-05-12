@@ -44,90 +44,77 @@ show_version(void)
 	g_print("%s\n", blurb);
 }
 
-static void
-handle_error(MuConfig* conf, MuError merr, GError** err)
+static int
+handle_result(const Result<void>& res, MuConfig* conf)
 {
-	if (!(err && *err))
-		return;
+	if (res)
+		return 0;
 
 	using Color = MaybeAnsi::Color;
 	MaybeAnsi col{conf ? !conf->nocolor : false};
 
-	if (*err)
+	// show the error and some help, but not if it's only a softerror.
+	if (!res.error().is_soft_error()) {
 		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
 			  << col.fg(Color::BrightYellow)
-			  << ((*err) ? (*err)->message : "something when wrong") << "\n";
+			  << res.error().what() << "something went wrong" << "\n";
+	} else
+		std::cerr <<  col.fg(Color::BrightBlue) << res.error().what() << '\n';
 
 	std::cerr << col.fg(Color::Green);
 
-	switch ((*err)->code) {
-	case MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK:
-		std::cerr << "Maybe mu is already running?\n";
-		break;
-
-	case MU_ERROR_XAPIAN_NEEDS_REINDEX:
-		std::cerr << "Database needs (re)indexing.\n"
-			  << "try 'mu index' "
-			  << "(see mu-index(1) for details)\n";
-		return;
-	case MU_ERROR_IN_PARAMETERS:
+	// perhaps give some useful hint on how to solve it.
+	switch (res.error().code()) {
+	case Error::Code::InvalidArgument:
 		if (conf && mu_config_cmd_is_valid(conf->cmd))
 			mu_config_show_help(conf->cmd);
 		break;
-	case MU_ERROR_SCRIPT_NOT_FOUND:
-		std::cerr << "See the mu manpage for commands, or "
-			  << "'mu script' for the scripts\n";
+	case Error::Code::SchemaMismatch:
+		std::cerr << "Please (re)initialize mu with 'mu init' "
+			  << "see mu-init(1) for details\n";
 		break;
-	case MU_ERROR_XAPIAN_CANNOT_OPEN:
-		std::cerr << "Please (re)initialize mu with 'mu init' "
-			  << "see mu-init(1) for details\n";
-		return;
-	case MU_ERROR_XAPIAN_SCHEMA_MISMATCH:
-		std::cerr << "Please (re)initialize mu with 'mu init' "
-			  << "see mu-init(1) for details\n";
-		return;
-	default: break; /* nothing to do */
+	default:
+		break; /* nothing to do */
 	}
 
 	std::cerr << col.reset();
+
+	return res.error().exit_code();
 }
 
 int
 main(int argc, char* argv[])
 {
-	GError*   err;
-	MuError   rv;
-	MuConfig* conf;
+	int rv{};
+	MuConfig *conf{};
+	GError*   err{};
+
+	using Color = MaybeAnsi::Color;
+	MaybeAnsi col{conf ? !conf->nocolor : false};
 
 	setlocale(LC_ALL, "");
 
-	err = NULL;
-	rv  = MU_OK;
-
 	conf = mu_config_init(&argc, &argv, &err);
 	if (!conf) {
-		rv = err ? (MuError)err->code : MU_ERROR;
+		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
+			  << col.fg(Color::BrightYellow)
+			  << (err ? err->message : "something went wrong") << "\n";
+		rv = 1;
 		goto cleanup;
 	} else if (conf->version) {
 		show_version();
 		goto cleanup;
-	}
-
-	/* nothing to do */
-	if (conf->cmd == MU_CONFIG_CMD_NONE)
-		return 0;
-
-	if (!mu_runtime_init(conf->muhome, PACKAGE_NAME, conf->debug)) {
-		mu_config_uninit(conf);
-		return 1;
-	}
-
-	rv = mu_cmd_execute(conf, &err);
+	} else if (conf->cmd == MU_CONFIG_CMD_NONE) /* nothing to do */
+		goto cleanup;
+	else if (!mu_runtime_init(conf->muhome, PACKAGE_NAME, conf->debug)) {
+		std::cerr << col.fg(Color::Red) << "error initializing mu\n"
+			  << col.reset();
+		rv = 2;
+	} else
+		rv = handle_result(mu_cmd_execute(conf), conf);
 
 cleanup:
-	handle_error(conf, rv, &err);
 	g_clear_error(&err);
-
 	mu_config_uninit(conf);
 	mu_runtime_uninit();
 

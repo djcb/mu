@@ -113,12 +113,14 @@ report_error(const Mu::Error& err) noexcept
 			   Server::OutputFlags::Flush);
 }
 
-MuError
-Mu::mu_cmd_server(const MuConfig* opts, GError** err)
-try {
-	auto store = Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),			 Store::Options::Writable);
+
+Result<void>
+Mu::mu_cmd_server(const MuConfig* opts) try {
+
+	auto store = Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+				 Store::Options::Writable);
 	if (!store)
-		throw store.error();
+		return Err(store.error());
 
 	Server server{*store, output_sexp_stdout};
 	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
@@ -132,7 +134,7 @@ try {
 						     : ""};
 	if (!eval.empty()) {
 		server.invoke(eval);
-		return MU_OK;
+		return Ok();
 	}
 
 	// Note, the readline stuff is inactive unless on a tty.
@@ -155,15 +157,14 @@ try {
 	}
 	shutdown_readline();
 
-	return MU_OK;
+	return Ok();
 
 } catch (const Error& er) {
 	/* note: user-level error, "OK" for mu */
 	report_error(er);
 	g_warning("server caught exception: %s", er.what());
-	return MU_OK;
+	return Ok();
 } catch (...) {
 	g_critical("server caught exception");
-	g_set_error(err, MU_ERROR_DOMAIN, MU_ERROR, "%s", "caught exception");
-	return MU_ERROR;
+	return Err(Error::Code::Internal, "caught exception");
 }

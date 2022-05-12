@@ -60,44 +60,29 @@ Result<void> mu_cmd_fields(const MuConfig* opts);
  * @param opts configuration options
  * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeds,
- * some error code otherwise
+ * @return Ok() or some error
  */
-MuError mu_cmd_script(const MuConfig* opts, GError** err);
+Result<void> mu_cmd_script(const MuConfig* opts);
 
 /**
  * execute the cfind command
  *
  * @param store store object to use
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeds,
- * some error code otherwise
+ * @return Ok() or some error
  */
-MuError mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts, GError** err);
-
-/**
- * execute some mu command, based on 'opts'
- *
- * @param opts configuration option
- * @param err receives error information, or NULL
- *
- * @return MU_OK if all went wall, some error code otherwise
- */
-MuError mu_cmd_execute(const MuConfig* opts, GError** err);
+Result<void> mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts);
 
 /**
  * execute the 'index' command
  *
  * @param store store object to use
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeded,
- * some error code otherwise
+ * @return Ok() or some error
  */
-MuError mu_cmd_index(Mu::Store& store, const MuConfig* opt, GError** err);
+Result<void> mu_cmd_index(Mu::Store& store, const MuConfig* opt);
 
 /**
  * execute the server command
@@ -106,7 +91,17 @@ MuError mu_cmd_index(Mu::Store& store, const MuConfig* opt, GError** err);
  *
  * @return MU_OK (0) if the command succeeds, some error code otherwise
  */
-MuError mu_cmd_server(const MuConfig* opts, GError** err);
+Result<void> mu_cmd_server(const MuConfig* opts);
+
+/**
+ * execute some mu command, based on 'opts'
+ *
+ * @param opts configuration option
+ * @param err receives error information, or NULL
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_execute(const MuConfig* opts);
 
 } // namespace Mu
 

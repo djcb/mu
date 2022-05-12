@@ -77,33 +77,20 @@ print_stats(const Indexer::Progress& stats, bool color)
 		  << "; cleaned-up: " << col.fg(Color::Green) << stats.removed << col.reset();
 }
 
-MuError
-Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
+Result<void>
+Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts)
 {
-	g_return_val_if_fail(opts, MU_ERROR);
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_INDEX, MU_ERROR);
+	if (!opts || opts->cmd != MU_CONFIG_CMD_INDEX || opts->params[1])
+		return Err(Error::Code::InvalidArgument, "error in parameters");
 
-	/* param[0] == 'index'  there should be no param[1] */
-	if (opts->params[1]) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "unexpected parameter");
-		return MU_ERROR;
-	}
-	if (opts->max_msg_size < 0) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_IN_PARAMETERS,
+	if (opts->max_msg_size < 0)
+		return Err(Error::Code::InvalidArgument,
 				    "the maximum message size must be >= 0");
-		return MU_ERROR;
-	}
 
 	const auto mdir{store.properties().root_maildir};
-	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0)) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_FILE,
-				    "'%s' is not readable: %s",
-				    mdir.c_str(),
-				    g_strerror(errno));
-		return MU_ERROR;
-	}
+	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0))
+		return Err(Error::Code::File, "'%s' is not readable: %s",
+			   mdir.c_str(), g_strerror(errno));
 
 	MaybeAnsi col{!opts->nocolor};
 	using Color = MaybeAnsi::Color;
@@ -146,5 +133,5 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts, GError** err)
 		std::cout << std::endl;
 	}
 
-	return MU_OK;
+	return Ok();
 }
