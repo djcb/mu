@@ -647,6 +647,8 @@ Store::commit()
 void
 Store::index_complete()
 {
+	std::lock_guard lock{priv_->lock_};
+
 	g_debug("marking index complete");
 	priv_->writable_db().set_metadata(IndexedKey, tstamp_to_string(::time({})));
 }
