@@ -87,12 +87,12 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-replied-face
-  '((t :inherit font-lock-builtin-face :weight normal))
+  '((t :inherit font-lock-builtin-face :weight normal :slant normal))
   "Face for a replied message header."
   :group 'mu4e-faces)
 
 (defface mu4e-forwarded-face
-  '((t :inherit font-lock-builtin-face :weight normal))
+  '((t :inherit font-lock-builtin-face :weight normal :slant normal))
   "Face for a passed (forwarded) message header."
   :group 'mu4e-faces)
 
@@ -100,6 +100,10 @@ I.e. a message with the draft flag set."
   '((t :inherit default))
   "Face for a header without any special flags."
   :group 'mu4e-faces)
+
+(defface mu4e-related-face
+  '((t :inherit default :slant italic))
+  "Face for a 'related' header." :group 'mu4e-faces)
 
 (defface mu4e-header-title-face
   '((t :inherit font-lock-type-face))
@@ -343,12 +347,6 @@ plist as argument, and returns a string. See the default value of
 Note that when using the gnus-based view, you only have access to
 a limited set of message fields: only the ones used in the
 header-view, not including, for instance, the message body.")
-
-;;; Run-time variables / constants
-
-;;;; Main
-
-;;;; Other
 
 ;;; Internals
 

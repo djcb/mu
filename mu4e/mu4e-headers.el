@@ -243,11 +243,11 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 
 
 
-(defvar mu4e-headers-threaded-label   '("T" . "🎄")
+(defvar mu4e-headers-threaded-label   '("T" . "Ⓣ")
   "Non-fancy and fancy labels for threaded search in the mode-line.")
-(defvar mu4e-headers-full-label       '("F" . "∀")
+(defvar mu4e-headers-full-label       '("F" . "Ⓕ")
   "Non-fancy and fancy labels for full search in the mode-line.")
-(defvar mu4e-headers-related-label    '("R" . "🤝")
+(defvar mu4e-headers-related-label    '("R" . "Ⓡ")
   "Non-fancy and fancy labels for include-related search in the mode-line.")
 
 ;;;; Various
@@ -632,8 +632,10 @@ space propertized with a 'display text property which expands to
 
 (defsubst mu4e~headers-apply-flags (msg fieldval)
   "Adjust LINE's face property based on FLAGS."
-  (let* ((flags (mu4e-message-field msg :flags))
-         (face (cond
+  (let* ((flags (plist-get msg :flags))
+	 (meta (plist-get msg :meta))
+	 (face (cond
+		((plist-get meta :related) 'mu4e-related-face)
                 ((memq 'trashed flags) 'mu4e-trashed-face)
                 ((memq 'draft flags)   'mu4e-draft-face)
                 ((or (memq 'unread flags) (memq 'new flags))
@@ -641,7 +643,7 @@ space propertized with a 'display text property which expands to
                 ((memq 'flagged flags) 'mu4e-flagged-face)
                 ((memq 'replied flags) 'mu4e-replied-face)
                 ((memq 'passed flags)  'mu4e-forwarded-face)
-                (t                     'mu4e-header-face))))
+		(t                     'mu4e-header-face))))
     (add-face-text-property 0 (length fieldval) face t fieldval)
     fieldval))
 
