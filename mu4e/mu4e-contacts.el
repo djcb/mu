@@ -56,13 +56,14 @@ time-based restriction."
   :type 'string
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-complete-max 2000
+(defcustom mu4e-compose-complete-max nil
   "Consider only the top-n contacts.
 After considering the other
 constraints (`mu4e-compose-complete-addresses' and
-`mu4e-compose-complete-only-after'), pick only the highest-ranked n.
+`mu4e-compose-complete-only-after'), pick only the highest-ranked
+<n>.
 
-This reduce start-up time and memory usage. Set to nil for no
+This reduces start-up time and memory usage. Set to nil for no
 limits."
   :type 'string
   :group 'mu4e-compose)

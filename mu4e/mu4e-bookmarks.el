@@ -65,9 +65,9 @@ bookmark uses a very slow query.
 implied when `:query' is a function.
 
 Note: for efficiency, queries used to determine the unread/all
-counts do not apply `mu4e-query-rewrite-function', nor do they
-discard duplicate or unreadable messages. Thus, the numbers shown
-may differ from the number you get from a 'real' query."
+counts do not discard duplicate or unreadable messages. Thus, the
+numbers shown may differ from the number you get from a normal
+query."
   :type '(repeat (plist))
   :group 'mu4e-bookmarks)
 
