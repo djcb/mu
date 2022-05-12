@@ -67,9 +67,12 @@ MessagePart::cooked_filename() const noexcept
 	// MimeMessagepart. Construct a name based on subject.
 	if (mime_object().is_message_part()) {
 		auto msg{MimeMessagePart{mime_object()}.get_message()};
-		return msg.subject()
-			.map(cleanup)
-			.value_or("no-subject") + ".eml";
+		if (!msg)
+			return Nothing;
+		else
+			return msg->subject()
+				.map(cleanup)
+				.value_or("no-subject") + ".eml";
 	}
 
 	return Nothing;

@@ -417,7 +417,10 @@ process_message_part(const MimeMessagePart& msg_part,
 		     Message::Private& info)
 {
 	auto submsg{msg_part.get_message()};
-	submsg.for_each([&](auto&& parent, auto&& child_obj) {
+	if (!submsg)
+		return;
+
+	submsg->for_each([&](auto&& parent, auto&& child_obj) {
 
 		/* XXX: we only handle one level */
 

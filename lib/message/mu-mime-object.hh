@@ -1182,11 +1182,14 @@ public:
 	/**
 	 * Get the MimeMessage for this MimeMessagePart.
 	 *
-	 * @return the MimeMessage
+	 * @return the MimeMessage or Nothing
 	 */
-	MimeMessage get_message() const {
-		return MimeMessage(
-			Object(G_OBJECT(g_mime_message_part_get_message(self()))));
+	Option<MimeMessage> get_message() const {
+		auto msg{g_mime_message_part_get_message(self())};
+		if (msg)
+			return MimeMessage(Object(G_OBJECT(msg)));
+		else
+			return Nothing;
 	}
 private:
 	GMimeMessagePart* self() const {

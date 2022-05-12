@@ -456,6 +456,22 @@ C0bdoCx44QVU8HaZ2x91h3GoM/0q5bqM/rvCauwbokiJgAUrznecNPY=
 	g_assert_cmpuint(n, ==, 1);
 }
 
+
+static void
+test_message_multipart_mixed_rfc822(void)
+{
+	constexpr const char *msgtext =
+R"(Content-Type: multipart/mixed;
+	boundary="Multipart_Tue_Sep__2_15:42:35_2014-1"
+
+--Multipart_Tue_Sep__2_15:42:35_2014-1
+Content-Type: message/rfc822
+)";
+	auto message{Message::make_from_text(msgtext)};
+	g_assert_true(!!message);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -469,6 +485,8 @@ main(int argc, char* argv[])
 			test_message_signed);
 	g_test_add_func("/message/message/signed-encrypted",
 			test_message_signed_encrypted);
+	g_test_add_func("/message/message/multipart-mixed-rfc822",
+			test_message_multipart_mixed_rfc822);
 
 	return g_test_run();
 }
