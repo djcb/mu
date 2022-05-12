@@ -586,8 +586,7 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 		throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
 	else if (res->empty())
 		throw Error(Error::Code::NotFound,
-			    "could not find message(s) for msgid %s",
-			    msgid.c_str());
+			    "could not find message(s) for msgid %s", msgid.c_str());
 
 	std::vector<Store::Id> docids{};
 	for (auto&& mi : *res)

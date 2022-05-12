@@ -113,11 +113,9 @@ struct Store::Private {
 
 	std::unique_ptr<Xapian::Database> make_xapian_db(const std::string db_path, XapianOpts opts)
 	try {
-
 		/* we do our own flushing, set Xapian's internal one as the
 		 * backstop*/
-		g_setenv("XAPIAN_FLUSH_THRESHOLD",
-			 format("%zu", properties_.batch_size + 100).c_str(), 1);
+		g_setenv("XAPIAN_FLUSH_THRESHOLD", "500000", 1);
 
 		switch (opts) {
 		case XapianOpts::ReadOnly:
@@ -132,6 +130,11 @@ struct Store::Private {
 			throw std::logic_error("invalid xapian options");
 		}
 
+	} catch (const Xapian::DatabaseLockError& xde) {
+		throw Mu::Error(Error::Code::StoreLock,
+				"failed to lock store @ %s: %s",
+				db_path.c_str(),
+				xde.get_msg().c_str());
 	} catch (const Xapian::DatabaseError& xde) {
 		throw Mu::Error(Error::Code::Store,
 				"failed to open store @ %s: %s",
