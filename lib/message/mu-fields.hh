@@ -293,7 +293,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::Integer,
 		"flags", "flag",
 		"Message properties",
-		"flag:unread",
+		"flag:unread AND flag:personal",
 		'g',
 		Field::Flag::BooleanTerm |
 		Field::Flag::Value |
@@ -336,7 +336,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Id::MessageId,
 		Field::Type::String,
 		"message-id", "msgid",
-		"message-Id",
+		"Message-Id",
 		"msgid:abc@123",
 		'i',
 		Field::Flag::BooleanTerm |
@@ -377,7 +377,7 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::References,
 		Field::Type::StringList,
-		"references", "refs",
+		"references", {},
 		"References to related messages",
 		{},
 		'r',
