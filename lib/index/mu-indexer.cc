@@ -42,14 +42,16 @@ using namespace Mu;
 struct IndexState {
 	enum State { Idle,
 		     Scanning,
+		     Finishing,
 		     Cleaning };
-	static const char* name(State s)
-	{
+	static const char* name(State s) {
 		switch (s) {
 		case Idle:
 			return "idle";
 		case Scanning:
 			return "scanning";
+		case Finishing:
+			return "finishing";
 		case Cleaning:
 			return "cleaning";
 		default:
@@ -58,16 +60,16 @@ struct IndexState {
 	}
 
 	bool operator==(State rhs) const {
-		return state_ == rhs;
+		return state_.load() == rhs;
 	}
 	bool operator!=(State rhs) const {
-		return state_ != rhs;
+		return state_.load() != rhs;
 	}
 
 	void change_to(State new_state) {
 		g_debug("changing indexer state %s->%s", name((State)state_),
 			name((State)new_state));
-		state_ = new_state;
+		state_.store(new_state);
 	}
 
 private:
@@ -80,15 +82,13 @@ struct Indexer::Private {
 				      [this](auto&& path, auto&& statbuf, auto&& info) {
 					      return handler(path, statbuf, info);
 				      }},
-	      max_message_size_{store_.properties().max_message_size}
-	{
+	      max_message_size_{store_.properties().max_message_size} {
 		g_message("created indexer for %s -> %s (batch-size: %zu)",
 			  store.properties().root_maildir.c_str(),
 			  store.properties().database_path.c_str(), store.properties().batch_size);
 	}
 
-	~Private()
-	{
+	~Private() {
 		stop();
 	}
 
@@ -305,7 +305,8 @@ Indexer::Private::scan_worker()
 		g_debug("starting scanner");
 		if (!scanner_.start()) { // blocks.
 			g_warning("failed to start scanner");
-			goto leave;
+			state_.change_to(IndexState::Idle);
+			return;
 		}
 		g_debug("scanner finished with %zu file(s) in queue", todos_.size());
 	}
@@ -324,8 +325,11 @@ Indexer::Private::scan_worker()
 		while (!todos_.empty())
 			std::this_thread::sleep_for(100ms);
 	}
-
-	store_.commit();
+	// and let the worker finish their work.
+	state_.change_to(IndexState::Finishing);
+	for (auto&& w : workers_)
+		if (w.joinable())
+			w.join();
 
 	if (conf_.cleanup) {
 		g_debug("starting cleanup");
@@ -335,7 +339,6 @@ Indexer::Private::scan_worker()
 		g_debug("cleanup finished");
 	}
 
-leave:
 	store_.index_complete();
 	state_.change_to(IndexState::Idle);
 }
