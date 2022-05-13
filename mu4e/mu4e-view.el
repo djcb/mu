@@ -655,6 +655,7 @@ marking if it still had that."
       (insert-file-contents-literally
        (mu4e-message-readable-path msg) nil nil nil t)))
   (switch-to-buffer gnus-article-buffer)
+  (article-remove-cr); CR are frequent for emails fetched by Thunderbird
   (setq mu4e~view-message msg)
   (mu4e~view-render-buffer msg))
 
