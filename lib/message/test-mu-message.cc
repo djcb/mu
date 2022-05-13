@@ -472,6 +472,93 @@ Content-Type: message/rfc822
 }
 
 
+static void
+test_message_detect_attachment(void)
+{
+	constexpr const char *msgtext =
+R"(From: "DUCK, Donald" <donald@example.com>
+Date: Tue, 3 May 2022 10:26:26 +0300
+Message-ID: <SADKLAJCLKDJLAS-xheQjE__+hS-3tff=pTYpMUyGiJwNGF_DA@mail.gmail.com>
+Subject: =?Windows-1252?Q?Purkuty=F6urakka?=
+To: Hello <moika@example.com>
+Content-Type: multipart/mixed; boundary="000000000000e687ed05de166d71"
+
+--000000000000e687ed05de166d71
+Content-Type: multipart/alternative; boundary="000000000000e687eb05de166d6f"
+
+--000000000000e687eb05de166d6f
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+fyi
+
+---------- Forwarded message ---------
+From: Fooish Bar <foobar@example.com>
+Date: Tue, 3 May 2022 at 08:59
+Subject: Ty=C3=B6t
+To: "DUCK, Donald" <donald@example.com>
+
+Moi,
+
+--
+
+--000000000000e687eb05de166d6f
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+abc
+
+--000000000000e687eb05de166d6f--
+--000000000000e687ed05de166d71
+Content-Type: application/pdf;
+	name="test1.pdf"
+Content-Disposition: attachment;
+	filename="test2.pdf"
+Content-Transfer-Encoding: base64
+Content-ID: <18088cfd4bc5517c6321>
+X-Attachment-Id: 18088cfd4bc5517c6321
+
+JVBERi0xLjcKJeLjz9MKNyAwIG9iago8PCAvVHlwZSAvUGFnZSAvUGFyZW50IDEgMCBSIC9MYXN0
+TW9kaWZpZWQgKEQ6MjAyMjA1MDMwODU3MzYrMDMnMDAnKSAvUmVzb3VyY2VzIDIgMCBSIC9NZWRp
+cmVmCjM1NjE4CiUlRU9GCg==
+--000000000000e687ed05de166d71--
+)";
+	auto message{Message::make_from_text(msgtext)};
+	g_assert_true(!!message);
+
+	g_assert_true(message->path().empty());
+
+	g_assert_true(message->bcc().empty());
+	assert_equal(message->subject(), "Purkutyöurakka");
+	assert_equal(message->body_html().value_or(""), "abc\n");
+	assert_equal(message->body_text().value_or(""),
+		     R"(fyi
+
+---------- Forwarded message ---------
+From: Fooish Bar <foobar@example.com>
+Date: Tue, 3 May 2022 at 08:59
+Subject: Työt
+To: "DUCK, Donald" <donald@example.com>
+
+Moi,
+
+--
+)");
+
+	g_assert_true(message->cc().empty());
+	g_assert_cmpuint(message->date(), ==, 1651562786);
+	g_assert_true(message->flags() == (Flags::HasAttachment));
+
+	g_assert_cmpuint(message->parts().size(), ==, 3);
+
+	for (auto&& part: message->parts())
+		g_info("%s %s",
+		       part.is_attachment() ? "yes" : "no",
+		       part.mime_type().value_or("boo").c_str());
+
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -487,6 +574,8 @@ main(int argc, char* argv[])
 			test_message_signed_encrypted);
 	g_test_add_func("/message/message/multipart-mixed-rfc822",
 			test_message_multipart_mixed_rfc822);
+	g_test_add_func("/message/message/detect-attachment",
+			test_message_detect_attachment);
 
 	return g_test_run();
 }
