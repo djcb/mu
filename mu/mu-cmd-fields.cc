@@ -48,7 +48,7 @@ show_fields(const MuConfig* opts)
 
 	Table fields;
 	fields.add_row({"field-name", "alias", "short", "search",
-			"value", "example query", "description"});
+			"value", "sexp", "example query", "description"});
 
 	auto disp= [&](std::string_view sv)->std::string {
 		if (sv.empty())
@@ -81,6 +81,7 @@ show_fields(const MuConfig* opts)
 				field.shortcut ? format("%c", field.shortcut) : ""s,
 				searchable(field),
 				field.is_value() ? "yes" : "no",
+				field.include_in_sexp() ? "yes" : "no",
 				disp(field.example_query),
 				disp(field.description)});
 		++row;
