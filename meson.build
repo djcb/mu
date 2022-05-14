@@ -42,8 +42,12 @@ infodir	  = join_paths(prefixdir, get_option('infodir'))
 extra_flags = [
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
-  '-Wno-#warnings'
-]
+  '-Wformat-security',
+  '-Wformat=2',
+  '-Wstack-protector',
+ # '-Wshadow',
+  '-Wno-switch-enum',
+  '-Wno-#warnings']
 
 if get_option('buildtype') == 'debug'
   extra_flags += [
