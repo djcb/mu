@@ -887,6 +887,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "E" #'mu4e-compose-edit)
 
     (define-key map "." #'mu4e-view-raw-message)
+    (define-key map "," #'mu4e-sexp-at-point)
     (define-key map "|" #'mu4e-view-pipe)
     (define-key map "a" #'mu4e-view-action)
     (define-key map "A" #'mu4e-view-mime-part-action)

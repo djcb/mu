@@ -119,6 +119,10 @@
    - Removed header-fields ~:attachments~, ~:signature~, ~:encryption~ and
      ~:user-agent~. They're obsolete with the Gnus-based message viewer.
 
+   - Add command ~mu4e-sexp-at-point~ for showing/hiding the s-expression for the
+     message-at-point. Useful for development / debugging. Bound to ~,~ in headers
+     and view mode.
+
    - undo is now supported across message-saves
 
    - a lot of the internals have been changed:

@@ -932,6 +932,8 @@ after the end of the search results."
           (define-key map "t" 'mu4e-headers-mark-subthread)
           (define-key map "T" 'mu4e-headers-mark-thread)
 
+	  (define-key map "," #'mu4e-sexp-at-point)
+
           ;; navigation between messages
           (define-key map "p" 'mu4e-headers-prev)
           (define-key map "n" 'mu4e-headers-next)

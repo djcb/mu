@@ -30,6 +30,7 @@
 (require 'mu4e-contacts)
 (require 'flow-fill)
 (require 'shr)
+(require 'pp)
 
 (declare-function mu4e-error "mu4e-helpers")
 (declare-function mu4e-warn  "mu4e-helpers")
@@ -47,9 +48,9 @@
 
 (defsubst mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG.
-FIELD is one of :from, :to, :cc, :bcc, :subject, :data,
-:message-id, :path, :maildir, :priority, :attachments,
-:references, :in-reply-to, :body-txt, :body-html
+
+See \"mu fields\" for the full list of field, in particular the
+\"sexp\" column.
 
 Returns nil if the field does not exist.
 
@@ -66,13 +67,6 @@ A message plist looks something like:
  :maildir \"/INBOX\"
  :priority normal
  :flags (seen)
- :attachments
-     ((:index 2 :name \"photo.jpg\" :mime-type \"image/jpeg\" :size 147331)
-      (:index 3 :name \"book.pdf\" :mime-type \"application/pdf\" :size 192220))
- :references  (\"238C8384574032D81EE81AF0114E4E74@123213.mail.example.com\"
- \"6BDC23465F79238203498230942D81EE81AF0114E4E74@123213.mail.example.com\")
- :in-reply-to \"238203498230942D81EE81AF0114E4E74@123213.mail.example.com\"
- :body-txt \"Hi Tom, ...\"
 \)).
 Some notes on the format:
 - The address fields are lists of plist (:name NAME :email EMAIL),
@@ -227,6 +221,19 @@ If MSG is nil, use `mu4e-message-at-point'."
   (let ((path (mu4e-message-field-at-point :path)))
     (kill-new path)
     (mu4e-message "Saved '%s' to kill-ring" path)))
+
+(defconst mu4e--sexp-buffer-name " *mu4e-sexp-at-point"
+  "Buffer name for sexp buffers.")
+
+(defun mu4e-sexp-at-point ()
+  "Show or hide the s-expression for the message-at-point, if any."
+  (interactive)
+  (if-let ((win (get-buffer-window mu4e--sexp-buffer-name)))
+      (delete-window win)
+    (when-let ((msg (mu4e-message-at-point 'noerror)))
+      (with-current-buffer-window mu4e--sexp-buffer-name nil nil
+	;; the "pretty-printing" is not very pretty...
+	(insert (pp-to-string msg))))))
 
 ;;;
 (provide 'mu4e-message)
