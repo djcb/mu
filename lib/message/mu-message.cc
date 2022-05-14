@@ -294,9 +294,9 @@ extract_tags(const MimeMessage& mime_msg)
 	std::vector<std::string> tags;
 	seq_for_each(tag_headers, [&](auto&& item) {
 		if (auto&& hdr = mime_msg.header(item.first); hdr) {
-			for (auto&& item : split(*hdr, item.second)) {
+			for (auto&& tagval : split(*hdr, item.second)) {
 				tags.emplace_back(
-					std::regex_replace(item, strip_rx, "$1"));
+					std::regex_replace(tagval, strip_rx, "$1"));
 			}
 		}
 	});
