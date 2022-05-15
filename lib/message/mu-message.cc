@@ -36,6 +36,7 @@
 #include <cstdlib>
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gmime/gmime.h>
 
 #include "gmime/gmime-message.h"
@@ -231,6 +232,7 @@ Message::load_mime_message(bool reload) const
 		return false;
 	} else {
 		priv_->mime_msg = std::move(mime_msg.value());
+		fill_document(*priv_);
 		return true;
 	}
 }
@@ -784,20 +786,29 @@ Message::parts() const
 }
 
 Result<std::string>
-Message::cache_path() const
+Message::cache_path(Option<size_t> index) const
 {
 	/* create tmpdir for this message, if needed */
 	if (priv_->cache_path.empty()) {
 		GError *err{};
-		auto tpath{to_string_opt_gchar(
-				g_dir_make_tmp("mu-message-part-XXXXXX", &err))};
+		auto tpath{to_string_opt_gchar(g_dir_make_tmp("mu-cache-XXXXXX", &err))};
 		if (!tpath)
-			return Err(Error::Code::File, &err,
-				   "failed to create temp dir");
+			return Err(Error::Code::File, &err, "failed to create temp dir");
+
 		priv_->cache_path = std::move(tpath.value());
 	}
 
-	return Ok(std::string{priv_->cache_path});
+	if (index) {
+		GError *err{};
+		auto tpath = format("%s/%zu", priv_->cache_path.c_str(), *index);
+		if (g_mkdir(tpath.c_str(), 0700) != 0)
+			return Err(Error::Code::File, &err,
+				   "failed to create cache dir '%s'; err=%d",
+				   tpath.c_str(), errno);
+		return Ok(std::move(tpath));
+	} else
+
+		return Ok(std::string{priv_->cache_path});
 }
 
 

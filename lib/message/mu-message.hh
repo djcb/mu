@@ -399,9 +399,12 @@ public:
 	 * Get the path to a cche directory for this message, which
 	 * is useful for temporarily saving attachments
 	 *
+	 * @param index optionally, create <cache-path>/<index> instead;
+	 * this is useful for having part-specific subdirectories.
+	 *
 	 * @return path to a (created) cache directory, or an error.
 	 */
-	Result<std::string> cache_path() const;
+	Result<std::string> cache_path(Option<size_t> index={}) const;
 
 
 	/**
