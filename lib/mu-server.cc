@@ -445,13 +445,13 @@ maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
 	if (!part.is_attachment())
 		return Nothing;
 
-	const auto cache_path{message.cache_path()};
+	const auto cache_path{message.cache_path(index)};
 	if (!cache_path)
 		throw cache_path.error();
 
-	const auto fname{format("%s/%zu-%s", cache_path->c_str(),
-				index, part.cooked_filename()
-				.value_or("part").c_str())};
+	const auto cooked_name{part.cooked_filename()};
+	const auto fname{format("%s/%s", cache_path->c_str(),
+				cooked_name.value_or("part").c_str())};
 
 	const auto res = part.to_file(fname, true);
 	if (!res)
@@ -461,6 +461,8 @@ maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
 
 	if (auto cdescr = part.content_description(); cdescr)
 		pi.add_prop(":description", Sexp::make_string(*cdescr));
+	else if (cooked_name)
+		pi.add_prop(":description", Sexp::make_string(cooked_name.value()));
 
 	pi.add_prop(":file-name", Sexp::make_string(fname));
 	pi.add_prop(":mime-type", Sexp::make_string(
