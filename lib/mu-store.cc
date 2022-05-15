@@ -132,14 +132,10 @@ struct Store::Private {
 
 	} catch (const Xapian::DatabaseLockError& xde) {
 		throw Mu::Error(Error::Code::StoreLock,
-				"failed to lock store @ %s: %s",
-				db_path.c_str(),
-				xde.get_msg().c_str());
+				"%s", xde.get_msg().c_str());
 	} catch (const Xapian::DatabaseError& xde) {
 		throw Mu::Error(Error::Code::Store,
-				"failed to open store @ %s: %s",
-				db_path.c_str(),
-				xde.get_msg().c_str());
+				"%s", xde.get_msg().c_str());
 	} catch (...) {
 		throw Mu::Error(Error::Code::Internal,
 				"something went wrong when opening store @ %s",

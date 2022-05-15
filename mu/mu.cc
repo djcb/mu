@@ -57,7 +57,7 @@ handle_result(const Result<void>& res, MuConfig* conf)
 	if (!res.error().is_soft_error()) {
 		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
 			  << col.fg(Color::BrightYellow)
-			  << res.error().what() << "something went wrong" << "\n";
+			  << res.error().what() << "\n";
 	} else
 		std::cerr <<  col.fg(Color::BrightBlue) << res.error().what() << '\n';
 
@@ -68,6 +68,9 @@ handle_result(const Result<void>& res, MuConfig* conf)
 	case Error::Code::InvalidArgument:
 		if (conf && mu_config_cmd_is_valid(conf->cmd))
 			mu_config_show_help(conf->cmd);
+		break;
+	case Error::Code::StoreLock:
+		std::cerr << "Perhaps mu is already running?\n";
 		break;
 	case Error::Code::SchemaMismatch:
 		std::cerr << "Please (re)initialize mu with 'mu init' "

@@ -564,12 +564,10 @@ Mu::mu_cmd_execute(const MuConfig* opts) try {
 
 	case MU_CONFIG_CMD_CFIND:
 		return with_readonly_store(mu_cmd_cfind, opts);
-		break;
 	case MU_CONFIG_CMD_FIND:
 		return cmd_find(opts);
 	case MU_CONFIG_CMD_INFO:
 		return with_readonly_store(cmd_info, opts);
-		break;
 
 	/* writable store */
 

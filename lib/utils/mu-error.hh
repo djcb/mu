@@ -150,7 +150,7 @@ struct Error final : public std::exception {
 	}
 
 	constexpr uint8_t exit_code() const {
-		return ((static_cast<uint32_t>(code_) >> 15) & 0xf);
+		return ((static_cast<uint32_t>(code_) >> 15) & 0xff);
 	}
 
 
