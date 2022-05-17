@@ -39,7 +39,8 @@ namespace Mu {
  * *not* try to remove the parts the were created. it *will* create any parent
  * dirs that are not yet existent.
  *
- * @param path the path (missing components will be created, as in 'mkdir -p')
+ * @param path the path (missing components will be created, as in 'mkdir -p').
+ * must be non-empty
  * @param mode the file mode (e.g., 0755)
  * @param noindex add a .noindex file to the maildir, so it will be excluded
  * from indexing by 'mu index'

@@ -67,6 +67,9 @@ slowpath:
 static Mu::Result<void>
 create_maildir(const std::string& path, mode_t mode)
 {
+	if (path.empty())
+		return Err(Error{Error::Code::File, "path must not be empty"});
+
 	std::array<std::string,3> subdirs = {"new", "cur", "tmp"};
 	for (auto&& subdir: subdirs) {
 
@@ -523,10 +526,10 @@ determine_dst_filename(const std::string& file, Flags flags,
  * sanity checks
  */
 static Mu::Result<void>
-check_determine_target_params (const std::string&       old_path,
-			       const std::string&       root_maildir_path,
-			       const std::string&       target_maildir,
-			       Flags			newflags)
+check_determine_target_params (const std::string& old_path,
+			       const std::string& root_maildir_path,
+			       const std::string& target_maildir,
+			       Flags newflags)
 {
 	if (!g_path_is_absolute(old_path.c_str()))
 		return Err(Error{Error::Code::File,
