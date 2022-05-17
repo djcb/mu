@@ -637,7 +637,10 @@ Mu::timezone_available(const std::string& tz)
 	bool have_tz = g_strcmp0(g_time_zone_get_identifier(tzone), tz.c_str()) == 0;
 	g_time_zone_unref (tzone);
 
-	g_setenv("TZ", old_tz, TRUE);
+	if (old_tz)
+		g_setenv("TZ", old_tz, TRUE);
+	else
+		g_unsetenv("TZ");
 
 	return have_tz;
 }
