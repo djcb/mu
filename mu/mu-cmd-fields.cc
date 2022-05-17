@@ -137,6 +137,10 @@ Mu::mu_cmd_fields(const MuConfig* opts)
 {
 	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
 
+	if (!locale_workaround())
+		return Err(Error::Code::User, "failed to find a working locale");
+
+
 	std::cout << "#\n# message fields\n#\n";
 	show_fields(opts);
 	std::cout << "\n#\n# message flags\n#\n";

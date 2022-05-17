@@ -406,6 +406,9 @@ cmd_info(const Mu::Store& store, const MuConfig* opts)
 {
 	using namespace tabulate;
 
+	if (!locale_workaround())
+		return Err(Error::Code::User, "failed to find a working locale");
+
 	auto colorify = [](Table& table) {
 		for (auto&& row: table) {
 
