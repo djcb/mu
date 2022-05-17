@@ -434,8 +434,7 @@ AllPubkeyAlgos = {{
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::PubkeyAlgo algo) {
 	return to_string_view_opt(AllPubkeyAlgos, algo);
-};
-
+}
 
 constexpr std::array<std::pair<MimeCertificate::DigestAlgo, std::string_view>, 15>
 AllDigestAlgos = {{
@@ -458,7 +457,7 @@ AllDigestAlgos = {{
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::DigestAlgo algo) {
 	return to_string_view_opt(AllDigestAlgos, algo);
-};
+}
 
 constexpr std::array<std::pair<MimeCertificate::Trust, std::string_view>, 6>
 AllTrusts = {{
@@ -472,7 +471,7 @@ AllTrusts = {{
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Trust trust) {
 	return to_string_view_opt(AllTrusts, trust);
-};
+}
 
 constexpr std::array<std::pair<MimeCertificate::Validity, std::string_view>, 6>
 AllValidities = {{
@@ -486,7 +485,7 @@ AllValidities = {{
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Validity val) {
 	return to_string_view_opt(AllValidities, val);
-};
+}
 
 
 
@@ -638,7 +637,7 @@ AllCipherAlgos= {{
 
 constexpr Option<std::string_view> to_string_view_opt(MimeDecryptResult::CipherAlgo algo) {
 	return to_string_view_opt(AllCipherAlgos, algo);
-};
+}
 
 
 /**
