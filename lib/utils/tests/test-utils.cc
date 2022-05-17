@@ -56,7 +56,21 @@ test_cases(const CaseVec& cases, ProcFunc proc)
 static void
 test_date_basic()
 {
-	g_setenv("TZ", "Europe/Helsinki", TRUE);
+	// ensure we have the needed TZ or skip the test.
+	const auto hki = "Europe/Helsinki";
+	g_setenv("TZ", hki, TRUE);
+
+	{
+		auto tz = g_time_zone_new_local ();
+		bool have_hki = g_strcmp0(g_time_zone_get_identifier(tz), hki) == 0;
+		g_time_zone_unref (tz);
+
+		if (!have_hki) {
+			g_test_skip("timezone Europe/Helsinki not available");
+			return;
+		}
+	}
+
 
 	constexpr std::array<std::tuple<const char*, bool, int64_t>, 9> cases = {{
 			{"2015-09-18T09:10:23", true, 1442556623},
@@ -250,7 +264,7 @@ test_to_from_lexnum()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	g_test_init(&argc, &argv, nullptr);
 
 	g_test_add_func("/utils/date-basic", test_date_basic);
 	g_test_add_func("/utils/date-ymwdhMs", test_date_ymwdhMs);
