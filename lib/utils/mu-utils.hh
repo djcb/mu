@@ -155,6 +155,17 @@ std::string time_to_string(const std::string& frm, time_t t, bool utc = false) G
 bool locale_workaround();
 
 
+/**
+ * Is the given timezone available? For tests
+ *
+ * @param tz a timezone, such as Europe/Helsinki
+ *
+ * @return true or false
+ */
+bool timezone_available(const std::string& tz);
+
+
+
 // https://stackoverflow.com/questions/19053351/how-do-i-use-a-custom-deleter-with-a-stdunique-ptr-member
 template <auto fn>
 struct deleter_from_fn {

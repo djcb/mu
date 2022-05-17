@@ -625,3 +625,19 @@ Mu::locale_workaround()
 
 	return false;
 }
+
+bool
+Mu::timezone_available(const std::string& tz)
+{
+	const auto old_tz = g_getenv("TZ");
+
+	g_setenv("TZ", tz.c_str(), TRUE);
+
+	auto tzone = g_time_zone_new_local ();
+	bool have_tz = g_strcmp0(g_time_zone_get_identifier(tzone), tz.c_str()) == 0;
+	g_time_zone_unref (tzone);
+
+	g_setenv("TZ", old_tz, TRUE);
+
+	return have_tz;
+}

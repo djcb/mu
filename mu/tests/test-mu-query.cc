@@ -323,6 +323,12 @@ test_mu_query_wildcards(void)
 static void
 test_mu_query_dates_helsinki(void)
 {
+	const auto hki = "Europe/Helsinki";
+	if (!timezone_available(hki)) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	int         i;
 	const char* old_tz;
 
@@ -332,7 +338,7 @@ test_mu_query_dates_helsinki(void)
 			      {"date:200808110803..today", 7},
 			      {"date:200808110801..now", 7}};
 
-	old_tz = set_tz("Europe/Helsinki");
+	old_tz = set_tz(hki);
 
 	const auto xpath{make_database(MU_TESTMAILDIR)};
 	g_assert_false(xpath.empty());
@@ -348,6 +354,12 @@ test_mu_query_dates_helsinki(void)
 static void
 test_mu_query_dates_sydney(void)
 {
+	const auto syd = "Australia/Sydney";
+	if (!timezone_available(syd)) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	int         i;
 	const char* old_tz;
 	QResults    queries[] = {{"date:20080731..20080804", 5},
@@ -355,8 +367,7 @@ test_mu_query_dates_sydney(void)
 			      {"date:200808110803..now", 7},
 			      {"date:200808110803..today", 7},
 			      {"date:200808110801..now", 7}};
-
-	old_tz = set_tz("Australia/Sydney");
+	old_tz = set_tz(syd);
 
 	const auto xpath{make_database(MU_TESTMAILDIR)};
 	g_assert_false(xpath.empty());
@@ -371,6 +382,12 @@ test_mu_query_dates_sydney(void)
 static void
 test_mu_query_dates_la(void)
 {
+	const auto la = "America/Los_Angeles";
+	if (!timezone_available(la)) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	int         i;
 	const char* old_tz;
 
@@ -381,8 +398,7 @@ test_mu_query_dates_la(void)
 			      {"date:200808110803..now", 6},
 			      {"date:200808110803..today", 6},
 			      {"date:200808110801..now", 6}};
-
-	old_tz = set_tz("America/Los_Angeles");
+	old_tz = set_tz(la);
 
 	const auto xpath = make_database(MU_TESTMAILDIR);
 	g_assert_false(xpath.empty());
@@ -605,7 +621,7 @@ main(int argc, char* argv[])
 
 	setlocale(LC_ALL, "");
 
-	g_test_init(&argc, &argv, NULL);
+	g_test_init(&argc, &argv, nullptr);
 	DB_PATH1 = make_database(MU_TESTMAILDIR);
 	g_assert_false(DB_PATH1.empty());
 

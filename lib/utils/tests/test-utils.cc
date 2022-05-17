@@ -56,22 +56,15 @@ test_cases(const CaseVec& cases, ProcFunc proc)
 static void
 test_date_basic()
 {
-	// ensure we have the needed TZ or skip the test.
 	const auto hki = "Europe/Helsinki";
-	g_setenv("TZ", hki, TRUE);
 
-	{
-		auto tz = g_time_zone_new_local ();
-		bool have_hki = g_strcmp0(g_time_zone_get_identifier(tz), hki) == 0;
-		g_time_zone_unref (tz);
-
-		if (!have_hki) {
-			g_test_skip("timezone Europe/Helsinki not available");
-			return;
-		}
+	// ensure we have the needed TZ or skip the test.
+	if (!timezone_available(hki)) {
+		g_test_skip("timezone Europe/Helsinki not available");
+		return;
 	}
 
-
+	g_setenv("TZ", hki, TRUE);
 	constexpr std::array<std::tuple<const char*, bool, int64_t>, 9> cases = {{
 			{"2015-09-18T09:10:23", true, 1442556623},
 			{"1972-12-14T09:10:23", true, 93165023},
