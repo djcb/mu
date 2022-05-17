@@ -147,22 +147,13 @@ std::string date_to_time_t_string(int64_t t);
 std::string time_to_string(const std::string& frm, time_t t, bool utc = false) G_GNUC_CONST;
 
 
-// /**
-//  * Create a std::string by consuming a gchar* array; this takes ownership
-//  * of str which should no longer be used.
-//  *
-//  * @param str a gchar* or NULL (latter taken as "")
-//  *
-//  * @return a std::string
-//  */
-// static inline std::string
-// from_gchars(gchar*&& str)
-// {
-//	std::string s{str ? str : ""};
-//	g_free(str);
+/**
+ * Hack to avoid locale crashes
+ *
+ * @return true if setting locale worked; false otherwise
+ */
+bool locale_workaround();
 
-//	return s;
-// }
 
 // https://stackoverflow.com/questions/19053351/how-do-i-use-a-custom-deleter-with-a-stdunique-ptr-member
 template <auto fn>

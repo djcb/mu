@@ -19,6 +19,7 @@
 
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
+#include <stdexcept>
 #endif /*_XOPEN_SOURCE*/
 
 #include <array>
@@ -605,4 +606,22 @@ Mu::TempDir::~TempDir()
 	(void)::system(cmd.c_str());
 
 	g_debug("removed '%s'", path_.c_str());
+}
+
+bool
+Mu::locale_workaround()
+{
+	// quite horrible... but some systems break otherwise with
+	//  https://github.com/djcb/mu/issues/2252
+
+	for (auto&& loc : {"", "en_US.UTF-8", "C" }) {
+		try {
+			std::locale::global(std::locale(loc));
+			return true;
+		} catch (const std::runtime_error& re) {
+			continue;
+		}
+	}
+
+	return false;
 }
