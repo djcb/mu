@@ -8,8 +8,8 @@
     - =mu= switched to use the [[https://mesonbuild.com][meson]] build system by default. The existing
       =autotools= is still avaiable, but is to be removed after the 1.8 release.
 
-      Using =meson= (which you need to install), you can use something like in the
-      mu top directory:
+      Using =meson= (which you need to install), you can use something like the
+      following in the mu top source directory:
 
 #+BEGIN_SRC sh
 	$ meson build && ninja -C build
@@ -29,7 +29,11 @@
    - =mu= now requires C++17 support for building
 
    - The server protocol (as used my mu4e) has seen a number of updates, to
-     allow for faster rendering.
+     allow for faster rendering. As before, there's no compatibility between
+     minor release numbers (1.4 vs 1.6 vs 1.8) nor within development series
+     (such as 1.7). However, within a stable release (such as all 1.6.x) the
+     protocol won't change (except if required to fix some severe bug; never
+     happened in practice)
 
    - The ~processed~ number in the indexing statistics has been renamed into
      ~checked~ and describes the number of message files considered for
@@ -164,7 +168,12 @@
 
     - the guile interface has been deprecated. It may be revamped at some point,
       but will be different from the current one, which is to be removed after
-      1.8.x
+      1.8
+
+*** toys
+
+    - the ~mug~ toys is deprecated and to be removed after 1.8
+
 
 
 * 1.6 (released, as of July 27 2021)
