@@ -416,8 +416,8 @@ cmd_info(const Mu::Store& store, const MuConfig* opts)
 				continue;
 
 			row.cells().at(0)->format().font_style({FontStyle::bold})
-				.font_color({Color::green});
-			row.cells().at(1)->format().font_color({Color::blue});
+				.font_color(Color::green);
+			row.cells().at(1)->format().font_color(Color::blue);
 		}
 	};
 

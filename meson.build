@@ -45,6 +45,7 @@ extra_flags = [
   '-Wformat-security',
   '-Wformat=2',
   '-Wstack-protector',
+  '-Wno-keyword-macro',
  # '-Wshadow',
   '-Wno-switch-enum',
   '-Wno-#warnings']

@@ -37,7 +37,7 @@ table_header(Table& table, const MuConfig* opts)
 
 	(*table.begin()).format()
 		.font_style({FontStyle::bold})
-		.font_color({Color::blue});
+		.font_color(Color::blue);
 
 }
 
