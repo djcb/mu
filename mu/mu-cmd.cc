@@ -411,8 +411,10 @@ cmd_info(const Mu::Store& store, const MuConfig* opts)
 
 	auto colorify = [](Table& table) {
 		for (auto&& row: table) {
+
 			if (row.cells().size() < 2)
 				continue;
+
 			row.cells().at(0)->format().font_style({FontStyle::bold})
 				.font_color(Color::green);
 			row.cells().at(1)->format().font_color(Color::blue);
@@ -426,8 +428,6 @@ cmd_info(const Mu::Store& store, const MuConfig* opts)
 			return time_to_string("%c", t);
 
 	};
-
-	return Ok();
 
 	Table info;
 	info.add_row({"maildir", store.properties().root_maildir});
