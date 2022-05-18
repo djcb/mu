@@ -110,6 +110,13 @@ public:
 	 */
 	const Progress& progress() const;
 
+	/**
+	 * Last time indexing was completed.
+	 *
+	 * @return the time or 0
+	 */
+	time_t completed() const;
+
 private:
 	struct Private;
 	std::unique_ptr<Private> priv_;

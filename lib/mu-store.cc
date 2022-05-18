@@ -103,8 +103,6 @@ struct Store::Private {
 
 	~Private() try {
 
-		indexer_.reset(); // reset so it cannot call us back
-
 		g_debug("closing store @ %s", properties_.database_path.c_str());
 		if (!read_only_) {
 			transaction_maybe_commit(true /*force*/);
@@ -173,6 +171,13 @@ struct Store::Private {
 								   contacts_cache_.serialize());
 				});
 			}
+
+			if (indexer_) { // save last index time.
+				if (auto&& t{indexer_->completed()}; t != 0)
+					writable_db().set_metadata(
+						IndexedKey, tstamp_to_string(t));
+			}
+
 			if (transaction_size_ == 0)
 				return; // nothing more to do here.
 
@@ -639,16 +644,6 @@ Store::commit()
 {
 	std::lock_guard guard{priv_->lock_};
 	priv_->transaction_maybe_commit(true /*force*/);
-}
-
-
-void
-Store::index_complete()
-{
-	std::lock_guard lock{priv_->lock_};
-
-	g_debug("marking index complete");
-	priv_->writable_db().set_metadata(IndexedKey, tstamp_to_string(::time({})));
 }
 
 

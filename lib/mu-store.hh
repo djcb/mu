@@ -456,12 +456,6 @@ private:
 	      const Config&      conf);
 
 
-	/**
-	 * Call with indexing has completed to update metadata.
-	 */
-	friend class Indexer;
-	void index_complete();
-
 	std::unique_ptr<Private> priv_;
 };
 

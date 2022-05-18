@@ -43,7 +43,8 @@ struct IndexState {
 	enum State { Idle,
 		     Scanning,
 		     Finishing,
-		     Cleaning };
+		     Cleaning
+	};
 	static const char* name(State s) {
 		switch (s) {
 		case Idle:
@@ -65,7 +66,6 @@ struct IndexState {
 	bool operator!=(State rhs) const {
 		return state_.load() != rhs;
 	}
-
 	void change_to(State new_state) {
 		g_debug("changing indexer state %s->%s", name((State)state_),
 			name((State)new_state));
@@ -128,6 +128,8 @@ struct Indexer::Private {
 	Progress   progress_;
 	IndexState state_;
 	std::mutex lock_, w_lock_;
+
+	std::atomic<time_t> completed_;
 };
 
 bool
@@ -339,7 +341,7 @@ Indexer::Private::scan_worker()
 		g_debug("cleanup finished");
 	}
 
-	store_.index_complete();
+	completed_ = ::time({});
 	state_.change_to(IndexState::Idle);
 }
 
@@ -380,7 +382,6 @@ Indexer::Private::stop()
 	if (scanner_worker_.joinable())
 		scanner_worker_.join();
 
-	store_.index_complete();
 	state_.change_to(IndexState::Idle);
 	for (auto&& w : workers_)
 		if (w.joinable())
@@ -392,8 +393,7 @@ Indexer::Private::stop()
 
 Indexer::Indexer(Store& store)
     : priv_{std::make_unique<Private>(store)}
-{
-}
+{}
 
 Indexer::~Indexer() = default;
 
@@ -437,4 +437,10 @@ Indexer::progress() const
 	priv_->progress_.running = priv_->state_ == IndexState::Idle ? false : true;
 
 	return priv_->progress_;
+}
+
+time_t
+Indexer::completed() const
+{
+	return priv_->completed_;
 }
