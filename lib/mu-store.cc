@@ -103,8 +103,7 @@ struct Store::Private {
 
 	~Private() try {
 
-		if (indexer_) // do this here, since it may call back.
-			indexer_->stop();
+		indexer_.reset(); // reset so it cannot call us back
 
 		g_debug("closing store @ %s", properties_.database_path.c_str());
 		if (!read_only_) {
