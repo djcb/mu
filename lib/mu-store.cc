@@ -101,8 +101,11 @@ struct Store::Private {
 	      contacts_cache_{"", properties_.personal_addresses} {
 	}
 
-	~Private()
-	try {
+	~Private() try {
+
+		if (indexer_) // do this here, since it may call back.
+			indexer_->stop();
+
 		g_debug("closing store @ %s", properties_.database_path.c_str());
 		if (!read_only_) {
 			transaction_maybe_commit(true /*force*/);
