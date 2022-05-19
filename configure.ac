@@ -16,7 +16,7 @@
 
 AC_PREREQ([2.68])
 AC_INIT([mu],[1.7.21],[https://github.com/djcb/mu/issues],[mu])
-AC_COPYRIGHT([Copyright (C) 2008-2021 Dirk-Jan C. Binnema])
+AC_COPYRIGHT([Copyright (C) 2008-2022 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
 # libtoolize wants to put some stuff in here; if you have an old
@@ -193,30 +193,6 @@ PKG_CHECK_MODULES(XAPIAN,xapian-core >= 1.4,[
 AC_DEFINE(MU_STORE_SCHEMA_VERSION,["462"],['Schema' version of the database])
 ###############################################################################
 
-###############################################################################
-# we need GTK+3 for some of the graphical tools
-# use --without-gtk to disable it
-AC_ARG_ENABLE([gtk],AS_HELP_STRING([--disable-gtk],[Disable GTK+]))
-AS_IF([test "x$enable_gtk" != "xno"],[
-     PKG_CHECK_MODULES(GTK,gtk+-3.0,[have_gtk=yes],[have_gtk=no])
-     gtk_version="$($PKG_CONFIG --modversion gtk+-3.0)"
-])
-AM_CONDITIONAL(HAVE_GTK,[test "x$have_gtk" = "xyes"])
-
-# webkit? needed for the fancy web widget
-# use --disable-webkit to disable it, even if you have it
-#
-# and note this is just a toy, not for distribution.
-AC_ARG_ENABLE([webkit],AS_HELP_STRING([--disable-webkit],[Disable webkit]))
-AS_IF([test "x$enable_webkit" != "xno"],[
-       PKG_CHECK_MODULES(WEBKIT,webkit2gtk-4.0 >= 2.0, [have_webkit=yes],[have_webkit=no])
-       AS_IF([test "x$have_webkit" = "xyes"],[
-    webkit_version="$($PKG_CONFIG --modversion webkit2gtk-4.0)"])
-])
-AM_CONDITIONAL(HAVE_WEBKIT, [test "x$have_webkit" = "xyes"])
-AM_CONDITIONAL(BUILD_GUI,[test "x$have_webkit" = "xyes" -a "x$have_gtk" = "xyes"])
-###############################################################################
-
 ################################################################################
 # should we try to build an emacs dynamic module?
 #AC_CHECK_HEADER([emacs-module.h],[
@@ -285,8 +261,6 @@ guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile
 guile/scripts/Makefile
-toys/Makefile
-toys/mug/Makefile
 man/Makefile
 m4/Makefile
 contrib/Makefile
@@ -307,30 +281,10 @@ echo "Xapian version                       : $xapian_version"
 echo "GLib version                         : $glib_version"
 echo "GMime version                        : $gmime_version"
 
-AM_COND_IF([BUILD_GUI],[
-echo "GTK+ version                         : $gtk_version"
-echo "Webkit2/GTK+ version                 : $webkit_version"
-])
-
 AM_COND_IF([BUILD_GUILE],[
 echo "Guile version                        : $guile_version"
 ])
-
-AS_IF([test "x$build_mu4e" = "xyes"],[
-echo "Build mu4e                           : yes"
-echo "Emacs version                        : $emacs_version"
-#AM_COND_IF([BUILD_EMACS_MODULE],[
-#echo "Build emacs module                   : yes"],[
-#echo "Build emacs module                   : no"
-#])])
-
-AM_COND_IF([BUILD_GUI],[
-echo "Build 'mug' toy-ui (gtk+/webkit)     : yes"],[
-echo "Build 'mug' toy-ui (gtk+/webkit)     : no"
-])
-
 echo
-
 echo "Have direntry->d_ino                 : $use_dirent_d_ino"
 echo "Have direntry->d_type                : $use_dirent_d_type"
 echo "------------------------------------------------"
@@ -347,12 +301,6 @@ if test "x$have_makeinfo" != "xyes"; then
     echo "  texinfo package in debian/ubuntu/fedora/... "
     echo
 fi
-
-# gui
-AS_IF([test "x$buildgui" = "xyes"],[
-     echo "* The demo UI will be built in toys/mug"
-     echo
-])
 
 # wordexp
 AS_IF([test "x$ac_cv_header_wordexp_h" != "xyes"],[

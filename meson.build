@@ -121,11 +121,6 @@ thread_dep     = dependency('threads')
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
 
-if get_option('toys').enabled()
-  gtk_dep = dependency('gtk+-3.0')
-  webkit_dep = dependency('webkit2gtk-4.0')
-endif
-
 awk=find_program(['gawk', 'awk'])
 
 # soft dependencies
@@ -190,12 +185,6 @@ if not get_option('guile').disabled() and guile_dep.found()
 endif
 
 config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
-
-
-if get_option('toys').enabled()
-  message('toys are disabled for now')
-  #subdir('toys/mug')
-endif
 ################################################################################
 
 ################################################################################

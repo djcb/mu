@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,11 +19,6 @@ option('guile',
        type : 'feature',
        value: 'auto',
        description: 'build the guile scripting support (requires guile-3.x)')
-
-option('toys',
-       type : 'feature',
-       value: 'auto',
-       description: 'build various toy programs (requires gtk3/gtk-webkit)')
 
 option('readline',
        type: 'feature',

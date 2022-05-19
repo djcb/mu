@@ -172,8 +172,8 @@
 
 *** toys
 
-    - the ~mug~ toys is deprecated and to be removed after 1.8
-
+    - the ~toys~ (~mug~) has been removed, as they no longer worked with the rest of
+      the code.
 
 
 * 1.6 (released, as of July 27 2021)
