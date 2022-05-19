@@ -30,7 +30,6 @@
 
 #include "test-mu-common.hh"
 #include "utils/mu-result.hh"
-#include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 
 #include <message/mu-message.hh>

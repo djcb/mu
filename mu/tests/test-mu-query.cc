@@ -33,7 +33,6 @@
 #include "test-mu-common.hh"
 #include "mu-query.hh"
 #include "utils/mu-result.hh"
-#include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 #include "mu-store.hh"
 

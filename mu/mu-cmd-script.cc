@@ -32,7 +32,6 @@
 #include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
-#include "utils/mu-str.h"
 
 #define MU_GUILE_EXT          ".scm"
 #define MU_GUILE_DESCR_PREFIX ";; INFO: "

@@ -37,7 +37,6 @@
 #include "message/mu-mime-object.hh"
 
 #include "utils/mu-util.h"
-#include "utils/mu-str.h"
 
 #include "utils/mu-error.hh"
 #include "utils/mu-utils.hh"

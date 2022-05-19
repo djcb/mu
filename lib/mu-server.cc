@@ -40,7 +40,6 @@
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
 
-#include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
 #include "utils/mu-command-parser.hh"

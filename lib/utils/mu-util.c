@@ -106,7 +106,7 @@ mu_util_dir_expand (const char *path)
 	/* now resolve any symlinks, .. etc. */
 	if (realpath (dir, resolved) == NULL) {
 		/* g_debug ("%s: could not get realpath for '%s': %s", */
-		/* 	 __func__, dir, g_strerror(errno)); */
+		/*	 __func__, dir, g_strerror(errno)); */
 		g_free (dir);
 		return NULL;
 	} else
@@ -126,20 +126,6 @@ mu_util_error_quark (void)
 
 	return error_domain;
 }
-
-
-const char*
-mu_util_cache_dir (void)
-{
-	static char cachedir [PATH_MAX];
-
-	g_snprintf (cachedir, sizeof(cachedir), "%s%cmu-%u",
-		  g_get_tmp_dir(), G_DIR_SEPARATOR,
-		  getuid());
-
-	return cachedir;
-}
-
 
 gboolean
 mu_util_check_dir (const gchar* path, gboolean readable, gboolean writeable)
@@ -219,21 +205,6 @@ mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
 
 	return TRUE;
 }
-
-
-int
-mu_util_create_writeable_fd (const char* path, mode_t mode,
-			     gboolean overwrite)
-{
-	errno = 0; /* clear! */
-	g_return_val_if_fail (path, -1);
-
-	if (overwrite)
-		return open (path, O_WRONLY|O_CREAT|O_TRUNC, mode);
-	else
-		return open (path, O_WRONLY|O_CREAT|O_EXCL, mode);
-}
-
 
 gboolean
 mu_util_is_local_file (const char* path)
@@ -375,7 +346,7 @@ mu_util_locale_is_utf8 (void)
 	static int is_utf8 = -1;
 
 	if (G_UNLIKELY(is_utf8 == -1))
-	    	is_utf8 = g_get_charset(&dummy) ? 1 : 0;
+		is_utf8 = g_get_charset(&dummy) ? 1 : 0;
 
 	return is_utf8 ? TRUE : FALSE;
 }
@@ -497,4 +468,46 @@ mu_util_read_password (const char *prompt)
 	}
 
 	return g_strdup(pass);
+}
+
+
+char*
+mu_str_summarize (const char* str, size_t max_lines)
+{
+	char *summary;
+	size_t nl_seen;
+	unsigned i,j;
+	gboolean last_was_blank;
+
+	g_return_val_if_fail (str, NULL);
+	g_return_val_if_fail (max_lines > 0, NULL);
+
+	/* len for summary <= original len */
+	summary = g_new (gchar, strlen(str) + 1);
+
+	/* copy the string up to max_lines lines, replace CR/LF/tab with
+	 * single space */
+	for (i = j = 0, nl_seen = 0, last_was_blank = TRUE;
+	     nl_seen < max_lines && str[i] != '\0'; ++i) {
+
+		if (str[i] == '\n' || str[i] == '\r' ||
+		    str[i] == '\t' || str[i] == ' ' ) {
+
+			if (str[i] == '\n')
+				++nl_seen;
+
+			/* no double-blanks or blank at end of str */
+			if (!last_was_blank && str[i+1] != '\0')
+				summary[j++] = ' ';
+
+			last_was_blank = TRUE;
+		} else {
+
+			summary[j++] = str[i];
+			last_was_blank = FALSE;
+		}
+	}
+
+	summary[j] = '\0';
+	return summary;
 }

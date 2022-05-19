@@ -32,9 +32,19 @@
 #include "utils/mu-util.h"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
-#include "utils/mu-str.h"
 
 using namespace Mu;
+
+/**
+ * macro to check whether the string is empty, ie. if it's NULL or
+ * it's length is 0
+ *
+ * @param S a string
+ *
+ * @return TRUE if the string is empty, FALSE otherwise
+ */
+#define mu_str_is_empty(S) ((!(S)||!(*S))?TRUE:FALSE)
+
 
 /**
  * guess the last name for the given name; clearly,

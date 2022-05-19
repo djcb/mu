@@ -21,7 +21,6 @@
 #include "mu-cmd.hh"
 #include "mu-config.hh"
 #include "utils/mu-util.h"
-#include "utils/mu-str.h"
 #include "utils/mu-utils.hh"
 #include <message/mu-message.hh>
 #include <regex>

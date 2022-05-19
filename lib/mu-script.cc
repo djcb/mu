@@ -34,7 +34,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "utils/mu-str.h"
 #include "mu-script.hh"
 #include "utils/mu-util.h"
 
@@ -116,9 +115,9 @@ mu_script_info_matches_regex(MuScriptInfo* msi, const char* rxstr, GError** err)
 	g_return_val_if_fail(rxstr, FALSE);
 
 	rx = g_regex_new(rxstr,
-	                 (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
-	                 (GRegexMatchFlags)0,
-	                 err);
+			 (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
+			 (GRegexMatchFlags)0,
+			 err);
 	if (!rx)
 		return FALSE;
 
@@ -148,8 +147,8 @@ open_channel(const char* path)
 	io_chan = g_io_channel_new_file(path, "r", &err);
 	if (!io_chan) {
 		g_warning("failed to open '%s': %s",
-		          path,
-		          err ? err->message : "something went wrong");
+			  path,
+			  err ? err->message : "something went wrong");
 		g_clear_error(&err);
 		return NULL;
 	}
@@ -167,7 +166,7 @@ end_channel(GIOChannel* io_chan)
 	status = g_io_channel_shutdown(io_chan, FALSE, &err);
 	if (status != G_IO_STATUS_NORMAL) {
 		g_warning("failed to shutdown io-channel: %s",
-		          err ? err->message : "something went wrong");
+			  err ? err->message : "something went wrong");
 		g_clear_error(&err);
 	}
 
@@ -214,8 +213,8 @@ get_descriptions(MuScriptInfo* msi, const char* prefix)
 
 	if (io_status != G_IO_STATUS_EOF) {
 		g_warning("error reading %s: %s",
-		          msi->_path,
-		          err ? err->message : "something went wrong");
+			  msi->_path,
+			  err ? err->message : "something went wrong");
 		g_clear_error(&err);
 	}
 
@@ -228,9 +227,9 @@ get_descriptions(MuScriptInfo* msi, const char* prefix)
 
 GSList*
 mu_script_get_script_info_list(const char* path,
-                               const char* ext,
-                               const char* descprefix,
-                               GError**    err)
+			       const char* ext,
+			       const char* descprefix,
+			       GError**    err)
 {
 	DIR*           dir;
 	GSList*        lst;
@@ -241,10 +240,10 @@ mu_script_get_script_info_list(const char* path,
 	dir = opendir(path);
 	if (!dir) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE_CANNOT_OPEN,
-		                    "failed to open '%s': %s",
-		                    path,
-		                    g_strerror(errno));
+				    MU_ERROR_FILE_CANNOT_OPEN,
+				    "failed to open '%s': %s",
+				    path,
+				    g_strerror(errno));
 		return NULL;
 	}
 
@@ -289,6 +288,34 @@ mu_script_find_script_with_name(GSList* lst, const char* name)
 	return NULL;
 }
 
+static char*
+quoted_from_strv (const gchar **params)
+{
+	GString *str;
+	int i;
+
+	g_return_val_if_fail (params, NULL);
+
+	if (!params[0])
+		return g_strdup ("");
+
+	str = g_string_sized_new (64); /* just a guess */
+
+	for (i = 0; params[i]; ++i) {
+
+		if (i > 0)
+			g_string_append_c (str, ' ');
+
+		g_string_append_c (str, '"');
+		g_string_append (str, params[i]);
+		g_string_append_c (str, '"');
+	}
+
+	return g_string_free (str, FALSE);
+}
+
+
+
 #ifdef BUILD_GUILE
 static void
 guile_shell(void* closure, int argc, char** argv)
@@ -308,9 +335,9 @@ mu_script_guile_run(MuScriptInfo* msi, const char* muhome, const char** args, GE
 
 	if (access(mu_script_info_path(msi), R_OK) != 0) {
 		mu_util_g_set_error(err,
-		                    MU_ERROR_FILE_CANNOT_READ,
-		                    "failed to read script: %s",
-		                    g_strerror(errno));
+				    MU_ERROR_FILE_CANNOT_READ,
+				    "failed to read script: %s",
+				    g_strerror(errno));
 		return FALSE;
 	}
 
@@ -321,11 +348,11 @@ mu_script_guile_run(MuScriptInfo* msi, const char* muhome, const char** args, GE
 	s       = mu_script_info_path(msi);
 	argv[2] = g_strdup(s ? s : "");
 
-	mainargs = mu_str_quoted_from_strv(args);
+	mainargs = quoted_from_strv(args);
 	expr     = g_strdup_printf("(main '(\"%s\" \"--muhome=%s\" %s))",
-	                           mu_script_info_name(msi),
-	                           muhome,
-                               mainargs ? mainargs : "");
+				   mu_script_info_name(msi),
+				   muhome,
+			       mainargs ? mainargs : "");
 
 	g_free(mainargs);
 	argv[3] = g_strdup("-c");

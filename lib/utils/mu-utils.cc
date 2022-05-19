@@ -46,7 +46,6 @@
 #include "mu-utils.hh"
 #include "mu-utils-format.hh"
 #include "mu-util.h"
-#include "mu-str.h"
 #include "mu-error.hh"
 #include "mu-option.hh"
 
@@ -140,11 +139,49 @@ Mu::utf8_flatten(const char* str)
 	return s;
 }
 
+
+
+
+/* turn \0-terminated buf into ascii (which is a utf8 subset); convert
+ *   any non-ascii into '.'
+ */
+static char*
+asciify_in_place (char *buf)
+{
+	char *c;
+
+	g_return_val_if_fail (buf, NULL);
+
+	for (c = buf; c && *c; ++c) {
+		if ((!isprint(*c) && !isspace (*c)) || !isascii(*c))
+			*c = '.';
+	}
+
+	return buf;
+}
+
+
+static char*
+utf8ify (const char *buf)
+{
+	char *utf8;
+
+	g_return_val_if_fail (buf, NULL);
+
+	utf8 = g_strdup (buf);
+
+	if (!g_utf8_validate (buf, -1, NULL))
+		asciify_in_place (utf8);
+
+	return utf8;
+}
+
+
 std::string
 Mu::utf8_clean(const std::string& dirty)
 {
 	g_autoptr(GString) gstr = g_string_sized_new(dirty.length());
-	g_autofree char *cstr	= mu_str_utf8ify(dirty.c_str());
+	g_autofree char *cstr	= utf8ify(dirty.c_str());
 
 	for (auto cur = cstr; cur && *cur; cur = g_utf8_next_char(cur)) {
 		const gunichar uc = g_utf8_get_char(cur);

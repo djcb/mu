@@ -21,8 +21,6 @@ lib_mu_utils=static_library('mu-utils', [
                   'mu-option.cc',
 		  'mu-readline.cc',
 		  'mu-sexp.cc',
-		  'mu-str.c',
-		  'mu-str.h',
 		  'mu-util.c',
 		  'mu-util.h',
 		  'mu-utils.cc'],

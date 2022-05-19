@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,31 +85,6 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 			    gboolean writeable)
 	G_GNUC_WARN_UNUSED_RESULT;
 
-
-/**
- * get our the cache directory, typically, /tmp/mu-<userid>/
- *
- * @return the cache directory; don't free
- */
-const char* mu_util_cache_dir (void) G_GNUC_CONST;
-
-/**
- * create a writeable file and return its file descriptor (which
- * you'll need to close(2) when done with it.)
- *
- * @param path the full path of the file to create
- * @param the mode to open (ie. 0644 or 0600 etc., see chmod(3)
- * @param overwrite should we allow for overwriting existing files?
- *
- * @return a file descriptor, or -1 in case of error. If it's a file
- * system error, 'errno' may contain more info. use 'close()' when done
- * with the file descriptor
- */
-int mu_util_create_writeable_fd (const char* path, mode_t mode,
-				 gboolean overwrite)
-	G_GNUC_WARN_UNUSED_RESULT;
-
-
 /**
  * check if file is local, ie. on the local file system. this means
  * that it's either having a file URI, *or* that it's an existing file
@@ -127,6 +102,21 @@ gboolean mu_util_is_local_file (const char* path);
  * @return TRUE if it's utf8 compatible, FALSE otherwise
  */
 gboolean mu_util_locale_is_utf8 (void) G_GNUC_CONST;
+
+
+
+/**
+ * get a 'summary' of the string, ie. the first /n/ lines of the
+ * strings, with all newlines removed, replaced by single spaces
+ *
+ * @param str the source string
+ * @param max_lines the maximum number of lines to include in the summary
+ *
+ * @return a newly allocated string with the summary. use g_free to free it.
+ */
+char* mu_str_summarize (const char* str, size_t max_lines)
+    G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
 
 /**
  * write a string (assumed to be in utf8-format) to a stream,
@@ -319,18 +309,18 @@ enum _MuError {
 	MU_ERROR_XAPIAN_MISSING_DATA         = 17,
 	/* can't get write lock */
 	MU_ERROR_XAPIAN_CANNOT_GET_WRITELOCK = 19,
-        /* could not write */
+	/* could not write */
 	MU_ERROR_XAPIAN_STORE_FAILED	     = 21,
 	/* could not remove */
 	MU_ERROR_XAPIAN_REMOVE_FAILED	     = 22,
 	/* database was modified; reload */
 	MU_ERROR_XAPIAN_MODIFIED             = 23,
-        /* database was modified; reload */
+	/* database was modified; reload */
 	MU_ERROR_XAPIAN_NEEDS_REINDEX        = 24,
-        /* database schema version doesn't match */
-        MU_ERROR_XAPIAN_SCHEMA_MISMATCH      = 25,
-        /* failed to open the database */
-        MU_ERROR_XAPIAN_CANNOT_OPEN          = 26,
+	/* database schema version doesn't match */
+	MU_ERROR_XAPIAN_SCHEMA_MISMATCH      = 25,
+	/* failed to open the database */
+	MU_ERROR_XAPIAN_CANNOT_OPEN          = 26,
 
 	/* GMime related errors */
 
@@ -342,7 +332,7 @@ enum _MuError {
 	MU_ERROR_CONTACTS_CANNOT_RETRIEVE     = 51,
 
 	/* crypto related errors */
-	MU_ERROR_CRYPTO		              = 60,
+	MU_ERROR_CRYPTO			      = 60,
 
 
 	/* File errors */

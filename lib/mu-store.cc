@@ -38,7 +38,6 @@
 #include "mu-maildir.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
-#include "utils/mu-str.h"
 #include "utils/mu-error.hh"
 
 #include "utils/mu-utils.hh"

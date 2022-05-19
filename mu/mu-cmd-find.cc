@@ -38,7 +38,6 @@
 
 #include "utils/mu-option.hh"
 #include "utils/mu-util.h"
-#include "utils/mu-str.h"
 
 #include "mu-cmd.hh"
 #include "utils/mu-utils.hh"

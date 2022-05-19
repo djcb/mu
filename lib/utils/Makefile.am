@@ -1,4 +1,4 @@
-## Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -45,11 +45,6 @@ AM_LDFLAGS=							\
 noinst_LTLIBRARIES=						\
 	libmu-utils.la
 
-
-third_party=							\
-	optional.hpp						\
-	expected.hpp
-
 libmu_utils_la_SOURCES=						\
 	mu-async-queue.hh					\
 	mu-command-parser.cc					\
@@ -64,14 +59,11 @@ libmu_utils_la_SOURCES=						\
 	mu-result.hh						\
 	mu-sexp.cc						\
 	mu-sexp.hh						\
-	mu-str.c						\
-	mu-str.h						\
 	mu-util.c						\
 	mu-util.h						\
 	mu-utils.cc						\
 	mu-utils.hh						\
-	mu-xapian-utils.hh					\
-	${third_party}
+	mu-xapian-utils.h
 
 libmu_utils_la_LIBADD=						\
 	$(GLIB_LIBS)						\
