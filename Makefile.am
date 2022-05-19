@@ -16,11 +16,11 @@
 
 include $(top_srcdir)/gtest.mk
 
-#if BUILD_GUILE
-#guile=guile
-#else
+if BUILD_GUILE
+guile=guile
+else
 guile=
-#endif
+endif
 
 if BUILD_MU4E
 mu4e=mu4e

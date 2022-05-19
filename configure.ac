@@ -252,6 +252,7 @@ Makefile
 mu/Makefile
 lib/Makefile
 lib/doxyfile
+lib/thirdparty/Makefile
 lib/utils/Makefile
 lib/message/Makefile
 lib/index/Makefile

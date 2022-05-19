@@ -63,7 +63,8 @@ libmu_utils_la_SOURCES=						\
 	mu-util.h						\
 	mu-utils.cc						\
 	mu-utils.hh						\
-	mu-xapian-utils.h
+	mu-utils-format.hh					\
+	mu-xapian-utils.hh
 
 libmu_utils_la_LIBADD=						\
 	$(GLIB_LIBS)						\

@@ -18,7 +18,7 @@
 # before descending into tests/
 include $(top_srcdir)/gtest.mk
 
-SUBDIRS= utils message index
+SUBDIRS= thirdparty utils message index
 
 TESTDEFS=                                               \
         -DMU_TESTMAILDIR=\"${abs_srcdir}/testdir\"      \
