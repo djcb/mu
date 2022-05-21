@@ -179,9 +179,10 @@ endif
 
 if not get_option('guile').disabled() and guile_dep.found()
   config_h_data.set('BUILD_GUILE', 1)
-  config_h_data.set_quoted('GUILE_BINARY', 'guile')
-  message('guile is disabled for now')
-  #subdir('guile')
+  config_h_data.set_quoted('GUILE_BINARY',
+                           guile_dep.get_pkgconfig_variable('guile'))
+  #message('guile is disabled for now')
+  subdir('guile')
 endif
 
 config_h_data.set_quoted('MU_PROGRAM', mu.full_path())

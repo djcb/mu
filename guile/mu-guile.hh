@@ -21,7 +21,9 @@
 #define __MU_GUILE_H__
 
 #include <glib.h>
+extern "C" {
 #include <libguile.h>
+}
 #include <mu-query.hh>
 
 /**

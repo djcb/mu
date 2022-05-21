@@ -23,9 +23,12 @@
 #include <locale.h>
 #include <glib-object.h>
 
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+extern "C" {
 #include <libguile.h>
+}
 #pragma GCC diagnostic pop
 
 #include <mu-runtime.hh>
@@ -71,26 +74,42 @@ mu_guile_g_error(const char* func_name, GError* err)
 
 /* there can be only one */
 
-static std::unique_ptr<Mu::Store> StoreSingleton;
+static Option<Mu::Store> StoreSingleton = Nothing;
 
-static gboolean
+static bool
 mu_guile_init_instance(const char* muhome)
 try {
 	setlocale(LC_ALL, "");
 	if (!mu_runtime_init(muhome, "guile", true) || StoreSingleton)
 		return FALSE;
 
-	StoreSingleton = std::make_unique<Mu::Store>(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB));
+	const auto path{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
+	auto store = Store::make(path);
+	if (!store) {
+		g_critical("error creating store @ %s: %s", path, store.error().what());
+		throw store.error();
+	} else
+		StoreSingleton.emplace(std::move(store.value()));
 
 	g_debug("mu-guile: opened store @ %s (n=%zu); maildir: %s",
 		StoreSingleton->properties().database_path.c_str(),
 		StoreSingleton->size(),
 		StoreSingleton->properties().root_maildir.c_str());
 
-	return TRUE;
+	return true;
 
+} catch (const Xapian::Error& xerr) {
+	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
+	return false;
+} catch (const std::runtime_error& re) {
+	g_critical("%s: error: %s", __func__, re.what());
+	return false;
+} catch (const std::exception& e) {
+	g_critical("%s: caught exception: %s", __func__, e.what());
+	return false;
 } catch (...) {
-	return FALSE;
+	g_critical("%s: caught exception", __func__);
+	return false;
 }
 
 static void
@@ -107,7 +126,7 @@ mu_guile_store()
 	if (!StoreSingleton)
 		g_error("mu guile not initialized");
 
-	return *StoreSingleton.get();
+	return StoreSingleton.value();
 }
 
 gboolean
@@ -131,7 +150,6 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 #define FUNC_NAME s_mu_initialize
 {
 	char*    muhome;
-	gboolean rv;
 
 	SCM_ASSERT(scm_is_string(MUHOME) || MUHOME == SCM_BOOL_F || SCM_UNBNDP(MUHOME),
 		   MUHOME,
@@ -146,14 +164,12 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 	else
 		muhome = scm_to_utf8_string(MUHOME);
 
-	rv = mu_guile_init_instance(muhome);
-	if (!rv) {
+	if (!mu_guile_init_instance(muhome)) {
 		free(muhome);
 		mu_guile_error(FUNC_NAME, 0, "Failed to initialize mu", SCM_UNSPECIFIED);
 	}
 
-	g_debug("mu-guile: initialized @ %s (%p)",
-		muhome ? muhome : "<default>", StoreSingleton.get());
+	g_debug("mu-guile: initialized @ %s", muhome ? muhome : "<default>");
 	free(muhome);
 
 	/* cleanup when we're exiting */

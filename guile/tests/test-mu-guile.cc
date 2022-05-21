@@ -29,64 +29,66 @@
 
 #include "test-mu-common.hh"
 #include <lib/mu-store.hh>
+#include <utils/mu-utils.hh>
 
-/* Tests For The command line interface, uses testdir2 */
+using namespace Mu;
 
-static gchar*
+static std::string test_dir;
+
+static std::string
 fill_database(void)
 {
-	gchar * cmdline, *tmpdir;
-	GError* err;
-
-	tmpdir  = test_mu_common_get_random_tmpdir();
-	cmdline = g_strdup_printf("/bin/sh -c '"
-				  "%s init  --muhome=%s --maildir=%s --quiet; "
-				  "%s index --muhome=%s  --quiet'",
-				  MU_PROGRAM,
-				  tmpdir,
-				  MU_TESTMAILDIR2,
-				  MU_PROGRAM,
-				  tmpdir);
+	const auto cmdline = format(
+		"/bin/sh -c '"
+		"%s init  --muhome=%s --maildir=%s --quiet; "
+		"%s index --muhome=%s  --quiet'",
+		MU_PROGRAM,
+		test_dir.c_str(),
+		MU_TESTMAILDIR2,
+		MU_PROGRAM,
+		test_dir.c_str());
 
 	if (g_test_verbose())
-		g_print("%s\n", cmdline);
+		g_print("%s\n", cmdline.c_str());
 
-	err = NULL;
-	if (!g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, &err)) {
+	GError *err{};
+	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, &err)) {
 		g_printerr("Error: %s\n", err ? err->message : "?");
+		g_clear_error(&err);
 		g_assert(0);
 	}
 
-	g_free(cmdline);
-	return tmpdir;
+	return test_dir;
 }
 
 static void
 test_something(const char* what)
 {
-	char *dir, *cmdline;
-	gint  result;
-
-
 	g_setenv("GUILE_AUTO_COMPILE", "0", TRUE);
 	g_setenv("GUILE_LOAD_PATH", GUILE_LOAD_PATH, TRUE);
-
-	dir     = fill_database();
-	cmdline = g_strdup_printf("%s -q -e main %s/test-mu-guile.scm "
-				  "--muhome=%s --test=%s",
-				  GUILE_BINARY,
-				  ABS_SRCDIR,
-				  dir,
-				  what);
+	g_setenv("GUILE_EXTENSIONS_PATH",GUILE_EXTENSIONS_PATH, TRUE);
 
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline);
+		g_print("GUILE_LOAD_PATH: %s\n", GUILE_LOAD_PATH);
 
-	result = system(cmdline);
-	g_assert(result == 0);
+	const auto dir = fill_database();
+	const auto cmdline  = format("%s -q -e main %s/test-mu-guile.scm "
+				     "--muhome=%s --test=%s",
+				     GUILE_BINARY,
+				     ABS_SRCDIR,
+				     dir.c_str(), what);
 
-	g_free(dir);
-	g_free(cmdline);
+	if (g_test_verbose())
+		g_print("cmdline: %s\n", cmdline.c_str());
+
+	GError *err{};
+	int status{};
+	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, &status, &err) ||
+	    status != 0) {
+		g_printerr("Error: %s\n", err ? err->message : "something went wrong");
+		g_clear_error(&err);
+		g_assert(0);
+	}
 }
 
 static void
@@ -111,6 +113,9 @@ int
 main(int argc, char* argv[])
 {
 	int rv;
+	TempDir tempdir;
+	test_dir = tempdir.path();
+
 	g_test_init(&argc, &argv, NULL);
 
 	if (!set_en_us_utf8_locale())

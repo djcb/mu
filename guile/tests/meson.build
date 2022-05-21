@@ -25,6 +25,7 @@ test('test-mu-guile',
 		install: false,
                 cpp_args: [
                   '-DABS_SRCDIR="' + meson.current_source_dir() + '"',
-                  '-DGUILE_LOAD_PATH="' + guile_load_path + '"'
+                  '-DGUILE_LOAD_PATH="' + guile_load_path + '"',
+                  '-DGUILE_EXTENSIONS_PATH="' + guile_load_path + '"'
                 ],
 		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))

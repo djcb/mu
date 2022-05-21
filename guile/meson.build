@@ -28,7 +28,7 @@ compile_scm=configure_file(
 run_command('chmod', '+x', compile_scm, check: true)
 scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
 
-snarf = find_program('guile-snarf')
+snarf = find_program('guile-snarf3.0','guile-snarf')
 # there must be a better way of feeding the include paths to snarf...
 snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
 	    '-I' + meson.current_source_dir() + '/../lib',
