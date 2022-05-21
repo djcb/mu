@@ -166,15 +166,14 @@
 
 *** guile
 
-    - the guile interface has been deprecated. It may be revamped at some point,
-      but will be different from the current one, which is to be removed after
-      1.8
+    - the current guile support has been deprecated. It may be revamped at some
+      point, but will be different from the current one, which is to be removed
+      after 1.8
 
 *** toys
 
     - the ~toys~ (~mug~) has been removed, as they no longer worked with the rest of
       the code.
-
 
 * 1.6 (released, as of July 27 2021)
 
