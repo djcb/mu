@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -177,7 +178,7 @@ public:
 	 */
 	QueryResultsIterator& operator++() {
 		++mset_it_;
-		document_.reset();
+		mdoc_ = Nothing;
 		return *this;
 	}
 
@@ -194,18 +195,38 @@ public:
 	QueryResultsIterator&       operator*() { return *this; }
 	const QueryResultsIterator& operator*() const { return *this; }
 
+
 	/**
-	 * Get the Mu::Document this iterator is pointing at,
+	 * Get the Xapian::Document this iterator is pointing at,
 	 * or an empty document when looking at end().
 	 *
 	 * @return a document
 	 */
-	 const Mu::Document& document() const {
-		if (!document_)
-			document_.emplace(mset_it_.get_document());
-		return *document_;
+	Option<Xapian::Document> document() const {
+		return xapian_try([this]()->Option<Xapian::Document> {
+			auto doc{mset_it_.get_document()};
+			if (doc.get_docid() == 0)
+				return Nothing;
+			else
+				return Some(std::move(doc));
+			}, Nothing);
 	}
 
+
+	/**
+	 * get the corresponding Message for this iter, if any
+	 *
+	 * @return a Message or Nothing
+	 */
+	Option<Message> message() const {
+		if (auto&& xdoc{document()}; !xdoc)
+			return Nothing;
+		else if (auto&& doc{Message::make_from_document(std::move(xdoc.value()))};
+			 !doc)
+			return Nothing;
+		else
+			return Some(std::move(doc.value()));
+	}
 
 	/**
 	 * Get the doc-id for the document this iterator is pointing at, or 0
@@ -221,8 +242,7 @@ public:
 	 *
 	 * @return a message-id
 	 */
-	Option<std::string> message_id() const noexcept
-	{
+	Option<std::string> message_id() const noexcept {
 		return opt_string(Field::Id::MessageId);
 	}
 
@@ -232,8 +252,7 @@ public:
 	 *
 	 * @return a message-id
 	 */
-	Option<std::string> thread_id() const noexcept
-	{
+	Option<std::string> thread_id() const noexcept {
 		return opt_string(Field::Id::ThreadId);
 	}
 
@@ -243,7 +262,9 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> path() const noexcept { return opt_string(Field::Id::Path); }
+	Option<std::string> path() const noexcept {
+		return opt_string(Field::Id::Path);
+	}
 
 	/**
 	 * Get the date for the document (message) the iterator is pointing at.
@@ -251,7 +272,9 @@ public:
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> date() const noexcept { return opt_string(Field::Id::Date); }
+	Option<std::string> date() const noexcept {
+		return opt_string(Field::Id::Date);
+	}
 
 	/**
 	 * Get the file-system path for the document (message) this iterator is
@@ -259,7 +282,9 @@ public:
 	 *
 	 * @return the subject
 	 */
-	Option<std::string> subject() const noexcept { return opt_string(Field::Id::Subject); }
+	Option<std::string> subject() const noexcept {
+		return opt_string(Field::Id::Subject);
+	}
 
 	/**
 	 * Get the references for the document (messages) this is iterator is
@@ -269,7 +294,7 @@ public:
 	 * @return references
 	 */
 	std::vector<std::string> references() const noexcept {
-		return document().string_vec_value(Field::Id::References);
+		return mu_document().string_vec_value(Field::Id::References);
 	}
 
 	/**
@@ -280,7 +305,7 @@ public:
 	 * @return the value
 	 */
 	Option<std::string> opt_string(Field::Id id) const noexcept {
-		if (auto&& val{document().string_value(id)}; val.empty())
+		if (auto&& val{mu_document().string_value(id)}; val.empty())
 			return Nothing;
 		else
 			return Some(std::move(val));
@@ -292,48 +317,34 @@ public:
 	 * @return the match info.
 	 */
 	QueryMatch& query_match() {
-		g_assert(query_matches_.find(document().docid()) != query_matches_.end());
-		return query_matches_.find(document().docid())->second;
+		g_assert(query_matches_.find(doc_id()) != query_matches_.end());
+		return query_matches_.find(doc_id())->second;
 	}
 	const QueryMatch& query_match() const {
-		g_assert(query_matches_.find(document().docid()) != query_matches_.end());
-		return query_matches_.find(document().docid())->second;
+		g_assert(query_matches_.find(doc_id()) != query_matches_.end());
+		return query_matches_.find(doc_id())->second;
 	}
-
-	/**
-	 * get the corresponding Message for this iter
-	 *
-	 * @return a Message or Nothing
-	 */
-	Option<Message> message() const {
-		return xapian_try(
-		    [&]()->Option<Message> {
-			    auto msg{Message::make_from_document(mset_it_.get_document())};
-			    if (msg)
-				    return Some(std::move(msg.value()));
-			    else
-				    return Nothing;
-		    },
-		    Nothing);
-	}
-
-	/**
-	 * get the corresponding Message for this iter a heap-allocated ptr;
-	 *
-	 * @return a unique ptr to a Message or P{}
-	 */
-	std::unique_ptr<Message> unique_message_ptr() const {
-		return xapian_try(
-		    [&]()->std::unique_ptr<Message> {
-			    return std::make_unique<Message>(mset_it_.get_document());
-		    }, nullptr);
-	}
-
 
 private:
+	/**
+	 * Get a (cached) reference for the Mu::Document corresponding
+	 * to the current iter.
+	 *
+	 * @return cached mu document,
+	 */
+	const Mu::Document& mu_document() const {
+		if (!mdoc_) {
+			if (auto xdoc = document(); !xdoc)
+				std::runtime_error("iter without document");
+			else
+				mdoc_ = Mu::Document{xdoc.value()};
+		}
+		return mdoc_.value();
+	}
+
+	mutable Option<Mu::Document>    mdoc_; // cache.
 	Xapian::MSetIterator		mset_it_;
 	QueryMatches&			query_matches_;
-	mutable Option<Mu::Document>	document_;
 };
 
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
