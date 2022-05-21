@@ -82,29 +82,18 @@ public:
 	}
 
 	/**
-	 * Construct a message based on a Message::Document
+	 * Construct a message based on a Xapian::Document
 	 *
 	 * @param doc a Mu Document
 	 *
 	 * @return a message or an error
 	 */
-	static Result<Message> make_from_document(Mu::Document&& doc) try {
+	static Result<Message> make_from_document(Xapian::Document&& doc) try {
 		return Ok(Message{std::move(doc)});
 	} catch (Error& err) {
 		return Err(err);
 	} catch (...) {
 		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
-	}
-
-	/**
-	 * Construct a message based on a Xapian::Document
-	 *
-	 * @param doc a xapian document
-	 *
-	 * @return a message or an error
-	 */
-	static Result<Message> make_from_document(Xapian::Document&& doc) noexcept {
-		return make_from_document(Mu::Document{std::move(doc)});
 	}
 
 	/**
@@ -436,13 +425,18 @@ public:
 
 	struct Private;
 
-	Message(Document&& doc); // XXX: make private
+	/*
+	 * Usually the make_ builders are better to create a message, but in
+	 * some special cases, we need a heap-allocated message... */
+
+	Message(Xapian::Document&& xdoc);
+	Message(const std::string& path, Options opts);
 
 private:
-	Message(const std::string& path, Options opts);
-	Message(const std::string& str,  const std::string& path, Options opt);
+	Message(const std::string& str, const std::string& path, Options opt);
 
-	std::unique_ptr<Private>        priv_;
+	std::unique_ptr<Private> priv_;
+
 }; // Message
 MU_ENABLE_BITOPS(Message::Options);
 

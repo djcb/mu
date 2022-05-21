@@ -49,7 +49,7 @@ lib_mu=static_library(
   ],
   install: false)
 
-# some of the libme headers include xapian
+
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
   dependencies: [ lib_mu_message_dep ],

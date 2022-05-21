@@ -46,6 +46,8 @@ using namespace Mu;
 
 struct Message::Private {
 	Private(Message::Options options): opts{options} {}
+	Private(Message::Options options, Xapian::Document&& xdoc):
+		opts{options}, doc{std::move(xdoc)} {}
 
 	Message::Options                opts;
 	Document			doc;
@@ -154,11 +156,9 @@ Message::operator=(Message&& other) noexcept
 	return *this;
 }
 
-Message::Message(Document&& doc):
-	priv_{std::make_unique<Private>(Message::Options::None)}
-{
-	priv_->doc = std::move(doc);
-}
+Message::Message(Xapian::Document&& doc):
+	priv_{std::make_unique<Private>(Message::Options::None, std::move(doc))}
+{}
 
 
 Message::~Message() = default;

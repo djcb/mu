@@ -181,9 +181,7 @@ contact_type_from_field_id(Field::Id id) noexcept {
 	}
 }
 
-
 using Contacts = std::vector<Contact>;
-
 
 /**
  * Get contacts as a comma-separated list.

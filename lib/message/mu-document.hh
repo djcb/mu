@@ -97,10 +97,9 @@ public:
 	void    add(Field::Id id, const Contacts& contacts);
 
 	/**
-	 * Addd some extra contacts with the given propname;
-	 * this is useful for ":reply-to" and ":list-post" which don't
-	 * have a Field::Id and are only present in the sexp,
-	 * not in the terms/values
+	 * Add some extra contacts with the given propname; this is useful for
+	 * ":reply-to" and ":list-post" which don't have a Field::Id and are
+	 * only present in the sexp, not in the terms/values
 	 *
 	 * @param propname property name (e.g.,. ":reply-to")
 	 * @param contacts contacts for this property.
