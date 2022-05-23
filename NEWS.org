@@ -23,6 +23,12 @@
 
    - After that, either =ninja -C build= or =make= should be enough to rebuild
 
+   - Apparently in some setups (e.g. some MacOS build), a build error may
+     happen related to ~guile~. If so, this can be avoid by build with
+#+begin_example
+     ./autogen.sh -Dguile=disabled
+#+end_example
+
    - Before installing, it is recommended that you *remove* any older versions of
      ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
 
@@ -65,6 +71,10 @@
 
    - message sexps are now cached in the store, which makes delivering
      sexp-based search results (as used by ~mu4e~) much faster.
+
+   - Windows/MSYS support is deprecated; it doesn't work well (if at all) and
+     there's currently not sufficient developer interest/expertise to change
+     this.
 
 *** mu4e
 
@@ -142,22 +152,22 @@
      - the remaining common functionality has ended up in =mu4e-helpers.el=
 
      - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=, and
-   	adds a minor-mode for the keybindings.
+	adds a minor-mode for the keybindings.
 
      - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
-   	keybindings, which saves a lot of code in the various views, since they
-   	don't need explicitly bind all those function.
+	keybindings, which saves a lot of code in the various views, since they
+	don't need explicitly bind all those function.
 
      - also =mu4e-vars.el= had become very big, we're refactoring the =defvar= /
-   	=defcustom= declarations to the topic-specific files.
+	=defcustom= declarations to the topic-specific files.
 
      - =mu4e-proc.el= has been renamed =mu4e-server.el=.
 
      - Between =mu= and =mu4e=, contact cells are now represented as a plist ~(:name
-   	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
-   	Bar" . "foobar@example.com").~
+	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
+	Bar" . "foobar@example.com").~
 
-   	If you have scripts depending on the old format, there's the
+	If you have scripts depending on the old format, there's the
        ~mu4e-contact-cons~ function which takes a news-style contact and yields
        the old form.
 
