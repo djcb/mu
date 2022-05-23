@@ -10,12 +10,11 @@
 [[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Dependencies-for-Debian_002fUbuntu][https://img.shields.io/badge/Platform-Linux-2e8b57?logo=linux&.svg]]
 [[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Building-from-a-release-tarball-1][https://img.shields.io/badge/Platform-FreeBSD-8b3a3a?logo=freebsd&logoColor=c32136&.svg]]
 [[https://formulae.brew.sh/formula/mu#default][https://img.shields.io/badge/Platform-macOS-101010?logo=apple&logoColor=ffffff&.svg]]
-[[https://github.com/msys2-unofficial/MSYS2-packages/blob/master/mu/README.org][https://img.shields.io/badge/Platform-Windows-00bfff?logo=windows&logoColor=00bfff&.svg]]
 
 Welcome to ~mu~!
 
-*Note*: you are looking at the *development* branch, which is where new
-code is being developed and tested, and which may occasionally break.
+*Note*: you are looking at the *development* branch, which is where new code is
+being developed and tested, and which may occasionally break.
 
 Distribution and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.6.x][1.6.x
 Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.6.x Releases]].
