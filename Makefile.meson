@@ -16,10 +16,11 @@
 
 # Makefile with some useful targets for meson/ninja
 
-NINJA    ?= ninja
-BUILDDIR ?= $(CURDIR)/build
-MESON    ?= meson
-V        ?= 0
+NINJA             ?= ninja
+BUILDDIR          ?= $(CURDIR)/build
+COVERAGE_BUILDDIR ?= $(CURDIR)/build-coverage
+MESON             ?= meson
+V                 ?= 0
 
 ifneq ($(V),0)
   VERBOSE=--verbose
@@ -54,6 +55,19 @@ test-helgrind: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) test					\
 	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
 	--timeout-multiplier 100
+
+$(COVERAGE_BUILDDIR):
+	$(MESON) -Db_coverage=true --buildtype=debug $(COVERAGE_BUILDDIR)
+
+covfile:=$(COVERAGE_BUILDDIR)/meson-logs/coverage.info
+
+# generate by hand, meson's built-ins are unflexible
+coverage: $(COVERAGE_BUILDDIR)
+	ninja -C $(COVERAGE_BUILDDIR) test
+	lcov --capture --directory . --output-file $(covfile)
+	lcov --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' --output $(covfile)
+	mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
+	genhtml $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
 
 dist: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) dist
