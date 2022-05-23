@@ -54,12 +54,14 @@ test_query()
 
 	auto dump_matches = [](const QueryResults& res) {
 		size_t n{};
-		for (auto&& item : res)
+		for (auto&& item : res) {
+			std::cout << item.query_match() << '\n';
 			if (g_test_verbose())
 				g_debug("%02zu %s %s",
 					++n,
 					item.path().value_or("<none>").c_str(),
 					item.message_id().value_or("<none>").c_str());
+		}
 	};
 
 	g_assert_cmpuint(store->size(), ==, 19);
@@ -69,6 +71,9 @@ test_query()
 		g_assert_true(!!res);
 		g_assert_cmpuint(res->size(), ==, 19);
 		dump_matches(*res);
+
+		g_assert_cmpuint(store->count_query(""), ==, 19);
+
 	}
 
 	{

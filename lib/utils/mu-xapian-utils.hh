@@ -26,6 +26,8 @@
 
 namespace Mu {
 
+// LCOV_EXCL_START
+
 // avoid exception-handling boilerplate.
 template <typename Func>
 void
@@ -77,8 +79,7 @@ try {
 	return Err(Error::Code::Internal, "caught exception");
 }
 
-
-
+// LCOV_EXCL_STOP
 
 } // namespace Mu
 

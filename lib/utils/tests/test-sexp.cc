@@ -96,6 +96,7 @@ test_prop_list()
 	l1.add_prop(":foo", Sexp::make_string("bar"));
 	Sexp s2{Sexp::make_list(std::move(l1))};
 	assert_equal(s2.to_sexp_string(), "(:foo \"bar\")");
+	g_assert_true(s2.is_prop_list());
 
 	Sexp::List        l2;
 	const std::string x{"bar"};
@@ -151,6 +152,16 @@ test_prop_list_remove()
 
 		assert_equal(Sexp::make_list(Sexp::List{lst}).to_sexp_string(),
 			     R"((:foo "123"))");
+
+		lst.clear();
+		g_assert_cmpuint(lst.size(), ==, 0);
+	}
+
+	{
+		Sexp::List lst;
+		lst.add(Sexp::make_number(123));
+		Sexp s2{Sexp::make_list(std::move(lst))};
+		g_assert_false(s2.is_prop_list());
 	}
 }
 

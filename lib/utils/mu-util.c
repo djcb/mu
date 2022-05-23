@@ -435,42 +435,6 @@ mu_util_print_encoded (const char *frm, ...)
 	return rv;
 }
 
-gboolean
-mu_util_printerr_encoded (const char *frm, ...)
-{
-	va_list args;
-	gboolean rv;
-
-	g_return_val_if_fail (frm, FALSE);
-
-	va_start (args, frm);
-	rv = print_args (stderr, frm, args);
-	va_end (args);
-
-	return rv;
-}
-
-
-char*
-mu_util_read_password (const char *prompt)
-{
-	char *pass;
-
-	g_return_val_if_fail (prompt, NULL);
-
-	/* note: getpass is obsolete; replace with something better */
-
-	pass = getpass (prompt); /* returns static mem, don't free */
-	if (!pass) {
-		if (errno)
-			g_warning ("error: %s", g_strerror(errno));
-		return NULL;
-	}
-
-	return g_strdup(pass);
-}
-
-
 char*
 mu_str_summarize (const char* str, size_t max_lines)
 {

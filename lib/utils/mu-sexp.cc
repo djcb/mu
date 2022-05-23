@@ -208,6 +208,8 @@ Sexp::to_sexp_string() const
 	return sstrm.str();
 }
 
+// LCOV_EXCL_START
+
 std::string
 Sexp::to_json_string() const
 {
@@ -264,3 +266,5 @@ Sexp::to_json_string() const
 
 	return sstrm.str();
 }
+
+// LCOV_EXCL_STOP

@@ -139,26 +139,6 @@ gboolean mu_util_fputs_encoded (const char *str, FILE *stream);
  */
 gboolean mu_util_print_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
 
-/**
- * print a formatted string (assumed to be in utf8-format) to stderr,
- * converted to the current locale
- *
- * @param a standard printf() format string, followed by a parameter list
- *
- * @return TRUE if printing worked, FALSE otherwise
- */
-gboolean mu_util_printerr_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
-
-
-/**
- * read a password from stdin (without echoing), and return it.
- *
- * @param prompt the prompt text before the password
- *
- * @return the password (free with g_free), or NULL
- */
-char* mu_util_read_password (const char *prompt)
-	G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Try to 'play' (ie., open with it's associated program) a file. On
