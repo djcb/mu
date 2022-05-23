@@ -732,7 +732,7 @@ The main view looks something like the following:
 
 @cartouche
 @verbatim
-* mu4e - mu for emacs version @value{VERSION}
+* mu4e - mu for emacs version x.y.z
 
   Basics
 
@@ -2792,7 +2792,7 @@ description).
 @t{mu4e} includes a number of example actions in the file
 @file{mu4e-actions.el} in the source distribution (see @kbd{C-h f
 mu4e-action-TAB}). For example, for viewing messages in an external web
-browser, or listening to a message's body-text using text-to-speech.
+browser.
 
 @node Extending mu4e
 @chapter Extending mu4e
@@ -2849,14 +2849,15 @@ certain pattern; again, see its docstring.
 @node Available functions
 @section Available functions
 
-The whole of @t{mu4e} consists of hundreds of elisp functions. However, the
-majority of those are for @emph{internal} use only; you can recognize them
-easily, because they all start with @code{mu4e~}. These functions make all
-kinds of assumptions, and they are subject to change, and should therefore
-@emph{not} be used. The same is true for @emph{variables} that start with
-@code{mu4e~}; don't touch them.  Let me repeat that:
+The whole of @t{mu4e} consists of hundreds of elisp functions. However,
+the majority of those are for @emph{internal} use only; you can
+recognize them easily, because they all start with @code{mu4e~} or
+@code{mu4e--}. These functions make all kinds of assumptions, and they
+are subject to change, and should therefore @emph{not} be used. The same
+is true for @emph{variables} with the same prefix; don't touch them. Let
+me repeat that:
 @verbatim
-Do not use mu4e~... functions or variables!
+Do not use mu4e~... or mu4e-- functions or variables!
 @end verbatim
 
 @noindent
@@ -2916,42 +2917,17 @@ point. Requires the 'formail' tool from procmail."
         (shell-quote-argument (mu4e-message-field-at-point :path))))))
 @end lisp
 
-@subsection Rewriting the message body
-
-Message body rewriting allows you to modify the message text that is
-presented in the message view. This can be useful if the message needs
-special processing, for instance for special filling or cleaning up
-encoding artifacts (this is what @t{mu4e} uses this for internally).
-
-To enable this, you can append your rewrite-function to
-@code{mu4e-message-body-rewrite-functions}; your function is expected to
-take two parameters @code{MSG} and @code{TXT}, which are the
-message-plist and the body-text, which could be the result of earlier
-transformations, including html->text conversion as per
-@code{mu4e-html2-text-command}. The function is expected to return the
-transformed text.
-
-As a fairly useless example, suppose we insist on reading @t{mu4e} as
-@t{MU4E}:
-@lisp
-(defun mu4e-to-MU4E-rewrite (msg txt)
-  (replace-regexp-in-string "mu4e" "MU4E" txt))
-
-(add-to-list 'mu4e-message-body-rewrite-functions 'mu4e-to-MU4E-rewrite t)
-@end lisp
-
-
 @node Contact functions
 @section Contact functions
 
-It can sometimes be useful to discard or rewrite the contact
-information that @t{mu4e} provides, for example to fix spelling
-errors, or omit unwanted contacts.
+It can sometimes be useful to discard or rewrite the contact information
+that @t{mu4e} provides, for example to fix spelling errors, or omit
+unwanted contacts.
 
-To handle this, @t{mu4e} provides
-@code{mu4e-contact-process-function}, which, if defined, is applied to
-each contact. If the result is @t{nil}, the contact is discarded,
-otherwise the (modified or not) contact information is used.
+To handle this, @t{mu4e} provides @code{mu4e-contact-process-function},
+which, if defined, is applied to each contact. If the result is @t{nil},
+the contact is discarded, otherwise the (modified or not) contact
+information is used.
 
 Each contact is a full e-mail address as you would see in a
 contact-field of an e-mail message, e.g.,
@@ -2984,8 +2960,8 @@ An example @code{mu4e-contact-process-function} might look like:
 @node Utility functions
 @section Utility functions
 
-@file{mu4e-utils} contains a number of utility functions; we list a few here.
-See their docstrings for details:
+@file{mu4e-utils} contains a number of utility functions; we list a few
+here. See their docstrings for details:
 @itemize
 @item @code{mu4e-read-option}: read one option from a list. For example:
 @lisp
@@ -3041,8 +3017,8 @@ you can do so by adding the following to your configuration:
 (setq mail-user-agent 'mu4e-user-agent)
 @end lisp
 
-Similarly, to specify @t{mu4e} as your preferred method for reading mail,
-customize the variable @code{read-mail-command}.
+Similarly, to specify @t{mu4e} as your preferred method for reading
+mail, customize the variable @code{read-mail-command}.
 
 @lisp
 (set-variable 'read-mail-command 'mu4e)
@@ -3121,9 +3097,9 @@ autocompletion}, and that is the recommended way to do this. However, it
 is also possible to manage your addresses with @t{org-mode}, using
 @t{org-contacts}@footnote{@url{https://julien.danjou.info/projects/emacs-packages#org-contacts}}.
 
-@t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a contact
-based on the @t{From:}-address in the message at point. To enable this, add to
-your configuration something like:
+@t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a
+contact based on the @t{From:}-address in the message at point. To
+enable this, add to your configuration something like:
 
 @lisp
   (setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
@@ -3134,9 +3110,9 @@ your configuration something like:
 @end lisp
 
 @noindent
-After this, you should be able to add contacts using @key{a o} in the headers
-view and the message view, using the @t{org-capture} mechanism. Note, the
-shortcut character @key{o} is due to the first character of
+After this, you should be able to add contacts using @key{a o} in the
+headers view and the message view, using the @t{org-capture} mechanism.
+Note, the shortcut character @key{o} is due to the first character of
 @t{org-contact-add}.
 
 @node BBDB
@@ -3181,14 +3157,14 @@ After this, you should be able to:
 @section iCalendar
 
 When Gnus' article-mode is chosen (@ref{Message view}), it is possible
-to view and reply to iCalendar events.  To enable this feature, add
+to view and reply to iCalendar events. To enable this feature, add
 
 @lisp
 (require 'mu4e-icalendar)
 (mu4e-icalendar-setup)
 @end lisp
 
-to your configuration.  If you want that the original invitation message
+to your configuration. If you want that the original invitation message
 be automatically trashed after sending the message created by clicking
 on the buttons “Accept”, “Tentative”, or “Decline”, also add:
 
@@ -3197,7 +3173,7 @@ on the buttons “Accept”, “Tentative”, or “Decline”, also add:
 @end lisp
 
 When you reply to an iCal event, a line may be automatically added to
-the diary file of your choice.  You can specify that file with
+the diary file of your choice. You can specify that file with
 
 @lisp
 (setq mu4e-icalendar-diary-file "/path/to/your/diary")
@@ -3220,9 +3196,9 @@ Both the capture file and the headline(s) inside it must already exist.
 By default, @code{gnus-icalendar-org-setup} adds a temporary capture
 template to the variable @code{org-capture-templates}, with the
 description ``used by gnus-icalendar-org'', and the shortcut key ``#''.
-If you want to use your own template, create it using the same key
-and description. This will prevent the temporary one from being
-installed next time you @code{gnus-icalendar-org-setup} is called.
+If you want to use your own template, create it using the same key and
+description. This will prevent the temporary one from being installed
+next time you @code{gnus-icalendar-org-setup} is called.
 
 The full default capture template is:
 
@@ -3246,9 +3222,9 @@ prompting for the date, you could use the following:
    "%i" :immediate-finish t :time-prompt t)
 @end lisp
 
-Note that the default behaviour for @code{datetree} targets in this situation
-is to store the event at the date that you capture it, not at the date
-that it is scheduled. That's why I've suggested using the
+Note that the default behaviour for @code{datetree} targets in this
+situation is to store the event at the date that you capture it, not at
+the date that it is scheduled. That's why I've suggested using the
 @code{:timeprompt t} argument. This gives you an opportunity to set the
 time to the correct value yourself.
 
@@ -3333,32 +3309,32 @@ information for an Emacs buffer in a separate frame. Using
 @code{mu4e-speedbar}, @t{mu4e} lists your bookmarks and maildir
 folders and allows for one-click access to them.
 
-To enable this, add @t{(require 'mu4e-speedbar)} to your
-configuration; then, all you need to do to activate it is @kbd{M-x
-speedbar}. Then, when then switching to the @ref{Main view}, the
-speedbar-frame is updated with your bookmarks and maildirs.
+To enable this, add @t{(require 'mu4e-speedbar)} to your configuration;
+then, all you need to do to activate it is @kbd{M-x speedbar}. Then,
+when then switching to the @ref{Main view}, the speedbar-frame is
+updated with your bookmarks and maildirs.
 
 For speed reasons, the list of maildirs is determined when @t{mu4e}
 starts; if the list of maildirs changes while @t{mu4e} is running, you
-need to restart @t{mu4e} to have those changes reflected in the
-speedbar and in other places that use this list, such as
-auto-completion when jumping to a maildir.
+need to restart @t{mu4e} to have those changes reflected in the speedbar
+and in other places that use this list, such as auto-completion when
+jumping to a maildir.
 
 @node Dired
 @section Dired
 
 It is possible to attach files to @t{mu4e} messages using @t{dired}
-(@inforef{Dired,,emacs}), using the following steps (based on a post on the
-@t{mu-discuss} mailing list by @emph{Stephen Eglen}).
+(@inforef{Dired,,emacs}), using the following steps (based on a post on
+the @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
 
 
 @lisp
 (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 @end lisp
 
-Then, mark the file(s) in @t{dired} you would like to attach and press @t{C-c
-RET C-a}, and you'll be asked whether to attach them to an existing message,
-or create a new one.
+Then, mark the file(s) in @t{dired} you would like to attach and press
+@t{C-c RET C-a}, and you'll be asked whether to attach them to an
+existing message, or create a new one.
 
 @node Hydra
 @section Hydra
@@ -3393,8 +3369,8 @@ Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 By default, mu4e presents iCalendar invitations as .vcs file
 attachments. Experimental support is available to parse these
 attachments in order to add the expected ``Accept'', ``Reject'', ``Add
-to Calendar'' buttons. This requires using Gnus' article view, which
-is the default since @t{mu4e} version 1.6.
+to Calendar'' buttons. This requires using Gnus' article view, which is
+the default since @t{mu4e} version 1.6.
 
 The minimal setup is:
 
@@ -3545,9 +3521,9 @@ customize.
 @node Gmail configuration
 @section Gmail configuration
 
-@emph{Gmail} is a popular e-mail provider; let's see how we can make it work
-with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that in the
-Gmail web interface (in the settings, under the ``Forwarding and
+@emph{Gmail} is a popular e-mail provider; let's see how we can make it
+work with @t{mu4e}. Since we are using @abbr{IMAP}, you must enable that
+in the Gmail web interface (in the settings, under the ``Forwarding and
 POP/IMAP''-tab).
 
 Gmail users may also be interested in @ref{Including related messages},
@@ -3555,9 +3531,9 @@ and in @ref{Skipping duplicates}.
 
 @subsection Setting up offlineimap
 
-First of all, we need a program to get the e-mail from Gmail to our local
-machine; for this we use @t{offlineimap}; on Debian (and derivatives like
-Ubuntu), this is as easy as:
+First of all, we need a program to get the e-mail from Gmail to our
+local machine; for this we use @t{offlineimap}; on Debian (and
+derivatives like Ubuntu), this is as easy as:
 
 @verbatim
 $ sudo apt-get install offlineimap
@@ -3836,9 +3812,9 @@ higher value, e.g. by adding the following to your configuration:
 
 @subsection How can I get notifications when receiving mail?
 There is @code{mu4e-index-updated-hook}, which gets triggered when the
-indexing process triggered sees an update (not just new mail though).
-To use this hook, put something like the following in your setup
-(assuming you have @t{aplay} and some soundfile, change as needed):
+indexing process triggered sees an update (not just new mail though). To
+use this hook, put something like the following in your setup (assuming
+you have @t{aplay} and some soundfile, change as needed):
 @lisp
 (add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
@@ -3847,9 +3823,9 @@ To use this hook, put something like the following in your setup
 
 @subsection Getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
 Use the literal string @t{"true"} (or don't do anything, it's the
-default) which then uses @t{/bin/true} (a command that does nothing
-and always succeeds). This makes getting mail a no-op, but the
-messages are still re-indexed.
+default) which then uses @t{/bin/true} (a command that does nothing and
+always succeeds). This makes getting mail a no-op, but the messages are
+still re-indexed.
 
 @subsection How can I re-index my messages without getting new mail?
 Use @kbd{M-x mu4e-update-index}
@@ -3860,11 +3836,11 @@ For instance:
 mu: mu_store_new_writable: xapian error
   'Unable to get write lock on ~/.cache/mu/xapian: already locked
 @end verbatim
-What to do about this? You get this error because the underlying
-Xapian database is locked by some other process; it can be opened only
-once in read-write mode. There is not much @t{mu4e} can do about this,
-but if is another @command{mu} instance that is holding the lock, you
-can ask it to (gracefully) terminate:
+What to do about this? You get this error because the underlying Xapian
+database is locked by some other process; it can be opened only once in
+read-write mode. There is not much @t{mu4e} can do about this, but if is
+another @command{mu} instance that is holding the lock, you can ask it
+to (gracefully) terminate:
 @verbatim
    pkill -2 -u $UID mu # send SIGINT
    sleep 1
@@ -3879,8 +3855,8 @@ Set the variable @code{mu4e-hide-index-messages} to non-@t{nil}.
 @subsection IMAP-synchronization and file-name changes
 Some IMAP-synchronization programs such as @t{mbsync} (but not
 @t{offlineimap}) don't like it when message files do not change their
-names when they are moved to different folders. @t{mu4e} can attempt
-to help with this - you can set the variable
+names when they are moved to different folders. @t{mu4e} can attempt to
+help with this - you can set the variable
 @code{mu4e-change-filenames-when-moving} to non-@t{nil}.
 
 @subsection @command{offlineimap} and UTF-7
@@ -3894,11 +3870,11 @@ instead --- see
 
 @subsection @command{mbsync} or @command{offlineimap} do not sync properly
 Unfortunately, @command{mbsync} and/or @command{offlineimap} do not
-always agree with @t{mu} about the meaning of various Maildir-flags.
-If you encounter unexpected behavior, it is recommended you check
-before and after a sync-operation. If the problem only shows up
-@emph{after} sync'ing, the problem is with the sync-program, and it's
-most productive to complain there.
+always agree with @t{mu} about the meaning of various Maildir-flags. If
+you encounter unexpected behavior, it is recommended you check before
+and after a sync-operation. If the problem only shows up @emph{after}
+sync'ing, the problem is with the sync-program, and it's most productive
+to complain there.
 
 Also, you may want to ensure that @t{mu4e-index-lazy-check} is kept at
 its default (@t{nil}) value, since it seems @command{mbsync} can make
