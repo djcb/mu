@@ -639,10 +639,13 @@ Mu::TempDir::~TempDir()
 	}
 
 	/* ugly */
+	GError *err{};
 	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};
-	(void)::system(cmd.c_str());
-
-	g_debug("removed '%s'", path_.c_str());
+	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
+		g_warning("error: %s\n", err ? err->message : "?");
+		g_clear_error(&err);
+	} else
+		g_debug("removed '%s'", path_.c_str());
 }
 
 bool
