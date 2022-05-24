@@ -18,11 +18,7 @@
 */
 #include "mu-guile-message.hh"
 
-extern "C" {
-#include "libguile/scm.h"
-#include "libguile/strings.h"
-}
-
+#include <libguile.h>
 #include "message/mu-message.hh"
 #include "utils/mu-utils.hh"
 #include <config.h>

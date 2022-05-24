@@ -24,7 +24,7 @@
  * Initialize this mu guile module.
  *
  * @param data
- *
+q *
  * @return
  */
 extern "C" {

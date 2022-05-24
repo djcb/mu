@@ -26,9 +26,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-extern "C" {
 #include <libguile.h>
-}
 #pragma GCC diagnostic pop
 
 #include <mu-runtime.hh>
