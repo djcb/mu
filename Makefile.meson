@@ -65,10 +65,10 @@ covfile:=$(COVERAGE_BUILDDIR)/meson-logs/coverage.info
 coverage: $(COVERAGE_BUILDDIR)
 	ninja -C $(COVERAGE_BUILDDIR) test
 	lcov --capture --directory . --output-file $(covfile)
-	lcov --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' --output $(covfile)
-	mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
-	genhtml $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
-
+	@lcov --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
+	@mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
+	@genhtml $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
+	@echo "coverage report at: file://$(COVERAGE_BUILDDIR)/meson/logs/coverage/index.html"
 dist: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) dist
 

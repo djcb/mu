@@ -439,6 +439,10 @@ C0bdoCx44QVU8HaZ2x91h3GoM/0q5bqM/rvCauwbokiJgAUrznecNPY=
 		if (!part.is_encrypted())
 			continue;
 
+		g_assert_false(!!part.content_description());
+		g_assert_false(part.is_attachment());
+		g_assert_cmpuint(part.size(),==,0);
+
 		const auto& mobj{part.mime_object()};
 		if (!mobj.is_multipart_encrypted())
 			continue;
@@ -469,6 +473,8 @@ Content-Type: message/rfc822
 )";
 	auto message{Message::make_from_text(msgtext)};
 	g_assert_true(!!message);
+
+	g_assert_true(message->cached_sexp().empty());
 }
 
 

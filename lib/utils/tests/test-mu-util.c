@@ -38,7 +38,7 @@ test_mu_util_dir_expand_00(void)
 
 	got      = mu_util_dir_expand("~/IProbablyDoNotExist");
 	expected = g_strdup_printf("%s%cIProbablyDoNotExist",
-	                           getenv("HOME"), G_DIR_SEPARATOR);
+				   getenv("HOME"), G_DIR_SEPARATOR);
 
 	g_assert_cmpstr(got, ==, expected);
 
@@ -61,7 +61,7 @@ test_mu_util_dir_expand_01(void)
 
 		got      = mu_util_dir_expand("~/Desktop");
 		expected = g_strdup_printf("%s%cDesktop",
-		                           getenv("HOME"), G_DIR_SEPARATOR);
+					   getenv("HOME"), G_DIR_SEPARATOR);
 
 		g_assert_cmpstr(got, ==, expected);
 
@@ -98,7 +98,7 @@ test_mu_util_guess_maildir_02(void)
 	g_unsetenv("MAILDIR");
 
 	mdir = g_strdup_printf("%s%cMaildir",
-	                       getenv("HOME"), G_DIR_SEPARATOR);
+			       getenv("HOME"), G_DIR_SEPARATOR);
 	got  = mu_util_guess_maildir();
 
 	if (access(mdir, F_OK) == 0)
@@ -183,7 +183,7 @@ test_mu_util_supports(void)
 	g_free(path);
 
 	g_assert_cmpuint(mu_util_supports(MU_FEATURE_GNUPLOT), ==,
-	                 path ? TRUE : FALSE);
+			 path ? TRUE : FALSE);
 
 	g_assert_cmpuint(
 	    mu_util_supports(MU_FEATURE_GNUPLOT | MU_FEATURE_GUILE),
@@ -197,6 +197,54 @@ test_mu_util_program_in_path(void)
 	g_assert_cmpuint(mu_util_program_in_path("ls"), ==, TRUE);
 }
 
+
+static void
+test_mu_util_summarize(void)
+{
+	const char *txt =
+		"Khiron was fortified and made the seat of a pargana during "
+		"the reign of Asaf-ud-Daula.\n\the headquarters had previously "
+		"been at Satanpur since its foundation and fortification by "
+		"the Bais raja Sathna.\n\nKhiron was also historically the seat "
+		"of a taluqdari estate belonging to a Janwar dynasty.\n"
+		"There were also several Kayasth qanungo families, "
+		"including many descended from Rai Sahib Rai, who had been "
+		"a chakladar under the Nawabs of Awadh.";
+
+	char *summ = mu_str_summarize(txt, 3);
+	g_assert_cmpstr(summ, ==,
+			"Khiron was fortified and made the seat of a pargana "
+			"during the reign of Asaf-ud-Daula. he headquarters had "
+			"previously been at Satanpur since its foundation and "
+			"fortification by the Bais raja Sathna. ");
+	g_free (summ);
+}
+
+
+static void
+test_mu_error(void)
+{
+	GQuark q;
+	GError *err;
+	gboolean res;
+
+	q = mu_util_error_quark();
+	g_assert_true(q != 0);
+
+
+	err = NULL;
+	res = mu_util_g_set_error(&err, MU_ERROR_IN_PARAMETERS,
+				  "Hello, %s!", "World");
+
+	g_assert_false(res);
+	g_assert_cmpuint(err->domain, ==, q);
+	g_assert_cmpuint(err->code, ==, MU_ERROR_IN_PARAMETERS);
+	g_assert_cmpstr(err->message,==,"Hello, World!");
+
+	g_clear_error(&err);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -204,32 +252,35 @@ main(int argc, char* argv[])
 
 	/* mu_util_dir_expand */
 	g_test_add_func("/mu-util/mu-util-dir-expand-00",
-	                test_mu_util_dir_expand_00);
+			test_mu_util_dir_expand_00);
 	g_test_add_func("/mu-util/mu-util-dir-expand-01",
-	                test_mu_util_dir_expand_01);
+			test_mu_util_dir_expand_01);
 
 	/* mu_util_guess_maildir */
 	g_test_add_func("/mu-util/mu-util-guess-maildir-01",
-	                test_mu_util_guess_maildir_01);
+			test_mu_util_guess_maildir_01);
 	g_test_add_func("/mu-util/mu-util-guess-maildir-02",
-	                test_mu_util_guess_maildir_02);
+			test_mu_util_guess_maildir_02);
 
 	/* mu_util_check_dir */
 	g_test_add_func("/mu-util/mu-util-check-dir-01",
-	                test_mu_util_check_dir_01);
+			test_mu_util_check_dir_01);
 	g_test_add_func("/mu-util/mu-util-check-dir-02",
-	                test_mu_util_check_dir_02);
+			test_mu_util_check_dir_02);
 	g_test_add_func("/mu-util/mu-util-check-dir-03",
-	                test_mu_util_check_dir_03);
+			test_mu_util_check_dir_03);
 	g_test_add_func("/mu-util/mu-util-check-dir-04",
-	                test_mu_util_check_dir_04);
+			test_mu_util_check_dir_04);
 
 	g_test_add_func("/mu-util/mu-util-get-dtype-with-lstat",
-	                test_mu_util_get_dtype_with_lstat);
+			test_mu_util_get_dtype_with_lstat);
 
 	g_test_add_func("/mu-util/mu-util-supports", test_mu_util_supports);
 	g_test_add_func("/mu-util/mu-util-program-in-path",
-	                test_mu_util_program_in_path);
+			test_mu_util_program_in_path);
+
+	g_test_add_func("/mu-util/summarize", test_mu_util_summarize);
+	g_test_add_func("/mu-util/error", test_mu_error);
 
 	return g_test_run();
 }
