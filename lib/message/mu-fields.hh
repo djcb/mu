@@ -381,7 +381,8 @@ static constexpr std::array<Field, Field::id_size()>
 		"References to related messages",
 		{},
 		'r',
-		Field::Flag::Value
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Size,
