@@ -26,12 +26,18 @@ ifneq ($(V),0)
   VERBOSE=--verbose
 endif
 
+
+.PHONY: all
+.PHONY: check test test-verbose-if-fail test-valgrind test-helgrind
+.PHONY: benchmark coverage
+.PHONY: dist install clean distclean
+.PHONY: mu4e-doc-html
+
 # MESON_FLAGS, e.g. "-Dreadline=enabled"
 
 # examples:
 # 1. build with clang, and the thread-sanitizer
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
-
 all: $(BUILDDIR)
 	$(NINJA) -C $(BUILDDIR) $(VERBOSE)
 
@@ -42,6 +48,19 @@ check: test
 
 test: all
 	$(MESON) test $(VERBOSE) -C $(BUILDDIR)
+
+
+install: $(BUILDDIR)
+	@cd $(BUILDDIR); $(MESON) install
+
+clean:
+	@rm -rf $(BUILDDIR) $(COVERAGE_BUILDDIR)
+
+
+#
+# below targets are just for development/testing/debugging. They may or
+# may not work on your system.
+#
 
 test-verbose-if-fail: all
 	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
@@ -56,6 +75,9 @@ test-helgrind: $(BUILDDIR)
 	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
 	--timeout-multiplier 100
 
+benchmark: $(BUILDDIR)
+	$(NINJA) -C $(BUILDDIR) benchmark
+
 $(COVERAGE_BUILDDIR):
 	$(MESON) -Db_coverage=true --buildtype=debug $(COVERAGE_BUILDDIR)
 
@@ -63,7 +85,7 @@ covfile:=$(COVERAGE_BUILDDIR)/meson-logs/coverage.info
 
 # generate by hand, meson's built-ins are unflexible
 coverage: $(COVERAGE_BUILDDIR)
-	ninja -C $(COVERAGE_BUILDDIR) test
+	$(NINJA) -C $(COVERAGE_BUILDDIR) test
 	lcov --capture --directory . --output-file $(covfile)
 	@lcov --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
 	@mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
@@ -72,11 +94,7 @@ coverage: $(COVERAGE_BUILDDIR)
 dist: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) dist
 
-install: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) install
-
-clean:
-	@test -d $(BUILDDIR) && $(NINJA) -C $(BUILDDIR) clean
+distclean: clean
 
 HTMLPATH=${BUILDDIR}/mu4e/mu4e
 mu4e-doc-html:

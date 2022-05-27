@@ -61,3 +61,16 @@ test('test-parser',
 		'test-parser.cc',
 		install: false,
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
+#
+# benchmarks
+#
+bench_maildirs=join_paths(meson.current_build_dir(), 'maildirs')
+bench_store=join_paths(meson.current_build_dir(), 'store')
+benchmark('bench-store',
+          executable('bench-store',
+                     'bench-mu-store.cc',
+                     install:false,
+                     cpp_args:['-DBENCH_MAILDIRS="' + bench_maildirs + '"',
+                               '-DBENCH_STORE="' + bench_store + '"',
+                              ],
+                     dependencies: [lib_mu_dep, glib_dep]))
