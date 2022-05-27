@@ -341,20 +341,12 @@ Mu::vformat(const char* frm, va_list args)
 }
 
 std::string
-Mu::time_to_string(const std::string& frm, time_t t, bool utc)
+Mu::time_to_string(const std::string& frm_, time_t t, bool utc)
 {
-	/* Temporary... https://github.com/djcb/mu/issues/2230 */
-	{
-		const char *end{};
-		if (!g_utf8_validate(frm.c_str(), frm.length(), &end)) {
-			std::string hex{};
-			for (auto i = 0; i != end - frm.c_str(); ++i)
-				hex += format("%02x", frm[i]);
-			g_critical("%s: non-utf8 format (%s)",
-				   __func__, hex.c_str());
-			return {};
-		}
-	}
+	/* Temporary hack... https://github.com/djcb/mu/issues/2230 */
+	const auto frm =
+		g_utf8_validate(frm_.c_str(), frm_.length(), {}) ?
+		frm_ : "%c";
 
 	GDateTime* dt = std::invoke([&] {
 		if (utc)
