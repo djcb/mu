@@ -205,9 +205,8 @@ removed."
 
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
-This processes the 'mu server' output. It accumulates the
-strings into valid sexps by checking of the ';;eox' `end-of-sexp'
-marker, and then evaluating them.
+This processes the \"mu server\" output. It accumulates the
+strings into valid sexpsv and evaluating those.
 
 The server output is as follows:
 
@@ -460,11 +459,12 @@ get at most MAX contacts."
 (defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
 				include-related)
   "Run QUERY with THREADS SORTFIELD SORTDIR MAXNUM SKIP-DUPS INCLUDE-RELATED.
-If THREADS is non-nil, show results in threaded fashion, SORTFIELD
-is a symbol describing the field to sort by (or nil); see
-`mu4e~headers-sortfield-choices'. If SORT is `descending', sort
-Z->A, if it's `ascending', sort A->Z. MAXNUM determines the
-maximum number of results to return, or nil for 'unlimited'. If
+
+If THREADS is non-nil, show results in threaded fashion,
+SORTFIELD is a symbol describing the field to sort by (or nil);
+see `mu4e~headers-sortfield-choices'. If SORT is `descending',
+sort Z->A, if it's `ascending', sort A->Z. MAXNUM determines the
+maximum number of results to return, or nil for unlimited. If
 SKIP-DUPS is non-nil, show only one of duplicate messages (see
 `mu4e-headers-skip-duplicates'). If INCLUDE-RELATED is non-nil,
 include messages related to the messages matching the search
@@ -472,7 +472,7 @@ query (see `mu4e-headers-include-related').
 
 For each result found, a function is called, depending on the
 kind of result. The variables `mu4e-error-func' contain the
-function that will be called for, resp., a message (header row)
+function that to be be called for, resp., a message (header)
 or an error."
   (mu4e--server-call-mu
    `(find
@@ -506,7 +506,7 @@ or the root-maildir-prefix. E.g. \"/archive\". This directory must
 already exist.
 
 The FLAGS parameter can have the following forms:
-  1. a list of flags such as '(passed replied seen)
+  1. a list of flags such as `(passed replied seen)'
   2. a string containing the one-char versions of the flags, e.g. \"PRS\"
   3. a delta-string specifying the changes with +/- and the one-char flags,
      e.g. \"+S-N\" to set Seen and remove New.
@@ -521,7 +521,7 @@ If the variable `mu4e-change-filenames-when-moving' is
 non-nil, moving to a different maildir generates new names forq
 the target files; this helps certain tools (such as mbsync).
 
-If NO-VIEW is non-nil, don't update the view.
+If NO-VIEW is non-nil, do not update the view.
 
 Returns either (:update ... ) or (:error ) sexp, which are handled my
 `mu4e-update-func' and `mu4e-error-func', respectively."
@@ -541,8 +541,8 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
 
 (defun mu4e--server-ping (&optional queries)
   "Sends a ping to the mu server, expecting a (:pong ...) in response.
-QUERIES is a list of queries for the number of results with read/unread status
-are returned in the 'pong' response."
+QUERIES is a list of queries for the number of results with
+read/unread status are returned in the pong-response."
   (mu4e--server-call-mu `(ping :queries ,queries)))
 
 (defun mu4e--server-remove (docid)

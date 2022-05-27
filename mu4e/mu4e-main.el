@@ -77,12 +77,12 @@ the personal addresses.")
          (switch-to-buffer ,curbuf)))))
 
 (defun mu4e-about ()
-  "Show the mu4e 'about' page."
+  "Show the mu4e \"About\" page."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/mu4e-about.org")))
 
 (defun mu4e-news ()
-  "Show the mu4e 'about' page."
+  "Show page with news for the current version of mu4e."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 

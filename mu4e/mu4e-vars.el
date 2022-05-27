@@ -34,7 +34,7 @@
   :group 'mail)
 
 (defcustom mu4e-headers-include-related t
-  "Wether to include 'related' messages in queries.
+  "Wether to include \"related\" messages in queries.
 With this option set to non-nil, not just return the matches for
 a searches, but also messages that are related (through their
 references) to these messages. This can be useful e.g. to include

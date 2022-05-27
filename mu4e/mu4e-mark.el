@@ -58,21 +58,21 @@ executed and the message itself."
   :group 'mu4e-headers)
 
 (defvar mu4e-headers-show-target t
-  "Whether to show targets (such as '-> delete', '-> /archive')
-when marking message. Normally, this is useful information for the
-user, however, when you often mark large numbers (thousands) of
-message, showing the target makes this quite a bit slower (showing
-the target uses an Emacs feature called 'overlays', which aren't
-particularly fast).")
+  "Whether to show targets (such as \"-> delete\", \"-> /archive\")
+when marking message. Normally, this is useful information for
+the user, however, when you often mark large numbers (thousands)
+of message, showing the target makes this quite a bit
+slower (showing the target uses Emacs overlays, which can be slow
+when overused).")
 
 ;;; Insert stuff
 
 (defvar mu4e--mark-map nil
   "Contains a mapping of docid->markinfo.
 When a message is marked, the information is added here. markinfo
-is a cons cell consisting of the following: \(mark . target)
-where MARK is the type of mark (move, trash, delete)
-TARGET (optional) is the target directory (for 'move')")
+is a cons cell consisting of the following: (mark . target) where
+MARK is the type of mark (move, trash, delete) TARGET (optional)
+is the target directory (for \"move\")")
 
 ;; the mark-map is specific for the current header buffer
 ;; currently, there can't be more than one, but we never know what will
@@ -218,9 +218,9 @@ properties are:
 (defun mu4e-mark-at-point (mark target)
   "Mark (or unmark) message at point.
 MARK specifies the mark-type. For `move'-marks and `trash'-marks
-the TARGET argument is non-nil and specifies to which
-maildir the message is to be moved/trashed. The function works in
-both headers buffers and message buffers.
+the TARGET argument is non-nil and specifies to which maildir the
+message is to be moved/trashed. The function works in both
+headers buffers and message buffers.
 
 The following marks are available, and the corresponding props:
 
@@ -234,16 +234,16 @@ The following marks are available, and the corresponding props:
    `read'      n        mark the message as read
    `trash'     y        trash the message to some folder
    `unflag'    n        mark this message for unflagging
-   `untrash'   n        remove the 'trashed' flag from a message
+   `untrash'   n        remove the `trashed' flag from a message
    `unmark'    n        unmark this message
    `unread'    n        mark the message as unread
    `action'    y        mark the message for some action."
   (interactive)
   (let* ((msg (mu4e-message-at-point))
          (docid (mu4e-message-field msg :docid))
-         ;; get a cell with the mark char and the 'target' 'move' already has a
-         ;; target (the target folder) the other ones get a pseudo "target", as
-         ;; info for the user.
+         ;; get a cell with the mark char and the "move" already has a target
+         ;; (the target folder) the other ones get a pseudo "target", as info
+         ;; for the user.
          (markdesc (cdr (or (assq mark mu4e-marks)
                             (mu4e-error "Invalid mark %S" mark))))
          (get-markkar
@@ -340,7 +340,7 @@ Optionally, provide TARGET (for moves)."
 
 (defun mu4e--mark-get-markpair (prompt &optional allow-something)
   "Ask user with PROMPT for a mark and return (MARK . TARGET).
-If ALLOW-SOMETHING is non-nil, allow the 'something' pseudo mark
+If ALLOW-SOMETHING is non-nil, allow the `something' pseudo mark
 as well."
   (let* ((marks (mapcar (lambda (markdescr)
                           (cons (plist-get (cdr markdescr) :prompt)
@@ -447,10 +447,11 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
 
 (defun mu4e-mark-handle-when-leaving ()
   "Handle any mark-instances in the current buffer when leaving.
-This is done according to the value of `mu4e-headers-leave-behavior'. This
-function is to be called before any further action (like searching,
-quitting the buffer) is taken; returning t means 'take the following
-action', return nil means 'don't do anything'."
+This is done according to the value of
+`mu4e-headers-leave-behavior'. This function is to be called
+before any further action (like searching, quitting the buffer)
+is taken; returning t means \"take the following action\", return
+nil means \"don't do anything\"."
   (mu4e--mark-in-context
    (let ((marknum (mu4e-mark-marks-num))
          (what mu4e-headers-leave-behavior))

@@ -197,8 +197,8 @@ the search."
 (defun mu4e-search-narrow(&optional filter)
   "Narrow the last search.
 Do so by appending search expression FILTER to the last search
-expression. Note that you can go back to previous
-query (effectively, 'widen' it), with `mu4e-search-prev'."
+expression. Note that you can go back to the previous
+query (effectively, \"widen\" it), with `mu4e-search-prev'."
   (interactive
    (let ((filter
 	  (read-string (mu4e-format "Narrow down to: ")
@@ -292,8 +292,8 @@ query (effectively, 'widen' it), with `mu4e-search-prev'."
 (defun mu4e--search-push-query (query where)
   "Push QUERY to one of the query stacks.
 WHERE is a symbol telling us where to push; it's a symbol, either
-'future or 'past. Functional also removes duplicates, limits the
-stack size."
+`future' or `past'. Also removes duplicates and truncates to
+limit the stack size."
   (let ((stack
 	 (pcase where
 	   ('past   mu4e--search-query-past)
@@ -406,7 +406,7 @@ either `future' or `past'."
 
 (defun mu4e--search-completion-contacts-action (match _status)
   "Delete contact alias from contact autocompletion, leaving just email address.
-Implements 'completion-extra-properties' :exit-function which
+Implements the `completion-extra-properties' :exit-function' which
 requires a function with arguments string MATCH and completion
 status, STATUS."
   (let ((contact-email (replace-regexp-in-string "^.*<\\|>$" "" match)))

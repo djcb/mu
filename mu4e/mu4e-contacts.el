@@ -37,10 +37,10 @@
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-complete-only-personal nil
-  "Whether to consider only 'personal' e-mail addresses for completion.
+  "Whether to consider only \"personal\" e-mail addresses for completion.
 That is, addresses from messages where user was explicitly in one
 of the address fields (this excludes mailing list messages).
-These addresses are the ones specified with `mu init'."
+These addresses are the ones specified with \"mu init\"."
   :type 'boolean
   :group 'mu4e-compose)
 
@@ -181,11 +181,13 @@ addresses and /regular expressions/."
 (defun mu4e--rfc822-phrase-type (ph)
   "Return an atom or quoted-string for the phrase PH.
 This checks for empty string first. Then quotes around the phrase
-\(returning 'rfc822-quoted-string). Then whether there is a quote
-inside the phrase (returning 'rfc822-containing-quote). The
-reverse of the RFC atext definition is then tested. If it
-matches, nil is returned, if not, it is an 'rfc822-atom, which is
-returned."
+\(returning symbol `rfc822-quoted-string'). Then whether there is
+a quote inside the phrase (returning symbol
+`rfc822-containing-quote').
+
+The reverse of the RFC atext definition is then tested. If it
+matches, nil is returned, if not, it returns a symbol
+`rfc822-atom'."
   (cond
    ((= (length ph) 0) 'rfc822-empty)
    ((= (aref ph 0) ?\")

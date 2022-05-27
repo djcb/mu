@@ -52,7 +52,7 @@ Example usage:
                     \"No date\")))
       (concat subject \" \" date)))
 
-  (setq org-mu4e-link-desc-func 'my-link-descr)"
+  (setq org-mu4e-link-desc-func \='my-link-descr)"
   :type '(function)
   :group 'mu4e-org)
 
@@ -95,7 +95,6 @@ the current query; otherwise, it links to the message at point.")
 				    	(mu4e-contact-email to)) ;; mu4e-specific
 		  :link              ,(concat "mu4e:msgid:" msgid)
 		  :description       ,(funcall mu4e-org-link-desc-func msg))))
-    (message "PROPS %S" props)
     (apply #'org-store-link-props props)))
 
 (defun mu4e-org-store-link ()
@@ -113,8 +112,8 @@ valid even after moving the message around."
 
 (defun mu4e-org-open (link)
   "Open the org LINK.
-Open the mu4e message (for links starting with 'msgid:') or run
-the query (for links starting with 'query:')."
+Open the mu4e message (for links starting with \"msgid:\") or run
+the query (for links starting with \"query:\")."
   (require 'mu4e)
   (cond
    ((string-match "^msgid:\\(.+\\)" link)

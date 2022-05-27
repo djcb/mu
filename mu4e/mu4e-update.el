@@ -38,9 +38,9 @@ Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
 arbitrary shell-commands can be used.
 
 When set to the literal string \"true\" (the default), the
-command simply finishes successfully (running the 'true' command)
-without retrieving any mail. This can be useful when mail is
-already retrieved in another way, such as a local MDA."
+command simply finishes successfully (running the \"true\"
+command) without retrieving any mail. This can be useful when
+mail is already retrieved in another way, such as a local MDA."
   :type 'string
   :group 'mu4e
   :safe 'stringp)
@@ -77,7 +77,7 @@ shown but can slow with large message stores on slow file-systems."
   :safe 'booleanp)
 
 (defcustom mu4e-index-lazy-check nil
-  "Whether to only use a 'lazy check' during reindexing.
+  "Whether to only use a \"lazy\" check during reindexing.
 This influences how we decide whether a message
 needs (re)indexing or not.
 

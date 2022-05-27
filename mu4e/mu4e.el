@@ -111,7 +111,7 @@ is non-nil."
 ;;; Starting / getting mail / updating the index
 
 (defun mu4e--pong-handler (_data func)
-  "Handle 'pong' responses from the mu server.
+  "Handle \"pong\" responses from the mu server.
 Invoke FUNC if non-nil."
   (let ((doccount (plist-get (mu4e-server-properties) :doccount)))
     (mu4e--check-requirements)

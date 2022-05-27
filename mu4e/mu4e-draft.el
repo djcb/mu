@@ -40,8 +40,9 @@
 
 (defcustom mu4e-compose-reply-recipients 'ask
   "Which recipients to use when replying to a message.
-May be 'ask, 'all, 'sender. Note that that only applies to
-non-mailing-list message; for those, mu4e always asks."
+May be a symbol `ask', `all', `sender'. Note that that only
+applies to non-mailing-list message; for those, mu4e always
+asks."
   :type '(choice ask
                  all
                  sender)
@@ -106,7 +107,7 @@ symbols, for example:
 
   (setq mu4e-sent-messages-behavior (lambda ()
   (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
-       'delete 'sent)))
+       \='delete \='sent)))
 
 The various `message-' functions from `message-mode' are available
 for querying the message information."
@@ -208,10 +209,10 @@ the width beyond which format=flowed lines are wrapped."
 
 (defcustom mu4e-compose-pre-hook nil
   "Hook run just *before* message composition starts.
-If the compose-type is either 'reply' or 'forward', the variable
-`mu4e-compose-parent-message' points to the message replied to /
-being forwarded / edited, and `mu4e-compose-type' contains the
-type of message to be composed.
+If the compose-type is a symbol, either `reply' or `forward', the
+variable `mu4e-compose-parent-message' points to the message
+replied to / being forwarded / edited, and `mu4e-compose-type'
+contains the type of message to be composed.
 
 Note that there is no draft message yet when this hook runs, it
 is meant for influencing the how mu4e constructs the draft
@@ -222,8 +223,8 @@ place to do that."
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-dont-reply-to-self nil
-  "If non-nil, don't include self.
-(as decided by `mu4e-personal-address-p')"
+  "If non-nil, do not include self.
+Selfness is decided by `mu4e-personal-address-p'"
   :type 'boolean
   :group 'mu4e-compose)
 

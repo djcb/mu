@@ -109,8 +109,8 @@ For backward compatibility, an older form is recognized as well:
 \"/archive/\"), and key is a single character.
 
 You can use these shortcuts in the headers and view buffers, for
-example with `mu4e-mark-for-move-quick' (or 'm', by default) or
-`mu4e-jump-to-maildir' (or 'j', by default), followed by the
+example with `mu4e-mark-for-move-quick' (or \"m\", by default) or
+`mu4e-jump-to-maildir' (or \"j\", by default), followed by the
 designated shortcut character for the maildir.
 
 Unlike in search queries, folder names with spaces in them must
@@ -277,10 +277,10 @@ the list of maildirs will not change until you restart mu4e."
 
 (defun mu4e-ask-maildir (prompt)
   "Ask the user for a shortcut (using PROMPT).
-As per (mu4e-maildir-shortcuts), then return the corresponding folder
-name. If the special shortcut 'o' (for _o_ther) is used, or if
-`(mu4e-maildir-shortcuts)' evaluates to nil, let user choose from
-all maildirs under `mu4e-maildir'."
+As per (mu4e-maildir-shortcuts), then return the corresponding
+folder name. If the special shortcut \"o\" (for _o_ther) is used,
+or if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
+from all maildirs under `mu4e-maildir'."
   (let ((prompt (mu4e-format "%s" prompt)))
     (if (not (mu4e-maildir-shortcuts))
         (substring-no-properties

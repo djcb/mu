@@ -236,7 +236,7 @@ Message-ID."
 
 (defun mu4e~compose-complete-contact (&optional start)
   "Complete the text at START with a contact.
-Ie. either 'name <email>' or 'email')."
+Ie. either \"name <email>\" or \"email\")."
   (interactive)
   (let ((mail-abbrev-mode-regexp mu4e~compose-address-fields-regexp)
         (eoh ;; end-of-headers
@@ -691,24 +691,25 @@ It restores mu4e window layout after killing the compose-buffer."
         (mu4e~switch-back-to-mu4e-buffer)))))
 
 (defun mu4e~compose-set-parent-flag (path)
-  "Set flags for replied-t and forwarded for the message at PATH.
-That is, set the 'replied' \"R\" flag on messages we replied to,
-and the 'passed' \"F\" flag on message we have forwarded.
+  "Set flags for replied-to and forwarded for the message at PATH.
+That is, set the `replied' \"R\" flag on messages we replied to,
+and the `passed' \"F\" flag on message we have forwarded.
 
-If a message has an 'in-reply-to' header, it is considered a reply
-to the message with the corresponding message id. If it does not
-have an 'in-reply-to' header, but does have a 'references' header,
-it is considered to be a forward message for the message
-corresponding with the /last/ message-id in the references header.
+If a message has an \"In-Reply-To\" header, it is considered a
+reply to the message with the corresponding message id.
+Otherwise, if it does not have an \"In-Reply-To\" header, but
+does have a \"References:\" header, it is considered to be a
+forward message for the message corresponding with the /last/
+message-id in the references header.
 
-Now, if the message has been determined to be either a forwarded
+If the message has been determined to be either a forwarded
 message or a reply, we instruct the server to update that message
-with resp. the 'P' (passed) flag for a forwarded message, or the
-'R' flag for a replied message. The original messages are also
-marked as Seen.
+with resp. the \"P\" (passed) flag for a forwarded message, or
+the \"R\" flag for a replied message. The original messages are
+also marked as Seen.
 
-Function assumes that it's executed in the context of the message
-buffer."
+Function assumes that it is executed in the context of the
+message buffer."
   (let ((buf (find-file-noselect path)))
     (when buf
       (with-current-buffer buf
@@ -810,11 +811,11 @@ draft message."
 				    _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
-Start composing a mail message to send.
-This uses the user’s chosen mail composition package
-as selected with the variable ‘mail-user-agent’.
-The optional arguments TO and SUBJECT specify recipients
-and the initial Subject field, respectively.
+
+Start composing a mail message to send. This uses the user's
+chosen mail composition package as selected with the variable
+`mail-user-agent'. The optional arguments TO and SUBJECT specify
+recipients and the initial Subject field, respectively.
 
 OTHER-HEADERS is an alist specifying additional
 header fields.  Elements look like (HEADER . VALUE) where both
@@ -826,11 +827,11 @@ being composed.  Interactively, CONTINUE is the prefix argument.
 SWITCH-FUNCTION, if non-nil, is a function to use to
 switch to and display the buffer used for mail composition.
 
-YANK-ACTION, if non-nil, is an action to perform, if and when necessary,
-to insert the raw text of the message being replied to.
-It has the form (FUNCTION . ARGS).  The user agent will apply
+YANK-ACTION, if non-nil, is an action to perform, if and when
+necessary, to insert the raw text of the message being replied
+to. It has the form (FUNCTION . ARGS). The user agent will apply
 FUNCTION to ARGS, to insert the raw text of the original message.
-\(The user agent will also run ‘mail-citation-hook’, *after* the
+\(The user agent will also run `mail-citation-hook', *after* the
 original text has been inserted in this way.)
 
 SEND-ACTIONS is a list of actions to call when the message is sent.
@@ -840,7 +841,8 @@ RETURN-ACTION, if non-nil, is an action for returning to the
 caller.  It has the form (FUNCTION . ARGS).  The function is
 called after the mail has been sent or put aside, and the mail
 buffer buried."
-   (unless (mu4e-running-p)
+
+  (unless (mu4e-running-p)
      (mu4e))
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in

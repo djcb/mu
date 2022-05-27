@@ -637,11 +637,11 @@ message."
 
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
-'In sync' here means that moving to the next/previous message in
-the the message view affects HDRSBUF, as does marking etc.
+\"In sync\" here means that moving to the next/previous message
+in the the message view affects HDRSBUF, as does marking etc.
 
-As a side-effect, a message that is being viewed loses its 'unread'
-marking if it still had that."
+As a side-effect, a message that is being viewed loses its
+`unread' marking if it still had that."
 
   (mu4e~headers-update-handler msg nil nil) ;; update headers, if necessary.
 
@@ -1065,7 +1065,7 @@ Based on Gnus' article-mode."
      ("ytoggle crypto"              . gnus-article-hide-pem)
      ("ftoggle fill-flowed"         . mu4e-view-toggle-fill-flowed)
      ("mtoggle show all MIME parts" . mu4e-view-toggle-show-mime-parts))
-"Various options for 'massaging' the message view. See `(gnus)
+"Various options for \"massaging\" the message view. See `(gnus)
 Article Treatment' for more options."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))

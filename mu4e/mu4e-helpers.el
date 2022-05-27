@@ -71,7 +71,7 @@ You can customize the exact fancy characters used with
 ;; here because they're needed in multiple buffers.
 
 (defcustom mu4e-view-auto-mark-as-read t
-  "Automatically mark messages are 'read' when you read them.
+  "Automatically mark messages as read when you read them.
 This is the default behavior, but can be turned off, for example
 when using a read-only file-system.
 
@@ -226,8 +226,8 @@ trying an exact match."
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area.
-PROMPT describes a multiple-choice question to the user.
-OPTIONS describe the options, and is a list of cells describing
+PROMPT describes a multiple-choice question to the user. OPTIONS
+describe the options, and is a list of cells describing
 particular options. Cells have the following structure:
 
    (OPTIONSTRING . RESULT)
@@ -240,12 +240,12 @@ can prefix the string with an uniquifying character.
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
-              '((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
+              \='((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
 
 User now will be presented with a list: \"Choose an animal:
    [M]onkey, [G]nu, [x]Moose\".
 
-Function will return the cdr of the list element."
+Function returns the cdr of the list element."
   (let* ((prompt (mu4e-format "%s" prompt))
          (optionsstr
           (mapconcat
@@ -345,8 +345,10 @@ The results are a list of elements of the form
 (defun mu4e-log (type frm &rest args)
   "Log a message of TYPE with format-string FRM and ARGS.
 Use the mu4e log buffer for this. If the variable mu4e-debug is
-non-nil. Type is either 'to-server, 'from-server or 'misc. This
-function is meant for debugging."
+non-nil. Type is a symbol, either `to-server', `from-server' or
+`misc'.
+
+This function is meant for debugging."
   (when mu4e-debug
     (with-current-buffer (mu4e--get-log-buffer)
       (let* ((inhibit-read-only t)

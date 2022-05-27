@@ -70,11 +70,13 @@
   "A list of header fields to show in the headers buffer.
 Each element has the form (HEADER . WIDTH), where HEADER is one of
 the available headers (see `mu4e-header-info') and WIDTH is the
-respective width in characters.  A width of `nil' means
-'unrestricted', and this is best reserved for the rightmost (last)
-field. Note that emacs may become very slow with excessively long
-lines (1000s of characters), so if you regularly get such messages,
-you want to avoid fields with `nil' altogether."
+respective width in characters.
+
+A width of nil means \"unrestricted\", and this is best reserved
+for the rightmost (last) field. Note that emacs may become very
+slow with excessively long lines (1000s of characters), so if you
+regularly get such messages, you want to avoid fields with nil
+altogether."
   :type `(repeat (cons (choice ,@(mapcar (lambda (h)
                                            (list 'const :tag
                                                  (plist-get (cdr h) :help)
@@ -138,17 +140,17 @@ next mail after marking a message in header view."
 
 
 (defvar mu4e-headers-hide-predicate nil
-  "Predicate function applied to headers before they are shown;
-if function is nil or evaluates to nil, show the header,
-otherwise don't. function takes one parameter MSG, which is the
-message plist for the message to be hidden or not.
+  "Predicate function to hide matching heasders.
+If the function evaluates to non-nil when applied a a message
+plist, do not show the corresponding header. The function takes
+one parameter MSG, which is the message plist for the message to
+be hidden or not.
 
-Example that hides all 'trashed' messages:
+Example that hides all trashed messages:
+
   (setq mu4e-headers-hide-predicate
      (lambda (msg)
-       (member 'trashed (mu4e-message-field msg :flags))))
-
-Note that this is merely a display filter.")
+       (member \='trashed (mu4e-message-field msg :flags)))).")
 
 (defcustom mu4e-headers-visible-flags
   '(draft flagged new passed replied trashed attach encrypted signed list personal)
@@ -507,10 +509,10 @@ while our display may be different)."
 
 (defun mu4e~headers-from-or-to (msg)
   "Get the From: address from MSG if not one of user's; otherwise get To:.
-When the from address for message MSG is one of the the user's addresses,
-\(as per `mu4e-personal-address-p'), show the To address;
-otherwise ; show the from address; prefixed with the appropriate
-`mu4e-headers-from-or-to-prefix'."
+When the from address for message MSG is one of the the user's
+addresses, (as per `mu4e-personal-address-p'), show the To
+address. Otherwise, show the From address, prefixed with the
+appropriate `mu4e-headers-from-or-to-prefix'."
   (let* ((from1 (car-safe (mu4e-message-field msg :from)))
 	 (from1-addr (and from1 (mu4e-contact-email from1)))
 	 (is-user (and from1-addr (mu4e-personal-address-p from1-addr))))
@@ -520,12 +522,11 @@ otherwise ; show the from address; prefixed with the appropriate
       (concat (car mu4e-headers-from-or-to-prefix)
               (mu4e~headers-contact-str (mu4e-message-field msg :from))))))
 
- 
 (defun mu4e~headers-human-date (msg)
-  "Show a 'human' date.
-If the date is today, show the time, otherwise, show the
-date. The formats used for date and time are
-`mu4e-headers-date-format' and `mu4e-headers-time-format'."
+  "Show a \"human\" date for MSG.
+If the date is today, show the time, otherwise, show the date.
+The formats used for date and time are `mu4e-headers-date-format'
+and `mu4e-headers-time-format'."
   (let ((date (mu4e-msg-field msg :date)))
     (if (equal date '(0 0 0))
         "None"
@@ -539,9 +540,10 @@ date. The formats used for date and time are
           (format-time-string mu4e-headers-date-format date))))))
 
 (defun mu4e~headers-thread-subject (msg)
-  "Get the subject if it is the first one in a thread; otherwise,
-return the thread-prefix without the subject-text. In other words,
-show the subject of a thread only once, similar to e.g. 'mutt'."
+  "Get the subject for MSG if it is the first one in a thread.
+Otherwise, return the thread-prefix without the subject-text. In
+other words, show the subject of a thread only once, similar to
+e.g. \"mutt\"."
   (let* ((tinfo  (mu4e-message-field msg :meta))
          (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
@@ -602,7 +604,7 @@ found."
 
 (defun mu4e~headers-truncate-field-precise (field val width)
   "Return VAL truncated to one less than WIDTH, with a trailing
-space propertized with a 'display text property which expands to
+space propertized with a `display' text property which expands to
  the correct column for display."
   (when width
     (let ((end-col (cl-loop for (f . w) in mu4e-headers-fields
@@ -1498,9 +1500,10 @@ descendants."
 ;;; Interactive functions
 (defun mu4e-headers-change-sorting (&optional field dir)
   "Change the sorting/threading parameters.
-FIELD is the field to sort by; DIR is a symbol: either 'ascending,
-'descending, 't (meaning: if FIELD is the same as the current
-sortfield, change the sort-order) or nil (ask the user)."
+FIELD is the field to sort by; DIR is a symbol: either
+`ascending', `descending', t (meaning: if FIELD is the same as
+the current sortfield, change the sort-order) or nil (ask the
+user)."
   (interactive)
   (let* ((field
           (or field

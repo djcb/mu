@@ -184,7 +184,7 @@ receive (:info add :path <path> :docid <docid>) as well as (:update
 RETAG-ARG is a comma-separated list of additions and removals.
 
 Example: +tag,+long tag,-oldtag
-would add 'tag' and 'long tag', and remove 'oldtag'."
+would add \"tag\" and \"long tag\", and remove \"oldtag\"."
   (let* (
          (path (mu4e-message-field msg :path))
          (oldtags (mu4e-message-field msg :tags))

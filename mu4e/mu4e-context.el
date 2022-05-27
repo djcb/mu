@@ -177,16 +177,17 @@ or nil if there is no such MSG; similar to what
 `mu4e-compose-pre-hook' does.
 
 POLICY specifies how to do the determination. If POLICY is
-'always-ask, we ask the user unconditionally.
+`always-ask', we ask the user unconditionally.
 
 In all other cases, if any context matches (using its match
 function), this context is returned. If none of the contexts
 match, POLICY determines what to do:
 
-- pick-first: pick the first of the contexts available
-- ask: ask the user
-- ask-if-none: ask if there is no context yet
-- otherwise, return nil. Effectively, this leaves the current context as it is."
+- `pick-first': pick the first of the contexts available
+- `ask': ask the user
+- `ask-if-none': ask if there is no context yet
+- otherwise, return nil. Effectively, this leaves the current context
+as it is."
   (when mu4e-contexts
     (if (eq policy 'always-ask)
         (mu4e--context-ask-user "Select context: ")
@@ -232,6 +233,6 @@ global-mode-line."
     map)
   (mu4e-context-in-modeline))
 
-;;; 
+;;;
 (provide 'mu4e-context)
 ;;; mu4e-context.el ends here
