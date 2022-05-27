@@ -104,15 +104,12 @@ It links to the last known query when in `mu4e-headers-mode' with
 `mu4e-org-link-query-in-headers-mode' set; otherwise it links to
 a specific message, based on its message-id, so that links stay
 valid even after moving the message around."
-  (let ((view-mode-p (mu4e-is-mode-or-derived-p 'mu4e-view-mode))
-	(headers-mode-p (mu4e-is-mode-or-derived-p 'mu4e-headers-mode))
-	(message-p (mu4e-message-at-point)))
-    (if view-mode-p
-	(mu4e--org-store-link-message)
-      (if headers-mode-p
-	  (if (or (not message-p) mu4e-org-link-query-in-headers-mode)
-	      (mu4e--org-store-link-query)
-	    (mu4e--org-store-link-message))))))
+  (cond
+   ((mu4e-is-mode-or-derived-p 'mu4e-view-mode) (mu4e--org-store-link-message))
+   ((mu4e-is-mode-or-derived-p 'mu4e-headers-mode)
+    (if mu4e-org-link-query-in-headers-mode
+        (mu4e--org-store-link-query)
+      (mu4e--org-store-link-message)))))
 
 (defun mu4e-org-open (link)
   "Open the org LINK.
