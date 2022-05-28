@@ -125,11 +125,6 @@ This is equivalent to:
   (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
-(defun mu4e-message-body-text (_msg &optional _prefer-html)
-  "Get the body in text form for message MSG."
-  "" ;; not implemented for Gnus mode.
-)
-
 (defun mu4e-message-contact-field-matches (msg cfield rx)
   "Does MSG's contact-field CFIELD match regexp RX?
 Check if any of the of the CFIELD in MSG matches RX. I.e.
