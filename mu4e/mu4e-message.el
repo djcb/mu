@@ -138,30 +138,30 @@ list of those) of msg MSG matches (with their name or e-mail
 address) regular expressions RX. If there is a match, return
 non-nil; otherwise return nil. RX can also be a list of regular
 expressions, in which case any of those are tried for a match."
-  (if (and cfield (listp cfield))
-      (or (mu4e-message-contact-field-matches
-	   msg (mu4e-contact-name cfield) rx)
-          (mu4e-message-contact-field-matches
-	   msg (mu4e-contact-email cfield) rx))
-    (when cfield
-      (if (listp rx)
-          ;; if rx is a list, try each one of them for a match
-          (seq-find
-           (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
-           rx)
-        ;; not a list, check the rx
-        (seq-find
-         (lambda (ct)
-           (let ((name (mu4e-contact-name ct))
-		 (email (mu4e-contact-email ct))
-                 ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
-                 ;; so let's detect and extract in that case.
-                 (rx (if (string-match-p  "^\\(.*\\)/$" rx)
-                         (substring rx  1 -1) rx)))
-             (or
-              (and name  (string-match rx name))
-              (and email (string-match rx email)))))
-         (mu4e-message-field msg cfield))))))
+  (cond
+   ((null cfield))
+   ((listp cfield)
+    (seq-find (lambda (cf) (mu4e-message-contact-field-matches msg cf rx))
+              cfield))
+   ((listp rx)
+    ;; if rx is a list, try each one of them for a match
+    (seq-find
+     (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
+     rx))
+   (t
+    ;; not a list, check the rx
+    (seq-find
+     (lambda (ct)
+       (let ((name (mu4e-contact-name ct))
+	     (email (mu4e-contact-email ct))
+             ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
+             ;; so let's detect and extract in that case.
+             (rx (if (string-match-p  "^\\(.*\\)/$" rx)
+                     (substring rx  1 -1) rx)))
+         (or
+          (and name  (string-match rx name))
+          (and email (string-match rx email)))))
+     (mu4e-message-field msg cfield)))))
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
   "Does contact-field CFIELD in MSG match me?
