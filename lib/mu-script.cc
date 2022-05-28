@@ -288,6 +288,9 @@ mu_script_find_script_with_name(GSList* lst, const char* name)
 	return NULL;
 }
 
+
+
+#ifdef BUILD_GUILE
 static char*
 quoted_from_strv (const gchar **params)
 {
@@ -315,8 +318,6 @@ quoted_from_strv (const gchar **params)
 }
 
 
-
-#ifdef BUILD_GUILE
 static void
 guile_shell(void* closure, int argc, char** argv)
 {
