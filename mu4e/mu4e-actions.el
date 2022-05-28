@@ -32,7 +32,6 @@
 (require 'mu4e-helpers)
 (require 'mu4e-message)
 (require 'mu4e-search)
-(require 'mu4e-meta)
 
 
 ;;; Count lines

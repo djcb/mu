@@ -37,7 +37,7 @@ dist_lisp_LISP=			\
 	mu4e-main.el		\
 	mu4e-mark.el		\
 	mu4e-message.el		\
-	mu4e-meta.el		\
+	mu4e-config.el		\
 	mu4e-org.el		\
 	mu4e-search.el		\
 	mu4e-server.el		\

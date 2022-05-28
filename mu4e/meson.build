@@ -14,9 +14,15 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+# where the lisp goes
+lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
+
+# generate some build data for use in mu4e
 mu4e_meta = configure_file(
-  input: 'mu4e-meta.el.in',
-  output: 'mu4e-meta.el',
+  input: 'mu4e-config.el.in',
+  output: 'mu4e-config.el',
+  install: true,
+  install_dir: lispdir,
   configuration: {
       'VERSION'         : meson.project_version(),
       # project_build_root() with meson >= 0.56
@@ -24,7 +30,7 @@ mu4e_meta = configure_file(
       'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
     })
 
-mu4e_plain_srcs=[
+mu4e_srcs=[
   'mu4e-actions.el',
   'mu4e-bookmarks.el',
   'mu4e-compose.el',
@@ -51,27 +57,20 @@ mu4e_plain_srcs=[
   'obsolete/org-mu4e.el',
 ]
 
-mu4e_gen_srcs=[
-  join_paths(meson.current_build_dir(), 'mu4e-meta.el'),
-]
-
-mu4e_all_srcs =  mu4e_plain_srcs
-mu4e_all_srcs += mu4e_gen_srcs
+# note, we cannot compile mu4e-config.el without incurring
+#  WARNING: Source item
+#   '[...]/build/mu4e/mu4e-meta.el' cannot be converted to File object, because
+#   it is a generated file. This will become a hard error in the future.
+#
+#... so let's not do that!
 
 # hack-around for native compile issue: copy sources to builddir.
 # see: https://debbugs.gnu.org/db/47/47987.html
-foreach src : mu4e_plain_srcs
+foreach src : mu4e_srcs
   configure_file(input: src, output:'@BASENAME@.el', copy:true)
 endforeach
 
-
-# XXX: this yields a warning: mu4e/meson.build:86: WARNING: Source item
-#   '[...]/build/mu4e/mu4e-meta.el' cannot be converted to File object, because
-#   it is a generated file. This will become a hard error in the future.
-# unsure how to best avoid that.
-
-lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
-foreach src : mu4e_all_srcs
+foreach src : mu4e_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
@@ -92,8 +91,8 @@ foreach src : mu4e_all_srcs
 			  '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
 
-# also install the sources.
-install_data(mu4e_all_srcs, install_dir: lispdir)
+# also install the sources and the config
+install_data(mu4e_srcs, install_dir: lispdir)
 
 # install mu4e-about.org
 install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))

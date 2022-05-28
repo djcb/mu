@@ -24,7 +24,6 @@
 
 ;;; Code:
 
-(require 'mu4e-meta)
 (require 'message)
 (require 'mu4e-helpers)
 

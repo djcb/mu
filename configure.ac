@@ -257,7 +257,7 @@ lib/utils/Makefile
 lib/message/Makefile
 lib/index/Makefile
 mu4e/Makefile
-mu4e/mu4e-meta.el
+mu4e/mu4e-config.el
 guile/Makefile
 guile/mu/Makefile
 guile/examples/Makefile

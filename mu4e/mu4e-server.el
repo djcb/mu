@@ -25,7 +25,6 @@
 ;;; Code:
 
 (require 'mu4e-helpers)
-(require 'mu4e-meta)
 
 
 ;;; Configuration

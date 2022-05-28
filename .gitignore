@@ -89,7 +89,7 @@ test-sexp-parser
 test-scanner
 /guile/tests/test-mu-guile
 
-mu4e-meta.el
+mu4e-config.el
 mu4e.pdf
 texinfo.tex
 texi.texi

@@ -31,6 +31,7 @@
 (require 'ido)
 (require 'cl-lib)
 
+(require 'mu4e-config)
 
 ;;; Customization
 
