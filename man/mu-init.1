@@ -1,4 +1,4 @@
-.TH MU-INIT 1 "January 2022" "User Manuals"
+.TH MU-INIT 1 "May 2022" "User Manuals"
 
 .SH NAME
 
@@ -23,8 +23,12 @@ man-page and not here, as they apply to multiple mu commands.
 \fB\-\-muhome\fR
 use an alternative directory to store and read the database, write the logs,
 etc. By default, \fBmu\fR uses XDG Base Directory Specification (e.g. on Linux
-this defaults to \fI~/.cache/mu\fR, \fI~/.config/mu\fR). Earlier versions of
-\fBmu\fR defaulted to \fI~/.mu\fR, which now requires \fI\-\-muhome=~/.mu\fR.
+this defaults to \fI~/.cache/mu\fR, \fI~/.config/mu\fR).
+
+Earlier versions of \fBmu\fR defaulted to \fI~/.mu\fR, which now requires
+\fI\-\-muhome=~/.mu\fR.
+
+Alternatively, use can use the \fBMUHOME\fR environment variable (the command-line takes precedence).
 
 .TP
 \fB\-m\fR, \fB\-\-maildir\fR=\fI<maildir>\fR
@@ -51,6 +55,8 @@ shell program, the argument may need to b quoted.
 \fBmu init\fR uses \fBMAILDIR\fR to find the user's Maildir if it has not been
 specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If \fBMAILDIR\fR is
 not set, \fBmu init\fR uses \fI~/Maildir\fR.
+
+\fBMUHOME\fR can be used as an alternative to \fB\-\-muhome\fR.
 
 .SH RETURN VALUE
 

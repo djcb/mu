@@ -45,14 +45,16 @@ static std::string
 make_database(const std::string& testdir)
 {
 	char*      tmpdir{test_mu_common_get_random_tmpdir()};
+
+	/* use the env var rather than `--muhome` */
+
+	g_setenv("MUHOME", tmpdir, 1);
 	const auto cmdline{format("/bin/sh -c '"
-				  "%s init  --muhome=%s --maildir=%s --quiet ; "
-				  "%s index --muhome=%s  --quiet'",
+				  "%s init --maildir=%s --quiet ; "
+				  "%s index --quiet'",
 				  MU_PROGRAM,
-				  tmpdir,
 				  testdir.c_str(),
-				  MU_PROGRAM,
-				  tmpdir)};
+				  MU_PROGRAM)};
 
 	if (g_test_verbose())
 		g_printerr("\n%s\n", cmdline.c_str());
@@ -60,6 +62,9 @@ make_database(const std::string& testdir)
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, NULL));
 	auto xpath = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
 	g_free(tmpdir);
+
+	/* ensure MUHOME worked */
+	g_assert_cmpuint(::access(xpath, F_OK), ==, 0);
 
 	std::string dbpath{xpath};
 	g_free(xpath);

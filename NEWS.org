@@ -53,6 +53,9 @@
      much of this is not immediately visible but is an enabler for some new
      features.
 
+   - instead of passing ~--muhome~, you can now also set an environment variable
+     ~MUHOME~.
+
    - the ~info~ command now includes information about the last indexing operation
      and the last database change that took place; note that the information may
      be slightly delayed due to database caching.

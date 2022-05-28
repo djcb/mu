@@ -75,8 +75,17 @@ get_output_format(const char* formatstr)
 static void
 set_group_mu_defaults()
 {
-	/* If muhome is not set, we use the XDG Base Directory Specification
-	 * locations. */
+	/* try to determine muhome from command-line or environment;
+	 * note: if not specified, we use XDG defaults */
+
+	if (!MU_CONFIG.muhome) {
+		/* if not set explicity, try the environment */
+		const char* muhome;
+		muhome = g_getenv("MUHOME");
+		if (muhome)
+			MU_CONFIG.muhome = g_strdup(muhome);
+	}
+
 	if (MU_CONFIG.muhome)
 		expand_dir(MU_CONFIG.muhome);
 

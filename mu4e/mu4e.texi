@@ -401,9 +401,10 @@ different file-systems; and symbolic links are supported.
 @section Initializing the message store
 
 The first time you run @t{mu}, you need to initialize its store
-(database). The default location for that is @t{~/.cache/mu/xapian},
-but you can change this using the @t{--muhome} option, and remember to
-pass that to the other commands as well.
+(database). The default location for that is @t{~/.cache/mu/xapian}, but
+you can change this using the @t{--muhome} option, and remember to pass
+that to the other commands as well. Alternatively, you can use an
+environment variable @t{MUHOME}.
 
 Assuming that your maildir is at @file{~/Maildir}, we issue the
 following command:
@@ -428,7 +429,8 @@ slashes, for example:
   $ mu init --maildir=~/Maildir '--my-address=/foo-.*@@example\.com/'
 @end example
 
-If you want to see the current values, you can use @command{mu info}.
+If you want to see the values for your message-store, you can use
+@command{mu info}.
 
 @node Indexing your messages
 @section Indexing your messages
