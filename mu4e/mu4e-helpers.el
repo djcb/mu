@@ -1,6 +1,6 @@
 ;;; mu4e-helpers.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -30,6 +30,7 @@
 (require 'seq)
 (require 'ido)
 (require 'cl-lib)
+(require 'bookmark)
 
 (require 'mu4e-config)
 
@@ -520,6 +521,30 @@ Or go to the top level if there is none."
           ('mu4e-headers-mode "(mu4e)Headers view")
           ('mu4e-view-mode    "(mu4e)Message view")
           (_                  "mu4e"))))
+
+
+;;; bookmarks
+(defun mu4e--make-bookmark-record ()
+  "Create a bookmark for the message at point."
+  (let* ((msg     (mu4e-message-at-point))
+	 (subject (or (plist-get msg :subject) "No subject"))
+	 (date	  (plist-get msg :date))
+	 (date	  (if date (format-time-string "%F: " date) ""))
+	 (title	  (format "%s%s" date subject))
+	 (msgid	  (or (plist-get msg :message-id)
+		      (mu4e-error "Cannot bookmark message without message-id"))))
+    `(,title
+      ,@(bookmark-make-record-default 'no-file 'no-context)
+      (message-id . ,msgid)
+      (handler    . mu4e--jump-to-bookmark))))
+
+(declare-function mu4e-view-message-with-message-id "mu4e-view")
+(declare-function mu4e-message-at-point             "mu4e-message")
+
+(defun mu4e--jump-to-bookmark (bookmark)
+  "View the message referred to by BOOKMARK."
+  (when-let ((msgid (bookmark-prop-get bookmark 'message-id)))
+    (mu4e-view-message-with-message-id msgid)))
 
 ;;; Macros
 

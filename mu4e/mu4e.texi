@@ -2996,6 +2996,7 @@ with other tools.
 
 @menu
 * Emacs default::Making mu4e the default emacs e-mail program
+* Emacs bookmarks::Using Emacs' bookmark system
 * Org-mode links::Adding mu4e to your organized life
 * Org-contacts::Hooking up with org-contacts
 * BBDB::Hooking up with the Insidious Big Brother Database
@@ -3027,6 +3028,16 @@ mail, customize the variable @code{read-mail-command}.
 @end lisp
 
 (@pxref{Top,,Emacs,Sending Mail, Mail Methods})
+
+
+@node Emacs bookmarks
+@section Emacs bookmarks
+
+@t{mu4e} supports linking to the message-at-point through the normal
+Emacs built-in bookmark system. The links are based on the message's
+message-id, and thus the bookmarks stay valid even if you move the
+message around.
+
 
 @node Org-mode links
 @section Org-mode links

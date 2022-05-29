@@ -1052,6 +1052,11 @@ Based on Gnus' article-mode."
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (setq buffer-undo-list t);; don't record undo info
+
+  ;; support bookmarks.
+  (set (make-local-variable 'bookmark-make-record-function)
+       'mu4e--make-bookmark-record)
+
   ;; autopair mode gives error when pressing RET
   ;; turn it off
   (when (boundp 'autopair-dont-activate)

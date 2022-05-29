@@ -1190,6 +1190,9 @@ The following specs are supported:
         (add-function :before-until (local 'eldoc-documentation-function)
                       #'mu4e-headers-eldoc-function))))
 
+  ;; support bookmarks.
+  (set (make-local-variable 'bookmark-make-record-function)
+       'mu4e--make-bookmark-record)
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook #'mu4e~headers-maybe-auto-update)
   (setq
