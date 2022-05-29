@@ -52,7 +52,7 @@ lib_mu=static_library(
 
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
-  dependencies: [ lib_mu_message_dep ],
+  dependencies: [ lib_mu_message_dep, thread_dep ],
   include_directories:
     include_directories(['.', '..']))
 
