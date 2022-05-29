@@ -1,6 +1,6 @@
 ;;; mu4e-contrib.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2013-2022 Dirk-Jan C. Binnema
 
 ;; This file is not part of GNU Emacs.
 
@@ -28,11 +28,8 @@
 (require 'bookmark)
 (require 'eshell)
 
-;; Contributed by sabof
-(defvar bookmark-make-record-function)
-
+
 ;;; Various simple commands
-
 (defun mu4e-headers-mark-all-unread-read ()
   "Put a ! \(read) mark on all visible unread messages."
   (interactive)
@@ -48,7 +45,7 @@
   (mu4e-mark-execute-all t))
 
 (defun mu4e-headers-mark-all ()
-  "Mark all headers for some action,
+  "Mark all headers for some action.
 Ask user what action to execute."
   (interactive)
   (mu4e-headers-mark-for-each-if
@@ -56,63 +53,8 @@ Ask user what action to execute."
    (lambda (_msg _param) t))
   (mu4e-mark-execute-all))
 
-;;; Bookmark handlers
-;;
-;;  Allow bookmarking a mu4e buffer in regular emacs bookmarks.
 
-(defun mu4e--view-set-bookmark-make-record-fn ()
-  "Make a bookmar record function (view)."
-  (set (make-local-variable 'bookmark-make-record-function)
-       'mu4e-view-bookmark-make-record))
-
-(defun mu4e--headers-set-bookmark-make-record-fn ()
-  "Make a bookmar record function (headers)."
-  (set (make-local-variable 'bookmark-make-record-function)
-       'mu4e-view-bookmark-make-record))
-
-;; Probably this can be moved to mu4e-view.el.
-(add-hook 'mu4e-view-mode-hook #'mu4e--view-set-bookmark-make-record-fn)
-;; And this can be moved to mu4e-headers.el.
-(add-hook 'mu4e-headers-mode-hook #'mu4e--headers-set-bookmark-make-record-fn)
-
-(defun mu4e-view-bookmark-make-record ()
-  "Make a bookmark entry for a mu4e buffer.
-Note that this is an Emacs bookmark, not to be confused with
-`mu4e-bookmarks'."
-  (let* ((msg     (mu4e-message-at-point))
-         (maildir (plist-get msg :maildir))
-         (date    (format-time-string "%Y%m%d" (plist-get msg :date)))
-         (query   (format "maildir:%s date:%s" maildir date))
-         (docid   (plist-get msg :docid))
-         (mode    (symbol-name major-mode))
-         (subject (or (plist-get msg :subject) "No subject")))
-    `(,subject
-      ,@(bookmark-make-record-default 'no-file 'no-context)
-      (location . (,query . ,docid))
-      (mode . ,mode)
-      (handler . mu4e-bookmark-jump))))
-
-(defun mu4e-bookmark-jump (bookmark)
-  "Handler function for record returned by `mu4e-view-bookmark-make-record'.
-BOOKMARK is a bookmark name or a bookmark record."
-  (let* ((path  (bookmark-prop-get bookmark 'location))
-         (mode  (bookmark-prop-get bookmark 'mode))
-         (docid (cdr path))
-         (query (car path)))
-    (call-interactively 'mu4e)
-    (mu4e-search query)
-    (sit-for 0.5)
-    (mu4e~headers-goto-docid docid)
-    (mu4e~headers-highlight docid)
-    (unless (string= mode "mu4e-headers-mode")
-      (call-interactively 'mu4e-headers-view-message)
-      (run-with-timer 0.1 nil
-                      (lambda (bmk)
-                        (bookmark-default-handler
-                         `("" (buffer . ,(current-buffer)) .
-                           ,(bookmark-get-bookmark-record bmk))))
-                      bookmark))))
-
+
 ;;; Bogofilter/SpamAssassin
 ;;
 ;; Support for handling spam with Bogofilter with the possibility
@@ -170,6 +112,7 @@ For example for bogofile, use \"/usr/bin/bogofilter -Sn < %s\"")
     (shell-command command))
   (mu4e-view-mark-for-something))
 
+
 ;;; Eshell functions
 ;;
 ;; Code for `gnus-dired-attached' modified to run from eshell,
