@@ -50,4 +50,12 @@ std::string read_line(bool& do_quit);
  */
 void save_line(const std::string& line);
 
+
+/**
+ * Do we have the non-shim readline?
+ *
+ * @return true or failse
+ */
+bool have_readline();
+
 } // namespace Mu

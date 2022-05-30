@@ -35,13 +35,13 @@
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
-static std::atomic<bool> MuTerminate{false};
+static std::atomic<int> MuTerminate{0};
 static bool              tty;
 
 static void
 sig_handler(int sig)
 {
-	MuTerminate = true;
+	MuTerminate = sig;
 }
 
 static void
@@ -50,7 +50,7 @@ install_sig_handler(void)
 	static struct sigaction action;
 	int                     i, sigs[] = {SIGINT, SIGHUP, SIGTERM, SIGPIPE};
 
-	MuTerminate = false;
+	MuTerminate = 0;
 
 	action.sa_handler = sig_handler;
 	sigemptyset(&action.sa_mask);
@@ -123,10 +123,12 @@ Mu::mu_cmd_server(const MuConfig* opts) try {
 		return Err(store.error());
 
 	Server server{*store, output_sexp_stdout};
-	g_message("created server with store @ %s; maildir @ %s; debug-mode %s",
+	g_message("created server with store @ %s; maildir @ %s; debug-mode %s"
+		  "readline: %s",
 		  store->properties().database_path.c_str(),
 		  store->properties().root_maildir.c_str(),
-		  opts->debug ? "yes" : "no");
+		  opts->debug ? "yes" : "no",
+		  have_readline() ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));
 	const auto eval = std::string{opts->commands ? "(help :full t)"
@@ -155,6 +157,10 @@ Mu::mu_cmd_server(const MuConfig* opts) try {
 		do_quit = server.invoke(line) ? false : true;
 		save_line(line);
 	}
+
+	if (MuTerminate != 0)
+		g_message ("shutting down due to signal %d", MuTerminate.load());
+
 	shutdown_readline();
 
 	return Ok();

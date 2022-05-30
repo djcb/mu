@@ -64,6 +64,13 @@ static bool        is_a_tty{};
 static std::string hist_path;
 static size_t      max_lines{};
 
+bool
+Mu::have_readline()
+{
+	return HAVE_READLINE != 0;
+}
+
+
 void
 Mu::setup_readline(const std::string& histpath, size_t maxlines)
 {
