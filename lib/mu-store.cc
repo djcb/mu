@@ -456,7 +456,8 @@ Store::add_message(Message& msg, bool use_transaction)
 	if (use_transaction) /* commit if batch is full */
 		priv_->transaction_maybe_commit();
 
-	g_debug("added message @ %s; docid = %u", msg.path().c_str(), *res);
+	g_debug("added %smessage @ %s; docid = %u",
+		is_personal ? "personal " : "", msg.path().c_str(), *res);
 
 	return res;
 }
