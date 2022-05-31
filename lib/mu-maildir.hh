@@ -94,7 +94,7 @@ Result<Flags> maildir_flags_from_path(const std::string& pathname);
  * @return the maildir or an Error
  */
 Result<std::string> maildir_from_path(const std::string& path,
-					 const std::string& root);
+				      const std::string& root);
 
 /**
  * Move a message file to another maildir. If the target file already exists, it

@@ -247,8 +247,6 @@ Mu::maildir_clear_links(const std::string& path)
 	return Ok();
 }
 
-
-
 Result<std::string>
 Mu::maildir_from_path(const std::string& path, const std::string& root)
 {
@@ -303,7 +301,7 @@ message_file_parts(const std::string& file)
 
 	/* no suffix at all? */
 	if (pos == std::string::npos ||
-	    pos >= file.length() - 3 ||
+	    pos > file.length() - 3 ||
 	    file[pos + 1] != '2' ||
 	    file[pos + 2] != ',')
 		return FileParts{ file, ':', {}};
@@ -559,11 +557,11 @@ check_determine_target_params (const std::string& old_path,
 
 
 Mu::Result<std::string>
-Mu::maildir_determine_target(const std::string&		old_path,
-				const std::string&      root_maildir_path,
-				const std::string&	target_maildir,
-				Flags			newflags,
-				bool			new_name)
+Mu::maildir_determine_target(const std::string&	old_path,
+			     const std::string& root_maildir_path,
+			     const std::string&	target_maildir,
+			     Flags		newflags,
+			     bool		new_name)
 {
 	/* sanity checks */
 	if (const auto checked{check_determine_target_params(
@@ -579,8 +577,8 @@ Mu::maildir_determine_target(const std::string&		old_path,
 		return Err(src.error());
 	const auto& [src_mdir, src_file, is_new] = *src;
 
-	/* if target_mdir is empty, we use the src_dir does not change
-	 * (though cur/ maybe become new or vice-versa) */
+	/* if target_mdir is empty, the src_dir does not change (though cur/
+	 * maybe become new or vice-versa) */
 	const auto dst_mdir{target_maildir.empty() ? src_mdir :
 		root_maildir_path + target_maildir};
 
