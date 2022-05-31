@@ -278,170 +278,138 @@ test_determine_target_ok(void)
 }
 
 
+static void
+test_maildir_get_new_path_01(void)
+{
+	struct {
+		std::string	oldpath;
+		Flags		flags;
+		std::string	newpath;
+	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+		      Flags::Replied,
+		      "/home/foo/Maildir/test/cur/123456:2,R"},
+		     {"/home/foo/Maildir/test/cur/123456:2,FR",
+		      Flags::New,
+		      "/home/foo/Maildir/test/new/123456"},
+		     {"/home/foo/Maildir/test/new/123456:2,FR",
+		      (Flags::Seen | Flags::Replied),
+		      "/home/foo/Maildir/test/cur/123456:2,RS"},
+		     {"/home/foo/Maildir/test/new/1313038887_0.697",
+			(Flags::Seen | Flags::Flagged | Flags::Passed),
+			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
+		     {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
+			(Flags::Seen | Flags::Flagged | Flags::Passed),
+			"/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
+		     /* note the ':2,' suffix on the new message is
+		      * removed */
 
+		     {"/home/foo/Maildir/trash/new/1312920597.2206_16.cthulhu",
+		      Flags::Seen,
+		      "/home/foo/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
 
+	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		const auto newpath{maildir_determine_target(paths[i].oldpath,
+							    "/home/foo/Maildir",
+							    {}, paths[i].flags, false)};
+		assert_valid_result(newpath);
+		assert_equal(*newpath, paths[i].newpath);
+	}
+}
 
+static void
+test_maildir_get_new_path_02(void)
+{
+	struct {
+		std::string	oldpath;
+		Flags		flags;
+		std::string	targetdir;
+		std::string	newpath;
+		std::string     root_maildir;
+	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+		      Flags::Replied,
+		      "/blabla",
+		      "/home/foo/Maildir/blabla/cur/123456:2,R",
+		      "/home/foo/Maildir"},
+		     {"/home/bar/Maildir/test/cur/123456:2,FR",
+		      Flags::New,
+		      "/coffee",
+		      "/home/bar/Maildir/coffee/new/123456",
+		      "/home/bar/Maildir"
+		     },
+		     {"/home/cuux/Maildir/test/new/123456",
+		      (Flags::Seen | Flags::Replied),
+		      "/tea",
+		      "/home/cuux/Maildir/tea/cur/123456:2,RS",
+		      "/home/cuux/Maildir"},
+		     {"/home/boy/Maildir/test/new/1313038887_0.697:2,",
+		      (Flags::Seen | Flags::Flagged | Flags::Passed),
+		      "/stuff",
+		      "/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS",
+		      "/home/boy/Maildir"}};
 
+	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		auto newpath{maildir_determine_target(paths[i].oldpath,
+						      paths[i].root_maildir,
+						      paths[i].targetdir,
+						      paths[i].flags,
+						      false)};
+		assert_valid_result(newpath);
+		assert_equal(*newpath, paths[i].newpath);
+	}
+}
 
+static void
+test_maildir_get_new_path_custom(void)
+{
+	struct {
+		std::string	oldpath;
+		Flags		flags;
+		std::string	targetdir;
+		std::string	newpath;
+		std::string     root_maildir;
+	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
+		      Flags::Replied,
+		      "/blabla",
+		      "/home/foo/Maildir/blabla/cur/123456:2,R",
+		      "/home/foo/Maildir"},
+		     {"/home/foo/Maildir/test/cur/123456:2,hFeRllo123",
+		      Flags::Flagged,
+		      "/blabla",
+		      "/home/foo/Maildir/blabla/cur/123456:2,F",
+		      "/home/foo/Maildir"},
+		     {"/home/foo/Maildir/test/cur/123456:2,abc",
+		      Flags::Passed,
+		      "/blabla",
+		      "/home/foo/Maildir/blabla/cur/123456:2,P",
+		      "/home/foo/Maildir"}};
 
+	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
+		auto newpath{maildir_determine_target(paths[i].oldpath,
+						      paths[1].root_maildir,
+						      paths[i].targetdir,
+						      paths[i].flags,
+						      false)};
+		assert_valid_result(newpath);
+		assert_equal(*newpath, paths[i].newpath);
+	}
+}
 
+static void
+test_maildir_from_path(void)
+{
+	unsigned u;
 
+	struct {
+		std::string path, exp;
+	} cases[] = {{"/home/foo/Maildir/test/cur/123456:2,FR", "/test"},
+		     {"/home/foo/Maildir/lala/new/1313038887_0.697:2,", "/lala"}};
 
-// static void
-// test_maildir_determine_target(void)
-// {
-//	int i;
-
-//	struct {
-//		std::string	oldpath;
-//		Flags    flags;
-//		std::string	newpath;
-//	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::Replied,
-//		      "/home/foo/Maildir/test/cur/123456:2,R"},
-//		     {"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::New,
-//		      "/home/foo/Maildir/test/new/123456"},
-//		     {"/home/foo/Maildir/test/new/123456:2,FR",
-//		      (Flags::Seen | Flags::Replied),
-//		      "/home/foo/Maildir/test/cur/123456:2,RS"},
-//		     {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-//		      (Flags::Seen | Flags::Flagged | Flags::Passed),
-//		      "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
-//		     {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
-//		      Flags::Seen,
-//		      "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
-
-//	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		const auto res{maildir_determine_target(paths[i].oldpath,
-//							   "/home/foo/Maildir",
-//							   {},
-//							   paths[i].flags, false)};
-//		g_assert_true(res && res.value() == paths[i].newpath);
-//		char *newbase = g_path_get_basename(newpath->c_str());
-//		assert_matches_regexp(newbase,
-//				      "\\d+\\."
-//				      "[[:xdigit:]]{16}\\."
-//				      "[[:alnum:]][[:alnum:]-]+(:2,.*)?");
-//		g_free(newbase);
-//	}
-// }
-
-// static void
-// test_maildir_get_new_path_01(void)
-// {
-//	struct {
-//		std::string	oldpath;
-//		Flags    flags;
-//		std::string	newpath;
-//	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::Replied,
-//		      "/home/foo/Maildir/test/cur/123456:2,R"},
-//		     {"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::New,
-//		      "/home/foo/Maildir/test/new/123456"},
-//		     {"/home/foo/Maildir/test/new/123456:2,FR",
-//		      (Flags::Seen | Flags::Replied),
-//		      "/home/foo/Maildir/test/cur/123456:2,RS"},
-//		     {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-//		      (Flags::Seen | Flags::Flagged | Flags::Passed),
-//		      "/home/foo/Maildir/test/cur/1313038887_0.697:2,FPS"},
-//		     {"/home/djcb/Maildir/trash/new/1312920597.2206_16.cthulhu",
-//		      Flags::Seen,
-//		      "/home/djcb/Maildir/trash/cur/1312920597.2206_16.cthulhu:2,S"}};
-
-//	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		const auto newpath{maildir_determine_target(
-//				paths[i].oldpath,
-//				"/home/foo/maildir",
-//				{}, paths[i].flags, false)};
-//		g_assert_true(newpath.has_value());
-//		g_assert_true(*newpath == paths[i].newpath);
-//	}
-// }
-
-// static void
-// test_maildir_get_new_path_02(void)
-// {
-//	struct {
-//		std::string	oldpath;
-//		Flags    flags;
-//		std::string	targetdir;
-//		std::string	newpath;
-//	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::Replied,
-//		      "/home/foo/Maildir/blabla",
-//		      "/home/foo/Maildir/blabla/cur/123456:2,R"},
-//		     {"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::New,
-//		      "/home/bar/Maildir/coffee",
-//		      "/home/bar/Maildir/coffee/new/123456"},
-//		     {"/home/foo/Maildir/test/new/123456",
-//		      (Flags::Seen | Flags::Replied),
-//		      "/home/cuux/Maildir/tea",
-//		      "/home/cuux/Maildir/tea/cur/123456:2,RS"},
-//		     {"/home/foo/Maildir/test/new/1313038887_0.697:2,",
-//		      (Flags::Seen | Flags::Flagged | Flags::Passed),
-//		      "/home/boy/Maildir/stuff",
-//		      "/home/boy/Maildir/stuff/cur/1313038887_0.697:2,FPS"}};
-
-//	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		auto newpath{maildir_determine_target(paths[i].oldpath,
-//							 paths[i].targetdir,
-//							 paths[i].flags,
-//							 false)};
-//		g_assert_true(newpath.has_value());
-//		g_assert_true(*newpath == paths[i].newpath);
-//	}
-// }
-
-// static void
-// test_maildir_get_new_path_custom(void)
-// {
-//	struct {
-//		std::string	oldpath;
-//		Flags    flags;
-//		std::string	targetdir;
-//		std::string	newpath;
-//	} paths[] = {{"/home/foo/Maildir/test/cur/123456:2,FR",
-//		      Flags::Replied,
-//		      "/home/foo/Maildir/blabla",
-//		      "/home/foo/Maildir/blabla/cur/123456:2,R"},
-//		     {"/home/foo/Maildir/test/cur/123456:2,hFeRllo123",
-//		      Flags::Flagged,
-//		      "/home/foo/Maildir/blabla",
-//		      "/home/foo/Maildir/blabla/cur/123456:2,Fhello123"},
-//		     {"/home/foo/Maildir/test/cur/123456:2,abc",
-//		      Flags::Passed,
-//		      "/home/foo/Maildir/blabla",
-//		      "/home/foo/Maildir/blabla/cur/123456:2,Pabc"}};
-
-//	for (int i = 0; i != G_N_ELEMENTS(paths); ++i) {
-//		auto newpath{maildir_get_new_path(paths[i].oldpath,
-//					      paths[i].targetdir,
-//					      paths[i].flags,
-//					      FALSE)};
-//		g_assert_true(newpath);
-//		g_assert_true(*newpath == paths[i].newpath);
-//	}
-// }
-
-// static void
-// test_maildir_from_path(void)
-// {
-//	unsigned u;
-
-//	struct {
-//		std::string path, exp;
-//	} cases[] = {{"/home/foo/Maildir/test/cur/123456:2,FR", "/home/foo/Maildir/test"},
-//		     {"/home/foo/Maildir/lala/new/1313038887_0.697:2,", "/home/foo/Maildir/lala"}};
-
-//	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
-//		auto mdir{maildir_from_path(cases[u].path)};
-//		g_assert_true(mdir.has_value());
-//		g_assert_true(*mdir == cases[u].exp);
-//	}
-// }
+	for (u = 0; u != G_N_ELEMENTS(cases); ++u) {
+		auto mdir{maildir_from_path(cases[u].path, "/home/foo/Maildir")};
+		assert_valid_result(mdir);
+		assert_equal(*mdir, cases[u].exp);
+	}
+}
 
 int
 main(int argc, char* argv[])
@@ -458,24 +426,16 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-maildir/mu-maildir-flags-from-path",
 			test_maildir_flags_from_path);
 
-
 	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
 			test_determine_target_ok);
 
-
 	// /* get/set flags */
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-new",
-	//                 test_maildir_get_new_path_new);
-
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_maildir_get_new_path_01);
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_maildir_get_new_path_02);
-	// g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
-	//                 test_maildir_get_new_path_custom);
-	// g_test_add_func("/mu-maildir/mu-maildir-get-flags-from-path",
-	//                 test_maildir_get_flags_from_path);
-
-	// g_test_add_func("/mu-maildir/mu-maildir-from-path",
-	//                 test_maildirx_from_path);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_maildir_get_new_path_01);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_maildir_get_new_path_02);
+	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
+			test_maildir_get_new_path_custom);
+	g_test_add_func("/mu-maildir/mu-maildir-from-path",
+			test_maildir_from_path);
 
 	g_log_set_handler(
 	    NULL,
