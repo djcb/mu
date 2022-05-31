@@ -136,13 +136,19 @@ Err(Error::Code errcode, GError **err, const char* frm, ...)
 
 
 
-
-#define assert_valid_result(R) do {					\
-	if(!R) {							\
-		g_critical("error-result: %s", (R).error().what());	\
-	}								\
-	}								\
-	while(0)
+/**
+ * Assert that some result has a value (for unit tests)
+ *
+ * @param R some result
+ */
+#define assert_valid_result(R) do {			\
+	if(!R) {					\
+		g_printerr("%s:%u: error-result: %s\n",	\
+			   __FILE__, __LINE__,		\
+			   (R).error().what());		\
+		g_assert_true(!!R);			\
+	}						\
+} while(0)
 
 
 
