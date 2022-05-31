@@ -1,6 +1,6 @@
 ;;; mu4e-server.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -335,10 +335,24 @@ The server output is as follows:
 
         (setq sexp (mu4e--server-eat-sexp-from-buf))))))
 
+(defun mu4e--kill-stale ()
+  "Kill stale mu4e server process.
+As per issue #2198."
+  (seq-each
+   (lambda(proc)
+     (when (and (process-live-p proc)
+		(string-prefix-p mu4e--server-name (process-name proc)))
+       (mu4e-message "killing stale mu4e server")
+       (ignore-errors
+	 (signal-process proc 'SIGINT) ;; nicely
+	 (sit-for 1.0)
+	 (signal-process proc 'SIGKILL)))) ;; forcefully
+   (process-list)))
+
 (defun mu4e--server-start ()
   "Start the mu server process."
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
-  ;; sanity-check 1
+    ;; sanity-check 1
   (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
     (mu4e-error
      "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
@@ -353,7 +367,8 @@ The server output is as follows:
         "Found mu version %s, but mu4e needs version %s"
 	"; please set `mu4e-mu-binary' "
         "accordingly") version mu4e-mu-version)))
-
+  ;; kill old/stale servers, if any.
+  (mu4e--kill-stale)
   (let* ((process-connection-type nil) ;; use a pipe
          (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
          (args (if mu4e-mu-debug (cons "--debug" args) args))
@@ -375,7 +390,7 @@ The server output is as follows:
   (let* ((buf (get-buffer mu4e--server-name))
          (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
-      (message "shutting down mu4e")
+      (mu4e-message "shutting down")
       (set-process-filter mu4e--server-process nil)
       (set-process-sentinel mu4e--server-process nil)
       (let ((delete-exited-processes t))
