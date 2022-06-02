@@ -74,21 +74,22 @@ info_TEXINFOS=						\
 mu_guile_TEXINFOS=					\
 	fdl.texi
 
-BUILT_SOURCES=$(XFILES)
-
-export CPP
-snarfcxxopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-SUFFIXES = .x .doc
-.cc.x:
-	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcxxopts)
-
+# we include pre-snarfed files now; see meson.build for explanation
+#
+# BUILT_SOURCES=$(XFILES)
+# export CPP
+# snarfcxxopts= $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+# SUFFIXES = .x .doc
+# .cc.x:
+# 	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcxxopts)
+SNARF_DATA=$(XFILES)
 
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/${GUILE_EFFECTIVE_VERSION}
 scm_DATA=mu.scm
 
-EXTRA_DIST=$(scm_DATA)
+EXTRA_DIST=$(scm_DATA) $(SNARF_DATA)
 
 ## Add -MG to make the .x magic work with auto-dep code.
 MKDEP = $(CC) -M -MG $(snarfcppopts)

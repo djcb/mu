@@ -1,0 +1,6 @@
+/* cpp arguments: mu-guile-message.cc -DHAVE_CONFIG_H -I. -I.. -I../lib -I/usr/local/include/guile/3.0 -pthread -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include -I/usr/include/sysprof-4 -I/usr/include/libmount -I/usr/include/blkid -pthread -fno-strict-aliasing -Wall -Wextra -Wundef -Wwrite-strings -Wpointer-arith -Wmissing-declarations -Wredundant-decls -Wno-unused-parameter -Wno-missing-field-initializers -Wformat=2 -Wcast-align -Wformat-nonliteral -Wformat-security -Wsign-compare -Wstrict-aliasing -Wshadow -Winline -Wpacked -Wmissing-format-attribute -Wmissing-noreturn -Winit-self -Wmissing-include-dirs -Wunused-but-set-variable -Warray-bounds -Wreturn-type -Wno-overloaded-virtual -Wswitch-enum -Wswitch-default -Wno-error=unused-parameter -Wno-error=missing-field-initializers -Wno-error=overloaded-virtual -Wno-redundant-decls -Wno-missing-declarations -Wno-suggest-attribute=noreturn -O2 -Wno-inline */
+scm_c_define_gsubr (s_get_field, 2, 0, 0, (scm_t_subr) get_field);;
+scm_c_define_gsubr (s_get_contacts, 2, 0, 0, (scm_t_subr) get_contacts);;
+scm_c_define_gsubr (s_get_parts, 1, 1, 0, (scm_t_subr) get_parts);;
+scm_c_define_gsubr (s_get_header, 2, 0, 0, (scm_t_subr) get_header);;
+scm_c_define_gsubr (s_for_each_message, 3, 0, 0, (scm_t_subr) for_each_message);;

@@ -28,29 +28,50 @@ compile_scm=configure_file(
 run_command('chmod', '+x', compile_scm, check: true)
 scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
 
-snarf = find_program('guile-snarf3.0','guile-snarf')
-# there must be a better way of feeding the include paths to snarf...
-snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
-	    '-I' + meson.current_source_dir() + '/../lib',
-	    '-I' + meson.current_build_dir() + '/..']
-snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('includedir'),
-                                'glib-2.0')
-snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('libdir'),
-                                'glib-2.0', 'include')
-snarf_args += '-I' + join_paths(guile_dep.get_pkgconfig_variable('includedir'),
-                                'guile', '3.0')
-snarf_gen=generator(snarf,
-		    output: '@BASENAME@.x',
-		    arguments: snarf_args)
+#
+# NOTE: snarfing works but you get:
+# ,----
+# | cc1plus: warning: command-line option ‘-std=gnu11’ is valid for C/ObjC
+# | but not for C++
+# `----
+# this is because the snarf-script hardcodes the '-std=gnu11' but we're
+# building for c++; even worse, e.g. on some MacOS, the warning is a
+# hard error.
+#
+# We can override flag through a env variable CPP; but then we _also_ need to
+# override the compiler, so e.g. CPP="g++ -std=c++17'; but it's a bit
+# hairy/ugly/fragile to derive the raw compiler name in meson; also the
+# generator expression doesn't take an 'env:' parameter, so we'd need
+# to rewrite using custom_target...
+#
+# for now, we avoid all that by simply including the generated files.
+do_snarf=false
 
-snarf_srcs=['mu-guile.cc', 'mu-guile-message.cc']
-snarf_x=snarf_gen.process(snarf_srcs)
+if do_snarf
+  snarf = find_program('guile-snarf3.0','guile-snarf')
+  # there must be a better way of feeding the include paths to snarf...
+  snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
+	      '-I' + meson.current_source_dir() + '/../lib',
+	      '-I' + meson.current_build_dir() + '/..']
+  snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('includedir'),
+                                  'glib-2.0')
+  snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('libdir'),
+                                  'glib-2.0', 'include')
+  snarf_args += '-I' + join_paths(guile_dep.get_pkgconfig_variable('includedir'),
+                                  'guile', '3.0')
+  snarf_gen=generator(snarf,
+		      output: '@BASENAME@.x',
+		      arguments: snarf_args)
+  snarf_srcs=['mu-guile.cc', 'mu-guile-message.cc']
+  snarf_x=snarf_gen.process(snarf_srcs)
+else
+  snarf_x = [ 'mu-guile-message.x', 'mu-guile.x' ]
+endif
 
 lib_guile_mu = shared_module(
   'guile-mu',
   [ 'mu-guile.cc',
-    'mu-guile-message.cc',
-    snarf_x ],
+    'mu-guile-message.cc' ],
   dependencies: [guile_dep, glib_dep, lib_mu_dep, config_h_dep, thread_dep ],
   install: true)
 
