@@ -167,8 +167,7 @@ delegated to other tools, such as
 @t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}; As long as
 the messages end up in a maildir, @t{mu4e} and @t{mu} are happy to
 deal with them.
-@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it depends on @t{smtpmail} (@inforef{Top,,smtpmail}), which is part of Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor;
-@inforef{Top,,message}.
+@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it depends on @t{smtpmail} (@ref{Top,,smtpmail}), which is part of Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor.
 @end itemize
 
 Thus, many of the things an e-mail client traditionally needs to do, are
@@ -623,11 +622,11 @@ updates --- for example when receiving new mail. See
 @node Sending mail
 @section Sending mail
 
-@t{mu4e} re-uses Gnus' @code{message-mode} (@inforef{Top,,message}) for
+@t{mu4e} re-uses Gnus' @code{message-mode} (@ref{Top,,message}) for
 writing mail and inherits the setup for sending mail as well.
 
 For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
-(@inforef{Top,,smtpmail}). This package supports many different ways to
+(@ref{Top,,smtpmail}). This package supports many different ways to
 send mail; please refer to its documentation for the details.
 
 Here, we only provide some simple examples --- for more, see
@@ -1614,10 +1613,10 @@ mu4e}.
 @node Signing and encrypting
 @section Signing and encrypting
 
-Signing and encrypting of messages is possible using @t{emacs-mime}
-(@inforef{Composing,,emacs-mime}), most easily accessed through the
-@t{Attachments}-menu while composing a message, or with @kbd{M-x
-mml-secure-message-encrypt-pgp}, @kbd{M-x mml-secure-message-sign-pgp}.
+Signing and encrypting of messages is possible using @t{emacs-mime},
+most easily accessed through the @t{Attachments}-menu while composing a
+message, or with @kbd{M-x mml-secure-message-encrypt-pgp}, @kbd{M-x
+mml-secure-message-sign-pgp}.
 
 Important note: the messages are encrypted when they are @emph{sent}:
 this means that draft messages are @emph{not} encrypted. So if you are
@@ -3337,7 +3336,7 @@ jumping to a maildir.
 @section Dired
 
 It is possible to attach files to @t{mu4e} messages using @t{dired}
-(@inforef{Dired,,emacs}), using the following steps (based on a post on
+(@ref{Dired,,emacs}), using the following steps (based on a post on
 the @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
 
 
@@ -4005,7 +4004,7 @@ See @ref{Compose hooks}.
 
 @subsection How can I influence the way the original message looks when replying/forwarding?
 Since @code{mu4e-compose-mode} derives from @code{message-mode}, you can
-re-use many of its facilities. @inforef{Insertion Variables,,message}.
+re-use many of its facilities.
 
 @subsection How can I easily include attachments in the messages I write?
 You can drag-and-drop from your desktop; alternatively, you can use
