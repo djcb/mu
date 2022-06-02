@@ -278,6 +278,77 @@ test_determine_target_ok(void)
 }
 
 
+
+static void
+test_determine_target_fail(void)
+{
+	struct TestCase {
+		std::string old_path;
+		std::string root_maildir;
+		std::string target_maildir;
+		Flags new_flags;
+		bool new_name;
+		std::string expected;
+	};
+	const std::vector<TestCase> testcases = {
+		 TestCase{ /* fail: no absolute path */
+			"../foo/Maildir/test/cur/123456:2,FR-not-absolute",
+			"/home/foo/Maildir",
+			{},
+			Flags::Seen | Flags::Passed,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,PS"
+		},
+
+		 TestCase{ /* fail: no absolute root */
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			"../foo/Maildir-not-absolute",
+			{},
+			Flags::New,
+			false,
+			"/home/foo/Maildir/test/new/123456"
+		},
+
+		 TestCase{ /* fail: maildir must start with '/' */
+			"/home/foo/Maildir/test/cur/123456",
+			"/home/foo/Maildir",
+			"mymaildirwithoutslash",
+			Flags::Seen | Flags::Flagged,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,FS"
+		 },
+
+		 TestCase{ /* fail: path must be below maildir */
+			"/home/foo/Maildir/test/cur/123456:2,FR",
+			"/home/bar/Maildir",
+			"/test2",
+			Flags::Flagged | Flags::Replied,
+			false,
+			"/home/foo/Maildir/test2/cur/123456:2,FR"
+		},
+		 TestCase{ /* fail: New cannot be combined */
+			"/home/foo/Maildir/test/new/123456",
+			"/home/foo/Maildir",
+			{},
+			Flags::New | Flags::Replied,
+			false,
+			"/home/foo/Maildir/test/cur/123456:2,"
+		},
+	};
+
+	for (auto&& testcase: testcases) {
+		const auto res = maildir_determine_target(
+			testcase.old_path,
+			testcase.root_maildir,
+			testcase.target_maildir,
+			testcase.new_flags,
+			testcase.new_name);
+		g_assert_false(!!res);
+	}
+}
+
+
+
 static void
 test_maildir_get_new_path_01(void)
 {
@@ -428,6 +499,8 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
 			test_determine_target_ok);
+	g_test_add_func("/mu-maildir/mu-maildir-determine-target-fail",
+			test_determine_target_fail);
 
 	// /* get/set flags */
 	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_maildir_get_new_path_01);

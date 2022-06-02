@@ -70,9 +70,13 @@ public:
 
 	} catch (const Mu::Error& me) {
 		return Err(me);
-	} catch (...) {
+	}
+ /* LCOV_EXCL_START */
+	catch (...) {
 		return Err(Error::Code::Internal, "failed to create store");
 	}
+ /* LCOV_EXCL_STOP */
+
 
 	struct Config {
 		size_t max_message_size{};
@@ -99,9 +103,12 @@ public:
 
 	} catch (const Mu::Error& me) {
 		return Err(me);
-	} catch (...) {
-		return Err(Error::Code::Internal, "failed to create store");
 	}
+ /* LCOV_EXCL_START */
+	catch (...) {
+		return Err(Error::Code::Internal, "failed to create new store");
+	}
+ /* LCOV_EXCL_STOP */
 
 	/**
 	 * Move CTOR

@@ -65,7 +65,6 @@ goto * instructions[pOp->opcode];
 			test_message_1,
 			"/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S")};
 	g_assert_true(!!message);
-
 	assert_equal(message->path(),
 		     "/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S");
 	g_assert_true(message->maildir().empty());
@@ -98,6 +97,10 @@ goto * instructions[pOp->opcode];
 
 	g_assert_true(message->priority() == Priority::Low);
 	g_assert_cmpuint(message->size(),==,::strlen(test_message_1));
+
+	/* text-based message use time({}) as their changed-time */
+	g_assert_cmpuint(message->changed() - ::time({}), >=, 0);
+	g_assert_cmpuint(message->changed() - ::time({}), <=, 2);
 
 	g_assert_true(message->references().empty());
 
@@ -177,7 +180,7 @@ World!
 
 	auto message{Message::make_from_text(msg_text)};
 	g_assert_true(!!message);
-
+	g_assert_true(message->has_mime_message());
 	g_assert_true(message->path().empty());
 
 	g_assert_true(message->bcc().empty());
@@ -201,6 +204,10 @@ World!
 	g_assert_true(message->path().empty());
 	g_assert_true(message->priority() == Priority::Normal);
 	g_assert_cmpuint(message->size(),==,::strlen(msg_text));
+
+	/* text-based message use time({}) as their changed-time */
+	g_assert_cmpuint(message->changed() - ::time({}), >=, 0);
+	g_assert_cmpuint(message->changed() - ::time({}), <=, 2);
 
 	assert_equal(message->subject(), "ättächmeñts");
 
@@ -565,6 +572,20 @@ Moi,
 }
 
 
+static void
+test_message_fail ()
+{
+	{
+		const auto msg = Message::make_from_path("/root/non-existent-path-12345");
+		g_assert_false(!!msg);
+	}
+
+	{
+		const auto msg = Message::make_from_text("", "");
+		g_assert_false(!!msg);
+	}
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -582,6 +603,9 @@ main(int argc, char* argv[])
 			test_message_multipart_mixed_rfc822);
 	g_test_add_func("/message/message/detect-attachment",
 			test_message_detect_attachment);
+	g_test_add_func("/message/message/fail",
+			test_message_fail);
+
 
 	return g_test_run();
 }

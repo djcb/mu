@@ -43,8 +43,8 @@ public:
 	enum struct Options {
 		None	     = 0,	/**< Defaults */
 		Decrypt	     = 1 << 0,	/**< Attempt to decrypt */
-		RetrieveKeys = 1 << 1, /**< Auto-retrieve crypto keys (implies network
-					* access) */
+		RetrieveKeys = 1 << 1,  /**< Auto-retrieve crypto keys (implies network
+					   * access) */
 	};
 
 	/**
@@ -77,9 +77,13 @@ public:
 		return Ok(Message{path,opts});
 	} catch (Error& err) {
 		return Err(err);
-	} catch (...) {
-		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
+	/* LCOV_EXCL_START */
+	catch (...) {
+		return Err(Mu::Error(Error::Code::Message,
+				     "failed to create message from path"));
+	}
+	/* LCOV_EXCL_STOP */
 
 	/**
 	 * Construct a message based on a Xapian::Document
@@ -92,13 +96,18 @@ public:
 		return Ok(Message{std::move(doc)});
 	} catch (Error& err) {
 		return Err(err);
-	} catch (...) {
-		return Err(Mu::Error(Error::Code::Message, "failed to create message"));
 	}
+	/* LCOV_EXCL_START */
+	catch (...) {
+		return Err(Mu::Error(Error::Code::Message,
+				     "failed to create message from document"));
+	}
+	/* LCOV_EXCL_STOP */
+
 
 	/**
 	 * Construct a message from a string. This is mostly useful for testing.
-
+	 *
 	 * @param text message text
 	 * @param path path to message - optional; path does not have to exist.
 	 * @param opts options
@@ -111,10 +120,13 @@ public:
 		return Ok(Message{text, path, opts});
 	} catch (Error& err) {
 		return Err(err);
-	} catch (...) {
+	}
+	/* LCOV_EXCL_START */
+	catch (...) {
 		return Err(Mu::Error(Error::Code::Message,
 				     "failed to create message from text"));
 	}
+	/* LCOV_EXCL_STOP */
 
 	/**
 	 * DTOR
@@ -233,9 +245,11 @@ public:
 	}
 
 	/**
-	 * get the last change-time (ctime) for this message
+	 * get the last change-time this message. For path/document-based
+	 * messages this corresponds with the ctime of the underlying file; for
+	 * the text-based ones (as used for testing) it is the creation time.
 	 *
-	 * @return chnage time or 0 if unknown
+	 * @return last-change time or 0 if unknown
 	 */
 	::time_t changed() const {
 		return static_cast<::time_t>(document().integer_value(Field::Id::Changed));

@@ -65,13 +65,19 @@ test_date_basic()
 	}
 
 	g_setenv("TZ", hki, TRUE);
-	constexpr std::array<std::tuple<const char*, bool, int64_t>, 9> cases = {{
+	constexpr std::array<std::tuple<const char*, bool/*is_first*/, int64_t>, 13> cases = {{
 			{"2015-09-18T09:10:23", true, 1442556623},
 			{"1972-12-14T09:10:23", true, 93165023},
 			{"1854-11-18T17:10:23", true, 0},
 
 			{"2000-02-31T09:10:23", true, 951861599},
 			{"2000-02-29T23:59:59", true, 951861599},
+
+			{"20220602", true, 1654117200},
+			{"20220605", false, 1654462799},
+
+			{"202206", true, 1654030800},
+			{"202206", false, 1656622799},
 
 			{"2016", true, 1451599200},
 			{"2016", false, 1483221599},
@@ -94,44 +100,55 @@ test_date_basic()
 static void
 test_date_ymwdhMs(void)
 {
-	struct {
-		std::string expr;
-		long        diff;
-		int         tolerance;
-	} tests[] = {{"3h", 3 * 60 * 60, 1},
-		     {"21d", 21 * 24 * 60 * 60, 3600 + 1},
-		     {"2w", 2 * 7 * 24 * 60 * 60, 3600 + 1},
+	struct testcase {
+		std::string	expr;
+		int64_t		diff;
+		int		tolerance;
+	};
 
-		     {"2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1},
-		     {"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}};
+	std::array<testcase, 7> cases = {{
+		{"7s", 7, 1},
+		{"3M", 3 * 60, 1},
+		{"3h", 3 * 60 * 60, 1},
+		{"21d", 21 * 24 * 60 * 60, 3600 + 1},
+		{"2w", 2 * 7 * 24 * 60 * 60, 3600 + 1},
+		{"2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1},
+		{"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}
+		}};
 
-	for (auto i = 0; i != G_N_ELEMENTS(tests); ++i) {
-		const auto diff = ::time({}) -
-			parse_date_time(tests[i].expr, true).value_or(-1);
+	for (auto&& tcase: cases) {
+		const auto date = parse_date_time(tcase.expr, true);
+		g_assert_true(date);
+		const auto diff = ::time({}) - *date;
 		if (g_test_verbose())
-			std::cerr << tests[i].expr << ' ' << diff << ' ' << tests[i].diff
-				  << std::endl;
+			std::cerr << tcase.expr << ' ' << diff << ' ' << tcase.diff << '\n';
 
-		g_assert_true(tests[i].diff - diff <= tests[i].tolerance);
+		g_assert_true(tcase.diff - diff <= tcase.tolerance);
 	}
 
-	//g_assert_true(strtol(Mu::date_to_time_t_string("-1y", true).c_str(), NULL, 10) == 0);
+	// note: perhaps it'd be nice if we'd detect this error;
+	// currently we're being rather tolerant
+	// g_assert_false(!!parse_date_time("25q", false));
 }
 
 static void
 test_parse_size()
 {
-	constexpr std::array<std::tuple<const char*, bool, int64_t>, 5> cases = {{
+	constexpr std::array<std::tuple<const char*, bool, int64_t>, 6> cases = {{
 			{ "456", false, 456 },
 			{ "", false, G_MAXINT64 },
 			{ "", true, 0 },
 			{ "2K", false, 2048 },
-			{ "2M", true, 2097152 }
+			{ "2M", true, 2097152 },
+			{ "5G", true, 5368709120 }
 		}};
 	for(auto&& test: cases) {
 		g_assert_cmpint(parse_size(std::get<0>(test), std::get<1>(test))
 				.value_or(-1), ==, std::get<2>(test));
 	}
+
+	g_assert_false(!!parse_size("-1", true));
+	g_assert_false(!!parse_size("scoobydoobydoo", false));
 }
 
 static void

@@ -308,9 +308,6 @@ ContactsCache::for_each(const EachContactFunc& each_contact) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
-	if (!each_contact)
-		return; // nothing to do
-
 	// first sort them for 'rank'
 	ContactSet sorted;
 	for (const auto& item : priv_->contacts_)
@@ -409,6 +406,39 @@ test_mu_contacts_cache_personal()
 }
 
 
+static void
+test_mu_contacts_cache_foreach()
+{
+	Mu::ContactsCache ccache("");
+	ccache.add(Mu::Contact{"a@example.com", "a", 123, true, 1000, 0});
+	ccache.add(Mu::Contact{"b@example.com", "b", 456, true, 1000, 0});
+
+	{
+		size_t n{};
+		g_assert_false(ccache.empty());
+		g_assert_cmpuint(ccache.size(),==,2);
+		ccache.for_each([&](auto&& contact) { ++n; return false; });
+		g_assert_cmpuint(n,==,1);
+	}
+
+	{
+		size_t n{};
+		g_assert_false(ccache.empty());
+		g_assert_cmpuint(ccache.size(),==,2);
+		ccache.for_each([&](auto&& contact) { ++n; return true; });
+		g_assert_cmpuint(n,==,2);
+	}
+
+	{
+		size_t n{};
+		ccache.clear();
+		g_assert_true(ccache.empty());
+		g_assert_cmpuint(ccache.size(),==,0);
+		ccache.for_each([&](auto&& contact) { ++n; return true; });
+		g_assert_cmpuint(n,==,0);
+	}
+}
+
 
 
 static void
@@ -418,6 +448,7 @@ test_mu_contacts_cache_sort()
 		std::string str;
 		if (g_test_verbose())
 			g_print("contacts-cache:\n");
+
 		ccache.for_each([&](auto&& contact) {
 			if (g_test_verbose())
 				g_print("\t- %s\n", contact.display_name().c_str());
@@ -426,7 +457,6 @@ test_mu_contacts_cache_sort()
 		});
 		return str;
 	};
-
 
 	const auto now{std::time({})};
 
@@ -473,6 +503,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/lib/contacts-cache/base", test_mu_contacts_cache_base);
 	g_test_add_func("/lib/contacts-cache/personal", test_mu_contacts_cache_personal);
+	g_test_add_func("/lib/contacts-cache/for-each", test_mu_contacts_cache_foreach);
 	g_test_add_func("/lib/contacts-cache/sort", test_mu_contacts_cache_sort);
 
 	g_log_set_handler(

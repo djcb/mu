@@ -531,7 +531,8 @@ Mu::parse_size(const std::string& val, bool is_first)
 	if (val.empty())
 		return is_first ? 0 : std::numeric_limits<int64_t>::max();
 
-	rx = g_regex_new("(\\d+)(b|k|kb|m|mb|g|gb)?", G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
+	rx = g_regex_new("^(\\d+)(b|k|kb|m|mb|g|gb)?$",
+			 G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
 	minfo = NULL;
 	if (g_regex_match(rx, val.c_str(), (GRegexMatchFlags)0, &minfo)) {
 

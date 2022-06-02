@@ -124,11 +124,16 @@ Message::Message(const std::string& text, const std::string& path,
 		 Message::Options opts):
 	priv_{std::make_unique<Private>(opts)}
 {
+	if (text.empty())
+		throw Error{Error::Code::InvalidArgument, "text must not be empty"};
+
 	if (!path.empty()) {
 		auto xpath{to_string_opt_gchar(g_canonicalize_filename(path.c_str(), {}))};
 		if (xpath)
 			priv_->doc.add(Field::Id::Path, std::move(xpath.value()));
 	}
+
+	priv_->ctime = ::time({});
 
 	priv_->doc.add(Field::Id::Size, static_cast<int64_t>(text.size()));
 
@@ -727,9 +732,10 @@ fill_document(Message::Private& priv)
 		case Field::Id::XBodyHtml:
 			doc.add(field.id, priv.body_html);
 			break;
-			/* ignore */
+		/* LCOV_EXCL_START */
 		case Field::Id::_count_:
 			break;
+		/* LCOV_EXCL_STOP */
 		}
 #pragma GCC diagnostic pop
 
@@ -739,27 +745,21 @@ fill_document(Message::Private& priv)
 Option<std::string>
 Message::header(const std::string& header_field) const
 {
-	if (!load_mime_message())
-		return Nothing;
-
+	load_mime_message();
 	return priv_->mime_msg->header(header_field);
 }
 
 Option<std::string>
 Message::body_text() const
 {
-	if (!load_mime_message())
-		return {};
-
+	load_mime_message();
 	return priv_->body_txt;
 }
 
 Option<std::string>
 Message::body_html() const
 {
-	if (!load_mime_message())
-		return {};
-
+	load_mime_message();
 	return priv_->body_html;
 }
 

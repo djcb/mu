@@ -383,7 +383,6 @@ public:
 	 *
 	 * @return iterator
 	 */
-	iterator       begin() { return QueryResultsIterator(mset_.begin(), query_matches_); }
 	const iterator begin() const { return QueryResultsIterator(mset_.begin(), query_matches_); }
 
 	/**
@@ -391,7 +390,6 @@ public:
 	 *
 	 * @return iterator
 	 */
-	iterator       end() { return QueryResultsIterator(mset_.end(), query_matches_); }
 	const_iterator end() const { return QueryResultsIterator(mset_.end(), query_matches_); }
 
 	/**

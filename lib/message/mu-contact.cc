@@ -169,6 +169,30 @@ test_encode()
 }
 
 
+static void
+test_sender()
+{
+	Contact c{"aa@example.com", "Anders Ångström",
+		Contact::Type::Sender, 54321};
+
+	assert_equal(c.email, "aa@example.com");
+	assert_equal(c.name, "Anders Ångström");
+	g_assert_false(c.personal);
+	g_assert_cmpuint(c.frequency,==,1);
+	g_assert_cmpuint(c.message_date,==,54321);
+
+	g_assert_false(!!c.field_id());
+}
+
+
+static void
+test_misc()
+{
+	g_assert_false(!!contact_type_from_field_id(Field::Id::Subject));
+
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -179,6 +203,9 @@ main(int argc, char* argv[])
 	g_test_add_func("/message/contact/ctor-blinky", test_ctor_blinky);
 	g_test_add_func("/message/contact/ctor-cleanup", test_ctor_cleanup);
 	g_test_add_func("/message/contact/encode", test_encode);
+
+	g_test_add_func("/message/contact/sender", test_sender);
+	g_test_add_func("/message/contact/misc", test_misc);
 
 	return g_test_run();
 }

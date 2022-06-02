@@ -139,6 +139,12 @@ goto * instructions[pOp->opcode];
 	assert_valid_result(docid);
 	g_assert_cmpuint(store->size(),==, 1);
 
+	/* ensure 'update' dtrt, i.e., nothing. */
+	const auto docid2 = store->update_message(*message, *docid);
+	assert_valid_result(docid2);
+	g_assert_cmpuint(store->size(),==, 1);
+	g_assert_cmpuint(*docid,==,*docid2);
+
 	auto msg2{store->find_message(*docid)};
 	g_assert_true(!!msg2);
 	assert_equal(message->path(), msg2->path());
@@ -228,6 +234,11 @@ World!
 	// for (auto&& term = msg2->document().xapian_document().termlist_begin();
 	//      term != msg2->document().xapian_document().termlist_end(); ++term)
 	//	g_message(">>> %s", (*term).c_str());
+
+	const auto stats{store->statistics()};
+	g_assert_cmpuint(stats.size,==,store->size());
+	g_assert_cmpuint(stats.last_index,==,0);
+	g_assert_cmpuint(stats.last_change,>=,::time({}));
 }
 
 
@@ -319,6 +330,23 @@ Yes, that would be excellent.
 }
 
 
+static void
+test_store_fail()
+{
+	{
+		const auto store = Store::make("/root/non-existent-path/12345");
+		g_assert_false(!!store);
+	}
+
+	{
+		const auto store = Store::make_new("/../../root/non-existent-path/12345",
+						   "/../../root/non-existent-path/54321",
+						   {}, {});
+		g_assert_false(!!store);
+
+	}
+}
+
 
 int
 main(int argc, char* argv[])
@@ -331,8 +359,8 @@ main(int argc, char* argv[])
 			test_message_mailing_list);
 	g_test_add_func("/store/message/attachments",
 			test_message_attachments);
-	g_test_add_func("/store/index/move",
-			test_index_move);
+	g_test_add_func("/store/index/move", test_index_move);
+	g_test_add_func("/store/index/fail", test_store_fail);
 
 	if (!g_test_verbose())
 		g_log_set_handler(
