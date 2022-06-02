@@ -23,11 +23,19 @@
 
    - After that, either =ninja -C build= or =make= should be enough to rebuild
 
-   - Apparently in some setups (e.g. some MacOS build), a build error may
-     happen related to ~guile~. If so, this can be avoid by build with
+   - NOTE: development versions 1.7.18 - 17.7.25 had a bug where the mail file
+     names sometimes got misnamed (with some extra ':2,'). This can be restored
+     with something like:
 #+begin_example
-     ./autogen.sh -Dguile=disabled
+    $ find ~/Maildir -name '*:2,*:*' | sed "s/\(\([^:]*\)\(:2,\)\{1,\}\(:2,.*$\)\)/mv '\0' '\2\4'/" > rename.sh
 #+end_example
+     (replace 'Maildir' with the path to your maildir)
+
+     once this is done, do check the generated 'rename.sh' and after convincing yourself it does the right thing, do
+#+begin_example
+     $ sh rename.sh
+#+end_example
+     after that, re-index.
 
    - Before installing, it is recommended that you *remove* any older versions of
      ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
