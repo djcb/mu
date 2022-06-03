@@ -67,4 +67,18 @@ lib_test_mu_common_dep=declare_dependency(
   include_directories: include_directories(['tests']))
 
 # actual tests
+
+test('test-threads',
+     executable('test-threads',
+		'mu-query-threads.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+test('test-contacts-cache',
+     executable('test-contacts-cache',
+		'mu-contacts-cache.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+
 subdir('tests')
