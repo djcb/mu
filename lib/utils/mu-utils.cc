@@ -49,6 +49,8 @@
 #include "mu-error.hh"
 #include "mu-option.hh"
 
+#include "message/mu-message-file.hh"
+
 using namespace Mu;
 
 namespace {
@@ -642,20 +644,21 @@ Mu::TempDir::~TempDir()
 }
 
 bool
-Mu::locale_workaround()
+Mu::locale_workaround() try
 {
 	// quite horrible... but some systems break otherwise with
 	//  https://github.com/djcb/mu/issues/2252
 
-	for (auto&& loc : {"", "en_US.UTF-8", "C" }) {
-		try {
-			std::locale::global(std::locale(loc));
-			return true;
-		} catch (const std::runtime_error& re) {
-			continue;
-		}
+	try {
+		std::locale::global(std::locale(""));
+	} catch (const std::runtime_error& re) {
+		g_setenv("LC_ALL", "C", 1);
+		std::locale::global(std::locale(""));
 	}
 
+	return true;
+
+} catch (...) {
 	return false;
 }
 

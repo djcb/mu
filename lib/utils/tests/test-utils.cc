@@ -270,6 +270,16 @@ test_to_from_lexnum()
 	g_assert_cmpuint(from_lexnum(to_lexnum(9876543)), ==, 9876543);
 }
 
+static void
+test_locale_workaround()
+{
+	g_assert_true(locale_workaround());
+
+	g_setenv("LC_ALL", "BOO", 1);
+
+	g_assert_true(locale_workaround());
+}
+
 
 int
 main(int argc, char* argv[])
@@ -287,6 +297,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/join", test_join);
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
+	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
 
 	return g_test_run();
 }
