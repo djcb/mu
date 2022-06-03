@@ -168,34 +168,6 @@ test_maildir_mkdir_05(void)
 	g_assert_false(!!maildir_mkdir({}, 0755, true));
 }
 
-static void
-test_maildir_flags_from_path(void)
-{
-	int i;
-	struct {
-		const char*  path;
-		Flags flags;
-	} paths[] = {
-		{"/home/foo/Maildir/test/cur/123456:2,FSR",
-		 (Flags::Replied | Flags::Seen | Flags::Flagged)},
-		{"/home/foo/Maildir/test/new/123456", Flags::New},
-		{/* NOTE: when in new/, the :2,.. stuff is ignored */
-			"/home/foo/Maildir/test/new/123456:2,FR",
-			Flags::New},
-		{"/home/foo/Maildir/test/cur/123456:2,DTP",
-		 (Flags::Draft | Flags::Trashed | Flags::Passed)},
-		{"/home/foo/Maildir/test/cur/123456:2,S", Flags::Seen}};
-
-	for (i = 0; i != G_N_ELEMENTS(paths); ++i) {
-		auto res{maildir_flags_from_path(paths[i].path)};
-		g_assert_true(!!res);
-		if (g_test_verbose())
-			g_print("%s -> <%s>\n", paths[i].path,
-				to_string(res.value()).c_str());
-		g_assert_true(res.value() == paths[i].flags);
-	}
-}
-
 [[maybe_unused]] static void
 assert_matches_regexp(const char* str, const char* rx)
 {
@@ -493,9 +465,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-maildir/mu-maildir-mkdir-03", test_maildir_mkdir_03);
 	g_test_add_func("/mu-maildir/mu-maildir-mkdir-04", test_maildir_mkdir_04);
 	g_test_add_func("/mu-maildir/mu-maildir-mkdir-05", test_maildir_mkdir_05);
-
-	g_test_add_func("/mu-maildir/mu-maildir-flags-from-path",
-			test_maildir_flags_from_path);
 
 	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
 			test_determine_target_ok);

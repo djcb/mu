@@ -29,6 +29,8 @@
 #include "mu-fields.hh"
 #include "mu-document.hh"
 #include "mu-message-part.hh"
+#include "mu-message-file.hh"
+
 #include <xapian.h>
 
 #include "utils/mu-utils.hh"

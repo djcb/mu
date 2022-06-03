@@ -72,19 +72,6 @@ Result<void> maildir_link(const std::string& src, const std::string& targetpath)
 Result<void> maildir_clear_links(const std::string& dir);
 
 /**
- * Get the Maildir flags from the full path of a mailfile. The flags are as
- * specified in http://cr.yp.to/proto/maildir.html, plus Flag::New for new
- * messages, ie the ones that live in new/. The flags are logically OR'ed. Note
- * that the file does not have to exist; the flags are based on the path only.
- *
- * @param pathname of a mailfile; it does not have to refer to an
- * actual message
- *
- * @return the message flags or an error
- */
-Result<Flags> maildir_flags_from_path(const std::string& pathname);
-
-/**
  * get the maildir for a certain message path, ie, the path *before*
  * cur/ or new/ and *after* the root.
  *

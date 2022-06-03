@@ -318,19 +318,6 @@ flags_from_expr(std::string_view        expr,
 }
 
 /**
- * Get the Maildir flags from the full path of a mailfile. The flags are as
- * specified in http://cr.yp.to/proto/maildir.html, plus MU_MSG_FLAG_NEW for new
- * messages, ie the ones that live in new/. The flags are logically OR'ed. Note
- * that the file does not have to exist; the flags are based on the path only.
- *
- * @param pathname of a mailfile; it does not have to refer to an existing
- * file/message
- *
- * @return the message flags or Nothing
- */
-Option<Flags> flags_from_path(const std::string& path);
-
-/**
  * Filter out flags which are not in the given category
  *
  * @param flags flags

@@ -19,6 +19,7 @@ lib_mu_message=static_library(
   'mu-message',
   [
     'mu-message.cc',
+    'mu-message-file.cc',
     'mu-message-part.cc',
     'mu-contact.cc',
     'mu-document.cc',
@@ -85,3 +86,10 @@ test('test-priority',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
 		dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+
+test('test-message-file',
+     executable('test-message-file',
+		'mu-message-file.cc',
+		install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, lib_mu_message_dep]))
