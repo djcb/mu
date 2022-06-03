@@ -1047,12 +1047,17 @@ Server::Private::maybe_mark_as_read(Store::Id docid, Flags oldflags, bool rename
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const std::string& msgid,
-					  bool rename) try {
+Server::Private::maybe_mark_msgid_as_read(const std::string& msgid, bool rename) try {
+
 	if (!msgid.empty())
 		return false; // nothing to do.
 
-	for (auto&& docid: docids_for_msgid(store_, msgid))
+	const auto docids = docids_for_msgid(store_, msgid);
+	if (!docids.empty())
+		g_debug("marking %zu messages with message-id '%s' as read",
+			docids.size(), msgid.c_str());
+
+	for (auto&& docid: docids)
 		if (auto msg{store().find_message(docid)}; msg)
 			maybe_mark_as_read(docid, msg->flags(), rename);
 
