@@ -43,7 +43,7 @@ save_part(const Message::Part& part, size_t idx, const MuConfig* opts)
 
 	if (opts->play) {
 		GError *err{};
-		if (auto res{mu_util_play(path.c_str(), TRUE, FALSE, &err)};
+		if (auto res{mu_util_play(path.c_str(), &err)};
 		    res != MU_OK)
 			return Err(Error::Code::Play, &err, "playing '%s' failed",
 				   path.c_str());

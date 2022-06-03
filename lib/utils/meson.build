@@ -26,6 +26,7 @@ lib_mu_utils=static_library('mu-utils', [
 		  'mu-utils.cc'],
 		 dependencies: [
 		   glib_dep,
+                   gio_dep,
 		   config_h_dep,
 		   readline_dep
 		 ],

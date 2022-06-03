@@ -40,6 +40,7 @@
 
 #include <glib-object.h>
 #include <glib/gstdio.h>
+#include <gio/gio.h>
 #include <errno.h>
 
 #include <langinfo.h>
@@ -207,22 +208,6 @@ mu_util_create_dir_maybe (const gchar *path, mode_t mode, gboolean nowarn)
 }
 
 gboolean
-mu_util_is_local_file (const char* path)
-{
-	/* if it starts with file:// it's a local file (for the
-	 * purposes of this function -- if it's on a remote FS it's
-	 * still considered local) */
-	if (g_ascii_strncasecmp ("file://", path, strlen("file://")) == 0)
-		return TRUE;
-
-	if (access (path, R_OK) == 0)
-		return TRUE;
-
-	return FALSE;
-}
-
-
-gboolean
 mu_util_supports (MuFeature feature)
 {
 	/* check for Guile support */
@@ -267,18 +252,24 @@ maybe_setsid (G_GNUC_UNUSED gpointer user_data)
 }
 
 gboolean
-mu_util_play (const char *path, gboolean allow_local, gboolean allow_remote,
-	      GError **err)
+mu_util_play (const char *path, GError **err)
 {
-	gboolean rv;
+	GFile *gf;
+	gboolean rv, is_native;
 	const gchar *argv[3];
 	const char *prog;
 
 	g_return_val_if_fail (path, FALSE);
-	g_return_val_if_fail (mu_util_is_local_file (path) || allow_remote,
-			      FALSE);
-	g_return_val_if_fail (!mu_util_is_local_file (path) || allow_local,
-			      FALSE);
+
+	gf = g_file_new_for_path(path);
+	is_native = g_file_is_native(gf);
+	g_object_unref(gf);
+
+	if (!is_native) {
+		mu_util_g_set_error (err, MU_ERROR_FILE_CANNOT_EXECUTE,
+				     "'%s' is not a native file", path);
+		return FALSE;
+	}
 
 	prog = g_getenv ("MU_PLAY_PROGRAM");
 	if (!prog) {

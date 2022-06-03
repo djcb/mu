@@ -86,24 +86,11 @@ gboolean mu_util_check_dir (const gchar* path, gboolean readable,
 	G_GNUC_WARN_UNUSED_RESULT;
 
 /**
- * check if file is local, ie. on the local file system. this means
- * that it's either having a file URI, *or* that it's an existing file
- *
- * @param path a path
- *
- * @return TRUE if the file is local, FALSE otherwise
- */
-gboolean mu_util_is_local_file (const char* path);
-
-
-/**
  * is the current locale utf-8 compatible?
  *
  * @return TRUE if it's utf8 compatible, FALSE otherwise
  */
 gboolean mu_util_locale_is_utf8 (void) G_GNUC_CONST;
-
-
 
 /**
  * get a 'summary' of the string, ie. the first /n/ lines of the
@@ -141,20 +128,19 @@ gboolean mu_util_print_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
 
 
 /**
- * Try to 'play' (ie., open with it's associated program) a file. On
- * MacOS, the the program 'open' is used for this; on other platforms
- * 'xdg-open' to do the actual opening. In addition you can set it to another program
- * by setting the MU_PLAY_PROGRAM environment variable
+ * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the
+ * the program 'open' is used for this; on other platforms 'xdg-open' to do the
+ * actual opening. In addition you can set it to another program by setting the
+ * MU_PLAY_PROGRAM environment variable
+ *
+ * This requires a 'native' file, see g_file_is_native()
  *
  * @param path full path of the file to open
- * @param allow_local allow local files (ie. with file:// prefix or fs paths)
- * @param allow_remote allow URIs (ie., http, mailto)
  * @param err receives error information, if any
  *
  * @return TRUE if it succeeded, FALSE otherwise
  */
-gboolean mu_util_play (const char *path, gboolean allow_local,
-		       gboolean allow_remote, GError **err);
+gboolean mu_util_play (const char *path, GError **err);
 
 /**
  * Check whether program prog exists in PATH
