@@ -99,8 +99,8 @@ goto * instructions[pOp->opcode];
 	g_assert_cmpuint(message->size(),==,::strlen(test_message_1));
 
 	/* text-based message use time({}) as their changed-time */
-	g_assert_cmpuint(message->changed() - ::time({}), >=, 0);
-	g_assert_cmpuint(message->changed() - ::time({}), <=, 2);
+	g_assert_cmpuint(::time({}) - message->changed(), >=, 0);
+	g_assert_cmpuint(::time({}) - message->changed(), <=, 2);
 
 	g_assert_true(message->references().empty());
 
@@ -206,8 +206,8 @@ World!
 	g_assert_cmpuint(message->size(),==,::strlen(msg_text));
 
 	/* text-based message use time({}) as their changed-time */
-	g_assert_cmpuint(message->changed() - ::time({}), >=, 0);
-	g_assert_cmpuint(message->changed() - ::time({}), <=, 2);
+	g_assert_cmpuint(::time({}) - message->changed(), >=, 0);
+	g_assert_cmpuint(::time({}) - message->changed(), <=, 2);
 
 	assert_equal(message->subject(), "ättächmeñts");
 
