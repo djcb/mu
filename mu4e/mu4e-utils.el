@@ -791,8 +791,7 @@ nothing."
     (mu4e~check-requirements)
     (when func (funcall func))
     (when (zerop doccount)
-      (mu4e-message "Store is empty; (re)indexing. This may take a while.") ;
-      (mu4e-update-index))
+      (mu4e-message "Store is empty; try indexing (M-x mu4e-update-index)."))
     (when (and mu4e-update-interval (null mu4e~update-timer))
       (setq mu4e~update-timer
             (run-at-time 0 mu4e-update-interval
