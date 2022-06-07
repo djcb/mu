@@ -99,8 +99,9 @@ struct Indexer::Private {
 	void item_worker();
 	void scan_worker();
 
-	bool cleanup();
+	bool add_message(const std::string& path);
 
+	bool cleanup();
 	bool start(const Indexer::Config& conf);
 	bool stop();
 
@@ -215,17 +216,25 @@ Indexer::Private::maybe_start_worker()
 	}
 }
 
-static bool
-add_message(Store& store, const std::string& path)
+bool
+Indexer::Private::add_message(const std::string& path)
 {
+	/*
+	 * Having the lock here makes things a _lot_ slower.
+	 *
+	 * The reason for having the lock is some helgrind warnings;
+	 * but it believed those are _false alarms_
+	 * https://gitlab.gnome.org/GNOME/glib/-/issues/2662
+	 *
+	 *	std::unique_lock lock{w_lock_};
+	 */
 	auto msg{Message::make_from_path(path)};
 	if (!msg) {
 		g_warning("failed to create message from %s: %s",
 			  path.c_str(), msg.error().what());
 		return false;
 	}
-
-	auto res = store.add_message(msg.value(), true /*use-transaction*/);
+	auto res = store_.add_message(msg.value(), true /*use-transaction*/);
 	if (!res) {
 		g_warning("failed to add message @ %s: %s",
 			  path.c_str(), res.error().what());
@@ -246,12 +255,11 @@ Indexer::Private::item_worker()
 		if (!todos_.pop(item, 250ms))
 			continue;
 		try {
-			std::lock_guard lock{w_lock_};
 			switch (item.type) {
-			case WorkItem::Type::File:
-				if (add_message(store_, item.full_path))
+			case WorkItem::Type::File: {
+				if (G_LIKELY(add_message(item.full_path)))
 					++progress_.updated;
-				break;
+			} break;
 			case WorkItem::Type::Dir:
 				store_.set_dirstamp(item.full_path, ::time(NULL));
 				break;
@@ -352,9 +360,11 @@ Indexer::Private::start(const Indexer::Config& conf)
 
 	conf_ = conf;
 	if (conf_.max_threads == 0) {
-		/* note, most time is spent in the (single) db thread
-		 * but creating messages in parallel still helps a bit */
-		max_workers_ = std::thread::hardware_concurrency()/2;
+		/* benchmarking suggests that ~4 threads is the fastest (the
+		 * real bottleneck is the database, so adding more threads just
+		 * slows things down)
+		 */
+		max_workers_ = std::min(4U, std::thread::hardware_concurrency());
 	} else
 		max_workers_ = conf.max_threads;
 
