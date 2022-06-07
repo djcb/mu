@@ -1222,7 +1222,10 @@ otherwise random; the result is placed in a temporary directory
 with a unique name. Returns the full path for the file created.
 The directory and file are self-destructed."
   (let* ((tmpdir (make-temp-file "mu4e-temp-" t))
-	 (fname (cdr-safe (assoc 'filename (assoc "attachment" (cdr handle)))))
+	 (fname (mm-handle-filename handle))
+	 (fname (and fname
+		     (gnus-map-function mm-file-name-rewrite-functions
+					(file-name-nondirectory fname))))
 	 (fname (if fname
 		    (concat tmpdir "/" (replace-regexp-in-string "/" "-" fname))
 		  (let ((temporary-file-directory tmpdir))
