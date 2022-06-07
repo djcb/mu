@@ -1,4 +1,4 @@
-.TH MU-INDEX 1 "November 2021" "User Manuals"
+.TH MU-INDEX 1 "June 2022" "User Manuals"
 
 .SH NAME
 
@@ -15,13 +15,13 @@ directories and storing the results in a Xapian database. The data can then be
 queried using
 .BR mu-find (1)\.
 
-Note that before the first time you run \fBmu index\fR, you must run \fBmu
-init\fR to initialize the database.
+Before the first time you run \fBmu index\fR, you must run \fBmu init\fR to
+initialize the database.
 
 \fBindex\fR understands Maildirs as defined by Daniel Bernstein for
-\fBqmail\fR(7). In addition, it understands recursive Maildirs (Maildirs
-within Maildirs), Maildir++. It can also deal with VFAT-based Maildirs
-which use '!' or ';' as the separators instead of ':'.
+\fBqmail\fR(7). In addition, it understands recursive Maildirs (Maildirs within
+Maildirs), Maildir++. It can also deal with VFAT-based Maildirs which use '!'
+or ';' as the separators instead of ':'.
 
 E-mail messages which are not stored in something resembling a maildir
 leaf-directory (\fIcur\fR and \fInew\fR) are ignored, as are the cache
@@ -40,20 +40,21 @@ If there is a file called \fI.noupdate\fR in a directory, the contents of that
 directory and all of its subdirectories will be ignored, unless we do a full
 rebuild (with \fBmu init\fR). This can be useful to speed up things you have
 some maildirs that never change. Note that you can still search for these
-messages, this only affects updating the database. \fI.noupdate\fR is ignored when you start indexing with an empty database (such as directly after \fImu init\fR.
+messages, this only affects updating the database. \fI.noupdate\fR is ignored
+when you start indexing with an empty database (such as directly after \fImu
+init\fR.
 
-There also the \fB--lazy-check\fR which can greatly speed up indexing;
-see below for details.
+There also the \fB--lazy-check\fR which can greatly speed up indexing; see below
+for details.
 
-The first run of \fBmu index\fR may take a few minutes if you have a
-lot of mail (tens of thousands of messages).  Fortunately, such a full
-scan needs to be done only once; after that it suffices to index the
-changes, which goes much faster. See the 'Note on performance
-(i,ii,iii)' below for more information.
+The first run of \fBmu index\fR may take a few minutes if you have a lot of mail
+(tens of thousands of messages). Fortunately, such a full scan needs to be done
+only once; after that it suffices to index the changes, which goes much faster.
+See the 'Note on performance (i,ii,iii)' below for more information.
 
-The optional 'phase two' of the indexing-process is the removal of messages
-from the database for which there is no longer a corresponding file in the
-Maildir. If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
+The optional 'phase two' of the indexing-process is the removal of messages from
+the database for which there is no longer a corresponding file in the Maildir.
+If you do not want this, you can use \fB\-n\fR, \fB\-\-nocleanup\fR.
 
 When \fBmu index\fR catches one of the signals \fBSIGINT\fR, \fBSIGHUP\fR or
 \fBSIGTERM\fR (e.g., when you press Ctrl-C during the indexing process), it
@@ -63,8 +64,8 @@ more), \fBmu index\fR will terminate immediately.
 
 .SH OPTIONS
 
-Note, some of the general options are described in the \fBmu(1)\fR man-page
-and not here, as they apply to multiple mu commands.
+Some of the general options are described in the \fBmu(1)\fR man-page and not
+here, as they apply to multiple mu commands.
 
 .TP
 \fB\-\-lazy-check\fR
@@ -148,33 +149,38 @@ maildir contains 72525 messages.
 .fi
 (about 1099 messages per second).
 
-As shown, \fBmu\fR has been getting faster with each release, even
-with relatively expensive new features such as text-normalization (for
-case-insensitve/accent-insensitive matching). The profiles are
-dominated by operations in the Xapian database now.
+.SS A note on performance (iv)
+A few years later and its June 2022. There's a lot more happening during indexing, but indexing became multi-threaded and machines are faster; e.g. this
+is with an AMD Ryzen Threadripper 1950X (32) @ 3.399GHz.
 
-.SH FILES
-\fBmu\fR stores logs of its operations and queries in \fI<muhome>/mu.log\fR
-(by default, this is \fI~/.cache/mu/mu.log\fR). Upon startup, \fBmu\fR checks the
-size of this log file. If it exceeds 1 MB, it will be moved to
-\fI~/.cache/mu/mu.log.old\fR, overwriting any existing file of that name, and start
-with an empty log file. This scheme allows for continued use of \fBmu\fR
-without the need for any manual maintenance of log files.
+The instructions are a little different since we have a proper repeatable
+benchmark now. After building,
 
-.SH ENVIRONMENT
+.nf
+ $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+% THREAD_NUM=4 build/lib/tests/bench-indexer -m perf
+# random seed: R02Sf5c50e4851ec51adaf301e0e054bd52b
+1..1
+# Start of bench tests
+# Start of indexer tests
+indexed 5000 messages in 20 maildirs in 3763ms; 752 μs/message; 1328 messages/s (4 thread(s))
+ok 1 /bench/indexer/4-cores
+# End of indexer tests
+# End of bench tests
+.fi
 
-\fBmu index\fR uses \fBMAILDIR\fR to find the user's Maildir if it has not
-been specified explicitly with \fB\-\-maildir\fR=\fI<maildir>\fR. If
-\fBMAILDIR\fR is not set, \fBmu index\fR will try \fI~/Maildir\fR.
+Things are again a little faster, even though the index does a lot more now
+(text-normalizatian, and pre-generating message-sexps). A faster machine helps,
+too!
 
 .SH RETURN VALUE
 
-\fBmu index\fR return 0 upon successful completion, and any other number
-greater than 0 signals an error.
+\fBmu index\fR return 0 upon successful completion; any other number signals an
+error.
 
 .SH BUGS
 
-Please report bugs if you find them:
+Please report bugs if you find any:
 .BR https://github.com/djcb/mu/issues
 
 .SH AUTHOR
