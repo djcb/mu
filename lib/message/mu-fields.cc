@@ -94,13 +94,12 @@ validate_field_flags()
 		/* - A field has at most one of Indexable, HasTerms, IsXapianBoolean and
 		   IsContact. */
 		size_t flagnum{};
+
 		if (field.is_indexable_term())
 			++flagnum;
 		if (field.is_boolean_term())
 			++flagnum;
 		if (field.is_normal_term())
-			++flagnum;
-		if (field.is_contact())
 			++flagnum;
 
 		if (flagnum > 1) {

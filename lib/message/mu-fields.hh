@@ -225,7 +225,9 @@ static constexpr std::array<Field, Field::id_size()>
 		'h',
 		Field::Flag::Contact |
 		Field::Flag::Value |
-		Field::Flag::IncludeInSexp
+		Field::Flag::IncludeInSexp |
+		Field::Flag::IndexableTerm,
+
 	    },
 	    {
 		Field::Id::BodyText,
@@ -245,7 +247,8 @@ static constexpr std::array<Field, Field::id_size()>
 		'c',
 		Field::Flag::Contact |
 		Field::Flag::Value |
-		Field::Flag::IncludeInSexp
+		Field::Flag::IncludeInSexp |
+		Field::Flag::IndexableTerm,
 	    },
 
 	    {
@@ -308,7 +311,8 @@ static constexpr std::array<Field, Field::id_size()>
 		'f',
 		Field::Flag::Contact |
 		Field::Flag::Value |
-		Field::Flag::IncludeInSexp
+		Field::Flag::IncludeInSexp |
+		Field::Flag::IndexableTerm,
 	    },
 	    {
 		Field::Id::Maildir,
@@ -436,7 +440,8 @@ static constexpr std::array<Field, Field::id_size()>
 		't',
 		Field::Flag::Contact |
 		Field::Flag::Value |
-		Field::Flag::IncludeInSexp
+		Field::Flag::IncludeInSexp |
+		Field::Flag::IndexableTerm,
 	    },
 
 	    /* internal */
