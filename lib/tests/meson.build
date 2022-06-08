@@ -50,11 +50,11 @@ test('test-parser',
 		install: false,
 		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
 
-# test('test-store-query',
-#      executable('test-store-query',
-# 		'test-mu-store-query.cc',
-# 		install: false,
-# 		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
+test('test-store-query',
+     executable('test-store-query',
+		'test-mu-store-query.cc',
+		install: false,
+		dependencies: [glib_dep, gmime_dep, lib_mu_dep, lib_test_mu_common_dep]))
 #
 # benchmarks
 #
