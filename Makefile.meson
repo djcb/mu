@@ -70,10 +70,12 @@ test-valgrind: $(BUILDDIR)
 		--wrap='valgrind --leak-check=full --error-exitcode=1'	\
 		--timeout-multiplier 100
 
-test-helgrind: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) test					\
-	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
-	--timeout-multiplier 100
+# we do _not_ pass helgrind; but this seems to be a false-alarm
+#    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
+# test-helgrind: $(BUILDDIR)
+# 	@cd $(BUILDDIR); TEST=HELGRIND $(MESON) test			\
+# 	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
+# 	--timeout-multiplier 100
 
 benchmark: $(BUILDDIR)
 	$(NINJA) -C $(BUILDDIR) benchmark
