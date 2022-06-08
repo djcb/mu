@@ -26,8 +26,10 @@
 #include <array>
 
 #include "mu-utils.hh"
+#include "mu-error.hh"
 
 using namespace Mu;
+
 
 struct Case {
 	const std::string expr;
@@ -280,6 +282,19 @@ test_locale_workaround()
 	g_assert_true(locale_workaround());
 }
 
+static void
+test_error()
+{
+	GError *err;
+	err = g_error_new(MU_ERROR_DOMAIN, 77, "Hello, %s", "world");
+	Error ex{Error::Code::Crypto, &err, "boo"};
+	g_assert_cmpstr(ex.what(), ==, "boo: Hello, world");
+
+	ex.fill_g_error(&err);
+	g_assert_cmpuint(err->code, ==, static_cast<unsigned>(Error::Code::Crypto));
+	g_clear_error(&err);
+}
+
 
 int
 main(int argc, char* argv[])
@@ -298,6 +313,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
+	g_test_add_func("/utils/error", test_error);
 
 	return g_test_run();
 }
