@@ -191,7 +191,7 @@ public:
 	/**
 	 * Run a query; see the `mu-query` man page for the syntax.
 	 *
-	 * Multi-threaded callers must aquire the lock and keep it
+	 * Multi-threaded callers must acquire the lock and keep it
 	 * at least as long as the return value.
 	 *
 	 * @param expr the search expression
