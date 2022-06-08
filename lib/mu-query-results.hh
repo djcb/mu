@@ -267,18 +267,19 @@ public:
 	}
 
 	/**
-	 * Get the date for the document (message) the iterator is pointing at.
-	 * pointing at, or Nothing.
+	 * Get the a sortable date str for the document (message) the iterator
+	 * is pointing at. pointing at, or Nothing. This (encoded) string
+	 * has the same sort-order as the corresponding date.
 	 *
 	 * @return a filesystem path
 	 */
-	Option<std::string> date() const noexcept {
+	Option<std::string> date_str() const noexcept {
 		return opt_string(Field::Id::Date);
 	}
 
 	/**
-	 * Get the file-system path for the document (message) this iterator is
-	 * pointing at.
+	 * Get the subject for the document (message) this iterator is pointing
+	 * at.
 	 *
 	 * @return the subject
 	 */

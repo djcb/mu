@@ -186,7 +186,7 @@ determine_id_table(QueryResultsType& qres)
 		// order, still sort the thread levels below that in ascending
 		// order.
 		container.thread_date_key = container.query_match->date_key =
-		    mi.date().value_or("");
+		    mi.date_str().value_or("");
 		// initial guess for the thread-date; might be updated
 		// later.
 
@@ -618,7 +618,7 @@ struct MockQueryResult {
 	}
 	Option<std::string>             message_id() const { return message_id_; }
 	Option<std::string>             path() const { return path_; }
-	Option<std::string>             date() const { return date_; }
+	Option<std::string>             date_str() const { return date_; }
 	Option<std::string>             subject() const { return subject_; }
 	QueryMatch&                     query_match() { return query_match_; }
 	const QueryMatch&               query_match() const { return query_match_; }
