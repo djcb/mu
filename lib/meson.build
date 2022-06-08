@@ -56,6 +56,13 @@ lib_mu_dep = declare_dependency(
   include_directories:
     include_directories(['.', '..']))
 
+# dev helpers
+tokenize = executable(
+  'tokenize',
+  [ 'mu-tokenizer.cc', 'tokenize.cc' ],
+  dependencies: [ lib_mu_utils_dep, glib_dep ],
+  install: false)
+
 # test helpers
 lib_test_mu_common=static_library('mu-test-common', [
 				   'tests/test-mu-common.cc',
