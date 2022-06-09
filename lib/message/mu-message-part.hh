@@ -105,12 +105,22 @@ public:
 	/**
 	 * Does this part have an "attachment" disposition? Otherwise it is
 	 * "inline". Note that does *not* map 1:1 to a message's HasAttachment
-	 * flag.
+	 * flag (which uses looks_like_attachment())
 	 *
 	 * @return true or false.
 	 */
 	bool is_attachment() const noexcept;
 
+
+	/**
+	 * Does this part appear to be an attachment from an end-users point of
+	 * view? This uses some heuristics to guess. Some parts for which
+	 * is_attachment() is true may not "really" be attachments, and
+	 * vice-versa
+	 *
+	 * @return true or false.
+	 */
+	bool looks_like_attachment() const noexcept;
 
 	/**
 	 * Is this part signed?

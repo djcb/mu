@@ -340,45 +340,6 @@ get_mailing_list(const MimeMessage& mime_msg)
 	return to_string_opt_gchar(std::move(res));
 }
 
-static bool /* heuristic */
-looks_like_attachment(const MimeObject& parent,
-		      const MimePart& part, const MimeContentType& ctype)
-{
-	constexpr std::array<std::pair<const char*, const char*>, 4> att_types = {{
-			{"image", "*"},
-			{"audio", "*"},
-			{"application", "*"},
-			{"application", "x-patch"}
-		}};
-
-	if (parent) { /* crypto multipart children are not considered attachments */
-		if (const auto parent_ctype{parent.content_type()}; parent_ctype) {
-			if (parent_ctype->is_type("multipart", "signed") ||
-			    parent_ctype->is_type("multipart", "encrypted"))
-				return false;
-		}
-	}
-
-	/* we also consider patches, images, audio, and non-pgp-signature
-	 * application attachments to be attachments... */
-	if (ctype.is_type("*", "pgp-signature"))
-		return false; /* don't consider as a signature */
-
-	if (ctype.is_type("text", "*") &&
-	    (ctype.is_type("*", "plain") || ctype.is_type("*", "html")))
-		return false; /* not a signature */
-
-	/* if not one of those special types, consider it any attachment
-	 * if it says so */
-	if (part.is_attachment())
-		return true;
-
-	const auto it = seq_find_if(att_types, [&](auto&& item){
-		return ctype.is_type(item.first, item.second);
-	});
-	return it != att_types.cend(); /* if found, it's an attachment */
-}
-
 static void
 append_text(Option<std::string>& str, Option<std::string> app)
 {
@@ -403,19 +364,38 @@ accumulate_text(const MimePart& part, Message::Private& info,
 		append_text(info.body_html, part.to_string());
 }
 
+
+static bool /* heuristic */
+looks_like_attachment(const MimeObject& parent, const MessagePart& mpart)
+{
+	if (parent) { /* crypto multipart children are not considered attachments */
+		if (const auto parent_ctype{parent.content_type()}; parent_ctype) {
+			if (parent_ctype->is_type("multipart", "signed") ||
+			    parent_ctype->is_type("multipart", "encrypted"))
+				return false;
+		}
+	}
+
+	return mpart.looks_like_attachment();
+}
+
+
 static void
 process_part(const MimeObject& parent, const MimePart& part,
-	     Message::Private& info)
+	     Message::Private& info, const MessagePart& mpart)
 {
 	const auto ctype{part.content_type()};
 	if (!ctype)
 		return;
 
-	if (looks_like_attachment(parent, part, *ctype))
 	// flag as calendar, if not already
 	if (none_of(info.flags & Flags::Calendar) &&
 	    ctype->is_type("text", "calendar"))
 		info.flags |= Flags::Calendar;
+
+	// flag as attachment, if not already.
+	if (none_of(info.flags & Flags::HasAttachment) &&
+	    looks_like_attachment(parent, mpart))
 		info.flags |= Flags::HasAttachment;
 
 	// if there are text parts, gather.
@@ -499,7 +479,7 @@ handle_object(const MimeObject& parent,
 		info.parts.emplace_back(obj);
 
 	if (obj.is_part())
-		process_part(parent, obj, info);
+		process_part(parent, obj, info, info.parts.back());
 	else if (obj.is_message_part())
 		process_message_part(obj, info);
 	else if (obj.is_multipart_signed())
@@ -553,6 +533,16 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	info.mailing_list = get_mailing_list(mime_msg);
 	if (info.mailing_list)
 		info.flags |= Flags::MailingList;
+
+	// Microsoft override; outlook message can tell us directly
+	// wther
+	const auto ms_atthdr{mime_msg.header("X-MS-Has-Attach")};
+	if (ms_atthdr) {
+		if (*ms_atthdr == "yes")
+			info.flags |= Flags::HasAttachment;
+		else
+			info.flags &= ~Flags::HasAttachment;
+	}
 }
 
 static Mu::Result<std::string>

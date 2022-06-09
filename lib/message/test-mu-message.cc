@@ -20,6 +20,7 @@
 #include "mu-message.hh"
 #include "mu-mime-object.hh"
 #include <glib.h>
+#include <regex>
 
 using namespace Mu;
 
@@ -569,7 +570,45 @@ Moi,
 		       part.mime_type().value_or("boo").c_str());
 }
 
+static void
+test_message_ms_attach()
+{
+	const std::string msgtext =
+R"(Date: Thu, 31 Jul 2008 14:57:25 -0400
+From: "John Milton" <jm@example.com>
+Subject: Fere libenter homines id quod volunt credunt
+To: "Julius Caesar" <jc@example.com>
+Message-id: <3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com>
+X-MS-Has-Attach:
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Content-transfer-encoding: 7BIT
 
+OF Mans First Disobedience, and the Fruit
+Of that Forbidden Tree, whose mortal tast
+Brought Death into the World, and all our woe,
+With loss of Eden, till one greater Man
+)";
+
+	{
+		auto message{Message::make_from_text(msgtext)};
+		g_assert_true(!!message);
+		g_assert_true(message->flags() == (Flags::None));
+	}
+
+	{
+		const auto text2 = std::regex_replace(
+			msgtext, std::regex{"X-MS-Has-Attach:"},
+			"X-MS-Has-Attach: yes");
+
+		g_message("%s", text2.c_str());
+
+		auto message{Message::make_from_text(text2)};
+
+		g_assert_true(!!message);
+		g_assert_true(message->flags() == (Flags::HasAttachment));
+	}
+}
 
 
 static void
@@ -841,6 +880,8 @@ main(int argc, char* argv[])
 			test_message_multipart_mixed_rfc822);
 	g_test_add_func("/message/message/detect-attachment",
 			test_message_detect_attachment);
+	g_test_add_func("/message/message/x-ms-has-attach",
+			test_message_ms_attach);
 	g_test_add_func("/message/message/calendar",
 			test_message_calendar);
 	g_test_add_func("/message/message/fail",

@@ -158,3 +158,31 @@ MessagePart::is_encrypted() const noexcept
 {
 	return mime_object().is_multipart_encrypted();
 }
+
+bool /* heuristic */
+MessagePart::looks_like_attachment() const noexcept
+{
+	auto matches=[](const MimeContentType& ctype,
+			const std::initializer_list<std::pair<const char*, const char*>>& ctypes) {
+		return std::find_if(ctypes.begin(), ctypes.end(), [&](auto&& item){
+			return ctype.is_type(item.first, item.second); }) != ctypes.end();
+	};
+
+	const auto ctype{mime_object().content_type()};
+	if (!ctype)
+		return false; // no content-type: not an attachment.
+
+	// we consider some parts _not_ to be attachments regardless of disposition
+	if  (matches(*ctype,{{"application", "pgp-keys"}}))
+		return false;
+
+	// we consider some parts to be attachments regardless of disposition
+	if  (matches(*ctype,{{"image", "*"},
+			     {"audio", "*"},
+			     {"application", "*"},
+			     {"application", "x-patch"}}))
+		return true;
+
+	// otherwise, rely on the disposition
+	return is_attachment();
+}
