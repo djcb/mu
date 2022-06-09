@@ -283,7 +283,7 @@ run in the background; otherwise, pop up a window."
       (set-process-filter proc 'mu4e--get-mail-process-filter))))
 
 (defun mu4e-update-mail-and-index (run-in-background)
-  "Get a new mail by running `mu4e-get-mail-command'.
+  "Retrieve new mail by running `mu4e-get-mail-command'.
 If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
 run in the background; otherwise, pop up a window."
   (interactive "P")
