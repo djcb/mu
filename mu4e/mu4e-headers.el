@@ -171,7 +171,8 @@ mostly covered by `new', and the display gets cluttered otherwise."
           (const :tag "Encrypted" encrypted)
           (const :tag "Signed" signed)
 	  (const :tag "List" list)
-	  (const :tag "Personal" personal))
+	  (const :tag "Personal" personal)
+	  (const :tag "Calendar" calendar))
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-found-hook nil
@@ -206,6 +207,27 @@ chronologically (`:date') by the newest message in the thread.")
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
+;; by default, we some conservative marks, even when 'fancy'
+;; so they're less likely to break if people don't have certain fonts.
+;; However, if you want to be really 'fancy', you could use something like
+;; the following; esp. with a newer Emacs with color-icon support.
+;; (setq
+;;  mu4e-headers-draft-mark     '("D" . "💈")
+;;  mu4e-headers-flagged-mark   '("F" . "📍")
+;;  mu4e-headers-new-mark       '("N" . "🔥")
+;;  mu4e-headers-passed-mark    '("P" . "❯")
+;;  mu4e-headers-replied-mark   '("R" . "❮")
+;;  mu4e-headers-seen-mark      '("S" . "☑")
+;;  mu4e-headers-trashed-mark   '("T" . "💀")
+;;  mu4e-headers-attach-mark    '("a" . "📎")
+;;  mu4e-headers-encrypted-mark '("x" . "🔒")
+;;  mu4e-headers-signed-mark    '("s" . "🔑")
+;;  mu4e-headers-unread-mark    '("u" . "⎕")
+;;  mu4e-headers-list-mark      '("s" . "🔈")
+;;  mu4e-headers-personal-mark  '("p" . "👨")
+;;  mu4e-headers-calendar-mark  '("c" . "📅"))
+
+
 (defvar mu4e-headers-draft-mark     '("D" . "⚒") "Draft.")
 (defvar mu4e-headers-flagged-mark   '("F" . "✚") "Flagged.")
 (defvar mu4e-headers-new-mark       '("N" . "✱") "New.")
@@ -219,7 +241,7 @@ chronologically (`:date') by the newest message in the thread.")
 (defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
 (defvar mu4e-headers-list-mark      '("s" . "Ⓛ") "Mailing list.")
 (defvar mu4e-headers-personal-mark  '("p" . "Ⓟ") "Personal.")
-
+(defvar mu4e-headers-calendar-mark  '("c" . "Ⓒ") "Calendar invitation.")
 
 
 ;;;; Graph drawing
