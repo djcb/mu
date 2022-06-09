@@ -105,14 +105,16 @@ Mu::flags_from_path(const std::string& path)
 	/* it's cur/ message, so parse the file name */
 	const auto parts{message_file_parts(dirfile->file)};
 	auto flags{flags_from_absolute_expr(parts.flags_suffix,
-						    true/*ignore invalid*/)};
+					    true/*ignore invalid*/)};
 	if (!flags) {
 		/* LCOV_EXCL_START*/
 		return Err(Error{Error::Code::InvalidArgument,
 				"invalid flags ('%s')", parts.flags_suffix.c_str()});
 		/* LCOV_EXCL_STOP*/
-	} else
-		return Ok(std::move(flags.value()));
+	}
+
+	/* of course, only _file_ flags are allowed */
+	return Ok(flags_filter(flags.value(), MessageFlagCategory::Mailfile));
 }
 
 

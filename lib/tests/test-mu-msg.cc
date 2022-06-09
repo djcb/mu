@@ -169,7 +169,7 @@ test_mu_msg_flags(void)
 			 (Flags::Flagged | Flags::Seen |
 			  Flags::HasAttachment)},
 			{MU_TESTMAILDIR4 "/special!2,Sabc",
-			 (Flags::Seen|Flags::HasAttachment)}
+			 (Flags::Seen)}
 		}};
 
 	for (auto&& test: tests) {
