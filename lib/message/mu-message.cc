@@ -412,6 +412,10 @@ process_part(const MimeObject& parent, const MimePart& part,
 		return;
 
 	if (looks_like_attachment(parent, part, *ctype))
+	// flag as calendar, if not already
+	if (none_of(info.flags & Flags::Calendar) &&
+	    ctype->is_type("text", "calendar"))
+		info.flags |= Flags::Calendar;
 		info.flags |= Flags::HasAttachment;
 
 	// if there are text parts, gather.

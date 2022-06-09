@@ -112,7 +112,7 @@ test_flags_from_expr()
 	static_assert(flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
 		      (Flags::Draft|Flags::Flagged|Flags::Passed|
 		       Flags::New | Flags::Encrypted |
-		       Flags::Unread | Flags::MailingList |
+		       Flags::Unread | Flags::MailingList | Flags::Calendar |
 		       Flags::HasAttachment));
 }
 

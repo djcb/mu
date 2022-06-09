@@ -65,10 +65,11 @@ enum struct Flags {
 	MailingList = 1 << 11, /**< A mailing-list message */
 	Personal    = 1 << 12, /**< A personal message (i.e., at least one of the
 				* contact fields contains a personal address) */
+	Calendar    = 1 << 13, /**< A calendar invitation */
 	/*
 	 * <private>
 	 */
-	_final_ = 1 << 13
+	_final_ = 1 << 14
 };
 MU_ENABLE_BITOPS(Flags);
 
@@ -112,7 +113,7 @@ struct MessageFlagInfo {
 /**
  * Array of all flag information.
  */
-constexpr std::array<MessageFlagInfo, 13> AllMessageFlagInfos = {{
+constexpr std::array<MessageFlagInfo, 14> AllMessageFlagInfos = {{
     MessageFlagInfo{Flags::Draft,        'D', "draft",		MessageFlagCategory::Mailfile,
 	    "Draft (in progress)"
     },
@@ -152,6 +153,9 @@ constexpr std::array<MessageFlagInfo, 13> AllMessageFlagInfos = {{
     },
     MessageFlagInfo{Flags::Personal,	 'q', "personal",	MessageFlagCategory::Content,
 	    "Personal message"
+    },
+    MessageFlagInfo{Flags::Calendar,	 'c', "calendar",	MessageFlagCategory::Content,
+	    "Calendar invitation"
     },
 }};
 
