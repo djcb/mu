@@ -75,10 +75,12 @@
      flags for use in queries. The information is the same information that ~mu~
      uses and so stays up to date.
 
-   - a new message field ~changed~, which refers to the time/date of the last time
-     a message was changed (the file ~ctime~) and a new flag ~personal~ to search
-     for "personal" messages, which are defined as a message with at least one
-     personal contact.
+   - a new message field ~changed~, which refers to the time/date of the last
+     time a message was changed (the file ~ctime~)
+
+   - new message flags ~personal~ to search for "personal" messages, which are
+     defined as a message with at least one personal contact, and ~calendar~ for
+     messages with calendar-invitations.
 
    - message sexps are now cached in the store, which makes delivering
      sexp-based search results (as used by ~mu4e~) much faster.
