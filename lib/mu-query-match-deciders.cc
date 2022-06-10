@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -92,7 +92,7 @@ struct MatchDecider : public Xapian::MatchDecider {
 			decider_info_.thread_ids.emplace(std::move(*thread_id));
 	}
 
-      protected:
+protected:
 	const QueryFlags qflags_;
 	DeciderInfo&     decider_info_;
 
@@ -125,7 +125,7 @@ struct MatchDeciderLeader final : public MatchDecider {
 	 * they were unreadable/duplicate (in the QueryMatch::Flags), so we can
 	 * quickly find that info when doing the second 'related' query.
 	 *
-	 * The "leader" query. Matches here get the Leader flag unless their
+	 * The "leader" query. Matches here get the Leader flag unless they are
 	 * duplicates / unreadable. We check the duplicate/readable status
 	 * regardless of whether SkipDuplicates/SkipUnreadable was passed
 	 * (to gather that information); however those flags
@@ -135,8 +135,7 @@ struct MatchDeciderLeader final : public MatchDecider {
 	 *
 	 * @return true or false
 	 */
-	bool operator()(const Xapian::Document& doc) const override
-	{
+	bool operator()(const Xapian::Document& doc) const override {
 		// by definition, we haven't seen the docid before,
 		// so no need to search
 		auto it = decider_info_.matches.emplace(doc.get_docid(), make_query_match(doc));
@@ -173,8 +172,7 @@ struct MatchDeciderRelated final : public MatchDecider {
 	 *
 	 * @return true or false
 	 */
-	bool operator()(const Xapian::Document& doc) const override
-	{
+	bool operator()(const Xapian::Document& doc) const override {
 		// we may have seen this match in the "Leader" query.
 		const auto it = decider_info_.matches.find(doc.get_docid());
 		if (it != decider_info_.matches.end())
@@ -210,8 +208,7 @@ struct MatchDeciderThread final : public MatchDecider {
 	 *
 	 * @return true or false
 	 */
-	bool operator()(const Xapian::Document& doc) const override
-	{
+	bool operator()(const Xapian::Document& doc) const override {
 		// we may have seen this match in the "Leader" query,
 		// or in the second (unbuounded) related query;
 		const auto it{decider_info_.matches.find(doc.get_docid())};
