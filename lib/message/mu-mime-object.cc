@@ -98,6 +98,34 @@ MimeObject::header(const std::string& hdr) const noexcept
 }
 
 
+std::vector<std::pair<std::string, std::string>>
+MimeObject::headers() const noexcept
+{
+	GMimeHeaderList *lst;
+
+	lst = g_mime_object_get_header_list(self()); /* _not_ owned */
+	if (!lst)
+		return {};
+
+	std::vector<std::pair<std::string, std::string>> hdrs;
+	const auto hdr_num{g_mime_header_list_get_count(lst)};
+
+	for (int i = 0; i != hdr_num; ++i) {
+		GMimeHeader *hdr{g_mime_header_list_get_header_at(lst, i)};
+		if (!hdr) /* ^^^ _not_ owned */
+			continue;
+		const auto name{g_mime_header_get_name(hdr)};
+		const auto val{g_mime_header_get_value(hdr)};
+		if (!name || !val)
+			continue;
+		hdrs.emplace_back(name, val);
+	}
+
+	return hdrs;
+}
+
+
+
 Result<size_t>
 MimeObject::write_to_stream(const MimeFormatOptions& f_opts,
 			    MimeStream& stream) const
@@ -379,8 +407,7 @@ MimeMessage::references() const noexcept
 
 	// is ref already in the list?
 	auto is_dup = [](auto&& seq, const std::string& ref) {
-		return seq_find_if(seq, [&](auto&& str) { return ref == str; })
-			!= seq.cend();
+		return seq_some(seq, [&](auto&& str) { return ref == str; });
 	};
 
 	std::vector<std::string> refs;

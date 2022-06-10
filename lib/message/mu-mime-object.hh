@@ -771,6 +771,15 @@ public:
 	 */
 	Option<std::string> header(const std::string& header) const noexcept;
 
+
+	/**
+	 * Get all headers as pairs of name, value
+	 *
+	 * @return all headers
+	 */
+	std::vector<std::pair<std::string, std::string>> headers() const noexcept;
+
+
 	/**
 	 * Get the content type
 	 *
