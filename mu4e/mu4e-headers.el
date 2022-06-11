@@ -272,13 +272,13 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 (defvar mu4e-headers-thread-duplicate-prefix '("=" . "≡ ")
   "Prefix for duplicate messages.")
 
-
-
 (defvar mu4e-headers-threaded-label   '("T" . "Ⓣ")
-  "Non-fancy and fancy labels for threaded search in the mode-line.")
+  "Non-fancy and fancy labels to indicate threaded search in the mode-line.")
 (defvar mu4e-headers-full-label       '("F" . "Ⓕ")
-  "Non-fancy and fancy labels for full search in the mode-line.")
+  "Non-fancy and fancy labels to indicate full search in the mode-line.")
 (defvar mu4e-headers-related-label    '("R" . "Ⓡ")
+  "Non-fancy and fancy labels to indicate related search in the mode-line.")
+(defvar mu4e-headers-skip-duplicates-label '("U" . "Ⓤ") ;; 'U' for 'unique'
   "Non-fancy and fancy labels for include-related search in the mode-line.")
 
 ;;;; Various
@@ -942,8 +942,11 @@ after the end of the search results."
         (let ((map (make-sparse-keymap)))
 
           (define-key map "j" 'mu4e~headers-jump-to-maildir)
-
           (define-key map "O" 'mu4e-headers-change-sorting)
+	  (define-key map "M" 'mu4e-headers-toggle-setting)
+
+	  ;; these are impossible to remember; use mu4e-headers-toggle-setting
+	  ;; instead :)
           (define-key map "P" 'mu4e-headers-toggle-threading)
           (define-key map "Q" 'mu4e-headers-toggle-full-search)
           (define-key map "W" 'mu4e-headers-toggle-include-related)
@@ -1296,15 +1299,16 @@ message plist, or nil if not found."
 (defun mu4e~headers-update-mode-line ()
   "Update mode-line settings."
     (let* ((flagstr
-            (mapconcat (lambda (flag-cell)
-                         (if (car flag-cell)
-                             (if mu4e-use-fancy-chars
-                                 (cddr flag-cell) (cadr flag-cell) )
-                           ""))
-                       `((,mu4e-search-full     . ,mu4e-headers-full-label)
-                         (,mu4e-headers-include-related . ,mu4e-headers-related-label)
-                         (,mu4e-search-threads    . ,mu4e-headers-threaded-label))
-                       ""))
+            (mapconcat
+	     (lambda (flag-cell)
+               (if (car flag-cell)
+                   (if mu4e-use-fancy-chars
+                       (cddr flag-cell) (cadr flag-cell) ) ""))
+             `((,mu4e-search-full             . ,mu4e-headers-full-label)
+               (,mu4e-headers-include-related . ,mu4e-headers-related-label)
+               (,mu4e-search-threads          . ,mu4e-headers-threaded-label)
+	       (,mu4e-headers-skip-duplicates . ,mu4e-headers-skip-duplicates-label))
+             ""))
            (name "mu4e-headers"))
 
       (setq mode-name name)
@@ -1560,6 +1564,29 @@ user)."
                   (symbol-name sortfield)
                   (symbol-name mu4e-headers-sort-direction))
     (mu4e-search-rerun)))
+
+
+(defun mu4e-headers-toggle-setting (&optional dont-refresh)
+  "Toggle some aspect of headers display.
+When prefix-argument DONT-REFRESH is non-nill, do not refresh the
+last search with the new setting."
+  (interactive "P")
+  (let* ((toggles '(("fFull-search"      . mu4e-search-full)
+		    ("rInclude-related"  . mu4e-headers-include-related)
+		    ("tShow threads"     . mu4e-search-threads)
+		    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)))
+	 (toggles (seq-map
+		   (lambda (cell)
+		     (cons
+		      (concat (car cell) (format" (%s)" (if (cdr cell) "on" "off")))
+		      (cdr cell))) toggles))
+	 (choice (mu4e-read-option "Toggle setting " toggles)))
+    (when choice
+      (set choice (not (symbol-value choice)))
+      (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))
+      (unless dont-refresh
+	(mu4e-search-rerun)))))
+
 
 (defun mu4e~headers-toggle (name togglevar dont-refresh)
   "Toggle variable TOGGLEVAR for feature NAME. Unless DONT-REFRESH is non-nil,
