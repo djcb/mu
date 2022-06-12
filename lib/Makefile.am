@@ -63,7 +63,6 @@ libmu_la_SOURCES=                                       \
         mu-bookmarks.hh                                 \
         mu-contacts-cache.cc                            \
         mu-contacts-cache.hh                            \
-        mu-data.hh                                      \
         mu-parser.cc                                    \
         mu-parser.hh                                    \
         mu-query.cc                                     \

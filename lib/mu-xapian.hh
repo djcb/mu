@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -17,8 +17,8 @@
 **  02110-1301, USA.
 */
 
-#ifndef __XAPIAN_HH__
-#define __XAPIAN_HH__
+#ifndef MU_XAPIAN_HH__
+#define MU_XAPIAN_HH__
 
 #include <xapian.h>
 #include <mu-parser.hh>
@@ -36,4 +36,4 @@ Xapian::Query xapian_query(const Mu::Tree& tree);
 
 } // namespace Mu
 
-#endif /* __XAPIAN_H__ */
+#endif /* MU_XAPIAN_H__ */

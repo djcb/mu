@@ -25,7 +25,6 @@
 #include <vector>
 #include <memory>
 
-#include <mu-data.hh>
 #include <mu-tree.hh>
 #include <mu-store.hh>
 

@@ -19,6 +19,7 @@
 #include "mu-parser.hh"
 
 #include <algorithm>
+#include <regex>
 #include <limits>
 
 #include "mu-tokenizer.hh"
@@ -199,8 +200,9 @@ Parser::Private::process_regex(const std::string& field_str,
 	const auto prefix{field_opt->xapian_term()};
 	std::vector<std::string> terms;
 	store_.for_each_term(field_opt->id, [&](auto&& str) {
-		if (std::regex_search(str.c_str() + 1, rx)) // avoid copy
-			terms.emplace_back(str);
+		auto val{str.c_str() + 1}; // strip off the Xapian prefix.
+		if (std::regex_search(val, rx))
+			terms.emplace_back(std::move(val));
 		return true;
 	});
 
@@ -233,22 +235,15 @@ Parser::Private::value(const FieldInfoVec& fields,
 	if (fields.size() == 1) {
 		const auto item = fields.front();
 		return Tree({Node::Type::Value,
-			     std::make_unique<Value>(item.field,
-						     item.prefix,
-						     item.id,
-						     process_value(item.field, val),
-						     item.supports_phrase)});
+				FieldValue{item.id, process_value(item.field, val)}});
 	}
 
 	// a 'multi-field' such as "recip:"
 	Tree tree(Node{Node::Type::OpOr});
 	for (const auto& item : fields)
 		tree.add_child(Tree({Node::Type::Value,
-				     std::make_unique<Value>(item.field,
-							     item.prefix,
-							     item.id,
-							     process_value(item.field, val),
-							     item.supports_phrase)}));
+					FieldValue{item.id,
+					     process_value(item.field, val)}}));
 	return tree;
 }
 
@@ -264,14 +259,13 @@ Parser::Private::regex(const FieldInfoVec& fields,
 	const auto rxstr = utf8_flatten(v.substr(1, v.length() - 2));
 
 	try {
-		Tree       tree(Node{Node::Type::OpOr});
+		Tree tree(Node{Node::Type::OpOr});
 		const auto rx = std::regex(rxstr);
 		for (const auto& field : fields) {
 			const auto terms = process_regex(field.field, rx);
 			for (const auto& term : terms) {
-				tree.add_child(Tree(
-				    {Node::Type::Value,
-				     std::make_unique<Value>(field.field, "", field.id, term)}));
+				tree.add_child(Tree({Node::Type::Value,
+							FieldValue{field.id, term}}));
 			}
 		}
 
@@ -306,11 +300,7 @@ Parser::Private::range(const FieldInfoVec& fields,
 		prange = process_range(field.field, upper, lower);
 
 	return Tree({Node::Type::Range,
-		     std::make_unique<Range>(field.field,
-					     field.prefix,
-					     field.id,
-					     prange.lower,
-					     prange.upper)});
+			FieldValue{field.id, prange.lower, prange.upper}});
 }
 
 Mu::Tree

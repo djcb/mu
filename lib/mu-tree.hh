@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -22,12 +22,53 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
 #include <iostream>
+#include <message/mu-fields.hh>
 
-#include <mu-data.hh>
+#include <utils/mu-option.hh>
 #include <utils/mu-error.hh>
 
 namespace Mu {
+
+struct FieldValue {
+	FieldValue(Field::Id idarg, const std::string valarg):
+		field_id{idarg}, val1{valarg} {}
+	FieldValue(Field::Id idarg, const std::string valarg1, const std::string valarg2):
+		field_id{idarg}, val1{valarg1}, val2{valarg2} {}
+
+	const Field& field() const { return field_from_id(field_id); }
+	const std::string& value() const { return val1; }
+	const std::pair<std::string, std::string> range() const { return { val1, val2 }; }
+
+	const Field::Id		field_id;
+	const std::string	val1;
+	const std::string	val2;
+
+};
+
+
+/**
+ * operator<<
+ *
+ * @param os an output stream
+ * @param fval a field value.
+ *
+ * @return the updated output stream
+ */
+inline std::ostream&
+operator<<(std::ostream& os, const FieldValue& fval)
+{
+	os << ' ' << quote(std::string{fval.field().name});
+
+	if (fval.field().is_range())
+		os << ' ' << quote(fval.range().first)
+		   << ' ' << quote(fval.range().second);
+	else
+		os << ' ' << quote(fval.value());
+
+	return os;
+}
 
 // A node in the parse tree
 struct Node {
@@ -43,31 +84,39 @@ struct Node {
 		Invalid
 	};
 
-	Node(Type _type, std::unique_ptr<Data>&& _data) : type{_type}, data{std::move(_data)} {}
+	Node(Type _type, FieldValue&& fval) : type{_type}, field_val{std::move(fval)} {}
 	Node(Type _type) : type{_type} {}
 	Node(Node&& rhs) = default;
 
 	Type                  type;
-	std::unique_ptr<Data> data;
+	Option<FieldValue>    field_val;
 
-	static const char* type_name(Type t)
-	{
+	static constexpr std::string_view type_name(Type t) {
 		switch (t) {
-		case Type::Empty: return ""; break;
-		case Type::OpAnd: return "and"; break;
-		case Type::OpOr: return "or"; break;
-		case Type::OpXor: return "xor"; break;
-		case Type::OpAndNot: return "andnot"; break;
-		case Type::OpNot: return "not"; break;
-		case Type::Value: return "value"; break;
-		case Type::Range: return "range"; break;
-		case Type::Invalid: return "<invalid>"; break;
-		default: throw Mu::Error(Error::Code::Internal, "unexpected type");
+		case Type::Empty:
+			return "";
+		case Type::OpAnd:
+			return "and";
+		case Type::OpOr:
+			return "or";
+		case Type::OpXor:
+			return "xor";
+		case Type::OpAndNot:
+			return "andnot";
+		case Type::OpNot:
+			return "not";
+		case Type::Value:
+			return "value";
+		case Type::Range:
+			return "range";
+		case Type::Invalid:
+			return "<invalid>";
+		default:
+			return "<error>";
 		}
 	}
 
-	static constexpr bool is_binop(Type t)
-	{
+	static constexpr bool is_binop(Type t) {
 		return t == Type::OpAnd || t == Type::OpAndNot || t == Type::OpOr ||
 		       t == Type::OpXor;
 	}
@@ -77,8 +126,8 @@ inline std::ostream&
 operator<<(std::ostream& os, const Node& t)
 {
 	os << Node::type_name(t.type);
-	if (t.data)
-		os << t.data;
+	if (t.field_val)
+		os << t.field_val.value();
 
 	return os;
 }
