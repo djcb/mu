@@ -107,7 +107,6 @@ List-Id: <sqlite-dev.sqlite.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: sqlite-dev-bounces@sqlite.org
-Content-Length: 639
 
 Inside sqlite3VdbeExec there is a very big switch statement.
 In order to increase performance with few modifications to the
@@ -117,6 +116,8 @@ http://docs.freebsd.org/info/gcc/gcc.info.Labels_as_Values.html
 With a properly defined "instructions" array, instead of the switch
 statement you can use something like:
 goto * instructions[pOp->opcode];
+
+I said: "Aujourd'hui!"
 )"},
 }};
 	TempDir tdir;
@@ -133,7 +134,9 @@ goto * instructions[pOp->opcode];
 			"date:2008-08-01..2008-09-01",
 			"prio:low",
 			"to:sqlite-dev@sqlite.org",
-			"list:sqlite-dev.sqlite.org"}) {
+			"list:sqlite-dev.sqlite.org",
+			"aujourd'hui",
+		}) {
 
 		if (g_test_verbose())
 			g_message("query: '%s'", expr);
