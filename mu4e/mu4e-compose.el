@@ -858,11 +858,15 @@ buffer buried."
   (message-add-header (concat "Subject: " subject "\n"))
 
   ;; add any other headers specified
-  (when other-headers
-    (dolist (h other-headers other-headers)
-      (if (symbolp (car h)) (setcar h (symbol-name (car h))))
-      (message-add-header
-       (concat (capitalize (car h)) ": " (cdr h) "\n"  ))))
+  (seq-each (lambda(hdr)
+	      (let ((field (capitalize(car hdr))) (value (cdr hdr)))
+		;; fix in-reply without <>
+		(when (and (string= field "In-Reply-To")
+			   (string-match-p "\\`[^ @]+@[^ @]+\\'" value)
+			   (not (string-match-p "\\`<.*>\\'" value)))
+		  (setq value (concat "<" value ">")))
+		(message-add-header (concat (capitalize field) ": " value "\n"))))
+	    other-headers)
 
   ;; yank message
   (if (bufferp yank-action)
