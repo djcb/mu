@@ -606,12 +606,13 @@ mailing-list."
          (recipnum
           (+ (length (mu4e~draft-create-to-lst origmsg))
              (length (mu4e~draft-create-cc-lst origmsg t t))))
+	 (sender (mu4e-contact-full (car from)))
          (reply-type
           (mu4e-read-option
            "Reply to mailing-list "
-           `( (,(format "all %d recipient(s)" recipnum)     . all)
-              (,(format "list-only (%s)" (cdar list-post))  . list-only)
-              (,(format "sender-only (%s)" (cdar from))     . sender-only)))))
+           `( (,(format "all %d recipient(s)" recipnum)    . all)
+              (,(format "list-only (%s)" (cdar list-post)) . list-only)
+              (,(format "sender-only (%s)" sender)         . sender-only)))))
     (cl-case reply-type
       (all
        (concat
