@@ -533,16 +533,6 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	info.mailing_list = get_mailing_list(mime_msg);
 	if (info.mailing_list)
 		info.flags |= Flags::MailingList;
-
-	// Microsoft override; outlook message can tell us directly
-	// wther
-	const auto ms_atthdr{mime_msg.header("X-MS-Has-Attach")};
-	if (ms_atthdr) {
-		if (*ms_atthdr == "yes")
-			info.flags |= Flags::HasAttachment;
-		else
-			info.flags &= ~Flags::HasAttachment;
-	}
 }
 
 static Mu::Result<std::string>
