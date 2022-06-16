@@ -39,6 +39,7 @@
 #include <cinttypes>
 #include <charconv>
 #include <limits>
+#include <regex>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -142,8 +143,6 @@ Mu::utf8_flatten(const char* str)
 }
 
 
-
-
 /* turn \0-terminated buf into ascii (which is a utf8 subset); convert
  *   any non-ascii into '.'
  */
@@ -161,7 +160,6 @@ asciify_in_place (char *buf)
 
 	return buf;
 }
-
 
 static char*
 utf8ify (const char *buf)
@@ -245,7 +243,6 @@ Mu::split(const std::string& str, const std::string& sepa)
 std::vector<std::string>
 Mu::split(const std::string& str, char sepa)
 {
-
 	std::vector<std::string> vec;
 	size_t b = 0, e = 0;
 
@@ -266,6 +263,14 @@ Mu::split(const std::string& str, char sepa)
 	return vec;
 }
 
+std::vector<std::string>
+Mu::split(const std::string& str, const std::regex& sepa_rx)
+{
+	std::sregex_token_iterator it(str.begin(), str.end(), sepa_rx, -1);
+	std::sregex_token_iterator end;
+
+	return {it, end};
+}
 
 std::string
 Mu::join(const std::vector<std::string>& svec, const std::string& sepa)

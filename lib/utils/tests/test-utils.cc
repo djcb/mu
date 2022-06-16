@@ -208,7 +208,7 @@ test_split()
 			g_assert_cmpstr(sv1[i].c_str(),==,sv2[i].c_str());
 	};
 
-
+	// string sepa
 	assert_equal_svec(split("axbxc", "x"), {"a", "b", "c"});
 	assert_equal_svec(split("axbxcx", "x"), {"a", "b", "c", ""});
 	assert_equal_svec(split("", "boo"), {});
@@ -216,10 +216,12 @@ test_split()
 	assert_equal_svec(split("abc", ""), {"a", "b", "c"});
 	assert_equal_svec(split("", "boo"), {});
 
-
+	// char sepa
 	assert_equal_svec(split("axbxc", 'x'), {"a", "b", "c"});
 	assert_equal_svec(split("axbxcx", 'x'), {"a", "b", "c", ""});
-	assert_equal_svec(split("", "boo"), {});
+
+	// rx sexp
+	assert_equal_svec(split("axbyc", std::regex("[xy]")), {"a", "b", "c"});
 }
 
 static void

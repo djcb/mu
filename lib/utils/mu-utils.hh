@@ -33,6 +33,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <numeric>
+#include <regex>
 
 #include "mu-utils-format.hh"
 #include "mu-option.hh"
@@ -85,7 +86,6 @@ std::string remove_ctrl(const std::string& str);
  */
 std::vector<std::string> split(const std::string& str, const std::string& sepa);
 
-
 /**
  * Split a string in parts. As a special case, splitting an empty string
  * yields an empty vector (not a vector with a single empty element)
@@ -97,6 +97,15 @@ std::vector<std::string> split(const std::string& str, const std::string& sepa);
  */
 std::vector<std::string> split(const std::string& str, char sepa);
 
+/**
+ * Split a string in parts
+ *
+ * @param str a string
+ * @param sepa the separator regex
+ *
+ * @return the parts.
+ */
+std::vector<std::string> split(const std::string& str, const std::regex& sepa_rx);
 
 /**
  * Join the strings in svec into a string, separated by sepa
