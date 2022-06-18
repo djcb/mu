@@ -50,8 +50,6 @@
 #include "mu-error.hh"
 #include "mu-option.hh"
 
-#include "message/mu-message-file.hh"
-
 using namespace Mu;
 
 namespace {

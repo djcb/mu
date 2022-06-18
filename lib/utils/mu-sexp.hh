@@ -415,6 +415,9 @@ operator<<(std::ostream& os, Sexp::Type id)
 	case Sexp::Type::Symbol:
 		os << "symbol";
 		break;
+	case Sexp::Type::Raw:
+		os << "raw";
+		break;
 	case Sexp::Type::Empty:
 		os << "empty";
 		break;

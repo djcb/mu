@@ -72,18 +72,6 @@ Result<void> maildir_link(const std::string& src, const std::string& targetpath)
 Result<void> maildir_clear_links(const std::string& dir);
 
 /**
- * get the maildir for a certain message path, ie, the path *before*
- * cur/ or new/ and *after* the root.
- *
- * @param path path for some message
- * @param root filesystem root for the maildir
- *
- * @return the maildir or an Error
- */
-Result<std::string> maildir_from_path(const std::string& path,
-				      const std::string& root);
-
-/**
  * Move a message file to another maildir. If the target file already exists, it
  * is overwritten.
  *

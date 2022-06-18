@@ -96,6 +96,8 @@ process_value(const std::string& field, const std::string& value)
 {
 	const auto id_opt{field_from_name(field)};
 	if (id_opt) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 		switch (id_opt->id) {
 		case Field::Id::Priority: {
 			if (!value.empty())
@@ -108,6 +110,7 @@ process_value(const std::string& field, const std::string& value)
 		default:
 			break;
 		}
+#pragma GCC diagnostic pop
 	}
 
 	return value; // XXX prio/flags, etc. alias

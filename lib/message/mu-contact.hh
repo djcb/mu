@@ -129,6 +129,8 @@ struct Contact {
 	 * @return the field-id or Nothing.
 	 */
 	constexpr Option<Field::Id> field_id() const noexcept {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 		switch(type) {
 		case Type::Bcc:
 			return Field::Id::Bcc;
@@ -141,6 +143,7 @@ struct Contact {
 		default:
 			return Nothing;
 		}
+#pragma GCC diagnostic pop
 	}
 
 
@@ -167,6 +170,8 @@ private:
 constexpr Option<Contact::Type>
 contact_type_from_field_id(Field::Id id) noexcept {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 	switch(id) {
 	case Field::Id::Bcc:
 		return Contact::Type::Bcc;
@@ -179,6 +184,7 @@ contact_type_from_field_id(Field::Id id) noexcept {
 	default:
 		return Nothing;
 	}
+#pragma GCC diagnostic pop
 }
 
 using Contacts = std::vector<Contact>;

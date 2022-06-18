@@ -331,6 +331,7 @@ address_type(Contact::Type ctype)
 		return GMIME_ADDRESS_TYPE_REPLY_TO;
 	case Contact::Type::Sender:
 		return GMIME_ADDRESS_TYPE_SENDER;
+	case Contact::Type::None:
 	default:
 		return Nothing;
 	}

@@ -490,6 +490,9 @@ handle_object(const MimeObject& parent,
 		info.flags |= Flags::Encrypted;
 	} else if (obj.is_mime_application_pkcs7_mime()) {
 		MimeApplicationPkcs7Mime smime(obj);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+		// CompressedData, CertsOnly, Unknown
 		switch (smime.smime_type()) {
 		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
 			info.flags |= Flags::Signed;
@@ -500,6 +503,7 @@ handle_object(const MimeObject& parent,
 		default:
 			break;
 		}
+#pragma GCC diagnostic pop
 	}
 }
 
@@ -718,6 +722,7 @@ fill_document(Message::Private& priv)
 			break;
 		/* LCOV_EXCL_START */
 		case Field::Id::_count_:
+		default:
 			break;
 		/* LCOV_EXCL_STOP */
 		}
