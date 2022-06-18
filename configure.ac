@@ -15,7 +15,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 AC_PREREQ([2.68])
-AC_INIT([mu],[1.7.27],[https://github.com/djcb/mu/issues],[mu])
+AC_INIT([mu],[1.7.28],[https://github.com/djcb/mu/issues],[mu])
 AC_COPYRIGHT([Copyright (C) 2008-2022 Dirk-Jan C. Binnema])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([mu/mu.cc])
@@ -42,10 +42,10 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 
-extra_flags="-Wformat-security      \
-         -Wstack-protector          \
-         -Wstack-protector-all      \
-         -Wno-cast-function-type    \
+extra_flags="-Wformat-security		\
+         -Wstack-protector		\
+         -Wstack-protector-all		\
+         -Wno-cast-function-type	\
          -Wno-bad-function-cast		\
 	 -Wno-switch-enum"
 
