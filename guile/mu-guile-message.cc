@@ -183,7 +183,8 @@ SCM_DEFINE(get_field,
 	SCM_ASSERT(scm_integer_p(FIELD), FIELD, SCM_ARG2, FUNC_NAME);
 	const auto field_opt{field_from_number(static_cast<size_t>(scm_to_int(FIELD)))};
 	SCM_ASSERT(!!field_opt, FIELD, SCM_ARG2, FUNC_NAME);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 	switch (field_opt->id) {
 	case Field::Id::Priority:
 		return get_prio_scm(*msg);
@@ -193,6 +194,7 @@ SCM_DEFINE(get_field,
 		return get_body(*msg, false);
 	default: break;
 	}
+#pragma GCC diagnostic pop
 
 	switch (field_opt->type) {
 	case Field::Type::String:

@@ -13,6 +13,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+include $(top_srcdir)/gtest.mk
 
 AM_CXXFLAGS=			\
 	$(WARN_CXXFLAGS)	\
@@ -27,6 +28,8 @@ noinst_LTLIBRARIES=		\
 libmu_message_la_SOURCES=	\
         mu-message.cc		\
         mu-message.hh		\
+	mu-message-file.cc	\
+	mu-message-file.hh	\
         mu-message-part.cc	\
         mu-message-part.hh	\
         mu-contact.hh		\

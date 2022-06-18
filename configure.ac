@@ -37,10 +37,10 @@ AC_SUBST(prefix)
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_CC_STDC
-AC_PROG_CC_C99
 AC_PROG_INSTALL
-AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 
 extra_flags="-Wformat-security      \
          -Wstack-protector          \
@@ -99,7 +99,7 @@ AS_IF([test "x$enable_mu4e" != "xno"], [
   AS_CASE([$emacs_version],
     [*25.3*],[build_mu4e=yes],
     [*26*|*27*|*28*|*29*],[build_mu4e=yes],
-    [AC_WARN([emacs is too old to build mu4e (need emacs >= 25.3)])])
+    [AC_MSG_WARN(emacs is too old to build mu4e (need emacs >= 25.3))])
 ])
 AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 
@@ -107,8 +107,7 @@ AM_CONDITIONAL(BUILD_MU4E, test "x$build_mu4e" = "xyes")
 # e.g. Solaris. See mu-maildir.c. Explicitly disabling it is for
 # testing purposes only
 AC_ARG_ENABLE([dirent-d-type],
-    AC_HELP_STRING([--disable-dirent-d-type],
-        [Don't use dirent->d_type, even if you have it]),
+    AS_HELP_STRING([--disable-dirent-d-type],[Don't use dirent->d_type, even if you have it]),
     [], [AC_STRUCT_DIRENT_D_TYPE]
 )
 AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
@@ -119,8 +118,7 @@ AS_IF([test "x$ac_cv_member_struct_dirent_d_type" != "xyes"],
 # order; this is much faster on some file systems (such as extfs3).
 # Explicitly disabling it is for testing purposes only.
 AC_ARG_ENABLE([dirent-d-ino],
-    AC_HELP_STRING([--disable-dirent-d-ino],
-        [Don't use dirent->d_ino, even if you have it]),
+    AS_HELP_STRING([--disable-dirent-d-ino],[Don't use dirent->d_ino, even if you have it]),
     [], [AC_STRUCT_DIRENT_D_INO]
 )
 AS_IF([test "x$ac_cv_member_struct_dirent_d_ino" != "xyes"],

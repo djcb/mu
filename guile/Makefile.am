@@ -82,16 +82,16 @@ mu_guile_TEXINFOS=					\
 # SUFFIXES = .x .doc
 # .cc.x:
 # 	$(AM_V_GEN) $(GUILE_SNARF) -o $@ $< $(snarfcxxopts)
-SNARF_DATA=$(XFILES)
+#SNARF_DATA=$(XFILES)
 
 # FIXME: GUILE_SITEDIR would be better, but that
 # breaks 'make distcheck'
 scmdir=${prefix}/share/guile/site/${GUILE_EFFECTIVE_VERSION}
 scm_DATA=mu.scm
 
-EXTRA_DIST=$(scm_DATA) $(SNARF_DATA)
+EXTRA_DIST=$(scm_DATA) $(XFILES)
 
 ## Add -MG to make the .x magic work with auto-dep code.
 MKDEP = $(CC) -M -MG $(snarfcppopts)
 
-CLEANFILES=$(XFILES)
+#CLEANFILES=$(XFILES)
