@@ -2999,12 +2999,11 @@ with other tools.
 * Org-mode links::Adding mu4e to your organized life
 * Org-contacts::Hooking up with org-contacts
 * BBDB::Hooking up with the Insidious Big Brother Database
-* iCalendar::Replying to iCal events
+* iCalendar::Enabling iCalendar invite processing
 * Sauron::Getting new mail notifications with Sauron
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
 * Hydra:: Custom shortcut menus
-* iCalendar Integration:: Enabling iCalendar invite processing in mu4e
 @end menu
 
 @node Emacs default
@@ -3374,40 +3373,6 @@ With Hydra installed, we can add multi-character shortcuts, for instance:
 
 Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 @end lisp
-
-@node iCalendar Integration
-@section iCalendar Integration
-
-By default, mu4e presents iCalendar invitations as .vcs file
-attachments. Experimental support is available to parse these
-attachments in order to add the expected ``Accept'', ``Reject'', ``Add
-to Calendar'' buttons. This requires using Gnus' article view, which is
-the default since @t{mu4e} version 1.6.
-
-The minimal setup is:
-
-@lisp
-(require 'mu4e-icalendar)
-(mu4e-icalendar-setup)
-@end lisp
-
-To add the event to a diary file of your choice:
-
-@lisp
-(setq mu4e-icalendar-diary-file "/path/to/your/diary")
-@end lisp
-
-To enable optional functionality to capture iCalendar events to your org files:
-
-@lisp
-(require 'org-agenda)
-(setq gnus-icalendar-org-capture-file "~/org/notes.org")
-(setq gnus-icalendar-org-capture-headline '("Calendar"))
-(gnus-icalendar-org-setup)
-@end lisp
-
-NOTE: both the capture file and the headline(s) inside must already
-exist.
 
 @node Example configs
 @appendix Example configs
