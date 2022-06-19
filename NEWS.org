@@ -427,6 +427,11 @@
       release notes for more detail).
 
 
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+
 ** 1.2
 
    After a bit over a year since version 1.0, here is version 1.2. This is
@@ -598,10 +603,10 @@
      - Better handle mbsync output in the update buffer
      - Add variables mu4e-index-cleanup and mu4e-index-lazy to enable
        lazy checking from mu4e; you can sit from mu4e using something like:
-     #+BEGIN_SRC elisp
+#+begin_src elisp
 (setq mu4e-index-cleanup nil ;; don't do a full cleanup check
   mu4e-index-lazy-check t) ;; don't consider up-to-date dirs #+END_SRC
-
+#+end_src
 **** misc
 
      - don't overwrite global-mode-string, append to it.
@@ -633,11 +638,7 @@
    Volpiatto, Thomas Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir
    Sedach
 
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
-
+  
 ** 0.9.16
 
 *** Release
