@@ -1,12 +1,13 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.7 (unreleased, development)
+* 1.8 (released on June 25, 2022)
 
 *** mu
 
-    - =mu= switched to use the [[https://mesonbuild.com][meson]] build system by default. The existing
-      =autotools= is still avaiable, but is to be removed after the 1.8 release.
+    - =mu= switched to use the [[https://mesonbuild.com][meson]] build system by
+      default. The existing =autotools= is still avaiable, but is to be removed
+      after the 1.8 release.
 
       Using =meson= (which you need to install), you can use something like the
       following in the mu top source directory:
@@ -15,8 +16,8 @@
 	$ meson build && ninja -C build
 #+END_SRC
 
-    - However, note that =autogen.sh= has been updated, and there's a convenience
-      =Makefile= with some useful targets, so you can also do:
+    - However, note that =autogen.sh= has been updated, and there's a
+      convenience =Makefile= with some useful targets, so you can also do:
 #+BEGIN_SRC sh
        $ ./autogen.sh && make # and optionally, 'sudo make install'
 #+END_SRC
@@ -31,14 +32,15 @@
 #+end_example
      (replace 'Maildir' with the path to your maildir)
 
-     once this is done, do check the generated 'rename.sh' and after convincing yourself it does the right thing, do
+     once this is done, do check the generated 'rename.sh' and after convincing
+     yourself it does the right thing, do
 #+begin_example
      $ sh rename.sh
 #+end_example
      after that, re-index.
 
-   - Before installing, it is recommended that you *remove* any older versions of
-     ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
+   - Before installing, it is recommended that you *remove* any older versions
+     of ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
 
    - =mu= now requires C++17 support for building
 
@@ -52,8 +54,8 @@
    - The ~processed~ number in the indexing statistics has been renamed into
      ~checked~ and describes the number of message files considered for
      updating, which is a bit more useful that the old value, which was
-     more-or-less synonymous with the ~updated~ number (which are the message that
-     got (re)parsed / (re)added to the database.
+     more-or-less synonymous with the ~updated~ number (which are the message
+     that got (re)parsed / (re)added to the database.
 
      Basically, it counts all the messages for which we checked their timestamp.
 
@@ -64,9 +66,9 @@
    - instead of passing ~--muhome~, you can now also set an environment variable
      ~MUHOME~.
 
-   - the ~info~ command now includes information about the last indexing operation
-     and the last database change that took place; note that the information may
-     be slightly delayed due to database caching.
+   - the ~info~ command now includes information about the last indexing
+     operation and the last database change that took place; note that the
+     information may be slightly delayed due to database caching.
 
    - the ~verify~ command for checking signatures has been updated, and is more
      informative
@@ -109,10 +111,10 @@
 
    - The various "toggles" for the headers-view (full-search, include-related,
      skip-duplicates, threading) were a bit hard to find and with non-obvious
-     key-bindings. For that, there is now ~mu4e-headers-toggle-setting~ (bound to
-     ~M~) to handle all of that. The toggles are also reflected in the mode-line;
-     so e.g. 'RTU' means we're including [R]elated messages, and show [T]hreads,
-     skip duplicates ([U]nique).
+     key-bindings. For that, there is now ~mu4e-headers-toggle-setting~ (bound
+     to ~M~) to handle all of that. The toggles are also reflected in the
+     mode-line; so e.g. 'RTU' means we're including [R]elated messages, and show
+     [T]hreads, skip duplicates ([U]nique).
 
    - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
      for removing quite a bit of old code.
@@ -140,22 +142,22 @@
      automatically change the ~Organization:~ header, and attempts to update the
      message signature. Also, there's a key-binding now: ~C-c ;~
 
-   - Changed the default for ~mu4e-compose-complete-only-after~ to 2018-01-01, to
-     filter out contacts not seen after that date.
+   - Changed the default for ~mu4e-compose-complete-only-after~ to 2018-01-01,
+     to filter out contacts not seen after that date.
 
    - As an additional measure to limit the number of contacts that mu4e loads
      for auto-completions, there's ~mu4e-compose-complete-max~, to set a precise
-     numerical match (*before* any possible filtering). Set to ~nil~ (no maximum by
-     default).
+     numerical match (*before* any possible filtering). Set to ~nil~ (no maximum
+     by default).
 
    - Updated the "fancy" characters for some header fields. Added new ones for
      personal and list messages.
 
    - Removed ~make-mu4e-bookmark~ which was obsoleted in version 1.3.9.
 
-   - Add command ~mu4e-sexp-at-point~ for showing/hiding the s-expression for the
-     message-at-point. Useful for development / debugging. Bound to ~,~ in headers
-     and view mode.
+   - Add command ~mu4e-sexp-at-point~ for showing/hiding the s-expression for
+     the message-at-point. Useful for development / debugging. Bound to ~,~ in
+     headers and view mode.
 
    - undo is now supported across message-saves
 
@@ -171,8 +173,8 @@
 
      - the remaining common functionality has ended up in =mu4e-helpers.el=
 
-     - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=, and
-	adds a minor-mode for the keybindings.
+     - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=,
+	and adds a minor-mode for the keybindings.
 
      - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
 	keybindings, which saves a lot of code in the various views, since they
@@ -204,6 +206,17 @@
 
     - the ~toys~ (~mug~) has been removed, as they no longer worked with the rest of
       the code.
+
+** Contributor for this release
+
+  - As per ~git~: c0dev0id, Christophe Troestler, Daniel Fleischer, Daniel Nagy,
+    Dirk-Jan C. Binnema, Dr. Rich Cordero, Kai von Fintel, Marcelo Henrique
+    Cerri, Nicholas Vollmer, PRESFIL, Tassilo Horn, Thierry Volpiatto, Yaman
+    Qalieh, Yuri D'Elia, Zero King
+  - And of course all the people filing issues, suggesting features and helping
+    out on the maling list.
+
+
 
 * 1.6 (released, as of July 27 2021)
 
@@ -637,8 +650,12 @@
    Sachdeva, Remco van 't Veer, Stephen Eglen, Stig Brautaset, Thierry
    Volpiatto, Thomas Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir
    Sedach
+   
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
 
-  
 ** 0.9.16
 
 *** Release
@@ -732,22 +749,32 @@
     - add the `:thread-subject' header field, for showing the subject
       for a thread only once. So, instead of (from the manual):
 
-      #+BEGIN_EXAMPLE
-06:32 Nu To Edmund Dantès GstDev + Re: Gstreamer-V4L... 15:08 Nu Abbé Busoni
-GstDev + Re: Gstreamer-V... 18:20 Nu Pierre Morrel GstDev \ Re: Gstreamer...
-2013-03-18 S Jacopo EmacsUsr + emacs server on win... 2013-03-18 S Mercédès
-EmacsUsr \ RE: emacs server ... 2013-03-18 S Beachamp EmacsUsr + Re: Copying a
-whole... 22:07 Nu Albert de Moncerf EmacsUsr \ Re: Copying a who... 2013-03-18 S
-Gaspard Caderousse GstDev | Issue with GESSimpl... 2013-03-18 Ss Baron Danglars
-GuileUsr | Guile-SDL 0.4.2 ava... End of search results #+END_EXAMPLE
+#+begin_example
+06:32      Nu To Edmund Dantès   GstDev   + Re: Gstreamer-V4L...
+15:08      Nu Abbé Busoni        GstDev   + Re: Gstreamer-V...
+18:20      Nu Pierre Morrel      GstDev   \ Re: Gstreamer...
+2013-03-18 S  Jacopo             EmacsUsr + emacs server on win...
+2013-03-18 S  Mercédès           EmacsUsr  \ RE: emacs server ...
+2013-03-18 S  Beachamp           EmacsUsr  + Re: Copying a whole...
+22:07      Nu Albert de Moncerf  EmacsUsr   \ Re: Copying a who...
+2013-03-18 S  Gaspard Caderousse GstDev   | Issue with GESSimpl...
+2013-03-18 Ss Baron Danglars     GuileUsr | Guile-SDL 0.4.2 ava...
+End of search results
+#+end_example
 
-      the headers list would now look something like:
-      #+BEGIN_EXAMPLE
-10:26 ⭑☐ Nicolas Goaziou Orgmode /bulk ◼ Re: [O] 2 issue with Include function
-11:00 ⭑☐ Leonard Randall Orgmode /bulk ┗▶ 10:55 ⭑☐ Guillermo Rodrigu... GstDev
-/bulk ◼ Re: stop pipeline into a callback function. 12:04 ⭑☐ Enrique Ocaña Gon...
-GstDev /bulk ┗▶ 11:27 ⭑☐ Tim Müller GstDev /bulk ◼ 09:34 ⭑☐ Robert Klein Orgmode
-/bulk ◼ Re: [O] Agenda Tag filtering - has the behaviour changed? #+END_EXAMPLE
+the headers list would now look something like:
+#+begin_example
+06:32      Nu To Edmund Dantès   GstDev   + Re: Gstreamer-V4L...
+15:08      Nu Abbé Busoni        GstDev   +
+18:20      Nu Pierre Morrel      GstDev   \ Re: Gstreamer...
+2013-03-18 S  Jacopo             EmacsUsr + emacs server on win...
+2013-03-18 S  Mercédès           EmacsUsr  \
+2013-03-18 S  Beachamp           EmacsUsr + Re: Copying a whole...
+22:07      Nu Albert de Moncerf  EmacsUsr   \
+2013-03-18 S  Gaspard Caderousse GstDev   | Issue with GESSimpl...
+2013-03-18 Ss Baron Danglars     GuileUsr | Guile-SDL 0.4.2 ava...
+End of search results
+#+end_example
 
       This is a feature known from e.g. `mutt' and `gnus` and many other
       clients, and can be enabled by customizing `mu4e-headers-fields'
