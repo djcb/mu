@@ -512,20 +512,18 @@ with DOCID which must be present in the headers buffer."
 
 (defun mu4e~headers-flags-str (flags)
   "Get a display string for FLAGS.
+The string is in the order of ‘mu4e-headers-visible-flags’.
 Note that `mu4e-flags-to-string' is for internal use only; this
 function is for display. (This difference is significant, since
 internally, the Maildir spec determines what the flags look like,
 while our display may be different)."
-  (or  (mapconcat
-	(lambda (flag)
-	  (when (member flag mu4e-headers-visible-flags)
-	    (if-let* ((mark (intern-soft
-			     (format "mu4e-headers-%s-mark" (symbol-name flag))))
-		      (cell (symbol-value mark)))
-		(if mu4e-use-fancy-chars (cdr cell) (car cell))
-	      "")))
-	flags "")
-       ""))
+  (cl-loop for flag in mu4e-headers-visible-flags
+           concat
+           (when (member flag flags)
+	         (when-let ((mark (intern-soft
+			                   (format "mu4e-headers-%s-mark" (symbol-name flag))))
+		                (cell (symbol-value mark)))
+		       (if mu4e-use-fancy-chars (cdr cell) (car cell))))))
 
 ;;; Special headers
 
