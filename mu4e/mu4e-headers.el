@@ -664,16 +664,16 @@ space propertized with a `display' text property which expands to
     val))
 
 (defsubst mu4e~headers-apply-flags (msg fieldval)
-  "Adjust LINE's face property based on FLAGS."
+  "Adjust FIELDVAL's face property based on flags in MSG."
   (let* ((flags (plist-get msg :flags))
 	 (meta (plist-get msg :meta))
 	 (face (cond
-		((plist-get meta :related) 'mu4e-related-face)
-                ((memq 'trashed flags) 'mu4e-trashed-face)
+		((memq 'trashed flags) 'mu4e-trashed-face)
                 ((memq 'draft flags)   'mu4e-draft-face)
                 ((or (memq 'unread flags) (memq 'new flags))
                  'mu4e-unread-face)
                 ((memq 'flagged flags) 'mu4e-flagged-face)
+		((plist-get meta :related) 'mu4e-related-face)
                 ((memq 'replied flags) 'mu4e-replied-face)
                 ((memq 'passed flags)  'mu4e-forwarded-face)
 		(t                     'mu4e-header-face))))

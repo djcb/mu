@@ -102,7 +102,7 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-related-face
   '((t :inherit default :slant italic))
-  "Face for a 'related' header." :group 'mu4e-faces)
+  "Face for a \='related' header." :group 'mu4e-faces)
 
 (defface mu4e-header-title-face
   '((t :inherit font-lock-type-face))
