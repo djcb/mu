@@ -3,46 +3,10 @@
 
 * 1.8 (released on June 25, 2022)
 
+  (there are some changes in the installation procedure compared to 1.6.x; see
+  Installation below)
+
 *** mu
-
-    - =mu= switched to the [[https://mesonbuild.com][meson]] build system by default. The existing =autotools=
-      is still available, but is to be removed after the 1.8 release.
-
-      Using =meson= (which you may need to install), you can use something like
-      the following in the mu top source directory:
-
-#+BEGIN_SRC sh
-	$ meson build && ninja -C build
-#+END_SRC
-
-    - However, note that =autogen.sh= has been updated, and there's a
-      convenience =Makefile= with some useful targets, so you can also do:
-#+BEGIN_SRC sh
-       $ ./autogen.sh && make # and optionally, 'sudo make install'
-#+END_SRC
-
-   - After that, either =ninja -C build= or =make= should be enough to rebuild
-
-   - NOTE: development versions 1.7.18 - 17.7.25 had a bug where the mail file
-     names sometimes got misnamed (with some extra ':2,'). This can be restored
-     with something like:
-#+begin_example
-    $ find ~/Maildir -name '*:2,*:*' | \
-       sed "s/\(\([^:]*\)\(:2,\)\{1,\}\(:2,.*$\)\)/mv '\0' '\2\4'/" > rename.sh
-#+end_example
-     (replace 'Maildir' with the path to your maildir)
-
-     once this is done, do check the generated 'rename.sh' and after convincing
-     yourself it does the right thing, do
-#+begin_example
-     $ sh rename.sh
-#+end_example
-     after that, re-index.
-
-   - Before installing, it is recommended that you *remove* any older versions
-     of ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
-
-   - =mu= now requires C++17 support for building
 
    - The server protocol (as used my mu4e) has seen a number of updates, to
      allow for faster rendering. As before, there's no compatibility between
@@ -93,6 +57,9 @@
 
 *** mu4e
 
+   - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
+     for removing quite a bit of old code.
+
    - the mu4e headers rendering is much faster (a factor of 3+), which makes
      displaying big results snappier. This required some updates in the headers
      handling and in the server protocol. Separate from that, the cached
@@ -115,9 +82,6 @@
      to ~M~) to handle all of that. The toggles are also reflected in the
      mode-line; so e.g. 'RTU' means we're including [R]elated messages, and show
      [T]hreads, skip duplicates ([U]nique).
-
-   - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
-     for removing quite a bit of old code.
 
    - A new ~defcustom~, ~mu4e-view-open-program~ for starting the appropriate
      program for a give file (e.g., ~xdg-open~). There are some reasonable
@@ -206,6 +170,48 @@
 
     - the ~toys~ (~mug~) has been removed, as they no longer worked with the rest of
       the code.
+
+** Installation
+
+    - =mu= switched to the [[https://mesonbuild.com][meson]] build system by default. The existing =autotools=
+      is still available, but is to be removed after the 1.8 release.
+
+      Using =meson= (which you may need to install), you can use something like
+      the following in the mu top source directory:
+
+#+BEGIN_SRC sh
+	$ meson build && ninja -C build
+#+END_SRC
+
+    - However, note that =autogen.sh= has been updated, and there's a
+      convenience =Makefile= with some useful targets, so you can also do:
+#+BEGIN_SRC sh
+       $ ./autogen.sh && make # and optionally, 'sudo make install'
+#+END_SRC
+
+   - After that, either =ninja -C build= or =make= should be enough to rebuild
+
+   - NOTE: development versions 1.7.18 - 17.7.25 had a bug where the mail file
+     names sometimes got misnamed (with some extra ':2,'). This can be restored
+     with something like:
+#+begin_example
+    $ find ~/Maildir -name '*:2,*:*' | \
+       sed "s/\(\([^:]*\)\(:2,\)\{1,\}\(:2,.*$\)\)/mv '\0' '\2\4'/" > rename.sh
+#+end_example
+     (replace 'Maildir' with the path to your maildir)
+
+     once this is done, do check the generated 'rename.sh' and after convincing
+     yourself it does the right thing, do
+#+begin_example
+     $ sh rename.sh
+#+end_example
+     after that, re-index.
+
+   - Before installing, it is recommended that you *remove* any older versions
+     of ~mu~ and especially ~mu4e~, since they may conflict with the newer ones.
+
+   - =mu= now requires C++17 support for building
+
 
 ** Contributor for this release
 
@@ -650,7 +656,7 @@
    Sachdeva, Remco van 't Veer, Stephen Eglen, Stig Brautaset, Thierry
    Volpiatto, Thomas Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir
    Sedach
-   
+
 * Old news
   :PROPERTIES:
   :VISIBILITY: folded
