@@ -81,7 +81,6 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 static void
 test_simple()
 {
-
 	const TestMap test_msgs = {{
 
 // "sqlite-msg" "Simple mailing list message.
@@ -157,13 +156,59 @@ I said: "Aujourd'hui!"
 	//g_assert_cmpuint(qr->begin().date().value_or(0), ==, 123454);
 }
 
+static void
+test_spam_address_components()
+{
+	const TestMap test_msgs = {{
+
+// "sqlite-msg" "Simple mailing list message.
+{
+"spam/cur/spam-msg:2,S",
+R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+To: example@example.com
+Subject: ***SPAM*** this is a test
+
+Boo!
+)"},
+}};
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	g_test_bug("2278");
+	g_test_bug("2281");
+
+	// matches both
+	for (auto&& expr: {
+			"SPAM",
+			"spam",
+			"/.*SPAM.*/",
+			"subject:SPAM",
+			"from:bar@example.com",
+			"subject:\\*\\*\\*SPAM\\*\\*\\*",
+			"bar",
+			"example.com"
+		}) {
+
+		if (g_test_verbose())
+			g_message("query: '%s'", expr);
+		auto qr = store.run_query(expr);
+		assert_valid_result(qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+}
 
 int
 main(int argc, char* argv[])
 {
 	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func("/store/query/simple", test_simple);
+	g_test_bug_base("https://github.com/djcb/mu/issues/");
+
+	g_test_add_func("/store/query/simple",       test_simple);
+	g_test_add_func("/store/query/spam-address-components",
+			test_spam_address_components);
 
 	return g_test_run();
 }

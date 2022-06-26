@@ -30,7 +30,6 @@
 #include <string>
 #include <utils/mu-utils.hh>
 
-
 using namespace Mu;
 
 constexpr uint8_t SepaChar1 = 0xfe;
@@ -46,7 +45,13 @@ add_search_term(Xapian::Document& doc, const Field& field, const std::string& va
 	} else if (field.is_indexable_term()) {
 		Xapian::TermGenerator termgen;
 		termgen.set_document(doc);
-		termgen.index_text(utf8_flatten(val),1,field.xapian_term());
+		termgen.index_text(utf8_flatten(val), 1, field.xapian_term());
+		 /* also add as 'normal' term, so some queries where the indexer
+		  * eats special chars also match */
+		if (field.id != Field::Id::BodyText &&
+		    field.id != Field::Id::EmbeddedText) {
+			doc.add_term(field.xapian_term(val));
+		}
 	} else
 		throw std::logic_error("not a search term");
 }
@@ -143,12 +148,19 @@ Document::add(Field::Id id, const Contacts& contacts)
 		if (!cfield_id || *cfield_id != id)
 			continue;
 
-		xdoc_.add_term(field.xapian_term(contact.email));
+		const auto e{contact.email};
+		xdoc_.add_term(field.xapian_term(e));
+
+		/* allow searching for address components, too */
+		const auto atpos = e.find('@');
+		if (atpos != std::string::npos && atpos < e.size() - 1) {
+			xdoc_.add_term(field.xapian_term(e.substr(0, atpos)));
+			xdoc_.add_term(field.xapian_term(e.substr(atpos + 1)));
+		}
 
 		if (!contact.name.empty())
 			termgen.index_text(utf8_flatten(contact.name), 1,
 					   field.xapian_term());
-
 		cvec.emplace_back(contact.email + sepa2 + contact.name);
 	}
 
