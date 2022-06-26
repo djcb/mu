@@ -5,12 +5,11 @@
 
 *** mu
 
-    - =mu= switched to use the [[https://mesonbuild.com][meson]] build system by
-      default. The existing =autotools= is still avaiable, but is to be removed
-      after the 1.8 release.
+    - =mu= switched to the [[https://mesonbuild.com][meson]] build system by default. The existing =autotools=
+      is still available, but is to be removed after the 1.8 release.
 
-      Using =meson= (which you need to install), you can use something like the
-      following in the mu top source directory:
+      Using =meson= (which you may need to install), you can use something like
+      the following in the mu top source directory:
 
 #+BEGIN_SRC sh
 	$ meson build && ninja -C build
@@ -28,7 +27,8 @@
      names sometimes got misnamed (with some extra ':2,'). This can be restored
      with something like:
 #+begin_example
-    $ find ~/Maildir -name '*:2,*:*' | sed "s/\(\([^:]*\)\(:2,\)\{1,\}\(:2,.*$\)\)/mv '\0' '\2\4'/" > rename.sh
+    $ find ~/Maildir -name '*:2,*:*' | \
+       sed "s/\(\([^:]*\)\(:2,\)\{1,\}\(:2,.*$\)\)/mv '\0' '\2\4'/" > rename.sh
 #+end_example
      (replace 'Maildir' with the path to your maildir)
 
