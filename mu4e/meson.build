@@ -76,19 +76,19 @@ foreach src : mu4e_srcs
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
 
   custom_target(src.underscorify() + '_el',
-		build_by_default: true,
-		input: src,
-		output: target_name,
+                build_by_default: true,
+                input: src,
+                output: target_name,
                 install_dir: lispdir,
                 install: true,
-		command: [emacs,
-			  '--no-init-file',
-			  '--batch',
-			  '--eval', '(setq load-prefer-newer t)',
-			  '--eval', target_func,
-			  '--directory', meson.current_build_dir(),
-			  '--directory', meson.current_source_dir(),
-			  '--funcall', 'batch-byte-compile', '@INPUT@'])
+                command: [emacs,
+                          '--no-init-file',
+                          '--batch',
+                          '--eval', '(setq load-prefer-newer t)',
+                          '--eval', target_func,
+                          '--directory', meson.current_build_dir(),
+                          '--directory', meson.current_source_dir(),
+                          '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
 
 # also install the sources and the config
@@ -98,13 +98,27 @@ install_data(mu4e_srcs, install_dir: lispdir)
 install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))
 
 if makeinfo.found()
+
+  fulldate = run_command('date', '+%d %B %Y', check:true).stdout().strip()
+  monthdate = run_command('date', '+%B %Y', check:true).stdout().strip()
+  version_texi_data = configuration_data({
+    'fulldate'  : fulldate,
+    'monthdate' : monthdate,
+    'version'   : meson.project_version(),
+  })
+  version_texi = configure_file(
+    input:  'version.texi.in',
+    output: 'version.texi',
+    configuration: version_texi_data
+  )
+
   custom_target('mu4e_info',
-		input: 'mu4e.texi',
-		output: 'mu4e.info',
-		install_dir: infodir,
-		install: true,
-		command: [makeinfo,
-			  '-o', join_paths(meson.current_build_dir(), 'mu4e.info'),
-			  join_paths(meson.current_source_dir(), 'mu4e.texi'),
-			  '-I', join_paths(meson.current_build_dir(), '..')])
+                input: 'mu4e.texi',
+                output: 'mu4e.info',
+                install_dir: infodir,
+                install: true,
+                command: [makeinfo,
+                          '-o', join_paths(meson.current_build_dir(), 'mu4e.info'),
+                          join_paths(meson.current_source_dir(), 'mu4e.texi'),
+                          '-I', join_paths(meson.current_build_dir(), '..')])
 endif
