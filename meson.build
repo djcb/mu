@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.8.1',
+	version: '1.8.2',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
@@ -75,7 +75,7 @@ endforeach
 # config.h setup
 #
 config_h_data=configuration_data()
-config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '464')
+config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '465')
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
                                            meson.project_version())
