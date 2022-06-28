@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <fstream>
 
 #include "test-mu-common.hh"
 #include "mu-maildir.hh"
@@ -454,6 +455,47 @@ test_maildir_from_path(void)
 	}
 }
 
+static void
+test_maildir_link()
+{
+	TempDir tmpdir{false};
+
+	g_message("%s", tmpdir.path().c_str());
+
+	g_assert_true(!!maildir_mkdir(tmpdir.path() + "/foo"));
+	g_assert_true(!!maildir_mkdir(tmpdir.path() + "/bar"));
+
+	const auto srcpath1 = tmpdir.path() + "/foo/cur/msg1";
+	const auto srcpath2 = tmpdir.path() + "/foo/new/msg2";
+
+	{
+		std::ofstream stream(srcpath1);
+		stream.write("cur", 3);
+		g_assert_true(stream.good());
+		stream.close();
+	}
+
+	{
+		std::ofstream stream(srcpath2);
+		stream.write("new", 3);
+		g_assert_true(stream.good());
+		stream.close();
+	}
+
+	g_assert_true(!!maildir_link(srcpath1, tmpdir.path() + "/bar", false));
+	g_assert_true(!!maildir_link(srcpath2, tmpdir.path() + "/bar", false));
+
+	const auto dstpath1 = tmpdir.path() + "/bar/cur/msg1";
+	const auto dstpath2 = tmpdir.path() + "/bar/new/msg2";
+
+	g_assert_true(g_access(dstpath1.c_str(), F_OK) == 0);
+	g_assert_true(g_access(dstpath2.c_str(), F_OK) == 0);
+
+	g_assert_true(!!maildir_clear_links(tmpdir.path() + "/bar"));
+	g_assert_false(g_access(dstpath1.c_str(), F_OK) == 0);
+	g_assert_false(g_access(dstpath2.c_str(), F_OK) == 0);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -479,11 +521,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-maildir/mu-maildir-from-path",
 			test_maildir_from_path);
 
-	g_log_set_handler(
-	    NULL,
-	    (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-	    (GLogFunc)black_hole,
-	    NULL);
+	g_test_add_func("/mu-maildir/mu-maildir-link", test_maildir_link);
 
 	return g_test_run();
 }

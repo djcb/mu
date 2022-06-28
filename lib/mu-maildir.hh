@@ -48,7 +48,7 @@ namespace Mu {
  * @return a valid result (!!result) or an Error
  */
 Result<void> maildir_mkdir(const std::string& path, mode_t mode=0700,
-			      bool noindex=false);
+			   bool noindex=false);
 
 /**
  * Create a symbolic link to a mail message
@@ -57,10 +57,13 @@ Result<void> maildir_mkdir(const std::string& path, mode_t mode=0700,
  * @param targetpath the path to the target maildir; ie., *not*
  * MyMaildir/cur, but just MyMaildir/. The function will figure out
  * the correct subdir then.
+ * @param unique_names whether to create unique names; should be true unless
+ * for tests.
  *
  * @return a valid result (!!result) or an Error
  */
-Result<void> maildir_link(const std::string& src, const std::string& targetpath);
+Result<void> maildir_link(const std::string& src, const std::string& targetpath,
+			  bool unique_names=true);
 
 /**
  * Recursively delete all the symbolic links in a directory tree

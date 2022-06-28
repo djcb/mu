@@ -147,7 +147,8 @@ check_subdir(const std::string& src, bool& in_cur)
 }
 
 static Mu::Result<std::string>
-get_target_fullpath(const std::string& src, const std::string& targetpath)
+get_target_fullpath(const std::string& src, const std::string& targetpath,
+		    bool unique_names)
 {
 	bool in_cur{};
 	if (auto&& res = check_subdir(src, in_cur); !res)
@@ -159,21 +160,30 @@ get_target_fullpath(const std::string& src, const std::string& targetpath)
 	 * including a hash of the srcname in the targetname. This helps if
 	 * there are copies of a message (which all have the same basename)
 	 */
-	auto targetfullpath = format("%s%c%s%c%u_%s",
-				     targetpath.c_str(),
-				     G_DIR_SEPARATOR, in_cur ? "cur" : "new",
-				     G_DIR_SEPARATOR,
-				     g_str_hash(src.c_str()),
-				     srcfile);
+	std::string fulltargetpath;
+	if (unique_names)
+		fulltargetpath = format("%s%c%s%c%u_%s",
+				    targetpath.c_str(),
+				    G_DIR_SEPARATOR, in_cur ? "cur" : "new",
+				    G_DIR_SEPARATOR,
+				    g_str_hash(src.c_str()),
+				    srcfile);
+	else
+		fulltargetpath = format("%s%c%s%c%s",
+				    targetpath.c_str(),
+				    G_DIR_SEPARATOR, in_cur ? "cur" : "new",
+				    G_DIR_SEPARATOR,
+				    srcfile);
 	g_free(srcfile);
 
-	return targetfullpath;
+	return fulltargetpath;
 }
 
 Result<void>
-Mu::maildir_link(const std::string& src, const std::string& targetpath)
+Mu::maildir_link(const std::string& src, const std::string& targetpath,
+		 bool unique_names)
 {
-	auto path_res{get_target_fullpath(src, targetpath)};
+	auto path_res{get_target_fullpath(src, targetpath, unique_names)};
 	if (!path_res)
 		return Err(std::move(path_res.error()));
 
