@@ -571,7 +571,8 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 	if (msgid.size() > MaxTermLength) {
 		throw Error(Error::Code::InvalidArgument,
 			    "invalid message-id '%s'", msgid.c_str());
-	}
+	} else if (msgid.empty())
+		return {};
 
 	const auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
 	/*XXX this is a bit dodgy */
@@ -1047,11 +1048,8 @@ Server::Private::maybe_mark_as_read(Store::Id docid, Flags oldflags, bool rename
 }
 
 bool
-Server::Private::maybe_mark_msgid_as_read(const std::string& msgid, bool rename) try {
-
-	if (!msgid.empty())
-		return false; // nothing to do.
-
+Server::Private::maybe_mark_msgid_as_read(const std::string& msgid, bool rename) try
+{
 	const auto docids = docids_for_msgid(store_, msgid);
 	if (!docids.empty())
 		g_debug("marking %zu messages with message-id '%s' as read",
@@ -1062,6 +1060,7 @@ Server::Private::maybe_mark_msgid_as_read(const std::string& msgid, bool rename)
 			maybe_mark_as_read(docid, msg->flags(), rename);
 
 	return true;
+
 } catch (...) { /* not fatal */
 	g_warning("failed to mark <%s> as read", msgid.c_str());
 	return false;
@@ -1099,8 +1098,7 @@ Server::Private::view_handler(const Parameters& params)
 
 Server::Server(Store& store, Server::Output output)
     : priv_{std::make_unique<Private>(store, output)}
-{
-}
+{}
 
 Server::~Server() = default;
 
