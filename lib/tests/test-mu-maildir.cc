@@ -28,6 +28,7 @@
 
 #include "test-mu-common.hh"
 #include "mu-maildir.hh"
+#include "utils/mu-result.hh"
 #include "utils/mu-util.h"
 
 using namespace Mu;
@@ -458,12 +459,10 @@ test_maildir_from_path(void)
 static void
 test_maildir_link()
 {
-	TempDir tmpdir{false};
+	TempDir tmpdir;
 
-	g_message("%s", tmpdir.path().c_str());
-
-	g_assert_true(!!maildir_mkdir(tmpdir.path() + "/foo"));
-	g_assert_true(!!maildir_mkdir(tmpdir.path() + "/bar"));
+	assert_valid_result(maildir_mkdir(tmpdir.path() + "/foo"));
+	assert_valid_result(maildir_mkdir(tmpdir.path() + "/bar"));
 
 	const auto srcpath1 = tmpdir.path() + "/foo/cur/msg1";
 	const auto srcpath2 = tmpdir.path() + "/foo/new/msg2";
@@ -482,8 +481,8 @@ test_maildir_link()
 		stream.close();
 	}
 
-	g_assert_true(!!maildir_link(srcpath1, tmpdir.path() + "/bar", false));
-	g_assert_true(!!maildir_link(srcpath2, tmpdir.path() + "/bar", false));
+	assert_valid_result(maildir_link(srcpath1, tmpdir.path() + "/bar", false));
+	assert_valid_result(maildir_link(srcpath2, tmpdir.path() + "/bar", false));
 
 	const auto dstpath1 = tmpdir.path() + "/bar/cur/msg1";
 	const auto dstpath2 = tmpdir.path() + "/bar/new/msg2";
@@ -491,10 +490,58 @@ test_maildir_link()
 	g_assert_true(g_access(dstpath1.c_str(), F_OK) == 0);
 	g_assert_true(g_access(dstpath2.c_str(), F_OK) == 0);
 
-	g_assert_true(!!maildir_clear_links(tmpdir.path() + "/bar"));
+	assert_valid_result(maildir_clear_links(tmpdir.path() + "/bar"));
 	g_assert_false(g_access(dstpath1.c_str(), F_OK) == 0);
 	g_assert_false(g_access(dstpath2.c_str(), F_OK) == 0);
 }
+
+
+static void
+test_maildir_move(bool use_gio)
+{
+	TempDir tmpdir;
+
+	assert_valid_result(maildir_mkdir(tmpdir.path() + "/foo"));
+	assert_valid_result(maildir_mkdir(tmpdir.path() + "/bar"));
+
+	const auto srcpath1 = tmpdir.path() + "/foo/cur/msg1";
+	const auto srcpath2 = tmpdir.path() + "/foo/new/msg2";
+
+	{
+		std::ofstream stream(srcpath1);
+		stream.write("cur", 3);
+		g_assert_true(stream.good());
+		stream.close();
+	}
+
+	{
+		std::ofstream stream(srcpath2);
+		stream.write("new", 3);
+		g_assert_true(stream.good());
+		stream.close();
+	}
+
+	const auto dstpath = tmpdir.path() + "/test1";
+
+	assert_valid_result(maildir_move_message(srcpath1, dstpath, use_gio));
+	assert_valid_result(maildir_move_message(srcpath2, dstpath, use_gio));
+
+
+	//g_assert_true(g_access(dstpath.c_str(), F_OK) == 0);
+}
+
+static void
+test_maildir_move_vanilla()
+{
+	test_maildir_move(false/*!gio*/);
+}
+
+static void
+test_maildir_move_gio()
+{
+	test_maildir_move(true/*gio*/);
+}
+
 
 int
 main(int argc, char* argv[])
@@ -522,6 +569,9 @@ main(int argc, char* argv[])
 			test_maildir_from_path);
 
 	g_test_add_func("/mu-maildir/mu-maildir-link", test_maildir_link);
+
+	g_test_add_func("/mu-maildir/mu-maildir-move-vanilla", test_maildir_move_vanilla);
+	g_test_add_func("/mu-maildir/mu-maildir-move-gio", test_maildir_move_gio);
 
 	return g_test_run();
 }

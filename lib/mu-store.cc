@@ -539,8 +539,7 @@ Store::move_message(Store::Id id,
 		return Err(target_path.error());
 
 	/* 2. let's move it */
-	if (const auto res = maildir_move_message(
-		    msg->path(), target_path.value(), true/*ignore dups*/); !res)
+	if (const auto res = maildir_move_message(msg->path(), target_path.value()); !res)
 		return Err(res.error());
 
 	/* 3. file move worked, now update the message with the new info.*/

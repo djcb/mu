@@ -75,21 +75,20 @@ Result<void> maildir_link(const std::string& src, const std::string& targetpath,
 Result<void> maildir_clear_links(const std::string& dir);
 
 /**
- * Move a message file to another maildir. If the target file already exists, it
- * is overwritten.
+ * Move a message file to another maildir. If the target exists, it is
+ * overwritten.
  *
  * @param oldpath an absolute file system path to an existing message in an
  * actual maildir
  * @param newpath the absolete full path to the target file
- * @param ignore_dups whether to silently ignore the src==target case
- * (and return @true)
- * @param err receives error information
+ * @param force_gio force the use of GIO for moving; this is done automatically
+ * when needed; forcing is mostly useful for tests
  *
- * @return  * @return a valid result (!!result) or an Error
+ * @return a valid result (!!result) or an Error
  */
 Result<void> maildir_move_message(const std::string& oldpath,
-				     const std::string& newpath,
-				     bool               ignore_dups);
+				  const std::string& newpath,
+				  bool               force_gio = false);
 
 /**
  * Determine the target path for a to-be-moved message; i.e. this does not

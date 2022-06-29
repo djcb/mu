@@ -257,43 +257,8 @@ Mu::maildir_clear_links(const std::string& path)
 	return Ok();
 }
 
-
-static size_t
-get_file_size(const std::string& path)
-{
-	int         rv;
-	struct stat statbuf;
-
-	rv = ::stat(path.c_str(), &statbuf);
-	if (rv != 0) {
-		/* g_warning ("error: %s", g_strerror (errno)); */
-		return -1;
-	}
-
-	return static_cast<size_t>(statbuf.st_size);
-}
-
 static Mu::Result<void>
-msg_move_check_pre(const std::string& src, const std::string& dst)
-{
-	if (::access(src.c_str(), R_OK) != 0)
-		return Err(Error{Error::Code::File, "cannot read %s", src.c_str()});
-
-	if (::access(dst.c_str(), F_OK) != 0)
-		return Ok();
-
-	/* target exist; we simply overwrite it, unless target has a different
-	 * size. ignore the exceedingly rare case where have duplicate message
-	 * file names with different content yet the same length. (md5 etc. is a
-	 * bit slow) */
-	if (get_file_size(src) != get_file_size(dst))
-		return Err(Error{Error::Code::File, "%s already exists", dst.c_str()});
-
-	return Ok();
- }
-
-static Mu::Result<void>
-msg_move_check_post(const std::string& src, const std::string& dst)
+msg_move_verify(const std::string& src, const std::string& dst)
 {
 	/* double check -- is the target really there? */
 	if (::access(dst.c_str(), F_OK) != 0)
@@ -322,9 +287,9 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 	GFile *dstfile{g_file_new_for_path(dst.c_str())};
 
 	GError* err{};
-	auto res = g_file_move(srcfile, dstfile, G_FILE_COPY_NONE,
+	auto res = g_file_move(srcfile, dstfile,
+			       G_FILE_COPY_OVERWRITE,
 			       NULL, NULL, NULL, &err);
-
 	g_clear_object(&srcfile);
 	g_clear_object(&dstfile);
 
@@ -337,38 +302,41 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 }
 
 static Mu::Result<void>
-msg_move(const std::string& src, const std::string& dst)
+msg_move(const std::string& src, const std::string& dst, bool force_gio)
 {
-	if (auto&& res = msg_move_check_pre(src, dst); !res)
-		return res;
+	if (::access(src.c_str(), R_OK) != 0)
+		return Err(Error{Error::Code::File, "cannot read %s", src.c_str()});
 
-	if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
-		return msg_move_check_post(src, dst);
+	if (!force_gio) { /* for testing */
 
-	if (errno != EXDEV) /* some unrecoverable error occurred */
-		return Err(Error{Error::Code::File, "error moving %s -> %s",
+		if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
+			return msg_move_verify(src, dst);
+
+		if (errno != EXDEV) /* some unrecoverable error occurred */
+			return Err(Error{Error::Code::File, "error moving %s -> %s",
 					   src.c_str(), dst.c_str()});
+	}
 
-	/* the EXDEV case -- source and target live on different filesystems */
-	return msg_move_g_file(src, dst);
+	/* the EXDEV / force-gio case -- source and target live on different
+	 * filesystems */
+	if (!msg_move_g_file(src, dst))
+		return Err(Error{Error::Code::File, "error moving %s -> %s",
+				src.c_str(), dst.c_str()});
+	else
+		return msg_move_verify(src, dst);
 }
 
 
 Mu::Result<void>
 Mu::maildir_move_message(const std::string&	oldpath,
-			    const std::string&	newpath,
-			    bool		ignore_dups)
+			 const std::string&	newpath,
+			 bool			force_gio)
 {
-	if (oldpath == newpath) {
-		if (ignore_dups)
-			return Ok();
-		else
-			return Err(Error{Error::Code::InvalidArgument,
-					"target equals source"});
-	}
+	if (oldpath == newpath)
+		return Ok(); // nothing to do.
 
 	g_debug("moving %s --> %s", oldpath.c_str(), newpath.c_str());
-	return msg_move(oldpath, newpath);
+	return msg_move(oldpath, newpath, force_gio);
 }
 
 static std::string
