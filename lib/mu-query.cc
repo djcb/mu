@@ -289,9 +289,9 @@ Query::count(const std::string& expr) const
 	    0);
 }
 
+/* LCOV_EXCL_START*/
 std::string
-Query::parse(const std::
-	     string& expr, bool xapian) const
+Query::parse(const std::string& expr, bool xapian) const
 {
 	WarningVec warns;
 	const auto tree{priv_->parser_.parse(expr, warns)};
@@ -303,3 +303,4 @@ Query::parse(const std::
 	else
 		return to_string(tree);
 }
+/* LCOV_EXCL_STOP*/
