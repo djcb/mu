@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -53,11 +53,9 @@ struct Server::Private {
 	Private(Store& store, Output output)
 	    : store_{store}, output_{output}, command_map_{make_command_map()},
 	      keep_going_{true}
-	{
-	}
+	{}
 
-	~Private()
-	{
+	~Private() {
 		indexer().stop();
 		if (index_thread_.joinable())
 			index_thread_.join();
@@ -82,14 +80,12 @@ struct Server::Private {
 	//
 	// output
 	//
-	void output_sexp(Sexp&& sexp,Server::OutputFlags flags = {}) const
-	{
+	void output_sexp(Sexp&& sexp,Server::OutputFlags flags = {}) const {
 		if (output_)
 			output_(std::move(sexp), flags);
 	}
 
-	void output_sexp(Sexp::List&& lst, Server::OutputFlags flags = {}) const
-	{
+	void output_sexp(Sexp::List&& lst, Server::OutputFlags flags = {}) const {
 		output_sexp(Sexp::make_list(std::move(lst)), flags);
 	}
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
@@ -811,6 +807,7 @@ Server::Private::index_handler(const Parameters& params)
 		}
 		output_sexp(get_stats(indexer().progress(), "complete"),
 			    Server::OutputFlags::Flush);
+		store().commit(); /* ensure on-disk database is updated, too */
 	});
 }
 
