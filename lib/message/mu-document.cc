@@ -76,7 +76,7 @@ Document::add(Field::Id id, const std::string& val)
 
 	if (field.include_in_sexp())
 		sexp_list().add_prop(make_prop_name(field),
-				   Sexp::make_string(std::move(val)));
+				     Sexp::make_string(std::move(val)));
 }
 
 void
@@ -99,7 +99,7 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 		for(auto&& val: vals)
 			elms.add(Sexp::make_string(val));
 		sexp_list().add_prop(make_prop_name(field),
-				   Sexp::make_list(std::move(elms)));
+				     Sexp::make_list(std::move(elms)));
 	}
 }
 
@@ -214,6 +214,7 @@ static Sexp
 make_emacs_time_sexp(::time_t t)
 {
 	Sexp::List dlist;
+
 	dlist.add(Sexp::make_number(static_cast<unsigned>(t >> 16)));
 	dlist.add(Sexp::make_number(static_cast<unsigned>(t & 0xffff)));
 	dlist.add(Sexp::make_number(0));
@@ -239,10 +240,10 @@ Document::add(Field::Id id, int64_t val)
 	if (field.include_in_sexp()) {
 		if (field.is_time_t())
 			sexp_list().add_prop(make_prop_name(field),
-					   make_emacs_time_sexp(val));
+					     make_emacs_time_sexp(val));
 		else
 			sexp_list().add_prop(make_prop_name(field),
-					   Sexp::make_number(val));
+					     Sexp::make_number(val));
 	}
 }
 
@@ -265,7 +266,7 @@ Document::add(Priority prio)
 
 	if (field.include_in_sexp())
 		sexp_list().add_prop(make_prop_name(field),
-				      Sexp::make_symbol_sv(priority_name(prio)));
+				     Sexp::make_symbol_sv(priority_name(prio)));
 }
 
 Priority
@@ -292,7 +293,7 @@ Document::add(Flags flags)
 
 	if (field.include_in_sexp())
 		sexp_list().add_prop(make_prop_name(field),
-				   Sexp::make_list(std::move(flaglist)));
+				     Sexp::make_list(std::move(flaglist)));
 }
 
 
@@ -401,8 +402,10 @@ test_bcc()
 		doc.add(Field::Id::Bcc, test_contacts);
 
 		Contacts expected_contacts = {{
-				Contact{"john@example.com", "John", Contact::Type::Bcc},
-				Contact{"ringo@example.com", "Ringo",  Contact::Type::Bcc},
+				Contact{"john@example.com", "John",
+					Contact::Type::Bcc},
+				Contact{"ringo@example.com", "Ringo",
+					Contact::Type::Bcc},
 			}};
 		const auto actual_contacts = doc.contacts_value(Field::Id::Bcc);
 		assert_same_contacts(expected_contacts, actual_contacts);
@@ -411,8 +414,10 @@ test_bcc()
 	{
 		Document doc;
 		Contacts contacts = {{
-				Contact{"john@example.com", "John Lennon", Contact::Type::Bcc},
-				Contact{"ringo@example.com", "Ringo",  Contact::Type::Bcc},
+				Contact{"john@example.com", "John Lennon",
+					Contact::Type::Bcc},
+				Contact{"ringo@example.com", "Ringo",
+					Contact::Type::Bcc},
 			}};
 		doc.add(Field::Id::Bcc, contacts);
 
