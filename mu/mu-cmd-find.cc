@@ -173,42 +173,41 @@ get_query(const MuConfig* opts)
 	return Ok(to_string_gchar(std::move(query)));
 }
 
-static gboolean
+static bool
 prepare_links(const MuConfig* opts, GError** err)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
 	if (auto&& res = maildir_mkdir(opts->linksdir, 0700, true); !res) {
 		res.error().fill_g_error(err);
-		return FALSE;
+		return false;
 	}
 
 	if (!opts->clearlinks)
-		return TRUE;
+		return false;
 
 	if (auto&& res = maildir_clear_links(opts->linksdir); !res) {
 		res.error().fill_g_error(err);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 static bool
 output_link(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
-	if (msg)
-		return true;
-
 	if (info.header)
 		return prepare_links(opts, err);
 	else if (info.footer)
 		return true;
+
 	if (auto&& res = maildir_link(msg->path(), opts->linksdir); !res) {
 		res.error().fill_g_error(err);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+
+	return true;
 }
 
 static void
@@ -388,9 +387,6 @@ output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 static bool
 output_json(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
-	if (!msg)
-		return true;
-
 	if (info.header) {
 		g_print("[\n");
 		return true;
@@ -400,6 +396,9 @@ output_json(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 		g_print("]\n");
 		return true;
 	}
+
+	if (!msg)
+		return true;
 
 	g_print("%s%s\n",
 		msg->to_sexp().to_json_string().c_str(),
