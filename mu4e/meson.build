@@ -109,8 +109,7 @@ if makeinfo.found()
   version_texi = configure_file(
     input:  'version.texi.in',
     output: 'version.texi',
-    configuration: version_texi_data
-  )
+    configuration: version_texi_data)
 
   custom_target('mu4e_info',
                 input: 'mu4e.texi',
@@ -121,4 +120,7 @@ if makeinfo.found()
                           '-o', join_paths(meson.current_build_dir(), 'mu4e.info'),
                           join_paths(meson.current_source_dir(), 'mu4e.texi'),
                           '-I', join_paths(meson.current_build_dir(), '..')])
+  if install_info.found()
+    meson.add_install_script(install_info_script, 'share/info', 'mu4e.info')
+  endif
 endif

@@ -117,11 +117,11 @@ gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
 xapian_dep     = dependency('xapian-core', version:'>= 1.4')
 thread_dep     = dependency('threads')
 
+awk=find_program(['gawk', 'awk'])
+gzip=find_program('gzip')
+
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
-
-awk=find_program(['gawk', 'awk'])
-
 # soft dependencies
 
 # emacs -- needed for mu4e compilation
@@ -134,6 +134,14 @@ endif
 makeinfo=find_program(['makeinfo'], required:false)
 if not makeinfo.found()
   message('makeinfo (texinfo) not found; not building info documentation')
+else
+  install_info=find_program(['install-info'], required:false)
+  if not install_info.found()
+    message('install-info not found')
+  else
+    install_info_script=join_paths(meson.current_source_dir(), 'build-aux',
+                                   'meson-install-info.sh')
+  endif
 endif
 
 # readline. annoyingly, macos has an incompatible libedit claiming to be
