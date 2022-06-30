@@ -16,8 +16,8 @@ Welcome to ~mu~!
 *Note*: you are looking at the *development* branch, which is where new code is
 being developed and tested, and which may occasionally break.
 
-Distribution and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.6.x][1.6.x
-Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.6.x Releases]].
+Distribution and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.8][1.8
+Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.8 Releases]].
 
 Given the enormous amounts of e-mail many people gather and the importance of
 e-mail message in our work-flows, it's essential to quickly deal with all that
@@ -48,3 +48,46 @@ Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora)
 under the name ~maildir-utils~; apparently because they don't like short names.
 All of the code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License
 version 3]] (or higher).
+
+* Installation
+
+Note: building from sources is an /advanced/ subject; esp. if something goes
+wrong. The below simple examples are a start, but all tools involved have many
+options; there are differences between systems, versions etc. So if this is all
+a bit daunting we recommend to wait for someone else to build it for you, such
+as a Linux distribution.
+
+** Requirement
+
+Ensure you have:
+
+- a C++17 compiler (~gcc~ or ~clang~ are known to work)
+- development packages for /Xapian/ and /GMime and /GLib/ (see ~meson.build~ for the
+  versions)
+- basic tools such as ~make~, ~sed~, ~grep~
+- ~meson~
+
+#+begin_example
+$ git clone git://github.com/djcb/mu.git
+$ cd mu
+#+end_example
+
+Now, you have a choice. ~mu~ uses ~meson~ for building, but includes a good-old
+~Makefile~ with some useful targets, which should work for typical cases.
+
+#+begin_example
+$ ./autogen.sh && make
+$ sudo make install
+#+end_example
+
+Alternatively, for more control, you can run ~meson~ directly:
+#+begin_example
+$ meson build && ninja -C build
+$ ninja -C build install
+#+end_example
+
+This allows for passing various meson options, such as ~--prefix~. Consult the
+~meson~ documentation for details.
+
+
+
