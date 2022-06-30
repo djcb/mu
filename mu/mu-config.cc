@@ -621,7 +621,7 @@ parse_params(int* argcp, char*** argvp, GError** err)
 
 	context = g_option_context_new("- mu general options");
 
-	g_option_context_set_help_enabled(context, TRUE);
+	g_option_context_set_help_enabled(context, FALSE);
 	g_option_context_set_main_group(context, config_options_group_mu());
 	g_option_context_set_ignore_unknown_options(context, FALSE);
 
