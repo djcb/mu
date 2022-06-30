@@ -24,3 +24,8 @@ option('readline',
        type: 'feature',
        value: 'auto',
        description: 'enable readline support for the mu4e repl')
+
+option('emacs',
+       type: 'string',
+       value: 'emacs',
+       description: 'name/path of the emacs executable')

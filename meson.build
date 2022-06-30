@@ -125,7 +125,8 @@ awk=find_program(['gawk', 'awk'])
 # soft dependencies
 
 # emacs -- needed for mu4e compilation
-emacs=find_program(['emacs'], version: '>=25.3', required:false)
+emacs_name=get_option('emacs')
+emacs=find_program([emacs_name], version: '>=25.3', required:false)
 if not emacs.found()
   message('emacs not found; not pre-compiling mu4e sources')
 endif
