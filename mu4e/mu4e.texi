@@ -301,7 +301,7 @@ GitHub@footnote{@url{https://github.com/djcb/mu/releases}}),
 installation follows the typical steps:
 
 @example
-$ tar xvfz mu-<version>.tar.gz  # use the specific version
+$ tar xvfz mu-<version>.xz  # use the specific version
 $ cd mu-<version>
 # On the BSDs: use gmake instead of make
 $ ./configure && make
@@ -315,8 +315,9 @@ Xapian, GMime and their dependencies must be installed.
 
 By default, @t{mu} uses the
 Meson@footnote{@url{https://mesonbuild.com/}} build-system. For
-ease-of-use, we also provide a Makefile though. You can of course also
-just use the corresponding @t{meson}/@t{ninja} commands.
+ease-of-use, we also provide a @t{Makefile} with some basic options. Of
+course, you can also just use the corresponding @t{meson}/@t{ninja}
+commands directly.
 
 @example
 $ git clone git://github.com/djcb/mu.git
