@@ -581,14 +581,6 @@ are optional."
 
   (mu4e~compose-set-friendly-buffer-name compose-type)
 
-  ;; now jump to some useful positions, and start writing that mail!
-  (if (member compose-type '(new forward))
-      (message-goto-to)
-    ;; otherwise, it depends...
-    (pcase message-cite-reply-position
-      ((or 'above 'traditional) (message-goto-body))
-      (_ (when (message-goto-signature) (forward-line -2)))))
-
   ;; bind to `mu4e-compose-parent-message' of compose buffer
   (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
   (put 'mu4e-compose-parent-message 'permanent-local t)
@@ -600,6 +592,15 @@ are optional."
   (mu4e~compose-hide-headers)
   ;; switch on the mode
   (mu4e-compose-mode)
+
+  ;; now jump to some useful positions, and start writing that mail!
+  (if (member compose-type '(new forward))
+      (message-goto-to)
+    ;; otherwise, it depends...
+    (pcase message-cite-reply-position
+      ((or 'above 'traditional) (message-goto-body))
+      (_ (when (message-goto-signature) (forward-line -2)))))
+
   ;; don't allow undoing anything before this.
   (setq buffer-undo-list nil)
 
