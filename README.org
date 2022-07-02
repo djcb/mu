@@ -1,4 +1,4 @@
-#+TITLE:Mu
+#+TITLE:mu
 [[https://github.com/djcb/mu/blob/master/COPYING][https://img.shields.io/github/license/djcb/mu?logo=gnu&.svg]]
 [[https://en.cppreference.com][https://img.shields.io/badge/Made%20with-C/CPP-1f425f?logo=c&.svg]]
 [[https://img.shields.io/github/v/release/djcb/mu][https://img.shields.io/github/v/release/djcb/mu.svg]]
@@ -27,8 +27,7 @@ now, and quickly file away message for later use.
 ~mu~ is a tool for dealing with e-mail messages stored in the Maildir-format. ~mu~'s
 purpose in life is to help you to quickly find the messages you need; in
 addition, it allows you to view messages, extract attachments, create new
-maildirs, and so on. See the [[www/cheatsheet.md][mu cheatsheet]] for some examples. =mu= is fully
-documented.
+maildirs, and so on. =mu= is fully documented.
 
 After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them using a
 custom query language. You can use various message fields or words in the body
@@ -36,13 +35,13 @@ text to find the right messages.
 
 Built on top of ~mu~ are some extensions (included in this package):
 
-- mu4e: a full-featured e-mail client that runs inside emacs
+- ~mu4e~: a full-featured e-mail client that runs inside emacs
 
-- mu-guile: bindings for the Guile/Scheme programming language (version 3.0 and
+- ~mu-guile~: bindings for the Guile/Scheme programming language (version 3.0 and
   later)
 
-~mu~ is written in C and C++; ~mu4e~ is written in ~elisp, and ~mu-guile~ in a mix of
-C++ and Scheme.
+~mu~ is written in C and C++; ~mu4e~ is written in ~elisp~ and ~mu-guile~ in a mix of C++ and
+Scheme.
 
 Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora)
 under the name ~maildir-utils~; apparently because they don't like short names.
@@ -51,21 +50,25 @@ version 3]] (or higher).
 
 * Installation
 
-Note: building from sources is an /advanced/ subject; esp. if something goes
+Note: building from source is an /advanced/ subject; esp. if something goes
 wrong. The below simple examples are a start, but all tools involved have many
 options; there are differences between systems, versions etc. So if this is all
 a bit daunting we recommend to wait for someone else to build it for you, such
-as a Linux distribution.
+as a Linux distribution. Many have packages available.
 
-** Requirement
+** Requirements
 
-Ensure you have:
+To be able to build ~mu~, ensure you have:
 
 - a C++17 compiler (~gcc~ or ~clang~ are known to work)
-- development packages for /Xapian/ and /GMime and /GLib/ (see ~meson.build~ for the
+- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
   versions)
 - basic tools such as ~make~, ~sed~, ~grep~
 - ~meson~
+
+For ~mu4e~, you also need ~emacs~.
+
+** Building
 
 #+begin_example
 $ git clone git://github.com/djcb/mu.git
@@ -86,7 +89,7 @@ $ meson build && ninja -C build
 $ ninja -C build install
 #+end_example
 
-This allows for passing various meson options, such as ~--prefix~. Consult the
+This allows for passing various ~meson~ options, such as ~--prefix~. Consult the
 ~meson~ documentation for details.
 
 
