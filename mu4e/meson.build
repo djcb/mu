@@ -14,15 +14,13 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-# where the lisp goes
-lispdir =  join_paths(datadir, 'emacs', 'site-lisp', 'mu4e')
 
 # generate some build data for use in mu4e
 mu4e_meta = configure_file(
   input: 'mu4e-config.el.in',
   output: 'mu4e-config.el',
   install: true,
-  install_dir: lispdir,
+  install_dir: mu4e_lispdir,
   configuration: {
       'VERSION'         : meson.project_version(),
       # project_build_root() with meson >= 0.56
@@ -79,7 +77,7 @@ foreach src : mu4e_srcs
                 build_by_default: true,
                 input: src,
                 output: target_name,
-                install_dir: lispdir,
+                install_dir: mu4e_lispdir,
                 install: true,
                 command: [emacs,
                           '--no-init-file',
@@ -92,7 +90,7 @@ foreach src : mu4e_srcs
 endforeach
 
 # also install the sources and the config
-install_data(mu4e_srcs, install_dir: lispdir)
+install_data(mu4e_srcs, install_dir: mu4e_lispdir)
 
 # install mu4e-about.org
 install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))

@@ -31,10 +31,18 @@ project('mu', ['c', 'cpp'],
 
 # installation paths
 prefixdir = get_option('prefix')
-bindir	  = join_paths(prefixdir, get_option('bindir'))
-datadir	  = join_paths(prefixdir, get_option('datadir'))
-mandir	  = join_paths(prefixdir, get_option('mandir'))
-infodir	  = join_paths(prefixdir, get_option('infodir'))
+bindir	  = prefixdir /  get_option('bindir')
+datadir	  = prefixdir / get_option('datadir')
+mandir	  = prefixdir / get_option('mandir')
+infodir	  = prefixdir / get_option('infodir')
+
+# allow for configuring lispdir, as with autotools.
+# default to <p
+if get_option('lispdir') == ''
+  mu4e_lispdir= datadir / join_paths('emacs', 'site-lisp', 'mu4e')
+else
+  mu4e_lispdir= get_option('lispdir') / 'mu4e'
+endif
 
 ################################################################################
 # compilers / flags

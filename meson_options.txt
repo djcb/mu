@@ -29,3 +29,7 @@ option('emacs',
        type: 'string',
        value: 'emacs',
        description: 'name/path of the emacs executable')
+
+option('lispdir',
+       type: 'string',
+       description: 'path under which to install emacs-lisp files')
