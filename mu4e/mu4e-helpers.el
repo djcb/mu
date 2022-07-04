@@ -510,7 +510,7 @@ in an external program."
 
 (defsubst mu4e-is-mode-or-derived-p (mode)
   "Is the current mode equal to MODE or derived from it?"
-  (or (eq major-mode 'mode) (derived-mode-p mode)))
+  (or (eq major-mode mode) (derived-mode-p mode)))
 
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode.
