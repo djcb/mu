@@ -191,7 +191,6 @@ A part would look something like:
 
 ;; backward compatibility ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defalias 'mu4e-msg-field 'mu4e-message-field)
-(defalias 'mu4e-body-text 'mu4e-message-body-text) ;; backward compatibility
 
 (defun mu4e-field-at-point (field)
   "Get FIELD for the message at point.
