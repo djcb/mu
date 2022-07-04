@@ -1978,7 +1978,8 @@ quick access to, for example:
      (:maildir "/lists"     :key  ?l)
      (:maildir "/work"      :key  ?w)
      (:maildir "/sent"      :key  ?s)
-     (:maildir "/lists/project/project_X" :key ?x :name "Project X")))
+     (:maildir "/lists/project_a/list_b" :key "Lab")
+     (:maildir "/lists/project_c/list_x" :key ?x :name "Project X")))
 @end lisp
 
 This sets @key{i} as a shortcut for the @t{/inbox} folder --- effectively a
@@ -1988,7 +1989,8 @@ choose from @emph{all} maildirs that you have. There is support for
 autocompletion; note that the list of maildirs is determined when @t{mu4e}
 starts; if there are changes in the maildirs while @t{mu4e} is running, you
 need to restart @t{mu4e}. Optionally, you can specify a name to be displayed
-in the main view.
+in the main view. The key can also be a string, in that case the string gets
+displayed in the main view. This is useful e.g. for calling custom Hydras.
 
 Each of the folder names is relative to your top-level maildir directory; so
 if you keep your mail in @file{~/Maildir}, @file{/inbox} would refer to
