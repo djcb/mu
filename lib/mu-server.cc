@@ -400,7 +400,7 @@ Server::Private::add_handler(const Parameters& params)
 	const auto docid_res{store().add_message(path)};
 
 	if (!docid_res)
-		throw Error(Error::Code::Store, "failed to add message to store");
+		throw docid_res.error();
 
 	const auto docid{docid_res.value()};
 
