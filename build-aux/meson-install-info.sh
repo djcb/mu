@@ -3,13 +3,12 @@
 infodir=$1
 infofile=$2
 
-
-echo "DESTDIR: ${DESTDIR}" > boo.txt
-echo "XX ${MESON_INSTALL_DESTDIR_PREFIX}" >> boo.txt
-
-
 # Meson post-install script to update info metadata
-install-info --info-dir ${MESON_INSTALL_DESTDIR_PREFIX}/${infodir} \
-	     ${MESON_INSTALL_DESTDIR_PREFIX}/${infodir}/${infofile}
+# If DESTDIR is set, do _not_ install-info, since it's only a temporary
+# install
+if test -z "${DESTDIR}"; then
+    install-info --info-dir ${MESON_INSTALL_DESTDIR_PREFIX}/${infodir} \
+		 ${MESON_INSTALL_DESTDIR_PREFIX}/${infodir}/${infofile}
+fi
 
 gzip --force ${MESON_INSTALL_DESTDIR_PREFIX}/${infodir}/${infofile}
