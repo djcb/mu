@@ -86,6 +86,12 @@ nil otherwise."
           (function :tag "Function return folder name"))
   :group 'mu4e-folders)
 
+(defcustom mu4e-maildirs nil
+  "A custom list of maildirs"
+  :type '(repeat string)
+  :version "1.3.9"
+  :group 'mu4e-folders)
+
 (defcustom mu4e-maildir-shortcuts nil
   "A list of maildir shortcuts.
 This makes it possible to quickly go to a particular
@@ -163,6 +169,12 @@ mime-type are nil."
   "Cached list of maildirs.")
 
 
+(defun mu4e-maildirs ()
+  "Get `mu4e-maildirs'."
+  (seq-map (lambda (item)
+             `(:maildir  ,item :key ,?.))
+  mu4e-maildirs))
+
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
 Converts from the old format if needed."

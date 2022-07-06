@@ -92,10 +92,12 @@ If ITEMS does not yet have a favorite item, pick the first."
   items)
 
 (defvar mu4e--bookmark-items-cached nil "Cached bookmarks query items.")
+(defvar mu4e--maildir-with-shortcut-items-cached nil "Cached maildirs query items.")
 (defvar mu4e--maildir-items-cached nil "Cached maildirs query items.")
 
 (declare-function mu4e-bookmarks "mu4e-bookmarks")
 (declare-function mu4e-maildir-shortcuts "mu4e-folders")
+(declare-function mu4e-maildirs "mu4e-folders")
 
 (defun mu4e--query-item-display-counts (item)
   "Get the count display string for some query-data ITEM."
@@ -123,6 +125,7 @@ With RESET-BASELINE, reset the baseline first."
     (setq mu4e--query-items-baseline nil
           mu4e--query-items-baseline-tstamp nil
           mu4e--bookmark-items-cached nil
+          mu4e--maildir-with-shortcut-items-cached nil
           mu4e--maildir-items-cached nil
           mu4e--last-delta-unread 0))
   (mu4e--server-queries
@@ -146,6 +149,7 @@ I.e. what we get in response to mu4e--query-items-refresh."
           mu4e--query-items-baseline-tstamp (current-time)))
 
   (setq mu4e--bookmark-items-cached nil
+        mu4e--maildir-with-shortcut-items-cached nil
         mu4e--maildir-items-cached nil)
   (mu4e-query-items) ;; for side-effects
   ;; tell the world.
@@ -254,12 +258,15 @@ please refer to info node `(mu4e) Bookmarks and Maildirs'."
         (setq mu4e--bookmark-items-cached
               (mu4e--query-items-pick-favorite
                (mu4e--make-query-items (mu4e-bookmarks) 'bookmarks)))))
+   ((equal type 'maildirs-with-shortcut)
+    (or mu4e--maildir-with-shortcut-items-cached
+        (setq mu4e--maildir-with-shortcut-items-cached (mu4e--make-query-items (mu4e-maildir-shortcuts) 'maildirs))))
    ((equal type 'maildirs)
     (or mu4e--maildir-items-cached
-        (setq mu4e--maildir-items-cached
-              (mu4e--make-query-items (mu4e-maildir-shortcuts) 'maildirs))))
+        (setq mu4e--maildir-items-cached (mu4e--make-query-items (mu4e-maildirs) 'maildirs))))
    ((not type)
     (append (mu4e-query-items 'bookmarks)
+            (mu4e-query-items 'maildirs-with-shortcut)
             (mu4e-query-items 'maildirs)))
    (t
     (mu4e-error "No such type %s" type))))

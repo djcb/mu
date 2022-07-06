@@ -228,7 +228,7 @@ for aligning them."
                 ;; note, we have a function for the binding,
                 ;; and perhaps a different one for the lambda.
                 (cond
-                 ((eq item-type 'maildirs)
+                 ((or (eq item-type 'maildirs) (eq item-type 'maildirs-with-shortcut))
                   (list #'mu4e-search-maildir #'mu4e-search
                         query))
                  ((eq item-type 'bookmarks)
@@ -239,11 +239,17 @@ for aligning them."
            (concat
             (mu4e--main-action
              ;; main title
-             (format "\t* [@] %s "
-                     (propertize
-                      name
-                      'face (if favorite 'mu4e-header-key-face nil)
-                      'help-echo query))
+             (if (eq item-type 'maildirs)
+                 (format "\t* %s "
+                         (propertize
+                          name
+                          'face (if favorite 'mu4e-header-key-face nil)
+                          'help-echo query))
+               (format "\t* [@] %s "
+                       (propertize
+                        name
+                        'face (if favorite 'mu4e-header-key-face nil)
+                        'help-echo query)))
              ;; function to call when activated
              (lambda () (interactive)
                (funcall (nth 1 item-info)
@@ -314,8 +320,19 @@ Otherwise, do nothing."
          (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
          (mu4e--main-items 'bookmarks max-length)
          "\n"
-         (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-         (mu4e--main-items 'maildirs max-length)
+         (if (eq mu4e-maildir-shortcuts nil)
+             ""
+           (concat
+            (propertize "  Quick access maildirs\n\n" 'face 'mu4e-title-face)
+            (mu4e--main-items 'maildirs-with-shortcut max-length)
+            "\n"))
+
+         (if (eq mu4e-maildirs nil)
+             ""
+           (concat
+            (propertize "  Other maildirs\n\n" 'face 'mu4e-title-face)
+            (mu4e--main-items 'maildirs max-length)
+            "\n"))
          "\n"
          (propertize "  Misc\n\n" 'face 'mu4e-title-face)
          (mu4e--main-action "\t* [@]Choose query\n"
