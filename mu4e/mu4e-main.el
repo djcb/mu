@@ -275,6 +275,7 @@ When REFRESH is non nil refresh infos from server."
       (mu4e--main-redraw-buffer))))
 
 (defun mu4e--main-redraw-buffer ()
+  "Redraw the main buffer."
   (with-current-buffer mu4e-main-buffer-name
     (let ((inhibit-read-only t)
           (pos (point))
@@ -403,34 +404,22 @@ When REFRESH is non nil refresh infos from server."
       (revert-buffer))))
 
 (defun mu4e--main-menu ()
-  "The mu4e main menu."
-  (interactive)
-  (let ((key
-         (read-key
-          (mu4e-format
-           "%s"
-           (concat
-            (mu4e--main-action-str "[j]ump " 'mu4e-jump-to-maildir)
-            (mu4e--main-action-str "[s]earch " 'mu4e-search)
-            (mu4e--main-action-str "[C]ompose " 'mu4e-compose-new)
-            (mu4e--main-action-str "[b]ookmarks " 'mu4e-headers-search-bookmark)
-            (mu4e--main-action-str "[;]Switch context " 'mu4e-context-switch)
-            (mu4e--main-action-str "[U]pdate " 'mu4e-update-mail-and-index)
-            (mu4e--main-action-str "[N]ews " 'mu4e-news)
-            (mu4e--main-action-str "[A]bout " 'mu4e-about)
-            (mu4e--main-action-str "[H]elp " 'mu4e-display-manual))))))
-    (unless (member key '(?\C-g ?\C-\[))
-      (let ((mu4e-command (lookup-key mu4e-main-mode-map (string key) t)))
-        (if mu4e-command
-            (condition-case err
-                (let ((mu4e-hide-index-messages t))
-                  (call-interactively mu4e-command))
-              (error (when (cadr err) (message (cadr err)))))
-          (message (mu4e-format "key %s not bound to a command" (string key))))
-        (when (or (not mu4e-command) (eq mu4e-command 'mu4e-context-switch))
-          (sit-for 1)
-          (mu4e--main-menu))))))
+  "The mu4e main menu in the mini-buffer."
+  (let ((func (mu4e-read-option
+	       "Do: "
+	       '(("jump"	    . mu4e~headers-jump-to-maildir)
+		 ("search"	    . mu4e-search)
+		 ("Compose"	    . mu4e-compose-new)
+		 ("bookmarks"	    . mu4e-headers-search-bookmark)
+		 (";Switch context" . mu4e-context-switch)
+		 ("Update"	    . mu4e-update-mail-and-index)
+		 ("News"	    . mu4e-news)
+		 ("About"	    . mu4e-about)
+		 ("Help "	    . mu4e-display-manual)))))
+    (call-interactively func)
+    (when (eq func 'mu4e-context-switch)
+      (sit-for 1)
+      (mu4e--main-menu))))
 
-;;; _
 (provide 'mu4e-main)
 ;;; mu4e-main.el ends here
