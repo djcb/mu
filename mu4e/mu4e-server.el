@@ -207,7 +207,7 @@ Checks whether the server process is live."
              '(run open listen connect stop)) t))
 
 (defsubst mu4e--server-eat-sexp-from-buf ()
-  "'Eat' the next s-expression from `mu4e--server-buf'.
+  "`Eat' the next s-expression from `mu4e--server-buf'.
 Note: this is a string, not an emacs-buffer. `mu4e--server-buf gets
 its contents from the mu-servers in the following form:
    <`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>

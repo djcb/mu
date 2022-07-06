@@ -227,7 +227,7 @@ for aligning them."
                 ;; note, we have a function for the binding,
                 ;; and perhaps a different one for the lambda.
                 (cond
-                 ((eq item-type 'maildirs)
+                 ((or (eq item-type 'maildirs) (eq item-type 'maildirs-with-shortcut))
                   (list #'mu4e-search-maildir #'mu4e-search
                         query))
                  ((eq item-type 'bookmarks)
@@ -311,7 +311,10 @@ Otherwise, do nothing."
            (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
            (mu4e--main-items 'bookmarks max-length)
            "\n"
-           (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
+           (propertize "  Quick access maildirs\n\n" 'face 'mu4e-title-face)
+           (mu4e--main-items 'maildirs-with-shortcut max-length)
+           "\n"
+           (propertize "  Other maildirs\n\n" 'face 'mu4e-title-face)
            (mu4e--main-items 'maildirs max-length)
            "\n"
            (propertize "  Misc\n\n" 'face 'mu4e-title-face)
