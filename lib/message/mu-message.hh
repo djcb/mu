@@ -209,6 +209,16 @@ public:
 	Result<void> set_maildir(const std::string& maildir);
 
 	/**
+	 * Clean up the maildir. This is for internal use, but exposed for testing.
+	 * For now cleaned-up means "stray trailing / removed".
+	 *
+	 * @param maildir some maildir
+	 *
+	 * @return a cleaned-up version
+	 */
+	static std::string sanitize_maildir(const std::string& maildir);
+
+	/**
 	 * Get the subject of this message
 	 *
 	 * @return the subject of this Message

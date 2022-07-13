@@ -800,14 +800,22 @@ Message::cache_path(Option<size_t> index) const
 		return Ok(std::string{priv_->cache_path});
 }
 
+// for now this only remove stray '/' at the end
+std::string
+Message::sanitize_maildir(const std::string& mdir)
+{
+	if (mdir.size() > 1 && mdir.at(mdir.length()-1) == '/')
+		return mdir.substr(0, mdir.length() - 1);
+	else
+		return mdir;
+}
 
 Result<void>
 Message::update_after_move(const std::string& new_path,
 			   const std::string& new_maildir,
 			   Flags new_flags)
 {
-	const auto statbuf{get_statbuf(new_path)};
-	if (!statbuf)
+	if (auto statbuf{get_statbuf(new_path)}; !statbuf)
 		return Err(statbuf.error());
 	else
 		priv_->ctime = statbuf->st_ctime;
@@ -820,7 +828,7 @@ Message::update_after_move(const std::string& new_path,
 
 	set_flags(new_flags);
 
-	if (const auto res = set_maildir(new_maildir); !res)
+	if (const auto res = set_maildir(sanitize_maildir(new_maildir)); !res)
 		return res;
 
 	return Ok();

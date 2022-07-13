@@ -823,6 +823,14 @@ test_message_fail ()
 	}
 }
 
+static void
+test_message_sanitize_maildir()
+{
+	assert_equal(Message::sanitize_maildir("/"), "/");
+	assert_equal(Message::sanitize_maildir("/foo/bar"), "/foo/bar");
+	assert_equal(Message::sanitize_maildir("/foo/bar/cuux/"), "/foo/bar/cuux");
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -844,6 +852,8 @@ main(int argc, char* argv[])
 			test_message_calendar);
 	g_test_add_func("/message/message/fail",
 			test_message_fail);
+	g_test_add_func("/message/message/sanitize-maildir",
+			test_message_sanitize_maildir);
 
 	return g_test_run();
 }
