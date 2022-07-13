@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.8.5',
+	version: '1.8.6',
 	meson_version: '>= 0.52.0', # debian 10
 	license: 'GPL-3.0-or-later',
 	default_options : [
@@ -53,8 +53,6 @@ extra_flags = [
   '-Wformat-security',
   '-Wformat=2',
   '-Wstack-protector',
-  '-Wno-keyword-macro',
- # '-Wshadow',
   '-Wno-switch-enum',
   '-Wno-#warnings']
 
