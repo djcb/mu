@@ -453,6 +453,17 @@ http://cr.yp.to/proto/maildir.html."
 
 
 ;;; Misc
+(defun mu4e-copy-thing-at-point ()
+  "Copy e-mail address or URL at point to the kill ring.
+If there is not e-mail address at point, do nothing."
+  (interactive)
+  (let* ((thing (and (thing-at-point 'email)
+		     (string-trim (thing-at-point 'email 'no-props) "<" ">")))
+	 (thing (or thing (thing-at-point 'url 'no-props))))
+    (when thing
+      (kill-new thing)
+      (mu4e-message "Copied '%s' to kill-ring" thing))))
+
 (defun mu4e-display-size (size)
   "Get a human-friendly string representation of SIZE (in bytes)."
   (cond

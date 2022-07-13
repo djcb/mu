@@ -949,9 +949,11 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     ;; misc
     (define-key map "M" #'mu4e-view-massage)
 
-    (define-key map "w" 'visual-line-mode)
+    (define-key map "w" #'visual-line-mode)
     (define-key map "h" #'mu4e-view-toggle-html)
-    (define-key map (kbd "M-q") 'article-fill-long-lines)
+    (define-key map (kbd "M-q") #'article-fill-long-lines)
+
+    (define-key map "c" #'mu4e-copy-thing-at-point)
 
     ;; next 3 only warn user when attempt in the message view
     (define-key map "u" #'mu4e-view-unmark)
