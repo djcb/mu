@@ -96,6 +96,7 @@ Message-Id: <83B5AF40-DBFA-4578-A043-04C80276E195@sqlabs.net>
 From: "Foo Example" <foo@example.com>
 To: sqlite-dev@sqlite.org
 Cc: "Bank of America" <bank@example.com>
+Bcc: Aku Ankka <donald.duck@duckstad.nl>
 Mime-Version: 1.0 (Apple Message framework v926)
 Date: Mon, 4 Aug 2008 11:40:49 +0200
 X-Mailer: Apple Mail (2.926)
@@ -130,6 +131,15 @@ I said: "Aujourd'hui!"
 			"from:\"Foo Example\"",
 			"from:/Foo.*Example/",
 			"recip:\"Bank Of America\"",
+			"cc:bank@example.com",
+			"cc:bank",
+			"cc:america",
+			"bcc:donald.duck@duckstad.nl",
+			"bcc:donald.duck",
+			"bcc:duckstad.nl",
+			"bcc:aku",
+			"bcc:ankka",
+			"bcc:\"aku ankka\"",
 			"date:2008-08-01..2008-09-01",
 			"prio:low",
 			"to:sqlite-dev@sqlite.org",
