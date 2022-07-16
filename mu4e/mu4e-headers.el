@@ -348,17 +348,19 @@ This is mostly useful for profiling.")
 
 ;;; Clear
 
-(defun mu4e~headers-clear (&optional msg)
-  "Clear the header buffer and related data structures."
+(defun mu4e~headers-clear (&optional text)
+  "Clear the headers buffer and related data structures.
+Optionally, show TEXT."
   (when (buffer-live-p (mu4e-get-headers-buffer))
-    (setq mu4e~headers-render-start (float-time))
+    (setq mu4e~headers-render-start (float-time)
+	  mu4e~view-message nil)
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
         (mu4e--mark-clear)
         (erase-buffer)
-        (when msg
+	(when text
           (goto-char (point-min))
-          (insert (propertize msg 'face 'mu4e-system-face 'intangible t)))))))
+          (insert (propertize text 'face 'mu4e-system-face 'intangible t)))))))
 
 
 ;;; Misc
