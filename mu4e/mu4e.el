@@ -1,11 +1,10 @@
 ;;; mu4e.el --- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Keywords: email
-;; Version: 0.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -32,6 +31,7 @@
 (require 'mu4e-context)
 (require 'mu4e-contacts)
 (require 'mu4e-headers)
+(require 'mu4e-view)
 (require 'mu4e-compose)
 (require 'mu4e-bookmarks)
 (require 'mu4e-update)
