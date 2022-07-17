@@ -114,10 +114,10 @@ or body-html."
 Either the headers buffer or the view buffer, or nil if there is
 no such message. If optional NOERROR is non-nil, do not raise an
 error when there is no message at point."
-  (let ((msg (or (get-text-property (point) 'msg) mu4e~view-message)))
-    (if msg
-        msg
-      (unless noerror (mu4e-warn "No message at point")))))
+  (or (cond
+       ((eq major-mode 'mu4e-headers-mode) (get-text-property (point) 'msg))
+       ((eq major-mode 'mu4e-view-mode) mu4e~view-message))
+      (unless noerror (mu4e-warn "No message at point"))))
 
 (defsubst mu4e-message-field-at-point (field)
   "Get the field FIELD from the message at point.
