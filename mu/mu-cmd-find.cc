@@ -76,7 +76,7 @@ run_query(const Store& store, const std::string& expr, const MuConfig* opts)
 		return Err(Error::Code::InvalidArgument,
 			   "invalid sort field: '%s'", opts->sortfield);
 
-	Mu::QueryFlags qflags{QueryFlags::None};
+	Mu::QueryFlags qflags{QueryFlags::SkipUnreadable};
 	if (opts->reverse)
 		qflags |= QueryFlags::Descending;
 	if (opts->skip_dups)
