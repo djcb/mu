@@ -12,14 +12,14 @@
      allow for faster rendering. As before, there's no compatibility between
      minor release numbers (1.4 vs 1.6 vs 1.8) nor within development series
      (such as 1.7). However, within a stable release (such as all 1.6.x) the
-     protocol won't change (except if required to fix some severe bug; never
-     happened in practice)
+     protocol won't change (except if required to fix some severe bug; this
+     never happened in practice)
 
    - The ~processed~ number in the indexing statistics has been renamed into
-     ~checked~ and describes the number of message files considered for
-     updating, which is a bit more useful that the old value, which was
-     more-or-less synonymous with the ~updated~ number (which are the message
-     that got (re)parsed / (re)added to the database.
+     ~checked~ and describes the number of message files considered for updating,
+     which is a bit more useful that the old value, which was more-or-less
+     synonymous with the ~updated~ number (which are the messages that got
+     (re)parsed / (re)added to the database.
 
      Basically, it counts all the messages for which we checked their timestamp.
 
@@ -92,7 +92,7 @@
      indexing operations.
 
    - ~mu4e-index-updated-hook~ now fires after indexing completed, regardless of
-     whether anything changed (before, it fired only is something changed). In
+     whether anything changed (before, it fired only if something changed). In
      your hook-functions (or elsewhere) you can check if anything changed using
      the new variable ~mu4e-index-update-status~. And note that ~processed~ has
      been renamed into ~checked~, with a slightly different meaning, see the mu
@@ -445,7 +445,6 @@
     - Don't forget to delete your old mail cache location if necessary (see
       release notes for more detail).
 
-
 * Old news
   :PROPERTIES:
   :VISIBILITY: folded
@@ -646,7 +645,7 @@
     - an experimental Perl binding ("mup") is available now. See
       perl/README.md for details.
 
-** Contributors:
+*** Contributors:
 
    Aaron LI, Abdo Roig-Maranges, Ævar Arnfjörð Bjarmason, Alex Bennée, Allen,
    Anders Johansson, Antoine Levitt, Arthur Lee, attila, Charles-H. Schulz,
@@ -656,11 +655,6 @@
    Sachdeva, Remco van 't Veer, Stephen Eglen, Stig Brautaset, Thierry
    Volpiatto, Thomas Moulia, Titus von der Malsburg, Yuri D'Elia, Vladimir
    Sedach
-
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
 
 ** 0.9.16
 
