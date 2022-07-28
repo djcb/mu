@@ -32,7 +32,7 @@
 (require 'mu4e-helpers)
 (require 'mu4e-message)
 (require 'mu4e-search)
-
+(require 'mu4e-contacts)
 
 ;;; Count lines
 
@@ -78,7 +78,8 @@ file where you store your org-contacts."
   (unless mu4e-org-contacts-file
     (mu4e-error "Variable `mu4e-org-contacts-file' is nil"))
   (let* ((sender (car-safe (mu4e-message-field msg :from)))
-         (name (car-safe sender)) (email (cdr-safe sender))
+         (name (mu4e-contact-name sender))
+	 (email (mu4e-contact-email sender))
          (blurb
           (format
            (concat
@@ -95,7 +96,6 @@ file where you store your org-contacts."
           (append org-capture-templates
                   (list (list key "contacts" 'entry
                               (list 'file mu4e-org-contacts-file) blurb)))))
-    (message "%S" org-capture-templates)
     (when (fboundp 'org-capture)
       (org-capture nil key))))
 
