@@ -491,16 +491,26 @@ or an error."
   (mu4e--server-call-mu
    `(find
      :query ,query
-     :threads ,threads
+     :threads ,(and threads t)
      :sortfield ,sortfield
      :descending ,(if (eq sortdir 'descending) t nil)
      :maxnum ,maxnum
-     :skip-dups ,skip-dups
-     :include-related ,include-related)))
+     :skip-dups ,(and skip-dups t)
+     :include-related ,(and include-related t))))
 
 (defun mu4e--server-index (&optional cleanup lazy-check)
-  "Index messages with possible CLEANUP and LAZY-CHECK."
-  (mu4e--server-call-mu `(index :cleanup ,cleanup :lazy-check ,lazy-check)))
+  "Index messages.
+If CLEANUP is non-nil, remove messages which are in the database
+but no longer in the filesystem. If LAZY-CHECK is non-nil, only
+consider messages for which the time stamp (ctime) of the
+directory they reside in has not changed since the previous
+indexing run. This is much faster than the non-lazy check, but
+won't update messages that have change (rather than having been
+added or removed), since merely editing a message does not update
+the directory time stamp."
+  (mu4e--server-call-mu
+   `(index :cleanup ,(and cleanup t)
+	   :lazy-check ,(and lazy-check t))))
 
 (defun mu4e--server-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."
@@ -573,19 +583,19 @@ If this works, we will receive (:info add :path <path> :docid
   (mu4e--server-call-mu `(sent :path ,path)))
 
 (defun mu4e--server-view (docid-or-msgid &optional mark-as-read)
-  "Get a message DOCID-OR-MSGID.
+  "View a message referred to by DOCID-OR-MSGID.
 Optionally, if MARK-AS-READ is non-nil, the backend marks the
-message as read before returning, if it was not already unread.
-The result will be delivered to the function registered as
-`mu4e-view-func'."
+message as \"read\" before returning, if not already. The result
+will be delivered to the function registered as `mu4e-view-func'."
   (mu4e--server-call-mu
    `(view
      :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
      :msgid ,(if (stringp docid-or-msgid) docid-or-msgid nil)
-     :mark-as-read ,mark-as-read
+     :mark-as-read ,(and mark-as-read t)
      ;; when moving (due to mark-as-read), change filenames
-     ;; if so configured.
-     :rename  ,mu4e-change-filenames-when-moving)))
+     ;; if so configured. Note: currently this *ignored*
+     ;; because mbsync seems to get confused.
+     :rename  ,(and mu4e-change-filenames-when-moving t))))
 
 
 (provide 'mu4e-server)
