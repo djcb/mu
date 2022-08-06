@@ -89,6 +89,23 @@ foreach src : mu4e_srcs
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
 
+target_name = 'mu4e-autoloads.el'
+target_path = join_paths(meson.current_build_dir(), target_name)
+target_var = '(setq generated-autoload-file "' + target_path + '")'
+
+custom_target('mu4e_autoloads_el',
+              build_by_default: true,
+              input: src,
+              output: target_name,
+              install_dir: mu4e_lispdir,
+              install: true,
+              command: [emacs,
+                        '--no-init-file',
+                        '--batch',
+                        '--eval', target_var,
+                        '--funcall', 'batch-update-autoloads',
+                        meson.current_source_dir()])
+
 # also install the sources and the config
 install_data(mu4e_srcs, install_dir: mu4e_lispdir)
 
