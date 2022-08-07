@@ -112,8 +112,15 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 {
 	Xapian::Enquire            enq{store_.database()};
 	std::vector<Xapian::Query> qvec;
-	for (auto&& t : thread_ids)
+	for (auto&& t : thread_ids) {
 		qvec.emplace_back(field_from_id(Field::Id::ThreadId).xapian_term(t));
+                // The first email in a thread might not have a References
+                // header, or might have References header with bogus value
+                // (since it is the first email in the thread). In such case,
+                // the Message-ID header can be used to lookup the this first
+                // email.
+                qvec.emplace_back(field_from_id(Field::Id::MessageId).xapian_term(t));
+        }
 
 	Xapian::Query qr{Xapian::Query::OP_OR, qvec.begin(), qvec.end()};
 	enq.set_query(qr);
