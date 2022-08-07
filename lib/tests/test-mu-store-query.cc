@@ -17,6 +17,7 @@
 **
 */
 
+#include "test-mu-common.hh"
 #include <array>
 #include <thread>
 #include <string>
@@ -209,6 +210,131 @@ Boo!
 	}
 }
 
+
+static void
+test_dups_related()
+{
+	const TestMap test_msgs = {{
+/* parent */
+{
+"inbox/cur/msg1:2,S",
+R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 11:01:54 -0700
+To: example@example.com
+Subject: test1
+
+Parent
+)"},
+/* child (dup vv) */
+{
+"boo/cur/msg2:1,S",
+R"(Message-Id: <edcba@foo.bar>
+In-Reply-To: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 13:01:54 -0700
+To: example@example.com
+Subject: Re: test1
+
+Child
+)"},
+/* child (dup ^^) */
+{
+"inbox/cur/msg2:1,S",
+R"(Message-Id: <edcba@foo.bar>
+In-Reply-To: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 14:01:54 -0700
+To: example@example.com
+Subject: Re: test1
+
+Child
+)"},
+}};
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	{
+		// direct matches
+		auto qr = store.run_query("test1", Field::Id::Date,
+					  QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	{
+		// skip duplicate messages; which one is skipped is arbitrary.
+		auto qr = store.run_query("test1", Field::Id::Date,
+					  QueryFlags::SkipDuplicates);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
+	{
+		// no related
+		auto qr = store.run_query("Parent", Field::Id::Date);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	{
+		// find related messages
+		auto qr = store.run_query("Parent", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	{
+		// find related messages, skip dups. the leader message
+		// should _not_ be skipped.
+		auto qr = store.run_query("test1 AND maildir:/inbox",
+					  Field::Id::Date,
+					  QueryFlags::IncludeRelated|
+					  QueryFlags::SkipDuplicates);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+
+		// ie the /boo is to be skipped, since it's not in the leader
+		// set.
+		for (auto&& m: *qr)
+			assert_equal(m.message()->maildir(), "/inbox");
+	}
+
+	{
+		// find related messages, find parent from child.
+		auto qr = store.run_query("Child and maildir:/inbox",
+					  Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+
+	}
+
+	{
+		// find related messages, find parent from child.
+		// leader message wins
+		auto qr = store.run_query("Child and maildir:/inbox",
+					  Field::Id::Date,
+					  QueryFlags::IncludeRelated|
+					  QueryFlags::SkipDuplicates|
+					  QueryFlags::Descending);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+
+		// ie the /boo is to be skipped, since it's not in the leader
+		// set.
+		for (auto&& m: *qr)
+			assert_equal(m.message()->maildir(), "/inbox");
+	}
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -219,6 +345,15 @@ main(int argc, char* argv[])
 	g_test_add_func("/store/query/simple",       test_simple);
 	g_test_add_func("/store/query/spam-address-components",
 			test_spam_address_components);
+	g_test_add_func("/store/query/dups-related",
+			test_dups_related);
+
+	if (!g_test_verbose())
+		g_log_set_handler(
+			NULL,
+			(GLogLevelFlags)(G_LOG_LEVEL_MASK |
+					 G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+			(GLogFunc)black_hole, NULL);
 
 	return g_test_run();
 }
