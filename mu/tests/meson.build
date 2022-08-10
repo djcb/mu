@@ -23,18 +23,18 @@ test('test-cmd',
      executable('test-cmd',
 		'test-mu-cmd.cc',
 		install: false,
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+		dependencies: [glib_dep, config_h_dep, lib_mu_dep]))
 
 test('test-cmd-cfind',
      executable('test-cmd-cfind',
 		'test-mu-cmd-cfind.cc',
 		install: false,
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+		dependencies: [glib_dep, config_h_dep, lib_mu_dep]))
 test('test-cmd-query',
      executable('test-cmd-query',
 		'test-mu-query.cc',
 		install: false,
-		dependencies: [glib_dep, lib_test_mu_common_dep, config_h_dep, lib_mu_dep]))
+		dependencies: [glib_dep, config_h_dep, lib_mu_dep]))
 
 gmime_test = executable(
   'gmime-test', [

@@ -585,7 +585,6 @@ Mu::from_lexnum(const std::string& str)
 }
 
 
-
 std::string
 Mu::canonicalize_filename(const std::string& path, const std::string& relative_to)
 {
@@ -601,50 +600,6 @@ Mu::canonicalize_filename(const std::string& path, const std::string& relative_t
 	return str;
 }
 
-
-void
-Mu::allow_warnings()
-{
-	g_test_log_set_fatal_handler(
-	    [](const char*, GLogLevelFlags, const char*, gpointer) { return FALSE; },
-	    {});
-}
-
-
-
-Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete}
-{
-	GError *err{};
-	gchar *tmpdir = g_dir_make_tmp("mu-tmp-XXXXXX", &err);
-	if (!tmpdir)
-		throw Mu::Error(Error::Code::File, &err,
-				"failed to create temporary directory");
-
-	path_ = tmpdir;
-	g_free(tmpdir);
-
-	g_debug("created '%s'", path_.c_str());
-}
-
-Mu::TempDir::~TempDir()
-{
-	if (::access(path_.c_str(), F_OK) != 0)
-		return; /* nothing to do */
-
-	if (!autodelete_) {
-		g_debug("_not_ deleting %s", path_.c_str());
-		return;
-	}
-
-	/* ugly */
-	GError *err{};
-	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};
-	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
-		g_warning("error: %s\n", err ? err->message : "?");
-		g_clear_error(&err);
-	} else
-		g_debug("removed '%s'", path_.c_str());
-}
 
 bool
 Mu::locale_workaround() try

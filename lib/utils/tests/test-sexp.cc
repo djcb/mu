@@ -25,6 +25,7 @@
 
 #include "mu-command-parser.hh"
 #include "mu-utils.hh"
+#include "mu-test-utils.hh"
 
 using namespace Mu;
 
@@ -168,7 +169,7 @@ test_prop_list_remove()
 int
 main(int argc, char* argv[])
 try {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	if (argc == 2) {
 		std::cout << Sexp::make_parse(argv[1]) << '\n';

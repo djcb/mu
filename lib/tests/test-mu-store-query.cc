@@ -17,7 +17,7 @@
 **
 */
 
-#include "test-mu-common.hh"
+
 #include <array>
 #include <thread>
 #include <string>
@@ -27,6 +27,7 @@
 
 #include <mu-store.hh>
 #include <utils/mu-utils.hh>
+#include <utils/mu-test-utils.hh>
 #include <message/mu-message.hh>
 
 using namespace Mu;
@@ -338,22 +339,15 @@ Child
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_bug_base("https://github.com/djcb/mu/issues/");
 
-	g_test_add_func("/store/query/simple",       test_simple);
+	g_test_add_func("/store/query/simple", test_simple);
 	g_test_add_func("/store/query/spam-address-components",
 			test_spam_address_components);
 	g_test_add_func("/store/query/dups-related",
 			test_dups_related);
-
-	if (!g_test_verbose())
-		g_log_set_handler(
-			NULL,
-			(GLogLevelFlags)(G_LOG_LEVEL_MASK |
-					 G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-			(GLogFunc)black_hole, NULL);
 
 	return g_test_run();
 }

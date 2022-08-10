@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include <lib/mu-store.hh>
 #include <utils/mu-utils.hh>
 
@@ -116,7 +116,7 @@ main(int argc, char* argv[])
 	TempDir tempdir;
 	test_dir = tempdir.path();
 
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	if (!set_en_us_utf8_locale())
 		return 0; /* don't error out... */
@@ -124,12 +124,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/guile/queries", test_mu_guile_queries);
 	g_test_add_func("/guile/message", test_mu_guile_messages);
 	g_test_add_func("/guile/stats", test_mu_guile_stats);
-
-	g_log_set_handler(NULL,
-			  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
-					   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-			  (GLogFunc)black_hole,
-			  NULL);
 
 	rv = g_test_run();
 

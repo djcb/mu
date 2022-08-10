@@ -26,7 +26,7 @@
 #include <vector>
 #include <fstream>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-maildir.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-util.h"

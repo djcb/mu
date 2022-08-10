@@ -28,4 +28,4 @@ test('test-mu-guile',
                   '-DGUILE_LOAD_PATH="' + guile_load_path + '"',
                   '-DGUILE_EXTENSIONS_PATH="' + guile_load_path + '"'
                 ],
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+		dependencies: [glib_dep, lib_mu_dep]))

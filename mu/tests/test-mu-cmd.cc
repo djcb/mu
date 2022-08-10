@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "utils/mu-result.hh"
@@ -829,8 +829,7 @@ main(int argc, char* argv[])
 	if (!g_getenv("RUN_TEST_MU_CMD"))
 		return 0;
 
-
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	if (!set_en_us_utf8_locale())
 		return 0; /* don't error out... */
@@ -869,12 +868,6 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/mu-cmd/test-mu-verify-good", test_mu_verify_good);
 	g_test_add_func("/mu-cmd/test-mu-verify-bad", test_mu_verify_bad);
-
-	g_log_set_handler(NULL,
-			  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
-					   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-			  (GLogFunc)black_hole,
-			  NULL);
 
 	TempDir tempdir;
 	DBPATH = tempdir.path();

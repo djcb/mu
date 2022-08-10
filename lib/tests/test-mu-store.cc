@@ -28,7 +28,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-store.hh"
 #include "utils/mu-result.hh"
 #include <utils/mu-utils.hh>
@@ -343,7 +343,6 @@ test_store_fail()
 						   "/../../root/non-existent-path/54321",
 						   {}, {});
 		g_assert_false(!!store);
-
 	}
 }
 
@@ -351,7 +350,7 @@ test_store_fail()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
@@ -361,14 +360,6 @@ main(int argc, char* argv[])
 			test_message_attachments);
 	g_test_add_func("/store/index/move", test_index_move);
 	g_test_add_func("/store/index/fail", test_store_fail);
-
-	if (!g_test_verbose())
-		g_log_set_handler(
-			NULL,
-			(GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
-					 G_LOG_FLAG_RECURSION),
-			(GLogFunc)black_hole,
-			NULL);
 
 	return g_test_run();
 }

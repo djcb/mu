@@ -80,7 +80,7 @@ Mu::lowercase_hash(const std::string& s)
  *
  */
 
-#include "utils/mu-utils.hh"
+#include "utils/mu-test-utils.hh"
 
 static void
 test_ctor_foo()
@@ -189,14 +189,13 @@ static void
 test_misc()
 {
 	g_assert_false(!!contact_type_from_field_id(Field::Id::Subject));
-
 }
 
 
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 	g_mime_init();
 
 	g_test_add_func("/message/contact/ctor-foo", test_ctor_foo);

@@ -370,6 +370,8 @@ Document::remove(Field::Id field_id)
 
 #ifdef BUILD_TESTS
 
+#include "utils/mu-test-utils.hh"
+
 #define assert_same_contact(C1,C2) do {				\
 	g_assert_cmpstr(C1.email.c_str(),==,C2.email.c_str());	\
 	g_assert_cmpstr(C2.name.c_str(),==,C2.name.c_str());	\

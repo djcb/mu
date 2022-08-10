@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "utils/mu-utils.hh"
@@ -325,7 +325,7 @@ test_mu_cfind_csv(void)
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	if (!set_en_us_utf8_locale())
 		return 0; /* don't error out... */
@@ -340,12 +340,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-mutt-ab", test_mu_cfind_mutt_ab);
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-org-contact", test_mu_cfind_org_contact);
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-csv", test_mu_cfind_csv);
-
-	g_log_set_handler(NULL,
-			  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_LEVEL_WARNING |
-					   G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-			  (GLogFunc)black_hole,
-			  NULL);
 
 	return g_test_run();
 }

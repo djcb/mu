@@ -30,7 +30,7 @@
 #include <string.h>
 #include <locale.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-query.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
@@ -625,7 +625,7 @@ main(int argc, char* argv[])
 
 	setlocale(LC_ALL, "");
 
-	g_test_init(&argc, &argv, nullptr);
+	mu_test_init(&argc, &argv);
 	DB_PATH1 = make_database(MU_TESTMAILDIR);
 	g_assert_false(DB_PATH1.empty());
 
@@ -668,13 +668,6 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/mu-query/test-mu-query-cjk",
 			test_mu_query_cjk);
-
-	if (!g_test_verbose())
-		g_log_set_handler(NULL,
-				  (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
-						   G_LOG_LEVEL_WARNING | G_LOG_FLAG_RECURSION),
-				  (GLogFunc)black_hole,
-				  NULL);
 	rv = g_test_run();
 
 	return rv;

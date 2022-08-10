@@ -342,7 +342,7 @@ ContactsCache::is_personal(const std::string& addr) const
  *
  */
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 
 static void
 test_mu_contacts_cache_base()
@@ -499,18 +499,12 @@ test_mu_contacts_cache_sort()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/lib/contacts-cache/base", test_mu_contacts_cache_base);
 	g_test_add_func("/lib/contacts-cache/personal", test_mu_contacts_cache_personal);
 	g_test_add_func("/lib/contacts-cache/for-each", test_mu_contacts_cache_foreach);
 	g_test_add_func("/lib/contacts-cache/sort", test_mu_contacts_cache_sort);
-
-	g_log_set_handler(
-	    NULL,
-	    (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-	    (GLogFunc)black_hole,
-	    NULL);
 
 	return g_test_run();
 }

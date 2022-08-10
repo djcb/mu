@@ -28,7 +28,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-message-fields.hh"
 
 static void

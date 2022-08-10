@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -25,6 +25,7 @@
 
 #include "mu-command-parser.hh"
 #include "mu-utils.hh"
+#include "mu-test-utils.hh"
 
 using namespace Mu;
 
@@ -68,9 +69,9 @@ test_command()
 	cmap.emplace(
 	    "my-command",
 	    CommandInfo{ArgMap{{":param1", ArgInfo{Sexp::Type::String, true, "some string"}},
-	                       {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
-	                "My command,",
-	                {}});
+			       {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
+			"My command,",
+			{}});
 
 	g_assert_true(call(cmap, "(my-command :param1 \"hello\")"));
 	g_assert_true(call(cmap, "(my-command :param1 \"hello\" :param2 123)"));
@@ -86,12 +87,12 @@ test_command2()
 
 	CommandMap cmap;
 	cmap.emplace("bla",
-	             CommandInfo{ArgMap{
+		     CommandInfo{ArgMap{
 				     {":foo", ArgInfo{Sexp::Type::Number, false, "foo"}},
 				     {":bar", ArgInfo{Sexp::Type::String, false, "bar"}},
 				 },
-	                         "yeah",
-	                         [&](const auto& params) {}});
+				 "yeah",
+				 [&](const auto& params) {}});
 
 	g_assert_true(call(cmap, "(bla :foo nil)"));
 	g_assert_false(call(cmap, "(bla :foo nil :bla nil)"));
@@ -109,9 +110,9 @@ test_command_fail()
 	cmap.emplace(
 	    "my-command",
 	    CommandInfo{ArgMap{{":param1", ArgInfo{Sexp::Type::String, true, "some string"}},
-	                       {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
-	                "My command,",
-	                {}});
+			       {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
+			"My command,",
+			{}});
 
 	g_assert_false(call(cmap, "(my-command)"));
 	g_assert_false(call(cmap, "(my-command2)"));
@@ -125,9 +126,9 @@ black_hole()
 }
 
 int
-main(int argc, char* argv[])
-try {
-	g_test_init(&argc, &argv, NULL);
+main(int argc, char* argv[]) try {
+
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/utils/command-parser/param-getters", test_param_getters);
 	g_test_add_func("/utils/command-parser/command", test_command);
