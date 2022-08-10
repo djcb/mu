@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -63,16 +63,6 @@ tokenize = executable(
   dependencies: [ lib_mu_utils_dep, glib_dep ],
   install: false)
 
-# test helpers
-lib_test_mu_common=static_library('mu-test-common', [
-				   'tests/test-mu-common.cc',
-				   'tests/test-mu-common.hh'],
-				  dependencies: [ glib_dep, thread_dep,
-                                                  config_h_dep ])
-lib_test_mu_common_dep=declare_dependency(
-  link_with: lib_test_mu_common,
-  include_directories: include_directories(['tests']))
-
 # actual tests
 
 test('test-threads',
@@ -80,12 +70,12 @@ test('test-threads',
 		'mu-query-threads.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+		dependencies: [glib_dep, lib_mu_dep]))
 test('test-contacts-cache',
      executable('test-contacts-cache',
 		'mu-contacts-cache.cc',
 		install: false,
 		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep, lib_test_mu_common_dep]))
+		dependencies: [glib_dep, lib_mu_dep]))
 
 subdir('tests')

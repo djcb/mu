@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 
 #include "mu-parser.hh"
 #include "utils/mu-result.hh"

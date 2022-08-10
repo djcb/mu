@@ -20,7 +20,7 @@
 #include "config.h"
 #include <glib.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "mu-container.hh"
 
 static gboolean

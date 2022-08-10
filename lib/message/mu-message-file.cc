@@ -122,6 +122,8 @@ Mu::flags_from_path(const std::string& path)
 
 #ifdef BUILD_TESTS
 
+#include "utils/mu-test-utils.hh"
+
 static void
 test_maildir_from_path()
 {
@@ -192,7 +194,7 @@ test_flags_from_path()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/message/file/maildir-from-path",
 			test_maildir_from_path);

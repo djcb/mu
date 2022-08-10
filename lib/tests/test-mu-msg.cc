@@ -28,7 +28,7 @@
 
 #include <locale.h>
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
 
@@ -207,12 +207,8 @@ test_mu_msg_references(void)
 		"non-exist-04@msg.id"
 	};
 
-	g_assert_cmpuint(msg.references().size(), == , expected_refs.size());
-	size_t n{};
-	for (auto&& ref: msg.references()) {
-		assert_equal(ref, expected_refs.at(n));
-		++n;
-	};
+	assert_equal_seq_str(msg.references(), expected_refs);
+	assert_equal(msg.thread_id(), expected_refs[0]);
 }
 
 static void
@@ -230,12 +226,8 @@ test_mu_msg_references_dups(void)
 		"20051211184308.GB13513@gauss.org"
 	};
 
-	g_assert_cmpuint(msg.references().size(), == , expected_refs.size());
-	size_t n{};
-	for (auto&& ref: msg.references()) {
-		assert_equal(ref, expected_refs.at(n));
-		++n;
-	};
+	assert_equal_seq_str(msg.references(), expected_refs);
+	assert_equal(msg.thread_id(), expected_refs[0]);
 }
 
 static void
@@ -258,12 +250,8 @@ test_mu_msg_references_many(void)
 		"8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk"
 	};
 
-	g_assert_cmpuint(msg.references().size(), == , expected_refs.size());
-	size_t n{};
-	for (auto&& ref: msg.references()) {
-		assert_equal(ref, expected_refs.at(n));
-		++n;
-	};
+	assert_equal_seq_str(msg.references(), expected_refs);
+	assert_equal(msg.thread_id(), expected_refs[0]);
 }
 
 static void

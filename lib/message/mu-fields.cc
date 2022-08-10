@@ -20,6 +20,8 @@
 #include "mu-fields.hh"
 #include "mu-flags.hh"
 
+#include "utils/mu-test-utils.hh"
+
 using namespace Mu;
 
 std::string
@@ -184,7 +186,7 @@ test_xapian_term()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/message/fields/ids", test_ids);
 	g_test_add_func("/message/fields/shortcuts", test_shortcuts);

@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ lib_mu_utils=static_library('mu-utils', [
                   'mu-option.cc',
 		  'mu-readline.cc',
 		  'mu-sexp.cc',
+                  'mu-test-utils.cc',
 		  'mu-util.c',
 		  'mu-util.h',
 		  'mu-utils.cc'],

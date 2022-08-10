@@ -30,7 +30,7 @@
 #include "index/mu-indexer.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 
 using namespace Mu;
 
@@ -87,19 +87,9 @@ test_query()
 int
 main(int argc, char* argv[])
 try {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/query", test_query);
-
-
-	if (!g_test_verbose())
-		g_log_set_handler(
-			NULL,
-			(GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL |
-					 G_LOG_FLAG_RECURSION),
-			(GLogFunc)black_hole,
-			NULL);
-
 
 	return g_test_run();
 

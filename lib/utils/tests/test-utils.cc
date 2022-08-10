@@ -26,6 +26,7 @@
 #include <array>
 
 #include "mu-utils.hh"
+#include "mu-test-utils.hh"
 #include "mu-error.hh"
 
 using namespace Mu;
@@ -301,7 +302,7 @@ test_error()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, nullptr);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/utils/date-basic", test_date_basic);
 	g_test_add_func("/utils/date-ymwdhMs", test_date_ymwdhMs);

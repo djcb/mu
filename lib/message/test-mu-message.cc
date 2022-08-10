@@ -16,7 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
+#include "utils/mu-test-utils.hh"
 #include "mu-message.hh"
 #include "mu-mime-object.hh"
 #include <glib.h>
@@ -834,7 +834,7 @@ test_message_sanitize_maildir()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/message/message/mailing-list",
 			test_message_mailing_list);

@@ -28,7 +28,7 @@
 #include <mu-store.hh>
 #include "mu-maildir.hh"
 
-#include "test-mu-common.hh"
+#include "utils/mu-test-utils.hh"
 
 using namespace Mu;
 
