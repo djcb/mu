@@ -336,6 +336,120 @@ Child
 	}
 }
 
+
+static void
+test_related_missing_root()
+{
+	const TestMap test_msgs = {{
+{
+"inbox/cur/msg1:2,S",
+R"(Content-Type: text/plain; charset=utf-8
+References:  <EZrZOnVCsYfFcX3Ls0VFoRnJdCGV4GM5YtO739l-iOB2ADNH7cIJWb0DaO5Of3BWDUEKq18Rz3a7rNoI96bNwQ==@protonmail.internalid>
+To: "Joerg Roedel" <joro@8bytes.org>, "Suman Anna" <s-anna@ti.com>
+Reply-To: "Dan Carpenter" <dan.carpenter@oracle.com>
+From: "Dan Carpenter" <dan.carpenter@oracle.com>
+Subject: [PATCH] iommu/omap: fix buffer overflow in debugfs
+Date: Thu, 4 Aug 2022 17:32:39 +0300
+Message-Id: <YuvYh1JbE3v+abd5@kili>
+List-Id: <kernel-janitors.vger.kernel.org>
+Precedence: bulk
+
+There are two issues here:
+)"},
+{
+"inbox/cur/msg2:2,S",
+R"(Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+References: <YuvYh1JbE3v+abd5@kili>
+ <9pEUi_xoxa7NskF7EK_qfrlgjXzGsyw9K7cMfYbo-KI6fnyVMKTpc8E2Fu94V8xedd7cMpn0LlBrr9klBMflpw==@protonmail.internalid>
+Reply-To: "Laurent Pinchart" <laurent.pinchart@ideasonboard.com>
+From: "Laurent Pinchart" <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH] iommu/omap: fix buffer overflow in debugfs
+List-Id: <kernel-janitors.vger.kernel.org>
+Message-Id: <YuvzKJM66k+ZPD9c@pendragon.ideasonboard.com>
+Precedence: bulk
+In-Reply-To: <YuvYh1JbE3v+abd5@kili>
+
+Hi Dan,
+
+Thank you for the patch.
+)"},
+{
+"inbox/cur/msg3:2,S",
+R"(Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+References: <YuvYh1JbE3v+abd5@kili>
+ <G6TStg8J52Q-uSMTR7wRQdPeloxpZMiEQT_F8_JIDYM25eEPeHGgrNKO0fuO78MiQgD9Mz4BDtsZlZgmPKFe4Q==@protonmail.internalid>
+To: "Dan Carpenter" <dan.carpenter@oracle.com>, "Joerg Roedel"
+ <joro@8bytes.org>, "Suman Anna" <s-anna@ti.com>
+Reply-To: "Robin Murphy" <robin.murphy@arm.com>
+From: "Robin Murphy" <robin.murphy@arm.com>
+Subject: Re: [PATCH] iommu/omap: fix buffer overflow in debugfs
+List-Id: <kernel-janitors.vger.kernel.org>
+Message-Id: <90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com>
+Precedence: bulk
+In-Reply-To: <YuvYh1JbE3v+abd5@kili>
+Date: Thu, 4 Aug 2022 17:31:39 +0100
+
+On 04/08/2022 3:32 pm, Dan Carpenter wrote:
+> There are two issues here:
+)"},
+{
+"inbox/new/msg4",
+R"(Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+References: <YuvYh1JbE3v+abd5@kili>
+ <90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com>
+ <T4CDWjUrgtI5n4mh1JEdW6RLYzqbPE9-yDrhEVwDM22WX-198fBwcnLd-4_xR1gvsVSHQps9fp_pZevTF0ZmaA==@protonmail.internalid>
+To: "Robin Murphy" <robin.murphy@arm.com>
+Reply-To: "Dan Carpenter" <dan.carpenter@oracle.com>
+From: "Dan Carpenter" <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] iommu/omap: fix buffer overflow in debugfs
+List-Id: <kernel-janitors.vger.kernel.org>
+Date: Fri, 5 Aug 2022 09:37:02 +0300
+In-Reply-To: <90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com>
+Precedence: bulk
+Message-Id: <20220805063702.GH3438@kadam>
+
+On Thu, Aug 04, 2022 at 05:31:39PM +0100, Robin Murphy wrote:
+> On 04/08/2022 3:32 pm, Dan Carpenter wrote:
+> > There are two issues here:
+)"},
+}};
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	{
+		auto qr = store.run_query("fix buffer overflow in debugfs",
+					  Field::Id::Date, QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_cmpuint(qr->size(), ==, 4);
+	}
+
+	{
+		auto qr = store.run_query("fix buffer overflow in debugfs and flag:unread",
+					  Field::Id::Date, QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+		assert_equal(qr->begin().message_id().value_or(""), "20220805063702.GH3438@kadam");
+		assert_equal(qr->begin().thread_id().value_or(""), "YuvYh1JbE3v+abd5@kili");
+	}
+
+	{
+		/* this one failed earlier, because the 'protonmail' id is the
+		 * first reference, which means it does _not_ have the same
+		 * thread-id as the rest; however, we filter these
+		 * fake-message-ids now.*/
+		g_test_bug("2312");
+
+		auto qr = store.run_query("fix buffer overflow in debugfs and flag:unread",
+					  Field::Id::Date, QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_cmpuint(qr->size(), ==, 4);
+	}
+}
+
+
+
 int
 main(int argc, char* argv[])
 {
@@ -348,6 +462,8 @@ main(int argc, char* argv[])
 			test_spam_address_components);
 	g_test_add_func("/store/query/dups-related",
 			test_dups_related);
+	g_test_add_func("/store/query/related-missing-root",
+			test_related_missing_root);
 
 	return g_test_run();
 }
