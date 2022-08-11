@@ -301,15 +301,27 @@ public:
 	size_t size() const { return static_cast<size_t>(document().integer_value(Field::Id::Size)); }
 
 	/**
-	 * get the list of references (consisting of both the References and
-	 * In-Reply-To fields), with the oldest first and the direct parent as
-	 * the last one. Note, any reference (message-id) will appear at most
-	 * once, duplicates are filtered out.
+	 * Get the (possibly empty) list of references (consisting of both the
+	 * References and In-Reply-To fields), with the oldest first and the
+	 * direct parent as the last one. Note, any reference (message-id) will
+	 * appear at most once, duplicates and fake-message-id (see impls) are
+	 * filtered out.
 	 *
 	 * @return a vec with the references for this msg.
 	 */
 	std::vector<std::string> references() const {
 		return document().string_vec_value(Field::Id::References);
+	}
+
+	/**
+	 * Get the thread-id for this message. This is the message-id of the
+	 * oldest-known (grand) parent, or the message-id of this message if
+	 * none.
+	 *
+	 * @return the thread id.
+	 */
+	std::string thread_id() const {
+		return document().string_value(Field::Id::ThreadId);
 	}
 
 	/**
@@ -408,7 +420,6 @@ public:
 	 */
 	using Part = MessagePart;
 	const std::vector<Part>& parts() const;
-
 
 	/**
 	 * Get the path to a cche directory for this message, which
