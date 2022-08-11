@@ -808,6 +808,52 @@ RU5EOlZFVkVOVA0KRU5EOlZDQUxFTkRBUg0K
 }
 
 
+static void
+test_message_references()
+{
+	constexpr auto msgtext =
+R"(Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+References: <YuvYh1JbE3v+abd5@kili>
+ <90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com>
+ <T4CDWjUrgtI5n4mh1JEdW6RLYzqbPE9-yDrhEVwDM22WX-198fBwcnLd-4_xR1gvsVSHQps9fp_pZevTF0ZmaA==@protonmail.internalid>
+To: "Robin Murphy" <robin.murphy@arm.com>
+Reply-To: "Dan Carpenter" <dan.carpenter@oracle.com>
+From: "Dan Carpenter" <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] iommu/omap: fix buffer overflow in debugfs
+List-Id: <kernel-janitors.vger.kernel.org>
+Date: Fri, 5 Aug 2022 09:37:02 +0300
+In-Reply-To: <90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com>
+Precedence: bulk
+Message-Id: <20220805063702.GH3438@kadam>
+
+On Thu, Aug 04, 2022 at 05:31:39PM +0100, Robin Murphy wrote:
+> On 04/08/2022 3:32 pm, Dan Carpenter wrote:
+> > There are two issues here:
+)";
+	auto message{Message::make_from_text(
+			msgtext,
+			"/home/test/Maildir/inbox/cur/162342449279256.88888_1.evergrey:2,S")};
+	g_assert_true(!!message);
+	assert_equal(message->subject(),
+		     "Re: [PATCH] iommu/omap: fix buffer overflow in debugfs");
+	g_assert_true(message->priority() == Priority::Low);
+
+	/*
+	 * "90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com" is seen both in
+	 * references and in-reply-to; in the de-duplication, the first one wins.
+	 */
+	std::vector<std::string> expected_refs = {
+		"YuvYh1JbE3v+abd5@kili",
+		"90a760c4-6e88-07b4-1f20-8b10414e49aa@arm.com",
+		/* protonmail.internalid is fake and removed */
+		// "T4CDWjUrgtI5n4mh1JEdW6RLYzqbPE9-yDrhEVwDM22WX-198fBwcnLd-4_"
+		// "xR1gvsVSHQps9fp_pZevTF0ZmaA==@protonmail.internalid"
+	};
+
+	assert_equal_seq_str(expected_refs, message->references());
+}
+
 
 static void
 test_message_fail ()
@@ -850,6 +896,8 @@ main(int argc, char* argv[])
 			test_message_detect_attachment);
 	g_test_add_func("/message/message/calendar",
 			test_message_calendar);
+	g_test_add_func("/message/message/references",
+			test_message_references);
 	g_test_add_func("/message/message/fail",
 			test_message_fail);
 	g_test_add_func("/message/message/sanitize-maildir",

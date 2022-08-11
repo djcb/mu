@@ -973,7 +973,9 @@ public:
 
 	/**
 	 * Get the references for this message (including in-reply-to), in the
-	 * order of older..newer; in-reply-to would be the last one.
+	 * order of older..newer; the first one would the oldest parent, and
+	 * in-reply-to would be the last one (if any). These are de-duplicated,
+	 * and known-fake references removed (see implementation)
 	 *
 	 * @return references.
 	 */

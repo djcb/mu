@@ -397,22 +397,31 @@ MimeMessage::contacts(Contact::Type ctype) const noexcept
 	return contacts;
 }
 
-
-
+/*
+ * references() returns the concatenation of the References and In-Reply-To
+ * message-ids (in that order). Duplicates are removed.
+ *
+ * The _first_ one in the list determines the thread-id for the message.
+ */
 std::vector<std::string>
 MimeMessage::references() const noexcept
 {
-	constexpr std::array<const char*, 2> ref_headers = {
-		"References", "In-reply-to",
-	};
-
-	// is ref already in the list?
+	// is ref already in the list? O(n) but with small n.
 	auto is_dup = [](auto&& seq, const std::string& ref) {
 		return seq_some(seq, [&](auto&& str) { return ref == str; });
 	};
 
+	auto is_fake = [](auto&& msgid) {
+		// this is bit ugly; protonmail injects fake References which
+		// can otherwise screw up threading.
+		if (g_str_has_suffix(msgid, "protonmail.internalid"))
+			return true;
+		/* ... */
+		return false;
+	};
+
 	std::vector<std::string> refs;
-	for (auto&& ref_header: ref_headers) {
+	for (auto&& ref_header: { "References", "In-reply-to" }) {
 
 		auto hdr{header(ref_header)};
 		if (!hdr)
@@ -422,12 +431,9 @@ MimeMessage::references() const noexcept
 		refs.reserve(refs.size() + g_mime_references_length(mime_refs));
 
 		for (auto i = 0; i != g_mime_references_length(mime_refs); ++i) {
-
 			const auto msgid{g_mime_references_get_message_id(mime_refs, i)};
-			if (!msgid || is_dup(refs, msgid))
-				continue; // invalid or skip dups
-
-			refs.emplace_back(msgid);
+			if (msgid && !is_dup(refs, msgid) && !is_fake(msgid))
+				refs.emplace_back(msgid);
 		}
 		g_mime_references_free(mime_refs);
 	}
