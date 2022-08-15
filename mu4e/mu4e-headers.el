@@ -352,8 +352,7 @@ This is mostly useful for profiling.")
   "Clear the headers buffer and related data structures.
 Optionally, show TEXT."
   (when (buffer-live-p (mu4e-get-headers-buffer))
-    (setq mu4e~headers-render-start (float-time)
-	  mu4e~view-message nil)
+    (setq mu4e~headers-render-start (float-time))
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
         (mu4e--mark-clear)
