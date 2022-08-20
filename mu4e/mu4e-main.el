@@ -43,10 +43,6 @@
 
 ;; Configuration
 
-(define-obsolete-variable-alias
-  'mu4e-main-buffer-hide-personal-addresses
-  'mu4e-main-hide-personal-addresses "1.5.7")
-
 (defvar mu4e-main-hide-personal-addresses nil
   "Whether to hide the personal address in the main view.
 

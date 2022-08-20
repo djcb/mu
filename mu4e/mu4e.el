@@ -26,11 +26,13 @@
 ;;; Code:
 
 (require 'mu4e-vars)
+(require 'mu4e-obsolete)
 (require 'mu4e-helpers)
 (require 'mu4e-folders)
 (require 'mu4e-context)
 (require 'mu4e-contacts)
 (require 'mu4e-headers)
+(require 'mu4e-search)
 (require 'mu4e-view)
 (require 'mu4e-compose)
 (require 'mu4e-bookmarks)

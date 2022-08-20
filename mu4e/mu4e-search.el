@@ -40,8 +40,6 @@
   "Search-related settings."
   :group 'mu4e)
 
-(define-obsolete-variable-alias 'mu4e-headers-results-limit
-  'mu4e-search-results-limit "1.7.0")
 (defcustom mu4e-search-results-limit 500
   "Maximum number of results to show.
 This affects performance, especially when
@@ -51,15 +49,10 @@ Set to -1 for no limits."
 		 (integer :tag "Limit"))
   :group 'mu4e-search)
 
-(define-obsolete-variable-alias 'mu4e-headers-full-search
-  'mu4e-search-full "1.7.0")
 (defvar mu4e-search-full nil
   "Whether to search for all results.
 If this is nil, search for up to `mu4e-search-results-limit')")
 
-
-(define-obsolete-variable-alias 'mu4e-headers-show-threads
-  'mu4e-search-threads "1.7.0")
 (defvar mu4e-search-threads t
   "Whether to calculate threads for the search results.")
 
@@ -85,9 +78,6 @@ anything about the query, it just does text replacement."
   :type 'function
   :group 'mu4e-search)
 
-(define-obsolete-variable-alias
-  'mu4e-headers-search-bookmark-hook
-  'mu4e-search-bookmark-hook "1.7.0")
 (defcustom mu4e-search-bookmark-hook nil
   "Hook run just after invoking a bookmarked search.
 
@@ -101,8 +91,6 @@ folder and change the options for the search."
   :type 'hook
   :group 'mu4e-search)
 
-(define-obsolete-variable-alias 'mu4e-headers-search-hook
-  'mu4e-search-hook "1.7.0")
 (defcustom mu4e-search-hook nil
   "Hook run just before executing a new search operation.
 This function receives the query as its parameter, before any
@@ -155,22 +143,17 @@ show the message with MSGID."
   (let* ((prompt (mu4e-format (or prompt "Search for: ")))
 	 (expr
 	  (if (or (null expr) edit)
-	      (mu4e-read-query prompt expr)
+	      (mu4e-search-read-query prompt expr)
 	    expr)))
     (mu4e-mark-handle-when-leaving)
     (mu4e--search-execute expr ignore-history)
     (setq mu4e--search-msgid-target msgid
     	  mu4e--search-view-target show)))
 
-(define-obsolete-function-alias 'mu4e-headers-search 'mu4e-search "1.7.0")
-
 (defun mu4e-search-edit ()
   "Edit the last search expression."
   (interactive)
   (mu4e-search mu4e--search-last-query nil t))
-
-(define-obsolete-function-alias 'mu4e-headers-search-edit
-  'mu4e-search-edit "1.7.0")
 
 (defun mu4e-search-bookmark (&optional expr edit)
   "Search using some bookmarked query EXPR.
@@ -183,16 +166,10 @@ the search."
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
     (mu4e-search expr (when edit "Edit bookmark: ") edit)))
 
-(define-obsolete-function-alias 'mu4e-headers-search-bookmark
-  'mu4e-search-bookmark "1.7.0")
-
 (defun mu4e-search-bookmark-edit ()
   "Edit an existing bookmark before executing it."
   (interactive)
   (mu4e-search-bookmark nil t))
-
-(define-obsolete-function-alias 'mu4e-headers-search-bookmark-edit
-  'mu4e-search-bookmark-edit "1.7.0")
 
 (defun mu4e-search-narrow(&optional filter)
   "Narrow the last search.
@@ -207,9 +184,6 @@ query (effectively, \"widen\" it), with `mu4e-search-prev'."
   (unless mu4e--search-last-query
     (mu4e-warn "There's nothing to filter"))
   (mu4e-search (format "(%s) AND (%s)" mu4e--search-last-query filter)))
-
-(define-obsolete-function-alias 'mu4e-headers-search-narrow
-  'mu4e-search-narrow "1.7.0")
 
 ;; (defun mu4e-headers-change-sorting (&optional field dir)
 ;;   "Change the sorting/threading parameters.
@@ -333,9 +307,6 @@ or `past'."
 	 (msgid (and msg (mu4e-message-field msg :message-id))))
     (mu4e-search mu4e--search-last-query nil nil t msgid)))
 
-(define-obsolete-function-alias 'mu4e-headers-rerun-search
-  'mu4e-search-rerun "1.7.0")
-
 (defun mu4e--search-query-navigate (whence)
   "Execute the previous query from the query stacks.
 WHENCE determines where the query is taken from and is a symbol,
@@ -351,16 +322,10 @@ either `future' or `past'."
   (interactive)
   (mu4e--search-query-navigate 'future))
 
-(define-obsolete-function-alias 'mu4e-headers-query-next
-  'mu4e-search-next "1.7.0")
-
 (defun mu4e-search-prev ()
   "Execute the previous query from the query stacks."
   (interactive)
   (mu4e--search-query-navigate 'past))
-
-(define-obsolete-function-alias 'mu4e-headers-query-prev
-  'mu4e-search-prev "1.7.0")
 
 ;; forget the past so we don't repeat it :/
 (defun mu4e-search-forget ()
@@ -369,9 +334,6 @@ either `future' or `past'."
   (setq mu4e--search-query-past nil
 	mu4e--search-query-future nil)
   (mu4e-message "Query history cleared"))
-
-(define-obsolete-function-alias 'mu4e-headers-forget-queries
-  'mu4e-search-forget "1.7.0")
 
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
@@ -394,9 +356,6 @@ either `future' or `past'."
 		    #'mu4e--search-query-completion-at-point)
 	(use-local-map mu4e-minibuffer-search-query-map))
     (read-string prompt initial-input 'mu4e--search-hist)))
-
-(define-obsolete-function-alias 'mu4e-read-query
-  'mu4e-search-read-query "1.7.0")
 
 (defconst mu4e--search-query-keywords
   '("and" "or" "not"

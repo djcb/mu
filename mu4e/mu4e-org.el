@@ -122,8 +122,6 @@ the query (for links starting with \"query:\")."
     (mu4e-search (match-string 1 link) current-prefix-arg))
    (t (mu4e-error "Unrecognized link type '%s'" link))))
 
-(make-obsolete 'org-mu4e-open 'mu4e-org-open "1.3.6")
-
 (defun mu4e-org-store-and-capture ()
   "Store a link to the current message or query.
 \(depending on `mu4e-org-link-query-in-headers-mode', and capture
@@ -131,9 +129,6 @@ it with org)."
   (interactive)
   (call-interactively 'org-store-link)
   (org-capture))
-
-(make-obsolete 'org-mu4e-store-and-capture
-               'mu4e-org-store-and-capture "1.3.6")
 
 ;; install mu4e-link support.
 (org-link-set-parameters "mu4e"

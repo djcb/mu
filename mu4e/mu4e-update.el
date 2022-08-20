@@ -304,9 +304,6 @@ run in the background; otherwise, pop up a window."
     (when (process-live-p proc)
       (kill-process proc t))))
 
-(define-obsolete-function-alias 'mu4e-interrupt-update-mail
-  'mu4e-kill-update-mail "1.0-alpha0")
-
 (define-minor-mode mu4e-update-minor-mode
   "Mode for triggering mu4e updates."
   :global nil

@@ -653,9 +653,6 @@ space propertized with a `display' text property which expands to
       (mu4e~headers-truncate-field-precise field val width)
     (mu4e~headers-truncate-field-fast val width)))
 
-(make-obsolete-variable 'mu4e-headers-field-properties-function
-                        "not used" "1.6.1")
-
 (defsubst mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
   (let* ((field (car f-w))

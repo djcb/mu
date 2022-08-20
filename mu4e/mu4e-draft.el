@@ -59,11 +59,6 @@ Useful when this is not equal to the From: address."
   :type 'boolean
   :group 'mu4e-compose)
 
-;; backward compatibility
-(make-obsolete-variable 'mu4e-reply-to-address
-                        'mu4e-compose-reply-to-address
-                        "v0.9.9")
-
 (defcustom mu4e-compose-keep-self-cc nil
   "When non-nil. keep your e-mail address in Cc: when replying."
   :type 'boolean
@@ -73,8 +68,6 @@ Useful when this is not equal to the From: address."
   "The parent message plist.
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new messages, it is nil.")
-
-(make-obsolete-variable 'mu4e-auto-retrieve-keys  "no longer used." "1.3.1")
 
 (defcustom mu4e-decryption-policy t
   "Policy for dealing with replying/forwarding encrypted parts.
@@ -183,21 +176,6 @@ All `sign-*' options have a `encrypt-*' analogue."
               (const :tag "Encrypt replies to encrypted messages" encrypt-encrypted-replies))
   :group 'mu4e-compose)
 
-(make-obsolete-variable 'mu4e-compose-crypto-reply-encrypted-policy "The use of the
- 'mu4e-compose-crypto-reply-encrypted-policy' variable is deprecated.
- 'mu4e-compose-crypto-policy' should be used instead" "2020-03-06")
-
-(make-obsolete-variable 'mu4e-compose-crypto-reply-plain-policy "The use of the
- 'mu4e-compose-crypto-reply-plain-policy' variable is deprecated.
- 'mu4e-compose-crypto-policy' should be used instead"
-                        "2020-03-06")
-
-(make-obsolete-variable 'mu4e-compose-crypto-reply-policy "The use of the
- 'mu4e-compose-crypto-reply-policy' variable is deprecated.
- 'mu4e-compose-crypto-reply-plain-policy' and
- 'mu4e-compose-crypto-reply-encrypted-policy' should be used instead"
-                        "2017-09-02")
-
 (defcustom mu4e-compose-format-flowed nil
   "Whether to compose messages to be sent as format=flowed.
 \(Or with long lines if variable `use-hard-newlines' is set to
@@ -252,9 +230,6 @@ mu4e-specific version of `message-signature'."
   "Whether to automatically include a message-signature."
   :type 'boolean
   :group 'mu4e-compose)
-
-(make-obsolete-variable 'mu4e-compose-auto-include-date
-                        "This is done unconditionally now" "1.3.5")
 
 (defcustom mu4e-compose-in-new-frame nil
   "Whether to compose messages in a new frame."

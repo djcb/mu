@@ -58,10 +58,6 @@ session."
   :type 'boolean
   :group 'mu4e)
 
-(make-obsolete-variable
- 'mu4e-maildir
- "determined by server; see `mu4e-root-maildir'." "1.3.8")
-
 (defcustom mu4e-change-filenames-when-moving nil
   "Change message file names when moving them.
 
@@ -107,8 +103,6 @@ passed the docid and the draft-path of the sent message.")
 The function is passed a message sexp as argument. See
 `mu4e--server-filter' for the format.")
 
-(make-obsolete-variable 'mu4e-header-func "mu4e-headers-append-func" "1.7.4")
-
 (defvar mu4e-headers-append-func nil
   "Function called with a list of headers to append.
 The function is passed a list of message plists as argument. See
@@ -139,10 +133,9 @@ from the server process.")
   "Function called for each (:pong type ....) sexp received.")
 
 (defvar mu4e-contacts-func nil
-  "A function called for each (:contacts (<list-of-contacts>)
+  "A function called for each (:contacts (<list-of-contacts>))
 sexp received from the server process.")
 
-(make-obsolete-variable 'mu4e-temp-func "No longer used" "1.7.0")
 
 ;;; Internal vars
 

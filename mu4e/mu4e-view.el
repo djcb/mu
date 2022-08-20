@@ -113,43 +113,6 @@ specified a function as viewer."
   :group 'mu4e-view)
 
 
-
-
-;;; Old options
-
-;; Options from the old message view.
-(make-obsolete-variable 'mu4e-view-show-addresses
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
-(make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
-(make-obsolete-variable 'mu4e-view-date-format
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-image-max-width
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-image-max-height
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-save-multiple-attachments-without-asking
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-attachment-assoc
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-attachment-actions
-			"See mu4e-view-mime-part-actions" "1.7.0")
-(make-obsolete-variable 'mu4e-view-header-field-keymap
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-header-field-keymap
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-contacts-header-keymap
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-view-attachments-header-keymap
-			"Unused with the new message view" "1.7.0")
-(make-obsolete-variable 'mu4e-imagemagick-identify nil "1.7.0")
-(make-obsolete-variable 'mu4e-view-show-images
-			"No longer used" "1.7.0")
-(make-obsolete-variable 'mu4e-view-gnus     "Old view is gone" "1.7.0")
-(make-obsolete-variable 'mu4e-view-use-gnus "Gnus view is the default" "1.5.10")
-
-(make-obsolete-variable 'mu4e-cited-regexp "No longer used" "1.7.0")
-
 
 
 ;; Helpers
@@ -623,12 +586,6 @@ message."
 (defvar gnus-icalendar-additional-identities)
 (defvar helm-comp-read-use-marked)
 (defvar-local mu4e~view-rendering nil)
-
-(define-obsolete-variable-alias 'mu4e-view-blocked-images 'gnus-blocked-images
-  "1.5.12")
-(define-obsolete-variable-alias 'mu4e-view-inhibit-images 'gnus-inhibit-images
-  "1.5.12")
-;;; Main
 
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.

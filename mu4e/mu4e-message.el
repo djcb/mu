@@ -37,13 +37,6 @@
 (declare-function mu4e-personal-address-p "mu4e-contacts")
 (declare-function mu4e-make-temp-file  "mu4e-helpers")
 
-(make-obsolete-variable 'mu4e-html2text-command "No longer in use" "1.7.0")
-(make-obsolete-variable 'mu4e-view-prefer-html "No longer in use" "1.7.0")
-(make-obsolete-variable 'mu4e-view-html-plaintext-ratio-heuristic
-			"No longer in use" "1.7.0")
-(make-obsolete-variable 'mu4e-message-body-rewrite-functions
-			"No longer in use" "1.7.0")
-
 ;;; Message fields
 
 (defsubst mu4e-message-field-raw (msg field)
@@ -197,9 +190,6 @@ A part would look something like:
 Either in the headers buffer or the view buffer. Field is a
 symbol, see `mu4e-header-info'."
   (plist-get (mu4e-message-at-point) field))
-
-;;; Html2Text
-(make-obsolete 'mu4e-shr2text "No longer in use" "1.7.0")
 
 (defun mu4e-message-readable-path (&optional msg)
   "Get a readable path to MSG or raise an error.
