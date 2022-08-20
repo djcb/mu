@@ -172,7 +172,7 @@ version_texi_data.set('UPDATED',
 version_texi_data.set('UPDATEDMONTH',
                       run_command('date', '+%B %Y', check:true).stdout().strip())
 
-configure_file(input: 'version.texi.in',
+configure_file(input: join_paths('build-aux', 'version.texi.in'),
 	       output: 'version.texi',
 	       configuration: version_texi_data)
 

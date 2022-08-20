@@ -7,7 +7,6 @@ test -f mu/mu.cc || {
     echo "*** Run this script from the top-level mu source directory"
     exit 1
 }
-
 BUILDDIR=build
 
 command -v meson 2> /dev/null
@@ -22,9 +21,6 @@ if test -d ${BUILDDIR}; then
 else
     meson ${BUILDDIR} $@
 fi
-
-# Add a Makefile with some useful target
-cp Makefile.meson Makefile
 
 echo "*** Now run 'ninja -C ${BUILDDIR}' to build mu"
 echo "*** Or check the Makefile for some useful targets"
