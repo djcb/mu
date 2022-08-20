@@ -91,6 +91,3 @@ $ ninja -C build install
 
 This allows for passing various ~meson~ options, such as ~--prefix~. Consult the
 ~meson~ documentation for details.
-
-
-

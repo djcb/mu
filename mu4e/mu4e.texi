@@ -272,79 +272,48 @@ anything yourself. However, if there are no packages for your
 distribution, if they are outdated, or if you want to use the latest
 development versions, you can follow the steps below.
 
-First, you need make sure you have the necessary dependencies; the
-details depend on your distribution. If you're using another
-distribution (or another OS), the below can at least be helpful in
-identifying the packages to install.
+@subsection Dependencies
 
-We provide some instructions for Debian, Ubuntu and Fedora; if those
-do not apply to you, you can follow either @ref{Building from a
-release tarball} or @ref{Building from git}.
-
-@subsection Dependencies for Debian/Ubuntu
-
+The first step is to get some build dependencies. The details depend a
+bit on your system's setup / distribution.
+@itemize
+@item On Debian/Ubuntu and derivatives:
 @example
-$ sudo apt-get install libgmime-3.0-dev libxapian-dev emacs
+$ sudo apt-get install git meson libgmime-3.0-dev libxapian-dev emacs
 @end example
-
-@subsection Dependencies for Fedora
-
+@item On Fedora and related:
 @example
-$ sudo yum install gmime30-devel xapian-core-devel emacs
+$ sudo dnf install git meson gmime30-devel xapian-core-devel emacs
 @end example
+@item Otherwise, install the equivalent of the above on your system
+@end itemize
 
-@subsection Building from a release tarball
-@anchor{Building from a release tarball}
 
-Using a release-tarball (as available from
-GitHub@footnote{@url{https://github.com/djcb/mu/releases}}),
-installation follows the typical steps:
+@subsection Getting mu
+
+The next step is to get the @t{mu} sources. There are two alternatives:
+@itemize
+@item @emph{Use a stable release} -- download a release from
+@url{https://github.com/djcb/mu/releases}
+@item @emph{Use an experimental development version} -- get it from the repository,
+and @t{git clone https://github.com/djcb/mu.git}
+@end itemize
+
+@subsection Building mu
+
+What all that in place, let's build and install @t{mu} and @t{mu4e}.
+Enter the directory where you unpacked or cloned @t{mu}. Then:
 
 @example
-$ tar xvfz mu-<version>.xz  # use the specific version
-$ cd mu-<version>
-# On the BSDs: use gmake instead of make
 $ ./configure && make
 $ sudo make install
 @end example
 
-Xapian, GMime and their dependencies must be installed.
+Note: if you are familiar with @t{meson}, you can of course use its
+commands directly; the @t{make} commands are just a thin wrapper around
+that.
 
-@subsection Building from git
-@anchor{Building from git}
-
-By default, @t{mu} uses the
-Meson@footnote{@url{https://mesonbuild.com/}} build-system. For
-ease-of-use, we also provide a @t{Makefile} with some basic options. Of
-course, you can also just use the corresponding @t{meson}/@t{ninja}
-commands directly.
-
-@example
-$ git clone git://github.com/djcb/mu.git
-$ cd mu
-$ ./autogen.sh
-$ make
-$ make install
-@end example
-
-After that, @t{make} (which is just @t{ninja -C build} under the covers)
-should be enough for rebuilding.
-
-Alternatively, you can also use the (now deprecated) @t{autotools} build
-setup, assuming you have autotools (@t{autoconf}, @t{automake},
-@t{libtool}, @t{texinfo}) installed:
-
-@example
-# get from git (alternatively, use a github tarball)
-$ git clone git://github.com/djcb/mu.git
-
-$ cd mu
-$ ./autogen.sh && make
-# On the BSDs: use gmake instead of make
-$ sudo make install
-@end example
-
-(Xapian, GMime and their dependencies must be installed).
+@subsection Installing
 
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a
 hard dependency between versions of @t{mu4e} and @t{mu} --- you cannot
@@ -361,13 +330,12 @@ configuration before trying again:
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
 @end lisp
 
-
 @subsection mu4e and emacs customization
 
 There is some support for using the Emacs customization system in
-@t{mu4e}, but for now, we recommend setting the values
-manually. Please refer to @ref{Example configs} for a couple of
-examples of this; here we go through things step-by-step.
+@t{mu4e}, but for now, we recommend setting the values manually. Please
+refer to @ref{Example configs} for a couple of examples of this; here we
+go through things step-by-step.
 
 @node Getting mail
 @section Getting mail
