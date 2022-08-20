@@ -1,6 +1,17 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
+* 1.9 (unreleased development version)
+
+*** building
+
+    - the autotools build (which was deprecated since 1.8) has now been removed.
+      we thank it for its services since 2008. We continue with ~meson~.
+
+      However, we still have ~autogen.sh~ and a ~Makefile~ which can be helpful for
+      driving ~meson~-based builds. Think of the ~Makefile~ as a convenient place to
+      put common action for which I always forget the ~meson~ incantation.**
+
 * 1.8 (released on June 25, 2022)
 
   (there are some changes in the installation procedure compared to 1.6.x; see
