@@ -316,7 +316,7 @@ Our parent `message-mode' uses font-locking for the compose
 buffers; lets remap its faces so it uses the ones for mu4e."
   ;; normal headers
   (face-remap-add-relative 'message-header-name
-                           '((:inherit mu4e-header-key-face)))
+                           '((:inherit mu4e-header-field-face)))
   (face-remap-add-relative 'message-header-other
                            '((:inherit mu4e-header-value-face)))
   ;; special headers

@@ -122,7 +122,13 @@ I.e. a message with the draft flag set."
 
 (defface mu4e-header-key-face
   '((t :inherit message-header-name :weight bold))
-  "Face for a header key (such as \"Foo\" in \"Subject:\ Foo\")."
+  "Face used to highlight items in various places."
+  :group 'mu4e-faces)
+
+(defface mu4e-header-field-face
+  '((t :weight bold))
+  "Face for a header field name (such as \"Subject:\" in \"Subject:\
+Foo\")."
   :group 'mu4e-faces)
 
 (defface mu4e-header-value-face
