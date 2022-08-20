@@ -3,6 +3,11 @@
 
 * 1.9 (unreleased development version)
 
+*** mu4e
+
+    - all the obsolete function and variable aliases have been moved to
+      ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
+
 *** building
 
     - the autotools build (which was deprecated since 1.8) has now been removed.
@@ -321,7 +326,11 @@
     - Switch the context for existing draft messages using
       ~mu4e-compose-context-switch~ or ~C-c C-;~ in ~mu4e-compose-mode~.
 
-* 1.4 (released, as of April 18 2020)
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+** 1.4 (released, as of April 18 2020)
 
 *** mu
 
@@ -456,10 +465,7 @@
     - Don't forget to delete your old mail cache location if necessary (see
       release notes for more detail).
 
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
+
 
 ** 1.2
 
