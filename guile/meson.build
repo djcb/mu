@@ -51,8 +51,8 @@ if do_snarf
   snarf = find_program('guile-snarf3.0','guile-snarf')
   # there must be a better way of feeding the include paths to snarf...
   snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
-	      '-I' + meson.current_source_dir() + '/../lib',
-	      '-I' + meson.current_build_dir() + '/..']
+              '-I' + meson.current_source_dir() + '/../lib',
+              '-I' + meson.current_build_dir() + '/..']
   snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('includedir'),
                                   'glib-2.0')
   snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('libdir'),
@@ -60,8 +60,8 @@ if do_snarf
   snarf_args += '-I' + join_paths(guile_dep.get_pkgconfig_variable('includedir'),
                                   'guile', '3.0')
   snarf_gen=generator(snarf,
-		      output: '@BASENAME@.x',
-		      arguments: snarf_args)
+                      output: '@BASENAME@.x',
+                      arguments: snarf_args)
   snarf_srcs=['mu-guile.cc', 'mu-guile-message.cc']
   snarf_x=snarf_gen.process(snarf_srcs)
 else
@@ -77,25 +77,24 @@ lib_guile_mu = shared_module(
 
 if makeinfo.found()
   custom_target('mu_guile_info',
-		input: 'mu-guile.texi',
-		output: 'mu-guile.info',
-		install: true,
-		install_dir: infodir,
-		command: [makeinfo,
-			  '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
-			  join_paths(meson.current_source_dir(), 'mu-guile.texi'),
-			  '-I', join_paths(meson.current_build_dir(), '..')])
+                input: 'mu-guile.texi',
+                output: 'mu-guile.info',
+                install: true,
+                install_dir: infodir,
+                command: [makeinfo,
+                          '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
+                          join_paths(meson.current_source_dir(), 'mu-guile.texi'),
+                          '-I', join_paths(meson.current_build_dir(), '..')])
 
   if install_info.found()
     meson.add_install_script(install_info_script, 'share/info', 'mu-guile.info')
   endif
-
   
 endif
 
 guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0', 'mu')
 install_data(['mu.scm','mu/script.scm', 'mu/message.scm', 'mu/stats.scm', 'mu/plot.scm'],
-	     install_dir: guile_scm_dir)
+             install_dir: guile_scm_dir)
 
 guile_builddir=meson.current_build_dir()
 
