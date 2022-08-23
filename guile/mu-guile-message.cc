@@ -444,10 +444,18 @@ static void
 define_vars(void)
 {
 	field_for_each([](auto&& field){
-		const auto name{"mu:field:" +
-			std::string{field.alias.empty() ? field.name : field.alias}};
-		scm_c_define(name.c_str(), scm_from_uint(field.value_no()));
-		scm_c_export(name.c_str(), NULL);
+
+		auto defvar = [&](auto&& fname, auto&& ffield) {
+			const auto name{"mu:field:" + std::string{fname}};
+			scm_c_define(name.c_str(), scm_from_uint(field.value_no()));
+			scm_c_export(name.c_str(), NULL);
+		};
+
+		// define for both name and (if exists) alias.
+		if (!field.name.empty())
+			defvar(field.name, field);
+		if (!field.alias.empty())
+			defvar(field.alias, field);
 	});
 
 	/* non-Xapian field: timestamp */
