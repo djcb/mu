@@ -89,12 +89,24 @@ if makeinfo.found()
   if install_info.found()
     meson.add_install_script(install_info_script, 'share/info', 'mu-guile.info')
   endif
-  
 endif
 
 guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0', 'mu')
 install_data(['mu.scm','mu/script.scm', 'mu/message.scm', 'mu/stats.scm', 'mu/plot.scm'],
              install_dir: guile_scm_dir)
+
+
+mu_guile_scripts=[
+  join_paths('scripts', 'find-dups.scm'),
+  join_paths('scripts', 'msgs-count.scm'),
+  join_paths('scripts', 'msgs-per-day.scm'),
+  join_paths('scripts', 'msgs-per-hour.scm'),
+  join_paths('scripts', 'msgs-per-month.scm'),
+  join_paths('scripts', 'msgs-per-year-month.scm'),
+  join_paths('scripts', 'msgs-per-year.scm')
+]
+mu_guile_script_dir=join_paths(datadir, 'mu', 'scripts')
+install_data(mu_guile_scripts, install_dir: mu_guile_script_dir)
 
 guile_builddir=meson.current_build_dir()
 
