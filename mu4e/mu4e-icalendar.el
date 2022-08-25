@@ -136,18 +136,19 @@
                   (mu4e-sent-messages-behavior 'delete)
                   (mu4e-compose-reply-recipients 'sender)
                   (ical-msg (cl-copy-list msg)))
-              ;; Make sure the reply is sent to the organiser.
+              ;; Make sure the reply is sent to email of the organiser with proper name.
               (let* ((organizer (gnus-icalendar-event:organizer event))
-                     (reply-to (plist-get msg :reply-to))
-                     (name (or (caar reply-to)
-                               (caar (plist-get msg :from))))
-                     (email (cons name organizer)))
+                     (reply-to (car (plist-get msg :reply-to)))
+                     (from     (car (plist-get msg :from)))
+                     (name (or  (plist-get reply-to :name)
+                                (plist-get from :name))))
+                ;; Add :reply-to field when incomplete or absent
                 (unless (or (string= organizer "")
                             (mu4e~icalendar-has-email organizer reply-to))
-                  (plist-put ical-msg :reply-to (cons email reply-to))))
-              (plist-put ical-msg :subject
-                         (concat (capitalize (symbol-name status))
-                                 ": " (gnus-icalendar-event:summary event)))
+                  (plist-put ical-msg :reply-to `((:name ,name :email ,organizer))))
+                (plist-put ical-msg :subject
+                           (concat (capitalize (symbol-name status))
+                                   ": " (gnus-icalendar-event:summary event))))
               (mu4e~compose-handler
                'reply ical-msg
                `((:buffer-name ,ical-name
