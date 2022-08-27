@@ -322,9 +322,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (face-remap-add-relative 'message-header-to 'mu4e-contact-face)
   (face-remap-add-relative 'message-header-cc 'mu4e-contact-face)
   (face-remap-add-relative 'message-header-bcc 'mu4e-contact-face)
-  (face-remap-add-relative 'message-header-subject 'mu4e-special-header-value-face)
-  ;; citation
-  (face-remap-add-relative 'message-cited-text 'mu4e-cited-1-face))
+  (face-remap-add-relative 'message-header-subject 'mu4e-special-header-value-face))
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
