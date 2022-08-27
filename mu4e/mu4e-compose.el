@@ -315,24 +315,16 @@ set, this simply executes `fill-paragraph'."
 Our parent `message-mode' uses font-locking for the compose
 buffers; lets remap its faces so it uses the ones for mu4e."
   ;; normal headers
-  (face-remap-add-relative 'message-header-name
-                           '((:inherit mu4e-header-field-face)))
-  (face-remap-add-relative 'message-header-other
-                           '((:inherit mu4e-header-value-face)))
+  (face-remap-add-relative 'message-header-name 'mu4e-header-field-face)
+  (face-remap-add-relative 'message-header-other 'mu4e-header-value-face)
   ;; special headers
-  (face-remap-add-relative 'message-header-from
-                           '((:inherit mu4e-contact-face)))
-  (face-remap-add-relative 'message-header-to
-                           '((:inherit mu4e-contact-face)))
-  (face-remap-add-relative 'message-header-cc
-                           '((:inherit mu4e-contact-face)))
-  (face-remap-add-relative 'message-header-bcc
-                           '((:inherit mu4e-contact-face)))
-  (face-remap-add-relative 'message-header-subject
-                           '((:inherit mu4e-special-header-value-face)))
+  (face-remap-add-relative 'message-header-from 'mu4e-contact-face)
+  (face-remap-add-relative 'message-header-to 'mu4e-contact-face)
+  (face-remap-add-relative 'message-header-cc 'mu4e-contact-face)
+  (face-remap-add-relative 'message-header-bcc 'mu4e-contact-face)
+  (face-remap-add-relative 'message-header-subject 'mu4e-special-header-value-face)
   ;; citation
-  (face-remap-add-relative 'message-cited-text
-                           '((:inherit mu4e-cited-1-face))))
+  (face-remap-add-relative 'message-cited-text 'mu4e-cited-1-face))
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
