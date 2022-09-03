@@ -1300,12 +1300,13 @@ the third MIME-part."
   (interactive)
   ;; This function assumes `gnus-article-mime-handle-alist' is sorted by
   ;; pertinence, i.e. the first HTML part found in it is the most important one.
-  (if-let ((html-part
-	    (seq-find (lambda (handle)
-			(equal (mm-handle-media-type (cdr handle)) "text/html"))
-		      gnus-article-mime-handle-alist)))
-      (gnus-article-inline-part (car html-part))
-    (mu4e-warn "No html part in this message")))
+  (save-excursion
+    (if-let ((html-part
+	      (seq-find (lambda (handle)
+			  (equal (mm-handle-media-type (cdr handle)) "text/html"))
+		        gnus-article-mime-handle-alist)))
+        (gnus-article-inline-part (car html-part))
+      (mu4e-warn "No html part in this message"))))
 
 (defun mu4e-process-file-through-pipe (path pipecmd)
   "Process file at PATH through a pipe with PIPECMD."
