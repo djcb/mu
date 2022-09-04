@@ -118,7 +118,8 @@ the personal addresses.")
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (mu4e-update-minor-mode)
-  (set (make-local-variable 'revert-buffer-function) #'mu4e--main-view-real))
+  (set (make-local-variable 'revert-buffer-function) #'mu4e--main-view-real)
+  (add-hook 'mu4e-index-updated-hook #'mu4e--main-update-after-index))
 
 
 (defun mu4e--main-action-str (str &optional func-or-shortcut)
@@ -416,6 +417,11 @@ When REFRESH is non nil refresh infos from server."
     (when (eq func 'mu4e-context-switch)
       (sit-for 1)
       (mu4e--main-menu))))
+
+(defun mu4e--main-update-after-index ()
+  "Update the main view buffer after indexing."
+  (with-current-buffer mu4e-main-buffer-name
+    (revert-buffer)))
 
 (provide 'mu4e-main)
 ;;; mu4e-main.el ends here
