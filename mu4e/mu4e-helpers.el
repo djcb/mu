@@ -211,6 +211,13 @@ Does a local-exit and does not return."
 
 ;;; Reading user input
 
+(defun mu4e--plist-get (lst prop)
+  "Get PROP from plist LST and raise an error if not present."
+  (or (plist-get lst prop)
+      (if (plist-member lst prop)
+	  nil
+	(mu4e-error "Missing property %s in %s" prop lst))))
+
 (defun mu4e--read-char-choice (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
 Any input that is not one of CHOICES is ignored. This is mu4e's
