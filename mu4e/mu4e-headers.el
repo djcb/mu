@@ -1552,12 +1552,7 @@ user)."
              (if (eq sortfield mu4e-headers-sort-field)
                  (if (eq mu4e-headers-sort-direction 'ascending)
                      'descending 'ascending)
-               'descending)))
-          ;; FIXME: This has been here for years but cl-case doesn't allow
-          ;; further clauses after t or otherwise.
-          ;; (mu4e-read-option "Direction: " '(("ascending" . 'ascending)
-          ;;                                   ("descending" . 'descending)))
-          ))
+               'descending)))))
     (setq
      mu4e-headers-sort-field sortfield
      mu4e-headers-sort-direction dir)
