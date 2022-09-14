@@ -379,14 +379,14 @@ into a string."
          (lambda (cell)
            (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (cl-case type
-      ('child         (funcall get-prefix mu4e-headers-thread-child-prefix))
-      ('first-child   (funcall get-prefix mu4e-headers-thread-first-child-prefix))
-      ('last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
-      ('connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
-      ('blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
-      ('orphan        (funcall get-prefix mu4e-headers-thread-orphan-prefix))
-      ('single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
-      ('duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
+      (child         (funcall get-prefix mu4e-headers-thread-child-prefix))
+      (first-child   (funcall get-prefix mu4e-headers-thread-first-child-prefix))
+      (last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
+      (connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
+      (blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
+      (orphan        (funcall get-prefix mu4e-headers-thread-orphan-prefix))
+      (single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
+      (duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
       (t              "?"))))
 
 
@@ -1555,9 +1555,12 @@ user)."
              (if (eq sortfield mu4e-headers-sort-field)
                  (if (eq mu4e-headers-sort-direction 'ascending)
                      'descending 'ascending)
-               'descending))
-            (mu4e-read-option "Direction: "
-                              '(("ascending" . 'ascending) ("descending" . 'descending))))))
+               'descending)))
+          ;; FIXME: This has been here for years but cl-case doesn't allow
+          ;; further clauses after t or otherwise.
+          ;; (mu4e-read-option "Direction: " '(("ascending" . 'ascending)
+          ;;                                   ("descending" . 'descending)))
+          ))
     (setq
      mu4e-headers-sort-field sortfield
      mu4e-headers-sort-direction dir)
