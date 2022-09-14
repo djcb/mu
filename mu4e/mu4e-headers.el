@@ -653,17 +653,12 @@ space propertized with a `display' text property which expands to
       (mu4e~headers-truncate-field-precise field val width)
     (mu4e~headers-truncate-field-fast val width)))
 
-(defsubst mu4e~headers-sanitize-field-value (val)
-  "Replace control characters in VAL by regular spaces."
-  (replace-regexp-in-string "[\0- ]+" " " val))
-
 (defsubst mu4e~headers-field-handler (f-w msg)
   "Create a description of the field of MSG described by F-W."
   (let* ((field (car f-w))
          (width (cdr f-w))
          (val (mu4e~headers-field-value msg field))
-         (val (and val (if width (mu4e~headers-truncate-field field val width) val)))
-         (val (and val (mu4e~headers-sanitize-field-value val))))
+         (val (and val (if width (mu4e~headers-truncate-field field val width) val))))
     val))
 
 (defsubst mu4e~headers-apply-flags (msg fieldval)
