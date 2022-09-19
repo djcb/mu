@@ -477,10 +477,22 @@ MimePart::size() const noexcept
 
 	return static_cast<size_t>(g_mime_stream_length(stream));
 }
-
 Option<std::string>
 MimePart::to_string() const noexcept
 {
+	/*
+	 * easy case: text. this automatically handles conversion to utf-8.
+	 */
+	if (GMIME_IS_TEXT_PART(self())) {
+		if (char* txt{g_mime_text_part_get_text(GMIME_TEXT_PART(self()))}; !txt)
+			return Nothing;
+		else
+			return to_string_gchar(std::move(txt)/*consumes*/);
+	}
+
+	/*
+	 * harder case: read from stream manually
+	 */
 	GMimeDataWrapper *wrapper{g_mime_part_get_content(self())};
 	if (!wrapper) { /* this happens with invalid mails */
 		g_debug("failed to create data wrapper");
@@ -492,7 +504,6 @@ MimePart::to_string() const noexcept
 		g_warning("failed to create mem stream");
 		return Nothing;
 	}
-
 
 	ssize_t buflen{g_mime_data_wrapper_write_to_stream(wrapper, stream)};
 	if (buflen <= 0) { /* empty buffer, not an error */
@@ -513,7 +524,9 @@ MimePart::to_string() const noexcept
 	buffer.resize(buflen);
 
 	return buffer;
+
 }
+
 
 
 Result<size_t>

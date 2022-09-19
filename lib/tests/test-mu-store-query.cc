@@ -449,6 +449,73 @@ On Thu, Aug 04, 2022 at 05:31:39PM +0100, Robin Murphy wrote:
 }
 
 
+static void
+test_body_matricula()
+{
+	const TestMap test_msgs = {{
+{
+"basic/cur/matricula-msg:2,S",
+R"(From: XXX <XX@XX.com>
+Subject:
+ =?iso-8859-1?Q?EF_-_Pago_matr=EDcula_de_la_matr=EDcula_de_inscripci=F3n_a?=
+Date: Thu, 4 Aug 2022 14:29:41 +0000
+Message-ID:
+ <VE1PR03MB5471882920DE08CFE44D97A0FE9F9@VE1PR03MB5471.eurprd03.prod.outlook.com>
+Accept-Language: es-AR, es-ES, en-US
+Content-Language: es-AR
+X-MS-Has-Attach: yes
+Content-Type: multipart/mixed;
+	boundary="_004_VE1PR03MB5471882920DE08CFE44D97A0FE9F9VE1PR03MB5471eurp_"
+MIME-Version: 1.0
+X-OriginatorOrg: ef.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: VE1PR03MB5471.eurprd03.prod.outlook.com
+
+--_004_VE1PR03MB5471882920DE08CFE44D97A0FE9F9VE1PR03MB5471eurp_
+Content-Type: multipart/alternative;
+	boundary="_000_VE1PR03MB5471882920DE08CFE44D97A0FE9F9VE1PR03MB5471eurp_"
+
+--_000_VE1PR03MB5471882920DE08CFE44D97A0FE9F9VE1PR03MB5471eurp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Buenas tardes Familia,
+
+
+Espero que est=E9n muy bien.
+
+
+
+Ya cargamos en sistema su pre inscripci=F3n para el curso
+
+
+Quedamos atentos ante cualquier consulta que surja.
+
+Saludos,
+)"},
+}};
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	/* i.e., non-utf8 text parts were not converted */
+	g_test_bug("2333");
+
+	// matches
+	for (auto&& expr: {
+			"subject:matrícula",
+			"subject:matricula",
+			"body:atentos",
+			"body:inscripción"
+		}) {
+
+		if (g_test_verbose())
+			g_message("query: '%s'", expr);
+		auto qr = store.run_query(expr);
+		assert_valid_result(qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+}
 
 int
 main(int argc, char* argv[])
@@ -464,6 +531,8 @@ main(int argc, char* argv[])
 			test_dups_related);
 	g_test_add_func("/store/query/related-missing-root",
 			test_related_missing_root);
+	g_test_add_func("/store/query/body-matricula",
+			test_body_matricula);
 
 	return g_test_run();
 }
