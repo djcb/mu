@@ -256,7 +256,7 @@ only marks the first message in the thread.")
 (defvar mu4e-headers-thread-child-prefix '("|>" . "│ ")
   "Prefix for messages in sub threads that do have a following sibling.")
 (defvar mu4e-headers-thread-first-child-prefix '("o " . "⚬ ")
-  "Prefix for messages in sub threads that do not have a following sibling.")
+  "Prefix for the first child messages in a sub thread.")
 (defvar mu4e-headers-thread-last-child-prefix '("L" . "└ ")
   "Prefix for messages in sub threads that do not have a following sibling.")
 (defvar mu4e-headers-thread-connection-prefix '("|" . "│ ")
@@ -379,14 +379,14 @@ into a string."
          (lambda (cell)
            (if mu4e-use-fancy-chars (cdr cell) (car cell)))))
     (cl-case type
-      ('child         (funcall get-prefix mu4e-headers-thread-child-prefix))
-      ('first-child   (funcall get-prefix mu4e-headers-thread-first-child-prefix))
-      ('last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
-      ('connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
-      ('blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
-      ('orphan        (funcall get-prefix mu4e-headers-thread-orphan-prefix))
-      ('single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
-      ('duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
+      (child         (funcall get-prefix mu4e-headers-thread-child-prefix))
+      (first-child   (funcall get-prefix mu4e-headers-thread-first-child-prefix))
+      (last-child    (funcall get-prefix mu4e-headers-thread-last-child-prefix))
+      (connection    (funcall get-prefix mu4e-headers-thread-connection-prefix))
+      (blank         (funcall get-prefix mu4e-headers-thread-blank-prefix))
+      (orphan        (funcall get-prefix mu4e-headers-thread-orphan-prefix))
+      (single-orphan (funcall get-prefix mu4e-headers-thread-single-orphan-prefix))
+      (duplicate     (funcall get-prefix mu4e-headers-thread-duplicate-prefix))
       (t              "?"))))
 
 
@@ -1552,9 +1552,7 @@ user)."
              (if (eq sortfield mu4e-headers-sort-field)
                  (if (eq mu4e-headers-sort-direction 'ascending)
                      'descending 'ascending)
-               'descending))
-            (mu4e-read-option "Direction: "
-                              '(("ascending" . 'ascending) ("descending" . 'descending))))))
+               'descending)))))
     (setq
      mu4e-headers-sort-field sortfield
      mu4e-headers-sort-direction dir)
