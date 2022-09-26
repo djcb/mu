@@ -119,6 +119,11 @@ NOT be quoted, since mu4e does this for you."
   :version "1.3.9"
   :group 'mu4e-folders)
 
+(defcustom mu4e-maildir-initial-input "/"
+  "Initial input for `mu4e-completing-completing-read' function."
+  :type 'string
+  :group 'mu4e-folders)
+
 (defcustom mu4e-maildir-info-delimiter
   (if (member system-type '(ms-dos windows-nt cygwin))
       ";" ":")
@@ -301,7 +306,8 @@ from all maildirs under `mu4e-maildir'."
         (if (member kar '(?/ ?o)) ;; user chose 'other'?
             (substring-no-properties
              (funcall mu4e-completing-read-function prompt
-                      (mu4e-get-maildirs) nil nil "/"))
+                      (mu4e-get-maildirs) nil nil
+                      mu4e-maildir-initial-input))
           (or (plist-get
                (seq-find (lambda (item) (= kar (plist-get item :key)))
                          (mu4e-maildir-shortcuts)) :maildir)
