@@ -45,15 +45,11 @@ public:
 
 	/**
 	 * Configuration options.
-	 *
-	 * @param path
-	 * @param readonly
 	 */
 	enum struct Options {
-		None	    = 0,	/**< No specific options */
-		Writable    = 1 << 0,	/**< Open in writable mode */
-		AutoUpgrade = 1 << 1,	/**< automatically re-initialize
-					 * versions do not match */
+		None	 = 0,	/**< No specific options */
+		Writable = 1 << 0, /**< Open in writable mode */
+		ReInit	 = 1 << 1, /**< Re-initialize based on existing */
 	};
 
 	/**
@@ -62,7 +58,7 @@ public:
 	 * @param path path to the database
 	 * @param options startup options
 	 *
-	 * A store or an error.
+	 * @return A store or an error.
 	 */
 	static Result<Store> make(const std::string& path,
 				  Options opts=Options::None) noexcept try {
@@ -93,6 +89,8 @@ public:
 	 * @param personal_addresses addresses that should be recognized as
 	 * 'personal' for identifying personal messages.
 	 * @param config a configuration object
+	 *
+	 * @return a store or an error
 	 */
 	static Result<Store> make_new(const std::string& path,
 				      const std::string& maildir,
@@ -447,6 +445,7 @@ private:
 	 * @param options startup options
 	 */
 	Store(const std::string& path, Options opts=Options::None);
+
 
 	/**
 	 * Construct a store for a not-yet-existing document database
