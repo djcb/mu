@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -34,7 +34,7 @@ static void
 show_version(void)
 {
 	const char* blurb = "mu (mail indexer/searcher) version " VERSION "\n"
-			    "Copyright (C) 2008-2021 Dirk-Jan C. Binnema\n"
+			    "Copyright (C) 2008-2022 Dirk-Jan C. Binnema\n"
 			    "License GPLv3+: GNU GPL version 3 or later "
 			    "<http://gnu.org/licenses/gpl.html>.\n"
 			    "This is free software: you are free to change "
