@@ -19,7 +19,7 @@
 #
 project('mu', ['c', 'cpp'],
 	version: '1.9.0',
-	meson_version: '>= 0.52.0', # debian 10
+	meson_version: '>= 0.53.0', # needed by fs module
 	license: 'GPL-3.0-or-later',
 	default_options : [
 	  'buildtype=debugoptimized',
@@ -43,6 +43,10 @@ if get_option('lispdir') == ''
 else
   mu4e_lispdir= get_option('lispdir') / 'mu4e'
 endif
+
+fs = import('fs')
+
+mu4e_nativelispdir= fs.parent(fs.parent(mu4e_lispdir)) / 'native-lisp'
 
 ################################################################################
 # compilers / flags
@@ -132,7 +136,12 @@ guile_dep = dependency('guile-3.0', required: get_option('guile'))
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
-emacs=find_program([emacs_name], version: '>=25.3', required:false)
+if get_option('native-comp')
+  emacs_min_version = '28.1'
+else
+  emacs_min_version = '25.3'
+endif
+emacs=find_program([emacs_name], version: '>=' + emacs_min_version, required:false)
 if not emacs.found()
   message('emacs not found; not pre-compiling mu4e sources')
 endif

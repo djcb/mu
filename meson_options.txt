@@ -33,3 +33,8 @@ option('emacs',
 option('lispdir',
        type: 'string',
        description: 'path under which to install emacs-lisp files')
+
+option('native-comp',
+       type: 'boolean',
+       value: false,
+       description: 'whether to do AOT native compilation for emacs-lisp files')

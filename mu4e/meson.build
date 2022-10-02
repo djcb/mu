@@ -89,6 +89,23 @@ foreach src : mu4e_srcs
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
 
+if get_option('native-comp')
+  target_dir = join_paths(meson.current_build_dir(), 'native-lisp')
+  target_func = '(setq native-comp-eln-load-path (list "' + target_dir + '"))'
+  custom_target('native-comp',
+                build_by_default: true,
+                input: mu4e_srcs,
+                # this is mandatory, but we don't use it because eln file names are not known
+                output: 'native-comp',
+                command: [emacs,
+                          '--no-init-file',
+                          '--batch',
+                          '--eval', target_func,
+                          '--directory', meson.current_build_dir(),
+                          '--funcall', 'batch-native-compile', '@INPUT@'])
+  install_subdir(target_dir, install_dir: mu4e_nativelispdir, strip_directory: true)
+endif
+
 # also install the sources and the config
 install_data(mu4e_srcs, install_dir: mu4e_lispdir)
 
