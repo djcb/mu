@@ -18,7 +18,7 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-        version: '1.9.0',
+        version: '1.9.1',
         meson_version: '>= 0.52.0', # debian 10
         license: 'GPL-3.0-or-later',
         default_options : [
