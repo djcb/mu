@@ -18,23 +18,23 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.9.0',
-	meson_version: '>= 0.52.0', # debian 10
-	license: 'GPL-3.0-or-later',
-	default_options : [
-	  'buildtype=debugoptimized',
-	  'warning_level=3',
-	  'c_std=c11',
-	  'cpp_std=c++17'
-	]
+        version: '1.9.1',
+        meson_version: '>= 0.52.0', # debian 10
+        license: 'GPL-3.0-or-later',
+        default_options : [
+          'buildtype=debugoptimized',
+          'warning_level=3',
+          'c_std=c11',
+          'cpp_std=c++17'
+        ]
        )
 
 # installation paths
 prefixdir = get_option('prefix')
-bindir	  = prefixdir /  get_option('bindir')
-datadir	  = prefixdir / get_option('datadir')
-mandir	  = prefixdir / get_option('mandir')
-infodir	  = prefixdir / get_option('infodir')
+bindir    = prefixdir /  get_option('bindir')
+datadir   = prefixdir / get_option('datadir')
+mandir    = prefixdir / get_option('mandir')
+infodir   = prefixdir / get_option('infodir')
 
 # allow for configuring lispdir, as with autotools.
 # default to <p
@@ -54,6 +54,7 @@ extra_flags = [
   '-Wformat=2',
   '-Wstack-protector',
   '-Wno-switch-enum',
+  '-Wno-keyword-macro',
   '-Wno-#warnings']
 
 if get_option('buildtype') == 'debug'
@@ -76,6 +77,8 @@ foreach extra_arg : extra_flags
     add_project_arguments([extra_arg], language: 'cpp')
   endif
 endforeach
+
+
 
 ################################################################################
 # config.h setup
@@ -173,8 +176,8 @@ version_texi_data.set('UPDATEDMONTH',
                       run_command('date', '+%B %Y', check:true).stdout().strip())
 
 configure_file(input: join_paths('build-aux', 'version.texi.in'),
-	       output: 'version.texi',
-	       configuration: version_texi_data)
+               output: 'version.texi',
+               configuration: version_texi_data)
 
 ################################################################################
 # install some data files

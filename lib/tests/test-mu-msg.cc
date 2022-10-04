@@ -48,8 +48,8 @@ assert_contacts_equal(const Contacts& contacts,
 	for (auto&& contact: contacts) {
 		if (g_test_verbose())
 			g_message("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
-		// assert_equal(contact.name, expected.at(n).first);
-		// assert_equal(contact.email, expected.at(n).second);
+		assert_equal(contact.name, expected.at(n).first);
+		assert_equal(contact.email, expected.at(n).second);
 		++n;
 	}
 	g_print("\n");
@@ -186,7 +186,7 @@ test_mu_msg_umlaut(void)
 		.value()};
 
 	assert_contacts_equal(msg.to(), { { "Helmut Kröger", "hk@testmu.xxx"}});
-	assert_contacts_equal(msg.from(), { { "Mü", "testmu@testmu.xxx"}});
+	assert_contacts_equal(msg.from(), { { "Mü", "testmu@testmu.xx"}});
 
 	assert_equal(msg.subject(), "Motörhead");
 	assert_equal(msg.from().at(0).display_name(), "Mü <testmu@testmu.xx>");

@@ -303,44 +303,31 @@ Store::Private::find_message_unlocked(Store::Id docid) const
 Store::Store(const std::string& path, Store::Options opts)
     : priv_{std::make_unique<Private>(path, none_of(opts & Store::Options::Writable))}
 {
-	if (properties().schema_version == ExpectedSchemaVersion)
-		return; // all is good.
+	if (none_of(opts & Store::Options::Writable) &&
+	    any_of(opts & Store::Options::ReInit))
+		throw Mu::Error(Error::Code::InvalidArgument,
+				"Options::ReInit requires Options::Writable");
 
-	// Now, it seems the schema versions do not match; shall we automatically
-	// update?
-
-	if (none_of(opts & Store::Options::AutoUpgrade)) {
-		// not allowed to auto-upgrade, so we give up.
-		throw Mu::Error(Error::Code::SchemaMismatch,
-				"expected schema-version %s, but got %s; "
-				"cannot auto-upgrade; please use 'mu init'",
-				ExpectedSchemaVersion,
-				properties().schema_version.c_str());
+	if (any_of(opts & Store::Options::ReInit)) {
+		/* user wants to re-initialize an existing store */
+		Config conf{};
+		conf.batch_size = properties().batch_size;
+		conf.max_message_size = properties().max_message_size;
+		const auto root_maildir{properties().root_maildir};
+		const auto addrs{properties().personal_addresses};
+		/* close the old one */
+		this->priv_.reset();
+		/* and create a new one. */
+		Store new_store(path, root_maildir, addrs, conf);
+		this->priv_ = std::move(new_store.priv_);
 	}
 
-	// Okay, let's attempt an auto-upgrade.
-	g_info("attempt reinit database from schema %s --> %s",
-	       properties().schema_version.c_str(), ExpectedSchemaVersion);
-
-	Config	conf;
-	conf.batch_size	      = properties().batch_size;
-	conf.max_message_size = properties().max_message_size;
-
-	priv_.reset();
-	priv_ = std::make_unique<Private>(path,
-					  properties().root_maildir,
-					  properties().personal_addresses,
-					  conf);
-	// Now let's try again.
-	priv_.reset();
-	priv_ = std::make_unique<Private>(path, none_of(opts & Store::Options::Writable));
+	/* otherwise, the schema version should match. */
 	if (properties().schema_version != ExpectedSchemaVersion)
-		// Nope, we failed.
 		throw Mu::Error(Error::Code::SchemaMismatch,
-				"failed to auto-upgrade from %s to %s; "
-				"please use 'mu init'",
-				properties().schema_version.c_str(),
-				ExpectedSchemaVersion);
+				"expected schema-version %s, but got %s",
+				ExpectedSchemaVersion,
+				properties().schema_version.c_str());
 }
 
 Store::Store(const std::string&   path,

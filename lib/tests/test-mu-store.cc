@@ -53,6 +53,62 @@ test_store_ctor_dtor()
 			store->properties().schema_version.c_str());
 }
 
+
+
+static void
+test_store_reinit()
+{
+	TempDir tempdir;
+	{
+		Store::Config conf{};
+		conf.max_message_size = 1234567;
+		conf.batch_size	      = 7654321;
+
+		StringVec my_addresses{ "foo@example.com", "bar@example.com" };
+
+		auto store{Store::make_new(tempdir.path(), MuTestMaildir, my_addresses, conf)};
+		assert_valid_result(store);
+
+		g_assert_true(store->empty());
+		g_assert_cmpuint(0, ==, store->size());
+
+		g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==,
+				store->properties().schema_version.c_str());
+
+		const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
+		const auto id = store->add_message(msgpath);
+		assert_valid_result(id);
+		g_assert_true(store->contains_message(msgpath));
+		g_assert_cmpuint(store->size(), ==, 1);
+	}
+
+	//now let's reinitialize it.
+	{
+		auto store{Store::make(tempdir.path(),
+				       Store::Options::Writable|Store::Options::ReInit)};
+
+		assert_valid_result(store);
+		g_assert_true(store->empty());
+
+		assert_equal(store->properties().database_path, tempdir.path());
+		g_assert_cmpuint(store->properties().batch_size,==,7654321);
+		g_assert_cmpuint(store->properties().max_message_size,==,1234567);
+
+		const auto addrs{store->properties().personal_addresses};
+		g_assert_cmpuint(addrs.size(),==,2);
+		g_assert_true(seq_some(addrs, [](auto&& a){return a=="foo@example.com";}));
+		g_assert_true(seq_some(addrs, [](auto&& a){return a=="bar@example.com";}));
+
+		const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
+		const auto id = store->add_message(msgpath);
+		assert_valid_result(id);
+		g_assert_true(store->contains_message(msgpath));
+		g_assert_cmpuint(store->size(), ==, 1);
+	}
+}
+
+
+
 static void
 test_store_add_count_remove()
 {
@@ -67,8 +123,6 @@ test_store_add_count_remove()
 	store->commit();
 
 	g_assert_cmpuint(store->size(), ==, 1);
-	g_assert_true(store->contains_message(msgpath));
-
 	g_assert_true(store->contains_message(msgpath));
 
 	const auto id2 = store->add_message(MuTestMaildir2 + "/bar/cur/mail3");
@@ -346,13 +400,13 @@ test_store_fail()
 	}
 }
 
-
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
+	g_test_add_func("/store/reinit", test_store_reinit);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
 	g_test_add_func("/store/message/mailing-list",
 			test_message_mailing_list);

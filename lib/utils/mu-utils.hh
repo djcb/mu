@@ -326,7 +326,7 @@ typename Sequence::const_iterator seq_find_if(const Sequence& seq, UnaryPredicat
 }
 
 /**
- * Is at least pred(element) true for at least one element of sequence
+ * Is pred(element) true for at least one element of sequence?
  *
  * @param seq sequence
  * @param pred a predicate
@@ -389,6 +389,49 @@ ResultType seq_fold(const Sequence& seq, ResultType init, BinaryOp op) {
 template<typename Sequence, typename UnaryOp>
 void seq_for_each(const Sequence& seq, UnaryOp op) {
 	std::for_each(seq.cbegin(), seq.cend(), op);
+}
+
+/**
+ * array of associated pair elements -- like an alist
+ * but based on std::array and thus can be constexpr
+ */
+template<typename T1, typename T2, std::size_t N>
+      using AssocPairs = std::array<std::pair<T1, T2>, N>;
+
+/**
+  * Get the first value of the pair where the second element is @param s.
+  *
+  * @param p AssocPairs
+  * @param s some second pair value
+  *
+  * @return the matching first pair value, or Nothing if not found.
+  */
+template<typename P>
+constexpr Option<typename P::value_type::first_type>
+to_first(const P& p, typename P::value_type::second_type s)
+{
+	for (const auto& item: p)
+		if (item.second == s)
+			return item.first;
+	return Nothing;
+}
+
+/**
+  * Get the second value of the pair where the first element is @param f.
+  *
+  * @param p AssocPairs
+  * @param f some first pair value
+  *
+  * @return the matching second pair value, or Nothing if not found.
+  */
+template<typename P>
+constexpr Option<typename P::value_type::second_type>
+to_second(const P& p, typename P::value_type::first_type f)
+{
+	for (const auto& item: p)
+		if (item.first == f)
+			return item.second;
+	return Nothing;
 }
 
 
