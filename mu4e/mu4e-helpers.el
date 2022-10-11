@@ -115,7 +115,7 @@ buffer list.")
   "Name of the buffer for message headers.")
 (defconst mu4e-embedded-buffer-name " *mu4e-embedded*"
   "Name for the embedded message view buffer.")
-(defconst mu4e-view-buffer-name "*Article*"
+(defconst mu4e-view-buffer-name "*mu4e-article*"
   "Name of the view buffer.")
 
 (defun mu4e-get-headers-buffer ()
