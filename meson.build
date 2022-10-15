@@ -78,7 +78,9 @@ foreach extra_arg : extra_flags
   endif
 endforeach
 
-
+# some clang don't have charconv, but we need it.
+# https://github.com/djcb/mu/issues/2347
+cxx.check_header('charconv', required:true)
 
 ################################################################################
 # config.h setup
