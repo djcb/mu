@@ -111,11 +111,11 @@ body_or_summary(const Message& message, const MuConfig* opts)
 	if (!body || body->empty()) {
 		if (any_of(message.flags() & Flags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
-			g_print("[No body found; "
+			g_print("[No text body found; "
 				"message has encrypted parts]\n");
 		} else {
 			color_maybe(MU_COLOR_MAGENTA);
-			g_print("[No body found]\n");
+			g_print("[No text body found]\n");
 		}
 		color_maybe(MU_COLOR_DEFAULT);
 		return;

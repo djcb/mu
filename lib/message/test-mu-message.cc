@@ -856,6 +856,121 @@ On Thu, Aug 04, 2022 at 05:31:39PM +0100, Robin Murphy wrote:
 
 
 static void
+test_message_outlook_body()
+{
+	constexpr auto msgtext =
+R"x(Received: from vu-ex2.activedir.vu.lt (172.16.159.219) by
+ vu-ex1.activedir.vu.lt (172.16.159.218) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.9
+ via Mailbox Transport; Fri, 27 May 2022 11:40:05 +0300
+Received: from vu-ex2.activedir.vu.lt (172.16.159.219) by
+ vu-ex2.activedir.vu.lt (172.16.159.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.9; Fri, 27 May 2022 11:40:05 +0300
+Received: from vu-ex2.activedir.vu.lt ([172.16.159.219]) by
+ vu-ex2.activedir.vu.lt ([172.16.159.219]) with mapi id 15.02.1118.009; Fri,
+ 27 May 2022 11:40:05 +0300
+From: =?windows-1257?Q?XXXXXXXXXX= <XXXXXXXXXX>
+To:  <XXXXXXXXXX@XXXXXXXXXX.com>
+Subject: =?windows-1257?Q?Pra=F0ymas?=
+Thread-Topic: =?windows-1257?Q?Pra=F0ymas?=
+Thread-Index: AQHYcaRi3ejPSLxkl0uTFDto7z2OcA==
+Date: Fri, 27 May 2022 11:40:05 +0300
+Message-ID: <5c2cd378af634e929a6cc69da1e66b9d@XX.vu.lt>
+Accept-Language: en-US, lt-LT
+Content-Language: en-US
+X-MS-Has-Attach:
+Content-Type: text/html; charset="windows-1257"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-TUID: 1vFQ9RPwwg/u
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dwindows-1=
+257">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;font=
+-family:Calibri,Helvetica,sans-serif;" dir=3D"ltr">
+<p>Laba diena visiems,</p>
+<p>Trumpai.</p>
+<p>D=EBl leidimo ar neleidimo ginti darb=E0: ed=EBstytojo paskyroje spaud=
+=FEiate ikon=E0 &quot;ra=F0to darbai&quot;, atidar=E6 susiraskite =E1ra=F0=
+=E0 &quot;tvirtinti / netvirtinti&quot;, pa=FEym=EBkite vien=E0 i=F0 j=F8.&=
+nbsp;</p>
+<p><br>
+</p>
+<p>=D0=E1 darb=E0 privalu atlikti, kad paskui nekilt=F8 problem=F8 studentu=
+i =E1vedant =E1vertinim=E0.</p>
+<p><br>
+</p>
+<p>Jei neleid=FEiate ginti darbo, pra=F0au informuoti mane ir komisijos sek=
+retori=F8.&nbsp;&nbsp;</p>
+<p><br>
+</p>
+<p>Vis=E0 tolesn=E6 informacij=E0 atsi=F8siu artimiausiu metu (stengsiuosi =
+=F0iandien vakare).</p>
+<p><br>
+</p>
+<p>Pagarbiai.</p>
+<p><br>
+</p>
+<p><br>
+</p>
+<div id=3D"Signature">
+<div id=3D"divtagdefaultwrapper" dir=3D"ltr" style=3D"font-family: Calibri,=
+ Helvetica, sans-serif, EmojiFont, &quot;Apple Color Emoji&quot;, &quot;Seg=
+oe UI Emoji&quot;, NotoColorEmoji, &quot;Segoe UI Symbol&quot;, &quot;Andro=
+id Emoji&quot;, EmojiSymbols;">
+<p style=3D"color:rgb(0,0,0); font-size:12pt"><br>
+</p>
+<p style=3D"color:rgb(0,0,0); font-size:12pt"><br>
+</p>
+<p style=3D"color:rgb(0,0,0); font-size:12pt"><br>
+</p>
+<p style=3D"color:rgb(0,0,0); font-size:12pt"><span style=3D"font-size:10pt=
+; background-color:rgb(255,255,255); color:rgb(0,111,201)"><br>
+</span></p>
+<p style=3D"color:rgb(0,0,0); font-size:12pt"><span style=3D"font-size:10pt=
+; background-color:rgb(255,255,255); color:rgb(0,111,201)">XXXXXXXXXX</span></p>
+<p style=3D""><font color=3D"#006fc9"><span style=3D"font-size:13.3333px"><=
+/span></font></p>
+<span style=3D"font-size:10pt; background-color:rgb(255,255,255); color:rgb=
+(0,111,201); font-size:10pt"></span>
+<p style=3D""><font color=3D"#006fc9"><span style=3D"font-size:13.3333px">XXXXXXXXXX</span></font></p>
+<p style=3D""><font color=3D"#006fc9"><span style=3D"font-size:13.3333px">XXXXXXXXXX</span></font></p>
+<p style=3D""><font color=3D"#006fc9"><span style=3D"font-size:13.3333px">XXXXXXXXXX</span></font></p>
+<p style=3D""><br>
+</p>
+<p style=3D""><br>
+</p>
+</div>
+</div>
+</div>
+</body>
+</html>
+)x";
+	g_test_bug("2349");
+
+	auto message{Message::make_from_text(
+			msgtext,
+			"/home/test/Maildir/inbox/cur/162342449279256.77777_1.evergrey:2,S")};
+	g_assert_true(!!message);
+
+	assert_equal(message->subject(), "Prašymas");
+	g_assert_true(message->priority() == Priority::Normal);
+
+	g_assert_false(!!message->body_text());
+	g_assert_true(!!message->body_html());
+	g_assert_cmpuint(message->body_html()->find("<p>Pagarbiai.</p>"), ==, 935);
+}
+
+
+
+static void
 test_message_fail ()
 {
 	{
@@ -898,6 +1013,8 @@ main(int argc, char* argv[])
 			test_message_calendar);
 	g_test_add_func("/message/message/references",
 			test_message_references);
+	g_test_add_func("/message/message/outlook-body",
+			test_message_outlook_body);
 	g_test_add_func("/message/message/fail",
 			test_message_fail);
 	g_test_add_func("/message/message/sanitize-maildir",
