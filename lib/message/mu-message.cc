@@ -638,7 +638,10 @@ fill_document(Message::Private& priv)
 
 	const auto path{doc.string_value(Field::Id::Path)};
 	const auto refs{mime_msg.references()};
-	const auto message_id{mime_msg.message_id().value_or(fake_message_id(path))};
+        const auto& raw_message_id = mime_msg.message_id();
+        const auto message_id = raw_message_id.has_value() && !raw_message_id->empty()
+            ? *raw_message_id
+            : fake_message_id(path);
 
 	process_message(mime_msg, path, priv);
 
