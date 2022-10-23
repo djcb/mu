@@ -969,6 +969,48 @@ id Emoji&quot;, EmojiSymbols;">
 }
 
 
+static void
+test_message_message_id()
+{
+	constexpr const auto msg1 =
+R"(From: "Mu Test" <mu@djcbsoftware.nl>
+To: mu@djcbsoftware.nl
+Message-ID: <87lew9xddt.fsf@djcbsoftware.nl>
+
+abc
+)";
+
+	constexpr const auto msg2 =
+R"(From: "Mu Test" <mu@djcbsoftware.nl>
+To: mu@djcbsoftware.nl
+
+abc
+)";
+
+	constexpr const auto msg3 =
+R"(From: "Mu Test" <mu@djcbsoftware.nl>
+To: mu@djcbsoftware.nl
+Message-ID:
+
+abc
+)";
+
+	const auto m1{Message::make_from_text(msg1, "/foo/cur/m123:2,S")};
+	assert_valid_result(m1);
+
+	const auto m2{Message::make_from_text(msg2, "/foo/cur/m456:2,S")};
+	assert_valid_result(m2);
+	const auto m3{Message::make_from_text(msg3, "/foo/cur/m789:2,S")};
+	assert_valid_result(m3);
+
+	assert_equal(m1->message_id(), "87lew9xddt.fsf@djcbsoftware.nl");
+
+	/* both with absent and empty message-id, generate "random" fake one,
+	 * which must end in @mu.id */
+	g_assert_true(g_str_has_suffix(m2->message_id().c_str(), "@mu.id"));
+	g_assert_true(g_str_has_suffix(m3->message_id().c_str(), "@mu.id"));
+}
+
 
 static void
 test_message_fail ()
@@ -1015,6 +1057,8 @@ main(int argc, char* argv[])
 			test_message_references);
 	g_test_add_func("/message/message/outlook-body",
 			test_message_outlook_body);
+	g_test_add_func("/message/message/message-id",
+			test_message_message_id);
 	g_test_add_func("/message/message/fail",
 			test_message_fail);
 	g_test_add_func("/message/message/sanitize-maildir",
