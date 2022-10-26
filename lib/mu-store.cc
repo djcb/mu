@@ -351,7 +351,11 @@ Store::Store(const std::string&   path,
 {
 }
 
-Store::Store(Store&&) = default;
+Store::Store(Store&& other)
+{
+	priv_ = std::move(other.priv_);
+	priv_->indexer_.reset();
+}
 
 Store::~Store() = default;
 
