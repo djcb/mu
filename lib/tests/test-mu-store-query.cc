@@ -72,7 +72,10 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(100ms);
 	}
-	g_assert_true(!store->empty());
+
+	if (test_map.size() > 0)
+		g_assert_false(store->empty());
+
 	g_assert_cmpuint(store->size(),==,test_map.size());
 
 	/* and we have a fully-ready store */
@@ -517,6 +520,59 @@ Saludos,
 	}
 }
 
+
+
+static void
+test_duplicate_refresh()
+{
+	g_test_bug("2327");
+
+	const TestMap test_msgs = {{
+		"inbox/new/msg",
+		{ R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Wed, 26 Oct 2022 11:01:54 -0700
+To: example@example.com
+Subject: Rainy night in Helsinki
+
+Boo!
+)"},
+		}};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	g_debug("%s", store.properties().root_maildir.c_str());
+
+	g_assert_cmpuint(store.size(), ==, 1U);
+
+	{
+		auto qr = store.run_query("Helsinki", Field::Id::Date, QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+
+		// /* mark as read */
+		auto msg = store.move_message(qr->begin().doc_id(),
+					      Nothing, Flags::Seen);
+		g_assert_cmpuint(store.size(), ==, 1);
+	}
+
+	/* index the messages */
+	auto res = store.indexer().start({});
+	g_assert_true(res);
+	while(store.indexer().is_running()) {
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(100ms);
+	}
+
+	/* should be only one */
+	g_assert_cmpuint(store.size(), ==, 1);
+	{
+		auto qr = store.run_query("Helsinki", Field::Id::Date, QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -533,6 +589,8 @@ main(int argc, char* argv[])
 			test_related_missing_root);
 	g_test_add_func("/store/query/body-matricula",
 			test_body_matricula);
+	g_test_add_func("/store/query/duplicate-refresh",
+			test_duplicate_refresh);
 
 	return g_test_run();
 }
