@@ -654,9 +654,10 @@ determine which browser function to use."
   "Show current MSG in an embedded xwidget, if available."
   (unless (fboundp 'xwidget-webkit-browse-url)
     (mu4e-error "No xwidget support available"))
-  (let ((browse-url-browser-function
-	 (lambda (url &optional _rest)
-	   (xwidget-webkit-browse-url url))))
+  (let ((browse-url-handlers nil)
+        (browse-url-browser-function
+         (lambda (url &optional _rest)
+           (xwidget-webkit-browse-url url))))
     (mu4e-action-view-in-browser msg)))
 
 (defun mu4e~view-render-buffer (msg)
