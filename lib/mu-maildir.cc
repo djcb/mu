@@ -296,7 +296,7 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 	if (res)
 		return Ok();
 	else
-		return Err(Error{Error::Code::File, &err,
+		return Err(Error{Error::Code::File, &err/*consumed*/,
 				"error moving %s -> %s",
 				src.c_str(), dst.c_str()});
 }
@@ -313,15 +313,15 @@ msg_move(const std::string& src, const std::string& dst, bool force_gio)
 			return msg_move_verify(src, dst);
 
 		if (errno != EXDEV) /* some unrecoverable error occurred */
-			return Err(Error{Error::Code::File, "error moving %s -> %s",
-					   src.c_str(), dst.c_str()});
+			return Err(Error{Error::Code::File, "error moving %s -> %s: %s",
+					   src.c_str(), dst.c_str(), strerror(errno)});
 	}
 
 	/* the EXDEV / force-gio case -- source and target live on different
 	 * filesystems */
-	if (!msg_move_g_file(src, dst))
-		return Err(Error{Error::Code::File, "error moving %s -> %s",
-				src.c_str(), dst.c_str()});
+	auto res = msg_move_g_file(src, dst);
+	if (!res)
+		return res;
 	else
 		return msg_move_verify(src, dst);
 }
