@@ -21,6 +21,8 @@
 #define MU_ERROR_HH__
 
 #include <stdexcept>
+#include <string>
+
 #include "mu-utils-format.hh"
 #include "mu-util.h"
 #include <glib.h>
