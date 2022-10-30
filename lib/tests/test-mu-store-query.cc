@@ -561,6 +561,7 @@ Boo!
 	assert_equal(qr->begin().message()->path(), old_path);
 	g_assert_true(::access(old_path.c_str(), F_OK) == 0);
 
+
 	/*
 	 * mark as read, i.e. move to cur/; ensure it really moved.
 	 */
@@ -575,9 +576,11 @@ Boo!
 
 	/* also ensure thath the cached sexp for the message has been updated;
 	 * that's what mu4e uses */
-	const auto moved_sexp{moved_msg->to_sexp().to_sexp_string()};
-	/* clumsy */
-	g_assert_true(moved_sexp.find(new_path) != std::string::npos);
+	const auto moved_sexp{moved_msg->to_sexp()};
+	g_assert_true(moved_sexp.is_prop_list());
+	const auto plist{Sexp::List(moved_sexp.list())};
+	g_assert_true(plist.has_prop(":path"));
+	assert_equal(plist.find_prop(":path").value(), new_path);
 
 	/*
 	 * find new message with query, ensure it's really that new one.
