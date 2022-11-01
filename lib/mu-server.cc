@@ -414,7 +414,7 @@ Server::Private::add_handler(const Parameters& params)
 	auto msg_res{store().find_message(docid)};
 	if (!msg_res)
 		throw Error(Error::Code::Store,
-			    "failed to get message at %s (docid=%u)",
+			    "failed to get message at %s (docid=%u): %s",
 			    path.c_str(), docid);
 
 	Sexp::List update;
@@ -581,7 +581,8 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
 	g_free(expr);
 	if (!res)
-		throw Error(Error::Code::Store, &gerr, "failed to run msgid-query");
+		throw Error(Error::Code::Store, &gerr,
+			    "failed to run message-id-query: %s", res.error().what());
 	else if (res->empty())
 		throw Error(Error::Code::NotFound,
 			    "could not find message(s) for msgid %s", msgid.c_str());
@@ -1013,7 +1014,8 @@ Server::Private::sent_handler(const Parameters& params)
 	const auto path{get_string_or(params, ":path")};
 	const auto docid = store().add_message(path);
 	if (!docid)
-		throw Error{Error::Code::Store, "failed to add path"};
+		throw Error{Error::Code::Store, "failed to add path: %s",
+			docid.error().what()};
 
 	Sexp::List lst;
 	lst.add_prop(":sent", Sexp::make_symbol("t"));
