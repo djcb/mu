@@ -31,7 +31,7 @@
 #include "mu-server.hh"
 
 #include "utils/mu-utils.hh"
-#include "utils/mu-command-parser.hh"
+#include "utils/mu-command-handler.hh"
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
@@ -82,15 +82,15 @@ cookie(size_t n)
 }
 
 static void
-output_sexp_stdout(Sexp&& sexp, Server::OutputFlags flags)
+output_sexp_stdout(const Sexp& sexp, Server::OutputFlags flags)
 {
 	/* if requested, insert \n between list elements; note:
 	 * is _not_ inherited by children */
+	Sexp::Format fopts{};
 	if (any_of(flags & Server::OutputFlags::SplitList))
-		sexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
+		fopts |= Sexp::Format::SplitList;
 
-	const auto str{sexp.to_sexp_string()};
-
+	const auto str{sexp.to_string(fopts)};
 	cookie(str.size() + 1);
 	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
 		g_critical("failed to write output '%s'", str.c_str());
@@ -104,12 +104,8 @@ output_sexp_stdout(Sexp&& sexp, Server::OutputFlags flags)
 static void
 report_error(const Mu::Error& err) noexcept
 {
-	Sexp::List e;
-
-	e.add_prop(":error", Sexp::make_number(static_cast<size_t>(err.code())));
-	e.add_prop(":message", Sexp::make_string(err.what()));
-
-	output_sexp_stdout(Sexp::make_list(std::move(e)),
+	output_sexp_stdout(Sexp(":error"_sym, static_cast<size_t>(err.code()),
+				":message"_sym, err.what()),
 			   Server::OutputFlags::Flush);
 }
 
