@@ -574,13 +574,13 @@ Boo!
 	g_assert_false(::access(old_path.c_str(), F_OK) == 0);
 	g_assert_true(::access(new_path.c_str(), F_OK) == 0);
 
-	/* also ensure thath the cached sexp for the message has been updated;
+	/* also ensure that the cached sexp for the message has been updated;
 	 * that's what mu4e uses */
-	const auto moved_sexp{moved_msg->to_sexp()};
-	g_assert_true(moved_sexp.is_prop_list());
-	const auto plist{Sexp::List(moved_sexp.list())};
-	g_assert_true(plist.has_prop(":path"));
-	assert_equal(plist.find_prop(":path").value(), new_path);
+	const auto moved_sexp{moved_msg->sexp()};
+	//std::cerr << "@@ " << *moved_msg << '\n';
+	g_assert_true(moved_sexp.plistp());
+	g_assert_true(moved_sexp.has_prop(":path"));
+	assert_equal(moved_sexp.get_prop(":path").string(), new_path);
 
 	/*
 	 * find new message with query, ensure it's really that new one.
