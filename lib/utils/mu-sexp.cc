@@ -1,6 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
-**
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,9 +17,11 @@
 **
 */
 
+
 #include "mu-sexp.hh"
 #include "mu-utils.hh"
 
+#include <atomic>
 #include <sstream>
 #include <array>
 
@@ -48,36 +49,38 @@ skip_whitespace(const std::string& s, size_t pos)
 		else
 			break;
 	}
-
 	return pos;
 }
 
-static Sexp parse(const std::string& expr, size_t& pos);
+static Result<Sexp> parse(const std::string& expr, size_t& pos);
 
-static Sexp
+static Result<Sexp>
 parse_list(const std::string& expr, size_t& pos)
 {
 	if (expr[pos] != '(') // sanity check.
-		throw parsing_error(pos, "expected: '(' but got '%c", expr[pos]);
+		return Err(parsing_error(pos, "expected: '(' but got '%c", expr[pos]));
 
-	Sexp::List list;
+	Sexp lst{};
 
 	++pos;
-	while (expr[pos] != ')' && pos != expr.size())
-		list.add(parse(expr, pos));
+	while (expr[pos] != ')' && pos != expr.size()) {
+		if (auto&& item = parse(expr, pos); item)
+			lst.add(std::move(*item));
+		else
+			return Err(item.error());
+	}
 
 	if (expr[pos] != ')')
-		throw parsing_error(pos, "expected: ')' but got '%c'", expr[pos]);
+		return Err(parsing_error(pos, "expected: ')' but got '%c'", expr[pos]));
 	++pos;
-	return Sexp::make_list(std::move(list));
+	return Ok(std::move(lst));
 }
 
-// parse string
-static Sexp
+static Result<Sexp>
 parse_string(const std::string& expr, size_t& pos)
 {
 	if (expr[pos] != '"') // sanity check.
-		throw parsing_error(pos, "expected: '\"'' but got '%c", expr[pos]);
+		return Err(parsing_error(pos, "expected: '\"'' but got '%c", expr[pos]));
 
 	bool        escape{};
 	std::string str;
@@ -101,14 +104,15 @@ parse_string(const std::string& expr, size_t& pos)
 		throw parsing_error(pos, "unterminated string '%s'", str.c_str());
 
 	++pos;
-	return Sexp::make_string(std::move(str));
+	return Ok(Sexp{std::move(str)});
 }
 
-static Sexp
+
+static Result<Sexp>
 parse_integer(const std::string& expr, size_t& pos)
 {
 	if (!isdigit(expr[pos]) && expr[pos] != '-') // sanity check.
-		throw parsing_error(pos, "expected: <digit> but got '%c", expr[pos]);
+		return Err(parsing_error(pos, "expected: <digit> but got '%c", expr[pos]));
 
 	std::string num; // negative number?
 	if (expr[pos] == '-') {
@@ -119,32 +123,32 @@ parse_integer(const std::string& expr, size_t& pos)
 	for (; isdigit(expr[pos]); ++pos)
 		num += expr[pos];
 
-	return Sexp::make_number(::atoi(num.c_str()));
+	return Ok(Sexp{::atoi(num.c_str())});
 }
 
-static Sexp
+static Result<Sexp>
 parse_symbol(const std::string& expr, size_t& pos)
 {
 	if (!isalpha(expr[pos]) && expr[pos] != ':') // sanity check.
-		throw parsing_error(pos, "expected: <alpha>|: but got '%c", expr[pos]);
+		return Err(parsing_error(pos, "expected: <alpha>|: but got '%c", expr[pos]));
 
-	std::string symbol(1, expr[pos]);
+	std::string symb(1, expr[pos]);
 	for (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
-		symbol += expr[pos];
+		symb += expr[pos];
 
-	return Sexp::make_symbol(std::move(symbol));
+	return Ok(Sexp{Sexp::Symbol{symb}});
 }
 
-static Sexp
+static Result<Sexp>
 parse(const std::string& expr, size_t& pos)
 {
 	pos = skip_whitespace(expr, pos);
 
 	if (pos == expr.size())
-		throw parsing_error(pos, "expected: character '%c", expr[pos]);
+		return Err(parsing_error(pos, "expected: character '%c", expr[pos]));
 
 	const auto kar  = expr[pos];
-	const auto node = [&]() -> Sexp {
+	const auto sexp = std::invoke([&]() -> Result<Sexp> {
 		if (kar == '(')
 			return parse_list(expr, pos);
 		else if (kar == '"')
@@ -155,55 +159,52 @@ parse(const std::string& expr, size_t& pos)
 			return parse_symbol(expr, pos);
 		else
 			throw parsing_error(pos, "unexpected character '%c", kar);
-	}();
+	});
 
 	pos = skip_whitespace(expr, pos);
 
-	return node;
+	return sexp;
 }
 
-Sexp
-Sexp::make_parse(const std::string& expr)
+Result<Sexp>
+Sexp::parse(const std::string& expr)
 {
 	size_t pos{};
-	auto   node{::parse(expr, pos)};
-
-	if (pos != expr.size())
-		throw parsing_error(pos, "trailing data starting with '%c'", expr[pos]);
-
-	return node;
+	auto res = ::parse(expr, pos);
+	if (!res)
+		return res;
+	else if (pos != expr.size())
+		return Err(parsing_error(pos, "trailing data starting with '%c'", expr[pos]));
+	else
+		return res;
 }
 
 std::string
-Sexp::to_sexp_string() const
+Sexp::to_string(Format fopts) const
 {
 	std::stringstream sstrm;
+	const auto splitp{any_of(fopts & Format::SplitList)};
+	const auto typeinfop{any_of(fopts & Format::TypeInfo)};
 
-	switch (type()) {
-	case Type::List: {
+	if (listp()) {
 		sstrm << '(';
 		bool first{true};
-		for (auto&& child : list()) {
-			sstrm << (first ? "" : " ") << child.to_sexp_string();
+		for(auto&& elm: list()) {
+			sstrm << (first ? "" : " ") << elm.to_string(fopts);
 			first = false;
 		}
 		sstrm << ')';
-
-		if (any_of(formatting_opts & FormattingOptions::SplitList))
+		if (splitp)
 			sstrm << '\n';
-		break;
-	}
-	case Type::String:
-		sstrm << quote(value());
-		break;
-	case Type::Raw:
-		sstrm << value();
-		break;
-	case Type::Number:
-	case Type::Symbol:
-	case Type::Empty:
-	default: sstrm << value();
-	}
+	} else if (stringp())
+		sstrm << quote(string());
+	else if (numberp())
+		sstrm << number();
+	else if (symbolp())
+		sstrm << symbol();
+
+	if (typeinfop)
+		sstrm << '<' << Sexp::type_name(type())  << '>';
 
 	return sstrm.str();
 }
@@ -211,26 +212,26 @@ Sexp::to_sexp_string() const
 // LCOV_EXCL_START
 
 std::string
-Sexp::to_json_string() const
+Sexp::to_json_string(Format fopts) const
 {
 	std::stringstream sstrm;
 
 	switch (type()) {
 	case Type::List: {
 		// property-lists become JSON objects
-		if (is_prop_list()) {
+		if (plistp()) {
 			sstrm << "{";
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
-				sstrm << (first ? "" : ",") << quote(it->value()) << ":";
+				sstrm << (first ? "" : ",") << quote(it->string()) << ":";
 				++it;
 				sstrm << it->to_json_string();
 				++it;
 				first = false;
 			}
 			sstrm << "}";
-			if (any_of(formatting_opts & FormattingOptions::SplitList))
+			if (any_of(fopts & Format::SplitList))
 			sstrm << '\n';
 		} else { // other lists become arrays.
 			sstrm << '[';
@@ -240,31 +241,254 @@ Sexp::to_json_string() const
 				first = false;
 			}
 			sstrm << ']';
-			if (any_of(formatting_opts & FormattingOptions::SplitList))
+			if (any_of(fopts & Format::SplitList))
 				sstrm << '\n';
 		}
 		break;
 	}
 	case Type::String:
-		sstrm << quote(value());
+		sstrm << quote(string());
 		break;
-	case Type::Raw: // FIXME: implement this.
-		break;
-
 	case Type::Symbol:
-		if (is_nil())
+		if (nilp())
 			sstrm << "false";
-		else if (is_t())
+		else if (symbol() == "t")
 			sstrm << "true";
 		else
-			sstrm << quote(value());
+			sstrm << quote(symbol());
 		break;
 	case Type::Number:
-	case Type::Empty:
-	default: sstrm << value();
+		sstrm << number();
+		break;
+	default:
+		break;
 	}
 
 	return sstrm.str();
 }
 
+
+
+Sexp&
+Sexp::del_prop(const std::string& pname)
+{
+	if (auto kill_it = find_prop(pname, begin(), end()); kill_it != cend())
+		list().erase(kill_it, kill_it + 2);
+	return *this;
+}
+
+
+Sexp::const_iterator
+Sexp::find_prop(const std::string& s,
+		Sexp::const_iterator b, Sexp::const_iterator e)  const
+{
+	for (auto&& it = b; it != e && it+1 != e; it += 2)
+		if (it->symbolp() && it->symbol() == s)
+			return it;
+	return e;
+}
+
+Sexp::iterator
+Sexp::find_prop(const std::string& s,
+		Sexp::iterator b, Sexp::iterator e)
+{
+	for (auto&& it = b; it != e && it+1 != e; it += 2)
+		if (it->symbolp() && it->symbol() == s)
+			return it;
+	return e;
+}
+
+
+bool
+Sexp::plistp(Sexp::const_iterator b, Sexp::const_iterator e) const
+{
+	if (b == e)
+		return true;
+	else if (b + 1 == e)
+		return false;
+	else
+		return b->symbolp() && plistp(b + 2, e);
+}
+
+
 // LCOV_EXCL_STOP
+
+#if BUILD_TESTS
+
+#include "mu-test-utils.hh"
+
+static void
+test_list()
+{
+	{
+		Sexp s;
+		g_assert_true(s.listp());
+		g_assert_true(s.to_string() == "()");
+		g_assert_true(s.empty());
+	}
+
+	{
+		Sexp::List items = {
+			Sexp("hello"),
+			Sexp(123),
+			Sexp::Symbol("world")
+		};
+		Sexp s{std::move(items)};
+		g_assert_false(s.empty());
+		g_assert_cmpuint(s.size(),==,3);
+		g_assert_true(s.to_string() == "(\"hello\" 123 world)");
+		//g_assert_true(s.to_string() == "(\"hello\" 123 world)");
+	}
+
+}
+
+static void
+test_string()
+{
+	{
+		Sexp s("hello");
+		g_assert_true(s.stringp());
+		g_assert_true(s.string()=="hello");
+		g_assert_true(s.to_string()=="\"hello\"");
+	}
+
+	{
+		// Sexp s(std::string_view("hel\"lo"));
+		// g_assert_true(s.is_string());
+		// g_assert_cmpstr(s.string().c_str(),==,"hel\"lo");
+		// g_assert_cmpstr(s.to_string().c_str(),==,"\"hel\\\"lo\"");
+	}
+}
+
+static void
+test_number()
+{
+	{
+		Sexp s(123);
+		g_assert_true(s.numberp());
+		g_assert_cmpint(s.number(),==,123);
+		g_assert_true(s.to_string() == "123");
+	}
+
+	{
+		Sexp s(true);
+		g_assert_true(s.numberp());
+		g_assert_cmpint(s.number(),==,1);
+		g_assert_true(s.to_string()=="1");
+	}
+}
+
+static void
+test_symbol()
+{
+	{
+		Sexp s{Sexp::Symbol("hello")};
+		g_assert_true(s.symbolp());
+		g_assert_true(s.symbol()=="hello");
+		g_assert_true (s.to_string()=="hello");
+	}
+
+	{
+		Sexp s{"hello"_sym};
+		g_assert_true(s.symbolp());
+		g_assert_true(s.symbol()=="hello");
+		g_assert_true (s.to_string()=="hello");
+	}
+
+}
+
+static void
+test_multi()
+{
+	Sexp s{"abc", 123, Sexp::Symbol{"def"}};
+	g_assert_true(s.to_string() == "(\"abc\" 123 def)");
+}
+
+
+static void
+test_add()
+{
+	{
+		Sexp s{"abc", 123};
+		s.add("def"_sym);
+		g_assert_true(s.to_string() == "(\"abc\" 123 def)");
+	}
+}
+
+static void
+test_add_multi()
+{
+	{
+		Sexp s{"abc", 123};
+		s.add("def"_sym, 456, Sexp{"boo", 2});
+		g_assert_true(s.to_string() == "(\"abc\" 123 def 456 (\"boo\" 2))");
+	}
+
+		{
+		Sexp s{"abc", 123};
+		Sexp t{"boo", 2};
+		s.add("def"_sym, 456, t);
+		g_assert_true(s.to_string() == "(\"abc\" 123 def 456 (\"boo\" 2))");
+	}
+
+}
+
+static void
+test_plist()
+{
+	Sexp s;
+	s.put_props("hello", "world"_sym, "foo", 123, "bar"_sym, "cuux");
+	g_assert_true(s.to_string() == R"((hello world foo 123 bar "cuux"))");
+
+	s.put_props("hello", 12345);
+	g_assert_true(s.to_string() == R"((foo 123 bar "cuux" hello 12345))");
+}
+
+
+static void
+check_parse(const std::string& expr, const std::string& expected)
+{
+	auto sexp = Sexp::parse(expr);
+	assert_valid_result(sexp);
+	assert_equal(to_string(*sexp), expected);
+}
+
+static void
+test_parser()
+{
+	check_parse(":foo-123", ":foo-123");
+	check_parse("foo", "foo");
+	check_parse(R"(12345)", "12345");
+	check_parse(R"(-12345)", "-12345");
+	check_parse(R"((123 bar "cuux"))", "(123 bar \"cuux\")");
+
+	check_parse(R"("foo\"bar\"cuux")", "\"foo\\\"bar\\\"cuux\"");
+
+	check_parse(R"("foo
+bar")",
+		    "\"foo\nbar\"");
+}
+
+int
+main(int argc, char* argv[])
+try {
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/sexp/list", test_list);
+	g_test_add_func("/sexp/string", test_string);
+	g_test_add_func("/sexp/number", test_number);
+	g_test_add_func("/sexp/symbol", test_symbol);
+	g_test_add_func("/sexp/multi",  test_multi);
+	g_test_add_func("/sexp/add",  test_add);
+	g_test_add_func("/sexp/add-multi",  test_add_multi);
+	g_test_add_func("/sexp/plist",  test_plist);
+	g_test_add_func("/sexp/parser", test_parser);
+	return g_test_run();
+
+} catch (const std::runtime_error& re) {
+	std::cerr << re.what() << "\n";
+	return 1;
+}
+
+
+#endif /*BUILD_TESTS*/

@@ -51,7 +51,7 @@ using namespace Mu;
 static Mu::Result<void>
 view_msg_sexp(const Message& message, const MuConfig* opts)
 {
-	::fputs(message.to_sexp().to_sexp_string().c_str(), stdout);
+	::fputs(message.sexp().to_string().c_str(), stdout);
 	::fputs("\n", stdout);
 
 	return Ok();

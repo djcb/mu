@@ -52,13 +52,23 @@ public:
 	 *
 	 * @param doc
 	 */
-	Document(const Xapian::Document& doc): xdoc_{doc} {}
+	Document(const Xapian::Document& doc): xdoc_{doc} {
+		if (auto&& s{Sexp::parse(xdoc_.get_data())}; s)
+			sexp_ = std::move(*s);
+	}
+
+	/**
+	 * DTOR
+	 */
+	~Document() {
+		xapian_document(); // for side-effect up updating sexp.
+	}
 
 	/**
 	 * Get a reference to the underlying Xapian document.
 	 *
 	 */
-	const Xapian::Document& xapian_document() const { return xdoc_; }
+	const Xapian::Document& xapian_document() const;
 
 	/**
 	 * Get the doc-id for this document
@@ -138,24 +148,12 @@ public:
 	void remove(Field::Id field_id);
 
 	/**
-	 * Update the cached sexp from the sexp_list_
-	 */
-	void update_cached_sexp();
-
-	/**
-	 * Get the cached s-expression
-	 *
-	 * @return a string
-	 */
-	std::string cached_sexp() const;
-
-	/**
-	 * Get the cached s-expressionl useful for changing
+	 * Get the cached s-expression useful for changing
 	 * it (call update_sexp_cache() when done)
 	 *
-	 * @return the cache s-expression
+	 * @return the cached s-expression
 	 */
-	Sexp::List& sexp_list();
+	const Sexp& sexp() const { return sexp_; }
 
 	/**
 	 * Generically adds an optional value, if set, to the document
@@ -184,6 +182,7 @@ public:
 			return xdoc_.get_value(field_from_id(field_id).value_no());
 		}, std::string{});
 	}
+
 	/**
 	 * Get a vec of string values.
 	 *
@@ -229,9 +228,13 @@ public:
 	Flags    flags_value() const noexcept;
 
 private:
-	Xapian::Document	xdoc_;
-	Sexp::List		sexp_list_;
+	template<typename SexpType> void put_prop(const Field& field, SexpType&& val);
+	template<typename SexpType> void put_prop(const std::string& pname, SexpType&& val);
 
+
+	mutable Xapian::Document	xdoc_;
+	Sexp				sexp_;
+	mutable bool			dirty_sexp_{};	/* xdoc's sexp is outdated */
 };
 
 } // namepace Mu

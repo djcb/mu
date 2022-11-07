@@ -42,16 +42,16 @@
 
 #include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
-#include "utils/mu-command-parser.hh"
+#include "utils/mu-command-handler.hh"
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
-using namespace Command;
 
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
 	Private(Store& store, Output output)
-	    : store_{store}, output_{output}, command_map_{make_command_map()},
+	    : store_{store}, output_{output},
+	      command_handler_{make_command_map()},
 	      keep_going_{true}
 	{}
 
@@ -63,14 +63,14 @@ struct Server::Private {
 	//
 	// construction helpers
 	//
-	CommandMap make_command_map();
+	CommandHandler::CommandInfoMap make_command_map();
 
 	//
 	// acccessors
 	Store&            store() { return store_; }
 	const Store&      store() const { return store_; }
 	Indexer&          indexer() { return store().indexer(); }
-	const CommandMap& command_map() const { return command_map_; }
+	//CommandMap&       command_map() const { return command_map_; }
 
 	//
 	// invoke
@@ -80,32 +80,29 @@ struct Server::Private {
 	//
 	// output
 	//
-	void output_sexp(Sexp&& sexp,Server::OutputFlags flags = {}) const {
+	void output_sexp(const Sexp& sexp, Server::OutputFlags flags = {}) const {
 		if (output_)
-			output_(std::move(sexp), flags);
+			output_(sexp, flags);
 	}
 
-	void output_sexp(Sexp::List&& lst, Server::OutputFlags flags = {}) const {
-		output_sexp(Sexp::make_list(std::move(lst)), flags);
-	}
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
 
 	//
 	// handlers for various commands.
 	//
-	void add_handler(const Parameters& params);
-	void compose_handler(const Parameters& params);
-	void contacts_handler(const Parameters& params);
-	void find_handler(const Parameters& params);
-	void help_handler(const Parameters& params);
-	void index_handler(const Parameters& params);
-	void move_handler(const Parameters& params);
-	void mkdir_handler(const Parameters& params);
-	void ping_handler(const Parameters& params);
-	void quit_handler(const Parameters& params);
-	void remove_handler(const Parameters& params);
-	void sent_handler(const Parameters& params);
-	void view_handler(const Parameters& params);
+	void add_handler(const Command& cmd);
+	void compose_handler(const Command& cmd);
+	void contacts_handler(const Command& cmd);
+	void find_handler(const Command& cmd);
+	void help_handler(const Command& cmd);
+	void index_handler(const Command& cmd);
+	void move_handler(const Command& cmd);
+	void mkdir_handler(const Command& cmd);
+	void ping_handler(const Command& cmd);
+	void quit_handler(const Command& cmd);
+	void remove_handler(const Command& cmd);
+	void sent_handler(const Command& cmd);
+	void view_handler(const Command& cmd);
 
 private:
 	// helpers
@@ -113,88 +110,83 @@ private:
 				Store::Id                 docid,
 				const Option<QueryMatch&> qm) const;
 
-	Sexp::List move_docid(Store::Id docid, Option<std::string> flagstr,
-			      bool new_name, bool no_view);
+	Sexp move_docid(Store::Id docid, Option<std::string> flagstr,
+			bool new_name, bool no_view);
 
-	Sexp::List perform_move(Store::Id		docid,
-				const Message&		msg,
-				const std::string&	maildirarg,
-				Flags			flags,
-				bool			new_name,
-				bool			no_view);
+	Sexp perform_move(Store::Id		docid,
+			  const Message&		msg,
+			  const std::string&	maildirarg,
+			  Flags			flags,
+			  bool			new_name,
+			  bool			no_view);
 
-	bool maybe_mark_as_read(Store::Id docid, Flags old_flags, bool rename);
-	bool maybe_mark_msgid_as_read(const std::string& msgid, bool rename);
+	bool view_mark_as_read(Store::Id docid, const Message& msg, bool rename);
 
-	Store&            store_;
-	Server::Output    output_;
-	const CommandMap  command_map_;
-	std::atomic<bool> keep_going_{};
-	std::thread       index_thread_;
+	Store&			store_;
+	Server::Output		output_;
+	const CommandHandler	command_handler_;
+	std::atomic<bool>       keep_going_{};
+	std::thread		index_thread_;
 };
 
 static Sexp
 build_metadata(const QueryMatch& qmatch)
 {
-	Sexp::List mdata;
-
-	auto symbol_t = [] { return Sexp::make_symbol("t"); };
-
-	mdata.add_prop(":path", Sexp::make_string(qmatch.thread_path));
-	mdata.add_prop(":level", Sexp::make_number(qmatch.thread_level));
-	mdata.add_prop(":date", Sexp::make_string(qmatch.thread_date));
-
-	Sexp::List dlist;
 	const auto td{::atoi(qmatch.thread_date.c_str())};
-	dlist.add(Sexp::make_number((unsigned)(td >> 16)));
-	dlist.add(Sexp::make_number((unsigned)(td & 0xffff)));
-	dlist.add(Sexp::make_number(0));
-	mdata.add_prop(":date-tstamp", Sexp::make_list(std::move(dlist)));
-
+	auto mdata = Sexp().put_props(":path", qmatch.thread_path,
+				      ":level", qmatch.thread_level,
+				      ":date", qmatch.thread_date,
+				      ":data-tstamp", Sexp().add(static_cast<unsigned>(td >> 16),
+								 static_cast<unsigned>(td & 0xffff),
+								 0));
 	if (qmatch.has_flag(QueryMatch::Flags::Root))
-		mdata.add_prop(":root", symbol_t());
+		mdata.put_props(":root", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::Related))
-		mdata.add_prop(":related", symbol_t());
+		mdata.put_props(":related", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::First))
-		mdata.add_prop(":first-child", symbol_t());
+		mdata.put_props(":first-child", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::Last))
-		mdata.add_prop(":last-child", symbol_t());
+		mdata.put_props(":last-child", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::Orphan))
-		mdata.add_prop(":orphan", symbol_t());
+		mdata.put_props(":orphan", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
-		mdata.add_prop(":duplicate", symbol_t());
+		mdata.put_props(":duplicate", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::HasChild))
-		mdata.add_prop(":has-child", symbol_t());
+		mdata.put_props(":has-child", Sexp::t());
 	if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
-		mdata.add_prop(":thread-subject", symbol_t());
+		mdata.put_props(":thread-subject", Sexp::t());
 
-	return Sexp::make_list(std::move(mdata));
+	return mdata;
 }
 
 /*
- * A message here is a Sexp::List consists of a message s-expression with
- * optionally a :meta expression added.
+ * A message here consists of a message s-expression with optionally a :docid
+ * and/or :meta expression added.
  */
 Sexp
 Server::Private::build_message_sexp(const Message&            msg,
 				    Store::Id                 docid,
 				    const Option<QueryMatch&> qm) const
 {
-	auto sexp_list = msg.to_sexp_list();
+	Sexp sexp{msg.sexp()}; // copy
 	if (docid != 0)
-		sexp_list.add_prop(":docid", Sexp::make_number(docid));
+		sexp.put_props(":docid", docid);
 	if (qm)
-		sexp_list.add_prop(":meta", build_metadata(*qm));
+		sexp.put_props(":meta", build_metadata(*qm));
 
-	return Sexp::make_list(std::move(sexp_list));
+	return sexp;
 }
 
-CommandMap
+CommandHandler::CommandInfoMap
 Server::Private::make_command_map()
 {
-	CommandMap cmap;
+	CommandHandler::CommandInfoMap cmap;
 
-	using Type = Sexp::Type;
+	using	CommandInfo = CommandHandler::CommandInfo;
+	using	ArgMap	    = CommandHandler::ArgMap;
+	using	ArgInfo	    = CommandHandler::ArgInfo;
+	using	Type	    = Sexp::Type;
+	using	Type	    = Sexp::Type;
 
 	cmap.emplace(
 	    "add",
@@ -352,12 +344,10 @@ make_error(Error::Code errcode, const char* frm, ...)
 	g_vasprintf(&msg, frm, ap);
 	va_end(ap);
 
-	Sexp::List err;
-	err.add_prop(":error", Sexp::make_number(static_cast<int>(errcode)));
-	err.add_prop(":message", Sexp::make_string(msg));
+	auto err = Sexp().put_props(":error", static_cast<int>(errcode),
+				    ":message", msg);
 	g_free(msg);
-
-	return Sexp::make_list(std::move(err));
+	return err;
 }
 
 bool
@@ -365,10 +355,14 @@ Server::Private::invoke(const std::string& expr) noexcept
 {
 	if (!keep_going_)
 		return false;
-
 	try {
-		auto call{Sexp::Sexp::make_parse(expr)};
-		Command::invoke(command_map(), call);
+		auto cmd{Command::make_parse(std::string{expr})};
+		if (!cmd)
+			throw cmd.error();
+
+		auto res = command_handler_.invoke(*cmd);
+		if (!res)
+			throw res.error();
 
 	} catch (const Mu::Error& me) {
 		output_sexp(make_error(me.code(), "%s", me.what()));
@@ -394,32 +388,27 @@ Server::Private::invoke(const std::string& expr) noexcept
  * information about the newly added message (details: see code below)
  */
 void
-Server::Private::add_handler(const Parameters& params)
+Server::Private::add_handler(const Command& cmd)
 {
-	auto       path{get_string_or(params, ":path")};
-	const auto docid_res{store().add_message(path)};
+	auto       path{cmd.string_arg(":path")};
+	const auto docid_res{store().add_message(*path)};
 
 	if (!docid_res)
 		throw docid_res.error();
 
 	const auto docid{docid_res.value()};
-
-	Sexp::List expr;
-	expr.add_prop(":info", Sexp::make_symbol("add"));
-	expr.add_prop(":path", Sexp::make_string(path));
-	expr.add_prop(":docid", Sexp::make_number(docid));
-
-	output_sexp(Sexp::make_list(std::move(expr)));
+	output_sexp(Sexp().put_props(":info", "add"_sym,
+				     ":path", *path,
+				     ":docid", docid));
 
 	auto msg_res{store().find_message(docid)};
 	if (!msg_res)
 		throw Error(Error::Code::Store,
 			    "failed to get message at %s (docid=%u): %s",
-			    path.c_str(), docid);
+			    path->c_str(), docid);
 
-	Sexp::List update;
-	update.add_prop(":update", build_message_sexp(msg_res.value(), docid, {}));
-	output_sexp(Sexp::make_list(std::move(update)));
+	output_sexp(Sexp().put_props(":update",
+				    build_message_sexp(msg_res.value(), docid, {})));
 }
 
 /* 'compose' produces the un-changed *original* message sexp (ie., the message
@@ -452,44 +441,42 @@ maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
 	if (!res)
 		throw res.error();
 
-	Sexp::List pi;
-
+	Sexp pi;
 	if (auto cdescr = part.content_description(); cdescr)
-		pi.add_prop(":description", Sexp::make_string(*cdescr));
+		pi.put_props(":description", *cdescr);
 	else if (cooked_name)
-		pi.add_prop(":description", Sexp::make_string(cooked_name.value()));
+		pi.put_props(":description", cooked_name.value());
 
-	pi.add_prop(":file-name", Sexp::make_string(fname));
-	pi.add_prop(":mime-type", Sexp::make_string(
-			    part.mime_type().value_or("application/octet-stream")));
+	pi.put_props(":file-name", fname,
+		     ":mime-type",
+		     part.mime_type().value_or("application/octet-stream"));
 
-	return Some(Sexp::make_list(std::move(pi)));
+	return Some(std::move(pi));
 }
 
 
 void
-Server::Private::compose_handler(const Parameters& params)
+Server::Private::compose_handler(const Command& cmd)
 {
-	const auto ctype{get_symbol_or(params, ":type")};
+	const auto ctype = cmd.symbol_arg(":type").value_or("<error>");
 
-	Sexp::List comp_lst;
-	comp_lst.add_prop(":compose", Sexp::make_symbol(std::string(ctype)));
+	auto comp_lst = Sexp().put_props(":compose", Sexp::Symbol(ctype));
 
 
 	if (ctype == "reply" || ctype == "forward" ||
 	    ctype == "edit" || ctype == "resend") {
 
-		const unsigned docid{(unsigned)get_int_or(params, ":docid")};
+		const unsigned docid{static_cast<unsigned>(cmd.number_arg(":docid").value_or(0))};
 		auto  msg{store().find_message(docid)};
 		if (!msg)
 			throw Error{Error::Code::Store, "failed to get message %u", docid};
 
-		comp_lst.add_prop(":original", build_message_sexp(msg.value(), docid, {}));
+		comp_lst.put_props(":original", build_message_sexp(msg.value(), docid, {}));
 
 		if (ctype == "forward") {
 			// when forwarding, attach any attachment in the orig
 			size_t index{};
-			Sexp::List attseq;
+			Sexp attseq;
 			for (auto&& part: msg->parts()) {
 				if (auto attsexp = maybe_add_attachment(
 					    *msg, part, index); attsexp) {
@@ -498,10 +485,8 @@ Server::Private::compose_handler(const Parameters& params)
 				}
 			}
 			if (!attseq.empty()) {
-				comp_lst.add_prop(":include",
-						  Sexp::make_list(std::move(attseq)));
-				comp_lst.add_prop(":cache-path",
-						  Sexp::make_string(*msg->cache_path()));
+				comp_lst.put_props(":include", std::move(attseq),
+						  ":cache-path", *msg->cache_path());
 			}
 		}
 
@@ -509,16 +494,16 @@ Server::Private::compose_handler(const Parameters& params)
 		throw Error(Error::Code::InvalidArgument, "invalid compose type '%s'",
 			    ctype.c_str());
 
-	output_sexp(std::move(comp_lst));
+	output_sexp(comp_lst);
 }
 
 void
-Server::Private::contacts_handler(const Parameters& params)
+Server::Private::contacts_handler(const Command& cmd)
 {
-	const auto personal  = get_bool_or(params, ":personal");
-	const auto afterstr  = get_string_or(params, ":after");
-	const auto tstampstr = get_string_or(params, ":tstamp");
-	const auto maxnum    = get_int_or(params, ":maxnum", 0 /*unlimited*/);
+	const auto personal  = cmd.boolean_arg(":personal");
+	const auto afterstr  = cmd.string_arg(":after").value_or("");
+	const auto tstampstr = cmd.string_arg(":tstamp").value_or("");
+	const auto maxnum    = cmd.number_arg(":maxnum").value_or(0 /*unlimited*/);
 
 	const auto after{afterstr.empty() ? 0 :
 		parse_date_time(afterstr, true).value_or(0)};
@@ -530,7 +515,7 @@ Server::Private::contacts_handler(const Parameters& params)
 		static_cast<size_t>(tstamp));
 
 	auto       n{0};
-	Sexp::List contacts;
+	Sexp contacts;
 	store().contacts_cache().for_each([&](const Contact& ci) {
 
 		/* since the last time we got some contacts */
@@ -545,19 +530,17 @@ Server::Private::contacts_handler(const Parameters& params)
 
 		n++;
 
-		contacts.add(Sexp::make_string(ci.display_name(true/*encode-if-needed*/)));
+		contacts.add(ci.display_name(true/*encode-if-needed*/));
 		return maxnum == 0 || n < maxnum;
 	});
 
-	Sexp::List seq;
-	seq.add_prop(":contacts", Sexp::make_list(std::move(contacts)));
-	seq.add_prop(":tstamp",
-		     Sexp::make_string(format("%" G_GINT64_FORMAT,
-					      g_get_monotonic_time())));
+	Sexp seq;
+	seq.put_props(":contacts", contacts,
+		      ":tstamp", format("%" G_GINT64_FORMAT, g_get_monotonic_time()));
 
 	/* dump the contacts cache as a giant sexp */
 	g_debug("sending %d of %zu contact(s)", n, store().contacts_cache().size());
-	output_sexp(std::move(seq), Server::OutputFlags::SplitList);
+	output_sexp(seq, Server::OutputFlags::SplitList);
 }
 
 /* get a *list* of all messages with the given message id */
@@ -613,10 +596,10 @@ path_from_docid(const Store& store, Store::Id docid)
 }
 
 static std::vector<Store::Id>
-determine_docids(const Store& store, const Parameters& params)
+determine_docids(const Store& store, const Command& cmd)
 {
-	auto       docid{get_int_or(params, ":docid", 0)};
-	const auto msgid{get_string_or(params, ":msgid")};
+	auto       docid{cmd.number_arg(":docid").value_or(0)};
+	const auto msgid{cmd.string_arg(":msgid").value_or("")};
 
 	if ((docid == 0) == msgid.empty())
 		throw Error(Error::Code::InvalidArgument,
@@ -632,12 +615,12 @@ size_t
 Server::Private::output_results(const QueryResults& qres, size_t batch_size) const
 {
 	size_t     n{};
-	Sexp::List headers;
+	Sexp	headers;
 
-	const auto output_batch = [&](Sexp::List&& hdrs) {
-		Sexp::List batch;
-		batch.add_prop(":headers", Sexp::make_list(std::move(hdrs)));
-		output_sexp(std::move(batch));
+	const auto output_batch = [&](Sexp&& hdrs) {
+		Sexp batch;
+		batch.put_props(":headers", std::move(hdrs));
+		output_sexp(batch);
 	};
 
 	for (auto&& mi : qres) {
@@ -649,7 +632,6 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 		// construct sexp for a single header.
 		auto qm{mi.query_match()};
 		auto msgsexp{build_message_sexp(*msg, mi.doc_id(), qm)};
-		msgsexp.formatting_opts |= Sexp::FormattingOptions::SplitList;
 		headers.add(std::move(msgsexp));
 		// we output up-to-batch-size lists of messages. It's much
 		// faster (on the emacs side) to handle such batches than single
@@ -668,17 +650,17 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 }
 
 void
-Server::Private::find_handler(const Parameters& params)
+Server::Private::find_handler(const Command& cmd)
 {
-	const auto q{get_string_or(params, ":query")};
-	const auto threads{get_bool_or(params, ":threads", false)};
+	const auto q{cmd.string_arg(":query").value_or("")};
+	const auto threads{cmd.boolean_arg(":threads")};
 	// perhaps let mu4e set this as frame-lines of the appropriate frame.
-	const auto batch_size{get_int_or(params, ":batch-size", 110)};
-	const auto sortfieldstr{get_symbol_or(params, ":sortfield", "")};
-	const auto descending{get_bool_or(params, ":descending", false)};
-	const auto maxnum{get_int_or(params, ":maxnum", -1 /*unlimited*/)};
-	const auto skip_dups{get_bool_or(params, ":skip-dups", false)};
-	const auto include_related{get_bool_or(params, ":include-related", false)};
+	const auto batch_size{cmd.number_arg(":batch-size").value_or(110)};
+	const auto sortfieldstr{cmd.symbol_arg(":sortfield").value_or("")};
+	const auto descending{cmd.boolean_arg(":descending")};
+	const auto maxnum{cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/};
+	const auto skip_dups{cmd.boolean_arg(":skip-dups")};
+	const auto include_related{cmd.boolean_arg(":include-related")};
 
 	auto sort_field = std::invoke([&]()->Option<Field>{
 		if (sortfieldstr.size() < 2)
@@ -710,26 +692,17 @@ Server::Private::find_handler(const Parameters& params)
 	/* before sending new results, send an 'erase' message, so the frontend
 	 * knows it should erase the headers buffer. this will ensure that the
 	 * output of two finds will not be mixed. */
-	{
-		Sexp::List lst;
-		lst.add_prop(":erase", Sexp::make_symbol("t"));
-		output_sexp(std::move(lst));
-	}
-
+	output_sexp(Sexp().put_props(":erase", Sexp::t()));
 	const auto foundnum{output_results(*qres, static_cast<size_t>(batch_size))};
-
-	{
-		Sexp::List lst;
-		lst.add_prop(":found", Sexp::make_number(foundnum));
-		output_sexp(std::move(lst));
-	}
+	output_sexp(Sexp().put_props(":found", foundnum));
 }
 
 void
-Server::Private::help_handler(const Parameters& params)
+Server::Private::help_handler(const Command& cmd)
 {
-	const auto command{get_symbol_or(params, ":command", "")};
-	const auto full{get_bool_or(params, ":full", !command.empty())};
+	const auto command{cmd.symbol_arg(":command").value_or("")};
+	const auto full{cmd.bool_arg(":full").value_or(!command.empty())};
+	auto&& info_map{command_handler_.info_map()};
 
 	if (command.empty()) {
 		std::cout << ";; Commands are s-expressions of the form\n"
@@ -740,12 +713,13 @@ Server::Private::help_handler(const Parameters& params)
 	}
 
 	std::vector<std::string> names;
-	for (auto&& name_cmd : command_map())
+	for (auto&& name_cmd: info_map)
 		names.emplace_back(name_cmd.first);
+
 	std::sort(names.begin(), names.end());
 
 	for (auto&& name : names) {
-		const auto& info{command_map().find(name)->second};
+		const auto& info{info_map.find(name)->second};
 
 		if (!command.empty() && name != command)
 			continue;
@@ -771,26 +745,27 @@ Server::Private::help_handler(const Parameters& params)
 	}
 }
 
-static Sexp::List
+static Sexp
 get_stats(const Indexer::Progress& stats, const std::string& state)
 {
-	Sexp::List lst;
+	Sexp sexp;
 
-	lst.add_prop(":info", Sexp::make_symbol("index"));
-	lst.add_prop(":status", Sexp::make_symbol(std::string{state}));
-	lst.add_prop(":checked", Sexp::make_number(stats.checked));
-	lst.add_prop(":updated", Sexp::make_number(stats.updated));
-	lst.add_prop(":cleaned-up", Sexp::make_number(stats.removed));
+	sexp.put_props(
+		":info", "index"_sym,
+		":status", Sexp::Symbol(state),
+		":checked", static_cast<int>(stats.checked),
+		":updated", static_cast<int>(stats.updated),
+		":cleaned-up", static_cast<int>(stats.removed));
 
-	return lst;
+	return sexp;
 }
 
 void
-Server::Private::index_handler(const Parameters& params)
+Server::Private::index_handler(const Command& cmd)
 {
 	Mu::Indexer::Config conf{};
-	conf.cleanup    = get_bool_or(params, ":cleanup");
-	conf.lazy_check = get_bool_or(params, ":lazy-check");
+	conf.cleanup    = cmd.boolean_arg(":cleanup");
+	conf.lazy_check = cmd.boolean_arg(":lazy-check");
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store().empty();
 
@@ -813,20 +788,17 @@ Server::Private::index_handler(const Parameters& params)
 }
 
 void
-Server::Private::mkdir_handler(const Parameters& params)
+Server::Private::mkdir_handler(const Command& cmd)
 {
-	const auto path{get_string_or(params, ":path")};
-	if (auto&& res = maildir_mkdir(path, 0755, FALSE); !res)
+	const auto path{cmd.string_arg(":path").value_or("<error>")};
+	if (auto&& res = maildir_mkdir(path, 0755, false); !res)
 		throw res.error();
 
-	Sexp::List lst;
-	lst.add_prop(":info", Sexp::make_string("mkdir"));
-	lst.add_prop(":message", Sexp::make_string(format("%s has been created", path.c_str())));
-
-	output_sexp(std::move(lst));
+	output_sexp(Sexp().put_props(":info", "mkdir",
+				     ":message", format("%s has been created", path.c_str())));
 }
 
-Sexp::List
+Sexp
 Server::Private::perform_move(Store::Id                 docid,
 			      const Message&            msg,
 			      const std::string&	maildirarg,
@@ -846,14 +818,14 @@ Server::Private::perform_move(Store::Id                 docid,
 	if (!new_msg)
 		throw new_msg.error();
 
-	Sexp::List seq;
-	seq.add_prop(":update", build_message_sexp(new_msg.value(), docid, {}));
+	Sexp seq;
+	seq.put_props(":update", build_message_sexp(new_msg.value(), docid, {}));
 	/* note, the :move t thing is a hint to the frontend that it
 	 * could remove the particular header */
 	if (different_mdir)
-		seq.add_prop(":move", Sexp::make_symbol("t"));
+		seq.put_props(":move", Sexp::t());
 	if (!no_view)
-		seq.add_prop(":maybe-view", Sexp::make_symbol("t"));
+		seq.put_props(":maybe-view", Sexp::t());
 
 	return seq;
 }
@@ -876,7 +848,7 @@ calculate_message_flags(const Message& msg, Option<std::string> flagopt)
 		return flags.value();
 }
 
-Sexp::List
+Sexp
 Server::Private::move_docid(Store::Id		docid,
 			    Option<std::string>	flagopt,
 			    bool		new_name,
@@ -891,6 +863,7 @@ Server::Private::move_docid(Store::Id		docid,
 
 	const auto flags = calculate_message_flags(msg.value(), flagopt);
 	auto lst = perform_move(docid, *msg, "", flags, new_name, no_view);
+
 	return lst;
 }
 
@@ -904,18 +877,18 @@ Server::Private::move_docid(Store::Id		docid,
  *
  */
 void
-Server::Private::move_handler(const Parameters& params)
+Server::Private::move_handler(const Command& cmd)
 {
-	auto       maildir{get_string_or(params, ":maildir")};
-	const auto flagopt{get_string(params, ":flags")};
-	const auto rename{get_bool_or(params, ":rename")};
-	const auto no_view{get_bool_or(params, ":noupdate")};
-	const auto docids{determine_docids(store_, params)};
+	auto       maildir{cmd.string_arg(":maildir").value_or("")};
+	const auto flagopt{cmd.string_arg(":flags").value_or("")};
+	const auto rename{cmd.boolean_arg(":rename")};
+	const auto no_view{cmd.boolean_arg(":noupdate")};
+	const auto docids{determine_docids(store_, cmd)};
 
 	if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
 			throw Mu::Error{Error::Code::Store,
-					"can't move multiple messages at the same time"};
+				"can't move multiple messages at the same time"};
 		// multi.
 		for (auto&& docid : docids)
 			output_sexp(move_docid(docid, flagopt,
@@ -939,57 +912,50 @@ Server::Private::move_handler(const Parameters& params)
 }
 
 void
-Server::Private::ping_handler(const Parameters& params)
+Server::Private::ping_handler(const Command& cmd)
 {
 	const auto storecount{store().size()};
 	if (storecount == (unsigned)-1)
 		throw Error{Error::Code::Store, "failed to read store"};
 
-	const auto queries{get_string_vec(params, ":queries")};
-	Sexp::List qresults;
+	const auto queries{cmd.string_vec_arg(":queries")
+		.value_or(std::vector<std::string>{})};
+	Sexp qresults;
 	for (auto&& q : queries) {
 		const auto count{store_.count_query(q)};
 		const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
 		const auto unread{store_.count_query(unreadq)};
-
-		Sexp::List lst;
-		lst.add_prop(":query", Sexp::make_string(q));
-		lst.add_prop(":count", Sexp::make_number(count));
-		lst.add_prop(":unread", Sexp::make_number(unread));
-
-		qresults.add(Sexp::make_list(std::move(lst)));
+		qresults.add(Sexp().put_props(":query", q,
+					      ":count", count,
+					      ":unread", unread));
 	}
 
-	Sexp::List addrs;
+	Sexp addrs;
 	for (auto&& addr : store().properties().personal_addresses)
-		addrs.add(Sexp::make_string(addr));
+		addrs.add(addr);
 
-	Sexp::List lst;
-	lst.add_prop(":pong", Sexp::make_string("mu"));
+	auto lst = Sexp().put_props(":pong", "mu");
+	auto proplst = Sexp().put_props(
+		":version", VERSION,
+		":personal-addresses", std::move(addrs),
+		":database-path", store().properties().database_path,
+		":root-maildir", store().properties().root_maildir,
+		":doccount", storecount,
+		":queries", std::move(qresults));
 
-	Sexp::List proplst;
-	proplst.add_prop(":version", Sexp::make_string(VERSION));
-	proplst.add_prop(":personal-addresses", Sexp::make_list(std::move(addrs)));
-	proplst.add_prop(":database-path", Sexp::make_string(store().properties().database_path));
-	proplst.add_prop(":root-maildir", Sexp::make_string(store().properties().root_maildir));
-	proplst.add_prop(":doccount", Sexp::make_number(storecount));
-	proplst.add_prop(":queries", Sexp::make_list(std::move(qresults)));
-
-	lst.add_prop(":props", Sexp::make_list(std::move(proplst)));
-
-	output_sexp(std::move(lst));
+	output_sexp(lst.put_props(":props", std::move(proplst)));
 }
 
 void
-Server::Private::quit_handler(const Parameters& params)
+Server::Private::quit_handler(const Command& cmd)
 {
 	keep_going_ = false;
 }
 
 void
-Server::Private::remove_handler(const Parameters& params)
+Server::Private::remove_handler(const Command& cmd)
 {
-	const auto docid{get_int_or(params, ":docid")};
+	const auto docid{cmd.number_arg(":docid").value_or(0)};
 	const auto path{path_from_docid(store(), docid)};
 
 	if (::unlink(path.c_str()) != 0 && errno != ENOENT)
@@ -1000,99 +966,83 @@ Server::Private::remove_handler(const Parameters& params)
 
 	if (!store().remove_message(path))
 		g_warning("failed to remove message @ %s (%d) from store", path.c_str(), docid);
-	// act as if it worked.
-
-	Sexp::List lst;
-	lst.add_prop(":remove", Sexp::make_number(docid));
-
-	output_sexp(std::move(lst));
+	output_sexp(Sexp().put_props(":remove", docid)); 	// act as if it worked.
 }
 
 void
-Server::Private::sent_handler(const Parameters& params)
+Server::Private::sent_handler(const Command& cmd)
 {
-	const auto path{get_string_or(params, ":path")};
+	const auto path{cmd.string_arg(":path").value_or("")};
 	const auto docid = store().add_message(path);
 	if (!docid)
 		throw Error{Error::Code::Store, "failed to add path: %s",
 			docid.error().what()};
-
-	Sexp::List lst;
-	lst.add_prop(":sent", Sexp::make_symbol("t"));
-	lst.add_prop(":path", Sexp::make_string(path));
-	lst.add_prop(":docid", Sexp::make_number(docid.value()));
-
-	output_sexp(std::move(lst));
+	output_sexp(Sexp().put_props(
+			    ":sent", Sexp::t(),
+			    ":path", path,
+			    ":docid", docid.value()));
 }
 
 bool
-Server::Private::maybe_mark_as_read(Store::Id docid, Flags oldflags, bool rename)
+Server::Private::view_mark_as_read(Store::Id docid, const Message& msg, bool rename)
 {
-	const auto newflags{flags_from_delta_expr("+S-u-N", oldflags)};
-	if (!newflags || oldflags == *newflags)
-		return false; // nothing to do.
+	/* move some message if the flags changes; and send either a :view (main message
+	 * or :update (the rest))*/
+	auto maybe_move = [&](Store::Id msg_docid, Flags old_flags,
+			      bool do_rename, bool do_view)->bool {
 
-	const auto msg = store().move_message(docid, {}, newflags, rename);
-	if (!msg)
-		throw msg.error();
+		const auto newflags{flags_from_delta_expr("+S-u-N", old_flags)};
+		if (!newflags || old_flags == *newflags)
+			return false;
 
-	/* send an update */
-	Sexp::List update;
-	update.add_prop(":update", build_message_sexp(*msg, docid, {}));
-	output_sexp(Sexp::make_list(std::move(update)));
+		auto updated_msg = store().move_message(msg_docid, {}, newflags, do_rename);
+		if (!updated_msg)
+			throw updated_msg.error();
 
-	g_debug("marked message %d as read => %s", docid, msg->path().c_str());
+		output_sexp(Sexp().put_props(do_view ? ":view" : ":update",
+					    build_message_sexp(*updated_msg, docid, {})));
+		return true;
+	};
 
-	return true;
-}
+	/* now get _al_ the message-ids for the given message-id,
+	 * since, we want to apply the read-status to _all_. */
 
-bool
-Server::Private::maybe_mark_msgid_as_read(const std::string& msgid, bool rename) try
-{
-	const auto docids = docids_for_msgid(store_, msgid);
-	if (!docids.empty())
-		g_debug("marking %zu messages with message-id '%s' as read",
-			docids.size(), msgid.c_str());
+	/* first the main message */
+	bool moved = maybe_move(docid, msg.flags(), rename, true/*:view*/);
 
-	for (auto&& docid: docids)
+	/* now any other message with the same message-id */
+	for (auto&& rel_docid: docids_for_msgid(store_, msg.message_id())) {
+		/* ignore main one since we already handled it. */
+		if (rel_docid == docid)
+			continue;
 		if (auto msg{store().find_message(docid)}; msg)
-			maybe_mark_as_read(docid, msg->flags(), rename);
+			maybe_move(rel_docid, msg->flags(), rename, false/*:update*/);
+	}
 
-	return true;
-
-} catch (...) { /* not fatal */
-	g_warning("failed to mark <%s> as read", msgid.c_str());
-	return false;
+	return moved;
 }
 
 void
-Server::Private::view_handler(const Parameters& params)
+Server::Private::view_handler(const Command& cmd)
 {
-	const auto mark_as_read{get_bool_or(params, ":mark-as-read")};
+	const auto mark_as_read{cmd.boolean_arg(":mark-as-read")};
 	/* for now, do _not_ rename, as it seems to confuse mbsync */
 	const auto rename{false};
 	//const auto rename{get_bool_or(params, ":rename")};
 
-	const auto docids{determine_docids(store(), params)};
+	const auto docids{determine_docids(store(), cmd)};
 
 	if (docids.empty())
 		throw Error{Error::Code::Store, "failed to find message for view"};
-
 	const auto docid{docids.at(0)};
 	auto msg = store().find_message(docid)
 		.or_else([]{throw Error{Error::Code::Store,
 					"failed to find message for view"};}).value();
 
-	if (mark_as_read) {
-		// maybe mark the main message as read.
-		maybe_mark_as_read(docid, msg.flags(), rename);
-		/* maybe mark _all_ messsage with same message-id as read */
-		maybe_mark_msgid_as_read(msg.message_id(), rename);
-	}
-
-	Sexp::List seq;
-	seq.add_prop(":view", build_message_sexp(msg, docid, {}));
-	output_sexp(std::move(seq));
+	/* if the message is marked-as-read, the response is handled there;
+	 * otherwise, we do so here. */
+	if (!mark_as_read || !view_mark_as_read(docid, msg, rename))
+		output_sexp(Sexp().put_props(":view", build_message_sexp(msg, docid, {})));
 }
 
 Server::Server(Store& store, Server::Output output)

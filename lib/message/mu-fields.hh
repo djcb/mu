@@ -186,8 +186,8 @@ struct Field {
 	 *
 	 */
 
-	constexpr char xapian_prefix() const
-	{ /* xapian uses uppercase shortcuts; toupper is not constexpr */
+	constexpr char xapian_prefix() const {
+		/* xapian uses uppercase shortcuts; toupper is not constexpr */
 		return shortcut == 0 ? 0 : shortcut - ('a' - 'A');
 	}
 
@@ -541,6 +541,7 @@ Option<Field> field_from_number(size_t id)
 	else
 		return field_from_id(static_cast<Field::Id>(id));
 }
+
 
 } // namespace Mu
 #endif /* MU_FIELDS_HH__ */

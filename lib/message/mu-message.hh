@@ -23,6 +23,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
+
 #include "mu-contact.hh"
 #include "mu-priority.hh"
 #include "mu-flags.hh"
@@ -336,37 +338,17 @@ public:
 			.string_vec_value(Field::Id::Tags);
 	}
 
-	/**
-	 * Get the cached s-expression for this message, or {} if not available.
-	 *
-	 * @return sexp or empty.
-	 */
-	std::string cached_sexp() const {
-		return document().cached_sexp();
-	}
-
 	/*
 	 * Convert to Sexp
 	 */
 
 	/**
-	 * Get the s-expression for this message. Stays valid as long
-	 * as this message is.
+	 * Get the s-expression for this message. Stays valid as long as this
+	 * message is.
 	 *
-	 * @return a Mu::Sexp::List representing the message.
+	 * @return an Sexp representing the message.
 	 */
-	const Mu::Sexp::List& to_sexp_list() const;
-	Mu::Sexp to_sexp() const {
-		return Sexp::make_list(Sexp::List(to_sexp_list()));
-	}
-
-	/**
-	 * Update the cached sexp for this message which is stored in the
-	 * document. This should be done immediately before storing it in the
-	 * database.
-	 *
-	 */
-	void update_cached_sexp();
+	const Sexp& sexp() const;
 
 	/*
 	 * And some non-const message, for updating an existing
@@ -476,6 +458,16 @@ private:
 
 }; // Message
 MU_ENABLE_BITOPS(Message::Options);
+
+
+
+static inline std::ostream&
+operator<<(std::ostream& os, const Message& msg)
+{
+	os << msg.sexp();
+	return os;
+}
+
 
 } // Mu
 #endif /* MU_MESSAGE_HH__ */

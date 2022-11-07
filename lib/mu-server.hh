@@ -49,7 +49,7 @@ public:
 	 * @param sexp an s-expression
 	 * @param flags flags that influence the behavior
 	 */
-	using Output = std::function<void(Sexp&& sexp, OutputFlags flags)>;
+	using Output = std::function<void(const Sexp& sexp, OutputFlags flags)>;
 
 	/**
 	 * Construct a new server

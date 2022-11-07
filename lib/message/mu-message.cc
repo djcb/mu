@@ -182,23 +182,16 @@ Message::docid() const
 }
 
 
-const Mu::Sexp::List&
-Message::to_sexp_list() const
+const Mu::Sexp&
+Message::sexp() const
 {
-	return priv_->doc.sexp_list();
-}
-
-void
-Message::update_cached_sexp()
-{
-	priv_->doc.update_cached_sexp();
+	return priv_->doc.sexp();
 }
 
 Result<void>
 Message::set_maildir(const std::string& maildir)
 {
 	/* sanity check a little bit */
-
 	if (maildir.empty() ||
 	    maildir.at(0) != '/' ||
 	    (maildir.size() > 1 && maildir.at(maildir.length()-1) == '/'))
