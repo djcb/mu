@@ -19,6 +19,7 @@
 
 #include "mu-document.hh"
 #include "mu-message.hh"
+#include "utils/mu-sexp.hh"
 
 #include <cstdint>
 #include <glib.h>
@@ -30,10 +31,36 @@
 #include <string>
 #include <utils/mu-utils.hh>
 
+
 using namespace Mu;
 
 constexpr uint8_t SepaChar1 = 0xfe;
 constexpr uint8_t SepaChar2 = 0xff;
+
+
+const Xapian::Document&
+Document::xapian_document() const
+{
+	if (dirty_sexp_) {
+		xdoc_.set_data(sexp_.to_string());
+		dirty_sexp_ = false;
+	}
+	return xdoc_;
+}
+
+template<typename SexpType> void
+Document::put_prop(const std::string& pname, SexpType&& val)
+{
+	sexp_.put_props(pname, std::forward<SexpType>(val));
+	dirty_sexp_ = true;
+}
+
+template<typename SexpType> void
+Document::put_prop(const Field& field, SexpType&& val)
+{
+	put_prop(std::string(":") + std::string{field.name},
+		 std::forward<SexpType>(val));
+}
 
 static void
 add_search_term(Xapian::Document& doc, const Field& field, const std::string& val)
@@ -57,12 +84,6 @@ add_search_term(Xapian::Document& doc, const Field& field, const std::string& va
 }
 
 
-static std::string
-make_prop_name(const Field& field)
-{
-	return ":" + std::string(field.name);
-}
-
 void
 Document::add(Field::Id id, const std::string& val)
 {
@@ -74,9 +95,9 @@ Document::add(Field::Id id, const std::string& val)
 	if (field.is_searchable())
 		add_search_term(xdoc_, field, val);
 
-	if (field.include_in_sexp())
-		sexp_list().add_prop(make_prop_name(field),
-				     Sexp::make_string(std::move(val)));
+	if (field.include_in_sexp()) {
+		put_prop(field, val);
+	}
 }
 
 void
@@ -95,11 +116,10 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 				      add_search_term(xdoc_, field, val); });
 
 	if (field.include_in_sexp()) {
-		Sexp::List elms;
+		Sexp elms{};
 		for(auto&& val: vals)
-			elms.add(Sexp::make_string(val));
-		sexp_list().add_prop(make_prop_name(field),
-				     Sexp::make_list(std::move(elms)));
+			elms.add(val);
+		put_prop(field, std::move(elms));
 	}
 }
 
@@ -113,19 +133,16 @@ Document::string_vec_value(Field::Id field_id) const noexcept
 static Sexp
 make_contacts_sexp(const Contacts& contacts)
 {
-	Sexp::List clist;
+	Sexp contacts_sexp;
 
 	seq_for_each(contacts, [&](auto&& c) {
+		Sexp contact(":email"_sym, c.email);
 		if (!c.name.empty())
-			clist.add(Sexp::make_prop_list(
-					  ":name",  Sexp::make_string(c.name),
-					  ":email", Sexp::make_string(c.email)));
-		else
-			clist.add(Sexp::make_prop_list(
-					  ":email", Sexp::make_string(c.email)));
+			contact.add(":name"_sym, c.name);
+		contacts_sexp.add(std::move(contact));
 	});
 
-	return Sexp::make_list(std::move(clist));
+	return contacts_sexp;
 }
 
 void
@@ -168,9 +185,7 @@ Document::add(Field::Id id, const Contacts& contacts)
 		xdoc_.add_value(field.value_no(), join(cvec, SepaChar1));
 
 	if (field.include_in_sexp())
-		sexp_list().add_prop(make_prop_name(field),
-				     make_contacts_sexp(contacts));
-
+		put_prop(field, make_contacts_sexp(contacts));
 }
 
 Contacts
@@ -204,22 +219,19 @@ Document::contacts_value(Field::Id id) const noexcept
 void
 Document::add_extra_contacts(const std::string& propname, const Contacts& contacts)
 {
-	if (!contacts.empty())
-		sexp_list().add_prop(std::string{propname},
-				     make_contacts_sexp(contacts));
+	if (!contacts.empty()) {
+		put_prop(propname, make_contacts_sexp(contacts));
+		dirty_sexp_ = true;
+	}
 }
 
 
 static Sexp
 make_emacs_time_sexp(::time_t t)
 {
-	Sexp::List dlist;
-
-	dlist.add(Sexp::make_number(static_cast<unsigned>(t >> 16)));
-	dlist.add(Sexp::make_number(static_cast<unsigned>(t & 0xffff)));
-	dlist.add(Sexp::make_number(0));
-
-	return Sexp::make_list(std::move(dlist));
+	return Sexp().add(static_cast<unsigned>(t >> 16),
+			  static_cast<unsigned>(t & 0xffff),
+			  0);
 }
 
 void
@@ -231,7 +243,6 @@ Document::add(Field::Id id, int64_t val)
 	 * we comply, by storing a number a base-16 and prefixing with 'f' +
 	 * length; such that the strings are sorted in the numerical order.
 	 */
-
 	const auto field{field_from_id(id)};
 
 	if (field.is_value())
@@ -239,11 +250,9 @@ Document::add(Field::Id id, int64_t val)
 
 	if (field.include_in_sexp()) {
 		if (field.is_time_t())
-			sexp_list().add_prop(make_prop_name(field),
-					     make_emacs_time_sexp(val));
+			put_prop(field, make_emacs_time_sexp(val));
 		else
-			sexp_list().add_prop(make_prop_name(field),
-					     Sexp::make_number(val));
+			put_prop(field, val);
 	}
 }
 
@@ -265,8 +274,7 @@ Document::add(Priority prio)
 	xdoc_.add_boolean_term(field.xapian_term(to_char(prio)));
 
 	if (field.include_in_sexp())
-		sexp_list().add_prop(make_prop_name(field),
-				     Sexp::make_symbol_sv(priority_name(prio)));
+		put_prop(field, Sexp::Symbol(priority_name(prio)));
 }
 
 Priority
@@ -281,51 +289,20 @@ Document::add(Flags flags)
 {
 	constexpr auto field{field_from_id(Field::Id::Flags)};
 
-	Sexp::List flaglist;
+	Sexp flaglist;
 	xdoc_.add_value(field.value_no(), to_lexnum(static_cast<int64_t>(flags)));
 	flag_infos_for_each([&](auto&& flag_info) {
 		auto term=[&](){return field.xapian_term(flag_info.shortcut_lower());};
 		if (any_of(flag_info.flag & flags)) {
 			xdoc_.add_boolean_term(term());
-			flaglist.add(Sexp::make_symbol_sv(flag_info.name));
+			flaglist.add(Sexp::Symbol(flag_info.name));
 		}
 	});
 
 	if (field.include_in_sexp())
-		sexp_list().add_prop(make_prop_name(field),
-				     Sexp::make_list(std::move(flaglist)));
+		put_prop(field, std::move(flaglist));
 }
 
-
-Sexp::List&
-Document::sexp_list()
-{
-	/* perhaps we need get the sexp_ from the document first? */
-	if (sexp_list_.empty()) {
-		const auto str{xdoc_.get_data()};
-		if (!str.empty()) {
-			Sexp sexp{Sexp::make_parse(str)};
-			sexp_list_ = sexp.list();
-		}
-	}
-
-	return sexp_list_;
-}
-
-std::string
-Document::cached_sexp() const
-{
-	return xdoc_.get_data();
-}
-
-void
-Document::update_cached_sexp(void)
-{
-	if (sexp_list_.empty())
-		return; /* nothing to do; i.e. the exisiting sexp is still up to
-			 * date */
-	xdoc_.set_data(Sexp::make_list(Sexp::List{sexp_list()}).to_sexp_string());
-}
 
 Flags
 Document::flags_value() const noexcept
@@ -364,7 +341,6 @@ Document::remove(Field::Id field_id)
 			}
 		}
 	});
-
 }
 
 

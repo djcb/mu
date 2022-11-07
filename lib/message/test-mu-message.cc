@@ -481,8 +481,7 @@ Content-Type: message/rfc822
 )";
 	auto message{Message::make_from_text(msgtext)};
 	g_assert_true(!!message);
-
-	g_assert_true(message->cached_sexp().empty());
+	//g_assert_true(message->sexp().empty());
 }
 
 
