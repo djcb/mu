@@ -20,6 +20,9 @@
 #ifndef MU_UTILS_FORMAT_HH__
 #define MU_UTILS_FORMAT_HH__
 
+#include <string>
+#include <cstdarg>
+
 namespace Mu {
 
 /**
