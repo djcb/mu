@@ -116,7 +116,7 @@ struct Command: public Sexp {
 	 * @return ref to symbol name, or Nothing if not found
 	 */
 	Option<const std::string&> symbol_arg(const std::string& name) const {
-		if (auto&& val{arg_val(name, Sexp::Type::String)}; !val)
+		if (auto&& val{arg_val(name, Sexp::Type::Symbol)}; !val)
 			return Nothing;
 		else
 			return val->symbol();
