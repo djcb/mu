@@ -267,7 +267,7 @@ Parser::Private::regex(const FieldInfoVec& fields,
 		for (const auto& field : fields) {
 			const auto terms = process_regex(field.field, rx);
 			for (const auto& term : terms) {
-				tree.add_child(Tree({Node::Type::Value,
+				tree.add_child(Tree({Node::Type::ValueAtomic,
 							FieldValue{field.id, term}}));
 			}
 		}

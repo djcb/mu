@@ -83,11 +83,15 @@ xapian_query_value(const Mu::Tree& tree)
 		return make_query(field_val, true /*maybe-wildcard*/);
 	}
 
+        const bool is_atomic = tree.node.type == Node::Type::ValueAtomic;
+
 	const auto parts{split(field_val.value(), " ")};
 	if (parts.empty())
 		return Xapian::Query::MatchNothing; // shouldn't happen
-	else if (parts.size() == 1)
+	else if (parts.size() == 1 && !is_atomic)
 		return make_query(field_val, true /*maybe-wildcard*/);
+        else if (is_atomic)
+                return make_query(field_val, false /*maybe-wildcard*/);
 
 	std::vector<Xapian::Query> phvec;
 	for (const auto& p : parts) {
@@ -124,6 +128,7 @@ Mu::xapian_query(const Mu::Tree& tree)
 	case Node::Type::OpAndNot:
 		return xapian_query_op(tree);
 	case Node::Type::Value:
+	case Node::Type::ValueAtomic:
 		return xapian_query_value(tree);
 	case Node::Type::Range:
 		return xapian_query_range(tree);
