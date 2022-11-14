@@ -264,6 +264,7 @@ run in the background; otherwise, pop up a window."
          (buf (process-buffer proc))
          (win (or run-in-background
                   (mu4e--temp-window buf mu4e--update-buffer-height))))
+    (set-process-query-on-exit-flag proc nil)
     (setq mu4e--update-buffer buf)
     (when (window-live-p win)
       (with-selected-window win
