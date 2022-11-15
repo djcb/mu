@@ -372,12 +372,10 @@ static bool
 output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
 {
 	if (msg) {
-
-		if (const auto sexp{msg->cached_sexp()}; !sexp.empty())
-			fputs(sexp.c_str(), stdout);
+		if (const auto sexp{msg->sexp()}; !sexp.empty())
+			fputs(sexp.to_string().c_str(), stdout);
 		else
-			fputs(msg->to_sexp().to_sexp_string().c_str(), stdout);
-
+			fputs(msg->sexp().to_string().c_str(), stdout);
 		fputs("\n", stdout);
 	}
 
@@ -401,7 +399,7 @@ output_json(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 		return true;
 
 	g_print("%s%s\n",
-		msg->to_sexp().to_json_string().c_str(),
+		msg->sexp().to_json_string().c_str(),
 		info.last ? "" : ",");
 
 	return true;

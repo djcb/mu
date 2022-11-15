@@ -16,14 +16,13 @@
 
 
 lib_mu_utils=static_library('mu-utils', [
-		  'mu-command-parser.cc',
+		  'mu-command-handler.cc',
 		  'mu-logger.cc',
                   'mu-option.cc',
 		  'mu-readline.cc',
 		  'mu-sexp.cc',
                   'mu-test-utils.cc',
 		  'mu-util.c',
-		  'mu-util.h',
 		  'mu-utils.cc'],
 		 dependencies: [
 		   glib_dep,
@@ -38,5 +37,20 @@ lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
   include_directories: include_directories(['.', '..'])
 )
+
+#
+# tests
+#
+test('test-sexp',
+     executable('test-sexp', 'mu-sexp.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, lib_mu_utils_dep]))
+
+test('test-command-handler',
+     executable('test-command-handler', 'mu-command-handler.cc',
+		install: false,
+		cpp_args: ['-DBUILD_TESTS'],
+		dependencies: [glib_dep, lib_mu_utils_dep]))
 
 subdir('tests')

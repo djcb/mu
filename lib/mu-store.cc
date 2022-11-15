@@ -262,11 +262,10 @@ struct Store::Private {
 Result<Store::Id>
 Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
 {
-	msg.update_cached_sexp();
-
 	return xapian_try_result([&]{
 		writable_db().replace_document(docid, msg.document().xapian_document());
 		g_debug("updated message @ %s; docid = %u", msg.path().c_str(), docid);
+		//g_info("%s", msg.sexp().to_string().c_str());
 		writable_db().set_metadata(ChangedKey, tstamp_to_string(::time({})));
 		return Ok(std::move(docid));
 	});
@@ -275,8 +274,6 @@ Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
 Result<Store::Id>
 Store::Private::update_message_unlocked(Message& msg, const std::string& path_to_replace)
 {
-	msg.update_cached_sexp();
-
 	return xapian_try_result([&]{
 		auto id = writable_db().replace_document(
 			field_from_id(Field::Id::Path).xapian_term(path_to_replace),
@@ -338,7 +335,11 @@ Store::Store(const std::string&   path,
 {
 }
 
-Store::Store(Store&&) = default;
+Store::Store(Store&& other)
+{
+	priv_ = std::move(other.priv_);
+	priv_->indexer_.reset();
+}
 
 Store::~Store() = default;
 

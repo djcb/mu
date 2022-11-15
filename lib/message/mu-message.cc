@@ -182,23 +182,16 @@ Message::docid() const
 }
 
 
-const Mu::Sexp::List&
-Message::to_sexp_list() const
+const Mu::Sexp&
+Message::sexp() const
 {
-	return priv_->doc.sexp_list();
-}
-
-void
-Message::update_cached_sexp()
-{
-	priv_->doc.update_cached_sexp();
+	return priv_->doc.sexp();
 }
 
 Result<void>
 Message::set_maildir(const std::string& maildir)
 {
 	/* sanity check a little bit */
-
 	if (maildir.empty() ||
 	    maildir.at(0) != '/' ||
 	    (maildir.size() > 1 && maildir.at(maildir.length()-1) == '/'))
@@ -638,7 +631,10 @@ fill_document(Message::Private& priv)
 
 	const auto path{doc.string_value(Field::Id::Path)};
 	const auto refs{mime_msg.references()};
-	const auto message_id{mime_msg.message_id().value_or(fake_message_id(path))};
+        const auto& raw_message_id = mime_msg.message_id();
+        const auto message_id = raw_message_id.has_value() && !raw_message_id->empty()
+            ? *raw_message_id
+            : fake_message_id(path);
 
 	process_message(mime_msg, path, priv);
 

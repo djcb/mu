@@ -20,427 +20,254 @@
 #ifndef MU_SEXP_HH__
 #define MU_SEXP_HH__
 
-#include <string>
-#include <vector>
-#include <type_traits>
+#include "mu-utils.hh"
 
-#include "utils/mu-utils.hh"
-#include "utils/mu-error.hh"
+#include <stdexcept>
+#include <vector>
+#include <string>
+#include <string_view>
+#include <iostream>
+#include <variant>
+#include <cinttypes>
+#include <ostream>
+#include <cassert>
+
+#include <utils/mu-result.hh>
 
 namespace Mu {
-/// Simple s-expression parser & list that parses lists () and atoms (strings
-/// ("-quoted), (positive) integers ([0..9]+) and symbol starting with alpha or
-/// ':', then alphanum and '-')
-///
-/// (:foo (1234 "bar" nil) :quux (a b c))
 
-/// Parse node
+/**
+ * A structure somewhat similar to a Lisp s-expression and which can be
+ * constructed from/to an s-expressing string representation.
+ *
+ * A sexp is either an atom (String, Number Symbol) or a List
+ */
 struct Sexp {
-	/// Node type
-	enum struct Type { Empty, List, String, Number, Symbol, Raw };
-
-	/**
-	 * Default CTOR
-	 */
-	Sexp() : type_{Type::Empty} {}
-
-	// Underlying data type for list; we'd like to use std::dequeu here,
-	// but that does not compile with libc++ (it does with libstdc++)
-	using Seq = std::vector<Sexp>;
-
-	/**
-	 * Make a sexp out of an s-expression string.
-	 *
-	 * @param expr a string containing an s-expression
-	 *
-	 * @return the parsed s-expression, or throw Error.
-	 */
-	static Sexp make_parse(const std::string& expr);
-
-	/**
-	 * Make a node for a string/integer/symbol/list value
-	 *
-	 * @param val some value
-	 * @param empty_is_nil turn empty string into a 'nil' symbol
-	 *
-	 * @return a node
-	 */
-	static Sexp make_string(std::string&& val, bool empty_is_nil=false)
-	{
-		if (empty_is_nil && val.empty())
-			return make_symbol("nil");
-		else
-			return Sexp{Type::String, std::move(val)};
-	}
-	static Sexp make_string(const std::string& val, bool empty_is_nil=false)
-	{
-		if (empty_is_nil && val.empty())
-			return make_symbol("nil");
-		else
-			return Sexp{Type::String, std::string(val)};
-	}
-
-	static Sexp make_number(int val) { return Sexp{Type::Number, format("%d", val)}; }
-	static Sexp make_symbol(std::string&& val) {
-		if (val.empty())
-			throw Error(Error::Code::InvalidArgument,
-				    "symbol must be non-empty");
-		return Sexp{Type::Symbol, std::move(val)};
-	}
-	static Sexp make_symbol_sv(std::string_view val) {
-		return make_symbol(std::string{val});
-	}
-
-	/**
-	 * Add a raw string sexp.
-	 *
-	 * @param val value
-	 *
-	 * @return A sexp
-	 */
-	static Sexp make_raw(std::string&& val) {
-		return Sexp{Type::Raw, std::string{val}};
-	}
-	static Sexp make_raw(const std::string& val) {
-		return make_raw(std::string{val});
-	}
-
-
-	/**
-	 *
-	 *
-	 * The value of this node; invalid for list nodes.
-	 *
-	 * @return
-	 */
-	const std::string& value() const {
-		if (is_list())
-			throw Error(Error::Code::InvalidArgument, "no value for list");
-		if (is_empty())
-			throw Error{Error::Code::InvalidArgument, "no value for empty"};
-		return value_;
-	}
-
-	/**
-	 * The underlying container of this list node; only valid for lists
-	 *
-	 * @return
-	 */
-	const Seq& list() const {
-		if (!is_list())
-			throw Error(Error::Code::InvalidArgument, "not a list");
-		return seq_;
-	}
-
-	/**
-	 * Convert a Sexp to its S-expression string representation
-	 *
-	 * @return the string representation
-	 */
-	std::string to_sexp_string() const;
-
-	/**
-	 * Convert a Sexp::Node to its JSON string representation
-	 *
-	 * @return the string representation
-	 */
-	std::string to_json_string() const;
-
-	/**
-	 * Return the type of this Node.
-	 *
-	 * @return the type
-	 */
-	Type type() const { return type_; }
-
-	///
-	/// Helper struct to build mutable lists.
-	///
-	struct List {
-		List () = default;
-		List (const Seq& seq): seq_{seq} {}
-
-		/**
-		 * Add a sexp to the list
-		 *
-		 * @param sexp a sexp
-		 * @param args rest arguments
-		 *
-		 * @return a ref to this List (for chaining)
-		 */
-		List& add() { return *this; }
-		List& add(Sexp&& sexp)
-		{
-			seq_.emplace_back(std::move(sexp));
-			return *this;
-		}
-		template <typename... Args> List& add(Sexp&& sexp, Args... args)
-		{
-			seq_.emplace_back(std::move(sexp));
-			seq_.emplace_back(std::forward<Args>(args)...);
-			return *this;
-		}
-
-		/**
-		 * Add a property (i.e., :key sexp ) to the list. Remove any
-		 * prop with the same name
-		 *
-		 * @param name a property-name. Must start with ':', length > 1
-		 * @param sexp a sexp
-		 * @param args rest arguments
-		 *
-		 * @return a ref to this List (for chaining)
-		 */
-		List& add_prop(std::string&& name, Sexp&& sexp) {
-			remove_prop(name);
-			if (!is_prop_name(name))
-				throw Error{Error::Code::InvalidArgument,
-					    "invalid property name ('%s')",
-					    name.c_str()};
-			seq_.emplace_back(make_symbol(std::move(name)));
-			seq_.emplace_back(std::move(sexp));
-			return *this;
-		}
-		template <typename... Args>
-		List& add_prop(std::string&& name, Sexp&& sexp, Args... args) {
-			remove_prop(name);
-			add_prop(std::move(name), std::move(sexp));
-			add_prop(std::forward<Args>(args)...);
-			return *this;
-		}
-
-		void remove_prop(const std::string& name) {
-			if (!is_prop_name(name))
-				throw Error{Error::Code::InvalidArgument,
-					"invalid property name ('%s')", name.c_str()};
-			auto it = std::find_if(seq_.begin(), seq_.end(), [&](auto&& elm) {
-				return elm.type() == Sexp::Type::Symbol &&
-					elm.value() == name;
-			});
-			if (it != seq_.cend() && it + 1 != seq_.cend()) {
-				/* erase propname and value.*/
-				seq_.erase(it, it + 2);
-			}
-		}
-
-		/**
-		 * Remove all elements from the list.
-		 */
-		void clear() { seq_.clear(); }
-
-		/**
-		 * Get the number of elements in the list
-		 *
-		 * @return number
-		 */
-		size_t size() const { return seq_.size(); }
-
-		/**
-		 * Is the list empty?
-		 *
-		 * @return true or false
-		 */
-		size_t empty() const { return seq_.empty(); }
-
-	private:
-		friend struct Sexp;
-		Seq seq_;
+	/// Types
+	using	List   = std::vector<Sexp>;
+	using	String = std::string;
+	using   Number = int64_t;
+	struct Symbol { // distinguish from String.
+		Symbol(const std::string& s): name{s} {}
+		Symbol(std::string&& s): name(std::move(s)) {}
+		Symbol(const char* str): Symbol(std::string{str}) {}
+		Symbol(std::string_view sv): Symbol(std::string{sv}) {}
+		operator const std::string&() const {return name; }
+		std::string name;
 	};
+	enum struct Type        { List, String, Number, Symbol };
+	using Data = std::variant<List, String, Number, Symbol>;
 
 	/**
-	 * Construct a list sexp from a List
+	 * Get the type of data
 	 *
-	 * @param list a list-list
-	 * @param sexp  a Sexp
-	 * @param args rest arguments
-	 *
-	 * @return a sexp.
+	 * @return type
 	 */
-	static Sexp make_list(List&& list) { return Sexp{Type::List, std::move(list.seq_)}; }
-	template <typename... Args> static Sexp make_list(Sexp&& sexp, Args... args)
-	{
-		List lst;
-		lst.add(std::move(sexp)).add(std::forward<Args>(args)...);
-		return make_list(std::move(lst));
+	constexpr Type type() const { return static_cast<Type>(data.index()); }
+
+
+	/**
+	 * Get the name for some type
+	 *
+	 * @param t type
+	 *
+	 * @return name
+	 */
+	static constexpr std::string_view type_name(Type t) {
+		switch(t) {
+		case Type::String:
+			return "string";
+		case Type::Number:
+			return "number";
+		case Type::Symbol:
+			return "symbol";
+		case Type::List:
+			return "list";
+		default:
+			return "<error>";
+		}
+	}
+
+
+	constexpr bool stringp() const { return std::holds_alternative<String>(data); }
+	constexpr bool numberp() const { return std::holds_alternative<Number>(data); }
+	constexpr bool listp()   const { return std::holds_alternative<List>(data); }
+	constexpr bool symbolp() const { return std::holds_alternative<Symbol>(data); }
+
+	constexpr bool nilp() const { return symbolp() && symbol() == "nil"; }
+	static const Sexp& nil() { static const Sexp nilsym(Symbol{"nil"}); return nilsym; }
+	static const Sexp& t()   { static const Sexp tsym(Symbol{"t"}); return tsym; }
+
+	// Get the specific variant type.
+	const List& list() const     { return std::get<List>(data); }
+	List& list()                 { return std::get<List>(data); }
+	const String& string() const { return std::get<String>(data); }
+	String& string()             { return std::get<String>(data); }
+	const Number& number() const { return std::get<Number>(data); }
+	Number& number()             { return std::get<Number>(data); }
+	const String& symbol() const { return std::get<Symbol>(data).name; }
+	String& symbol()             { return std::get<Symbol>(data).name; }
+
+	/// Default ctor
+	Sexp():data{List{}} {} // default: an empty list.
+
+	// Copy & move ctors
+	Sexp(const Sexp& other):data{other.data}{}
+	Sexp(Sexp&& other):data{std::move(other.data)}{}
+
+	// Assignment
+	Sexp& operator=(const Sexp& rhs) {
+		if (this != &rhs)
+			data = rhs.data;
+		return *this;
+	}
+	Sexp& operator=(Sexp&& rhs) {
+		if (this != &rhs)
+			data = std::move(rhs.data);
+		return *this;
+	}
+
+	/// Type specific ctors
+	Sexp(const List& lst): data{lst} {}
+	Sexp(List&& lst): data{std::move(lst)} {}
+
+	Sexp(const String& str): data{str} {}
+	Sexp(String&& str): data{std::move(str)} {}
+	Sexp(const char *str): Sexp{std::string{str}} {}
+	Sexp(std::string_view sv): Sexp{std::string{sv}} {}
+
+	template<typename N, typename = std::enable_if_t<std::is_integral_v<N>> >
+	Sexp(N n):data{static_cast<Number>(n)} {}
+
+	Sexp(const Symbol& sym): data{sym} {}
+	Sexp(Symbol&& sym): data{std::move(sym)} {}
+
+	///
+	template<typename S, typename T, typename... Args>
+	Sexp(S&& s, T&& t, Args&&... args): data{List()} {
+		auto& l{std::get<List>(data)};
+		l.emplace_back(Sexp(std::forward<S>(s)));
+		l.emplace_back(Sexp(std::forward<T>(t)));
+		(l.emplace_back(Sexp(std::forward<Args>(args))), ...);
 	}
 
 	/**
-	 * Construct a property list sexp from a List
+	 * Parse sexp from string
 	 *
-	 * @param name the property name; must start wtth ':'
-	 * @param sexp  a Sexp
-	 * @param args rest arguments (property list)
+	 * @param str a string
 	 *
-	 * @return a sexp.
+	 * @return either an Sexp or an error
 	 */
-	template <typename... Args>
-	static Sexp make_prop_list(std::string&& name, Sexp&& sexp, Args... args)
-	{
-		List list;
-		list.add_prop(std::move(name), std::move(sexp), std::forward<Args>(args)...);
-		return make_list(std::move(list));
+	static Result<Sexp> parse(const std::string& str);
+
+
+	/// List specific
+	using iterator =  List::iterator;
+	using const_iterator = List::const_iterator;
+	iterator       begin()        { return list().begin(); }
+	const_iterator begin()  const { return list().begin(); }
+	const_iterator cbegin() const { return list().cbegin(); }
+
+	iterator       end()         { return list().end(); }
+	const_iterator end()   const { return list().end(); }
+	const_iterator cend()  const { return list().cend(); }
+
+	bool empty() const { return list().empty(); }
+	size_t size() const { return list().size(); }
+	void clear() { list().clear(); }
+
+	/// Adding to lists
+	Sexp& add(const Sexp& s) { list().emplace_back(s); return *this; }
+	Sexp& add(Sexp&& s)      { list().emplace_back(std::move(s)); return *this; }
+	Sexp& add()              { return *this; }
+
+	template <typename V1, typename V2, typename... Args>
+	Sexp& add(V1&& v1, V2&& v2, Args... args) {
+		return add(std::forward<V1>(v1))
+			.add(std::forward<V2>(v2))
+			.add(std::forward<Args>(args)...);
+	}
+
+	// Plist (property lists)
+	bool plistp() const { return listp() && plistp(cbegin(), cend()); }
+	Sexp& put_props() { return *this; } // Final case for template pack.
+	template <class PropType, class SexpType, typename... Args>
+	Sexp& put_props(PropType&& prop, SexpType&& sexp, Args... args) {
+		auto&& propname{std::string(prop)};
+		return del_prop(propname)
+			.add(Symbol(std::move(propname)),
+			     std::forward<SexpType>(sexp))
+			.put_props(std::forward<Args>(args)...);
 	}
 
 	/**
-	 * Construct a properrty list sexp from a List
+	 * Find the property value for some property by name
 	 *
-	 * @param funcname function name for the call
-	 * @param name the property name; must start wtth ':'
-	 * @param sexp  a Sexp
-	 * @param args rest arguments (property list)
+	 * @param p property name
 	 *
-	 * @return a sexp.
+	 * @return the property if found, or the symbol nil otherwise.
 	 */
-	template <typename... Args>
-	static Sexp make_call(std::string&& funcname, std::string&& name, Sexp&& sexp, Args... args)
-	{
-		List list;
-		list.add(make_symbol(std::move(funcname)));
-		list.add_prop(std::move(name), std::move(sexp), std::forward<Args>(args)...);
-		return make_list(std::move(list));
-	}
-
-	/// Some type helpers
-	bool is_list() const { return type() == Type::List; }
-	bool is_string() const { return type() == Type::String; }
-	bool is_number() const { return type() == Type::Number; }
-	bool is_symbol() const { return type() == Type::Symbol; }
-	bool is_empty() const { return type() == Type::Empty; }
-
-	operator bool() const { return !is_empty(); }
-
-	static constexpr auto SymbolNil{"nil"};
-	static constexpr auto SymbolT{"t"};
-	bool                  is_nil() const { return is_symbol() && value() == SymbolNil; }
-	bool                  is_t() const { return is_symbol() && value() == SymbolT; }
-
-	/**
-	 * Is this a prop-list? A prop list is a list sexp with alternating
-	 * property / sexp
-	 *
-	 * @return
-	 */
-	bool is_prop_list() const
-	{
-		if (!is_list() || list().size() % 2 != 0)
-			return false;
+	const Sexp& get_prop(const std::string& p) const {
+		if (auto&& it = find_prop(p, cbegin(), cend()); it != cend())
+			return *(std::next(it));
 		else
-			return is_prop_list(list().begin(), list().end());
+			return Sexp::nil();
+	}
+	bool has_prop(const std::string& s) const {
+		return find_prop(s, cbegin(), cend())!= cend();
 	}
 
-	/**
-	 * Is this a call? A call is a list sexp with a symbol (function name),
-	 * followed by a prop list
-	 *
-	 * @return
-	 */
-	bool is_call() const
-	{
-		if (!is_list() || list().size() % 2 != 1 || !list().at(0).is_symbol())
-			return false;
-		else
-			return is_prop_list(list().begin() + 1, list().end());
-	}
-
-	enum struct FormattingOptions {
+	/// Output to string
+	enum struct Format {
 		Default	  = 0,	/**< Nothing in particular */
 		SplitList = 1 << 0,	/**< Insert newline after list item */
+		TypeInfo  = 1 << 1, /**< Show type-info */
 	};
 
-	FormattingOptions formatting_opts{}; /**< Formatting option for the
-					      * string output */
-
-private:
-	Sexp(Type typearg, std::string&& valuearg) : type_{typearg}, value_{std::move(valuearg)} {
-		if (is_list())
-			throw Error{Error::Code::InvalidArgument, "cannot be a list type"};
-		if (is_empty())
-			throw Error{Error::Code::InvalidArgument, "cannot be an empty type"};
-	}
-	Sexp(Type typearg, Seq&& seq) : type_{Type::List}, seq_{std::move(seq)} {
-		if (!is_list())
-			throw Error{Error::Code::InvalidArgument, "must be a list type"};
-		if (is_empty())
-			throw Error{Error::Code::InvalidArgument, "cannot be an empty type"};
-	}
 	/**
-	 * Is the sexp a valid property name?
+	 * Get a string representation of the sexp
 	 *
-	 * @param sexp a Sexp.
-	 *
-	 * @return true or false.
+	 * @return str
 	 */
-	static bool is_prop_name(const std::string& str)
-	{
-		return str.size() > 1 && str.at(0) == ':';
-	}
-	static bool is_prop_name(const Sexp& sexp)
-	{
-		return sexp.is_symbol() && is_prop_name(sexp.value());
-	}
+	std::string to_string(Format fopts=Format::Default) const;
+	std::string to_json_string(Format fopts=Format::Default) const;
 
-	static bool is_prop_list(Seq::const_iterator b, Seq::const_iterator e)
-	{
-		while (b != e) {
-			const Sexp& s{*b};
-			if (!is_prop_name(s))
-				return false;
-			if (++b == e)
-				return false;
-			++b;
-		}
-		return b == e;
-	}
-
-	Type	    type_;  /**<  Type of node */
-	std::string value_; /**< String value of node (only for
-			       * non-Type::Lst)*/
-	Seq seq_;	    /**< Children of node (only for
-				   * Type::Lst) */
+	Sexp& del_prop(const std::string& pname);
+protected:
+	const_iterator find_prop(const std::string& s, const_iterator b,
+				       const_iterator e)  const;
+	bool plistp(const_iterator b, const_iterator e) const;
+private:
+	iterator find_prop(const std::string& s,iterator b,
+				 iterator e);
+	Data data;
 };
 
-static inline std::ostream&
-operator<<(std::ostream& os, Sexp::Type id)
-{
-	switch (id) {
-	case Sexp::Type::List:
-		os << "list";
-		break;
-	case Sexp::Type::String:
-		os << "string";
-		break;
-	case Sexp::Type::Number:
-		os << "number";
-		break;
-	case Sexp::Type::Symbol:
-		os << "symbol";
-		break;
-	case Sexp::Type::Raw:
-		os << "raw";
-		break;
-	case Sexp::Type::Empty:
-		os << "empty";
-		break;
-	default: throw std::runtime_error("unknown node type");
-	}
+MU_ENABLE_BITOPS(Sexp::Format);
 
+/**
+ * String-literal; allow for ":foo"_sym to be a symbol
+ */
+static inline Sexp::Symbol
+operator"" _sym(const char* str, std::size_t n)
+{
+	return Sexp::Symbol{str};
+}
+
+static inline std::ostream&
+operator<<(std::ostream& os, const Sexp::Type& stype)
+{
+	os << Sexp::type_name(stype);
 	return os;
 }
+
 
 static inline std::ostream&
 operator<<(std::ostream& os, const Sexp& sexp)
 {
-	os << sexp.to_sexp_string();
+	os << sexp.to_string();
 	return os;
 }
-
-static inline std::ostream&
-operator<<(std::ostream& os, const Sexp::List& sexp)
-{
-	os << Sexp::make_list(Sexp::List(sexp));
-	return os;
-}
-MU_ENABLE_BITOPS(Sexp::FormattingOptions);
 
 } // namespace Mu
 

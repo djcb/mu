@@ -2645,7 +2645,7 @@ For general information extending @t{mu4e} and writing your own functions, see
 * Defining actions::How to create an action
 * Headers view actions::Doing things with message headers
 * Message view actions::Doing things with messages
-* Attachment actions::Doing things with attachments
+* MIME-part actions::Doing things with MIME-parts such as attachments
 * Example actions::Some more examples
 @end menu
 
@@ -2679,7 +2679,7 @@ After you have defined your function, you can add it to the list of
 actions@footnote{Instead of defining the functions separately, you can
 obviously also add a @code{lambda}-function directly to the list; however,
 separate functions are easier to change}, either @code{mu4e-headers-actions},
-@code{mu4e-view-actions} or @code{mu4e-view-attachment-actions}.  The
+@code{mu4e-view-actions} or @code{mu4e-view-mime-part-actions}.  The
 format@footnote{Note, the format of the actions has changed since version
 0.9.8.4, and you must change your configuration to use the new format;
 @t{mu4e} warns you when you are using the old format.} of each action is a
@@ -2735,16 +2735,16 @@ is a list of @code{(:name NAME :email EMAIL)} plists; so this code gets
 us the e-mail address of the first in the list. @t{From:}-fields rarely
 have more that one address.
 
-@node Attachment actions
-@section Attachment actions
+@node MIME-part actions
+@section MIME-part actions
 
-Finally, let's define an attachment action. As mentioned, attachment-action
-functions receive @emph{2} arguments, the message and the attachment number to
-use.
+Finally, let's define a MIME-part action. As mentioned, MIME-part
+functions receive @emph{2} arguments, the message and the attachment
+number to use.
 
-The following example action counts the number of lines in an attachment, and
-defines @key{n} as its shortcut key (the @key{n} is prefixed to the
-description).
+The following example action counts the number of lines in an
+attachment, and defines @key{n} as its shortcut key (the @key{n} is
+prefixed to the description).
 
 @lisp
 (defun count-lines-in-attachment (msg attachnum)
@@ -2752,7 +2752,7 @@ description).
   (mu4e-view-pipe-attachment msg attachnum "wc -l"))
 
 ;; defining 'n' as the shortcut
-(add-to-list 'mu4e-view-attachment-actions
+(add-to-list 'mu4e-view-mime-part-actions
   '("ncount lines" . count-lines-in-attachment) t)
 @end lisp
 
@@ -2796,7 +2796,7 @@ see @ref{Headers view actions}
 see @ref{Message view actions}
 @item Add a new kind of mark for use in the headers view
 - see @ref{Adding a new kind of mark}
-@item Apply a function to an attachment --- see @ref{Attachment actions}
+@item Apply a function to a MIME-part --- see @ref{MIME-part actions}
 @item Custom function to mark certain messages ---
 see @ref{Custom mark functions}
 @item Using various @emph{mode}-hooks, @code{mu4e-compose-pre-hook} (see

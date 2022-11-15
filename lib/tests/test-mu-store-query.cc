@@ -18,6 +18,7 @@
 */
 
 
+#include "utils/mu-result.hh"
 #include <array>
 #include <thread>
 #include <string>
@@ -26,6 +27,7 @@
 #include <unordered_map>
 
 #include <mu-store.hh>
+#include <mu-maildir.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-test-utils.hh>
 #include <message/mu-message.hh>
@@ -72,7 +74,10 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(100ms);
 	}
-	g_assert_true(!store->empty());
+
+	if (test_map.size() > 0)
+		g_assert_false(store->empty());
+
 	g_assert_cmpuint(store->size(),==,test_map.size());
 
 	/* and we have a fully-ready store */
@@ -517,6 +522,110 @@ Saludos,
 	}
 }
 
+
+
+static void
+test_duplicate_refresh_real(bool rename)
+{
+	g_test_bug("2327");
+
+	const TestMap test_msgs = {{
+		"inbox/new/msg",
+		{ R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Wed, 26 Oct 2022 11:01:54 -0700
+To: example@example.com
+Subject: Rainy night in Helsinki
+
+Boo!
+)"},
+		}};
+
+	/* create maildir with message */
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	g_debug("%s", store.properties().root_maildir.c_str());
+	/* ensure we have a proper maildir, with new/, cur/ */
+	auto mres = maildir_mkdir(store.properties().root_maildir + "/inbox");
+	assert_valid_result(mres);
+	g_assert_cmpuint(store.size(), ==, 1U);
+
+	/*
+	 * find the one msg with a query
+	 */
+	auto qr = store.run_query("Helsinki", Field::Id::Date, QueryFlags::None);
+	g_assert_true(!!qr);
+	g_assert_cmpuint(qr->size(), ==, 1);
+	const auto old_path = qr->begin().path().value();
+	const auto old_docid = qr->begin().doc_id();
+	assert_equal(qr->begin().message()->path(), old_path);
+	g_assert_true(::access(old_path.c_str(), F_OK) == 0);
+
+
+	/*
+	 * mark as read, i.e. move to cur/; ensure it really moved.
+	 */
+	auto moved_msg = store.move_message(old_docid, Nothing, Flags::Seen, rename);
+	assert_valid_result(moved_msg);
+	const auto new_path = moved_msg->path();
+	if (!rename)
+		assert_equal(new_path, store.properties().root_maildir + "/inbox/cur/msg:2,S");
+	g_assert_cmpuint(store.size(), ==, 1);
+	g_assert_false(::access(old_path.c_str(), F_OK) == 0);
+	g_assert_true(::access(new_path.c_str(), F_OK) == 0);
+
+	/* also ensure that the cached sexp for the message has been updated;
+	 * that's what mu4e uses */
+	const auto moved_sexp{moved_msg->sexp()};
+	//std::cerr << "@@ " << *moved_msg << '\n';
+	g_assert_true(moved_sexp.plistp());
+	g_assert_true(moved_sexp.has_prop(":path"));
+	assert_equal(moved_sexp.get_prop(":path").string(), new_path);
+
+	/*
+	 * find new message with query, ensure it's really that new one.
+	 */
+	auto qr2 = store.run_query("Helsinki", Field::Id::Date, QueryFlags::None);
+	g_assert_true(!!qr2);
+	g_assert_cmpuint(qr2->size(), ==, 1);
+	assert_equal(qr2->begin().path().value(), new_path);
+
+	/* index the messages */
+	auto res = store.indexer().start({});
+	g_assert_true(res);
+	while(store.indexer().is_running()) {
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(100ms);
+	}
+	g_assert_cmpuint(store.size(), ==, 1);
+
+	/*
+	 * ensure query still has the right results
+	 */
+	auto qr3 = store.run_query("Helsinki", Field::Id::Date, QueryFlags::None);
+	g_assert_true(!!qr3);
+	g_assert_cmpuint(qr3->size(), ==, 1);
+	const auto path3{qr3->begin().path().value()};
+	assert_equal(path3, new_path);
+	assert_equal(qr3->begin().message()->path(), new_path);
+	g_assert_true(::access(path3.c_str(), F_OK) == 0);
+}
+
+
+static void
+test_duplicate_refresh()
+{
+	test_duplicate_refresh_real(false/*no rename*/);
+}
+
+
+static void
+test_duplicate_refresh_rename()
+{
+	test_duplicate_refresh_real(true/*rename*/);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -533,6 +642,10 @@ main(int argc, char* argv[])
 			test_related_missing_root);
 	g_test_add_func("/store/query/body-matricula",
 			test_body_matricula);
+	g_test_add_func("/store/query/duplicate-refresh",
+			test_duplicate_refresh);
+	g_test_add_func("/store/query/duplicate-refresh-rename",
+			test_duplicate_refresh_rename);
 
 	return g_test_run();
 }

@@ -368,7 +368,7 @@ Yes, that would be excellent.
 	 const auto oldpath{msg->path()};
 	 assert_equal(msg->subject(), "Re: multi-eq hash tables");
 	 g_assert_true(msg->docid() != 0);
-	 g_debug("%s", msg->to_sexp().to_sexp_string().c_str());
+	 g_debug("%s", msg->sexp().to_string().c_str());
 
 	 // Move the message from new->cur
 	 std::this_thread::sleep_for(1s); /* ctime should change */
@@ -379,7 +379,7 @@ Yes, that would be excellent.
 	 g_assert_true(::access(msg3->path().c_str(), R_OK)==0);
 	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
 
-	 g_debug("%s", msg3->to_sexp().to_sexp_string().c_str());
+	 g_debug("%s", msg3->sexp().to_string().c_str());
 	 g_assert_cmpuint(store->size(), ==, 1);
 }
 

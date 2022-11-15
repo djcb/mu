@@ -105,7 +105,7 @@ validate_field_flags()
 			++flagnum;
 
 		if (flagnum > 1) {
-			//g_warning("invalid field %*s", STR_V(field.name));
+			//g_warning("invalid field %*.s", STR_V(field.name));
 			return false;
 		}
 	}
