@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -32,10 +32,10 @@
 
 using namespace Mu;
 
-static bool           MuLogInitialized = false;
-static Mu::LogOptions MuLogOptions;
-static std::ofstream  MuStream;
-static auto           MaxLogFileSize = 1000 * 1024;
+static bool			MuLogInitialized = false;
+static Mu::Logger::Options	MuLogOptions;
+static std::ofstream		MuStream;
+static auto			MaxLogFileSize	 = 1000 * 1024;
 
 static std::string MuLogPath;
 
@@ -114,16 +114,21 @@ log_journal(GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpoin
 	return g_log_writer_journald(level, fields, n_fields, user_data);
 }
 
-void
-Mu::log_init(const std::string& path, Mu::LogOptions opts)
-{
-	if (MuLogInitialized) {
-		g_error("logging is already initialized");
-		return;
-	}
 
+Result<Logger>
+Mu::Logger::make(const std::string& path, Mu::Logger::Options opts)
+{
+	if (MuLogInitialized)
+		return Err(Error::Code::Internal, "logging already initialized");
+
+	return Ok(Logger(path, opts));
+}
+
+
+Mu::Logger::Logger(const std::string& path, Mu::Logger::Options opts)
+{
 	if (g_getenv("MU_LOG_STDOUTERR"))
-		opts |= LogOptions::StdOutErr;
+		opts |= Logger::Options::StdOutErr;
 
 	MuLogOptions = opts;
 	MuLogPath    = path;
@@ -132,12 +137,12 @@ Mu::log_init(const std::string& path, Mu::LogOptions opts)
 	    [](GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpointer user_data) {
 		    // filter out debug-level messages?
 		    if (level == G_LOG_LEVEL_DEBUG &&
-			(none_of(MuLogOptions & Mu::LogOptions::Debug)))
+			(none_of(MuLogOptions & Options::Debug)))
 			    return G_LOG_WRITER_HANDLED;
 
 		    // log criticals to stdout / err or if asked
 		    if (level == G_LOG_LEVEL_CRITICAL ||
-			any_of(MuLogOptions & Mu::LogOptions::StdOutErr)) {
+			any_of(MuLogOptions & Options::StdOutErr)) {
 			    log_stdouterr(level, fields, n_fields, user_data);
 		    }
 
@@ -151,14 +156,13 @@ Mu::log_init(const std::string& path, Mu::LogOptions opts)
 	    NULL);
 
 	g_message("logging initialized; debug: %s, stdout/stderr: %s",
-		  any_of(log_get_options() & LogOptions::Debug) ? "yes" : "no",
-		  any_of(log_get_options() & LogOptions::StdOutErr) ? "yes" : "no");
+		  any_of(opts & Options::Debug) ? "yes" : "no",
+		  any_of(opts & Options::StdOutErr) ? "yes" : "no");
 
 	MuLogInitialized = true;
 }
 
-void
-Mu::log_uninit()
+Logger::~Logger()
 {
 	if (!MuLogInitialized)
 		return;
@@ -167,16 +171,4 @@ Mu::log_uninit()
 		MuStream.close();
 
 	MuLogInitialized = false;
-}
-
-void
-Mu::log_set_options(Mu::LogOptions opts)
-{
-	MuLogOptions = opts;
-}
-
-Mu::LogOptions
-Mu::log_get_options()
-{
-	return MuLogOptions;
 }

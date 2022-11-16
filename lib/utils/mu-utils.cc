@@ -638,3 +638,36 @@ Mu::timezone_available(const std::string& tz)
 
 	return have_tz;
 }
+
+
+std::string
+Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
+{
+	auto [mu_cache, mu_config] =
+		std::invoke([&]()->std::pair<std::string, std::string> {
+
+			static std::string mu{"/mu"};
+			if (muhome.empty())
+				return { g_get_user_cache_dir() + mu,
+					 g_get_user_config_dir() + mu };
+			else
+				return { muhome, muhome };
+	});
+
+	switch (path) {
+	case Mu::RuntimePath::Cache:
+		return mu_cache;
+	case Mu::RuntimePath::XapianDb:
+		return mu_cache + "/xapian";
+	case Mu::RuntimePath::LogFile:
+		return mu_cache + "/mu.log";
+	case Mu::RuntimePath::Bookmarks:
+		return mu_config + "/bookmarks";
+	case Mu::RuntimePath::Config:
+		return mu_config;
+	case Mu::RuntimePath::Scripts:
+		return mu_config + "/scripts";
+	default:
+		throw std::logic_error("unknown path");
+	}
+}
