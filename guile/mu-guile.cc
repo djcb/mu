@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,13 +23,11 @@
 #include <locale.h>
 #include <glib-object.h>
 
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <libguile.h>
 #pragma GCC diagnostic pop
 
-#include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
 
@@ -75,16 +73,14 @@ mu_guile_g_error(const char* func_name, GError* err)
 static Option<Mu::Store> StoreSingleton = Nothing;
 
 static bool
-mu_guile_init_instance(const char* muhome)
-try {
+mu_guile_init_instance(const std::string& muhome) try {
 	setlocale(LC_ALL, "");
-	if (!mu_runtime_init(muhome, "guile", true) || StoreSingleton)
-		return FALSE;
 
-	const auto path{mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB)};
+	const auto path{runtime_path(RuntimePath::XapianDb, muhome)};
 	auto store = Store::make(path);
 	if (!store) {
-		g_critical("error creating store @ %s: %s", path, store.error().what());
+		g_critical("error creating store @ %s: %s", path.c_str(),
+			   store.error().what());
 		throw store.error();
 	} else
 		StoreSingleton.emplace(std::move(store.value()));
@@ -114,8 +110,6 @@ static void
 mu_guile_uninit_instance()
 {
 	StoreSingleton.reset();
-
-	mu_runtime_uninit();
 }
 
 Mu::Store&
@@ -162,9 +156,10 @@ SCM_DEFINE_PUBLIC(mu_initialize,
 	else
 		muhome = scm_to_utf8_string(MUHOME);
 
-	if (!mu_guile_init_instance(muhome)) {
+	if (!mu_guile_init_instance(muhome ? muhome : "")) {
 		free(muhome);
 		mu_guile_error(FUNC_NAME, 0, "Failed to initialize mu", SCM_UNSPECIFIED);
+		return SCM_UNSPECIFIED;
 	}
 
 	g_debug("mu-guile: initialized @ %s", muhome ? muhome : "<default>");
