@@ -99,12 +99,7 @@ install_data(['mu.scm','mu/script.scm', 'mu/message.scm', 'mu/stats.scm', 'mu/pl
 mu_guile_scripts=[
   join_paths('scripts', 'find-dups.scm'),
   join_paths('scripts', 'msgs-count.scm'),
-  join_paths('scripts', 'msgs-per-day.scm'),
-  join_paths('scripts', 'msgs-per-hour.scm'),
-  join_paths('scripts', 'msgs-per-month.scm'),
-  join_paths('scripts', 'msgs-per-year-month.scm'),
-  join_paths('scripts', 'msgs-per-year.scm')
-]
+  join_paths('scripts', 'histogram.scm')]
 mu_guile_script_dir=join_paths(datadir, 'mu', 'scripts')
 install_data(mu_guile_scripts, install_dir: mu_guile_script_dir)
 
