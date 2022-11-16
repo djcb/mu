@@ -19,7 +19,7 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; INFO: find duplicate messages
+;; INFO: Find duplicate messages
 ;; INFO: options:
 ;; INFO:   --muhome=<muhome>: path to mu home dir
 ;; INFO:   --delete: delete all but the first one (experimental, be careful!)

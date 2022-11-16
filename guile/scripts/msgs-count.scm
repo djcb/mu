@@ -1,8 +1,7 @@
 #!/bin/sh
 exec guile -e main -s $0 $@
 !#
-;;
-;; Copyright (C) 2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -19,10 +18,11 @@ exec guile -e main -s $0 $@
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-;; INFO: graph the number of messages per day (using gnuplot)
+
+;; INFO: Count the number of messages matching some query
 ;; INFO: options:
 ;; INFO:   --query=<query>:   limit to messages matching query
-;; INFO:   --muhome=<muhome>: path to mu home dir
+;; INFO:   --muhome=<muhome>: path to mu home dir (optional)
 
 (use-modules (mu) (mu script) (mu stats))
 
