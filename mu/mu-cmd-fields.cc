@@ -30,9 +30,9 @@ using namespace tabulate;
 
 
 static void
-table_header(Table& table, const MuConfig* opts)
+table_header(Table& table, const Options& opts)
 {
-	if (opts->nocolor)
+	if (opts.nocolor)
 		return;
 
 	(*table.begin()).format()
@@ -42,7 +42,7 @@ table_header(Table& table, const MuConfig* opts)
 }
 
 static void
-show_fields(const MuConfig* opts)
+show_fields(const Options& opts)
 {
 	using namespace std::string_literals;
 
@@ -54,7 +54,7 @@ show_fields(const MuConfig* opts)
 		if (sv.empty())
 			return "";
 		else
-			return format("%*s", STR_V(sv));
+			return format("%.*s", STR_V(sv));
 	};
 
 	auto searchable=[&](const Field& field)->std::string {
@@ -76,8 +76,8 @@ show_fields(const MuConfig* opts)
 		if (field.is_internal())
 			return; // skip.
 
-		fields.add_row({format("%*s", STR_V(field.name)),
-				field.alias.empty() ? "" : format("%*s", STR_V(field.alias)),
+		fields.add_row({format("%.*s", STR_V(field.name)),
+				field.alias.empty() ? "" : format("%.*s", STR_V(field.alias)),
 				field.shortcut ? format("%c", field.shortcut) : ""s,
 				searchable(field),
 				field.is_value() ? "yes" : "no",
@@ -93,7 +93,7 @@ show_fields(const MuConfig* opts)
 }
 
 static void
-show_flags(const MuConfig* opts)
+show_flags(const Options& opts)
 {
 	using namespace tabulate;
 	using namespace std::string_literals;
@@ -119,7 +119,7 @@ show_flags(const MuConfig* opts)
 				}
 			}, info.category);
 
-		flags.add_row({format("%*s", STR_V(info.name)),
+		flags.add_row({format("%.*s", STR_V(info.name)),
 				format("%c", info.shortcut),
 				catname,
 				std::string{info.description}});
@@ -133,13 +133,10 @@ show_flags(const MuConfig* opts)
 
 
 Result<void>
-Mu::mu_cmd_fields(const MuConfig* opts)
+Mu::mu_cmd_fields(const Options& opts)
 {
-	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
-
 	if (!locale_workaround())
 		return Err(Error::Code::User, "failed to find a working locale");
-
 
 	std::cout << "#\n# message fields\n#\n";
 	show_fields(opts);

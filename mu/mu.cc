@@ -18,40 +18,29 @@
 */
 
 #include <config.h>
+#include <functional>
 
 #include <glib.h>
 #include <glib-object.h>
 #include <locale.h>
 
-#include "mu-config.hh"
 #include "mu-cmd.hh"
-#include "mu-runtime.hh"
+#include "mu-options.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-logger.hh"
+
+#include "mu-cmd.hh"
 
 using namespace Mu;
 
-static void
-show_version(void)
-{
-	const char* blurb = "mu (mail indexer/searcher) version " VERSION "\n"
-			    "Copyright (C) 2008-2022 Dirk-Jan C. Binnema\n"
-			    "License GPLv3+: GNU GPL version 3 or later "
-			    "<http://gnu.org/licenses/gpl.html>.\n"
-			    "This is free software: you are free to change "
-			    "and redistribute it.\n"
-			    "There is NO WARRANTY, to the extent permitted by law.";
-
-	g_print("%s\n", blurb);
-}
-
 static int
-handle_result(const Result<void>& res, MuConfig* conf)
+handle_result(const Result<void>& res, const Mu::Options& opts)
 {
 	if (res)
 		return 0;
 
 	using Color = MaybeAnsi::Color;
-	MaybeAnsi col{conf ? !conf->nocolor : false};
+	MaybeAnsi col{!opts.nocolor};
 
 	// show the error and some help, but not if it's only a softerror.
 	if (!res.error().is_soft_error()) {
@@ -66,8 +55,6 @@ handle_result(const Result<void>& res, MuConfig* conf)
 	// perhaps give some useful hint on how to solve it.
 	switch (res.error().code()) {
 	case Error::Code::InvalidArgument:
-		if (conf && mu_config_cmd_is_valid(conf->cmd))
-			mu_config_show_help(conf->cmd);
 		break;
 	case Error::Code::StoreLock:
 		std::cerr << "Perhaps mu is already running?\n";
@@ -88,38 +75,38 @@ handle_result(const Result<void>& res, MuConfig* conf)
 int
 main(int argc, char* argv[])
 {
-	int rv{};
-	MuConfig *conf{};
-	GError*   err{};
-
-	using Color = MaybeAnsi::Color;
-	MaybeAnsi col{conf ? !conf->nocolor : false};
-
 	setlocale(LC_ALL, "");
 
-	conf = mu_config_init(&argc, &argv, &err);
-	if (!conf) {
-		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
-			  << col.fg(Color::BrightYellow)
-			  << (err ? err->message : "something went wrong") << "\n";
-		rv = 1;
-		goto cleanup;
-	} else if (conf->version) {
-		show_version();
-		goto cleanup;
-	} else if (conf->cmd == MU_CONFIG_CMD_NONE) /* nothing to do */
-		goto cleanup;
-	else if (!mu_runtime_init(conf->muhome, PACKAGE_NAME, conf->debug)) {
-		std::cerr << col.fg(Color::Red) << "error initializing mu\n"
-			  << col.reset();
-		rv = 2;
-	} else
-		rv = handle_result(mu_cmd_execute(conf), conf);
+	/*
+	 * read command-line options
+	 */
+	const auto opts{Options::make(argc, argv)};
+	if (!opts) {
+		std::cerr << "error: " << opts.error().what() << "\n";
+		return opts.error().exit_code();
+	} else if (!opts->sub_command) {
+		// nothing more to do.
+		return 0;
+	}
 
-cleanup:
-	g_clear_error(&err);
-	mu_config_uninit(conf);
-	mu_runtime_uninit();
+	/*
+	 * set up logging
+	 */
+	Logger::Options lopts{Logger::Options::None};
+	if (opts->log_stderr)
+		lopts |= Logger::Options::StdOutErr;
+	if (opts->debug)
+		lopts |= Logger::Options::Debug;
 
-	return rv;
+	const auto logger = Logger::make(opts->runtime_path(RuntimePath::LogFile),
+					 lopts);
+	if (!logger) {
+		std::cerr << "error:" << logger.error().what() << "\n";
+		return logger.error().exit_code();
+	}
+
+	/*
+	 * handle sub command
+	 */
+	return handle_result(mu_cmd_execute(*opts), *opts);
 }

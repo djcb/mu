@@ -27,13 +27,13 @@
 
 #include "mu-cmd.hh"
 #include "mu-contacts-cache.hh"
-#include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
 
 using namespace Mu;
+
 
 /**
  * macro to check whether the string is empty, ie. if it's NULL or
@@ -187,15 +187,17 @@ leave : {
 	return nick;
 }
 
+using Format = Options::Cfind::Format;
+
 static void
-print_header(const MuConfigFormat format)
+print_header(Format format)
 {
 	switch (format) {
-	case MU_CONFIG_FORMAT_BBDB:
+	case Format::Bbdb:
 		g_print(";; -*-coding: utf-8-emacs;-*-\n"
 			";;; file-version: 6\n");
 		break;
-	case MU_CONFIG_FORMAT_MUTT_AB:
+	case Format::MuttAddressBook:
 		g_print("Matching addresses in the mu database:\n");
 		break;
 	default:
@@ -275,7 +277,7 @@ print_plain(const std::string& email, const std::string& name, bool color)
 }
 
 struct ECData {
-	MuConfigFormat	format;
+	Format		format;
 	gboolean	color, personal;
 	time_t		after;
 	GRegex*		rx;
@@ -304,28 +306,30 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 	++ecdata.n;
 
 	switch (ecdata.format) {
-	case MU_CONFIG_FORMAT_MUTT_ALIAS:
+	case Format::MuttAlias:
 		each_contact_mutt_alias(ci.email, ci.name, ecdata.nicks);
 		break;
-	case MU_CONFIG_FORMAT_MUTT_AB:
+	case Format::MuttAddressBook:
 		mu_util_print_encoded("%s\t%s\t\n", ci.email.c_str(), ci.name.c_str());
 		break;
-	case MU_CONFIG_FORMAT_WL: each_contact_wl(ci.email, ci.name, ecdata.nicks);
+	case Format::Wanderlust:
+		each_contact_wl(ci.email, ci.name, ecdata.nicks);
 		break;
-	case MU_CONFIG_FORMAT_ORG_CONTACT:
+	case Format::OrgContact:
 		if (!ci.name.empty())
 			mu_util_print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
 					      ci.name.c_str(),
 					      ci.email.c_str());
 		break;
-	case MU_CONFIG_FORMAT_BBDB: each_contact_bbdb(ci.email, ci.name, ci.message_date);
+	case Format::Bbdb:
+		each_contact_bbdb(ci.email, ci.name, ci.message_date);
 		break;
-	case MU_CONFIG_FORMAT_CSV:
+	case Format::Csv:
 		mu_util_print_encoded("%s,%s\n",
 				      ci.name.empty() ? "" : Mu::quote(ci.name).c_str(),
 				      Mu::quote(ci.email).c_str());
 		break;
-	case MU_CONFIG_FORMAT_DEBUG: {
+	case Format::Debug: {
 		char datebuf[32];
 		const auto mdate(static_cast<::time_t>(ci.message_date));
 		::strftime(datebuf, sizeof(datebuf), "%F %T", ::gmtime(&mdate));
@@ -346,21 +350,21 @@ each_contact(const Mu::Contact& ci, ECData& ecdata)
 
 static Result<void>
 run_cmd_cfind(const Mu::Store&		store,
-	      const char*		pattern,
-	      gboolean			personal,
+	      const std::string&	pattern,
+	      bool			personal,
 	      time_t			after,
-	      int			maxnum,
-	      const MuConfigFormat	format,
-	      gboolean			color)
+	      size_t			maxnum,
+	      Format			format,
+	      bool			color)
 {
 	ECData ecdata{};
 	GError *err{};
 
 	memset(&ecdata, 0, sizeof(ecdata));
 
-	if (pattern) {
+	if (!pattern.empty()) {
 		ecdata.rx = g_regex_new(
-		    pattern,
+		    pattern.c_str(),
 		    (GRegexCompileFlags)(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
 		    (GRegexMatchFlags)0, &err);
 
@@ -393,47 +397,14 @@ run_cmd_cfind(const Mu::Store&		store,
 		return Ok();
 }
 
-static gboolean
-cfind_params_valid(const MuConfig* opts)
-{
-	if (!opts || opts->cmd != MU_CONFIG_CMD_CFIND)
-		return FALSE;
-
-	switch (opts->format) {
-	case MU_CONFIG_FORMAT_PLAIN:
-	case MU_CONFIG_FORMAT_MUTT_ALIAS:
-	case MU_CONFIG_FORMAT_MUTT_AB:
-	case MU_CONFIG_FORMAT_WL:
-	case MU_CONFIG_FORMAT_BBDB:
-	case MU_CONFIG_FORMAT_CSV:
-	case MU_CONFIG_FORMAT_ORG_CONTACT:
-	case MU_CONFIG_FORMAT_DEBUG: break;
-	default:
-		g_printerr("invalid output format %s\n",
-			   opts->formatstr ? opts->formatstr : "<none>");
-		return FALSE;
-	}
-
-	/* only one pattern allowed */
-	if (opts->params[1] && opts->params[2]) {
-		g_printerr("usage: mu cfind [options] [<ptrn>]\n");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 Result<void>
-Mu::mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts)
+Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 {
-	if (!cfind_params_valid(opts))
-		return Err(Error::Code::InvalidArgument, "error in parameters");
-	else
-		return run_cmd_cfind(store,
-				     opts->params[1],
-				     opts->personal,
-				     opts->after,
-				     opts->maxnum,
-				     opts->format,
-				      !opts->nocolor);
+	return run_cmd_cfind(store,
+			     opts.cfind.rx_pattern,
+			     opts.cfind.personal,
+			     opts.cfind.after.value_or(0),
+			     opts.cfind.maxnum.value_or(0),
+			     opts.cfind.format,
+			     !opts.nocolor);
 }
