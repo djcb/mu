@@ -56,6 +56,8 @@ struct Error final : public std::exception {
 		Play		    = ERROR_ENUM(1,0),
 		Query		    = ERROR_ENUM(1,0),
 		SchemaMismatch	    = ERROR_ENUM(1,0),
+		Script              = ERROR_ENUM(1,0),
+		ScriptNotFound      = ERROR_ENUM(1,0),
 		Store		    = ERROR_ENUM(1,0),
 		StoreLock           = ERROR_ENUM(19,0),
 		UnverifiedSignature = ERROR_ENUM(1,0),
