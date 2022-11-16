@@ -363,10 +363,15 @@ As per issue #2198."
   ;; kill old/stale servers, if any.
   (mu4e--kill-stale)
   (let* ((process-connection-type nil) ;; use a pipe
-         (args (when mu4e-mu-home `(,(format"--muhome=%s" mu4e-mu-home))))
-         (args (if mu4e-mu-debug (cons "--debug" args) args))
-         (args (cons "server" args)))
+	 (args
+	  ;; [--debug] server [--muhome=..]
+	  (seq-filter (lambda (arg) arg) ;; filter out nil
+		      `(,(when mu4e-mu-debug "--debug")
+			"server"
+			,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home))))))
     (setq mu4e--server-buf "")
+    (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
+	      (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
     (setq mu4e--server-process (apply 'start-process
                                       mu4e--server-name mu4e--server-name
                                       mu4e-mu-binary args))
@@ -401,6 +406,7 @@ As per issue #2198."
 (defun mu4e--server-sentinel (proc _msg)
   "Function called when the server process PROC terminates with MSG."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
+    (mu4e-log 'misc "* famous last words from server: '%s'" mu4e--server-buf)
     (setq mu4e--server-process nil)
     (setq mu4e--server-buf "") ;; clear any half-received sexps
     (cond
