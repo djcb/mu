@@ -667,12 +667,7 @@ This is based on `mu4e-drafts-folder', which is evaluated once.")
 
 (defun mu4e~draft-open-file (path switch-function)
   "Open the the draft file at PATH."
-  (let ((buf (find-file-noselect path)))
-    (funcall (or
-              switch-function
-              (and mu4e-compose-in-new-frame 'switch-to-buffer-other-frame)
-              'switch-to-buffer)
-             buf)))
+  (find-file-noselect path))
 
 
 (defun mu4e~draft-determine-path (draft-dir)
@@ -692,8 +687,11 @@ concatenation of `(mu4e-root-maildir)' and `mu4e-drafts-folder' (the
 latter will be evaluated). The message file name is a unique name
 determined by `mu4e-send-draft-file-name'. The initial contents
 will be created from either `mu4e~draft-reply-construct', or
-`mu4e~draft-forward-construct' or `mu4e~draft-newmsg-construct'."
-  (let ((draft-dir nil))
+`mu4e~draft-forward-construct' or `mu4e~draft-newmsg-construct'.
+
+Returns the newly-created draft buffer."
+  (let ((draft-dir nil)
+        (draft-buffer))
     (cl-case compose-type
 
       (edit
@@ -701,7 +699,7 @@ will be created from either `mu4e~draft-reply-construct', or
        ;; full path, but we cannot really know 'drafts folder'... we make a
        ;; guess
        (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
-       (mu4e~draft-open-file (mu4e-message-field msg :path) switch-function))
+       (setq draft-buffer (mu4e~draft-open-file (mu4e-message-field msg :path) switch-function)))
 
       (resend
        ;; case-2: copy some exisisting message to a draft message, then edit
@@ -709,7 +707,7 @@ will be created from either `mu4e~draft-reply-construct', or
        (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
        (let ((draft-path (mu4e~draft-determine-path draft-dir)))
          (copy-file (mu4e-message-field msg :path) draft-path)
-         (mu4e~draft-open-file draft-path switch-function)))
+         (setq draft-buffer (mu4e~draft-open-file draft-path switch-function))))
 
       ((reply forward new)
        ;; case-3: creating a new message; in this case, we can determine
@@ -721,7 +719,8 @@ will be created from either `mu4e~draft-reply-construct', or
                 (reply   (mu4e~draft-reply-construct msg))
                 (forward (mu4e~draft-forward-construct msg))
                 (new     (mu4e~draft-newmsg-construct)))))
-         (mu4e~draft-open-file draft-path switch-function)
+         (setq draft-buffer (mu4e~draft-open-file draft-path switch-function))
+         (set-buffer draft-buffer)
          (insert initial-contents)
          (newline)
          ;; include the message signature (if it's set)
@@ -739,7 +738,9 @@ will be created from either `mu4e~draft-reply-construct', or
     (set (make-local-variable 'mu4e~draft-drafts-folder) draft-dir)
     (put 'mu4e~draft-drafts-folder 'permanent-local t)
     (unless mu4e~draft-drafts-folder
-      (mu4e-error "Failed to determine drafts folder"))))
+      (mu4e-error "Failed to determine drafts folder"))
+    ;; return the name of the draft buffer
+    draft-buffer))
 
 ;;; _
 (provide 'mu4e-draft)

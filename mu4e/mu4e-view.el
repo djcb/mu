@@ -122,42 +122,7 @@ specified a function as viewer."
 This is a rather complex function, to ensure we don't disturb
 other windows."
   (interactive)
-  (if (eq mu4e-split-view 'single-window)
-      (when (buffer-live-p (mu4e-get-view-buffer))
-	(kill-buffer (mu4e-get-view-buffer)))
-    (unless (eq major-mode 'mu4e-view-mode)
-      (mu4e-error "Must be in mu4e-view-mode (%S)" major-mode))
-    (let ((curbuf (current-buffer))
-	  (curwin (selected-window))
-	  (headers-win))
-      (walk-windows
-       (lambda (win)
-	 ;; check whether the headers buffer window is visible
-	 (when (eq (mu4e-get-headers-buffer) (window-buffer win))
-	   (setq headers-win win))
-	 ;; and kill any _other_ (non-selected) window that shows the current
-	 ;; buffer
-	 (when
-	     (and
-	      (eq curbuf (window-buffer win)) ;; does win show curbuf?
-	      (not (eq curwin win))         ;; but it's not the curwin?
-	      (not (one-window-p))) ;; and not the last one on the frame?
-	   (delete-window win))))  ;; delete it!
-      ;; now, all *other* windows should be gone.
-      ;; if the headers view is also visible, kill ourselves + window; otherwise
-      ;; switch to the headers view
-      (if (window-live-p headers-win)
-	  ;; headers are visible
-	  (progn
-	    (kill-buffer-and-window) ;; kill the view win
-	    (setq mu4e~headers-view-win nil)
-	    (select-window headers-win)) ;; and switch to the headers win...
-	;; headers are not visible...
-	(progn
-	  (kill-buffer)
-	  (setq mu4e~headers-view-win nil)
-	  (when (buffer-live-p (mu4e-get-headers-buffer))
-	    (switch-to-buffer (mu4e-get-headers-buffer))))))))
+  (quit-window t))
 
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
@@ -171,10 +136,10 @@ other windows."
     (with-current-buffer buf
       (let ((inhibit-read-only t))
 	(erase-buffer)
-	(insert-file-contents path)
-	(view-mode)
+        (mu4e-raw-view-mode)
+        (insert-file-contents path)
 	(goto-char (point-min))))
-    (switch-to-buffer buf)))
+    (mu4e-display-buffer buf t)))
 
 (defun mu4e-view-pipe (cmd)
   "Pipe the message at point through shell command CMD.
@@ -186,17 +151,31 @@ Then, display the results."
 (defmacro mu4e~view-in-headers-context (&rest body)
   "Evaluate BODY in the context of the headers buffer."
   `(progn
-     (unless (buffer-live-p (mu4e-get-headers-buffer))
-       (mu4e-error "No headers buffer connected"))
      (let* ((msg (mu4e-message-at-point))
+            (buffer (cond
+                     ;; are we already inside a headers buffer?
+                     ((mu4e-current-buffer-type-p 'headers) (current-buffer))
+                     ;; if not, are we inside a view buffer, and does it have linked headers buffer?
+                     ((mu4e-current-buffer-type-p 'view) (mu4e-get-headers-buffer))
+                     ;; fallback; but what would trigger this?
+                     (t (mu4e-get-headers-buffer))))
 	    (docid (mu4e-message-field msg :docid)))
        (unless docid
 	 (mu4e-error "Message without docid: action is not possible"))
-       (with-current-buffer (mu4e-get-headers-buffer)
-	 (unless (eq mu4e-split-view 'single-window)
-	   (when (get-buffer-window)
-	     (select-window (get-buffer-window))))
-	 (if (mu4e~headers-goto-docid docid)
+       (with-current-buffer buffer
+	 (mu4e-display-buffer buffer)
+	 (if (or (mu4e~headers-goto-docid docid)
+                 ;; TODO: Is this the best way to find another
+                 ;; relevant docid for a view buffer?
+                 ;;
+                 ;; If you attach a view buffer to another headers
+                 ;; buffer that does not contain the current docid
+                 ;; then `mu4e~headers-goto-docid' returns nil and we
+                 ;; get an error. This "hack" instead gets its
+                 ;; now-changed headers buffer's current message as a
+                 ;; docid
+                 (mu4e~headers-goto-docid (with-current-buffer (mu4e-get-headers-buffer)
+                                            (mu4e-message-field (mu4e-message-at-point) :docid))))
 	     ,@body
 	   (mu4e-error "Cannot find message in headers buffer"))))))
 
@@ -226,12 +205,8 @@ message view. If this succeeds, return the new docid. Otherwise,
 return nil."
   (mu4e~view-in-headers-context
    (mu4e~headers-prev-or-next-unread backwards))
-  (if (eq mu4e-split-view 'single-window)
-      (when (eq (window-buffer) (mu4e-get-view-buffer))
-	(with-current-buffer (mu4e-get-headers-buffer)
-	  (mu4e-headers-view-message)))
-    (mu4e-select-other-view)
-    (mu4e-headers-view-message)))
+  (mu4e-select-other-view)
+  (mu4e-headers-view-message))
 
 (defun mu4e-view-headers-prev-unread ()
   "Move point to the previous unread message header.
@@ -335,6 +310,31 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 (defun mu4e~view-split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
+
+
+(defun mu4e-view-detach ()
+  "Detach the view buffer from its headers buffer."
+  (interactive)
+  (unless mu4e-linked-headers-buffer
+    (mu4e-error "This view buffer is already detached."))
+  (mu4e-message "Detached view buffer from %s"
+                (prog1 mu4e-linked-headers-buffer
+                  (with-current-buffer mu4e-linked-headers-buffer
+                    (when (eq (selected-window) mu4e~headers-view-win)
+                      (setq mu4e~headers-view-win nil)))
+                  (setq mu4e-linked-headers-buffer nil))))
+
+(defun mu4e-view-attach (headers-buffer)
+  "Attaches a view buffer to a headers buffer."
+  (interactive
+   (list (get-buffer (read-buffer
+                      "Select a headers buffer to attach to: " nil t
+                      (lambda (buf) (with-current-buffer (car buf)
+                                 (mu4e-current-buffer-type-p 'headers)))))))
+  (mu4e-message "Attached view buffer to %s" headers-buffer)
+  (setq mu4e-linked-headers-buffer headers-buffer)
+  (with-current-buffer headers-buffer
+    (setq mu4e~headers-view-win (selected-window))))
 
 ;;; Scroll commands
 
@@ -599,27 +599,34 @@ in the the message view affects HDRSBUF, as does marking etc.
 
 As a side-effect, a message that is being viewed loses its
 `unread' marking if it still had that."
-
   (mu4e~headers-update-handler msg nil nil) ;; update headers, if necessary.
-
-  (when (bufferp gnus-article-buffer)
-    (kill-buffer gnus-article-buffer))
-  (setq gnus-article-buffer mu4e-view-buffer-name)
-  (with-current-buffer (get-buffer-create gnus-article-buffer)
+  ;; create a new view buffer (if needed)
+  (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
+  (with-current-buffer gnus-article-buffer
     (let ((inhibit-read-only t))
       (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
       (erase-buffer)
       (insert-file-contents-literally
-       (mu4e-message-readable-path msg) nil nil nil t)))
-  (switch-to-buffer gnus-article-buffer)
-  (setq mu4e~view-message msg)
-  (mu4e~view-render-buffer msg))
+       (mu4e-message-readable-path msg) nil nil nil t)
+      (setq-local mu4e~view-message msg)))
+  (mu4e~view-render-buffer msg)
+  (unless (mu4e--view-detached-p gnus-article-buffer)
+    (with-current-buffer mu4e-linked-headers-buffer
+      ;; We need this here as we want to avoid displaying the buffer until
+      ;; the last possible moment --- after the message is rendered in the
+      ;; view buffer.
+      ;;
+      ;; Otherwise, `mu4e-display-buffer' may adjust the view buffer's
+      ;; window height based on a buffer that has no text in it yet!
+      (setq-local mu4e~headers-view-win (mu4e-display-buffer gnus-article-buffer nil))
+      (unless (window-live-p mu4e~headers-view-win)
+        (mu4e-error "Cannot get a message view"))
+      (select-window mu4e~headers-view-win))))
 
 (defun mu4e-view-message-text (msg)
   "Return the pristine MSG as a string."
   ;; we need this for replying/forwarding, since the mu4e-compose
   ;; wants it that way.
-
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
@@ -686,7 +693,6 @@ determine which browser function to use."
     (condition-case err
 	(progn
 	  (mm-enable-multibyte)
-	  (mu4e-view-mode)
 	  (run-hooks 'gnus-article-decode-hook)
 	  (gnus-article-prepare-display)
 	  (mu4e~view-activate-urls)
@@ -826,9 +832,8 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 
     (define-key map "q" #'mu4e~view-quit-buffer)
 
-    ;; note, 'z' is by-default bound to 'bury-buffer'
-    ;; but that's not very useful in this case
-    (define-key map "z" #'ignore)
+    (define-key map "z" #'mu4e-view-detach)
+    (define-key map "Z" #'mu4e-view-attach)
 
     (define-key map "%" #'mu4e-view-mark-pattern)
     (define-key map "t" #'mu4e-view-mark-subthread)
@@ -985,11 +990,20 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 
 (set-keymap-parent mu4e-view-mode-map button-buffer-map)
 
+(defcustom mu4e-raw-view-mode-hook nil
+  "Hook run when entering \\[mu4e-raw-view] mode."
+  :options '()
+  :type 'hook
+  :group 'mu4e-view)
+
 (defcustom mu4e-view-mode-hook nil
-  "Hook run when entering Mu4e-View mode."
+  "Hook run when entering \\[mu4e-view] mode."
   :options '(turn-on-visual-line-mode)
   :type 'hook
   :group 'mu4e-view)
+
+(define-derived-mode mu4e-raw-view-mode fundamental-mode "mu4e:raw-view"
+  (view-mode))
 
 ;;  "Define the major-mode for the mu4e-view."
 (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
@@ -1150,11 +1164,11 @@ containing commas."
     (:name "raw" :handler (lambda (str)
 			    (let ((tmpbuf
 				   (get-buffer-create " *mu4e-raw-mime*")))
-				  (with-current-buffer tmpbuf
-				    (insert str)
-				    (view-mode)
-				    (goto-char (point-min)))
-				  (switch-to-buffer tmpbuf)))  :receives pipe))
+			      (with-current-buffer tmpbuf
+				(insert str)
+				(view-mode)
+				(goto-char (point-min)))
+			      (display-buffer tmpbuf)))  :receives pipe))
 
   "Specifies actions for MIME-parts.
 
@@ -1274,7 +1288,7 @@ the third MIME-part."
         (erase-buffer)
         (call-process-shell-command pipecmd path t t)
         (view-mode)))
-    (switch-to-buffer buf)))
+    (display-buffer buf)))
 
 ;;; Bug Reference mode support
 

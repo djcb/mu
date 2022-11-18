@@ -355,7 +355,7 @@ header-view, not including, for instance, the message body.")
 
 ;;; Internals
 
-(defvar mu4e~headers-view-win nil
+(defvar-local mu4e~headers-view-win nil
   "The view window connected to this headers view.")
 
 ;; It's useful to have the current view message available to
@@ -363,7 +363,7 @@ header-view, not including, for instance, the message body.")
 ;; before calling `mu4e-view-mode'.  However, changing the major mode
 ;; clobbers any local variables.  Work around that by declaring the
 ;; variable permanent-local.
-(defvar mu4e~view-message nil "The message being viewed in view mode.")
+(defvar-local mu4e~view-message nil "The message being viewed in view mode.")
 (put 'mu4e~view-message 'permanent-local t)
 ;;; _
 (provide 'mu4e-vars)

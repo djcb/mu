@@ -99,30 +99,22 @@ is the target directory (for \"move\")")
 (defun mu4e--mark-find-headers-buffer ()
   "Find the headers buffer, if any."
   (seq-find (lambda (b)
-	      (with-current-buffer b
-		(eq major-mode 'mu4e-headers-mode)))
+	      (mu4e-current-buffer-type-p 'headers))
 	    (buffer-list)))
 
 (defmacro mu4e--mark-in-context (&rest body)
   "Evaluate BODY in the context of the headers buffer.
 The current buffer must be either a headers or view buffer."
   `(cond
-    ((eq major-mode 'mu4e-headers-mode) ,@body)
-    ((eq major-mode 'mu4e-view-mode)
+    ((mu4e-current-buffer-type-p 'headers) ,@body)
+    ((mu4e-current-buffer-type-p 'view)
      (when (buffer-live-p (mu4e-get-headers-buffer))
        (let* ((msg (mu4e-message-at-point))
               (docid (mu4e-message-field msg :docid)))
          (with-current-buffer (mu4e-get-headers-buffer)
            (if (mu4e~headers-goto-docid docid)
                ,@body
-             (mu4e-error "Cannot find message in headers buffer"))))))
-    (t
-     ;; even in other modes (e.g. mu4e-main-mode we try to find
-     ;; the headers buffer
-     (let ((hbuf (mu4e--mark-find-headers-buffer)))
-       (if (buffer-live-p hbuf)
-           (with-current-buffer hbuf ,@body)
-         ,@body)))))
+             (mu4e-error "Cannot find message in headers buffer"))))))))
 
 (defconst mu4e-marks
   '((refile

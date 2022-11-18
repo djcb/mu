@@ -105,60 +105,25 @@ and `mu4e-headers-visible-columns'."
                  (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
-;;; Buffers
 
-(defconst mu4e-main-buffer-name " *mu4e-main*"
-  "Name of the mu4e main buffer.
-The default name starts with SPC and therefore is not visible in
-buffer list.")
-(defconst mu4e-headers-buffer-name "*mu4e-headers*"
-  "Name of the buffer for message headers.")
-(defconst mu4e-embedded-buffer-name " *mu4e-embedded*"
-  "Name for the embedded message view buffer.")
-(defconst mu4e-view-buffer-name "*Article*"
-  "Name of the view buffer.")
-
-(defun mu4e-get-headers-buffer ()
-  "Get the buffer object from `mu4e-headers-buffer-name'."
-  (get-buffer mu4e-headers-buffer-name))
-
-(defun mu4e-get-view-buffer ()
-  "Get the buffer object from `mu4e-view-buffer-name'."
-  (get-buffer mu4e-view-buffer-name))
-
+;;; TODO: rewrite select other window
 (defun mu4e-select-other-view ()
   "Switch between headers view and message view."
   (interactive)
   (let* ((other-buf
           (cond
-           ((eq major-mode 'mu4e-headers-mode)
+           ((mu4e-current-buffer-type-p 'view)
+            (mu4e-get-headers-buffer))
+           ((mu4e-current-buffer-type-p 'headers)
             (mu4e-get-view-buffer))
-           ((eq major-mode 'mu4e-view-mode)
-            (mu4e-get-headers-buffer))))
+           (t (mu4e-error "This window is neither the headers nor the view window."))))
          (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
         (select-window other-win)
       (mu4e-message "No window to switch to"))))
 
 
-;;; Windows
-(defun mu4e-hide-other-mu4e-buffers ()
-  "Bury mu4e buffers.
-Hide (main, headers, view) (and delete all windows displaying
-it). Do _not_ bury the current buffer, though."
-  (interactive)
-  (unless (eq mu4e-split-view 'single-window)
-    (let ((curbuf (current-buffer)))
-      ;; note: 'walk-windows' does not seem to work correctly when modifying
-      ;; windows; therefore, the doloops here
-      (dolist (frame (frame-list))
-        (dolist (win (window-list frame nil))
-          (with-current-buffer (window-buffer win)
-            (unless (eq curbuf (current-buffer))
-              (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-                (when (eq t (window-deletable-p win))
-                  (delete-window win))))))) t)))
-
+
 ;;; Modeline
 
 (defun mu4e-quote-for-modeline (str)
@@ -406,7 +371,7 @@ log-buffer. See `mu4e-show-log'."
   (let ((buf (get-buffer mu4e--log-buffer-name)))
     (unless (buffer-live-p buf)
       (mu4e-warn "No debug log available"))
-    (switch-to-buffer buf)))
+    (display-buffer buf)))
 
 
 
