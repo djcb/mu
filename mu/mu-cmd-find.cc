@@ -1,4 +1,4 @@
-/*
+ /*
 ** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
@@ -33,7 +33,6 @@
 #include "mu-query-match-deciders.hh"
 #include "mu-query.hh"
 #include "mu-bookmarks.hh"
-#include "mu-runtime.hh"
 #include "message/mu-message.hh"
 
 #include "utils/mu-option.hh"
@@ -43,6 +42,8 @@
 #include "utils/mu-utils.hh"
 
 using namespace Mu;
+
+using Format = Options::Find::Format;
 
 struct OutputInfo {
 	Xapian::docid       docid{};
@@ -56,52 +57,50 @@ constexpr auto FirstOutput{OutputInfo{0, true, false, {}, {}}};
 constexpr auto LastOutput{OutputInfo{0, false, true, {}, {}}};
 
 using OutputFunc = std::function<bool(const Option<Message>& msg, const OutputInfo&,
-				      const MuConfig*, GError**)>;
+				      const Options&, GError**)>;
+
+using Format = Options::Find::Format;
 
 static Result<void>
 print_internal(const Store&       store,
 	       const std::string& expr,
-	       gboolean           xapian,
-	       gboolean           warn)
+	       bool           xapian,
+	       bool           warn)
 {
 	std::cout << store.parse_query(expr, xapian) << "\n";
 	return Ok();
 }
 
 static Result<QueryResults>
-run_query(const Store& store, const std::string& expr, const MuConfig* opts)
+run_query(const Store& store, const std::string& expr, const Options& opts)
 {
-	const auto sortfield{field_from_name(opts->sortfield ? opts->sortfield : "")};
-	if (!sortfield && opts->sortfield)
-		return Err(Error::Code::InvalidArgument,
-			   "invalid sort field: '%s'", opts->sortfield);
-
 	Mu::QueryFlags qflags{QueryFlags::SkipUnreadable};
-	if (opts->reverse)
+	if (opts.find.reverse)
 		qflags |= QueryFlags::Descending;
-	if (opts->skip_dups)
+	if (opts.find.skip_dups)
 		qflags |= QueryFlags::SkipDuplicates;
-	if (opts->include_related)
+	if (opts.find.include_related)
 		qflags |= QueryFlags::IncludeRelated;
-	if (opts->threads)
+	if (opts.find.threads)
 		qflags |= QueryFlags::Threading;
 
-	return store.run_query(expr, sortfield.value_or(field_from_id(Field::Id::Date)).id,
-			       qflags, opts->maxnum);
+	return store.run_query(expr,
+			       opts.find.sortfield,
+			       qflags, opts.find.maxnum.value_or(0));
 }
 
-static gboolean
-exec_cmd(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+static bool
+exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (!msg)
-		return TRUE;
+		return true;
 
 	gint     status;
 	char *   cmdline, *escpath;
-	gboolean rv;
+	bool rv;
 
 	escpath = g_shell_quote(msg->path().c_str());
-	cmdline = g_strdup_printf("%s %s", opts->exec, escpath);
+	cmdline = g_strdup_printf("%s %s", opts.find.exec.c_str(), escpath);
 
 	rv = g_spawn_command_line_sync(cmdline, NULL, NULL, &status, err);
 
@@ -111,82 +110,60 @@ exec_cmd(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opt
 	return rv;
 }
 
-static gchar*
-resolve_bookmark(const MuConfig* opts, GError** err)
+static Result<std::string>
+resolve_bookmark(const Options& opts)
 {
-	MuBookmarks* bm;
-	char*        val;
-	const gchar* bmfile;
+	const auto bmfile = opts.runtime_path(RuntimePath::Bookmarks);
+	auto bm     = mu_bookmarks_new(bmfile.c_str());
+	if (!bm)
+		return Err(Error::Code::File,
+			   "failed to open bookmarks file '%s'", bmfile.c_str());
 
-	bmfile = mu_runtime_path(MU_RUNTIME_PATH_BOOKMARKS);
-	bm     = mu_bookmarks_new(bmfile);
-	if (!bm) {
-		g_set_error(err,
-			    MU_ERROR_DOMAIN,
-			    MU_ERROR_FILE_CANNOT_OPEN,
-			    "failed to open bookmarks file '%s'",
-			    bmfile);
-		return FALSE;
+	const auto bookmark{opts.find.bookmark};
+	const auto val = mu_bookmarks_lookup(bm, bookmark.c_str());
+	if (!val) {
+		mu_bookmarks_destroy(bm);
+		return Err(Error::Code::NoMatches,
+			   "bookmark '%s' not found", bookmark.c_str());
 	}
 
-	val = (gchar*)mu_bookmarks_lookup(bm, opts->bookmark);
-	if (!val)
-		g_set_error(err,
-			    MU_ERROR_DOMAIN,
-			    MU_ERROR_NO_MATCHES,
-			    "bookmark '%s' not found",
-			    opts->bookmark);
-	else
-		val = g_strdup(val);
-
 	mu_bookmarks_destroy(bm);
-	return val;
+	return Ok(std::string(val));
 }
 
 static Result<std::string>
-get_query(const MuConfig* opts)
+get_query(const Options& opts)
 {
-	GError *err{};
-	gchar *query, *bookmarkval;
+	if (opts.find.bookmark.empty() && opts.find.query.empty())
+		return Err(Error::Code::InvalidArgument,
+			   "neither bookmark nor query");
 
-	/* params[0] is 'find', actual search params start with [1] */
-	if (!opts->bookmark && !opts->params[1])
-		return Err(Error::Code::InvalidArgument, "error in parameters");
-
-	bookmarkval = {};
-	if (opts->bookmark) {
-		bookmarkval = resolve_bookmark(opts, &err);
-		if (!bookmarkval)
-			return Err(Error::Code::Command, &err,
-				   "failed to resolve bookmark");
+	std::string bookmark;
+	if (!opts.find.bookmark.empty()) {
+		const auto res = resolve_bookmark(opts);
+		if (!res)
+			return Err(std::move(res.error()));
+		bookmark = res.value() + " ";
 	}
 
-	query = g_strjoinv(" ", &opts->params[1]);
-	if (bookmarkval) {
-		gchar* tmp;
-		tmp = g_strdup_printf("%s %s", bookmarkval, query);
-		g_free(query);
-		query = tmp;
-	}
-	g_free(bookmarkval);
-
-	return Ok(to_string_gchar(std::move(query)));
+	auto&& query{join(opts.find.query, " ")};
+	return Ok(bookmark + query);
 }
 
 static bool
-prepare_links(const MuConfig* opts, GError** err)
+prepare_links(const Options& opts, GError** err)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
-	if (auto&& res = maildir_mkdir(opts->linksdir, 0700, true); !res) {
+	if (auto&& res = maildir_mkdir(opts.find.linksdir, 0700, true); !res) {
 		res.error().fill_g_error(err);
 		return false;
 	}
 
-	if (!opts->clearlinks)
+	if (!opts.find.clearlinks)
 		return false;
 
-	if (auto&& res = maildir_clear_links(opts->linksdir); !res) {
+	if (auto&& res = maildir_clear_links(opts.find.linksdir); !res) {
 		res.error().fill_g_error(err);
 		return false;
 	}
@@ -195,14 +172,14 @@ prepare_links(const MuConfig* opts, GError** err)
 }
 
 static bool
-output_link(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_link(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (info.header)
 		return prepare_links(opts, err);
 	else if (info.footer)
 		return true;
 
-	if (auto&& res = maildir_link(msg->path(), opts->linksdir); !res) {
+	if (auto&& res = maildir_link(msg->path(), opts.find.linksdir); !res) {
 		res.error().fill_g_error(err);
 		return false;
 	}
@@ -211,7 +188,7 @@ output_link(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 }
 
 static void
-ansi_color_maybe(Field::Id field_id, gboolean color)
+ansi_color_maybe(Field::Id field_id, bool color)
 {
 	const char* ansi;
 
@@ -238,7 +215,7 @@ ansi_color_maybe(Field::Id field_id, gboolean color)
 }
 
 static void
-ansi_reset_maybe(Field::Id field_id, gboolean color)
+ansi_reset_maybe(Field::Id field_id, bool color)
 {
 	if (!color)
 		return; /* nothing to do */
@@ -275,7 +252,7 @@ display_field(const Message& msg, Field::Id field_id)
 }
 
 static void
-print_summary(const Message& msg, const MuConfig* opts)
+print_summary(const Message& msg, const Options& opts)
 {
 	const auto body{msg.body_text()};
 	if (!body)
@@ -283,7 +260,7 @@ print_summary(const Message& msg, const MuConfig* opts)
 
 	const auto summ{to_string_opt_gchar(
 			mu_str_summarize(body->c_str(),
-					 opts->summary_len))};
+					 opts.find.summary_len.value_or(0)))};
 
 	g_print("Summary: ");
 	mu_util_fputs_encoded(summ ? summ->c_str() : "<none>", stdout);
@@ -291,7 +268,7 @@ print_summary(const Message& msg, const MuConfig* opts)
 }
 
 static void
-thread_indent(const QueryMatch& info, const MuConfig* opts)
+thread_indent(const QueryMatch& info, const Options& opts)
 {
 	const auto is_root{any_of(info.flags & QueryMatch::Flags::Root)};
 	const auto first_child{any_of(info.flags & QueryMatch::Flags::First)};
@@ -301,7 +278,7 @@ thread_indent(const QueryMatch& info, const MuConfig* opts)
 	// const auto is_related{any_of(info.flags & QueryMatch::Flags::Related)};
 
 	/* indent */
-	if (opts->debug) {
+	if (opts.debug) {
 		::fputs(info.thread_path.c_str(), stdout);
 		::fputs(" ", stdout);
 	} else
@@ -322,18 +299,15 @@ thread_indent(const QueryMatch& info, const MuConfig* opts)
 }
 
 static void
-output_plain_fields(const Message& msg, const char* fields,
-		    gboolean color, gboolean threads)
+output_plain_fields(const Message& msg, const std::string& fields,
+		    bool color, bool threads)
 {
-	const char* myfields;
-	int         nonempty;
+	size_t nonempty{};
 
-	g_return_if_fail(fields);
-
-	for (myfields = fields, nonempty = 0; *myfields; ++myfields) {
-		const auto field_opt{field_from_shortcut(*myfields)};
+	for (auto&& k: fields) {
+		const auto field_opt{field_from_shortcut(k)};
 		if (!field_opt || (!field_opt->is_value() && !field_opt->is_contact()))
-			nonempty += printf("%c", *myfields);
+			nonempty += printf("%c", k);
 
 		else {
 			ansi_color_maybe(field_opt->id, color);
@@ -347,29 +321,29 @@ output_plain_fields(const Message& msg, const char* fields,
 		fputs("\n", stdout);
 }
 
-static gboolean
+static bool
 output_plain(const Option<Message>& msg, const OutputInfo& info,
-	     const MuConfig* opts, GError** err)
+	     const Options& opts, GError** err)
 {
 	if (!msg)
 		return true;
 
 	/* we reuse the color (whatever that may be)
 	 * for message-priority for threads, too */
-	ansi_color_maybe(Field::Id::Priority, !opts->nocolor);
-	if (opts->threads && info.match_info)
+	ansi_color_maybe(Field::Id::Priority, !opts.nocolor);
+	if (opts.find.threads && info.match_info)
 		thread_indent(*info.match_info, opts);
 
-	output_plain_fields(*msg, opts->fields, !opts->nocolor, opts->threads);
+	output_plain_fields(*msg, opts.find.fields, !opts.nocolor, opts.find.threads);
 
-	if (opts->summary_len > 0)
+	if (opts.view.summary_len)
 		print_summary(*msg, opts);
 
-	return TRUE;
+	return true;
 }
 
 static bool
-output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_sexp(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (msg) {
 		if (const auto sexp{msg->sexp()}; !sexp.empty())
@@ -383,7 +357,7 @@ output_sexp(const Option<Message>& msg, const OutputInfo& info, const MuConfig* 
 }
 
 static bool
-output_json(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_json(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (info.header) {
 		g_print("[\n");
@@ -416,7 +390,7 @@ print_attr_xml(const std::string& elm, const std::string& str)
 }
 
 static bool
-output_xml(const Option<Message>& msg, const OutputInfo& info, const MuConfig* opts, GError** err)
+output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (info.header) {
 		g_print("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
@@ -445,29 +419,32 @@ output_xml(const Option<Message>& msg, const OutputInfo& info, const MuConfig* o
 }
 
 static OutputFunc
-get_output_func(const MuConfig* opts, GError** err)
+get_output_func(const Options& opts, GError** err)
 {
-	switch (opts->format) {
-	case MU_CONFIG_FORMAT_LINKS: return output_link;
-	case MU_CONFIG_FORMAT_EXEC: return exec_cmd;
-	case MU_CONFIG_FORMAT_PLAIN: return output_plain;
-	case MU_CONFIG_FORMAT_XML: return output_xml;
-	case MU_CONFIG_FORMAT_SEXP: return output_sexp;
-	case MU_CONFIG_FORMAT_JSON: return output_json;
+	if (!opts.find.exec.empty())
+		return exec_cmd;
 
+	switch (opts.find.format) {
+	case Format::Links: return output_link;
+	case Format::Plain: return output_plain;
+	case Format::Xml: return output_xml;
+	case Format::Sexp: return output_sexp;
+	case Format::Json: return output_json;
 	default: g_return_val_if_reached(NULL); return NULL;
 	}
+
+
 }
 
 static Result<void>
-output_query_results(const QueryResults& qres, const MuConfig* opts)
+output_query_results(const QueryResults& qres, const Options& opts)
 {
 	GError* err{};
 	const auto output_func{get_output_func(opts, &err)};
 	if (!output_func)
 		return Err(Error::Code::Query, &err, "failed to find output function");
 
-	gboolean rv{true};
+	bool rv{true};
 	output_func(Nothing, FirstOutput, opts, {});
 
 	size_t n{0};
@@ -477,7 +454,7 @@ output_query_results(const QueryResults& qres, const MuConfig* opts)
 		if (!msg)
 			continue;
 
-		if (opts->after != 0 && msg->changed() < opts->after)
+		if (msg->changed() < opts.find.after.value_or(0))
 			continue;
 
 		rv = output_func(msg,
@@ -501,7 +478,7 @@ output_query_results(const QueryResults& qres, const MuConfig* opts)
 }
 
 static Result<void>
-process_query(const Store& store, const std::string& expr, const MuConfig* opts)
+process_query(const Store& store, const std::string& expr, const Options& opts)
 {
 	auto qres{run_query(store, expr, opts)};
 	if (!qres)
@@ -513,98 +490,17 @@ process_query(const Store& store, const std::string& expr, const MuConfig* opts)
 	return output_query_results(*qres, opts);
 }
 
-static Result<void>
-execute_find(const Store& store, const MuConfig* opts)
+Result<void>
+Mu::mu_cmd_find(const Store& store, const Options& opts)
 {
 	auto expr{get_query(opts)};
 	if (!expr)
 		return Err(expr.error());
 
-	if (opts->format == MU_CONFIG_FORMAT_XQUERY)
-		return print_internal(store, *expr, TRUE, FALSE);
-	else if (opts->format == MU_CONFIG_FORMAT_MQUERY)
-		return print_internal(store, *expr, FALSE, opts->verbose);
+	if (opts.find.format == Format::XQuery)
+		return print_internal(store, *expr, true, false);
+	else if (opts.find.format == Format::MQuery)
+		return print_internal(store, *expr, false, opts.verbose);
 	else
 		return process_query(store, *expr, opts);
-}
-
-static gboolean
-format_params_valid(const MuConfig* opts, GError** err)
-{
-	switch (opts->format) {
-	case MU_CONFIG_FORMAT_EXEC: break;
-	case MU_CONFIG_FORMAT_PLAIN:
-	case MU_CONFIG_FORMAT_SEXP:
-	case MU_CONFIG_FORMAT_JSON:
-	case MU_CONFIG_FORMAT_LINKS:
-	case MU_CONFIG_FORMAT_XML:
-	case MU_CONFIG_FORMAT_XQUERY:
-	case MU_CONFIG_FORMAT_MQUERY:
-		if (opts->exec) {
-			mu_util_g_set_error(err,
-					    MU_ERROR_IN_PARAMETERS,
-					    "--exec and --format cannot be combined");
-			return FALSE;
-		}
-		break;
-	default:
-		mu_util_g_set_error(err,
-				    MU_ERROR_IN_PARAMETERS,
-				    "invalid output format %s",
-				    opts->formatstr ? opts->formatstr : "<none>");
-		return FALSE;
-	}
-
-	if (opts->format == MU_CONFIG_FORMAT_LINKS && !opts->linksdir) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing --linksdir argument");
-		return FALSE;
-	}
-
-	if (opts->linksdir && opts->format != MU_CONFIG_FORMAT_LINKS) {
-		mu_util_g_set_error(err,
-				    MU_ERROR_IN_PARAMETERS,
-				    "--linksdir is only valid with --format=links");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-query_params_valid(const MuConfig* opts, GError** err)
-{
-	const gchar* xpath;
-
-	if (!opts->params[1]) {
-		mu_util_g_set_error(err, MU_ERROR_IN_PARAMETERS, "missing query");
-		return FALSE;
-	}
-
-	xpath = mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB);
-	if (mu_util_check_dir(xpath, TRUE, FALSE))
-		return TRUE;
-
-	mu_util_g_set_error(err,
-			    MU_ERROR_FILE_CANNOT_READ,
-			    "'%s' is not a readable Xapian directory",
-			    xpath);
-	return FALSE;
-}
-
-Result<void>
-Mu::mu_cmd_find(const Store& store, const MuConfig* opts)
-{
-	g_return_val_if_fail(opts, Err(Error::Code::Internal, "no opts"));
-	g_return_val_if_fail(opts->cmd == MU_CONFIG_CMD_FIND, Err(Error::Code::Internal,
-								  "wrong command"));
-	MuConfig myopts{*opts};
-
-	if (myopts.exec)
-		myopts.format = MU_CONFIG_FORMAT_EXEC; /* pseudo format */
-
-	GError *err{};
-	if (!query_params_valid(&myopts, &err) || !format_params_valid(&myopts, &err))
-		return Err(Error::Code::InvalidArgument, &err, "invalid argument");
-	else
-		return execute_find(store, &myopts);
 }

@@ -26,7 +26,6 @@
 
 #include <unistd.h>
 
-#include "mu-runtime.hh"
 #include "mu-cmd.hh"
 #include "mu-server.hh"
 
@@ -111,9 +110,9 @@ report_error(const Mu::Error& err) noexcept
 
 
 Result<void>
-Mu::mu_cmd_server(const MuConfig* opts) try {
+Mu::mu_cmd_server(const Mu::Options& opts) try {
 
-	auto store = Store::make(mu_runtime_path(MU_RUNTIME_PATH_XAPIANDB),
+	auto store = Store::make(opts.runtime_path(RuntimePath::XapianDb),
 				 Store::Options::Writable);
 	if (!store)
 		return Err(store.error());
@@ -123,20 +122,18 @@ Mu::mu_cmd_server(const MuConfig* opts) try {
 		  "readline: %s",
 		  store->properties().database_path.c_str(),
 		  store->properties().root_maildir.c_str(),
-		  opts->debug ? "yes" : "no",
+		  opts.debug ? "yes" : "no",
 		  have_readline() ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));
-	const auto eval = std::string{opts->commands ? "(help :full t)"
-				      : opts->eval   ? opts->eval
-						     : ""};
+	const auto eval = std::string{opts.server.commands ? "(help :full t)" : opts.server.eval};
 	if (!eval.empty()) {
 		server.invoke(eval);
 		return Ok();
 	}
 
 	// Note, the readline stuff is inactive unless on a tty.
-	const auto histpath{std::string{mu_runtime_path(MU_RUNTIME_PATH_CACHE)} + "/history"};
+	const auto histpath{opts.runtime_path(RuntimePath::Cache) + "/history"};
 	setup_readline(histpath, 50);
 
 	install_sig_handler();

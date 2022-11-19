@@ -1,5 +1,5 @@
 ;;
-;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -26,12 +26,12 @@
 (define (export-pairs pairs)
   "Write a temporary file with the list of PAIRS in table format, and
 return the file name."
-  (let* ((datafile (tmpnam))
-	  (output (open datafile (logior O_CREAT O_WRONLY) #O0600)))
+  (let* ((output (mkstemp "/tmp/mu-guile-XXXXXX" "w"))
+	 (datafile (port-filename output)))
     (for-each
-      (lambda(pair)
-	(display (format #f "~a ~a\n" (car pair) (cdr pair)) output))
-      pairs)
+     (lambda(pair)
+       (display (format #f "~a ~a\n" (car pair) (cdr pair)) output))
+     pairs)
     (close output)
     datafile))
 
@@ -62,18 +62,21 @@ EXTRA-GNUPLOT-OPTS is a list
 of any additional options for gnuplot."
   (if (not (find-program-in-path "gnuplot"))
     (error "cannot find 'gnuplot' in path"))
-  (let ((datafile (export-pairs data))
-	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE)))
-    (display (string-append
-	       "reset\n"
-	       "set term " (or output "dumb") "\n"
-	       "set title \"" title "\"\n"
-	       "set xlabel \"" x-label "\"\n"
-	       "set ylabel \"" y-label "\"\n"
-	       "set boxwidth 0.9\n"
-	       (string-join extra-gnuplot-opts "\n")
-	       "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid\n")
-      gnuplot)
+  (when (zero? (length data))
+    (error "No data for plotting"))
+  (let* ((datafile (export-pairs data))
+	 (gnuplot (open-pipe "gnuplot -p" OPEN_WRITE))
+	 (recipe
+	   (string-append
+	    "reset\n"
+	    "set term " (or output "dumb") "\n"
+	    "set title \"" title "\"\n"
+	    "set xlabel \"" x-label "\"\n"
+	    "set ylabel \"" y-label "\"\n"
+	    "set boxwidth 0.9\n"
+	    (string-join extra-gnuplot-opts "\n")
+	    "plot \"" datafile "\" using 2:xticlabels(1) with boxes fs solid title \"\"\n")))
+    (display recipe gnuplot)
     (close-pipe gnuplot)))
 
 ;; backward compatibility

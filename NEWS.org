@@ -3,10 +3,34 @@
 
 * 1.9 (unreleased development version)
 
+*** mu
+
+   - a new command-line parser, which allows (hopefully!) for a better user
+     interaction; better error checking and more
+
 *** mu4e
 
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
+
+*** guile
+
+     - in the 1.8 release, the /current/ Guile API was deprecated; that does not
+       mean that Guile support goes way, just that it will look different.
+
+     - Guile script commands are now integrated with the main ~mu~, so without
+       further parameters ~mu~ shows both subcommands and scripts. This is work
+       in progress!
+
+     - The per-(week|day|year|year-month) script have been combined into a
+       ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~ installed,
+       you can do e.g.,
+#+begin_example
+     mu histogram -- --time-unit=day --query="hello"
+#+end_example
+
+       to get a histogram of such messages. Note, this area is under active
+       developement and will likely change.
 
 *** building
 
@@ -16,6 +40,13 @@
       However, we still have ~autogen.sh~ and a ~Makefile~ which can be helpful for
       driving ~meson~-based builds. Think of the ~Makefile~ as a convenient place to
       put common action for which I always forget the ~meson~ incantation.**
+
+*** internals
+
+    As usual, there have been a number of internal updates in the ~mu~ codebase:
+
+    - reworked the internal s-expression parser
+    - new command-line argument parser (based on CLI11)
 
 * 1.8 (released on June 25, 2022)
 

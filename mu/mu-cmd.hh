@@ -21,11 +21,37 @@
 #define MU_CMD_HH__
 
 #include <glib.h>
-#include <mu-config.hh>
 #include <mu-store.hh>
 #include <utils/mu-result.hh>
 
+#include "mu-options.hh"
+
 namespace Mu {
+
+
+/**
+ * Get message options from (sub)command options
+ *
+ * @param cmdopts (sub) command options
+ *
+ * @return message options
+ */
+template<typename CmdOpts>
+constexpr Message::Options
+message_options(const CmdOpts& cmdopts)
+{
+	Message::Options mopts{};
+
+	if (cmdopts.decrypt)
+		mopts |= Message::Options::Decrypt;
+	if (cmdopts.auto_retrieve)
+		mopts |= Message::Options::RetrieveKeys;
+
+	return mopts;
+}
+
+
+
 /**
  * execute the 'find' command
  *
@@ -34,7 +60,7 @@ namespace Mu {
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_find(const Mu::Store& store, const MuConfig* opts);
+Result<void> mu_cmd_find(const Store& store, const Options& opts);
 
 /**
  * execute the 'extract' command
@@ -43,7 +69,7 @@ Result<void> mu_cmd_find(const Mu::Store& store, const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_extract(const MuConfig* opts);
+Result<void> mu_cmd_extract(const Options& opts);
 
 /**
  * execute the 'fields' command
@@ -52,7 +78,7 @@ Result<void> mu_cmd_extract(const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_fields(const MuConfig* opts);
+Result<void> mu_cmd_fields(const Options& opts);
 
 /**
  * execute the 'script' command
@@ -62,7 +88,7 @@ Result<void> mu_cmd_fields(const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_script(const MuConfig* opts);
+Result<void> mu_cmd_script(const Options& opts);
 
 /**
  * execute the cfind command
@@ -72,7 +98,7 @@ Result<void> mu_cmd_script(const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts);
+Result<void> mu_cmd_cfind(const Store& store, const Options& opts);
 
 /**
  * execute the 'index' command
@@ -82,16 +108,16 @@ Result<void> mu_cmd_cfind(const Mu::Store& store, const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_index(Mu::Store& store, const MuConfig* opt);
+Result<void> mu_cmd_index(Store& store, const Options& opt);
 
 /**
  * execute the server command
  * @param opts configuration options
  * @param err receives error information, or NULL
  *
- * @return MU_OK (0) if the command succeeds, some error code otherwise
+ * @return Ok() or some error
  */
-Result<void> mu_cmd_server(const MuConfig* opts);
+Result<void> mu_cmd_server(const Options& opts);
 
 /**
  * execute some mu command, based on 'opts'
@@ -101,7 +127,7 @@ Result<void> mu_cmd_server(const MuConfig* opts);
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_execute(const MuConfig* opts);
+Result<void> mu_cmd_execute(const Options& opts);
 
 } // namespace Mu
 

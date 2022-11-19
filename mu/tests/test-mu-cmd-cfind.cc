@@ -40,8 +40,8 @@ static std::string
 fill_contacts_cache(const std::string& path)
 {
 	auto cmdline = format("/bin/sh -c '"
-			      "%s init  --muhome=%s --maildir=%s --quiet; "
-			      "%s index --muhome=%s  --quiet'",
+			      "%s --quiet init  --muhome=%s --maildir=%s ; "
+			      "%s --quiet index --muhome=%s '",
 			      MU_PROGRAM,
 			      path.c_str(),
 			      MU_TESTMAILDIR,
@@ -65,7 +65,7 @@ test_mu_cfind_plain(void)
 {
 	gchar *cmdline, *output, *erroutput;
 
-	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=plain "
+	cmdline = g_strdup_printf("%s --nocolor cfind --muhome=%s --format=plain "
 				  "'testmu\\.xxx?'",
 				  MU_PROGRAM,
 				  CONTACTS_CACHE.c_str());
@@ -103,7 +103,7 @@ test_mu_cfind_bbdb(void)
 
 	old_tz = set_tz("Europe/Helsinki");
 
-	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=bbdb "
+	cmdline = g_strdup_printf("%s --nocolor cfind --muhome=%s --format=bbdb "
 				  "'testmu\\.xxx?'",
 				  MU_PROGRAM,
 				  CONTACTS_CACHE.c_str());
@@ -296,7 +296,7 @@ test_mu_cfind_csv(void)
 {
 	gchar *cmdline, *output, *erroutput;
 
-	cmdline = g_strdup_printf("%s cfind --muhome=%s --format=csv "
+	cmdline = g_strdup_printf("%s --nocolor cfind --muhome=%s --format=csv "
 				  "'testmu\\.xxx?'",
 				  MU_PROGRAM,
 				  CONTACTS_CACHE.c_str());

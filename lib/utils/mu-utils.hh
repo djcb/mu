@@ -175,6 +175,31 @@ bool timezone_available(const std::string& tz);
 
 
 
+/**
+ * Well-known runtime paths
+ *
+ */
+enum struct RuntimePath {
+	XapianDb,
+	Cache,
+	LogFile,
+	Config,
+	Scripts,
+	Bookmarks
+};
+
+/**
+ * Get some well-known Path for internal use when don't have
+ * access to the command-line
+ *
+ * @param path the RuntimePath to find
+ * @param muhome path to muhome directory, or empty for the default.
+ *
+ * @return the path name
+ */
+std::string runtime_path(RuntimePath path, const std::string& muhome="");
+
+
 // https://stackoverflow.com/questions/19053351/how-do-i-use-a-custom-deleter-with-a-stdunique-ptr-member
 template <auto fn>
 struct deleter_from_fn {
@@ -436,7 +461,7 @@ to_second(const P& p, typename P::value_type::first_type f)
 
 
 /**
- * Convert string view in something printable with %*s
+ * Convert string view in something printable with %.*s
  */
 #define STR_V(sv__) static_cast<int>((sv__).size()), (sv__).data()
 

@@ -32,7 +32,6 @@
 
 #include "index/mu-indexer.hh"
 #include "mu-store.hh"
-#include "mu-runtime.hh"
 
 #include "utils/mu-util.h"
 
@@ -78,24 +77,17 @@ print_stats(const Indexer::Progress& stats, bool color)
 }
 
 Result<void>
-Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts)
+Mu::mu_cmd_index(Store& store, const Options& opts)
 {
-	if (!opts || opts->cmd != MU_CONFIG_CMD_INDEX || opts->params[1])
-		return Err(Error::Code::InvalidArgument, "error in parameters");
-
-	if (opts->max_msg_size < 0)
-		return Err(Error::Code::InvalidArgument,
-				    "the maximum message size must be >= 0");
-
 	const auto mdir{store.properties().root_maildir};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0))
 		return Err(Error::Code::File, "'%s' is not readable: %s",
 			   mdir.c_str(), g_strerror(errno));
 
-	MaybeAnsi col{!opts->nocolor};
+	MaybeAnsi col{!opts.nocolor};
 	using Color = MaybeAnsi::Color;
-	if (!opts->quiet) {
-		if (opts->lazycheck)
+	if (!opts.quiet) {
+		if (opts.index.lazycheck)
 			std::cout << "lazily ";
 
 		std::cout << "indexing maildir " << col.fg(Color::Green)
@@ -105,8 +97,8 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts)
 	}
 
 	Mu::Indexer::Config conf{};
-	conf.cleanup    = !opts->nocleanup;
-	conf.lazy_check = opts->lazycheck;
+	conf.cleanup    = !opts.index.nocleanup;
+	conf.lazy_check = opts.index.lazycheck;
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store.empty();
 
@@ -115,12 +107,12 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts)
 	auto& indexer{store.indexer()};
 	indexer.start(conf);
 	while (!caught_signal && indexer.is_running()) {
-		if (!opts->quiet)
-			print_stats(indexer.progress(), !opts->nocolor);
+		if (!opts.quiet)
+			print_stats(indexer.progress(), !opts.nocolor);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-		if (!opts->quiet) {
+		if (!opts.quiet) {
 			std::cout << "\r";
 			std::cout.flush();
 		}
@@ -128,8 +120,8 @@ Mu::mu_cmd_index(Mu::Store& store, const MuConfig* opts)
 
 	store.indexer().stop();
 
-	if (!opts->quiet) {
-		print_stats(store.indexer().progress(), !opts->nocolor);
+	if (!opts.quiet) {
+		print_stats(store.indexer().progress(), !opts.nocolor);
 		std::cout << std::endl;
 	}
 

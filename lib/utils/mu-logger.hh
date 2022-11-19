@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,54 +21,54 @@
 #define MU_LOGGER_HH__
 
 #include <string>
-#include "utils/mu-utils.hh"
+#include <utils/mu-utils.hh>
+#include <utils/mu-result.hh>
 
 namespace Mu {
 
 /**
- * Logging options
+ * RAII object for handling logging (through g_(debug|warning|...))
  *
  */
-enum struct LogOptions {
-	None      = 0,      /**< Nothing specific */
-	StdOutErr = 1 << 1, /**< Log to stdout/stderr */
-	Debug     = 1 << 2, /**< Include debug-level logs */
+struct Logger {
+
+	/**
+	 * Logging options
+	 *
+	 */
+	enum struct Options {
+		None      = 0,      /**< Nothing specific */
+		StdOutErr = 1 << 1, /**< Log to stdout/stderr */
+		Debug     = 1 << 2, /**< Include debug-level logs */
+	};
+
+
+	/**
+	 * Initialize the logging system.
+	 *
+	 * Note that the path is only used if structured logging fails --
+	 * practically, it goes to the file if there's no systemd/journald.
+	 *
+	 * if the environment variable MU_LOG_STDOUTERR is set,
+	 * LogOptions::StdoutErr is implied.
+	 *
+	 * @param path path to the log file
+	 * @param opts logging options
+	 */
+	static Result<Logger> make(const std::string& path, Options opts=Options::None);
+
+	/**
+	 * DTOR
+	 *
+	 */
+	~Logger();
+
+private:
+	Logger(const std::string& path, Options opts);
 };
 
-/**
- * Initialize the logging system. Note that the path is only used if structured
- * logging fails -- practically, it goes to the file if there's
- * systemd/journald.
- *
- * if the environment variable MU_LOG_STDOUTERR is set, LogOptions::StdoutErr is
- * implied.
- *
- * @param path path to the log file
- * @param opts logging options
- */
-void log_init(const std::string& path, LogOptions opts);
-
-/**
- * Uninitialize the logging system
- *
- */
-void log_uninit();
-
-/**
- * Change the logging options.
- *
- * @param opts options
- */
-void log_set_options(LogOptions opts);
-
-/**
- * Get the current log options
- *
- * @return the log options
- */
-LogOptions log_get_options();
+MU_ENABLE_BITOPS(Logger::Options);
 
 } // namespace Mu
-MU_ENABLE_BITOPS(Mu::LogOptions);
 
 #endif /* MU_LOGGER_HH__ */

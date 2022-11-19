@@ -32,7 +32,6 @@
 
 #include "mu-guile.hh"
 
-#include <mu-runtime.hh>
 #include <mu-store.hh>
 #include <mu-query.hh>
 

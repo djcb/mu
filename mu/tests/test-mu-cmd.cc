@@ -47,8 +47,8 @@ fill_database(void)
 	GError* err;
 
 	cmdline = g_strdup_printf("/bin/sh -c '"
-				  "%s init  --muhome=%s --maildir=%s --quiet; "
-				  "%s index --muhome=%s  --quiet'",
+				  "%s --quiet init  --muhome=%s --maildir=%s ; "
+				  "%s --quiet index --muhome=%s '",
 				  MU_PROGRAM,
 				  DBPATH.c_str(),
 				  MU_TESTMAILDIR2,
@@ -91,8 +91,7 @@ search_func(const char* query, unsigned expected)
 	cmdline = g_strdup_printf("%s find --muhome=%s %s", MU_PROGRAM,
 				  DBPATH.c_str(), query);
 
-	g_message("[%u] %s", expected, query);
-
+	g_debug("%s", cmdline);
 	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
 	if (g_test_verbose())
 		g_print("\nOutput:\n%s", output);
@@ -307,9 +306,8 @@ test_mu_extract_01(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s extract --muhome=%s %s%cFoo%ccur%cmail5",
+	cmdline = g_strdup_printf("%s extract %s%cFoo%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
 				  G_DIR_SEPARATOR,
@@ -354,7 +352,7 @@ get_file_size(const char* path)
 
 	rv = stat(path, &statbuf);
 	if (rv != 0) {
-		/* g_warning ("error: %s", g_strerror (errno)); */
+		g_debug ("error: %s", g_strerror (errno));
 		return -1;
 	}
 
@@ -372,10 +370,9 @@ test_mu_extract_02(void)
 
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s extract --muhome=%s -a "
+	cmdline = g_strdup_printf("%s extract -a "
 				  "--target-dir=%s %s%cFoo%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
@@ -399,7 +396,6 @@ test_mu_extract_02(void)
 	size = get_file_size(att2);
 	g_assert_cmpint(size, ==, 17674);
 
-
 	g_free(output);
 	g_free(tmpdir);
 	g_free(cmdline);
@@ -418,10 +414,9 @@ test_mu_extract_03(void)
 
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s extract --muhome=%s --parts 3 "
+	cmdline = g_strdup_printf("%s extract --parts 3 "
 				  "--target-dir=%s %s%cFoo%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
@@ -459,10 +454,9 @@ test_mu_extract_overwrite(void)
 
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s extract --muhome=%s -a "
+	cmdline = g_strdup_printf("%s extract -a "
 				  "--target-dir=%s %s%cFoo%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
@@ -491,10 +485,9 @@ test_mu_extract_overwrite(void)
 
 	g_free(cmdline);
 	/* this should work now, because we have specified --overwrite */
-	cmdline = g_strdup_printf("%s extract --muhome=%s -a --overwrite "
+	cmdline = g_strdup_printf("%s extract -a --overwrite "
 				  "--target-dir=%s %s%cFoo%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
@@ -522,11 +515,10 @@ test_mu_extract_by_name(void)
 
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s extract --muhome=%s "
+	cmdline = g_strdup_printf("%s extract "
 				  "--target-dir=%s %s%cFoo%ccur%cmail5 "
 				  "sittingbull.jpg",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
@@ -559,9 +551,8 @@ test_mu_view_01(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s view --muhome=%s %s%cbar%ccur%cmail4",
+	cmdline = g_strdup_printf("%s view %s%cbar%ccur%cmail4",
 				  MU_PROGRAM,
-				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
 				  G_DIR_SEPARATOR,
@@ -613,11 +604,10 @@ test_mu_view_multi(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s view --muhome=%s "
+	cmdline = g_strdup_printf("%s view "
 				  "%s%cbar%ccur%cmail5 "
 				  "%s%cbar%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
 				  G_DIR_SEPARATOR,
@@ -649,11 +639,10 @@ test_mu_view_multi_separate(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s view --terminate --muhome=%s "
+	cmdline = g_strdup_printf("%s view --terminate "
 				  "%s%cbar%ccur%cmail5 "
 				  "%s%cbar%ccur%cmail5",
 				  MU_PROGRAM,
-				  tmpdir,
 				  MU_TESTMAILDIR2,
 				  G_DIR_SEPARATOR,
 				  G_DIR_SEPARATOR,
@@ -716,9 +705,8 @@ test_mu_mkdir_01(void)
 	tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(g_mkdir_with_parents(tmpdir, 0700) == 0);
 
-	cmdline = g_strdup_printf("%s mkdir --muhome=%s %s%ctest1 %s%ctest2",
+	cmdline = g_strdup_printf("%s mkdir %s%ctest1 %s%ctest2",
 				  MU_PROGRAM,
-				  tmpdir,
 				  tmpdir,
 				  G_DIR_SEPARATOR,
 				  tmpdir,

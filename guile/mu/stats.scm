@@ -1,5 +1,5 @@
 ;;
-;; Copyright (C) 2011-2013 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -47,7 +47,7 @@ get back a list like
 	 ;; func to add a value to our table
 	 (update-table
 	   (lambda (val)
-	     (let ((old-freq (or (assoc-ref table val) 0))) 
+	     (let ((old-freq (or (assoc-ref table val) 0)))
 	       (set! table (assoc-set! table val (1+ old-freq)))))))
     (mu:for-each-message
       (lambda(msg)
@@ -65,9 +65,10 @@ returns #t if A < B, #f otherwise), and then take the first N."
   (take (sort (mu:tabulate func expr) less) n))
 
 (define* (mu:top-n-most-frequent func n #:optional (expr #t))
-  "Take the results of (mu:tabulate FUNC EXPR), and return the N items with the highest frequency."
+  "Take the results of (mu:tabulate FUNC EXPR), and return the N items
+with the highest frequency."
   (top-n func (lambda (a b) (> (cdr a) (cdr b))) n expr))
- 
+
 (define* (mu:count #:optional (expr #t))
   "Count the number of messages matching EXPR. If EXPR is not
 provided, match /all/ messages."
@@ -100,7 +101,8 @@ EXPR (or #t for all). Returns #f if undefined."
 
 (define* (mu:stddev func #:optional (expr #t))
   "Get the standard deviation the the values of FUNC applied to all
-messages matching EXPR (or #t for all). This is the 'population' stddev, not the 'sample' stddev. Returns #f if undefined."
+messages matching EXPR (or #t for all). This is the 'population' stddev,
+not the 'sample' stddev. Returns #f if undefined."
   (stddev (map func (mu:message-list expr))))
 
 (define* (mu:max func #:optional (expr #t))

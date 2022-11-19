@@ -29,7 +29,6 @@ lib_mu=static_library(
     'mu-query-match-deciders.cc',
     'mu-query-threads.cc',
     'mu-query.cc',
-    'mu-runtime.cc',
     'mu-script.cc',
     'mu-server.cc',
     'mu-store.cc',

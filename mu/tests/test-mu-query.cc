@@ -50,8 +50,8 @@ make_database(const std::string& testdir)
 
 	g_setenv("MUHOME", tmpdir, 1);
 	const auto cmdline{format("/bin/sh -c '"
-				  "%s init --maildir=%s --quiet ; "
-				  "%s index --quiet'",
+				  "%s --quiet init --maildir=%s ; "
+				  "%s --quiet index'",
 				  MU_PROGRAM,
 				  testdir.c_str(),
 				  MU_PROGRAM)};

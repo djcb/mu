@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include "mu-cmd.hh"
-#include "mu-config.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-utils.hh"
 #include <message/mu-message.hh>
@@ -29,19 +28,19 @@ using namespace Mu;
 
 
 static Result<void>
-save_part(const Message::Part& part, size_t idx, const MuConfig* opts)
+save_part(const Message::Part& part, size_t idx, const Options& opts)
 {
 	const auto targetdir = std::invoke([&]{
-		auto tdir{std::string{opts->targetdir ? opts->targetdir : ""}};
+		const auto tdir{opts.extract.targetdir};
 		return tdir.empty() ? tdir : tdir + G_DIR_SEPARATOR_S;
 	});
 	const auto path{targetdir +
 		part.cooked_filename().value_or(format("part-%zu", idx))};
 
-	if (auto&& res{part.to_file(path, opts->overwrite)}; !res)
+	if (auto&& res{part.to_file(path, opts.extract.overwrite)}; !res)
 		return Err(res.error());
 
-	if (opts->play) {
+	if (opts.extract.play) {
 		GError *err{};
 		if (auto res{mu_util_play(path.c_str(), &err)};
 		    res != MU_OK)
@@ -53,39 +52,37 @@ save_part(const Message::Part& part, size_t idx, const MuConfig* opts)
 }
 
 static Result<void>
-save_parts(const std::string& path, Option<std::string>& filename_rx,
-	   const MuConfig* opts)
+save_parts(const std::string& path, const std::string& filename_rx,
+	   const Options& opts)
 {
-	auto message{Message::make_from_path(path, mu_config_message_options(opts))};
+	auto message{Message::make_from_path(path, message_options(opts.extract))};
 	if (!message)
 		return Err(std::move(message.error()));
 
-
 	size_t partnum{}, saved_num{};
-	const auto partnums = std::invoke([&]()->std::vector<size_t> {
-			std::vector<size_t> nums;
-			for (auto&& numstr : split(opts->parts ? opts->parts : "", ','))
-				nums.emplace_back(
-					static_cast<size_t>(::atoi(numstr.c_str())));
-			return nums;
+	for (auto&& part: message->parts()) {
+		++partnum;
+		// should we extract this part?
+		const auto do_extract = std::invoke([&]() {
+
+			if (opts.extract.save_all)
+				return true;
+			else if (opts.extract.save_attachments &&
+			    part.looks_like_attachment())
+				return true;
+			else if (seq_some(opts.extract.parts,
+				     [&](auto&& num){return num==partnum;}))
+				return true;
+			else if (!filename_rx.empty() && part.raw_filename() &&
+				 std::regex_match(*part.raw_filename(),
+						  std::regex{filename_rx}))
+				return true;
+			else
+				return false;
 		});
 
-
-	for (auto&& part: message->parts()) {
-
-		++partnum;
-
-		if (!opts->save_all) {
-
-			if (!partnums.empty() &&
-			    !seq_some(partnums, [&](auto&& num){return num==partnum;}))
-				continue; // not a wanted partnum.
-
-			if (filename_rx && (!part.raw_filename() ||
-					    !std::regex_match(*part.raw_filename(),
-							      std::regex{*filename_rx})))
-				continue; // not a wanted pattern.
-		}
+		if (!do_extract)
+			continue;
 
 		if (auto res = save_part(part, partnum, opts); !res)
 			return res;
@@ -93,11 +90,11 @@ save_parts(const std::string& path, Option<std::string>& filename_rx,
 		++saved_num;
 	}
 
-	// if (saved_num == 0)
-	//	return Err(Error::Code::File,
-	//		   "no %s extracted from this message",
-	//		   opts->save_attachments ? "attachments" : "parts");
-	// else
+	if (saved_num == 0)
+		return Err(Error::Code::File,
+			   "no %s extracted from this message",
+			   opts.extract.save_attachments ? "attachments" : "parts");
+	else
 		return Ok();
 }
 
@@ -140,66 +137,32 @@ show_part(const MessagePart& part, size_t index, bool color)
 }
 
 static Mu::Result<void>
-show_parts(const char* path, const MuConfig* opts)
+show_parts(const std::string& path, const Options& opts)
 {
-	//msgopts = mu_config_get_msg_options(opts);
-
-	auto msg_res{Message::make_from_path(path, mu_config_message_options(opts))};
+	auto msg_res{Message::make_from_path(path, message_options(opts.extract))};
 	if (!msg_res)
 		return Err(std::move(msg_res.error()));
 
-	/* TODO: update this for crypto */
 	size_t index{};
 	g_print("MIME-parts in this message:\n");
 	for (auto&& part: msg_res->parts())
-		show_part(part, ++index, !opts->nocolor);
+		show_part(part, ++index, !opts.nocolor);
 
 	return Ok();
 }
-
-static Mu::Result<void>
-check_params(const MuConfig* opts)
-{
-	size_t param_num;
-	param_num = mu_config_param_num(opts);
-
-	if (param_num < 2)
-		return Err(Error::Code::InvalidArgument, "parameters missing");
-
-	if (opts->save_attachments || opts->save_all)
-		if (opts->parts || param_num == 3)
-			return Err(Error::Code::User,
-				   "--save-attachments and --save-all don't "
-				   "accept a filename pattern or --parts");
-
-	if (opts->save_attachments && opts->save_all)
-		return Err(Error::Code::User,
-			   "only one of --save-attachments and"
-			   " --save-all is allowed");
-	return Ok();
-}
-
 
 Mu::Result<void>
-Mu::mu_cmd_extract(const MuConfig* opts)
+Mu::mu_cmd_extract(const Options& opts)
 {
-	if (!opts ||  opts->cmd != MU_CONFIG_CMD_EXTRACT)
-		return Err(Error::Code::Internal, "error in arguments");
-	if (auto res = check_params(opts); !res)
-		return Err(std::move(res.error()));
+	if (opts.extract.parts.empty() &&
+	    !opts.extract.save_attachments && !opts.extract.save_all &&
+	    opts.extract.filename_rx.empty())
+		return show_parts(opts.extract.message, opts); /* show, don't save */
 
-	if (!opts->params[2] && !opts->parts &&
-	    !opts->save_attachments && !opts->save_all)
-		return show_parts(opts->params[1], opts); /* show, don't save */
-
-	if (!mu_util_check_dir(opts->targetdir, FALSE, TRUE))
+	if (!mu_util_check_dir(opts.extract.targetdir.c_str(), FALSE, TRUE))
 		return Err(Error::Code::File,
 			   "target '%s' is not a writable directory",
-			   opts->targetdir);
+			   opts.extract.targetdir.c_str());
 
-	Option<std::string> pattern{};
-	if (opts->params[2])
-		pattern = opts->params[2];
-
-	return save_parts(opts->params[1], pattern, opts);
+	return save_parts(opts.extract.message, opts.extract.filename_rx, opts);
 }
