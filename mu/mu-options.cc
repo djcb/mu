@@ -37,6 +37,7 @@
 #include <config.h>
 #include <stdexcept>
 #include <array>
+#include <unordered_map>
 #include <iostream>
 #include <string_view>
 #include <unistd.h>
