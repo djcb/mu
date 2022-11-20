@@ -625,6 +625,47 @@ test_duplicate_refresh_rename()
 	test_duplicate_refresh_real(true/*rename*/);
 }
 
+static void
+test_term_split()
+{
+	g_test_bug("2365");
+
+	// Note the fancy quote in "foo’s bar"
+	const TestMap test_msgs = {{
+			"inbox/new/msg",
+			{ R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Wed, 26 Oct 2022 11:01:54 -0700
+To: example@example.com
+Subject: foo’s bar
+
+Boo!
+)"},
+		}};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	/* true: match; false: no match */
+	const auto cases = std::array<std::pair<const char*, bool>, 6>{{
+		{"subject:foo's", true},
+		{"subject:foo*", true},
+		{"subject:/foo/", true},
+		{"subject:/foo’s/", true}, /* <-- breaks before PR #2365 */
+		{"subject:/foo.*bar/", true},  /* <-- breaks before PR #2365 */
+		{"subject:/foo’s bar/", false}, /* <-- no matching yet */
+	}};
+
+	for (auto&& test: cases) {
+		g_debug("query: %s", test.first);
+		auto qr = store.run_query(test.first);
+		assert_valid_result(qr);
+		if (test.second)
+			g_assert_cmpuint(qr->size(), ==, 1);
+		else
+			g_assert_true(qr->empty());
+	}
+}
+
 
 int
 main(int argc, char* argv[])
@@ -646,6 +687,8 @@ main(int argc, char* argv[])
 			test_duplicate_refresh);
 	g_test_add_func("/store/query/duplicate-refresh-rename",
 			test_duplicate_refresh_rename);
+	g_test_add_func("/store/query/term-split",
+			test_term_split);
 
 	return g_test_run();
 }
