@@ -159,6 +159,8 @@ struct Field {
 	constexpr bool is_searchable()          const { return is_indexable_term() ||
 							       is_boolean_term() ||
 							       is_normal_term(); }
+	constexpr bool is_sortable()            const { return is_value(); }
+
 
 	constexpr bool is_value()		const { return any_of(Flag::Value); }
 	constexpr bool is_internal()		const { return any_of(Flag::Internal); }
