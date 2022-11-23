@@ -80,6 +80,7 @@ struct Node {
 		OpAndNot,
 		OpNot,
 		Value,
+                ValueAtomic,
 		Range,
 		Invalid
 	};
@@ -107,6 +108,8 @@ struct Node {
 			return "not";
 		case Type::Value:
 			return "value";
+		case Type::ValueAtomic:
+			return "value_atomic";
 		case Type::Range:
 			return "range";
 		case Type::Invalid:

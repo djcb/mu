@@ -24,13 +24,13 @@
  * the time of writing, that library seems to be the best based on the criteria
  * that it supports the features we need and is available as a header-only
  * include.
- * 
+ *
  * CLI11 can do quite a bit, and we're only scratching the surface here,
  * plan is to slowly improve things.
  *
  * - we do quite a bit of sanity-checking, but the errors are a rather terse
  * - the docs could be improved, e.g., `mu find --help` and --format/--sortfield
- * 
+ *
  */
 
 
@@ -309,7 +309,7 @@ sub_find(CLI::App& sub, Options& opts)
 	std::unordered_map<std::string, Field::Id> smap;
 	std::string sopts;
 	field_for_each([&](auto&& field){
-		if (field.is_searchable()) {
+		if (field.is_sortable()) {
 			smap.emplace(std::string(field.name), field.id);
 			if (!sopts.empty())
 				sopts += ", ";
@@ -456,7 +456,7 @@ sub_view(CLI::App& sub, Options& opts)
 		       "Use up to so many lines for the summary")
 		->type_name("<lines>")
 		->check(CLI::PositiveNumber);
-	
+
 	sub.add_flag("--terminate", opts.view.terminate,
 		     "Insert form-feed after each message");
 
@@ -550,7 +550,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 
 static ScriptInfos
 add_scripts(CLI::App& app, Options& opts)
-{ 
+{
 #ifndef BUILD_GUILE
 	return {};
 #else
@@ -561,7 +561,7 @@ add_scripts(CLI::App& app, Options& opts)
 			 ->description(script.oneline);
 		 sub->add_option("params", opts.script.params,
 				 "Parameter to script")
-			 ->type_name("<params>");	
+			 ->type_name("<params>");
 	 }
 
 	 return scriptinfos;
@@ -583,7 +583,7 @@ show_manpage(Options& opts, const std::string& name)
 	if (!res)
 		return Err(Error::Code::Command, &err,
 			   "error running man command");
-	
+
 	return Ok(std::move(opts));
 }
 
@@ -595,7 +595,7 @@ cmd_help(const CLI::App& app, Options& opts)
 		std::cout << app.help() << "\n";
 		return Ok(std::move(opts));
 	}
-	
+
 	for (auto&& item: SubCommandInfos) {
 		if (item.second.name == opts.help.command)
 			return show_manpage(opts, "mu-" + opts.help.command);
@@ -605,7 +605,7 @@ cmd_help(const CLI::App& app, Options& opts)
 		if (item == opts.help.command)
 			return show_manpage(opts, "mu-" + opts.help.command);
 
-	return Err(Error::Code::Command, 
+	return Err(Error::Code::Command,
 		   "no help available for '%s'", opts.help.command.c_str());
 }
 
@@ -647,9 +647,9 @@ There is NO WARRANTY, to the extent permitted by law.
 	 app.set_help_flag("-h,--help", "Show help informmation");
 	 app.set_help_all_flag("--help-all");
 	 app.require_subcommand(0, 1);
-	 
+
 	 add_global_options(app, opts);
-	 
+
 	/*
 	 * subcommands
 	 *
@@ -663,12 +663,12 @@ There is NO WARRANTY, to the extent permitted by law.
 		const auto setup{cmdinfo.second.setup_func};
 		const auto cat{category(cmdinfo.first)};
 
-		if (!setup) 
+		if (!setup)
 			continue;
-		
+
 		auto sub = app.add_subcommand(name, help);
 		setup(*sub, opts);
-				
+
 		/* allow global options _after_ subcommand as well;
 		 * this is for backward compat with the older
 		 * command-line parsing */
@@ -682,10 +682,10 @@ There is NO WARRANTY, to the extent permitted by law.
 				->envname("MUHOME")
 				->type_name("<dir>");
 	 }
-	 
+
 	 /* add scripts (if supported) as semi-subscommands as well */
 	 const auto scripts = add_scripts(app, opts);
-	 
+
 	 try {
 		app.parse(argc, argv);
 
@@ -712,7 +712,7 @@ There is NO WARRANTY, to the extent permitted by law.
 		// if nothing else, try "help"
 		if (opts.sub_command.value_or(SubCommand::Help) == SubCommand::Help)
 			return cmd_help(app, opts);
-		
+
 	} catch (const CLI::CallForHelp& cfh) {
 		std::cout << app.help() << std::flush;
 	} catch (const CLI::CallForAllHelp& cfah) {
