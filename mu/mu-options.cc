@@ -323,6 +323,8 @@ sub_find(CLI::App& sub, Options& opts)
 		->default_val(Field::Id::Date)
 		->transform(CLI::CheckedTransformer(smap));
 
+	sub.add_flag("--reverse,-z", opts.find.reverse, "Sort in descending order");
+
 	sub.add_option("--bookmark,-b", opts.find.bookmark,
 		       "Use bookmarked query")
 		->type_name("<bookmark>");
