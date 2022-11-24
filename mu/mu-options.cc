@@ -619,6 +619,7 @@ add_global_options(CLI::App& cli, Options& opts)
 		!::isatty(::fileno(stdout)) ||
 		!::isatty(::fileno(stderr)) ||
 		::getenv("NO_COLOR") != NULL;
+	opts.nocolor = default_no_color;
 
 	errno = 0;
 
