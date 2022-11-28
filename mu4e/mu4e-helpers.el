@@ -466,6 +466,7 @@ If there is not e-mail address at point, do nothing."
   (interactive)
   (let* ((thing (and (thing-at-point 'email)
                      (string-trim (thing-at-point 'email 'no-props) "<" ">")))
+         (thing (or thing (get-text-property (point) 'shr-url)))
          (thing (or thing (thing-at-point 'url 'no-props))))
     (when thing
       (kill-new thing)
