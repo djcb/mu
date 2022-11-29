@@ -596,7 +596,6 @@ are optional."
     ;; don't allow undoing anything before this.
     (setq buffer-undo-list nil)
 
-    ;; TODO: replace this
     (when mu4e-compose-in-new-frame
       ;; make sure to close the frame when we're done with the message these are
       ;; all buffer-local;

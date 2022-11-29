@@ -106,7 +106,6 @@ and `mu4e-headers-visible-columns'."
   :group 'mu4e-headers)
 
 
-;;; TODO: rewrite select other window
 (defun mu4e-select-other-view ()
   "Switch between headers view and message view."
   (interactive)

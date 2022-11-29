@@ -22,12 +22,6 @@
 
 ;;; Code:
 
-;; TODO: write function to get headers buffer (and return an error if it is missing)
-;; TODO: write a function that displays the headers/view buffer(s)
-;; TODO: write a function that returns buffer livenness for headers/view
-;; TODO: write a function that returns whether a buffer is visible
-;; TODO: write a function that selects the headers/view buffer if it exists or is visible.
-
 ;;; Buffer names for internal use
 
 (defvar mu4e~headers-loading-buf nil
