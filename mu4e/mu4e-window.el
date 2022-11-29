@@ -63,7 +63,7 @@ The function is given one argument, the headers buffer it is
 linked to.")
 
 (defvar-local mu4e-linked-headers-buffer nil
-  "Holds the headers buffer object that ties it to a view")
+  "Holds the headers buffer object that ties it to a view.")
 
 (defun mu4e-get-headers-buffer (&optional buffer-name create)
   "Return a related headers buffer optionally named BUFFER-NAME.
@@ -104,7 +104,7 @@ generated name does not already exist."
     buffer))
 
 (defun mu4e-get-view-buffers (pred)
-  "Filter all known view buffers and keep those where PRED returns non-nil.
+  "Filter all known view buffers and keep those where PRED return non-nil.
 
 The PRED function is called from inside the buffer that is being
 tested."
@@ -117,14 +117,14 @@ tested."
 
 
 (defun mu4e--view-detached-p (buffer)
-  "Returns non-nil if BUFFER is a detached view buffer."
+  "Return non-nil if BUFFER is a detached view buffer."
   (with-current-buffer buffer
     (unless (mu4e-current-buffer-type-p 'view)
       (error "Buffer `%s' is not a valid mu4e view buffer" buffer))
     (null mu4e-linked-headers-buffer)))
 
 (defun mu4e--get-current-buffer-type ()
-  "Returns an internal symbol that corresponds to each mu4e major mode."
+  "Return an internal symbol that corresponds to each mu4e major mode."
   (cond ((derived-mode-p 'mu4e-view-mode 'mu4e-raw-view-mode) 'view)
         ((derived-mode-p 'mu4e-loading-mode) 'loading)
         ((derived-mode-p 'mu4e-headers-mode) 'headers)
@@ -133,7 +133,7 @@ tested."
         (t 'unknown)))
 
 (defun mu4e-current-buffer-type-p (type)
-  "Returns non-nil if the current buffer is a mu4e buffer of TYPE.
+  "Return non-nil if the current buffer is a mu4e buffer of TYPE.
 
 Where TYPE is `view', `loading', `headers', `compose',
 `main' or `unknown'.
@@ -212,7 +212,7 @@ for BUFFER-OR-NAME to be displayed in."
   (if (functionp mu4e-split-view)
       (set-window-buffer (funcall mu4e-split-view) buffer-or-name)
     (let* ((buffer-name (or (get-buffer buffer-or-name)
-                            (error "Buffer `%s' does not exist." buffer-or-name)))
+                            (error "Buffer `%s' does not exist" buffer-or-name)))
            (buffer-type (with-current-buffer buffer-name (mu4e--get-current-buffer-type)))
            (direction (cons 'direction
                             (pcase (cons buffer-type mu4e-split-view)
