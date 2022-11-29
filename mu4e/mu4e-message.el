@@ -217,7 +217,7 @@ If MSG is nil, use `mu4e-message-at-point'."
       (with-current-buffer-window (get-buffer-create mu4e--sexp-buffer-name) nil nil
         (lisp-data-mode)
 	(insert (pp-to-string msg))
-        (font-lock-fontify-buffer)
+        (font-lock-ensure)
         ;; add basic `quit-window' bindings
         (view-mode 1)))))
 
