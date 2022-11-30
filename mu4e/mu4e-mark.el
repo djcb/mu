@@ -112,9 +112,9 @@ The current buffer must be either a headers or view buffer."
        (let* ((msg (mu4e-message-at-point))
               (docid (mu4e-message-field msg :docid)))
          (with-current-buffer (mu4e-get-headers-buffer)
-           (if (mu4e~headers-goto-docid docid)
-               ,@body
-             (mu4e-error "Cannot find message in headers buffer"))))))))
+           (when (mu4e~headers-goto-docid docid)
+             ,@body
+             )))))))
 
 (defconst mu4e-marks
   '((refile
