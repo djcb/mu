@@ -156,7 +156,10 @@ Then, display the results."
                      ;; are we already inside a headers buffer?
                      ((mu4e-current-buffer-type-p 'headers) (current-buffer))
                      ;; if not, are we inside a view buffer, and does it have linked headers buffer?
-                     ((mu4e-current-buffer-type-p 'view) (mu4e-get-headers-buffer))
+                     ((mu4e-current-buffer-type-p 'view)
+                      (when (mu4e--view-detached-p (current-buffer))
+                        (mu4e-error "You cannot navigate in a detached view buffer."))
+                      (mu4e-get-headers-buffer))
                      ;; fallback; but what would trigger this?
                      (t (mu4e-get-headers-buffer))))
 	    (docid (mu4e-message-field msg :docid)))
