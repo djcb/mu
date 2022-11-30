@@ -602,8 +602,15 @@ in the the message view affects HDRSBUF, as does marking etc.
 
 As a side-effect, a message that is being viewed loses its
 `unread' marking if it still had that."
-  (mu4e~headers-update-handler msg nil nil) ;; update headers, if necessary.
-  ;; create a new view buffer (if needed)
+  ;; update headers, if necessary.
+  (mu4e~headers-update-handler msg nil nil)
+  ;; Create a new view buffer (if needed) as it is not
+  ;; feasible to recycle an existing window due to buffer-specific
+  ;; state (buttons, etc.) that can interfere with message rendering
+  ;; in gnus.
+  (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
+    (delete-windows-on existing-buffer t)
+    (kill-buffer existing-buffer))
   (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
   (with-current-buffer gnus-article-buffer
     (let ((inhibit-read-only t))
