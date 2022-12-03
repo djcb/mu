@@ -565,9 +565,12 @@ Boo!
 	/*
 	 * mark as read, i.e. move to cur/; ensure it really moved.
 	 */
-	auto moved_msg = store.move_message(old_docid, Nothing, Flags::Seen, rename);
-	assert_valid_result(moved_msg);
-	const auto new_path = moved_msg->path();
+	auto move_opts{rename ? Store::MoveOptions::ChangeName : Store::MoveOptions::None};
+	auto moved_msgs = store.move_message(old_docid, Nothing, Flags::Seen, move_opts);
+	assert_valid_result(moved_msgs);
+	g_assert_true(moved_msgs->size() == 1);
+	const auto& moved_msg{moved_msgs->at(0).second};
+	const auto new_path = moved_msg.path();
 	if (!rename)
 		assert_equal(new_path, store.properties().root_maildir + "/inbox/cur/msg:2,S");
 	g_assert_cmpuint(store.size(), ==, 1);
@@ -576,7 +579,7 @@ Boo!
 
 	/* also ensure that the cached sexp for the message has been updated;
 	 * that's what mu4e uses */
-	const auto moved_sexp{moved_msg->sexp()};
+	const auto moved_sexp{moved_msg.sexp()};
 	//std::cerr << "@@ " << *moved_msg << '\n';
 	g_assert_true(moved_sexp.plistp());
 	g_assert_true(moved_sexp.has_prop(":path"));

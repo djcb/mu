@@ -373,14 +373,16 @@ Yes, that would be excellent.
 
 	 // Move the message from new->cur
 	 std::this_thread::sleep_for(1s); /* ctime should change */
-	 const auto msg3 = store->move_message(msg->docid(), {}, Flags::Seen);
-	 assert_valid_result(msg3);
-	 assert_equal(msg3->maildir(), "/a");
-	 assert_equal(msg3->path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
-	 g_assert_true(::access(msg3->path().c_str(), R_OK)==0);
+	 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
+	 assert_valid_result(msgs3);
+	 g_assert_true(msgs3->size() == 1);
+	 const auto& msg3{msgs3->at(0).second};
+	 assert_equal(msg3.maildir(), "/a");
+	 assert_equal(msg3.path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
+	 g_assert_true(::access(msg3.path().c_str(), R_OK)==0);
 	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
 
-	 g_debug("%s", msg3->sexp().to_string().c_str());
+	 g_debug("%s", msg3.sexp().to_string().c_str());
 	 g_assert_cmpuint(store->size(), ==, 1);
 }
 
