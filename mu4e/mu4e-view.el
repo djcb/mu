@@ -112,6 +112,10 @@ specified a function as viewer."
   :type 'integer
   :group 'mu4e-view)
 
+(defcustom mu4e-after-view-message-hook '(mu4e-resize-linked-headers-window)
+  "Hook run by `mu4e-view' after a message is rendered."
+  :type 'hook
+  :group 'mu4e-view)
 
 
 
@@ -644,7 +648,9 @@ As a side-effect, a message that is being viewed loses its
       (setq-local mu4e~headers-view-win (mu4e-display-buffer gnus-article-buffer nil))
       (unless (window-live-p mu4e~headers-view-win)
         (mu4e-error "Cannot get a message view"))
-      (select-window mu4e~headers-view-win))))
+      (select-window mu4e~headers-view-win)))
+  (with-current-buffer gnus-article-buffer
+    (run-hooks 'mu4e-after-view-message-hook)))
 
 (defun mu4e-view-message-text (msg)
   "Return the pristine MSG as a string."

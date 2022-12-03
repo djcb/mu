@@ -242,5 +242,30 @@ for BUFFER-OR-NAME to be displayed in."
                buffer-name
                arg))))
 
+(defun mu4e-resize-linked-headers-window ()
+  "Resizes the linked headers window belonging to a view.
+
+Resizes the current headers view according to `mu4e-split-view'
+and `mu4e-headers-visible-lines' or
+`mu4e-headers-visible-columns'.
+
+This function is best called from the hook
+`mu4e-after-view-message-hook'."
+  (unless (mu4e-current-buffer-type-p 'view)
+    (error "Cannot resize as this is not a valid view buffer."))
+  (when-let (win (and mu4e-linked-headers-buffer
+                      (get-buffer-window mu4e-linked-headers-buffer)))
+    ;; This can fail for any number of reasons. If it does, we do
+    ;; nothing. If the user has customized the window display we may
+    ;; find it impossible to resize the window, and that should not be
+    ;; cause for error.
+    (ignore-errors
+      (cond ((eq mu4e-split-view 'vertical)
+             (window-resize win (- mu4e-headers-visible-columns (window-width win nil))
+                            t t nil))
+            ((eq mu4e-split-view 'horizontal)
+             (set-window-text-height win mu4e-headers-visible-lines))))))
+
+
 (provide 'mu4e-window)
 ;;; mu4e-window.el ends here
