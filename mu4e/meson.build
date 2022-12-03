@@ -52,7 +52,8 @@ mu4e_srcs=[
   'mu4e-speedbar.el',
   'mu4e-update.el',
   'mu4e-vars.el',
-  'mu4e-view.el'
+  'mu4e-view.el',
+  'mu4e-window.el'
 ]
 
 # note, we cannot compile mu4e-config.el without incurring
