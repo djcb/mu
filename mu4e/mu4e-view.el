@@ -605,7 +605,7 @@ As a side-effect, a message that is being viewed loses its
   ;; update headers, if necessary.
   (mu4e~headers-update-handler msg nil nil)
   ;; Create a new view buffer (if needed) as it is not
-  ;; feasible to recycle an existing window due to buffer-specific
+  ;; feasible to recycle an existing buffer due to buffer-specific
   ;; state (buttons, etc.) that can interfere with message rendering
   ;; in gnus.
   (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
