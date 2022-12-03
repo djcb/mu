@@ -171,11 +171,11 @@ being created if CREATE is non-nil."
         ;; we'll generate a new, unique name.
         (when (and (buffer-live-p buffer) (mu4e--view-detached-p buffer))
           (setq buffer (generate-new-buffer-name buffer-name)))
-        (when (and (not (buffer-live-p buffer)) create)
+        (when (or (not (buffer-live-p buffer)) create)
           (setq buffer (get-buffer-create (or buffer buffer-name)))
           (with-current-buffer buffer
             (mu4e-view-mode))))
-      (when buffer
+      (when (and buffer (buffer-live-p buffer))
         ;; Required. Callers expect the view buffer to be set.
         (set-buffer buffer)
         ;; Required. The call chain of `mu4e-view-mode' ends up
