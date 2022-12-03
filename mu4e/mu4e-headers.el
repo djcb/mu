@@ -1611,7 +1611,7 @@ _not_ refresh the last search with the new setting for threading."
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read)))
-    (when-let ((buf (mu4e-get-view-buffer nil nil)))
+    (when-let ((buf (mu4e-get-view-buffer (current-buffer) nil)))
       (with-current-buffer buf
         (mu4e-loading-mode 1)))
     (mu4e--server-view docid mark-as-read)))

@@ -155,7 +155,8 @@ Then, display the results."
             (buffer (cond
                      ;; are we already inside a headers buffer?
                      ((mu4e-current-buffer-type-p 'headers) (current-buffer))
-                     ;; if not, are we inside a view buffer, and does it have linked headers buffer?
+                     ;; if not, are we inside a view buffer, and does
+                     ;; it have linked headers buffer?
                      ((mu4e-current-buffer-type-p 'view)
                       (when (mu4e--view-detached-p (current-buffer))
                         (mu4e-error "You cannot navigate in a detached view buffer."))
@@ -177,8 +178,9 @@ Then, display the results."
                  ;; get an error. This "hack" instead gets its
                  ;; now-changed headers buffer's current message as a
                  ;; docid
-                 (mu4e~headers-goto-docid (with-current-buffer (mu4e-get-headers-buffer)
-                                            (mu4e-message-field (mu4e-message-at-point) :docid))))
+                 (mu4e~headers-goto-docid
+                  (with-current-buffer buffer
+                    (mu4e-message-field (mu4e-message-at-point) :docid))))
 	     ,@body
 	   (mu4e-error "Cannot find message in headers buffer"))))))
 
@@ -608,19 +610,29 @@ As a side-effect, a message that is being viewed loses its
   ;; feasible to recycle an existing buffer due to buffer-specific
   ;; state (buttons, etc.) that can interfere with message rendering
   ;; in gnus.
-  (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
-    (delete-windows-on existing-buffer t)
-    (kill-buffer existing-buffer))
-  (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
-  (with-current-buffer gnus-article-buffer
-    (let ((inhibit-read-only t))
-      (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
-      (erase-buffer)
-      (insert-file-contents-literally
-       (mu4e-message-readable-path msg) nil nil nil t)
-      (setq-local mu4e~view-message msg)
-      (mu4e~view-render-buffer msg))
-    (mu4e-loading-mode 0))
+  ;;
+  ;; Unfortunately that does create its own issues: namely ensuring
+  ;; buffer-local state that *must* survive is correctly copied
+  ;; across.
+  (let ((linked-headers-buffer))
+    (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
+      ;; required; this state must carry over from the killed buffer
+      ;; to the new one.
+      (setq linked-headers-buffer mu4e-linked-headers-buffer)
+      (delete-windows-on existing-buffer t)
+      (kill-buffer existing-buffer))
+    (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
+    (with-current-buffer gnus-article-buffer
+      (when linked-headers-buffer
+        (setq mu4e-linked-headers-buffer linked-headers-buffer))
+      (let ((inhibit-read-only t))
+        (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
+        (erase-buffer)
+        (insert-file-contents-literally
+         (mu4e-message-readable-path msg) nil nil nil t)
+        (setq-local mu4e~view-message msg)
+        (mu4e~view-render-buffer msg))
+      (mu4e-loading-mode 0)))
   (unless (mu4e--view-detached-p gnus-article-buffer)
     (with-current-buffer mu4e-linked-headers-buffer
       ;; We need this here as we want to avoid displaying the buffer until
