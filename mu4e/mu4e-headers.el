@@ -1611,6 +1611,9 @@ _not_ refresh the last search with the new setting for threading."
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read)))
+    (when-let ((buf (mu4e-get-view-buffer nil nil)))
+      (with-current-buffer buf
+        (mu4e-loading-mode 1)))
     (mu4e--server-view docid mark-as-read)))
 
 
@@ -1767,28 +1770,28 @@ other windows."
 
 ;;; Loading messages
 ;;
-(defvar mu4e-loading-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "n" #'ignore)
-    (define-key map "p" #'ignore)
-    (define-key map "q" #'bury-buffer)
-    map)
-  "Keymap for *mu4e-loading* buffers.")
 
-(define-derived-mode mu4e-loading-mode special-mode
-  "mu4e:loading"
-  (use-local-map mu4e-loading-mode-map)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (insert (propertize "Loading message..."
-                        'face 'mu4e-system-face 'intangible t))))
-
-(defun mu4e~loading-close ()
-  "Bury the mu4e Loading... buffer, if any."
-  (let* ((buf mu4e~headers-loading-buf)
-	 (win (and (buffer-live-p buf) (get-buffer-window buf t))))
-    (when (window-live-p win)
-      (delete-window win))))
+(define-minor-mode mu4e-loading-mode
+  "Minor mode for buffers awaiting data from mu"
+  :init-value nil :lighter " Loading" :keymap nil
+  (if mu4e-loading-mode
+      (progn
+        (when mu4e-dim-when-loading
+          (set (make-variable-buffer-local 'mu4e--loading-overlay-bg)
+               (let ((overlay (make-overlay (point-min) (point-max))))
+                 (overlay-put overlay 'face `(:foreground "gray22" :background
+                                                          ,(face-attribute 'default :background)))
+                 (overlay-put overlay 'priority 9998)
+                 overlay)))
+        (set (make-variable-buffer-local 'mu4e--loading-overlay-text)
+             (let ((overlay (make-overlay (point-min) (point-min))))
+               (overlay-put overlay 'priority 9999)
+               (overlay-put overlay 'before-string (propertize "Loading…\n" 'face 'mu4e-header-title-face))
+               overlay)))
+    (when mu4e--loading-overlay-bg
+      (delete-overlay mu4e--loading-overlay-bg))
+    (when mu4e--loading-overlay-text
+      (delete-overlay mu4e--loading-overlay-text))))
 
 (provide 'mu4e-headers)
 ;;; mu4e-headers.el ends here

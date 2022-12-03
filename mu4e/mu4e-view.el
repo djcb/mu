@@ -619,7 +619,8 @@ As a side-effect, a message that is being viewed loses its
       (insert-file-contents-literally
        (mu4e-message-readable-path msg) nil nil nil t)
       (setq-local mu4e~view-message msg)
-      (mu4e~view-render-buffer msg)))
+      (mu4e~view-render-buffer msg))
+    (mu4e-loading-mode 0))
   (unless (mu4e--view-detached-p gnus-article-buffer)
     (with-current-buffer mu4e-linked-headers-buffer
       ;; We need this here as we want to avoid displaying the buffer until

@@ -24,9 +24,6 @@
 
 ;;; Buffer names for internal use
 
-(defvar mu4e~headers-loading-buf nil
-  "A buffer for loading a message view.")
-
 (defconst mu4e--sexp-buffer-name "*mu4e-sexp-at-point*"
   "Buffer name for sexp buffers.")
 
@@ -110,7 +107,6 @@ tested."
             (and pred (funcall pred buf)))))
    (buffer-list)))
 
-
 (defun mu4e--view-detached-p (buffer)
   "Return non-nil if BUFFER is a detached view buffer."
   (with-current-buffer buffer
@@ -121,7 +117,6 @@ tested."
 (defun mu4e--get-current-buffer-type ()
   "Return an internal symbol that corresponds to each mu4e major mode."
   (cond ((derived-mode-p 'mu4e-view-mode 'mu4e-raw-view-mode) 'view)
-        ((derived-mode-p 'mu4e-loading-mode) 'loading)
         ((derived-mode-p 'mu4e-headers-mode) 'headers)
         ((derived-mode-p 'mu4e-compose-mode) 'compose)
         ((derived-mode-p 'mu4e-main-mode) 'main)
@@ -130,8 +125,7 @@ tested."
 (defun mu4e-current-buffer-type-p (type)
   "Return non-nil if the current buffer is a mu4e buffer of TYPE.
 
-Where TYPE is `view', `loading', `headers', `compose',
-`main' or `unknown'.
+Where TYPE is `view', `headers', `compose', `main' or `unknown'.
 
 Checks are performed using `derived-mode-p' and the current
 buffer's major mode."
@@ -226,7 +220,6 @@ for BUFFER-OR-NAME to be displayed in."
               ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
               (`(,_ . t) nil)))
            (window-action (cond
-                           ((memq buffer-type '(loader)) '(display-buffer-same-window))
                            ((memq buffer-type '(headers compose))
                             '(display-buffer-reuse-mode-window display-buffer-same-window))
                            ((memq mu4e-split-view '(horizontal vertical))

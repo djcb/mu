@@ -56,6 +56,12 @@ Follows the format of `format-time-string'."
   :type 'string
   :group 'mu4e)
 
+(defcustom mu4e-dim-when-loading t
+  "Dim buffer text when loading new data.
+If non-nil, dim some buffers during data retrieval and rendering. Disable this if you"
+  :type 'boolean
+  :group 'mu4e)
+
 
 ;;; Faces
 
