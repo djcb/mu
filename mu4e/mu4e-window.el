@@ -220,6 +220,8 @@ for BUFFER-OR-NAME to be displayed in."
               ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
               (`(,_ . t) nil)))
            (window-action (cond
+                           ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
+                            '(display-buffer-pop-up-frame))
                            ((memq buffer-type '(headers compose))
                             '(display-buffer-reuse-mode-window display-buffer-same-window))
                            ((memq mu4e-split-view '(horizontal vertical))
