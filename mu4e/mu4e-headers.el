@@ -1577,7 +1577,8 @@ last search with the new setting."
 	 (toggles (seq-map
 		   (lambda (cell)
 		     (cons
-		      (concat (car cell) (format" (%s)" (if (cdr cell) "on" "off")))
+		      (concat (car cell) (format" (%s)"
+						(if (symbol-value (cdr cell)) "on" "off")))
 		      (cdr cell))) toggles))
 	 (choice (mu4e-read-option "Toggle setting " toggles)))
     (when choice
