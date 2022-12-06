@@ -222,11 +222,11 @@ if you otherwise want to use `mu4e-index-lazy-check'."
 This function uses `display-buffer' with a default preset.
 
 To override this behavior, customize `display-buffer-alist'."
-  (let ((win (display-buffer buf `(display-buffer-at-bottom
-                                   (preserve-size . (nil . t))
-                                   (height . ,height)
-                                   (window-height . fit-window-to-buffer)))))
-    (set-window-buffer (get-buffer-window buf) buf)))
+  (display-buffer buf `(display-buffer-at-bottom
+                        (preserve-size . (nil . t))
+                        (height . ,height)
+                        (window-height . fit-window-to-buffer)))
+  (set-window-buffer (get-buffer-window buf) buf))
 
 (defun mu4e--update-sentinel-func (proc _msg)
   "Sentinel function for the update process PROC."

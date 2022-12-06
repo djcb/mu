@@ -665,7 +665,7 @@ will be the same as in the original."
   "The drafts-folder for this compose buffer.
 This is based on `mu4e-drafts-folder', which is evaluated once.")
 
-(defun mu4e~draft-open-file (path switch-function)
+(defun mu4e~draft-open-file (path)
   "Open the the draft file at PATH."
   (find-file-noselect path))
 
@@ -676,7 +676,7 @@ This is based on `mu4e-drafts-folder', which is evaluated once.")
           (mu4e-root-maildir) draft-dir (mu4e~draft-message-filename-construct "DS")))
 
 
-(defun mu4e-draft-open (compose-type &optional msg switch-function)
+(defun mu4e-draft-open (compose-type &optional msg)
   "Open a draft file for a message MSG.
 In case of a new message (when COMPOSE-TYPE is `reply', `forward'
  or `new'), open an existing draft (when COMPOSE-TYPE is `edit'),
@@ -699,7 +699,7 @@ Returns the newly-created draft buffer."
        ;; full path, but we cannot really know 'drafts folder'... we make a
        ;; guess
        (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
-       (setq draft-buffer (mu4e~draft-open-file (mu4e-message-field msg :path) switch-function)))
+       (setq draft-buffer (mu4e~draft-open-file (mu4e-message-field msg :path))))
 
       (resend
        ;; case-2: copy some exisisting message to a draft message, then edit
@@ -707,7 +707,7 @@ Returns the newly-created draft buffer."
        (setq draft-dir (mu4e--guess-maildir (mu4e-message-field msg :path)))
        (let ((draft-path (mu4e~draft-determine-path draft-dir)))
          (copy-file (mu4e-message-field msg :path) draft-path)
-         (setq draft-buffer (mu4e~draft-open-file draft-path switch-function))))
+         (setq draft-buffer (mu4e~draft-open-file draft-path))))
 
       ((reply forward new)
        ;; case-3: creating a new message; in this case, we can determine
@@ -719,7 +719,7 @@ Returns the newly-created draft buffer."
                 (reply   (mu4e~draft-reply-construct msg))
                 (forward (mu4e~draft-forward-construct msg))
                 (new     (mu4e~draft-newmsg-construct)))))
-         (setq draft-buffer (mu4e~draft-open-file draft-path switch-function))
+         (setq draft-buffer (mu4e~draft-open-file draft-path))
          (set-buffer draft-buffer)
          (insert initial-contents)
          (newline)

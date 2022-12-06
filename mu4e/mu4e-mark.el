@@ -98,7 +98,7 @@ is the target directory (for \"move\")")
 
 (defun mu4e--mark-find-headers-buffer ()
   "Find the headers buffer, if any."
-  (seq-find (lambda (b)
+  (seq-find (lambda (_)
 	      (mu4e-current-buffer-type-p 'headers))
 	    (buffer-list)))
 

@@ -724,7 +724,7 @@ docid is not found."
 
 (defun mu4e~headers-view-this-message-p (docid)
   "Is DOCID currently being viewed?"
-  (mu4e-get-view-buffers (lambda (buf) (eq docid (plist-get mu4e~view-message :docid)))))
+  (mu4e-get-view-buffers (lambda (_) (eq docid (plist-get mu4e~view-message :docid)))))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-append-handler (msglst)
@@ -1771,23 +1771,30 @@ other windows."
 ;;; Loading messages
 ;;
 
+
+(defvar-local mu4e--loading-overlay-bg nil
+  "Internal variable that holds the loading overlay for the background.")
+
+(defvar-local mu4e--loading-overlay-text nil
+  "Internal variable that holds the loading overlay for the text.")
+
 (define-minor-mode mu4e-loading-mode
   "Minor mode for buffers awaiting data from mu"
   :init-value nil :lighter " Loading" :keymap nil
   (if mu4e-loading-mode
       (progn
         (when mu4e-dim-when-loading
-          (set (make-variable-buffer-local 'mu4e--loading-overlay-bg)
-               (let ((overlay (make-overlay (point-min) (point-max))))
-                 (overlay-put overlay 'face `(:foreground "gray22" :background
-                                                          ,(face-attribute 'default :background)))
-                 (overlay-put overlay 'priority 9998)
-                 overlay)))
-        (set (make-variable-buffer-local 'mu4e--loading-overlay-text)
-             (let ((overlay (make-overlay (point-min) (point-min))))
-               (overlay-put overlay 'priority 9999)
-               (overlay-put overlay 'before-string (propertize "Loading…\n" 'face 'mu4e-header-title-face))
-               overlay)))
+          (setq mu4e--loading-overlay-bg
+                (let ((overlay (make-overlay (point-min) (point-max))))
+                  (overlay-put overlay 'face `(:foreground "gray22" :background
+                                                           ,(face-attribute 'default :background)))
+                  (overlay-put overlay 'priority 9998)
+                  overlay)))
+        (setq mu4e--loading-overlay-text
+              (let ((overlay (make-overlay (point-min) (point-min))))
+                (overlay-put overlay 'priority 9999)
+                (overlay-put overlay 'before-string (propertize "Loading…\n" 'face 'mu4e-header-title-face))
+                overlay)))
     (when mu4e--loading-overlay-bg
       (delete-overlay mu4e--loading-overlay-bg))
     (when mu4e--loading-overlay-text

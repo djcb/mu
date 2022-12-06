@@ -76,7 +76,7 @@
 (require 'mu4e-message)
 (require 'mu4e-draft)
 (require 'mu4e-context)
-
+(require 'mu4e-window)
 
 ;;; Configuration
 ;; see mu4e-drafts.el
@@ -502,8 +502,7 @@ See `mu4e-compose-crypto-policy' for more details."
           (sign (mml-secure-message-sign))
           (encrypt (mml-secure-message-encrypt)))))
 
-(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes
-                                             switch-function)
+(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -542,7 +541,7 @@ are optional."
   (let ((draft-buffer))
     (let ((winconf (current-window-configuration)))
       (condition-case nil
-          (setq draft-buffer (mu4e-draft-open compose-type original-msg switch-function))
+          (setq draft-buffer (mu4e-draft-open compose-type original-msg))
         (quit (set-window-configuration winconf)
               (mu4e-message "Operation aborted")
               (cl-return-from mu4e~compose-handler))))
@@ -797,8 +796,7 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers _continue
-                                    switch-function yank-action
-				    _send-actions _return-action)
+                                    yank-action _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 
@@ -813,9 +811,6 @@ HEADER and VALUE are strings.
 
 CONTINUE, if non-nil, says to continue editing a message already
 being composed.  Interactively, CONTINUE is the prefix argument.
-
-SWITCH-FUNCTION, if non-nil, is a function to use to
-switch to and display the buffer used for mail composition.
 
 YANK-ACTION, if non-nil, is an action to perform, if and when
 necessary, to insert the raw text of the message being replied
@@ -833,11 +828,11 @@ called after the mail has been sent or put aside, and the mail
 buffer buried."
 
   (unless (mu4e-running-p)
-     (mu4e))
+    (mu4e))
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
-  (mu4e~compose-handler 'new nil nil switch-function)
+  (mu4e~compose-handler 'new nil nil)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
