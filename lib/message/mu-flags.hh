@@ -338,6 +338,28 @@ flags_filter(Flags flags, MessageFlagCategory cat)
 	return flags;
 }
 
+
+
+/**
+ * Return flags, where flags = new_flags but with unmutable_flag in the
+ * result the same as in old_flags
+ *
+ * @param old_flags
+ * @param new_flags
+ * @param unmutable_flag
+ *
+ * @return
+ */
+constexpr Flags
+flags_keep_unmutable(Flags old_flags, Flags new_flags, Flags unmutable_flag)
+{
+    if (any_of(old_flags & unmutable_flag))
+	return new_flags | unmutable_flag;
+    else
+	return new_flags & ~unmutable_flag;
+}
+
+
 /**
  * Get a string representation of flags
  *
