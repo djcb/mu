@@ -669,6 +669,57 @@ Boo!
 	}
 }
 
+static void
+test_related_dup_threaded()
+{
+	// test message sent to self, and copy of received msg.
+
+	const auto test_msg = R"(From: "Edward Mallory" <ed@leviathan.gb>
+To: "Laurence Oliphant <oli@hotmail.com>
+Subject: Boo
+Date: Wed, 07 Dec 2022 18:38:06 +0200
+Message-ID: <875yentbhg.fsf@djcbsoftware.nl>
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Boo!
+)";
+	const TestMap test_msgs = {
+		{"sent/cur/msg1", test_msg },
+		{"inbox/cur/msg1", test_msg },
+		{"inbox/cur/msg2", test_msg }};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	g_assert_cmpuint(store.size(), ==, 3);
+
+
+	// normal query should give 2
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::None);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
+	// a related query should give 3
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	// a related/threading query should give 3.
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated | QueryFlags::Threading);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+}
 
 int
 main(int argc, char* argv[])
@@ -692,6 +743,8 @@ main(int argc, char* argv[])
 			test_duplicate_refresh_rename);
 	g_test_add_func("/store/query/term-split",
 			test_term_split);
+	g_test_add_func("/store/query/related-dup-threaded",
+			test_related_dup_threaded);
 
 	return g_test_run();
 }
