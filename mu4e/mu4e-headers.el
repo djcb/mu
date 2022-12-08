@@ -567,7 +567,7 @@ and `mu4e-headers-time-format'."
 Otherwise, return the thread-prefix without the subject-text. In
 other words, show the subject of a thread only once, similar to
 e.g. \"mutt\"."
-  (let* ((tinfo  (mu4e-message-field msg :meta))
+  (let* ((tinfo (mu4e-message-field msg :meta))
          (subj (mu4e-msg-field msg :subject)))
     (concat ;; prefix subject with a thread indicator
      (mu4e~headers-thread-prefix tinfo)
@@ -600,7 +600,10 @@ found."
         ;; work-around: emacs' display gets really slow when lines are too long;
         ;; so limit subject length to 600
         (truncate-string-to-width val 600)))
-      (:thread-subject (mu4e~headers-thread-subject msg))
+      (:thread-subject ;; if not searching threads, fall back to :subject
+       (if mu4e-search-threads
+	   (mu4e~headers-thread-subject msg)
+	 (mu4e~headers-field-value msg :subject)))
       ((:maildir :path :message-id) val)
       ((:to :from :cc :bcc) (mu4e~headers-contact-str val))
       ;; if we (ie. `user-mail-address' is the 'From', show
