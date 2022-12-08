@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -661,6 +661,10 @@ assert_thread_paths(const MockQueryResults& qrs, const Expected& expected)
 			       qr.path().value_or("") == exp.first;
 		});
 		g_assert_true(it != qrs.end());
+		g_debug("thread-path (%s@%s): expected: '%s'; got '%s'",
+			it->message_id().value_or("<none>").c_str(),
+			it->path().value_or("<none>").c_str(),
+			exp.second.c_str(), it->query_match().thread_path.c_str());
 		g_assert_cmpstr(exp.second.c_str(), ==, it->query_match().thread_path.c_str());
 	}
 }
@@ -754,12 +758,42 @@ test_dups_dup_first()
 
 	calculate_threads(results, false);
 
-	assert_thread_paths(results,
-			    {
-				{"/path2", "0"},
-				{"/path1", "0:0"},
-			    });
+	assert_thread_paths(results, {
+			{"/path2", "0"},
+			{"/path1", "0:0"},
+		});
 }
+
+static void
+test_dups_dup_multi()
+{
+	// now dup becomes the leader; this will _demote_
+	// r1.
+
+	MockQueryResult r1_dup1{"m1", "1", {}};
+	r1_dup1.query_match().flags |= QueryMatch::Flags::Duplicate;
+	r1_dup1.path_ = "/path1";
+
+	MockQueryResult r1_dup2{"m1", "1", {}};
+	r1_dup2.query_match().flags |= QueryMatch::Flags::Duplicate;
+	r1_dup2.path_ = "/path2";
+
+	MockQueryResult r1{"m1", "1", {}};
+	r1.query_match().flags |= QueryMatch::Flags::Leader;
+	r1.path_ = "/path3";
+
+	auto results = MockQueryResults{r1_dup1, r1_dup2, r1};
+	calculate_threads(results, false);
+
+	assert_thread_paths(results, {
+			{"/path3", "0"},
+			{"/path1", "0:0"},
+			{"/path2", "0:1"},
+		});
+}
+
+
+
 
 static void
 test_do_not_prune_root_empty_with_children()
@@ -896,6 +930,7 @@ try {
 	g_test_add_func("/threader/id-table-inconsistent", test_id_table_inconsistent);
 	g_test_add_func("/threader/dups/dup-last", test_dups_dup_last);
 	g_test_add_func("/threader/dups/dup-first", test_dups_dup_first);
+	g_test_add_func("/threader/dups/dup-multi", test_dups_dup_multi);
 
 	g_test_add_func("/threader/prune/do-not-prune-root-empty-with-children",
 			test_do_not_prune_root_empty_with_children);

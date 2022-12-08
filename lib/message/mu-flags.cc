@@ -150,6 +150,18 @@ test_flags_filter()
 }
 
 
+
+[[maybe_unused]] static void
+test_flags_keep_unmutable()
+{
+	static_assert(flags_keep_unmutable((Flags::Seen|Flags::Passed),
+					   (Flags::Flagged|Flags::Draft),
+					   Flags::Replied) ==
+		      (Flags::Flagged|Flags::Draft));
+}
+
+
+
 #ifdef BUILD_TESTS
 int
 main(int argc, char* argv[])
@@ -164,6 +176,8 @@ main(int argc, char* argv[])
 			test_flags_from_delta_expr);
 	g_test_add_func("/message/flags/flags-filter",
 			test_flags_filter);
+	g_test_add_func("/message/flags/flags-keep-unmutable",
+			test_flags_keep_unmutable);
 
 	return g_test_run();
 }

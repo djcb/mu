@@ -109,17 +109,17 @@ private:
 				Store::Id                 docid,
 				const Option<QueryMatch&> qm) const;
 
-	Sexp move_docid(Store::Id docid, Option<std::string> flagstr,
+	void move_docid(Store::Id docid, Option<std::string> flagstr,
 			bool new_name, bool no_view);
 
-	Sexp perform_move(Store::Id		docid,
-			  const Message&		msg,
+	void perform_move(Store::Id		docid,
+			  const Message&	msg,
 			  const std::string&	maildirarg,
 			  Flags			flags,
 			  bool			new_name,
 			  bool			no_view);
 
-	bool view_mark_as_read(Store::Id docid, const Message& msg, bool rename);
+	void view_mark_as_read(Store::Id docid, Message&& msg, bool rename);
 
 	Store&			store_;
 	Server::Output		output_;
@@ -797,7 +797,7 @@ Server::Private::mkdir_handler(const Command& cmd)
 				     ":message", format("%s has been created", path.c_str())));
 }
 
-Sexp
+void
 Server::Private::perform_move(Store::Id                 docid,
 			      const Message&            msg,
 			      const std::string&	maildirarg,
@@ -813,20 +813,26 @@ Server::Private::perform_move(Store::Id                 docid,
 	} else /* are we moving to a different mdir, or is it just flags? */
 		different_mdir = maildir != msg.maildir();
 
-	const auto new_msg = store().move_message(docid, maildir, flags, new_name);
-	if (!new_msg)
-		throw new_msg.error();
+	Store::MoveOptions move_opts{Store::MoveOptions::DupFlags};
+	if (new_name)
+		move_opts |= Store::MoveOptions::ChangeName;
 
-	Sexp seq;
-	seq.put_props(":update", build_message_sexp(new_msg.value(), docid, {}));
-	/* note, the :move t thing is a hint to the frontend that it
-	 * could remove the particular header */
-	if (different_mdir)
-		seq.put_props(":move", Sexp::t());
-	if (!no_view)
-		seq.put_props(":maybe-view", Sexp::t());
+	/* note: we get back _all_ the messages that changed; the first is the
+	 * primary mover; the rest (if present) are any dups affected */
+	const auto idmsgvec{store().move_message(docid, maildir, flags, move_opts)};
+	if (!idmsgvec)
+		throw idmsgvec.error();
 
-	return seq;
+	for (auto&&[id, msg]: *idmsgvec) {
+		Sexp sexp{":update"_sym, build_message_sexp(idmsgvec->at(0).second, id, {})};
+		/* note, the :move t thing is a hint to the frontend that it
+		 * could remove the particular header */
+		if (different_mdir)
+			sexp.put_props(":move", Sexp::t());
+		if (!no_view && id == docid)
+			sexp.put_props(":maybe-view", Sexp::t());
+		output_sexp(std::move(sexp));
+	}
 }
 
 
@@ -847,7 +853,7 @@ calculate_message_flags(const Message& msg, Option<std::string> flagopt)
 		return flags.value();
 }
 
-Sexp
+void
 Server::Private::move_docid(Store::Id		docid,
 			    Option<std::string>	flagopt,
 			    bool		new_name,
@@ -861,9 +867,7 @@ Server::Private::move_docid(Store::Id		docid,
 		throw Error{Error::Code::Store, "failed to get message from store"};
 
 	const auto flags = calculate_message_flags(msg.value(), flagopt);
-	auto lst = perform_move(docid, *msg, "", flags, new_name, no_view);
-
-	return lst;
+	perform_move(docid, *msg, "", flags, new_name, no_view);
 }
 
 /*
@@ -871,9 +875,6 @@ Server::Private::move_docid(Store::Id		docid,
  * flags. parameters are *either* a 'docid:' or 'msgid:' pointing to
  * the message, a 'maildir:' for the target maildir, and a 'flags:'
  * parameter for the new flags.
- *
- * returns an (:update <new-msg-sexp>)
- *
  */
 void
 Server::Private::move_handler(const Command& cmd)
@@ -890,8 +891,7 @@ Server::Private::move_handler(const Command& cmd)
 				"can't move multiple messages at the same time"};
 		// multi.
 		for (auto&& docid : docids)
-			output_sexp(move_docid(docid, flagopt,
-					       rename, no_view));
+			move_docid(docid, flagopt, rename, no_view);
 		return;
 	}
 	auto docid{docids.at(0)};
@@ -907,7 +907,7 @@ Server::Private::move_handler(const Command& cmd)
 	 * we received (ie., flagstr), if any, plus the existing message
 	 * flags. */
 	const auto flags = calculate_message_flags(msg, flagopt);
-	output_sexp(perform_move(docid, msg, maildir, flags, rename, no_view));
+	perform_move(docid, msg, maildir, flags, rename, no_view);
 }
 
 void
@@ -965,7 +965,7 @@ Server::Private::remove_handler(const Command& cmd)
 
 	if (!store().remove_message(path))
 		g_warning("failed to remove message @ %s (%d) from store", path.c_str(), docid);
-	output_sexp(Sexp().put_props(":remove", docid)); 	// act as if it worked.
+	output_sexp(Sexp().put_props(":remove", docid));	// act as if it worked.
 }
 
 void
@@ -982,43 +982,32 @@ Server::Private::sent_handler(const Command& cmd)
 			    ":docid", docid.value()));
 }
 
-bool
-Server::Private::view_mark_as_read(Store::Id docid, const Message& msg, bool rename)
+void
+Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 {
-	/* move some message if the flags changes; and send either a :view (main message
-	 * or :update (the rest))*/
-	auto maybe_move = [&](Store::Id msg_docid, Flags old_flags,
-			      bool do_rename, bool do_view)->bool {
 
-		const auto newflags{flags_from_delta_expr("+S-u-N", old_flags)};
-		if (!newflags || old_flags == *newflags)
-			return false;
+	auto move_res = std::invoke([&]()->Result<Store::IdMessageVec> {
+			const auto newflags{flags_from_delta_expr("+S-u-N", msg.flags())};
+			if (!newflags || msg.flags() == *newflags) {
+				/* case 1: message was already read; do nothing */
+				Store::IdMessageVec idmvec;
+				idmvec.emplace_back(docid, std::move(msg));
+				return idmvec;
+			} else {
+				/* case 2: move message (and possibly dups) */
+				Store::MoveOptions move_opts{Store::MoveOptions::DupFlags};
+				if (rename)
+					move_opts |= Store::MoveOptions::ChangeName;
+				return store().move_message(docid, {}, newflags, move_opts);
+			}
+		});
 
-		auto updated_msg = store().move_message(msg_docid, {}, newflags, do_rename);
-		if (!updated_msg)
-			throw updated_msg.error();
+	if (!move_res)
+		throw move_res.error();
 
-		output_sexp(Sexp().put_props(do_view ? ":view" : ":update",
-					    build_message_sexp(*updated_msg, docid, {})));
-		return true;
-	};
-
-	/* now get _al_ the message-ids for the given message-id,
-	 * since, we want to apply the read-status to _all_. */
-
-	/* first the main message */
-	bool moved = maybe_move(docid, msg.flags(), rename, true/*:view*/);
-
-	/* now any other message with the same message-id */
-	for (auto&& rel_docid: docids_for_msgid(store_, msg.message_id())) {
-		/* ignore main one since we already handled it. */
-		if (rel_docid == docid)
-			continue;
-		if (auto msg{store().find_message(docid)}; msg)
-			maybe_move(rel_docid, msg->flags(), rename, false/*:update*/);
-	}
-
-	return moved;
+	for (auto&& [id, msg]: move_res.value())
+		output_sexp(Sexp{id == docid ? ":view"_sym : ":update"_sym,
+				build_message_sexp(msg, id, {})});
 }
 
 void
@@ -1038,10 +1027,12 @@ Server::Private::view_handler(const Command& cmd)
 		.or_else([]{throw Error{Error::Code::Store,
 					"failed to find message for view"};}).value();
 
-	/* if the message is marked-as-read, the response is handled there;
-	 * otherwise, we do so here. */
-	if (!mark_as_read || !view_mark_as_read(docid, msg, rename))
+	/* if the message should not be marked-as-read, we're done. */
+	if (!mark_as_read)
 		output_sexp(Sexp().put_props(":view", build_message_sexp(msg, docid, {})));
+	else
+		view_mark_as_read(docid, std::move(msg), rename);
+	/* otherwise, mark message and and possible dups as read */
 }
 
 Server::Server(Store& store, Server::Output output)

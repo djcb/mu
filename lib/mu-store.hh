@@ -307,21 +307,37 @@ public:
 	 */
 	bool contains_message(const std::string& path) const;
 
+
 	/**
-	 * Move a message both in the filesystem and in the store.
-	 * After a successful move, the message is updated.
+	 * Options for moving
+	 *
+	 */
+	enum struct MoveOptions {
+		None	     = 0,	/**< Defaults */
+		ChangeName   = 1 << 0,	/**< Change the name when moving */
+		DupFlags     = 1 << 1,  /**< Update flags for duplicate messages too*/
+	};
+
+
+	/**
+	 * Move a message both in the filesystem and in the store. After a
+	 * successful move, the message is updated.
 	 *
 	 * @param id the id for some message
 	 * @param target_mdir the target maildir (if any)
 	 * @param new_flags new flags (if any)
 	 * @param change_name whether to change the name
 	 *
-	 * @return Result, either the moved message or some error.
+	 * @return Result, either a vec of <doc-id, message> for the moved
+	 * message(s) or some error. Note that in case of success at least one
+	 * message is returned, and only with MoveOptions::DupFlags can it be
+	 * more than one.
 	 */
-	Result<Message> move_message(Store::Id id,
-				     Option<const std::string&> target_mdir = Nothing,
-				     Option<Flags> new_flags = Nothing,
-				     bool change_name = false);
+	using IdMessageVec = std::vector<std::pair<Id, Message>>;
+	Result<IdMessageVec> move_message(Store::Id id,
+					Option<const std::string&> target_mdir = Nothing,
+					Option<Flags> new_flags = Nothing,
+					MoveOptions opts = MoveOptions::None);
 
 	/**
 	 * Prototype for the ForEachMessageFunc
@@ -466,6 +482,7 @@ private:
 };
 
 MU_ENABLE_BITOPS(Store::Options);
+MU_ENABLE_BITOPS(Store::MoveOptions);
 
 } // namespace Mu
 

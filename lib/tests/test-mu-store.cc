@@ -22,6 +22,7 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <thread>
+#include <array>
 #include <unistd.h>
 #include <time.h>
 #include <fstream>
@@ -372,15 +373,92 @@ Yes, that would be excellent.
 
 	 // Move the message from new->cur
 	 std::this_thread::sleep_for(1s); /* ctime should change */
-	 const auto msg3 = store->move_message(msg->docid(), {}, Flags::Seen);
-	 assert_valid_result(msg3);
-	 assert_equal(msg3->maildir(), "/a");
-	 assert_equal(msg3->path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
-	 g_assert_true(::access(msg3->path().c_str(), R_OK)==0);
+	 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
+	 assert_valid_result(msgs3);
+	 g_assert_true(msgs3->size() == 1);
+	 const auto& msg3{msgs3->at(0).second};
+	 assert_equal(msg3.maildir(), "/a");
+	 assert_equal(msg3.path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
+	 g_assert_true(::access(msg3.path().c_str(), R_OK)==0);
 	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
 
-	 g_debug("%s", msg3->sexp().to_string().c_str());
+	 g_debug("%s", msg3.sexp().to_string().c_str());
 	 g_assert_cmpuint(store->size(), ==, 1);
+}
+
+
+
+static void
+test_store_move_dups()
+{
+	 const std::string msg_text =
+R"(From: Valentine Michael Smith <mike@example.com>
+To: Raul Endymion <raul@example.com>
+Subject: Re: multi-eq hash tables
+Date: Tue, 03 May 2022 20:58:02 +0200
+Message-ID: <87h766tzzz.fsf@gnus.org>
+
+Yes, that would be excellent.
+)";
+	 TempDir tempdir2;
+
+	 // create a message file + dups
+	 const auto res1 = maildir_mkdir(tempdir2.path() + "/Maildir/a");
+	 assert_valid_result(res1);
+	 const auto res2 = maildir_mkdir(tempdir2.path() + "/Maildir/b");
+	 assert_valid_result(res2);
+
+	 auto msg1_path = tempdir2.path() + "/Maildir/a/new/msg123";
+	 auto msg2_path = tempdir2.path() + "/Maildir/a/cur/msgabc:2,S";
+	 auto msg3_path = tempdir2.path() + "/Maildir/b/cur/msgdef:2,RS";
+
+	 TempDir tempdir;
+	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir", {}, {})};
+	 assert_valid_result(store);
+
+	 std::vector<Store::Id> ids;
+	 for (auto&& p: {msg1_path, msg2_path, msg3_path}) {
+			 std::ofstream output{p};
+			 output.write(msg_text.c_str(), msg_text.size());
+			 output.close();
+			 auto res = store->add_message(p);
+			 assert_valid_result(res);
+			 ids.emplace_back(*res);
+	 }
+	 g_assert_cmpuint(store->size(), ==, 3);
+
+	 // mark main message (+ dups) as seen
+	 auto mres = store->move_message(ids.at(0), {},
+					 Flags::Seen | Flags::Flagged | Flags::Passed,
+					 Store::MoveOptions::DupFlags);
+	 assert_valid_result(mres);
+	 // al three dups should have been updated
+	 g_assert_cmpuint(mres->size(), ==, 3);
+	 // first should be the  original
+	 g_assert_cmpuint(mres->at(0).first, ==, ids.at(0));
+	 { // Message 1
+		 const Message& msg = mres->at(0).second;
+		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/a/cur/msg123:2,FPS");
+		 g_assert_true(msg.flags() == (Flags::Seen|Flags::Flagged|Flags::Passed));
+	 }
+	 // note: Seen and Passed should be added to msg2/3, but Flagged shouldn't
+	 // msg3 should loose its R flag.
+
+	 auto check_msg2 = [&](const Message& msg) {
+		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/a/cur/msgabc:2,PS");
+	 };
+
+	 auto check_msg3 = [&](const Message& msg) {
+		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/b/cur/msgdef:2,PS");
+	 };
+
+	 if (mres->at(1).first == ids.at(1)) {
+		 check_msg2(mres->at(1).second);
+		 check_msg3(mres->at(2).second);
+	 } else  {
+		 check_msg2(mres->at(2).second);
+		 check_msg3(mres->at(1).second);
+	 }
 }
 
 
@@ -412,7 +490,8 @@ main(int argc, char* argv[])
 			test_message_mailing_list);
 	g_test_add_func("/store/message/attachments",
 			test_message_attachments);
-	g_test_add_func("/store/index/move", test_index_move);
+	g_test_add_func("/store/index/index-move", test_index_move);
+	g_test_add_func("/store/index/move-dups", test_store_move_dups);
 	g_test_add_func("/store/index/fail", test_store_fail);
 
 	return g_test_run();

@@ -565,9 +565,12 @@ Boo!
 	/*
 	 * mark as read, i.e. move to cur/; ensure it really moved.
 	 */
-	auto moved_msg = store.move_message(old_docid, Nothing, Flags::Seen, rename);
-	assert_valid_result(moved_msg);
-	const auto new_path = moved_msg->path();
+	auto move_opts{rename ? Store::MoveOptions::ChangeName : Store::MoveOptions::None};
+	auto moved_msgs = store.move_message(old_docid, Nothing, Flags::Seen, move_opts);
+	assert_valid_result(moved_msgs);
+	g_assert_true(moved_msgs->size() == 1);
+	const auto& moved_msg{moved_msgs->at(0).second};
+	const auto new_path = moved_msg.path();
 	if (!rename)
 		assert_equal(new_path, store.properties().root_maildir + "/inbox/cur/msg:2,S");
 	g_assert_cmpuint(store.size(), ==, 1);
@@ -576,7 +579,7 @@ Boo!
 
 	/* also ensure that the cached sexp for the message has been updated;
 	 * that's what mu4e uses */
-	const auto moved_sexp{moved_msg->sexp()};
+	const auto moved_sexp{moved_msg.sexp()};
 	//std::cerr << "@@ " << *moved_msg << '\n';
 	g_assert_true(moved_sexp.plistp());
 	g_assert_true(moved_sexp.has_prop(":path"));
@@ -666,6 +669,57 @@ Boo!
 	}
 }
 
+static void
+test_related_dup_threaded()
+{
+	// test message sent to self, and copy of received msg.
+
+	const auto test_msg = R"(From: "Edward Mallory" <ed@leviathan.gb>
+To: "Laurence Oliphant <oli@hotmail.com>
+Subject: Boo
+Date: Wed, 07 Dec 2022 18:38:06 +0200
+Message-ID: <875yentbhg.fsf@djcbsoftware.nl>
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Boo!
+)";
+	const TestMap test_msgs = {
+		{"sent/cur/msg1", test_msg },
+		{"inbox/cur/msg1", test_msg },
+		{"inbox/cur/msg2", test_msg }};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	g_assert_cmpuint(store.size(), ==, 3);
+
+
+	// normal query should give 2
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::None);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
+	// a related query should give 3
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	// a related/threading query should give 3.
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated | QueryFlags::Threading);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+}
 
 int
 main(int argc, char* argv[])
@@ -689,6 +743,8 @@ main(int argc, char* argv[])
 			test_duplicate_refresh_rename);
 	g_test_add_func("/store/query/term-split",
 			test_term_split);
+	g_test_add_func("/store/query/related-dup-threaded",
+			test_related_dup_threaded);
 
 	return g_test_run();
 }
