@@ -180,7 +180,7 @@ struct MatchDeciderRelated final : public MatchDecider {
 
 		auto qm{make_query_match(doc)};
 		if (should_include(qm)) {
-			qm.flags = QueryMatch::Flags::Related;
+			qm.flags |= QueryMatch::Flags::Related;
 			decider_info_.matches.emplace(doc.get_docid(), std::move(qm));
 			return true;
 		} else
