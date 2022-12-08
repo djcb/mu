@@ -10,6 +10,14 @@
 
 *** mu4e
 
+    - when moving messages (which includes changing flags), file-flags changes
+      are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
+      /Replied/ status is propagated to all duplicates (earlier, this was only
+      done when marking a message as read). Note, /Draft/, /Flagged/ and /Trashed/
+      flags are deliberately *not* propagated.
+
+    - teach ~mu4e-copy-thing-at-point~ about shr links
+
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
 
@@ -23,8 +31,8 @@
        in progress!
 
      - The per-(week|day|year|year-month) script have been combined into a
-       ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~ installed,
-       you can do e.g.,
+       ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~
+       installed, you can do e.g.,
 #+begin_example
      mu histogram -- --time-unit=day --query="hello"
 #+end_example
@@ -47,6 +55,7 @@
 
     - reworked the internal s-expression parser
     - new command-line argument parser (based on CLI11)
+    - message-move flag propagation moved from the mu4e-server to mu-store
 
 * 1.8 (released on June 25, 2022)
 
