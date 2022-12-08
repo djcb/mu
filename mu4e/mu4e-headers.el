@@ -590,7 +590,7 @@ found."
                                field (cdr item)))))
     (funcall func msg)))
 
-(defsubst mu4e~headers-field-value (msg field)
+(defun mu4e~headers-field-value (msg field)
   (let ((val (mu4e-message-field msg field)))
     (cl-case field
       (:subject
@@ -622,7 +622,7 @@ found."
       (:size (mu4e-display-size val))
       (t (mu4e~headers-custom-field-value msg field)))))
 
-(defun mu4e~headers-truncate-field-fast (val width)
+(defsubst mu4e~headers-truncate-field-fast (val width)
   "Truncate VAL to WIDTH. Fast and somewhat inaccurate."
   (if width
       (truncate-string-to-width val width 0 ?\s truncate-string-ellipsis)
