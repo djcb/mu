@@ -56,6 +56,45 @@ linked to.")
 (defvar-local mu4e-linked-headers-buffer nil
   "Holds the headers buffer object that ties it to a view.")
 
+(defcustom mu4e-split-view 'horizontal
+  "How to show messages / headers.
+A symbol which is either:
+ * `horizontal':    split horizontally (headers on top)
+ * `vertical':      split vertically (headers on the left).
+ * `single-window': view and headers in one window (mu4e will try not to
+        touch your window layout), main view in minibuffer
+ * a function:      the function is responsible to return some window for
+        the view.
+ * anything else:   don't split (show either headers or messages,
+        not both).
+Also see `mu4e-headers-visible-lines'
+and `mu4e-headers-visible-columns'."
+  :type '(choice (const :tag "Split horizontally" horizontal)
+                 (const :tag "Split vertically" vertical)
+                 (const :tag "Single window" single-window)
+                 (const :tag "Don't split" nil))
+  :group 'mu4e-headers)
+
+(defcustom mu4e-compose-in-new-frame nil
+  "Whether to compose messages in a new frame."
+  :type 'boolean
+  :group 'mu4e-compose)
+
+(defcustom mu4e-headers-visible-lines 10
+  "Number of lines to display in the header view when using the
+horizontal split-view. This includes the header-line at the top,
+and the mode-line."
+  :type 'integer
+  :group 'mu4e-headers)
+
+(defcustom mu4e-headers-visible-columns 30
+  "Number of columns to display for the header view when using the
+vertical split-view."
+  :type 'integer
+  :group 'mu4e-headers)
+
+(declare-function mu4e-view-mode "mu4e-view")
+
 (defun mu4e-get-headers-buffer (&optional buffer-name create)
   "Return a related headers buffer optionally named BUFFER-NAME.
 
@@ -160,7 +199,7 @@ being created if CREATE is non-nil."
                                         (eq mu4e-linked-headers-buffer headers-buffer))))))
       ;; If such a linked buffer exists and its buffer is live, we use that buffer.
       (if (and linked-buffer (buffer-live-p (car linked-buffer)))
-          ;; NOTE: It's possible for there to be one than one linked view buffer.
+          ;; NOTE: It's possible for there to be more than one linked view buffer.
           ;;
           ;; What, if anything, should the heuristic be to pick the
           ;; one to use? Presently `car' is used, but there are better

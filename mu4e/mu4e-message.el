@@ -28,6 +28,7 @@
 
 (require 'mu4e-vars)
 (require 'mu4e-contacts)
+(require 'mu4e-window)
 (require 'flow-fill)
 (require 'shr)
 (require 'pp)

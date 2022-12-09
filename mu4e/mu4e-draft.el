@@ -231,11 +231,6 @@ mu4e-specific version of `message-signature'."
   :type 'boolean
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-in-new-frame nil
-  "Whether to compose messages in a new frame."
-  :type 'boolean
-  :group 'mu4e-compose)
-
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
   "The User-Agent string for mu4e, or nil.")

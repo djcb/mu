@@ -32,6 +32,7 @@
 (require 'cl-lib)
 (require 'bookmark)
 
+(require 'mu4e-window)
 (require 'mu4e-config)
 
 ;;; Customization
@@ -86,24 +87,7 @@ marked as read-only, or non-nil otherwise."
   :group 'mu4e-view)
 
 
-(defcustom mu4e-split-view 'horizontal
-  "How to show messages / headers.
-A symbol which is either:
- * `horizontal':    split horizontally (headers on top)
- * `vertical':      split vertically (headers on the left).
- * `single-window': view and headers in one window (mu4e will try not to
-        touch your window layout), main view in minibuffer
- * a function:      the function is responsible to return some window for
-        the view.
- * anything else:   don't split (show either headers or messages,
-        not both).
-Also see `mu4e-headers-visible-lines'
-and `mu4e-headers-visible-columns'."
-  :type '(choice (const :tag "Split horizontally" horizontal)
-                 (const :tag "Split vertically" vertical)
-                 (const :tag "Single window" single-window)
-                 (const :tag "Don't split" nil))
-  :group 'mu4e-headers)
+
 
 
 (defun mu4e-select-other-view ()

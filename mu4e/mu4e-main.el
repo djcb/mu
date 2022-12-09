@@ -33,6 +33,7 @@
 (require 'mu4e-contacts)
 (require 'mu4e-search)
 (require 'mu4e-vars)     ;; mu-wide variables
+(require 'mu4e-window)
 
 (declare-function mu4e-compose-new  "mu4e-compose")
 (declare-function mu4e~headers-jump-to-maildir  "mu4e-headers")

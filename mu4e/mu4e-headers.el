@@ -104,18 +104,7 @@ In the format of `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-visible-lines 10
-  "Number of lines to display in the header view when using the
-horizontal split-view. This includes the header-line at the top,
-and the mode-line."
-  :type 'integer
-  :group 'mu4e-headers)
 
-(defcustom mu4e-headers-visible-columns 30
-  "Number of columns to display for the header view when using the
-vertical split-view."
-  :type 'integer
-  :group 'mu4e-headers)
 
 (defcustom mu4e-headers-precise-alignment nil
   "When set, use precise (but relatively slow) alignment for columns.
