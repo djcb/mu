@@ -115,9 +115,7 @@ generated name does not already exist."
            ;; there is no such linked buffer -- it is
            ;; detached -- raise an error.
            (and (mu4e-current-buffer-type-p 'view)
-                (or mu4e-linked-headers-buffer
-                    ;; (error "This view buffer is detached")
-                    ))
+                mu4e-linked-headers-buffer)
            ;; if we're already in a headers buffer then
            ;; that is the one we use.
            (and (mu4e-current-buffer-type-p 'headers)
