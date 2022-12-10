@@ -837,7 +837,7 @@ major-mode for the headers view is @code{mu4e-headers-mode}.
 * Sorting and threading::Influencing the display
 * Custom headers: HV Custom headers. Adding your own headers
 * Actions: HV Actions. Defining and using actions
-* Split view::Seeing both headers and messages
+* Controlling and Displaying Buffers:: How and where the buffers are displayed
 @end menu
 
 @node HV Overview
@@ -1117,14 +1117,24 @@ attachment, using @code{mu4e-compose-attach-captured-message}. See
 @file{mu4e-actions.el} in the @t{mu4e} source distribution for more example
 actions.
 
-@node Split view
-@section Split view
+@node Controlling and Displaying Buffers
+@section Display
 
-Using the @emph{Split view}, we can see the @ref{Headers view} and the
-@ref{Message view} next to each other, with the message selected in the
-former, visible in the latter. You can influence the way the splitting
-is done by customizing the variable @code{mu4e-split-view}. Possible
-values are:
+By default, @t{mu4e} will attempt to manage the display of its own
+buffers. To do this, the variable @code{mu4e-split-view} is used to determine
+how, or where, windows and buffers are placed.
+
+However, @t{mu4e}'s display rules are provisional; you can override them
+easily by customizing @code{display-buffer-alist}, which governs how Emacs --
+and thus @t{mu4e} -- must display your buffers.
+
+That means you can instruct @t{mu4e} to place message views in separate tabs
+or frames, if you so desire.
+
+@section Split view
+You can control how @t{mu4e} displays its buffers, including the @ref{Headers
+view} and the @ref{Message view}, by customizing
+@code{mu4e-split-view}. There are several options available:
 
 @itemize
 @item @t{horizontal} (this is the default): display the message view below the
@@ -1138,7 +1148,9 @@ minimize mu4e window operations (opening, killing, resizing, etc) and
 buffer changes, while still retaining the view and headers buffers. In
 addition, it replaces mu4e main view with a minibuffer prompt containing
 the same information.
-@item anything else: don't do any splitting
+@item @t{function}: a function that takes a buffer name and returns a
+window to display the buffer in.
+@item anything else: prefer reusing the same window, if possible.
 @end itemize
 
 @noindent
@@ -1151,6 +1163,26 @@ headers-view to the message-view and vice-versa with
 @code{mu4e-select-other-view}, bound to @key{y}
 @end itemize
 
+@section Display Buffer Example
+
+Here are a couple of examples that override @t{mu4e}'s default buffer
+placement. You do not need to configure @code{mu4e-split-view} for this to
+work. In the absence of explicit rules to the contrary, @t{mu4e} will fall
+back on the value you have set in @code{mu4e-split-view} @emph{unless} you
+have assigned your own custom window function.
+
+Here is an example that displays the headers buffer in a side window to the
+right. It occupies half of the width of the frame.
+
+@lisp
+(add-to-list 'display-buffer-alist
+  '(("\\*mu4e-headers\\*" display-buffer-in-side-window
+    (side . right)
+    (window-width . 0.5)))
+@end lisp
+
+You can type @key{C-x w s} to toggle the side windows to hide or show them at
+will.
 
 @node Message view
 @chapter The message view
@@ -1170,6 +1202,7 @@ from @t{gnus-article-mode}.
 * Rich-text and images: MSGV Rich-text and images. Reading rich-text messages
 * Custom headers: MSGV Custom headers. Your very own headers
 * Actions: MSGV Actions. Defining and using actions.
+* Detaching and Reattaching messages: MSGV Detaching and reattaching. Multiple message views.
 @end menu
 
 @node MSGV Overview
@@ -1286,6 +1319,7 @@ A            execute some custom action on the message's MIME-parts
 
 misc
 ----
+z, Z         detach (or reattach) a message view to a headers buffer
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
 H            get help
@@ -1397,6 +1431,35 @@ MIME-part actions allow you to act upon MIME-parts in a message - such
 as attachments.  For now, these actions are defined and documented in
 @code{mu4e-view-mime-part-actions}.
 
+
+
+@node MSGV Detaching and reattaching
+@section Detaching and reattaching messages
+
+You can have multiple message views, but you must rename the view
+buffer and detach it to stop @t{mu4e} from reusing it when you
+navigate up or down in the headers buffer. If you have several view
+buffers attached to a headers view, then @t{mu4e} may pick one at
+random when it has to choose which one to display a message in.
+
+To detach the message view from its linked headers buffer, type
+@key{z}. A message will appear saying it is detached (or warn you if
+it is already detached.)
+
+Detached buffers are static; they cannot change the displayed message,
+and no headers buffer will use a detached buffer to display its
+messages. You can reattach a buffer to an live headers buffer by
+typing @key{Z}.
+
+You can freely rename a message view buffer -- such as with @key{C-x x
+r} -- if you want multiple, open messages.
+
+Detached messages are often useful for workflows involving lots of
+simultaneous messages.
+
+You can @emph{tear off} the window a message is in and place it in a
+new tab by typing @key{C-x w ^ f}. You can also detach a window and
+put it in its own tab with @key{C-x w ^ t}.
 
 @node Editor view
 @chapter The editor view
@@ -4022,8 +4085,12 @@ Sending...done
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
 
-@subsection Is it possible to compose messages in a separate frame?
-Yes --- set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
+@subsection Is it possible to view headers and messages, or compose new ones, in a separate frame?
+Yes. There is builtin support for composing messages in a new
+frame. Set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
+
+However, if you want to personalize the display of all of @t{mu4e}'s
+buffers, you can do so by customizing @code{display-buffer-alist}.
 
 @subsection How can I apply format=flowed to my outgoing messages?
 This enables receiving clients that support this feature to reflow

@@ -211,21 +211,22 @@ if you otherwise want to use `mu4e-index-lazy-check'."
 (defvar mu4e--update-buffer nil
   "The buffer of the update process when updating.")
 
-(define-derived-mode mu4e--update-mail-mode
-special-mode "mu4e:update"
+(define-derived-mode mu4e--update-mail-mode special-mode "mu4e:update"
   "Major mode used for retrieving new e-mail messages in `mu4e'.")
 
 (define-key mu4e--update-mail-mode-map (kbd "q") 'mu4e-kill-update-mail)
 
 (defun mu4e--temp-window (buf height)
-  "Create a temporary window with HEIGHT at the bottom BUF."
-  (let ((win
-         (split-window
-          (frame-root-window)
-          (- (window-height (frame-root-window)) height))))
-    (set-window-buffer win buf)
-    (set-window-dedicated-p win t)
-    win))
+  "Create a temporary window with HEIGHT at the bottom BUF.
+
+This function uses `display-buffer' with a default preset.
+
+To override this behavior, customize `display-buffer-alist'."
+  (display-buffer buf `(display-buffer-at-bottom
+                        (preserve-size . (nil . t))
+                        (height . ,height)
+                        (window-height . fit-window-to-buffer)))
+  (set-window-buffer (get-buffer-window buf) buf))
 
 (defun mu4e--update-sentinel-func (proc _msg)
   "Sentinel function for the update process PROC."
@@ -244,8 +245,7 @@ special-mode "mu4e:update"
           (mu4e-update-index)))
     (mu4e-update-index))
   (when (buffer-live-p mu4e--update-buffer)
-    (unless (eq mu4e-split-view 'single-window)
-      (mapc #'delete-window (get-buffer-window-list mu4e--update-buffer)))
+    (delete-windows-on mu4e--update-buffer t)
     (kill-buffer mu4e--update-buffer)))
 
 ;; complicated function, as it:
@@ -268,8 +268,6 @@ run in the background; otherwise, pop up a window."
     (setq mu4e--update-buffer buf)
     (when (window-live-p win)
       (with-selected-window win
-        ;; ;;(switch-to-buffer buf)
-        ;; (set-window-dedicated-p win t)
         (erase-buffer)
         (insert "\n") ;; FIXME -- needed so output starts
         (mu4e--update-mail-mode)))

@@ -28,6 +28,7 @@
 
 (require 'mu4e-vars)
 (require 'mu4e-contacts)
+(require 'mu4e-window)
 (require 'flow-fill)
 (require 'shr)
 (require 'pp)
@@ -206,18 +207,20 @@ If MSG is nil, use `mu4e-message-at-point'."
     (kill-new path)
     (mu4e-message "Saved '%s' to kill-ring" path)))
 
-(defconst mu4e--sexp-buffer-name " *mu4e-sexp-at-point"
-  "Buffer name for sexp buffers.")
-
 (defun mu4e-sexp-at-point ()
   "Show or hide the s-expression for the message-at-point, if any."
   (interactive)
   (if-let ((win (get-buffer-window mu4e--sexp-buffer-name)))
       (delete-window win)
     (when-let ((msg (mu4e-message-at-point 'noerror)))
-      (with-current-buffer-window mu4e--sexp-buffer-name nil nil
-	;; the "pretty-printing" is not very pretty...
-	(insert (pp-to-string msg))))))
+      (when (buffer-live-p mu4e--sexp-buffer-name)
+        (kill-buffer mu4e--sexp-buffer-name))
+      (with-current-buffer-window (get-buffer-create mu4e--sexp-buffer-name) nil nil
+        (lisp-data-mode)
+	(insert (pp-to-string msg))
+        (font-lock-ensure)
+        ;; add basic `quit-window' bindings
+        (view-mode 1)))))
 
 ;;;
 (provide 'mu4e-message)

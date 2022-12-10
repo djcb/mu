@@ -191,7 +191,7 @@
         (funcall action docid original-msg target))
       (when (and (mu4e~headers-view-this-message-p docid)
                  (buffer-live-p (mu4e-get-view-buffer)))
-        (switch-to-buffer (mu4e-get-view-buffer))
+        (mu4e-display-buffer (mu4e-get-view-buffer))
         (or (mu4e-view-headers-next)
             (kill-buffer-and-window))))))
 

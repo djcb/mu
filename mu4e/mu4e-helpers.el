@@ -32,6 +32,7 @@
 (require 'cl-lib)
 (require 'bookmark)
 
+(require 'mu4e-window)
 (require 'mu4e-config)
 
 ;;; Customization
@@ -86,79 +87,26 @@ marked as read-only, or non-nil otherwise."
   :group 'mu4e-view)
 
 
-(defcustom mu4e-split-view 'horizontal
-  "How to show messages / headers.
-A symbol which is either:
- * `horizontal':    split horizontally (headers on top)
- * `vertical':      split vertically (headers on the left).
- * `single-window': view and headers in one window (mu4e will try not to
-        touch your window layout), main view in minibuffer
- * a function:      the function is responsible to return some window for
-        the view.
- * anything else:   don't split (show either headers or messages,
-        not both).
-Also see `mu4e-headers-visible-lines'
-and `mu4e-headers-visible-columns'."
-  :type '(choice (const :tag "Split horizontally" horizontal)
-                 (const :tag "Split vertically" vertical)
-                 (const :tag "Single window" single-window)
-                 (const :tag "Don't split" nil))
-  :group 'mu4e-headers)
+
 
-;;; Buffers
-
-(defconst mu4e-main-buffer-name " *mu4e-main*"
-  "Name of the mu4e main buffer.
-The default name starts with SPC and therefore is not visible in
-buffer list.")
-(defconst mu4e-headers-buffer-name "*mu4e-headers*"
-  "Name of the buffer for message headers.")
-(defconst mu4e-embedded-buffer-name " *mu4e-embedded*"
-  "Name for the embedded message view buffer.")
-(defconst mu4e-view-buffer-name "*Article*"
-  "Name of the view buffer.")
-
-(defun mu4e-get-headers-buffer ()
-  "Get the buffer object from `mu4e-headers-buffer-name'."
-  (get-buffer mu4e-headers-buffer-name))
-
-(defun mu4e-get-view-buffer ()
-  "Get the buffer object from `mu4e-view-buffer-name'."
-  (get-buffer mu4e-view-buffer-name))
 
 (defun mu4e-select-other-view ()
   "Switch between headers view and message view."
   (interactive)
   (let* ((other-buf
           (cond
-           ((eq major-mode 'mu4e-headers-mode)
+           ((mu4e-current-buffer-type-p 'view)
+            (mu4e-get-headers-buffer))
+           ((mu4e-current-buffer-type-p 'headers)
             (mu4e-get-view-buffer))
-           ((eq major-mode 'mu4e-view-mode)
-            (mu4e-get-headers-buffer))))
+           (t (mu4e-error "This window is neither the headers nor the view window."))))
          (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
         (select-window other-win)
       (mu4e-message "No window to switch to"))))
 
 
-;;; Windows
-(defun mu4e-hide-other-mu4e-buffers ()
-  "Bury mu4e buffers.
-Hide (main, headers, view) (and delete all windows displaying
-it). Do _not_ bury the current buffer, though."
-  (interactive)
-  (unless (eq mu4e-split-view 'single-window)
-    (let ((curbuf (current-buffer)))
-      ;; note: 'walk-windows' does not seem to work correctly when modifying
-      ;; windows; therefore, the doloops here
-      (dolist (frame (frame-list))
-        (dolist (win (window-list frame nil))
-          (with-current-buffer (window-buffer win)
-            (unless (eq curbuf (current-buffer))
-              (when (member major-mode '(mu4e-headers-mode mu4e-view-mode))
-                (when (eq t (window-deletable-p win))
-                  (delete-window win))))))) t)))
-
+
 ;;; Modeline
 
 (defun mu4e-quote-for-modeline (str)
@@ -199,8 +147,6 @@ Create [mu4e]-prefixed error based on format FRM and ARGS. Does a
 local-exit and does not return, and raises a
 debuggable (backtrace) error."
   (mu4e-log 'error (apply 'mu4e-format frm args))
-  ;; opportunistically close the "loading" window.
-  (mu4e~loading-close)
   (error "%s" (apply 'mu4e-format frm args)))
 
 (defun mu4e-warn (frm &rest args)
@@ -406,7 +352,7 @@ log-buffer. See `mu4e-show-log'."
   (let ((buf (get-buffer mu4e--log-buffer-name)))
     (unless (buffer-live-p buf)
       (mu4e-warn "No debug log available"))
-    (switch-to-buffer buf)))
+    (display-buffer buf)))
 
 
 

@@ -104,18 +104,7 @@ In the format of `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
 
-(defcustom mu4e-headers-visible-lines 10
-  "Number of lines to display in the header view when using the
-horizontal split-view. This includes the header-line at the top,
-and the mode-line."
-  :type 'integer
-  :group 'mu4e-headers)
 
-(defcustom mu4e-headers-visible-columns 30
-  "Number of columns to display for the header view when using the
-vertical split-view."
-  :type 'integer
-  :group 'mu4e-headers)
 
 (defcustom mu4e-headers-precise-alignment nil
   "When set, use precise (but relatively slow) alignment for columns.
@@ -727,9 +716,7 @@ docid is not found."
 
 (defun mu4e~headers-view-this-message-p (docid)
   "Is DOCID currently being viewed?"
-  (when (buffer-live-p (mu4e-get-view-buffer))
-    (with-current-buffer (mu4e-get-view-buffer)
-      (eq docid (plist-get mu4e~view-message :docid)))))
+  (mu4e-get-view-buffers (lambda (_) (eq docid (plist-get mu4e~view-message :docid)))))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-append-handler (msglst)
@@ -811,10 +798,10 @@ present, don't do anything."
   ;; if we were viewing this message, close it now.
   (when (and (mu4e~headers-view-this-message-p docid)
              (buffer-live-p (mu4e-get-view-buffer)))
-    (unless (eq mu4e-split-view 'single-window)
+    (let ((buf (mu4e-get-view-buffer)))
       (mapc #'delete-window (get-buffer-window-list
-                             (mu4e-get-view-buffer) nil t)))
-    (kill-buffer (mu4e-get-view-buffer))))
+                             buf nil t))
+      (kill-buffer buf))))
 
 
 
@@ -828,7 +815,7 @@ present, don't do anything."
 
 Switch to the output buffer for the results. If IGNORE-HISTORY is
 true, do *not* update the query history stack."
-  (let* ((buf (get-buffer-create mu4e-headers-buffer-name))
+  (let* ((buf (mu4e-get-headers-buffer nil t))
          (inhibit-read-only t)
          (rewritten-expr (funcall mu4e-query-rewrite-function expr))
          (maxnum (unless mu4e-search-full mu4e-search-results-limit)))
@@ -845,7 +832,7 @@ true, do *not* update the query history stack."
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
     (unless (get-buffer-window buf 0)
-      (switch-to-buffer buf))
+      (mu4e-display-buffer buf t))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
     (setq mu4e~headers-search-start (float-time))
@@ -1158,7 +1145,8 @@ no user-interaction ongoing."
   (when (and mu4e-headers-auto-update          ;; must be set
 	     mu4e-index-update-status
 	     (not (zerop (plist-get mu4e-index-update-status :updated)))
-             (zerop (mu4e-mark-marks-num))     ;; non active marks
+             ;; NOTE: `mu4e-mark-marks-num' can return nil. Is that intended?
+             (zerop (or (mu4e-mark-marks-num) 0))     ;; non active marks
              (not (active-minibuffer-window))) ;; no user input only
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
@@ -1332,32 +1320,6 @@ message plist, or nil if not found."
                         ""))))))
 
 
-(defun mu4e~headers-redraw-get-view-window ()
-  "Close all windows, redraw the headers buffer based on the value
-of `mu4e-split-view', and return a window for the message view."
-  (if (eq mu4e-split-view 'single-window)
-      (or (and (buffer-live-p (mu4e-get-view-buffer))
-               (get-buffer-window (mu4e-get-view-buffer)))
-          (selected-window))
-    (mu4e-hide-other-mu4e-buffers)
-    (unless (buffer-live-p (mu4e-get-headers-buffer))
-      (mu4e-error "No headers buffer available"))
-    (switch-to-buffer (mu4e-get-headers-buffer))
-    ;; kill the existing view buffer
-    (when (buffer-live-p (mu4e-get-view-buffer))
-      (kill-buffer (mu4e-get-view-buffer)))
-    ;; get a new view window
-    (setq mu4e~headers-view-win
-          (with-demoted-errors "Unable to split window: %S"
-            (cond
-             ((eq mu4e-split-view 'horizontal) ;; split horizontally
-              (split-window-vertically mu4e-headers-visible-lines))
-             ((eq mu4e-split-view 'vertical) ;; split vertically
-              (split-window-horizontally mu4e-headers-visible-columns))
-             ((functionp mu4e-split-view)
-              (funcall mu4e-split-view))
-             (t ;; no splitting; just use the currently selected one
-              (selected-window)))))))
 
 ;;; Search-based marking
 
@@ -1627,41 +1589,24 @@ _not_ refresh the last search with the new setting for threading."
   (mu4e~headers-toggle "Skip-duplicates"
                        'mu4e-headers-skip-duplicates dont-refresh))
 
-(defvar mu4e~headers-loading-buf nil
-  "A buffer for loading a message view.")
-
 (defun mu4e-headers-view-message ()
-  "View message at point                                    .
-If there's an existing window for the view, re-use that one . If
-not, create a new one, depending on the value of
-`mu4e-split-view': if it's a symbol `horizontal' or `vertical',
-split the window accordingly; if it is nil, replace the current
-window                                                      . "
+  "View message at point."
   (interactive)
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((msg (mu4e-message-at-point))
 	 (path (mu4e-message-field msg :path))
 	 (_exists (or (file-readable-p  path)
-		     (mu4e-warn "No message at %s" path)))
+		      (mu4e-warn "No message at %s" path)))
          (docid (or (mu4e-message-field msg :docid)
                     (mu4e-warn "No message at point")))
          (mark-as-read
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
-            mu4e-view-auto-mark-as-read))
-         (viewwin (mu4e~headers-redraw-get-view-window)))
-    (unless (window-live-p viewwin)
-      (mu4e-error "Cannot get a message view"))
-    (select-window viewwin)
-
-    ;; show some 'loading...' buffer
-    (unless (buffer-live-p mu4e~headers-loading-buf)
-      (setq mu4e~headers-loading-buf (get-buffer-create " *mu4e-loading*"))
-      (with-current-buffer mu4e~headers-loading-buf
-        (mu4e-loading-mode)))
-
-    (switch-to-buffer mu4e~headers-loading-buf)
+            mu4e-view-auto-mark-as-read)))
+    (when-let ((buf (mu4e-get-view-buffer (current-buffer) nil)))
+      (with-current-buffer buf
+        (mu4e-loading-mode 1)))
     (mu4e--server-view docid mark-as-read)))
 
 
@@ -1692,15 +1637,15 @@ return nil."
         ;; update all windows showing the headers buffer
         (walk-windows
          (lambda (win)
-           (when (eq (window-buffer win) (mu4e-get-headers-buffer))
+           (when (eq (window-buffer win) (mu4e-get-headers-buffer (buffer-name)))
              (set-window-point win (point))))
          nil t)
-        (if (eq mu4e-split-view 'single-window)
-            (when (eq (window-buffer) (mu4e-get-view-buffer))
-              (mu4e-headers-view-message))
-          ;; update message view if it was already showing
-          (when (and mu4e-split-view (window-live-p mu4e~headers-view-win))
-            (mu4e-headers-view-message)))
+        ;; If the assigned (and buffer-local) `mu4e~headers-view-win'
+        ;; is not live then that is indicates the user does not want
+        ;; to pop up the view when they navigate in the headers
+        ;; buffer.
+        (when (window-live-p mu4e~headers-view-win)
+          (mu4e-headers-view-message))
         ;; attempt to highlight the new line, display the message
         (mu4e~headers-highlight docid)
         (if succeeded
@@ -1811,58 +1756,42 @@ region if there is a region, then move to the next message."
 This is a rather complex function, to ensure we don't disturb
 other windows."
   (interactive)
-  (if (eq mu4e-split-view 'single-window)
-      (progn (mu4e-mark-handle-when-leaving)
-             (kill-buffer))
-    (unless (eq major-mode 'mu4e-headers-mode)
-      (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-    (mu4e-mark-handle-when-leaving)
-    (let ((curbuf (current-buffer))
-          (curwin (selected-window)))
-      (walk-windows
-       (lambda (win)
-         (with-selected-window win
-           ;; if we the view window connected to this one, kill it
-           (when (and (not (one-window-p win)) (eq mu4e~headers-view-win win))
-             (delete-window win)
-             (setq mu4e~headers-view-win nil)))
-         ;; and kill any _other_ (non-selected) window that shows the current
-         ;; buffer
-         (when (and
-                (eq curbuf (window-buffer win)) ;; does win show curbuf?
-                (not (eq curwin win))             ;; it's not the curwin?
-                (not (one-window-p)))           ;; and not the last one?
-           (delete-window win))))  ;; delete it!
-      ;; now, all *other* windows should be gone. kill ourselves, and return
-      ;; to the main view
-      (kill-buffer)
-      (mu4e--main-view 'refresh))))
+  (mu4e-mark-handle-when-leaving)
+  (quit-window t)
+  (mu4e--main-view 'refresh))
 
 
 ;;; Loading messages
 ;;
-(defvar mu4e-loading-mode-map
-  (let ((map (make-sparse-keymap)))
-          (define-key map "n" #'ignore)
-          (define-key map "p" #'ignore)
-          (define-key map "q" #'bury-buffer)
-          map)
-  "Keymap for *mu4e-loading* buffers.")
 
-(define-derived-mode mu4e-loading-mode special-mode
-  "mu4e:loading"
-  (use-local-map mu4e-loading-mode-map)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (insert (propertize "Loading message..."
-                        'face 'mu4e-system-face 'intangible t))))
 
-(defun mu4e~loading-close ()
-  "Bury the mu4e Loading... buffer, if any."
-  (let* ((buf mu4e~headers-loading-buf)
-	 (win (and (buffer-live-p buf) (get-buffer-window buf t))))
-    (when (window-live-p win)
-      (delete-window win))))
+(defvar-local mu4e--loading-overlay-bg nil
+  "Internal variable that holds the loading overlay for the background.")
+
+(defvar-local mu4e--loading-overlay-text nil
+  "Internal variable that holds the loading overlay for the text.")
+
+(define-minor-mode mu4e-loading-mode
+  "Minor mode for buffers awaiting data from mu"
+  :init-value nil :lighter " Loading" :keymap nil
+  (if mu4e-loading-mode
+      (progn
+        (when mu4e-dim-when-loading
+          (setq mu4e--loading-overlay-bg
+                (let ((overlay (make-overlay (point-min) (point-max))))
+                  (overlay-put overlay 'face `(:foreground "gray22" :background
+                                                           ,(face-attribute 'default :background)))
+                  (overlay-put overlay 'priority 9998)
+                  overlay)))
+        (setq mu4e--loading-overlay-text
+              (let ((overlay (make-overlay (point-min) (point-min))))
+                (overlay-put overlay 'priority 9999)
+                (overlay-put overlay 'before-string (propertize "Loading…\n" 'face 'mu4e-header-title-face))
+                overlay)))
+    (when mu4e--loading-overlay-bg
+      (delete-overlay mu4e--loading-overlay-bg))
+    (when mu4e--loading-overlay-text
+      (delete-overlay mu4e--loading-overlay-text))))
 
 (provide 'mu4e-headers)
 ;;; mu4e-headers.el ends here

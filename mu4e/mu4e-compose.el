@@ -76,7 +76,7 @@
 (require 'mu4e-message)
 (require 'mu4e-draft)
 (require 'mu4e-context)
-
+(require 'mu4e-window)
 
 ;;; Configuration
 ;; see mu4e-drafts.el
@@ -443,9 +443,9 @@ buffers; lets remap its faces so it uses the ones for mu4e."
          (subj (unless (and subj (string-match "^[:blank:]*$" subj)) subj))
          (str (or subj
                   (pcase compose-type
-                    ('reply       "*reply*")
-                    ('forward     "*forward*")
-                    (_             "*draft*")))))
+                    ('reply       "*mu4e-reply*")
+                    ('forward     "*mu4e-forward*")
+                    (_             "*mu4e-draft*")))))
     (rename-buffer (generate-new-buffer-name
                     (truncate-string-to-width
 		     str mu4e~compose-buffer-max-name-length)
@@ -502,8 +502,7 @@ See `mu4e-compose-crypto-policy' for more details."
           (sign (mml-secure-message-sign))
           (encrypt (mml-secure-message-encrypt)))))
 
-(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes
-                                             switch-function)
+(cl-defun mu4e~compose-handler (compose-type &optional original-msg includes)
   "Create a new draft message, or open an existing one.
 
 COMPOSE-TYPE determines the kind of message to compose and is a
@@ -539,79 +538,81 @@ are optional."
                             mu4e-compose-context-policy)
   (run-hooks 'mu4e-compose-pre-hook)
   ;; this opens (or re-opens) a message with all the basic headers set.
-  (let ((winconf (current-window-configuration)))
-    (condition-case nil
-        (mu4e-draft-open compose-type original-msg switch-function)
-      (quit (set-window-configuration winconf)
-            (mu4e-message "Operation aborted")
-            (cl-return-from mu4e~compose-handler))))
-  ;; insert mail-header-separator, which is needed by message mode to separate
-  ;; headers and body. will be removed before saving to disk
-  (mu4e~draft-insert-mail-header-separator)
+  (let ((draft-buffer))
+    (let ((winconf (current-window-configuration)))
+      (condition-case nil
+          (setq draft-buffer (mu4e-draft-open compose-type original-msg))
+        (quit (set-window-configuration winconf)
+              (mu4e-message "Operation aborted")
+              (cl-return-from mu4e~compose-handler))))
+    (set-buffer draft-buffer)
+    ;; insert mail-header-separator, which is needed by message mode to separate
+    ;; headers and body. will be removed before saving to disk
+    (mu4e~draft-insert-mail-header-separator)
 
-  ;; maybe encrypt/sign replies
-  (mu4e-compose-crypto-message original-msg compose-type)
+    ;; maybe encrypt/sign replies
+    (mu4e-compose-crypto-message original-msg compose-type)
 
-  ;; include files -- e.g. when inline forwarding a message with
-  ;; attachments, we take those from the original.
-  (save-excursion
-    (goto-char (point-max)) ;; put attachments at the end
+    ;; include files -- e.g. when inline forwarding a message with
+    ;; attachments, we take those from the original.
+    (save-excursion
+      (goto-char (point-max)) ;; put attachments at the end
 
-    (if (and (eq compose-type 'forward) mu4e-compose-forward-as-attachment)
-        (mu4e-compose-attach-message original-msg)
-      (dolist (att includes)
-        (let ((file-name (plist-get att :file-name))
-              (mime (plist-get att :mime-type))
-              (description (plist-get att :description))
-              (disposition (plist-get att :disposition)))
-          (if file-name
-              (mml-attach-file file-name mime description disposition)
-            (mml-attach-buffer (plist-get att :buffer-name)
-                               mime description disposition))))))
+      (if (and (eq compose-type 'forward) mu4e-compose-forward-as-attachment)
+          (mu4e-compose-attach-message original-msg)
+        (dolist (att includes)
+          (let ((file-name (plist-get att :file-name))
+                (mime (plist-get att :mime-type))
+                (description (plist-get att :description))
+                (disposition (plist-get att :disposition)))
+            (if file-name
+                (mml-attach-file file-name mime description disposition)
+              (mml-attach-buffer (plist-get att :buffer-name)
+                                 mime description disposition))))))
 
-  (mu4e~compose-set-friendly-buffer-name compose-type)
+    (mu4e~compose-set-friendly-buffer-name compose-type)
 
-  ;; bind to `mu4e-compose-parent-message' of compose buffer
-  (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
-  (put 'mu4e-compose-parent-message 'permanent-local t)
-  ;; set mu4e-compose-type once more for this buffer,
-  (set (make-local-variable 'mu4e-compose-type) compose-type)
-  (put 'mu4e-compose-type 'permanent-local t)
+    ;; bind to `mu4e-compose-parent-message' of compose buffer
+    (set (make-local-variable 'mu4e-compose-parent-message) original-msg)
+    (put 'mu4e-compose-parent-message 'permanent-local t)
+    ;; set mu4e-compose-type once more for this buffer,
+    (set (make-local-variable 'mu4e-compose-type) compose-type)
+    (put 'mu4e-compose-type 'permanent-local t)
 
-  ;; hide some headers
-  (mu4e~compose-hide-headers)
-  ;; switch on the mode
-  (mu4e-compose-mode)
+    ;; hide some headers
+    (mu4e~compose-hide-headers)
+    ;; switch on the mode
+    (mu4e-compose-mode)
 
-  ;; now jump to some useful positions, and start writing that mail!
-  (if (member compose-type '(new forward))
-      (message-goto-to)
-    ;; otherwise, it depends...
-    (pcase message-cite-reply-position
-      ((or 'above 'traditional) (message-goto-body))
-      (_ (when (message-goto-signature) (forward-line -2)))))
+    ;; now jump to some useful positions, and start writing that mail!
+    (if (member compose-type '(new forward))
+        (message-goto-to)
+      ;; otherwise, it depends...
+      (pcase message-cite-reply-position
+        ((or 'above 'traditional) (message-goto-body))
+        (_ (when (message-goto-signature) (forward-line -2)))))
 
-  ;; don't allow undoing anything before this.
-  (setq buffer-undo-list nil)
+    ;; don't allow undoing anything before this.
+    (setq buffer-undo-list nil)
 
-  (when mu4e-compose-in-new-frame
-    ;; make sure to close the frame when we're done with the message these are
-    ;; all buffer-local;
-    (push 'delete-frame message-exit-actions)
-    (push 'delete-frame message-postpone-actions))
+    (when mu4e-compose-in-new-frame
+      ;; make sure to close the frame when we're done with the message these are
+      ;; all buffer-local;
+      (push 'delete-frame message-exit-actions)
+      (push 'delete-frame message-postpone-actions))
 
-  ;; buffer is not user-modified yet
-  (set-buffer-modified-p nil))
+    ;; buffer is not user-modified yet
+    (set-buffer-modified-p nil)
+    (mu4e-display-buffer draft-buffer t)))
 
 (defun mu4e~switch-back-to-mu4e-buffer ()
   "Try to go back to some previous buffer, in the order view->headers->main."
-  (unless (eq mu4e-split-view 'single-window)
-    (if (buffer-live-p (mu4e-get-view-buffer))
-        (switch-to-buffer (mu4e-get-view-buffer))
-      (if (buffer-live-p (mu4e-get-headers-buffer))
-          (switch-to-buffer (mu4e-get-headers-buffer))
-        ;; if all else fails, back to the main view
-        (when (fboundp 'mu4e) (mu4e))))))
+  (if (buffer-live-p (mu4e-get-view-buffer))
+      (mu4e-display-buffer (mu4e-get-view-buffer) t)
+    (if (buffer-live-p (mu4e-get-headers-buffer))
+        (mu4e-display-buffer (mu4e-get-headers-buffer) t)
+      ;; if all else fails, back to the main view
+      (when (fboundp 'mu4e) (mu4e)))))
 
 (defun mu4e-compose-context-switch (&optional force name)
   "Change the context for the current draft message.
@@ -755,10 +756,7 @@ Symbol `edit' is only allowed for draft messages."
         ;; composing a new message, so that one will be replaced by the compose
         ;; window. The 10-or-so line headers buffer is not a good place to write
         ;; it...
-        (unless (eq mu4e-split-view 'single-window)
-          (let ((viewwin (get-buffer-window (mu4e-get-view-buffer))))
-            (when (window-live-p viewwin)
-              (select-window viewwin))))
+        ;; (mu4e-display-buffer (mu4e-get-view-buffer))
         ;; talk to the backend
         (mu4e--server-compose compose-type decrypt docid)))))
 
@@ -798,8 +796,7 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers _continue
-                                    switch-function yank-action
-				    _send-actions _return-action)
+                                    yank-action _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 
@@ -814,9 +811,6 @@ HEADER and VALUE are strings.
 
 CONTINUE, if non-nil, says to continue editing a message already
 being composed.  Interactively, CONTINUE is the prefix argument.
-
-SWITCH-FUNCTION, if non-nil, is a function to use to
-switch to and display the buffer used for mail composition.
 
 YANK-ACTION, if non-nil, is an action to perform, if and when
 necessary, to insert the raw text of the message being replied
@@ -834,11 +828,11 @@ called after the mail has been sent or put aside, and the mail
 buffer buried."
 
   (unless (mu4e-running-p)
-     (mu4e))
+    (mu4e))
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
-  (mu4e~compose-handler 'new nil nil switch-function)
+  (mu4e~compose-handler 'new nil nil)
 
   (when (message-goto-to) ;; reset to-address, if needed
     (message-delete-line))
