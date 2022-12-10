@@ -10,6 +10,11 @@
 
 *** mu4e
 
+    - mu4e window management has been significantly changed, affecting the
+      message loading as well as window-layout. As a user-visible feature,
+      there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and alllow
+      for keeping multiple views around; see the Mu4e manual for details.
+
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
       /Replied/ status is propagated to all duplicates (earlier, this was only
