@@ -153,7 +153,7 @@ std::string date_to_time_t_string(int64_t t);
  * @return a string representation of the time in UTF8-format, or empty in case
  * of error.
  */
-std::string time_to_string(const std::string& frm, time_t t, bool utc = false) G_GNUC_CONST;
+std::string time_to_string(const char *frm, time_t t, bool utc = false) G_GNUC_CONST;
 
 
 /**

@@ -346,12 +346,9 @@ Mu::vformat(const char* frm, va_list args)
 }
 
 std::string
-Mu::time_to_string(const std::string& frm_, time_t t, bool utc)
+Mu::time_to_string(const char *frm, time_t t, bool utc)
 {
-	/* Temporary hack... https://github.com/djcb/mu/issues/2230 */
-	const auto frm =
-		g_utf8_validate(frm_.c_str(), frm_.length(), {}) ?
-		frm_ : "%c";
+	g_return_val_if_fail(frm, "");
 
 	GDateTime* dt = std::invoke([&] {
 		if (utc)
@@ -366,10 +363,11 @@ Mu::time_to_string(const std::string& frm_, time_t t, bool utc)
 		return {};
 	}
 
-	auto datestr{to_string_opt_gchar(g_date_time_format(dt, frm.c_str()))};
+	frm = frm ? frm : "%c";
+	auto datestr{to_string_opt_gchar(g_date_time_format(dt, frm))};
 	g_date_time_unref(dt);
 	if (!datestr)
-		g_warning("failed to format time with format '%s'", frm.c_str());
+		g_warning("failed to format time with format '%s'", frm);
 
 	return datestr.value_or("");
 }
