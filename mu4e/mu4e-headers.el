@@ -342,6 +342,9 @@ In the format needed for `mu4e-read-option'.")
   "If non-nil, report on the time it took to render the messages.
 This is mostly useful for profiling.")
 
+(defvar mu4e~headers-hidden 0
+  "Number of headers hidden due to `mu4e-headers-hide-predicate'.")
+
 
 
 ;;; Clear
@@ -350,7 +353,8 @@ This is mostly useful for profiling.")
   "Clear the headers buffer and related data structures.
 Optionally, show TEXT."
   (when (buffer-live-p (mu4e-get-headers-buffer))
-    (setq mu4e~headers-render-start (float-time))
+    (setq mu4e~headers-render-start (float-time)
+          mu4e~headers-hidden 0)
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
         (mu4e--mark-clear)
@@ -687,14 +691,16 @@ space propertized with a `display' text property which expands to
 (defsubst mu4e~message-header-line (msg)
   "Return a propertized description of message MSG suitable for
 displaying in the header view."
-  ;; should we hide it?
-  (unless (and mu4e-headers-hide-enabled mu4e-headers-hide-predicate
-               (funcall mu4e-headers-hide-predicate msg))
-    (mu4e~headers-apply-flags
-     msg
-     (mapconcat (lambda (f-w) (mu4e~headers-field-handler f-w msg))
-                mu4e-headers-fields " "))))
-
+  (if (and mu4e-headers-hide-enabled mu4e-headers-hide-predicate
+           (funcall mu4e-headers-hide-predicate msg))
+      (progn
+        (cl-incf mu4e~headers-hidden)
+        nil)
+    (progn
+      (mu4e~headers-apply-flags
+       msg
+       (mapconcat (lambda (f-w) (mu4e~headers-field-handler f-w msg))
+                  mu4e-headers-fields " ")))))
 
 (defsubst mu4e~headers-insert-header (msg pos)
   "Insert a header for MSG at point POS."
@@ -885,8 +891,9 @@ after the end of the search results."
         (goto-char (point-max))
         (let ((inhibit-read-only t)
               (str (if (zerop count) mu4e~no-matches mu4e~end-of-results))
-              (msg (format "Found %d matching message%s%s"
+              (msg (format "Found %d matching message%s; %d hidden%s"
                            count (if (= 1 count) "" "s")
+                           mu4e~headers-hidden
                            (mu4e~headers-benchmark-message count))))
 
           (insert (propertize str 'face 'mu4e-system-face 'intangible t))
