@@ -174,14 +174,14 @@ If optional KEY is provided, use that instead of asking user."
   (let ((choice) (chosen) (inhibit-quit nil))
     (while (not chosen)
       (message nil);; this seems needed...
-      (setq choice (read-char-exclusive prompt))
+      (setq choice (or key (read-char-exclusive prompt)))
       (if (eq choice 27) (keyboard-quit)) ;; quit if ESC is pressed
       (setq chosen (or (member choice choices)
                        (member (downcase choice) choices)
                        (member (upcase choice) choices))))
     (car chosen)))
 
-(defun mu4e-read-option (prompt options)
+(defun mu4e-read-option (prompt options &optional key)
   "Ask user for an option from a list on the input area.
 PROMPT describes a multiple-choice question to the user. OPTIONS
 describe the options, and is a list of cells describing
@@ -201,6 +201,9 @@ user can then choose by typing CHAR.  Example:
 
 User now will be presented with a list: \"Choose an animal:
    [M]onkey, [G]nu, [x]Moose\".
+
+If optional character KEY is provied, use that instead of asking
+the user.
 
 Function returns the cdr of the list element."
   (let* ((prompt (mu4e-format "%s" prompt))
@@ -223,7 +226,8 @@ Function returns the cdr of the list element."
                    " [" (propertize "C-g" 'face 'mu4e-highlight-face)
                    " to cancel]")
            ;; the allowable chars
-           (seq-map (lambda(elm) (string-to-char (car elm))) options)))
+           (seq-map (lambda(elm) (string-to-char (car elm))) options)
+           key))
          (chosen
           (seq-find
            (lambda (option) (eq response (string-to-char (car option))))
