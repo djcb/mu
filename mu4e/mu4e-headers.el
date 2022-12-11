@@ -130,17 +130,21 @@ next mail after marking a message in header view."
 
 
 (defvar mu4e-headers-hide-predicate nil
-  "Predicate function to hide matching heasders.
-If the function evaluates to non-nil when applied a a message
-plist, do not show the corresponding header. The function takes
-one parameter MSG, which is the message plist for the message to
-be hidden or not.
+  "Predicate function to hide matching headers.
+Either nil or a function taking one message plist parameter and
+which which return non-nil for messages that should be hidden from
+the search results. Also see `mu4e-headers-hide-enabled'.
 
 Example that hides all trashed messages:
 
   (setq mu4e-headers-hide-predicate
      (lambda (msg)
        (member \='trashed (mu4e-message-field msg :flags)))).")
+
+(defvar mu4e-headers-hide-enabled t
+  "Whether `mu4e-headers-hide-predicate' should be active.
+This can be used to toggle use of the predicate through
+ `mu4e-headers-toggle-property'.")
 
 (defcustom mu4e-headers-visible-flags
   '(draft flagged new passed replied trashed attach encrypted signed
@@ -271,6 +275,9 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
   "Non-fancy and fancy labels to indicate related search in the mode-line.")
 (defvar mu4e-headers-skip-duplicates-label '("U" . "Ⓤ") ;; 'U' for 'unique'
   "Non-fancy and fancy labels for include-related search in the mode-line.")
+(defvar mu4e-headers-hide-label   '("H" . "Ⓗ")
+  "Non-fancy and fancy labels to indicate header-hiding is active in
+the mode-line.")
 
 ;;;; Various
 
@@ -678,9 +685,10 @@ space propertized with a `display' text property which expands to
     fieldval))
 
 (defsubst mu4e~message-header-line (msg)
-  "Return a propertized description of MSG suitable for
+  "Return a propertized description of message MSG suitable for
 displaying in the header view."
-  (unless (and mu4e-headers-hide-predicate
+  ;; should we hide it?
+  (unless (and mu4e-headers-hide-enabled mu4e-headers-hide-predicate
                (funcall mu4e-headers-hide-predicate msg))
     (mu4e~headers-apply-flags
      msg
