@@ -706,46 +706,46 @@ The main view looks something like the following:
 
   Basics
 
-	* [j]ump to some maildir
-	* enter a [s]earch query
-	* [C]ompose a new message
+        * [j]ump to some maildir
+        * enter a [s]earch query
+        * [C]ompose a new message
 
   Bookmarks
 
-	* [bu] Unread messages      (13085/13085)
-	* [bt] Today's messages
-	* [bw] Last 7 days          (53/128)
-	* [bp] Messages with images (75/2441)
+        * [bu] Unread messages      (13085/13085)
+        * [bt] Today's messages
+        * [bw] Last 7 days          (53/128)
+        * [bp] Messages with images (75/2441)
 
   Maildirs
 
-	* [ja] /archive             (2101/18837)
-	* [ji] /inbox               (1/2)
-	* [jb] /bulk                (33/35)
-	* [jB] /bulkarchive         (179/2090)
-	* [jm] /mu                  (694/17687)
-	* [jn] /sauron
-	* [js] /sent
+        * [ja] /archive             (2101/18837)
+        * [ji] /inbox               (1/2)
+        * [jb] /bulk                (33/35)
+        * [jB] /bulkarchive         (179/2090)
+        * [jm] /mu                  (694/17687)
+        * [jn] /sauron
+        * [js] /sent
 
   Misc
 
-	* [;]Switch context
-	* [U]pdate email & database
-	* toggle [m]ail sending mode (currently direct)
-	* [f]lush 1 queued mail
+        * [;]Switch context
+        * [U]pdate email & database
+        * toggle [m]ail sending mode (currently direct)
+        * [f]lush 1 queued mail
 
-	* [N]ews
-	* [A]bout mu4e
-	* [H]elp
-	* [q]uit
+        * [N]ews
+        * [A]bout mu4e
+        * [H]elp
+        * [q]uit
 
   Info
 
-	* last updated        : Sat May  7 20:37:37 2022
-	* database-path       : /home/pam/.cache/mu/xapian
-	* maildir             : /home/pam/Maildir
-	* in store            : 86179 messages
-	* personal addresses  : /.*example.com/, pam@fo
+        * last updated        : Sat May  7 20:37:37 2022
+        * database-path       : /home/pam/.cache/mu/xapian
+        * maildir             : /home/pam/Maildir
+        * in store            : 86179 messages
+        * personal addresses  : /.*example.com/, pam@fo
 
 @end verbatim
 @end cartouche
@@ -950,10 +950,7 @@ M-left,\     previous query
 M-right      next query
 
 O            change sort order
-P            toggle threading
-Q            toggle full-search
-V            toggle skip-duplicates
-W            toggle include-related
+P            toggle search property
 
 marking
 -------
@@ -1037,14 +1034,14 @@ The header field used for sorting is indicated by ``@t{V}'' or
 variable @code{mu4e-use-fancy-chars}}, indicating the sort order
 (descending or ascending, respectively).
 
-You can change the sort order by clicking the corresponding column with
-the mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note
-that not all fields can be used for sorting. You can toggle threading
-on/off using @kbd{M-x mu4e-headers-toggle-threading} or @key{P}. For
-both of these functions, unless you provide a prefix argument
-(@key{C-u}), the current search is updated immediately using the new
-parameters. You can toggle full-search (@ref{Searching}) using @kbd{M-x
-mu4e-headers-toggle-full-search} or @key{Q}.
+You can change the sort order by clicking the corresponding column with the
+mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note that not
+all fields can be used for sorting. You can toggle threading on/off through
+@kbd{M-x mu4e-headers-toggle-property} or @key{Pt}. For both of these functions,
+unless you provide a prefix argument (@key{C-u}), the current search is updated
+immediately using the new parameters. You can toggle full-search
+(@ref{Searching}) through @kbd{M-x mu4e-headers-toggle-property} as well; or
+@key{Pf}.
 
 Note that with threading enabled, the sorting is exclusively by date,
 regardless of the column clicked.
@@ -1273,6 +1270,9 @@ S            edit last query
 b            search bookmark
 B            edit bookmark before search
 j            jump to maildir
+
+O            change sort order
+P            toggle search property
 
 M-left       previous query
 M-right      next query
@@ -1728,12 +1728,11 @@ order for this to work properly you need to pass your address to
 executing a query for messages that happen to have the property of being in a
 certain folder (maildir).
 
-Normally, queries return up to @code{mu4e-headers-results-limit} (default:
-500) results. That is usually more than enough, and makes things significantly
+Normally, queries return up to @code{mu4e-headers-results-limit} (default: 500)
+results. That is usually more than enough, and makes things significantly
 faster. Sometimes, however, you may want to show @emph{all} results; you can
-enable this with @kbd{M-x mu4e-headers-toggle-full-search}, or by customizing
-the variable @code{mu4e-headers-full-search}. This applies to all search
-commands.
+enable this with @kbd{M-x mu4e-headers-toggle-property}, or by customizing the
+variable @code{mu4e-headers-full-search}. This applies to all search commands.
 
 You can also influence the sort order and whether threads are shown or not;
 see @ref{Sorting and threading}.
@@ -3798,10 +3797,12 @@ completion.
 Set @code{mu4e-cache-maildir-list} to @code{t} (make sure to read
 its docstring).
 
-@subsection How can I hide messages from the search results?
-See the variable @code{mu4e-headers-hide-predicate}.
+@subsection How can I hide certain messages from the search results?
+See the variables @code{mu4e-headers-hide-predicate} and
+@code{mu4e-headers-hide-enabled}. The latter can be toggled through
+@code{mu4e-headers-toggle-property}.
 
-For example, to filter out GMail's spam, set it to:
+For example, to filter out GMail's spam folder, set it to:
 @lisp
 (setq mu4e-headers-hide-predicate
      (lambda (msg)

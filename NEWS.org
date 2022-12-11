@@ -15,13 +15,31 @@
       there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and alllow
       for keeping multiple views around; see the Mu4e manual for details.
 
+    - One very visible (experimental) change is that the main-window is no
+      longer full-screen
+
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
       /Replied/ status is propagated to all duplicates (earlier, this was only
       done when marking a message as read). Note, /Draft/, /Flagged/ and /Trashed/
       flags are deliberately *not* propagated.
 
-    - teach ~mu4e-copy-thing-at-point~ about shr links
+    - teach ~mu4e-copy-thing-at-point~ about ~shr~ links
+
+    - The ~mu4e-headers-toggle-setting~ has been renamed
+      ~mu4e-headers-toggle-property~ and has the new default binding ~P~, which
+      works in both the headers-view and message-view. The older functions
+      ~mu4e-headers-toggle-threading~, ~mu4e-headers-toggle-threading~,
+      ~mu4e-headers-toggle-full-search~ ~mu4e-headers-toggle-include-related~,
+      ~full-search~skip-duplicates~ have been removed (with their keybindings) in
+      favor of ~mu4e-headers-toggle-property~.
+
+    - There's also a new property ~mu4e-headers-hide-enabled~, which controls
+      wheter ~mu4e-headers-hide-predicate~ is applied (when non-~nil~). This can be
+      used to temporarily turn the predicate off/on.
+
+    - When searching, the number of hidden messages is now shown in the
+      message footer along with the number of Found messages
 
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.

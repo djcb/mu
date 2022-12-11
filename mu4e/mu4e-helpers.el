@@ -161,25 +161,27 @@ Does a local-exit and does not return."
   "Get PROP from plist LST and raise an error if not present."
   (or (plist-get lst prop)
       (if (plist-member lst prop)
-	  nil
-	(mu4e-error "Missing property %s in %s" prop lst))))
+          nil
+        (mu4e-error "Missing property %s in %s" prop lst))))
 
-(defun mu4e--read-char-choice (prompt choices)
+(defun mu4e--read-char-choice (prompt choices &optional key)
   "Read and return one of CHOICES, prompting for PROMPT.
 Any input that is not one of CHOICES is ignored. This is mu4e's
 version of `read-char-choice' which becomes case-insentive after
-trying an exact match."
+trying an exact match.
+
+If optional KEY is provided, use that instead of asking user."
   (let ((choice) (chosen) (inhibit-quit nil))
     (while (not chosen)
       (message nil);; this seems needed...
-      (setq choice (read-char-exclusive prompt))
+      (setq choice (or key (read-char-exclusive prompt)))
       (if (eq choice 27) (keyboard-quit)) ;; quit if ESC is pressed
       (setq chosen (or (member choice choices)
                        (member (downcase choice) choices)
                        (member (upcase choice) choices))))
     (car chosen)))
 
-(defun mu4e-read-option (prompt options)
+(defun mu4e-read-option (prompt options &optional key)
   "Ask user for an option from a list on the input area.
 PROMPT describes a multiple-choice question to the user. OPTIONS
 describe the options, and is a list of cells describing
@@ -199,6 +201,9 @@ user can then choose by typing CHAR.  Example:
 
 User now will be presented with a list: \"Choose an animal:
    [M]onkey, [G]nu, [x]Moose\".
+
+If optional character KEY is provied, use that instead of asking
+the user.
 
 Function returns the cdr of the list element."
   (let* ((prompt (mu4e-format "%s" prompt))
@@ -221,7 +226,8 @@ Function returns the cdr of the list element."
                    " [" (propertize "C-g" 'face 'mu4e-highlight-face)
                    " to cancel]")
            ;; the allowable chars
-           (seq-map (lambda(elm) (string-to-char (car elm))) options)))
+           (seq-map (lambda(elm) (string-to-char (car elm))) options)
+           key))
          (chosen
           (seq-find
            (lambda (option) (eq response (string-to-char (car option))))
@@ -369,18 +375,18 @@ http://cr.yp.to/proto/maildir.html."
    (seq-mapcat
     (lambda (flag)
       (pcase flag
-	(`draft     "D")
-	(`flagged   "F")
-	(`new       "N")
-	(`passed    "P")
-	(`replied   "R")
-	(`seen      "S")
-	(`trashed   "T")
-	(`attach    "a")
-	(`encrypted "x")
-	(`signed    "s")
-	(`unread    "u")
-	(_          "")))
+        (`draft     "D")
+        (`flagged   "F")
+        (`new       "N")
+        (`passed    "P")
+        (`replied   "R")
+        (`seen      "S")
+        (`trashed   "T")
+        (`attach    "a")
+        (`encrypted "x")
+        (`signed    "s")
+        (`unread    "u")
+        (_          "")))
     (seq-uniq flags) 'string)))
 
 (defun mu4e-string-to-flags (str)
@@ -394,14 +400,14 @@ http://cr.yp.to/proto/maildir.html."
     (seq-mapcat
      (lambda (kar)
        (list
-	(pcase kar
-	  ('?D   'draft)
-	  ('?F   'flagged)
-	  ('?P   'passed)
-	  ('?R   'replied)
-	  ('?S   'seen)
-	  ('?T   'trashed)
-	  (_     nil))))
+        (pcase kar
+          ('?D   'draft)
+          ('?F   'flagged)
+          ('?P   'passed)
+          ('?R   'replied)
+          ('?S   'seen)
+          ('?T   'trashed)
+          (_     nil))))
      str))))
 
 
@@ -470,7 +476,7 @@ The file will self-destruct in a short while, enough to open it
 in an external program."
   (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
     (run-at-time "30 sec" nil
-		 (lambda () (ignore-errors (delete-file tmpfile))))
+                 (lambda () (ignore-errors (delete-file tmpfile))))
     tmpfile))
 
 (defsubst mu4e-is-mode-or-derived-p (mode)
@@ -492,12 +498,12 @@ Or go to the top level if there is none."
 (defun mu4e--make-bookmark-record ()
   "Create a bookmark for the message at point."
   (let* ((msg     (mu4e-message-at-point))
-	 (subject (or (plist-get msg :subject) "No subject"))
-	 (date	  (plist-get msg :date))
-	 (date	  (if date (format-time-string "%F: " date) ""))
-	 (title	  (format "%s%s" date subject))
-	 (msgid	  (or (plist-get msg :message-id)
-		      (mu4e-error "Cannot bookmark message without message-id"))))
+         (subject (or (plist-get msg :subject) "No subject"))
+         (date	  (plist-get msg :date))
+         (date	  (if date (format-time-string "%F: " date) ""))
+         (title	  (format "%s%s" date subject))
+         (msgid	  (or (plist-get msg :message-id)
+                      (mu4e-error "Cannot bookmark message without message-id"))))
     `(,title
       ,@(bookmark-make-record-default 'no-file 'no-context)
       (message-id . ,msgid)
