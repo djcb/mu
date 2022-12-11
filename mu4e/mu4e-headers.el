@@ -940,14 +940,7 @@ after the end of the search results."
 
           (define-key map "j" 'mu4e~headers-jump-to-maildir)
           (define-key map "O" 'mu4e-headers-change-sorting)
-          (define-key map "M" 'mu4e-headers-toggle-setting)
-
-          ;; these are impossible to remember; use mu4e-headers-toggle-setting
-          ;; instead :)
-          (define-key map "P" 'mu4e-headers-toggle-threading)
-          (define-key map "Q" 'mu4e-headers-toggle-full-search)
-          (define-key map "W" 'mu4e-headers-toggle-include-related)
-          (define-key map "V" 'mu4e-headers-toggle-skip-duplicates)
+          (define-key map "P" 'mu4e-headers-toggle-property)
 
           (define-key map "q" 'mu4e~headers-quit-buffer)
           (define-key map "g" 'mu4e-search-rerun) ;; for compatibility
@@ -1036,18 +1029,6 @@ after the end of the search results."
             (define-key menumap [display-help] '("Help" . mu4e-display-manual))
 
             (define-key menumap [sepa0] '("--"))
-
-            (define-key menumap [toggle-include-related]
-              '(menu-item "Toggle related messages"
-                          mu4e-headers-toggle-include-related
-                          :button (:toggle .
-                                           (and (boundp 'mu4e-headers-include-related)
-                                                mu4e-headers-include-related))))
-            (define-key menumap [toggle-threading]
-              '(menu-item "Toggle threading" mu4e-headers-toggle-threading
-                          :button (:toggle .
-                                           (and (boundp 'mu4e-search-threads)
-                                                mu4e-search-threads))))
 
             (define-key menumap "|" '("Pipe through shell" . mu4e-view-pipe))
             (define-key menumap [sepa1] '("--"))
@@ -1311,7 +1292,8 @@ message plist, or nil if not found."
              (,mu4e-headers-include-related . ,mu4e-headers-related-label)
              (,mu4e-search-threads          . ,mu4e-headers-threaded-label)
              (,mu4e-headers-skip-duplicates
-              . ,mu4e-headers-skip-duplicates-label))
+              . ,mu4e-headers-skip-duplicates-label)
+             (,mu4e-headers-hide-enabled    . ,mu4e-headers-hide-label))
            ""))
          (name "mu4e-headers"))
 
@@ -1544,16 +1526,17 @@ user)."
                   (symbol-name mu4e-headers-sort-direction))
     (mu4e-search-rerun)))
 
-
-(defun mu4e-headers-toggle-setting (&optional dont-refresh)
+(defun mu4e-headers-toggle-property (&optional dont-refresh key)
   "Toggle some aspect of headers display.
-When prefix-argument DONT-REFRESH is non-nill, do not refresh the
-last search with the new setting."
+When prefix-argument DONT-REFRESH is non-nil, do not refresh the
+last search with the new setting.
+If KEY is provided, use it instead of asking user."
   (interactive "P")
   (let* ((toggles '(("fFull-search"      . mu4e-search-full)
                     ("rInclude-related"  . mu4e-headers-include-related)
                     ("tShow threads"     . mu4e-search-threads)
-                    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)))
+                    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)
+                    ("pHide-predicate"   . mu4e-headers-hide-enabled)))
          (toggles (seq-map
                    (lambda (cell)
                      (cons
@@ -1561,52 +1544,12 @@ last search with the new setting."
                               (format" (%s)"
                                      (if (symbol-value (cdr cell)) "on" "off")))
                       (cdr cell))) toggles))
-         (choice (mu4e-read-option "Toggle setting " toggles)))
+         (choice (mu4e-read-option "Toggle property " toggles key)))
     (when choice
       (set choice (not (symbol-value choice)))
       (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))
       (unless dont-refresh
         (mu4e-search-rerun)))))
-
-
-(defun mu4e~headers-toggle (name togglevar dont-refresh)
-  "Toggle variable TOGGLEVAR for feature NAME. Unless DONT-REFRESH is non-nil,
-re-run the last search."
-  (set togglevar (not (symbol-value togglevar)))
-  (mu4e-message "%s turned %s%s"
-                name
-                (if (symbol-value togglevar) "on" "off")
-                (if dont-refresh
-                    " (press 'g' to refresh)" ""))
-  (unless dont-refresh
-    (mu4e-search-rerun)))
-
-(defun mu4e-headers-toggle-threading (&optional dont-refresh)
-  "Toggle `mu4e-search-threads'. With prefix-argument, do
-_not_ refresh the last search with the new setting for threading."
-  (interactive "P")
-  (mu4e~headers-toggle "Threading" 'mu4e-search-threads dont-refresh))
-
-(defun mu4e-headers-toggle-full-search (&optional dont-refresh)
-  "Toggle `mu4e-search-full'. With prefix-argument, do
-_not_ refresh the last search with the new setting for threading."
-  (interactive "P")
-  (mu4e~headers-toggle "Full-search"
-                       'mu4e-search-full dont-refresh))
-
-(defun mu4e-headers-toggle-include-related (&optional dont-refresh)
-  "Toggle `mu4e-headers-include-related'. With prefix-argument, do
-_not_ refresh the last search with the new setting for threading."
-  (interactive "P")
-  (mu4e~headers-toggle "Include-related"
-                       'mu4e-headers-include-related dont-refresh))
-
-(defun mu4e-headers-toggle-skip-duplicates (&optional dont-refresh)
-  "Toggle `mu4e-headers-skip-duplicates'. With prefix-argument, do
-_not_ refresh the last search with the new setting for threading."
-  (interactive "P")
-  (mu4e~headers-toggle "Skip-duplicates"
-                       'mu4e-headers-skip-duplicates dont-refresh))
 
 (defun mu4e-headers-view-message ()
   "View message at point."
