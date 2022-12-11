@@ -150,6 +150,16 @@
 (make-obsolete-variable 'mu4e-headers-field-properties-function
                         "not used" "1.6.1")
 
+(define-obsolete-function-alias 'mu4e-headers-toggle-setting
+  'mu4e-headers-toggle-property "1.9.5")
+(define-obsolete-function-alias 'mu4e-headers-toggle-threading
+  'mu4e-headers-toggle-property "1.9.5")
+(define-obsolete-function-alias 'mu4e-headers-toggle-full-search
+  'mu4e-headers-toggle-settin "1.9.5")
+(define-obsolete-function-alias 'mu4e-headers-toggle-include-related
+  'mu4e-headers-toggle-property "1.9.5")
+(define-obsolete-function-alias 'mu4e-headers-toggle-skip-duplicates
+  'mu4e-headers-toggle-property "1.9.5")
 
 
 ;; mu4e-main
