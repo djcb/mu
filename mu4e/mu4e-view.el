@@ -889,9 +889,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 
     ;; toggle header settings
     (define-key map "O" #'mu4e-headers-change-sorting)
-    (define-key map "P" #'mu4e-headers-toggle-threading)
-    (define-key map "Q" #'mu4e-headers-toggle-full-search)
-    (define-key map "W" #'mu4e-headers-toggle-include-related)
+    (define-key map "P" #'mu4e-headers-toggle-property)
 
     ;; change the number of headers
     (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
