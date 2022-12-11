@@ -60,9 +60,9 @@
 (make-obsolete-variable 'mu4e-html2text-command "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-view-prefer-html "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-view-html-plaintext-ratio-heuristic
-			"No longer in use" "1.7.0")
+                        "No longer in use" "1.7.0")
 (make-obsolete-variable 'mu4e-message-body-rewrite-functions
-			"No longer in use" "1.7.0")
+                        "No longer in use" "1.7.0")
 ;;; Html2Text
 (make-obsolete 'mu4e-shr2text "No longer in use" "1.7.0")
 
@@ -70,32 +70,32 @@
 
 ;; old message view
 (make-obsolete-variable 'mu4e-view-show-addresses
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-wrap-lines nil "0.9.9-dev7")
 (make-obsolete-variable 'mu4e-view-hide-cited nil "0.9.9-dev7")
 (make-obsolete-variable 'mu4e-view-date-format
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-image-max-width
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-image-max-height
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-save-multiple-attachments-without-asking
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-attachment-assoc
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-attachment-actions
-			"See mu4e-view-mime-part-actions" "1.7.0")
+                        "See mu4e-view-mime-part-actions" "1.7.0")
 (make-obsolete-variable 'mu4e-view-header-field-keymap
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-header-field-keymap
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-contacts-header-keymap
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-view-attachments-header-keymap
-			"Unused with the new message view" "1.7.0")
+                        "Unused with the new message view" "1.7.0")
 (make-obsolete-variable 'mu4e-imagemagick-identify nil "1.7.0")
 (make-obsolete-variable 'mu4e-view-show-images
-			"No longer used" "1.7.0")
+                        "No longer used" "1.7.0")
 (make-obsolete-variable 'mu4e-view-gnus     "Old view is gone" "1.7.0")
 (make-obsolete-variable 'mu4e-view-use-gnus "Gnus view is the default" "1.5.10")
 
