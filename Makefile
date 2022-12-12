@@ -70,9 +70,12 @@ clean:
 test-verbose-if-fail: all
 	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
 
+vg_opts:=--enable-debuginfod=no --leak-check=full --error-exitcode=1
+test-valgrind: export G_SLICE=always-malloc
+test-valgrind: export G_DEBUG=gc-friendly
 test-valgrind: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) test					\
-		--wrap='valgrind --leak-check=full --error-exitcode=1'	\
+	@cd $(BUILDDIR); $(MESON) test		\
+		--wrap="valgrind $(vg_opts)"	\
 		--timeout-multiplier 100
 
 # we do _not_ pass helgrind; but this seems to be a false-alarm
