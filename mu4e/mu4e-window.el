@@ -235,49 +235,53 @@ modifying `display-buffer-alist'.
 
 If `mu4e-split-view' is a function, then it must return a live window
 for BUFFER-OR-NAME to be displayed in."
-  (if (functionp mu4e-split-view)
-      (set-window-buffer (funcall mu4e-split-view) buffer-or-name)
-    (let* ((buffer-name (or (get-buffer buffer-or-name)
-                            (error "Buffer `%s' does not exist" buffer-or-name)))
-           (buffer-type (with-current-buffer buffer-name (mu4e--get-current-buffer-type)))
-           (direction (cons 'direction
-                            (pcase (cons buffer-type mu4e-split-view)
-                              ;; views or headers can display
-                              ;; horz/vert depending on the value of
-                              ;; `mu4e-split-view'
-                              (`(,(or 'view 'headers) . horizontal) 'below)
-                              (`(,(or 'view 'headers) . vertical) 'right)
-                              (`(,_ . t) nil))))
-           (window-size
-            (pcase (cons buffer-type mu4e-split-view)
-              ;; views or headers can display
-              ;; horz/vert depending on the value of
-              ;; `mu4e-split-view'
-              ('(view . horizontal) '((window-height . shrink-window-if-larger-than-buffer)))
-              ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
-              (`(,_ . t) nil)))
-           (window-action (cond
-                           ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
-                            '(display-buffer-pop-up-frame))
-                           ((memq buffer-type '(headers compose))
-                            '(display-buffer-reuse-mode-window display-buffer-same-window))
-                           ((memq mu4e-split-view '(horizontal vertical))
-                            '(display-buffer-in-direction))
-                           ((memq mu4e-split-view '(single-window))
-                            '(display-buffer-same-window))
-                           ;; I cannot discern a difference between
-                           ;; `single-window' and "anything else" in
-                           ;; `mu4e-split-view'.
-                           (t '(display-buffer-same-window))))
-           (arg `((display-buffer-reuse-window
-                   display-buffer-reuse-mode-window
-                   ,@window-action)
-                  ,@window-size
-                  ,direction
-                  )))
-      (funcall (if select #'pop-to-buffer #'display-buffer)
-               buffer-name
-               arg))))
+  ;; For now, using a function for mu4e-split-view is not behaving well
+  ;; Turn off.
+  (when (functionp mu4e-split-view)
+    (mu4e-message "Function for `mu4e-split-view' not supported; fallback")
+    (setq mu4e-split-view 'horizontal))
+
+  (let* ((buffer-name (or (get-buffer buffer-or-name)
+                          (mu4e-error "Buffer `%s' does not exist" buffer-or-name)))
+         (buffer-type (with-current-buffer buffer-name (mu4e--get-current-buffer-type)))
+         (direction (cons 'direction
+                          (pcase (cons buffer-type mu4e-split-view)
+                            ;; views or headers can display
+                            ;; horz/vert depending on the value of
+                            ;; `mu4e-split-view'
+                            (`(,(or 'view 'headers) . horizontal) 'below)
+                            (`(,(or 'view 'headers) . vertical) 'right)
+                            (`(,_ . t) nil))))
+         (window-size
+          (pcase (cons buffer-type mu4e-split-view)
+            ;; views or headers can display
+            ;; horz/vert depending on the value of
+            ;; `mu4e-split-view'
+            ('(view . horizontal) '((window-height . shrink-window-if-larger-than-buffer)))
+            ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
+            (`(,_ . t) nil)))
+         (window-action (cond
+                         ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
+                          '(display-buffer-pop-up-frame))
+                         ((memq buffer-type '(headers compose))
+                          '(display-buffer-reuse-mode-window display-buffer-same-window))
+                         ((memq mu4e-split-view '(horizontal vertical))
+                          '(display-buffer-in-direction))
+                         ((memq mu4e-split-view '(single-window))
+                          '(display-buffer-same-window))
+                         ;; I cannot discern a difference between
+                         ;; `single-window' and "anything else" in
+                         ;; `mu4e-split-view'.
+                         (t '(display-buffer-same-window))))
+         (arg `((display-buffer-reuse-window
+                 display-buffer-reuse-mode-window
+                 ,@window-action)
+                ,@window-size
+                ,direction
+                )))
+    (funcall (if select #'pop-to-buffer #'display-buffer)
+             buffer-name
+             arg)))
 
 (defun mu4e-resize-linked-headers-window ()
   "Resizes the linked headers window belonging to a view.
