@@ -26,6 +26,11 @@ ifneq ($(V),0)
   VERBOSE=--verbose
 endif
 
+# when MU_HACKER is set, do a debug build
+ifneq (${MU_HACKER},)
+MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'
+endif
+
 
 .PHONY: all
 .PHONY: check test test-verbose-if-fail test-valgrind test-helgrind
@@ -39,15 +44,15 @@ endif
 # 1. build with clang, and the thread-sanitizer
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
 all: $(BUILDDIR)
-	$(NINJA) -C $(BUILDDIR) $(VERBOSE)
+	@$(NINJA) -C $(BUILDDIR) $(VERBOSE)
 
 $(BUILDDIR):
-	$(MESON) $(MESON_FLAGS) $(BUILDDIR)
+	@$(MESON) $(MESON_FLAGS) $(BUILDDIR)
 
 check: test
 
 test: all
-	$(MESON) test $(VERBOSE) -C $(BUILDDIR)
+	@$(MESON) test $(VERBOSE) -C $(BUILDDIR)
 
 
 install: $(BUILDDIR)
@@ -73,9 +78,9 @@ test-valgrind: $(BUILDDIR)
 # we do _not_ pass helgrind; but this seems to be a false-alarm
 #    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
 # test-helgrind: $(BUILDDIR)
-# 	@cd $(BUILDDIR); TEST=HELGRIND $(MESON) test			\
-# 	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
-# 	--timeout-multiplier 100
+#	@cd $(BUILDDIR); TEST=HELGRIND $(MESON) test			\
+#	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
+#	--timeout-multiplier 100
 
 benchmark: $(BUILDDIR)
 	$(NINJA) -C $(BUILDDIR) benchmark
