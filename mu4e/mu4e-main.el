@@ -303,7 +303,7 @@ When REFRESH is non nil refresh infos from server."
 
        (mu4e--main-action-str "\t* [;]Switch context\n"
                              (lambda()(interactive)
-			       (mu4e-context-switch)(revert-buffer)))
+                               (mu4e-context-switch)(revert-buffer)))
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
                              'mu4e-update-mail-and-index)
@@ -325,10 +325,10 @@ When REFRESH is non nil refresh infos from server."
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"
                      (format "%d" (plist-get mu4e--server-props :doccount))
-		     "messages")
+                     "messages")
        (if mu4e-main-hide-personal-addresses ""
          (mu4e--key-val "personal addresses"
-		       (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
+                       (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (if mu4e-main-hide-personal-addresses ""
         (unless (mu4e-personal-address-p user-mail-address)
@@ -400,16 +400,16 @@ When REFRESH is non nil refresh infos from server."
 (defun mu4e--main-menu ()
   "The mu4e main menu in the mini-buffer."
   (let ((func (mu4e-read-option
-	       "Do: "
-	       '(("jump"	    . mu4e~headers-jump-to-maildir)
-		 ("search"	    . mu4e-search)
-		 ("Compose"	    . mu4e-compose-new)
-		 ("bookmarks"	    . mu4e-headers-search-bookmark)
-		 (";Switch context" . mu4e-context-switch)
-		 ("Update"	    . mu4e-update-mail-and-index)
-		 ("News"	    . mu4e-news)
-		 ("About"	    . mu4e-about)
-		 ("Help "	    . mu4e-display-manual)))))
+               "Do: "
+               '(("jump"	    . mu4e~headers-jump-to-maildir)
+                 ("search"	    . mu4e-search)
+                 ("Compose"	    . mu4e-compose-new)
+                 ("bookmarks"	    . mu4e-headers-search-bookmark)
+                 (";Switch context" . mu4e-context-switch)
+                 ("Update"	    . mu4e-update-mail-and-index)
+                 ("News"	    . mu4e-news)
+                 ("About"	    . mu4e-about)
+                 ("Help "	    . mu4e-display-manual)))))
     (call-interactively func)
     (when (eq func 'mu4e-context-switch)
       (sit-for 1)
