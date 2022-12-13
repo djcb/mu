@@ -94,6 +94,9 @@ vertical split-view."
   :group 'mu4e-headers)
 
 (declare-function mu4e-view-mode "mu4e-view")
+(declare-function mu4e-error     "mu4e-helpers")
+(declare-function mu4e-warn      "mu4e-helpers")
+(declare-function mu4e-message   "mu4e-helpers")
 
 (defun mu4e-get-headers-buffer (&optional buffer-name create)
   "Return a related headers buffer optionally named BUFFER-NAME.
