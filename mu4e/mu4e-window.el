@@ -214,7 +214,7 @@ being created if CREATE is non-nil."
         ;; we'll generate a new, unique name.
         (when (and (buffer-live-p buffer) (mu4e--view-detached-p buffer))
           (setq buffer (generate-new-buffer-name buffer-name)))
-        (when (or (not (buffer-live-p buffer)) create)
+        (when (and (not (buffer-live-p buffer)) create)
           (setq buffer (get-buffer-create (or buffer buffer-name)))
           (with-current-buffer buffer
             (mu4e-view-mode))))
