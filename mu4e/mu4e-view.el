@@ -119,16 +119,6 @@ specified a function as viewer."
 
 
 
-;; Helpers
-
-(defun mu4e~view-quit-buffer ()
-  "Quit the mu4e-view buffer.
-This is a rather complex function, to ensure we don't disturb
-other windows."
-  (interactive)
-  (quit-window t))
-
-
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")
 
@@ -861,7 +851,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
 
-    (define-key map "q" #'mu4e~view-quit-buffer)
+    (define-key map "q" #'kill-buffer-and-window)
 
     (define-key map "z" #'mu4e-view-detach)
     (define-key map "Z" #'mu4e-view-attach)
