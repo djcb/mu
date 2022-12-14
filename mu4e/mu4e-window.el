@@ -151,7 +151,7 @@ tested."
   "Return non-nil if BUFFER is a detached view buffer."
   (with-current-buffer buffer
     (unless (mu4e-current-buffer-type-p 'view)
-      (error "Buffer `%s' is not a valid mu4e view buffer" buffer))
+      (mu4e-error "Buffer `%s' is not a valid mu4e view buffer" buffer))
     (null mu4e-linked-headers-buffer)))
 
 (defun mu4e--get-current-buffer-type ()
@@ -296,7 +296,7 @@ and `mu4e-headers-visible-lines' or
 This function is best called from the hook
 `mu4e-after-view-message-hook'."
   (unless (mu4e-current-buffer-type-p 'view)
-    (error "Cannot resize as this is not a valid view buffer."))
+    (mu4e-error "Cannot resize as this is not a valid view buffer."))
   (when-let (win (and mu4e-linked-headers-buffer
                       (get-buffer-window mu4e-linked-headers-buffer)))
     ;; This can fail for any number of reasons. If it does, we do
