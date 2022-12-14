@@ -63,12 +63,15 @@ A symbol which is either:
  * `vertical':      split vertically (headers on the left).
  * `single-window': view and headers in one window (mu4e will try not to
         touch your window layout), main view in minibuffer
- * a function:      the function is responsible to return some window for
-        the view.
  * anything else:   don't split (show either headers or messages,
         not both).
-Also see `mu4e-headers-visible-lines'
-and `mu4e-headers-visible-columns'."
+
+Also see `mu4e-headers-visible-lines' and
+`mu4e-headers-visible-columns'.
+
+Note that in older mu4e version, the value could also be
+function; this is no longer supported; instead you can use
+`display-buffer-alist'."
   :type '(choice (const :tag "Split horizontally" horizontal)
                  (const :tag "Split vertically" vertical)
                  (const :tag "Single window" single-window)
