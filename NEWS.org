@@ -10,13 +10,13 @@
 
 *** mu4e
 
-    - mu4e window management has been significantly changed, affecting the
+    - mu4e window management has been significantly reworked, affecting the
       message loading as well as window-layout. As a user-visible feature,
       there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and alllow
       for keeping multiple views around; see the Mu4e manual for details.
 
-    - One very visible (experimental) change is that the main-window is no
-      longer full-screen
+    - One change is that ~mu4e-split-view~ can no longer be a function; the new
+      way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]].
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
