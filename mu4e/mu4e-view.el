@@ -112,11 +112,6 @@ specified a function as viewer."
   :type 'integer
   :group 'mu4e-view)
 
-(defcustom mu4e-after-view-message-hook '(mu4e-resize-linked-headers-window)
-  "Hook run by `mu4e-view' after a message is rendered."
-  :type 'hook
-  :group 'mu4e-view)
-
 
 
 (defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
@@ -1018,6 +1013,11 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 (defcustom mu4e-view-mode-hook nil
   "Hook run when entering \\[mu4e-view] mode."
   :options '(turn-on-visual-line-mode)
+  :type 'hook
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-rendered-hook '(mu4e-resize-linked-headers-window)
+  "Hook run by `mu4e-view' after a message is rendered."
   :type 'hook
   :group 'mu4e-view)
 

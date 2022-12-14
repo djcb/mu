@@ -106,6 +106,9 @@
 (define-obsolete-variable-alias 'mu4e-view-inhibit-images 'gnus-inhibit-images
   "1.5.12")
 
+(define-obsolete-variable-alias 'mu4e-after-view-message-hook
+  'mu4e-view-rendered-hook "1.6.7")
+
 
 ;; mu4e-org
 (make-obsolete 'org-mu4e-open 'mu4e-org-open "1.3.6")
