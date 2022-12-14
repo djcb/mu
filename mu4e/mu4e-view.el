@@ -1311,24 +1311,33 @@ the third MIME-part."
 
 ;;; Bug Reference mode support
 
+;; Due to mu4e's view buffer handling (mu4e-view-mode is called long before the
+;; actual mail text is inserted into the buffer), one should activate
+;; bug-reference-mode in mu4e-after-view-message-hook, not mu4e-view-mode-hook.
+
 ;; This is Emacs 28 stuff but there is no need to guard it with some (f)boundp
 ;; checks (which would return nil if bug-reference.el is not loaded before
 ;; mu4e) since the function definition doesn't hurt and `add-hook' works fine
 ;; for not yet defined variables (by creating them).
 (declare-function bug-reference-maybe-setup-from-mail "ext:bug-reference")
+
+(defvar mu4e--view-bug-reference-checked-headers
+  '("list" "list-id" "to" "from" "cc" "subject" "reply-to")
+  "List of mail headers whose values are passed to bug-reference's auto-setup.")
+
 (defun mu4e--view-try-setup-bug-reference-mode ()
   "Try to guess bug-reference setup from the current mu4e mail.
-Looks at the maildir and the mail headers List, List-Id, Maildir,
-To, From, Cc, and Subject and tries to guess suitable values for
-`bug-reference-bug-regexp' and `bug-reference-url-format' by
-matching the maildir name against GROUP-REGEXP and each header
-value against HEADER-REGEXP in
+Looks at the maildir and the mail headers in
+`mu4e--view-bug-reference-checked-headers' and tries to guess suitable
+values for `bug-reference-bug-regexp' and
+`bug-reference-url-format' by matching the maildir name against
+GROUP-REGEXP and each header value against HEADER-REGEXP in
 `bug-reference-setup-from-mail-alist'."
   (when (derived-mode-p 'mu4e-view-mode)
     (let (header-values)
       (save-excursion
 	(goto-char (point-min))
-	(dolist (field '("list" "list-id" "to" "from" "cc" "subject"))
+	(dolist (field mu4e--view-bug-reference-checked-headers)
 	  (let ((val (mail-fetch-field field)))
 	    (when val
 	      (push val header-values)))))
