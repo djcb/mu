@@ -10,6 +10,10 @@
 
 *** mu4e
 
+    - ~mu4e-view-mode-hook~ now fires much earlier, before the message is
+      rendered. If you have hook-functions that depend on the message contents,
+      instead you should use the new ~mu4e-view-rendered-hook~.
+
     - mu4e window management has been significantly reworked, affecting the
       message loading as well as window-layout. As a user-visible feature,
       there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and alllow

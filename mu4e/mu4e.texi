@@ -1185,9 +1185,9 @@ right. It occupies half of the width of the frame.
 You can type @key{C-x w s} to toggle the side windows to hide or show them at
 will.
 
-Note that you may need to customize @code{mu4e-after-view-message-hook} as well;
-by default it contains @code{mu4e-resize-linked-headers-window} but you can set
-it to @code{nil} if you want to handle manually (through
+Note that you may need to customize @code{mu4e-view-rendered-hook} as well; by
+default it contains @code{mu4e-resize-linked-headers-window} but you can set it
+to @code{nil} if you want to handle manually (through
 @code{display-buffer-alist}.
 
 @node Message view
@@ -3189,7 +3189,7 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
   ;; (bbdb-initialize 'message 'mu4e)
 
   (setq bbdb-mail-user-agent 'mu4e-user-agent)
-  (setq mu4e-view-mode-hook 'bbdb-mua-auto-update)
+  (setq mu4e-view-rendered-hook 'bbdb-mua-auto-update)
   (setq mu4e-compose-complete-addresses nil)
   (setq bbdb-mua-pop-up t)
   (setq bbdb-mua-pop-up-window-size 5)
@@ -3944,9 +3944,9 @@ ticket, but please be sure to mention the following:
 @end itemize
 
 @subsection How can I word-wrap long lines in when viewing a message?
-You can toggle between wrapped and non-wrapped states using
-@key{w}. If you want to do this automatically, invoke @code{visual-line-mode} in
-your @code{mu4e-view-mode-hook}.
+You can toggle between wrapped and non-wrapped states using @key{w}. If you want
+to do this automatically, invoke @code{visual-line-mode} in your
+@code{mu4e-view-rendered-hook} (@code{mu4e-view-mode-hook} fires too early).
 @subsection How can I perform custom actions on messages and attachments?
 See @ref{Actions}.
 @subsection How can I prevent @t{mu4e} from automatically marking messages as `read' when I read them?
