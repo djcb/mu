@@ -834,10 +834,10 @@ major-mode for the headers view is @code{mu4e-headers-mode}.
 * Overview: HV Overview. What is the Header View
 * Keybindings::Do things with your keyboard
 * Marking: HV Marking. Selecting messages for doing things
-* Sorting and threading::Influencing the display
+* Sorting and threading::Influencing how headers are shown
 * Custom headers: HV Custom headers. Adding your own headers
 * Actions: HV Actions. Defining and using actions
-* Controlling and Displaying Buffers:: How and where the buffers are displayed
+* Buffer display:: How and where the buffers are displayed
 @end menu
 
 @node HV Overview
@@ -1114,24 +1114,17 @@ attachment, using @code{mu4e-compose-attach-captured-message}. See
 @file{mu4e-actions.el} in the @t{mu4e} source distribution for more example
 actions.
 
-@node Controlling and Displaying Buffers
-@section Display
+@node Buffer display
+@section Buffer display
 
-By default, @t{mu4e} will attempt to manage the display of its own
-buffers. To do this, the variable @code{mu4e-split-view} is used to determine
-how, or where, windows and buffers are placed.
-
-However, @t{mu4e}'s display rules are provisional; you can override them
-easily by customizing @code{display-buffer-alist}, which governs how Emacs --
-and thus @t{mu4e} -- must display your buffers.
-
-That means you can instruct @t{mu4e} to place message views in separate tabs
-or frames, if you so desire.
+By default, @t{mu4e} will attempt to manage the display of its own buffers. For
+headers and message views, the variable @code{mu4e-split-view} is @t{mu4e's}
+built-in way to decide how and where they are shown.
 
 @section Split view
 You can control how @t{mu4e} displays its buffers, including the @ref{Headers
-view} and the @ref{Message view}, by customizing
-@code{mu4e-split-view}. There are several options available:
+view} and the @ref{Message view}, by customizing @code{mu4e-split-view}. There
+are several options available:
 
 @itemize
 @item @t{horizontal} (this is the default): display the message view below the
@@ -1141,14 +1134,16 @@ lines shown (default: 8).
 right side of the header view. Use @code{mu4e-headers-visible-columns} to set
 the number of visible columns (default: 30).
 @item @t{single-window}: single window mode. Single-window mode tries to
-minimize mu4e window operations (opening, killing, resizing, etc) and
-buffer changes, while still retaining the view and headers buffers. In
-addition, it replaces mu4e main view with a minibuffer prompt containing
-the same information.
-@item @t{function}: a function that takes a buffer name and returns a
-window to display the buffer in.
-@item anything else: prefer reusing the same window, if possible.
+minimize mu4e window operations (opening, killing, resizing, etc) and buffer
+changes, while still retaining the view and headers buffers. In addition, it
+replaces @t{mu4e}'s main view with a minibuffer-prompt containing the same
+information.
+@item anything else: prefer reusing the same window, where possible.
 @end itemize
+
+Note that using a window-returning @emph{function} for @code{mu4e-split-view} is
+no longer supported, instead you can use @code{display-buffer-alist}, see
+@xref{Further display customization}.
 
 @noindent
 Some useful key bindings in the split view:
@@ -1160,13 +1155,22 @@ headers-view to the message-view and vice-versa with
 @code{mu4e-select-other-view}, bound to @key{y}
 @end itemize
 
-@section Display Buffer Example
+@node Further display customization
+@subsection Further customization
 
-Here are a couple of examples that override @t{mu4e}'s default buffer
-placement. You do not need to configure @code{mu4e-split-view} for this to
-work. In the absence of explicit rules to the contrary, @t{mu4e} will fall
-back on the value you have set in @code{mu4e-split-view} @emph{unless} you
-have assigned your own custom window function.
+However, @t{mu4e}'s display rules are provisional; you can override them
+easily by customizing @code{display-buffer-alist}, which governs how Emacs --
+and thus @t{mu4e} -- must display your buffers.
+
+That means you can instruct @t{mu4e} to place message views in separate tabs or
+frames, if you so desire.
+
+@node Display Customization Example
+@subsection Example
+
+You do not need to configure @code{mu4e-split-view} for this to work. In the
+absence of explicit rules to the contrary, @t{mu4e} will fall back on the value
+you have set in @code{mu4e-split-view}.
 
 Here is an example that displays the headers buffer in a side window to the
 right. It occupies half of the width of the frame.
@@ -1180,6 +1184,11 @@ right. It occupies half of the width of the frame.
 
 You can type @key{C-x w s} to toggle the side windows to hide or show them at
 will.
+
+Note that you may need to customize @code{mu4e-after-view-message-hook} as well;
+by default it contains @code{mu4e-resize-linked-headers-window} but you can set
+it to @code{nil} if you want to handle manually (through
+@code{display-buffer-alist}.
 
 @node Message view
 @chapter The message view
