@@ -946,7 +946,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
       (define-key menumap [quit-buffer]
-                  '("Quit view" . mu4e~view-quit-buffer))
+                  '("Quit view" . kill-buffer-and-window))
       (define-key menumap [display-help] '("Help" . kill-buffer-and-window))
 
       (define-key menumap [sepa0] '("--"))
