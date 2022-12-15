@@ -297,7 +297,7 @@ and `mu4e-headers-visible-lines' or
 `mu4e-headers-visible-columns'.
 
 This function is best called from the hook
-`mu4e-after-view-message-hook'."
+`mu4e-view-rendered-hook'."
   (unless (mu4e-current-buffer-type-p 'view)
     (mu4e-error "Cannot resize as this is not a valid view buffer."))
   (when-let (win (and mu4e-linked-headers-buffer

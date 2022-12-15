@@ -107,7 +107,7 @@
   "1.5.12")
 
 (define-obsolete-variable-alias 'mu4e-after-view-message-hook
-  'mu4e-view-rendered-hook "1.6.7")
+  'mu4e-view-rendered-hook "1.9.7")
 
 
 ;; mu4e-org
