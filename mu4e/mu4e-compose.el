@@ -799,7 +799,7 @@ draft message."
 
 ;;;###autoload
 (defun mu4e~compose-mail (&optional to subject other-headers _continue
-                                    yank-action _send-actions _return-action)
+                                    _switch-action yank-action _send-actions _return-action)
   "This is mu4e's implementation of `compose-mail'.
 Quoting its docstring:
 
