@@ -673,8 +673,11 @@ appropriate flag at the message forwarded or replied-to."
   "Wrapper around `message-kill-buffer'.
 It restores mu4e window layout after killing the compose-buffer."
   (interactive)
-  (let ((current-buffer (current-buffer)))
+  (let ((current-buffer (current-buffer))
+        (win (selected-window)))
     (message-kill-buffer)
+    (when (window-live-p win)
+      (delete-window win))
     ;; Compose buffer killed
     (when (not (equal current-buffer (current-buffer)))
       ;; Restore mu4e
