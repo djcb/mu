@@ -124,7 +124,7 @@ An empty string \"\" if there is none."
   "Switch to a context with NAME.
 Context must be part of `mu4e-contexts'; if NAME is nil, query user.
 
-If the new context is the same and the current context, only
+If the new context is the same as the current context, only
 switch (run associated functions) when prefix argument FORCE is
 non-nil."
   (interactive "P")
@@ -226,11 +226,11 @@ global-mode-line."
   :global nil
   :init-value nil ;; disabled by default
   :group 'mu4e
-  :lighter ""
   :keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd";") #'mu4e-context-switch)
+    (define-key map (kbd ";") #'mu4e-context-switch)
     map)
+  :lighter ""
   (mu4e-context-in-modeline))
 
 ;;;
