@@ -104,7 +104,7 @@ to_enum(const IE& ie, std::string_view name) {
  * @param ie infoenum
  * @param default_opt default option
  *
- * @return
+ * @return a help string
  */
 template<typename IE>
 static std::string
@@ -311,9 +311,10 @@ sub_find(CLI::App& sub, Options& opts)
 	field_for_each([&](auto&& field){
 		if (field.is_sortable()) {
 			smap.emplace(std::string(field.name), field.id);
+			smap.emplace(std::string(1, field.shortcut), field.id);
 			if (!sopts.empty())
 				sopts += ", ";
-			sopts += format("%.*s|%c",STR_V(field.name), field.shortcut);
+			sopts += format("%.*s|%c", STR_V(field.name), field.shortcut);
 		}
 	});
 	sub.add_option("--sortfield,-s", opts.find.sortfield,
