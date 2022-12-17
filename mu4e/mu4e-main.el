@@ -375,13 +375,9 @@ When REFRESH is non nil refresh infos from server."
     ;; `mu4e--main-view' is called from `mu4e--start', so don't call it
     ;; a second time here i.e. do not refresh unless specified
     ;; explicitly with REFRESH arg.
-
-    (mu4e-display-buffer buf t)
-    ;; undo some of the mu4e-display-buffer magic; we want a full screen.
-    ;; perhaps we could use display-buffer-alist instead?
-    (delete-other-windows)
     (with-current-buffer buf
       (mu4e--main-view-real-1 refresh))
+    (mu4e-display-buffer buf t)
     (goto-char (point-min))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

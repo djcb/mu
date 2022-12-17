@@ -27,10 +27,8 @@
 (defconst mu4e--sexp-buffer-name "*mu4e-sexp-at-point*"
   "Buffer name for sexp buffers.")
 
-(defvar mu4e-main-buffer-name " *mu4e-main*"
-  "Name of the mu4e main buffer.
-The default name starts with SPC and therefore is not visible in
-buffer list.")
+(defvar mu4e-main-buffer-name "*mu4e-main*"
+  "Name of the mu4e main buffer.")
 
 (defvar mu4e-embedded-buffer-name " *mu4e-embedded*"
   "Name for the embedded message view buffer.")
@@ -267,6 +265,7 @@ for BUFFER-OR-NAME to be displayed in."
             ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
             (`(,_ . t) nil)))
          (window-action (cond
+                         ((eq buffer-type 'main) '(display-buffer-full-frame))
                          ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
                           '(display-buffer-pop-up-frame))
                          ((memq buffer-type '(headers compose))
