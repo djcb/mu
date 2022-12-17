@@ -1,0 +1,25 @@
+#+title: MU-INFO
+
+* NAME
+
+~mu info~  - show information about the mu database
+
+* SYNOPSIS
+
+*mu [common options] info*
+
+* DESCRIPTION
+
+~mu info~ is the ~mu~ command for getting information about the mu database. Note
+that while running (e.g. ~mu4e~), some of the information may be slightly delayed
+due to database caching.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*maildir(5)*, *mu(1)*

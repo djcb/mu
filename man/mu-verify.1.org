@@ -1,0 +1,51 @@
+#+title:  MU VERIFY
+
+* NAME
+
+mu verify - verify message signatures and display information about them
+
+* SYNOPSIS
+
+*mu [common-options] verify [options] <msgfile>*
+
+* DESCRIPTION
+
+*mu verify* is the *mu* command for verifying message signatures (such as PGP/GPG
+signatures) and displaying information about them. The sub-command works on
+message files, and does not require the message to be indexed in the database.
+
+* VERIFY OPTIONS
+
+** -r, --auto-retrieve
+attempt to find keys online (see the *auto-key-retrieve* option in the *gnupg(1)*
+documentation).
+
+** decrypt
+attempt to decrypt the message
+
+#+include: "common-options.inc" :minlevel 1
+
+* EXAMPLES
+
+To display aggregated (one-line) information about the verification status in a
+message:
+#+begin_example
+$ mu verify msgfile
+#+end_example
+
+To display information about all the signatures:
+#+begin_example
+$ mu verify --verbose msgfile
+#+end_example
+
+If you only want to use the exit code, you can use:
+#+begin_example
+$ mu verify --quiet msgfile
+#+end_example
+which does not give any output unless there is an error.
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*

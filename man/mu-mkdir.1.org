@@ -1,0 +1,37 @@
+#+title:  MU MKDIR
+
+* NAME
+
+*mu mkdir* - create a new Maildir
+
+* SYNOPSIS
+
+*mu [common-options] mkdir [options] <dir> [<dirs>]*
+
+* DESCRIPTION
+
+*mu mkdir* is the *mu* command for creating Maildirs. It does not* use the mu
+*database. With the *mkdir* command, you can create new Maildirs with
+*permissions 0755. For example,
+
+#+begin_example
+$ mu mkdir tom dick harry
+#+end_example
+
+creates three maildirs, =tom=, =dick= and =harry=.
+
+If creation fails for any reason, *no* attempt is made to remove any parts that
+were created. This is for safety reasons.
+
+* MKDIR OPTIONS
+
+** --mode=<mode>
+set the file access mode for the new maildir(s) as in *chmod(1)*.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*maildir(5)*, *chmod(1)*

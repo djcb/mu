@@ -1,0 +1,288 @@
+#+title:  MU FIND
+
+* NAME
+
+*mu find* - find e-mail messages in the *mu* database.
+
+* SYNOPSIS
+
+*mu [common-options] find [options] <search expression>*
+
+* DESCRIPTION
+
+*mu find* is the *mu* command for searching e-mail message that were stored earlier
+using *mu index(1)*.
+
+* SEARCHING MAIL
+
+*mu find* starts a search for messages in the database that match some search
+pattern. The search patterns are described in detail in *mu-query(7)*.
+
+For example:
+
+#+begin_example
+$ mu find subject:snow and date:2009..
+#+end_example
+
+would find all messages in 2009 with 'snow' in the subject field, e.g:
+
+#+begin_example
+2009-03-05 17:57:33 EET Lucia  <lucia@example.com> running in the snow
+2009-03-05 18:38:24 EET Marius <marius@foobar.com> Re: running in the snow
+#+end_example
+
+Note, this the default, plain-text output, which is the default, so you don't
+have to use *--format=plain*. For other types of output (such as symlinks, XML or
+s-expressions), see the discussion in the *OPTIONS*-section below about *--format*.
+
+The search pattern is taken as a command-line parameter. If the search
+parameter consists of multiple parts (as in the example) they are
+treated as if there were a logical *and* between them.
+
+For details on the possible queries, see *mu-query(7)*.
+
+* FIND OPTIONS
+
+Note, some of the important options are described in the *mu*(1) man-page
+and not here, as they apply to multiple mu-commands.
+
+The *find*-command has various options that influence the way *mu* displays the
+results. If you don't specify anything, the defaults are ~fields="d f s"~,
+~--sortfield=date~ and ~--reverse~.
+
+** -f, --fields=<fields>
+specifies a string that determines which fields are shown in the output. This
+string consists of a number of characters (such as 's' for subject or 'f' for
+from), which will replace with the actual field in the output. Fields that are
+not known will be output as-is, allowing for some simple formatting.
+
+For example:
+
+#+begin_example
+$ mu find subject:snow --fields "d f s"
+#+end_example
+
+lists the date, subject and sender of all messages with 'snow' in the their
+subject.
+
+The table of replacement characters is superset of the list mentions for search
+parameters, such as:
+#+begin_example
+	t       *t*o: recipient
+	d       Sent *d*ate of the message
+	f       Message sender (*f*rom:)
+	g       Message flags (fla*g*s)
+	l       Full path to the message (*l*ocation)
+	s       Message *s*ubject
+	i       Message-*i*d
+	m       *m*aildir
+#+end_example
+
+For the complate list, see *mu-fields(1)*.
+
+The message flags are described in *mu-query(7)*. As an example, a message which
+is 'seen', has an attachment and is signed would have 'asz' as its corresponding
+output string, while an encrypted new message would have 'nx'.
+
+** -s, --sortfield=<field> and -z,--reverse
+specify the field to sort the search results by and the direction (i.e.,
+'reverse' means that the sort should be reverted - Z-A). Examples include:
+
+#+begin_example
+	cc,c            Cc (carbon-copy) recipient(s)
+	date,d          Message sent date
+	from,f          Message sender
+	maildir,m       Maildir
+	msgid,i         Message id
+	prio,p          Nessage priority
+	subject,s       Message subject
+	to,t            To:-recipient(s)
+#+end_example
+
+For the complete list use can use the *mu fields* command; see *mu-fields(1)*.
+
+Thus, for example, to sort messages by date, you could specify:
+
+#+begin_example
+$ mu find fahrrad --fields "d f s" --sortfield=date --reverse
+#+end_example
+
+Note, if you specify a sortfield, by default, messages are sorted in reverse
+(descending) order (e.g., from lowest to highest). This is usually a good
+choice, but for dates it may be more useful to sort in the opposite direction.
+
+** -n, --maxnum=<number>
+If > 0, display maximally that number of entries. If not specified, all matching
+entries are displayed.
+
+** --summary-len=<number>
+If > 0, use that number of lines of the message to provide a summary.
+
+** --format=<plain|links|xquery|xml|sexp>
+
+output results in the specified format:
+
+- The default is *plain*, i.e normal output with one line per message.
+- *links* outputs the results as a maildir with symbolic links to the found
+  messages. This enables easy integration with mail-clients (see below for more
+  information).
+- *xml* formats the search results as XML.
+- *sexp* formats the search results as an s-expression as used in Lisp programming
+  environments.
+- *xquery* shows the Xapian query corresponding to your search terms. This is
+  meant for for debugging purposes.
+
+** --linksdir=<dir> and -c, --clearlinks
+when using ~-format=links~, output the results as a maildir with symbolic links to
+the found messages. This enables easy integration with mail-clients (see below
+for more information). *mu* will create the maildir if it does not exist yet.
+
+If you specify ~--clearlinks~, existing symlinks will be cleared from the target
+directories; this allows for re-use of the same maildir. However, this option
+will delete any symlink it finds, so be careful.
+
+#+begin_example
+$ mu find grolsch --format=links --linksdir=~/Maildir/search --clearlinks
+#+end_example
+
+stores links to found messages in =~/Maildir/search=. If the directory does not
+exist yet, it will be created. Note: when *mu* creates a Maildir for these links,
+it automatically inserts a =.noindex= file, to exclude the directory from *mu
+index*.
+
+** --after=<timestamp>
+only show messages whose message files were last modified (*mtime*) after
+=<timestamp>=. =<timestamp>= is a UNIX *time_t* value, the number of seconds since
+1970-01-01 (in UTC).
+
+From the command line, you can use the *date* command to get this value. For
+example, only consider messages modified (or created) in the last 5 minutes, you
+could specify
+#+begin_example
+  --after=`date +%s --date='5 min ago'`
+#+end_example
+This is assuming the GNU *date* command.
+
+** --exec=<command>
+the ~--exec~ coption causes the =command= to be executed on each matched message;
+for example, to see the raw text of all messages matching 'milkshake', you could
+use:
+#+begin_example
+$ mu find milkshake --exec='less'
+#+end_example
+which is roughly equivalent to:
+#+begin_example
+$ mu find milkshake --fields="l" | xargs less
+#+end_example
+
+** -b, --bookmark=<bookmark>
+use a bookmarked search query. Using this option, a query from your bookmark
+file will be prepended to other search queries. See *mu-bookmarks(5)* for the
+details of the bookmarks file.
+
+
+** -u, --skip-dups
+whenever there are multiple messages with the same message-id field, only show
+the first one. This is useful if you have copies of the same message, which is a
+common occurrence when using e.g. Gmail together with *offlineimap*.
+
+** -r, --include-related
+include messages being referred to by the matched messages -- i.e.. include
+messages that are part of the same message thread as some matched messages. This
+is useful if you want Gmail-style 'conversations'.
+
+** -t, --threads
+show messages in a 'threaded' format -- that is, with indentation and arrows
+showing the conversation threads in the list of matching messages. When using
+this, sorting is chronological (by date), based on the newest message in a
+thread.
+
+Messages in the threaded list are indented based on the depth in the discussion,
+and are prefix with a kind of arrow with thread-related information about the
+message, as in the following table:
+#+begin_example
+|             | normal | orphan | duplicate |
+|-------------+--------+--------+-----------|
+| first child | `->    | `*>    | `=>       |
+| other       | |->    | |*>    | |=>       |
+#+end_example
+
+Here, an 'orphan' is a message without a parent message (in the list of
+matches), and a duplicate is a message whose message-id was already seen before;
+not this may not really be the same message, if the message-id was copied.
+
+The algorithm used for determining the threads is based on Jamie Zawinksi's
+description: http://www.jwz.org/doc/threading.html
+
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "common-options.inc" :minlevel 1
+
+* Integrating mu find with mail clients
+
+** *mutt*
+
+For *mutt* you can use the following in your =muttrc=; pressing the F8 key will
+start a search, and F9 will take you to the results.
+
+#+begin_example
+# mutt macros for mu
+macro index <F8> "<shell-escape>mu find --clearlinks --format=links --linksdir=~/Maildir/search " \\
+					"mu find"
+macro index <F9> "<change-folder-readonly>~/Maildir/search" \\
+					"mu find results"
+#+end_example
+
+
+** *Wanderlust*
+
+*Sam B* suggested the following on the *mu*-mailing list. First add the following to
+your Wanderlust configuration file:
+
+#+begin_example
+(require 'elmo-search)
+(elmo-search-register-engine
+    'mu 'local-file
+    :prog "/usr/local/bin/mu" ;; or wherever you've installed it
+    :args '("find" pattern "--fields" "l") :charset 'utf-8)
+
+(setq elmo-search-default-engine 'mu)
+;; for when you type "g" in folder or summary.
+(setq wl-default-spec "[")
+#+end_example
+
+Now, you can search using the *g* key binding; you can also create permanent
+virtual folders when the messages matching some expression by adding something
+like the following to your =folders= file.
+
+#+begin_example
+VFolders {
+  [date:today..now]!mu  "Today"
+  [size:1m..100m]!mu    "Big"
+  [flag:unread]!mu      "Unread"
+}
+#+end_example
+
+After restarting Wanderlust, the virtual folders should appear.
+
+* ENCODING
+
+*mu find* output is encoded according the locale for =--format=plain=
+(the default), and UTF-8 for all other formats (=sexp=,
+=xml=).
+
+
+* EXIT CODE
+
+This command returns 0 upon successful completion, or a non-zero exit code
+otherwise: 1 for a generals error and 2 for 'no matches'.
+
+#+include: "bugs.inc" :minlevel 1
+
+#+include: "author.inc" :minlevel 1
+
+#+include: "copyright.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*, *mu-index(1)*, *mu-query(7)*, *mu-fields(1)*

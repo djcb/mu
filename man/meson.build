@@ -14,23 +14,81 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-install_man(
-  ['mu.1',
-   'mu-add.1',
-   'mu-bookmarks.5',
-   'mu-cfind.1',
-   'mu-easy.1',
-   'mu-extract.1',
-   'mu-fields.1',
-   'mu-find.1',
-   'mu-help.1',
-   'mu-index.1',
-   'mu-info.1',
-   'mu-init.1',
-   'mu-mkdir.1',
-   'mu-query.7',
-   'mu-remove.1',
-   'mu-script.1',
-   'mu-server.1',
-   'mu-verify.1',
-   'mu-view.1'])
+#
+# generate org include files
+#
+man_data=configuration_data()
+man_data.set('VERSION', meson.project_version())
+incs=[
+  'author.inc',
+  'bugs.inc',
+  'common-options.inc',
+  'copyright.inc.in',
+  'exit-code.inc',
+  'muhome.inc',
+  'prefooter.inc',
+]
+foreach inc: incs
+  # configure the .in ones
+  if inc.substring(-3) == '.in'
+    configure_file(input: inc,
+                   output: '@BASENAME@',
+                   configuration: man_data)
+  else # and copy the rest
+    configure_file(input: inc, output:'@BASENAME@.inc',
+                   copy:true)
+  endif
+endforeach
+
+# man-pages is org-format.
+man_orgs=[
+  'mu.1.org',
+  'mu-add.1.org',
+  'mu-bookmarks.5.org',
+  'mu-cfind.1.org',
+  'mu-easy.5.org',
+  'mu-extract.1.org',
+  'mu-fields.1.org',
+  'mu-find.1.org',
+  'mu-help.1.org',
+  'mu-index.1.org',
+  'mu-info.1.org',
+  'mu-init.1.org',
+  'mu-mkdir.1.org',
+  'mu-query.7.org',
+  'mu-remove.1.org',
+  'mu-server.1.org',
+  'mu-verify.1.org',
+  'mu-view.1.org'
+]
+
+foreach src : man_orgs
+  # copy to builddir so org-includes work.
+  configure_file(input: src, output:'@BASENAME@.org', copy:true)
+
+  # meson makes in tricky to use the results of e.g. configure_file
+  # in custom_commands..., so this is admittedly a little hacky.
+  org = join_paths(meson.current_build_dir(), src)
+  man = '@BASENAME@'
+
+  expr_tmpl = ''.join([
+    '(progn',
+    '  (require \'ox-man)',
+    '  (org-export-to-file \'man "@0@"))',
+  ])
+  expr = expr_tmpl.format(org.substring(0,-4))
+  sectiondir = join_paths(mandir, 'man' + src.substring(-5, -4))
+
+  custom_target(src + '-to-man',
+                build_by_default: true,
+                input: src,
+                output: '@BASENAME@',
+                install: true,
+                install_dir: sectiondir,
+                depend_files: incs,
+                command: [emacs,
+                          '--no-init-file',
+                          '--batch',
+                          org,
+                          '--eval', expr])
+endforeach

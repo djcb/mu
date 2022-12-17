@@ -1,0 +1,22 @@
+#+title:  MU FIELDS
+
+* NAME
+
+*mu fields* - list all message fields
+
+* SYNOPSIS
+
+*mu [common-options] fields
+
+* DESCRIPTION
+
+*mu fields* is the *mu* command for showing a table of message fields and their
+properties.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*

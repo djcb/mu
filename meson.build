@@ -190,10 +190,17 @@ install_data('NEWS.org',
 # subdirs
 subdir('lib')
 subdir('mu')
-subdir('man')
+
+if emacs.found()
+  subdir('man')
+else
+  message('emacs not found; not generating manpages')
+endif
 
 if emacs.found()
    subdir('mu4e')
+else
+  message('emacs not found; not preparing mu4e support')
 endif
 
 if not get_option('guile').disabled() and guile_dep.found()

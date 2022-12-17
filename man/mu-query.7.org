@@ -1,0 +1,334 @@
+#+title:  MU QUERY
+
+* NAME
+
+mu query language -- a language for finding messages in *mu* databases.
+
+* DESCRIPTION
+
+The mu query language is a language used by *mu find* and *mu4e* to find messages in
+*mu*'s Xapian databases. The language is quite similar to Xapian's default
+query-parser, but is an independent implementation that is customized for the
+mu/mu4e use-case.
+
+In this article, we give a structured but informal overview of the query
+language and provide examples.
+
+As a companion to this, we recommend the *mu fields* and *mu flags* commands to get
+an up-to-date list of the available fields and flags.
+
+*NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
+quote any characters that would otherwise be interpreted by the shell, such as
+*""*, *(* and *)* and whitespace.
+
+* TERMS
+
+The basic building blocks of a query are *terms*; these are just normal words like
+'banana' or 'hello', or words prefixed with a field-name which make them apply
+to just that field. See *mu find* for all the available fields.
+
+Some example queries:
+#+begin_example
+vacation
+subject:capybara
+maildir:/inbox
+#+end_example
+
+Terms without an explicit field-prefix, (like 'vacation' above) are interpreted
+like:
+#+begin_example
+to:vacation or subject:vacation or body:vacation or ...
+#+end_example
+
+The language is case-insensitive for terms and attempts to 'flatten' any
+diacritics, so =angtrom= matches =Ångström=.
+
+If terms contain whitespace, they need to be quoted:
+#+begin_example
+subject:"hi there"
+#+end_example
+This is a so-called =phrase query=, which means that we match against subjects
+that contain the literal phrase "hi there".
+
+Remember that you need to escape those quotes when using this from the
+command-line:
+#+begin_example
+mu find subject:\\"hi there\\"
+#+end_example
+
+* LOGICAL OPERATORS
+
+We can combine terms with logical operators -- binary ones: *and*, *or*, *xor* and the
+unary *not*, with the conventional rules for precedence and association, and are
+case-insensitive.
+
+
+You can also group things with *(* and *)*, so you can do things like:
+#+begin_example
+(subject:beethoven or subject:bach) and not body:elvis
+#+end_example
+
+If you do not explicitly specify an operator between terms, *and* is implied, so
+the queries
+#+begin_example
+subject:chip subject:dale
+#+end_example
+#+begin_example
+subject:chip AND subject:dale
+#+end_example
+are equivalent. For readability, we recommend the second version.
+
+Note that a =pure not= - e.g. searching for *not apples* is quite a 'heavy' query.
+
+* REGULAR EXPRESSIONS AND WILDCARDS
+
+The language supports matching regular expressions that follow ECMAScript; for
+details, see http://www.cplusplus.com/reference/regex/ECMAScript/
+
+Regular expressions are enclosed in *//*. Some examples:
+#+begin_example
+subject:/h.llo/		# match hallo, hello, ...
+subject:/
+#+end_example
+
+Note the difference between 'maildir:/foo' and 'maildir:/foo/'; the former
+matches messages in the '/foo' maildir, while the latter matches all messages in
+all maildirs that match 'foo', such as '/foo', '/bar/cuux/foo', '/fooishbar'
+etc.
+
+Wildcards are an older mechanism for matching where a term with a rightmost ***
+(and =only= in that position) matches any term that starts with the part before
+the ***; they are supported for backward compatibility and *mu* translates them to
+regular expressions internally:
+#+begin_example
+foo*
+#+end_example
+is equivalent to
+#+begin_example
+/foo.*/
+#+end_example
+
+As a note of caution, certain wild-cards and regular expression can take quite a
+bit longer than 'normal' queries.
+
+* FIELDS
+
+We already saw a number of search fields, such as *subject:* and *body:*. For the
+full table, see *mu-fields(1)*.
+#+begin_example
+	bcc,h           Bcc (blind-carbon-copy) recipient(s)
+	body,b          Message body
+	cc,c            Cc (carbon-copy) recipient(s)
+	changed,k       Last change to message file (range)
+	date,d          Send date (range)
+	embed,e         Search inside embedded text parts
+	file,j          Attachment filename
+	flag,g          Message Flags
+	from,f          Message sender
+	list,v          Mailing list (e.g. the List-Id value)
+	maildir,m       Maildir
+	mime,y          MIME-type of one or more message parts
+	msgid,i         Message-ID
+	prio,p          Message priority (=low=, =normal= or =high=)
+	size,z          Message size range
+	subject,s       Message subject
+	tag,x           Tags for the message
+	thread,w        Thread a message belongs to
+	to,t            To: recipient(s)
+#+end_example
+
+The shortcut character can be used instead of the full name:
+#+begin_example
+f:foo@bar
+#+end_example
+is the same as
+#+begin_example
+from:foo@bar
+#+end_example
+For queries that are not one-off, we would recommend the longer name
+for readability.
+
+There are also the special fields *contact:*, which matches all contact-fields
+(=from=, =to=, =cc= and =bcc=), and *recip*, which matches all recipient-fields (=to=, =cc=
+and =bcc=). Hence, for instance,
+#+begin_example
+contact:fnorb@example.com
+#+end_example
+is equivalent to
+#+begin_example
+(from:fnorb@example.com or to:fnorb@example.com or
+      cc:from:fnorb@example.com or bcc:fnorb@example.com)
+#+end_example
+
+* DATE RANGES
+
+The *date:* field takes a date-range, expressed as the lower and upper bound,
+separated by *..*. Either lower or upper (but not both) can be omitted to create
+an open range.
+
+Dates are expressed in local time and using ISO-8601 format (YYYY-MM-DD
+HH:MM:SS); you can leave out the right part, and *mu* adds the rest, depending on
+whether this is the beginning or end of the range (e.g., as a lower bound,
+'2015' would be interpreted as the start of that year; as an upper bound as the
+end of the year).
+
+You can use '/' , '.', '-' and 'T' to make dates more human readable.
+
+Some examples:
+#+begin_example
+date:20170505..20170602
+date:2017-05-05..2017-06-02
+date:..2017-10-01T12:00
+date:2015-06-01..
+date:2016..2016
+#+end_example
+
+You can also use the special 'dates' *now* and *today*:
+#+begin_example
+date:20170505..now
+date:today..
+#+end_example
+
+Finally, you can use relative 'ago' times which express some time before now and
+consist of a number followed by a unit, with units *s* for seconds, *M* for minutes,
+*h* for hours, *d* for days, *w* for week, *m* for months and *y* for years. Some
+examples:
+
+#+begin_example
+date:3m..
+date:2017.01.01..5w
+#+end_example
+
+* SIZE RANGES
+
+The *size* or *z* field allows you to match =size ranges= -- that is, match messages
+that have a byte-size within a certain range. Units (b (for bytes), K (for 1000
+bytes) and M (for 1000 * 1000 bytes) are supported). Some examples:
+
+#+begin_example
+size:10k..2m
+size:10m..
+#+end_example
+
+* FLAG FIELD
+
+The *flag/g* field allows you to match message flags. The following fields are
+available:
+#+begin_example
+	a,attach        Message with attachment
+	d,draft         Draft Message
+	f,flagged       Flagged
+	l,list          Mailing-list message
+	n,new           New message (in new/ Maildir)
+	p,passed        Passed ('Handled')
+	r,replied       Replied
+	s,seen          Seen
+	t,trashed       Marked for deletion
+	u,unread        new OR NOT seen
+	x,encrypted     Encrypted message
+	z,signed        Signed message
+#+end_example
+
+Some examples:
+#+begin_example
+flag:attach
+flag:replied
+g:x
+#+end_example
+
+Encrypted messages may be signed as well, but this is only visible after
+decrypting and thus invisible to *mu*.
+
+* PRIORITY FIELD
+
+The message priority field (*prio:*) has three possible values: *low*, *normal* or
+*high*. For instance, to match high-priority messages:
+#+begin_example
+prio:high
+#+end_example
+
+* MAILDIR
+
+The Maildir field describes the directory path starting *after* the Maildir-base
+path, and before the =/cur/= or =/new/= part. So for example, if there's a message
+with the file name =~/Maildir/lists/running/cur/1234.213:2,=, you could find it
+(and all the other messages in the same maildir) with:
+#+begin_example
+maildir:/lists/running
+#+end_example
+
+Note the starting '/'. If you want to match mails in the 'root' maildir, you can
+do with a single '/':
+#+begin_example
+maildir:/
+#+end_example
+
+If you have maildirs (or any fields) that include spaces, you need to quote
+them, ie.
+#+begin_example
+maildir:"/Sent Items"
+#+end_example
+
+Note that from the command-line, such queries must be quoted:
+#+begin_example
+mu find 'maildir:"/Sent Items"'
+#+end_example
+
+* MORE EXAMPLES
+
+Here are some simple examples of *mu* queries; you can make many more complicated
+queries using various logical operators, parentheses and so on, but in the
+author's experience, it's usually faster to find a message with a simple query
+just searching for some words.
+
+Find all messages with both 'bee' and 'bird' (in any field)
+#+begin_example
+bee AND bird
+#+end_example
+
+Find all messages with either Frodo or Sam:
+#+begin_example
+Frodo OR Sam
+#+end_example
+
+Find all messages with the 'wombat' as subject, and 'capybara' anywhere:
+#+begin_example
+subject:wombat and capybara
+#+end_example
+
+Find all messages in the 'Archive' folder from Fred:
+#+begin_example
+from:fred and maildir:/Archive
+#+end_example
+
+Find all unread messages with attachments:
+#+begin_example
+flag:attach and flag:unread
+#+end_example
+
+
+Find all messages with PDF-attachments:
+#+begin_example
+mime:application/pdf
+#+end_example
+
+Find all messages with attached images:
+#+begin_example
+mime:image/*
+#+end_example
+
+* CAVEATS
+
+With current Xapian versions, the apostroph character is considered part of a
+word. Thus, you cannot find =D'Artagnan= by searching for =Artagnan=. So, include
+the apostroph in search or use a regexp search.
+
+Matching on spaces has changed compared to the old query-parser; this applies
+e.g. to Maildirs that have spaces in their name, such as =Sent Items=. See *MAILDIR*
+above.
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu-find(1)*, *mu-fields(1)*

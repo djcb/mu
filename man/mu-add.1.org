@@ -1,0 +1,28 @@
+#+title: MU ADD
+
+* NAME
+
+~mu add~ - add one or more messages to the database
+
+* SYNOPSIS
+
+*mu [common-options] add [options] <file> [<files>]*
+
+* DESCRIPTION
+
+~mu add~ is the command to add specific message files to the database. Each file
+must be specified with an absolute path.
+
+* ADD OPTIONS
+
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*, *mu-index(1)*, *mu-remove(1)*

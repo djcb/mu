@@ -1,0 +1,89 @@
+#+title: MU
+
+* NAME
+
+~mu~ - a set of tools to deal with Maildirs and message files, in particular to
+index and search e-mail messages.
+
+* SYNOPSIS
+
+~mu~ [COMMON-OPTIONS] [[COMMAND] [COMMAND-OPTIONS]]
+
+For information about the commmon options, see *COMMON OPTIONS*.
+
+* DESCRIPTION
+
+~mu~ is the general command shows help about the specific commands:
+
+- ~add~:  add specific messages to the database.
+- ~cfind~: find contacts
+- ~extract~: extract attachments and other MIME-parts
+- ~find~: find messages in the database
+- ~help~: get help for some command
+- ~index~: (re)index the messages in a Maildir
+- ~info~: show information about the mu database
+- ~init~: initialize the mu database
+- ~mkdir~: create a new Maildir
+- ~remove~: remove specific messages from the database
+- ~server~: start a server process (for ~mu4e~-internal use)
+- ~view~: view a specific message
+
+Each of the commands have their own manpage ~mu-<command~>~.
+
+~mu~ is a set of tools for dealing with Maildirs and the e-mail messages
+in them.
+
+~mu~'s main purpose is to enable searching of e-mail messages. It
+does so by periodically scanning a Maildir directory tree and
+analyzing the e-mail messages found (this is called 'indexing'). The
+results of this analysis are stored in a database, which can then be
+queried.
+
+In addition to indexing and searching, ~mu~ also offers
+functionality for viewing messages, extracting attachments and
+creating maildirs, and searching and exporting contact information.
+
+~mu~ can be used from the command line or can be integrated with various
+e-mail clients.
+
+This manpage gives a general overview of the available commands
+(~index~, ~find~, etc.); each ~mu~ command has its own
+man-page as well.
+
+* COLORS
+
+Some ~mu~ commands support colorized output, and do so by default. If you don't
+want colors, you can use ~--nocolor~.
+
+* ENCODING
+
+~mu~'s output is in the current locale, with the exceptions of the output
+specifically meant for output to UTF8-encoded files. In practice, this means
+that the output of commands ~index~, ~view~, ~extract~ is always encoded according to
+the current locale.
+
+The same is true for ~find~ and ~cfind~, with some exceptions, where
+the output is always UTF-8, regardless of the locale:
+
+- For ~cfind~ the exception is ~--format=bbdb~. This is hard-coded to UTF-8, and as
+  such specified in the output-file, so emacs/bbdb can handle it correctly
+  without guessing.
+- For ~find~ the output is encoded according the locale for ~--format=plain~ (the
+  default), and UTF-8 for all other formats.
+
+* DATABASE AND FILE
+
+Commands ~mu index~ and ~find~ and ~cfind~ work with the database, while the other
+ones work on individual mail files. Hence, running ~view~, ~mkdir~ and ~extract~ does
+not require the mu database.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+~mu-add(1)~, ~mu-cfind(1)~, ~mu-extract(1)~, ~mu-find(1)~, ~mu-help(1)~, ~mu-index(1)~,
+~mu-info(1)~, ~mu-init(1)~, ~mu-mkdir(1)~, ~mu-remove(1)~, ~mu-server(1)~, ~mu-view(1)~,
+~mu-query(7)~, ~mu-easy(1)~

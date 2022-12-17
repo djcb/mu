@@ -1,0 +1,42 @@
+#+title:  MU-INIT
+
+* NAME
+
+mu init -- initialize the mu message database
+
+* SYNOPSIS
+
+*mu [common-options] init [options]*
+
+* DESCRIPTION
+
+*mu init* is the subcommand for setting up the mu message database. After *mu init*
+has completed, you can run *mu index*
+
+* INIT OPTIONS
+
+** -m, --maildir=<maildir>
+starts searching at =<maildir>=. By default, *mu* uses whatever the *MAILDIR*
+environment variable is set to; if it is not set, it tries =~/Maildir= if it
+already exists.
+
+** --my-address=<my-email-address>
+
+specifies that some e-mail addresses are 'my-address' (the option can be used
+multiple times). Any message in which at least one of the contact fields
+contains such an address is considered a 'personal' messages; this can then be
+used for filtering in *mu-find(1)*, *mu-cfind(1)* and *mu4e*, e.g. to filter-out
+mailing list messages.
+
+=<my-email-address>= can be either a plain e-mail address (such as
+*foo@example.com*), or a regular-expression (of the 'Basic POSIX' flavor), wrapped
+in */* (such as =/foo-.*@example\\.com/=). Depending on your shell, the argument may
+need to b quoted.
+
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu-index(1)*, *mu-find(1)*, *mu-cfind(1)*

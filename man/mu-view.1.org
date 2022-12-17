@@ -1,0 +1,42 @@
+#+title:  MU VIEW
+
+* NAME
+
+mu view - display an e-mail message file
+
+* SYNOPSIS
+
+mu [common options] view [options] <file> [<files>]
+
+* DESCRIPTION
+
+*mu view* is the *mu* command for displaying e-mail message files. It works on
+message files and does =not= require the message to be indexed in the database.
+
+The command shows some common headers (From:, To:, Cc:, Bcc:, Subject: and
+Date:), the list of attachments and the plain-text body of the message (if any).
+
+* VIEW OPTIONS
+
+** --summary-len=<number>
+instead of displaying the full message, output a summary based upon the first
+=<number>= lines of the message.
+
+** --terminate
+terminate messages with \\f (=form-feed=) characters when displaying them. This is
+useful when you want to further process them.
+
+** --decrypt
+attempt to decrypt encrypted message bodies. This is only possible if *mu*
+was built with crypto-support.
+
+** --auto-retrieve
+attempt to retrieve crypto-keys automatically from the network, when needed.
+
+#+include: "common-options.inc" :minlevel 1
+
+* BUGS
+
+* SEE ALSO
+
+*mu(1)*

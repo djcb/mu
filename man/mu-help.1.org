@@ -1,0 +1,19 @@
+#+title:  MU HELP
+
+* NAME
+
+*mu help* is a *mu* command that gives help information about mu commands.
+
+* SYNOPSIS
+
+*mu [common-options] help [<command>]*
+
+* DESCRIPTION
+
+*mu help* provides help information about mu commands.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1

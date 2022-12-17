@@ -1,0 +1,35 @@
+#+title: MU-BOOKMARKS
+
+* NAME
+
+bookmarks - file with bookmarks (shortcuts) for mu search expressions
+
+* DESCRIPTION
+
+Bookmarks are named shortcuts for search queries. They allow using a convenient
+name for often-used queries. The bookmarks are also visible as shortcuts in the
+mu experimental user interfaces, =mug= and =mug2=.
+
+The bookmarks file is read from =<muhome>/bookmarks=. On Unix this would typically
+be w be =~/.config/mu/bookmarks=, but this can be influenced using the ~--muhome~
+parameter for *mu-find(1)*.
+
+The bookmarks file is a typical key=value *.ini*-file, which is best shown by
+means of an example:
+
+#+begin_example
+[mu]
+inbox=maildir:/inbox                  # inbox
+oldhat=maildir:/archive subject:hat   # archived with subject containing 'hat'
+#+end_example
+
+The *[mu]* group header is required. For practical uses of bookmarks, see
+*mu-find(1)*.
+
+#+include: "author.inc" :minlevel 1
+
+#+include: "copyright.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*, *mu-find(1)*

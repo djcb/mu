@@ -1,0 +1,89 @@
+#+title: MU EXTRACT
+
+* NAME
+
+*mu extract* is the *mu* command to display and save message parts
+(attachments), and open them with other tools.
+
+* SYNOPSIS
+
+*mu [common-options] extract [options] <file>*
+
+*mu [common-options] extract [options] <file> <pattern>*
+
+* DESCRIPTION
+
+*mu extract* is the *mu* sub-command for extracting MIME-parts (e.g., attachments)
+from mail messages. The sub-command works on message files, and does not require
+the message to be indexed in the database.
+
+For attachments, the file name used when saving it is the name of the attachment
+in the message. If there is no such name, or when saving non-attachment
+MIME-parts, a name is derived from the message-id of the message.
+
+If you specify a pattern (a case-insensitive regular expression) as the second
+argument, all attachments with filenames matching that pattern will be
+extracted. The regular expressions are Perl-compatible (as per the
+PCRE-library).
+
+Without any options, *mu extract* simply outputs the list of leaf MIME-parts in
+the message. Only 'leaf' MIME-parts (including RFC822 attachments) are
+considered, *multipart/** etc. are ignored.
+
+* EXTRACT OPTIONS
+
+** -a, --save-attachments
+save all MIME-parts that look like attachments.
+
+** --save-all
+save all non-multipart MIME-parts.
+
+** --parts=<parts>
+only consider the following numbered parts (comma-separated list). The numbers
+for the parts can be seen from running *mu extract* without any options but only
+the message file.
+
+** --target-dir=<dir>
+save the parts in the target directory rather than the current working
+directory.
+
+** --overwrite
+overwrite existing files with the same name; by default overwriting is not
+allowed.
+
+** --play
+Try to 'play' (open) the attachment with the default application for the
+particular file type. On MacOS, this uses the *open* program, on other platforms
+it uses *xdg-open*. You can choose a different program by setting the
+*MU_PLAY_PROGRAM* environment variable.
+
+#+include: "common-options.inc" :minlevel 1
+
+* EXAMPLES
+
+To display information about all the MIME-parts in a message file:
+#+begin_example
+$ mu extract msgfile
+#+end_example
+
+To extract MIME-part 3 and 4 from this message, overwriting existing files with
+the same name:
+#+begin_example
+$ mu extract --parts=3,4 --overwrite msgfile
+#+end_example
+
+To extract all files ending in '.jpg' (case-insensitive):
+#+begin_example
+$ mu extract msgfile '.*\.jpg'
+#+end_example
+
+To extract an mp3-file, and play it in the default mp3-playing application:
+#+begin_example
+$ mu extract --play msgfile 'whoopsididitagain.mp3'
+#+end_example
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*

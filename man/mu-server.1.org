@@ -1,0 +1,69 @@
+#+title:  MU-SERVER
+
+* NAME
+
+mu server - the mu backend for the mu4e e-mail client
+
+* SYNOPSIS
+
+mu [common-options] server
+
+* DESCRIPTION
+
+*mu server* starts a simple shell in which one can query and manipulate the mu
+database. The output uses s-expressions. *mu server* is not meant for use by
+humans, except for debugging purposes. Instead, it is designed specifically for
+the *mu4e* e-mail client.
+
+In this man-page, we document the commands *mu server* accepts, as well as their
+responses. In general, the commands sent to the server are s-expressions of the
+form:
+
+#+begin_example
+   (<command-name> :param1 value1 :param2 value2)
+#+end_example
+
+For example, to view a certain message, the command would be:
+
+#+begin_example
+   (view :docid 12345)
+#+end_example
+
+Parameters can be sent in any order; they must be of the correct type though.
+See *lib/utils/mu-sexp-parser.hh* and *lib/utils/mu-sexp-parser.cc* in source-tree
+for the details.
+
+* OUTPUT FORMAT
+
+*mu server* accepts a number of commands, and delivers its results in the form:
+
+#+begin_example
+   \\376<length>\\377<s-expr>
+#+end_example
+
+\\376 (one byte 0xfe), followed by the length of the s-expression expressed as
+an hexadecimal number, followed by another \\377 (one byte 0xff), followed by
+the actual s-expression.
+
+By prefixing the expression with its length, it can be processed more
+efficiently. The \\376 and \\377 were chosen since they never occur in valid
+UTF-8 (in which the s-expressions are encoded).
+
+* SERVER OPTIONS
+
+** --commands
+
+List available commands (and try with ~--verbose~)
+
+** --eval <expression>
+
+Evaluate a mu4e server s-expression
+
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+*mu(1)*

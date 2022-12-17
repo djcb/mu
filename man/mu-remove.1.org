@@ -1,0 +1,26 @@
+#+title:  MU REMOVE
+
+* NAME
+
+*mu remove* - command to remove messages from the database.
+
+* SYNOPSIS
+
+*mu [common-options] remove [options] <file> [<files>]*
+
+* DESCRIPTION
+
+*mu remove* removes specific messages from the database, each of them specified by
+their filename. The files do not have to exist in the file system.
+
+* REMOVE OPTIONS
+
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*mu(1)*, *mu-index(1)*, *mu-add(1)*
