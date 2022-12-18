@@ -15,8 +15,8 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-guile_load_path=':'.join([ # meson 0.56 has project_source_root
-    join_paths(meson.source_root(), 'guile'),
+guile_load_path=':'.join([
+    join_paths(meson.project_source_root(), 'guile'),
     join_paths(meson.current_build_dir(), '..')])
 
 test('test-mu-guile',

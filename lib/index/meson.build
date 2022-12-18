@@ -21,7 +21,7 @@ index_srcs=[
 	'mu-scanner.cc'
 ]
 
-xapian_incs = xapian_dep.get_pkgconfig_variable('includedir')
+xapian_incs = xapian_dep.get_variable(pkgconfig: 'includedir')
 lib_mu_index_inc_dep = declare_dependency(
   include_directories: include_directories(['.', '..', xapian_incs]))
 lib_mu_index=static_library('mu-index', [index_srcs],

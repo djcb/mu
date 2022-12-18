@@ -19,7 +19,7 @@
 #
 project('mu', ['c', 'cpp'],
         version: '1.9.7',
-        meson_version: '>= 0.52.0', # debian 10
+        meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
           'buildtype=debugoptimized',
@@ -199,7 +199,7 @@ endif
 if not get_option('guile').disabled() and guile_dep.found()
   config_h_data.set('BUILD_GUILE', 1)
   config_h_data.set_quoted('GUILE_BINARY',
-                           guile_dep.get_pkgconfig_variable('guile'))
+                           guile_dep.get_variable(pkgconfig: 'guile'))
   #message('guile is disabled for now')
   subdir('guile')
 endif
