@@ -841,12 +841,19 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (apply 'mu4e~compose-mail args)
     (apply func args)))
 
+(defun mu4e-view-quit ()
+  "Quit the mu4e-view buffer."
+  (interactive)
+  (if (memq mu4e-split-view '(horizontal vertical))
+      (kill-buffer-and-window)
+    (kill-buffer)))
+
 (defvar mu4e-view-mode-map
   (let ((map (make-keymap)))
     (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
 
-    (define-key map "q" #'kill-buffer-and-window)
+    (define-key map "q" #'mu4e-view-quit)
 
     (define-key map "z" #'mu4e-view-detach)
     (define-key map "Z" #'mu4e-view-attach)
@@ -946,8 +953,8 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (define-key map [menu-bar headers] (cons "Mu4e" menumap))
 
       (define-key menumap [quit-buffer]
-                  '("Quit view" . kill-buffer-and-window))
-      (define-key menumap [display-help] '("Help" . kill-buffer-and-window))
+                  '("Quit view" . mu4e-view-quit))
+      (define-key menumap [display-help] '("Help" . mu4e-view-quit))
 
       (define-key menumap [sepa0] '("--"))
       (define-key menumap [wrap-lines]
