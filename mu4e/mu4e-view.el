@@ -157,7 +157,7 @@ Then, display the results."
        (unless docid
          (mu4e-error "Message without docid: action is not possible"))
        (with-current-buffer buffer
-         (mu4e-display-buffer buffer)
+         ;;(mu4e-display-buffer buffer)
          (if (or (mu4e~headers-goto-docid docid)
                  ;; TODO: Is this the best way to find another
                  ;; relevant docid for a view buffer?
