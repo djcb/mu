@@ -137,7 +137,7 @@ guile_dep = dependency('guile-3.0', required: get_option('guile'))
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
-emacs=find_program([emacs_name], version: '>=25.3', required:false)
+emacs=find_program([emacs_name], version: '>=26.3', required:false)
 if not emacs.found()
   message('emacs not found; not pre-compiling mu4e sources')
 endif
