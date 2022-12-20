@@ -225,6 +225,26 @@ being created if CREATE is non-nil."
         (set (make-local-variable 'mu4e-linked-headers-buffer) headers-buffer))
       buffer)))
 
+;; backward compat: `display-buffer-full-frame' only appears in emacs 29.
+(unless (fboundp 'display-buffer-full-frame)
+  (defun display-buffer-full-frame (buffer alist)
+    "Display BUFFER in the current frame, taking the entire frame.
+ALIST is an association list of action symbols and values.  See
+Info node `(elisp) Buffer Display Action Alists' for details of
+such alists.
+
+This is an action function for buffer display, see Info
+node `(elisp) Buffer Display Action Functions'.  It should be
+called only by `display-buffer' or a function directly or
+indirectly called by the latter."
+    (when-let ((window (or (display-buffer-reuse-window buffer alist)
+                           (display-buffer-same-window buffer alist)
+                           (display-buffer-pop-up-window buffer alist)
+                           (display-buffer-use-some-window buffer alist))))
+      (delete-other-windows window)
+      window)))
+
+
 (defun mu4e-display-buffer (buffer-or-name &optional select)
   "Display BUFFER-OR-NAME as per `mu4e-split-view'.
 
