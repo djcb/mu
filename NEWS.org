@@ -10,6 +10,8 @@
 
 *** mu4e
 
+    - ~emacs~ 26.3 or higher is now required for ~mu4e~
+
     - ~mu4e-view-mode-hook~ now fires much earlier, before the message is
       rendered. If you have hook-functions that depend on the message contents,
       instead you should use the new ~mu4e-view-rendered-hook~.
@@ -60,6 +62,7 @@
      - The per-(week|day|year|year-month) script have been combined into a
        ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~
        installed, you can do e.g.,
+
 #+begin_example
      mu histogram -- --time-unit=day --query="hello"
 #+end_example
@@ -75,6 +78,10 @@
       However, we still have ~autogen.sh~ and a ~Makefile~ which can be helpful for
       driving ~meson~-based builds. Think of the ~Makefile~ as a convenient place to
       put common action for which I always forget the ~meson~ incantation.**
+
+    - ~meson~ 56.0 or higher is required for building
+
+    - ~emacs~ 26.3 or higher is needed for ~mu4e~
 
 *** internals
 
