@@ -4237,6 +4237,28 @@ try the @emph{unicode-fonts} package:
 (unicode-fonts-setup)
 @end lisp
 
+It's possible to customize various header marks as well, with a ``fancy'' and
+``non-fancy'' version (if you cannot see some the ``fancy'' characters, that is
+an indication that the font you are using does not support those characters.
+
+@lisp
+ (setq
+   mu4e-headers-draft-mark     '("D" . "💈")
+   mu4e-headers-flagged-mark   '("F" . "📍")
+   mu4e-headers-new-mark       '("N" . "🔥")
+   mu4e-headers-passed-mark    '("P" . "❯")
+   mu4e-headers-replied-mark   '("R" . "❮")
+   mu4e-headers-seen-mark      '("S" . "☑")
+   mu4e-headers-trashed-mark   '("T" . "💀")
+   mu4e-headers-attach-mark    '("a" . "📎")
+   mu4e-headers-encrypted-mark '("x" . "🔒")
+   mu4e-headers-signed-mark    '("s" . "🔑")
+   mu4e-headers-unread-mark    '("u" . "⎕")
+   mu4e-headers-list-mark      '("s" . "🔈")
+   mu4e-headers-personal-mark  '("p" . "👨")
+   mu4e-headers-calendar-mark  '("c" . "📅"))
+@end lisp
+
 @node Refiling messages
 @section Refiling messages
 
