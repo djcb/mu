@@ -28,9 +28,8 @@ endif
 
 # when MU_HACKER is set, do a debug build
 ifneq (${MU_HACKER},)
-MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'
+MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug' '-Db_sanitize=address'
 endif
-
 
 .PHONY: all
 .PHONY: check test test-verbose-if-fail test-valgrind test-helgrind
