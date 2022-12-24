@@ -738,7 +738,7 @@ docid is not found."
 (defun mu4e~headers-view-this-message-p (docid)
   "Is DOCID currently being viewed?"
   (mu4e-get-view-buffers
-   (lambda (_) (eq docid (plist-get mu4e~view-message :docid)))))
+   (lambda (_) (eq docid (plist-get mu4e--view-message :docid)))))
 
 ;; note: this function is very performance-sensitive
 (defun mu4e~headers-append-handler (msglst)

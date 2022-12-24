@@ -110,7 +110,7 @@ no such message. If optional NOERROR is non-nil, do not raise an
 error when there is no message at point."
   (or (cond
        ((eq major-mode 'mu4e-headers-mode) (get-text-property (point) 'msg))
-       ((eq major-mode 'mu4e-view-mode) mu4e~view-message))
+       ((eq major-mode 'mu4e-view-mode) mu4e--view-message))
       (unless noerror (mu4e-warn "No message at point"))))
 
 (defsubst mu4e-message-field-at-point (field)
@@ -142,7 +142,7 @@ expressions, in which case any of those are tried for a match."
     (seq-find
      (lambda (ct)
        (let ((name (mu4e-contact-name ct))
-	     (email (mu4e-contact-email ct))
+             (email (mu4e-contact-email ct))
              ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
              ;; so let's detect and extract in that case.
              (rx (if (string-match-p  "^\\(.*\\)/$" rx)
@@ -160,7 +160,7 @@ of the of the contacts in field CFIELD (either :to, :from, :cc or
 which `mu4e-personal-address-p' return t. Returns the contact
 cell that matched, or nil."
   (seq-find (lambda (cell)
-	      (mu4e-personal-address-p (mu4e-contact-email cell)))
+              (mu4e-personal-address-p (mu4e-contact-email cell)))
             (mu4e-message-field msg cfield)))
 
 (defun mu4e-message-sent-by-me (msg)
@@ -217,7 +217,7 @@ If MSG is nil, use `mu4e-message-at-point'."
         (kill-buffer mu4e--sexp-buffer-name))
       (with-current-buffer-window (get-buffer-create mu4e--sexp-buffer-name) nil nil
         (lisp-data-mode)
-	(insert (pp-to-string msg))
+        (insert (pp-to-string msg))
         (font-lock-ensure)
         ;; add basic `quit-window' bindings
         (view-mode 1)))))

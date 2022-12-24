@@ -369,8 +369,8 @@ header-view, not including, for instance, the message body.")
 ;; before calling `mu4e-view-mode'.  However, changing the major mode
 ;; clobbers any local variables.  Work around that by declaring the
 ;; variable permanent-local.
-(defvar-local mu4e~view-message nil "The message being viewed in view mode.")
-(put 'mu4e~view-message 'permanent-local t)
+(defvar-local mu4e--view-message nil "The message being viewed in view mode.")
+(put 'mu4e--view-message 'permanent-local t)
 ;;; _
 (provide 'mu4e-vars)
 ;;; mu4e-vars.el ends here

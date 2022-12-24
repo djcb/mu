@@ -84,7 +84,7 @@
   (gnus-icalendar-setup)
   (cl-defmethod gnus-icalendar-event:inline-reply-buttons :around
     ((event gnus-icalendar-event) handle)
-    (if (and (boundp 'mu4e~view-rendering)
+    (if (and (boundp 'mu4e--view-rendering)
              (gnus-icalendar-event:rsvp event))
         (let ((method (gnus-icalendar-event:method event)))
           (when (or (string= method "REQUEST") (string= method "PUBLISH"))

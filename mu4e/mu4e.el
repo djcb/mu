@@ -148,7 +148,7 @@ invoke
     (seq-filter (lambda (bm)
                   (and (stringp (plist-get bm :query))
                        (not (or (plist-get bm :hide)
-				(plist-get bm :hide-unread)))))
+                                (plist-get bm :hide-unread)))))
                 (append (mu4e-bookmarks)
                         (mu4e--maildirs-with-query)))))
   ;; maybe request the list of contacts, automatically refreshed after
@@ -166,7 +166,7 @@ invoke
   (mapc
    (lambda (buf)
      ;; When using the Gnus-based viewer, the view buffer has the
-     ;; kill-buffer-hook function mu4e~view-kill-buffer-hook-fn which kills the
+     ;; kill-buffer-hook function mu4e--view-kill-buffer-hook-fn which kills the
      ;; mm-* buffers created by Gnus' article mode.  Those have been returned by
      ;; `buffer-list' but might already be deleted in case the view buffer has
      ;; been killed first.  So we need a `buffer-live-p' check here.
@@ -193,10 +193,10 @@ invoke
 (defun mu4e--update-status (info)
   "Update the status message with INFO."
   (setq mu4e-index-update-status
-	`(:tstamp ,(current-time)
-	  :checked ,(plist-get info :checked)
+        `(:tstamp ,(current-time)
+          :checked ,(plist-get info :checked)
           :updated  ,(plist-get info :updated)
-	  :cleaned-up ,(plist-get info :cleaned-up))))
+          :cleaned-up ,(plist-get info :cleaned-up))))
 
 (defun mu4e--info-handler (info)
   "Handler function for (:INFO ...) sexps received from server."
@@ -212,16 +212,16 @@ invoke
           (mu4e-index-message
            "Indexing... checked %d, updated %d" checked updated)
         (progn ;; i.e. 'complete
-	  (mu4e--update-status info)
+          (mu4e--update-status info)
           (mu4e-index-message
            "%s completed; checked %d, updated %d, cleaned-up %d"
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
            checked updated cleaned-up)
           (run-hooks 'mu4e-index-updated-hook)
-	  ;; backward compatibility...
-	  (unless (zerop (+ updated cleaned-up))
-	    mu4e-message-changed-hook)
-	  (unless (and (not (string= mu4e--contacts-tstamp "0"))
+          ;; backward compatibility...
+          (unless (zerop (+ updated cleaned-up))
+            mu4e-message-changed-hook)
+          (unless (and (not (string= mu4e--contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e--request-contacts-maybe))
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))

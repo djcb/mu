@@ -114,14 +114,14 @@ specified a function as viewer."
 
 
 
-(defconst mu4e~view-raw-buffer-name " *mu4e-raw-view*"
+(defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")
 
 (defun mu4e-view-raw-message ()
   "Display the raw contents of message at point in a new buffer."
   (interactive)
   (let ((path (mu4e-message-readable-path))
-        (buf (get-buffer-create mu4e~view-raw-buffer-name)))
+        (buf (get-buffer-create mu4e--view-raw-buffer-name)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -137,7 +137,7 @@ Then, display the results."
   (let ((path (mu4e-message-readable-path)))
     (mu4e-process-file-through-pipe path cmd)))
 
-(defmacro mu4e~view-in-headers-context (&rest body)
+(defmacro mu4e--view-in-headers-context (&rest body)
   "Evaluate BODY in the context of the headers buffer."
   `(progn
      (let* ((msg (mu4e-message-at-point))
@@ -180,7 +180,7 @@ If this succeeds, return the new docid. Otherwise, return nil.
 Optionally, takes an integer N (prefix argument), to the Nth next
 header."
   (interactive "P")
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (mu4e~headers-move (or n 1))))
 
 (defun mu4e-view-headers-prev (&optional n)
@@ -189,16 +189,16 @@ If this succeeds, return the new docid. Otherwise, return nil.
 Optionally, takes an integer N (prefix argument), to the Nth
 previous header."
   (interactive "P")
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (mu4e~headers-move (- (or n 1)))))
 
-(defun mu4e~view-prev-or-next-unread (backwards)
+(defun mu4e--view-prev-or-next-unread (backwards)
   "Move point to the next or previous message.
 Go to the previous message if BACKWARDS is non-nil.
 unread message header in the headers buffer connected with this
 message view. If this succeeds, return the new docid. Otherwise,
 return nil."
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (mu4e~headers-prev-or-next-unread backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
@@ -207,13 +207,13 @@ return nil."
   "Move point to the previous unread message header.
 If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
-  (mu4e~view-prev-or-next-unread t))
+  (mu4e--view-prev-or-next-unread t))
 
 (defun mu4e-view-headers-next-unread ()
   "Move point to the next unread message header.
 If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
-  (mu4e~view-prev-or-next-unread nil))
+  (mu4e--view-prev-or-next-unread nil))
 
 
 ;;; Interactive functions
@@ -233,7 +233,7 @@ Ask user for a kind of mark, (move, delete etc.), a field to
 match and a regular expression to match with. Then, mark all
 matching messages with that mark."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-headers-mark-pattern)))
+  (mu4e--view-in-headers-context (mu4e-headers-mark-pattern)))
 
 (defun mu4e-view-mark-thread (&optional markpair)
   "Mark whole thread with a certain mark.
@@ -242,7 +242,7 @@ to all messages in the thread at point in the headers view. The
 optional MARKPAIR can also be used to provide the mark
 selection."
   (interactive)
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (if markpair (mu4e-headers-mark-thread nil markpair)
      (call-interactively 'mu4e-headers-mark-thread))))
 
@@ -253,19 +253,19 @@ to all messages in the subthread at point in the headers view.
 The optional MARKPAIR can also be used to provide the mark
 selection."
   (interactive)
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (if markpair (mu4e-headers-mark-subthread markpair)
      (mu4e-headers-mark-subthread))))
 
 (defun mu4e-view-search-narrow ()
   "Run `mu4e-headers-search-narrow' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-search-narrow)))
+  (mu4e--view-in-headers-context (mu4e-search-narrow)))
 
 (defun mu4e-view-search-edit ()
   "Run `mu4e-search-edit' in the headers buffer."
   (interactive)
-  (mu4e~view-in-headers-context (mu4e-search-edit)))
+  (mu4e--view-in-headers-context (mu4e-search-edit)))
 
 (defun mu4e-mark-region-code ()
   "Highlight region marked with `message-mark-inserted-region'.
@@ -299,10 +299,10 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
 
 (defun mu4e-view-mark-custom ()
   "Run some custom mark function."
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (mu4e-headers-mark-custom)))
 
-(defun mu4e~view-split-view-p ()
+(defun mu4e--view-split-view-p ()
   "Return t if we're in split-view, nil otherwise."
   (member mu4e-split-view '(horizontal vertical)))
 
@@ -361,8 +361,8 @@ any further, go the next message."
 Otherwise, warn user that unmarking only works in the header
 list."
   (interactive)
-  (if (mu4e~view-split-view-p)
-      (mu4e~view-in-headers-context (mu4e-mark-unmark-all))
+  (if (mu4e--view-split-view-p)
+      (mu4e--view-in-headers-context (mu4e-mark-unmark-all))
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
 (defun mu4e-view-unmark ()
@@ -370,73 +370,73 @@ list."
 Otherwise, warn user that unmarking only works in the header
 list."
   (interactive)
-  (if (mu4e~view-split-view-p)
+  (if (mu4e--view-split-view-p)
       (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
-(defmacro mu4e~view-defun-mark-for (mark)
+(defmacro mu4e--view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for- MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
         (docstring (format "Mark the current message for %s." mark)))
     `(progn
        (defun ,funcname () ,docstring
               (interactive)
-              (mu4e~view-in-headers-context
+              (mu4e--view-in-headers-context
                (mu4e-headers-mark-and-next ',mark)))
        (put ',funcname 'definition-name ',mark))))
 
-(mu4e~view-defun-mark-for move)
-(mu4e~view-defun-mark-for refile)
-(mu4e~view-defun-mark-for delete)
-(mu4e~view-defun-mark-for flag)
-(mu4e~view-defun-mark-for unflag)
-(mu4e~view-defun-mark-for unmark)
-(mu4e~view-defun-mark-for something)
-(mu4e~view-defun-mark-for read)
-(mu4e~view-defun-mark-for unread)
-(mu4e~view-defun-mark-for trash)
-(mu4e~view-defun-mark-for untrash)
+(mu4e--view-defun-mark-for move)
+(mu4e--view-defun-mark-for refile)
+(mu4e--view-defun-mark-for delete)
+(mu4e--view-defun-mark-for flag)
+(mu4e--view-defun-mark-for unflag)
+(mu4e--view-defun-mark-for unmark)
+(mu4e--view-defun-mark-for something)
+(mu4e--view-defun-mark-for read)
+(mu4e--view-defun-mark-for unread)
+(mu4e--view-defun-mark-for trash)
+(mu4e--view-defun-mark-for untrash)
 
 (defun mu4e-view-marked-execute ()
   "Execute the marked actions."
   (interactive)
-  (mu4e~view-in-headers-context
+  (mu4e--view-in-headers-context
    (mu4e-mark-execute-all)))
 
 
 ;;; URL handling
 
-(defvar mu4e~view-link-map nil
+(defvar mu4e--view-link-map nil
   "A map of some number->url so we can jump to url by number.")
-(put 'mu4e~view-link-map 'permanent-local t)
+(put 'mu4e--view-link-map 'permanent-local t)
 
 (defvar mu4e-view-active-urls-keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map [down-mouse-1] 'mu4e~view-browse-url-from-binding)
-    (define-key map [mouse-1] 'mu4e~view-browse-url-from-binding)
-    (define-key map (kbd "M-<return>") 'mu4e~view-browse-url-from-binding)
+    (define-key map [down-mouse-1] 'mu4e--view-browse-url-from-binding)
+    (define-key map [mouse-1] 'mu4e--view-browse-url-from-binding)
+    (define-key map (kbd "M-<return>") 'mu4e--view-browse-url-from-binding)
     map)
   "Keymap used for the urls inside the body.")
 
-(defvar mu4e~view-beginning-of-url-regexp
+(defvar mu4e--view-beginning-of-url-regexp
   "https?\\://\\|mailto:"
   "Regexp that matches the beginning of certain URLs.
 Match-string 1 will contain the matched URL, if any.")
 
 
-(defun mu4e~view-browse-url-from-binding (&optional url)
+(defun mu4e--view-browse-url-from-binding (&optional url)
   "View in browser the url at point, or click location.
 If the optional argument URL is provided, browse that instead.
 If the url is mailto link, start writing an email to that address."
   (interactive)
-  (let* (( url (or url (mu4e~view-get-property-from-event 'mu4e-url))))
+  (let* (( url (or url (mu4e--view-get-property-from-event 'mu4e-url))))
     (when url
       (if (string-match-p "^mailto:" url)
           (browse-url-mail url)
         (browse-url url)))))
 
 
-(defun mu4e~view-get-property-from-event (prop)
+(defun mu4e--view-get-property-from-event (prop)
   "Get the property PROP at point, or the location of the mouse.
 The action is chosen based on the `last-command-event'.
 Meant to be evoked from interactive commands."
@@ -451,20 +451,20 @@ Meant to be evoked from interactive commands."
     (get-text-property (point) prop)))
 
 ;; this is fairly simplistic...
-(defun mu4e~view-activate-urls ()
+(defun mu4e--view-activate-urls ()
   "Turn things that look like URLs into clickable things.
 Also number them so they can be opened using `mu4e-view-go-to-url'."
   (let ((num 0))
     (save-excursion
-      (setq mu4e~view-link-map ;; buffer local
+      (setq mu4e--view-link-map ;; buffer local
             (make-hash-table :size 32 :weakness nil))
       (goto-char (point-min))
-      (while (re-search-forward mu4e~view-beginning-of-url-regexp nil t)
+      (while (re-search-forward mu4e--view-beginning-of-url-regexp nil t)
         (let ((bounds (thing-at-point-bounds-of-url-at-point)))
           (when bounds
             (let* ((url (thing-at-point-url-at-point))
                    (ov (make-overlay (car bounds) (cdr bounds))))
-              (puthash (cl-incf num) url mu4e~view-link-map)
+              (puthash (cl-incf num) url mu4e--view-link-map)
               (add-text-properties
                (car bounds)
                (cdr bounds)
@@ -480,14 +480,14 @@ Also number them so they can be opened using `mu4e-view-go-to-url'."
                                        'face 'mu4e-url-number-face)))))))))
 
 
-(defun mu4e~view-get-urls-num (prompt &optional multi)
+(defun mu4e--view-get-urls-num (prompt &optional multi)
   "Ask the user with PROMPT for an URL number for MSG.
 The number is [1..n] for URLs \[0..(n-1)] in the message. If
 MULTI is nil, return the number for the URL; otherwise (MULTI is
 non-nil), accept ranges of URL numbers, as per
 `mu4e-split-ranges-to-numbers', and return the corresponding
 string."
-  (let* ((count (hash-table-count mu4e~view-link-map)) (def))
+  (let* ((count (hash-table-count mu4e--view-link-map)) (def))
     (when (zerop count) (mu4e-error "No links for this message"))
     (if (not multi)
         (if (= count 1)
@@ -502,16 +502,16 @@ string."
   "Offer to go visit one or more URLs.
 If MULTI (prefix-argument) is non-nil, offer to go to a range of URLs."
   (interactive "P")
-  (mu4e~view-handle-urls "URL to visit"
+  (mu4e--view-handle-urls "URL to visit"
                          multi
-                         (lambda (url) (mu4e~view-browse-url-from-binding url))))
+                         (lambda (url) (mu4e--view-browse-url-from-binding url))))
 
 (defun mu4e-view-save-url (&optional multi)
   "Offer to save URLs to the kill ring.
 If MULTI (prefix-argument) is nil, save a single one, otherwise, offer
 to save a range of URLs."
   (interactive "P")
-  (mu4e~view-handle-urls "URL to save" multi
+  (mu4e--view-handle-urls "URL to save" multi
                          (lambda (url)
                            (kill-new url)
                            (mu4e-message "Saved %s to the kill-ring" url))))
@@ -522,7 +522,7 @@ If MULTI (prefix-argument) is nil,
 download a single one, otherwise, offer to fetch a range of
 URLs. The urls are fetched to `mu4e-attachment-dir'."
   (interactive "P")
-  (mu4e~view-handle-urls
+  (mu4e--view-handle-urls
    "URL to fetch" multi
    (lambda (url)
      (let ((target (concat (mu4e~get-attachment-dir url) "/"
@@ -530,23 +530,23 @@ URLs. The urls are fetched to `mu4e-attachment-dir'."
        (url-copy-file url target)
        (mu4e-message "Fetched %s -> %s" url target)))))
 
-(defun mu4e~view-handle-urls (prompt multi urlfunc)
+(defun mu4e--view-handle-urls (prompt multi urlfunc)
   "Handle URLs.
 If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
 it to a range of uris. PROMPT is the query to present to the user."
   (if multi
-      (mu4e~view-handle-multi-urls prompt urlfunc)
-    (mu4e~view-handle-single-url prompt urlfunc)))
+      (mu4e--view-handle-multi-urls prompt urlfunc)
+    (mu4e--view-handle-single-url prompt urlfunc)))
 
-(defun mu4e~view-handle-single-url (prompt urlfunc &optional num)
+(defun mu4e--view-handle-single-url (prompt urlfunc &optional num)
   "Apply URLFUNC to some URL with NUM in the current message.
 Prompting the user with PROMPT for the number."
-  (let* ((num (or num (mu4e~view-get-urls-num prompt)))
-         (url (gethash num mu4e~view-link-map)))
+  (let* ((num (or num (mu4e--view-get-urls-num prompt)))
+         (url (gethash num mu4e--view-link-map)))
     (unless url (mu4e-warn "Invalid number for URL"))
     (funcall urlfunc url)))
 
-(defun mu4e~view-handle-multi-urls (prompt urlfunc)
+(defun mu4e--view-handle-multi-urls (prompt urlfunc)
   "Apply URLFUNC to a a range of URLs in the current message.
 
 Prompting the user with PROMPT for the numbers.
@@ -557,16 +557,16 @@ of urls. You can type multiple values separated by space, e.g.  1
 
 Furthermore, there is a shortcut \"a\" which means all urls, but as
 this is the default, you may not need it."
-  (let* ((linkstr (mu4e~view-get-urls-num
+  (let* ((linkstr (mu4e--view-get-urls-num
                    "URL number range (or 'a' for 'all')" t))
-         (count (hash-table-count mu4e~view-link-map))
+         (count (hash-table-count mu4e--view-link-map))
          (linknums (mu4e-split-ranges-to-numbers linkstr count)))
     (dolist (num linknums)
-      (mu4e~view-handle-single-url prompt urlfunc num))))
+      (mu4e--view-handle-single-url prompt urlfunc num))))
 
 (defun mu4e-view-for-each-uri (func)
   "Evaluate FUNC(uri) for each uri in the current message."
-  (maphash (lambda (_num uri) (funcall func uri)) mu4e~view-link-map))
+  (maphash (lambda (_num uri) (funcall func uri)) mu4e--view-link-map))
 
 (defun mu4e-view-message-with-message-id (msgid)
   "View message with message-id MSGID.
@@ -580,7 +580,7 @@ message."
 
 (defvar gnus-icalendar-additional-identities)
 (defvar helm-comp-read-use-marked)
-(defvar-local mu4e~view-rendering nil)
+(defvar-local mu4e--view-rendering nil)
 
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
@@ -620,8 +620,8 @@ As a side-effect, a message that is being viewed loses its
         (erase-buffer)
         (insert-file-contents-literally
          (mu4e-message-readable-path msg) nil nil nil t)
-        (setq-local mu4e~view-message msg)
-        (mu4e~view-render-buffer msg))
+        (setq-local mu4e--view-message msg)
+        (mu4e--view-render-buffer msg))
       (mu4e-loading-mode 0)))
   (unless (mu4e--view-detached-p gnus-article-buffer)
     (with-current-buffer mu4e-linked-headers-buffer
@@ -646,7 +646,7 @@ As a side-effect, a message that is being viewed loses its
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
-    (mu4e~view-render-buffer msg)
+    (mu4e--view-render-buffer msg)
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mu4e-action-view-in-browser (msg &optional skip-headers)
@@ -683,7 +683,7 @@ determine which browser function to use."
            (xwidget-webkit-browse-url url))))
     (mu4e-action-view-in-browser msg)))
 
-(defun mu4e~view-render-buffer (msg)
+(defun mu4e--view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode."
   (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
@@ -693,7 +693,7 @@ determine which browser function to use."
          (ct (and ct (mail-header-parse-content-type ct)))
          (charset (mail-content-type-get ct 'charset))
          (charset (and charset (intern charset)))
-         (mu4e~view-rendering t); Needed if e.g. an ics file is buttonized
+         (mu4e--view-rendering t); Needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime t)
          (gnus-unbuttonized-mime-types '(".*/.*"))
          (gnus-buttonized-mime-types
@@ -703,7 +703,7 @@ determine which browser function to use."
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
          ;; Possibly add headers (before "Attachments")
-         (gnus-display-mime-function (mu4e~view-gnus-display-mime msg))
+         (gnus-display-mime-function (mu4e--view-gnus-display-mime msg))
          (gnus-icalendar-additional-identities
           (mu4e-personal-addresses 'no-regexp)))
     (condition-case err
@@ -711,16 +711,16 @@ determine which browser function to use."
           (mm-enable-multibyte)
           (run-hooks 'gnus-article-decode-hook)
           (gnus-article-prepare-display)
-          (mu4e~view-activate-urls)
+          (mu4e--view-activate-urls)
           (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
-          (add-hook 'kill-buffer-hook #'mu4e~view-kill-mime-handles))
+          (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles))
       (epg-error
        (mu4e-warn "EPG error: %s; fall back to raw view"
                   (error-message-string err))))))
 
-(defun mu4e~view-kill-mime-handles ()
+(defun mu4e--view-kill-mime-handles ()
   "Kill cached MIME-handles, if any."
   (when mu4e~gnus-article-mime-handles
     (mm-destroy-parts mu4e~gnus-article-mime-handles)
@@ -731,7 +731,7 @@ determine which browser function to use."
   (interactive)
   (when (derived-mode-p 'mu4e-view-mode)
     (kill-buffer)
-    (mu4e-view mu4e~view-message)))
+    (mu4e-view mu4e--view-message)))
 
 (defun mu4e-view-toggle-show-mime-parts()
   "Toggle whether to show all MIME-parts."
@@ -746,7 +746,7 @@ determine which browser function to use."
   (setq mm-fill-flowed (not mm-fill-flowed))
   (mu4e-view-refresh))
 
-(defun mu4e~view-gnus-display-mime (msg)
+(defun mu4e--view-gnus-display-mime (msg)
   "Like `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
     (gnus-display-mime ihandles)
@@ -759,7 +759,7 @@ determine which browser function to use."
           (let ((fieldval (mu4e-message-field msg field)))
             (pcase field
               ((or ':path ':maildir :list ':user-agent ':message-id)
-               (mu4e~view-gnus-insert-header field fieldval))
+               (mu4e--view-gnus-insert-header field fieldval))
               (':mailing-list
                (let ((list (plist-get msg :list)))
                  (if list (mu4e-get-mailing-list-shortname list) "")))
@@ -768,20 +768,20 @@ determine which browser function to use."
                                          (if (symbolp flag)
                                              (symbol-name flag)
                                            flag)) fieldval ", ")))
-                 (mu4e~view-gnus-insert-header field flags)))
-              (':size (mu4e~view-gnus-insert-header
+                 (mu4e--view-gnus-insert-header field flags)))
+              (':size (mu4e--view-gnus-insert-header
                       field (mu4e-display-size fieldval)))
               ((or ':subject ':to ':from ':cc ':bcc ':from-or-to
                    ':date :attachments ':signature
                    ':decryption)) ; handled by Gnus
               (_
-               (mu4e~view-gnus-insert-header-custom msg field)))))
+               (mu4e--view-gnus-insert-header-custom msg field)))))
         (let ((gnus-treatment-function-alist
                '((gnus-treat-highlight-headers
                   gnus-article-highlight-headers))))
           (gnus-treat-article 'head))))))
 
-(defun mu4e~view-gnus-insert-header (field val)
+(defun mu4e--view-gnus-insert-header (field val)
   "Insert a header FIELD with value VAL."
   (let* ((info (cdr (assoc field mu4e-header-info)))
          (key (plist-get info :name))
@@ -790,7 +790,7 @@ determine which browser function to use."
         (insert (propertize (concat key ":") 'help-echo help)
                 " " val "\n"))))
 
-(defun mu4e~view-gnus-insert-header-custom (msg field)
+(defun mu4e--view-gnus-insert-header-custom (msg field)
   "Insert MSG's custom FIELD."
   (let* ((info (cdr-safe (or (assoc field mu4e-header-info-custom)
                              (mu4e-error "Custom field %S not found" field))))
@@ -804,9 +804,9 @@ determine which browser function to use."
       (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
 
 (define-advice gnus-icalendar-event-from-handle
-    (:filter-args (handle-attendee) mu4e~view-fix-missing-charset)
+    (:filter-args (handle-attendee) mu4e--view-fix-missing-charset)
   "Avoid error when displaying an ical attachment without a charset."
-  (if (and (boundp 'mu4e~view-rendering) mu4e~view-rendering)
+  (if (and (boundp 'mu4e--view-rendering) mu4e--view-rendering)
       (let* ((handle (car handle-attendee))
              (attendee (cadr handle-attendee))
              (buf (mm-handle-buffer handle))
@@ -818,26 +818,26 @@ determine which browser function to use."
         (list handle attendee))
   handle-attendee))
 
-(defun mu4e~view-mode-p ()
+(defun mu4e--view-mode-p ()
   "Is the buffer in mu4e-view-mode or one of its descendants?"
   (or (eq major-mode 'mu4e-view-mode)
       (derived-mode-p '(mu4e-view-mode))))
 
-(defun mu4e~view-nop (func &rest args)
+(defun mu4e--view-nop (func &rest args)
   "Do not invoke FUNC with ARGS when in mu4e-view-mode.
 This is useful for advising some Gnus-functionality that does not work in mu4e."
-  (unless (mu4e~view-mode-p)
+  (unless (mu4e--view-mode-p)
     (apply func args)))
 
-(defun mu4e~view-button-reply (func &rest args)
+(defun mu4e--view-button-reply (func &rest args)
   "Advise FUNC with ARGS to make `gnus-button-reply' links work in mu4e."
-  (if (mu4e~view-mode-p)
+  (if (mu4e--view-mode-p)
       (mu4e-compose-reply)
     (apply func args)))
 
-(defun mu4e~view-msg-mail (func &rest args)
+(defun mu4e--view-msg-mail (func &rest args)
   "Advise FUNC with ARGS  to make `gnus-msg-mail' links compose with mu4e."
-  (if (mu4e~view-mode-p)
+  (if (mu4e--view-mode-p)
       (apply 'mu4e~compose-mail args)
     (apply func args)))
 
@@ -1038,15 +1038,15 @@ Based on Gnus' article-mode."
   ;; Restore C-h b default behavior
   (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
   ;; ;; turn off gnus modeline changes and menu items
-  (advice-add 'gnus-set-mode-line :around #'mu4e~view-nop)
-  (advice-add 'gnus-button-reply :around #'mu4e~view-button-reply)
-  (advice-add 'gnus-msg-mail :around #'mu4e~view-msg-mail)
+  (advice-add 'gnus-set-mode-line :around #'mu4e--view-nop)
+  (advice-add 'gnus-button-reply :around #'mu4e--view-button-reply)
+  (advice-add 'gnus-msg-mail :around #'mu4e--view-msg-mail)
 
   ;; advice gnus-block-private-groups to always return "."
   ;; so that by default we block images.
   (advice-add 'gnus-block-private-groups :around
               (lambda(func &rest args)
-                (if (mu4e~view-mode-p)
+                (if (mu4e--view-mode-p)
                     "." (apply func args))))
   (use-local-map mu4e-view-mode-map)
   (mu4e-context-minor-mode)
@@ -1081,10 +1081,10 @@ Article Treatment' for more options."
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 ;;; MIME-parts
-(defvar-local mu4e~view-mime-parts nil
+(defvar-local mu4e--view-mime-parts nil
   "MIME parts for this message.")
 
-(defun mu4e~view-gather-mime-parts ()
+(defun mu4e--view-gather-mime-parts ()
   "Gather all MIME parts as an alist.
 The alist uniquely maps the number to the gnus-part."
   (let ((parts '()))
@@ -1116,7 +1116,7 @@ containing commas."
   (interactive "P")
   (cl-assert (and (eq major-mode 'mu4e-view-mode)
                   (derived-mode-p 'gnus-article-mode)))
-  (let* ((parts (mu4e~view-gather-mime-parts))
+  (let* ((parts (mu4e--view-gather-mime-parts))
          (handles '())
          (files '())
          (compfn (if (and (boundp 'helm-mode) helm-mode)
@@ -1170,9 +1170,9 @@ containing commas."
     ;; pipe MIME-part to some arbitrary shell command
     (:name "|pipe" :handler gnus-article-pipe-part :receives index)
     ;; open with the default handler, if any
-    (:name "open" :handler mu4e~view-open-file :receives temp)
+    (:name "open" :handler mu4e--view-open-file :receives temp)
     ;; open with some custom file.
-    (:name "wopen-with" :handler (lambda (file)(mu4e~view-open-file file t))
+    (:name "wopen-with" :handler (lambda (file)(mu4e--view-open-file file t))
            :receives temp)
 
     ;;
@@ -1215,7 +1215,7 @@ Each of the actions is a plist with keys
 ).")
 
 
-(defun mu4e~view-mime-part-to-temp-file (handle)
+(defun mu4e--view-mime-part-to-temp-file (handle)
   "Write MIME-part HANDLE to a temporary file and return the file name.
 The filename is deduced from the MIME-part's filename, or
 otherwise random; the result is placed in a temporary directory
@@ -1236,7 +1236,7 @@ The directory and file are self-destructed."
     fname))
 
 
-(defun mu4e~view-open-file (file &optional force-ask)
+(defun mu4e--view-open-file (file &optional force-ask)
   "Open FILE with default handler, if any.
 Otherwise, or if FORCE-ASK is set, ask user for the program to
 open with."
@@ -1254,7 +1254,7 @@ open with."
 If N is not specified, ask for it. For instance, '3 A o' opens
 the third MIME-part."
   (interactive "NNumber of MIME-part: ")
-  (let* ((parts (mu4e~view-gather-mime-parts))
+  (let* ((parts (mu4e--view-gather-mime-parts))
          (options
           (mapcar (lambda (action) `(,(plist-get action :name) . ,action))
                   mu4e-view-mime-part-actions))
@@ -1279,7 +1279,7 @@ the third MIME-part."
                                                   (mm-insert-part handle)
                                                   (buffer-string))))
          ((eq receives 'temp)
-          (funcall handler (mu4e~view-mime-part-to-temp-file handle)))
+          (funcall handler (mu4e--view-mime-part-to-temp-file handle)))
          (t (mu4e-error "Invalid :receive for %S" action))))
        ((stringp handler)
         (cond
@@ -1290,7 +1290,7 @@ the third MIME-part."
           (shell-command
            (shell-command (concat handler " "
                                   (shell-quote-argument
-                                   (mu4e~view-mime-part-to-temp-file handle))))))
+                                   (mu4e--view-mime-part-to-temp-file handle))))))
          (t (mu4e-error "Invalid action %S" action))))))))
 
 (defun mu4e-view-toggle-html ()
