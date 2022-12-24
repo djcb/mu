@@ -191,7 +191,8 @@ SCM_DEFINE(get_field,
 		return get_flags_scm(*msg);
 	case Field::Id::BodyText:
 		return get_body(*msg, false);
-	default: break;
+	default:
+		break;
 	}
 #pragma GCC diagnostic pop
 
@@ -209,6 +210,8 @@ SCM_DEFINE(get_field,
 	default:
 		SCM_ASSERT(0, FIELD, SCM_ARG2, FUNC_NAME);
 	}
+
+	return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
