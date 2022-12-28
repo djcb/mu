@@ -8,6 +8,10 @@
    - a new command-line parser, which allows (hopefully!) for a better user
      interaction; better error checking and more
 
+   - the MSYS2 (Windows) builds is _experimental_ now; some things may not work;
+     see e.g. https://github.com/djcb/mu/issues?q=is%3Aissue+label%3Amsys, but
+     we welcome efforts to fix those things.
+
 *** mu4e
 
     - ~emacs~ 26.3 or higher is now required for ~mu4e~
@@ -16,13 +20,17 @@
       rendered. If you have hook-functions that depend on the message contents,
       instead you should use the new ~mu4e-view-rendered-hook~.
 
-    - mu4e window management has been significantly reworked, affecting the
-      message loading as well as window-layout. As a user-visible feature,
-      there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and alllow
-      for keeping multiple views around; see the Mu4e manual for details.
+    - mu4e window management has been significantly reworked and cleaned up,
+      affecting the message loading as well as window-layout. As a user-visible
+      feature, there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and
+      alllow for keeping multiple views around; see the Mu4e manual for details.
 
     - One change is that ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]].
+
+    - ~mu4e-maildir-shortcuts~ now take an optional ~:name~ property, which is shown
+      instead of the Maildir path. Useful for very long paths. Maildirs now can
+      also be without a ~:key~.
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
