@@ -24,6 +24,6 @@ Anonymize as needed, all that matters is that the issue still reproduces.
 Please describe the versions of OS, Emacs, mu/mu4e etc. you are using.
 
 **Checklist**
-- [ ] you are running either the latest 1.6.x release, or a 1.8.x release (otherwise, please upgrade)
-- [ ] you are running mu4e without any third-party extensions (otherwise, make sure you can reproduce without those)
+- [ ] you are running either an 1.8.x release or the latest 1.9.x development release
+- [ ] you can reproduce the problem without 3rd party extensions (including Doom/Evil etc.)
 - [ ] you have read all of the above
