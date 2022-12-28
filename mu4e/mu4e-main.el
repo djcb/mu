@@ -226,12 +226,12 @@ clicked."
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
-		   (cond ((characterp key)
-			  (mu4e--main-action-str
-			   (concat "\t* [j" (string key) "] " name)
-			   (concat "j" (string key))))
-			 ((stringp key) (concat "\t* " key "  " name))
-			 (t (concat "\t*      " name)))
+                   (cond ((characterp key)
+                          (mu4e--main-action-str
+                           (concat "\t* [j" (string key) "] " name)
+                           (concat "j" (string key))))
+                         ((stringp key) (concat "\t* " key "  " name))
+                         (t (concat "\t*      " name)))
                    ;; append all/unread numbers, if available.
                    (if qcounts
                        (let ((unread (plist-get (car qcounts) :unread))
