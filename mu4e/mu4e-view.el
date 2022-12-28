@@ -845,7 +845,13 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
   (interactive)
   (if (memq mu4e-split-view '(horizontal vertical))
       (kill-buffer-and-window)
-    (kill-buffer)))
+    ;; single-window case
+    (when mu4e-linked-headers-buffer ;; re-use mu4e-view-detach?
+      (with-current-buffer mu4e-linked-headers-buffer
+        (when (eq (selected-window) mu4e~headers-view-win)
+          (setq mu4e~headers-view-win nil)))
+      (setq mu4e-linked-headers-buffer nil)
+      (kill-buffer))))
 
 (defvar mu4e-view-mode-map
   (let ((map (make-keymap)))
