@@ -92,11 +92,13 @@ This makes it possible to quickly go to a particular
 maildir (folder), or quickly moving messages to them (e.g., for
 archiving or refiling).
 
-Each of the list elements is a plist with at least:
+Each of the list elements is a plist with at least a
 `:maildir'  - the maildir for the shortcut (e.g. \"/archive\")
-`:key'      - the shortcut key.
 
 Optionally, you can add the following:
+`:key'  - the shortcut key, can also be a string that gets
+displayed in the main view.
+`:name' - name of the maildir to be displayed in main-view.
 `:hide'  - if t, the shortcut is hidden from the main-view and
 speedbar.
 `:hide-unread' - do not show the counts of unread/total number
@@ -164,7 +166,8 @@ This is compatibile with `mu4e-bookmarks'."
   (seq-map
    (lambda (item)
      (let* ((maildir (plist-get item :maildir))
-	    (item (plist-put item :name maildir))
+	    (name (or (plist-get item :name) maildir))
+	    (item (plist-put item :name name))
 	    (item (plist-put item :query (format "maildir:\"%s\"" maildir))))
        item)) ;; we don't need ":maildir", but it's harmless.
    (mu4e-maildir-shortcuts)))

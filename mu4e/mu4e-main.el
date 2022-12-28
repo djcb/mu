@@ -210,7 +210,7 @@ clicked."
            with longest = (mu4e--longest-of-maildirs-and-bookmarks)
            with queries = (plist-get mu4e--server-props :queries)
            for m in mds
-           for key = (string (plist-get m :key))
+           for key = (plist-get m :key)
            for name = (plist-get m :name)
            for query = (plist-get m :query)
            for qcounts = (and (stringp query)
@@ -226,9 +226,12 @@ clicked."
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
            concat (concat
                    ;; menu entry
-                   (mu4e--main-action-str
-                    (concat "\t* [j" key "] " name)
-                    (concat "j" key))
+		   (cond ((characterp key)
+			  (mu4e--main-action-str
+			   (concat "\t* [j" (string key) "] " name)
+			   (concat "j" (string key))))
+			 ((stringp key) (concat "\t* " key "  " name))
+			 (t (concat "\t*      " name)))
                    ;; append all/unread numbers, if available.
                    (if qcounts
                        (let ((unread (plist-get (car qcounts) :unread))
