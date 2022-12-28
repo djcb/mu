@@ -51,11 +51,11 @@ version 3]] (or higher).
 
 * Installation
 
-Note: building from source is an /advanced/ subject; esp. if something goes
-wrong. The below simple examples are a start, but all tools involved have many
-options; there are differences between systems, versions etc. So if this is all
-a bit daunting we recommend to wait for someone else to build it for you, such
-as a Linux distribution. Many have packages available.
+Note: building from source is an /advanced/ subject; esp. if something goes wrong.
+The below simple examples are a start, but all tools involved have many options;
+there are differences between systems, versions etc. So if this is all a bit
+daunting we recommend to wait for someone else to build it for you, such as a
+Linux distribution. Many have packages available.
 
 ** Requirements
 
@@ -69,6 +69,10 @@ To be able to build ~mu~, ensure you have:
 
 For ~mu4e~, you also need ~emacs~.
 
+Note, the MSYS2 support for Windows is _experimental_, that is, it works for some
+people, but we can't really support it due to lack of the specific expertise.
+Help is welcome!
+
 ** Building
 
 #+begin_example
@@ -76,15 +80,18 @@ $ git clone git://github.com/djcb/mu.git
 $ cd mu
 #+end_example
 
-Now, you have a choice. ~mu~ uses ~meson~ for building, but includes a good-old
-~Makefile~ with some useful targets, which should work for typical cases.
+~mu~ uses ~meson~ for building, so you can use that directly, and all the usual
+commands apply. You can also use it _indirectly_ through the provided ~Makefile~,
+which provides a number of useful targets.
+
+For instance, using the ~Makefile~, you could install ~mu~ using:
 
 #+begin_example
 $ ./autogen.sh && make
 $ sudo make install
 #+end_example
 
-Alternatively, for more control, you can run ~meson~ directly:
+Alternatively, you can run ~meson~ directly:
 #+begin_example
 $ meson build && ninja -C build
 $ ninja -C build install
