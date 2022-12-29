@@ -54,11 +54,10 @@ Documentation License.''
 
 Welcome to @t{mu4e} @value{VERSION}.
 
-@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version
-25.3 or newer, built on top of the
-@t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search
-engine. @t{mu4e} is optimized for quickly processing large amounts of
-e-mail.
+@t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version 26.3 or
+newer, built on top of the
+@t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search engine.
+@t{mu4e} is optimized for quickly processing large amounts of e-mail.
 
 Some of its highlights:
 @itemize
@@ -231,15 +230,14 @@ After these steps, @t{mu4e} should be ready to go!
 @node Requirements
 @section Requirements
 
-@t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and
-Unix-like systems, including many Linux distributions, OS X and FreeBSD,
-and even on MS-Windows (with Cygwin). Emacs 25.3 or higher is required,
-as well as Xapian@footnote{@url{https://xapian.org/}} and
+@t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and Unix-like
+systems, including many Linux distributions, OS X and FreeBSD, and even on
+MS-Windows (with Cygwin). Emacs 26.3 or higher is required, as well as
+Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
-@t{mu} has optional support for both versions 2.2 and 3.0 of the Guile
-(Scheme) programming language. There are also some GUI-toys, which
-require GTK+ 3.x and Webkit.
+@t{mu} has optional support for the Guile (Scheme) programming language (version
+3.0 or higher). There are also some GUI-toys, which require GTK+ 3.x and Webkit.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++17 compilers (both @command{gcc} and
@@ -251,16 +249,16 @@ also need the development packages for GTK+, Webkit and Guile.
 @section Versions
 
 The stable (release) versions have even minor version numbers, while the
-development versions have odd ones. So, for example, 1.6.10 is a stable
-version, while the 1.7.15 is the development version.
+development versions have odd ones. So, for example, 1.8.13 is a stable version,
+while the 1.9.9 is the development version.
 
-The stable versions only receive bug fixes after being released, while
-the development versions get new features, fixes, and, perhaps, bugs,
-and are meant for people with a tolerance for that.
+The stable versions only receive bug fixes after being released, while the
+development versions get new features, fixes, and, perhaps, bugs, and are meant
+for people with a tolerance for that.
 
-There is support for one release branch; so, when the 1.8 release is
-available (and a new 1.9 development series start), no more changes are
-expected for the 1.6 releases.
+There is support for one release branch; so, when the 1.10 release is available
+(and a new 1.11 development series start), no more changes are expected for the
+1.8 releases.
 
 @node Installation
 @section Installation
