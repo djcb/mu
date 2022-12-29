@@ -31,7 +31,7 @@ project('mu', ['c', 'cpp'],
 
 # installation paths
 prefixdir = get_option('prefix')
-bindir    = prefixdir /  get_option('bindir')
+bindir    = prefixdir / get_option('bindir')
 datadir   = prefixdir / get_option('datadir')
 mandir    = prefixdir / get_option('mandir')
 infodir   = prefixdir / get_option('infodir')

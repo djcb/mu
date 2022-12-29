@@ -105,4 +105,24 @@ install_data(mu_guile_scripts, install_dir: mu_guile_script_dir)
 
 guile_builddir=meson.current_build_dir()
 
-subdir('tests')
+#
+# guile test; does't work wit asan.
+#
+if get_option('b_sanitize') == 'none'
+  guile_load_path=':'.join([
+    join_paths(meson.project_source_root(), 'guile'),
+    meson.current_build_dir()])
+
+  test('test-mu-guile',
+       executable('test-mu-guile',
+                  join_paths('tests', 'test-mu-guile.cc'),
+                  install: false,
+                  cpp_args: [
+                    '-DABS_SRCDIR="' + join_paths(meson.current_source_dir(), 'tests') + '"',
+                    '-DGUILE_LOAD_PATH="' + guile_load_path + '"',
+                    '-DGUILE_EXTENSIONS_PATH="' + guile_load_path + '"'
+                  ],
+                  dependencies: [glib_dep, lib_mu_dep]))
+else
+  message('sanitizer build; skip guile test')
+endif
