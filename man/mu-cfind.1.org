@@ -58,6 +58,7 @@ sets the output format to the given value. The following are available:
 | org-contact | org-mode org-contact format       |
 | bbdb        | BBDB format                       |
 | csv         | comma-separated values [1]        |
+| json        | JSON format                       |
 
 
 [1] *CSV is not fully standardized, but *mu cfind* follows some common practices:
@@ -82,6 +83,51 @@ only seen in mailing-list messages. See the ~--my-address~ parameter to *mu init
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "common-options.inc" :minlevel 1
+
+* JSON FORMAT
+
+With ~--format=json~, the matching contacts come out as a JSON array, e.g.,
+#+begin_example
+[
+  {
+    "email"         : "syb@example.com",
+    "name"          : "Sybil Gerard",
+    "display"       : "Sybil Gerard <syb@example.com>",
+    "last-seen"     : 1075982687,
+    "last-seen-iso" : "2004-02-05T14:04:47Z",
+    "personal"      : false,
+    "frequency"     : 14
+  },
+  {
+    "email"         : "ed@example.com",
+    "name"          : "Mallory, Edward",
+    "display"       : "\"Mallory, Edward\" <ed@example.com>",
+    "last-seen"     : 1425991805,
+    "last-seen-iso" : "2015-03-10T14:50:05Z",
+    "personal"      : true,
+    "frequency"     : 2
+  }
+]
+#+end_example
+
+Each contact has the following fields:
+
+| property      | description                                                              |
+|---------------+--------------------------------------------------------------------------|
+| ~email~         | the email-address                                                        |
+| ~name~          | the name (or ~none~)                                                       |
+| ~display~       | the combination name and e-mail address for display purposes             |
+| ~last-seen~     | date of most recent message with this contact (Unix time)                |
+| ~last-seen-iso~ | ~last-seen~ represented as an ISO-8601 timestamp                           |
+| ~personal~      | whether the email was seen in a message together with a personal address |
+| ~frequency~     | approximation of the number of times this contact was seen in messages   |
+
+The JSON format is useful for further processing, e.g. using the *jq(1)* tool:
+
+List display names, sorted by their last-seen date:
+#+begin_example
+$ mu cfind --format=json --personal | jq -r '.[] | ."last-seen-iso" + " " + .display' | sort
+#+end_example
 
 * INTEGRATION WITH MUTT
 
@@ -113,4 +159,4 @@ otherwise: 1 for a generals error and 2 for 'no matches'.
 #+include: "copyright.inc" :minlevel 1
 
 * SEE ALSO
-*mu(1)*, *mu-index(1)*, *mu-find(1)*, *pcre(3)*
+*mu(1)*, *mu-index(1)*, *mu-find(1)*, *pcre(3)*, *jq(1)*

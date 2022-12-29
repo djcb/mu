@@ -167,30 +167,14 @@ sub_cfind(CLI::App& sub, Options& opts)
 {
 	using Format = Options::Cfind::Format;
 	static constexpr InfoEnum<Format, 8> FormatInfos = {{
-			{ Format::Plain,
-			  {"plain", "Plain output"}
-			},
-			{ Format::MuttAlias,
-			  {"mutt-alias", "Mutt alias"}
-			},
-			{ Format::MuttAddressBook,
-			  {"mutt-ab", "Mutt address book"}
-			},
-			{ Format::Wanderlust,
-			  {"wl", "Wanderlust"}
-			},
-			{ Format::OrgContact,
-			  {"org-contact", "org-contact"}
-			},
-			{ Format::Bbdb,
-			  {"bbdb", "BBDB"}
-			},
-			{ Format::Csv,
-			  {"csv", "comma-separated values"}
-			},
-			{ Format::Debug,
-			  {"debug", "debug output"}
-			}
+			{ Format::Plain,           {"plain", "Plain output"} },
+			{ Format::MuttAlias,       {"mutt-alias", "Mutt alias"} },
+			{ Format::MuttAddressBook, {"mutt-ab", "Mutt address book"}},
+			{ Format::Wanderlust,      {"wl", "Wanderlust"}},
+			{ Format::OrgContact,      {"org-contact", "org-contact"}},
+			{ Format::Bbdb,            {"bbdb", "Emacs BBDB"}},
+			{ Format::Csv,             {"csv", "comma-separated values"}},
+			{ Format::Json,            {"json", "format as json array"}},
 		}};
 
 	const auto fhelp = options_help(FormatInfos, Format::Plain);
@@ -205,10 +189,8 @@ sub_cfind(CLI::App& sub, Options& opts)
 
 	sub.add_option("pattern", opts.cfind.rx_pattern,
 		       "Regular expression pattern to match");
-
 	sub.add_flag("--personal,-p", opts.cfind.personal,
 		       "Only show 'personal' contacts");
-
 	sub.add_option("--maxnum,-n", opts.cfind.maxnum,
 		       "Maximum number of results")
 		->type_name("<number>")

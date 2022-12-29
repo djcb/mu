@@ -114,20 +114,20 @@ test_mu_cfind_bbdb(void)
 #define frm1                                                                                       \
 	";; -*-coding: utf-8-emacs;-*-\n"                                                          \
 	";;; file-version: 6\n"                                                                    \
-	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                             \
+	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                              \
 	"((creation-date . \"%s\") "                                                               \
 	"(time-stamp . \"1970-01-01\")) nil]\n"                                                    \
-	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                    \
+	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                     \
 	"((creation-date . \"%s\") "                                                               \
 	"(time-stamp . \"1970-01-01\")) nil]\n"
 
 #define frm2                                                                                       \
 	";; -*-coding: utf-8-emacs;-*-\n"                                                          \
 	";;; file-version: 6\n"                                                                    \
-	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                    \
+	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                     \
 	"((creation-date . \"%s\") "                                                               \
 	"(time-stamp . \"1970-01-01\")) nil]\n"                                                    \
-	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                             \
+	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                              \
 	"((creation-date . \"%s\") "                                                               \
 	"(time-stamp . \"1970-01-01\")) nil]\n"
 
@@ -322,6 +322,41 @@ test_mu_cfind_csv(void)
 	g_free(erroutput);
 }
 
+
+static void
+test_mu_cfind_json()
+{
+	gchar *cmdline, *output, *erroutput;
+
+	cmdline = g_strdup_printf("%s --nocolor cfind --muhome=%s --format=json ^a@example\\.com",
+				  MU_PROGRAM,
+				  CONTACTS_CACHE.c_str());
+
+	if (g_test_verbose())
+		g_print("%s\n", cmdline);
+
+	output = erroutput = NULL;
+	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
+	g_assert(output);
+
+	const auto expected = R"([
+  {
+    "email"         : "a@example.com",
+    "name"          : null,
+    "display"       : "a@example.com",
+    "last-seen"     : 1463331445,
+    "last-seen-iso" : "2016-05-15T19:57:25Z",
+    "personal"      : false,
+    "frequency"     : 1
+  }
+]
+)";
+	g_assert_cmpstr(output, ==, expected);
+	g_free(cmdline);
+	g_free(output);
+	g_free(erroutput);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -340,6 +375,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-mutt-ab", test_mu_cfind_mutt_ab);
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-org-contact", test_mu_cfind_org_contact);
 	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-csv", test_mu_cfind_csv);
+	g_test_add_func("/mu-cmd-cfind/test-mu-cfind-json", test_mu_cfind_json);
 
 	return g_test_run();
 }
