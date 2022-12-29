@@ -374,7 +374,7 @@ When REFRESH is non nil refresh infos from server."
   "Create the mu4e main-view, and switch to it or show the menu.
 When REFRESH is non nil refresh infos from server.
 
-If `mu4e-split-view' equals 'single-window, show a mu4e menu
+If `mu4e-split-view' equals \='single-window, show a mu4e menu
 instead."
   (if (eq mu4e-split-view 'single-window)
       (mu4e--main-menu)
