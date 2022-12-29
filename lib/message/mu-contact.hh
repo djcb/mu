@@ -97,6 +97,15 @@ struct Contact {
 
 
 	/**
+	 * Does the contact contain a valid email address as per
+	 *   https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+	 * ?
+	 *
+	 * @return true or false
+	 */
+	bool has_valid_email() const;
+
+	/**
 	 * Operator==; based on the hash values (ie. lowercase e-mail address)
 	 *
 	 * @param rhs some other Contact
@@ -151,13 +160,13 @@ struct Contact {
 	 * data members
 	 */
 
-	std::string		email;		/**< Email address for this contact.Not empty */
-	std::string		name;		/**< Name for this contact; can be empty. */
-	Type			type;		/**< Type of contact */
-	int64_t			message_date;	/**< date of the contact's message */
-	bool			personal;	/**<  A personal message? */
-	size_t			frequency;	/**< Frequency of this contact */
-	int64_t			tstamp;		/**< Timestamp for this contact (internal use) */
+	std::string	email;		/**< Email address for this contact.Not empty */
+	std::string	name;		/**< Name for this contact; can be empty. */
+	Type		type;		/**< Type of contact */
+	int64_t		message_date;	/**< Date of the contact's message */
+	bool		personal;	/**<  A personal message? */
+	size_t		frequency;	/**< Frequency of this contact */
+	int64_t		tstamp;		/**< Timestamp for this contact (internal use) */
 
 private:
 	void cleanup_name() { // replace control characters by spaces.
