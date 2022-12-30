@@ -156,25 +156,48 @@ clicked."
                        'mouse-face 'highlight newstr)
     newstr))
 
-
-
 (defun mu4e--longest-of-maildirs-and-bookmarks ()
   "Return the length of longest name of bookmarks and maildirs."
   (cl-loop for b in (append (mu4e-bookmarks)
                             (mu4e--maildirs-with-query))
            maximize (string-width (plist-get b :name))))
 
-(defun mu4e--main-bookmarks ()
-  "Return the entries for the bookmarks menu."
-  ;; TODO: it's a bit uncool to hard-code the "b" shortcut...
-  (cl-loop with bmks = (mu4e-bookmarks)
-           with longest = (mu4e--longest-of-maildirs-and-bookmarks)
-           with queries = (mu4e-last-query-results)
-           for bm in bmks
-           for key = (string (plist-get bm :key))
-           for name = (plist-get bm :name)
+(defun mu4e--main-item (fullkey name qcounts max-length)
+  "Display one main bookmarks/maildir item.
+- FULLKEY is a 2-character string describing the item's shortcut
+- NAME is the name of the of the item
+- QCOUNTS is a structure with unread information
+  for this item (or nil)
+- MAX-LENGTH is the maximum length for an item name
+  (used for alignment)."
+  (concat
+   (mu4e--main-action-str
+    (concat "\t* [" fullkey "] " name) fullkey)
+   ;; append all/unread numbers, if available.
+   (if qcounts
+       (let ((unread (plist-get (car qcounts) :unread))
+             (count  (plist-get (car qcounts) :count)))
+         (format
+          "%s (%s/%s)"
+          (make-string (- max-length (string-width name)) ? )
+          (propertize (number-to-string unread)
+                      'face 'mu4e-header-key-face)
+          count))
+     "") "\n"))
+
+(defun mu4e--main-items (shortcut items queries max-length)
+  "Display the entries for the bookmark/maildir menu.
+- SHORTCUT is a single character which is the first
+character of the keyboard shortcut
+- ITEMS is a list of items, for format see `(mu4e-bookmarks)'.
+- QUERIES is the list of last query-results (or nil)
+- MAX-LENGTH is the maximum length for an item name
+  (used for alignment)."
+  (cl-loop for item in items
+           for fullkey = (format "%c%c" shortcut (plist-get item :key))
+           for name = (plist-get item :name)
            for query = (funcall (or mu4e-query-rewrite-function #'identity)
-                                (plist-get bm :query))
+                                (plist-get item :query))
            for qcounts = (and (stringp query)
                               (cl-loop for q in queries
                                        when (string=
@@ -183,68 +206,9 @@ clicked."
                                              query)
                                        collect q))
            for unread = (and qcounts (plist-get (car qcounts) :unread))
-           when (not (plist-get bm :hide))
+           when (not (plist-get item :hide))
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
-           concat (concat
-                   ;; menu entry
-                   (mu4e--main-action-str
-                    (concat "\t* [b" key "] " name)
-                    (concat "b" key))
-                   ;; append all/unread numbers, if available.
-                   (if qcounts
-                       (let ((unread (plist-get (car qcounts) :unread))
-                             (count  (plist-get (car qcounts) :count)))
-                         (format
-                          "%s (%s/%s)"
-                          (make-string (- longest (string-width name)) ? )
-                          (propertize (number-to-string unread)
-                                      'face 'mu4e-header-key-face)
-                          count))
-                     "")
-                   "\n")))
-
-
-(defun mu4e--main-maildirs ()
-  "Return a string of maildirs with their counts."
-  (cl-loop with mds = (mu4e--maildirs-with-query)
-           with longest = (mu4e--longest-of-maildirs-and-bookmarks)
-           with queries = (plist-get mu4e--server-props :queries)
-           for m in mds
-           for key = (string (plist-get m :key))
-           for name = (plist-get m :name)
-           for query = (plist-get m :query)
-           for qcounts = (and (stringp query)
-                              (cl-loop for q in queries
-                                       when (string=
-                                             (decode-coding-string
-                                              (plist-get q :query)
-                                              'utf-8 t)
-                                             query)
-                                       collect q))
-           for unread = (and qcounts (plist-get (car qcounts) :unread))
-           when (not (plist-get m :hide))
-           when (not (and mu4e-main-hide-fully-read (eq unread 0)))
-           concat (concat
-                   ;; menu entry
-                   (cond ((characterp key)
-                          (mu4e--main-action-str
-                           (concat "\t* [j" (string key) "] " name)
-                           (concat "j" (string key))))
-                         ((stringp key) (concat "\t* " key "  " name))
-                         (t (concat "\t*      " name)))
-                   ;; append all/unread numbers, if available.
-                   (if qcounts
-                       (let ((unread (plist-get (car qcounts) :unread))
-                             (count  (plist-get (car qcounts) :count)))
-                         (format
-                          "%s (%s/%s)"
-                          (make-string (- longest (string-width name)) ? )
-                          (propertize (number-to-string unread)
-                                      'face 'mu4e-header-key-face)
-                          count))
-                     "")
-                   "\n")))
-
+           concat (mu4e--main-item fullkey name qcounts max-length)))
 
 (defun mu4e--key-val (key val &optional unit)
   "Show a KEY / VAL pair, with optional UNIT."
@@ -255,8 +219,7 @@ clicked."
    (propertize val 'face 'mu4e-header-key-face)
    (if unit
        (propertize (concat " " unit) 'face 'mu4e-header-title-face)
-     "")
-   "\n"))
+     "")  "\n"))
 
 ;; NEW This is the old `mu4e--main-view' function but without
 ;; buffer switching at the end.
@@ -280,7 +243,8 @@ When REFRESH is non nil refresh infos from server."
   (with-current-buffer mu4e-main-buffer-name
     (let ((inhibit-read-only t)
           (pos (point))
-          (addrs (mu4e-personal-addresses)))
+          (addrs (mu4e-personal-addresses))
+          (max-length (mu4e--longest-of-maildirs-and-bookmarks)))
       (erase-buffer)
       (insert
        "* "
@@ -297,10 +261,11 @@ When REFRESH is non nil refresh infos from server."
         "\t* [C]ompose a new message\n" #'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-bookmarks)
+       (mu4e--main-items ?b (mu4e-bookmarks) (mu4e-last-query-results) max-length)
        "\n"
        (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-maildirs)
+       (mu4e--main-items ?j (mu4e--maildirs-with-query)
+                         (plist-get mu4e--server-props :queries) max-length)
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
@@ -323,7 +288,9 @@ When REFRESH is non nil refresh infos from server."
 
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
-       (mu4e--key-val "last updated" (current-time-string (plist-get mu4e-index-update-status :tstamp)))
+       (mu4e--key-val "last updated"
+                      (current-time-string
+                       (plist-get mu4e-index-update-status :tstamp)))
        (mu4e--key-val "database-path" (mu4e-database-path))
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"
