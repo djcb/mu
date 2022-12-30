@@ -28,13 +28,16 @@ namespace Mu {
  * PCRE rather than std::regex because it is much faster.
  */
 struct Regex {
+#if !GLIB_CHECK_VERSION(2,74,0) /* backward compat */
+#define G_REGEX_DEFAULT	      (static_cast<GRegexCompileFlags>(0))
+#define G_REGEX_MATCH_DEFAULT (static_cast<GRegexMatchFlags>(0))
+#endif
 	/**
 	 * Trivial constructor
 	 *
 	 * @return
 	 */
 	Regex() noexcept: rx_{}  {}
-
 
 	/**
 	 * Construct a new Regex object
@@ -47,7 +50,7 @@ struct Regex {
 	 */
 	static Result<Regex> make(const std::string& ptrn,
 				  GRegexCompileFlags cflags = G_REGEX_DEFAULT,
-				   GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT) noexcept try {
+				  GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT) noexcept try {
 		return Regex(ptrn.c_str(), cflags, mflags);
 	} catch (const Error& err) {
 		return Err(err);
