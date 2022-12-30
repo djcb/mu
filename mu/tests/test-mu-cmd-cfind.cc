@@ -345,7 +345,7 @@ test_mu_cfind_json()
     "name"          : null,
     "display"       : "a@example.com",
     "last-seen"     : 1463331445,
-    "last-seen-iso" : "2016-05-15T19:57:25Z",
+    "last-seen-iso" : "2016-05-15T16:57:25Z",
     "personal"      : false,
     "frequency"     : 1
   }
