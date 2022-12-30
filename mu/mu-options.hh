@@ -53,7 +53,7 @@ struct Options {
 	std::string	muhome;				/**<  alternative mu dir */
 
 	enum struct SubCommand {
- 		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
+		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
 		Remove, Script, Server, Verify, View/*must be last*/
 	};
 	static constexpr std::size_t SubCommandNum =
@@ -91,7 +91,7 @@ struct Options {
 	 */
 	struct Cfind {
 		enum struct Format { Plain, MuttAlias, MuttAddressBook,
-			Wanderlust, OrgContact, Bbdb, Csv, Debug };
+			Wanderlust, OrgContact, Bbdb, Csv, Json };
 		Format		format;			/**< Output format */
 		bool		personal;		/**< only show personal contacts */
 		OptTStamp	after;			/**< only last seen after tstamp */
@@ -112,11 +112,11 @@ struct Options {
 		std::string     message;		/**<  path to message file */
 		bool		save_all;		/**<  extract all parts */
 		bool		save_attachments;	/**<  extract all attachment parts */
-		SizeVec	        parts;		/**<  parts to save /  open */
+		SizeVec		parts;		/**<  parts to save /  open */
 		std::string	targetdir{};		/**<  where to save attachments */
 		bool		overwrite;		/**<  overwrite same-named files */
 		bool		play;			/**<  try to 'play' attachment */
-		std::string     filename_rx;	        /**<  Filename rx to save */
+		std::string     filename_rx;		/**<  Filename rx to save */
 	} extract;
 
 	/*
@@ -183,7 +183,7 @@ struct Options {
 	 */
 	struct Mkdir {
 		StringVec	dirs;			/**< Dir(s) to create */
-		mode_t    	mode;			/**< Mode for the maildir */
+		mode_t		mode;			/**< Mode for the maildir */
 	} mkdir;
 
 	/*
@@ -200,7 +200,7 @@ struct Options {
 		std::string     name;                   /**< name of script */
 		StringVec	params;			/**< script params */
 	} script;
-	
+
 	/*
 	 * Server
 	 */

@@ -128,7 +128,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 			g_warning("error: '%s'", line.c_str());
 			continue;
 		}
-		Contact ci(parts[1],                                                  // email
+		Contact ci(parts[1],                                                         // email
 				  std::move(parts[2]),                                       // name
 				  (time_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),       // message_date
 				  parts[3][0] == '1' ? true : false,                         // personal
@@ -151,6 +151,9 @@ ContactsCache::serialize() const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 	std::string                 s;
+
+	// XXX: 'display_name' is cached but unused; remove it, the next time we
+	// update the database schema.
 
 	for (auto& item : priv_->contacts_) {
 		const auto& ci{item.second};
@@ -184,10 +187,16 @@ ContactsCache::dirty() const
 	return priv_->dirty_;
 }
 
-//const Contact
 void
 ContactsCache::add(Contact&& contact)
 {
+	/* we do _not_ cache invalid email addresses, so we won't offer them in completions etc. It
+	 * should be _rare_, but we've seen cases ( broken local messages) */
+	if (!contact.has_valid_email()) {
+		g_warning("not caching invalid e-mail address '%s'", contact.email.c_str());
+		return;
+	}
+
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
 	++priv_->dirty_;

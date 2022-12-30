@@ -53,6 +53,8 @@ public:
 	/**
 	 * Add a contact
 	 *
+	 * Invalid email address are not cached (but we log a warning)
+	 *
 	 * @param contact a Contact object
 	 *
 	 */
@@ -65,6 +67,8 @@ public:
 	 * if any of the contacts matches one of the personal addresses,
 	 * any of the senders/recipients are considered "personal"
 	 *
+	 * Invalid email address are not cached (but we log a warning)
+	 *
 	 * @param contacts a Contact object sequence
 	 * @param is_personal receives true if any of the contacts was personal;
 	 * false otherwise
@@ -74,7 +78,6 @@ public:
 		bool _ignore;
 		add(std::move(contacts), _ignore);
 	}
-
 
 	/**
 	 * Clear all contacts
