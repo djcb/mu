@@ -50,7 +50,6 @@ Contact::display_name(bool quote) const
 		return address_rfc2047(*this);
 }
 
-
 static Regex email_rx;
 
 bool
