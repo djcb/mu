@@ -210,7 +210,7 @@ clicked."
            with longest = (mu4e--longest-of-maildirs-and-bookmarks)
            with queries = (plist-get mu4e--server-props :queries)
            for m in mds
-           for key = (plist-get m :key)
+           for key = (string (plist-get m :key))
            for name = (plist-get m :name)
            for query = (plist-get m :query)
            for qcounts = (and (stringp query)
