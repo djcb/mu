@@ -1,4 +1,5 @@
-#+title: MU
+#+TITLE: MU
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 
 * NAME
 

@@ -17,8 +17,10 @@
 #
 # generate org include files
 #
+year = run_command('date', '+%Y', check:true, capture:true)
 man_data=configuration_data()
 man_data.set('VERSION', meson.project_version())
+man_data.set('YEAR', year.stdout().strip())
 incs=[
   'author.inc',
   'bugs.inc',
@@ -46,7 +48,7 @@ man_orgs=[
   'mu-add.1.org',
   'mu-bookmarks.5.org',
   'mu-cfind.1.org',
-  'mu-easy.5.org',
+  'mu-easy.7.org',
   'mu-extract.1.org',
   'mu-fields.1.org',
   'mu-find.1.org',
@@ -62,14 +64,27 @@ man_orgs=[
   'mu-view.1.org'
 ]
 
+env = environment()
+env.set('LANG', 'C')
+yearmonth = run_command('date', '+%B %Y', check:true, capture:true, env: env)
+ym=yearmonth.stdout().strip()
+
 foreach src : man_orgs
-  # copy to builddir so org-includes work.
-  configure_file(input: src, output:'@BASENAME@.org', copy:true)
 
   # meson makes in tricky to use the results of e.g. configure_file
   # in custom_commands..., so this is admittedly a little hacky.
   org = join_paths(meson.current_build_dir(), src)
   man = '@BASENAME@'
+  section = src.substring(-5, -4)
+
+  # we fill in some man-page details:
+  #  @SECTION_ID@: the man-page section
+  #  @MAN_DATE@: date of the generation (not yet supported by ox-man)
+  conf_data = configuration_data()
+  conf_data.set('SECTION_ID', section)
+  conf_data.set('MAN_DATE', ym)
+  configure_file(input: src, output:'@BASENAME@.org',
+                 configuration: conf_data)
 
   expr_tmpl = ''.join([
     '(progn',
@@ -77,7 +92,7 @@ foreach src : man_orgs
     '  (org-export-to-file \'man "@0@"))',
   ])
   expr = expr_tmpl.format(org.substring(0,-4))
-  sectiondir = join_paths(mandir, 'man' + src.substring(-5, -4))
+  sectiondir = join_paths(mandir, 'man' + section)
 
   custom_target(src + '-to-man',
                 build_by_default: true,

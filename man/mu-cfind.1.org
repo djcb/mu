@@ -1,4 +1,5 @@
-#+title:  MU CFIND
+#+TITLE: MU CFIND
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 
 * NAME
 
@@ -41,8 +42,7 @@ If you do not specify a search expression, *mu cfind* returns the full list of
 contacts. Note, *mu cfind* uses a cache with the e-mail information, which is
 populated during the indexing process.
 
-The regular expressions are Perl-compatible (as per the PCRE-library used by
-GRegex).
+The regular expressions are basic case-insensitive PCRE, see *pcre(3)*.
 
 * CFIND OPTIONS
 
@@ -113,4 +113,4 @@ otherwise: 1 for a generals error and 2 for 'no matches'.
 #+include: "copyright.inc" :minlevel 1
 
 * SEE ALSO
-*mu(1)*, *mu-index(1)*, *mu-find(1)*
+*mu(1)*, *mu-index(1)*, *mu-find(1)*, *pcre(3)*

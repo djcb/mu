@@ -1,0 +1,303 @@
+#+TITLE: MU EASY
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+
+* NAME
+
+mu easy - a quick introduction to mu
+
+* DESCRIPTION
+
+*mu* is a set of tools for dealing with e-mail messages in Maildirs. There are
+many options, which are all described in the man pages for the various
+sub-commands. This man pages jumps over all of the details and gives examples of
+some common use cases. If the use cases described here do not precisely do what
+you want, please check the more extensive information in the man page about the
+sub-command you are using -- for example, the *mu-index(1)* or *mu-find(1)* man
+pages.
+
+*NOTE*: the *index* command (and therefore, the ones that depend on that, such as
+*find*), require that you store your mail in the Maildir-format. If you don't do
+so, you can still use the other commands, but you won't be able to index/search
+your mail.
+
+By default, *mu* uses colorized output when it thinks your terminal is capable of
+doing so. If you don't like color, you can use the *--nocolor* command-line
+option, or set either the *MU_NOCOLOR* or the *NO_COLOR* environment variable to
+non-empty.
+
+* SETTING THINGS UP
+
+The first time you run the mu commands, you need to initialize it. This is done
+with the *init* command.
+
+#+begin_example
+$ mu init
+#+end_example
+
+This uses the defaults (see *mu-init(1)* for details on how to change that).
+
+
+* INDEXING YOUR E-MAIL
+
+Before you can search e-mails, you'll first need to index them:
+
+#+begin_example
+$ mu index
+#+end_example
+
+The process can take a few minutes, depending on the amount of mail you have,
+the speed of your computer, hard drive etc. Usually, indexing should be able to
+reach a speed of a few hundred messages per second.
+
+*mu index* guesses the top-level Maildir to do its job; if it guesses wrong, you
+can use the =--maildir= option to specify the top-level directory that should be
+processed. See the *mu-index*(1) man page for more details.
+
+Normally, *mu index* visits all the directories under the top-level Maildir;
+however, you can exclude certain directories (say, the 'trash' or 'spam'
+folders) by creating a file called =.noindex= in the directory. When *mu* sees such
+a file, it will exclude this directory and its sub-directories from indexing.
+Also see *.noupdate* in the *mu-index*(1) manpage.
+
+* SEARCHING YOUR E-MAIL
+
+After you have indexed your mail, you can start searching it. By default, the
+search results are printed on standard output. Alternatively, the output can
+take the form of Maildir with symbolic links to the found messages. This enables
+integration with e-mail clients; see the *mu-find*(1) man page for details, the
+syntax of the search parameters and so on. Here, we just give some examples for
+common cases.
+
+You can use the *mu fields* command to get information about all possible fields
+and flags.
+
+First, let's search for all messages sent to Julius (Caesar) regarding fruit:
+
+#+begin_example
+$ mu find t:julius fruit
+#+end_example
+
+This should return something like:
+
+#+begin_example
+2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
+#+end_example
+
+This means there is a message to 'julius' with 'fruit' somewhere in the message.
+In this case, it's a message from John Milton. Note that the date format depends
+on your the language/locale you are using.
+
+How do we know that the message was sent to Julius Caesar? Well, it's not
+visible from the results above, because the default fields that are shown are
+date/sender/subject. However, we can change this using the =--fields= parameter
+(try *mu fields* to see all the details):
+
+#+begin_example
+$ mu find --fields="t s" t:julius fruit
+#+end_example
+
+In other words, display the 'To:'-field (t) and the subject (s). This should
+return something like:
+#+begin_example
+Julius Caesar <jc@example.com> Fere libenter homines id quod volunt credunt
+#+end_example
+
+This is the same message found before, only with some different fields
+displayed.
+
+By default, *mu* uses the logical ~AND~ for the search parameters -- that is, it
+displays messages that match all the parameters. However, we can use logical ~OR~
+as well:
+
+#+begin_example
+$ mu find t:julius OR f:socrates
+#+end_example
+
+In other words, display messages that are either sent to Julius Caesar *or* are
+from Socrates. This could return something like:
+
+#+begin_example
+2008-07-31T21:57:25 EEST Socrates <soc@example.com> cool stuff
+2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
+#+end_example
+
+What if we want to see some of the body of the message? You can get a 'summary'
+of the first lines of the message using the =--summary-len= option, which will
+'summarize' the first =n= lines of the message:
+
+#+begin_example
+$ mu find --summary-len=3 napoleon m:/archive
+#+end_example
+
+#+begin_example
+1970-01-01T02:00:00 EET Napoleon Bonaparte <nb@example.com> rock on dude
+Summary: Le 24 février 1815, la vigie de Notre-Dame de la Garde signala le
+trois-mâts le Pharaon, venant de Smyrne, Trieste et Naples. Comme
+d'habitude, un pilote côtier partit aussitôt du port, rasa le château
+#+end_example
+
+The summary consists of the first /n/ lines of the message with all superfluous
+whitespace removed.
+
+Also note the *m:/archive* parameter in the query. This means that we only match
+messages in a maildir called ~'/archive'~.
+
+* MORE QUERIES
+
+Let's list a few more queries that may be interesting; please note that
+searches for message flags, priority and date ranges are only available in mu
+version 0.9 or later.
+
+Get all important messages which are signed:
+#+begin_example
+  *$ mu find flag:signed prio:high *
+#+end_example
+
+Get all messages from Jim without an attachment:
+#+begin_example
+  *$ mu find from:jim AND NOT flag:attach*
+#+end_example
+
+Get all messages where Jack is in one of the contact fields:
+#+begin_example
+  *$ mu find contact:jack*
+#+end_example
+This uses the special contact: pseudo-field which matches (*from*,
+*to*, *cc* and *bcc*).
+
+Get all messages in the Sent Items folder about yoghurt:
+#+begin_example
+ *$mu find maildir:'/Sent Items' yoghurt*
+#+end_example
+Note how we need to quote search terms that include spaces.
+
+
+Get all unread messages where the subject mentions Ångström:
+#+begin_example
+  *$ mu find subject:Ångström flag:unread*
+#+end_example
+which is equivalent to:
+#+begin_example
+  *$ mu find subject:angstrom flag:unread*
+#+end_example
+because does mu is case-insensitive and accent-insensitive.
+
+Get all unread messages between March 2002 and August 2003 about some bird (or
+a Swedish rock band):
+#+begin_example
+  *$ mu find date:20020301..20030831 nightingale flag:unread*
+#+end_example
+
+Get all messages received today:
+#+begin_example
+  *$ mu find date:today..now*
+#+end_example
+
+Get all messages we got in the last two weeks about emacs:
+#+begin_example
+  *$ mu find date:2w..now emacs*
+#+end_example
+
+Another powerful feature (since 0.9.6) are wildcard searches, where you can
+search for the last =n= characters in a word. For example, you can search
+for:
+#+begin_example
+  *$ mu find 'subject:soc*'*
+#+end_example
+and get mails about soccer, Socrates, society, and so on. Note, it's important
+to quote the search query, otherwise the shell will interpret
+the '*'.
+
+You can also search for messages with a certain attachment using their
+filename, for example:
+
+#+begin_example
+  *$ mu find 'file:pic*'*
+#+end_example
+will get you all messages with an attachment starting with 'pic'.
+
+If you want to find attachments with a certain MIME-type, you can use the
+following:
+
+Get all messages with PDF attachments:
+#+begin_example
+  *$ mu find mime:application/pdf*
+#+end_example
+
+or even:
+
+Get all messages with image attachments:
+#+begin_example
+  *$ mu find 'mime:image/*'*
+#+end_example
+
+
+Note that (1) the '*' wildcard can only be used as the rightmost thing in a
+search query, and (2) that you need to quote the search term, because
+otherwise your shell will interpret the '*' (expanding it to all files in the
+current directory -- probably not what you want).
+
+* DISPLAYING MESSAGES
+
+We might also want to display the complete messages instead of the header
+information. This can be done using *mu view* command. Note that this
+command does not use the database; you simply provide it the path to a
+message.
+
+Therefore, if you want to display some message from a search query, you'll
+need its path. To get the path (think *l*ocation) for our first example we
+can use:
+
+#+begin_example
+$ mu find --fields="l" t:julius fruit
+#+end_example
+
+And we'll get something like:
+#+begin_example
+/home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,
+#+end_example
+
+We can now display this message:
+
+#+begin_example
+$ mu view /home/someuser/Maildir/archive/cur/1266188485_0.6850.cthulhu:2,
+From: John Milton <jm@example.com>
+To: Julius Caesar <jc@example.com>
+Subject: Fere libenter homines id quod volunt credunt
+Date: 2008-07-31T21:57:25 EEST
+
+OF Mans First Disobedience, and the Fruit
+Of that Forbidden Tree, whose mortal taste
+Brought Death into the World, and all our woe,
+[...]
+#+end_example
+
+* FINDING CONTACTS
+
+While *mu find* searches for messages, there is also *mu cfind* to find =contacts=,
+that is, names + addresses. Without any search expression, *mu cfind* lists all of
+your contacts.
+
+#+begin_example
+$ mu cfind julius
+#+end_example
+
+will find all contacts with 'julius' in either name or e-mail address. Note that
+*mu cfind* accepts a =regular expression= (as per *pcre(3)*)
+
+*mu cfind* also supports a =--format==-parameter, which sets the output to some
+specific format, so the results can be imported into another program. For
+example, to export your contact information to a *mutt* address book file, you can
+use something like:
+
+#+begin_example
+$ mu cfind --format=mutt-alias > ~/mutt-aliases
+#+end_example
+
+Then, you can use them in *mutt* if you add something like *source ~/mutt-aliases*
+to your =muttrc=.
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+*mu(1)*, *mu-init(1)*, *mu-index(1)*, *mu-find(1)*, *mu-mfind(1)*, *mu-mkdir(1)*, *mu-view(1)*, *mu-extract(1)*

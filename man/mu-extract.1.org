@@ -1,4 +1,5 @@
-#+title: MU EXTRACT
+#+TITLE: MU EXTRACT
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 
 * NAME
 
@@ -21,10 +22,9 @@ For attachments, the file name used when saving it is the name of the attachment
 in the message. If there is no such name, or when saving non-attachment
 MIME-parts, a name is derived from the message-id of the message.
 
-If you specify a pattern (a case-insensitive regular expression) as the second
-argument, all attachments with filenames matching that pattern will be
-extracted. The regular expressions are Perl-compatible (as per the
-PCRE-library).
+If you specify a regular express pattern as the second argument, all attachments
+with filenames matching that pattern will be extracted. The regular expressions
+are basic PCRE, and are case-sensitive by default; see *pcre(3)* for more details.
 
 Without any options, *mu extract* simply outputs the list of leaf MIME-parts in
 the message. Only 'leaf' MIME-parts (including RFC822 attachments) are

@@ -1,4 +1,5 @@
-#+title:  MU QUERY
+#+TITLE: MU QUERY
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 
 * NAME
 
@@ -82,8 +83,7 @@ Note that a =pure not= - e.g. searching for *not apples* is quite a 'heavy' quer
 
 * REGULAR EXPRESSIONS AND WILDCARDS
 
-The language supports matching regular expressions that follow ECMAScript; for
-details, see http://www.cplusplus.com/reference/regex/ECMAScript/
+The language supports matching basic PCRE regular expressions, see *pcre(3*).
 
 Regular expressions are enclosed in *//*. Some examples:
 #+begin_example
@@ -331,4 +331,4 @@ above.
 
 * SEE ALSO
 
-*mu-find(1)*, *mu-fields(1)*
+*mu-find(1)*, *mu-fields(1), *pcre(3)*
