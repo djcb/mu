@@ -220,9 +220,6 @@ test_split()
 	// char sepa
 	assert_equal_svec(split("axbxc", 'x'), {"a", "b", "c"});
 	assert_equal_svec(split("axbxcx", 'x'), {"a", "b", "c", ""});
-
-	// rx sexp
-	assert_equal_svec(split("axbyc", std::regex("[xy]")), {"a", "b", "c"});
 }
 
 static void

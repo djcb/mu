@@ -39,7 +39,6 @@
 #include <cinttypes>
 #include <charconv>
 #include <limits>
-#include <regex>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -259,15 +258,6 @@ Mu::split(const std::string& str, char sepa)
 	}
 
 	return vec;
-}
-
-std::vector<std::string>
-Mu::split(const std::string& str, const std::regex& sepa_rx)
-{
-	std::sregex_token_iterator it(str.begin(), str.end(), sepa_rx, -1);
-	std::sregex_token_iterator end;
-
-	return {it, end};
 }
 
 std::string

@@ -289,14 +289,14 @@ extract_tags(const MimeMessage& mime_msg)
 	constexpr std::array<std::pair<const char*, char>, 3> tag_headers = {{
 		{"X-Label", ' '}, {"X-Keywords", ','}, {"Keywords", ' '}
 	}};
-	static const auto strip_rx{std::regex("^\\s+| +$|( )\\s+")};
 
 	std::vector<std::string> tags;
 	seq_for_each(tag_headers, [&](auto&& item) {
 		if (auto&& hdr = mime_msg.header(item.first); hdr) {
 			for (auto&& tagval : split(*hdr, item.second)) {
-				tags.emplace_back(
-					std::regex_replace(tagval, strip_rx, "$1"));
+				tagval.erase(0, tagval.find_first_not_of(' '));
+				tagval.erase(tagval.find_last_not_of(' ')+1);
+				tags.emplace_back(std::move(tagval));
 			}
 		}
 	});
@@ -631,10 +631,10 @@ fill_document(Message::Private& priv)
 
 	const auto path{doc.string_value(Field::Id::Path)};
 	const auto refs{mime_msg.references()};
-        const auto& raw_message_id = mime_msg.message_id();
-        const auto message_id = raw_message_id.has_value() && !raw_message_id->empty()
-            ? *raw_message_id
-            : fake_message_id(path);
+	const auto& raw_message_id = mime_msg.message_id();
+	const auto message_id = raw_message_id.has_value() && !raw_message_id->empty()
+	    ? *raw_message_id
+	    : fake_message_id(path);
 
 	process_message(mime_msg, path, priv);
 

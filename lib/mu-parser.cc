@@ -19,12 +19,12 @@
 #include "mu-parser.hh"
 
 #include <algorithm>
-#include <regex>
 #include <limits>
 
 #include "mu-tokenizer.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-error.hh"
+#include "utils/mu-regex.hh"
 #include "message/mu-message.hh"
 
 using namespace Mu;
@@ -64,7 +64,7 @@ struct Parser::Private {
 	Private(const Store& store, Parser::Flags flags) : store_{store}, flags_{flags} {}
 
 	std::vector<std::string> process_regex(const std::string& field,
-					       const std::regex&  rx) const;
+					       const Regex&  rx) const;
 
 	Mu::Tree term_1(Mu::Tokens& tokens, WarningVec& warnings) const;
 	Mu::Tree term_2(Mu::Tokens& tokens, Node::Type& op, WarningVec& warnings) const;
@@ -194,7 +194,7 @@ process_range(const std::string& field_str,
 
 std::vector<std::string>
 Parser::Private::process_regex(const std::string& field_str,
-			       const std::regex& rx) const
+			       const Regex& rx) const
 {
 	const auto field_opt{field_from_name(field_str)};
 	if (!field_opt)
@@ -204,7 +204,7 @@ Parser::Private::process_regex(const std::string& field_str,
 	std::vector<std::string> terms;
 	store_.for_each_term(field_opt->id, [&](auto&& str) {
 		auto val{str.c_str() + 1}; // strip off the Xapian prefix.
-		if (std::regex_search(val, rx))
+		if (rx.matches(val))
 			terms.emplace_back(std::move(val));
 		return true;
 	});
@@ -263,9 +263,11 @@ Parser::Private::regex(const FieldInfoVec& fields,
 
 	try {
 		Tree tree(Node{Node::Type::OpOr});
-		const auto rx = std::regex(rxstr);
+		const auto rx = Regex::make(rxstr, G_REGEX_OPTIMIZE);
+		if (!rx)
+			throw rx.error();
 		for (const auto& field : fields) {
-			const auto terms = process_regex(field.field, rx);
+			const auto terms = process_regex(field.field, *rx);
 			for (const auto& term : terms) {
 				tree.add_child(Tree({Node::Type::ValueAtomic,
 							FieldValue{field.id, term}}));

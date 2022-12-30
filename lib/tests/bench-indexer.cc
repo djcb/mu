@@ -21,10 +21,10 @@
 #include <thread>
 #include <vector>
 #include <iostream>
-#include <regex>
 #include <fstream>
 
 #include <utils/mu-utils.hh>
+#include <utils/mu-regex.hh>
 #include <mu-store.hh>
 #include "mu-maildir.hh"
 
@@ -390,13 +390,15 @@ The archives can be found at:
 https://lists.cs.wisc.edu/archive/htcondor-users/
 --===============0678627779074767862==--)";
 
-
 static std::string
-message(const std::regex& rx, size_t id)
+message(const Regex& rx, size_t id)
 {
 	char buf[16];
 	::snprintf(buf, sizeof(buf), "%zu", id);
-	return std::regex_replace(test_msg, rx, buf);
+
+	return to_string_gchar(
+		g_regex_replace(rx, test_msg, -1, 0, buf,
+				G_REGEX_MATCH_DEFAULT, {}));
 }
 
 struct TestData {
@@ -420,7 +422,7 @@ setup(const TestData& tdata)
 		auto res = maildir_mkdir(mdir);
 		g_assert(!!res);
 	}
-	const auto rx = std::regex("@ID@");
+	const auto rx = Regex::make("@ID@");
 	/* create messages */
 	for (size_t n = 0; n != tdata.num_messages; ++n) {
 		auto mpath = format("%s/maildir-%zu/cur/msg-%zu:2,S",
@@ -428,7 +430,7 @@ setup(const TestData& tdata)
 				    n % tdata.num_maildirs,
 				    n);
 		std::ofstream stream(mpath);
-		auto msg = message(rx, n);
+		auto msg = message(*rx, n);
 		stream.write(msg.c_str(), msg.size());
 		g_assert_true(stream.good());
 	}

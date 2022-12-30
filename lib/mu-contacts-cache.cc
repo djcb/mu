@@ -25,10 +25,10 @@
 #include <sstream>
 #include <functional>
 #include <algorithm>
-#include <regex>
 #include <ctime>
 
 #include <utils/mu-utils.hh>
+#include <utils/mu-regex.hh>
 #include <glib.h>
 
 using namespace Mu;
@@ -59,8 +59,8 @@ struct ContactsCache::Private {
 	ContactUMap contacts_;
 	std::mutex  mtx_;
 
-	const StringVec               personal_plain_;
-	const std::vector<std::regex> personal_rx_;
+	const StringVec			personal_plain_;
+	const std::vector<Regex>	personal_rx_;
 
 	size_t dirty_;
 
@@ -76,8 +76,8 @@ private:
 		StringVec svec;
 		std::copy_if(personal.begin(),  personal.end(),
 			     std::back_inserter(svec), [&](auto&& p) {
-				     return p.size() < 2
-					     || p.at(0) != '/' || p.at(p.length() - 1) != '/';
+				     return p.size() < 2 || p.at(0) != '/' ||
+					     p.at(p.length() - 1) != '/';
 			     });
 		return svec;
 	}
@@ -89,18 +89,20 @@ private:
 	 *
 	 * @return
 	 */
-	std::vector<std::regex> make_personal_rx(const StringVec& personal) const {
-		std::vector<std::regex> rxvec;
+	std::vector<Regex> make_personal_rx(const StringVec& personal) const {
+		std::vector<Regex> rxvec;
 		for(auto&& p: personal) {
 			if (p.size() < 2 || p[0] != '/' || p[p.length()- 1] != '/')
 				continue;
 			// a regex pattern.
 			try {
 				const auto rxstr{p.substr(1, p.length() - 2)};
-				rxvec.emplace_back(std::regex(
-				    rxstr, std::regex::basic | std::regex::optimize |
-				    std::regex::icase));
-			} catch (const std::regex_error& rex) {
+				auto opts = static_cast<GRegexCompileFlags>(G_REGEX_OPTIMIZE|G_REGEX_CASELESS);
+				auto rx = Regex::make(rxstr, opts);
+				if (!rx)
+					throw rx.error();
+				rxvec.emplace_back(rx.value());
+			} catch (const Error& rex) {
 				g_warning("invalid personal address regexp '%s': %s",
 					  p.c_str(),
 					  rex.what());
@@ -328,8 +330,7 @@ ContactsCache::is_personal(const std::string& addr) const
 			return true;
 
 	for (auto&& rx : priv_->personal_rx_) {
-		std::smatch m; // perhaps cache addr in personal_plain_?
-		if (std::regex_match(addr, m, rx))
+		if (rx.matches(addr))
 			return true;
 	}
 

@@ -33,7 +33,6 @@
 #include <type_traits>
 #include <algorithm>
 #include <numeric>
-#include <regex>
 
 #include "mu-utils-format.hh"
 #include "mu-option.hh"
@@ -96,16 +95,6 @@ std::vector<std::string> split(const std::string& str, const std::string& sepa);
  * @return the parts.
  */
 std::vector<std::string> split(const std::string& str, char sepa);
-
-/**
- * Split a string in parts
- *
- * @param str a string
- * @param sepa the separator regex
- *
- * @return the parts.
- */
-std::vector<std::string> split(const std::string& str, const std::regex& sepa_rx);
 
 /**
  * Join the strings in svec into a string, separated by sepa
@@ -172,8 +161,6 @@ bool locale_workaround();
  * @return true or false
  */
 bool timezone_available(const std::string& tz);
-
-
 
 /**
  * Well-known runtime paths

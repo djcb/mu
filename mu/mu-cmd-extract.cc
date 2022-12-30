@@ -21,11 +21,10 @@
 #include "mu-cmd.hh"
 #include "utils/mu-util.h"
 #include "utils/mu-utils.hh"
+#include "utils/mu-regex.hh"
 #include <message/mu-message.hh>
-#include <regex>
 
 using namespace Mu;
-
 
 static Result<void>
 save_part(const Message::Part& part, size_t idx, const Options& opts)
@@ -73,12 +72,13 @@ save_parts(const std::string& path, const std::string& filename_rx,
 			else if (seq_some(opts.extract.parts,
 				     [&](auto&& num){return num==partnum;}))
 				return true;
-			else if (!filename_rx.empty() && part.raw_filename() &&
-				 std::regex_match(*part.raw_filename(),
-						  std::regex{filename_rx}))
-				return true;
-			else
-				return false;
+			else if (!filename_rx.empty() && part.raw_filename()) {
+				if (auto rx = Regex::make(filename_rx); !rx)
+					throw rx.error();
+				else if (rx->matches(*part.raw_filename()))
+					return true;
+			}
+			return false;
 		});
 
 		if (!do_extract)
