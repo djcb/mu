@@ -8,6 +8,14 @@
    - a new command-line parser, which allows (hopefully!) for a better user
      interaction; better error checking and more
 
+   - The ~script~ command is gone, and integrated with ~mu~ directly, i.e. the
+     scripts (when enabled) are directly visible in the ~mu~ output. Also see the
+     Guile section.
+
+   - Revamped manpages with are now generated from ~org~ descriptions
+
+   - Standardize on PCRE-flavored regular expressions throughout *mu*.
+
    - the MSYS2 (Windows) builds is _experimental_ now; some things may not work;
      see e.g. https://github.com/djcb/mu/issues?q=is%3Aissue+label%3Amsys, but
      we welcome efforts to fix those things.
@@ -21,9 +29,10 @@
       instead you should use the new ~mu4e-view-rendered-hook~.
 
     - mu4e window management has been significantly reworked and cleaned up,
-      affecting the message loading as well as window-layout. As a user-visible
-      feature, there's now 'z' binding (~mu4e-view-detach~), to 'detach' view and
-      alllow for keeping multiple views around; see the Mu4e manual for details.
+      affecting the message loading as well as the window-layout. As a
+      user-visible feature, there's now 'z' binding (~mu4e-view-detach~), to
+      'detach' view and alllow for keeping multiple views around; see the Mu4e
+      manual for details.
 
     - One change is that ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]].
@@ -64,8 +73,8 @@
        mean that Guile support goes way, just that it will look different.
 
      - Guile script commands are now integrated with the main ~mu~, so without
-       further parameters ~mu~ shows both subcommands and scripts. This is work
-       in progress!
+       further parameters ~mu~ shows both subcommands and scripts. This is a
+       work-in-progress!
 
      - The per-(week|day|year|year-month) script have been combined into a
        ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~
