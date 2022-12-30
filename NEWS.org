@@ -8,6 +8,12 @@
    - a new command-line parser, which allows (hopefully!) for a better user
      interaction; better error checking and more
 
+   - Invalid e-mail addresses are no longer added to the contacts-cache.
+
+   - The ~cfind~ command gained ~--format=json~, which makes it easy to further
+     process contact information, e.g. using ~jq~. See the manpage for more
+     details.
+
    - The ~script~ command is gone, and integrated with ~mu~ directly, i.e. the
      scripts (when enabled) are directly visible in the ~mu~ output. Also see the
      Guile section.
@@ -105,8 +111,12 @@
     As usual, there have been a number of internal updates in the ~mu~ codebase:
 
     - reworked the internal s-expression parser
+
     - new command-line argument parser (based on CLI11)
+
     - message-move flag propagation moved from the mu4e-server to mu-store
+
+    - more =mu4e~= internals have been renamed/reworked in to ~mu4e--~.
 
 * 1.8 (released on June 25, 2022)
 
