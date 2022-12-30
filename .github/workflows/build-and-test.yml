@@ -22,15 +22,15 @@ jobs:
         name: ubuntu-deps
         run: |
           sudo apt update
-          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev pkg-config
+          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev pkg-config guile-3.0-dev
 
       - if: contains(matrix.os, 'macos')
         name: macos-deps
         run: |
-          brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian
+          brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian guile
 
       - name: configure
-        run: ./autogen.sh -Dguile=disabled -Db_sanitize=address
+        run: ./autogen.sh '-Db_sanitize=address'
 
       - name: build
         run: make
