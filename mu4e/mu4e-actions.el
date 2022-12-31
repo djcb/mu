@@ -241,7 +241,7 @@ the message."
   (let ((msgid (mu4e-message-field msg :message-id)))
     (when msgid
       (let ((mu4e-search-threads t)
-            (mu4e-headers-include-related t))
+            (mu4e-search-include-related t))
         (mu4e-search
          (format "msgid:%s" msgid)
          nil nil nil

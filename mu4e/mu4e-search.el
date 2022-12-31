@@ -46,15 +46,54 @@ This affects performance, especially when
 `mu4e-summary-include-related' is non-nil.
 Set to -1 for no limits."
   :type '(choice (const :tag "Unlimited" -1)
-		 (integer :tag "Limit"))
+                 (integer :tag "Limit"))
   :group 'mu4e-search)
 
-(defvar mu4e-search-full nil
+(defcustom mu4e-search-full nil
   "Whether to search for all results.
-If this is nil, search for up to `mu4e-search-results-limit')")
+If this is nil, search for up to `mu4e-search-results-limit')"
+  :type 'boolean
+  :group 'mu4e-search)
 
-(defvar mu4e-search-threads t
-  "Whether to calculate threads for the search results.")
+(defcustom mu4e-search-threads t
+  "Whether to calculate threads for the search results."
+  :type 'boolean
+  :group 'mu4e-search)
+
+(defcustom mu4e-search-include-related t
+  "Whether to include \"related\" messages in queries.
+With this option set to non-nil, not just return the matches for
+a searches, but also messages that are related (through their
+references) to these messages. This can be useful e.g. to include
+sent messages into message threads."
+  :type 'boolean
+  :group 'mu4e-search)
+
+(defcustom mu4e-search-skip-duplicates t
+  "Whether to skip duplicate messages.
+With this option set to non-nil, show only one of duplicate
+messages. This is useful when you have multiple copies of the same
+message, which is a common occurrence for example when using Gmail
+and offlineimap."
+  :type 'boolean
+  :group 'mu4e-search)
+
+(defcustom mu4e-search-sort-field :date
+  "Field to sort the headers by. A symbol:
+one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
+`:list'.
+
+Note that when threading is enabled (through
+`mu4e-search-threads'), the headers are exclusively sorted
+chronologically (`:date') by the newest message in the thread."
+  :type 'symbol
+  :group 'mu4e-search)
+
+(defcustom mu4e-search-sort-direction 'descending
+  "Direction to sort by; a symbol either `descending' (sorting
+  Z->A) or `ascending' (sorting A->Z)."
+  :type 'symbol
+  :group 'mu4e-search)
 
 (defcustom mu4e-query-rewrite-function 'identity
   "Function to rewrite a query.
@@ -330,6 +369,77 @@ status, STATUS."
           (match-end 1)
           mu4e--lists-hash))))
 
+;;; Interactive functions
+(defun mu4e-search-change-sorting (&optional field dir)
+  "Change the sorting/threading parameters.
+FIELD is the field to sort by; DIR is a symbol: either
+`ascending', `descending', t (meaning: if FIELD is the same as
+the current sortfield, change the sort-order) or nil (ask the
+user)."
+  (interactive)
+  (let* ((choices '(("date"    . :date)
+                    ("from"    . :from)
+                    ("list"    . :list)
+                    ("maildir" . :maildir)
+                    ("prio"    . :prio)
+                    ("zsize"   . :size)
+                    ("subject" . :subject)
+                    ("to"      . :to)))
+         (field
+          (or field
+              (mu4e-read-option "Sortfield: " choices)))
+         ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
+         ;; sortable field), _or_ another field (meaning: sort by this other
+         ;; field).
+         (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
+         ;; error check
+         (sortable
+          (if sortable
+              sortable
+            (mu4e-error "Not a sortable field")))
+         (sortfield (if (booleanp sortable) field sortable))
+         (dir
+          (cl-case dir
+            ((ascending descending) dir)
+            ;; change the sort order if field = curfield
+            (t
+             (if (eq sortfield mu4e-search-sort-field)
+                 (if (eq mu4e-search-sort-direction 'ascending)
+                     'descending 'ascending)
+               'descending)))))
+    (setq
+     mu4e-search-sort-field sortfield
+     mu4e-search-sort-direction dir)
+    (mu4e-message "Sorting by %s (%s)"
+                  (symbol-name sortfield)
+                  (symbol-name mu4e-search-sort-direction))
+    (mu4e-search-rerun)))
+
+(defun mu4e-search-toggle-property (&optional dont-refresh key)
+  "Toggle some aspect of search.
+When prefix-argument DONT-REFRESH is non-nil, do not refresh the
+last search with the new setting.
+If KEY is provided, use it instead of asking user."
+  (interactive "P")
+  (let* ((toggles '(("fFull-search"      . mu4e-search-full)
+                    ("rInclude-related"  . mu4e-headers-include-related)
+                    ("tShow threads"     . mu4e-search-threads)
+                    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)
+                    ("pHide-predicate"   . mu4e-headers-hide-enabled)))
+         (toggles (seq-map
+                   (lambda (cell)
+                     (cons
+                      (concat (car cell)
+                              (format" (%s)"
+                                     (if (symbol-value (cdr cell)) "on" "off")))
+                      (cdr cell))) toggles))
+         (choice (mu4e-read-option "Toggle property " toggles key)))
+    (when choice
+      (set choice (not (symbol-value choice)))
+      (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))
+      (unless dont-refresh
+        (mu4e-search-rerun)))))
+
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
   :global nil
@@ -338,17 +448,32 @@ status, STATUS."
   :lighter ""
   :keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map "s" 'mu4e-search)
-    (define-key map "S" 'mu4e-search-edit)
-    (define-key map "/" 'mu4e-search-narrow)
+    (define-key map "s" #'mu4e-search)
+    (define-key map "S" #'mu4e-search-edit)
+    (define-key map "/" #'mu4e-search-narrow)
     ;;(define-key map "j" 'mu4e~headers-jump-to-maildir)
-    (define-key map (kbd "<M-left>")  'mu4e-search-prev)
-    (define-key map (kbd "\\")        'mu4e-search-prev)
-    (define-key map (kbd "<M-right>") 'mu4e-search-next)
+    (define-key map (kbd "<M-left>")  #'mu4e-search-prev)
+    (define-key map (kbd "\\")        #'mu4e-search-prev)
+    (define-key map (kbd "<M-right>") #'mu4e-search-next)
 
-    (define-key map "b" 'mu4e-search-bookmark)
-    (define-key map "B" 'mu4e-search-bookmark-edit)
-    map))
+    (define-key map "O" #'mu4e-search-change-sorting)
+    (define-key map "P" #'mu4e-search-toggle-property)
+
+    (define-key map "b" #'mu4e-search-bookmark)
+    (define-key map "B" #'mu4e-search-bookmark-edit)
+
+    (let ((menumap (make-sparse-keymap)))
+      (define-key map [menu-bar search] (cons "Mu4e" menumap))
+      (define-key menumap [query-next]
+                  '("Next query" . mu4e-search-next))
+      (define-key menumap [query-prev]  '("Previous query" .
+                                          mu4e-search-prev))
+      (define-key menumap [narrow-search] '("Narrow search" .
+                                            mu4e-search-narrow))
+      (define-key menumap [bookmark]  '("Search bookmark" .
+                                        mu4e-search-bookmark))
+      (define-key menumap [refresh]  '("Refresh" . mu4e-search-rerun))
+      map)))
 
 (provide 'mu4e-search)
 ;;; mu4e-search.el ends here

@@ -84,6 +84,7 @@ foreach src : mu4e_srcs
                           '--no-init-file',
                           '--batch',
                           '--eval', '(setq load-prefer-newer t)',
+                          '--eval', '(require \'mu4e-obsolete)',
                           '--eval', target_func,
                           '--directory', meson.current_build_dir(),
                           '--directory', meson.current_source_dir(),

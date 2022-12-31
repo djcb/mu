@@ -248,8 +248,7 @@ This function uses `mu4e-compose-cite-function', and as such all
 its settings apply."
   (with-temp-buffer
     (when (fboundp 'mu4e-view-message-text) ;; keep bytecompiler happy
-      (let ((mu4e-view-date-format "%Y-%m-%dT%T%z"))
-        (insert (mu4e-view-message-text msg)))
+      (insert (mu4e-view-message-text msg))
       (message-yank-original)
       (goto-char (point-min))
       (push-mark (point-max))

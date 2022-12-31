@@ -177,20 +177,6 @@ query have been received and are displayed."
   :group 'mu4e-headers)
 
 ;;; Public variables
-
-(defvar mu4e-headers-sort-field :date
-  "Field to sort the headers by. A symbol:
-one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
-`:list'.
-
-Note that when threading is enabled (through
-`mu4e-search-threads'), the headers are exclusively sorted
-chronologically (`:date') by the newest message in the thread.")
-
-(defvar mu4e-headers-sort-direction 'descending
-  "Direction to sort by; a symbol either `descending' (sorting
-  Z->A) or `ascending' (sorting A->Z).")
-
 (defcustom mu4e-headers-from-or-to-prefix '("" . "To ")
   "Prefix for the :from-or-to field when it is showing,
   respectively, From: or To:.  It is a cons cell with the car
@@ -320,18 +306,6 @@ followed by the docid, followed by `mu4e~headers-docid-post'.")
 (defconst mu4e~headers-docid-post "\377"
   "Each header starts (invisibly) with the `mu4e~headers-docid-pre',
 followed by the docid, followed by `mu4e~headers-docid-post'.")
-
-(defvar mu4e~headers-sort-field-choices
-  '( ("date"    . :date)
-     ("from"    . :from)
-     ("list"    . :list)
-     ("maildir" . :maildir)
-     ("prio"    . :prio)
-     ("zsize"   . :size)
-     ("subject" . :subject)
-     ("to"      . :to))
-  "List of cells describing the various sort-options.
-In the format needed for `mu4e-read-option'.")
 
 
 (defvar mu4e~headers-search-start nil)
@@ -867,11 +841,11 @@ true, do *not* update the query history stack."
     (mu4e--server-find
      rewritten-expr
      mu4e-search-threads
-     mu4e-headers-sort-field
-     mu4e-headers-sort-direction
+     mu4e-search-sort-field
+     mu4e-search-sort-direction
      maxnum
-     mu4e-headers-skip-duplicates
-     mu4e-headers-include-related)))
+     mu4e-search-skip-duplicates
+     mu4e-search-include-related)))
 
 (defun mu4e~headers-benchmark-message (count)
   "Get some report message for messaging search and rendering speed."
@@ -960,8 +934,6 @@ after the end of the search results."
         (let ((map (make-sparse-keymap)))
 
           (define-key map "j" 'mu4e~headers-jump-to-maildir)
-          (define-key map "O" 'mu4e-headers-change-sorting)
-          (define-key map "P" 'mu4e-headers-toggle-property)
 
           (define-key map "q" 'mu4e~headers-quit-buffer)
           (define-key map "g" 'mu4e-search-rerun) ;; for compatibility
@@ -1083,26 +1055,14 @@ after the end of the search results."
             (define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
 
             (define-key menumap [sepa3] '("--"))
-
-            (define-key menumap [query-next]
-              '("Next query" . mu4e-headers-query-next))
-            (define-key menumap [query-prev]  '("Previous query" .
-                                                mu4e-headers-query-prev))
-            (define-key menumap [narrow-search] '("Narrow search" .
-                                                  mu4e-headers-search-narrow))
-            (define-key menumap [bookmark]  '("Search bookmark" .
-                                              mu4e-headers-search-bookmark))
             (define-key menumap [jump]  '("Jump to maildir" .
                                           mu4e~headers-jump-to-maildir))
-            (define-key menumap [refresh]  '("Refresh" . mu4e-search-rerun))
             (define-key menumap [search]  '("Search" . mu4e-headers-search))
-
             (define-key menumap [sepa4] '("--"))
 
             (define-key menumap [view]  '("View" . mu4e-headers-view-message))
             (define-key menumap [next]  '("Next" . mu4e-headers-next))
-            (define-key menumap [previous]  '("Previous" . mu4e-headers-prev))
-            (define-key menumap [sepa5] '("--")))
+            (define-key menumap [previous]  '("Previous" . mu4e-headers-prev)))
           map)))
 (fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
 
@@ -1116,7 +1076,7 @@ after the end of the search results."
      (mapcar
       (lambda (item)
         (let* ( ;; with threading enabled, we're necessarily sorting by date.
-               (sort-field (if mu4e-search-threads :date mu4e-headers-sort-field))
+               (sort-field (if mu4e-search-threads :date mu4e-search-sort-field))
                (field (car item)) (width (cdr item))
                (info (cdr (assoc field
                                  (append mu4e-header-info mu4e-header-info-custom))))
@@ -1128,7 +1088,7 @@ after the end of the search results."
                ;; triangle to mark the sorted-by column
                (arrow
                 (when (and sortable (eq this-field sort-field))
-                  (if (eq mu4e-headers-sort-direction 'descending) downarrow uparrow)))
+                  (if (eq mu4e-search-sort-direction 'descending) downarrow uparrow)))
                (name (concat (plist-get info :shortname) arrow))
                (map (make-sparse-keymap)))
           (when sortable
@@ -1141,7 +1101,7 @@ after the end of the search results."
                         (and obj (get-text-property 0 'field (car obj)))))
                   ;; "t": if we're already sorted by field, the sort-order is
                   ;; changed
-                  (mu4e-headers-change-sorting field t)))))
+                  (mu4e-search-change-sorting field t)))))
           (concat
            (propertize
             (if width
@@ -1310,9 +1270,9 @@ message plist, or nil if not found."
                  (if mu4e-use-fancy-chars
                      (cddr flag-cell) (cadr flag-cell) ) ""))
            `((,mu4e-search-full             . ,mu4e-headers-full-label)
-             (,mu4e-headers-include-related . ,mu4e-headers-related-label)
+             (,mu4e-search-include-related . ,mu4e-headers-related-label)
              (,mu4e-search-threads          . ,mu4e-headers-threaded-label)
-             (,mu4e-headers-skip-duplicates
+             (,mu4e-search-skip-duplicates
               . ,mu4e-headers-skip-duplicates-label)
              (,mu4e-headers-hide-enabled    . ,mu4e-headers-hide-label))
            ""))
@@ -1509,68 +1469,6 @@ descendants."
       (call-interactively 'mu4e-headers-mark-thread))))
 
 
-;;; Interactive functions
-(defun mu4e-headers-change-sorting (&optional field dir)
-  "Change the sorting/threading parameters.
-FIELD is the field to sort by; DIR is a symbol: either
-`ascending', `descending', t (meaning: if FIELD is the same as
-the current sortfield, change the sort-order) or nil (ask the
-user)."
-  (interactive)
-  (let* ((field
-          (or field
-              (mu4e-read-option "Sortfield: " mu4e~headers-sort-field-choices)))
-         ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
-         ;; sortable field), _or_ another field (meaning: sort by this other
-         ;; field).
-         (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
-         ;; error check
-         (sortable
-          (if sortable
-              sortable
-            (mu4e-error "Not a sortable field")))
-         (sortfield (if (booleanp sortable) field sortable))
-         (dir
-          (cl-case dir
-            ((ascending descending) dir)
-            ;; change the sort order if field = curfield
-            (t
-             (if (eq sortfield mu4e-headers-sort-field)
-                 (if (eq mu4e-headers-sort-direction 'ascending)
-                     'descending 'ascending)
-               'descending)))))
-    (setq
-     mu4e-headers-sort-field sortfield
-     mu4e-headers-sort-direction dir)
-    (mu4e-message "Sorting by %s (%s)"
-                  (symbol-name sortfield)
-                  (symbol-name mu4e-headers-sort-direction))
-    (mu4e-search-rerun)))
-
-(defun mu4e-headers-toggle-property (&optional dont-refresh key)
-  "Toggle some aspect of headers display.
-When prefix-argument DONT-REFRESH is non-nil, do not refresh the
-last search with the new setting.
-If KEY is provided, use it instead of asking user."
-  (interactive "P")
-  (let* ((toggles '(("fFull-search"      . mu4e-search-full)
-                    ("rInclude-related"  . mu4e-headers-include-related)
-                    ("tShow threads"     . mu4e-search-threads)
-                    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)
-                    ("pHide-predicate"   . mu4e-headers-hide-enabled)))
-         (toggles (seq-map
-                   (lambda (cell)
-                     (cons
-                      (concat (car cell)
-                              (format" (%s)"
-                                     (if (symbol-value (cdr cell)) "on" "off")))
-                      (cdr cell))) toggles))
-         (choice (mu4e-read-option "Toggle property " toggles key)))
-    (when choice
-      (set choice (not (symbol-value choice)))
-      (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))
-      (unless dont-refresh
-        (mu4e-search-rerun)))))
 
 (defun mu4e-headers-view-message ()
   "View message at point."

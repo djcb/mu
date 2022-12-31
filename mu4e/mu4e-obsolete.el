@@ -164,6 +164,20 @@
 (define-obsolete-function-alias 'mu4e-headers-toggle-skip-duplicates
   'mu4e-headers-toggle-property "1.9.5")
 
+(define-obsolete-function-alias 'mu4e-headers-change-sorting
+  'mu4e-search-change-sorting "1.9.11")
+(define-obsolete-function-alias 'mu4e-headers-toggle-property
+  'mu4e-search-toggle-property "1.9.11")
+
+(make-obsolete-variable 'mu4e-headers-include-related
+                        'mu4e-search-include-related "1.9.11")
+(make-obsolete-variable 'mu4e-headers-skip-duplicates
+                        'mu4e-search-skip-duplicates "1.9.11")
+(make-obsolete-variable 'mu4e-headers-sort-field
+                        'mu4e-search-sort-field "1.9.11")
+(make-obsolete-variable 'mu4e-headers-sort-direction
+                        'mu4e-search-sort-direction "1.9.11")
+
 
 ;; mu4e-main
 (define-obsolete-variable-alias
