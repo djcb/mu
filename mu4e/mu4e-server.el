@@ -286,7 +286,7 @@ The server output is as follows:
 
          ;; received a pong message
          ((plist-get sexp :pong)
-	  (setq mu4e--server-props (plist-get sexp :props))
+          (mu4e--update-server-props (plist-get sexp :props))
           (funcall mu4e-pong-func sexp))
 
          ;; received a contacts message

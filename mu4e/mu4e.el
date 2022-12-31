@@ -139,6 +139,8 @@ invoke
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e--pong-handler info func)))
+  (when mu4e-main-auto-reset-baseline
+    (mu4e-reset-baseline-query-results))
   (mu4e--server-ping
    (mapcar ;; send it a list of queries we'd like to see read/unread info for
     (lambda (bm)

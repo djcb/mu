@@ -44,15 +44,31 @@
 
 ;; Configuration
 
-(defvar mu4e-main-hide-personal-addresses nil
+(defcustom mu4e-main-hide-personal-addresses nil
   "Whether to hide the personal address in the main view.
 
-This can be useful to avoid the noise when there are many, and
+  This can be useful to avoid the noise when there are many, and
 also hides the warning if your `user-mail-address' is not part of
-the personal addresses.")
+the personal addresses."
+  :type 'boolean
+  :group 'mu4e-main)
 
-(defvar mu4e-main-hide-fully-read nil
-  "Whether to hide bookmarks or maildirs without unread messages.")
+(defcustom mu4e-main-hide-fully-read nil
+  "Whether to hide bookmarks or maildirs without unread messages."
+  :type 'boolean
+  :group 'mu4e-main)
+
+(defcustom mu4e-main-hide-baseline-delta nil
+  "Whether to hide the baseline-from-delta from the message counts
+for bookmarks and maildirs."
+  :type 'boolean
+  :group 'mu4e-main)
+
+(defcustom mu4e-main-auto-reset-baseline t
+  "Automatically reset the baseline when explicitly (interactively)
+swiching to the main-view (using the `mu4e' command."
+  :type 'boolean
+  :group 'mu4e-main)
 
 
 ;;; Mode
@@ -83,6 +99,12 @@ the personal addresses.")
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 
+(defun mu4e--main-reset-baseline-query-results ()
+  "Main-view version of `mu4e-reset-baseline-query-results'.
+This version handles updating the current screen as well."
+  (interactive)
+  (mu4e-reset-baseline-query-results)
+  (revert-buffer))
 
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
@@ -95,6 +117,7 @@ the personal addresses.")
     (define-key map "f" #'smtpmail-send-queued-mail)
     ;;
     (define-key map "U" #'mu4e-update-mail-and-index)
+    (define-key map "R" #'mu4e--main-reset-baseline-query-results)
     (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
@@ -102,7 +125,7 @@ the personal addresses.")
     (define-key map "S" #'mu4e-kill-update-mail)
     (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map ";"
-      (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
+                (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
 
     (define-key map "$" #'mu4e-show-log)
     (define-key map "A" #'mu4e-about)
@@ -121,7 +144,6 @@ the personal addresses.")
   (mu4e-update-minor-mode)
   (set (make-local-variable 'revert-buffer-function) #'mu4e--main-view-real)
   (add-hook 'mu4e-index-updated-hook #'mu4e--main-update-after-index))
-
 
 (defun mu4e--main-action-str (str &optional func-or-shortcut)
   "Highlight the first occurrence of [.] in STR.
@@ -163,7 +185,7 @@ clicked."
            maximize (string-width (plist-get b :name))))
 
 (defun mu4e--main-item (fullkey name qcounts max-length)
-  "Display one main bookmarks/maildir item.
+  "Display a main-view bookmarks/maildir item.
 - FULLKEY is a 2-character string describing the item's shortcut
 - NAME is the name of the of the item
 - QCOUNTS is a structure with unread information
@@ -175,22 +197,31 @@ clicked."
     (concat "\t* [" fullkey "] " name) fullkey)
    ;; append all/unread numbers, if available.
    (if qcounts
-       (let ((unread (plist-get (car qcounts) :unread))
-             (count  (plist-get (car qcounts) :count)))
-         (format
-          "%s (%s/%s)"
-          (make-string (- max-length (string-width name)) ? )
-          (propertize (number-to-string unread)
-                      'face 'mu4e-header-key-face)
-          count))
+       (let* ((unread (plist-get qcounts :unread))
+              (count  (plist-get qcounts :count))
+              (baseline (plist-get qcounts :baseline))
+              (baseline-unread
+               (or (when baseline (plist-get baseline :unread)) unread))
+              (delta (- unread baseline-unread)))
+         (format"%s (%s%s/%s)"
+                (make-string (- max-length (string-width name)) ? )
+                (propertize
+                 (number-to-string unread) 'face 'mu4e-header-key-face
+                 'help-echo "Number of unread messages")
+                (if (not mu4e-main-hide-baseline-delta)
+                    (propertize (format "/%+d" delta) 'face
+                                (if (> delta 0) 'mu4e-unread-face 'default)
+                                'help-echo "Unread messsages baseline-delta")
+                  "")
+                (propertize (number-to-string count)
+                            'help-echo "Total number of messages")))
      "") "\n"))
 
-(defun mu4e--main-items (shortcut items queries max-length)
+(defun mu4e--main-items (shortcut items max-length)
   "Display the entries for the bookmark/maildir menu.
 - SHORTCUT is a single character which is the first
 character of the keyboard shortcut
 - ITEMS is a list of items, for format see `(mu4e-bookmarks)'.
-- QUERIES is the list of last query-results (or nil)
 - MAX-LENGTH is the maximum length for an item name
   (used for alignment)."
   (cl-loop for item in items
@@ -198,13 +229,7 @@ character of the keyboard shortcut
            for name = (plist-get item :name)
            for query = (funcall (or mu4e-query-rewrite-function #'identity)
                                 (plist-get item :query))
-           for qcounts = (and (stringp query)
-                              (cl-loop for q in queries
-                                       when (string=
-                                             (decode-coding-string
-                                              (plist-get q :query) 'utf-8 t)
-                                             query)
-                                       collect q))
+           for qcounts = (mu4e-last-query-result query)
            for unread = (and qcounts (plist-get (car qcounts) :unread))
            when (not (plist-get item :hide))
            when (not (and mu4e-main-hide-fully-read (eq unread 0)))
@@ -261,11 +286,10 @@ When REFRESH is non nil refresh infos from server."
         "\t* [C]ompose a new message\n" #'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-items ?b (mu4e-bookmarks) (mu4e-last-query-results) max-length)
+       (mu4e--main-items ?b (mu4e-bookmarks) max-length)
        "\n"
        (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-items ?j (mu4e--maildirs-with-query)
-                         (plist-get mu4e--server-props :queries) max-length)
+       (mu4e--main-items ?j (mu4e--maildirs-with-query) max-length)
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
@@ -274,7 +298,9 @@ When REFRESH is non nil refresh infos from server."
                                (mu4e-context-switch)(revert-buffer)))
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
-                             'mu4e-update-mail-and-index)
+                             #'mu4e-update-mail-and-index)
+       (mu4e--main-action-str "\t* [R]eset query-results baseline\n"
+                              #'mu4e--main-reset-baseline-query-results)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)
@@ -291,6 +317,11 @@ When REFRESH is non nil refresh infos from server."
        (mu4e--key-val "last updated"
                       (current-time-string
                        (plist-get mu4e-index-update-status :tstamp)))
+       (if (and (not mu4e-main-hide-baseline-delta)
+                mu4e--baseline-query-results-tstamp)
+           (mu4e--key-val "baseline"
+                          (current-time-string mu4e--baseline-query-results-tstamp))
+         "")
        (mu4e--key-val "database-path" (mu4e-database-path))
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"

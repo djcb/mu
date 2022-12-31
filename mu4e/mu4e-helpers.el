@@ -86,8 +86,6 @@ marked as read-only, or non-nil otherwise."
           function)
   :group 'mu4e-view)
 
-
-
 
 
 (defun mu4e-select-other-view ()
@@ -240,7 +238,32 @@ Function returns the cdr of the list element."
 
 ;;; Server properties
 (defvar mu4e--server-props nil
-  "Metadata we receive from the mu4e server.")
+  "Metadata we receive from the mu4e server.
+Use `mu4e--update-server-props' to update.")
+
+;; XXX: we could make these session-persistent
+
+(defvar mu4e--baseline-query-results nil
+  "Some previous version of the query-results.
+This is used as the baseline to track updates by comparing it to
+the latest query-results.")
+
+(defvar mu4e--baseline-query-results-tstamp nil
+  "Timestamp for when the query-results baseline was updated.")
+
+(defun mu4e-reset-baseline-query-results ()
+  "Reset the baseline query-results."
+  (interactive)
+  (setq mu4e--baseline-query-results nil
+        mu4e--baseline-query-results-tstamp nil))
+
+(defun mu4e--update-server-props (props)
+  "Update server props and possibly the baseline query results."
+  (setq mu4e--server-props props)
+  (when-let ((queries (plist-get mu4e--server-props :queries)))
+    (unless mu4e--baseline-query-results
+      (setq mu4e--baseline-query-results queries
+            mu4e--baseline-query-results-tstamp (current-time)))))
 
 (defun mu4e-server-properties ()
   "Get the server metadata plist."
@@ -272,16 +295,38 @@ used to populated the read/unread counts in the main view. They
 are refreshed when calling `(mu4e)', i.e., when going to the main
 view.
 
+When available, the based-line results are added as well.
+
 The results are a list of elements of the form
    (:query \"query string\"
-            :count  <total number matching count>
-            :unread <number of unread messages in count>)"
-  (plist-get mu4e--server-props :queries))
+      :count  <total number matching count>
+      :unread <number of unread messages in count>
+      :baseline ( ;; baseline results
+         :count  <total number matching count>
+         :unread <number of unread messages in count>)) The
+baseline part is optional (see
+`mu4e-reset-baseline-query-results') for more details)."
+  (unless mu4e--baseline-query-results
+    (mu4e-reset-baseline-query-results))
+  (seq-map (lambda (qres)
+             (let* ((query (plist-get qres :query))
+                    (bres (seq-find ;; find the corresponding baseline entry
+                           (lambda (bq) (string= query (plist-get bq :query)))
+                           mu4e--baseline-query-results)))
+               (when bres
+                 (plist-put qres :baseline
+                            `(:count ,(plist-get bres :count)
+                                     :unread ,(plist-get bres :unread))))
+               qres))
+           (plist-get mu4e--server-props :queries)))
 
 (defun mu4e-last-query-result (query)
-  "Get the last result for some QUERY or nil if not found."
+  "Get the last result for some QUERY or nil if not found.
+See `mu4e-last-query-results' for the format."
   (seq-find
-   (lambda (elm) (string= (plist-get elm :query) query))
+   (lambda (elm) ;;; XXX do we need the decoding?
+     (let ((qstring (decode-coding-string (plist-get elm :query) 'utf-8 t)))
+       (string= query qstring)))
    (mu4e-last-query-results)))
 
 
