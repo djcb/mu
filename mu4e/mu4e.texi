@@ -104,8 +104,13 @@ Appendices
 * Tips and Tricks:: Useful tips
 * How it works:: Some notes about the implementation of @t{mu4e}
 * Debugging:: How to debug problems in @t{mu4e}
-
 * GNU Free Documentation License::  The license of this manual
+
+@c Indices
+@c * Command Index::       An item for each standard command name.
+@c * Variable Index::      An item for each variable documented in this manual.
+@c * Concept Index::       An item for concepts and other general subjects.
+
 @end menu
 
 @node Introduction
@@ -381,7 +386,8 @@ following command:
 You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 
 @example
-  $ mu init --maildir=~/Maildir --my-address=jim@@example.com --my-address=bob@@example.com
+  $ mu init --maildir=~/Maildir --my-address=jim@@example.com \
+    --my-address=bob@@example.com
 @end example
 
 @t{mu} remembers the maildir and your addresses and uses them when
@@ -689,7 +695,7 @@ correctly, and then shows you the @t{mu4e} main view. Its major mode is
 @menu
 * Overview: MV Overview. What is the main view
 * Basic actions::What can we do
-* Bookmarks: MV Bookmarks. Jumping to other places
+* Bookmarks and Maildirs: Bookmarks and Maildirs. Jumping to other places
 * Miscellaneous::Notes
 @end menu
 
@@ -710,18 +716,18 @@ The main view looks something like the following:
 
   Bookmarks
 
-        * [bu] Unread messages      (13085/13085)
+        * [bu] Unread messages      (13085/+3/13085)
         * [bt] Today's messages
-        * [bw] Last 7 days          (53/128)
-        * [bp] Messages with images (75/2441)
+        * [bw] Last 7 days          (53/+3/128)
+        * [bp] Messages with images (75/-2/2441)
 
   Maildirs
 
-        * [ja] /archive             (2101/18837)
-        * [ji] /inbox               (1/2)
-        * [jb] /bulk                (33/35)
-        * [jB] /bulkarchive         (179/2090)
-        * [jm] /mu                  (694/17687)
+        * [ja] /archive             (2101/0/18837)
+        * [ji] /inbox               (8/+2/10)
+        * [jb] /bulk                (33/+0/35)
+        * [jB] /bulkarchive         (179/+0/2090)
+        * [jm] /mu                  (694/+1/17687)
         * [jn] /sauron
         * [js] /sent
 
@@ -729,6 +735,7 @@ The main view looks something like the following:
 
         * [;]Switch context
         * [U]pdate email & database
+        * [R]eset query-results baseline
         * toggle [m]ail sending mode (currently direct)
         * [f]lush 1 queued mail
 
@@ -739,12 +746,12 @@ The main view looks something like the following:
 
   Info
 
-        * last updated        : Sat May  7 20:37:37 2022
+        * last-updated        : Sat Dec 31 16:43:56 2022
+        * baseline            : Sat Dec 31 15:57:12 2022
         * database-path       : /home/pam/.cache/mu/xapian
         * maildir             : /home/pam/Maildir
         * in store            : 86179 messages
-        * personal addresses  : /.*example.com/, pam@fo
-
+        * personal addresses  : /.*example.com/, pam@@example.com
 @end verbatim
 @end cartouche
 
@@ -768,10 +775,10 @@ you for a search query, and after entering one, shows the results in the
 the @ref{Editor view} to write a new message.
 @end itemize
 
-@node MV Bookmarks
-@section Bookmarks
+@node Bookmarks and Maildirs
+@section Bookmarks and Maildirs
 
-The next item in the Main view is @emph{Bookmarks}.
+The next two items in the Main view are @emph{Bookmarks} and @emph{Maildirs}.
 
 Bookmarks are predefined queries with a descriptive name and a
 shortcut --- in the example above, we see the default bookmarks. You
@@ -779,8 +786,20 @@ can view the list of messages matching a certain bookmark by pressing
 @key{b} followed by the bookmark's shortcut. If you'd like to edit the
 bookmarked query first before invoking it, use @key{B}.
 
-Next to each bookmark there is the number of (unread/all) messages
-that match.
+Next to each bookmark there is the number of (unread/delta/all) messages that
+match.
+
+The ``unread'' and ``all'' have their obvious meaning; the @emph{delta} is the
+difference in unread messages since ``baseline'', which is the state at some
+point in the past. This delta is useful to quickly see what changed since the
+last time you looked.
+
+By default, the baseline is automatically reset when switching to the main view
+explicitly; otherwise the baseline can be reset with
+@code{mu4e-reset-baseline-query-results}, which is bound to @kbd{R} in the
+main-view, and @kbd{C-c C-R} throughout @t{mu4e}. You can customize the behavior
+using @var{mu4e-main-hide-baseline-delta} and
+@var{mu4e-main-auto-reset-baseline}.
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
 your own and/or replace the default ones; @xref{Bookmarks}. For
@@ -801,6 +820,9 @@ useful if you have bookmarks for slow queries. Note that
 the common case where the query function involves some user input,
 which would be disruptive in this case.
 
+The Maildirs item is very similar to Bookmarks, when you consider maildirs here
+as being special kind of bookmark that matches some Maildir.
+
 @node Miscellaneous
 @section Miscellaneous
 
@@ -810,6 +832,8 @@ Finally, there are some @emph{Misc} (miscellaneous) actions:
 @code{mu4e-get-mail-command}, and afterwards updates the @t{mu}
 database; see @ref{Indexing your messages} and @ref{Getting mail} for
 details.
+@item @t{[R]eset query-results baseline} this reset the current 'baseline'
+for query and updates the screen; see @ref{Bookmarks and Maildirs}.
 @item @t{toggle [m]ail sending mode (direct)} toggles between sending
 mail directly, and queuing it first (for example, when you are offline),
 and @t{[f]lush queued mail} flushes any queued mail. This item is
@@ -983,7 +1007,9 @@ a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
 H            get help
+C-c C-r      reset query results baseline
 C-S-u        update mail & reindex
+C-c C-u      update mail & reindex
 q            leave the headers buffer
 @end verbatim
 
@@ -1044,11 +1070,10 @@ immediately using the new parameters. You can toggle full-search
 Note that with threading enabled, the sorting is exclusively by date,
 regardless of the column clicked.
 
-If you want to change the defaults for these settings, you can use the
-variables @code{mu4e-headers-sort-field} and
-@code{mu4e-headers-show-threads}, as well as
-@code{mu4e-headers-change-sorting} to change the sorting of the current
-search results.
+If you want to change the defaults for these settings, you can use the variables
+@var{mu4e-search-sort-field} and @var{mu4e-search-show-threads}, as well as
+@code{mu4e-search-change-sorting} to change the sorting of the current search
+results.
 
 @node HV Custom headers
 @section Custom headers
@@ -2073,17 +2098,17 @@ also match this extra search pattern. @key{\} takes you back to the previous
 query, so, effectively `widens' the search. Technically, narrowing the results
 of query @t{x} with expression @t{y} implies doing a search @t{(x) AND (y)}.
 
-Note that messages that were not in your original search results because
-of @code{mu4e-headers-results-limit} may show up in the narrowed query.
+Note that messages that were not in your original search results because of
+@var{mu4e-search-results-limit} may show up in the narrowed query.
 
 @subsection Including related messages
 @anchor{Including related messages}
 
 It can be useful to not only show the messages that directly match a certain
 query, but also include messages that are related to these messages. That is,
-messages that belong to the same discussion threads are included in the
-results, just like e.g. Gmail does it. You can enable this behavior by setting
-@code{mu4e-headers-include-related} to @code{t}, and you can toggle between
+messages that belong to the same discussion threads are included in the results,
+just like e.g. Gmail does it. You can enable this behavior by setting
+@var{mu4e-search-include-related} to @code{t}, and you can toggle between
 including/not-including with @key{W}.
 
 Be careful though when e.g. deleting ranges of messages from a certain
@@ -2097,8 +2122,8 @@ Another useful feature is skipping of @emph{duplicate messages}. When you have
 copies of messages, there's usually little value in including more than one in
 search results. A common reason for having multiple copies of messages is the
 combination of Gmail and @t{offlineimap}, since that is the way the labels /
-virtual folders in Gmail are represented. You can enable skipping duplicates
-by setting @code{mu4e-headers-skip-duplicates} to @code{t}, and you can toggle
+virtual folders in Gmail are represented. You can enable skipping duplicates by
+setting @var{mu4e-search-skip-duplicates} to @code{t}, and you can toggle
 between the skipping/not skipping with @key{V}.
 
 Note, messages are considered duplicates when they have the same
@@ -4633,6 +4658,18 @@ it on all the time. By default, the log only maintains the most recent
 @appendix GNU Free Documentation License
 
 @include fdl.texi
+
+@c @node Command Index
+@c @unnumbered Command and Function Index
+@c @printindex fn
+
+@c @node Variable Index
+@c @unnumbered Variable Index
+@c @printindex vr
+
+@c @node Concept Index
+@c @unnumbered Concept Index
+@c @printindex cp
 
 @bye
 
