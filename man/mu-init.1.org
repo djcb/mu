@@ -32,7 +32,7 @@ mailing list messages.
 =<my-email-address>= can be either a plain e-mail address (such as
 *foo@example.com*), or a basic PCRE regular-expression (see *pcre(3)* for details),
 wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on your shell, the
-argument may need to b quoted.
+argument may need to be quoted.
 
 #+include: "muhome.inc" :minlevel 2
 
