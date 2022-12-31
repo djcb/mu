@@ -155,7 +155,7 @@ sexp received from the server process.")
 <`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>.")
 (defconst mu4e--server-cookie-matcher-rx
   (concat mu4e--server-cookie-pre "\\([[:xdigit:]]+\\)"
-	  mu4e--server-cookie-post)
+          mu4e--server-cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
 
@@ -334,12 +334,12 @@ As per issue #2198."
   (seq-each
    (lambda(proc)
      (when (and (process-live-p proc)
-		(string-prefix-p mu4e--server-name (process-name proc)))
+                (string-prefix-p mu4e--server-name (process-name proc)))
        (mu4e-message "killing stale mu4e server")
        (ignore-errors
-	 (signal-process proc 'SIGINT) ;; nicely
-	 (sit-for 1.0)
-	 (signal-process proc 'SIGKILL)))) ;; forcefully
+         (signal-process proc 'SIGINT) ;; nicely
+         (sit-for 1.0)
+         (signal-process proc 'SIGKILL)))) ;; forcefully
    (process-list)))
 
 (defun mu4e--server-start ()
@@ -351,27 +351,27 @@ As per issue #2198."
      "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
   ;; sanity-check 2
   (let ((version (let ((s (shell-command-to-string
-			   (concat mu4e-mu-binary " --version"))))
+                           (concat mu4e-mu-binary " --version"))))
                    (and (string-match "version \\([.0-9]+\\)" s)
                         (match-string 1 s)))))
     (unless (string= version mu4e-mu-version)
       (mu4e-error
        (concat
         "Found mu version %s, but mu4e needs version %s"
-	"; please set `mu4e-mu-binary' "
+        "; please set `mu4e-mu-binary' "
         "accordingly") version mu4e-mu-version)))
   ;; kill old/stale servers, if any.
   (mu4e--kill-stale)
   (let* ((process-connection-type nil) ;; use a pipe
-	 (args
-	  ;; [--debug] server [--muhome=..]
-	  (seq-filter (lambda (arg) arg) ;; filter out nil
-		      `(,(when mu4e-mu-debug "--debug")
-			"server"
-			,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home))))))
+         (args
+          ;; [--debug] server [--muhome=..]
+          (seq-filter (lambda (arg) arg) ;; filter out nil
+                      `(,(when mu4e-mu-debug "--debug")
+                        "server"
+                        ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home))))))
     (setq mu4e--server-buf "")
     (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
-	      (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
+              (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
     (setq mu4e--server-process (apply 'start-process
                                       mu4e--server-name mu4e--server-name
                                       mu4e-mu-binary args))
@@ -470,7 +470,7 @@ get at most MAX contacts."
      :maxnum   ,(or maxnum nil))))
 
 (defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
-				include-related)
+                                include-related)
   "Run QUERY with THREADS SORTFIELD SORTDIR MAXNUM SKIP-DUPS INCLUDE-RELATED.
 
 If THREADS is non-nil, show results in threaded fashion,
@@ -509,7 +509,7 @@ added or removed), since merely editing a message does not update
 the directory time stamp."
   (mu4e--server-call-mu
    `(index :cleanup ,(and cleanup t)
-	   :lazy-check ,(and lazy-check t))))
+           :lazy-check ,(and lazy-check t))))
 
 (defun mu4e--server-mkdir (path)
   "Create a new maildir-directory at filesystem PATH."

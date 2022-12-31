@@ -441,7 +441,7 @@ This is based on the variable `user-full-name' and
   (when user-mail-address
     (mu4e-contact-full (mu4e-contact-make
                         user-full-name
-			user-mail-address))))
+                        user-mail-address))))
 
 ;;; Header separators
 
@@ -466,17 +466,17 @@ separator is never written to the message file. Also see
                               ;;'read-only "Can't touch this"
                               'rear-nonsticky t
                               'font-lock-face 'mu4e-compose-separator-face)))
-	(widen)
-	;; search for the first empty line
-	(goto-char (point-min))
-	(if (search-forward-regexp "^$" nil t)
+        (widen)
+        ;; search for the first empty line
+        (goto-char (point-min))
+        (if (search-forward-regexp "^$" nil t)
             (progn
               (replace-match sepa)
               ;; `message-narrow-to-headers` searches for a
               ;; `mail-header-separator` followed by a new line. Therefore, we
               ;; must insert a newline if on the last line of the buffer.
               (when (= (point) (point-max))
-		(insert "\n")))
+                (insert "\n")))
           (progn ;; no empty line? then prepend one
             (goto-char (point-max))
             (insert "\n" sepa))))))
@@ -576,7 +576,7 @@ mailing-list."
          (recipnum
           (+ (length (mu4e~draft-create-to-lst origmsg))
              (length (mu4e~draft-create-cc-lst origmsg t t))))
-	 (sender (mu4e-contact-full (car from)))
+         (sender (mu4e-contact-full (car from)))
          (reply-type
           (mu4e-read-option
            "Reply to mailing-list "

@@ -42,7 +42,7 @@ Works for headers view and message-view."
   (message "Number of lines: %s"
            (shell-command-to-string
             (concat "wc -l < "
-		    (shell-quote-argument (mu4e-message-field msg :path))))))
+                    (shell-quote-argument (mu4e-message-field msg :path))))))
 
 ;;; Org Helpers
 
@@ -79,7 +79,7 @@ file where you store your org-contacts."
     (mu4e-error "Variable `mu4e-org-contacts-file' is nil"))
   (let* ((sender (car-safe (mu4e-message-field msg :from)))
          (name (mu4e-contact-name sender))
-	 (email (mu4e-contact-email sender))
+         (email (mu4e-contact-email sender))
          (blurb
           (format
            (concat
