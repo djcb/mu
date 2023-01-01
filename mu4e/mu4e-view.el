@@ -1146,6 +1146,12 @@ containing commas."
                 dir (if arg (read-directory-name "Save to directory: ")
                       mu4e-attachment-dir))
           (cl-loop for (f . h) in handles
+                   initially
+                   do (when
+                          (and
+                           (not (file-directory-p dir))
+                           (y-or-n-p (format "Create directory `%s'? " dir)))
+                        (make-directory dir t))
                    when (member f files)
                    do (mm-save-part-to-file
                        h (let ((file (expand-file-name f dir)))
