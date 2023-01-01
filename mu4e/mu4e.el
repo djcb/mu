@@ -76,6 +76,12 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
+
+  ;; i.e., only auto update baseline when user explicitly requested
+  (when (and mu4e-main-auto-reset-baseline
+             (not background) (called-interactively-p 'interactive))
+    (mu4e-reset-baseline-query-results))
+
   (mu4e--start (unless background 'mu4e--main-view)))
 
 (defun mu4e-quit()
@@ -133,14 +139,11 @@ If `mu4e-contexts' have been defined, but we don't have a context
 yet, switch to the matching one, or none matches, the first. If
 mu4e is already running, invoke FUNC (if non-nil).
 
-Otherwise, check requirements, then start mu4e. When successful,
-invoke
+Otherwise, check requirements, then start mu4e. When successful, invoke
  FUNC (if non-nil) afterwards."
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e--pong-handler info func)))
-  (when mu4e-main-auto-reset-baseline
-    (mu4e-reset-baseline-query-results))
   (mu4e--server-ping
    (mapcar ;; send it a list of queries we'd like to see read/unread info for
     (lambda (bm)
