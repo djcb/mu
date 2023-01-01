@@ -43,9 +43,8 @@
     - One change is that ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]].
 
-    - ~mu4e-maildir-shortcuts~ now take an optional ~:name~ property, which is shown
-      instead of the Maildir path. Useful for very long paths. Maildirs now can
-      also be without a ~:key~.
+    - ~mu4e~ now keeps track of the 'baseline' query results and shows the
+      difference from that in the main view. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
