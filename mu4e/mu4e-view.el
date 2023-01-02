@@ -608,7 +608,8 @@ As a side-effect, a message that is being viewed loses its
       ;; required; this state must carry over from the killed buffer
       ;; to the new one.
       (setq linked-headers-buffer mu4e-linked-headers-buffer)
-      (delete-windows-on existing-buffer t)
+      (if (memq mu4e-split-view '(horizontal vertical))
+          (delete-windows-on existing-buffer t))
       (kill-buffer existing-buffer))
     (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
     (with-current-buffer gnus-article-buffer
