@@ -24,10 +24,10 @@
 ;;; Commentary:
 
 ;;; Code:
+(require 'mu4e-obsolete)
 
 (require 'mu4e-vars)
 (require 'mu4e-window)
-(require 'mu4e-obsolete)
 (require 'mu4e-helpers)
 (require 'mu4e-folders)
 (require 'mu4e-context)
