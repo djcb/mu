@@ -74,6 +74,8 @@ foreach src : mu4e_srcs
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
 
+  # todo: depfile.
+
   custom_target(src.underscorify() + '_el',
                 build_by_default: true,
                 input: src,
@@ -83,10 +85,10 @@ foreach src : mu4e_srcs
                 command: [emacs,
                           '--no-init-file',
                           '--batch',
-                          '--eval', '(setq load-prefer-newer t)',
-                          '--eval', target_func,
                           '--directory', meson.current_build_dir(),
                           '--directory', meson.current_source_dir(),
+                          '--eval', '(setq load-prefer-newer t)',
+                          '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
 
