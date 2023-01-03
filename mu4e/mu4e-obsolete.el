@@ -158,7 +158,7 @@
 (define-obsolete-function-alias 'mu4e-headers-toggle-threading
   'mu4e-headers-toggle-property "1.9.5")
 (define-obsolete-function-alias 'mu4e-headers-toggle-full-search
-  'mu4e-headers-toggle-settin "1.9.5")
+  'mu4e-headers-toggle-property "1.9.5")
 (define-obsolete-function-alias 'mu4e-headers-toggle-include-related
   'mu4e-headers-toggle-property "1.9.5")
 (define-obsolete-function-alias 'mu4e-headers-toggle-skip-duplicates
@@ -169,18 +169,18 @@
 (define-obsolete-function-alias 'mu4e-headers-toggle-property
   'mu4e-search-toggle-property "1.9.11")
 
-(make-obsolete-variable 'mu4e-headers-include-related
-                        'mu4e-search-include-related "1.9.11")
-(make-obsolete-variable 'mu4e-headers-skip-duplicates
-                        'mu4e-search-skip-duplicates "1.9.11")
-(make-obsolete-variable 'mu4e-headers-sort-field
-                        'mu4e-search-sort-field "1.9.11")
-(make-obsolete-variable 'mu4e-headers-sort-direction
-                        'mu4e-search-sort-direction "1.9.11")
+(define-obsolete-variable-alias 'mu4e-headers-include-related
+  'mu4e-search-include-related "1.9.11")
+(define-obsolete-variable-alias 'mu4e-headers-skip-duplicates
+  'mu4e-search-skip-duplicates "1.9.11")
+(define-obsolete-variable-alias 'mu4e-headers-sort-field
+  'mu4e-search-sort-field "1.9.11")
+(define-obsolete-variable-alias 'mu4e-headers-sort-direction
+  'mu4e-search-sort-direction "1.9.11")
 
-(make-obsolete-variable 'mu4e-headers-hide-predicate
-                        'mu4e-search-hide-predicate "1.9.11")
-(make-obsolete-variable 'mu4e-headers-hide-enabled
+(define-obsolete-variable-alias 'mu4e-headers-hide-predicate
+  'mu4e-search-hide-predicate "1.9.11")
+(define-obsolete-variable-alias 'mu4e-headers-hide-enabled
                         'mu4e-search-hide-enabled "1.9.11")
 
 
