@@ -78,6 +78,24 @@ and offlineimap."
   :type 'boolean
   :group 'mu4e-search)
 
+(defvar mu4e-search-hide-predicate nil
+  "Predicate function to hide matching headers.
+Either nil or a function taking one message plist parameter and
+which which return non-nil for messages that should be hidden from
+the search results. Also see `mu4e-search-hide-enabled'.
+
+Example that hides all trashed messages:
+
+  (setq mu4e-search-hide-predicate
+     (lambda (msg)
+       (member \='trashed (mu4e-message-field msg :flags)))).")
+
+(defvar mu4e-search-hide-enabled t
+  "Whether `mu4e-search-hide-predicate' should be active.
+This can be used to toggle use of the predicate through
+ `mu4e-search-toggle-property'.")
+
+
 (defcustom mu4e-search-sort-field :date
   "Field to sort the headers by. A symbol:
 one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
@@ -123,7 +141,7 @@ anything about the query, it just does text replacement."
 This function receives the query as its parameter, before any
 rewriting as per `mu4e-query-rewrite-function' has taken place.
 
-The reason to use this instead of `mu4e-headers-search-hook' is
+The reason to use this instead of `mu4e-search-hook' is
 if you only want to execute a hook when a search is entered via a
 bookmark, e.g. if you'd like to treat the bookmarks as a custom
 folder and change the options for the search."
@@ -424,8 +442,8 @@ If KEY is provided, use it instead of asking user."
   (let* ((toggles '(("fFull-search"      . mu4e-search-full)
                     ("rInclude-related"  . mu4e-headers-include-related)
                     ("tShow threads"     . mu4e-search-threads)
-                    ("uSkip duplicates"  . mu4e-headers-skip-duplicates)
-                    ("pHide-predicate"   . mu4e-headers-hide-enabled)))
+                    ("uSkip duplicates"  . mu4e-search-skip-duplicates)
+                    ("pHide-predicate"   . mu4e-search-hide-enabled)))
          (toggles (seq-map
                    (lambda (cell)
                      (cons

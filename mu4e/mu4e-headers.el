@@ -129,23 +129,6 @@ next mail after marking a message in header view."
   :group 'mu4e-headers)
 
 
-(defvar mu4e-headers-hide-predicate nil
-  "Predicate function to hide matching headers.
-Either nil or a function taking one message plist parameter and
-which which return non-nil for messages that should be hidden from
-the search results. Also see `mu4e-headers-hide-enabled'.
-
-Example that hides all trashed messages:
-
-  (setq mu4e-headers-hide-predicate
-     (lambda (msg)
-       (member \='trashed (mu4e-message-field msg :flags)))).")
-
-(defvar mu4e-headers-hide-enabled t
-  "Whether `mu4e-headers-hide-predicate' should be active.
-This can be used to toggle use of the predicate through
- `mu4e-headers-toggle-property'.")
-
 (defcustom mu4e-headers-visible-flags
   '(draft flagged new passed replied trashed attach encrypted signed
           list personal)
@@ -665,8 +648,8 @@ space propertized with a `display' text property which expands to
 (defsubst mu4e~message-header-line (msg)
   "Return a propertized description of message MSG suitable for
 displaying in the header view."
-  (if (and mu4e-headers-hide-enabled mu4e-headers-hide-predicate
-           (funcall mu4e-headers-hide-predicate msg))
+  (if (and mu4e-search-hide-enabled mu4e-search-hide-predicate
+           (funcall mu4e-search-hide-predicate msg))
       (progn
         (cl-incf mu4e~headers-hidden)
         nil)
@@ -1269,12 +1252,12 @@ message plist, or nil if not found."
              (if (car flag-cell)
                  (if mu4e-use-fancy-chars
                      (cddr flag-cell) (cadr flag-cell) ) ""))
-           `((,mu4e-search-full             . ,mu4e-headers-full-label)
+           `((,mu4e-search-full            . ,mu4e-headers-full-label)
              (,mu4e-search-include-related . ,mu4e-headers-related-label)
-             (,mu4e-search-threads          . ,mu4e-headers-threaded-label)
+             (,mu4e-search-threads         . ,mu4e-headers-threaded-label)
              (,mu4e-search-skip-duplicates
               . ,mu4e-headers-skip-duplicates-label)
-             (,mu4e-headers-hide-enabled    . ,mu4e-headers-hide-label))
+             (,mu4e-search-hide-enabled    . ,mu4e-headers-hide-label))
            ""))
          (name "mu4e-headers"))
 
