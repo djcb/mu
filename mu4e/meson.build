@@ -82,6 +82,8 @@ foreach src : mu4e_srcs
                 output: target_name,
                 install_dir: mu4e_lispdir,
                 install: true,
+                # rebuild all if any changed.
+                depend_files: mu4e_srcs,
                 command: [emacs,
                           '--no-init-file',
                           '--batch',
