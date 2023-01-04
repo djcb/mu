@@ -61,10 +61,17 @@ Example usage:
 If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
 
+;; backward compat until org >= 9.3 is univeral.
+(defalias 'mu4e--org-link-store-props
+  (if (fboundp 'org-link-store-props)
+      #'org-link-store-props
+    (with-no-warnings
+      #'org-store-link-props)))
+
 (defun mu4e--org-store-link-query ()
   "Store a link to a mu4e query."
-  (setq org-store-link-plist nil) ; reset
-  (org-store-link-props
+  (setq org-store-link-plist nil)       ; reset
+  (mu4e--org-link-store-props
    :type        "mu4e"
    :query       (mu4e-last-query)
    :date        (format-time-string "%FT%T") ;; avoid error
@@ -80,22 +87,22 @@ the current query; otherwise, it links to the message at point.")
          (date     (format-time-string "%FT%T" (plist-get msg :date)))
          (msgid    (or (plist-get msg :message-id)
                        (mu4e-error "Cannot link message without message-id")))
-	 (props `(:type  "mu4e"
-		  :date              ,date
-		  :from              ,(mu4e-contact-full from)
-		  :fromname          ,(mu4e-contact-name from)
-		  :fromnameoraddress ,(or (mu4e-contact-name from)
-				    	(mu4e-contact-email from)) ;; mu4e-specific
-		  :maildir           ,(plist-get msg :maildir)
-		  :message-id        ,msgid
-		  :path              ,(plist-get msg :path)
-		  :subject           ,(plist-get msg :subject)
-		  :to                ,(mu4e-contact-full to)
-		  :tonameoraddress   ,(or (mu4e-contact-name to)
-				    	(mu4e-contact-email to)) ;; mu4e-specific
-		  :link              ,(concat "mu4e:msgid:" msgid)
-		  :description       ,(funcall mu4e-org-link-desc-func msg))))
-    (apply #'org-store-link-props props)))
+         (props `(:type  "mu4e"
+                  :date              ,date
+                  :from              ,(mu4e-contact-full from)
+                  :fromname          ,(mu4e-contact-name from)
+                  :fromnameoraddress ,(or (mu4e-contact-name from)
+                                        (mu4e-contact-email from)) ;; mu4e-specific
+                  :maildir           ,(plist-get msg :maildir)
+                  :message-id        ,msgid
+                  :path              ,(plist-get msg :path)
+                  :subject           ,(plist-get msg :subject)
+                  :to                ,(mu4e-contact-full to)
+                  :tonameoraddress   ,(or (mu4e-contact-name to)
+                                        (mu4e-contact-email to)) ;; mu4e-specific
+                  :link              ,(concat "mu4e:msgid:" msgid)
+                  :description       ,(funcall mu4e-org-link-desc-func msg))))
+    (apply #'mu4e--org-link-store-props props)))
 
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.
