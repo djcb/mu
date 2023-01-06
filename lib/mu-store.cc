@@ -116,6 +116,11 @@ struct Store::Private {
 		 * backstop*/
 		g_setenv("XAPIAN_FLUSH_THRESHOLD", "500000", 1);
 
+		if (g_mkdir_with_parents(db_path.c_str(), 0700) != 0)
+			throw Mu::Error(Error::Code::Internal,
+				"failed to create database dir %s: %s",
+					db_path.c_str(), ::strerror(errno));
+
 		switch (opts) {
 		case XapianOpts::ReadOnly:
 			return std::make_unique<Xapian::Database>(db_path);
@@ -135,6 +140,8 @@ struct Store::Private {
 	} catch (const Xapian::DatabaseError& xde) {
 		throw Mu::Error(Error::Code::Store,
 				"%s", xde.get_msg().c_str());
+	} catch (const Mu::Error& me) {
+		throw;
 	} catch (...) {
 		throw Mu::Error(Error::Code::Internal,
 				"something went wrong when opening store @ %s",
