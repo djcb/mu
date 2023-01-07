@@ -931,6 +931,8 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map (kbd "<insert>")     #'mu4e-view-mark-for-something)
     (define-key map (kbd "<insertchar>") #'mu4e-view-mark-for-something)
 
+    (define-key map ";" #'mu4e-context-switch)
+
     (define-key map (kbd "#") #'mu4e-mark-resolve-deferred-marks)
     ;; misc
     (define-key map "M" #'mu4e-view-massage)

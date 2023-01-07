@@ -219,10 +219,6 @@ An empty string \"\" if there is none."
   :global nil
   :init-value nil ;; disabled by default
   :group 'mu4e
-  :keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd ";") #'mu4e-context-switch)
-    map)
   :lighter ""
   (mu4e--modeline-register #'mu4e--context-modeline-item))
 

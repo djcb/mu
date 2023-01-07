@@ -916,16 +916,17 @@ after the end of the search results."
   (setq mu4e-headers-mode-map
         (let ((map (make-sparse-keymap)))
 
-          (define-key map "j" 'mu4e~headers-jump-to-maildir)
+          (define-key map "j" #'mu4e~headers-jump-to-maildir)
 
-          (define-key map "q" 'mu4e~headers-quit-buffer)
-          (define-key map "g" 'mu4e-search-rerun) ;; for compatibility
+          (define-key map "q" #'mu4e~headers-quit-buffer)
+          (define-key map "g" #'mu4e-search-rerun) ;; for compatibility
 
-          (define-key map "%" 'mu4e-headers-mark-pattern)
-          (define-key map "t" 'mu4e-headers-mark-subthread)
-          (define-key map "T" 'mu4e-headers-mark-thread)
+          (define-key map "%" #'mu4e-headers-mark-pattern)
+          (define-key map "t" #'mu4e-headers-mark-subthread)
+          (define-key map "T" #'mu4e-headers-mark-thread)
 
           (define-key map "," #'mu4e-sexp-at-point)
+          (define-key map ";" #'mu4e-context-switch)
 
           ;; navigation between messages
           (define-key map "p" 'mu4e-headers-prev)
