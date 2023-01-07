@@ -132,12 +132,55 @@ from the server process.")
 (defvar mu4e-pong-func nil
   "Function called for each (:pong type ....) sexp received.")
 
+(defvar mu4e-queries-func nil
+  "Function called for each (:queries type ....) sexp received.")
+
 (defvar mu4e-contacts-func nil
   "A function called for each (:contacts (<list-of-contacts>))
 sexp received from the server process.")
 
 
-;;; Internal vars
+;;; Dealing with Server properties
+(defvar mu4e--server-props nil
+  "Metadata we receive from the mu4e server.")
+
+(defun mu4e-server-properties ()
+  "Get the server metadata plist."
+  mu4e--server-props)
+
+(defun mu4e-root-maildir()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :root-maildir))
+      (mu4e-error "Root maildir unknown; did you start mu4e?")))
+
+(defun mu4e-database-path()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :database-path))
+      (mu4e-error "Root maildir unknown; did you start mu4e?")))
+
+(defun mu4e-server-version()
+  "Get the root maildir."
+  (or (and mu4e--server-props
+           (plist-get mu4e--server-props :version))
+      (mu4e-error "Version unknown; did you start mu4e?")))
+
+;;
+;; server-query-results are the results from the counting-queries
+;; we do for bookmarks etc. to populate the main view with unread
+;; counts.
+
+;;; remember queries result.
+(defvar mu4e--server-query-results nil
+  "Metadata we receive from the mu4e server.")
+
+(defun mu4e-server-query-results ()
+  "Get the latest server queries list."
+  mu4e--server-query-results)
+
+
+;;; Handling raw server data
 
 (defvar mu4e--server-buf nil
   "Buffer (string) for data received from the backend.")
@@ -164,8 +207,7 @@ Match 1 will be the length (in hex).")
 Checks whether the server process is live."
   (and mu4e--server-process
        (memq (process-status mu4e--server-process)
-             '(run open listen connect stop))
-       t))
+             '(run open listen connect stop)) t))
 
 (defsubst mu4e--server-eat-sexp-from-buf ()
   "'Eat' the next s-expression from `mu4e--server-buf'.
@@ -286,8 +328,13 @@ The server output is as follows:
 
          ;; received a pong message
          ((plist-get sexp :pong)
-          (mu4e--update-server-props (plist-get sexp :props))
+          (setq mu4e--server-props (plist-get sexp :props))
           (funcall mu4e-pong-func sexp))
+
+         ;; receive queries info
+         ((plist-get sexp :queries)
+          (setq mu4e--server-query-results (plist-get sexp :queries))
+          (funcall mu4e-queries-func sexp))
 
          ;; received a contacts message
          ;; note: we use 'member', to match (:contacts nil)
@@ -562,11 +609,15 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
      :rename  ,(and maildir mu4e-change-filenames-when-moving t)
      :no-view ,(and no-view t))))
 
-(defun mu4e--server-ping (&optional queries)
-  "Sends a ping to the mu server, expecting a (:pong ...) in response.
+(defun mu4e--server-ping ()
+  "Sends a ping to the mu server, expecting a (:pong ...) in response."
+  (mu4e--server-call-mu `(ping)))
+
+(defun mu4e--server-queries (queries)
+  "Sends queries to the mu server, expecting a (:queries ...) in response.
 QUERIES is a list of queries for the number of results with
 read/unread status are returned in the pong-response."
-  (mu4e--server-call-mu `(ping :queries ,queries)))
+  (mu4e--server-call-mu `(queries :queries ,queries)))
 
 (defun mu4e--server-remove (docid)
   "Remove message  with DOCID.

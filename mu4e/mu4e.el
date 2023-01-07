@@ -138,6 +138,21 @@ Invoke FUNC if non-nil."
                          (lambda () (mu4e-update-mail-and-index
                                      mu4e-index-update-in-background)))))))
 
+(defun mu4e--queries-handler (_sexp)
+  ;; we've received new server-queries; so update the main view
+  ;; (if any) and the modeline.
+
+  ;; 1. update the query results (i.e. process the new server queries)
+  (mu4e-last-query-results 'force-update)
+  (unless mu4e--baseline
+    (mu4e--reset-baseline))
+  (mu4e--modeline-update)
+
+  ;; 2. update the main view, if any
+  (when (buffer-live-p mu4e-main-buffer-name)
+    (with-current-buffer mu4e-main-buffer-name
+      (revert-buffer))))
+
 (defun mu4e--start (&optional func)
   "Start mu4e.
 If `mu4e-contexts' have been defined, but we don't have a context
@@ -258,6 +273,7 @@ chance."
   (mu4e-setq-if-nil mu4e-contacts-func #'mu4e--update-contacts)
   (mu4e-setq-if-nil mu4e-info-func     #'mu4e--info-handler)
   (mu4e-setq-if-nil mu4e-pong-func     #'mu4e--default-handler))
+  (mu4e-setq-if-nil mu4e-queries-func          #'mu4e--queries-handler))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."

@@ -65,11 +65,6 @@ You can customize the exact fancy characters used with
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-display-update-status-in-modeline nil
-  "Non-nil value will display the update status in the modeline."
-  :group 'mu4e
-  :type 'boolean)
-
 ;; maybe move the next ones... but they're convenient
 ;; here because they're needed in multiple buffers.
 
@@ -233,101 +228,6 @@ Function returns the cdr of the list element."
     (if chosen
         (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
-
-
-
-;;; Server properties
-(defvar mu4e--server-props nil
-  "Metadata we receive from the mu4e server.
-Use `mu4e--update-server-props' to update.")
-
-;; XXX: we could make these session-persistent
-
-(defvar mu4e--baseline-query-results nil
-  "Some previous version of the query-results.
-This is used as the baseline to track updates by comparing it to
-the latest query-results.")
-
-(defvar mu4e--baseline-query-results-tstamp nil
-  "Timestamp for when the query-results baseline was updated.")
-
-(defun mu4e-reset-baseline-query-results ()
-  "Reset the baseline query-results."
-  (interactive)
-  (setq mu4e--baseline-query-results nil
-        mu4e--baseline-query-results-tstamp nil))
-
-(defun mu4e--update-server-props (props)
-  "Update server props and possibly the baseline query results."
-  (setq mu4e--server-props props)
-  (when-let ((queries (plist-get mu4e--server-props :queries)))
-    (unless mu4e--baseline-query-results
-      (setq mu4e--baseline-query-results queries
-            mu4e--baseline-query-results-tstamp (current-time)))))
-
-(defun mu4e-server-properties ()
-  "Get the server metadata plist."
-  mu4e--server-props)
-
-(defun mu4e-root-maildir()
-  "Get the root maildir."
-  (or (and mu4e--server-props
-           (plist-get mu4e--server-props :root-maildir))
-      (mu4e-error "Root maildir unknown; did you start mu4e?")))
-
-(defun mu4e-database-path()
-  "Get the root maildir."
-  (or (and mu4e--server-props
-           (plist-get mu4e--server-props :database-path))
-      (mu4e-error "Root maildir unknown; did you start mu4e?")))
-
-(defun mu4e-server-version()
-  "Get the root maildir."
-  (or (and mu4e--server-props
-           (plist-get mu4e--server-props :version))
-      (mu4e-error "Version unknown; did you start mu4e?")))
-
-(defun mu4e-last-query-results ()
-  "Get the results (counts) of the last cached queries.
-
-The cached queries are the bookmark / maildir queries that are
-used to populated the read/unread counts in the main view. They
-are refreshed when calling `(mu4e)', i.e., when going to the main
-view.
-
-When available, the based-line results are added as well.
-
-The results are a list of elements of the form
-   (:query \"query string\"
-      :count  <total number matching count>
-      :unread <number of unread messages in count>
-      :baseline ( ;; baseline results
-         :count  <total number matching count>
-         :unread <number of unread messages in count>)) The
-baseline part is optional (see
-`mu4e-reset-baseline-query-results') for more details)."
-  (unless mu4e--baseline-query-results
-    (mu4e-reset-baseline-query-results))
-  (seq-map (lambda (qres)
-             (let* ((query (plist-get qres :query))
-                    (bres (seq-find ;; find the corresponding baseline entry
-                           (lambda (bq) (string= query (plist-get bq :query)))
-                           mu4e--baseline-query-results)))
-               (when bres
-                 (plist-put qres :baseline
-                            `(:count ,(plist-get bres :count)
-                                     :unread ,(plist-get bres :unread))))
-               qres))
-           (plist-get mu4e--server-props :queries)))
-
-(defun mu4e-last-query-result (query)
-  "Get the last result for some QUERY or nil if not found.
-See `mu4e-last-query-results' for the format."
-  (seq-find
-   (lambda (elm) ;;; XXX do we need the decoding?
-     (let ((qstring (decode-coding-string (plist-get elm :query) 'utf-8 t)))
-       (string= query qstring)))
-   (mu4e-last-query-results)))
 
 
 ;;; Logging / debugging
