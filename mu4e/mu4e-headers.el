@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el -- part of mu4e -*- lexical-binding: t; coding:utf-8 -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -812,7 +812,7 @@ true, do *not* update the query history stack."
           (mu4e--search-push-query mu4e--search-last-query 'past)))
       (setq mu4e--search-last-query rewritten-expr)
       (setq list-buffers-directory rewritten-expr)
-      (mu4e~headers-update-mode-line))
+      (mu4e--modeline-update))
 
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
@@ -1178,7 +1178,10 @@ The following specs are supported:
   (mu4e-context-minor-mode)
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
-  (hl-line-mode 1))
+  (hl-line-mode 1)
+
+  (mu4e--modeline-register #'mu4e~headers-modeline-item)
+  (mu4e--modeline-update))
 
 ;;; Highlighting
 
@@ -1244,7 +1247,7 @@ message plist, or nil if not found."
 
 ;;; Queries & searching
 (defvar mu4e~headers-mode-line-label "")
-(defun mu4e~headers-update-mode-line ()
+(defun mu4e~headers-modeline-item ()
   "Update mode-line settings."
   (let* ((flagstr
           (mapconcat
@@ -1258,30 +1261,8 @@ message plist, or nil if not found."
              (,mu4e-search-skip-duplicates
               . ,mu4e-headers-skip-duplicates-label)
              (,mu4e-search-hide-enabled    . ,mu4e-headers-hide-label))
-           ""))
-         (name "mu4e-headers"))
-
-      (setq mode-name name)
-      (setq mu4e~headers-mode-line-label
-            (concat flagstr " " mu4e--search-last-query))
-
-      (make-local-variable 'global-mode-string)
-
-      (add-to-list 'global-mode-string
-                   `(:eval
-                     (concat
-                      (propertize
-                       (mu4e-quote-for-modeline ,mu4e~headers-mode-line-label)
-                       'face 'mu4e-modeline-face)
-                      " "
-                      (if (and mu4e-display-update-status-in-modeline
-                               (buffer-live-p mu4e--update-buffer)
-                               (process-live-p (get-buffer-process
-                                                mu4e--update-buffer)))
-                          (propertize " (updating)" 'face 'mu4e-modeline-face)
-                        ""))))))
-
-
+           "")))
+    (concat flagstr " " mu4e--search-last-query)))
 
 ;;; Search-based marking
 

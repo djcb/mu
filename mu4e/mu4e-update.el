@@ -311,7 +311,6 @@ run in the background; otherwise, pop up a window."
   :lighter ""
   :keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd  "C-c C-r") #'mu4e-reset-baseline-query-results)
     (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)

@@ -1,6 +1,6 @@
 ;;; mu4e.el --- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -48,6 +48,11 @@
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-modeline-support t
+  "Support for shoiwing information in the modeline."
+  :type 'boolean
+  :group 'mu4e)
+
 (defcustom mu4e-org-support t
   "Support Org-mode links."
   :type 'boolean
@@ -68,6 +73,7 @@
 (with-eval-after-load 'desktop
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
 
+
 ;;;###autoload
 (defun mu4e (&optional background)
   "If mu4e is not running yet, start it.
@@ -76,12 +82,11 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
-
   ;; i.e., only auto update baseline when user explicitly requested
-  (when (and mu4e-main-auto-reset-baseline
-             (not background) (called-interactively-p 'interactive))
-    (mu4e-reset-baseline-query-results))
-
+  (when (or (not mu4e--baseline-tstamp)
+         (and (not background) (called-interactively-p 'interactive)))
+    (mu4e--reset-baseline))
+  (mu4e--modeline-update)
   (mu4e--start (unless background 'mu4e--main-view)))
 
 (defun mu4e-quit()
@@ -133,6 +138,34 @@ Invoke FUNC if non-nil."
                          (lambda () (mu4e-update-mail-and-index
                                      mu4e-index-update-in-background)))))))
 
+(defun mu4e--server-bookmarks-queries()
+  (mu4e--server-queries
+   (mapcar ;; send it a list of queries we'd like to see read/unread info for
+    (lambda (bm)
+      (funcall (or mu4e-query-rewrite-function #'identity)
+               (mu4e--bookmark-query bm)))
+    ;; exclude bookmarks with certain flags
+    (seq-filter (lambda (bm)
+                  (and (not (or (plist-get bm :hide)
+                                (plist-get bm :hide-unread)))))
+                (append (mu4e-bookmarks)
+                        (mu4e--maildirs-with-query))))))
+
+(defun mu4e--queries-handler (_sexp)
+  ;; we've received new server-queries; so update the main view
+  ;; (if any) and the modeline.
+
+  ;; 1. update the query results (i.e. process the new server queries)
+  (mu4e-last-query-results 'force-update)
+  (unless mu4e--baseline
+    (mu4e--reset-baseline))
+  (mu4e--modeline-update)
+
+  ;; 2. update the main view, if any
+  (when (buffer-live-p mu4e-main-buffer-name)
+    (with-current-buffer mu4e-main-buffer-name
+      (revert-buffer))))
+
 (defun mu4e--start (&optional func)
   "Start mu4e.
 If `mu4e-contexts' have been defined, but we don't have a context
@@ -144,18 +177,10 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func (lambda (info) (mu4e--pong-handler info func)))
-  (mu4e--server-ping
-   (mapcar ;; send it a list of queries we'd like to see read/unread info for
-    (lambda (bm)
-      (funcall (or mu4e-query-rewrite-function #'identity)
-               (plist-get bm :query)))
-    ;; exclude bookmarks that are not strings, and with certain flags
-    (seq-filter (lambda (bm)
-                  (and (stringp (plist-get bm :query))
-                       (not (or (plist-get bm :hide)
-                                (plist-get bm :hide-unread)))))
-                (append (mu4e-bookmarks)
-                        (mu4e--maildirs-with-query)))))
+  (mu4e--modeline-register #'mu4e--bookmarks-modeline-item 'global)
+  (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
+  (mu4e--server-bookmarks-queries)
+  (mu4e--server-ping)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
   (unless mu4e--contacts-set (mu4e--request-contacts-maybe)))
@@ -166,6 +191,8 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
     (cancel-timer mu4e--update-timer)
     (setq mu4e--update-timer nil))
   (mu4e-clear-caches)
+
+  (mu4e-modeline-mode -1)
   (mu4e--server-kill)
   ;; kill all mu4e buffers
   (mapc
@@ -185,7 +212,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
 ;;; Handlers
 (defun mu4e--default-handler (&rest args)
   "Dummy handler function with arbitrary ARGS."
-  (mu4e-error "Not handled: %S" args))
+  (mu4e-error "Not handled: %s" args))
 
 (defun mu4e--error-handler (errcode errmsg)
   "Handler function for showing an error with ERRCODE and ERRMSG."
@@ -222,6 +249,8 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
            "%s completed; checked %d, updated %d, cleaned-up %d"
            (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
            checked updated cleaned-up)
+          ;; index done; grab updated queries
+          (mu4e--server-bookmarks-queries)
           (run-hooks 'mu4e-index-updated-hook)
           ;; backward compatibility...
           (unless (zerop (+ updated cleaned-up))
@@ -248,11 +277,12 @@ chance."
   (mu4e-setq-if-nil mu4e-found-func            #'mu4e~headers-found-handler)
   (mu4e-setq-if-nil mu4e-erase-func            #'mu4e~headers-clear)
 
-  (mu4e-setq-if-nil mu4e-sent-func     #'mu4e--default-handler)
-  (mu4e-setq-if-nil mu4e-compose-func  #'mu4e~compose-handler)
-  (mu4e-setq-if-nil mu4e-contacts-func #'mu4e--update-contacts)
-  (mu4e-setq-if-nil mu4e-info-func     #'mu4e--info-handler)
-  (mu4e-setq-if-nil mu4e-pong-func     #'mu4e--default-handler))
+  (mu4e-setq-if-nil mu4e-sent-func             #'mu4e--default-handler)
+  (mu4e-setq-if-nil mu4e-compose-func          #'mu4e~compose-handler)
+  (mu4e-setq-if-nil mu4e-contacts-func         #'mu4e--update-contacts)
+  (mu4e-setq-if-nil mu4e-info-func             #'mu4e--info-handler)
+  (mu4e-setq-if-nil mu4e-pong-func             #'mu4e--default-handler)
+  (mu4e-setq-if-nil mu4e-queries-func          #'mu4e--queries-handler))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."

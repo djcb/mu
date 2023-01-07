@@ -1,6 +1,6 @@
 ;;; mu4e-context.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2015-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'mu4e-helpers)
+(require 'mu4e-modeline)
 
 
 ;;; Configuration
@@ -81,14 +82,6 @@ none."
       (mu4e-message "Current context: %s"
                     (if ctx (mu4e-context-name ctx) "<none>")))
     ctx))
-
-(defun mu4e-context-label ()
-  "Propertized string with the current context name.
-An empty string \"\" if there is none."
-  (if (mu4e-context-current)
-      (concat "[" (propertize (mu4e-quote-for-modeline
-                               (mu4e-context-name (mu4e-context-current)))
-                              'face 'mu4e-context-face) "]") ""))
 
 (cl-defstruct mu4e-context
   "A mu4e context object with the following members:
@@ -153,8 +146,7 @@ non-nil."
       (setq mu4e--context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
-      (mu4e-message "Switched context to %s" (mu4e-context-name context))
-      (force-mode-line-update))
+      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
 (defun mu4e--context-autoswitch (&optional msg policy)
@@ -204,13 +196,6 @@ as it is."
                           (mu4e--context-ask-user "Select context: ")))
          (_ nil))))))
 
-(defun mu4e-context-in-modeline ()
-  "Display the mu4e-context (if any) in a (buffer-specific)
-global-mode-line."
-  (add-to-list
-   (make-local-variable 'global-mode-string)
-   '(:eval (mu4e-context-label))))
-
 (defmacro with-mu4e-context-vars (context &rest body)
   "Evaluate BODY, with variables let-bound for CONTEXT (if any).
 `funcall'."
@@ -220,6 +205,14 @@ global-mode-line."
          (mapcar (lambda(cell) (car cell)) vars)
          (mapcar (lambda(cell) (cdr cell)) vars)
        (eval ,@body))))
+
+(defun mu4e--context-modeline-item ()
+  "Propertized string with the current context name.
+An empty string \"\" if there is none."
+  (if (mu4e-context-current)
+      (concat "[" (propertize (mu4e-quote-for-modeline
+                               (mu4e-context-name (mu4e-context-current)))
+                              'face 'mu4e-context-face) "] " ) ""))
 
 (define-minor-mode mu4e-context-minor-mode
   "Mode for switching the mu4e context."
@@ -231,7 +224,7 @@ global-mode-line."
     (define-key map (kbd ";") #'mu4e-context-switch)
     map)
   :lighter ""
-  (mu4e-context-in-modeline))
+  (mu4e--modeline-register #'mu4e--context-modeline-item))
 
 ;;;
 (provide 'mu4e-context)
