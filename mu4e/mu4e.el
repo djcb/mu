@@ -1,6 +1,6 @@
 ;;; mu4e.el --- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -45,6 +45,11 @@
 
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-modeline-support t
+  "Support for shoiwing information in the modeline."
   :type 'boolean
   :group 'mu4e)
 
