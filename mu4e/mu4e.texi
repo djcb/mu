@@ -799,10 +799,8 @@ time you looked. Imagine switching to another buffer to work on something or
 even (!) stepping away from your computer to return later: the baseline allows
 you to quickly see what changed.
 
-By default, the baseline is reset automatically when switching to the main view
-explicitly (but see @code{mu4e-main-auto-reset-baseline}. It can also be reset
-explicitly using @code{mu4e-reset-baseline-query-results}, which is bound to
-@kbd{R} in the main-view.
+The baseline is reset automatically when switching to the main view, or when
+querying the ``favorite'' query (explained below).
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
 your own and/or replace the default ones; @xref{Bookmarks}. For
@@ -3121,8 +3119,8 @@ this means there are 10 unread messages, with 5 new messages since the baseline,
 and in total 15 messages.
 
 You can also customize the icon; see @var{mu4e-modeline-all-clear},
-@var{mu4e-modeline-all-read}, @var{mu4e-modeline-all-clear} and
-@var{mu4e-modeline-all-clear}
+@var{mu4e-modeline-all-read}, @var{mu4e-modeline-unread-items} and
+@var{mu4e-modeline-new-items}.
 
 Due to the way queries work, the modeline is @emph{not} immediately updated when
 you read messages; but going back to the main view (with @kbd{M-x mu4e} restores
