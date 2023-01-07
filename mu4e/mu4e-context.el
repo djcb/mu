@@ -146,8 +146,7 @@ non-nil."
       (setq mu4e--context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
-      (mu4e-message "Switched context to %s" (mu4e-context-name context))
-      (mu4e--modeline-update))
+      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
 (defun mu4e--context-autoswitch (&optional msg policy)
@@ -225,8 +224,7 @@ An empty string \"\" if there is none."
     (define-key map (kbd ";") #'mu4e-context-switch)
     map)
   :lighter ""
-  (mu4e--modeline-register #'mu4e--context-modeline-item)
-  (mu4e--modeline-update))
+  (mu4e--modeline-register #'mu4e--context-modeline-item))
 
 ;;;
 (provide 'mu4e-context)

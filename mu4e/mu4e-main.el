@@ -1,6 +1,6 @@
 ;;; mu4e-main.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -24,9 +24,9 @@
 
 ;;; Code:
 
-(require 'smtpmail)      ;; the queueing stuff (silence elint)
-(require 'mu4e-helpers)    ;; utility functions
-(require 'mu4e-context)  ;; the context
+(require 'smtpmail)
+(require 'mu4e-helpers)
+(require 'mu4e-context)
 (require 'mu4e-bookmarks)
 (require 'mu4e-folders)
 (require 'mu4e-update)
@@ -55,18 +55,6 @@ the personal addresses."
 
 (defcustom mu4e-main-hide-fully-read nil
   "Whether to hide bookmarks or maildirs without unread messages."
-  :type 'boolean
-  :group 'mu4e-main)
-
-(defcustom mu4e-main-hide-baseline-delta nil
-  "Whether to hide the baseline-from-delta from the message counts
-for bookmarks and maildirs."
-  :type 'boolean
-  :group 'mu4e-main)
-
-(defcustom mu4e-main-auto-reset-baseline t
-  "Automatically reset the baseline when explicitly (interactively)
-swiching to the main-view (using the `mu4e' command."
   :type 'boolean
   :group 'mu4e-main)
 
@@ -99,11 +87,11 @@ swiching to the main-view (using the `mu4e' command."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 
-(defun mu4e--main-reset-baseline-query-results ()
-  "Main-view version of `mu4e-reset-baseline-query-results'.
+(defun mu4e--main-reset-baseline()
+  "Main-view version of `mu4e-reset-query-results'.
 This version handles updating the current screen as well."
   (interactive)
-  (mu4e-reset-baseline-query-results)
+  (mu4e--reset-baseline)
   (revert-buffer))
 
 (defvar mu4e-main-mode-map
@@ -117,7 +105,7 @@ This version handles updating the current screen as well."
     (define-key map "f" #'smtpmail-send-queued-mail)
     ;;
     (define-key map "U" #'mu4e-update-mail-and-index)
-    (define-key map "R" #'mu4e--main-reset-baseline-query-results)
+    (define-key map "R" #'mu4e--main-reset-baseline)
     (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
@@ -142,15 +130,16 @@ This version handles updating the current screen as well."
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (mu4e-update-minor-mode)
-  (set (make-local-variable 'revert-buffer-function) #'mu4e--main-view-real)
-  (add-hook 'mu4e-index-updated-hook #'mu4e--main-update-after-index))
+  (setq-local revert-buffer-function
+              (lambda (_ignore-auto _noconfirm)
+                (mu4e--main-view 'refresh))))
 
 (defun mu4e--main-action-str (str &optional func-or-shortcut)
   "Highlight the first occurrence of [.] in STR.
 If FUNC-OR-SHORTCUT is non-nil and if it is a function, call it
 when STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is
 a string, execute the corresponding keyboard action when it is
-clicked."
+clicked. If HIGHLIGHT is non-nil, hightlight the name."
   (let ((newstr
          (replace-regexp-in-string
           "\\[\\(..?\\)\\]"
@@ -175,8 +164,7 @@ clicked."
                        (if (stringp func-or-shortcut)
                            (length newstr)
                          (- (length newstr) 1))
-                       'mouse-face 'highlight newstr)
-    newstr))
+                       'mouse-face 'highlight newstr)  newstr))
 
 (defun mu4e--longest-of-maildirs-and-bookmarks ()
   "Return the length of longest name of bookmarks and maildirs."
@@ -194,7 +182,11 @@ clicked."
   (used for alignment)."
   (concat
    (mu4e--main-action-str
-    (concat "\t* [" fullkey "] " name) fullkey)
+    (format "\t* [%s] %s" fullkey
+            (propertize name 'face
+                        (if (and qcounts (plist-get qcounts :favorite))
+                            'mu4e-header-key-face nil)))
+    fullkey)
    ;; append all/unread numbers, if available.
    (if qcounts
        (let* ((unread (plist-get qcounts :unread))
@@ -203,32 +195,30 @@ clicked."
               (baseline-unread
                (or (when baseline (plist-get baseline :unread)) unread))
               (delta (- unread baseline-unread)))
-         (format"%s (%s%s/%s)"
+         (format "%s (%s%s/%s)"
                 (make-string (- max-length (string-width name)) ? )
                 (propertize
                  (number-to-string unread) 'face 'mu4e-header-key-face
                  'help-echo "Number of unread messages")
-                (if (not mu4e-main-hide-baseline-delta)
-                    (propertize (format "/%+d" delta) 'face
-                                (if (> delta 0) 'mu4e-unread-face 'default)
-                                'help-echo "Unread messsages baseline-delta")
-                  "")
+                (if (> delta 0)
+                    (propertize (format "(%+d)" delta) 'face
+                                'mu4e-unread-face) "")
                 (propertize (number-to-string count)
                             'help-echo "Total number of messages")))
      "") "\n"))
 
 (defun mu4e--main-items (shortcut items max-length)
-  "Display the entries for the bookmark/maildir menu.
+  "Display the entries for the bookmark/maildir menu
 - SHORTCUT is a single character which is the first
 character of the keyboard shortcut
-- ITEMS is a list of items, for format see `(mu4e-bookmarks)'.
+- ITEMS is a list of items, for format see `(mu4e-bookmarks)'
 - MAX-LENGTH is the maximum length for an item name
   (used for alignment)."
   (cl-loop for item in items
            for fullkey = (format "%c%c" shortcut (plist-get item :key))
            for name = (plist-get item :name)
            for query = (funcall (or mu4e-query-rewrite-function #'identity)
-                                (plist-get item :query))
+                                (mu4e--bookmark-query item))
            for qcounts = (mu4e-last-query-result query)
            for unread = (and qcounts (plist-get (car qcounts) :unread))
            when (not (plist-get item :hide))
@@ -246,22 +236,17 @@ character of the keyboard shortcut
        (propertize (concat " " unit) 'face 'mu4e-header-title-face)
      "")  "\n"))
 
-;; NEW This is the old `mu4e--main-view' function but without
-;; buffer switching at the end.
-(defun mu4e--main-view-real (_ignore-auto _noconfirm)
-  "The revert buffer function for `mu4e-main-mode'."
-  (mu4e--main-view-real-1 'refresh))
-
-(declare-function mu4e--start "mu4e")
-
-(defun mu4e--main-view-real-1 (&optional refresh)
-  "Create `mu4e-main-buffer-name' and set it up.
-When REFRESH is non nil refresh infos from server."
-  (let ((inhibit-read-only t))
-    ;; Maybe refresh infos from server.
-    (if refresh
-        (mu4e--start 'mu4e--main-redraw-buffer)
-      (mu4e--main-redraw-buffer))))
+(defun mu4e--baseline-time-string ()
+  "Calculate the baseline time string."
+  (let* ((baseline-t mu4e--baseline-tstamp)
+         (updated-t (plist-get mu4e-index-update-status :tstamp))
+         (delta-t (and baseline-t updated-t
+                       (float-time (time-subtract updated-t baseline-t)))))
+    (if (and delta-t (> delta-t 0))
+        (format-seconds  "%Y %D %H %M %z%S ago" delta-t)
+      (if baseline-t
+          (current-time-string baseline-t)
+        "Never"))))
 
 (defun mu4e--main-redraw-buffer ()
   "Redraw the main buffer."
@@ -276,7 +261,7 @@ When REFRESH is non nil refresh infos from server."
        (propertize "mu4e" 'face 'mu4e-header-key-face)
        (propertize " - mu for emacs version " 'face 'mu4e-title-face)
        (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-        "\n\n"
+       "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e--main-action-str
         "\t* [j]ump to some maildir\n" #'mu4e~headers-jump-to-maildir)
@@ -294,13 +279,12 @@ When REFRESH is non nil refresh infos from server."
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
        (mu4e--main-action-str "\t* [;]Switch context\n"
-                             (lambda()(interactive)
-                               (mu4e-context-switch)(revert-buffer)))
+                              (lambda()(interactive)
+                                (mu4e-context-switch)(revert-buffer)))
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
-                             #'mu4e-update-mail-and-index)
-       (mu4e--main-action-str "\t* [R]eset query-results baseline\n"
-                              #'mu4e--main-reset-baseline-query-results)
+                              #'mu4e-update-mail-and-index)
+       (mu4e--main-action-str "\t* [R]eset  baseline\n" #'mu4e--reset-baseline)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)
@@ -317,19 +301,17 @@ When REFRESH is non nil refresh infos from server."
        (mu4e--key-val "last updated"
                       (current-time-string
                        (plist-get mu4e-index-update-status :tstamp)))
-       (if (and (not mu4e-main-hide-baseline-delta)
-                mu4e--baseline-query-results-tstamp)
-           (mu4e--key-val "baseline"
-                          (current-time-string mu4e--baseline-query-results-tstamp))
+       (if mu4e--baseline-tstamp
+           (mu4e--key-val "baseline" (mu4e--baseline-time-string))
          "")
        (mu4e--key-val "database-path" (mu4e-database-path))
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"
-                     (format "%d" (plist-get mu4e--server-props :doccount))
-                     "messages")
+                      (format "%d" (plist-get mu4e--server-props :doccount))
+                      "messages")
        (if mu4e-main-hide-personal-addresses ""
          (mu4e--key-val "personal addresses"
-                       (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
+                        (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
       (if mu4e-main-hide-personal-addresses ""
         (unless (mu4e-personal-address-p user-mail-address)
@@ -368,26 +350,31 @@ When REFRESH is non nil refresh infos from server."
         (count-lines (point-min) (point-max)))
     (error 0)))
 
+(declare-function mu4e--start "mu4e")
+
 (defun mu4e--main-view (&optional refresh)
-  "Create the mu4e main-view, and switch to it or show the menu.
+  "Create or refresh the mu4e main-view, and switch to it.
 When REFRESH is non nil refresh infos from server.
 
 If `mu4e-split-view' equals \='single-window, show a mu4e menu
 instead."
+  (mu4e--reset-baseline)
   (if (eq mu4e-split-view 'single-window)
       (mu4e--main-menu)
-    (let ((buf (get-buffer-create mu4e-main-buffer-name)))
+    (let ((buf (get-buffer-create mu4e-main-buffer-name))
+          (inhibit-read-only t))
       ;; `mu4e--main-view' is called from `mu4e--start', so don't call it
       ;; a second time here i.e. do not refresh unless specified
       ;; explicitly with REFRESH arg.
       (with-current-buffer buf
-        (mu4e--main-view-real-1 refresh))
+        (if refresh
+            (mu4e--start 'mu4e--main-redraw-buffer)
+          (mu4e--main-redraw-buffer)))
       (mu4e-display-buffer buf t)
       (goto-char (point-min)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
-;; NEW
 ;; Toggle mail sending mode without switching
 (defun mu4e--main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
@@ -409,7 +396,7 @@ instead."
                '(("jump"	    . mu4e~headers-jump-to-maildir)
                  ("search"	    . mu4e-search)
                  ("Compose"	    . mu4e-compose-new)
-                 ("bookmarks"	    . mu4e-headers-search-bookmark)
+                 ("bookmarks"	    . mu4e-search-bookmark)
                  (";Switch context" . mu4e-context-switch)
                  ("Update"	    . mu4e-update-mail-and-index)
                  ("News"	    . mu4e-news)
@@ -419,12 +406,6 @@ instead."
     (when (eq func 'mu4e-context-switch)
       (sit-for 1)
       (mu4e--main-menu))))
-
-(defun mu4e--main-update-after-index ()
-  "Update the main view buffer after indexing."
-  (when (buffer-live-p mu4e-main-buffer-name)
-    (with-current-buffer mu4e-main-buffer-name
-      (revert-buffer))))
 
 (provide 'mu4e-main)
 ;;; mu4e-main.el ends here

@@ -148,6 +148,8 @@
 (define-obsolete-function-alias 'mu4e-read-query
   'mu4e-search-read-query "1.7.0")
 
+(make-obsolete-variable 'mu4e-display-update-status-in-modeline
+                        "No longer used" "1.9.11")
 
 ;; mu4e-headers
 (make-obsolete-variable 'mu4e-headers-field-properties-function

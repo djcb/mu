@@ -165,8 +165,7 @@ but also manually invoked searches."
 ;;; History
 (defvar mu4e--search-query-past nil
   "Stack of queries before the present one.")
-(defvar mu4e--search-query-future nil
-  "Stack of queries after the present one.")
+(defvar mu4e--search-query-future nil  "Stack of queries after the present one.")
 (defvar mu4e--search-query-stack-size 20
   "Maximum size for the query stacks.")
 (defvar mu4e--search-last-query nil
@@ -217,9 +216,14 @@ show the message with MSGID."
 If EDIT is non-nil, let the user edit the bookmark before starting
 the search."
   (interactive)
-  (let ((expr
+  (let* ((expr
          (or expr
-             (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: ")))))
+             (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: "))))
+         (fav (mu4e--bookmark-query (mu4e-favorite-bookmark))))
+    ;; reset baseline when searching for bookmark query
+    (when (and fav (string= fav expr))
+      (mu4e--reset-baseline))
+
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
     (mu4e-search expr (when edit "Edit bookmark: ") edit)))
 
