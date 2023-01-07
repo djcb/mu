@@ -41,10 +41,19 @@
       manual for details.
 
     - One change is that ~mu4e-split-view~ can no longer be a function; the new
-      way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]].
+      way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]]
 
-    - ~mu4e~ now keeps track of the 'baseline' query results and shows the
-      difference from that in the main view. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
+    - ~mu4e~ now keeps track of 'baseline' query results and shows the difference
+      from that in the main view and modeline. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
+
+    - Related to that, you can now crown one of your bookmarks in =mu4e-bookmarks=
+      with ~:monitor t~, causing it to be highlighted in the main view and used in
+      the mode-line. See the new [[info:mu4e#Modeline][modeline entry]] in the manual; this uses the new
+      =mu4e-modeline-mode= minor-mode.
+
+    - Bookmark ~:query~ values must be strings now; earlier version half-attempted
+      to allow for functions to works as well, but it didn't work. So now we
+      officially remove this.
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
@@ -81,7 +90,7 @@
        further parameters ~mu~ shows both subcommands and scripts. This is a
        work-in-progress!
 
-     - The per-(week|day|year|year-month) script have been combined into a
+     - The per-(week|day|year|year-month) scripts have been combined into a
        ~histogram~ script. If you have Guile-support enabled, and have ~gnuplot~
        installed, you can do e.g.,
 
@@ -92,7 +101,7 @@
        to get a histogram of such messages. Note, this area is under active
        developement and will likely change.
 
-*** building
+*** building and installation
 
     - the autotools build (which was deprecated since 1.8) has now been removed.
       we thank it for its services since 2008. We continue with ~meson~.
@@ -339,8 +348,12 @@
     out on the maling list.
 
 
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
 
-* 1.6 (released, as of July 27 2021)
+** 1.6 (released, as of July 27 2021)
 
   NOTE: After upgrading, you need to call ~mu init~, with your prefered parameters
   before you can use ~mu~ / ~mu4e~. This is because the underlying database-schema
@@ -426,10 +439,7 @@
     - Switch the context for existing draft messages using
       ~mu4e-compose-context-switch~ or ~C-c C-;~ in ~mu4e-compose-mode~.
 
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
+
 ** 1.4 (released, as of April 18 2020)
 
 *** mu
@@ -939,7 +949,7 @@ End of search results
     - org: improve template keywords
     - rework URL handling
 
-** Release 0.9.5
+** Release 0.9.10
 
 *** mu
 
