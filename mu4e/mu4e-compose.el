@@ -134,7 +134,7 @@ If needed, set the Fcc header, and register the handler function."
             ('trash (mu4e-get-trash-folder mu4e-compose-parent-message))
             ('sent (mu4e-get-sent-folder mu4e-compose-parent-message))
             (_ (mu4e-error
-		"Unsupported value %S for `mu4e-sent-messages-behavior'"
+                "Unsupported value %S for `mu4e-sent-messages-behavior'"
                 mu4e-sent-messages-behavior))))
          (fccfile (and mdir
                        (concat (mu4e-root-maildir) mdir "/cur/"
@@ -150,7 +150,7 @@ If needed, set the Fcc header, and register the handler function."
                   (old-handler message-fcc-handler-function))
               (lambda (file)
                 (setq message-fcc-handler-function old-handler)
-		;; reset the fcc handler
+                ;; reset the fcc handler
                 (let ((mdir-path (concat (mu4e-root-maildir) maildir)))
                   ;; Create the full maildir structure for the sent folder if it
                   ;; doesn't exist. `mu4e--server-mkdir` runs asynchronously but
@@ -280,7 +280,7 @@ removing the In-Reply-To header."
           (define-key map (kbd "C-S-u")   'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-u") 'mu4e-update-mail-and-index)
           (define-key map (kbd "C-c C-k") 'mu4e-message-kill-buffer)
-	  (define-key map (kbd "C-c ;")   'mu4e-compose-context-switch)
+          (define-key map (kbd "C-c ;")   'mu4e-compose-context-switch)
           (define-key map (kbd "M-q")     'mu4e-fill-paragraph)
           map)))
 
@@ -348,7 +348,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     ;; offer completion for e-mail addresses
     (when mu4e-compose-complete-addresses
       (unless mu4e--contacts-set
-	;; work-around for https://github.com/djcb/mu/issues/1016
+        ;; work-around for https://github.com/djcb/mu/issues/1016
         (mu4e--request-contacts-maybe))
       (mu4e~compose-setup-completion))
     (if mu4e-compose-format-flowed
@@ -448,7 +448,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                     (_             "*mu4e-draft*")))))
     (rename-buffer (generate-new-buffer-name
                     (truncate-string-to-width
-		     str mu4e~compose-buffer-max-name-length)
+                     str mu4e~compose-buffer-max-name-length)
                     (buffer-name)))))
 
 (defun mu4e-compose-crypto-message (parent compose-type)
@@ -476,7 +476,7 @@ See `mu4e-compose-crypto-policy' for more details."
               ;; encrypted replies
               (and (eq compose-type 'reply) encrypted-p
                    (memq 'encrypt-encrypted-replies
-			 mu4e-compose-crypto-policy))))
+                         mu4e-compose-crypto-policy))))
          (sign
           (or (memq 'sign-all-messages mu4e-compose-crypto-policy)
               ;; new messages
@@ -635,22 +635,22 @@ the file under our feet, which is a bit fragile."
   (let ((old-context (mu4e-context-current)))
     (unless (and name (not force) (eq old-context name))
       (unless (and (not force)
-		   (eq old-context (mu4e-context-switch nil name)))
-	(save-excursion
-	  ;; Change From / Organization if needed.
-	  (message-replace-header "Organization"
-				  (or (message-make-organization) "")
-				  '("Subject")) ;; keep in same place
-	  (message-replace-header "From"
-				  (or (mu4e~draft-from-construct) ""))
-	  ;; Update signature.
-	  (when (message-goto-signature) ;; delete old signature.
-	    (if message-signature-insert-empty-line
-		(forward-line -2) (forward-line -1))
-	    (delete-region (point) (point-max)))
-	  (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
-	      (let ((message-signature mu4e-compose-signature))
-		(save-excursion (message-insert-signature)))))))))
+                   (eq old-context (mu4e-context-switch nil name)))
+        (save-excursion
+          ;; Change From / Organization if needed.
+          (message-replace-header "Organization"
+                                  (or (message-make-organization) "")
+                                  '("Subject")) ;; keep in same place
+          (message-replace-header "From"
+                                  (or (mu4e~draft-from-construct) ""))
+          ;; Update signature.
+          (when (message-goto-signature) ;; delete old signature.
+            (if message-signature-insert-empty-line
+                (forward-line -2) (forward-line -1))
+            (delete-region (point) (point-max)))
+          (if (and mu4e-compose-signature-auto-include mu4e-compose-signature)
+              (let ((message-signature mu4e-compose-signature))
+                (save-excursion (message-insert-signature)))))))))
 
 (defun mu4e-sent-handler (docid path)
   "Handler called with DOCID and PATH for the just-sent message.
@@ -847,14 +847,14 @@ buffer buried."
 
   ;; add any other headers specified
   (seq-each (lambda(hdr)
-	      (let ((field (capitalize(car hdr))) (value (cdr hdr)))
-		;; fix in-reply without <>
-		(when (and (string= field "In-Reply-To")
-			   (string-match-p "\\`[^ @]+@[^ @]+\\'" value)
-			   (not (string-match-p "\\`<.*>\\'" value)))
-		  (setq value (concat "<" value ">")))
-		(message-add-header (concat (capitalize field) ": " value "\n"))))
-	    other-headers)
+              (let ((field (capitalize(car hdr))) (value (cdr hdr)))
+                ;; fix in-reply without <>
+                (when (and (string= field "In-Reply-To")
+                           (string-match-p "\\`[^ @]+@[^ @]+\\'" value)
+                           (not (string-match-p "\\`<.*>\\'" value)))
+                  (setq value (concat "<" value ">")))
+                (message-add-header (concat (capitalize field) ": " value "\n"))))
+            other-headers)
 
   ;; yank message
   (if (bufferp yank-action)
