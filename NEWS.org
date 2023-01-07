@@ -45,15 +45,14 @@
 
     - ~mu4e~ now keeps track of 'baseline' query results and shows the difference
       from that in the main view and modeline. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
+      The idea is that you get a quick overview of where changes happened while
+      you were doing something else. This is somewhat experimental feature, and
+      we're tweaking the details.
 
     - Related to that, you can now crown one of your bookmarks in =mu4e-bookmarks=
-      with ~:monitor t~, causing it to be highlighted in the main view and used in
-      the mode-line. See the new [[info:mu4e#Modeline][modeline entry]] in the manual; this uses the new
-      =mu4e-modeline-mode= minor-mode.
-
-    - Bookmark ~:query~ values must be strings now; earlier version half-attempted
-      to allow for functions to works as well, but it didn't work. So now we
-      officially remove this.
+      with ~:favorite t~, causing it to be highlighted in the main view and used
+      in the mode-line. See the new [[info:mu4e#Modeline][modeline entry]] in the manual; this uses the
+      new =mu4e-modeline-mode= minor-mode.
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
@@ -574,8 +573,6 @@
 
     - Don't forget to delete your old mail cache location if necessary (see
       release notes for more detail).
-
-
 
 ** 1.2
 
