@@ -98,6 +98,7 @@ struct Server::Private {
 	void move_handler(const Command& cmd);
 	void mkdir_handler(const Command& cmd);
 	void ping_handler(const Command& cmd);
+	void queries_handler(const Command& cmd);
 	void quit_handler(const Command& cmd);
 	void remove_handler(const Command& cmd);
 	void sent_handler(const Command& cmd);
@@ -288,16 +289,19 @@ Server::Private::make_command_map()
 	cmap.emplace(
 	    "ping",
 	    CommandInfo{
+		ArgMap{},
+		"ping the mu-server and get server information in the response",
+		[&](const auto& params) { ping_handler(params); }});
+
+	cmap.emplace(
+	    "queries",
+	    CommandInfo{
 		ArgMap{
 		    {":queries",
 		     ArgInfo{Type::List, false, "queries for which to get read/unread numbers"}},
-		    {":skip-dups",
-		     ArgInfo{Type::Symbol,
-			     false,
-			     "whether to exclude messages with duplicate message-ids"}},
 		},
-		"ping the mu-server and get information in response",
-		[&](const auto& params) { ping_handler(params); }});
+		"get unread/totals information for a list of queries",
+		[&](const auto& params) { queries_handler(params); }});
 
 	cmap.emplace("quit", CommandInfo{{}, "quit the mu server", [&](const auto& params) {
 						 quit_handler(params);
@@ -916,9 +920,28 @@ Server::Private::ping_handler(const Command& cmd)
 	const auto storecount{store().size()};
 	if (storecount == (unsigned)-1)
 		throw Error{Error::Code::Store, "failed to read store"};
+	Sexp addrs;
+	for (auto&& addr : store().properties().personal_addresses)
+		addrs.add(addr);
 
+	output_sexp(Sexp()
+		    .put_props(":pong", "mu")
+		    .put_props(":props",
+			       Sexp().put_props(
+				       ":version", VERSION,
+				       ":personal-addresses", std::move(addrs),
+				       ":database-path", store().properties().database_path,
+				       ":root-maildir", store().properties().root_maildir,
+				       ":doccount", storecount)));
+}
+
+
+void
+Server::Private::queries_handler(const Command& cmd)
+{
 	const auto queries{cmd.string_vec_arg(":queries")
 		.value_or(std::vector<std::string>{})};
+
 	Sexp qresults;
 	for (auto&& q : queries) {
 		const auto count{store_.count_query(q)};
@@ -929,21 +952,9 @@ Server::Private::ping_handler(const Command& cmd)
 					      ":unread", unread));
 	}
 
-	Sexp addrs;
-	for (auto&& addr : store().properties().personal_addresses)
-		addrs.add(addr);
-
-	auto lst = Sexp().put_props(":pong", "mu");
-	auto proplst = Sexp().put_props(
-		":version", VERSION,
-		":personal-addresses", std::move(addrs),
-		":database-path", store().properties().database_path,
-		":root-maildir", store().properties().root_maildir,
-		":doccount", storecount,
-		":queries", std::move(qresults));
-
-	output_sexp(lst.put_props(":props", std::move(proplst)));
+	output_sexp(Sexp(":queries"_sym, std::move(qresults)));
 }
+
 
 void
 Server::Private::quit_handler(const Command& cmd)
