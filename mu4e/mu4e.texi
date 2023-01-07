@@ -12,7 +12,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2012-2022 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-2023 Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -80,7 +80,7 @@ basic configuration and explain its daily use. We also show you how you
 can customize @t{mu4e} for your special needs.
 
 At the end of the manual, there are some example configurations, to get
-you up to speed quickly: @ref{Example configs}. There's also a section
+you up to speed quickly: @ref{Example configurations}. There's also a section
 with answers to frequently asked questions, @ref{FAQ}.
 
 @menu
@@ -99,25 +99,24 @@ with answers to frequently asked questions, @ref{FAQ}.
 
 Appendices
 * Other tools:: mu4e and the rest of the world
-* Example configs:: Some examples to set you up quickly
+* Example configurations:: Some examples to set you up quickly
 * FAQ:: Common questions and answers
 * Tips and Tricks:: Useful tips
 * How it works:: Some notes about the implementation of @t{mu4e}
 * Debugging:: How to debug problems in @t{mu4e}
 * GNU Free Documentation License::  The license of this manual
 
-@c Indices
+Indices
 @c * Command Index::       An item for each standard command name.
 @c * Variable Index::      An item for each variable documented in this manual.
-@c * Concept Index::       An item for concepts and other general subjects.
+* Concept Index::       Index of @t{mu4e} concepts and other general subjects.
 
 @end menu
 
 @node Introduction
 @chapter Introduction
 
-Let's get started!
-
+Let's get started!q
 @menu
 * Why another e-mail client::Aren't there enough already
 * Other mail clients::Where @t{mu4e} takes its inspiration from
@@ -316,7 +315,7 @@ Note: if you are familiar with @t{meson}, you can of course use its
 commands directly; the @t{make} commands are just a thin wrapper around
 that.
 
-@subsection Installing
+@subsection Installation
 
 After this, @t{mu} and @t{mu4e} should be installed @footnote{there's a
 hard dependency between versions of @t{mu4e} and @t{mu} --- you cannot
@@ -337,7 +336,7 @@ configuration before trying again:
 
 There is some support for using the Emacs customization system in
 @t{mu4e}, but for now, we recommend setting the values manually. Please
-refer to @ref{Example configs} for a couple of examples of this; here we
+refer to @ref{Example configurations} for a couple of examples of this; here we
 go through things step-by-step.
 
 @node Getting mail
@@ -394,7 +393,7 @@ You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 indexing messages. If you want to change them, you need to @t{init}
 once again.
 
-The addresses may also be basic POSIX regular expressions, wrapped in
+The addresses may also be basic PCRE regular expressions, wrapped in
 slashes, for example:
 
 @example
@@ -603,7 +602,7 @@ For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
 send mail; please refer to its documentation for the details.
 
 Here, we only provide some simple examples --- for more, see
-@ref{Example configs}.
+@ref{Example configurations}.
 
 A very minimal setup:
 
@@ -716,18 +715,18 @@ The main view looks something like the following:
 
   Bookmarks
 
-        * [bu] Unread messages      (13085/+3/13085)
+        * [bu] Unread messages      (13085(+3)/13085)
         * [bt] Today's messages
-        * [bw] Last 7 days          (53/+3/128)
-        * [bp] Messages with images (75/-2/2441)
+        * [bw] Last 7 days          (53(+3)/128)
+        * [bp] Messages with images (75/2441)
 
   Maildirs
 
-        * [ja] /archive             (2101/0/18837)
-        * [ji] /inbox               (8/+2/10)
-        * [jb] /bulk                (33/+0/35)
-        * [jB] /bulkarchive         (179/+0/2090)
-        * [jm] /mu                  (694/+1/17687)
+        * [ja] /archive             (2101/18837)
+        * [ji] /inbox               (8(+2)/10)
+        * [jb] /bulk                (33/35)
+        * [jB] /bulkarchive         (179/2090)
+        * [jm] /mu                  (694(+1)/17687)
         * [jn] /sauron
         * [js] /sent
 
@@ -780,26 +779,30 @@ the @ref{Editor view} to write a new message.
 
 The next two items in the Main view are @emph{Bookmarks} and @emph{Maildirs}.
 
-Bookmarks are predefined queries with a descriptive name and a
-shortcut --- in the example above, we see the default bookmarks. You
-can view the list of messages matching a certain bookmark by pressing
-@key{b} followed by the bookmark's shortcut. If you'd like to edit the
-bookmarked query first before invoking it, use @key{B}.
+Bookmarks are predefined queries with a descriptive name and a shortcut --- in
+the example above, we see the default bookmarks. You can view the list of
+messages matching a certain bookmark by pressing @key{b} followed by the
+bookmark's shortcut. If you want to edit the bookmarked query before invoking
+it, use @key{B}.
 
-Next to each bookmark there is the number of (unread/delta/all) messages that
-match.
+Next to each bookmark are some numbers that indicate the (unread(delta)/all)
+matching messages for the given query, with the delta being the difference in
+unread count since some ``baseline'', and only shown when this delta > 0.
 
-The ``unread'' and ``all'' have their obvious meaning; the @emph{delta} is the
-difference in unread messages since ``baseline'', which is the state at some
-point in the past. This delta is useful to quickly see what changed since the
-last time you looked.
+Note that the ``delta'' has its limitations: if you, for instance, deleted 5
+messages and received 5 new one, the ``delta'' would be 0, although there were
+changes indeed. So it is mostly useful for tracking changes while you are
+@emph{not} using @t{mu4e}.
 
-By default, the baseline is automatically reset when switching to the main view
-explicitly; otherwise the baseline can be reset with
-@code{mu4e-reset-baseline-query-results}, which is bound to @kbd{R} in the
-main-view, and @kbd{C-c C-R} throughout @t{mu4e}. You can customize the behavior
-using @var{mu4e-main-hide-baseline-delta} and
-@var{mu4e-main-auto-reset-baseline}.
+This delta is useful to quickly see that there are new messages since the last
+time you looked. Imagine switching to another buffer to work on something or
+even (!) stepping away from your computer to return later: the baseline allows
+you to quickly see what changed.
+
+By default, the baseline is reset automatically when switching to the main view
+explicitly (but see @code{mu4e-main-auto-reset-baseline}. It can also be reset
+explicitly using @code{mu4e-reset-baseline-query-results}, which is bound to
+@kbd{R} in the main-view.
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
 your own and/or replace the default ones; @xref{Bookmarks}. For
@@ -812,13 +815,16 @@ instance:
      :query "list:mu-discuss.googlegroups.com AND date:7d..now"))
 @end lisp
 
-There are optional keys @t{:hide} to hide the bookmark from the main
-menu, but still have it available (using @key{b})) and
-@t{:hide-unread} to avoid generating the unread-number; that can be
-useful if you have bookmarks for slow queries. Note that
-@t{:hide-unread} is implied when the query is not a string; this for
-the common case where the query function involves some user input,
+There are optional keys @t{:hide} to hide the bookmark from the main menu, but
+still have it available (using @key{b})) and @t{:hide-unread} to avoid
+generating the unread-number; that can be useful if you have bookmarks for slow
+queries. Note that @t{:hide-unread} is implied when the query is not a string;
+this for the common case where the query function involves some user input,
 which would be disruptive in this case.
+
+There is also the optional @code{:favorite} property, which at most one bookmark
+should have; this bookmark is highlighted in the main view, and its
+unread-status is shown in the modeline; @xref{Modeline}.
 
 The Maildirs item is very similar to Bookmarks, when you consider maildirs here
 as being special kind of bookmark that matches some Maildir.
@@ -1071,7 +1077,7 @@ Note that with threading enabled, the sorting is exclusively by date,
 regardless of the column clicked.
 
 If you want to change the defaults for these settings, you can use the variables
-@var{mu4e-search-sort-field} and @var{mu4e-search-show-threads}, as well as
+@code{mu4e-search-sort-field} and @code{mu4e-search-show-threads}, as well as
 @code{mu4e-search-change-sorting} to change the sorting of the current search
 results.
 
@@ -1740,7 +1746,7 @@ then still include the signature manually, using the function
 
 @itemize
 @item If you want use @t{mu4e} as Emacs' default program for sending mail,
-see @ref{Emacs default}.
+see @ref{Default email client}.
 @item Normally, @t{mu4e} @emph{buries} the message buffer after sending; if you want
 to kill the buffer instead, add something like the following to your
 configuration:
@@ -2099,7 +2105,7 @@ query, so, effectively `widens' the search. Technically, narrowing the results
 of query @t{x} with expression @t{y} implies doing a search @t{(x) AND (y)}.
 
 Note that messages that were not in your original search results because of
-@var{mu4e-search-results-limit} may show up in the narrowed query.
+@code{mu4e-search-results-limit} may show up in the narrowed query.
 
 @subsection Including related messages
 @anchor{Including related messages}
@@ -2108,7 +2114,7 @@ It can be useful to not only show the messages that directly match a certain
 query, but also include messages that are related to these messages. That is,
 messages that belong to the same discussion threads are included in the results,
 just like e.g. Gmail does it. You can enable this behavior by setting
-@var{mu4e-search-include-related} to @code{t}, and you can toggle between
+@code{mu4e-search-include-related} to @code{t}, and you can toggle between
 including/not-including with @key{W}.
 
 Be careful though when e.g. deleting ranges of messages from a certain
@@ -2123,7 +2129,7 @@ copies of messages, there's usually little value in including more than one in
 search results. A common reason for having multiple copies of messages is the
 combination of Gmail and @t{offlineimap}, since that is the way the labels /
 virtual folders in Gmail are represented. You can enable skipping duplicates by
-setting @var{mu4e-search-skip-duplicates} to @code{t}, and you can toggle
+setting @code{mu4e-search-skip-duplicates} to @code{t}, and you can toggle
 between the skipping/not skipping with @key{V}.
 
 Note, messages are considered duplicates when they have the same
@@ -2265,8 +2271,8 @@ Custom mark functions are to be appended to the list
 @item The name of the marker --- a short string describing this marker. The
 first character of this string determines its shortcut, so these should be
 unique. If necessary, simply prefix the name with a unique character.
-@item a predicate function, taking two arguments @var{msg} and @var{param}.
-@var{msg} is the message plist (see @ref{Message functions}) and @var{param} is
+@item a predicate function, taking two arguments @code{msg} and @code{param}.
+@code{msg} is the message plist (see @ref{Message functions}) and @code{param} is
 a parameter provided by the third of the marker elements (see the next
 item). The predicate function should return non-@t{nil} if the message
 matches.
@@ -2575,8 +2581,8 @@ when starting; see the discussion in the previous section.
 A couple of notes about this example:
 @itemize
 @item You can manually switch the context use @code{M-x mu4e-context-switch},
-by default bound to @kbd{;} in headers, view and main mode.
-The current context appears in the mode-line.
+by default bound to @kbd{;} in headers, view and main mode. The current context
+appears in the modeline by default; see @ref{Modeline} for details.
 @item Normally, @code{M-x mu4e-context-switch} does not call the enter or
 leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @t{mu4e} to
@@ -2713,11 +2719,10 @@ work-email. You can achieve this with something like:
 @noindent
 Good to remember:
 @itemize
-@item The @var{msg} parameter you receive in the function refers to the
-@emph{original message}, that is, the message being replied to or
-forwarded. When re-editing a message, it refers to the message being
-edited. When you compose a totally new message, the @var{msg} parameter is
-@code{nil}.
+@item The @code{msg} parameter you receive in the function refers to the
+@emph{original message}, that is, the message being replied to or forwarded.
+When re-editing a message, it refers to the message being edited. When you
+compose a totally new message, the @code{msg} parameter is @code{nil}.
 @item When re-editing messages, the value of @code{mu4e-drafts-folder} is ignored.
 @end itemize
 
@@ -3052,32 +3057,84 @@ see @code{mu4e-toggle-logging}.
 @code{user-error} and @code{error} functions.
 @end itemize
 
-@node Other tools
-@appendix Other tools
+@node Integrating with Emacs
+@chapter Integrating with Emacs
 
-In this chapter, we discuss some ways in which @t{mu4e} can cooperate
-with other tools.
+In this chapter, we discuss how you can integrate @t{mu4e} with Emacs in various
+ways. Here we focus on Emacs built-ins; for dealing with external tools,
+@xref{Other tools}.
 
 @menu
-* Emacs default::Making mu4e the default emacs e-mail program
-* Emacs bookmarks::Using Emacs' bookmark system
+* Modeline::Showing mu4e's status in the modeline
+* Default email client::Making mu4e the default emacs e-mail program
+* Using bookmarks::Using Emacs' bookmark system
 * Org-mode links::Adding mu4e to your organized life
-* Org-contacts::Hooking up with org-contacts
-* BBDB::Hooking up with the Insidious Big Brother Database
 * iCalendar::Enabling iCalendar invite processing
-* Sauron::Getting new mail notifications with Sauron
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
-* Hydra:: Custom shortcut menus
 @end menu
 
-@node Emacs default
-@section Emacs default
+@node Modeline
+@section Modeline
+@cindex modeline
 
-Emacs allows you to select an e-mail program as the default
-program it uses when you press @key{C-x m} (@code{compose-mail}), call
-@code{report-emacs-bug} and so on. If you want to use @t{mu4e} for this,
-you can do so by adding the following to your configuration:
+One of the most visible ways in which @t{mu4e} integrates with Emacs is through
+the @emph{modeline} @xref{Mode Line,,,emacs}. The @t{mu4e} support for that is
+handled through a minor-mode @code{mu4e-modeline-mode}, which is enabled by
+default when @t{mu4e} is running.
+
+To completely turn off the modeline support, set @code{mu4e-support-modeline} to
+@t{nil} before starting @t{mu4e}.
+
+@t{mu4e} shares information on the modeline in two ways:
+@itemize
+@item buffer-specific: information about the search parameters and the current context
+@item global: information about unread messages
+@end itemize
+
+The buffer-specific items should be fairly self-explanatory - they show,
+respectively, your search parameters and the current context.
+
+@cindex favorite bookmark
+Since @t{mu4e} is a query-based email-client, there a lot of flexibilty in what
+you want to consider ``interesting new mail'', that is the, the query we want to
+monitor for changes.
+
+The global modeline contains the results of some specific ``favorite'' bookmark
+query from @code{mu4e-bookmarks}. By default, the @emph{first} one in chosen,
+but you may want change that by using the @code{:favorite} property for a
+particular query, e.g., as part of @var{mu4e-bookmarks}:
+@example
+ ;; Monitor the inbox folder in the modeline
+ (:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t)
+@end example
+
+The results of this query (the last time it was updated) is shows as some
+character or emoji (depending on @var{mu4e-use-fancy-chars}) and 2 or 3 numbers,
+just like what we saw in @xref{Bookmarks and Maildirs}, e.g.,
+@example
+ N:10(+5)/15
+@end example
+
+@cindex baseline query results
+this means there are 10 unread messages, with 5 new messages since the baseline,
+and in total 15 messages.
+
+You can also customize the icon; see @var{mu4e-modeline-all-clear},
+@var{mu4e-modeline-all-read}, @var{mu4e-modeline-all-clear} and
+@var{mu4e-modeline-all-clear}
+
+Due to the way queries work, the modeline is @emph{not} immediately updated when
+you read messages; but going back to the main view (with @kbd{M-x mu4e} restores
+things.
+
+@node Default email client
+@section Default email client
+
+Emacs allows you to select an e-mail program as the default program it uses when
+you press @key{C-x m} (@code{compose-mail}), call @code{report-emacs-bug} and so
+on. If you want to use @t{mu4e} for this, you can do so by adding the following
+to your configuration:
 
 @lisp
 (setq mail-user-agent 'mu4e-user-agent)
@@ -3092,15 +3149,15 @@ mail, customize the variable @code{read-mail-command}.
 
 (@pxref{Top,,Emacs,Sending Mail, Mail Methods})
 
+@node Using bookmarks
+@section Using bookmarks
 
-@node Emacs bookmarks
-@section Emacs bookmarks
+Note, emacs bookmarks are not to be confused with mu4e's bookmarks; the former
+are a generic linking system, while the latter are remember stored queries.
 
-@t{mu4e} supports linking to the message-at-point through the normal
-Emacs built-in bookmark system. The links are based on the message's
-message-id, and thus the bookmarks stay valid even if you move the
-message around.
-
+@t{mu4e} supports linking to the message-at-point through the normal Emacs
+built-in bookmark system. The links are based on the message's message-id, and
+thus the bookmarks stay valid even if you move the message around.
 
 @node Org-mode links
 @section Org-mode links
@@ -3163,71 +3220,6 @@ key-bindings for that in headers and view mode:
   (define-key mu4e-headers-mode-map (kbd "C-c c") 'mu4e-org-store-and-capture)
   (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
 @end lisp
-
-
-@node Org-contacts
-@section Org-contacts
-
-Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
-autocompletion}, and that is the recommended way to do this. However, it
-is also possible to manage your addresses with @t{org-mode}, using
-@t{org-contacts}@footnote{@url{https://julien.danjou.info/projects/emacs-packages#org-contacts}}.
-
-@t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a
-contact based on the @t{From:}-address in the message at point. To
-enable this, add to your configuration something like:
-
-@lisp
-  (setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
-  (add-to-list 'mu4e-headers-actions
-    '("org-contact-add" . mu4e-action-add-org-contact) t)
-  (add-to-list 'mu4e-view-actions
-    '("org-contact-add" . mu4e-action-add-org-contact) t)
-@end lisp
-
-@noindent
-After this, you should be able to add contacts using @key{a o} in the
-headers view and the message view, using the @t{org-capture} mechanism.
-Note, the shortcut character @key{o} is due to the first character of
-@t{org-contact-add}.
-
-@node BBDB
-@section BBDB
-
-Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
-autocompletion}, and that is the recommended way to do this. However, it
-is also possible to manage your addresses with the current (2015-06-23)
-development release of @t{BBDB}, or releases of @t{BBDB} after
-3.1.2.@footnote{@url{https://savannah.nongnu.org/projects/bbdb/}}.
-
-To enable BBDB, add to your @file{~/.emacs} (or its moral equivalent,
-such as @file{~/.emacs.d/init.el}) the following @emph{after} the
-@code{(require 'mu4e)} line:
-
-@lisp
-  ;; Load BBDB (Method 1)
-  (require 'bbdb-loaddefs)
-  ;; OR (Method 2)
-  ;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
-  ;; OR (Method 3)
-  ;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
-  ;; (bbdb-initialize 'message 'mu4e)
-
-  (setq bbdb-mail-user-agent 'mu4e-user-agent)
-  (setq mu4e-view-rendered-hook 'bbdb-mua-auto-update)
-  (setq mu4e-compose-complete-addresses nil)
-  (setq bbdb-mua-pop-up t)
-  (setq bbdb-mua-pop-up-window-size 5)
-  (setq mu4e-view-show-addresses t)
-@end lisp
-
-@noindent
-After this, you should be able to:
-@itemize
-@item In mu4e-view mode, add the sender of the email to BBDB with @key{C-u :}
-@item Tab-complete addresses from BBDB when composing emails
-@item View the BBDB contact while viewing a message
-@end itemize
 
 @node iCalendar
 @section iCalendar
@@ -3320,6 +3312,120 @@ functions use that to set the @code{datetree} location:
 If you do this, you'll want to omit the @code{:timeprompt t} setting
 from your capture template.
 
+
+@node Speedbar
+@section Speedbar
+@cindex speedbar
+
+@code{speedbar} is an Emacs-extension that shows navigational
+information for an Emacs buffer in a separate frame. Using
+@code{mu4e-speedbar}, @t{mu4e} lists your bookmarks and maildir
+folders and allows for one-click access to them.
+
+To enable this, add @t{(require 'mu4e-speedbar)} to your configuration;
+then, all you need to do to activate it is @kbd{M-x speedbar}. Then,
+when then switching to the @ref{Main view}, the speedbar-frame is
+updated with your bookmarks and maildirs.
+
+For speed reasons, the list of maildirs is determined when @t{mu4e}
+starts; if the list of maildirs changes while @t{mu4e} is running, you
+need to restart @t{mu4e} to have those changes reflected in the speedbar
+and in other places that use this list, such as auto-completion when
+jumping to a maildir.
+
+@node Dired
+@section Dired
+
+It is possible to attach files to @t{mu4e} messages using @t{dired}
+(@ref{Dired,,emacs}), using the following steps (based on a post on
+the @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
+
+@lisp
+(add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+@end lisp
+
+Then, mark the file(s) in @t{dired} you would like to attach and press
+@t{C-c RET C-a}, and you'll be asked whether to attach them to an
+existing message, or create a new one.
+
+@node Other tools
+@appendix Other tools
+
+In this chapter, we discuss some ways in which @t{mu4e} can cooperate
+with other tools.
+
+@menu
+* Org-contacts::Hooking up with org-contacts
+* BBDB::Hooking up with the Insidious Big Brother Database
+* Sauron::Getting new mail notifications with Sauron
+* Hydra:: Custom shortcut menus
+@end menu
+
+@node Org-contacts
+@section Org-contacts
+
+Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
+autocompletion}, and that is the recommended way to do this. However, it
+is also possible to manage your addresses with @t{org-mode}, using
+@t{org-contacts}@footnote{@url{https://julien.danjou.info/projects/emacs-packages#org-contacts}}.
+
+@t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a
+contact based on the @t{From:}-address in the message at point. To
+enable this, add to your configuration something like:
+
+@lisp
+  (setq mu4e-org-contacts-file  <full-path-to-your-org-contacts-file>)
+  (add-to-list 'mu4e-headers-actions
+    '("org-contact-add" . mu4e-action-add-org-contact) t)
+  (add-to-list 'mu4e-view-actions
+    '("org-contact-add" . mu4e-action-add-org-contact) t)
+@end lisp
+
+@noindent
+After this, you should be able to add contacts using @key{a o} in the
+headers view and the message view, using the @t{org-capture} mechanism.
+Note, the shortcut character @key{o} is due to the first character of
+@t{org-contact-add}.
+
+@node BBDB
+@section BBDB
+
+Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
+autocompletion}, and that is the recommended way to do this. However, it
+is also possible to manage your addresses with the current (2015-06-23)
+development release of @t{BBDB}, or releases of @t{BBDB} after
+3.1.2.@footnote{@url{https://savannah.nongnu.org/projects/bbdb/}}.
+
+To enable BBDB, add to your @file{~/.emacs} (or its moral equivalent,
+such as @file{~/.emacs.d/init.el}) the following @emph{after} the
+@code{(require 'mu4e)} line:
+
+@lisp
+  ;; Load BBDB (Method 1)
+  (require 'bbdb-loaddefs)
+  ;; OR (Method 2)
+  ;; (require 'bbdb-loaddefs "/path/to/bbdb/lisp/bbdb-loaddefs.el")
+  ;; OR (Method 3)
+  ;; (autoload 'bbdb-insinuate-mu4e "bbdb-mu4e")
+  ;; (bbdb-initialize 'message 'mu4e)
+
+  (setq bbdb-mail-user-agent 'mu4e-user-agent)
+  (setq mu4e-view-rendered-hook 'bbdb-mua-auto-update)
+  (setq mu4e-compose-complete-addresses nil)
+  (setq bbdb-mua-pop-up t)
+  (setq bbdb-mua-pop-up-window-size 5)
+  (setq mu4e-view-show-addresses t)
+@end lisp
+
+@noindent
+After this, you should be able to:
+@itemize
+@item In mu4e-view mode, add the sender of the email to BBDB with @key{C-u :}
+@item Tab-complete addresses from BBDB when composing emails
+@item View the BBDB contact while viewing a message
+@end itemize
+
+
 @node Sauron
 @section Sauron
 
@@ -3377,40 +3483,6 @@ You might want to put:
 in your setup, to allow the script to find the D-Bus session bus, even when
 running outside its session.
 
-@node Speedbar
-@section Speedbar
-
-@code{speedbar} is an Emacs-extension that shows navigational
-information for an Emacs buffer in a separate frame. Using
-@code{mu4e-speedbar}, @t{mu4e} lists your bookmarks and maildir
-folders and allows for one-click access to them.
-
-To enable this, add @t{(require 'mu4e-speedbar)} to your configuration;
-then, all you need to do to activate it is @kbd{M-x speedbar}. Then,
-when then switching to the @ref{Main view}, the speedbar-frame is
-updated with your bookmarks and maildirs.
-
-For speed reasons, the list of maildirs is determined when @t{mu4e}
-starts; if the list of maildirs changes while @t{mu4e} is running, you
-need to restart @t{mu4e} to have those changes reflected in the speedbar
-and in other places that use this list, such as auto-completion when
-jumping to a maildir.
-
-@node Dired
-@section Dired
-
-It is possible to attach files to @t{mu4e} messages using @t{dired}
-(@ref{Dired,,emacs}), using the following steps (based on a post on
-the @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
-
-
-@lisp
-(add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
-@end lisp
-
-Then, mark the file(s) in @t{dired} you would like to attach and press
-@t{C-c RET C-a}, and you'll be asked whether to attach them to an
-existing message, or create a new one.
 
 @node Hydra
 @section Hydra
@@ -3439,8 +3511,8 @@ With Hydra installed, we can add multi-character shortcuts, for instance:
 Now, you can bind a convenient key to my-mu4e-bookmarks/body.
 @end lisp
 
-@node Example configs
-@appendix Example configs
+@node Example configurations
+@appendix Example configurations
 
 In this chapter, we show some example configurations. While it is very useful
 to see some working settings, we'd like to warn against blindly copying such
@@ -3511,7 +3583,7 @@ customize.
       mu4e-trash-folder  "/trash")
 
 ;; the maildirs you use frequently; access them with 'j' ('jump')
-(setq   mu4e-maildir-shortcuts
+(setq mu4e-maildir-shortcuts
     '((:maildir "/archive" :key ?a)
       (:maildir "/inbox"   :key ?i)
       (:maildir "/work"    :key ?w)
@@ -3526,6 +3598,10 @@ customize.
        (:flags         .   6)
        (:from          .  22)
        (:subject       .  nil))) ;; alternatively, use :thread-subject
+
+(add-to-list 'mu4e-bookmarks
+    ;; ':favorite t' i.e, use this one for the modeline
+   '(:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t))
 
 ;; program to get mail; alternatives are 'fetchmail', 'getmail'
 ;; isync or your own shellscript. called when 'U' is pressed in
@@ -3688,6 +3764,10 @@ Next step: let's make a @t{mu4e} configuration for this:
        (:maildir "/[Gmail].Trash"      :key ?t)
        (:maildir "/[Gmail].All Mail"   :key ?a)))
 
+(add-to-list 'mu4e-bookmarks
+    ;; ':favorite t' i.e, use this one for the modeline
+   '(:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t))
+
 ;; allow for updating mail using 'U' in the main view:
 (setq mu4e-get-mail-command "offlineimap")
 
@@ -3801,7 +3881,7 @@ Yes you can --- see the documentation for the variable
 @t{mu4e-headers-leave-behavior}.
 
 @subsection How can I set @t{mu4e} as the default e-mail client in Emacs?
-See @ref{Emacs default}.
+See @ref{Default email client}.
 
 @subsection Can @t{mu4e} use some fancy Unicode instead of these boring plain-ASCII ones?
 Glad you asked! Yes, if you set @code{mu4e-use-fancy-chars} to @t{t},
@@ -4619,7 +4699,7 @@ to provide this information (this is implemented in
 @file{mu-cmd-server.c}).
 
 We start this sequence when @t{mu4e} is invoked (when the program is
-started). It calls @t{mu4e-server-ping}, and registers a (lambda)
+started). It calls @t{mu4e--server-ping}, and registers a (lambda)
 function for @t{mu4e-server-pong-func}, to handle the response.
 
 @verbatim
@@ -4667,9 +4747,9 @@ it on all the time. By default, the log only maintains the most recent
 @c @unnumbered Variable Index
 @c @printindex vr
 
-@c @node Concept Index
-@c @unnumbered Concept Index
-@c @printindex cp
+@node Concept Index
+@unnumbered Concept Index
+@printindex cp
 
 @bye
 
