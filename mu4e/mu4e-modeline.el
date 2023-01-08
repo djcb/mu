@@ -22,8 +22,8 @@
 
 ;;; Commentary:
 
-;; This file contains functionality for putting mu4e-related information
-;; in the emacs modeline, both buffer-specific and globally.
+;; This file contains functionality for putting mu4e-related information in the
+;; Emacs modeline, both buffer-specific and globally.
 
 ;;; Code:
 
@@ -38,24 +38,35 @@ Each element is function that evaluates to a string.")
 Each element is function that evaluates to a string.")
 
 (defun mu4e--modeline-register (func &optional global)
-  "Register a function for calculating some mu4e modeline part.
+  "Register FUNC for calculating some mu4e modeline part.
 If GLOBAL is non-nil, add to the global-modeline; otherwise use
 the buffer-local one."
   (add-to-list
-   (if global 'mu4e--modeline-global-items 'mu4e--modeline-buffer-items)
+   (if global
+       'mu4e--modeline-global-items
+     'mu4e--modeline-buffer-items)
    func))
 
 (defvar mu4e--modeline-item nil
   "Mu4e item for the global-mode-line.")
 
+(defvar mu4e--modeline-string-cached nil
+  "Cached version of the modeline string.")
+
 (defun mu4e--modeline-string ()
-  "Calculate the current mu4e modeline string."
-  (mapconcat
-   (lambda (item)
-     (if (functionp item)
-         (or (funcall item) "")
-       ""))
-   (append mu4e--modeline-buffer-items mu4e--modeline-global-items) " "))
+  "Get the current mu4e modeline string."
+  (or mu4e--modeline-string-cached
+      (setq mu4e--modeline-string-cached
+            (mapconcat
+             (lambda (func) (or (funcall func) ""))
+             (append mu4e--modeline-buffer-items
+                     mu4e--modeline-global-items)
+             " "))))
+
+(defun mu4e--modeline-update ()
+  "Recalculate and force-update the modeline."
+  (setq mu4e--modeline-string-cached nil)
+  (force-mode-line-update))
 
 (define-minor-mode mu4e-modeline-mode
   "Minor mode for showing mu4e information on the modeline."
@@ -68,12 +79,14 @@ the buffer-local one."
   (if mu4e-modeline-mode
       (progn
         (setq mu4e--modeline-item '(:eval (mu4e--modeline-string)))
-        (add-to-list 'global-mode-string mu4e--modeline-item))
+        (add-to-list 'global-mode-string mu4e--modeline-item)
+        (mu4e--modeline-update))
     (progn
       (setq global-mode-string
             (seq-remove (lambda (item) (equal item mu4e--modeline-item))
-                        global-mode-string))))
-  (force-mode-line-update))
+                        global-mode-string)))
+    (force-mode-line-update)))
 
 (provide 'mu4e-modeline)
-;; mu4e-modeline.el ends here
+
+;;; mu4e-modeline.el ends here

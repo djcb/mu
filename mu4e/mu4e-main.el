@@ -130,6 +130,7 @@ This version handles updating the current screen as well."
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (mu4e-update-minor-mode)
+  (mu4e-modeline-mode)
   (setq-local revert-buffer-function
               (lambda (_ignore-auto _noconfirm)
                 (mu4e--main-view 'refresh))))
@@ -352,13 +353,14 @@ character of the keyboard shortcut
 
 (declare-function mu4e--start "mu4e")
 
-(defun mu4e--main-view (&optional refresh)
+(defun mu4e--main-view (&optional refresh no-reset)
   "Create or refresh the mu4e main-view, and switch to it.
 When REFRESH is non nil refresh infos from server.
 
 If `mu4e-split-view' equals \='single-window, show a mu4e menu
 instead."
-  (mu4e--reset-baseline)
+  (unless no-reset
+    (mu4e--reset-baseline))
   (if (eq mu4e-split-view 'single-window)
       (mu4e--main-menu)
     (let ((buf (get-buffer-create mu4e-main-buffer-name))

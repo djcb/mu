@@ -156,10 +156,11 @@ Invoke FUNC if non-nil."
   ;; (if any) and the modeline.
 
   ;; 1. update the query results (i.e. process the new server queries)
-  (mu4e-last-query-results 'force-update)
-  (unless mu4e--baseline
-    (mu4e--reset-baseline))
-  (mu4e--modeline-update)
+  (mu4e-last-query-results 'refresh)
+  (if mu4e--baseline
+      (mu4e-last-query-results 'refresh)
+      (mu4e--reset-baseline))
+  ;; note: mu4e-reset-baseline implies mu4e--last-query-results
 
   ;; 2. update the main view, if any
   (when (buffer-live-p mu4e-main-buffer-name)
@@ -261,7 +262,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
           (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
             (save-window-excursion
               (select-window (get-buffer-window mainbuf))
-              (mu4e--main-view 'refresh))))))
+              (mu4e--main-view 'refresh 'no-reset))))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 

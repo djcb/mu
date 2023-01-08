@@ -167,11 +167,11 @@ the latest query-results.")
 (defun mu4e--reset-baseline ()
   (setq mu4e--baseline (mu4e-server-query-results)
         mu4e--baseline-tstamp (current-time))
-  (mu4e-last-query-results 'force)) ; for side-effects
+  (mu4e-last-query-results 'refresh)) ; for side-effects
 
 
 (defvar mu4e--last-query-results-cached nil)
-(defun mu4e-last-query-results(&optional force)
+(defun mu4e-last-query-results(&optional refresh)
   "Get the results (counts) of the latest queries.
 
 Either read form the cache or update them when oudated or FORCE
@@ -195,32 +195,32 @@ The results are a list of elements of the form
 baseline part is optional (see `mu4e-reset-query-results') for
 more details).
 
-Uses a cached string unless its nil or FORCE is non-nil."
-  (if (and mu4e--last-query-results-cached (not force))
-      mu4e--last-query-results-cached ;; use cache
-    ;; otherwise, recalculate.
-    (let* ((favorite (mu4e-favorite-bookmark))
-           (favorite-query
-            (and favorite (mu4e--bookmark-query favorite))))
-      (setq mu4e--last-query-results-cached ;; walk over the remembered queries
-            ;; and augment them with the baseline data and ':favorite' flag, if
-            ;; any.
-            (seq-map
-             (lambda (qres)
-               ;; note: queries can be _functions_ too; use their
-               ;; string value.
-               (let* ((query (mu4e--bookmark-query qres))
-                      (bres (seq-find ;; find the corresponding baseline entry
-                             (lambda (bq)
-                               (string= query (mu4e--bookmark-query bq)))
-                             mu4e--baseline)))
-                 (when (string= query (or favorite-query ""))
-                   (plist-put qres :favorite t))
-                 (when bres
-                   (plist-put qres :baseline
-                              `(:count ,(plist-get bres :count)
-                                :unread ,(plist-get bres :unread))))
-                 qres)) (mu4e-server-query-results))))))
+Uses a cached string unless it is nil or REFRESH is non-nil."
+  (or (and (not refresh) mu4e--last-query-results-cached)
+      (setq mu4e--last-query-results-cached
+            (let* ((favorite (mu4e-favorite-bookmark))
+                   (favorite-query
+                    (and favorite (mu4e--bookmark-query favorite))))
+              ;; walk over the remembered queries
+              ;; and augment them with the baseline data and ':favorite' flag, if
+              ;; any.
+              (seq-map
+               (lambda (qres)
+                 ;; note: queries can be _functions_ too; use their
+                 ;; string value.
+                 (let* ((query (mu4e--bookmark-query qres))
+                        (bres (seq-find ;; find the corresponding baseline entry
+                               (lambda (bq)
+                                 (string= query (mu4e--bookmark-query bq)))
+                               mu4e--baseline)))
+                   (when (string= query (or favorite-query ""))
+                     (plist-put qres :favorite t))
+                   (when bres
+                     (plist-put qres :baseline
+                                `(:count ,(plist-get bres :count)
+                                         :unread ,(plist-get bres :unread))))
+                   qres))
+               (mu4e-server-query-results))))))
 
 (defun mu4e-last-query-result (query)
   "Get the last result for some QUERY or nil if not found.
@@ -247,51 +247,39 @@ I.e., very new messages.")
   (when-let ((fav (mu4e--bookmark-query (mu4e-favorite-bookmark))))
     (mu4e-search-bookmark fav)))
 
-(defvar mu4e--bookmarks-modeline-cached nil)
-
 (defun mu4e--bookmarks-modeline-item ()
   "Modeline item showing message counts for the favorite bookmark.
 
 This uses the one special ':favorite' bookmark, and if there is
 one, creates a propertized string for display in the modeline."
-  (or mu4e--bookmarks-modeline-cached
-      (setq mu4e--bookmarks-modeline-cached
-            (when-let ((fav ;; any results for the favorite bookmark item?
-                        (seq-find (lambda (bm) (plist-get bm :favorite))
-                                  (mu4e-last-query-results))))
-              (let* ((unread (plist-get   fav :unread))
-                     (count  (plist-get   fav :count))
-                     (baseline (plist-get fav :baseline))
-                     (baseline-unread
-                      (or (when baseline (plist-get baseline :unread)) unread))
-                     (delta (- unread baseline-unread)))
-                (propertize
-                 (format "%s%s%s/%s "
-                         (funcall (if mu4e-use-fancy-chars 'cdr 'car)
-                                  (cond
-                                   ((> delta 0)  mu4e-modeline-new-items)
-                                   ((> unread 0) mu4e-modeline-unread-items)
-                                   ((> count 0) mu4e-modeline-all-read)
-                                   (t mu4e-modeline-all-clear)))
-                         (propertize (number-to-string unread) 'face 'mu4e-header-key-face)
-                         (if (<= delta 0) ""
-                           (propertize (format "(%+d)" delta)
-                                       'face 'mu4e-unread-face))
-                         (number-to-string count))
-                 'help-echo (format "mu4e query: '%s'" (mu4e--bookmark-query fav))
-                 'mouse-face 'mode-line-highlight
-                 'keymap '(mode-line keymap
-                                     (mouse-1   . mu4e-jump-to-favorite)
-                                     (mouse-2   . mu4e-jump-to-favorite)
-                                     (mouse-3   . mu4e-jump-to-favorite))))))))
-
-
-(defun mu4e--modeline-update()
-  "Update the modeline and redisplay if mu4e-modeline-mode is
-active."
-  (when mu4e-modeline-mode
-    (setq mu4e--bookmarks-modeline-cached nil) ;; force recalculation
-    (force-mode-line-update)))
+  (when-let ((fav ;; any results for the favorite bookmark item?
+              (seq-find (lambda (bm) (plist-get bm :favorite))
+                        (mu4e-last-query-results))))
+    (let* ((unread (plist-get   fav :unread))
+           (count  (plist-get   fav :count))
+           (baseline (plist-get fav :baseline))
+           (baseline-unread
+            (or (when baseline (plist-get baseline :unread)) unread))
+           (delta (- unread baseline-unread)))
+      (propertize
+       (format "%s%s%s/%s "
+               (funcall (if mu4e-use-fancy-chars 'cdr 'car)
+                        (cond
+                         ((> delta 0)  mu4e-modeline-new-items)
+                         ((> unread 0) mu4e-modeline-unread-items)
+                         ((> count 0) mu4e-modeline-all-read)
+                         (t mu4e-modeline-all-clear)))
+               (propertize (number-to-string unread) 'face 'mu4e-header-key-face)
+               (if (<= delta 0) ""
+                 (propertize (format "(%+d)" delta)
+                             'face 'mu4e-unread-face))
+               (number-to-string count))
+       'help-echo (format "mu4e query: '%s'" (mu4e--bookmark-query fav))
+       'mouse-face 'mode-line-highlight
+       'keymap '(mode-line keymap
+                           (mouse-1   . mu4e-jump-to-favorite)
+                           (mouse-2   . mu4e-jump-to-favorite)
+                           (mouse-3   . mu4e-jump-to-favorite))))))
 
 
 

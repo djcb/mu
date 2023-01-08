@@ -204,7 +204,8 @@ show the message with MSGID."
     (mu4e-mark-handle-when-leaving)
     (mu4e--search-execute expr ignore-history)
     (setq mu4e--search-msgid-target msgid
-          mu4e--search-view-target show)))
+          mu4e--search-view-target show)
+    (mu4e--modeline-update)))
 
 (defun mu4e-search-edit ()
   "Edit the last search expression."
@@ -459,6 +460,7 @@ If KEY is provided, use it instead of asking user."
     (when choice
       (set choice (not (symbol-value choice)))
       (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))
+      (mu4e--modeline-update)
       (unless dont-refresh
         (mu4e-search-rerun)))))
 

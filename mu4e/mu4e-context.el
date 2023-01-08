@@ -146,6 +146,7 @@ non-nil."
       (setq mu4e--context-current context)
 
       (run-hooks 'mu4e-context-changed-hook)
+      (mu4e--modeline-update)
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))
 
@@ -207,12 +208,13 @@ as it is."
        (eval ,@body))))
 
 (defun mu4e--context-modeline-item ()
-  "Propertized string with the current context name.
-An empty string \"\" if there is none."
-  (if (mu4e-context-current)
-      (concat "[" (propertize (mu4e-quote-for-modeline
-                               (mu4e-context-name (mu4e-context-current)))
-                              'face 'mu4e-context-face) "] " ) ""))
+  "Propertized string with the current context or nil."
+  (when (mu4e-context-current)
+      (concat
+       "["
+       (propertize (mu4e-quote-for-modeline
+                    (mu4e-context-name (mu4e-context-current)))
+                   'face 'mu4e-context-face) "] " )))
 
 (define-minor-mode mu4e-context-minor-mode
   "Mode for switching the mu4e context."
