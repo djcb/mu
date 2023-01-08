@@ -462,6 +462,35 @@ If KEY is provided, use it instead of asking user."
       (unless dont-refresh
         (mu4e-search-rerun)))))
 
+(defvar mu4e-search-threaded-label        '("T" . "Ⓣ")
+  "Non-fancy and fancy labels to indicate threaded search in the mode-line.")
+(defvar mu4e-search-full-label            '("F" . "Ⓕ")
+  "Non-fancy and fancy labels to indicate full search in the mode-line.")
+(defvar mu4e-search-related-label         '("R" . "Ⓡ")
+  "Non-fancy and fancy labels to indicate related search in the mode-line.")
+(defvar mu4e-search-skip-duplicates-label '("U" . "Ⓤ") ;; 'U' for 'unique'
+  "Non-fancy and fancy labels for include-related search in the mode-line.")
+(defvar mu4e-search-hide-label            '("H" . "Ⓗ")
+  "Non-fancy and fancy labels to indicate header-hiding is active in
+the mode-line.")
+
+(defun mu4e--search-modeline-item ()
+  "Get mu4e-search modeline item."
+  (let* ((flagstr
+          (mapconcat
+           (lambda (flag-cell)
+             (if (car flag-cell)
+                 (if mu4e-use-fancy-chars
+                     (cddr flag-cell) (cadr flag-cell) ) ""))
+           `((,mu4e-search-full            . ,mu4e-search-full-label)
+             (,mu4e-search-include-related . ,mu4e-search-related-label)
+             (,mu4e-search-threads         . ,mu4e-search-threaded-label)
+             (,mu4e-search-skip-duplicates
+              . ,mu4e-search-skip-duplicates-label)
+             (,mu4e-search-hide-enabled    . ,mu4e-search-hide-label))
+           "")))
+    (concat flagstr " " mu4e--search-last-query)))
+
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
   :global nil

@@ -185,6 +185,16 @@
 (define-obsolete-variable-alias 'mu4e-headers-hide-enabled
                         'mu4e-search-hide-enabled "1.9.11")
 
+(define-obsolete-variable-alias 'mu4e-headers-threaded-label
+  'mu4e-search-threaded-label "1.9.12")
+(define-obsolete-variable-alias 'mu4e-headers-full-label
+  'mu4e-search-full-label "1.9.12")
+(define-obsolete-variable-alias 'mu4e-headers-related-label
+  'mu4e-search-related-label "1.9.12")
+(define-obsolete-variable-alias 'mu4e-headers-skip-duplicates-label
+  'mu4e-search-skip-duplicates-label "1.9.12")
+(define-obsolete-variable-alias 'mu4e-headers-hide-label
+  'mu4e-search-hide-label "1.9.12")
 
 
 ;; mu4e-main
