@@ -867,7 +867,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "%" #'mu4e-view-mark-pattern)
     (define-key map "t" #'mu4e-view-mark-subthread)
     (define-key map "T" #'mu4e-view-mark-thread)
-    (define-key map "j" #'mu4e~headers-jump-to-maildir)
 
     (define-key map "g" #'mu4e-view-go-to-url)
     (define-key map "k" #'mu4e-view-save-url)

@@ -233,6 +233,21 @@ the search."
   (interactive)
   (mu4e-search-bookmark nil t))
 
+
+(defun mu4e-search-maildir (maildir &optional edit)
+  "Search the messages in maildir.
+The user is prompted to ask what maildir. If prefix arg EDIT is
+given, offer to edit the search query before executing it."
+  (interactive
+   (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
+     (list maildir current-prefix-arg)))
+  (when maildir
+    (let* ((query (format "maildir:\"%s\"" maildir))
+           (query (if edit
+                      (mu4e-search-read-query "Refine query: " query) query)))
+      (mu4e-mark-handle-when-leaving)
+      (mu4e-search query))))
+
 (defun mu4e-search-narrow(&optional filter)
   "Narrow the last search.
 Do so by appending search expression FILTER to the last search
@@ -504,7 +519,7 @@ the mode-line.")
     (define-key map "s" #'mu4e-search)
     (define-key map "S" #'mu4e-search-edit)
     (define-key map "/" #'mu4e-search-narrow)
-    ;;(define-key map "j" 'mu4e~headers-jump-to-maildir)
+
     (define-key map (kbd "<M-left>")  #'mu4e-search-prev)
     (define-key map (kbd "\\")        #'mu4e-search-prev)
     (define-key map (kbd "<M-right>") #'mu4e-search-next)
@@ -515,14 +530,17 @@ the mode-line.")
     (define-key map "b" #'mu4e-search-bookmark)
     (define-key map "B" #'mu4e-search-bookmark-edit)
 
-      map))
+    (define-key map "j" #'mu4e-search-maildir)
+    map))
 
 (defvar mu4e--search-menu-items
   '("--"
     ["Search" mu4e-search
      :help "Search using expression"]
     ["Search bookmark" mu4e-search-bookmark
-     :help "Search some bookmark"]
+     :help "Show messages matching some bookmark query"]
+    ["Search maildir" mu4e-search-maildir
+     :help "Show messages in some maildir"]
     ["Previous query" mu4e-search-prev
      :help "Run previous query"]
     ["Next query" mu4e-search-next

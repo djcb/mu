@@ -36,7 +36,6 @@
 (require 'mu4e-window)
 
 (declare-function mu4e-compose-new  "mu4e-compose")
-(declare-function mu4e~headers-jump-to-maildir  "mu4e-headers")
 (declare-function mu4e-quit "mu4e")
 
 (require 'cl-lib)
@@ -98,7 +97,6 @@ This version handles updating the current screen as well."
   (let ((map (make-sparse-keymap)))
 
     (define-key map "q" #'mu4e-quit)
-    (define-key map "j" #'mu4e~headers-jump-to-maildir)
     (define-key map "C" #'mu4e-compose-new)
 
     (define-key map "m" #'mu4e--main-toggle-mail-sending-mode)

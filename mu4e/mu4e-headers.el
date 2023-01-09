@@ -901,8 +901,6 @@ after the end of the search results."
 (defvar mu4e-headers-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "j" #'mu4e~headers-jump-to-maildir)
-
     (define-key map "q" #'mu4e~headers-quit-buffer)
     (define-key map "g" #'mu4e-search-rerun) ;; for compatibility
 
@@ -1479,20 +1477,6 @@ untrashed)."
 untrashed)."
   (interactive)
   (mu4e~headers-prev-or-next-unread nil))
-
-(defun mu4e~headers-jump-to-maildir (maildir &optional edit)
-  "Show the messages in maildir.
-The user is prompted to ask what maildir.  If prefix arg EDIT is
-given, offer to edit the search query before executing it."
-  (interactive
-   (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
-     (list maildir current-prefix-arg)))
-  (when maildir
-    (let* ((query (format "maildir:\"%s\"" maildir))
-           (query (if edit
-                      (mu4e-search-read-query "Refine query: " query) query)))
-      (mu4e-mark-handle-when-leaving)
-      (mu4e-search query))))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.

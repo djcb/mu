@@ -195,6 +195,9 @@
   'mu4e-search-skip-duplicates-label "1.9.12")
 (define-obsolete-variable-alias 'mu4e-headers-hide-label
   'mu4e-search-hide-label "1.9.12")
+;; by exception, add alias for internal func
+(define-obsolete-function-alias 'mu4e~headers-jump-to-maildir
+  'mu4e-search-maildir "1.9.13")
 
 
 ;; mu4e-main
