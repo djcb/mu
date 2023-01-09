@@ -923,6 +923,16 @@ is supplied, or Transient Mark mode is enabled and the mark is active."
 (define-key mu4e-compose-mode-map
   (vector 'remap 'end-of-buffer) 'mu4e-compose-goto-bottom)
 
+(defvar mu4e--compose-menu-items
+  '("--"
+    ["Compose new" mu4e-compose-new
+     :help "Compose new message"]
+    ["Reply" mu4e-compose-reply
+     :help "Reply to message"]
+    ["Forward" mu4e-compose-forward
+     :help "Forward message"])
+  "Easy menu items for search.")
+
 ;;; _
 (provide 'mu4e-compose)
 ;;; mu4e-compose.el ends here

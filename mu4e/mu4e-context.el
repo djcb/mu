@@ -224,6 +224,14 @@ as it is."
   :lighter ""
   (mu4e--modeline-register #'mu4e--context-modeline-item))
 
+
+(defvar mu4e--context-menu-items
+  '("--"
+    ["Switch-context" mu4e-context-switch
+     :help "Switch the mu4e context"])
+  "Easy menu items for mu4e-context.")
+
+
 ;;;
 (provide 'mu4e-context)
 ;;; mu4e-context.el ends here

@@ -515,18 +515,21 @@ the mode-line.")
     (define-key map "b" #'mu4e-search-bookmark)
     (define-key map "B" #'mu4e-search-bookmark-edit)
 
-    (let ((menumap (make-sparse-keymap)))
-      (define-key map [menu-bar search] (cons "Mu4e" menumap))
-      (define-key menumap [query-next]
-                  '("Next query" . mu4e-search-next))
-      (define-key menumap [query-prev]  '("Previous query" .
-                                          mu4e-search-prev))
-      (define-key menumap [narrow-search] '("Narrow search" .
-                                            mu4e-search-narrow))
-      (define-key menumap [bookmark]  '("Search bookmark" .
-                                        mu4e-search-bookmark))
-      (define-key menumap [refresh]  '("Refresh" . mu4e-search-rerun))
-      map)))
+      map))
+
+(defvar mu4e--search-menu-items
+  '("--"
+    ["Search" mu4e-search
+     :help "Search using expression"]
+    ["Search bookmark" mu4e-search-bookmark
+     :help "Search some bookmark"]
+    ["Previous query" mu4e-search-prev
+     :help "Run previous query"]
+    ["Next query" mu4e-search-next
+     :help "Run next query"]
+    ["Narrow search" mu4e-search-narrow
+     :help "Narrow the search query"])
+  "Easy menu items for search.")
 
 (provide 'mu4e-search)
 ;;; mu4e-search.el ends here

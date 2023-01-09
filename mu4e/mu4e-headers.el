@@ -896,147 +896,117 @@ after the end of the search results."
 (mu4e~headers-defun-mark-for unread)
 (mu4e~headers-defun-mark-for action)
 
+(declare-function mu4e-view-pipe "mu4e-view")
+
+(defvar mu4e-headers-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "j" #'mu4e~headers-jump-to-maildir)
+
+    (define-key map "q" #'mu4e~headers-quit-buffer)
+    (define-key map "g" #'mu4e-search-rerun) ;; for compatibility
+
+
+    (define-key map "%" #'mu4e-headers-mark-pattern)
+    (define-key map "t" #'mu4e-headers-mark-subthread)
+    (define-key map "T" #'mu4e-headers-mark-thread)
+
+    (define-key map "," #'mu4e-sexp-at-point)
+    (define-key map ";" #'mu4e-context-switch)
+
+    ;; navigation between messages
+    (define-key map "p" #'mu4e-headers-prev)
+    (define-key map "n" #'mu4e-headers-next)
+    (define-key map (kbd "<M-up>") #'mu4e-headers-prev)
+    (define-key map (kbd "<M-down>") #'mu4e-headers-next)
+
+    (define-key map (kbd "[") #'mu4e-headers-prev-unread)
+    (define-key map (kbd "]") #'mu4e-headers-next-unread)
+
+    ;; change the number of headers
+    (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
+    (define-key map (kbd "C--") #'mu4e-headers-split-view-shrink)
+    (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
+    (define-key map (kbd "<C-kp-subtract>")
+                #'mu4e-headers-split-view-shrink)
+
+    ;; switching to view mode (if it's visible)
+    (define-key map "y" #'mu4e-select-other-view)
+
+    ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (define-key map (kbd "<backspace>")  #'mu4e-headers-mark-for-trash)
+    (define-key map (kbd "d")            #'mu4e-headers-mark-for-trash)
+    (define-key map (kbd "<delete>")     #'mu4e-headers-mark-for-delete)
+    (define-key map (kbd "<deletechar>") #'mu4e-headers-mark-for-delete)
+    (define-key map (kbd "D")            #'mu4e-headers-mark-for-delete)
+    (define-key map (kbd "m")            #'mu4e-headers-mark-for-move)
+    (define-key map (kbd "r")            #'mu4e-headers-mark-for-refile)
+
+    (define-key map (kbd "?")            #'mu4e-headers-mark-for-unread)
+    (define-key map (kbd "!")            #'mu4e-headers-mark-for-read)
+    (define-key map (kbd "A")            #'mu4e-headers-mark-for-action)
+
+    (define-key map (kbd "u")            #'mu4e-headers-mark-for-unmark)
+    (define-key map (kbd "+")            #'mu4e-headers-mark-for-flag)
+    (define-key map (kbd "-")            #'mu4e-headers-mark-for-unflag)
+    (define-key map (kbd "=")            #'mu4e-headers-mark-for-untrash)
+    (define-key map (kbd "&")            #'mu4e-headers-mark-custom)
+
+    (define-key map (kbd "*")
+                #'mu4e-headers-mark-for-something)
+    (define-key map (kbd "<kp-multiply>")
+                #'mu4e-headers-mark-for-something)
+    (define-key map (kbd "<insertchar>")
+                #'mu4e-headers-mark-for-something)
+    (define-key map (kbd "<insert>")
+                #'mu4e-headers-mark-for-something)
+
+    (define-key map (kbd "#")   #'mu4e-mark-resolve-deferred-marks)
+
+    (define-key map "U" #'mu4e-mark-unmark-all)
+    (define-key map "x" #'mu4e-mark-execute-all)
+
+    (define-key map "a" #'mu4e-headers-action)
+
+    ;; message composition
+    (define-key map "R" #'mu4e-compose-reply)
+    (define-key map "F" #'mu4e-compose-forward)
+    (define-key map "C" #'mu4e-compose-new)
+    (define-key map "E" #'mu4e-compose-edit)
+
+    (define-key map (kbd "RET") #'mu4e-headers-view-message)
+    (define-key map [mouse-2]   #'mu4e-headers-view-message)
+
+    (define-key map "$" #'mu4e-show-log)
+    (define-key map "H" #'mu4e-display-manual)
+
+    (define-key map "|" #'mu4e-view-pipe)
+    map)
+  "Keymap for mu4e's headers mode.")
+
+(easy-menu-define mu4e-headers-mode-menu
+  mu4e-headers-mode-map "Menu for mu4e's headers-mode."
+  (append
+   '("Headers" ;;:visible mu4e-headers-mode
+     "--"
+     ["Previous" mu4e-headers-prev
+      :help "Move to previous header"]
+     ["Next" mu4e-headers-prev
+      :help "Move to next header"]
+     "--"
+     ["Mark for move" mu4e-headers-mark-for-move
+      :help "Mark message for move"
+      ])
+   mu4e--compose-menu-items
+   mu4e--search-menu-items
+   mu4e--context-menu-items
+   '(
+     "--"
+     ["Quit" mu4e~headers-quit-buffer
+      :help "Quit the headers"]
+     )))
+
 ;;; Headers-mode and mode-map
-
-(defvar mu4e-headers-mode-map nil
-  "Keymap for *mu4e-headers* buffers.")
-(unless mu4e-headers-mode-map
-  (setq mu4e-headers-mode-map
-        (let ((map (make-sparse-keymap)))
-
-          (define-key map "j" #'mu4e~headers-jump-to-maildir)
-
-          (define-key map "q" #'mu4e~headers-quit-buffer)
-          (define-key map "g" #'mu4e-search-rerun) ;; for compatibility
-
-          (define-key map "%" #'mu4e-headers-mark-pattern)
-          (define-key map "t" #'mu4e-headers-mark-subthread)
-          (define-key map "T" #'mu4e-headers-mark-thread)
-
-          (define-key map "," #'mu4e-sexp-at-point)
-          (define-key map ";" #'mu4e-context-switch)
-
-          ;; navigation between messages
-          (define-key map "p" 'mu4e-headers-prev)
-          (define-key map "n" 'mu4e-headers-next)
-          (define-key map (kbd "<M-up>") 'mu4e-headers-prev)
-          (define-key map (kbd "<M-down>") 'mu4e-headers-next)
-
-          (define-key map (kbd "[") 'mu4e-headers-prev-unread)
-          (define-key map (kbd "]") 'mu4e-headers-next-unread)
-
-          ;; change the number of headers
-          (define-key map (kbd "C-+") 'mu4e-headers-split-view-grow)
-          (define-key map (kbd "C--") 'mu4e-headers-split-view-shrink)
-          (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
-          (define-key map (kbd "<C-kp-subtract>")
-                      'mu4e-headers-split-view-shrink)
-
-          ;; switching to view mode (if it's visible)
-          (define-key map "y" 'mu4e-select-other-view)
-
-          ;; marking/unmarking ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-          (define-key map (kbd "<backspace>")  'mu4e-headers-mark-for-trash)
-          (define-key map (kbd "d")            'mu4e-headers-mark-for-trash)
-          (define-key map (kbd "<delete>")     'mu4e-headers-mark-for-delete)
-          (define-key map (kbd "<deletechar>") 'mu4e-headers-mark-for-delete)
-          (define-key map (kbd "D")            'mu4e-headers-mark-for-delete)
-          (define-key map (kbd "m")            'mu4e-headers-mark-for-move)
-          (define-key map (kbd "r")            'mu4e-headers-mark-for-refile)
-
-          (define-key map (kbd "?")            'mu4e-headers-mark-for-unread)
-          (define-key map (kbd "!")            'mu4e-headers-mark-for-read)
-          (define-key map (kbd "A")            'mu4e-headers-mark-for-action)
-
-          (define-key map (kbd "u")            'mu4e-headers-mark-for-unmark)
-          (define-key map (kbd "+")            'mu4e-headers-mark-for-flag)
-          (define-key map (kbd "-")            'mu4e-headers-mark-for-unflag)
-          (define-key map (kbd "=")            'mu4e-headers-mark-for-untrash)
-          (define-key map (kbd "&")            'mu4e-headers-mark-custom)
-
-          (define-key map (kbd "*")
-                      'mu4e-headers-mark-for-something)
-          (define-key map (kbd "<kp-multiply>")
-                      'mu4e-headers-mark-for-something)
-          (define-key map (kbd "<insertchar>")
-                      'mu4e-headers-mark-for-something)
-          (define-key map (kbd "<insert>")
-                      'mu4e-headers-mark-for-something)
-
-          (define-key map (kbd "#")   'mu4e-mark-resolve-deferred-marks)
-
-          (define-key map "U" 'mu4e-mark-unmark-all)
-          (define-key map "x" 'mu4e-mark-execute-all)
-
-          (define-key map "a" 'mu4e-headers-action)
-
-          ;; message composition
-          (define-key map "R" 'mu4e-compose-reply)
-          (define-key map "F" 'mu4e-compose-forward)
-          (define-key map "C" 'mu4e-compose-new)
-          (define-key map "E" 'mu4e-compose-edit)
-
-          (define-key map (kbd "RET") 'mu4e-headers-view-message)
-          (define-key map [mouse-2]   'mu4e-headers-view-message)
-
-          (define-key map "$" 'mu4e-show-log)
-          (define-key map "H" 'mu4e-display-manual)
-
-          (define-key map "|" 'mu4e-view-pipe)
-
-          ;; menu
-          ;;(define-key map [menu-bar] (make-sparse-keymap))
-          (let ((menumap (make-sparse-keymap)))
-            (define-key map [menu-bar headers] (cons "Mu4e" menumap))
-
-            (define-key menumap [mu4e~headers-quit-buffer]
-              '("Quit view" . mu4e~headers-quit-buffer))
-            (define-key menumap [display-help] '("Help" . mu4e-display-manual))
-
-            (define-key menumap [sepa0] '("--"))
-
-            (define-key menumap "|" '("Pipe through shell" . mu4e-view-pipe))
-            (define-key menumap [sepa1] '("--"))
-
-            (define-key menumap [execute-marks]  '("Execute marks"
-                                                   . mu4e-mark-execute-all))
-            (define-key menumap [unmark-all]  '("Unmark all" . mu4e-mark-unmark-all))
-            (define-key menumap [unmark]
-              '("Unmark" . mu4e-headers-mark-for-unmark))
-
-            (define-key menumap [mark-pattern]  '("Mark pattern" .
-                                                  mu4e-headers-mark-pattern))
-            (define-key menumap [mark-as-read]  '("Mark as read" .
-                                                  mu4e-headers-mark-for-read))
-            (define-key menumap [mark-as-unread]
-              '("Mark as unread" .  mu4e-headers-mark-for-unread))
-
-            (define-key menumap [mark-delete]
-              '("Mark for deletion" . mu4e-headers-mark-for-delete))
-            (define-key menumap [mark-untrash]
-              '("Mark for untrash" .  mu4e-headers-mark-for-untrash))
-            (define-key menumap [mark-trash]
-              '("Mark for trash" .  mu4e-headers-mark-for-trash))
-            (define-key menumap [mark-move]
-              '("Mark for move" . mu4e-headers-mark-for-move))
-            (define-key menumap [sepa2] '("--"))
-
-            (define-key menumap [resend]  '("Resend" . mu4e-compose-resend))
-            (define-key menumap [forward]  '("Forward" . mu4e-compose-forward))
-            (define-key menumap [reply]  '("Reply" . mu4e-compose-reply))
-            (define-key menumap [compose-new]  '("Compose new" . mu4e-compose-new))
-
-            (define-key menumap [sepa3] '("--"))
-            (define-key menumap [jump]  '("Jump to maildir" .
-                                          mu4e~headers-jump-to-maildir))
-            (define-key menumap [search]  '("Search" . mu4e-headers-search))
-            (define-key menumap [sepa4] '("--"))
-
-            (define-key menumap [view]  '("View" . mu4e-headers-view-message))
-            (define-key menumap [next]  '("Next" . mu4e-headers-next))
-            (define-key menumap [previous]  '("Previous" . mu4e-headers-prev)))
-          map)))
-(fset 'mu4e-headers-mode-map mu4e-headers-mode-map)
 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
@@ -1047,7 +1017,7 @@ after the end of the search results."
       (+ mu4e--mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
      (mapcar
       (lambda (item)
-        (let* ( ;; with threading enabled, we're necessarily sorting by date.
+        (let* (;; with threading enabled, we're necessarily sorting by date.
                (sort-field (if mu4e-search-threads :date mu4e-search-sort-field))
                (field (car item)) (width (cdr item))
                (info (cdr (assoc field
@@ -1065,15 +1035,15 @@ after the end of the search results."
                (map (make-sparse-keymap)))
           (when sortable
             (define-key map [header-line mouse-1]
-              (lambda (&optional e)
-                ;; getting the field, inspired by `tabulated-list-col-sort'
-                (interactive "e")
-                (let* ((obj (posn-object (event-start e)))
-                       (field
-                        (and obj (get-text-property 0 'field (car obj)))))
-                  ;; "t": if we're already sorted by field, the sort-order is
-                  ;; changed
-                  (mu4e-search-change-sorting field t)))))
+                        (lambda (&optional e)
+                          ;; getting the field, inspired by `tabulated-list-col-sort'
+                          (interactive "e")
+                          (let* ((obj (posn-object (event-start e)))
+                                 (field
+                                  (and obj (get-text-property 0 'field (car obj)))))
+                            ;; "t": if we're already sorted by field, the sort-order is
+                            ;; changed
+                            (mu4e-search-change-sorting field t)))))
           (concat
            (propertize
             (if width
