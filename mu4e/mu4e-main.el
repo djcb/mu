@@ -120,6 +120,24 @@ This version handles updating the current screen as well."
     map)
   "Keymap for the *mu4e-main* buffer.")
 
+(easy-menu-define mu4e-main-mode-menu
+  mu4e-main-mode-map "Menu for mu4e's main view."
+  (append
+   '("Mu4e" ;;:visible mu4e-headers-mode
+     "--"
+     ["Update mail and index" mu4e-update-mail-and-index]
+     ["Flush queued mail"     smtpmail-send-queued-mail]
+     "--"
+     ["Show debug log" mu4e-show-log]
+     )
+   mu4e--compose-menu-items
+   mu4e--search-menu-items
+   '(
+     "--"
+     ["Quit" mu4e-quit :help "Quit mu4e"]
+     )))
+
+
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
 \\{mu4e-main-mode-map}."
