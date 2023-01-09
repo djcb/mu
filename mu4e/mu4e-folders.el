@@ -1,6 +1,6 @@
 ;;; mu4e-folders.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -165,9 +165,9 @@ This is compatibile with `mu4e-bookmarks'."
   (seq-map
    (lambda (item)
      (let* ((maildir (plist-get item :maildir))
-	    (name (or (plist-get item :name) maildir))
-	    (item (plist-put item :name name))
-	    (item (plist-put item :query (format "maildir:\"%s\"" maildir))))
+            (name (or (plist-get item :name) maildir))
+            (item (plist-put item :name name))
+            (item (plist-put item :query (format "maildir:\"%s\"" maildir))))
        item)) ;; we don't need ":maildir", but it's harmless.
    (mu4e-maildir-shortcuts)))
 
@@ -249,10 +249,10 @@ Do so recursively and produce a list of relative paths."
             (setq dirs (cons (concat mdir (car dentry)) dirs)))
         (unless (member (car dentry) '("cur" "new" "tmp"))
           (setq dirs
-		(append dirs
-			(mu4e~get-maildirs-1 path
+                (append dirs
+                        (mu4e~get-maildirs-1 path
                                              (concat mdir
-						     (car dentry) "/")))))))
+                                                     (car dentry) "/")))))))
     dirs))
 
 (defvar mu4e-cache-maildir-list nil
