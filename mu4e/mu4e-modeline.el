@@ -63,11 +63,6 @@ the buffer-local one."
                      mu4e--modeline-global-items)
              " "))))
 
-(defun mu4e--modeline-update ()
-  "Recalculate and force-update the modeline."
-  (setq mu4e--modeline-string-cached nil)
-  (force-mode-line-update))
-
 (define-minor-mode mu4e-modeline-mode
   "Minor mode for showing mu4e information on the modeline."
   ;; This is a bit special 'global' mode, since it consists of both
@@ -86,6 +81,13 @@ the buffer-local one."
             (seq-remove (lambda (item) (equal item mu4e--modeline-item))
                         global-mode-string)))
     (force-mode-line-update)))
+
+(defun mu4e--modeline-update ()
+  "Recalculate and force-update the modeline."
+  (when mu4e-modeline-mode
+    (setq mu4e--modeline-string-cached nil)
+    (force-mode-line-update)))
+
 
 (provide 'mu4e-modeline)
 

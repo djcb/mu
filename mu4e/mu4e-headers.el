@@ -1526,13 +1526,12 @@ region if there is a region, then move to the next message."
   (when mu4e-headers-advance-after-mark (mu4e-headers-next)))
 
 (defun mu4e~headers-quit-buffer ()
-  "Quit the mu4e-headers buffer.
-This is a rather complex function, to ensure we don't disturb
-other windows."
+  "Quit the mu4e-headers buffer."
   (interactive)
   (mu4e-mark-handle-when-leaving)
   (quit-window t)
-  (mu4e--main-view 'refresh))
+  (mu4e--query-items-reset-baseline)
+  (mu4e--main-view))
 
 
 ;;; Loading messages

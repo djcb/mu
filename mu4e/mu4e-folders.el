@@ -159,18 +159,6 @@ Converts from the old format if needed."
                item))
            mu4e-maildir-shortcuts))
 
-(defun mu4e--maildirs-with-query ()
-  "Like `mu4e-maildir-shortcuts', but with :query populated.
-This is compatibile with `mu4e-bookmarks'."
-  (seq-map
-   (lambda (item)
-     (let* ((maildir (plist-get item :maildir))
-            (name (or (plist-get item :name) maildir))
-            (item (plist-put item :name name))
-            (item (plist-put item :query (format "maildir:\"%s\"" maildir))))
-       item)) ;; we don't need ":maildir", but it's harmless.
-   (mu4e-maildir-shortcuts)))
-
 ;; the standard folders can be functions too
 (defun mu4e--get-folder (foldervar msg)
   "Within the mu-context of MSG, get message folder FOLDERVAR.

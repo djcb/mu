@@ -33,6 +33,7 @@
 (require 'mu4e-contacts)
 (require 'mu4e-lists)
 (require 'mu4e-mark)
+(require 'mu4e-query-items)
 
 
 ;;; Configuration
@@ -219,11 +220,12 @@ the search."
   (interactive)
   (let* ((expr
          (or expr
-             (mu4e-ask-bookmark (if edit "Select bookmark: " "Bookmark: "))))
-         (fav (mu4e--bookmark-query (mu4e-favorite-bookmark))))
-    ;; reset baseline when searching for bookmark query
+             (mu4e-ask-bookmark
+              (if edit "Select bookmark: " "Bookmark: "))))
+         (fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
+    ;; reset baseline when searching for the favorite bookmark query
     (when (and fav (string= fav expr))
-      (mu4e--reset-baseline))
+      (mu4e--query-items-reset-baseline))
 
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
     (mu4e-search expr (when edit "Edit bookmark: ") edit)))

@@ -48,6 +48,7 @@ mu4e_srcs=[
   'mu4e-modeline.el',
   'mu4e-obsolete.el',
   'mu4e-org.el',
+  'mu4e-query-items.el',
   'mu4e-search.el',
   'mu4e-server.el',
   'mu4e-speedbar.el',

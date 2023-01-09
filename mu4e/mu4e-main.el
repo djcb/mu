@@ -27,6 +27,7 @@
 (require 'smtpmail)
 (require 'mu4e-helpers)
 (require 'mu4e-context)
+(require 'mu4e-compose)
 (require 'mu4e-bookmarks)
 (require 'mu4e-folders)
 (require 'mu4e-update)
@@ -34,6 +35,7 @@
 (require 'mu4e-search)
 (require 'mu4e-vars)     ;; mu-wide variables
 (require 'mu4e-window)
+(require 'mu4e-query-items)
 
 (declare-function mu4e-compose-new  "mu4e-compose")
 (declare-function mu4e-quit "mu4e")
@@ -87,10 +89,9 @@ the personal addresses."
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 
 (defun mu4e--main-reset-baseline()
-  "Main-view version of `mu4e-reset-query-results'.
-This version handles updating the current screen as well."
+  "Reset the query baseline."
   (interactive)
-  (mu4e--reset-baseline)
+  (mu4e--query-items-reset-baseline)
   (revert-buffer))
 
 (defvar mu4e-main-mode-map
@@ -111,7 +112,8 @@ This version handles updating the current screen as well."
     (define-key map "S" #'mu4e-kill-update-mail)
     (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map ";"
-                (lambda()(interactive)(mu4e-context-switch)(revert-buffer)))
+                (lambda()(interactive)
+                  (mu4e-context-switch)(revert-buffer)))
 
     (define-key map "$" #'mu4e-show-log)
     (define-key map "A" #'mu4e-about)
@@ -137,6 +139,7 @@ This version handles updating the current screen as well."
      ["Quit" mu4e-quit :help "Quit mu4e"]
      )))
 
+(declare-function mu4e--server-bookmarks-queries "mu4e")
 
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
@@ -146,10 +149,14 @@ This version handles updating the current screen as well."
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
   (mu4e-update-minor-mode)
-  (mu4e-modeline-mode)
   (setq-local revert-buffer-function
               (lambda (_ignore-auto _noconfirm)
-                (mu4e--main-view 'refresh))))
+                ;; the query results will trigger a redraw
+                (mu4e--query-items-refresh)))
+  (add-hook 'mu4e-query-items-updated-hook
+            (lambda ()
+              (when (get-buffer mu4e-main-buffer-name)
+                (mu4e--main-redraw-buffer))) nil t))
 
 (defun mu4e--main-action-str (str &optional func-or-shortcut)
   "Highlight the first occurrence of [.] in STR.
@@ -183,64 +190,28 @@ clicked. If HIGHLIGHT is non-nil, hightlight the name."
                          (- (length newstr) 1))
                        'mouse-face 'highlight newstr)  newstr))
 
-(defun mu4e--longest-of-maildirs-and-bookmarks ()
-  "Return the length of longest name of bookmarks and maildirs."
-  (cl-loop for b in (append (mu4e-bookmarks)
-                            (mu4e--maildirs-with-query))
-           maximize (string-width (plist-get b :name))))
-
-(defun mu4e--main-item (fullkey name qcounts max-length)
-  "Display a main-view bookmarks/maildir item.
-- FULLKEY is a 2-character string describing the item's shortcut
-- NAME is the name of the of the item
-- QCOUNTS is a structure with unread information
-  for this item (or nil)
-- MAX-LENGTH is the maximum length for an item name
-  (used for alignment)."
-  (concat
-   (mu4e--main-action-str
-    (format "\t* [%s] %s" fullkey
-            (propertize name 'face
-                        (if (and qcounts (plist-get qcounts :favorite))
-                            'mu4e-header-key-face nil)))
-    fullkey)
-   ;; append all/unread numbers, if available.
-   (if qcounts
-       (let* ((unread (plist-get qcounts :unread))
-              (count  (plist-get qcounts :count))
-              (baseline (plist-get qcounts :baseline))
-              (baseline-unread
-               (or (when baseline (plist-get baseline :unread)) unread))
-              (delta (- unread baseline-unread)))
-         (format "%s (%s%s/%s)"
-                (make-string (- max-length (string-width name)) ? )
-                (propertize
-                 (number-to-string unread) 'face 'mu4e-header-key-face
-                 'help-echo "Number of unread messages")
-                (if (> delta 0)
-                    (propertize (format "(%+d)" delta) 'face
-                                'mu4e-unread-face) "")
-                (propertize (number-to-string count)
-                            'help-echo "Total number of messages")))
-     "") "\n"))
-
-(defun mu4e--main-items (shortcut items max-length)
+(defun mu4e--main-items (data shortcut max-length)
   "Display the entries for the bookmark/maildir menu
 - SHORTCUT is a single character which is the first
 character of the keyboard shortcut
-- ITEMS is a list of items, for format see `(mu4e-bookmarks)'
-- MAX-LENGTH is the maximum length for an item name
-  (used for alignment)."
-  (cl-loop for item in items
-           for fullkey = (format "%c%c" shortcut (plist-get item :key))
-           for name = (plist-get item :name)
-           for query = (funcall (or mu4e-query-rewrite-function #'identity)
-                                (mu4e--bookmark-query item))
-           for qcounts = (mu4e-last-query-result query)
-           for unread = (and qcounts (plist-get (car qcounts) :unread))
-           when (not (plist-get item :hide))
-           when (not (and mu4e-main-hide-fully-read (eq unread 0)))
-           concat (mu4e--main-item fullkey name qcounts max-length)))
+- ITEMS is a list of items, for format see `(mu4e-query-data)'
+- MAX-LENGTH is the maximum length for an item name"
+  (mapconcat
+   (lambda (item)
+     (cl-destructuring-bind
+         (&key hide name key favorite &allow-other-keys) item
+       ;; hide items explicitly hidden, without key or wrong category.
+       (if hide
+           ""
+         (concat
+          (mu4e--main-action-str
+           (format "\t* [%s] %s " (format "%c%c" shortcut key)
+                   (propertize
+                    name 'face
+                    (if favorite 'mu4e-header-key-face nil))))
+          (format "%s%s\n"
+                  (make-string (- max-length (string-width name)) ?\s)
+                  (mu4e--query-item-display-counts item)))))) data ""))
 
 (defun mu4e--key-val (key val &optional unit)
   "Show a KEY / VAL pair, with optional UNIT."
@@ -255,7 +226,7 @@ character of the keyboard shortcut
 
 (defun mu4e--baseline-time-string ()
   "Calculate the baseline time string."
-  (let* ((baseline-t mu4e--baseline-tstamp)
+  (let* ((baseline-t mu4e--query-items-baseline-tstamp)
          (updated-t (plist-get mu4e-index-update-status :tstamp))
          (delta-t (and baseline-t updated-t
                        (float-time (time-subtract updated-t baseline-t)))))
@@ -268,10 +239,12 @@ character of the keyboard shortcut
 (defun mu4e--main-redraw-buffer ()
   "Redraw the main buffer."
   (with-current-buffer mu4e-main-buffer-name
-    (let ((inhibit-read-only t)
-          (pos (point))
-          (addrs (mu4e-personal-addresses))
-          (max-length (mu4e--longest-of-maildirs-and-bookmarks)))
+    (let* ((inhibit-read-only t)
+           (pos (point))
+           (addrs (mu4e-personal-addresses))
+           (max-length (seq-reduce (lambda (a b)
+                                     (max a (length (plist-get b :name))))
+                                   (mu4e-query-items) 0)))
       (erase-buffer)
       (insert
        "* "
@@ -281,17 +254,17 @@ character of the keyboard shortcut
        "\n\n"
        (propertize "  Basics\n\n" 'face 'mu4e-title-face)
        (mu4e--main-action-str
-        "\t* [j]ump to some maildir\n" #'mu4e~headers-jump-to-maildir)
+        "\t* [j]ump to some maildir\n" #'mu4e-search-maildir)
        (mu4e--main-action-str
         "\t* enter a [s]earch query\n" #'mu4e-search)
        (mu4e--main-action-str
         "\t* [C]ompose a new message\n" #'mu4e-compose-new)
        "\n"
        (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-items ?b (mu4e-bookmarks) max-length)
+       (mu4e--main-items (mu4e-query-items 'bookmarks) ?b max-length)
        "\n"
        (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-       (mu4e--main-items ?j (mu4e--maildirs-with-query) max-length)
+       (mu4e--main-items (mu4e-query-items 'maildirs) ?j max-length)
        "\n"
        (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
@@ -301,7 +274,8 @@ character of the keyboard shortcut
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
                               #'mu4e-update-mail-and-index)
-       (mu4e--main-action-str "\t* [R]eset  baseline\n" #'mu4e--reset-baseline)
+       (mu4e--main-action-str "\t* [R]eset  baseline\n"
+                              #'mu4e--main-reset-baseline)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)
@@ -318,7 +292,7 @@ character of the keyboard shortcut
        (mu4e--key-val "last updated"
                       (current-time-string
                        (plist-get mu4e-index-update-status :tstamp)))
-       (if mu4e--baseline-tstamp
+       (if mu4e--query-items-baseline-tstamp
            (mu4e--key-val "baseline" (mu4e--baseline-time-string))
          "")
        (mu4e--key-val "database-path" (mu4e-database-path))
@@ -369,27 +343,23 @@ character of the keyboard shortcut
 
 (declare-function mu4e--start "mu4e")
 
-(defun mu4e--main-view (&optional refresh no-reset)
-  "Create or refresh the mu4e main-view, and switch to it.
-When REFRESH is non nil refresh infos from server.
+(defun mu4e--main-view ()
+  "(Re)create the mu4e main-view, and switch to it.
 
 If `mu4e-split-view' equals \='single-window, show a mu4e menu
 instead."
-  (unless no-reset
-    (mu4e--reset-baseline))
   (if (eq mu4e-split-view 'single-window)
       (mu4e--main-menu)
     (let ((buf (get-buffer-create mu4e-main-buffer-name))
           (inhibit-read-only t))
-      ;; `mu4e--main-view' is called from `mu4e--start', so don't call it
-      ;; a second time here i.e. do not refresh unless specified
-      ;; explicitly with REFRESH arg.
+      ;; `mu4e--main-view' is called from `mu4e--start', so don't call it a
+      ;; second time here i.e. do not refresh unless specified explicitly with
+      ;; REFRESH arg.
       (with-current-buffer buf
-        (if refresh
-            (mu4e--start 'mu4e--main-redraw-buffer)
-          (mu4e--main-redraw-buffer)))
-      (mu4e-display-buffer buf t)
-      (goto-char (point-min)))))
+        (mu4e--main-redraw-buffer))
+      (mu4e-display-buffer buf t)))
+
+  (goto-char (point-min)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions

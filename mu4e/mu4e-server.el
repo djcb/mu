@@ -166,18 +166,15 @@ sexp received from the server process.")
            (plist-get mu4e--server-props :version))
       (mu4e-error "Version unknown; did you start mu4e?")))
 
-;;
-;; server-query-results are the results from the counting-queries
-;; we do for bookmarks etc. to populate the main view with unread
-;; counts.
-
 ;;; remember queries result.
-(defvar mu4e--server-query-results nil
-  "Metadata we receive from the mu4e server.")
+(defvar mu4e--server-query-items nil
+  "Query items results we receive from the mu4e server.
+Those are the results from the counting-queries
+for bookmarks and maildirs.")
 
-(defun mu4e-server-query-results ()
-  "Get the latest server queries list."
-  mu4e--server-query-results)
+(defun mu4e-server-query-items ()
+  "Get the latest server query items."
+  mu4e--server-query-items)
 
 
 ;;; Handling raw server data
@@ -333,7 +330,7 @@ The server output is as follows:
 
          ;; receive queries info
          ((plist-get sexp :queries)
-          (setq mu4e--server-query-results (plist-get sexp :queries))
+          (setq mu4e--server-query-items (plist-get sexp :queries))
           (funcall mu4e-queries-func sexp))
 
          ;; received a contacts message
