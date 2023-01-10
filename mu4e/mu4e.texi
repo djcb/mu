@@ -942,7 +942,7 @@ found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
 @code{mu4e-headers-auto-update} to @code{nil}.
 @item Just before executing a search, a hook-function
-@code{mu4e-headers-search-hook} is invoked, which receives the search
+@code{mu4e-search-hook} is invoked, which receives the search
 expression as its parameter.
 @item Also, there is a hook-function @code{mu4e-headers-found-hook} available which
 is invoked just after @t{mu4e} has completed showing the messages in the
@@ -2010,11 +2010,11 @@ It is defining a function to make the code more readable.
 
 @subsection Editing bookmarks before searching
 
-There is also @kbd{M-x mu4e-headers-search-bookmark-edit} (key @key{B}), which
-lets you edit the bookmarked query before invoking it. This can be useful if
-you have many similar queries, but need to change some parameter. For example,
-you could have a bookmark @samp{"date:today..now AND "}@footnote{Not a valid
-search query by itself}, which limits any result to today's messages.
+There is also @kbd{M-x mu4e-search-bookmark-edit} (key @key{B}), which lets you
+edit the bookmarked query before invoking it. This can be useful if you have
+many similar queries, but need to change some parameter. For example, you could
+have a bookmark @samp{"date:today..now AND "}@footnote{Not a valid search query
+by itself}, which limits any result to today's messages.
 
 @node Maildir searches
 @section Maildir searches
@@ -2089,13 +2089,12 @@ previous/next queries, you can use @kbd{M-x mu4e-headers-forget-queries}.
 It can be useful to narrow existing search results, that is, to add some
 clauses to the current query to match fewer messages.
 
-For example, suppose you're looking at some mailing list, perhaps by
-jumping to a maildir (@kbd{M-x mu4e-headers-jump-to-maildir}, @key{j}) or
-because you followed some bookmark (@kbd{M-x mu4e-headers-search-bookmark},
-@key{b}). Now, you want to narrow things down to only those messages that have
-attachments.
+For example, suppose you're looking at some mailing list, perhaps by jumping to
+a maildir (@kbd{M-x mu4e-headers-jump-to-maildir}, @key{j}) or because you
+followed some bookmark (@kbd{M-x mu4e-search-bookmark}, @key{b}). Now, you want
+to narrow things down to only those messages that have attachments.
 
-This is when @kbd{M-x mu4e-headers-search-narrow} (@key{/}) comes in handy. It
+This is when @kbd{M-x mu4e-search-narrow} (@key{/}) comes in handy. It
 asks for an additional search pattern, which is appended to the current search
 query, in effect getting you the subset of the currently shown headers that
 also match this extra search pattern. @key{\} takes you back to the previous
@@ -2819,7 +2818,7 @@ sender of the message at point:
 @lisp
 (defun search-for-sender (msg)
   "Search for messages sent by the sender of the message at point."
-  (mu4e-headers-search
+  (mu4e-search
     (concat "from:"
       (mu4e-contact-email (car (mu4e-message-field msg :from))))))
 
@@ -3493,13 +3492,13 @@ With Hydra installed, we can add multi-character shortcuts, for instance:
 @lisp
 (defhydra my-mu4e-bookmarks-work (:color blue)
   "work bookmarks"
-  ("b" (mu4e-headers-search "banana AND maildir:/work") "banana")
-  ("u" (mu4e-headers-search "flag:unread AND maildir:/work")   "unread"))
+  ("b" (mu4e-search "banana AND maildir:/work") "banana")
+  ("u" (mu4e-search "flag:unread AND maildir:/work")   "unread"))
 
 (defhydra my-mu4e-bookmarks-personal (:color blue)
   "personal bookmarks"
-  ("c" (mu4e-headers-search "capybara AND maildir:/personal") "capybara")
-  ("u" (mu4e-headers-search "flag:unread AND maildir:/personal")  "unread"))
+  ("c" (mu4e-search "capybara AND maildir:/personal") "capybara")
+  ("u" (mu4e-search "flag:unread AND maildir:/personal")  "unread"))
 
 (defhydra my-mu4e-bookmarks (:color blue)
   "mu4e bookmarks"
