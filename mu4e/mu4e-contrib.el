@@ -160,7 +160,7 @@ the file."
                                         (file-directory-p f))
                                     nil
                                   (expand-file-name f)))
-                    (mu4e--flatten-list (reverse args))))))
+                    (eshell-flatten-list (reverse args))))))
     ;; warn if user tries to attach without any files marked
     (if (null files-to-attach)
         (error "No files to attach")
@@ -189,7 +189,7 @@ the file."
                  (goto-char (point-max)) ; attach at end of buffer
                  (while files-to-attach
                    (mml-attach-file (car files-to-attach)
-                                    (or (mu4e--mm-default-file-type
+                                    (or (mm-default-file-encoding
                                          (car files-to-attach))
                                         "application/octet-stream") nil)
                    (setq files-to-attach (cdr files-to-attach)))

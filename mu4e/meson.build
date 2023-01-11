@@ -92,6 +92,9 @@ foreach src : mu4e_srcs
                           '--directory', meson.current_build_dir(),
                           '--directory', meson.current_source_dir(),
                           '--eval', '(setq load-prefer-newer t)',
+                          # we don't need warnings for items that have become
+                          # obsolete _after_ our last supported emacs release.
+                          '--eval', '(setq byte-compile-warnings \'(not obsolete))',
                           '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
