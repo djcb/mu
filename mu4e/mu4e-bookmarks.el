@@ -60,7 +60,7 @@ Note that the :query parameter can be a function/lambda.
 Optionally, you can add the following:
 
 - `:favorite' - if t, monitor the results of this query, and make
-it eligible for showing its status in the emacs modeline. At mose
+it eligible for showing its status in the emacs modeline. At most
 one bookmark should have this set to t (otherwise the _first_
 bookmark is the implicit favorite)
 - `:hide' - if t, the bookmark is hidden from the main-view and
