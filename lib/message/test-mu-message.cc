@@ -804,6 +804,7 @@ RU5EOlZFVkVOVA0KRU5EOlZDQUxFTkRBUg0K
 		     "Invitation: HELLO, @ Thu 9 Jan 2014 08:30 - 09:30 (william@example.com)");
 	g_assert_true(message->flags() == (Flags::Passed|Flags::Seen|
 					   Flags::HasAttachment|Flags::Calendar));
+	g_assert_cmpuint(message->body_html().value_or("").find("DETAILS"), ==, 2271);
 }
 
 
