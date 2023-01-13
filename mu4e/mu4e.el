@@ -172,6 +172,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (mu4e-clear-caches)
   (remove-hook 'mu4e-query-items-updated-hook
               #'mu4e--modeline-update)
+  (mu4e-kill-update-mail)
   (mu4e-modeline-mode -1)
   (mu4e--server-kill)
   ;; kill all mu4e buffers
