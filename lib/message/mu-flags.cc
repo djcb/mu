@@ -105,10 +105,13 @@ test_flags_from_expr()
 		      (Flags::Flagged | Flags::Unread |
 		       Flags::HasAttachment | Flags::MailingList));
 
+	/* note: unread is a special flag, _implied_ from "new or not seen" */
+	static_assert(flags_from_absolute_expr("N").value() == (Flags::New|Flags::Unread));
+
 	static_assert(!flags_from_absolute_expr("DRT?"));
 	static_assert(flags_from_absolute_expr("DRT?", true/*ignore invalid*/).value() ==
 		      (Flags::Draft | Flags::Replied |
-		       Flags::Trashed));
+		       Flags::Trashed | Flags::Unread));
 	static_assert(flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
 		      (Flags::Draft|Flags::Flagged|Flags::Passed|
 		       Flags::New | Flags::Encrypted |
@@ -126,6 +129,16 @@ test_flags_from_delta_expr()
 	static_assert(flags_from_delta_expr(
 			      "+S-u-N", Flags::New|Flags::Unread).value() ==
 		      Flags::Seen);
+
+	/* note: unread is a special flag, _implied_ from "new or not seen" */
+	static_assert(flags_from_delta_expr(
+			      "+S-N", Flags::New|Flags::Unread).value() ==
+		      Flags::Seen);
+	static_assert(flags_from_delta_expr(
+			      "-S", Flags::Seen).value() ==
+		      Flags::Unread);
+
+
 	static_assert(flags_from_delta_expr("+R+P-F", Flags::Seen).value() ==
 		      (Flags::Seen|Flags::Passed|Flags::Replied));
 	/* '-B' is invalid */
@@ -134,7 +147,7 @@ test_flags_from_delta_expr()
 	static_assert(flags_from_delta_expr("+R+P-B", Flags::Seen, true) ==
 		      (Flags::Replied|Flags::Passed|Flags::Seen));
 	static_assert(flags_from_delta_expr("+F+T-S", Flags::None, true).value() ==
-		      (Flags::Flagged|Flags::Trashed));
+		      (Flags::Flagged|Flags::Trashed|Flags::Unread));
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -226,9 +226,26 @@ flag_info(std::string_view name)
 }
 
 /**
+ * 'unread' is a pseudo-flag that means 'new or not seen'
+ *
+ * @param flags
+ *
+ * @return flags with unread added or removed.
+ */
+constexpr Flags
+imply_unread(Flags flags)
+{
+	/* unread is a pseudo flag equivalent to 'new or not seen' */
+	if (any_of(flags & Flags::New) || none_of(flags & Flags::Seen))
+		return flags | Flags::Unread;
+	else
+		return flags & ~Flags::Unread;
+}
+
+/**
  * There are two string-based expression types for flags:
  * 1) 'absolute': replace the existing flags
- * 2_ 'delta'  : flags as a delta of existing flags.
+ * 2) 'delta'  : flags as a delta of existing flags.
  */
 
 /**
@@ -253,7 +270,7 @@ flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
 			flags |= info->flag;
 	}
 
-	return flags;
+	return imply_unread(flags);
 }
 
 /**
@@ -296,7 +313,8 @@ flags_from_delta_expr(std::string_view expr, Flags flags,
 		}
 	}
 
-	return flags;
+	return imply_unread(flags);
+
 }
 
 /**
