@@ -715,18 +715,18 @@ The main view looks something like the following:
 
   Bookmarks
 
-        * [bu] Unread messages      (13085(+3)/13085)
+        * [bu] Unread messages      13085(+3)/13085
         * [bt] Today's messages
-        * [bw] Last 7 days          (53(+3)/128)
-        * [bp] Messages with images (75/2441)
+        * [bw] Last 7 days          53(+3)/128
+        * [bp] Messages with images 75/2441
 
   Maildirs
 
-        * [ja] /archive             (2101/18837)
-        * [ji] /inbox               (8(+2)/10)
-        * [jb] /bulk                (33/35)
-        * [jB] /bulkarchive         (179/2090)
-        * [jm] /mu                  (694(+1)/17687)
+        * [ja] /archive             2101/18837
+        * [ji] /inbox               8(+2)/10
+        * [jb] /bulk                33/35
+        * [jB] /bulkarchive         179/2090
+        * [jm] /mu                  694(+1)/17687
         * [jn] /sauron
         * [js] /sent
 
@@ -746,7 +746,6 @@ The main view looks something like the following:
   Info
 
         * last-updated        : Sat Dec 31 16:43:56 2022
-        * baseline            : Sat Dec 31 15:57:12 2022
         * database-path       : /home/pam/.cache/mu/xapian
         * maildir             : /home/pam/Maildir
         * in store            : 86179 messages
@@ -785,7 +784,7 @@ messages matching a certain bookmark by pressing @key{b} followed by the
 bookmark's shortcut. If you want to edit the bookmarked query before invoking
 it, use @key{B}.
 
-Next to each bookmark are some numbers that indicate the (unread(delta)/all)
+Next to each bookmark are some numbers that indicate the unread(delta)/all
 matching messages for the given query, with the delta being the difference in
 unread count since some ``baseline'', and only shown when this delta > 0.
 
@@ -794,13 +793,14 @@ messages and received 5 new one, the ``delta'' would be 0, although there were
 changes indeed. So it is mostly useful for tracking changes while you are
 @emph{not} using @t{mu4e}.
 
-This delta is useful to quickly see that there are new messages since the last
-time you looked. Imagine switching to another buffer to work on something or
-even (!) stepping away from your computer to return later: the baseline allows
-you to quickly see what changed.
+Using a baseline is useful to quickly see that there are new messages since the
+last time you looked. Imagine switching to another buffer to work on something
+or even (!) stepping away from your computer to return later: the baseline
+allows you to quickly see what changed.
 
 The baseline is reset automatically when switching to the main view, or when
-querying the ``favorite'' query (explained below).
+querying the ``favorite'' query (explained below). You can see the current value
+using the @code{mu4e-baseline-time} command.
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
 your own and/or replace the default ones; @xref{Bookmarks}. For
