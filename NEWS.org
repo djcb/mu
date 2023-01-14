@@ -30,21 +30,22 @@
 
     - ~emacs~ 26.3 or higher is now required for ~mu4e~
 
-    - ~mu4e-view-mode-hook~ now fires much earlier, before the message is
-      rendered. If you have hook-functions that depend on the message contents,
-      instead you should use the new ~mu4e-view-rendered-hook~.
+    - ~mu4e-view-mode-hook~ now fires before the message is rendered. If you have
+      hook-functions that depend on the message contents, you should use
+      the new ~mu4e-view-rendered-hook~.
 
-    - mu4e window management has been significantly reworked and cleaned up,
+    - mu4e window management has been completely reworked and cleaned up,
       affecting the message loading as well as the window-layout. As a
       user-visible feature, there's now 'z' binding (~mu4e-view-detach~), to
       'detach' view and alllow for keeping multiple views around; see the Mu4e
       manual for details.
 
-    - One change is that ~mu4e-split-view~ can no longer be a function; the new
+    - As a result of that, ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]]
 
     - ~mu4e~ now keeps track of 'baseline' query results and shows the difference
       from that in the main view and modeline. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
+
       The idea is that you get a quick overview of where changes happened while
       you were doing something else. This is somewhat experimental feature, and
       we're tweaking the details.
