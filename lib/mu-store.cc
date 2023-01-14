@@ -523,7 +523,7 @@ Store::find_message(Store::Id docid) const
  * @param id message id
  * @param target_mdir target_midr (or Nothing for current)
  * @param new_flags new flags (or Notthing)
-'; * @param opts move_optionss
+ * @param opts move_optionss
  *
  * @return the Message after the moving, or an Error
  */
