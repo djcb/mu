@@ -36,9 +36,9 @@
 
     - mu4e window management has been completely reworked and cleaned up,
       affecting the message loading as well as the window-layout. As a
-      user-visible feature, there's now 'z' binding (~mu4e-view-detach~), to
-      'detach' view and alllow for keeping multiple views around; see the Mu4e
-      manual for details.
+      user-visible feature, there's now the =z= binding (~mu4e-view-detach~), to
+      'detach' view and alllow for keeping multiple views around; see the [[info:mu4e:MSGV Detaching and reattaching][manual
+      entry]] for further details.
 
     - As a result of that, ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]]
@@ -47,7 +47,7 @@
       from that in the main view and modeline. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
 
       The idea is that you get a quick overview of where changes happened while
-      you were doing something else. This is somewhat experimental feature, and
+      you were doing something else. This is a qsomewhat experimental feature, and
       we're tweaking the details.
 
     - Related to that, you can now crown one of your bookmarks in =mu4e-bookmarks=
