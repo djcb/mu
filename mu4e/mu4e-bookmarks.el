@@ -61,7 +61,7 @@ Note that the :query parameter can be a function/lambda.
 Optionally, you can add the following:
 
 - `:favorite' - if t, monitor the results of this query, and make
-it eligible for showing its status in the modeline. At mose
+it eligible for showing its status in the modeline. At most
 one bookmark should have this set to t (otherwise the _first_
 bookmark is the implicit favorite). The query for the `:favorite'
 item must be unique among `mu4e-bookmarks' and
