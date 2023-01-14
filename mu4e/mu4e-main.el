@@ -88,6 +88,23 @@ the personal addresses."
   (interactive)
   (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
 
+(defun mu4e-baseline-time ()
+  "Show the baseline time."
+  (interactive)
+  (mu4e-message "Baseline time: %s" (mu4e--baseline-time-string)))
+
+(defun mu4e--baseline-time-string ()
+  "Calculate the baseline time string."
+  (let* ((baseline-t mu4e--query-items-baseline-tstamp)
+         (updated-t (plist-get mu4e-index-update-status :tstamp))
+         (delta-t (and baseline-t updated-t
+                       (float-time (time-subtract updated-t baseline-t)))))
+    (if (and delta-t (> delta-t 0))
+        (format-seconds  "%Y %D %H %M %z%S since latest" delta-t)
+      (if baseline-t
+          (current-time-string baseline-t)
+        "Never"))))
+
 (defun mu4e--main-reset-baseline()
   "Reset the query baseline."
   (interactive)
@@ -224,8 +241,8 @@ character of the keyboard shortcut
        (propertize (concat " " unit) 'face 'mu4e-header-title-face)
      "")  "\n"))
 
-(defun mu4e--baseline-time-string ()
-  "Calculate the baseline time string."
+(defun mu4e--main-baseline-time-string ()
+  "Calculate the baseline time string for use in the main-"
   (let* ((baseline-t mu4e--query-items-baseline-tstamp)
          (updated-t (plist-get mu4e-index-update-status :tstamp))
          (delta-t (and baseline-t updated-t
@@ -274,7 +291,10 @@ character of the keyboard shortcut
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
                               #'mu4e-update-mail-and-index)
-       (mu4e--main-action-str "\t* [R]eset  baseline\n"
+       (mu4e--main-action-str (propertize
+                               "\t* [R]eset baseline\n"
+                               'help-echo
+                               (mu4e--baseline-time-string))
                               #'mu4e--main-reset-baseline)
 
        ;; show the queue functions if `smtpmail-queue-dir' is defined
@@ -286,15 +306,11 @@ character of the keyboard shortcut
        (mu4e--main-action-str "\t* [A]bout mu4e\n" #'mu4e-about)
        (mu4e--main-action-str "\t* [H]elp\n" #'mu4e-display-manual)
        (mu4e--main-action-str "\t* [q]uit\n" #'mu4e-quit)
-
        "\n"
        (propertize "  Info\n\n" 'face 'mu4e-title-face)
        (mu4e--key-val "last updated"
                       (current-time-string
                        (plist-get mu4e-index-update-status :tstamp)))
-       (if mu4e--query-items-baseline-tstamp
-           (mu4e--key-val "baseline" (mu4e--baseline-time-string))
-         "")
        (mu4e--key-val "database-path" (mu4e-database-path))
        (mu4e--key-val "maildir" (mu4e-root-maildir))
        (mu4e--key-val "in store"
