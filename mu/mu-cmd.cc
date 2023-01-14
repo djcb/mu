@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -34,8 +34,6 @@
 #include "mu-contacts-cache.hh"
 #include "message/mu-message.hh"
 #include "message/mu-mime-object.hh"
-
-#include "utils/mu-util.h"
 
 #include "utils/mu-error.hh"
 #include "utils/mu-utils.hh"
@@ -86,12 +84,12 @@ print_field(const std::string& field, const std::string& val, bool color)
 		return;
 
 	color_maybe(MU_COLOR_MAGENTA);
-	mu_util_fputs_encoded(field.c_str(), stdout);
+	fputs_encoded(field, stdout);
 	color_maybe(MU_COLOR_DEFAULT);
 	fputs(": ", stdout);
 
 	color_maybe(MU_COLOR_GREEN);
-	mu_util_fputs_encoded(val.c_str(), stdout);
+	fputs_encoded(val, stdout);
 
 	color_maybe(MU_COLOR_DEFAULT);
 	fputs("\n", stdout);
@@ -120,12 +118,10 @@ body_or_summary(const Message& message, const Options& opts)
 	}
 
 	if (opts.view.summary_len) {
-		gchar* summ;
-		summ = mu_str_summarize(body->c_str(), *opts.view.summary_len);
+		const auto summ{summarize(body->c_str(), *opts.view.summary_len)};
 		print_field("Summary", summ, color);
-		g_free(summ);
 	} else {
-		mu_util_print_encoded("%s", body->c_str());
+		print_encoded("%s", body->c_str());
 		if (!g_str_has_suffix(body->c_str(), "\n"))
 			g_print("\n");
 	}

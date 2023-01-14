@@ -31,6 +31,8 @@
 #include <mu-store.hh>
 #include <mu-query.hh>
 
+#include <utils/mu-utils-file.hh>
+
 using namespace Mu;
 
 SCM

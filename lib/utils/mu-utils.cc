@@ -45,7 +45,6 @@
 
 #include "mu-utils.hh"
 #include "mu-utils-format.hh"
-#include "mu-util.h"
 #include "mu-error.hh"
 #include "mu-option.hh"
 
@@ -572,23 +571,6 @@ Mu::from_lexnum(const std::string& str)
 	return val;
 }
 
-
-std::string
-Mu::canonicalize_filename(const std::string& path, const std::string& relative_to)
-{
-	auto str{to_string_opt_gchar(
-		g_canonicalize_filename(
-			path.c_str(),
-			relative_to.empty() ? nullptr : relative_to.c_str())).value()};
-
-	// remove trailing '/'... is this needed?
-	if (str[str.length()-1] == G_DIR_SEPARATOR)
-		str.erase(str.length() - 1);
-
-	return str;
-}
-
-
 bool
 Mu::locale_workaround() try
 {
@@ -627,35 +609,110 @@ Mu::timezone_available(const std::string& tz)
 	return have_tz;
 }
 
-
 std::string
-Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
+Mu::summarize(const std::string& str, size_t max_lines)
 {
-	auto [mu_cache, mu_config] =
-		std::invoke([&]()->std::pair<std::string, std::string> {
+	size_t nl_seen;
+	unsigned i,j;
+	gboolean last_was_blank;
 
-			static std::string mu{"/mu"};
-			if (muhome.empty())
-				return { g_get_user_cache_dir() + mu,
-					 g_get_user_config_dir() + mu };
-			else
-				return { muhome, muhome };
-	});
+	if (str.empty())
+		return {};
 
-	switch (path) {
-	case Mu::RuntimePath::Cache:
-		return mu_cache;
-	case Mu::RuntimePath::XapianDb:
-		return mu_cache + "/xapian";
-	case Mu::RuntimePath::LogFile:
-		return mu_cache + "/mu.log";
-	case Mu::RuntimePath::Bookmarks:
-		return mu_config + "/bookmarks";
-	case Mu::RuntimePath::Config:
-		return mu_config;
-	case Mu::RuntimePath::Scripts:
-		return mu_config + "/scripts";
-	default:
-		throw std::logic_error("unknown path");
+	/* len for summary <= original len */
+	char *summary = g_new (gchar, str.length() + 1);
+
+	/* copy the string up to max_lines lines, replace CR/LF/tab with
+	 * single space */
+	for (i = j = 0, nl_seen = 0, last_was_blank = TRUE;
+	     nl_seen < max_lines && i < str.length(); ++i) {
+
+		if (str[i] == '\n' || str[i] == '\r' ||
+		    str[i] == '\t' || str[i] == ' ' ) {
+
+			if (str[i] == '\n')
+				++nl_seen;
+
+			/* no double-blanks or blank at end of str */
+			if (!last_was_blank && str[i+1] != '\0')
+				summary[j++] = ' ';
+
+			last_was_blank = TRUE;
+		} else {
+
+			summary[j++] = str[i];
+			last_was_blank = FALSE;
+		}
 	}
+
+	summary[j] = '\0';
+
+	return to_string_gchar(std::move(summary)/*consumes*/);
+}
+
+
+
+
+static bool
+locale_is_utf8 (void)
+{
+	const gchar *dummy;
+	static int is_utf8 = -1;
+	if (G_UNLIKELY(is_utf8 == -1))
+		is_utf8 = g_get_charset(&dummy) ? 1 : 0;
+
+	return !!is_utf8;
+}
+
+bool
+Mu::fputs_encoded (const std::string& str, FILE *stream)
+{
+	g_return_val_if_fail (stream, false);
+
+	/* g_get_charset return TRUE when the locale is UTF8 */
+	if (locale_is_utf8())
+		return ::fputs (str.c_str(), stream) == EOF ? false: true;
+
+	 /* charset is _not_ utf8, so we need to convert it */
+	char *conv{};
+	if (g_utf8_validate (str.c_str(), -1, NULL))
+		conv = g_locale_from_utf8 (str.c_str(), -1, {}, {}, {});
+
+	/* conversion failed; this happens because is some cases GMime may gives
+	 * us non-UTF-8 strings from e.g. wrongly encoded message-subjects; if
+	 * so, we escape the string */
+	conv = conv ? conv : g_strescape (str.c_str(), "\n\t");
+	int rv   = conv ? ::fputs (conv, stream) : EOF;
+	g_free (conv);
+
+	return (rv == EOF) ? false: true;
+}
+
+__attribute__((format(printf, 2, 0)))
+static bool
+print_args (FILE *stream, const char *frm, va_list args)
+{
+	gchar *str;
+	gboolean rv;
+
+	str = g_strdup_vprintf (frm, args);
+	rv = fputs_encoded (str, stream);
+	g_free (str);
+
+	return rv;
+}
+
+bool
+Mu::print_encoded (const char *frm, ...)
+{
+	va_list args;
+	gboolean rv;
+
+	g_return_val_if_fail (frm, false);
+
+	va_start (args, frm);
+	rv = print_args (stdout, frm, args);
+	va_end (args);
+
+	return rv;
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,8 +19,8 @@
 
 #include "config.h"
 #include "mu-cmd.hh"
-#include "utils/mu-util.h"
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include "utils/mu-regex.hh"
 #include <message/mu-message.hh>
 
@@ -38,16 +38,10 @@ save_part(const Message::Part& part, size_t idx, const Options& opts)
 
 	if (auto&& res{part.to_file(path, opts.extract.overwrite)}; !res)
 		return Err(res.error());
-
-	if (opts.extract.play) {
-		GError *err{};
-		if (auto res{mu_util_play(path.c_str(), &err)};
-		    res != MU_OK)
-			return Err(Error::Code::Play, &err, "playing '%s' failed",
-				   path.c_str());
-	}
-
-	return Ok();
+	else if (opts.extract.play)
+		return play(path);
+	else
+		return Ok();
 }
 
 static Result<void>
@@ -113,19 +107,18 @@ show_part(const MessagePart& part, size_t index, bool color)
 	/* filename */
 	color_maybe(MU_COLOR_GREEN);
 	const auto fname{part.raw_filename()};
-	mu_util_fputs_encoded(fname ? fname->c_str() : "<none>", stdout);
-
-	mu_util_fputs_encoded(" ", stdout);
+	fputs_encoded(fname.value_or("<none>"), stdout);
+	fputs_encoded(" ", stdout);
 
 	/* content-type */
 	color_maybe(MU_COLOR_BLUE);
 	const auto ctype{part.mime_type()};
-	mu_util_fputs_encoded(ctype ? ctype->c_str() :  "<none>", stdout);
+	fputs_encoded(ctype.value_or("<none>"), stdout);
 
 	/* /\* disposition *\/ */
 	color_maybe(MU_COLOR_MAGENTA);
-	mu_util_print_encoded(" [%s]", part.is_attachment() ?
-			      "attachment" : "inline");
+	print_encoded(" [%s]", part.is_attachment() ?
+		      "attachment" : "inline");
 	/* size */
 	if (part.size() > 0) {
 		color_maybe(MU_COLOR_CYAN);
@@ -159,7 +152,7 @@ Mu::mu_cmd_extract(const Options& opts)
 	    opts.extract.filename_rx.empty())
 		return show_parts(opts.extract.message, opts); /* show, don't save */
 
-	if (!mu_util_check_dir(opts.extract.targetdir.c_str(), FALSE, TRUE))
+	if (!check_dir(opts.extract.targetdir, false/*!readable*/, true/*writeable*/))
 		return Err(Error::Code::File,
 			   "target '%s' is not a writable directory",
 			   opts.extract.targetdir.c_str());

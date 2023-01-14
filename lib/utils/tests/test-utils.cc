@@ -282,19 +282,6 @@ test_locale_workaround()
 	g_assert_true(locale_workaround());
 }
 
-static void
-test_error()
-{
-	GError *err;
-	err = g_error_new(MU_ERROR_DOMAIN, 77, "Hello, %s", "world");
-	Error ex{Error::Code::Crypto, &err, "boo"};
-	g_assert_cmpstr(ex.what(), ==, "boo: Hello, world");
-
-	ex.fill_g_error(&err);
-	g_assert_cmpuint(err->code, ==, static_cast<unsigned>(Error::Code::Crypto));
-	g_clear_error(&err);
-}
-
 enum struct TestEnum { A, B, C };
 constexpr AssocPairs<TestEnum, std::string_view, 3>
 test_epairs = {{
@@ -323,6 +310,31 @@ test_enum_pairs(void)
 	g_assert_true(to_type("c").value() ==  TestEnum::C);
 }
 
+
+
+static void
+test_summarize(void)
+{
+	const char *txt =
+		"Khiron was fortified and made the seat of a pargana during "
+		"the reign of Asaf-ud-Daula.\n\the headquarters had previously "
+		"been at Satanpur since its foundation and fortification by "
+		"the Bais raja Sathna.\n\nKhiron was also historically the seat "
+		"of a taluqdari estate belonging to a Janwar dynasty.\n"
+		"There were also several Kayasth qanungo families, "
+		"including many descended from Rai Sahib Rai, who had been "
+		"a chakladar under the Nawabs of Awadh.";
+
+	const auto summ = summarize(txt, 3);
+	g_assert_cmpstr(summ.c_str(), ==,
+			"Khiron was fortified and made the seat of a pargana "
+			"during the reign of Asaf-ud-Daula. he headquarters had "
+			"previously been at Satanpur since its foundation and "
+			"fortification by the Bais raja Sathna. ");
+}
+
+
+
 int
 main(int argc, char* argv[])
 {
@@ -335,12 +347,12 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/remove-ctrl", test_remove_ctrl);
 	g_test_add_func("/utils/clean", test_clean);
 	g_test_add_func("/utils/format", test_format);
+	g_test_add_func("/utils/summarize", test_summarize);
 	g_test_add_func("/utils/split", test_split);
 	g_test_add_func("/utils/join", test_join);
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
-	g_test_add_func("/utils/error", test_error);
 	g_test_add_func("/utils/enum-pairs", test_enum_pairs);
 
 	return g_test_run();

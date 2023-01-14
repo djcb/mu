@@ -33,6 +33,7 @@
 #include "mu-store.hh"
 #include "utils/mu-result.hh"
 #include <utils/mu-utils.hh>
+#include <utils/mu-utils-file.hh>
 #include "mu-maildir.hh"
 
 using namespace Mu;

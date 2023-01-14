@@ -34,7 +34,7 @@
 #include "glibconfig.h"
 #include "mu-maildir.hh"
 #include "utils/mu-utils.hh"
-#include "utils/mu-util.h"
+#include "utils/mu-utils-file.hh"
 
 using namespace Mu;
 
@@ -61,7 +61,8 @@ get_dtype(struct dirent* dentry, const std::string& path, bool use_lstat)
 
 slowpath:
 #endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
-	return mu_util_get_dtype(path.c_str(), use_lstat);
+
+	return determine_dtype(path, use_lstat);
 }
 
 static Mu::Result<void>
@@ -77,7 +78,7 @@ create_maildir(const std::string& path, mode_t mode)
 
 		/* if subdir already exists, don't try to re-create
 		 * it */
-		if (mu_util_check_dir(fullpath.c_str(), TRUE, TRUE))
+		if (check_dir(fullpath, true/*readable*/, true/*writable*/))
 			continue;
 
 		int rv{g_mkdir_with_parents(fullpath.c_str(), static_cast<int>(mode))};
@@ -85,7 +86,7 @@ create_maildir(const std::string& path, mode_t mode)
 		/* note, g_mkdir_with_parents won't detect an error if
 		 * there's already such a dir, but with the wrong
 		 * permissions; so we need to check */
-		if (rv != 0 || !mu_util_check_dir(fullpath.c_str(), TRUE, TRUE))
+		if (rv != 0 || !check_dir(fullpath, true/*readable*/, true/*writable*/))
 			return Err(Error{Error::Code::File,
 					"creating dir failed for %s: %s",
 					fullpath.c_str(), g_strerror(errno)});

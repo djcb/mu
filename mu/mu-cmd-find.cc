@@ -36,7 +36,6 @@
 #include "message/mu-message.hh"
 
 #include "utils/mu-option.hh"
-#include "utils/mu-util.h"
 
 #include "mu-cmd.hh"
 #include "utils/mu-utils.hh"
@@ -258,12 +257,10 @@ print_summary(const Message& msg, const Options& opts)
 	if (!body)
 		return;
 
-	const auto summ{to_string_opt_gchar(
-			mu_str_summarize(body->c_str(),
-					 opts.find.summary_len.value_or(0)))};
+	const auto summ{summarize(body->c_str(), opts.find.summary_len.value_or(0))};
 
 	g_print("Summary: ");
-	mu_util_fputs_encoded(summ ? summ->c_str() : "<none>", stdout);
+	fputs_encoded(summ, stdout);
 	g_print("\n");
 }
 
@@ -311,8 +308,8 @@ output_plain_fields(const Message& msg, const std::string& fields,
 
 		else {
 			ansi_color_maybe(field_opt->id, color);
-			nonempty += mu_util_fputs_encoded(
-				display_field(msg, field_opt->id).c_str(), stdout);
+			nonempty += fputs_encoded(
+				display_field(msg, field_opt->id), stdout);
 			ansi_reset_maybe(field_opt->id, color);
 		}
 	}

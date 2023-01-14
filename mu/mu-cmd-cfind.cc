@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,7 +27,6 @@
 
 #include <utils/mu-utils.hh>
 #include <utils/mu-regex.hh>
-#include <utils/mu-util.h>
 #include <utils/mu-option.hh>
 
 using namespace Mu;
@@ -113,14 +112,14 @@ output_plain(ItemType itype, OptContact contact, const Options& opts)
 	const auto col2{opts.nocolor ? "" : MU_COLOR_GREEN};
 	const auto coldef{opts.nocolor ? "" : MU_COLOR_DEFAULT};
 
-	mu_util_print_encoded("%s%s%s%s%s%s%s\n",
-				 col1,
-				 contact->name.c_str(),
-				 coldef,
-				 contact->name.empty() ? "" : " ",
-				 col2,
-				 contact->email.c_str(),
-				 coldef);
+	print_encoded("%s%s%s%s%s%s%s\n",
+		      col1,
+		      contact->name.c_str(),
+		      coldef,
+		      contact->name.empty() ? "" : " ",
+		      col2,
+		      contact->email.c_str(),
+		      coldef);
 }
 
 static void
@@ -130,8 +129,8 @@ output_mutt_alias(ItemType itype, OptContact contact, const Options& opts)
 		return;
 
 	const auto nick{guess_nick(*contact)};
-	mu_util_print_encoded("alias %s %s <%s>\n", nick.c_str(),
-			      contact->name.c_str(), contact->email.c_str());
+	print_encoded("alias %s %s <%s>\n", nick.c_str(),
+		      contact->name.c_str(), contact->email.c_str());
 }
 
 static void
@@ -143,9 +142,9 @@ output_mutt_address_book(ItemType itype, OptContact contact, const Options& opts
 	if (!contact)
 		return;
 
-	mu_util_print_encoded("%s\t%s\t\n",
-			      contact->email.c_str(),
-			      contact->name.c_str());
+	print_encoded("%s\t%s\t\n",
+		      contact->email.c_str(),
+		      contact->name.c_str());
 }
 
 static void
@@ -156,10 +155,10 @@ output_wanderlust(ItemType itype, OptContact contact, const Options& opts)
 
 	auto nick=guess_nick(*contact);
 
-	mu_util_print_encoded("%s \"%s\" \"%s\"\n",
-			      contact->email.c_str(),
-			      nick.c_str(),
-			      contact->name.c_str());
+	print_encoded("%s \"%s\" \"%s\"\n",
+		      contact->email.c_str(),
+		      nick.c_str(),
+		      contact->name.c_str());
 }
 
 static void
@@ -168,9 +167,9 @@ output_org_contact(ItemType itype, OptContact contact, const Options& opts)
 	if (!contact || contact->name.empty())
 		return;
 
-	mu_util_print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
-			      contact->name.c_str(),
-			      contact->email.c_str());
+	print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
+		      contact->name.c_str(),
+		      contact->email.c_str());
 }
 
 static void
@@ -201,9 +200,9 @@ output_csv(ItemType itype, OptContact contact, const Options& opts)
 	if (!contact)
 		return;
 
-	mu_util_print_encoded("%s,%s\n",
-			      contact->name.empty() ? "" : Mu::quote(contact->name).c_str(),
-			      Mu::quote(contact->email).c_str());
+	print_encoded("%s,%s\n",
+		      contact->name.empty() ? "" : Mu::quote(contact->name).c_str(),
+		      Mu::quote(contact->email).c_str());
 }
 
 static void
@@ -216,7 +215,7 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 		g_print ("  {\n");
 
 		const std::string name = contact->name.empty() ? "null" : Mu::quote(contact->name);
-		mu_util_print_encoded(
+		print_encoded(
 			"    \"email\"         : \"%s\",\n"
 			"    \"name\"          : %s,\n"
 			"    \"display\"       : %s,\n"

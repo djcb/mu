@@ -41,6 +41,7 @@
 #include "utils/mu-error.hh"
 
 #include "utils/mu-utils.hh"
+#include <utils/mu-utils-file.hh>
 #include "utils/mu-xapian-utils.hh"
 
 using namespace Mu;

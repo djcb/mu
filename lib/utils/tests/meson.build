@@ -18,18 +18,13 @@
 ################################################################################
 # tests
 #
-test('test-mu-util',
-     executable('test-mu-util',
-		'test-mu-util.c',
-		install: false,
-		dependencies: [glib_dep,config_h_dep, lib_mu_utils_dep]))
 test('test-option',
      executable('test-option',
-		'test-option.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep]))
+                'test-option.cc',
+                install: false,
+                dependencies: [glib_dep, lib_mu_utils_dep]))
 test('test-mu-utils',
      executable('test-mu-utils',
-		'test-utils.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_utils_dep]))
+                'test-utils.cc',
+                install: false,
+                dependencies: [glib_dep, lib_mu_utils_dep]))

@@ -110,6 +110,27 @@ static inline std::string join(const std::vector<std::string>& svec, char sepa) 
 }
 
 /**
+ * write a string (assumed to be in utf8-format) to a stream,
+ * converted to the current locale
+ *
+ * @param str a string
+ * @param stream a stream
+ *
+ * @return true if printing worked, false otherwise
+ */
+bool fputs_encoded (const std::string& str, FILE *stream);
+
+/**
+ * print a formatted string (assumed to be in utf8-format) to stdout,
+ * converted to the current locale
+ *
+ * @param a standard printf() format string, followed by a parameter list
+ *
+ * @return true if printing worked, false otherwise
+ */
+bool print_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
+
+/**
  * Parse a date string to the corresponding time_t
  * *
  * @param date the date expressed a YYYYMMDDHHMMSS or any n... of the first
@@ -161,30 +182,6 @@ bool locale_workaround();
  * @return true or false
  */
 bool timezone_available(const std::string& tz);
-
-/**
- * Well-known runtime paths
- *
- */
-enum struct RuntimePath {
-	XapianDb,
-	Cache,
-	LogFile,
-	Config,
-	Scripts,
-	Bookmarks
-};
-
-/**
- * Get some well-known Path for internal use when don't have
- * access to the command-line
- *
- * @param path the RuntimePath to find
- * @param muhome path to muhome directory, or empty for the default.
- *
- * @return the path name
- */
-std::string runtime_path(RuntimePath path, const std::string& muhome="");
 
 
 // https://stackoverflow.com/questions/19053351/how-do-i-use-a-custom-deleter-with-a-stdunique-ptr-member
@@ -247,16 +244,6 @@ private:
 };
 
 /**
- * See g_canonicalize_filename
- *
- * @param filename
- * @param relative_to
- *
- * @return
- */
-std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
-
-/**
  * Convert a size string to a size in bytes
  *
  * @param sizestr the size string
@@ -275,6 +262,17 @@ Option<int64_t> parse_size(const std::string& sizestr, bool first);
  * @return the size expressed as a string with the decimal number of bytes
  */
 std::string size_to_string(int64_t size);
+
+/**
+ * get a crude 'summary' of the string, ie. the first /n/ lines of the strings,
+ * with all newlines removed, replaced by single spaces
+ *
+ * @param str the source string
+ * @param max_lines the maximum number of lines to include in the summary
+ *
+ * @return a newly allocated string with the summary. use g_free to free it.
+ */
+std::string summarize(const std::string& str, size_t max_lines);
 
 /**
  * Convert any ostreamable<< value to a string
@@ -446,7 +444,6 @@ to_second(const P& p, typename P::value_type::first_type f)
 	return Nothing;
 }
 
-
 /**
  * Convert string view in something printable with %.*s
  */
@@ -488,6 +485,15 @@ private:
 
 	const bool color_;
 };
+
+#define MU_COLOR_RED		"\x1b[31m"
+#define MU_COLOR_GREEN		"\x1b[32m"
+#define MU_COLOR_YELLOW		"\x1b[33m"
+#define MU_COLOR_BLUE		"\x1b[34m"
+#define MU_COLOR_MAGENTA	"\x1b[35m"
+#define MU_COLOR_CYAN		"\x1b[36m"
+#define MU_COLOR_DEFAULT	"\x1b[0m"
+
 
 /// Allow using enum structs as bitflags
 #define MU_TO_NUM(ET, ELM)  std::underlying_type_t<ET>(ELM)

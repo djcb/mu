@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,7 +24,6 @@
 #include <string>
 
 #include "mu-utils-format.hh"
-#include "mu-util.h"
 #include <glib.h>
 
 namespace Mu {
@@ -164,11 +163,18 @@ struct Error final : public std::exception {
 	 * @param err GError** (or NULL)
 	 */
 	void fill_g_error(GError **err) const noexcept{
-		g_set_error(err, MU_ERROR_DOMAIN, static_cast<int>(code_),
+		g_set_error(err, error_quark(), static_cast<int>(code_),
 			    "%s", what_.c_str());
 	}
 
 private:
+	static inline GQuark error_quark (void) {
+	static GQuark error_domain = 0;
+	if (G_UNLIKELY(error_domain == 0))
+		error_domain = g_quark_from_static_string("mu-error-quark");
+	return error_domain;
+	}
+
 	const Code  code_;
 	std::string what_;
 };
