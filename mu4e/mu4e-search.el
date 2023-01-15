@@ -389,7 +389,13 @@ status, STATUS."
    ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
-          (mu4e-get-maildirs)))
+          (mapcar (lambda (dir)
+                    ;; Quote maildirs with whitespace in their name, e.g.,
+                    ;; maildir:"Foobar/Junk Mail".
+                    (if (string-match-p "[[:space:]]" dir)
+                        (concat "\"" dir "\"")
+                      dir))
+                  (mu4e-get-maildirs))))
    ((looking-back "prio:\\(\\w*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
