@@ -553,7 +553,7 @@ You can append flags."
          ;; When we're replying to ourselves, simply keep the same headers.
          (concat
           (mu4e~draft-header "To" (mu4e~draft-recipients-list-to-string
-                                   (mu4e-message-field origmsg :to)))
+                                   (mu4e-message-field origmsg :from)))
           (mu4e~draft-header "Cc" (mu4e~draft-recipients-list-to-string
                                    (mu4e-message-field origmsg :cc))))
 
