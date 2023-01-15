@@ -34,6 +34,29 @@
 (require 'mu4e-helpers)
 (require 'mu4e-server)
 
+
+(defcustom mu4e-query-rewrite-function 'identity
+  "Function to rewrite a query.
+
+It takes a search expression string, and returns a possibly
+  changed search expression string.
+
+This function is applied on the search expression just before
+searching, and allows users to modify the query.
+
+For instance, we could change and of workmail into
+\"maildir:/long-path-to-work-related-emails\", by setting the function
+
+(setq mu4e-query-rewrite-function
+  (lambda(expr)
+     (replace-regexp-in-string \"workmail\"
+                   \"maildir:/long-path-to-work-related-emails\" expr)))
+
+It is good to remember that the replacement does not understand
+anything about the query, it just does text replacement."
+  :type 'function
+  :group 'mu4e-search)
+
 (defvar mu4e--query-items-baseline nil
   "Some previous version of the query-items.
 This is used as the baseline to track updates by comparing it to
@@ -151,6 +174,7 @@ bookmark or maildir."
             (name (plist-get item :name))
             ;; maildir items may have an implicit name
             ;; which is the maildir value.
+            (query (funcall mu4e-query-rewrite-function query))
             (name (or name (and (equal type 'maildirs) maildir)))
 
             (last-results (mu4e-server-query-items))

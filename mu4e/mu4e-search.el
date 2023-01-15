@@ -114,27 +114,8 @@ chronologically (`:date') by the newest message in the thread."
   :type 'symbol
   :group 'mu4e-search)
 
-(defcustom mu4e-query-rewrite-function 'identity
-  "Function to rewrite a query.
-
-It takes a search expression string, and returns a possibly
-  changed search expression string.
-
-This function is applied on the search expression just before
-searching, and allows users to modify the query.
-
-For instance, we could change and of workmail into
-\"maildir:/long-path-to-work-related-emails\", by setting the function
-
-(setq mu4e-query-rewrite-function
-  (lambda(expr)
-     (replace-regexp-in-string \"workmail\"
-                   \"maildir:/long-path-to-work-related-emails\" expr)))
-
-It is good to remember that the replacement does not understand
-anything about the query, it just does text replacement."
-  :type 'function
-  :group 'mu4e-search)
+;; mu4e-query-rewrite-function lives in mu4e-query-items.el
+;; to avoid circular deps.
 
 (defcustom mu4e-search-bookmark-hook nil
   "Hook run just after invoking a bookmarked search.
