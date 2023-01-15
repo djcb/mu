@@ -39,6 +39,7 @@
 (require 'mu4e-bookmarks)
 (require 'mu4e-update)
 (require 'mu4e-main)
+(require 'mu4e-notification)
 (require 'mu4e-server)     ;; communication with backend
 
 
@@ -49,7 +50,12 @@
   :group 'mu4e)
 
 (defcustom mu4e-modeline-support t
-  "Support for shoiwing information in the modeline."
+  "Support for showing information in the modeline."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-notification-support nil
+  "Support for new-message notifications."
   :type 'boolean
   :group 'mu4e)
 
@@ -82,8 +88,8 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
-  (mu4e--start (unless background #'mu4e--main-view))
-  (mu4e--query-items-refresh))
+  (mu4e--query-items-refresh)
+  (mu4e--start (unless background #'mu4e--main-view)))
 
 (defun mu4e-quit()
   "Quit the mu4e session."
@@ -134,13 +140,6 @@ Invoke FUNC if non-nil."
                          (lambda () (mu4e-update-mail-and-index
                                      mu4e-index-update-in-background)))))))
 
-  ;; ;; 2. update the main view, if any
-  ;; (when-let ((mainbuf (get-buffer mu4e-main-buffer-name)))
-  ;;   (when (buffer-live-p mainbuf)
-  ;;     (mu4e--main-redraw-buffer)))
-  ;; ;; 3. modeline.
-  ;; (mu4e--modeline-update)
-
 (defun mu4e--start (&optional func)
   "Start mu4e.
 If `mu4e-contexts' have been defined, but we don't have a context
@@ -153,12 +152,16 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func
         (lambda (info) (mu4e--pong-handler info func)))
-  (mu4e--modeline-register #'mu4e--bookmarks-modeline-item 'global)
+  ;; modeline support
   (when mu4e-modeline-support
+    (mu4e--modeline-register #'mu4e--bookmarks-modeline-item 'global)
     (mu4e-modeline-mode)
     (add-hook 'mu4e-query-items-updated-hook
               #'mu4e--modeline-update))
   (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
+  (when mu4e-notification-support
+    (add-hook 'mu4e-query-items-updated-hook
+              #'mu4e--notification))
   (mu4e--server-ping)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
@@ -172,6 +175,8 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (mu4e-clear-caches)
   (remove-hook 'mu4e-query-items-updated-hook
               #'mu4e--modeline-update)
+  (remove-hook 'mu4e-query-items-updated-hook
+               #'mu4e--notification)
   (mu4e-kill-update-mail)
   (mu4e-modeline-mode -1)
   (mu4e--server-kill)
@@ -271,6 +276,7 @@ chance."
    mu4e-maildir-list nil
    mu4e--contacts-set nil
    mu4e--contacts-tstamp "0"))
-;;; _
+
+;;;
 (provide 'mu4e)
 ;;; mu4e.el ends here

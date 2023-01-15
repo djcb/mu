@@ -96,6 +96,7 @@ with answers to frequently asked questions, @ref{FAQ}.
 * Dynamic folders:: Folders that change based on circumstances
 * Actions:: Defining and using custom actions
 * Extending mu4e:: Writing code for @t{mu4e}
+* Integration:: Integrating @t{mu4e} with Emacs facilities
 
 Appendices
 * Other tools:: mu4e and the rest of the world
@@ -2479,7 +2480,7 @@ contexts very often, and e.g. manually changes contexts with @kbd{M-x
 mu4e-context-switch}.
 @end itemize
 
-You can easily switch contexts manually using the @kbd{;} key from 
+You can easily switch contexts manually using the @kbd{;} key from
 the main screen, or by pressing @kbd{C-c ;} when drafting a message
 using the editor view.
 
@@ -3059,22 +3060,45 @@ see @code{mu4e-toggle-logging}.
 @code{user-error} and @code{error} functions.
 @end itemize
 
-@node Integrating with Emacs
-@chapter Integrating with Emacs
+@node Integration
+@chapter Integrating @t{mu4e} with Emacs facilities
 
 In this chapter, we discuss how you can integrate @t{mu4e} with Emacs in various
 ways. Here we focus on Emacs built-ins; for dealing with external tools,
 @xref{Other tools}.
 
 @menu
-* Modeline::Showing mu4e's status in the modeline
 * Default email client::Making mu4e the default emacs e-mail program
-* Using bookmarks::Using Emacs' bookmark system
+* Modeline::Showing mu4e's status in the modeline
+* Desktop notifications::Get desktop notifications for new mail
+* Emacs bookmarks::Using Emacs' bookmark system
 * Org-mode links::Adding mu4e to your organized life
 * iCalendar::Enabling iCalendar invite processing
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
 @end menu
+
+
+@node Default email client
+@section Default email client
+
+Emacs allows you to select an e-mail program as the default program it uses when
+you press @key{C-x m} (@code{compose-mail}), call @code{report-emacs-bug} and so
+on. If you want to use @t{mu4e} for this, you can do so by adding the following
+to your configuration:
+
+@lisp
+(setq mail-user-agent 'mu4e-user-agent)
+@end lisp
+
+Similarly, to specify @t{mu4e} as your preferred method for reading
+mail, customize the variable @code{read-mail-command}.
+
+@lisp
+(set-variable 'read-mail-command 'mu4e)
+@end lisp
+
+(@pxref{Top,,Emacs,Sending Mail, Mail Methods})
 
 @node Modeline
 @section Modeline
@@ -3130,29 +3154,28 @@ Due to the way queries work, the modeline is @emph{not} immediately updated when
 you read messages; but going back to the main view (with @kbd{M-x mu4e} restores
 things.
 
-@node Default email client
-@section Default email client
+@node Desktop notifications
+@section Desktop notifications
 
-Emacs allows you to select an e-mail program as the default program it uses when
-you press @key{C-x m} (@code{compose-mail}), call @code{report-emacs-bug} and so
-on. If you want to use @t{mu4e} for this, you can do so by adding the following
-to your configuration:
+Depending on your desktop environment, it is possible to get notification when
+there is new mail.
 
-@lisp
-(setq mail-user-agent 'mu4e-user-agent)
-@end lisp
+The default implementation (which you can override) depends on the same system
+used for the @xref{Bookmarks and Maildirs} in the main view and the
+@xref{Modeline}, and thus gives updates when there new messages compared to some
+``baseline'', as discussed earlier.
 
-Similarly, to specify @t{mu4e} as your preferred method for reading
-mail, customize the variable @code{read-mail-command}.
+For now, notifications are implemented for desktop environments that support
+DBus-based notifications, as per Emacs' notification sub-system
+@xref{Desktop Notifications,,,elisp,GNU Emacs Lisp Reference Manual}.
 
-@lisp
-(set-variable 'read-mail-command 'mu4e)
-@end lisp
+You can enable mu4e's desktop notifications (provided that you are on a
+supported system) by setting @code{mu4e-notification-support} to @t{t}. If you
+want tweak the details, have a look at @code{mu4e-notification-filter} and
+@code{mu4e-notification-function}.
 
-(@pxref{Top,,Emacs,Sending Mail, Mail Methods})
-
-@node Using bookmarks
-@section Using bookmarks
+@node Emacs bookmarks
+@section Emacs bookmarks
 
 Note, emacs bookmarks are not to be confused with mu4e's bookmarks; the former
 are a generic linking system, while the latter are remember stored queries.
