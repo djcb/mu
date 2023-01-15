@@ -105,12 +105,6 @@ the personal addresses."
           (current-time-string baseline-t)
         "Never"))))
 
-(defun mu4e--main-reset-baseline()
-  "Reset the query baseline."
-  (interactive)
-  (mu4e--query-items-reset-baseline)
-  (revert-buffer))
-
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
@@ -121,7 +115,6 @@ the personal addresses."
     (define-key map "f" #'smtpmail-send-queued-mail)
     ;;
     (define-key map "U" #'mu4e-update-mail-and-index)
-    (define-key map "R" #'mu4e--main-reset-baseline)
     (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
@@ -168,8 +161,8 @@ the personal addresses."
   (mu4e-update-minor-mode)
   (setq-local revert-buffer-function
               (lambda (_ignore-auto _noconfirm)
-                ;; the query results will trigger a redraw
-                (mu4e--query-items-refresh)))
+                ;; reset the baseline and get updated results.
+                (mu4e--query-items-refresh 'reset-baseline)))
   (add-hook 'mu4e-query-items-updated-hook
             (lambda ()
               (when (get-buffer mu4e-main-buffer-name)
@@ -291,12 +284,6 @@ character of the keyboard shortcut
 
        (mu4e--main-action-str "\t* [U]pdate email & database\n"
                               #'mu4e-update-mail-and-index)
-       (mu4e--main-action-str (propertize
-                               "\t* [R]eset baseline\n"
-                               'help-echo
-                               (mu4e--baseline-time-string))
-                              #'mu4e--main-reset-baseline)
-
        ;; show the queue functions if `smtpmail-queue-dir' is defined
        (if (file-directory-p smtpmail-queue-dir)
            (mu4e--main-view-queue)
@@ -359,8 +346,10 @@ character of the keyboard shortcut
 
 (declare-function mu4e--start "mu4e")
 
-(defun mu4e--main-view ()
+(defun mu4e--main-view (&optional refresh)
   "(Re)create the mu4e main-view, and switch to it.
+
+With non-nil REFRESH, refresh queries and baseline first.
 
 If `mu4e-split-view' equals \='single-window, show a mu4e menu
 instead."
@@ -371,6 +360,8 @@ instead."
       ;; `mu4e--main-view' is called from `mu4e--start', so don't call it a
       ;; second time here i.e. do not refresh unless specified explicitly with
       ;; REFRESH arg.
+      (when refresh
+        (mu4e--query-items-refresh 'reset-baseline))
       (with-current-buffer buf
         (mu4e--main-redraw-buffer))
       (mu4e-display-buffer buf t)))
@@ -390,8 +381,7 @@ instead."
                    (if smtpmail-queue-mail "queued" "sent directly")))
   (unless (or (eq mu4e-split-view 'single-window)
               (not (buffer-live-p (get-buffer mu4e-main-buffer-name))))
-    (with-current-buffer mu4e-main-buffer-name
-      (revert-buffer))))
+    (mu4e--main-redraw-buffer)))
 
 (defun mu4e--main-menu ()
   "The mu4e main menu in the mini-buffer."

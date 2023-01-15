@@ -735,7 +735,6 @@ The main view looks something like the following:
 
         * [;]Switch context
         * [U]pdate email & database
-        * [R]eset query-results baseline
         * toggle [m]ail sending mode (currently direct)
         * [f]lush 1 queued mail
 
@@ -1012,7 +1011,6 @@ a            execute some custom action on a header
 |            pipe message through shell command
 C-+,C--      increase / decrease the number of headers shown
 H            get help
-C-c C-r      reset query results baseline
 C-S-u        update mail & reindex
 C-c C-u      update mail & reindex
 q            leave the headers buffer

@@ -268,7 +268,8 @@ chance."
   (mu4e-setq-if-nil mu4e-contacts-func         #'mu4e--update-contacts)
   (mu4e-setq-if-nil mu4e-info-func             #'mu4e--info-handler)
   (mu4e-setq-if-nil mu4e-pong-func             #'mu4e--default-handler)
-  (mu4e-setq-if-nil mu4e-queries-func          #'mu4e--query-items-queries-handler))
+
+  (mu4e-setq-if-nil mu4e-queries-func      #'mu4e--query-items-queries-handler))
 
 (defun mu4e-clear-caches ()
   "Clear any cached resources."

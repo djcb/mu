@@ -128,8 +128,11 @@ If ITEMS does not yet have a favorite item, pick the first."
        (propertize (number-to-string count)
                    'help-echo "Total number")))))
 
-(defun mu4e--query-items-refresh()
-  "Get the latest query data from the mu4e server."
+(defun mu4e--query-items-refresh (&optional reset-baseline)
+  "Get the latest query data from the mu4e server.
+With RESET-BASELINE, reset the baseline first."
+  (when reset-baseline
+    (mu4e--query-items-reset-baseline))
   (mu4e--server-queries
    ;; note: we must apply the rewrite function here, since the query does not go
    ;; through mu4e-search.

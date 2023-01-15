@@ -1541,7 +1541,6 @@ region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-handle-when-leaving)
   (quit-window t)
-  (mu4e--query-items-reset-baseline)
   (mu4e--main-view))
 
 
