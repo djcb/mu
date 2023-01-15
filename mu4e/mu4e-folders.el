@@ -180,7 +180,7 @@ the result."
         (or val (mu4e-error "%S evaluates to nil" foldervar)))))
 
 (defun mu4e-get-drafts-folder (&optional msg)
-  "Get the sent folder, optionallly based on MSG.
+  "Get the drafts folder, optionallly based on MSG.
 See `mu4e-drafts-folder'." (mu4e--get-folder 'mu4e-drafts-folder msg))
 
 (defun mu4e-get-refile-folder (&optional msg)
@@ -192,7 +192,7 @@ See `mu4e-refile-folder'." (mu4e--get-folder 'mu4e-refile-folder msg))
 See `mu4e-sent-folder'." (mu4e--get-folder 'mu4e-sent-folder msg))
 
 (defun mu4e-get-trash-folder (&optional msg)
-  "Get the sent folder, optionallly based on MSG.
+  "Get the trash folder, optionallly based on MSG.
 See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
 
 
