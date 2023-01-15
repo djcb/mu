@@ -367,7 +367,7 @@ sub_init(CLI::App& sub, Options& opts)
 		->type_name("<addresses>");
 	sub.add_option("--max-message-size", opts.init.max_msg_size,
 		       "Maximum allowed message size in bytes");
-	sub.add_option("--batch-size", opts.init.max_msg_size,
+	sub.add_option("--batch-size", opts.init.batch_size,
 		       "Maximum size of database transaction");
 }
 
