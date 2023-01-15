@@ -259,15 +259,17 @@ The first character of NAME is used as the shortcut.")
      (lambda (msg bytes) (> (mu4e-msg-field msg :size) (* 1024 bytes)))
      (lambda () (read-number "Match messages bigger than (Kbytes): "))))
   "List of custom markers -- functions to mark message that match
-some custom function. Each of the list members has the following format:
+some custom function. Each of the list members has the following
+format:
   (NAME PREDICATE-FUNC PARAM-FUNC)
-* NAME is the name of the predicate function, and the first character
-is the shortcut (so keep those unique).
+* NAME is the name of the predicate function, and the first
+character is the shortcut (so keep those unique).
 * PREDICATE-FUNC is a function that takes two parameters, MSG
 and (optionally) PARAM, and should return non-nil when there's a
 match.
-* PARAM-FUNC is function that is evaluated once, and its value is then passed to
-PREDICATE-FUNC as PARAM. This is useful for getting user-input.")
+* PARAM-FUNC is function that is evaluated once, and its value is
+then passed to PREDICATE-FUNC as PARAM. This is useful for
+getting user-input.")
 ;;; Internal variables/constants
 
 ;; docid cookies
@@ -1016,36 +1018,45 @@ after the end of the search results."
      (mapcar
       (lambda (item)
         (let* (;; with threading enabled, we're necessarily sorting by date.
-               (sort-field (if mu4e-search-threads :date mu4e-search-sort-field))
+               (sort-field (if mu4e-search-threads
+                               :date mu4e-search-sort-field))
                (field (car item)) (width (cdr item))
                (info (cdr (assoc field
-                                 (append mu4e-header-info mu4e-header-info-custom))))
+                                 (append mu4e-header-info
+                                         mu4e-header-info-custom))))
                (sortable (plist-get info :sortable))
                ;; if sortable, it is either t (when field is sortable itself)
                ;; or a symbol (if another field is used for sorting)
-               (this-field (when sortable (if (booleanp sortable) field sortable)))
+               (this-field (when sortable (if (booleanp sortable)
+                                              field
+                                            sortable)))
                (help (plist-get info :help))
                ;; triangle to mark the sorted-by column
                (arrow
                 (when (and sortable (eq this-field sort-field))
-                  (if (eq mu4e-search-sort-direction 'descending) downarrow uparrow)))
+                  (if (eq mu4e-search-sort-direction 'descending)
+                      downarrow
+                    uparrow)))
                (name (concat (plist-get info :shortname) arrow))
                (map (make-sparse-keymap)))
           (when sortable
             (define-key map [header-line mouse-1]
                         (lambda (&optional e)
-                          ;; getting the field, inspired by `tabulated-list-col-sort'
+                          ;; getting the field, inspired by
+                          ;; `tabulated-list-col-sort'
                           (interactive "e")
                           (let* ((obj (posn-object (event-start e)))
                                  (field
-                                  (and obj (get-text-property 0 'field (car obj)))))
-                            ;; "t": if we're already sorted by field, the sort-order is
-                            ;; changed
+                                  (and obj
+                                       (get-text-property 0 'field (car obj)))))
+                            ;; "t": if we're already sorted by field, the
+                            ;; sort-order is changed
                             (mu4e-search-change-sorting field t)))))
           (concat
            (propertize
             (if width
-                (truncate-string-to-width name width 0 ?\s truncate-string-ellipsis)
+                (truncate-string-to-width
+                 name width 0 ?\s truncate-string-ellipsis)
               name)
             'face (when arrow 'bold)
             'help-echo help
@@ -1526,7 +1537,7 @@ region if there is a region, then move to the next message."
   (when mu4e-headers-advance-after-mark (mu4e-headers-next)))
 
 (defun mu4e~headers-quit-buffer ()
-  "Quit the mu4e-headers buffer."
+  "Quit the mu4e-headers buffer and go back to the main view."
   (interactive)
   (mu4e-mark-handle-when-leaving)
   (quit-window t)
