@@ -88,7 +88,6 @@ the buffer-local one."
     (setq mu4e--modeline-string-cached nil)
     (force-mode-line-update)))
 
-
 (provide 'mu4e-modeline)
 
 ;;; mu4e-modeline.el ends here
