@@ -44,7 +44,7 @@ It takes a search expression string, and returns a possibly
 This function is applied on the search expression just before
 searching, and allows users to modify the query.
 
-For instance, we could change and of workmail into
+For instance, we could change any instance of \"workmail\" into
 \"maildir:/long-path-to-work-related-emails\", by setting the function
 
 (setq mu4e-query-rewrite-function
@@ -53,7 +53,12 @@ For instance, we could change and of workmail into
                    \"maildir:/long-path-to-work-related-emails\" expr)))
 
 It is good to remember that the replacement does not understand
-anything about the query, it just does text replacement."
+anything about the query, it just does text replacement.
+
+A word of caution: the function should be deterministic and
+always return the same result for a given query (at least within
+some \"context\" (see `mu4e-context'). If not, you may get incorrect results
+for the various unread counts."
   :type 'function
   :group 'mu4e-search)
 
@@ -65,13 +70,13 @@ the latest query-items.")
   "Timestamp for when the query-items baseline was updated.")
 
 (defun mu4e--bookmark-query (bm)
-  "Get query string for some bookmark BM."
+  "Get the query string for some bookmark BM."
   (when bm
     (let* ((query (or (plist-get bm :query)
                       (mu4e-warn "No query in %S" bm)))
-           ;; queries being functions is deprecated.
+           ;; queries being functions is deprecated, but for now we
+           ;; still support it.
            (query (if (functionp query) (funcall query) query)))
-      ;; earlier, we allowed for the queries being fucntions
       (unless (stringp query)
         (mu4e-warn "Could not get query string from %s" bm))
       ;; apparently, non-UTF8 queries exist, i.e.,
@@ -123,11 +128,14 @@ If ITEMS does not yet have a favorite item, pick the first."
        (propertize (number-to-string count)
                    'help-echo "Total number")))))
 
-
 (defun mu4e--query-items-refresh()
   "Get the latest query data from the mu4e server."
   (mu4e--server-queries
-   (mapcar #'mu4e--bookmark-query
+   ;; note: we must apply the rewrite function here, since the query does not go
+   ;; through mu4e-search.
+   (mapcar (lambda (bm)
+             (funcall mu4e-query-rewrite-function
+                      (mu4e--bookmark-query bm)))
            (seq-filter (lambda (item)
                          (and (not (or (plist-get item :hide)
                                        (plist-get item :hide-unread)))))
@@ -172,16 +180,19 @@ bookmark or maildir."
                        (format "maildir:\"%s\"" maildir)
                      (plist-get item :query)))
             (name (plist-get item :name))
+            ;; it is possible that the user has a rewrite function
+            (effective-query (funcall mu4e-query-rewrite-function query))
             ;; maildir items may have an implicit name
             ;; which is the maildir value.
-            (query (funcall mu4e-query-rewrite-function query))
             (name (or name (and (equal type 'maildirs) maildir)))
-
             (last-results (mu4e-server-query-items))
             (baseline mu4e--query-items-baseline)
-
-            (baseline-item (mu4e--query-find-item query baseline))
-            (last-results-item (mu4e--query-find-item query last-results))
+            ;; we use the _effective_ query to find the results,
+            ;; since that's what the server will give to us.
+            (baseline-item
+             (mu4e--query-find-item effective-query baseline))
+            (last-results-item
+             (mu4e--query-find-item effective-query last-results))
             (count  (or (plist-get last-results-item :count) 0))
             (unread (or (plist-get last-results-item :unread) 0))
             (baseline-count  (or (plist-get baseline-item :count) count))
@@ -196,6 +207,10 @@ bookmark or maildir."
               :unread       unread
               :delta-count  (- count baseline-count)
               :delta-unread delta-unread)))
+       ;; remember the *effective* query too; we don't really need it, but
+       ;; useful for debugging.
+       (unless (string= query effective-query)
+         (plist-put value :effective-query effective-query))
 
        ;; nil props bring me discomfort
        (when (plist-get item :favorite)
