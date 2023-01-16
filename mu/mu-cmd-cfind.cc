@@ -222,7 +222,7 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 			"    \"last-seen\"     : %" PRId64 ",\n"
 			"    \"last-seen-iso\" : \"%s\",\n"
 			"    \"personal\"      : %s,\n"
-			"    \"frequency\"     : %" PRId64 "\n",
+			"    \"frequency\"     : %zu\n",
 			contact->email.c_str(),
 			name.c_str(),
 			Mu::quote(contact->display_name(true)).c_str(),
