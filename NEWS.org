@@ -37,8 +37,9 @@
     - mu4e window management has been completely reworked and cleaned up,
       affecting the message loading as well as the window-layout. As a
       user-visible feature, there's now the =z= binding (~mu4e-view-detach~), to
-      'detach' view and alllow for keeping multiple views around; see the [[info:mu4e:MSGV Detaching and reattaching][manual
-      entry]] for further details.
+      'detach' view and alllow for keeping multiple views around; see the
+      [[info:mu4e:MSGV Detaching and reattaching][manual entry]] for further
+      details.
 
     - As a result of that, ~mu4e-split-view~ can no longer be a function; the new
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]]
@@ -55,13 +56,17 @@
       in the mode-line. See the new [[info:mu4e#Modeline][modeline entry]] in the manual; this uses the
       new =mu4e-modeline-mode= minor-mode.
 
+    - Expanding on that further, you can also get desktop notifications for new
+      mail (on systems with DBus for now; see [[info:mu4e:#Desktop notifications][Desktop notifications]] in the
+      manual.
+
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
       /Replied/ status is propagated to all duplicates (earlier, this was only
       done when marking a message as read). Note, /Draft/, /Flagged/ and /Trashed/
       flags are deliberately *not* propagated.
 
-    - teach ~mu4e-copy-thing-at-point~ about ~shr~ links
+    - Teach ~mu4e-copy-thing-at-point~ about ~shr~ links
 
     - The ~mu4e-headers-toggle-setting~ has been renamed
       ~mu4e-headers-toggle-property~ and has the new default binding ~P~, which
