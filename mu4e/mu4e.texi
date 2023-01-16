@@ -52,7 +52,7 @@ Documentation License.''
 @unnumbered Welcome to mu4e
 @end iftex
 
-Welcome to @t{mu4e} @value{VERSION}.
+Welcome to @t{mu4e}!
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version 26.3 or
 newer, built on top of the
@@ -1147,7 +1147,7 @@ By default, @t{mu4e} will attempt to manage the display of its own buffers. For
 headers and message views, the variable @code{mu4e-split-view} is @t{mu4e's}
 built-in way to decide how and where they are shown.
 
-@section Split view
+@subsection Split view
 You can control how @t{mu4e} displays its buffers, including the @ref{Headers
 view} and the @ref{Message view}, by customizing @code{mu4e-split-view}. There
 are several options available:
@@ -1191,8 +1191,7 @@ and thus @t{mu4e} -- must display your buffers.
 That means you can instruct @t{mu4e} to place message views in separate tabs or
 frames, if you so desire.
 
-@node Display Customization Example
-@subsection Example
+@subsection Display Customization Example
 
 You do not need to configure @code{mu4e-split-view} for this to work. In the
 absence of explicit rules to the contrary, @t{mu4e} will fall back on the value
@@ -3159,7 +3158,7 @@ Depending on your desktop environment, it is possible to get notification when
 there is new mail.
 
 The default implementation (which you can override) depends on the same system
-used for the @xref{Bookmarks and Maildirs} in the main view and the
+used for the @xref{Bookmarks and Maildirs}, in the main view and the
 @xref{Modeline}, and thus gives updates when there new messages compared to some
 ``baseline'', as discussed earlier.
 
