@@ -1169,7 +1169,7 @@ information.
 
 Note that using a window-returning @emph{function} for @code{mu4e-split-view} is
 no longer supported, instead you can use @code{display-buffer-alist}, see
-@xref{Further display customization}.
+the section on further display customization.
 
 @noindent
 Some useful key bindings in the split view:
@@ -1181,7 +1181,6 @@ headers-view to the message-view and vice-versa with
 @code{mu4e-select-other-view}, bound to @key{y}
 @end itemize
 
-@node Further display customization
 @subsection Further customization
 
 However, @t{mu4e}'s display rules are provisional; you can override them
