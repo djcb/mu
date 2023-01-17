@@ -181,12 +181,22 @@ one, creates a propertized string for display in the modeline."
                          ((> count 0) mu4e-modeline-all-read)
                          (t mu4e-modeline-all-clear)))
                (mu4e--query-item-display-counts fav))
-       'help-echo (format "mu4e query: '%s'" (mu4e--bookmark-query fav))
+       'help-echo
+       (format
+        (concat
+         "mu4e favorite bookmark '%s':\n"
+         "\t%s\n\n"
+         "number of matches: %d\n"
+         "unread messages: %d\n"
+         "changes since baseline: %+d\n")
+        (plist-get fav :name)
+        (mu4e--bookmark-query fav)
+         count unread  delta-unread)
        'mouse-face 'mode-line-highlight
        'keymap '(mode-line keymap
-                           (mouse-1   . mu4e-jump-to-favorite)
-                           (mouse-2   . mu4e-jump-to-favorite)
-                           (mouse-3   . mu4e-jump-to-favorite))))))
+                           (mouse-1 . mu4e-jump-to-favorite)
+                           (mouse-2 . mu4e-jump-to-favorite)
+                           (mouse-3 . mu4e-jump-to-favorite))))))
 
 (provide 'mu4e-bookmarks)
 ;;; mu4e-bookmarks.el ends here
