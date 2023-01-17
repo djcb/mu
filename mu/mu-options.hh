@@ -54,6 +54,13 @@ struct Options {
 	bool		verbose;			/**<  verbose output */
 	std::string	muhome;				/**<  alternative mu dir */
 
+	/**
+	 * Whether by default, we should show color
+	 *
+	 * @return true or false
+	 */
+	static bool default_no_color();
+
 	enum struct SubCommand {
 		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
 		Remove, Script, Server, Verify, View/*must be last*/
@@ -273,7 +280,6 @@ struct Options {
 	}
 
 };
-
 
 } // namepace Mu
 

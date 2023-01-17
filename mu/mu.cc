@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -33,6 +33,19 @@
 
 using namespace Mu;
 
+
+static void
+output_error(const std::string& what, bool use_color)
+{
+	using Color = MaybeAnsi::Color;
+	MaybeAnsi col{use_color};
+
+	std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
+		  << col.fg(Color::BrightYellow)
+		  << what << "\n";
+
+}
+
 static int
 handle_result(const Result<void>& res, const Mu::Options& opts)
 {
@@ -43,11 +56,9 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 	MaybeAnsi col{!opts.nocolor};
 
 	// show the error and some help, but not if it's only a softerror.
-	if (!res.error().is_soft_error()) {
-		std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
-			  << col.fg(Color::BrightYellow)
-			  << res.error().what() << "\n";
-	} else
+	if (!res.error().is_soft_error())
+		output_error(res.error().what(), !opts.nocolor);
+	else
 		std::cerr <<  col.fg(Color::BrightBlue) << res.error().what() << '\n';
 
 	std::cerr << col.fg(Color::Green);
@@ -82,12 +93,17 @@ main(int argc, char* argv[])
 	 */
 	const auto opts{Options::make(argc, argv)};
 	if (!opts) {
-		std::cerr << "error: " << opts.error().what() << "\n";
+		output_error(opts.error().what(), !Options::default_no_color());
 		return opts.error().exit_code();
 	} else if (!opts->sub_command) {
 		// nothing more to do.
 		return 0;
 	}
+
+	/*
+	 * there's a subcommand
+	 */
+
 
 	/*
 	 * set up logging
@@ -101,7 +117,7 @@ main(int argc, char* argv[])
 	const auto logger = Logger::make(opts->runtime_path(RuntimePath::LogFile),
 					 lopts);
 	if (!logger) {
-		std::cerr << "error:" << logger.error().what() << "\n";
+		output_error(logger.error().what(), !opts->nocolor);
 		return logger.error().exit_code();
 	}
 

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -594,24 +594,29 @@ cmd_help(const CLI::App& app, Options& opts)
 		   "no help available for '%s'", opts.help.command.c_str());
 }
 
+bool
+Options::default_no_color()
+{
+	static const auto no_color =
+		!::isatty(::fileno(stdout)) ||
+		!::isatty(::fileno(stderr)) ||
+		::getenv("NO_COLOR") != NULL;
+
+	return no_color;
+}
 
 static void
 add_global_options(CLI::App& cli, Options& opts)
 {
-	static const auto default_no_color =
-		!::isatty(::fileno(stdout)) ||
-		!::isatty(::fileno(stderr)) ||
-		::getenv("NO_COLOR") != NULL;
-	opts.nocolor = default_no_color;
-
+	opts.nocolor = Options::default_no_color();
 	errno = 0;
 
 	cli.add_flag("-q,--quiet", opts.quiet, "Hide non-essential output");
 	cli.add_flag("-v,--verbose", opts.verbose, "Show verbose output");
 	cli.add_flag("--log-stderr", opts.log_stderr, "Log to stderr");
 	cli.add_flag("--nocolor", opts.nocolor, "Don't show ANSI colors")
-		->default_val(default_no_color)
-		->default_str(default_no_color ? "<true>" : "<false>");
+		->default_val(Options::default_no_color())
+		->default_str(Options::default_no_color() ? "<true>" : "<false>");
 	cli.add_flag("-d,--debug", opts.debug, "Run in debug mode")
 		->group(""/*always hide*/);
 }
