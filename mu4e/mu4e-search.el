@@ -482,20 +482,44 @@ the mode-line.")
 
 (defun mu4e--search-modeline-item ()
   "Get mu4e-search modeline item."
-  (let* ((flagstr
-          (mapconcat
-           (lambda (flag-cell)
-             (if (car flag-cell)
-                 (if mu4e-use-fancy-chars
-                     (cddr flag-cell) (cadr flag-cell) ) ""))
-           `((,mu4e-search-full            . ,mu4e-search-full-label)
-             (,mu4e-search-include-related . ,mu4e-search-related-label)
-             (,mu4e-search-threads         . ,mu4e-search-threaded-label)
-             (,mu4e-search-skip-duplicates
-              . ,mu4e-search-skip-duplicates-label)
-             (,mu4e-search-hide-enabled    . ,mu4e-search-hide-label))
-           "")))
-    (concat flagstr " " mu4e--search-last-query)))
+  (let* ((label (lambda (label-cons)
+                  (if mu4e-use-fancy-chars
+                      (cdr label-cons) (car label-cons))))
+         (props
+          `((,mu4e-search-full ,mu4e-search-full-label
+             "Full search")
+            (,mu4e-search-include-related
+             ,mu4e-search-related-label
+             "Include related messages")
+            (,mu4e-search-threads
+             ,mu4e-search-threaded-label
+             "Show message threads")
+            (,mu4e-search-skip-duplicates
+             ,mu4e-search-skip-duplicates-label
+             "Skip duplicate messages")
+            (,mu4e-search-hide-enabled
+             ,mu4e-search-hide-label
+             "Enable message hide predicate"))))
+    (concat
+     (propertize
+      (mapconcat
+       (lambda (cell)
+         (when (nth 0 cell) (funcall label (nth 1 cell))))
+       props "")
+      'help-echo (concat "mu4e search properties legend\n\n"
+                         (mapconcat
+                          (lambda (cell)
+                            (format "%s %s (%s)"
+                                    (funcall label (nth 1 cell))
+                                    (nth 2 cell)
+                                    (if (nth 0 cell) "yes" : "no")))
+                          props "\n")))
+     " ["
+     (propertize
+      mu4e--search-last-query
+      'face 'mu4e-title-face
+      'help-echo (format "mu4e query:\n\t%s" mu4e--search-last-query))
+     "]")))
 
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
