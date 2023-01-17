@@ -45,11 +45,13 @@
       way is to use ~display-buffer-alist~ as explained in the [[info:mu4e:Buffer Display][manual]]
 
     - ~mu4e~ now keeps track of 'baseline' query results and shows the difference
-      from that in the main view and modeline. See the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
+      from that in the main view and modeline (you'll might see something like
+      =1(+1)/2= for your bookmarks or in the modeline; that means that there is
+      one more unread message since baseline; see the [[info:mu4e#Bookmarks and Maildirs][manual entry]] for details.
 
       The idea is that you get a quick overview of where changes happened while
-      you were doing something else. This is a qsomewhat experimental feature, and
-      we're tweaking the details.
+      you were doing something else. This is a somewhat experimental feature
+      which is under active development
 
     - Related to that, you can now crown one of your bookmarks in =mu4e-bookmarks=
       with ~:favorite t~, causing it to be highlighted in the main view and used
@@ -59,6 +61,10 @@
     - Expanding on that further, you can also get desktop notifications for new
       mail (on systems with DBus for now; see [[info:mu4e:#Desktop notifications][Desktop notifications]] in the
       manual.
+
+    - If your search query matches some bookmark, the modeline now shows the
+      bookmark's name rather than the query; this can be controlled through
+      =mu4e-modeline-prefer-bookmark-name= (default: =t=).
 
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
