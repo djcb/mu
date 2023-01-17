@@ -105,7 +105,7 @@ If ITEMS does not yet have a favorite item, pick the first."
 
 (defun mu4e--query-items-reset-baseline ()
   "Reset the baseline query-items."
-  (setq mu4e--query-items-baseline (mu4e-server-query-items)
+  (setq mu4e--query-items-baseline nil
         mu4e--query-items-baseline-tstamp (current-time))
   (mu4e--query-items-reset))
 
@@ -149,12 +149,10 @@ With RESET-BASELINE, reset the baseline first."
 I.e. what we get in response to mu4e--query-items-refresh."
   ;; if we don't have a baseline yet, set it. (note that
   ;; mu4e--query-items-reset-baseline also calls mu4e--query-items-reset.
-  (if (not mu4e--query-items-baseline)
-      (progn
-        (mu4e--query-items-reset-baseline))
-    (mu4e--query-items-reset))
-  ;; for side-effects; recalculate.
-  (mu4e-query-items))
+  (mu4e--query-items-reset)
+  (mu4e-query-items) ;; for side-effects; recalculate.
+  (when (not mu4e--query-items-baseline)
+      (mu4e--query-items-reset-baseline)))
 
 ;; this makes for O(n*m)... but with typically small(ish) n,m. Perhaps use a
 ;; hash for last-query-items and baseline-results?
