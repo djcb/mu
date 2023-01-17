@@ -499,7 +499,17 @@ the mode-line.")
              "Skip duplicate messages")
             (,mu4e-search-hide-enabled
              ,mu4e-search-hide-label
-             "Enable message hide predicate"))))
+             "Enable message hide predicate")))
+         ;; can we fin find a bookmark corresponding
+         ;; with this query?
+         (bookmark
+          (and mu4e-modeline-prefer-bookmark-name
+               (seq-find (lambda (item)
+                           (string=
+                            mu4e--search-last-query
+                            (or (plist-get item :effective-query)
+                                (plist-get item :query))))
+                         (mu4e-query-items 'bookmarks)))))
     (concat
      (propertize
       (mapconcat
@@ -516,7 +526,9 @@ the mode-line.")
                           props "\n")))
      " ["
      (propertize
-      mu4e--search-last-query
+      (if bookmark ;; show the bookmark name instead of the query?
+          (plist-get bookmark :name)
+          mu4e--search-last-query)
       'face 'mu4e-title-face
       'help-echo (format "mu4e query:\n\t%s" mu4e--search-last-query))
      "]")))

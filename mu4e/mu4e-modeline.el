@@ -40,6 +40,14 @@ the search properties and the last query), not the global items
   :type 'integer
   :group 'mu4e-modeline)
 
+(defcustom mu4e-modeline-prefer-bookmark-name t
+  "Show bookmark name rather than query in modeline.
+
+If non-nil, if the current search query matches some bookmark,
+display the bookmark name rather than the query."
+  :type 'boolean
+  :group 'mu4e-modeline)
+
 (defvar-local mu4e--modeline-buffer-items nil
   "List of buffer-local items for the mu4e modeline.
 Each element is function that evaluates to a string.")
