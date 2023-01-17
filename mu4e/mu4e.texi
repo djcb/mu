@@ -489,7 +489,8 @@ folders.
 
 @node Retrieval and indexing
 @section Retrieval and indexing with mu4e
-
+@cindex mail retrieval
+@cindex indexing
 As we have seen, we can do all of the mail retrieval @emph{outside} of
 Emacs/@t{mu4e}. However, you can also do it from within
 @t{mu4e}.
@@ -783,6 +784,7 @@ example above, we see the default bookmarks. You can pick a bookmar by pressing
 @key{b} followed by the specific bookmark's shortcut. If you want to edit the
 bookmarked query before invoking it, use @key{B}.
 
+@cindex baseline
 Next to each bookmark are some numbers that indicate the unread(delta)/all
 matching messages for the given query, with the delta being the difference in
 unread count since some ``baseline'', and only shown when this delta > 0.
@@ -790,16 +792,17 @@ unread count since some ``baseline'', and only shown when this delta > 0.
 Note that the ``delta'' has its limitations: if you, for instance, deleted 5
 messages and received 5 new one, the ``delta'' would be 0, although there were
 changes indeed. So it is mostly useful for tracking changes while you are
-@emph{not} using @t{mu4e}.
+@emph{not} using @t{mu4e}. For this reason, you can reset the baseline manually,
+e.g. by visiting the main view .
 
-Using a baseline is useful to quickly see that there are new messages since the
-last time you looked. Imagine switching to another buffer to work on something
-or even (!) stepping away from your computer to return later: the baseline
-allows you to quickly see what changed.
+By comparing current results with the baseline, you can quickly what new
+messages have arrived since the last time you looked.
 
-The baseline is reset automatically when switching to the main view, or when
-querying the ``favorite'' query (explained below). You can see the current value
-using the @code{mu4e-baseline-time} command.
+The baseline@footnote{For debugging, it can be useful to see the time for the
+baseline - for that, there is the @code{mu4e-baseline-time} command} . is reset
+automatically when switching to the main view, or invoking @code{buffer-revert}
+(@kbd{g}) while in the main-view. Visiting the ``favorite'' bookmark does the
+same(explained below).
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
 your own and/or replace the default ones; @xref{Bookmarks}. For
@@ -1383,6 +1386,7 @@ For the marking commands, please refer to @ref{Marking messages}.
 
 @node MSGV Rich-text and images
 @section Reading rich-text messages
+@cindex rich-text
 
 These days, many e-mail messages contain rich-text (typically, HTML);
 either as an alternative to a text-only version, or even as the only
@@ -1452,6 +1456,7 @@ well.
 
 @node MSGV Custom headers
 @section Custom headers
+@cindex custom headers
 
 Sometimes the normal headers (Date, From, To, Subject, etc.)@: may not be
 enough. For these cases, @t{mu4e} offers @emph{custom headers} in both
@@ -1477,8 +1482,6 @@ on the current message. You can specify these actions using the variable
 MIME-part actions allow you to act upon MIME-parts in a message - such
 as attachments.  For now, these actions are defined and documented in
 @code{mu4e-view-mime-part-actions}.
-
-
 
 @node MSGV Detaching and reattaching
 @section Detaching and reattaching messages
@@ -1603,7 +1606,9 @@ addresses last seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes old e-mail addresses. The
 default is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen
 since the start of 2010.
-@item @code{mu4e-compose-complete-max} -- the maximum number of contacts to use. This adds a hard limit to the 2000 (default) contacts; those are sorted by recency /frequency etc. so should include the ones you most likely need.
+@item @code{mu4e-compose-complete-max} -- the maximum number of contacts to use.
+This adds a hard limit to the 2000 (default) contacts; those are sorted by
+recency /frequency etc. so should include the ones you most likely need.
 @item @code{mu4e-contact-process-function} --- a function to rewrite or
 exclude certain addresses.
 @end itemize
@@ -3124,28 +3129,39 @@ To completely turn off the modeline support, set @code{mu4e-support-modeline} to
 
 @t{mu4e} shares information on the modeline in two ways:
 @itemize
-@item buffer-specific: information about the search parameters and the current context
-@item global: information about unread messages
+@item buffer-specific
+@itemize
+@item current context (as per @xref{Contexts}
+@item current query parameters (headers-mode only)
+@end itemize
+@item global: information about the results for the ``favorite query''
 @end itemize
 
-The buffer-specific items should be fairly self-explanatory - they show,
-respectively, your search parameters and the current context.
+All of the bookmark items provide more details in their @code{help-echo}, i.e.,
+their tooltip.
+
+@subsection Query parameters bookmark item
+The query parameters in the modeline start with the various query flags (such as
+some representation of @code{mu4e-search-threads}, @code{mu4e-search-full}; the
+@t{help-echo} (tool-tip) has the details.
+
+The query parameters are followed by the query-string use for the headers-view.
+By default, if the query string matches some bookmark, the name of that bookmark
+is shown instead of the query it specfies. This can be changed by setting
+@code{mu4e-modeline-prefer-bookmark-name} to @t{nil}.
 
 @cindex favorite bookmark
-Since @t{mu4e} is a query-based email-client, there a lot of flexibilty in what
-you want to consider ``interesting new mail'', that is the, the query we want to
-monitor for changes.
-
+@subsection Favorite bookmark modeline item
 The global modeline contains the results of some specific ``favorite'' bookmark
 query from @code{mu4e-bookmarks}. By default, the @emph{first} one in chosen,
-but you may want change that by using the @code{:favorite} property for a
-particular query, e.g., as part of @var{mu4e-bookmarks}:
+but you may want to change that by using the @code{:favorite} property for a
+particular query, e.g., as part of your @var{mu4e-bookmarks}:
 @example
  ;; Monitor the inbox folder in the modeline
  (:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t)
 @end example
 
-The results of this query (the last time it was updated) is shows as some
+The results of this query (the last time it was updated) is shown as some
 character or emoji (depending on @var{mu4e-use-fancy-chars}) and 2 or 3 numbers,
 just like what we saw in @xref{Bookmarks and Maildirs}, e.g.,
 @example
@@ -3153,19 +3169,21 @@ just like what we saw in @xref{Bookmarks and Maildirs}, e.g.,
 @end example
 
 @cindex baseline query results
-this means there are 10 unread messages, with 5 new messages since the baseline,
-and in total 15 messages.
+this means there are @emph{10 unread messages}, with @emph{5 new messages since
+the baseline}, and @emph{15 messages in total} matching the query.
 
-You can also customize the icon; see @var{mu4e-modeline-all-clear},
+You can customize the icon; see @var{mu4e-modeline-all-clear},
 @var{mu4e-modeline-all-read}, @var{mu4e-modeline-unread-items} and
 @var{mu4e-modeline-new-items}.
 
 Due to the way queries work, the modeline is @emph{not} immediately updated when
-you read messages; but going back to the main view (with @kbd{M-x mu4e} restores
-things.
+you read messages; but going back to the main view (with @kbd{M-x mu4e} resets
+the counts to latest known ones. When in the main-view, you can use
+@code{revert-buffer} (@kbd{g}) to reset the counters explicitly.
 
 @node Desktop notifications
 @section Desktop notifications
+@cindex desktop notifications
 
 Depending on your desktop environment, it is possible to get notification when
 there is new mail.
@@ -3186,6 +3204,7 @@ want tweak the details, have a look at @code{mu4e-notification-filter} and
 
 @node Emacs bookmarks
 @section Emacs bookmarks
+@cindex Emacs bookmarks
 
 Note, emacs bookmarks are not to be confused with mu4e's bookmarks; the former
 are a generic linking system, while the latter are remember stored queries.
@@ -3370,6 +3389,7 @@ jumping to a maildir.
 
 @node Dired
 @section Dired
+@cindex dired
 
 It is possible to attach files to @t{mu4e} messages using @t{dired}
 (@ref{Dired,,emacs}), using the following steps (based on a post on
@@ -3898,18 +3918,17 @@ necessary.
 @end itemize
 
 @subsection The unread/all counts in the main-screen differ from the 'real' numbers - what's going on?
-For speed reasons, the counts do not exclude messages that no longer
-exist in the file-system, nor does it exclude duplicate messages; @xref{mu-mu4e-differ}.
+For speed reasons, the counts do not exclude messages that no longer exist in
+the file-system, nor does it exclude duplicate messages; @xref{mu-mu4e-differ}.
 
 @subsection How can I quickly delete/move/trash a lot of messages?
-You can select ('mark' in Emacs-speak) the messages like you would
-select text in a buffer; the actions you then take (e.g., @key{DEL}
-for delete, @key{m} for move and @key{t} for trash) apply to all
-selected messages. You can also use functions like
-@code{mu4e-headers-mark-thread} (@key{T}),
-@code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at
-the same time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark
-all messages matching a certain regular expression.
+You can select ('mark' in Emacs-speak) messages, just like you would select text
+in a buffer; the actions you then take (e.g., @key{DEL} for delete, @key{m} for
+move and @key{t} for trash) apply to all selected messages. You can also use
+functions like @code{mu4e-headers-mark-thread} (@key{T}),
+@code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
+time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
+matching a certain regular expression.
 
 @subsection Can I automatically apply the marks on messages when leaving the headers buffer?
 Yes you can --- see the documentation for the variable
@@ -3919,32 +3938,31 @@ Yes you can --- see the documentation for the variable
 See @ref{Default email client}.
 
 @subsection Can @t{mu4e} use some fancy Unicode instead of these boring plain-ASCII ones?
-Glad you asked! Yes, if you set @code{mu4e-use-fancy-chars} to @t{t},
-@t{mu4e} uses such fancy characters in a number of places. Since not
-all fonts include all characters, you may want to install the
-@t{unifont} and/or @t{symbola} fonts on your system.
+Glad you asked! Yes, if you set @code{mu4e-use-fancy-chars} to @t{t}, @t{mu4e}
+uses such fancy characters in a number of places. Since not all fonts include
+all characters, you may want to install the @t{unifont} and/or @t{symbola} fonts
+on your system.
 
 @subsection Can I start @t{mu4e} in the background?
-Yes --- if you provide a prefix-argument (@key{C-u}), @t{mu4e} starts,
-but does not show the main-window.
+Yes --- if you provide a prefix-argument (@key{C-u}), @t{mu4e} starts, but does
+not show the main-window.
 
 @subsection Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?
-Yes, if you have @t{Xapian} 1.2.8 or newer, and set the environment
-variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when
-using @t{mu} from the command-line and from @t{mu4e}.
+Only partially. If you have @t{Xapian} 1.2.8 or newer, and set the environment
+variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when using
+@t{mu} from the command-line and from @t{mu4e}.
 
 @subsection How can I customize the function to select a folder?
-The @t{mu4e-completing-read-function} variable can be customized to
-select a folder in any way. The variable can be set to a function that
-receives five arguments, following @t{completing-read}. The default
-value is @code{ido-completing-read}; to use emacs's default behavior,
-set the variable to @code{completing-read}. Helm users can use the
-same value, and by enabling @code{helm-mode} use helm-style
-completion.
+The @t{mu4e-completing-read-function} variable can be customized to select a
+folder in any way. The variable can be set to a function that receives five
+arguments, following @t{completing-read}. The default value is
+@code{ido-completing-read}; to use emacs's default behavior, set the variable to
+@code{completing-read}. Helm users can use the same value, and by enabling
+@code{helm-mode} use helm-style completion.
 
 @subsection With a lot of Maildir folders, jumping to them can get slow. What can I do?
-Set @code{mu4e-cache-maildir-list} to @code{t} (make sure to read
-its docstring).
+Set @code{mu4e-cache-maildir-list} to @code{t} (make sure to read its
+docstring).
 
 @subsection How can I hide certain messages from the search results?
 See the variables @code{mu4e-headers-hide-predicate} and
@@ -3965,6 +3983,7 @@ higher value, e.g. by adding the following to your configuration:
 @lisp
 (setq max-specpdl-size 5000)
 @end lisp
+Note that Emacs 29 obsoletes this variable.
 
 @node Retrieving mail
 @section Retrieving mail
@@ -3980,7 +3999,7 @@ you have @t{aplay} and some soundfile, change as needed):
     (shell-command "aplay ~/Sounds/boing.wav&")))
 @end lisp
 
-@subsection Getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
+@subsection I'm getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
 Use the literal string @t{"true"} (or don't do anything, it's the
 default) which then uses @t{/bin/true} (a command that does nothing and
 always succeeds). This makes getting mail a no-op, but the messages are
@@ -4050,11 +4069,10 @@ mailing-list; worthwhile to check out.
 However, if you experience slowdowns, here are some things to consider:
 @itemize
 @item opening messages while indexing:
-@t{mu4e} corresponds with the @t{mu} server synchronously; this means
-that you can do only one thing at a time. The one operation that
-potentially does take a bit of time is indexing of mail. Since the 1.7.x
-series you don't have to wait for the indexing to complete, but it can
-be still be a bit slower because @t{mu} is very busy at that time.
+@t{mu4e} communicates with the @t{mu} server mostly synchronously; this means
+that you can do only one thing at a time. The one operation that potentially
+does take a bit of time is indexing of mail. Indexing does happen
+asynchronously, but still can slow down @t{mu} enough that users may notice.
 
 For some strategies to reduce that time, see the next question.
 @item getting contact information can take some time:
@@ -4207,9 +4225,9 @@ Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
 
 @subsection Sending big messages is slow and blocks emacs --- what can I do about it?
 
-For this, there's @url{https://github.com/jwiegley/emacs-async} (also
-available from the Emacs package repository); add the following snippet
-to your configuration:
+For this, there's @url{https://github.com/jwiegley/emacs-async} (also available
+from the Emacs package repository); add the following snippet to your
+configuration:
 @lisp
 (require 'smtpmail-async)
 (setq
@@ -4218,12 +4236,12 @@ to your configuration:
 @end lisp
 With this, messages are sent using a background Emacs instance.
 
-A word of warning though, this tends to not be as reliable as sending
-the message in the normal, synchronous fashion, and people have reported
-silent failures, where mail sending fails for some reason without any
-indication of that.
+A word of warning though, this tends to not be as reliable as sending the
+message in the normal, synchronous fashion, and people have reported silent
+failures, where mail sending fails for some reason without any indication of
+that.
 
-You can check the progress of the background by checking the
+You can check the progress of the background delivery by checking the
 @t{*Messages*}-buffer, which should show something like:
 @verbatim
 Delivering message to "William Shakespeare" <will@example.com>...
@@ -4257,19 +4275,18 @@ have it, your mails mostly look quite bad especially on mobile
 devices) and here's the RFC with all the details:
 @url{https://www.ietf.org/rfc/rfc2646.txt}.
 
-Since version 0.9.17, @t{mu4e} sends emails with @t{format=flowed} by
-setting
+Since version 0.9.17, @t{mu4e} sends emails with @t{format=flowed} by setting
 @lisp
 (setq mu4e-compose-format-flowed t)
 @end lisp
 
 @noindent
-in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}).
-The transformation of your message into the proper format is done at the
-time of sending. For this to happen properly, you should write each
-paragraph of your message of as a long line (i.e. without carriage
-return). If you introduce unwanted newlines in your paragraph, use
-@kbd{M-q} to reformat it as a single line.
+in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}). The
+transformation of your message into the proper format is done at the time of
+sending. For this to happen properly, you should write each paragraph of your
+message of as a long line (i.e. without carriage return). If you introduce
+unwanted newlines in your paragraph, use @kbd{M-q} to reformat it as a single
+line.
 
 If you want to send the message with paragraphs on single lines but
 without @t{format=flowed} (because, say, the receiver does not
@@ -4294,12 +4311,11 @@ User Marcin Borkowski has a solution:
 
 @subsection How can I avoid Outlook display issues?
 
-Limited testing shows that certain Outlook clients do not work well with
-inline replies, and the entire message including-and-below the first
-quoted section is collapsed. This means recipients may not even notice
-important inline text, especially if there is some top-posted content.
-This has been observed on OS X, Windows, and Web-based Outlook clients
-accessing Office 365.
+Limited testing shows that certain Outlook clients do not work well with inline
+replies, and the entire message including-and-below the first quoted section is
+collapsed. This means recipients may not even notice important inline text,
+especially if there is some top-posted content. This has been observed on OS X,
+Windows, and Web-based Outlook clients accessing Office 365.
 
 It appears the bug is triggered by the standard reply regex "On ...
 wrote:". Changing "On", or removing the trailing ":" appears to fix the
@@ -4715,8 +4731,8 @@ convenience functions in @file{mu4e-message.el}.
 
 Some notes on the format:
 @itemize
-@item The address fields are @emph{lists} of @t{plists} of the form @code{(:name <name>   :email <email>)},
-where @t{name} can be @t{nil}.
+@item The address fields are @emph{lists} of @t{plists} of the form
+@code{(:name <name>   :email <email>)}, where @t{name} can be @t{nil}.
 @item The date is in format Emacs uses (for example in
 @code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
 available for the actual number; the other bits are use by Emacs for
