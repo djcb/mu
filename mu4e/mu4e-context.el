@@ -214,12 +214,16 @@ as it is."
 
 (defun mu4e--context-modeline-item ()
   "Propertized string with the current context or nil."
-  (when (mu4e-context-current)
-      (concat
-       "["
-       (propertize (mu4e-quote-for-modeline
-                    (mu4e-context-name (mu4e-context-current)))
-                   'face 'mu4e-context-face) "] " )))
+  (when-let* ((ctx (mu4e-context-current))
+              (name (and ctx (mu4e-context-name ctx))))
+    (concat
+     "<"
+     (propertize
+      name
+      'face 'mu4e-context-face
+      'help-echo
+      (format  "mu4e context: %s" name))
+     ">")))
 
 (define-minor-mode mu4e-context-minor-mode
   "Mode for switching the mu4e context."
@@ -229,13 +233,11 @@ as it is."
   :lighter ""
   (mu4e--modeline-register #'mu4e--context-modeline-item))
 
-
 (defvar mu4e--context-menu-items
   '("--"
     ["Switch-context" mu4e-context-switch
      :help "Switch the mu4e context"])
   "Easy menu items for mu4e-context.")
-
 
 ;;;
 (provide 'mu4e-context)
