@@ -220,5 +220,9 @@
 (define-obsolete-function-alias 'mu4e-interrupt-update-mail
   'mu4e-kill-update-mail "1.0-alpha0")
 
+;; mu4e-helpers
+(define-obsolete-function-alias 'mu4e-quote-for-modeline
+  'mu4e--modeline-quote-and-truncate "1.9.16")
+
 (provide 'mu4e-obsolete)
 ;;; mu4e-obsolete.el ends here
