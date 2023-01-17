@@ -152,16 +152,17 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func
         (lambda (info) (mu4e--pong-handler info func)))
+  ;; show some notification?
+  (when mu4e-notification-support
+    (add-hook 'mu4e-query-items-updated-hook #'mu4e--notification))
   ;; modeline support
   (when mu4e-modeline-support
     (mu4e--modeline-register #'mu4e--bookmarks-modeline-item 'global)
     (mu4e-modeline-mode)
-    (add-hook 'mu4e-query-items-updated-hook
-              #'mu4e--modeline-update))
+    (add-hook 'mu4e-query-items-updated-hook #'mu4e--modeline-update))
   (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
-  (when mu4e-notification-support
-    (add-hook 'mu4e-query-items-updated-hook
-              #'mu4e--notification))
+  ;; redraw main buffer if there is one.
+  (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
   (mu4e--server-ping)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
@@ -173,10 +174,9 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
     (cancel-timer mu4e--update-timer)
     (setq mu4e--update-timer nil))
   (mu4e-clear-caches)
-  (remove-hook 'mu4e-query-items-updated-hook
-              #'mu4e--modeline-update)
-  (remove-hook 'mu4e-query-items-updated-hook
-               #'mu4e--notification)
+  (remove-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
+  (remove-hook 'mu4e-query-items-updated-hook #'mu4e--modeline-update)
+  (remove-hook 'mu4e-query-items-updated-hook #'mu4e--notification)
   (mu4e-kill-update-mail)
   (mu4e-modeline-mode -1)
   (mu4e--server-kill)

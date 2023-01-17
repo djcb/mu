@@ -1541,6 +1541,8 @@ region if there is a region, then move to the next message."
   (interactive)
   (mu4e-mark-handle-when-leaving)
   (quit-window t)
+  ;; clear the decks before going to the main-view
+  (mu4e--query-items-refresh 'reset-baseline)
   (mu4e--main-view))
 
 
