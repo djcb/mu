@@ -42,12 +42,6 @@
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-modeline-max-width 42
-  "Determines the maximum length of the modeline string.
-If the string exceeds this limit, it will be truncated to fit."
-  :type 'integer
-  :group 'mu4e)
-
 (defcustom mu4e-completing-read-function 'ido-completing-read
   "Function to be used to receive user-input during completion.
 Suggested possible values are:
@@ -100,18 +94,7 @@ marked as read-only, or non-nil otherwise."
 
 
 
-;;; Modeline
 
-(defun mu4e-quote-for-modeline (str)
-  "Quote STR to be used literally in the modeline.
-The string will be shortened to fit if its length exceeds
-`mu4e-modeline-max-width'."
-  (replace-regexp-in-string
-   "%" "%%"
-   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
-
-
-
 ;;; Messages, warnings and errors
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
