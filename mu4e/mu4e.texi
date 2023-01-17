@@ -778,11 +778,10 @@ the @ref{Editor view} to write a new message.
 
 The next two items in the Main view are @emph{Bookmarks} and @emph{Maildirs}.
 
-Bookmarks are predefined queries with a descriptive name and a shortcut --- in
-the example above, we see the default bookmarks. You can view the list of
-messages matching a certain bookmark by pressing @key{b} followed by the
-bookmark's shortcut. If you want to edit the bookmarked query before invoking
-it, use @key{B}.
+Bookmarks are predefined queries with a descriptive name and a shortcut. In the
+example above, we see the default bookmarks. You can pick a bookmar by pressing
+@key{b} followed by the specific bookmark's shortcut. If you want to edit the
+bookmarked query before invoking it, use @key{B}.
 
 Next to each bookmark are some numbers that indicate the unread(delta)/all
 matching messages for the given query, with the delta being the difference in
@@ -822,10 +821,25 @@ which would be disruptive in this case.
 
 There is also the optional @code{:favorite} property, which at most one bookmark
 should have; this bookmark is highlighted in the main view, and its
-unread-status is shown in the modeline; @xref{Modeline}.
+unread-status is shown in the modeline; @xref{Modeline}, and you can enable
+desktop notifications; @xref{Desktop notifications}. We'd recommend creating
+such a ``favorite'', which should match message that require your quick
+attention:
 
-The Maildirs item is very similar to Bookmarks, when you consider maildirs here
-as being special kind of bookmark that matches some Maildir.
+@lisp
+(add-to-list 'mu4e-bookmarks
+  ;; bookmark for message that require quick attention
+  '( :name "Urgent"
+     :key  ?u
+     :query "maildir:/inbox AND from:boss@@exmaple.com"))
+@end lisp
+
+Note that @t{mu4e} resets the baseline when you are interacting with it (for
+instance, when you visit the urgent bookmark, or when you go to the main view);
+in such cases, there won't be any further notifications.
+
+The @emph{Maildirs} item is very similar to Bookmarks -- consider maildirs here
+as being a special kind of bookmark query that matches a Maildir.
 
 @node Miscellaneous
 @section Miscellaneous
