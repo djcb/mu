@@ -687,6 +687,9 @@ Server::Private::find_handler(const Command& cmd)
 	if (threads)
 		qflags |= QueryFlags::Threading;
 
+	StopWatch sw{format("%s (indexing: %s)", __func__,
+			    indexer().is_running() ? "yes" :  "no")};
+
 	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field->id, qflags, maxnum)};
 	if (!qres)
@@ -778,6 +781,7 @@ Server::Private::index_handler(const Command& cmd)
 
 	// start a background track.
 	index_thread_ = std::thread([this, conf = std::move(conf)] {
+		StopWatch sw{"indexing"};
 		indexer().start(conf);
 		while (indexer().is_running()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -1024,6 +1028,9 @@ Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 void
 Server::Private::view_handler(const Command& cmd)
 {
+	StopWatch sw{format("%s (indexing: %s)", __func__,
+			    indexer().is_running() ? "yes" :  "no")};
+
 	const auto mark_as_read{cmd.boolean_arg(":mark-as-read")};
 	/* for now, do _not_ rename, as it seems to confuse mbsync */
 	const auto rename{false};

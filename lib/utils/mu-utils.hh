@@ -231,11 +231,11 @@ struct StopWatch {
 	{
 		const auto us{static_cast<double>(to_us(Clock::now() - start_))};
 		if (us > 2000000)
-			g_debug("%s: finished after %0.1f s", name_.c_str(), us / 1000000);
+			g_debug("sw: %s: finished after %0.1f s", name_.c_str(), us / 1000000);
 		else if (us > 2000)
-			g_debug("%s: finished after %0.1f ms", name_.c_str(), us / 1000);
+			g_debug("sw: %s: finished after %0.1f ms", name_.c_str(), us / 1000);
 		else
-			g_debug("%s: finished after %g us", name_.c_str(), us);
+			g_debug("sw: %s: finished after %g us", name_.c_str(), us);
 	}
 
 private:
