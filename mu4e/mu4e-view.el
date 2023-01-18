@@ -158,22 +158,22 @@ Then, display the results."
        (with-current-buffer buffer
          ;; make sure to select the window, or jumping won't
          ;; be reflected.
-         (select-window (get-buffer-window))
-         (if (or (mu4e~headers-goto-docid docid)
-                 ;; TODO: Is this the best way to find another
-                 ;; relevant docid for a view buffer?
-                 ;;
-                 ;; If you attach a view buffer to another headers
-                 ;; buffer that does not contain the current docid
-                 ;; then `mu4e~headers-goto-docid' returns nil and we
-                 ;; get an error. This "hack" instead gets its
-                 ;; now-changed headers buffer's current message as a
-                 ;; docid
-                 (mu4e~headers-goto-docid
-                  (with-current-buffer buffer
-                    (mu4e-message-field (mu4e-message-at-point) :docid))))
-             ,@body
-           (mu4e-error "Cannot find message in headers buffer"))))))
+         (with-selected-window (get-buffer-window)
+           (if (or (mu4e~headers-goto-docid docid)
+                   ;; TODO: Is this the best way to find another
+                   ;; relevant docid for a view buffer?
+                   ;;
+                   ;; If you attach a view buffer to another headers
+                   ;; buffer that does not contain the current docid
+                   ;; then `mu4e~headers-goto-docid' returns nil and we
+                   ;; get an error. This "hack" instead gets its
+                   ;; now-changed headers buffer's current message as a
+                   ;; docid
+                   (mu4e~headers-goto-docid
+                    (with-current-buffer buffer
+                      (mu4e-message-field (mu4e-message-at-point) :docid))))
+               ,@body
+             (mu4e-error "Cannot find message in headers buffer")))))))
 
 (defun mu4e-view-headers-next (&optional n)
   "Move point to the next message header.
