@@ -212,6 +212,13 @@ Function returns the cdr of the list element."
         (cdr chosen)
       (mu4e-warn "Unknown shortcut '%c'" response))))
 
+(defun mu4e-filter-single-key (lst)
+  "Return a list consisting of LST items with a `characterp' :key prop."
+  ;; This works for bookmarks and maildirs.
+  (seq-filter (lambda (item)
+                (characterp (plist-get item :key)))
+              lst))
+
 
 ;;; Logging / debugging
 

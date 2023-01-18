@@ -216,7 +216,10 @@ character of the keyboard shortcut
                     'help-echo query)))
           (format "%s%s\n"
                   (make-string (- max-length (string-width name)) ?\s)
-                  (mu4e--query-item-display-counts item)))))) data ""))
+                  (mu4e--query-item-display-counts item))))))
+   ;; only item which have a single-character :key
+   (mu4e-filter-single-key data)
+   ""))
 
 (defun mu4e--key-val (key val &optional unit)
   "Show a KEY / VAL pair, with optional UNIT."

@@ -280,8 +280,9 @@ from all maildirs under `mu4e-maildir'."
     (if (not (mu4e-maildir-shortcuts))
         (substring-no-properties
          (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs)))
-      (let* ((mlist (append (mu4e-maildir-shortcuts)
-                            '((:maildir "ther"  :key ?o))))
+      (let* ((mlist (append
+                     (mu4e-filter-single-key (mu4e-maildir-shortcuts))
+                     '((:maildir "ther"  :key ?o))))
              (fnames
               (mapconcat
                (lambda (item)

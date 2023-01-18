@@ -81,7 +81,7 @@ query."
   :type '(repeat (plist))
   :group 'mu4e-bookmarks)
 
-
+
 (defun mu4e-ask-bookmark (prompt)
   "Ask user for bookmark using PROMPT.
 Return the corresponding query. The bookmark are as defined in
@@ -96,7 +96,9 @@ Return the corresponding query. The bookmark are as defined in
               (propertize (make-string 1 (plist-get bm :key))
                           'face 'mu4e-highlight-face)
               "]"
-              (plist-get bm :name))) (mu4e-bookmarks) ", "))
+              (plist-get bm :name)))
+           (mu4e-filter-single-key (mu4e-bookmarks))
+           ", "))
          (kar (read-char (concat prompt bmarks))))
     (mu4e-get-bookmark-query kar)))
 
