@@ -99,8 +99,8 @@ is the target directory (for \"move\")")
 (defun mu4e--mark-find-headers-buffer ()
   "Find the headers buffer, if any."
   (seq-find (lambda (_)
-	      (mu4e-current-buffer-type-p 'headers))
-	    (buffer-list)))
+              (mu4e-current-buffer-type-p 'headers))
+            (buffer-list)))
 
 (defmacro mu4e--mark-in-context (&rest body)
   "Evaluate BODY in the context of the headers buffer.
@@ -150,7 +150,7 @@ The current buffer must be either a headers or view buffer."
      :prompt "dtrash"
      :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
      :action (lambda (docid msg target)
-	       (mu4e--server-move docid
+               (mu4e--server-move docid
                                   (mu4e--mark-check-target target) "+T-N")))
     (unflag
      :char    ("-" . "➖")
@@ -259,7 +259,7 @@ The following marks are available, and the corresponding props:
         (remhash docid mu4e--mark-map)
         ;; remove possible mark overlays
         (remove-overlays (line-beginning-position) (line-end-position)
-			 'mu4e-mark t)
+                         'mu4e-mark t)
         ;; now, let's set a mark (unless we were unmarking)
         (unless (eql mark 'unmark)
           (puthash docid (cons mark target) mu4e--mark-map)
@@ -385,7 +385,7 @@ work well.
 If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
   (interactive "P")
   (mu4e--mark-in-context
-   (let* ((marknum (hash-table-count mu4e--mark-map))
+   (let* ((marknum (mu4e-mark-marks-num))
           (prompt (format "Are you sure you want to execute %d mark%s?"
                           marknum (if (> marknum 1) "s" ""))))
      (if (zerop marknum)
@@ -409,28 +409,31 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
                              docid msg target))
                 (mu4e-error "Unrecognized mark %S" mark))))
           mu4e--mark-map))
-       (mu4e-mark-unmark-all)
+       (mu4e-mark-unmark-all 'no-confirm)
        (message nil)))))
 
-(defun mu4e-mark-unmark-all ()
+(defun mu4e-mark-unmark-all (&optional no-confirmation)
   "Unmark all marked messages."
   (interactive)
   (mu4e--mark-in-context
-   (when (or (null mu4e--mark-map) (zerop (hash-table-count mu4e--mark-map)))
+   (when (zerop (mu4e-mark-marks-num))
      (mu4e-warn "Nothing is marked"))
-   (maphash
-    (lambda (docid _val)
-      (save-excursion
-        (when (mu4e~headers-goto-docid docid)
-          (mu4e-mark-set 'unmark))))
-    mu4e--mark-map)
-   ;; in any case, clear the marks map
-   (mu4e--mark-clear)))
+   (let* ((marknum (hash-table-count mu4e--mark-map))
+          (prompt (format "Are you sure you want to unmark %d message%s?"
+                          marknum (if (> marknum 1) "s" ""))))
+     (when (or no-confirmation (y-or-n-p prompt))
+       (maphash
+        (lambda (docid _val)
+          (save-excursion
+            (when (mu4e~headers-goto-docid docid)
+              (mu4e-mark-set 'unmark))))
+        mu4e--mark-map)
+       ;; in any case, clear the marks map
+       (mu4e--mark-clear)))))
 
 (defun mu4e-mark-docid-marked-p (docid)
   "Is the given DOCID marked?"
   (when (gethash docid mu4e--mark-map) t))
-
 
 (defun mu4e-mark-marks-num ()
   "Return the number of mark-instances in the current buffer."
