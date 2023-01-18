@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -61,24 +61,44 @@ struct Scanner::Private {
 };
 
 static bool
-is_special_dir(const char* d_name)
+is_dotdir(const char *d_name)
 {
-	return d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
-	       (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.');
+	/* dotdir? */
+	if (d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
+	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
+		return true;
+	/* gnus? */
+	if (d_name[0] == '.' && g_strcmp0(d_name + 1, "nnmaildir") == 0)
+		return true;
+
+	return false;
+}
+
+static bool
+is_ignoredir(const char *d_name)
+{
+	/* gnus? */
+	if (d_name[0] == '.' && g_strcmp0(d_name + 1, "nnmaildir") == 0)
+		return true;
+
+	return false;
 }
 
 bool
-Scanner::Private::process_dentry(const std::string& path, struct dirent* dentry,
-                                 bool is_maildir)
+Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
+				 bool is_maildir)
 {
 	const auto d_name{dentry->d_name};
 
-	if (is_special_dir(d_name) || std::strcmp(d_name, "tmp") == 0)
+	if (is_dotdir(d_name) || std::strcmp(d_name, "tmp") == 0)
 		return true; // ignore.
+	if (is_ignoredir(d_name)) {
+		g_debug("skip %s/%s (ignore-dir)", path.c_str(), d_name);
+		return true; // ignore
+	}
 
 	const auto  fullpath{path + "/" + d_name};
-	struct stat statbuf {
-	};
+	struct stat statbuf {};
 	if (::stat(fullpath.c_str(), &statbuf) != 0) {
 		g_warning("failed to stat %s: %s", fullpath.c_str(), g_strerror(errno));
 		return false;
@@ -180,7 +200,7 @@ Scanner::Private::start()
 	process_dir(root_dir_, is_maildir);
 	const auto elapsed = std::chrono::steady_clock::now() - start;
 	g_debug("finished scan of %s in %" G_GINT64_FORMAT " ms", root_dir_.c_str(),
-	        to_ms(elapsed));
+		to_ms(elapsed));
 	running_ = false;
 
 	return true;
