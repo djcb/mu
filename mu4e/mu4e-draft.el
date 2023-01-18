@@ -263,12 +263,21 @@ its settings apply."
 
 (defun mu4e~draft-header (hdr val)
   "Return a header line of the form \"HDR: VAL\".
+If VAL is a non-empty list, unpack it.
 If VAL is nil, return nil."
   ;; note: the propertize here is currently useless, since gnus sets its own
   ;; later.
-  (when val (format "%s: %s\n"
-                    (propertize hdr 'face 'mu4e-header-key-face)
-                    (propertize val 'face 'mu4e-header-value-face))))
+  (when-let ((val
+               (if (stringp val)
+                   val
+                 ;; otherwise, convert list into comma sep'd list
+                 ;; of e-mail addresses
+                 (unless (null val)
+                   (mapconcat
+                    (lambda (contact) (mu4e-contact-full contact)) val ", ")))))
+    (format "%s: %s\n"
+            (propertize hdr 'face 'mu4e-header-key-face)
+            (propertize val 'face 'mu4e-header-value-face))))
 
 (defconst mu4e~max-reference-num 21
   "Specifies the maximum number of References:.
@@ -322,14 +331,6 @@ References. If both are empty, return nil."
 
 
 ;;; Determine the recipient fields for new messages
-
-(defun mu4e~draft-recipients-list-to-string (lst)
-  "Convert a lst LST of address cells into a string.
-This is specified as a comma-separated list of e-mail addresses.
-If LST is nil, returns nil."
-  (when lst
-    (mapconcat
-     (lambda (contact) (mu4e-contact-full contact)) lst ", ")))
 
 (defun mu4e~draft-address-cell-equal (cell1 cell2)
   "Return t if CELL1 and CELL2 have the same e-mail address.
@@ -393,7 +394,9 @@ REPLY-ALL."
              (append
               (plist-get origmsg :to)
               (plist-get origmsg :cc)
-              (when include-from(plist-get origmsg :from))
+              (when include-from
+                (or (plist-get origmsg :reply-to)
+                    (plist-get origmsg :from)))
               (plist-get origmsg :list-post))
              :test #'mu4e~draft-address-cell-equal))
            ;; now we have the basic list, but we must remove
@@ -424,14 +427,13 @@ REPLY-ALL."
 \(which is a symbol, :to or :cc), based on the original message ORIGMSG,
 and (optionally) REPLY-ALL which indicates this is a reply-to-all
 message. Return nil if there are no recipients for the particular field."
-  (mu4e~draft-recipients-list-to-string
-   (cl-case field
-     (:to
-      (mu4e~draft-create-to-lst origmsg))
-     (:cc
-      (mu4e~draft-create-cc-lst origmsg reply-all include-from))
-     (otherwise
-      (mu4e-error "Unsupported field")))))
+  (cl-case field
+    (:to
+     (mu4e~draft-create-to-lst origmsg))
+    (:cc
+     (mu4e~draft-create-cc-lst origmsg reply-all include-from))
+    (otherwise
+     (mu4e-error "Unsupported field"))))
 
 (defun mu4e~draft-from-construct ()
   "Construct a value for the From:-field of the reply.
@@ -542,7 +544,8 @@ You can append flags."
 
 (defun mu4e~draft-reply-construct-recipients (origmsg)
   "Determine the to/cc recipients for a reply message."
-  (let* ((reply-to-self (mu4e-message-contact-field-matches-me origmsg :from))
+  (let* ((return-to (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))
+         (reply-to-self (mu4e-personal-address-p (plist-get return-to :email)))
          ;; reply-to-self implies reply-all
          (reply-all (or reply-to-self
                         (eq mu4e-compose-reply-recipients 'all)
@@ -552,10 +555,8 @@ You can append flags."
      (if reply-to-self
          ;; When we're replying to ourselves, simply keep the same headers.
          (concat
-          (mu4e~draft-header "To" (mu4e~draft-recipients-list-to-string
-                                   (mu4e-message-field origmsg :from)))
-          (mu4e~draft-header "Cc" (mu4e~draft-recipients-list-to-string
-                                   (mu4e-message-field origmsg :cc))))
+          (mu4e~draft-header "To" return-to)
+          (mu4e~draft-header "Cc" (mu4e-message-field origmsg :cc)))
 
        ;; if there's no-one in To, copy the CC-list
        (if (zerop (length (mu4e~draft-create-to-lst origmsg)))
@@ -563,19 +564,20 @@ You can append flags."
                                     :cc origmsg reply-all))
          ;; otherwise...
          (concat
-          (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg reply-all))))))))
+          (mu4e~draft-header "To" return-to)
+          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct
+                                   :cc origmsg reply-all))))))))
 
 (defun mu4e~draft-reply-construct-recipients-list (origmsg)
   "Determine the to/cc recipients for a reply message to a
 mailing-list."
   (let* ( ;; reply-to-self implies reply-all
          (list-post (plist-get origmsg :list-post))
-         (from      (plist-get origmsg :from))
+         (return-to (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))
          (recipnum
           (+ (length (mu4e~draft-create-to-lst origmsg))
              (length (mu4e~draft-create-cc-lst origmsg t t))))
-         (sender (mu4e-contact-full (car from)))
+         (sender (mu4e-contact-full (car return-to)))
          (reply-type
           (mu4e-read-option
            "Reply to mailing-list "
@@ -588,11 +590,9 @@ mailing-list."
         (mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
         (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t t))))
       (list-only
-       (mu4e~draft-header "To"
-                          (mu4e~draft-recipients-list-to-string list-post)))
+       (mu4e~draft-header "To" list-post))
       (sender-only
-       (mu4e~draft-header "To"
-                          (mu4e~draft-recipients-list-to-string from))))))
+       (mu4e~draft-header "To" return-to)))))
 
 (defun mu4e~draft-reply-construct (origmsg)
   "Create a draft message as a reply to ORIGMSG.
