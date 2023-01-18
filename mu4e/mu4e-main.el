@@ -202,16 +202,18 @@ character of the keyboard shortcut
   (mapconcat
    (lambda (item)
      (cl-destructuring-bind
-         (&key hide name key favorite &allow-other-keys) item
+         (&key hide name key favorite query &allow-other-keys) item
        ;; hide items explicitly hidden, without key or wrong category.
        (if hide
            ""
          (concat
           (mu4e--main-action-str
-           (format "\t* [%s] %s " (format "%c%c" shortcut key)
+           (format "\t* [%s] %s "
+                   (format "%c%c" shortcut key)
                    (propertize
-                    name 'face
-                    (if favorite 'mu4e-header-key-face nil))))
+                    name
+                    'face (if favorite 'mu4e-header-key-face nil)
+                    'help-echo query)))
           (format "%s%s\n"
                   (make-string (- max-length (string-width name)) ?\s)
                   (mu4e--query-item-display-counts item)))))) data ""))
