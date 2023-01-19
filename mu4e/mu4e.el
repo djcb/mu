@@ -88,7 +88,7 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
-  (mu4e--query-items-refresh)
+  (mu4e--query-items-refresh 'reset-baseline)
   (mu4e--start (unless background #'mu4e--main-view)))
 
 (defun mu4e-quit()
