@@ -55,12 +55,12 @@ messages since baseline for the favorite bookmark."
 The default implementation uses emacs' built-in dbus-notification
 support."
   (when-let ((fav (mu4e-bookmark-favorite)))
-    (let* ((title "Mu4e found new mail")
+    (let* ((title "mu4e found new mail")
            (delta-unread (or (plist-get fav :delta-unread) 0))
-           (body (format "There %s %d new message%s for your favorite bookmark"
-                         (if (= delta-unread 1) "is" "are")
+           (body (format "%d new message%s in %s"
                          delta-unread
-                         (if (= delta-unread 1) "" "s"))))
+                         (if (= delta-unread 1) "" "s")
+                         (plist-get fav :name))))
       (cond
        ((fboundp 'notifications-notify)
         ;; notifactions available
