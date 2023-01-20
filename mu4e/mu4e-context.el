@@ -146,11 +146,9 @@ non-nil."
               (mu4e-context-vars context)))
       (setq mu4e--context-current context)
       (run-hooks 'mu4e-context-changed-hook)
-
       ;; refresh our remember query items; we have have
       ;; different bookmarks/maildirs now.
-      (mu4e--query-items-reset-baseline)
-      (mu4e--query-items-refresh)
+      (mu4e--query-items-refresh 'reset-baseline)
 
       (mu4e-message "Switched context to %s" (mu4e-context-name context)))
     context))

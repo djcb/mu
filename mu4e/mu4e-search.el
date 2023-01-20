@@ -206,7 +206,7 @@ the search."
          (fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
     ;; reset baseline when searching for the favorite bookmark query
     (when (and fav (string= fav expr))
-      (mu4e--query-items-reset-baseline))
+      (mu4e--query-items-refresh 'reset-baseline))
 
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
     (mu4e-search expr (when edit "Edit bookmark: ") edit)))

@@ -97,18 +97,6 @@ If ITEMS does not yet have a favorite item, pick the first."
 (declare-function  mu4e-bookmarks "mu4e-bookmarks")
 (declare-function  mu4e-maildir-shortcuts "mu4e-folders")
 
-(defun mu4e--query-items-reset ()
-  "Reset the query items."
-  (setq mu4e--bookmark-items-cached nil
-        mu4e--maildir-items-cached nil)
-  (run-hooks 'mu4e-query-items-updated-hook))
-
-(defun mu4e--query-items-reset-baseline ()
-  "Reset the baseline query-items."
-  (setq mu4e--query-items-baseline (mu4e-server-query-items)
-        mu4e--query-items-baseline-tstamp (current-time))
-  (mu4e--query-items-reset))
-
 (defun mu4e--query-item-display-counts (item)
   "Get the count display string for some query-data ITEM."
   ;; purely for display, but we need it in the main menu, modeline
@@ -132,7 +120,8 @@ If ITEMS does not yet have a favorite item, pick the first."
   "Get the latest query data from the mu4e server.
 With RESET-BASELINE, reset the baseline first."
   (when reset-baseline
-    (mu4e--query-items-reset-baseline))
+    (setq mu4e--query-items-baseline nil
+          mu4e--query-items-baseline-tstamp nil))
   (mu4e--server-queries
    ;; note: we must apply the rewrite function here, since the query does not go
    ;; through mu4e-search.
@@ -147,10 +136,17 @@ With RESET-BASELINE, reset the baseline first."
 (defun mu4e--query-items-queries-handler (_sexp)
   "Handler for queries responses from the mu4e-server.
 I.e. what we get in response to mu4e--query-items-refresh."
-  ;; if we don't have a baseline yet, set it. (note that
-  ;; mu4e--query-items-reset-baseline also calls mu4e--query-items-reset.
-  (mu4e--query-items-reset)
-  (mu4e-query-items)) ;; for side-effects; recalculate.
+  ;; if we cleared the baseline (in mu4e--query-items-refresh)
+  ;; set it to the latest now.
+  (unless mu4e--query-items-baseline
+    (setq mu4e--query-items-baseline (mu4e-server-query-items)
+          mu4e--query-items-baseline-tstamp (current-time)))
+
+  (setq mu4e--bookmark-items-cached nil
+        mu4e--maildir-items-cached nil)
+  (mu4e-query-items) ;; for side-effects
+  ;; tell the world.
+  (run-hooks 'mu4e-query-items-updated-hook))
 
 ;; this makes for O(n*m)... but with typically small(ish) n,m. Perhaps use a
 ;; hash for last-query-items and baseline-results?
@@ -220,11 +216,6 @@ bookmark or maildir."
          (plist-put value :hide-unread t))
        value))
    data))
-
-;; Note: uipdating is lazy, only happens with the first caller to
-;; mu4e-query items.
-(defvar mu4e-query-items-updated-hook nil
-  "Hook run when the query items have been updated.")
 
 (defun mu4e-query-items (&optional type)
   "Grab query items of TYPE.
