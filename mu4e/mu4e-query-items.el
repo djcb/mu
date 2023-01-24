@@ -34,7 +34,6 @@
 (require 'mu4e-helpers)
 (require 'mu4e-server)
 
-
 (defcustom mu4e-query-rewrite-function 'identity
   "Function to rewrite a query.
 
@@ -247,4 +246,4 @@ for use in various places."
     (mu4e-error "No such type %s" type))))
 
 (provide 'mu4e-query-items)
-;;; mu4e-query-data.el ends here
+;;; mu4e-query-items.el ends here
