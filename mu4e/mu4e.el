@@ -88,8 +88,8 @@ is non-nil."
   (interactive "P")
   ;; start mu4e, then show the main view
   (mu4e--init-handlers)
-  (mu4e--query-items-refresh 'reset-baseline)
-  (mu4e--start (unless background #'mu4e--main-view)))
+  (mu4e--start
+   (unless background #'mu4e--main-view)))
 
 (defun mu4e-quit()
   "Quit the mu4e session."
@@ -163,10 +163,12 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
   ;; redraw main buffer if there is one.
   (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
+  (mu4e--query-items-refresh 'reset-baseline)
   (mu4e--server-ping)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; reindexing
-  (unless mu4e--contacts-set (mu4e--request-contacts-maybe)))
+  (unless mu4e--contacts-set
+    (mu4e--request-contacts-maybe)))
 
 (defun mu4e--stop ()
   "Stop mu4e."
@@ -183,11 +185,11 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   ;; kill all mu4e buffers
   (mapc
    (lambda (buf)
-     ;; When using the Gnus-based viewer, the view buffer has the
-     ;; kill-buffer-hook function mu4e--view-kill-buffer-hook-fn which kills the
-     ;; mm-* buffers created by Gnus' article mode.  Those have been returned by
-     ;; `buffer-list' but might already be deleted in case the view buffer has
-     ;; been killed first.  So we need a `buffer-live-p' check here.
+     ;; the view buffer has the kill-buffer-hook function
+     ;; mu4e--view-kill-mime-handles which kills the mm-* buffers created by
+     ;; Gnus' article mode. Those have been returned by `buffer-list' but might
+     ;; already be deleted in case the view buffer has been killed first. So we
+     ;; need a `buffer-live-p' check here.
      (when (buffer-live-p buf)
        (with-current-buffer buf
          (when (member major-mode
@@ -221,8 +223,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (let* ((type (plist-get info :info))
          (checked (plist-get info :checked))
          (updated (plist-get info :updated))
-         (cleaned-up (plist-get info :cleaned-up))
-         (mainbuf (get-buffer mu4e-main-buffer-name)))
+         (cleaned-up (plist-get info :cleaned-up)))
     (cond
      ((eq type 'add) t) ;; do nothing
      ((eq type 'index)
@@ -244,10 +245,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
           (unless (and (not (string= mu4e--contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e--request-contacts-maybe))
-          (when (and (buffer-live-p mainbuf) (get-buffer-window mainbuf))
-            (save-window-excursion
-              (select-window (get-buffer-window mainbuf))
-              (mu4e--main-view))))))
+          (mu4e--main-redraw))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 
