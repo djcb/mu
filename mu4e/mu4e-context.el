@@ -43,9 +43,9 @@ function), this context is used. Otherwise, if none of the
 contexts match, we have the following choices:
 
 - `pick-first': pick the first of the contexts available (ie. the default)
-- `ask': ask the user
-- `ask-if-none': ask if there is no context yet, otherwise leave it as it is
--  nil: return nil; leaves the current context as is.
+- `ask': ask the user `ask-if-none': ask if there is no context yet,
+   otherwise leave it as it is
+- nil: return nil; eaves the current context as is.
 
 Also see `mu4e-compose-context-policy'."
   :type '(choice
@@ -127,12 +127,13 @@ non-nil."
   (let* ((names (seq-map (lambda (context)
                            (cons (mu4e-context-name context) context))
                         mu4e-contexts))
+         (old-context mu4e--context-current) ; i.e., context before switch
          (context
           (if name
               (cdr-safe (assoc name names))
             (mu4e--context-ask-user "Switch to context: "))))
     (unless context (mu4e-error "No such context"))
-    ;; if new context is same as old one one switch with FORCE is set.
+    ;; if new context is same as old one, only switch with FORCE
     (when (or force (not (eq context (mu4e-context-current))))
       (when (and (mu4e-context-current)
                  (mu4e-context-leave-func mu4e--context-current))
@@ -146,11 +147,12 @@ non-nil."
               (mu4e-context-vars context)))
       (setq mu4e--context-current context)
       (run-hooks 'mu4e-context-changed-hook)
-      ;; refresh our remember query items; we have have
-      ;; different bookmarks/maildirs now.
-      (mu4e--query-items-refresh 'reset-baseline)
-
-      (mu4e-message "Switched context to %s" (mu4e-context-name context)))
+      ;; refresh the cached query items if there was a context before; we have
+      ;; have different bookmarks/maildirs now.
+      (when old-context
+           (mu4e--query-items-refresh 'reset-baseline))
+      (mu4e-message "Switched context to %s"
+                    (mu4e-context-name context)))
     context))
 
 (defun mu4e--context-autoswitch (&optional msg policy)
@@ -219,8 +221,7 @@ as it is."
      (propertize
       name
       'face 'mu4e-context-face
-      'help-echo
-      (format  "mu4e context: %s" name))
+      'help-echo (format  "mu4e context: %s" name))
      ">")))
 
 (define-minor-mode mu4e-context-minor-mode
