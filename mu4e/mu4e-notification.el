@@ -19,7 +19,6 @@
   "Function for determining if a notification is to be emitted.
 
 If this is the case, the function should return non-nil.
-
 The function must accept an optional single parameter, unused for
 now."
   :type 'function
@@ -32,53 +31,61 @@ now."
 The function is invoked when we need to emit a new-mail
 notification in some system-specific way. The function is invoked
 when the query-items have been updated and
-`mu4e-notification-filter' returns t.
+`mu4e-notification-filter' returns non-nil.
 
 The function must accept an optional single parameter, unused for
 now."
   :type 'function
   :group 'mu4e-notification)
 
+(defvar mu4e--last-delta-unread 0
+  "Last notified number.")
+(defvar mu4e--notification-id nil
+  "The last notification id, so we can replace it.")
+
 (defun mu4e--default-notification-filter (&optional _)
   "Return t if a notification should be shown.
 
-This default implementation does so when there are more unread
-messages since baseline for the favorite bookmark."
-  (when-let ((fav (mu4e-bookmark-favorite)))
-    (> (or (plist-get fav :delta-unread) 0) 0)))
-
-(defvar mu4e--notification-id nil
-  "The last notification id, so we can replace it.")
+This default implementation does so when the number of unread
+messages changed since the last notification and it is greater
+than zero."
+  (when-let* ((fav (mu4e-bookmark-favorite))
+              (delta-unread (plist-get fav :delta-unread)))
+    (when (and (> delta-unread 0)
+               (not (= delta-unread mu4e--last-delta-unread)))
+      (setq mu4e--last-delta-unread delta-unread) ;; update
+      t ;; do show notification
+      )))
 
 (defun mu4e--default-notification-function (&optional _)
   "Default function for handling notifications.
 The default implementation uses emacs' built-in dbus-notification
 support."
-  (when-let ((fav (mu4e-bookmark-favorite)))
-    (let* ((title "mu4e found new mail")
-           (delta-unread (or (plist-get fav :delta-unread) 0))
-           (body (format "%d new message%s in %s"
-                         delta-unread
-                         (if (= delta-unread 1) "" "s")
-                         (plist-get fav :name))))
-      (cond
-       ((fboundp 'notifications-notify)
-        ;; notifactions available
-        (setq mu4e--notification-id
-              (notifications-notify
-               :title title
-               :body body
-               :app-name "mu4e@emacs"
-               :replaces-id mu4e--notification-id
-               ;; a custom mu4e icon would be nice...
-               ;; :app-icon (ignore-errors
-               ;;             (image-search-load-path
-               ;;              "gnus/gnus.png"))
-               :actions '("Show" "Favorite bookmark")
-               :on-action (lambda (_ _) (mu4e-jump-to-favorite)))))
-       ;; ... TBI: other notifications ...
-       (t ;; last resort
-        (mu4e-message "%s: %s" title body))))))
+  (when-let* ((fav (mu4e-bookmark-favorite))
+              (title "mu4e found new mail")
+              (delta-unread (or (plist-get fav :delta-unread) 0))
+              (body (format "%d new message%s in %s"
+                            delta-unread
+                            (if (= delta-unread 1) "" "s")
+                            (plist-get fav :name))))
+    (cond
+     ((fboundp 'notifications-notify)
+      ;; notifications available
+      (setq mu4e--notification-id
+            (notifications-notify
+             :title title
+             :body body
+             :app-name "mu4e@emacs"
+             :replaces-id mu4e--notification-id
+             ;; a custom mu4e icon would be nice...
+             ;; :app-icon (ignore-errors
+             ;;             (image-search-load-path
+             ;;              "gnus/gnus.png"))
+             :actions '("Show" "Favorite bookmark")
+             :on-action (lambda (_ _) (mu4e-jump-to-favorite)))))
+     ;; ... TBI: other notifications ...
+     (t ;; last resort
+      (mu4e-message "%s: %s" title body)))))
 
 (defun mu4e--notification ()
   "Function called when the query items have been updated."
