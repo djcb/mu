@@ -94,7 +94,6 @@ marked as read-only, or non-nil otherwise."
 
 
 
-
 ;;; Messages, warnings and errors
 (defun mu4e-format (frm &rest args)
   "Create [mu4e]-prefixed string based on format FRM and ARGS."
@@ -457,6 +456,24 @@ Or go to the top level if there is none."
 (defmacro mu4e-setq-if-nil (var val)
   "Set VAR to VAL if VAR is nil."
   `(unless ,var (setq ,var ,val)))
+
+
+
+;;; Misc
+(defun mu4e--file-name-concat (directory &rest components)
+  "Append COMPONENTS to DIRECTORY and return the resulting string.
+Elements in COMPONENTS must be a string or nil. DIRECTORY or the
+non-final elements in COMPONENTS may or may not end with a slash
+-- if they don’t end with a slash, a slash will be inserted
+before concatenating.
+
+Compatibility function for Emacs 28's `file-name-concat'."
+  (mapconcat
+   (lambda (part)
+     (if (string= (substring part -1) "/")
+         (substring part 0 -1)
+       part))
+   (cons directory components) "/"))
 
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here
