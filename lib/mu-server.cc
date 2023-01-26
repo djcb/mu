@@ -888,7 +888,7 @@ void
 Server::Private::move_handler(const Command& cmd)
 {
 	auto       maildir{cmd.string_arg(":maildir").value_or("")};
-	const auto flagopt{cmd.string_arg(":flags").value_or("")};
+	const auto flagopt{cmd.string_arg(":flags")};
 	const auto rename{cmd.boolean_arg(":rename")};
 	const auto no_view{cmd.boolean_arg(":noupdate")};
 	const auto docids{determine_docids(store_, cmd)};
