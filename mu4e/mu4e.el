@@ -118,7 +118,7 @@ is non-nil."
       (mu4e-error "Please set %S" var))
     (unless (functionp (symbol-value var)) ;; functions are okay, too
       (let* ((dir (symbol-value var))
-             (path (concat (mu4e-root-maildir) dir)))
+             (path (mu4e-join-paths (mu4e-root-maildir) dir)))
         (unless (string= (substring dir 0 1) "/")
           (mu4e-error "%S must start with a '/'" dir))
         (unless (mu4e-create-maildir-maybe path)

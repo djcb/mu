@@ -286,7 +286,7 @@ The following marks are available, and the corresponding props:
          (target (if (string= (substring target 0 1) "/")
                      target
                    (concat "/" target)))
-         (fulltarget (concat (mu4e-root-maildir) target)))
+         (fulltarget (mu4e-join-paths (mu4e-root-maildir) target)))
     (when (or (file-directory-p fulltarget)
               (and (yes-or-no-p
                     (format "%s does not exist.  Create now?" fulltarget))
@@ -366,7 +366,7 @@ user which one)."
 
 (defun mu4e--mark-check-target (target)
   "Check if TARGET exists; if not, offer to create it."
-  (let ((fulltarget (concat (mu4e-root-maildir) target)))
+  (let ((fulltarget (mu4e-join-paths (mu4e-root-maildir) target)))
     (if (not (mu4e-create-maildir-maybe fulltarget))
         (mu4e-error "Target dir %s does not exist " fulltarget)
       target)))

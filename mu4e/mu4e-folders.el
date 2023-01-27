@@ -205,7 +205,7 @@ See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
        (mu4e-root-maildir)
        ""
        (expand-file-name
-        (concat path "/../.."))))))
+        (mu4e-join-paths path ".." ".."))))))
 
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create maildir DIR if it does not exist yet.
@@ -214,12 +214,12 @@ create it -- we cannot be sure creation succeeded here, since this
 is done asynchronously. Otherwise, return nil. NOte, DIR has to be
 an absolute path."
   (if (and (file-exists-p dir) (not (file-directory-p dir)))
-      (mu4e-error "File %s exists, but is not a directory" dir))
-  (cond
-   ((file-directory-p dir) t)
-   ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
-    (mu4e--server-mkdir dir) t)
-   (t nil)))
+      (mu4e-error "File %s exists, but is not a directory" dir)
+    (cond
+     ((file-directory-p dir) t)
+     ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
+      (mu4e--server-mkdir dir) t)
+     (t nil))))
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs for MDIR under PATH.
@@ -228,19 +228,19 @@ Do so recursively and produce a list of relative paths."
         (dentries
          (ignore-errors
            (directory-files-and-attributes
-            (concat path mdir) nil
+            (mu4e-join-paths path mdir) nil
             "^[^.]\\|\\.[^.][^.]" t))))
     (dolist (dentry dentries)
       (when (and (booleanp (cadr dentry)) (cadr dentry))
         (if (file-accessible-directory-p
-             (concat (mu4e-root-maildir) "/" mdir "/" (car dentry) "/cur"))
-            (setq dirs (cons (concat mdir (car dentry)) dirs)))
+             (mu4e-join-paths (mu4e-root-maildir) mdir (car dentry) "cur"))
+            (setq dirs
+                  (cons (mu4e-join-paths mdir (car dentry)) dirs)))
         (unless (member (car dentry) '("cur" "new" "tmp"))
           (setq dirs
                 (append dirs
-                        (mu4e~get-maildirs-1 path
-                                             (concat mdir
-                                                     (car dentry) "/")))))))
+                        (mu4e~get-maildirs-1
+                         path (mu4e-join-paths mdir (car dentry))))))))
     dirs))
 
 (defvar mu4e-cache-maildir-list nil
@@ -265,9 +265,12 @@ the list of maildirs will not change until you restart mu4e."
           (sort
            (append
             (when (file-accessible-directory-p
-                   (concat (mu4e-root-maildir) "/cur")) '("/"))
+                   (mu4e-join-paths
+                    (mu4e-root-maildir) "cur"))
+              '("/"))
             (mu4e~get-maildirs-1 (mu4e-root-maildir) "/"))
-           (lambda (s1 s2) (string< (downcase s1) (downcase s2))))))
+           (lambda (s1 s2)
+             (string< (downcase s1) (downcase s2))))))
   mu4e-maildir-list)
 
 (defun mu4e-ask-maildir (prompt)
@@ -308,7 +311,7 @@ from all maildirs under `mu4e-maildir'."
   "Like `mu4e-ask-maildir', PROMPT for existence of the maildir.
 Offer to create it if it does not exist yet."
   (let* ((mdir (mu4e-ask-maildir prompt))
-         (fullpath (concat (mu4e-root-maildir) mdir)))
+         (fullpath (mu4e-join-paths (mu4e-root-maildir) mdir)))
     (unless (file-directory-p fullpath)
       (and (yes-or-no-p
             (mu4e-format "%s does not exist. Create now?" fullpath))

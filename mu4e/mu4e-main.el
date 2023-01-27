@@ -81,12 +81,12 @@ the personal addresses."
 (defun mu4e-about ()
   "Show the mu4e \"About\" page."
   (interactive)
-  (mu4e-info (concat mu4e-doc-dir "/mu4e-about.org")))
+  (mu4e-info (mu4e-join-paths mu4e-doc-dir "mu4e-about.org")))
 
 (defun mu4e-news ()
   "Show page with news for the current version of mu4e."
   (interactive)
-  (mu4e-info (concat mu4e-doc-dir "/NEWS.org")))
+  (mu4e-info (mu4e-join-paths mu4e-doc-dir "NEWS.org")))
 
 (defun mu4e-baseline-time ()
   "Show the baseline time."

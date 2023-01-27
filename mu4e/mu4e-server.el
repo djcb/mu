@@ -595,7 +595,8 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
   (unless (or (not maildir)
-              (file-exists-p (concat (mu4e-root-maildir) "/" maildir "/")))
+              (file-exists-p
+               (mu4e-join-paths (mu4e-root-maildir) maildir)))
     (mu4e-error "Target dir does not exist"))
   (mu4e--server-call-mu
    `(move
