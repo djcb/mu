@@ -44,6 +44,7 @@ endif
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
 all: $(BUILDDIR)
 	@$(NINJA) -C $(BUILDDIR) $(VERBOSE)
+	@ln -sf $(BUILDDIR)/compile_commands.json $(CURDIR) || /bin/true
 
 $(BUILDDIR):
 	@$(MESON) $(MESON_FLAGS) $(BUILDDIR)
