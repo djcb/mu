@@ -78,13 +78,13 @@ Mu::play (const std::string& path)
 	argv[0] = program_path->c_str();
 	argv[1] = path.c_str();
 	argv[2] = nullptr;
-	
+
 	GError *err{};
 	if (!g_spawn_async ({}, (gchar**)&argv, {}, G_SPAWN_SEARCH_PATH, maybe_setsid,
 			    {}, {}, &err))
 		return Err(Error::Code::File, &err/*consumes*/, "failed to open '%s' with '%s'",
 			   path. c_str(), program_path->c_str());
-	
+
 	return Ok();
 }
 
@@ -109,7 +109,7 @@ Mu::determine_dtype (const std::string& path, bool use_lstat)
 {
 	int res;
 	struct stat statbuf{};
-	
+
 	if (use_lstat)
 		res = ::lstat(path.c_str(), &statbuf);
 	else
@@ -257,6 +257,17 @@ test_program_in_path(void)
 	g_assert_true(!!program_in_path("ls"));
 }
 
+static void
+test_join_paths()
+{
+
+	assert_equal(join_paths(), "");
+	assert_equal(join_paths("a"), "a");
+	assert_equal(join_paths("a", "b"), "a/b");
+	assert_equal(join_paths("/a/b///c/d//", "e"), "/a/b/c/d/e");
+}
+
+
 
 int
 main(int argc, char* argv[])
@@ -272,12 +283,12 @@ main(int argc, char* argv[])
 			test_check_dir_03);
 	g_test_add_func("/utils/check-dir-04",
 			test_check_dir_04);
-
 	g_test_add_func("/utils/determine-dtype-with-lstat",
 			test_determine_dtype_with_lstat);
-	
 	g_test_add_func("/utils/program-in-path",
 			test_program_in_path);
+	g_test_add_func("/utils/join-paths",
+			test_join_paths);
 
 	return g_test_run();
 }

@@ -24,8 +24,8 @@
 #include <cinttypes>
 #include <sys/stat.h>
 
-#include <utils/mu-sexp.hh>
 #include <utils/mu-option.hh>
+#include <utils/mu-regex.hh>
 
 namespace Mu {
 
@@ -43,22 +43,22 @@ namespace Mu {
  */
 Result<void> play(const std::string& path);
 
-/** 
+/**
  * Find program in PATH
- * 
+ *
  * @param name the name of the program
- * 
+ *
  * @return either the full path to program, or Nothing if not found.
- */	
+ */
 Option<std::string> program_in_path(const std::string& name);
-	
-/** 
+
+/**
  * Check if the directory has the given attributes
- * 
+ *
  * @param path path to dir
  * @param readable is it readable?
  * @param writeable is it writable?
- * 
+ *
  * @return true if is is a directory with given attributes; false otherwise.
  */
 bool check_dir(const std::string& path, bool readable, bool writeable);
@@ -72,8 +72,8 @@ bool check_dir(const std::string& path, bool readable, bool writeable);
  * @return
  */
 std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
-	
-/*	
+
+/*
  * for OSs with out support for direntry->d_type, like Solaris
  */
 #ifndef DT_UNKNOWN
@@ -108,7 +108,7 @@ enum {
  *
  * @return DT_REG, DT_DIR, DT_LNK, or DT_UNKNOWN (other values are not supported
  * currently)
- */	
+ */
 uint8_t determine_dtype(const std::string& path, bool use_lstat);
 
 
@@ -135,7 +135,28 @@ enum struct RuntimePath {
  * @return the path name
  */
 std::string runtime_path(RuntimePath path, const std::string& muhome="");
+/**
+ * Join  path components into a path (with '/')
+ *
+ * @param s a string-convertible value
+ * @param args 0 or more string-convertible values
+ *
+ * @return the path
+ */
+static inline std::string join_paths() { return {}; }
+template<typename S, typename...Args>
+std::string join_paths(S&& s, Args...args) {
 
+	static std::string sepa{"/"};
+	auto&& str{std::string{std::forward<S>(s)}};
+	if (auto&& rest{join_paths(std::forward<Args>(args)...)}; !rest.empty())
+		str += (sepa + rest);
+
+	static auto rx = Regex::make("//*").value();
+	return rx.replace(str, sepa);
 }
-#endif /* MU_UTILS_FILE_HH__ */
 
+
+} // namespace Mu
+
+#endif /* MU_UTILS_FILE_HH__ */
