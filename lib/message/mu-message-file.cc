@@ -73,7 +73,7 @@ Mu::message_file_parts(const std::string& file)
 Mu::Result<DirFile>
 Mu::base_message_dir_file(const std::string& path)
 {
-	constexpr auto newdir{ G_DIR_SEPARATOR_S "new"};
+	constexpr auto newdir{"/new"};
 
 	char *dirname{g_path_get_dirname(path.c_str())};
 	bool is_new{!!g_str_has_suffix(dirname, newdir)};

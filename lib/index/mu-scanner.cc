@@ -33,6 +33,7 @@
 #include <glib.h>
 
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include "utils/mu-error.hh"
 
 using namespace Mu;
@@ -44,10 +45,7 @@ struct Scanner::Private {
 		if (!handler_)
 			throw Mu::Error{Error::Code::Internal, "missing handler"};
 	}
-	~Private()
-	{
-		stop();
-	}
+	~Private() { stop(); }
 
 	bool start();
 	bool stop();
@@ -66,9 +64,6 @@ is_dotdir(const char *d_name)
 	/* dotdir? */
 	if (d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
 	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
-		return true;
-	/* gnus? */
-	if (d_name[0] == '.' && g_strcmp0(d_name + 1, "nnmaildir") == 0)
 		return true;
 
 	return false;
@@ -97,7 +92,7 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
 		return true; // ignore
 	}
 
-	const auto  fullpath{path + "/" + d_name};
+	const auto  fullpath{join_paths(path, d_name)};
 	struct stat statbuf {};
 	if (::stat(fullpath.c_str(), &statbuf) != 0) {
 		g_warning("failed to stat %s: %s", fullpath.c_str(), g_strerror(errno));

@@ -74,7 +74,7 @@ create_maildir(const std::string& path, mode_t mode)
 	std::array<std::string,3> subdirs = {"new", "cur", "tmp"};
 	for (auto&& subdir: subdirs) {
 
-		const auto fullpath{path + G_DIR_SEPARATOR_S + subdir};
+		const auto fullpath{join_paths(path, subdir)};
 
 		/* if subdir already exists, don't try to re-create
 		 * it */
@@ -98,7 +98,7 @@ create_maildir(const std::string& path, mode_t mode)
 static Mu::Result<void>		/* create a noindex file if requested */
 create_noindex(const std::string& path)
 {
-	const auto noindexpath{path + G_DIR_SEPARATOR_S MU_MAILDIR_NOINDEX_FILE};
+	const auto noindexpath{join_paths(path, MU_MAILDIR_NOINDEX_FILE)};
 
 	/* note, if the 'close' failed, creation may still have succeeded...*/
 	int fd = ::creat(noindexpath.c_str(), 0644);
@@ -163,18 +163,15 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 	 */
 	std::string fulltargetpath;
 	if (unique_names)
-		fulltargetpath = format("%s%c%s%c%u_%s",
-				    targetpath.c_str(),
-				    G_DIR_SEPARATOR, in_cur ? "cur" : "new",
-				    G_DIR_SEPARATOR,
-				    g_str_hash(src.c_str()),
-				    srcfile);
+		fulltargetpath = join_paths(targetpath,
+					    in_cur ? "cur" : "new",
+					    format("%u_%s",
+						   g_str_hash(src.c_str()),
+						   srcfile));
 	else
-		fulltargetpath = format("%s%c%s%c%s",
-				    targetpath.c_str(),
-				    G_DIR_SEPARATOR, in_cur ? "cur" : "new",
-				    G_DIR_SEPARATOR,
-				    srcfile);
+		fulltargetpath = join_paths(targetpath,
+					    in_cur ? "cur" : "new",
+					    srcfile);
 	g_free(srcfile);
 
 	return fulltargetpath;
@@ -213,8 +210,7 @@ clear_links(const std::string& path, DIR* dir)
 		if (dentry->d_name[0] == '.')
 			continue; /* ignore .,.. other dotdirs */
 
-		const auto fullpath{
-			format("%s" G_DIR_SEPARATOR_S "%s",path.c_str(), dentry->d_name)};
+		const auto fullpath{join_paths(path, dentry->d_name)};
 		const auto d_type   = get_dtype(dentry, fullpath.c_str(), true/*lstat*/);
 		switch(d_type) {
 		case DT_LNK:
@@ -441,8 +437,8 @@ Mu::maildir_determine_target(const std::string&	old_path,
 
 	/* if target_mdir is empty, the src_dir does not change (though cur/
 	 * maybe become new or vice-versa) */
-	const auto dst_mdir{target_maildir.empty() ? src_mdir :
-		root_maildir_path + target_maildir};
+	const auto dst_mdir = target_maildir.empty() ? src_mdir :
+		join_paths(root_maildir_path,  target_maildir);
 
 	/* now calculate the message name (incl. its immediate parent dir) */
 	const auto dst_file{determine_dst_filename(src_file, newflags, new_name)};
@@ -455,5 +451,5 @@ Mu::maildir_determine_target(const std::string&	old_path,
 			return "new";
 	});
 
-	return dst_mdir + G_DIR_SEPARATOR_S + subdir + G_DIR_SEPARATOR_S + dst_file;
+	return join_paths(dst_mdir, subdir,dst_file);
 }

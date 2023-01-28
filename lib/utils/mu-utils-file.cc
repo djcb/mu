@@ -153,11 +153,9 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 {
 	auto [mu_cache, mu_config] =
 		std::invoke([&]()->std::pair<std::string, std::string> {
-
-			static std::string mu{"/mu"};
 			if (muhome.empty())
-				return { g_get_user_cache_dir() + mu,
-					 g_get_user_config_dir() + mu };
+				return { join_paths(g_get_user_cache_dir(), "mu"),
+					 join_paths(g_get_user_config_dir(), "mu")};
 			else
 				return { muhome, muhome };
 	});
@@ -166,15 +164,15 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 	case Mu::RuntimePath::Cache:
 		return mu_cache;
 	case Mu::RuntimePath::XapianDb:
-		return mu_cache + "/xapian";
+		return join_paths(mu_cache, "xapian");
 	case Mu::RuntimePath::LogFile:
-		return mu_cache + "/mu.log";
+		return join_paths(mu_cache, "mu.log");
 	case Mu::RuntimePath::Bookmarks:
-		return mu_config + "/bookmarks";
+		return join_paths(mu_config, "bookmarks");
 	case Mu::RuntimePath::Config:
 		return mu_config;
 	case Mu::RuntimePath::Scripts:
-		return mu_config + "/scripts";
+		return join_paths(mu_config, "scripts");
 	default:
 		throw std::logic_error("unknown path");
 	}
