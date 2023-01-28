@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -78,8 +78,7 @@ struct Regex {
 	 */
 	operator bool() const noexcept { return !!rx_; }
 
-
-	// No need for a move CTOR, copying is cheap (GRegex is refcounted)
+	// No need for a move CTOR, copying is cheap (GRegex is ref-counted)
 
 	/**
 	 * Copy CTOR
@@ -117,6 +116,25 @@ struct Regex {
 	bool matches(const std::string& str,
 		     GRegexMatchFlags mflags=G_REGEX_MATCH_DEFAULT) const noexcept {
 		return rx_ ? g_regex_match(rx_, str.c_str(), mflags, {}) : false;
+	}
+
+	/**
+	 * Replace all occurences of @this regexp in some string with a
+	 * replacement string
+	 *
+	 * @param str some string
+	 * @param repl replacement string
+	 *
+	 * @return string
+	 */
+	std::string replace(const std::string& str, const std::string& repl) {
+		char *s{g_regex_replace(rx_, str.c_str(), str.length(), 0,
+					repl.c_str(), G_REGEX_MATCH_DEFAULT, {})};
+		if (!s)
+			throw Err(Error::Code::InvalidArgument, "error in Regex::replace");
+		std::string r{s};
+		g_free(s);
+		return r;
 	}
 
 private:

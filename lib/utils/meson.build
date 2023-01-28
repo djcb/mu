@@ -16,22 +16,22 @@
 
 
 lib_mu_utils=static_library('mu-utils', [
-                  'mu-command-handler.cc',
-                  'mu-logger.cc',
-                  'mu-option.cc',
-                  'mu-readline.cc',
-                  'mu-sexp.cc',
-                  'mu-test-utils.cc',
-                  'mu-utils.cc',
-                  'mu-utils-file.cc'],
-                 dependencies: [
-                   glib_dep,
-                   gio_dep,
-                   config_h_dep,
-                   readline_dep
-                 ],
-                 include_directories: include_directories(['.','..']),
-                 install: false)
+  'mu-command-handler.cc',
+  'mu-logger.cc',
+  'mu-option.cc',
+  'mu-readline.cc',
+  'mu-sexp.cc',
+  'mu-test-utils.cc',
+  'mu-utils-file.cc',
+  'mu-utils.cc'
+], dependencies: [
+  glib_dep,
+  gio_dep,
+  config_h_dep,
+  readline_dep
+], include_directories:
+     include_directories(['.','..']),
+install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
@@ -43,6 +43,12 @@ lib_mu_utils_dep = declare_dependency(
 #
 test('test-sexp',
      executable('test-sexp', 'mu-sexp.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep]))
+
+test('test-regex',
+     executable('test-regex', 'mu-regex.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_utils_dep]))
