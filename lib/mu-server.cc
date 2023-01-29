@@ -659,21 +659,25 @@ Server::Private::find_handler(const Command& cmd)
 	const auto threads{cmd.boolean_arg(":threads")};
 	// perhaps let mu4e set this as frame-lines of the appropriate frame.
 	const auto batch_size{cmd.number_arg(":batch-size").value_or(110)};
-	const auto sortfieldstr{cmd.symbol_arg(":sortfield").value_or("")};
 	const auto descending{cmd.boolean_arg(":descending")};
 	const auto maxnum{cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/};
 	const auto skip_dups{cmd.boolean_arg(":skip-dups")};
 	const auto include_related{cmd.boolean_arg(":include-related")};
 
-	auto sort_field = std::invoke([&]()->Option<Field>{
-		if (sortfieldstr.size() < 2)
-			return Nothing;
+	// complicated!
+	auto sort_field_id = std::invoke([&]()->Field::Id {
+		if (const auto arg = cmd.symbol_arg(":sortfield"); !arg)
+			return Field::Id::Date;
+		else if (arg->length() < 2)
+			throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
+				arg->c_str()};
+		else if (const auto field{field_from_name(arg->substr(1))}; !field)
+			throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
+				arg->c_str()};
 		else
-			return field_from_name(sortfieldstr.substr(1));
+			return field->id;
 	});
-	if (!sort_field && !sortfieldstr.empty())
-		throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
-			sortfieldstr.c_str()};
+
 	if (batch_size < 1)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
 
@@ -691,9 +695,9 @@ Server::Private::find_handler(const Command& cmd)
 			    indexer().is_running() ? "yes" :  "no")};
 
 	std::lock_guard l{store_.lock()};
-	auto qres{store_.run_query(q, sort_field->id, qflags, maxnum)};
+	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
 	if (!qres)
-		throw Error(Error::Code::Query, "failed to run query");
+		throw Error(Error::Code::Query, "failed to run query: %s", qres.error().what());
 
 	/* before sending new results, send an 'erase' message, so the frontend
 	 * knows it should erase the headers buffer. this will ensure that the
