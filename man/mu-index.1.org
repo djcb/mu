@@ -176,6 +176,8 @@ Things are again a little faster, even though the index does a lot more now
 (text-normalizatian, and pre-generating message-sexps). A faster machine helps,
 too!
 
+#+include: "exit-code.inc" :minlevel 1
+
 #+include: "prefooter.inc"
 
 * SEE ALSO

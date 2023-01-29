@@ -147,10 +147,7 @@ which is (by default) accessible by pressing *Q*.
 =--format=bbdb=. This is hard-coded to UTF-8, and as such specified in the
 output-file, so emacs/bbdb can handle things correctly, without guessing.
 
-* EXIT CODE
-
-This command returns 0 upon successful completion, or a non-zero exit code
-otherwise: 1 for a generals error and 2 for 'no matches'.
+#+include: "exit-code.inc" :minlevel 1
 
 #+include: "bugs.inc" :minlevel 1
 

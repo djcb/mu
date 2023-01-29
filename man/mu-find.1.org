@@ -272,11 +272,7 @@ After restarting Wanderlust, the virtual folders should appear.
 (the default), and UTF-8 for all other formats (=sexp=,
 =xml=).
 
-
-* EXIT CODE
-
-This command returns 0 upon successful completion, or a non-zero exit code
-otherwise: 1 for a generals error and 2 for 'no matches'.
+#+include: "exit-code.inc" :minlevel 1
 
 #+include: "bugs.inc" :minlevel 1
 

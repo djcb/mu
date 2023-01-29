@@ -40,6 +40,7 @@ reinitialize the database from an earlier version; that is, create a new
 empty database witht the existing settings. This cannot be combined
 with the other ~init~ options.
 
+#+include: "exit-code.inc" :minlevel 1
 
 #+include: "muhome.inc" :minlevel 2
 
