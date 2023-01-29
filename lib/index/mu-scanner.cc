@@ -70,10 +70,18 @@ is_dotdir(const char *d_name)
 }
 
 static bool
-is_ignoredir(const char *d_name)
+do_ignore(const char *d_name)
 {
-	/* gnus? */
-	if (d_name[0] == '.' && g_strcmp0(d_name + 1, "nnmaildir") == 0)
+	if (d_name[0] == '.') {
+		if (d_name[1] == '#') /* emacs? */
+			return true;
+		if (g_strcmp0(d_name + 1, "nnmaildir") == 0) /* gnus? */
+			return true;
+		if (g_strcmp0(d_name + 1, "notmuch") == 0) /* notmuch? */
+			return true;
+	}
+
+	if (g_strcmp0(d_name, "hcache.db") == 0) /* mutt cache? */
 		return true;
 
 	return false;
@@ -87,8 +95,8 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
 
 	if (is_dotdir(d_name) || std::strcmp(d_name, "tmp") == 0)
 		return true; // ignore.
-	if (is_ignoredir(d_name)) {
-		g_debug("skip %s/%s (ignore-dir)", path.c_str(), d_name);
+	if (do_ignore(d_name)) {
+		g_debug("skip %s/%s (ignore)", path.c_str(), d_name);
 		return true; // ignore
 	}
 
