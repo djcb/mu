@@ -118,7 +118,7 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 		return Err(store.error());
 
 	Server server{*store, output_sexp_stdout};
-	g_message("created server with store @ %s; maildir @ %s; debug-mode %s"
+	g_message("created server with store @ %s; maildir @ %s; debug-mode %s;"
 		  "readline: %s",
 		  store->properties().database_path.c_str(),
 		  store->properties().root_maildir.c_str(),
