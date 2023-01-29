@@ -1,4 +1,4 @@
-## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
 # project setup
 #
 project('mu', ['c', 'cpp'],
-	version: '1.8.13',
-	meson_version: '>= 0.52.0', # debian 10
-	license: 'GPL-3.0-or-later',
-	default_options : [
-	  'buildtype=debugoptimized',
-	  'warning_level=3',
-	  'c_std=c11',
-	  'cpp_std=c++17'
-	]
+        version: '1.8.14',
+        meson_version: '>= 0.52.0', # debian 10
+        license: 'GPL-3.0-or-later',
+        default_options : [
+          'buildtype=debugoptimized',
+          'warning_level=3',
+          'c_std=c11',
+          'cpp_std=c++17'
+        ]
        )
 
 # installation paths
@@ -178,8 +178,8 @@ version_texi_data.set('UPDATEDMONTH',
                       run_command('date', '+%B %Y', check:true).stdout().strip())
 
 configure_file(input: 'version.texi.in',
-	       output: 'version.texi',
-	       configuration: version_texi_data)
+               output: 'version.texi',
+               configuration: version_texi_data)
 
 ################################################################################
 # install some data files

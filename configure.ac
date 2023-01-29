@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -43,10 +43,10 @@ AC_PROG_EGREP
 
 
 extra_flags="-Wformat-security		\
-         -Wstack-protector		\
-         -Wstack-protector-all		\
-         -Wno-cast-function-type	\
-         -Wno-bad-function-cast		\
+	 -Wstack-protector		\
+	 -Wstack-protector-all		\
+	 -Wno-cast-function-type	\
+	 -Wno-bad-function-cast		\
 	 -Wno-switch-enum"
 
 AX_CXX_COMPILE_STDCXX_17
@@ -69,7 +69,7 @@ AC_SYS_LARGEFILE
 # asan is somewhat similar to valgrind, but has low enough overhead so it
 # can be used during normal operation.
 AC_ARG_ENABLE([asan],[AS_HELP_STRING([--enable-asan],
-          [Enable Address Sanitizer])], [use_asan=$enableval], [use_asan=no])
+	  [Enable Address Sanitizer])], [use_asan=$enableval], [use_asan=no])
 AS_IF([test "x$use_asan" = "xyes"],[
   AC_SUBST(ASAN_CFLAGS,  "-fsanitize=address -static-libasan -fno-omit-frame-pointer")
   AC_SUBST(ASAN_CXXFLAGS,"-fsanitize=address -static-libasan -fno-omit-frame-pointer")
@@ -219,7 +219,7 @@ AS_IF([test "x$enable_guile" != "xno"],[
 ])
 
 AM_CONDITIONAL(BUILD_GUILE,[test "x$have_guile" = "xyes" -a \
-                 "x$ac_cv_prog_GUILE_SNARF" != "xno"])
+		 "x$ac_cv_prog_GUILE_SNARF" != "xno"])
 AM_COND_IF([BUILD_GUILE],[AC_DEFINE(BUILD_GUILE,[1], [Do we support Guile?])])
 ###############################################################################
 
