@@ -14,11 +14,14 @@
      process contact information, e.g. using ~jq~. See the manpage for more
      details.
 
+   - The ~init~ command learned ~--reinit~ to reinitialize the database with the
+     setings of an exisitng one
+
    - The ~script~ command is gone, and integrated with ~mu~ directly, i.e. the
      scripts (when enabled) are directly visible in the ~mu~ output. Also see the
      Guile section.
 
-   - Revamped manpages with are now generated from ~org~ descriptions
+   - Revamped manpages which are now generated from ~org~ descriptions
 
    - Standardize on PCRE-flavored regular expressions throughout *mu*.
 
