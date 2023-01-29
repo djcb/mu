@@ -410,26 +410,41 @@ cmd_info(const Mu::Store& store, const Options& opts)
 static Result<void>
 cmd_init(const Options& opts)
 {
-	/* not provided, nor could we find a good default */
-	if (opts.init.maildir.empty())
-		return Err(Error::Code::InvalidArgument,
-			   "missing --maildir parameter and could "
-			   "not determine default");
+	auto store = std::invoke([&]()->Result<Store> {
 
-	Mu::Store::Config conf{};
-	conf.max_message_size = opts.init.max_msg_size.value_or(0);
-	conf.batch_size       = opts.init.batch_size.value_or(0);
+		/*
+		 * reinit
+		 */
+		if (opts.init.reinit)
+			return Store::make(opts.runtime_path(RuntimePath::XapianDb),
+					   Store::Options::ReInit|Store::Options::Writable);
+		/*
+		 * full init
+		 */
 
-	auto store = Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
-				     opts.init.maildir, opts.init.my_addresses,  conf);
+		/* not provided, nor could we find a good default */
+		if (opts.init.maildir.empty())
+			return Err(Error::Code::InvalidArgument,
+				   "missing --maildir parameter and could "
+				   "not determine default");
+
+		Mu::Store::Config conf{};
+		conf.max_message_size = opts.init.max_msg_size.value_or(0);
+		conf.batch_size       = opts.init.batch_size.value_or(0);
+
+		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
+				       opts.init.maildir, opts.init.my_addresses,  conf);
+	});
+
 	if (!store)
 		return Err(store.error());
 
 	if (!opts.quiet) {
 		cmd_info(*store, opts);
-		std::cout << "\nstore created; use the 'index' command to fill/update it.\n";
+		std::cout << "database "
+			  << (opts.init.reinit ? "reinitialized" : "created")
+			  << "; use the 'index' command to fill/update it.\n";
 	}
-
 	return Ok();
 }
 

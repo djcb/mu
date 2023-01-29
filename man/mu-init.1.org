@@ -34,6 +34,13 @@ mailing list messages.
 wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on your shell, the
 argument may need to be quoted.
 
+** --reinit
+
+reinitialize the database from an earlier version; that is, create a new
+empty database witht the existing settings. This cannot be combined
+with the other ~init~ options.
+
+
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "prefooter.inc" :minlevel 1

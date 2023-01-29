@@ -364,11 +364,17 @@ sub_init(CLI::App& sub, Options& opts)
 		->type_name("<maildir>");
 	sub.add_option("--my-address", opts.init.my_addresses,
 		       "Personal e-mail addresses")
-		->type_name("<addresses>");
+		->type_name("<address>");
 	sub.add_option("--max-message-size", opts.init.max_msg_size,
 		       "Maximum allowed message size in bytes");
 	sub.add_option("--batch-size", opts.init.batch_size,
 		       "Maximum size of database transaction");
+	sub.add_flag("--reinit", opts.init.reinit,
+		       "Re-initialize database with current settings")
+		->excludes("--maildir")
+		->excludes("--my-address")
+		->excludes("--max-message-size")
+		->excludes("--batch-size");
 }
 
 static void
