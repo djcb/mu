@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -27,8 +27,11 @@ ifneq ($(V),0)
 endif
 
 # when MU_HACKER is set, do a debug build
+# MU_HACKER is for djcb & compatible developers
 ifneq (${MU_HACKER},)
-MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug' '-Db_sanitize=address'
+MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
+			    '-Db_sanitize=address' \
+			    '-Dreadline=enabled'
 endif
 
 .PHONY: all
