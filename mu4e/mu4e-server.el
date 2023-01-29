@@ -458,16 +458,18 @@ As per issue #2198."
       (cond
        ((or(eq code 9) (eq code 2)) (message nil))
        ;;(message "the mu server process has been stopped"))
-       (t (error (format "mu server process received signal %d" code)))))
+       (t (mu4e-error (format "server process received signal %d" code)))))
      ((eq status 'exit)
       (cond
        ((eq code 0)
         (message nil)) ;; don't do anything
+       ((eq code 5)
+        (error "schema mismatch; please re-init mu from command-line"))
        ((eq code 19)
-        (error "Database is locked by another process"))
-       (t (error "Mu server process ended with exit code %d" code))))
+        (error "mu database is locked by another process"))
+       (t (error "mu server process ended with exit code %d" code))))
      (t
-      (error "Something bad happened to the mu server process")))))
+      (error "something bad happened to the mu server process")))))
 
 (defun mu4e--server-call-mu (form)
   "Call the mu server with some command FORM."
