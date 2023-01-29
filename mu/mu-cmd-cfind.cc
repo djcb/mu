@@ -315,7 +315,7 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 	});
 
 	if (num == 0)
-		return Err(Error::Code::ContactNotFound, "no matching contacts found");
+		return Err(Error::Code::NoMatches, "no matching contacts found");
 
 	output(ItemType::Footer, Nothing, opts);
 	return Ok();
