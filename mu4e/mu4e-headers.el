@@ -1121,15 +1121,14 @@ The following specs are supported:
   (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
 
   ;; Eldoc support
-  (when (featurep 'eldoc)
+  (when (and (featurep 'eldoc) mu4e-eldoc-support)
     (if (boundp 'eldoc-documentation-functions)
         ;; Emacs 28 or newer
         (add-hook 'eldoc-documentation-functions
                   #'mu4e-headers-eldoc-function nil t)
       ;; Emacs 27 or older
-      (when (fboundp 'add-function) ;; add-function was added in 24.4.
-        (add-function :before-until (local 'eldoc-documentation-function)
-                      #'mu4e-headers-eldoc-function))))
+      (add-function :before-until (local 'eldoc-documentation-function)
+                    #'mu4e-headers-eldoc-function)))
 
   ;; support bookmarks.
   (set (make-local-variable 'bookmark-make-record-function)

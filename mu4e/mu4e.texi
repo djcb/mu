@@ -3087,6 +3087,7 @@ ways. Here we focus on Emacs built-ins; for dealing with external tools,
 * Modeline::Showing mu4e's status in the modeline
 * Desktop notifications::Get desktop notifications for new mail
 * Emacs bookmarks::Using Emacs' bookmark system
+* Eldoc::Information about the current header in the echo area
 * Org-mode links::Adding mu4e to your organized life
 * iCalendar::Enabling iCalendar invite processing
 * Speedbar::A special frame with your folders
@@ -3206,12 +3207,20 @@ want tweak the details, have a look at @code{mu4e-notification-filter} and
 @section Emacs bookmarks
 @cindex Emacs bookmarks
 
-Note, emacs bookmarks are not to be confused with mu4e's bookmarks; the former
-are a generic linking system, while the latter are remember stored queries.
+Note, Emacs bookmarks are not to be confused with mu4e's bookmarks; the former
+are a generic linking system across Emacs, while the latter are stored queries
+within @t{mu4e}.
 
 @t{mu4e} supports linking to the message-at-point through the normal Emacs
 built-in bookmark system. The links are based on the message's message-id, and
 thus the bookmarks stay valid even if you move the message around.
+
+@node Eldoc
+@section Eldoc
+@cindex eldoc
+
+It is possible to get information about the current header in the echo-area.
+You can enable this by setting @t{mu4e-eldoc-support} to non-@t{nil}.
 
 @node Org-mode links
 @section Org-mode links
@@ -3365,7 +3374,6 @@ functions use that to set the @code{datetree} location:
 
 If you do this, you'll want to omit the @code{:timeprompt t} setting
 from your capture template.
-
 
 @node Speedbar
 @section Speedbar

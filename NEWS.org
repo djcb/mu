@@ -92,6 +92,9 @@
     - When searching, the number of hidden messages is now shown in the
       message footer along with the number of Found messages
 
+    - The ~eldoc~ support in header-mode is now optional and disabled by default;
+      set ~mu4e-eldoc-support~ to non-nil to enable it.
+
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
 

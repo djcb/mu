@@ -69,6 +69,12 @@
   :type 'boolean
   :group 'mu4e)
 
+(defcustom mu4e-eldoc-support nil
+  "Support eldoc help in the headers-view."
+  :type 'boolean
+  :group 'mu4e)
+
+
 (when mu4e-speedbar-support
   (require 'mu4e-speedbar)) ;; support for speedbar
 (when mu4e-org-support
