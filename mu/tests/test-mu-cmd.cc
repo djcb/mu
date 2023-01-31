@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -150,15 +150,29 @@ test_mu_find_01(void)
 static void
 test_mu_find_02(void)
 {
-	search("bull", 1);
+	/* when matching html as if it were text,
+	 * 'bull' is also matched in arto.eml, &bull;
+	 */
+	// search("bull", 1);
+	// search("bull m:foo", 0);
+	// search("bull m:/foo", 1);
+	// search("bull m:/Foo", 1);
+	// search("bull flag:attach", 1);
+	// search("bull flag:a", 1);
+
+	search("bull", 2);
 	search("bull m:foo", 0);
-	search("bull m:/foo", 1);
-	search("bull m:/Foo", 1);
+	search("bull m:/foo", 2);
+	search("bull m:/Foo", 2);
 	search("bull flag:attach", 1);
 	search("bull flag:a", 1);
+
+
 	search("g:x", 0);
 	search("flag:encrypted", 0);
 	search("flag:attach", 1);
+
+	search("i:3BE9E6535E0D852173@emss35m06.us.lmco.com", 1);
 }
 
 static void
@@ -191,17 +205,9 @@ test_mu_find_text_in_rfc822(void)
 }
 
 /* some more tests */
-static void
-test_mu_find_03(void)
-{
-	search("bull", 1);
-	search("bull m:foo", 0);
-	search("bull m:/foo", 1);
-	search("i:3BE9E6535E0D852173@emss35m06.us.lmco.com", 1);
-}
 
 static void /* error cases */
-test_mu_find_04(void)
+test_mu_find_03()
 {
 	gchar *cmdline, *erroutput;
 
@@ -840,7 +846,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-cmd/test-mu-find-text-in-rfc822", test_mu_find_text_in_rfc822);
 
 	g_test_add_func("/mu-cmd/test-mu-find-03", test_mu_find_03);
-	g_test_add_func("/mu-cmd/test-mu-find-04", test_mu_find_04);
 	g_test_add_func("/mu-cmd/test-mu-find-maildir-special", test_mu_find_maildir_special);
 	g_test_add_func("/mu-cmd/test-mu-extract-01", test_mu_extract_01);
 	g_test_add_func("/mu-cmd/test-mu-extract-02", test_mu_extract_02);

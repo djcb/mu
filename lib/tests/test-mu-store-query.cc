@@ -718,8 +718,59 @@ Boo!
 		assert_valid_result(qr);
 		g_assert_cmpuint(qr->size(), ==, 3);
 	}
+}
+
+
+static void
+test_html()
+{
+	// test message sent to self, and copy of received msg.
+
+	const auto test_msg = R"(From: Test <test@example.com>
+To: abc@example.com
+Date: Mon, 23 May 2011 10:53:45 +0200
+Subject: vla
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d"
+Message-ID: <10374608.109906.11909.20115aabbccdd.MSGID@mailinglijst.nl>
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+
+text
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d
+Content-Type: text/html; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+
+html
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d--
+)";
+	const TestMap test_msgs = {{"inbox/cur/msg1", test_msg }};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	g_assert_cmpuint(store.size(), ==, 1);
+
+	{
+		auto qr = store.run_query("body:text", Field::Id::Date,
+					  QueryFlags::None);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	{
+		auto qr = store.run_query("body:html", Field::Id::Date,
+					  QueryFlags::None);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
 
 }
+
 
 int
 main(int argc, char* argv[])
@@ -745,6 +796,7 @@ main(int argc, char* argv[])
 			test_term_split);
 	g_test_add_func("/store/query/related-dup-threaded",
 			test_related_dup_threaded);
+	g_test_add_func("/store/query/html", test_html);
 
 	return g_test_run();
 }
