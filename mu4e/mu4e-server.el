@@ -463,7 +463,7 @@ As per issue #2198."
       (cond
        ((eq code 0)
         (message nil)) ;; don't do anything
-       ((eq code 5)
+       ((eq code 11)
         (error "schema mismatch; please re-init mu from command-line"))
        ((eq code 19)
         (error "mu database is locked by another process"))
