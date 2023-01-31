@@ -124,17 +124,17 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 
 	while (getline(ss, line)) {
 		const auto parts = Mu::split(line, Separator);
-		if (G_UNLIKELY(parts.size() != 6)) {
+		if (G_UNLIKELY(parts.size() != 5)) {
 			g_warning("error: '%s'", line.c_str());
 			continue;
 		}
-		Contact ci(parts[1],                                                         // email
-				  std::move(parts[2]),                                       // name
-				  (time_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),       // message_date
-				  parts[3][0] == '1' ? true : false,                         // personal
-				  (std::size_t)g_ascii_strtoll(parts[5].c_str(), NULL, 10),  // frequency
-				  g_get_monotonic_time());                                   // tstamp
-		contacts.emplace(std::move(parts[1]), std::move(ci));
+		Contact ci(parts[0],                                                  // email
+			   std::move(parts[1]),                                       // name
+			   (time_t)g_ascii_strtoll(parts[3].c_str(), NULL, 10),       // message_date
+			   parts[2][0] == '1' ? true : false,                         // personal
+			   (std::size_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),  // frequency
+			   g_get_monotonic_time());                                   // tstamp
+		contacts.emplace(std::move(parts[0]), std::move(ci));
 	}
 
 	return contacts;
@@ -146,25 +146,20 @@ ContactsCache::ContactsCache(const std::string& serialized, const StringVec& per
 }
 
 ContactsCache::~ContactsCache() = default;
+
 std::string
 ContactsCache::serialize() const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 	std::string                 s;
 
-	// XXX: 'display_name' is cached but unused; remove it, the next time we
-	// update the database schema.
-
 	for (auto& item : priv_->contacts_) {
 		const auto& ci{item.second};
 		s += Mu::format("%s%s"
 				"%s%s"
-				"%s%s"
 				"%d%s"
 				"%" G_GINT64_FORMAT "%s"
 				"%" G_GINT64_FORMAT "\n",
-				ci.display_name().c_str(),
-				Separator,
 				ci.email.c_str(),
 				Separator,
 				ci.name.c_str(),

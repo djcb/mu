@@ -86,7 +86,7 @@ cxx.check_header('charconv', required:true)
 # config.h setup
 #
 config_h_data=configuration_data()
-config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '465')
+config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '466')
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
                                            meson.project_version())
