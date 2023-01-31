@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -31,6 +31,36 @@
 (defgroup mu4e nil
   "Mu4e - an email-client for Emacs."
   :group 'mail)
+
+(defcustom mu4e-confirm-quit t
+  "Whether to confirm to quit mu4e."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-modeline-support t
+  "Support for showing information in the modeline."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-notification-support nil
+  "Support for new-message notifications."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-org-support t
+  "Support Org-mode links."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-speedbar-support nil
+  "Support having a speedbar to navigate folders/bookmarks."
+  :type 'boolean
+  :group 'mu4e)
+
+(defcustom mu4e-eldoc-support nil
+  "Support eldoc help in the headers-view."
+  :type 'boolean
+  :group 'mu4e)
 
 (defcustom mu4e-date-format-long "%c"
   "Date format to use in the message view.

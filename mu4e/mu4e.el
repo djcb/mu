@@ -44,37 +44,6 @@
 
 
 
-(defcustom mu4e-confirm-quit t
-  "Whether to confirm to quit mu4e."
-  :type 'boolean
-  :group 'mu4e)
-
-(defcustom mu4e-modeline-support t
-  "Support for showing information in the modeline."
-  :type 'boolean
-  :group 'mu4e)
-
-(defcustom mu4e-notification-support nil
-  "Support for new-message notifications."
-  :type 'boolean
-  :group 'mu4e)
-
-(defcustom mu4e-org-support t
-  "Support Org-mode links."
-  :type 'boolean
-  :group 'mu4e)
-
-(defcustom mu4e-speedbar-support nil
-  "Support having a speedbar to navigate folders/bookmarks."
-  :type 'boolean
-  :group 'mu4e)
-
-(defcustom mu4e-eldoc-support nil
-  "Support eldoc help in the headers-view."
-  :type 'boolean
-  :group 'mu4e)
-
-
 (when mu4e-speedbar-support
   (require 'mu4e-speedbar)) ;; support for speedbar
 (when mu4e-org-support
