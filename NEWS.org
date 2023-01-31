@@ -25,6 +25,11 @@
 
    - Standardize on PCRE-flavored regular expressions throughout *mu*.
 
+   - Experimental: as bit of a hack, html message bodies are processed as if
+     they were plain text, similar how "old mu" would do it (1.6.x and earlier).
+     A nicer solution would be to convert to text, but this something for the
+     future.
+
    - the MSYS2 (Windows) builds is _experimental_ now; some things may not work;
      see e.g. https://github.com/djcb/mu/issues?q=is%3Aissue+label%3Amsys, but
      we welcome efforts to fix those things.
