@@ -231,7 +231,7 @@ Do so recursively and produce a list of relative paths."
             (mu4e-join-paths path mdir) nil
             "^[^.]\\|\\.[^.][^.]" t))))
     (dolist (dentry dentries)
-      (when (and (booleanp (cadr dentry)) (cadr dentry))
+      (when (or (and (booleanp (cadr dentry)) (cadr dentry)) (file-directory-p (mu4e-join-paths path (car dentry))))
         (if (file-accessible-directory-p
              (mu4e-join-paths (mu4e-root-maildir) mdir (car dentry) "cur"))
             (setq dirs
