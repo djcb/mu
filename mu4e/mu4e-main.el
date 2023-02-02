@@ -247,72 +247,72 @@ character of the keyboard shortcut
 (defun mu4e--main-redraw ()
   "Redraw the main buffer if there is one.
 Otherwise, do nothing."
-  (when (buffer-live-p (get-buffer mu4e-main-buffer-name))
-    (with-current-buffer mu4e-main-buffer-name
-      (let* ((inhibit-read-only t)
-             (pos (point))
-             (addrs (mu4e-personal-addresses))
-             (max-length (seq-reduce (lambda (a b)
-                                       (max a (length (plist-get b :name))))
-                                     (mu4e-query-items) 0)))
-        (erase-buffer)
-        (insert
-         "* "
-         (propertize "mu4e" 'face 'mu4e-header-key-face)
-         (propertize " - mu for emacs version " 'face 'mu4e-title-face)
-         (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-         "\n\n"
-         (propertize "  Basics\n\n" 'face 'mu4e-title-face)
-         (mu4e--main-action-str
-          "\t* [j]ump to some maildir\n" #'mu4e-search-maildir)
-         (mu4e--main-action-str
-          "\t* enter a [s]earch query\n" #'mu4e-search)
-         (mu4e--main-action-str
-          "\t* [C]ompose a new message\n" #'mu4e-compose-new)
-         "\n"
-         (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-         (mu4e--main-items (mu4e-query-items 'bookmarks) ?b max-length)
-         "\n"
-         (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-         (mu4e--main-items (mu4e-query-items 'maildirs) ?j max-length)
-         "\n"
-         (propertize "  Misc\n\n" 'face 'mu4e-title-face)
+  (when-let* ((buffer (get-buffer mu4e-main-buffer-name))
+              (buffer (and (buffer-live-p buffer) buffer)))
+    (with-current-buffer buffer
+        (let* ((inhibit-read-only t)
+               (pos (point))
+               (addrs (mu4e-personal-addresses))
+               (max-length (seq-reduce (lambda (a b)
+                                         (max a (length (plist-get b :name))))
+                                       (mu4e-query-items) 0)))
+          (erase-buffer)
+          (insert
+           "* "
+           (propertize "mu4e" 'face 'mu4e-header-key-face)
+           (propertize " - mu for emacs version " 'face 'mu4e-title-face)
+           (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
+           "\n\n"
+           (propertize "  Basics\n\n" 'face 'mu4e-title-face)
+           (mu4e--main-action-str
+            "\t* [j]ump to some maildir\n" #'mu4e-search-maildir)
+           (mu4e--main-action-str
+            "\t* enter a [s]earch query\n" #'mu4e-search)
+           (mu4e--main-action-str
+            "\t* [C]ompose a new message\n" #'mu4e-compose-new)
+           "\n"
+           (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
+           (mu4e--main-items (mu4e-query-items 'bookmarks) ?b max-length)
+           "\n"
+           (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
+           (mu4e--main-items (mu4e-query-items 'maildirs) ?j max-length)
+           "\n"
+           (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-         (mu4e--main-action-str "\t* [;]Switch context\n" #'mu4e-context-switch)
-         (mu4e--main-action-str "\t* [U]pdate email & database\n"
-                                #'mu4e-update-mail-and-index)
-         ;; show the queue functions if `smtpmail-queue-dir' is defined
-         (if (file-directory-p smtpmail-queue-dir)
-             (mu4e--main-view-queue)
-           "")
-         "\n"
-         (mu4e--main-action-str "\t* [N]ews\n" #'mu4e-news)
-         (mu4e--main-action-str "\t* [A]bout mu4e\n" #'mu4e-about)
-         (mu4e--main-action-str "\t* [H]elp\n" #'mu4e-display-manual)
-         (mu4e--main-action-str "\t* [q]uit\n" #'mu4e-quit)
-         "\n"
-         (propertize "  Info\n\n" 'face 'mu4e-title-face)
-         (mu4e--key-val "last updated"
-                        (current-time-string
-                         (plist-get mu4e-index-update-status :tstamp)))
-         (mu4e--key-val "database-path" (mu4e-database-path))
-         (mu4e--key-val "maildir" (mu4e-root-maildir))
-         (mu4e--key-val "in store"
-                        (format "%d" (plist-get mu4e--server-props :doccount))
-                        "messages")
-         (if mu4e-main-hide-personal-addresses ""
-           (mu4e--key-val "personal addresses"
-                          (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
+           (mu4e--main-action-str "\t* [;]Switch context\n" #'mu4e-context-switch)
+           (mu4e--main-action-str "\t* [U]pdate email & database\n"
+                                  #'mu4e-update-mail-and-index)
+           ;; show the queue functions if `smtpmail-queue-dir' is defined
+           (if (file-directory-p smtpmail-queue-dir)
+               (mu4e--main-view-queue)
+             "")
+           "\n"
+           (mu4e--main-action-str "\t* [N]ews\n" #'mu4e-news)
+           (mu4e--main-action-str "\t* [A]bout mu4e\n" #'mu4e-about)
+           (mu4e--main-action-str "\t* [H]elp\n" #'mu4e-display-manual)
+           (mu4e--main-action-str "\t* [q]uit\n" #'mu4e-quit)
+           "\n"
+           (propertize "  Info\n\n" 'face 'mu4e-title-face)
+           (mu4e--key-val "last updated"
+                          (current-time-string
+                           (plist-get mu4e-index-update-status :tstamp)))
+           (mu4e--key-val "database-path" (mu4e-database-path))
+           (mu4e--key-val "maildir" (mu4e-root-maildir))
+           (mu4e--key-val "in store"
+                          (format "%d" (plist-get mu4e--server-props :doccount))
+                          "messages")
+           (if mu4e-main-hide-personal-addresses ""
+             (mu4e--key-val "personal addresses"
+                            (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
-        (if mu4e-main-hide-personal-addresses ""
-          (unless (mu4e-personal-address-p user-mail-address)
-            (mu4e-message (concat
-                           "Tip: `user-mail-address' ('%s') is not part "
-                           "of mu's addresses; add it with 'mu init
+          (if mu4e-main-hide-personal-addresses ""
+            (unless (mu4e-personal-address-p user-mail-address)
+              (mu4e-message (concat
+                             "Tip: `user-mail-address' ('%s') is not part "
+                             "of mu's addresses; add it with 'mu init
                         --my-address='") user-mail-address)))
-        (mu4e-main-mode)
-        (goto-char pos)))))
-
+          (mu4e-main-mode)
+          (goto-char pos)))))
 
 (defun mu4e--main-view-queue ()
   "Display queue-related actions in the main view."
