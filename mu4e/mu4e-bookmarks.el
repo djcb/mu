@@ -37,18 +37,18 @@
 
 (defcustom mu4e-bookmarks
   '(( :name  "Unread messages"
-             :query "flag:unread AND NOT flag:trashed"
-             :key ?u)
+      :query "flag:unread AND NOT flag:trashed"
+      :key ?u)
     ( :name "Today's messages"
-            :query "date:today..now"
-            :key ?t)
+      :query "date:today..now"
+      :key ?t)
     ( :name "Last 7 days"
-            :query "date:7d..now"
-            :hide-unread t
-            :key ?w)
+      :query "date:7d..now"
+      :hide-unread t
+      :key ?w)
     ( :name "Messages with images"
-            :query "mime:image/*"
-            :key ?p))
+      :query "mime:image/*"
+      :key ?p))
   "List of pre-defined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
@@ -123,8 +123,8 @@ with KEY."
            (= (plist-get bm :key) key))
          (mu4e-bookmarks)))
   (cl-pushnew `(:name  ,name
-                :query ,query
-                :key   ,key)
+                       :query ,query
+                       :key   ,key)
               mu4e-bookmarks :test 'equal))
 
 (defun mu4e-bookmarks ()
@@ -132,15 +132,15 @@ with KEY."
 Convert from the old format if needed."
   (seq-map (lambda (item)
              (if (and (listp item) (= (length item) 3))
-               `(:name  ,(nth 1 item) :query ,(nth 0 item)
-                        :key   ,(nth 2 item))
+                 `(:name  ,(nth 1 item) :query ,(nth 0 item)
+                          :key   ,(nth 2 item))
                item))
            mu4e-bookmarks))
 
 (defun mu4e-bookmark-favorite ()
   "Find the favorite bookmark."
-;; note, use query-items, which will have picked a favorite
-;; even if user did not provide one explictly
+  ;; note, use query-items, which will have picked a favorite
+  ;; even if user did not provide one explictly
   (seq-find
    (lambda (item)
      (plist-get item :favorite))
@@ -193,7 +193,7 @@ one, creates a propertized string for display in the modeline."
          "changes since baseline: %+d\n")
         (plist-get fav :name)
         (mu4e--bookmark-query fav)
-         count unread  delta-unread)
+        count unread  delta-unread)
        'mouse-face 'mode-line-highlight
        'keymap '(mode-line keymap
                            (mouse-1 . mu4e-jump-to-favorite)
