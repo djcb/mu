@@ -120,7 +120,9 @@ If ITEMS does not yet have a favorite item, pick the first."
 With RESET-BASELINE, reset the baseline first."
   (when reset-baseline
     (setq mu4e--query-items-baseline nil
-          mu4e--query-items-baseline-tstamp nil))
+          mu4e--query-items-baseline-tstamp nil
+          mu4e--bookmark-items-cached nil
+          mu4e--maildir-items-cached nil))
   (mu4e--server-queries
    ;; note: we must apply the rewrite function here, since the query does not go
    ;; through mu4e-search.
