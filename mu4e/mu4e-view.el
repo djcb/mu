@@ -1328,8 +1328,9 @@ GROUP-REGEXP and each header value against HEADER-REGEXP in
        (mail-fetch-field "maildir")
        header-values))))
 
-(add-hook 'bug-reference-auto-setup-functions
-          #'mu4e--view-try-setup-bug-reference-mode)
+(with-eval-after-load 'bug-reference
+  (add-hook 'bug-reference-auto-setup-functions
+            #'mu4e--view-try-setup-bug-reference-mode))
 
 
 (provide 'mu4e-view)
