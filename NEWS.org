@@ -100,6 +100,14 @@
     - The ~eldoc~ support in header-mode is now optional and disabled by default;
       set ~mu4e-eldoc-support~ to non-nil to enable it.
 
+    - In the main view, the keybindings shown are a representation of the actual
+      keybindings, rather than just the defaults.
+
+    - As a side-effect of that, ~mu4e-main-mode~ and ~mu4e-main-mode-hook~ functions
+      are now invoked _before_ the rendering takes place; if you're customizations
+      depend on happening after rendering is completed, use the new
+      ~mu4e-main-rendered-hook~ instead.
+
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
 
