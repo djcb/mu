@@ -170,8 +170,8 @@ the personal addresses."
 When activated, invoke interactive function CMD.
 
 In the result, used the TITLE string, with the first occurrence
-of [@] replace by a textual replacement for eiter the first
-binding to CMD or, if specified, BINDSTR.
+of [@] replaced by a textual replacement of a binding to CMD as
+per `mu4e-key-description', or, if specified, BINDSTR.
 
 If the first letter after the [@] is equal to the last letter of the
 binding representation, remove that first letter."
@@ -205,7 +205,7 @@ for aligning them."
          (let ((qfunc-pair
                 (cond
                  ((eq item-type 'maildirs)
-                  (cons #'mu4e-search-maildir name))
+                  (cons #'mu4e-search query))
                  ((eq item-type 'bookmarks)
                   (cons #'mu4e-search-bookmark (mu4e-get-bookmark-query key)))
                  (t
