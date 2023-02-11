@@ -59,6 +59,11 @@ the personal addresses."
   :type 'boolean
   :group 'mu4e-main)
 
+(defcustom mu4e-main-rendered-hook nil
+  "Hook run after the main-view has been rendered."
+  :type 'hook
+  :group 'mu4e-main)
+
 
 ;;; Mode
 (define-derived-mode mu4e-org-mode org-mode "mu4e:org"
@@ -114,13 +119,11 @@ the personal addresses."
     (define-key map "m" #'mu4e--main-toggle-mail-sending-mode)
     (define-key map "f" #'smtpmail-send-queued-mail)
     ;;
-    (define-key map "U" #'mu4e-update-mail-and-index)
     (define-key map  (kbd "C-S-u")   #'mu4e-update-mail-and-index)
     ;; for terminal users
     (define-key map  (kbd "C-c C-u") #'mu4e-update-mail-and-index)
-
+    (define-key map "U" #'mu4e-update-mail-and-index)
     (define-key map "S" #'mu4e-kill-update-mail)
-    (define-key map  (kbd "C-S-u") #'mu4e-update-mail-and-index)
     (define-key map ";" #'mu4e-context-switch)
     (define-key map "$" #'mu4e-show-log)
     (define-key map "A" #'mu4e-about)
@@ -161,44 +164,37 @@ the personal addresses."
                 ;; reset the baseline and get updated results.
                 (mu4e--query-items-refresh 'reset-baseline))))
 
-(defun mu4e--main-action-str (str &optional func-or-shortcut)
-  "Highlight the first occurrence of [.] in STR.
-If FUNC-OR-SHORTCUT is non-nil and if it is a function, call it
-when STR is clicked (using RET or mouse-2); if FUNC-OR-SHORTCUT is
-a string, execute the corresponding keyboard action when it is
-clicked. If HIGHLIGHT is non-nil, hightlight the name."
-  (let ((newstr
-         (replace-regexp-in-string
-          "\\[\\(..?\\)\\]"
-          (lambda(m)
-            (format "[%s]"
-                    (propertize (match-string 1 m) 'face 'mu4e-highlight-face)))
-          str))
-        (map (make-sparse-keymap))
-        (func (if (functionp func-or-shortcut)
-                  func-or-shortcut
-                (if (stringp func-or-shortcut)
-                    (lambda()(interactive)
-                      (execute-kbd-macro func-or-shortcut))))))
-    (define-key map [mouse-2] func)
-    (define-key map (kbd "RET") func)
-    (put-text-property 0 (length newstr) 'keymap map newstr)
-    (put-text-property (string-match "\\[.+$" newstr)
-                       ;; only subtract one from length of newstr if we're
-                       ;; actually consuming the first letter (e.g.
-                       ;; `func-or-shortcut' is a function, meaning we put
-                       ;; braces around the first letter of `str')
-                       (if (stringp func-or-shortcut)
-                           (length newstr)
-                         (- (length newstr) 1))
-                       'mouse-face 'highlight newstr)  newstr))
+(defun mu4e--main-action (title cmd &optional bindstr)
+  "Produce main view action string with TITLE.
 
-(defun mu4e--main-items (data shortcut max-length)
-  "Display the entries for the bookmark/maildir menu
-- SHORTCUT is a single character which is the first
-character of the keyboard shortcut
-- ITEMS is a list of items, for format see `(mu4e-query-data)'
-- MAX-LENGTH is the maximum length for an item name"
+When activated, invoke interactive function CMD.
+
+In the result, used the TITLE string, with the first occurrence
+of [@] replace by a textual replacement for eiter the first
+binding to CMD or, if specified, BINDSTR.
+
+If the first letter after the [@] is equal to the last letter of the
+binding representation, remove that first letter."
+  (let* ((bindstr (or bindstr (mu4e-key-description cmd)
+                      (mu4e-error "No binding for %s" cmd)))
+         (title ;; remove first letter afrer [] if it equal last of binding
+          (mu4e-string-replace
+           (concat "[@]" (substring bindstr -1)) "[@]" title))
+         (title ;; insert binding in [@]
+          (mu4e-string-replace
+           "[@]" (format "[%s]" (propertize bindstr 'face 'mu4e-highlight-face))
+           title))
+         (map (make-sparse-keymap)))
+    (define-key map [mouse-2] cmd)
+    (define-key map (kbd "RET") cmd)
+    (propertize title 'keymap map)))
+
+(defun mu4e--main-items (item-type max-length)
+  "Produce the string with menu-items for ITEM-TYPE.
+ITEM-TYPE is a symbol, either `bookmarks' or `maildirs'.
+
+MAX-LENGTH is the maximum length of the item titles; this is used
+for aligning them."
   (mapconcat
    (lambda (item)
      (cl-destructuring-bind
@@ -206,20 +202,33 @@ character of the keyboard shortcut
        ;; hide items explicitly hidden, without key or wrong category.
        (if hide
            ""
-         (concat
-          (mu4e--main-action-str
-           (format "\t* [%s] %s "
-                   (format "%c%c" shortcut key)
-                   (propertize
-                    name
-                    'face (if favorite 'mu4e-header-key-face nil)
-                    'help-echo query)))
-          (format "%s%s\n"
-                  (make-string (- max-length (string-width name)) ?\s)
-                  (mu4e--query-item-display-counts item))))))
-   ;; only item which have a single-character :key
-   (mu4e-filter-single-key data)
-   ""))
+         (let ((qfunc-pair
+                (cond
+                 ((eq item-type 'maildirs)
+                  (cons #'mu4e-search-maildir name))
+                 ((eq item-type 'bookmarks)
+                  (cons #'mu4e-search-bookmark (mu4e-get-bookmark-query key)))
+                 (t
+                  (mu4e-error "Invalid item-type %s" item-type)))))
+           (concat
+            (mu4e--main-action
+             ;; main title
+             (format "\t* [@] %s "
+                     (propertize
+                      name
+                      'face (if favorite 'mu4e-header-key-face nil)
+                      'help-echo query))
+             ;; function to call when activated
+             (lambda () (interactive)
+               (funcall (car qfunc-pair) (cdr qfunc-pair)))
+             ;; custom key binding string
+             (concat (mu4e-key-description (car qfunc-pair)) (string key)))
+            ;; counts
+            (format "%s%s\n"
+                    (make-string (- max-length (string-width name)) ?\s)
+                    (mu4e--query-item-display-counts item)))))))
+   ;; only items which have a single-character :key
+   (mu4e-filter-single-key (mu4e-query-items item-type)) ""))
 
 (defun mu4e--key-val (key val &optional unit)
   "Show a KEY / VAL pair, with optional UNIT."
@@ -256,6 +265,7 @@ Otherwise, do nothing."
                (max-length (seq-reduce (lambda (a b)
                                          (max a (length (plist-get b :name))))
                                        (mu4e-query-items) 0)))
+          (mu4e-main-mode)
           (erase-buffer)
           (insert
            "* "
@@ -264,33 +274,33 @@ Otherwise, do nothing."
            (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
            "\n\n"
            (propertize "  Basics\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-action-str
-            "\t* [j]ump to some maildir\n" #'mu4e-search-maildir)
-           (mu4e--main-action-str
-            "\t* enter a [s]earch query\n" #'mu4e-search)
-           (mu4e--main-action-str
-            "\t* [C]ompose a new message\n" #'mu4e-compose-new)
+           (mu4e--main-action
+            "\t* [@]jump to some maildir\n" #'mu4e-search-maildir)
+           (mu4e--main-action
+            "\t* enter a [@]search query\n" #'mu4e-search)
+           (mu4e--main-action
+            "\t* [@]Compose a new message\n" #'mu4e-compose-new)
            "\n"
            (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-items (mu4e-query-items 'bookmarks) ?b max-length)
+           (mu4e--main-items 'bookmarks max-length)
            "\n"
            (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-items (mu4e-query-items 'maildirs) ?j max-length)
+           (mu4e--main-items 'maildirs max-length)
            "\n"
            (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-           (mu4e--main-action-str "\t* [;]Switch context\n" #'mu4e-context-switch)
-           (mu4e--main-action-str "\t* [U]pdate email & database\n"
+           (mu4e--main-action "\t* [@]Switch context\n" #'mu4e-context-switch)
+           (mu4e--main-action "\t* [@]Update email & database\n"
                                   #'mu4e-update-mail-and-index)
            ;; show the queue functions if `smtpmail-queue-dir' is defined
            (if (file-directory-p smtpmail-queue-dir)
                (mu4e--main-view-queue)
              "")
            "\n"
-           (mu4e--main-action-str "\t* [N]ews\n" #'mu4e-news)
-           (mu4e--main-action-str "\t* [A]bout mu4e\n" #'mu4e-about)
-           (mu4e--main-action-str "\t* [H]elp\n" #'mu4e-display-manual)
-           (mu4e--main-action-str "\t* [q]uit\n" #'mu4e-quit)
+           (mu4e--main-action "\t* [@]News\n" #'mu4e-news)
+           (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about)
+           (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual)
+           (mu4e--main-action "\t* [@]quit\n" #'mu4e-quit)
            "\n"
            (propertize "  Info\n\n" 'face 'mu4e-title-face)
            (mu4e--key-val "last updated"
@@ -311,14 +321,13 @@ Otherwise, do nothing."
                              "Tip: `user-mail-address' ('%s') is not part "
                              "of mu's addresses; add it with 'mu init
                         --my-address='") user-mail-address)))
-          (mu4e-main-mode)
           (goto-char pos)))))
 
 (defun mu4e--main-view-queue ()
   "Display queue-related actions in the main view."
   (concat
-   (mu4e--main-action-str "\t* toggle [m]ail sending mode "
-                          'mu4e--main-toggle-mail-sending-mode)
+   (mu4e--main-action "\t* toggle [@]mail sending mode "
+                      #'mu4e--main-toggle-mail-sending-mode)
    "(currently "
    (propertize (if smtpmail-queue-mail "queued" "direct")
                'face 'mu4e-header-key-face)
@@ -326,8 +335,8 @@ Otherwise, do nothing."
    (let ((queue-size (mu4e--main-queue-size)))
      (if (zerop queue-size)
          ""
-       (mu4e--main-action-str
-        (format "\t* [f]lush %s queued %s\n"
+       (mu4e--main-action
+        (format "\t* [@]flush %s queued %s\n"
                 (propertize (int-to-string queue-size)
                             'face 'mu4e-header-key-face)
                 (if (> queue-size 1) "mails" "mail"))
@@ -355,8 +364,8 @@ instead."
           (inhibit-read-only t))
       (with-current-buffer buf
         (mu4e--main-redraw))
-      (mu4e-display-buffer buf t)))
-
+      (mu4e-display-buffer buf t)
+      (run-hooks 'mu4e-main-rendered-hook)))
   (goto-char (point-min)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

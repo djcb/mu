@@ -471,5 +471,22 @@ COMPONENTS."
    (mapconcat (lambda (part) (if (stringp part) part ""))
               (cons directory components) "/")))
 
+(defun mu4e-string-replace (from-string to-string in-string)
+  "Replace FROM-STRING with TO-STRING in IN-STRING each time it occurs.
+Mu4e version of emacs 28's string-replace."
+  (replace-regexp-in-string (regexp-quote from-string)
+                            to-string in-string nil 'literal))
+
+(defun mu4e-key-description (cmd)
+  "Get the textual form of current binding to interactive function CMD.
+If it is unbound, return nil. If there are multiple bindings,
+return the shortest."
+  ;; not a perfect heuristic: e.g. '<up>' is longer that 'C-p'
+  (car-safe
+   (seq-sort (lambda (b1 b2)
+               (< (length b1) (length b2)))
+             (seq-map #'key-description
+                      (where-is-internal cmd)))))
+
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here
