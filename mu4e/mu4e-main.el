@@ -202,12 +202,16 @@ for aligning them."
        ;; hide items explicitly hidden, without key or wrong category.
        (if hide
            ""
-         (let ((qfunc-pair
+         (let ((item-info
+                ;; note, we have a function for the binding,
+                ;; and perhaps a different one for the lambda.
                 (cond
                  ((eq item-type 'maildirs)
-                  (cons #'mu4e-search query))
+                  (list #'mu4e-search-maildir #'mu4e-search
+                        query))
                  ((eq item-type 'bookmarks)
-                  (cons #'mu4e-search-bookmark (mu4e-get-bookmark-query key)))
+                  (list #'mu4e-search-bookmark #'mu4e-search-bookmark
+                        (mu4e-get-bookmark-query key)))
                  (t
                   (mu4e-error "Invalid item-type %s" item-type)))))
            (concat
@@ -220,9 +224,10 @@ for aligning them."
                       'help-echo query))
              ;; function to call when activated
              (lambda () (interactive)
-               (funcall (car qfunc-pair) (cdr qfunc-pair)))
+               (funcall (nth 1 item-info)
+                        (nth 2 item-info)))
              ;; custom key binding string
-             (concat (mu4e-key-description (car qfunc-pair)) (string key)))
+             (concat (mu4e-key-description (nth 0 item-info)) (string key)))
             ;; counts
             (format "%s%s\n"
                     (make-string (- max-length (string-width name)) ?\s)
