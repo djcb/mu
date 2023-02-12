@@ -263,7 +263,15 @@ Server::Private::make_command_map()
 				"whether to avoid indexing up-to-date directories"}}},
 		"scan maildir for new/updated/removed messages",
 		[&](const auto& params) { index_handler(params); }});
-
+	cmap.emplace(
+	    "mkdir",
+	    CommandInfo{
+		ArgMap{
+		    {":path", ArgInfo{Type::String, true, "location for the new maildir"}},
+		    {":update", ArgInfo{Type::Symbol, false,
+			     "whether to send an update after creating"}}
+		}, "create a new maildir",
+		[&](const auto& params) { mkdir_handler(params); }});
 	cmap.emplace(
 	    "move",
 	    CommandInfo{
@@ -277,15 +285,7 @@ Server::Private::make_command_map()
 		     ArgInfo{Type::Symbol, false, "if set, do not hint at updating the view"}},
 		},
 		"move messages and/or change their flags",
-
 		[&](const auto& params) { move_handler(params); }});
-
-	cmap.emplace(
-	    "mkdir",
-	    CommandInfo{
-		ArgMap{{":path", ArgInfo{Type::String, true, "location for the new maildir"}}},
-		"create a new maildir",
-		[&](const auto& params) { mkdir_handler(params); }});
 	cmap.emplace(
 	    "ping",
 	    CommandInfo{
@@ -802,11 +802,17 @@ void
 Server::Private::mkdir_handler(const Command& cmd)
 {
 	const auto path{cmd.string_arg(":path").value_or("<error>")};
+	const auto update{cmd.boolean_arg(":update")};
+
 	if (auto&& res = maildir_mkdir(path, 0755, false); !res)
 		throw res.error();
 
-	output_sexp(Sexp().put_props(":info", "mkdir",
-				     ":message", format("%s has been created", path.c_str())));
+	/* mu4e does a lot of opportunistic 'mkdir', only send it updates when
+	 * requested */
+	if (update)
+		output_sexp(Sexp().put_props(":info", "mkdir",
+					     ":message", format("%s has been created",
+								path.c_str())));
 }
 
 void
