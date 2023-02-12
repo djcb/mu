@@ -557,9 +557,12 @@ the directory time stamp."
    `(index :cleanup ,(and cleanup t)
            :lazy-check ,(and lazy-check t))))
 
-(defun mu4e--server-mkdir (path)
-  "Create a new maildir-directory at filesystem PATH."
-  (mu4e--server-call-mu `(mkdir :path ,path)))
+(defun mu4e--server-mkdir (path &optional update)
+  "Create a new maildir-directory at filesystem PATH.
+When UPDATE is non-nil, send a update when completed."
+  (mu4e--server-call-mu `(mkdir
+                          :path ,path
+                          :update ,(or update nil))))
 
 (defun mu4e--server-move (docid-or-msgid &optional maildir flags no-view)
   "Move message identified by DOCID-OR-MSGID.

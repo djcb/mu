@@ -280,17 +280,12 @@ The following marks are available, and the corresponding props:
 
 (defun mu4e--mark-get-move-target ()
   "Ask for a move target, and propose to create it if it does not exist."
-  (interactive)
-  ;;  (mu4e-message-at-point) ;; raises error if there is none
   (let* ((target (mu4e-ask-maildir "Move message to: "))
          (target (if (string= (substring target 0 1) "/")
                      target
                    (concat "/" target)))
          (fulltarget (mu4e-join-paths (mu4e-root-maildir) target)))
-    (when (or (file-directory-p fulltarget)
-              (and (yes-or-no-p
-                    (format "%s does not exist.  Create now?" fulltarget))
-                   (mu4e--server-mkdir fulltarget)))
+    (when (mu4e-create-maildir-maybe fulltarget)
       target)))
 
 (defun mu4e--mark-ask-target (mark)

@@ -195,7 +195,6 @@ See `mu4e-sent-folder'." (mu4e--get-folder 'mu4e-sent-folder msg))
   "Get the trash folder, optionallly based on MSG.
 See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
 
-
 ;;; Maildirs
 (defun mu4e--guess-maildir (path)
   "Guess the maildir for PATH, or nil if cannot find it."
@@ -209,17 +208,15 @@ See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
 
 (defun mu4e-create-maildir-maybe (dir)
   "Offer to create maildir DIR if it does not exist yet.
-Return t if the dir already existed, or an attempt has been made to
-create it -- we cannot be sure creation succeeded here, since this
-is done asynchronously. Otherwise, return nil. NOte, DIR has to be
-an absolute path."
-  (if (and (file-exists-p dir) (not (file-directory-p dir)))
-      (mu4e-error "File %s exists, but is not a directory" dir)
-    (cond
-     ((file-directory-p dir) t)
-     ((yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir))
-      (mu4e--server-mkdir dir) t)
-     (t nil))))
+Return t if it already exists or (after asking) an attempt has been
+to create it; otherwise return nil."
+  (let ((seems-to-exist (file-directory-p dir)))
+    (when (or seems-to-exist
+              (yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir)))
+      ;; even when the maildir already seems to exist,
+      ;; call mkdir for a deeper check. However only get an update
+      ;; when the maildir is totally new.
+      (mu4e--server-mkdir dir (not seems-to-exist)) t)))
 
 (defun mu4e~get-maildirs-1 (path mdir)
   "Get maildirs for MDIR under PATH.
