@@ -923,6 +923,9 @@ after the end of the search results."
     (define-key map (kbd "[") #'mu4e-headers-prev-unread)
     (define-key map (kbd "]") #'mu4e-headers-next-unread)
 
+    (define-key map (kbd "{") #'mu4e-headers-prev-thread)
+    (define-key map (kbd "}") #'mu4e-headers-next-thread)
+
     ;; change the number of headers
     (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
     (define-key map (kbd "C--") #'mu4e-headers-split-view-shrink)
@@ -1467,7 +1470,7 @@ previous header."
 (defun mu4e~headers-prev-or-next-unread (backwards)
   "Move point to the next message that is unread (and
 untrashed). If BACKWARDS is non-`nil', move backwards."
-  (interactive)
+  (interactive "P")
   (or (mu4e-headers-find-if-next
        (lambda (msg)
          (let ((flags (mu4e-message-field msg :flags)))
@@ -1487,6 +1490,26 @@ untrashed)."
 untrashed)."
   (interactive)
   (mu4e~headers-prev-or-next-unread nil))
+
+
+(defun mu4e~headers-prev-or-next-thread (backwards)
+  "Move point to the top of the next thread.
+If BACKWARDS is non-`nil', move backwards."
+  (interactive "P")
+  (or (mu4e-headers-find-if-next
+       (lambda (msg)
+         (eq 0 (plist-get (plist-get msg :meta) :level)))
+       backwards)
+      (mu4e-message (format "No %s thread found"
+                            (if backwards "previous" "next")))))
+
+(defun mu4e-headers-prev-thread ()
+  "Move point to the previous thread."
+  (interactive) (mu4e~headers-prev-or-next-thread t))
+
+(defun mu4e-headers-next-thread ()
+  "Move point to the previous thread."
+  (interactive) (mu4e~headers-prev-or-next-thread nil))
 
 (defun mu4e-headers-split-view-grow (&optional n)
   "In split-view, grow the headers window.

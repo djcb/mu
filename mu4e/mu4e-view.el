@@ -193,14 +193,13 @@ previous header."
   (mu4e--view-in-headers-context
    (mu4e~headers-move (- (or n 1)))))
 
-(defun mu4e--view-prev-or-next-unread (backwards)
+(defun mu4e--view-prev-or-next (func backwards)
   "Move point to the next or previous message.
 Go to the previous message if BACKWARDS is non-nil.
 unread message header in the headers buffer connected with this
 message view. If this succeeds, return the new docid. Otherwise,
 return nil."
-  (mu4e--view-in-headers-context
-   (mu4e~headers-prev-or-next-unread backwards))
+  (mu4e--view-in-headers-context (funcall func backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
 
@@ -208,13 +207,25 @@ return nil."
   "Move point to the previous unread message header.
 If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
-  (mu4e--view-prev-or-next-unread t))
+  (mu4e--view-prev-or-next #'mu4e~headers-prev-or-next-unread t))
 
 (defun mu4e-view-headers-next-unread ()
   "Move point to the next unread message header.
 If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
-  (mu4e--view-prev-or-next-unread nil))
+  (mu4e--view-prev-or-next #'mu4e~headers-prev-or-next-unread nil))
+
+(defun mu4e-view-headers-prev-thread()
+  "Move point to the previous thread.
+If this succeeds, return the new docid. Otherwise, return nil."
+  (interactive)
+  (mu4e--view-prev-or-next #'mu4e~headers-prev-or-next-thread t))
+
+(defun mu4e-view-headers-next-thread()
+  "Move point to the previous thread.
+If this succeeds, return the new docid. Otherwise, return nil."
+  (interactive)
+  (mu4e--view-prev-or-next #'mu4e~headers-prev-or-next-thread nil))
 
 
 ;;; Interactive functions
@@ -907,6 +918,8 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 
     (define-key map (kbd "[") #'mu4e-view-headers-prev-unread)
     (define-key map (kbd "]") #'mu4e-view-headers-next-unread)
+    (define-key map (kbd "{") #'mu4e-view-headers-prev-thread)
+    (define-key map (kbd "}") #'mu4e-view-headers-next-thread)
 
     ;; switching from view <-> headers (when visible)
     (define-key map "y" #'mu4e-select-other-view)

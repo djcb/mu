@@ -978,7 +978,8 @@ key          description
 ===========================================================
 n,p          view the next, previous message
 ],[          move to the next, previous unread message
-y            select the message view (if it's visible)
+},{          move to the next, previous thread
+y            select the message view (if visible)
 RET          open the message at point in the message view
 
 searching
@@ -1304,7 +1305,8 @@ key          description
 ==============================================================
 n,p          view the next, previous message
 ],[          move to the next, previous unread message
-y            select the headers view (if it's visible)
+},{          move to the next, previous thread
+y            select the headers view (if visible)
 
 RET          scroll down
 M-RET        open URL at point / attachment at point
