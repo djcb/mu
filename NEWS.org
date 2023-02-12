@@ -94,6 +94,9 @@
       wheter ~mu4e-headers-hide-predicate~ is applied (when non-~nil~). This can be
       used to temporarily turn the predicate off/on.
 
+    - You can now jump to previous / next threads in headers-view, message view.
+      Default binding is ~{~ and ~}~, respectively.
+
     - When searching, the number of hidden messages is now shown in the
       message footer along with the number of Found messages
 
