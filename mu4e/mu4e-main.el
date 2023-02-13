@@ -361,7 +361,7 @@ Otherwise, do nothing."
 (defun mu4e--main-view ()
   "(Re)create the mu4e main-view, and switch to it.
 
-If `mu4e-split-view' equals \='single-window, show a mu4e menu
+If `mu4e-split-view' equals \\='single-window, show a mu4e menu
 instead."
   (if (eq mu4e-split-view 'single-window)
       (mu4e--main-menu)

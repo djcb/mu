@@ -52,7 +52,7 @@ Example usage:
                     \"No date\")))
       (concat subject \" \" date)))
 
-  (setq org-mu4e-link-desc-func \='my-link-descr)"
+  (setq org-mu4e-link-desc-func \\='my-link-descr)"
   :type '(function)
   :group 'mu4e-org)
 

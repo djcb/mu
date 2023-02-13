@@ -89,7 +89,7 @@ Example that hides all trashed messages:
 
   (setq mu4e-search-hide-predicate
      (lambda (msg)
-       (member \='trashed (mu4e-message-field msg :flags)))).")
+       (member \\='trashed (mu4e-message-field msg :flags)))).")
 
 (defvar mu4e-search-hide-enabled t
   "Whether `mu4e-search-hide-predicate' should be active.

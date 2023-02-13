@@ -100,7 +100,7 @@ symbols, for example:
 
   (setq mu4e-sent-messages-behavior (lambda ()
   (if (string= (message-sendmail-envelope-from) \"foo@example.com\")
-       \='delete \='sent)))
+       \\='delete \\='sent)))
 
 The various `message-' functions from `message-mode' are available
 for querying the message information."
