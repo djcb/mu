@@ -87,20 +87,13 @@ query."
 Return the corresponding query. The bookmark are as defined in
 `mu4e-bookmarks'."
   (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))
-  (let* ((prompt (mu4e-format "%s" prompt))
-         (bmarks
-          (mapconcat
-           (lambda (bm)
-             (concat
-              "["
-              (propertize (make-string 1 (plist-get bm :key))
-                          'face 'mu4e-highlight-face)
-              "]"
-              (plist-get bm :name)))
-           (mu4e-filter-single-key (mu4e-bookmarks))
-           ", "))
-         (kar (read-char (concat prompt bmarks))))
-    (mu4e-get-bookmark-query kar)))
+  (let* ((bmarks (seq-map (lambda (bm)
+                            (cons (format "%c%s"
+                                          (plist-get bm :key)
+                                          (plist-get bm :name))
+                                  (plist-get bm :query)))
+                          (mu4e-filter-single-key (mu4e-bookmarks)))))
+    (mu4e-read-option bmarks prompt)))
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut KAR.
