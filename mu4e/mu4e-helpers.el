@@ -167,6 +167,53 @@ Return the cdr (value) of the matching cell, if any."
     (if match (cdadr match)
       (when match-ci (cdadr match-ci)))))
 
+(defun new/mu4e--read-char-choice (prompt candidates)
+  "Run a quick `completing-read' for the given CANDIDATES.
+
+List of CANDIDATES is a list of strings. The first character is
+used for quick selection."
+  (let* ((candidates-alist
+          (mapcar (lambda (cand)
+                    (prog1
+                        (cons
+                         (concat "["
+                                 (propertize (substring cand 0 1)
+                                             'face 'mu4e-highlight-face)
+                                 "]"
+                                 (substring cand 1))
+                         cand)))
+                  candidates))
+         (metadata `(metadata
+                     (display-sort-function . ,#'identity)
+                     (cycle-sort-function . ,#'identity)))
+         (quick-result)
+         (result
+          (minibuffer-with-setup-hook
+              (lambda ()
+                (add-hook 'post-command-hook
+                          (lambda ()
+                            ;; Exit directly if a quick key is pressed
+                            (let ((prefix (minibuffer-contents-no-properties)))
+                              (unless (string-empty-p prefix)
+                                (mapc (lambda (cand)
+                                        (when (string-prefix-p prefix (cdr cand) t)
+                                          (setq quick-result cand)
+                                          (exit-minibuffer)))
+                                      candidates-alist))))
+                          -1 'local))
+            (completing-read
+             prompt
+             ;; Use function with metadata to disable sorting.
+             (lambda (input predicate action)
+               (if (eq action 'metadata)
+                   metadata
+                 (complete-with-action action candidates-alist input predicate)))
+             ;; Require confirmation, if the input does not match a suggestion
+             nil t nil nil nil))))
+    (or (cdr quick-result)
+        (cdr (assoc result candidates-alist)))))
+
+
 (defun mu4e--read-choice-builtin (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
 
@@ -179,15 +226,15 @@ version of `read-char-choice' which becomes case-insensitive
 after trying an exact match.
 
 Return the matching choice value (cdr of the cell)."
-        (let ((chosen) (inhibit-quit nil)
-              (prompt (format "%s%s"
-                              (mu4e-format prompt)
-                              (mapconcat #'car choices ", "))))
-          (while (not chosen)
-            (message nil) ;; this seems needed...
-            (when-let ((kar (read-char-exclusive prompt)))
-              (setq chosen (mu4e--matching-choice choices kar))))
-          chosen))
+  (let ((chosen) (inhibit-quit nil)
+        (prompt (format "%s%s"
+                        (mu4e-format prompt)
+                        (mapconcat #'car choices ", "))))
+    (while (not chosen)
+      (message nil) ;; this seems needed...
+      (when-let ((kar (read-char-exclusive prompt)))
+        (setq chosen (mu4e--matching-choice choices kar))))
+    chosen))
 
 (defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area.
