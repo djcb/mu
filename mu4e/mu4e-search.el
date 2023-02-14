@@ -442,11 +442,10 @@ user)."
                   (symbol-name mu4e-search-sort-direction))
     (mu4e-search-rerun)))
 
-(defun mu4e-search-toggle-property (&optional dont-refresh key)
+(defun mu4e-search-toggle-property (&optional dont-refresh)
   "Toggle some aspect of search.
 When prefix-argument DONT-REFRESH is non-nil, do not refresh the
-last search with the new setting.
-If KEY is provided, use it instead of asking user."
+last search with the new setting."
   (interactive "P")
   (let* ((toggles '(("fFull-search"      . mu4e-search-full)
                     ("rInclude-related"  . mu4e-headers-include-related)
@@ -460,7 +459,7 @@ If KEY is provided, use it instead of asking user."
                               (format" (%s)"
                                      (if (symbol-value (cdr cell)) "on" "off")))
                       (cdr cell))) toggles))
-         (choice (mu4e-read-option "Toggle property " toggles key)))
+         (choice (mu4e-read-option "Toggle property " toggles)))
     (when choice
       (set choice (not (symbol-value choice)))
       (mu4e-message "Set `%s' to %s" (symbol-name choice) (symbol-value choice))

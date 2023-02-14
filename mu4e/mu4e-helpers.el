@@ -1,6 +1,6 @@
 ;;; mu4e-helpers.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2023  Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -139,40 +139,74 @@ Does a local-exit and does not return."
           nil
         (mu4e-error "Missing property %s in %s" prop lst))))
 
-(defun mu4e--read-char-choice (prompt choices &optional key)
+(defun mu4e--matching-choice (choices kar)
+  "Does KAR match any of the  CHOICES?
+
+KAR is a character and CHOICES is an alist as describe in
+`mu4e--read-choice-builting'.
+
+First try an exact match, but if there isn't, try
+case-insensitive.
+
+Return the cdr (value) of the matching cell, if any."
+  (let* ((match) (match-ci))
+    (catch 'found
+      (seq-do
+       (lambda (choice)
+         ;; first try an exact match
+         (let ((case-fold-search nil))
+           (if (char-equal kar (caadr choice))
+               (progn
+                 (setq match choice)
+                 (throw 'found choice)) ;; found it - quit.
+             ;; perhaps case-insensitive?
+             (let ((case-fold-search t))
+               (when (and (not match-ci) (char-equal kar (caadr choice)))
+                 (setq match-ci choice))))))
+       choices))
+    (if match (cdadr match)
+      (when match-ci (cdadr match-ci)))))
+
+(defun mu4e--read-choice-builtin (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
+
+PROMPT describes a multiple-choice question to the user. CHOICES
+is an alist of the fiorm
+  ( ( <display-string>  ( <shortcut> . <value> ))
+     ... )
 Any input that is not one of CHOICES is ignored. This is mu4e's
-version of `read-char-choice' which becomes case-insentive after
-trying an exact match.
+version of `read-char-choice' which becomes case-insensitive
+after trying an exact match.
 
-If optional KEY is provided, use that instead of asking user."
-  (let ((choice) (chosen) (inhibit-quit nil))
-    (while (not chosen)
-      (message nil);; this seems needed...
-      (setq choice (or key (read-char-exclusive prompt)))
-      (if (eq choice 27) (keyboard-quit)) ;; quit if ESC is pressed
-      (setq chosen (or (member choice choices)
-                       (member (downcase choice) choices)
-                       (member (upcase choice) choices))))
-    (car chosen)))
+Return the matching choice value (cdr of the cell)."
+        (let ((chosen) (inhibit-quit nil)
+              (prompt (format "%s%s"
+                              (mu4e-format prompt)
+                              (mapconcat #'car choices ", "))))
+          (while (not chosen)
+            (message nil) ;; this seems needed...
+            (when-let ((kar (read-char-exclusive prompt)))
+              (setq chosen (mu4e--matching-choice choices kar))))
+          chosen))
 
-(defun mu4e-read-option (prompt options &optional key)
+(defun mu4e-read-option (prompt options)
   "Ask user for an option from a list on the input area.
+
 PROMPT describes a multiple-choice question to the user. OPTIONS
 describe the options, and is a list of cells describing
 particular options. Cells have the following structure:
 
-   (OPTIONSTRING . RESULT)
+   (OPTION . RESULT)
 
-where OPTIONSTRING is a non-empty string describing the
-option. The first character of OPTIONSTRING is used as the
-shortcut, and obviously all shortcuts must be different, so you
-can prefix the string with an uniquifying character.
+where OPTIONS is a non-empty string describing the option. The
+first character of OPTION is used as the shortcut, and obviously
+all shortcuts must be different, so you can prefix the string
+with an uniquifying character.
 
 The options are provided as a list for the user to choose from;
 user can then choose by typing CHAR.  Example:
   (mu4e-read-option \"Choose an animal: \"
-              \='((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
+              \\='((\"Monkey\" . monkey) (\"Gnu\" . gnu) (\"xMoose\" . moose)))
 
 User now will be presented with a list: \"Choose an animal:
    [M]onkey, [G]nu, [x]Moose\".
@@ -180,36 +214,22 @@ User now will be presented with a list: \"Choose an animal:
 If optional character KEY is provied, use that instead of asking
 the user.
 
-Function returns the cdr of the list element."
-  (let* ((prompt (mu4e-format "%s" prompt))
-         (optionsstr
-          (mapconcat
+Function returns the value (cdr) of the matching cell."
+  (let* ((choices ;; ((<display> ( <key> . <value> ) ...)
+          (seq-map
            (lambda (option)
-             ;; try to detect old-style options, and warn
-             (when (characterp (car-safe (cdr-safe option)))
-               (mu4e-error
-                (concat "Please use the new format for options/actions; "
-                        "see the manual")))
-             (let ((kar (substring (car option) 0 1)))
-               (concat
-                "[" (propertize kar 'face 'mu4e-highlight-face) "]"
-                (substring (car option) 1))))
-           options ", "))
-         (response
-          (mu4e--read-char-choice
-           (concat prompt optionsstr
-                   " [" (propertize "C-g" 'face 'mu4e-highlight-face)
-                   " to cancel]")
-           ;; the allowable chars
-           (seq-map (lambda(elm) (string-to-char (car elm))) options)
-           key))
-         (chosen
-          (seq-find
-           (lambda (option) (eq response (string-to-char (car option))))
+             (list
+              (concat ;; <display>
+               "[" (propertize (substring (car option) 0 1)
+                               'face 'mu4e-highlight-face)
+               "]"
+               (substring (car option) 1))
+              (cons
+               (string-to-char (car option)) ;; <key>
+               (cdr option)))) ;; <value>
            options)))
-    (if chosen
-        (cdr chosen)
-      (mu4e-warn "Unknown shortcut '%c'" response))))
+    (or (mu4e--read-choice-builtin prompt choices)
+        (mu4e-warn "invalid input"))))
 
 (defun mu4e-filter-single-key (lst)
   "Return a list consisting of LST items with a `characterp' :key prop."
@@ -480,7 +500,10 @@ Mu4e version of emacs 28's string-replace."
 (defun mu4e-key-description (cmd)
   "Get the textual form of current binding to interactive function CMD.
 If it is unbound, return nil. If there are multiple bindings,
-return the shortest."
+return the shortest.
+
+Rougly does what `substitute-command-keys' does, but picks
+shorter keys in some cases where there are multiple bindings."
   ;; not a perfect heuristic: e.g. '<up>' is longer that 'C-p'
   (car-safe
    (seq-sort (lambda (b1 b2)
