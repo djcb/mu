@@ -44,12 +44,37 @@
 
 (defcustom mu4e-completing-read-function 'ido-completing-read
   "Function to be used to receive user-input during completion.
+
 Suggested possible values are:
- * `completing-read':      built-in completion method
- * `ido-completing-read':  dynamic completion within the minibuffer."
+ * `completing-read':      emacs built-in completion method
+ * `ido-completing-read':  dynamic completion within the minibuffer.
+
+The function is used in two contexts -
+1) directly - for instance in when listing _other_ maildirs
+   in `mu4e-ask-maildir'
+2) if  `mu4e-read-option-use-builtin' is nil, it is used
+   as part of `mu4e-read-option' in many places."
   :type 'function
   :options '(completing-read ido-completing-read)
   :group 'mu4e)
+
+(defcustom mu4e-read-option-use-builtin t
+  "Whether to use mu4e's traditional completion for
+`mu4e-read-option'.
+
+If nil, use the value of `mu4e-completing-read-function', integrated
+into mu4e.
+
+Note that many of the third-party completion frameworks influence
+`completion-read' itself rather than offering their own e.g.
+`ido-completing-read'; so to have mu4e follow your overall
+settings, try the equivalent of
+
+   (setq mu4e-read-option-use-builtin nil
+         mu4e-completing-read-function \\='completing-read)"
+  :type 'boolean
+  :group 'mu4e)
+
 
 (defcustom mu4e-use-fancy-chars nil
   "When set, allow fancy (Unicode) characters for marks/threads.
@@ -167,25 +192,21 @@ Return the cdr (value) of the matching cell, if any."
     (if match (cdadr match)
       (when match-ci (cdadr match-ci)))))
 
-(defun new/mu4e--read-char-choice (prompt candidates)
-  "Run a quick `completing-read' for the given CANDIDATES.
+(defun mu4e--read-choice-completing-read (prompt choices)
+  "Read and return one of CHOICES, prompting for PROMPT.
 
-List of CANDIDATES is a list of strings. The first character is
-used for quick selection."
-  (let* ((candidates-alist
-          (mapcar (lambda (cand)
-                    (prog1
-                        (cons
-                         (concat "["
-                                 (propertize (substring cand 0 1)
-                                             'face 'mu4e-highlight-face)
-                                 "]"
-                                 (substring cand 1))
-                         cand)))
-                  candidates))
-         (metadata `(metadata
+PROMPT describes a multiple-choice question to the user. CHOICES
+is an alist of the fiorm
+  ( ( <display-string>  ( <shortcut> . <value> ))
+     ... )
+Any input that is not one of CHOICES is ignored. This is mu4e's
+version of `read-char-choice' which becomes case-insensitive
+after trying an exact match.
+
+Return the matching choice value (cdr of the cell)."
+  (let* ((metadata `(metadata
                      (display-sort-function . ,#'identity)
-                     (cycle-sort-function . ,#'identity)))
+                     (cycle-sort-function .   ,#'identity)))
          (quick-result)
          (result
           (minibuffer-with-setup-hook
@@ -195,24 +216,22 @@ used for quick selection."
                             ;; Exit directly if a quick key is pressed
                             (let ((prefix (minibuffer-contents-no-properties)))
                               (unless (string-empty-p prefix)
-                                (mapc (lambda (cand)
-                                        (when (string-prefix-p prefix (cdr cand) t)
-                                          (setq quick-result cand)
-                                          (exit-minibuffer)))
-                                      candidates-alist))))
+                                (setq quick-result
+                                      (mu4e--matching-choice choices (string-to-char prefix)))
+                                (when quick-result
+                                  (exit-minibuffer)))))
                           -1 'local))
-            (completing-read
+            (funcall mu4e-completing-read-function
              prompt
              ;; Use function with metadata to disable sorting.
              (lambda (input predicate action)
                (if (eq action 'metadata)
                    metadata
-                 (complete-with-action action candidates-alist input predicate)))
+                 (complete-with-action action choices input predicate)))
              ;; Require confirmation, if the input does not match a suggestion
              nil t nil nil nil))))
-    (or (cdr quick-result)
-        (cdr (assoc result candidates-alist)))))
-
+    (or quick-result
+        (cdr (assoc result choices)))))
 
 (defun mu4e--read-choice-builtin (prompt choices)
   "Read and return one of CHOICES, prompting for PROMPT.
@@ -273,9 +292,14 @@ Function returns the value (cdr) of the matching cell."
                (substring (car option) 1))
               (cons
                (string-to-char (car option)) ;; <key>
-               (cdr option)))) ;; <value>
-           options)))
-    (or (mu4e--read-choice-builtin prompt choices)
+               (cdr option))))               ;; <value>
+           options))
+         (response (funcall
+                    (if mu4e-read-option-use-builtin
+                        #'mu4e--read-choice-builtin
+                      #'mu4e--read-choice-completing-read)
+                    prompt choices)))
+    (or response
         (mu4e-warn "invalid input"))))
 
 (defun mu4e-filter-single-key (lst)
