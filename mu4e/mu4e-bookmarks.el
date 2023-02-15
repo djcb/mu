@@ -93,7 +93,7 @@ Return the corresponding query. The bookmark are as defined in
                                           (plist-get bm :name))
                                   (plist-get bm :query)))
                           (mu4e-filter-single-key (mu4e-bookmarks)))))
-    (mu4e-read-option bmarks prompt)))
+    (mu4e-read-option prompt bmarks)))
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut KAR.

@@ -228,7 +228,8 @@ Do so recursively and produce a list of relative paths."
             (mu4e-join-paths path mdir) nil
             "^[^.]\\|\\.[^.][^.]" t))))
     (dolist (dentry dentries)
-      (when (or (and (booleanp (cadr dentry)) (cadr dentry)) (file-directory-p (mu4e-join-paths path (car dentry))))
+      (when (or (and (booleanp (cadr dentry)) (cadr dentry))
+                (file-directory-p (mu4e-join-paths path (car dentry))))
         (if (file-accessible-directory-p
              (mu4e-join-paths (mu4e-root-maildir) mdir (car dentry) "cur"))
             (setq dirs
@@ -271,38 +272,30 @@ the list of maildirs will not change until you restart mu4e."
   mu4e-maildir-list)
 
 (defun mu4e-ask-maildir (prompt)
-  "Ask the user for a shortcut (using PROMPT).
-As per (mu4e-maildir-shortcuts), then return the corresponding
-folder name. If the special shortcut \"o\" (for _o_ther) is used,
-or if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
+  "Ask the user for a maildir (using PROMPT).
+
+If the special shortcut \"o\" (for _o_ther) is used, or
+if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
 from all maildirs under `mu4e-maildir'."
-  (let ((prompt (mu4e-format "%s" prompt)))
-    (if (not (mu4e-maildir-shortcuts))
-        (substring-no-properties
-         (funcall mu4e-completing-read-function prompt (mu4e-get-maildirs)))
-      (let* ((mlist (append
-                     (mu4e-filter-single-key (mu4e-maildir-shortcuts))
-                     '((:maildir "ther"  :key ?o))))
-             (fnames
-              (mapconcat
-               (lambda (item)
-                 (concat
-                  "["
-                  (propertize (make-string 1 (plist-get item :key))
-                              'face 'mu4e-highlight-face)
-                  "]"
-                  (plist-get item :maildir)))
-               mlist ", "))
-             (kar (read-char (concat prompt fnames))))
-        (if (member kar '(?/ ?o)) ;; user chose 'other'?
-            (substring-no-properties
-             (funcall mu4e-completing-read-function prompt
-                      (mu4e-get-maildirs) nil nil
-                      mu4e-maildir-initial-input))
-          (or (plist-get
-               (seq-find (lambda (item) (= kar (plist-get item :key)))
-                         (mu4e-maildir-shortcuts)) :maildir)
-              (mu4e-warn "Unknown shortcut '%c'" kar)))))))
+  (let* ((options
+         (seq-map (lambda (md)
+                    (cons
+                     (format "%c%s" (plist-get md :key)
+                             (or (plist-get md :name)
+                                 (plist-get md :maildir)))
+                     (plist-get md :maildir)))
+                  (mu4e-filter-single-key (mu4e-maildir-shortcuts))))
+        (response
+         (if (not options)
+             'other
+           (mu4e-read-option prompt
+                             (append options
+                                     '(("oOther..." . 'other)))))))
+    (if (eq response 'other)
+        (funcall mu4e-completing-read-function prompt
+                 (mu4e-get-maildirs) nil nil
+                 mu4e-maildir-initial-input)
+      response)))
 
 (defun mu4e-ask-maildir-check-exists (prompt)
   "Like `mu4e-ask-maildir', PROMPT for existence of the maildir.
