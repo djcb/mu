@@ -458,7 +458,8 @@ last search with the new setting."
                       (concat (car cell)
                               (format" (%s)"
                                      (if (symbol-value (cdr cell)) "on" "off")))
-                      (cdr cell))) toggles))
+                      (cdr cell)))
+                   toggles))
          (choice (mu4e-read-option "Toggle property " toggles)))
     (when choice
       (set choice (not (symbol-value choice)))
