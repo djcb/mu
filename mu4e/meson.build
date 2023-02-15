@@ -69,7 +69,8 @@ mu4e_srcs=[
 # hack-around for native compile issue: copy sources to builddir.
 # see: https://debbugs.gnu.org/db/47/47987.html
 foreach src : mu4e_srcs
-  configure_file(input: src, output:'@BASENAME@.el', copy:true)
+  configure_file(input: src, output:'@BASENAME@.el', copy:true,
+                 install_mode: 'r--r--r--')
 endforeach
 
 foreach src : mu4e_srcs
