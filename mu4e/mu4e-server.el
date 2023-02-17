@@ -386,46 +386,65 @@ As per issue #2198."
          (signal-process proc 'SIGKILL)))) ;; forcefully
    (process-list)))
 
+(defun mu4e--server-args()
+  "Return the command line args for the command  to start the mu4e-server."
+  ;; [--debug] server [--muhome=..]
+  (seq-filter #'identity ;; filter out nil
+              `(,(when mu4e-mu-debug "--debug")
+                "server"
+                ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
+
+(defun mu4e-server-repl ()
+  "Start a mu4e-server repl.
+
+This is meant for debugging/testing - the repl is designed for
+machines, not for humans.
+
+You cannot run the repl when mu4e is running (or vice-versa)."
+  (interactive)
+  (if (mu4e-running-p)
+      (mu4e-error "Cannot run repl when mu4e is running")
+    (let ((cmd (string-join (cons mu4e-mu-binary (mu4e--server-args)) " ")))
+      (term cmd)
+      (rename-buffer "*mu4e-repl*" 'unique)
+      (message "invoked: '%s'" cmd))))
+
 (defun mu4e--server-start ()
   "Start the mu server process."
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
     ;; sanity-check 1
-  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
-    (mu4e-error
-     "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
-  ;; sanity-check 2
-  (let ((version (let ((s (shell-command-to-string
-                           (concat mu4e-mu-binary " --version"))))
-                   (and (string-match "version \\([.0-9]+\\)" s)
-                        (match-string 1 s)))))
-    (unless (string= version mu4e-mu-version)
+    (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
       (mu4e-error
-       (concat
-        "Found mu version %s, but mu4e needs version %s"
-        "; please set `mu4e-mu-binary' "
-        "accordingly") version mu4e-mu-version)))
-  ;; kill old/stale servers, if any.
-  (mu4e--kill-stale)
-  (let* ((process-connection-type nil) ;; use a pipe
-         (args
-          ;; [--debug] server [--muhome=..]
-          (seq-filter (lambda (arg) arg) ;; filter out nil
-                      `(,(when mu4e-mu-debug "--debug")
-                        "server"
-                        ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home))))))
-    (setq mu4e--server-buf "")
-    (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
-              (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
-    (setq mu4e--server-process (apply 'start-process
-                                      mu4e--server-name mu4e--server-name
-                                      mu4e-mu-binary args))
-    ;; register a function for (:info ...) sexps
-    (unless mu4e--server-process
-      (mu4e-error "Failed to start the mu4e backend"))
-    (set-process-query-on-exit-flag mu4e--server-process nil)
-    (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
-    (set-process-filter mu4e--server-process 'mu4e--server-filter)
-    (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel))))
+       "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
+    ;; sanity-check 2
+    (let ((version (let ((s (shell-command-to-string
+                             (concat mu4e-mu-binary " --version"))))
+                     (and (string-match "version \\([.0-9]+\\)" s)
+                          (match-string 1 s)))))
+      (unless (string= version mu4e-mu-version)
+        (mu4e-error
+         (concat
+          "Found mu version %s, but mu4e needs version %s"
+          "; please set `mu4e-mu-binary' "
+          "accordingly")
+         version mu4e-mu-version)))
+    ;; kill old/stale servers, if any.
+    (mu4e--kill-stale)
+    (let* ((process-connection-type nil) ;; use a pipe
+           (args (mu4e--server-args)))
+      (setq mu4e--server-buf "")
+      (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
+                (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
+      (setq mu4e--server-process (apply 'start-process
+                                        mu4e--server-name mu4e--server-name
+                                        mu4e-mu-binary args))
+      ;; register a function for (:info ...) sexps
+      (unless mu4e--server-process
+        (mu4e-error "Failed to start the mu4e backend"))
+      (set-process-query-on-exit-flag mu4e--server-process nil)
+      (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
+      (set-process-filter mu4e--server-process 'mu4e--server-filter)
+      (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel))))
 
 (defun mu4e--server-kill ()
   "Kill the mu server process."
