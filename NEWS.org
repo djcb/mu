@@ -74,6 +74,15 @@
       bookmark's name rather than the query; this can be controlled through
       =mu4e-modeline-prefer-bookmark-name= (default: =t=).
 
+    - You can now tell mu4e to use emacs' completion system rather than the mu4e
+      built-in one; see the variables ~mu4e-read-option-use-builtin~ and
+      ~mu4e-completing-read-function~; e.g. to always emacs completion (which
+      may have been enhanced by various completion frameworks), use:
+    #+begin_src elisp
+       (setq mu4e-read-option-use-builtin nil
+	 mu4e-completing-read-function 'completing-read)
+    #+end_src
+
     - when moving messages (which includes changing flags), file-flags changes
       are propagated to duplicates of the messages; that is, e.g. the /Seen/ or
       /Replied/ status is propagated to all duplicates (earlier, this was only
@@ -104,12 +113,20 @@
       set ~mu4e-eldoc-support~ to non-nil to enable it.
 
     - In the main view, the keybindings shown are a representation of the actual
-      keybindings, rather than just the defaults.
+      keybindings, rather than just the defaults. This is for the benefit for
+      people who want to use different keybindings.
 
     - As a side-effect of that, ~mu4e-main-mode~ and ~mu4e-main-mode-hook~ functions
       are now invoked _before_ the rendering takes place; if you're customizations
       depend on happening after rendering is completed, use the new
       ~mu4e-main-rendered-hook~ instead.
+
+    - ~mu4e-cache-maildir-list~ has been promoted to be a =defcustom=, enabled by
+      default. This caches the list of "other" maildirs (i.e., without a
+      shortcut).
+
+    - For testing, a new command ~mu4e-server-repl~ to start a ~mu~ server just as
+      ~mu4e~ does it. Note that this cannot run at the same time when ~mu4e~ runs.
 
     - all the obsolete function and variable aliases have been moved to
       ~mu4e-obsolete.el~ so we can unclutter the non-obsolete code a bit.
