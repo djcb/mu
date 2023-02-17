@@ -3259,7 +3259,7 @@ templates, the following mu4e-specific values are available:
 @verbatim
 item                                                 | description
 -----------------------------------------------------+------------------------
-%:date, %:date-timestamp, %d:date-timestamp-inactive | date, org timestamps
+%:date, %:date-timestamp, %date-timestamp-inactive   | date, org timestamps
 %:from, %:fromname, %:fromaddress                    | sender, name/address
 %:to, %:toname, %:toaddress                          | recipient, name/address
 %:maildir                                            | maildir for the message
