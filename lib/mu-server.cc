@@ -715,10 +715,10 @@ Server::Private::help_handler(const Command& cmd)
 	auto&& info_map{command_handler_.info_map()};
 
 	if (command.empty()) {
-		std::cout << ";; Commands are s-expressions of the form\n"
+		std::cout << ";; Commands are single-line s-expressions of the form\n"
 			  << ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
-			  << ";; For instance:\n;;  (help :command quit)\n"
-			  << ";; to get detailed information about the 'quit'\n;;\n";
+			  << ";; For instance:\n;;  (help :command mkdir)\n"
+			  << ";; to get detailed information about the 'mkdir' command\n;;\n";
 		std::cout << ";; The following commands are available:\n\n";
 	}
 

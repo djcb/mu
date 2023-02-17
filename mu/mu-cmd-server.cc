@@ -137,7 +137,8 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	setup_readline(histpath, 50);
 
 	install_sig_handler();
-	std::cout << ";; Welcome to the " << PACKAGE_STRING << " command-server\n"
+	std::cout << ";; Welcome to the " << PACKAGE_STRING << " command-server"
+		  << (opts.debug ? " (debug-mode)" : "") << '\n'
 		  << ";; Use (help) to get a list of commands, (quit) to quit.\n";
 
 	bool do_quit{};
