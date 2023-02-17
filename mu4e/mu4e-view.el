@@ -1291,9 +1291,13 @@ the third MIME-part."
     (if-let ((html-part
               (seq-find (lambda (handle)
                           (equal (mm-handle-media-type (cdr handle)) "text/html"))
+                        gnus-article-mime-handle-alist))
+             (text-part
+              (seq-find (lambda (handle)
+                          (equal (mm-handle-media-type (cdr handle)) "text/plain"))
                         gnus-article-mime-handle-alist)))
         (gnus-article-inline-part (car html-part))
-      (mu4e-warn "No html part in this message"))))
+      (mu4e-warn "Cannot switch; no html and/or text part in this message"))))
 
 (defun mu4e-process-file-through-pipe (path pipecmd)
   "Process file at PATH through a pipe with PIPECMD."
