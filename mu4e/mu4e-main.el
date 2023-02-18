@@ -153,7 +153,21 @@ the personal addresses."
 
 (define-derived-mode mu4e-main-mode special-mode "mu4e:main"
   "Major mode for the mu4e main screen.
-\\{mu4e-main-mode-map}."
+
+This mode is a bit special when it comes to keybinding, since it
+shows those keybindings.
+
+For the rebinding the mu4e functions (such as
+`mu4e-search-bookmark' and `mu4e-search-maildir') to different
+keys, note that mu4e determines the bindings when drawing the
+screen, which is *after* we enable the mode. Thus, the
+keybindings must be known when this happens.
+
+Binding the existing bindings (such as \='s') to different
+functions, is *not* really supported, and we still display the
+default binding fo*r the original function; which should still do
+the reasonable thing in most cases. Still, such a rebinding
+*only* affects the key, and not e.g. the mouse-bindings."
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
   (mu4e-context-minor-mode)
@@ -164,7 +178,7 @@ the personal addresses."
                 ;; reset the baseline and get updated results.
                 (mu4e--query-items-refresh 'reset-baseline))))
 
-(defun mu4e--main-action (title cmd &optional bindstr)
+(defun mu4e--main-action (title cmd &optional bindstr alt)
   "Produce main view action string with TITLE.
 
 When activated, invoke interactive function CMD.
@@ -173,10 +187,15 @@ In the result, used the TITLE string, with the first occurrence
 of [@] replaced by a textual replacement of a binding to CMD as
 per `mu4e-key-description', or, if specified, BINDSTR.
 
+If ALT is specified, and BINDSTR is longer than a single character,
+use ALT as a substitute.
+
 If the first letter after the [@] is equal to the last letter of the
 binding representation, remove that first letter."
-  (let* ((bindstr (or bindstr (mu4e-key-description cmd)
+  (let* ((bindstr (or bindstr (mu4e-key-description cmd) (string alt)
                       (mu4e-error "No binding for %s" cmd)))
+         (bindstr
+          (if (and alt (> (length bindstr) 1)) alt bindstr))
          (title ;; remove first letter afrer [] if it equal last of binding
           (mu4e-string-replace
            (concat "[@]" (substring bindstr -1)) "[@]" title))
@@ -244,7 +263,8 @@ for aligning them."
    (propertize val 'face 'mu4e-header-key-face)
    (if unit
        (propertize (concat " " unit) 'face 'mu4e-header-title-face)
-     "")  "\n"))
+     "")
+   "\n"))
 
 (defun mu4e--main-baseline-time-string ()
   "Calculate the baseline time string for use in the main-"
@@ -280,11 +300,11 @@ Otherwise, do nothing."
            "\n\n"
            (propertize "  Basics\n\n" 'face 'mu4e-title-face)
            (mu4e--main-action
-            "\t* [@]jump to some maildir\n" #'mu4e-search-maildir)
+            "\t* [@]jump to some maildir\n" #'mu4e-search-maildir nil "j")
            (mu4e--main-action
-            "\t* enter a [@]search query\n" #'mu4e-search)
+            "\t* enter a [@]search query\n" #'mu4e-search nil "s")
            (mu4e--main-action
-            "\t* [@]Compose a new message\n" #'mu4e-compose-new)
+            "\t* [@]Compose a new message\n" #'mu4e-compose-new nil "C")
            "\n"
            (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
            (mu4e--main-items 'bookmarks max-length)
@@ -294,18 +314,19 @@ Otherwise, do nothing."
            "\n"
            (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-           (mu4e--main-action "\t* [@]Switch context\n" #'mu4e-context-switch)
+           (mu4e--main-action "\t* [@]Switch context\n"
+                              #'mu4e-context-switch nil ";")
            (mu4e--main-action "\t* [@]Update email & database\n"
-                                  #'mu4e-update-mail-and-index)
+                                  #'mu4e-update-mail-and-index nil "U")
            ;; show the queue functions if `smtpmail-queue-dir' is defined
            (if (file-directory-p smtpmail-queue-dir)
                (mu4e--main-view-queue)
              "")
            "\n"
-           (mu4e--main-action "\t* [@]News\n" #'mu4e-news)
-           (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about)
-           (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual)
-           (mu4e--main-action "\t* [@]quit\n" #'mu4e-quit)
+           (mu4e--main-action "\t* [@]News\n" #'mu4e-news nil "N")
+           (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about nil "A")
+           (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual nil "H")
+           (mu4e--main-action "\t* [@]quit\n" #'mu4e-quit nil "q")
            "\n"
            (propertize "  Info\n\n" 'face 'mu4e-title-face)
            (mu4e--key-val "last updated"
