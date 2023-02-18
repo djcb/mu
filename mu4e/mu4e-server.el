@@ -394,6 +394,25 @@ As per issue #2198."
                 "server"
                 ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
 
+(defun mu4e--version-check ()
+  ;; sanity-check 1
+  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (mu4e-error
+     "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
+  ;; sanity-check 2
+  (let ((version (let ((s (shell-command-to-string
+                           (concat mu4e-mu-binary " --version"))))
+                   (and (string-match "version \\([.0-9]+\\)" s)
+                        (match-string 1 s)))))
+    (if (not (string= version mu4e-mu-version))
+      (mu4e-error
+       (concat
+        "Found mu version %s, but mu4e needs version %s"
+        "; please set `mu4e-mu-binary' "
+        "accordingly")
+       version mu4e-mu-version)
+      (mu4e-message "Found mu version %s" version))))
+
 (defun mu4e-server-repl ()
   "Start a mu4e-server repl.
 
@@ -404,30 +423,17 @@ You cannot run the repl when mu4e is running (or vice-versa)."
   (interactive)
   (if (mu4e-running-p)
       (mu4e-error "Cannot run repl when mu4e is running")
-    (let ((cmd (string-join (cons mu4e-mu-binary (mu4e--server-args)) " ")))
-      (term cmd)
-      (rename-buffer "*mu4e-repl*" 'unique)
-      (message "invoked: '%s'" cmd))))
+    (progn
+      (mu4e--version-check)
+      (let ((cmd (string-join (cons mu4e-mu-binary (mu4e--server-args)) " ")))
+        (term cmd)
+        (rename-buffer "*mu4e-repl*" 'unique)
+        (message "invoked: '%s'" cmd)))))
 
 (defun mu4e--server-start ()
   "Start the mu server process."
+  (mu4e--version-check)
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
-    ;; sanity-check 1
-    (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
-      (mu4e-error
-       "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
-    ;; sanity-check 2
-    (let ((version (let ((s (shell-command-to-string
-                             (concat mu4e-mu-binary " --version"))))
-                     (and (string-match "version \\([.0-9]+\\)" s)
-                          (match-string 1 s)))))
-      (unless (string= version mu4e-mu-version)
-        (mu4e-error
-         (concat
-          "Found mu version %s, but mu4e needs version %s"
-          "; please set `mu4e-mu-binary' "
-          "accordingly")
-         version mu4e-mu-version)))
     ;; kill old/stale servers, if any.
     (mu4e--kill-stale)
     (let* ((process-connection-type nil) ;; use a pipe
