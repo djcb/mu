@@ -42,7 +42,7 @@
   :type 'boolean
   :group 'mu4e)
 
-(defcustom mu4e-completing-read-function 'ido-completing-read
+(defcustom mu4e-completing-read-function #'ido-completing-read
   "Function to be used to receive user-input during completion.
 
 Suggested possible values are:
@@ -53,7 +53,15 @@ The function is used in two contexts -
 1) directly - for instance in when listing _other_ maildirs
    in `mu4e-ask-maildir'
 2) if  `mu4e-read-option-use-builtin' is nil, it is used
-   as part of `mu4e-read-option' in many places."
+   as part of `mu4e-read-option' in many places.
+
+Set it to `completing-read' when you want to use completion
+frameworks such as Helm, Ivy or Vertico. In that case, you
+might want to add soemthing like the following in your configuration.
+
+   (setq mu4e-read-option-use-builtin nil
+         mu4e-completing-read-function \\='completing-read)
+."
   :type 'function
   :options '(completing-read ido-completing-read)
   :group 'mu4e)
@@ -65,13 +73,15 @@ The function is used in two contexts -
 If nil, use the value of `mu4e-completing-read-function', integrated
 into mu4e.
 
-Note that many of the third-party completion frameworks influence
-`completion-read' itself rather than offering their own e.g.
-`ido-completing-read'; so to have mu4e follow your overall
-settings, try the equivalent of
+Many of the third-party completion frameworks such as Helm, Ivy
+and Vertico influence `completion-read', so to have mu4e follow
+your overall settings, try the equivalent of
 
    (setq mu4e-read-option-use-builtin nil
-         mu4e-completing-read-function \\='completing-read)"
+         mu4e-completing-read-function \\='completing-read)
+
+Tastes differ, but without any such frameworks, the unaugmented
+Emacs `completing-read' is rather Spartan."
   :type 'boolean
   :group 'mu4e)
 
