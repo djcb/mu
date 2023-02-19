@@ -42,27 +42,48 @@ MessagePart::mime_object() const noexcept
 	return *mime_obj;
 }
 
-Option<std::string>
-MessagePart::cooked_filename() const noexcept
+static std::string
+cook(const std::string& fname, const std::vector<char>& forbidden)
 {
-	// make a bit more pallatble.
-	auto cleanup = [](const std::string& name)->std::string {
-		std::string clean;
-		clean.reserve(name.length());
-		for (auto& c: name) {
-			auto taboo{(::iscntrl(c) || c == G_DIR_SEPARATOR ||
-				    c == ' ' || c == '\\' || c == ':')};
-			clean += (taboo ? '-' : c);
-		}
-		if (clean.size() > 1 && clean[0] == '-')
-			clean.erase(0, 1);
+	std::string clean;
+	clean.reserve(fname.length());
 
+	for (auto& c: to_string_gchar(g_path_get_basename(fname.c_str())))
+		if (seq_some(forbidden,[&](char fc){return ::iscntrl(c) || c == fc;}))
+			clean += '-';
+		else
+			clean += c;
+
+	if (clean[0] == '.' && (clean == "." || clean == ".."))
+		return "-";
+	else
 		return clean;
-	};
+}
+
+static std::string
+cook_minimal(const std::string& fname)
+{
+	return cook(fname, { '/' });
+}
+
+static std::string
+cook_full(const std::string& fname)
+{
+	auto cooked = cook(fname, { '/', ' ', '\\', ':' });
+	if (cooked.size() > 1 && cooked[0] == '-')
+		cooked.erase(0, 1);
+
+	return cooked;
+}
+
+Option<std::string>
+MessagePart::cooked_filename(bool minimal) const noexcept
+{
+	auto&& cooker{minimal ? cook_minimal : cook_full};
 
 	// a MimePart... use the name if there is one.
 	if (mime_object().is_part())
-		return MimePart{mime_object()}.filename().map(cleanup);
+		return MimePart{mime_object()}.filename().map(cooker);
 
 	// MimeMessagepart. Construct a name based on subject.
 	if (mime_object().is_message_part()) {
@@ -71,7 +92,7 @@ MessagePart::cooked_filename() const noexcept
 			return Nothing;
 		else
 			return msg->subject()
-				.map(cleanup)
+				.map(cooker)
 				.value_or("no-subject") + ".eml";
 	}
 
@@ -186,3 +207,48 @@ MessagePart::looks_like_attachment() const noexcept
 	// otherwise, rely on the disposition
 	return is_attachment();
 }
+
+
+
+#ifdef BUILD_TESTS
+#include "utils/mu-test-utils.hh"
+
+static void
+test_cooked_full()
+{
+	std::array<std::pair<std::string, std::string>, 4> cases = {{
+		{ "/hello/world/foo", "foo" },
+		{ "foo:/\n/bar", "bar"},
+		{ "Aap Noot Mies", "Aap-Noot-Mies"},
+		{ "..", "-"}
+	}};
+
+	for (auto&& test: cases)
+		assert_equal(cook_full(test.first), test.second);
+}
+
+static void
+test_cooked_minimal()
+{
+	std::array<std::pair<std::string, std::string>, 4> cases = {{
+		{ "/hello/world/foo", "foo" },
+		{ "foo:/\n/bar", "bar"},
+		{ "Aap Noot Mies.doc", "Aap Noot Mies.doc"},
+		{ "..", "-"}
+	}};
+
+	for (auto&& test: cases)
+		assert_equal(cook_minimal(test.first), test.second);
+}
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/message/message-part/cooked-full", test_cooked_full);
+	g_test_add_func("/message/message-part/cooked-minimal", test_cooked_minimal);
+
+	return g_test_run();
+}
+#endif /*BUILD_TESTS*/

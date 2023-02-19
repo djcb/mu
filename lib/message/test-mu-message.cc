@@ -235,7 +235,7 @@ World!
 	{
 		auto&& part{message->parts().at(2)};
 		assert_equal(part.raw_filename().value(), "/tmp/file-02.bin");
-		assert_equal(part.cooked_filename().value(), "tmp-file-02.bin");
+		assert_equal(part.cooked_filename().value(), "file-02.bin");
 		assert_equal(part.mime_type().value(), "audio/ogg");
 		// file consistso of 4 bytes 4..7
 		assert_equal(part.to_string().value(), "\004\005\006\007");

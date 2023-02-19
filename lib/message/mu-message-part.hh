@@ -65,13 +65,16 @@ public:
 	/**
 	 * Filename for the mime-part file. This is a "cooked" filename with
 	 * unallowed characters removed. If there's no filename specified,
-	 * construct one (such as in the case of MimeMessagePart).
+	 * construct one (such as in the case of a MimeMessagePart).
+	 *
+	 * @param minimal if true, only perform *minimal* cookiing, where we
+	 * only remove forward-slashes.
 	 *
 	 * @see raw_filename()
 	 *
 	 * @return the name
 	 */
-	Option<std::string> cooked_filename() const noexcept;
+	Option<std::string> cooked_filename(bool minimal=false) const noexcept;
 
 	/**
 	 * Name for the mime-part file, i.e., MimePart::filename
