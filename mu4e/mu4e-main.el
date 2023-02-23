@@ -192,7 +192,7 @@ use ALT as a substitute.
 
 If the first letter after the [@] is equal to the last letter of the
 binding representation, remove that first letter."
-  (let* ((bindstr (or bindstr (mu4e-key-description cmd) (string alt)
+  (let* ((bindstr (or bindstr (mu4e-key-description cmd) (and alt (string alt))
                       (mu4e-error "No binding for %s" cmd)))
          (bindstr
           (if (and alt (> (length bindstr) 1)) alt bindstr))
