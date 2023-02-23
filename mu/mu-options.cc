@@ -222,6 +222,8 @@ sub_extract(CLI::App& sub, Options& opts)
 	sub.add_option("message", opts.extract.message,
 		       "Path to message file")->required()
 		->type_name("<message-path>");
+	sub.add_flag("--uncooked,-u", opts.extract.uncooked,
+		       "Avoid massaging extracted file-names");
 	sub.add_option("filename-rx", opts.extract.filename_rx,
 		       "Regular expression for files to save")
 		->type_name("<filename-rx>")

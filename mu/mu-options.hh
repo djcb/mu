@@ -126,6 +126,8 @@ struct Options {
 		bool		overwrite;		/**<  overwrite same-named files */
 		bool		play;			/**<  try to 'play' attachment */
 		std::string     filename_rx;		/**<  Filename rx to save */
+		bool            uncooked{};             /**<  Whether to avoid massaging
+							 * output filename */
 	} extract;
 
 	/*

@@ -33,8 +33,12 @@ save_part(const Message::Part& part, size_t idx, const Options& opts)
 		const auto tdir{opts.extract.targetdir};
 		return tdir.empty() ? tdir : tdir + G_DIR_SEPARATOR_S;
 	});
+
+	/* 'uncooked' isn't really _raw_; it means only doing some _minimal_
+	 * cooking */
 	const auto path{targetdir +
-		part.cooked_filename().value_or(format("part-%zu", idx))};
+		part.cooked_filename(opts.extract.uncooked)
+		.value_or(format("part-%zu", idx))};
 
 	if (auto&& res{part.to_file(path, opts.extract.overwrite)}; !res)
 		return Err(res.error());

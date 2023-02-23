@@ -51,6 +51,11 @@ directory.
 overwrite existing files with the same name; by default overwriting is not
 allowed.
 
+** -u,--uncooked
+by default, ~mu~ transforms the attachment filenames a bit (such as by replacing
+spaces by dashes); with this option, leave that to the minimum for creating
+a legal filename in the target directory.
+
 ** --play
 Try to 'play' (open) the attachment with the default application for the
 particular file type. On MacOS, this uses the *open* program, on other platforms
