@@ -24,6 +24,7 @@
 #include <mutex>
 #include <regex>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <errno.h>
 
 using namespace Mu;
