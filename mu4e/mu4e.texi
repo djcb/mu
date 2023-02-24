@@ -2131,7 +2131,7 @@ query, but also include messages that are related to these messages. That is,
 messages that belong to the same discussion threads are included in the results,
 just like e.g. Gmail does it. You can enable this behavior by setting
 @code{mu4e-search-include-related} to @code{t}, and you can toggle between
-including/not-including with @key{W}.
+including/not-including using @key{P} (@code{mu4e-search-toggle-property}).
 
 Be careful though when e.g. deleting ranges of messages from a certain
 folder --- the list may now also include messages from @emph{other}
@@ -2146,7 +2146,7 @@ search results. A common reason for having multiple copies of messages is the
 combination of Gmail and @t{offlineimap}, since that is the way the labels /
 virtual folders in Gmail are represented. You can enable skipping duplicates by
 setting @code{mu4e-search-skip-duplicates} to @code{t}, and you can toggle
-between the skipping/not skipping with @key{V}.
+the value using @key{P} (@code{mu4e-search-toggle-property}).
 
 Note, messages are considered duplicates when they have the same
 @t{Message-Id}.
