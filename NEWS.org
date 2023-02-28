@@ -21,6 +21,9 @@
      scripts (when enabled) are directly visible in the ~mu~ output. Also see the
      Guile section.
 
+   - The ~extract~ command gained the ~--uncooked~ option to tell it to _not_ replace
+     spaces with dashes in extracted filenames (and a few other things).
+
    - Revamped manpages which are now generated from ~org~ descriptions
 
    - Standardize on PCRE-flavored regular expressions throughout *mu*.
