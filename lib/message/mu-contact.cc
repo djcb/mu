@@ -41,7 +41,6 @@ needs_quoting(const std::string& name)
 std::string
 Contact::display_name(bool quote) const
 {
-
 	if (name.empty())
 		return email;
 	else if (!quote || !needs_quoting(name))

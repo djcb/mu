@@ -533,7 +533,7 @@ Server::Private::contacts_handler(const Command& cmd)
 
 		n++;
 
-		contacts.add(ci.display_name(true/*encode-if-needed*/));
+		contacts.add(ci.display_name());
 		return maxnum == 0 || n < maxnum;
 	});
 

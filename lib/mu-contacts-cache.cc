@@ -142,8 +142,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 
 ContactsCache::ContactsCache(const std::string& serialized, const StringVec& personal)
     : priv_{std::make_unique<Private>(serialized, personal)}
-{
-}
+{}
 
 ContactsCache::~ContactsCache() = default;
 
@@ -208,7 +207,7 @@ ContactsCache::add(Contact&& contact)
 		auto email{contact.email};
 		// return priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)))
 		//     .first->second;
-
+		g_debug("adding contact %s <%s>", contact.name.c_str(), contact.email.c_str());
 		priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)));
 
 	} else {	// existing contact.
@@ -222,6 +221,8 @@ ContactsCache::add(Contact&& contact)
 			existing.tstamp	      = g_get_monotonic_time();
 			existing.message_date = contact.message_date;
 		}
+		g_debug("updating contact %s <%s> (%zu)",
+			contact.name.c_str(), contact.email.c_str(), existing.frequency);
 	}
 }
 
@@ -282,9 +283,7 @@ struct ContactLessThan {
 	ContactLessThan()
 	    : recently_{::time({}) - RecentOffset} {}
 
-
-	bool operator()(const Mu::Contact& ci1, const Mu::Contact& ci2) const
-	{
+	bool operator()(const Mu::Contact& ci1, const Mu::Contact& ci2) const {
 		// non-personal is less relevant.
 		if (ci1.personal != ci2.personal)
 			return ci1.personal < ci2.personal;
