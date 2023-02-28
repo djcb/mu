@@ -494,6 +494,7 @@ Date: Tue, 3 May 2022 10:26:26 +0300
 Message-ID: <SADKLAJCLKDJLAS-xheQjE__+hS-3tff=pTYpMUyGiJwNGF_DA@mail.gmail.com>
 Subject: =?Windows-1252?Q?Purkuty=F6urakka?=
 To: Hello <moika@example.com>
+Cc: =?iso-8859-1?q?M=FCller=2C?= Mickey <Mickey.Mueller@example.com>
 Content-Type: multipart/mixed; boundary="000000000000e687ed05de166d71"
 
 --000000000000e687ed05de166d71
@@ -541,6 +542,12 @@ cmVmCjM1NjE4CiUlRU9GCg==
 
 	g_assert_true(message->path().empty());
 
+	/* https://groups.google.com/g/mu-discuss/c/kCtrlxMXBjo */
+	g_assert_cmpuint(message->cc().size(),==, 1);
+	assert_equal(message->cc().at(0).email, "Mickey.Mueller@example.com");
+	assert_equal(message->cc().at(0).name, "Müller, Mickey");
+	assert_equal(message->cc().at(0).display_name(), "Müller, Mickey <Mickey.Mueller@example.com>");
+
 	g_assert_true(message->bcc().empty());
 	assert_equal(message->subject(), "Purkutyöurakka");
 	assert_equal(message->body_html().value_or(""), "abc\n");
@@ -557,7 +564,6 @@ Moi,
 
 --
 )");
-	g_assert_true(message->cc().empty());
 	g_assert_cmpuint(message->date(), ==, 1651562786);
 	g_assert_true(message->flags() == (Flags::HasAttachment));
 
