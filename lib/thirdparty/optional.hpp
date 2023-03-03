@@ -18,7 +18,7 @@
 #define TL_OPTIONAL_HPP
 
 #define TL_OPTIONAL_VERSION_MAJOR 1
-#define TL_OPTIONAL_VERSION_MINOR 0
+#define TL_OPTIONAL_VERSION_MINOR 1
 #define TL_OPTIONAL_VERSION_PATCH 0
 
 #include <exception>
@@ -409,7 +409,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
     this->m_has_value = false;
   }
 
-  template <class... Args> void construct(Args &&... args) noexcept {
+  template <class... Args> void construct(Args &&... args) {
     new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
     this->m_has_value = true;
   }
@@ -742,8 +742,7 @@ public:
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : result(nullopt);
+    return has_value() ? detail::invoke(std::forward<F>(f), **this) : result(nullopt);
   }
 
   template <class F>
@@ -1183,7 +1182,7 @@ public:
       }
     }
 
-    if (rhs.has_value()) {
+    else if (rhs.has_value()) {
       this->construct(*rhs);
     }
 
@@ -1205,7 +1204,7 @@ public:
       }
     }
 
-    if (rhs.has_value()) {
+    else if (rhs.has_value()) {
       this->construct(std::move(*rhs));
     }
 
@@ -1323,7 +1322,7 @@ public:
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be move constructible and convertible from U");
-    return has_value() ? **this : static_cast<T>(std::forward<U>(u));
+    return has_value() ? std::move(**this) : static_cast<T>(std::forward<U>(u));
   }
 
   /// Destroys the stored value if one exists, making the optional empty
@@ -1646,7 +1645,7 @@ public:
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(nullopt);
   }
 #endif
