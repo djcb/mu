@@ -78,10 +78,11 @@ the current query; otherwise, it links to the message at point.")
    :link        (concat "mu4e:query:" (mu4e-last-query))
    :description (format "[%s]" (mu4e-last-query))))
 
-(defun mu4e--org-store-link-message ()
-  "Store a link to a mu4e message."
+(defun mu4e--org-store-link-message (&optional msg)
+  "Store a link to a mu4e message.
+If MSG is non-nil, store a link to MSG, otherwise use `mu4e-message-at-point'."
   (setq org-store-link-plist nil)
-  (let* ((msg      (mu4e-message-at-point))
+  (let* ((msg      (or msg (mu4e-message-at-point)))
          (from     (car-safe (plist-get msg :from)))
          (to       (car-safe (plist-get msg :to)))
          (date     (format-time-string "%FT%T" (plist-get msg :date)))
