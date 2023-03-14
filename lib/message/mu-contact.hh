@@ -83,18 +83,15 @@ struct Contact {
 	{ cleanup_name();}
 
 	/**
-	 * Get the "display name" for this contact; basically, if there's a
-	 * non-empty name, it's
-	 *     Jane Doe <email@example.com>
-	 * otherwise it's just the e-mail address.
+	 * Get the "display name" for this contact:
 	 *
-	 * @param quote_if_needed if true, handle quoting of the name-part as
-	 * well. This is useful when the address is to be used directly in
-	 * emails.
+	 * If there's a non-empty name, it's Jane Doe <email@example.com>
+	 * otherwise it's just the e-mail address. Names with commas are quoted
+	 * (with the quotes escaped).
 	 *
 	 * @return the display name
 	 */
-	std::string display_name(bool quote_if_needed=false) const;
+	std::string display_name() const;
 
 
 	/**

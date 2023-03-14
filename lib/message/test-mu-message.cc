@@ -546,7 +546,7 @@ cmVmCjM1NjE4CiUlRU9GCg==
 	g_assert_cmpuint(message->cc().size(),==, 1);
 	assert_equal(message->cc().at(0).email, "Mickey.Mueller@example.com");
 	assert_equal(message->cc().at(0).name, "Müller, Mickey");
-	assert_equal(message->cc().at(0).display_name(), "Müller, Mickey <Mickey.Mueller@example.com>");
+	assert_equal(message->cc().at(0).display_name(), "\"Müller, Mickey\" <Mickey.Mueller@example.com>");
 
 	g_assert_true(message->bcc().empty());
 	assert_equal(message->subject(), "Purkutyöurakka");

@@ -225,7 +225,7 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 			"    \"frequency\"     : %zu\n",
 			contact->email.c_str(),
 			name.c_str(),
-			Mu::quote(contact->display_name(true)).c_str(),
+			Mu::quote(contact->display_name()).c_str(),
 			contact->message_date,
 			time_to_string("%FT%TZ", contact->message_date, true/*utc*/).c_str(),
 			contact->personal ? "true" : "false",

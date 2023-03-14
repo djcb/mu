@@ -29,24 +29,22 @@
 
 using namespace Mu;
 
-static bool
-needs_quoting(const std::string& name)
-{
-	for (auto& c: name)
-		if (c == ',' || c == '"')
-			return true;
-	return false;
-}
-
 std::string
-Contact::display_name(bool quote) const
+Contact::display_name() const
 {
+	auto needs_quoting= [](const std::string& n) {
+		for (auto& c: n)
+			if (c == ',' || c == '"')
+				return true;
+		return false;
+	};
+
 	if (name.empty())
 		return email;
-	else if (!quote || !needs_quoting(name))
+	else if (!needs_quoting(name))
 		return name + " <" + email + '>';
 	else
-		return address_rfc2047(*this);
+		return Mu::quote(name) + " <" + email + '>';
 }
 
 static Regex email_rx;
@@ -196,7 +194,7 @@ test_encode()
 	g_assert_cmpuint(c.tstamp,==,768);
 	g_assert_cmpuint(c.message_date,==,345);
 
-	assert_equal(c.display_name(true),
+	assert_equal(c.display_name(),
 		     "\"Ali, Muhammad \\\"The Greatest\\\"\" <cassius@example.com>");
 }
 
