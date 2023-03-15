@@ -4416,7 +4416,7 @@ an indication that the font you are using does not support those characters.
    mu4e-headers-encrypted-mark '("x" . "🔒")
    mu4e-headers-signed-mark    '("s" . "🔑")
    mu4e-headers-unread-mark    '("u" . "⎕")
-   mu4e-headers-list-mark      '("s" . "🔈")
+   mu4e-headers-list-mark      '("L" . "🔈")
    mu4e-headers-personal-mark  '("p" . "👨")
    mu4e-headers-calendar-mark  '("c" . "📅"))
 @end lisp
