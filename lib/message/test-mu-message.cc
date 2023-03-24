@@ -994,7 +994,6 @@ Message-ID:
 
 abc
 )";
-
 	const auto m1{Message::make_from_text(msg1, "/foo/cur/m123:2,S")};
 	assert_valid_result(m1);
 
@@ -1007,8 +1006,11 @@ abc
 
 	/* both with absent and empty message-id, generate "random" fake one,
 	 * which must end in @mu.id */
-	g_assert_true(g_str_has_suffix(m2->message_id().c_str(), "@mu.id"));
-	g_assert_true(g_str_has_suffix(m3->message_id().c_str(), "@mu.id"));
+	const auto id2{m2->message_id()};
+	const auto id3{m3->message_id()};
+
+	g_assert_true(g_str_has_suffix(id2.c_str(), "@mu.id"));
+	g_assert_true(g_str_has_suffix(id3.c_str(), "@mu.id"));
 }
 
 
