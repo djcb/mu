@@ -589,7 +589,6 @@ headers-buffer with a search for MSGID, then open a view for that
 message."
   (mu4e-search (concat "msgid:" msgid) nil nil t msgid t))
 
-
 ;;; Variables
 
 (defvar gnus-icalendar-additional-identities)
@@ -850,6 +849,12 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (mu4e-compose-reply)
     (apply func args)))
 
+(defun mu4e--view-button-message-id (func &rest args)
+  "Advise FUNC with ARGS to make `gnus-button-message-id' links work in mu4e."
+  (if (and (mu4e--view-mode-p) (stringp (car-safe args)))
+      (mu4e-view-message-with-message-id (car args))
+    (apply func args)))
+
 (defun mu4e--view-msg-mail (func &rest args)
   "Advise FUNC with ARGS  to make `gnus-msg-mail' links compose with mu4e."
   (if (mu4e--view-mode-p)
@@ -1031,6 +1036,7 @@ Based on Gnus' article-mode."
   ;; ;; turn off gnus modeline changes and menu items
   (advice-add 'gnus-set-mode-line :around #'mu4e--view-nop)
   (advice-add 'gnus-button-reply :around #'mu4e--view-button-reply)
+  (advice-add 'gnus-button-message-id :around #'mu4e--view-button-message-id)
   (advice-add 'gnus-msg-mail :around #'mu4e--view-msg-mail)
 
   ;; advice gnus-block-private-groups to always return "."
