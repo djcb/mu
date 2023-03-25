@@ -187,7 +187,7 @@ query have been received and are displayed."
 ;;  mu4e-headers-encrypted-mark '("x" . "🔒")
 ;;  mu4e-headers-signed-mark    '("s" . "🔑")
 ;;  mu4e-headers-unread-mark    '("u" . "⎕")
-;;  mu4e-headers-list-mark      '("s" . "🔈")
+;;  mu4e-headers-list-mark      '("l" . "🔈")
 ;;  mu4e-headers-personal-mark  '("p" . "👨")
 ;;  mu4e-headers-calendar-mark  '("c" . "📅"))
 
@@ -203,7 +203,7 @@ query have been received and are displayed."
 (defvar mu4e-headers-encrypted-mark '("x" . "⚴") "Encrypted.")
 (defvar mu4e-headers-signed-mark    '("s" . "☡") "Signed.")
 (defvar mu4e-headers-unread-mark    '("u" . "⎕") "Unread.")
-(defvar mu4e-headers-list-mark      '("s" . "Ⓛ") "Mailing list.")
+(defvar mu4e-headers-list-mark      '("l" . "Ⓛ") "Mailing list.")
 (defvar mu4e-headers-personal-mark  '("p" . "Ⓟ") "Personal.")
 (defvar mu4e-headers-calendar-mark  '("c" . "Ⓒ") "Calendar invitation.")
 
