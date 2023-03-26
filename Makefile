@@ -113,4 +113,4 @@ distclean: clean
 HTMLPATH=${BUILDDIR}/mu4e/mu4e
 mu4e-doc-html:
 	@mkdir -p ${HTMLPATH} && cp mu4e/texinfo-klare.css ${HTMLPATH}
-	@makeinfo --html --css-ref=texinfo-klare.css -o ${HTMLPATH} mu4e/mu4e.texi
+	@makeinfo -I ${BUILDDIR}/mu4e --html --css-ref=texinfo-klare.css -o ${HTMLPATH} mu4e/mu4e.texi
