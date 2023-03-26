@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.9 (unreleased development version)
+* 1.10 (releases on March 26, 2023)
 
 *** mu
 
@@ -179,12 +179,29 @@
 
     - more =mu4e~= internals have been renamed/reworked in to ~mu4e--~.
 
-* 1.8 (released on June 25, 2022)
+*** contributor to this release
+
+    Aimé Bertrand, Aleksei Atavin, Al Haji-Ali, Andreas Hindborg, Anton Tetov,
+    Arsen Arsenović, Babak Farrokhi, Ben Cohen, Damon Kwok, Daniel Colascione,
+    Derek Zhou, Dirk-Jan C. Binnema, John Hamelink, Leo Gaskin, Manuel
+    Wiesinger, Marcel van der Boom, Mark Knoop, Mickey Petersen, Nicholas
+    Vollmer, Protesilaos Stavrou, Remco van 't Veer, Sean Allred, Sean Farley,
+    Stephen Eglen, Tassilo Horn
+
+    And of course all the people how filed tickets, asked question, provided
+    suggestions.
+
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+
+** 1.8 (released on June 25, 2022)
 
   (there are some changes in the installation procedure compared to 1.6.x; see
   Installation below)
 
-*** mu
+**** mu
 
    - The server protocol (as used my mu4e) has seen a number of updates, to
      allow for faster rendering. As before, there's no compatibility between
@@ -233,7 +250,7 @@
      there's currently not sufficient developer interest/expertise to change
      this.
 
-*** mu4e
+**** mu4e
 
    - the old mu4e-view is *gone*; only the gnus-based one remains. This allowed
      for removing quite a bit of old code.
@@ -338,18 +355,18 @@
     - Because of all these changes, it is recommended you remove older version
       of ~mu4e~ before reinstalling.
 
-*** guile
+**** guile
 
     - the current guile support has been deprecated. It may be revamped at some
       point, but will be different from the current one, which is to be removed
       after 1.8
 
-*** toys
+**** toys
 
     - the ~toys~ (~mug~) has been removed, as they no longer worked with the rest of
       the code.
 
-** Installation
+*** Installation
 
     - =mu= switched to the [[https://mesonbuild.com][meson]] build system by default. The existing =autotools=
       is still available, but is to be removed after the 1.8 release.
@@ -391,7 +408,7 @@
    - =mu= now requires C++17 support for building
 
 
-** Contributor for this release
+*** Contributor for this release
 
   - As per ~git~: c0dev0id, Christophe Troestler, Daniel Fleischer, Daniel Nagy,
     Dirk-Jan C. Binnema, Dr. Rich Cordero, Kai von Fintel, Marcelo Henrique
@@ -401,10 +418,7 @@
     out on the maling list.
 
 
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
+
 
 ** 1.6 (released, as of July 27 2021)
 
