@@ -44,7 +44,7 @@ Documentation License.''
 
 @ifnottex
 @node Top
-@top mu4e manual
+@top mu4e manual for version @value{VERSION}
 @end ifnottex
 
 @iftex
@@ -117,7 +117,7 @@ Indices
 @node Introduction
 @chapter Introduction
 
-Let's get started!q
+Let's get started
 @menu
 * Why another e-mail client::Aren't there enough already
 * Other mail clients::Where @t{mu4e} takes its inspiration from
