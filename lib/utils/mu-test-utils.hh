@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,6 +21,7 @@
 #define MU_TEST_UTILS_HH__
 
 #include <string>
+#include <utils/mu-utils.hh>
 
 namespace Mu {
 
@@ -29,7 +30,10 @@ namespace Mu {
  *
  * @return a random dir name, g_free when it's no longer needed
  */
-char* test_mu_common_get_random_tmpdir();
+char* test_mu_common_get_random_tmpdir(void);
+static inline std::string test_random_tmpdir() {
+	return to_string_gchar(test_mu_common_get_random_tmpdir());
+}
 
 /**
  * mu wrapper for g_test_init
