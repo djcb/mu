@@ -327,11 +327,14 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
   (unless mu4e-linked-headers-buffer
     (mu4e-error "This view buffer is already detached."))
   (mu4e-message "Detached view buffer from %s"
-                (prog1 mu4e-linked-headers-buffer
+                (progn mu4e-linked-headers-buffer
                   (with-current-buffer mu4e-linked-headers-buffer
                     (when (eq (selected-window) mu4e~headers-view-win)
                       (setq mu4e~headers-view-win nil)))
-                  (setq mu4e-linked-headers-buffer nil))))
+                  (setq mu4e-linked-headers-buffer nil)
+                  ;; automatically rename mu4e-view-article buffer when
+                  ;; detaching; will get renamed back when reattaching
+                  (rename-buffer (make-temp-name (buffer-name)) t))))
 
 (defun mu4e-view-attach (headers-buffer)
   "Attaches a view buffer to a headers buffer."
