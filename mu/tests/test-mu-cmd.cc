@@ -25,6 +25,7 @@
 #include <errno.h>
 
 #include <stdlib.h>
+#include <type_traits>
 #include <unistd.h>
 #include <string.h>
 
@@ -33,6 +34,7 @@
 #include "mu-query.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 
 using namespace Mu;
 
@@ -227,59 +229,59 @@ test_mu_find_03()
 	g_free(cmdline);
 }
 
-G_GNUC_UNUSED static void
+static void
 test_mu_find_links(void)
 {
-	gchar *cmdline, *output, *erroutput, *tmpdir;
-
-	tmpdir = test_mu_common_get_random_tmpdir();
-
-	cmdline = g_strdup_printf("%s find --muhome=%s --format=links --linksdir=%s "
-				  "mime:message/rfc822",
-				  MU_PROGRAM,
-				  DBPATH.c_str(),
-				  tmpdir);
-
+	char *output,  *erroutput;
+	const auto tmpdir{test_random_tmpdir()};
+	auto cmdline = format("%s find --muhome=%s --format=links --linksdir=%s "
+			      "mime:message/rfc822", MU_PROGRAM, DBPATH.c_str(),  tmpdir.c_str());
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline);
+		g_print("cmdline: %s\n", cmdline.c_str());
 
-	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
+	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	/* there should be no errors */
 	g_assert_cmpuint(newlines_in_output(output), ==, 0);
 	g_assert_cmpuint(newlines_in_output(erroutput), ==, 0);
 	g_free(output);
 	g_free(erroutput);
+	output = erroutput = NULL;
+
+	/* furthermore, two symlinks should be there */
+	const auto f1{format("%s/cur/3419760385_rfc822.1", tmpdir.c_str())};
+	const auto f2{format("%s/cur/3419760386_rfc822.2", tmpdir.c_str())};
+
+	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
+	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
 
 	/* now we try again, we should get a line of error output,
 	 * when we find the first target file already exists */
 
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline);
+		g_print("cmdline: %s\n", cmdline.c_str());
 
-	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
+	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	g_assert_cmpuint(newlines_in_output(output), ==, 0);
 	g_assert_cmpuint(newlines_in_output(erroutput), ==, 1);
 	g_free(output);
 	g_free(erroutput);
+	output = erroutput = NULL;
 
 	/* now we try again with --clearlinks, and the we should be
 	 * back to 0 errors */
-	g_free(cmdline);
-	cmdline = g_strdup_printf("%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
-				  "mime:message/rfc822",
-				  MU_PROGRAM,
-				  DBPATH.c_str(),
-				  tmpdir);
-	g_assert(g_spawn_command_line_sync(cmdline, &output, &erroutput, NULL, NULL));
+	cmdline = format("%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
+				   "mime:message/rfc822", MU_PROGRAM, DBPATH.c_str(),  tmpdir.c_str());
+
+	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline);
+		g_print("cmdline: %s\n", cmdline.c_str());
 	g_assert_cmpuint(newlines_in_output(output), ==, 0);
 	g_assert_cmpuint(newlines_in_output(erroutput), ==, 0);
 	g_free(output);
 	g_free(erroutput);
 
-	g_free(cmdline);
-	g_free(tmpdir);
+	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
+	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
 }
 
 /* some more tests */
@@ -837,11 +839,8 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-cmd/test-mu-find-file", test_mu_find_file);
 	g_test_add_func("/mu-cmd/test-mu-find-mime", test_mu_find_mime);
 
-	/* recently, this test breaks _sometimes_ when run on Travis; but it
-	 * seems related to the setup there, as nothing has changed in the code.
-	 * turn off for now. */
-	/* g_test_add_func ("/mu-cmd/test-mu-find-links",
-	 * test_mu_find_links); */
+
+	g_test_add_func ("/mu-cmd/test-mu-find-links", test_mu_find_links);
 
 	g_test_add_func("/mu-cmd/test-mu-find-text-in-rfc822", test_mu_find_text_in_rfc822);
 
