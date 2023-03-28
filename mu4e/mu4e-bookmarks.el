@@ -53,10 +53,8 @@
 
 Each of the list elements is a plist with at least:
 `:name'  - the name of the query
-`:query' - the query expression string (not a function)
+`:query' - the query expression string or function
 `:key'   - the shortcut key (single character)
-
-Note that the :query parameter can be a function/lambda.
 
 Optionally, you can add the following:
 
