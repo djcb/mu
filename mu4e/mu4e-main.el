@@ -178,6 +178,7 @@ the reasonable thing in most cases. Still, such a rebinding
                 ;; reset the baseline and get updated results.
                 (mu4e--query-items-refresh 'reset-baseline))))
 
+
 (defun mu4e--main-action (title cmd &optional bindstr alt)
   "Produce main view action string with TITLE.
 
@@ -187,12 +188,13 @@ In the result, used the TITLE string, with the first occurrence
 of [@] replaced by a textual replacement of a binding to CMD as
 per `mu4e-key-description', or, if specified, BINDSTR.
 
-If ALT is specified, and BINDSTR is longer than a single character,
-use ALT as a substitute.
+If a string ALT is specified, and BINDSTR is longer than a single
+character, use ALT as a substitute. ALT should be a string of
+length 1.
 
 If the first letter after the [@] is equal to the last letter of the
 binding representation, remove that first letter."
-  (let* ((bindstr (or bindstr (mu4e-key-description cmd) (and alt (string alt))
+  (let* ((bindstr (or bindstr (mu4e-key-description cmd) alt
                       (mu4e-error "No binding for %s" cmd)))
          (bindstr
           (if (and alt (> (length bindstr) 1)) alt bindstr))
