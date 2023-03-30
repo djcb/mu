@@ -70,7 +70,8 @@ Follows the format of `format-time-string'."
 
 (defcustom mu4e-dim-when-loading t
   "Dim buffer text when loading new data.
-If non-nil, dim some buffers during data retrieval and rendering."
+If non-nil, dim some buffers during data retrieval and rendering,
+and show some \"Loading\" banner."
   :type 'boolean
   :group 'mu4e)
 

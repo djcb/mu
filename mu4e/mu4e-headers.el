@@ -1591,14 +1591,14 @@ region if there is a region, then move to the next message."
                                              ,(face-attribute 'default
                                                               :background)))
                   (overlay-put overlay 'priority 9998)
-                  overlay)))
-        (setq mu4e--loading-overlay-text
-              (let ((overlay (make-overlay (point-min) (point-min))))
-                (overlay-put overlay 'priority 9999)
-                (overlay-put overlay 'before-string
-                             (propertize "Loading…\n"
-                                         'face 'mu4e-header-title-face))
-                overlay)))
+                  overlay))
+          (setq mu4e--loading-overlay-text
+                (let ((overlay (make-overlay (point-min) (point-min))))
+                  (overlay-put overlay 'priority 9999)
+                  (overlay-put overlay 'before-string
+                               (propertize "Loading…\n"
+                                           'face 'mu4e-header-title-face))
+                  overlay))))
     (when mu4e--loading-overlay-bg
       (delete-overlay mu4e--loading-overlay-bg))
     (when mu4e--loading-overlay-text
