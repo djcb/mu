@@ -256,6 +256,9 @@ sub_find(CLI::App& sub, Options& opts)
 			{ Format::Sexp,
 			  {"sexp", "S-expressions"}
 			},
+			{ Format::Json,
+			  {"json", "JSON"}
+			},
 			{ Format::XQuery,
 			  {"xquery", "Show Xapian query (for debugging)"}
 			},
