@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -224,7 +224,7 @@ Sexp::to_json_string(Format fopts) const
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
-				sstrm << (first ? "" : ",") << quote(it->string()) << ":";
+				sstrm << (first ? "" : ",")  << quote(it->symbol()) << ":";
 				++it;
 				sstrm << it->to_json_string();
 				++it;
