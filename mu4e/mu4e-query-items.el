@@ -175,6 +175,7 @@ bookmark or maildir."
             (query (if (equal type 'maildirs)
                        (format "maildir:\"%s\"" maildir)
                      (plist-get item :query)))
+            (query (if (functionp query) (funcall query) query))
             (name (plist-get item :name))
             ;; it is possible that the user has a rewrite function
             (effective-query (funcall mu4e-query-rewrite-function query))

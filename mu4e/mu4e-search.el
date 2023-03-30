@@ -203,6 +203,7 @@ the search."
          (or expr
              (mu4e-ask-bookmark
               (if edit "Select bookmark: " "Bookmark: "))))
+         (expr (if (functionp expr) (funcall expr) expr))
          (fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
     ;; reset baseline when searching for the favorite bookmark query
     (when (and fav (string= fav expr))
