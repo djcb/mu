@@ -42,7 +42,7 @@ output_error(const std::string& what, bool use_color)
 
 	std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
 		  << col.fg(Color::BrightYellow)
-		  << what << "\n";
+		  << what << col.reset() << "\n";
 
 }
 
