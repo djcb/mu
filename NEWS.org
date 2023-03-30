@@ -28,6 +28,10 @@
 
    - Standardize on PCRE-flavored regular expressions throughout *mu*.
 
+   - ~mu~ no longer attempts to 'expand' the `~` (and some other characters) in
+     command line options that take filenames, since it was a bit unpredictable.
+     So write e.g. ~--option=/home/user/hello~ instead of ~--option=~/hello~
+
    - Experimental: as bit of a hack, html message bodies are processed as if
      they were plain text, similar how "old mu" would do it (1.6.x and earlier).
      A nicer solution would be to convert to text, but this something for the
