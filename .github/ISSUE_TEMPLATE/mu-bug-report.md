@@ -17,4 +17,4 @@ Detailed steps to reproduce the behavior. If this is about a specific (kind of) 
 Please describe the versions of OS, Emacs, mu etc. you are using.
 
 **Checklist**
-- [ ] you are running either the latest 1.6.x release, or a 1.7.x development release (otherwise, please upgrade).
+- [ ] you are running either the latest 1.8.x/1.10.x release or `master` (otherwise, please upgrade).
