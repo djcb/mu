@@ -69,11 +69,11 @@ Note, you can use this to add fields that are not otherwise
 shown; you can further tweak the other fields using e.g.,
 `gnus-article-hide-boring-headers', `gnus-article-hide-headers'
 etc., see the gnus documentation for details."
-  :type (list 'symbol)
+  :type '(repeat symbol)
   :group 'mu4e-view)
 
 (defcustom mu4e-view-actions
-  (seq-filter 'identity
+  (seq-filter #'identity
               `( ("capture message"  . mu4e-action-capture-message)
                  ("view in browser"  . mu4e-action-view-in-browser)
                  ,(when (fboundp 'xwidget-webkit-browse-url)

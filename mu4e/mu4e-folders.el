@@ -116,7 +116,17 @@ designated shortcut character for the maildir.
 
 Unlike in search queries, folder names with spaces in them must
 NOT be quoted, since mu4e does this for you."
-  :type '(repeat (cons (string :tag "Maildir") character))
+  :type '(choice
+          (alist :key-type (string :tag "Maildir")
+                 :value-type character
+                 :tag "Alist (old format)")
+          (repeat (plist
+                   :key-type (choice (const :tag "Maildir" :maildir)
+                                     (const :tag "Shortcut" :key)
+                                     (const :tag "Name of maildir" :name)
+                                     (const :tag "Hide from main view" :hide)
+                                     (const :tag "Do not count" :hide-unread))
+                   :tag "Plist (new format)")))
   :version "1.3.9"
   :group 'mu4e-folders)
 

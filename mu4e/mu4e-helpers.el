@@ -38,7 +38,7 @@
 ;;; Customization
 
 (defcustom mu4e-debug nil
-  "When set to non-nil, log debug information to the mu4e log  buffer."
+  "When set to non-nil, log debug information to the mu4e log buffer."
   :type 'boolean
   :group 'mu4e)
 
