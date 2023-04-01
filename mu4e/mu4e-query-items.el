@@ -46,7 +46,7 @@ searching, and allows users to modify the query.
 For instance, we could change any instance of \"workmail\" into
 \"maildir:/long-path-to-work-related-emails\", by setting the function
 
-(setq mu4e-query-rewrite-function
+\\=(setq mu4e-query-rewrite-function
   (lambda(expr)
      (replace-regexp-in-string \"workmail\"
                    \"maildir:/long-path-to-work-related-emails\" expr)))

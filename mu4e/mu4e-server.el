@@ -45,7 +45,7 @@ session."
 
 Changes to this value only take effect after (re)starting the mu
 session."
-  :type 'file
+  :type '(file :must-match t)
   :group 'mu4e
   :safe 'stringp)
 
