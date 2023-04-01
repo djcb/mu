@@ -60,7 +60,7 @@ Useful when this is not equal to the From: address."
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-keep-self-cc nil
-  "When non-nil. keep your e-mail address in Cc: when replying."
+  "When non-nil, keep your e-mail address in Cc: when replying."
   :type 'boolean
   :group 'mu4e-compose)
 
