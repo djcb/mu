@@ -216,3 +216,8 @@ config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
 ################################################################################
 # write-out config.h
 configure_file(output : 'config.h', configuration : config_h_data)
+
+if gmime_dep.version() == '3.2.13'
+  warning('gmime version 3.2.13 detected, which as a decoding bug')
+  warning('See: https://github.com/jstedfast/gmime/issues/133')
+endif
