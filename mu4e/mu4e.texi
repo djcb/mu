@@ -3112,7 +3112,7 @@ the @emph{modeline} @xref{Mode Line,,,emacs}. The @t{mu4e} support for that is
 handled through a minor-mode @code{mu4e-modeline-mode}, which is enabled by
 default when @t{mu4e} is running.
 
-To completely turn off the modeline support, set @code{mu4e-support-modeline} to
+To completely turn off the modeline support, set @code{mu4e-modeline-support} to
 @t{nil} before starting @t{mu4e}.
 
 @t{mu4e} shares information on the modeline in two ways:
