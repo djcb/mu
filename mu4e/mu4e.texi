@@ -1510,7 +1510,7 @@ Detached messages are often useful for workflows involving lots of
 simultaneous messages.
 
 You can @emph{tear off} the window a message is in and place it in a
-new tab by typing @key{C-x w ^ f}. You can also detach a window and
+new frame by typing @key{C-x w ^ f}. You can also detach a window and
 put it in its own tab with @key{C-x w ^ t}.
 
 @node Editor view
