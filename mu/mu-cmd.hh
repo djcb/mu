@@ -40,7 +40,7 @@ template<typename CmdOpts>
 constexpr Message::Options
 message_options(const CmdOpts& cmdopts)
 {
-	Message::Options mopts{};
+	Message::Options mopts{Message::Options::AllowRelativePath};
 
 	if (cmdopts.decrypt)
 		mopts |= Message::Options::Decrypt;
