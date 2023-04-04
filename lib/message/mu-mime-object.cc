@@ -125,8 +125,6 @@ MimeObject::headers() const noexcept
 	return hdrs;
 }
 
-
-
 Result<size_t>
 MimeObject::write_to_stream(const MimeFormatOptions& f_opts,
 			    MimeStream& stream) const
@@ -138,6 +136,22 @@ MimeObject::write_to_stream(const MimeFormatOptions& f_opts,
 	else
 		return Ok(static_cast<size_t>(written));
 }
+
+Result<size_t>
+MimeObject::to_file(const std::string& path, bool overwrite) const noexcept
+{
+	GError *err{};
+	auto strm{g_mime_stream_fs_open(path.c_str(),
+					O_WRONLY | O_CREAT | O_TRUNC |(overwrite ? 0 : O_EXCL),
+					S_IRUSR|S_IWUSR,
+					&err)};
+	if (!strm)
+		return Err(Error::Code::File, &err, "failed to open '%s'", path.c_str());
+
+	MimeStream stream{MimeStream::make_from_stream(strm)};
+	return write_to_stream({}, stream);
+}
+
 
 Option<std::string>
 MimeObject::to_string_opt() const noexcept
@@ -525,10 +539,7 @@ MimePart::to_string() const noexcept
 	buffer.resize(buflen);
 
 	return buffer;
-
 }
-
-
 
 Result<size_t>
 MimePart::to_file(const std::string& path, bool overwrite) const noexcept
@@ -557,9 +568,6 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 
 	return Ok(static_cast<size_t>(written));
 }
-
-
-
 
 void
 MimeMultipart::for_each(const ForEachFunc& func) const noexcept

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -156,16 +156,18 @@ MessagePart::to_string() const noexcept
 		return mime_object().to_string_opt();
 }
 
-
-
 Result<size_t>
 MessagePart::to_file(const std::string& path, bool overwrite) const noexcept
 {
-	if (!mime_object().is_part())
-		return Err(Error::Code::InvalidArgument,
-			   "not a part");
-	else
+	if (mime_object().is_part())
 		return MimePart{mime_object()}.to_file(path, overwrite);
+	else if (mime_object().is_message_part()) {
+		if (auto&& msg{MimeMessagePart{mime_object()}.get_message()}; !msg)
+			return Err(Error::Code::Message, "failed to get message-part");
+		else
+			return msg->to_file(path, overwrite);
+	} else
+		return mime_object().to_file(path, overwrite);
 }
 
 bool

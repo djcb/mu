@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -249,6 +249,10 @@ World!
 	{
 		auto&& part{message->parts().at(3)};
 		g_assert_true(part.mime_type() == "message/rfc822");
+
+		const auto fname{*cache_path + "/msgpart"};
+		g_assert_cmpuint(part.to_file(fname, true).value_or(123), ==, 139);
+		g_assert_true(::access(fname.c_str(), F_OK) == 0);
 	}
 
 	{

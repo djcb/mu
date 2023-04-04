@@ -829,6 +829,16 @@ public:
 	 */
 	Option<std::string> to_string_opt() const noexcept;
 
+	/**
+	 * Write object to a file
+	 *
+	 * @param path path to file
+	 * @param overwrite if true, overwrite existing file, if it bqexists
+	 *
+	 * @return size of the wrtten file, or an error.
+	 */
+	Result<size_t> to_file(const std::string& path, bool overwrite) const noexcept;
+
 	/*
 	 * subtypes.
 	 */
@@ -1101,7 +1111,6 @@ public:
 	 */
 	Option<std::string> to_string() const noexcept;
 
-
 	/**
 	 * Write part to a file
 	 *
@@ -1112,7 +1121,6 @@ public:
 	 */
 	Result<size_t> to_file(const std::string& path, bool overwrite)
 		const noexcept;
-
 
 	/**
 	 * Types of Content Encoding.
