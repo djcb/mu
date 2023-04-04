@@ -73,11 +73,13 @@ struct Message::Private {
 static void fill_document(Message::Private& priv);
 
 static Result<struct stat>
-get_statbuf(const std::string& path)
+get_statbuf(const std::string& path, Message::Options opts = Message::Options::None)
 {
-	if (!g_path_is_absolute(path.c_str()))
+	if (none_of(opts & Message::Options::AllowRelativePath) &&
+	    !g_path_is_absolute(path.c_str()))
 		return Err(Error::Code::File, "path '%s' is not absolute",
 			   path.c_str());
+
 	if (::access(path.c_str(), R_OK) != 0)
 		return Err(Error::Code::File, "file @ '%s' is not readable",
 			   path.c_str());
@@ -97,7 +99,7 @@ get_statbuf(const std::string& path)
 Message::Message(const std::string& path,  Message::Options opts):
 	priv_{std::make_unique<Private>(opts)}
 {
-	const auto statbuf{get_statbuf(path)};
+	const auto statbuf{get_statbuf(path, opts)};
 	if (!statbuf)
 		throw statbuf.error();
 

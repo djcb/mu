@@ -156,12 +156,7 @@ handle_msg(const std::string& fname, const Options& opts)
 {
 	using Format = Options::View::Format;
 
-	// make absolute.
-	const auto fpath{to_string_opt_gchar(g_canonicalize_filename(fname.c_str(), NULL))};
-	if (!fpath)
-		return Err(Error::Code::File, "invalid file '%s'", fname.c_str());
-
-	auto message{Message::make_from_path(*fpath, message_options(opts.view))};
+	auto message{Message::make_from_path(fname, message_options(opts.view))};
 	if (!message)
 		return Err(message.error());
 

@@ -45,10 +45,12 @@ namespace Mu {
 class Message {
 public:
 	enum struct Options {
-		None	     = 0,	/**< Defaults */
-		Decrypt	     = 1 << 0,	/**< Attempt to decrypt */
-		RetrieveKeys = 1 << 1,  /**< Auto-retrieve crypto keys (implies network
-					   * access) */
+		None		  = 0,		/**< Defaults */
+		Decrypt		  = 1 << 0,	/**< Attempt to decrypt */
+		RetrieveKeys	  = 1 << 1,	/**< Auto-retrieve crypto keys (implies network
+						   * access) */
+		AllowRelativePath = 1 << 2,	/**< Allow relateive paths for filename
+						   * in make_from_path */
 	};
 
 	/**
