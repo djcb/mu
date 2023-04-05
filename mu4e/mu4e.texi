@@ -842,7 +842,9 @@ instance, when you visit the urgent bookmark, or when you go to the main view);
 in such cases, there won't be any further notifications.
 
 The @emph{Maildirs} item is very similar to Bookmarks -- consider maildirs here
-as being a special kind of bookmark query that matches a Maildir.
+as being a special kind of bookmark query that matches a Maildir. You can
+configure this using the variable @code{mu4e-maildir-shortcuts}; see its
+docstring and @xref{Maildir searches} for more details.
 
 @node Miscellaneous
 @section Miscellaneous
