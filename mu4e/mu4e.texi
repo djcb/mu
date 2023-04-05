@@ -3125,8 +3125,11 @@ To completely turn off the modeline support, set @code{mu4e-modeline-support} to
 @item global: information about the results for the ``favorite query''
 @end itemize
 
-All of the bookmark items provide more details in their @code{help-echo}, i.e.,
-their tooltip.
+The global indicators can be disabled by setting @code{mu4e-modeline-show-global}
+to @t{nil}.
+
+All of the bookmark items provide more details in their @code{help-echo},
+i.e., their tooltip.
 
 @subsection Query parameters bookmark item
 The query parameters in the modeline start with the various query flags (such as
