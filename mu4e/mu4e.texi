@@ -1504,7 +1504,7 @@ messages. You can reattach a buffer to an live headers buffer by
 typing @key{Z}.
 
 You can freely rename a message view buffer -- such as with @key{C-x x
-r} -- if you want multiple, open messages.
+r} -- if you want a custom, non-randomized name.
 
 Detached messages are often useful for workflows involving lots of
 simultaneous messages.
