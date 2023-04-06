@@ -1207,10 +1207,20 @@ However, @t{mu4e}'s display rules are provisional; you can override them
 easily by customizing @code{display-buffer-alist}, which governs how Emacs --
 and thus @t{mu4e} -- must display your buffers.
 
-That means you can instruct @t{mu4e} to place message views in separate tabs or
-frames, if you so desire.
+Let's look at some examples.
 
-@subsection Display Customization Example
+@subsection Fine-tuning the main buffer display
+
+By default @t{mu4e}'s main buffer occupies the complete frame, but this can be
+changed to use the current window:
+
+@lisp
+(add-to-list 'display-buffer-alist
+             `(,(regexp-quote mu4e-main-buffer-name)
+               display-buffer-same-window))
+@end lisp
+
+@subsection Fine-tuning headers buffer display
 
 You do not need to configure @code{mu4e-split-view} for this to work. In the
 absence of explicit rules to the contrary, @t{mu4e} will fall back on the value
@@ -1221,9 +1231,10 @@ right. It occupies half of the width of the frame.
 
 @lisp
 (add-to-list 'display-buffer-alist
-  '(("\\*mu4e-headers\\*" display-buffer-in-side-window
-    (side . right)
-    (window-width . 0.5)))
+             `(,(regexp-quote mu4e-headers-buffer-name)
+               display-buffer-in-side-window
+               (side . right)
+               (window-width . 0.5)))
 @end lisp
 
 You can type @key{C-x w s} to toggle the side windows to hide or show them at
