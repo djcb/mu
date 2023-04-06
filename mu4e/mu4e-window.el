@@ -297,22 +297,28 @@ for BUFFER-OR-NAME to be displayed in."
             ('(view . vertical) '((window-min-width . fit-window-to-buffer)))
             (`(,_ . t) nil)))
          (window-action (cond
-                         ((eq buffer-type 'main) '(display-buffer-full-frame))
+                         ((eq buffer-type 'main) '(display-buffer-reuse-window
+                                                   display-buffer-reuse-mode-window
+                                                   display-buffer-full-frame))
                          ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
                           '(display-buffer-pop-up-frame))
                          ((memq buffer-type '(headers compose))
-                          '(display-buffer-reuse-mode-window display-buffer-same-window))
+                          '(display-buffer-reuse-window
+                            display-buffer-reuse-mode-window
+                            display-buffer-same-window))
                          ((memq mu4e-split-view '(horizontal vertical))
                           '(display-buffer-in-direction))
                          ((memq mu4e-split-view '(single-window))
-                          '(display-buffer-same-window))
+                          '(display-buffer-reuse-window
+                            display-buffer-reuse-mode-window
+                            display-buffer-same-window))
                          ;; I cannot discern a difference between
                          ;; `single-window' and "anything else" in
                          ;; `mu4e-split-view'.
-                         (t '(display-buffer-same-window))))
-         (arg `((display-buffer-reuse-window
-                 display-buffer-reuse-mode-window
-                 ,@window-action)
+                         (t '(display-buffer-reuse-window
+                              display-buffer-reuse-mode-window
+                              display-buffer-same-window))))
+         (arg `((,@window-action)
                 ,@window-size
                 ,direction
                 )))
