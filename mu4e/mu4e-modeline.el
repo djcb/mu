@@ -48,6 +48,14 @@ display the bookmark name rather than the query."
   :type 'boolean
   :group 'mu4e-modeline)
 
+(defcustom mu4e-modeline-show-global t
+  "Whether to populate global modeline segments.
+
+If non-nil, show both buffer-specific and global modeline items,
+otherwise only present buffer-specific information."
+  :type 'boolean
+  :group 'mu4e-modeline)
+
 (defvar-local mu4e--modeline-buffer-items nil
   "List of buffer-local items for the mu4e modeline.
 Each element is function that evaluates to a string.")
@@ -90,15 +98,17 @@ originate.")
             (mapconcat
              (lambda (func) (or (funcall func) "")) lst " ")))
          (global-string ;; global string is _cached_ as it may be expensive.
-          (or mu4e--modeline-global-string-cached
-              (setq mu4e--modeline-global-string-cached
-                    (funcall collect mu4e--modeline-global-items)))))
+          (and
+           mu4e-modeline-show-global
+           (or mu4e--modeline-global-string-cached
+               (setq mu4e--modeline-global-string-cached
+                     (funcall collect mu4e--modeline-global-items))))))
     (concat
      ;; (local) buffer items are _not_ cached, so they'll get update
      ;; automatically when leaving the buffer.
      (mu4e--modeline-quote-and-truncate
       (funcall collect mu4e--modeline-buffer-items))
-     " "
+     (and global-string " ")
      global-string)))
 
 (define-minor-mode mu4e-modeline-mode
