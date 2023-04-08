@@ -191,6 +191,10 @@ sub_cfind(CLI::App& sub, Options& opts)
 		       "Regular expression pattern to match");
 	sub.add_flag("--personal,-p", opts.cfind.personal,
 		       "Only show 'personal' contacts");
+	sub.add_option("--after", opts.cfind.after,
+		       "Only show results after some timestamps")
+		->type_name("<time_t>")
+		->check(CLI::PositiveNumber);
 	sub.add_option("--maxnum,-n", opts.cfind.maxnum,
 		       "Maximum number of results")
 		->type_name("<number>")
