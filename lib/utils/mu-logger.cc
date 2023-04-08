@@ -28,6 +28,9 @@
 #include <fstream>
 #include <cstring>
 
+#include <thread>
+#include <mutex>
+
 #include "mu-logger.hh"
 
 using namespace Mu;
@@ -36,6 +39,7 @@ static bool			MuLogInitialized = false;
 static Mu::Logger::Options	MuLogOptions;
 static std::ofstream		MuStream;
 static auto			MaxLogFileSize	 = 1000 * 1024;
+static std::mutex		logger_mtx;
 
 static std::string MuLogPath;
 
@@ -84,6 +88,8 @@ maybe_rotate_logfile()
 static GLogWriterOutput
 log_file(GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpointer user_data)
 {
+	std::lock_guard lock{logger_mtx};
+
 	if (!maybe_open_logfile())
 		return G_LOG_WRITER_UNHANDLED;
 
@@ -124,7 +130,6 @@ Mu::Logger::make(const std::string& path, Mu::Logger::Options opts)
 	return Ok(Logger(path, opts));
 }
 
-
 Mu::Logger::Logger(const std::string& path, Mu::Logger::Options opts)
 {
 	if (g_getenv("MU_LOG_STDOUTERR"))
@@ -147,7 +152,8 @@ Mu::Logger::Logger(const std::string& path, Mu::Logger::Options opts)
 		    }
 
 		    // log to the journal, or, if not available to a file.
-		    if (log_journal(level, fields, n_fields, user_data) != G_LOG_WRITER_HANDLED)
+		    if (any_of(MuLogOptions & Options::File) ||
+			log_journal(level, fields, n_fields, user_data) != G_LOG_WRITER_HANDLED)
 			    return log_file(level, fields, n_fields, user_data);
 		    else
 			    return G_LOG_WRITER_HANDLED;
@@ -172,3 +178,56 @@ Logger::~Logger()
 
 	MuLogInitialized = false;
 }
+
+
+#ifdef BUILD_TESTS
+#include <vector>
+#include <atomic>
+
+#include "mu-test-utils.hh"
+
+static void
+test_logger_threads(void)
+{
+	const auto testpath{test_random_tmpdir() + "/test.log"};
+	g_message("log-file: %s", testpath.c_str());
+
+	auto logger = Logger::make(testpath.c_str(), Logger::Options::File | Logger::Options::Debug);
+	assert_valid_result(logger);
+
+	const auto		thread_num = 16;
+	std::atomic<bool>	running	   = true;
+
+	std::vector<std::thread> threads;
+
+	/* log to the logger file from many threass */
+	for (auto n = 0; n != thread_num; ++n)
+		threads.emplace_back(
+			std::thread([n,&running]{
+				while (running) {
+					g_debug("log message from thread <%d>", n);
+					std::this_thread::yield();
+				}
+			}));
+
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(1s);
+	running = false;
+
+	for (auto n = 0; n != 16; ++n)
+		if (threads[n].joinable())
+			threads[n].join();
+}
+
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/utils/logger", test_logger_threads);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/

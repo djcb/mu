@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -39,12 +39,12 @@ struct Logger {
 	enum struct Options {
 		None      = 0,      /**< Nothing specific */
 		StdOutErr = 1 << 1, /**< Log to stdout/stderr */
-		Debug     = 1 << 2, /**< Include debug-level logs */
+		File      = 1 << 2, /**< Force logging to file, even if journal available */
+		Debug     = 1 << 3, /**< Include debug-level logs */
 	};
 
-
 	/**
-	 * Initialize the logging system.
+	 * Initialize the logging sub-system.
 	 *
 	 * Note that the path is only used if structured logging fails --
 	 * practically, it goes to the file if there's no systemd/journald.

@@ -65,4 +65,10 @@ test('test-utils-file',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, config_h_dep, lib_mu_utils_dep]))
 
+test('test-logger',
+     executable('test-logger', 'mu-logger.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep]))
+
 subdir('tests')
