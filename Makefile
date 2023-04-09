@@ -50,7 +50,7 @@ all: $(BUILDDIR)
 	@ln -sf $(BUILDDIR)/compile_commands.json $(CURDIR) || /bin/true
 
 $(BUILDDIR):
-	@$(MESON) $(MESON_FLAGS) $(BUILDDIR)
+	@$(MESON) setup $(MESON_FLAGS) $(BUILDDIR)
 
 check: test
 
