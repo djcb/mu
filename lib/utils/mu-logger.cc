@@ -49,6 +49,13 @@ maybe_open_logfile()
 	if (MuStream.is_open())
 		return true;
 
+	const auto logdir{to_string_gchar(g_path_get_dirname(MuLogPath.c_str()))};
+	if (g_mkdir_with_parents(logdir.c_str(), 0700) != 0) {
+		std::cerr << "creating " << logdir << " failed:" << g_strerror(errno)
+			  << std::endl;
+		return false;
+	}
+
 	MuStream.open(MuLogPath, std::ios::out | std::ios::app);
 	if (!MuStream.is_open()) {
 		std::cerr << "opening " << MuLogPath << " failed:" << g_strerror(errno)
