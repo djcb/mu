@@ -17,8 +17,8 @@ Welcome to ~mu~!
 *Note*: you are looking at the *development* branch, which is where new code is
 being developed and tested, and which may occasionally break.
 
-Distribution and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.8][1.8
-Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.8 Releases]].
+Distributions and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.10][1.10
+Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]].
 
 Given the enormous amounts of e-mail many people gather and the importance of
 e-mail message in our work-flows, it's essential to quickly deal with all that
@@ -41,7 +41,7 @@ Built on top of ~mu~ are some extensions (included in this package):
 - ~mu-guile~: bindings for the Guile/Scheme programming language (version 3.0 and
   later)
 
-~mu~ is written in C and C++; ~mu4e~ is written in ~elisp~ and ~mu-guile~ in a mix of C++ and
+~mu~ is written in C++; ~mu4e~ is written in ~elisp~ and ~mu-guile~ in a mix of C++ and
 Scheme.
 
 Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora)
