@@ -248,8 +248,9 @@ test_mu_find_links(void)
 	output = erroutput = NULL;
 
 	/* furthermore, two symlinks should be there */
-	const auto f1{format("%s/cur/3419760385_rfc822.1", tmpdir.c_str())};
-	const auto f2{format("%s/cur/3419760386_rfc822.2", tmpdir.c_str())};
+	const auto f1{format("%s/cur/rfc822.1", tmpdir.c_str())};
+	const auto f2{format("%s/cur/rfc822.2", tmpdir.c_str())};
+
 
 	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
 	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
@@ -820,11 +821,6 @@ main(int argc, char* argv[])
 {
 	int rv;
 
-	/* currently, something is broken on Ubuntu CI (but not elsewhere);
-	 * selectively turn this test off */
-	if (!g_getenv("RUN_TEST_MU_CMD"))
-		return 0;
-
 	mu_test_init(&argc, &argv);
 
 	if (!set_en_us_utf8_locale())
@@ -838,7 +834,6 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/mu-cmd/test-mu-find-file", test_mu_find_file);
 	g_test_add_func("/mu-cmd/test-mu-find-mime", test_mu_find_mime);
-
 
 	g_test_add_func ("/mu-cmd/test-mu-find-links", test_mu_find_links);
 
