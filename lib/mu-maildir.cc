@@ -155,7 +155,7 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 	if (auto&& res = check_subdir(src, in_cur); !res)
 		return Err(std::move(res.error()));
 
-	char *srcfile{g_path_get_basename(src.c_str())};
+	const auto srcfile{to_string_gchar(g_path_get_basename(src.c_str()))};
 
 	/* create targetpath; note: make the filename *cough* unique by
 	 * including a hash of the srcname in the targetname. This helps if
@@ -165,15 +165,13 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 	if (unique_names)
 		fulltargetpath = join_paths(targetpath,
 					    in_cur ? "cur" : "new",
-					    format("%u_%s",
+					    format("%08x-%s",
 						   g_str_hash(src.c_str()),
-						   srcfile));
+						   srcfile.c_str()));
 	else
 		fulltargetpath = join_paths(targetpath,
 					    in_cur ? "cur" : "new",
-					    srcfile);
-	g_free(srcfile);
-
+					    srcfile.c_str());
 	return fulltargetpath;
 }
 

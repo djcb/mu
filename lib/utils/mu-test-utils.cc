@@ -93,6 +93,8 @@ black_hole(void)
 void
 Mu::mu_test_init(int *argc, char ***argv)
 {
+	g_setenv("MU_TEST", "yes", TRUE);
+
 	g_test_init(argc, argv, NULL);
 
 	if (!g_test_verbose())
