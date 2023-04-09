@@ -36,7 +36,7 @@ static inline std::string test_random_tmpdir() {
 }
 
 /**
- * mu wrapper for g_test_init
+ * mu wrapper for g_test_init. Sets environment variable MU_TEST to 1.
  *
  * @param argc
  * @param argv

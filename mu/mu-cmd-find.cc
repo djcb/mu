@@ -178,7 +178,11 @@ output_link(const Option<Message>& msg, const OutputInfo& info, const Options& o
 	else if (info.footer)
 		return true;
 
-	if (auto&& res = maildir_link(msg->path(), opts.find.linksdir); !res) {
+	/* during test, do not create "unique names" (i.e., names with path
+	 * hashes), so we get a predictable result */
+	const auto unique_names{!g_getenv("MU_TEST")&&!g_test_initialized()};
+
+	if (auto&& res = maildir_link(msg->path(), opts.find.linksdir, unique_names); !res) {
 		res.error().fill_g_error(err);
 		return false;
 	}
