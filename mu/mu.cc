@@ -104,7 +104,6 @@ main(int argc, char* argv[])
 	 * there's a subcommand
 	 */
 
-
 	/*
 	 * set up logging
 	 */
@@ -113,6 +112,8 @@ main(int argc, char* argv[])
 		lopts |= Logger::Options::StdOutErr;
 	if (opts->debug)
 		lopts |= Logger::Options::Debug;
+	if (g_getenv("MU_TEST"))
+		lopts |= Logger::Options::File;
 
 	const auto logger = Logger::make(opts->runtime_path(RuntimePath::LogFile),
 					 lopts);
