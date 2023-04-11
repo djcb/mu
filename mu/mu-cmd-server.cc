@@ -103,7 +103,7 @@ output_sexp_stdout(const Sexp& sexp, Server::OutputFlags flags)
 static void
 report_error(const Mu::Error& err) noexcept
 {
-	output_sexp_stdout(Sexp(":error"_sym, static_cast<size_t>(err.code()),
+	output_sexp_stdout(Sexp(":error"_sym, Error::error_number(err.code()),
 				":message"_sym, err.what()),
 			   Server::OutputFlags::Flush);
 }
