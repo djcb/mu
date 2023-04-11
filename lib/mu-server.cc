@@ -33,6 +33,7 @@
 #include <cstring>
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <unistd.h>
 
 #include "mu-maildir.hh"
 #include "mu-query.hh"
@@ -338,18 +339,15 @@ Server::Private::make_command_map()
 
 G_GNUC_PRINTF(2, 3)
 static Sexp
-make_error(Error::Code errcode, const char* frm, ...)
+make_error(Error::Code code, const char* frm, ...)
 {
-	char*   msg{};
 	va_list ap;
-
 	va_start(ap, frm);
-	g_vasprintf(&msg, frm, ap);
+	auto err = Sexp().put_props(
+		":error", Error::error_number(code),
+		":message", vformat(frm, ap));
 	va_end(ap);
 
-	auto err = Sexp().put_props(":error", static_cast<int>(errcode),
-				    ":message", msg);
-	g_free(msg);
 	return err;
 }
 

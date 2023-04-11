@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <errno.h>
 #include <cstdint>
 
 #include "mu-utils-format.hh"
@@ -29,47 +30,52 @@
 
 namespace Mu {
 
+// calculate an error enum value.
+constexpr uint32_t err_enum(uint8_t code, uint8_t rv, uint8_t cat) {
+	return static_cast<uint32_t>(code|(rv << 16)|cat<<24);
+}
+
 struct Error final : public std::exception {
 
 	// 16 lower bits are for the error code the next 8 bits is for the return code
 	// upper byte is for flags
-
-	static constexpr uint32_t SoftError = 1 << 23;
-
-#define ERROR_ENUM(RV,CAT) \
-	static_cast<uint32_t>(__LINE__ | ((RV) << 15) | (CAT))
+	static constexpr uint8_t SoftError = 1;
 
 	enum struct Code: uint32_t {
-		AccessDenied	    = ERROR_ENUM(1,0),
-		AssertionFailure    = ERROR_ENUM(1,0),
-		Command		    = ERROR_ENUM(1,0),
-		Crypto		    = ERROR_ENUM(1,0),
-		File		    = ERROR_ENUM(1,0),
-		Index		    = ERROR_ENUM(1,0),
-		Internal	    = ERROR_ENUM(1,0),
-		InvalidArgument	    = ERROR_ENUM(1,0),
-		Message		    = ERROR_ENUM(1,0),
-		NoMatches	    = ERROR_ENUM(2,SoftError),
-		NotFound	    = ERROR_ENUM(1,0),
-		Parsing		    = ERROR_ENUM(1,0),
-		Play		    = ERROR_ENUM(1,0),
-		Query		    = ERROR_ENUM(1,0),
-		SchemaMismatch	    = ERROR_ENUM(11,0),
-		Script              = ERROR_ENUM(1,0),
-		ScriptNotFound      = ERROR_ENUM(1,0),
-		Store		    = ERROR_ENUM(1,0),
-		StoreLock           = ERROR_ENUM(19,0),
-		UnverifiedSignature = ERROR_ENUM(1,0),
-		User		    = ERROR_ENUM(1,0),
-		Xapian		    = ERROR_ENUM(1,0),
-	};
+		Ok                      = err_enum(0,0,0),
 
+		// used by mu4e.
+		NoMatches               = err_enum(4,2,SoftError),
+		SchemaMismatch          = err_enum(110,11,0),
+
+		// other
+		AccessDenied            = err_enum(100,1,0),
+		AssertionFailure        = err_enum(101,1,0),
+		Command                 = err_enum(102,1,0),
+		Crypto                  = err_enum(103,1,0),
+		File                    = err_enum(104,1,0),
+		Index                   = err_enum(105,1,0),
+		Internal                = err_enum(106,1,0),
+		InvalidArgument         = err_enum(107,1,0),
+		Message                 = err_enum(108,1,0),
+		NotFound                = err_enum(109,1,0),
+		Parsing                 = err_enum(111,1,0),
+		Play                    = err_enum(112,1,0),
+		Query                   = err_enum(113,1,0),
+		Script                  = err_enum(115,1,0),
+		ScriptNotFound          = err_enum(116,1,0),
+		Store                   = err_enum(117,1,0),
+		StoreLock               = err_enum(118,19,0),
+		UnverifiedSignature     = err_enum(119,1,0),
+		User                    = err_enum(120,1,0),
+		Xapian                  = err_enum(121,1,0),
+	};
 
 	/**
 	 * Construct an error
 	 *
 	 * @param codearg error-code
-	 * #param msgarg the error diecription
+	 * @param msgarg the error description
 	 */
 	Error(Code codearg, const std::string& msgarg) : code_{codearg}, what_{msgarg} {}
 	Error(Code codearg, std::string&& msgarg) : code_{codearg}, what_{std::move(msgarg)} {}
@@ -92,7 +98,7 @@ struct Error final : public std::exception {
 		va_end(args);
 	}
 
-	Error(Error&& rhs)      = default;
+	Error(Error&& rhs)	= default;
 	Error(const Error& rhs) = default;
 
 	/**
@@ -142,6 +148,16 @@ struct Error final : public std::exception {
 	 */
 	Code code() const noexcept { return code_; }
 
+	/**
+	 * Get the error number (e.g. for reporting to mu4e) for some error.
+	 *
+	 * @param c error code
+	 *
+	 * @return the error number
+	 */
+	static constexpr uint32_t error_number(Code c) noexcept {
+		return static_cast<uint32_t>(c) & 0xffff;
+	}
 
 	/**
 	 * Is this is a 'soft error'?
@@ -153,9 +169,8 @@ struct Error final : public std::exception {
 	}
 
 	constexpr uint8_t exit_code() const {
-		return ((static_cast<uint32_t>(code_) >> 15) & 0xff);
+		return ((static_cast<uint32_t>(code_) >> 16) & 0xff);
 	}
-
 
 	/**
 	 * Fill a GError with the error information
@@ -169,10 +184,10 @@ struct Error final : public std::exception {
 
 private:
 	static inline GQuark error_quark (void) {
-	static GQuark error_domain = 0;
-	if (G_UNLIKELY(error_domain == 0))
-		error_domain = g_quark_from_static_string("mu-error-quark");
-	return error_domain;
+		static GQuark error_domain = 0;
+		if (G_UNLIKELY(error_domain == 0))
+			error_domain = g_quark_from_static_string("mu-error-quark");
+		return error_domain;
 	}
 
 	const Code  code_;
