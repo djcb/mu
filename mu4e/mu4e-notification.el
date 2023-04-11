@@ -38,8 +38,6 @@ now."
   :type 'function
   :group 'mu4e-notification)
 
-(defvar mu4e--last-delta-unread 0
-  "Last notified number.")
 (defvar mu4e--notification-id nil
   "The last notification id, so we can replace it.")
 
