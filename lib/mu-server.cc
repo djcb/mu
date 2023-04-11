@@ -904,16 +904,16 @@ Server::Private::move_handler(const Command& cmd)
 	if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
 			throw Mu::Error{Error::Code::Store,
-				"can't move multiple messages at the same time"};
+				"cannot move multiple messages at the same time"};
 		// multi.
 		for (auto&& docid : docids)
 			move_docid(docid, flagopt, rename, no_view);
 		return;
 	}
-	auto docid{docids.at(0)};
+	const auto docid{docids.at(0)};
 	auto    msg = store().find_message(docid)
-		.or_else([]{throw Error{Error::Code::InvalidArgument,
-					"could not create message"};}).value();
+		.or_else([&]{throw Error{Error::Code::InvalidArgument,
+					"cannot find message %u", docid};}).value();
 
 	/* if maildir was not specified, take the current one */
 	if (maildir.empty())
