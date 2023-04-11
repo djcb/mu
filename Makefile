@@ -37,7 +37,7 @@ endif
 .PHONY: all
 .PHONY: check test test-verbose-if-fail test-valgrind test-helgrind
 .PHONY: benchmark coverage
-.PHONY: dist install clean distclean
+.PHONY: dist install uninstall clean distclean
 .PHONY: mu4e-doc-html
 
 # MESON_FLAGS, e.g. "-Dreadline=enabled"
@@ -57,13 +57,14 @@ check: test
 test: all
 	@$(MESON) test $(VERBOSE) -C $(BUILDDIR)
 
-
 install: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) install
 
+uninstall: $(BUILDDIR)
+	@$(NINJA) -C $(BUILDDIR) uninstall
+
 clean:
 	@rm -rf $(BUILDDIR) $(COVERAGE_BUILDDIR)
-
 
 #
 # below targets are just for development/testing/debugging. They may or
