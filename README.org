@@ -14,11 +14,9 @@
 
 Welcome to ~mu~!
 
-*Note*: you are looking at the *development* branch, which is where new code is
-being developed and tested, and which may occasionally break.
-
-Distributions and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.10][1.10
-Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]].
+*Note*: you are looking at the 1.10 *stable branch*, which is meant for common users
+and distributions - pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]]. If you are interested in
+~mu~ development, you can check the [[https://github.com/djcb/mu][master branch]] where that happens.
 
 Given the enormous amounts of e-mail many people gather and the importance of
 e-mail message in our work-flows, it's essential to quickly deal with all that
