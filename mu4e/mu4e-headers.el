@@ -1407,12 +1407,22 @@ descendants."
         (mu4e-loading-mode 1)))
     (mu4e--server-view docid mark-as-read)))
 
+(defvar-local mu4e-headers-open-after-move t
+  "If set to non-nil, open message after `mu4e-headers-next' and
+`mu4e-headers-prev' if pointing at a message after the move
+and there is a live message view.
+
+This variable is for let-binding when scripting.")
 
 (defun mu4e~headers-move (lines)
   "Move point LINES lines.
 Move foward if LINES is positive or backwards if LINES is
 negative. If this succeeds, return the new docid. Otherwise,
-return nil."
+return nil.
+
+If pointing at a message after the move and there is a
+view-window, open the message unless
+`mu4e-headers-open-after-move' is non-nil."
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (cl-flet ((goto-next-line
@@ -1443,7 +1453,8 @@ return nil."
         ;; is not live then that is indicates the user does not want
         ;; to pop up the view when they navigate in the headers
         ;; buffer.
-        (when (window-live-p mu4e~headers-view-win)
+        (when (and mu4e-headers-open-after-move
+                   (window-live-p mu4e~headers-view-win))
           (mu4e-headers-view-message))
         ;; attempt to highlight the new line, display the message
         (mu4e~headers-highlight docid)
@@ -1455,7 +1466,11 @@ return nil."
   "Move point to the next message header.
 If this succeeds, return the new docid. Otherwise, return nil.
 Optionally, takes an integer N (prefix argument), to the Nth next
-header."
+header.
+
+If pointing at a message after the move and there is a
+view-window, open the message unless
+`mu4e-headers-open-after-move' is non-nil."
   (interactive "P")
   (mu4e~headers-move (or n 1)))
 
@@ -1463,7 +1478,11 @@ header."
   "Move point to the previous message header.
 If this succeeds, return the new docid. Otherwise, return nil.
 Optionally, takes an integer N (prefix argument), to the Nth
-previous header."
+previous header.
+
+If pointing at a message after the move and there is a
+view-window, open the message unless
+`mu4e-headers-open-after-move' is non-nil."
   (interactive "P")
   (mu4e~headers-move (- (or n 1))))
 
