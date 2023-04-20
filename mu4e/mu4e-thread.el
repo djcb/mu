@@ -32,13 +32,6 @@
 ;; on folded messages as explained in usage example.
 
 ;;; Usage example:
-
-;; Key bindings
-;; (bind-key "<S-left>"  #'mu4e-thread-goto-root 'mu4e-headers-mode-map)
-;; (bind-key "<S-down>"  #'mu4e-thread-goto-next 'mu4e-headers-mode-map)
-;; (bind-key "<S-up>"    #'mu4e-thread-goto-prev 'mu4e-headers-mode-map)
-;; (bind-key "<tab>"     #'mu4e-thread-fold-toggle-goto-next 'mu4e-headers-mode-map)
-;; (bind-key "<backtab>" #'mu4e-thread-fold-toggle-all 'mu4e-headers-mode-map)
 ;;
 ;; This enforces folding after a new search
 ;; (add-hook 'mu4e-headers-found-hook #'mu4e-thread-fold-apply-all)
@@ -47,27 +40,33 @@
 ;; (advice-add #'mu4e-headers-mark-and-next :around #'mu4e-thread/mark-and-next)
 
 
-;;; Code
+;;; Code:
+
+(require 'mu4e-vars)
+
+(require 'mu4e-message)
+(require 'mu4e-mark)
 
 (defcustom mu4e-thread-fold-unread nil
   "Whether to fold unread messages in a thread."
+  :type 'boolean
   :group 'mu4e-headers)
 
 (defface mu4e-thread-fold-face
   `((t :inherit mu4e-highlight-face))
-  "Face for the information line of a folded thread"
+  "Face for the information line of a folded thread."
   :group 'mu4e-faces)
 
 (defvar mu4e-thread--fold-status nil
-  "Global folding status")
+  "Global folding status.")
 
 (defvar mu4e-thread--docids nil
-  "Thread list whose folding has been set individually")
+  "Thread list whose folding has been set individually.")
 
+(defvar mu4e-headers-fields) ;; defined in mu4e-headers.el
 (defun mu4e-thread-fold-info (count unread)
-  "Text to be displayed for a folded thread with COUNT hidden
-messages and UNREAD messages."
-
+  "Text to be displayed for a folded thread.
+There are COUNT hidden and UNREAD messages overall."
   (let ((size  (+ 2 (apply #'+ (mapcar (lambda (item) (or (cdr item) 0))
                                        mu4e-headers-fields))))
         (msg (concat (format"[%d hidden messages%s]\n" count
@@ -77,8 +76,8 @@ messages and UNREAD messages."
     (propertize (concat "  " (make-string size ?•) " " msg))))
 
 (defun mu4e-thread/mark-and-next (orig-fun &rest args)
-  "Advice function to prevent marking of folded messages"
-  
+  "Advice function to prevent marking of folded messages.
+ORIG-FUN is the original functions, taking ARGS."
   (if-let* ((overlay (mu4e-thread-is-folded))
             (beg (overlay-start overlay))
             (end (overlay-end overlay))
@@ -88,8 +87,7 @@ messages and UNREAD messages."
 
 
 (defun mu4e-thread-is-root ()
-  "Test if message at point is the root of the current thread"
-  
+  "Test if message at point is the root of the current thread."
   (when-let* ((msg (get-text-property (point) 'msg))
               (meta (mu4e-message-field msg :meta)))
     (let* ((orphan (plist-get meta :orphan))
@@ -98,15 +96,13 @@ messages and UNREAD messages."
       (or root (and orphan first-child)))))
 
 (defun mu4e-thread-goto-root ()
-  "Go to the root of the current thread"
-  
+  "Go to the root of the current thread."
   (interactive)
   (goto-char (mu4e-thread-root))
   (beginning-of-line))
 
 (defun mu4e-thread-root ()
-  "Get the root of the current thread"
-  
+  "Get the root of the current thread."
   (interactive)
   (let ((point))
     (save-excursion
@@ -118,7 +114,6 @@ messages and UNREAD messages."
 
 (defun mu4e-thread-goto-prev ()
   "Go to the root of the previous thread, return nil if thread is the first."
-  
   (interactive)
   (mu4e-thread-goto-root)
   (when-let ((point (mu4e-thread-prev)))
@@ -126,9 +121,8 @@ messages and UNREAD messages."
     point))
 
 (defun mu4e-thread-prev ()
-  "Get the root of the previous thread (if any)"
-  
-  (let ((point))
+  "Get the root of the previous thread (if any)."
+  (let ((_point))
     (save-excursion
       (mu4e-thread-goto-root)
       (unless (eq (point-min) (point))
@@ -137,16 +131,14 @@ messages and UNREAD messages."
         (point)))))
 
 (defun mu4e-thread-goto-next ()
-  "Go to the root of the next thread, return t if there was a
-next thread."
-  
+  "Go to the root of the next thread.
+Return t if there was a next thread, nil otherwise."
   (interactive)
   (when-let ((point (mu4e-thread-next)))
     (goto-char point)))
 
 (defun mu4e-thread-next ()
-  "Get the root of the next thread (if any)"
-  
+  "Get the root of the next thread (if any)."
   (let ((point))
     (save-excursion
       (forward-line +1)
@@ -157,8 +149,7 @@ next thread."
     point)))
 
 (defun mu4e-thread-is-folded ()
-  "Test if thread at point is folded"
-
+  "Test if thread at point is folded."
   (interactive)
   (let* ((thread-beg (mu4e-thread-root))
          (thread-end (mu4e-thread-next))
@@ -170,9 +161,8 @@ next thread."
 
 
 (defun mu4e-thread-fold-toggle-all ()
-  "Toggle all threads folding unconditionally and reset individual
-folding states."
-
+  "Toggle all threads folding unconditionally.
+Reset individual folding states."
   (interactive)
   (setq mu4e-thread--docids nil)
   (if mu4e-thread--fold-status
@@ -180,16 +170,12 @@ folding states."
     (mu4e-thread-fold-all)))
 
 (defun mu4e-thread-fold-apply-all ()
-  "Apply global folding status to all threads but those which have
-been set individually."
-
+  "Apply global folding status to all threads not set individually."
   (interactive)
-
   ;; Global fold status
   (if mu4e-thread--fold-status
       (mu4e-thread-fold-all)
     (mu4e-thread-unfold-all))
-
   ;; Individual fold status
   (save-excursion
     (goto-char (point-min))
@@ -204,10 +190,9 @@ been set individually."
         (unless (mu4e-thread-next)
           (throw 'end-search t))
         (mu4e-thread-goto-next)))))
-  
-(defun mu4e-thread-fold-all ()
-  "Fold all threads unconditionally"
 
+(defun mu4e-thread-fold-all ()
+  "Fold all threads unconditionally."
   (interactive)
   (setq mu4e-thread--fold-status t)
 
@@ -220,15 +205,13 @@ been set individually."
           (throw 'done t))))))
 
 (defun mu4e-thread-unfold-all ()
-  "Unfold all threads unconditionally"
-
+  "Unfold all threads unconditionally."
   (interactive)
   (setq mu4e-thread--fold-status nil)
   (remove-overlays (point-min) (point-max) 'mu4e-thread-folded t))
 
 (defun mu4e-thread-fold-toggle ()
-  "Toggle folding for thread at point"
-
+  "Toggle folding for thread at point."
   (interactive)
   (if (mu4e-thread-is-folded)
       (mu4e-thread-unfold)
@@ -236,35 +219,30 @@ been set individually."
 
 (defun mu4e-thread-fold-toggle-goto-next ()
   "Toggle folding for thread at point and go to next thread."
-
   (interactive)
   (if (mu4e-thread-is-folded)
       (mu4e-thread-unfold-goto-next)
     (mu4e-thread-fold-goto-next)))
 
 (defun mu4e-thread-unfold (&optional no-save)
-  "Unfold thread at point and store state unless NO-SAVE is t"
-
+  "Unfold thread at point and store state unless NO-SAVE is t."
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (when-let ((overlay (mu4e-thread-is-folded)))
       (unless no-save
         (mu4e-thread--save-state 'unfolded))
       (delete-overlay overlay))))
-  
-(defun mu4e-thread--save-state (state)
-  "Save the folding STATE of thread at point"
 
+(defun mu4e-thread--save-state (state)
+  "Save the folding STATE of thread at point."
   (save-excursion
     (mu4e-thread-goto-root)
     (when-let* ((msg (get-text-property (point) 'msg))
                 (docid (mu4e-message-field msg :docid)))
-
       (setf (alist-get docid mu4e-thread--docids) state))))
 
 (defun mu4e-thread-fold (&optional no-save)
-  "Fold thread at point and store state unless NO-SAVE is t"
-  
+  "Fold thread at point and store state unless NO-SAVE is t."
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (let* ((thread-beg (mu4e-thread-root))
@@ -301,26 +279,25 @@ been set individually."
           (let ((inhibit-read-only t)
                 (overlay (make-overlay fold-beg fold-end))
                 (info (mu4e-thread-fold-info child-count unread-count)))
-            (add-text-properties fold-beg (+ fold-beg 1) '(face mu4e-thread-fold-face))
+            (add-text-properties fold-beg (+ fold-beg 1)
+                                 '(face mu4e-thread-fold-face))
             (overlay-put overlay 'mu4e-thread-folded t)
             (overlay-put overlay 'display info)))))))
 
 (defun mu4e-thread-fold-goto-next ()
-  "Fold the thread at point and go to next thread"
-  
+  "Fold the thread at point and go to next thread."
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (mu4e-thread-fold)
     (mu4e-thread-goto-next)))
 
 (defun mu4e-thread-unfold-goto-next ()
-  "Unfold the thread at point and go to next thread"
-  
+  "Unfold the thread at point and go to next thread."
+
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (mu4e-thread-unfold)
     (mu4e-thread-goto-next)))
-
 
 (provide 'mu4e-thread)
 ;;; mu4e-thread.el ends here
