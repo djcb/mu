@@ -1019,6 +1019,12 @@ T,t          mark whole thread, subthread
 
 x            execute actions for the marked messages
 
+threads
+-------
+S-left       goto root
+TAB          toggle threading at current level
+S-TAB        toggle all threading
+
 composition
 -----------
 R,F,C        reply/forward/compose
@@ -1097,6 +1103,29 @@ If you want to change the defaults for these settings, you can use the variables
 @code{mu4e-search-sort-field} and @code{mu4e-search-show-threads}, as well as
 @code{mu4e-search-change-sorting} to change the sorting of the current search
 results.
+
+@node Folding threads
+@section Folding threads
+
+It is possible to fold threads - that is, visually collapse threads into a
+single line (and the reverse), by default using the @key{TAB} amd @key{S-TAB}
+bindings. Note that the collapsing is always for threads as a whole, not for
+sub-threads.
+
+Folding stops at the @emph{first unread message}, unless you set
+@code{mu4e-thread-fold-unread}. Similarly, when a thread has marked messages,
+the folding stops at the first marked message. Marking folded messages is not
+allowed as it is too error-prone.
+
+If you want to automatically fold all threads after a query, you can use a hook:
+@lisp
+ (add-hook 'mu4e-headers-found-hook #'mu4e-thread-fold-apply-all)
+@end lisp
+
+By default, single-child threads are @emph{not} collapsed, since it would simply
+result in replacing a single line with the collapsed one. However, if, for
+consistency you also want to fold those, you can use
+@t{mu4e-thread-fold-single-children}.
 
 @node HV Custom headers
 @section Custom headers

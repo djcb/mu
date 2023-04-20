@@ -1,7 +1,14 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.10 (releases on March 26, 2023)
+* 1.11.x (unreleased development build)
+
+*** mu4e
+
+    - experimental: support folding message threads (with TAB / S-TAB).
+      See the [[info:mu4e:Folding threads][manual entry]] for further details.
+
+* 1.10 (released on March 26, 2023)
 
 *** mu
 
@@ -15,7 +22,7 @@
      details.
 
    - The ~init~ command learned ~--reinit~ to reinitialize the database with the
-     setings of an exisitng one
+     setings of an existing one
 
    - The ~script~ command is gone, and integrated with ~mu~ directly, i.e. the
      scripts (when enabled) are directly visible in the ~mu~ output. Also see the
@@ -52,8 +59,7 @@
     - mu4e window management has been completely reworked and cleaned up,
       affecting the message loading as well as the window-layout. As a
       user-visible feature, there's now the =z= binding (~mu4e-view-detach~), to
-      'detach' view and alllow for keeping multiple views around; see the
-      [[info:mu4e:MSGV Detaching and reattaching][manual entry]] for further
+      'detach' view and alllow for keV Detaching and reattaching][manual entry]] for further
       details.
 
     - As a result of that, ~mu4e-split-view~ can no longer be a function; the new
