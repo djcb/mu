@@ -53,6 +53,7 @@ mu4e_srcs=[
   'mu4e-search.el',
   'mu4e-server.el',
   'mu4e-speedbar.el',
+  'mu4e-thread.el',
   'mu4e-update.el',
   'mu4e-vars.el',
   'mu4e-view.el',

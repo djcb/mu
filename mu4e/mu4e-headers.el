@@ -50,6 +50,7 @@
 (require 'mu4e-lists)
 (require 'mu4e-update)
 (require 'mu4e-folders)
+(require 'mu4e-thread)
 
 (declare-function mu4e-view       "mu4e-view")
 (declare-function mu4e--main-view  "mu4e-main")
@@ -104,8 +105,6 @@ In the format of `format-time-string'."
 In the format of `format-time-string'."
   :type  'string
   :group 'mu4e-headers)
-
-
 
 (defcustom mu4e-headers-precise-alignment nil
   "When set, use precise (but relatively slow) alignment for columns.
@@ -932,6 +931,11 @@ after the end of the search results."
     (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
     (define-key map (kbd "<C-kp-subtract>")
                 #'mu4e-headers-split-view-shrink)
+
+    ;; threads
+    (define-key map (kbd "<S-left>")  #'mu4e-thread-goto-root)
+    (define-key map (kbd "<tab>")     #'mu4e-thread-fold-toggle-goto-next)
+    (define-key map (kbd "<backtab>") #'mu4e-thread-fold-toggle-all)
 
     ;; switching to view mode (if it's visible)
     (define-key map "y" #'mu4e-select-other-view)
