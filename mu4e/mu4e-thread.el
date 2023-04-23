@@ -105,41 +105,23 @@ ORIG-FUN is the original functions, taking ARGS."
       (setq point (point)))
     point))
 
-(defun mu4e-thread-goto-prev ()
-  "Go to the root of the previous thread, return nil if thread is the first."
-  (interactive)
-  (mu4e-thread-goto-root)
-  (when-let ((point (mu4e-thread-prev)))
-    (goto-char point)
-    point))
+(declare-function 'mu4e-headers-prev-thread "mu4e-headers")
+(declare-function 'mu4e-headers-next-thread "mu4e-headers")
+
+(defalias 'mu4e-thread-goto-prev 'mu4e-headers-prev-thread)
+(defalias 'mu4e-thread-goto-next 'mu4e-headers-next-thread)
 
 (defun mu4e-thread-prev ()
   "Get the root of the previous thread (if any)."
-  (let ((_point))
-    (save-excursion
-      (mu4e-thread-goto-root)
-      (unless (eq (point-min) (point))
-        (forward-line -1)
-        (mu4e-thread-goto-root)
-        (point)))))
+  (save-excursion
+    (when (mu4e-thread-goto-prev)
+      (mu4e-thread-root))))
 
-(defun mu4e-thread-goto-next ()
-  "Go to the root of the next thread.
-Return t if there was a next thread, nil otherwise."
-  (interactive)
-  (when-let ((point (mu4e-thread-next)))
-    (goto-char point)))
-
-(defun mu4e-thread-next ()
+(defun mu4e-thread-next()
   "Get the root of the next thread (if any)."
-  (let ((point))
-    (save-excursion
-      (forward-line +1)
-      (while (and (not (eobp))
-                  (not (mu4e-thread-is-root)))
-        (forward-line +1))
-        (setq point (point))
-    point)))
+  (save-excursion
+    (when (mu4e-thread-goto-next)
+      (mu4e-thread-root))))
 
 (defun mu4e-thread-is-folded ()
   "Test if thread at point is folded."
