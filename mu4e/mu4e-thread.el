@@ -52,6 +52,13 @@
   :type 'boolean
   :group 'mu4e-headers)
 
+(defcustom mu4e-thread-fold-single-children nil
+  "If set to t fold even if there is only a single child.
+Otherwise, do not not fold single children since would simply
+hide the single child."
+  :type 'number
+  :group 'mu4e-headers)
+
 (defface mu4e-thread-fold-face
   `((t :inherit mu4e-highlight-face))
   "Face for the information line of a folded thread."
@@ -250,7 +257,7 @@ Reset individual folding states."
         (mu4e-thread--save-state 'folded))
       (let ((child-count (count-lines fold-beg fold-end))
             (unread-count (if mu4e-thread-fold-unread unread-count 0)))
-        (when (> child-count 1)
+        (when (> child-count (if mu4e-thread-fold-single-children 0 1))
           (let ((inhibit-read-only t)
                 (overlay (make-overlay fold-beg fold-end))
                 (info (mu4e-thread-fold-info child-count unread-count)))
