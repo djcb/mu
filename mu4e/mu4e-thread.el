@@ -85,15 +85,8 @@ ORIG-FUN is the original functions, taking ARGS."
       (mu4e-warn "Cannot mark when folded")
     (apply orig-fun args)))
 
-
-(defun mu4e-thread-is-root ()
-  "Test if message at point is the root of the current thread."
-  (when-let* ((msg (get-text-property (point) 'msg))
-              (meta (mu4e-message-field msg :meta)))
-    (let* ((orphan (plist-get meta :orphan))
-           (first-child (plist-get meta :first-child))
-           (root (plist-get meta :root)))
-      (or root (and orphan first-child)))))
+(declare-function 'mu4e~headers-thread-root-p "mu4e-headers")
+(defalias  'mu4e-thread-is-root 'mu4e~headers-thread-root-p)
 
 (defun mu4e-thread-goto-root ()
   "Go to the root of the current thread."

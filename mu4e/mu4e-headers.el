@@ -1236,13 +1236,18 @@ corresponding header."
         (when msg
           (funcall func msg))))))
 
+
 (defun mu4e-headers-find-if (func &optional backward)
-  "Move to the next header for which FUNC returns non-`nil',
-starting from the current position. FUNC receives one argument, the
-message s-expression for the corresponding header. If BACKWARD is
-non-`nil', search backwards. Returns the new position, or `nil' if
-nothing was found. If you want to exclude matches for the current
-message, you can use `mu4e-headers-find-if-next'."
+  "Move to the header for which FUNC returns non-`nil'.
+if BACKWARD is non-nil, search backwards.
+
+ FUNC receives one argument, the message s-expression for the
+corresponding header. If BACKWARD is non-`nil', search backwards.
+Returns the new position, or `nil' if nothing was found. If you
+want to exclude matches for the current message, you can use
+`mu4e-headers-find-if-next'.
+
+Return the found position or nil if not found."
   (let ((pos)
         (search-func (if backward 'search-backward 'search-forward)))
     (save-excursion
@@ -1254,7 +1259,8 @@ message, you can use `mu4e-headers-find-if-next'."
           (when (and msg (funcall func msg))
             (setq pos (point))))))
     (when pos
-      (goto-char pos))))
+      (goto-char pos))
+    pos))
 
 (defun mu4e-headers-find-if-next (func &optional backwards)
   "Like `mu4e-headers-find-if', but do not match the current header.
@@ -1262,9 +1268,7 @@ Move to the next or (if BACKWARDS is non-`nil') header for which FUNC
 returns non-`nil', starting from the current position."
   (let ((pos))
     (save-excursion
-      (if backwards
-          (beginning-of-line)
-        (end-of-line))
+      (if backwards (beginning-of-line) (end-of-line))
       (setq pos (mu4e-headers-find-if func backwards)))
     (when pos (goto-char pos))))
 
@@ -1514,15 +1518,21 @@ untrashed)."
   (interactive)
   (mu4e~headers-prev-or-next-unread nil))
 
+(defun mu4e~headers-thread-root-p (&optional msg)
+  "Is MSG at the root of a thread?
+If MSG is nil, use message at point."
+  (when-let* ((msg (or msg (get-text-property (point) 'msg)))
+              (meta (mu4e-message-field msg :meta)))
+    (let* ((orphan (plist-get meta :orphan))
+           (first-child (plist-get meta :first-child))
+           (root (plist-get meta :root)))
+      (or root (and orphan first-child)))))
 
 (defun mu4e~headers-prev-or-next-thread (backwards)
   "Move point to the top of the next thread.
 If BACKWARDS is non-`nil', move backwards."
   (interactive "P")
-  (or (mu4e-headers-find-if-next
-       (lambda (msg)
-         (eq 0 (plist-get (plist-get msg :meta) :level)))
-       backwards)
+  (or (mu4e-headers-find-if-next #'mu4e~headers-thread-root-p backwards)
       (mu4e-message (format "No %s thread found"
                             (if backwards "previous" "next")))))
 
