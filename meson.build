@@ -47,6 +47,7 @@ endif
 # compilers / flags
 #
 extra_flags = [
+  '-Wc11-extensions', # for clang
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
   '-Wformat-security',
