@@ -151,16 +151,14 @@ struct Store::Private {
 
 	const Xapian::Database& db() const { return *db_.get(); }
 
-	Xapian::WritableDatabase& writable_db()
-	{
+	Xapian::WritableDatabase& writable_db() {
 		if (read_only_)
 			throw Mu::Error(Error::Code::AccessDenied, "database is read-only");
 		return dynamic_cast<Xapian::WritableDatabase&>(*db_.get());
 	}
 
 	// If not started yet, start a transaction. Otherwise, just update the transaction size.
-	void transaction_inc() noexcept
-	{
+	void transaction_inc() noexcept {
 		if (transaction_size_ == 0) {
 			g_debug("starting transaction");
 			xapian_try([this] { writable_db().begin_transaction(); });
@@ -204,14 +202,12 @@ struct Store::Private {
 		return (time_t)atoll(db().get_metadata(key).c_str());
 	}
 
-	Store::Properties make_properties(const std::string& db_path)
-	{
+	Store::Properties make_properties(const std::string& db_path) {
 		Store::Properties props;
 
 		props.database_path	 = db_path;
 		props.schema_version	 = db().get_metadata(SchemaVersionKey);
 		props.created		 = string_to_tstamp(db().get_metadata(CreatedKey));
-		props.read_only		 = read_only_;
 		props.batch_size	 = ::atoll(db().get_metadata(BatchSizeKey).c_str());
 		props.max_message_size	 = ::atoll(db().get_metadata(MaxMessageSizeKey).c_str());
 		props.root_maildir       = db().get_metadata(RootMaildirKey);
@@ -373,8 +369,6 @@ Store::statistics() const
 	return stats;
 }
 
-
-
 const ContactsCache&
 Store::contacts_cache() const
 {
@@ -392,7 +386,7 @@ Store::indexer()
 {
 	std::lock_guard guard{priv_->lock_};
 
-	if (properties().read_only)
+	if (read_only())
 		throw Error{Error::Code::Store, "no indexer for read-only store"};
 	else if (!priv_->indexer_)
 		priv_->indexer_ = std::make_unique<Indexer>(*this);
@@ -408,10 +402,11 @@ Store::size() const
 }
 
 bool
-Store::empty() const
+Store::read_only() const
 {
-	return size() == 0;
+	return priv_->read_only_;
 }
+
 
 Result<Store::Id>
 Store::add_message(const std::string& path, bool use_transaction)

@@ -127,9 +127,7 @@ public:
 		std::string schema_version; /**< Database schema version */
 		std::time_t created;        /**<  database creation time */
 
-		bool   read_only;  /**< Is the database opened read-only? */
 		size_t batch_size; /**< Maximum database transaction batch size */
-		bool   in_memory;  /**< Is this an in-memory database (for testing)?*/
 
 		std::string root_maildir; /**<  Absolute path to the top-level maildir */
 
@@ -163,6 +161,27 @@ public:
 	 */
 	Statistics statistics() const;
 
+
+	/**
+	 * Get the number of documents in the document database
+	 *
+	 * @return the number
+	 */
+	std::size_t size() const;
+
+	/**
+	 * Is the database empty?
+	 *
+	 * @return true or false
+	 */
+	bool empty() const { return size() == 0; }
+
+	/**
+	 * Is the database read-only?
+	 *
+	 * @return true or false
+	 */
+	bool read_only() const;
 
 	/**
 	 * Get the ContactsCache object for this store
@@ -423,20 +442,6 @@ public:
 	 * @param tstamp the timestamp for that path
 	 */
 	void set_dirstamp(const std::string& path, time_t tstamp);
-
-	/**
-	 * Get the number of documents in the document database
-	 *
-	 * @return the number
-	 */
-	std::size_t size() const;
-
-	/**
-	 * Is the database empty?
-	 *
-	 * @return true or false
-	 */
-	bool empty() const;
 
 	/**
 	 * Commit the current batch of modifications to disk, opportunistically.
