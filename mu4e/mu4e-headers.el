@@ -1588,6 +1588,8 @@ argument."
   "Set mark MARK on the message at point or on all messages in the
 region if there is a region, then move to the next message."
   (interactive)
+  (when (mu4e-thread-message-folded-p)
+    (mu4e-warn "Cannot mark folded messages"))
   (mu4e-mark-set mark)
   (when mu4e-headers-advance-after-mark (mu4e-headers-next)))
 

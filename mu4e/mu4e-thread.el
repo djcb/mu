@@ -20,30 +20,26 @@
 
 ;;; Commentary:
 
-;; mu4e-thread.el is a library that allows to fold and unfold threads
-;; in mu4e headers mode. Folding works by creating an overlay over
-;; thread children that display a summary (number of hidden messages
-;; and possibly number of unread messages). Folding is perform just in
-;; time such that it is quite fast to fold/unfold threads. When a
-;; thread has unread messages, the folding stops at the first unread
-;; message unless `mu4e-thread-fold-unread` has been set to t.
-;; Similarly, when a thread has marked messages, the folding stops at
-;; the first marked message and it is strongly advised to disable marking
-;; on folded messages as explained in usage example.
+;; mu4e-thread.el is a library that allows to fold and unfold threads in mu4e
+;; headers mode. Folding works by creating an overlay over thread children that
+;; display a summary (number of hidden messages and possibly number of unread
+;; messages).
+
+;; Folding is performed just-in-time such that it is quite fast to
+;; fold/unfold threads. When a thread has unread messages, the folding stops at
+;; the first unread message unless `mu4e-thread-fold-unread` has been set to t.
+
+;; Similarly, when a thread has marked messages, the folding stops at the first
+;; marked message.
 
 ;;; Usage example:
 ;;
 ;; This enforces folding after a new search
 ;; (add-hook 'mu4e-headers-found-hook #'mu4e-thread-fold-apply-all)
-;;
-;; This prevents marking messages when folded
-;; (advice-add #'mu4e-headers-mark-and-next :around #'mu4e-thread/mark-and-next)
-
 
 ;;; Code:
 
 (require 'mu4e-vars)
-
 (require 'mu4e-message)
 (require 'mu4e-mark)
 
@@ -64,10 +60,10 @@ hide the single child."
   "Face for the information line of a folded thread."
   :group 'mu4e-faces)
 
-(defvar mu4e-thread--fold-status nil
+(defvar-local mu4e-thread--fold-status nil
   "Global folding status.")
 
-(defvar mu4e-thread--docids nil
+(defvar-local mu4e-thread--docids nil
   "Thread list whose folding has been set individually.")
 
 (defvar mu4e-headers-fields) ;; defined in mu4e-headers.el
@@ -82,15 +78,12 @@ There are COUNT hidden and UNREAD messages overall."
                               "")))))
     (propertize (concat "  " (make-string size ?•) " " msg))))
 
-(defun mu4e-thread/mark-and-next (orig-fun &rest args)
-  "Advice function to prevent marking of folded messages.
-ORIG-FUN is the original functions, taking ARGS."
-  (if-let* ((overlay (mu4e-thread-is-folded))
-            (beg (overlay-start overlay))
-            (end (overlay-end overlay))
-            (folded (and (>= (point) beg) (< (point) end))))
-      (mu4e-warn "Cannot mark when folded")
-    (apply orig-fun args)))
+(defun mu4e-thread-message-folded-p ()
+  "Is point in a folded area?"
+  (when-let* ((overlay (mu4e-thread-is-folded))
+              (beg (overlay-start overlay))
+              (end (overlay-end overlay)))
+    (and (>= (point) beg) (< (point) end))))
 
 (declare-function 'mu4e~headers-thread-root-p "mu4e-headers")
 (defalias  'mu4e-thread-is-root 'mu4e~headers-thread-root-p)
@@ -140,7 +133,6 @@ ORIG-FUN is the original functions, taking ARGS."
       (dolist (overlay overlays)
         (when (overlay-get overlay 'mu4e-thread-folded)
           (throw 'folded overlay))))))
-
 
 (defun mu4e-thread-fold-toggle-all ()
   "Toggle all threads folding unconditionally.
@@ -275,7 +267,6 @@ Reset individual folding states."
 
 (defun mu4e-thread-unfold-goto-next ()
   "Unfold the thread at point and go to next thread."
-
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (mu4e-thread-unfold)
