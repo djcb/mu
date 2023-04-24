@@ -1046,6 +1046,28 @@ test_message_sanitize_maildir()
 	assert_equal(Message::sanitize_maildir("/foo/bar/cuux/"), "/foo/bar/cuux");
 }
 
+static void
+test_message_subject_with_newline()
+{
+constexpr const auto txt =
+R"(To: foo@example.com
+Subject: =?utf-8?q?Le_poids_=C3=A9conomique_de_la_chasse_:_=0A=0Ala_dette_cach?= =?utf-8?q?=C3=A9e_de_la_chasse_!?=
+Date: Mon, 24 Apr 2023 07:32:43 +0000
+
+Hello!
+)";
+	g_test_bug("2477");
+
+	const auto msg{Message::make_from_text(txt, "/foo/cur/m123:2,S")};
+	assert_valid_result(msg);
+
+	assert_equal(msg->subject(), // newlines are filtered-out
+		     "Le poids économique de la chasse : la dette cachée de la chasse !");
+	assert_equal(msg->header("Subject").value_or(""),
+		     "Le poids économique de la chasse : \n\nla dette cachée de la chasse !");
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -1071,6 +1093,8 @@ main(int argc, char* argv[])
 			test_message_outlook_body);
 	g_test_add_func("/message/message/message-id",
 			test_message_message_id);
+	g_test_add_func("/message/message/subject-with-newline",
+			test_message_subject_with_newline);
 	g_test_add_func("/message/message/fail",
 			test_message_fail);
 	g_test_add_func("/message/message/sanitize-maildir",
