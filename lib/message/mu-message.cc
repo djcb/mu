@@ -700,7 +700,7 @@ fill_document(Message::Private& priv)
 		case Field::Id::Size: /* already */
 			break;
 		case Field::Id::Subject:
-			doc.add(field.id, mime_msg.subject());
+			doc.add(field.id, mime_msg.subject().map(remove_ctrl));
 			break;
 		case Field::Id::Tags:
 			if (auto&& tags{extract_tags(mime_msg)}; !tags.empty())
