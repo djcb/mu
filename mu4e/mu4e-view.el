@@ -229,6 +229,21 @@ If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
   (mu4e--view-prev-or-next #'mu4e~headers-prev-or-next-thread nil))
 
+(defun mu4e-view-thread-goto-root ()
+  "Move to thread root."
+  (interactive)
+  (mu4e--view-in-headers-context (mu4e-thread-goto-root)))
+
+(defun mu4e-view-thread-fold-toggle-goto-next ()
+  "Toggle threading or go to next."
+  (interactive)
+  (mu4e--view-in-headers-context (mu4e-thread-fold-toggle-goto-next)))
+
+(defun mu4e-view-thread-fold-toggle-all ()
+  "Toggle all threads."
+  (interactive)
+  (mu4e--view-in-headers-context (mu4e-thread-fold-toggle-all)))
+
 
 ;;; Interactive functions
 (defun mu4e-view-action (&optional msg)
@@ -930,6 +945,14 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map (kbd "]") #'mu4e-view-headers-next-unread)
     (define-key map (kbd "{") #'mu4e-view-headers-prev-thread)
     (define-key map (kbd "}") #'mu4e-view-headers-next-thread)
+
+    ;; ;; threads
+    ;; TODO: find some binding that don't conflict
+    ;; (define-key map (kbd "<S-left>")  #'mu4e-view-thread-goto-root)
+    ;; ;; <tab> is taken already
+    ;; (define-key map (kbd "<C-S-tab>")   #'mu4e-view-thread-fold-toggle-goto-next)
+    ;; (define-key map (kbd "<backtab>") #'mu4e-view-thread-fold-toggle-all)
+
 
     ;; switching from view <-> headers (when visible)
     (define-key map "y" #'mu4e-select-other-view)

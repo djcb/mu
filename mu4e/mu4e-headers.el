@@ -935,6 +935,7 @@ after the end of the search results."
     ;; threads
     (define-key map (kbd "<S-left>")  #'mu4e-thread-goto-root)
     (define-key map (kbd "<tab>")     #'mu4e-thread-fold-toggle-goto-next)
+    (define-key map (kbd "<C-tab>")   #'mu4e-thread-fold-toggle-goto-next)
     (define-key map (kbd "<backtab>") #'mu4e-thread-fold-toggle-all)
 
     ;; switching to view mode (if it's visible)
