@@ -1532,12 +1532,8 @@ If MSG is nil, use message at point."
 (defun mu4e~headers-prev-or-next-thread (backwards)
   "Move point to the top of the next thread.
 If BACKWARDS is non-`nil', move backwards."
-  (interactive "P")
-  (if (mu4e-headers-find-if-next #'mu4e~headers-thread-root-p backwards)
-      (point)
-    (progn
-      (mu4e-message (format "No %s thread found" (if backwards "previous" "next")))
-      nil)))
+  (when (mu4e-headers-find-if-next #'mu4e~headers-thread-root-p backwards)
+      (point)))
 
 (defun mu4e-headers-prev-thread ()
   "Move point to the previous thread."

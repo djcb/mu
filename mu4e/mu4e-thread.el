@@ -127,7 +127,7 @@ There are COUNT hidden and UNREAD messages overall."
   "Test if thread at point is folded."
   (interactive)
   (let* ((thread-beg (mu4e-thread-root))
-         (thread-end (mu4e-thread-next))
+         (thread-end (or (mu4e-thread-next) (point-max)))
          (overlays (overlays-in thread-beg thread-end)))
     (catch 'folded
       (dolist (overlay overlays)
@@ -220,7 +220,7 @@ Reset individual folding states."
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (let* ((thread-beg (mu4e-thread-root))
-           (thread-end (mu4e-thread-next))
+           (thread-end (or (mu4e-thread-next) (point-max)))
            (unread-count 0)
            (fold-beg (save-excursion
                        (goto-char thread-beg)
