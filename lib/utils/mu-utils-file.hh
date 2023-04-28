@@ -24,6 +24,7 @@
 #include <cinttypes>
 #include <sys/stat.h>
 
+#include <gio/gio.h>
 #include <utils/mu-option.hh>
 #include <utils/mu-regex.hh>
 
@@ -156,6 +157,17 @@ std::string join_paths(S&& s, Args...args) {
 	return rx.replace(str, sepa);
 }
 
+
+/**
+ * Like g_cancellable_new(), but automatically cancels itself
+ * after timeout
+ *
+ * @param timeout timeout in millisecs
+ *
+ * @return A GCancellable* instances; free with g_object_unref() when
+ * no longer needed.
+ */
+GCancellable* g_cancellable_new_with_timeout(guint timeout);
 
 } // namespace Mu
 

@@ -178,6 +178,55 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 	}
 }
 
+static gpointer
+cancel_wait(gpointer data)
+{
+	guint timeout, deadline;
+	GCancellable *cancel;
+
+	cancel	 = (GCancellable*)data;
+	timeout	 = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(cancel), "timeout"));
+	deadline = g_get_monotonic_time() + 1000 * timeout;
+
+	while (g_get_monotonic_time() < deadline && !g_cancellable_is_cancelled(cancel)) {
+		g_usleep(50 * 1000); /* 50 ms */
+		g_thread_yield();
+	}
+
+	g_cancellable_cancel(cancel);
+
+	return NULL;
+}
+
+static void
+cancel_wait_free(gpointer data)
+{
+	GThread *thread;
+	GCancellable *cancel;
+
+	cancel	 = (GCancellable*)data;
+	thread   = (GThread*)g_object_get_data(G_OBJECT(cancel), "thread");
+
+	g_cancellable_cancel(cancel);
+	g_thread_join(thread);
+}
+
+GCancellable*
+Mu::g_cancellable_new_with_timeout(guint timeout)
+{
+	GCancellable *cancel;
+
+	cancel = g_cancellable_new();
+
+	g_object_set_data(G_OBJECT(cancel), "timeout", GUINT_TO_POINTER(timeout));
+	g_object_set_data(G_OBJECT(cancel), "thread",
+			  g_thread_new("cancel-wait", cancel_wait, cancel));
+	g_object_set_data_full(G_OBJECT(cancel), "cancel", cancel, cancel_wait_free);
+
+
+	return cancel;
+}
+
 
 #ifdef BUILD_TESTS
 
