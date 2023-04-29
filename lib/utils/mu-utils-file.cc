@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <gio/gunixinputstream.h>
 
 using namespace Mu;
 
@@ -223,8 +224,31 @@ Mu::g_cancellable_new_with_timeout(guint timeout)
 			  g_thread_new("cancel-wait", cancel_wait, cancel));
 	g_object_set_data_full(G_OBJECT(cancel), "cancel", cancel, cancel_wait_free);
 
-
 	return cancel;
+}
+
+
+Result<std::string>
+Mu::read_from_stdin()
+{
+	g_autoptr(GOutputStream) outmem = g_memory_output_stream_new_resizable();
+	g_autoptr(GInputStream) input = g_unix_input_stream_new(STDIN_FILENO, TRUE);
+	//g_autoptr(GCancellable) cancel{maybe_cancellable_timeout(timeout)};
+
+	GError *err{};
+	auto bytes = g_output_stream_splice(outmem, input,
+					    static_cast<GOutputStreamSpliceFlags>
+					    (G_OUTPUT_STREAM_SPLICE_CLOSE_SOURCE |
+					    G_OUTPUT_STREAM_SPLICE_CLOSE_TARGET),
+					    {}, &err);
+
+	if (bytes < 0)
+		return Err(Error::Code::File, &err, "error reading from pipe");
+
+	return Ok(std::string{
+			static_cast<const char*>(g_memory_output_stream_get_data(
+							 G_MEMORY_OUTPUT_STREAM(outmem))),
+			g_memory_output_stream_get_size(G_MEMORY_OUTPUT_STREAM(outmem))});
 }
 
 

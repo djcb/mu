@@ -1,4 +1,4 @@
-## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ lib_mu_utils=static_library('mu-utils', [
 ], dependencies: [
   glib_dep,
   gio_dep,
+  gio_unix_dep,
   config_h_dep,
   readline_dep
 ], include_directories:
@@ -63,7 +64,7 @@ test('test-utils-file',
      executable('test-utils-file', 'mu-utils-file.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, config_h_dep, lib_mu_utils_dep]))
+                dependencies: [glib_dep, gio_unix_dep,config_h_dep, lib_mu_utils_dep]))
 
 test('test-logger',
      executable('test-logger', 'mu-logger.cc',

@@ -121,9 +121,10 @@ config_h_data.set_quoted('MU_TESTMAILDIR_CJK',  join_paths(testmaildir, 'cjk'))
 ################################################################################
 # hard dependencies
 #
-glib_dep       = dependency('glib-2.0', version: '>= 2.58')
-gobject_dep    = dependency('gobject-2.0', version: '>= 2.58')
-gio_dep        = dependency('gio-2.0', version: '>= 2.50')
+glib_dep       = dependency('glib-2.0', version: '>= 2.60')
+gobject_dep    = dependency('gobject-2.0', version: '>= 2.60')
+gio_dep        = dependency('gio-2.0', version: '>= 2.60')
+gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.60')
 gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
 xapian_dep     = dependency('xapian-core', version:'>= 1.4')
 thread_dep     = dependency('threads')

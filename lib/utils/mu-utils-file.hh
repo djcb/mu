@@ -169,6 +169,14 @@ std::string join_paths(S&& s, Args...args) {
  */
 GCancellable* g_cancellable_new_with_timeout(guint timeout);
 
+/**
+ * Read for standard input
+ *
+ * @return data from standard input or an error.
+ */
+Result<std::string> read_from_stdin();
+
+
 } // namespace Mu
 
 #endif /* MU_UTILS_FILE_HH__ */
