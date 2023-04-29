@@ -8,7 +8,7 @@
 
 * SYNOPSIS
 
-*mu [common-options] extract [options] <file>*
+*mu [common-options] extract [options] [<file>]*
 
 *mu [common-options] extract [options] <file> <pattern>*
 
@@ -29,6 +29,10 @@ are basic PCRE, and are case-sensitive by default; see *pcre(3)* for more detail
 Without any options, *mu extract* simply outputs the list of leaf MIME-parts in
 the message. Only 'leaf' MIME-parts (including RFC822 attachments) are
 considered, *multipart/** etc. are ignored.
+
+Without a filename parameter, ~mu extract~ reads a message from standard-input. In
+that case, you cannot use the second, ~<pattern>~ parameter as this would be
+ambiguous; instead, use the ~--matches~ option.
 
 * EXTRACT OPTIONS
 
@@ -55,6 +59,11 @@ allowed.
 by default, ~mu~ transforms the attachment filenames a bit (such as by replacing
 spaces by dashes); with this option, leave that to the minimum for creating
 a legal filename in the target directory.
+
+** --matches=<pattern>
+Attachments with filenames matching the pattern will be extracted. The regular
+expressions are basic PCRE, and are case-sensitive by default; see *pcre(3)* for
+more details.
 
 ** --play
 Try to 'play' (open) the attachment with the default application for the
@@ -85,6 +94,11 @@ $ mu extract msgfile '.*\.jpg'
 To extract an mp3-file, and play it in the default mp3-playing application:
 #+begin_example
 $ mu extract --play msgfile 'whoopsididitagain.mp3'
+#+end_example
+
+when reading from standard-input, you need ~--matches~, so:
+#+begin_example
+$ cat msgfile | mu extract --play --matches 'whoopsididitagain.mp3'
 #+end_example
 
 #+include: "prefooter.inc" :minlevel 1

@@ -49,15 +49,11 @@ save_part(const Message::Part& part, size_t idx, const Options& opts)
 }
 
 static Result<void>
-save_parts(const std::string& path, const std::string& filename_rx,
+save_parts(const Message& message, const std::string& filename_rx,
 	   const Options& opts)
 {
-	auto message{Message::make_from_path(path, message_options(opts.extract))};
-	if (!message)
-		return Err(std::move(message.error()));
-
 	size_t partnum{}, saved_num{};
-	for (auto&& part: message->parts()) {
+	for (auto&& part: message.parts()) {
 		++partnum;
 		// should we extract this part?
 		const auto do_extract = std::invoke([&]() {
@@ -134,15 +130,11 @@ show_part(const MessagePart& part, size_t index, bool color)
 }
 
 static Mu::Result<void>
-show_parts(const std::string& path, const Options& opts)
+show_parts(const Message& message, const Options& opts)
 {
-	auto msg_res{Message::make_from_path(path, message_options(opts.extract))};
-	if (!msg_res)
-		return Err(std::move(msg_res.error()));
-
 	size_t index{};
 	g_print("MIME-parts in this message:\n");
-	for (auto&& part: msg_res->parts())
+	for (auto&& part: message.parts())
 		show_part(part, ++index, !opts.nocolor);
 
 	return Ok();
@@ -151,15 +143,29 @@ show_parts(const std::string& path, const Options& opts)
 Mu::Result<void>
 Mu::mu_cmd_extract(const Options& opts)
 {
-	if (opts.extract.parts.empty() &&
-	    !opts.extract.save_attachments && !opts.extract.save_all &&
-	    opts.extract.filename_rx.empty())
-		return show_parts(opts.extract.message, opts); /* show, don't save */
+	auto message = std::invoke([&]()->Result<Message>{
+		const auto mopts{message_options(opts.extract)};
+		if (!opts.extract.message.empty())
+			return Message::make_from_path(opts.extract.message, mopts);
+
+		const auto msgtxt = read_from_stdin();
+		if (!msgtxt)
+			return Err(msgtxt.error());
+		else
+			return Message::make_from_text(*msgtxt, {}, mopts);
+	});
+
+	if (!message)
+		return Err(message.error());
+	else if (opts.extract.parts.empty() &&
+		 !opts.extract.save_attachments && !opts.extract.save_all &&
+		 opts.extract.filename_rx.empty())
+		return show_parts(*message, opts); /* show, don't save */
 
 	if (!check_dir(opts.extract.targetdir, false/*!readable*/, true/*writeable*/))
 		return Err(Error::Code::File,
 			   "target '%s' is not a writable directory",
 			   opts.extract.targetdir.c_str());
 
-	return save_parts(opts.extract.message, opts.extract.filename_rx, opts);
+	return save_parts(*message, opts.extract.filename_rx, opts);
 }

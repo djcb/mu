@@ -36,6 +36,7 @@
 #include "message/mu-mime-object.hh"
 
 #include "utils/mu-error.hh"
+#include "utils/mu-utils-file.hh"
 #include "utils/mu-utils.hh"
 #include "message/mu-message.hh"
 
@@ -152,19 +153,15 @@ view_msg_plain(const Message& message, const Options& opts)
 }
 
 static Mu::Result<void>
-handle_msg(const std::string& fname, const Options& opts)
+handle_msg(const Message& message, const Options& opts)
 {
 	using Format = Options::View::Format;
 
-	auto message{Message::make_from_path(fname, message_options(opts.view))};
-	if (!message)
-		return Err(message.error());
-
 	switch (opts.view.format) {
 	case Format::Plain:
-		return view_msg_plain(*message, opts);
+		return view_msg_plain(message, opts);
 	case Format::Sexp:
-		return view_msg_sexp(*message, opts);
+		return view_msg_sexp(message, opts);
 	default:
 		g_critical("bug: should not be reached");
 		return Err(Error::Code::Internal, "error");
@@ -175,13 +172,29 @@ static Mu::Result<void>
 cmd_view(const Options& opts)
 {
 	for (auto&& file: opts.view.files) {
-		if (auto res = handle_msg(file, opts); !res)
+		auto message{Message::make_from_path(
+				file, message_options(opts.view))};
+		if (!message)
+			return Err(message.error());
+
+		if (auto res = handle_msg(*message, opts); !res)
 			return res;
 		/* add a separator between two messages? */
 		if (opts.view.terminate)
 			g_print("%c", VIEW_TERMINATOR);
 	}
 
+	// no files? read from stding
+	if (opts.view.files.empty()) {
+		const auto msgtxt = read_from_stdin();
+		if (!msgtxt)
+			return Err(msgtxt.error());
+		auto message = Message::make_from_text(*msgtxt,{}, message_options(opts.view));
+		if (!message)
+			return Err(message.error());
+		else
+			return handle_msg(*message, opts);
+	}
 	return Ok();
 }
 
@@ -312,6 +325,35 @@ verify(const MimeMultipartSigned& sigpart, const Options& opts)
 	return valid;
 }
 
+
+static bool
+verify_message(const Message& message, const Options& opts, const std::string& name)
+{
+	if (none_of(message.flags() & Flags::Signed)) {
+		if (!opts.quiet)
+			g_print("%s: no signed parts found\n", name.c_str());
+		return false;
+	}
+
+	bool verified{true}; /* innocent until proven guilty */
+	for(auto&& part: message.parts()) {
+
+		if (!part.is_signed())
+			continue;
+
+		const auto& mobj{part.mime_object()};
+		if (!mobj.is_multipart_signed())
+			continue;
+
+		if (!verify(MimeMultipartSigned(mobj), opts))
+			verified = false;
+	}
+
+	return verified;
+}
+
+
+
 static Mu::Result<void>
 cmd_verify(const Options& opts)
 {
@@ -325,29 +367,22 @@ cmd_verify(const Options& opts)
 			return Err(message.error());
 
 		if (!opts.quiet && opts.verify.files.size() > 1)
-			g_print("verifying %sn\n", file.c_str());
+			g_print("verifying %s\n", file.c_str());
 
-		if (none_of(message->flags() & Flags::Signed)) {
-			if (!opts.quiet)
-				g_print("%s: no signed parts found\n", file.c_str());
-			continue;
-		}
+		if (!verify_message(*message, opts, file))
+			all_ok = false;
+	}
 
-		bool verified{true}; /* innocent until proven guilty */
-		for(auto&& part: message->parts()) {
+	// when no messages provided, read from stdin
+	if (opts.verify.files.empty()) {
+		const auto msgtxt = read_from_stdin();
+		if (!msgtxt)
+			return Err(msgtxt.error());
+		auto message{Message::make_from_text(*msgtxt, {}, mopts)};
+		if (!message)
+			return Err(message.error());
 
-			if (!part.is_signed())
-				continue;
-
-			const auto& mobj{part.mime_object()};
-			if (!mobj.is_multipart_signed())
-				continue;
-
-			if (!verify(MimeMultipartSigned(mobj), opts))
-				verified = false;
-		}
-
-		all_ok = all_ok && verified;
+		all_ok = verify_message(*message, opts, "<stdin>");
 	}
 
 	if (all_ok)

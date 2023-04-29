@@ -7,13 +7,16 @@ mu verify - verify message signatures and display information about them
 
 * SYNOPSIS
 
-*mu [common-options] verify [options] <msgfile>*
+*mu [common-options] verify [options] [<file> ... ]*
 
 * DESCRIPTION
 
 *mu verify* is the *mu* command for verifying message signatures (such as PGP/GPG
 signatures) and displaying information about them. The sub-command works on
 message files, and does not require the message to be indexed in the database.
+
+If no message file is provided, the command expects the message on
+standard-input.
 
 * VERIFY OPTIONS
 

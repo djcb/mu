@@ -7,7 +7,7 @@ mu view - display an e-mail message file
 
 * SYNOPSIS
 
-mu [common options] view [options] <file> [<files>]
+mu [common options] view [options] [<file> ...]
 
 * DESCRIPTION
 
@@ -16,6 +16,9 @@ message files and does =not= require the message to be indexed in the database.
 
 The command shows some common headers (From:, To:, Cc:, Bcc:, Subject: and
 Date:), the list of attachments and the plain-text body of the message (if any).
+
+If no message file is provided, the command expects the message on
+standard-input.
 
 * VIEW OPTIONS
 

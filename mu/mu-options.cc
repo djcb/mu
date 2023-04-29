@@ -223,16 +223,27 @@ sub_extract(CLI::App& sub, Options& opts)
 		       "Target directory for saving")
 		->type_name("<dir>")
 		->default_str("<current>")->default_val(".");
-	sub.add_option("message", opts.extract.message,
-		       "Path to message file")->required()
-		->type_name("<message-path>");
 	sub.add_flag("--uncooked,-u", opts.extract.uncooked,
 		       "Avoid massaging extracted file-names");
+	// optional; otherwise use standard-input
+	sub.add_option("message-path", opts.extract.message,
+		       "Path to message file")
+		->type_name("<message-path>");
+
+	sub.add_option("--matches", opts.extract.filename_rx,
+		       "Regular expression for files to save")
+		->type_name("<filename-rx>")
+		->excludes("--parts")
+		->excludes("--save-attachments")
+		->excludes("--save-all");
+
+	// backward compat: filename-rx as non-option
 	sub.add_option("filename-rx", opts.extract.filename_rx,
 		       "Regular expression for files to save")
 		->type_name("<filename-rx>")
 		->excludes("--parts")
 		->excludes("--save-attachments")
+		->excludes("--matches")
 		->excludes("--save-all");
 }
 
@@ -421,10 +432,10 @@ sub_verify(CLI::App& sub, Options& opts)
 {
 	sub_crypto(sub, opts.verify);
 
-	sub.add_option("files", opts.verify.files,
+	// optional; otherwise use standard-input
+	sub.add_option("message-paths", opts.verify.files,
 		       "Message files to verify")
-		->type_name("<message-file>")
-		->required();
+		->type_name("<message-path>");
 }
 
 static void
@@ -460,10 +471,10 @@ sub_view(CLI::App& sub, Options& opts)
 	sub.add_flag("--terminate", opts.view.terminate,
 		     "Insert form-feed after each message");
 
-	sub.add_option("files", opts.view.files,
+	// optional; otherwise use standard-input
+	sub.add_option("message-paths", opts.view.files,
 		       "Message files to view")
-		->type_name("<file>")
-		->required();
+		->type_name("<message-path>");
 }
 
 

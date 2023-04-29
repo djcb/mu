@@ -3,10 +3,16 @@
 
 * 1.11.x (unreleased development build)
 
+*** mu
+
+    - ~mu~ commands ~extract~, ~verify~ and ~view~ can now read the message from
+       standard input; see their man-pages for details
+
 *** mu4e
 
     - experimental: support folding message threads (with TAB / S-TAB).
       See the [[info:mu4e:Folding threads][manual entry]] for further details.
+
 
 * 1.10 (released on March 26, 2023)
 
