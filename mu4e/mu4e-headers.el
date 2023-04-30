@@ -1424,52 +1424,45 @@ and there is a live message view.
 This variable is for let-binding when scripting.")
 
 (defun mu4e~headers-move (lines)
-  "Move point LINES lines.
-Move foward if LINES is positive or backwards if LINES is
+    "Move point LINES lines.
+Move forward if LINES is positive or backwards if LINES is
 negative. If this succeeds, return the new docid. Otherwise,
 return nil.
 
 If pointing at a message after the move and there is a
 view-window, open the message unless
 `mu4e-headers-open-after-move' is non-nil."
-  (unless (eq major-mode 'mu4e-headers-mode)
-    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (cl-flet ((goto-next-line
-              (arg)
-              (condition-case _err
-                  (prog1
-                      (let (line-move-visual)
-                        (and (line-move arg) 0))
-                    ;; Skip invisible text at BOL possibly hidden by
-                    ;; the end of another invisible overlay covering
-                    ;; previous EOL.
-                    (move-to-column 2))
-                ((beginning-of-buffer end-of-buffer)
-                 1))))
-    (let* ((succeeded (zerop (goto-next-line lines)))
-           (docid (mu4e~headers-docid-at-point)))
-      ;; move point, even if this function is called when this window is not
-      ;; visible
-      (when docid
-        ;; update all windows showing the headers buffer
-        (walk-windows
-         (lambda (win)
-           (when (eq (window-buffer win)
-                     (mu4e-get-headers-buffer (buffer-name)))
-             (set-window-point win (point))))
-         nil t)
-        ;; If the assigned (and buffer-local) `mu4e~headers-view-win'
-        ;; is not live then that is indicates the user does not want
-        ;; to pop up the view when they navigate in the headers
-        ;; buffer.
-        (when (and mu4e-headers-open-after-move
-                   (window-live-p mu4e~headers-view-win))
-          (mu4e-headers-view-message))
-        ;; attempt to highlight the new line, display the message
-        (mu4e~headers-highlight docid)
-        (if succeeded
-            docid
-          nil)))))
+  (cl-assert (eq major-mode 'mu4e-headers-mode))
+  (when (ignore-errors
+          (let (line-move-visual)
+            (line-move lines)
+            t))
+    (let* ((docid (mu4e~headers-docid-at-point))
+           (folded (and docid (mu4e-thread-message-folded-p))))
+      (if folded
+          (mu4e~headers-move (if (< lines 0) -1 1)) ;; skip folded
+        (when docid
+          ;; Skip invisible text at BOL possibly hidden by
+          ;; the end of another invisible overlay covering
+          ;; previous EOL.
+          (move-to-column 2)
+          ;; update all windows showing the headers buffer
+          (walk-windows
+           (lambda (win)
+             (when (eq (window-buffer win)
+                       (mu4e-get-headers-buffer (buffer-name)))
+               (set-window-point win (point))))
+           nil t)
+          ;; If the assigned (and buffer-local) `mu4e~headers-view-win'
+          ;; is not live then that is indicates the user does not want
+          ;; to pop up the view when they navigate in the headers
+          ;; buffer.
+          (when (and mu4e-headers-open-after-move
+                     (window-live-p mu4e~headers-view-win))
+            (mu4e-headers-view-message))
+          ;; attempt to highlight the new line, display the message
+          (mu4e~headers-highlight docid)
+          docid)))))
 
 (defun mu4e-headers-next (&optional n)
   "Move point to the next message header.
