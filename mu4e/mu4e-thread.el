@@ -220,7 +220,8 @@ Reset individual folding states."
   (interactive)
   (unless (eq (line-end-position) (point-max))
     (let* ((thread-beg (mu4e-thread-root))
-           (thread-end (or (mu4e-thread-next) (point-max)))
+           (thread-end (mu4e-thread-next))
+           (thread-end (if thread-end (1- thread-end) (point-max)))
            (unread-count 0)
            (fold-beg (save-excursion
                        (goto-char thread-beg)
