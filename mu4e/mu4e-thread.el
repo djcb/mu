@@ -32,10 +32,14 @@
 ;; Similarly, when a thread has marked messages, the folding stops at the first
 ;; marked message.
 
+;; Note, you can only use these functions when threads are available, roughly
+;; when `mu4e-search-threads' in non-nil.
+
 ;;; Usage example:
 ;;
-;; This enforces folding after a new search
-;; (add-hook 'mu4e-headers-found-hook #'mu4e-thread-fold-apply-all)
+;; After a search, mu4e-thread-mode will be enable when threads
+;; are available; so, to automatically sort them:
+;;  (add-hook 'mu4e-thread-mode-hook #'mu4e-thread-fold-apply-all)
 
 ;;; Code:
 
@@ -272,6 +276,20 @@ Reset individual folding states."
   (unless (eq (line-end-position) (point-max))
     (mu4e-thread-unfold)
     (mu4e-thread-goto-next)))
+
+(define-minor-mode mu4e-thread-mode
+  "Mode for thread-support."
+  :global nil
+  :init-value nil ;; disabled by default
+  :group 'mu4e
+  :lighter ""
+  :keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "<S-left>")  #'mu4e-thread-goto-root)
+    (define-key map (kbd "<tab>")     #'mu4e-thread-fold-toggle-goto-next)
+    (define-key map (kbd "<C-tab>")   #'mu4e-thread-fold-toggle-goto-next)
+    (define-key map (kbd "<backtab>") #'mu4e-thread-fold-toggle-all)
+    map))
 
 (provide 'mu4e-thread)
 ;;; mu4e-thread.el ends here

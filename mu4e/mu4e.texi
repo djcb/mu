@@ -1118,15 +1118,19 @@ Folding stops at the @emph{first unread message}, unless you set
 the folding stops at the first marked message. Marking folded messages is not
 allowed as it is too error-prone.
 
+Thread-mode functionality is only available with @code{mu4e-search-threads}
+enabled; this triggers a minor mode @code{mu4e-thread-mode} in the headers-view.
+For now, this functionality is not available in the message view, due to the
+conflicting key bindings.
+
 If you want to automatically fold all threads after a query, you can use a hook:
 @lisp
- (add-hook 'mu4e-headers-found-hook #'mu4e-thread-fold-apply-all)
+  (add-hook 'mu4e-thread-mode-hook #'mu4e-thread-fold-apply-all)
 @end lisp
 
-By default, single-child threads are @emph{not} collapsed, since it would simply
-result in replacing a single line with the collapsed one. However, if, for
-consistency you also want to fold those, you can use
-@t{mu4e-thread-fold-single-children}.
+By default, single-child threads are @emph{not} collapsed, since it would result
+in replacing a single line with the collapsed one. However, if, for consistency,
+you also want to fold those, you can use @t{mu4e-thread-fold-single-children}.
 
 @node HV Custom headers
 @section Custom headers

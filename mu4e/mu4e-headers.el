@@ -868,8 +868,11 @@ after the end of the search results."
                 mu4e--search-msgid-target nil)
           (when (mu4e~headers-docid-at-point)
             (mu4e~headers-highlight (mu4e~headers-docid-at-point)))))
-    ;; run-hooks
-    (run-hooks 'mu4e-headers-found-hook))
+  ;; maybe enable thread folding
+  (when mu4e-search-threads
+    (mu4e-thread-mode))
+  ;; run-hooks
+  (run-hooks 'mu4e-headers-found-hook))
 
 
 ;;; Marking
@@ -931,12 +934,6 @@ after the end of the search results."
     (define-key map (kbd "<C-kp-add>") 'mu4e-headers-split-view-grow)
     (define-key map (kbd "<C-kp-subtract>")
                 #'mu4e-headers-split-view-shrink)
-
-    ;; threads
-    (define-key map (kbd "<S-left>")  #'mu4e-thread-goto-root)
-    (define-key map (kbd "<tab>")     #'mu4e-thread-fold-toggle-goto-next)
-    (define-key map (kbd "<C-tab>")   #'mu4e-thread-fold-toggle-goto-next)
-    (define-key map (kbd "<backtab>") #'mu4e-thread-fold-toggle-all)
 
     ;; switching to view mode (if it's visible)
     (define-key map "y" #'mu4e-select-other-view)
