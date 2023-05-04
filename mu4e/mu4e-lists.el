@@ -28,7 +28,7 @@
 ;;; Code:
 
 ;;; Configuration
-(defvar mu4e-mailing-lists
+(defconst mu4e-mailing-lists
   '( ("bbdb-info.lists.sourceforge.net"                       . "BBDB")
      ("boost-announce.lists.boost.org"                        . "BoostA")
      ("boost-interest.lists.boost.org"                        . "BoostI")
@@ -82,12 +82,34 @@
      ("wl-en.ml.gentei.org"                                   . "WdrLust")
      ("xapian-devel.lists.xapian.org"                         . "Xapian")
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
-  "AList of cells (MAILING-LIST-ID . SHORTNAME).")
+  "A constant alist of cells (MAILING-LIST-ID . SHORTNAME).")
+
+(defun mu4e-lists--populate-hash (lists ht)
+  "Helper function to populate a list of mailing lists to hash table.
+LISTS is an alist of string => string: (FULL . SHORT).
+
+HT is a hashtable to be copied, or nil to create a new hashtable."
+  (let ((ht (if ht (copy-hash-table ht) (make-hash-table :test #'equal))))
+    (dolist (cell lists ht) (puthash (car cell) (cdr cell) ht))))
+
+(defconst mu4e-lists--default-hash
+  (mu4e-lists--populate-hash mu4e-mailing-lists nil)
+  "A constant hash table based on `mu4e-mailing-lists'.")
+
+;; TODO: mu4e-search.el contains a reference to `mu4e--lists-hash'.
+(defvaralias 'mu4e--lists-hash 'mu4e-lists--hash)
+(defvar mu4e-lists--hash nil
+  "Hashtable of mailing-list-id => shortname.
+Based on `mu4e-mailing-lists' and `mu4e-user-mailing-lists'.")
 
 (defcustom mu4e-user-mailing-lists nil
   "An alist with cells (MAILING-LIST-ID . SHORTNAME).
 These are used in addition to the built-in list `mu4e-mailing-lists'."
   :group 'mu4e-headers
+  :set (lambda (name value)
+         (setq mu4e-lists--hash (mu4e-lists--populate-hash
+                                 value mu4e-lists--default-hash))
+         (set name value))
   :type '(repeat (cons string string)))
 
 (defcustom mu4e-mailing-list-patterns nil
@@ -96,27 +118,15 @@ For the first regex that matches, its first matchgroup will be
 used as the shortname."
   :group 'mu4e-headers
   :type '(repeat (regexp)))
-
-
-(defvar mu4e--lists-hash nil
-  "Hashtable of mailing-list-id => shortname.
-Based on `mu4e-mailing-lists' and `mu4e-user-mailing-lists'.")
 
 
 (defun mu4e-get-mailing-list-shortname (list-id)
   "Get the shortname for a mailing-list with list-id LIST-ID.
 Based on `mu4e-mailing-lists', `mu4e-user-mailing-lists', and
 `mu4e-mailing-list-patterns'."
-  (unless mu4e--lists-hash
-    (setq mu4e--lists-hash (make-hash-table :test 'equal))
-    (dolist (cell mu4e-mailing-lists)
-      (puthash (car cell) (cdr cell) mu4e--lists-hash))
-    (dolist (cell mu4e-user-mailing-lists)
-      (puthash (car cell) (cdr cell) mu4e--lists-hash)))
   (or
-   (gethash list-id mu4e--lists-hash)
-   (and (boundp 'mu4e-mailing-list-patterns)
-        (seq-drop-while
+   (gethash list-id mu4e-lists--hash)
+   (and (seq-drop-while
          (lambda (pattern)
            (not (string-match pattern list-id)))
          mu4e-mailing-list-patterns)
