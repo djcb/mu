@@ -84,6 +84,9 @@
      ("zsh-users.zsh.org"                                     . "ZshUsr"))
   "AList of cells (MAILING-LIST-ID . SHORTNAME).")
 
+(defgroup mu4e-lists nil "Configuration for mailing lists."
+  :group 'mu4e)
+
 (defcustom mu4e-user-mailing-lists nil
   "An alist with cells (MAILING-LIST-ID . SHORTNAME).
 These are used in addition to the built-in list `mu4e-mailing-lists'."
