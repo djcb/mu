@@ -97,7 +97,6 @@ Based on the current value of `mu4e-mailing-lists' and
   (interactive)
   (setq mu4e--lists-hash (make-hash-table :test 'equal))
   (seq-do (lambda (item)
-            (message "%S %s" item (plistp item))
             (if (plistp item)
                 ;; the new format
                 (puthash (plist-get item :list-id) item mu4e--lists-hash)
