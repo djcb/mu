@@ -74,8 +74,10 @@ These are used in addition to the built-in list
 
 The older format, a list of cons cells,
   (LIST-ID . NAME)
-is still supported for backward compatibility, but
-you are encouraged to use the new format."
+is still supported for backward compatibility.
+
+After changing, use `mu4e-mailing-list-info-refresh' to make mu4e
+use the new values."
   :group 'mu4e-headers
   :type '(repeat (plist)))
 

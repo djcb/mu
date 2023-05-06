@@ -13,6 +13,11 @@
     - experimental: support folding message threads (with TAB / S-TAB).
       See the [[info:mu4e:Folding threads][manual entry]] for further details.
 
+    - mailing list support was modernized a bit; the format changed (see the
+      `mu4e-mailing-lists` and `mu4e-user-mailing-lists` docstrings. There is
+      `mu4e-mailing-list-info-refresh` to update to the new values after
+      changing them.
+
 
 * 1.10 (released on March 26, 2023)
 
