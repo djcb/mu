@@ -237,15 +237,18 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 
 ;;;; Various
 
-(defvar mu4e-headers-actions
+(defcustom mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message)
+     ("browse online archive" . mu4e-actions-browse-list-archive)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in the headers list.
 The actions are cons-cells of the form (NAME . FUNC) where:
 * NAME is the name of the action (e.g. \"Count lines\")
 * FUNC is a function which receives a message plist as an argument.
 
-The first character of NAME is used as the shortcut.")
+The first character of NAME is used as the shortcut."
+  :group 'mu4e-headers
+  :type '(alist :key-type string :value-type function))
 
 (defvar mu4e-headers-custom-markers
   '(("Older than"

@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'ido)
+(require 'browse-url)
 
 (require 'mu4e-helpers)
 (require 'mu4e-message)
@@ -247,6 +248,22 @@ the message."
          nil nil nil
          msgid (and (eq major-mode 'mu4e-view-mode)
                     (not (eq mu4e-split-view 'single-window))))))))
+
+(defun mu4e-actions-browse-list-archive (msg)
+  "Browse the archive for a mailing list message MSG.
+See `mu4e-list-archives-resolve'."
+  (interactive (list (mu4e-message-at-point)))
+  (when-let ((url (mu4e-list-archives-resolve msg)))
+    (browse-url url)))
+
+(defun mu4e-actions-kill-list-archive (msg)
+  "Kill the archive url for a mailing list message MSG.
+See `mu4e-list-archives-resolve'."
+  (interactive (list (mu4e-message-at-point)))
+  (let ((url (mu4e-list-archives-resolve msg)))
+    (if (stringp url) (kill-new url)
+      (user-error "Cannot get url for this message"))))
+
 ;;; _
 (provide 'mu4e-actions)
 ;;; mu4e-actions.el ends here

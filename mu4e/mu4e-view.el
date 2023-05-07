@@ -73,12 +73,12 @@ etc., see the gnus documentation for details."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-actions
-  (seq-filter #'identity
-              `( ("capture message"  . mu4e-action-capture-message)
-                 ("view in browser"  . mu4e-action-view-in-browser)
-                 ,(when (fboundp 'xwidget-webkit-browse-url)
-                    '("xview in xwidget" . mu4e-action-view-in-xwidget))
-                 ("show this thread" . mu4e-action-show-thread)))
+  (delq nil `(("capture message" . mu4e-action-capture-message)
+              ("view in browser" . mu4e-action-view-in-browser)
+              ("browse online archive" . mu4e-actions-browse-list-archive)
+              ,(when (fboundp 'xwidget-webkit-browse-url)
+                 '("xview in xwidget" . mu4e-action-view-in-xwidget))
+              ("show this thread" . mu4e-action-show-thread)))
   "List of actions to perform on messages in view mode.
 The actions are cons-cells of the form:
   (NAME . FUNC)

@@ -67,6 +67,9 @@
      - `:list-id'       - the mailing list id
      - `:name'          - the display name.")
 
+(defgroup mu4e-lists nil "Configuration for mailing lists."
+  :group 'mu4e)
+
 (defcustom mu4e-user-mailing-lists nil
   "A list with plists like `mu4e-mailing-lists'.
 These are used in addition to the built-in list
