@@ -867,10 +867,10 @@ after the end of the search results."
           (setq mu4e--search-view-target nil
                 mu4e--search-msgid-target nil)
           (when (mu4e~headers-docid-at-point)
-            (mu4e~headers-highlight (mu4e~headers-docid-at-point)))))
-  ;; maybe enable thread folding
-  (when mu4e-search-threads
-    (mu4e-thread-mode))
+            (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
+          ;; maybe enable thread folding
+          (when mu4e-search-threads
+            (mu4e-thread-mode))))
   ;; run-hooks
   (run-hooks 'mu4e-headers-found-hook))
 
