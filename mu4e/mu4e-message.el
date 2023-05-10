@@ -222,6 +222,11 @@ If MSG is nil, use `mu4e-message-at-point'."
         ;; add basic `quit-window' bindings
         (view-mode 1)))))
 
+(defun mu4e-fetch-field (msg hdr)
+  "Find the value for an arbitrary header field HDR from MSG."
+  (with-temp-buffer
+    (insert-file-contents (plist-get msg :path))
+    (message-fetch-field hdr)))
 ;;;
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here
