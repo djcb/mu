@@ -18,6 +18,9 @@
       `mu4e-mailing-list-info-refresh` to update to the new values after
       changing them.
 
+    - also, there are now actions ('a' in view/header) to get to online archives
+      for some (selected) mailing-list archives.
+
 
 * 1.10 (released on March 26, 2023)
 
