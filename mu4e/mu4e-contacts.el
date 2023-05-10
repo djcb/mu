@@ -57,15 +57,14 @@ time-based restriction."
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-complete-max nil
-  "Consider only the top-n contacts.
-After considering the other
-constraints (`mu4e-compose-complete-addresses' and
+  "Limit the amount of contacts for completion, nil for no limits.
+After considering the other constraints
+\(`mu4e-compose-complete-addresses' and
 `mu4e-compose-complete-only-after'), pick only the highest-ranked
 <n>.
 
-This reduces start-up time and memory usage. Set to nil for no
-limits."
-  :type 'string
+Lowering this variable reduces start-up time and memory usage."
+  :type '(choice natnum (const :tag "No limits" nil))
   :group 'mu4e-compose)
 
 ;; names and mail-addresses can be mapped onto their canonical
