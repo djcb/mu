@@ -883,7 +883,8 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
   "Quit the mu4e-view buffer."
   (interactive)
   (if (memq mu4e-split-view '(horizontal vertical))
-      (kill-buffer-and-window)
+      (ignore-errors ;; try, don't error out.
+        (kill-buffer-and-window))
     ;; single-window case
     (when mu4e-linked-headers-buffer ;; re-use mu4e-view-detach?
       (with-current-buffer mu4e-linked-headers-buffer
