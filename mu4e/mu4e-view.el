@@ -1,6 +1,6 @@
 ;;; mu4e-view.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -75,7 +75,7 @@ etc., see the gnus documentation for details."
 (defcustom mu4e-view-actions
   (delq nil `(("capture message" . mu4e-action-capture-message)
               ("view in browser" . mu4e-action-view-in-browser)
-              ("browse online archive" . mu4e-actions-browse-list-archive)
+              ("browse online archive" . mu4e-action-browse-list-archive)
               ,(when (fboundp 'xwidget-webkit-browse-url)
                  '("xview in xwidget" . mu4e-action-view-in-xwidget))
               ("show this thread" . mu4e-action-show-thread)))

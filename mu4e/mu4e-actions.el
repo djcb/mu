@@ -1,6 +1,6 @@
 ;;; mu4e-actions.el -- part of mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -34,6 +34,7 @@
 (require 'mu4e-message)
 (require 'mu4e-search)
 (require 'mu4e-contacts)
+(require 'mu4e-lists)
 
 ;;; Count lines
 
@@ -249,21 +250,26 @@ the message."
          msgid (and (eq major-mode 'mu4e-view-mode)
                     (not (eq mu4e-split-view 'single-window))))))))
 
-(defun mu4e-actions-browse-list-archive (msg)
+
+;;; Mailing list URLS
+
+(defun mu4e-action-browse-list-archive (msg)
   "Browse the archive for a mailing list message MSG.
-See `mu4e-list-archives-resolve'."
+See `mu4e-mailing-list-archive-url'."
   (interactive (list (mu4e-message-at-point)))
-  (when-let ((url (mu4e-list-archives-resolve msg)))
-    (browse-url url)))
+  (if-let ((url (mu4e-mailing-list-archive-url msg)))
+    (browse-url url)
+    (mu4e-warn "No archive available for this message")))
 
-(defun mu4e-actions-kill-list-archive (msg)
-  "Kill the archive url for a mailing list message MSG.
-See `mu4e-list-archives-resolve'."
+(defun mu4e-action-copy-list-archive-url (msg)
+  "Copy the archive url for a mailing list message MSG.
+See `mu4e-mailing-list-archive-url'."
   (interactive (list (mu4e-message-at-point)))
-  (let ((url (mu4e-list-archives-resolve msg)))
-    (if (stringp url) (kill-new url)
-      (user-error "Cannot get url for this message"))))
+  (let ((url (mu4e-mailing-list-archive-url msg)))
+    (if (stringp url)
+        (kill-new url)
+      (mu4e-warn "Cannot get archive URL for this message"))))
 
-;;; _
+;;;
 (provide 'mu4e-actions)
 ;;; mu4e-actions.el ends here

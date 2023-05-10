@@ -239,7 +239,7 @@ Must have the same length as `mu4e-headers-thread-connection-prefix'.")
 
 (defcustom mu4e-headers-actions
   '( ("capture message"  . mu4e-action-capture-message)
-     ("browse online archive" . mu4e-actions-browse-list-archive)
+     ("browse online archive" . mu4e-action-browse-list-archive)
      ("show this thread" . mu4e-action-show-thread))
   "List of actions to perform on messages in the headers list.
 The actions are cons-cells of the form (NAME . FUNC) where:
