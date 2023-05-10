@@ -130,28 +130,28 @@ predicate function. A value of nil keeps all the addresses."
   "Set with the full contact addresses for autocompletion.")
 
 ;;; user mail address
-(defun mu4e-personal-addresses(&optional no-regexp)
+(defun mu4e-personal-addresses (&optional no-regexp)
   "Get the list user's personal addresses, as passed to mu init.
 The address are either plain e-mail address or /regular
- expressions/. When NO-REGEXP is non-nil, do not include regexp
+ expressions/.  When NO-REGEXP is non-nil, do not include regexp
  address patterns (if any)."
   (seq-remove
-   (lambda(addr) (and no-regexp (string-match-p "^/.*/" addr)))
-   (when (mu4e-server-properties)
-     (plist-get (mu4e-server-properties) :personal-addresses))))
+   (lambda (addr) (and no-regexp (string-match-p "^/.*/" addr)))
+   (when-let ((props (mu4e-server-properties)))
+     (plist-get props :personal-addresses))))
 
 (defun mu4e-personal-address-p (addr)
   "Is ADDR a personal address?
-Evaluate to nil if ADDR matches any of the personal addresses.
-Uses (mu4e-personal-addresses) for the addresses with both the plain
-addresses and /regular expressions/."
+Evaluate to nil if ADDR does not match any of the personal
+addresses.  Uses \\=(mu4e-personal-addresses) for the addresses
+with both the plain addresses and /regular expressions/."
   (when addr
     (seq-find
      (lambda (m)
        (if (string-match "/\\(.*\\)/" m)
            (let ((rx (match-string 1 m))
                  (case-fold-search t))
-             (if (string-match rx addr) t nil))
+             (string-match rx addr))
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
      (mu4e-personal-addresses))))
 
