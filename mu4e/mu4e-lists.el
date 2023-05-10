@@ -26,46 +26,71 @@
 ;; The shortname (friendly) should a at most 8 characters, camel-case
 
 ;;; Code:
+(require 'mu4e-message)
+
+
+
+ ;;; Helpers
+(defmacro mu4e-message-id-url(base-url)
+  "Construct lambda to get an archive URL for message.
+This is based on some BASE-URL to which the message-id is concatenated;
+e.g. public-inbox-based archives."
+  `(lambda (msg) (concat ,base-url "/" (plist-get msg :message-id))))
+
+(defmacro mu4e-x-seq-url (base-url)
+  "Construct x-seq archive URL for MSG or nil if not found."
+  `(lambda (msg)
+     (when-let ((xseq (mu4e-fetch-field msg "X-Seq")))
+       (concat ,base-url "/" xseq))))
 
 ;;; Configuration
 (defvar mu4e-mailing-lists
-  '( (:list-id "bbdb-info.lists.sourceforge.net"         :name "BBDB")
-     (:list-id "boost-announce.lists.boost.org"          :name "BoostA")
-     (:list-id "boost-interest.lists.boost.org"          :name "BoostI")
-     (:list-id "curl-library.cool.haxx.se"               :name "LibCurl")
+  `( (:list-id "bbdb-info.lists.sourceforge.net"         :name "BBDB")
+     (:list-id "boost-announce.lists.boost.org"          :name "Boost")
+     (:list-id "boost-interest.lists.boost.org"          :name "Boost")
+     (:list-id "curl-library.cool.haxx.se"               :name "Curl")
      (:list-id "dbus.lists.freedesktop.org"              :name "DBus")
-     (:list-id "desktop-devel-list.gnome.org"            :name "GnomeDT")
+     (:list-id "desktop-devel-list.gnome.org"            :name "Gnome")
      (:list-id "discuss-webrtc.googlegroups.com"         :name "WebRTC")
-     (:list-id "emacs-devel.gnu.org"                     :name "EmacsDev")
-     (:list-id "emacs-orgmode.gnu.org"                   :name "Orgmode")
+     (:list-id "emacs-devel.gnu.org"                     :name "EmacsDev"
+      :archive ,(mu4e-message-id-url "https://yhetil.org/emacs-devel"))
+     (:list-id "emacs-orgmode.gnu.org"                   :name "Orgmode"
+      :archive ,(mu4e-message-id-url "https://list.orgmode.org"))
      (:list-id "emms-help.gnu.org"                       :name "Emms")
-     (:list-id "evolution-hackers.lists.ximian.com"      :name "EvoDev")
-     (:list-id "mailman.lists.freedesktop.org"           :name "FDeskTop")
      (:list-id "gcc-help.gcc.gnu.org"                    :name "Gcc")
-     (:list-id "gmime-devel-list.gnome.org"              :name "GMimeDev")
-     (:list-id "gnome-shell-list.gnome.org"              :name "GnomeSh")
-     (:list-id "gnu-emacs-sources.gnu.org"               :name "EmacsSrc")
-     (:list-id "gnupg-users.gnupg.org"                   :name "GnupgU")
+     (:list-id "gmime-devel-list.gnome.org"              :name "GMime")
+     (:list-id "gnome-shell-list.gnome.org"              :name "Gnome")
+     (:list-id "gnu-emacs-sources.gnu.org"               :name "Emacs")
+     (:list-id "gnupg-users.gnupg.org"                   :name "Gnupg")
      (:list-id "gstreamer-devel.lists.freedesktop.org"   :name "GstDev")
      (:list-id "gtk-devel-list.gnome.org"                :name "GtkDev")
-     (:list-id "gtkmm-list.gnome.org"                    :name "GtkmmDev")
-     (:list-id "guile-devel.gnu.org"                     :name "GuileDev")
-     (:list-id "guile-user.gnu.org"                      :name "GuileUsr")
-     (:list-id "help-gnu-emacs.gnu.org"                  :name "EmacsUsr")
+     (:list-id "guile-devel.gnu.org"                     :name "Guile"
+      :archive ,(mu4e-message-id-url "https://yhetil.org/guile-devel"))
+     (:list-id "guile-user.gnu.org"                      :name "Guile"
+      :archive ,(mu4e-message-id-url "https://yhetil.org/guile-user"))
+     (:list-id "help-gnu-emacs.gnu.org"                  :name "EmacsUsr"
+      :archive ,(mu4e-message-id-url "https://yhetil.org/emacs-user"))
      (:list-id "mu-discuss.googlegroups.com"             :name "Mu")
      (:list-id "nautilus-list.gnome.org"                 :name "Nautilus")
-     (:list-id "notmuch.notmuchmail.org"                 :name "Notmuch")
-     (:list-id "sqlite-announce.sqlite.org"              :name "SQliteAnn")
-     (:list-id "sqlite-dev.sqlite.org"                   :name "SQLiteDev")
+     (:list-id "notmuch.notmuchmail.org"                 :name "Notmuch"
+      :archive ,(mu4e-message-id-url "https://yhetil.org/notmuch"))
+     (:list-id "sqlite-announce.sqlite.org"              :name "SQlite")
+     (:list-id "sqlite-dev.sqlite.org"                   :name "SQLite")
      (:list-id "xapian-discuss.lists.xapian.org"         :name "Xapian")
      (:list-id "xdg.lists.freedesktop.org"               :name "XDG")
-     (:list-id "wl-en.lists.airs.net"                    :name "Wdrlust")
+     (:list-id "wl-en.lists.airs.net"                    :name "WdrLust")
      (:list-id "wl-en.ml.gentei.org"                     :name "WdrLust")
      (:list-id "xapian-devel.lists.xapian.org"           :name "Xapian")
-     (:list-id "zsh-users.zsh.org"                       :name "ZshUsr"))
+     (:list-id "zsh-users.zsh.org"                       :name "Zsh"
+      :archive ,(mu4e-x-seq-url "https://www.zsh.org/users")))
   "List of plists with keys:
-     - `:list-id'       - the mailing list id
-     - `:name'          - the display name.")
+- `:list-id'       - the mailing list id
+- `:name'          - the display name
+- `:archive'       - (optional) a function taking a MSG and
+                      returning an URL to to the online-location of
+                      the message.
+After changes, use `mu4e-mailing-list-info-refresh' to update the
+corresponding data-structures.")
 
 (defgroup mu4e-lists nil "Configuration for mailing lists."
   :group 'mu4e)
@@ -90,7 +115,7 @@ For the first regex that matches, its first match-group will be
 used as the shortname."
   :group 'mu4e-headers
   :type '(repeat (regexp)))
-
+
 (defvar mu4e--lists-hash nil
   "Hash-table of list-id => plist.
 Based on `mu4e-mailing-lists' and `mu4e-user-mailing-lists'.")
@@ -108,7 +133,8 @@ Based on the current value of `mu4e-mailing-lists' and
               ;; backward compatibility
               (puthash (car item) (cdr item) mu4e--lists-hash)))
           (append mu4e-mailing-lists
-                  mu4e-user-mailing-lists)))
+                  mu4e-user-mailing-lists))
+  mu4e--lists-hash)
 
 (defun mu4e-mailing-list-info (list-id)
   "Get mailing list info for LIST-ID.
@@ -129,6 +155,16 @@ we guess one."
        (match-string 1 list-id)
      ;;   3. otherwise, just return the whole thing
      list-id)))
+
+(defun mu4e-mailing-list-archive-url (&optional msg)
+  "Get the mailing-list archive URL for MSG.
+If MSG is nil, use the message at point."
+  (when-let* ((msg (or msg (mu4e-message-at-point)))
+              (list-id (plist-get msg :list))
+              (list-info (and list-id (mu4e-mailing-list-info list-id)))
+              (func (plist-get list-info :archive)))
+    (when func
+      (funcall func msg))))
 
 (provide 'mu4e-lists)
 ;;; mu4e-lists.el ends here
