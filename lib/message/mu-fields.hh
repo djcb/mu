@@ -52,6 +52,7 @@ struct Field {
 		File,		/**< Filename */
 		Flags,		/**< Message flags */
 		From,		/**< Message sender */
+		Language,	/**< Body language */
 		Maildir,	/**< Maildir path */
 		MailingList,	/**< Mailing list */
 		MessageId,	/**< Message Id */
@@ -252,7 +253,6 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::IncludeInSexp |
 		Field::Flag::IndexableTerm,
 	    },
-
 	    {
 		Field::Id::Changed,
 		Field::Type::TimeT,
@@ -315,6 +315,17 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
 		Field::Flag::IndexableTerm,
+	    },
+	    {
+		Field::Id::Language,
+		Field::Type::String,
+		"language", "lang",
+		"ISO 639-1 language code for body",
+		"lang:nl",
+		'a',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 	    {
 		Field::Id::Maildir,

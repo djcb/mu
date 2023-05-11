@@ -165,7 +165,6 @@ test_field_from_name()
 		      Field::Id::Bcc);
 }
 
-
 static void
 test_xapian_term()
 {

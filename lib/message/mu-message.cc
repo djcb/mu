@@ -29,6 +29,7 @@
 #include <utils/mu-utils.hh>
 #include <utils/mu-error.hh>
 #include <utils/mu-option.hh>
+#include <utils/mu-lang-detector.hh>
 
 #include <atomic>
 #include <mutex>
@@ -67,6 +68,8 @@ struct Message::Private {
 	Option<std::string> body_txt;
 	Option<std::string> body_html;
 	Option<std::string> embedded;
+
+	Option<std::string> language; /* body ISO language code */
 };
 
 
@@ -531,6 +534,14 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	info.mailing_list = get_mailing_list(mime_msg);
 	if (info.mailing_list)
 		info.flags |= Flags::MailingList;
+
+	if (info.body_txt) { /* attempt to get the body-language */
+		if (const auto lang{detect_language(info.body_txt.value())}; lang) {
+			info.language = lang->code;
+			g_debug("detected language: %s", lang->code);
+		} else
+			g_debug("could not detect language");
+	}
 }
 
 static Mu::Result<std::string>
@@ -585,8 +596,6 @@ fake_message_id(const std::string& path)
  * however, there are some _extra_ values in the sexp-list that are not
  * based on a field. So we add them here.
  */
-
-
 
 static void
 doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
@@ -643,7 +652,7 @@ fill_document(Message::Private& priv)
 	doc_add_reply_to(doc, mime_msg);  /* only in sexp */
 
 	field_for_each([&](auto&& field) {
-		/* insist on expliclity handling each */
+		/* insist on explicitly handling each */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 		switch(field.id) {
@@ -652,7 +661,6 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::BodyText:
 			doc.add(field.id, priv.body_txt);
-
 			break;
 		case Field::Id::Cc:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::Cc));
@@ -675,6 +683,9 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::From:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::From));
+			break;
+		case Field::Id::Language:
+			doc.add(field.id, priv.language);
 			break;
 		case Field::Id::Maildir: /* already */
 			break;

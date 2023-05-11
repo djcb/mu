@@ -110,7 +110,6 @@ public:
 	}
 	/* LCOV_EXCL_STOP */
 
-
 	/**
 	 * Construct a message from a string. This is mostly useful for testing.
 	 *
@@ -406,8 +405,8 @@ public:
 	const std::vector<Part>& parts() const;
 
 	/**
-	 * Get the path to a cche directory for this message, which
-	 * is useful for temporarily saving attachments
+	 * Get the path to a cache directory for this message, which is useful
+	 * for temporarily saving attachments
 	 *
 	 * @param index optionally, create <cache-path>/<index> instead;
 	 * this is useful for having part-specific subdirectories.
