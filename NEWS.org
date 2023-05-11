@@ -6,7 +6,12 @@
 *** mu
 
     - ~mu~ commands ~extract~, ~verify~ and ~view~ can now read the message from
-       standard input; see their man-pages for details
+      standard input; see their man-pages for details
+
+    - experimental: if you build ~mu~ with [[https://github.com/CLD2Owners/cld2][CLD2]] support (available in many Linux
+      distros), ~mu~ will try to detect the language of the body of e-mail
+      messages; you can then search by their ISO-639-1 code, e.g. ~mu find
+      lang:en~
 
 *** mu4e
 
@@ -14,8 +19,8 @@
       See the [[info:mu4e:Folding threads][manual entry]] for further details.
 
     - mailing list support was modernized a bit; the format changed (see the
-      `mu4e-mailing-lists` and `mu4e-user-mailing-lists` docstrings. There is
-      `mu4e-mailing-list-info-refresh` to update to the new values after
+      ~mu4e-mailing-lists~ and ~mu4e-user-mailing-lists~ docstrings. There is
+      ~M-x mu4e-mailing-list-info-refresh~ to update to the new values after
       changing them.
 
     - also, there are now actions ('a' in view/header) to get to online archives
