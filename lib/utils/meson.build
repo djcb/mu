@@ -17,6 +17,7 @@
 
 lib_mu_utils=static_library('mu-utils', [
   'mu-command-handler.cc',
+  'mu-lang-detector.cc',
   'mu-logger.cc',
   'mu-option.cc',
   'mu-readline.cc',
@@ -29,7 +30,8 @@ lib_mu_utils=static_library('mu-utils', [
   gio_dep,
   gio_unix_dep,
   config_h_dep,
-  readline_dep
+  readline_dep,
+  cld2_dep
 ], include_directories:
      include_directories(['.','..']),
 install: false)
@@ -71,5 +73,12 @@ test('test-logger',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_utils_dep, thread_dep ]))
+
+test('test-lang-detector',
+     executable('test-lang-detector', 'mu-lang-detector.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep, cld2_dep, config_h_dep]))
+
 
 subdir('tests')

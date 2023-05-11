@@ -86,7 +86,7 @@ cxx.check_header('charconv', required:true)
 # config.h setup
 #
 config_h_data=configuration_data()
-config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '466')
+config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '467')
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
                                            meson.project_version())
@@ -128,6 +128,16 @@ gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.60')
 gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
 xapian_dep     = dependency('xapian-core', version:'>= 1.4')
 thread_dep     = dependency('threads')
+
+# optionally, use Compact Language Detector2 if we can find it.
+cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: false)
+if cld2_dep.found()
+  config_h_data.set('HAVE_CLD2', 1)
+else
+  message('CLD2 not found; no support for language detection')
+endif
+
+  dependency('cld2', required : false)
 
 awk=find_program(['gawk', 'awk'])
 gzip=find_program('gzip')
