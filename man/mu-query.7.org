@@ -114,43 +114,42 @@ bit longer than 'normal' queries.
 * FIELDS
 
 We already saw a number of search fields, such as *subject:* and *body:*. For the
-full table, see *mu-fields(1)*.
-#+begin_example
-	bcc,h           Bcc (blind-carbon-copy) recipient(s)
-	body,b          Message body
-	cc,c            Cc (carbon-copy) recipient(s)
-	changed,k       Last change to message file (range)
-	date,d          Send date (range)
-	embed,e         Search inside embedded text parts
-	file,j          Attachment filename
-	flag,g          Message Flags
-	from,f          Message sender
-	list,v          Mailing list (e.g. the List-Id value)
-	maildir,m       Maildir
-	mime,y          MIME-type of one or more message parts
-	msgid,i         Message-ID
-	prio,p          Message priority (=low=, =normal= or =high=)
-	size,z          Message size range
-	subject,s       Message subject
-	tag,x           Tags for the message
-	thread,w        Thread a message belongs to
-	to,t            To: recipient(s)
-#+end_example
+full table with all details, including single-char shortcuts, see *mu-fields(1)*.
 
-The shortcut character can be used instead of the full name:
-#+begin_example
-f:foo@bar
-#+end_example
-is the same as
-#+begin_example
-from:foo@bar
-#+end_example
-For queries that are not one-off, we would recommend the longer name
-for readability.
+|------------+-----------+--------------------------------|
+| field-name | alias     | description                    |
+| bcc        |           | Blind carbon-copy recipient    |
+| body       |           | Message plain-text body        |
+| cc         |           | Carbon-copy recipient          |
+| changed    |           | Last change time               |
+| date       |           | Message date                   |
+| embed      |           | Embedded text                  |
+| file       |           | Attachment file name           |
+| flags      | flag      | Message properties             |
+| from       |           | Message sender                 |
+| language   | lang      | ISO 639-1 language code (*)    |
+| maildir    |           | Maildir path for message       |
+| list       |           | Mailing list (List-Id:)        |
+| message-id | msgid     | Message-Id                     |
+| mime       | mime-type | Attachment MIME-type           |
+| path       |           | File system path to message    |
+| priority   | prio      | Priority                       |
+| references |           | References to related messages |
+| size       |           | Message size in bytes          |
+| subject    |           | Message subject                |
+| tags       | tag       | Message tags                   |
+| thread     |           | Thread a message belongs to    |
+| to         |           | Message recipient              |
+|------------+-----------+--------------------------------|
+
+(*) The language code for the text-body if found. This works only
+if ~mu~ was built with CLD2 support.
 
 There are also the special fields *contact:*, which matches all contact-fields
 (=from=, =to=, =cc= and =bcc=), and *recip*, which matches all recipient-fields (=to=, =cc=
-and =bcc=). Hence, for instance,
+and =bcc=).
+
+Hence, for instance,
 #+begin_example
 contact:fnorb@example.com
 #+end_example
@@ -306,7 +305,6 @@ Find all unread messages with attachments:
 flag:attach and flag:unread
 #+end_example
 
-
 Find all messages with PDF-attachments:
 #+begin_example
 mime:application/pdf
@@ -316,6 +314,12 @@ Find all messages with attached images:
 #+begin_example
 mime:image/*
 #+end_example
+
+Find all messages written in Dutch or German with the word 'hallo':
+#+begin_example
+hallo and (lang:nl or lang:de)
+#+end_example
+
 
 * CAVEATS
 
