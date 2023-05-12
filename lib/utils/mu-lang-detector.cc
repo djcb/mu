@@ -23,7 +23,7 @@ using namespace Mu;
 
 #ifndef HAVE_CLD2
 // Dummy implementation
-Option<Language> detect_language(const std::string& txt) { return Nothing; }
+Option<Language> Mu::detect_language(const std::string& txt) { return Nothing; }
 #else
 #include <cld2/public/compact_lang_det.h>
 #include <cld2/public/encodings.h>
