@@ -40,18 +40,19 @@
 
 (defcustom mu4e-compose-reply-recipients 'ask
   "Which recipients to use when replying to a message.
-May be a symbol `ask', `all', `sender'. Note that that only
-applies to non-mailing-list message; for those, mu4e always
-asks."
-  :type '(choice ask
-                 all
-                 sender)
+May be a symbol `ask', `all', `sender'.  Note that this option
+only applies to non-mailing-list message; for mailing-list
+messages, mu4e always asks."
+  :type '(choice (const ask)
+                 (const all)
+                 (const sender))
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-reply-to-address nil
-  "The Reply-To address.
+  "When non-nil, the Reply-To address.
 Useful when this is not equal to the From: address."
-  :type 'string
+  :type '(choice (const :tag "Same as the \"From:\" address" nil)
+                 string)
   :group 'mu4e-compose)
 
 (defcustom mu4e-compose-forward-as-attachment nil
