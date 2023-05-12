@@ -53,10 +53,10 @@
   :group 'mu4e-headers)
 
 (defcustom mu4e-thread-fold-single-children nil
-  "If set to t fold even if there is only a single child.
+  "When non-nil, fold a thread even if there is only a single child.
 Otherwise, do not not fold single children since would simply
 hide the single child."
-  :type 'number
+  :type 'boolean
   :group 'mu4e-headers)
 
 (defface mu4e-thread-fold-face
