@@ -307,12 +307,13 @@ from all maildirs under `mu4e-maildir'."
            (mu4e-read-option prompt
                              (append options
                                      '(("oOther..." . other)))))))
-    (if (eq response 'other)
-        (progn
-          (funcall mu4e-completing-read-function prompt
-                   (mu4e-get-maildirs) nil nil
-                   mu4e-maildir-initial-input))
-      response)))
+    (substring-no-properties
+     (if (eq response 'other)
+         (progn
+           (funcall mu4e-completing-read-function prompt
+                    (mu4e-get-maildirs) nil nil
+                    mu4e-maildir-initial-input))
+       response))))
 
 (defun mu4e-ask-maildir-check-exists (prompt)
   "Like `mu4e-ask-maildir', PROMPT for existence of the maildir.
