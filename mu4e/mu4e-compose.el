@@ -81,6 +81,15 @@
 ;;; Configuration
 ;; see mu4e-drafts.el
 
+(defcustom mu4e-allow-edit-any-message nil
+  "Whether to allow to edit any message or just the draft messages.
+Setting this to t allows any message to be edited, not just the draft messages.
+
+Changes to this value only take effect after (re)starting the mu
+session."
+  :type 'boolean
+  :group 'mu4e)
+
 ;;; Attachments
 (defun mu4e-compose-attach-message (msg)
   "Insert message MSG as an attachment."
@@ -736,6 +745,7 @@ Symbol `edit' is only allowed for draft messages."
     (unless (member compose-type '(reply forward edit resend new))
       (mu4e-error "Invalid compose type '%S'" compose-type))
     (when (and (eq compose-type 'edit)
+               (not (eq mu4e-allow-edit-any-message 't))
                (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))
 
