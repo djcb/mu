@@ -91,7 +91,14 @@ This multiplexes the `message-mode' hooks `message-send-actions',
   :type 'hook
   :group 'mu4e-compose)
 
+(defcustom mu4e-allow-edit-any-message nil
+  "Whether to allow to edit any message or just the draft messages.
+Setting this to t allows any message to be edited, not just the draft messages.
 
+Changes to this value only take effect after (re)starting the mu
+session."
+  :type 'boolean
+  :group 'mu4e)
 
 (defvar mu4e-captured-message)
 (defun mu4e-compose-attach-captured-message ()
@@ -445,7 +452,8 @@ variables ‘message-forward-as-mime’ and
   "Edit an existing draft message."
   (interactive)
   (let* ((msg (mu4e-message-at-point)))
-    (unless  (member 'draft (mu4e-message-field msg :flags))
+    (unless (or (member 'draft (mu4e-message-field msg :flags))
+                (eq mu4e-allow-edit-any-message 't))
       (mu4e-warn "Cannot edit non-draft messages"))
     (mu4e--draft
      'edit
