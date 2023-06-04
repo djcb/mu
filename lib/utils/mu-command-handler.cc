@@ -93,7 +93,7 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 				 [&](auto&& arg) { return cmdargname == arg.first; }))
 			return Err(Error::Code::Command,
 				   "unknown parameter '%s 'in command '%s'",
-				   cmdargname.c_str(), cmd.to_string().c_str());
+				   cmdargname.name.c_str(), cmd.to_string().c_str());
 	}
 
 	return Ok();

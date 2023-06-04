@@ -71,7 +71,7 @@ struct Command: public Sexp {
 	 * @return name
 	 */
 	const std::string& name() const {
-		return cbegin()->symbol();
+		return cbegin()->symbol().name;
 	}
 
 	/**
@@ -119,7 +119,7 @@ struct Command: public Sexp {
 		if (auto&& val{arg_val(name, Sexp::Type::Symbol)}; !val)
 			return Nothing;
 		else
-			return val->symbol();
+			return val->symbol().name;
 	}
 
 	/**

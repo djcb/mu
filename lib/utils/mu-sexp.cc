@@ -201,7 +201,7 @@ Sexp::to_string(Format fopts) const
 	else if (numberp())
 		sstrm << number();
 	else if (symbolp())
-		sstrm << symbol();
+		sstrm << symbol().name;
 
 	if (typeinfop)
 		sstrm << '<' << Sexp::type_name(type())  << '>';
@@ -224,7 +224,7 @@ Sexp::to_json_string(Format fopts) const
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
-				sstrm << (first ? "" : ",")  << quote(it->symbol()) << ":";
+				sstrm << (first ? "" : ",")  << quote(it->symbol().name) << ":";
 				++it;
 				sstrm << it->to_json_string();
 				++it;
@@ -255,7 +255,7 @@ Sexp::to_json_string(Format fopts) const
 		else if (symbol() == "t")
 			sstrm << "true";
 		else
-			sstrm << quote(symbol());
+			sstrm << quote(symbol().name);
 		break;
 	case Type::Number:
 		sstrm << number();
