@@ -211,6 +211,8 @@ struct Field {
 	}
 };
 
+static inline bool operator==(const Field& f1, const Field& f2) { return f1.id == f2.id; }
+
 MU_ENABLE_BITOPS(Field::Flag);
 
 /**
@@ -513,11 +515,11 @@ constexpr Option<Field> field_find_if(Pred&& pred) {
 }
 
 /**
- * Get the the message-field id for the given name or shortcut
+ * Get the the message-field for the given name or shortcut
  *
  * @param name_or_shortcut
  *
- * @return the message-field-id or nullopt.
+ * @return the message-field or Nothing
  */
 static inline
 Option<Field> field_from_shortcut(char shortcut) {
@@ -538,6 +540,57 @@ Option<Field> field_from_name(const std::string& name) {
 		});
 	}
 }
+
+/**
+ * Return combination-fields such
+ * as "contact", "recip" and "" (empty)
+ *
+ * @param name combination field name
+ *
+ * @return list of matching fields
+ */
+using FieldsVec = std::vector<Field>;
+static inline
+const FieldsVec& fields_from_name(const std::string& name) {
+
+	static const FieldsVec none{};
+	static const FieldsVec recip_fields ={
+		field_from_id(Field::Id::To),
+		field_from_id(Field::Id::Cc),
+		field_from_id(Field::Id::Bcc)};
+
+	static const FieldsVec contact_fields = {
+		field_from_id(Field::Id::To),
+		field_from_id(Field::Id::Cc),
+		field_from_id(Field::Id::Bcc),
+		field_from_id(Field::Id::From),
+	};
+	static const FieldsVec empty_fields= {
+		field_from_id(Field::Id::To),
+		field_from_id(Field::Id::Cc),
+		field_from_id(Field::Id::Bcc),
+		field_from_id(Field::Id::From),
+		field_from_id(Field::Id::Subject),
+		field_from_id(Field::Id::BodyText),
+		field_from_id(Field::Id::EmbeddedText),
+	};
+
+	if (name == "recip")
+		return recip_fields;
+	else if (name == "contact")
+		return contact_fields;
+	else if (name.empty())
+		return empty_fields;
+	else
+		return none;
+}
+
+static inline bool
+field_is_combi (const std::string& name)
+{
+	return name == "recip" || name == "contact";
+}
+
 
 /**
  * Get the Field::Id for some number, or nullopt if it does not match
