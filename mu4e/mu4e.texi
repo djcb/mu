@@ -2370,8 +2370,8 @@ messages. There are more examples in the defaults for
 @node Adding a new kind of mark
 @section Adding a new kind of mark
 
-It is possible to configure new marks. To do so, one can add entries
-in the list @code{mu4e-marks}. Such an element must have the following form:
+It is possible to configure new marks, by adding elements to the list
+@code{mu4e-marks}. Such an element must have the following form:
 
 @lisp
 (SYMBOL
@@ -2383,9 +2383,9 @@ in the list @code{mu4e-marks}. Such an element must have the following form:
   :action (lambda (DOCID MSG DYN-TARGET) nil))
 @end lisp
 
-The symbol can be any symbol, except for @code{'unmark} and
-@code{'something}, which are reserved. The rest is a plist with the
-following elements:
+The symbol can be any symbol, except for the symbols @code{unmark} and
+@code{something}, which are reserved. The rest is a plist with the following
+elements:
 
 @itemize
 @item @code{:char} --- the character to display in the headers view.
@@ -2404,9 +2404,8 @@ If @code{:show-target} is @t{nil} the @t{DYN-TARGET} is shown (and
 @item @code{:action} --- the action to apply on the message when the mark is executed.
 @end itemize
 
-As an example, suppose we would like to add a mark for tagging
-messages (GMail-style), then we can run the following code (after
-loading @t{mu4e}):
+As an example, suppose we would like to add a mark for tagging messages
+(GMail-style). We can use the following code (after loading @t{mu4e}):
 
 @lisp
 (add-to-list 'mu4e-marks
@@ -2414,22 +2413,21 @@ loading @t{mu4e}):
      :char       "g"
      :prompt     "gtag"
      :ask-target (lambda () (read-string "What tag do you want to add?"))
-     :action      (lambda (docid msg target)
-                    (mu4e-action-retag-message msg (concat "+" target)))))
+     :action     (lambda (docid msg target)
+                   (mu4e-action-retag-message msg (concat "+" target)))))
 @end lisp
 
-Adding to @code{mu4e-marks} list allows to use the mark in bulk operations
-(for example when tagging a whole thread), but does not bind the mark
-to a key to use at the top-level. This must be done separately. In our
-example:
+Adding elements to @code{mu4e-marks} (as in the example) allows you to use the
+mark in bulk operations (for example when tagging a whole thread); if you also
+want to add a key-binding for the headers view, you can use something like:
 
 @lisp
 (defun my-mu4e-mark-add-tag()
-  "Add a tag to the message."
+  "Add a tag to the message at point."
   (interactive)
   (mu4e-headers-mark-and-next 'tag))
 
-(define-key mu4e-headers-mode-map (kbd "g") 'mu4e-headers-mark-for-tag)
+(define-key mu4e-headers-mode-map (kbd "g") #'my-mu4e-mark-add-tag)
 @end lisp
 
 @node Contexts
