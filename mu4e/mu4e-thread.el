@@ -87,7 +87,7 @@ There are COUNT hidden and UNREAD messages overall."
   (when-let* ((overlay (mu4e-thread-is-folded))
               (beg (overlay-start overlay))
               (end (overlay-end overlay)))
-    (and (>= (point) beg) (< (point) end))))
+    (and (>= (point) beg) (<= (point) end))))
 
 (declare-function 'mu4e~headers-thread-root-p "mu4e-headers")
 (defalias  'mu4e-thread-is-root 'mu4e~headers-thread-root-p)
