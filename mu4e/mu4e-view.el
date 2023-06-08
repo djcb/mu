@@ -669,7 +669,8 @@ As a side-effect, a message that is being viewed loses its
         (mu4e-error "Cannot get a message view"))
       (select-window mu4e~headers-view-win)))
   (with-current-buffer gnus-article-buffer
-    (run-hooks 'mu4e-view-rendered-hook)))
+    (let ((inhibit-read-only t))
+      (run-hooks 'mu4e-view-rendered-hook))))
 
 (defun mu4e-view-message-text (msg)
   "Return the pristine MSG as a string."
