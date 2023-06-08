@@ -578,6 +578,13 @@ Mu4e version of emacs 28's string-replace."
   (replace-regexp-in-string (regexp-quote from-string)
                             to-string in-string nil 'literal))
 
+(defun mu4e-plistp (object)
+  "Non-nil if and only if OBJECT is a valid plist.
+
+This is mu4e's version of Emacs 29's `plistp'."
+  (let ((len (proper-list-p object)))
+    (and len (zerop (% len 2)))))
+
 (defun mu4e-key-description (cmd)
   "Get the textual form of current binding to interactive function CMD.
 If it is unbound, return nil. If there are multiple bindings,

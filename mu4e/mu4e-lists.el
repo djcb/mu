@@ -27,7 +27,7 @@
 
 ;;; Code:
 (require 'mu4e-message)
-
+(require 'mu4e-helpers)
 
 
  ;;; Helpers
@@ -127,7 +127,7 @@ Based on the current value of `mu4e-mailing-lists' and
   (interactive)
   (setq mu4e--lists-hash (make-hash-table :test 'equal))
   (seq-do (lambda (item)
-            (if (plistp item)
+            (if (mu4e-plistp item)
                 ;; the new format
                 (puthash (plist-get item :list-id) item mu4e--lists-hash)
               ;; backward compatibility
