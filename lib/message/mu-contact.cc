@@ -29,13 +29,20 @@
 
 using namespace Mu;
 
+const std::string rfc822SpecialCharacters  = "()<>@,;:\\\".[]";
+
 std::string
 Contact::display_name() const
 {
 	auto needs_quoting= [](const std::string& n) {
-		for (auto& c: n)
-			if (c == ',' || c == '"')
+		for (auto& c: n){
+			// RFC 822 3.3 and RFC 5322 3.2.3 defines special characters, Ascii
+			// Control (CTL) characters (0-31), DEL (127), and space as requiring
+			// quoting.
+			if (c <=31 || c >= 127 || c == ' ' || rfc822SpecialCharacters.find(c) != std::string::npos){
 				return true;
+			}
+		}
 		return false;
 	};
 
