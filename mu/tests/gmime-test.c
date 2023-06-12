@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -58,8 +58,12 @@ get_refs_str(GMimeMessage* msg)
 	refs_len  = g_mime_references_length(mime_refs);
 	for (rv = NULL, i = 0; i < refs_len; ++i) {
 		const char* msgid;
+		char *tmp;
+
 		msgid = g_mime_references_get_message_id(mime_refs, i);
+		tmp = rv;
 		rv    = g_strdup_printf("%s%s%s", rv ? rv : "", rv ? "," : "", msgid);
+		g_free(tmp);
 	}
 	g_mime_references_free(mime_refs);
 
