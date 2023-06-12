@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -32,9 +32,9 @@ using namespace Mu;
 std::string
 Contact::display_name() const
 {
-	auto needs_quoting= [](const std::string& n) {
+	const auto needs_quoting= [](const std::string& n) {
 		for (auto& c: n)
-			if (c == ',' || c == '"')
+			if (c == ',' || c == '"' || c == '@')
 				return true;
 		return false;
 	};
