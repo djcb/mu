@@ -262,6 +262,10 @@ Return the matching choice value (cdr of the cell)."
     (while (not chosen)
       (message nil) ;; this seems needed...
       (when-let ((kar (read-char-exclusive prompt)))
+        (when (eq kar ?\e) (keyboard-quit)) ;; `read-char-exclusive' is a C
+                                            ;; function and doesn't check for
+                                            ;; `keyboard-quit', there we need to
+                                            ;; check if ESC is pressed
         (setq chosen (mu4e--matching-choice choices kar))))
     chosen))
 
