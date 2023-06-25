@@ -887,12 +887,17 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
       (ignore-errors ;; try, don't error out.
         (kill-buffer-and-window))
     ;; single-window case
-    (when mu4e-linked-headers-buffer ;; re-use mu4e-view-detach?
-      (with-current-buffer mu4e-linked-headers-buffer
-        (when (eq (selected-window) mu4e~headers-view-win)
-          (setq mu4e~headers-view-win nil)))
-      (setq mu4e-linked-headers-buffer nil)
-      (kill-buffer))))
+    (let ((docid (mu4e-field-at-point :docid)))
+      (when mu4e-linked-headers-buffer ;; re-use mu4e-view-detach?
+        (with-current-buffer mu4e-linked-headers-buffer
+          (when (eq (selected-window) mu4e~headers-view-win)
+            (setq mu4e~headers-view-win nil)))
+        (setq mu4e-linked-headers-buffer nil)
+        (kill-buffer)
+        ;; attempt to move point to just-viewed message.
+        (when docid
+          (ignore-errors
+            (mu4e~headers-goto-docid docid)))))))
 
 (defvar mu4e-view-mode-map
   (let ((map (make-keymap)))
