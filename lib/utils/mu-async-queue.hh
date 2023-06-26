@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,9 +29,9 @@ namespace Mu {
 
 constexpr std::size_t UnlimitedAsyncQueueSize{0};
 
-template <typename ItemType,                             /**< the type of Item to queue */
-          std::size_t MaxSize = UnlimitedAsyncQueueSize, /**< maximum size for the queue */
-          typename Allocator  = std::allocator<ItemType>> /**< allocator the items */
+template <typename ItemType,                              /**< the type of Item to queue */
+	  std::size_t MaxSize = UnlimitedAsyncQueueSize,  /**< maximum size for the queue */
+	  typename Allocator  = std::allocator<ItemType>> /**< allocator for the items */
 
 class AsyncQueue {
       public:
@@ -45,8 +45,6 @@ class AsyncQueue {
 
 	using Timeout = std::chrono::steady_clock::duration;
 
-#define LOCKED std::unique_lock<std::mutex> lock(m_);
-
 	/**
 	 * Push an item to the end of the queue by moving it
 	 *
@@ -55,8 +53,7 @@ class AsyncQueue {
 	 *
 	 * @return true if the item was pushed; false otherwise.
 	 */
-	bool push(const value_type& item, Timeout timeout = {})
-	{
+	bool push(const value_type& item, Timeout timeout = {}) {
 		return push(std::move(value_type(item)), timeout);
 	}
 
@@ -68,8 +65,7 @@ class AsyncQueue {
 	 *
 	 * @return true if the item was pushed; false otherwise.
 	 */
-	bool push(value_type&& item, Timeout timeout = {})
-	{
+	bool push(value_type&& item, Timeout timeout = {}) {
 		std::unique_lock lock{m_};
 
 		if (!unlimited()) {
@@ -94,8 +90,7 @@ class AsyncQueue {
 	 *
 	 * @return true if an item was popped (into val), false otherwise.
 	 */
-	bool pop(value_type& val, Timeout timeout = {})
-	{
+	bool pop(value_type& val, Timeout timeout = {}) {
 		std::unique_lock lock{m_};
 
 		if (timeout != Timeout{}) {
@@ -119,8 +114,7 @@ class AsyncQueue {
 	 * Clear the queue
 	 *
 	 */
-	void clear()
-	{
+	void clear() {
 		std::unique_lock lock{m_};
 		q_.clear();
 		cv_full_.notify_one();
@@ -132,8 +126,7 @@ class AsyncQueue {
 	 *
 	 * @return the size
 	 */
-	size_type size() const
-	{
+	size_type size() const {
 		std::unique_lock lock{m_};
 		return q_.size();
 	}
@@ -145,21 +138,14 @@ class AsyncQueue {
 	 *
 	 * @return the maximum size
 	 */
-	size_type max_size() const
-	{
-		if (unlimited())
-			return q_.max_size();
-		else
-			return MaxSize;
-	}
+	size_type max_size() const { return unlimited() ? q_.max_size() : MaxSize; }
 
 	/**
 	 * Is the queue empty?
 	 *
 	 * @return true or false
 	 */
-	bool empty() const
-	{
+	bool empty() const {
 		std::unique_lock lock{m_};
 		return q_.empty();
 	}
@@ -170,8 +156,7 @@ class AsyncQueue {
 	 *
 	 * @return true or false.
 	 */
-	bool full() const
-	{
+	bool full() const {
 		if (unlimited())
 			return false;
 

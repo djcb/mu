@@ -141,21 +141,21 @@ build_metadata(const QueryMatch& qmatch)
 								 static_cast<unsigned>(td & 0xffff),
 								 0));
 	if (qmatch.has_flag(QueryMatch::Flags::Root))
-		mdata.put_props(":root", Sexp::t());
+		mdata.put_props(":root", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::Related))
-		mdata.put_props(":related", Sexp::t());
+		mdata.put_props(":related", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::First))
-		mdata.put_props(":first-child", Sexp::t());
+		mdata.put_props(":first-child", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::Last))
-		mdata.put_props(":last-child", Sexp::t());
+		mdata.put_props(":last-child", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::Orphan))
-		mdata.put_props(":orphan", Sexp::t());
+		mdata.put_props(":orphan", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
-		mdata.put_props(":duplicate", Sexp::t());
+		mdata.put_props(":duplicate", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::HasChild))
-		mdata.put_props(":has-child", Sexp::t());
+		mdata.put_props(":has-child", Sexp::t_sym);
 	if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
-		mdata.put_props(":thread-subject", Sexp::t());
+		mdata.put_props(":thread-subject", Sexp::t_sym);
 
 	return mdata;
 }
@@ -700,7 +700,7 @@ Server::Private::find_handler(const Command& cmd)
 	/* before sending new results, send an 'erase' message, so the frontend
 	 * knows it should erase the headers buffer. this will ensure that the
 	 * output of two finds will not be mixed. */
-	output_sexp(Sexp().put_props(":erase", Sexp::t()));
+	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
 	const auto foundnum{output_results(*qres, static_cast<size_t>(batch_size))};
 	output_sexp(Sexp().put_props(":found", foundnum));
 }
@@ -844,9 +844,9 @@ Server::Private::perform_move(Store::Id                 docid,
 		/* note, the :move t thing is a hint to the frontend that it
 		 * could remove the particular header */
 		if (different_mdir)
-			sexp.put_props(":move", Sexp::t());
+			sexp.put_props(":move", Sexp::t_sym);
 		if (!no_view && id == docid)
-			sexp.put_props(":maybe-view", Sexp::t());
+			sexp.put_props(":maybe-view", Sexp::t_sym);
 		output_sexp(std::move(sexp));
 	}
 }
@@ -1000,7 +1000,7 @@ Server::Private::sent_handler(const Command& cmd)
 		throw Error{Error::Code::Store, "failed to add path: %s",
 			docid.error().what()};
 	output_sexp(Sexp().put_props(
-			    ":sent", Sexp::t(),
+			    ":sent", Sexp::t_sym,
 			    ":path", path,
 			    ":docid", docid.value()));
 }

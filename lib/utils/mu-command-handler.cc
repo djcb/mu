@@ -51,9 +51,6 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 	 const CommandHandler::CommandInfo& cmd_info,
 	 const Command& cmd)
 {
-	if (g_test_verbose())
-		std::cout << cmd.to_string(Sexp::Format::TypeInfo) << '\n';
-
 	// all required parameters must be present
 	for (auto&& arg : cmd_info.args) {
 
@@ -121,6 +118,7 @@ CommandHandler::invoke(const Command& cmd, bool do_validate) const
 }
 
 
+// LCOV_EXCL_START
 #ifdef BUILD_TESTS
 
 #include "mu-test-utils.hh"
@@ -224,6 +222,10 @@ test_command_fail()
 	g_assert_false(call(cmap, "(my-command2)"));
 	g_assert_false(call(cmap, "(my-command :param1 123 :param2 123)"));
 	g_assert_false(call(cmap, "(my-command :param1 \"hello\" :param2 \"123\")"));
+
+	g_assert_false(call(cmap, "(my-command"));
+
+	g_assert_false(!!Command::make_parse(R"((foo :bar 123 :cuux "456" :boo nil :bah))"));
 }
 
 
@@ -245,3 +247,4 @@ main(int argc, char* argv[]) try {
 }
 
 #endif /*BUILD_TESTS*/
+// LCOV_EXCL_STOP

@@ -47,9 +47,6 @@ namespace Mu {
 
 struct Command: public Sexp {
 
-	using	iterator       = List::iterator;
-	using	const_iterator = List::const_iterator;
-
 	static Result<Command> make(Sexp&& sexp) try {
 		return Ok(Command{std::move(sexp)});
 	} catch (const Error& e) {

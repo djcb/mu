@@ -64,6 +64,8 @@ static bool        is_a_tty{};
 static std::string hist_path;
 static size_t      max_lines{};
 
+// LCOV_EXCL_START
+
 bool
 Mu::have_readline()
 {
@@ -133,3 +135,5 @@ Mu::save_line(const std::string& line)
 		add_history(line.c_str());
 #endif /*HAVE_READLINE*/
 }
+
+// LCOV_EXCL_STOP

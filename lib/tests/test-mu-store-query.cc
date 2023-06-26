@@ -582,8 +582,8 @@ Boo!
 	const auto moved_sexp{moved_msg.sexp()};
 	//std::cerr << "@@ " << *moved_msg << '\n';
 	g_assert_true(moved_sexp.plistp());
-	g_assert_true(moved_sexp.has_prop(":path"));
-	assert_equal(moved_sexp.get_prop(":path").string(), new_path);
+	g_assert_true(!!moved_sexp.get_prop(":path"));
+	assert_equal(moved_sexp.get_prop(":path").value().string(), new_path);
 
 	/*
 	 * find new message with query, ensure it's really that new one.
