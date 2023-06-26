@@ -41,10 +41,13 @@ namespace Mu {
  * A structure somewhat similar to a Lisp s-expression and which can be
  * constructed from/to an s-expressing string representation.
  *
- * A sexp is either an atom (String, Number Symbol) or a List
+ * A sexp is either an atom (String, Number, Symbol) or a List.
  */
 struct Sexp {
-	/// Types
+	/**
+	 * Types
+	 *
+	 */
 	using	List   = std::vector<Sexp>;
 	using	String = std::string;
 	using   Number = int64_t;
@@ -63,6 +66,83 @@ struct Sexp {
 	};
 	enum struct Type { List, String, Number, Symbol };
 	using ValueType = std::variant<List, String, Number, Symbol>;
+
+	/**
+	 * Is some Sexp of the given type?
+	 *
+	 * @return true or false
+	 */
+	constexpr bool stringp() const { return std::holds_alternative<String>(value); }
+	constexpr bool numberp() const { return std::holds_alternative<Number>(value); }
+	constexpr bool listp()   const { return std::holds_alternative<List>(value); }
+	constexpr bool symbolp() const { return std::holds_alternative<Symbol>(value); }
+	constexpr bool symbolp(const Sexp::Symbol& sym) const {return symbolp() && symbol() == sym; }
+	constexpr bool nilp() const { return symbolp(nil_sym); }
+
+	// Get the specific variant type.
+	const List& list() const     { return std::get<List>(value); }
+	List& list()                 { return std::get<List>(value); }
+	const String& string() const { return std::get<String>(value); }
+	String& string()             { return std::get<String>(value); }
+	const Number& number() const { return std::get<Number>(value); }
+	Number& number()             { return std::get<Number>(value); }
+	const Symbol& symbol() const { return std::get<Symbol>(value); }
+	Symbol& symbol()             { return std::get<Symbol>(value); }
+
+	/**
+	 * Constructors
+	 */
+	Sexp():value{List{}} {} // default: an empty list.
+	// Copy & move ctors
+	Sexp(const Sexp& other):value{other.value}{}
+	Sexp(Sexp&& other):value{std::move(other.value)}{}
+	// From various types
+	Sexp(const List& lst): value{lst} {}
+	Sexp(List&& lst): value{std::move(lst)} {}
+	Sexp(const String& str): value{str} {}
+	Sexp(String&& str): value{std::move(str)} {}
+	Sexp(const char *str): Sexp{std::string{str}} {}
+	Sexp(std::string_view sv): Sexp{std::string{sv}} {}
+
+	template<typename N, typename = std::enable_if_t<std::is_integral_v<N>> >
+	Sexp(N n):value{static_cast<Number>(n)} {}
+
+	Sexp(const Symbol& sym): value{sym} {}
+	Sexp(Symbol&& sym): value{std::move(sym)} {}
+
+	template<typename S, typename T, typename... Args>
+	Sexp(S&& s, T&& t, Args&&... args): value{List()} {
+		auto& l{std::get<List>(value)};
+		l.emplace_back(Sexp(std::forward<S>(s)));
+		l.emplace_back(Sexp(std::forward<T>(t)));
+		(l.emplace_back(Sexp(std::forward<Args>(args))), ...);
+	}
+
+	/**
+	 * Copy-assignment
+	 *
+	 * @param rhs another sexp
+	 *
+	 * @return the sexp
+	 */
+	Sexp& operator=(const Sexp& rhs) {
+		if (this != &rhs)
+			value = rhs.value;
+		return *this;
+	}
+
+	/**
+	 * Move-assignment
+	 *
+	 * @param rhs another sexp
+	 *
+	 * @return the sexp
+	 */
+	Sexp& operator=(Sexp&& rhs) {
+		if (this != &rhs)
+			value = std::move(rhs.value);
+		return *this;
+	}
 
 	/**
 	 * Get the type of value
@@ -92,70 +172,6 @@ struct Sexp {
 		}
 	}
 
-	constexpr bool stringp() const { return std::holds_alternative<String>(value); }
-	constexpr bool numberp() const { return std::holds_alternative<Number>(value); }
-	constexpr bool listp()   const { return std::holds_alternative<List>(value); }
-	constexpr bool symbolp() const { return std::holds_alternative<Symbol>(value); }
-
-	constexpr bool symbolp(const Sexp::Symbol& sym) const {return symbolp() && symbol() == sym; }
-
-	constexpr bool nilp() const { return symbolp() && symbol() == "nil"; }
-	static const Sexp& nil() { static const Sexp nilsym(Symbol{"nil"}); return nilsym; }
-	static const Sexp& t()   { static const Sexp tsym(Symbol{"t"}); return tsym; }
-
-	// Get the specific variant type.
-	const List& list() const     { return std::get<List>(value); }
-	List& list()                 { return std::get<List>(value); }
-	const String& string() const { return std::get<String>(value); }
-	String& string()             { return std::get<String>(value); }
-	const Number& number() const { return std::get<Number>(value); }
-	Number& number()             { return std::get<Number>(value); }
-	const Symbol& symbol() const { return std::get<Symbol>(value); }
-	Symbol& symbol()             { return std::get<Symbol>(value); }
-
-	/// Default ctor
-	Sexp():value{List{}} {} // default: an empty list.
-
-	// Copy & move ctors
-	Sexp(const Sexp& other):value{other.value}{}
-	Sexp(Sexp&& other):value{std::move(other.value)}{}
-
-	// Assignment
-	Sexp& operator=(const Sexp& rhs) {
-		if (this != &rhs)
-			value = rhs.value;
-		return *this;
-	}
-	Sexp& operator=(Sexp&& rhs) {
-		if (this != &rhs)
-			value = std::move(rhs.value);
-		return *this;
-	}
-
-	/// Type specific ctors
-	Sexp(const List& lst): value{lst} {}
-	Sexp(List&& lst): value{std::move(lst)} {}
-
-	Sexp(const String& str): value{str} {}
-	Sexp(String&& str): value{std::move(str)} {}
-	Sexp(const char *str): Sexp{std::string{str}} {}
-	Sexp(std::string_view sv): Sexp{std::string{sv}} {}
-
-	template<typename N, typename = std::enable_if_t<std::is_integral_v<N>> >
-	Sexp(N n):value{static_cast<Number>(n)} {}
-
-	Sexp(const Symbol& sym): value{sym} {}
-	Sexp(Symbol&& sym): value{std::move(sym)} {}
-
-	///
-	template<typename S, typename T, typename... Args>
-	Sexp(S&& s, T&& t, Args&&... args): value{List()} {
-		auto& l{std::get<List>(value)};
-		l.emplace_back(Sexp(std::forward<S>(s)));
-		l.emplace_back(Sexp(std::forward<T>(t)));
-		(l.emplace_back(Sexp(std::forward<Args>(args))), ...);
-	}
-
 	/**
 	 * Parse sexp from string
 	 *
@@ -166,31 +182,20 @@ struct Sexp {
 	static Result<Sexp> parse(const std::string& str);
 
 
-	/// List specific
+	/**
+	 * List specific functionality
+	 *
+	 */
 	using	iterator       = List::iterator;
 	using	const_iterator = List::const_iterator;
 
-
-	iterator       begin()        { return list().begin(); }
+	iterator begin()        { return list().begin(); }
 	const_iterator begin()  const { return list().begin(); }
 	const_iterator cbegin() const { return list().cbegin(); }
 
 	iterator       end()         { return list().end(); }
 	const_iterator end()   const { return list().end(); }
 	const_iterator cend()  const { return list().cend(); }
-
-
-	Sexp& front() { return list().front(); }
-	const Sexp& front() const { return list().front(); }
-	void pop_front() { list().erase(list().begin()); }
-
-	Option<Sexp&> head() { if (listp()&&!empty()) return front(); else return Nothing; }
-	Option<const Sexp&> head() const { if (listp()&&!empty()) return front(); else return Nothing; }
-
-	Option<Sexp&> tail() {
-		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(begin()+1); else return Nothing; }
-	Option<const Sexp&> tail() const {
-		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(cbegin()+1); else return Nothing; }
 
 	bool empty() const { return list().empty(); }
 	size_t size() const { return list().size(); }
@@ -208,7 +213,37 @@ struct Sexp {
 			.add(std::forward<Args>(args)...);
 	}
 
-	// Plist (property lists)
+	/// Adding list elements
+	Sexp& add_list(Sexp&& l) { for (auto&& e: l) add(std::move(e)); return *this;};
+
+	/// Use list as stack.
+	Sexp& prepend(Sexp&& e) { list().insert(list().begin(), std::move(e)); return *this;};
+	Sexp& prepend(const Sexp& e) { list().insert(list().begin(), e); return *this;};
+
+	/// Some convenience for the query parser
+	Sexp& front() { return list().front(); }
+	const Sexp& front() const { return list().front(); }
+	void pop_front() { list().erase(list().begin()); }
+
+	Option<Sexp&> head() { if (listp()&&!empty()) return front(); else return Nothing; }
+	Option<const Sexp&> head() const { if (listp()&&!empty()) return front(); else return Nothing; }
+
+	bool head_symbolp() const {
+		if (auto&& h{head()}; h) return h->symbolp(); else return false;
+	}
+	bool head_symbolp(const Symbol& sym) const {
+		if (head_symbolp()) return head()->symbolp(sym); else return false;
+	}
+	Option<Sexp&> tail() {
+		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(begin()+1); else return Nothing; }
+	Option<const Sexp&> tail() const {
+		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(cbegin()+1); else return Nothing; }
+
+
+	/**
+	 * Property lists (aka plists)
+	 */
+
 	bool plistp() const { return listp() && plistp(cbegin(), cend()); }
 	Sexp& put_props() { return *this; } // Final case for template pack.
 	template <class PropType, class SexpType, typename... Args>
@@ -225,18 +260,14 @@ struct Sexp {
 	 *
 	 * @param p property name
 	 *
-	 * @return the property if found, or the symbol nil otherwise.
+	 * @return the property if found, or nothing
 	 */
-	const Sexp& get_prop(const std::string& p) const {
+	const Option<const Sexp&> get_prop(const std::string& p) const {
 		if (auto&& it = find_prop(p, cbegin(), cend()); it != cend())
 			return *(std::next(it));
 		else
-			return Sexp::nil();
+			return Nothing;
 	}
-	bool has_prop(const std::string& s) const {
-		return find_prop(s, cbegin(), cend())!= cend();
-	}
-
 	/// Output to string
 	enum struct Format {
 		Default	  = 0,	/**< Nothing in particular */
@@ -253,6 +284,14 @@ struct Sexp {
 	std::string to_json_string(Format fopts=Format::Default) const;
 
 	Sexp& del_prop(const std::string& pname);
+
+	/**
+	 * Some useful constants
+	 *
+	 */
+	static inline const auto nil_sym	= Sexp::Symbol{"nil"};
+	static inline const auto t_sym	= Sexp::Symbol{"t"};
+
 protected:
 	const_iterator find_prop(const std::string& s, const_iterator b,
 				       const_iterator e)  const;
@@ -261,6 +300,8 @@ private:
 	iterator find_prop(const std::string& s,iterator b,
 				 iterator e);
 	ValueType value;
+
+
 };
 
 MU_ENABLE_BITOPS(Sexp::Format);

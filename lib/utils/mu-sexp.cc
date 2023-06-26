@@ -101,7 +101,7 @@ parse_string(const std::string& expr, size_t& pos)
 	}
 
 	if (escape || expr[pos] != '"')
-		throw parsing_error(pos, "unterminated string '%s'", str.c_str());
+		return Err(parsing_error(pos, "unterminated string '%s'", str.c_str()));
 
 	++pos;
 	return Ok(Sexp{std::move(str)});
@@ -158,10 +158,11 @@ parse(const std::string& expr, size_t& pos)
 		else if (isalpha(kar) || kar == ':')
 			return parse_symbol(expr, pos);
 		else
-			throw parsing_error(pos, "unexpected character '%c", kar);
+			return Err(parsing_error(pos, "unexpected character '%c", kar));
 	});
 
-	pos = skip_whitespace(expr, pos);
+	if (sexp)
+		pos = skip_whitespace(expr, pos);
 
 	return sexp;
 }
@@ -324,6 +325,7 @@ test_list()
 		Sexp s;
 		g_assert_true(s.listp());
 		g_assert_true(s.to_string() == "()");
+		g_assert_true(Sexp::type_name(s.type()) == "list");
 		g_assert_true(s.empty());
 	}
 
@@ -333,11 +335,22 @@ test_list()
 			Sexp(123),
 			Sexp::Symbol("world")
 		};
-		Sexp s{std::move(items)};
+		const Sexp s{std::move(items)};
 		g_assert_false(s.empty());
 		g_assert_cmpuint(s.size(),==,3);
 		g_assert_true(s.to_string() == "(\"hello\" 123 world)");
-		//g_assert_true(s.to_string() == "(\"hello\" 123 world)");
+
+
+		/* copy */
+		Sexp s2 = s;
+		g_assert_true(s2.to_string() == "(\"hello\" 123 world)");
+
+		/* move */
+		Sexp s3 = std::move(s2);
+		g_assert_true(s3.to_string() == "(\"hello\" 123 world)");
+
+		s3.clear();
+		g_assert_true(s3.empty());
 	}
 
 }
@@ -350,6 +363,7 @@ test_string()
 		g_assert_true(s.stringp());
 		g_assert_true(s.string()=="hello");
 		g_assert_true(s.to_string()=="\"hello\"");
+		g_assert_true(Sexp::type_name(s.type()) == "string");
 	}
 
 	{
@@ -368,6 +382,7 @@ test_number()
 		g_assert_true(s.numberp());
 		g_assert_cmpint(s.number(),==,123);
 		g_assert_true(s.to_string() == "123");
+		g_assert_true(Sexp::type_name(s.type()) == "number");
 	}
 
 	{
@@ -386,6 +401,7 @@ test_symbol()
 		g_assert_true(s.symbolp());
 		g_assert_true(s.symbol()=="hello");
 		g_assert_true (s.to_string()=="hello");
+		g_assert_true(Sexp::type_name(s.type()) == "symbol");
 	}
 
 	{
@@ -469,6 +485,19 @@ bar")",
 		    "\"foo\nbar\"");
 }
 
+static void
+test_parser_fail()
+{
+	g_assert_false(!!Sexp::parse("\""));
+	g_assert_false(!!Sexp::parse("123abc"));
+	g_assert_false(!!Sexp::parse("("));
+	g_assert_false(!!Sexp::parse(")"));
+	g_assert_false(!!Sexp::parse("(hello (boo))))"));
+
+	g_assert_true(Sexp::type_name(static_cast<Sexp::Type>(-1)) == "<error>");
+}
+
+
 int
 main(int argc, char* argv[])
 try {
@@ -483,6 +512,8 @@ try {
 	g_test_add_func("/sexp/add-multi",  test_add_multi);
 	g_test_add_func("/sexp/plist",  test_plist);
 	g_test_add_func("/sexp/parser", test_parser);
+	g_test_add_func("/sexp/parser-fail", test_parser_fail);
+
 	return g_test_run();
 
 } catch (const std::runtime_error& re) {
