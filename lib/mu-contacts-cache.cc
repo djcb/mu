@@ -46,23 +46,28 @@ struct EmailEqual {
 
 using ContactUMap = std::unordered_map<const std::string, Contact, EmailHash, EmailEqual>;
 struct ContactsCache::Private {
-	Private(const std::string& serialized, const StringVec& personal)
-		: contacts_{deserialize(serialized)},
-		  personal_plain_{make_personal_plain(personal)},
-		  personal_rx_{make_personal_rx(personal)},
-		  dirty_{0}
-	{}
+	Private(Config& config_db)
+		:config_db_{config_db},
+		 contacts_{deserialize(config_db_.get<Config::Id::Contacts>())},
+		 personal_plain_{make_personal_plain(config_db_.get<Config::Id::PersonalAddresses>())},
+		 personal_rx_{make_personal_rx(config_db_.get<Config::Id::PersonalAddresses>())},
+		 dirty_{0}
+		{}
+
+	~Private() {
+		serialize();
+	}
 
 	ContactUMap deserialize(const std::string&) const;
-	std::string serialize() const;
+	void serialize() const;
 
-	ContactUMap contacts_;
-	std::mutex  mtx_;
+	Config&		config_db_;
+	ContactUMap		contacts_;
+	mutable std::mutex	mtx_;
 
 	const StringVec			personal_plain_;
 	const std::vector<Regex>	personal_rx_;
-
-	size_t dirty_;
+	mutable size_t			dirty_;
 
 private:
 	/**
@@ -140,19 +145,23 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 	return contacts;
 }
 
-ContactsCache::ContactsCache(const std::string& serialized, const StringVec& personal)
-    : priv_{std::make_unique<Private>(serialized, personal)}
-{}
 
-ContactsCache::~ContactsCache() = default;
-
-std::string
-ContactsCache::serialize() const
+void
+ContactsCache::Private::serialize() const
 {
-	std::lock_guard<std::mutex> l_{priv_->mtx_};
-	std::string                 s;
+	if (config_db_.read_only()) {
+		if (dirty_ > 0)
+			g_critical("dirty data in read-only ccache!"); // bug
+		return;
+	}
 
-	for (auto& item : priv_->contacts_) {
+	std::string     s;
+	std::unique_lock lock(mtx_);
+
+	if (dirty_ == 0)
+		return; // nothing to do.
+
+	for (auto& item : contacts_) {
 		const auto& ci{item.second};
 		s += Mu::format("%s%s"
 				"%s%s"
@@ -169,16 +178,25 @@ ContactsCache::serialize() const
 				Separator,
 				(gint64)ci.frequency);
 	}
-
-	priv_->dirty_ = 0;
-
-	return s;
+	config_db_.set<Config::Id::Contacts>(s);
+	dirty_ = 0;
 }
 
-bool
-ContactsCache::dirty() const
+
+
+ContactsCache::ContactsCache(Config& config_db)
+	: priv_{std::make_unique<Private>(config_db)}
+{}
+
+ContactsCache::~ContactsCache() = default;
+
+void
+ContactsCache::serialize() const
 {
-	return priv_->dirty_;
+	if (priv_->config_db_.read_only())
+		throw std::runtime_error("cannot serialize read-only contacts-cache");
+
+	priv_->serialize();
 }
 
 void
@@ -351,7 +369,9 @@ ContactsCache::is_personal(const std::string& addr) const
 static void
 test_mu_contacts_cache_base()
 {
-	Mu::ContactsCache contacts("");
+	MemDb xdb{};
+	Config cdb{xdb};
+	ContactsCache contacts(cdb);
 
 	g_assert_true(contacts.empty());
 	g_assert_cmpuint(contacts.size(), ==, 0);
@@ -395,8 +415,11 @@ test_mu_contacts_cache_base()
 static void
 test_mu_contacts_cache_personal()
 {
-	Mu::StringVec personal = {"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"};
-	Mu::ContactsCache  contacts{"", personal};
+	MemDb xdb{};
+	Config cdb{xdb};
+	cdb.set<Config::Id::PersonalAddresses>
+		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}});
+	ContactsCache  contacts{cdb};
 
 	g_assert_true(contacts.is_personal("foo@example.com"));
 	g_assert_true(contacts.is_personal("Bar@CuuX.orG"));
@@ -413,7 +436,10 @@ test_mu_contacts_cache_personal()
 static void
 test_mu_contacts_cache_foreach()
 {
-	Mu::ContactsCache ccache("");
+	MemDb xdb{};
+	Config cdb{xdb};
+	ContactsCache ccache(cdb);
+
 	ccache.add(Mu::Contact{"a@example.com", "a", 123, true, 1000, 0});
 	ccache.add(Mu::Contact{"b@example.com", "b", 456, true, 1000, 0});
 
@@ -468,7 +494,10 @@ test_mu_contacts_cache_sort()
 
 	{ /* recent messages, newer comes first */
 
-		Mu::ContactsCache ccache("");
+		MemDb xdb{};
+		Config cdb{xdb};
+		ContactsCache ccache(cdb);
+
 		ccache.add(Mu::Contact{"a@example.com", "a", now, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now-1, true, 1000, 0});
 		assert_equal(result_chars(ccache), "ab");
@@ -476,22 +505,30 @@ test_mu_contacts_cache_sort()
 
 	{ /* non-recent messages, more frequent comes first */
 
-		Mu::ContactsCache ccache("");
+		MemDb xdb{};
+		Config cdb{xdb};
+		ContactsCache ccache(cdb);
+
 		ccache.add(Mu::Contact{"a@example.com", "a", now-2*RecentOffset, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now-3*RecentOffset, true, 2000, 0});
 		assert_equal(result_chars(ccache), "ba");
 	}
 
 	{ /* personal comes first */
+		MemDb xdb{};
+		Config cdb{xdb};
+		ContactsCache ccache(cdb);
 
-		Mu::ContactsCache ccache("");
 		ccache.add(Mu::Contact{"a@example.com", "a", now-5*RecentOffset, true, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 8000, 0});
 		assert_equal(result_chars(ccache), "ab");
 	}
 
 	{ /* if all else fails, reverse-alphabetically */
-		Mu::ContactsCache ccache("");
+		MemDb xdb{};
+		Config cdb{xdb};
+		ContactsCache ccache(cdb);
+
 		ccache.add(Mu::Contact{"a@example.com", "a", now, false, 1000, 0});
 		ccache.add(Mu::Contact{"b@example.com", "b", now, false, 1000, 0});
 		g_assert_cmpuint(ccache.size(),==,2);

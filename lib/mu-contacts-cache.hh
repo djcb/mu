@@ -30,6 +30,7 @@
 #include <inttypes.h>
 #include <utils/mu-utils.hh>
 
+#include "mu-config.hh"
 #include <message/mu-message.hh>
 
 namespace Mu {
@@ -39,10 +40,9 @@ public:
 	/**
 	 * Construct a new ContactsCache object
 	 *
-	 * @param serialized serialized contacts
-	 * @param personal personal addresses
+	 * @param config db configuration database object
 	 */
-	ContactsCache(const std::string& serialized = "", const StringVec& personal = {});
+	ContactsCache(Config& config);
 
 	/**
 	 * DTOR
@@ -101,20 +101,10 @@ public:
 	bool empty() const { return size() == 0; }
 
 	/**
-	 * Get the contacts, serialized. This all marks the data as
-	 * non-dirty (see dirty())
-	 *
-	 * @return serialized contacts
+	 * Serialize contact information. This all marks the data as
+	 * non-dirty
 	 */
-	std::string serialize() const;
-
-	/**
-	 * Has the contacts database change since the last
-	 * call to serialize()?
-	 *
-	 * @return true or false
-	 */
-	bool dirty() const;
+	void serialize() const;
 
 	/**
 	 * Does this look like a 'personal' address?
