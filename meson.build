@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.11.7',
+        version: '1.11.8',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -86,7 +86,7 @@ cxx.check_header('charconv', required:true)
 # config.h setup
 #
 config_h_data=configuration_data()
-config_h_data.set_quoted('MU_STORE_SCHEMA_VERSION', '467')
+config_h_data.set('MU_STORE_SCHEMA_VERSION', 500)
 config_h_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
                                            meson.project_version())

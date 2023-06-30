@@ -23,6 +23,7 @@ lib_mu=static_library(
   'mu',
   [
     'mu-bookmarks.cc',
+    'mu-config.cc',
     'mu-contacts-cache.cc',
     'mu-maildir.cc',
     'mu-parser.cc',
@@ -33,7 +34,8 @@ lib_mu=static_library(
     'mu-server.cc',
     'mu-store.cc',
     'mu-tokenizer.cc',
-    'mu-xapian.cc'
+    'mu-xapian.cc',
+    'mu-xapian-db.cc'
   ],
   dependencies: [
     glib_dep,
@@ -66,15 +68,22 @@ tokenize = executable(
 
 test('test-threads',
      executable('test-threads',
-		'mu-query-threads.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep]))
+                'mu-query-threads.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
 test('test-contacts-cache',
      executable('test-contacts-cache',
-		'mu-contacts-cache.cc',
-		install: false,
-		cpp_args: ['-DBUILD_TESTS'],
-		dependencies: [glib_dep, lib_mu_dep]))
+                'mu-contacts-cache.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-config',
+     executable('test-config',
+                'mu-config.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
 
 subdir('tests')

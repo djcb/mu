@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,6 +26,8 @@
 #include <ctime>
 
 #include "mu-contacts-cache.hh"
+#include "mu-xapian-db.hh"
+#include "mu-config.hh"
 #include <xapian.h>
 
 #include <utils/mu-utils.hh>
@@ -73,31 +75,19 @@ public:
 	}
  /* LCOV_EXCL_STOP */
 
-
-	struct Config {
-		size_t max_message_size{};
-		/**< maximum size (in bytes) for a message, or 0 for default */
-		size_t batch_size{};
-		/**< size of batches before committing, or 0 for default */
-	};
-
 	/**
 	 * Construct a store for a not-yet-existing document database
 	 *
 	 * @param path path to the database
-	 * @param maildir maildir to use for this store
-	 * @param personal_addresses addresses that should be recognized as
-	 * 'personal' for identifying personal messages.
+	 * @param root_maildir maildir to use for this store
 	 * @param config a configuration object
 	 *
 	 * @return a store or an error
 	 */
 	static Result<Store> make_new(const std::string& path,
-				      const std::string& maildir,
-				      const StringVec&   personal_addresses,
-				      const Config&      conf) noexcept try {
-
-		return Ok(Store(path, maildir, personal_addresses, conf));
+				      const std::string& root_maildir,
+				      Option<const Config&> conf={}) noexcept try {
+		return Ok(Store(path, root_maildir, conf));
 
 	} catch (const Mu::Error& me) {
 		return Err(me);
@@ -107,6 +97,7 @@ public:
 		return Err(Error::Code::Internal, "failed to create new store");
 	}
  /* LCOV_EXCL_STOP */
+
 
 	/**
 	 * Move CTOR
@@ -118,30 +109,6 @@ public:
 	 * DTOR
 	 */
 	~Store();
-
-	/**
-	 * Store properties
-	 */
-	struct Properties {
-		std::string database_path;  /**< Full path to the Xapian database */
-		std::string schema_version; /**< Database schema version */
-		std::time_t created;        /**<  database creation time */
-
-		size_t batch_size; /**< Maximum database transaction batch size */
-
-		std::string root_maildir; /**<  Absolute path to the top-level maildir */
-
-		StringVec personal_addresses; /**< Personal e-mail addresses */
-		size_t    max_message_size;   /**<  Maximus allowed message size */
-	};
-
-	/**
-	 * Get properties about this store.
-	 *
-	 * @return the metadata
-	 */
-	const Properties& properties() const;
-
 
 	/**
 	 * Store statistics. Unlike the properties, these can change
@@ -161,27 +128,21 @@ public:
 	 */
 	Statistics statistics() const;
 
+	/**
+	 * Get the underlying xapian db object
+	 *
+	 * @return the XapianDb for this store
+	 */
+	const XapianDb& xapian_db() const;
+	XapianDb& xapian_db();
 
 	/**
-	 * Get the number of documents in the document database
+	 * Get the Config for this store
 	 *
-	 * @return the number
+	 * @return the Config
 	 */
-	std::size_t size() const;
-
-	/**
-	 * Is the database empty?
-	 *
-	 * @return true or false
-	 */
-	bool empty() const { return size() == 0; }
-
-	/**
-	 * Is the database read-only?
-	 *
-	 * @return true or false
-	 */
-	bool read_only() const;
+	const Config& config() const;
+	Config& config();
 
 	/**
 	 * Get the ContactsCache object for this store
@@ -189,13 +150,6 @@ public:
 	 * @return the Contacts object
 	 */
 	const ContactsCache& contacts_cache() const;
-
-	/**
-	 * Get the underlying Xapian database for this store.
-	 *
-	 * @return the database
-	 */
-	const Xapian::Database& database() const;
 
 	/**
 	 * Get the Indexer associated with this store. It is an error to call
@@ -449,6 +403,44 @@ public:
 	 */
 	void commit();
 
+	/*
+	 *
+	 * Some convenience
+	 *
+	 */
+
+	/**
+	 * Get the Xapian database-path for this store
+	 *
+	 * @return the path
+	 */
+	const std::string& path() const { return xapian_db().path(); }
+
+	/**
+	 * Get the root-maildir for this store
+	 *
+	 * @return the root-maildir
+	 */
+	const std::string& root_maildir() const;
+
+	/**
+	 * Get the number of messages in the store
+	 *
+	 * @return the number
+	 */
+	size_t size() const { return xapian_db().size(); }
+
+	/**
+	 * Is the store empty?
+	 *
+	 * @return true or false
+	 */
+	size_t empty() const { return xapian_db().empty(); }
+
+	/*
+	 * _almost_ private
+	 */
+
 	/**
 	 * Get a reference to the private data. For internal use.
 	 *
@@ -467,21 +459,14 @@ private:
 	 */
 	Store(const std::string& path, Options opts=Options::None);
 
-
 	/**
 	 * Construct a store for a not-yet-existing document database
 	 *
 	 * @param path path to the database
-	 * @param maildir maildir to use for this store
-	 * @param personal_addresses addresses that should be recognized as
-	 * 'personal' for identifying personal messages.
 	 * @param config a configuration object
 	 */
-	Store(const std::string& path,
-	      const std::string& maildir,
-	      const StringVec&   personal_addresses,
-	      const Config&      conf);
-
+	Store(const std::string& path, const std::string& root_maildir,
+	      Option<const Config&> conf);
 
 	std::unique_ptr<Private> priv_;
 };
