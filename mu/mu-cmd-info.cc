@@ -49,7 +49,6 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 			return "never";
 		else
 			return time_to_string("%c", t);
-
 	};
 
 	Table info;
@@ -61,8 +60,11 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	info.add_row({"max-message-size", format("%zu", conf.get<Config::Id::MaxMessageSize>())});
 	info.add_row({"batch-size", format("%zu", conf.get<Config::Id::BatchSize>())});
 	info.add_row({"created", tstamp(conf.get<Config::Id::Created>())});
+
 	for (auto&& c : conf.get<Config::Id::PersonalAddresses>())
 		info.add_row({"personal-address", c});
+	for (auto&& c : conf.get<Config::Id::IgnoredAddresses>())
+		info.add_row({"ignored-address", c});
 
 	info.add_row({"messages in store", format("%zu", store.size())});
 	info.add_row({"last-change", tstamp(store.statistics().last_change)});

@@ -184,6 +184,8 @@ struct Options {
 	struct Init {
 		std::string	maildir;		/**<  where the mails are */
 		StringVec	my_addresses;		/**<  personal e-mail addresses */
+		StringVec	ignored_addresses;	/**<  addresses to be ignored for
+							 * the contacts-cache */
 		OptSize         max_msg_size;		/**<  max size for message files */
 		OptSize		batch_size;		/**<  db transaction batch size */
 		bool		reinit;			/**<  re-initialize  */

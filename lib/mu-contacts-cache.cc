@@ -188,8 +188,6 @@ ContactsCache::Private::serialize() const
 	dirty_ = 0;
 }
 
-
-
 ContactsCache::ContactsCache(Config& config_db)
 	: priv_{std::make_unique<Private>(config_db)}
 {}
@@ -380,9 +378,6 @@ ContactsCache::is_ignored(const std::string& addr) const
 {
 	return address_matches(addr, priv_->ignored_plain_, priv_->ignored_rx_);
 }
-
-
-
 
 #ifdef BUILD_TESTS
 /*

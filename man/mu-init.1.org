@@ -21,24 +21,38 @@ starts searching at =<maildir>=. By default, *mu* uses whatever the *MAILDIR*
 environment variable is set to; if it is not set, it tries =~/Maildir= if it
 already exists.
 
-** --my-address=<my-email-address>
+** --my-address=<email-address-or-regex>
 
-specifies that some e-mail addresses are 'my-address' (the option can be used
+specifies that some e-mail address is 'my-address' (the option can be used
 multiple times). Any message in which at least one of the contact fields
 contains such an address is considered a 'personal' messages; this can then be
 used for filtering in *mu-find(1)*, *mu-cfind(1)* and *mu4e*, e.g. to filter-out
 mailing list messages.
 
-=<my-email-address>= can be either a plain e-mail address (such as
+=<email-address-or-regex>= can be either a plain e-mail address (such as
 *foo@example.com*), or a basic PCRE regular-expression (see *pcre(3)* for details),
 wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on your shell, the
 argument may need to be quoted.
 
+** --ignored-address=<email-address-or-regex>
+
+specifies that some e-mail address is to be ignored from the contacts-cache
+(the option can be used multiple times). Such address then cannot be found with
+*mu-cfind(1)* or in the Mu4e contacts cache.
+
+=<my-email-address>= can be either a plain e-mail address or a regexp, just like
+for the =--my-address= option.
+
 ** --reinit
 
-reinitialize the database from an earlier version; that is, create a new
-empty database witht the existing settings. This cannot be combined
-with the other ~init~ options.
+reinitialize the database from an earlier version; that is, create a new empty
+database with the existing settings. This cannot be combined with the other ~init~
+options.
+
+* EXAMPLE
+#+begin_example
+$ mu init --maildir=~/Maildir --my-address=alice@example.com --my-address=bob@example.com --ignored-address='/.*reply.*/'
+#+end_example
 
 #+include: "exit-code.inc" :minlevel 1
 

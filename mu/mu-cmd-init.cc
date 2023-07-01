@@ -46,10 +46,15 @@ Mu::mu_cmd_init(const Options& opts)
 
 		MemDb mdb;
 		Config conf{mdb};
+
 		if (opts.init.max_msg_size)
 			conf.set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
 		if (opts.init.batch_size)
 			conf.set<Config::Id::MaxMessageSize>(*opts.init.batch_size);
+		if (!opts.init.my_addresses.empty())
+			conf.set<Config::Id::PersonalAddresses>(opts.init.my_addresses);
+		if (!opts.init.ignored_addresses.empty())
+			conf.set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
 
 		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
 				       opts.init.maildir, conf);
@@ -67,4 +72,3 @@ Mu::mu_cmd_init(const Options& opts)
 
 	return Ok();
 }
-

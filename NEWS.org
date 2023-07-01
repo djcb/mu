@@ -8,6 +8,14 @@
     - ~mu~ commands ~extract~, ~verify~ and ~view~ can now read the message from
       standard input; see their man-pages for details
 
+    - ~mu init~ gained the ~--ignored-address~ option for email-addresses / regexps
+      that should _not_ be included in the contacts-cache (i.e., for ~mu cfind~ and
+      Mu4e address completion). See the ~mu-init~ manpage for details.
+
+      It's not unusual for 'noreply`-type e-mail addresses to be the majority in
+      an e-mail corpus, so it useful to get rid of those, with
+      '=--ignored-address=/.*noreply*/'=
+
     - experimental: if you build ~mu~ with [[https://github.com/CLD2Owners/cld2][CLD2]] support (available in many Linux
       distros), ~mu~ will try to detect the language of the body of e-mail
       messages; you can then search by their ISO-639-1 code, e.g. ~mu find
