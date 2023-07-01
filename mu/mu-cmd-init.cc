@@ -1,0 +1,70 @@
+/*
+** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**
+** This program is free software; you can redistribute it and/or modify it
+** under the terms of the GNU General Public License as published by the
+** Free Software Foundation; either version 3, or (at your option) any
+** later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software Foundation,
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
+*/
+
+#include "config.h"
+
+#include "mu-cmd.hh"
+
+using namespace Mu;
+
+Result<void>
+Mu::mu_cmd_init(const Options& opts)
+{
+	auto store = std::invoke([&]()->Result<Store> {
+
+		/*
+		 * reinit
+		 */
+		if (opts.init.reinit)
+			return Store::make(opts.runtime_path(RuntimePath::XapianDb),
+					   Store::Options::ReInit|Store::Options::Writable);
+		/*
+		 * full init
+		 */
+
+		/* not provided, nor could we find a good default */
+		if (opts.init.maildir.empty())
+			return Err(Error::Code::InvalidArgument,
+				   "missing --maildir parameter and could "
+				   "not determine default");
+
+		MemDb mdb;
+		Config conf{mdb};
+		if (opts.init.max_msg_size)
+			conf.set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
+		if (opts.init.batch_size)
+			conf.set<Config::Id::MaxMessageSize>(*opts.init.batch_size);
+
+		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
+				       opts.init.maildir, conf);
+	});
+
+	if (!store)
+		return Err(store.error());
+
+	if (!opts.quiet) {
+		mu_cmd_info(*store, opts);
+		std::cout << "database "
+			  << (opts.init.reinit ? "reinitialized" : "created")
+			  << "; use the 'index' command to fill/update it.\n";
+	}
+
+	return Ok();
+}
+

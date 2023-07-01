@@ -50,17 +50,25 @@ message_options(const CmdOpts& cmdopts)
 	return mopts;
 }
 
-
-
 /**
- * execute the 'find' command
+ * execute the 'add' command
  *
  * @param store store object to use
  * @param opts configuration options
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_find(const Store& store, const Options& opts);
+Result<void> mu_cmd_add(Store& store, const Options& opts);
+
+/**
+ * execute the 'cfind' command
+ *
+ * @param store store object to use
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_cfind(const Store& store, const Options& opts);
 
 /**
  * execute the 'extract' command
@@ -81,24 +89,14 @@ Result<void> mu_cmd_extract(const Options& opts);
 Result<void> mu_cmd_fields(const Options& opts);
 
 /**
- * execute the 'script' command
- *
- * @param opts configuration options
- * @param err receives error information, or NULL
- *
- * @return Ok() or some error
- */
-Result<void> mu_cmd_script(const Options& opts);
-
-/**
- * execute the cfind command
+ * execute the 'find' command
  *
  * @param store store object to use
  * @param opts configuration options
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_cfind(const Store& store, const Options& opts);
+Result<void> mu_cmd_find(const Store& store, const Options& opts);
 
 /**
  * execute the 'index' command
@@ -111,6 +109,55 @@ Result<void> mu_cmd_cfind(const Store& store, const Options& opts);
 Result<void> mu_cmd_index(Store& store, const Options& opt);
 
 /**
+ * execute the 'info' command
+ *
+ * @param store message store object.
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_info(const Mu::Store& store, const Options& opts);
+
+/**
+ * execute the 'init' command
+ *
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_init(const Options& opts);
+
+/**
+ * execute the 'mkdir' command
+ *
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_mkdir(const Options& opts);
+
+/**
+ * execute the 'remove' command
+ *
+ * @param store store object to use
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_remove(Store& store, const Options& opt);
+
+/**
+ * execute the 'script' command
+ *
+ * @param opts configuration options
+ * @param err receives error information, or NULL
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_script(const Options& opts);
+
+
+/**
  * execute the server command
  * @param opts configuration options
  * @param err receives error information, or NULL
@@ -118,6 +165,24 @@ Result<void> mu_cmd_index(Store& store, const Options& opt);
  * @return Ok() or some error
  */
 Result<void> mu_cmd_server(const Options& opts);
+
+/**
+ * execute the 'verify' command
+ *
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Mu::Result<void> mu_cmd_verify(const Options& opts);
+
+/**
+ * execute the 'view' command
+ *
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Mu::Result<void> mu_cmd_view(const Options& opts);
 
 /**
  * execute some mu command, based on 'opts'

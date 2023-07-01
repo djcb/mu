@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,13 +18,20 @@ mu = executable(
   'mu', [
   'mu.cc',
   'mu-options.cc',
+  'mu-cmd-add.cc',
   'mu-cmd-cfind.cc',
   'mu-cmd-extract.cc',
   'mu-cmd-fields.cc',
   'mu-cmd-find.cc',
+  'mu-cmd-info.cc',
+  'mu-cmd-init.cc',
   'mu-cmd-index.cc',
+  'mu-cmd-mkdir.cc',
+  'mu-cmd-remove.cc',
   'mu-cmd-script.cc',
   'mu-cmd-server.cc',
+  'mu-cmd-verify.cc',
+  'mu-cmd-view.cc',
   'mu-cmd.cc'
 ],
   dependencies: [ glib_dep, gmime_dep, lib_mu_dep, thread_dep, config_h_dep ],
