@@ -933,7 +933,7 @@ Server::Private::ping_handler(const Command& cmd)
 	if (storecount == (unsigned)-1)
 		throw Error{Error::Code::Store, "failed to read store"};
 	Sexp addrs;
-	for (auto&& addr : store().properties().personal_addresses)
+	for (auto&& addr : store().config().get<Config::Id::PersonalAddresses>())
 		addrs.add(addr);
 
 	output_sexp(Sexp()
@@ -942,8 +942,8 @@ Server::Private::ping_handler(const Command& cmd)
 			       Sexp().put_props(
 				       ":version", VERSION,
 				       ":personal-addresses", std::move(addrs),
-				       ":database-path", store().properties().database_path,
-				       ":root-maildir", store().properties().root_maildir,
+				       ":database-path", store().path(),
+				       ":root-maildir", store().root_maildir(),
 				       ":doccount", storecount)));
 }
 

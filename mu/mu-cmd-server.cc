@@ -120,8 +120,8 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	Server server{*store, output_sexp_stdout};
 	g_message("created server with store @ %s; maildir @ %s; debug-mode %s;"
 		  "readline: %s",
-		  store->properties().database_path.c_str(),
-		  store->properties().root_maildir.c_str(),
+		  store->path().c_str(),
+		  store->root_maildir().c_str(),
 		  opts.debug ? "yes" : "no",
 		  have_readline() ? "yes" : "no");
 

@@ -33,7 +33,7 @@
 #include "mu-query-match-deciders.hh"
 #include "mu-query-threads.hh"
 #include <mu-xapian.hh>
-#include "utils/mu-xapian-utils.hh"
+#include "mu-xapian-db.hh"
 
 using namespace Mu;
 
@@ -60,9 +60,6 @@ struct Query::Private {
 	Option<QueryResults> run(const std::string& expr,
 				 Field::Id sortfield_id, QueryFlags qflags,
 				 size_t maxnum) const;
-
-	size_t store_size() const { return store_.database().get_doccount(); }
-
 	const Store& store_;
 	const Parser parser_;
 };
@@ -87,8 +84,7 @@ Query::Private::make_enquire(const std::string& expr,
 			     Field::Id		sortfield_id,
 			     QueryFlags         qflags) const
 {
-	Xapian::Enquire enq{store_.database()};
-
+	auto enq{store_.xapian_db().enquire()};
 	if (expr.empty() || expr == R"("")")
 		enq.set_query(Xapian::Query::MatchAll);
 	else {
@@ -110,7 +106,7 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 				     Field::Id sortfield_id,
 				     QueryFlags qflags) const
 {
-	Xapian::Enquire            enq{store_.database()};
+	auto enq{store_.xapian_db().enquire()};
 	std::vector<Xapian::Query> qvec;
 	for (auto&& t : thread_ids)
 		qvec.emplace_back(field_from_id(Field::Id::ThreadId).xapian_term(t));
@@ -235,7 +231,7 @@ Query::Private::run_related(const std::string& expr,
 			return make_related_enquire(minfo.thread_ids, sortfield_id, qflags);
 	});
 
-	const auto r_mset{r_enq.get_mset(0, threading ? store_size() : maxnum, {},
+	const auto r_mset{r_enq.get_mset(0, threading ? store_.size() : maxnum, {},
 					 make_related_decider(qflags, minfo).get())};
 	auto       qres{QueryResults{r_mset, std::move(minfo.matches)}};
 	return threading ? run_threaded(std::move(qres), r_enq, qflags, maxnum) : qres;
@@ -245,7 +241,7 @@ Option<QueryResults>
 Query::Private::run(const std::string&  expr, Field::Id sortfield_id, QueryFlags qflags,
 		    size_t maxnum) const
 {
-	const auto eff_maxnum{maxnum == 0 ? store_size() : maxnum};
+	const auto eff_maxnum{maxnum == 0 ? store_.size() : maxnum};
 
 	if (any_of(qflags & QueryFlags::IncludeRelated))
 		return run_related(expr, sortfield_id, qflags, eff_maxnum);
@@ -273,7 +269,6 @@ Query::run(const std::string& expr, Field::Id sortfield_id,
 			return Result<QueryResults>(Err(Error::Code::Query,
 							"failed to run query"));
 	});
-
 }
 
 size_t
@@ -282,7 +277,7 @@ Query::count(const std::string& expr) const
 	return xapian_try(
 	    [&] {
 		    const auto enq{priv_->make_enquire(expr, {}, {})};
-		    auto       mset{enq.get_mset(0, priv_->store_size())};
+		    auto       mset{enq.get_mset(0, priv_->store_.size())};
 		    mset.fetch();
 		    return mset.size();
 	    },

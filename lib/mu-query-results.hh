@@ -38,7 +38,7 @@
 
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
-#include <utils/mu-xapian-utils.hh>
+#include <mu-xapian-db.hh>
 
 #include <message/mu-message.hh>
 

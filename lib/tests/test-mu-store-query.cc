@@ -64,7 +64,11 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 	}
 
 	/* make the store */
-	auto store = Store::make_new(test_path, maildir, personal_addresses, {});
+	MemDb mdb;
+	Config conf{mdb};
+	conf.set<Config::Id::PersonalAddresses>(personal_addresses);
+
+	auto store = Store::make_new(test_path, maildir, conf);
 	assert_valid_result(store);
 
 	/* index the messages */
@@ -544,9 +548,9 @@ Boo!
 	/* create maildir with message */
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
-	g_debug("%s", store.properties().root_maildir.c_str());
+	g_debug("%s", store.root_maildir().c_str());
 	/* ensure we have a proper maildir, with new/, cur/ */
-	auto mres = maildir_mkdir(store.properties().root_maildir + "/inbox");
+	auto mres = maildir_mkdir(store.root_maildir() + "/inbox");
 	assert_valid_result(mres);
 	g_assert_cmpuint(store.size(), ==, 1U);
 
@@ -572,7 +576,7 @@ Boo!
 	const auto& moved_msg{moved_msgs->at(0).second};
 	const auto new_path = moved_msg.path();
 	if (!rename)
-		assert_equal(new_path, store.properties().root_maildir + "/inbox/cur/msg:2,S");
+		assert_equal(new_path, store.root_maildir() + "/inbox/cur/msg:2,S");
 	g_assert_cmpuint(store.size(), ==, 1);
 	g_assert_false(::access(old_path.c_str(), F_OK) == 0);
 	g_assert_true(::access(new_path.c_str(), F_OK) == 0);

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -45,37 +45,36 @@ static void
 test_store_ctor_dtor()
 {
 	TempDir tempdir;
-	auto store{Store::make_new(tempdir.path(), "/tmp", {}, {})};
+	auto store{Store::make_new(tempdir.path(), "/tmp")};
 	assert_valid_result(store);
 
 	g_assert_true(store->empty());
 	g_assert_cmpuint(0, ==, store->size());
 
-	g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==,
-			store->properties().schema_version.c_str());
+	g_assert_cmpuint(MU_STORE_SCHEMA_VERSION, ==,
+			 store->config().get<Config::Id::SchemaVersion>());
 }
-
-
 
 static void
 test_store_reinit()
 {
 	TempDir tempdir;
 	{
-		Store::Config conf{};
-		conf.max_message_size = 1234567;
-		conf.batch_size	      = 7654321;
+		MemDb mdb;
+		Config conf{mdb};
+		conf.set<Config::Id::MaxMessageSize>(1234567);
+		conf.set<Config::Id::BatchSize>(7654321);
+		conf.set<Config::Id::PersonalAddresses>(
+			StringVec{ "foo@example.com", "bar@example.com" });
 
-		StringVec my_addresses{ "foo@example.com", "bar@example.com" };
-
-		auto store{Store::make_new(tempdir.path(), MuTestMaildir, my_addresses, conf)};
+		auto store{Store::make_new(tempdir.path(), MuTestMaildir, conf)};
 		assert_valid_result(store);
 
 		g_assert_true(store->empty());
 		g_assert_cmpuint(0, ==, store->size());
 
-		g_assert_cmpstr(MU_STORE_SCHEMA_VERSION, ==,
-				store->properties().schema_version.c_str());
+		g_assert_cmpuint(MU_STORE_SCHEMA_VERSION, ==,
+				 store->config().get<Config::Id::SchemaVersion>());
 
 		const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
 		const auto id = store->add_message(msgpath);
@@ -92,11 +91,13 @@ test_store_reinit()
 		assert_valid_result(store);
 		g_assert_true(store->empty());
 
-		assert_equal(store->properties().database_path, tempdir.path());
-		g_assert_cmpuint(store->properties().batch_size,==,7654321);
-		g_assert_cmpuint(store->properties().max_message_size,==,1234567);
+		assert_equal(store->path(), tempdir.path());
+		assert_equal(store->root_maildir(), MuTestMaildir);
 
-		const auto addrs{store->properties().personal_addresses};
+		g_assert_cmpuint(store->config().get<Config::Id::BatchSize>(),==,7654321);
+		g_assert_cmpuint(store->config().get<Config::Id::MaxMessageSize>(),==,1234567);
+
+		const auto addrs{store->config().get<Config::Id::PersonalAddresses>()};
 		g_assert_cmpuint(addrs.size(),==,2);
 		g_assert_true(seq_some(addrs, [](auto&& a){return a=="foo@example.com";}));
 		g_assert_true(seq_some(addrs, [](auto&& a){return a=="bar@example.com";}));
@@ -116,8 +117,11 @@ test_store_add_count_remove()
 {
 	TempDir tempdir{false};
 
-	auto store{Store::make_new(tempdir.path() + "/xapian", MuTestMaildir, {}, {})};
+	auto store{Store::make_new(tempdir.path() + "/xapian", MuTestMaildir)};
 	assert_valid_result(store);
+
+	assert_equal(store->path(), tempdir.path() + "/xapian");
+	assert_equal(store->root_maildir(), MuTestMaildir);
 
 	const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
 	const auto id1 = store->add_message(msgpath);
@@ -184,7 +188,7 @@ statement you can use something like:
 goto * instructions[pOp->opcode];
 )";
 	TempDir tempdir;
-	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir", {}, {})};
+	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir")};
 	assert_valid_result(store);
 
 	const auto msgpath{"/home/test/Maildir/inbox/cur/1649279256.107710_1.evergrey:2,S"};
@@ -269,7 +273,7 @@ World!
 )";
 
 	TempDir tempdir;
-	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir", {}, {})};
+	auto store{Store::make_new(tempdir.path(), "/home/test/Maildir")};
 	assert_valid_result(store);
 
 	auto message{Message::make_from_text(
@@ -343,7 +347,7 @@ Yes, that would be excellent.
 
 	 // Index it into a store.
 	 TempDir tempdir;
-	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir", {}, {})};
+	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir")};
 	 assert_valid_result(store);
 
 	 store->indexer().start({});
@@ -414,7 +418,7 @@ Yes, that would be excellent.
 	 auto msg3_path = tempdir2.path() + "/Maildir/b/cur/msgdef:2,RS";
 
 	 TempDir tempdir;
-	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir", {}, {})};
+	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir")};
 	 assert_valid_result(store);
 
 	 std::vector<Store::Id> ids;
@@ -473,8 +477,7 @@ test_store_fail()
 
 	{
 		const auto store = Store::make_new("/../../root/non-existent-path/12345",
-						   "/../../root/non-existent-path/54321",
-						   {}, {});
+						   "/../../root/non-existent-path/54321");
 		g_assert_false(!!store);
 	}
 }

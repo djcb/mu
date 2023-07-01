@@ -88,9 +88,9 @@ mu_guile_init_instance(const std::string& muhome) try {
 		StoreSingleton.emplace(std::move(store.value()));
 
 	g_debug("mu-guile: opened store @ %s (n=%zu); maildir: %s",
-		StoreSingleton->properties().database_path.c_str(),
+		StoreSingleton->path().c_str(),
 		StoreSingleton->size(),
-		StoreSingleton->properties().root_maildir.c_str());
+		StoreSingleton->root_maildir().c_str());
 
 	return true;
 

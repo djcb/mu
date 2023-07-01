@@ -77,7 +77,7 @@ print_stats(const Indexer::Progress& stats, bool color)
 Result<void>
 Mu::mu_cmd_index(Store& store, const Options& opts)
 {
-	const auto mdir{store.properties().root_maildir};
+	const auto mdir{store.root_maildir()};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0))
 		return Err(Error::Code::File, "'%s' is not readable: %s",
 			   mdir.c_str(), g_strerror(errno));
@@ -89,8 +89,8 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 			std::cout << "lazily ";
 
 		std::cout << "indexing maildir " << col.fg(Color::Green)
-			  << store.properties().root_maildir << col.reset() << " -> store "
-			  << col.fg(Color::Green) << store.properties().database_path << col.reset()
+			  << store.root_maildir() << col.reset() << " -> store "
+			  << col.fg(Color::Green) << store.path() << col.reset()
 			  << std::endl;
 	}
 

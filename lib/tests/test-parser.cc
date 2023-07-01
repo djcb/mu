@@ -43,7 +43,7 @@ test_cases(const CaseVec& cases)
 {
 	char* tmpdir = test_mu_common_get_random_tmpdir();
 	g_assert(tmpdir);
-	auto dummy_store{Store::make_new(tmpdir, "/tmp", {}, {})};
+	auto dummy_store{Store::make_new(tmpdir, "/tmp")};
 	assert_valid_result(dummy_store);
 
 	g_free(tmpdir);

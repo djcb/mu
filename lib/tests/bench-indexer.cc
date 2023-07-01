@@ -465,7 +465,7 @@ benchmark_indexer(gconstpointer testdata)
 	auto start = Clock::now();
 
 	{
-		auto store{Store::make_new(BENCH_STORE, BENCH_MAILDIRS, {}, {})};
+		auto store{Store::make_new(BENCH_STORE, BENCH_MAILDIRS)};
 		g_assert_true(!!store);
 		Indexer::Config conf{};
 		conf.max_threads = tdata->num_threads;

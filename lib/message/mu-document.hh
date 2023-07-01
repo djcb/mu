@@ -23,8 +23,8 @@
 #include <utility>
 #include <string>
 #include <vector>
-#include "utils/mu-xapian-utils.hh"
 
+#include "mu-xapian-db.hh"
 #include "mu-fields.hh"
 #include "mu-priority.hh"
 #include "mu-flags.hh"

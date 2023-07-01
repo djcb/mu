@@ -41,7 +41,7 @@ test_query()
 	char* tdir;
 
 	tdir = test_mu_common_get_random_tmpdir();
-	auto store = Store::make_new(tdir, std::string{MU_TESTMAILDIR}, {}, {});
+	auto store = Store::make_new(tdir, std::string{MU_TESTMAILDIR});
 	assert_valid_result(store);
 	g_free(tdir);
 

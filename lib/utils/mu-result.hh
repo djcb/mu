@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -134,8 +134,6 @@ Err(Error::Code errcode, GError **err, const char* frm, ...)
 	return Err(errcode, std::move(str));
 }
 
-
-
 /**
  * Assert that some result has a value (for unit tests)
  *
@@ -149,8 +147,6 @@ Err(Error::Code errcode, GError **err, const char* frm, ...)
 		g_assert_true(!!R);			\
 	}						\
 } while(0)
-
-
 
 }// namespace Mu
 

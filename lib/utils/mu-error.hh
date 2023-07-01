@@ -69,6 +69,8 @@ struct Error final : public std::exception {
 		UnverifiedSignature     = err_enum(119,1,0),
 		User                    = err_enum(120,1,0),
 		Xapian                  = err_enum(121,1,0),
+
+		CannotReinit           = err_enum(122,1,0),
 	};
 
 	/**

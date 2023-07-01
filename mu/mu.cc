@@ -71,7 +71,11 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 		std::cerr << "Perhaps mu is already running?\n";
 		break;
 	case Error::Code::SchemaMismatch:
-		std::cerr << "Please (re)initialize mu with 'mu init' "
+		std::cerr << "Please (re)initialize mu with 'mu init'; "
+			  << "see mu-init(1) for details\n";
+		break;
+	case Error::Code::CannotReinit:
+		std::cerr << "Invoke 'mu init' without '--reinit'; "
 			  << "see mu-init(1) for details\n";
 		break;
 	default:
