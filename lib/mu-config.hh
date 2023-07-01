@@ -43,15 +43,16 @@ struct Property {
 	enum struct Id {
 		BatchSize,	/**< Xapian batch-size */
 		Contacts,       /**< Cache of contact information */
-		Created,        /**  Time of creation */
+		Created,        /**<  Time of creation */
+		IgnoredAddresses,/**< Email addresses ignored for the contacts-cache */
 		LastChange,	/**< Time of last change */
 		LastIndex,	/**< Time of last index */
 		MaxMessageSize,	/**< Maximum message size (in bytes) */
-		PersonalAddresses, /**< List of personal e-mail addresses */
+		PersonalAddresses,	/**< List of personal e-mail addresses */
 		RootMaildir,	/**< Root maildir path */
 		SchemaVersion,	/**< Xapian DB schema version */
 		/* <private> */
-		_count_ /* Number of Ids */
+		_count_		/* Number of Ids */
 	};
 
 	static constexpr size_t id_size = static_cast<size_t>(Id::_count_);
@@ -119,6 +120,15 @@ public:
 			"Database creation time"
 		},
 		{
+			Id::IgnoredAddresses,
+			Type::StringList,
+			Flags::Configurable,
+			"ignored-addresses",
+			{},
+			"E-mail addresses ignored  for the contacts-cache, "
+			"literal or /regexp/"
+		},
+		{
 			Id::LastChange,
 			Type::Timestamp,
 			Flags::ReadOnly,
@@ -147,8 +157,8 @@ public:
 			Type::StringList,
 			Flags::Configurable,
 			"personal-addresses",
-			"",
-			"List of personal e-mail addresses, literal or /regexp/"
+			{},
+			"Personal e-mail addresses, literal or /regexp/"
 		},
 		{
 			Id::RootMaildir,

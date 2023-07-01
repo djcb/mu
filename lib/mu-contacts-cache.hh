@@ -53,10 +53,10 @@ public:
 	/**
 	 * Add a contact
 	 *
-	 * Invalid email address are not cached (but we log a warning)
+	 * Invalid email address are not cached (but we log a warning); neither
+	 * are "ignored" addresses (see --ignored-address in mu-init(1))
 	 *
 	 * @param contact a Contact object
-	 *
 	 */
 	void add(Contact&& contact);
 
@@ -67,7 +67,8 @@ public:
 	 * if any of the contacts matches one of the personal addresses,
 	 * any of the senders/recipients are considered "personal"
 	 *
-	 * Invalid email address are not cached (but we log a warning)
+	 * Invalid email address are not cached (but we log a warning); neither
+	 * are "ignored" addresses (see --ignored-address in mu-init(1))
 	 *
 	 * @param contacts a Contact object sequence
 	 * @param is_personal receives true if any of the contacts was personal;
@@ -114,6 +115,16 @@ public:
 	 * @return true or false
 	 */
 	bool is_personal(const std::string& addr) const;
+
+
+	/**
+	 * Does this look like an email-address that should be ignored?
+	 *
+	 * @param addr some e-mail address
+	 *
+	 * @return true or false
+	 */
+	bool is_ignored(const std::string& addr) const;
 
 	/**
 	 * Find a contact based on the email address. This is not safe, since

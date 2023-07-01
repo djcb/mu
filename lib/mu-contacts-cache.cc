@@ -49,8 +49,10 @@ struct ContactsCache::Private {
 	Private(Config& config_db)
 		:config_db_{config_db},
 		 contacts_{deserialize(config_db_.get<Config::Id::Contacts>())},
-		 personal_plain_{make_personal_plain(config_db_.get<Config::Id::PersonalAddresses>())},
-		 personal_rx_{make_personal_rx(config_db_.get<Config::Id::PersonalAddresses>())},
+		 personal_plain_{make_plain(config_db_.get<Config::Id::PersonalAddresses>())},
+		 personal_rx_{make_rx(config_db_.get<Config::Id::PersonalAddresses>())},
+		 ignored_plain_{make_plain(config_db_.get<Config::Id::IgnoredAddresses>())},
+		 ignored_rx_{make_rx(config_db_.get<Config::Id::IgnoredAddresses>())},
 		 dirty_{0}
 		{}
 
@@ -61,12 +63,16 @@ struct ContactsCache::Private {
 	ContactUMap deserialize(const std::string&) const;
 	void serialize() const;
 
-	Config&		config_db_;
+	Config&			config_db_;
 	ContactUMap		contacts_;
 	mutable std::mutex	mtx_;
 
 	const StringVec			personal_plain_;
 	const std::vector<Regex>	personal_rx_;
+
+	const StringVec			ignored_plain_;
+	const std::vector<Regex>	ignored_rx_;
+
 	mutable size_t			dirty_;
 
 private:
@@ -77,7 +83,7 @@ private:
 	 *
 	 * @return
 	 */
-	StringVec make_personal_plain(const StringVec& personal) const {
+	StringVec make_plain(const StringVec& personal) const {
 		StringVec svec;
 		std::copy_if(personal.begin(),  personal.end(),
 			     std::back_inserter(svec), [&](auto&& p) {
@@ -94,7 +100,7 @@ private:
 	 *
 	 * @return
 	 */
-	std::vector<Regex> make_personal_rx(const StringVec& personal) const {
+	std::vector<Regex> make_rx(const StringVec& personal) const {
 		std::vector<Regex> rxvec;
 		for(auto&& p: personal) {
 			if (p.size() < 2 || p[0] != '/' || p[p.length()- 1] != '/')
@@ -209,6 +215,11 @@ ContactsCache::add(Contact&& contact)
 		return;
 	}
 
+	if (is_ignored(contact.email)) {
+		/* ignored this address, e.g. 'noreply@example.com */
+		return;
+	}
+
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
 
 	++priv_->dirty_;
@@ -256,7 +267,6 @@ ContactsCache::add(Contacts&& contacts, bool& personal)
 		add(std::move(contact));
 	}
 }
-
 
 const Contact*
 ContactsCache::_find(const std::string& email) const
@@ -343,20 +353,36 @@ ContactsCache::for_each(const EachContactFunc& each_contact) const
 	}
 }
 
-bool
-ContactsCache::is_personal(const std::string& addr) const
+static bool
+address_matches(const std::string& addr, const StringVec& plain, const std::vector<Regex>& regexes)
 {
-	for (auto&& p : priv_->personal_plain_)
+	for (auto&& p : plain)
 		if (g_ascii_strcasecmp(addr.c_str(), p.c_str()) == 0)
 			return true;
 
-	for (auto&& rx : priv_->personal_rx_) {
+	for (auto&& rx : regexes) {
 		if (rx.matches(addr))
 			return true;
 	}
 
 	return false;
 }
+
+
+bool
+ContactsCache::is_personal(const std::string& addr) const
+{
+	return address_matches(addr, priv_->personal_plain_, priv_->personal_rx_);
+}
+
+bool
+ContactsCache::is_ignored(const std::string& addr) const
+{
+	return address_matches(addr, priv_->ignored_plain_, priv_->ignored_rx_);
+}
+
+
+
 
 #ifdef BUILD_TESTS
 /*
@@ -431,6 +457,36 @@ test_mu_contacts_cache_personal()
 	g_assert_false(contacts.is_personal("bar@fnorb.fi"));
 	g_assert_false(contacts.is_personal("bar-zzz@fnorb.xr"));
 }
+
+static void
+test_mu_contacts_cache_ignored()
+{
+	MemDb xdb{};
+	Config cdb{xdb};
+	cdb.set<Config::Id::IgnoredAddresses>
+		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}});
+	ContactsCache  contacts{cdb};
+
+	g_assert_true(contacts.is_ignored("foo@example.com"));
+	g_assert_true(contacts.is_ignored("Bar@CuuX.orG"));
+	g_assert_true(contacts.is_ignored("bar-123abc@fnorb.fi"));
+	g_assert_true(contacts.is_ignored("bar-zzz@fnorb.fr"));
+
+	g_assert_false(contacts.is_ignored("foo@bar.com"));
+	g_assert_false(contacts.is_ignored("BÂr@CuuX.orG"));
+	g_assert_false(contacts.is_ignored("bar@fnorb.fi"));
+	g_assert_false(contacts.is_ignored("bar-zzz@fnorb.xr"));
+
+	g_assert_cmpuint(contacts.size(),==,0);
+	contacts.add(Mu::Contact{"a@example.com", "a", 123, true, 1000, 0});
+	g_assert_cmpuint(contacts.size(),==,1);
+	contacts.add(Mu::Contact{"foo@example.com", "b", 123, true, 1000, 0}); // ignored
+	contacts.add(Mu::Contact{"bar-123abc@fnorb.fi", "c", 123, true, 1000, 0}); // ignored
+	g_assert_cmpuint(contacts.size(),==,1);
+	contacts.add(Mu::Contact{"b@example.com", "d", 123, true, 1000, 0});
+	g_assert_cmpuint(contacts.size(),==,2);
+}
+
 
 
 static void
@@ -544,6 +600,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/lib/contacts-cache/base", test_mu_contacts_cache_base);
 	g_test_add_func("/lib/contacts-cache/personal", test_mu_contacts_cache_personal);
+	g_test_add_func("/lib/contacts-cache/ignored", test_mu_contacts_cache_ignored);
 	g_test_add_func("/lib/contacts-cache/for-each", test_mu_contacts_cache_foreach);
 	g_test_add_func("/lib/contacts-cache/sort", test_mu_contacts_cache_sort);
 
