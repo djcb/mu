@@ -10,15 +10,14 @@
 [[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Dependencies-for-Debian_002fUbuntu][https://img.shields.io/badge/Platform-Linux-2e8b57?logo=linux&.svg]]
 [[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Building-from-a-release-tarball-1][https://img.shields.io/badge/Platform-FreeBSD-8b3a3a?logo=freebsd&logoColor=c32136&.svg]]
 [[https://formulae.brew.sh/formula/mu#default][https://img.shields.io/badge/Platform-macOS-101010?logo=apple&logoColor=ffffff&.svg]]
-[[https://github.com/msys2-unofficial/MSYS2-packages/blob/master/mu/README.org][https://img.shields.io/badge/Platform-Windows-00bfff?logo=windows&logoColor=00bfff&.svg]]
+https://img.shields.io/badge/Platform-WSL2%20(experimental)-blue
+
+ [ *Note*: you are looking at the *development* branch, which is where new code is
+ being developed and tested, and which may occasionally break. Distributions and
+ non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.10][1.10 Release Branch]] or
+ to pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]]. ]
 
 Welcome to ~mu~!
-
-*Note*: you are looking at the *development* branch, which is where new code is
-being developed and tested, and which may occasionally break.
-
-Distributions and non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.10][1.10
-Release Branch]] or to pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]].
 
 Given the enormous amounts of e-mail many people gather and the importance of
 e-mail message in our work-flows, it's essential to quickly deal with all that
@@ -28,7 +27,7 @@ now, and quickly file away message for later use.
 ~mu~ is a tool for dealing with e-mail messages stored in the Maildir-format. ~mu~'s
 purpose in life is to help you to quickly find the messages you need; in
 addition, it allows you to view messages, extract attachments, create new
-maildirs, and so on. =mu= is fully documented.
+maildirs, and so on.
 
 After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them using a
 custom query language. You can use various message fields or words in the body
@@ -44,32 +43,32 @@ Built on top of ~mu~ are some extensions (included in this package):
 ~mu~ is written in C++; ~mu4e~ is written in ~elisp~ and ~mu-guile~ in a mix of C++ and
 Scheme.
 
-Note, ~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora)
-under the name ~maildir-utils~; apparently because they don't like short names.
-All of the code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License
-version 3]] (or higher).
+~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora) under the
+name ~maildir-utils~; apparently because they don't like short names. All of the
+code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License version 3]]
+(or higher).
 
 * Installation
 
-Note: building from source is an /advanced/ subject; esp. if something goes wrong.
-The below simple examples are a start, but all tools involved have many options;
-there are differences between systems, versions etc. So if this is all a bit
-daunting we recommend to wait for someone else to build it for you, such as a
-Linux distribution. Many have packages available.
+Note: building from source is an /advanced/ subject, especially if something goes
+wrong. The below simple examples are a start, but all tools involved have many
+options; there are differences between systems, versions etc. So if this is all
+a bit daunting we recommend to wait for someone else to build it for you, such
+as a Linux distribution. Many have packages available.
 
 ** Requirements
 
 To be able to build ~mu~, ensure you have:
 
 - a C++17 compiler (~gcc~ or ~clang~ are known to work)
-- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
+- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for thex
   versions)
 - basic tools such as ~make~, ~sed~, ~grep~
 - ~meson~
 
 For ~mu4e~, you also need ~emacs~.
 
-Note, the MSYS2 support for Windows is _experimental_, that is, it works for some
+Note, support for Windows is very much _experimental_, that is, it works for some
 people, but we can't really support it due to lack of the specific expertise.
 Help is welcome!
 
@@ -91,11 +90,10 @@ $ ./autogen.sh && make
 $ sudo make install
 #+end_example
 
-Alternatively, you can run ~meson~ directly:
+Alternatively, you can run ~meson~ directly (see the ~meson~ documentation for
+more details):
 #+begin_example
-$ meson build && ninja -C build
-$ ninja -C build install
+$ meson setup -C build
+$ meson compile -C build
+$ meson install -C build
 #+end_example
-
-This allows for passing various ~meson~ options, such as ~--prefix~. Consult the
-~meson~ documentation for details.
