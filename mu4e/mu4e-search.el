@@ -410,16 +410,22 @@ status, STATUS."
 FIELD is the field to sort by; DIR is a symbol: either
 `ascending', `descending', t (meaning: if FIELD is the same as
 the current sortfield, change the sort-order) or nil (ask the
-user)."
+user).
+
+When threads are enabled (`mu4e-search-threads'), you can only sort
+by the `:date' field."
   (interactive)
-  (let* ((choices '(("date"    . :date)
-                    ("from"    . :from)
-                    ("list"    . :list)
-                    ("maildir" . :maildir)
-                    ("prio"    . :prio)
-                    ("zsize"   . :size)
-                    ("subject" . :subject)
-                    ("to"      . :to)))
+  (let* ((choices ;; with threads enabled, you can only sort by *date*
+          (if mu4e-search-threads
+              '(("date"    . :date))
+            '(("date"    . :date)
+              ("from"    . :from)
+              ("list"    . :list)
+              ("maildir" . :maildir)
+              ("prio"    . :prio)
+              ("zsize"   . :size)
+              ("subject" . :subject)
+              ("to"      . :to))))
          (field
           (or field
               (mu4e-read-option "Sortfield: " choices)))
