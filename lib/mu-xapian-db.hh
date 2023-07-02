@@ -25,6 +25,7 @@
 #include <string>
 #include <mutex>
 #include <functional>
+#include <unordered_map>
 
 #include <glib.h>
 
