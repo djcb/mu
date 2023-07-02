@@ -15,12 +15,17 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # Makefile with some useful targets for meson/ninja
+V                 ?= 0
 
-NINJA             ?= ninja
 BUILDDIR          ?= $(CURDIR)/build
 COVERAGE_BUILDDIR ?= $(CURDIR)/build-coverage
+
+GENHTML           ?= genhtml
+LCOV              ?= lcov
+MAKEINFO          ?= makeinfo
 MESON             ?= meson
-V                 ?= 0
+NINJA             ?= ninja
+VALGRIND          ?= valgrind
 
 ifneq ($(V),0)
   VERBOSE=--verbose
@@ -46,7 +51,7 @@ endif
 # 1. build with clang, and the thread-sanitizer
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
 all: $(BUILDDIR)
-	@$(NINJA) -C $(BUILDDIR) $(VERBOSE)
+	@$(MESON) compile -C $(BUILDDIR) $(VERBOSE)
 	@ln -sf $(BUILDDIR)/compile_commands.json $(CURDIR) || /bin/true
 
 $(BUILDDIR):
@@ -58,7 +63,7 @@ test: all
 	@$(MESON) test $(VERBOSE) -C $(BUILDDIR)
 
 install: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) install
+	@$(MESON) install -C $(BUILDDIR) $(VERBOSE)
 
 uninstall: $(BUILDDIR)
 	@$(NINJA) -C $(BUILDDIR) uninstall
@@ -70,16 +75,15 @@ clean:
 # below targets are just for development/testing/debugging. They may or
 # may not work on your system.
 #
-
 test-verbose-if-fail: all
-	@cd $(BUILDDIR); $(MESON) test || $(MESON) test --verbose
+	$(MESON) test -C $(BUILDDIR) || $(MESON) test -C $(BUILDDIR) --verbose
 
 vg_opts:=--enable-debuginfod=no --leak-check=full --error-exitcode=1
 test-valgrind: export G_SLICE=always-malloc
 test-valgrind: export G_DEBUG=gc-friendly
 test-valgrind: $(BUILDDIR)
 	@cd $(BUILDDIR); $(MESON) test		\
-		--wrap="valgrind $(vg_opts)"	\
+		--wrap="$(VALGRIND) $(vg_opts)"	\
 		--timeout-multiplier 100
 
 # we do _not_ pass helgrind; but this seems to be a false-alarm
@@ -93,21 +97,21 @@ benchmark: $(BUILDDIR)
 	$(NINJA) -C $(BUILDDIR) benchmark
 
 $(COVERAGE_BUILDDIR):
-	$(MESON) -Db_coverage=true --buildtype=debug $(COVERAGE_BUILDDIR)
+	$(MESON) setup -Db_coverage=true --buildtype=debug $(COVERAGE_BUILDDIR)
 
 covfile:=$(COVERAGE_BUILDDIR)/meson-logs/coverage.info
 
 # generate by hand, meson's built-ins are unflexible
 coverage: $(COVERAGE_BUILDDIR)
-	$(NINJA) -C $(COVERAGE_BUILDDIR) test
-	lcov --capture --directory . --output-file $(covfile)
-	@lcov --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
-	@lcov --remove $(covfile) '*mu/mu/*' --output $(covfile)
+	@$(MESON) test -C $(COVERAGE_BUILDDIR) $(VERBOSE)
+	$(LCOV) --capture --directory . --output-file $(covfile)
+	@$(LCOV) --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
+	@$(LCOV) --remove $(covfile) '*mu/mu/*' --output $(covfile)
 	@mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
-	@genhtml $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
+	@$(GENHTML) $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
 	@echo "coverage report at: file://$(COVERAGE_BUILDDIR)/meson-logs/coverage/index.html"
 dist: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) dist
+	$(MESON) dist -C $(BUILDDIR) $(VERBOSE)
 
 distclean: clean
 
