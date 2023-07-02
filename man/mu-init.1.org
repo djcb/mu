@@ -49,14 +49,14 @@ reinitialize the database from an earlier version; that is, create a new empty
 database with the existing settings. This cannot be combined with the other ~init~
 options.
 
+#+include: "muhome.inc" :minlevel 2
+
+#+include: "exit-code.inc" :minlevel 1
+
 * EXAMPLE
 #+begin_example
 $ mu init --maildir=~/Maildir --my-address=alice@example.com --my-address=bob@example.com --ignored-address='/.*reply.*/'
 #+end_example
-
-#+include: "exit-code.inc" :minlevel 1
-
-#+include: "muhome.inc" :minlevel 2
 
 #+include: "prefooter.inc" :minlevel 1
 

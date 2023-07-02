@@ -219,7 +219,9 @@ description: http://www.jwz.org/doc/threading.html
 
 #+include: "common-options.inc" :minlevel 1
 
-* Integrating mu find with mail clients
+* INTEGRATION
+
+It is possible to integrate *mu find* with some mail clients
 
 ** *mutt*
 
@@ -268,9 +270,8 @@ After restarting Wanderlust, the virtual folders should appear.
 
 * ENCODING
 
-*mu find* output is encoded according the locale for =--format=plain=
-(the default), and UTF-8 for all other formats (=sexp=,
-=xml=).
+*mu find* output is encoded according to the locale for =--format=plain= (the
+default format), and UTF-8 for all other formats (=sexp=, =xml=).
 
 #+include: "exit-code.inc" :minlevel 1
 

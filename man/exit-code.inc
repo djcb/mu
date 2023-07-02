@@ -1,20 +1,12 @@
 * EXIT CODE
 
 This command returns 0 upon successful completion, or a non-zero exit code
-otherwise. Typical values are 2 (no matches found), 11 (database schema
-mismatch) and 12 (failed to acquire database lock).
+otherwise.
 
-** no matches found (2)
-
-Nothing matching found; try a different query
-
-** database schema mismatch (11)
-
-You need to re-initialize ~mu~, see *mu-init(1*)
-
-** failed to acquire lock (19)
-
-Some other program has exclusive access to the mu (Xapian) database
+    0. success
+    2. no matches found. Try a different query
+   11. database schema mismatch. You need to re-initialize ~mu~, see *mu-init(1*)
+   19. failed to acquire lock. Some other program has exclusive access to the mu database
 
 # Local Variables:
 # mode: org
