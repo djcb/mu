@@ -36,7 +36,8 @@ endif
 ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Db_sanitize=address' \
-			    '-Dreadline=enabled'
+			    '-Dreadline=enabled'   \
+			    '-Dcpp_std=c++20'
 endif
 
 .PHONY: all

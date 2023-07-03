@@ -28,6 +28,13 @@
 #include "mu-utils-format.hh"
 #include <glib.h>
 
+#ifndef FMT_HEADER_ONLY
+#define FMT_HEADER_ONLY
+#endif
+
+#include <fmt/format.h>
+#include <fmt/core.h>
+
 namespace Mu {
 
 // calculate an error enum value.
@@ -76,68 +83,31 @@ struct Error final : public std::exception {
 	/**
 	 * Construct an error
 	 *
-	 * @param codearg error-code
-	 * @param msgarg the error description
+	 * @param code the error-code
+	 * @param args... libfmt-style format string and parameters
 	 */
-	Error(Code codearg, const std::string& msgarg) : code_{codearg}, what_{msgarg} {}
-	Error(Code codearg, std::string&& msgarg) : code_{codearg}, what_{std::move(msgarg)} {}
+	template<typename...T>
+	Error(Code code, fmt::format_string<T...> frm, T&&... args):
+		code_{code},
+		what_{fmt::format(frm, std::forward<T>(args)...)} {}
 
 	/**
-	 * Build an error from an error-code and a format string
+	 * Construct an error
 	 *
-	 * @param code error-code
-	 * @param frm format string
-	 * @param ... format parameters
-	 *
-	 * @return an Error object
+	 * @param code the error-code
+	 * @param gerr a GError (or {}); the error is _consumed_ by this function
+	 * @param args... libfmt-style format string and parameters
 	 */
-	__attribute__((format(printf, 3, 0))) Error(Code codearg, const char* frm, ...)
-	    : code_{codearg}
-	{
-		va_list args;
-		va_start(args, frm);
-		what_ = vformat(frm, args);
-		va_end(args);
-	}
-
-	Error(Error&& rhs)	= default;
-	Error(const Error& rhs) = default;
+	template<typename...T>
+	Error(Code code, GError **gerr, fmt::format_string<T...> frm, T&&... args):
+		code_{code},
+		what_{fmt::format(frm, std::forward<T>(args)...) +
+		fmt::format(": {}", (gerr && *gerr) ? (*gerr)->message :
+			    "something went wrong")}
+		{ g_clear_error(gerr); }
 
 	/**
-	 * Build an error from a GError an error-code and a format string
-	 *
-	 * @param code error-code
-	 * @param gerr a GError or {}, which is consumed
-	 * @param frm format string
-	 * @param ... format parameters
-	 *
-	 * @return an Error object
-	 */
-	__attribute__((format(printf, 4, 0)))
-	Error(Code codearg, GError** err, const char* frm, ...)
-	    : code_{codearg}
-	{
-		va_list args;
-		va_start(args, frm);
-		what_ = vformat(frm, args);
-		va_end(args);
-
-		if (err && *err)
-			what_ += format(": %s", (*err)->message);
-		else
-			what_ += ": something went wrong";
-
-		g_clear_error(err);
-	}
-
-	/**
-	 * DTOR
-	 *
-	 */
-	virtual ~Error() override = default;
-
-	/**
-	 * Get the descriptive message.
+	 * Get the descriptive message for this error.
 	 *
 	 * @return
 	 */
@@ -192,8 +162,8 @@ private:
 		return error_domain;
 	}
 
-	const Code  code_;
-	std::string what_;
+	const Code		code_;
+	const std::string	what_;
 };
 
 } // namespace Mu

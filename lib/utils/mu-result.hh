@@ -39,8 +39,6 @@ template <typename T> using Result = tl::expected<T, Error>;
  */
 template <typename T>
 class Result<T>::expected
-// note: "class", not "typename";
-// https://stackoverflow.com/questions/46412754/class-name-injection-and-constructors
 Ok(T&& t)
 {
 	return std::move(t);
@@ -83,55 +81,21 @@ Err(const Result<T>& res)
 	return res.error();
 }
 
-
-
-template <typename T>
-static inline Result<void>
-Ok(const T& t)
-{
-	if (t)
-		return Ok();
-	else
-		return Err(t.error());
-}
-
-
 /*
  * convenience
  */
-
-static inline tl::unexpected<Error>
-Err(Error::Code errcode, std::string&& msg="")
+template <typename ...T>
+inline tl::unexpected<Error>
+Err(Error::Code code, fmt::format_string<T...> frm, T&&... args)
 {
-	return Err(Error{errcode, std::move(msg)});
+	return Err(Error{code, frm, std::forward<T>(args)...});
 }
 
-__attribute__((format(printf, 2, 0)))
-static inline tl::unexpected<Error>
-Err(Error::Code errcode, const char* frm, ...)
+template <typename ...T>
+inline tl::unexpected<Error>
+Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
 {
-	va_list args;
-	va_start(args, frm);
-	auto str{vformat(frm, args)};
-	va_end(args);
-
-	return Err(errcode, std::move(str));
-}
-
-__attribute__((format(printf, 3, 0)))
-static inline tl::unexpected<Error>
-Err(Error::Code errcode, GError **err, const char* frm, ...)
-{
-	va_list args;
-	va_start(args, frm);
-	auto str{vformat(frm, args)};
-	va_end(args);
-
-	if (err && *err)
-		str += format(" (%s)", (*err)->message ? (*err)->message : "");
-	g_clear_error(err);
-
-	return Err(errcode, std::move(str));
+	return Err(Error{code, err, frm, std::forward<T>(args)...});
 }
 
 /**

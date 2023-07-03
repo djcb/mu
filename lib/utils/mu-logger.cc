@@ -51,15 +51,13 @@ maybe_open_logfile()
 
 	const auto logdir{to_string_gchar(g_path_get_dirname(MuLogPath.c_str()))};
 	if (g_mkdir_with_parents(logdir.c_str(), 0700) != 0) {
-		std::cerr << "creating " << logdir << " failed:" << g_strerror(errno)
-			  << std::endl;
+		mu_printerrln("creating {} failed: {}", logdir, g_strerror(errno));
 		return false;
 	}
 
 	MuStream.open(MuLogPath, std::ios::out | std::ios::app);
 	if (!MuStream.is_open()) {
-		std::cerr << "opening " << MuLogPath << " failed:" << g_strerror(errno)
-			  << std::endl;
+		mu_printerrln("opening {} failed: {}", MuLogPath, g_strerror(errno));
 		return false;
 	}
 
@@ -86,8 +84,7 @@ maybe_rotate_logfile()
 		MuStream.close();
 
 	if (g_rename(MuLogPath.c_str(), old.c_str()) != 0)
-		std::cerr << "failed to rename " << MuLogPath << " -> " << old.c_str() << ": "
-			  << g_strerror(errno) << std::endl;
+		mu_printerrln("failed to rename {} -> {}: {}", MuLogPath, old, g_strerror(errno));
 
 	return maybe_open_logfile();
 }
@@ -197,7 +194,7 @@ static void
 test_logger_threads(void)
 {
 	const auto testpath{test_random_tmpdir() + "/test.log"};
-	g_message("log-file: %s", testpath.c_str());
+	mu_message("log-file: {}", testpath);
 
 	auto logger = Logger::make(testpath.c_str(), Logger::Options::File | Logger::Options::Debug);
 	assert_valid_result(logger);
@@ -212,7 +209,7 @@ test_logger_threads(void)
 		threads.emplace_back(
 			std::thread([n,&running]{
 				while (running) {
-					g_debug("log message from thread <%d>", n);
+					mu_debug("log message from thread <{}>", n);
 					std::this_thread::yield();
 				}
 			}));

@@ -517,7 +517,7 @@ try {
 	return g_test_run();
 
 } catch (const std::runtime_error& re) {
-	std::cerr << re.what() << "\n";
+	mu_printerrln("{}", re.what());
 	return 1;
 }
 

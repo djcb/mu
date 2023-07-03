@@ -35,20 +35,17 @@
 
 using namespace Mu;
 
-char*
-Mu::test_mu_common_get_random_tmpdir()
+std::string
+Mu::test_random_tmpdir()
 {
-	char* dir;
-	int   res;
+	auto&& dir = mu_format("{}{}mu-test-{}{}test-{:x}",
+			       g_get_tmp_dir(),
+			       G_DIR_SEPARATOR,
+			       getuid(),
+			       G_DIR_SEPARATOR,
+			       ::random() * getpid() * ::time({}));
 
-	dir = g_strdup_printf("%s%cmu-test-%d%ctest-%x",
-			      g_get_tmp_dir(),
-			      G_DIR_SEPARATOR,
-			      getuid(),
-			      G_DIR_SEPARATOR,
-			      (int)random() * getpid() * (int)time(NULL));
-
-	res = g_mkdir_with_parents(dir, 0700);
+	auto res = g_mkdir_with_parents(dir.c_str(), 0700);
 	g_assert(res != -1);
 
 	return dir;
@@ -76,12 +73,12 @@ Mu::set_en_us_utf8_locale()
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	if (strcmp(nl_langinfo(CODESET), "UTF-8") != 0) {
-		g_print("Note: Unit tests require the en_US.utf8 locale. "
-			"Ignoring test cases.\n");
-		return FALSE;
+		mu_println("Note: Unit tests require the en_US.utf8 locale. "
+			   "Ignoring test cases.");
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 static void
@@ -108,8 +105,6 @@ Mu::mu_test_init(int *argc, char ***argv)
 			(GLogFunc)black_hole, NULL);
 }
 
-
-
 void
 Mu::allow_warnings()
 {
@@ -128,10 +123,8 @@ Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete}
 		throw Mu::Error(Error::Code::File, &err,
 				"failed to create temporary directory");
 
-	path_ = tmpdir;
-	g_free(tmpdir);
-
-	g_debug("created '%s'", path_.c_str());
+	path_ = to_string_gchar(std::move(tmpdir));
+	mu_debug("created '{}'", path_);
 }
 
 Mu::TempDir::~TempDir()

@@ -17,8 +17,8 @@
 **  02110-1301, USA.
 */
 
-#ifndef __MU_UTILS_HH__
-#define __MU_UTILS_HH__
+#ifndef MU_UTILS_HH__
+#define MU_UTILS_HH__
 
 #include <string>
 #include <string_view>
@@ -37,7 +37,49 @@
 #include "mu-utils-format.hh"
 #include "mu-option.hh"
 
+
+#ifndef FMT_HEADER_ONLY
+#define FMT_HEADER_ONLY
+#endif /*FMT_HEADER_ONLY*/
+#include <fmt/format.h>
+#include <fmt/core.h>
+
 namespace Mu {
+
+/*
+ * Logging functions connect libfmt with the Glib logging system
+ */
+
+template<typename...T>
+inline void mu_debug(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_DEBUG, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+template<typename...T>
+inline void mu_info(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_INFO, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+template<typename...T>
+inline void mu_message(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_MESSAGE, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+template<typename...T>
+inline void mu_warning(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_WARNING, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+template<typename...T>
+inline void mu_critical(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_CRITICAL, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+template<typename...T>
+inline void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", G_LOG_LEVEL_ERROR, "%s",
+	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
 
 using StringVec = std::vector<std::string>;
 
@@ -517,4 +559,4 @@ private:
 
 } // namespace Mu
 
-#endif /* __MU_UTILS_HH__ */
+#endif /* MU_UTILS_HH__ */

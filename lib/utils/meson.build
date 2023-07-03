@@ -38,7 +38,9 @@ install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
-  include_directories: include_directories(['.', '..'])
+  compile_args: '-DFMT_HEADER_ONLY',
+  include_directories:
+    include_directories(['.', '..', '../thirdparty/fmt'])
 )
 
 #

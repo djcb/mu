@@ -51,15 +51,15 @@ test_regex_replace()
 int
 main(int argc, char* argv[])
 try {
-        mu_test_init(&argc, &argv);
+	mu_test_init(&argc, &argv);
 
-        g_test_add_func("/regex/match", test_regex_match);
-        g_test_add_func("/regex/replace", test_regex_replace);
-        return g_test_run();
+	g_test_add_func("/regex/match", test_regex_match);
+	g_test_add_func("/regex/replace", test_regex_replace);
+	return g_test_run();
 
 } catch (const std::runtime_error& re) {
-        std::cerr << re.what() << "\n";
-        return 1;
+	mu_printerrln("{}", re.what());
+	return 1;
 }
 
 #endif /*BUILD_TESTS*/

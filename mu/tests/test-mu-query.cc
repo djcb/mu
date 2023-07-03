@@ -44,32 +44,27 @@ static std::string DB_PATH2;
 static std::string
 make_database(const std::string& testdir)
 {
-	char*      tmpdir{test_mu_common_get_random_tmpdir()};
+	auto&& tmpdir{test_random_tmpdir()};
 
 	/* use the env var rather than `--muhome` */
 
-	g_setenv("MUHOME", tmpdir, 1);
-	const auto cmdline{format("/bin/sh -c '"
-				  "%s --quiet init --maildir=%s ; "
-				  "%s --quiet index'",
-				  MU_PROGRAM,
-				  testdir.c_str(),
-				  MU_PROGRAM)};
+	g_setenv("MUHOME", tmpdir.c_str(), 1);
+	const auto cmdline{mu_format(
+			"/bin/sh -c '"
+			"{} --quiet init --maildir={} ; "
+			"{} --quiet index'",
+			MU_PROGRAM, testdir, MU_PROGRAM)};
 
 	if (g_test_verbose())
 		g_printerr("\n%s\n", cmdline.c_str());
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, NULL));
-	auto xpath = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "xapian");
-	g_free(tmpdir);
-
+	auto xpath = mu_format("{}{}{}",
+			       tmpdir, G_DIR_SEPARATOR, "xapian");
 	/* ensure MUHOME worked */
-	g_assert_cmpuint(::access(xpath, F_OK), ==, 0);
+	g_assert_cmpuint(::access(xpath.c_str(), F_OK), ==, 0);
 
-	std::string dbpath{xpath};
-	g_free(xpath);
-
-	return dbpath;
+	return xpath;
 }
 
 static void

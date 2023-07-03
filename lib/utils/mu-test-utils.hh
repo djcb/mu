@@ -28,11 +28,12 @@ namespace Mu {
 /**
  * get a dir name for a random temporary directory to do tests
  *
- * @return a random dir name, g_free when it's no longer needed
+ * @return a random dir name
  */
-char* test_mu_common_get_random_tmpdir(void);
-static inline std::string test_random_tmpdir() {
-	return to_string_gchar(test_mu_common_get_random_tmpdir());
+std::string test_random_tmpdir(void);
+
+inline gchar* test_mu_common_get_random_tmpdir() {
+	return g_strdup(test_random_tmpdir().c_str());
 }
 
 /**
