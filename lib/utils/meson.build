@@ -17,6 +17,7 @@
 
 lib_mu_utils=static_library('mu-utils', [
   'mu-command-handler.cc',
+  'mu-html-to-text.cc',
   'mu-lang-detector.cc',
   'mu-logger.cc',
   'mu-option.cc',
@@ -42,6 +43,15 @@ lib_mu_utils_dep = declare_dependency(
   include_directories:
     include_directories(['.', '..', '../thirdparty'])
 )
+
+#
+# tools
+#
+html2text = executable('mu-html2text',
+                       'mu-html-to-text.cc',
+  dependencies: [ lib_mu_utils_dep, glib_dep ],
+  cpp_args: ['-DBUILD_HTML_TO_TEXT'],
+  install: false)
 
 #
 # tests
@@ -81,5 +91,12 @@ test('test-lang-detector',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [ config_h_dep, glib_dep, lib_mu_utils_dep ]))
+
+test('test-html-to-text',
+     executable('test-html-to-text', 'mu-html-to-text.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep]))
+
 
 subdir('tests')
