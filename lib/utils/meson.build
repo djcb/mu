@@ -33,14 +33,14 @@ lib_mu_utils=static_library('mu-utils', [
   readline_dep,
   cld2_dep
 ], include_directories:
-     include_directories(['.','..']),
+     include_directories(['.','..', '../thirdparty/']),
 install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
   compile_args: '-DFMT_HEADER_ONLY',
   include_directories:
-    include_directories(['.', '..', '../thirdparty/fmt'])
+    include_directories(['.', '..', '../thirdparty'])
 )
 
 #
@@ -80,5 +80,6 @@ test('test-lang-detector',
      executable('test-lang-detector', 'mu-lang-detector.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [ config_h_dep, glib_dep, lib_mu_utils_dep ]))
 
 subdir('tests')

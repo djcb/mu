@@ -38,7 +38,7 @@ lib_mu_message=static_library(
 
 lib_mu_message_dep = declare_dependency(
   link_with: lib_mu_message,
-  dependencies: [ xapian_dep, gmime_dep ],
+  dependencies: [ xapian_dep, gmime_dep, lib_mu_utils_dep ],
   include_directories:
     include_directories(['.', '..']))
 

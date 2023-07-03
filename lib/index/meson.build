@@ -15,22 +15,23 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 index_srcs=[
-	'mu-indexer.hh',
-	'mu-indexer.cc',
-	'mu-scanner.hh',
-	'mu-scanner.cc'
+        'mu-indexer.hh',
+        'mu-indexer.cc',
+        'mu-scanner.hh',
+        'mu-scanner.cc'
 ]
 
 xapian_incs = xapian_dep.get_variable(pkgconfig: 'includedir')
 lib_mu_index_inc_dep = declare_dependency(
   include_directories: include_directories(['.', '..', xapian_incs]))
 lib_mu_index=static_library('mu-index', [index_srcs],
-			    dependencies: [
-			      config_h_dep,
-			      glib_dep,
-			      lib_mu_index_inc_dep
-			    ],
-			    install: false)
+                            dependencies: [
+                              config_h_dep,
+                              glib_dep,
+                              lib_mu_utils_dep,
+                              lib_mu_index_inc_dep
+                            ],
+                            install: false)
 
 lib_mu_index_dep = declare_dependency(
   link_with: lib_mu_index
