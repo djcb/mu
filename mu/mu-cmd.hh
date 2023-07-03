@@ -80,15 +80,6 @@ Result<void> mu_cmd_cfind(const Store& store, const Options& opts);
 Result<void> mu_cmd_extract(const Options& opts);
 
 /**
- * execute the 'fields' command
- *
- * @param opts configuration options
- *
- * @return Ok() or some error
- */
-Result<void> mu_cmd_fields(const Options& opts);
-
-/**
  * execute the 'find' command
  *
  * @param store store object to use

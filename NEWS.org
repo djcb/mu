@@ -16,6 +16,9 @@
       an e-mail corpus, so it useful to get rid of those, with
       '=--ignored-address=/.*noreply*/'=
 
+    - what used to be the ~mu fields~ command has been merged into ~mu info~; i.e.,
+      ~mu fields~ is now ~mu info fields~.
+
     - experimental: if you build ~mu~ with [[https://github.com/CLD2Owners/cld2][CLD2]] support (available in many Linux
       distros), ~mu~ will try to detect the language of the body of e-mail
       messages; you can then search by their ISO-639-1 code, e.g. ~mu find
@@ -49,7 +52,7 @@
      details.
 
    - The ~init~ command learned ~--reinit~ to reinitialize the database with the
-     setings of an existing one
+     settings of an existing one
 
    - The ~script~ command is gone, and integrated with ~mu~ directly, i.e. the
      scripts (when enabled) are directly visible in the ~mu~ output. Also see the

@@ -359,7 +359,6 @@ sub_help(CLI::App& sub, Options& opts)
 		->type_name("<command>");
 }
 
-
 static void
 sub_index(CLI::App& sub, Options& opts)
 {
@@ -373,7 +372,9 @@ sub_index(CLI::App& sub, Options& opts)
 static void
 sub_info(CLI::App& sub, Options& opts)
 {
-	// nothing to do.
+	sub.add_option("topic", opts.info.topic,
+		       "Information topic")
+		->type_name("<topic>") ;
 }
 
 static void
@@ -512,7 +513,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Fields,
 		  {Category::None,
-		  "fields", "Show a information about search fields", sub_fields}
+		  "fields", "Superseded by 'mu info'", sub_fields}
 		},
 		{ SubCommand::Find,
 		  {Category::NeedsReadOnlyStore,

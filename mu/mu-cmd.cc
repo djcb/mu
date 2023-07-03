@@ -43,6 +43,17 @@
 
 using namespace Mu;
 
+
+static Result<void>
+cmd_fields(const Options& opts)
+{
+	g_printerr("the 'mu fields' command has been superseded by 'mu info'; try:\n"
+		      "  mu info fields\n"
+		      "  mu info flags\n");
+
+	return Ok();
+}
+
 static Result<void>
 cmd_find(const Options& opts)
 {
@@ -101,7 +112,7 @@ Mu::mu_cmd_execute(const Options& opts) try {
 	 * no store needed
 	 */
 	case Options::SubCommand::Fields:
-		return mu_cmd_fields(opts);
+		return cmd_fields(opts);
 	case Options::SubCommand::Mkdir:
 		return mu_cmd_mkdir(opts);
 	case Options::SubCommand::Script:

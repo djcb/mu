@@ -36,7 +36,6 @@
 /* command-line options for Mu */
 namespace Mu {
 struct Options {
-
 	using   OptSize	     = Option<std::size_t>;
 	using   SizeVec      = std::vector<std::size_t>;
 	using   OptTStamp    = Option<std::time_t>;
@@ -177,6 +176,9 @@ struct Options {
 	/*
 	 * Info
 	 */
+	struct Info {
+		std::string topic;			/**< what to get info about? */
+	} info;
 
 	/*
 	 * Init

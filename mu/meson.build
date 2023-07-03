@@ -21,7 +21,6 @@ mu = executable(
   'mu-cmd-add.cc',
   'mu-cmd-cfind.cc',
   'mu-cmd-extract.cc',
-  'mu-cmd-fields.cc',
   'mu-cmd-find.cc',
   'mu-cmd-info.cc',
   'mu-cmd-init.cc',

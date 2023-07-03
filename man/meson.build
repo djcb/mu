@@ -50,7 +50,6 @@ man_orgs=[
   'mu-cfind.1.org',
   'mu-easy.7.org',
   'mu-extract.1.org',
-  'mu-fields.1.org',
   'mu-find.1.org',
   'mu-help.1.org',
   'mu-index.1.org',
