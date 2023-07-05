@@ -33,6 +33,8 @@ endif
 
 # when MU_HACKER is set, do a debug build
 # MU_HACKER is for djcb & compatible developers
+# note that mu uses C++17, we only pass C++20 here
+# for the better error messages (esp. for fmt).
 ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Db_sanitize=address' \
