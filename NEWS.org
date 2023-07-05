@@ -12,7 +12,7 @@
       that should _not_ be included in the contacts-cache (i.e., for ~mu cfind~ and
       Mu4e address completion). See the ~mu-init~ manpage for details.
 
-      It's not unusual for 'noreply`-type e-mail addresses to be the majority in
+      It's not unusual for 'noreply'-type e-mail addresses to be the majority in
       an e-mail corpus, so it useful to get rid of those, with
       '=--ignored-address=/.*noreply*/'=
 
@@ -37,6 +37,8 @@
     - also, there are now actions ('a' in view/header) to get to online archives
       for some (selected) mailing-list archives.
 
+    - In the main-view, by default ~q~ is now bound to ~mu4e-main-quit-or-bury~,
+      which calls either ~mu4e-quit~ or, with prefix argument, ~bury-buffer~.
 
 * 1.10 (released on March 26, 2023)
 

@@ -110,10 +110,17 @@ the personal addresses."
           (current-time-string baseline-t)
         "Never"))))
 
+(defun mu4e-main-quit-or-bury (&optional bury)
+  "Quit mu4e, or, with prefix-argument, bury the buffer."
+  (interactive "p")
+  (if bury
+      (bury-buffer)
+    (mu4e-quit)))
+
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "q" #'mu4e-quit)
+    (define-key map "q" #'mu4e-main-quit-or-bury)
     (define-key map "C" #'mu4e-compose-new)
 
     (define-key map "m" #'mu4e--main-toggle-mail-sending-mode)
@@ -286,70 +293,70 @@ Otherwise, do nothing."
   (when-let* ((buffer (get-buffer mu4e-main-buffer-name))
               (buffer (and (buffer-live-p buffer) buffer)))
     (with-current-buffer buffer
-        (let* ((inhibit-read-only t)
-               (pos (point))
-               (addrs (mu4e-personal-addresses))
-               (max-length (seq-reduce (lambda (a b)
-                                         (max a (length (plist-get b :name))))
-                                       (mu4e-query-items) 0)))
-          (mu4e-main-mode)
-          (erase-buffer)
-          (insert
-           "* "
-           (propertize "mu4e" 'face 'mu4e-header-key-face)
-           (propertize " - mu for emacs version " 'face 'mu4e-title-face)
-           (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
-           "\n\n"
-           (propertize "  Basics\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-action
-            "\t* [@]jump to some maildir\n" #'mu4e-search-maildir nil "j")
-           (mu4e--main-action
-            "\t* enter a [@]search query\n" #'mu4e-search nil "s")
-           (mu4e--main-action
-            "\t* [@]Compose a new message\n" #'mu4e-compose-new nil "C")
-           "\n"
-           (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-items 'bookmarks max-length)
-           "\n"
-           (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
-           (mu4e--main-items 'maildirs max-length)
-           "\n"
-           (propertize "  Misc\n\n" 'face 'mu4e-title-face)
+      (let* ((inhibit-read-only t)
+             (pos (point))
+             (addrs (mu4e-personal-addresses))
+             (max-length (seq-reduce (lambda (a b)
+                                       (max a (length (plist-get b :name))))
+                                     (mu4e-query-items) 0)))
+        (mu4e-main-mode)
+        (erase-buffer)
+        (insert
+         "* "
+         (propertize "mu4e" 'face 'mu4e-header-key-face)
+         (propertize " - mu for emacs version " 'face 'mu4e-title-face)
+         (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
+         "\n\n"
+         (propertize "  Basics\n\n" 'face 'mu4e-title-face)
+         (mu4e--main-action
+          "\t* [@]jump to some maildir\n" #'mu4e-search-maildir nil "j")
+         (mu4e--main-action
+          "\t* enter a [@]search query\n" #'mu4e-search nil "s")
+         (mu4e--main-action
+          "\t* [@]Compose a new message\n" #'mu4e-compose-new nil "C")
+         "\n"
+         (propertize "  Bookmarks\n\n" 'face 'mu4e-title-face)
+         (mu4e--main-items 'bookmarks max-length)
+         "\n"
+         (propertize "  Maildirs\n\n" 'face 'mu4e-title-face)
+         (mu4e--main-items 'maildirs max-length)
+         "\n"
+         (propertize "  Misc\n\n" 'face 'mu4e-title-face)
 
-           (mu4e--main-action "\t* [@]Switch context\n"
-                              #'mu4e-context-switch nil ";")
-           (mu4e--main-action "\t* [@]Update email & database\n"
-                                  #'mu4e-update-mail-and-index nil "U")
-           ;; show the queue functions if `smtpmail-queue-dir' is defined
-           (if (file-directory-p smtpmail-queue-dir)
-               (mu4e--main-view-queue)
-             "")
-           "\n"
-           (mu4e--main-action "\t* [@]News\n" #'mu4e-news nil "N")
-           (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about nil "A")
-           (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual nil "H")
-           (mu4e--main-action "\t* [@]quit\n" #'mu4e-quit nil "q")
-           "\n"
-           (propertize "  Info\n\n" 'face 'mu4e-title-face)
-           (mu4e--key-val "last updated"
-                          (current-time-string
-                           (plist-get mu4e-index-update-status :tstamp)))
-           (mu4e--key-val "database-path" (mu4e-database-path))
-           (mu4e--key-val "maildir" (mu4e-root-maildir))
-           (mu4e--key-val "in store"
-                          (format "%d" (plist-get mu4e--server-props :doccount))
-                          "messages")
-           (if mu4e-main-hide-personal-addresses ""
-             (mu4e--key-val "personal addresses"
-                            (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
+         (mu4e--main-action "\t* [@]Switch context\n"
+                            #'mu4e-context-switch nil ";")
+         (mu4e--main-action "\t* [@]Update email & database\n"
+                            #'mu4e-update-mail-and-index nil "U")
+         ;; show the queue functions if `smtpmail-queue-dir' is defined
+         (if (file-directory-p smtpmail-queue-dir)
+             (mu4e--main-view-queue)
+           "")
+         "\n"
+         (mu4e--main-action "\t* [@]News\n" #'mu4e-news nil "N")
+         (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about nil "A")
+         (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual nil "H")
+         (mu4e--main-action "\t* [@]quit\n" #'mu4e-main-quit-or-bury nil "q")
+         "\n"
+         (propertize "  Info\n\n" 'face 'mu4e-title-face)
+         (mu4e--key-val "last updated"
+                        (current-time-string
+                         (plist-get mu4e-index-update-status :tstamp)))
+         (mu4e--key-val "database-path" (mu4e-database-path))
+         (mu4e--key-val "maildir" (mu4e-root-maildir))
+         (mu4e--key-val "in store"
+                        (format "%d" (plist-get mu4e--server-props :doccount))
+                        "messages")
+         (if mu4e-main-hide-personal-addresses ""
+           (mu4e--key-val "personal addresses"
+                          (if addrs (mapconcat #'identity addrs ", "  ) "none"))))
 
-          (if mu4e-main-hide-personal-addresses ""
-            (unless (mu4e-personal-address-p user-mail-address)
-              (mu4e-message (concat
-                             "Tip: `user-mail-address' ('%s') is not part "
-                             "of mu's addresses; add it with 'mu init
+        (if mu4e-main-hide-personal-addresses ""
+          (unless (mu4e-personal-address-p user-mail-address)
+            (mu4e-message (concat
+                           "Tip: `user-mail-address' ('%s') is not part "
+                           "of mu's addresses; add it with 'mu init
                         --my-address='") user-mail-address)))
-          (goto-char pos)))))
+        (goto-char pos)))))
 
 (defun mu4e--main-view-queue ()
   "Display queue-related actions in the main view."
