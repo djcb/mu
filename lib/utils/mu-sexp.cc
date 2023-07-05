@@ -27,19 +27,16 @@
 
 using namespace Mu;
 
-__attribute__((format(printf, 2, 0))) static Mu::Error
-parsing_error(size_t pos, const char* frm, ...)
+template<typename...T> static Mu::Error
+parsing_error(size_t pos, fmt::format_string<T...> frm, T&&... args)
 {
-	va_list args;
-	va_start(args, frm);
-	auto msg = vformat(frm, args);
-	va_end(args);
-
+	const auto&& msg{fmt::format(frm, std::forward<T>(args)...)};
 	if (pos == 0)
 		return Mu::Error(Error::Code::Parsing, "{}", msg);
 	else
 		return Mu::Error(Error::Code::Parsing, "{}: {}", pos, msg);
 }
+
 static size_t
 skip_whitespace(const std::string& s, size_t pos)
 {
