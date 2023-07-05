@@ -86,7 +86,7 @@ save_parts(const Message& message, const std::string& filename_rx,
 
 	if (saved_num == 0)
 		return Err(Error::Code::File,
-			   "no %s extracted from this message",
+			   "no {} extracted from this message",
 			   opts.extract.save_attachments ? "attachments" : "parts");
 	else
 		return Ok();
@@ -102,7 +102,7 @@ static void
 show_part(const MessagePart& part, size_t index, bool color)
 {
 	/* index */
-	g_print("  %zu ", index);
+	mu_print("  {} ", index);
 
 	/* filename */
 	color_maybe(MU_COLOR_GREEN);
@@ -122,7 +122,7 @@ show_part(const MessagePart& part, size_t index, bool color)
 	/* size */
 	if (part.size() > 0) {
 		color_maybe(MU_COLOR_CYAN);
-		g_print(" (%zu bytes)", part.size());
+		mu_print(" ({} bytes)", part.size());
 	}
 
 	color_maybe(MU_COLOR_DEFAULT);
@@ -133,7 +133,7 @@ static Mu::Result<void>
 show_parts(const Message& message, const Options& opts)
 {
 	size_t index{};
-	g_print("MIME-parts in this message:\n");
+	mu_println("MIME-parts in this message:");
 	for (auto&& part: message.parts())
 		show_part(part, ++index, !opts.nocolor);
 
@@ -164,8 +164,8 @@ Mu::mu_cmd_extract(const Options& opts)
 
 	if (!check_dir(opts.extract.targetdir, false/*!readable*/, true/*writeable*/))
 		return Err(Error::Code::File,
-			   "target '%s' is not a writable directory",
-			   opts.extract.targetdir.c_str());
+			   "target '{}' is not a writable directory",
+			   opts.extract.targetdir);
 
 	return save_parts(*message, opts.extract.filename_rx, opts);
 }

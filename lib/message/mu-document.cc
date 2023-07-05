@@ -208,7 +208,7 @@ Document::contacts_value(Field::Id id) const noexcept
 
 	const auto ctype{contact_type_from_field_id(id)};
 	if (G_UNLIKELY(!ctype)) {
-		g_critical("invalid field-id for contact-type: <%zu>",
+		mu_critical("invalid field-id for contact-type: <{}>",
 			   static_cast<size_t>(id));
 		return {};
 	}
@@ -217,7 +217,7 @@ Document::contacts_value(Field::Id id) const noexcept
 
 		const auto pos = s.find(SepaChar2);
 		if (G_UNLIKELY(pos == std::string::npos)) {
-			g_critical("invalid contact data '%s'", s.c_str());
+			mu_critical("invalid contact data '{}'", s);
 			break;
 		}
 
@@ -348,7 +348,7 @@ Document::remove(Field::Id field_id)
 			try {
 				xdoc_.remove_term(term);
 			} catch(const Xapian::InvalidArgumentError& xe) {
-				g_critical("failed to remove '%s'", term.c_str());
+				mu_critical("failed to remove '{}'", term);
 			}
 		}
 	});

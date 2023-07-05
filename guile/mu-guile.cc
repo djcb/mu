@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,17 +16,12 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <config.h>
 
 #include "mu-guile.hh"
 
-#include <config.h>
 #include <locale.h>
 #include <glib-object.h>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <libguile.h>
-#pragma GCC diagnostic pop
 
 #include <mu-store.hh>
 #include <mu-query.hh>
@@ -81,30 +76,30 @@ mu_guile_init_instance(const std::string& muhome) try {
 	const auto path{runtime_path(RuntimePath::XapianDb, muhome)};
 	auto store = Store::make(path);
 	if (!store) {
-		g_critical("error creating store @ %s: %s", path.c_str(),
-			   store.error().what());
+		mu_critical("error creating store @ %s: %s", path,
+			    store.error().what());
 		throw store.error();
 	} else
 		StoreSingleton.emplace(std::move(store.value()));
 
-	g_debug("mu-guile: opened store @ %s (n=%zu); maildir: %s",
-		StoreSingleton->path().c_str(),
+	mu_debug("mu-guile: opened store @ {} (n={}); maildir: {}",
+		StoreSingleton->path(),
 		StoreSingleton->size(),
-		StoreSingleton->root_maildir().c_str());
+		StoreSingleton->root_maildir());
 
 	return true;
 
 } catch (const Xapian::Error& xerr) {
-	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
+	mu_critical("{}: xapian error '{}'", __func__, xerr.get_msg());
 	return false;
 } catch (const std::runtime_error& re) {
-	g_critical("%s: error: %s", __func__, re.what());
+	mu_critical("{}: error: {}", __func__, re.what());
 	return false;
 } catch (const std::exception& e) {
-	g_critical("%s: caught exception: %s", __func__, e.what());
+	mu_critical("{}: caught exception: {}", __func__, e.what());
 	return false;
 } catch (...) {
-	g_critical("%s: caught exception", __func__);
+	mu_critical("{}: caught exception", __func__);
 	return false;
 }
 
@@ -118,7 +113,7 @@ Mu::Store&
 mu_guile_store()
 {
 	if (!StoreSingleton)
-		g_error("mu guile not initialized");
+		mu_error("mu guile not initialized");
 
 	return StoreSingleton.value();
 }

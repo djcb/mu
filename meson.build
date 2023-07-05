@@ -55,6 +55,7 @@ extra_flags = [
   '-Wstack-protector',
   '-Wno-switch-enum',
   '-Wno-keyword-macro',
+  '-Wno-volatile',
   '-Wno-#warnings']
 
 if get_option('buildtype') == 'debug'

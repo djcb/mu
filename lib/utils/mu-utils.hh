@@ -47,7 +47,12 @@
 namespace Mu {
 
 /*
- * Logging functions connect libfmt with the Glib logging system
+ * Logging/printing/formatting functions connect libfmt with the Glib logging
+ * system. We wrap so perhaps at some point (C++23?) we can use std:: instead.
+ */
+
+/*
+ * Debug/error/warning logging
  */
 
 template<typename...T>
@@ -79,6 +84,35 @@ template<typename...T>
 inline void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_ERROR, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
+}
+
+/*
+ * Printing
+ */
+
+template<typename...T>
+inline void mu_print(fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::print(frm, std::forward<T>(args)...);
+}
+template<typename...T>
+inline void mu_println(fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::println(frm, std::forward<T>(args)...);
+}
+template<typename...T>
+inline void mu_printerr(fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::print(stderr, frm, std::forward<T>(args)...);
+}
+template<typename...T>
+inline void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::println(stderr, frm, std::forward<T>(args)...);
+}
+
+/*
+ * Fprmatting
+ */
+template<typename...T>
+inline std::string mu_format(fmt::format_string<T...> frm, T&&... args) noexcept {
+	return fmt::format(frm, std::forward<T>(args)...);
 }
 
 using StringVec = std::vector<std::string>;
@@ -206,7 +240,6 @@ std::string date_to_time_t_string(int64_t t);
  * of error.
  */
 std::string time_to_string(const char *frm, time_t t, bool utc = false) G_GNUC_CONST;
-
 
 /**
  * Hack to avoid locale crashes

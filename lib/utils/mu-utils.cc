@@ -347,8 +347,7 @@ Mu::time_to_string(const char *frm, time_t t, bool utc)
 	});
 
 	if (!dt) {
-		g_warning("time_t out of range: <%" G_GUINT64_FORMAT ">",
-			  static_cast<guint64>(t));
+		mu_warning("time_t out of range: <{}>", t);
 		return {};
 	}
 
@@ -356,7 +355,7 @@ Mu::time_to_string(const char *frm, time_t t, bool utc)
 	auto datestr{to_string_opt_gchar(g_date_time_format(dt, frm))};
 	g_date_time_unref(dt);
 	if (!datestr)
-		g_warning("failed to format time with format '%s'", frm);
+		mu_warning("failed to format time with format '{}'", frm);
 
 	return datestr.value_or("");
 }
@@ -692,7 +691,7 @@ __attribute__((format(printf, 2, 0)))
 static bool
 print_args (FILE *stream, const char *frm, va_list args)
 {
-	gchar *str;
+	char *str;
 	gboolean rv;
 
 	str = g_strdup_vprintf (frm, args);

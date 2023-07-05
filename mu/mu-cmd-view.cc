@@ -93,11 +93,10 @@ body_or_summary(const Message& message, const Options& opts)
 	if (!body || body->empty()) {
 		if (any_of(message.flags() & Flags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
-			g_print("[No text body found; "
-				"message has encrypted parts]\n");
+			mu_println("[No text body found; message has encrypted parts]");
 		} else {
 			color_maybe(MU_COLOR_MAGENTA);
-			g_print("[No text body found]\n");
+			mu_println("[No text body found]");
 		}
 		color_maybe(MU_COLOR_DEFAULT);
 		return;
@@ -109,7 +108,7 @@ body_or_summary(const Message& message, const Options& opts)
 	} else {
 		print_encoded("%s", body->c_str());
 		if (!g_str_has_suffix(body->c_str(), "\n"))
-			g_print("\n");
+			mu_println("");
 	}
 }
 
@@ -148,7 +147,7 @@ handle_msg(const Message& message, const Options& opts)
 	case Format::Sexp:
 		return view_msg_sexp(message, opts);
 	default:
-		g_critical("bug: should not be reached");
+		mu_critical("bug: should not be reached");
 		return Err(Error::Code::Internal, "error");
 	}
 }
@@ -166,7 +165,7 @@ Mu::mu_cmd_view(const Options& opts)
 			return res;
 		/* add a separator between two messages? */
 		if (opts.view.terminate)
-			g_print("%c", VIEW_TERMINATOR);
+			mu_print("{}", VIEW_TERMINATOR);
 	}
 
 	// no files? read from stding

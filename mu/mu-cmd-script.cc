@@ -36,7 +36,7 @@ Mu::mu_cmd_script(const Options& opts)
 
 	if (script_it == scriptinfos.cend())
 		return Err(Error::Code::InvalidArgument,
-			   "cannot find script '%s'", opts.script.name.c_str());
+			   "cannot find script '{}'", opts.script.name);
 
 	std::vector<std::string> params{opts.script.params};
 	if (!opts.muhome.empty()) {

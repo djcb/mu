@@ -28,11 +28,10 @@ Mu::mu_cmd_remove(Mu::Store& store, const Options& opts)
 	for (auto&& file: opts.remove.files) {
 		const auto res = store.remove_message(file);
 		if (!res)
-			return Err(Error::Code::File, "failed to remove %s", file.c_str());
+			return Err(Error::Code::File, "failed to remove {}", file.c_str());
 		else
 			g_debug("removed message @ %s", file.c_str());
 	}
 
 	return Ok();
 }
-

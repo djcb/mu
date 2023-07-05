@@ -1,15 +1,21 @@
 /*
- * Created on 2020-11-08 by Dirk-Jan C. Binnema <dbinnema@logitech.com>
- *
- * Copyright (c) 2020 Logitech, Inc.  All Rights Reserved
- * This program is a trade secret of LOGITECH, and it is not to be reproduced,
- * published, disclosed to others, copied, adapted, distributed or displayed
- * without the prior authorization of LOGITECH.
- *
- * Licensee agrees to attach or embed this notice on all copies of the program,
- * including partial copies or modified versions thereof.
- *
- */
+** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**
+** This program is free software; you can redistribute it and/or modify it
+** under the terms of the GNU General Public License as published by the
+** Free Software Foundation; either version 3, or (at your option) any
+** later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software Foundation,
+** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+**
+*/
 
 #ifndef MU_OPTION__
 #define MU_OPTION__
@@ -28,7 +34,7 @@ Some(T&& t)
 {
 	return std::move(t);
 }
-constexpr auto Nothing = tl::nullopt; // 'None' is take already
+constexpr auto Nothing = tl::nullopt; // 'None' is already taken.
 
 /**
  * Maybe create a string from a const char pointer.

@@ -137,7 +137,7 @@ static void
 output_mutt_address_book(ItemType itype, OptContact contact, const Options& opts)
 {
 	if (itype == ItemType::Header)
-		g_print ("Matching addresses in the mu database:\n");
+		mu_print ("Matching addresses in the mu database:\n");
 
 	if (!contact)
 		return;
@@ -176,8 +176,8 @@ static void
 output_bbdb(ItemType itype, OptContact contact, const Options& opts)
 {
 	if (itype == ItemType::Header)
-		g_print (";; -*-coding: utf-8-emacs;-*-\n"
-			 ";;; file-version: 6\n");
+		mu_println (";; -*-coding: utf-8-emacs;-*-\n"
+			    ";;; file-version: 6");
 	if (!contact)
 		return;
 
@@ -185,13 +185,9 @@ output_bbdb(ItemType itype, OptContact contact, const Options& opts)
 	const auto now{time_to_string("%Y-%m-%d", ::time(NULL))};
 	const auto timestamp{time_to_string("%Y-%m-%d", contact->message_date)};
 
-	g_print("[\"%s\" \"%s\" nil nil nil nil (\"%s\") "
-		"((creation-date . \"%s\") (time-stamp . \"%s\")) nil]\n",
-		names.first.c_str(),
-		names.second.c_str(),
-		contact->email.c_str(),
-		now.c_str(),
-		timestamp.c_str());
+	mu_println("[\"{}\" \"{}\" nil nil nil nil (\"{}\") "
+		"((creation-date . \"{}\") (time-stamp . \"{}\")) nil]",
+		names.first, names.second, contact->email, now, timestamp);
 }
 
 static void
@@ -209,10 +205,10 @@ static void
 output_json(ItemType itype, OptContact contact, const Options& opts)
 {
 	if (itype == ItemType::Header)
-		g_print("[\n");
+		mu_println("[");
 	if (contact) {
-		g_print("%s", itype == ItemType::Header ? "" : ",\n");
-		g_print ("  {\n");
+		mu_print("{}", itype == ItemType::Header ? "" : ",\n");
+		mu_println ("  {{");
 
 		const std::string name = contact->name.empty() ? "null" : Mu::quote(contact->name);
 		print_encoded(
@@ -230,11 +226,11 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 			time_to_string("%FT%TZ", contact->message_date, true/*utc*/).c_str(),
 			contact->personal ? "true" : "false",
 			contact->frequency);
-		g_print ("  }");
+		mu_print ("  }}");
 	}
 
 	if (itype == ItemType::Footer)
-		g_print("\n]\n");
+		mu_println("\n]");
 }
 
 static OutputFunc
@@ -260,7 +256,7 @@ find_output_func(Format format)
 	case Format::Json:
 		return output_json;
 	default:
-		g_warning("unsupported format");
+		mu_warning("unsupported format");
 		return {};
 	}
 #pragma GCC diagnostic pop

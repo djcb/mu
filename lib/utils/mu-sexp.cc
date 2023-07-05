@@ -36,9 +36,9 @@ parsing_error(size_t pos, const char* frm, ...)
 	va_end(args);
 
 	if (pos == 0)
-		return Mu::Error(Error::Code::Parsing, "%s", msg.c_str());
+		return Mu::Error(Error::Code::Parsing, "{}", msg);
 	else
-		return Mu::Error(Error::Code::Parsing, "%zu: %s", pos, msg.c_str());
+		return Mu::Error(Error::Code::Parsing, "{}: {}", pos, msg);
 }
 static size_t
 skip_whitespace(const std::string& s, size_t pos)
@@ -58,7 +58,7 @@ static Result<Sexp>
 parse_list(const std::string& expr, size_t& pos)
 {
 	if (expr[pos] != '(') // sanity check.
-		return Err(parsing_error(pos, "expected: '(' but got '%c", expr[pos]));
+		return Err(parsing_error(pos, "expected: '(' but got '{}", expr[pos]));
 
 	Sexp lst{};
 
@@ -71,7 +71,7 @@ parse_list(const std::string& expr, size_t& pos)
 	}
 
 	if (expr[pos] != ')')
-		return Err(parsing_error(pos, "expected: ')' but got '%c'", expr[pos]));
+		return Err(parsing_error(pos, "expected: ')' but got '{}'", expr[pos]));
 	++pos;
 	return Ok(std::move(lst));
 }
@@ -80,7 +80,7 @@ static Result<Sexp>
 parse_string(const std::string& expr, size_t& pos)
 {
 	if (expr[pos] != '"') // sanity check.
-		return Err(parsing_error(pos, "expected: '\"'' but got '%c", expr[pos]));
+		return Err(parsing_error(pos, "expected: '\"'' but got '{}", expr[pos]));
 
 	bool        escape{};
 	std::string str;
@@ -101,7 +101,7 @@ parse_string(const std::string& expr, size_t& pos)
 	}
 
 	if (escape || expr[pos] != '"')
-		return Err(parsing_error(pos, "unterminated string '%s'", str.c_str()));
+		return Err(parsing_error(pos, "unterminated string '{}'", str));
 
 	++pos;
 	return Ok(Sexp{std::move(str)});
@@ -112,7 +112,7 @@ static Result<Sexp>
 parse_integer(const std::string& expr, size_t& pos)
 {
 	if (!isdigit(expr[pos]) && expr[pos] != '-') // sanity check.
-		return Err(parsing_error(pos, "expected: <digit> but got '%c", expr[pos]));
+		return Err(parsing_error(pos, "expected: <digit> but got '{}", expr[pos]));
 
 	std::string num; // negative number?
 	if (expr[pos] == '-') {
@@ -130,7 +130,7 @@ static Result<Sexp>
 parse_symbol(const std::string& expr, size_t& pos)
 {
 	if (!isalpha(expr[pos]) && expr[pos] != ':') // sanity check.
-		return Err(parsing_error(pos, "expected: <alpha>|: but got '%c", expr[pos]));
+		return Err(parsing_error(pos, "expected: <alpha>|: but got '{}", expr[pos]));
 
 	std::string symb(1, expr[pos]);
 	for (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
@@ -145,7 +145,7 @@ parse(const std::string& expr, size_t& pos)
 	pos = skip_whitespace(expr, pos);
 
 	if (pos == expr.size())
-		return Err(parsing_error(pos, "expected: character '%c", expr[pos]));
+		return Err(parsing_error(pos, "expected: character '{}", expr[pos]));
 
 	const auto kar  = expr[pos];
 	const auto sexp = std::invoke([&]() -> Result<Sexp> {
@@ -158,7 +158,7 @@ parse(const std::string& expr, size_t& pos)
 		else if (isalpha(kar) || kar == ':')
 			return parse_symbol(expr, pos);
 		else
-			return Err(parsing_error(pos, "unexpected character '%c", kar));
+			return Err(parsing_error(pos, "unexpected character '{}", kar));
 	});
 
 	if (sexp)
@@ -175,7 +175,7 @@ Sexp::parse(const std::string& expr)
 	if (!res)
 		return res;
 	else if (pos != expr.size())
-		return Err(parsing_error(pos, "trailing data starting with '%c'", expr[pos]));
+		return Err(parsing_error(pos, "trailing data starting with '{}'", expr[pos]));
 	else
 		return res;
 }

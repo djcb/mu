@@ -55,7 +55,7 @@ install_sig_handler(void)
 
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
-			g_critical("set sigaction for %d failed: %s",
+			mu_critical("set sigaction for {} failed: {}",
 				   sigs[i], g_strerror(errno));
 }
 
@@ -79,7 +79,7 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 {
 	const auto mdir{store.root_maildir()};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0))
-		return Err(Error::Code::File, "'%s' is not readable: %s",
+		return Err(Error::Code::File, "'{}' is not readable: {}",
 			   mdir.c_str(), g_strerror(errno));
 
 	MaybeAnsi col{!opts.nocolor};

@@ -91,9 +91,9 @@ Query::Private::make_enquire(const std::string& expr,
 		WarningVec warns;
 		const auto tree{parser_.parse(expr, warns)};
 		for (auto&& w : warns)
-			g_warning("query warning: %s", to_string(w).c_str());
+			mu_warning("query warning: {}", to_string(w));
 		enq.set_query(xapian_query(tree));
-		g_debug("qtree: %s", to_string(tree).c_str());
+		mu_debug("qtree: {}", to_string(tree));
 	}
 
 	sort_enquire(enq, sortfield_id, qflags);
@@ -291,7 +291,7 @@ Query::parse(const std::string& expr, bool xapian) const
 	WarningVec warns;
 	const auto tree{priv_->parser_.parse(expr, warns)};
 	for (auto&& w : warns)
-		g_warning("query warning: %s", to_string(w).c_str());
+		mu_warning("query warning: {}", to_string(w));
 
 	if (xapian)
 		return xapian_query(tree).get_description();

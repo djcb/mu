@@ -88,8 +88,8 @@ create_maildir(const std::string& path, mode_t mode)
 		 * permissions; so we need to check */
 		if (rv != 0 || !check_dir(fullpath, true/*readable*/, true/*writable*/))
 			return Err(Error{Error::Code::File,
-					"creating dir failed for %s: %s",
-					fullpath.c_str(), g_strerror(errno)});
+					"creating dir failed for {}: {}",
+					fullpath, g_strerror(errno)});
 	}
 
 	return Ok();
@@ -104,7 +104,7 @@ create_noindex(const std::string& path)
 	int fd = ::creat(noindexpath.c_str(), 0644);
 	if (fd < 0 || ::close(fd) != 0)
 		return Err(Error{Error::Code::File,
-				"error creating .noindex: %s", g_strerror(errno)});
+				"error creating .noindex: {}", g_strerror(errno)});
 	else
 		return Ok();
 }
@@ -141,8 +141,7 @@ check_subdir(const std::string& src, bool& in_cur)
 	g_free(srcpath);
 
 	if (invalid)
-		return Err(Error{Error::Code::File, "invalid source message '%s'",
-				src.c_str()});
+		return Err(Error{Error::Code::File, "invalid source message '{}'", src});
 	else
 		return Ok();
 }
@@ -186,10 +185,8 @@ Mu::maildir_link(const std::string& src, const std::string& targetpath,
 	auto rv{::symlink(src.c_str(), path_res->c_str())};
 	if (rv != 0)
 		return Err(Error{Error::Code::File,
-				"error creating link %s => %s: %s",
-				path_res->c_str(),
-				src.c_str(),
-				g_strerror(errno)});
+				"error creating link {} => {}: {}",
+				*path_res, src, g_strerror(errno)});
 
 	return Ok();
 }
@@ -209,19 +206,20 @@ clear_links(const std::string& path, DIR* dir)
 			continue; /* ignore .,.. other dotdirs */
 
 		const auto fullpath{join_paths(path, dentry->d_name)};
-		const auto d_type   = get_dtype(dentry, fullpath.c_str(), true/*lstat*/);
+		const auto d_type   = get_dtype(dentry, fullpath.c_str(),
+						true/*lstat*/);
 		switch(d_type) {
 		case DT_LNK:
 			if (::unlink(fullpath.c_str()) != 0) {
-				g_warning("error unlinking %s: %s",
-					  fullpath.c_str(), g_strerror(errno));
+				mu_warning("error unlinking {}: {}",
+					  fullpath, g_strerror(errno));
 				res = false;
 			}
 			break;
 		case  DT_DIR: {
 			DIR* subdir{::opendir(fullpath.c_str())};
 			if (!subdir) {
-				g_warning("failed to open dir %s: %s", fullpath.c_str(),
+				mu_warning("failed to open dir {}: {}", fullpath,
 					  g_strerror(errno));
 				res = false;
 			}
@@ -243,8 +241,8 @@ Mu::maildir_clear_links(const std::string& path)
 {
 	const auto dir{::opendir(path.c_str())};
 	if (!dir)
-		return Err(Error{Error::Code::File, "failed to open %s: %s",
-				path.c_str(), g_strerror(errno)});
+		return Err(Error{Error::Code::File, "failed to open {}: {}",
+				path, g_strerror(errno)});
 
 	clear_links(path, dir);
 	::closedir(dir);
@@ -258,16 +256,15 @@ msg_move_verify(const std::string& src, const std::string& dst)
 	/* double check -- is the target really there? */
 	if (::access(dst.c_str(), F_OK) != 0)
 		return Err(Error{Error::Code::File,
-				"can't find target (%s->%s)",
-				src.c_str(), dst.c_str()});
+				"can't find target ({}->{})", src, dst});
 
 	if (::access(src.c_str(), F_OK) == 0) {
 		if (src ==  dst) {
-			g_warning("moved %s to itself", src.c_str());
+			mu_warning("moved {} to itself", src);
 		}
 		/* this could happen if some other tool (for mail syncing) is
 		 * interfering */
-		g_debug("the source is still there (%s->%s)", src.c_str(), dst.c_str());
+		mu_debug("source is still there ({}->{})", src, dst);
 	}
 
 	return Ok();
@@ -292,15 +289,14 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 		return Ok();
 	else
 		return Err(Error{Error::Code::File, &err/*consumed*/,
-				"error moving %s -> %s",
-				src.c_str(), dst.c_str()});
+				"error moving {} -> {}", src, dst});
 }
 
 static Mu::Result<void>
 msg_move(const std::string& src, const std::string& dst, bool force_gio)
 {
 	if (::access(src.c_str(), R_OK) != 0)
-		return Err(Error{Error::Code::File, "cannot read %s", src.c_str()});
+		return Err(Error{Error::Code::File, "cannot read {}", src});
 
 	if (!force_gio) { /* for testing */
 
@@ -308,8 +304,8 @@ msg_move(const std::string& src, const std::string& dst, bool force_gio)
 			return msg_move_verify(src, dst);
 
 		if (errno != EXDEV) /* some unrecoverable error occurred */
-			return Err(Error{Error::Code::File, "error moving %s -> %s: %s",
-					   src.c_str(), dst.c_str(), strerror(errno)});
+			return Err(Error{Error::Code::File, "error moving {} -> {}: {}",
+					src, dst, strerror(errno)});
 	}
 
 	/* the EXDEV / force-gio case -- source and target live on different
@@ -330,7 +326,7 @@ Mu::maildir_move_message(const std::string&	oldpath,
 	if (oldpath == newpath)
 		return Ok(); // nothing to do.
 
-	g_debug("moving %s --> %s", oldpath.c_str(), newpath.c_str());
+	mu_debug("moving {} --> {}", oldpath, newpath);
 	return msg_move(oldpath, newpath, force_gio);
 }
 
@@ -387,27 +383,26 @@ check_determine_target_params (const std::string& old_path,
 {
 	if (!g_path_is_absolute(old_path.c_str()))
 		return Err(Error{Error::Code::File,
-				"old_path is not absolute (%s)", old_path.c_str()});
+				"old_path is not absolute ({})", old_path});
 
 	if (!g_path_is_absolute(root_maildir_path.c_str()))
 		return Err(Error{Error::Code::File,
-				"root maildir path is not absolute",
-				root_maildir_path.c_str()});
+				"root maildir path is not absolute ({})",
+				root_maildir_path});
 
 	if (!target_maildir.empty() && target_maildir[0] != '/')
 		return Err(Error{Error::Code::File,
-				"target maildir must be empty or start with / (%s)",
-				target_maildir.c_str()});
+				"target maildir must be empty or start with / ({})",
+				target_maildir});
 
 	if (old_path.find(root_maildir_path) != 0)
 		return Err(Error{Error::Code::File,
-				"old-path must be below root-maildir (%s) (%s)",
-				old_path.c_str(), root_maildir_path.c_str()});
+				"old-path must be below root-maildir ({}) ({})",
+				old_path, root_maildir_path});
 
 	if (any_of(newflags & Flags::New) && newflags != Flags::New)
 		return Err(Error{Error::Code::File,
-					"if ::New is specified, "
-					"it must be the only flag"});
+					"if ::New is specified, it must be the only flag"});
 	return Ok();
 }
 

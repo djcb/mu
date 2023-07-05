@@ -443,7 +443,7 @@ tear_down()
 	GError *err{};
 	const auto cmd{format("/bin/rm -rf '%s' '%s'", BENCH_MAILDIRS, BENCH_STORE)};
 	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
-		g_warning("error: %s\n", err ? err->message : "?");
+		mu_warning("error: {}", err ? err->message : "?");
 		g_clear_error(&err);
 	}
 }

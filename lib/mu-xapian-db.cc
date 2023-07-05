@@ -102,8 +102,8 @@ XapianDb::make(const std::string& db_path, Flavor flavor) noexcept try {
 		g_setenv("XAPIAN_FLUSH_THRESHOLD", "500000", 1);
 		/* create path if needed */
 		if (g_mkdir_with_parents(db_path.c_str(), 0700) != 0)
-			return Err(Error::Code::File, "failed to create database dir %s: %s",
-				   db_path.c_str(), ::strerror(errno));
+			return Err(Error::Code::File, "failed to create database dir {}: {}",
+				   db_path, ::strerror(errno));
 	}
 
 	switch (flavor) {
@@ -125,12 +125,12 @@ XapianDb::make(const std::string& db_path, Flavor flavor) noexcept try {
 	}
 
 } catch (const Xapian::DatabaseLockError& xde) {
-	return Err(Error::Code::StoreLock, "%s", xde.get_msg().c_str());
+	return Err(Error::Code::StoreLock, "{}", xde.get_msg());
 } catch (const Xapian::DatabaseError& xde) {
-	return Err(Error::Code::Store, "%s", xde.get_msg().c_str());
+	return Err(Error::Code::Store, "{}", xde.get_msg());
 } catch (const Mu::Error& me) {
 	return Err(me);
 } catch (...) {
 	return Err(Error::Code::Internal,
-		   "something went wrong when opening store @ %s", db_path.c_str());
+		   "something went wrong when opening store @ {}", db_path);
 }

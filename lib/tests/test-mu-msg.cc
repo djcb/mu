@@ -47,12 +47,13 @@ assert_contacts_equal(const Contacts& contacts,
 	size_t n{};
 	for (auto&& contact: contacts) {
 		if (g_test_verbose())
-			g_message("{ \"%s\", \"%s\"},\n", contact.name.c_str(), contact.email.c_str());
+			mu_message("{{ \"{}\", \"{}\"}},\n",
+				   contact.name, contact.email);
 		assert_equal(contact.name, expected.at(n).first);
 		assert_equal(contact.email, expected.at(n).second);
 		++n;
 	}
-	g_print("\n");
+	mu_print("\n");
 }
 
 
@@ -97,7 +98,7 @@ test_mu_msg_02(void)
 	g_assert_true(msg.priority() /* 'low' */
 		      == Priority::Low);
 	g_assert_cmpuint(msg.date(), ==, 1218051515);
-		g_print("flags: %s\n", Mu::to_string(msg.flags()).c_str());
+		mu_println("flags: {}", Mu::to_string(msg.flags()));
 	g_assert_true(msg.flags() == (Flags::Seen|Flags::MailingList));
 
 	assert_contacts_equal(msg.all_contacts(), {

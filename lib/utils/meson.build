@@ -80,7 +80,5 @@ test('test-lang-detector',
      executable('test-lang-detector', 'mu-lang-detector.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep, cld2_dep, config_h_dep]))
-
 
 subdir('tests')

@@ -674,7 +674,8 @@ struct MimeCryptoContext : public Object {
 	make(const std::string& protocol) {
 		auto ctx = g_mime_crypto_context_new(protocol.c_str());
 		if (!ctx)
-			return Err(Error::Code::Crypto, "unsupported protocol " + protocol);
+			return Err(Error::Code::Crypto,
+				   "unsupported protocol {}", protocol);
 		MimeCryptoContext mctx{ctx};
 		mctx.unref(); /* remove extra ref */
 		return Ok(std::move(mctx));

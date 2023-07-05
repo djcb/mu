@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2011-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2011-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,17 +16,17 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <config.h>
 #include "mu-guile-message.hh"
 
-#include <libguile.h>
 #include "message/mu-message.hh"
 #include "utils/mu-utils.hh"
-#include <config.h>
 
 #include <glib-object.h>
 #include <memory>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC diagnostic ignored "-Wvolatile"
 #include <libguile.h>
 #pragma GCC diagnostic pop
 

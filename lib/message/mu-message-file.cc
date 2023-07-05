@@ -27,21 +27,19 @@ Mu::maildir_from_path(const std::string& path, const std::string& root)
 	const auto pos = path.find(root);
 	if (pos != 0 || path[root.length()] != '/')
 		return Err(Error{Error::Code::InvalidArgument,
-				"root '%s' is not a root for path '%s'",
-				root.c_str(), path.c_str()});
+				"root '{}' is not a root for path '{}'", root, path});
 
 	auto mdir{path.substr(root.length())};
 	auto slash{mdir.rfind('/')};
 
 	if (G_UNLIKELY(slash == std::string::npos) || slash < 4)
 		return Err(Error{Error::Code::InvalidArgument,
-				"invalid path: %s", path.c_str()});
+				"invalid path: {}", path});
 	mdir.erase(slash);
 	auto subdir = mdir.data() + slash - 4;
 	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 && strncmp(subdir, "/new", 4)))
 		return Err(Error::Code::InvalidArgument,
-			   "cannot find '/new' or '/cur' - invalid path: %s",
-			   path.c_str());
+			   "cannot find '/new' or '/cur' - invalid path: {}", path);
 
 	if (mdir.length() == 4)
 		return "/";
@@ -109,7 +107,7 @@ Mu::flags_from_path(const std::string& path)
 	if (!flags) {
 		/* LCOV_EXCL_START*/
 		return Err(Error{Error::Code::InvalidArgument,
-				"invalid flags ('%s')", parts.flags_suffix.c_str()});
+				"invalid flags ('{}')", parts.flags_suffix});
 		/* LCOV_EXCL_STOP*/
 	}
 
@@ -182,8 +180,8 @@ test_flags_from_path()
 		assert_valid_result(res);
 		/* LCOV_EXCL_START*/
 		if (g_test_verbose()) {
-			g_print("%s -> <%s>\n", tcase.first.c_str(),
-				to_string(res.value()).c_str());
+			mu_println("{} -> <{}>", tcase.first,
+				   to_string(res.value()));
 			g_assert_true(res.value() == tcase.second);
 		}
 		/*LCOV_EXCL_STOP*/

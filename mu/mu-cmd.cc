@@ -47,12 +47,13 @@ using namespace Mu;
 static Result<void>
 cmd_fields(const Options& opts)
 {
-	g_printerr("the 'mu fields' command has been superseded by 'mu info'; try:\n"
+	mu_printerrln("the 'mu fields' command has been superseded by 'mu info'; try:\n"
 		      "  mu info fields\n"
-		      "  mu info flags\n");
+		      "  mu info flags");
 
 	return Ok();
 }
+
 
 static Result<void>
 cmd_find(const Options& opts)
@@ -64,14 +65,15 @@ cmd_find(const Options& opts)
 		return mu_cmd_find(*store, opts);
 }
 
+
 static void
 show_usage(void)
 {
-	g_print("usage: mu command [options] [parameters]\n");
-	g_print("where command is one of index, find, cfind, view, mkdir, "
-		"extract, add, remove, script, verify or server\n");
-	g_print("see the mu, mu-<command> or mu-easy manpages for "
-		"more information\n");
+	mu_println("usage: mu command [options] [parameters]");
+	mu_println("where command is one of index, find, cfind, view, mkdir, "
+		"extract, add, remove, script, verify or server");
+	mu_println("see the mu, mu-<command> or mu-easy manpages for "
+		   "more information");
 }
 
 
@@ -157,9 +159,9 @@ Mu::mu_cmd_execute(const Options& opts) try {
 } catch (const Mu::Error& er) {
 	return Err(er);
 } catch (const std::runtime_error& re) {
-	return Err(Error::Code::Internal, "runtime-error: %s", re.what());
+	return Err(Error::Code::Internal, "runtime-error: {}", re.what());
 } catch (const std::exception& ex) {
-	return Err(Error::Code::Internal, "error: %s", ex.what());
+	return Err(Error::Code::Internal, "error: {}", ex.what());
 } catch (...) {
 	return Err(Error::Code::Internal, "caught exception");
 }

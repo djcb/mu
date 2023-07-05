@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -337,23 +337,15 @@ Server::Private::make_command_map()
 	return cmap;
 }
 
-G_GNUC_PRINTF(2, 3)
-static Sexp
-make_error(Error::Code code, const char* frm, ...)
-{
-	va_list ap;
-	va_start(ap, frm);
-	auto err = Sexp().put_props(
-		":error", Error::error_number(code),
-		":message", vformat(frm, ap));
-	va_end(ap);
-
-	return err;
-}
-
 bool
 Server::Private::invoke(const std::string& expr) noexcept
 {
+	auto make_error=[](auto&& code, auto&& msg) {
+		return Sexp().put_props(
+			":error", Error::error_number(code),
+			":message", msg);
+	};
+
 	if (!keep_going_)
 		return false;
 	try {
@@ -366,17 +358,20 @@ Server::Private::invoke(const std::string& expr) noexcept
 			throw res.error();
 
 	} catch (const Mu::Error& me) {
-		output_sexp(make_error(me.code(), "%s", me.what()));
+		output_sexp(make_error(me.code(), mu_format("{}", me.what())));
 		keep_going_ = true;
 	} catch (const Xapian::Error& xerr) {
-		output_sexp(make_error(Error::Code::Internal, "xapian error: %s: %s",
-				       xerr.get_type(), xerr.get_description().c_str()));
+		output_sexp(make_error(Error::Code::Internal,
+				       mu_format("xapian error: {}: {}",
+						 xerr.get_type(), xerr.get_description())));
 		keep_going_ = false;
 	} catch (const std::runtime_error& re) {
-		output_sexp(make_error(Error::Code::Internal, "caught exception: %s", re.what()));
+		output_sexp(make_error(Error::Code::Internal,
+				       mu_format("caught exception: {}", re.what())));
 		keep_going_ = false;
 	} catch (...) {
-		output_sexp(make_error(Error::Code::Internal, "something went wrong: quiting"));
+		output_sexp(make_error(Error::Code::Internal,
+				       mu_format("something went wrong: quitting")));
 		keep_going_ = false;
 	}
 
@@ -405,8 +400,7 @@ Server::Private::add_handler(const Command& cmd)
 	auto msg_res{store().find_message(docid)};
 	if (!msg_res)
 		throw Error(Error::Code::Store,
-			    "failed to get message at %s (docid=%u): %s",
-			    path->c_str(), docid);
+			    "failed to get message at {} (docid={})", *path, docid);
 
 	output_sexp(Sexp().put_props(":update",
 				    build_message_sexp(msg_res.value(), docid, {})));
@@ -470,7 +464,7 @@ Server::Private::compose_handler(const Command& cmd)
 		const unsigned docid{static_cast<unsigned>(cmd.number_arg(":docid").value_or(0))};
 		auto  msg{store().find_message(docid)};
 		if (!msg)
-			throw Error{Error::Code::Store, "failed to get message %u", docid};
+			throw Error{Error::Code::Store, "failed to get message {}", docid};
 
 		comp_lst.put_props(":original", build_message_sexp(msg.value(), docid, {}));
 
@@ -492,8 +486,7 @@ Server::Private::compose_handler(const Command& cmd)
 		}
 
 	} else if (ctype != "new")
-		throw Error(Error::Code::InvalidArgument, "invalid compose type '%s'",
-			    ctype.c_str());
+		throw Error(Error::Code::InvalidArgument, "invalid compose type '{}'", ctype);
 
 	output_sexp(comp_lst);
 }
@@ -510,10 +503,8 @@ Server::Private::contacts_handler(const Command& cmd)
 		parse_date_time(afterstr, true).value_or(0)};
 	const auto tstamp = g_ascii_strtoll(tstampstr.c_str(), NULL, 10);
 
-	g_debug("find %s contacts last seen >= %s (tstamp: %zu)",
-		personal ? "personal" : "any",
-		time_to_string("%c", after).c_str(),
-		static_cast<size_t>(tstamp));
+	mu_debug("find {} contacts last seen >= {} (tstamp: {})",
+		 personal ? "personal" : "any", time_to_string("%c", after), tstamp);
 
 	auto       n{0};
 	Sexp contacts;
@@ -540,7 +531,7 @@ Server::Private::contacts_handler(const Command& cmd)
 		      ":tstamp", format("%" G_GINT64_FORMAT, g_get_monotonic_time()));
 
 	/* dump the contacts cache as a giant sexp */
-	g_debug("sending %d of %zu contact(s)", n, store().contacts_cache().size());
+	mu_debug("sending {} of {} contact(s)", n, store().contacts_cache().size());
 	output_sexp(seq, Server::OutputFlags::SplitList);
 }
 
@@ -549,8 +540,7 @@ static std::vector<Store::Id>
 docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 {
 	if (msgid.size() > MaxTermLength) {
-		throw Error(Error::Code::InvalidArgument,
-			    "invalid message-id '%s'", msgid.c_str());
+		throw Error(Error::Code::InvalidArgument, "invalid message-id '{}'", msgid);
 	} else if (msgid.empty())
 		return {};
 
@@ -566,10 +556,10 @@ docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
 	g_free(expr);
 	if (!res)
 		throw Error(Error::Code::Store, &gerr,
-			    "failed to run message-id-query: %s", res.error().what());
+			    "failed to run message-id-query: {}", res.error().what());
 	else if (res->empty())
 		throw Error(Error::Code::NotFound,
-			    "could not find message(s) for msgid %s", msgid.c_str());
+			    "could not find message(s) for msgid {}", msgid);
 
 	std::vector<Store::Id> docids{};
 	for (auto&& mi : *res)
@@ -590,7 +580,7 @@ path_from_docid(const Store& store, Store::Id docid)
 		throw Error(Error::Code::Store, "could not get message from store");
 
 	if (auto path{msg->path()}; path.empty())
-		throw Error(Error::Code::Store, "could not get path for message %u",
+		throw Error(Error::Code::Store, "could not get path for message {}",
 			    docid);
 	else
 		return path;
@@ -667,17 +657,17 @@ Server::Private::find_handler(const Command& cmd)
 		if (const auto arg = cmd.symbol_arg(":sortfield"); !arg)
 			return Field::Id::Date;
 		else if (arg->length() < 2)
-			throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
-				arg->c_str()};
+			throw Error{Error::Code::InvalidArgument, "invalid sort field '{}'",
+				*arg};
 		else if (const auto field{field_from_name(arg->substr(1))}; !field)
-			throw Error{Error::Code::InvalidArgument, "invalid sort field '%s'",
-				arg->c_str()};
+			throw Error{Error::Code::InvalidArgument, "invalid sort field '{}'",
+				*arg};
 		else
 			return field->id;
 	});
 
 	if (batch_size < 1)
-		throw Error{Error::Code::InvalidArgument, "invalid batch-size %d", batch_size};
+		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", batch_size};
 
 	auto qflags{QueryFlags::SkipUnreadable}; // don't show unreadables.
 	if (descending)
@@ -695,7 +685,7 @@ Server::Private::find_handler(const Command& cmd)
 	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
 	if (!qres)
-		throw Error(Error::Code::Query, "failed to run query: %s", qres.error().what());
+		throw Error(Error::Code::Query, "failed to run query: {}", qres.error().what());
 
 	/* before sending new results, send an 'erase' message, so the frontend
 	 * knows it should erase the headers buffer. this will ensure that the
@@ -864,7 +854,7 @@ calculate_message_flags(const Message& msg, Option<std::string> flagopt)
 
 	if (!flags)
 		throw Error{Error::Code::InvalidArgument,
-			"invalid flags '%s'", flagopt.value_or("").c_str()};
+			"invalid flags '{}'", flagopt.value_or("")};
 	else
 		return flags.value();
 }
@@ -913,7 +903,7 @@ Server::Private::move_handler(const Command& cmd)
 	const auto docid{docids.at(0)};
 	auto    msg = store().find_message(docid)
 		.or_else([&]{throw Error{Error::Code::InvalidArgument,
-					"cannot find message %u", docid};}).value();
+					"cannot find message {}", docid};}).value();
 
 	/* if maildir was not specified, take the current one */
 	if (maildir.empty())
@@ -982,12 +972,10 @@ Server::Private::remove_handler(const Command& cmd)
 
 	if (::unlink(path.c_str()) != 0 && errno != ENOENT)
 		throw Error(Error::Code::File,
-			    "could not delete %s: %s",
-			    path.c_str(),
-			    g_strerror(errno));
+			    "could not delete {}: {}", path, g_strerror(errno));
 
 	if (!store().remove_message(path))
-		g_warning("failed to remove message @ %s (%d) from store", path.c_str(), docid);
+		mu_warning("failed to remove message @ {} ({}) from store", path, docid);
 	output_sexp(Sexp().put_props(":remove", docid));	// act as if it worked.
 }
 
@@ -997,8 +985,9 @@ Server::Private::sent_handler(const Command& cmd)
 	const auto path{cmd.string_arg(":path").value_or("")};
 	const auto docid = store().add_message(path);
 	if (!docid)
-		throw Error{Error::Code::Store, "failed to add path: %s",
-			docid.error().what()};
+		throw Error{Error::Code::Store, "failed to add path: {}: {}",
+			path, docid.error().what()};
+
 	output_sexp(Sexp().put_props(
 			    ":sent", Sexp::t_sym,
 			    ":path", path,

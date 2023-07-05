@@ -34,12 +34,10 @@ key_val(const Mu::MaybeAnsi& col, const std::string& key, T val)
 {
 	using Color = Mu::MaybeAnsi::Color;
 
-	std::cout << col.fg(Color::BrightBlue) << std::left << std::setw(18) << key << col.reset()
-		  << ": ";
-
-	std::cout << col.fg(Color::Green) << val << col.reset() << "\n";
+	mu_println("{}{:<18}{}: {}{}{}",
+		   col.fg(Color::BrightBlue), key, col.reset(),
+		   col.fg(Color::Green), val, col.reset());
 }
-
 
 static void
 print_signature(const Mu::MimeSignature& sig, const Options& opts)
@@ -90,7 +88,7 @@ verify(const MimeMultipartSigned& sigpart, const Options& opts)
 	if (!sigs || sigs->empty()) {
 
 		if (!opts.quiet)
-			g_print("cannot find signatures in part\n");
+			mu_println("cannot find signatures in part");
 
 		return true;
 	}
@@ -119,7 +117,7 @@ verify_message(const Message& message, const Options& opts, const std::string& n
 {
 	if (none_of(message.flags() & Flags::Signed)) {
 		if (!opts.quiet)
-			g_print("%s: no signed parts found\n", name.c_str());
+			mu_println("{}: no signed parts found", name);
 		return false;
 	}
 
@@ -155,7 +153,7 @@ Mu::mu_cmd_verify(const Options& opts)
 			return Err(message.error());
 
 		if (!opts.quiet && opts.verify.files.size() > 1)
-			g_print("verifying %s\n", file.c_str());
+			mu_println("verifying {}", file);
 
 		if (!verify_message(*message, opts, file))
 			all_ok = false;

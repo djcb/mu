@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,20 +19,20 @@
 #include "config.h"
 
 #include "mu-script.hh"
-
-#ifdef BUILD_GUILE
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <libguile.h>
-#pragma GCC diagnostic pop
-#endif /*BUILD_GUILE*/
-
 #include "mu/mu-options.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
 
 #include <fstream>
 #include <iostream>
+
+#ifdef BUILD_GUILE
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC diagnostic ignored "-Wvolatile"
+#include <libguile.h>
+#pragma GCC diagnostic pop
+#endif /*BUILD_GUILE*/
 
 using namespace Mu;
 
@@ -58,7 +58,7 @@ get_info(std::string&& path, const std::string& prefix)
 {
 	std::ifstream file{path};
 	if (!file.is_open()) {
-		g_warning ("failed to open %s", path.c_str());
+		mu_warning ("failed to open {}", path);
 		return Nothing;
 	}
 
@@ -93,7 +93,7 @@ script_infos_in_dir(const std::string& scriptdir, Mu::ScriptInfos& infos)
 {
 	DIR *dir = opendir(scriptdir.c_str());
 	if (!dir) {
-		g_debug("failed to open '%s': %s", scriptdir.c_str(),
+		mu_debug("failed to open '{}': {}", scriptdir,
 			g_strerror(errno));
 		return;
 	}

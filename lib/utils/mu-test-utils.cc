@@ -133,16 +133,16 @@ Mu::TempDir::~TempDir()
 		return; /* nothing to do */
 
 	if (!autodelete_) {
-		g_debug("_not_ deleting %s", path_.c_str());
+		mu_debug("_not_ deleting {}", path_);
 		return;
 	}
 
 	/* ugly */
 	GError *err{};
-	const auto cmd{format("/bin/rm -rf '%s'", path_.c_str())};
+	const auto cmd{fmt::format("/bin/rm -rf '{}'", path_)};
 	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
-		g_warning("error: %s\n", err ? err->message : "?");
+		mu_warning("error: {}", err ? err->message : "?");
 		g_clear_error(&err);
 	} else
-		g_debug("removed '%s'", path_.c_str());
+		mu_debug("removed '{}'", path_);
 }

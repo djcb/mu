@@ -36,8 +36,8 @@ Command::string_vec_arg(const std::string& name) const
 	std::vector<std::string> vec;
 	for (const auto& item : val->list()) {
 		if (!item.stringp()) {
-			// g_warning("command: non-string in string-list for %s: %s",
-			//	  name.c_str(), to_string().c_str());
+			// mu_warning("command: non-string in string-list for {}: {}",
+			//	  name, to_string());
 			return Nothing;
 		} else
 			vec.emplace_back(item.string());
@@ -68,19 +68,17 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 		if (param_it == cmd.cend()) {
 			if (arginfo.required)
 				return Err(Error::Code::Command,
-					   "missing required parameter %s in command '%s'",
-					   argname.c_str(), cmd.to_string().c_str());
+					   "missing required parameter {} in command '{}'",
+					   argname, cmd.to_string());
 			continue; // not required
 		}
 
 		// the types must match, but the 'nil' symbol is acceptable as "no value"
 		if (param_val->type() != arginfo.type && !(param_val->nilp()))
 			return Err(Error::Code::Command,
-				   "parameter %s expects type %s, but got %s in command '%s'",
-				   argname.c_str(),
-				   to_string(arginfo.type).c_str(),
-				   to_string(param_val->type()).c_str(),
-				   cmd.to_string().c_str());
+				   "parameter {} expects type {}, but got {} in command '{}'",
+				   argname, to_string(arginfo.type),
+				   to_string(param_val->type()), cmd.to_string());
 	}
 
 	// all parameters must be known
@@ -89,7 +87,7 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 		if (std::none_of(cmd_info.args.cbegin(), cmd_info.args.cend(),
 				 [&](auto&& arg) { return cmdargname == arg.first; }))
 			return Err(Error::Code::Command,
-				   "unknown parameter '%s 'in command '%s'",
+				   "unknown parameter '{} 'in command '{}'",
 				   cmdargname.name.c_str(), cmd.to_string().c_str());
 	}
 
@@ -103,7 +101,7 @@ CommandHandler::invoke(const Command& cmd, bool do_validate) const
 	const auto cmit{cmap_.find(cmd.name())};
 	if (cmit == cmap_.cend())
 		return Err(Error::Code::Command,
-			   "unknown command '%s'", cmd.to_string().c_str());
+			   "unknown command '{}'", cmd.to_string().c_str());
 
 	const auto& cmd_info{cmit->second};
 	if (do_validate) {
@@ -142,8 +140,6 @@ test_args()
 	assert_equal(cmd->string_arg(":bar").value_or("abc"), "abc"); // wrong type
 
 	g_assert_false(cmd->boolean_arg(":boo"));
-
-
 	g_assert_true(cmd->boolean_arg(":bah"));
 }
 
@@ -164,7 +160,7 @@ call(const CommandInfoMap& cmap, const std::string& str) try {
 	return !!res;
 
 } catch (const Error& err) {
-	g_warning("%s", err.what());
+	mu_warning("{}", err.what());
 	return false;
 }
 

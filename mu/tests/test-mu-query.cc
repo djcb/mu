@@ -56,7 +56,7 @@ make_database(const std::string& testdir)
 			MU_PROGRAM, testdir, MU_PROGRAM)};
 
 	if (g_test_verbose())
-		g_printerr("\n%s\n", cmdline.c_str());
+		mu_printerrln("\n{}", cmdline);
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, NULL));
 	auto xpath = mu_format("{}{}{}",
@@ -106,7 +106,7 @@ run_and_count_matches(const std::string& xpath,
 
 
 	if (g_test_verbose())
-		g_print("'%s' => %zu\n", expr.c_str(), qres->size());
+		mu_println("'{}' => {}\n", expr, qres->size());
 
 	return qres->size();
 }
@@ -247,7 +247,7 @@ test_mu_query_accented_chars_01(void)
 
 	const auto msg{qres->begin().message()};
 	if (!msg) {
-		g_warning("error getting message");
+		mu_warning("error getting message");
 		g_assert_not_reached();
 	}
 
@@ -269,7 +269,7 @@ test_mu_query_accented_chars_02(void)
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		auto count = run_and_count_matches(DB_PATH1, queries[i].query);
 		if (count != queries[i].count)
-			g_warning("query '%s'; expect %zu but got %zu",
+			mu_warning("query '{}'; expected {} but got {}",
 				  queries[i].query, queries[i].count, count);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
 				 ==,
@@ -292,7 +292,7 @@ test_mu_query_accented_chars_fraiche(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
-			g_print("'%s'\n", queries[i].query);
+			mu_println("{}", queries[i].query);
 
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
 				 ==,
@@ -439,7 +439,7 @@ test_mu_query_attach(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
-			g_print("query: %s\n", queries[i].query);
+			mu_println("query: {}", queries[i].query);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
 				 ==,
 				 queries[i].count);
@@ -462,7 +462,7 @@ test_mu_query_msgid(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		if (g_test_verbose())
-			g_print("query: %s\n", queries[i].query);
+			mu_println("query: {}", queries[i].query);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
 				 ==,
 				 queries[i].count);

@@ -114,9 +114,8 @@ private:
 					throw rx.error();
 				rxvec.emplace_back(rx.value());
 			} catch (const Error& rex) {
-				g_warning("invalid personal address regexp '%s': %s",
-					  p.c_str(),
-					  rex.what());
+				mu_warning("invalid personal address regexp '{}': {}",
+					   p, rex.what());
 			}
 		}
 		return rxvec;
@@ -136,7 +135,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 	while (getline(ss, line)) {
 		const auto parts = Mu::split(line, Separator);
 		if (G_UNLIKELY(parts.size() != 5)) {
-			g_warning("error: '%s'", line.c_str());
+			mu_warning("error: '{}'", line);
 			continue;
 		}
 		Contact ci(parts[0],                                                  // email
@@ -157,7 +156,7 @@ ContactsCache::Private::serialize() const
 {
 	if (config_db_.read_only()) {
 		if (dirty_ > 0)
-			g_critical("dirty data in read-only ccache!"); // bug
+			mu_critical("dirty data in read-only ccache!"); // bug
 		return;
 	}
 
@@ -209,7 +208,7 @@ ContactsCache::add(Contact&& contact)
 	/* we do _not_ cache invalid email addresses, so we won't offer them in completions etc. It
 	 * should be _rare_, but we've seen cases ( broken local messages) */
 	if (!contact.has_valid_email()) {
-		g_warning("not caching invalid e-mail address '%s'", contact.email.c_str());
+		mu_warning("not caching invalid e-mail address '{}'", contact.email);
 		return;
 	}
 
@@ -234,7 +233,7 @@ ContactsCache::add(Contact&& contact)
 		auto email{contact.email};
 		// return priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)))
 		//     .first->second;
-		g_debug("adding contact %s <%s>", contact.name.c_str(), contact.email.c_str());
+		mu_debug("adding contact {} <{}>", contact.name.c_str(), contact.email.c_str());
 		priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)));
 
 	} else {	// existing contact.
@@ -248,8 +247,8 @@ ContactsCache::add(Contact&& contact)
 			existing.tstamp	      = g_get_monotonic_time();
 			existing.message_date = contact.message_date;
 		}
-		g_debug("updating contact %s <%s> (%zu)",
-			contact.name.c_str(), contact.email.c_str(), existing.frequency);
+		mu_debug("updating contact {} <{}> ({})",
+			 contact.name, contact.email, existing.frequency);
 	}
 }
 
@@ -528,11 +527,11 @@ test_mu_contacts_cache_sort()
 	auto result_chars = [](const Mu::ContactsCache& ccache)->std::string {
 		std::string str;
 		if (g_test_verbose())
-			g_print("contacts-cache:\n");
+			fmt::print("contacts-cache:\n");
 
 		ccache.for_each([&](auto&& contact) {
 			if (g_test_verbose())
-				g_print("\t- %s\n", contact.display_name().c_str());
+				fmt::print("\t- {}\n", contact.display_name());
 			str += contact.name;
 			return true;
 		});

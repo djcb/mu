@@ -57,7 +57,7 @@ install_sig_handler(void)
 
 	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
 		if (sigaction(sigs[i], &action, NULL) != 0)
-			g_critical("set sigaction for %d failed: %s",
+			mu_critical("set sigaction for {} failed: {}",
 				   sigs[i], g_strerror(errno));
 }
 
@@ -92,7 +92,7 @@ output_sexp_stdout(const Sexp& sexp, Server::OutputFlags flags)
 	const auto str{sexp.to_string(fopts)};
 	cookie(str.size() + 1);
 	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
-		g_critical("failed to write output '%s'", str.c_str());
+		mu_critical("failed to write output '{}'", str);
 		::raise(SIGTERM); /* terminate ourselves */
 	}
 
@@ -118,12 +118,11 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 		return Err(store.error());
 
 	Server server{*store, output_sexp_stdout};
-	g_message("created server with store @ %s; maildir @ %s; debug-mode %s;"
-		  "readline: %s",
-		  store->path().c_str(),
-		  store->root_maildir().c_str(),
-		  opts.debug ? "yes" : "no",
-		  have_readline() ? "yes" : "no");
+	mu_message("created server with store @ {}; maildir @ {}; debug-mode {};"
+		  "readline: {}",
+		   store->path(), store->root_maildir(),
+		   opts.debug ? "yes" : "no",
+		   have_readline() ? "yes" : "no");
 
 	tty = ::isatty(::fileno(stdout));
 	const auto eval = std::string{opts.server.commands ? "(help :full t)" : opts.server.eval};
@@ -153,18 +152,17 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	}
 
 	if (MuTerminate != 0)
-		g_message ("shutting down due to signal %d", MuTerminate.load());
+		mu_message ("shutting down due to signal {}", MuTerminate.load());
 
 	shutdown_readline();
 
 	return Ok();
 
-} catch (const Error& er) {
-	/* note: user-level error, "OK" for mu */
+} catch (const Error& er) { /* note: user-level error, "OK" for mu */
 	report_error(er);
-	g_warning("server caught exception: %s", er.what());
+	mu_warning("server caught exception: {}", er.what());
 	return Ok();
 } catch (...) {
-	g_critical("server caught exception");
+	mu_critical("server caught exception");
 	return Err(Error::Code::Internal, "caught exception");
 }

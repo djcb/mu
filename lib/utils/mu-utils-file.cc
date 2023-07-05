@@ -60,7 +60,7 @@ Mu::play (const std::string& path)
 	auto	 is_native = g_file_is_native(gf);
 	g_object_unref(gf);
 	if (!is_native)
-		return Err(Error::Code::File, "'%s' is not a native file", path.c_str());
+		return Err(Error::Code::File, "'{}' is not a native file", path);
 
 	const char *prog{g_getenv ("MU_PLAY_PROGRAM")};
 	if (!prog) {
@@ -73,7 +73,7 @@ Mu::play (const std::string& path)
 
 	const auto program_path{program_in_path(prog)};
 	if (!program_path)
-		return Err(Error::Code::File, "cannot find '%s' in path", prog);
+		return Err(Error::Code::File, "cannot find '{}' in path", prog);
 
 	const gchar *argv[3]{};
 	argv[0] = program_path->c_str();
@@ -83,9 +83,8 @@ Mu::play (const std::string& path)
 	GError *err{};
 	if (!g_spawn_async ({}, (gchar**)&argv, {}, G_SPAWN_SEARCH_PATH, maybe_setsid,
 			    {}, {}, &err))
-		return Err(Error::Code::File, &err/*consumes*/, "failed to open '%s' with '%s'",
-			   path. c_str(), program_path->c_str());
-
+		return Err(Error::Code::File, &err/*consumes*/,
+			   "failed to open '{}' with '{}'", path, *program_path);
 	return Ok();
 }
 
@@ -117,8 +116,8 @@ Mu::determine_dtype (const std::string& path, bool use_lstat)
 		res = ::stat(path.c_str(), &statbuf);
 
 	if (res != 0) {
-		g_warning ("%sstat failed on %s: %s",
-			   use_lstat ? "l" : "", path.c_str(), g_strerror(errno));
+		mu_warning ("{}stat failed on {}: {}",
+			   use_lstat ? "l" : "", path, g_strerror(errno));
 		return DT_UNKNOWN;
 	}
 

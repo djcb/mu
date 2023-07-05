@@ -71,18 +71,18 @@ struct Store::Private {
 		{}
 
 	~Private() try {
-		g_debug("closing store @ %s", xapian_db_.path().c_str());
+		mu_debug("closing store @ {}", xapian_db_.path());
 		if (!xapian_db_.read_only()) {
 			transaction_maybe_commit(true /*force*/);
 		}
 	} catch (...) {
-		g_critical("caught exception in store dtor");
+		mu_critical("caught exception in store dtor");
 	}
 
 	// If not started yet, start a transaction. Otherwise, just update the transaction size.
 	void transaction_inc() noexcept {
 		if (transaction_size_ == 0) {
-			g_debug("starting transaction");
+			mu_debug("starting transaction");
 			xapian_db_.begin_transaction();
 		}
 		++transaction_size_;
@@ -102,14 +102,10 @@ struct Store::Private {
 			if (transaction_size_ == 0)
 				return; // nothing more to do here.
 
-			g_debug("committing transaction (n=%zu)", transaction_size_);
+			mu_debug("committing transaction (n={})", transaction_size_);
 			xapian_db_.commit_transaction();
 			transaction_size_ = 0;
 		}
-	}
-
-	time_t metadata_time_t(const std::string& key) const {
-		return static_cast<time_t>(::atoll(xapian_db_.metadata(key).c_str()));
 	}
 
 	XapianDb make_db(const std::string& path, XapianDb::Flavor flavor) {
@@ -193,7 +189,7 @@ Store::Store(const std::string& path, Store::Options opts)
 		/* don't try to recover from version with an incompatible scheme */
 		if (s_version < 500)
 			throw Mu::Error(Error::Code::CannotReinit,
-					"old schema (%zu) is too old to re-initialize from",
+					"old schema ({}) is too old to re-initialize from",
 					s_version);
 		const auto old_root_maildir{root_maildir()};
 
@@ -210,7 +206,7 @@ Store::Store(const std::string& path, Store::Options opts)
 	/* otherwise, the schema version should match. */
 	if (s_version != ExpectedSchemaVersion)
 		throw Mu::Error(Error::Code::SchemaMismatch,
-				"expected schema-version %zu, but got %zu",
+				"expected schema-version {}, but got {}",
 				ExpectedSchemaVersion, s_version);
 }
 
@@ -433,7 +429,7 @@ static Store::IdMessageVec
 messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100)
 {
 	if (msgid.size() > MaxTermLength) {
-		g_warning("invalid message-id '%s'", msgid.c_str());
+		mu_warning("invalid message-id '{}'", msgid.c_str());
 		return {};
 	} else if (msgid.empty())
 		return {};
@@ -447,11 +443,11 @@ messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100
 	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
 	g_free(expr);
 	if (!res) {
-		g_warning("failed to run message-id-query: %s", res.error().what());
+		mu_warning("failed to run message-id-query: {}", res.error().what());
 		return {};
 	}
 	if (res->empty()) {
-		g_warning("could not find message(s) for msgid %s", msgid.c_str());
+		mu_warning("could not find message(s) for msgid {}", msgid);
 		return {};
 	}
 
@@ -483,7 +479,7 @@ Store::move_message(Store::Id id,
 
 	auto msg{priv_->find_message_unlocked(id)};
 	if (!msg)
-		return Err(Error::Code::Store, "cannot find message <%u>", id);
+		return Err(Error::Code::Store, "cannot find message <{}>", id);
 
 	auto res{priv_->move_message_unlocked(std::move(*msg), target_mdir, new_flags, opts)};
 	if (!res)
@@ -513,7 +509,7 @@ Store::move_message(Store::Id id,
 		if (dup_res)
 			imvec.emplace_back(docid, std::move(*dup_res));
 		else
-			g_warning("failed to move dup: %s", dup_res.error().what());
+			mu_warning("failed to move dup: {}", dup_res.error().what());
 	}
 
 	return Ok(std::move(imvec));

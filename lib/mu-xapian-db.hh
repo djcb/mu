@@ -31,6 +31,7 @@
 
 #include <xapian.h>
 #include <utils/mu-result.hh>
+#include <utils/mu-utils.hh>
 
 namespace Mu {
 
@@ -42,13 +43,13 @@ xapian_try(Func&& func) noexcept
 try {
 	func();
 } catch (const Xapian::Error& xerr) {
-	g_critical("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
+	mu_critical("{}: xapian error '{}'", __func__, xerr.get_msg());
 } catch (const std::runtime_error& re) {
-	g_critical("%s: runtime error: %s", __func__, re.what());
+	mu_critical("{}: runtime error: {}", __func__, re.what());
 } catch (const std::exception& e) {
-	g_critical("%s: caught std::exception: %s", __func__, e.what());
+	mu_critical("{}: caught std::exception: {}", __func__, e.what());
 } catch (...) {
-	g_critical("%s: caught exception", __func__);
+	mu_critical("{}: caught exception", __func__);
 }
 
 template <typename Func, typename Default = std::invoke_result<Func>> auto
@@ -58,30 +59,29 @@ try {
 } catch (const Xapian::DocNotFoundError& xerr) {
 	return static_cast<Default>(def);
 } catch (const Xapian::Error& xerr) {
-	g_warning("%s: xapian error '%s'", __func__, xerr.get_msg().c_str());
+	mu_warning("{}: xapian error '{}'", __func__, xerr.get_msg());
 	return static_cast<Default>(def);
 } catch (const std::runtime_error& re) {
-	g_critical("%s: runtime error: %s", __func__, re.what());
+	mu_critical("{}: runtime error: {}", __func__, re.what());
 	return static_cast<Default>(def);
 } catch (const std::exception& e) {
-	g_critical("%s: caught std::exception: %s", __func__, e.what());
+	mu_critical("{}: caught std::exception: {}", __func__, e.what());
 	return static_cast<Default>(def);
 } catch (...) {
-	g_critical("%s: caught exception", __func__);
+	mu_critical("{}: caught exception", __func__);
 	return static_cast<Default>(def);
 }
-
 
 template <typename Func> auto
 xapian_try_result(Func&& func) noexcept -> std::decay_t<decltype(func())>
 try {
 	return func();
 } catch (const Xapian::Error& xerr) {
-	return Err(Error::Code::Xapian, "%s", xerr.get_error_string());
+	return Err(Error::Code::Xapian, "{}", xerr.get_error_string());
 } catch (const std::runtime_error& re) {
-	return Err(Error::Code::Internal, "runtime error: %s", re.what());
+	return Err(Error::Code::Internal, "runtime error: {}", re.what());
 } catch (const std::exception& e) {
-	return Err(Error::Code::Internal, "caught std::exception: %s", e.what());
+	return Err(Error::Code::Internal, "caught std::exception: {}", e.what());
 } catch (...) {
 	return Err(Error::Code::Internal, "caught exception");
 }

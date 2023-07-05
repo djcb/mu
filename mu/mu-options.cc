@@ -623,7 +623,7 @@ cmd_help(const CLI::App& app, Options& opts)
 			return show_manpage(opts, "mu-" + opts.help.command);
 
 	return Err(Error::Code::Command,
-		   "no help available for '%s'", opts.help.command.c_str());
+		   "no help available for '{}'", opts.help.command);
 }
 
 bool
@@ -660,7 +660,7 @@ Options::make(int argc, char *argv[])
 	CLI::App app{"mu mail indexer/searcher", "mu"};
 
 	app.description(R"(mu mail indexer/searcher
-Copyright (C) 2008-2022 Dirk-Jan C. Binnema
+Copyright (C) 2008-2023 Dirk-Jan C. Binnema
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
@@ -743,7 +743,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	} catch (const CLI::CallForVersion&) {
 		std::cout << "version " << PACKAGE_VERSION << "\n";
 	} catch (const CLI::ParseError& pe) {
-		return Err(Error::Code::InvalidArgument, "%s", pe.what());
+		return Err(Error::Code::InvalidArgument, "{}", pe.what());
 	}  catch (...) {
 		return Err(Error::Code::Internal, "error parsing arguments");
 	}

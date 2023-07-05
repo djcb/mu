@@ -284,7 +284,6 @@ struct Options {
 	std::string runtime_path(RuntimePath path) const {
 		return Mu::runtime_path(path, muhome);
 	}
-
 };
 
 } // namepace Mu

@@ -77,8 +77,7 @@ validate_field_shortcuts()
 #ifdef BUILD_TESTS
 		if (shortcut != 0) {
 			if (++no_dups[static_cast<size_t>(shortcut-'a')] > 1) {
-				g_critical("shortcut '%c' is duplicated",
-					   shortcut);
+				mu_critical("shortcut '{}' is duplicated", shortcut);
 				return false;
 			}
 		}
@@ -105,7 +104,7 @@ validate_field_flags()
 			++flagnum;
 
 		if (flagnum > 1) {
-			//g_warning("invalid field %*.s", STR_V(field.name));
+			//mu_warning("invalid field {}", field.name);
 			return false;
 		}
 	}

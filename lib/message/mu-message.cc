@@ -80,20 +80,18 @@ get_statbuf(const std::string& path, Message::Options opts = Message::Options::N
 {
 	if (none_of(opts & Message::Options::AllowRelativePath) &&
 	    !g_path_is_absolute(path.c_str()))
-		return Err(Error::Code::File, "path '%s' is not absolute",
-			   path.c_str());
+		return Err(Error::Code::File, "path '{}' is not absolute", path);
 
 	if (::access(path.c_str(), R_OK) != 0)
-		return Err(Error::Code::File, "file @ '%s' is not readable",
-			   path.c_str());
+		return Err(Error::Code::File, "file @ '{}' is not readable", path);
 
 	struct stat statbuf{};
 	if (::stat(path.c_str(), &statbuf) < 0)
-		return Err(Error::Code::File, "cannot stat %s: %s", path.c_str(),
-			    g_strerror(errno));
+		return Err(Error::Code::File, "cannot stat {}: {}", path,
+			   g_strerror(errno));
 
 	if (!S_ISREG(statbuf.st_mode))
-		return Err(Error::Code::File, "not a regular file: %s", path.c_str());
+		return Err(Error::Code::File, "not a regular file: {}", path);
 
 	return Ok(std::move(statbuf));
 }
@@ -200,13 +198,13 @@ Message::set_maildir(const std::string& maildir)
 	    maildir.at(0) != '/' ||
 	    (maildir.size() > 1 && maildir.at(maildir.length()-1) == '/'))
 		return Err(Error::Code::Message,
-			   "'%s' is not a valid maildir", maildir.c_str());
+			   "'{}' is not a valid maildir", maildir.c_str());
 
 	const auto path{document().string_value(Field::Id::Path)};
 	if (path == maildir || path.find(maildir) == std::string::npos)
 		return Err(Error::Code::Message,
-			   "'%s' is not a valid maildir for message @ %s",
-			   maildir.c_str(), path.c_str());
+			   "'{}' is not a valid maildir for message @ {}",
+			   maildir, path);
 
 	priv_->doc.remove(Field::Id::Maildir);
 	priv_->doc.add(Field::Id::Maildir, maildir);
@@ -229,8 +227,8 @@ Message::load_mime_message(bool reload) const
 
 	const auto path{document().string_value(Field::Id::Path)};
 	if (auto mime_msg{MimeMessage::make_from_file(path)}; !mime_msg) {
-		g_warning("failed to load '%s': %s",
-			  path.c_str(), mime_msg.error().what());
+		mu_warning("failed to load '{}': {}",
+			   path, mime_msg.error().what());
 		return false;
 	} else {
 		priv_->mime_msg = std::move(mime_msg.value());
@@ -258,17 +256,17 @@ get_priority(const MimeMessage& mime_msg)
 	constexpr std::array<std::pair<std::string_view, Priority>, 10>
 		prio_alist = {{
 			{"high",	Priority::High},
-			{"1",		Priority::High},
-			{"2",		Priority::High},
+			{"1",	Priority::High},
+			{"2",	Priority::High},
 
 			{"normal",	Priority::Normal},
-			{"3",		Priority::Normal},
+			{"3",	Priority::Normal},
 
-			{"low",		Priority::Low},
+			{"low",	Priority::Low},
 			{"list",	Priority::Low},
 			{"bulk",	Priority::Low},
-			{"4",		Priority::Low},
-			{"5",		Priority::Low}
+			{"4",	Priority::Low},
+			{"5",	Priority::Low}
 		}};
 
 	const auto opt_str = mime_msg.header("Precedence")
@@ -440,14 +438,13 @@ handle_encrypted(const MimeMultipartEncrypted& part, Message::Private& info)
 	const auto proto{part.content_type_parameter("protocol").value_or("unknown")};
 	const auto ctx = MimeCryptoContext::make(proto);
 	if (!ctx) {
-		g_warning("failed to create context for protocol <%s>",
-			  proto.c_str());
+		mu_warning("failed to create context for protocol <{}>", proto);
 		return;
 	}
 
 	auto res{part.decrypt(*ctx)};
 	if (!res) {
-		g_warning("failed to decrypt: %s", res.error().what());
+		mu_warning("failed to decrypt: {}", res.error().what());
 		return;
 	}
 
@@ -538,9 +535,9 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	if (info.body_txt) { /* attempt to get the body-language */
 		if (const auto lang{detect_language(info.body_txt.value())}; lang) {
 			info.language = lang->code;
-			g_debug("detected language: %s", lang->code);
+			mu_debug("detected language: {}", lang->code);
 		} else
-			g_debug("could not detect language");
+			mu_debug("could not detect language");
 	}
 }
 
@@ -551,8 +548,8 @@ calculate_sha256(const std::string& path)
 
 	FILE *file{::fopen(path.c_str(), "r")};
 	if (!file)
-		return Err(Error{Error::Code::File, "failed to open %s: %s",
-					path.c_str(), ::strerror(errno)});
+		return Err(Error{Error::Code::File, "failed to open {}: {}",
+					path, ::strerror(errno)});
 
 	std::array<uint8_t, 4096> buf{};
 	while (true) {
@@ -566,7 +563,7 @@ calculate_sha256(const std::string& path)
 	::fclose(file);
 
 	if (has_err)
-		return Err(Error{Error::Code::File, "failed to read %s", path.c_str()});
+		return Err(Error{Error::Code::File, "failed to read {}", path});
 
 	return Ok(g_checksum_get_string(checksum));
 }
@@ -585,17 +582,18 @@ fake_message_id(const std::string& path)
 
 	// not a very good message-id, only for testing.
 	if (path.empty() || ::access(path.c_str(), R_OK) != 0)
-		return format("%08x%s", g_str_hash(path.c_str()), mu_suffix);
+		return mu_format("{:08x}{}", g_str_hash(path.c_str()), mu_suffix);
 	if (const auto sha256_res{calculate_sha256(path)}; !sha256_res)
-		return format("%08x%s", g_str_hash(path.c_str()), mu_suffix);
+		return mu_format("{:08x}{}", g_str_hash(path.c_str()), mu_suffix);
 	else
-		return format("%s%s", sha256_res.value().c_str(), mu_suffix);
+		return mu_format("{}{}", sha256_res.value(), mu_suffix);
 }
 
-/* many of the doc.add(fiels ....) automatically update the sexp-list as well;
+/* many of the doc.add(fields ....) automatically update the sexp-list as well;
  * however, there are some _extra_ values in the sexp-list that are not
  * based on a field. So we add them here.
  */
+
 
 static void
 doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
@@ -797,11 +795,10 @@ Message::cache_path(Option<size_t> index) const
 
 	if (index) {
 		GError *err{};
-		auto tpath = format("%s/%zu", priv_->cache_path.c_str(), *index);
+		auto tpath = mu_format("{}/{}", priv_->cache_path, *index);
 		if (g_mkdir(tpath.c_str(), 0700) != 0)
 			return Err(Error::Code::File, &err,
-				   "failed to create cache dir '%s'; err=%d",
-				   tpath.c_str(), errno);
+				   "failed to create cache dir '{}'; err={}", tpath, errno);
 		return Ok(std::move(tpath));
 	} else
 

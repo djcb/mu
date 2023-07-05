@@ -96,14 +96,14 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
 	if (is_dotdir(d_name) || std::strcmp(d_name, "tmp") == 0)
 		return true; // ignore.
 	if (do_ignore(d_name)) {
-		g_debug("skip %s/%s (ignore)", path.c_str(), d_name);
+		mu_debug("skip {}/{} (ignore)", path, d_name);
 		return true; // ignore
 	}
 
 	const auto  fullpath{join_paths(path, d_name)};
 	struct stat statbuf {};
 	if (::stat(fullpath.c_str(), &statbuf) != 0) {
-		g_warning("failed to stat %s: %s", fullpath.c_str(), g_strerror(errno));
+		mu_warning("failed to stat {}: {}", fullpath, g_strerror(errno));
 		return false;
 	}
 
@@ -123,7 +123,7 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
 	} else if (S_ISREG(statbuf.st_mode) && is_maildir)
 		return handler_(fullpath, &statbuf, Scanner::HandleType::File);
 
-	g_debug("skip %s (neither maildir-file nor directory)", fullpath.c_str());
+	mu_debug("skip {} (neither maildir-file nor directory)", fullpath);
 
 	return true;
 }
@@ -136,7 +136,7 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 
 	const auto dir = opendir(path.c_str());
 	if (G_UNLIKELY(!dir)) {
-		g_warning("failed to scan dir %s: %s", path.c_str(), g_strerror(errno));
+		mu_warning("failed to scan dir {}: {}", path, g_strerror(errno));
 		return false;
 	}
 
@@ -153,7 +153,7 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 		}
 
 		if (errno != 0) {
-			g_warning("failed to read %s: %s", path.c_str(), g_strerror(errno));
+			mu_warning("failed to read {}: {}", path, g_strerror(errno));
 			continue;
 		}
 
@@ -169,30 +169,29 @@ Scanner::Private::start()
 {
 	const auto& path{root_dir_};
 	if (G_UNLIKELY(path.length() > PATH_MAX)) {
-		g_warning("path too long");
+		mu_warning("path too long");
 		return false;
 	}
 
 	const auto mode{F_OK | R_OK};
 	if (G_UNLIKELY(access(path.c_str(), mode) != 0)) {
-		g_warning("'%s' is not readable: %s", path.c_str(), g_strerror(errno));
+		mu_warning("'{}' is not readable: {}", path, g_strerror(errno));
 		return false;
 	}
 
-	struct stat statbuf {
-	};
+	struct stat statbuf {};
 	if (G_UNLIKELY(stat(path.c_str(), &statbuf) != 0)) {
-		g_warning("'%s' is not stat'able: %s", path.c_str(), g_strerror(errno));
+		mu_warning("'{}' is not stat'able: {}", path, g_strerror(errno));
 		return false;
 	}
 
 	if (G_UNLIKELY(!S_ISDIR(statbuf.st_mode))) {
-		g_warning("'%s' is not a directory", path.c_str());
+		mu_warning("'{}' is not a directory", path);
 		return false;
 	}
 
 	running_ = true;
-	g_debug("starting scan @ %s", root_dir_.c_str());
+	mu_debug("starting scan @ {}", root_dir_);
 
 	auto       basename{g_path_get_basename(root_dir_.c_str())};
 	const auto is_maildir =
@@ -202,8 +201,7 @@ Scanner::Private::start()
 	const auto start{std::chrono::steady_clock::now()};
 	process_dir(root_dir_, is_maildir);
 	const auto elapsed = std::chrono::steady_clock::now() - start;
-	g_debug("finished scan of %s in %" G_GINT64_FORMAT " ms", root_dir_.c_str(),
-		to_ms(elapsed));
+	mu_debug("finished scan of {} in {} ms", root_dir_, to_ms(elapsed));
 	running_ = false;
 
 	return true;
@@ -215,7 +213,7 @@ Scanner::Private::stop()
 	if (!running_)
 		return true; // nothing to do
 
-	g_debug("stopping scan");
+	mu_debug("stopping scan");
 	running_ = false;
 
 	return true;

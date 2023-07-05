@@ -369,7 +369,7 @@ Q46aYjxe0As6AP90bcAZ3dcn5RcTJaM0UhZssguawZ+tnriD3+5DPkMMCg==
 		const auto mpart{MimeMultipartSigned(mobj)};
 		const auto sigs{mpart.verify(*ctx)};
 		if (!sigs)
-			g_warning("%s", sigs.error().what());
+			mu_warning("{}", sigs.error().what());
 
 		g_assert_true(!!sigs);
 		g_assert_cmpuint(sigs->size(), ==, 1);

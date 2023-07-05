@@ -49,7 +49,7 @@ Mu::init_gmime(void)
 	if (gmime_initialized)
 		return; // already
 
-	g_debug("initializing gmime %u.%u.%u",
+	mu_debug("initializing gmime {}.{}.{}",
 		gmime_major_version,
 		gmime_minor_version,
 		gmime_micro_version);
@@ -58,7 +58,7 @@ Mu::init_gmime(void)
 	gmime_initialized = true;
 
 	std::atexit([] {
-		g_debug("shutting down gmime");
+		mu_debug("shutting down gmime");
 		g_mime_shutdown();
 		gmime_initialized = false;
 	});
@@ -146,7 +146,7 @@ MimeObject::to_file(const std::string& path, bool overwrite) const noexcept
 					S_IRUSR|S_IWUSR,
 					&err)};
 	if (!strm)
-		return Err(Error::Code::File, &err, "failed to open '%s'", path.c_str());
+		return Err(Error::Code::File, &err, "failed to open '{}'", path);
 
 	MimeStream stream{MimeStream::make_from_stream(strm)};
 	return write_to_stream({}, stream);
@@ -158,14 +158,14 @@ MimeObject::to_string_opt() const noexcept
 {
 	auto stream{MimeStream::make_mem()};
 	if (!stream) {
-		g_warning("failed to create mem stream");
+		mu_warning("failed to create mem stream");
 		return Nothing;
 	}
 
 	const auto written = g_mime_object_write_to_stream(
 		self(), {}, GMIME_STREAM(stream.object()));
 	if (written < 0) {
-		g_warning("failed to write object to stream");
+		mu_warning("failed to write object to stream");
 		return Nothing;
 	}
 
@@ -246,16 +246,15 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 
 	if (g_mkdir_with_parents((testpath + "/.gnupg").c_str(), 0700) != 0)
 		return Err(Error::Code::File,
-			   "failed to create gnupg dir; err=%d", errno);
+			   "failed to create gnupg dir; err={}", errno);
 
 	auto write_gpgfile=[&](const std::string& fname, const std::string& data)
 		-> Result<void> {
 
 		GError *err{};
-		std::string path{format("%s/%s", testpath.c_str(), fname.c_str())};
+		std::string path{mu_format("{}/{}", testpath, fname)};
 		if (!g_file_set_contents(path.c_str(), data.c_str(), data.size(), &err))
-			return Err(Error::Code::File, &err,
-				   "failed to write %s", path.c_str());
+			return Err(Error::Code::File, &err, "failed to write {}", path);
 		else
 			return Ok();
 	};
@@ -303,7 +302,7 @@ MimeMessage::make_from_file(const std::string& path)
 	init_gmime();
 	if (auto&& stream{g_mime_stream_file_open(path.c_str(), "r", &err)}; !stream)
 		return Err(Error::Code::Message, &err,
-			   "failed to open stream for %s", path.c_str());
+			   "failed to open stream for {}", path);
 	else
 		return make_from_stream(std::move(stream));
 }
@@ -480,13 +479,13 @@ MimePart::size() const noexcept
 {
 	auto wrapper{g_mime_part_get_content(self())};
 	if (!wrapper) {
-		g_warning("failed to get content wrapper");
+		mu_warning("failed to get content wrapper");
 		return 0;
 	}
 
 	auto stream{g_mime_data_wrapper_get_stream(wrapper)};
 	if (!stream) {
-		g_warning("failed to get stream");
+		mu_warning("failed to get stream");
 		return 0;
 	}
 
@@ -510,13 +509,13 @@ MimePart::to_string() const noexcept
 	 */
 	GMimeDataWrapper *wrapper{g_mime_part_get_content(self())};
 	if (!wrapper) { /* this happens with invalid mails */
-		g_debug("failed to create data wrapper");
+		mu_warning("failed to create data wrapper");
 		return Nothing;
 	}
 
 	GMimeStream *stream{g_mime_stream_mem_new()};
 	if (!stream) {
-		g_warning("failed to create mem stream");
+		mu_warning("failed to create mem stream");
 		return Nothing;
 	}
 
@@ -554,7 +553,7 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 					S_IRUSR|S_IWUSR,
 					&err)};
 	if (!strm)
-		return Err(Error::Code::File, &err, "failed to open '%s'", path.c_str());
+		return Err(Error::Code::File, &err, "failed to open '{}'", path);
 
 	MimeStream stream{MimeStream::make_from_stream(strm)};
 	ssize_t written{g_mime_data_wrapper_write_to_stream(
@@ -563,7 +562,7 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 
 	if (written < 0) {
 		return Err(Error::Code::File, &err,
-			   "failed to write to '%s'", path.c_str());
+			   "failed to write to '{}'", path);
 	}
 
 	return Ok(static_cast<size_t>(written));
@@ -635,7 +634,7 @@ MimeMultipartSigned::verify(const MimeCryptoContext& ctx, VerifyFlags vflags) co
 	const auto sign_proto{ctx.signature_protocol()};
 
 	if (!proto || !sign_proto || !mime_types_equal(*proto, *sign_proto))
-		return Err(Error::Code::Crypto, "unsupported protocol " +
+		return Err(Error::Code::Crypto, "unsupported protocol {}",
 			   proto.value_or("<unknown>"));
 
 	const auto sig{signed_signature_part()};
@@ -734,7 +733,7 @@ MimeMultipartEncrypted::decrypt(const MimeCryptoContext& ctx, DecryptFlags dflag
 	const auto enc_proto{ctx.encryption_protocol()};
 
 	if (!proto || !enc_proto || !mime_types_equal(*proto, *enc_proto))
-		return Err(Error::Code::Crypto, "unsupported protocol " +
+		return Err(Error::Code::Crypto, "unsupported protocol {}",
 			   proto.value_or("<unknown>"));
 
 	const auto version{encrypted_version_part()};
@@ -744,14 +743,14 @@ MimeMultipartEncrypted::decrypt(const MimeCryptoContext& ctx, DecryptFlags dflag
 
 	if (!mime_types_equal(version->mime_type().value_or(""), proto.value()))
 		return Err(Error::Code::Crypto,
-			   "cannot decrypt; unexpected version content-type '%s' != '%s'",
-			   version->mime_type().value_or("").c_str(),
-			   proto.value().c_str());
+			   "cannot decrypt; unexpected version content-type '{}' != '{}'",
+			   version->mime_type().value_or(""), proto.value());
 
-	if (!mime_types_equal(encrypted->mime_type().value_or(""), "application/octet-stream"))
+	if (!mime_types_equal(encrypted->mime_type().value_or(""),
+			      "application/octet-stream"))
 		return Err(Error::Code::Crypto,
-			   "cannot decrypt; unexpected encrypted content-type '%s'",
-			   encrypted->mime_type().value_or("").c_str());
+			   "cannot decrypt; unexpected encrypted content-type '{}'",
+			   encrypted->mime_type().value_or(""));
 
 	const auto content{encrypted->content()};
 	auto ciphertext{MimeStream::make_mem()};

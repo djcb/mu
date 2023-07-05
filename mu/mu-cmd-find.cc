@@ -116,14 +116,14 @@ resolve_bookmark(const Options& opts)
 	auto bm     = mu_bookmarks_new(bmfile.c_str());
 	if (!bm)
 		return Err(Error::Code::File,
-			   "failed to open bookmarks file '%s'", bmfile.c_str());
+			   "failed to open bookmarks file '{}'", bmfile);
 
 	const auto bookmark{opts.find.bookmark};
 	const auto val = mu_bookmarks_lookup(bm, bookmark.c_str());
 	if (!val) {
 		mu_bookmarks_destroy(bm);
 		return Err(Error::Code::NoMatches,
-			   "bookmark '%s' not found", bookmark.c_str());
+			   "bookmark '{}' not found", bookmark);
 	}
 
 	mu_bookmarks_destroy(bm);
@@ -263,9 +263,9 @@ print_summary(const Message& msg, const Options& opts)
 
 	const auto summ{summarize(body->c_str(), opts.find.summary_len.value_or(0))};
 
-	g_print("Summary: ");
+	mu_print("Summary: ");
 	fputs_encoded(summ, stdout);
-	g_print("\n");
+	mu_println("");
 }
 
 static void
@@ -361,21 +361,19 @@ static bool
 output_json(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (info.header) {
-		g_print("[\n");
+		mu_println("[");
 		return true;
 	}
 
 	if (info.footer) {
-		g_print("]\n");
+		mu_println("]");
 		return true;
 	}
 
 	if (!msg)
 		return true;
 
-	g_print("%s%s\n",
-		msg->sexp().to_json_string().c_str(),
-		info.last ? "" : ",");
+	mu_println("{}{}", msg->sexp().to_json_string(), info.last ? "" : ",");
 
 	return true;
 }
@@ -387,34 +385,34 @@ print_attr_xml(const std::string& elm, const std::string& str)
 		return; /* empty: don't include */
 
 	auto&& esc{to_string_opt_gchar(g_markup_escape_text(str.c_str(), -1))};
-	g_print("\t\t<%s>%s</%s>\n", elm.c_str(), esc.value_or("").c_str(), elm.c_str());
+	mu_println("\t\t<{}>{}</{}>", elm, esc.value_or(""), elm);
 }
 
 static bool
 output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
 {
 	if (info.header) {
-		g_print("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-		g_print("<messages>\n");
+		mu_println("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
+		mu_println("<messages>");
 		return true;
 	}
 
 	if (info.footer) {
-		g_print("</messages>\n");
+		mu_println("</messages>");
 		return true;
 	}
 
-	g_print("\t<message>\n");
+	mu_println("\t<message>");
 	print_attr_xml("from", to_string(msg->from()));
 	print_attr_xml("to", to_string(msg->to()));
 	print_attr_xml("cc", to_string(msg->cc()));
 	print_attr_xml("subject", msg->subject());
-	g_print("\t\t<date>%u</date>\n", (unsigned)msg->date());
-	g_print("\t\t<size>%u</size>\n", (unsigned)msg->size());
+	mu_println("\t\t<date>{}</date>", (unsigned)msg->date());
+	mu_println("\t\t<size>{}</size>", (unsigned)msg->size());
 	print_attr_xml("msgid", msg->message_id());
 	print_attr_xml("path", msg->path());
 	print_attr_xml("maildir", msg->maildir());
-	g_print("\t</message>\n");
+	mu_println("\t</message>");
 
 	return true;
 }

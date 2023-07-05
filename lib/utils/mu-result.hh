@@ -103,13 +103,13 @@ Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
  *
  * @param R some result
  */
-#define assert_valid_result(R) do {			\
-	if(!R) {					\
-		g_printerr("%s:%u: error-result: %s\n",	\
-			   __FILE__, __LINE__,		\
-			   (R).error().what());		\
-		g_assert_true(!!R);			\
-	}						\
+#define assert_valid_result(R) do {				\
+	if(!R) {						\
+		mu_printerrln("{}:{}: error-result: {}",	\
+			   __FILE__, __LINE__,			\
+			   (R).error().what());			\
+		g_assert_true(!!R);				\
+	}							\
 } while(0)
 
 }// namespace Mu

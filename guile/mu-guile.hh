@@ -21,8 +21,13 @@
 #define __MU_GUILE_H__
 
 #include <glib.h>
-#include <libguile.h>
 #include <mu-query.hh>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC diagnostic ignored "-Wvolatile"
+#include <libguile.h>
+#pragma GCC diagnostic pop
 
 /**
  * get the singleton Store instance

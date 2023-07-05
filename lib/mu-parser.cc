@@ -43,7 +43,7 @@ using namespace Mu;
 // <regex>      ->      [field:]/regex/
 
 #define BUG(...)                                                                                   \
-	Mu::Error(Error::Code::Internal, format("%u: BUG: ", __LINE__) + format(__VA_ARGS__))
+	Mu::Error(Error::Code::Internal, "BUG @ line {}", __LINE__);
 
 /**
  * Get the "shortcut"/internal fields for the the given fieldstr or empty if there is none
