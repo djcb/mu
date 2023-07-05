@@ -1291,12 +1291,15 @@ public:
 	void for_each(const ForEachFunc& func) const noexcept;
 
 private:
-
+	// Note: the part may not be available if the message was marked as
+	// _signed_ or _encrypted_ because it contained a forwarded signed or
+	// encrypted message.
 	Option<MimePart> part(int index) const {
-		if (MimeObject mobj{g_mime_multipart_get_part(self(),index)}; !mobj)
+		if (auto&& p{g_mime_multipart_get_part(self() ,index)};
+		    !GMIME_IS_PART(p))
 			return Nothing;
 		else
-			return mobj;
+			return Some(MimeObject{p});
 	}
 
 	GMimeMultipart* self() const {
