@@ -532,6 +532,8 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	if (info.mailing_list)
 		info.flags |= Flags::MailingList;
 
+#ifdef HAVE_CLD2
+	/* language detection requires the cld2 lib */
 	if (info.body_txt) { /* attempt to get the body-language */
 		if (const auto lang{detect_language(info.body_txt.value())}; lang) {
 			info.language = lang->code;
@@ -539,6 +541,7 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 		} else
 			mu_debug("could not detect language");
 	}
+#endif /*HAVE_CLD2*/
 }
 
 static Mu::Result<std::string>
