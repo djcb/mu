@@ -89,8 +89,7 @@ XapianDb::lock() const
 void
 XapianDb::set_timestamp(const std::string_view key)
 {
-	wdb().set_metadata(std::string{key},
-			   format("%" PRIi64, static_cast<int64_t>(::time({}))));
+	wdb().set_metadata(std::string{key}, mu_format("{}", ::time({})));
 }
 
 Result<XapianDb>

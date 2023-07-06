@@ -347,7 +347,6 @@ Store::remove_message(const std::string& path)
 	std::lock_guard guard{priv_->lock_};
 	const auto term{field_from_id(Field::Id::Path).xapian_term(path)};
 	xapian_db().delete_document(term);
-	config().set<Config::Id::LastChange>(::time({}));
 	g_debug("deleted message @ %s from store", path.c_str());
 	return true;
 }
@@ -362,7 +361,6 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 	for (auto&& id : ids)
 		xapian_db().delete_document(id);
 
-	config().set<Config::Id::LastChange>(::time({}));
 	priv_->transaction_maybe_commit(true /*force*/);
 }
 
