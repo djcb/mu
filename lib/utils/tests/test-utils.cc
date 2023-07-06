@@ -282,35 +282,6 @@ test_locale_workaround()
 	g_assert_true(locale_workaround());
 }
 
-enum struct TestEnum { A, B, C };
-constexpr AssocPairs<TestEnum, std::string_view, 3>
-test_epairs = {{
-	{TestEnum::A, "a"},
-	{TestEnum::B, "b"},
-	{TestEnum::C, "c"},
-}};
-
-static constexpr Option<std::string_view>
-to_name(TestEnum te)
-{
-	return to_second(test_epairs, te);
-}
-
-static constexpr Option<TestEnum>
-to_type(std::string_view name)
-{
-	return to_first(test_epairs, name);
-
-}
-
-static void
-test_enum_pairs(void)
-{
-	assert_equal(to_name(TestEnum::A).value(), "a");
-	g_assert_true(to_type("c").value() ==  TestEnum::C);
-}
-
-
 
 static void
 test_summarize(void)
@@ -353,7 +324,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
-	g_test_add_func("/utils/enum-pairs", test_enum_pairs);
 
 	return g_test_run();
 }

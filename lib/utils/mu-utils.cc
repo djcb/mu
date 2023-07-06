@@ -686,32 +686,3 @@ Mu::fputs_encoded (const std::string& str, FILE *stream)
 
 	return (rv == EOF) ? false: true;
 }
-
-__attribute__((format(printf, 2, 0)))
-static bool
-print_args (FILE *stream, const char *frm, va_list args)
-{
-	char *str;
-	gboolean rv;
-
-	str = g_strdup_vprintf (frm, args);
-	rv = fputs_encoded (str, stream);
-	g_free (str);
-
-	return rv;
-}
-
-bool
-Mu::print_encoded (const char *frm, ...)
-{
-	va_list args;
-	gboolean rv;
-
-	g_return_val_if_fail (frm, false);
-
-	va_start (args, frm);
-	rv = print_args (stdout, frm, args);
-	va_end (args);
-
-	return rv;
-}

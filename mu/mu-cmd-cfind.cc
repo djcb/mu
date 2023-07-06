@@ -112,14 +112,10 @@ output_plain(ItemType itype, OptContact contact, const Options& opts)
 	const auto col2{opts.nocolor ? "" : MU_COLOR_GREEN};
 	const auto coldef{opts.nocolor ? "" : MU_COLOR_DEFAULT};
 
-	print_encoded("%s%s%s%s%s%s%s\n",
-		      col1,
-		      contact->name.c_str(),
-		      coldef,
-		      contact->name.empty() ? "" : " ",
-		      col2,
-		      contact->email.c_str(),
-		      coldef);
+	mu_print_encoded("{}{}{}{}{}{}{}\n",
+			 col1, contact->name, coldef,
+			 contact->name.empty() ? "" : " ",
+			 col2, contact->email, coldef);
 }
 
 static void
@@ -129,8 +125,8 @@ output_mutt_alias(ItemType itype, OptContact contact, const Options& opts)
 		return;
 
 	const auto nick{guess_nick(*contact)};
-	print_encoded("alias %s %s <%s>\n", nick.c_str(),
-		      contact->name.c_str(), contact->email.c_str());
+	mu_print_encoded("alias {} {} <{}>\n", nick, contact->name, contact->email);
+
 }
 
 static void
@@ -139,12 +135,8 @@ output_mutt_address_book(ItemType itype, OptContact contact, const Options& opts
 	if (itype == ItemType::Header)
 		mu_print ("Matching addresses in the mu database:\n");
 
-	if (!contact)
-		return;
-
-	print_encoded("%s\t%s\t\n",
-		      contact->email.c_str(),
-		      contact->name.c_str());
+	if (contact)
+		mu_print_encoded("{}\t{}\t\n", contact->email, contact->name);
 }
 
 static void
@@ -155,10 +147,8 @@ output_wanderlust(ItemType itype, OptContact contact, const Options& opts)
 
 	auto nick=guess_nick(*contact);
 
-	print_encoded("%s \"%s\" \"%s\"\n",
-		      contact->email.c_str(),
-		      nick.c_str(),
-		      contact->name.c_str());
+	mu_print_encoded("{} \"{}\" \"{}\"\n", contact->email, nick, contact->name);
+
 }
 
 static void
@@ -167,9 +157,8 @@ output_org_contact(ItemType itype, OptContact contact, const Options& opts)
 	if (!contact || contact->name.empty())
 		return;
 
-	print_encoded("* %s\n:PROPERTIES:\n:EMAIL: %s\n:END:\n\n",
-		      contact->name.c_str(),
-		      contact->email.c_str());
+	mu_print_encoded("* {}\n:PROPERTIES:\n:EMAIL: {}\n:END:\n\n",
+			 contact->name, contact->email);
 }
 
 static void
@@ -196,9 +185,9 @@ output_csv(ItemType itype, OptContact contact, const Options& opts)
 	if (!contact)
 		return;
 
-	print_encoded("%s,%s\n",
-		      contact->name.empty() ? "" : Mu::quote(contact->name).c_str(),
-		      Mu::quote(contact->email).c_str());
+	mu_print_encoded("{},{}\n",
+			 contact->name.empty() ? "" : Mu::quote(contact->name),
+			 Mu::quote(contact->email));
 }
 
 static void
@@ -211,22 +200,22 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 		mu_println ("  {{");
 
 		const std::string name = contact->name.empty() ? "null" : Mu::quote(contact->name);
-		print_encoded(
-			"    \"email\"         : \"%s\",\n"
-			"    \"name\"          : %s,\n"
-			"    \"display\"       : %s,\n"
-			"    \"last-seen\"     : %" PRId64 ",\n"
-			"    \"last-seen-iso\" : \"%s\",\n"
-			"    \"personal\"      : %s,\n"
-			"    \"frequency\"     : %zu\n",
-			contact->email.c_str(),
-			name.c_str(),
-			Mu::quote(contact->display_name()).c_str(),
+		mu_print_encoded(
+			"    \"email\"         : \"{}\",\n"
+			"    \"name\"          : {},\n"
+			"    \"display\"       : {},\n"
+			"    \"last-seen\"     : {},\n"
+			"    \"last-seen-iso\" : \"{}\",\n"
+			"    \"personal\"      : {},\n"
+			"    \"frequency\"     : {}\n",
+			contact->email,
+			name,
+			Mu::quote(contact->display_name()),
 			contact->message_date,
-			time_to_string("%FT%TZ", contact->message_date, true/*utc*/).c_str(),
+			time_to_string("%FT%TZ", contact->message_date, true/*utc*/),
 			contact->personal ? "true" : "false",
 			contact->frequency);
-		mu_print ("  }}");
+		mu_print("  }}");
 	}
 
 	if (itype == ItemType::Footer)

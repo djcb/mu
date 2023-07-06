@@ -57,6 +57,53 @@ using namespace Mu;
  * helpers
  */
 
+
+
+/**
+ * array of associated pair elements -- like an alist
+ * but based on std::array and thus can be constexpr
+ */
+template<typename T1, typename T2, std::size_t N>
+      using AssocPairs = std::array<std::pair<T1, T2>, N>;
+
+
+/**
+  * Get the first value of the pair where the second element is @param s.
+  *
+  * @param p AssocPairs
+  * @param s some second pair value
+  *
+  * @return the matching first pair value, or Nothing if not found.
+  */
+template<typename P>
+constexpr Option<typename P::value_type::first_type>
+to_first(const P& p, typename P::value_type::second_type s)
+{
+	for (const auto& item: p)
+		if (item.second == s)
+			return item.first;
+	return Nothing;
+}
+
+/**
+  * Get the second value of the pair where the first element is @param f.
+  *
+  * @param p AssocPairs
+  * @param f some first pair value
+  *
+  * @return the matching second pair value, or Nothing if not found.
+  */
+template<typename P>
+constexpr Option<typename P::value_type::second_type>
+to_second(const P& p, typename P::value_type::first_type f)
+{
+	for (const auto& item: p)
+		if (item.first == f)
+			return item.second;
+	return Nothing;
+}
+
+
 /**
  * Options-specific array-bases type that maps some enum to a <name, description> pair
  */
@@ -316,7 +363,7 @@ sub_find(CLI::App& sub, Options& opts)
 			smap.emplace(std::string(1, field.shortcut), field.id);
 			if (!sopts.empty())
 				sopts += ", ";
-			sopts += format("%.*s|%c", STR_V(field.name), field.shortcut);
+			sopts += mu_format("{}|{}", field.name, field.shortcut);
 		}
 	});
 	sub.add_option("--sortfield,-s", opts.find.sortfield,
@@ -326,7 +373,8 @@ sub_find(CLI::App& sub, Options& opts)
 		->default_val(Field::Id::Date)
 		->transform(CLI::CheckedTransformer(smap));
 
-	sub.add_flag("--reverse,-z", opts.find.reverse, "Sort in descending order");
+	sub.add_flag("--reverse,-z", opts.find.reverse,
+		     "Sort in descending order");
 
 	sub.add_option("--bookmark,-b", opts.find.bookmark,
 		       "Use bookmarked query")
@@ -347,7 +395,8 @@ sub_find(CLI::App& sub, Options& opts)
 		       "Command to execute on message file")
 		->type_name("<command>");
 
-	sub.add_option("query", opts.find.query, "Search query pattern(s)")
+	sub.add_option("query", opts.find.query,
+		       "Search query pattern(s)")
 		->type_name("<query>");
 }
 
@@ -792,12 +841,45 @@ test_ids()
 
 #ifdef BUILD_TESTS
 
+
+
+
+
+enum struct TestEnum { A, B, C };
+constexpr AssocPairs<TestEnum, std::string_view, 3>
+test_epairs = {{
+	{TestEnum::A, "a"},
+	{TestEnum::B, "b"},
+	{TestEnum::C, "c"},
+}};
+
+static constexpr Option<std::string_view>
+to_name(TestEnum te)
+{
+	return to_second(test_epairs, te);
+}
+
+static constexpr Option<TestEnum>
+to_type(std::string_view name)
+{
+	return to_first(test_epairs, name);
+
+}
+
+static void
+test_enum_pairs(void)
+{
+	assert_equal(to_name(TestEnum::A).value(), "a");
+	g_assert_true(to_type("c").value() ==  TestEnum::C);
+}
+
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/options/ids", test_ids);
+	g_test_add_func("/option/enum-pairs", test_enum_pairs);
 
 	return g_test_run();
 }

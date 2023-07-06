@@ -106,7 +106,7 @@ body_or_summary(const Message& message, const Options& opts)
 		const auto summ{summarize(body->c_str(), *opts.view.summary_len)};
 		print_field("Summary", summ, color);
 	} else {
-		print_encoded("%s", body->c_str());
+		mu_print_encoded("{}", *body);
 		if (!g_str_has_suffix(body->c_str(), "\n"))
 			mu_println("");
 	}

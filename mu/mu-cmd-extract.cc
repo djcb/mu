@@ -117,8 +117,7 @@ show_part(const MessagePart& part, size_t index, bool color)
 
 	/* /\* disposition *\/ */
 	color_maybe(MU_COLOR_MAGENTA);
-	print_encoded(" [%s]", part.is_attachment() ?
-		      "attachment" : "inline");
+	mu_print_encoded(" [{}]", part.is_attachment() ? "attachment" : "inline");
 	/* size */
 	if (part.size() > 0) {
 		color_maybe(MU_COLOR_CYAN);

@@ -98,13 +98,6 @@ topic_fields(const Options& opts)
 	fields.add_row({"field-name", "alias", "short", "search",
 			"value", "sexp", "example query", "description"});
 
-	auto disp= [&](std::string_view sv)->std::string {
-		if (sv.empty())
-			return "";
-		else
-			return format("%.*s", STR_V(sv));
-	};
-
 	auto searchable=[&](const Field& field)->std::string {
 		if (field.is_boolean_term())
 			return "boolean";
@@ -130,8 +123,8 @@ topic_fields(const Options& opts)
 				searchable(field),
 				field.is_value() ? "yes" : "no",
 				field.include_in_sexp() ? "yes" : "no",
-				disp(field.example_query),
-				disp(field.description)});
+				field.example_query,
+				field.description});
 		++row;
 	});
 

@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -107,6 +107,7 @@ inline void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(stderr, frm, std::forward<T>(args)...);
 }
 
+
 /*
  * Fprmatting
  */
@@ -197,22 +198,27 @@ static inline std::string join(const std::vector<std::string>& svec, char sepa) 
 bool fputs_encoded (const std::string& str, FILE *stream);
 
 /**
- * print a formatted string (assumed to be in utf8-format) to stdout,
+ * print a fmt-style formatted string (assumed to be in utf8-format) to stdout,
  * converted to the current locale
  *
- * @param a standard printf() format string, followed by a parameter list
+ * @param a standard fmt-style format string, followed by a parameter list
  *
  * @return true if printing worked, false otherwise
  */
-bool print_encoded (const char *frm, ...) G_GNUC_PRINTF(1,2);
+template<typename...T>
+static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) noexcept {
+	return fputs_encoded(fmt::format(frm, std::forward<T>(args)...),
+			     ::stdout);
+}
 
 /**
  * Parse a date string to the corresponding time_t
  * *
  * @param date the date expressed a YYYYMMDDHHMMSS or any n... of the first
- * characters, using the local timezone.
- * @param first whether to fill out incomplete dates to the start or the end;
- * ie. either 1972 -> 197201010000 or 1972 -> 197212312359
+ * characters, using the local timezone. Non-digits are ignored,
+ * so 2018-05-05 is equivalent to 20180505.
+ * @param first whether to fill out incomplete dates to the start (@true) or the
+ * end (@false); ie. either 1972 -> 197201010000 or 1972 -> 197212312359
  *
  * @return the corresponding time_t or Nothing if parsing failed.
  */
@@ -302,17 +308,15 @@ to_us(Duration d)
 struct StopWatch {
 	using Clock = std::chrono::steady_clock;
 	StopWatch(const std::string name) : start_{Clock::now()}, name_{name} {}
-	~StopWatch()
-	{
+	~StopWatch() {
 		const auto us{static_cast<double>(to_us(Clock::now() - start_))};
 		if (us > 2000000)
-			g_debug("sw: %s: finished after %0.1f s", name_.c_str(), us / 1000000);
+			mu_debug("sw: {}: finished after {:.1f} s", name_, us / 1000000);
 		else if (us > 2000)
-			g_debug("sw: %s: finished after %0.1f ms", name_.c_str(), us / 1000);
+			mu_debug("sw: {}: finished after {:.1f} ms", name_, us / 1000);
 		else
-			g_debug("sw: %s: finished after %g us", name_.c_str(), us);
+			mu_debug("sw: {}: finished after {} us", name_, us);
 	}
-
 private:
 	Clock::time_point start_;
 	std::string       name_;
@@ -383,9 +387,9 @@ to_string_gchar(gchar*&& str)
 
 
 /*
- * Lexicals Number are lexicographically sortable string representations
- * of numbers. Start with 'g' + length of number in hex, followed by
- * the ascii for the hex represntation. So,
+ * Lexnums are lexicographically sortable string representations of non-negative
+ * integers. Start with 'f' + length of hex-representation number, followed by
+ * the hex representation itself. So,
  *
  * 0  -> 'g0'
  * 1  -> 'g1'
@@ -476,54 +480,6 @@ void seq_for_each(const Sequence& seq, UnaryOp op) {
 	std::for_each(seq.cbegin(), seq.cend(), op);
 }
 
-/**
- * array of associated pair elements -- like an alist
- * but based on std::array and thus can be constexpr
- */
-template<typename T1, typename T2, std::size_t N>
-      using AssocPairs = std::array<std::pair<T1, T2>, N>;
-
-/**
-  * Get the first value of the pair where the second element is @param s.
-  *
-  * @param p AssocPairs
-  * @param s some second pair value
-  *
-  * @return the matching first pair value, or Nothing if not found.
-  */
-template<typename P>
-constexpr Option<typename P::value_type::first_type>
-to_first(const P& p, typename P::value_type::second_type s)
-{
-	for (const auto& item: p)
-		if (item.second == s)
-			return item.first;
-	return Nothing;
-}
-
-/**
-  * Get the second value of the pair where the first element is @param f.
-  *
-  * @param p AssocPairs
-  * @param f some first pair value
-  *
-  * @return the matching second pair value, or Nothing if not found.
-  */
-template<typename P>
-constexpr Option<typename P::value_type::second_type>
-to_second(const P& p, typename P::value_type::first_type f)
-{
-	for (const auto& item: p)
-		if (item.first == f)
-			return item.second;
-	return Nothing;
-}
-
-/**
- * Convert string view in something printable with %.*s
- */
-#define STR_V(sv__) static_cast<int>((sv__).size()), (sv__).data()
-
 struct MaybeAnsi {
 	explicit MaybeAnsi(bool use_color) : color_{use_color} {}
 
@@ -555,7 +511,8 @@ struct MaybeAnsi {
 private:
 	std::string ansi(Color c, bool fg = true) const
 	{
-		return color_ ? format("\x1b[%dm", static_cast<int>(c) + (fg ? 0 : 10)) : "";
+		return color_ ? mu_format("\x1b[{}m",
+					  static_cast<int>(c) + (fg ? 0 : 10)) : "";
 	}
 
 	const bool color_;
@@ -574,12 +531,10 @@ private:
 #define MU_TO_NUM(ET, ELM)  std::underlying_type_t<ET>(ELM)
 #define MU_TO_ENUM(ET, NUM) static_cast<ET>(NUM)
 #define MU_ENABLE_BITOPS(ET)                                                                    \
-	constexpr ET operator&(ET e1, ET e2)                                                    \
-	{                                                                                       \
+	constexpr ET operator&(ET e1, ET e2) {                                                  \
 		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) & MU_TO_NUM(ET, e2));                   \
 	}                                                                                       \
-	constexpr ET operator|(ET e1, ET e2)                                                    \
-	{                                                                                       \
+	constexpr ET operator|(ET e1, ET e2) {							\
 		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) | MU_TO_NUM(ET, e2));                   \
 	}                                                                                       \
 	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }       \
