@@ -79,7 +79,7 @@ parameters, such as:
 	m       *m*aildir
 #+end_example
 
-For the complate list, see *mu-fields(1)*.
+For the complete list, try the command: ~mu info fields~.
 
 The message flags are described in *mu-query(7)*. As an example, a message which
 is 'seen', has an attachment and is signed would have 'asz' as its corresponding
@@ -100,7 +100,7 @@ specify the field to sort the search results by and the direction (i.e.,
 	to,t            To:-recipient(s)
 #+end_example
 
-For the complete list use can use the *mu fields* command; see *mu-fields(1)*.
+For the complete list, try the command: ~mu info fields~.
 
 Thus, for example, to sort messages by date, you could specify:
 
@@ -283,4 +283,4 @@ default format), and UTF-8 for all other formats (=sexp=, =xml=).
 
 * SEE ALSO
 
-*mu(1)*, *mu-index(1)*, *mu-query(7)*, *mu-fields(1)*
+*mu(1)*, *mu-index(1)*, *mu-query(7)*, *mu-info(1)*

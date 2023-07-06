@@ -22,23 +22,72 @@
 #include "mu-cmd.hh"
 #include <message/mu-message.hh>
 #include "utils/mu-utils.hh"
+#include <fmt/ostream.h>
 
 #include <thirdparty/tabulate.hpp>
 
 using namespace Mu;
 using namespace tabulate;
 
+template <> struct fmt::formatter<Table> : ostream_formatter {};
+
 static void
-table_header(Table& table, const Options& opts)
+colorify(Table& table, const Options& opts)
 {
-	if (opts.nocolor)
+	if (opts.nocolor || table.size() == 0)
 		return;
 
-	(*table.begin()).format()
-		.font_style({FontStyle::bold})
-		.font_color(Color::blue);
+	for (auto&& c = 0U; c != table.row(0).size(); ++c) {
+		switch (c) {
+		case 0:
+			table.column(c).format()
+				.font_color(Color::green)
+				.font_style({FontStyle::bold});
+			break;
+		case 1:
+			table.column(c).format()
+				.font_color(Color::blue);
+			break;
+		case 2:
+			table.column(c).format()
+				.font_color(Color::magenta);
+			break;
+
+		case 3:
+			table.column(c).format()
+				.font_color(Color::yellow);
+			break;
+		case 4:
+			table.column(c).format()
+				.font_color(Color::green);
+			break;
+		case 5:
+			table.column(c).format()
+				.font_color(Color::blue);
+			break;
+		case 6:
+			table.column(c).format()
+				.font_color(Color::magenta);
+			break;
+
+		case 7:
+			table.column(c).format()
+				.font_color(Color::yellow);
+			break;
+		default:
+			table.column(c).format()
+				.font_color(Color::grey);
+			break;
+		}
+	}
+
+	for (auto&& c = 0U; c != table.row(0).size(); ++c)
+		table[0][c].format()
+			.font_color(Color::white)
+			.font_style({FontStyle::bold});
 
 }
+
 
 static Result<void>
 topic_fields(const Options& opts)
@@ -75,9 +124,9 @@ topic_fields(const Options& opts)
 		if (field.is_internal())
 			return; // skip.
 
-		fields.add_row({format("%.*s", STR_V(field.name)),
-				field.alias.empty() ? "" : format("%.*s", STR_V(field.alias)),
-				field.shortcut ? format("%c", field.shortcut) : ""s,
+		fields.add_row({mu_format("{}", field.name),
+				field.alias.empty() ? "" : mu_format("{}", field.alias),
+				field.shortcut ? mu_format("{}", field.shortcut) : ""s,
 				searchable(field),
 				field.is_value() ? "yes" : "no",
 				field.include_in_sexp() ? "yes" : "no",
@@ -86,8 +135,7 @@ topic_fields(const Options& opts)
 		++row;
 	});
 
-	table_header(fields, opts);
-
+	colorify(fields, opts);
 	std::cout << fields << '\n';
 
 	return Ok();
@@ -120,38 +168,23 @@ topic_flags(const Options& opts)
 				}
 			}, info.category);
 
-		flags.add_row({format("%.*s", STR_V(info.name)),
-				format("%c", info.shortcut),
+		flags.add_row({mu_format("{}", info.name),
+				mu_format("{}", info.shortcut),
 				catname,
 				std::string{info.description}});
 	});
 
-	table_header(flags, opts);
+	colorify(flags, opts);
 
 	std::cout << flags << '\n';
+
+
 	return Ok();
 }
-
-static void
-colorify(Table& table)
-{
-	for (auto&& row: table) {
-
-		if (row.cells().size() < 2)
-			continue;
-
-		row.cells().at(0)->format().font_style({FontStyle::bold})
-			.font_color(Color::green);
-		row.cells().at(1)->format().font_color(Color::blue);
-	}
-}
-
 
 static Result<void>
 topic_store(const Mu::Store& store, const Options& opts)
 {
-	using namespace tabulate;
-
 	auto tstamp = [](::time_t t)->std::string {
 		if (t == 0)
 			return "never";
@@ -161,12 +194,13 @@ topic_store(const Mu::Store& store, const Options& opts)
 
 	Table info;
 	const auto conf{store.config()};
+	info.add_row({"property", "value"});
 	info.add_row({"maildir", store.root_maildir()});
 	info.add_row({"database-path", store.path()});
 	info.add_row({"schema-version",
-			format("%zu", conf.get<Config::Id::SchemaVersion>())});
-	info.add_row({"max-message-size", format("%zu", conf.get<Config::Id::MaxMessageSize>())});
-	info.add_row({"batch-size", format("%zu", conf.get<Config::Id::BatchSize>())});
+			mu_format("{}", conf.get<Config::Id::SchemaVersion>())});
+	info.add_row({"max-message-size", mu_format("{}", conf.get<Config::Id::MaxMessageSize>())});
+	info.add_row({"batch-size", mu_format("{}", conf.get<Config::Id::BatchSize>())});
 	info.add_row({"created", tstamp(conf.get<Config::Id::Created>())});
 
 	for (auto&& c : conf.get<Config::Id::PersonalAddresses>())
@@ -174,12 +208,12 @@ topic_store(const Mu::Store& store, const Options& opts)
 	for (auto&& c : conf.get<Config::Id::IgnoredAddresses>())
 		info.add_row({"ignored-address", c});
 
-	info.add_row({"messages in store", format("%zu", store.size())});
+	info.add_row({"messages in store", mu_format("{}", store.size())});
 	info.add_row({"last-change", tstamp(store.statistics().last_change)});
 	info.add_row({"last-index",  tstamp(store.statistics().last_index)});
 
 	if (!opts.nocolor)
-		colorify(info);
+		colorify(info, opts);
 
 	std::cout << info << '\n';
 
@@ -187,22 +221,23 @@ topic_store(const Mu::Store& store, const Options& opts)
 }
 
 static Result<void>
-topic_common(const Options& opts)
+topic_mu(const Options& opts)
 {
 	Table info;
 
 	using namespace tabulate;
 
-	info.add_row({"mu version", std::string{VERSION}});
-	info.add_row({"store schema-version", format("%u", MU_STORE_SCHEMA_VERSION)});
-	info.add_row({"guile-support:",
+	info.add_row({"property", "value"});
+	info.add_row({"version", std::string{VERSION}});
+	info.add_row({"schema-version", mu_format("{}", MU_STORE_SCHEMA_VERSION)});
+	info.add_row({"guile-support",
 #if BUILD_GUILE
 			"yes"
 #else
 			"no"
 #endif
 		});
-	info.add_row({"readline-support:",
+	info.add_row({"readline-support",
 #if HAVE_LIBREADLINE
 			"yes"
 #else
@@ -210,7 +245,7 @@ topic_common(const Options& opts)
 #endif
 		});
 
-	info.add_row({"cld2 language support:",
+	info.add_row({"cld2-support",
 #if HAVE_CLD2
 			"yes"
 #else
@@ -219,9 +254,11 @@ topic_common(const Options& opts)
 		});
 
 	if (!opts.nocolor)
-		colorify(info);
+		colorify(info, opts);
 
 	std::cout << info << '\n';
+
+	// mu_println("{}", info);
 
 	return Ok();
 }
@@ -239,21 +276,22 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	else if (topic == "fields") {
 		topic_fields(opts);
 		return topic_flags(opts);
-	} else if (topic == "common") {
-		return topic_common(opts);
+	} else if (topic == "mu") {
+		return topic_mu(opts);
 	} else {
-		topic_common(opts);
+		topic_store(store, opts);
 
 		MaybeAnsi col{!opts.nocolor};
 		using Color = MaybeAnsi::Color;
 
-		auto topic = [&](const std::string& s)->std::string {
-			return "  " + col.fg(Color::Green) + s.c_str() + col.reset();
+		auto topic = [&](auto&& t, auto&& d)->std::string {
+			return mu_format("{}{:<10}{} - {:>12}",
+					 col.fg(Color::Green), t, col.reset(), d);
 		};
 
-		std::cout << "\nother available info topics ('mu info <topic>'):\n"
-			  << topic("store")  << "  - information about the message store (database)\n"
-			  << topic("fields") << " - information about message fields\n";
+		mu_println("\nother info topics ('mu info <topic>'):\n{}\n{}",
+			   topic("store", "information about the message store (database)"),
+			   topic("fields",  "information about message fields"));
 	}
 
 	return Ok();

@@ -114,7 +114,8 @@ bit longer than 'normal' queries.
 * FIELDS
 
 We already saw a number of search fields, such as *subject:* and *body:*. For the
-full table with all details, including single-char shortcuts, see *mu-fields(1)*.
+full table with all details, including single-char shortcuts, try the command:
+~mu info fields~.
 
 |------------+-----------+--------------------------------|
 | field-name | alias     | description                    |
@@ -325,7 +326,7 @@ hallo and (lang:nl or lang:de)
 
 With current Xapian versions, the apostroph character is considered part of a
 word. Thus, you cannot find =D'Artagnan= by searching for =Artagnan=. So, include
-the apostroph in search or use a regexp search.
+the apostrophe in search or use a regexp search.
 
 Matching on spaces has changed compared to the old query-parser; this applies
 e.g. to Maildirs that have spaces in their name, such as =Sent Items=. See *MAILDIR*
@@ -335,4 +336,4 @@ above.
 
 * SEE ALSO
 
-*mu-find(1)*, *mu-fields(1), *pcre(3)*
+*mu-find(1)*, *mu-info(1), *pcre(3)*

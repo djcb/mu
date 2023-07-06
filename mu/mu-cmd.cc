@@ -48,9 +48,7 @@ static Result<void>
 cmd_fields(const Options& opts)
 {
 	mu_printerrln("the 'mu fields' command has been superseded by 'mu info'; try:\n"
-		      "  mu info fields\n"
-		      "  mu info flags");
-
+		      "  mu info fields\n");
 	return Ok();
 }
 
