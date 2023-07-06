@@ -112,7 +112,7 @@ the personal addresses."
 
 (defun mu4e-main-quit-or-bury (&optional bury)
   "Quit mu4e, or, with prefix-argument, bury the buffer."
-  (interactive "p")
+  (interactive "P")
   (if bury
       (bury-buffer)
     (mu4e-quit)))
