@@ -52,6 +52,16 @@ static_assert(std::is_same<Store::Id, Xapian::docid>::value, "wrong type for Sto
 // Properties
 constexpr auto ExpectedSchemaVersion = MU_STORE_SCHEMA_VERSION;
 
+static std::string
+remove_slash(const std::string& str)
+{
+	auto clean{str};
+	while (clean[clean.length() - 1] == '/')
+		clean.pop_back();
+
+	return clean;
+}
+
 struct Store::Private {
 
 	Private(const std::string& path, bool readonly):
@@ -59,7 +69,7 @@ struct Store::Private {
 				   : XapianDb::Flavor::Open)},
 		config_{xapian_db_},
 		contacts_cache_{config_},
-		root_maildir_{config_.get<Config::Id::RootMaildir>()}
+		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())}
 		{}
 
 	Private(const std::string& path, const std::string& root_maildir,
@@ -67,7 +77,7 @@ struct Store::Private {
 		xapian_db_{make_db(path, XapianDb::Flavor::CreateOverwrite)},
 		config_{make_config(xapian_db_, root_maildir, conf)},
 		contacts_cache_{config_},
-		root_maildir_{config_.get<Config::Id::RootMaildir>()}
+		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())}
 		{}
 
 	~Private() try {
@@ -123,7 +133,7 @@ struct Store::Private {
 		if (conf)
 			config.import_configurable(*conf);
 
-		config.set<Config::Id::RootMaildir>(root_maildir);
+		config.set<Config::Id::RootMaildir>(remove_slash(root_maildir));
 		config.set<Config::Id::SchemaVersion>(ExpectedSchemaVersion);
 
 		return config;

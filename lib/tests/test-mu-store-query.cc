@@ -42,7 +42,9 @@ static Store
 make_test_store(const std::string& test_path, const TestMap& test_map,
 		const StringVec &personal_addresses)
 {
-	std::string maildir = test_path + "/Maildir";
+	std::string maildir = test_path + "/Maildir/";
+	// note the trailing '/'
+	g_test_bug("2513");
 
 	/* write messages to disk */
 	for (auto&& item: test_map) {
