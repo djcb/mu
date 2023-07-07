@@ -143,10 +143,8 @@ Mu::run_script(const std::string& path,
 #else
 	std::string mainargs;
 	for (auto&& arg: args)
-		mainargs += format("%s\"%s\"",
-				   mainargs.empty() ? "" : " ", arg.c_str());
-	auto expr = format("(main '(\"%s\" %s))",
-			   get_name(path).c_str(), mainargs.c_str());
+		mainargs += mu_format("{}\"{}\"", mainargs.empty() ? "" : " ", arg);
+	auto expr = mu_format("(main '(\"{}\" {}))", get_name(path), mainargs);
 
 	std::vector<const char*> argv = {
 		GUILE_BINARY,

@@ -30,8 +30,7 @@ Mu::mu_cmd_add(Mu::Store& store, const Options& opts)
 		if (!docid)
 			return Err(docid.error());
 		else
-			g_debug("added message @ %s, docid=%u",
-				file.c_str(), docid.value());
+			mu_debug("added message @ {}, docid={}", file, *docid);
 	}
 
 	return Ok();

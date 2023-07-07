@@ -129,7 +129,8 @@ topic_fields(const Options& opts)
 	});
 
 	colorify(fields, opts);
-	std::cout << fields << '\n';
+
+	std::cout << "# Message fields\n" << fields << '\n';
 
 	return Ok();
 }
@@ -169,8 +170,7 @@ topic_flags(const Options& opts)
 
 	colorify(flags, opts);
 
-	std::cout << flags << '\n';
-
+	std::cout << "# Message flags\n" << flags << '\n';
 
 	return Ok();
 }
@@ -251,8 +251,6 @@ topic_mu(const Options& opts)
 
 	std::cout << info << '\n';
 
-	// mu_println("{}", info);
-
 	return Ok();
 }
 
@@ -268,6 +266,7 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 		return topic_store(store, opts);
 	else if (topic == "fields") {
 		topic_fields(opts);
+		std::cout << std::endl;
 		return topic_flags(opts);
 	} else if (topic == "mu") {
 		return topic_mu(opts);

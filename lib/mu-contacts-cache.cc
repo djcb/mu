@@ -122,9 +122,6 @@ private:
 	}
 };
 
-constexpr auto Separator = "\xff"; // Invalid in UTF-8
-
-
 ContactUMap
 ContactsCache::Private::deserialize(const std::string& serialized) const
 {
@@ -133,7 +130,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 	std::string       line;
 
 	while (getline(ss, line)) {
-		const auto parts = Mu::split(line, Separator);
+		const auto parts = Mu::split(line, SepaChar2);
 		if (G_UNLIKELY(parts.size() != 5)) {
 			mu_warning("error: '{}'", line);
 			continue;
@@ -168,20 +165,12 @@ ContactsCache::Private::serialize() const
 
 	for (auto& item : contacts_) {
 		const auto& ci{item.second};
-		s += Mu::format("%s%s"
-				"%s%s"
-				"%d%s"
-				"%" G_GINT64_FORMAT "%s"
-				"%" G_GINT64_FORMAT "\n",
-				ci.email.c_str(),
-				Separator,
-				ci.name.c_str(),
-				Separator,
-				ci.personal ? 1 : 0,
-				Separator,
-				(gint64)ci.message_date,
-				Separator,
-				(gint64)ci.frequency);
+		s += mu_format("{}{}{}{}{}{}{}{}{}\n",
+			       ci.email, SepaChar2,
+			       ci.name, SepaChar2,
+			       ci.personal ? 1 : 0, SepaChar2,
+			       ci.message_date, SepaChar2,
+			       ci.frequency);
 	}
 	config_db_.set<Config::Id::Contacts>(s);
 	dirty_ = 0;

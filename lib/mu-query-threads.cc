@@ -379,7 +379,6 @@ subject_matches(const std::string& sub1, const std::string& sub2)
 		}
 	};
 
-	// g_debug ("'%s' '%s'", search_str(sub1), search_str(sub2));
 	return g_strcmp0(search_str(sub1), search_str(sub2)) == 0;
 }
 
@@ -661,10 +660,10 @@ assert_thread_paths(const MockQueryResults& qrs, const Expected& expected)
 			       qr.path().value_or("") == exp.first;
 		});
 		g_assert_true(it != qrs.end());
-		g_debug("thread-path (%s@%s): expected: '%s'; got '%s'",
-			it->message_id().value_or("<none>").c_str(),
-			it->path().value_or("<none>").c_str(),
-			exp.second.c_str(), it->query_match().thread_path.c_str());
+		mu_debug("thread-path ({}@{}): expected: '{}'; got '{}'",
+			 it->message_id().value_or("<none>"),
+			 it->path().value_or("<none>"),
+			 exp.second, it->query_match().thread_path);
 		g_assert_cmpstr(exp.second.c_str(), ==, it->query_match().thread_path.c_str());
 	}
 }

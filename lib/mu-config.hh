@@ -256,13 +256,13 @@ public:
 
 		const auto strval = std::invoke([&]{
 			if constexpr (prop.type == Type::Number || prop.type == Type::Timestamp)
-				return format("%" PRIi64, static_cast<int64_t>(val));
+				return mu_format("{}", static_cast<int64_t>(val));
 			else if constexpr (prop.type == Type::Path || prop.type == Type::String)
 				return std::string{val};
 			else if constexpr (prop.type == Type::StringList)
 				return join(val, SepaChar1);
-
-			throw std::logic_error("invalid prop " + std::string{prop.name});
+			else
+				throw std::logic_error("invalid prop " + std::string{prop.name});
 		});
 
 		cstore_.set_metadata(std::string{prop.name}, strval);
@@ -293,7 +293,6 @@ public:
 	}
 
 private:
-	static constexpr uint8_t SepaChar1 = 0xfe;
 	MetadataIface& cstore_;
 };
 

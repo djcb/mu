@@ -34,10 +34,6 @@
 
 using namespace Mu;
 
-constexpr uint8_t SepaChar1 = 0xfe;
-constexpr uint8_t SepaChar2 = 0xff;
-
-
 const Xapian::Document&
 Document::xapian_document() const
 {

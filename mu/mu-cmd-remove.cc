@@ -30,7 +30,7 @@ Mu::mu_cmd_remove(Mu::Store& store, const Options& opts)
 		if (!res)
 			return Err(Error::Code::File, "failed to remove {}", file.c_str());
 		else
-			g_debug("removed message @ %s", file.c_str());
+			mu_debug("removed message @ {}", file);
 	}
 
 	return Ok();

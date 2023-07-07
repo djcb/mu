@@ -46,6 +46,15 @@
 
 namespace Mu {
 
+
+/*
+ * Separator characters used in various places; importantly,
+ * they are not used in UTF-8
+ */
+constexpr const auto SepaChar1 = '\xfe';
+constexpr const auto SepaChar2 = '\xff';
+
+
 /*
  * Logging/printing/formatting functions connect libfmt with the Glib logging
  * system. We wrap so perhaps at some point (C++23?) we can use std:: instead.
@@ -53,35 +62,38 @@ namespace Mu {
 
 /*
  * Debug/error/warning logging
+ *
+ * The 'noexcept' means that they _wilL_ terminate the program
+ * when the formatting fails (ie. a bug)
  */
 
 template<typename...T>
-inline void mu_debug(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_debug(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_DEBUG, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
 template<typename...T>
-inline void mu_info(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_info(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_INFO, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
 template<typename...T>
-inline void mu_message(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_message(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_MESSAGE, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
 template<typename...T>
-inline void mu_warning(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_warning(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_WARNING, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
 template<typename...T>
-inline void mu_critical(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_critical(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_CRITICAL, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
 template<typename...T>
-inline void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_ERROR, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
@@ -91,19 +103,19 @@ inline void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
  */
 
 template<typename...T>
-inline void mu_print(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_print(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::print(frm, std::forward<T>(args)...);
 }
 template<typename...T>
-inline void mu_println(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_println(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(frm, std::forward<T>(args)...);
 }
 template<typename...T>
-inline void mu_printerr(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_printerr(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::print(stderr, frm, std::forward<T>(args)...);
 }
 template<typename...T>
-inline void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
+void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(stderr, frm, std::forward<T>(args)...);
 }
 
@@ -112,9 +124,15 @@ inline void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
  * Fprmatting
  */
 template<typename...T>
-inline std::string mu_format(fmt::format_string<T...> frm, T&&... args) noexcept {
+std::string mu_format(fmt::format_string<T...> frm, T&&... args) noexcept {
 	return fmt::format(frm, std::forward<T>(args)...);
 }
+
+template<typename Range>
+auto mu_join(Range&& range, std::string_view sepa) {
+	return fmt::join(std::forward<Range>(range), sepa);
+}
+
 
 using StringVec = std::vector<std::string>;
 
