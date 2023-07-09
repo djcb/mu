@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,7 +29,9 @@
 #include <langinfo.h>
 #include <locale.h>
 
+#include "utils/mu-utils.hh"
 #include "utils/mu-test-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include "utils/mu-error.hh"
 
 
@@ -115,15 +117,29 @@ Mu::allow_warnings()
 
 
 
-Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete}
+Result<int>
+Mu::run_mu_command(const std::string& args)
 {
-	GError *err{};
-	gchar *tmpdir = g_dir_make_tmp("mu-tmp-XXXXXX", &err);
-	if (!tmpdir)
-		throw Mu::Error(Error::Code::File, &err,
-				"failed to create temporary directory");
+	auto cmdline{mu_format("/bin/sh -c '{} {}'", MU_PROGRAM, args)};
+	if (g_test_verbose())
+		mu_println("command-line: {}", cmdline);
 
-	path_ = to_string_gchar(std::move(tmpdir));
+	GError *err{};
+	int wait_status{};
+	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
+		return Err(Error::Code::File, &err, "failed to execute command '{}", cmdline);
+	else
+		return Ok(WEXITSTATUS(wait_status));
+}
+
+
+Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete} {
+
+	if (auto res{make_temp_dir()}; !res)
+		throw res.error();
+	else
+		path_ = std::move(*res);
+
 	mu_debug("created '{}'", path_);
 }
 
@@ -139,8 +155,9 @@ Mu::TempDir::~TempDir()
 
 	/* ugly */
 	GError *err{};
-	const auto cmd{fmt::format("/bin/rm -rf '{}'", path_)};
-	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
+	const auto cmd{mu_format("/bin/rm -rf '{}'", path_)};
+	if (!g_spawn_command_line_sync(cmd.c_str(), NULL,
+				       NULL, NULL, &err)) {
 		mu_warning("error: {}", err ? err->message : "?");
 		g_clear_error(&err);
 	} else

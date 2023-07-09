@@ -147,6 +147,33 @@ Mu::canonicalize_filename(const std::string& path, const std::string& relative_t
 	return str;
 }
 
+Result<std::string>
+Mu::make_temp_dir()
+{
+	GError *err{};
+	if (auto tmpdir{g_dir_make_tmp("mu-tmp-XXXXXX", &err)}; !tmpdir)
+		return Err(Error::Code::File, &err,
+			   "failed to create temporary directory");
+	else
+		return Ok(to_string_gchar(std::move(tmpdir)));
+}
+
+
+Result<void>
+Mu::remove_directory(const std::string& path)
+{
+	/* ugly */
+	GError *err{};
+	const auto cmd{mu_format("/bin/rm -rf '{}'", path)};
+	if (!g_spawn_command_line_sync(cmd.c_str(), NULL,
+				       NULL, NULL, &err))
+		return Err(Error::Code::File, &err, "failed to remove {}", path);
+	else
+		return Ok();
+}
+
+
+
 
 std::string
 Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)

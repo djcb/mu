@@ -26,6 +26,7 @@
 
 #include <gio/gio.h>
 #include <utils/mu-option.hh>
+#include <utils/mu-result.hh>
 #include <utils/mu-regex.hh>
 
 namespace Mu {
@@ -136,8 +137,9 @@ enum struct RuntimePath {
  * @return the path name
  */
 std::string runtime_path(RuntimePath path, const std::string& muhome="");
+
 /**
- * Join  path components into a path (with '/')
+ * Join path components into a path (with '/')
  *
  * @param s a string-convertible value
  * @param args 0 or more string-convertible values
@@ -175,6 +177,23 @@ GCancellable* g_cancellable_new_with_timeout(guint timeout);
  * @return data from standard input or an error.
  */
 Result<std::string> read_from_stdin();
+
+/**
+ * Create a randomly-named temporary directory
+ *
+ * @return name of the temporary directory or an error.
+ */
+Result<std::string> make_temp_dir();
+
+
+/**
+ * Remove a directory, recursively. Does not have to be empty.
+ *
+ * @param path path to directory
+ *
+ * @return Ok() or an error.
+ */
+Result<void> remove_directory(const std::string& path);
 
 
 } // namespace Mu

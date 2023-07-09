@@ -22,6 +22,7 @@
 
 #include <string>
 #include <utils/mu-utils.hh>
+#include <utils/mu-result.hh>
 
 namespace Mu {
 
@@ -95,6 +96,18 @@ bool set_en_us_utf8_locale();
  *
  */
 void allow_warnings();
+
+
+
+/**
+ * Execute the in-tree mu executable with the arguments
+ * Asserts if fails.
+ *
+ * @param args arguments;;
+ *
+ * @return either the exit code or an error.
+ */
+Result<int> run_mu_command(const std::string& args);
 
 
 /**
