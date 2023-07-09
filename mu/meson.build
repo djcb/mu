@@ -37,4 +37,16 @@ mu = executable(
   cpp_args: ['-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
   install: true)
 
+#
+# tests
+#
+
+test('test-cmd-add',
+     executable('test-cmd-add',
+                'mu-cmd-add.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+
 subdir('tests')

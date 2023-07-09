@@ -35,3 +35,108 @@ Mu::mu_cmd_add(Mu::Store& store, const Options& opts)
 
 	return Ok();
 }
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+static void
+test_add_ok()
+{
+	auto testhome{unwrap(make_temp_dir())};
+	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
+
+	{
+		unwrap(Store::make_new(dbpath, MU_TESTMAILDIR));
+	}
+
+	{
+		auto res = run_mu_command(
+			mu_format("add --muhome={} {}",
+				  testhome,
+				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
+		assert_valid_result(res);
+		g_assert_cmpuint(*res,==,0);
+	}
+
+	{
+		auto&& store = Store::make(dbpath);
+		assert_valid_result(store);
+		g_assert_cmpuint(store->size(),==,1);
+	}
+
+	{ // re-add the same
+		auto res = run_mu_command(
+			mu_format("add --muhome={} {}",
+				  testhome,
+				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
+		assert_valid_result(res);
+		g_assert_cmpuint(*res,==,0);
+	}
+
+
+	{
+		auto&& store = Store::make(dbpath);
+		assert_valid_result(store);
+		g_assert_cmpuint(store->size(),==,1);
+	}
+
+
+	remove_directory(testhome);
+}
+
+static void
+test_add_fail()
+{
+	auto testhome{unwrap(make_temp_dir())};
+	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
+
+	{
+		unwrap(Store::make_new(dbpath, MU_TESTMAILDIR2));
+	}
+
+	{ // wrong maildir
+		auto res = run_mu_command(
+			mu_format("add --muhome={} {}",
+				  testhome,
+				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
+		assert_valid_result(res);
+		g_assert_cmpuint(*res,!=,0);
+	}
+
+
+	{ // non-existent
+		auto res = run_mu_command(
+			mu_format("add --muhome={} {}",
+				  testhome, "/foo/bar/non-existent"));
+		assert_valid_result(res);
+		g_assert_cmpuint(*res,!=,0);
+	}
+
+	remove_directory(testhome);
+}
+
+
+int
+main(int argc, char* argv[]) try {
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/add/ok", test_add_ok);
+	g_test_add_func("/cmd/add/fail", test_add_fail);
+
+	return g_test_run();
+
+} catch (const Error& e) {
+	mu_printerrln("{}", e.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+#endif /*BUILD_TESTS*/
