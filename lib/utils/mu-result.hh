@@ -85,17 +85,27 @@ Err(const Result<T>& res)
  * convenience
  */
 template <typename ...T>
-inline tl::unexpected<Error>
+tl::unexpected<Error>
 Err(Error::Code code, fmt::format_string<T...> frm, T&&... args)
 {
 	return Err(Error{code, frm, std::forward<T>(args)...});
 }
 
 template <typename ...T>
-inline tl::unexpected<Error>
+tl::unexpected<Error>
 Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
 {
 	return Err(Error{code, err, frm, std::forward<T>(args)...});
+}
+
+
+template<typename T>
+T unwrap(Result<T>&& res)
+{
+	if (!!res)
+		return std::move(res.value());
+	else
+		throw res.error();
 }
 
 /**
@@ -104,11 +114,12 @@ Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
  * @param R some result
  */
 #define assert_valid_result(R) do {				\
-	if(!R) {						\
+	auto&& res__ = R;					\
+	if(!res__) {						\
 		mu_printerrln("{}:{}: error-result: {}",	\
 			   __FILE__, __LINE__,			\
-			   (R).error().what());			\
-		g_assert_true(!!R);				\
+			   (res__).error().what());		\
+		g_assert_true(!!res__);				\
 	}							\
 } while(0)
 
