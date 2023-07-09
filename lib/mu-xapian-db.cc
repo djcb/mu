@@ -26,38 +26,13 @@
 
 using namespace Mu;
 
-struct XapianDb::Private {
-	using DbType = std::variant<Xapian::Database, Xapian::WritableDatabase>;
-
-	Private(Xapian::Database&& db, const std::string& path):
-		db_{std::move(db)}, path_{path} {}
-	Private(Xapian::WritableDatabase&& wdb, const std::string& path):
-		db_{std::move(wdb)}, path_{path} {}
-
-	DbType			db_;
-	const std::string	path_;
-	mutable std::mutex	lock_;
-};
-
-
-XapianDb::XapianDb(Xapian::Database&& db, const std::string& path):
-	priv_{std::make_unique<Private>(std::move(db), path)}
-{}
-XapianDb::XapianDb(Xapian::WritableDatabase&& wdb, const std::string& path):
-	priv_{std::make_unique<Private>(std::move(wdb), path)}
-{}
-
-XapianDb::XapianDb(XapianDb&& rhs) = default;
-XapianDb::~XapianDb() = default;
-
-
 const Xapian::Database&
 XapianDb::db() const
 {
-	if (std::holds_alternative<Xapian::WritableDatabase>(priv_->db_))
-		return std::get<Xapian::WritableDatabase>(priv_->db_);
+	if (std::holds_alternative<Xapian::WritableDatabase>(db_))
+		return std::get<Xapian::WritableDatabase>(db_);
 	else
-		return std::get<Xapian::Database>(priv_->db_);
+		return std::get<Xapian::Database>(db_);
 }
 
 Xapian::WritableDatabase&
@@ -65,25 +40,19 @@ XapianDb::wdb()
 {
 	if (read_only())
 		throw std::runtime_error("database is read-only");
-	return std::get<Xapian::WritableDatabase>(priv_->db_);
+	return std::get<Xapian::WritableDatabase>(db_);
 }
 
 bool
 XapianDb::read_only() const
 {
-	return !std::holds_alternative<Xapian::WritableDatabase>(priv_->db_);
+	return !std::holds_alternative<Xapian::WritableDatabase>(db_);
 }
 
 const std::string&
 XapianDb::path() const
 {
-	return priv_->path_;
-}
-
-std::mutex&
-XapianDb::lock() const
-{
-	return priv_->lock_;
+	return path_;
 }
 
 void
@@ -92,44 +61,44 @@ XapianDb::set_timestamp(const std::string_view key)
 	wdb().set_metadata(std::string{key}, mu_format("{}", ::time({})));
 }
 
-Result<XapianDb>
-XapianDb::make(const std::string& db_path, Flavor flavor) noexcept try {
+using Flavor = XapianDb::Flavor;
 
+static std::string
+make_path(const std::string& db_path, Flavor flavor)
+{
 	if (flavor != Flavor::ReadOnly) {
 		/* we do our own flushing, set Xapian's internal one as
 		 * the backstop*/
 		g_setenv("XAPIAN_FLUSH_THRESHOLD", "500000", 1);
 		/* create path if needed */
 		if (g_mkdir_with_parents(db_path.c_str(), 0700) != 0)
-			return Err(Error::Code::File, "failed to create database dir {}: {}",
-				   db_path, ::strerror(errno));
+			throw Error(Error::Code::File, "failed to create database dir {}: {}",
+				    db_path, ::strerror(errno));
 	}
 
+	return db_path;
+}
+
+static XapianDb::DbType
+make_db(const std::string& db_path, Flavor flavor)
+{
 	switch (flavor) {
 
 	case Flavor::ReadOnly:
-		return Ok(XapianDb(Xapian::Database(db_path), db_path));
+		return Xapian::Database(db_path);
 	case Flavor::Open:
-		return Ok(XapianDb(Xapian::WritableDatabase(
-					   db_path, Xapian::DB_OPEN), db_path));
-	case Flavor::CreateOverwrite: {
-		auto&& xdb{XapianDb(Xapian::WritableDatabase(
-					    db_path,
-					    Xapian::DB_CREATE_OR_OVERWRITE), db_path)};
-		xdb.set_timestamp(MetadataIface::created_key);
-		return Ok(std::move(xdb));
-	}
+		return Xapian::WritableDatabase(db_path, Xapian::DB_OPEN);
+	case Flavor::CreateOverwrite:
+		return Xapian::WritableDatabase(db_path, Xapian::DB_CREATE_OR_OVERWRITE);
 	default:
-		return Err(Error::Code::Internal, "invalid xapian options");
+		throw std::logic_error("unknown flavor");
 	}
+}
 
-} catch (const Xapian::DatabaseLockError& xde) {
-	return Err(Error::Code::StoreLock, "{}", xde.get_msg());
-} catch (const Xapian::DatabaseError& xde) {
-	return Err(Error::Code::Store, "{}", xde.get_msg());
-} catch (const Mu::Error& me) {
-	return Err(me);
-} catch (...) {
-	return Err(Error::Code::Internal,
-		   "something went wrong when opening store @ {}", db_path);
+XapianDb::XapianDb(const std::string& db_path, Flavor flavor) :
+	path_(make_path(db_path, flavor)),
+	db_(make_db(path_,flavor)) {
+
+	if (flavor == Flavor::CreateOverwrite)
+		set_timestamp(MetadataIface::created_key);
 }

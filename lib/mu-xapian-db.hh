@@ -162,7 +162,7 @@ private:
  * with just the things we need + locking + exception handling
  */
 class XapianDb: public MetadataIface {
-#define DB_LOCKED std::unique_lock l{lock()}
+#define DB_LOCKED std::unique_lock lock__{lock_};
 public:
 	/**
 	 * Type of database to create.
@@ -174,15 +174,7 @@ public:
 		CreateOverwrite, /**< Create new or overwrite existing */
 	};
 
-	/**
-	 * Make a new Xapian Database wrapper object
-	 *
-	 * @param db_path path to the database
-	 * @param flavor type of database to created
-	 *
-	 * @return a result; either a XapianDb or an Error.
-	 */
-	static Result<XapianDb> make(const std::string& db_path, Flavor flavor) noexcept;
+	XapianDb(const std::string& db_path, Flavor flavor);
 
 	/**
 	 * Is the database read-only?
@@ -364,6 +356,11 @@ public:
 		xapian_try([&]{ DB_LOCKED; return wdb().commit_transaction();});
 	}
 
+	using DbType = std::variant<Xapian::Database, Xapian::WritableDatabase>;
+
+private:
+	void set_timestamp(const std::string_view key);
+
 	/**
 	 * Get a reference to the underlying database
 	 *
@@ -378,26 +375,10 @@ public:
 	 */
 	Xapian::WritableDatabase& wdb();
 
-	/**
-	 * DTOR
-	 */
-	~XapianDb();
+	mutable std::mutex lock_;
+	std::string path_;
 
-	/**
-	 * Move CTOR
-	 *
-	 * @param rhs
-	 */
-	XapianDb(XapianDb&& rhs);
-
-private:
-	XapianDb(Xapian::Database&& db, const std::string& path);
-	XapianDb(Xapian::WritableDatabase&& wdb, const std::string& path);
-	void set_timestamp(const std::string_view key);
-	std::mutex& lock() const;
-
-	struct Private;
-	std::unique_ptr<Private> priv_;
+	DbType db_;
 };
 
 } // namespace Mu

@@ -65,8 +65,8 @@ remove_slash(const std::string& str)
 struct Store::Private {
 
 	Private(const std::string& path, bool readonly):
-		xapian_db_{make_db(path, readonly ? XapianDb::Flavor::ReadOnly
-				   : XapianDb::Flavor::Open)},
+		xapian_db_{XapianDb(path, readonly ? XapianDb::Flavor::ReadOnly
+				    : XapianDb::Flavor::Open)},
 		config_{xapian_db_},
 		contacts_cache_{config_},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())}
@@ -74,7 +74,7 @@ struct Store::Private {
 
 	Private(const std::string& path, const std::string& root_maildir,
 		Option<const Config&> conf):
-		xapian_db_{make_db(path, XapianDb::Flavor::CreateOverwrite)},
+		xapian_db_{XapianDb(path, XapianDb::Flavor::CreateOverwrite)},
 		config_{make_config(xapian_db_, root_maildir, conf)},
 		contacts_cache_{config_},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())}
@@ -116,13 +116,6 @@ struct Store::Private {
 			xapian_db_.commit_transaction();
 			transaction_size_ = 0;
 		}
-	}
-
-	XapianDb make_db(const std::string& path, XapianDb::Flavor flavor) {
-		if (auto&& res{XapianDb::make(path, flavor)}; res)
-			return std::move(res.value());
-		else
-			throw res.error();
 	}
 
 	Config make_config(XapianDb& xapian_db, const std::string& root_maildir,
