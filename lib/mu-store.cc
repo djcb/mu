@@ -423,8 +423,6 @@ Store::Private::move_message_unlocked(Message&& msg,
 	return Ok(std::move(msg));
 }
 
-
-
 /* get a vec of all messages with the given message id */
 static Store::IdMessageVec
 messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100)
@@ -457,6 +455,36 @@ messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100
 		imvec.emplace_back(std::make_pair(mi.doc_id(), mi.message().value()));
 
 	return imvec;
+}
+
+
+static Result<std::string>
+message_id_query(const std::string& msgid)
+{
+	if (msgid.empty())
+		return Err(Error::Code::InvalidArgument, "empty message-id");
+	else if (msgid.size() > MaxTermLength)
+		return Err(Error::Code::InvalidArgument, "message-id too long");
+	else
+		return Ok(mu_format("{}:{}", field_from_id(Field::Id::MessageId).shortcut, msgid));
+}
+
+
+Result<Store::IdVec>
+Store::find_docids_with_message_id(const std::string& msgid) const
+{
+	std::lock_guard guard{priv_->lock_};
+
+	if (auto&& query{message_id_query(msgid)}; !query)
+		return Err(std::move(query.error()));
+	else if (auto&& res{run_query(*query)}; !res)
+		return Err(std::move(res.error()));
+	else {
+		Store::IdVec ids;
+		for (auto&& mi: *res)
+			ids.emplace_back(mi.doc_id());
+		return Ok(std::move(ids));
+	}
 }
 
 

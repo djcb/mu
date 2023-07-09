@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,8 +30,7 @@
 namespace Mu {
 
 /**
- * @brief Implements the mu	server, as used by mu4e.
- *
+ * @brief Implements the mu server, as used by mu4e.
  */
 class Server {
 public:

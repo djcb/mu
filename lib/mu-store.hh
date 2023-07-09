@@ -271,6 +271,18 @@ public:
 	 */
 	Option<Message> find_message(Id id) const;
 
+	using IdVec = std::vector<Id>;
+
+	/**
+	 * Get the doc-ids for messages with the given message-id
+	 *
+	 * @param msg_id a message id
+	 * @param max_results maximum number of results
+	 *
+	 * @return either an Error or a vector of docids
+	 */
+	Result<IdVec> find_docids_with_message_id(const std::string& msg_id) const;
+
 	/**
 	 * does a certain message exist in the store already?
 	 *
@@ -352,24 +364,6 @@ public:
 	 * @return the number of times func was invoked
 	 */
 	size_t for_each_term(Field::Id id, ForEachTermFunc func) const;
-
-
-	/**
-	 * Get the store metadata for @p key
-	 *
-	 * @param key the metadata key
-	 *
-	 * @return the metadata value or empty for none.
-	 */
-	std::string metadata(const std::string& key) const;
-
-	/**
-	 * Write metadata to the store.
-	 *
-	 * @param key key
-	 * @param val value
-	 */
-	void set_metadata(const std::string& key, const std::string& val);
 
 	/**
 	 * Get the timestamp for some message, or 0 if not found

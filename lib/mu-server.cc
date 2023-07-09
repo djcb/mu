@@ -535,39 +535,6 @@ Server::Private::contacts_handler(const Command& cmd)
 	output_sexp(seq, Server::OutputFlags::SplitList);
 }
 
-/* get a *list* of all messages with the given message id */
-static std::vector<Store::Id>
-docids_for_msgid(const Store& store, const std::string& msgid, size_t max = 100)
-{
-	if (msgid.size() > MaxTermLength) {
-		throw Error(Error::Code::InvalidArgument, "invalid message-id '{}'", msgid);
-	} else if (msgid.empty())
-		return {};
-
-	const auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
-	/*XXX this is a bit dodgy */
-	auto tmp{g_ascii_strdown(msgid.c_str(), -1)};
-	auto expr{g_strdup_printf("%c:%s", xprefix, tmp)};
-	g_free(tmp);
-
-	GError*    gerr{};
-	std::lock_guard l{store.lock()};
-	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
-	g_free(expr);
-	if (!res)
-		throw Error(Error::Code::Store, &gerr,
-			    "failed to run message-id-query: {}", res.error().what());
-	else if (res->empty())
-		throw Error(Error::Code::NotFound,
-			    "could not find message(s) for msgid {}", msgid);
-
-	std::vector<Store::Id> docids{};
-	for (auto&& mi : *res)
-		docids.emplace_back(mi.doc_id());
-
-	return docids;
-}
-
 /*
  * creating a message object just to get a path seems a bit excessive maybe
  * mu_store_get_path could be added if this turns out to be a problem
@@ -599,7 +566,7 @@ determine_docids(const Store& store, const Command& cmd)
 	if (docid != 0)
 		return {static_cast<Store::Id>(docid)};
 	else
-		return docids_for_msgid(store, msgid.c_str());
+		return unwrap(store.find_docids_with_message_id(msgid));
 }
 
 size_t
