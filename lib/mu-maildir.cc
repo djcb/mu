@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <stdlib.h>
 
@@ -156,7 +157,7 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 
 	const auto srcfile{to_string_gchar(g_path_get_basename(src.c_str()))};
 
-	/* create targetpath; note: make the filename *cough* unique by
+	/* create target-path; note: make the filename *cough* unique by
 	 * including a hash of the srcname in the targetname. This helps if
 	 * there are copies of a message (which all have the same basename)
 	 */
@@ -164,9 +165,9 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 	if (unique_names)
 		fulltargetpath = join_paths(targetpath,
 					    in_cur ? "cur" : "new",
-					    format("%08x-%s",
-						   g_str_hash(src.c_str()),
-						   srcfile.c_str()));
+					    mu_format("{:08x}-{}",
+						      g_str_hash(src.c_str()),
+						      srcfile));
 	else
 		fulltargetpath = join_paths(targetpath,
 					    in_cur ? "cur" : "new",
@@ -272,7 +273,7 @@ msg_move_verify(const std::string& src, const std::string& dst)
 
 /* use GIO to move files; this is slower than rename() so only use
  * this when needed: when moving across filesystems */
-static Mu::Result<void>
+G_GNUC_UNUSED static Mu::Result<void>
 msg_move_g_file(const std::string& src, const std::string& dst)
 {
 	GFile *srcfile{g_file_new_for_path(src.c_str())};
@@ -288,17 +289,38 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 	if (res)
 		return Ok();
 	else
-		return Err(Error{Error::Code::File, &err/*consumed*/,
-				"error moving {} -> {}", src, dst});
+		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
+}
+
+/* use mv to move files; this is slower than rename() so only use this when
+ * needed: when moving across filesystems */
+G_GNUC_UNUSED static Mu::Result<void>
+msg_move_mv_file(const std::string& src, const std::string& dst)
+{
+	const auto cmdline{mu_format("/bin/mv {} {}",
+				     to_string_gchar(g_shell_quote(src.c_str())),
+				     to_string_gchar(g_shell_quote(dst.c_str())))};
+	GError *err{};
+	int wait_status{};
+
+	mu_debug("{}", cmdline);
+
+	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
+		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
+	else if (auto&& res{WEXITSTATUS(wait_status)}; res != 0)
+		return Err(Error::Code::File, "error moving {} -> {}; err={}",
+			   src, dst, res);
+	else
+		return Ok();
 }
 
 static Mu::Result<void>
-msg_move(const std::string& src, const std::string& dst, bool force_gio)
+msg_move(const std::string& src, const std::string& dst, bool assume_remote)
 {
 	if (::access(src.c_str(), R_OK) != 0)
 		return Err(Error{Error::Code::File, "cannot read {}", src});
 
-	if (!force_gio) { /* for testing */
+	if (!assume_remote) { /* for testing */
 
 		if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
 			return msg_move_verify(src, dst);
@@ -308,15 +330,18 @@ msg_move(const std::string& src, const std::string& dst, bool force_gio)
 					src, dst, strerror(errno)});
 	}
 
-	/* the EXDEV / force-gio case -- source and target live on different
-	 * filesystems */
-	auto res = msg_move_g_file(src, dst);
-	if (!res)
+	/* the EXDEV / assume-remote case -- source and target live on different
+	 * file systems
+	 *
+	 * we can choose either msg_move_gio_file or msg_move_mv_file;
+	 * we use the latter for now, since the former gives some (false)
+	 * valgrind alarms.
+	 * */
+	if (auto&& res{msg_move_mv_file(src, dst)}; !res)
 		return res;
 	else
 		return msg_move_verify(src, dst);
 }
-
 
 Mu::Result<void>
 Mu::maildir_move_message(const std::string&	oldpath,
@@ -326,18 +351,18 @@ Mu::maildir_move_message(const std::string&	oldpath,
 	if (oldpath == newpath)
 		return Ok(); // nothing to do.
 
-	mu_debug("moving {} --> {}", oldpath, newpath);
+	mu_debug("moving {} --> {} (force-gio:{})", oldpath, newpath, force_gio ? "yes": "no");
 	return msg_move(oldpath, newpath, force_gio);
 }
 
 static std::string
 reinvent_filename_base()
 {
-	return format("%u.%08x%08x.%s",
-		      static_cast<unsigned>(::time(NULL)),
-		      g_random_int(),
-		      static_cast<uint32_t>(g_get_monotonic_time()),
-		      g_get_host_name());
+	return mu_format("{}.{:08x}{:08x}.{}",
+			 ::time({}),
+			 g_random_int(),
+			 g_get_monotonic_time(),
+			 g_get_host_name());
 }
 
 /**

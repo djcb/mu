@@ -80,15 +80,15 @@ Result<void> maildir_clear_links(const std::string& dir);
  *
  * @param oldpath an absolute file system path to an existing message in an
  * actual maildir
- * @param newpath the absolete full path to the target file
- * @param force_gio force the use of GIO for moving; this is done automatically
- * when needed; forcing is mostly useful for tests
+ * @param newpath the absolute full path to the target file
+ * @param assume_remote assume the target is on a different file-system,
+ * and hence rename() won't work and we need another method (this is for testing)
  *
- * @return a valid result (!!result) or an Error
+ * @return a valid result or an Error
  */
 Result<void> maildir_move_message(const std::string& oldpath,
 				  const std::string& newpath,
-				  bool               force_gio = false);
+				  bool               assume_remote = false);
 
 /**
  * Determine the target path for a to-be-moved message; i.e. this does not
