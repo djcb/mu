@@ -39,6 +39,24 @@ test_regex_match()
 	g_assert_false(rx->matches("axxxxxbqqc"));
 }
 
+
+static void
+test_regex_match2()
+{
+	Regex rx;
+	{
+
+		std::string foo = "h.llo";
+		rx = unwrap(Regex::make(foo.c_str()));
+	}
+
+	std::string hei = "hei";
+
+	g_assert_true(rx.matches("hallo"));
+	g_assert_false(rx.matches(hei));
+}
+
+
 static void
 test_regex_replace()
 {
@@ -54,6 +72,7 @@ try {
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/regex/match", test_regex_match);
+	g_test_add_func("/regex/match2", test_regex_match2);
 	g_test_add_func("/regex/replace", test_regex_replace);
 	return g_test_run();
 

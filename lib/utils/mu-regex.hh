@@ -20,7 +20,9 @@
 #define MU_REGEX_HH__
 
 #include <glib.h>
+#
 #include <utils/mu-result.hh>
+#include <utils/mu-utils.hh>
 
 namespace Mu {
 /**
@@ -50,19 +52,33 @@ struct Regex {
 	 */
 	static Result<Regex> make(const std::string& ptrn,
 				  GRegexCompileFlags cflags = G_REGEX_DEFAULT,
-				  GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT) noexcept try {
+				  GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT)
+		noexcept try {
 		return Regex(ptrn.c_str(), cflags, mflags);
 	} catch (const Error& err) {
 		return Err(err);
 	}
 
+
+	/**
+	 * Copy CTOR
+	 *
+	 * @param other some other Regex
+	 */
+	Regex(const Regex& other) noexcept: rx_{}  { *this = other; }
+
+	/**
+	 * Move CTOR
+	 *
+	 * @param other some other Regex
+	 */
+	Regex(Regex&& other) noexcept: rx_{} { *this = std::move(other); }
+
+
 	/**
 	 * DTOR
 	 */
-	~Regex() {
-		if (rx_)
-			g_regex_unref(rx_);
-	}
+	~Regex() noexcept { g_clear_pointer(&rx_, g_regex_unref); }
 
 	/**
 	 * Cast to the the underlying GRegex*
@@ -78,15 +94,6 @@ struct Regex {
 	 */
 	operator bool() const noexcept { return !!rx_; }
 
-	// No need for a move CTOR, copying is cheap (GRegex is ref-counted)
-
-	/**
-	 * Copy CTOR
-	 *
-	 * @param other some other Regex
-	 */
-	Regex(const Regex& other) noexcept { *this = other; }
-
 	/**
 	 * operator=
 	 *
@@ -96,10 +103,25 @@ struct Regex {
 	 */
 	Regex& operator=(const Regex& other) noexcept {
 		if (this != &other) {
-			auto oldrx = rx_;
-			rx_ = other.rx_ ? g_regex_ref(other.rx_): nullptr;
-			if (oldrx)
-				g_regex_unref(oldrx);
+			g_clear_pointer(&rx_, g_regex_unref);
+			if (other.rx_)
+				rx_ = g_regex_ref(other.rx_);
+		}
+		return *this;
+	}
+
+	/**
+	 * operator=
+	 *
+	 * @param other move some other object to this one
+	 *
+	 * @return *this
+	 */
+	Regex& operator=(Regex&& other) noexcept {
+		if (this != &other) {
+			g_clear_pointer(&rx_, g_regex_unref);
+			rx_ = other.rx_;
+			other.rx_ = nullptr;
 		}
 		return *this;
 	}
@@ -108,14 +130,19 @@ struct Regex {
 	 * Does this regexp match the given string? An unset Regex matches
 	 * nothing.
 	 *
-	 * @param str
-	 * @param mflags
+	 * @param str string to test
+	 * @param mflags match flags
 	 *
 	 * @return true or false
 	 */
 	bool matches(const std::string& str,
 		     GRegexMatchFlags mflags=G_REGEX_MATCH_DEFAULT) const noexcept {
-		return rx_ ? g_regex_match(rx_, str.c_str(), mflags, {}) : false;
+		if (!rx_)
+			return false;
+		else
+			return g_regex_match(rx_, str.c_str(), mflags, nullptr);
+		// strangely, valgrind reports some memory error related to
+		// the str.c_str(). It *seems* like a false alarm.
 	}
 
 	/**
@@ -132,21 +159,30 @@ struct Regex {
 					repl.c_str(), G_REGEX_MATCH_DEFAULT, {})};
 		if (!s)
 			throw Err(Error::Code::InvalidArgument, "error in Regex::replace");
-		std::string r{s};
-		g_free(s);
-		return r;
+		return to_string_gchar(std::move(s));
 	}
+
+	const GRegex* g_regex() const { return rx_; }
 
 private:
 	Regex(const char *ptrn, GRegexCompileFlags cflags, GRegexMatchFlags mflags) {
 		GError *err{};
-		rx_ = g_regex_new(ptrn, cflags, mflags, &err);
-		if (!rx_)
-			throw Err(Error::Code::InvalidArgument,
-				  "invalid regexp: '%s'", ptrn);
+		if (rx_ = g_regex_new(ptrn, cflags, mflags, &err); !rx_)
+			throw Err(Error::Code::InvalidArgument, &err,
+				  "invalid regexp: '{}'", ptrn);
 	}
-	GRegex *rx_{};
+
+	GRegex *rx_;
 };
+
+static inline std::string format_as(const Regex& rx) {
+	if (auto&& grx{rx.g_regex()}; !grx)
+		return "//";
+	else
+		return mu_format("/{}/", g_regex_get_pattern(grx));
+
+}
+
 
 } // namespace Mu
 
