@@ -18,7 +18,8 @@
 V                 ?= 0
 
 BUILDDIR          ?= $(CURDIR)/build
-COVERAGE_BUILDDIR ?= $(CURDIR)/build-coverage
+BUILDDIR_COVERAGE ?= $(CURDIR)/build-coverage
+BUILDDIR_VALGRIND ?= $(CURDIR)/build-valgrind
 
 GENHTML           ?= genhtml
 LCOV              ?= lcov
@@ -42,7 +43,7 @@ MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Dcpp_std=c++20'
 endif
 
-.PHONY: all
+.PHONY: all build-valgrind
 .PHONY: check test test-verbose-if-fail test-valgrind test-helgrind
 .PHONY: benchmark coverage
 .PHONY: dist install uninstall clean distclean
@@ -72,7 +73,8 @@ uninstall: $(BUILDDIR)
 	@$(NINJA) -C $(BUILDDIR) uninstall
 
 clean:
-	@rm -rf $(BUILDDIR) $(COVERAGE_BUILDDIR)
+	@rm -rf $(BUILDDIR) $(BUILDDIR_COVERAGE) $(BUILDDIR_VALGRIND)
+	@rm -rf compile_commands.json
 
 #
 # below targets are just for development/testing/debugging. They may or
@@ -81,38 +83,48 @@ clean:
 test-verbose-if-fail: all
 	$(MESON) test -C $(BUILDDIR) || $(MESON) test -C $(BUILDDIR) --verbose
 
+build-valgrind: $(BUILDDIR_VALGRIND)
+	@$(MESON) compile -C $(BUILDDIR_VALGRIND) $(VERBOSE)
+
+$(BUILDDIR_VALGRIND):
+	@$(MESON) setup --buildtype=debug $(BUILDDIR_VALGRIND)
+
 vg_opts:=--enable-debuginfod=no --leak-check=full --error-exitcode=1
 test-valgrind: export G_SLICE=always-malloc
 test-valgrind: export G_DEBUG=gc-friendly
-test-valgrind: $(BUILDDIR)
-	@cd $(BUILDDIR); $(MESON) test		\
-		--wrap="$(VALGRIND) $(vg_opts)"	\
+test-valgrind: build-valgrind
+	@$(MESON) test -C $(BUILDDIR_VALGRIND)			\
+		--wrap="$(VALGRIND) $(vg_opts)"			\
 		--timeout-multiplier 100
+
+check-valgrind: test-valgrind
 
 # we do _not_ pass helgrind; but this seems to be a false-alarm
 #    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
-# test-helgrind: $(BUILDDIR)
-#	@cd $(BUILDDIR); TEST=HELGRIND $(MESON) test			\
-#	--wrap='valgrind --tool=helgrind --error-exitcode=1'		\
-#	--timeout-multiplier 100
+test-helgrind: $(BUILDDIR_VALGRIND)
+	$(MESON) -C $(BUILDDIR_VALGRIND) test	\
+	--wrap="$(VALGRIND) --tool=helgrind --error-exitcode=1"	\
+	--timeout-multiplier 100
+
+check-helgrind: test-helgrind
 
 benchmark: $(BUILDDIR)
 	$(NINJA) -C $(BUILDDIR) benchmark
 
-$(COVERAGE_BUILDDIR):
-	$(MESON) setup -Db_coverage=true --buildtype=debug $(COVERAGE_BUILDDIR)
+$(BUILDDIR_COVERAGE):
+	$(MESON) setup -Db_coverage=true --buildtype=debug $(BUILDDIR_COVERAGE)
 
-covfile:=$(COVERAGE_BUILDDIR)/meson-logs/coverage.info
+covfile:=$(BUILDDIR_COVERAGE)/meson-logs/coverage.info
 
 # generate by hand, meson's built-ins are unflexible
-coverage: $(COVERAGE_BUILDDIR)
-	@$(MESON) test -C $(COVERAGE_BUILDDIR) $(VERBOSE)
+coverage: $(BUILDDIR_COVERAGE)
+	@$(MESON) test -C $(BUILDDIR_COVERAGE) $(VERBOSE)
 	$(LCOV) --capture --directory . --output-file $(covfile)
 	@$(LCOV) --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
 	@$(LCOV) --remove $(covfile) '*mu/mu/*' --output $(covfile)
-	@mkdir -p $(COVERAGE_BUILDDIR)/meson-logs/coverage
-	@$(GENHTML) $(covfile) --output-directory $(COVERAGE_BUILDDIR)/meson-logs/coverage/
-	@echo "coverage report at: file://$(COVERAGE_BUILDDIR)/meson-logs/coverage/index.html"
+	@mkdir -p $(BUILDDIR_COVERAGE)/meson-logs/coverage
+	@$(GENHTML) $(covfile) --output-directory $(BUILDDIR_COVERAGE)/meson-logs/coverage/
+	@echo "coverage report at: file://$(BUILDDIR_COVERAGE)/meson-logs/coverage/index.html"
 dist: $(BUILDDIR)
 	$(MESON) dist -C $(BUILDDIR) $(VERBOSE)
 
