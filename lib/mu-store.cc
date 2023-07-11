@@ -547,27 +547,29 @@ Store::move_message(Store::Id id,
 time_t
 Store::dirstamp(const std::string& path) const
 {
-	constexpr auto epoch = static_cast<time_t>(0);
-	const auto ts{xapian_db().metadata(path)};
-	if (ts.empty())
-		return epoch;
-	else
-		return static_cast<time_t>(strtoll(ts.c_str(), NULL, 16));
+	std::string ts;
+
+	{
+		std::unique_lock lock{priv_->lock_};
+		ts = xapian_db().metadata(path);
+	}
+
+	return ts.empty() ? 0 /*epoch*/ : ::strtoll(ts.c_str(), {}, 16);
 }
 
 void
 Store::set_dirstamp(const std::string& path, time_t tstamp)
 {
-	std::array<char, 2 * sizeof(tstamp) + 1> data{};
-	const auto len = static_cast<size_t>(
-	    g_snprintf(data.data(), data.size(), "%zx", tstamp));
+	std::unique_lock lock{priv_->lock_};
 
-	xapian_db().set_metadata(path, std::string{data.data(), len});
+	xapian_db().set_metadata(path, mu_format("{:x}", tstamp));
 }
 
 bool
 Store::contains_message(const std::string& path) const
 {
+	std::unique_lock lock{priv_->lock_};
+
 	return xapian_db().term_exists(field_from_id(Field::Id::Path).xapian_term(path));
 }
 
