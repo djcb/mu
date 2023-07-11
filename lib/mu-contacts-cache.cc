@@ -49,12 +49,11 @@ struct ContactsCache::Private {
 	Private(Config& config_db)
 		:config_db_{config_db},
 		 contacts_{deserialize(config_db_.get<Config::Id::Contacts>())},
-		 personal_plain_{make_plain(config_db_.get<Config::Id::PersonalAddresses>())},
-		 personal_rx_{make_rx(config_db_.get<Config::Id::PersonalAddresses>())},
-		 ignored_plain_{make_plain(config_db_.get<Config::Id::IgnoredAddresses>())},
-		 ignored_rx_{make_rx(config_db_.get<Config::Id::IgnoredAddresses>())},
-		 dirty_{0}
-		{}
+		 personal_plain_{make_matchers<Config::Id::PersonalAddresses>()},
+		 personal_rx_{make_rx_matchers<Config::Id::PersonalAddresses>()},
+		 ignored_plain_{make_matchers<Config::Id::IgnoredAddresses>()},
+		 ignored_rx_{make_rx_matchers<Config::Id::IgnoredAddresses>()},
+		 dirty_{0} {}
 
 	~Private() {
 		serialize();
@@ -76,43 +75,28 @@ struct ContactsCache::Private {
 	mutable size_t			dirty_;
 
 private:
-	/**
-	 * Return the non-regex addresses
-	 *
-	 * @param personal
-	 *
-	 * @return
-	 */
-	StringVec make_plain(const StringVec& personal) const {
-		StringVec svec;
-		std::copy_if(personal.begin(),  personal.end(),
-			     std::back_inserter(svec), [&](auto&& p) {
-				     return p.size() < 2 || p.at(0) != '/' ||
-					     p.at(p.length() - 1) != '/';
-			     });
-		return svec;
+	static bool is_rx(const std::string& p)  {
+		return p.size() >= 2 && p.at(0) == '/' && p.at(p.length() - 1) == '/';
 	}
 
-	/**
-	 * Return regexps for the regex-addresses
-	 *
-	 * @param personal
-	 *
-	 * @return
-	 */
-	std::vector<Regex> make_rx(const StringVec& personal) const {
+	template<Config::Id Id> StringVec make_matchers() const {
+		return seq_remove(config_db_.get<Id>(), is_rx);
+	}
+	template<Config::Id Id> std::vector<Regex> make_rx_matchers() const {
 		std::vector<Regex> rxvec;
-		for(auto&& p: personal) {
-			if (p.size() < 2 || p[0] != '/' || p[p.length()- 1] != '/')
+		for (auto&& p: config_db_.get<Id>()) {
+
+			mu_debug("--> {}", p);
+
+			if (!is_rx(p))
 				continue;
-			// a regex pattern.
+			constexpr auto opts{static_cast<GRegexCompileFlags>(G_REGEX_OPTIMIZE|G_REGEX_CASELESS)};
+
+			const auto rxstr{p.substr(1, p.length() - 2)};
 			try {
-				const auto rxstr{p.substr(1, p.length() - 2)};
-				auto opts = static_cast<GRegexCompileFlags>(G_REGEX_OPTIMIZE|G_REGEX_CASELESS);
-				auto rx = Regex::make(rxstr, opts);
-				if (!rx)
-					throw rx.error();
-				rxvec.emplace_back(rx.value());
+				rxvec.push_back(unwrap(Regex::make(rxstr, opts)));
+				mu_debug("match {}: '{}' {}", Config::property<Id>().name,
+					 p, rxvec.back());
 			} catch (const Error& rex) {
 				mu_warning("invalid personal address regexp '{}': {}",
 					   p, rex.what());
@@ -353,7 +337,6 @@ address_matches(const std::string& addr, const StringVec& plain, const std::vect
 
 	return false;
 }
-
 
 bool
 ContactsCache::is_personal(const std::string& addr) const
