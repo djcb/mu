@@ -154,7 +154,7 @@ the attachment dir. See Info node `(mu4e) Attachments' for
 details.
 
 When this called for composing a message, both filename and
-mime-type are nill."
+mime-type are nil."
   :type 'directory
   :group 'mu4e-folders
   :safe 'stringp)
@@ -330,9 +330,14 @@ Offer to create it if it does not exist yet."
 ;; filename and the mime-type as argument, either (or both) which can
 ;; be nil
 
-(defun mu4e~get-attachment-dir (&optional fname mimetype)
-  "Get the directory for saving attachments from `mu4e-attachment-dir'.
-This is optionally based on the file-name FNAME and its MIMETYPE."
+(defun mu4e-determine-attachment-dir (&optional fname mimetype)
+  "Get the target-directory for attachments.
+
+This is based on the variable `mu4e-attachment-dir', which is either:
+- if is a string, used it as-is
+-  a function taking two string parameters, both of which can be nil:
+    (1) a filename or a URL
+    (2) a mime-type (such as \"text/plain\"."
   (let ((dir
          (cond
           ((stringp mu4e-attachment-dir)
@@ -340,7 +345,7 @@ This is optionally based on the file-name FNAME and its MIMETYPE."
           ((functionp mu4e-attachment-dir)
            (funcall mu4e-attachment-dir fname mimetype))
           (t
-          (mu4e-error "Unsupported type for mu4e-attachment-dir" )))))
+           (mu4e-error "Unsupported type for mu4e-attachment-dir" )))))
     (if dir
         (expand-file-name dir)
       (mu4e-error "Mu4e-attachment-dir evaluates to nil"))))

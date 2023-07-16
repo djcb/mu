@@ -73,8 +73,8 @@ might want to add soemthing like the following in your configuration.
 If nil, use the value of `mu4e-completing-read-function', integrated
 into mu4e.
 
-Many of the third-party completion frameworks such as Helm, Ivy
-and Vertico influence `completion-read', so to have mu4e follow
+Many of the third-party completion frameworks - such as Helm, Ivy
+and Vertico - influence `completion-read', so to have mu4e follow
 your overall settings, try the equivalent of
 
    (setq mu4e-read-option-use-builtin nil
@@ -84,7 +84,6 @@ Tastes differ, but without any such frameworks, the unaugmented
 Emacs `completing-read' is rather Spartan."
   :type 'boolean
   :group 'mu4e)
-
 
 (defcustom mu4e-use-fancy-chars nil
   "When set, allow fancy (Unicode) characters for marks/threads.
@@ -121,7 +120,8 @@ marked as read-only, or non-nil otherwise."
             (mu4e-get-headers-buffer))
            ((mu4e-current-buffer-type-p 'headers)
             (mu4e-get-view-buffer))
-           (t (mu4e-error "This window is neither the headers nor the view window."))))
+           (t (mu4e-error
+               "This window is neither the headers nor the view window."))))
          (other-win (and other-buf (get-buffer-window other-buf))))
     (if (window-live-p other-win)
         (select-window other-win)
@@ -206,7 +206,7 @@ Return the cdr (value) of the matching cell, if any."
   "Read and return one of CHOICES, prompting for PROMPT.
 
 PROMPT describes a multiple-choice question to the user. CHOICES
-is an alist of the fiorm
+is an alist of the form
   ( ( <display-string>  ( <shortcut> . <value> ))
      ... )
 Any input that is not one of CHOICES is ignored. This is mu4e's
@@ -227,7 +227,8 @@ Return the matching choice value (cdr of the cell)."
                             (let ((prefix (minibuffer-contents-no-properties)))
                               (unless (string-empty-p prefix)
                                 (setq quick-result
-                                      (mu4e--matching-choice choices (string-to-char prefix)))
+                                      (mu4e--matching-choice
+                                       choices (string-to-char prefix)))
                                 (when quick-result
                                   (exit-minibuffer)))))
                           -1 'local))
@@ -474,7 +475,6 @@ If there is not e-mail address at point, do nothing."
     (format "%d" size))
    (t "?")))
 
-
 (defun mu4e-split-ranges-to-numbers (str n)
   "Convert STR containing attachment numbers into a list of numbers.
 
@@ -542,7 +542,8 @@ Or go to the top level if there is none."
          (date	  (if date (format-time-string "%F: " date) ""))
          (title	  (format "%s%s" date subject))
          (msgid	  (or (plist-get msg :message-id)
-                      (mu4e-error "Cannot bookmark message without message-id"))))
+                      (mu4e-error
+                       "Cannot bookmark message without message-id"))))
     `(,title
       ,@(bookmark-make-record-default 'no-file 'no-context)
       (message-id . ,msgid)

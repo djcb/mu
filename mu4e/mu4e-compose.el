@@ -359,7 +359,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 
     ;; set the attachment dir to something more reasonable than the draft
     ;; directory.
-    (setq default-directory (mu4e~get-attachment-dir))
+    (setq default-directory (mu4e-determine-attachment-dir))
 
     (let ((keymap (lookup-key message-mode-map [menu-bar text])))
       (when keymap
