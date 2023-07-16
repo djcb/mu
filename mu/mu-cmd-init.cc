@@ -50,7 +50,7 @@ Mu::mu_cmd_init(const Options& opts)
 		if (opts.init.max_msg_size)
 			conf.set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
 		if (opts.init.batch_size)
-			conf.set<Config::Id::MaxMessageSize>(*opts.init.batch_size);
+			conf.set<Config::Id::BatchSize>(*opts.init.batch_size);
 		if (!opts.init.my_addresses.empty())
 			conf.set<Config::Id::PersonalAddresses>(opts.init.my_addresses);
 		if (!opts.init.ignored_addresses.empty())
