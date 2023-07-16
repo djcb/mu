@@ -707,7 +707,7 @@ determine which browser function to use."
          (charset (mail-content-type-get ct 'charset))
          (charset (and charset (intern charset)))
          (mu4e--view-rendering t); Needed if e.g. an ics file is buttonized
-         (gnus-article-emulate-mime t)
+         (gnus-article-emulate-mime nil) ;; avoid perf problems
          (gnus-unbuttonized-mime-types '(".*/.*"))
          (gnus-buttonized-mime-types
             (append (list "multipart/signed" "multipart/encrypted")
@@ -756,6 +756,13 @@ determine which browser function to use."
   (setq mm-fill-flowed (not mm-fill-flowed))
   (mu4e-view-refresh))
 
+(defun mu4e-view-toggle-emulate-mime()
+  "Toggle GNUs MIME-emulation.
+Note that for some messages, this can trigger high CPU load."
+  (interactive)
+  (setq gnus-article-emulate-mime (not gnus-article-emulate-mime))
+  (mu4e-view-refresh))
+
 (defun mu4e--view-gnus-display-mime (msg)
   "Like `gnus-display-mime' but include mu4e headers to MSG."
   (lambda (&optional ihandles)
@@ -780,10 +787,10 @@ determine which browser function to use."
                                            flag)) fieldval ", ")))
                  (mu4e--view-gnus-insert-header field flags)))
               (':size (mu4e--view-gnus-insert-header
-                      field (mu4e-display-size fieldval)))
+                       field (mu4e-display-size fieldval)))
               ((or ':subject ':to ':from ':cc ':bcc ':from-or-to
                    ':date :attachments ':signature
-                   ':decryption)) ; handled by Gnus
+                   ':decryption))       ; handled by Gnus
               (_
                (mu4e--view-gnus-insert-header-custom msg field)))))
         (let ((gnus-treatment-function-alist
@@ -1076,7 +1083,8 @@ Based on Gnus' article-mode."
      ("htoggle headers"             . gnus-article-hide-headers)
      ("ytoggle crypto"              . gnus-article-hide-pem)
      ("ftoggle fill-flowed"         . mu4e-view-toggle-fill-flowed)
-     ("mtoggle show all MIME parts" . mu4e-view-toggle-show-mime-parts))
+     ("mtoggle show all MIME parts" . mu4e-view-toggle-show-mime-parts)
+     ("Mtoggle show emulate MIME"   . mu4e-view-toggle-emulate-mime))
 "Various options for \"massaging\" the message view. See `(gnus)
 Article Treatment' for more options."
   :group 'mu4e-view
