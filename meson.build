@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.11.9',
+        version: '1.11.10',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -56,7 +56,11 @@ extra_flags = [
   '-Wno-switch-enum',
   '-Wno-keyword-macro',
   '-Wno-volatile',
-  '-Wno-#warnings']
+  '-Wno-#warnings',
+  # assuming these are false alarm... (in fmt, with gcc13):
+  '-Wno-array-bounds',
+  '-Wno-stringop-overflow',
+]
 
 if get_option('buildtype') == 'debug'
   extra_flags += [
