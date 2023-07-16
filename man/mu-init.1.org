@@ -43,6 +43,17 @@ specifies that some e-mail address is to be ignored from the contacts-cache
 =<my-email-address>= can be either a plain e-mail address or a regexp, just like
 for the =--my-address= option.
 
+** --max-message-size=<size>
+
+specifies the maximum size for an e-mail message. Usually, the default of
+100000000 bytes should be fine.
+
+** --batch-size=<size>
+
+number of changes after which they are committed to the database; decreasing
+this reduces the memory requirements, but make indexing substantially slows (and
+vice-versa for increasing). Usually, the default of 250000 should be fine.
+
 ** --reinit
 
 reinitialize the database from an earlier version; that is, create a new empty
