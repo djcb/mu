@@ -236,9 +236,8 @@ After these steps, @t{mu4e} should be ready to go!
 @section Requirements
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and Unix-like
-systems, including many Linux distributions, OS X and FreeBSD, and even on
-MS-Windows (with Cygwin). Emacs 26.3 or higher is required, as well as
-Xapian@footnote{@url{https://xapian.org/}} and
+systems, including many Linux distributions, OS X and FreeBSD. Emacs 26.3 or
+higher is required, as well as Xapian@footnote{@url{https://xapian.org/}} and
 GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 @t{mu} has optional support for the Guile (Scheme) programming language (version
@@ -246,16 +245,16 @@ GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
 
 If you intend to compile @t{mu} yourself, you need to have the typical
 development tools, such as C and C++17 compilers (both @command{gcc} and
-@command{clang} should work), @command{meson} and @command{make}, and
-the development packages for GMime 3.x, GLib and Xapian. Optionally, you
-also need the development packages for GTK+, Webkit and Guile.
+@command{clang} work), @command{meson} and @command{make}, and the development
+packages for GMime 3.x, GLib and Xapian. Optionally, you also need the
+development packages for GTK+, Webkit and Guile.
 
 @node Versions
 @section Versions
 
 The stable (release) versions have even minor version numbers, while the
-development versions have odd ones. So, for example, 1.8.13 is a stable version,
-while the 1.9.9 is the development version.
+development versions have odd ones. So, for example, 1.10.5 is a stable version,
+while the 1.11.9 is the development version.
 
 The stable versions only receive bug fixes after being released, while the
 development versions get new features, fixes, and, perhaps, bugs, and are meant
@@ -1282,9 +1281,7 @@ to @code{nil} if you want to handle manually (through
 @node Message view
 @chapter The message view
 
-This chapter discusses the message view; this is new (since version
-1.6) message view, based on Gnus' Article Mode, which replaces the
-older one.
+This chapter discusses the message view, the view for reading e-mail messages.
 
 After selecting a message in the @ref{Headers view}, it appears in a
 message view window, which shows the message headers, followed by the
@@ -1295,9 +1292,10 @@ from @t{gnus-article-mode}.
 * Overview: MSGV Overview. What is the Message View
 * Keybindings: MSGV Keybindings. Do things with your keyboard
 * Rich-text and images: MSGV Rich-text and images. Reading rich-text messages
+* Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts
 * Custom headers: MSGV Custom headers. Your very own headers
-* Actions: MSGV Actions. Defining and using actions.
-* Detaching and Reattaching messages: MSGV Detaching and reattaching. Multiple message views.
+* Actions: MSGV Actions. Defining and using actions
+* Detaching & reattaching: MSGV Detaching and reattaching. Multiple message views.
 @end menu
 
 @node MSGV Overview
@@ -1503,13 +1501,54 @@ if you have Gnus-specific settings for @t{gnus-blocked-images}, you
 should verify that they have the desired effect in @code{mu4e} as
 well.
 
+@node MSGV Attachments and MIME-parts
+@section Attachments and MIME-parts
+@cindex attachments
+@cindex mime-parts
+
+E-mail messages can be though as a series of ``MIME-parts'', which are sections
+of the message. The most prominent is the 'body', that is the main message your
+are reading. Many e-mail messages also contains @emph{attachments}, which
+MIME-parts that contain files@footnote{Attachments come in two flavors:
+@c{inline} and @c{attachment}. @t{mu4e} does not distinguish between them when
+operating on them; everything that specifies a filename is considered an
+attachment}.
+
+To save such attachments as files on your file systems, the @t{mu4e}
+message-view offers the command @code{mu4e-view-save-attachments}; default
+keybinding is @key{e} (think @emph{extract}). After invoking the command, you
+can enter the file names to save, comma-separated, and using the completion
+support. Press @key{RET} to save the chosen files to your file-system.
+
+With a prefix argument, you get to choose the target-directory, otherwise,
+@t{mu4e} determines it following the variable @t{mu4e-attachment-dir} (which can
+be file-system path or a function; see its docstring for details.
+
+While completing, @code{mu4e-view-completion-minor-mode} is active, which offers
+@code{mu4e-view-complete-all} (bound to @key{C-c C-a} to complete @emph{all}
+files@footnote{Except when using 'Helm'; in that case, use the Helm-mechanism
+for selecting multiple}.
+
+@subsection MIME-parts
+
+Not all MIME-parts are message bodies or attachments, and it can be useful to
+operate on those other parts as well. For that, there is the function
+@code{mu4e-view-mime-part-action} (default key-binding @key{A}). You can pass
+the number of the MIME-pars (as seen in the message view) as a prefix argument,
+otherwise you get to get to choose from a completion menu.
+
+After choosing one or more MIME-parts, you are asked for an action to apply to
+them; see the variable @code{mu4e-view-mime-part-actions} for the possibilities;
+and you can add your own actions as well, see @ref{MIME-part actions} for some
+example.
+
 @node MSGV Custom headers
 @section Custom headers
 @cindex custom headers
 
 Sometimes the normal headers (Date, From, To, Subject, etc.)@: may not be
-enough. For these cases, @t{mu4e} offers @emph{custom headers} in both
-the headers-view and the message-view.
+enough. For these cases, @t{mu4e} offers @emph{custom headers} in both the
+headers-view and the message-view.
 
 See @ref{HV Custom headers} for an example of this; the difference for
 the message-view is that you should add your custom header to
@@ -1530,7 +1569,7 @@ on the current message. You can specify these actions using the variable
 @subsection MIME-part actions
 MIME-part actions allow you to act upon MIME-parts in a message - such
 as attachments.  For now, these actions are defined and documented in
-@code{mu4e-view-mime-part-actions}.
+@code{mu4e-view-mime-part-actions} and see
 
 @node MSGV Detaching and reattaching
 @section Detaching and reattaching messages
@@ -1622,16 +1661,15 @@ C-S-u        update mail & reindex
 @node Address autocompletion
 @section Address autocompletion
 
-@t{mu4e} supports@footnote{GNU Emacs 24.4 or higher is required}
-autocompleting addresses when composing e-mail messages. @t{mu4e} uses the
-e-mail addresses from the messages you sent or received as the source for
-this. Address auto-completion is enabled by default; if you want to disable it
-for some reason, set @t{mu4e-compose-complete-addresses} to @t{nil}.
+@t{mu4e} supports autocompleting addresses when composing e-mail messages.
+@t{mu4e} uses the e-mail addresses from the messages you sent or received as the
+source for this. Address auto-completion is enabled by default; if you want to
+disable it for some reason, set @t{mu4e-compose-complete-addresses} to @t{nil}.
 
-Emacs 24 also supports cycling through the alternatives. When there are more
-than @emph{5} matching addresses, they are shown in a @t{*Completions*}
-buffer. Once the number of matches gets below this number, one is inserted in
-the address field and you can cycle through the alternatives using @key{TAB}.
+Emacs also supports cycling through the alternatives. When there are more than
+@emph{5} matching addresses, they are shown in a @t{*Completions*} buffer. Once
+the number of matches gets below this number, one is inserted in the address
+field and you can cycle through the alternatives using @key{TAB}.
 
 @subsection Limiting the number of addresses
 
@@ -1657,7 +1695,7 @@ default is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen
 since the start of 2010.
 @item @code{mu4e-compose-complete-max} -- the maximum number of contacts to use.
 This adds a hard limit to the 2000 (default) contacts; those are sorted by
-recency /frequency etc. so should include the ones you most likely need.
+recency / frequency etc. so should include the ones you most likely need.
 @item @code{mu4e-contact-process-function} --- a function to rewrite or
 exclude certain addresses.
 @end itemize
@@ -2893,18 +2931,15 @@ Finally, let's define a MIME-part action. As mentioned, MIME-part
 functions receive @emph{2} arguments, the message and the attachment
 number to use.
 
-The following example action counts the number of lines in an
-attachment, and defines @key{n} as its shortcut key (the @key{n} is
-prefixed to the description).
+The following example action counts the number of lines in an attachment, and
+defines @key{n} as its shortcut key (the @key{n} is prefixed to the
+description). See the the @code{mu4e-view-mime-part-actions} for the details
+of the format.
 
 @lisp
-(defun count-lines-in-attachment (msg attachnum)
-  "Count the number of lines in an attachment."
-  (mu4e-view-pipe-attachment msg attachnum "wc -l"))
-
-;; defining 'n' as the shortcut
 (add-to-list 'mu4e-view-mime-part-actions
-  '("ncount lines" . count-lines-in-attachment) t)
+    ;; count the number of lines in a MIME-part
+    '(:name "line-count" :handler "wc -l" :receives pipe))
 @end lisp
 
 @node Example actions
