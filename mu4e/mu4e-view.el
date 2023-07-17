@@ -746,10 +746,12 @@ determine which browser function to use."
 
 (defun mu4e-view-refresh ()
   "Refresh the message view."
+  ;;; XXX: sometimes, side-effect: increase the header-buffers size
   (interactive)
-  (when (derived-mode-p 'mu4e-view-mode)
-    (kill-buffer)
-    (mu4e-view mu4e--view-message)))
+  (when-let ((msg (and (derived-mode-p 'mu4e-view-mode)
+                       mu4e--view-message)))
+    (mu4e-view-quit)
+    (mu4e-view msg)))
 
 (defun mu4e-view-toggle-show-mime-parts()
   "Toggle whether to show all MIME-parts."
