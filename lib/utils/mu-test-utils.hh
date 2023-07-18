@@ -20,6 +20,7 @@
 #ifndef MU_TEST_UTILS_HH__
 #define MU_TEST_UTILS_HH__
 
+#include <initializer_list>
 #include <string>
 #include <utils/mu-utils.hh>
 #include <utils/mu-result.hh>
@@ -91,23 +92,19 @@ bool set_en_us_utf8_locale();
 		}							\
 		} while(0)
 
+#define assert_valid_command(RCO) do {					\
+	assert_valid_result(RCO);					\
+	if ((RCO)->exit_code != 0 && !(RCO)->standard_err.empty())	\
+		mu_printerrln("{}:{}: {}",				\
+			      __FILE__, __LINE__, (RCO)->standard_err);	\
+	g_assert_cmpuint((RCO)->exit_code, ==, 0);			\
+} while (0)
+
 /**
  * For unit-tests, allow warnings in the current function.
  *
  */
 void allow_warnings();
-
-
-
-/**
- * Execute the in-tree mu executable with the arguments
- * Asserts if fails.
- *
- * @param args arguments;;
- *
- * @return either the exit code or an error.
- */
-Result<int> run_mu_command(const std::string& args);
 
 
 /**

@@ -115,24 +115,6 @@ Mu::allow_warnings()
 	    {});
 }
 
-
-
-Result<int>
-Mu::run_mu_command(const std::string& args)
-{
-	auto cmdline{mu_format("/bin/sh -c '{} {}'", MU_PROGRAM, args)};
-	if (g_test_verbose())
-		mu_println("command-line: {}", cmdline);
-
-	GError *err{};
-	int wait_status{};
-	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
-		return Err(Error::Code::File, &err, "failed to execute command '{}", cmdline);
-	else
-		return Ok(WEXITSTATUS(wait_status));
-}
-
-
 Mu::TempDir::TempDir(bool autodelete): autodelete_{autodelete} {
 
 	if (auto res{make_temp_dir()}; !res)

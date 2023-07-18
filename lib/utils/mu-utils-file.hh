@@ -196,6 +196,22 @@ Result<std::string> make_temp_dir();
 Result<void> remove_directory(const std::string& path);
 
 
+/**
+ * Run some system command
+ *
+ * @param cmd the command
+ *
+ * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_
+ * considered an error from the perspective of this function.
+ */
+struct CommandOutput {
+	int exit_code;
+	std::string standard_out;
+	std::string standard_err;
+};
+Result<CommandOutput> run_command(std::initializer_list<std::string> args);
+
+
 } // namespace Mu
 
 #endif /* MU_UTILS_FILE_HH__ */

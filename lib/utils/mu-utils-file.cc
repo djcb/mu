@@ -277,6 +277,37 @@ Mu::read_from_stdin()
 			g_memory_output_stream_get_size(G_MEMORY_OUTPUT_STREAM(outmem))});
 }
 
+Result<Mu::CommandOutput>
+Mu::run_command(std::initializer_list<std::string> args)
+{
+	std::vector<char*> argvec{};
+	for (auto&& arg: args)
+		argvec.push_back(g_strdup(arg.c_str()));
+	argvec.push_back({});
+
+	GError *err{};
+	int wait_status{};
+	gchar *std_out{}, *std_err{};
+	auto res = g_spawn_sync({},
+				static_cast<char**>(argvec.data()),
+				{},
+				(GSpawnFlags)(G_SPAWN_SEARCH_PATH),
+				{}, {},
+				&std_out, &std_err,
+				&wait_status, &err);
+
+	for (auto& a: argvec)
+		g_free(a);
+
+	if (!res)
+		return Err(Error::Code::File, &err, "failed to execute command");
+	else
+		return Ok(Mu::CommandOutput{
+				WEXITSTATUS(wait_status),
+				to_string_gchar(std::move(std_out/*consumed*/)),
+				to_string_gchar(std::move(std_err/*consumed*/))});
+}
+
 
 #ifdef BUILD_TESTS
 
