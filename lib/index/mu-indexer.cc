@@ -141,6 +141,15 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 	switch (htype) {
 	case Scanner::HandleType::EnterDir:
 	case Scanner::HandleType::EnterNewCur: {
+		if (fullpath.length() > MaxTermLength) {
+			// currently the db uses the path as a key, and
+			// therefore it cannot be too long. We'd get an error
+			// later anyway but for now it's useful for surviving
+			// circular symlinks
+			mu_warning("'{}' is too long; ignore", fullpath);
+			return false;
+		}
+
 		// in lazy-mode, we ignore this dir if its dirstamp suggest it
 		// is up-to-date (this is _not_ always true; hence we call it
 		// lazy-mode); only for actual message dirs, since the dir
