@@ -56,12 +56,9 @@ test_add_ok()
 	}
 
 	{
-		auto res = run_mu_command(
-			mu_format("add --muhome={} {}",
-				  testhome,
-				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
-		assert_valid_result(res);
-		g_assert_cmpuint(*res,==,0);
+		auto res = run_command({MU_PROGRAM, "add", mu_format("--muhome={}", testhome),
+				MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"});
+		assert_valid_command(res);
 	}
 
 	{
@@ -71,14 +68,10 @@ test_add_ok()
 	}
 
 	{ // re-add the same
-		auto res = run_mu_command(
-			mu_format("add --muhome={} {}",
-				  testhome,
-				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
-		assert_valid_result(res);
-		g_assert_cmpuint(*res,==,0);
+		auto res = run_command({MU_PROGRAM, "add", mu_format("--muhome={}",testhome),
+				MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"});
+		assert_valid_command(res);
 	}
-
 
 	{
 		auto&& store = Store::make(dbpath);
@@ -101,21 +94,18 @@ test_add_fail()
 	}
 
 	{ // wrong maildir
-		auto res = run_mu_command(
-			mu_format("add --muhome={} {}",
-				  testhome,
-				  MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"));
+		auto res = run_command({MU_PROGRAM, "add", mu_format("--muhome={}", testhome),
+				       MU_TESTMAILDIR "/cur/1220863042.12663_1.mindcrime!2,S"});
 		assert_valid_result(res);
-		g_assert_cmpuint(*res,!=,0);
+		g_assert_cmpuint(res->exit_code,!=,0);
 	}
 
 
 	{ // non-existent
-		auto res = run_mu_command(
-			mu_format("add --muhome={} {}",
-				  testhome, "/foo/bar/non-existent"));
+		auto res = run_command({MU_PROGRAM, "add", mu_format("--muhome={}", testhome),
+				"/foo/bar/non-existent"});
 		assert_valid_result(res);
-		g_assert_cmpuint(*res,!=,0);
+		g_assert_cmpuint(res->exit_code,!=,0);
 	}
 
 	remove_directory(testhome);
