@@ -626,7 +626,12 @@ As a side-effect, a message that is being viewed loses its
     (with-current-buffer gnus-article-buffer
       (when linked-headers-buffer
         (setq mu4e-linked-headers-buffer linked-headers-buffer))
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (gnus-unbuttonized-mime-types '(".*/.*"))
+            (gnus-buttonized-mime-types
+             (append (list "multipart/signed" "multipart/encrypted")
+                     gnus-buttonized-mime-types))
+            (gnus-inhibit-mime-unbuttonizing t))
         (remove-overlays (point-min)(point-max) 'mu4e-overlay t)
         (erase-buffer)
         (insert-file-contents-literally
@@ -659,7 +664,9 @@ As a side-effect, a message that is being viewed loses its
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
-    (mu4e--view-render-buffer msg)
+    (let ((gnus-inhibit-mime-unbuttonizing nil)
+          (gnus-unbuttonized-mime-types '(".*/.*")))
+      (mu4e--view-render-buffer msg))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mu4e-action-view-in-browser (msg &optional skip-headers)
@@ -708,11 +715,6 @@ determine which browser function to use."
          (charset (and charset (intern charset)))
          (mu4e--view-rendering t); Needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime nil) ;; avoid perf problems
-         (gnus-unbuttonized-mime-types '(".*/.*"))
-         (gnus-buttonized-mime-types
-            (append (list "multipart/signed" "multipart/encrypted")
-                    gnus-buttonized-mime-types))
-         (gnus-inhibit-mime-unbuttonizing t)
          (gnus-newsgroup-charset
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
