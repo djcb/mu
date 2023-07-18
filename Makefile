@@ -116,8 +116,9 @@ $(BUILDDIR_COVERAGE):
 
 covfile:=$(BUILDDIR_COVERAGE)/meson-logs/coverage.info
 
-# generate by hand, meson's built-ins are unflexible
+# generate by hand, meson's built-ins are rather inflexible
 coverage: $(BUILDDIR_COVERAGE)
+	@$(MESON) compile -C $(BUILDDIR_COVERAGE)
 	@$(MESON) test -C $(BUILDDIR_COVERAGE) $(VERBOSE)
 	$(LCOV) --capture --directory . --output-file $(covfile)
 	@$(LCOV) --remove $(covfile) '/usr/*' '*guile*' '*thirdparty*' '*/tests/*' '*mime-object*' --output $(covfile)
