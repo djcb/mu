@@ -126,7 +126,9 @@ coverage: $(BUILDDIR_COVERAGE)
 	@mkdir -p $(BUILDDIR_COVERAGE)/meson-logs/coverage
 	@$(GENHTML) $(covfile) --output-directory $(BUILDDIR_COVERAGE)/meson-logs/coverage/
 	@echo "coverage report at: file://$(BUILDDIR_COVERAGE)/meson-logs/coverage/index.html"
+
 dist: $(BUILDDIR)
+	$(MESON) compile -C $(BUILDDIR) $(VERBOSE)
 	$(MESON) dist -C $(BUILDDIR) $(VERBOSE)
 
 distclean: clean
