@@ -20,16 +20,16 @@ database.
 
 *index* understands Maildirs as defined by Daniel Bernstein for *qmail(7)*. In
 addition, it understands recursive Maildirs (Maildirs within Maildirs),
-Maildir++. It also supports VFAT-based Maildirs which use '!' or ';' as the
-separators instead of ':'.
+Maildir++. It also supports VFAT-based Maildirs which use =!= or =;= as the
+separators instead of =:=.
 
 E-mail messages which are not stored in something resembling a maildir
 leaf-directory (=cur= and =new=) are ignored, as are the cache directories for
 =notmuch= and =gnus=, and any dot-directory.
 
-Starting with mu 1.5.x, symlinks are followed, and can be spread over multiple
+Symlinks are followed, and the directories can be spread over multiple
 filesystems; however note that moving files around is much faster when multiple
-filesystems are not involved.
+filesystems are not involved. Be careful to avoid self-referential symlinks!
 
 If there is a file called =.noindex= in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
@@ -37,19 +37,20 @@ exclude certain directories from the indexing process, for example directories
 with spam-messages.
 
 If there is a file called =.noupdate= in a directory, the contents of that
-directory and all of its subdirectories will be ignored, unless we do a full
-rebuild (with *mu init*). This can be useful to speed up things you have some
-maildirs that never change. Note that you can still search for these messages,
-this only affects updating the database. =.noupdate= is ignored when you start
-indexing with an empty database (such as directly after =mu init=.
+directory and all of its subdirectories will be ignored. This can be useful to
+speed up things you have some maildirs that never change.
 
-There also the *--lazy-check* which can greatly speed up indexing; see below for
-details.
+=.noupdate= does not affect already-indexed message: you can still search for
+them. =.noupdate= is ignored when you start indexing with an empty database (such
+as directly after =mu init=.
+
+There also the option *--lazy-check* which can greatly speed up indexing; see
+below for details.
 
 The first run of *mu index* may take a few minutes if you have a lot of mail (tens
 of thousands of messages). Fortunately, such a full scan needs to be done only
 once; after that it suffices to index the changes, which goes much faster. See
-the 'Note on performance (i,ii,iii)' below for more information.
+the 'PERFORMANCE (i,ii,iii)' below for more information.
 
 The optional 'phase two' of the indexing-process is the removal of messages from
 the database for which there is no longer a corresponding file in the Maildir.
@@ -64,6 +65,7 @@ terminate immediately.
 * INDEX OPTIONS
 
 ** --lazy-check
+
 in lazy-check mode, *mu* does not consider messages for which the time-stamp
 (ctime) of the directory they reside in has not changed since the previous
 indexing run. This is much faster than the non-lazy check, but won't update
@@ -73,6 +75,7 @@ you can run *mu-index* occasionally without ~--lazy-check~, to pick up such
 messages.
 
 ** --nocleanup
+
 disable the database cleanup that *mu* does by default after indexing.
 
 #+include: "muhome.inc" :minlevel 2
