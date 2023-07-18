@@ -142,10 +142,19 @@ else
   message('CLD2 not found; no support for language detection')
 endif
 
-  dependency('cld2', required : false)
+dependency('cld2', required : false)
 
+cp=find_program('cp')
+mv=find_program('mv')
+rm=find_program('rm')
 awk=find_program(['gawk', 'awk'])
 gzip=find_program('gzip')
+
+config_h_data.set_quoted('CP_PROGRAM',   cp.full_path())
+config_h_data.set_quoted('MV_PROGRAM',   mv.full_path())
+config_h_data.set_quoted('RM_PROGRAM',   rm.full_path())
+config_h_data.set_quoted('AWK_PROGRAM',  awk.full_path())
+config_h_data.set_quoted('GZIP_PROGRAM', gzip.full_path())
 
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))

@@ -35,3 +35,66 @@ Mu::mu_cmd_remove(Mu::Store& store, const Options& opts)
 
 	return Ok();
 }
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+static void
+test_remove_ok()
+{
+	auto testhome{unwrap(make_temp_dir())};
+	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
+
+	/* create a writable copy */
+	const auto testmdir = join_paths(testhome, "test-maildir");
+	const auto testmsg  = join_paths(testmdir, "/cur/1220863042.12663_1.mindcrime!2,S");
+	auto cres = run_command({CP_PROGRAM, "-r", MU_TESTMAILDIR, testmdir});
+	assert_valid_command(cres);
+
+	{
+		auto&& store = unwrap(Store::make_new(dbpath, testmdir));
+		auto res = store.add_message(testmsg);
+		assert_valid_result(res);
+		g_assert_true(store.contains_message(testmsg));
+	}
+
+	{ // remove the same
+		auto res = run_command({MU_PROGRAM, "remove",
+				mu_format("--muhome={}", testhome),
+				testmsg});
+		assert_valid_command(res);
+	}
+
+	{
+		auto&& store = unwrap(Store::make(dbpath));
+		g_assert_false(!!store.contains_message(testmsg));
+		g_assert_cmpuint(::access(testmsg.c_str(), F_OK), ==, 0);
+	}
+
+	remove_directory(testhome);
+}
+
+
+int
+main(int argc, char* argv[]) try {
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/remove/ok", test_remove_ok);
+
+	return g_test_run();
+
+} catch (const Error& e) {
+	mu_printerrln("{}", e.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+#endif /*BUILD_TESTS*/
