@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -36,3 +36,14 @@ lib_mu_index=static_library('mu-index', [index_srcs],
 lib_mu_index_dep = declare_dependency(
   link_with: lib_mu_index
 )
+
+#
+# tests
+#
+
+test('test-scanner',
+     executable('test-scanner', 'mu-scanner.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, config_h_dep,
+                               lib_mu_utils_dep]))

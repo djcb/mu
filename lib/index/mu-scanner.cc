@@ -134,7 +134,15 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 	if (!running_)
 		return true; /* we're done */
 
-	const auto dir = opendir(path.c_str());
+	if (G_UNLIKELY(path.length() > PATH_MAX)) {
+		// note: unlikely to hit this, one case would be a
+		// self-referential symlink; that should be caught earlier,
+		// so this is just a backstop.
+		mu_warning("path is too long: {}", path);
+		return false;
+	}
+
+	const auto dir{::opendir(path.c_str())};
 	if (G_UNLIKELY(!dir)) {
 		mu_warning("failed to scan dir {}: {}", path, g_strerror(errno));
 		return false;
@@ -145,7 +153,7 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 
 	while (running_) {
 		errno = 0;
-		const auto dentry{readdir(dir)};
+		const auto dentry{::readdir(dir)};
 
 		if (G_LIKELY(dentry)) {
 			process_dentry(path, dentry, is_maildir);
@@ -169,7 +177,7 @@ Scanner::Private::start()
 {
 	const auto& path{root_dir_};
 	if (G_UNLIKELY(path.length() > PATH_MAX)) {
-		mu_warning("path too long");
+		mu_warning("path is too long: {}", path);
 		return false;
 	}
 
@@ -251,3 +259,51 @@ Scanner::is_running() const
 {
 	return priv_->running_;
 }
+
+
+
+
+#if BUILD_TESTS
+#include "mu-test-utils.hh"
+
+
+static void
+test_scan_maildir()
+{
+	allow_warnings();
+
+	size_t count{};
+	Scanner scanner{
+		MU_TESTMAILDIR,
+		[&](const std::string& fullpath, const struct stat* statbuf, auto&& htype) -> bool {
+			mu_debug("{} {}", fullpath, statbuf->st_size);
+			++count;
+			return true;
+		}};
+	g_assert_true(scanner.start());
+
+	while (scanner.is_running()) { g_usleep(1000); }
+
+	// very rudimentary test...
+	g_assert_cmpuint(count,==,23);
+}
+
+int
+main(int argc, char* argv[])
+try {
+	g_test_init(&argc, &argv, NULL);
+
+	g_test_add_func("/index/scanner/scan-maildir", test_scan_maildir);
+
+	return g_test_run();
+
+} catch (const std::runtime_error& re) {
+	mu_printerrln("caught runtime error: {}", re.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+
+
+#endif /*BUILD_TESTS*/
