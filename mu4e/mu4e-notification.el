@@ -79,7 +79,8 @@ support."
              ;; :app-icon (ignore-errors
              ;;             (image-search-load-path
              ;;              "gnus/gnus.png"))
-             :actions '("Show" "Favorite bookmark")
+             :actions '("Show" "Favorite bookmark"
+                        "default" "Favorite bookmark")
              :on-action (lambda (_ _) (mu4e-jump-to-favorite)))))
      ;; ... TBI: other notifications ...
      (t ;; last resort
