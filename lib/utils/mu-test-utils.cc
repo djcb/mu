@@ -99,6 +99,8 @@ Mu::mu_test_init(int *argc, char ***argv)
 
 	g_test_init(argc, argv, NULL);
 
+	g_test_bug_base("https://github.com/djcb/mu/issues/");
+
 	if (!g_test_verbose())
 		g_log_set_handler(
 			NULL,

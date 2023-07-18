@@ -783,8 +783,6 @@ main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-	g_test_bug_base("https://github.com/djcb/mu/issues/");
-
 	g_test_add_func("/store/query/simple", test_simple);
 	g_test_add_func("/store/query/spam-address-components",
 			test_spam_address_components);

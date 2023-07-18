@@ -144,8 +144,11 @@ endif
 
 dependency('cld2', required : false)
 
+# note: these are for the unit-tests
+
 cp=find_program('cp')
 mv=find_program('mv')
+ln=find_program('ln')
 rm=find_program('rm')
 awk=find_program(['gawk', 'awk'])
 gzip=find_program('gzip')
@@ -153,6 +156,7 @@ gzip=find_program('gzip')
 config_h_data.set_quoted('CP_PROGRAM',   cp.full_path())
 config_h_data.set_quoted('MV_PROGRAM',   mv.full_path())
 config_h_data.set_quoted('RM_PROGRAM',   rm.full_path())
+config_h_data.set_quoted('LN_PROGRAM',   ln.full_path())
 config_h_data.set_quoted('AWK_PROGRAM',  awk.full_path())
 config_h_data.set_quoted('GZIP_PROGRAM', gzip.full_path())
 

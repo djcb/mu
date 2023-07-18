@@ -38,6 +38,8 @@
 
 using namespace Mu;
 
+using namespace std::chrono_literals;
+
 static std::string MuTestMaildir  = Mu::canonicalize_filename(MU_TESTMAILDIR, "/");
 static std::string MuTestMaildir2 = Mu::canonicalize_filename(MU_TESTMAILDIR2, "/");
 
@@ -305,8 +307,6 @@ World!
 static void
 test_index_move()
 {
-	using namespace std::chrono_literals;
-
 	 const std::string msg_text =
 R"(From: Valentine Michael Smith <mike@example.com>
 To: Raul Endymion <raul@example.com>
@@ -466,6 +466,37 @@ Yes, that would be excellent.
 	 }
 }
 
+static void
+test_store_circular_symlink(void)
+{
+	allow_warnings();
+
+	g_test_bug("2517");
+
+	auto testhome{unwrap(make_temp_dir())};
+	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
+
+	/* create a writable copy */
+	const auto testmdir = join_paths(testhome, "test-maildir");
+	auto cres1 = run_command({CP_PROGRAM, "-r", MU_TESTMAILDIR, testmdir});
+	assert_valid_command(cres1);
+	// create a symink
+	auto cres2 = run_command({LN_PROGRAM, "-s", testmdir, join_paths(testmdir, "testlink")});
+	assert_valid_command(cres2);
+
+	auto&& store = unwrap(Store::make_new(dbpath, testmdir));
+	store.indexer().start({});
+	size_t n{};
+	while (store.indexer().is_running()) {
+		std::this_thread::sleep_for(100ms);
+		g_assert_cmpuint(n++,<=,25);
+	}
+	// there will be a lot of dups....
+	g_assert_false(store.empty());
+
+	remove_directory(testhome);
+}
+
 
 static void
 test_store_fail()
@@ -496,6 +527,7 @@ main(int argc, char* argv[])
 			test_message_attachments);
 	g_test_add_func("/store/index/index-move", test_index_move);
 	g_test_add_func("/store/index/move-dups", test_store_move_dups);
+	g_test_add_func("/store/index/circular-symlink", test_store_circular_symlink);
 	g_test_add_func("/store/index/fail", test_store_fail);
 
 	return g_test_run();
