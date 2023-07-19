@@ -48,6 +48,13 @@ test('test-cmd-add',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
 
+test('test-cmd-mkdir',
+     executable('test-cmd-mkdir',
+                'mu-cmd-mkdir.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
 test('test-cmd-remove',
      executable('test-cmd-remove',
                 'mu-cmd-remove.cc',

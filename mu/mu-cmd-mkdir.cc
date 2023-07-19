@@ -35,3 +35,65 @@ Mu::mu_cmd_mkdir(const Options& opts)
 
 	return Ok();
 }
+
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+static void
+test_mkdir_single()
+{
+	auto testroot{unwrap(make_temp_dir())};
+	auto testdir1{join_paths(testroot, "testdir1")};
+
+	auto res = run_command({MU_PROGRAM, "mkdir", testdir1});
+	assert_valid_command(res);
+
+	g_assert_true(check_dir(join_paths(testdir1, "cur"), true, true));
+	g_assert_true(check_dir(join_paths(testdir1, "new"), true, true));
+	g_assert_true(check_dir(join_paths(testdir1, "tmp"), true, true));
+}
+
+static void
+test_mkdir_multi()
+{
+	auto testroot{unwrap(make_temp_dir())};
+	auto testdir2{join_paths(testroot, "testdir2")};
+	auto testdir3{join_paths(testroot, "testdir3")};
+
+	auto res = run_command({MU_PROGRAM, "mkdir", testdir2, testdir3});
+	assert_valid_command(res);
+
+	g_assert_true(check_dir(join_paths(testdir2, "cur"), true, true));
+	g_assert_true(check_dir(join_paths(testdir2, "new"), true, true));
+	g_assert_true(check_dir(join_paths(testdir3, "tmp"), true, true));
+
+	g_assert_true(check_dir(join_paths(testdir3, "cur"), true, true));
+	g_assert_true(check_dir(join_paths(testdir3, "new"), true, true));
+	g_assert_true(check_dir(join_paths(testdir3, "tmp"), true, true));
+}
+
+int
+main(int argc, char* argv[]) try {
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/mkdir/single", test_mkdir_single);
+	g_test_add_func("/cmd/mkdir/multi", test_mkdir_multi);
+
+	return g_test_run();
+
+} catch (const Error& e) {
+	mu_printerrln("{}", e.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+#endif /*BUILD_TESTS*/
