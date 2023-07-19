@@ -55,7 +55,8 @@ extra_flags = [
   '-Wstack-protector',
   '-Wno-switch-enum',
   '-Wno-keyword-macro',
-  '-Wno-#warnings']
+  '-Wno-#warnings',
+  '-Wno-volatile']
 
 if get_option('buildtype') == 'debug'
   extra_flags += [
@@ -110,6 +111,8 @@ endforeach
 
 if cc.has_function('wordexp')
   config_h_data.set('HAVE_WORDEXP_H',1)
+else
+  message('no wordexp, expansion in command line options')
 endif
 
 testmaildir=join_paths(meson.current_source_dir(), 'lib', 'tests')
