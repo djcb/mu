@@ -95,7 +95,7 @@ guess_nick(const Contact& contact)
 		nicks.emplace(nick, 0);
 	else {
 		++it->second;
-		nick = format("%s%zu", nick.c_str(), ++it->second);
+		nick = mu_format("{}{}", nick, ++it->second);
 	}
 
 	return nick;

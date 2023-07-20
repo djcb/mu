@@ -41,6 +41,8 @@
 #include "mu-store.hh"
 
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
+
 #include "utils/mu-option.hh"
 #include "utils/mu-command-handler.hh"
 #include "utils/mu-readline.hh"
@@ -429,8 +431,7 @@ maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
 		throw cache_path.error();
 
 	const auto cooked_name{part.cooked_filename()};
-	const auto fname{format("%s/%s", cache_path->c_str(),
-				cooked_name.value_or("part").c_str())};
+	const auto fname{join_paths(*cache_path, cooked_name.value_or("part"))};
 
 	const auto res = part.to_file(fname, true);
 	if (!res)
@@ -528,7 +529,7 @@ Server::Private::contacts_handler(const Command& cmd)
 
 	Sexp seq;
 	seq.put_props(":contacts", contacts,
-		      ":tstamp", format("%" G_GINT64_FORMAT, g_get_monotonic_time()));
+		      ":tstamp", mu_format("{}", g_get_monotonic_time()));
 
 	/* dump the contacts cache as a giant sexp */
 	mu_debug("sending {} of {} contact(s)", n, store().contacts_cache().size());
@@ -646,8 +647,8 @@ Server::Private::find_handler(const Command& cmd)
 	if (threads)
 		qflags |= QueryFlags::Threading;
 
-	StopWatch sw{format("%s (indexing: %s)", __func__,
-			    indexer().is_running() ? "yes" :  "no")};
+	StopWatch sw{mu_format("{} (indexing: {})", __func__,
+			       indexer().is_running() ? "yes" :  "no")};
 
 	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
@@ -670,11 +671,11 @@ Server::Private::help_handler(const Command& cmd)
 	auto&& info_map{command_handler_.info_map()};
 
 	if (command.empty()) {
-		std::cout << ";; Commands are single-line s-expressions of the form\n"
-			  << ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
-			  << ";; For instance:\n;;  (help :command mkdir)\n"
-			  << ";; to get detailed information about the 'mkdir' command\n;;\n";
-		std::cout << ";; The following commands are available:\n\n";
+		mu_println(";; Commands are single-line s-expressions of the form\n"
+			   ";;   (<command-name> :param1 val1 :param2 val2 ...)\n"
+			   ";; For instance:\n;;  (help :command mkdir)\n"
+			   ";; to get more information about the 'mkdir' command\n;;\n"
+			   ";; The following commands are available:");
 	}
 
 	std::vector<std::string> names;
@@ -689,24 +690,18 @@ Server::Private::help_handler(const Command& cmd)
 		if (!command.empty() && name != command)
 			continue;
 
-		if (!command.empty())
-			std::cout << ";;   "
-				  << format("%-10s -- %s\n", name.c_str(), info.docstring.c_str());
-		else
-			std::cout << ";;  " << name.c_str() << " -- " << info.docstring.c_str()
-				  << '\n';
+		mu_println(";;  {:<12} -- {}", name, info.docstring);
+
 		if (!full)
 			continue;
 
 		for (auto&& argname : info.sorted_argnames()) {
 			const auto& arg{info.args.find(argname)};
-			std::cout << ";;        "
-				  << format("%-17s  : %-24s ",
-					    arg->first.c_str(),
-					    to_string(arg->second).c_str());
-			std::cout << "  " << arg->second.docstring << "\n";
+			mu_println(";;     {:<17} :: {:<24} -- {}",
+				   arg->first, to_string(arg->second),
+				   arg->second.docstring);
 		}
-		std::cout << ";;\n";
+		mu_println(";;");
 	}
 }
 
@@ -766,8 +761,8 @@ Server::Private::mkdir_handler(const Command& cmd)
 	 * requested */
 	if (update)
 		output_sexp(Sexp().put_props(":info", "mkdir",
-					     ":message", format("%s has been created",
-								path.c_str())));
+					     ":message",
+					     mu_format("{} has been created", path)));
 }
 
 void
@@ -914,7 +909,7 @@ Server::Private::queries_handler(const Command& cmd)
 	Sexp qresults;
 	for (auto&& q : queries) {
 		const auto count{store_.count_query(q)};
-		const auto unreadq{format("flag:unread AND (%s)", q.c_str())};
+		const auto unreadq{mu_format("flag:unread AND ({})", q)};
 		const auto unread{store_.count_query(unreadq)};
 		qresults.add(Sexp().put_props(":query", q,
 					      ":count", count,
@@ -992,8 +987,7 @@ Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 void
 Server::Private::view_handler(const Command& cmd)
 {
-	StopWatch sw{format("%s (indexing: %s)", __func__,
-			    indexer().is_running() ? "yes" :  "no")};
+	StopWatch sw{mu_format("{} (indexing: {})", __func__, indexer().is_running())};
 
 	const auto mark_as_read{cmd.boolean_arg(":mark-as-read")};
 	/* for now, do _not_ rename, as it seems to confuse mbsync */

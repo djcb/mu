@@ -38,7 +38,7 @@ save_part(const Message::Part& part, size_t idx, const Options& opts)
 	 * cooking */
 	const auto path{targetdir +
 		part.cooked_filename(opts.extract.uncooked)
-		.value_or(format("part-%zu", idx))};
+		.value_or(mu_format("part-{}", idx))};
 
 	if (auto&& res{part.to_file(path, opts.extract.overwrite)}; !res)
 		return Err(res.error());

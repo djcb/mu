@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,6 +21,7 @@
 #include "mu-mime-object.hh"
 #include "gmime/gmime-message.h"
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include <mutex>
 #include <regex>
 #include <fcntl.h>
@@ -237,7 +238,7 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 {
 	/* setup clean environment for testing; inspired by gmime */
 
-	g_setenv ("GNUPGHOME", format("%s/.gnupg", testpath.c_str()).c_str(), 1);
+	g_setenv ("GNUPGHOME", join_paths(testpath, ".gnupg").c_str(), 1);
 
 	/* disable environment variables that gpg-agent uses for pinentry */
 	g_unsetenv ("DBUS_SESSION_BUS_ADDRESS");

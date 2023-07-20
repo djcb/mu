@@ -359,7 +359,7 @@ to_string(const ThreadPath& tpath, size_t digits)
 
 	bool first{true};
 	for (auto&& segm : tpath) {
-		str += format("%s%0*x", first ? "" : ":", (int)digits, segm);
+		str += mu_format("{}{:0{}x}", first ? "" : ":", segm, digits);
 		first = false;
 	}
 

@@ -257,8 +257,8 @@ Query::run(const std::string& expr, Field::Id sortfield_id,
 	g_return_val_if_fail(none_of(qflags & QueryFlags::Leader),
 			     Err(Error::Code::InvalidArgument, "cannot pass Leader flag"));
 
-	StopWatch sw{format(
-	    "ran query '%s'; related: %s; threads: %s; max-size: %zu", expr.c_str(),
+	StopWatch sw{mu_format(
+	    "ran query '{}'; related: {}; threads: {}; max-size: {}", expr,
 	    any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
 	    any_of(qflags & QueryFlags::Threading) ? "yes" : "no", maxnum)};
 
