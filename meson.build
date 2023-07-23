@@ -56,6 +56,7 @@ extra_flags = [
   '-Wno-switch-enum',
   '-Wno-keyword-macro',
   '-Wno-volatile',
+  '-Wno-deprecated-volatile',
   '-Wno-#warnings',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
