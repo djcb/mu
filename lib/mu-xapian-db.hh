@@ -76,6 +76,8 @@ template <typename Func> auto
 xapian_try_result(Func&& func) noexcept -> std::decay_t<decltype(func())>
 try {
 	return func();
+} catch (const Xapian::DatabaseLockError& dlerr) {
+	return Err(Error::Code::StoreLock, "database locked");
 } catch (const Xapian::Error& xerr) {
 	return Err(Error::Code::Xapian, "{}", xerr.get_error_string());
 } catch (const std::runtime_error& re) {

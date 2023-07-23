@@ -63,17 +63,10 @@ public:
 	 * @return A store or an error.
 	 */
 	static Result<Store> make(const std::string& path,
-				  Options opts=Options::None) noexcept try {
-		return Ok(Store{path, opts});
-
-	} catch (const Mu::Error& me) {
-		return Err(me);
+				  Options opts=Options::None) noexcept {
+		return xapian_try_result(
+			[&]{return Ok(Store{path, opts});});
 	}
- /* LCOV_EXCL_START */
-	catch (...) {
-		return Err(Error::Code::Internal, "failed to create store");
-	}
- /* LCOV_EXCL_STOP */
 
 	/**
 	 * Construct a store for a not-yet-existing document database
@@ -86,18 +79,10 @@ public:
 	 */
 	static Result<Store> make_new(const std::string& path,
 				      const std::string& root_maildir,
-				      Option<const Config&> conf={}) noexcept try {
-		return Ok(Store(path, root_maildir, conf));
-
-	} catch (const Mu::Error& me) {
-		return Err(me);
+				      Option<const Config&> conf={}) noexcept {
+		return xapian_try_result(
+			[&]{return Ok(Store(path, root_maildir, conf));});
 	}
- /* LCOV_EXCL_START */
-	catch (...) {
-		return Err(Error::Code::Internal, "failed to create new store");
-	}
- /* LCOV_EXCL_STOP */
-
 
 	/**
 	 * Move CTOR
