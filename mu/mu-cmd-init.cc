@@ -64,10 +64,15 @@ Mu::mu_cmd_init(const Options& opts)
 		return Err(store.error());
 
 	if (!opts.quiet) {
-		mu_cmd_info(*store, opts);
-		std::cout << "database "
-			  << (opts.init.reinit ? "reinitialized" : "created")
-			  << "; use the 'index' command to fill/update it.\n";
+
+		mu_println("mu has been {} with the following properties:",
+			   opts.init.reinit ? "reinitialized" : "created");
+		// mildly hacky
+		Options opts_copy{opts};
+		opts_copy.info.topic = "store";
+		mu_cmd_info(*store, opts_copy);
+
+		mu_println("Database is empty. You can use 'mu index' to fill it.");
 	}
 
 	return Ok();
