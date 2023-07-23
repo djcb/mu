@@ -535,8 +535,7 @@ MimePart::to_string() const noexcept
 	if (bytes < 0)
 		return Nothing;
 
-	buffer.data()[bytes]='\0';
-	buffer.resize(buflen);
+	buffer.resize(bytes + 1);
 
 	return buffer;
 }

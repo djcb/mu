@@ -65,12 +65,8 @@ struct Field {
 		Tags,		/**< Message Tags */
 		ThreadId,	/**< Thread Id */
 		To,		/**< To: recipient */
-		/*
-		 * <private>
-		 */
-		XBodyHtml,	/**< HTML Body */
-
-		_count_ /**< Number of FieldIds */
+		//
+		_count_         /**< Number of Ids */
 	};
 
 	/**
@@ -457,17 +453,6 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
 		Field::Flag::IndexableTerm,
-	    },
-
-	    /* internal */
-	    {
-		Field::Id::XBodyHtml,
-		Field::Type::String,
-		"htmlbody", {},
-		"Message html body",
-		{},
-		{},
-		Field::Flag::Internal
 	    },
 	}};
 
