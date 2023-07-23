@@ -15,12 +15,20 @@ mu [common options] view [options] [<file> ...]
 message files and does =not= require the message to be indexed in the database.
 
 The command shows some common headers (From:, To:, Cc:, Bcc:, Subject: and
-Date:), the list of attachments and the plain-text body of the message (if any).
+Date:), the list of attachments and either the plain-text or html body of the
+message (if any), or its s-expression representation.
 
-If no message file is provided, the command expects the message on
+If no message file is provided, the command reads the message from
 standard-input.
 
 * VIEW OPTIONS
+
+** --format,-o  = <format>
+use the given output format, one of:
+
+- ~plain~ - use the plain-text body; this is the default
+- ~html~ - use the HTML body
+- ~sexp~ - show the S-expression representation of the message
 
 ** --summary-len=<number>
 instead of displaying the full message, output a summary based upon the first

@@ -85,29 +85,42 @@ print_field(const std::string& field, const std::string& val, bool color)
 static void
 body_or_summary(const Message& message, const Options& opts)
 {
-	gboolean    color;
+	const auto color{!opts.nocolor};
+	using Format = Options::View::Format;
 
-	color = !opts.nocolor;
+	std::string body, btype;
+	switch (opts.view.format) {
+	case Format::Plain:
+		btype = "plain text";
+		body = message.body_text().value_or("");
+		break;
+	case Format::Html:
+		btype = "html";
+		body = message.body_html().value_or("");
+		break;
+	default:
+		throw std::range_error("unsupported format"); // bug
+	}
 
-	const auto body{message.body_text()};
-	if (!body || body->empty()) {
+	if (body.empty()) {
 		if (any_of(message.flags() & Flags::Encrypted)) {
 			color_maybe(MU_COLOR_CYAN);
-			mu_println("[No text body found; message has encrypted parts]");
+			mu_println("[No {} body found; message does have encrypted parts]",
+				   btype);
 		} else {
 			color_maybe(MU_COLOR_MAGENTA);
-			mu_println("[No text body found]");
+			mu_println("[No {} body found]", btype);
 		}
 		color_maybe(MU_COLOR_DEFAULT);
 		return;
 	}
 
 	if (opts.view.summary_len) {
-		const auto summ{summarize(body->c_str(), *opts.view.summary_len)};
+		const auto summ{summarize(body, *opts.view.summary_len)};
 		print_field("Summary", summ, color);
 	} else {
-		mu_print_encoded("{}", *body);
-		if (!g_str_has_suffix(body->c_str(), "\n"))
+		mu_print_encoded("{}", body);
+		if (!g_str_has_suffix(body.c_str(), "\n"))
 			mu_println("");
 	}
 }
@@ -131,6 +144,8 @@ view_msg_plain(const Message& message, const Options& opts)
 	print_field("Tags", join(message.tags(), ", "), color);
 
 	print_field("Attachments",get_attach_str(message, opts), color);
+
+	mu_println("");
 	body_or_summary(message, opts);
 
 	return Ok();
@@ -143,7 +158,9 @@ handle_msg(const Message& message, const Options& opts)
 
 	switch (opts.view.format) {
 	case Format::Plain:
+	case Format::Html:
 		return view_msg_plain(message, opts);
+
 	case Format::Sexp:
 		return view_msg_sexp(message, opts);
 	default:
@@ -173,7 +190,8 @@ Mu::mu_cmd_view(const Options& opts)
 		const auto msgtxt = read_from_stdin();
 		if (!msgtxt)
 			return Err(msgtxt.error());
-		auto message = Message::make_from_text(*msgtxt,{}, message_options(opts.view));
+		auto message = Message::make_from_text(*msgtxt,{},
+						       message_options(opts.view));
 		if (!message)
 			return Err(message.error());
 		else

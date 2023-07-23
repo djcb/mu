@@ -237,7 +237,7 @@ struct Options {
 		bool	terminate;			/**< add \f between msgs in view */
 		OptSize summary_len;			/**< max # of lines for summary */
 
-		enum struct Format { Plain,  Sexp };
+		enum struct Format { Plain,  Sexp, Html };
 		Format format;				/**< output format*/
 
 		StringVec files;			/**< Message file(s) */

@@ -497,9 +497,12 @@ static void
 sub_view(CLI::App& sub, Options& opts)
 {
 	using Format = Options::View::Format;
-	static constexpr InfoEnum<Format, 2> FormatInfos = {{
+	static constexpr InfoEnum<Format, 3> FormatInfos = {{
 			{ Format::Plain,
 			  {"plain", "Plain output"}
+			},
+			{ Format::Html,
+			  {"html", "Plain output with HTML body"}
 			},
 			{ Format::Sexp,
 			  {"sexp", "S-expressions"}
