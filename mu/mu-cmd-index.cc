@@ -26,7 +26,7 @@
 
 #include <errno.h>
 #include <string.h>
-#include <stdio.h>
+#include <cstdio>
 #include <signal.h>
 #include <unistd.h>
 
@@ -68,30 +68,34 @@ print_stats(const Indexer::Progress& stats, bool color)
 	MaybeAnsi col{color};
 	using Color = MaybeAnsi::Color;
 
-	std::cout << col.fg(Color::Yellow) << kars[++i % 4] << col.reset() << " indexing messages; "
-		  << "checked: " << col.fg(Color::Green) << stats.checked << col.reset()
-		  << "; updated/new: " << col.fg(Color::Green) << stats.updated << col.reset()
-		  << "; cleaned-up: " << col.fg(Color::Green) << stats.removed << col.reset();
+	mu_print("{}{}{} indexing messages; "
+		 "checked: {}{}{}; "
+		 "updated/new: {}{}{}; "
+		 "cleaned-up: {}{}{}",
+		 col.fg(Color::Yellow), kars[++i % 4], col.reset(),
+		 col.fg(Color::Green), static_cast<size_t>(stats.checked), col.reset(),
+		 col.fg(Color::Green), static_cast<size_t>(stats.updated), col.reset(),
+		 col.fg(Color::Green), static_cast<size_t>(stats.removed), col.reset());
 }
 
 Result<void>
 Mu::mu_cmd_index(Store& store, const Options& opts)
 {
 	const auto mdir{store.root_maildir()};
-	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0))
+	if (G_UNLIKELY(::access(mdir.c_str(), R_OK) != 0))
 		return Err(Error::Code::File, "'{}' is not readable: {}",
-			   mdir.c_str(), g_strerror(errno));
+			   mdir, g_strerror(errno));
 
 	MaybeAnsi col{!opts.nocolor};
 	using Color = MaybeAnsi::Color;
 	if (!opts.quiet) {
 		if (opts.index.lazycheck)
-			std::cout << "lazily ";
+			mu_print("lazily ");
 
-		std::cout << "indexing maildir " << col.fg(Color::Green)
-			  << store.root_maildir() << col.reset() << " -> store "
-			  << col.fg(Color::Green) << store.path() << col.reset()
-			  << std::endl;
+		mu_println("indexing maildir {}{}{} -> "
+			   "store {}{}{}",
+			   col.fg(Color::Green), store.root_maildir(), col.reset(),
+			   col.fg(Color::Blue), store.path(), col.reset());
 	}
 
 	Mu::Indexer::Config conf{};
@@ -108,11 +112,11 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 		if (!opts.quiet)
 			print_stats(indexer.progress(), !opts.nocolor);
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		if (!opts.quiet) {
-			std::cout << "\r";
-			std::cout.flush();
+			mu_print("\r");
+			::fflush({});
 		}
 	}
 
@@ -120,7 +124,8 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 
 	if (!opts.quiet) {
 		print_stats(store.indexer().progress(), !opts.nocolor);
-		std::cout << std::endl;
+		mu_print("\n");
+		::fflush({});
 	}
 
 	return Ok();

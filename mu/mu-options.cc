@@ -661,7 +661,7 @@ static Result<Options>
 cmd_help(const CLI::App& app, Options& opts)
 {
 	if (opts.help.command.empty()) {
-		std::cout << app.help() << "\n";
+		mu_println("{}", app.help());
 		return Ok(std::move(opts));
 	}
 
@@ -718,12 +718,12 @@ License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 )");
-	 app.set_version_flag("-V,--version", PACKAGE_VERSION);
-	 app.set_help_flag("-h,--help", "Show help informmation");
-	 app.set_help_all_flag("--help-all");
-	 app.require_subcommand(0, 1);
+	app.set_version_flag("-V,--version", PACKAGE_VERSION);
+	app.set_help_flag("-h,--help", "Show help informmation");
+	app.set_help_all_flag("--help-all");
+	app.require_subcommand(0, 1);
 
-	 add_global_options(app, opts);
+	add_global_options(app, opts);
 
 	/*
 	 * subcommands
@@ -731,7 +731,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	 * we keep around a map of the subcommand pointers, so we can
 	 * easily find the chosen one (if any) later.
 	 */
-	 for (auto&& cmdinfo: SubCommandInfos) {
+	for (auto&& cmdinfo: SubCommandInfos) {
 		//const auto cmdtype = cmdinfo.first;
 		const auto name{std::string{cmdinfo.second.name}};
 		const auto help{std::string{cmdinfo.second.help}};
@@ -756,12 +756,12 @@ There is NO WARRANTY, to the extent permitted by law.
 					opts.muhome, "Specify alternative mu directory")
 				->envname("MUHOME")
 				->type_name("<dir>");
-	 }
+	}
 
-	 /* add scripts (if supported) as semi-subscommands as well */
-	 const auto scripts = add_scripts(app, opts);
+	/* add scripts (if supported) as semi-subscommands as well */
+	const auto scripts = add_scripts(app, opts);
 
-	 try {
+	try {
 		app.parse(argc, argv);
 
 		// find the chosen sub command,  if any.
@@ -789,11 +789,11 @@ There is NO WARRANTY, to the extent permitted by law.
 			return cmd_help(app, opts);
 
 	} catch (const CLI::CallForHelp& cfh) {
-		std::cout << app.help() << std::flush;
+		mu_println("{}", app.help());
 	} catch (const CLI::CallForAllHelp& cfah) {
-		std::cout << app.help("", CLI::AppFormatMode::All) << std::flush;
+		mu_println("{}", app.help("", CLI::AppFormatMode::All));
 	} catch (const CLI::CallForVersion&) {
-		std::cout << "version " << PACKAGE_VERSION << "\n";
+		mu_println("version {}", PACKAGE_VERSION);
 	} catch (const CLI::ParseError& pe) {
 		return Err(Error::Code::InvalidArgument, "{}", pe.what());
 	}  catch (...) {
