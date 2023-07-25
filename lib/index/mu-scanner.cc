@@ -39,17 +39,30 @@
 using namespace Mu;
 
 struct Scanner::Private {
-	Private(const std::string& root_dir, Scanner::Handler handler)
-	    : root_dir_{root_dir}, handler_{handler}
-	{
+	Private(const std::string& root_dir, Scanner::Handler handler):
+		root_dir_{root_dir}, handler_{handler} {
+		if (root_dir_.length() > PATH_MAX)
+			throw Mu::Error{Error::Code::InvalidArgument,
+				"path is too long"};
 		if (!handler_)
-			throw Mu::Error{Error::Code::Internal, "missing handler"};
+			throw Mu::Error{Error::Code::InvalidArgument,
+				"missing handler"};
 	}
 	~Private() { stop(); }
 
-	bool start();
-	bool stop();
-	bool process_dentry(const std::string& path, struct dirent* dentry, bool is_maildir);
+	Result<void> start();
+	void stop();
+
+	struct dentry_t {
+		dentry_t(const struct dirent *dentry):
+			d_ino{dentry->d_ino},
+			d_name{static_cast<const char*>(dentry->d_name)} {}
+		ino_t		d_ino;
+		std::string	d_name;
+	};
+
+	bool process_dentry(const std::string& path, const dentry_t& dentry,
+			    bool is_maildir);
 	bool process_dir(const std::string& path, bool is_maildir);
 
 	const std::string      root_dir_;
@@ -88,10 +101,10 @@ do_ignore(const char *d_name)
 }
 
 bool
-Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
+Scanner::Private::process_dentry(const std::string& path, const dentry_t& dentry,
 				 bool is_maildir)
 {
-	const auto d_name{dentry->d_name};
+	const auto d_name{dentry.d_name.c_str()};
 
 	if (is_dotdir(d_name) || std::strcmp(d_name, "tmp") == 0)
 		return true; // ignore.
@@ -111,13 +124,14 @@ Scanner::Private::process_dentry(const std::string& path, struct dirent *dentry,
 		const auto new_cur =
 		    std::strcmp(d_name, "cur") == 0 || std::strcmp(d_name, "new") == 0;
 		const auto htype =
-		    new_cur ? Scanner::HandleType::EnterNewCur : Scanner::HandleType::EnterDir;
+		    new_cur ?
+			Scanner::HandleType::EnterNewCur :
+			Scanner::HandleType::EnterDir;
 		const auto res = handler_(fullpath, &statbuf, htype);
 		if (!res)
 			return true; // skip
 
 		process_dir(fullpath, new_cur);
-
 		return handler_(fullpath, &statbuf, Scanner::HandleType::LeaveDir);
 
 	} else if (S_ISREG(statbuf.st_mode) && is_maildir)
@@ -135,9 +149,8 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 		return true; /* we're done */
 
 	if (G_UNLIKELY(path.length() > PATH_MAX)) {
-		// note: unlikely to hit this, one case would be a
-		// self-referential symlink; that should be caught earlier,
-		// so this is just a backstop.
+		// note: unlikely to hit this, one case would be a self-referential
+		// symlink; that should be caught earlier, so this is just a backstop.
 		mu_warning("path is too long: {}", path);
 		return false;
 	}
@@ -148,63 +161,57 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 		return false;
 	}
 
-	// TODO: sort dentries by inode order, which makes things faster for extfs.
-	// see mu-maildir.c
-
+	std::vector<dentry_t> dir_entries;
 	while (running_) {
 		errno = 0;
-		const auto dentry{::readdir(dir)};
-
-		if (G_LIKELY(dentry)) {
-			process_dentry(path, dentry, is_maildir);
+		if (const auto& dentry{::readdir(dir)}; dentry) {
+			dir_entries.emplace_back(dentry);
 			continue;
-		}
-
-		if (errno != 0) {
+		} else if (errno != 0) {
 			mu_warning("failed to read {}: {}", path, g_strerror(errno));
 			continue;
 		}
 
 		break;
 	}
-	closedir(dir);
+	::closedir(dir);
+
+	// sort by i-node; much faster on rotational (HDDs) devices and on SSDs
+	// sort is quick enough to not matter much
+	std::sort(dir_entries.begin(), dir_entries.end(),
+		  [](auto&& d1, auto&& d2){ return d1.d_ino < d2.d_ino; });
+
+	// now process...
+	for (auto&& dentry: dir_entries)
+		process_dentry(path, dentry, is_maildir);
 
 	return true;
 }
 
-bool
+Result<void>
 Scanner::Private::start()
 {
-	const auto& path{root_dir_};
-	if (G_UNLIKELY(path.length() > PATH_MAX)) {
-		mu_warning("path is too long: {}", path);
-		return false;
-	}
-
 	const auto mode{F_OK | R_OK};
-	if (G_UNLIKELY(access(path.c_str(), mode) != 0)) {
-		mu_warning("'{}' is not readable: {}", path, g_strerror(errno));
-		return false;
-	}
+	if (G_UNLIKELY(::access(root_dir_.c_str(), mode) != 0))
+		return Err(Error::Code::File,
+			   "'{}' is not readable: {}", root_dir_,
+			   g_strerror(errno));
 
 	struct stat statbuf {};
-	if (G_UNLIKELY(stat(path.c_str(), &statbuf) != 0)) {
-		mu_warning("'{}' is not stat'able: {}", path, g_strerror(errno));
-		return false;
-	}
+	if (G_UNLIKELY(::stat(root_dir_.c_str(), &statbuf) != 0))
+		return Err(Error::Code::File,
+			   "'{}' is not stat'able: {}",
+			   root_dir_, g_strerror(errno));
 
-	if (G_UNLIKELY(!S_ISDIR(statbuf.st_mode))) {
-		mu_warning("'{}' is not a directory", path);
-		return false;
-	}
+	if (G_UNLIKELY(!S_ISDIR(statbuf.st_mode)))
+		return Err(Error::Code::File,
+			   "'{}' is not a directory", root_dir_);
 
 	running_ = true;
 	mu_debug("starting scan @ {}", root_dir_);
 
-	auto       basename{g_path_get_basename(root_dir_.c_str())};
-	const auto is_maildir =
-	    (g_strcmp0(basename, "cur") == 0 || g_strcmp0(basename, "new") == 0);
-	g_free(basename);
+	auto basename{to_string_gchar(g_path_get_basename(root_dir_.c_str()))};
+	const auto is_maildir = basename == "cur" || basename == "new";
 
 	const auto start{std::chrono::steady_clock::now()};
 	process_dir(root_dir_, is_maildir);
@@ -212,19 +219,16 @@ Scanner::Private::start()
 	mu_debug("finished scan of {} in {} ms", root_dir_, to_ms(elapsed));
 	running_ = false;
 
-	return true;
+	return Ok();
 }
 
-bool
+void
 Scanner::Private::stop()
 {
-	if (!running_)
-		return true; // nothing to do
-
-	mu_debug("stopping scan");
-	running_ = false;
-
-	return true;
+	if (running_) {
+		mu_debug("stopping scan");
+		running_ = false;
+	}
 }
 
 Scanner::Scanner(const std::string& root_dir, Scanner::Handler handler)
@@ -234,24 +238,23 @@ Scanner::Scanner(const std::string& root_dir, Scanner::Handler handler)
 
 Scanner::~Scanner() = default;
 
-bool
+Result<void>
 Scanner::start()
 {
 	if (priv_->running_)
-		return true; // nothing to do
+		return Ok(); // nothing to do
 
-	const auto res  = priv_->start(); /* blocks */
+	auto res  = priv_->start(); /* blocks */
 	priv_->running_ = false;
 
 	return res;
 }
 
-bool
+void
 Scanner::stop()
 {
 	std::lock_guard l(priv_->lock_);
-
-	return priv_->stop();
+	priv_->stop();
 }
 
 bool

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <memory>
+#include <utils/mu-result.hh>
 
 #include <dirent.h>
 #include <sys/types.h>
@@ -57,7 +58,6 @@ class Scanner {
 	 *
 	 * If handler is a directory
 	 *
-	 *
 	 * @param root_dir root dir to start scanning
 	 * @param handler handler function for some direntry
 	 */
@@ -72,16 +72,14 @@ class Scanner {
 	 * Start the scan; this is a blocking call than runs until
 	 * finished or (from another thread) stop() is called.
 	 *
-	 * @return true if starting worked; false otherwise
+	 * @return Ok if starting worked; an Error otherwise
 	 */
-	bool start();
+	Result<void> start();
 
 	/**
-	 * Stop the scan
-	 *
-	 * @return true if stopping worked; false otherwi%sse
+	 * Request stopping the scan if it's running; otherwise do nothing
 	 */
-	bool stop();
+	void stop();
 
 	/**
 	 * Is a scan currently running?
@@ -90,7 +88,7 @@ class Scanner {
 	 */
 	bool is_running() const;
 
-	private:
+private:
 	struct Private;
 	std::unique_ptr<Private> priv_;
 };
