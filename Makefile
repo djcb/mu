@@ -15,18 +15,19 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # Makefile with some useful targets for meson/ninja
-V                 ?= 0
+V                  ?= 0
 
-BUILDDIR          ?= $(CURDIR)/build
-BUILDDIR_COVERAGE ?= $(CURDIR)/build-coverage
-BUILDDIR_VALGRIND ?= $(CURDIR)/build-valgrind
+BUILDDIR           ?= $(CURDIR)/build
+BUILDDIR_COVERAGE  ?= $(CURDIR)/build-coverage
+BUILDDIR_VALGRIND  ?= $(CURDIR)/build-valgrind
+BUILDDIR_BENCHMARK ?= $(CURDIR)/build-benchmark
 
-GENHTML           ?= genhtml
-LCOV              ?= lcov
-MAKEINFO          ?= makeinfo
-MESON             ?= meson
-NINJA             ?= ninja
-VALGRIND          ?= valgrind
+GENHTML            ?= genhtml
+LCOV               ?= lcov
+MAKEINFO           ?= makeinfo
+MESON              ?= meson
+NINJA              ?= ninja
+VALGRIND           ?= valgrind
 
 ifneq ($(V),0)
   VERBOSE=--verbose
@@ -108,8 +109,22 @@ test-helgrind: $(BUILDDIR_VALGRIND)
 
 check-helgrind: test-helgrind
 
-benchmark: $(BUILDDIR)
-	$(NINJA) -C $(BUILDDIR) benchmark
+#
+# benchmarking
+#
+
+$(BUILDDIR_BENCHMARK):
+	@$(MESON) setup --buildtype=release $(BUILDDIR_BENCHMARK)
+
+build-benchmark: $(BUILDDIR_BENCHMARK)
+	@$(MESON) compile -C $(BUILDDIR_BENCHMARK) $(VERBOSE)
+
+benchmark: $(BUILDDIR_BENCHMARK)
+	$(NINJA) -C $(BUILDDIR_BENCHMARK) benchmark
+
+#
+# coverage
+#
 
 $(BUILDDIR_COVERAGE):
 	$(MESON) setup -Db_coverage=true --buildtype=debug $(BUILDDIR_COVERAGE)
@@ -126,6 +141,11 @@ coverage: $(BUILDDIR_COVERAGE)
 	@mkdir -p $(BUILDDIR_COVERAGE)/meson-logs/coverage
 	@$(GENHTML) $(covfile) --output-directory $(BUILDDIR_COVERAGE)/meson-logs/coverage/
 	@echo "coverage report at: file://$(BUILDDIR_COVERAGE)/meson-logs/coverage/index.html"
+
+
+#
+# misc
+#
 
 dist: $(BUILDDIR)
 	$(MESON) compile -C $(BUILDDIR) $(VERBOSE)

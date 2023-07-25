@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -494,7 +494,9 @@ int
 main(int argc, char *argv[])
 {
 	size_t num_maildirs{}, num_messages{};
-	g_test_init(&argc, &argv, nullptr);
+
+	mu_test_init(&argc, &argv);
+
 	if (g_test_perf()) {
 		num_maildirs = 20;
 		num_messages = 5000;
