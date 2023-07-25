@@ -186,30 +186,32 @@ public:
 	std::string parse_query(const std::string& expr, bool xapian) const;
 
 	/**
-	 * Add a message to the store. When planning to write many messages,
-	 * it's much faster to do so in a transaction. If so, set
+	 * Add or update a message to the store. When planning to write many
+	 * messages, it's much faster to do so in a transaction. If so, set
 	 * @in_transaction to true. When done with adding messages, call
 	 * commit().
 	 *
-	 * @param path the message path.
-	 * @param whether to bundle up to batch_size changes in a transaction
-	 *
-	 * @return the doc id of the added message or an error.
-	 */
-	Result<Id> add_message(const std::string& path, bool use_transaction = false);
-
-	/**
-	 * Add a message to the store. When planning to write many messages,
-	 * it's much faster to do so in a transaction. If so, set
-	 * @in_transaction to true. When done with adding messages, call
-	 * commit().
+	 * Optimization: If you are sure the message (i.e., a message with the
+	 * given file-system path) does not yet exist in the database, ie., when
+	 * doing the initial indexing, set @p is_new to true since we then don't
+	 * have to check for the existing message.
 	 *
 	 * @param msg a message
-	 * @param whether to bundle up to batch_size changes in a transaction
+	 * @param use_transaction whether to bundle up to batch_size
+	 * changes in a transaction
+	 * @param is_new whether this is a completely new message
 	 *
 	 * @return the doc id of the added message or an error.
 	 */
-	Result<Id> add_message(Message& msg, bool use_transaction = false);
+	Result<Id> add_message(Message& msg, bool use_transaction = false,
+			       bool is_new = false);
+	Result<Id> add_message(const std::string& path, bool use_transaction = false,
+			       bool is_new = false) {
+		if (auto msg{Message::make_from_path(path)}; !msg)
+			return Err(msg.error());
+		else
+			return add_message(msg.value(), use_transaction, is_new);
+	}
 
 	/**
 	 * Update a message in the store.
@@ -219,7 +221,6 @@ public:
 	 *
 	 * @return Ok() or an error.
 	 */
-	Result<Store::Id> update_message(Message& msg, Id id);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
@@ -414,7 +415,7 @@ public:
 	 *
 	 * @return true or false
 	 */
-	size_t empty() const { return xapian_db().empty(); }
+	bool empty() const { return xapian_db().empty(); }
 
 	/*
 	 * _almost_ private

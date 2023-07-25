@@ -79,14 +79,18 @@ private:
 struct Indexer::Private {
 	Private(Mu::Store& store)
 	    : store_{store}, scanner_{store_.root_maildir(),
-				      [this](auto&& path,
-					     auto&& statbuf, auto&& info) {
-					      return handler(path, statbuf, info);
-				      }},
-	      max_message_size_{store_.config().get<Mu::Config::Id::MaxMessageSize>()} {
-		mu_message("created indexer for {} -> {} (batch-size: {})",
-			  store.root_maildir(), store.path(),
-			   store.config().get<Mu::Config::Id::BatchSize>());
+		[this](auto&& path,
+		       auto&& statbuf, auto&& info) {
+			return handler(path, statbuf, info);
+		}},
+	      max_message_size_{store_.config().get<Mu::Config::Id::MaxMessageSize>()},
+	      was_empty_{store.empty()} {
+
+		mu_message("created indexer for {} -> "
+			   "{} (batch-size: {}; was-empty: {})",
+			   store.root_maildir(), store.path(),
+			   store.config().get<Mu::Config::Id::BatchSize>(),
+			   was_empty_);
 	}
 
 	~Private() {
@@ -127,11 +131,11 @@ struct Indexer::Private {
 
 	AsyncQueue<WorkItem> todos_;
 
-	Progress   progress_;
-	IndexState state_;
+	Progress   progress_{};
+	IndexState state_{};
 	std::mutex lock_, w_lock_;
-
-	std::atomic<time_t> completed_;
+	std::atomic<time_t> completed_{};
+	bool was_empty_{};
 };
 
 bool
@@ -240,7 +244,12 @@ Indexer::Private::add_message(const std::string& path)
 		mu_warning("failed to create message from {}: {}", path, msg.error().what());
 		return false;
 	}
-	auto res = store_.add_message(msg.value(), true /*use-transaction*/);
+	// if the store was empty, we know that the message is completely new
+	// and can use the fast path (Xapians 'add_document' rather tahn
+	// 'replace_document)
+	auto res = store_.add_message(msg.value(),
+				      true /*use-transaction*/,
+				      was_empty_);
 	if (!res) {
 		mu_warning("failed to add message @ {}: {}", path, res.error().what());
 		return false;

@@ -133,6 +133,7 @@ struct Store::Private {
 	}
 
 	Option<Message> find_message_unlocked(Store::Id docid) const;
+	Result<Store::Id> add_message_unlocked(Message& msg);
 	Result<Store::Id> update_message_unlocked(Message& msg, Store::Id docid);
 	Result<Store::Id> update_message_unlocked(Message& msg, const std::string& old_path);
 	Result<Message> move_message_unlocked(Message&& msg,
@@ -150,10 +151,22 @@ struct Store::Private {
 	std::mutex lock_;
 };
 
-Result<Store::Id>Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
+
+Result<Store::Id>
+Store::Private::add_message_unlocked(Message& msg)
+{
+	auto docid{xapian_db_.add_document(msg.document().xapian_document())};
+	mu_debug("added message @ {}; docid = {}", msg.path(), docid);
+
+	return Ok(std::move(docid));
+}
+
+
+Result<Store::Id>
+Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
 {
 	xapian_db_.replace_document(docid, msg.document().xapian_document());
-	g_debug("updated message @ %s; docid = %u", msg.path().c_str(), docid);
+	mu_debug("updated message @ {}; docid = {}", msg.path(), docid);
 
 	return Ok(std::move(docid));
 }
@@ -288,26 +301,15 @@ Store::indexer()
 }
 
 Result<Store::Id>
-Store::add_message(const std::string& path, bool use_transaction)
+Store::add_message(Message& msg, bool use_transaction, bool is_new)
 {
-	if (auto msg{Message::make_from_path(path)}; !msg)
-		return Err(msg.error());
-	else
-		return add_message(msg.value(), use_transaction);
-}
-
-Result<Store::Id>
-Store::add_message(Message& msg, bool use_transaction)
-{
-	std::lock_guard guard{priv_->lock_};
-
 	const auto mdir{maildir_from_path(msg.path(),
 					  root_maildir())};
 	if (!mdir)
 		return Err(mdir.error());
-
 	if (auto&& res = msg.set_maildir(mdir.value()); !res)
 		return Err(res.error());
+
 	/* add contacts from this message to cache; this cache
 	 * also determines whether those contacts are _personal_, i.e. match
 	 * our personal addresses.
@@ -320,37 +322,34 @@ Store::add_message(Message& msg, bool use_transaction)
 	if (is_personal)
 		msg.set_flags(msg.flags() | Flags::Personal);
 
+	std::lock_guard guard{priv_->lock_};
 	if (use_transaction)
 		priv_->transaction_inc();
 
-	auto res = priv_->update_message_unlocked(msg, msg.path());
+	auto&& res = is_new ?
+		priv_->add_message_unlocked(msg) :
+		priv_->update_message_unlocked(msg, msg.path());
 	if (!res)
 		return Err(res.error());
 
 	if (use_transaction) /* commit if batch is full */
 		priv_->transaction_maybe_commit();
 
-	g_debug("added %smessage @ %s; docid = %u",
-		is_personal ? "personal " : "", msg.path().c_str(), *res);
+	mu_debug("added {}message @ {}; docid = {}",
+		 is_personal ? "personal " : "", msg.path(), *res);
 
 	return res;
-}
-
-Result<Store::Id>
-Store::update_message(Message& msg, Store::Id docid)
-{
-	std::lock_guard guard{priv_->lock_};
-
-	return priv_->update_message_unlocked(msg, docid);
 }
 
 bool
 Store::remove_message(const std::string& path)
 {
-	std::lock_guard guard{priv_->lock_};
 	const auto term{field_from_id(Field::Id::Path).xapian_term(path)};
+
+	std::lock_guard guard{priv_->lock_};
+
 	xapian_db().delete_document(term);
-	g_debug("deleted message @ %s from store", path.c_str());
+	mu_debug("deleted message @ {} from store", path);
 	return true;
 }
 
@@ -433,14 +432,11 @@ messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100
 	} else if (msgid.empty())
 		return {};
 
-	const auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
-	/*XXX this is a bit dodgy */
-	auto tmp{g_ascii_strdown(msgid.c_str(), -1)};
-	auto expr{g_strdup_printf("%c:%s", xprefix, tmp)};
-	g_free(tmp);
+	constexpr auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
+	auto expr{mu_format("{}:{}", xprefix,
+			    to_string_gchar(g_ascii_strdown(msgid.c_str(), -1)))};
 
 	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
-	g_free(expr);
 	if (!res) {
 		mu_warning("failed to run message-id-query: {}", res.error().what());
 		return {};

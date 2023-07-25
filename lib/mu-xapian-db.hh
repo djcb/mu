@@ -282,13 +282,29 @@ public:
 	}
 
 	/**
+	 * Add a new document to the database
+	 *
+	 * @param doc a document (message)
+	 *
+	 * @return new docid or 0
+	 */
+	Xapian::docid add_document(const Xapian::Document& doc) {
+		return xapian_try([&]{
+			DB_LOCKED;
+			auto&& id= wdb().add_document(doc);
+			set_timestamp(MetadataIface::last_change_key);
+			return id;
+		}, 0);
+	}
+
+	/**
 	 * Replace document in database
 	 *
 	 * @param term unique term
 	 * @param id docid
 	 * @param doc replacement document
 	 *
-	 * @return new docid or nothing.
+	 * @return new docid or 0
 	 */
 	Xapian::docid replace_document(const std::string& term, const Xapian::Document& doc) {
 		return xapian_try([&]{

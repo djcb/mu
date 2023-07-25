@@ -202,7 +202,7 @@ goto * instructions[pOp->opcode];
 	g_assert_cmpuint(store->size(),==, 1);
 
 	/* ensure 'update' dtrt, i.e., nothing. */
-	const auto docid2 = store->update_message(*message, *docid);
+	const auto docid2 = store->add_message(*message, *docid);
 	assert_valid_result(docid2);
 	g_assert_cmpuint(store->size(),==, 1);
 	g_assert_cmpuint(*docid,==,*docid2);
