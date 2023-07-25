@@ -81,6 +81,13 @@ Err(const Result<T>& res)
 	return res.error();
 }
 
+template<typename T>
+static inline tl::unexpected<Error>
+Err(Result<T>&& res)
+{
+	return std::move(res.error());
+}
+
 /*
  * convenience
  */
