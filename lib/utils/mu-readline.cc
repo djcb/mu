@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,15 +16,13 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
-#include "mu-readline.hh"
 #include "config.h"
 
-#include <iostream>
-#include <unistd.h>
+#include "mu-utils.hh"
+#include "mu-readline.hh"
+
 #include <string>
-#include <glib.h>
-#include <glib/gprintf.h>
+#include <unistd.h>
 
 #ifdef HAVE_LIBREADLINE
 #if defined(HAVE_READLINE_READLINE_H)
@@ -71,7 +69,6 @@ Mu::have_readline()
 {
 	return HAVE_READLINE != 0;
 }
-
 
 void
 Mu::setup_readline(const std::string& histpath, size_t maxlines)
@@ -120,7 +117,7 @@ Mu::read_line(bool& do_quit)
 #endif /*HAVE_READLINE*/
 
 	std::string line;
-	std::cout << ";; mu> ";
+	mu_print(";; mu> ");
 	if (!std::getline(std::cin, line))
 		do_quit = true;
 
