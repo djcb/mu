@@ -1,5 +1,5 @@
  /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -55,8 +55,8 @@ struct OutputInfo {
 constexpr auto FirstOutput{OutputInfo{0, true, false, {}, {}}};
 constexpr auto LastOutput{OutputInfo{0, false, true, {}, {}}};
 
-using OutputFunc = std::function<bool(const Option<Message>& msg, const OutputInfo&,
-				      const Options&, GError**)>;
+using OutputFunc = std::function<Result<void>(const Option<Message>& msg, const OutputInfo&,
+					      const Options&)>;
 
 using Format = Options::Find::Format;
 
@@ -66,7 +66,7 @@ print_internal(const Store&       store,
 	       bool           xapian,
 	       bool           warn)
 {
-	std::cout << store.parse_query(expr, xapian) << "\n";
+	mu_println("{}", store.parse_query(expr, xapian));
 	return Ok();
 }
 
@@ -88,25 +88,25 @@ run_query(const Store& store, const std::string& expr, const Options& opts)
 			       qflags, opts.find.maxnum.value_or(0));
 }
 
-static bool
-exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
+static Result<void>
+exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (!msg)
-		return true;
+		return Ok();
 
-	gint     status;
-	char *   cmdline, *escpath;
-	bool rv;
+	int wait_status{};
+	GError *err{};
+	auto cmdline{mu_format("{} {}", opts.find.exec,
+			       to_string_gchar(g_shell_quote(msg->path().c_str())))};
 
-	escpath = g_shell_quote(msg->path().c_str());
-	cmdline = g_strdup_printf("%s %s", opts.find.exec.c_str(), escpath);
-
-	rv = g_spawn_command_line_sync(cmdline, NULL, NULL, &status, err);
-
-	g_free(cmdline);
-	g_free(escpath);
-
-	return rv;
+	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
+		return Err(Error::Code::File, &err/*consumed*/,
+			   "failed to execute shell command");
+	else if (WEXITSTATUS(wait_status) != 0)
+		return Err(Error::Code::File,
+			"shell command exited with exit-code {}",
+			   WEXITSTATUS(wait_status));
+	return Ok();
 }
 
 static Result<std::string>
@@ -149,45 +149,39 @@ get_query(const Options& opts)
 	return Ok(bookmark + query);
 }
 
-static bool
-prepare_links(const Options& opts, GError** err)
+static Result<void>
+prepare_links(const Options& opts)
 {
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
-	if (auto&& res = maildir_mkdir(opts.find.linksdir, 0700, true); !res) {
-		res.error().fill_g_error(err);
-		return false;
-	}
+	if (auto&& res = maildir_mkdir(opts.find.linksdir, 0700, true); !res)
+		return Err(std::move(res.error()));
 
 	if (!opts.find.clearlinks)
-		return false;
+		return Ok();
 
-	if (auto&& res = maildir_clear_links(opts.find.linksdir); !res) {
-		res.error().fill_g_error(err);
-		return false;
-	}
+	if (auto&& res = maildir_clear_links(opts.find.linksdir); !res)
+		return Err(std::move(res.error()));
 
-	return true;
+	return Ok();
 }
 
-static bool
-output_link(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
+static Result<void>
+output_link(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (info.header)
-		return prepare_links(opts, err);
+		return prepare_links(opts);
 	else if (info.footer)
-		return true;
+		return Ok();
 
 	/* during test, do not create "unique names" (i.e., names with path
 	 * hashes), so we get a predictable result */
 	const auto unique_names{!g_getenv("MU_TEST")&&!g_test_initialized()};
 
-	if (auto&& res = maildir_link(msg->path(), opts.find.linksdir, unique_names); !res) {
-		res.error().fill_g_error(err);
-		return false;
-	}
+	if (auto&& res = maildir_link(msg->path(), opts.find.linksdir, unique_names); !res)
+		return Err(std::move(res.error()));
 
-	return true;
+	return Ok();
 }
 
 static void
@@ -322,12 +316,12 @@ output_plain_fields(const Message& msg, const std::string& fields,
 		fputs("\n", stdout);
 }
 
-static bool
+static Result<void>
 output_plain(const Option<Message>& msg, const OutputInfo& info,
-	     const Options& opts, GError** err)
+	     const Options& opts)
 {
 	if (!msg)
-		return true;
+		return Ok();
 
 	/* we reuse the color (whatever that may be)
 	 * for message-priority for threads, too */
@@ -340,11 +334,11 @@ output_plain(const Option<Message>& msg, const OutputInfo& info,
 	if (opts.view.summary_len)
 		print_summary(*msg, opts);
 
-	return true;
+	return Ok();
 }
 
-static bool
-output_sexp(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
+static Result<void>
+output_sexp(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (msg) {
 		if (const auto sexp{msg->sexp()}; !sexp.empty())
@@ -354,28 +348,28 @@ output_sexp(const Option<Message>& msg, const OutputInfo& info, const Options& o
 		fputs("\n", stdout);
 	}
 
-	return true;
+	return Ok();
 }
 
-static bool
-output_json(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
+static Result<void>
+output_json(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (info.header) {
 		mu_println("[");
-		return true;
+		return Ok();
 	}
 
 	if (info.footer) {
 		mu_println("]");
-		return true;
+		return Ok();
 	}
 
 	if (!msg)
-		return true;
+		return Ok();
 
 	mu_println("{}{}", msg->sexp().to_json_string(), info.last ? "" : ",");
 
-	return true;
+	return Ok();
 }
 
 static void
@@ -388,18 +382,18 @@ print_attr_xml(const std::string& elm, const std::string& str)
 	mu_println("\t\t<{}>{}</{}>", elm, esc.value_or(""), elm);
 }
 
-static bool
-output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& opts, GError** err)
+static Result<void>
+output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (info.header) {
 		mu_println("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
 		mu_println("<messages>");
-		return true;
+		return Ok();
 	}
 
 	if (info.footer) {
 		mu_println("</messages>");
-		return true;
+		return Ok();
 	}
 
 	mu_println("\t<message>");
@@ -414,37 +408,43 @@ output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& op
 	print_attr_xml("maildir", msg->maildir());
 	mu_println("\t</message>");
 
-	return true;
+	return Ok();
 }
 
 static OutputFunc
-get_output_func(const Options& opts, GError** err)
+get_output_func(const Options& opts)
 {
 	if (!opts.find.exec.empty())
 		return exec_cmd;
 
 	switch (opts.find.format) {
-	case Format::Links: return output_link;
-	case Format::Plain: return output_plain;
-	case Format::Xml: return output_xml;
-	case Format::Sexp: return output_sexp;
-	case Format::Json: return output_json;
-	default: g_return_val_if_reached(NULL); return NULL;
+	case Format::Links:
+		return output_link;
+	case Format::Plain:
+		return output_plain;
+	case Format::Xml:
+		return output_xml;
+	case Format::Sexp:
+		return output_sexp;
+	case Format::Json:
+		return output_json;
+	default:
+		throw Error(Error::Code::Internal,
+			    "invalid format {}",
+			    static_cast<size_t>(opts.find.format));
 	}
-
-
 }
 
 static Result<void>
 output_query_results(const QueryResults& qres, const Options& opts)
 {
 	GError* err{};
-	const auto output_func{get_output_func(opts, &err)};
+	const auto output_func{get_output_func(opts)};
 	if (!output_func)
 		return Err(Error::Code::Query, &err, "failed to find output function");
 
-	bool rv{true};
-	output_func(Nothing, FirstOutput, opts, {});
+	if (auto&& res = output_func(Nothing, FirstOutput, opts); !res)
+		return Err(std::move(res.error()));
 
 	size_t n{0};
 	for (auto&& item : qres) {
@@ -456,24 +456,20 @@ output_query_results(const QueryResults& qres, const Options& opts)
 		if (msg->changed() < opts.find.after.value_or(0))
 			continue;
 
-		rv = output_func(msg,
-				 {item.doc_id(),
-				  false,
-				  false,
-				  n == qres.size(), /* last? */
-				  item.query_match()},
-				 opts,
-				 &err);
-		if (!rv)
-			break;
+		if (auto&& res = output_func(msg,
+					     {item.doc_id(),
+					      false,
+					      false,
+					      n == qres.size(), /* last? */
+					      item.query_match()},
+					     opts); !res)
+			return Err(std::move(res.error()));
 	}
-	output_func(Nothing, LastOutput, opts, {});
 
-
-	if (rv)
-		return Ok();
+	if (auto&& res{output_func(Nothing, LastOutput, opts)}; !res)
+		return Err(std::move(res.error()));
 	else
-		return Err(Error::Code::Query, &err, "error in query results output");
+		return Ok();
 }
 
 static Result<void>
