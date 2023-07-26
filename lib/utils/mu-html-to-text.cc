@@ -22,6 +22,7 @@
 #include "mu-regex.hh"
 
 #include <string>
+#include <array>
 #include <string_view>
 #include <algorithm>
 
