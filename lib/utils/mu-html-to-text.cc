@@ -334,7 +334,7 @@ comment(Context& ctx)
 static bool // do we need a SPC separator for this tag?
 needs_separator(std::string_view tagname)
 {
-	constexpr std::array nosep_tags = {
+	constexpr std::array<const char*, 7> nosep_tags = {
 		"b", "em", "i", "s", "strike", "tt", "u"
 	};
 	return !seq_some(nosep_tags, [&](auto&& t){return matches(tagname, t);});
@@ -343,7 +343,7 @@ needs_separator(std::string_view tagname)
 static bool // do we need to skip the element completely?
 is_skip_element(std::string_view tagname)
 {
-	constexpr std::array skip_tags = {
+	constexpr std::array<const char*, 4> skip_tags = {
 		"script", "style", "head", "meta"
 	};
 	return seq_some(skip_tags, [&](auto&& t){return matches(tagname, t);});
@@ -422,7 +422,7 @@ html_escape_char(Context& ctx)
 {
 	// we only care about a few accented chars, and add them unaccented, lowercase, since that's
 	// we do for indexing anyway.
-	constexpr std::array escs = {
+	constexpr std::array<const char*, 11> escs = {
 		"breve",
 		"caron",
 		"circ",
