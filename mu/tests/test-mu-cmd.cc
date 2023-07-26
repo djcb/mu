@@ -153,22 +153,10 @@ static void
 test_mu_find_02(void)
 {
 	/* when matching html as if it were text,
-	 * 'bull' is also matched in arto.eml, &bull;
-	 */
-	// search("bull", 1);
-	// search("bull m:foo", 0);
-	// search("bull m:/foo", 1);
-	// search("bull m:/Foo", 1);
-	// search("bull flag:attach", 1);
-	// search("bull flag:a", 1);
+	 * 'bull' is also matched in arto.eml, &bull; however,
+	 * we don't do that anymore! */
 
-	search("bull", 2);
-	search("bull m:foo", 0);
-	search("bull m:/foo", 2);
-	search("bull m:/Foo", 2);
-	search("bull flag:attach", 1);
-	search("bull flag:a", 1);
-
+	search("bull", 1);
 
 	search("g:x", 0);
 	search("flag:encrypted", 0);

@@ -266,6 +266,16 @@ std::string date_to_time_t_string(int64_t t);
 std::string time_to_string(const char *frm, time_t t, bool utc = false) G_GNUC_CONST;
 
 /**
+ * Crudely convert HTML to plain text. This attempts to scrape the
+ * human-readable text from html-email so we can use it for indexing.
+ *
+ * @param html html
+ *
+ * @return plain text
+ */
+std::string html_to_text(const std::string& html);
+
+/**
  * Hack to avoid locale crashes
  *
  * @return true if setting locale worked; false otherwise

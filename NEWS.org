@@ -19,9 +19,14 @@
     - what used to be the ~mu fields~ command has been merged into ~mu info~; i.e.,
       ~mu fields~ is now ~mu info fields~.
 
-    - ~mu view~ gained ~--format=html~ for it to output the HTML body of the message
-      (if any) rather than the plain-text body. See its updated manpage for
-      details.
+    - ~mu view~ gained ~--format=html~ which compels it to output the HTML body of
+      the message rather than the (default) plain-text body. See its updated
+      manpage for details.
+
+    - when encountering an HTML message part during indexing, previously (i.e.,
+      ~mu 1.10~) we would attempt to process that as-is, with HTML-tags etc.; this
+      is now improved by employing a html->text scraper which extracts the
+      human-readable text from the html.
 
     - /experimental/: if you build ~mu~ with [[https://github.com/CLD2Owners/cld2][CLD2]] support (available in many Linux
       distros), ~mu~ will try to detect the language of the body of e-mail

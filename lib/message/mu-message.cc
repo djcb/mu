@@ -336,11 +336,11 @@ get_mailing_list(const MimeMessage& mime_msg)
 }
 
 static void
-append_text(Option<std::string>& str, Option<std::string> app)
+append_text(Option<std::string>& str, Option<std::string>&& app)
 {
-	if (!str)
-		str = app;
-	else if (app)
+	if (!str && app)
+		str = std::move(*app);
+	else if (str && app)
 		str.value() += app.value();
 }
 
@@ -407,17 +407,18 @@ process_message_part(const MimeMessagePart& msg_part,
 		return;
 
 	submsg->for_each([&](auto&& parent, auto&& child_obj) {
-
-		/* XXX: we only handle one level */
-
+		/* NOTE: we only handle one level; ideally, we'd apply the whole
+		   parsing machinery recursively; so this a little crude. */
 		if (!child_obj.is_part())
 			return;
-
-		const auto ctype{child_obj.content_type()};
-		if (!ctype || !ctype->is_type("text", "*"))
+		if (const auto ctype{child_obj.content_type()}; !ctype)
 			return;
-
-		append_text(info.embedded, MimePart{child_obj}.to_string());
+		else if (ctype->is_type("text", "plain"))
+			append_text(info.embedded, MimePart{child_obj}.to_string());
+		else if (ctype->is_type("text", "html")) {
+			if (auto&& str{MimePart{child_obj}.to_string()}; str)
+				append_text(info.embedded, html_to_text(*str));
+		}
 	});
 }
 
@@ -662,6 +663,8 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::BodyText:
 			doc.add(field.id, priv.body_txt);
+			if (priv.body_html)
+				doc.add(field.id, html_to_text(*priv.body_html));
 			break;
 		case Field::Id::Cc:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::Cc));
@@ -724,10 +727,6 @@ fill_document(Message::Private& priv)
 			break;
 		case Field::Id::To:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::To));
-			break;
-			/* internal fields */
-		case Field::Id::XBodyHtml:
-			doc.add(field.id, priv.body_html);
 			break;
 		/* LCOV_EXCL_START */
 		case Field::Id::_count_:

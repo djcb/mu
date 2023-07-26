@@ -79,17 +79,6 @@ add_search_term(Xapian::Document& doc, const Field& field, const std::string& va
 		throw std::logic_error("not a search term");
 }
 
-/* hack... import html text as if it were plain text. */
-static void
-add_body_html(Xapian::Document& doc, const Field& field, const std::string& val)
-{
-	static Field body_field = field_from_id(Field::Id::BodyText);
-
-	Xapian::TermGenerator termgen;
-	termgen.set_document(doc);
-	termgen.index_text(utf8_flatten(val), 1, body_field.xapian_term());
-}
-
 void
 Document::add(Field::Id id, const std::string& val)
 {
@@ -100,11 +89,9 @@ Document::add(Field::Id id, const std::string& val)
 
 	if (field.is_searchable())
 		add_search_term(xdoc_, field, val);
-	else if (id == Field::Id::XBodyHtml)
-		add_body_html(xdoc_, field, val);
-	if (field.include_in_sexp()) {
+
+	if (field.include_in_sexp())
 		put_prop(field, val);
-	}
 }
 
 void

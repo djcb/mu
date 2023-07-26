@@ -139,7 +139,6 @@ static void
 test_prefix()
 {
 	static_assert(field_from_id(Field::Id::Subject).xapian_prefix() == 'S');
-	static_assert(field_from_id(Field::Id::XBodyHtml).xapian_prefix() == 0);
 }
 
 [[maybe_unused]]
