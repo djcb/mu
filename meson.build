@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.11.10',
+        version: '1.11.11',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -163,7 +163,6 @@ config_h_data.set_quoted('GZIP_PROGRAM', gzip.full_path())
 
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
-# soft dependencies
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
