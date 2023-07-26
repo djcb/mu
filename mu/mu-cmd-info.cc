@@ -21,6 +21,7 @@
 
 #include "mu-cmd.hh"
 #include <message/mu-message.hh>
+#include <xapian.h>
 #include "utils/mu-utils.hh"
 #include <fmt/ostream.h>
 
@@ -85,7 +86,6 @@ colorify(Table& table, const Options& opts)
 		table[0][c].format()
 			.font_color(Color::white)
 			.font_style({FontStyle::bold});
-
 }
 
 
@@ -220,23 +220,13 @@ topic_mu(const Options& opts)
 
 	using namespace tabulate;
 
-	info.add_row({"property", "value"});
-	info.add_row({"version", std::string{VERSION}});
-	info.add_row({"schema-version", mu_format("{}", MU_STORE_SCHEMA_VERSION)});
-	info.add_row({"guile-support",
-#if BUILD_GUILE
-			"yes"
-#else
-			"no"
-#endif
-		});
-	info.add_row({"readline-support",
-#if HAVE_LIBREADLINE
-			"yes"
-#else
-			"no"
-#endif
-		});
+	info.add_row({"property", "value", "description"});
+	info.add_row({"mu-version", std::string{VERSION},
+			"Mu runtime version"});
+	info.add_row({"xapian-version", Xapian::version_string(),
+			"Xapian runtime version"});
+	info.add_row({"schema-version", mu_format("{}", MU_STORE_SCHEMA_VERSION),
+			"Version of the database schema"});
 
 	info.add_row({"cld2-support",
 #if HAVE_CLD2
@@ -244,7 +234,22 @@ topic_mu(const Options& opts)
 #else
 			"no"
 #endif
-		});
+		, "Support searching by language-code?"});
+
+	info.add_row({"guile-support",
+#if BUILD_GUILE
+			"yes"
+#else
+			"no"
+#endif
+		, "GNU Guile 3.x scripting support?"});
+	info.add_row({"readline-support",
+#if HAVE_LIBREADLINE
+			"yes"
+#else
+			"no"
+#endif
+		, "Better 'm server' REPL for debugging?"});
 
 	if (!opts.nocolor)
 		colorify(info, opts);
@@ -271,7 +276,7 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	} else if (topic == "mu") {
 		return topic_mu(opts);
 	} else {
-		topic_store(store, opts);
+		topic_mu(opts);
 
 		MaybeAnsi col{!opts.nocolor};
 		using Color = MaybeAnsi::Color;
