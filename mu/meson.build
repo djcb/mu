@@ -62,6 +62,11 @@ test('test-cmd-remove',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
 
-
+test('test-cmd-view',
+     executable('test-cmd-view',
+                'mu-cmd-view.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
 
 subdir('tests')

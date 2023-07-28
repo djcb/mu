@@ -16,6 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include <config.h>
 
 #include "mu-cmd.hh"
 
@@ -199,3 +200,133 @@ Mu::mu_cmd_view(const Options& opts)
 	}
 	return Ok();
 }
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include <fcntl.h>           /* Definition of AT_* constants */
+#include <sys/stat.h>
+#include <fstream>
+#include "utils/mu-test-utils.hh"
+
+static constexpr std::string_view test_msg =
+R"(From: Test <test@example.com>
+To: abc@example.com
+Date: Mon, 23 May 2011 10:53:45 +0200
+Subject: vla
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d"
+Message-ID: <10374608.109906.11909.20115aabbccdd.MSGID@mailinglijst.nl>
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+
+text
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d
+Content-Type: text/html; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+
+html
+
+--_=aspNetEmail=_5ed4592191214c7a99bd7f6a3a0f077d--
+)";
+
+
+static std::string msgpath;
+
+static void
+test_view_plain()
+{
+	auto res = run_command({MU_PROGRAM, "view", msgpath});
+	assert_valid_command(res);
+	auto output{*res};
+
+	g_assert_true(output.standard_err.empty());
+	assert_equal(output.standard_out,
+R"(From: Test <test@example.com>
+To: abc@example.com
+Subject: vla
+Date: 2011-05-23T10:53:45 CEST
+
+text
+)");
+
+}
+
+static void
+test_view_html()
+{
+	auto res = run_command({MU_PROGRAM, "view", "--format=html", msgpath});
+	assert_valid_command(res);
+	auto output{*res};
+
+	g_assert_true(output.standard_err.empty());
+	assert_equal(output.standard_out,
+R"(From: Test <test@example.com>
+To: abc@example.com
+Subject: vla
+Date: 2011-05-23T10:53:45 CEST
+
+html
+)");
+
+}
+
+static void
+test_view_sexp()
+{
+	auto res = run_command({MU_PROGRAM, "view", "--format=sexp", msgpath});
+	assert_valid_command(res);
+	auto output{*res};
+
+	g_assert_true(output.standard_err.empty());
+
+	// Note: :path, :changed (file ctime) change per run.
+	struct stat statbuf{};
+	g_assert_true(::stat(msgpath.c_str(), &statbuf) == 0);
+
+	const auto expected = mu_format(
+		R"((:path "{}" :size 638 :changed ({} {} 0) :date (19930 8345 0) :flags (unread) :from ((:email "test@example.com" :name "Test")) :message-id "10374608.109906.11909.20115aabbccdd.MSGID@mailinglijst.nl" :priority normal :subject "vla" :to ((:email "abc@example.com")))
+)",
+		msgpath,
+		statbuf.st_ctime >> 16,
+		statbuf.st_ctime & 0xffff);
+
+	assert_equal(output.standard_out, expected);
+}
+
+int
+main(int argc, char* argv[]) try {
+
+	TempDir tmpdir{false};
+	msgpath = join_paths(tmpdir.path(), "test-message.txt");
+	std::ofstream strm{msgpath};
+	strm.write(test_msg.data(), test_msg.size());
+	strm.close();
+	g_assert_true(strm.good());
+
+	set_tz("Europe/Amsterdam");
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/view/plain", test_view_plain);
+	g_test_add_func("/cmd/view/html", test_view_html);
+	g_test_add_func("/cmd/view/sexp", test_view_sexp);
+
+	return g_test_run();
+
+} catch (const Error& e) {
+	mu_printerrln("{}", e.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+#endif /*BUILD_TESTS*/

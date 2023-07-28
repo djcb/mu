@@ -129,8 +129,6 @@ struct TempDir {
 	 * Path to the temporary directory
 	 *
 	 * @return the path.
-	 *
-	 *
 	 */
 	const std::string& path() {return path_; }
 private:
