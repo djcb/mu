@@ -739,6 +739,9 @@ Symbol `edit' is only allowed for draft messages."
                (not (member 'draft (mu4e-message-field msg :flags))))
       (mu4e-warn "Editing is only allowed for draft messages"))
 
+    (unless (mu4e-running-p) ;; start mu4e if it's not yet running.
+      (mu4e 'background))
+
     ;; 'new is special, since it takes no existing message as arg; therefore, we
     ;; don't need to involve the backend, and call the handler *directly*
     (if (eq compose-type 'new)
@@ -825,9 +828,6 @@ RETURN-ACTION, if non-nil, is an action for returning to the
 caller.  It has the form (FUNCTION . ARGS).  The function is
 called after the mail has been sent or put aside, and the mail
 buffer buried."
-
-  (unless (mu4e-running-p)
-    (mu4e))
 
   ;; create a new draft message 'resetting' (as below) is not actually needed in
   ;; this case, but let's prepare for the re-edit case as well
