@@ -14,7 +14,7 @@
 
       It's not unusual for ~noreply~-type e-mail addresses to be the majority in
       an e-mail corpus; to get rid of those, with something like
-      '=--ignored-address=/.*noreply*/'=
+      '=--ignored-address=/.*no.*reply.*/'=
 
     - what used to be the ~mu fields~ command has been merged into ~mu info~; i.e.,
       ~mu fields~ is now ~mu info fields~.
