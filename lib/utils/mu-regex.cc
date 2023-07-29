@@ -60,10 +60,17 @@ test_regex_match2()
 static void
 test_regex_replace()
 {
-	auto rx = Regex::make("f.o");
-	assert_valid_result(rx);
+	{
+		auto rx = Regex::make("f.o");
+		assert_valid_result(rx);
+		assert_equal(rx->replace("foobar", "cuux"), "cuuxbar");
+	}
 
-	assert_equal(rx->replace("foobar", "cuux"), "cuuxbar");
+	{
+		auto rx = Regex::make("f.o", G_REGEX_MULTILINE);
+		assert_valid_result(rx);
+		assert_equal(rx->replace("foobar\nfoobar", "cuux"), "cuuxbar\ncuuxbar");
+	}
 }
 
 int
