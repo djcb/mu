@@ -211,6 +211,7 @@ Mu::mu_cmd_view(const Options& opts)
 #include <fcntl.h>           /* Definition of AT_* constants */
 #include <sys/stat.h>
 #include <fstream>
+#include <locale.h>
 #include "utils/mu-test-utils.hh"
 
 static constexpr std::string_view test_msg =
@@ -249,6 +250,7 @@ test_view_plain()
 		g_test_skip("timezone not available");
 		return;
 	}
+	setlocale(LC_ALL, "C");
 
 	auto res = run_command({MU_PROGRAM, "view", msgpath});
 	assert_valid_command(res);
@@ -274,6 +276,7 @@ test_view_html()
 		g_test_skip("timezone not available");
 		return;
 	}
+	setlocale(LC_ALL, "C");
 
 	auto res = run_command({MU_PROGRAM, "view", "--format=html", msgpath});
 	assert_valid_command(res);
@@ -299,6 +302,7 @@ test_view_sexp()
 		g_test_skip("timezone not available");
 		return;
 	}
+	setlocale(LC_ALL, "C");
 
 	auto res = run_command({MU_PROGRAM, "view", "--format=sexp", msgpath});
 	assert_valid_command(res);

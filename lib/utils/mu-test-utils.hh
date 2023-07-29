@@ -145,7 +145,7 @@ struct TempTz {
 			old_tz_ = set_tz(tz);
 		else
 			old_tz_ = {};
-		mu_debug("timezone '{}' {}available", tz, old_tz_ ? "": "not");
+		mu_debug("timezone '{}' {}available", tz, old_tz_ ? "": "not ");
 	}
 	~TempTz() {
 		if (old_tz_) {
