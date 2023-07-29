@@ -244,6 +244,12 @@ static std::string msgpath;
 static void
 test_view_plain()
 {
+	TempTz tz("Europe/Amsterdam");
+	if (!tz.available()) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	auto res = run_command({MU_PROGRAM, "view", msgpath});
 	assert_valid_command(res);
 	auto output{*res};
@@ -263,6 +269,12 @@ text
 static void
 test_view_html()
 {
+	TempTz tz("Europe/Amsterdam");
+	if (!tz.available()) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	auto res = run_command({MU_PROGRAM, "view", "--format=html", msgpath});
 	assert_valid_command(res);
 	auto output{*res};
@@ -282,6 +294,12 @@ html
 static void
 test_view_sexp()
 {
+	TempTz tz("Europe/Amsterdam");
+	if (!tz.available()) {
+		g_test_skip("timezone not available");
+		return;
+	}
+
 	auto res = run_command({MU_PROGRAM, "view", "--format=sexp", msgpath});
 	assert_valid_command(res);
 	auto output{*res};
@@ -311,8 +329,6 @@ main(int argc, char* argv[]) try {
 	strm.write(test_msg.data(), test_msg.size());
 	strm.close();
 	g_assert_true(strm.good());
-
-	set_tz("Europe/Amsterdam");
 
 	mu_test_init(&argc, &argv);
 
