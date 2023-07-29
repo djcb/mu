@@ -136,6 +136,28 @@ private:
 	const bool autodelete_;
 };
 
+/**
+ * Temporary (RAII) timezone
+ */
+struct TempTz {
+	TempTz(const char* tz) {
+		if (timezone_available(tz))
+			old_tz_ = set_tz(tz);
+		else
+			old_tz_ = {};
+		mu_debug("timezone '{}' {}available", tz, old_tz_ ? "": "not");
+	}
+	~TempTz() {
+		if (old_tz_) {
+			mu_debug("reset timezone to '{}'", old_tz_);
+			set_tz(old_tz_);
+		}
+	}
+	bool available() const { return !!old_tz_; }
+private:
+	const char *old_tz_{};
+};
+
 } // namepace Mu
 
 
