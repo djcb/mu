@@ -1,6 +1,6 @@
 ;;; mu4e-server.el -- part of mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -72,6 +72,21 @@ better with e.g. offlineimap."
   :type 'boolean
   :group 'mu4e
   :safe 'booleanp)
+
+(defcustom mu4e-mu-allow-temp-file t
+  "Allow using temp-files for optimizing mu <-> mu4e communication.
+
+Some commands - in particular \"find\" and \"contacts\" - return
+big s-expressions and it can make mu4e noticeably snappier by
+using temporary files (esp. when those live on an in-memory
+filesystem); so we pass the information that way.
+
+This is an experimental feature, so at least for now it can be
+turned off, as we gather experience. For a change to this variable
+to take effect, you need to stop/start mu4e."
+  :type  'boolean
+  :group 'mu4e
+  :safe  'booleanp)
 
 
 ;; Handlers are not strictly internal, but are not meant
@@ -234,6 +249,14 @@ removed."
             (setq mu4e--server-buf (substring mu4e--server-buf sexp-len))
             (car objcons)))))))
 
+(defun mu4e--server-file-data-and-remove (file)
+  "Return Elisp object from FILE and remove FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (delete-file file)
+    (read (current-buffer))))
+
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
 This processes the \"mu server\" output. It accumulates the
@@ -301,9 +324,15 @@ The server output is as follows:
       (while sexp
         (mu4e-log 'from-server "%s" sexp)
         (cond
-         ;; a header plist can be recognized by the existence of a :date field
+         ;; a list of messages (after a find command)
          ((plist-get sexp :headers)
           (funcall mu4e-headers-append-func (plist-get sexp :headers)))
+         ;; similar to :headers, but instead of reading the headers from the
+         ;; process, we can read it from a tempfile the server created for us.
+         ((plist-get sexp :headers-temp-file)
+          (funcall mu4e-headers-append-func
+                   (mu4e--server-file-data-and-remove
+                    (plist-get sexp :headers-temp-file))))
 
          ;; the found sexp, we receive after getting all the headers
          ((plist-get sexp :found)
@@ -338,6 +367,13 @@ The server output is as follows:
          ((plist-member sexp :contacts)
           (funcall mu4e-contacts-func
                    (plist-get sexp :contacts)
+                   (plist-get sexp :tstamp)))
+         ;; similar to :contacts, but instead of reading the headers from the
+         ;; process, we can read it from a tempfile the server created for us.
+         ((plist-get sexp :contacts-temp-file)
+          (funcall mu4e-contacts-func
+                   (mu4e--server-file-data-and-remove
+                    (plist-get sexp :contacts-temp-file))
                    (plist-get sexp :tstamp)))
 
          ;; something got moved/flags changed
@@ -392,6 +428,7 @@ As per issue #2198."
   (seq-filter #'identity ;; filter out nil
               `(,(when mu4e-mu-debug "--debug")
                 "server"
+                ,(when mu4e-mu-allow-temp-file "--allow-temp-file")
                 ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
 
 (defun mu4e--version-check ()
