@@ -38,7 +38,7 @@ const Xapian::Document&
 Document::xapian_document() const
 {
 	if (dirty_sexp_) {
-		xdoc_.set_data(sexp_.to_string());
+		xdoc_.set_data(sexp().to_string());
 		dirty_sexp_ = false;
 	}
 	return xdoc_;
@@ -47,7 +47,7 @@ Document::xapian_document() const
 template<typename SexpType> void
 Document::put_prop(const std::string& pname, SexpType&& val)
 {
-	sexp_.put_props(pname, std::forward<SexpType>(val));
+	cached_sexp().put_props(pname, std::forward<SexpType>(val));
 	dirty_sexp_ = true;
 }
 

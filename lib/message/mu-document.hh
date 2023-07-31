@@ -1,4 +1,4 @@
-/** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -43,19 +43,15 @@ class Document {
 public:
 	/**
 	 * Construct a message for a new Xapian Document
-	 *
 	 */
 	Document() {}
 
 	/**
-	 * Construct a message document based on on existing Xapian document.
+	 * Construct a message document based on an existing Xapian document.
 	 *
 	 * @param doc
 	 */
-	Document(const Xapian::Document& doc): xdoc_{doc} {
-		if (auto&& s{Sexp::parse(xdoc_.get_data())}; s)
-			sexp_ = std::move(*s);
-	}
+	Document(const Xapian::Document& doc): xdoc_{doc} {}
 
 	/**
 	 * DTOR
@@ -153,7 +149,7 @@ public:
 	 *
 	 * @return the cached s-expression
 	 */
-	const Sexp& sexp() const { return sexp_; }
+	const Sexp& sexp() const { return cached_sexp(); }
 
 	/**
 	 * Generically adds an optional value, if set, to the document
@@ -231,9 +227,16 @@ private:
 	template<typename SexpType> void put_prop(const Field& field, SexpType&& val);
 	template<typename SexpType> void put_prop(const std::string& pname, SexpType&& val);
 
+	Sexp& cached_sexp() const {
+		if (cached_sexp_.empty())
+			if (auto&& s{Sexp::parse(xdoc_.get_data())}; s)
+				cached_sexp_ = std::move(*s);
+		return cached_sexp_;
+	}
+
 
 	mutable Xapian::Document	xdoc_;
-	Sexp				sexp_;
+	mutable Sexp			cached_sexp_;
 	mutable bool			dirty_sexp_{};	/* xdoc's sexp is outdated */
 };
 
