@@ -22,7 +22,7 @@
 #include "message/mu-message.hh"
 #include "mu-server.hh"
 
-#include <iostream>
+#include <fstream>
 #include <string>
 #include <algorithm>
 #include <atomic>
@@ -51,16 +51,19 @@ using namespace Mu;
 
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
-	Private(Store& store, Output output)
-	    : store_{store}, output_{output},
+	Private(Store& store, const Server::Options& opts, Output output)
+	    : store_{store}, options_{opts}, output_{output},
 	      command_handler_{make_command_map()},
-	      keep_going_{true}
+	      keep_going_{true},
+	      tmp_dir_{unwrap(make_temp_dir())}
 	{}
 
 	~Private() {
 		indexer().stop();
 		if (index_thread_.joinable())
 			index_thread_.join();
+		if (!tmp_dir_.empty())
+			remove_directory(tmp_dir_);
 	}
 	//
 	// construction helpers
@@ -88,6 +91,7 @@ struct Server::Private {
 	}
 
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
+	size_t output_results_temp_file(const QueryResults& qres, size_t batch_size) const;
 
 	//
 	// handlers for various commands.
@@ -125,11 +129,15 @@ private:
 
 	void view_mark_as_read(Store::Id docid, Message&& msg, bool rename);
 
+	std::pair<std::ofstream, std::string> make_temp_file_stream() const;
+
 	Store&			store_;
+	Server::Options         options_;
 	Server::Output		output_;
 	const CommandHandler	command_handler_;
 	std::atomic<bool>       keep_going_{};
 	std::thread		index_thread_;
+	std::string		tmp_dir_;
 };
 
 static Sexp
@@ -220,7 +228,8 @@ Server::Private::make_command_map()
 		       {":after",
 			ArgInfo{Type::String, false, "only contacts seen after time_t string"}},
 		       {":tstamp", ArgInfo{Type::String, false, "return changes since tstamp"}},
-		       {":maxnum", ArgInfo{Type::Number, false, "max number of contacts to return"}}},
+		       {":maxnum", ArgInfo{Type::Number, false, "max number of contacts to return"}}
+		},
 		"get contact information",
 		[&](const auto& params) { contacts_handler(params); }});
 	cmap.emplace(
@@ -492,6 +501,21 @@ Server::Private::compose_handler(const Command& cmd)
 	output_sexp(comp_lst);
 }
 
+// create pair of ostream / name
+std::pair<std::ofstream, std::string>
+Server::Private::make_temp_file_stream() const
+{
+	auto tmp_eld{join_paths(tmp_dir_, mu_format("mu-{}.eld",  g_get_monotonic_time()))};
+	std::ofstream output{tmp_eld, std::ios::out};
+	if (!output.good())
+		throw Mu::Error{Error::Code::File, "failed to create temp-file"};
+
+	return make_pair<std::ofstream, std::string>(std::move(output),
+						     std::move(tmp_eld));
+}
+
+
+
 void
 Server::Private::contacts_handler(const Command& cmd)
 {
@@ -520,20 +544,24 @@ Server::Private::contacts_handler(const Command& cmd)
 		/* only include newer-than-x contacts */
 		if (after > ci.message_date)
 			return true;
-
 		n++;
-
 		contacts.add(ci.display_name());
 		return maxnum == 0 || n < maxnum;
 	});
 
-	Sexp seq;
-	seq.put_props(":contacts", contacts,
-		      ":tstamp", mu_format("{}", g_get_monotonic_time()));
-
 	/* dump the contacts cache as a giant sexp */
 	mu_debug("sending {} of {} contact(s)", n, store().contacts_cache().size());
-	output_sexp(seq, Server::OutputFlags::SplitList);
+	if (options_.allow_temp_file) {
+		auto&& [output, tmp_eld] = make_temp_file_stream();
+		output << contacts;
+		output_sexp(Sexp{":tstamp"_sym, mu_format("{}", g_get_monotonic_time()),
+				":contacts-temp-file"_sym, tmp_eld});
+	} else {
+		Sexp seq;
+		seq.put_props(":contacts", contacts,
+			      ":tstamp", mu_format("{}", g_get_monotonic_time()));
+		output_sexp(seq, Server::OutputFlags::SplitList);
+	}
 }
 
 /*
@@ -587,7 +615,6 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 		if (!msg)
 			continue;
 		++n;
-
 		// construct sexp for a single header.
 		auto qm{mi.query_match()};
 		auto msgsexp{build_message_sexp(*msg, mi.doc_id(), qm)};
@@ -608,13 +635,47 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 	return n;
 }
 
+size_t
+Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch_size) const
+{
+	// create an output stream with a file name
+	size_t n{};
+
+	auto&& [output, tmp_eld] = make_temp_file_stream();
+	output << '(';
+	for(auto&& mi: qres) {
+
+		auto msg{mi.message()};
+		if (!msg)
+			continue;
+
+		auto qm{mi.query_match()}; // construct sexp for a single header.
+		output << build_message_sexp(*msg, mi.doc_id(), qm);
+		++n;
+
+		if (n % batch_size == 0) {
+			output << ')';
+			output_sexp(Sexp{":headers-temp-file"_sym, tmp_eld});
+			auto new_stream{make_temp_file_stream()};
+			output	= std::move(new_stream.first);
+			tmp_eld = std::move(new_stream.second);
+			output << '(';
+		}
+	}
+	output << ')';
+	output_sexp(Sexp{":headers-temp-file"_sym, tmp_eld});
+
+	return n;
+}
+
+
 void
 Server::Private::find_handler(const Command& cmd)
 {
 	const auto q{cmd.string_arg(":query").value_or("")};
 	const auto threads{cmd.boolean_arg(":threads")};
 	// perhaps let mu4e set this as frame-lines of the appropriate frame.
-	const auto batch_size{cmd.number_arg(":batch-size").value_or(110)};
+	const auto batch_size{cmd.number_arg(":batch-size").value_or(200)};
 	const auto descending{cmd.boolean_arg(":descending")};
 	const auto maxnum{cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/};
 	const auto skip_dups{cmd.boolean_arg(":skip-dups")};
@@ -659,7 +720,9 @@ Server::Private::find_handler(const Command& cmd)
 	 * knows it should erase the headers buffer. this will ensure that the
 	 * output of two finds will not be mixed. */
 	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
-	const auto foundnum{output_results(*qres, static_cast<size_t>(batch_size))};
+	const auto bsize{static_cast<size_t>(batch_size)};
+	const auto foundnum =options_.allow_temp_file ?
+		output_results_temp_file(*qres, bsize) : output_results(*qres, bsize);
 	output_sexp(Sexp().put_props(":found", foundnum));
 }
 
@@ -899,7 +962,6 @@ Server::Private::ping_handler(const Command& cmd)
 				       ":doccount", storecount)));
 }
 
-
 void
 Server::Private::queries_handler(const Command& cmd)
 {
@@ -1011,8 +1073,8 @@ Server::Private::view_handler(const Command& cmd)
 	/* otherwise, mark message and and possible dups as read */
 }
 
-Server::Server(Store& store, Server::Output output)
-    : priv_{std::make_unique<Private>(store, output)}
+Server::Server(Store& store, const Server::Options& opts, Server::Output output)
+    : priv_{std::make_unique<Private>(store, opts, output)}
 {}
 
 Server::~Server() = default;

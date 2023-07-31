@@ -50,13 +50,17 @@ public:
 	 */
 	using Output = std::function<void(const Sexp& sexp, OutputFlags flags)>;
 
+	struct Options {
+		bool allow_temp_file; /**< temp file optimization allowed? */
+	};
+
 	/**
 	 * Construct a new server
 	 *
 	 * @param store a message store object
 	 * @param output callable for the server responses.
 	 */
-	Server(Store& store, Output output);
+	Server(Store& store, const Options& opts, Output output);
 
 	/**
 	 * DTOR

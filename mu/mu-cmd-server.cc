@@ -117,7 +117,10 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	if (!store)
 		return Err(store.error());
 
-	Server server{*store, output_sexp_stdout};
+	Server::Options sopts{};
+	sopts.allow_temp_file = opts.server.allow_temp_file;
+
+	Server server{*store, sopts, output_sexp_stdout};
 	mu_message("created server with store @ {}; maildir @ {}; debug-mode {};"
 		  "readline: {}",
 		   store->path(), store->root_maildir(),

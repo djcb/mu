@@ -16,10 +16,6 @@ database. The output uses s-expressions. *mu server* is not meant for use by
 humans, except for debugging purposes. Instead, it is designed specifically for
 the *mu4e* e-mail client.
 
-In this man-page, we document the commands *mu server* accepts, as well as their
-responses. In general, the commands sent to the server are s-expressions of the
-form:
-
 #+begin_example
    (<command-name> :param1 value1 :param2 value2)
 #+end_example
@@ -59,6 +55,14 @@ List available commands (and try with ~--verbose~)
 ** --eval <expression>
 
 Evaluate a mu4e server s-expression
+
+** --allow-temp-file
+
+If set, allow for the output of some commands to use temp-files rather than
+directly through the emacs process input/output. This is noticeably faster for
+commands with a lot of output, esp. when the the temp-file uses a in-memory
+file-system.
+
 
 #+include: "muhome.inc" :minlevel 2
 

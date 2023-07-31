@@ -498,6 +498,10 @@ sub_server(CLI::App& sub, Options& opts)
 	sub.add_option("--eval", opts.server.eval,
 		       "Evaluate mu server expression")
 		->excludes("--commands");
+	sub.add_flag("--allow-temp-file", opts.server.allow_temp_file,
+		     "Allow for the temp-file optimization")
+		->excludes("--commands");
+
 }
 
 static void

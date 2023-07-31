@@ -222,6 +222,7 @@ struct Options {
 	struct Server {
 		bool		commands;		/**< dump docs for commands */
 		std::string	eval;			/**< command to evaluate */
+		bool            allow_temp_file;	/**< temp-file optimization allowed? */
 	} server;
 
 	/*
