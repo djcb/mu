@@ -84,10 +84,12 @@ struct Server::Private {
 
 	//
 	// output
-	//
-	void output_sexp(const Sexp& sexp, Server::OutputFlags flags = {}) const {
+	void output(const std::string& str, Server::OutputFlags flags = {}) const {
 		if (output_)
-			output_(sexp, flags);
+			output_(str, flags);
+	}
+	void output_sexp(const Sexp& sexp, Server::OutputFlags flags = {}) const {
+		output(sexp.to_string(), flags);
 	}
 
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
@@ -112,11 +114,6 @@ struct Server::Private {
 	void view_handler(const Command& cmd);
 
 private:
-	// helpers
-	Sexp build_message_sexp(const Message&            msg,
-				Store::Id                 docid,
-				const Option<QueryMatch&> qm) const;
-
 	void move_docid(Store::Id docid, Option<std::string> flagstr,
 			bool new_name, bool no_view);
 
@@ -140,53 +137,65 @@ private:
 	std::string		tmp_dir_;
 };
 
-static Sexp
-build_metadata(const QueryMatch& qmatch)
+static void
+append_metadata(std::string& str, const QueryMatch& qmatch)
 {
 	const auto td{::atoi(qmatch.thread_date.c_str())};
-	auto mdata = Sexp().put_props(":path", qmatch.thread_path,
-				      ":level", qmatch.thread_level,
-				      ":date", qmatch.thread_date,
-				      ":data-tstamp", Sexp().add(static_cast<unsigned>(td >> 16),
-								 static_cast<unsigned>(td & 0xffff),
-								 0));
-	if (qmatch.has_flag(QueryMatch::Flags::Root))
-		mdata.put_props(":root", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::Related))
-		mdata.put_props(":related", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::First))
-		mdata.put_props(":first-child", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::Last))
-		mdata.put_props(":last-child", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::Orphan))
-		mdata.put_props(":orphan", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
-		mdata.put_props(":duplicate", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::HasChild))
-		mdata.put_props(":has-child", Sexp::t_sym);
-	if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
-		mdata.put_props(":thread-subject", Sexp::t_sym);
 
-	return mdata;
+	str += mu_format(" :meta (:path \"{}\" :level {} :date \"{}\" "
+			 ":data-tstamp ({} {} 0)",
+			 qmatch.thread_path,
+			 qmatch.thread_level,
+			 qmatch.thread_date,
+			 static_cast<unsigned>(td >> 16),
+			 static_cast<unsigned>(td & 0xffff));
+
+	if (qmatch.has_flag(QueryMatch::Flags::Root))
+		str += " :root t";
+	if (qmatch.has_flag(QueryMatch::Flags::Related))
+		str += " :related t";
+	if (qmatch.has_flag(QueryMatch::Flags::First))
+		str += " :first-child t";
+	if (qmatch.has_flag(QueryMatch::Flags::Last))
+		str += " :last-child t";
+	if (qmatch.has_flag(QueryMatch::Flags::Orphan))
+		str += " :orphan t";
+	if (qmatch.has_flag(QueryMatch::Flags::Duplicate))
+		str += " :duplicate t";
+	if (qmatch.has_flag(QueryMatch::Flags::HasChild))
+		str += " :has-child t";
+	if (qmatch.has_flag(QueryMatch::Flags::ThreadSubject))
+		str += " :thread-subject t";
+
+	str += ')';
 }
 
 /*
  * A message here consists of a message s-expression with optionally a :docid
  * and/or :meta expression added.
+ *
+ * Note, for speed reasons, we build is as a _string_, without any further
+ * parsing.
  */
-Sexp
-Server::Private::build_message_sexp(const Message&            msg,
-				    Store::Id                 docid,
-				    const Option<QueryMatch&> qm) const
+static std::string
+msg_sexp_str(const Message& msg, Store::Id docid, const Option<QueryMatch&> qm)
 {
-	Sexp sexp{msg.sexp()}; // copy
-	if (docid != 0)
-		sexp.put_props(":docid", docid);
-	if (qm)
-		sexp.put_props(":meta", build_metadata(*qm));
+	auto sexpstr{msg.document().sexp_str()};
+	sexpstr.reserve(sexpstr.size () + (docid == 0 ? 0 : 16) + (qm ? 64 : 0));
 
-	return sexp;
+	// remove the closing ( ... )
+	sexpstr.erase(sexpstr.end() - 1);
+
+	if (docid != 0)
+		sexpstr += " :docid " +  to_string(docid);
+	if (qm)
+		append_metadata(sexpstr, *qm);
+
+	sexpstr += ')'; // ... end close it again.
+
+	return sexpstr;
 }
+
 
 CommandHandler::CommandInfoMap
 Server::Private::make_command_map()
@@ -413,8 +422,8 @@ Server::Private::add_handler(const Command& cmd)
 		throw Error(Error::Code::Store,
 			    "failed to get message at {} (docid={})", *path, docid);
 
-	output_sexp(Sexp().put_props(":update",
-				    build_message_sexp(msg_res.value(), docid, {})));
+	output(mu_format("(:update {})",
+			 msg_sexp_str(msg_res.value(), docid, {})));
 }
 
 /* 'compose' produces the un-changed *original* message sexp (ie., the message
@@ -423,8 +432,8 @@ Server::Private::add_handler(const Command& cmd)
  * edit/resend), and 'docid' for the message to reply to. Note, type:new does
  * not have an original message, and therefore does not need a docid
  *
- * In returns a (:compose <type> [:original <original-msg>] [:include] )
- * message (detals: see code below)
+ * In returns a (:compose <type> [:original <original-msg>] [:include] ) message
+ * (details: see code below)
  *
  * Note ':include' t or nil determines whether to include attachments
  */
@@ -476,8 +485,8 @@ Server::Private::compose_handler(const Command& cmd)
 		if (!msg)
 			throw Error{Error::Code::Store, "failed to get message {}", docid};
 
-		comp_lst.put_props(":original", build_message_sexp(msg.value(), docid, {}));
-
+		auto msg_sexp = unwrap(Sexp::parse(msg_sexp_str(msg.value(), docid, {})));
+		comp_lst.put_props(":original", msg_sexp);
 		if (ctype == "forward") {
 			// when forwarding, attach any attachment in the orig
 			size_t index{};
@@ -510,8 +519,8 @@ Server::Private::make_temp_file_stream() const
 	if (!output.good())
 		throw Mu::Error{Error::Code::File, "failed to create temp-file"};
 
-	return make_pair<std::ofstream, std::string>(std::move(output),
-						     std::move(tmp_eld));
+	return std::make_pair<std::ofstream, std::string>(std::move(output),
+							  std::move(tmp_eld));
 }
 
 
@@ -531,37 +540,48 @@ Server::Private::contacts_handler(const Command& cmd)
 	mu_debug("find {} contacts last seen >= {} (tstamp: {})",
 		 personal ? "personal" : "any", time_to_string("%c", after), tstamp);
 
-	auto       n{0};
-	Sexp contacts;
-	store().contacts_cache().for_each([&](const Contact& ci) {
-
-		/* since the last time we got some contacts */
+	auto match_contact = [&](const Contact& ci)->bool {
 		if (tstamp > ci.tstamp)
-			return true;
-		/* (maybe) only include 'personal' contacts */
-		if (personal && !ci.personal)
-			return true;
-		/* only include newer-than-x contacts */
-		if (after > ci.message_date)
-			return true;
-		n++;
-		contacts.add(ci.display_name());
-		return maxnum == 0 || n < maxnum;
-	});
+			return false; /* already seen? */
+		else if (personal && !ci.personal)
+			return false; /* not personal? */
+		else if (after > ci.message_date)
+			return true; /* too old? */
+		else
+			return false;
+	};
 
-	/* dump the contacts cache as a giant sexp */
-	mu_debug("sending {} of {} contact(s)", n, store().contacts_cache().size());
+	auto       n{0};
 	if (options_.allow_temp_file) {
-		auto&& [output, tmp_eld] = make_temp_file_stream();
-		output << contacts;
-		output_sexp(Sexp{":tstamp"_sym, mu_format("{}", g_get_monotonic_time()),
-				":contacts-temp-file"_sym, tmp_eld});
+		// fast way: put all the contacts in a temp-file
+		auto&& [tmp_file, tmp_file_name] = make_temp_file_stream();
+		tmp_file << '(';
+		store().contacts_cache().for_each([&](const Contact& ci) {
+			if (!match_contact(ci))
+				return true; // continue
+			tmp_file << quote(ci.display_name()) << "\n";
+			++n;
+			return maxnum == 0 || n <  maxnum;
+		});
+		tmp_file << ')';
+		output_sexp(Sexp{":tstamp"_sym, mu_format("\"{}\"", g_get_monotonic_time()),
+				":contacts-temp-file"_sym, tmp_file_name});
 	} else {
+		Sexp contacts;
+		store().contacts_cache().for_each([&](const Contact& ci) {
+			if (!match_contact(ci))
+				return true; // continue;
+			contacts.add(ci.display_name());
+			++n;
+			return maxnum == 0 || n <  maxnum;
+		});
 		Sexp seq;
-		seq.put_props(":contacts", contacts,
-			      ":tstamp", mu_format("{}", g_get_monotonic_time()));
-		output_sexp(seq, Server::OutputFlags::SplitList);
+		seq.put_props(":contacts", std::move(contacts),
+			      ":tstamp", mu_format("\"{}\"", g_get_monotonic_time()));
+		output_sexp(seq);
 	}
+
+	mu_debug("sent {} of {} contact(s)", n, store().contacts_cache().size());
 }
 
 /*
@@ -601,7 +621,7 @@ determine_docids(const Store& store, const Command& cmd)
 size_t
 Server::Private::output_results(const QueryResults& qres, size_t batch_size) const
 {
-	size_t     n{};
+	size_t  n{};
 	Sexp	headers;
 
 	const auto output_batch = [&](Sexp&& hdrs) {
@@ -617,7 +637,7 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 		++n;
 		// construct sexp for a single header.
 		auto qm{mi.query_match()};
-		auto msgsexp{build_message_sexp(*msg, mi.doc_id(), qm)};
+		auto msgsexp{unwrap(Sexp::parse(msg_sexp_str(*msg, mi.doc_id(), qm)))};
 		headers.add(std::move(msgsexp));
 		// we output up-to-batch-size lists of messages. It's much
 		// faster (on the emacs side) to handle such batches than single
@@ -641,8 +661,8 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 	// create an output stream with a file name
 	size_t n{};
 
-	auto&& [output, tmp_eld] = make_temp_file_stream();
-	output << '(';
+	auto&& [tmp_file, tmp_file_name] = make_temp_file_stream();
+	tmp_file << '(';
 	for(auto&& mi: qres) {
 
 		auto msg{mi.message()};
@@ -650,20 +670,21 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 			continue;
 
 		auto qm{mi.query_match()}; // construct sexp for a single header.
-		output << build_message_sexp(*msg, mi.doc_id(), qm);
+		tmp_file << msg_sexp_str(*msg, mi.doc_id(), qm) << '\n';
 		++n;
 
 		if (n % batch_size == 0) {
-			output << ')';
-			output_sexp(Sexp{":headers-temp-file"_sym, tmp_eld});
+			tmp_file << ')';
+			batch_size = 1000;
+			output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
 			auto new_stream{make_temp_file_stream()};
-			output	= std::move(new_stream.first);
-			tmp_eld = std::move(new_stream.second);
-			output << '(';
+			tmp_file	= std::move(new_stream.first);
+			tmp_file_name = std::move(new_stream.second);
+			tmp_file << '(';
 		}
 	}
-	output << ')';
-	output_sexp(Sexp{":headers-temp-file"_sym, tmp_eld});
+	tmp_file << ')';
+	output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
 
 	return n;
 }
@@ -855,17 +876,17 @@ Server::Private::perform_move(Store::Id                 docid,
 		throw idmsgvec.error();
 
 	for (auto&&[id, msg]: *idmsgvec) {
-		Sexp sexp{":update"_sym, build_message_sexp(idmsgvec->at(0).second, id, {})};
+		auto sexpstr = "(:update " + msg_sexp_str(idmsgvec->at(0).second, id, {});
 		/* note, the :move t thing is a hint to the frontend that it
 		 * could remove the particular header */
 		if (different_mdir)
-			sexp.put_props(":move", Sexp::t_sym);
+			sexpstr += " :move t";
 		if (!no_view && id == docid)
-			sexp.put_props(":maybe-view", Sexp::t_sym);
-		output_sexp(std::move(sexp));
+			sexpstr += " :maybe-view t";
+		sexpstr += ')';
+		output(std::move(sexpstr));
 	}
 }
-
 
 static Flags
 calculate_message_flags(const Message& msg, Option<std::string> flagopt)
@@ -1042,8 +1063,8 @@ Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 		throw move_res.error();
 
 	for (auto&& [id, msg]: move_res.value())
-		output_sexp(Sexp{id == docid ? ":view"_sym : ":update"_sym,
-				build_message_sexp(msg, id, {})});
+		output(mu_format("({} {})", id == docid ? ":view" : ":update",
+				 msg_sexp_str(msg, id, {})));
 }
 
 void
@@ -1067,7 +1088,7 @@ Server::Private::view_handler(const Command& cmd)
 
 	/* if the message should not be marked-as-read, we're done. */
 	if (!mark_as_read)
-		output_sexp(Sexp().put_props(":view", build_message_sexp(msg, docid, {})));
+		output(mu_format("(:view {})", msg_sexp_str(msg, docid, {})));
 	else
 		view_mark_as_read(docid, std::move(msg), rename);
 	/* otherwise, mark message and and possible dups as read */

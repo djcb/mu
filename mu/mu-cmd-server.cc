@@ -80,32 +80,27 @@ cookie(size_t n)
 		::printf(COOKIE_PRE "%x" COOKIE_POST, num);
 }
 
-static void
-output_sexp_stdout(const Sexp& sexp, Server::OutputFlags flags)
-{
-	/* if requested, insert \n between list elements; note:
-	 * is _not_ inherited by children */
-	Sexp::Format fopts{};
-	if (any_of(flags & Server::OutputFlags::SplitList))
-		fopts |= Sexp::Format::SplitList;
 
-	const auto str{sexp.to_string(fopts)};
+
+static void
+output_stdout(const std::string& str, Server::OutputFlags flags)
+{
 	cookie(str.size() + 1);
 	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
 		mu_critical("failed to write output '{}'", str);
 		::raise(SIGTERM); /* terminate ourselves */
 	}
-
 	if (any_of(flags & Server::OutputFlags::Flush))
 		std::fflush(stdout);
 }
 
+
 static void
 report_error(const Mu::Error& err) noexcept
 {
-	output_sexp_stdout(Sexp(":error"_sym, Error::error_number(err.code()),
-				":message"_sym, err.what()),
-			   Server::OutputFlags::Flush);
+	output_stdout(Sexp(":error"_sym, Error::error_number(err.code()),
+			   ":message"_sym, err.what()).to_string(),
+		      Server::OutputFlags::Flush);
 }
 
 
@@ -120,7 +115,7 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	Server::Options sopts{};
 	sopts.allow_temp_file = opts.server.allow_temp_file;
 
-	Server server{*store, sopts, output_sexp_stdout};
+	Server server{*store, sopts, output_stdout};
 	mu_message("created server with store @ {}; maildir @ {}; debug-mode {};"
 		  "readline: {}",
 		   store->path(), store->root_maildir(),

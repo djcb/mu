@@ -36,19 +36,16 @@ class Server {
 public:
 	enum struct OutputFlags {
 		None	  = 0,
-		SplitList = 1 << 0,
-		/**< insert newlines between list items */
-		Flush	  = 1 << 1,
-		/**< flush output buffer after */
+		Flush	  = 1 << 0, /**< flush output buffer after */
 	};
 
 	/**
 	 * Prototype for output function
 	 *
-	 * @param sexp an s-expression
+	 * @param str a string
 	 * @param flags flags that influence the behavior
 	 */
-	using Output = std::function<void(const Sexp& sexp, OutputFlags flags)>;
+	using Output = std::function<void(const std::string& str, OutputFlags flags)>;
 
 	struct Options {
 		bool allow_temp_file; /**< temp file optimization allowed? */

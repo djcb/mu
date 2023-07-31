@@ -144,12 +144,18 @@ public:
 	void remove(Field::Id field_id);
 
 	/**
-	 * Get the cached s-expression useful for changing
-	 * it (call update_sexp_cache() when done)
+	 * Get the cached s-expression
 	 *
 	 * @return the cached s-expression
 	 */
 	const Sexp& sexp() const { return cached_sexp(); }
+
+	/**
+	 * Get the message s-expression as a string
+	 *
+	 * @return message s-expression string
+	 */
+	std::string sexp_str() const { return xdoc_.get_data(); }
 
 	/**
 	 * Generically adds an optional value, if set, to the document
