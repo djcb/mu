@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,7 +93,6 @@ Query::Private::make_enquire(const std::string& expr,
 		for (auto&& w : warns)
 			mu_warning("query warning: {}", to_string(w));
 		enq.set_query(xapian_query(tree));
-		mu_debug("qtree: {}", to_string(tree));
 	}
 
 	sort_enquire(enq, sortfield_id, qflags);
@@ -108,6 +107,8 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 {
 	auto enq{store_.xapian_db().enquire()};
 	std::vector<Xapian::Query> qvec;
+	qvec.reserve(thread_ids.size());
+
 	for (auto&& t : thread_ids)
 		qvec.emplace_back(field_from_id(Field::Id::ThreadId).xapian_term(t));
 
@@ -212,11 +213,10 @@ Query::Private::run_related(const std::string& expr,
 
 	// Gather the thread-ids we found
 	mset.fetch();
-	for (auto it = mset.begin(); it != mset.end(); ++it) {
-		auto thread_id{opt_string(it.get_document(), Field::Id::ThreadId)};
-		if (thread_id)
+	minfo.thread_ids.reserve(mset.size());
+	for (auto it = mset.begin(); it != mset.end(); ++it)
+		if (auto thread_id{opt_string(it.get_document(), Field::Id::ThreadId)}; thread_id)
 			minfo.thread_ids.emplace(std::move(*thread_id));
-	}
 
 	// Now, determine the "related query".
 	//
@@ -226,7 +226,7 @@ Query::Private::run_related(const std::string& expr,
 	auto r_enq = std::invoke([&]{
 		if (threading)
 			return make_related_enquire(minfo.thread_ids, Field::Id::Date,
-						    qflags );
+						    qflags);
 		else
 			return make_related_enquire(minfo.thread_ids, sortfield_id, qflags);
 	});
