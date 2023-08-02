@@ -55,7 +55,7 @@ constexpr auto ContactsKey          = "contacts";
 constexpr auto PersonalAddressesKey = "personal-addresses";
 constexpr auto CreatedKey           = "created";
 constexpr auto BatchSizeKey         = "batch-size";
-constexpr auto DefaultBatchSize     = 250'000U;
+constexpr auto DefaultBatchSize     = 50'000U;
 
 constexpr auto MaxMessageSizeKey     = "max-message-size";
 constexpr auto DefaultMaxMessageSize = 100'000'000U;
