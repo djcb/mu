@@ -100,8 +100,8 @@ public:
 			Type::Number,
 			Flags::Configurable,
 			"batch-size",
-			"250000",
-			"Version of the Xapian database schema"
+			"50000",
+			"Number of changes in a database transaction"
 		},
 		{
 			Id::Contacts,
