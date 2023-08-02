@@ -116,6 +116,8 @@ endforeach
 
 if cc.has_function('wordexp')
   config_h_data.set('HAVE_WORDEXP_H',1)
+else
+  message('no wordexp, no command-line option expansion')
 endif
 
 testmaildir=join_paths(meson.current_source_dir(), 'lib', 'tests')

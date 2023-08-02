@@ -43,6 +43,7 @@
 #include <unistd.h>
 
 #include <utils/mu-utils.hh>
+#include <utils/mu-utils-file.hh>
 #include <utils/mu-error.hh>
 #include "utils/mu-test-utils.hh"
 #include "mu-options.hh"
@@ -182,6 +183,19 @@ options_map(const IE& ie)
 
 	return map;
 }
+
+
+
+// transformers
+
+
+// Expand the path using wordexp
+static const std::function ExpandPath = [](std::string filepath)->std::string {
+	if (auto&& res{expand_path(filepath)}; !res)
+		throw CLI::ValidationError{res.error().what()};
+	else
+		return filepath = std::move(res.value());
+};
 
 /*
  * common
