@@ -75,6 +75,16 @@ bool check_dir(const std::string& path, bool readable, bool writeable);
  */
 std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
 
+/**
+ * Expand the filesystem path (as per wordexp(3))
+ *
+ * @param str a filesystem path string
+ *
+ * @return the expanded string or some error
+ */
+Result<std::string> expand_path(const std::string& str);
+
+
 /*
  * for OSs with out support for direntry->d_type, like Solaris
  */
