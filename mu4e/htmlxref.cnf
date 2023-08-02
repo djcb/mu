@@ -1,0 +1,788 @@
+# htmlxref.cnf - reference file for free Texinfo manuals on the web.
+
+htmlxrefversion=2023-04-02.12; # UTC
+
+# Copyright 2010-2023 Free Software Foundation, Inc.
+# 
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.
+#
+# The latest version of this file is available at
+# http://ftpmirror.gnu.org/texinfo/htmlxref.cnf.
+# Email corrections or additions to bug-texinfo@gnu.org.
+# The primary goal is to list all relevant GNU manuals;
+# other free manuals are also welcome.
+#
+# To be included in this list, a manual must:
+#
+# - have a generic url, e.g., no version numbers;
+# - have a unique file name (e.g., manual identifier), i.e., be related to the
+#   package name.  Things like "refman" or "tutorial" don't work.
+# - follow the naming convention for nodes described at
+# http://www.gnu.org/software/texinfo/manual/texinfo/html_node/HTML-Xref.html
+#   This is what makeinfo and texi2html implement.
+# 
+# Unless the above criteria are met, it's not possible to generate
+# reliable cross-manual references.
+# 
+# For information on automatically generating all the useful formats for
+# a manual to put on the web, see
+# http://www.gnu.org/prep/maintain/html_node/Manuals-on-Web-Pages.html.
+
+# For people editing this file: when a manual named foo is related to a
+# package named bar, the url should contain a variable reference ${BAR}.
+# Otherwise, the gnumaint scripts have no way of knowing they are
+# associated, and thus gnu.org/manual can't include them.
+
+# shorten references to manuals on www.gnu.org.
+G = https://www.gnu.org
+GS = ${G}/software
+
+3dldf		mono	${GS}/3dldf/manual/user_ref/3DLDF.html
+3dldf		node	${GS}/3dldf/manual/user_ref/
+
+alive		mono	${GS}/alive/manual/alive.html
+alive		node	${GS}/alive/manual/html_node/
+
+anubis		mono	${GS}/anubis/manual/anubis.html
+anubis		chapter	${GS}/anubis/manual/html_chapter/
+anubis		section	${GS}/anubis/manual/html_section/
+anubis		node	${GS}/anubis/manual/html_node/
+
+artanis		mono	${GS}/artanis/manual/artanis.html
+artanis		node	${GS}/artanis/manual/html_node/
+
+aspell		section	http://aspell.net/man-html/index.html
+
+auctex		mono	${GS}/auctex/manual/auctex.html
+auctex		node	${GS}/auctex/manual/auctex/
+
+autoconf	mono	${GS}/autoconf/manual/autoconf.html
+autoconf	node	${GS}/autoconf/manual/html_node/
+
+autogen		mono	${GS}/autogen/manual/autogen.html
+autogen		chapter	${GS}/autogen/manual/html_chapter/
+autogen		node	${GS}/autoconf/manual/html_node/
+
+automake	mono	${GS}/automake/manual/automake.html
+automake	node	${GS}/automake/manual/html_node/
+
+avl		node	http://adtinfo.org/libavl.html/
+
+bash		mono	${GS}/bash/manual/bash.html
+bash		node	${GS}/bash/manual/html_node/
+
+BINUTILS = https://sourceware.org/binutils/docs
+binutils	mono	${BINUTILS}/binutils.html
+binutils	node	${BINUTILS}/binutils/
+ #
+ as		mono	${BINUTILS}/as.html
+ as		node	${BINUTILS}/as/
+ #
+ bfd		mono	${BINUTILS}/bfd.html
+ bfd		node	${BINUTILS}/bfd/
+ #
+ gprof		mono	${BINUTILS}/gprof.html
+ gprof		node	${BINUTILS}/gprof/
+ #
+ ld		mono	${BINUTILS}/ld.html
+ ld		node	${BINUTILS}/ld/
+
+bison		mono	${GS}/bison/manual/bison.html
+bison		node	${GS}/bison/manual/html_node/
+
+bpel2owfn	mono	${GS}/bpel2owfn/manual/2.0.x/bpel2owfn.html
+
+ccd2cue		mono	${GS}/ccd2cue/manual/ccd2cue.html
+ccd2cue		node	${GS}/ccd2cue/manual/html_node/
+
+cflow		mono	${GS}/cflow/manual/cflow.html
+cflow		node	${GS}/cflow/manual/html_node/
+
+chess		mono	${GS}/chess/manual/gnuchess.html
+chess		node	${GS}/chess/manual/html_node/
+
+combine		mono	${GS}/combine/manual/combine.html
+combine		chapter	${GS}/combine/manual/html_chapter/
+combine		section	${GS}/combine/manual/html_section/
+combine		node	${GS}/combine/manual/html_node/
+
+complexity	mono	${GS}/complexity/manual/complexity.html
+complexity	node	${GS}/complexity/manual/html_node/
+
+coreutils	mono	${GS}/coreutils/manual/coreutils.html
+coreutils	node	${GS}/coreutils/manual/html_node/
+
+cpio		mono	${GS}/cpio/manual/cpio.html
+cpio		node	${GS}/cpio/manual/html_node/
+
+cssc		node	${GS}/cssc/manual/
+
+CVS = ${GS}/trans-coord/manual
+cvs		mono	${CVS}/cvs/cvs.html
+cvs		node	${CVS}/cvs/html_node/
+
+ddd		mono	${GS}/ddd/manual/html_mono/ddd.html
+
+ddrescue	mono	${GS}/ddrescue/manual/ddrescue_manual.html
+
+dejagnu         node    ${GS}/dejagnu/manual/
+
+DICO = https://www.gnu.org.ua/software/dico/manual
+dico		mono	${DICO}/dico.html
+dico		chapter	${DICO}/html_chapter/
+dico		section	${DICO}/html_section/
+dico		node	${DICO}/html_node/
+
+diffutils	mono	${GS}/diffutils/manual/diffutils.html
+diffutils	node	${GS}/diffutils/manual/html_node/
+
+ed		mono	${GS}/ed/manual/ed_manual.html
+
+EMACS = ${GS}/emacs/manual
+emacs		mono	${EMACS}/html_mono/emacs.html
+emacs		node	${EMACS}/html_node/emacs/
+ #
+ auth		mono	${EMACS}/html_mono/auth.html
+ auth		node	${EMACS}/html_node/auth/
+ #
+ autotype	mono	${EMACS}/html_mono/autotype.html
+ autotype	node	${EMACS}/html_node/autotype/
+ #
+ calc		mono	${EMACS}/html_mono/calc.html
+ calc		node	${EMACS}/html_node/calc/
+ #
+ ccmode		mono	${EMACS}/html_mono/ccmode.html
+ ccmode		node	${EMACS}/html_node/ccmode/
+ #
+ cl		mono	${EMACS}/html_mono/cl.html
+ cl		node	${EMACS}/html_node/cl/
+ #
+ dbus		mono	${EMACS}/html_mono/dbus.html
+ dbus		node	${EMACS}/html_node/dbus/
+ #
+ ebrowse	mono	${EMACS}/html_mono/ebrowse.html
+ ebrowse	node	${EMACS}/html_node/ebrowse/
+ #
+ ede		mono	${EMACS}/html_mono/ede.html
+ ede		node	${EMACS}/html_node/ede/
+ #
+ edt		mono	${EMACS}/html_mono/edt.html
+ edt		node	${EMACS}/html_node/edt/
+ #
+ ediff		mono	${EMACS}/html_mono/ediff.html
+ ediff		node	${EMACS}/html_node/ediff/
+ #
+ eieio		mono	${EMACS}/html_mono/eieio.html
+ eieio		node	${EMACS}/html_node/eieio/
+ #
+ elisp		mono	${EMACS}/html_mono/elisp.html
+ elisp		node	${EMACS}/html_node/elisp/
+ #
+ emacs-gnutls	mono	${EMACS}/html_mono/emacs-gnutls.html
+ emacs-gnutls	node	${EMACS}/html_node/emacs-gnutls/
+ #
+ emacs-mime	mono	${EMACS}/html_mono/emacs-mime.html
+ emacs-mime	node	${EMACS}/html_node/emacs-mime/
+ #
+ epa		mono	${EMACS}/html_mono/epa.html
+ epa		node	${EMACS}/html_node/epa/
+ #
+ erc		mono	${EMACS}/html_mono/erc.html
+ erc		node	${EMACS}/html_node/erc/
+ #
+ dired-x	mono	${EMACS}/html_mono/dired-x.html
+ dired-x	node	${EMACS}/html_node/dired-x/
+ #
+ ert		mono	${EMACS}/html_mono/ert.html
+ ert		node	${EMACS}/html_node/ert/
+ #
+ eshell		mono	${EMACS}/html_mono/eshell.html
+ eshell		node	${EMACS}/html_node/eshell/
+ #
+ eudc		mono	${EMACS}/html_mono/eudc.html
+ eudc		node	${EMACS}/html_node/eudc/
+ #
+ eww		mono	${EMACS}/html_mono/eww.html
+ eww		node	${EMACS}/html_node/eww/
+ #
+ forms		mono	${EMACS}/html_mono/forms.html
+ forms		node	${EMACS}/html_node/forms/
+ #
+ flymake	mono	${EMACS}/html_mono/flymake.html
+ flymake	node	${EMACS}/html_node/flymake/
+ #
+ gnus		mono	${EMACS}/html_mono/gnus.html
+ gnus		node	${EMACS}/html_node/gnus/
+ #
+ htmlfontify	mono	${EMACS}/html_mono/htmlfontify.html
+ htmlfontify	node	${EMACS}/html_node/htmlfontify/
+ #
+ idlwave	mono	${EMACS}/html_mono/idlwave.html
+ idlwave	node	${EMACS}/html_node/idlwave/
+ #
+ ido		mono	${EMACS}/html_mono/ido.html
+ ido		node	${EMACS}/html_node/ido/
+ #
+ info   	mono	${EMACS}/html_mono/info.html
+ info   	node	${EMACS}/html_node/info/
+ #
+ mairix-el	mono	${EMACS}/html_mono/mairix-el.html
+ mairix-el	node	${EMACS}/html_node/mairix-el/
+ #
+ message	mono	${EMACS}/html_mono/message.html
+ message	node	${EMACS}/html_node/message/
+ #
+ mh-e		mono	${EMACS}/html_mono/mh-e.html
+ mh-e		node	${EMACS}/html_node/mh-e/
+ #
+ newsticker	mono	${EMACS}/html_mono/newsticker.html
+ newsticker	node	${EMACS}/html_node/newsticker/
+ #
+ nxml-mode	mono	${EMACS}/html_mono/nxml-mode.html
+ nxml-mode	node	${EMACS}/html_node/nxml-mode/
+ #
+ octave-mode	mono	${EMACS}/html_mono/octave-mode.html
+ octave-mode	node	${EMACS}/html_node/octave-mode/
+ #
+ org		mono	${EMACS}/html_mono/org.html
+ org		node	${EMACS}/html_node/org/
+ #
+ pcl-cvs	mono	${EMACS}/html_mono/pcl-cvs.html
+ pcl-cvs	node	${EMACS}/html_node/pcl-cvs/
+ #
+ pgg		mono	${EMACS}/html_mono/pgg.html
+ pgg		node	${EMACS}/html_node/pgg/
+ #
+ rcirc		mono	${EMACS}/html_mono/rcirc.html
+ rcirc		node	${EMACS}/html_node/rcirc/
+ #
+ reftex		mono	${EMACS}/html_mono/reftex.html
+ reftex		node	${EMACS}/html_node/reftex/
+ #
+ remember	mono	${EMACS}/html_mono/remember.html
+ remember	node	${EMACS}/html_node/remember/
+ #
+ sasl		mono	${EMACS}/html_mono/sasl.html
+ sasl		node	${EMACS}/html_node/sasl/
+ #
+ semantic	mono	${EMACS}/html_mono/semantic.html
+ semantic	node	${EMACS}/html_node/semantic/
+ #
+ bovine		mono	${EMACS}/html_mono/bovine.html
+ bovine		node	${EMACS}/html_node/bovine/
+ #
+ srecode	mono	${EMACS}/html_mono/srecode.html
+ srecode	node	${EMACS}/html_node/srecode/
+ #
+ ses		mono	${EMACS}/html_mono/ses.html
+ ses		node	${EMACS}/html_node/ses/
+ #
+ sieve		mono	${EMACS}/html_mono/sieve.html
+ sieve		node	${EMACS}/html_node/sieve/
+ #
+ smtp		mono	${EMACS}/html_mono/smtpmail.html
+ smtp		node	${EMACS}/html_node/smtpmail/
+ #
+ speedbar	mono	${EMACS}/html_mono/speedbar.html
+ speedbar	node	${EMACS}/html_node/speedbar/
+ #
+ sc		mono	${EMACS}/html_mono/sc.html
+ sc		node	${EMACS}/html_node/sc/
+ #
+ todo-mode	mono	${EMACS}/html_mono/todo-mode.html
+ todo-mode	node	${EMACS}/html_node/todo-mode/
+ #
+ tramp		mono	${EMACS}/html_mono/tramp.html
+ tramp		node	${EMACS}/html_node/tramp/
+ #
+ url		mono	${EMACS}/html_mono/url.html
+ url		node	${EMACS}/html_node/url/
+ #
+ vhdl-mode	mono	${EMACS}/html_mono/vhdl-mode.html
+ vhdl-mode	node	${EMACS}/html_node/vhdl-mode/
+ #
+ vip		mono	${EMACS}/html_mono/vip.html
+ vip		node	${EMACS}/html_node/vip/
+ #
+ viper		mono	${EMACS}/html_mono/viper.html
+ viper		node	${EMACS}/html_node/viper/
+ #
+ widget		mono	${EMACS}/html_mono/widget.html
+ widget		node	${EMACS}/html_node/widget/
+ #
+ wisent		mono	${EMACS}/html_mono/wisent.html
+ wisent		node	${EMACS}/html_node/wisent/
+ #
+ woman		mono	${EMACS}/html_mono/woman.html
+ woman		node	${EMACS}/html_node/woman/
+ # (end emacs manuals in EMACS)
+
+easejs		mono	${GS}/easejs/manual/easejs.html
+easejs		node	${GS}/easejs/manual/
+
+emacs-muse	mono	${GS}/emacs-muse/manual/muse.html
+emacs-muse	node	${GS}/emacs-muse/manual/html_node/
+
+emms		node	${GS}/emms/manual/
+
+ada-mode	mono	https://elpa.gnu.org/packages/ada-mode.html
+
+gpr-mode	mono	https://elpa.gnu.org/packages/doc/gpr-mode.html
+
+findutils	mono	${GS}/findutils/manual/html_mono/find.html
+findutils	node	${GS}/findutils/manual/html_node/find_html
+
+flex		node	https://westes.github.io/flex/manual/
+
+gama		mono	${GS}/gama/manual/gama.html
+gama		node	${GS}/gama/manual/html_node/
+
+GAWK = ${GS}/gawk/manual
+gawk		mono	${GAWK}/gawk.html
+gawk		node	${GAWK}/html_node/
+ gawkinet	mono	${GAWK}/gawkinet/gawkinet.html
+ gawkinet	node	${GAWK}/gawkinet/html_node/
+
+gcal		mono	${GS}/gcal/manual/gcal.html
+gcal		node	${GS}/gcal/manual/html_node/
+
+GCC = https://gcc.gnu.org/onlinedocs
+gcc		node	${GCC}/gcc/
+ cpp		node	${GCC}/cpp/
+ gfortran	node	${GCC}/gfortran/
+ gnat_rm	node	${GCC}/gnat_rm/
+ gnat_ugn	node	${GCC}/gnat_ugn/
+ libgomp	node	${GCC}/libgomp/
+ libstdc++	node	${GCC}/libstdc++/
+ #
+ gccint		node	${GCC}/gccint/
+ cppinternals	node	${GCC}/cppinternals/
+ gfc-internals	node	${GCC}/gfc-internals/
+ gnat-style	node	${GCC}/gnat-style/
+ libiberty	node	${GCC}/libiberty/
+
+GDB = https://sourceware.org/gdb/current/onlinedocs
+gdb		node	${GDB}/gdb.html/
+ stabs		node	${GDB}/stabs.html/
+
+GDBM = http://www.gnu.org.ua/software/gdbm/manual
+gdbm		node	${GDBM}/
+
+gettext		mono	${GS}/gettext/manual/gettext.html
+gettext		node	${GS}/gettext/manual/html_node/
+
+gforth		node	https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/
+
+global		mono	${GS}/global/manual/global.html
+
+gmediaserver	node	${GS}/gmediaserver/manual/
+
+gmp		node	https://www.gmplib.org/manual/
+
+gnu-arch	node	${GS}/gnu-arch/tutorial/
+
+gnu-c-manual	mono	${GS}/gnu-c-manual/gnu-c-manual.html
+
+gnu-crypto	node	${GS}/gnu-crypto/manual/
+
+gnubg		mono	${GS}/gnubg/manual/gnubg.html
+gnubg		node	${GS}/gnubg/manual/html_node/
+
+GNUCOBOL = https://gnucobol.sourceforge.io/HTML
+gnucobpg	mono	${GNUCOBOL}/gnucobpg.html
+ gnucobqr	mono	${GNUCOBOL}/gnucobqr.html
+ gnucobsp	mono	${GNUCOBOL}/gnucobsp.html
+
+gnubik		mono	${GS}/gnubik/manual/gnubik.html
+gnubik		node	${GS}/gnubik/manual/html_node/
+
+gnulib		mono	${GS}/gnulib/manual/gnulib.html
+gnulib		node	${GS}/gnulib/manual/html_node/
+
+GNUN = ${GS}/trans-coord/manual
+gnun		mono	${GNUN}/gnun/gnun.html
+gnun		node	${GNUN}/gnun/html_node/
+ web-trans	mono	${GNUN}/web-trans/web-trans.html
+ web-trans	node	${GNUN}/web-trans/html_node/
+
+GNUPG = https://www.gnupg.org/documentation/manuals
+gnupg		node	${GNUPG}/gnupg/
+ dirmngr	node	${GNUPG}/dirmngr/
+ gcrypt		node	${GNUPG}/gcrypt/
+ libgcrypt	node	${GNUPG}/gcrypt/
+ ksba		node	${GNUPG}/ksba/
+ assuan		node	${GNUPG}/assuan/
+ gpgme		node	${GNUPG}/gpgme/
+
+gnuprologjava	node	${GS}/gnuprologjava/manual/
+
+gnuschool	mono	${GS}/gnuschool/gnuschool.html
+
+GNUSTANDARDS = ${G}/prep
+ maintain	mono	${GNUSTANDARDS}/maintain/maintain.html
+ maintain	node	${GNUSTANDARDS}/maintain/html_node/
+ #
+ standards	mono	${GNUSTANDARDS}/standards/standards.html
+ standards	node	${GNUSTANDARDS}/standards/html_node/
+
+# following url is a redirect, which cannot be used for links within the manual
+#gnutls		mono	${GS}/gnutls/manual/gnutls.html
+# empty directory
+#gnutls		node	${GS}/gnutls/manual/html_node/
+GNUTLS = http://www.gnutls.org/manual
+gnutls		mono	${GNUTLS}/gnutls.html
+gnutls		node	${GNUTLS}/html_node/
+
+gperf		mono	${GS}/gperf/manual/gperf.html
+gperf		node	${GS}/gperf/manual/html_node/
+
+grep		mono	${GS}/grep/manual/grep.html
+grep		node	${GS}/grep/manual/html_node/
+
+groff		node	${GS}/groff/manual/html_node/
+
+GRUB = ${GS}/grub/manual/
+  grub		mono	${GRUB}/grub/grub.html
+  grub		node	${GRUB}/grub/html_node/
+  #
+  multiboot	mono	${GRUB}/multiboot/multiboot.html
+  multiboot	node	${GRUB}/multiboot/html_node/
+  #
+  grub-dev	mono	${GRUB}/grub-dev/grub-dev.html
+  grub-dev	node	${GRUB}/grub-dev/html_node/
+
+gsasl		mono	${GS}/gsasl/manual/gsasl.html
+gsasl		node	${GS}/gsasl/manual/html_node/
+
+gsl		node	${GS}/gsl/manual/html_node/
+
+gsrc		mono	${GS}/gsrc/manual/gsrc.html
+gsrc		node	${GS}/gsrc/manual/html_node/
+
+gss		mono	${GS}/gss/manual/gss.html
+gss		node	${GS}/gss/manual/html_node/
+
+gtypist		mono	${GS}/gtypist/doc/gtypist.html
+
+guile		mono	${GS}/guile/manual/guile.html
+guile		node	${GS}/guile/manual/html_node/
+
+GUILE_GNOME = ${GS}/guile-gnome/docs
+ gobject 	node	${GUILE_GNOME}/gobject/html/
+ glib		node	${GUILE_GNOME}/glib/html/
+ atk		node	${GUILE_GNOME}/atk/html/
+ pango		node	${GUILE_GNOME}/pango/html/
+ pangocairo	node	${GUILE_GNOME}/pangocairo/html/
+ gdk		node	${GUILE_GNOME}/gdk/html/
+ gtk		node	${GUILE_GNOME}/gtk/html/
+ libglade	node	${GUILE_GNOME}/libglade/html/
+ gnome-vfs	node	${GUILE_GNOME}/gnome-vfs/html/
+ libgnomecanvas	node	${GUILE_GNOME}/libgnomecanvas/html/
+ gconf		node	${GUILE_GNOME}/gconf/html/
+ libgnome	node	${GUILE_GNOME}/libgnome/html/
+ libgnomeui	node	${GUILE_GNOME}/libgnomeui/html/
+ corba		node	${GUILE_GNOME}/corba/html/
+ clutter	node	${GUILE_GNOME}/clutter/html/
+ clutter-glx	node	${GUILE_GNOME}/clutter-glx/html/
+
+guile-gtk	node	${GS}/guile-gtk/docs/guile-gtk/
+
+guile-rpc	mono	${GS}/guile-rpc/manual/guile-rpc.html
+guile-rpc	node	${GS}/guile-rpc/manual/html_node/
+
+guix		mono	${GS}/guix/manual/guix.html
+guix		node	${GS}/guix/manual/html_node/
+
+gv		mono	${GS}/gv/manual/gv.html
+gv		node	${GS}/gv/manual/html_node/
+
+gzip		mono	${GS}/gzip/manual/gzip.html
+gzip		node	${GS}/gzip/manual/html_node/
+
+hello		mono	${GS}/hello/manual/hello.html
+hello		node	${GS}/hello/manual/html_node/
+
+help2man	mono	${GS}/help2man/help2man.html
+
+idutils		mono	${GS}/idutils/manual/idutils.html
+idutils		node	${GS}/idutils/manual/html_node/
+
+inetutils	mono	${GS}/inetutils/manual/inetutils.html
+inetutils	node	${GS}/inetutils/manual/html_node/
+
+# No manual, redirects to git sources
+#jwhois		mono	${GS}/jwhois/manual/jwhois.html
+# 404 Not Found
+#jwhois		node	${GS}/jwhois/manual/html_node/
+
+libc		mono	${GS}/libc/manual/html_mono/libc.html
+libc		node	${GS}/libc/manual/html_node/
+
+LIBCDIO = ${GS}/libcdio
+ libcdio	mono	${LIBCDIO}/libcdio.html
+ cd-text	mono	${LIBCDIO}/cd-text-format.html
+
+libextractor	mono	${GS}/libextractor/manual/libextractor.html
+libextractor	node	${GS}/libextractor/manual/html_node/
+
+libidn		mono	${GS}/libidn/manual/libidn.html
+libidn		node	${GS}/libidn/manual/html_node/
+
+libidn2		mono	${GS}/libidn/libidn2/manual/libidn2.html
+libidn2		node	${GS}/libidn/libidn2/manual/html_node/
+
+librejs		mono	${GS}/librejs/manual/librejs.html
+librejs		node	${GS}/librejs/manual/html_node/
+
+libmatheval	mono	${GS}/libmatheval/manual/libmatheval.html
+
+LIBMICROHTTPD = ${GS}/libmicrohttpd
+libmicrohttpd		mono	${LIBMICROHTTPD}/manual/libmicrohttpd.html
+libmicrohttpd		node	${LIBMICROHTTPD}/manual/html_node/
+ # The manual name is based on the Texinfo file name in the code,
+ # not on the file name for the tutorial which is too generic.
+ microhttpd-tutorial	mono	${LIBMICROHTTPD}/tutorial.html
+
+libtasn1	mono	${GS}/libtasn1/manual/libtasn1.html
+libtasn1	node	${GS}/libtasn1/manual/html_node/
+
+libtool		mono	${GS}/libtool/manual/libtool.html
+libtool		node	${GS}/libtool/manual/html_node/
+
+lightning	mono	${GS}/lightning/manual/lightning.html
+lightning	node	${GS}/lightning/manual/html_node/
+
+# The stable/ url redirects immediately, but that's ok.
+# The .html extension is omitted on their web site, but it works if given.
+LILYPOND = http://lilypond.org/doc/stable/Documentation
+ lilypond-internals	node ${LILYPOND}/internals/
+ lilypond-learning	node ${LILYPOND}/learning/
+ lilypond-notation 	node ${LILYPOND}/notation/
+ lilypond-snippets 	node ${LILYPOND}/snippets/
+ lilypond-usage		node ${LILYPOND}/usage/
+ lilypond-web		node ${LILYPOND}/web/
+ music-glossary		node ${LILYPOND}/music-glossary/
+
+liquidwar6	mono	${GS}/liquidwar6/manual/liquidwar6.html
+liquidwar6	node	${GS}/liquidwar6/manual/html_node/
+
+lispintro	mono	${GS}/emacs/emacs-lisp-intro/html_mono/emacs-lisp-intro.html
+lispintro	node	${GS}/emacs/emacs-lisp-intro/html_node/index.html
+
+LSH = http://www.lysator.liu.se/~nisse/lsh
+  lsh		mono	${LSH}/lsh.html
+
+m4		mono	${GS}/m4/manual/m4.html
+m4		node	${GS}/m4/manual/html_node/
+
+MITGNUSCHEME = ${GS}/mit-scheme/documentation/stable
+mit-scheme-user	mono	${MITGNUSCHEME}/mit-scheme-user.html
+mit-scheme-user	node	${MITGNUSCHEME}/mit-scheme-user/
+ #
+ mit-scheme-ref	mono	${MITGNUSCHEME}/mit-scheme-ref.html
+ mit-scheme-ref	node	${MITGNUSCHEME}/mit-scheme-ref/
+ #
+ mit-scheme-ffi	mono	${MITGNUSCHEME}/mit-scheme-ffi.html
+ mit-scheme-ffi	node	${MITGNUSCHEME}/mit-scheme-ffi/
+ #
+ mit-scheme-sos	mono	${MITGNUSCHEME}/mit-scheme-sos.html
+ mit-scheme-sos	node	${MITGNUSCHEME}/mit-scheme-sos/
+ #
+ mit-scheme-imail	mono	${MITGNUSCHEME}/mit-scheme-imail.html
+ #
+ mit-scheme-blowfish	mono	${MITGNUSCHEME}/mit-scheme-blowfish.html
+ #
+ mit-scheme-gdbm	mono	${MITGNUSCHEME}/mit-scheme-gdbm.html
+
+mailutils	mono	${GS}/mailutils/manual/mailutils.html
+mailutils	chapter	${GS}/mailutils/manual/html_chapter/
+mailutils	section	${GS}/mailutils/manual/html_section/
+mailutils	node	${GS}/mailutils/manual/html_node/
+
+make		mono	${GS}/make/manual/make.html
+make		node	${GS}/make/manual/html_node/
+
+mdk		mono	${GS}/mdk/manual/mdk.html
+mdk		node	${GS}/mdk/manual/html_node/
+
+METAEXCHANGE = https://ftp.gwdg.de/pub/gnu2/iwfmdh/doc/texinfo
+ iwf_mh		node	${METAEXCHANGE}/iwf_mh.html
+ scantest	node	${METAEXCHANGE}/scantest.html
+
+MIT_SCHEME = ${GS}/mit-scheme/documentation/stable
+ mit-scheme-ref	  node	${MIT_SCHEME}/mit-scheme-ref/
+ mit-scheme-user  node	${MIT_SCHEME}/mit-scheme-user/
+ sos		  node	${MIT_SCHEME}/mit-scheme-sos/
+ mit-scheme-imail mono	${MIT_SCHEME}/mit-scheme-imail.html
+
+moe		mono	${GS}/moe/manual/moe_manual.html
+
+motti		node	${GS}/motti/manual/
+
+# only PDF is available as documentation to download
+#mpc		node	http://www.multiprecision.org/index.php?prog=mpc&page=html
+
+mpfr		mono	https://www.mpfr.org/mpfr-current/mpfr.html
+
+mtools		mono	${GS}/mtools/manual/mtools.html
+
+nano		mono	https://www.nano-editor.org/dist/latest/nano.html
+
+nettle		mono	https://www.lysator.liu.se/~nisse/nettle/nettle.html
+
+ocrad		mono	${GS}/ocrad/manual/ocrad_manual.html
+
+parted		mono	${GS}/parted/manual/parted.html
+parted		node	${GS}/parted/manual/html_node/
+
+pascal		node	https://www.gnu-pascal.de/gpc/
+
+# can't use pcb since url's contain dates --30nov10
+
+PIES = http://www.gnu.org.ua/software/pies/manual
+pies		node	${PIES}/
+
+plotutils	mono	${GS}/plotutils/manual/en/plotutils.html
+plotutils	node	${GS}/plotutils/manual/en/html_node/
+
+proxyknife	mono	${GS}/proxyknife/manual/proxyknife.html
+proxyknife	node	${GS}/proxyknife/manual/html_node/
+
+pspp		mono	${GS}/pspp/manual/pspp.html
+pspp		node	${GS}/pspp/manual/html_node/
+
+pyconfigure	mono	${GS}/pyconfigure/manual/pyconfigure.html
+pyconfigure	node	${GS}/pyconfigure/manual/html_node/
+
+R = https://cran.r-project.org/doc/manuals
+ R-intro	mono	${R}/R-intro.html
+ R-lang		mono	${R}/R-lang.html
+ R-exts		mono	${R}/R-exts.html
+ R-data		mono	${R}/R-data.html
+ R-admin	mono	${R}/R-admin.html
+ R-ints		mono	${R}/R-ints.html
+
+rcs		mono	${GS}/rcs/manual/rcs.html
+rcs		node	${GS}/rcs/manual/html_node/
+
+READLINE = https://tiswww.cwru.edu/php/chet/readline
+readline	mono	${READLINE}/readline.html
+ rluserman	mono	${READLINE}/rluserman.html
+ history	mono	${READLINE}/history.html
+
+# no manual for Recode found.  Most recent fork seems to be at
+# https://github.com/rrthomas/recode/
+
+recutils	mono	${GS}/recutils/manual/recutils.html
+recutils	node	${GS}/recutils/manual/html_node/
+
+remotecontrol	mono	${GS}/remotecontrol/manual/remotecontrol.html
+remotecontrol	node	${GS}/remotecontrol/manual/html_node/
+
+rottlog		mono	${GS}/rottlog/manual/rottlog.html
+rottlog		node	${GS}/rottlog/manual/html_node/
+
+RUSH = http://www.gnu.org.ua/software/rush/manual
+rush		mono	${RUSH}/rush.html
+rush 		chapter	${RUSH}/html_chapter/
+rush 		section	${RUSH}/html_section/
+rush		node	${RUSH}/html_node/
+
+screen		mono	${GS}/screen/manual/screen.html
+screen		node	${GS}/screen/manual/html_node/
+
+sed		mono	${GS}/sed/manual/sed.html
+sed		node	${GS}/sed/manual/html_node/
+
+sharutils	mono	${GS}/sharutils/manual/sharutils.html
+sharutils	chapter	${GS}/sharutils/manual/html_chapter/
+sharutils	node	${GS}/sharutils/manual/html_node/
+
+# replaces dmd
+shepherd	mono	${GS}/shepherd/manual/shepherd.html
+shepherd	node	${GS}/shepherd/manual/html_node/
+
+SMALLTALK = ${GS}/smalltalk
+gst		mono	${SMALLTALK}/manual/gst.html
+gst		node	${SMALLTALK}/manual/html_node/
+ #
+ gst-base	mono	${SMALLTALK}/manual-base/gst-base.html
+ gst-base	node	${SMALLTALK}/manual-base/html_node/
+ #
+ gst-libs	mono	${SMALLTALK}/manual-libs/gst-libs.html
+ gst-libs	node	${SMALLTALK}/manual-libs/html_node/
+
+sourceinstall	mono	${GS}/sourceinstall/manual/sourceinstall.html
+sourceinstall	node	${GS}/sourceinstall/manual/html_node/
+
+sqltutor	mono	${GS}/sqltutor/manual/sqltutor.html
+sqltutor	node	${GS}/sqltutor/manual/html_node/
+
+src-highlite	mono	${GS}/src-highlite/source-highlight.html
+
+swbis		mono	${GS}/swbis/manual.html
+
+tar		mono	${GS}/tar/manual/tar.html
+tar		chapter	${GS}/tar/manual/html_chapter/
+tar		section	${GS}/tar/manual/html_section/
+tar		node	${GS}/tar/manual/html_node/
+
+teseq		mono	${GS}/teseq/manual/teseq.html
+teseq		node	${GS}/teseq/manual/html_node/
+
+TEXINFO = ${GS}/texinfo/manual
+texinfo		mono	${TEXINFO}/texinfo/texinfo.html
+texinfo		node	${TEXINFO}/texinfo/html_node/
+ #
+ info-stnd	mono	${TEXINFO}/info-stnd/info-stnd.html
+ info-stnd	node	${TEXINFO}/info-stnd/html_node/
+ #
+ texi2any_api	mono	${TEXINFO}/texi2any_api/texi2any_api.html
+ texi2any_api	node	${TEXINFO}/texi2any_api/html_node/
+ #
+ texi2any_internals	mono	${TEXINFO}/texi2any_internals/texi2any_internals.html
+ texi2any_internals	chapter	${TEXINFO}/texi2any_internals/html_chapter/
+
+thales		node	${GS}/thales/manual/
+
+units		mono	${GS}/units/manual/units.html
+units		node	${GS}/units/manual/html_node/
+
+vc-dwim		mono	${GS}/vc-dwim/manual/vc-dwim.html
+vc-dwim		node	${GS}/vc-dwim/manual/html_node/
+
+wdiff		mono	${GS}/wdiff/manual/wdiff.html
+wdiff		node	${GS}/wdiff/manual/html_node/
+
+websocket4j	mono	${GS}/websocket4j/manual/websocket4j.html
+websocket4j	node	${GS}/websocket4j/manual/html_node/
+
+wget		mono	${GS}/wget/manual/wget.html
+wget		node	${GS}/wget/manual/html_node/
+
+xboard		mono	${GS}/xboard/manual/xboard.html
+xboard		node	${GS}/xboard/manual/html_node/
+
+# emacs-page
+# Free TeX-related Texinfo manuals on tug.org.
+
+T = https://tug.org/texinfohtml
+
+dvipng		mono	${T}/dvipng.html
+dvips		mono	${T}/dvips.html
+eplain		mono	${T}/eplain.html
+kpathsea	mono	${T}/kpathsea.html
+latex2e		mono	${T}/latex2e.html
+tlbuild		mono	${T}/tlbuild.html
+web2c		mono	${T}/web2c.html
+
+
+# Local Variables:
+# eval: (add-hook 'write-file-hooks 'time-stamp)
+# time-stamp-start: "htmlxrefversion="
+# time-stamp-format: "%:y-%02m-%02d.%02H"
+# time-stamp-time-zone: "UTC"
+# time-stamp-end: "; # UTC"
+# End:

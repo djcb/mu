@@ -55,9 +55,9 @@ Documentation License.''
 Welcome to @t{mu4e}!
 
 @t{mu4e} (@t{mu}-for-emacs) is an e-mail client for GNU Emacs version 26.3 or
-newer, built on top of the
-@t{mu}@footnote{@url{https://www.djcbsoftware.nl/code/mu}} e-mail search engine.
-@t{mu4e} is optimized for quickly processing large amounts of e-mail.
+newer, built on top of the @uref{https://www.djcbsoftware.nl/code/mu,mu} e-mail
+search engine. @t{mu4e} is optimized for quickly processing large amounts of
+e-mail.
 
 Some of its highlights:
 @itemize
@@ -141,16 +141,14 @@ basis.
 @node Other mail clients
 @section Other mail clients
 
-Under the hood, @t{mu4e} is fully search-based, similar to programs
-like @t{notmuch}@footnote{@url{https://notmuchmail.org/}} and
-@t{sup}@footnote{@url{https://sup-heliotrope.github.io/}}.
+Under the hood, @t{mu4e} is fully search-based, similar to programs like
+@uref{https://notmuchmail.org/,notmuch} and
+@uref{https://sup-heliotrope.github.io/,sup}.
 
-However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail
-handling (deleting, moving, etc.)@: is inspired by
-Wanderlust@footnote{@url{http://www.gohome.org/wl/}} (another
-Emacs-based e-mail client),
-@t{mutt}@footnote{@url{http://www.mutt.org/}} and the @t{dired}
-file-manager for emacs.
+However, @t{mu4e}'s user-interface is quite different. @t{mu4e}'s mail handling
+(deleting, moving, etc.)@: is inspired by
+@uref{http://www.gohome.org/wl/,Wanderlust} (another Emacs-based e-mail client),
+@uref{http://www.mutt.org/,mutt} and the @t{dired} file-manager for emacs.
 
 @t{mu4e} keeps all the `state' in your maildirs, so you can easily
 switch between clients, synchronize over @abbr{IMAP}, backup with
@@ -164,14 +162,14 @@ information.
 There are a number of things that @t{mu4e} does @b{not} do, by design:
 @itemize
 @item @t{mu}/@t{mu4e} do @emph{not} get your e-mail messages from
-a mail server. Nor does it sync-back any changes. Those tasks are
-delegated to other tools, such as
-@t{offlineimap}@footnote{@url{https://www.offlineimap.org/}},
-@t{isync/mbsync}@footnote{@url{http://isync.sourceforge.net/}} or
-@t{fetchmail}@footnote{@url{http://www.fetchmail.info/}}; As long as
-the messages end up in a maildir, @t{mu4e} and @t{mu} are happy to
-deal with them.
-@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it depends on @t{smtpmail} (@ref{Top,,smtpmail}), which is part of Emacs. In addition, @t{mu4e} piggybacks on Gnus' message editor.
+a mail server. Nor does it sync-back any changes. Those tasks are delegated to
+other tools, such as @uref{https://www.offlineimap.org/,offlineimap},
+@uref{http://isync.sourceforge.net/,mbsync} or
+@uref{http://www.fetchmail.info/,fetchmail}; As long as the messages end up in a
+maildir, @t{mu4e} and @t{mu} are happy to deal with them.
+@item @t{mu4e} also does @emph{not} implement sending of messages; instead, it depends on
+@ref{(smtpmail) Top}, which is part of Emacs. In addition, @t{mu4e} piggybacks on
+Gnus' message editor.
 @end itemize
 
 Thus, many of the things an e-mail client traditionally needs to do, are
@@ -189,18 +187,15 @@ about programming or elisp shouldn't be required. The idea is to provide
 sensible defaults, and allow for customization.
 
 When you take @t{mu4e} into use, it's a good idea to subscribe to the
-@t{mu}/@t{mu4e}-mailing
-list@footnote{@url{https://groups.google.com/group/mu-discuss}}.
+@uref{https://groups.google.com/group/mu-discuss,mu/mu4e mailing list}.
 
-Sometimes, you might encounter some unexpected behavior while using
-@t{mu4e}. It could be a bug in @t{mu4e}, it could be an issue in other
-software. Or it could just be a misunderstanding. In any case, if you
-want to report this (either to the mailing list or to
-@url{https://github.com/djcb/mu/issues}, the latter is preferred),
-please always include the following information:
+Sometimes, you might encounter some unexpected behavior while using @t{mu4e}, or
+have some idea on how it could work better. To report this, you can use the
+@uref{https://github.com/djcb/mu/issues,bug-tracker}. Please always include the
+following information:
 
 @itemize
-@item what did you expect that should happen? what actually happened?
+@item what did you expect or wish to happen? what actually happened?
 @item can you provide some exact steps to reproduce?
 @item what version of @t{mu4e} and @t{emacs} were you using? What operating system?
 @item can you reproduce it with @command{emacs -q} and only loading @t{mu4e}?
@@ -210,10 +205,9 @@ please always include the following information:
 @node Getting started
 @chapter Getting started
 
-In this chapter, we go through the installation of @t{mu4e} and its
-basic setup. After we have succeeded in @ref{Getting mail}, and
-@pxref{Indexing your messages}, we discuss the @ref{Basic
-configuration}.
+In this chapter, we go through the installation of @t{mu4e} and its basic setup.
+After we have succeeded in @ref{Getting mail}, and @pxref{Indexing your
+messages}, we discuss the @ref{Basic configuration}.
 
 After these steps, @t{mu4e} should be ready to go!
 
@@ -237,8 +231,8 @@ After these steps, @t{mu4e} should be ready to go!
 
 @t{mu}/@t{mu4e} are known to work on a wide variety of Unix- and Unix-like
 systems, including many Linux distributions, OS X and FreeBSD. Emacs 26.3 or
-higher is required, as well as Xapian@footnote{@url{https://xapian.org/}} and
-GMime@footnote{@url{http://spruce.sourceforge.net/gmime/}}.
+higher is required, as well as @uref{https://xapian.org/,Xapian} and
+@uref{http://spruce.sourceforge.net/gmime/,GMime}.
 
 @t{mu} has optional support for the Guile (Scheme) programming language (version
 3.0 or higher). There are also some GUI-toys, which require GTK+ 3.x and Webkit.
@@ -342,12 +336,11 @@ go through things step-by-step.
 @node Getting mail
 @section Getting mail
 
-In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to
-have your e-mail messages stored in a
-@emph{maildir}@footnote{@url{https://en.wikipedia.org/wiki/Maildir};
-in this manual we use the term `maildir' for both the standard and the
-hierarchy of maildirs that store your messages} --- a specific
-directory structure with one-file-per-message.
+In order for @t{mu} (and, by extension, @t{mu4e}) to work, you need to have your
+e-mail messages stored in a
+@uref{https://en.wikipedia.org/wiki/Maildir, Maildir}; in this manual we use the
+term `maildir' for both the standard and the hierarchy of maildirs that store
+your messages --- a specific directory structure with one-file-per-message.
 
 If you are already using a maildir, you are lucky. If not, some setup
 is required:
@@ -595,15 +588,14 @@ updates --- for example when receiving new mail. See
 @node Sending mail
 @section Sending mail
 
-@t{mu4e} re-uses Gnus' @code{message-mode} (@ref{Top,,message}) for
-writing mail and inherits the setup for sending mail as well.
+@t{mu4e} uses Emacs's @ref{(message) Top,,message-mode} for writing mail.
 
-For sending mail using @abbr{SMTP}, @t{mu4e} uses @t{smtpmail}
-(@ref{Top,,smtpmail}). This package supports many different ways to
-send mail; please refer to its documentation for the details.
+For sending mail using @abbr{SMTP}, @t{mu4e} uses @ref{(smtpmail)
+Top,,smtpmail}. This package supports many different ways to send mail; please
+refer to its documentation for the details.
 
-Here, we only provide some simple examples --- for more, see
-@ref{Example configurations}.
+Here, we only provide some simple examples --- for more, see @ref{Example
+configurations}.
 
 A very minimal setup:
 
@@ -953,9 +945,9 @@ F=@emph{flagged} (i.e., `starred'), N=@emph{new}, P=@emph{passed} (i.e.,
 forwarded), R=@emph{replied}, S=@emph{seen}, T=@emph{trashed},
 a=@emph{has-attachment}, x=@emph{encrypted}, s=@emph{signed},
 u=@emph{unread}. The tooltip for this field also contains this information.
-@item The subject field also indicates the discussion threads @footnote{using
-Jamie Zawinski's mail threading algorithm,
-@url{https://www.jwz.org/doc/threading.html}}.
+@item The subject field also indicates the discussion threads, following
+@uref{https://www.jwz.org/doc/threading.html,Jamie Zawinski's mail threading
+algorithm}.
 @item The headers view is @emph{automatically updated} if any changes are
 found during the indexing process, and if there is no current
 user-interaction. If you do not want such automatic updates, set
@@ -1784,16 +1776,16 @@ mu4e}.
 @node Signing and encrypting
 @section Signing and encrypting
 
-Signing and encrypting of messages is possible using @t{emacs-mime},
-most easily accessed through the @t{Attachments}-menu while composing a
-message, or with @kbd{M-x mml-secure-message-encrypt-pgp}, @kbd{M-x
+Signing and encrypting of messages is possible using @ref{(emacs-mime) Top,
+emacs-mime}, most easily accessed through the @t{Attachments}-menu while
+composing a message, or with @kbd{M-x mml-secure-message-encrypt-pgp}, @kbd{M-x
 mml-secure-message-sign-pgp}.
 
-Important note: the messages are encrypted when they are @emph{sent}:
-this means that draft messages are @emph{not} encrypted. So if you are
-using e.g. @t{offlineimap} or @t{mbsync} to synchronize with some
-remote IMAP-service, make sure the drafts folder is @emph{not} in the
-set of synchronized folders, for obvious reasons.
+Important note: the messages are encrypted when they are @emph{sent}: this means
+that draft messages are @emph{not} encrypted. So if you are using e.g.
+@t{offlineimap} or @t{mbsync} to synchronize with some remote IMAP-service, make
+sure the drafts folder is @emph{not} in the set of synchronized folders, for
+obvious reasons.
 
 @node Queuing mail
 @section Queuing mail
@@ -3167,7 +3159,9 @@ ways. Here we focus on Emacs built-ins; for dealing with external tools,
 
 Emacs allows you to select an e-mail program as the default program it uses when
 you press @key{C-x m} (@code{compose-mail}), call @code{report-emacs-bug} and so
-on. If you want to use @t{mu4e} for this, you can do so by adding the following
+on; see @ref{(emacs) Mail Methods}.
+
+If you want to use @t{mu4e} for this, you can do so by adding the following
 to your configuration:
 
 @lisp
@@ -3180,8 +3174,6 @@ mail, customize the variable @code{read-mail-command}.
 @lisp
 (set-variable 'read-mail-command 'mu4e)
 @end lisp
-
-(@pxref{Top,,Emacs,Sending Mail, Mail Methods})
 
 @node Modeline
 @section Modeline
@@ -3265,8 +3257,8 @@ used for the @xref{Bookmarks and Maildirs}, in the main view and the
 ``baseline'', as discussed earlier.
 
 For now, notifications are implemented for desktop environments that support
-DBus-based notifications, as per Emacs' notification sub-system
-@xref{Desktop Notifications,,,elisp,GNU Emacs Lisp Reference Manual}.
+DBus-based notifications, as per Emacs' notification sub-system @xref{(elisp)
+Desktop Notifications}.
 
 You can enable mu4e's desktop notifications (provided that you are on a
 supported system) by setting @code{mu4e-notification-support} to @t{t}. If you
@@ -3498,9 +3490,9 @@ with other tools.
 @section Org-contacts
 
 Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
-autocompletion}, and that is the recommended way to do this. However, it
-is also possible to manage your addresses with @t{org-mode}, using
-@t{org-contacts}@footnote{@url{https://julien.danjou.info/projects/emacs-packages#org-contacts}}.
+autocompletion}, and that is the recommended way to do this. However, it is also
+possible to manage your addresses with @t{org-mode}, using
+@uref{https://julien.danjou.info/projects/emacs-packages#org-contacts,org-contacts}.
 
 @t{mu4e-actions} defines a useful action (@ref{Actions}) for adding a
 contact based on the @t{From:}-address in the message at point. To
@@ -3524,10 +3516,9 @@ Note, the shortcut character @key{o} is due to the first character of
 @section BBDB
 
 Note, @t{mu4e} supports built-in address autocompletion; @ref{Address
-autocompletion}, and that is the recommended way to do this. However, it
-is also possible to manage your addresses with the current (2015-06-23)
-development release of @t{BBDB}, or releases of @t{BBDB} after
-3.1.2.@footnote{@url{https://savannah.nongnu.org/projects/bbdb/}}.
+autocompletion}, and that is the recommended way to do this. However, it is also
+possible to manage your addresses with
+@uref{https://savannah.nongnu.org/projects/bbdb/,BBDB}.
 
 To enable BBDB, add to your @file{~/.emacs} (or its moral equivalent,
 such as @file{~/.emacs.d/init.el}) the following @emph{after} the
@@ -3562,12 +3553,9 @@ After this, you should be able to:
 @node Sauron
 @section Sauron
 
-The Emacs package @t{sauron}@footnote{Sauron can be found at
-@url{https://github.com/djcb/sauron}, or in the MELPA (Milkypostman’s
-Emacs Lisp Package Archive) package repository at
-@url{https://melpa.org/}} (by the same author) can be used to
-get notifications about new mails. If you run something like the below
-script from your @t{crontab} (or have some other way of having it
+The Emacs package @uref{https://github.com/djcb/sauron,sauron} (by the same
+author) can be used to get notifications about new mails. If you run something
+like the below script from your @t{crontab} (or have some other way of having it
 execute every @emph{n} minutes), you receive notifications in the
 @t{sauron}-buffer when new messages arrive.
 
@@ -3620,9 +3608,9 @@ running outside its session.
 @node Hydra
 @section Hydra
 
-People sometimes ask about having multi-character shortcuts for
-bookmarks; an easy way to achieve this, is by using an emacs package
-called Hydra@footnote{@url{https://github.com/abo-abo/hydra}}.
+People sometimes ask about having multi-character shortcuts for bookmarks; an
+easy way to achieve this, is by using an emacs package
+@uref{https://github.com/abo-abo/hydra,Hydra}.
 
 With Hydra installed, we can add multi-character shortcuts, for instance:
 @lisp
@@ -4120,9 +4108,9 @@ help with this - you can set the variable
 names, while @command{mu} expects UTF-8 (so, e.g. @t{/まりもえ
 お}@footnote{some Japanese characters} becomes @t{/&MH4wijCCMEgwSg-}).
 
-This is best solved by telling @command{offlineimap} to use UTF-8
-instead --- see
-@url{https://github.com/djcb/mu/issues/68#issuecomment-8598652}.
+This is best solved by telling @command{offlineimap} to use UTF-8 instead ---
+see @uref{https://github.com/djcb/mu/issues/68#issuecomment-8598652,this
+ticket}.
 
 @subsection @command{mbsync} or @command{offlineimap} do not sync properly
 Unfortunately, @command{mbsync} and/or @command{offlineimap} do not
@@ -4216,13 +4204,12 @@ your configuration (courtesy of user @t{kpachnis}):
       mml2015-sign-with-sender t)
 @end lisp
 @subsection Can I `bounce' or `resend' messages?
-Somewhat --- it is possible to edit a (copy of) an existing message and
-then send it, using @code{M-x mu4e-compose-resend}. This gives you a
-raw copy of the message, including all headers, encoded parts and so
-on. Reason for this is that for resending, it is important not to
-change anything (except perhaps for the @t{To:} address when
-bouncing); since we cannot losslessly decode an existing message, you
-get the raw version.
+Somewhat --- it is possible to edit a (copy of) an existing message and then
+send it, using @code{M-x mu4e-compose-resend}. This gives you a raw copy of the
+message, including all headers, encoded parts and so on. Reason for this is that
+for resending, it is important not to change anything (except perhaps for the
+@t{To:} address when bouncing); since we cannot losslessly decode an existing
+message, you get the raw version.
 
 @node Writing messages
 @section Writing messages
@@ -4246,22 +4233,22 @@ See @ref{(emacs) Mail Aliases}.
 See @ref{Compose hooks}.
 
 @subsection How can I influence the way the original message looks when replying/forwarding?
-Since @code{mu4e-compose-mode} derives from @code{message-mode}, you can
-re-use many of its facilities.
+Since @code{mu4e-compose-mode} derives from @xref{(message) Top}, you can re-use
+many of its facilities.
 
 @subsection How can I easily include attachments in the messages I write?
-You can drag-and-drop from your desktop; alternatively, you can use
-@t{dired} --- see @ref{Dired}.
+You can drag-and-drop from your desktop; alternatively, you can use @ref{(emacs)
+Dired}.
 
 @subsection @t{mu4e} seems to remove myself from the @t{Cc:}-list; how can I prevent that?
 Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
 
-@subsection @t{mu4e} include myself from the @t{Cc:}-list; how can I prevent that?
+@subsection @t{mu4e} includes myself from the @t{Cc:}-list; how can I prevent that?
 You need list your personal addresses by passing one or more
 @t{--my-address=...} to @t{mu init}. Note that the
-@code{mu4e-user-mail-address-list} which was used in older @t{mu4e}
-versions is no longer used. Also see the entries for version 1.4 in
-@t{NEWS.org} (@kbd{N}) in the main-menu.
+@code{mu4e-user-mail-address-list} which was used in older @t{mu4e} versions is
+no longer used. Also see the entries for version 1.4 in @t{NEWS.org} (@kbd{N})
+in the main-menu.
 
 @subsection How can I start a new message-thread from a reply?
 Remove the @t{In-Reply-To} header, and @t{mu4e} automatically removes
@@ -4293,9 +4280,6 @@ values of @var{mu4e-compose-complete-only-personal},
 @var{mu4e-compose-complete-only-after} and
 @var{mu4e-compose-complete-max}.
 
-@subsection Can I use @t{BBDB} with @t{mu4e}?
-Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
-
 @subsection How can I get rid of the message buffer after sending?
 @lisp
 (setq message-kill-buffer-on-exit t)
@@ -4303,9 +4287,9 @@ Yes, with releases of BBDB after 3.1.2. @ref{BBDB}.
 
 @subsection Sending big messages is slow and blocks emacs --- what can I do about it?
 
-For this, there's @url{https://github.com/jwiegley/emacs-async} (also available
-from the Emacs package repository); add the following snippet to your
-configuration:
+For this, there's @uref{https://github.com/jwiegley/emacs-async,emacs-async}
+(also available from the Emacs package repository); add the following snippet to
+your configuration:
 @lisp
 (require 'smtpmail-async)
 (setq
@@ -4346,12 +4330,10 @@ refilled) by receiving clients that support this standard. Clients
 that don't support this, show them as is, which means this feature is
 truly non-invasive.
 
-Here's an explanatory blog post which also shows why this is a
-desirable feature:
-@url{https://mathiasbynens.be/notes/gmail-plain-text} (if you don't
-have it, your mails mostly look quite bad especially on mobile
-devices) and here's the RFC with all the details:
-@url{https://www.ietf.org/rfc/rfc2646.txt}.
+Here's an explanatory blog post which also shows why this is a desirable
+feature: @url{https://mathiasbynens.be/notes/gmail-plain-text} (if you don't
+have it, your mails mostly look quite bad especially on mobile devices) and
+here's the @uref{https://www.ietf.org/rfc/rfc2646.txt,RFC with all the details}.
 
 Since version 0.9.17, @t{mu4e} sends emails with @t{format=flowed} by setting
 @lisp
@@ -4777,9 +4759,8 @@ log using @kbd{M-x mu4e-show-log} (@key{$}).
 @node The message s-expression
 @section The message s-expression
 
-As a word of warning, the details of the s-expression are internal to
-the mu4e - mu communications, and are subject to change between
-versions.
+As a word of warning, the details of the s-expression are internal to the mu4e -
+mu communications, and are subject to change between versions.
 
 A typical message s-expression looks something like the following:
 
