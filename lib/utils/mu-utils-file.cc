@@ -27,6 +27,10 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#ifdef HAVE_WORDEXP_H
+#include <wordexp.h>
+#endif /*HAVE_WORDEXP_H*/
+
 using namespace Mu;
 
 
@@ -177,6 +181,30 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 		throw std::logic_error("unknown path");
 	}
 }
+
+
+Result<std::string>
+Mu::expand_path(const std::string& str)
+{
+#ifndef HAVE_WORDEXP_H
+	return Ok(std::string{str});
+#else
+	int res;
+	wordexp_t result;
+	memset(&result, 0, sizeof(result));
+
+	res = wordexp(str.c_str(), &result, 0);
+	if (res != 0 || result.we_wordc == 0)
+		return Err(Error::Code::File, "cannot expand '%s'; err=%d", str.c_str(), res);
+
+	std::string expanded{result.we_wordv[0]};
+	wordfree(&result);
+
+	return Ok(std::move(expanded));
+
+#endif /*HAVE_WORDEXP_H*/
+}
+
 
 
 #ifdef BUILD_TESTS
