@@ -28,10 +28,20 @@
       is now improved by employing a html->text scraper which extracts the
       human-readable text from the html.
 
+    - mu querying and (esp.) showing results has been made significantly faster;
+      e.g., in one big ~mu find~ query we went from ~47s to only ~7s
+
     - /experimental/: if you build ~mu~ with [[https://github.com/CLD2Owners/cld2][CLD2]] support (available in many Linux
       distros), ~mu~ will try to detect the language of the body of e-mail
       messages; you can then search by their ISO-639-1 code, e.g. ~mu find
       lang:en~
+
+    - set the default database batch-size (the ~--batch-size~ parameter to ~mu
+      init~) to 50000 rather than 250000; the latter was too high for systems
+      with limited memory.
+
+    - restore expansion for "~--option=~/foo~" type options for shells that don't
+      do that, such as Bash.
 
 *** mu4e
 
@@ -56,6 +66,16 @@
 
     - In the main-view, by default ~q~ is now bound to ~mu4e-main-quit-or-bury~,
       which calls either ~mu4e-quit~ or, with prefix argument, ~bury-buffer~.
+
+    - ~mu4e~ benefits from the mentioned speed-ups in querying, and adds some of
+      its own - e.g., for showing 500 messages (debug build), we went from 642ms
+      to 247ms. Note, the optimizations are experimental, and for now you can
+      turn them off by setting =mu4e-mu-allow-temp-file= to =nil= (and restart
+      ~mu4e~); and reporting.
+
+    - after retrieving mail (~mu4e-update-mail-and-index~), save the output of the
+      retrieval command in a buffer =*mu4e-last-update*=, = which can be useful
+      for diagnosis.
 
 * 1.10 (released on March 26, 2023)
 
