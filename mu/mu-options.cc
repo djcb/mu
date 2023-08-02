@@ -283,7 +283,9 @@ sub_extract(CLI::App& sub, Options& opts)
 	sub.add_option("--target-dir", opts.extract.targetdir,
 		       "Target directory for saving")
 		->type_name("<dir>")
-		->default_str("<current>")->default_val(".");
+		->transform(ExpandPath, "expand path")
+		->default_str("<current>")
+		->default_val(".");
 	sub.add_flag("--uncooked,-u", opts.extract.uncooked,
 		       "Avoid massaging extracted file-names");
 	// optional; otherwise use standard-input
@@ -398,7 +400,8 @@ sub_find(CLI::App& sub, Options& opts)
 		     "Clear old links first");
 	sub.add_option("--linksdir", opts.find.linksdir,
 		       "Use bookmarked query")
-		->type_name("<dir>");
+		->type_name("<dir>")
+		->transform(ExpandPath, "expand path");
 
 	sub.add_option("--summary-len", opts.find.summary_len,
 		       "Use up to so many lines for the summary")
@@ -445,7 +448,8 @@ sub_init(CLI::App& sub, Options& opts)
 {
 	sub.add_option("--maildir,-m", opts.init.maildir,
 		       "Top of the maildir")
-		->type_name("<maildir>");
+		->type_name("<maildir>")
+		->transform(ExpandPath, "expand path");
 	sub.add_option("--my-address", opts.init.my_addresses,
 		       "Personal e-mail address or regexp")
 		->type_name("<address>");
@@ -769,7 +773,8 @@ There is NO WARRANTY, to the extent permitted by law.
 			sub->add_option("--muhome",
 					opts.muhome, "Specify alternative mu directory")
 				->envname("MUHOME")
-				->type_name("<dir>");
+				->type_name("<dir>")
+				->transform(ExpandPath, "expand path");
 	}
 
 	/* add scripts (if supported) as semi-subscommands as well */
@@ -857,10 +862,6 @@ test_ids()
 }
 
 #ifdef BUILD_TESTS
-
-
-
-
 
 enum struct TestEnum { A, B, C };
 constexpr AssocPairs<TestEnum, std::string_view, 3>
