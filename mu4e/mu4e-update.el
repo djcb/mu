@@ -1,6 +1,6 @@
 ;;; mu4e-update.el -- part of mu4e, -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -131,15 +131,18 @@ If non-nil, this is a plist of the form:
 :cleaned-up  <number of stale messages removed from store
 :stamp       <emacs (current-time) timestamp for the status)")
 
+(defconst mu4e-last-update-buffer "*mu4e-last-update*"
+  "Name of buffer with cloned from the last update buffer.
+Useful for diagnosing update problems.")
 
 
-;;; Internal variables
+;;; Internal variables / const
+(defconst mu4e--update-name " *mu4e-update*"
+  "Name of the process and buffer to update mail.")
 (defvar mu4e--progress-reporter nil
   "Internal, the progress reporter object.")
 (defvar mu4e--update-timer nil
   "The mu4e update timer.")
-(defconst mu4e--update-name " *mu4e-update*"
-  "Name of the process and buffer to update mail.")
 (defconst mu4e--update-buffer-height 8
   "Height of the mu4e message retrieval/update buffer.")
 (defvar mu4e--get-mail-ask-password "mu4e get-mail: Enter password: "
@@ -225,6 +228,7 @@ To override this behavior, customize `display-buffer-alist'."
   (display-buffer buf `(display-buffer-at-bottom
                         (preserve-size . (nil . t))
                         (height . ,height)
+                        (inhibit-same-window . t)
                         (window-height . fit-window-to-buffer)))
   (set-window-buffer (get-buffer-window buf) buf))
 
@@ -245,7 +249,14 @@ To override this behavior, customize `display-buffer-alist'."
           (mu4e-update-index)))
     (mu4e-update-index))
   (when (buffer-live-p mu4e--update-buffer)
-    (delete-windows-on mu4e--update-buffer t)
+    (delete-windows-on mu4e--update-buffer)
+    ;; clone the update buffer for diagnosis
+    (when (get-buffer mu4e-last-update-buffer)
+      (kill-buffer mu4e-last-update-buffer))
+    (with-current-buffer mu4e--update-buffer
+      (clone-buffer mu4e-last-update-buffer))
+    ;; and kill the buffer itself; the cloning is needed
+    ;; so the temp window handling works as expected.
     (kill-buffer mu4e--update-buffer)))
 
 ;; complicated function, as it:
@@ -259,7 +270,7 @@ RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
 run in the background; otherwise, pop up a window."
   (let* ((process-connection-type t)
          (proc (start-process-shell-command
-                "mu4e-update" mu4e--update-name
+                mu4e--update-name mu4e--update-name
                 mu4e-get-mail-command))
          (buf (process-buffer proc))
          (win (or run-in-background

@@ -507,6 +507,9 @@ before the changes take effect. By default, this will run in
 background and to change it to run in foreground, set
 @code{mu4e-index-update-in-background} to @code{nil}.
 
+After updating has completed, @t{mu4e} keeps the output in a buffer
+@t{*mu4e-last-update*}, which you can use for diagnosis if needed.
+
 @subsection Handling errors during mail retrieval
 
 If the mail-retrieval process returns with a non-zero exit code,
