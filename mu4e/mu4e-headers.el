@@ -1079,6 +1079,7 @@ some changes, `mu4e-headers-auto-update' is non-nil and there is
 no user-interaction ongoing."
   (when (and mu4e-headers-auto-update          ;; must be set
              mu4e-index-update-status
+             (not (mu4e-get-view-buffer))  ;; not when viewing a message
              (not (zerop (plist-get mu4e-index-update-status :updated)))
              ;; NOTE: `mu4e-mark-marks-num' can return nil. Is that intended?
              (zerop (or (mu4e-mark-marks-num) 0))     ;; non active marks
