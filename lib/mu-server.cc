@@ -126,7 +126,7 @@ private:
 
 	void view_mark_as_read(Store::Id docid, Message&& msg, bool rename);
 
-	std::pair<std::ofstream, std::string> make_temp_file_stream() const;
+	std::tuple<std::ofstream, std::string> make_temp_file_stream() const;
 
 	Store&			store_;
 	Server::Options         options_;
@@ -510,8 +510,9 @@ Server::Private::compose_handler(const Command& cmd)
 	output_sexp(comp_lst);
 }
 
-// create pair of ostream / name
-std::pair<std::ofstream, std::string>
+// create tuple of ostream / name
+// https://stackoverflow.com/questions/46114214/lambda-implicit-capture-fails-with-variable-declared-from-structured-binding
+std::tuple<std::ofstream, std::string>
 Server::Private::make_temp_file_stream() const
 {
 	auto tmp_eld{join_paths(tmp_dir_, mu_format("mu-{}.eld",  g_get_monotonic_time()))};
@@ -519,8 +520,8 @@ Server::Private::make_temp_file_stream() const
 	if (!output.good())
 		throw Mu::Error{Error::Code::File, "failed to create temp-file"};
 
-	return std::make_pair<std::ofstream, std::string>(std::move(output),
-							  std::move(tmp_eld));
+	return std::make_tuple<std::ofstream, std::string>(std::move(output),
+							   std::move(tmp_eld));
 }
 
 
@@ -678,8 +679,8 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 			batch_size = 1000;
 			output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
 			auto new_stream{make_temp_file_stream()};
-			tmp_file	= std::move(new_stream.first);
-			tmp_file_name = std::move(new_stream.second);
+			tmp_file	= std::move(std::get<0>(new_stream));
+			tmp_file_name = std::move(std::get<1>(new_stream));
 			tmp_file << '(';
 		}
 	}
