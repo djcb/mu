@@ -524,8 +524,6 @@ Server::Private::make_temp_file_stream() const
 							   std::move(tmp_eld));
 }
 
-
-
 void
 Server::Private::contacts_handler(const Command& cmd)
 {
@@ -662,7 +660,11 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 	// create an output stream with a file name
 	size_t n{};
 
-	auto&& [tmp_file, tmp_file_name] = make_temp_file_stream();
+	// structured bindings / lambda don't work with some clang.
+	auto&& tmp_stream{make_temp_file_stream()};
+	auto&& tmp_file	= std::move(std::get<0>(tmp_stream));
+	auto&& tmp_file_name = std::move(std::get<1>(tmp_stream));
+
 	tmp_file << '(';
 	for(auto&& mi: qres) {
 
