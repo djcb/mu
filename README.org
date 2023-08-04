@@ -18,7 +18,9 @@
 
 Welcome to ~mu~!
 
-Given the enormous amounts of e-mail many people gather and the importance of
+Latest development news: [[NEWS.org]].
+
+With the enormous amounts of e-mail many people gather and the importance of
 e-mail message in our work-flows, it's essential to quickly deal with all that
 mail - in particular, to instantly find that one important e-mail you need right
 now, and quickly file away message for later use.
