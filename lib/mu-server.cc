@@ -553,7 +553,11 @@ Server::Private::contacts_handler(const Command& cmd)
 	auto       n{0};
 	if (options_.allow_temp_file) {
 		// fast way: put all the contacts in a temp-file
-		auto&& [tmp_file, tmp_file_name] = make_temp_file_stream();
+		// structured bindings / lambda don't work with some clang.
+		auto&& tmp_stream{make_temp_file_stream()};
+		auto&& tmp_file	= std::move(std::get<0>(tmp_stream));
+		auto&& tmp_file_name = std::move(std::get<1>(tmp_stream));
+
 		tmp_file << '(';
 		store().contacts_cache().for_each([&](const Contact& ci) {
 			if (!match_contact(ci))
