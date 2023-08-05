@@ -532,12 +532,11 @@ Server::Private::contacts_handler(const Command& cmd)
 	const auto tstampstr = cmd.string_arg(":tstamp").value_or("");
 	const auto maxnum    = cmd.number_arg(":maxnum").value_or(0 /*unlimited*/);
 
-	const auto after{afterstr.empty() ? 0 :
-		parse_date_time(afterstr, true).value_or(0)};
+	const auto after{afterstr.empty() ? 0 : parse_date_time(afterstr, true).value_or(0)};
 	const auto tstamp = g_ascii_strtoll(tstampstr.c_str(), NULL, 10);
 
-	mu_debug("find {} contacts last seen >= {} (tstamp: {})",
-		 personal ? "personal" : "any", time_to_string("%c", after), tstamp);
+	mu_debug("find {} contacts last seen >= {:%c} (tstamp: {})",
+		 personal ? "personal" : "any", mu_time(after), tstamp);
 
 	auto match_contact = [&](const Contact& ci)->bool {
 		if (tstamp > ci.tstamp)

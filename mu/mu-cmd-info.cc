@@ -182,7 +182,7 @@ topic_store(const Mu::Store& store, const Options& opts)
 		if (t == 0)
 			return "never";
 		else
-			return time_to_string("%c", t);
+			return mu_format("{:%c}", mu_time(t));
 	};
 
 	Table info;

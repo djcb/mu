@@ -115,7 +115,7 @@ public:
 	 *
 	 * @return the time or 0
 	 */
-	time_t completed() const;
+	::time_t completed() const;
 
 private:
 	struct Private;

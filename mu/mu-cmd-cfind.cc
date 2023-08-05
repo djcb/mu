@@ -171,12 +171,12 @@ output_bbdb(ItemType itype, OptContact contact, const Options& opts)
 		return;
 
 	const auto names{guess_first_last_name(contact->name)};
-	const auto now{time_to_string("%Y-%m-%d", ::time(NULL))};
-	const auto timestamp{time_to_string("%Y-%m-%d", contact->message_date)};
+	const auto now{mu_format("{:%Y-%m-%d}", mu_time(::time({})))};
+	const auto timestamp{mu_format("{:%Y-%m-%d}", mu_time(contact->message_date))};
 
 	mu_println("[\"{}\" \"{}\" nil nil nil nil (\"{}\") "
-		"((creation-date . \"{}\") (time-stamp . \"{}\")) nil]",
-		names.first, names.second, contact->email, now, timestamp);
+		   "((creation-date . \"{}\") (time-stamp . \"{}\")) nil]",
+		   names.first, names.second, contact->email, now, timestamp);
 }
 
 static void
@@ -212,7 +212,7 @@ output_json(ItemType itype, OptContact contact, const Options& opts)
 			name,
 			Mu::quote(contact->display_name()),
 			contact->message_date,
-			time_to_string("%FT%TZ", contact->message_date, true/*utc*/),
+			mu_format("{:%FT%TZ}", mu_time(contact->message_date, true/*utc*/)),
 			contact->personal ? "true" : "false",
 			contact->frequency);
 		mu_print("  }}");

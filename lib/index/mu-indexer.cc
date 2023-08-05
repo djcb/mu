@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -115,7 +115,7 @@ struct Indexer::Private {
 	Scanner         scanner_;
 	const size_t    max_message_size_;
 
-	time_t                   dirstamp_{};
+	::time_t                 dirstamp_{};
 	std::size_t              max_workers_;
 	std::vector<std::thread> workers_;
 	std::thread              scanner_worker_;
@@ -161,9 +161,8 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		dirstamp_ = store_.dirstamp(fullpath);
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
-			mu_debug("skip {} (seems up-to-date: {} >= {})", fullpath,
-				 time_to_string("%FT%T", dirstamp_),
-				 time_to_string("%FT%T", statbuf->st_ctime));
+			mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
+				 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
 			return false;
 		}
 
@@ -461,7 +460,7 @@ Indexer::progress() const
 	return priv_->progress_;
 }
 
-time_t
+::time_t
 Indexer::completed() const
 {
 	return priv_->completed_;

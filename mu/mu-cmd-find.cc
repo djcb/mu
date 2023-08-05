@@ -234,8 +234,8 @@ display_field(const Message& msg, Field::Id field_id)
 		} else /* as string */
 			return msg.document().string_value(field_id);
 	case Field::Type::TimeT:
-		return time_to_string(
-			"%c", static_cast<::time_t>(msg.document().integer_value(field_id)));
+		return mu_format("{:%c}",
+				 mu_time(msg.document().integer_value(field_id)));
 	case Field::Type::ByteSize:
 		return to_string(msg.document().integer_value(field_id));
 	case Field::Type::StringList:

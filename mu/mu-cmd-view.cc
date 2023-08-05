@@ -140,7 +140,7 @@ view_msg_plain(const Message& message, const Options& opts)
 	print_field("Subject", message.subject(), color);
 
 	if (auto&& date = message.date(); date != 0)
-		print_field("Date", time_to_string("%c", date), color);
+		print_field("Date", mu_format("{:%c}", mu_time(date)), color);
 
 	print_field("Tags", join(message.tags(), ", "), color);
 

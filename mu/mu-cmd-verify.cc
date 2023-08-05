@@ -46,12 +46,12 @@ print_signature(const Mu::MimeSignature& sig, const Options& opts)
 
 	const auto created{sig.created()};
 	key_val(col, "created",
-		created == 0 ? "unknown" :
-		time_to_string("%c", sig.created()).c_str());
+		created == 0 ? std::string{"unknown"} :
+		mu_format("{:%c}", mu_time(sig.created())));
 
 	const auto expires{sig.expires()};
-	key_val(col, "expires", expires==0 ? "never" :
-		time_to_string("%c", sig.expires()).c_str());
+	key_val(col, "expires", expires==0 ? std::string{"never"} :
+		mu_format("{:%c}", mu_time(sig.expires())));
 
 	const auto cert{sig.certificate()};
 	key_val(col, "public-key algo",
