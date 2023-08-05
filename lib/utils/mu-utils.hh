@@ -43,6 +43,7 @@
 #endif /*FMT_HEADER_ONLY*/
 #include <fmt/format.h>
 #include <fmt/core.h>
+#include <fmt/chrono.h>
 
 namespace Mu {
 
@@ -133,6 +134,11 @@ auto mu_join(Range&& range, std::string_view sepa) {
 	return fmt::join(std::forward<Range>(range), sepa);
 }
 
+template <typename T>
+auto mu_time(T t, bool use_utc=false) {
+	::time_t tt{static_cast<::time_t>(t)};
+	return use_utc ? fmt::gmtime(tt) : fmt::localtime(tt);
+}
 
 using StringVec = std::vector<std::string>;
 
@@ -145,8 +151,7 @@ using StringVec = std::vector<std::string>;
  */
 std::string utf8_flatten(const char* str);
 inline std::string
-utf8_flatten(const std::string& s)
-{
+utf8_flatten(const std::string& s) {
 	return utf8_flatten(s.c_str());
 }
 
@@ -240,30 +245,7 @@ static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) n
  *
  * @return the corresponding time_t or Nothing if parsing failed.
  */
-Option<int64_t> parse_date_time(const std::string& date, bool first);
-
-/**
- * 64-bit incarnation of time_t expressed as a 10-digit string. Uses 64-bit for the time-value,
- *  regardless of the size of time_t.
- *
- * @param t some time value
- *
- * @return
- */
-std::string date_to_time_t_string(int64_t t);
-
-/**
- * Get a string for a given time_t and format
- * memory that must be freed after use.
- *
- * @param frm the format of the string (in strftime(3) format)
- * @param t the time as time_t
- * @param utc whether to display as UTC(if true) or local time
- *
- * @return a string representation of the time in UTF8-format, or empty in case
- * of error.
- */
-std::string time_to_string(const char *frm, time_t t, bool utc = false) G_GNUC_CONST;
+Option<::time_t> parse_date_time(const std::string& date, bool first);
 
 /**
  * Crudely convert HTML to plain text. This attempts to scrape the

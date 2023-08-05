@@ -334,33 +334,7 @@ Mu::vformat(const char* frm, va_list args)
 	return str;
 }
 
-std::string
-Mu::time_to_string(const char *frm, time_t t, bool utc)
-{
-	g_return_val_if_fail(frm, "");
-
-	GDateTime* dt = std::invoke([&] {
-		if (utc)
-			return g_date_time_new_from_unix_utc(t);
-		else
-			return g_date_time_new_from_unix_local(t);
-	});
-
-	if (!dt) {
-		mu_warning("time_t out of range: <{}>", t);
-		return {};
-	}
-
-	frm = frm ? frm : "%c";
-	auto datestr{to_string_opt_gchar(g_date_time_format(dt, frm))};
-	g_date_time_unref(dt);
-	if (!datestr)
-		mu_warning("failed to format time with format '{}'", frm);
-
-	return datestr.value_or("");
-}
-
-static Option<int64_t>
+static Option<::time_t>
 delta_ymwdhMs(const std::string& expr)
 {
 	char* endptr;
@@ -390,7 +364,7 @@ delta_ymwdhMs(const std::string& expr)
 		then =
 		    g_date_time_add_full(now, -years, -months, -days, -hours, -minutes, -seconds);
 
-	auto  t = std::max<int64_t>(0, g_date_time_to_unix(then));
+	auto  t = std::max<::time_t>(0, g_date_time_to_unix(then));
 
 	g_date_time_unref(then);
 	g_date_time_unref(now);
@@ -398,7 +372,7 @@ delta_ymwdhMs(const std::string& expr)
 	return t;
 }
 
-static Option<int64_t>
+static Option<::time_t>
 special_date_time(const std::string& d, bool is_first)
 {
 	if (d == "now")
@@ -467,12 +441,12 @@ fixup_month(struct tm* tbuf)
  }
 
 
-Option<int64_t>
+Option<::time_t>
 Mu::parse_date_time(const std::string& dstr, bool is_first)
 {
 	struct tm tbuf{};
 	GDateTime *dtime{};
-	int64_t t;
+	::time_t t;
 
 	/* one-sided dates */
 	if (dstr.empty())
@@ -506,7 +480,7 @@ Mu::parse_date_time(const std::string& dstr, bool is_first)
 	t = g_date_time_to_unix(dtime);
 	g_date_time_unref(dtime);
 
-	return std::max<int64_t>(t, 0);
+	return std::max<::time_t>(t, 0);
 }
 
 
