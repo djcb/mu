@@ -174,24 +174,28 @@ append_metadata(std::string& str, const QueryMatch& qmatch)
  * A message here consists of a message s-expression with optionally a :docid
  * and/or :meta expression added.
  *
- * Note, for speed reasons, we build is as a _string_, without any further
- * parsing.
+ * We could parse the sexp and use the Sexp APIs to add some things... but...
+ * it's _much_ faster to directly work on the string representation: remove the
+ * final ')', add a few items, and add the ')' again.
  */
 static std::string
 msg_sexp_str(const Message& msg, Store::Id docid, const Option<QueryMatch&> qm)
 {
-	auto sexpstr{msg.document().sexp_str()};
-	sexpstr.reserve(sexpstr.size () + (docid == 0 ? 0 : 16) + (qm ? 64 : 0));
+	auto&& sexpstr{msg.document().sexp_str()};
 
-	// remove the closing ( ... )
-	sexpstr.erase(sexpstr.end() - 1);
+	if (docid != 0 || qm) {
+		sexpstr.reserve(sexpstr.size () + (docid == 0 ? 0 : 16) + (qm ? 64 : 0));
 
-	if (docid != 0)
-		sexpstr += " :docid " +  to_string(docid);
-	if (qm)
-		append_metadata(sexpstr, *qm);
+		// remove the closing ( ... )
+		sexpstr.erase(sexpstr.end() - 1);
 
-	sexpstr += ')'; // ... end close it again.
+		if (docid != 0)
+			sexpstr += " :docid " +  to_string(docid);
+		if (qm)
+			append_metadata(sexpstr, *qm);
+
+		sexpstr += ')'; // ... end close it again.
+	}
 
 	return sexpstr;
 }
