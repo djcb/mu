@@ -74,7 +74,7 @@ uninstall: $(BUILDDIR)
 	@$(NINJA) -C $(BUILDDIR) uninstall
 
 clean:
-	@rm -rf $(BUILDDIR) $(BUILDDIR_COVERAGE) $(BUILDDIR_VALGRIND)
+	@rm -rf $(BUILDDIR) $(BUILDDIR_COVERAGE) $(BUILDDIR_VALGRIND) $(BUILDDIR_BENCHMARK)
 	@rm -rf compile_commands.json
 
 #
@@ -114,12 +114,12 @@ check-helgrind: test-helgrind
 #
 
 $(BUILDDIR_BENCHMARK):
-	@$(MESON) setup --buildtype=release $(BUILDDIR_BENCHMARK)
+	@$(MESON) setup --buildtype=debugoptimized $(BUILDDIR_BENCHMARK)
 
-build-benchmark: $(BUILDDIR_BENCHMARK)
+build-benchmark-target: $(BUILDDIR_BENCHMARK)
 	@$(MESON) compile -C $(BUILDDIR_BENCHMARK) $(VERBOSE)
 
-benchmark: $(BUILDDIR_BENCHMARK)
+benchmark: build-benchmark-target
 	$(NINJA) -C $(BUILDDIR_BENCHMARK) benchmark
 
 #
@@ -141,7 +141,6 @@ coverage: $(BUILDDIR_COVERAGE)
 	@mkdir -p $(BUILDDIR_COVERAGE)/meson-logs/coverage
 	@$(GENHTML) $(covfile) --output-directory $(BUILDDIR_COVERAGE)/meson-logs/coverage/
 	@echo "coverage report at: file://$(BUILDDIR_COVERAGE)/meson-logs/coverage/index.html"
-
 
 #
 # misc
