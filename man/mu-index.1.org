@@ -179,6 +179,24 @@ Things are again a little faster, even though the index does a lot more now
 (text-normalizatian, and pre-generating message-sexps). A faster machine helps,
 too!
 
+** recent releases
+
+Indexing the the same 93000-message mail corpus with the last few releases:
+
+|       release | time (sec) | notes                                    |
+|---------------+------------+------------------------------------------|
+|           1.4 | 160s       |                                          |
+|           1.6 | 178s       |                                          |
+|           1.8 | 97s        |                                          |
+|          1.10 | 120s       | adds html indexing, sexp-caching         |
+| 1.11 (master) | 96s        | adds language-guessing, batch-size=50000 |
+|               |            |                                          |
+
+Quite some variation!
+
+Over time new features / refactoring can change the timings quite a bit. At
+least for now, the latest code is both the fastest and the most featureful!
+
 #+include: "exit-code.inc" :minlevel 1
 
 #+include: "prefooter.inc"

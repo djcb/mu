@@ -273,6 +273,27 @@ After restarting Wanderlust, the virtual folders should appear.
 *mu find* output is encoded according to the locale for =--format=plain= (the
 default format), and UTF-8 for all other formats (=sexp=, =xml=).
 
+
+* PERFORMANCE
+
+Some notes on performance, comparing the timings between some recent releases;
+taking the total number for 10 test runs.
+
+1. time (repeat 10 mu find "" -n 50000 > /dev/null)
+2. time (repeat 10 mu find "" -n 50000 --include-related --threads > /dev/null)
+
+
+|       release | time 1 (sec) | time 2 (sec) |
+|---------------+--------------+--------------|
+|           1.4 | 8.9s         | 59.3s        |
+|           1.6 | 8.3s         | 27.5s        |
+|           1.8 | 8.7s         | 29.3s        |
+|          1.10 | 9.8s         | 30.6s        |
+| 1.11 (master) | 10.1s        | 29.5s        |
+
+
+
+
 #+include: "exit-code.inc" :minlevel 1
 
 #+include: "bugs.inc" :minlevel 1

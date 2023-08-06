@@ -63,6 +63,22 @@ directly through the emacs process input/output. This is noticeably faster for
 commands with a lot of output, esp. when the the temp-file uses a in-memory
 file-system.
 
+* PERFORMANCE
+
+As an indication for the relative performance, we can simulate something ~mu4e~
+does; we take overall time of 50 such requests:
+
+#+begin_src sh
+time build/mu/mu server --allow-temp-file --eval '(find :query "\"\"" :include-related t :threads t :maxnum 50000)' >/dev/null
+#+end_src
+(and ~--allow-temp-file~ for 1.11)
+
+|       release | time (sec) |
+|---------------+------------|
+|           1.8 | 8.6s       |
+|          1.10 | 5.7s       |
+| 1.11 (master) | 2.8s       |
+
 
 #+include: "muhome.inc" :minlevel 2
 
