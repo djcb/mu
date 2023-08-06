@@ -101,8 +101,7 @@ There are some internal fields as well, e.g. ; subject to change:
                         (index (get-text-property (point) 'gnus-part)))
                (when (and part (numberp index) (not (member index indices)))
                  (let* ((disp (mm-handle-disposition part))
-                        (fname (cdr-safe
-                                (and disp (assoc 'filename (cdr disp)))))
+                        (fname (mm-handle-filename part))
                         (mime-type (mm-handle-media-type part))
                         (info
                          `(:part-index  ,index
