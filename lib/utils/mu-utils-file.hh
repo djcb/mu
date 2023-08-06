@@ -157,16 +157,38 @@ std::string runtime_path(RuntimePath path, const std::string& muhome="");
  * @return the path
  */
 static inline std::string join_paths() { return {}; }
-template<typename S, typename...Args>
-std::string join_paths(S&& s, Args...args) {
+template<typename S> std::string join_paths_(S&& s) { return std::string{s}; }
+template<typename	S, typename...Args>
+std::string join_paths_(S&& s, Args...args) {
 
 	static std::string sepa{"/"};
 	auto&& str{std::string{std::forward<S>(s)}};
-	if (auto&& rest{join_paths(std::forward<Args>(args)...)}; !rest.empty())
+	if (auto&& rest{join_paths_(std::forward<Args>(args)...)}; !rest.empty())
 		str += (sepa + rest);
+	return str;
+}
 
-	static auto rx = Regex::make("//*").value();
-	return rx.replace(str, sepa);
+template<typename S, typename...Args>
+std::string join_paths(S&& s, Args...args) {
+
+	constexpr auto sepa = '/';
+	auto path = join_paths_(std::forward<S>(s), std::forward<Args>(args)...);
+
+	auto c{0U};
+	while (c < path.size()) {
+
+		if (path[c] != sepa) {
+			++c;
+			continue;
+		}
+
+		while (path[++c] == '/') {
+			path.erase(c, 1);
+			--c;
+		}
+	}
+
+	return path;
 }
 
 
