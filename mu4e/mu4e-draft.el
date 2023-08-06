@@ -351,7 +351,9 @@ whatever was in the To: field before, goes to the Cc:-list (if
 we're doing a reply-to-all). Special case: if we were the sender
 of the original, we simple copy the list form the original."
   (let ((reply-to
-         (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
+         (append
+          (plist-get origmsg :to)
+          (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))))
     (cl-delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)
     (if mu4e-compose-dont-reply-to-self
         (cl-delete-if
@@ -546,28 +548,23 @@ You can append flags."
 (defun mu4e~draft-reply-construct-recipients (origmsg)
   "Determine the to/cc recipients for a reply message."
   (let* ((return-to (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))
-         (reply-to-self (mu4e-personal-address-p (plist-get return-to :email)))
+         (reply-to-self (mu4e-personal-address-p (plist-get (car return-to) :email)))
          ;; reply-to-self implies reply-all
          (reply-all (or reply-to-self
                         (eq mu4e-compose-reply-recipients 'all)
                         (and (not (eq mu4e-compose-reply-recipients 'sender))
                              (mu4e~draft-reply-all-p origmsg)))))
     (concat
-     (if reply-to-self
-         ;; When we're replying to ourselves, simply keep the same headers.
-         (concat
-          (mu4e~draft-header "To" return-to)
-          (mu4e~draft-header "Cc" (mu4e-message-field origmsg :cc)))
-
-       ;; if there's no-one in To, copy the CC-list
-       (if (zerop (length (mu4e~draft-create-to-lst origmsg)))
-           (mu4e~draft-header "To" (mu4e~draft-recipients-construct
-                                    :cc origmsg reply-all))
-         ;; otherwise...
-         (concat
-          (mu4e~draft-header "To" return-to)
-          (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct
-                                   :cc origmsg reply-all))))))))
+     ;; if there's no-one in To, copy the CC-list
+     (if (zerop (length (mu4e~draft-create-to-lst origmsg)))
+         (mu4e~draft-header "To" (mu4e~draft-recipients-construct
+                                  :cc origmsg reply-all))
+       ;; otherwise...
+       (concat
+        (mu4e~draft-header "To" (mu4e~draft-recipients-construct
+                                 :to origmsg reply-all))
+        (mu4e~draft-header "Cc" (mu4e~draft-recipients-construct
+                                 :cc origmsg reply-all)))))))
 
 (defun mu4e~draft-reply-construct-recipients-list (origmsg)
   "Determine the to/cc recipients for a reply message to a
