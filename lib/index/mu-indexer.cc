@@ -158,13 +158,16 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		// is up-to-date (this is _not_ always true; hence we call it
 		// lazy-mode); only for actual message dirs, since the dir
 		// tstamps may not bubble up.
-		dirstamp_ = store_.dirstamp(fullpath);
-		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
-		    htype == Scanner::HandleType::EnterNewCur) {
-			mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
-				 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
-			return false;
-		}
+		if (conf_.lazy_check)  {
+			dirstamp_ = store_.dirstamp(fullpath);
+			if (dirstamp_ >= statbuf->st_ctime &&
+			    htype == Scanner::HandleType::EnterNewCur) {
+				mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
+					 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
+				return false;
+			}
+		} else
+			dirstamp_ = 0;
 
 		// don't index dirs with '.noindex'
 		auto noindex = ::access((fullpath + "/.noindex").c_str(), F_OK) == 0;
@@ -378,6 +381,11 @@ Indexer::Private::start(const Indexer::Config& conf)
 		max_workers_ = std::min(4U, std::thread::hardware_concurrency());
 	} else
 		max_workers_ = conf.max_threads;
+
+	if (store_.empty() && conf_.lazy_check) {
+		mu_debug("turn off lazy check since we have an empty store");
+		conf_.lazy_check = false;
+	}
 
 	mu_debug("starting indexer with <= {} worker thread(s)", max_workers_);
 	mu_debug("indexing: {}; clean-up: {}", conf_.scan ? "yes" : "no",
