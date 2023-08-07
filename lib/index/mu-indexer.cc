@@ -157,15 +157,15 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		// in lazy-mode, we ignore this dir if its dirstamp suggest it
 		// is up-to-date (this is _not_ always true; hence we call it
 		// lazy-mode); only for actual message dirs, since the dir
-		// tstamps may not bubble up.
+		// tstamps may not bubble up.U
 		dirstamp_ = store_.dirstamp(fullpath);
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
-			    htype == Scanner::HandleType::EnterNewCur) {
-				mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
-					 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
-				return false;
-			}
+		    htype == Scanner::HandleType::EnterNewCur) {
+			mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
+				 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
+			return false;
 		}
+
 		// don't index dirs with '.noindex'
 		auto noindex = ::access((fullpath + "/.noindex").c_str(), F_OK) == 0;
 		if (noindex) {
