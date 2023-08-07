@@ -64,8 +64,9 @@
     - also, there are now actions ('a' in view/header) to get to online archives
       for some (selected) mailing-list archives.
 
-    - In the main-view, by default ~q~ is now bound to ~mu4e-main-quit-or-bury~,
-      which calls either ~mu4e-quit~ or, with prefix argument, ~bury-buffer~.
+    - ~mu4e-quit~ now takes a prefix argument which, if provided, causes it to
+      bury he mu main buffer, rather than quitting mu. ~mu4e~ will now just switch
+      the mu4e buffer if it exists (otherwise it starts ~mu4e~).
 
     - ~mu4e~ benefits from the mentioned speed-ups in querying, and adds some of
       its own - e.g., for showing 500 messages (debug build), we went from 642ms

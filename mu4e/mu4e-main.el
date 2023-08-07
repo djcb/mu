@@ -110,17 +110,10 @@ the personal addresses."
           (current-time-string baseline-t)
         "Never"))))
 
-(defun mu4e-main-quit-or-bury (&optional bury)
-  "Quit mu4e, or, with prefix-argument, bury the buffer."
-  (interactive "P")
-  (if bury
-      (bury-buffer)
-    (mu4e-quit)))
-
 (defvar mu4e-main-mode-map
   (let ((map (make-sparse-keymap)))
 
-    (define-key map "q" #'mu4e-main-quit-or-bury)
+    (define-key map "q" #'mu4e-quit)
     (define-key map "C" #'mu4e-compose-new)
 
     (define-key map "m" #'mu4e--main-toggle-mail-sending-mode)
@@ -335,7 +328,7 @@ Otherwise, do nothing."
          (mu4e--main-action "\t* [@]News\n" #'mu4e-news nil "N")
          (mu4e--main-action "\t* [@]About mu4e\n" #'mu4e-about nil "A")
          (mu4e--main-action "\t* [@]Help\n" #'mu4e-display-manual nil "H")
-         (mu4e--main-action "\t* [@]quit\n" #'mu4e-main-quit-or-bury nil "q")
+         (mu4e--main-action "\t* [@]quit\n" #'mu4e-quit nil "q")
          "\n"
          (propertize "  Info\n\n" 'face 'mu4e-title-face)
          (mu4e--key-val "last updated"

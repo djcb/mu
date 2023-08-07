@@ -61,18 +61,26 @@
 Then, show the main window, unless BACKGROUND (prefix-argument)
 is non-nil."
   (interactive "P")
-  ;; start mu4e, then show the main view
-  (mu4e--init-handlers)
-  (mu4e--start
-   (unless background #'mu4e--main-view)))
+  (if (and (not background) (buffer-live-p mu4e-main-buffer-name))
+      ;; already running.
+      (switch-to-buffer mu4e-main-buffer-name)
+    ;; start mu4e, then show the main view
+    (mu4e--init-handlers)
+    (mu4e--start
+     (unless background #'mu4e--main-view))))
 
-(defun mu4e-quit()
-  "Quit the mu4e session."
-  (interactive)
-  (if mu4e-confirm-quit
-      (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
-        (mu4e--stop))
-    (mu4e--stop)))
+(defun mu4e-quit(&optional bury)
+  "Quit the mu4e session or bury the buffer.
+
+If prefix-argument BURY is non-nil, merely bury the buffer.
+Otherwise, completely quit mu4e, including automatic updating."
+  (interactive "P")
+  (if bury
+      (bury-buffer)
+    (if mu4e-confirm-quit
+        (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
+          (mu4e--stop))
+      (mu4e--stop))))
 
 ;;; Internals
 

@@ -858,16 +858,17 @@ visible only if you have actually set up mail-queuing. @ref{Queuing
 mail}
 @item @t{[A]bout mu4e} provides general information about the program
 @item @t{[H]elp} shows help information for this view
-@item Finally, @t{[q]uit mu4e} quits your @t{mu4e}-session
+@item Finally, @t{[q]uit mu4e} quits your @t{mu4e}-session@footnote{@t{mu4e-quit}; or with a @t{C-u}
+prefix argument, it merely buries the buffer}
 @end itemize
 
 @node Headers view
 @chapter The headers view
 
-The headers view shows the results of a query. The header-line shows
-the names of the fields. Below that, there is a line with those
-fields, for each matching message, followed by a footer line. The
-major-mode for the headers view is @code{mu4e-headers-mode}.
+The headers view shows the results of a query. The header-line shows the names
+of the fields. Below that, there is a line with those fields, for each matching
+message, followed by a footer line. The major-mode for the headers view is
+@code{mu4e-headers-mode}.
 
 @menu
 * Overview: HV Overview. What is the Header View
