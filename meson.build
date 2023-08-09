@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.11.13',
+        version: '1.11.14',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -174,6 +174,7 @@ if guile_dep.found()
     guile_extension_dir = custom_guile_xd
   endif
   config_h_data.set_quoted('MU_GUILE_EXTENSION_DIR', guile_extension_dir)
+  message('Using guile-extension-dir: ' + guile_extension_dir)
 endif
 
 # emacs -- needed for mu4e compilation
