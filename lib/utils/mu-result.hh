@@ -106,8 +106,8 @@ Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
 }
 
 
-template<typename T>
-T unwrap(Result<T>&& res)
+template<typename T> T
+unwrap(Result<T>&& res)
 {
 	if (!!res)
 		return std::move(res.value());

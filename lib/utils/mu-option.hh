@@ -21,6 +21,7 @@
 #define MU_OPTION__
 
 #include <tl/optional.hpp>
+#include <stdexcept>
 #include <string>
 
 namespace Mu {
@@ -35,6 +36,16 @@ Some(T&& t)
 	return std::move(t);
 }
 constexpr auto Nothing = tl::nullopt; // 'None' is already taken.
+
+template<typename T> T
+unwrap(Option<T>&& res)
+{
+	if (!!res)
+		return std::move(res.value());
+	else
+		throw std::runtime_error("failure is not an option");
+}
+
 
 /**
  * Maybe create a string from a const char pointer.
