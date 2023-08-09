@@ -133,9 +133,13 @@ struct Store::Private {
 	}
 
 	Option<Message> find_message_unlocked(Store::Id docid) const;
+	Store::IdVec find_duplicates_unlocked(const Store& store,
+					      const std::string& message_id) const;
+
 	Result<Store::Id> add_message_unlocked(Message& msg);
 	Result<Store::Id> update_message_unlocked(Message& msg, Store::Id docid);
 	Result<Store::Id> update_message_unlocked(Message& msg, const std::string& old_path);
+
 	Result<Message> move_message_unlocked(Message&& msg,
 					      Option<const std::string&> target_mdir,
 					      Option<Flags> new_flags,
@@ -189,6 +193,31 @@ Store::Private::find_message_unlocked(Store::Id docid) const
 		return Nothing;
 	else
 		return Some(std::move(*msg));
+}
+
+Store::IdVec
+Store::Private::find_duplicates_unlocked(const Store& store,
+					 const std::string& message_id) const
+{
+	if (message_id.empty() || message_id.size() > MaxTermLength) {
+		mu_warning("invalid message-id '{}'", message_id);
+		return {};
+	}
+
+	auto expr{mu_format("{}:{}",
+			    field_from_id(Field::Id::MessageId).shortcut,
+			    message_id)};
+	if (auto&& res{store.run_query(expr)}; !res) {
+		mu_warning("error finding message-ids: {}", res.error().what());
+		return {};
+
+	} else {
+		Store::IdVec ids;
+		ids.reserve(res->size());
+		for (auto&& mi: *res)
+			ids.emplace_back(mi.doc_id());
+		return ids;
+	}
 }
 
 
@@ -375,15 +404,29 @@ Store::find_message(Store::Id docid) const
 	return priv_->find_message_unlocked(docid);
 }
 
+Store::IdMessageVec
+Store::find_messages(IdVec ids) const
+{
+	std::lock_guard guard{priv_->lock_};
+
+	IdMessageVec id_msgs;
+	for (auto&& id: ids) {
+		if (auto&& msg{priv_->find_message_unlocked(id)}; msg)
+			id_msgs.emplace_back(std::make_pair(id, std::move(*msg)));
+	}
+
+	return id_msgs;
+}
+
 /**
  * Move a message in store and filesystem.
  *
  * Lock is assumed taken already
  *
  * @param id message id
- * @param target_mdir target_midr (or Nothing for current)
- * @param new_flags new flags (or Notthing)
- * @param opts move_optionss
+ * @param target_mdir target_mdir (or Nothing for current)
+ * @param new_flags new flags (or Nothing)
+ * @param opts move_options
  *
  * @return the Message after the moving, or an Error
  */
@@ -393,9 +436,9 @@ Store::Private::move_message_unlocked(Message&& msg,
 				      Option<Flags> new_flags,
 				      MoveOptions opts)
 {
-	const auto	old_path       = msg.path();
-	const auto	target_flags   = new_flags.value_or(msg.flags());
-	const auto	target_maildir = target_mdir.value_or(msg.maildir());
+	const auto old_path       = msg.path();
+	const auto target_flags   = new_flags.value_or(msg.flags());
+	const auto target_maildir = target_mdir.value_or(msg.maildir());
 
 	/* 1. first determine the file system path of the target */
 	const auto target_path =
@@ -422,122 +465,71 @@ Store::Private::move_message_unlocked(Message&& msg,
 	return Ok(std::move(msg));
 }
 
-/* get a vec of all messages with the given message id */
-static Store::IdMessageVec
-messages_with_msgid(const Store& store, const std::string& msgid, size_t max=100)
-{
-	if (msgid.size() > MaxTermLength) {
-		mu_warning("invalid message-id '{}'", msgid.c_str());
-		return {};
-	} else if (msgid.empty())
-		return {};
-
-	constexpr auto xprefix{field_from_id(Field::Id::MessageId).shortcut};
-	auto expr{mu_format("{}:{}", xprefix,
-			    to_string_gchar(g_ascii_strdown(msgid.c_str(), -1)))};
-
-	const auto res{store.run_query(expr, {}, QueryFlags::None, max)};
-	if (!res) {
-		mu_warning("failed to run message-id-query: {}", res.error().what());
-		return {};
-	}
-	if (res->empty()) {
-		mu_warning("could not find message(s) for msgid {}", msgid);
-		return {};
-	}
-
-	Store::IdMessageVec imvec;
-	for (auto&& mi : *res)
-		imvec.emplace_back(std::make_pair(mi.doc_id(), mi.message().value()));
-
-	return imvec;
-}
-
-
-static Result<std::string>
-message_id_query(const std::string& msgid)
-{
-	if (msgid.empty())
-		return Err(Error::Code::InvalidArgument, "empty message-id");
-	else if (msgid.size() > MaxTermLength)
-		return Err(Error::Code::InvalidArgument, "message-id too long");
-	else
-		return Ok(mu_format("{}:{}", field_from_id(Field::Id::MessageId).shortcut, msgid));
-}
-
-
-Result<Store::IdVec>
-Store::find_docids_with_message_id(const std::string& msgid) const
+Store::IdVec
+Store::find_duplicates(const std::string& message_id) const
 {
 	std::lock_guard guard{priv_->lock_};
 
-	if (auto&& query{message_id_query(msgid)}; !query)
-		return Err(std::move(query.error()));
-	else if (auto&& res{run_query(*query)}; !res)
-		return Err(std::move(res.error()));
-	else {
-		Store::IdVec ids;
-		for (auto&& mi: *res)
-			ids.emplace_back(mi.doc_id());
-		return Ok(std::move(ids));
-	}
+	return priv_->find_duplicates_unlocked(*this, message_id);
 }
 
 
-static Flags
-filter_dup_flags(Flags old_flags, Flags new_flags)
-{
-	new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Draft);
-	new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Flagged);
-	new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Trashed);
 
-	return new_flags;
-}
-
-Result<Store::IdMessageVec>
+Result<Store::IdVec>
 Store::move_message(Store::Id id,
 		    Option<const std::string&> target_mdir,
 		    Option<Flags> new_flags,
 		    MoveOptions opts)
 {
+	auto filter_dup_flags=[](Flags old_flags, Flags new_flags) -> Flags {
+		new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Draft);
+		new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Flagged);
+		new_flags = flags_keep_unmutable(old_flags, new_flags, Flags::Trashed);
+		return new_flags;
+	};
+
 	std::lock_guard guard{priv_->lock_};
 
 	auto msg{priv_->find_message_unlocked(id)};
 	if (!msg)
 		return Err(Error::Code::Store, "cannot find message <{}>", id);
 
-	auto res{priv_->move_message_unlocked(std::move(*msg), target_mdir, new_flags, opts)};
+	const auto message_id{msg->message_id()};
+	auto res{priv_->move_message_unlocked(std::move(*msg),
+					      target_mdir, new_flags, opts)};
 	if (!res)
 		return Err(res.error());
 
-	IdMessageVec imvec;
-	imvec.emplace_back(std::make_pair(id, std::move(*res)));
-	if (none_of(opts & Store::MoveOptions::DupFlags) || !new_flags)
-		return Ok(std::move(imvec));
+	IdVec ids{id};
+	if (none_of(opts & Store::MoveOptions::DupFlags) || message_id.empty() || !new_flags)
+		return Ok(std::move(ids));
 
 	/* handle the dupflags case; i.e. apply (a subset of) the flags to
 	 * all messages with the same message-id as well */
-	for (auto&& [docid, msg]: messages_with_msgid(*this, imvec.at(0).second.message_id())) {
+	auto dups{priv_->find_duplicates_unlocked(*this, message_id)};
+	for (auto&& dupid: dups) {
 
-		if (docid == id)
+		if (dupid == id)
 			continue; // already
 
-		/* For now, don't change Draft/Flagged/Trashed */
-		Flags dup_flags = filter_dup_flags(msg.flags(), *new_flags);
+		auto dup_msg{priv_->find_message_unlocked(dupid)};
+		if (!dup_msg)
+			continue; // no such message
 
+		/* For now, don't change Draft/Flagged/Trashed */
+		const auto dup_flags{filter_dup_flags(dup_msg->flags(), *new_flags)};
 		/* use the updated new_flags and default MoveOptions (so we don't recurse, nor do we
 		 * change the base-name of moved messages) */
-		auto dup_res = priv_->move_message_unlocked(std::move(msg), Nothing,
-							    dup_flags,
-							    Store::MoveOptions::None);
-		// just log a warning if it fails, but continue.
-		if (dup_res)
-			imvec.emplace_back(docid, std::move(*dup_res));
-		else
+		if (auto dup_res = priv_->move_message_unlocked(
+			    std::move(*dup_msg), Nothing,
+			    dup_flags,
+			    Store::MoveOptions::None); !dup_res)
 			mu_warning("failed to move dup: {}", dup_res.error().what());
+		else
+			ids.emplace_back(dupid);
 	}
 
-	return Ok(std::move(imvec));
+	return Ok(std::move(ids));
 }
 
 time_t

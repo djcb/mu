@@ -621,7 +621,7 @@ determine_docids(const Store& store, const Command& cmd)
 	if (docid != 0)
 		return {static_cast<Store::Id>(docid)};
 	else
-		return unwrap(store.find_docids_with_message_id(msgid));
+		return store.find_duplicates(msgid);
 }
 
 size_t
@@ -881,12 +881,14 @@ Server::Private::perform_move(Store::Id                 docid,
 
 	/* note: we get back _all_ the messages that changed; the first is the
 	 * primary mover; the rest (if present) are any dups affected */
-	const auto idmsgvec{store().move_message(docid, maildir, flags, move_opts)};
-	if (!idmsgvec)
-		throw idmsgvec.error();
+	const auto ids{unwrap(store().move_message(docid, maildir, flags, move_opts))};
 
-	for (auto&&[id, msg]: *idmsgvec) {
-		auto sexpstr = "(:update " + msg_sexp_str(idmsgvec->at(0).second, id, {});
+	for (auto&& id: ids) {
+		auto idmsg{store().find_message(id)};
+		if (!idmsg)
+			mu_warning("failed to find message for id {}", id);
+
+		auto sexpstr = "(:update " + msg_sexp_str(*idmsg, id, {});
 		/* note, the :move t thing is a hint to the frontend that it
 		 * could remove the particular header */
 		if (different_mdir)
@@ -1052,29 +1054,30 @@ Server::Private::sent_handler(const Command& cmd)
 void
 Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 {
+	auto new_flags = [](const Message& m)->Option<Flags> {
+		auto nflags = flags_from_delta_expr("+S-u-N", m.flags());
+		if (!nflags || nflags == m.flags())
+			return Nothing; // nothing to do
+		else
+			return nflags;
+	};
 
-	auto move_res = std::invoke([&]()->Result<Store::IdMessageVec> {
-			const auto newflags{flags_from_delta_expr("+S-u-N", msg.flags())};
-			if (!newflags || msg.flags() == *newflags) {
-				/* case 1: message was already read; do nothing */
-				Store::IdMessageVec idmvec;
-				idmvec.emplace_back(docid, std::move(msg));
-				return idmvec;
-			} else {
-				/* case 2: move message (and possibly dups) */
-				Store::MoveOptions move_opts{Store::MoveOptions::DupFlags};
-				if (rename)
-					move_opts |= Store::MoveOptions::ChangeName;
-				return store().move_message(docid, {}, newflags, move_opts);
-			}
-		});
+	auto&& nflags = new_flags(msg);
+	if (!nflags) { // nothing to move, just send the message for viewing.
+		output(mu_format("(:view {})", msg_sexp_str(msg, docid, {})));
+		return;
+	}
 
-	if (!move_res)
-		throw move_res.error();
+	// move message + dups, present results.
 
-	for (auto&& [id, msg]: move_res.value())
+	Store::MoveOptions move_opts{Store::MoveOptions::DupFlags};
+	if (rename)
+		move_opts |= Store::MoveOptions::ChangeName;
+	auto&& ids = unwrap(store().move_message(docid, {}, nflags, move_opts));
+	for (auto&& [id, moved_msg]: store().find_messages(ids)) {
 		output(mu_format("({} {})", id == docid ? ":view" : ":update",
-				 msg_sexp_str(msg, id, {})));
+				 msg_sexp_str(moved_msg, id, {})));
+	}
 }
 
 void

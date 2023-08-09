@@ -381,14 +381,16 @@ Yes, that would be excellent.
 	 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
 	 assert_valid_result(msgs3);
 	 g_assert_true(msgs3->size() == 1);
-	 const auto& msg3{msgs3->at(0).second};
+	 auto&& msg3_opt{store->find_message(msgs3->at(0))};
+	 g_assert_true(!!msg3_opt);
+	 auto&& msg3{std::move(*msg3_opt)};
+
 	 assert_equal(msg3.maildir(), "/a");
 	 assert_equal(msg3.path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
 	 g_assert_true(::access(msg3.path().c_str(), R_OK)==0);
 	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
 
-	 g_debug("%s", msg3.sexp().to_string().c_str());
-	 g_assert_cmpuint(store->size(), ==, 1);
+	 g_debug("%s", msg3.sexp().to_string().c_str());	 g_assert_cmpuint(store->size(), ==, 1);
 }
 
 
@@ -413,12 +415,13 @@ Yes, that would be excellent.
 	 const auto res2 = maildir_mkdir(tempdir2.path() + "/Maildir/b");
 	 assert_valid_result(res2);
 
-	 auto msg1_path = tempdir2.path() + "/Maildir/a/new/msg123";
-	 auto msg2_path = tempdir2.path() + "/Maildir/a/cur/msgabc:2,S";
-	 auto msg3_path = tempdir2.path() + "/Maildir/b/cur/msgdef:2,RS";
+	 auto msg1_path = join_paths(tempdir2.path(), "Maildir/a/new/msg123");
+	 auto msg2_path = join_paths(tempdir2.path(), "Maildir/a/cur/msgabc:2,S");
+	 auto msg3_path = join_paths(tempdir2.path(),"Maildir/b/cur/msgdef:2,RS");
 
 	 TempDir tempdir;
-	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir")};
+	 auto store{Store::make_new(tempdir.path(),
+				    join_paths(tempdir2.path() , "Maildir"))};
 	 assert_valid_result(store);
 
 	 std::vector<Store::Id> ids;
@@ -437,12 +440,18 @@ Yes, that would be excellent.
 					 Flags::Seen | Flags::Flagged | Flags::Passed,
 					 Store::MoveOptions::DupFlags);
 	 assert_valid_result(mres);
+	 mu_info("found {} matches", mres->size());
+	 for (auto&& m: *mres)
+		 mu_info("id: {}", m);
+
 	 // al three dups should have been updated
 	 g_assert_cmpuint(mres->size(), ==, 3);
+	 auto&& id_msgs{store->find_messages(*mres)};
+
 	 // first should be the  original
-	 g_assert_cmpuint(mres->at(0).first, ==, ids.at(0));
+	 g_assert_cmpuint(id_msgs.at(0).first, ==, ids.at(0));
 	 { // Message 1
-		 const Message& msg = mres->at(0).second;
+		 const Message& msg = id_msgs.at(0).second;
 		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/a/cur/msg123:2,FPS");
 		 g_assert_true(msg.flags() == (Flags::Seen|Flags::Flagged|Flags::Passed));
 	 }
@@ -450,19 +459,18 @@ Yes, that would be excellent.
 	 // msg3 should loose its R flag.
 
 	 auto check_msg2 = [&](const Message& msg) {
-		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/a/cur/msgabc:2,PS");
+		 assert_equal(msg.path(), join_paths(tempdir2.path(), "/Maildir/a/cur/msgabc:2,PS"));
 	 };
-
 	 auto check_msg3 = [&](const Message& msg) {
-		 assert_equal(msg.path(), tempdir2.path() + "/Maildir/b/cur/msgdef:2,PS");
+		 assert_equal(msg.path(), join_paths(tempdir2.path(), "/Maildir/b/cur/msgdef:2,PS"));
 	 };
 
-	 if (mres->at(1).first == ids.at(1)) {
-		 check_msg2(mres->at(1).second);
-		 check_msg3(mres->at(2).second);
+	 if (id_msgs.at(1).first == ids.at(1)) {
+		 check_msg2(id_msgs.at(1).second);
+		 check_msg3(id_msgs.at(2).second);
 	 } else  {
-		 check_msg2(mres->at(2).second);
-		 check_msg3(mres->at(1).second);
+		 check_msg2(id_msgs.at(2).second);
+		 check_msg3(id_msgs.at(1).second);
 	 }
 }
 
@@ -525,8 +533,8 @@ main(int argc, char* argv[])
 			test_message_mailing_list);
 	g_test_add_func("/store/message/attachments",
 			test_message_attachments);
+	g_test_add_func("/store/move-dups", test_store_move_dups);
 	g_test_add_func("/store/index/index-move", test_index_move);
-	g_test_add_func("/store/index/move-dups", test_store_move_dups);
 	g_test_add_func("/store/index/circular-symlink", test_store_circular_symlink);
 	g_test_add_func("/store/index/fail", test_store_fail);
 

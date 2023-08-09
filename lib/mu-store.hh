@@ -42,8 +42,9 @@ namespace Mu {
 
 class Store {
 public:
-	using Id                      = Xapian::docid; /**< Id for a message in the store */
-	static constexpr Id InvalidId = 0;             /**< Invalid  store id */
+	using Id                      = Xapian::docid;   /**< Id for a message in the store */
+	static constexpr Id InvalidId = 0;               /**< Invalid  store id */
+	using IdVec                   = std::vector<Id>; /**< Vector of document ids */
 
 	/**
 	 * Configuration options.
@@ -257,17 +258,26 @@ public:
 	 */
 	Option<Message> find_message(Id id) const;
 
-	using IdVec = std::vector<Id>;
 
 	/**
-	 * Get the doc-ids for messages with the given message-id
+	 * Find the messages for the given ids
 	 *
-	 * @param msg_id a message id
-	 * @param max_results maximum number of results
+	 * @param ids document ids for the message
 	 *
-	 * @return either an Error or a vector of docids
+	 * @return id, message pairs for the messages found
+	 * (which not necessarily _all_ of the ids)
 	 */
-	Result<IdVec> find_docids_with_message_id(const std::string& msg_id) const;
+	using IdMessageVec = std::vector<std::pair<Id, Message>>;
+	IdMessageVec find_messages(IdVec ids) const;
+
+	/**
+	 * Find the ids for all messages with a give message-id
+	 *
+	 * @param message_id a message id
+	 *
+	 * @return the ids of all messages with the given message-id
+	 */
+	IdVec find_duplicates(const std::string& message_id) const;
 
 	/**
 	 * does a certain message exist in the store already?
@@ -299,16 +309,15 @@ public:
 	 * @param new_flags new flags (if any)
 	 * @param change_name whether to change the name
 	 *
-	 * @return Result, either a vec of <doc-id, message> for the moved
+	 * @return Result, either an IdVec with ids for the  moved
 	 * message(s) or some error. Note that in case of success at least one
 	 * message is returned, and only with MoveOptions::DupFlags can it be
 	 * more than one.
 	 */
-	using IdMessageVec = std::vector<std::pair<Id, Message>>;
-	Result<IdMessageVec> move_message(Store::Id id,
-					Option<const std::string&> target_mdir = Nothing,
-					Option<Flags> new_flags = Nothing,
-					MoveOptions opts = MoveOptions::None);
+	Result<IdVec> move_message(Store::Id id,
+				   Option<const std::string&> target_mdir = Nothing,
+				   Option<Flags> new_flags = Nothing,
+				   MoveOptions opts = MoveOptions::None);
 
 	/**
 	 * Prototype for the ForEachMessageFunc
