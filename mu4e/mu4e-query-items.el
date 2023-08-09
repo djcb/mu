@@ -80,7 +80,7 @@ the latest query-items.")
       (unless (stringp query)
         (mu4e-warn "Could not get query string from %s" bm))
       ;; apparently, non-UTF8 queries exist, i.e.,
-      ;; with maild dir names.
+      ;; with maildir names.
       (decode-coding-string query 'utf-8 t))))
 
 (defun mu4e--query-items-pick-favorite (items)

@@ -315,7 +315,8 @@ Otherwise, do nothing."
          (mu4e--main-items 'maildirs max-length)
          "\n"
          (propertize "  Misc\n\n" 'face 'mu4e-title-face)
-
+         (mu4e--main-action "\t* [@]Choose query\n"
+                            #'mu4e-search-query nil "c")
          (mu4e--main-action "\t* [@]Switch context\n"
                             #'mu4e-context-switch nil ";")
          (mu4e--main-action "\t* [@]Update email & database\n"

@@ -987,6 +987,7 @@ S            edit last query
 /            narrow the search
 b            search bookmark
 B            edit bookmark before search
+c            search query with completion
 j            jump to maildir
 M-left,\     previous query
 M-right      next query
@@ -1362,6 +1363,7 @@ S            edit last query
 /            narrow the search
 b            search bookmark
 B            edit bookmark before search
+c            search query with completion
 j            jump to maildir
 
 O            change sort order

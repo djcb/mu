@@ -45,6 +45,10 @@
 
 *** mu4e
 
+    - New command ~mu4e-search-query~ (bound to =c=) which lets you pick a query
+      (from bookmark / maildir shortcuts) with completion in main / headers /
+      view buffers.
+
     - improved support for dealing with attachments and other MIME-parts in the
       message view; they gained completions support with annotations in the
       minibuffer
@@ -65,14 +69,14 @@
       for some (selected) mailing-list archives.
 
     - ~mu4e-quit~ now takes a prefix argument which, if provided, causes it to
-      bury he mu main buffer, rather than quitting mu. ~mu4e~ will now just switch
-      the mu4e buffer if it exists (otherwise it starts ~mu4e~).
+      bury the mu main buffer, rather than quitting mu. ~mu4e~ will now just
+      switch the mu4e buffer if it exists (otherwise it starts ~mu4e~).
 
-    - ~mu4e~ benefits from the mentioned speed-ups in querying, and adds some of
-      its own - e.g., for showing 500 messages (debug build), we went from 642ms
-      to 247ms. Note, the optimizations are experimental, and for now you can
-      turn them off by setting =mu4e-mu-allow-temp-file= to =nil= (and restart
-      ~mu4e~); and reporting.
+    - ~mu4e~ queries are much snappier now. ~mu4e~ benefits from the mentioned
+      speed-ups in querying, and adds some of its own - e.g., for showing 500
+      messages (debug build), we went from 642ms to 247ms. Note, the
+      optimizations are experimental, and for now you can turn them off by
+      setting =mu4e-mu-allow-temp-file= to =nil= (and restart ~mu4e~); and reporting.
 
     - after retrieving mail (~mu4e-update-mail-and-index~), save the output of the
       retrieval command in a buffer =*mu4e-last-update*=, = which can be useful

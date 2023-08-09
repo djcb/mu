@@ -217,7 +217,7 @@ the search."
       (mu4e--query-items-refresh 'reset-baseline))
 
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
-    (mu4e-search expr (when edit "Edit bookmark: ") edit)))
+    (mu4e-search expr (when edit "Edit query: ") edit)))
 
 (defun mu4e-search-bookmark-edit ()
   "Edit an existing bookmark before executing it."
@@ -547,6 +547,36 @@ the mode-line.")
       'help-echo (format "mu4e query:\n\t%s" mu4e--search-last-query))
      "]")))
 
+(defun mu4e-search-query (&optional edit)
+  "Select a search query through `completing-read'.
+
+If prefix-argument EDIT is non-nil, allow for editing the chosen
+query before submitting it."
+  (interactive "P")
+  (let* ((candidates (seq-map (lambda (item)
+                                (cons (plist-get item :name) item))
+                              (mu4e-query-items)))
+         (longest-name
+          (seq-max (seq-map (lambda (c) (length (car c))) candidates)))
+         (longest-query
+          (seq-max (seq-map (lambda (c) (length (plist-get (cdr c) :query)))
+                            candidates)))
+
+         (annotation-func
+          (lambda (candidate)
+            (let* ((item (cdr-safe (assoc candidate candidates)))
+                   (name (propertize (or  (plist-get item :name) "")
+                                     'face 'mu4e-header-key-face))
+                   (query (propertize (or (plist-get item :query) "")
+                                      'face 'mu4e-header-value-face)))
+              (concat
+               "  "
+               (make-string (- longest-name (length name)) ?\s)
+               query))))
+         (completion-extra-properties
+          `(:annotation-function ,annotation-func)))
+    (mu4e-search-bookmark (completing-read "Query: " candidates) edit)))
+
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
   :global nil
@@ -569,6 +599,8 @@ the mode-line.")
     (define-key map "b" #'mu4e-search-bookmark)
     (define-key map "B" #'mu4e-search-bookmark-edit)
 
+    (define-key map "c" #'mu4e-search-query)
+
     (define-key map "j" #'mu4e-search-maildir)
     map))
 
@@ -580,6 +612,8 @@ the mode-line.")
      :help "Show messages matching some bookmark query"]
     ["Search maildir" mu4e-search-maildir
      :help "Show messages in some maildir"]
+    ["Choose query" mu4e-search-query
+     :help "Show messages for some query"]
     ["Previous query" mu4e-search-prev
      :help "Run previous query"]
     ["Next query" mu4e-search-next
