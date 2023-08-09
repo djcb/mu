@@ -460,15 +460,10 @@ private:
 }; // Message
 MU_ENABLE_BITOPS(Message::Options);
 
-
-
-static inline std::ostream&
-operator<<(std::ostream& os, const Message& msg)
-{
-	os << msg.sexp();
-	return os;
+static inline auto
+format_as(const Message& msg) {
+	return msg.path();
 }
-
 
 } // Mu
 #endif /* MU_MESSAGE_HH__ */

@@ -387,6 +387,18 @@ flags_keep_unmutable(Flags old_flags, Flags new_flags, Flags unmutable_flag)
  */
 std::string to_string(Flags flags);
 
+
+/**
+ * Get a string representation of Flags for fmt
+ *
+ * @param flags flags
+ *
+ * @return string as a sequence of message-flag shortcuts
+ */
+static inline auto format_as(const Flags& flags) {
+	return to_string(flags);
+}
+
 } // namespace Mu
 
 #endif /* MU_FLAGS_HH__ */

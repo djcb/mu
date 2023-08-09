@@ -109,7 +109,7 @@ QueryMatch::has_flag(QueryMatch::Flags flag) const
 	return any_of(flags & flag);
 }
 
-inline std::ostream&
+static inline std::ostream&
 operator<<(std::ostream& os, QueryMatch::Flags mflags)
 {
 	if (mflags == QueryMatch::Flags::None) {
@@ -347,6 +347,13 @@ private:
 	Xapian::MSetIterator		mset_it_;
 	QueryMatches&			query_matches_;
 };
+
+
+static inline auto
+format_as(const QueryResultsIterator& it)
+{
+	return it.path().value_or("<no path>");
+}
 
 constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
 

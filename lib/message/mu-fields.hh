@@ -594,5 +594,20 @@ Option<Field> field_from_number(size_t id)
 }
 
 
+/**
+ * Get a fmt-printable representation of Field for fmt
+ *
+ * @param field a Field
+ *
+ * @return a printable representation
+ */
+static inline constexpr auto format_as(const Field& field) {
+	return field.name;
+}
+static inline constexpr auto format_as(const Field::Id id) {
+	return format_as(field_from_id(id));
+}
+
+
 } // namespace Mu
 #endif /* MU_FIELDS_HH__ */
