@@ -36,12 +36,12 @@ mandir    = prefixdir / get_option('mandir')
 infodir   = prefixdir / get_option('infodir')
 
 # allow for configuring lispdir, as with autotools.
-# default to <p
 if get_option('lispdir') == ''
   mu4e_lispdir= datadir / join_paths('emacs', 'site-lisp', 'mu4e')
 else
   mu4e_lispdir= get_option('lispdir') / 'mu4e'
 endif
+
 
 ################################################################################
 # compilers / flags
@@ -136,7 +136,17 @@ gzip=find_program('gzip')
 
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
-# soft dependencies
+
+# allow for a custom guile-extension-dir
+if guile_dep.found()
+  custom_guile_xd=get_option('guile-extension-dir')
+  if custom_guile_xd == ''
+    guile_extension_dir = guile_dep.get_variable(pkgconfig: 'extensiondir')
+  else
+    guile_extension_dir = custom_guile_xd
+  endif
+  config_h_data.set_quoted('MU_GUILE_EXTENSION_DIR', guile_extension_dir)
+endif
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')

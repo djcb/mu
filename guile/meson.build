@@ -74,7 +74,7 @@ lib_guile_mu = shared_module(
     'mu-guile-message.cc' ],
   dependencies: [guile_dep, glib_dep, lib_mu_dep, config_h_dep, thread_dep ],
   install: true,
-  install_dir: guile_dep.get_variable(pkgconfig: 'extensiondir')
+  install_dir: guile_extension_dir
 )
 
 if makeinfo.found()
