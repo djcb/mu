@@ -1,4 +1,4 @@
-## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,6 +19,11 @@ option('guile',
        type : 'feature',
        value: 'auto',
        description: 'build the guile scripting support (requires guile-3.x)')
+
+# by default, this uses guile_dep.get_variable(pkgconfig: 'extensiondir')
+option('guile-extension-dir',
+       type: 'string',
+       description: 'custom install path for the guile extension module')
 
 option('readline',
        type: 'feature',
