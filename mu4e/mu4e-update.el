@@ -94,7 +94,10 @@ to automate this."
 (defcustom mu4e-update-interval nil
   "Number of seconds between mail retrieval/indexing.
 If nil, don't update automatically. Note, changes in
-`mu4e-update-interval' only take effect after restarting mu4e."
+`mu4e-update-interval' only take effect after restarting mu4e.
+
+Important, the automatic update *only* works when `mu4e' is
+running."
   :type '(choice (const :tag "No automatic update" nil)
                  (integer :tag "Seconds"))
   :group 'mu4e
