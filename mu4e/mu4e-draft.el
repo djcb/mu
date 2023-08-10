@@ -350,11 +350,12 @@ address is set, use that, otherwise use the From address. Note,
 whatever was in the To: field before, goes to the Cc:-list (if
 we're doing a reply-to-all). Special case: if we were the sender
 of the original, we simple copy the list form the original."
-  (let ((reply-to
+  (let* ((reply-to
          (append
           (plist-get origmsg :to)
-          (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))))
-    (cl-delete-duplicates reply-to :test #'mu4e~draft-address-cell-equal)
+          (or (plist-get origmsg :reply-to) (plist-get origmsg :from))))
+         (reply-to (cl-delete-duplicates reply-to
+                                         :test #'mu4e~draft-address-cell-equal)))
     (if mu4e-compose-dont-reply-to-self
         (cl-delete-if
          (lambda (to-cell)
