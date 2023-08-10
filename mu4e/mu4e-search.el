@@ -572,10 +572,16 @@ query before submitting it."
               (concat
                "  "
                (make-string (- longest-name (length name)) ?\s)
-               query))))
+               query
+               (make-string (- longest-query (length query)) ?\s)
+               "  "
+               (mu4e--query-item-display-counts item)))))
          (completion-extra-properties
-          `(:annotation-function ,annotation-func)))
-    (mu4e-search-bookmark (completing-read "Query: " candidates) edit)))
+          `(:annotation-function ,annotation-func))
+         (chosen (completing-read "Query: " candidates))
+         (query (or (plist-get (cdr-safe (assoc chosen candidates)) :query)
+                    (mu4e-warn "No query for %s" chosen))))
+    (mu4e-search-bookmark query edit)))
 
 (define-minor-mode mu4e-search-minor-mode
   "Mode for searching for messages."
