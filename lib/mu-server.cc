@@ -543,14 +543,14 @@ Server::Private::contacts_handler(const Command& cmd)
 		 personal ? "personal" : "any", mu_time(after), tstamp);
 
 	auto match_contact = [&](const Contact& ci)->bool {
-		if (tstamp > ci.tstamp)
+		if (ci.tstamp < tstamp)
 			return false; /* already seen? */
 		else if (personal && !ci.personal)
 			return false; /* not personal? */
-		else if (after > ci.message_date)
-			return true; /* too old? */
+		else if (ci.message_date < after)
+			return false; /* too old? */
 		else
-			return false;
+			return true;
 	};
 
 	auto       n{0};
@@ -561,15 +561,15 @@ Server::Private::contacts_handler(const Command& cmd)
 		auto&& tmp_file	= std::move(std::get<0>(tmp_stream));
 		auto&& tmp_file_name = std::move(std::get<1>(tmp_stream));
 
-		tmp_file << '(';
+		mu_print(tmp_file, "(");
 		store().contacts_cache().for_each([&](const Contact& ci) {
 			if (!match_contact(ci))
 				return true; // continue
-			tmp_file << quote(ci.display_name()) << "\n";
+			mu_println(tmp_file, "{}", quote(ci.display_name()));
 			++n;
 			return maxnum == 0 || n <  maxnum;
 		});
-		tmp_file << ')';
+		mu_print(tmp_file, ")");
 		output_sexp(Sexp{":tstamp"_sym, mu_format("\"{}\"", g_get_monotonic_time()),
 				":contacts-temp-file"_sym, tmp_file_name});
 	} else {
