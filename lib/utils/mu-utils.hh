@@ -44,6 +44,7 @@
 #include <fmt/format.h>
 #include <fmt/core.h>
 #include <fmt/chrono.h>
+#include <fmt/ostream.h>
 
 namespace Mu {
 
@@ -100,7 +101,7 @@ void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
 }
 
 /*
- * Printing
+ * Printing; add our wrapper functions, one day we might be able to use std::
  */
 
 template<typename...T>
@@ -111,6 +112,7 @@ template<typename...T>
 void mu_println(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(frm, std::forward<T>(args)...);
 }
+
 template<typename...T>
 void mu_printerr(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::print(stderr, frm, std::forward<T>(args)...);
@@ -120,6 +122,16 @@ void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(stderr, frm, std::forward<T>(args)...);
 }
 
+
+/* stream */
+template<typename...T>
+void mu_print(std::ostream& os, fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::print(os, frm, std::forward<T>(args)...);
+}
+template<typename...T>
+void mu_println(std::ostream& os, fmt::format_string<T...> frm, T&&... args) noexcept {
+	fmt::println(os, frm, std::forward<T>(args)...);
+}
 
 /*
  * Fprmatting
