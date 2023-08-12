@@ -38,9 +38,35 @@
 
 using namespace Mu;
 
+using Mode = Scanner::Mode;
+
+/*
+ * dentry->d_ino, dentry->d_type may not be available
+ */
+struct dentry_t {
+	dentry_t(const struct dirent *dentry):
+#if HAVE_DIRENT_D_INO
+		d_ino{dentry->d_ino},
+#endif /*HAVE_DIRENT_D_INO*/
+
+#if HAVE_DIRENT_D_TYPE
+		d_type(dentry->d_type),
+#endif /*HAVE_DIRENT_D_TYPE*/
+		d_name{static_cast<const char*>(dentry->d_name)} {}
+#if HAVE_DIRENT_D_INO
+	ino_t		d_ino;
+#endif /*HAVE_DIRENT_D_INO*/
+
+#if HAVE_DIRENT_D_TYPE
+	unsigned char	d_type;
+#endif /*HAVE_DIRENT_D_TYPE*/
+
+	std::string	d_name;
+};
+
 struct Scanner::Private {
-	Private(const std::string& root_dir, Scanner::Handler handler):
-		root_dir_{root_dir}, handler_{handler} {
+	Private(const std::string& root_dir, Scanner::Handler handler, Mode mode):
+		root_dir_{root_dir}, handler_{handler}, mode_{mode} {
 		if (root_dir_.length() > PATH_MAX)
 			throw Mu::Error{Error::Code::InvalidArgument,
 				"path is too long"};
@@ -53,38 +79,35 @@ struct Scanner::Private {
 	Result<void> start();
 	void stop();
 
-	struct dentry_t {
-		dentry_t(const struct dirent *dentry):
-			d_ino{dentry->d_ino},
-			d_name{static_cast<const char*>(dentry->d_name)} {}
-		ino_t		d_ino;
-		std::string	d_name;
-	};
-
 	bool process_dentry(const std::string& path, const dentry_t& dentry,
 			    bool is_maildir);
 	bool process_dir(const std::string& path, bool is_maildir);
 
-	const std::string      root_dir_;
-	const Scanner::Handler handler_;
-	std::atomic<bool>      running_{};
-	std::mutex             lock_;
+	int lazy_stat(const char *fullpath, struct stat *stat_buf,
+		      const dentry_t& dentry);
+
+	bool maildirs_only_mode() const { return mode_ == Mode::MaildirsOnly; }
+
+	const std::string	root_dir_;
+	const Scanner::Handler	handler_;
+	Mode			mode_;
+	std::atomic<bool>       running_{};
+	std::mutex		lock_;
 };
 
 static bool
-is_dotdir(const char *d_name)
+ignore_dentry(const dentry_t& dentry)
 {
+	const auto d_name{dentry.d_name.c_str()};
+
 	/* dotdir? */
 	if (d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
 	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
 		return true;
 
-	return false;
-}
+	if (g_strcmp0(d_name, "tmp") == 0)
+			return true;
 
-static bool
-do_ignore(const char *d_name)
-{
 	if (d_name[0] == '.') {
 		if (d_name[1] == '#') /* emacs? */
 			return true;
@@ -97,45 +120,78 @@ do_ignore(const char *d_name)
 	if (g_strcmp0(d_name, "hcache.db") == 0) /* mutt cache? */
 		return true;
 
-	return false;
+	return false; /* don't ignore */
 }
+
+
+/*
+ * stat() if necessary (we'd like to avoid it), which we can if we only need the
+ * file-type and we already have that from the dentry.
+ */
+int
+Scanner::Private::lazy_stat(const char *path, struct stat *stat_buf, const dentry_t& dentry)
+{
+#if HAVE_DIRENT_D_TYPE
+	if (maildirs_only_mode()) {
+		switch (dentry.d_type) {
+		case DT_REG:
+			stat_buf->st_mode = S_IFREG;
+			return 0;
+		case DT_DIR:
+			stat_buf->st_mode = S_IFDIR;
+			return 0;
+		default:
+			/* LNK is inconclusive; we need a stat. */
+			break;
+		}
+	}
+#endif /*HAVE_DIRENT_D_TYPE*/
+
+	int res = ::stat(path, stat_buf);
+	if (res != 0)
+		mu_warning("failed to stat {}: {}", path, g_strerror(errno));
+
+	return res;
+}
+
 
 bool
 Scanner::Private::process_dentry(const std::string& path, const dentry_t& dentry,
 				 bool is_maildir)
 {
-	const auto d_name{dentry.d_name.c_str()};
+	if (ignore_dentry(dentry))
+		return true;
 
-	if (is_dotdir(d_name) || std::strcmp(d_name, "tmp") == 0)
-		return true; // ignore.
-	if (do_ignore(d_name)) {
-		mu_debug("skip {}/{} (ignore)", path, d_name);
-		return true; // ignore
-	}
+	auto call_handler=[&](auto&& path, auto&& statbuf, auto&& htype)->bool {
+		return maildirs_only_mode() ? true : handler_(path, statbuf, htype);
+	};
 
-	const auto  fullpath{join_paths(path, d_name)};
-	struct stat statbuf {};
-	if (::stat(fullpath.c_str(), &statbuf) != 0) {
-		mu_warning("failed to stat {}: {}", fullpath, g_strerror(errno));
+	const auto fullpath{join_paths(path, dentry.d_name)};
+	struct stat statbuf{};
+	if (lazy_stat(fullpath.c_str(), &statbuf, dentry) != 0)
 		return false;
+
+	if (maildirs_only_mode() && S_ISDIR(statbuf.st_mode) && dentry.d_name == "cur") {
+		handler_(path/*without cur*/, {}, Scanner::HandleType::Maildir);
+		return true; // found maildir; no need to recurse further.
 	}
 
 	if (S_ISDIR(statbuf.st_mode)) {
-		const auto new_cur =
-		    std::strcmp(d_name, "cur") == 0 || std::strcmp(d_name, "new") == 0;
+		const auto new_cur = dentry.d_name == "cur" || dentry.d_name == "new";
 		const auto htype =
 		    new_cur ?
 			Scanner::HandleType::EnterNewCur :
 			Scanner::HandleType::EnterDir;
-		const auto res = handler_(fullpath, &statbuf, htype);
+
+		const auto res = call_handler(fullpath, &statbuf, htype);
 		if (!res)
 			return true; // skip
 
 		process_dir(fullpath, new_cur);
-		return handler_(fullpath, &statbuf, Scanner::HandleType::LeaveDir);
+		return call_handler(fullpath, &statbuf, Scanner::HandleType::LeaveDir);
 
 	} else if (S_ISREG(statbuf.st_mode) && is_maildir)
-		return handler_(fullpath, &statbuf, Scanner::HandleType::File);
+		return call_handler(fullpath, &statbuf, Scanner::HandleType::File);
 
 	mu_debug("skip {} (neither maildir-file nor directory)", fullpath);
 
@@ -165,6 +221,11 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 	while (running_) {
 		errno = 0;
 		if (const auto& dentry{::readdir(dir)}; dentry) {
+#if HAVE_DIRENT_D_TYPE /* opttimization: filter out non-dirs early */
+			if (maildirs_only_mode() &&
+			    dentry->d_type != DT_DIR && dentry->d_type != DT_LNK)
+				continue;
+#endif /*HAVE_DIRENT_D_TYPE*/
 			dir_entries.emplace_back(dentry);
 			continue;
 		} else if (errno != 0) {
@@ -176,10 +237,12 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 	}
 	::closedir(dir);
 
+#if HAVE_DIRENT_D_INO
 	// sort by i-node; much faster on rotational (HDDs) devices and on SSDs
 	// sort is quick enough to not matter much
 	std::sort(dir_entries.begin(), dir_entries.end(),
 		  [](auto&& d1, auto&& d2){ return d1.d_ino < d2.d_ino; });
+#endif /*HAVEN_DIRENT_D_INO*/
 
 	// now process...
 	for (auto&& dentry: dir_entries)
@@ -231,8 +294,8 @@ Scanner::Private::stop()
 	}
 }
 
-Scanner::Scanner(const std::string& root_dir, Scanner::Handler handler)
-    : priv_{std::make_unique<Private>(root_dir, handler)}
+Scanner::Scanner(const std::string& root_dir, Scanner::Handler handler, Mode flavor)
+    : priv_{std::make_unique<Private>(root_dir, handler, flavor)}
 {
 }
 
@@ -264,11 +327,8 @@ Scanner::is_running() const
 }
 
 
-
-
 #if BUILD_TESTS
 #include "mu-test-utils.hh"
-
 
 static void
 test_scan_maildir()
@@ -307,6 +367,29 @@ try {
 	mu_printerrln("caught exception");
 	return 1;
 }
-
-
 #endif /*BUILD_TESTS*/
+
+#if BUILD_LIST_MAILDIRS
+
+static bool
+on_path(const std::string& path, struct stat* statbuf, Scanner::HandleType htype)
+{
+	mu_println("{}", path);
+	return true;
+}
+
+int
+main (int argc, char *argv[])
+{
+	if (argc < 2) {
+		mu_printerrln("expected: path to maildir");
+		return 1;
+	}
+
+	Scanner scanner{argv[1], on_path, Mode::MaildirsOnly};
+
+	scanner.start();
+
+	return 0;
+}
+#endif /*BUILD_LIST_MAILDIRS*/

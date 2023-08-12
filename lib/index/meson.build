@@ -37,8 +37,19 @@ lib_mu_index_dep = declare_dependency(
   link_with: lib_mu_index
 )
 
+
 #
-# tests
+# test tool
+#
+executable('list-maildirs', 'mu-scanner.cc',
+           install: false,
+           cpp_args: ['-DBUILD_LIST_MAILDIRS'],
+           dependencies: [glib_dep, config_h_dep,
+                               lib_mu_utils_dep])
+
+
+#
+# unit tests
 #
 
 test('test-scanner',

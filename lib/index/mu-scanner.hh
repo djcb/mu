@@ -31,28 +31,51 @@
 
 namespace Mu {
 
-/// @brief Maildir scanner
-///
-/// Scans maildir (trees) recursively, and calls the Handler callback for
-/// directories & files.
-///
-/// It filters out (i.e., does *not* call the handler for):
-///  - files starting with '.'
-///  - files that do not live in a cur / new leaf maildir
-///  - directories '.' and '..' and 'tmp'
-///
+/**
+ * @brief Maildir scanner
+ *
+ * Scans maildir (trees) recursively, and calls the Handler callback for
+ * directories & files.
+ *
+ * It filters out (i.e., does *not* call the handler for):
+ *  - files starting with '.'
+ *  - files that do not live in a cur / new leaf maildir
+ *  - directories '.' and '..' and 'tmp'
+*/
 class Scanner {
 	public:
 	enum struct HandleType {
+		/*
+		 * Mode: All
+		 */
 		File,
 		EnterNewCur, /* cur/ or new/ */
 		EnterDir,    /* some other directory */
-		LeaveDir
+		LeaveDir,
+		/*
+		 * Mode: Maildir
+		 */
+		Maildir,
 	};
 
-	/// Prototype for a handler function
+	/**
+	 * Callback handler function
+	 *
+	 * path: full file-system path
+	 * statbuf: stat result or nullptr (for Mode::MaildirsOnly)
+	 * htype: HandleType. For Mode::MaildirsOnly only Maildir
+	 */
 	using Handler = std::function<
-	    bool(const std::string& fullpath, struct stat* statbuf, HandleType htype)>;
+	    bool(const std::string& path, struct stat* statbuf, HandleType htype)>;
+
+	/**
+	 * Running mode for this Scanner
+	 */
+	enum struct Mode {
+		All,		/**< Vanilla */
+		MaildirsOnly	/**< Only return maildir to handler */
+	};
+
 	/**
 	 * Construct a scanner object for scanning a directory, recursively.
 	 *
@@ -60,15 +83,16 @@ class Scanner {
 	 *
 	 * @param root_dir root dir to start scanning
 	 * @param handler handler function for some direntry
+	 * @param options options to influence behavior
 	 */
-	Scanner(const std::string& root_dir, Handler handler);
+	Scanner(const std::string& root_dir, Handler handler, Mode mode = Mode::All);
 
 	/**
 	 * DTOR
 	 */
 	~Scanner();
 
-	/**
+	/**#
 	 * Start the scan; this is a blocking call than runs until
 	 * finished or (from another thread) stop() is called.
 	 *

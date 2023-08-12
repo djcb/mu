@@ -47,20 +47,21 @@ endif
 # compilers / flags
 #
 extra_flags = [
-  '-Wc11-extensions', # for clang
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
   '-Wformat-security',
   '-Wformat=2',
   '-Wstack-protector',
   '-Wno-switch-enum',
-  '-Wno-keyword-macro',
   '-Wno-volatile',
-  '-Wno-deprecated-volatile',
-  '-Wno-#warnings',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
   '-Wno-stringop-overflow',
+# clang
+  '-Wc11-extensions', # for clang
+  '-Wno-keyword-macro',
+  '-Wno-deprecated-volatile',
+  '-Wno-#warnings',
 ]
 
 if get_option('buildtype') == 'debug'
@@ -103,6 +104,20 @@ add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
 add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
+
+
+#
+# d_type, d_ino are not available universally, so let's check
+# (we use them for optimizations in mu-scanner
+#
+if cxx.has_member('struct dirent', 'd_ino', prefix : '#include<dirent.h>')
+  config_h_data.set('HAVE_DIRENT_D_INO', 1)
+endif
+
+if cxx.has_member('struct dirent', 'd_type', prefix : '#include<dirent.h>')
+  config_h_data.set('HAVE_DIRENT_D_TYPE', 1)
+endif
+
 
 functions=[
   'setsid'
