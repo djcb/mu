@@ -101,6 +101,7 @@ struct Server::Private {
 	void add_handler(const Command& cmd);
 	void compose_handler(const Command& cmd);
 	void contacts_handler(const Command& cmd);
+	void data_handler(const Command& cmd);
 	void find_handler(const Command& cmd);
 	void help_handler(const Command& cmd);
 	void index_handler(const Command& cmd);
@@ -126,7 +127,7 @@ private:
 
 	void view_mark_as_read(Store::Id docid, Message&& msg, bool rename);
 
-	std::tuple<std::ofstream, std::string> make_temp_file_stream() const;
+	std::ofstream make_temp_file_stream(std::string& fname) const;
 
 	Store&			store_;
 	Server::Options         options_;
@@ -245,6 +246,14 @@ Server::Private::make_command_map()
 		},
 		"get contact information",
 		[&](const auto& params) { contacts_handler(params); }});
+
+	cmap.emplace(
+	    "data",
+	    CommandInfo{
+		    ArgMap{{":kind", ArgInfo{Type::Symbol, true, "kind of data (maildirs)"}}},
+		    "request data of some kind",
+		[&](const auto& params) { data_handler(params); }});
+
 	cmap.emplace(
 	    "find",
 	    CommandInfo{
@@ -516,16 +525,15 @@ Server::Private::compose_handler(const Command& cmd)
 
 // create tuple of ostream / name
 // https://stackoverflow.com/questions/46114214/lambda-implicit-capture-fails-with-variable-declared-from-structured-binding
-std::tuple<std::ofstream, std::string>
-Server::Private::make_temp_file_stream() const
+std::ofstream
+Server::Private::make_temp_file_stream(std::string& fname) const
 {
-	auto tmp_eld{join_paths(tmp_dir_, mu_format("mu-{}.eld",  g_get_monotonic_time()))};
-	std::ofstream output{tmp_eld, std::ios::out};
+	fname = join_paths(tmp_dir_, mu_format("mu-{}.eld",  g_get_monotonic_time()));
+	std::ofstream output{fname, std::ios::out};
 	if (!output.good())
 		throw Mu::Error{Error::Code::File, "failed to create temp-file"};
 
-	return std::make_tuple<std::ofstream, std::string>(std::move(output),
-							   std::move(tmp_eld));
+	return output;
 }
 
 void
@@ -557,9 +565,8 @@ Server::Private::contacts_handler(const Command& cmd)
 	if (options_.allow_temp_file) {
 		// fast way: put all the contacts in a temp-file
 		// structured bindings / lambda don't work with some clang.
-		auto&& tmp_stream{make_temp_file_stream()};
-		auto&& tmp_file	= std::move(std::get<0>(tmp_stream));
-		auto&& tmp_file_name = std::move(std::get<1>(tmp_stream));
+		std::string tmp_file_name;
+		auto&& tmp_file = make_temp_file_stream(tmp_file_name);
 
 		mu_print(tmp_file, "(");
 		store().contacts_cache().for_each([&](const Contact& ci) {
@@ -589,6 +596,24 @@ Server::Private::contacts_handler(const Command& cmd)
 
 	mu_debug("sent {} of {} contact(s)", n, store().contacts_cache().size());
 }
+
+void
+Server::Private::data_handler(const Command& cmd)
+{
+	const auto request_type{unwrap(cmd.symbol_arg(":kind"))};
+
+	if (request_type == "maildirs") {
+		auto&& out{make_output_stream()};
+		mu_print(out, "(");
+		for (auto&& mdir: store().maildirs())
+			mu_println(out, "{}", quote(std::move(mdir)));
+		mu_print(out, ")");
+		output(mu_format("(:maildirs {})", out.to_string()));
+	} else
+		throw Error(Error::Code::InvalidArgument,
+			"invalid request type '{}'", request_type);
+}
+
 
 /*
  * creating a message object just to get a path seems a bit excessive maybe
@@ -668,11 +693,10 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 	size_t n{};
 
 	// structured bindings / lambda don't work with some clang.
-	auto&& tmp_stream{make_temp_file_stream()};
-	auto&& tmp_file	= std::move(std::get<0>(tmp_stream));
-	auto&& tmp_file_name = std::move(std::get<1>(tmp_stream));
+	std::string tmp_file_name;
+	auto&& tmp_file{make_temp_file_stream(tmp_file_name)};
 
-	tmp_file << '(';
+	mu_print(tmp_file, "(");
 	for(auto&& mi: qres) {
 
 		auto msg{mi.message()};
@@ -684,16 +708,14 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 		++n;
 
 		if (n % batch_size == 0) {
-			tmp_file << ')';
+			mu_print(")");
 			batch_size = 1000;
 			output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
-			auto new_stream{make_temp_file_stream()};
-			tmp_file	= std::move(std::get<0>(new_stream));
-			tmp_file_name = std::move(std::get<1>(new_stream));
-			tmp_file << '(';
+			tmp_file = make_temp_file_stream(tmp_file_name);
+			mu_print(tmp_file, "(");
 		}
 	}
-	tmp_file << ')';
+	mu_print(tmp_file, ")");
 	output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
 
 	return n;
