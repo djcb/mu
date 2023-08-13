@@ -89,6 +89,10 @@ to take effect, you need to stop/start mu4e."
   :safe  'booleanp)
 
 
+;; Cached data
+(defvar mu4e-maildir-list)
+
+
 ;; Handlers are not strictly internal, but are not meant
 ;; for overriding outside mu4e. The are mainly for breaking
 ;; dependency cycles.
@@ -398,6 +402,12 @@ The server output is as follows:
          ((plist-get sexp :info)
           (funcall mu4e-info-func sexp))
 
+         ;; get some data
+         ((plist-get sexp :data)
+          (pcase (plist-get sexp :data)
+            ('maildirs (setq mu4e-maildir-list (plist-get sexp :value)))
+            (_ (mu4e-warn "unknown data kind"))))
+
          ;; receive an error
          ((plist-get sexp :error)
           (funcall mu4e-error-func
@@ -576,6 +586,12 @@ get at most MAX contacts."
      :after    ,(or after nil)
      :tstamp   ,(or tstamp nil)
      :maxnum   ,(or maxnum nil))))
+
+(defun mu4e--server-data (kind)
+  "Request data of some KIND.
+KIND is a symbol. Currently supported kinds: maildirs."
+  (mu4e--server-call-mu
+   `(data :kind ,kind)))
 
 (defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
                                 include-related)

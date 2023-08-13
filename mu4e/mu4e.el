@@ -148,8 +148,10 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
   (mu4e--query-items-refresh 'reset-baseline)
   (mu4e--server-ping)
+  ;; ask for the maildir-list
+  (mu4e--server-data 'maildirs)
   ;; maybe request the list of contacts, automatically refreshed after
-  ;; reindexing
+  ;; re-indexing
   (unless mu4e--contacts-set
     (mu4e--request-contacts-maybe)))
 

@@ -226,9 +226,9 @@ the search."
 
 
 (defun mu4e-search-maildir (maildir &optional edit)
-  "Search the messages in maildir.
-The user is prompted to ask what maildir. If prefix arg EDIT is
-given, offer to edit the search query before executing it."
+  "Search the messages in MAILDIR.
+The user is prompted to ask what maildir. If prefix-argument EDIT
+is given, offer to edit the search query before executing it."
   (interactive
    (let ((maildir (mu4e-ask-maildir "Jump to maildir: ")))
      (list maildir current-prefix-arg)))

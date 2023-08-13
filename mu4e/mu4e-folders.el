@@ -244,47 +244,8 @@ to create it; otherwise return nil."
       (setq mu4e-maildir-list nil) ;; clear cache
       t)))
 
-(defun mu4e--get-maildirs-1 (path mdir)
-  "Get maildirs for MDIR under PATH.
-Do so recursively and produce a list of relative paths."
-  (let ((dirs)
-        (dentries
-         (ignore-errors
-           (directory-files-and-attributes
-            (mu4e-join-paths path mdir) nil
-            "^[^.]\\|\\.[^.][^.]" t))))
-    (dolist (dentry dentries)
-      (when (or (and (booleanp (cadr dentry)) (cadr dentry))
-                (file-directory-p (mu4e-join-paths path (car dentry))))
-        (if (file-accessible-directory-p
-             (mu4e-join-paths (mu4e-root-maildir) mdir (car dentry) "cur"))
-            (setq dirs
-                  (cons (mu4e-join-paths mdir (car dentry)) dirs)))
-        (unless (member (car dentry) '("cur" "new" "tmp"))
-          (setq dirs
-                (append dirs
-                        (mu4e--get-maildirs-1
-                         path (mu4e-join-paths mdir (car dentry))))))))
-    dirs))
-
 (defun mu4e-get-maildirs ()
-  "Get maildirs under `mu4e-maildir'.
-Do so recursively, and produce a list of relative paths (ie.,
-/archive, /sent etc.). Most of the work is done in
-`mu4e--get-maildirs-1'. Note, these results are /cached/ if
-`mu4e-cache-maildir-list' is customized to non-nil. In that case,
-the list of maildirs will not change until you restart mu4e."
-  (unless (and mu4e-maildir-list mu4e-cache-maildir-list)
-    (setq mu4e-maildir-list
-          (sort
-           (append
-            (when (file-accessible-directory-p
-                   (mu4e-join-paths
-                    (mu4e-root-maildir) "cur"))
-              '("/"))
-            (mu4e--get-maildirs-1 (mu4e-root-maildir) "/"))
-           (lambda (s1 s2)
-             (string< (downcase s1) (downcase s2))))))
+  "Get maildirs under `mu4e-maildir'."
   mu4e-maildir-list)
 
 (defun mu4e-ask-maildir (prompt)
