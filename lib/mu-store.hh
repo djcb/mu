@@ -426,6 +426,17 @@ public:
 	 */
 	bool empty() const { return xapian_db().empty(); }
 
+
+	/**
+	 * Get the list of maildirs, that is, the list of maildirs
+	 * under root_maildir, without file-system prefix.
+	 *
+	 * This does a file-system scan.
+	 *
+	 * @return list of maildirs
+	 */
+	std::vector<std::string> maildirs() const;
+
 	/*
 	 * _almost_ private
 	 */

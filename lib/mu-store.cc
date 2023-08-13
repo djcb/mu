@@ -39,6 +39,7 @@
 #include "mu-store.hh"
 #include "mu-query.hh"
 #include "mu-xapian-db.hh"
+#include "index/mu-scanner.hh"
 
 #include "utils/mu-error.hh"
 
@@ -629,4 +630,22 @@ Store::parse_query(const std::string& expr, bool xapian) const
 
 		return q.parse(expr, xapian);
 	}, std::string{});
+}
+
+
+std::vector<std::string>
+Store::maildirs() const
+{
+	std::vector<std::string> mdirs;
+	const auto prefix_size = root_maildir().size();
+	Scanner::Handler handler = [&](const std::string& path, auto&& _1, auto&& _2) {
+		mdirs.emplace_back(path.substr(prefix_size));
+		return true;
+	};
+
+	Scanner scanner{root_maildir(), handler, Scanner::Mode::MaildirsOnly};
+	scanner.start();
+	std::sort(mdirs.begin(), mdirs.end());
+
+	return mdirs;
 }
