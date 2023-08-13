@@ -72,11 +72,17 @@
       bury the mu main buffer, rather than quitting mu. ~mu4e~ will now just
       switch the mu4e buffer if it exists (otherwise it starts ~mu4e~).
 
-    - ~mu4e~ queries are much snappier now. ~mu4e~ benefits from the mentioned
-      speed-ups in querying, and adds some of its own - e.g., for showing 500
-      messages (debug build), we went from 642ms to 247ms. Note, the
-      optimizations are experimental, and for now you can turn them off by
-      setting =mu4e-mu-allow-temp-file= to =nil= (and restart ~mu4e~); and reporting.
+    - ~mu4e~ queries are much snappier now, due to the mentioned speed-ups in
+      querying; ~mu4e~ also adds a new optimization =mu4e-mu-allow-temp-file=
+      (turned off by default), which speed up things further; e.g., for showing
+      500 messages (debug build), we went from 642ms to 247ms, given an
+      in-memory temp file.
+
+      If and how much this helps, depends on your setup, see the
+      =mu4e-mu-allow-temp-file= docstring for details on how to determine this.
+
+    - Jumping to the 'jo' /other/ Maildirs used to quite slow the first time, but
+      this now done on the server side, making it much faster.
 
     - after retrieving mail (~mu4e-update-mail-and-index~), save the output of the
       retrieval command in a buffer =*mu4e-last-update*=, = which can be useful
