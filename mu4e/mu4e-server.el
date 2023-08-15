@@ -73,17 +73,22 @@ better with e.g. offlineimap."
   :group 'mu4e
   :safe 'booleanp)
 
-(defcustom mu4e-mu-allow-temp-file t
+(defcustom mu4e-mu-allow-temp-file nil
   "Allow using temp-files for optimizing mu <-> mu4e communication.
 
 Some commands - in particular \"find\" and \"contacts\" - return
-big s-expressions and it can make mu4e noticeably snappier by
-using temporary files (esp. when those live on an in-memory
-filesystem); so we pass the information that way.
+big s-expressions; and it turns out that reading those is faster
+by passing them through a temp file rather than through normal
+stdin/stdout channel - esp. on the (common case) where the
+file-system for temp-files is in-memory.
 
-This is an experimental feature, so at least for now it can be
-turned off, as we gather experience. For a change to this variable
-to take effect, you need to stop/start mu4e."
+To see if the helps, you can benchmark the rendering with
+     (setq mu4e-headers-report-render-time t)
+
+and compare the results with `mu4e-mu-allow-temp' set and unset.
+
+Note: for a change to this variable to take effect, you need to
+stop/start mu4e."
   :type  'boolean
   :group 'mu4e
   :safe  'booleanp)
@@ -253,13 +258,28 @@ removed."
             (setq mu4e--server-buf (substring mu4e--server-buf sexp-len))
             (car objcons)))))))
 
-(defun mu4e--server-file-data-and-remove (file)
-  "Return Elisp object from FILE and remove FILE."
-  (with-temp-buffer
-    (insert-file-contents file)
-    (goto-char (point-min))
-    (delete-file file)
-    (read (current-buffer))))
+(defun mu4e--server-plist-get (plist key)
+  "Like `plist-get' but load data from file if it is a string.
+
+I.e. (mu4e--server-plist-get (:foo bar) :foo)
+  => bar
+but
+     (mu4e--server-plist-get (:foo \"/tmp/data.eld\") :foo)
+  => evaluates the contents of /tmp/data.eld
+   (and deletes the file afterward).
+
+This for the few sexps we get from the mu server that support this
+(headers, contacts, maildirs)."
+  ;; XXX: perhaps re-use the same buffer?
+  (let ((val (plist-get plist key)))
+    (if (stringp val)
+        (with-temp-buffer
+          (insert-file-contents val)
+          (goto-char (point-min))
+          (delete-file val)
+          (read (current-buffer)))
+      val)))
+
 
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
@@ -330,13 +350,8 @@ The server output is as follows:
         (cond
          ;; a list of messages (after a find command)
          ((plist-get sexp :headers)
-          (funcall mu4e-headers-append-func (plist-get sexp :headers)))
-         ;; similar to :headers, but instead of reading the headers from the
-         ;; process, we can read it from a tempfile the server created for us.
-         ((plist-get sexp :headers-temp-file)
           (funcall mu4e-headers-append-func
-                   (mu4e--server-file-data-and-remove
-                    (plist-get sexp :headers-temp-file))))
+                   (mu4e--server-plist-get sexp :headers)))
 
          ;; the found sexp, we receive after getting all the headers
          ((plist-get sexp :found)
@@ -370,14 +385,7 @@ The server output is as follows:
          ;; note: we use 'member', to match (:contacts nil)
          ((plist-member sexp :contacts)
           (funcall mu4e-contacts-func
-                   (plist-get sexp :contacts)
-                   (plist-get sexp :tstamp)))
-         ;; similar to :contacts, but instead of reading the headers from the
-         ;; process, we can read it from a tempfile the server created for us.
-         ((plist-get sexp :contacts-temp-file)
-          (funcall mu4e-contacts-func
-                   (mu4e--server-file-data-and-remove
-                    (plist-get sexp :contacts-temp-file))
+                   (mu4e--server-plist-get sexp :contacts)
                    (plist-get sexp :tstamp)))
 
          ;; something got moved/flags changed
@@ -403,10 +411,8 @@ The server output is as follows:
           (funcall mu4e-info-func sexp))
 
          ;; get some data
-         ((plist-get sexp :data)
-          (pcase (plist-get sexp :data)
-            ('maildirs (setq mu4e-maildir-list (plist-get sexp :value)))
-            (_ (mu4e-warn "unknown data kind"))))
+         ((plist-get sexp :maildirs)
+          (setq mu4e-maildir-list (mu4e--server-plist-get sexp :maildirs)))
 
          ;; receive an error
          ((plist-get sexp :error)
