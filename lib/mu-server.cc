@@ -23,11 +23,13 @@
 #include "mu-server.hh"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <algorithm>
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <variant>
 #include <functional>
 
 #include <cstring>
@@ -48,6 +50,77 @@
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
+
+/// output stream to _either_ a file or to a stringstream
+struct OutputStream {
+	/**
+	 * Construct an OutputStream for a tempfile
+	 *
+	 * @param tmp_dir dir for temp files
+	 */
+	OutputStream(const std::string& tmp_dir):
+		fname_{join_paths(tmp_dir,
+				  mu_format("mu-{}.eld", g_get_monotonic_time()))},
+		out_{std::ofstream{fname_}} {
+		if (!out().good())
+			throw Mu::Error{Error::Code::File, "failed to create temp-file"};
+	}
+	/**
+	 * Construct an OutputStream for a stringstream
+	 *
+	 * @param cdr name of the output (e.g., "contacts")
+	 *
+	 * @return
+	 */
+	OutputStream(): out_{std::ostringstream{}} {}
+
+	/**
+	 * Get a writable ostream
+	 *
+	 * @return an ostream
+	 */
+	std::ostream& out() {
+		if (std::holds_alternative<std::ofstream>(out_))
+			return std::get<std::ofstream>(out_);
+		else
+			return std::get<std::ostringstream>(out_);
+	}
+
+	/// conversion
+	operator std::ostream&() { return out(); }
+
+	/**
+	 * Get the output as a string, either something like, either a lisp form
+	 * or a the full path to a temp file containing the same.
+	 *
+	 * @return lisp form or path
+	 */
+	std::string to_string() const {
+		return std::holds_alternative<std::ostringstream>(out_) ?
+			std::get<std::ostringstream>(out_).str() :
+			quote(fname_);
+	}
+
+
+	/**
+	 * Delete file, if any. Only do this when the OutputStream is no
+	 * longer needed.
+	 */
+	void unlink () {
+		if (!fname_.empty())
+			return;
+		if (auto&&res{::unlink(fname_.c_str())}; res != 0)
+			mu_warning("failed to unlink '{}'", ::strerror(res));
+	}
+
+private:
+	std::string		fname_;
+	using OutType = std::variant<std::ofstream, std::ostringstream>;
+	OutType out_;
+	bool do_unlink_{};
+};
+
+
 
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
@@ -93,7 +166,6 @@ struct Server::Private {
 	}
 
 	size_t output_results(const QueryResults& qres, size_t batch_size) const;
-	size_t output_results_temp_file(const QueryResults& qres, size_t batch_size) const;
 
 	//
 	// handlers for various commands.
@@ -126,6 +198,13 @@ private:
 			  bool			no_view);
 
 	void view_mark_as_read(Store::Id docid, Message&& msg, bool rename);
+
+	OutputStream make_output_stream() const {
+		if (options_.allow_temp_file)
+			return OutputStream{tmp_dir_};
+		else
+			return OutputStream{};
+	}
 
 	std::ofstream make_temp_file_stream(std::string& fname) const;
 
@@ -413,8 +492,9 @@ Server::Private::invoke(const std::string& expr) noexcept
 
 /* 'add' adds a message to the database, and takes two parameters: 'path', which
  * is the full path to the message, and 'maildir', which is the maildir this
- * message lives in (e.g. "/inbox"). response with an (:info ...) message with
- * information about the newly added message (details: see code below)
+ * message lives in (e.g. "/inbox").
+ *
+ * responds with an (added . <message sexp>)  forr the new message
  */
 void
 Server::Private::add_handler(const Command& cmd)
@@ -523,19 +603,6 @@ Server::Private::compose_handler(const Command& cmd)
 	output_sexp(comp_lst);
 }
 
-// create tuple of ostream / name
-// https://stackoverflow.com/questions/46114214/lambda-implicit-capture-fails-with-variable-declared-from-structured-binding
-std::ofstream
-Server::Private::make_temp_file_stream(std::string& fname) const
-{
-	fname = join_paths(tmp_dir_, mu_format("mu-{}.eld",  g_get_monotonic_time()));
-	std::ofstream output{fname, std::ios::out};
-	if (!output.good())
-		throw Mu::Error{Error::Code::File, "failed to create temp-file"};
-
-	return output;
-}
-
 void
 Server::Private::contacts_handler(const Command& cmd)
 {
@@ -562,37 +629,18 @@ Server::Private::contacts_handler(const Command& cmd)
 	};
 
 	auto       n{0};
-	if (options_.allow_temp_file) {
-		// fast way: put all the contacts in a temp-file
-		// structured bindings / lambda don't work with some clang.
-		std::string tmp_file_name;
-		auto&& tmp_file = make_temp_file_stream(tmp_file_name);
-
-		mu_print(tmp_file, "(");
-		store().contacts_cache().for_each([&](const Contact& ci) {
-			if (!match_contact(ci))
-				return true; // continue
-			mu_println(tmp_file, "{}", quote(ci.display_name()));
-			++n;
-			return maxnum == 0 || n <  maxnum;
-		});
-		mu_print(tmp_file, ")");
-		output_sexp(Sexp{":tstamp"_sym, mu_format("\"{}\"", g_get_monotonic_time()),
-				":contacts-temp-file"_sym, tmp_file_name});
-	} else {
-		Sexp contacts;
-		store().contacts_cache().for_each([&](const Contact& ci) {
-			if (!match_contact(ci))
-				return true; // continue;
-			contacts.add(ci.display_name());
-			++n;
-			return maxnum == 0 || n <  maxnum;
-		});
-		Sexp seq;
-		seq.put_props(":contacts", std::move(contacts),
-			      ":tstamp", mu_format("\"{}\"", g_get_monotonic_time()));
-		output_sexp(seq);
-	}
+	auto&& out{make_output_stream()};
+	mu_print(out, "(");
+	store().contacts_cache().for_each([&](const Contact& ci) {
+		if (!match_contact(ci))
+			return true; // continue
+		mu_println(out.out(), "{}", quote(ci.display_name()));
+		++n;
+		return maxnum == 0 || n <  maxnum;
+	});
+	mu_print(out, ")");
+	output(mu_format("(:contacts {}\n:tstamp \"{}\")",
+			 out.to_string(), g_get_monotonic_time()));
 
 	mu_debug("sent {} of {} contact(s)", n, store().contacts_cache().size());
 }
@@ -652,51 +700,12 @@ determine_docids(const Store& store, const Command& cmd)
 size_t
 Server::Private::output_results(const QueryResults& qres, size_t batch_size) const
 {
-	size_t  n{};
-	Sexp	headers;
-
-	const auto output_batch = [&](Sexp&& hdrs) {
-		Sexp batch;
-		batch.put_props(":headers", std::move(hdrs));
-		output_sexp(batch);
-	};
-
-	for (auto&& mi : qres) {
-		auto msg{mi.message()};
-		if (!msg)
-			continue;
-		++n;
-		// construct sexp for a single header.
-		auto qm{mi.query_match()};
-		auto msgsexp{unwrap(Sexp::parse(msg_sexp_str(*msg, mi.doc_id(), qm)))};
-		headers.add(std::move(msgsexp));
-		// we output up-to-batch-size lists of messages. It's much
-		// faster (on the emacs side) to handle such batches than single
-		// headers.
-		if (headers.size() % batch_size == 0) {
-			output_batch(std::move(headers));
-			headers.clear();
-		};
-	}
-
-	// remaining.
-	if (!headers.empty())
-		output_batch(std::move(headers));
-
-	return n;
-}
-
-size_t
-Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch_size) const
-{
 	// create an output stream with a file name
-	size_t n{};
-
+	size_t n{}, batch_n{};
+	auto&& out{make_output_stream()};
 	// structured bindings / lambda don't work with some clang.
-	std::string tmp_file_name;
-	auto&& tmp_file{make_temp_file_stream(tmp_file_name)};
 
-	mu_print(tmp_file, "(");
+	mu_print(out, "(");
 	for(auto&& mi: qres) {
 
 		auto msg{mi.message()};
@@ -704,19 +713,27 @@ Server::Private::output_results_temp_file(const QueryResults& qres, size_t batch
 			continue;
 
 		auto qm{mi.query_match()}; // construct sexp for a single header.
-		tmp_file << msg_sexp_str(*msg, mi.doc_id(), qm) << '\n';
+		mu_println(out,  "{}", msg_sexp_str(*msg, mi.doc_id(), qm));
 		++n;
+		++batch_n;
 
 		if (n % batch_size == 0) {
-			mu_print(")");
-			batch_size = 1000;
-			output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
-			tmp_file = make_temp_file_stream(tmp_file_name);
-			mu_print(tmp_file, "(");
+			// batch complete
+			mu_print(out, ")");
+			batch_size = 5000;
+			output(mu_format("(:headers {})", out.to_string()));
+			batch_n = 0;
+			// start a new batch
+			out = make_output_stream();
+			mu_print(out, "(");
 		}
 	}
-	mu_print(tmp_file, ")");
-	output_sexp(Sexp{":headers-temp-file"_sym, tmp_file_name});
+
+	mu_print(out, ")");
+	if (batch_n > 0)
+		output(mu_format("(:headers {})", out.to_string()));
+	else
+		out.unlink();
 
 	return n;
 }
@@ -774,8 +791,7 @@ Server::Private::find_handler(const Command& cmd)
 	 * output of two finds will not be mixed. */
 	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
 	const auto bsize{static_cast<size_t>(batch_size)};
-	const auto foundnum =options_.allow_temp_file ?
-		output_results_temp_file(*qres, bsize) : output_results(*qres, bsize);
+	const auto foundnum = output_results(*qres, bsize);
 	output_sexp(Sexp().put_props(":found", foundnum));
 }
 
