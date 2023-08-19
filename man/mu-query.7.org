@@ -83,7 +83,7 @@ Note that a =pure not= - e.g. searching for *not apples* is quite a 'heavy' quer
 
 * REGULAR EXPRESSIONS AND WILDCARDS
 
-The language supports matching basic PCRE regular expressions, see *pcre(3*).
+The language supports matching basic PCRE regular expressions, see *pcre(3)*.
 
 Regular expressions are enclosed in *//*. Some examples:
 #+begin_example
