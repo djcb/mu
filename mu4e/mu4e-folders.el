@@ -162,17 +162,6 @@ mime-type are nil."
 (defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
 
-(defcustom mu4e-cache-maildir-list t
-  "Whether to cache the list of maildirs.
-Set it to t if you find that generating the list on the fly is
-too slow.
-
-If you do so, you can set `mu4e-maildir-list' to nil to force
-regenerating the cache the next time `mu4e-get-maildirs' gets
-called."
-  :type 'boolean
-  :group 'mu4e-folders)
-
 
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
@@ -204,19 +193,19 @@ the result."
         (or val (mu4e-error "%S evaluates to nil" foldervar)))))
 
 (defun mu4e-get-drafts-folder (&optional msg)
-  "Get the drafts folder, optionallly based on MSG.
+  "Get the drafts folder, optionally based on MSG.
 See `mu4e-drafts-folder'." (mu4e--get-folder 'mu4e-drafts-folder msg))
 
 (defun mu4e-get-refile-folder (&optional msg)
-  "Get the folder for refiling, optionallly based on MSG.
+  "Get the folder for refiling, optionally based on MSG.
 See `mu4e-refile-folder'." (mu4e--get-folder 'mu4e-refile-folder msg))
 
 (defun mu4e-get-sent-folder (&optional msg)
-  "Get the sent folder, optionallly based on MSG.
+  "Get the sent folder, optionally based on MSG.
 See `mu4e-sent-folder'." (mu4e--get-folder 'mu4e-sent-folder msg))
 
 (defun mu4e-get-trash-folder (&optional msg)
-  "Get the trash folder, optionallly based on MSG.
+  "Get the trash folder, optionally based on MSG.
 See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
 
 ;;; Maildirs
@@ -237,11 +226,9 @@ to create it; otherwise return nil."
   (let ((seems-to-exist (file-directory-p dir)))
     (when (or seems-to-exist
               (yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir)))
-      ;; even when the maildir already seems to exist,
-      ;; call mkdir for a deeper check. However only get an update
-      ;; when the maildir is totally new.
+      ;; even when the maildir already seems to exist, call mkdir for a deeper
+      ;; check. However only get an update when the maildir is totally new.
       (mu4e--server-mkdir dir (not seems-to-exist))
-      (setq mu4e-maildir-list nil) ;; clear cache
       t)))
 
 (defun mu4e-get-maildirs ()

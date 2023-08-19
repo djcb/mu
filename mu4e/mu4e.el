@@ -160,7 +160,12 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (when mu4e--update-timer
     (cancel-timer mu4e--update-timer)
     (setq mu4e--update-timer nil))
-  (mu4e-clear-caches)
+
+  (setq ;; clear some caches
+   mu4e-maildir-list nil
+   mu4e--contacts-set nil
+   mu4e--contacts-tstamp "0")
+
   (remove-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
   (remove-hook 'mu4e-query-items-updated-hook #'mu4e--modeline-update)
   (remove-hook 'mu4e-query-items-updated-hook #'mu4e--notification)
@@ -229,7 +234,8 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
             mu4e-message-changed-hook)
           (unless (and (not (string= mu4e--contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
-            (mu4e--request-contacts-maybe))
+            (mu4e--request-contacts-maybe)
+            (mu4e--server-data 'maildirs)) ;; update maildir list
           (mu4e--main-redraw))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
@@ -253,13 +259,6 @@ chance."
   (mu4e-setq-if-nil mu4e-pong-func             #'mu4e--default-handler)
 
   (mu4e-setq-if-nil mu4e-queries-func      #'mu4e--query-items-queries-handler))
-
-(defun mu4e-clear-caches ()
-  "Clear any cached resources."
-  (setq
-   mu4e-maildir-list nil
-   mu4e--contacts-set nil
-   mu4e--contacts-tstamp "0"))
 
 ;;;
 (provide 'mu4e)

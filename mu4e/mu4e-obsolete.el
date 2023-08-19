@@ -224,5 +224,11 @@
 (define-obsolete-function-alias 'mu4e-quote-for-modeline
   'mu4e--modeline-quote-and-truncate "1.9.16")
 
+;; mu4e-folder
+(make-obsolete-variable 'mu4e-cache-maildir-list "No longer used" "1.11.15")
+
+;; mu4e.
+(make-obsolete 'mu4e-clear-caches "No longer used" "1.11.15")
+
 (provide 'mu4e-obsolete)
 ;;; mu4e-obsolete.el ends here

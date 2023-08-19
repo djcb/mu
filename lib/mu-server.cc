@@ -886,15 +886,20 @@ Server::Private::mkdir_handler(const Command& cmd)
 	const auto path{cmd.string_arg(":path").value_or("<error>")};
 	const auto update{cmd.boolean_arg(":update")};
 
+	if (path.find(store().root_maildir()) != 0)
+		throw Error{Error::Code::File, "maildir is not below root-maildir"};
+
 	if (auto&& res = maildir_mkdir(path, 0755, false); !res)
 		throw res.error();
 
 	/* mu4e does a lot of opportunistic 'mkdir', only send it updates when
 	 * requested */
-	if (update)
-		output_sexp(Sexp().put_props(":info", "mkdir",
-					     ":message",
-					     mu_format("{} has been created", path)));
+	if (!update)
+		return;
+
+	output_sexp(Sexp().put_props(":info", "mkdir",
+				     ":message",
+				     mu_format("{} has been created", path)));
 }
 
 void

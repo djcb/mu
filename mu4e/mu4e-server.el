@@ -643,7 +643,13 @@ the directory time stamp."
 
 (defun mu4e--server-mkdir (path &optional update)
   "Create a new maildir-directory at filesystem PATH.
-When UPDATE is non-nil, send a update when completed."
+When UPDATE is non-nil, send a update when completed.
+PATH must be below the root-maildir."
+  ;; handle maildir cache
+  (if (not (string-prefix-p (mu4e-root-maildir) path))
+      (mu4e-error "Cannot create maildir outside root-maildir")
+    (add-to-list 'mu4e-maildir-list ;; update cache
+                 (substring path (length (mu4e-root-maildir)))))
   (mu4e--server-call-mu `(mkdir
                           :path ,path
                           :update ,(or update nil))))
