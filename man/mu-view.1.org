@@ -35,7 +35,7 @@ instead of displaying the full message, output a summary based upon the first
 =<number>= lines of the message.
 
 ** --terminate
-terminate messages with \\f (=form-feed=) characters when displaying them. This is
+terminate messages with \\​f (=form-feed=) characters when displaying them. This is
 useful when you want to further process them.
 
 ** --decrypt
