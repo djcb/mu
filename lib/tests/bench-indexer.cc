@@ -418,16 +418,15 @@ setup(const TestData& tdata)
 
 	/* create maildirs */
 	for (size_t i = 0; i != tdata.num_maildirs; ++i) {
-		const auto mdir = format("%s/maildir-%zu", top_maildir.c_str(), i);
+		const auto mdir = mu_format("{}/maildir-{}", top_maildir, i);
 		auto res = maildir_mkdir(mdir);
 		g_assert(!!res);
 	}
 	const auto rx = Regex::make("@ID@");
 	/* create messages */
 	for (size_t n = 0; n != tdata.num_messages; ++n) {
-		auto mpath = format("%s/maildir-%zu/cur/msg-%zu:2,S",
-				    top_maildir.c_str(),
-				    n % tdata.num_maildirs,
+		auto mpath = mu_format("{}/maildir-{}/cur/msg-{}:2,S",
+				    top_maildir, n % tdata.num_maildirs,
 				    n);
 		std::ofstream stream(mpath);
 		auto msg = message(*rx, n);
@@ -441,7 +440,7 @@ tear_down()
 {
 	/* ugly */
 	GError *err{};
-	const auto cmd{format("/bin/rm -rf '%s' '%s'", BENCH_MAILDIRS, BENCH_STORE)};
+	const auto cmd{mu_format("/bin/rm -rf '{}' '{}'", BENCH_MAILDIRS, BENCH_STORE)};
 	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
 		mu_warning("error: {}", err ? err->message : "?");
 		g_clear_error(&err);

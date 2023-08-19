@@ -216,10 +216,6 @@ struct Sexp {
 	/// Adding list elements
 	Sexp& add_list(Sexp&& l) { for (auto&& e: l) add(std::move(e)); return *this;};
 
-	/// Use list as stack.
-	Sexp& prepend(Sexp&& e) { list().insert(list().begin(), std::move(e)); return *this;};
-	Sexp& prepend(const Sexp& e) { list().insert(list().begin(), e); return *this;};
-
 	/// Some convenience for the query parser
 	Sexp& front() { return list().front(); }
 	const Sexp& front() const { return list().front(); }
@@ -234,11 +230,6 @@ struct Sexp {
 	bool head_symbolp(const Symbol& sym) const {
 		if (head_symbolp()) return head()->symbolp(sym); else return false;
 	}
-	Option<Sexp&> tail() {
-		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(begin()+1); else return Nothing; }
-	Option<const Sexp&> tail() const {
-		if (listp()&&!empty()&&cbegin()+1!=cend()) return *(cbegin()+1); else return Nothing; }
-
 
 	/**
 	 * Property lists (aka plists)

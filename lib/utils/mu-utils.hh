@@ -34,7 +34,6 @@
 #include <algorithm>
 #include <numeric>
 
-#include "mu-utils-format.hh"
 #include "mu-option.hh"
 
 
@@ -374,6 +373,17 @@ std::string size_to_string(int64_t size);
  * @return a newly allocated string with the summary. use g_free to free it.
  */
 std::string summarize(const std::string& str, size_t max_lines);
+
+
+/**
+ * Quote & escape a string for " and \
+ *
+ * @param str a string
+ *
+ * @return quoted string
+ */
+std::string quote(const std::string& str);
+
 
 /**
  * Convert any ostreamable<< value to a string

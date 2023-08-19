@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <cstdint>
 
-#include "mu-utils-format.hh"
+#include "mu-utils.hh"
 #include <glib.h>
 
 #ifndef FMT_HEADER_ONLY
@@ -165,6 +165,12 @@ private:
 	const Code		code_;
 	const std::string	what_;
 };
+
+
+static inline auto
+format_as(const Error& err) {
+	return mu_format("<{} ({})>", err.what(), Error::error_number(err.code()));
+}
 
 } // namespace Mu
 

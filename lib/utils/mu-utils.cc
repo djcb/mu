@@ -44,7 +44,6 @@
 #include <glib/gprintf.h>
 
 #include "mu-utils.hh"
-#include "mu-utils-format.hh"
 #include "mu-error.hh"
 #include "mu-option.hh"
 
@@ -304,34 +303,6 @@ Mu::quote(const std::string& str)
 	}
 
 	return res + "\"";
-}
-
-std::string
-Mu::format(const char* frm, ...)
-{
-	va_list args;
-
-	va_start(args, frm);
-	auto str = vformat(frm, args);
-	va_end(args);
-
-	return str;
-}
-
-std::string
-Mu::vformat(const char* frm, va_list args)
-{
-	char*      s{};
-	const auto res = g_vasprintf(&s, frm, args);
-	if (res == -1) {
-		std::cerr << "string format failed" << std::endl;
-		return {};
-	}
-
-	std::string str{s};
-	g_free(s);
-
-	return str;
 }
 
 static Option<::time_t>

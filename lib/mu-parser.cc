@@ -327,7 +327,7 @@ Parser::Private::data(Mu::Tokens& tokens, WarningVec& warnings) const
 
 	auto fields = process_field(field, flags_);
 	if (fields.empty()) { // not valid field...
-		warnings.push_back({token.pos, format("invalid field '%s'", field.c_str())});
+		warnings.push_back({token.pos, mu_format("invalid field '{}'", field)});
 		fields = process_field("", flags_);
 		// fallback, treat the whole of foo:bar as a value
 		return value(fields, field + ":" + val, token.pos, warnings);

@@ -45,27 +45,24 @@ static std::string DBPATH; /* global */
 static void
 fill_database(void)
 {
-	gchar * cmdline;
-	GError* err;
-
-	cmdline = g_strdup_printf("/bin/sh -c '"
-				  "%s --quiet init  --muhome=%s --maildir=%s ; "
-				  "%s --quiet index --muhome=%s '",
+	GError* err{};
+	auto&& cmdline = mu_format("/bin/sh -c '"
+				   "{} --quiet init  --muhome={} --maildir={} ; "
+				   "{} --quiet index --muhome={} '",
 				  MU_PROGRAM,
-				  DBPATH.c_str(),
+				  DBPATH,
 				  MU_TESTMAILDIR2,
 				  MU_PROGRAM,
-				  DBPATH.c_str());
+				  DBPATH);
 	if (g_test_verbose())
-		g_print("%s\n", cmdline);
+		mu_println("{}", cmdline);
 
 	err = NULL;
-	if (!g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, &err)) {
-		g_printerr("Error: %s\n", err ? err->message : "?");
+	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, &err)) {
+		mu_printerrln("Error: {}", err ? err->message : "?");
+		g_clear_error(&err);
 		g_assert(0);
 	}
-
-	g_free(cmdline);
 }
 
 static unsigned
@@ -222,10 +219,10 @@ test_mu_find_links(void)
 {
 	char *output,  *erroutput;
 	const auto tmpdir{test_random_tmpdir()};
-	auto cmdline = format("%s find --muhome=%s --format=links --linksdir=%s "
-			      "mime:message/rfc822", MU_PROGRAM, DBPATH.c_str(),  tmpdir.c_str());
+	auto cmdline = mu_format("{} find --muhome={} --format=links --linksdir={} "
+			      "mime:message/rfc822", MU_PROGRAM, DBPATH,  tmpdir);
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline.c_str());
+		mu_println("cmdline: %s", cmdline);
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	/* there should be no errors */
@@ -236,9 +233,8 @@ test_mu_find_links(void)
 	output = erroutput = NULL;
 
 	/* furthermore, two symlinks should be there */
-	const auto f1{format("%s/cur/rfc822.1", tmpdir.c_str())};
-	const auto f2{format("%s/cur/rfc822.2", tmpdir.c_str())};
-
+	const auto f1{mu_format("{}/cur/rfc822.1", tmpdir)};
+	const auto f2{mu_format("{}/cur/rfc822.2", tmpdir)};
 
 	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
 	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
@@ -247,7 +243,7 @@ test_mu_find_links(void)
 	 * when we find the first target file already exists */
 
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline.c_str());
+		mu_println("cmdline: {}", cmdline);
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	g_assert_cmpuint(newlines_in_output(output), ==, 0);
@@ -258,12 +254,12 @@ test_mu_find_links(void)
 
 	/* now we try again with --clearlinks, and the we should be
 	 * back to 0 errors */
-	cmdline = format("%s find --muhome=%s --format=links --linksdir=%s --clearlinks "
-				   "mime:message/rfc822", MU_PROGRAM, DBPATH.c_str(),  tmpdir.c_str());
+	cmdline = mu_format("{} find --muhome={} --format=links --linksdir={} --clearlinks "
+			    "mime:message/rfc822", MU_PROGRAM, DBPATH,  tmpdir);
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), &output, &erroutput, NULL, NULL));
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline.c_str());
+		mu_println("cmdline: {}", cmdline);
 	g_assert_cmpuint(newlines_in_output(output), ==, 0);
 	g_assert_cmpuint(newlines_in_output(erroutput), ==, 0);
 	g_free(output);

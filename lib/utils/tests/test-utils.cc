@@ -195,8 +195,8 @@ test_clean()
 static void
 test_format()
 {
-	g_assert_true(format("hello %s", "world") == "hello world");
-	g_assert_true(format("hello %s, %u", "world", 123) == "hello world, 123");
+	g_assert_true(mu_format("hello {}", "world") == "hello world");
+	g_assert_true(mu_format("hello {}, {}", "world", 123) == "hello world, 123");
 }
 
 static void

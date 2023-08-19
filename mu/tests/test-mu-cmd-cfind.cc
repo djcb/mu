@@ -39,21 +39,22 @@ using namespace Mu;
 static std::string
 fill_contacts_cache(const std::string& path)
 {
-	auto cmdline = format("/bin/sh -c '"
-			      "%s --quiet init  --muhome=%s --maildir=%s ; "
-			      "%s --quiet index --muhome=%s '",
+	auto cmdline = mu_format("/bin/sh -c '"
+				 "{} --quiet init  --muhome={} --maildir={} ; "
+				 "{} --quiet index --muhome={} '",
 			      MU_PROGRAM,
-			      path.c_str(),
+			      path,
 			      MU_TESTMAILDIR,
 			      MU_PROGRAM,
-			      path.c_str());
+			      path);
 
 	if (g_test_verbose())
-		g_print("%s\n", cmdline.c_str());
+		mu_println("{}", cmdline);
 
 	GError *err{};
 	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, &err)) {
-		g_printerr("Error: %s\n", err ? err->message : "?");
+		mu_printerrln("Error: {}", err ? err->message : "?");
+		g_clear_error(&err);
 		g_assert(0);
 	}
 
