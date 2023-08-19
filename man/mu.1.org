@@ -10,7 +10,7 @@ index and search e-mail messages.
 
 ~mu~ [COMMON-OPTIONS] [[COMMAND] [COMMAND-OPTIONS]]
 
-For information about the commmon options, see *COMMON OPTIONS*.
+For information about the common options, see *COMMON OPTIONS*.
 
 * DESCRIPTION
 
