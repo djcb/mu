@@ -209,20 +209,23 @@ flag_info(char shortcut)
 }
 
 /**
- * Get flag info for some flag
+ * Get flag info for some flag, either by its name of is shortcut
  *
- * @param name of the message-flag.
+ * @param name the name of the message-flag, or its shortcut
  *
- * @return the MessageFlagInfo
+ * @return the MessageFlagInfo or Nothing if not found
  */
 constexpr const Option<MessageFlagInfo>
 flag_info(std::string_view name)
 {
+	if (name.empty())
+		return Nothing;
+
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.name == name)
 			return info;
 
-	return Nothing;
+	return flag_info(name.at(0));
 }
 
 /**
@@ -357,24 +360,23 @@ flags_filter(Flags flags, MessageFlagCategory cat)
 }
 
 
-
 /**
  * Return flags, where flags = new_flags but with unmutable_flag in the
  * result the same as in old_flags
  *
  * @param old_flags
  * @param new_flags
- * @param unmutable_flag
+ * @param immutable_flag
  *
  * @return
  */
 constexpr Flags
-flags_keep_unmutable(Flags old_flags, Flags new_flags, Flags unmutable_flag)
+flags_keep_unmutable(Flags old_flags, Flags new_flags, Flags immutable_flag)
 {
-    if (any_of(old_flags & unmutable_flag))
-	return new_flags | unmutable_flag;
+    if (any_of(old_flags & immutable_flag))
+	return new_flags | immutable_flag;
     else
-	return new_flags & ~unmutable_flag;
+	return new_flags & ~immutable_flag;
 }
 
 
