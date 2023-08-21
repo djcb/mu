@@ -413,7 +413,7 @@ fixup_month(struct tm* tbuf)
 
 
 Option<::time_t>
-Mu::parse_date_time(const std::string& dstr, bool is_first)
+Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 {
 	struct tm tbuf{};
 	GDateTime *dtime{};
@@ -442,12 +442,20 @@ Mu::parse_date_time(const std::string& dstr, bool is_first)
 		return Nothing;
 
 	fixup_month(&tbuf);
-	dtime = g_date_time_new_local(tbuf.tm_year + 1900,
+	dtime = utc ?
+		g_date_time_new_utc(tbuf.tm_year + 1900,
+				      tbuf.tm_mon + 1,
+				      tbuf.tm_mday,
+				      tbuf.tm_hour,
+				      tbuf.tm_min,
+				      tbuf.tm_sec) :
+		g_date_time_new_local(tbuf.tm_year + 1900,
 				      tbuf.tm_mon + 1,
 				      tbuf.tm_mday,
 				      tbuf.tm_hour,
 				      tbuf.tm_min,
 				      tbuf.tm_sec);
+
 	t = g_date_time_to_unix(dtime);
 	g_date_time_unref(dtime);
 

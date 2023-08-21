@@ -146,7 +146,7 @@ auto mu_join(Range&& range, std::string_view sepa) {
 }
 
 template <typename T>
-auto mu_time(T t, bool use_utc=false) {
+std::tm mu_time(T t={}, bool use_utc=false) {
 	::time_t tt{static_cast<::time_t>(t)};
 	return use_utc ? fmt::gmtime(tt) : fmt::localtime(tt);
 }
@@ -253,10 +253,11 @@ static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) n
  * so 2018-05-05 is equivalent to 20180505.
  * @param first whether to fill out incomplete dates to the start (@true) or the
  * end (@false); ie. either 1972 -> 197201010000 or 1972 -> 197212312359
+ * @param use_utc interpret @param date as UTC
  *
  * @return the corresponding time_t or Nothing if parsing failed.
  */
-Option<::time_t> parse_date_time(const std::string& date, bool first);
+Option<::time_t> parse_date_time(const std::string& date, bool first, bool use_utc=false);
 
 /**
  * Crudely convert HTML to plain text. This attempts to scrape the
