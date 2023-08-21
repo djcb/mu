@@ -61,7 +61,7 @@ to_char(Priority prio)
 }
 
 /**
- * Get the priority for some character; unknown onws
+ * Get the priority for some character; unknown ones
  * become Normal.
  *
  * @param c some character
@@ -79,6 +79,28 @@ priority_from_char(char c)
 		return Priority::Normal;
 	}
 }
+
+/**
+ * Get the priority from their (internal) name, i.e., low/normal/high
+ * or shortcut.
+ *
+ * @param pname
+ *
+ * @return the priority or none
+ */
+static inline Option<Priority>
+priority_from_name(std::string_view pname)
+{
+	if (pname == "low" || pname == "l")
+		return Priority::Low;
+	else if (pname == "high" || pname == "h")
+		return Priority::High;
+	else if (pname == "normal" || pname == "n")
+		return Priority::Normal;
+	else
+		return Nothing;
+}
+
 
 /**
  * Get the name for a given priority
@@ -108,10 +130,13 @@ constexpr const char*
 priority_name_c_str(Priority prio)
 {
 	switch (prio) {
-	case Priority::Low: return "low";
-	case Priority::High: return "high";
+	case Priority::Low:
+		return "low";
+	case Priority::High:
+		return "high";
 	case Priority::Normal:
-	default: return "normal";
+	default:
+		return "normal";
 	}
 }
 
