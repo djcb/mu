@@ -22,6 +22,8 @@
 
 #include <stdexcept>
 #include <cinttypes>
+#include <cstdint>
+
 #include "mu-utils-format.hh"
 #include "mu-util.h"
 #include <glib.h>
