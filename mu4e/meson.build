@@ -23,8 +23,6 @@ mu4e_meta = configure_file(
   install_dir: mu4e_lispdir,
   configuration: {
       'VERSION'         : meson.project_version(),
-      # project_build_root() with meson >= 0.56
-      'abs_top_builddir': join_paths(meson.current_build_dir()),
       'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
     })
 
