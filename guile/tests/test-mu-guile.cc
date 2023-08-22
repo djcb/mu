@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -38,22 +38,22 @@ static std::string test_dir;
 static std::string
 fill_database(void)
 {
-	const auto cmdline = format(
+	const auto cmdline = mu_format(
 		"/bin/sh -c '"
-		"%s init  --muhome=%s --maildir=%s --quiet; "
-		"%s index --muhome=%s  --quiet'",
+		"{} init  --muhome={} --maildir={} --quiet; "
+		"{} index --muhome={}  --quiet'",
 		MU_PROGRAM,
-		test_dir.c_str(),
+		test_dir,
 		MU_TESTMAILDIR2,
 		MU_PROGRAM,
-		test_dir.c_str());
+		test_dir);
 
 	if (g_test_verbose())
-		g_print("%s\n", cmdline.c_str());
+		mu_println("{}", cmdline);
 
 	GError *err{};
 	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, &err)) {
-		g_printerr("Error: %s\n", err ? err->message : "?");
+		mu_printerrln("Error: {}", err ? err->message : "?");
 		g_clear_error(&err);
 		g_assert(0);
 	}
@@ -72,20 +72,19 @@ test_something(const char* what)
 		g_print("GUILE_LOAD_PATH: %s\n", GUILE_LOAD_PATH);
 
 	const auto dir = fill_database();
-	const auto cmdline  = format("%s -q -e main %s/test-mu-guile.scm "
-				     "--muhome=%s --test=%s",
-				     GUILE_BINARY,
-				     ABS_SRCDIR,
-				     dir.c_str(), what);
+	const auto cmdline  = mu_format("{} -q -e main {}/test-mu-guile.scm "
+				     "--muhome={} --test={}",
+				     GUILE_BINARY, ABS_SRCDIR,
+				     dir, what);
 
 	if (g_test_verbose())
-		g_print("cmdline: %s\n", cmdline.c_str());
+		mu_println("cmdline: {}", cmdline);
 
 	GError *err{};
 	int status{};
 	if (!g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, &status, &err) ||
 	    status != 0) {
-		g_printerr("Error: %s\n", err ? err->message : "something went wrong");
+		mu_printerrln("Error: {}", err ? err->message : "something went wrong");
 		g_clear_error(&err);
 		g_assert(0);
 	}
