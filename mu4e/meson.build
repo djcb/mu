@@ -83,6 +83,17 @@ foreach src : mu4e_srcs
                  install_mode: 'r--r--r--')
 endforeach
 
+# this depends on the above hack: all mu4e elisp files needs to be in builddir
+mu4e_autoloads = configure_file(
+  output: 'mu4e-autoloads.el',
+  install: true,
+  install_dir: mu4e_lispdir,
+  command: [emacs,
+            '--no-init-file',
+            '--batch',
+            '--load', 'package',
+            '--eval', '(package-generate-autoloads "mu4e" "' + meson.current_build_dir() + '" )'])
+
 foreach src : mu4e_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
