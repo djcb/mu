@@ -26,6 +26,16 @@ mu4e_meta = configure_file(
       'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
     })
 
+mu4e_pkg_desc = configure_file(
+  input: 'mu4e-pkg.el.in',
+  output: 'mu4e-pkg.el',
+  install: true,
+  install_dir: mu4e_lispdir,
+  configuration: {
+      'VERSION'           : meson.project_version(),
+      'EMACS_MIN_VERSION' : emacs_min_version,
+    })
+
 mu4e_srcs=[
   'mu4e-actions.el',
   'mu4e-bookmarks.el',
