@@ -1050,8 +1050,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 (define-derived-mode mu4e-view-mode gnus-article-mode "mu4e:view"
   "Major mode for viewing an e-mail message in mu4e.
 Based on Gnus' article-mode."
-  ;; Restore C-h b default behavior
-  (define-key mu4e-view-mode-map (kbd "C-h b") 'describe-bindings)
   ;; ;; turn off gnus modeline changes and menu items
   (advice-add 'gnus-set-mode-line :around #'mu4e--view-nop)
   (advice-add 'gnus-button-reply :around #'mu4e--view-button-reply)
