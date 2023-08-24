@@ -194,7 +194,8 @@ endif
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
-emacs=find_program([emacs_name], version: '>=26.3', required:false)
+emacs_min_version='26.3'
+emacs=find_program([emacs_name], version: '>='+emacs_min_version, required:false)
 if not emacs.found()
   message('emacs not found; not pre-compiling mu4e sources')
 endif

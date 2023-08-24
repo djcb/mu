@@ -1,0 +1,7 @@
+;; -*- no-byte-compile: t; -*-
+(define-package "mu4e" "@VERSION@"
+  "part of mu4e, the mu mail user agent"
+  '((emacs "@EMACS_MIN_VERSION@"))
+  :authors '(("Dirk-Jan C. Binnema" . "djcb@djcbsoftware.nl"))
+  :maintainer '("Dirk-Jan C. Binnema" . "djcb@djcbsoftware.nl")
+  :keywords '("email"))

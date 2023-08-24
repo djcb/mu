@@ -23,9 +23,17 @@ mu4e_meta = configure_file(
   install_dir: mu4e_lispdir,
   configuration: {
       'VERSION'         : meson.project_version(),
-      # project_build_root() with meson >= 0.56
-      'abs_top_builddir': join_paths(meson.current_build_dir()),
       'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
+    })
+
+mu4e_pkg_desc = configure_file(
+  input: 'mu4e-pkg.el.in',
+  output: 'mu4e-pkg.el',
+  install: true,
+  install_dir: mu4e_lispdir,
+  configuration: {
+      'VERSION'           : meson.project_version(),
+      'EMACS_MIN_VERSION' : emacs_min_version,
     })
 
 mu4e_srcs=[
@@ -74,6 +82,17 @@ foreach src : mu4e_srcs
   configure_file(input: src, output:'@BASENAME@.el', copy:true,
                  install_mode: 'r--r--r--')
 endforeach
+
+# this depends on the above hack: all mu4e elisp files needs to be in builddir
+mu4e_autoloads = configure_file(
+  output: 'mu4e-autoloads.el',
+  install: true,
+  install_dir: mu4e_lispdir,
+  command: [emacs,
+            '--no-init-file',
+            '--batch',
+            '--load', 'package',
+            '--eval', '(package-generate-autoloads "mu4e" "' + meson.current_build_dir() + '" )'])
 
 foreach src : mu4e_srcs
   target_name= '@BASENAME@.elc'
