@@ -130,11 +130,16 @@ struct TempDir {
 	 *
 	 * @return the path.
 	 */
-	const std::string& path() {return path_; }
+	const std::string& path() const { return path_; }
 private:
 	std::string path_;
 	const bool autodelete_;
 };
+
+static inline auto format_as(const TempDir& td) {
+	return td.path();
+}
+
 
 /**
  * Temporary (RAII) timezone

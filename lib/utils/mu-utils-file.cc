@@ -289,6 +289,13 @@ Mu::run_command(std::initializer_list<std::string> args)
 		argvec.push_back(g_strdup(arg.c_str()));
 	argvec.push_back({});
 
+	{
+		std::vector<std::string> qargs{};
+		for(auto&& arg: args)
+			qargs.emplace_back("'" + arg + "'");
+		mu_debug("run-command: {}", fmt::join(qargs, "  "));
+	}
+
 	GError *err{};
 	int wait_status{};
 	gchar *std_out{}, *std_err{};

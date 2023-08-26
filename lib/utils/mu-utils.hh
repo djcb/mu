@@ -145,7 +145,7 @@ auto mu_join(Range&& range, std::string_view sepa) {
 	return fmt::join(std::forward<Range>(range), sepa);
 }
 
-template <typename T>
+template <typename T=::time_t>
 std::tm mu_time(T t={}, bool use_utc=false) {
 	::time_t tt{static_cast<::time_t>(t)};
 	return use_utc ? fmt::gmtime(tt) : fmt::localtime(tt);
