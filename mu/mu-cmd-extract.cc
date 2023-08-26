@@ -168,3 +168,139 @@ Mu::mu_cmd_extract(const Options& opts)
 
 	return save_parts(*message, opts.extract.filename_rx, opts);
 }
+
+
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include <glib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <utils/mu-regex.hh>
+#include "utils/mu-test-utils.hh"
+
+
+static gint64
+get_file_size(const std::string& path)
+{
+	int         rv;
+	struct stat statbuf;
+
+	mu_info("ppatj {}", path);
+
+	rv = stat(path.c_str(), &statbuf);
+	if (rv != 0) {
+		mu_debug ("error: {}", g_strerror (errno));
+		return -1;
+	}
+
+	mu_debug("{} -> {} bytes", path, statbuf.st_size);
+
+	return statbuf.st_size;
+}
+
+static void
+test_mu_extract_02(void)
+{
+	TempDir temp_dir{};
+	auto res= run_command({
+			MU_PROGRAM, "extract", "--save-attachments",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_cmpuint(get_file_size(join_paths(temp_dir.path(), "custer.jpg")), >=, 15955);
+	g_assert_cmpuint(get_file_size(join_paths(temp_dir.path(), "custer.jpg")), <=, 15960);
+	g_assert_cmpuint(get_file_size(join_paths(temp_dir.path(), "sittingbull.jpg")), ==, 17674);
+}
+
+static void
+test_mu_extract_03(void)
+{
+	TempDir temp_dir{};
+	auto res= run_command({
+			MU_PROGRAM, "extract", "--parts=3",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_true(g_access(join_paths(temp_dir.path(), "custer.jpg").c_str(), F_OK) == 0);
+	g_assert_false(g_access(join_paths(temp_dir.path(), "sittingbull.jpg").c_str(), F_OK) == 0);
+}
+
+static void
+test_mu_extract_overwrite(void)
+{
+	TempDir temp_dir{};
+	auto res= run_command({
+			MU_PROGRAM, "extract", "-a",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_true(g_access(join_paths(temp_dir.path(), "custer.jpg").c_str(), F_OK) == 0);
+	g_assert_true(g_access(join_paths(temp_dir.path(), "sittingbull.jpg").c_str(), F_OK) == 0);
+
+
+	/* now, it should fail, because we don't allow overwrites
+	 * without --overwrite */
+	auto res2 = run_command({
+			MU_PROGRAM, "extract", "-a",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+
+	assert_valid_result(res2);
+	g_assert_false(res2->standard_err.empty());
+
+
+	auto res3 = run_command({
+			MU_PROGRAM, "extract", "-a", "--overwrite",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+
+	assert_valid_result(res3);
+	g_assert_true(res3->standard_err.empty());
+}
+
+static void
+test_mu_extract_by_name(void)
+{
+	TempDir temp_dir{};
+	auto res= run_command({
+			MU_PROGRAM, "extract",
+			mu_format("--target-dir='{}'", temp_dir.path()),
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5"),
+			"sittingbull.jpg"});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_true(g_access(join_paths(temp_dir.path(), "sittingbull.jpg").c_str(), F_OK) == 0);
+	g_assert_false(g_access(join_paths(temp_dir.path(), "custer.jpg").c_str(), F_OK) == 0);
+}
+
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/extract/02", test_mu_extract_02);
+	g_test_add_func("/cmd/extract/03", test_mu_extract_03);
+	g_test_add_func("/cmd/extract/overwrite", test_mu_extract_overwrite);
+	g_test_add_func("/cmd/extract/by-name", test_mu_extract_by_name);
+
+	return g_test_run();
+}
+
+#endif

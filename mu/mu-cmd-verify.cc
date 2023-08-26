@@ -177,3 +177,79 @@ Mu::mu_cmd_verify(const Options& opts)
 		return Err(Error::Code::UnverifiedSignature,
 			   "failed to verify one or more signatures");
 }
+
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+/* we can only test 'verify' if gpg is installed, and has djcb@djcbsoftware's key in the keyring */
+static bool
+verify_is_testable(void)
+{
+	auto gpg{program_in_path("gpg2")};
+	if (!gpg) {
+		mu_message("cannot find gpg2 in path");
+		return false;
+	}
+
+	auto res{run_command({*gpg, "--list-keys", "DCC4A036"})}; /* djcb@djcbsoftware.nl's key */
+	if (!res || res->exit_code != 0) {
+		mu_message("key DCC4A036 not found");
+		return false;
+	}
+
+	return true;
+}
+
+static void
+test_mu_verify_good(void)
+{
+	if (!verify_is_testable()) {
+		g_test_skip("cannot test verify");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "verify",
+			join_paths(MU_TESTMAILDIR4, "signed!2,S")});
+	assert_valid_result(res);
+	g_assert_cmpuint(res->exit_code ,==, 0);
+}
+
+static void
+test_mu_verify_bad(void)
+{
+	if (!verify_is_testable()) {
+		g_test_skip("cannot test verify");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "verify",
+			join_paths(MU_TESTMAILDIR4, "signed-bad!2,S")});
+	assert_valid_result(res);
+	g_assert_cmpuint(res->exit_code,==, 1);
+}
+
+int
+main(int argc, char* argv[]) try {
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/verify/good", test_mu_verify_good);
+	g_test_add_func("/cmd/verify/bad", test_mu_verify_bad);
+
+	return g_test_run();
+
+} catch (const Error& e) {
+	mu_printerrln("{}", e.what());
+	return 1;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 1;
+}
+#endif /*BUILD_TESTS*/

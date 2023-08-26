@@ -499,3 +499,227 @@ Mu::mu_cmd_find(const Store& store, const Options& opts)
 	else
 		return process_query(store, *expr, opts);
 }
+
+
+
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+
+/* tests for the command line interface, uses testdir2 */
+
+static std::string test_mu_home;
+
+auto count_nl(const std::string& s)->size_t {
+	size_t n{};
+	for (auto&& c: s)
+		if (c == '\n')
+			++n;
+	return n;
+}
+
+static size_t
+search_func(const std::string& expr, size_t expected)
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home, expr});
+	assert_valid_result(res);
+
+	/* we expect zero lines of error output if there is a match; otherwise
+	 * there should be one line 'No matches found' */
+	if (res->exit_code != 0) {
+		g_assert_cmpuint(res->exit_code, ==, 2); // no match
+		g_assert_true(res->standard_out.empty());
+		g_assert_cmpuint(count_nl(res->standard_err), ==, 1);
+		return 0;
+	}
+
+	return count_nl(res->standard_out);
+}
+
+#define search(Q,EXP) do {				\
+	g_assert_cmpuint(search_func(Q, EXP), ==, EXP); \
+} while(0)
+
+
+static void
+test_mu_find_empty_query(void)
+{
+	search("\"\"", 13);
+}
+
+static void
+test_mu_find_01(void)
+{
+	search("f:john fruit", 1);
+	search("f:soc@example.com", 1);
+	search("t:alki@example.com", 1);
+	search("t:alcibiades", 1);
+	search("http emacs", 1);
+	search("f:soc@example.com OR f:john", 2);
+	search("f:soc@example.com OR f:john OR t:edmond", 3);
+	search("t:julius", 1);
+	search("s:dude", 1);
+	search("t:dantès", 1);
+}
+
+/* index testdir2, and make sure it adds two documents */
+static void
+test_mu_find_02(void)
+{
+	search("bull", 1);
+	search("g:x", 0);
+	search("flag:encrypted", 0);
+	search("flag:attach", 1);
+
+	search("i:3BE9E6535E0D852173@emss35m06.us.lmco.com", 1);
+}
+
+static void
+test_mu_find_file(void)
+{
+	search("file:sittingbull.jpg", 1);
+	search("file:custer.jpg", 1);
+	search("file:custer.*", 1);
+	search("j:sit*", 1);
+}
+
+static void
+test_mu_find_mime(void)
+{
+	search("mime:image/jpeg", 1);
+	search("mime:text/plain", 13);
+	search("y:text*", 13);
+	search("y:image*", 1);
+	search("mime:message/rfc822", 2);
+}
+
+static void
+test_mu_find_text_in_rfc822(void)
+{
+	search("embed:dancing", 1);
+	search("e:curious", 1);
+	search("embed:with", 2);
+	search("e:karjala", 0);
+	search("embed:navigation", 1);
+}
+
+static void
+test_mu_find_maildir_special(void)
+{
+	search("\"maildir:/wOm_bàT\"", 3);
+	search("\"maildir:/wOm*\"", 3);
+	search("\"maildir:/wOm_*\"", 3);
+	search("\"maildir:wom_bat\"", 0);
+	search("\"maildir:/wombat\"", 0);
+	search("subject:atoms", 1);
+	search("\"maildir:/wom_bat\" subject:atoms", 1);
+}
+
+
+/* some more tests */
+
+static void
+test_mu_find_wrong_muhome()
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome",
+			join_paths("/foo", "bar", "nonexistent"), "f:socrates"});
+	assert_valid_result(res);
+	g_assert_cmpuint(res->exit_code,==,1); // general error
+	g_assert_cmpuint(count_nl(res->standard_err), >, 1);
+}
+
+static void
+test_mu_find_links(void)
+{
+	TempDir temp_dir;
+
+	{
+		auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+				"--format", "links", "--linksdir", temp_dir.path(),
+				"mime:message/rfc822"});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==,0);
+		g_assert_cmpuint(count_nl(res->standard_out),==,0);
+		g_assert_cmpuint(count_nl(res->standard_err),==,0);
+	}
+
+
+	/* furthermore, two symlinks should be there */
+	const auto f1{mu_format("{}/cur/rfc822.1", temp_dir)};
+	const auto f2{mu_format("{}/cur/rfc822.2", temp_dir)};
+
+	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
+	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
+
+	/* now we try again, we should get a line of error output,
+	 * when we find the first target file already exists */
+	{
+		auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+				"--format", "links", "--linksdir", temp_dir.path(),
+				"mime:message/rfc822"});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==,1);
+		g_assert_cmpuint(count_nl(res->standard_out),==,0);
+		g_assert_cmpuint(count_nl(res->standard_err),==,1);
+	}
+
+	/* now we try again with --clearlinks, and the we should be
+	 * back to 0 errors */
+	{
+		auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+				"--format", "links", "--clearlinks", "--linksdir", temp_dir.path(),
+				"mime:message/rfc822"});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==,0);
+		g_assert_cmpuint(count_nl(res->standard_out),==,0);
+		g_assert_cmpuint(count_nl(res->standard_err),==,0);
+	}
+
+	g_assert_cmpuint(determine_dtype(f1.c_str(), true), ==, DT_LNK);
+	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
+}
+
+/* some more tests */
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	if (!set_en_us_utf8_locale())
+		return 0; /* don't error out... */
+
+	TempDir temp_dir{};
+	{
+		test_mu_home = temp_dir.path();
+
+		auto res1 = run_command({MU_PROGRAM, "--quiet", "init",
+				"--muhome", test_mu_home, "--maildir" , MU_TESTMAILDIR2});
+		assert_valid_result(res1);
+
+		auto res2 = run_command({MU_PROGRAM, "--quiet", "index",
+				"--muhome", test_mu_home});
+		assert_valid_result(res2);
+	}
+
+	g_test_add_func("/cmd/find/empty-query", test_mu_find_empty_query);
+	g_test_add_func("/cmd/find/01", test_mu_find_01);
+	g_test_add_func("/cmd/find/02", test_mu_find_02);
+	g_test_add_func("/cmd/find/file", test_mu_find_file);
+	g_test_add_func("/cmd/find/mime", test_mu_find_mime);
+	g_test_add_func("/cmd/find/links", test_mu_find_links);
+	g_test_add_func("/cmd/find/text-in-rfc822", test_mu_find_text_in_rfc822);
+	g_test_add_func("/cmd/find/wrong-muhome", test_mu_find_wrong_muhome);
+	g_test_add_func("/cmd/find/maildir-special", test_mu_find_maildir_special);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/

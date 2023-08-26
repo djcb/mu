@@ -48,6 +48,27 @@ test('test-cmd-add',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
 
+test('test-cmd-cfind',
+     executable('test-cmd-cfind',
+                'mu-cmd-cfind.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-cmd-extract',
+     executable('test-cmd-extract',
+                'mu-cmd-extract.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-cmd-find',
+     executable('test-cmd-find',
+                'mu-cmd-find.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
 test('test-cmd-mkdir',
      executable('test-cmd-mkdir',
                 'mu-cmd-mkdir.cc',
@@ -61,6 +82,14 @@ test('test-cmd-remove',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-cmd-verify',
+     executable('test-cmd-verify',
+                'mu-cmd-verify.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
 
 test('test-cmd-view',
      executable('test-cmd-view',

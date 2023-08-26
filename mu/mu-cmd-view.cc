@@ -316,10 +316,86 @@ test_view_sexp()
 	assert_equal(output.standard_out, expected);
 }
 
+static void
+test_mu_view_01(void)
+{
+	TempDir temp_dir{};
+
+	if (!set_en_us_utf8_locale()) {
+		g_test_skip("failed to switch to en_US/utf8");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "view",
+			join_paths(MU_TESTMAILDIR2, "bar", "cur", "mail4")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_cmpuint(res->standard_out.size(), ==, 364);
+}
+
+static void
+test_mu_view_multi(void)
+{
+	TempDir temp_dir{};
+
+	if (!set_en_us_utf8_locale()) {
+		g_test_skip("failed to switch to en_US/utf8");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "view",
+			join_paths(MU_TESTMAILDIR2, "bar", "cur", "mail5"),
+			join_paths(MU_TESTMAILDIR2, "bar", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_cmpuint(res->standard_out.size(), ==, 162);
+}
+
+static void
+test_mu_view_multi_separate(void)
+{
+	TempDir temp_dir{};
+
+	if (!set_en_us_utf8_locale()) {
+		g_test_skip("failed to switch to en_US/utf8");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "view", "--terminate",
+			join_paths(MU_TESTMAILDIR2, "bar", "cur", "mail5"),
+			join_paths(MU_TESTMAILDIR2, "bar", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_cmpuint(res->standard_out.size(), ==, 164);
+}
+
+static void
+test_mu_view_attach(void)
+{
+	TempDir temp_dir{};
+
+	if (!set_en_us_utf8_locale()) {
+		g_test_skip("failed to switch to en_US/utf8");
+		return;
+	}
+
+	auto res = run_command({MU_PROGRAM, "view", "--terminate",
+			join_paths(MU_TESTMAILDIR2, "Foo", "cur", "mail5")});
+	assert_valid_result(res);
+	g_assert_true(res->standard_err.empty());
+
+	g_assert_cmpuint(res->standard_out.size(), ==, 164);
+}
+
+
+
 int
 main(int argc, char* argv[]) try {
 
-	TempDir tmpdir{false};
+	TempDir tmpdir{};
 	msgpath = join_paths(tmpdir.path(), "test-message.txt");
 	std::ofstream strm{msgpath};
 	strm.write(test_msg.data(), test_msg.size());
@@ -328,6 +404,10 @@ main(int argc, char* argv[]) try {
 
 	mu_test_init(&argc, &argv);
 
+	g_test_add_func("/cmd/view/01", test_mu_view_01);
+	g_test_add_func("/cmd/view/multi", test_mu_view_multi);
+	g_test_add_func("/cmd/view/multi-separate", test_mu_view_multi_separate);
+	g_test_add_func("/cmd/view/attach", test_mu_view_attach);
 	g_test_add_func("/cmd/view/plain", test_view_plain);
 	g_test_add_func("/cmd/view/html", test_view_html);
 	g_test_add_func("/cmd/view/sexp", test_view_sexp);

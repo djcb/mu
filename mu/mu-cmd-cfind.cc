@@ -305,3 +305,231 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 	output(ItemType::Footer, Nothing, opts);
 	return Ok();
 }
+
+
+
+
+#ifdef BUILD_TESTS
+/*
+ * Tests.
+ *
+ */
+
+#include "utils/mu-test-utils.hh"
+
+
+static std::string test_mu_home;
+
+static void
+test_mu_cfind_plain(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "plain", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	/* note, output order is unspecified */
+	if (res->standard_out[0] == 'H')
+		assert_equal(res->standard_out,
+			     "Helmut Kröger hk@testmu.xxx\n"
+			     "Mü testmu@testmu.xx\n");
+	else
+		assert_equal(res->standard_out,
+			     "Mü testmu@testmu.xx\n"
+			     "Helmut Kröger hk@testmu.xxx\n");
+}
+
+static void
+test_mu_cfind_bbdb(void)
+{
+	const auto old_tz{set_tz("Europe/Helsinki")};
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "bbdb", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+	g_assert_cmpuint(res->standard_out.size(), >, 52);
+
+#define frm1                                                                                       \
+	";; -*-coding: utf-8-emacs;-*-\n"                                                          \
+	";;; file-version: 6\n"                                                                    \
+	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                              \
+	"((creation-date . \"{}\") "                                                               \
+	"(time-stamp . \"1970-01-01\")) nil]\n"                                                    \
+	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                     \
+	"((creation-date . \"{}\") "                                                               \
+	"(time-stamp . \"1970-01-01\")) nil]\n"
+
+#define frm2                                                                                       \
+	";; -*-coding: utf-8-emacs;-*-\n"                                                          \
+	";;; file-version: 6\n"                                                                    \
+	"[\"Mü\" \"\" nil nil nil nil (\"testmu@testmu.xx\") "                                     \
+	"((creation-date . \"{}\") "                                                               \
+	"(time-stamp . \"1970-01-01\")) nil]\n"                                                    \
+	"[\"Helmut\" \"Kröger\" nil nil nil nil (\"hk@testmu.xxx\") "                              \
+	"((creation-date . \"{}\") "                                                               \
+	"(time-stamp . \"1970-01-01\")) nil]\n"
+
+	auto&& today{mu_format("{:%F}", mu_time(::time({})))};
+	std::string expected;
+	if (res->standard_out.at(52) == 'H')
+		expected = mu_format(frm1, today, today);
+	else
+		expected = mu_format(frm2, today, today);
+
+	assert_equal(res->standard_out, expected);
+	set_tz(old_tz);
+}
+
+static void
+test_mu_cfind_wl(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "wl", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	if (res->standard_out.at(0) == 'h')
+		assert_equal(res->standard_out,
+			     "hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n"
+			     "testmu@testmu.xx \"Mü\" \"Mü\"\n");
+	else
+		assert_equal(res->standard_out,
+				"testmu@testmu.xx \"Mü\" \"Mü\"\n"
+				"hk@testmu.xxx \"HelmutK\" \"Helmut Kröger\"\n");
+}
+
+static void
+test_mu_cfind_mutt_alias(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "mutt-alias", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	if (res->standard_out.at(6) == 'H')
+		assert_equal(res->standard_out,
+			     "alias HelmutK Helmut Kröger <hk@testmu.xxx>\n"
+			     "alias Mü Mü <testmu@testmu.xx>\n");
+	else
+		assert_equal(res->standard_out,
+				"alias Mü Mü <testmu@testmu.xx>\n"
+				"alias HelmutK Helmut Kröger <hk@testmu.xxx>\n");
+}
+
+static void
+test_mu_cfind_mutt_ab(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "mutt-ab", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	if (res->standard_out.at(39) == 'h')
+		assert_equal(res->standard_out,
+			     "Matching addresses in the mu database:\n"
+			     "hk@testmu.xxx\tHelmut Kröger\t\n"
+			     "testmu@testmu.xx\tMü\t\n");
+	else
+		assert_equal(res->standard_out,
+				"Matching addresses in the mu database:\n"
+				"testmu@testmu.xx\tMü\t\n"
+				"hk@testmu.xxx\tHelmut Kröger\t\n");
+}
+
+static void
+test_mu_cfind_org_contact(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "org-contact", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	if (res->standard_out.at(2) == 'H')
+		assert_equal(res->standard_out,
+				"* Helmut Kröger\n"
+				":PROPERTIES:\n"
+				":EMAIL: hk@testmu.xxx\n"
+				":END:\n\n"
+				"* Mü\n"
+				":PROPERTIES:\n"
+				":EMAIL: testmu@testmu.xx\n"
+				":END:\n\n");
+	else
+		assert_equal(res->standard_out,
+				"* Mü\n"
+				":PROPERTIES:\n"
+				":EMAIL: testmu@testmu.xx\n"
+				":END:\n\n"
+				"* Helmut Kröger\n"
+				":PROPERTIES:\n"
+				":EMAIL: hk@testmu.xxx\n"
+				":END:\n\n");
+}
+
+static void
+test_mu_cfind_csv(void)
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "csv", "testmu\\.xxx?"})};
+	assert_valid_result(res);
+
+	if (res->standard_out.at(1) == 'H')
+		assert_equal(res->standard_out,
+			     "\"Helmut Kröger\",\"hk@testmu.xxx\"\n"
+			     "\"Mü\",\"testmu@testmu.xx\"\n");
+	else
+		assert_equal(res->standard_out,
+				"\"Mü\",\"testmu@testmu.xx\"\n"
+				"\"Helmut Kröger\",\"hk@testmu.xxx\"\n");
+}
+
+
+static void
+test_mu_cfind_json()
+{
+	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
+				"--format", "json", "^a@example\\.com"})};
+	assert_valid_result(res);
+
+	const auto expected = R"([
+  {
+    "email"         : "a@example.com",
+    "name"          : null,
+    "display"       : "a@example.com",
+    "last-seen"     : 1463331445,
+    "last-seen-iso" : "2016-05-15T16:57:25Z",
+    "personal"      : false,
+    "frequency"     : 1
+  }
+]
+)";
+	assert_equal(res->standard_out, expected);
+}
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	if (!set_en_us_utf8_locale())
+		return 0; /* don't error out... */
+
+	TempDir temp_dir{};
+	{
+		test_mu_home = temp_dir.path();
+
+		auto res1 = run_command({MU_PROGRAM, "--quiet", "init",
+				"--muhome", test_mu_home, "--maildir" , MU_TESTMAILDIR});
+		assert_valid_result(res1);
+
+		auto res2 = run_command({MU_PROGRAM, "--quiet", "index",
+				"--muhome", test_mu_home});
+		assert_valid_result(res2);
+	}
+
+	g_test_add_func("/cmd/find/plain", test_mu_cfind_plain);
+	g_test_add_func("/cmd/find/bbdb", test_mu_cfind_bbdb);
+	g_test_add_func("/cmd/find/wl", test_mu_cfind_wl);
+	g_test_add_func("/cmd/find/mutt-alias", test_mu_cfind_mutt_alias);
+	g_test_add_func("/cmd/find/mutt-ab", test_mu_cfind_mutt_ab);
+	g_test_add_func("/cmd/find/org-contact", test_mu_cfind_org_contact);
+	g_test_add_func("/cmd/find/csv", test_mu_cfind_csv);
+	g_test_add_func("/cmd/find/json", test_mu_cfind_json);
+
+	return g_test_run();
+}
+#endif /*BUILD_TESTS*/
