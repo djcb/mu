@@ -135,7 +135,7 @@ else
   message('no wordexp, no command-line option expansion')
 endif
 
-testmaildir=join_paths(meson.current_source_dir(), 'lib', 'tests')
+testmaildir=join_paths(meson.current_source_dir(), 'testdata')
 config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
 config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
 config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
