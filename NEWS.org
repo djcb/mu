@@ -82,13 +82,15 @@
       =mu4e-mu-allow-temp-file= docstring for details on how to determine this.
 
     - Maildir lists are now generated server-side; so e.g. jumping to the 'jo'
-      /other/ Maildirs used to be quite slow the first time.
+      /other/ Maildirs used to be quite slow the first time, but is now very fast.
 
       ~mu4e-cache-maildir-list~ is obsolete / non-functional now.
 
     - after retrieving mail (~mu4e-update-mail-and-index~), save the output of the
       retrieval command in a buffer =*mu4e-last-update*=, = which can be useful
       for diagnosis.
+
+    - ~mu4e~ now follows Emacs' ~package~ guidelines
 
 * 1.10 (released on March 26, 2023)
 
