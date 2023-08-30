@@ -15,6 +15,8 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+thirdparty=join_paths('..', '..', 'thirdparty')
+
 lib_mu_utils=static_library('mu-utils', [
   'mu-command-handler.cc',
   'mu-html-to-text.cc',
@@ -34,15 +36,14 @@ lib_mu_utils=static_library('mu-utils', [
   readline_dep,
   cld2_dep
 ], include_directories:
-     include_directories(['.','..', '../thirdparty/']),
+     include_directories(['.', '..', thirdparty]),
 install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
   compile_args: '-DFMT_HEADER_ONLY',
   include_directories:
-    include_directories(['.', '..', '../thirdparty'])
-)
+    include_directories(['.', '..', thirdparty]))
 
 #
 # tools
