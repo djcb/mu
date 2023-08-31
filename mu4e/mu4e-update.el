@@ -257,6 +257,7 @@ To override this behavior, customize `display-buffer-alist'."
     (when (get-buffer mu4e-last-update-buffer)
       (kill-buffer mu4e-last-update-buffer))
     (with-current-buffer mu4e--update-buffer
+      (special-mode)
       (clone-buffer mu4e-last-update-buffer))
     ;; and kill the buffer itself; the cloning is needed
     ;; so the temp window handling works as expected.
