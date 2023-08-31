@@ -806,9 +806,9 @@ true, do *not* update the query history stack."
       (setq list-buffers-directory rewritten-expr)
       (mu4e--modeline-update))
 
-    ;; when the buffer is already visible on the frame, select it; otherwise,
+    ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
-    (unless (get-buffer-window buf)
+    (unless (get-buffer-window buf 0)
       (mu4e-display-buffer buf t))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
