@@ -87,9 +87,9 @@ if makeinfo.found()
                           '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
                           join_paths(meson.current_source_dir(), 'mu-guile.texi'),
                           '-I', join_paths(meson.current_build_dir(), '..')])
-
   if install_info.found()
-    meson.add_install_script(install_info_script, 'share/info', 'mu-guile.info')
+    infodir = join_paths(get_option('prefix') / get_option('infodir'))
+    meson.add_install_script(install_info_script, infodir, 'mu-guile.info')
   endif
 endif
 
