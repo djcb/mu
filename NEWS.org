@@ -43,11 +43,16 @@
     - restore expansion for path options such as ~--maildir=~/Maildir~ (to e.g.
       ~/home/user/Maildir~) for shells that don't do that, such as Bash.
 
-    - updated query-parser; this is (should be) compatible with the older one,
-      apart from a number of fixes. There is a new option ~--analyze~ to ~mu find~
-      which shows the parsed query in a human-readable s-expression form; this
-      can be used to debug your queries (this replaces the older
+    - overhauled query-parser; this is (should be) compatible with the older
+      one, apart from a number of fixes. There is a new option ~--analyze~ to ~mu
+      find~ which shows the parsed query in a human-readable s-expression form;
+      this can be used to debug your queries (this replaces the older
       ~--format=mquery|xquery~)
+
+      Furthermore, there now support for the "ngram"-based indexing and
+      querying, which is useful for languages/scripts without explicit
+      word-breaks. See the *mu-init* manpages, in particular the ~--support-ngrams~
+      option, and why you may (or may not) want to enable that.
 
 *** mu4e
 
