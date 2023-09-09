@@ -40,8 +40,14 @@
       rather than 250000; the latter was too high for systems with limited
       memory. You can of course change that with ~--batch-size=...~
 
-    - restore expansion for path options such as ~--maildir=~/Maildir~ for shells
-      that don't do that, such as Bash.
+    - restore expansion for path options such as ~--maildir=~/Maildir~ (to e.g.
+      ~/home/user/Maildir~) for shells that don't do that, such as Bash.
+
+    - updated query-parser; this is (should be) compatible with the older one,
+      apart from a number of fixes. There is a new option ~--analyze~ to ~mu find~
+      which shows the parsed query in a human-readable s-expression form; this
+      can be used to debug your queries (this replaces the older
+      ~--format=mquery|xquery~)
 
 *** mu4e
 
