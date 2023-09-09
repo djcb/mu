@@ -45,14 +45,8 @@ test_cases(const CaseVec& cases, ProcFunc proc)
 {
 	for (const auto& casus : cases) {
 		const auto res = proc(casus.expr, casus.is_first);
-		if (g_test_verbose()) {
-			std::cout << "\n";
-			std::cout << casus.expr << ' ' << casus.is_first << std::endl;
-			std::cout << "exp: '" << casus.expected << "'" << std::endl;
-			std::cout << "got: '" << res << "'" << std::endl;
-		}
-
-		g_assert_true(casus.expected == res);
+		//mu_println("'{}'\n'{}'", casus.expected, res);
+		assert_equal(casus.expected, res);
 	}
 }
 
@@ -161,6 +155,8 @@ test_flatten()
 	    {"Менделе́ев", true, "менделеев"},
 	    {"", false, ""},
 	    {"Ångström", true, "angstrom"},
+	    // don't touch combining characters in CJK etc.
+	    {"スポンサーシップ募集",true, "スポンサーシップ募集"}
 	};
 
 	test_cases(cases, [](auto s, auto f) { return utf8_flatten(s); });

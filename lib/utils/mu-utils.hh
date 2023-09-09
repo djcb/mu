@@ -154,7 +154,19 @@ std::tm mu_time(T t={}, bool use_utc=false) {
 using StringVec = std::vector<std::string>;
 
 /**
- * Flatten a string -- downcase and fold diacritics etc.
+ * Does the string contain script without explicit word separators?
+ *
+ * @param str a string
+ *
+ * @return true or false
+ */
+bool contains_unbroken_script(const char* str);
+static inline bool contains_unbroken_script(const std::string& str) {
+	return contains_unbroken_script(str.c_str());
+}
+
+/**
+ * Flatten a string -- down-case and fold diacritics.
  *
  * @param str a string
  *
