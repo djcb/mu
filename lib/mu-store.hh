@@ -467,6 +467,13 @@ private:
 MU_ENABLE_BITOPS(Store::Options);
 MU_ENABLE_BITOPS(Store::MoveOptions);
 
+static inline std::string
+format_as(const Store& store)
+{
+	return mu_format("store ({}/{})", format_as(store.xapian_db()),
+			 store.root_maildir());
+}
+
 } // namespace Mu
 
 #endif /* __MU_STORE_HH__ */
