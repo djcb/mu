@@ -25,8 +25,8 @@ quote any characters that would otherwise be interpreted by the shell, such as
 * TERMS
 
 The basic building blocks of a query are *terms*; these are just normal words like
-'banana' or 'hello', or words prefixed with a field-name which make them apply
-to just that field. See *mu find* for all the available fields.
+'banana' or 'hello', or words prefixed with a field-name which makes them apply
+to just that field. See *mu info fields* for all the available fields.
 
 Some example queries:
 #+begin_example
@@ -60,9 +60,8 @@ mu find subject:\\"hi there\\"
 * LOGICAL OPERATORS
 
 We can combine terms with logical operators -- binary ones: *and*, *or*, *xor* and the
-unary *not*, with the conventional rules for precedence and association, and are
-case-insensitive.
-
+unary *not*, with the conventional rules for precedence and association. The
+operators are case-insensitive.
 
 You can also group things with *(* and *)*, so you can do things like:
 #+begin_example
@@ -86,6 +85,7 @@ Note that a =pure not= - e.g. searching for *not apples* is quite a 'heavy' quer
 The language supports matching basic PCRE regular expressions, see *pcre(3)*.
 
 Regular expressions are enclosed in *//*. Some examples:
+
 #+begin_example
 subject:/h.llo/		# match hallo, hello, ...
 subject:/
@@ -96,10 +96,10 @@ matches messages in the '/foo' maildir, while the latter matches all messages in
 all maildirs that match 'foo', such as '/foo', '/bar/cuux/foo', '/fooishbar'
 etc.
 
-Wildcards are an older mechanism for matching where a term with a rightmost ***
+Wildcards are another mechanism for matching where a term with a rightmost ***
 (and =only= in that position) matches any term that starts with the part before
-the ***; they are supported for backward compatibility and *mu* translates them to
-regular expressions internally:
+the ***; they are therefore less powerful than regular expressions, but also much
+faster:
 #+begin_example
 foo*
 #+end_example
@@ -108,8 +108,7 @@ is equivalent to
 /foo.*/
 #+end_example
 
-As a note of caution, certain wild-cards and regular expression can take quite a
-bit longer than 'normal' queries.
+Regular expressions can be useful, but are relatively slow.
 
 * FIELDS
 
@@ -143,8 +142,8 @@ full table with all details, including single-char shortcuts, try the command:
 | to         |           | Message recipient              |
 |------------+-----------+--------------------------------|
 
-(*) The language code for the text-body if found. This works only
-if ~mu~ was built with CLD2 support.
+(*) The language code for the text-body if found. This works only if ~mu~ was
+built with CLD2 support.
 
 There are also the special fields *contact:*, which matches all contact-fields
 (=from=, =to=, =cc= and =bcc=), and *recip*, which matches all recipient-fields (=to=, =cc=
@@ -167,12 +166,12 @@ separated by *..*. Either lower or upper (but not both) can be omitted to create
 an open range.
 
 Dates are expressed in local time and using ISO-8601 format (YYYY-MM-DD
-HH:MM:SS); you can leave out the right part, and *mu* adds the rest, depending on
+HH:MM:SS); you can leave out the right part and *mu* adds the rest, depending on
 whether this is the beginning or end of the range (e.g., as a lower bound,
 '2015' would be interpreted as the start of that year; as an upper bound as the
 end of the year).
 
-You can use '/' , '.', '-' and 'T' to make dates more human readable.
+You can use '/' , '.', '-', ':' and 'T' to make dates more human-readable.
 
 Some examples:
 #+begin_example
@@ -274,6 +273,9 @@ Note that from the command-line, such queries must be quoted:
 mu find 'maildir:"/Sent Items"'
 #+end_example
 
+Also note that you should *not* end the maildir with a ~/~, or it can be
+misinterpreted as a regular expression term; see aforementioned.
+
 * MORE EXAMPLES
 
 Here are some simple examples of *mu* queries; you can make many more complicated
@@ -321,16 +323,25 @@ Find all messages written in Dutch or German with the word 'hallo':
 hallo and (lang:nl or lang:de)
 #+end_example
 
+* ANALZYING QUERIES
 
-* CAVEATS
+Despite all the documentation, in some cases it can be non-obvious how ~mu~
+interprets a certain query. For that, you can ask ~mu~ to analyze the query --
+that is, show how ~mu~ interprets the query.
 
-With current Xapian versions, the apostroph character is considered part of a
-word. Thus, you cannot find =D'Artagnan= by searching for =Artagnan=. So, include
-the apostrophe in search or use a regexp search.
+This uses the the ~--analyze~ option to *mu find*.
+#+begin_example
+$ mu find subject:wombat AND date:3m.. size:..2000  --analyze
+* query:
+  subject:wombat AND date:3m.. size:..2000
+* parsed query:
+  (and (subject "wombat") (date (range "2023-05-30T06:10:09Z" "")) (size (range "" "2000")))
+* Xapian query:
+  Query((Swombat AND VALUE_GE 4 n64759341 AND VALUE_LE 17 i7d0))
+#+end_example
 
-Matching on spaces has changed compared to the old query-parser; this applies
-e.g. to Maildirs that have spaces in their name, such as =Sent Items=. See *MAILDIR*
-above.
+The ~parsed query~ is usually the most interesting one to understand what's
+happening.
 
 #+include: "prefooter.inc" :minlevel 1
 

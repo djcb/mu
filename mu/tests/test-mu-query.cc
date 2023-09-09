@@ -578,47 +578,10 @@ test_mu_query_threads_compilation_error(void)
 			 3);
 }
 
-/* https://github.com/djcb/mu/issues/1428 */
-static void
-test_mu_query_cjk(void)
-{
-	/* XXX: this doesn't pass yet; return for now */
-	g_test_skip("skip CJK tests");
-	return;
-
-	{
-		g_unsetenv("XAPIAN_CJK_NGRAM");
-		const auto xpath = make_database(MU_TESTMAILDIR_CJK);
-		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバがダウンしました",
-						       QueryFlags::None),
-				 ==, 1);
-		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバ",
-						       QueryFlags::None),
-				 ==, 0);
-	}
-
-	{
-		g_setenv("XAPIAN_CJK_NGRAM", "1", TRUE);
-		const auto xpath = make_database(MU_TESTMAILDIR_CJK);
-		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバがダウンしました",
-						       QueryFlags::None),
-				 ==, 0);
-		g_assert_cmpuint(run_and_count_matches(xpath,
-						       "サーバ",
-						       QueryFlags::None),
-				 ==, 0);
-	}
-}
-
 int
 main(int argc, char* argv[])
 {
 	int rv;
-
-	setlocale(LC_ALL, "");
 
 	mu_test_init(&argc, &argv);
 	DB_PATH1 = make_database(MU_TESTMAILDIR);
@@ -661,8 +624,6 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-query/test-mu-query-threads-compilation-error",
 			test_mu_query_threads_compilation_error);
 
-	g_test_add_func("/mu-query/test-mu-query-cjk",
-			test_mu_query_cjk);
 	rv = g_test_run();
 
 	return rv;

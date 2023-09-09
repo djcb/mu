@@ -101,4 +101,6 @@ XapianDb::XapianDb(const std::string& db_path, Flavor flavor) :
 
 	if (flavor == Flavor::CreateOverwrite)
 		set_timestamp(MetadataIface::created_key);
+
+	mu_debug("created {} / {}", flavor, *this);
 }

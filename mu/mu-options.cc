@@ -337,12 +337,6 @@ sub_find(CLI::App& sub, Options& opts)
 			{ Format::Json,
 			  {"json", "JSON"}
 			},
-			{ Format::XQuery,
-			  {"xquery", "Show Xapian query (for debugging)"}
-			},
-			{ Format::MQuery,
-			  {"mquery", "Show mu query for (for debugging)"}
-			},
 		}};
 
 	sub.add_flag("--threads,-t", opts.find.threads,
@@ -351,6 +345,8 @@ sub_find(CLI::App& sub, Options& opts)
 		     "Show only one of messages with same message-id");
 	sub.add_flag("--include-related,-r", opts.find.include_related,
 		     "Include related messages in results");
+	sub.add_flag("--analyze,-a", opts.find.analyze,
+		     "Analyze the query");
 
 	const auto fhelp = options_help(FormatInfos, Format::Plain);
 	const auto fmap = options_map(FormatInfos);
@@ -461,13 +457,16 @@ sub_init(CLI::App& sub, Options& opts)
 		       "Maximum allowed message size in bytes");
 	sub.add_option("--batch-size", opts.init.batch_size,
 		       "Maximum size of database transaction");
+	sub.add_option("--support-ngrams", opts.init.support_ngrams,
+		       "Support CJK n-grams if for querying/indexing");
 	sub.add_flag("--reinit", opts.init.reinit,
 		       "Re-initialize database with current settings")
 		->excludes("--maildir")
 		->excludes("--my-address")
 		->excludes("--ignored-address")
 		->excludes("--max-message-size")
-		->excludes("--batch-size");
+		->excludes("--batch-size")
+		->excludes("--support-ngrams");
 }
 
 static void

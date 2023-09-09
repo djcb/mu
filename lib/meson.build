@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -26,16 +26,17 @@ lib_mu=static_library(
     'mu-config.cc',
     'mu-contacts-cache.cc',
     'mu-maildir.cc',
-    'mu-parser.cc',
     'mu-query-match-deciders.cc',
     'mu-query-threads.cc',
     'mu-query.cc',
     'mu-script.cc',
     'mu-server.cc',
     'mu-store.cc',
-    'mu-tokenizer.cc',
-    'mu-xapian.cc',
-    'mu-xapian-db.cc'
+    'mu-xapian-db.cc',
+    # query-parser
+    'mu-query-processor.cc',
+    'mu-query-parser.cc',
+    'mu-query-xapianizer.cc'
   ],
   dependencies: [
     glib_dep,
@@ -46,8 +47,7 @@ lib_mu=static_library(
     config_h_dep,
     lib_mu_utils_dep,
     lib_mu_message_dep,
-    lib_mu_index_dep
-  ],
+    lib_mu_index_dep],
   install: false)
 
 
@@ -57,14 +57,32 @@ lib_mu_dep = declare_dependency(
   include_directories:
     include_directories(['.', '..']))
 
-# dev helpers
-tokenize = executable(
-  'tokenize',
-  [ 'mu-tokenizer.cc', 'tokenize.cc' ],
-  dependencies: [ lib_mu_utils_dep, glib_dep ],
-  install: false)
+#
+# query parser dev helpers
+#
+process_query = executable('process-query', [ 'mu-query-processor.cc'],
+  install: false,
+  cpp_args: ['-DBUILD_PROCESS_QUERY'],
+  dependencies: [glib_dep, lib_mu_dep])
 
-# actual tests
+parse_query = executable(  'parse-query', [ 'mu-query-parser.cc' ],
+  install: false,
+  cpp_args: ['-DBUILD_PARSE_QUERY'],
+  dependencies: [glib_dep, lib_mu_dep])
+
+parse_query_expand = executable(  'parse-query-expand', [ 'mu-query-parser.cc' ],
+  install: false,
+  cpp_args: ['-DBUILD_PARSE_QUERY_EXPAND'],
+  dependencies: [glib_dep, lib_mu_dep])
+
+xapian_query = executable('xapianize-query', [ 'mu-query-xapianizer.cc' ],
+  install: false,
+  cpp_args: ['-DBUILD_XAPIANIZE_QUERY'],
+  dependencies: [glib_dep, lib_mu_dep])
+
+#
+# unit tests
+#
 
 test('test-threads',
      executable('test-threads',
@@ -85,5 +103,26 @@ test('test-config',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-query-processor',
+     executable('test-query-processor',
+                'mu-query-processor.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+test('test-query-parser',
+     executable('test-query-parser',
+                'mu-query-parser.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+test('test-query-xapianizer',
+     executable('test-query-xapianizer',
+                'mu-query-xapianizer.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
 
 subdir('tests')

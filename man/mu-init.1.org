@@ -17,6 +17,7 @@ has completed, you can run *mu index*
 * INIT OPTIONS
 
 ** -m, --maildir=<maildir>
+
 starts searching at =<maildir>=. By default, *mu* uses whatever the *MAILDIR*
 environment variable is set to; if it is not set, it tries =~/Maildir= if it
 already exists.
@@ -54,6 +55,13 @@ number of changes after which they are committed to the database; decreasing
 this reduces the memory requirements, but make indexing substantially slows (and
 vice-versa for increasing). Usually, the default of 250000 should be fine.
 
+** --support-ngrams
+
+whether to enable support for using ngrams in indexing and query parsing; this
+can be useful for languages without explicit word-breaks, such as
+Chinese/Japanes/Korean. See *NGRAM SUPPORT* below.
+
+
 ** --reinit
 
 reinitialize the database from an earlier version; that is, create a new empty
@@ -62,7 +70,19 @@ options.
 
 #+include: "muhome.inc" :minlevel 2
 
+* NGRAM SUPPORT
+
+*mu*'s underlying Xapian database supports 'ngrams', which improve searching for
+languages/scripts that do not have explicit word breaks, such as Chinese,
+Japanese and Korean. It is fairly intrusive, and influence both indexing and
+query-parsing; it is not enabled by default, and is recommended only if you need
+to search in such languages.
+
+When enabled, *mu* automatically uses ngrams automatically. Xapian environment
+variables such as ~XAPIAN_CJK_NGRAM~ are ignored.
+
 #+include: "exit-code.inc" :minlevel 1
+
 
 * EXAMPLE
 #+begin_example

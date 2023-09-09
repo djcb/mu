@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,8 +29,11 @@
 #include <mu-store.hh>
 #include <mu-maildir.hh>
 #include <utils/mu-utils.hh>
+#include <utils/mu-utils-file.hh>
 #include <utils/mu-test-utils.hh>
 #include <message/mu-message.hh>
+
+#include "mu-query-parser.hh"
 
 using namespace Mu;
 
@@ -40,7 +43,7 @@ using TestMap = std::unordered_map<std::string, std::string>;
 
 static Store
 make_test_store(const std::string& test_path, const TestMap& test_map,
-		const StringVec &personal_addresses)
+		Option<const Config&> conf={})
 {
 	std::string maildir = test_path + "/Maildir/";
 	// note the trailing '/'
@@ -49,12 +52,11 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 	/* write messages to disk */
 	for (auto&& item: test_map) {
 
-		const auto msgpath = maildir + "/" + item.first;
-
 		/* create the directory for the message */
+		const auto msgpath{join_paths(maildir, item.first)};
 		auto dir = to_string_gchar(g_path_get_dirname(msgpath.c_str()));
 		if (g_test_verbose())
-			g_message("create message dir %s", dir.c_str());
+			mu_message("create maildir {}", dir.c_str());
 
 		g_assert_cmpuint(g_mkdir_with_parents(dir.c_str(), 0700), ==, 0);
 
@@ -64,11 +66,6 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 		g_assert_true(stream.good());
 		stream.close();
 	}
-
-	/* make the store */
-	MemDb mdb;
-	Config conf{mdb};
-	conf.set<Config::Id::PersonalAddresses>(personal_addresses);
 
 	auto store = Store::make_new(test_path, maildir, conf);
 	assert_valid_result(store);
@@ -89,7 +86,6 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 	/* and we have a fully-ready store */
 	return std::move(store.value());
 }
-
 
 static void
 test_simple()
@@ -161,7 +157,9 @@ I said: "Aujourd'hui!"
 		}) {
 
 		if (g_test_verbose())
-			g_message("query: '%s'", expr);
+			mu_message("query: '{}'\n", expr,
+				make_xapian_query(store, expr)->get_description());
+
 		auto qr = store.run_query(expr);
 		assert_valid_result(qr);
 		g_assert_false(qr->empty());
@@ -644,7 +642,8 @@ test_term_split()
 	// Note the fancy quote in "foo’s bar"
 	const TestMap test_msgs = {{
 			"inbox/new/msg",
-			{ R"(Message-Id: <abcde@foo.bar>
+			{
+R"(Message-Id: <abcde@foo.bar>
 From: "Foo Example" <bar@example.com>
 Date: Wed, 26 Oct 2022 11:01:54 -0700
 To: example@example.com
@@ -657,17 +656,57 @@ Boo!
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
 	/* true: match; false: no match */
-	const auto cases = std::array<std::pair<const char*, bool>, 6>{{
+	const auto cases = std::array<std::pair<const char*, bool>, 7>{{
 		{"subject:foo's", true},
 		{"subject:foo*", true},
 		{"subject:/foo/", true},
 		{"subject:/foo’s/", true}, /* <-- breaks before PR #2365 */
 		{"subject:/foo.*bar/", true},  /* <-- breaks before PR #2365 */
-		{"subject:/foo’s bar/", false}, /* <-- no matching yet */
+		{"subject:/foo’s bar/", false}, /* <-- no matching, needs quoting */
+		{"subject:\"/foo’s bar/\"", true}, /* <-- this works, quote the regex */
 	}};
 
 	for (auto&& test: cases) {
-		g_debug("query: %s", test.first);
+		mu_debug("query: '{}'", test.first);
+		auto qr = store.run_query(test.first);
+		assert_valid_result(qr);
+		if (test.second)
+			g_assert_cmpuint(qr->size(), ==, 1);
+		else
+			g_assert_true(qr->empty());
+	}
+}
+
+static void
+test_subject_kata_containers()
+{
+	g_test_bug("2167");
+
+	// Note the fancy quote in "foo’s bar"
+	const TestMap test_msgs = {{
+			"inbox/new/msg",
+			{
+R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Wed, 26 Oct 2022 11:01:54 -0700
+To: example@example.com
+Subject: kata-containers
+
+Boo!
+)"},
+		}};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	/* true: match; false: no match */
+	const auto cases = std::array<std::pair<const char*, bool>, 3>{{
+			{"subject:kata", true},
+			{"subject:containers", true},
+			{"subject:kata-containers", true}
+		}};
+
+	for (auto&& test: cases) {
+		mu_debug("query: '{}'", test.first);
 		auto qr = store.run_query(test.first);
 		assert_valid_result(qr);
 		if (test.second)
@@ -776,14 +815,74 @@ html
 		assert_valid_result(qr);
 		g_assert_cmpuint(qr->size(), ==, 1);
 	}
-
 }
 
+
+static void
+test_cjk()
+{
+	g_test_bug("2167");
+
+	// Note the fancy quote in "foo’s bar"
+	const TestMap test_msgs = {{
+			"inbox/new/msg",
+			{
+R"(From: "Bob" <bob@builder.com>
+Subject: スポンサーシップ募集
+To: "Chase" <chase@ppatrol.org>
+Message-Id: 112342343e9dfo.fsf@builder.com
+
+    中文
+
+https://trac.xapian.org/ticket/719
+
+    サーバがダウンしました
+)"}}};
+
+	MemDb mdb;
+	Config conf{mdb};
+	conf.set<Config::Id::SupportNgrams>(true);
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, conf)};
+	store.commit();
+
+	/* true: match; false: no match */
+	const auto cases = std::vector<std::pair<std::string_view, bool>>{{
+			{"body:中文", true},
+			{"body:中", true},
+			{"body:文", true},
+			{"body:し", true},
+			{"body:サー", true},
+			{"body:サーバがダウンしました", true}, // fail
+			{"中文", true},
+			{"中", true},
+			{"文", true},
+			{"subject:スポン", true },
+			{"subject:スポンサーシップ募集", true },
+			{"subject:シップ", true }, // XXX should match
+			{"サーバがダウンしました", true}, // okay
+			{"body:サーバがダウンしました", true}, //  okay
+			{"subject:スポンサーシップ募集", true}, // okay
+			{"subject:シップx", true }, // XXX should match
+		}};
+
+	for (auto&& test: cases) {
+		auto qr = store.run_query(std::string{test.first});
+		assert_valid_result(qr);
+		if (test.second)
+			g_assert_cmpuint(qr->size(), ==, 1);
+		else
+			g_assert_true(qr->empty());
+	}
+}
 
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
+
+	//_test_add_func("/store/query/cjk", test_cjk);
 
 	g_test_add_func("/store/query/simple", test_simple);
 	g_test_add_func("/store/query/spam-address-components",
@@ -800,9 +899,15 @@ main(int argc, char* argv[])
 			test_duplicate_refresh_rename);
 	g_test_add_func("/store/query/term-split",
 			test_term_split);
+	g_test_add_func("/store/query/kata_containers",
+			test_subject_kata_containers);
 	g_test_add_func("/store/query/related-dup-threaded",
 			test_related_dup_threaded);
-	g_test_add_func("/store/query/html", test_html);
+	g_test_add_func("/store/query/html",
+			test_html);
+
+	g_test_add_func("/store/query/cjk-once-more", test_cjk);
+
 
 	return g_test_run();
 }

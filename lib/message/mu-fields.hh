@@ -207,7 +207,10 @@ struct Field {
 	}
 };
 
-static inline bool operator==(const Field& f1, const Field& f2) { return f1.id == f2.id; }
+// equality
+static inline constexpr bool operator==(const Field& f1, const Field& f2) { return f1.id == f2.id; }
+static inline constexpr bool operator==(const Field& f1, const Field::Id id) { return f1.id == id; }
+
 
 MU_ENABLE_BITOPS(Field::Flag);
 
@@ -591,21 +594,6 @@ Option<Field> field_from_number(size_t id)
 		return Nothing;
 	else
 		return field_from_id(static_cast<Field::Id>(id));
-}
-
-
-/**
- * Get a fmt-printable representation of Field for fmt
- *
- * @param field a Field
- *
- * @return a printable representation
- */
-static inline constexpr auto format_as(const Field& field) {
-	return field.name;
-}
-static inline constexpr auto format_as(const Field::Id id) {
-	return format_as(field_from_id(id));
 }
 
 

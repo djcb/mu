@@ -55,6 +55,8 @@ Mu::mu_cmd_init(const Options& opts)
 			conf.set<Config::Id::PersonalAddresses>(opts.init.my_addresses);
 		if (!opts.init.ignored_addresses.empty())
 			conf.set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
+		if (opts.init.support_ngrams)
+			conf.set<Config::Id::SupportNgrams>(true);
 
 		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
 				       opts.init.maildir, conf);

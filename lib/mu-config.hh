@@ -51,6 +51,8 @@ struct Property {
 		PersonalAddresses,	/**< List of personal e-mail addresses */
 		RootMaildir,	/**< Root maildir path */
 		SchemaVersion,	/**< Xapian DB schema version */
+		SupportNgrams,  /**< Support ngrams for indexing & querying
+				 *  for e.g. CJK languages */
 		/* <private> */
 		_count_		/* Number of Ids */
 	};
@@ -61,12 +63,13 @@ struct Property {
 	enum struct Flags {
 		None	     = 0,	/**< Nothing in particular */
 		ReadOnly     = 1 << 0, /**< Property is read-only for external use
-				     * (but can change from within the store) */
+					* (but can change from within the store) */
 		Configurable = 1 << 1,	/**< A user-configurable parameter; name
 					 * starts with 'conf-' */
 		Internal     = 1 << 2,	/**< Mu-internal field */
 	};
 	enum struct Type {
+		Boolean,        /**< Some boolean value */
 		Number,		/**< Some number */
 		Timestamp,      /**< Timestamp number */
 		Path,           /**< Path string */
@@ -176,6 +179,14 @@ public:
 			{},
 			"Version of the Xapian database schema"
 		},
+		{
+			Id::SupportNgrams,
+			Type::Boolean,
+			Flags::Configurable,
+			"support-ngrams",
+			{},
+			"Support n-grams for working with CJK and other languages"
+		},
 	}};
 
 	/**
@@ -229,6 +240,9 @@ public:
 		});
 		if constexpr (prop.type == Type::Number)
 			return static_cast<size_t>(str.empty() ? 0 : std::atoll(str.c_str()));
+		if constexpr (prop.type == Type::Boolean)
+			return static_cast<size_t>(str.empty() ? false :
+						   std::atol(str.c_str()) != 0);
 		else if constexpr (prop.type == Type::Timestamp)
 			return static_cast<time_t>(str.empty() ? 0 : std::atoll(str.c_str()));
 		else if constexpr (prop.type == Type::Path || prop.type == Type::String)
@@ -257,6 +271,8 @@ public:
 		const auto strval = std::invoke([&]{
 			if constexpr (prop.type == Type::Number || prop.type == Type::Timestamp)
 				return mu_format("{}", static_cast<int64_t>(val));
+			if constexpr (prop.type == Type::Boolean)
+				return val ? "1" : "0";
 			else if constexpr (prop.type == Type::Path || prop.type == Type::String)
 				return std::string{val};
 			else if constexpr (prop.type == Type::StringList)

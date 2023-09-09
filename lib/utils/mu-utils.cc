@@ -44,6 +44,8 @@
 #include <glib/gprintf.h>
 
 #include "mu-utils.hh"
+#include "mu-unbroken.hh"
+
 #include "mu-error.hh"
 #include "mu-option.hh"
 
@@ -112,11 +114,27 @@ gx_utf8_flatten(const gchar* str, gssize len)
 
 } // namespace
 
+bool
+Mu::contains_unbroken_script(const char *str)
+{
+	while (str && *str) {
+		auto uc = g_utf8_get_char(str);
+		if (is_unbroken_script(uc))
+			return true;
+		str = g_utf8_next_char(str);
+	}
+
+	return false;
+}
+
 std::string // gx_utf8_flatten
 Mu::utf8_flatten(const char* str)
 {
 	if (!str)
 		return {};
+
+	if (contains_unbroken_script(str))
+		return std::string{str};
 
 	// the pure-ascii case
 	if (g_str_is_ascii(str)) {

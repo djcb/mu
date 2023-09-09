@@ -207,21 +207,7 @@ public:
 	Result<Id> add_message(Message& msg, bool use_transaction = false,
 			       bool is_new = false);
 	Result<Id> add_message(const std::string& path, bool use_transaction = false,
-			       bool is_new = false) {
-		if (auto msg{Message::make_from_path(path)}; !msg)
-			return Err(msg.error());
-		else
-			return add_message(msg.value(), use_transaction, is_new);
-	}
-
-	/**
-	 * Update a message in the store.
-	 *
-	 * @param msg a message
-	 * @param id the id for this message
-	 *
-	 * @return Ok() or an error.
-	 */
+			       bool is_new = false);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
@@ -258,7 +244,6 @@ public:
 	 */
 	Option<Message> find_message(Id id) const;
 
-
 	/**
 	 * Find the messages for the given ids
 	 *
@@ -287,7 +272,6 @@ public:
 	 * @return true if the message exists in the store, false otherwise
 	 */
 	bool contains_message(const std::string& path) const;
-
 
 	/**
 	 * Options for moving
@@ -437,6 +421,15 @@ public:
 	 */
 	std::vector<std::string> maildirs() const;
 
+
+	/**
+	 * Compatible message-options for this store
+	 *
+	 * @return message-options.
+	 */
+	Message::Options message_options() const;
+
+
 	/*
 	 * _almost_ private
 	 */
@@ -473,6 +466,13 @@ private:
 
 MU_ENABLE_BITOPS(Store::Options);
 MU_ENABLE_BITOPS(Store::MoveOptions);
+
+static inline std::string
+format_as(const Store& store)
+{
+	return mu_format("store ({}/{})", format_as(store.xapian_db()),
+			 store.root_maildir());
+}
 
 } // namespace Mu
 

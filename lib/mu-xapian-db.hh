@@ -193,6 +193,16 @@ public:
 	const std::string& path() const;
 
 	/**
+	 * Get a description of the Xapian database
+	 *
+	 * @return description
+	 */
+	const std::string description() const {
+		return db().get_description();
+	}
+
+
+	/**
 	 * Get the number of documents (messages) in the database
 	 *
 	 * @return number
@@ -398,6 +408,27 @@ private:
 
 	DbType db_;
 };
+
+constexpr std::string_view
+format_as(XapianDb::Flavor flavor)
+{
+	switch(flavor) {
+	case XapianDb::Flavor::CreateOverwrite:
+		return "create-overwrite";
+	case XapianDb::Flavor::Open:
+		return "open";
+	case XapianDb::Flavor::ReadOnly:
+		return "read-only";
+	default:
+		return "??";
+	}
+}
+
+static inline std::string
+format_as(const XapianDb& db)
+{
+	return mu_format("{} @ {}", db.description(), db.path());
+}
 
 } // namespace Mu
 
