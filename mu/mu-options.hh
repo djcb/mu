@@ -143,11 +143,12 @@ struct Options {
 		bool		reverse;		/**<  sort in revers order (z->a) */
 		bool		threads;		/**<  show message threads */
 		bool		clearlinks;		/**<  clear linksdir first */
-		std::string	linksdir;		/**< directory for links */
+		std::string	linksdir;		/**<  directory for links */
 		OptSize		summary_len;		/**<  max # of lines for summary */
 		std::string	bookmark;		/**<  use bookmark */
+		bool            analyze;                /**<  analyze query */
 
-		enum struct Format { Plain, Links, Xml, Json, Sexp, XQuery, MQuery, Exec };
+		enum struct Format { Plain, Links, Xml, Json, Sexp, Exec };
 		Format		format;			/**< Output format */
 		std::string	exec;			/**<  cmd to execute on matches */
 		bool		skip_dups;		/**< show only first with msg id */

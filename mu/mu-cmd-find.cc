@@ -33,6 +33,7 @@
 #include "mu-query-match-deciders.hh"
 #include "mu-query.hh"
 #include "mu-bookmarks.hh"
+#include "mu-query-parser.hh"
 #include "message/mu-message.hh"
 
 #include "utils/mu-option.hh"
@@ -61,12 +62,30 @@ using OutputFunc = std::function<Result<void>(const Option<Message>& msg, const 
 using Format = Options::Find::Format;
 
 static Result<void>
-print_internal(const Store&       store,
-	       const std::string& expr,
-	       bool           xapian,
-	       bool           warn)
+analyze_query_expr(const Store& store, const std::string& expr, const Options& opts)
 {
-	mu_println("{}", store.parse_query(expr, xapian));
+	auto print_item=[&](auto&&title, auto&&val) {
+		const auto blue{opts.nocolor  ? "" : MU_COLOR_BLUE};
+		const auto green{opts.nocolor ? "" : MU_COLOR_GREEN};
+		const auto reset{opts.nocolor ? "" : MU_COLOR_DEFAULT};
+		mu_println("* {}{}{}:\n  {}{}{}", blue, title, reset, green, val, reset);
+	};
+
+	print_item("query", expr);
+
+	const auto pq{parse_query(expr, false/*don't expand*/).to_string()};
+	const auto pqx{parse_query(expr, true/*do expand*/).to_string()};
+
+	print_item("parsed query", pq);
+	if (pq != pqx)
+		print_item("parsed query (expanded)", pqx);
+
+	auto xq{make_xapian_query(store, expr)};
+	if (!xq)
+		return Err(std::move(xq.error()));
+
+	print_item("Xapian query", xq->get_description());
+
 	return Ok();
 }
 
@@ -473,7 +492,7 @@ output_query_results(const QueryResults& qres, const Options& opts)
 }
 
 static Result<void>
-process_query(const Store& store, const std::string& expr, const Options& opts)
+process_store_query(const Store& store, const std::string& expr, const Options& opts)
 {
 	auto qres{run_query(store, expr, opts)};
 	if (!qres)
@@ -492,15 +511,11 @@ Mu::mu_cmd_find(const Store& store, const Options& opts)
 	if (!expr)
 		return Err(expr.error());
 
-	if (opts.find.format == Format::XQuery)
-		return print_internal(store, *expr, true, false);
-	else if (opts.find.format == Format::MQuery)
-		return print_internal(store, *expr, false, opts.verbose);
+	if (opts.find.analyze)
+		return analyze_query_expr(store, *expr, opts);
 	else
-		return process_query(store, *expr, opts);
+		return process_store_query(store, *expr, opts);
 }
-
-
 
 
 

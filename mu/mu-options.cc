@@ -337,12 +337,6 @@ sub_find(CLI::App& sub, Options& opts)
 			{ Format::Json,
 			  {"json", "JSON"}
 			},
-			{ Format::XQuery,
-			  {"xquery", "Show Xapian query (for debugging)"}
-			},
-			{ Format::MQuery,
-			  {"mquery", "Show mu query for (for debugging)"}
-			},
 		}};
 
 	sub.add_flag("--threads,-t", opts.find.threads,
@@ -351,6 +345,8 @@ sub_find(CLI::App& sub, Options& opts)
 		     "Show only one of messages with same message-id");
 	sub.add_flag("--include-related,-r", opts.find.include_related,
 		     "Include related messages in results");
+	sub.add_flag("--analyze,-a", opts.find.analyze,
+		     "Analyze the query");
 
 	const auto fhelp = options_help(FormatInfos, Format::Plain);
 	const auto fmap = options_map(FormatInfos);

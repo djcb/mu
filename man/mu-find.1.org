@@ -119,7 +119,7 @@ entries are displayed.
 ** --summary-len=<number>
 If > 0, use that number of lines of the message to provide a summary.
 
-** --format=<plain|links|xquery|xml|sexp>
+** --format=<plain|links|xml|sexp>
 
 output results in the specified format:
 
@@ -129,9 +129,7 @@ output results in the specified format:
   information).
 - *xml* formats the search results as XML.
 - *sexp* formats the search results as an s-expression as used in Lisp programming
-  environments.
-- *xquery* shows the Xapian query corresponding to your search terms. This is
-  meant for for debugging purposes.
+  environments
 
 ** --linksdir=<dir> and -c, --clearlinks
 when using ~-format=links~, output the results as a maildir with symbolic links to
@@ -214,6 +212,14 @@ not this may not really be the same message, if the message-id was copied.
 
 The algorithm used for determining the threads is based on Jamie Zawinksi's
 description: http://www.jwz.org/doc/threading.html
+
+** -a,--analyze
+instead of executing the query, analyze it by show the parse-tree s-expression
+and a stringified version of the Xapian query. This can help users to determine
+how ~mu~ interprets some query.
+
+The output of this command are differ between versions, but should be helpful
+nevertheless.
 
 #+include: "muhome.inc" :minlevel 2
 
