@@ -19,42 +19,30 @@
 #
 test('test-maildir',
      executable('test-maildir',
-		'test-mu-maildir.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep]))
+                'test-mu-maildir.cc',
+                install: false,
+                dependencies: [glib_dep, lib_mu_dep]))
 test('test-msg',
      executable('test-msg',
-		'test-mu-msg.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep]))
+                'test-mu-msg.cc',
+                install: false,
+                dependencies: [glib_dep, lib_mu_dep]))
 test('test-store',
      executable('test-store',
-		'test-mu-store.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep]))
+                'test-mu-store.cc',
+                install: false,
+                dependencies: [glib_dep, lib_mu_dep]))
 test('test-query',
      executable('test-query',
-		'test-query.cc',
-		install: false,
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
-
-test('test-tokenizer',
-     executable('test-tokenizer',
-		'test-tokenizer.cc',
-		install: false,
-		dependencies: [glib_dep, lib_mu_dep]))
-
-test('test-parser',
-     executable('test-parser',
-		'test-parser.cc',
-		install: false,
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
+                'test-query.cc',
+                install: false,
+                dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
 
 test('test-store-query',
      executable('test-store-query',
-		'test-mu-store-query.cc',
-		install: false,
-		dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
+                'test-mu-store-query.cc',
+                install: false,
+                dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
 #
 # benchmarks
 #

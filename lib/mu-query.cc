@@ -32,15 +32,17 @@
 #include "mu-query-results.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query-threads.hh"
-#include <mu-xapian.hh>
 #include "mu-xapian-db.hh"
+
+#include "mu-query-parser.hh"
 
 using namespace Mu;
 
 struct Query::Private {
-	Private(const Store& store) : store_{store}, parser_{store_} {}
-	// New
-	// bool calculate_threads (Xapian::Enquire& enq, size maxnum);
+	Private(const Store& store) :
+		store_{store},
+		parser_flags_{any_of(store_.message_options() & Message::Options::SupportNgrams) ?
+		ParserFlags::SupportNgrams : ParserFlags::None} {}
 
 	Xapian::Enquire make_enquire(const std::string& expr, Field::Id sortfield_id,
 				     QueryFlags qflags) const;
@@ -61,7 +63,7 @@ struct Query::Private {
 				 Field::Id sortfield_id, QueryFlags qflags,
 				 size_t maxnum) const;
 	const Store& store_;
-	const Parser parser_;
+	const ParserFlags parser_flags_;
 };
 
 Query::Query(const Store& store) : priv_{std::make_unique<Private>(store)} {}
@@ -79,22 +81,27 @@ sort_enquire(Xapian::Enquire& enq, Field::Id sortfield_id, QueryFlags qflags)
 	return enq;
 }
 
+static Xapian::Query
+make_query(const Store& store, const std::string& expr, ParserFlags parser_flags)
+{
+	if (expr.empty() || expr == R"("")")
+		return Xapian::Query::MatchAll;
+	else {
+		if (auto&& q{make_xapian_query(store, expr, parser_flags)}; !q) {
+			mu_warning("error in query '{}': {}", expr, q.error().what());
+			return Xapian::Query::MatchNothing;
+		} else
+			return q.value();
+	}
+}
+
 Xapian::Enquire
 Query::Private::make_enquire(const std::string& expr,
 			     Field::Id		sortfield_id,
 			     QueryFlags         qflags) const
 {
 	auto enq{store_.xapian_db().enquire()};
-	if (expr.empty() || expr == R"("")")
-		enq.set_query(Xapian::Query::MatchAll);
-	else {
-		WarningVec warns;
-		const auto tree{parser_.parse(expr, warns)};
-		for (auto&& w : warns)
-			mu_warning("query warning: {}", to_string(w));
-		enq.set_query(xapian_query(tree));
-	}
-
+	enq.set_query(make_query(store_, expr, parser_flags_));
 	sort_enquire(enq, sortfield_id, qflags);
 
 	return enq;
@@ -122,8 +129,7 @@ Query::Private::make_related_enquire(const StringSet& thread_ids,
 
 struct ThreadKeyMaker : public Xapian::KeyMaker {
 	ThreadKeyMaker(const QueryMatches& matches) : match_info_(matches) {}
-	std::string operator()(const Xapian::Document& doc) const override
-	{
+	std::string operator()(const Xapian::Document& doc) const override {
 		const auto it{match_info_.find(doc.get_docid())};
 		return (it == match_info_.end()) ? "" : it->second.thread_path;
 	}
@@ -288,14 +294,10 @@ Query::count(const std::string& expr) const
 std::string
 Query::parse(const std::string& expr, bool xapian) const
 {
-	WarningVec warns;
-	const auto tree{priv_->parser_.parse(expr, warns)};
-	for (auto&& w : warns)
-		mu_warning("query warning: {}", to_string(w));
-
 	if (xapian)
-		return xapian_query(tree).get_description();
+		return make_query(priv_->store_, expr,
+				  priv_->parser_flags_).get_description();
 	else
-		return to_string(tree);
+		return parse_query(expr).to_string();
 }
 /* LCOV_EXCL_STOP*/
