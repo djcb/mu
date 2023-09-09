@@ -45,9 +45,10 @@
 using namespace Mu;
 
 struct Message::Private {
-	Private(Message::Options options): opts{options} {}
+	Private(Message::Options options):
+		opts{options}, doc{doc_opts(opts)} {}
 	Private(Message::Options options, Xapian::Document&& xdoc):
-		opts{options}, doc{std::move(xdoc)} {}
+		opts{options}, doc{std::move(xdoc), doc_opts(opts)} {}
 
 	Message::Options                opts;
 	Document			doc;
@@ -70,6 +71,13 @@ struct Message::Private {
 	Option<std::string> embedded;
 
 	Option<std::string> language; /* body ISO language code */
+
+private:
+	Document::Options doc_opts(Message::Options mopts) {
+		return any_of(opts & Message::Options::SupportNgrams) ?
+			Document::Options::SupportNgrams :
+			Document::Options::None;
+	}
 };
 
 
@@ -176,6 +184,11 @@ Message::document() const
 	return priv_->doc;
 }
 
+Message::Options
+Message::options() const
+{
+	return priv_->opts;
+}
 
 unsigned
 Message::docid() const

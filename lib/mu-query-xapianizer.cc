@@ -32,7 +32,10 @@
 
 using namespace Mu;
 
-
+// backward compat
+#ifndef HAVE_XAPIAN_FLAG_NGRAMS
+#define FLAG_NGRAMS FLAG_CJK_NGRAM
+#endif /*HAVE_XAPIAN_FLAG_NGRAMS*/
 
 /**
  * Expand terms for scripts without explicit word-breaks (e.g.
@@ -42,23 +45,13 @@ using namespace Mu;
 static Result<Xapian::Query>
 ngram_expand(const Field& field, const std::string& str)
 {
-	mu_println("ng: '{}'", str);
-
 	Xapian::QueryParser qp;
 	const auto pfx{std::string(1U, field.xapian_prefix())};
 
 	qp.set_default_op(Xapian::Query::OP_OR);
 
-	return qp.parse_query(
-		str,
-#if HAVE_XAPIAN_FLAG_NGRAMS
-		Xapian::QueryParser::FLAG_NGRAMS,
-#else
-		Xapian::QueryParser::FLAG_CJK_NGRAM,
-#endif /*HAVE_XAPIAN_FLAG_NGRAMS*/
-		pfx);
+	return qp.parse_query(str, Xapian::QueryParser::FLAG_NGRAMS, pfx);
 }
-
 
 
 static Option<Sexp>
@@ -259,11 +252,10 @@ parse_field_matcher(const Store& store, const Field& field,
 }
 
 
-static Result<Xapian::Query>
-parse_basic(const Field& field, Sexp&& vals, Mu::ParserFlags flags)
+static Result<Xapian::Query> parse_basic(const Field &field, Sexp &&vals,
+					 Mu::ParserFlags flags)
 {
-	static auto ngrams = any_of(flags & ParserFlags::SupportNgrams);
-
+	auto ngrams = any_of(flags & ParserFlags::SupportNgrams);
 	if (!vals.stringp())
 		return Err(Error::Code::InvalidArgument, "expected string");
 
@@ -321,7 +313,6 @@ parse(const Store& store, Sexp&& s, Mu::ParserFlags flags)
 				   "expected field-value or field-matcher");
 
 		auto&& matcher{rest->front()};
-
 		// field-value: (field "value"); ensure "value" is there
 		if (matcher.stringp())
 			return parse_basic(*field, std::move(matcher), flags);
@@ -468,14 +459,7 @@ main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-
 	Xapian::QueryParser qp;
-	// mu_println("{}", qp.parse_query("スポンサーシップ募集").get_description());
-	// mu_println("{}", qp.parse_query("スポンサーシップ募集", Xapian::QueryParser::FLAG_NGRAMS).get_description());
-
-	// mu_println("{}", qp.parse_query("hello world").get_description());
-	// mu_println("{}", qp.parse_query("hello world", Xapian::QueryParser::FLAG_NGRAMS).get_description());
-
 	g_test_add_func("/query-parser/xapianizer", test_xapian);
 
 	return g_test_run();

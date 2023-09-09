@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,6 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include "config.h"
 
 #include "mu-document.hh"
 #include "mu-message.hh"
@@ -31,8 +32,13 @@
 #include <string>
 #include <utils/mu-utils.hh>
 
-
 using namespace Mu;
+
+// backward compat
+#ifndef HAVE_XAPIAN_FLAG_NGRAMS
+#define FLAG_NGRAMS FLAG_CJK_NGRAM
+#endif /*HAVE_XAPIAN_FLAG_NGRAMS*/
+
 
 const Xapian::Document&
 Document::xapian_document() const
@@ -58,16 +64,29 @@ Document::put_prop(const Field& field, SexpType&& val)
 		 std::forward<SexpType>(val));
 }
 
+static Xapian::TermGenerator
+make_term_generator(Xapian::Document& doc, Document::Options opts)
+{
+	Xapian::TermGenerator termgen;
+
+	if (any_of(opts & Document::Options::SupportNgrams))
+		termgen.set_flags(Xapian::TermGenerator::FLAG_NGRAMS);
+
+	termgen.set_document(doc);
+
+	return termgen;
+}
+
 static void
-add_search_term(Xapian::Document& doc, const Field& field, const std::string& val)
+add_search_term(Xapian::Document& doc, const Field& field, const std::string& val,
+		Document::Options opts)
 {
 	if (field.is_normal_term()) {
 		doc.add_term(field.xapian_term(val));
 	} else if (field.is_boolean_term()) {
 		doc.add_boolean_term(field.xapian_term(val));
 	} else if (field.is_indexable_term()) {
-		Xapian::TermGenerator termgen;
-		termgen.set_document(doc);
+		auto&& termgen{make_term_generator(doc, opts)};
 		termgen.index_text(utf8_flatten(val), 1, field.xapian_term());
 		 /* also add as 'normal' term, so some queries where the indexer
 		  * eats special chars also match */
@@ -88,7 +107,7 @@ Document::add(Field::Id id, const std::string& val)
 		xdoc_.add_value(field.value_no(), val);
 
 	if (field.is_searchable())
-		add_search_term(xdoc_, field, val);
+		add_search_term(xdoc_, field, val, options_);
 
 	if (field.include_in_sexp())
 		put_prop(field, val);
@@ -107,7 +126,7 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 	if (field.is_searchable())
 		std::for_each(vals.begin(), vals.end(),
 			      [&](const auto& val) {
-				      add_search_term(xdoc_, field, val); });
+				      add_search_term(xdoc_, field, val, options_); });
 
 	if (field.include_in_sexp()) {
 		Sexp elms{};
@@ -149,9 +168,7 @@ Document::add(Field::Id id, const Contacts& contacts)
 	std::vector<std::string> cvec;
 
 	const std::string sepa2(1, SepaChar2);
-
-	Xapian::TermGenerator termgen;
-	termgen.set_document(xdoc_);
+	auto&& termgen{make_term_generator(xdoc_, options_)};
 
 	for (auto&& contact: contacts) {
 

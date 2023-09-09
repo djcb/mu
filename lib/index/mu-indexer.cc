@@ -87,10 +87,11 @@ struct Indexer::Private {
 	      was_empty_{store.empty()} {
 
 		mu_message("created indexer for {} -> "
-			   "{} (batch-size: {}; was-empty: {})",
+			   "{} (batch-size: {}; was-empty: {}; ngrams: {})",
 			   store.root_maildir(), store.path(),
 			   store.config().get<Mu::Config::Id::BatchSize>(),
-			   was_empty_);
+			   was_empty_,
+			   store.config().get<Mu::Config::Id::SupportNgrams>());
 	}
 
 	~Private() {
@@ -238,7 +239,7 @@ Indexer::Private::add_message(const std::string& path)
 	 *
 	 *	std::unique_lock lock{w_lock_};
 	 */
-	auto msg{Message::make_from_path(path)};
+	auto msg{Message::make_from_path(path, store_.message_options())};
 	if (!msg) {
 		mu_warning("failed to create message from {}: {}", path, msg.error().what());
 		return false;

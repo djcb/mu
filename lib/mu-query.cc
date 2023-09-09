@@ -263,10 +263,13 @@ Query::run(const std::string& expr, Field::Id sortfield_id,
 	g_return_val_if_fail(none_of(qflags & QueryFlags::Leader),
 			     Err(Error::Code::InvalidArgument, "cannot pass Leader flag"));
 
-	StopWatch sw{mu_format(
-	    "ran query '{}'; related: {}; threads: {}; max-size: {}", expr,
-	    any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
-	    any_of(qflags & QueryFlags::Threading) ? "yes" : "no", maxnum)};
+	StopWatch sw{
+		mu_format("query: '{}'; (related:{}; threads:{}; ngrams:{}; max-size:{})",
+			  expr,
+			  any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
+			  any_of(qflags & QueryFlags::Threading) ? "yes" : "no",
+			  any_of(priv_->parser_flags_ & ParserFlags::SupportNgrams) ? "yes" : "no",
+			  maxnum == 0 ? std::string{"∞"} : std::to_string(maxnum))};
 
 	return xapian_try_result([&]{
 		if (auto&& res = priv_->run(expr, sortfield_id, qflags, maxnum); res)

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -49,8 +49,10 @@ public:
 		Decrypt		  = 1 << 0,	/**< Attempt to decrypt */
 		RetrieveKeys	  = 1 << 1,	/**< Auto-retrieve crypto keys (implies network
 						   * access) */
-		AllowRelativePath = 1 << 2,	/**< Allow relateive paths for filename
+		AllowRelativePath = 1 << 2,	/**< Allow relative paths for filename
 						   * in make_from_path */
+		SupportNgrams     = 1 << 3,     /**< Support ngrams, as used in
+						 * CJK and other languages. */
 	};
 
 	/**
@@ -59,7 +61,6 @@ public:
 	 * @param some other message
 	 */
 	Message(Message&& other) noexcept;
-
 
 	/**
 	 * operator=
@@ -145,6 +146,14 @@ public:
 	 * @return document
 	 */
 	const Document& document() const;
+
+
+	/**
+	 * The message options for this message
+	 *
+	 * @return message options
+	 */
+	Options options() const;
 
 
 	/**

@@ -41,17 +41,27 @@ namespace Mu {
  */
 class Document {
 public:
+	enum struct Options {
+		None	      = 0,
+		SupportNgrams = 1 << 0,     /**< Support ngrams, as used in
+					     * CJK and other languages. */
+	};
+
 	/**
 	 * Construct a message for a new Xapian Document
+	 *
+	 * @param flags behavioral flags
 	 */
-	Document() {}
+	Document(Options opts = Options::None): options_{opts} {}
 
 	/**
 	 * Construct a message document based on an existing Xapian document.
 	 *
 	 * @param doc
+	 * @param flags behavioral flags
 	 */
-	Document(const Xapian::Document& doc): xdoc_{doc} {}
+	Document(const Xapian::Document& doc, Options opts = Options::None):
+		xdoc_{doc}, options_{opts} {}
 
 	/**
 	 * DTOR
@@ -240,11 +250,12 @@ private:
 		return cached_sexp_;
 	}
 
-
 	mutable Xapian::Document	xdoc_;
+	Options				options_;
 	mutable Sexp			cached_sexp_;
 	mutable bool			dirty_sexp_{};	/* xdoc's sexp is outdated */
 };
+MU_ENABLE_BITOPS(Document::Options);
 
 } // namepace Mu
 

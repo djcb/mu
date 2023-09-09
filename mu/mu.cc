@@ -90,6 +90,14 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 int
 main(int argc, char* argv[])
 {
+	/*
+	 * We handle this through explicit options
+	 */
+	g_unsetenv("XAPIAN_CJK_NGRAM");
+
+	/*
+	 * set up locale
+	 */
 	setlocale(LC_ALL, "");
 
 	/*

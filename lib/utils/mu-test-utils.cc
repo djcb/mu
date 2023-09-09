@@ -94,8 +94,11 @@ Mu::mu_test_init(int *argc, char ***argv)
 {
 	const auto tmpdir{test_random_tmpdir()};
 
+	g_unsetenv("XAPIAN_CJK_NGRAM");
 	g_setenv("MU_TEST", "yes", TRUE);
 	g_setenv("XDG_CACHE_HOME", tmpdir.c_str(), TRUE);
+
+	setlocale(LC_ALL, "");
 
 	g_test_init(argc, argv, NULL);
 

@@ -202,6 +202,8 @@ topic_store(const Mu::Store& store, const Options& opts)
 		info.add_row({"ignored-address", c});
 
 	info.add_row({"messages in store", mu_format("{}", store.size())});
+	info.add_row({"support-ngrams",  conf.get<Config::Id::SupportNgrams>() ? "yes" : "no"});
+
 	info.add_row({"last-change", tstamp(store.statistics().last_change)});
 	info.add_row({"last-index",  tstamp(store.statistics().last_index)});
 

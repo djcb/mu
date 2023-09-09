@@ -457,13 +457,16 @@ sub_init(CLI::App& sub, Options& opts)
 		       "Maximum allowed message size in bytes");
 	sub.add_option("--batch-size", opts.init.batch_size,
 		       "Maximum size of database transaction");
+	sub.add_option("--support-ngrams", opts.init.support_ngrams,
+		       "Support CJK n-grams if for querying/indexing");
 	sub.add_flag("--reinit", opts.init.reinit,
 		       "Re-initialize database with current settings")
 		->excludes("--maildir")
 		->excludes("--my-address")
 		->excludes("--ignored-address")
 		->excludes("--max-message-size")
-		->excludes("--batch-size");
+		->excludes("--batch-size")
+		->excludes("--support-ngrams");
 }
 
 static void
