@@ -19,9 +19,9 @@
 
 
 #include "mu-message-part.hh"
-#include "glibconfig.h"
 #include "mu-mime-object.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include <string>
 
 using namespace Mu;
@@ -48,7 +48,7 @@ cook(const std::string& fname, const std::vector<char>& forbidden)
 	std::string clean;
 	clean.reserve(fname.length());
 
-	for (auto& c: to_string_gchar(g_path_get_basename(fname.c_str())))
+	for (auto& c: basename(fname))
 		if (seq_some(forbidden,[&](char fc){return ::iscntrl(c) || c == fc;}))
 			clean += '-';
 		else

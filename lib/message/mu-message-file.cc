@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb.bulk@gmail.com>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb.bulk@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,6 +18,7 @@
 */
 
 #include "mu-message-file.hh"
+#include "utils/mu-utils-file.hh"
 
 using namespace Mu;
 
@@ -73,17 +74,11 @@ Mu::base_message_dir_file(const std::string& path)
 {
 	constexpr auto newdir{"/new"};
 
-	char *dirname{g_path_get_dirname(path.c_str())};
-	bool is_new{!!g_str_has_suffix(dirname, newdir)};
+	const auto dname{dirname(path)};
+	bool is_new{!!g_str_has_suffix(dname.c_str(), newdir)};
 
-	std::string mdir{dirname, ::strlen(dirname) - 4};
-	g_free(dirname);
-
-	char *basename{g_path_get_basename(path.c_str())};
-	std::string bname{basename};
-	g_free(basename);
-
-	return Ok(DirFile{std::move(mdir), std::move(bname), is_new});
+	std::string mdir{dname.substr(0, dname.size() - 4)};
+	return Ok(DirFile{std::move(mdir), basename(path), is_new});
 }
 
 Mu::Result<Mu::Flags>
@@ -114,8 +109,6 @@ Mu::flags_from_path(const std::string& path)
 	/* of course, only _file_ flags are allowed */
 	return Ok(flags_filter(flags.value(), MessageFlagCategory::Mailfile));
 }
-
-
 
 
 #ifdef BUILD_TESTS

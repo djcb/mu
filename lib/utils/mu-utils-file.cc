@@ -151,6 +151,18 @@ Mu::canonicalize_filename(const std::string& path, const std::string& relative_t
 	return str;
 }
 
+std::string
+Mu::basename(const std::string& path)
+{
+	return to_string_gchar(g_path_get_basename(path.c_str()));
+}
+
+std::string
+Mu::dirname(const std::string& path)
+{
+	return to_string_gchar(g_path_get_dirname(path.c_str()));
+}
+
 Result<std::string>
 Mu::make_temp_dir()
 {

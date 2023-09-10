@@ -85,6 +85,28 @@ std::string canonicalize_filename(const std::string& path, const std::string& re
 Result<std::string> expand_path(const std::string& str);
 
 
+/**
+ * Get the basename for path, i.e. without leading directory component,
+ * @see g_path_get_basename
+ *
+ * @param path
+ *
+ * @return the basename
+ */
+std::string basename(const std::string& path);
+
+
+/**
+ * Get the dirname for path, i.e. without leading directory component,
+ * @see g_path_get_dirname
+ *
+ * @param path
+ *
+ * @return the dirname
+ */
+std::string dirname(const std::string& path);
+
+
 /*
  * for OSs with out support for direntry->d_type, like Solaris
  */
