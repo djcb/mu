@@ -251,9 +251,8 @@ parse_field_matcher(const Store& store, const Field& field,
 		   field.name, match_sym, args.to_string());
 }
 
-
-static Result<Xapian::Query> parse_basic(const Field &field, Sexp &&vals,
-					 Mu::ParserFlags flags)
+static Result<Xapian::Query>
+parse_basic(const Field &field, Sexp &&vals, Mu::ParserFlags flags)
 {
 	auto ngrams = any_of(flags & ParserFlags::SupportNgrams);
 	if (!vals.stringp())
@@ -334,7 +333,7 @@ parse(const Store& store, Sexp&& s, Mu::ParserFlags flags)
 		   "unexpected sexp {}", s.to_string());
 }
 
-
+/* LCOV_EXCL_START */
 // parse the way Xapian's internal parser does it; for testing.
 static Xapian::Query
 xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
@@ -359,23 +358,17 @@ xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
 			xqp.add_prefix(name, prefix);
 	});
 
-	const auto xflags = std::invoke([&]() {
-		unsigned f = Xapian::QueryParser::FLAG_PHRASE |
-			Xapian::QueryParser::FLAG_BOOLEAN |
-			Xapian::QueryParser::FLAG_WILDCARD;
-		if (any_of(flags & ParserFlags::SupportNgrams)) {
-#if HAVE_XAPIAN_FLAG_NGRAMS
-			f |= Xapian::QueryParser::FLAG_NGRAMS;
-#else
-			f |= Xapian::QueryParser::FLAG_CJK_NGRAM;
-#endif
-		}
-		return f;
-	});
+	auto xflags = Xapian::QueryParser::FLAG_PHRASE |
+		Xapian::QueryParser::FLAG_BOOLEAN |
+		Xapian::QueryParser::FLAG_WILDCARD;
+
+	if (any_of(flags & ParserFlags::SupportNgrams))
+		xflags |= Xapian::QueryParser::FLAG_NGRAMS;
 
 	xqp.set_default_op(Xapian::Query::OP_AND);
 	return xqp.parse_query(expr, xflags);
 }
+/* LCOV_EXCL_STOP */
 
 Result<Xapian::Query>
 Mu::make_xapian_query(const Store& store, const std::string& expr, Mu::ParserFlags flags) noexcept
@@ -436,18 +429,25 @@ test_xapian()
 	auto&& store{unwrap(Store::make_new(dbpath, join_paths(testhome, "test-maildir")))};
 
 	std::vector<TestCase> cases = {
+
 		TestCase{R"(i:87h766tzzz.fsf@gnus.org)", R"(Query(I87h766tzzz.fsf@gnus.org))"},
 		TestCase{R"(subject:foo to:bar)", R"(Query((Sfoo AND Tbar)))"},
 		TestCase{R"(subject:"cuux*")", R"(Query(WILDCARD SYNONYM Scuux))"},
 		TestCase{R"(subject:"hello world")", R"(Query((Shello PHRASE 2 Sworld)))"},
 		TestCase{R"(subject:/boo/")", R"(Query())"},
+
+		// ranges.
+		TestCase{R"(size:1..10")", R"(Query(VALUE_RANGE 17 g1 ga))"},
+		TestCase{R"(size:10..1")", R"(Query(VALUE_RANGE 17 g1 ga))"},
+		TestCase{R"(size:10..")",  R"(Query(VALUE_GE 17 ga))"},
+		TestCase{R"(size:..10")",  R"(Query(VALUE_LE 17 ga))"},
+		TestCase{R"(size:10")",    R"(Query(VALUE_RANGE 17 ga ga))"}, // change?
+		TestCase{R"(size:..")",    R"(Query(<alldocuments>))"},
 	};
 
 	for (auto&& test: cases) {
 		auto&& xq{make_xapian_query(store, test.first)};
 		assert_valid_result(xq);
-
-		mu_println("'{}' <=> '{}'", xq->get_description(), test.second);
 		assert_equal(xq->get_description(), test.second);
 	}
 
