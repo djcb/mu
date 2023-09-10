@@ -316,7 +316,8 @@ basify(Element&& element)
 		auto val{str->substr(pos + 1)};
 		if (field == Field::Id::Flags) {
 			if (auto&& finfo{flag_info(val)}; finfo)
-				element.value =  Element::Basic{field->name, std::string{finfo->name}};
+				element.value =  Element::Basic{field->name,
+					std::string{finfo->name}};
 			else
 				Element::Basic{*str};
 		} else if (field == Field::Id::Priority) {
@@ -343,9 +344,12 @@ phrasify(Element&& element)
 	if (!basic)
 		return element;
 
-	auto&& val{basic->value};
-	if (val.find(' ') != std::string::npos)
-		element.value = Element::Phrase{basic->field, val};
+	auto&& field = field_from_name(*basic->field);
+	if (!field || field->is_indexable_term()) {
+		auto&& val{basic->value};
+		if (val.find(' ') != std::string::npos)
+			element.value = Element::Phrase{basic->field, val};
+	}
 
 	return element;
 }
@@ -521,10 +525,13 @@ static void
 test_processor()
 {
 	std::vector<TestCase> cases = {
+		// basics
 		TestCase{R"(hello world)", R"(((_ "hello") (_ "world")))"},
 		TestCase{R"("hello world")", R"(((_ (phrase "hello world"))))"},
 		TestCase{R"(subject:"hello world")", R"(((subject (phrase "hello world"))))"},
-		// TODO: add more...
+
+		// maildir must _not_ be phrasified
+		TestCase{R"(maildir:/"hello world")", R"(((maildir "/hello world")))"},
 	};
 
 	for (auto&& test: cases) {
@@ -532,8 +539,6 @@ test_processor()
 		assert_equal(sexp.to_string(), test.second);
 	}
 }
-
-
 
 int
 main(int argc, char* argv[])
