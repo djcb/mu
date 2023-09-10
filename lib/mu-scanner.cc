@@ -68,11 +68,9 @@ struct Scanner::Private {
 	Private(const std::string& root_dir, Scanner::Handler handler, Mode mode):
 		root_dir_{root_dir}, handler_{handler}, mode_{mode} {
 		if (root_dir_.length() > PATH_MAX)
-			throw Mu::Error{Error::Code::InvalidArgument,
-				"path is too long"};
+			throw Mu::Error{Error::Code::InvalidArgument, "path is too long"};
 		if (!handler_)
-			throw Mu::Error{Error::Code::InvalidArgument,
-				"missing handler"};
+			throw Mu::Error{Error::Code::InvalidArgument, "missing handler"};
 	}
 	~Private() { stop(); }
 
@@ -273,8 +271,8 @@ Scanner::Private::start()
 	running_ = true;
 	mu_debug("starting scan @ {}", root_dir_);
 
-	auto basename{to_string_gchar(g_path_get_basename(root_dir_.c_str()))};
-	const auto is_maildir = basename == "cur" || basename == "new";
+	const auto bname{basename(root_dir_)};
+	const auto is_maildir = bname == "cur" || bname == "new";
 
 	const auto start{std::chrono::steady_clock::now()};
 	process_dir(root_dir_, is_maildir);
@@ -331,7 +329,7 @@ Scanner::is_running() const
 #include "mu-test-utils.hh"
 
 static void
-test_scan_maildir()
+test_scan_maildirs()
 {
 	allow_warnings();
 
@@ -339,7 +337,6 @@ test_scan_maildir()
 	Scanner scanner{
 		MU_TESTMAILDIR,
 		[&](const std::string& fullpath, const struct stat* statbuf, auto&& htype) -> bool {
-			mu_debug("{} {}", fullpath, statbuf->st_size);
 			++count;
 			return true;
 		}};
@@ -351,12 +348,36 @@ test_scan_maildir()
 	g_assert_cmpuint(count,==,23);
 }
 
+static void
+test_count_maildirs()
+{
+	allow_warnings();
+
+	std::vector<std::string> dirs;
+	Scanner scanner{
+		MU_TESTMAILDIR2,
+		[&](const std::string& fullpath, const struct stat* statbuf, auto&& htype) -> bool {
+			dirs.emplace_back(basename(fullpath));
+			return true;
+		}, Scanner::Mode::MaildirsOnly};
+	g_assert_true(scanner.start());
+
+	while (scanner.is_running()) { g_usleep(1000); }
+
+	g_assert_cmpuint(dirs.size(),==,3);
+	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "bar";}) != dirs.end());
+	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "Foo";}) != dirs.end());
+	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "wom_bat";}) != dirs.end());
+}
+
+
 int
 main(int argc, char* argv[])
 try {
 	g_test_init(&argc, &argv, NULL);
 
-	g_test_add_func("/index/scanner/scan-maildir", test_scan_maildir);
+	g_test_add_func("/index/scan-maildirs", test_scan_maildirs);
+	g_test_add_func("/index/count-maildirs", test_count_maildirs);
 
 	return g_test_run();
 
