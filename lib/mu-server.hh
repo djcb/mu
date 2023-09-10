@@ -27,6 +27,8 @@
 #include <utils/mu-utils.hh>
 #include <mu-store.hh>
 
+/* LCOV_EXCL_START */
+
 namespace Mu {
 
 /**
@@ -82,5 +84,6 @@ MU_ENABLE_BITOPS(Server::OutputFlags);
 
 } // namespace Mu
 
+/* LCOV_EXCL_STOP */
 
 #endif /* MU_SERVER_HH__ */

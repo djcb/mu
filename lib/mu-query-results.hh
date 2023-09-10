@@ -109,6 +109,7 @@ QueryMatch::has_flag(QueryMatch::Flags flag) const
 	return any_of(flags & flag);
 }
 
+/* LCOV_EXCL_START */
 static inline std::ostream&
 operator<<(std::ostream& os, QueryMatch::Flags mflags)
 {
@@ -140,8 +141,6 @@ operator<<(std::ostream& os, QueryMatch::Flags mflags)
 	return os;
 }
 
-using QueryMatches = std::unordered_map<Xapian::docid, QueryMatch>;
-
 inline std::ostream&
 operator<<(std::ostream& os, const QueryMatch& qmatch)
 {
@@ -151,6 +150,10 @@ operator<<(std::ostream& os, const QueryMatch& qmatch)
 
 	return os;
 }
+/* LCOV_EXCL_STOP*/
+
+using QueryMatches = std::unordered_map<Xapian::docid, QueryMatch>;
+
 
 ///
 /// This is a view over the Xapian::MSet, which can optionally filter unreadable

@@ -107,6 +107,7 @@ struct Container {
 using Containers   = Container::Containers;
 using ContainerVec = Container::ContainerVec;
 
+/* LCOV_EXCL_START */
 static std::ostream&
 operator<<(std::ostream& os, const Container& container)
 {
@@ -125,6 +126,7 @@ operator<<(std::ostream& os, const Container& container)
 
 	return os;
 }
+/* LCOV_EXCL_STOP */
 
 using IdTable  = std::unordered_map<std::string, Container>;
 using DupTable = std::multimap<std::string, Container>;
@@ -534,6 +536,7 @@ sort_siblings(IdTable& id_table, bool descending)
 	update_containers(root_vec, descending, id_table.size());
 }
 
+/* LCOV_EXCL_START */
 static std::ostream&
 operator<<(std::ostream& os, const IdTable& id_table)
 {
@@ -559,6 +562,7 @@ operator<<(std::ostream& os, const IdTable& id_table)
 	}
 	return os;
 }
+/* LCOV_EXCL_STOP */
 
 template <typename Results>
 static void

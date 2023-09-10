@@ -50,6 +50,8 @@
 
 using namespace Mu;
 
+/* LCOV_EXCL_START */
+
 /// output stream to _either_ a file or to a stringstream
 struct OutputStream {
 	/**
@@ -1160,3 +1162,5 @@ Server::invoke(const std::string& expr) noexcept
 {
 	return priv_->invoke(expr);
 }
+
+/* LCOV_EXCL_STOP */
