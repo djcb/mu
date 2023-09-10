@@ -17,22 +17,24 @@
 **
 */
 
-#ifndef __MU_STORE_HH__
-#define __MU_STORE_HH__
+#ifndef MU_STORE_HH__
+#define MU_STORE_HH__
 
 #include <string>
 #include <vector>
 #include <mutex>
 #include <ctime>
+#include <memory>
+
+#include <xapian.h>
 
 #include "mu-contacts-cache.hh"
 #include "mu-xapian-db.hh"
 #include "mu-config.hh"
-#include <xapian.h>
+#include "mu-indexer.hh"
+#include "mu-query-results.hh"
 
 #include <utils/mu-utils.hh>
-#include <index/mu-indexer.hh>
-#include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
 
@@ -476,4 +478,4 @@ format_as(const Store& store)
 
 } // namespace Mu
 
-#endif /* __MU_STORE_HH__ */
+#endif /* MU_STORE_HH__ */

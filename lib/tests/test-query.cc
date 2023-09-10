@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,7 +27,6 @@
 
 #include "mu-store.hh"
 #include "mu-query.hh"
-#include "index/mu-indexer.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-test-utils.hh"

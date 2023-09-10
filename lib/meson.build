@@ -17,26 +17,31 @@
 
 subdir('utils')
 subdir('message')
-subdir('index')
 
 lib_mu=static_library(
   'mu',
   [
-    'mu-bookmarks.cc',
+    # db
     'mu-config.cc',
     'mu-contacts-cache.cc',
-    'mu-maildir.cc',
-    'mu-query-match-deciders.cc',
-    'mu-query-threads.cc',
-    'mu-query.cc',
-    'mu-script.cc',
-    'mu-server.cc',
     'mu-store.cc',
     'mu-xapian-db.cc',
-    # query-parser
-    'mu-query-processor.cc',
+    # querying
+    'mu-bookmarks.cc',
+    'mu-query-match-deciders.cc',
     'mu-query-parser.cc',
-    'mu-query-xapianizer.cc'
+    'mu-query-processor.cc',
+    'mu-query-threads.cc',
+    'mu-query-xapianizer.cc',
+    'mu-query.cc',
+    # indexing
+    'mu-indexer.cc',
+    'mu-scanner.cc',
+    # mu4e
+    'mu-server.cc',
+    # misc
+    'mu-maildir.cc',
+    'mu-script.cc',
   ],
   dependencies: [
     glib_dep,
@@ -46,10 +51,8 @@ lib_mu=static_library(
     guile_dep,
     config_h_dep,
     lib_mu_utils_dep,
-    lib_mu_message_dep,
-    lib_mu_index_dep],
+    lib_mu_message_dep],
   install: false)
-
 
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
@@ -58,8 +61,9 @@ lib_mu_dep = declare_dependency(
     include_directories(['.', '..']))
 
 #
-# query parser dev helpers
+# dev helpers
 #
+
 process_query = executable('process-query', [ 'mu-query-processor.cc'],
   install: false,
   cpp_args: ['-DBUILD_PROCESS_QUERY'],
@@ -79,6 +83,12 @@ xapian_query = executable('xapianize-query', [ 'mu-query-xapianizer.cc' ],
   install: false,
   cpp_args: ['-DBUILD_XAPIANIZE_QUERY'],
   dependencies: [glib_dep, lib_mu_dep])
+
+list_maildirs = executable('list-maildirs', 'mu-scanner.cc',
+           install: false,
+           cpp_args: ['-DBUILD_LIST_MAILDIRS'],
+           dependencies: [glib_dep, config_h_dep,
+                               lib_mu_utils_dep])
 
 #
 # unit tests
@@ -124,5 +134,13 @@ test('test-query-xapianizer',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [lib_mu_dep]))
+
+
+test('test-scanner',
+     executable('test-scanner', 'mu-scanner.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, config_h_dep,
+                               lib_mu_utils_dep]))
 
 subdir('tests')

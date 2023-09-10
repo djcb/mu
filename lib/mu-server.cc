@@ -18,9 +18,9 @@
 */
 
 #include "config.h"
+#include "mu-server.hh"
 
 #include "message/mu-message.hh"
-#include "mu-server.hh"
 
 #include <fstream>
 #include <sstream>
@@ -39,7 +39,6 @@
 
 #include "mu-maildir.hh"
 #include "mu-query.hh"
-#include "index/mu-indexer.hh"
 #include "mu-store.hh"
 
 #include "utils/mu-utils.hh"

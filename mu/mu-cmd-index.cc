@@ -30,7 +30,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "index/mu-indexer.hh"
 #include "mu-store.hh"
 
 using namespace Mu;

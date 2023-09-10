@@ -18,28 +18,23 @@
 */
 
 #include "config.h"
+#include "mu-store.hh"
 
 #include <chrono>
-#include <memory>
 #include <mutex>
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
-#include <string>
 #include <unordered_map>
 #include <atomic>
 #include <type_traits>
 #include <iostream>
 #include <cstring>
 
-#include <vector>
-#include <xapian.h>
-
 #include "mu-maildir.hh"
-#include "mu-store.hh"
 #include "mu-query.hh"
 #include "mu-xapian-db.hh"
-#include "index/mu-scanner.hh"
+#include "mu-scanner.hh"
 
 #include "utils/mu-error.hh"
 
