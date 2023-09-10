@@ -37,7 +37,7 @@
  *
  * @return true or false
  */
-constexpr bool
+static inline bool
 is_unbroken_script(unsigned p)
 {
 	// Array containing the last value in each range of codepoints which
