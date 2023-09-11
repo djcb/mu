@@ -24,7 +24,6 @@
 #include <variant>
 #include <array>
 #include <type_traits>
-#include <iostream>
 
 #include "utils/mu-option.hh"
 #include <glib.h>
@@ -162,7 +161,7 @@ range(const Field& field, Sexp&& s)
 			   "unsupported range field {}", field.name);
 
 	if (r0->empty() && r1->empty())
-		return Xapian::Query::MatchAll;
+		return Xapian::Query::MatchNothing; // empty range matches nothing.
 	else if (r0->empty() && !r1->empty())
 		return Xapian::Query(Xapian::Query::OP_VALUE_LE,
 				     field.value_no(), *r1);
@@ -428,6 +427,21 @@ test_xapian()
 	auto&& dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
 	auto&& store{unwrap(Store::make_new(dbpath, join_paths(testhome, "test-maildir")))};
 
+	// Xapian internal format (get_description()) is _not_ guaranteed
+	// to be the same between versions
+	auto&& zz{make_xapian_query(store, R"(subject:"hello world")")};
+	assert_valid_result(zz);
+	if (zz->get_description() != R"(Query((Shello PHRASE 2 Sworld)))") {
+		if (mu_test_mu_hacker()) {
+			// in the mu hacker case, we want to be warned if Xapian changed.
+			g_critical("xapian version mismatch");
+			g_assert_true(false);
+		} else {
+			g_test_skip("incompatible xapian descriptions");
+			return;
+		}
+	}
+
 	std::vector<TestCase> cases = {
 
 		TestCase{R"(i:87h766tzzz.fsf@gnus.org)", R"(Query(I87h766tzzz.fsf@gnus.org))"},
@@ -442,7 +456,7 @@ test_xapian()
 		TestCase{R"(size:10..")",  R"(Query(VALUE_GE 17 ga))"},
 		TestCase{R"(size:..10")",  R"(Query(VALUE_LE 17 ga))"},
 		TestCase{R"(size:10")",    R"(Query(VALUE_RANGE 17 ga ga))"}, // change?
-		TestCase{R"(size:..")",    R"(Query(<alldocuments>))"},
+		TestCase{R"(size:..")",    R"(Query())"},
 	};
 
 	for (auto&& test: cases) {
