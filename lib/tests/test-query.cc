@@ -37,29 +37,27 @@ static void
 test_query()
 {
 	allow_warnings();
-	char* tdir;
+	TempDir temp_dir;
 
-	tdir = test_mu_common_get_random_tmpdir();
-	auto store = Store::make_new(tdir, std::string{MU_TESTMAILDIR});
+	auto store = Store::make_new(temp_dir.path(), std::string{MU_TESTMAILDIR});
 	assert_valid_result(store);
-	g_free(tdir);
 
 	auto&& idx{store->indexer()};
-
 	g_assert_true(idx.start(Indexer::Config{}));
 	while (idx.is_running()) {
-		sleep(1);
+		g_usleep(1000);
 	}
 
 	auto dump_matches = [](const QueryResults& res) {
 		size_t n{};
 		for (auto&& item : res) {
-			std::cout << item.query_match() << '\n';
-			if (g_test_verbose())
-				g_debug("%02zu %s %s",
-					++n,
-					item.path().value_or("<none>").c_str(),
-					item.message_id().value_or("<none>").c_str());
+			if (g_test_verbose()) {
+				std::cout << item.query_match() << '\n';
+				mu_debug("{:02d} {} {}",
+					 ++n,
+					 item.path().value_or("<none>"),
+					 item.message_id().value_or("<none>"));
+			}
 		}
 	};
 
@@ -84,8 +82,8 @@ test_query()
 }
 
 int
-main(int argc, char* argv[])
-try {
+main(int argc, char* argv[]) try {
+
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/query", test_query);

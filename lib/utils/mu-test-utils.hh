@@ -28,23 +28,20 @@
 namespace Mu {
 
 /**
- * get a dir name for a random temporary directory to do tests
- *
- * @return a random dir name
- */
-std::string test_random_tmpdir(void);
-
-inline gchar* test_mu_common_get_random_tmpdir() {
-	return g_strdup(test_random_tmpdir().c_str());
-}
-
-/**
  * mu wrapper for g_test_init. Sets environment variable MU_TEST to 1.
  *
  * @param argc
  * @param argv
  */
 void mu_test_init(int *argc, char ***argv);
+
+
+/**
+ * Are we running in a MU_HACKER environment?
+ *
+ * @return true or false
+ */
+bool mu_test_mu_hacker();
 
 /**
  * set the timezone
@@ -61,6 +58,7 @@ const char* set_tz(const char* tz);
  * @return true if the switch succeeds, false otherwise
  */
 bool set_en_us_utf8_locale();
+
 
 /**
  * For unit tests, assert two std::string's are equal.

@@ -34,24 +34,14 @@
 #include "utils/mu-utils-file.hh"
 #include "utils/mu-error.hh"
 
-
 using namespace Mu;
 
-std::string
-Mu::test_random_tmpdir()
+bool
+Mu::mu_test_mu_hacker()
 {
-	auto&& dir = mu_format("{}{}mu-test-{}{}test-{:x}",
-			       g_get_tmp_dir(),
-			       G_DIR_SEPARATOR,
-			       getuid(),
-			       G_DIR_SEPARATOR,
-			       ::random() * getpid() * ::time({}));
-
-	auto res = g_mkdir_with_parents(dir.c_str(), 0700);
-	g_assert(res != -1);
-
-	return dir;
+	return !!g_getenv("MU_HACKER");
 }
+
 
 const char*
 Mu::set_tz(const char* tz)
@@ -92,11 +82,11 @@ black_hole(void)
 void
 Mu::mu_test_init(int *argc, char ***argv)
 {
-	const auto tmpdir{test_random_tmpdir()};
+	TempDir temp_dir;
 
 	g_unsetenv("XAPIAN_CJK_NGRAM");
 	g_setenv("MU_TEST", "yes", TRUE);
-	g_setenv("XDG_CACHE_HOME", tmpdir.c_str(), TRUE);
+	g_setenv("XDG_CACHE_HOME", temp_dir.path().c_str(), TRUE);
 
 	setlocale(LC_ALL, "");
 

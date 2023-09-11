@@ -34,6 +34,7 @@
 #include "mu-query.hh"
 #include "utils/mu-result.hh"
 #include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include "mu-store.hh"
 
 using namespace Mu;
@@ -42,13 +43,10 @@ static std::string DB_PATH1;
 static std::string DB_PATH2;
 
 static std::string
-make_database(const std::string& testdir)
+make_database(const std::string& dbdir, const std::string& testdir)
 {
-	auto&& tmpdir{test_random_tmpdir()};
-
 	/* use the env var rather than `--muhome` */
-
-	g_setenv("MUHOME", tmpdir.c_str(), 1);
+	g_setenv("MUHOME", dbdir.c_str(), 1);
 	const auto cmdline{mu_format(
 			"/bin/sh -c '"
 			"{} --quiet init --maildir={} ; "
@@ -59,8 +57,7 @@ make_database(const std::string& testdir)
 		mu_printerrln("\n{}", cmdline);
 
 	g_assert(g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, NULL));
-	auto xpath = mu_format("{}{}{}",
-			       tmpdir, G_DIR_SEPARATOR, "xapian");
+	auto xpath = join_paths(dbdir, "xapian");
 	/* ensure MUHOME worked */
 	g_assert_cmpuint(::access(xpath.c_str(), F_OK), ==, 0);
 
@@ -104,7 +101,6 @@ run_and_count_matches(const std::string& xpath,
 	g_assert_true(!!qres);
 	assert_no_dups(*qres);
 
-
 	if (g_test_verbose())
 		mu_println("'{}' => {}\n", expr, qres->size());
 
@@ -143,8 +139,7 @@ test_mu_query_01(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -186,8 +181,7 @@ test_mu_query_03(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -213,8 +207,7 @@ test_mu_query_04(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -231,8 +224,7 @@ test_mu_query_logic(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -272,8 +264,7 @@ test_mu_query_accented_chars_02(void)
 			mu_warning("query '{}'; expected {} but got {}",
 				  queries[i].query, queries[i].count, count);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	}
 }
 
@@ -295,8 +286,7 @@ test_mu_query_accented_chars_fraiche(void)
 			mu_println("{}", queries[i].query);
 
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	}
 }
 
@@ -315,8 +305,7 @@ test_mu_query_wildcards(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -338,14 +327,13 @@ test_mu_query_dates_helsinki(void)
 			      {"date:200808110801..now", 7}};
 
 	old_tz = set_tz(hki);
-
-	const auto xpath{make_database(MU_TESTMAILDIR)};
+	TempDir tdir;
+	const auto xpath{make_database(tdir.path(), MU_TESTMAILDIR)};
 	g_assert_false(xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(xpath, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 
 	set_tz(old_tz);
 }
@@ -368,13 +356,13 @@ test_mu_query_dates_sydney(void)
 			      {"date:200808110801..now", 7}};
 	old_tz = set_tz(syd);
 
-	const auto xpath{make_database(MU_TESTMAILDIR)};
+	TempDir tdir;
+	const auto xpath{make_database(tdir.path(), MU_TESTMAILDIR)};
 	g_assert_false(xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(xpath, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	set_tz(old_tz);
 }
 
@@ -399,14 +387,14 @@ test_mu_query_dates_la(void)
 			      {"date:200808110801..now", 6}};
 	old_tz = set_tz(la);
 
-	const auto xpath = make_database(MU_TESTMAILDIR);
+	TempDir tdir;
+	const auto xpath{make_database(tdir.path(), MU_TESTMAILDIR)};
 	g_assert_false(xpath.empty());
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		/* g_print ("%s\n", queries[i].query); */
 		g_assert_cmpuint(run_and_count_matches(xpath, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	}
 
 	set_tz(old_tz);
@@ -427,8 +415,7 @@ test_mu_query_sizes(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -441,8 +428,7 @@ test_mu_query_attach(void)
 		if (g_test_verbose())
 			mu_println("query: {}", queries[i].query);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	}
 }
 
@@ -464,8 +450,7 @@ test_mu_query_msgid(void)
 		if (g_test_verbose())
 			mu_println("query: {}", queries[i].query);
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 	}
 }
 
@@ -488,8 +473,7 @@ test_mu_query_tags(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -504,8 +488,7 @@ test_mu_query_wom_bat(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -537,8 +520,7 @@ test_mu_query_multi_to_cc(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)
 		g_assert_cmpuint(run_and_count_matches(DB_PATH1, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==, queries[i].count);
 }
 
 static void
@@ -554,8 +536,7 @@ test_mu_query_tags_02(void)
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i) {
 		g_assert_cmpuint(run_and_count_matches(DB_PATH2, queries[i].query),
-				 ==,
-				 queries[i].count);
+				 ==,  queries[i].count);
 	}
 }
 
@@ -567,27 +548,27 @@ test_mu_query_tags_02(void)
 static void
 test_mu_query_threads_compilation_error(void)
 {
-	const auto xpath = make_database(MU_TESTMAILDIR);
+	TempDir tdir;
+	const auto xpath = make_database(tdir.path(), MU_TESTMAILDIR);
 
 	g_assert_cmpuint(run_and_count_matches(xpath, "msgid:uwsireh25.fsf@one.dot.net"), ==, 1);
 
 	g_assert_cmpuint(run_and_count_matches(xpath,
 					       "msgid:uwsireh25.fsf@one.dot.net",
-					       QueryFlags::IncludeRelated),
-			 ==,
-			 3);
+					       QueryFlags::IncludeRelated), ==, 3);
 }
 
 int
 main(int argc, char* argv[])
 {
-	int rv;
+	TempDir td1;
+	TempDir td2;
 
 	mu_test_init(&argc, &argv);
-	DB_PATH1 = make_database(MU_TESTMAILDIR);
+	DB_PATH1 = make_database(td1.path(), MU_TESTMAILDIR);
 	g_assert_false(DB_PATH1.empty());
 
-	DB_PATH2 = make_database(MU_TESTMAILDIR2);
+	DB_PATH2 = make_database(td2.path(), MU_TESTMAILDIR2);
 	g_assert_false(DB_PATH2.empty());
 
 	g_test_add_func("/mu-query/test-mu-query-01", test_mu_query_01);
@@ -624,7 +605,5 @@ main(int argc, char* argv[])
 	g_test_add_func("/mu-query/test-mu-query-threads-compilation-error",
 			test_mu_query_threads_compilation_error);
 
-	rv = g_test_run();
-
-	return rv;
+	return g_test_run();
 }

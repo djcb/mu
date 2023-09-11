@@ -28,130 +28,91 @@
 
 #include "utils/mu-test-utils.hh"
 #include "mu-maildir.hh"
+#include "utils/mu-utils.hh"
+#include "utils/mu-utils-file.hh"
 #include "utils/mu-result.hh"
 
 using namespace Mu;
 
 static void
-test_maildir_mkdir_01(void)
+test_maildir_mkdir_01()
 {
-	int          i;
-	gchar *      tmpdir, *mdir, *tmp;
-	const gchar* subs[] = {"tmp", "cur", "new"};
+	TempDir temp_dir;
+	auto mdir = join_paths(temp_dir.path(), "cuux");
+	auto res{maildir_mkdir(mdir, 0755, false/*!noindex*/)};
+	assert_valid_result(res);
 
-	tmpdir = test_mu_common_get_random_tmpdir();
-	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
-
-	g_assert_true(!!maildir_mkdir(mdir, 0755, FALSE));
-
-	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
-		gchar* dir;
-
-		dir = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, subs[i]);
-		g_assert_cmpuint(g_access(dir, R_OK), ==, 0);
-		g_assert_cmpuint(g_access(dir, W_OK), ==, 0);
-		g_free(dir);
+	for (auto sub : {"tmp", "cur", "new"}) {
+		auto subpath = join_paths(mdir, sub);
+		g_assert_cmpuint(g_access(subpath.c_str(), R_OK), ==, 0);
+		g_assert_cmpuint(g_access(subpath.c_str(), W_OK), ==, 0);
 	}
 
-	tmp = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
-	g_assert_cmpuint(g_access(tmp, F_OK), !=, 0);
-
-	g_free(tmp);
-	g_free(tmpdir);
-	g_free(mdir);
+	auto noindex = join_paths(mdir, ".noindex");
+	g_assert_cmpuint(g_access(noindex.c_str(), F_OK), !=, 0);
 }
 
 static void
-test_maildir_mkdir_02(void)
+test_maildir_mkdir_02()
 {
-	int          i;
-	gchar *      tmpdir, *mdir, *tmp;
-	const gchar* subs[] = {"tmp", "cur", "new"};
+	TempDir temp_dir;
+	auto mdir = join_paths(temp_dir.path(), "cuux");
+	auto res{maildir_mkdir(mdir, 0755, true/*noindex*/)};
+	assert_valid_result(res);
 
-	tmpdir = test_mu_common_get_random_tmpdir();
-	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
-
-	g_assert_true(!!maildir_mkdir(mdir, 0755, TRUE));
-
-	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
-		gchar* dir;
-
-		dir = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, subs[i]);
-		g_assert_cmpuint(g_access(dir, R_OK), ==, 0);
-
-		g_assert_cmpuint(g_access(dir, W_OK), ==, 0);
-		g_free(dir);
+	for (auto sub : {"tmp", "cur", "new"}) {
+		auto subpath = join_paths(mdir, sub);
+		g_assert_cmpuint(g_access(subpath.c_str(), R_OK), ==, 0);
+		g_assert_cmpuint(g_access(subpath.c_str(), W_OK), ==, 0);
 	}
 
-	tmp = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
-	g_assert_cmpuint(g_access(tmp, F_OK), ==, 0);
-
-	g_free(tmp);
-	g_free(tmpdir);
-	g_free(mdir);
+	auto noindex = join_paths(mdir, ".noindex");
+	g_assert_cmpuint(g_access(noindex.c_str(), F_OK), ==, 0);
 }
 
 static void
-test_maildir_mkdir_03(void)
+test_maildir_mkdir_03()
 {
-	int          i;
-	gchar *      tmpdir, *mdir, *tmp;
-	const gchar* subs[] = {"tmp", "cur", "new"};
+	TempDir temp_dir;
+	auto mdir = join_paths(temp_dir.path(), "cuux");
 
-	tmpdir = test_mu_common_get_random_tmpdir();
-	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
+	// create part already
+	auto curdir = join_paths(mdir, "cur");
+	g_assert_cmpuint(g_mkdir_with_parents(curdir.c_str(), 0755), ==, 0);
 
-	/* create part of the structure already... */
-	{
-		gchar* dir;
-		dir = g_strdup_printf("%s%ccur", mdir, G_DIR_SEPARATOR);
-		g_assert_cmpuint(g_mkdir_with_parents(dir, 0755), ==, 0);
-		g_free(dir);
+	auto res{maildir_mkdir(mdir, 0755, false/*!noindex*/)};
+	assert_valid_result(res);
+
+	// should still work.
+	for (auto sub : {"tmp", "cur", "new"}) {
+		auto subpath = join_paths(mdir, sub);
+		g_assert_cmpuint(g_access(subpath.c_str(), R_OK), ==, 0);
+		g_assert_cmpuint(g_access(subpath.c_str(), W_OK), ==, 0);
 	}
 
-	/* this should still work */
-	g_assert_true(!!maildir_mkdir(mdir, 0755, FALSE));
-
-	for (i = 0; i != G_N_ELEMENTS(subs); ++i) {
-		gchar* dir;
-
-		dir = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, subs[i]);
-		g_assert_cmpuint(g_access(dir, R_OK), ==, 0);
-		g_assert_cmpuint(g_access(dir, W_OK), ==, 0);
-		g_free(dir);
-	}
-
-	tmp = g_strdup_printf("%s%c%s", mdir, G_DIR_SEPARATOR, ".noindex");
-	g_assert_cmpuint(g_access(tmp, F_OK), !=, 0);
-
-	g_free(tmp);
-	g_free(tmpdir);
-	g_free(mdir);
+	auto noindex = join_paths(mdir, ".noindex");
+	g_assert_cmpuint(g_access(noindex.c_str(), F_OK), !=, 0);
 }
 
+
 static void
-test_maildir_mkdir_04(void)
+test_maildir_mkdir_04()
 {
-	gchar *tmpdir, *mdir;
-
-	tmpdir = test_mu_common_get_random_tmpdir();
-	mdir   = g_strdup_printf("%s%c%s", tmpdir, G_DIR_SEPARATOR, "cuux");
-
-	/* create part of the structure already... */
-	{
-		gchar* dir;
-		g_assert_cmpuint(g_mkdir_with_parents(mdir, 0755), ==, 0);
-		dir = g_strdup_printf("%s%ccur", mdir, G_DIR_SEPARATOR);
-		g_assert_cmpuint(g_mkdir_with_parents(dir, 0000), ==, 0);
-		g_free(dir);
+	if (geteuid() == 0) {
+		g_test_skip("not useful when run as root");
+		return;
 	}
+
+	TempDir temp_dir;
+	auto mdir = join_paths(temp_dir.path(), "cuux");
+	g_assert_cmpuint(g_mkdir_with_parents(mdir.c_str(), 0755), ==, 0);
+
+	auto curdir = join_paths(mdir, "cur");
+	g_assert_cmpuint(g_mkdir_with_parents(curdir.c_str(), 0000), ==, 0);
 
 	/* this should fail now, because cur is not read/writable  */
-	if (geteuid() != 0)
-		g_assert_false(!!maildir_mkdir(mdir, 0755, false));
-
-	g_free(tmpdir);
-	g_free(mdir);
+	auto res = maildir_mkdir(mdir, 0755, false);
+	g_assert_false(!!res);
 }
 
 static gboolean

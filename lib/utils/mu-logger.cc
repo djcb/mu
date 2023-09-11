@@ -189,14 +189,16 @@ Logger::~Logger()
 #include <atomic>
 
 #include "mu-test-utils.hh"
+#include "mu-utils-file.hh"
 
 static void
 test_logger_threads(void)
 {
-	const auto testpath{test_random_tmpdir() + "/test.log"};
+	TempDir temp_dir;
+	const auto testpath{join_paths(temp_dir.path(), "test.log")};
 	mu_message("log-file: {}", testpath);
 
-	auto logger = Logger::make(testpath.c_str(), Logger::Options::File | Logger::Options::Debug);
+	auto logger = Logger::make(testpath, Logger::Options::File | Logger::Options::Debug);
 	assert_valid_result(logger);
 
 	const auto		thread_num = 16;
