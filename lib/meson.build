@@ -27,7 +27,7 @@ lib_mu=static_library(
     'mu-store.cc',
     'mu-xapian-db.cc',
     # querying
-    'mu-bookmarks.cc',
+    'mu-query-macros.cc',
     'mu-query-match-deciders.cc',
     'mu-query-parser.cc',
     'mu-query-processor.cc',
@@ -113,6 +113,13 @@ test('test-config',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-query-macros',
+     executable('test-query-macros',
+                'mu-query-macros.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
 
 test('test-query-processor',
      executable('test-query-processor',

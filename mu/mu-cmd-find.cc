@@ -32,7 +32,7 @@
 #include "mu-maildir.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query.hh"
-#include "mu-bookmarks.hh"
+#include "mu-query-macros.hh"
 #include "mu-query-parser.hh"
 #include "message/mu-message.hh"
 
@@ -129,28 +129,20 @@ exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts
 }
 
 static Result<std::string>
-resolve_bookmark(const Options& opts)
+resolve_bookmark(const Store& store, const Options& opts)
 {
-	const auto bmfile = opts.runtime_path(RuntimePath::Bookmarks);
-	auto bm     = mu_bookmarks_new(bmfile.c_str());
-	if (!bm)
-		return Err(Error::Code::File,
-			   "failed to open bookmarks file '{}'", bmfile);
-
-	const auto bookmark{opts.find.bookmark};
-	const auto val = mu_bookmarks_lookup(bm, bookmark.c_str());
-	if (!val) {
-		mu_bookmarks_destroy(bm);
-		return Err(Error::Code::NoMatches,
-			   "bookmark '{}' not found", bookmark);
-	}
-
-	mu_bookmarks_destroy(bm);
-	return Ok(std::string(val));
+	QueryMacros macros{store.config()};
+	if (auto&& res{macros.load_bookmarks(opts.runtime_path(RuntimePath::Bookmarks))}; !res)
+		return Err(res.error());
+	else if (auto&& bm{macros.find_macro(opts.find.bookmark)}; !bm)
+		return Err(Error::Code::InvalidArgument, "bookmark '{}' not found",
+			   opts.find.bookmark);
+	else
+		return Ok(std::move(*bm));
 }
 
 static Result<std::string>
-get_query(const Options& opts)
+get_query(const Store& store, const Options& opts)
 {
 	if (opts.find.bookmark.empty() && opts.find.query.empty())
 		return Err(Error::Code::InvalidArgument,
@@ -158,7 +150,7 @@ get_query(const Options& opts)
 
 	std::string bookmark;
 	if (!opts.find.bookmark.empty()) {
-		const auto res = resolve_bookmark(opts);
+		const auto res = resolve_bookmark(store, opts);
 		if (!res)
 			return Err(std::move(res.error()));
 		bookmark = res.value() + " ";
@@ -507,7 +499,7 @@ process_store_query(const Store& store, const std::string& expr, const Options& 
 Result<void>
 Mu::mu_cmd_find(const Store& store, const Options& opts)
 {
-	auto expr{get_query(opts)};
+	auto expr{get_query(store, opts)};
 	if (!expr)
 		return Err(expr.error());
 
