@@ -171,7 +171,7 @@ private:
 		if (!listp() || empty() || !cbegin()->symbolp() ||
 		    !plistp(cbegin() + 1, cend()))
 			throw Error(Error::Code::Command,
-				    "expected command, got '%s'", to_string().c_str());
+				    "expected command, got '{}'", to_string());
 	}
 
 
