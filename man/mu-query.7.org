@@ -7,16 +7,17 @@ mu query language -- a language for finding messages in *mu* databases.
 
 * DESCRIPTION
 
-The mu query language is a language used by *mu find* and *mu4e* to find messages in
-*mu*'s Xapian databases. The language is quite similar to Xapian's default
+The mu query language is the language used by *mu find* and *mu4e* to find messages
+in *mu*'s Xapian database. The language is quite similar to Xapian's default
 query-parser, but is an independent implementation that is customized for the
 mu/mu4e use-case.
 
-In this article, we give a structured but informal overview of the query
-language and provide examples.
+Here, we give a structured but informal overview of the query language and
+provide examples. As a companion to this, we recommend the *mu fields* and *mu
+flags* commands to get an up-to-date list of the available fields and flags.
 
-As a companion to this, we recommend the *mu fields* and *mu flags* commands to get
-an up-to-date list of the available fields and flags.
+Furthermore, *mu find* provides the ~--analyze~ option, which shows how *mu*
+interprets your query; see the *ANALYZING QUERIES* section below.
 
 *NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
 quote any characters that would otherwise be interpreted by the shell, such as
@@ -41,15 +42,16 @@ like:
 to:vacation or subject:vacation or body:vacation or ...
 #+end_example
 
-The language is case-insensitive for terms and attempts to 'flatten' any
-diacritics, so =angtrom= matches =Ångström=.
+The language is case-insensitive for terms and attempts to 'flatten' diacritics,
+so =angtrom= matches =Ångström=.
 
 If terms contain whitespace, they need to be quoted:
 #+begin_example
 subject:"hi there"
 #+end_example
 This is a so-called =phrase query=, which means that we match against subjects
-that contain the literal phrase "hi there".
+that contain the literal phrase "hi there". Phrase queries only work for fields
+that are /indexed/, i.e., fields with *index* in the *mu info fields* search column.
 
 Remember that you need to escape those quotes when using this from the
 command-line:
@@ -63,7 +65,7 @@ We can combine terms with logical operators -- binary ones: *and*, *or*, *xor* a
 unary *not*, with the conventional rules for precedence and association. The
 operators are case-insensitive.
 
-You can also group things with *(* and *)*, so you can do things like:
+You can also group things with *(* and *)*, so you can write:
 #+begin_example
 (subject:beethoven or subject:bach) and not body:elvis
 #+end_example
@@ -248,10 +250,10 @@ prio:high
 
 * MAILDIR
 
-The Maildir field describes the directory path starting *after* the Maildir-base
-path, and before the =/cur/= or =/new/= part. So for example, if there's a message
-with the file name =~/Maildir/lists/running/cur/1234.213:2,=, you could find it
-(and all the other messages in the same maildir) with:
+The Maildir field describes the directory path starting *after* the Maildir root
+directory, and before the =/cur/= or =/new/= part. So, for example, if there's a
+message with the file name =~/Maildir/lists/running/cur/1234.213:2,=, you could
+find it (and all the other messages in that same maildir) with:
 #+begin_example
 maildir:/lists/running
 #+end_example
@@ -268,7 +270,8 @@ them, ie.
 maildir:"/Sent Items"
 #+end_example
 
-Note that from the command-line, such queries must be quoted:
+And once again, note that when using the command-line, such queries must be
+quoted:
 #+begin_example
 mu find 'maildir:"/Sent Items"'
 #+end_example
@@ -323,11 +326,14 @@ Find all messages written in Dutch or German with the word 'hallo':
 hallo and (lang:nl or lang:de)
 #+end_example
 
+This is only available if your *mu* has support for this; see *mu info* and check
+for "cld2-support*.
+
 * ANALZYING QUERIES
 
-Despite all the documentation, in some cases it can be non-obvious how ~mu~
-interprets a certain query. For that, you can ask ~mu~ to analyze the query --
-that is, show how ~mu~ interprets the query.
+Despite all the excellent documentation, in some cases it can be non-obvious how
+~mu~ interprets your query. For that, you can ask ~mu~ to analyze the query -- that
+is, show how ~mu~ interprets the query.
 
 This uses the the ~--analyze~ option to *mu find*.
 #+begin_example
@@ -340,8 +346,8 @@ $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
   Query((Swombat AND VALUE_GE 4 n64759341 AND VALUE_LE 17 i7d0))
 #+end_example
 
-The ~parsed query~ is usually the most interesting one to understand what's
-happening.
+The ~parsed query~ is usually the most useful one for understanding how *mu*
+interprets your query.
 
 #+include: "prefooter.inc" :minlevel 1
 
