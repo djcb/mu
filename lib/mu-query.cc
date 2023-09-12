@@ -68,8 +68,6 @@ struct Query::Private {
 
 Query::Query(const Store& store) : priv_{std::make_unique<Private>(store)} {}
 
-Query::Query(Query&& other) = default;
-
 Query::~Query() = default;
 
 static Xapian::Enquire&

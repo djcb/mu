@@ -91,7 +91,6 @@ private:
 	 *
 	 * @param other
 	 */
-	Query(Query&& other);
 
 	struct Private;
 	std::unique_ptr<Private> priv_;
