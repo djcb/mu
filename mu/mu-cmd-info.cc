@@ -23,6 +23,10 @@
 #include <message/mu-message.hh>
 #include <xapian.h>
 #include "utils/mu-utils.hh"
+
+#include <glib.h>
+#include <gmime/gmime.h>
+
 #include <fmt/ostream.h>
 
 #include <thirdparty/tabulate.hpp>
@@ -227,8 +231,14 @@ topic_mu(const Options& opts)
 			"Mu runtime version"});
 	info.add_row({"xapian-version", Xapian::version_string(),
 			"Xapian runtime version"});
+	info.add_row({"gmime-version",
+			mu_format("{}.{}.{}", gmime_major_version, gmime_minor_version,
+				  gmime_micro_version), "GMime runtime version"});
+	info.add_row({"glib-version",
+			mu_format("{}.{}.{}", glib_major_version, glib_minor_version,
+				  glib_micro_version), "GLib runtime version"});
 	info.add_row({"schema-version", mu_format("{}", MU_STORE_SCHEMA_VERSION),
-			"Version of the database schema"});
+			"Version of mu's database schema"});
 
 	info.add_row({"cld2-support",
 #if HAVE_CLD2
