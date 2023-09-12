@@ -61,6 +61,8 @@ test_basic()
 	MemDb db;
 	Config conf_db{db};
 
+	g_assert_false(conf_db.read_only());
+
 	using Id = Config::Id;
 
 	{
@@ -69,7 +71,9 @@ test_basic()
 	}
 
 	{
-		conf_db.set<Id::RootMaildir>("/home/djcb/Maildir");
+		auto res = conf_db.set<Id::RootMaildir>("/home/djcb/Maildir");
+		assert_valid_result(res);
+
 		const auto rmd = conf_db.get<Id::RootMaildir>();
 		assert_equal(rmd, "/home/djcb/Maildir");
 	}

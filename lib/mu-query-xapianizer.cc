@@ -431,6 +431,7 @@ test_xapian()
 	// to be the same between versions
 	auto&& zz{make_xapian_query(store, R"(subject:"hello world")")};
 	assert_valid_result(zz);
+	/* LCOV_EXCL_START*/
 	if (zz->get_description() != R"(Query((Shello PHRASE 2 Sworld)))") {
 		if (mu_test_mu_hacker()) {
 			// in the mu hacker case, we want to be warned if Xapian changed.
@@ -441,6 +442,7 @@ test_xapian()
 			return;
 		}
 	}
+	/* LCOV_EXCL_STOP*/
 
 	std::vector<TestCase> cases = {
 

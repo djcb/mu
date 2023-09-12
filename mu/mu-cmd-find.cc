@@ -558,7 +558,7 @@ search_func(const std::string& expr, size_t expected)
 static void
 test_mu_find_empty_query(void)
 {
-	search("\"\"", 13);
+	search("\"\"", 14);
 }
 
 static void
@@ -601,8 +601,8 @@ static void
 test_mu_find_mime(void)
 {
 	search("mime:image/jpeg", 1);
-	search("mime:text/plain", 13);
-	search("y:text*", 13);
+	search("mime:text/plain", 14);
+	search("y:text*", 14);
 	search("y:image*", 1);
 	search("mime:message/rfc822", 2);
 }

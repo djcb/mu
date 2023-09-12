@@ -143,6 +143,13 @@ test('test-query-xapianizer',
                 dependencies: [lib_mu_dep]))
 
 
+test('test-indexer',
+     executable('test-indexer', 'mu-indexer.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, config_h_dep,
+                               lib_mu_dep]))
+
 test('test-scanner',
      executable('test-scanner', 'mu-scanner.cc',
                 install: false,

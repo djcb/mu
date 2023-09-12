@@ -471,3 +471,87 @@ Indexer::completed() const
 {
 	return priv_->completed_;
 }
+
+
+#if BUILD_TESTS
+#include "mu-test-utils.hh"
+
+static void
+test_index_basic()
+{
+	allow_warnings();
+
+	TempDir tdir;
+	auto store = Store::make_new(tdir.path(), MU_TESTMAILDIR2);
+	assert_valid_result(store);
+	g_assert_true(store->empty());
+
+	Indexer& idx{store->indexer()};
+
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+	g_assert_cmpuint(idx.completed(),==, 0);
+
+	const auto& prog{idx.progress()};
+	g_assert_false(prog.running);
+	g_assert_cmpuint(prog.checked,==, 0);
+	g_assert_cmpuint(prog.updated,==, 0);
+	g_assert_cmpuint(prog.removed,==, 0);
+
+	Indexer::Config conf{};
+	conf.ignore_noupdate = true;
+
+	{
+		const auto start{time({})};
+		g_assert_true(idx.start(conf));
+		while (idx.is_running())
+			g_usleep(10000);
+
+		g_assert_false(idx.is_running());
+		g_assert_true(idx.stop());
+
+		g_assert_cmpuint(idx.completed() - start, <, 5);
+
+		g_assert_false(prog.running);
+		g_assert_cmpuint(prog.checked,==, 14);
+		g_assert_cmpuint(prog.updated,==, 14);
+		g_assert_cmpuint(prog.removed,==, 0);
+
+		g_assert_cmpuint(store->size(),==,14);
+	}
+
+	conf.lazy_check	     = true;
+	conf.max_threads     = 1;
+	conf.ignore_noupdate = false;
+
+	{
+		const auto start{time({})};
+		g_assert_true(idx.start(conf));
+		while (idx.is_running())
+			g_usleep(10000);
+
+		g_assert_false(idx.is_running());
+		g_assert_true(idx.stop());
+
+		g_assert_cmpuint(idx.completed() - start, <, 3);
+
+		g_assert_false(prog.running);
+		g_assert_cmpuint(prog.checked,==, 0);
+		g_assert_cmpuint(prog.updated,==, 0);
+		g_assert_cmpuint(prog.removed,==, 0);
+
+		g_assert_cmpuint(store->size(),==, 14);
+	}
+}
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/index/basic", test_index_basic);
+
+	return g_test_run();
+
+}
+#endif /*BUILD_TESTS*/

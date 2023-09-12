@@ -45,7 +45,7 @@ static Store
 make_test_store(const std::string& test_path, const TestMap& test_map,
 		Option<const Config&> conf={})
 {
-	std::string maildir = test_path + "/Maildir/";
+	const auto maildir{join_paths(test_path, "/Maildir/")};
 	// note the trailing '/'
 	g_test_bug("2513");
 
@@ -819,7 +819,7 @@ html
 
 
 static void
-test_cjk()
+test_ngrams()
 {
 	g_test_bug("2167");
 
@@ -882,9 +882,8 @@ main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-	//_test_add_func("/store/query/cjk", test_cjk);
-
-	g_test_add_func("/store/query/simple", test_simple);
+	g_test_add_func("/store/query/simple",
+			test_simple);
 	g_test_add_func("/store/query/spam-address-components",
 			test_spam_address_components);
 	g_test_add_func("/store/query/dups-related",
@@ -905,9 +904,8 @@ main(int argc, char* argv[])
 			test_related_dup_threaded);
 	g_test_add_func("/store/query/html",
 			test_html);
-
-	g_test_add_func("/store/query/cjk-once-more", test_cjk);
-
+	g_test_add_func("/store/query/ngrams",
+			test_ngrams);
 
 	return g_test_run();
 }

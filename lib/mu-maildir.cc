@@ -161,18 +161,11 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 	 * including a hash of the srcname in the targetname. This helps if
 	 * there are copies of a message (which all have the same basename)
 	 */
-	std::string fulltargetpath;
 	if (unique_names)
-		fulltargetpath = join_paths(targetpath,
-					    in_cur ? "cur" : "new",
-					    mu_format("{:08x}-{}",
-						      g_str_hash(src.c_str()),
-						      srcfile));
+		return join_paths(targetpath, in_cur ? "cur" : "new",
+				  mu_format("{:08x}-{}", g_str_hash(src.c_str()), srcfile));
 	else
-		fulltargetpath = join_paths(targetpath,
-					    in_cur ? "cur" : "new",
-					    srcfile.c_str());
-	return fulltargetpath;
+		return join_paths(targetpath, in_cur ? "cur" : "new", srcfile.c_str());
 }
 
 Result<void>
@@ -251,6 +244,7 @@ Mu::maildir_clear_links(const std::string& path)
 	return Ok();
 }
 
+/* LCOV_EXCL_START*/
 static Mu::Result<void>
 msg_move_verify(const std::string& src, const std::string& dst)
 {
@@ -270,7 +264,11 @@ msg_move_verify(const std::string& src, const std::string& dst)
 
 	return Ok();
 }
+/* LCOV_EXCL_STOP*/
 
+/* LCOV_EXCL_START*/
+// don't use this right now, since it gives as (false alarm)
+// valgrind warning in tests
 /* use GIO to move files; this is slower than rename() so only use
  * this when needed: when moving across filesystems */
 G_GNUC_UNUSED static Mu::Result<void>
@@ -291,6 +289,7 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 	else
 		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
 }
+/* LCOV_EXCL_STOPT*/
 
 /* use mv to move files; this is slower than rename() so only use this when
  * needed: when moving across filesystems */

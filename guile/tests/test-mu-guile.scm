@@ -50,8 +50,8 @@ exec guile -e main -s $0 $@
   (n-results-or-exit "file:custer.*" 1)
   (n-results-or-exit "j:sit*" 1)
   (n-results-or-exit "mime:image/jpeg" 1)
-  (n-results-or-exit "mime:text/plain" 13)
-  (n-results-or-exit "y:text*" 13)
+  (n-results-or-exit "mime:text/plain" 14)
+  (n-results-or-exit "y:text*" 14)
   (n-results-or-exit "y:image*" 1)
   (n-results-or-exit "mime:message/rfc822" 2))
 
@@ -97,8 +97,8 @@ exec guile -e main -s $0 $@
 (define (test-stats)
   "Test statistical functions."
   ;; average
-  (num-equal-or-exit (mu:average mu:size) 82152/13)
-  (num-equal-or-exit (floor (mu:stddev mu:size)) 13020.0)
+  (num-equal-or-exit (mu:average mu:size) 82601/14)
+  (num-equal-or-exit (floor (mu:stddev mu:size)) 12637.0)
   (num-equal-or-exit (mu:max mu:size) 46308)
   (num-equal-or-exit (mu:min mu:size) 111))
 

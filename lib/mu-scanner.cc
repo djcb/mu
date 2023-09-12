@@ -103,20 +103,16 @@ ignore_dentry(const dentry_t& dentry)
 	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
 		return true;
 
-	if (g_strcmp0(d_name, "tmp") == 0)
-			return true;
+	if (d_name[0] != 't' && d_name[0] != 'h' && d_name[0] != '.')
+		return false; /* don't ignore */
 
-	if (d_name[0] == '.') {
-		if (d_name[1] == '#') /* emacs? */
-			return true;
-		if (g_strcmp0(d_name + 1, "nnmaildir") == 0) /* gnus? */
-			return true;
-		if (g_strcmp0(d_name + 1, "notmuch") == 0) /* notmuch? */
-			return true;
-	}
+	if (::strcmp(d_name, "tmp") == 0 || ::strcmp(d_name, "hcache.db") == 0)
+		return true; // ignore
 
-	if (g_strcmp0(d_name, "hcache.db") == 0) /* mutt cache? */
-		return true;
+	if (d_name[0] == '.')
+		for (auto dname : { "nnmaildir", "notmuch", "noindex", "noupdate"})
+			if (::strcmp(d_name + 1, dname) == 0)
+				return true;
 
 	return false; /* don't ignore */
 }
@@ -373,20 +369,13 @@ test_count_maildirs()
 
 int
 main(int argc, char* argv[])
-try {
-	g_test_init(&argc, &argv, NULL);
+{
+	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/index/scan-maildirs", test_scan_maildirs);
 	g_test_add_func("/index/count-maildirs", test_count_maildirs);
 
 	return g_test_run();
-
-} catch (const std::runtime_error& re) {
-	mu_printerrln("caught runtime error: {}", re.what());
-	return 1;
-} catch (...) {
-	mu_printerrln("caught exception");
-	return 1;
 }
 #endif /*BUILD_TESTS*/
 
