@@ -32,10 +32,13 @@
 #include <chrono>
 using namespace std::chrono_literals;
 
+#include "mu-store.hh"
+
 #include "mu-scanner.hh"
 #include "utils/mu-async-queue.hh"
 #include "utils/mu-error.hh"
-#include "../mu-store.hh"
+
+#include "utils/mu-utils-file.hh"
 
 using namespace Mu;
 
@@ -544,12 +547,106 @@ test_index_basic()
 	}
 }
 
+
+static void
+test_index_lazy()
+{
+	allow_warnings();
+
+	TempDir tdir;
+	auto store = Store::make_new(tdir.path(), MU_TESTMAILDIR2);
+	assert_valid_result(store);
+	g_assert_true(store->empty());
+	Indexer& idx{store->indexer()};
+
+	Indexer::Config conf{};
+	conf.lazy_check	     = true;
+	conf.ignore_noupdate = false;
+
+	const auto start{time({})};
+	g_assert_true(idx.start(conf));
+	while (idx.is_running())
+		g_usleep(10000);
+
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+
+	g_assert_cmpuint(idx.completed() - start, <, 3);
+
+	const auto& prog{idx.progress()};
+	g_assert_false(prog.running);
+	g_assert_cmpuint(prog.checked,==, 6);
+	g_assert_cmpuint(prog.updated,==, 6);
+	g_assert_cmpuint(prog.removed,==, 0);
+
+	g_assert_cmpuint(store->size(),==, 6);
+}
+
+static void
+test_index_cleanup()
+{
+	allow_warnings();
+
+	TempDir tdir;
+	auto mdir = join_paths(tdir.path(), "Test");
+	{
+		auto res = run_command({"cp", "-r", MU_TESTMAILDIR2, mdir});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==, 0);
+	}
+
+	auto store = Store::make_new(tdir.path(), mdir);
+	assert_valid_result(store);
+	g_assert_true(store->empty());
+	Indexer& idx{store->indexer()};
+
+	Indexer::Config conf{};
+	conf.ignore_noupdate = true;
+
+	g_assert_true(idx.start(conf));
+	while (idx.is_running())
+		g_usleep(10000);
+
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+	g_assert_cmpuint(store->size(),==, 14);
+
+	// remove a message
+	{
+		auto mpath = join_paths(mdir, "bar", "cur", "mail6");
+		auto res = run_command({"rm", mpath});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==, 0);
+	}
+
+	// no cleanup, # stays the same
+	conf.cleanup = false;
+	g_assert_true(idx.start(conf));
+	while (idx.is_running())
+		g_usleep(10000);
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+	g_assert_cmpuint(store->size(),==, 14);
+
+	// cleanup, message is gone from store.
+	conf.cleanup = true;
+	g_assert_true(idx.start(conf));
+	while (idx.is_running())
+		g_usleep(10000);
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+	g_assert_cmpuint(store->size(),==, 13);
+}
+
+
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/index/basic", test_index_basic);
+	g_test_add_func("/index/lazy", test_index_lazy);
+	g_test_add_func("/index/cleanup", test_index_cleanup);
 
 	return g_test_run();
 

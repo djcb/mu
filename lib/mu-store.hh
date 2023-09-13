@@ -285,7 +285,6 @@ public:
 		DupFlags     = 1 << 1,  /**< Update flags for duplicate messages too*/
 	};
 
-
 	/**
 	 * Move a message both in the filesystem and in the store. After a
 	 * successful move, the message is updated.

@@ -505,6 +505,26 @@ test_store_circular_symlink(void)
 	remove_directory(testhome);
 }
 
+static void
+test_store_maildirs()
+{
+	allow_warnings();
+
+	TempDir tdir;
+	auto store = Store::make_new(tdir.path(), MU_TESTMAILDIR2);
+	assert_valid_result(store);
+	g_assert_true(store->empty());
+
+	const auto mdirs = store->maildirs();
+
+	g_assert_cmpuint(mdirs.size(), ==, 3);
+	g_assert(seq_some(mdirs, [](auto&& m){return m == "/Foo";}));
+	g_assert(seq_some(mdirs, [](auto&& m){return m == "/bar";}));
+	g_assert(seq_some(mdirs, [](auto&& m){return m == "/wom_bat";}));
+}
+
+
+
 
 static void
 test_store_fail()
@@ -521,6 +541,7 @@ test_store_fail()
 	}
 }
 
+
 int
 main(int argc, char* argv[])
 {
@@ -534,8 +555,12 @@ main(int argc, char* argv[])
 	g_test_add_func("/store/message/attachments",
 			test_message_attachments);
 	g_test_add_func("/store/move-dups", test_store_move_dups);
+
+	g_test_add_func("/store/maildirs", test_store_maildirs);
+
 	g_test_add_func("/store/index/index-move", test_index_move);
 	g_test_add_func("/store/index/circular-symlink", test_store_circular_symlink);
+
 	g_test_add_func("/store/index/fail", test_store_fail);
 
 	return g_test_run();

@@ -250,14 +250,12 @@ Scanner::Private::start()
 {
 	const auto mode{F_OK | R_OK};
 	if (G_UNLIKELY(::access(root_dir_.c_str(), mode) != 0))
-		return Err(Error::Code::File,
-			   "'{}' is not readable: {}", root_dir_,
+		return Err(Error::Code::File, "'{}' is not readable: {}", root_dir_,
 			   g_strerror(errno));
 
 	struct stat statbuf {};
 	if (G_UNLIKELY(::stat(root_dir_.c_str(), &statbuf) != 0))
-		return Err(Error::Code::File,
-			   "'{}' is not stat'able: {}",
+		return Err(Error::Code::File,  "'{}' is not stat'able: {}",
 			   root_dir_, g_strerror(errno));
 
 	if (G_UNLIKELY(!S_ISDIR(statbuf.st_mode)))
@@ -322,6 +320,7 @@ Scanner::is_running() const
 
 
 #if BUILD_TESTS
+/* LCOV_EXCL_START*/
 #include "mu-test-utils.hh"
 
 static void
@@ -334,11 +333,15 @@ test_scan_maildirs()
 		MU_TESTMAILDIR,
 		[&](const std::string& fullpath, const struct stat* statbuf, auto&& htype) -> bool {
 			++count;
+			g_usleep(10000);
 			return true;
 		}};
-	g_assert_true(scanner.start());
+	assert_valid_result(scanner.start());
+	scanner.stop();
+	count = 0;
+	assert_valid_result(scanner.start());
 
-	while (scanner.is_running()) { g_usleep(1000); }
+	while (scanner.is_running()) { g_usleep(100000); }
 
 	// very rudimentary test...
 	g_assert_cmpuint(count,==,23);
@@ -356,7 +359,7 @@ test_count_maildirs()
 			dirs.emplace_back(basename(fullpath));
 			return true;
 		}, Scanner::Mode::MaildirsOnly};
-	g_assert_true(scanner.start());
+	assert_valid_result(scanner.start());
 
 	while (scanner.is_running()) { g_usleep(1000); }
 
@@ -366,14 +369,27 @@ test_count_maildirs()
 	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "wom_bat";}) != dirs.end());
 }
 
+static void
+test_fail_nonexistent()
+{
+	allow_warnings();
+
+	Scanner scanner{"/foo/bar/non-existent",
+		[&](auto&& a1, auto&& a2, auto&& a3){ return false; }};
+	g_assert_false(scanner.is_running());
+	g_assert_false(!!scanner.start());
+	g_assert_false(scanner.is_running());
+}
+
 
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-	g_test_add_func("/index/scan-maildirs", test_scan_maildirs);
-	g_test_add_func("/index/count-maildirs", test_count_maildirs);
+	g_test_add_func("/scanner/scan-maildirs", test_scan_maildirs);
+	g_test_add_func("/scanner/count-maildirs", test_count_maildirs);
+	g_test_add_func("/scanner/fail-nonexistent", test_fail_nonexistent);
 
 	return g_test_run();
 }
@@ -402,4 +418,5 @@ main (int argc, char *argv[])
 
 	return 0;
 }
+/* LCOV_EXCL_STOP*/
 #endif /*BUILD_LIST_MAILDIRS*/

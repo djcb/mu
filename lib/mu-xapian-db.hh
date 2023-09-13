@@ -112,6 +112,13 @@ struct MetadataIface {
 /// In-memory db
 struct MemDb: public MetadataIface {
 	/**
+	 * Create a new memdb
+	 *
+	 * @param readonly read-only? (for testing)
+	 */
+	MemDb(bool readonly=false):read_only_{readonly} {}
+
+	/**
 	 * Set some metadata
 	 *
 	 * @param name key name
@@ -141,7 +148,7 @@ struct MemDb: public MetadataIface {
 	 *
 	 * @return true or false
 	 */
-	bool read_only() const override { return false; }
+	bool read_only() const override { return read_only_; }
 
 
 	/**
@@ -157,6 +164,7 @@ struct MemDb: public MetadataIface {
 
 private:
 	std::unordered_map<std::string, std::string> map_;
+	const bool read_only_;
 };
 
 /**
@@ -171,8 +179,8 @@ public:
 	 *
 	 */
 	enum struct Flavor {
-		ReadOnly,	/**< Read-only database */
-		Open,		/**< Open existing read-write */
+		ReadOnly,	 /**< Read-only database */
+		Open,		 /**< Open existing read-write */
 		CreateOverwrite, /**< Create new or overwrite existing */
 	};
 

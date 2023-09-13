@@ -363,8 +363,9 @@ test_maildir_get_new_path_02(void)
 	}
 }
 
+
 static void
-test_maildir_get_new_path_custom(void)
+test_maildir_get_new_path_custom_real(bool change_name)
 {
 	struct {
 		std::string	oldpath;
@@ -393,11 +394,29 @@ test_maildir_get_new_path_custom(void)
 						      paths[1].root_maildir,
 						      paths[i].targetdir,
 						      paths[i].flags,
-						      false)};
+						      change_name)};
 		assert_valid_result(newpath);
-		assert_equal(*newpath, paths[i].newpath);
+		if (change_name)
+			g_assert_true(*newpath != paths[i].newpath); // weak test
+		else
+			assert_equal(*newpath, paths[i].newpath);
 	}
 }
+
+
+static void
+test_maildir_get_new_path_custom(void)
+{
+	return test_maildir_get_new_path_custom_real(false);
+}
+
+
+static void
+test_maildir_get_new_path_custom_change_name(void)
+{
+	return test_maildir_get_new_path_custom_real(true);
+}
+
 
 static void
 test_maildir_from_path(void)
@@ -506,32 +525,30 @@ test_maildir_move_gio()
 int
 main(int argc, char* argv[])
 {
-	g_test_init(&argc, &argv, NULL);
+	mu_test_init(&argc, &argv);
 
 	/* mu_util_maildir_mkmdir */
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-01", test_maildir_mkdir_01);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-02", test_maildir_mkdir_02);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-03", test_maildir_mkdir_03);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-04", test_maildir_mkdir_04);
-	g_test_add_func("/mu-maildir/mu-maildir-mkdir-05", test_maildir_mkdir_05);
+	g_test_add_func("/maildir/mkdir-01", test_maildir_mkdir_01);
+	g_test_add_func("/maildir/mkdir-02", test_maildir_mkdir_02);
+	g_test_add_func("/maildir/mkdir-03", test_maildir_mkdir_03);
+	g_test_add_func("/maildir/mkdir-04", test_maildir_mkdir_04);
+	g_test_add_func("/maildir/mkdir-05", test_maildir_mkdir_05);
 
-	g_test_add_func("/mu-maildir/mu-maildir-determine-target-ok",
-			test_determine_target_ok);
-	g_test_add_func("/mu-maildir/mu-maildir-determine-target-fail",
-			test_determine_target_fail);
+	g_test_add_func("/maildir/determine-target-ok", test_determine_target_ok);
+	g_test_add_func("/maildir/determine-target-fail", test_determine_target_fail);
 
 	// /* get/set flags */
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-01", test_maildir_get_new_path_01);
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-02", test_maildir_get_new_path_02);
-	g_test_add_func("/mu-maildir/mu-maildir-get-new-path-custom",
-			test_maildir_get_new_path_custom);
-	g_test_add_func("/mu-maildir/mu-maildir-from-path",
-			test_maildir_from_path);
+	g_test_add_func("/maildir/get-new-path-01", test_maildir_get_new_path_01);
+	g_test_add_func("/maildir/get-new-path-02", test_maildir_get_new_path_02);
+	g_test_add_func("/maildir/get-new-path-custom", test_maildir_get_new_path_custom);
+	g_test_add_func("/maildir/get-new-path-custom-change-name",
+			test_maildir_get_new_path_custom_change_name);
 
-	g_test_add_func("/mu-maildir/mu-maildir-link", test_maildir_link);
+	g_test_add_func("/maildir/from-path", test_maildir_from_path);
 
-	g_test_add_func("/mu-maildir/mu-maildir-move-vanilla", test_maildir_move_vanilla);
-	g_test_add_func("/mu-maildir/mu-maildir-move-gio", test_maildir_move_gio);
+	g_test_add_func("/maildir/link", test_maildir_link);
+	g_test_add_func("/maildir/move-vanilla", test_maildir_move_vanilla);
+	g_test_add_func("/maildir/aildir-move-gio", test_maildir_move_gio);
 
 	return g_test_run();
 }

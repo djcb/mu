@@ -205,23 +205,20 @@ clear_links(const std::string& path, DIR* dir)
 		switch(d_type) {
 		case DT_LNK:
 			if (::unlink(fullpath.c_str()) != 0) {
-				mu_warning("error unlinking {}: {}",
-					  fullpath, g_strerror(errno));
+				mu_warning("error unlinking {}: {}", fullpath, g_strerror(errno));
 				res = false;
 			}
 			break;
 		case  DT_DIR: {
 			DIR* subdir{::opendir(fullpath.c_str())};
 			if (!subdir) {
-				mu_warning("failed to open dir {}: {}", fullpath,
-					  g_strerror(errno));
+				mu_warning("error opening dir {}: {}", fullpath, g_strerror(errno));
 				res = false;
 			}
 			if (!clear_links(fullpath, subdir))
 				res = false;
 			::closedir(subdir);
-		}
-			break;
+		} break;
 		default:
 			break;
 		}
@@ -289,7 +286,7 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 	else
 		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
 }
-/* LCOV_EXCL_STOPT*/
+/* LCOV_EXCL_STOP*/
 
 /* use mv to move files; this is slower than rename() so only use this when
  * needed: when moving across filesystems */
@@ -323,10 +320,11 @@ msg_move(const std::string& src, const std::string& dst, bool assume_remote)
 
 		if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
 			return msg_move_verify(src, dst);
-
+		/* LCOV_EXCL_START*/
 		if (errno != EXDEV) /* some unrecoverable error occurred */
 			return Err(Error{Error::Code::File, "error moving {} -> {}: {}",
 					src, dst, strerror(errno)});
+		/* LCOV_EXCL_STOP*/
 	}
 
 	/* the EXDEV / assume-remote case -- source and target live on different
@@ -461,12 +459,7 @@ Mu::maildir_determine_target(const std::string&	old_path,
 	const auto dst_file{determine_dst_filename(src_file, newflags, new_name)};
 
 	/* and the complete path name. */
-	const auto subdir = std::invoke([&]()->std::string {
-		if (none_of(newflags & Flags::New))
-			return "cur";
-		else
-			return "new";
-	});
+	const std::string subdir{(none_of(newflags & Flags::New)) ? "cur" : "new"};
 
 	return join_paths(dst_mdir, subdir,dst_file);
 }

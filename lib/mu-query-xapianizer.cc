@@ -264,14 +264,12 @@ parse_basic(const Field &field, Sexp &&vals, Mu::ParserFlags flags)
 		if (auto&& finfo{flag_info(val)}; finfo)
 			return Xapian::Query{field.xapian_term(finfo->shortcut_lower())};
 		else
-			return Err(Error::Code::InvalidArgument,
-				   "invalid flag '{}'", val);
+			return Err(Error::Code::InvalidArgument, "invalid flag '{}'", val);
 	case Field::Id::Priority:
 		if (auto&& prio{priority_from_name(val)}; prio)
 			return Xapian::Query{field.xapian_term(to_char(*prio))};
 		else
-			return Err(Error::Code::InvalidArgument,
-				   "invalid priority '{}'", val);
+			return Err(Error::Code::InvalidArgument, "invalid priority '{}'", val);
 	default: {
 		auto q{Xapian::Query{field.xapian_term(val)}};
 		if (ngrams) { // special case: cjk; see if we can create an expanded query.
@@ -328,8 +326,7 @@ parse(const Store& store, Sexp&& s, Mu::ParserFlags flags)
 			return parse_field_matcher(store, *field,
 						   *match_sym, std::move(*args));
 	}
-	return Err(Error::Code::InvalidArgument,
-		   "unexpected sexp {}", s.to_string());
+	return Err(Error::Code::InvalidArgument, "unexpected sexp {}", s.to_string());
 }
 
 /* LCOV_EXCL_START */

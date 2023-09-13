@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,12 +17,7 @@
 
 ################################################################################
 # tests
-#
-test('test-option',
-     executable('test-option',
-                'test-option.cc',
-                install: false,
-                dependencies: [glib_dep, lib_mu_utils_dep]))
+
 test('test-mu-utils',
      executable('test-mu-utils',
                 'test-utils.cc',

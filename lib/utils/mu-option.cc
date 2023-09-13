@@ -30,3 +30,77 @@ Mu::to_string_opt_gchar(gchar*&& str)
 
 	return res;
 }
+
+#if BUILD_TESTS
+#include "mu-test-utils.hh"
+
+static Option<int>
+get_opt_int(bool b)
+{
+	if (b)
+		return Some(123);
+	else
+		return Nothing;
+}
+
+static void
+test_option()
+{
+	{
+		const auto oi{get_opt_int(true)};
+		g_assert_true(!!oi);
+		g_assert_cmpint(oi.value(), ==, 123);
+	}
+
+	{
+		const auto oi{get_opt_int(false)};
+		g_assert_false(!!oi);
+		g_assert_false(oi.has_value());
+		g_assert_cmpint(oi.value_or(456), ==, 456);
+	}
+}
+
+static void
+test_unwrap()
+{
+	{
+		auto&& oi{get_opt_int(true)};
+		g_assert_cmpint(unwrap(std::move(oi)), ==, 123);
+	}
+
+	auto ex{0};
+	try {
+		auto&& oi{get_opt_int(false)};
+		unwrap(std::move(oi));
+	} catch(...) {
+		ex = 1;
+	}
+
+	g_assert_cmpuint(ex, ==, 1);
+}
+
+static void
+test_opt_gchar()
+{
+	auto o1{to_string_opt_gchar(g_strdup("boo!"))};
+	auto o2{to_string_opt_gchar(nullptr)};
+
+	g_assert_false(!!o2);
+	g_assert_true(o1.value() == "boo!");
+}
+
+
+
+int
+main(int argc, char* argv[])
+{
+	g_test_init(&argc, &argv, NULL);
+
+	g_test_add_func("/option/option", test_option);
+	g_test_add_func("/option/unwrap", test_unwrap);
+	g_test_add_func("/option/opt-gchar", test_opt_gchar);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/
