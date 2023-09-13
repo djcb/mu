@@ -32,29 +32,6 @@
 namespace Mu {
 
 /**
- * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the
- * the program 'open' is used for this; on other platforms 'xdg-open' to do the
- * actual opening. In addition you can set it to another program by setting thep
- * MU_PLAY_PROGRAM environment variable
- *
- * This requires a 'native' file, see g_file_is_native()
- *
- * @param path full path of the file to open
- *
- * @return Ok() if succeeded, some error otherwise.
- */
-Result<void> play(const std::string& path);
-
-/**
- * Find program in PATH
- *
- * @param name the name of the program
- *
- * @return either the full path to program, or Nothing if not found.
- */
-Option<std::string> program_in_path(const std::string& name);
-
-/**
  * Check if the directory has the given attributes
  *
  * @param path path to dir
@@ -253,7 +230,9 @@ Result<void> remove_directory(const std::string& path);
 /**
  * Run some system command
  *
- * @param cmd the command
+ * @param args a list of commmand line arguments (like argv)
+ * @param try_setsid whether to try setsid(2) (see its manpage for details) if this
+ *        system supports it.
  *
  * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_
  * considered an error from the perspective of this function.
@@ -263,7 +242,35 @@ struct CommandOutput {
 	std::string standard_out;
 	std::string standard_err;
 };
-Result<CommandOutput> run_command(std::initializer_list<std::string> args);
+Result<CommandOutput> run_command(std::initializer_list<std::string> args,
+				  bool try_setsid=false);
+
+/**
+ * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the
+ * the program 'open' is used for this; on other platforms 'xdg-open' to do the
+ * actual opening. In addition you can set it to another program by setting thep
+ * MU_PLAY_PROGRAM environment variable
+ *
+ * This requires a 'native' file, see g_file_is_native()
+ *
+ * @param path full path of the file to open
+ *
+ * @return Ok() if succeeded, some error otherwise.
+ */
+Result<void> play(const std::string& path);
+
+/**
+ * Find program in PATH
+ *
+ * @param name the name of the program
+ *
+ * @return either the full path to program, or Nothing if not found.
+ */
+Option<std::string> program_in_path(const std::string& name);
+
+
+
+
 
 
 } // namespace Mu
