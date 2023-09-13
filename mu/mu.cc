@@ -40,10 +40,9 @@ output_error(const std::string& what, bool use_color)
 	using Color = MaybeAnsi::Color;
 	MaybeAnsi col{use_color};
 
-	std::cerr << col.fg(Color::Red) << "error" << col.reset() << ": "
-		  << col.fg(Color::BrightYellow)
-		  << what << col.reset() << "\n";
-
+	mu_printerrln("{}error{}: {}{}{}",
+		      col.fg(Color::Red), col.reset(),
+		      col.fg(Color::BrightYellow), what, col.reset());
 }
 
 static int
@@ -59,36 +58,35 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 	if (!res.error().is_soft_error())
 		output_error(res.error().what(), !opts.nocolor);
 	else
-		std::cerr <<  col.fg(Color::BrightBlue) << res.error().what() << '\n';
+		mu_printerrln("{}{}{}",
+			      col.fg(Color::BrightBlue), res.error().what(), col.reset());
 
-	std::cerr << col.fg(Color::Green);
+	mu_printerr("{}", col.fg(Color::Green));
 
 	// perhaps give some useful hint on how to solve it.
 	switch (res.error().code()) {
 	case Error::Code::InvalidArgument:
 		break;
 	case Error::Code::StoreLock:
-		std::cerr << "Perhaps mu is already running?\n";
+		mu_printerrln("Perhaps mu is already running?");
 		break;
 	case Error::Code::SchemaMismatch:
-		std::cerr << "Please (re)initialize mu with 'mu init'; "
-			  << "see mu-init(1) for details\n";
+		mu_printerrln("Please (re)initialize with 'mu init'; see mu-init(1) for details");
 		break;
 	case Error::Code::CannotReinit:
-		std::cerr << "Invoke 'mu init' without '--reinit'; "
-			  << "see mu-init(1) for details\n";
+		mu_printerrln("Invoke 'mu init' without '--reinit'; see mu-init(1) for details");
 		break;
 	default:
 		break; /* nothing to do */
 	}
 
-	std::cerr << col.reset();
+	mu_printerr("{}", col.reset());
 
 	return res.error().exit_code();
 }
 
 int
-main(int argc, char* argv[])
+main(int argc, char* argv[]) try
 {
 	/*
 	 * We handle this through explicit options
@@ -112,23 +110,16 @@ main(int argc, char* argv[])
 		return 0;
 	}
 
-	/*
-	 * there's a subcommand
-	 */
-
-	/*
-	 * set up logging
-	 */
+	// setup logging
 	Logger::Options lopts{Logger::Options::None};
 	if (opts->log_stderr)
 		lopts |= Logger::Options::StdOutErr;
 	if (opts->debug)
 		lopts |= Logger::Options::Debug;
-	if (g_getenv("MU_TEST"))
+	if (!!g_getenv("MU_TEST"))
 		lopts |= Logger::Options::File;
 
-	const auto logger = Logger::make(opts->runtime_path(RuntimePath::LogFile),
-					 lopts);
+	const auto logger{Logger::make(opts->runtime_path(RuntimePath::LogFile), lopts)};
 	if (!logger) {
 		output_error(logger.error().what(), !opts->nocolor);
 		return logger.error().exit_code();
@@ -138,4 +129,13 @@ main(int argc, char* argv[])
 	 * handle sub command
 	 */
 	return handle_result(mu_cmd_execute(*opts), *opts);
+
+	// exceptions should have been handled earlier, but catch them here,
+	// just in case...
+} catch (const std::runtime_error& re) {
+	mu_printerrln("caught runtime-error: {}", re.what());
+	return 99;
+} catch (...) {
+	mu_printerrln("caught exception");
+	return 99;
 }
