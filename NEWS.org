@@ -14,7 +14,7 @@
 
       It's not unusual for ~noreply~-type e-mail addresses to be the majority in
       an e-mail corpus; to get rid of those, with something like
-      '=--ignored-address=/.*no.*reply.*/'=
+      ~=--ignored-address=/.*no.*reply.*/~
 
     - what used to be the ~mu fields~ command has been merged into ~mu info~; i.e.,
       ~mu fields~ is now ~mu info fields~.
@@ -25,8 +25,8 @@
 
     - when encountering an HTML message part during indexing, previously (i.e.,
       ~mu 1.10~) we would attempt to process that as-is, with HTML-tags etc.; this
-      is now improved by employing a html->text scraper which extracts the
-      human-readable text from the html.
+      is now improved by employing a custom html->text scraper which extracts
+      the human-readable text from the html.
 
     - mu querying and (esp.) showing results has been made significantly faster;
       e.g., in one big ~mu find~ query we went from ~47s to only ~7s
@@ -44,15 +44,15 @@
       ~/home/user/Maildir~) for shells that don't do that, such as Bash.
 
     - overhauled query-parser; this is (should be) compatible with the older
-      one, apart from a number of fixes. There is a new option ~--analyze~ to ~mu
-      find~ which shows the parsed query in a human-readable s-expression form;
-      this can be used to debug your queries (this replaces the older
-      ~--format=mquery|xquery~)
+      one, apart from a number of fixes. There is a new option ~--analyze~ for the
+      ~mu find~ command, which shows the parsed query in a (hopefully)
+      human-readable s-expression form; this can be used to debug your queries
+      (this replaces the older ~--format=mquery|xquery~)
 
-      Furthermore, there now support for the "ngram"-based indexing and
-      querying, which is useful for languages/scripts without explicit
-      word-breaks. See the *mu-init* manpages, in particular the ~--support-ngrams~
-      option, and why you may (or may not) want to enable that.
+      Furthermore, there now support for "ngram"-based indexing and querying,
+      which is useful for languages/scripts without explicit word-breaks, such
+      as Chinese/Japanese/Korean. See the *mu-init* manpages, in particular the
+      ~--support-ngrams~ option, and why you may (or may not) want to enable that.
 
 *** mu4e
 
@@ -64,9 +64,9 @@
       message view; they gained completions support with annotations in the
       minibuffer
 
-      It is possible to save all attachments at once =C-c C-a=, except with Helm,
-      which uses its own mechanism for this. This same has been extended to the
-      MIME-part actions.
+      It is possible to save all attachments at once with =C-c C-a=, except with
+      Helm, which uses its own mechanism for this. This same has been extended
+      to the MIME-part actions.
 
     - experimental: support folding message threads (with =TAB= / =S-TAB=). See the
       [[info:mu4e:Folding threads][entry in the Mu4e manual]] for further details.
