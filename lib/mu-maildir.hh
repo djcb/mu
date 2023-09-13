@@ -64,7 +64,6 @@ Result<void> maildir_mkdir(const std::string& path, mode_t mode=0700,
  */
 Result<void> maildir_link(const std::string& src, const std::string& targetpath,
 			  bool unique_names=true);
-
 /**
  * Recursively delete all the symbolic links in a directory tree
  *
@@ -111,10 +110,10 @@ Result<void> maildir_move_message(const std::string& oldpath,
  */
 Result<std::string>
 maildir_determine_target(const std::string&	old_path,
-			    const std::string&  root_maildir_path,
-			    const std::string&	target_maildir,
-			    Flags		newflags,
-			    bool		new_name);
+			 const std::string&	root_maildir_path,
+			 const std::string&	target_maildir,
+			 Flags			newflags,
+			 bool			new_name);
 
 } // namespace Mu
 

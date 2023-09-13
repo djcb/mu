@@ -329,8 +329,7 @@ flags_from_delta_expr(std::string_view expr, Flags flags,
  * @return either messages flags or Nothing in case of error.
  */
 constexpr Option<Flags>
-flags_from_expr(std::string_view        expr,
-		Option<Flags> flags = Nothing)
+flags_from_expr(std::string_view expr, Option<Flags> flags = Nothing)
 {
 	if (expr.empty())
 		return Nothing;

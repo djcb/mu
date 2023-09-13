@@ -26,6 +26,7 @@ mu = executable(
   'mu-cmd-init.cc',
   'mu-cmd-index.cc',
   'mu-cmd-mkdir.cc',
+  'mu-cmd-move.cc',
   'mu-cmd-remove.cc',
   'mu-cmd-script.cc',
   'mu-cmd-server.cc',
@@ -72,6 +73,13 @@ test('test-cmd-find',
 test('test-cmd-mkdir',
      executable('test-cmd-mkdir',
                 'mu-cmd-mkdir.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-cmd-move',
+     executable('test-cmd-move',
+                'mu-cmd-move.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))

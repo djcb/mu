@@ -381,7 +381,7 @@ Yes, that would be excellent.
 	 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
 	 assert_valid_result(msgs3);
 	 g_assert_true(msgs3->size() == 1);
-	 auto&& msg3_opt{store->find_message(msgs3->at(0))};
+	 auto&& msg3_opt{store->find_message(msgs3->at(0).first/*id*/)};
 	 g_assert_true(!!msg3_opt);
 	 auto&& msg3{std::move(*msg3_opt)};
 
@@ -442,11 +442,11 @@ Yes, that would be excellent.
 	 assert_valid_result(mres);
 	 mu_info("found {} matches", mres->size());
 	 for (auto&& m: *mres)
-		 mu_info("id: {}", m);
+		 mu_info("id: {}: {}", m.first, m.second);
 
 	 // al three dups should have been updated
 	 g_assert_cmpuint(mres->size(), ==, 3);
-	 auto&& id_msgs{store->find_messages(*mres)};
+	 auto&& id_msgs{store->find_messages(Store::id_vec(*mres))};
 
 	 // first should be the  original
 	 g_assert_cmpuint(id_msgs.at(0).first, ==, ids.at(0));

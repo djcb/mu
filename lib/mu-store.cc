@@ -145,10 +145,12 @@ struct Store::Private {
 	Result<Store::Id> update_message_unlocked(Message& msg, Store::Id docid);
 	Result<Store::Id> update_message_unlocked(Message& msg, const std::string& old_path);
 
-	Result<Message> move_message_unlocked(Message&& msg,
-					      Option<const std::string&> target_mdir,
-					      Option<Flags> new_flags,
-					      MoveOptions opts);
+
+	using PathMessage = std::pair<std::string, Message>;
+	Result<PathMessage> move_message_unlocked(Message&& msg,
+						  Option<const std::string&> target_mdir,
+						  Option<Flags> new_flags,
+						  MoveOptions opts);
 	XapianDb xapian_db_;
 	Config config_;
 	ContactsCache            contacts_cache_;
@@ -341,8 +343,7 @@ Store::indexer()
 Result<Store::Id>
 Store::add_message(Message& msg, bool use_transaction, bool is_new)
 {
-	const auto mdir{maildir_from_path(msg.path(),
-					  root_maildir())};
+	const auto mdir{maildir_from_path(msg.path(), root_maildir())};
 	if (!mdir)
 		return Err(mdir.error());
 	if (auto&& res = msg.set_maildir(mdir.value()); !res)
@@ -428,6 +429,23 @@ Store::find_message(Store::Id docid) const
 	return priv_->find_message_unlocked(docid);
 }
 
+Option<Store::Id>
+Store::find_message_id(const std::string& path) const
+{
+	constexpr auto path_field{field_from_id(Field::Id::Path)};
+
+	std::lock_guard guard{priv_->lock_};
+
+	auto enq{xapian_db().enquire()};
+	enq.set_query(Xapian::Query{path_field.xapian_term(path)});
+
+	if (auto mset{enq.get_mset(0, 1)}; mset.empty())
+		return Nothing; // message not found
+	else
+		return Some(*mset.begin());
+}
+
+
 Store::IdMessageVec
 Store::find_messages(IdVec ids) const
 {
@@ -443,7 +461,7 @@ Store::find_messages(IdVec ids) const
 }
 
 /**
- * Move a message in store and filesystem.
+ * Move a message in store and filesystem; with DryRun, only calculate the target name.
  *
  * Lock is assumed taken already
  *
@@ -454,7 +472,7 @@ Store::find_messages(IdVec ids) const
  *
  * @return the Message after the moving, or an Error
  */
-Result<Message>
+Result<Store::Private::PathMessage>
 Store::Private::move_message_unlocked(Message&& msg,
 				      Option<const std::string&> target_mdir,
 				      Option<Flags> new_flags,
@@ -472,21 +490,25 @@ Store::Private::move_message_unlocked(Message&& msg,
 	if (!target_path)
 		return Err(target_path.error());
 
-	/* 2. let's move it */
-	if (const auto res = maildir_move_message(msg.path(), target_path.value()); !res)
-		return Err(res.error());
+	// in dry-run mode, we only determine the target-path
+	if (none_of(opts & MoveOptions::DryRun)) {
 
-	/* 3. file move worked, now update the message with the new info.*/
-	if (auto&& res = msg.update_after_move(
-		    target_path.value(), target_maildir, target_flags); !res)
-		return Err(res.error());
+		/* 2. let's move it */
+		if (const auto res = maildir_move_message(msg.path(), target_path.value()); !res)
+			return Err(res.error());
 
-	/* 4. update message worked; re-store it */
-	if (auto&& res = update_message_unlocked(msg, old_path); !res)
-		return Err(res.error());
+		/* 3. file move worked, now update the message with the new info.*/
+		if (auto&& res = msg.update_after_move(
+			    target_path.value(), target_maildir, target_flags); !res)
+			return Err(res.error());
+
+		/* 4. update message worked; re-store it */
+		if (auto&& res = update_message_unlocked(msg, old_path); !res)
+			return Err(res.error());
+	}
 
 	/* 6. Profit! */
-	return Ok(std::move(msg));
+	return Ok(PathMessage{std::move(*target_path), std::move(msg)});
 }
 
 Store::IdVec
@@ -498,8 +520,7 @@ Store::find_duplicates(const std::string& message_id) const
 }
 
 
-
-Result<Store::IdVec>
+Result<Store::IdPathVec>
 Store::move_message(Store::Id id,
 		    Option<const std::string&> target_mdir,
 		    Option<Flags> new_flags,
@@ -519,14 +540,13 @@ Store::move_message(Store::Id id,
 		return Err(Error::Code::Store, "cannot find message <{}>", id);
 
 	const auto message_id{msg->message_id()};
-	auto res{priv_->move_message_unlocked(std::move(*msg),
-					      target_mdir, new_flags, opts)};
+	auto res{priv_->move_message_unlocked(std::move(*msg), target_mdir, new_flags, opts)};
 	if (!res)
 		return Err(res.error());
 
-	IdVec ids{id};
+	IdPathVec id_paths{{id, res->first}};
 	if (none_of(opts & Store::MoveOptions::DupFlags) || message_id.empty() || !new_flags)
-		return Ok(std::move(ids));
+		return Ok(std::move(id_paths));
 
 	/* handle the dupflags case; i.e. apply (a subset of) the flags to
 	 * all messages with the same message-id as well */
@@ -550,11 +570,22 @@ Store::move_message(Store::Id id,
 			    Store::MoveOptions::None); !dup_res)
 			mu_warning("failed to move dup: {}", dup_res.error().what());
 		else
-			ids.emplace_back(dupid);
+			id_paths.emplace_back(dupid, dup_res->first);
 	}
 
-	return Ok(std::move(ids));
+	return Ok(std::move(id_paths));
 }
+
+Store::IdVec
+Store::id_vec(const IdPathVec& ips)
+{
+	IdVec idv;
+	for (auto&& ip: ips)
+		idv.emplace_back(ip.first);
+
+	return idv;
+}
+
 
 time_t
 Store::dirstamp(const std::string& path) const
@@ -660,9 +691,11 @@ std::vector<std::string>
 Store::maildirs() const
 {
 	std::vector<std::string> mdirs;
-	const auto prefix_size = root_maildir().size();
+	const auto prefix_size{root_maildir().size()};
+
 	Scanner::Handler handler = [&](const std::string& path, auto&& _1, auto&& _2) {
-		mdirs.emplace_back(path.substr(prefix_size));
+		auto md{path.substr(prefix_size)};
+		mdirs.emplace_back(std::move(md.empty() ? "/" : md));
 		return true;
 	};
 

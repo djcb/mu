@@ -128,6 +128,15 @@ Result<void> mu_cmd_init(const Options& opts);
 Result<void> mu_cmd_mkdir(const Options& opts);
 
 /**
+ * execute the 'move' command
+ *
+ * @param opts configuration options
+ *
+ * @return Ok() or some error
+ */
+Result<void> mu_cmd_move(Store& store, const Options& opts);
+
+/**
  * execute the 'remove' command
  *
  * @param store store object to use
