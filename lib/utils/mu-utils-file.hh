@@ -50,7 +50,7 @@ bool check_dir(const std::string& path, bool readable, bool writeable);
  *
  * @return
  */
-std::string canonicalize_filename(const std::string& path, const std::string& relative_to);
+std::string canonicalize_filename(const std::string& path, const std::string& relative_to="");
 
 /**
  * Expand the filesystem path (as per wordexp(3))
@@ -85,7 +85,7 @@ std::string dirname(const std::string& path);
 
 
 /*
- * for OSs with out support for direntry->d_type, like Solaris
+ * for OSs without support for direntry->d_type, like Solaris
  */
 #ifndef DT_UNKNOWN
 enum {
@@ -120,7 +120,7 @@ enum {
  * @return DT_REG, DT_DIR, DT_LNK, or DT_UNKNOWN (other values are not supported
  * currently)
  */
-uint8_t determine_dtype(const std::string& path, bool use_lstat);
+uint8_t determine_dtype(const std::string& path, bool use_lstat=false);
 
 
 /**
@@ -226,7 +226,6 @@ Result<std::string> make_temp_dir();
  */
 Result<void> remove_directory(const std::string& path);
 
-
 /**
  * Run some system command
  *
@@ -267,11 +266,6 @@ Result<void> play(const std::string& path);
  * @return either the full path to program, or Nothing if not found.
  */
 Option<std::string> program_in_path(const std::string& name);
-
-
-
-
-
 
 } // namespace Mu
 
