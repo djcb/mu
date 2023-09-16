@@ -288,8 +288,7 @@ Scanner::Private::stop()
 
 Scanner::Scanner(const std::string& root_dir, Scanner::Handler handler, Mode flavor)
     : priv_{std::make_unique<Private>(root_dir, handler, flavor)}
-{
-}
+{}
 
 Scanner::~Scanner() = default;
 

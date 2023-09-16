@@ -111,8 +111,10 @@ struct Indexer::Private {
 	bool add_message(const std::string& path);
 
 	bool cleanup();
-	bool start(const Indexer::Config& conf);
+	bool start(const Indexer::Config& conf, bool block);
 	bool stop();
+
+	bool is_running() const { return state_ != IndexState::Idle; }
 
 	Indexer::Config conf_;
 	Store&          store_;
@@ -369,7 +371,7 @@ Indexer::Private::scan_worker()
 }
 
 bool
-Indexer::Private::start(const Indexer::Config& conf)
+Indexer::Private::start(const Indexer::Config& conf, bool block)
 {
 	stop();
 
@@ -398,7 +400,13 @@ Indexer::Private::start(const Indexer::Config& conf)
 	/* kick the disk-scanner thread */
 	scanner_worker_ = std::thread([this] { scan_worker(); });
 
-	mu_debug("started indexer");
+	mu_debug("started indexer in {}-mode", block ? "blocking" : "non-blocking");
+	if (block) {
+		while(is_running()) {
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(100ms);
+		}
+	}
 
 	return true;
 }
@@ -428,7 +436,7 @@ Indexer::Indexer(Store& store)
 Indexer::~Indexer() = default;
 
 bool
-Indexer::start(const Indexer::Config& conf)
+Indexer::start(const Indexer::Config& conf, bool block)
 {
 	const auto mdir{priv_->store_.root_maildir()};
 	if (G_UNLIKELY(access(mdir.c_str(), R_OK) != 0)) {
@@ -440,7 +448,7 @@ Indexer::start(const Indexer::Config& conf)
 	if (is_running())
 		return true;
 
-	return priv_->start(conf);
+	return priv_->start(conf, block);
 }
 
 bool
@@ -458,7 +466,7 @@ Indexer::stop()
 bool
 Indexer::is_running() const
 {
-	return priv_->state_ != IndexState::Idle;
+	return priv_->is_running();
 }
 
 const Indexer::Progress&

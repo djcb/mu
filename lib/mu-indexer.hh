@@ -61,7 +61,7 @@ public:
 	/**
 	 * Start indexing. If already underway, do nothing. This returns
 	 * immediately after starting, with the work being done in the
-	 * background.
+	 * background, unless blocking = true
 	 *
 	 * @param conf a configuration object
 	 *
@@ -69,7 +69,7 @@ public:
 	 * underway; false otherwise.
 	 *
 	 */
-	bool start(const Config& conf);
+	bool start(const Config& conf, bool block=false);
 
 	/**
 	 * Stop indexing. If not indexing, do nothing.
