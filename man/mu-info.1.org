@@ -16,6 +16,7 @@
 - *mu*: general mu build information (default)
 - *store*: information about the message store
 - *fields*: table with all the query fields and flags
+- *maildirs*: list all maildirs under the store's root-maildir
 
 Note that while running (e.g. ~mu4e~), some of the ~store~ information can be
 delayed due to database caching.

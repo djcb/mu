@@ -220,6 +220,15 @@ topic_store(const Mu::Store& store, const Options& opts)
 }
 
 static Result<void>
+topic_maildirs(const Mu::Store& store, const Options& opts)
+{
+	for (auto&& mdir: store.maildirs())
+		mu_println("{}", mdir);
+
+	return Ok();
+}
+
+static Result<void>
 topic_mu(const Options& opts)
 {
 	Table info;
@@ -227,10 +236,8 @@ topic_mu(const Options& opts)
 	using namespace tabulate;
 
 	info.add_row({"property", "value", "description"});
-	info.add_row({"mu-version", std::string{VERSION},
-			"Mu runtime version"});
-	info.add_row({"xapian-version", Xapian::version_string(),
-			"Xapian runtime version"});
+	info.add_row({"mu-version", std::string{VERSION}, "Mu runtime version"});
+	info.add_row({"xapian-version", Xapian::version_string(), "Xapian runtime version"});
 	info.add_row({"gmime-version",
 			mu_format("{}.{}.{}", gmime_major_version, gmime_minor_version,
 				  gmime_micro_version), "GMime runtime version"});
@@ -281,6 +288,8 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	const auto topic{opts.info.topic};
 	if (topic == "store")
 		return topic_store(store, opts);
+	else if (topic == "maildirs")
+		return topic_maildirs(store, opts);
 	else if (topic == "fields") {
 		topic_fields(opts);
 		std::cout << std::endl;
@@ -298,8 +307,9 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 					 col.fg(Color::Green), t, col.reset(), d);
 		};
 
-		mu_println("\nother info topics ('mu info <topic>'):\n{}\n{}",
+		mu_println("\nother info topics ('mu info <topic>'):\n{}\n{}\n{}",
 			   topic("store", "information about the message store (database)"),
+			   topic("maildirs", "list the maildirs under the store's root-maildir"),
 			   topic("fields",  "information about message fields"));
 	}
 
