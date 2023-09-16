@@ -61,26 +61,11 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 		mu_printerrln("{}{}{}",
 			      col.fg(Color::BrightBlue), res.error().what(), col.reset());
 
-	mu_printerr("{}", col.fg(Color::Green));
-
 	// perhaps give some useful hint on how to solve it.
-	switch (res.error().code()) {
-	case Error::Code::InvalidArgument:
-		break;
-	case Error::Code::StoreLock:
-		mu_printerrln("Perhaps mu is already running?");
-		break;
-	case Error::Code::SchemaMismatch:
-		mu_printerrln("Please (re)initialize with 'mu init'; see mu-init(1) for details");
-		break;
-	case Error::Code::CannotReinit:
-		mu_printerrln("Invoke 'mu init' without '--reinit'; see mu-init(1) for details");
-		break;
-	default:
-		break; /* nothing to do */
-	}
-
-	mu_printerr("{}", col.reset());
+	if (!res.error().hint().empty())
+		mu_printerrln("{}hint{}: {}{}{}",
+			      col.fg(Color::Blue), col.reset(),
+			      col.fg(Color::Green), res.error().hint(), col.reset());
 
 	return res.error().exit_code();
 }

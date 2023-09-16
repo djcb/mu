@@ -241,7 +241,8 @@ Store::Store(const std::string& path, Store::Options opts)
 		if (s_version < 500)
 			throw Mu::Error(Error::Code::CannotReinit,
 					"old schema ({}) is too old to re-initialize from",
-					s_version);
+					s_version).add_hint("Invoke 'mu init' without '--reinit'; "
+							    "see mu-init(1) for details");
 		const auto old_root_maildir{root_maildir()};
 
 		MemDb mem_db;
@@ -258,7 +259,8 @@ Store::Store(const std::string& path, Store::Options opts)
 	if (s_version != ExpectedSchemaVersion)
 		throw Mu::Error(Error::Code::SchemaMismatch,
 				"expected schema-version {}, but got {}",
-				ExpectedSchemaVersion, s_version);
+				ExpectedSchemaVersion, s_version).
+			add_hint("Please (re)initialize with 'mu init'; see mu-init(1) for details");
 }
 
 Store::Store(const std::string& path,
@@ -348,7 +350,7 @@ Store::add_message(Message& msg, bool use_transaction, bool is_new)
 	// we shouldn't mix ngrams/non-ngrams messages.
 	if (any_of(msg.options() & Message::Options::SupportNgrams) !=
 	    any_of(message_options() & Message::Options::SupportNgrams))
-	    return Err(Error::Code::InvalidArgument, "incompatible message options");
+		return Err(Error::Code::InvalidArgument, "incompatible message options");
 
 	/* add contacts from this message to cache; this cache
 	 * also determines whether those contacts are _personal_, i.e. match
