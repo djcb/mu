@@ -137,7 +137,7 @@ struct Error final : public std::exception {
 	 * @return true or false
 	 */
 	constexpr bool is_soft_error() const {
-		return (static_cast<uint32_t>(code_) & SoftError) != 0;
+		return !!((static_cast<uint32_t>(code_)>>24) & SoftError);
 	}
 
 	constexpr uint8_t exit_code() const {
@@ -154,6 +154,26 @@ struct Error final : public std::exception {
 			    "%s", what_.c_str());
 	}
 
+	/**
+	 * Add an end-user hint
+	 *
+	 * @param args... libfmt-style format string and parameters
+	 *
+	 * @return the error
+	 */
+	template<typename...T>
+	Error& add_hint(fmt::format_string<T...> frm, T&&... args) {
+		hint_ = fmt::format(frm, std::forward<T>(args)...);
+		return *this;
+	}
+
+	/**
+	 * Get the hint
+	 *
+	 * @return the hint, empty for no hint.
+	 */
+	const std::string& hint() const { return hint_; }
+
 private:
 	static inline GQuark error_quark (void) {
 		static GQuark error_domain = 0;
@@ -164,8 +184,8 @@ private:
 
 	const Code		code_;
 	const std::string	what_;
+	std::string		hint_;
 };
-
 
 static inline auto
 format_as(const Error& err) {
