@@ -105,9 +105,9 @@ topic_fields(const Options& opts)
 	auto searchable=[&](const Field& field)->std::string {
 		if (field.is_boolean_term())
 			return "boolean";
-		if (field.is_indexable_term())
-			return "index";
-		if (field.is_normal_term())
+		if (field.is_phrasable_term())
+			return "phrase";
+		if (field.is_value())
 			return "yes";
 		if (field.is_contact())
 			return "contact";

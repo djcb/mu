@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -110,24 +110,24 @@ struct Field {
 	 * (msg), ie.  one value containing the list of To: addresses - there
 	 * can be multiple terms, each containing e.g. one of the To:
 	 * addresses - searching uses terms, but to display some field, it
-	 * must be in the value (at least when using MuMsgIter)
+	 * must be in the value
 	 *
 	 * Rules (build-time enforced):
-	 * - A field has at most one of Indexable, HasTerms, IsXapianBoolean and IsContact.
+	 * - A field has at most one of PhrasableTerm, BooleanTerm, ContactTerm.
 	 */
 
 	enum struct Flag {
 		/*
-		 * Different kind of terms; at most one is true,
-		 * and cannot be combined with IsContact. Compile-time enforced.
+		 * Different kind of terms; at most one is true, and cannot be combined with
+		 * Contact. Compile-time enforced.
 		 */
 		NormalTerm    = 1 << 0,
 		/**< Field is a searchable term */
 		BooleanTerm   = 1 << 1,
 		/**< Field is a boolean search-term (i.e. at most one per message);
 		 * wildcards do not work */
-		IndexableTerm = 1 << 2,
-		/**< Field has indexable text as term */
+		PhrasableTerm = 1 << 2,
+		/**< Field has phrasable/indexable text as term */
 		/*
 		 * Contact flag cannot be combined with any of the term flags.
 		 * This is compile-time enforced.
@@ -150,10 +150,10 @@ struct Field {
 		return (static_cast<int>(some_flag) & static_cast<int>(flags)) != 0;
 	}
 
-	constexpr bool is_indexable_term()	const { return any_of(Flag::IndexableTerm); }
+	constexpr bool is_phrasable_term()	const { return any_of(Flag::PhrasableTerm); }
 	constexpr bool is_boolean_term()	const { return any_of(Flag::BooleanTerm); }
 	constexpr bool is_normal_term()		const { return any_of(Flag::NormalTerm); }
-	constexpr bool is_searchable()          const { return is_indexable_term() ||
+	constexpr bool is_searchable()          const { return is_phrasable_term() ||
 							       is_boolean_term() ||
 							       is_normal_term(); }
 	constexpr bool is_sortable()            const { return is_value(); }
@@ -230,8 +230,8 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
-		Field::Flag::IndexableTerm,
-
+		Field::Flag::NormalTerm |
+		Field::Flag::PhrasableTerm,
 	    },
 	    {
 		Field::Id::BodyText,
@@ -240,7 +240,7 @@ static constexpr std::array<Field, Field::id_size()>
 		"Message plain-text body",
 		"body:capybara",
 		'b',
-		Field::Flag::IndexableTerm,
+		Field::Flag::PhrasableTerm,
 	    },
 	    {
 		Field::Id::Cc,
@@ -252,7 +252,8 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
-		Field::Flag::IndexableTerm,
+		Field::Flag::NormalTerm |
+		Field::Flag::PhrasableTerm,
 	    },
 	    {
 		Field::Id::Changed,
@@ -283,7 +284,7 @@ static constexpr std::array<Field, Field::id_size()>
 		"Embedded text",
 		"embed:war OR embed:peace",
 		'e',
-		Field::Flag::IndexableTerm
+		Field::Flag::PhrasableTerm
 	    },
 	    {
 		Field::Id::File,
@@ -315,7 +316,8 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
-		Field::Flag::IndexableTerm,
+		Field::Flag::NormalTerm |
+		Field::Flag::PhrasableTerm,
 	    },
 	    {
 		Field::Id::Language,
@@ -421,8 +423,9 @@ static constexpr std::array<Field, Field::id_size()>
 		"subject:wombat",
 		's',
 		Field::Flag::Value |
-		Field::Flag::IndexableTerm |
-		Field::Flag::IncludeInSexp
+		Field::Flag::IncludeInSexp |
+		Field::Flag::NormalTerm |
+		Field::Flag::PhrasableTerm
 	    },
 	    {
 		Field::Id::Tags,
@@ -455,7 +458,8 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::Contact |
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp |
-		Field::Flag::IndexableTerm,
+		Field::Flag::NormalTerm |
+		Field::Flag::PhrasableTerm,
 	    },
 	}};
 

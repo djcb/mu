@@ -81,19 +81,16 @@ static void
 add_search_term(Xapian::Document& doc, const Field& field, const std::string& val,
 		Document::Options opts)
 {
-	if (field.is_normal_term()) {
-		doc.add_term(field.xapian_term(val));
+	if (field.is_normal_term() || field.is_phrasable_term()) {
+		const auto flat{utf8_flatten(val)};
+		if (field.is_normal_term())
+			doc.add_term(field.xapian_term(flat));
+		if (field.is_phrasable_term()) {
+			auto termgen{make_term_generator(doc, opts)};
+			termgen.index_text(flat, 1, field.xapian_term());
+		}
 	} else if (field.is_boolean_term()) {
 		doc.add_boolean_term(field.xapian_term(val));
-	} else if (field.is_indexable_term()) {
-		auto&& termgen{make_term_generator(doc, opts)};
-		termgen.index_text(utf8_flatten(val), 1, field.xapian_term());
-		 /* also add as 'normal' term, so some queries where the indexer
-		  * eats special chars also match */
-		if (field.id != Field::Id::BodyText &&
-		    field.id != Field::Id::EmbeddedText) {
-			doc.add_term(field.xapian_term(val));
-		}
 	} else
 		throw std::logic_error("not a search term");
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -92,15 +92,12 @@ constexpr /*static*/ bool
 validate_field_flags()
 {
 	for (auto&& field: Fields) {
-		/* - A field has at most one of Indexable, HasTerms, IsXapianBoolean and
-		   IsContact. */
+		/* - A field has at most one of Phrasable, Boolean */
 		size_t flagnum{};
 
-		if (field.is_indexable_term())
+		if (field.is_phrasable_term())
 			++flagnum;
 		if (field.is_boolean_term())
-			++flagnum;
-		if (field.is_normal_term())
 			++flagnum;
 
 		if (flagnum > 1) {
