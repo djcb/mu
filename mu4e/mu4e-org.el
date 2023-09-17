@@ -1,4 +1,4 @@
-;;; mu4e-org -- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
+;;; mu4e-org --- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
 

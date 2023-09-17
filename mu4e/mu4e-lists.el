@@ -1,4 +1,4 @@
-;;; mu4e-lists.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-lists.el --- Create tables of list-id -> shortname for mailing lists in mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 

@@ -1,4 +1,4 @@
-;;; mu4e-contrib.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-contrib.el --- Some user-contributed functions for mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2013-2022 Dirk-Jan C. Binnema
 

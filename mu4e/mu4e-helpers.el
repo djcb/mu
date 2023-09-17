@@ -1,4 +1,4 @@
-;;; mu4e-helpers.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-helpers.el --- Helper functions used in mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022-2023  Dirk-Jan C. Binnema
 

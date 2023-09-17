@@ -1,4 +1,4 @@
-;;; mu4e-query-items.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-query-items.el --- Queries for bookmarks and items for mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023 Dirk-Jan C. Binnema
 
