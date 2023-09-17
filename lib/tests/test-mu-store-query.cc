@@ -131,6 +131,7 @@ I said: "Aujourd'hui!"
 }};
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	store.commit();
 
 	// matches
 	for (auto&& expr: {
@@ -692,6 +693,8 @@ Date: Wed, 26 Oct 2022 11:01:54 -0700
 To: example@example.com
 Subject: kata-containers
 
+voodoo-containers
+
 Boo!
 )"},
 		}};
@@ -699,10 +702,13 @@ Boo!
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
 	/* true: match; false: no match */
-	const auto cases = std::array<std::pair<const char*, bool>, 3>{{
+	const auto cases = std::vector<std::pair<const char*, bool>>{{
 			{"subject:kata", true},
 			{"subject:containers", true},
-			{"subject:kata-containers", true}
+			{"subject:kata-containers", true},
+			{"subject:\"kata containers\"", true},
+			{"voodoo-containers", true},
+			{"voodoo containers", true}
 		}};
 
 	for (auto&& test: cases) {

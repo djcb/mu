@@ -74,7 +74,6 @@ struct Element {
 		ValueType		value{};
 	};
 	struct Basic: public FieldValue<std::string> {using FieldValue::FieldValue;};
-	struct Phrase: public FieldValue<std::string> {using FieldValue::FieldValue;};
 	struct Regex: public FieldValue<std::string> {using FieldValue::FieldValue;};
 	struct Wildcard: public FieldValue<std::string> {using FieldValue::FieldValue;};
 	struct Range: public FieldValue<std::pair<std::string, std::string>> {
@@ -89,7 +88,6 @@ struct Element {
 		std::string,
 		/* value types */
 		Basic,
-		Phrase,
 		Regex,
 		Wildcard,
 		Range
@@ -152,9 +150,6 @@ struct Element {
 				}
 			} else if constexpr (std::is_same_v<T, Basic>) {
 				return Sexp { field_sym(arg.field), arg.value };
-			} else if constexpr (std::is_same_v<T, Phrase>) {
-				return Sexp {field_sym(arg.field),
-					Sexp{ phrase_sym, arg.value }};
 			} else if constexpr (std::is_same_v<T, Regex>) {
 				return Sexp { field_sym(arg.field), Sexp{ regex_sym, arg.value}};
 			} else if constexpr (std::is_same_v<T, Wildcard>) {
@@ -338,24 +333,6 @@ basify(Element&& element)
 }
 
 static Option<Element>
-phrasify(Element&& element)
-{
-	auto&& basic{element.get_opt<Element::Basic>()};
-	if (!basic)
-		return element;
-
-	auto&& field = field_from_name(*basic->field);
-	if (!field || field->is_indexable_term()) {
-		auto&& val{basic->value};
-		if (val.find(' ') != std::string::npos)
-			element.value = Element::Phrase{basic->field, val};
-	}
-
-	return element;
-}
-
-
-static Option<Element>
 wildcardify(Element&& element)
 {
 	auto&& basic{element.get_opt<Element::Basic>()};
@@ -467,7 +444,7 @@ process(const std::string& expr)
 			.and_then(opify)
 			.and_then(basify)
 			.and_then(regexpify)
-			.and_then(phrasify)
+			//.and_then(phrasify)
 			.and_then(wildcardify)
 			.and_then(rangify);
 		if (element)
@@ -527,10 +504,6 @@ test_processor()
 	std::vector<TestCase> cases = {
 		// basics
 		TestCase{R"(hello world)", R"(((_ "hello") (_ "world")))"},
-		TestCase{R"("hello world")", R"(((_ (phrase "hello world"))))"},
-		TestCase{R"(subject:"hello world")", R"(((subject (phrase "hello world"))))"},
-
-		// maildir must _not_ be phrasified
 		TestCase{R"(maildir:/"hello world")", R"(((maildir "/hello world")))"},
 	};
 

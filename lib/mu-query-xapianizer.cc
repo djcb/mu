@@ -89,7 +89,7 @@ string_nth(const Sexp& args, size_t n)
 static Result<Xapian::Query>
 phrase(const Field& field, Sexp&& s)
 {
-	if (!field.is_indexable_term())
+	if (!field.is_phrasable_term())
 		return Err(Error::Code::InvalidArgument,
 			   "field {} does not support phrases", field.name);
 
@@ -273,13 +273,12 @@ parse_basic(const Field &field, Sexp &&vals, Mu::ParserFlags flags)
 	default: {
 		auto q{Xapian::Query{field.xapian_term(val)}};
 		if (ngrams) { // special case: cjk; see if we can create an expanded query.
-			if (field.is_indexable_term() && contains_unbroken_script(val))
+			if (field.is_phrasable_term() && contains_unbroken_script(val))
 				if (auto&& ng{ngram_expand(field, val)}; ng)
 					return ng;
 		}
 		return q;
 	}}
-
 }
 
 static Result<Xapian::Query>
@@ -420,6 +419,8 @@ using TestCase = std::pair<std::string, std::string>;
 static void
 test_xapian()
 {
+	allow_warnings();
+
 	auto&& testhome{unwrap(make_temp_dir())};
 	auto&& dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
 	auto&& store{unwrap(Store::make_new(dbpath, join_paths(testhome, "test-maildir")))};
@@ -429,7 +430,8 @@ test_xapian()
 	auto&& zz{make_xapian_query(store, R"(subject:"hello world")")};
 	assert_valid_result(zz);
 	/* LCOV_EXCL_START*/
-	if (zz->get_description() != R"(Query((Shello PHRASE 2 Sworld)))") {
+	if (zz->get_description() != R"(Query((Shello world OR (Shello PHRASE 2 Sworld))))") {
+		mu_println("{}", zz->get_description());
 		if (mu_test_mu_hacker()) {
 			// in the mu hacker case, we want to be warned if Xapian changed.
 			g_critical("xapian version mismatch");
@@ -446,7 +448,8 @@ test_xapian()
 		TestCase{R"(i:87h766tzzz.fsf@gnus.org)", R"(Query(I87h766tzzz.fsf@gnus.org))"},
 		TestCase{R"(subject:foo to:bar)", R"(Query((Sfoo AND Tbar)))"},
 		TestCase{R"(subject:"cuux*")", R"(Query(WILDCARD SYNONYM Scuux))"},
-		TestCase{R"(subject:"hello world")", R"(Query((Shello PHRASE 2 Sworld)))"},
+		TestCase{R"(subject:"hello world")",
+			R"(Query((Shello world OR (Shello PHRASE 2 Sworld))))"},
 		TestCase{R"(subject:/boo/")", R"(Query())"},
 
 		// ranges.

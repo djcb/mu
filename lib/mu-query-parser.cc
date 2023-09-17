@@ -76,6 +76,42 @@ struct ParseContext {
 };
 
 
+
+
+/**
+ * Indexable fields become _phrase_ fields if they contain
+ * wordbreakable data;
+ *
+ * @param field
+ * @param val
+ *
+ * @return
+ */
+static Option<Sexp>
+phrasify(const Field& field, const Sexp& val)
+{
+	if (!field.is_phrasable_term() || !val.stringp())
+		return Nothing; // nothing to phrasify
+
+	auto words{utf8_wordbreak(val.string())};
+	if (words.find(' ') == std::string::npos)
+		return Nothing; // nothing to phrasify
+
+	auto phrase = Sexp {
+		Sexp::Symbol{field.name},
+		Sexp{phrase_sym, Sexp{std::move(words)}}};
+
+	// if the field both a normal term & phrasable, match both
+	// if they are different
+	if (val.string() != words)
+		return Sexp{or_sym,
+			Sexp {Sexp::Symbol{field.name}, Sexp(val.string())},
+			std::move(phrase)};
+	else
+		return phrase;
+}
+
+
 /*
  * Grammar
  *
@@ -87,6 +123,7 @@ struct ParseContext {
 
 static Sexp query(Sexp& tokens, ParseContext& ctx);
 
+
 static Sexp
 matcher(Sexp& tokens, ParseContext& ctx)
 {
@@ -95,22 +132,38 @@ matcher(Sexp& tokens, ParseContext& ctx)
 
 	auto val{*tokens.head()};
 	tokens.pop_front();
-
-	/* special case: if we find some non-matcher type here, we need to
-	 * second-guess the tokenizer */
+	/* special case: if we find some non-matcher type here, we need to second-guess the token */
 	if (!looks_like_matcher(val))
 		val = Sexp{placeholder_sym, val.symbol().name};
 
+	const auto fieldsym{val.front().symbol()};
+
+	// Note the _expand_ case is what we use when processing the query 'for real';
+	// the non-expand case is only to have a bit more human-readable Sexp for use
+	// mu find's '--analyze'
+	//
+	// Re: phrase-fields We map something like 'subject:hello-world'
+	// to
+	//    (or (subject "hello-world" (subject (phrase "hello world"))))
+
 	if (ctx.expand) { /* should we expand meta-fields? */
-		const auto symbol{val.front().symbol()};
-		const auto fields = fields_from_name(symbol == placeholder_sym ? "" : symbol.name);
+		auto fields = fields_from_name(fieldsym == placeholder_sym ? "" : fieldsym.name);
 		if (!fields.empty()) {
 			Sexp vals{};
 			vals.add(or_sym);
 			for (auto&& field: fields)
-				vals.add(Sexp{Sexp::Symbol{field.name}, Sexp{*second(val)}});
+				if (auto&& phrase{phrasify(field, *second(val))}; phrase)
+					vals.add(std::move(*phrase));
+				else
+					vals.add(Sexp{Sexp::Symbol{field.name}, Sexp{*second(val)}});
 			val = std::move(vals);
 		}
+
+	}
+
+	if (auto&& field{field_from_name(fieldsym.name)}; field) {
+		if (auto&& phrase(phrasify(*field, *second(val))); phrase)
+			val = std::move(*phrase);
 	}
 
 	return val;
