@@ -187,6 +187,17 @@ utf8_flatten(const std::string& s) {
  */
 std::string utf8_clean(const std::string& dirty);
 
+
+/**
+ * Replace all wordbreak chars (as recognized by Xapian by single SPC)
+ *
+ * @param txt text
+ *
+ * @return string
+ */
+std::string utf8_wordbreak(const std::string& txt);
+
+
 /**
  * Remove ctrl characters, replacing them with ' '; subsequent
  * ctrl characters are replaced by a single ' '

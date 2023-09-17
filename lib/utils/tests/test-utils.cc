@@ -188,6 +188,20 @@ test_clean()
 	test_cases(cases, [](auto s, auto f) { return utf8_clean(s); });
 }
 
+
+static void
+test_word_break()
+{
+	CaseVec cases = {
+	    {"aap+noot&mies",            true,  "aap noot mies"},
+	    {"hallo",                    true,  "hallo"},
+	    {"  foo-bar###cuux,fnorb  ", true, "foo bar cuux fnorb"},
+	};
+
+	test_cases(cases, [](auto s, auto f) { return utf8_wordbreak(s); });
+}
+
+
 static void
 test_format()
 {
@@ -313,6 +327,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/flatten", test_flatten);
 	g_test_add_func("/utils/remove-ctrl", test_remove_ctrl);
 	g_test_add_func("/utils/clean", test_clean);
+	g_test_add_func("/utils/word-break", test_word_break);
 	g_test_add_func("/utils/format", test_format);
 	g_test_add_func("/utils/summarize", test_summarize);
 	g_test_add_func("/utils/split", test_split);
