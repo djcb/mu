@@ -1,4 +1,4 @@
-;;; mu4e-icalendar.el --- reply to iCalendar meeting requests (part of mu4e)  -*- lexical-binding: t; -*-
+;;; mu4e-icalendar.el --- Icalendar and diary integration in mu4e -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019-2023 Christophe Troestler
 

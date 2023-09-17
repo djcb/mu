@@ -1,4 +1,4 @@
-;;; mu4e-modeline.el -- part of mu4e  -*- lexical-binding: t -*-
+;;; mu4e-modeline.el --- Modeline for mu4e  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023 Dirk-Jan C. Binnema
 

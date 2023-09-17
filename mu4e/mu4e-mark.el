@@ -1,4 +1,4 @@
-;;; mu4e-mark.el -- part of mu4e  -*- lexical-binding: t -*-
+;;; mu4e-mark.el --- functions related to marking messages in mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 

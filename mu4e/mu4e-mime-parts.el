@@ -1,4 +1,4 @@
-;;; mu4e-mime-parts.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-mime-parts.el --- Implements functions and variables for dealing with MIME-parts and URLs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023 Dirk-Jan C. Binnema
 

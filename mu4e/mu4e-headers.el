@@ -1,4 +1,4 @@
-;;; mu4e-headers.el -- part of mu4e -*- lexical-binding: t; coding:utf-8 -*-
+;;; mu4e-headers.el --- Functions related to mu4e-headers-mode -*- lexical-binding: t; coding:utf-8 -*-
 
 ;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 

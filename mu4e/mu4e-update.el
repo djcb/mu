@@ -1,4 +1,4 @@
-;;; mu4e-update.el -- part of mu4e, -*- lexical-binding: t -*-
+;;; mu4e-update.el --- Update the mu4e message store -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
