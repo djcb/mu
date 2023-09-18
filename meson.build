@@ -46,6 +46,11 @@ endif
 ################################################################################
 # compilers / flags
 #
+
+# compilers
+cc = meson.get_compiler('c')
+cxx= meson.get_compiler('cpp')
+
 extra_flags = [
   '-Wno-unused-parameter',
   '-Wno-cast-function-type',
@@ -53,33 +58,36 @@ extra_flags = [
   '-Wformat=2',
   '-Wstack-protector',
   '-Wno-switch-enum',
-  '-Wno-volatile',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
-  '-Wno-stringop-overflow',
-# clang
-  '-Wc11-extensions', # for clang
-  '-Wno-keyword-macro',
-  '-Wno-deprecated-volatile',
-  '-Wno-#warnings',
+  '-Wno-stringop-overflow']
+
+if (cxx.get_id() == 'clang')
+  extra_flags += [
+    '-Wc11-extensions',
+    '-Wno-keyword-macro',
+    '-Wno-deprecated-volatile',
+    '-Wno-#warnings']
+endif
+
+extra_cpp_flags= [
+  '-Wno-volatile'
 ]
 
 if get_option('buildtype') == 'debug'
   extra_flags += [
     '-ggdb',
-    '-fvar-tracking',
-    '-fvar-tracking-assignments']
+    '-g3']
 endif
-
-# compilers
-cc = meson.get_compiler('c')
-cxx= meson.get_compiler('cpp')
 
 # extra arguments, if available
 foreach extra_arg : extra_flags
   if cc.has_argument (extra_arg)
     add_project_arguments([extra_arg], language: 'c')
   endif
+endforeach
+
+foreach extra_arg : extra_flags + extra_cpp_flags
   if cxx.has_argument (extra_arg)
     add_project_arguments([extra_arg], language: 'cpp')
   endif
@@ -167,8 +175,6 @@ if cld2_dep.found()
 else
   message('CLD2 not found; no support for language detection')
 endif
-
-dependency('cld2', required : false)
 
 # note: these are for the unit-tests
 
