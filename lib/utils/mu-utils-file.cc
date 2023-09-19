@@ -162,7 +162,7 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 		throw std::logic_error("unknown path");
 	}
 }
-
+/* LCOV_EXCL_START*/
 static gpointer
 cancel_wait(gpointer data)
 {
@@ -210,7 +210,7 @@ Mu::g_cancellable_new_with_timeout(guint timeout)
 
 	return cancel;
 }
-
+/* LCOV_EXCL_STOP*/
 
 Result<std::string>
 Mu::read_from_stdin()
@@ -285,6 +285,18 @@ Mu::run_command(std::initializer_list<std::string> args, bool try_setsid)
 				to_string_gchar(std::move(std_out/*consumed*/)),
 				to_string_gchar(std::move(std_err/*consumed*/))});
 }
+
+Result<Mu::CommandOutput>
+Mu::run_command0(std::initializer_list<std::string> args, bool try_setsid)
+{
+	if (auto&& res{run_command(args, try_setsid)}; !res)
+		return res;
+	else if (res->exit_code != 0)
+		return Err(Error::Code::File, "command ran with non-zero exit code");
+	else
+		return Ok(std::move(*res));
+}
+
 
 Mu::Option<std::string>
 Mu::program_in_path(const std::string& name)

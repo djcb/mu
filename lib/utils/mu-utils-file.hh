@@ -227,14 +227,14 @@ Result<std::string> make_temp_dir();
 Result<void> remove_directory(const std::string& path);
 
 /**
- * Run some system command
+ * Run some system command.
  *
  * @param args a list of commmand line arguments (like argv)
  * @param try_setsid whether to try setsid(2) (see its manpage for details) if this
  *        system supports it.
  *
- * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_
- * considered an error from the perspective of this function.
+ * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_ considered an error from the
+ * perspective of run_command, but is for run_command0
  */
 struct CommandOutput {
 	int exit_code;
@@ -243,6 +243,8 @@ struct CommandOutput {
 };
 Result<CommandOutput> run_command(std::initializer_list<std::string> args,
 				  bool try_setsid=false);
+Result<CommandOutput> run_command0(std::initializer_list<std::string> args,
+				   bool try_setsid=false);
 
 /**
  * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the
