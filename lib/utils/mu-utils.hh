@@ -425,6 +425,19 @@ to_string(const T& val)
 
 	return sstr.str();
 }
+/**
+ * Convert to std::string to a std::string_view
+ * Careful with the lifetimes!
+ *
+ * @param s a string
+ *
+ * @return a string_view
+ */
+static inline std::string_view
+to_string_view(const std::string& s)
+{
+	return std::string_view{s.data(), s.size()};
+}
 
 /**
  * Consume a gchar and return a std::string
