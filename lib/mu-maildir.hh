@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -97,19 +97,18 @@ Result<void> maildir_move_message(const std::string& oldpath,
  * @param old_path an absolute file system path to an existing message in an
  * actual maildir
  * @param root_maildir_path the absolete file system path under which
- * all maidlirs live.
+ * all maildirs live.
  * @param target_maildir the target maildir; note that this the base-level
  * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
  * 'cur' or 'new' part. Note that the target maildir must be on the
  * same filesystem. Can be empty if the message should not be moved to
  * a different maildir; note that this may still involve a
  * move to another directory (say, from new/ to cur/)
- * @param flags to set for the target (influences the filename, path).
+ * @param flags to set for the target (influences the filename, path). Any none-Maildir/File
+ * flags are ignored.
  * @param new_name whether to change the basename of the file
- * @param err receives error information
  *
- * @return Full path name of the target file or std::nullopt in case
- * of error
+ * @return Full path name of the target file or an Error
  */
 Result<std::string>
 maildir_determine_target(const std::string&	old_path,

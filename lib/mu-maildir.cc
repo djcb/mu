@@ -293,19 +293,8 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 G_GNUC_UNUSED static Mu::Result<void>
 msg_move_mv_file(const std::string& src, const std::string& dst)
 {
-	const auto cmdline{mu_format("/bin/mv {} {}",
-				     to_string_gchar(g_shell_quote(src.c_str())),
-				     to_string_gchar(g_shell_quote(dst.c_str())))};
-	GError *err{};
-	int wait_status{};
-
-	mu_debug("{}", cmdline);
-
-	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
-		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
-	else if (auto&& res{WEXITSTATUS(wait_status)}; res != 0)
-		return Err(Error::Code::File, "error moving {} -> {}; err={}",
-			   src, dst, res);
+	if (auto res{run_command0({"/bin/mv", src, dst})}; !res)
+		return Err(Error::Code::File, "error moving {}->{}; err={}", src, dst, res.error());
 	else
 		return Ok();
 }
@@ -424,7 +413,7 @@ check_determine_target_params (const std::string& old_path,
 
 	if (any_of(newflags & Flags::New) && newflags != Flags::New)
 		return Err(Error{Error::Code::File,
-					"if ::New is specified, it must be the only flag"});
+					"if the New flag is specified, it must be the only flag"});
 	return Ok();
 }
 
@@ -436,6 +425,8 @@ Mu::maildir_determine_target(const std::string&	old_path,
 			     Flags		newflags,
 			     bool		new_name)
 {
+	newflags = flags_mail_dir_file(newflags); // filter out irrelevant flags.
+
 	/* sanity checks */
 	if (const auto checked{check_determine_target_params(
 		old_path, root_maildir_path, target_maildir, newflags)}; !checked)
