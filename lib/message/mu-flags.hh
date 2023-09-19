@@ -114,48 +114,48 @@ struct MessageFlagInfo {
  * Array of all flag information.
  */
 constexpr std::array<MessageFlagInfo, 14> AllMessageFlagInfos = {{
-    MessageFlagInfo{Flags::Draft,        'D', "draft",		MessageFlagCategory::Mailfile,
+	MessageFlagInfo{Flags::Draft,        'D', "draft",	MessageFlagCategory::Mailfile,
 	    "Draft (in progress)"
-    },
-    MessageFlagInfo{Flags::Flagged,	 'F', "flagged",	MessageFlagCategory::Mailfile,
-	    "User-flagged"
-    },
-    MessageFlagInfo{Flags::Passed,	 'P', "passed",		MessageFlagCategory::Mailfile,
-	    "Forwarded message"
-    },
-    MessageFlagInfo{Flags::Replied,	 'R', "replied",	MessageFlagCategory::Mailfile,
-	    "Replied-to"
-    },
-    MessageFlagInfo{Flags::Seen,	 'S', "seen",		MessageFlagCategory::Mailfile,
-	    "Viewed at least once"
-    },
-    MessageFlagInfo{Flags::Trashed,	 'T', "trashed",	MessageFlagCategory::Mailfile,
-	    "Marked for deletion"
-    },
-    MessageFlagInfo{Flags::New,		 'N', "new",		MessageFlagCategory::Maildir,
-	    "New message"
-    },
-    MessageFlagInfo{Flags::Signed,	 'z', "signed",		MessageFlagCategory::Content,
-	    "Cryptographically signed"
-    },
-    MessageFlagInfo{Flags::Encrypted,	 'x', "encrypted",      MessageFlagCategory::Content,
-	    "Encrypted"
-    },
-    MessageFlagInfo{Flags::HasAttachment,'a', "attach",        MessageFlagCategory::Content,
-	    "Has at least one attachment"
-    },
+	},
+	MessageFlagInfo{Flags::Flagged,	 'F', "flagged",	MessageFlagCategory::Mailfile,
+		"User-flagged"
+	},
+	MessageFlagInfo{Flags::Passed,	 'P', "passed",		MessageFlagCategory::Mailfile,
+		"Forwarded message"
+	},
+	MessageFlagInfo{Flags::Replied,	 'R', "replied",	MessageFlagCategory::Mailfile,
+		"Replied-to"
+	},
+	MessageFlagInfo{Flags::Seen,	 'S', "seen",		MessageFlagCategory::Mailfile,
+		"Viewed at least once"
+	},
+	MessageFlagInfo{Flags::Trashed,	 'T', "trashed",	MessageFlagCategory::Mailfile,
+		"Marked for deletion"
+	},
+	MessageFlagInfo{Flags::New,	 'N', "new",		MessageFlagCategory::Maildir,
+		"New message"
+	},
+	MessageFlagInfo{Flags::Signed,	 'z', "signed",		MessageFlagCategory::Content,
+		"Cryptographically signed"
+	},
+	MessageFlagInfo{Flags::Encrypted, 'x', "encrypted",      MessageFlagCategory::Content,
+		"Encrypted"
+	},
+	MessageFlagInfo{Flags::HasAttachment,'a', "attach",     MessageFlagCategory::Content,
+		"Has at least one attachment"
+	},
 
-    MessageFlagInfo{Flags::Unread,	 'u', "unread",		MessageFlagCategory::Pseudo,
-	    "New or not seen message"
-    },
-    MessageFlagInfo{Flags::MailingList,	 'l', "list",		MessageFlagCategory::Content,
-	    "Mailing list message"
-    },
-    MessageFlagInfo{Flags::Personal,	 'q', "personal",	MessageFlagCategory::Content,
-	    "Personal message"
-    },
-    MessageFlagInfo{Flags::Calendar,	 'c', "calendar",	MessageFlagCategory::Content,
-	    "Calendar invitation"
+	MessageFlagInfo{Flags::Unread,	 'u', "unread",		MessageFlagCategory::Pseudo,
+		"New or not seen message"
+	},
+	MessageFlagInfo{Flags::MailingList, 'l', "list",	MessageFlagCategory::Content,
+		"Mailing list message"
+	},
+	MessageFlagInfo{Flags::Personal, 'q', "personal",	MessageFlagCategory::Content,
+		"Personal message"
+	},
+	MessageFlagInfo{Flags::Calendar, 'c', "calendar",	MessageFlagCategory::Content,
+		"Calendar invitation"
     },
 }};
 
@@ -348,7 +348,7 @@ flags_from_expr(std::string_view        expr,
  * @param flags flags
  * @param cat category
  *
- * @return filter flags
+ * @return filtered flags
  */
 constexpr Flags
 flags_filter(Flags flags, MessageFlagCategory cat)
@@ -358,6 +358,25 @@ flags_filter(Flags flags, MessageFlagCategory cat)
 			flags &= ~info.flag;
 	return flags;
 }
+
+/**
+ * Filter out any flags which are _not_ Maildir / Mailfile flags
+ *
+ * @param flags flags
+ *
+ * @return filtered flags
+ */
+constexpr Flags
+flags_mail_dir_file(Flags flags)
+{
+	for (auto&& info : AllMessageFlagInfos)
+		if (info.category != MessageFlagCategory::Maildir &&
+		    info.category != MessageFlagCategory::Mailfile)
+			flags &= ~info.flag;
+	return flags;
+}
+
+
 
 
 /**
