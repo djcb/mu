@@ -174,7 +174,7 @@ unit(Sexp& tokens, ParseContext& ctx)
 {
 	if (tokens.head_symbolp(not_sym)) { /* NOT */
 		tokens.pop_front();
-		Sexp sub{query(tokens, ctx)};
+		Sexp sub{unit(tokens, ctx)};
 
 		/* special case: interpret "not" as a matcher instead; */
 		if (sub.empty())
@@ -360,6 +360,8 @@ test_parser_basic()
 		TestCase{R"(not)", R"((_ "not"))"},
 		// a and (b or c)
 		TestCase{R"(a and (b or c))", R"((and (_ "a") (or (_ "b") (_ "c"))))"},
+		// not a and not b
+		TestCase{R"(not a and b)", R"((and (not (_ "a")) (_ "b")))"},
 		// TODO: add more...
 	};
 
