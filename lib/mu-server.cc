@@ -108,7 +108,7 @@ struct OutputStream {
 	 * longer needed.
 	 */
 	void unlink () {
-		if (!fname_.empty())
+		if (fname_.empty())
 			return;
 		if (auto&&res{::unlink(fname_.c_str())}; res != 0)
 			mu_warning("failed to unlink '{}'", ::strerror(res));
@@ -707,7 +707,7 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 	// structured bindings / lambda don't work with some clang.
 
 	mu_print(out, "(");
-	for(auto&& mi: qres) {
+	for (auto&& mi: qres) {
 
 		auto msg{mi.message()};
 		if (!msg)
