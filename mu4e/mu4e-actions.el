@@ -1,4 +1,4 @@
-;;; mu4e-actions.el --- Actions for messages and attachments in mu4e -*- lexical-binding: t -*-
+;;; mu4e-actions.el --- Actions for messages/attachments -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 

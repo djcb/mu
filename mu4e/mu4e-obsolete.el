@@ -1,4 +1,4 @@
-;;; mu4e-obsolete-vars.el --- Obsolete variables and functions aliases for mu4e -*- lexical-binding: t -*-
+;;; mu4e-obsolete-vars.el --- Obsolete things -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 Dirk-Jan C. Binnema
 

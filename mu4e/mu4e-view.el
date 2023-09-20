@@ -1,4 +1,4 @@
-;;; mu4e-view.el --- Define mu4e-view-mode for viewing e-mail messages in mu4e -*- lexical-binding: t -*-
+;;; mu4e-view.el --- Mode for viewing e-mail messages -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021-2023 Dirk-Jan C. Binnema
 

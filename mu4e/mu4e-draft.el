@@ -1,6 +1,6 @@
-;;; mu4e-draft.el --- various functions to create draft messages in mu4e -*- lexical-binding: t -*-
+;;; mu4e-draft.el --- Creating draft messages -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>

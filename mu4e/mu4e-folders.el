@@ -1,4 +1,4 @@
-;;; mu4e-folders.el --- Dealing with maildirs & folders in mu4e -*- lexical-binding: t -*-
+;;; mu4e-folders.el --- Dealing with maildirs & folders -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021-2023 Dirk-Jan C. Binnema
 

@@ -1,4 +1,4 @@
-;;; mu4e-window.el --- window management for mu4e    -*- lexical-binding: t; -*-
+;;; mu4e-window.el --- Window management -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022  Mickey Petersen
 

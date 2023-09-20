@@ -1,4 +1,4 @@
-;;; mu4e-compose.el --- Various functions to compose/send messages from mu4e -*- lexical-binding: t -*-
+;;; mu4e-compose.el --- Compose and send messages -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
 

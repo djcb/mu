@@ -1,6 +1,6 @@
-;;; mu4e-contacts.el -- part of mu4e -*- lexical-binding: t -*-
+;;; mu4e-contacts.el -- Dealing with contacts -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2023 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -81,10 +81,10 @@ their canonical counterpart; useful as an example."
 
 (make-obsolete-variable 'mu4e-contact-rewrite-function
                         "mu4e-contact-process-function (see docstring)"
-			"mu4e 1.3.2")
+                        "mu4e 1.3.2")
 (make-obsolete-variable 'mu4e-compose-complete-ignore-address-regexp
                         "mu4e-contact-process-function (see docstring)"
-			"mu4e 1.3.2")
+                        "mu4e 1.3.2")
 
 (defcustom mu4e-contact-process-function
   (lambda(addr)
@@ -165,7 +165,7 @@ with both the plain addresses and /regular expressions/."
                         'mu4e-user-mail-address-list "0.9.9.x")
 (make-obsolete-variable 'mu4e-user-mail-address-list
                         "determined by server; see `mu4e-personal-addresses'."
-			"1.3.8")
+                        "1.3.8")
 
 
 ;; Helpers
@@ -231,9 +231,9 @@ case a phrase contains a quote, it will be escaped."
 (defun mu4e-contact-full (contact)
   "Get the full combination of name and email address from CONTACT."
   (let* ((email (mu4e-contact-email contact))
-	 (name (mu4e-contact-name contact)))
+         (name (mu4e-contact-name contact)))
     (if (and name (> (length name) 0))
-	(format "%s <%s>" (mu4e--rfc822-quote-phrase name) email)
+        (format "%s <%s>" (mu4e--rfc822-quote-phrase name) email)
       email)))
 
 
@@ -249,9 +249,9 @@ This is used by the completion function in mu4e-compose."
     (dolist (contact contacts)
       (cl-incf n)
       (when (functionp mu4e-contact-process-function)
-	(setq contact (funcall mu4e-contact-process-function contact)))
+        (setq contact (funcall mu4e-contact-process-function contact)))
       (when contact ;; note the explicit deccode; the strings we get are
-		      ;; utf-8, but emacs doesn't know yet.
+                      ;; utf-8, but emacs doesn't know yet.
         (puthash (decode-coding-string contact 'utf-8) t mu4e--contacts-set)))
     (setq mu4e--contacts-tstamp (or tstamp "0"))
     (unless (zerop n)
@@ -265,7 +265,7 @@ For testing/debugging."
   (with-current-buffer (get-buffer-create "*mu4e-contacts-info*")
     (erase-buffer)
     (insert (format "complete addresses:        %s\n"
-		    (if mu4e-compose-complete-addresses "yes" "no")))
+                    (if mu4e-compose-complete-addresses "yes" "no")))
     (insert (format "only personal addresses:   %s\n"
                     (if mu4e-compose-complete-only-personal "yes" "no")))
     (insert (format "only addresses seen after: %s\n"
@@ -275,7 +275,7 @@ For testing/debugging."
       (insert (format "number of contacts cached: %d\n\n"
                       (hash-table-count mu4e--contacts-set)))
       (maphash (lambda (contact _)
-		 (insert (format "%s\n" contact))) mu4e--contacts-set))
+                 (insert (format "%s\n" contact))) mu4e--contacts-set))
     (pop-to-buffer "*mu4e-contacts-info*")))
 
 (declare-function mu4e--server-contacts  "mu4e-server")

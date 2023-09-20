@@ -1,6 +1,6 @@
-;;; mu4e-contrib.el --- Some user-contributed functions for mu4e -*- lexical-binding: t -*-
+;;; mu4e-contrib.el --- User-contributed functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2013-2023 Dirk-Jan C. Binnema
 
 ;; This file is not part of GNU Emacs.
 

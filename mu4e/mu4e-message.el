@@ -1,4 +1,4 @@
-;;; mu4e-message.el --- Functions to get data from mu4e-message plist structure -*- lexical-binding: t -*-
+;;; mu4e-message.el --- Working with mu4e-message plists -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
 

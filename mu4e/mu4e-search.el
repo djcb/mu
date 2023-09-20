@@ -1,4 +1,4 @@
-;;; mu4e-search.el --- Search-related functions for mu4e -*- lexical-binding: t -*-
+;;; mu4e-search.el --- Search-related functions -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021,2022 Dirk-Jan C. Binnema
 
