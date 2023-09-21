@@ -452,6 +452,13 @@ test_xapian()
 			R"(Query((Shello world OR (Shello PHRASE 2 Sworld))))"},
 		TestCase{R"(subject:/boo/")", R"(Query())"},
 
+		// logic
+		TestCase{R"(not)", R"(Query((Tnot OR Cnot OR Hnot OR Fnot OR Snot OR Bnot OR Enot)))"},
+		TestCase{R"(from:a and (from:b or from:c))", R"(Query((Fa AND (Fb OR Fc))))"},
+		// optimize?
+		TestCase{R"(not from:a and to:b)", R"(Query(((<alldocuments> AND_NOT Fa) AND Tb)))"},
+		TestCase{R"(cc:a not bcc:b)", R"(Query((Ca AND (<alldocuments> AND_NOT Hb))))"},
+
 		// ranges.
 		TestCase{R"(size:1..10")", R"(Query(VALUE_RANGE 17 g1 ga))"},
 		TestCase{R"(size:10..1")", R"(Query(VALUE_RANGE 17 g1 ga))"},

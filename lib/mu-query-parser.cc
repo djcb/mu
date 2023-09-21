@@ -178,7 +178,7 @@ unit(Sexp& tokens, ParseContext& ctx)
 
 		/* special case: interpret "not" as a matcher instead; */
 		if (sub.empty())
-			return Sexp{placeholder_sym, not_sym.name};
+			return matcher(prepend(tokens, Sexp{placeholder_sym, not_sym.name}), ctx);
 
 		/* we try to optimize: double negations are removed */
 		if (sub.head_symbolp(not_sym))
@@ -214,6 +214,8 @@ factor(Sexp& tokens, ParseContext& ctx)
 	auto implicit_and = [&]() {
 		if (tokens.head_symbolp(open_sym))
 			return true;
+		else if (tokens.head_symbolp(not_sym)) // turn a lone 'not' -> 'and not'
+			return true;
 		else if (auto&& head{tokens.head()}; head)
 			return looks_like_matcher(*head);
 		else
@@ -222,7 +224,6 @@ factor(Sexp& tokens, ParseContext& ctx)
 
 	Sexp uns;
 	while (true) {
-
 		if (tokens.head_symbolp(and_sym))
 			tokens.pop_front();
 		else if (!implicit_and())
@@ -362,7 +363,8 @@ test_parser_basic()
 		TestCase{R"(a and (b or c))", R"((and (_ "a") (or (_ "b") (_ "c"))))"},
 		// not a and not b
 		TestCase{R"(not a and b)", R"((and (not (_ "a")) (_ "b")))"},
-		// TODO: add more...
+		// a not b
+		TestCase{R"(a not b)", R"((and (_ "a") (not (_ "b"))))"},
 	};
 
 	for (auto&& test: cases) {
