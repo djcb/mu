@@ -165,29 +165,30 @@ struct Store::Private {
 Result<Store::Id>
 Store::Private::add_message_unlocked(Message& msg)
 {
-	auto docid{xapian_db_.add_document(msg.document().xapian_document())};
-	mu_debug("added message @ {}; docid = {}", msg.path(), docid);
+	auto&& docid{xapian_db_.add_document(msg.document().xapian_document())};
+	if (docid)
+		mu_debug("added message @ {}; docid = {}", msg.path(), *docid);
 
-	return Ok(std::move(docid));
+	return docid;
 }
 
 
 Result<Store::Id>
 Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
 {
-	xapian_db_.replace_document(docid, msg.document().xapian_document());
-	mu_debug("updated message @ {}; docid = {}", msg.path(), docid);
+	auto&& res{xapian_db_.replace_document(docid, msg.document().xapian_document())};
+	if (res)
+		mu_debug("updated message @ {}; docid = {}", msg.path(), *res);
 
-	return Ok(std::move(docid));
+	return res;
 }
 
 Result<Store::Id>
 Store::Private::update_message_unlocked(Message& msg, const std::string& path_to_replace)
 {
-	auto id = xapian_db_.replace_document(
+	return xapian_db_.replace_document(
 		field_from_id(Field::Id::Path).xapian_term(path_to_replace),
 		msg.document().xapian_document());
-	return Ok(std::move(id));
 }
 
 Option<Message>

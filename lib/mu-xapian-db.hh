@@ -307,13 +307,13 @@ public:
 	 *
 	 * @return new docid or 0
 	 */
-	Xapian::docid add_document(const Xapian::Document& doc) {
-		return xapian_try([&]{
+	Result<Xapian::docid> add_document(const Xapian::Document& doc) {
+		return xapian_try_result([&]{
 			DB_LOCKED;
-			auto&& id= wdb().add_document(doc);
+			auto&& id{wdb().add_document(doc)};
 			set_timestamp(MetadataIface::last_change_key);
-			return id;
-		}, 0);
+			return Ok(std::move(id));
+		});
 	}
 
 	/**
@@ -323,21 +323,24 @@ public:
 	 * @param id docid
 	 * @param doc replacement document
 	 *
-	 * @return new docid or 0
+	 * @return new docid or an error
 	 */
-	Xapian::docid replace_document(const std::string& term, const Xapian::Document& doc) {
-		return xapian_try([&]{
+	Result<Xapian::docid>
+	replace_document(const std::string& term, const Xapian::Document& doc) {
+		return xapian_try_result([&]{
 			DB_LOCKED;
-			auto&& id= wdb().replace_document(term, doc);
+			auto&& id{wdb().replace_document(term, doc)};
 			set_timestamp(MetadataIface::last_change_key);
-			return id;
-		}, 0);
+			return Ok(std::move(id));
+		});
 	}
-	void replace_document(const Xapian::docid id, const Xapian::Document& doc) {
-		xapian_try([&]{
+	Result<Xapian::docid>
+	replace_document(Xapian::docid id, const Xapian::Document& doc) {
+		return xapian_try_result([&]{
 			DB_LOCKED;
 			wdb().replace_document(id, doc);
 			set_timestamp(MetadataIface::last_change_key);
+			return Ok(std::move(id));
 		});
 	}
 
@@ -345,20 +348,23 @@ public:
 	 * Delete document(s) for the given term or id
 	 *
 	 * @param term a term
+	 *
+	 * @return Ok or Error
 	 */
-	void delete_document(const std::string& term) {
-		xapian_try([&]{
+	Result<void> delete_document(const std::string& term) {
+		return xapian_try_result([&]{
 			DB_LOCKED;
 			wdb().delete_document(term);
 			set_timestamp(MetadataIface::last_change_key);
+			return Ok();
 		});
 	}
-
-	void delete_document(Xapian::docid id) {
-		xapian_try([&]{
+	Result<void> delete_document(Xapian::docid id) {
+		return xapian_try_result([&]{
 			DB_LOCKED;
 			wdb().delete_document(id);
 			set_timestamp(MetadataIface::last_change_key);
+			return Ok();
 		});
 	}
 
@@ -382,15 +388,26 @@ public:
 	 * Start a transaction
 	 *
 	 * @param flushed
+	 *
+	 * @return Ok or Error
 	 */
-	void begin_transaction(bool flushed=true) {
-		xapian_try([&]{ DB_LOCKED; return wdb().begin_transaction(flushed);});
+	Result<void> begin_transaction(bool flushed=true) {
+		return xapian_try_result([&]{
+			DB_LOCKED;
+			wdb().begin_transaction(flushed);
+			return Ok();
+		});
 	}
 	/**
 	 * Commit a transaction
-	 */
-	void commit_transaction() {
-		xapian_try([&]{ DB_LOCKED; return wdb().commit_transaction();});
+	 *
+	 * @return Ok or Error*/
+	Result<void> commit_transaction() {
+		return xapian_try_result([&]{
+			DB_LOCKED;
+			wdb().commit_transaction();
+			return Ok();
+		});
 	}
 
 	using DbType = std::variant<Xapian::Database, Xapian::WritableDatabase>;

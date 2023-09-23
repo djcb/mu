@@ -77,6 +77,29 @@ test_basic()
 		const auto rmd = conf_db.get<Id::RootMaildir>();
 		assert_equal(rmd, "/home/djcb/Maildir");
 	}
+
+	{
+		g_assert_true(Config::property<Id::BatchSize>().default_val == "50000");
+		g_assert_cmpuint(conf_db.get<Id::BatchSize>(),==,50000);
+
+		assert_valid_result(conf_db.set<Id::BatchSize>(123456));
+		g_assert_cmpuint(conf_db.get<Id::BatchSize>(),==,123456);
+	}
+
+
+	{
+		MemDb db2;
+		Config conf_db2{db2};
+
+		g_assert_cmpuint(conf_db2.get<Id::BatchSize>(),==,50000);
+		g_assert_true(conf_db2.get<Id::RootMaildir>().empty());
+
+		// BatchSize is configurable; RootMaildir is not.
+		conf_db2.import_configurable(conf_db);
+
+		g_assert_cmpuint(conf_db2.get<Id::BatchSize>(),==,123456);
+		g_assert_true(conf_db2.get<Id::RootMaildir>().empty());
+	}
 }
 
 static void
