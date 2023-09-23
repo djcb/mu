@@ -205,18 +205,22 @@ clear_links(const std::string& path, DIR* dir)
 		switch(d_type) {
 		case DT_LNK:
 			if (::unlink(fullpath.c_str()) != 0) {
+				/* LCOV_EXCL_START*/
 				mu_warning("error unlinking {}: {}", fullpath, g_strerror(errno));
 				res = false;
+				/* LCOV_EXCL_STOP*/
 			}
 			break;
 		case  DT_DIR: {
 			DIR* subdir{::opendir(fullpath.c_str())};
+			/* LCOV_EXCL_START*/
 			if (!subdir) {
 				mu_warning("error opening dir {}: {}", fullpath, g_strerror(errno));
 				res = false;
 			}
 			if (!clear_links(fullpath, subdir))
 				res = false;
+			/* LCOV_EXCL_STOP*/
 			::closedir(subdir);
 		} break;
 		default:
@@ -299,20 +303,27 @@ msg_move_mv_file(const std::string& src, const std::string& dst)
 		return Ok();
 }
 
-static Mu::Result<void>
-msg_move(const std::string& src, const std::string& dst, bool assume_remote)
+Mu::Result<void>
+Mu::maildir_move_message(const std::string&	oldpath,
+			 const std::string&	newpath,
+			 bool			assume_remote)
 {
-	if (::access(src.c_str(), R_OK) != 0)
-		return Err(Error{Error::Code::File, "cannot read {}", src});
+	mu_debug("moving {} --> {} (assume-remote:{})", oldpath, newpath, assume_remote);
+
+	if (::access(oldpath.c_str(), R_OK) != 0)
+		return Err(Error{Error::Code::File, "cannot read {}", oldpath});
+
+	if (oldpath == newpath)
+		return Ok(); // nothing to do.
 
 	if (!assume_remote) { /* for testing */
 
-		if (::rename(src.c_str(), dst.c_str()) == 0) /* seems it worked; double-check */
-			return msg_move_verify(src, dst);
+		if (::rename(oldpath.c_str(), newpath.c_str()) == 0) /* seems it worked; double-check */
+			return msg_move_verify(oldpath, newpath);
 		/* LCOV_EXCL_START*/
 		if (errno != EXDEV) /* some unrecoverable error occurred */
 			return Err(Error{Error::Code::File, "error moving {} -> {}: {}",
-					src, dst, strerror(errno)});
+					oldpath, newpath, strerror(errno)});
 		/* LCOV_EXCL_STOP*/
 	}
 
@@ -323,32 +334,17 @@ msg_move(const std::string& src, const std::string& dst, bool assume_remote)
 	 * we use the latter for now, since the former gives some (false)
 	 * valgrind alarms.
 	 * */
-	if (auto&& res{msg_move_mv_file(src, dst)}; !res)
+	if (auto&& res{msg_move_mv_file(oldpath, newpath)}; !res)
 		return res;
 	else
-		return msg_move_verify(src, dst);
-}
-
-Mu::Result<void>
-Mu::maildir_move_message(const std::string&	oldpath,
-			 const std::string&	newpath,
-			 bool			force_gio)
-{
-	if (oldpath == newpath)
-		return Ok(); // nothing to do.
-
-	mu_debug("moving {} --> {} (force-gio:{})", oldpath, newpath, force_gio ? "yes": "no");
-	return msg_move(oldpath, newpath, force_gio);
+		return msg_move_verify(oldpath, newpath);
 }
 
 static std::string
 reinvent_filename_base()
 {
-	return mu_format("{}.{:08x}{:08x}.{}",
-			 ::time({}),
-			 g_random_int(),
-			 g_get_monotonic_time(),
-			 g_get_host_name());
+	return mu_format("{}.{:08x}{:08x}.{}", ::time({}),
+			 g_random_int(), g_get_monotonic_time(), g_get_host_name());
 }
 
 /**

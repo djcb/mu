@@ -75,14 +75,13 @@ Result<void> maildir_link(const std::string& src, const std::string& targetpath,
 Result<void> maildir_clear_links(const std::string& dir);
 
 /**
- * Move a message file to another maildir. If the target exists, it is
- * overwritten.
+ * Move a message file to another maildir. If the target exists, it is overwritten.
  *
  * @param oldpath an absolute file system path to an existing message in an
  * actual maildir
  * @param newpath the absolute full path to the target file
  * @param assume_remote assume the target is on a different file-system,
- * and hence rename() won't work and we need another method (this is for testing)
+ * and hence rename() won't work and we need another method
  *
  * @return a valid result or an Error
  */

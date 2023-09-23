@@ -524,7 +524,32 @@ test_store_maildirs()
 }
 
 
+static void
+test_store_parse()
+{
+	allow_warnings();
 
+	TempDir tdir;
+	auto store = Store::make_new(tdir.path(), MU_TESTMAILDIR2);
+	assert_valid_result(store);
+	g_assert_true(store->empty());
+
+	// Xapian internal format (get_description()) is _not_ guaranteed
+	// to be the same between versions
+	const auto&& pq1{store->parse_query("subject:\"hello world\"", false)};
+	const auto&& pq2{store->parse_query("subject:\"hello world\"", true)};
+
+	assert_equal(pq1, "(or (subject \"hello world\") (subject (phrase \"hello world\")))");
+
+	/* LCOV_EXCL_START*/
+	if (pq2 != "Query((Shello world OR (Shello PHRASE 2 Sworld)))") {
+		g_test_skip("incompatible xapian descriptions");
+		return;
+	}
+	/* LCOV_EXCL_STOP*/
+
+	assert_equal(pq2, "Query((Shello world OR (Shello PHRASE 2 Sworld)))");
+}
 
 static void
 test_store_fail()
@@ -557,6 +582,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/store/move-dups", test_store_move_dups);
 
 	g_test_add_func("/store/maildirs", test_store_maildirs);
+	g_test_add_func("/store/parse", test_store_parse);
 
 	g_test_add_func("/store/index/index-move", test_index_move);
 	g_test_add_func("/store/index/circular-symlink", test_store_circular_symlink);
