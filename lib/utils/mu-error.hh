@@ -189,7 +189,10 @@ private:
 
 static inline auto
 format_as(const Error& err) {
-	return mu_format("<{} ({})>", err.what(), Error::error_number(err.code()));
+	return mu_format("<{} ({}:{})>",
+			 err.what(),
+			 Error::error_number(err.code()),
+			 err.exit_code());
 }
 
 } // namespace Mu
