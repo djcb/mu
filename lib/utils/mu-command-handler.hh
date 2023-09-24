@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -218,7 +218,7 @@ struct CommandHandler {
 		 * first, then alphabetical.
 		 *
 		 * @return vec with the sorted names.
-		 */
+		 */ /* LCOV_EXCL_START */
 		std::vector<std::string> sorted_argnames() const {
 			// sort args -- by required, then alphabetical.
 			std::vector<std::string> names;
@@ -234,6 +234,7 @@ struct CommandHandler {
 			});
 			return names;
 		}
+		/* LCOV_EXCL_STOP */
 
 	};
 
@@ -263,6 +264,7 @@ private:
 	const CommandInfoMap cmap_;
 };
 
+/* LCOV_EXCL_START */
 static inline std::ostream&
 operator<<(std::ostream& os, const CommandHandler::ArgInfo& info)
 {
@@ -270,6 +272,7 @@ operator<<(std::ostream& os, const CommandHandler::ArgInfo& info)
 
 	return os;
 }
+/* LCOV_EXCL_STOP */
 
 static inline std::ostream&
 operator<<(std::ostream& os, const CommandHandler::CommandInfo& info)
