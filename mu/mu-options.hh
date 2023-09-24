@@ -8,7 +8,7 @@
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
@@ -36,10 +36,10 @@
 /* command-line options for Mu */
 namespace Mu {
 struct Options {
-	using   OptSize	     = Option<std::size_t>;
-	using   SizeVec      = std::vector<std::size_t>;
-	using   OptTStamp    = Option<std::time_t>;
-	using   OptFieldId   = Option<Field::Id>;
+	using	OptSize	     = Option<std::size_t>;
+	using	SizeVec	     = std::vector<std::size_t>;
+	using	OptTStamp    = Option<std::time_t>;
+	using	OptFieldId   = Option<Field::Id>;
 	using	StringVec    = std::vector<std::string>;
 
 	/*
@@ -62,10 +62,11 @@ struct Options {
 
 	enum struct SubCommand {
 		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
-		Remove, Script, Server, Verify, View/*must be last*/
+		Move, Remove, Script, Server, Verify, View,
+		// <private>
+		__count__
 	};
-	static constexpr std::size_t SubCommandNum =
-		1 + static_cast<std::size_t>(SubCommand::View);
+	static constexpr auto SubCommandNum = static_cast<size_t>(SubCommand::__count__);
 	static constexpr std::array<SubCommand, SubCommandNum> SubCommands = {{
 			SubCommand::Add,
 			SubCommand::Cfind,
@@ -77,13 +78,13 @@ struct Options {
 			SubCommand::Info,
 			SubCommand::Init,
 			SubCommand::Mkdir,
+			SubCommand::Move,
 			SubCommand::Remove,
 			SubCommand::Script,
 			SubCommand::Server,
 			SubCommand::Verify,
 			SubCommand::View
 		}};
-
 
 	Option<SubCommand> sub_command;			/**< The chosen sub-command, if any. */
 
@@ -117,16 +118,16 @@ struct Options {
 	 * Extract
 	 */
 	struct Extract: public Crypto {
-		std::string     message;		/**<  path to message file */
+		std::string	message;		/**<  path to message file */
 		bool		save_all;		/**<  extract all parts */
 		bool		save_attachments;	/**<  extract all attachment parts */
-		SizeVec		parts;		/**<  parts to save /  open */
+		SizeVec		parts;			/**<  parts to save /  open */
 		std::string	targetdir{};		/**<  where to save attachments */
 		bool		overwrite;		/**<  overwrite same-named files */
 		bool		play;			/**<  try to 'play' attachment */
-		std::string     filename_rx;		/**<  Filename rx to save */
-		bool            uncooked{};             /**<  Whether to avoid massaging
-							 * output filename */
+		std::string	filename_rx;		/**<  Filename rx to save */
+		bool		uncooked{};		/**<  Whether to avoid massaging
+							    * the output filename */
 	} extract;
 
 	/*
@@ -138,7 +139,7 @@ struct Options {
 	 */
 	struct Find {
 		std::string	fields;			/**<  fields to show in output */
-		Field::Id	sortfield;		/**<  field to sort by  */
+		Field::Id	sortfield;		/**<  field to sort by	*/
 		OptSize		maxnum;			/**<  max # of entries to print */
 		bool		reverse;		/**<  sort in revers order (z->a) */
 		bool		threads;		/**<  show message threads */
@@ -146,7 +147,7 @@ struct Options {
 		std::string	linksdir;		/**<  directory for links */
 		OptSize		summary_len;		/**<  max # of lines for summary */
 		std::string	bookmark;		/**<  use bookmark */
-		bool            analyze;                /**<  analyze query */
+		bool		analyze;		/**<  analyze query */
 
 		enum struct Format { Plain, Links, Xml, Json, Sexp, Exec };
 		Format		format;			/**< Output format */
@@ -158,7 +159,7 @@ struct Options {
 		bool		auto_retrieve;		/**<  assume we're online */
 		bool		decrypt;		/**<  try to decrypt the body */
 
-		StringVec       query;			/**< search query */
+		StringVec	query;			/**< search query */
 	} find;
 
 	struct Help {
@@ -189,10 +190,10 @@ struct Options {
 		StringVec	my_addresses;		/**< personal e-mail addresses */
 		StringVec	ignored_addresses;	/**< addresses to be ignored for
 							 * the contacts-cache */
-		OptSize         max_msg_size;		/**< max size for message files */
+		OptSize		max_msg_size;		/**< max size for message files */
 		OptSize		batch_size;		/**< db transaction batch size */
 		bool		reinit;			/**< re-initialize  */
-		bool            support_ngrams;         /**< support CJK etc. ngrams */
+		bool		support_ngrams;		/**< support CJK etc. ngrams */
 
 	} init;
 
@@ -205,6 +206,19 @@ struct Options {
 	} mkdir;
 
 	/*
+	 * Move
+	 */
+	struct Move {
+		std::string	src;		       /**< Source file */
+		std::string	dest;		       /**< Destination dir */
+		std::string	flags;		       /**< Flags for destination */
+		bool            change_name;           /**< Change basename for destination */
+		bool            update_dups;           /**< Update duplicate messages too */
+		bool            dry_run;               /**< Just print the result path,
+							but do not change anything */
+	} move;
+
+	/*
 	 * Remove
 	 */
 	struct Remove {
@@ -215,7 +229,7 @@ struct Options {
 	 * Scripts (i.e., finding scriot)
 	 */
 	struct Script {
-		std::string     name;                   /**< name of script */
+		std::string	name;			/**< name of script */
 		StringVec	params;			/**< script params */
 	} script;
 
@@ -225,7 +239,7 @@ struct Options {
 	struct Server {
 		bool		commands;		/**< dump docs for commands */
 		std::string	eval;			/**< command to evaluate */
-		bool            allow_temp_file;	/**< temp-file optimization allowed? */
+		bool		allow_temp_file;	/**< temp-file optimization allowed? */
 	} server;
 
 	/*

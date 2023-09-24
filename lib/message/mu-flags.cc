@@ -138,7 +138,6 @@ test_flags_from_delta_expr()
 			      "-S", Flags::Seen).value() ==
 		      Flags::Unread);
 
-
 	static_assert(flags_from_delta_expr("+R+P-F", Flags::Seen).value() ==
 		      (Flags::Seen|Flags::Passed|Flags::Replied));
 	/* '-B' is invalid */

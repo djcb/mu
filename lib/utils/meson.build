@@ -105,5 +105,11 @@ test('test-html-to-text',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_utils_dep]))
 
+test('test-error',
+     executable('test-error', 'mu-error.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep]))
+
 
 subdir('tests')

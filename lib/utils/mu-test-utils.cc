@@ -36,11 +36,13 @@
 
 using namespace Mu;
 
+/* LCOV_EXCL_START*/
 bool
 Mu::mu_test_mu_hacker()
 {
 	return !!g_getenv("MU_HACKER");
 }
+/* LCOV_EXCL_STOP*/
 
 
 const char*
@@ -65,8 +67,10 @@ Mu::set_en_us_utf8_locale()
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	if (strcmp(nl_langinfo(CODESET), "UTF-8") != 0) {
+		/* LCOV_EXCL_START*/
 		mu_println("Note: Unit tests require the en_US.utf8 locale. "
 			   "Ignoring test cases.");
+		/* LCOV_EXCL_STOP*/
 		return false;
 	}
 
@@ -130,13 +134,10 @@ Mu::TempDir::~TempDir()
 		return;
 	}
 
-	/* ugly */
-	GError *err{};
-	const auto cmd{mu_format("/bin/rm -rf '{}'", path_)};
-	if (!g_spawn_command_line_sync(cmd.c_str(), NULL,
-				       NULL, NULL, &err)) {
-		mu_warning("error: {}", err ? err->message : "?");
-		g_clear_error(&err);
+	if (auto&& res{run_command0({RM_PROGRAM, "-fr", path_})}; !res) {
+		/* LCOV_EXCL_START*/
+		mu_warning("error removing {}: {}", path_, format_as(res.error()));
+		/* LCOV_EXCL_STOP*/
 	} else
 		mu_debug("removed '{}'", path_);
 }

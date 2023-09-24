@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -148,20 +148,16 @@ using	ArgMap	       = CommandHandler::ArgMap;
 using	ArgInfo	       = CommandHandler::ArgInfo;
 using	CommandInfo    = CommandHandler::CommandInfo;
 
-
-static bool
+static Result<void>
 call(const CommandInfoMap& cmap, const std::string& str) try {
 
-	const auto cmd{Command::make_parse(str)};
-	if (!cmd)
-		throw Error(Error::Code::Internal, "invalid sexp str");
-
-	const auto res{CommandHandler(cmap).invoke(*cmd)};
-	return !!res;
+	if (const auto cmd{Command::make_parse(str)}; !cmd)
+		return Err(Error::Code::Internal, "invalid s-expression '{}'", str);
+	else
+		return CommandHandler(cmap).invoke(*cmd);
 
 } catch (const Error& err) {
-	mu_warning("{}", err.what());
-	return false;
+	return Err(Error{err});
 }
 
 static void
@@ -169,18 +165,49 @@ test_command()
 {
 	allow_warnings();
 
-	CommandInfoMap cmap;
-	cmap.emplace(
+	CommandInfoMap ci_map;
+	ci_map.emplace(
 	    "my-command",
 	    CommandInfo{ArgMap{{":param1", ArgInfo{Sexp::Type::String, true, "some string"}},
 			       {":param2", ArgInfo{Sexp::Type::Number, false, "some integer"}}},
 			"My command,",
 			{}});
+	ci_map.emplace(
+		"another-command",
+		CommandInfo{
+			ArgMap{
+				{":queries", ArgInfo{Sexp::Type::List, false,
+					 "queries for which to get read/unread numbers"}},
+				{":symbol", ArgInfo{Sexp::Type::Symbol, true,
+					 "some boring symbol"}},
+				{":bool", ArgInfo{Sexp::Type::Symbol, true,
+					 "some even more boring boolean symbol"}},
+				{":symbol2", ArgInfo{Sexp::Type::Symbol, false,
+					 "some even more boring symbol"}},
+				{":bool2", ArgInfo{Sexp::Type::Symbol, false,
+					 "some boring boolean symbol"}},
+			},
+			"get unread/totals information for a list of queries",
+			[&](const auto& params) {
+				const auto queries{params.string_vec_arg(":queries")
+					.value_or(std::vector<std::string>{})};
+				g_assert_cmpuint(queries.size(),==,3);
+				g_assert_true(params.bool_arg(":bool").value_or(false) == true);
+				assert_equal(params.symbol_arg(":symbol").value_or("boo"), "sym");
 
-	g_assert_true(call(cmap, "(my-command :param1 \"hello\")"));
-	g_assert_true(call(cmap, "(my-command :param1 \"hello\" :param2 123)"));
+				g_assert_false(!!params.bool_arg(":bool2"));
+				g_assert_false(!!params.bool_arg(":symbol2"));
 
-	g_assert_false(call(cmap, "(my-command :param1 \"hello\" :param2 123 :param3 xxx)"));
+			}});
+
+	CommandHandler handler(std::move(ci_map));
+	const auto cmap{handler.info_map()};
+
+	assert_valid_result(call(cmap, "(my-command :param1 \"hello\")"));
+	assert_valid_result(call(cmap, "(my-command :param1 \"hello\" :param2 123)"));
+	g_assert_false(!!call(cmap, "(my-command :param1 \"hello\" :param2 123 :param3 xxx)"));
+	assert_valid_result(call(cmap, "(another-command :queries (\"foo\" \"bar\" \"cuux\") "
+				 ":symbol sym :bool true)"));
 }
 
 static void

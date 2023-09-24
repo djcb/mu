@@ -140,6 +140,8 @@ Mu::mu_cmd_execute(const Options& opts) try {
 		return with_writable_store(mu_cmd_add, opts);
 	case Options::SubCommand::Remove:
 		return with_writable_store(mu_cmd_remove, opts);
+	case Options::SubCommand::Move:
+		return with_writable_store(mu_cmd_move, opts);
 	case Options::SubCommand::Index:
 		return with_writable_store(mu_cmd_index, opts);
 

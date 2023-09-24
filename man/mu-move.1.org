@@ -1,0 +1,115 @@
+#+TITLE: MU MOVE
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+
+* NAME
+
+*mu move* - move a message file or change its flags
+
+* SYNOPSIS
+
+*mu [common-options] move [options] <src> [--flags=<flags>] [<target>]*
+
+* DESCRIPTION
+
+*mu move* is the command for moving messages in a Maildir or changing their flags.
+
+For any change, both the message file in the file system as well as its
+representation in the database are updated accordingly.
+
+The source message file and target-maildir must reside under the root-maildir
+for mu's database (see *mu info store*).
+
+* MOVE OPTIONS
+
+** --flags=<flags>
+
+specify the new message flags. See *FLAGS* for details.
+
+** --change-name
+
+change the basename of the message file when moving; this can be useful when
+using some external tools such as *mbsync(1)* which otherwise get confused
+
+** --update-dups
+
+update the flags of duplicate messages too, where "duplicate messages" are
+defined as all message that share the same message-id. Note that the
+Draft/Flagged/Trashed flags are deliberately _not_ changed if you change those on
+the source message.
+
+** --dry-run,-n
+
+print the target filename(s), but don't change anything.
+
+Note that with the ~--change-name~, the target name is not constant, so you cannot
+use a dry-run to predict the exact name when doing a 'real' run.
+
+#+include: "common-options.inc" :minlevel 1
+
+* FLAGS
+
+(Note: if you are not familiar with Maildirs, please refer to the *maildir(5)*
+man-page, or see http://cr.yp.to/proto/maildir.html)
+
+The message flags specify the Maildir-metadata for a message and are represented
+by uppercase letters at the end of the message file name for all 'non-new'
+messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
+
+| Flag | Meaning                            |
+|------+------------------------------------|
+| D    | Draft message                      |
+| F    | Flagged message                    |
+| P    | Passed message (i.e., 'forwarded') |
+| R    | Replied message                    |
+| S    | Seen message                       |
+| T    | Trashed; to be deleted later       |
+
+New messages (in the ~new/~ sub-directory) do not have flags encoded in their
+file-name; but we *mu* uses 'N' in the ~--flags~ to represent that:
+
+| Flag | Meaning |
+|------+---------|
+| N    | New     |
+
+Thus, changing flags means changing the letters at the end of the message
+file-name, except when setting or removing the 'N' (new) flag. Setting or
+un-setting the New flag causes the message is to be moved from ~cur/~ to ~new/~ or
+vice-versa, respectively. When marking a message as New, it looses the other
+flags.
+
+* ABSOLUTE AND RELATIVE FLAGS
+
+You can specify the flags with the ~--flags~ parameter, and do either with either
+*absolute* or *relative* flags.
+
+Absolute flags just specify the new flags by their letters; e.g. to specify a
+/Trashed/, /Seen/, /Replied/ message, you'd use ~--flags STR~.
+#+end_example
+
+Relative flags are relative to the current flags for some message, and each of
+the flags is prefixed with either ~+~ ("add this flag") or ~-~ ("remove this flag").
+
+So to add the /Seen/ flag and remove the /Draft/ flag from whatever the message
+already has, ~--flags +S-D~.
+
+You cannot combine relative and relative flags.
+
+* EXAMPLES
+
+** change some flags
+#+begin_example
+$ mu move /home/user/Maildir/inbox/cur/1695559560.a73985881f4611ac2.hostname!2,S --flags +F
+/home/user/Maildir/inbox/cur/1695559560.a73985881f4611ac2.hostname!2,FS
+#+end_example
+
+** move to a different maildir
+#+begin_example
+$ mu move /home/user/Maildir/project1/cur/1695559560.a73985881f4611ac2.hostname!2,S /project2
+/home/user/Maildir/project2/cur/1695559560.a73985881f4611ac2.hostname!2,S
+#+end_example
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+*maildir(5)*

@@ -925,9 +925,8 @@ Server::Private::perform_move(Store::Id                 docid,
 
 	/* note: we get back _all_ the messages that changed; the first is the
 	 * primary mover; the rest (if present) are any dups affected */
-	const auto ids{unwrap(store().move_message(docid, maildir, flags, move_opts))};
-
-	for (auto&& id: ids) {
+	const auto id_paths{unwrap(store().move_message(docid, maildir, flags, move_opts))};
+	for (auto& [id,path]: id_paths) {
 		auto idmsg{store().find_message(id)};
 		if (!idmsg)
 			mu_warning("failed to find message for id {}", id);
@@ -1113,15 +1112,14 @@ Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 	}
 
 	// move message + dups, present results.
-
 	Store::MoveOptions move_opts{Store::MoveOptions::DupFlags};
 	if (rename)
 		move_opts |= Store::MoveOptions::ChangeName;
-	auto&& ids = unwrap(store().move_message(docid, {}, nflags, move_opts));
-	for (auto&& [id, moved_msg]: store().find_messages(ids)) {
+
+	const auto ids{Store::id_vec(unwrap(store().move_message(docid, {}, nflags, move_opts)))};
+	for (auto&& [id, moved_msg]: store().find_messages(ids))
 		output(mu_format("({} {})", id == docid ? ":view" : ":update",
 				 msg_sexp_str(moved_msg, id, {})));
-	}
 }
 
 void
