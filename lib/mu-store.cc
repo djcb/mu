@@ -548,7 +548,7 @@ Store::move_message(Store::Id id,
 	if (none_of(opts & Store::MoveOptions::DupFlags) || message_id.empty() || !new_flags)
 		return Ok(std::move(id_paths));
 
-	/* handle the dupflags case; i.e. apply (a subset of) the flags to
+	/* handle the dup-flags case; i.e. apply (a subset of) the flags to
 	 * all messages with the same message-id as well */
 	auto dups{priv_->find_duplicates_unlocked(*this, message_id)};
 	for (auto&& dupid: dups) {
@@ -562,16 +562,19 @@ Store::move_message(Store::Id id,
 
 		/* For now, don't change Draft/Flagged/Trashed */
 		const auto dup_flags{filter_dup_flags(dup_msg->flags(), *new_flags)};
-		/* use the updated new_flags and default MoveOptions (so we don't recurse, nor do we
-		 * change the base-name of moved messages) */
+		/* use the updated new_flags and MoveOptions without DupFlags (so we don't
+		 * recurse) */
+		opts = opts & ~MoveOptions::DupFlags;
 		if (auto dup_res = priv_->move_message_unlocked(
-			    std::move(*dup_msg), Nothing,
-			    dup_flags,
-			    Store::MoveOptions::None); !dup_res)
+			    std::move(*dup_msg), Nothing, dup_flags, opts); !dup_res)
 			mu_warning("failed to move dup: {}", dup_res.error().what());
 		else
 			id_paths.emplace_back(dupid, dup_res->first);
 	}
+
+	// sort the dup paths by name;
+	std::sort(id_paths.begin() + 1, id_paths.end(),
+		  [](const auto& idp1, const auto& idp2) { return idp1.second < idp2.second; });
 
 	return Ok(std::move(id_paths));
 }

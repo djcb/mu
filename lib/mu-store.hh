@@ -309,6 +309,9 @@ public:
 	 * @return Result, either an IdPathVec with ids and paths for the moved message(s) or some
 	 * error. Note that in case of success at least one message is returned, and only with
 	 * MoveOptions::DupFlags can it be more than one.
+	 *
+	 * The first element of the IdPathVec, is the main message that got move; any subsequent
+	 * (if any) are the duplicate paths, sorted by path-name.
 	 */
 	Result<IdPathVec> move_message(Store::Id id,
 				       Option<const std::string&> target_mdir = Nothing,
