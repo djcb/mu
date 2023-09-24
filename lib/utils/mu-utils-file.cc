@@ -298,7 +298,11 @@ Mu::run_command0(std::initializer_list<std::string> args, bool try_setsid)
 	if (auto&& res{run_command(args, try_setsid)}; !res)
 		return res;
 	else if (res->exit_code != 0)
-		return Err(Error::Code::File, "command ran with non-zero exit code");
+		return Err(Error::Code::File, "command returned {}: {}",
+			   res->exit_code,
+			   res->standard_err.empty() ?
+			   std::string{"something went wrong"}:
+			   res->standard_err);
 	else
 		return Ok(std::move(*res));
 }

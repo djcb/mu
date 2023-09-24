@@ -98,6 +98,8 @@ test_maildir_mkdir_03()
 static void
 test_maildir_mkdir_04()
 {
+	allow_warnings();
+
 	if (geteuid() == 0) {
 		g_test_skip("not useful when run as root");
 		return;
