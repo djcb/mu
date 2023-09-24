@@ -5,7 +5,10 @@
 
 *** mu
 
-    - ~mu~ commands ~extract~, ~verify~ and ~view~ can now read the message from
+    - new command ~mu move~ to move messages across maildirs and/or change their
+      flags. See the manpage for all the details.
+
+    - ~mu~ commands ~extract~ ~verify~ and ~view~ can now read the message from
       standard input; see their man-pages for details
 
     - ~mu init~ gained the ~--ignored-address~ option for email-addresses / regexps
