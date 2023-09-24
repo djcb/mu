@@ -44,8 +44,8 @@ constexpr uint32_t err_enum(uint8_t code, uint8_t rv, uint8_t cat) {
 
 struct Error final : public std::exception {
 
-	// 16 lower bits are for the error code the next 8 bits is for the return code
-	// upper byte is for flags
+	// 16 lower bits are for the error code;the next 8 bits are for the return code; the upper
+	// byte is for flags
 	static constexpr uint8_t SoftError = 1;
 
 	enum struct Code: uint32_t {
