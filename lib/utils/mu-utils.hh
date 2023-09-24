@@ -47,14 +47,12 @@
 
 namespace Mu {
 
-
 /*
  * Separator characters used in various places; importantly,
  * they are not used in UTF-8
  */
 constexpr const auto SepaChar1 = '\xfe';
 constexpr const auto SepaChar2 = '\xff';
-
 
 /*
  * Logging/printing/formatting functions connect libfmt with the Glib logging
@@ -88,6 +86,7 @@ void mu_warning(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_WARNING, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
+/* LCOV_EXCL_START*/
 template<typename...T>
 void mu_critical(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_CRITICAL, "%s",
@@ -98,6 +97,7 @@ void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
 	g_log("mu", G_LOG_LEVEL_ERROR, "%s",
 	      fmt::format(frm, std::forward<T>(args)...).c_str());
 }
+/* LCOV_EXCL_STOP*/
 
 /*
  * Printing; add our wrapper functions, one day we might be able to use std::
@@ -355,8 +355,10 @@ struct StopWatch {
 	StopWatch(const std::string name) : start_{Clock::now()}, name_{name} {}
 	~StopWatch() {
 		const auto us{static_cast<double>(to_us(Clock::now() - start_))};
+		/* LCOV_EXCL_START*/
 		if (us > 2000000)
 			mu_debug("sw: {}: finished after {:.1f} s", name_, us / 1000000);
+		/* LCOV_EXCL_STOP*/
 		else if (us > 2000)
 			mu_debug("sw: {}: finished after {:.1f} ms", name_, us / 1000);
 		else

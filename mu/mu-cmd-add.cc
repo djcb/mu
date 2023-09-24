@@ -113,20 +113,13 @@ test_add_fail()
 
 
 int
-main(int argc, char* argv[]) try {
-
+main(int argc, char* argv[])
+{
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/cmd/add/ok", test_add_ok);
 	g_test_add_func("/cmd/add/fail", test_add_fail);
 
 	return g_test_run();
-
-} catch (const Error& e) {
-	mu_printerrln("{}", e.what());
-	return 1;
-} catch (...) {
-	mu_printerrln("caught exception");
-	return 1;
 }
 #endif /*BUILD_TESTS*/

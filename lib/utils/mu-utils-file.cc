@@ -158,10 +158,13 @@ Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 		return mu_config;
 	case Mu::RuntimePath::Scripts:
 		return join_paths(mu_config, "scripts");
+		/*LCOV_EXCL_START*/
 	default:
 		throw std::logic_error("unknown path");
+		/*LCOV_EXCL_STOP*/
 	}
 }
+
 /* LCOV_EXCL_START*/
 static gpointer
 cancel_wait(gpointer data)
@@ -212,6 +215,7 @@ Mu::g_cancellable_new_with_timeout(guint timeout)
 }
 /* LCOV_EXCL_STOP*/
 
+/* LCOV_EXCL_START*/
 Result<std::string>
 Mu::read_from_stdin()
 {
@@ -234,13 +238,14 @@ Mu::read_from_stdin()
 							 G_MEMORY_OUTPUT_STREAM(outmem))),
 			g_memory_output_stream_get_size(G_MEMORY_OUTPUT_STREAM(outmem))});
 }
-
+/* LCOV_EXCL_STOP*/
 
 
 /*
  * Set the child to a group leader to avoid being killed when the
  * parent group is killed.
  */
+/*LCOV_EXCL_START*/
 static void
 maybe_setsid (G_GNUC_UNUSED gpointer user_data)
 {
@@ -248,6 +253,7 @@ maybe_setsid (G_GNUC_UNUSED gpointer user_data)
 	setsid();
 #endif /*HAVE_SETSID*/
 }
+/*LCOV_EXCL_STOP*/
 
 Result<Mu::CommandOutput>
 Mu::run_command(std::initializer_list<std::string> args, bool try_setsid)
@@ -451,7 +457,20 @@ test_join_paths()
 	assert_equal(join_paths("/a/b///c/d//", "e"), "/a/b/c/d/e");
 }
 
+static void
+test_runtime_paths()
+{
+	TempDir tdir;
 
+	assert_equal(runtime_path(RuntimePath::Cache, tdir.path()), tdir.path());
+	assert_equal(runtime_path(RuntimePath::XapianDb, tdir.path()),
+		     join_paths(tdir.path(), "xapian"));
+	assert_equal(runtime_path(RuntimePath::Bookmarks, tdir.path()),
+		     join_paths(tdir.path(), "bookmarks"));
+	assert_equal(runtime_path(RuntimePath::Config, tdir.path()), tdir.path());
+	assert_equal(runtime_path(RuntimePath::Scripts, tdir.path()),
+		     join_paths(tdir.path(), "scripts"));
+}
 
 int
 main(int argc, char* argv[])
@@ -473,6 +492,8 @@ main(int argc, char* argv[])
 			test_program_in_path);
 	g_test_add_func("/utils/join-paths",
 			test_join_paths);
+	g_test_add_func("/utils/runtime-paths",
+			test_runtime_paths);
 
 	return g_test_run();
 }
