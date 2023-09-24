@@ -251,7 +251,7 @@ test_view_plain()
 
 	// silly hack to avoid locale  diffs
 	auto rx = unwrap(Regex::make("^Date:.*", G_REGEX_MULTILINE));
-	output.standard_out = rx.replace(output.standard_out, "Date: xxx");
+	output.standard_out = unwrap(rx.replace(output.standard_out, "Date: xxx"));
 
 	g_assert_true(output.standard_err.empty());
 	assert_equal(output.standard_out,
@@ -273,7 +273,7 @@ test_view_html()
 	auto output{*res};
 
 	auto rx = unwrap(Regex::make("^Date:.*", G_REGEX_MULTILINE));
-	output.standard_out = rx.replace(output.standard_out, "Date: xxx");
+	output.standard_out = unwrap(rx.replace(output.standard_out, "Date: xxx"));
 
 	g_assert_true(output.standard_err.empty());
 	assert_equal(output.standard_out,

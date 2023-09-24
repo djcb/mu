@@ -319,8 +319,6 @@ test_summarize(void)
 			"fortification by the Bais raja Sathna. ");
 }
 
-
-
 int
 main(int argc, char* argv[])
 {

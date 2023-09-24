@@ -211,7 +211,7 @@ test_logger_threads(void)
 		threads.emplace_back(
 			std::thread([n,&running]{
 				while (running) {
-					mu_debug("log message from thread <{}>", n);
+					//mu_debug("log message from thread <{}>", n);
 					std::this_thread::yield();
 				}
 			}));

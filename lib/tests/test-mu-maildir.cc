@@ -517,7 +517,7 @@ test_maildir_move_vanilla()
 }
 
 static void
-test_maildir_move_gio()
+test_maildir_move_remote()
 {
 	test_maildir_move(true/*assume_remote*/);
 }
@@ -549,7 +549,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/maildir/link", test_maildir_link);
 	g_test_add_func("/maildir/move-vanilla", test_maildir_move_vanilla);
-	g_test_add_func("/maildir/aildir-move-gio", test_maildir_move_gio);
+	g_test_add_func("/maildir/move-remote", test_maildir_move_remote);
 
 	return g_test_run();
 }

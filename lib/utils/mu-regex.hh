@@ -52,8 +52,7 @@ struct Regex {
 	 */
 	static Result<Regex> make(const std::string& ptrn,
 				  GRegexCompileFlags cflags = G_REGEX_DEFAULT,
-				  GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT)
-		noexcept try {
+				  GRegexMatchFlags mflags = G_REGEX_MATCH_DEFAULT) noexcept try {
 		return Regex(ptrn.c_str(), cflags, mflags);
 	} catch (const Error& err) {
 		return Err(err);
@@ -146,20 +145,24 @@ struct Regex {
 	}
 
 	/**
-	 * Replace all occurences of @this regexp in some string with a
+	 * Replace all occurrences of @this regexp in some string with a
 	 * replacement string
 	 *
 	 * @param str some string
 	 * @param repl replacement string
 	 *
-	 * @return string
+	 * @return string or error
 	 */
-	std::string replace(const std::string& str, const std::string& repl) {
-		char *s{g_regex_replace(rx_, str.c_str(), str.length(), 0,
-					repl.c_str(), G_REGEX_MATCH_DEFAULT, {})};
-		if (!s)
-			throw Err(Error::Code::InvalidArgument, "error in Regex::replace");
-		return to_string_gchar(std::move(s));
+	Result<std::string> replace(const std::string& str, const std::string& repl) const {
+		GError *gerr{};
+
+		if (!rx_)
+			return Err(Error::Code::InvalidArgument, "missing regexp");
+		else if (auto&& s{g_regex_replace(rx_, str.c_str(), str.length(), 0,
+					     repl.c_str(), G_REGEX_MATCH_DEFAULT, &gerr)}; !s)
+			return Err(Error::Code::InvalidArgument, &gerr, "error in Regex::replace");
+		else
+			return Ok(to_string_gchar(std::move(s)));
 	}
 
 	const GRegex* g_regex() const { return rx_; }
@@ -168,11 +171,11 @@ private:
 	Regex(const char *ptrn, GRegexCompileFlags cflags, GRegexMatchFlags mflags) {
 		GError *err{};
 		if (rx_ = g_regex_new(ptrn, cflags, mflags, &err); !rx_)
-			throw Err(Error::Code::InvalidArgument, &err,
-				  "invalid regexp: '{}'", ptrn);
+			throw Error{Error::Code::InvalidArgument, &err,
+				"invalid regexp: '{}'", ptrn};
 	}
 
-	GRegex *rx_;
+	GRegex *rx_{};
 };
 
 static inline std::string format_as(const Regex& rx) {
