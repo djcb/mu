@@ -94,7 +94,7 @@ Result<void> maildir_move_message(const std::string& oldpath,
  *
  * @param old_path an absolute file system path to an existing message in an
  * actual maildir
- * @param root_maildir_path the absolete file system path under which
+ * @param root_maildir_path the absolute file system path under which
  * all maildirs live.
  * @param target_maildir the target maildir; note that this the base-level
  * Maildir, ie. /home/user/Maildir/archive, and must _not_ include the
@@ -102,8 +102,8 @@ Result<void> maildir_move_message(const std::string& oldpath,
  * same filesystem. Can be empty if the message should not be moved to
  * a different maildir; note that this may still involve a
  * move to another directory (say, from new/ to cur/)
- * @param flags to set for the target (influences the filename, path). Any none-Maildir/File
- * flags are ignored.
+ * @param flags to set for the target (influences the filename, path).
+ * Any non-Maildir/File flags are ignored.
  * @param new_name whether to change the basename of the file
  *
  * @return Full path name of the target file or an Error

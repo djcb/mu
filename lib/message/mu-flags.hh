@@ -144,7 +144,6 @@ constexpr std::array<MessageFlagInfo, 14> AllMessageFlagInfos = {{
 	MessageFlagInfo{Flags::HasAttachment,'a', "attach",     MessageFlagCategory::Content,
 		"Has at least one attachment"
 	},
-
 	MessageFlagInfo{Flags::Unread,	 'u', "unread",		MessageFlagCategory::Pseudo,
 		"New or not seen message"
 	},
@@ -289,9 +288,9 @@ flags_from_absolute_expr(std::string_view expr, bool ignore_invalid = false)
  * @param expr delta expression
  * @param flags existing flags
  * @param ignore_invalid if @true, ignore invalid flags, otherwise return
- * nullopt if an invalid flag is encountered
+ * Nothing if an invalid flag is encountered
  *
- * @return new flags, or nullopt in case of error
+ * @return new flags, or Nothing in case of error
  */
 constexpr Option<Flags>
 flags_from_delta_expr(std::string_view expr, Flags flags,
@@ -317,7 +316,6 @@ flags_from_delta_expr(std::string_view expr, Flags flags,
 	}
 
 	return imply_unread(flags);
-
 }
 
 /**
@@ -366,7 +364,7 @@ flags_filter(Flags flags, MessageFlagCategory cat)
  * @return filtered flags
  */
 constexpr Flags
-flags_mail_dir_file(Flags flags)
+flags_maildir_file(Flags flags)
 {
 	for (auto&& info : AllMessageFlagInfos)
 		if (info.category != MessageFlagCategory::Maildir &&

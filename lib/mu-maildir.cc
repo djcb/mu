@@ -421,7 +421,7 @@ Mu::maildir_determine_target(const std::string&	old_path,
 			     Flags		newflags,
 			     bool		new_name)
 {
-	newflags = flags_mail_dir_file(newflags); // filter out irrelevant flags.
+	newflags = flags_maildir_file(newflags); // filter out irrelevant flags.
 
 	/* sanity checks */
 	if (const auto checked{check_determine_target_params(
