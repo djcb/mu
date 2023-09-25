@@ -212,6 +212,7 @@ parse_logop(const Store& store, Xapian::Query::op op, Sexp&& args, Mu::ParserFla
 
 	switch(op) {
 	case Xapian::Query::OP_AND_NOT:
+		// TODO: optimize AND_NOT
 		if (qs.size() != 1)
 			return Err(Error::Code::InvalidArgument,
 				   "expected single argument for NOT");
@@ -328,7 +329,7 @@ parse(const Store& store, Sexp&& s, Mu::ParserFlags flags)
 	return Err(Error::Code::InvalidArgument, "unexpected sexp {}", s.to_string());
 }
 
-/* LCOV_EXCL_START */
+/* LCOV_EXCL_START*/
 // parse the way Xapian's internal parser does it; for testing.
 static Xapian::Query
 xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
@@ -363,7 +364,7 @@ xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
 	xqp.set_default_op(Xapian::Query::OP_AND);
 	return xqp.parse_query(expr, xflags);
 }
-/* LCOV_EXCL_STOP */
+/* LCOV_EXCL_STOP*/
 
 Result<Xapian::Query>
 Mu::make_xapian_query(const Store& store, const std::string& expr, Mu::ParserFlags flags) noexcept
@@ -399,10 +400,18 @@ main (int argc, char *argv[])
 	if (auto&& query{make_xapian_query(*store, expr)}; !query) {
 		mu_printerrln("error: {}", query.error());
 		return 1;
-	} else {
-		mu_println("{}", query->get_description());
-		return 0;
-	}
+	} else
+		mu_println("mu: {}", query->get_description());
+
+	if (auto&& query{make_xapian_query(*store, expr, ParserFlags::XapianParser)}; !query) {
+		mu_printerrln("error: {}", query.error());
+		return 2;
+	} else
+		mu_println("xp: {}", query->get_description());
+
+	return 0;
+
+
 }
 #endif /*BUILD_XAPIANIZE_QUERY*/
 
@@ -415,6 +424,25 @@ main (int argc, char *argv[])
 #include "utils/mu-test-utils.hh"
 
 using TestCase = std::pair<std::string, std::string>;
+
+static void
+test_sexp()
+{
+	/* tail */
+	g_assert_false(!!tail(Sexp{}));
+	auto t = tail(Sexp{1,2,3});
+	g_assert_true(!!t && t->listp() && t->size() == 2);
+
+	/* head_symbol */
+	g_assert_false(!!head_symbol(Sexp{}));
+	assert_equal(head_symbol(Sexp{"foo"_sym, 1, 2}).value_or("bar"), "foo");
+
+	/* string_nth */
+	g_assert_false(!!string_nth(Sexp{}, 123));
+	g_assert_false(!!string_nth(Sexp{1, 2, 3}, 1));
+	assert_equal(string_nth(Sexp{"aap", "noot", "mies"}, 2).value_or("wim"), "mies");
+}
+
 
 static void
 test_xapian()
@@ -483,6 +511,8 @@ main(int argc, char* argv[])
 	mu_test_init(&argc, &argv);
 
 	Xapian::QueryParser qp;
+
+	g_test_add_func("/query-parser/sexp",       test_sexp);
 	g_test_add_func("/query-parser/xapianizer", test_xapian);
 
 	return g_test_run();
