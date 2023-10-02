@@ -678,7 +678,8 @@ determine which browser function to use."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
-    (run-hooks 'gnus-article-decode-hook)
+    ;; just continue if some of the decoding fails.
+    (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (let ((header (unless skip-headers
                     (cl-loop for field in '("from" "to" "cc" "date" "subject")
                              when (message-fetch-field field)
@@ -725,7 +726,8 @@ determine which browser function to use."
     (condition-case err
         (progn
           (mm-enable-multibyte)
-          (run-hooks 'gnus-article-decode-hook)
+          ;; just continue if some of the decoding fails.
+          (ignore-errors (run-hooks 'gnus-article-decode-hook))
           (gnus-article-prepare-display)
           (mu4e--view-activate-urls)
           (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
