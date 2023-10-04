@@ -76,24 +76,6 @@ mu4e_srcs=[
 #
 #... so let's not do that!
 
-# hack-around for native compile issue: copy sources to builddir.
-# see: https://debbugs.gnu.org/db/47/47987.html
-foreach src : mu4e_srcs
-  configure_file(input: src, output:'@BASENAME@.el', copy:true,
-                 install_mode: 'r--r--r--')
-endforeach
-
-# this depends on the above hack: all mu4e elisp files needs to be in builddir
-mu4e_autoloads = configure_file(
-  output: 'mu4e-autoloads.el',
-  install: true,
-  install_dir: mu4e_lispdir,
-  command: [emacs,
-            '--no-init-file',
-            '--batch',
-            '--load', 'package',
-            '--eval', '(package-generate-autoloads "mu4e" "' + meson.current_build_dir() + '" )'])
-
 foreach src : mu4e_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
@@ -114,13 +96,31 @@ foreach src : mu4e_srcs
                           '--batch',
                           '--directory', meson.current_build_dir(),
                           '--directory', meson.current_source_dir(),
-                          '--eval', '(setq load-prefer-newer t)',
                           # we don't need warnings for items that have become
                           # obsolete _after_ our last supported emacs release.
                           '--eval', '(setq byte-compile-warnings \'(not obsolete))',
                           '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
 endforeach
+
+# hack-around for native compile issue: copy sources to builddir.
+# see: https://debbugs.gnu.org/db/47/47987.html
+foreach src : mu4e_srcs
+  configure_file(input: src, output:'@BASENAME@.el', copy:true,
+                 install_mode: 'r--r--r--')
+endforeach
+
+# this depends on the above hack: all mu4e elisp files needs to be in builddir
+mu4e_autoloads = configure_file(
+  output: 'mu4e-autoloads.el',
+  install: true,
+  install_dir: mu4e_lispdir,
+  command: [emacs,
+            '--no-init-file',
+            '--batch',
+            '--load', 'package',
+            '--eval', '(package-generate-autoloads "mu4e" "' +
+                      meson.current_build_dir() + '" )'])
 
 # also install the sources and the config
 install_data(mu4e_srcs, install_dir: mu4e_lispdir)
