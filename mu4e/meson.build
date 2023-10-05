@@ -81,7 +81,10 @@ foreach src : mu4e_srcs
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
 
-  # todo: depfile.
+  # hack-around for native compile issue: copy sources to builddir.
+  # see: https://debbugs.gnu.org/db/47/47987.html
+  configure_file(input: src, output:'@BASENAME@.el', copy:true,
+                 install_mode: 'r--r--r--')
 
   custom_target(src.underscorify() + '_el',
                 build_by_default: true,
@@ -94,20 +97,14 @@ foreach src : mu4e_srcs
                 command: [emacs,
                           '--no-init-file',
                           '--batch',
-                          '--directory', meson.current_build_dir(),
                           '--directory', meson.current_source_dir(),
+                          '--directory', meson.current_build_dir(),
                           # we don't need warnings for items that have become
                           # obsolete _after_ our last supported emacs release.
                           '--eval', '(setq byte-compile-warnings \'(not obsolete))',
                           '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
-endforeach
 
-# hack-around for native compile issue: copy sources to builddir.
-# see: https://debbugs.gnu.org/db/47/47987.html
-foreach src : mu4e_srcs
-  configure_file(input: src, output:'@BASENAME@.el', copy:true,
-                 install_mode: 'r--r--r--')
 endforeach
 
 # this depends on the above hack: all mu4e elisp files needs to be in builddir
