@@ -57,6 +57,7 @@
 (require 'mu4e-contacts)
 (require 'mu4e-headers)
 (require 'mu4e-view)
+(require 'mu4e-obsolete)
 
 
 ;;; Configuration
@@ -133,7 +134,7 @@
           ;; Compose the reply message.
           (save-excursion
             (let ((message-signature nil)
-                  (mu4e-compose-cite-function #'mu4e--icalendar-delete-citation)
+                  (message-cite-function #'mu4e--icalendar-delete-citation)
                   (mu4e-sent-messages-behavior 'delete)
                   (mu4e-compose-reply-recipients 'sender)
                   (ical-msg (cl-copy-list msg)))
@@ -152,7 +153,7 @@
                 (plist-put ical-msg :subject
                            (concat (capitalize (symbol-name status))
                                    ": " (gnus-icalendar-event:summary event))))
-              (mu4e~compose-handler
+              (mu4e--compose-setup
                'reply ical-msg
                `((:buffer-name ,ical-name
                   :mime-type "text/calendar; method=REPLY; charset=utf-8")))
