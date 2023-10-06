@@ -352,18 +352,21 @@ Mu::play (const std::string& path)
 
 
 Result<std::string>
-Mu::expand_path(const std::string& str)
+expand_path_real(const std::string& str)
 {
 #ifndef HAVE_WORDEXP_H
 	return Ok(std::string{str});
 #else
 	int res;
-	wordexp_t result;
-	memset(&result, 0, sizeof(result));
+	wordexp_t result{};
 
 	res = wordexp(str.c_str(), &result, 0);
-	if (res != 0 || result.we_wordc == 0)
-		return Err(Error::Code::File, "cannot expand '%s'; err=%d", str.c_str(), res);
+	if (res != 0)
+		return Err(Error::Code::File, "cannot expand {}; err={}", str, res);
+	else if (auto&n = result.we_wordc; n != 1) {
+		wordfree(&result);
+		return Err(Error::Code::File, "expected 1 expansions, but got {} for {}", n, str);
+	}
 
 	std::string expanded{result.we_wordv[0]};
 	wordfree(&result);
@@ -371,6 +374,18 @@ Mu::expand_path(const std::string& str)
 	return Ok(std::move(expanded));
 
 #endif /*HAVE_WORDEXP_H*/
+}
+
+
+Result<std::string>
+Mu::expand_path(const std::string& str)
+{
+	if (auto&& res{expand_path_real(str)}; res)
+		return res;
+
+	// failed... try quoting.
+	auto qstr{to_string_gchar(g_shell_quote(str.c_str()))};
+	return expand_path_real(qstr);
 }
 
 
