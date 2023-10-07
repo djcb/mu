@@ -783,6 +783,11 @@ present, don't do anything."
 (defconst mu4e~no-matches     "No matching messages found")
 (defconst mu4e~end-of-results "End of search results")
 
+(defvar mu4e--search-background nil
+  "Is this a background search?
+ If so, do not attempt to switch buffers. This variable is to be let-bound
+to t before \"automatic\" searches.")
+
 (defun mu4e--search-execute (expr ignore-history)
   "Search for query EXPR.
 
@@ -810,7 +815,7 @@ true, do *not* update the query history stack."
 
     ;; when the buffer is already visible, select it; otherwise,
     ;; switch to it.
-    (unless (get-buffer-window buf 0)
+    (unless (get-buffer-window buf (if mu4e--search-background 0 nil))
       (mu4e-display-buffer buf t))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
@@ -1079,18 +1084,19 @@ after the end of the search results."
   "Update the current headers buffer after indexing has brought
 some changes, `mu4e-headers-auto-update' is non-nil and there is
 no user-interaction ongoing."
-  (when (and mu4e-headers-auto-update          ;; must be set
+  (when (and mu4e-headers-auto-update ;; must be set
              mu4e-index-update-status
-             (not (mu4e-get-view-buffer))  ;; not when viewing a message
+             (not (mu4e-get-view-buffer)) ;; not when viewing a message
              (not (zerop (plist-get mu4e-index-update-status :updated)))
              ;; NOTE: `mu4e-mark-marks-num' can return nil. Is that intended?
-             (zerop (or (mu4e-mark-marks-num) 0))     ;; non active marks
-             (not (active-minibuffer-window))) ;; no user input only
+             (zerop (or (mu4e-mark-marks-num) 0)) ;; non active marks
+             (not (active-minibuffer-window)))    ;; no user input only
     ;; rerun search if there's a live window with search results;
     ;; otherwise we'd trigger a headers view from out of nowhere.
     (when (and (buffer-live-p (mu4e-get-headers-buffer))
                (window-live-p (get-buffer-window (mu4e-get-headers-buffer) t)))
-      (mu4e-search-rerun))))
+      (let ((mu4e--search-background t))
+        (mu4e-search-rerun)))))
 
 (defcustom mu4e-headers-eldoc-format "“%s” from %f on %d"
   "Format for the `eldoc' string for the current message in the headers buffer.
