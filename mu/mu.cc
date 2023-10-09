@@ -84,7 +84,7 @@ main(int argc, char* argv[]) try
 	/*
 	 * set up locale
 	 */
-	setlocale(LC_ALL, "");
+	::setlocale(LC_ALL, "");
 
 	/*
 	 * read command-line options
@@ -120,9 +120,12 @@ main(int argc, char* argv[]) try
 
 	// exceptions should have been handled earlier, but catch them here,
 	// just in case...
+} catch (const std::logic_error& le) {
+	mu_printerrln("caught logic-error: {}", le.what());
+	return 97;
 } catch (const std::runtime_error& re) {
 	mu_printerrln("caught runtime-error: {}", re.what());
-	return 99;
+	return 98;
 } catch (...) {
 	mu_printerrln("caught exception");
 	return 99;
