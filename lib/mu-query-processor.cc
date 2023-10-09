@@ -311,10 +311,10 @@ basify(Element&& element)
 		auto val{str->substr(pos + 1)};
 		if (field == Field::Id::Flags) {
 			if (auto&& finfo{flag_info(val)}; finfo)
-				element.value =  Element::Basic{field->name,
+				element.value = Element::Basic{field->name,
 					std::string{finfo->name}};
 			else
-				Element::Basic{*str};
+				element.value = Element::Basic{*str};
 		} else if (field == Field::Id::Priority) {
 			if (auto&& prio{priority_from_name(val)}; prio)
 				element.value = Element::Basic{field->name,
@@ -444,7 +444,6 @@ process(const std::string& expr)
 			.and_then(opify)
 			.and_then(basify)
 			.and_then(regexpify)
-			//.and_then(phrasify)
 			.and_then(wildcardify)
 			.and_then(rangify);
 		if (element)
@@ -490,6 +489,7 @@ main (int argc, char *argv[])
 
 #if BUILD_TESTS
 /*
+ *
  * Tests.
  *
  */
@@ -505,6 +505,7 @@ test_processor()
 		// basics
 		TestCase{R"(hello world)", R"(((_ "hello") (_ "world")))"},
 		TestCase{R"(maildir:/"hello world")", R"(((maildir "/hello world")))"},
+		TestCase{R"(flag:deleted)", R"(((_ "flag:deleted")))"} // non-existing flags
 	};
 
 	for (auto&& test: cases) {
