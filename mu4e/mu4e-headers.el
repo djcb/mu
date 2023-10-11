@@ -984,10 +984,6 @@ after the end of the search results."
     (define-key map "a" #'mu4e-headers-action)
 
     ;; message composition
-    (define-key map "R" #'mu4e-compose-reply)
-    (define-key map "F" #'mu4e-compose-forward)
-    (define-key map "C" #'mu4e-compose-new)
-    (define-key map "E" #'mu4e-compose-edit)
 
     (define-key map (kbd "RET") #'mu4e-headers-view-message)
     (define-key map [mouse-2]   #'mu4e-headers-view-message)
@@ -1162,6 +1158,7 @@ The following specs are supported:
   (mu4e-context-minor-mode)
   (mu4e-update-minor-mode)
   (mu4e-search-minor-mode)
+  (mu4e-compose-minor-mode)
   (hl-line-mode 1)
 
   (mu4e--modeline-register #'mu4e--search-modeline-item)
