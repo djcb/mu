@@ -76,11 +76,6 @@ function; this is no longer supported; instead you can use
                  (const :tag "Don't split" nil))
   :group 'mu4e-headers)
 
-(defcustom mu4e-compose-in-new-frame nil
-  "Whether to compose messages in a new frame."
-  :type 'boolean
-  :group 'mu4e-compose)
-
 (defcustom mu4e-headers-visible-lines 10
   "Number of lines to display in the header view when using the
 horizontal split-view. This includes the header-line at the top,
@@ -300,8 +295,6 @@ for BUFFER-OR-NAME to be displayed in."
                          ((eq buffer-type 'main) '(display-buffer-reuse-window
                                                    display-buffer-reuse-mode-window
                                                    display-buffer-full-frame))
-                         ((and (eq buffer-type 'compose) mu4e-compose-in-new-frame)
-                          '(display-buffer-pop-up-frame))
                          ((memq buffer-type '(headers compose))
                           '(display-buffer-reuse-window
                             display-buffer-reuse-mode-window
