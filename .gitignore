@@ -105,7 +105,6 @@ configure.lineno
 /lib/doxyfile
 /version.texi
 /compile
-build-aux/
 /TAGS
 parse
 
