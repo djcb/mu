@@ -103,7 +103,7 @@ build_aux = join_paths(meson.current_source_dir(), 'build-aux')
 ################################################################################
 # derived date values (based on 'mu-date'); used in docs
 # we can't use the 'date' because MacOS 'date' is incompatible with GNU's.
-pdate=join_paths(build_aux, 'date.py')
+pdate=find_program(join_paths(build_aux, 'date.py'))
 env = environment()
 env.set('LANG', 'C')
 mu_day_month_year = run_command(pdate, mu_date, '%d %B %Y',
