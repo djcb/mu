@@ -126,19 +126,6 @@ install_data(mu4e_srcs, install_dir: mu4e_lispdir)
 install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))
 
 if makeinfo.found()
-
-  fulldate = run_command('date', '+%d %B %Y', check:true).stdout().strip()
-  monthdate = run_command('date', '+%B %Y', check:true).stdout().strip()
-  version_texi_data = configuration_data({
-    'fulldate'  : fulldate,
-    'monthdate' : monthdate,
-    'version'   : meson.project_version(),
-  })
-  version_texi = configure_file(
-    input:  'version.texi.in',
-    output: 'version.texi',
-    configuration: version_texi_data)
-
   custom_target('mu4e_info',
                 input: 'mu4e.texi',
                 output: 'mu4e.info',

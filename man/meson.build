@@ -1,4 +1,4 @@
-## Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -63,13 +63,7 @@ man_orgs=[
   'mu-view.1.org'
 ]
 
-env = environment()
-env.set('LANG', 'C')
-yearmonth = run_command('date', '+%B %Y', check:true, capture:true, env: env)
-ym=yearmonth.stdout().strip()
-
 foreach src : man_orgs
-
   # meson makes in tricky to use the results of e.g. configure_file
   # in custom_commands..., so this is admittedly a little hacky.
   org = join_paths(meson.current_build_dir(), src)
@@ -81,15 +75,14 @@ foreach src : man_orgs
   #  @MAN_DATE@: date of the generation (not yet supported by ox-man)
   conf_data = configuration_data()
   conf_data.set('SECTION_ID', section)
-  conf_data.set('MAN_DATE', ym)
+  conf_data.set('MAN_DATE', mu_month_year)
   configure_file(input: src, output:'@BASENAME@.org',
                  configuration: conf_data)
 
   expr_tmpl = ''.join([
     '(progn',
     '  (require \'ox-man)',
-    '  (org-export-to-file \'man "@0@"))',
-  ])
+    '  (org-export-to-file \'man "@0@"))'])
   expr = expr_tmpl.format(org.substring(0,-4))
   sectiondir = join_paths(mandir, 'man' + section)
 

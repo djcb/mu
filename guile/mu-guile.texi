@@ -14,7 +14,7 @@
 @include version.texi
 
 @copying
-Copyright @copyright{} 2012 Dirk-Jan C. Binnema
+Copyright @copyright{} 2012-@value{UPDATED-YEAR} Dirk-Jan C. Binnema
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document

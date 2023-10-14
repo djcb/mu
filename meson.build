@@ -24,9 +24,11 @@ project('mu', ['c', 'cpp'],
           'buildtype=debugoptimized',
           'warning_level=3',
           'c_std=c11',
-          'cpp_std=c++17'
-        ]
-       )
+          'cpp_std=c++17'])
+
+# hard-code the date here (for reproduciblity); we derive the dates used in e.g.
+# documentation from this.
+mu_date='2023-10-14'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -41,7 +43,6 @@ if get_option('lispdir') == ''
 else
   mu4e_lispdir= get_option('lispdir') / 'mu4e'
 endif
-
 
 ################################################################################
 # compilers / flags
@@ -96,6 +97,22 @@ endforeach
 # some clang don't have charconv, but we need it.
 # https://github.com/djcb/mu/issues/2347
 cxx.check_header('charconv', required:true)
+
+
+################################################################################
+# derived date values (based on 'mu-date'); used in docs
+date=find_program('date', required:true)
+env = environment()
+env.set('LANG', 'C')
+mu_day_month_year = run_command(date, '-u', '+%d %B %Y', '--date', mu_date,
+                                check:true, capture:true,
+                                env: env).stdout().strip()
+mu_month_year = run_command(date, '-u', '+%B %Y', '--date', mu_date,
+                            check:true, capture:true,
+                            env: env).stdout().strip()
+mu_year = run_command(date, '-u', '+%Y', '--date', mu_date,
+                      check:true, capture:true, env: env).stdout().strip()
+
 
 ################################################################################
 # config.h setup
@@ -244,10 +261,11 @@ endif
 version_texi_data=configuration_data()
 version_texi_data.set('VERSION', meson.project_version())
 version_texi_data.set('EDITION', meson.project_version())
-version_texi_data.set('UPDATED',
-                      run_command('date', '+%d %B %Y', check:true).stdout().strip())
-version_texi_data.set('UPDATEDMONTH',
-                      run_command('date', '+%B %Y', check:true).stdout().strip())
+
+# derived date values
+version_texi_data.set('UPDATED', mu_day_month_year)
+version_texi_data.set('UPDATEDMONTH', mu_month_year)
+version_texi_data.set('UPDATEDYEAR', mu_year)
 
 configure_file(input: join_paths('build-aux', 'version.texi.in'),
                output: 'version.texi',
