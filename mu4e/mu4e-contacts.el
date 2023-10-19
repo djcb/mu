@@ -26,6 +26,7 @@
 
 ;;; Code:
 (require 'cl-lib)
+(require 'message)
 (require 'mu4e-helpers)
 (require 'mu4e-update)
 
@@ -78,13 +79,6 @@ their canonical counterpart; useful as an example."
   (let ((name (plist-get contact :name))
         (mail (plist-get contact :mail)))
     (list :name name :mail mail)))
-
-(make-obsolete-variable 'mu4e-contact-rewrite-function
-                        "mu4e-contact-process-function (see docstring)"
-                        "mu4e 1.3.2")
-(make-obsolete-variable 'mu4e-compose-complete-ignore-address-regexp
-                        "mu4e-contact-process-function (see docstring)"
-                        "mu4e 1.3.2")
 
 (defcustom mu4e-contact-process-function
   (lambda(addr)
@@ -154,18 +148,18 @@ with both the plain addresses and /regular expressions/."
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
      (mu4e-personal-addresses))))
 
-(define-obsolete-function-alias 'mu4e-user-mail-address-p
-  'mu4e-personal-address-p "1.5.5")
-
-
-;; don't use the older vars anymore
-(make-obsolete-variable 'mu4e-user-mail-address-regexp
-                        'mu4e-user-mail-address-list "0.9.9.x")
-(make-obsolete-variable 'mu4e-my-email-addresses
-                        'mu4e-user-mail-address-list "0.9.9.x")
-(make-obsolete-variable 'mu4e-user-mail-address-list
-                        "determined by server; see `mu4e-personal-addresses'."
-                        "1.3.8")
+(defun mu4e-personal-or-alternative-address ()
+  "Return a function matching user's addresses.
+Function takes one parameter, an address. This glues mu4e's
+personal addresses together with gnus'
+`message-alternative-emails'."
+  (let* ((alts  message-alternative-emails))
+    (lambda (addr)
+      (or (mu4e-personal-address-p addr)
+          (cond
+           ((functionp alts) (funcall alts addr))
+           ((stringp alts)  (string-match alts addr))
+           (t nil))))))
 
 
 ;; Helpers
@@ -192,7 +186,7 @@ matches, nil is returned, if not, it returns a symbol
    ((= (aref ph 0) ?\")
     (if (string-match "\"\\([^\"\\\n]\\|\\\\.\\|\\\\\n\\)*\"" ph)
         'rfc822-quoted-string
-      'rfc822-containing-quote)) ; starts with quote, but doesn't end with one
+      'rfc822-containing-quote))   ; starts with quote, but doesn't end with one
    ((string-match-p "[\"]" ph) 'rfc822-containing-quote)
    ((string-match-p "[\000-\037()\*<>@,;:\\\.]+" ph) nil)
    (t 'rfc822-atom)))
