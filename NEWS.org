@@ -59,6 +59,42 @@
 
 *** mu4e
 
+**** message composer
+
+    - Overhaul of the message composer; it is now closer to the Gnus/Message
+      composer functions (e.g. the whole mu4e-specific draft setup is gone);
+      this reduces code size and offers some new capabilities.
+
+      More of the ~message-~ functions can be used now.
+
+    - Variables ~mu4e-compose-signature~, ~mu4e-compose-cite-function~ are gone
+      (with aliases in place), use ~message-signature~, ~message-cite-function~
+      instead. There's a special ~mu4e-message-cite-nothing~ for the case where
+      you do not want to cite anything.
+
+    - There's a new function ~mu4e-compose-wide-reply~ (bound to =W=) which does a
+      wide-reply, a.k.a., 'reply to all'
+
+    - The special mailing list handling is gone; ~mu4e-compose-reply~ and
+      ~mu4e-compose-wide-reply~ should take care of that. There's also
+      ~message-reply-to-function~ you can customize for ultimate control; see [[info:(message) Reply][info
+      (message) Reply]] for details.
+
+    - ~mu4e-compose-in-new-frame~ has been generalized (in a backward-compatible
+      way) to ~mu4e-compose-switch~, which lets you decide whether a message
+      should be composed in the current window (default), a new window or a new
+      frame.
+
+    - ~mu4e-compose-context-switch~ is gone; it was a little too fragile. Best
+      change when creating the message (=mu4e= asks you by default, see
+      ~mu4e-compose-context-policy~).
+
+    - iCalendar support is a work-in-progress with the new editor. One change is
+      that support is now _automatically_ available.
+
+**** other
+
+
     - New command ~mu4e-search-query~ (bound to =c=) which lets you pick a query
       (from bookmark / maildir shortcuts) with completion in main / headers /
       view buffers.

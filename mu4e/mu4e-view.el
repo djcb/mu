@@ -721,8 +721,8 @@ determine which browser function to use."
             (detect-coding-region (point-min) (point-max) t)))
          ;; Possibly add headers (before "Attachments")
          (gnus-display-mime-function (mu4e--view-gnus-display-mime msg))
-         (gnus-icalendar-additional-identities
-          (mu4e-personal-addresses 'no-regexp)))
+         (message-alternative-emails
+          (mu4e-personal-or-alternative-address)))
     (condition-case err
         (progn
           (mm-enable-multibyte)
@@ -905,11 +905,6 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "k" #'mu4e-view-save-url)
     (define-key map "f" #'mu4e-view-fetch-url)
 
-    (define-key map "F" #'mu4e-compose-forward)
-    (define-key map "R" #'mu4e-compose-reply)
-    (define-key map "C" #'mu4e-compose-new)
-    (define-key map "E" #'mu4e-compose-edit)
-
     (define-key map "." #'mu4e-view-raw-message)
     (define-key map "," #'mu4e-sexp-at-point)
     (define-key map "|" #'mu4e-view-pipe)
@@ -1067,6 +1062,7 @@ Based on Gnus' article-mode."
   (use-local-map mu4e-view-mode-map)
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
+  (mu4e-compose-minor-mode)
   (setq buffer-undo-list t) ;; don't record undo info
 
   ;; support bookmarks.

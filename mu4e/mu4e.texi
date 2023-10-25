@@ -89,7 +89,7 @@ with answers to frequently asked questions, @ref{FAQ}.
 * Main view:: The @t{mu4e} overview
 * Headers view:: Lists of message headers
 * Message view:: Viewing specific messages
-* Editor view:: Creating and editing messages
+* Composer:: Creating and editing messages
 * Searching:: Some more background on searching/queries`
 * Marking:: Marking messages and performing actions
 * Contexts:: Defining contexts and switching between them
@@ -765,7 +765,7 @@ maildir are listed, in the @ref{Headers view}.
 you for a search query, and after entering one, shows the results in the
 @ref{Headers view}.
 @item @t{[C]ompose a new message}: after pressing @key{C}, you are dropped in
-the @ref{Editor view} to write a new message.
+the @ref{Composer} to write a new message.
 @end itemize
 
 @node Bookmarks and Maildirs
@@ -1024,9 +1024,8 @@ S-TAB        toggle all threading
 
 composition
 -----------
-R,F,C        reply/forward/compose
+R,W,F,C      reply/reply-to-all/forward/compose
 E            edit (only allowed for draft messages)
-
 
 misc
 ----
@@ -1039,9 +1038,10 @@ C-c C-u      update mail & reindex
 q            leave the headers buffer
 @end verbatim
 
-Furthermore, a number of keybindings are available through minor modes:
+Some keybindings are available through minor modes:
 @itemize
 @item Context; see @pxref{Contexts}.
+@item Composition; see @pxref{Composer} and @t{mu4e-compose-minor-mode}
 @end itemize
 
 @node HV Marking
@@ -1394,7 +1394,7 @@ x            execute actions for the marked messages
 
 composition
 -----------
-R,F,C        reply/forward/compose
+R,W,F,C      reply/reply-to-all/forward/compose
 E            edit (only allowed for draft messages)
 
 actions
@@ -1422,9 +1422,10 @@ C-S-u        update mail & reindex
 q            leave the message view
 @end verbatim
 
-Furthermore, a number of keybindings are available through minor modes:
+Some keybindings are available through minor modes:
 @itemize
-@item Context; see @pxref{Contexts}.
+@item Context; see @pxref{Contexts}
+@item Composition; see @pxref{Composer} and @t{mu4e-compose-minor-mode}
 @end itemize
 
 For the marking commands, please refer to @ref{Marking messages}.
@@ -1597,26 +1598,30 @@ You can @emph{tear off} the window a message is in and place it in a
 new frame by typing @key{C-x w ^ f}. You can also detach a window and
 put it in its own tab with @key{C-x w ^ t}.
 
-@node Editor view
-@chapter The editor view
+@node Composer
+@chapter Composer
 
-Writing e-mail messages takes place in the Editor View. @t{mu4e}'s editor view
-builds on top of Gnus' @t{message-mode}. Most of the @t{message-mode}
-functionality is available, as well some @t{mu4e}-specifics. Its major mode is
-@code{mu4e-compose-mode}.
+Writing e-mail messages takes place in the Composer. @t{mu4e}'s re-uses much of
+Gnus' @t{message-mode}.
+
+Much of the @t{message-mode} functionality is available, as well some
+@t{mu4e}-specifics. See @ref{(message) Top} for details; not every setting is
+necessarily also supported in @t{mu4e}.
+
+The major mode for the composer is @code{mu4e-compose-mode}.
 
 @menu
-* Overview: EV Overview. What is the Editor view
-* Keybindings: EV Keybindings. Doing things with your keyboard
+* Composer overview: Composer overview. What is the composer good for
+* Keybindings: Composer Keybindings. Doing things with your keyboard
 * Address autocompletion:: Quickly entering known addresses
 * Compose hooks::Calling functions when composing
 * Signing and encrypting:: Support for cryptography
 * Queuing mail:: Sending mail when the time is ripe
 * Message signatures:: Adding your personal footer to messages
-* Other settings::Miscellanea
+* Other settings::Miscellaneous
 @end menu
 
-@node EV Overview
+@node Composer overview
 @section Overview
 
 @cartouche
@@ -1632,14 +1637,62 @@ functionality is available, as well some @t{mu4e}-specifics. Its major mode is
     >
     > Dude - how are things?
     >
-    > Later -- wally.
+    > Later -- Wally.
 @end verbatim
 @end cartouche
 
-@node EV Keybindings
+@node Entering the composer
+@section Entering the composer
+
+There are a view different ways to @emph{enter} the composer; i.e., from other
+@t{mu4e} views or even completely outside.
+
+If you want the composer to start in a new frame or window, see the variable
+@t{mu4e-compose-switch}.
+
+@subsection New message
+
+You can start composing a completely new message with @t{mu4e-compose-new} (with
+@kbd{N} from within @t{mu4e}.
+
+@subsection Reply
+
+You can compose a reply to an existing message with @t{mu4e-compose-reply} (with
+@kbd{R} from within the headers view or when looking at some specific message.
+
+When you want to reply to @emph{all} recipients of a message, you can use
+@t{mu4e-compose-wide-reply}, bound to @kbd{W}. This is often called
+``reply-to-all'', while Gnus uses the term ``wide reply''.
+
+By default, the reply will cite the message being replied to. If you do not want
+that, you can set (or @t{let}-bind) @t{message-cite-function} to
+@t{mu4e-message-cite-nothing}.
+
+See @ref{(message) Reply} and @ref{(message) Wide Reply} for further
+information.
+
+@subsection Forward
+
+You can forward some existing message with @t{mu4e-compose-forward} (with
+@kbd{F} from within the headers view or when looking at some specific message.
+
+For more information, see @ref{(message) Forwarding}.
+
+To influence the way a message is forwarded, you can use the variables
+@code{message-forward-as-mime} and @code{message-forward-show-mml}.
+
+@subsection Resend
+
+You can re-send some existing message with @t{mu4e-compose-resend} from within
+the headers view or when looking at some specific message.
+
+This re-sends the message without letting you edit it, as per @ref{(message)
+Resending}.
+
+@node Composer Keybindings
 @section Keybindings
 
-@t{mu4e}'s editor view derives from Gnus' message editor and shares most of
+@t{mu4e}'s composer derives from Gnus' message editor and shares most of
 its keybindings. Here are some of the more useful ones (you can use the menu
 to find more):
 
@@ -1649,11 +1702,11 @@ key          description
 C-c C-c      send message
 C-c C-d      save to drafts and leave
 C-c C-k      kill the message buffer (the message remains in the draft folder)
-C-c C-a      attach a file (pro-tip: drag & drop works as well)
+C-c C-a      attach a file (pro-tip: drag & drop works as well in graphical context)
 C-c C-;      switch the context
 
 (mu4e-specific)
-C-S-u        update mail & reindex
+C-S-u        update mail & re-index
 @end verbatim
 
 @node Address autocompletion
@@ -1718,27 +1771,7 @@ is also at your disposal.
 @end itemize
 
 @noindent
-Let's look at some examples. First, suppose we want to set the
-@t{From:}-address for a reply message based on the receiver of the original:
-@lisp
-;; 1) messages to me@@foo.example.com should be replied with From:me@@foo.example.com
-;; 2) messages to me@@bar.example.com should be replied with From:me@@bar.example.com
-;; 3) all other mail should use From:me@@cuux.example.com
-(add-hook 'mu4e-compose-pre-hook
-  (defun my-set-from-address ()
-    "Set the From address based on the To address of the original."
-    (let ((msg mu4e-compose-parent-message)) ;; msg is shorter...
-      (when msg
-        (setq user-mail-address
-          (cond
-            ((mu4e-message-contact-field-matches msg :to "me@@foo.example.com")
-              "me@@foo.example.com")
-            ((mu4e-message-contact-field-matches msg :to "me@@bar.example.com")
-              "me@@bar.example.com")
-            (t "me@@cuux.example.com")))))))
-@end lisp
-
-Secondly, as mentioned, @code{mu4e-compose-mode-hook} is especially
+Let's look at an examples. As mentioned, @code{mu4e-compose-mode-hook} is especially
 useful for editing-related settings. For example:
 @lisp
 (add-hook 'mu4e-compose-mode-hook
@@ -1832,13 +1865,9 @@ do this accidentally!
 @section Message signatures
 
 Message signatures are the standard footer blobs in e-mail messages where you
-can put in information you want to include in every message. The text to
-include is set with @code{mu4e-compose-signature}.
-
-If you don't want to include this automatically with each message,
-you can set @code{mu4e-compose-signature-auto-include} to @code{nil}; you can
-then still include the signature manually, using the function
-@code{message-insert-signature}, typically bound to @kbd{C-c C-w}.
+can put in information you want to include in every message. The text to include
+is set with @code{message-signature} (older @t{mu4e} used
+@code{mu4e-compose-signature}, but that has been obsoleted).
 
 @node Other settings
 @section Other settings
@@ -2618,7 +2647,7 @@ when starting; see the discussion in the previous section.
           :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
                    ( user-full-name	    . "Alice Derleth" )
                    ( message-user-organization . "Homebase" )
-                   ( mu4e-compose-signature .
+                   ( message-signature .
                      (concat
                        "Alice Derleth\n"
                        "Lauttasaari, Finland\n"))))
@@ -2631,10 +2660,10 @@ when starting; see the discussion in the previous section.
           :match-func (lambda (msg)
                         (when msg
                           (string-match-p "^/Arkham" (mu4e-message-field msg :maildir))))
-          :vars '( ( user-mail-address	     . "aderleth@@miskatonic.example.com" )
-                   ( user-full-name	     . "Alice Derleth" )
+          :vars '( ( user-mail-address	       . "aderleth@@miskatonic.example.com" )
+                   ( user-full-name	       . "Alice Derleth" )
                    ( message-user-organization . "Miskatonic University" )
-                   ( mu4e-compose-signature  .
+                   ( message-signature         .
                      (concat
                        "Prof. Alice Derleth\n"
                        "Miskatonic University, Dept. of Occult Sciences\n"))))
@@ -2648,9 +2677,9 @@ when starting; see the discussion in the previous section.
           :match-func (lambda (msg)
                         (when msg
                           (string= (mu4e-message-field msg :maildir) "/cycling")))
-          :vars '( ( user-mail-address	     . "aderleth@@example.com" )
-                   ( user-full-name	     . "AliceD" )
-                   ( mu4e-compose-signature  . nil)))))
+          :vars '( ( user-mail-address	. "aderleth@@example.com" )
+                   ( user-full-name	. "AliceD" )
+                   ( message-signature  . nil)))))
 
   ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
   ;; guess or ask the correct context, e.g.
@@ -3743,8 +3772,7 @@ customize.
 (setq mu4e-compose-reply-to-address "foo@@bar.example.com"
       user-mail-address "foo@@bar.example.com"
       user-full-name  "Foo X. Bar")
-(setq mu4e-compose-signature
-   "Foo X. Bar\nhttp://www.example.com\n")
+(setq message-signature "Foo X. Bar\nhttp://www.example.com\n")
 
 ;; smtp mail setting
 (setq
@@ -3902,7 +3930,7 @@ Next step: let's make a @t{mu4e} configuration for this:
 (setq
    user-mail-address "USERNAME@@gmail.com"
    user-full-name  "Foo X. Bar"
-   mu4e-compose-signature
+   message-signature
     (concat
       "Foo X. Bar\n"
       "http://www.example.com\n"))
@@ -3932,8 +3960,8 @@ Next step: let's make a @t{mu4e} configuration for this:
 (setq message-kill-buffer-on-exit t)
 @end lisp
 
-And that's it --- put the above in your @file{~/.emacs}, change @t{USERNAME}
-etc.@: to your own, and restart Emacs, and run @kbd{M-x mu4e}.
+And that's it --- put the above in your emacs initialization file, change
+@t{USERNAME} etc. to your own, restart Emacs, and run @kbd{M-x mu4e}.
 
 @node CONF Other settings
 @section Other settings
@@ -4209,13 +4237,6 @@ your configuration (courtesy of user @t{kpachnis}):
       mml2015-encrypt-to-self t
       mml2015-sign-with-sender t)
 @end lisp
-@subsection Can I `bounce' or `resend' messages?
-Somewhat --- it is possible to edit a (copy of) an existing message and then
-send it, using @code{M-x mu4e-compose-resend}. This gives you a raw copy of the
-message, including all headers, encoded parts and so on. Reason for this is that
-for resending, it is important not to change anything (except perhaps for the
-@t{To:} address when bouncing); since we cannot losslessly decode an existing
-message, you get the raw version.
 
 @node Writing messages
 @section Writing messages

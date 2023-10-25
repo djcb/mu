@@ -43,7 +43,6 @@ mu4e_srcs=[
   'mu4e-contacts.el',
   'mu4e-context.el',
   'mu4e-contrib.el',
-  'mu4e-draft.el',
   'mu4e-folders.el',
   'mu4e.el',
   'mu4e-headers.el',
