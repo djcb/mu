@@ -687,11 +687,15 @@ PARENT is the \"parent\" message; nil
       (with-temp-buffer
         ;; call the call message function; turn off the gnus crypto stuff;
         ;; we handle that ourselves below
-        (let ((message-required-mail-headers
-               '(From Subject Date (optional . In-Reply-To)
-                      Message-ID
-                      (optional . User-Agent)
-                      (optional . Organization)))
+        (let* ((message-newsreader mu4e-user-agent-string)
+               (message-required-mail-headers
+                (seq-keep #'identity ;; ensure needed headers are generated.
+                     `(From Subject Date Message-ID
+                            ,(when (eq mu4e-compose-type  'reply) 'In-Reply-To)
+                            ;; XXX vvv these two don't work. why not?
+                            ;; ,(when message-newsreader 'User-Agent)
+                            ;; ,(when message-user-organization 'Organization)
+                            )))
               (message-this-is-mail t))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
