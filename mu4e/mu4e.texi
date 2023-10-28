@@ -4241,12 +4241,6 @@ your configuration (courtesy of user @t{kpachnis}):
 @node Writing messages
 @section Writing messages
 
-@subsection What's the deal with replies to messages I wrote myself?
-Like many other mail-clients, @t{mu4e} treats replies to messages you
-wrote yourself as special --- these messages keep the same @t{To:} and
-@t{Cc:} as the original message. This is to ease the common case of
-following up to a message you wrote earlier.
-
 @subsection How can I automatically set the @t{From:}-address for a reply-message?
 See @ref{Compose hooks}.
 
@@ -4261,21 +4255,11 @@ See @ref{Compose hooks}.
 
 @subsection How can I influence the way the original message looks when replying/forwarding?
 Since @code{mu4e-compose-mode} derives from @xref{(message) Top}, you can re-use
-many of its facilities.
+many (though not @emph{all} of its facilities.
 
 @subsection How can I easily include attachments in the messages I write?
 You can drag-and-drop from your desktop; alternatively, you can use @ref{(emacs)
 Dired}.
-
-@subsection @t{mu4e} seems to remove myself from the @t{Cc:}-list; how can I prevent that?
-Set @code{mu4e-compose-keep-self-cc} to @t{t} in your configuration.
-
-@subsection @t{mu4e} includes myself from the @t{Cc:}-list; how can I prevent that?
-You need list your personal addresses by passing one or more
-@t{--my-address=...} to @t{mu init}. Note that the
-@code{mu4e-user-mail-address-list} which was used in older @t{mu4e} versions is
-no longer used. Also see the entries for version 1.4 in @t{NEWS.org} (@kbd{N})
-in the main-menu.
 
 @subsection How can I start a new message-thread from a reply?
 Remove the @t{In-Reply-To} header, and @t{mu4e} automatically removes
@@ -4292,15 +4276,11 @@ You can do so using Emacs' MIME-support --- check the
 @t{Attachments}-menu while composing a message. Also see @ref{Signing
 and encrypting}.
 
-You can do so using Emacs' MIME-support --- check the
-@t{Attachments}-menu while composing a message. Also see @ref{Signing
-and encrypting}.
-
-@subsection Address auto-completion does not work?
-If you have set @code{mu4e-compose-complete-only-personal} to non-nil,
-@t{mu4e} only completes 'personal' addresses - so you tell it about your
-e-mail addresses when setting up the database (@t{mu init});
-@ref{Initializing the message store}.
+@subsection Address auto-completion misses some addresses
+If you have set @code{mu4e-compose-complete-only-personal} to non-nil, @t{mu4e}
+only completes 'personal' addresses - so you tell it about your e-mail addresses
+when setting up the database (@t{mu init}); @ref{Initializing the message
+store}.
 
 If you cannot find specific addresses you'd expect to find, inspect the
 values of @var{mu4e-compose-complete-only-personal},
@@ -4342,12 +4322,15 @@ Sending...done
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
 
-@subsection Is it possible to view headers and messages, or compose new ones, in a separate frame?
-Yes. There is builtin support for composing messages in a new
-frame. Set the variable @code{mu4e-compose-in-new-frame} to @code{t}.
+@subsection Is it possible to view headers and messages, or compose new ones, in a separate frame or window?
+Yes. There is built-in support for composing messages in a new frame or window.
+Either use Emacs' standard @t{compose-mail-other-frame} (@kbd{C-x 5 m}) and
+@t{compose-mail-other-window} (@kbd{C-x 4 m}) if you have set up @t{mu4e} as your Emacs
+e-mailer.
 
-However, if you want to personalize the display of all of @t{mu4e}'s
-buffers, you can do so by customizing @code{display-buffer-alist}.
+Additionally, there's the variable @code{mu4e-compose-switch} (see its
+docstring) which you can customize to influence how @t{mu4e} creates new
+messages.
 
 @subsection How can I apply format=flowed to my outgoing messages?
 This enables receiving clients that support this feature to reflow
