@@ -124,9 +124,10 @@ predicate function. A value of nil keeps all the addresses."
 
 ;;; user mail address
 (defun mu4e-personal-addresses (&optional no-regexp)
-  "Get the list user's personal addresses, as passed to mu init.
-The address are either plain e-mail address or /regular
- expressions/.  When NO-REGEXP is non-nil, do not include regexp
+  "Get the list user's personal addresses, as passed to \"mu init\".
+
+The address are either plain e-mail addresses or regexps (strings
+ wrapped / /). When NO-REGEXP is non-nil, do not include regexp
  address patterns (if any)."
   (seq-remove
    (lambda (addr) (and no-regexp (string-match-p "^/.*/" addr)))
@@ -152,14 +153,18 @@ with both the plain addresses and /regular expressions/."
   "Return a function matching user's addresses.
 Function takes one parameter, an address. This glues mu4e's
 personal addresses together with gnus'
-`message-alternative-emails'."
-  (let* ((alts  message-alternative-emails))
+`message-alternative-emails'.
+
+Note that this expanded definition of user-addresses is only for the
+message composition."
+  (let* ((alts message-alternative-emails))
     (lambda (addr)
       (or (mu4e-personal-address-p addr)
           (cond
            ((functionp alts) (funcall alts addr))
-           ((stringp alts)  (string-match alts addr))
+           ((stringp alts)   (string-match alts addr))
            (t nil))))))
+
 
 
 ;; Helpers

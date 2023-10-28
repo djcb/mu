@@ -192,7 +192,11 @@ predicate function. A value of nil keeps all the addresses."
 
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, do not include self.
-Selfness is decided by `mu4e-personal-address-p'"
+
+Whether a given address belongs to this user (the \"self\") is
+determined by `mu4e-personal-or-alternative-address', which
+overrides `message-dont-reply-to-names' when replying to
+messages, if `mu4e-compose-dont-reply-to-self' is non-nil."
   :type 'boolean
   :group 'mu4e-compose)
 
@@ -635,22 +639,6 @@ This function uses `message-cite-function', and its settings apply."
     (goto-char (point-min))
     (buffer-string)))
 
-(defun mu4e--address-blacklist ()
-  "Get the list of addresses *not* to send mail to in wide-replies."
-  (let ((ignored mu4e-compose-reply-ignore-address)
-        (addrs (mu4e-personal-addresses))
-        (is-rx (lambda (addr) (string-match-p "^/.*/" addr))))
-    (when mu4e-compose-dont-reply-to-self
-      (setq ignored
-            (append ignored
-                    (list
-                     (regexp-opt
-                      (seq-filter (lambda (addr)
-                                    (not (funcall is-rx addr))) addrs))
-                     (seq-filter (lambda (addr)
-                                   (funcall is-rx addr)) addrs)))))
-    (flatten-list ignored)))
-
 (defvar mu4e-user-agent-string
   (format "mu4e %s; emacs %s" mu4e-mu-version emacs-version)
   "The User-Agent string for mu4e, or nil.")
@@ -796,7 +784,10 @@ of message."
   (mu4e--compose-setup
    'reply
    (lambda (parent)
-     (let ((message-dont-reply-to-names (mu4e--address-blacklist)))
+     (let ((message-dont-reply-to-names
+            (if mu4e-compose-dont-reply-to-self
+                message-dont-reply-to-names
+              #'mu4e-personal-or-alternative-address)))
        (message-reply nil wide)
        (insert (mu4e--compose-cite parent))))))
 
