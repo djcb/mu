@@ -651,7 +651,7 @@ Boo!
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
 	/* true: match; false: no match */
-	const auto cases = std::array<std::pair<const char*, bool>, 7>{{
+	const auto cases = std::array<std::pair<const char*, bool>, 8>{{
 		{"subject:foo's", true},
 		{"subject:foo*", true},
 		{"subject:/foo/", true},
@@ -659,6 +659,7 @@ Boo!
 		{"subject:/foo.*bar/", true},  /* <-- breaks before PR #2365 */
 		{"subject:/foo’s bar/", false}, /* <-- no matching, needs quoting */
 		{"subject:\"/foo’s bar/\"", true}, /* <-- this works, quote the regex */
+		{R"(subject:"/foo’s bar/")", true}, /* <-- this works, quote the regex */
 	}};
 
 	for (auto&& test: cases) {
