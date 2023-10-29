@@ -149,23 +149,21 @@ with both the plain addresses and /regular expressions/."
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
      (mu4e-personal-addresses))))
 
-(defun mu4e-personal-or-alternative-address ()
-  "Return a function matching user's addresses.
-Function takes one parameter, an address. This glues mu4e's
-personal addresses together with gnus'
+(defun mu4e-personal-or-alternative-address-p (addr)
+  "Is ADDR either a personal or an alternative address?
+
+That is, does it match either `mu4e-personal-address-p' or
 `message-alternative-emails'.
 
-Note that this expanded definition of user-addresses is only for the
-message composition."
-  (let* ((alts message-alternative-emails))
-    (lambda (addr)
-      (or (mu4e-personal-address-p addr)
-          (cond
-           ((functionp alts) (funcall alts addr))
-           ((stringp alts)   (string-match alts addr))
-           (t nil))))))
-
-
+Note that this expanded definition of user-addresses not used for
+ indexing mu does not know about `message-alternative-emails' so
+ it cannot use it for indexing."
+  (let ((alts message-alternative-emails))
+    (or (mu4e-personal-address-p addr)
+        (cond
+         ((functionp alts) (funcall alts addr))
+         ((stringp alts)   (string-match alts addr))
+         (t nil)))))
 
 ;; Helpers
 

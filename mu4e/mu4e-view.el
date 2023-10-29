@@ -725,7 +725,7 @@ determine which browser function to use."
          ;; Possibly add headers (before "Attachments")
          (gnus-display-mime-function (mu4e--view-gnus-display-mime msg))
          (message-alternative-emails
-          (mu4e-personal-or-alternative-address)))
+          #'mu4e-personal-or-alternative-address-p))
     (condition-case err
         (progn
           (mm-enable-multibyte)

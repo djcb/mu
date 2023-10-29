@@ -194,7 +194,7 @@ predicate function. A value of nil keeps all the addresses."
   "If non-nil, do not include self.
 
 Whether a given address belongs to this user (the \"self\") is
-determined by `mu4e-personal-or-alternative-address', which
+determined by `mu4e-personal-or-alternative-address-p', which
 overrides `message-dont-reply-to-names' when replying to
 messages, if `mu4e-compose-dont-reply-to-self' is non-nil."
   :type 'boolean
@@ -787,7 +787,7 @@ of message."
      (let ((message-dont-reply-to-names
             (if mu4e-compose-dont-reply-to-self
                 message-dont-reply-to-names
-              #'mu4e-personal-or-alternative-address)))
+              #'mu4e-personal-or-alternative-address-p)))
        (message-reply nil wide)
        (insert (mu4e--compose-cite parent))))))
 
