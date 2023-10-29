@@ -636,6 +636,9 @@ As a side-effect, a message that is being viewed loses its
         (erase-buffer)
         (insert-file-contents-literally
          (mu4e-message-readable-path msg) nil nil nil t)
+        ;; some messages have ^M which causes various rendering
+        ;; problems later (#2260, #2508), so let's remove those
+        (article-remove-cr)
         (setq-local mu4e--view-message msg)
         (mu4e--view-render-buffer msg)
         (setq-local mu4e--view-mime-part-cached nil))
