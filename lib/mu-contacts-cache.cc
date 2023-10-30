@@ -55,9 +55,7 @@ struct ContactsCache::Private {
 		 ignored_rx_{make_rx_matchers<Config::Id::IgnoredAddresses>()},
 		 dirty_{0} {}
 
-	~Private() {
-		serialize();
-	}
+	~Private() { serialize(); }
 
 	ContactUMap deserialize(const std::string&) const;
 	void serialize() const;
@@ -85,8 +83,6 @@ private:
 	template<Config::Id Id> std::vector<Regex> make_rx_matchers() const {
 		std::vector<Regex> rxvec;
 		for (auto&& p: config_db_.get<Id>()) {
-
-			mu_debug("--> {}", p);
 
 			if (!is_rx(p))
 				continue;
