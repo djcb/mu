@@ -583,14 +583,8 @@ query before submitting it."
                     (mu4e-warn "No query for %s" chosen))))
     (mu4e-search-bookmark query edit)))
 
-(define-minor-mode mu4e-search-minor-mode
-  "Mode for searching for messages."
-  :global nil
-  :init-value nil ;; disabled by default
-  :group 'mu4e
-  :lighter ""
-  :keymap
-  (let ((map (make-sparse-keymap)))
+(defvar mu4e-search-minor-mode-map
+    (let ((map (make-sparse-keymap)))
     (define-key map "s" #'mu4e-search)
     (define-key map "S" #'mu4e-search-edit)
     (define-key map "/" #'mu4e-search-narrow)
@@ -608,7 +602,16 @@ query before submitting it."
     (define-key map "c" #'mu4e-search-query)
 
     (define-key map "j" #'mu4e-search-maildir)
-    map))
+    map)
+    "Keymap for mu4e-search-minor-mode.")
+
+(define-minor-mode mu4e-search-minor-mode
+  "Mode for searching for messages."
+  :global nil
+  :init-value nil ;; disabled by default
+  :group 'mu4e
+  :lighter ""
+  :keymap mu4e-search-minor-mode-map)
 
 (defvar mu4e--search-menu-items
   '("--"
