@@ -873,21 +873,25 @@ they do not conflict with mu4e inner workings."
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
 
- ;;; minor mode for use in other modes.
-(define-minor-mode mu4e-compose-minor-mode
-  "Mode for searching for messages."
-  :global nil
-  :init-value nil ;; disabled by default
-  :group 'mu4e
-  :lighter ""
-  :keymap
+
+;;; minor mode for use in other modes.
+(defvar mu4e-compose-minor-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "R" #'mu4e-compose-reply)
     (define-key map "W" #'mu4e-compose-wide-reply)
     (define-key map "F" #'mu4e-compose-forward)
     (define-key map "E" #'mu4e-compose-edit)
     (define-key map "C" #'mu4e-compose-new)
-    map))
+    map)
+  "Keymap for compose minor-mode.")
+
+(define-minor-mode mu4e-compose-minor-mode
+  "Mode for searching for messages."
+  :global nil
+  :init-value nil ;; disabled by default
+  :group 'mu4e
+  :lighter ""
+  :keymap mu4e-compose-minor-mode-map)
 
 (defvar mu4e--compose-menu-items
   '("--"
