@@ -93,10 +93,12 @@ if makeinfo.found()
   endif
 endif
 
-guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0', 'mu')
-install_data(['mu.scm','mu/script.scm', 'mu/message.scm', 'mu/stats.scm', 'mu/plot.scm'],
-             install_dir: guile_scm_dir)
-
+guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0')
+install_data(['mu.scm'], install_dir: guile_scm_dir)
+guile_scm_mu_dir=join_paths(guile_scm_dir, 'mu')
+foreach mod : ['script.scm', 'message.scm', 'stats.scm', 'plot.scm']
+    install_data(join_paths('mu', mod), install_dir: guile_scm_mu_dir)
+endforeach
 
 mu_guile_scripts=[
   join_paths('scripts', 'find-dups.scm'),
