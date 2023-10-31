@@ -74,12 +74,14 @@
 
     - There's a new function ~mu4e-compose-wide-reply~ (bound to =W=) which does a
       wide-reply, a.k.a., 'reply to all'. So ~mu4e-compose-reply-recipients~ is
-      not needed anymore and has been obsoleted (and doesn't do anything
+      not needed anymore and has been obsoleted (and doesn't do anything).
+      ~mu4e-compose-reply-ignore-address~ is no longer supported, use
+      ~message-prune-recipient-rules~ instead.
 
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
-      ~message-reply-to-function~ you can customize for ultimate control; see [[info:(message) Reply][info
-      (message) Reply]] for details.
+      ~message-reply-to-function~ for ultimate control; see [[info:(message)
+      Reply][info (message) Reply]] for details.
 
     - ~mu4e-compose-in-new-frame~ has been generalized (in a backward-compatible
       way) to ~mu4e-compose-switch~, which lets you decide whether a message

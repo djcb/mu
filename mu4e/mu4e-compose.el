@@ -177,19 +177,6 @@ the place to do that."
   :type 'hook
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-reply-ignore-address
-  '("no-?reply")
-  "Addresses to prune when doing wide replies.
-
-This can be a regexp matching the address, a list of regexps or a
-predicate function. A value of nil keeps all the addresses."
-  :type '(choice
-          (const nil)
-          function
-          string
-          (repeat string))
-  :group 'mu4e-compose)
-
 (defcustom mu4e-compose-dont-reply-to-self nil
   "If non-nil, do not include self.
 

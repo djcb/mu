@@ -252,10 +252,17 @@
 
 (make-obsolete-variable 'mu4e-contact-rewrite-function
                         "mu4e-contact-process-function (see docstring)"
-                        "mu4e 1.3.2")
+                        "1.3.2")
 (make-obsolete-variable 'mu4e-compose-complete-ignore-address-regexp
                         "mu4e-contact-process-function (see docstring)"
-                        "mu4e 1.3.2")
+                        "1.3.2")
+
+(make-obsolete-variable 'mu4e-compose-reply-recipients
+                        "use mu4e-compose-reply / mu4e-compose-wide-reply"
+                        "1.11.23")
+(make-obsolete-variable 'mu4e-compose-reply-ignore-address
+                        "see: message-prune-recipient-rules" "1.11.23")
+
 ;; calendar
 (define-obsolete-function-alias 'mu4e-icalendar-setup #'ignore '"1.11.22")
 
