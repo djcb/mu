@@ -73,7 +73,8 @@
       you do not want to cite anything.
 
     - There's a new function ~mu4e-compose-wide-reply~ (bound to =W=) which does a
-      wide-reply, a.k.a., 'reply to all'
+      wide-reply, a.k.a., 'reply to all'. So ~mu4e-compose-reply-recipients~ is
+      not needed anymore and has been obsoleted (and doesn't do anything
 
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
