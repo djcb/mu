@@ -28,13 +28,13 @@
 ;; in the mu4e context.
 
 
+;; Code
 (require 'message)
 (require 'mu4e-obsolete)
 (require 'mu4e-server)
-(require 'mu4e-actions)
 (require 'mu4e-message)
 (require 'mu4e-context)
-(require 'mu4e-window)
+(require 'mu4e-folders)
 
 
 ;;; User configuration for compose-mode
@@ -677,7 +677,7 @@ PARENT is the \"parent\" message; nil
                       gnus-message-replyencrypt nil
                       gnus-message-replysignencrypted nil)
           (when parent
-            (insert-file-contents (plist-get parent :path)))
+            (insert (mu4e-view-message-text parent)))
           (goto-char (point-min))
           ;; annoyingly, various message- functions call `message-pop-to-buffer`
           ;; (showing the message. But we're not ready for that yet. So
