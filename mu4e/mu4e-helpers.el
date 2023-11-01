@@ -567,21 +567,25 @@ Or go to the top level if there is none."
 
 ;;; Misc
 (defun mu4e-join-paths (directory &rest components)
-  "Append COMPONENTS to DIRECTORY and return the resulting string.
+       "Append COMPONENTS to DIRECTORY and return the resulting string.
 
 This is mu4e's version of Emacs 28's `file-name-concat' with the
 difference it also handles slashes at the beginning of
 COMPONENTS."
-  (replace-regexp-in-string
-   "//+" "/"
-   (mapconcat (lambda (part) (if (stringp part) part ""))
-              (cons directory components) "/")))
+       (let ((double-slash (string-match "^//[^/]" directory))
+             (path (replace-regexp-in-string
+                    "//+" "/"
+                    (mapconcat (lambda (part) (if (stringp part) part ""))
+                               (cons directory components) "/"))))
+         (if double-slash
+             (concat "/" path)
+           path)))
 
 (defun mu4e-string-replace (from-string to-string in-string)
-  "Replace FROM-STRING with TO-STRING in IN-STRING each time it occurs.
+       "Replace FROM-STRING with TO-STRING in IN-STRING each time it occurs.
 Mu4e version of emacs 28's string-replace."
-  (replace-regexp-in-string (regexp-quote from-string)
-                            to-string in-string nil 'literal))
+       (replace-regexp-in-string (regexp-quote from-string)
+                                 to-string in-string nil 'literal))
 
 (defun mu4e-plistp (object)
   "Non-nil if and only if OBJECT is a valid plist.
