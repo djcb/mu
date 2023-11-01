@@ -432,25 +432,27 @@ You cannot run the repl when mu4e is running (or vice-versa)."
         (message "invoked: '%s'" cmd)))))
 
 (defun mu4e--server-start ()
-  "Start the mu server process."
-  (mu4e--version-check)
-  ;; kill old/stale servers, if any.
-  (mu4e--kill-stale)
-  (let* ((process-connection-type nil) ;; use a pipe
-         (args (mu4e--server-args)))
-    (setq mu4e--server-buf "")
-    (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
-              (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
-    (setq mu4e--server-process (apply 'start-process
-                                      mu4e--server-name mu4e--server-name
-                                      mu4e-mu-binary args))
-    ;; register a function for (:info ...) sexps
-    (unless mu4e--server-process
-      (mu4e-error "Failed to start the mu4e backend"))
-    (set-process-query-on-exit-flag mu4e--server-process nil)
-    (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
-    (set-process-filter mu4e--server-process 'mu4e--server-filter)
-    (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel)))
+       "Start the mu server process."
+       (mu4e--version-check)
+       ;; kill old/stale servers, if any.
+       (mu4e--kill-stale)
+       (let* ((process-connection-type nil) ;; use a pipe
+              (args (mu4e--server-args)))
+              (setq mu4e--server-buf "")
+              (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
+                        (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
+              (setq mu4e--server-process ;; (apply 'start-process
+                    ;;        mu4e--server-name mu4e--server-name
+                    ;;        mu4e-mu-binary args)
+                    (start-process-shell-command mu4e--server-name mu4e--server-name (concat mu4e-mu-binary " " (mapconcat 'identity args " ")))
+                    )
+              ;; register a function for (:info ...) sexps
+              (unless mu4e--server-process
+                (mu4e-error "Failed to start the mu4e backend"))
+              (set-process-query-on-exit-flag mu4e--server-process nil)
+              (set-process-coding-system mu4e--server-process 'binary 'utf-8-unix)
+              (set-process-filter mu4e--server-process 'mu4e--server-filter)
+              (set-process-sentinel mu4e--server-process 'mu4e--server-sentinel)))
 
 (defun mu4e--server-kill ()
   "Kill the mu server process."
