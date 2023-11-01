@@ -1397,24 +1397,25 @@ descendants."
 
 
 (defun mu4e-headers-view-message ()
-  "View message at point."
-  (interactive)
-  (unless (eq major-mode 'mu4e-headers-mode)
-    (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
-  (let* ((msg (mu4e-message-at-point))
-         (path (mu4e-message-field msg :path))
-         (_exists (or (file-readable-p  path)
-                      (mu4e-warn "No message at %s" path)))
-         (docid (or (mu4e-message-field msg :docid)
-                    (mu4e-warn "No message at point")))
-         (mark-as-read
-          (if (functionp mu4e-view-auto-mark-as-read)
-              (funcall mu4e-view-auto-mark-as-read msg)
-            mu4e-view-auto-mark-as-read)))
-    (when-let ((buf (mu4e-get-view-buffer (current-buffer) nil)))
-      (with-current-buffer buf
-        (mu4e-loading-mode 1)))
-    (mu4e--server-view docid mark-as-read)))
+       "View message at point."
+       (interactive)
+       (unless (eq major-mode 'mu4e-headers-mode)
+               (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
+       (let* ((msg (mu4e-message-at-point))
+              (path (mu4e-message-field msg :path))
+              (_exists ;; (or (file-readable-p  path)
+               ;;     (mu4e-warn "No message at %s" path))
+               t)
+              (docid (or (mu4e-message-field msg :docid)
+                         (mu4e-warn "No message at point")))
+              (mark-as-read
+               (if (functionp mu4e-view-auto-mark-as-read)
+                 (funcall mu4e-view-auto-mark-as-read msg)
+                 mu4e-view-auto-mark-as-read)))
+                 (when-let ((buf (mu4e-get-view-buffer (current-buffer) nil)))
+                           (with-current-buffer buf
+                             (mu4e-loading-mode 1)))
+                 (mu4e--server-view docid mark-as-read)))
 
 (defvar-local mu4e-headers-open-after-move t
   "If set to non-nil, open message after `mu4e-headers-next' and
