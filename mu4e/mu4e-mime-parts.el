@@ -160,18 +160,20 @@ Otherwise, return a file with a unique number appended to the base-name."
         (insert (string-join
                  (seq-map #'car mu4e--completions-table) ", ")))))
 
+(defvar mu4e-view-completion-minor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-a") #'mu4e-view-complete-all)
+    ;; XXX perhaps a binding for clearing all?
+    map)
+  "Keybindings for mu4e-view completion.")
+
 (define-minor-mode mu4e-view-completion-minor-mode
   "Minor-mode for completing mu4e mime parts."
   :global nil
   :init-value nil ;; disabled by default
   :group 'mu4e
   :lighter ""
-  :keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-a") #'mu4e-view-complete-all)
-    ;; XXX perhaps a binding for clearing all?
-    map))
-
+  :keymap mu4e-view-completion-minor-mode-map)
 
 (defun mu4e--part-annotation (candidate part type longest-filename)
   "Calculate the annotation candidates as per
