@@ -187,18 +187,21 @@ A part would look something like:
 (defalias 'mu4e-msg-field 'mu4e-message-field)
 
 (defun mu4e-field-at-point (field)
-  "Get FIELD for the message at point.
+       "Get FIELD for the message at point.
 Either in the headers buffer or the view buffer. Field is a
 symbol, see `mu4e-header-info'."
-  (plist-get (mu4e-message-at-point) field))
+       (plist-get (mu4e-message-at-point) field))
 
 (defun mu4e-message-readable-path (&optional msg)
-  "Get a readable path to MSG or raise an error.
+       "Get a readable path to MSG or raise an error.
 If MSG is nil, use `mu4e-message-at-point'."
-  (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
-    (unless (file-readable-p path)
-      (mu4e-error "No readable message at %s; database outdated?" path))
-    path))
+       (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
+            ;; (unless (file-readable-p path)
+            ;;   (mu4e-error "No readable message at %s; database outdated?" path))
+            
+            (if mu4e-mu-through-wsl
+                (concat "//wsl.localhost/Ubuntu" path)
+              path)))
 
 (defun mu4e-copy-message-path ()
   "Copy the message-path of message at point to the kill ring."
