@@ -664,7 +664,7 @@ PARENT is the \"parent\" message; nil
         ;; we handle that ourselves below
         (let* ((message-newsreader mu4e-user-agent-string)
                (message-required-mail-headers
-                (seq-keep #'identity ;; ensure needed headers are generated.
+                (seq-filter #'identity ;; ensure needed headers are generated.
                      `(From Subject Date Message-ID
                             ,(when (eq mu4e-compose-type  'reply) 'In-Reply-To)
                             ;; XXX vvv these two don't work. why not?
