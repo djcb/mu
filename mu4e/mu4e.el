@@ -84,7 +84,8 @@ is non-nil."
     (unless (string= (mu4e-server-version) mu4e-mu-version)
       (mu4e-error "The mu server has version %s, but we need %s"
                   (mu4e-server-version) mu4e-mu-version)))
-  (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+  (unless (and mu4e-mu-binary ;; (file-executable-p mu4e-mu-binary)
+               )
     (mu4e-error "Please set `mu4e-mu-binary' to the full path to the mu
     binary"))
   (dolist (var '(mu4e-sent-folder mu4e-drafts-folder

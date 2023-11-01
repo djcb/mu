@@ -395,24 +395,25 @@ As per issue #2198."
                 ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
 
 (defun mu4e--version-check ()
-  ;; sanity-check 1
-  (let ((default-directory temporary-file-directory)) ;;ensure it's local.
-    (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
-      (mu4e-error
-       "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
-    ;; sanity-check 2
-    (let ((version (let ((s (shell-command-to-string
-                             (concat mu4e-mu-binary " --version"))))
-                     (and (string-match "version \\([.0-9]+\\)" s)
-                          (match-string 1 s)))))
-      (if (not (string= version mu4e-mu-version))
-          (mu4e-error
-           (concat
-            "Found mu version %s, but mu4e needs version %s"
-            "; please set `mu4e-mu-binary' "
-            "accordingly")
-           version mu4e-mu-version)
-        (mu4e-message "Found mu version %s" version)))))
+       ;; sanity-check 1
+       (let ((default-directory temporary-file-directory)) ;;ensure it's local.
+         (unless (and mu4e-mu-binary ;; (file-executable-p mu4e-mu-binary)
+                      )
+                       (mu4e-error
+                        "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
+         ;; sanity-check 2
+         (let ((version (let ((s (shell-command-to-string
+                                  (concat mu4e-mu-binary " --version"))))
+                                  (and (string-match "version \\([.0-9]+\\)" s)
+                                       (match-string 1 s)))))
+                                       (if (not (string= version mu4e-mu-version))
+                                         (mu4e-error
+                                          (concat
+                                           "Found mu version %s, but mu4e needs version %s"
+                                           "; please set `mu4e-mu-binary' "
+                                           "accordingly")
+                                          version mu4e-mu-version)
+                                         (mu4e-message "Found mu version %s" version)))))
 
 (defun mu4e-server-repl ()
   "Start a mu4e-server repl.
