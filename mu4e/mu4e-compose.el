@@ -666,18 +666,20 @@ PARENT is the \"parent\" message; nil
                (message-required-mail-headers
                 (seq-filter #'identity ;; ensure needed headers are generated.
                      `(From Subject Date Message-ID
-                            ,(when (eq mu4e-compose-type  'reply) 'In-Reply-To)
+                            ,(when (eq mu4e-compose-type 'reply) 'In-Reply-To)
+                            ,(when (memq mu4e-compose-type '(reply forward))
+                                         'References))
                             ;; XXX vvv these two don't work. why not?
                             ;; ,(when message-newsreader 'User-Agent)
                             ;; ,(when message-user-organization 'Organization)
-                            )))
+                            ))
               (message-this-is-mail t))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
                       gnus-message-replysignencrypted nil)
           (when parent
-            (insert (mu4e-view-message-text parent)))
+            (insert (mu4e-view-message-text parent 'all-headers)))
           (goto-char (point-min))
           ;; annoyingly, various message- functions call `message-pop-to-buffer`
           ;; (showing the message. But we're not ready for that yet. So

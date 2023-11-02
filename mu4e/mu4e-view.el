@@ -660,17 +660,17 @@ As a side-effect, a message that is being viewed loses its
     (let ((inhibit-read-only t))
       (run-hooks 'mu4e-view-rendered-hook))))
 
-(defun mu4e-view-message-text (msg)
-  "Return the pristine MSG as a string."
-  ;; we need this for replying/forwarding, since the mu4e-compose
-  ;; wants it that way.
+(defun mu4e-view-message-text (msg &optional all-headers)
+  "Return the pristine MSG as a string.
+If ALL-HEADERS is non-nil, include all headers."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
     (let ((gnus-inhibit-mime-unbuttonizing nil)
-          (gnus-unbuttonized-mime-types '(".*/.*")))
-      (mu4e--view-render-buffer msg))
-    (buffer-substring-no-properties (point-min) (point-max))))
+          (gnus-unbuttonized-mime-types '(".*/.*"))
+          (gnus-inhibit-hiding all-headers))
+      (gnus-article-prepare-display)
+      (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defun mu4e-action-view-in-browser (msg &optional skip-headers)
   "Show current MSG in browser if it includes an HTML-part.
