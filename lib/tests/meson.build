@@ -17,53 +17,56 @@
 #
 # tests
 #
-test('test-maildir',
-     executable('test-maildir',
-                'test-mu-maildir.cc',
-                install: false,
-                dependencies: [glib_dep, lib_mu_dep]))
-test('test-msg',
-     executable('test-msg',
-                'test-mu-msg.cc',
-                install: false,
-                dependencies: [glib_dep, lib_mu_dep]))
-test('test-store',
-     executable('test-store',
-                'test-mu-store.cc',
-                install: false,
-                dependencies: [glib_dep, lib_mu_dep]))
-test('test-query',
-     executable('test-query',
-                'test-query.cc',
-                install: false,
-                dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
 
-test('test-store-query',
-     executable('test-store-query',
-                'test-mu-store-query.cc',
-                install: false,
-                dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
-#
-# benchmarks
-#
-bench_maildirs=join_paths(meson.current_build_dir(), 'maildirs')
-bench_store=join_paths(meson.current_build_dir(), 'store')
-bench_indexer_exe = executable(
-  'bench-indexer',
-  'bench-indexer.cc',
-  install:false,
-  cpp_args:['-DBENCH_MAILDIRS="' + bench_maildirs + '"',
-            '-DBENCH_STORE="' + bench_store + '"',
-           ],
-  dependencies: [lib_mu_dep, glib_dep])
+if not get_option('tests').disabled()
+    test('test-maildir',
+         executable('test-maildir',
+                    'test-mu-maildir.cc',
+                    install: false,
+                    dependencies: [glib_dep, lib_mu_dep]))
+    test('test-msg',
+         executable('test-msg',
+                    'test-mu-msg.cc',
+                    install: false,
+                    dependencies: [glib_dep, lib_mu_dep]))
+    test('test-store',
+         executable('test-store',
+                    'test-mu-store.cc',
+                    install: false,
+                    dependencies: [glib_dep, lib_mu_dep]))
+    test('test-query',
+         executable('test-query',
+                    'test-query.cc',
+                    install: false,
+                    dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
 
-benchmark('bench-indexer', bench_indexer_exe, args: ['-m', 'perf'])
+    test('test-store-query',
+         executable('test-store-query',
+                    'test-mu-store-query.cc',
+                    install: false,
+                    dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
+    #
+    # benchmarks
+    #
+    bench_maildirs=join_paths(meson.current_build_dir(), 'maildirs')
+    bench_store=join_paths(meson.current_build_dir(), 'store')
+    bench_indexer_exe = executable(
+      'bench-indexer',
+      'bench-indexer.cc',
+      install:false,
+      cpp_args:['-DBENCH_MAILDIRS="' + bench_maildirs + '"',
+                '-DBENCH_STORE="' + bench_store + '"',
+               ],
+      dependencies: [lib_mu_dep, glib_dep])
 
-#
-# below does _not_ pass; it is believed that it's a false alarm.
-#    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
+    benchmark('bench-indexer', bench_indexer_exe, args: ['-m', 'perf'])
 
-# also register benchmark as a normal test so it gets included for
-# valgrind/helgrind etc.
-# test('test-bench-indexer', bench_indexer_exe,
-#      args : ['-m', 'quick'], env: ['THREADNUM=16'])
+    #
+    # below does _not_ pass; it is believed that it's a false alarm.
+    #    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
+
+    # also register benchmark as a normal test so it gets included for
+    # valgrind/helgrind etc.
+    # test('test-bench-indexer', bench_indexer_exe,
+    #      args : ['-m', 'quick'], env: ['THREADNUM=16'])
+endif

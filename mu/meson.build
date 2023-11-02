@@ -42,68 +42,70 @@ mu = executable(
 # tests
 #
 
-test('test-cmd-add',
-     executable('test-cmd-add',
-                'mu-cmd-add.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+if not get_option('tests').disabled()
+    test('test-cmd-add',
+         executable('test-cmd-add',
+                    'mu-cmd-add.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-cfind',
-     executable('test-cmd-cfind',
-                'mu-cmd-cfind.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-cfind',
+         executable('test-cmd-cfind',
+                    'mu-cmd-cfind.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-extract',
-     executable('test-cmd-extract',
-                'mu-cmd-extract.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-extract',
+         executable('test-cmd-extract',
+                    'mu-cmd-extract.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-find',
-     executable('test-cmd-find',
-                'mu-cmd-find.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-find',
+         executable('test-cmd-find',
+                    'mu-cmd-find.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-mkdir',
-     executable('test-cmd-mkdir',
-                'mu-cmd-mkdir.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-mkdir',
+         executable('test-cmd-mkdir',
+                    'mu-cmd-mkdir.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-move',
-     executable('test-cmd-move',
-                'mu-cmd-move.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-move',
+         executable('test-cmd-move',
+                    'mu-cmd-move.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-remove',
-     executable('test-cmd-remove',
-                'mu-cmd-remove.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-remove',
+         executable('test-cmd-remove',
+                    'mu-cmd-remove.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-test('test-cmd-verify',
-     executable('test-cmd-verify',
-                'mu-cmd-verify.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-verify',
+         executable('test-cmd-verify',
+                    'mu-cmd-verify.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
 
-test('test-cmd-view',
-     executable('test-cmd-view',
-                'mu-cmd-view.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_dep]))
+    test('test-cmd-view',
+         executable('test-cmd-view',
+                    'mu-cmd-view.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_dep]))
 
-subdir('tests')
+    subdir('tests')
+endif

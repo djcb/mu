@@ -15,6 +15,11 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+option('tests',
+       type: 'feature',
+       value: 'auto',
+       description: 'build tests')
+
 option('guile',
        type : 'feature',
        value: 'auto',

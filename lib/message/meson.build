@@ -46,57 +46,59 @@ lib_mu_message_dep = declare_dependency(
 # tests
 #
 
-test('test-contact',
-     executable('test-contact',
-                'mu-contact.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+if not get_option('tests').disabled()
+    test('test-contact',
+         executable('test-contact',
+                    'mu-contact.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-document',
-     executable('test-document',
-                'mu-document.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+    test('test-document',
+         executable('test-document',
+                    'mu-document.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-fields',
-     executable('test-fields',
-                'mu-fields.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+    test('test-fields',
+         executable('test-fields',
+                    'mu-fields.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-flags',
-     executable('test-flags',
-                'mu-flags.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+    test('test-flags',
+         executable('test-flags',
+                    'mu-flags.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-message',
-     executable('test-message',
-                'test-mu-message.cc',
-                install: false,
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+    test('test-message',
+         executable('test-message',
+                    'test-mu-message.cc',
+                    install: false,
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-priority',
-     executable('test-priority',
-                'mu-priority.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
+    test('test-priority',
+         executable('test-priority',
+                    'mu-priority.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
-test('test-message-file',
-     executable('test-message-file',
-                'mu-message-file.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_message_dep]))
+    test('test-message-file',
+         executable('test-message-file',
+                    'mu-message-file.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_message_dep]))
 
-test('test-message-part',
-     executable('test-message-part',
-                'mu-message-part.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_message_dep]))
+    test('test-message-part',
+         executable('test-message-part',
+                    'mu-message-part.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_message_dep]))
+endif

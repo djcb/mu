@@ -57,59 +57,62 @@ html2text = executable('mu-html2text',
 #
 # tests
 #
-test('test-sexp',
-     executable('test-sexp', 'mu-sexp.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep]))
 
-test('test-regex',
-     executable('test-regex', 'mu-regex.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep]))
+if not get_option('tests').disabled()
+    test('test-sexp',
+         executable('test-sexp', 'mu-sexp.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep]))
 
-test('test-command-handler',
-     executable('test-command-handler', 'mu-command-handler.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep]))
+    test('test-regex',
+         executable('test-regex', 'mu-regex.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep]))
 
-test('test-utils-file',
-     executable('test-utils-file', 'mu-utils-file.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, gio_unix_dep,config_h_dep, lib_mu_utils_dep]))
+    test('test-command-handler',
+         executable('test-command-handler', 'mu-command-handler.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep]))
 
-test('test-logger',
-     executable('test-logger', 'mu-logger.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep, thread_dep ]))
+    test('test-utils-file',
+         executable('test-utils-file', 'mu-utils-file.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, gio_unix_dep,config_h_dep, lib_mu_utils_dep]))
 
-test('test-option',
-     executable('test-option', 'mu-option.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep ]))
+    test('test-logger',
+         executable('test-logger', 'mu-logger.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep, thread_dep ]))
 
-test('test-lang-detector',
-     executable('test-lang-detector', 'mu-lang-detector.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [ config_h_dep, glib_dep, lib_mu_utils_dep ]))
+    test('test-option',
+         executable('test-option', 'mu-option.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep ]))
 
-test('test-html-to-text',
-     executable('test-html-to-text', 'mu-html-to-text.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep]))
+    test('test-lang-detector',
+         executable('test-lang-detector', 'mu-lang-detector.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [ config_h_dep, glib_dep, lib_mu_utils_dep ]))
 
-test('test-error',
-     executable('test-error', 'mu-error.cc',
-                install: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep]))
+    test('test-html-to-text',
+         executable('test-html-to-text', 'mu-html-to-text.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep]))
+
+    test('test-error',
+         executable('test-error', 'mu-error.cc',
+                    install: false,
+                    cpp_args: ['-DBUILD_TESTS'],
+                    dependencies: [glib_dep, lib_mu_utils_dep]))
 
 
-subdir('tests')
+    subdir('tests')
+endif
