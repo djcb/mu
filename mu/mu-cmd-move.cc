@@ -66,7 +66,7 @@ Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 	if (!old_flags)
 		return Err(Error::Code::InvalidArgument, "failed to determine old flags");
 
-	Flags new_flags;
+	Flags new_flags{};
 	if (!opts.move.flags.empty()) {
 		if (auto&& nflags{flags_from_expr(to_string_view(opts.move.flags),
 						  *old_flags)}; !nflags)
