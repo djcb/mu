@@ -326,7 +326,9 @@ If MSGPATH is nil, do nothing."
 (defun mu4e--delimit-headers ()
   "Delimit headers."
   (let ((mail-header-separator mu4e--header-separator))
-    (save-excursion (mail-sendmail-delimit-header))))
+    (save-excursion
+      (mail-sendmail-undelimit-header)
+      (mail-sendmail-delimit-header))))
 
 (defun mu4e--undelimit-headers ()
   "Undelimit headers."
@@ -336,8 +338,8 @@ If MSGPATH is nil, do nothing."
 (defun mu4e--compose-before-save ()
   "Function called just before the draft buffer is saved."
   ;; This does 3 things:
-  ;;  - set the message id (if not already)
-  ;;  - set the Date (if not already)
+  ;;  - set the Message-Id if not already
+  ;;  - set the Date if not already
   ;;  - (temporarily) remove the mail-header separator
   (setq mu4e--compose-undo buffer-undo-list)
   (save-excursion
@@ -648,12 +650,8 @@ PARENT is the \"parent\" message; nil
                      `(From Subject Date Message-ID
                             ,(when (eq mu4e-compose-type 'reply) 'In-Reply-To)
                             ,(when (memq mu4e-compose-type '(reply forward))
-                                         'References))
-                            ;; XXX vvv these two don't work. why not?
-                            ;; ,(when message-newsreader 'User-Agent)
-                            ;; ,(when message-user-organization 'Organization)
-                            ))
-              (message-this-is-mail t))
+                                         'References))))
+               (message-this-is-mail t))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
@@ -668,22 +666,11 @@ PARENT is the \"parent\" message; nil
                       :override #'mu4e--fake-pop-to-buffer)
           (funcall compose-func parent)
           (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
-          (current-buffer))) ;; returns new buffer
-
-    (set-visited-file-name ;; make it a draft file
-     (mu4e--draft-message-path (mu4e--message-basename) parent))
-    ;; Extra headers
-    (when-let ((fcc-path (mu4e--fcc-path (mu4e--message-basename) parent)))
-      (message-add-header (concat "Fcc: " fcc-path "\n")))
-    (when mu4e-user-agent-string
-      (message-add-header (format "User-Agent: %s\n" mu4e-user-agent-string)))
-    (when-let ((org (message-make-organization)))
-      (message-add-header (format "Organization: %s\n" org)))
-    (current-buffer)))
+          (current-buffer))))) ;; returns new buffer
 
 (defun mu4e--compose-setup-post (compose-type &optional parent)
-  "Prepare the new message buffer while in mu4e-compose-mode."
-
+  "Prepare the new message buffer."
+  (mu4e-compose-mode)
   ;; remember some variables, e.g for user hooks.
   (setq-local
    mu4e-compose-parent-message parent
@@ -691,6 +678,7 @@ PARENT is the \"parent\" message; nil
    message-hidden-headers mu4e-compose-hidden-headers)
   (message-hide-headers)
   (mu4e--compose-set-friendly-buffer-name)
+
   ;; crypto
   (mu4e--compose-setup-crypto parent compose-type)
   ;; set the attachment dir to something more reasonable than the draft
@@ -702,7 +690,23 @@ PARENT is the \"parent\" message; nil
   (add-hook 'message-send-hook #'mu4e--compose-before-send nil t)
   (add-hook 'message-sent-hook #'mu4e--compose-after-send nil t)
 
-  (setq-local message-fcc-handler-function #'mu4e--fcc-handler))
+  (unless (eq compose-type 'edit)
+    ;; Extra headers
+    (when mu4e-user-agent-string
+      (message-add-header (format "User-Agent: %s\n" mu4e-user-agent-string)))
+    (when-let ((org (message-make-organization)))
+      (message-add-header (format "Organization: %s\n" org))))
+
+  (when-let ((fcc-path (mu4e--fcc-path (mu4e--message-basename) parent)))
+    (message-add-header (concat "Fcc: " fcc-path "\n")))
+  (setq-local message-fcc-handler-function #'mu4e--fcc-handler)
+
+  ;; jump to some reasonable place.
+  (if (not (message-field-value "To"))
+      (message-goto-to)
+    (if (not (message-field-value "Subject"))
+        (message-goto-subject)
+      (message-goto-body))))
 
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
@@ -722,29 +726,24 @@ of message."
            (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type))
-
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
-
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
-    (with-current-buffer (mu4e--compose-setup-buffer compose-func parent)
-      (mu4e-compose-mode)
-      (mu4e--compose-setup-post compose-type parent)
-      (set-buffer-modified-p nil) ;; buffer is not user-modified yet
-      ;; show the complete message buffer.
+    (with-current-buffer
+        (mu4e--compose-setup-buffer compose-func parent)
       (funcall (or switch (mu4e--compose-switch-function)) (current-buffer))
-      ;; jump to some reasonable place.
-      (if (not (message-field-value "To"))
-          (message-goto-to)
-        (if (not (message-field-value "Subject"))
-            (message-goto-subject)
-          (message-goto-body))))))
+      (unless (eq compose-type 'edit)
+        (set-visited-file-name ;; make it a draft file
+         (mu4e--draft-message-path (mu4e--message-basename) parent)))
+      (mu4e--compose-setup-post compose-type parent)
+      ;; buffer is not user-modified yet
+      (set-buffer-modified-p nil))))
 
 ;;;###autoload
 (defun mu4e-compose-new ()
   "Compose a new message."
   (interactive)
   (mu4e--compose-setup
-   'new (lambda (_parent) (message-mail nil))))
+   'new (lambda (_parent) (message-mail))))
 
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
@@ -776,17 +775,17 @@ of message."
        (message-forward-make-body cur)))))
 
 ;;;###autoload
-(defun mu4e-compose-edit ()
-  "Edit an existing message."
+(defun mu4e-compose-edit()
+  "Edit an existing draft message."
   (interactive)
   (let* ((msg (mu4e-message-at-point)))
-    (unless (member 'draft (mu4e-message-field msg :flags))
-      (mu4e-warn "Editing is only allowed for draft messages"))
+    (unless  (member 'draft (mu4e-message-field msg :flags))
+      (mu4e-warn "Cannot edit non-draft messages"))
     (mu4e--compose-setup
-     'edit (lambda (msg)
-             (with-current-buffer
-                 (insert-file-contents (plist-get msg :path))
-               (mu4e--delimit-headers))))))
+     'edit
+     (lambda (parent)
+       (find-file (plist-get parent :path))
+       (mu4e--delimit-headers)))))
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
@@ -799,7 +798,6 @@ of message."
     (with-temp-buffer
       (insert-file-contents path)
       (message-resend address))))
-
 
 ;;; Compose Mail
 
