@@ -177,26 +177,6 @@ the place to do that."
   :type 'hook
   :group 'mu4e-compose)
 
-(defcustom mu4e-compose-dont-reply-to-self nil
-  "If non-nil, do not include self.
-
-Whether a given address belongs to this user (the \"self\") is
-determined by `mu4e-personal-or-alternative-address-p', which
-overrides `message-dont-reply-to-names' when replying to
-messages, if `mu4e-compose-dont-reply-to-self' is non-nil."
-  :type 'boolean
-  :group 'mu4e-compose)
-
-(defcustom mu4e-compose-reply-recipients 'ask
-  "Which recipients to use when replying to a message.
-May be a symbol `ask', `all', `sender'.  Note that this option
-only applies to non-mailing-list message; for mailing-list
-messages, mu4e always asks."
-  :type '(choice (const ask)
-                 (const all)
-                 (const sender))
-  :group 'mu4e-compose)
-
 
 ;;; Runtime variables; useful for user-hooks etc.
 (defvar-local mu4e-compose-parent-message nil
@@ -773,12 +753,8 @@ of message."
   (mu4e--compose-setup
    'reply
    (lambda (parent)
-     (let ((message-dont-reply-to-names
-            (if mu4e-compose-dont-reply-to-self
-                message-dont-reply-to-names
-              #'mu4e-personal-or-alternative-address-p)))
-       (message-reply nil wide)
-       (insert (mu4e--compose-cite parent))))))
+     (message-reply nil wide)
+     (insert (mu4e--compose-cite parent)))))
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()

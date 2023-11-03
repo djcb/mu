@@ -78,6 +78,11 @@
       ~mu4e-compose-reply-ignore-address~ is no longer supported, use
       ~message-prune-recipient-rules~ instead.
 
+      Same for ~mu4e-compose-dont-reply-to-self~; roughly the same effect can be
+      achieved by setting ~message-dont-reply-to-names~ to
+      ~#'mu4e-personal-or-alternative-address-p~. This only works for
+      [[info:(message) Wide Reply][wide-replies]].
+
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
       ~message-reply-to-function~ for ultimate control; see [[info:(message)

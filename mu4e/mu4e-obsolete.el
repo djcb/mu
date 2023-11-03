@@ -249,7 +249,6 @@
 (make-obsolete-variable 'mu4e-user-mail-address-list
                         "determined by server; see `mu4e-personal-addresses'."
                         "1.3.8")
-
 (make-obsolete-variable 'mu4e-contact-rewrite-function
                         "mu4e-contact-process-function (see docstring)"
                         "1.3.2")
@@ -262,6 +261,11 @@
                         "1.11.23")
 (make-obsolete-variable 'mu4e-compose-reply-ignore-address
                         "see: message-prune-recipient-rules" "1.11.23")
+
+;; this is only a _rough_
+(make-obsolete-variable 'mu4e-compose-dont-reply-to-self
+                        "message-dont-reply-to-names"
+                        "1.11.24")
 
 ;; calendar
 (define-obsolete-function-alias 'mu4e-icalendar-setup #'ignore '"1.11.22")

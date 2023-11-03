@@ -1881,10 +1881,11 @@ configuration:
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
-@item If you want to exclude your own e-mail address when ``replying to
-all'', set @code{mu4e-compose-dont-reply-to-self} to @code{t}. In
-order for this to work properly you need to pass your address to
-@command{mu init --my-address=} at database initialization time.
+@item If you want to exclude your own e-mail addresses when ``replying to
+all'', set @code{message-dont-reply-to-names} to
+@code{mu4e-personal-or-alternative-address-p}. In order for this to work
+properly you need to pass your address to @command{mu init --my-address=} at
+database initialization time, and/or use @t{message-alternative-emails}.
 @end itemize
 
 @node Searching
