@@ -9,5 +9,5 @@ infofile=$2
 # install
 if test -z "${DESTDIR}"; then
     install-info --info-dir "${infodir}" "${infodir}/${infofile}"
-    gzip --force "${infodir}/${infofile}"
+    gzip --best --force "${infodir}/${infofile}"
 fi
