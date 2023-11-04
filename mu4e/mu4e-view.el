@@ -669,7 +669,7 @@ If ALL-HEADERS is non-nil, include all headers."
     (let ((gnus-inhibit-mime-unbuttonizing nil)
           (gnus-unbuttonized-mime-types '(".*/.*"))
           (gnus-inhibit-hiding all-headers))
-      (gnus-article-prepare-display)
+      (mu4e--view-render-buffer msg)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defun mu4e-action-view-in-browser (msg &optional skip-headers)
