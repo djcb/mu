@@ -580,12 +580,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
           (visual-line-mode t))
       (setq mml-enable-flowed nil))))
 
-
-(defvar mu4e-compose-hidden-headers
-  (append message-hidden-headers '("^User-agent:" "^Fcc:"))
-  "Message headers to hide when composing.
-This is mu4e's version of `message-hidden-headers'.")
-
 (declare-function mu4e-view-message-text "mu4e-view")
 
 (defun mu4e-message-cite-nothing ()
@@ -631,7 +625,16 @@ not ready yet to show the buffer in mu4e."
   (erase-buffer)
   (current-buffer))
 
-(defun mu4e--compose-setup-buffer (compose-func parent)
+(defun mu4e--headers (compose-type)
+  "Determine headers needed for message."
+  (seq-filter #'identity ;; ensure needed headers are generated.
+       `(From Subject Date Message-ID
+        ,(when (eq compose-type 'reply) 'In-Reply-To)
+        ,(when (memq compose-type '(reply forward)) 'References)
+        ,(when message-newsreader 'User-Agent)
+        ,(when message-user-organization 'Organization))))
+
+(defun mu4e--compose-setup-buffer (compose-type compose-func parent)
   "Set up a buffer for message composition before mu4e-compose-mode.
 
 COMPOSE-FUNC is a function / lambda to create the specific type
@@ -644,14 +647,10 @@ PARENT is the \"parent\" message; nil
       (with-temp-buffer
         ;; call the call message function; turn off the gnus crypto stuff;
         ;; we handle that ourselves below
-        (let* ((message-newsreader mu4e-user-agent-string)
-               (message-required-mail-headers
-                (seq-filter #'identity ;; ensure needed headers are generated.
-                     `(From Subject Date Message-ID
-                            ,(when (eq mu4e-compose-type 'reply) 'In-Reply-To)
-                            ,(when (memq mu4e-compose-type '(reply forward))
-                                         'References))))
-               (message-this-is-mail t))
+        (let* ((message-this-is-mail t)
+               (message-generate-headers-first t)
+               (message-newsreader mu4e-user-agent-string)
+               (message-required-mail-headers (mu4e--headers compose-type)))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
@@ -668,18 +667,20 @@ PARENT is the \"parent\" message; nil
           (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
           (current-buffer))))) ;; returns new buffer
 
+
+(defvar mu4e-compose-hidden-headers
+  (append message-hidden-headers '("^User-agent:" "^Fcc:"))
+  "Message headers to hide when composing.
+This is mu4e's version of `message-hidden-headers'.")
+
 (defun mu4e--compose-setup-post (compose-type &optional parent)
   "Prepare the new message buffer."
   (mu4e-compose-mode)
   ;; remember some variables, e.g for user hooks.
   (setq-local
    mu4e-compose-parent-message parent
-   mu4e-compose-type compose-type
-   message-hidden-headers mu4e-compose-hidden-headers)
-  (message-hide-headers)
-  (mu4e--compose-set-friendly-buffer-name)
+   mu4e-compose-type compose-type)
 
-  ;; crypto
   (mu4e--compose-setup-crypto parent compose-type)
   ;; set the attachment dir to something more reasonable than the draft
   ;; directory.
@@ -690,23 +691,25 @@ PARENT is the \"parent\" message; nil
   (add-hook 'message-send-hook #'mu4e--compose-before-send nil t)
   (add-hook 'message-sent-hook #'mu4e--compose-after-send nil t)
 
-  (unless (eq compose-type 'edit)
-    ;; Extra headers
-    (when mu4e-user-agent-string
-      (message-add-header (format "User-Agent: %s\n" mu4e-user-agent-string)))
-    (when-let ((org (message-make-organization)))
-      (message-add-header (format "Organization: %s\n" org))))
-
   (when-let ((fcc-path (mu4e--fcc-path (mu4e--message-basename) parent)))
     (message-add-header (concat "Fcc: " fcc-path "\n")))
   (setq-local message-fcc-handler-function #'mu4e--fcc-handler)
+
+  (mu4e--compose-set-friendly-buffer-name)
+
+  (let ((message-hidden-headers mu4e-compose-hidden-headers))
+    (message-hide-headers))
 
   ;; jump to some reasonable place.
   (if (not (message-field-value "To"))
       (message-goto-to)
     (if (not (message-field-value "Subject"))
         (message-goto-subject)
-      (message-goto-body))))
+      (message-goto-body)))
+
+  ;; buffer is not user-modified yet
+  (set-buffer-modified-p nil)
+  (undo-boundary))
 
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
@@ -729,14 +732,12 @@ of message."
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
     (with-current-buffer
-        (mu4e--compose-setup-buffer compose-func parent)
+        (mu4e--compose-setup-buffer compose-type compose-func parent)
       (funcall (or switch (mu4e--compose-switch-function)) (current-buffer))
       (unless (eq compose-type 'edit)
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
-      (mu4e--compose-setup-post compose-type parent)
-      ;; buffer is not user-modified yet
-      (set-buffer-modified-p nil))))
+      (mu4e--compose-setup-post compose-type parent))))
 
 ;;;###autoload
 (defun mu4e-compose-new ()
@@ -753,6 +754,7 @@ of message."
    'reply
    (lambda (parent)
      (message-reply nil wide)
+     (message-goto-body)
      (insert (mu4e--compose-cite parent)))))
 
 ;;;###autoload
