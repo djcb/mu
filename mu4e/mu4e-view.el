@@ -661,14 +661,17 @@ As a side-effect, a message that is being viewed loses its
       (run-hooks 'mu4e-view-rendered-hook))))
 
 (defun mu4e-view-message-text (msg &optional all-headers)
-  "Return the pristine MSG as a string.
+  "Return the rendered MSG as a string.
 If ALL-HEADERS is non-nil, include all headers."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
     (let ((gnus-inhibit-mime-unbuttonizing nil)
           (gnus-unbuttonized-mime-types '(".*/.*"))
-          (gnus-inhibit-hiding all-headers))
+          (gnus-inhibit-hiding all-headers)
+          (mu4e-view-fields mu4e-view-fields))
+      ;; ensure we always include the message-id.
+      (cl-pushnew ':message-id mu4e-view-fields)
       (mu4e--view-render-buffer msg)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
@@ -771,7 +774,7 @@ Note that for some messages, this can trigger high CPU load."
   (mu4e-view-refresh))
 
 (defun mu4e--view-gnus-display-mime (msg)
-  "Like `gnus-display-mime' but include mu4e headers to MSG."
+  "Like `gnus-display-mime', but include mu4e headers to MSG."
   (lambda (&optional ihandles)
     (gnus-display-mime ihandles)
     (unless ihandles
@@ -782,8 +785,11 @@ Note that for some messages, this can trigger high CPU load."
         (dolist (field mu4e-view-fields)
           (let ((fieldval (mu4e-message-field msg field)))
             (pcase field
-              ((or ':path ':maildir :list ':user-agent ':message-id)
+              ((or ':path ':maildir ':list)
                (mu4e--view-gnus-insert-header field fieldval))
+              (':message-id
+               (when-let ((msgid (plist-get msg :message-id)))
+                 (mu4e--view-gnus-insert-header field (format "<%s>" msgid))))
               (':mailing-list
                (let ((list (plist-get msg :list)))
                  (if list (mu4e-get-mailing-list-shortname list) "")))
@@ -796,8 +802,8 @@ Note that for some messages, this can trigger high CPU load."
               (':size (mu4e--view-gnus-insert-header
                        field (mu4e-display-size fieldval)))
               ((or ':subject ':to ':from ':cc ':bcc ':from-or-to
-                   ':date :attachments ':signature
-                   ':decryption))       ; handled by Gnus
+                   ':user-agent ':date ':attachments
+                   ':signature ':decryption)) ;; handled by Gnus
               (_
                (mu4e--view-gnus-insert-header-custom msg field)))))
         (let ((gnus-treatment-function-alist
