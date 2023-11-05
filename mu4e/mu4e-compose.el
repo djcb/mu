@@ -442,7 +442,7 @@ appropriate flag at the message forwarded or replied-to."
   ;; This allows the user to effectively start a new message-thread by
   ;; removing the In-Reply-To header.
   (when (eq mu4e-compose-type 'reply)
-    (unless (message-fetch-field "in-reply-to")
+    (unless (message-fetch-field "In-Reply-To")
       (message-remove-header "References")))
   (when use-hard-newlines
     (mu4e--send-harden-newlines))
@@ -533,7 +533,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key map (kbd "C-S-u")               #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c C-u")             #'mu4e-update-mail-and-index)
     (define-key map [remap message-kill-buffer] #'mu4e-message-kill-buffer)
-    ;; remove some unsupport... [remap ..]  does not work here
+    ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
     (define-key map (kbd "C-c C-f C-n")   nil) ;; message-goto-newsgroups
     (define-key map (kbd "C-c C-n")       nil) ;; message-insert-newsgroups
@@ -629,8 +629,8 @@ not ready yet to show the buffer in mu4e."
   "Determine headers needed for message."
   (seq-filter #'identity ;; ensure needed headers are generated.
        `(From Subject Date Message-ID
-        ,(when (eq compose-type 'reply) 'In-Reply-To)
         ,(when (memq compose-type '(reply forward)) 'References)
+        ,(when (eq compose-type 'reply) 'In-Reply-To)
         ,(when message-newsreader 'User-Agent)
         ,(when message-user-organization 'Organization))))
 
@@ -648,9 +648,8 @@ PARENT is the \"parent\" message; nil
         ;; call the call message function; turn off the gnus crypto stuff;
         ;; we handle that ourselves below
         (let* ((message-this-is-mail t)
-               (message-generate-headers-first t)
-               (message-newsreader mu4e-user-agent-string)
-               (message-required-mail-headers (mu4e--headers compose-type)))
+               (message-generate-headers-first nil)
+               (message-newsreader mu4e-user-agent-string))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
@@ -664,6 +663,8 @@ PARENT is the \"parent\" message; nil
           (advice-add 'message-pop-to-buffer
                       :override #'mu4e--fake-pop-to-buffer)
           (funcall compose-func parent)
+          ;; explicitly add the right headers
+          (message-generate-headers (mu4e--headers compose-type))
           (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
           (current-buffer))))) ;; returns new buffer
 
