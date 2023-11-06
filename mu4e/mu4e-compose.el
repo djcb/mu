@@ -562,6 +562,7 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (mu4e-context-minor-mode)
     (mu4e--neutralize-undesirables)
     (mu4e--compose-remap-faces)
+    (setq-local nobreak-char-display nil)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
     (set (make-local-variable 'message-send-mail-real-function) nil)
     ;; Set to nil to enable `electric-quote-local-mode' to work:
@@ -588,11 +589,34 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (message-cite-original-without-signature)
     (delete-region (point-min) (point-max))))
 
-(defun mu4e--compose-cite (parent)
-  "Return a cited version of the PARENT message.
+(defun mu4e--decoded-message (msg)
+  "Get the message MSG, decoded as a string."
+  (with-temp-buffer
+    (setq-local gnus-article-decode-hook
+                '(article-decode-charset
+                  article-decode-encoded-words
+                  article-decode-idna-rhs
+                  article-treat-non-ascii
+                  article-de-base64-unreadable
+                  article-de-quoted-unreadable
+                  article-wash-html)
+                gnus-original-article-buffer (current-buffer))
+    (insert-file-contents-literally
+     (mu4e-message-readable-path msg) nil nil nil t)
+    ;; in rare (broken) case, if a message-id is missing
+    ;; use the generated one from mu.
+    (unless (message-fetch-field "Message-Id")
+      (goto-char (point-min))
+      (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
+    (mm-enable-multibyte)
+    (ignore-errors (run-hooks 'gnus-article-decode-hook))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun mu4e--compose-cite (orig)
+  "Return a cited version of the ORIG message (a string).
 This function uses `message-cite-function', and its settings apply."
   (with-temp-buffer
-    (insert (mu4e-view-message-text parent))
+    (insert orig)
     (goto-char (point-min))
     (push-mark (point-max))
     (let ((message-signature-separator "^-- *$")
@@ -649,20 +673,21 @@ PARENT is the \"parent\" message; nil
         ;; we handle that ourselves below
         (let* ((message-this-is-mail t)
                (message-generate-headers-first nil)
-               (message-newsreader mu4e-user-agent-string))
+               (message-newsreader mu4e-user-agent-string)
+               (orig (and parent (mu4e--decoded-message parent))))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
                       gnus-message-replysignencrypted nil)
-          (when parent
-            (insert (mu4e-view-message-text parent 'all-headers)))
+          (when orig
+            (insert orig))
           (goto-char (point-min))
           ;; annoyingly, various message- functions call `message-pop-to-buffer`
           ;; (showing the message. But we're not ready for that yet. So
           ;; temporarily override that.
           (advice-add 'message-pop-to-buffer
                       :override #'mu4e--fake-pop-to-buffer)
-          (funcall compose-func parent)
+          (funcall compose-func parent orig)
           ;; explicitly add the right headers
           (message-generate-headers (mu4e--headers compose-type))
           (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
@@ -753,10 +778,10 @@ of message."
   (interactive)
   (mu4e--compose-setup
    'reply
-   (lambda (parent)
+   (lambda (_parent orig)
      (message-reply nil wide)
      (message-goto-body)
-     (insert (mu4e--compose-cite parent)))))
+     (insert (mu4e--compose-cite orig)))))
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()
@@ -770,7 +795,7 @@ of message."
   (interactive)
   (mu4e--compose-setup
    'forward
-   (lambda (_parent)
+   (lambda (_parent _orig)
      (let ((message-make-forward-subject-function
             #'message-forward-subject-fwd)
            (cur (current-buffer)))
@@ -786,7 +811,7 @@ of message."
       (mu4e-warn "Cannot edit non-draft messages"))
     (mu4e--compose-setup
      'edit
-     (lambda (parent)
+     (lambda (parent _orig)
        (find-file (plist-get parent :path))
        (mu4e--delimit-headers)))))
 
