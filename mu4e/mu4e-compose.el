@@ -844,7 +844,7 @@ they do not conflict with mu4e inner workings."
   ;; this case, but let's prepare for the re-edit case as well
   (mu4e--compose-setup
    'new
-   (lambda (_parent)
+   (lambda (_parent _orig)
      (message-mail to subject other-headers continue nil
                    yank-action send-actions return-action))
    switch-function))
