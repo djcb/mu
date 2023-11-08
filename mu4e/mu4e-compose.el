@@ -778,7 +778,7 @@ of message."
   "Compose a new message."
   (interactive)
   (mu4e--compose-setup
-   'new (lambda (_parent) (message-mail))))
+   'new (lambda (_parent _orig) (message-mail))))
 
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
