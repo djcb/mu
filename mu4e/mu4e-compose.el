@@ -674,7 +674,15 @@ PARENT is the \"parent\" message; nil
         (let* ((message-this-is-mail t)
                (message-generate-headers-first nil)
                (message-newsreader mu4e-user-agent-string)
-               (orig (and parent (mu4e--decoded-message parent))))
+               ;; for 'forward' we just need the raw original;
+               ;; the rest need a decoded version.
+               (orig (and parent
+                          (if (eq compose-type 'forward)
+                              (with-temp-buffer
+                                (insert-file-contents-literally
+                                 (mu4e-message-readable-path parent) nil nil nil t)
+                                (buffer-string))
+                            (mu4e--decoded-message parent)))))
           ;; we handle it ourselves.
           (setq-local gnus-message-replysign nil
                       gnus-message-replyencrypt nil
