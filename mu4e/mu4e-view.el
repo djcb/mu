@@ -1057,6 +1057,10 @@ Based on Gnus' article-mode."
               (lambda(func &rest args)
                 (if (mu4e--view-mode-p)
                     "." (apply func args))))
+
+   ;; some external tools (bbdb) depend on this
+  (setq gnus-article-buffer (current-buffer))
+
   (use-local-map mu4e-view-mode-map)
   (mu4e-context-minor-mode)
   (mu4e-search-minor-mode)
