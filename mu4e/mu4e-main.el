@@ -146,8 +146,7 @@ the personal addresses."
    mu4e--search-menu-items
    '(
      "--"
-     ["Quit" mu4e-quit :help "Quit mu4e"]
-     )))
+     ["Quit" mu4e-quit :help "Quit mu4e"])))
 
 (declare-function mu4e--server-bookmarks-queries "mu4e")
 
@@ -165,9 +164,11 @@ keybindings must be known when this happens.
 
 Binding the existing bindings (such as \='s') to different
 functions, is *not* really supported, and we still display the
-default binding fo*r the original function; which should still do
-the reasonable thing in most cases. Still, such a rebinding
-*only* affects the key, and not e.g. the mouse-bindings."
+default binding for the original function; which should still do
+the reasonable thing in most cases.
+
+Still, such a rebinding *only* affects the key, and not e.g. the
+mouse-bindings."
   (setq truncate-lines t
         overwrite-mode 'overwrite-mode-binary)
   (mu4e-context-minor-mode)
