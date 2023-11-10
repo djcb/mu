@@ -660,18 +660,14 @@ As a side-effect, a message that is being viewed loses its
     (let ((inhibit-read-only t))
       (run-hooks 'mu4e-view-rendered-hook))))
 
-(defun mu4e-view-message-text (msg &optional all-headers)
-  "Return the rendered MSG as a string.
-If ALL-HEADERS is non-nil, include all headers."
+(defun mu4e-view-message-text (msg)
+  "Return the rendered MSG as a string."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
     (let ((gnus-inhibit-mime-unbuttonizing nil)
           (gnus-unbuttonized-mime-types '(".*/.*"))
-          (gnus-inhibit-hiding all-headers)
-          (mu4e-view-fields mu4e-view-fields))
-      ;; ensure we always include the message-id.
-      (cl-pushnew ':message-id mu4e-view-fields)
+          (mu4e-view-fields '(:from :to :cc :subject :date)'))
       (mu4e--view-render-buffer msg)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
