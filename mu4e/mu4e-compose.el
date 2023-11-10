@@ -590,7 +590,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (delete-region (point-min) (point-max))))
 
 (defun mu4e--decoded-message (msg)
-  "Get the message MSG, decoded as a string."
+  "Get the message MSG, decoded as a string.
+This is used only to extract header information."
   (with-temp-buffer
     (setq-local gnus-article-decode-hook
                 '(article-decode-charset
@@ -598,25 +599,24 @@ buffers; lets remap its faces so it uses the ones for mu4e."
                   article-decode-idna-rhs
                   article-treat-non-ascii
                   article-de-base64-unreadable
-                  article-de-quoted-unreadable
-                  article-wash-html)
+                  article-de-quoted-unreadable)
                 gnus-original-article-buffer (current-buffer))
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
+    (mu4e--delimit-headers)
     ;; in rare (broken) case, if a message-id is missing
     ;; use the generated one from mu.
     (unless (message-fetch-field "Message-Id")
       (goto-char (point-min))
       (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
-    (mm-enable-multibyte)
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun mu4e--compose-cite (orig)
+(defun mu4e--compose-cite (msg)
   "Return a cited version of the ORIG message (a string).
 This function uses `message-cite-function', and its settings apply."
   (with-temp-buffer
-    (insert orig)
+    (insert (mu4e-view-message-text msg))
     (goto-char (point-min))
     (push-mark (point-max))
     (let ((message-signature-separator "^-- *$")
@@ -695,7 +695,7 @@ PARENT is the \"parent\" message; nil
           ;; temporarily override that.
           (advice-add 'message-pop-to-buffer
                       :override #'mu4e--fake-pop-to-buffer)
-          (funcall compose-func parent orig)
+          (funcall compose-func parent)
           ;; explicitly add the right headers
           (message-generate-headers (mu4e--headers compose-type))
           (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
@@ -778,7 +778,7 @@ of message."
   "Compose a new message."
   (interactive)
   (mu4e--compose-setup
-   'new (lambda (_parent _orig) (message-mail))))
+   'new (lambda (_parent) (message-mail))))
 
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
@@ -786,10 +786,11 @@ of message."
   (interactive)
   (mu4e--compose-setup
    'reply
-   (lambda (_parent orig)
+   (lambda (parent)
+     (mu4e--decoded-message parent)
      (message-reply nil wide)
      (message-goto-body)
-     (insert (mu4e--compose-cite orig)))))
+     (insert (mu4e--compose-cite parent)))))
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()
@@ -803,10 +804,12 @@ of message."
   (interactive)
   (mu4e--compose-setup
    'forward
-   (lambda (_parent _orig)
+   (lambda (parent)
      (let ((message-make-forward-subject-function
             #'message-forward-subject-fwd)
            (cur (current-buffer)))
+       (insert-file-contents-literally
+        (mu4e-message-readable-path parent) nil nil nil t)
        (message-mail nil (message-make-forward-subject) nil nil nil)
        (message-forward-make-body cur)))))
 
@@ -819,7 +822,7 @@ of message."
       (mu4e-warn "Cannot edit non-draft messages"))
     (mu4e--compose-setup
      'edit
-     (lambda (parent _orig)
+     (lambda (parent)
        (find-file (plist-get parent :path))
        (mu4e--delimit-headers)))))
 
