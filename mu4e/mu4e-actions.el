@@ -169,7 +169,7 @@ Otherwise return nil."
     (save-excursion
       (goto-char (point-min))
       (if (re-search-forward regexp nil t)
-          (replace-match to-string nil nil)))))
+          (replace-match to-string t nil)))))
 
 (declare-function mu4e--server-add "mu4e-server")
 (defun mu4e--refresh-message (path)
