@@ -65,10 +65,11 @@ is non-nil."
       (progn
         (mu4e--init-handlers)
         (mu4e--start (unless background #'mu4e--main-view)))
-    ;; mu4e already running
-    (when (and (not background)
-               (buffer-live-p (get-buffer mu4e-main-buffer-name)))
-      (switch-to-buffer mu4e-main-buffer-name))))
+    ;; mu4e already running; show unless BACKGROUND
+    (unless background
+      (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
+          (switch-to-buffer mu4e-main-buffer-name)
+        (mu4e--main-view)))))
 
 (defun mu4e-quit(&optional bury)
   "Quit the mu4e session or bury the buffer.
