@@ -667,7 +667,7 @@ As a side-effect, a message that is being viewed loses its
      (mu4e-message-readable-path msg) nil nil nil t)
     (let ((gnus-inhibit-mime-unbuttonizing nil)
           (gnus-unbuttonized-mime-types '(".*/.*"))
-          (mu4e-view-fields '(:from :to :cc :subject :date)'))
+          (mu4e-view-fields '(:from :to :cc :subject :date)))
       (mu4e--view-render-buffer msg)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
