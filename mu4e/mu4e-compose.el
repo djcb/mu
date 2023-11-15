@@ -674,6 +674,7 @@ PARENT is the \"parent\" message; nil
         (let* ((message-this-is-mail t)
                (message-generate-headers-first nil)
                (message-newsreader mu4e-user-agent-string)
+               (message-mail-user-agent nil)
                ;; for 'forward' we just need the raw original;
                ;; the rest need a decoded version.
                (orig (and parent
