@@ -295,7 +295,6 @@ This is mostly useful for profiling.")
   "Number of headers hidden due to `mu4e-headers-hide-predicate'.")
 
 
-
 ;;; Clear
 
 (defun mu4e~headers-clear (&optional text)
@@ -307,11 +306,11 @@ Optionally, show TEXT."
     (let ((inhibit-read-only t))
       (with-current-buffer (mu4e-get-headers-buffer)
         (mu4e--mark-clear)
+        (remove-overlays)
         (erase-buffer)
         (when text
           (goto-char (point-min))
           (insert (propertize text 'face 'mu4e-system-face 'intangible t)))))))
-
 
 ;;; Misc
 
