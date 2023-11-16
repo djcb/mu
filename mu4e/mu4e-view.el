@@ -722,9 +722,7 @@ determine which browser function to use."
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
          ;; Possibly add headers (before "Attachments")
-         (gnus-display-mime-function (mu4e--view-gnus-display-mime msg))
-         (message-alternative-emails
-          #'mu4e-personal-or-alternative-address-p))
+         (gnus-display-mime-function (mu4e--view-gnus-display-mime msg)))
     (condition-case err
         (progn
           (mm-enable-multibyte)
