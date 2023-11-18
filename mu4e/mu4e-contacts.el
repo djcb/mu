@@ -1,4 +1,4 @@
-;;; mu4e-contacts.el -- Dealing with contacts -*- lexical-binding: t -*-
+;;; mu4e-contacts.el --- Dealing with contacts -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022-2023 Dirk-Jan C. Binnema
 
@@ -278,7 +278,7 @@ For testing/debugging."
 (declare-function mu4e--server-contacts  "mu4e-server")
 
 (defun mu4e--request-contacts-maybe ()
-  "Maybe update the set of contacts for autocompletion. 
+  "Maybe update the set of contacts for autocompletion.
 
 If `mu4e-compose-complete-addresses' is non-nil, get/update the
 list of contacts we use for autocompletion; otherwise, do
