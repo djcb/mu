@@ -17,10 +17,9 @@
 #
 # generate org include files
 #
-year = run_command('date', '+%Y', check:true, capture:true)
 man_data=configuration_data()
 man_data.set('VERSION', meson.project_version())
-man_data.set('YEAR', year.stdout().strip())
+man_data.set('YEAR', mu_year)
 incs=[
   'author.inc',
   'bugs.inc',
