@@ -803,7 +803,7 @@ of message."
   "Reply to the message at point with REPLY-TYPE.
 REPLY-TYPE is either nil (normal reply), \='wide or \='supersede."
   (interactive)
-  (cl-assert (when reply-type (member reply-type '(wide supersede))))
+  (cl-assert (member reply-type '(wide supersede nil)))
   (mu4e--compose-setup
    'reply
    (lambda (parent)
