@@ -1681,6 +1681,16 @@ For more information, see @ref{(message) Forwarding}.
 To influence the way a message is forwarded, you can use the variables
 @code{message-forward-as-mime} and @code{message-forward-show-mml}.
 
+@subsection Supersede
+
+Occasionally, it can be useful to ``supersede'' a message you sent; this is
+somewhat like a wide-reply, but with the all the same recipients as the original
+message, as determined by @code{mu4e-personal-or-alternative-address-p}.
+
+For this, there @t{mu4e-compose-supersede} (no default keybinding).
+
+This wraps @code{message-supersede}.
+
 @subsection Resend
 
 You can re-send some existing message with @t{mu4e-compose-resend} from within
@@ -1688,6 +1698,7 @@ the headers view or when looking at some specific message.
 
 This re-sends the message without letting you edit it, as per @ref{(message)
 Resending}.
+
 
 @node Composer Keybindings
 @section Keybindings

@@ -681,7 +681,8 @@ PARENT is the \"parent\" message; nil
                           (if (eq compose-type 'forward)
                               (with-temp-buffer
                                 (insert-file-contents-literally
-                                 (mu4e-message-readable-path parent) nil nil nil t)
+                                 (mu4e-message-readable-path parent)
+                                 nil nil nil t)
                                 (buffer-string))
                             (mu4e--decoded-message parent)))))
           ;; we handle it ourselves.
@@ -708,9 +709,23 @@ PARENT is the \"parent\" message; nil
   "Message headers to hide when composing.
 This is mu4e's version of `message-hidden-headers'.")
 
+(defun mu4e--message-is-yours-p (func &rest args)
+  "Mu4e advise for `message-is-yours'.
+Is this address yours?"
+  (if (mu4e-running-p)
+      (let ((sender (message-fetch-field "from"))
+            (from (message-fetch-field "sender")))
+        (message "yours? %s %s" sender from)
+        (or (and sender (mu4e-personal-or-alternative-address-p
+                         (car (mail-header-parse-address sender))))
+            (and from (mu4e-personal-or-alternative-address-p
+                       (car (mail-header-parse-address from))))))
+    (apply func args)))
+
 (defun mu4e--compose-setup-post (compose-type &optional parent)
   "Prepare the new message buffer."
   (mu4e-compose-mode)
+
   ;; remember some variables, e.g for user hooks.
   (setq-local
    mu4e-compose-parent-message parent
@@ -757,13 +772,15 @@ all others (the message replied to / forwarded / ...).
 COMPOSE-FUNC is a function / lambda to create the specific type
 of message."
   (cl-assert (member compose-type '(reply forward edit new)))
-
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
   (let* ((parent
          (when (member compose-type '(reply forward edit))
            (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type))
+
+    (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
+
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
     (with-current-buffer
@@ -782,22 +799,33 @@ of message."
    'new (lambda (_parent) (message-mail))))
 
 ;;;###autoload
-(defun mu4e-compose-reply (&optional wide)
-  "Reply to the message at point."
+(defun mu4e-compose-reply (&optional reply-type)
+  "Reply to the message at point with REPLY-TYPE.
+REPLY-TYPE is either nil (normal reply), \='wide or \='supersede."
   (interactive)
+  (cl-assert (when reply-type (member reply-type '(wide supersede))))
   (mu4e--compose-setup
    'reply
    (lambda (parent)
      (mu4e--decoded-message parent)
-     (message-reply nil wide)
+     (pcase reply-type
+       ('wide      (message-reply nil t))
+       ('supersede (message-supersede))
+       (_          (message-reply))) ;; vanilla reply
      (message-goto-body)
      (insert (mu4e--compose-cite parent)))))
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()
   "Reply to the message at point to all recipients."
-  (interactive)
-  (mu4e-compose-reply 'wide))
+  (interactive) (mu4e-compose-reply 'wide))
+
+;;;###autoload
+(defun mu4e-compose-supersede ()
+  "Supersede message at point.
+Message must be from current user, as determined through
+`mu4e-personal-or-alternative-address-p'."
+  (interactive) (mu4e-compose-reply 'supersede))
 
 ;;;###autoload
 (defun mu4e-compose-forward ()
@@ -838,6 +866,8 @@ of message."
     (with-temp-buffer
       (insert-file-contents path)
       (message-resend address))))
+
+
 
 ;;; Compose Mail
 

@@ -83,6 +83,11 @@
       ~#'mu4e-personal-or-alternative-address-p~. This only works for
       [[info:(message) Wide Reply][wide-replies]].
 
+    - Another new function is ~mu4e-compose-supersede~ (not bound to any key by
+      default), with which you can /supersede/ your own messages; that is, send
+      the message as a kind-of reply to the same recipients. This only works if
+      you were the sender.
+
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
       ~message-reply-to-function~ for ultimate control; see [[info:(message)
