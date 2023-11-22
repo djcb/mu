@@ -147,6 +147,7 @@ Then, display the results."
        (with-selected-window (or (get-buffer-window buffer)
                                  (get-buffer-window))
          (with-current-buffer buffer
+           (mu4e-thread-unfold-all)
            (if (or (mu4e~headers-goto-docid docid)
                    ;; TODO: Is this the best way to find another
                    ;; relevant docid for a view buffer?
