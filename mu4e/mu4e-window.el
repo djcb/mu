@@ -152,7 +152,7 @@ tested."
 
 (defun mu4e--get-current-buffer-type ()
   "Return an internal symbol that corresponds to each mu4e major mode."
-  (cond ((derived-mode-p 'mu4e-view-mode 'mu4e-raw-view-mode) 'view)
+  (cond ((derived-mode-p '(mu4e-view-mode mu4e-raw-view-mode)) 'view)
         ((derived-mode-p 'mu4e-headers-mode) 'headers)
         ((derived-mode-p 'mu4e-compose-mode) 'compose)
         ((derived-mode-p 'mu4e-main-mode) 'main)
