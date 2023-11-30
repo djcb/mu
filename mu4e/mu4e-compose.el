@@ -30,6 +30,8 @@
 
 ;; Code
 (require 'message)
+(require 'nnheader) ;; for make-full-mail-header
+
 (require 'mu4e-obsolete)
 (require 'mu4e-server)
 (require 'mu4e-message)
@@ -136,7 +138,7 @@ All `sign-*' options have a `encrypt-*' analogue."
               (const :tag "Encrypt all messages" encrypt-all-messages)
               (const :tag "Sign new messages" sign-new-messages)
               (const :tag "Encrypt new messages" encrypt-new-messages)
-              (const :tag "Sign forwarded messages" sign-forwarded-messages)
+y              (const :tag "Sign forwarded messages" sign-forwarded-messages)
               (const :tag "Encrypt forwarded messages"
                      encrypt-forwarded-messages)
               (const :tag "Sign edited messages" sign-edited-messages)
@@ -323,17 +325,13 @@ If MSGPATH is nil, do nothing."
 (defvar-local mu4e--compose-undo nil
   "Remember the undo-state.")
 
-(defun mu4e--delimit-headers ()
-  "Delimit headers."
-  (let ((mail-header-separator mu4e--header-separator))
+(defun mu4e--delimit-headers (&optional undelimit)
+  "Delimit or undelimit (with UNDELIMIT) headers."
+  (let ((mail-header-separator mu4e--header-separator)
+        (inhibit-read-only t))
     (save-excursion
-      (mail-sendmail-undelimit-header)
-      (mail-sendmail-delimit-header))))
-
-(defun mu4e--undelimit-headers ()
-  "Undelimit headers."
-  (let ((mail-header-separator mu4e--header-separator))
-    (save-excursion (mail-sendmail-undelimit-header))))
+      (mail-sendmail-undelimit-header) ;; clear first
+      (unless undelimit (mail-sendmail-delimit-header)))))
 
 (defun mu4e--compose-before-save ()
   "Function called just before the draft buffer is saved."
@@ -348,7 +346,7 @@ If MSGPATH is nil, do nothing."
       (unless (message-fetch-field "Message-ID")
         (message-generate-headers '(Message-ID)))
       (message-generate-headers '(Date)))
-    (mu4e--undelimit-headers))) ;; remove separator
+    (mu4e--delimit-headers 'undelimit))) ;; remove separator
 
 (defvar mu4e--compose-buffer-max-name-length 48)
 (defun mu4e--compose-set-friendly-buffer-name ()
@@ -584,13 +582,13 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 (declare-function mu4e-view-message-text "mu4e-view")
 
 (defun mu4e-message-cite-nothing ()
-  "Function for `message-cite-function' that cites_ nothing_."
+  "Function for `message-cite-function' that cites _nothing_."
   (save-excursion
     (message-cite-original-without-signature)
     (delete-region (point-min) (point-max))))
 
-(defun mu4e--decoded-message (msg)
-  "Get the message MSG, decoded as a string.
+(defun mu4e--decoded-message (msg &optional headers-only)
+  "Get the headers part of message MSG, decoded as a string.
 This is used only to extract header information."
   (with-temp-buffer
     (setq-local gnus-article-decode-hook
@@ -600,15 +598,22 @@ This is used only to extract header information."
                   article-treat-non-ascii
                   article-de-base64-unreadable
                   article-de-quoted-unreadable)
+                gnus-inhibit-mime-unbuttonizing nil
+                gnus-unbuttonized-mime-types '(".*/.*")
                 gnus-original-article-buffer (current-buffer))
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
+    ;; remove the body / attachments and what not.
+    (when headers-only
+      (rfc822-goto-eoh)
+      (delete-region (point) (point-max)))
+    ;; in rare (broken) case, if a message-id is missing use the generated one
+    ;; from mu.
     (mu4e--delimit-headers)
-    ;; in rare (broken) case, if a message-id is missing
-    ;; use the generated one from mu.
     (unless (message-fetch-field "Message-Id")
       (goto-char (point-min))
       (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
+    (mu4e--delimit-headers 'undelimit)
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (buffer-substring-no-properties (point-min) (point-max))))
 
@@ -667,41 +672,28 @@ of message; it should return (but not show) the created buffer.
 PARENT is the \"parent\" message; nil
  for a \\='new message, set for all others (the message replied to /
  forwarded / ...)."
-  (with-current-buffer
-      (with-temp-buffer
-        ;; call the call message function; turn off the gnus crypto stuff;
-        ;; we handle that ourselves below
-        (let* ((message-this-is-mail t)
-               (message-generate-headers-first nil)
-               (message-newsreader mu4e-user-agent-string)
-               (message-mail-user-agent nil)
-               ;; for 'forward' we just need the raw original;
-               ;; the rest need a decoded version.
-               (orig (and parent
-                          (if (eq compose-type 'forward)
-                              (with-temp-buffer
-                                (insert-file-contents-literally
-                                 (mu4e-message-readable-path parent)
-                                 nil nil nil t)
-                                (buffer-string))
-                            (mu4e--decoded-message parent)))))
-          ;; we handle it ourselves.
-          (setq-local gnus-message-replysign nil
-                      gnus-message-replyencrypt nil
-                      gnus-message-replysignencrypted nil)
-          (when orig
-            (insert orig))
-          (goto-char (point-min))
-          ;; annoyingly, various message- functions call `message-pop-to-buffer`
-          ;; (showing the message. But we're not ready for that yet. So
-          ;; temporarily override that.
-          (advice-add 'message-pop-to-buffer
-                      :override #'mu4e--fake-pop-to-buffer)
-          (funcall compose-func parent)
-          ;; explicitly add the right headers
-          (message-generate-headers (mu4e--headers compose-type))
-          (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
-          (current-buffer))))) ;; returns new buffer
+  (with-temp-buffer
+    ;; call the call message function; turn off the gnus crypto stuff;
+    ;; we handle that ourselves below
+    (let* ((message-this-is-mail t)
+           (message-generate-headers-first nil)
+           (message-newsreader mu4e-user-agent-string)
+           (message-mail-user-agent nil))
+      ;; we handle it ourselves.
+      (setq-local gnus-message-replysign nil
+                  gnus-message-replyencrypt nil
+                  gnus-message-replysignencrypted nil)
+      (goto-char (point-min))
+      ;; annoyingly, various message- functions call `message-pop-to-buffer`
+      ;; (showing the message. But we're not ready for that yet. So
+      ;; temporarily override that.
+      (advice-add 'message-pop-to-buffer
+                  :override #'mu4e--fake-pop-to-buffer)
+      (funcall compose-func parent)
+      ;; add some more headers, if needed.
+      (message-generate-headers (mu4e--headers compose-type))
+      (advice-remove 'message-pop-to-buffer #'mu4e--fake-pop-to-buffer)
+      (current-buffer)))) ;; returns new buffer (this is not the tmp buf)
 
 
 (defvar mu4e-compose-hidden-headers
@@ -710,12 +702,11 @@ PARENT is the \"parent\" message; nil
 This is mu4e's version of `message-hidden-headers'.")
 
 (defun mu4e--message-is-yours-p (func &rest args)
-  "Mu4e advise for `message-is-yours'.
+  "Mu4e advice for `message-is-yours'.
 Is this address yours?"
   (if (mu4e-running-p)
       (let ((sender (message-fetch-field "from"))
             (from (message-fetch-field "sender")))
-        (message "yours? %s %s" sender from)
         (or (and sender (mu4e-personal-or-alternative-address-p
                          (car (mail-header-parse-address sender))))
             (and from (mu4e-personal-or-alternative-address-p
@@ -746,7 +737,6 @@ Is this address yours?"
   (setq-local message-fcc-handler-function #'mu4e--fcc-handler)
 
   (mu4e--compose-set-friendly-buffer-name)
-
   (let ((message-hidden-headers mu4e-compose-hidden-headers))
     (message-hide-headers))
 
@@ -778,9 +768,7 @@ of message."
            (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type))
-
     (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
-
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
     (with-current-buffer
@@ -790,6 +778,7 @@ of message."
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
       (mu4e--compose-setup-post compose-type parent))))
+
 
 ;;;###autoload
 (defun mu4e-compose-new ()
@@ -799,19 +788,15 @@ of message."
    'new (lambda (_parent) (message-mail))))
 
 ;;;###autoload
-(defun mu4e-compose-reply (&optional reply-type)
-  "Reply to the message at point with REPLY-TYPE.
-REPLY-TYPE is either nil (normal reply), \='wide or \='supersede."
+(defun mu4e-compose-reply (&optional wide)
+  "Reply to the message at point.
+If WIDE is non-nil, make it a \"wide\" reply (\"reply-to-all\")."
   (interactive)
-  (cl-assert (member reply-type '(wide supersede nil)))
   (mu4e--compose-setup
    'reply
    (lambda (parent)
-     (mu4e--decoded-message parent)
-     (pcase reply-type
-       ('wide      (message-reply nil t))
-       ('supersede (message-supersede))
-       (_          (message-reply))) ;; vanilla reply
+     (insert (mu4e--decoded-message parent 'headers-only))
+     (message-reply nil wide)
      (message-goto-body)
      (insert (mu4e--compose-cite parent)))))
 
@@ -825,7 +810,13 @@ REPLY-TYPE is either nil (normal reply), \='wide or \='supersede."
   "Supersede message at point.
 Message must be from current user, as determined through
 `mu4e-personal-or-alternative-address-p'."
-  (interactive) (mu4e-compose-reply 'supersede))
+  (interactive)
+  (mu4e--compose-setup
+   'reply ;; it's a special kind of reply.
+   (lambda (parent)
+     (insert (mu4e--decoded-message parent))
+     (set-buffer-modified-p nil)
+     (message-supersede))))
 
 ;;;###autoload
 (defun mu4e-compose-forward ()
@@ -835,12 +826,23 @@ Message must be from current user, as determined through
    'forward
    (lambda (parent)
      (let ((message-make-forward-subject-function
-            #'message-forward-subject-fwd)
-           (cur (current-buffer)))
-       (insert-file-contents-literally
-        (mu4e-message-readable-path parent) nil nil nil t)
-       (message-mail nil (message-make-forward-subject) nil nil nil)
-       (message-forward-make-body cur)))))
+            #'message-forward-subject-fwd))
+       (insert (mu4e--decoded-message parent))
+       (mu4e--delimit-headers)
+       ;; message-forward expects message-reply-headers to be set up; here we
+       ;; only need message-id & references, rest is for completeness.
+       (setq-local message-reply-headers
+             (make-full-mail-header
+              0
+              (or (message-fetch-field "subject") "none")
+              (or (message-fetch-field "from") "nobody")
+              (message-fetch-field "date")
+              (message-fetch-field "message-id" t)
+              (message-fetch-field "references")
+              0 0 ""))
+       (mu4e--delimit-headers 'undelimit)
+       (set-buffer-modified-p nil)
+       (message-forward)))))
 
 ;;;###autoload
 (defun mu4e-compose-edit()
@@ -866,8 +868,6 @@ Message must be from current user, as determined through
     (with-temp-buffer
       (insert-file-contents path)
       (message-resend address))))
-
-
 
 ;;; Compose Mail
 
