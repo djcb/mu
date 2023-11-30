@@ -458,15 +458,13 @@ appropriate flag at the message forwarded or replied-to."
 It attempts to restore some mu4e window layout after killing the
 compose-buffer."
   (interactive)
-  (let ((win (selected-window))
-        (view (mu4e-get-view-buffer))
+  (let ((view (save-selected-window (mu4e-get-view-buffer)))
         (hdrs (mu4e-get-headers-buffer)))
     (message-kill-buffer)
-    (when (window-live-p win) (delete-window win))
-    ;; try to go back to some mu window if its live; otherwise do nothing.
-    (if (and (buffer-live-p view) (window-live-p (get-buffer-window view)))
+    ;; try to go back to some mu window if it is live; otherwise do nothing.
+    (if (buffer-live-p view)
         (switch-to-buffer view)
-      (when (and (buffer-live-p hdrs) (window-live-p (get-buffer-window hdrs)))
+      (when (and (buffer-live-p hdrs))
         (switch-to-buffer hdrs)))))
 
 ;;; Crypto
