@@ -58,10 +58,11 @@ extra_flags = [
   '-Wformat-security',
   '-Wformat=2',
   '-Wstack-protector',
+  '-fstack-protector-strong',
   '-Wno-switch-enum',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
-  '-Wno-stringop-overflow']
+  '-Wno-stringop-overflow',]
 
 if (cxx.get_id() == 'clang')
   extra_flags += [
@@ -77,6 +78,7 @@ extra_cpp_flags= [
 
 if get_option('buildtype') == 'debug'
   extra_flags += [
+    '-D_GLIBCXX_ASSERTIONS',
     '-ggdb',
     '-g3']
 endif
