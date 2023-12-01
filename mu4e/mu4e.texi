@@ -1683,11 +1683,12 @@ To influence the way a message is forwarded, you can use the variables
 
 @subsection Supersede
 
-Occasionally, it can be useful to ``supersede'' a message you sent; this is
-somewhat like a wide-reply, but with the all the same recipients as the original
-message, as determined by @code{mu4e-personal-or-alternative-address-p}.
+Occasionally, it can be useful to ``supersede'' a message you sent; this drops
+you into a new message that is just like the old message (and a @t{Supersedes:}
+message header). You can then edit this message and send it.
 
-For this, there @t{mu4e-compose-supersede} (no default keybinding).
+This is only possible for messages @emph{you} sent, as determined by
+@code{mu4e-personal-or-alternative-address-p}.
 
 This wraps @code{message-supersede}.
 

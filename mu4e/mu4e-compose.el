@@ -789,7 +789,8 @@ of message."
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
   "Reply to the message at point.
-If WIDE is non-nil, make it a \"wide\" reply (\"reply-to-all\")."
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a.
+\"reply-to-all\")."
   (interactive)
   (mu4e--compose-setup
    'reply
@@ -801,13 +802,17 @@ If WIDE is non-nil, make it a \"wide\" reply (\"reply-to-all\")."
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()
-  "Reply to the message at point to all recipients."
+  "Wide-reply to the message at point.
+A.k.a., \"reply-to-all\"."
   (interactive) (mu4e-compose-reply 'wide))
 
 ;;;###autoload
 (defun mu4e-compose-supersede ()
   "Supersede message at point.
-Message must be from current user, as determined through
+
+That is, send the message again, with all the same recipients;
+this can be useful to follow-up on a sent message. The message
+must be from current user, as determined through
 `mu4e-personal-or-alternative-address-p'."
   (interactive)
   (mu4e--compose-setup
@@ -858,7 +863,8 @@ Message must be from current user, as determined through
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
-  "Re-send the message at point."
+  "Re-send the message at point.
+The message is resent as-is, without any editing. "
   (interactive
    (list (completing-read
           "Resend message to address: " mu4e--contacts-set)))
