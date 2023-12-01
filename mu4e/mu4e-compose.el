@@ -594,6 +594,7 @@ This is used only to extract header information."
                   article-decode-encoded-words
                   article-decode-idna-rhs
                   article-treat-non-ascii
+                  article-remove-cr
                   article-de-base64-unreadable
                   article-de-quoted-unreadable)
                 gnus-inhibit-mime-unbuttonizing nil
