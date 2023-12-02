@@ -24,8 +24,8 @@
 
 ;; Implements mu4e-compose-mode, which is a `message-mode' derivative. This is a
 ;; *fairly* thin wrapper around the gnus functions for message composition,
-;; integrated with mu4e. Still, quite a bit of code to make it work nicely
-;; in the mu4e context.
+;; integrated with mu4e. Still, quite a bit of code to make it work nicely in
+;; the mu4e context.
 
 
 ;; Code
@@ -715,7 +715,6 @@ Is this address yours?"
 (defun mu4e--compose-setup-post (compose-type &optional parent)
   "Prepare the new message buffer."
   (mu4e-compose-mode)
-
   ;; remember some variables, e.g for user hooks.
   (setq-local
    mu4e-compose-parent-message parent
@@ -780,11 +779,23 @@ of message."
 
 
 ;;;###autoload
-(defun mu4e-compose-new ()
-  "Compose a new message."
+(defun mu4e-compose-new (&optional to subject other-headers continue
+                                   switch-function yank-action send-actions
+                                   return-action &rest _)
+  "This is mu4e's implementation of `compose-mail'. TO, SUBJECT,
+OTHER-HEADERS, CONTINUE, SWITCH-FUNCTION, YANK-ACTION
+SEND-ACTIONS RETURN-ACTION are as described in `compose-mail',
+and to the extend that they do not conflict with mu4e inner
+workings."
   (interactive)
   (mu4e--compose-setup
-   'new (lambda (_parent) (message-mail))))
+   'new (lambda (_parent)
+          (message-mail to subject other-headers continue nil
+                        yank-action send-actions return-action))
+   switch-function))
+
+;;;###autoload
+(defalias 'mu4e-compose-mail #'mu4e-compose-new)
 
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
@@ -879,29 +890,12 @@ The message is resent as-is, without any editing. "
 (declare-function mu4e "mu4e")
 
 ;;;###autoload
-(defun mu4e-compose-mail (&optional to subject other-headers continue
-                                    switch-function yank-action send-actions
-                                    return-action &rest _)
-  "This is mu4e's implementation of `compose-mail'.
-
-TO, SUBJECT, OTHER-HEADERS, CONTINUE, SWITCH-FUNCTION, YANK-ACTION SEND-ACTIONS
-RETURN-ACTION are as described in `compose-mail', and to the extend that
-they do not conflict with mu4e inner workings."
-  ;; create a new draft message 'resetting' (as below) is not actually needed in
-  ;; this case, but let's prepare for the re-edit case as well
-  (mu4e--compose-setup
-   'new
-   (lambda (_parent)
-     (message-mail to subject other-headers continue nil
-                   yank-action send-actions return-action))
-   switch-function))
-
-;;;###autoload
 (define-mail-user-agent 'mu4e-user-agent
-  'mu4e-compose-mail
-  'message-send-and-exit
-  'message-kill-buffer
+  #'mu4e-compose-mail
+  #'message-send-and-exit
+  #'mu4e-message-kill-buffer
   'message-send-hook)
+
 ;; Without this, `mail-user-agent' cannot be set to `mu4e-user-agent'
 ;; through customize, as the custom type expects a function.  Not
 ;; sure whether this function is actually ever used; if it is then
@@ -910,7 +904,6 @@ they do not conflict with mu4e inner workings."
 (defun mu4e-user-agent ()
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
-
 
 ;;; minor mode for use in other modes.
 (defvar mu4e-compose-minor-mode-map
