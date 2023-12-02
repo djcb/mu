@@ -752,20 +752,23 @@ Is this address yours?"
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
 
-COMPOSE-TYPE is a symbol for the kind of message; one of
- \\='(new reply forward edit)
+COMPOSE-TYPE is a symbol for message-kind; one of \\='(new reply forward edit)
 PARENT is the \"parent\" message; nil for a \\='new message, set for
 all others (the message replied to / forwarded / ...).
 
 COMPOSE-FUNC is a function / lambda to create the specific type
-of message."
+of message.
+
+Optionally, SWITCH determines how to find a buffer for the message
+(see SWITCH-FUNCTION in `compose-mail')."
   (cl-assert (member compose-type '(reply forward edit new)))
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
   (let* ((parent
          (when (member compose-type '(reply forward edit))
            (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
-         (mu4e-compose-type compose-type))
+         (mu4e-compose-type compose-type)
+         (buf))
     (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
@@ -775,7 +778,9 @@ of message."
       (unless (eq compose-type 'edit)
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
-      (mu4e--compose-setup-post compose-type parent))))
+      (mu4e--compose-setup-post compose-type parent)
+      (setq buf (current-buffer)))
+    (switch-to-buffer buf)))
 
 
 ;;;###autoload
