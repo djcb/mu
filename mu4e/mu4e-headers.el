@@ -56,7 +56,6 @@
 (declare-function mu4e--main-view  "mu4e-main")
 
 
-
 ;;; Configuration
 
 (defgroup mu4e-headers nil
@@ -79,14 +78,23 @@ for the rightmost (last) field. Note that emacs may become very
 slow with excessively long lines (1000s of characters), so if you
 regularly get such messages, you want to avoid fields with nil
 altogether."
-  :type `(repeat (cons (choice ,@(mapcar (lambda (h)
-                                           (list 'const :tag
-                                                 (plist-get (cdr h) :help)
-                                                 (car h)))
-                                         mu4e-header-info))
+  :type `(repeat (cons (choice
+                        ,@(mapcar (lambda (h)
+                                    (list 'const :tag
+                                          (plist-get (cdr h) :help)
+                                          (car h)))
+                                  mu4e-header-info)
+                        (restricted-sexp
+                         :tag "User-specified header"
+                         :match-alternatives (mu4e--headers-header-p)))
                        (choice (integer :tag "width")
                                (const :tag "unrestricted width" nil))))
   :group 'mu4e-headers)
+
+(defun mu4e--headers-header-p (symbol)
+  "Is symbol a valid mu4e header?
+This means its either one of the build-in or user-specified headers."
+  (assoc symbol (append mu4e-header-info mu4e-header-info-custom)))
 
 (defcustom mu4e-headers-date-format "%x"
   "Date format to use in the headers view.
