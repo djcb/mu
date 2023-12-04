@@ -744,10 +744,14 @@ Is this address yours?"
     (if (not (message-field-value "Subject"))
         (message-goto-subject)
       (message-goto-body)))
-
   ;; buffer is not user-modified yet
   (set-buffer-modified-p nil)
   (undo-boundary))
+
+(defun mu4e--maybe-delete-frame ()
+  "Delete frame if there are multiple and current one has a single window."
+  (when (and (one-window-p) (> (length (frame-list)) 1))
+    (delete-frame)))
 
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
@@ -764,10 +768,11 @@ Optionally, SWITCH determines how to find a buffer for the message
   (cl-assert (member compose-type '(reply forward edit new)))
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
   (let* ((parent
-         (when (member compose-type '(reply forward edit))
-           (mu4e-message-at-point)))
+          (when (member compose-type '(reply forward edit))
+            (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type)
+         (actions '(mu4e--maybe-delete-frame))
          (buf))
     (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
@@ -779,6 +784,10 @@ Optionally, SWITCH determines how to find a buffer for the message
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
       (mu4e--compose-setup-post compose-type parent)
+      ;; handle closing of frames.
+      (setq-local ;;message-kill-actions actions
+       message-postpone-actions actions
+       message-send-actions actions)
       (setq buf (current-buffer)))
     (switch-to-buffer buf)))
 
