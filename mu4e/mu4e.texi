@@ -4412,27 +4412,36 @@ as:
 @node Known issues
 @section Known issues
 
-Although they are not really @emph{questions}, we end this chapter with
-a list of known issues and/or missing features in @t{mu4e}. Thus, users
-won't have to search in vain for things that are not there (yet), and
-the author can use it as a todo-list.
+Although they are not really @emph{questions}, we end this chapter with a list
+of known issues and/or missing features in @t{mu4e}. Thus, users won't have to
+search in vain for things that are not there (yet), and the author can use it as
+a todo-list.
 
 @subsection UTF-8 language environment is required
-@t{mu4e} does not work well if the Emacs language environment is not
-UTF-8; so, if you encounter problems with encodings, be sure to have
-@code{(set-language-environment "UTF-8")} in your @file{~/.emacs} (or
-its moral equivalents in other places).
+@t{mu4e} does not work well if the Emacs language environment is not UTF-8; so,
+if you encounter problems with encodings, be sure to have
+@code{(set-language-environment "UTF-8")} in your @file{~/.emacs} (or its moral
+equivalents in other places).
 
-@subsection Thread handling is incomplete
-While threads are calculated and are visible in the headers buffer,
-you cannot collapse/open them.
+@subsection Headers-buffer can get mis-aligned
+Due to the way the headers buffer works, it can get misaligned.
 
-@subsection Key-bindings are @emph{somewhat} hard-coded.
-That is, the main menu assumes the default key-bindings, as do the
-clicks-on-bookmarks.
+For the particular case where the header values are misaligned with the column
+headings, you can try something like the following:
+@lisp
+(add-hook 'mu4e-headers-mode-hook #'my-mu4e-headers-mode-hook)
+(defun my-mu4e-headers-mode-hook ()
+  ;; Account for the fringe and other spacing in the header line.
+  (header-line-indent-mode 1)
+  (push (propertize " " 'display '(space :align-to header-line-indent-width))
+        header-line-format)
+  ;; Ensure `text-scale-adjust' scales the header line with the headers themselves
+  ;; by ensuring the `default' face is in the inheritance hierarchy.
+  (face-remap-add-relative 'header-line '(:inherit (mu4e-header-face default)))
+@end lisp
 
-For a more complete list, please refer to the issues-list in the
-github-repository.
+This does not solve all possible issues; that would require a thorough rework of
+the headers-view, which may happen at some time.
 
 @node Tips and Tricks
 @appendix Tips and Tricks
