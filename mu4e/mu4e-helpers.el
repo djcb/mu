@@ -518,10 +518,6 @@ in an external program."
                  (lambda () (ignore-errors (delete-file tmpfile))))
     tmpfile))
 
-(defsubst mu4e-is-mode-or-derived-p (mode)
-  "Is the current mode equal to MODE or derived from it?"
-  (or (eq major-mode mode) (derived-mode-p mode)))
-
 (defun mu4e-display-manual ()
   "Display the mu4e manual page for the current mode.
 Or go to the top level if there is none."

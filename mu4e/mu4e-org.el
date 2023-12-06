@@ -112,8 +112,8 @@ It links to the last known query when in `mu4e-headers-mode' with
 a specific message, based on its message-id, so that links stay
 valid even after moving the message around."
   (cond
-   ((mu4e-is-mode-or-derived-p 'mu4e-view-mode) (mu4e--org-store-link-message))
-   ((mu4e-is-mode-or-derived-p 'mu4e-headers-mode)
+   ((derived-mode-p 'mu4e-view-mode) (mu4e--org-store-link-message))
+   ((derived-mode-p 'mu4e-headers-mode)
     (if mu4e-org-link-query-in-headers-mode
         (mu4e--org-store-link-query)
       (mu4e--org-store-link-message)))))
