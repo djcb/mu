@@ -209,7 +209,8 @@ clear_links(const std::string& path, DIR* dir)
 				mu_warning("error unlinking {}: {}", fullpath, g_strerror(errno));
 				res = false;
 				/* LCOV_EXCL_STOP*/
-			}
+			} else
+				mu_debug("unlinked linksdir {}", fullpath);
 			break;
 		case  DT_DIR: {
 			DIR* subdir{::opendir(fullpath.c_str())};
@@ -262,6 +263,8 @@ msg_move_verify(const std::string& src, const std::string& dst)
 		 * interfering */
 		mu_debug("source is still there ({}->{})", src, dst);
 	}
+
+	mu_debug("moved {} -> {}", src, dst);
 
 	return Ok();
 }

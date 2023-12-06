@@ -102,7 +102,6 @@ struct OutputStream {
 			quote(fname_);
 	}
 
-
 	/**
 	 * Delete file, if any. Only do this when the OutputStream is no
 	 * longer needed.
@@ -112,6 +111,8 @@ struct OutputStream {
 			return;
 		if (auto&&res{::unlink(fname_.c_str())}; res != 0)
 			mu_warning("failed to unlink '{}'", ::strerror(res));
+		else
+			mu_debug("unlinked output-stream {}", fname_);
 	}
 
 private:
@@ -1076,7 +1077,10 @@ Server::Private::remove_handler(const Command& cmd)
 
 	if (!store().remove_message(path))
 		mu_warning("failed to remove message @ {} ({}) from store", path, docid);
-	output_sexp(Sexp().put_props(":remove", docid));	// act as if it worked.
+	else
+		mu_debug("removed message @ {} @ ({})", path, docid);
+
+	output_sexp(Sexp().put_props(":remove", docid)); // act as if it worked.
 }
 
 void
