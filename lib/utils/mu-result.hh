@@ -37,8 +37,7 @@ template <typename T> using Result = tl::expected<T, Error>;
  *
  * @return a success Result<T>
  */
-template <typename T>
-class Result<T>::expected
+template <typename T> Result<T>
 Ok(T&& t)
 {
 	return std::move(t);
@@ -62,6 +61,17 @@ Ok()
  *
  * @return error
  */
+template<typename T> Result<T>
+Err(Error&& err)
+{
+	return tl::unexpected(std::move(err));
+}
+template<typename T> Result<T>
+Err(const Error& err)
+{
+	return tl::unexpected(err);
+}
+
 static inline tl::unexpected<Error>
 Err(Error&& err)
 {
