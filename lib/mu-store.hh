@@ -193,7 +193,7 @@ public:
 	/**
 	 * Add or update a message to the store. When planning to write many
 	 * messages, it's much faster to do so in a transaction. If so, set
-	 * @in_transaction to true. When done with adding messages, call
+	 * @param in_transaction to true. When done with adding messages, call
 	 * commit().
 	 *
 	 * Optimization: If you are sure the message (i.e., a message with the
@@ -202,16 +202,12 @@ public:
 	 * have to check for the existing message.
 	 *
 	 * @param msg a message
-	 * @param use_transaction whether to bundle up to batch_size
-	 * changes in a transaction
 	 * @param is_new whether this is a completely new message
 	 *
 	 * @return the doc id of the added message or an error.
 	 */
-	Result<Id> add_message(Message& msg, bool use_transaction = false,
-			       bool is_new = false);
-	Result<Id> add_message(const std::string& path, bool use_transaction = false,
-			       bool is_new = false);
+	Result<Id> add_message(Message& msg, bool is_new = false);
+	Result<Id> add_message(const std::string& path, bool is_new = false);
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
@@ -392,12 +388,6 @@ public:
 	 * @param tstamp the timestamp for that path
 	 */
 	void set_dirstamp(const std::string& path, time_t tstamp);
-
-	/**
-	 * Commit the current batch of modifications to disk, opportunistically.
-	 * If no transaction is underway, do nothing.
-	 */
-	void commit();
 
 	/*
 	 *

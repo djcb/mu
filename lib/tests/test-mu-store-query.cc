@@ -125,7 +125,6 @@ I said: "Aujourd'hui!"
 }};
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
-	store.commit();
 
 	// matches
 	for (auto&& expr: {
@@ -846,7 +845,6 @@ https://trac.xapian.org/ticket/719
 
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, conf)};
-	store.commit();
 
 	/* true: match; false: no match */
 	const auto cases = std::vector<std::pair<std::string_view, bool>>{{

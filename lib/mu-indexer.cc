@@ -252,9 +252,7 @@ Indexer::Private::add_message(const std::string& path)
 	// if the store was empty, we know that the message is completely new
 	// and can use the fast path (Xapians 'add_document' rather tahn
 	// 'replace_document)
-	auto res = store_.add_message(msg.value(),
-				      true /*use-transaction*/,
-				      was_empty_);
+	auto res = store_.add_message(msg.value(), was_empty_);
 	if (!res) {
 		mu_warning("failed to add message @ {}: {}", path, res.error().what());
 		return false;
@@ -327,8 +325,9 @@ Indexer::Private::cleanup()
 void
 Indexer::Private::scan_worker()
 {
-	progress_.reset();
+	XapianDb::Transaction tx{store_.xapian_db()}; // RAII
 
+	progress_.reset();
 	if (conf_.scan) {
 		mu_debug("starting scanner");
 		if (!scanner_.start()) { // blocks.
@@ -367,6 +366,7 @@ Indexer::Private::scan_worker()
 	}
 
 	completed_ = ::time({});
+	store_.config().set<Mu::Config::Id::LastIndex>(completed_);
 	state_.change_to(IndexState::Idle);
 }
 

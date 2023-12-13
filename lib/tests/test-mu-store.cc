@@ -128,14 +128,12 @@ test_store_add_count_remove()
 	const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
 	const auto id1 = store->add_message(msgpath);
 	assert_valid_result(id1);
-	store->commit();
 
 	g_assert_cmpuint(store->size(), ==, 1);
 	g_assert_true(store->contains_message(msgpath));
 
 	const auto id2 = store->add_message(MuTestMaildir2 + "/bar/cur/mail3");
 	g_assert_false(!!id2); // wrong maildir.
-	store->commit();
 
 	const auto msg3path{MuTestMaildir + "/cur/1252168370_3.14675.cthulhu!2,S"};
 	const auto id3 = store->add_message(msg3path);
@@ -202,7 +200,7 @@ goto * instructions[pOp->opcode];
 	g_assert_cmpuint(store->size(),==, 1);
 
 	/* ensure 'update' dtrt, i.e., nothing. */
-	const auto docid2 = store->add_message(*message, *docid);
+	const auto docid2 = store->add_message(*message);
 	assert_valid_result(docid2);
 	g_assert_cmpuint(store->size(),==, 1);
 	g_assert_cmpuint(*docid,==,*docid2);
@@ -285,7 +283,6 @@ World!
 
 	const auto docid = store->add_message(*message);
 	assert_valid_result(docid);
-	store->commit();
 
 	auto msg2{store->find_message(*docid)};
 	g_assert_true(!!msg2);

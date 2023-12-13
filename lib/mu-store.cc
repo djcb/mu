@@ -80,40 +80,10 @@ struct Store::Private {
 
 	~Private() try {
 		mu_debug("closing store @ {}", xapian_db_.path());
-		if (!xapian_db_.read_only()) {
-			transaction_maybe_commit(true /*force*/);
-		}
+		if (!xapian_db_.read_only())
+			contacts_cache_.serialize();
 	} catch (...) {
 		mu_critical("caught exception in store dtor");
-	}
-
-	// If not started yet, start a transaction. Otherwise, just update the transaction size.
-	void transaction_inc() noexcept {
-		if (transaction_size_ == 0) {
-			mu_debug("starting transaction");
-			xapian_db_.begin_transaction();
-		}
-		++transaction_size_;
-	}
-
-	// Opportunistically commit a transaction if the transaction size
-	// filled up a batch, or with force.
-	void transaction_maybe_commit(bool force = false) noexcept {
-		static auto batch_size = config_.get<Config::Id::BatchSize>();
-		if (force || transaction_size_ >= batch_size) {
-			contacts_cache_.serialize();
-
-			if (indexer_) // save last index time.
-				if (auto&& t{indexer_->completed()}; t != 0)
-					config_.set<Config::Id::LastIndex>(::time({}));
-
-			if (transaction_size_ == 0)
-				return; // nothing more to do here.
-
-			mu_debug("committing transaction (n={})", transaction_size_);
-			xapian_db_.commit_transaction();
-			transaction_size_ = 0;
-		}
 	}
 
 	Config make_config(XapianDb& xapian_db, const std::string& root_maildir,
@@ -159,7 +129,6 @@ struct Store::Private {
 	const std::string	root_maildir_;
 	const Message::Options	message_opts_;
 
-	size_t     transaction_size_{};
 	std::mutex lock_;
 };
 
@@ -341,7 +310,7 @@ Store::indexer()
 }
 
 Result<Store::Id>
-Store::add_message(Message& msg, bool use_transaction, bool is_new)
+Store::add_message(Message& msg, bool is_new)
 {
 	const auto mdir{maildir_from_path(msg.path(), root_maildir())};
 	if (!mdir)
@@ -367,31 +336,25 @@ Store::add_message(Message& msg, bool use_transaction, bool is_new)
 		msg.set_flags(msg.flags() | Flags::Personal);
 
 	std::lock_guard guard{priv_->lock_};
-	if (use_transaction)
-		priv_->transaction_inc();
-
 	auto&& res = is_new ?
 		priv_->add_message_unlocked(msg) :
 		priv_->update_message_unlocked(msg, msg.path());
 	if (!res)
 		return Err(res.error());
 
-	if (use_transaction) /* commit if batch is full */
-		priv_->transaction_maybe_commit();
-
-	mu_debug("added {}message @ {}; docid = {}",
-		 is_personal ? "personal " : "", msg.path(), *res);
+	mu_debug("added {}{}message @ {}; docid = {}",
+		 is_new ? "new " : "", is_personal ? "personal " : "", msg.path(), *res);
 
 	return res;
 }
 
 Result<Store::Id>
-Store::add_message(const std::string& path, bool use_transaction, bool is_new)
+Store::add_message(const std::string& path, bool is_new)
 {
 	if (auto msg{Message::make_from_path(path, priv_->message_opts_)}; !msg)
 		return Err(msg.error());
 	else
-		return add_message(msg.value(), use_transaction, is_new);
+		return add_message(msg.value(), is_new);
 }
 
 
@@ -412,12 +375,10 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 {
 	std::lock_guard guard{priv_->lock_};
 
-	priv_->transaction_inc();
+	XapianDb::Transaction tx (xapian_db()); // RAII
 
 	for (auto&& id : ids)
 		xapian_db().delete_document(id);
-
-	priv_->transaction_maybe_commit(true /*force*/);
 }
 
 
@@ -640,14 +601,6 @@ Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
 
 	return n;
 }
-
-void
-Store::commit()
-{
-	std::lock_guard guard{priv_->lock_};
-	priv_->transaction_maybe_commit(true /*force*/);
-}
-
 
 std::size_t
 Store::for_each_term(Field::Id field_id, Store::ForEachTermFunc func) const

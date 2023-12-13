@@ -783,6 +783,8 @@ Server::Private::find_handler(const Command& cmd)
 	StopWatch sw{mu_format("{} (indexing: {})", __func__,
 			       indexer().is_running() ? "yes" :  "no")};
 
+	// we need to _lock_ the store while querying (which likely consists of
+	// multiple actual queries) + grabbing the results.
 	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
 	if (!qres)
@@ -843,7 +845,6 @@ static Sexp
 get_stats(const Indexer::Progress& stats, const std::string& state)
 {
 	Sexp sexp;
-
 	sexp.put_props(
 		":info", "index"_sym,
 		":status", Sexp::Symbol(state),
@@ -878,7 +879,6 @@ Server::Private::index_handler(const Command& cmd)
 		}
 		output_sexp(get_stats(indexer().progress(), "complete"),
 			    Server::OutputFlags::Flush);
-		store().commit(); /* ensure on-disk database is updated, too */
 	});
 }
 
