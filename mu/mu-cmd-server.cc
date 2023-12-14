@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,12 +30,12 @@
 #include "mu-server.hh"
 
 #include "utils/mu-utils.hh"
-#include "utils/mu-command-handler.hh"
 #include "utils/mu-readline.hh"
 
 using namespace Mu;
+
 static std::atomic<int> MuTerminate{0};
-static bool              tty;
+static bool     tty;
 
 static void
 sig_handler(int sig)
@@ -44,27 +44,26 @@ sig_handler(int sig)
 }
 
 static void
-install_sig_handler(void)
+install_sig_handler()
 {
-	static struct sigaction action;
-	int                     i, sigs[] = {SIGINT, SIGHUP, SIGTERM, SIGPIPE};
-
 	MuTerminate = 0;
 
+	struct sigaction action{};
 	action.sa_handler = sig_handler;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = SA_RESETHAND;
 
-	for (i = 0; i != G_N_ELEMENTS(sigs); ++i)
-		if (sigaction(sigs[i], &action, NULL) != 0)
+	for (auto sig: {SIGINT, SIGHUP, SIGTERM, SIGPIPE})
+		if (sigaction(sig, &action, NULL) != 0)
 			mu_critical("set sigaction for {} failed: {}",
-				   sigs[i], g_strerror(errno));
+				    sig, g_strerror(errno));
 }
 
 /*
  * Markers for/after the length cookie that precedes the expression we write to
  * output. We use octal 376, 377 (ie, 0xfe, 0xff) as they will never occur in
- * utf8 */
+ * utf8
+ */
 
 #define COOKIE_PRE  "\376"
 #define COOKIE_POST "\377"
@@ -102,7 +101,6 @@ report_error(const Mu::Error& err) noexcept
 			   ":message"_sym, err.what()).to_string(),
 		      Server::OutputFlags::Flush);
 }
-
 
 Result<void>
 Mu::mu_cmd_server(const Mu::Options& opts) try {
