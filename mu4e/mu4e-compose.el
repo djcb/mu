@@ -586,8 +586,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (delete-region (point-min) (point-max))))
 
 (defun mu4e--decoded-message (msg &optional headers-only)
-  "Get the headers part of message MSG, decoded as a string.
-This is used only to extract header information."
+  "Get the message MSG, decoded as a string.
+With HEADERS-ONLY non-nil, only include the headers part."
   (with-temp-buffer
     (setq-local gnus-article-decode-hook
                 '(article-decode-charset
@@ -750,8 +750,14 @@ Is this address yours?"
 
 (defun mu4e--maybe-delete-frame ()
   "Delete frame if there are multiple and current one has a single window."
-  (when (and (one-window-p) (> (length (frame-list)) 1))
-    (delete-frame)))
+  ;; Only consider _real_ frames with some size
+  (when (one-window-p)
+    (let ((real-frames
+           (seq-filter (lambda (frame)
+                         (> (or (frame-parameter frame 'width) 0) 0))
+                       (frame-list))))
+      (when (> (length real-frames) 1)
+        (delete-frame)))))
 
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
