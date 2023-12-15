@@ -749,15 +749,19 @@ Is this address yours?"
   (undo-boundary))
 
 (defun mu4e--maybe-delete-frame ()
-  "Delete frame if there are multiple and current one has a single window."
+  "Delete frame if there are multiple and current one has a single
+window."
+  ;; XXX: this doesn't quite work; need a way to filter out
+  ;; the one _real_ frame I'm looking at; but I always get 3 or so.
   ;; Only consider _real_ frames with some size
-  (when (one-window-p)
-    (let ((real-frames
-           (seq-filter (lambda (frame)
-                         (> (or (frame-parameter frame 'width) 0) 0))
-                       (frame-list))))
-      (when (> (length real-frames) 1)
-        (delete-frame)))))
+  ;; (when (one-window-p)
+  ;;   (let ((real-frames
+  ;;          (seq-filter (lambda (frame);; only count live visible parent frames.
+  ;;                        (not (frame-parent frame)))
+  ;;                      (visible-frame-list))))
+  ;;     (when (> (length real-frames) 1)
+  ;;       (delete-frame))))
+  )
 
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
