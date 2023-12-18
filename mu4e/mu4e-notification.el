@@ -67,6 +67,9 @@ support."
                             (if (= delta-unread 1) "" "s")
                             (plist-get fav :name))))
     (cond
+     ((fboundp 'do-applescript)
+      (do-applescript
+       (format "display notification %S with title %S" body title)))
      ((fboundp 'notifications-notify)
       ;; notifications available
       (setq mu4e--notification-id
