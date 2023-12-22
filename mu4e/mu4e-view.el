@@ -869,7 +869,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
 (defun mu4e--view-msg-mail (func &rest args)
   "Advise FUNC with ARGS  to make `gnus-msg-mail' links compose with mu4e."
   (if (mu4e--view-mode-p)
-      (apply 'mu4e~compose-mail args)
+      (apply 'mu4e-compose-mail args)
     (apply func args)))
 
 (defun mu4e-view-quit ()
