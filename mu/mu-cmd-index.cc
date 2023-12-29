@@ -129,3 +129,61 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 
 	return Ok();
 }
+
+
+#ifdef BUILD_TESTS
+
+/*
+ * Tests.
+ *
+ */
+#include <config.h>
+#include <mu-store.hh>
+#include "utils/mu-test-utils.hh"
+
+
+static void
+test_mu_index(size_t batch_size=0)
+{
+	TempDir temp_dir{};
+
+	const auto mu_home{temp_dir.path()};
+
+	auto res1 = run_command({MU_PROGRAM, "--quiet", "init", "--batch-size",
+			mu_format("{}", batch_size == 0 ? 10000 : batch_size),
+			"--muhome", mu_home, "--maildir" , MU_TESTMAILDIR2});
+	assert_valid_result(res1);
+
+	auto res2 = run_command({MU_PROGRAM, "--quiet", "index",
+			"--muhome", mu_home});
+	assert_valid_result(res2);
+
+	auto&& store = unwrap(Store::make(join_paths(temp_dir.path(), "xapian")));
+	g_assert_cmpuint(store.size(),==,14);
+}
+
+
+static void
+test_mu_index_basic()
+{
+	test_mu_index();
+}
+
+static void
+test_mu_index_batch()
+{
+	test_mu_index(2);
+}
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/index/basic", test_mu_index_basic);
+	g_test_add_func("/cmd/index/batch", test_mu_index_batch);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/

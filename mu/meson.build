@@ -70,6 +70,13 @@ test('test-cmd-find',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
 
+test('test-cmd-index',
+     executable('test-cmd-index',
+                'mu-cmd-index.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
 test('test-cmd-mkdir',
      executable('test-cmd-mkdir',
                 'mu-cmd-mkdir.cc',
