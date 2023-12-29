@@ -55,12 +55,13 @@ number of changes after which they are committed to the database; decreasing
 this reduces the memory requirements, but make indexing substantially slows (and
 vice-versa for increasing). Usually, the default of 250000 should be fine.
 
+Batch-size 0 is interpreted as 'use the default'.
+
 ** --support-ngrams
 
 whether to enable support for using ngrams in indexing and query parsing; this
-can be useful for languages without explicit word-breaks, such as
-Chinese/Japanes/Korean. See *NGRAM SUPPORT* below.
-
+can be useful for languages without explicit word breaks, such as
+Chinese/Japanese/Korean. See *NGRAM SUPPORT* below.
 
 ** --reinit
 
