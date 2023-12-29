@@ -76,9 +76,15 @@ template <typename Func> auto
 xapian_try_result(Func&& func) noexcept -> std::decay_t<decltype(func())>
 try {
 	return func();
+} catch (const Xapian::DatabaseNotFoundError& nferr) {
+	return Err(Error{Error::Code::Xapian, "failed to open database"}.
+		   add_hint("Perhaps try (re)creating using `mu index'"));
 } catch (const Xapian::DatabaseLockError& dlerr) {
 	return Err(Error{Error::Code::StoreLock, "database locked"}.
 		   add_hint("Perhaps mu is already running?"));
+} catch (const Xapian::DatabaseCorruptError& dcerr) {
+	return Err(Error{Error::Code::Xapian, "failed to read database"}.
+		   add_hint("Try (re)creating using `mu index'"));
 } catch (const Xapian::Error& xerr) {
 	return Err(Error::Code::Xapian, "{}", xerr.get_error_string());
 } catch (const std::runtime_error& re) {
@@ -186,7 +192,7 @@ public:
 	};
 
 	/**
-	 * XapianDb CTOR
+	 * XapianDb CTOR. This may throw some Xapian exception.
 	 *
 	 * @param db_path path to the database
 	 * @param flavor kind of database
@@ -422,6 +428,7 @@ public:
 				wdb().begin_transaction();
 			}
 			++tx_level_;
+			mu_debug("ind'd tx level to {}", tx_level_);
 		});
 	}
 
@@ -443,6 +450,7 @@ public:
 				changes_ = 0;
 			}
 			--tx_level_;
+			mu_debug("dec'd tx level to {}", tx_level_);
 		});
 	}
 
@@ -501,6 +509,7 @@ private:
 			--tx_level_;
 			changes_ = 0;
 			wdb().begin_transaction();
+			++tx_level_;
 		}
 	}
 
