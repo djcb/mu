@@ -255,7 +255,6 @@ chance."
   (mu4e-setq-if-nil mu4e-erase-func            #'mu4e~headers-clear)
 
   (mu4e-setq-if-nil mu4e-sent-func             #'mu4e--default-handler)
-  (mu4e-setq-if-nil mu4e-compose-func          #'mu4e--compose-setup)
   (mu4e-setq-if-nil mu4e-contacts-func         #'mu4e--update-contacts)
   (mu4e-setq-if-nil mu4e-info-func             #'mu4e--info-handler)
   (mu4e-setq-if-nil mu4e-pong-func             #'mu4e--default-handler)

@@ -302,21 +302,6 @@ Server::Private::make_command_map()
 		[&](const auto& params) { add_handler(params); }});
 
 	cmap.emplace(
-	    "compose",
-	    CommandInfo{
-		ArgMap{
-		    {":type",
-		     ArgInfo{Type::Symbol,
-			     true,
-			     "type of composition: reply/forward/edit/resend/new"}},
-		    {":docid",
-		     ArgInfo{Type::Number, false, "document id of parent-message, if any"}},
-		    {":decrypt",
-		     ArgInfo{Type::Symbol, false, "whether to decrypt encrypted parts (if any)"}}},
-		"compose a new message",
-		[&](const auto& params) { compose_handler(params); }});
-
-	cmap.emplace(
 	    "contacts",
 	    CommandInfo{
 		ArgMap{{":personal", ArgInfo{Type::Symbol, false, "only personal contacts"}},
@@ -519,90 +504,6 @@ Server::Private::add_handler(const Command& cmd)
 
 	output(mu_format("(:update {})",
 			 msg_sexp_str(msg_res.value(), docid, {})));
-}
-
-/* 'compose' produces the un-changed *original* message sexp (ie., the message
- * to reply to, forward or edit) for a new message to compose). It takes two
- * parameters: 'type' with the compose type (either reply, forward or
- * edit/resend), and 'docid' for the message to reply to. Note, type:new does
- * not have an original message, and therefore does not need a docid
- *
- * In returns a (:compose <type> [:original <original-msg>] [:include] ) message
- * (details: see code below)
- *
- * Note ':include' t or nil determines whether to include attachments
- */
-
-static Option<Sexp>
-maybe_add_attachment(Message& message, const MessagePart& part, size_t index)
-{
-	if (!part.is_attachment())
-		return Nothing;
-
-	const auto cache_path{message.cache_path(index)};
-	if (!cache_path)
-		throw cache_path.error();
-
-	const auto cooked_name{part.cooked_filename()};
-	const auto fname{join_paths(*cache_path, cooked_name.value_or("part"))};
-
-	const auto res = part.to_file(fname, true);
-	if (!res)
-		throw res.error();
-
-	Sexp pi;
-	if (auto cdescr = part.content_description(); cdescr)
-		pi.put_props(":description", *cdescr);
-	else if (cooked_name)
-		pi.put_props(":description", cooked_name.value());
-
-	pi.put_props(":file-name", fname,
-		     ":mime-type",
-		     part.mime_type().value_or("application/octet-stream"));
-
-	return Some(std::move(pi));
-}
-
-
-void
-Server::Private::compose_handler(const Command& cmd)
-{
-	const auto ctype = cmd.symbol_arg(":type").value_or("<error>");
-
-	auto comp_lst = Sexp().put_props(":compose", Sexp::Symbol(ctype));
-
-
-	if (ctype == "reply" || ctype == "forward" ||
-	    ctype == "edit" || ctype == "resend") {
-
-		const unsigned docid{static_cast<unsigned>(cmd.number_arg(":docid").value_or(0))};
-		auto  msg{store().find_message(docid)};
-		if (!msg)
-			throw Error{Error::Code::Store, "failed to get message {}", docid};
-
-		auto msg_sexp = unwrap(Sexp::parse(msg_sexp_str(msg.value(), docid, {})));
-		comp_lst.put_props(":original", msg_sexp);
-		if (ctype == "forward") {
-			// when forwarding, attach any attachment in the orig
-			size_t index{};
-			Sexp attseq;
-			for (auto&& part: msg->parts()) {
-				if (auto attsexp = maybe_add_attachment(
-					    *msg, part, index); attsexp) {
-					attseq.add(std::move(*attsexp));
-					++index;
-				}
-			}
-			if (!attseq.empty()) {
-				comp_lst.put_props(":include", std::move(attseq),
-						  ":cache-path", *msg->cache_path());
-			}
-		}
-
-	} else if (ctype != "new")
-		throw Error(Error::Code::InvalidArgument, "invalid compose type '{}'", ctype);
-
-	output_sexp(comp_lst);
 }
 
 void

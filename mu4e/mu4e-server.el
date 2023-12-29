@@ -142,13 +142,6 @@ the number of matches. See `mu4e--server-filter' for the format.")
 This before new headers are displayed, to clear the current
 headers buffer. See `mu4e--server-filter' for the format.")
 
-(defvar mu4e-compose-func nil
-  "Function called for each compose message received.
-I.e., the original message that is used as basis for composing a
-new message (i.e., either a reply or a forward); the function is
-passed msg and a symbol (either reply or forward). See
-`mu4e--server-filter' for the format of <msg-plist>.")
-
 (defvar mu4e-info-func nil
   "Function called for each (:info type ....) sexp received.
 from the server process.")
@@ -562,20 +555,6 @@ You cannot run the repl when mu4e is running (or vice-versa)."
 On success, we receive `'(:info add :path <path> :docid <docid>)'
 as well as `'(:update <msg-sexp>)`'; otherwise, we receive an error."
   (mu4e--server-call-mu `(add :path ,path)))
-
-(defun mu4e--server-compose (type decrypt &optional docid)
-  "Compose a message of TYPE, DECRYPT it and use DOCID.
-TYPE is a symbol, either `forward', `reply', `edit', `resend' or
-`new', based on an original message (ie, replying to, forwarding,
-editing, resending) with DOCID or nil for type `new'.
-
-The result is delivered to the function registered as
-`mu4e-compose-func'."
-  (mu4e--server-call-mu
-   `(compose
-     :type ,type
-     :decrypt ,(and decrypt t)
-     :docid   ,docid)))
 
 (defun mu4e--server-contacts (personal after maxnum tstamp)
   "Ask for contacts with PERSONAL AFTER MAXNUM TSTAMP.

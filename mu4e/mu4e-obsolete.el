@@ -36,6 +36,8 @@
 
 (make-obsolete-variable 'mu4e-auto-retrieve-keys  "no longer used." "1.3.1")
 
+(make-obsolete-variable 'mu4e-compose-func "no longer used" "1.11.26")
+
 (make-obsolete-variable 'mu4e-compose-crypto-reply-encrypted-policy "The use of the
  'mu4e-compose-crypto-reply-encrypted-policy' variable is deprecated.
  'mu4e-compose-crypto-policy' should be used instead" "2020-03-06")
