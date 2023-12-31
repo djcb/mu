@@ -831,7 +831,7 @@ Server::Private::perform_move(Store::Id                 docid,
 	for (auto& [id,path]: id_paths) {
 		auto idmsg{store().find_message(id)};
 		if (!idmsg)
-			mu_warning("failed to find message for id {}", id);
+			throw Error{Error::Code::Xapian, "cannot find message for id {}", id};
 
 		auto sexpstr = "(:update " + msg_sexp_str(*idmsg, id, {});
 		/* note, the :move t thing is a hint to the frontend that it
