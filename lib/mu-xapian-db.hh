@@ -85,6 +85,9 @@ try {
 } catch (const Xapian::DatabaseCorruptError& dcerr) {
 	return Err(Error{Error::Code::Xapian, "failed to read database"}.
 		   add_hint("Try (re)creating using `mu index'"));
+} catch (const Xapian::DocNotFoundError& dnferr) {
+	return Err(Error{Error::Code::Xapian, "message not found in database"}.
+		   add_hint("Try reopening the database"));
 } catch (const Xapian::Error& xerr) {
 	return Err(Error::Code::Xapian, "{}", xerr.get_error_string());
 } catch (const std::runtime_error& re) {
