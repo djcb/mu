@@ -392,13 +392,6 @@ The server output is as follows:
          ((plist-get sexp :remove)
           (funcall mu4e-remove-func (plist-get sexp :remove)))
 
-         ;; start composing a new message
-         ((plist-get sexp :compose)
-          (funcall mu4e-compose-func
-                   (plist-get sexp :compose)
-                   (plist-get sexp :original)
-                   (plist-get sexp :include)))
-
          ;; get some info
          ((plist-get sexp :info)
           (funcall mu4e-info-func sexp))
