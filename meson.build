@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.11.26',
+        version: '1.11.27',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -28,7 +28,7 @@ project('mu', ['c', 'cpp'],
 
 # hard-code the date here (for reproduciblity); we derive the dates used in e.g.
 # documentation from this.
-mu_date='2023-11-30'
+mu_date='2024-01-01'
 
 # installation paths
 prefixdir = get_option('prefix')
