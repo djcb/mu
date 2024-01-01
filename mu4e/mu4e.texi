@@ -2490,7 +2490,7 @@ As an example, suppose we would like to add a mark for tagging messages
   '(tag
      :char       "g"
      :prompt     "gtag"
-     :ask-target (lambda () (read-string "What tag do you want to add?"))
+     :ask-target (lambda () (read-string "What tag do you want to add? "))
      :action     (lambda (docid msg target)
                    (mu4e-action-retag-message msg (concat "+" target)))))
 @end lisp

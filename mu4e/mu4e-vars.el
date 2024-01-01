@@ -302,7 +302,8 @@ Foo\")."
      . (:name "Tags"
         :shortname "Tags"
         :help "Tags for the message"
-        :sortable nil))
+        ;; sort by _first_ tag.
+        :sortable t))
     (:thread-subject
      . (:name "Subject"
         :shortname "Subject"
@@ -313,9 +314,11 @@ Foo\")."
         :shortname "To"
         :help "Recipient of the message"
         :sortable t)))
+
   "An alist of all possible header fields and information about them.
-This is used in the user-interface (the column headers in the header list, and
-the fields the message view).
+
+This is used in the user-interface (the column headers in the
+header list, and the fields the message view).
 
 Most fields should be self-explanatory. A special one is
 `:from-or-to', which is equal to `:from' unless `:from' matches
@@ -362,7 +365,7 @@ Note, `:sortable' is not supported for custom header fields.")
                  (+ (length (mu4e-message-field msg :to))
                     (length (mu4e-message-field msg :cc))))))))
 
-  "A list of custom (user-defined) headers.
+  "An  alist of custom (user-defined) headers.
 The format is similar to `mu4e-header-info', but adds a :function
 property, which should point to a function that takes a message
 plist as argument, and returns a string. See the default value of
