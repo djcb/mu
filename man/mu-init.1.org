@@ -18,9 +18,11 @@ has completed, you can run *mu index*
 
 ** -m, --maildir=<maildir>
 
-starts searching at =<maildir>=. By default, *mu* uses whatever the *MAILDIR*
-environment variable is set to; if it is not set, it tries =~/Maildir= if it
-already exists.
+use =<maildir>= as the root-maildir.
+
+By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses =~/Maildir=
+if it is an existing directory. If neither of those can be used, the ~--maildir~
+option is required.
 
 ** --my-address=<email-address-or-regex>
 
@@ -37,8 +39,8 @@ argument may need to be quoted.
 
 ** --ignored-address=<email-address-or-regex>
 
-specifies that some e-mail address is to be ignored from the contacts-cache
-(the option can be used multiple times). Such address then cannot be found with
+specifies that some e-mail address is to be ignored from the contacts-cache (the
+option can be used multiple times). Such addresses then cannot be found with
 *mu-cfind(1)* or in the Mu4e contacts cache.
 
 =<my-email-address>= can be either a plain e-mail address or a regexp, just like
@@ -51,9 +53,9 @@ specifies the maximum size for an e-mail message. Usually, the default of
 
 ** --batch-size=<size>
 
-number of changes after which they are committed to the database; decreasing
-this reduces the memory requirements, but make indexing substantially slows (and
-vice-versa for increasing). Usually, the default of 250000 should be fine.
+the number of changes after which they are committed to the database; decreasing
+the value reduces the memory requirements, at the cost of make indexing
+substantially slower. Usually, the default of 250000 should be fine.
 
 Batch-size 0 is interpreted as 'use the default'.
 
@@ -61,7 +63,7 @@ Batch-size 0 is interpreted as 'use the default'.
 
 whether to enable support for using ngrams in indexing and query parsing; this
 can be useful for languages without explicit word breaks, such as
-Chinese/Japanese/Korean. See *NGRAM SUPPORT* below.
+Chinese/Japanese/Korean. See *NGRAM SUPPORT* below for details.
 
 ** --reinit
 
@@ -75,9 +77,9 @@ options.
 
 *mu*'s underlying Xapian database supports 'ngrams', which improve searching for
 languages/scripts that do not have explicit word breaks, such as Chinese,
-Japanese and Korean. It is fairly intrusive, and influence both indexing and
+Japanese and Korean. It is fairly intrusive, and influences both indexing and
 query-parsing; it is not enabled by default, and is recommended only if you need
-to search in such languages.
+to search for messages written in such languages.
 
 When enabled, *mu* automatically uses ngrams automatically. Xapian environment
 variables such as ~XAPIAN_CJK_NGRAM~ are ignored.

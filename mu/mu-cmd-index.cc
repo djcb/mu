@@ -152,11 +152,11 @@ test_mu_index(size_t batch_size=0)
 	auto res1 = run_command({MU_PROGRAM, "--quiet", "init", "--batch-size",
 			mu_format("{}", batch_size == 0 ? 10000 : batch_size),
 			"--muhome", mu_home, "--maildir" , MU_TESTMAILDIR2});
-	assert_valid_result(res1);
+	assert_valid_command(res1);
 
 	auto res2 = run_command({MU_PROGRAM, "--quiet", "index",
 			"--muhome", mu_home});
-	assert_valid_result(res2);
+	assert_valid_command(res2);
 
 	auto&& store = unwrap(Store::make(join_paths(temp_dir.path(), "xapian")));
 	g_assert_cmpuint(store.size(),==,14);

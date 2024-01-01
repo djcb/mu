@@ -35,12 +35,12 @@ namespace Mu {
  * Check if the directory has the given attributes
  *
  * @param path path to dir
- * @param readable is it readable?
- * @param writeable is it writable?
+ * @param readable is it readable? false means "don't care"
+ * @param writeable is it writable? false means "don't care"
  *
  * @return true if is is a directory with given attributes; false otherwise.
  */
-bool check_dir(const std::string& path, bool readable, bool writeable);
+bool check_dir(const std::string& path, bool readable=false, bool writeable=false);
 
 /**
  * See g_canonicalize_filename
@@ -233,8 +233,9 @@ Result<void> remove_directory(const std::string& path);
  * @param try_setsid whether to try setsid(2) (see its manpage for details) if this
  *        system supports it.
  *
- * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_ considered an error from the
- * perspective of run_command, but is for run_command0
+ * @return Ok(exit code) or an error. Note that exit-code != 0 is _not_
+ * considered an error from the perspective of run_command, but is for
+ * run_command0
  */
 struct CommandOutput {
 	int exit_code;

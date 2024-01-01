@@ -77,6 +77,13 @@ test('test-cmd-index',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
 
+test('test-cmd-init',
+     executable('test-cmd-init',
+                'mu-cmd-init.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
 test('test-cmd-mkdir',
      executable('test-cmd-mkdir',
                 'mu-cmd-mkdir.cc',
@@ -104,7 +111,6 @@ test('test-cmd-verify',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
-
 
 test('test-cmd-view',
      executable('test-cmd-view',

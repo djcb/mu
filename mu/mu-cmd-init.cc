@@ -23,6 +23,8 @@
 
 using namespace Mu;
 
+#ifndef BUILD_TESTS
+
 Result<void>
 Mu::mu_cmd_init(const Options& opts)
 {
@@ -79,3 +81,61 @@ Mu::mu_cmd_init(const Options& opts)
 
 	return Ok();
 }
+
+
+
+#else /* BUILD_TESTS */
+
+/*
+ * Tests.
+ *
+ */
+#include <config.h>
+#include <mu-store.hh>
+#include "utils/mu-test-utils.hh"
+
+
+static void
+test_mu_init_basic()
+{
+	TempDir temp_dir{};
+
+	const auto mu_home{temp_dir.path()};
+
+	auto res1 = run_command({MU_PROGRAM, "--quiet", "init",
+			"--muhome", mu_home, "--maildir" , MU_TESTMAILDIR2});
+	assert_valid_command(res1);
+
+	auto&& store = unwrap(Store::make(join_paths(temp_dir.path(), "xapian")));
+	g_assert_true(store.empty());
+}
+
+static void
+test_mu_init_maildir()
+{
+	TempDir temp_dir{};
+
+	const auto mu_home{temp_dir.path()};
+
+	g_setenv("MAILDIR", MU_TESTMAILDIR2, 1);
+	auto res1 = run_command({MU_PROGRAM, "--quiet", "init",
+			"--muhome", mu_home});
+	assert_valid_command(res1);
+
+	auto&& store = unwrap(Store::make(join_paths(temp_dir.path(), "xapian")));
+	g_assert_true(store.empty());
+	assert_equal(store.root_maildir(), MU_TESTMAILDIR2);
+}
+
+int
+main(int argc, char* argv[])
+{
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/cmd/init/basic", test_mu_init_basic);
+	g_test_add_func("/cmd/init/maildir", test_mu_init_maildir);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/

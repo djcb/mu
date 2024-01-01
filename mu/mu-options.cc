@@ -184,19 +184,15 @@ options_map(const IE& ie)
 	return map;
 }
 
-
-
 // transformers
-
 
 // Expand the path using wordexp
 static const std::function ExpandPath = [](std::string filepath)->std::string {
 	if (auto&& res{expand_path(filepath)}; !res)
 		throw CLI::ValidationError{res.error().what()};
 	else
-		return filepath = std::move(res.value());
+		return res.value();
 };
-
 
 // Canonicalize path
 static const std::function CanonicalizePath = [](std::string filepath)->std::string {
@@ -289,7 +285,7 @@ sub_extract(CLI::App& sub, Options& opts)
 	sub.add_option("--target-dir", opts.extract.targetdir,
 		       "Target directory for saving")
 		->type_name("<dir>")
-		->transform(ExpandPath, "expand path")
+		->transform(ExpandPath, "expand target path")
 		->default_str("<current>")
 		->default_val(".");
 	sub.add_flag("--uncooked,-u", opts.extract.uncooked,
@@ -403,7 +399,7 @@ sub_find(CLI::App& sub, Options& opts)
 	sub.add_option("--linksdir", opts.find.linksdir,
 		       "Use bookmarked query")
 		->type_name("<dir>")
-		->transform(ExpandPath, "expand path");
+		->transform(ExpandPath, "expand linksdir path");
 
 	sub.add_option("--summary-len", opts.find.summary_len,
 		       "Use up to so many lines for the summary")
@@ -448,10 +444,20 @@ sub_info(CLI::App& sub, Options& opts)
 static void
 sub_init(CLI::App& sub, Options& opts)
 {
-	sub.add_option("--maildir,-m", opts.init.maildir,
-		       "Top of the maildir")
+	const auto default_mdir = std::invoke([]()->std::string {
+		if (const auto mdir_env{::getenv("MAILDIR")}; mdir_env)
+			return mdir_env;
+		else if (const auto mdir_home = ::join_paths(g_get_home_dir(), "Maildir");
+			 check_dir(mdir_home))
+			return mdir_home;
+		else
+			return {};
+	});
+
+	sub.add_option("--maildir,-m", opts.init.maildir, "Top of the maildir")
 		->type_name("<maildir>")
-		->transform(ExpandPath, "expand path");
+		->default_val(default_mdir)
+		->transform(ExpandPath, "expand maildir path");
 	sub.add_option("--my-address", opts.init.my_addresses,
 		       "Personal e-mail address or regexp")
 		->type_name("<address>");
@@ -503,8 +509,8 @@ sub_move(CLI::App& sub, Options& opts)
 
 	sub.add_option("source", opts.move.src, "Message file to move")
 		->type_name("<message-path>")
-		->transform(ExpandPath, "expand path")
-		->transform(CanonicalizePath, "canonicalize path")
+		->transform(ExpandPath, "expand source path")
+		->transform(CanonicalizePath, "canonicalize source path")
 		->required();
 	sub.add_option("destination", opts.move.dest,
 		       "Destination maildir")
@@ -813,7 +819,7 @@ There is NO WARRANTY, to the extent permitted by law.
 					opts.muhome, "Specify alternative mu directory")
 				->envname("MUHOME")
 				->type_name("<dir>")
-				->transform(ExpandPath, "expand path");
+				->transform(ExpandPath, "expand muhome path");
 	}
 
 	/* add scripts (if supported) as semi-subcommands as well */
