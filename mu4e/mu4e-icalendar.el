@@ -130,10 +130,11 @@
                    (organizer (when (and organizer
                                          (not (string-empty-p organizer)))
                                 organizer))
-                   (organizer (or organizer
-                                  (car (plist-get msg :reply-to))
-                                  (car (plist-get msg :from))
-                                  (mu4e-warn "Cannot find organizer"))))
+                   (organizer
+                    (or organizer
+                        (plist-get (car (plist-get msg :reply-to)) :email)
+                        (plist-get (car (plist-get msg :from)) :email)
+                        (mu4e-warn "Cannot find organizer"))))
               (mu4e--compose-setup
                'reply
                (lambda (_parent)
