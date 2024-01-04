@@ -39,14 +39,14 @@
       messages; you can then search by their ISO-639-1 code, e.g.:
        ~$ mu find lang:en~
 
-    - set the default database batch-size to the ~mu init~ command) to 50000
+    - set the default database batch-size (using the ~mu init~ command) to 50000
       rather than 250000; the latter was too high for systems with limited
       memory. You can of course change that with ~--batch-size=...~
 
     - restore expansion for path options such as ~--maildir=~/Maildir~ (to e.g.
-      ~/home/user/Maildir~) for shells that don't do that, such as Bash.
+      ~/home/user/Maildir~) for shells that do not do that, such as Bash.
 
-    - overhauled query-parser; this is (should be) compatible with the older
+    - overhauled the query-parser; this is (should be) compatible with the older
       one, apart from a number of fixes. There is a new option ~--analyze~ for the
       ~mu find~ command, which shows the parsed query in a (hopefully)
       human-readable s-expression form; this can be used to debug your queries
@@ -57,6 +57,8 @@
       as Chinese/Japanese/Korean. See the *mu-init* manpages, in particular the
       ~--support-ngrams~ option, and why you may (or may not) want to enable that.
 
+    - the build has been made reproducible
+
 *** mu4e
 
 **** message composer
@@ -65,7 +67,7 @@
       composer functions (e.g. the whole mu4e-specific draft setup is gone);
       this reduces code size and offers some new capabilities.
 
-      More of the ~message-~ functions can be used now.
+      More of the ~message-~ functionality can be used now in ~mu4e~.
 
     - Variables ~mu4e-compose-signature~, ~mu4e-compose-cite-function~ are gone
       (with aliases in place), use ~message-signature~, ~message-cite-function~
@@ -106,7 +108,6 @@
       that support is now _automatically_ available.
 
 **** other
-
 
     - New command ~mu4e-search-query~ (bound to =c=) which lets you pick a query
       (from bookmark / maildir shortcuts) with completion in main / headers /
@@ -152,6 +153,10 @@
     - after retrieving mail (~mu4e-update-mail-and-index~), save the output of the
       retrieval command in a buffer =*mu4e-last-update*=, = which can be useful
       for diagnosis.
+
+    - support new-mail notifications on MacOS out-of-the-box
+
+    - allow sorting by tag
 
     - ~mu4e~ now follows Emacs' ~package~ guidelines
 
