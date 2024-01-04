@@ -222,10 +222,21 @@ If MSG is nil, use `mu4e-message-at-point'."
         ;; add basic `quit-window' bindings
         (view-mode 1)))))
 
-(defun mu4e-fetch-field (msg hdr)
-  "Find the value for an arbitrary header field HDR from MSG."
+(declare-function mu4e--decoded-message "mu4e-compose")
+
+(defun mu4e-fetch-field (msg hdr &optional first)
+  "Find the value for an arbitrary header field HDR from MSG.
+
+If the header appears multiple times, the field values are
+concatenated, unless FIRST is non-nil, in which case only the
+first value is returned. See `message-fetch-field' for details.
+
+Note: this loads the full message file such that any available
+message header can be used. If the header is part of the MSG
+plist, it is much more efficient to get the information from that
+plist."
   (with-temp-buffer
-    (insert-file-contents (plist-get msg :path))
+    (insert (mu4e--decoded-message msg 'headers-only))
     (message-fetch-field hdr)))
 ;;;
 (provide 'mu4e-message)

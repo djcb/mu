@@ -1156,25 +1156,25 @@ suppose that our function takes a message-plist as its argument
                (length (mu4e-message-field msg :cc))))))))
 @end lisp
 
-Or, let's get the full mailing-list name:
+Or, let's get the contents of the Jabber-ID header.
+
 @lisp
 (add-to-list 'mu4e-header-info-custom
- '(:full-mailing-list .
-     ( :name "Mailing-list"               ;; long name, as seen in the message-view
-       :shortname "ML"                    ;; short name, as seen in the headers view
-       :help "Full name for mailing list" ;; tooltip
+ '(:jabber-id .
+     ( :name "Jabber-ID"     ;; long name, as seen in the message-view
+       :shortname "JID"      ;; short name, as seen in the headers view
+       :help "The Jabber ID" ;; tooltip
+       ;; uses mu4e-fetch-field which is rel. slow, so only appropriate
+       ;; for mu4e-view-fields, and _not_ mu4e-headers-fields
        :function (lambda (msg)
-           (or (mu4e-message-field msg :mailing-list) "")))))
+           (or (mu4e-fetch-field msg "Jabber-ID") "")))))
 @end lisp
 
-You can then add the custom header to your @code{mu4e-headers-fields},
-just like the built-in headers. After evaluation, your headers-view
-should include a new header @t{Recip#} with the number of recipients,
-and/or @t{ML} with the full mailing-list name.
-
-This function can be used in both the headers-view and the message-view;
-if you need something specific for one of these, you can check for the
-mode in your function, or create separate functions.
+You can then add the custom header to your @code{mu4e-headers-fields} or
+@code{mu4e-view-fields}, just like the built-in headers. However, there is an
+important caveat: when your custom header in @code{mu4e-headers-fields}, the
+function is invoked for each of your message headers in search results, and if
+it is slow, would dramatically slow down @t{mu4e}.
 
 @node HV Actions
 @section Actions
