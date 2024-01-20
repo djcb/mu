@@ -480,9 +480,9 @@ You cannot run the repl when mu4e is running (or vice-versa)."
     (setq mu4e--server-buf "")
     (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
               (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
-    (setq mu4e--server-process (apply 'start-process
-                                      mu4e--server-name mu4e--server-name
-                                      mu4e-mu-binary args))
+    (setq mu4e--server-process (start-process-shell-command
+                                mu4e--server-name mu4e--server-name
+                                (concat mu4e-mu-binary " " (mapconcat 'identity args " "))))
     ;; register a function for (:info ...) sexps
     (unless mu4e--server-process
       (mu4e-error "Failed to start the mu4e backend"))
