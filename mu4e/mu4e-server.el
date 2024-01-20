@@ -436,7 +436,7 @@ As per issue #2198."
 (defun mu4e--version-check ()
   ;; sanity-check 1
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
-    (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (unless mu4e-mu-binary
       (mu4e-error
        "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
     ;; sanity-check 2
