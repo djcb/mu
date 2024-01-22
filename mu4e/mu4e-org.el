@@ -1,6 +1,6 @@
 ;;; mu4e-org --- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -52,7 +52,7 @@ Example usage:
                     \"No date\")))
       (concat subject \" \" date)))
 
-  (setq org-mu4e-link-desc-func \\='my-link-descr)"
+  (setq mu4e-org-link-desc-func \\='my-link-descr)"
   :type '(function)
   :group 'mu4e-org)
 
