@@ -237,7 +237,7 @@ plist, it is much more efficient to get the information from that
 plist."
   (with-temp-buffer
     (insert (mu4e--decoded-message msg 'headers-only))
-    (message-fetch-field hdr)))
+    (message-fetch-field hdr first)))
 ;;;
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here
