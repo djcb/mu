@@ -98,3 +98,7 @@ $ meson setup -C build
 $ meson compile -C build
 $ meson install -C build
 #+end_example
+
+** Contributing
+
+Contributions are welcome! See the Github issue list and [[IDEAS.org]].
