@@ -1,0 +1,19 @@
+#+STARTUP:showall
+* IDEAS
+
+Ideas for future enhancements. We collect those here so they don't clutter up
+the Github issue list, i.e. without any clear plan for adding in the near
+future.
+
+- Support automatic handling for List-Unsubscribe headers
+  https://github.com/djcb/mu/issues/2623 This seems useful, but probably
+  requires a lot of testing to get right.
+
+- Allow for *muting* messages https://github.com/djcb/mu/issues/636 Useful;
+  probably need to do this by *remembering* the thread-id of muted messages; and
+  management (unmute etc.). Perhaps at the mu side, a list of thread-id to add
+  to each query for what *not* to match.
+
+- Support *creating* calendar invitations.
+  https://github.com/djcb/mu/issues/2308
+  Shouldn't be _too_ hard, for someone that uses the functionality.
