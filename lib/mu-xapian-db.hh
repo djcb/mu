@@ -447,12 +447,14 @@ public:
 				mu_critical("cannot dec transaction-level)");
 				throw std::runtime_error("cannot dec transactions");
 			}
-			if (tx_level_ == 1) {// need to commit the Xapian transaction?
-				mu_debug("committing {} changes", changes_);
-				wdb().commit_transaction();
-				changes_ = 0;
-			}
+
 			--tx_level_;
+			if (tx_level_ == 0) {// need to commit the Xapian transaction?
+				mu_debug("committing {} changes", changes_);
+				changes_ = 0;
+				wdb().commit_transaction();
+			}
+
 			mu_debug("dec'd tx level to {}", tx_level_);
 		});
 	}

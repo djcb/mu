@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,6 +17,84 @@
 #
 # tests
 #
+
+
+#
+# unit tests
+#
+
+test('test-threads',
+     executable('test-threads',
+                '../mu-query-threads.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+test('test-contacts-cache',
+     executable('test-contacts-cache',
+                '../mu-contacts-cache.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-config',
+     executable('test-config',
+                '../mu-config.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
+
+test('test-query-macros',
+     executable('test-query-macros',
+                '../mu-query-macros.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+test('test-query-processor',
+     executable('test-query-processor',
+                '../mu-query-processor.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+test('test-query-parser',
+     executable('test-query-parser',
+                '../mu-query-parser.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+test('test-query-xapianizer',
+     executable('test-query-xapianizer',
+                '../mu-query-xapianizer.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep]))
+
+
+test('test-indexer',
+     executable('test-indexer',
+                '../mu-indexer.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, config_h_dep,
+                               lib_mu_dep]))
+
+test('test-scanner',
+     executable('test-scanner',
+                '../mu-scanner.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, config_h_dep,
+                               lib_mu_utils_dep]))
+
+test('test-xapian-db',
+     executable('test-xapian-db',
+                '../mu-xapian-db.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [lib_mu_dep, config_h_dep]))
+
 test('test-maildir',
      executable('test-maildir',
                 'test-mu-maildir.cc',
