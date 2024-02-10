@@ -107,7 +107,10 @@ side-stepping the issue of compiling ~mu~ on windows. Assuming you have installe
 
 #+begin_src emacs-lisp
 (use-package mu4e
-  :load-path "//wsl.localhost/path/to/mu4e"
+  :load-path "//wsl.localhost/Ubuntu/path/to/mu4e"
   :config
   (setq mu4e-mu-binary "wsl mu"))
 #+end_src
+
+Launching ~mu4e~ from any buffer under ~//wsl.localhost/Ubuntu~ should work then.
+For more information on why this works, look at [[this PR][https://github.com/djcb/mu/pull/2624]].
