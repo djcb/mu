@@ -453,19 +453,21 @@ appropriate flag at the message forwarded or replied-to."
   (setq mu4e-sent-func #'mu4e-sent-handler)
   (mu4e--server-sent (buffer-file-name)))
 
-(defun mu4e-message-kill-buffer ()
-  "Wrapper around `message-kill-buffer'.
-It attempts to restore some mu4e window layout after killing the
-compose-buffer."
-  (interactive)
-  (let ((view (save-selected-window (mu4e-get-view-buffer)))
-        (hdrs (mu4e-get-headers-buffer)))
-    (message-kill-buffer)
-    ;; try to go back to some mu window if it is live; otherwise do nothing.
-    (if (buffer-live-p view)
-        (switch-to-buffer view)
-      (when (and (buffer-live-p hdrs))
-        (switch-to-buffer hdrs)))))
+;; (defun mu4e-message-kill-buffer ()
+;;   "Wrapper around `message-kill-buffer'.
+;; It attempts to restore some mu4e window layout after killing the
+;; compose-buffer."
+;;   (interactive)
+;;   (let ((view (save-selected-window (mu4e-get-view-buffer)))
+;;         (hdrs (mu4e-get-headers-buffer)))
+;;     (message-kill-buffer)
+;;     ;; try to go back to some mu window if it is live; otherwise do nothing.
+;;     (if (buffer-live-p view)
+;;         (switch-to-buffer view)
+;;       (when (and (buffer-live-p hdrs))
+;;         (switch-to-buffer hdrs)))))
+
+(defalias 'mu4e-message-kill-buffer 'message-kill-buffer)
 
 ;;; Crypto
 (defun mu4e--compose-setup-crypto (parent compose-type)
@@ -748,21 +750,6 @@ Is this address yours?"
   (set-buffer-modified-p nil)
   (undo-boundary))
 
-(defun mu4e--maybe-delete-frame ()
-  "Delete frame if there are multiple and current one has a single
-window."
-  ;; XXX: this doesn't quite work; need a way to filter out
-  ;; the one _real_ frame I'm looking at; but I always get 3 or so.
-  ;; Only consider _real_ frames with some size
-  ;; (when (one-window-p)
-  ;;   (let ((real-frames
-  ;;          (seq-filter (lambda (frame);; only count live visible parent frames.
-  ;;                        (not (frame-parent frame)))
-  ;;                      (visible-frame-list))))
-  ;;     (when (> (length real-frames) 1)
-  ;;       (delete-frame))))
-  )
-
 (defun mu4e--compose-setup (compose-type compose-func &optional switch)
   "Set up a new buffer for mu4e message composition.
 
@@ -782,7 +769,7 @@ Optionally, SWITCH determines how to find a buffer for the message
             (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type)
-         (actions '(mu4e--maybe-delete-frame))
+         (oldframe (selected-frame))
          (buf))
     (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
@@ -794,12 +781,18 @@ Optionally, SWITCH determines how to find a buffer for the message
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
       (mu4e--compose-setup-post compose-type parent)
-      ;; handle closing of frames.
-      (setq-local ;;message-kill-actions actions
-       message-postpone-actions actions
-       message-send-actions actions)
-      (setq buf (current-buffer)))
-    (switch-to-buffer buf)))
+      (setq buf (current-buffer))
+      (switch-to-buffer buf)
+      (let* ((msgframe (selected-frame))
+             (actions (list
+                       (lambda () ;; kill frame when it was created for this
+                         (unless (eq oldframe msgframe)
+                           (delete-frame msgframe))))))
+        ;; handle closing of frames.
+        (setq-local ;;message-kill-actions actions
+         message-return-actions actions
+         message-send-actions actions
+         message-kill-actions actions)))))
 
 
 ;;;###autoload
