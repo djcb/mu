@@ -1,7 +1,7 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.11.x (unreleased development build)
+* 1.12 (released on February 24, 2024)
 
 ** Some highlights
 
