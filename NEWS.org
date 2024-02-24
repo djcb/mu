@@ -3,6 +3,18 @@
 
 * 1.11.x (unreleased development build)
 
+** Some highlights
+
+  - Significant speedups in both ~mu~ and ~mu4e~
+  - Reworked message composition, closer to its Gnus origins which adds many of its features
+  - Overhauled the query parser; squashing a number of bugs/limitations, incl. dealing
+    with CJK messages
+  - Experimental folding of message threads
+  - Better and faster indexing of HTML messages
+  - Experimental search by (human) language wit CLD2
+
+  For details & more, see below.
+
 *** mu
 
     - new command ~mu move~ to move messages across maildirs and/or change their
@@ -17,7 +29,7 @@
 
       It's not unusual for ~noreply~-type e-mail addresses to be the majority in
       an e-mail corpus; to get rid of those, with something like
-      ~=--ignored-address=/.*no.*reply.*/~
+      ~--ignored-address=/.*no.*reply.*/~
 
     - what used to be the ~mu fields~ command has been merged into ~mu info~; i.e.,
       ~mu fields~ is now ~mu info fields~.
@@ -160,7 +172,24 @@
 
     - ~mu4e~ now follows Emacs' ~package~ guidelines
 
-* 1.10 (released on March 26, 2023)
+*** Contributors
+
+    Thanks to our contributors - code committers belows, but also to everyone
+    who filed tickets, asked questions, answered them etc.
+
+    Babak Farrokhi, Christophe Troestler, Christoph Reichenbach, Daniel Fleischer,
+    David Edmondson, Davide Masserut, Dirk-Jan C. Binnema, Jeremy Sowden,
+    Lin Jian, Martin R. Albrecht, Nacho Barrientos, Nicholas Vollmer,
+    Nicolas P. Rougier, ramon diaz-uriarte (at Phelsuma), reindert, Ruijie Yu,
+    Sean Farley, stardiviner, Tassilo Horn and Thierry Volpiatto
+
+
+* Old news
+  :PROPERTIES:
+  :VISIBILITY: folded
+  :END:
+
+** 1.10 (released on March 26, 2023)
 
 *** mu
 
@@ -314,7 +343,7 @@
 #+end_example
 
        to get a histogram of such messages. Note, this area is under active
-       developement and will likely change.
+       development and will likely change.
 
 *** building and installation
 
@@ -353,10 +382,6 @@
     And of course all the people how filed tickets, asked question, provided
     suggestions.
 
-* Old news
-  :PROPERTIES:
-  :VISIBILITY: folded
-  :END:
 
 ** 1.8 (released on June 25, 2022)
 
