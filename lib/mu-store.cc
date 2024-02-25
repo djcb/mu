@@ -52,7 +52,7 @@ static std::string
 remove_slash(const std::string& str)
 {
 	auto clean{str};
-	while (clean[clean.length() - 1] == '/')
+	while (!clean.empty() && clean[clean.length() - 1] == '/')
 		clean.pop_back();
 
 	return clean;
