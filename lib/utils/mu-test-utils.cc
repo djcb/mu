@@ -64,15 +64,12 @@ bool
 Mu::set_en_us_utf8_locale()
 {
 	setenv("LC_ALL", "en_US.UTF-8", 1);
-	setlocale(LC_ALL, "en_US.UTF-8");
 
-	if (strcmp(nl_langinfo(CODESET), "UTF-8") != 0) {
-		/* LCOV_EXCL_START*/
-		mu_println("Note: Unit tests require the en_US.utf8 locale. "
-			   "Ignoring test cases.");
-		/* LCOV_EXCL_STOP*/
+	if (auto str = setlocale(LC_ALL, "en_US.UTF-8"); !str)
 		return false;
-	}
+
+	if (strcmp(nl_langinfo(CODESET), "UTF-8") != 0)
+		return false;
 
 	return true;
 }
