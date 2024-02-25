@@ -189,11 +189,11 @@ else
 endif
 
 # optionally, use Compact Language Detector2 if we can find it.
-cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: false)
-if cld2_dep.found()
+cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: get_option('cld2'))
+if not get_option('cld2').disabled() and cld2_dep.found()
   config_h_data.set('HAVE_CLD2', 1)
 else
-  message('CLD2 not found; no support for language detection')
+  message('CLD2 not found or disabled; no support for language detection')
 endif
 
 # note: these are for the unit-tests
