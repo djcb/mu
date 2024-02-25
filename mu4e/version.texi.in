@@ -1,4 +1,0 @@
-@set UPDATED @fulldate@
-@set UPDATED-MONTH @monthdate@
-@set EDITION @version@
-@set VERSION @version@
