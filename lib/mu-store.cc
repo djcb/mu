@@ -89,8 +89,12 @@ struct Store::Private {
 	Config make_config(XapianDb& xapian_db, const std::string& root_maildir,
 			   Option<const Config&> conf) {
 
-		Config config{xapian_db};
+		if (!g_path_is_absolute(root_maildir.c_str()))
+			throw Error{Error::Code::File,
+					"root maildir path is not absolute ({})",
+					root_maildir};
 
+		Config config{xapian_db};
 		if (conf)
 			config.import_configurable(*conf);
 

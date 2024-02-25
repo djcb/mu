@@ -45,6 +45,9 @@ Mu::mu_cmd_init(const Options& opts)
 			return Err(Error::Code::InvalidArgument,
 				   "missing --maildir parameter and could "
 				   "not determine default");
+		else if (!g_path_is_absolute(opts.init.maildir.c_str()))
+			return Err(Error{Error::Code::File,
+					"--maildir is not absolute"});
 
 		MemDb mdb;
 		Config conf{mdb};

@@ -77,8 +77,8 @@ public:
 	 * Construct a store for a not-yet-existing document database
 	 *
 	 * @param path path to the database
-	 * @param root_maildir maildir to use for this store
-	 * @param config a configuration object
+	 * @param root_maildir absolute path to maildir to use for this store
+	 * @param conf a configuration object
 	 *
 	 * @return a store or an error
 	 */

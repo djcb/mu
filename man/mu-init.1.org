@@ -22,7 +22,8 @@ use =<maildir>= as the root-maildir.
 
 By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses =~/Maildir=
 if it is an existing directory. If neither of those can be used, the ~--maildir~
-option is required.
+option is required; it must be an absolute path (but ~~/~ expansion is
+performed).
 
 ** --my-address=<email-address-or-regex>
 
