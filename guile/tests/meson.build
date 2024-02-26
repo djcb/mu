@@ -14,9 +14,8 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 #
-# guile test; does't work wit asan.
+# guile test; they don't work with ASAN.
 #
 if get_option('b_sanitize') == 'none'
   guile_load_path=':'.join([
