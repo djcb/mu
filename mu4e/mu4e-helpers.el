@@ -52,12 +52,12 @@ Suggested possible values are:
 The function is used in two contexts -
 1) directly - for instance in when listing _other_ maildirs
    in `mu4e-ask-maildir'
-2) if  `mu4e-read-option-use-builtin' is nil, it is used
+2) if `mu4e-read-option-use-builtin' is nil, it is used
    as part of `mu4e-read-option' in many places.
 
 Set it to `completing-read' when you want to use completion
 frameworks such as Helm, Ivy or Vertico. In that case, you
-might want to add soemthing like the following in your configuration.
+might want to add something like the following in your configuration.
 
    (setq mu4e-read-option-use-builtin nil
          mu4e-completing-read-function \\='completing-read)
@@ -177,8 +177,8 @@ Does a local-exit and does not return."
 (defun mu4e--matching-choice (choices kar)
   "Does KAR match any of the  CHOICES?
 
-KAR is a character and CHOICES is an alist as describe in
-`mu4e--read-choice-builting'.
+KAR is a character and CHOICES is an alist as described in
+`mu4e--read-choice-builtin'.
 
 First try an exact match, but if there isn't, try
 case-insensitive.
