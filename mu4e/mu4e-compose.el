@@ -77,6 +77,7 @@ A symbol:
 - nil       : default (new buffer)
 - window    : compose in new window
 - frame or t: compose in new frame
+- nowhere   : do nothing (let a later display-buffer call decide)
 
 For backward compatibility with `mu4e-compose-in-new-frame', t is
 treated as =\\'frame."
@@ -643,6 +644,7 @@ Based on the value of `mu4e-compose-switch'."
     ('nil           #'switch-to-buffer)
     ('window        #'switch-to-buffer-other-window)
     ((or 'frame 't) #'switch-to-buffer-other-frame)
+    ('nowhere       (lambda (buffer-or-name)))
     ;; t for backward compatibility with mu4e-compose-in-new-frame
     (_             (mu4e-error "Invalid mu4e-compose-switch"))))
 
