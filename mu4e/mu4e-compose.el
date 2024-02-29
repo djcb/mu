@@ -782,7 +782,7 @@ Optionally, SWITCH determines how to find a buffer for the message
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
       (mu4e--compose-setup-post compose-type parent)
       (setq buf (current-buffer))
-      (switch-to-buffer buf)
+      (display-buffer buf)
       (let* ((msgframe (selected-frame))
              (actions (list
                        (lambda () ;; kill frame when it was created for this
