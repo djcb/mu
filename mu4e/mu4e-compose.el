@@ -792,7 +792,8 @@ Optionally, SWITCH determines how to find a buffer for the message
         (setq-local ;;message-kill-actions actions
          message-return-actions actions
          message-send-actions actions
-         message-kill-actions actions)))))
+         message-kill-actions actions)))
+    buf))
 
 
 ;;;###autoload
