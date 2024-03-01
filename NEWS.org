@@ -171,6 +171,9 @@
       retrieval command in a buffer =*mu4e-last-update*=, = which can be useful
       for diagnosis.
 
+    - links (in text-mode emails) are now clickable through <mouse-2>, to be
+      consistent with eww.
+
     - support new-mail notifications on MacOS out-of-the-box
 
     - allow sorting by tag

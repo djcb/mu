@@ -431,11 +431,10 @@ list."
 
 (defvar mu4e-view-active-urls-keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map [down-mouse-1] 'mu4e--view-browse-url-from-binding)
-    (define-key map [mouse-1] 'mu4e--view-browse-url-from-binding)
-    (define-key map (kbd "M-<return>") 'mu4e--view-browse-url-from-binding)
+    (define-key map (kbd "<mouse-2>")  #'mu4e--view-browse-url-from-binding)
+    (define-key map (kbd "M-<return>") #'mu4e--view-browse-url-from-binding)
     map)
-  "Keymap used for the urls inside the body.")
+  "Keymap used for the URLs inside the body.")
 
 (defvar mu4e--view-beginning-of-url-regexp
   "https?\\://\\|mailto:"

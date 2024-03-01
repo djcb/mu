@@ -1400,7 +1400,7 @@ E            edit (only allowed for draft messages)
 actions
 -------
 g            go to (visit) numbered URL (using `browse-url')
-(or: <mouse-1> or M-RET with point on url)
+(or: <mouse-2> or M-RET with point on URL)
 C-u g visits multiple URLs
 f            fetch (download )the numbered URL.
 C-u f fetches multiple URLs
