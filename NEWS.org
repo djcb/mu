@@ -51,6 +51,11 @@
       messages; you can then search by their ISO-639-1 code, e.g.:
        ~$ mu find lang:en~
 
+      the matching is not perfect, and seems to favor non-english if there's a
+      mostly english message with some other language mixed in.
+
+      this does require re-indexing the database.
+
     - set the default database batch-size (using the ~mu init~ command) to 50000
       rather than 250000; the latter was too high for systems with limited
       memory. You can of course change that with ~--batch-size=...~
