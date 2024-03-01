@@ -135,6 +135,9 @@ test_mu_query_01(void)
 	    { "", 19 },
 	    {"msgid:abcd$efgh@example.com", 1},
 	    {"i:abcd$efgh@example.com", 1},
+#ifdef HAVE_CLD2
+{	    "lang:en",  14},
+#endif /*HAVE_CLD2*/
 	};
 
 	for (i = 0; i != G_N_ELEMENTS(queries); ++i)

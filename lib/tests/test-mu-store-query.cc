@@ -16,7 +16,7 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
+#include "config.h"
 
 #include "utils/mu-result.hh"
 #include <array>
@@ -148,6 +148,9 @@ I said: "Aujourd'hui!"
 			"to:sqlite-dev@sqlite.org",
 			"list:sqlite-dev.sqlite.org",
 			"aujourd'hui",
+#ifdef HAVE_CLD2
+			"lang:en",
+#endif /*HAVE_CLD2*/
 		}) {
 
 		if (g_test_verbose())
