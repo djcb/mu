@@ -289,6 +289,7 @@ taking the total number for 10 test runs.
 2. time (repeat 10 mu find "" -n 50000 --include-related --threads > /dev/null)
 
 
+#+ATTR_MAN: :disable-caption t
 |       release | time 1 (sec) | time 2 (sec) |
 |---------------+--------------+--------------|
 |           1.4 | 8.9s         | 59.3s        |

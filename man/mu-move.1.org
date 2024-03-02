@@ -55,6 +55,7 @@ The message flags specify the Maildir-metadata for a message and are represented
 by uppercase letters at the end of the message file name for all 'non-new'
 messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
 
+#+ATTR_MAN: :disable-caption t
 | Flag | Meaning                            |
 |------+------------------------------------|
 | D    | Draft message                      |
@@ -67,6 +68,7 @@ messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
 New messages (in the ~new/~ sub-directory) do not have flags encoded in their
 file-name; but we *mu* uses 'N' in the ~--flags~ to represent that:
 
+#+ATTR_MAN: :disable-caption t
 | Flag | Meaning |
 |------+---------|
 | N    | New     |

@@ -49,6 +49,7 @@ The regular expressions are basic case-insensitive PCRE, see *pcre(3)*.
 ** --format=plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv
 sets the output format to the given value. The following are available:
 
+#+ATTR_MAN: :disable-caption t
 | --format=   | description                       |
 |-------------+-----------------------------------|
 | plain       | default, simple list              |
@@ -112,6 +113,7 @@ With ~--format=json~, the matching contacts come out as a JSON array, e.g.,
 
 Each contact has the following fields:
 
+#+ATTR_MAN: :disable-caption t
 | property      | description                                                              |
 |---------------+--------------------------------------------------------------------------|
 | ~email~         | the email-address                                                        |

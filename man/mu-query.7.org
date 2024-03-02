@@ -118,6 +118,7 @@ We already saw a number of search fields, such as *subject:* and *body:*. For th
 full table with all details, including single-char shortcuts, try the command:
 ~mu info fields~.
 
+#+ATTR_MAN: :disable-caption t
 |------------+-----------+--------------------------------|
 | field-name | alias     | description                    |
 | bcc        |           | Blind carbon-copy recipient    |

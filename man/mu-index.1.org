@@ -183,6 +183,7 @@ too!
 
 Indexing the the same 93000-message mail corpus with the last few releases:
 
+#+ATTR_MAN: :disable-caption t
 |       release | time (sec) | notes                                    |
 |---------------+------------+------------------------------------------|
 |           1.4 | 160s       |                                          |
