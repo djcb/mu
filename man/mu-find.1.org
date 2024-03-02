@@ -25,7 +25,7 @@ For example:
 $ mu find subject:snow and date:2009..
 #+end_example
 
-would find all messages in 2009 with 'snow' in the subject field, e.g:
+would find all messages in 2009 with `snow' in the subject field, e.g:
 
 #+begin_example
 2009-03-05 17:57:33 EET Lucia  <lucia@example.com> running in the snow
@@ -63,7 +63,7 @@ For example:
 $ mu find subject:snow --fields "d f s"
 #+end_example
 
-lists the date, subject and sender of all messages with 'snow' in the their
+lists the date, subject and sender of all messages with `snow' in the their
 subject.
 
 The table of replacement characters is superset of the list mentions for search
@@ -82,12 +82,12 @@ parameters, such as:
 For the complete list, try the command: ~mu info fields~.
 
 The message flags are described in *mu-query(7)*. As an example, a message which
-is 'seen', has an attachment and is signed would have 'asz' as its corresponding
-output string, while an encrypted new message would have 'nx'.
+is `seen', has an attachment and is signed would have `asz' as its corresponding
+output string, while an encrypted new message would have `nx'.
 
 ** -s, --sortfield=<field> and -z,--reverse
 specify the field to sort the search results by and the direction (i.e.,
-'reverse' means that the sort should be reverted - Z-A). Examples include:
+`reverse' means that the sort should be reverted - Z-A). Examples include:
 
 #+begin_example
 	cc,c            Cc (carbon-copy) recipient(s)
@@ -164,7 +164,7 @@ This is assuming the GNU *date* command.
 
 ** --exec=<command>
 the ~--exec~ coption causes the =command= to be executed on each matched message;
-for example, to see the raw text of all messages matching 'milkshake', you could
+for example, to see the raw text of all messages matching `milkshake', you could
 use:
 #+begin_example
 $ mu find milkshake --exec='less'
@@ -188,10 +188,10 @@ common occurrence when using e.g. Gmail together with *offlineimap*.
 ** -r, --include-related
 include messages being referred to by the matched messages -- i.e.. include
 messages that are part of the same message thread as some matched messages. This
-is useful if you want Gmail-style 'conversations'.
+is useful if you want Gmail-style `conversations'.
 
 ** -t, --threads
-show messages in a 'threaded' format -- that is, with indentation and arrows
+show messages in a `threaded' format -- that is, with indentation and arrows
 showing the conversation threads in the list of matching messages. When using
 this, sorting is chronological (by date), based on the newest message in a
 thread.
@@ -206,7 +206,7 @@ message, as in the following table:
 | other       | |->    | |*>    | |=>       |
 #+end_example
 
-Here, an 'orphan' is a message without a parent message (in the list of
+Here, an `orphan' is a message without a parent message (in the list of
 matches), and a duplicate is a message whose message-id was already seen before;
 not this may not really be the same message, if the message-id was copied.
 

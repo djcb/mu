@@ -27,9 +27,9 @@ performed).
 
 ** --my-address=<email-address-or-regex>
 
-specifies that some e-mail address is 'my-address' (the option can be used
+specifies that some e-mail address is `my-address' (the option can be used
 multiple times). Any message in which at least one of the contact fields
-contains such an address is considered a 'personal' messages; this can then be
+contains such an address is considered a `personal' messages; this can then be
 used for filtering in *mu-find(1)*, *mu-cfind(1)* and *mu4e*, e.g. to filter-out
 mailing list messages.
 
@@ -58,7 +58,7 @@ the number of changes after which they are committed to the database; decreasing
 the value reduces the memory requirements, at the cost of make indexing
 substantially slower. Usually, the default of 250000 should be fine.
 
-Batch-size 0 is interpreted as 'use the default'.
+Batch-size 0 is interpreted as `use the default'.
 
 ** --support-ngrams
 
@@ -76,7 +76,7 @@ options.
 
 * NGRAM SUPPORT
 
-*mu*'s underlying Xapian database supports 'ngrams', which improve searching for
+*mu*'s underlying Xapian database supports `ngrams', which improve searching for
 languages/scripts that do not have explicit word breaks, such as Chinese,
 Japanese and Korean. It is fairly intrusive, and influences both indexing and
 query-parsing; it is not enabled by default, and is recommended only if you need
