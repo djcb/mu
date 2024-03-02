@@ -5,6 +5,11 @@ Ideas for future enhancements. We collect those here so they don't clutter up
 the Github issue list, i.e. without any clear plan for adding in the near
 future.
 
+- Ability to _mute_ message threads. This is useful but also requires quite bit of
+  extra infra; we could add some blacklist for "muted" messages, perhaps on the
+  'mu server' side, but then we'd need some way to manage that (ie., unmute).
+  https://github.com/djcb/mu/issues/636
+
 - Support automatic handling for List-Unsubscribe headers
   https://github.com/djcb/mu/issues/2623 This seems useful, but probably
   requires a lot of testing to get right.
@@ -17,3 +22,17 @@ future.
 - Support *creating* calendar invitations.
   https://github.com/djcb/mu/issues/2308
   Shouldn't be _too_ hard, for someone that uses the functionality.
+
+- Support mu4e-mark-handle-when also for when leaving emacs
+  (kill-emacs-query-functions).
+  https://github.com/djcb/mu/issues/2649
+
+- Make sorting stable if there are multiple messages with the same date. We
+  _could_ do this by adding some random millisecs to each messasge's timestamp; _or_
+  complicating the search (i.e., the message hash?). Maybe leave as is?
+  https://github.com/djcb/mu/issues/2527
+
+- Include "message summary" in message information, for display in the headers
+  buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
+  useful one line description... perhaps the first line after the "Dear x,"?
+  Moreover, this requires new functionality on the headers-view side as well.
