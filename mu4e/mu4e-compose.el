@@ -1,6 +1,6 @@
 ;;; mu4e-compose.el --- Compose and send messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -74,9 +74,11 @@ for querying the message information."
 (defcustom mu4e-compose-switch nil
   "Where to display the new message?
 A symbol:
-- nil       : default (new buffer)
-- window    : compose in new window
-- frame or t: compose in new frame
+- nil           : default (new buffer)
+- window        : compose in new window
+- frame or t    : compose in new frame
+- display-buffer: use display-buffer / display-buffer-alist
+  (for fine-tuning).
 
 For backward compatibility with `mu4e-compose-in-new-frame', t is
 treated as =\\'frame."
@@ -452,22 +454,6 @@ appropriate flag at the message forwarded or replied-to."
   "Function called just after sending a message."
   (setq mu4e-sent-func #'mu4e-sent-handler)
   (mu4e--server-sent (buffer-file-name)))
-
-;; (defun mu4e-message-kill-buffer ()
-;;   "Wrapper around `message-kill-buffer'.
-;; It attempts to restore some mu4e window layout after killing the
-;; compose-buffer."
-;;   (interactive)
-;;   (let ((view (save-selected-window (mu4e-get-view-buffer)))
-;;         (hdrs (mu4e-get-headers-buffer)))
-;;     (message-kill-buffer)
-;;     ;; try to go back to some mu window if it is live; otherwise do nothing.
-;;     (if (buffer-live-p view)
-;;         (switch-to-buffer view)
-;;       (when (and (buffer-live-p hdrs))
-;;         (switch-to-buffer hdrs)))))
-
-(defalias 'mu4e-message-kill-buffer 'message-kill-buffer)
 
 ;;; Crypto
 (defun mu4e--compose-setup-crypto (parent compose-type)
@@ -530,7 +516,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (set-keymap-parent map message-mode-map)
     (define-key map (kbd "C-S-u")               #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c C-u")             #'mu4e-update-mail-and-index)
-    (define-key map [remap message-kill-buffer] #'mu4e-message-kill-buffer)
     ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
     (define-key map (kbd "C-c C-f C-n")   nil) ;; message-goto-newsgroups
@@ -640,9 +625,10 @@ This function uses `message-cite-function', and its settings apply."
   "Function to switch & display composition buffer.
 Based on the value of `mu4e-compose-switch'."
   (pcase mu4e-compose-switch
-    ('nil           #'switch-to-buffer)
-    ('window        #'switch-to-buffer-other-window)
-    ((or 'frame 't) #'switch-to-buffer-other-frame)
+    ('nil             #'switch-to-buffer)
+    ('window          #'switch-to-buffer-other-window)
+    ((or 'frame 't)   #'switch-to-buffer-other-frame)
+    ('display-buffer  #'display-buffer)
     ;; t for backward compatibility with mu4e-compose-in-new-frame
     (_             (mu4e-error "Invalid mu4e-compose-switch"))))
 
@@ -769,20 +755,17 @@ Optionally, SWITCH determines how to find a buffer for the message
             (mu4e-message-at-point)))
          (mu4e-compose-parent-message parent)
          (mu4e-compose-type compose-type)
-         (oldframe (selected-frame))
-         (buf))
+         (oldframe (selected-frame)))
     (advice-add 'message-is-yours-p :around #'mu4e--message-is-yours-p)
     (run-hooks 'mu4e-compose-pre-hook) ;; run the pre-hook. Still useful?
     (mu4e--context-autoswitch parent mu4e-compose-context-policy)
     (with-current-buffer
         (mu4e--compose-setup-buffer compose-type compose-func parent)
-      (funcall (or switch (mu4e--compose-switch-function)) (current-buffer))
       (unless (eq compose-type 'edit)
         (set-visited-file-name ;; make it a draft file
          (mu4e--draft-message-path (mu4e--message-basename) parent)))
       (mu4e--compose-setup-post compose-type parent)
-      (setq buf (current-buffer))
-      (switch-to-buffer buf)
+      (funcall (or switch (mu4e--compose-switch-function)) (current-buffer))
       (let* ((msgframe (selected-frame))
              (actions (list
                        (lambda () ;; kill frame when it was created for this
@@ -910,7 +893,7 @@ The message is resent as-is, without any editing. "
 (define-mail-user-agent 'mu4e-user-agent
   #'mu4e-compose-mail
   #'message-send-and-exit
-  #'mu4e-message-kill-buffer
+  #'message-kill-buffer
   'message-send-hook)
 
 ;; Without this, `mail-user-agent' cannot be set to `mu4e-user-agent'
