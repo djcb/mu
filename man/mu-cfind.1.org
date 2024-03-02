@@ -61,7 +61,7 @@ sets the output format to the given value. The following are available:
 | json        | JSON format                       |
 
 
-[1] *CSV is not fully standardized, but *mu cfind* follows some common practices:
+[1] *CSV* is not fully standardized, but *mu cfind* follows some common practices:
 any double-quote is replaced by a double-double quote (thus, "hello" become
 ""hello"", and fields with commas are put in double-quotes. Normally, this
 should only apply to name fields.
