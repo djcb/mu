@@ -3,7 +3,7 @@
 
 * NAME
 
-~mu~ - a set of tools to deal with Maildirs and message files, in particular to
+mu - a set of tools to deal with Maildirs and message files, in particular to
 index and search e-mail messages.
 
 * SYNOPSIS

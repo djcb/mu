@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu index* -- index e-mail messages stored in Maildirs
+mu-index - index e-mail messages stored in Maildirs
 
 * SYNOPSIS
 

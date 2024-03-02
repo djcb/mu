@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu cfind* is the *mu* command to find contacts in the *mu* database and export them
+mu-cfind - find contacts in the *mu* database and export them
 for use in other programs.
 
 * SYNOPSIS

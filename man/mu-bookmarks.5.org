@@ -3,7 +3,7 @@
 
 * NAME
 
-bookmarks - file with bookmarks (shortcuts) for mu search expressions
+mu-bookmarks - file with bookmarks (shortcuts) for mu search expressions
 
 * DESCRIPTION
 

@@ -3,7 +3,7 @@
 
 * NAME
 
-mu query language -- a language for finding messages in *mu* databases.
+mu-query - a language for finding messages in *mu* databases.
 
 * DESCRIPTION
 

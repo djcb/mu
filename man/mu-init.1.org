@@ -3,7 +3,7 @@
 
 * NAME
 
-mu init -- initialize the mu message database
+mu-init - initialize the mu message database
 
 * SYNOPSIS
 

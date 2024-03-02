@@ -3,7 +3,7 @@
 
 * NAME
 
-mu server - the mu backend for the mu4e e-mail client
+mu-server - the mu backend for the mu4e e-mail client
 
 * SYNOPSIS
 

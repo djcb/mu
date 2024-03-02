@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu find* - find e-mail messages in the *mu* database.
+mu-find - find e-mail messages in the *mu* database.
 
 * SYNOPSIS
 

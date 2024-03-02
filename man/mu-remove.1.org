@@ -1,10 +1,9 @@
 #+TITLE: MU REMOVE
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 
-
 * NAME
 
-*mu remove* - command to remove messages from the database.
+mu-remove - remove messages from the database.
 
 * SYNOPSIS
 

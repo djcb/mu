@@ -3,7 +3,7 @@
 
 * NAME
 
-mu easy - a quick introduction to mu
+mu-easy - a quick introduction to mu
 
 * DESCRIPTION
 

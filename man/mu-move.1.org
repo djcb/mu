@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu move* - move a message file or change its flags
+mu-move - move a message file or change its flags
 
 * SYNOPSIS
 

@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu extract* is the *mu* command to display and save message parts
+mu-extract - display and save message parts
 (attachments), and open them with other tools.
 
 * SYNOPSIS

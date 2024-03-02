@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu help* is a *mu* command that gives help information about mu commands.
+mu-help - show help information about mu commands.
 
 * SYNOPSIS
 

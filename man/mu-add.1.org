@@ -3,7 +3,7 @@
 
 * NAME
 
-~mu add~ - add one or more messages to the database
+mu-add - add one or more messages to the database
 
 * SYNOPSIS
 
