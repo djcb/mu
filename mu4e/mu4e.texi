@@ -2606,8 +2606,7 @@ mu4e-context-switch}.
 @end itemize
 
 You can easily switch contexts manually using the @kbd{;} key from
-the main screen, or by pressing @kbd{C-c ;} when drafting a message
-using the editor view.
+the main screen.
 
 @node Contexts and special folders
 @section Contexts and special folders
