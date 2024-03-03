@@ -747,7 +747,9 @@ COMPOSE-FUNC is a function / lambda to create the specific type
 of message.
 
 Optionally, SWITCH determines how to find a buffer for the message
-(see SWITCH-FUNCTION in `compose-mail')."
+(see SWITCH-FUNCTION in `compose-mail').
+
+Returns the new buffer."
   (cl-assert (member compose-type '(reply forward edit new)))
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
   (let* ((parent
@@ -775,7 +777,8 @@ Optionally, SWITCH determines how to find a buffer for the message
         (setq-local ;;message-kill-actions actions
          message-return-actions actions
          message-send-actions actions
-         message-kill-actions actions)))))
+         message-kill-actions actions))
+      (current-buffer))))
 
 
 ;;;###autoload
@@ -875,7 +878,7 @@ must be from current user, as determined through
 ;;;###autoload
 (defun mu4e-compose-resend (address)
   "Re-send the message at point.
-The message is resent as-is, without any editing. "
+The message is resent as-is, without any editing."
   (interactive
    (list (completing-read
           "Resend message to address: " mu4e--contacts-set)))
