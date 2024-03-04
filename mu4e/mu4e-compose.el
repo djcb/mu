@@ -731,7 +731,9 @@ Is this address yours?"
       (message-goto-to)
     (if (not (message-field-value "Subject"))
         (message-goto-subject)
-      (message-goto-body)))
+      (pcase message-cite-reply-position
+        ((or 'above 'traditional) (message-goto-body))
+        (_ (when (message-goto-signature) (forward-line -2))))))
   ;; buffer is not user-modified yet
   (set-buffer-modified-p nil)
   (undo-boundary))
