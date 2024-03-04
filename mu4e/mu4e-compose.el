@@ -206,6 +206,44 @@ Messages are captured with `mu4e-action-capture-message'."
        (or (plist-get msg :subject) "No subject")
        "attachment")
     (mu4e-warn "No valid message has been captured")))
+
+(defun mu4e-compose-context-switch (&optional force name)
+  "Change the context for the current draft message.
+
+With NAME, switch to the context with NAME, and with FORCE non-nil,
+switch even if the switch is to the same context.
+
+Like `mu4e-context-switch' but with some changes after switching:
+1. Update the From and Organization headers as per the new context
+2. Update the message-signature as per the new context.
+
+Unlike some earlier version of this function, does _not_ update
+the draft folder for the messages, as that would require changing
+the file under our feet, which is a bit fragile."
+  (interactive "P")
+
+  (unless (derived-mode-p 'mu4e-compose-mode)
+    (mu4e-error "Only available in mu4e compose buffers"))
+
+  (let ((old-context (mu4e-context-current)))
+    (unless (and name (not force) (eq old-context name))
+      (unless (and (not force)
+                   (eq old-context (mu4e-context-switch nil name)))
+        (save-excursion
+          ;; Change From / Organization if needed.
+          (message-replace-header "Organization"
+                                  (or (message-make-organization) "")
+                                  '("Subject")) ;; keep in same place
+          (message-replace-header "From"
+                                  (or (message-make-from) ""))
+          ;; Update signature.
+          (when (message-goto-signature) ;; delete old signature.
+            (if message-signature-insert-empty-line
+                (forward-line -2) (forward-line -1))
+            (delete-region (point) (point-max)))
+          (when message-signature
+              (save-excursion (message-insert-signature))))))))
+
 
 ;;; Filenames
 (defun mu4e--message-basename()
@@ -528,9 +566,10 @@ buffers; lets remap its faces so it uses the ones for mu4e."
 (defvar mu4e-compose-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map message-mode-map)
-    (define-key map (kbd "C-S-u")               #'mu4e-update-mail-and-index)
-    (define-key map (kbd "C-c C-u")             #'mu4e-update-mail-and-index)
-    ;; remove some unsupported commands... [remap ..]  does not work here
+    (define-key map (kbd "C-S-u")    #'mu4e-update-mail-and-index)
+    (define-key map (kbd "C-c C-u")  #'mu4e-update-mail-and-index)
+    (define-key map (kbd "C-c ;")    #'mu4e-compose-context-switch)
+        ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
     (define-key map (kbd "C-c C-f C-n")   nil) ;; message-goto-newsgroups
     (define-key map (kbd "C-c C-n")       nil) ;; message-insert-newsgroups
