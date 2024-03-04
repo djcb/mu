@@ -192,6 +192,20 @@ messages, it is nil.")
 (defvar-local mu4e-compose-type nil
   "The compose-type for the current message.")
 
+(defvar mu4e-captured-message)
+(defun mu4e-compose-attach-captured-message ()
+  "Insert the last captured message file as an attachment.
+Messages are captured with `mu4e-action-capture-message'."
+  (interactive)
+  (if-let* ((msg mu4e-captured-message)
+            (path (plist-get msg :path))
+            (path (and (file-exists-p path) path)))
+      (mml-attach-file
+       path
+       "message/rfc822"
+       (or (plist-get msg :subject) "No subject")
+       "attachment")
+    (mu4e-warn "No valid message has been captured")))
 
 ;;; Filenames
 (defun mu4e--message-basename()
