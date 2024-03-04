@@ -140,7 +140,7 @@ All `sign-*' options have a `encrypt-*' analogue."
               (const :tag "Encrypt all messages" encrypt-all-messages)
               (const :tag "Sign new messages" sign-new-messages)
               (const :tag "Encrypt new messages" encrypt-new-messages)
-y              (const :tag "Sign forwarded messages" sign-forwarded-messages)
+              (const :tag "Sign forwarded messages" sign-forwarded-messages)
               (const :tag "Encrypt forwarded messages"
                      encrypt-forwarded-messages)
               (const :tag "Sign edited messages" sign-edited-messages)
