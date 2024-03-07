@@ -82,6 +82,13 @@ disable the database cleanup that *mu* does by default after indexing.
 
 #+include: "common-options.inc" :minlevel 1
 
+* ENCRYPTION
+
+*mu index* does _not_ decrypt messages, and only the metadata (such as headers) of
+encrypted messages makes it to the database. *mu view* and *mu4e* can decrypt
+messages, but those work with the message directly and the information is not
+added to the database.
+
 * PERFORMANCE
 
 ** indexing in ancient times (2009?)
