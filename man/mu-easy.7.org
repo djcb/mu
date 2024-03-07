@@ -3,7 +3,7 @@
 
 * NAME
 
-mu easy - a quick introduction to mu
+mu-easy - a quick introduction to mu
 
 * DESCRIPTION
 
@@ -54,7 +54,7 @@ can use the =--maildir= option to specify the top-level directory that should be
 processed. See the *mu-index(1)* man page for more details.
 
 Normally, *mu index* visits all the directories under the top-level Maildir;
-however, you can exclude certain directories (say, the 'trash' or 'spam'
+however, you can exclude certain directories (say, the `trash' or `spam'
 folders) by creating a file called =.noindex= in the directory. When *mu* sees such
 a file, it will exclude this directory and its sub-directories from indexing.
 Also see *.noupdate* in the *mu-index(1)* manpage.
@@ -83,7 +83,7 @@ This should return something like:
 2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
 #+end_example
 
-This means there is a message to 'julius' with 'fruit' somewhere in the message.
+This means there is a message to `julius' with `fruit' somewhere in the message.
 In this case, it's a message from John Milton. Note that the date format depends
 on your the language/locale you are using.
 
@@ -96,7 +96,7 @@ date/sender/subject. However, we can change this using the =--fields= parameter
 $ mu find --fields="t s" t:julius fruit
 #+end_example
 
-In other words, display the 'To:'-field (t) and the subject (s). This should
+In other words, display the `To:'-field (t) and the subject (s). This should
 return something like:
 #+begin_example
 Julius Caesar <jc@example.com> Fere libenter homines id quod volunt credunt
@@ -121,9 +121,9 @@ from Socrates. This could return something like:
 2008-07-31T21:57:25 EEST John Milton <jm@example.com> Fere libenter homines id quod volunt credunt
 #+end_example
 
-What if we want to see some of the body of the message? You can get a 'summary'
+What if we want to see some of the body of the message? You can get a `summary'
 of the first lines of the message using the =--summary-len= option, which will
-'summarize' the first =n= lines of the message:
+`summarize' the first =n= lines of the message:
 
 #+begin_example
 $ mu find --summary-len=3 napoleon m:/archive
@@ -206,7 +206,7 @@ for:
 #+end_example
 and get mails about soccer, Socrates, society, and so on. Note, it's important
 to quote the search query, otherwise the shell will interpret
-the '*'.
+the `*'.
 
 You can also search for messages with a certain attachment using their
 filename, for example:
@@ -214,7 +214,7 @@ filename, for example:
 #+begin_example
   *$ mu find 'file:pic*'*
 #+end_example
-will get you all messages with an attachment starting with 'pic'.
+will get you all messages with an attachment starting with `pic'.
 
 If you want to find attachments with a certain MIME-type, you can use the
 following:
@@ -232,9 +232,9 @@ Get all messages with image attachments:
 #+end_example
 
 
-Note that (1) the '*' wildcard can only be used as the rightmost thing in a
+Note that (1) the `*' wildcard can only be used as the rightmost thing in a
 search query, and (2) that you need to quote the search term, because
-otherwise your shell will interpret the '*' (expanding it to all files in the
+otherwise your shell will interpret the `*' (expanding it to all files in the
 current directory -- probably not what you want).
 
 * DISPLAYING MESSAGES
@@ -282,7 +282,7 @@ your contacts.
 $ mu cfind julius
 #+end_example
 
-will find all contacts with 'julius' in either name or e-mail address. Note that
+will find all contacts with `julius' in either name or e-mail address. Note that
 *mu cfind* accepts a =regular expression= (as per *pcre(3)*)
 
 *mu cfind* also supports a =--format==-parameter, which sets the output to some

@@ -3,7 +3,7 @@
 
 * NAME
 
-mu verify - verify message signatures and display information about them
+mu-verify - verify message signatures and display information about them
 
 * SYNOPSIS
 

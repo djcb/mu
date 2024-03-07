@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu cfind* is the *mu* command to find contacts in the *mu* database and export them
+mu-cfind - find contacts in the *mu* database and export them
 for use in other programs.
 
 * SYNOPSIS
@@ -49,6 +49,7 @@ The regular expressions are basic case-insensitive PCRE, see *pcre(3)*.
 ** --format=plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv
 sets the output format to the given value. The following are available:
 
+#+ATTR_MAN: :disable-caption t
 | --format=   | description                       |
 |-------------+-----------------------------------|
 | plain       | default, simple list              |
@@ -61,12 +62,12 @@ sets the output format to the given value. The following are available:
 | json        | JSON format                       |
 
 
-[1] *CSV is not fully standardized, but *mu cfind* follows some common practices:
+[1] *CSV* is not fully standardized, but *mu cfind* follows some common practices:
 any double-quote is replaced by a double-double quote (thus, "hello" become
 ""hello"", and fields with commas are put in double-quotes. Normally, this
 should only apply to name fields.
 
-** --personal,-p only show addresses seen in messages where one of 'my' e-mail
+** --personal,-p only show addresses seen in messages where one of `my' e-mail
 addresses was seen in one of the address fields; this is to exclude addresses
 only seen in mailing-list messages. See the ~--my-address~ parameter to *mu init*.
 
@@ -112,6 +113,7 @@ With ~--format=json~, the matching contacts come out as a JSON array, e.g.,
 
 Each contact has the following fields:
 
+#+ATTR_MAN: :disable-caption t
 | property      | description                                                              |
 |---------------+--------------------------------------------------------------------------|
 | ~email~         | the email-address                                                        |

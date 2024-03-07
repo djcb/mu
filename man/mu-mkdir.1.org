@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu mkdir* - create a new Maildir
+mu-mkdir - create a new Maildir
 
 * SYNOPSIS
 

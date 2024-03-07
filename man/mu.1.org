@@ -3,7 +3,7 @@
 
 * NAME
 
-~mu~ - a set of tools to deal with Maildirs and message files, in particular to
+mu - a set of tools to deal with Maildirs and message files, in particular to
 index and search e-mail messages.
 
 * SYNOPSIS
@@ -36,7 +36,7 @@ in them.
 
 ~mu~'s main purpose is to enable searching of e-mail messages. It
 does so by periodically scanning a Maildir directory tree and
-analyzing the e-mail messages found (this is called 'indexing'). The
+analyzing the e-mail messages found (this is called `indexing'). The
 results of this analysis are stored in a database, which can then be
 queried.
 

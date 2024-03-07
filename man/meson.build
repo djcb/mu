@@ -55,6 +55,7 @@ man_orgs=[
   'mu-info.1.org',
   'mu-init.1.org',
   'mu-mkdir.1.org',
+  'mu-move.1.org',
   'mu-query.7.org',
   'mu-remove.1.org',
   'mu-server.1.org',
@@ -81,6 +82,7 @@ foreach src : man_orgs
   expr_tmpl = ''.join([
     '(progn',
     '  (require \'ox-man)',
+    '  (setq org-export-with-sub-superscripts \'{})',
     '  (org-export-to-file \'man "@0@"))'])
   expr = expr_tmpl.format(org.substring(0,-4))
   sectiondir = join_paths(mandir, 'man' + section)

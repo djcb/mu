@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu index* -- index e-mail messages stored in Maildirs
+mu-index - index e-mail messages stored in Maildirs
 
 * SYNOPSIS
 
@@ -50,9 +50,9 @@ below for details.
 The first run of *mu index* may take a few minutes if you have a lot of mail (tens
 of thousands of messages). Fortunately, such a full scan needs to be done only
 once; after that it suffices to index the changes, which goes much faster. See
-the 'PERFORMANCE (i,ii,iii)' below for more information.
+the `PERFORMANCE (i,ii,iii)' below for more information.
 
-The optional 'phase two' of the indexing-process is the removal of messages from
+The optional `phase two' of the indexing-process is the removal of messages from
 the database for which there is no longer a corresponding file in the Maildir.
 If you do not want this, you can use ~-n~, ~--nocleanup~.
 
@@ -108,7 +108,7 @@ $ time mu index --quiet
 (more than 56818 messages per second)
 
 Note that each test flushes the caches first; a more common use case might be to
-run *mu index* when new mail has arrived; the cache may stay quite 'warm' in that
+run *mu index* when new mail has arrived; the cache may stay quite `warm' in that
 case:
 
 #+begin_example
@@ -183,6 +183,7 @@ too!
 
 Indexing the the same 93000-message mail corpus with the last few releases:
 
+#+ATTR_MAN: :disable-caption t
 |       release | time (sec) | notes                                    |
 |---------------+------------+------------------------------------------|
 |           1.4 | 160s       |                                          |

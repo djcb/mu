@@ -3,7 +3,7 @@
 
 * NAME
 
-mu server - the mu backend for the mu4e e-mail client
+mu-server - the mu backend for the mu4e e-mail client
 
 * SYNOPSIS
 
@@ -73,6 +73,7 @@ time build/mu/mu server --allow-temp-file --eval '(find :query "\"\"" :include-r
 #+end_src
 (and ~--allow-temp-file~ for 1.11)
 
+#+ATTR_MAN: :disable-caption t
 |       release | time (sec) |
 |---------------+------------|
 |           1.8 | 8.6s       |

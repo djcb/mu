@@ -3,7 +3,7 @@
 
 * NAME
 
-*mu move* - move a message file or change its flags
+mu-move - move a message file or change its flags
 
 * SYNOPSIS
 
@@ -42,7 +42,7 @@ the source message.
 print the target filename(s), but don't change anything.
 
 Note that with the ~--change-name~, the target name is not constant, so you cannot
-use a dry-run to predict the exact name when doing a 'real' run.
+use a dry-run to predict the exact name when doing a `real' run.
 
 #+include: "common-options.inc" :minlevel 1
 
@@ -52,27 +52,29 @@ use a dry-run to predict the exact name when doing a 'real' run.
 man-page, or see http://cr.yp.to/proto/maildir.html)
 
 The message flags specify the Maildir-metadata for a message and are represented
-by uppercase letters at the end of the message file name for all 'non-new'
+by uppercase letters at the end of the message file name for all `non-new'
 messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
 
+#+ATTR_MAN: :disable-caption t
 | Flag | Meaning                            |
 |------+------------------------------------|
 | D    | Draft message                      |
 | F    | Flagged message                    |
-| P    | Passed message (i.e., 'forwarded') |
+| P    | Passed message (i.e., `forwarded') |
 | R    | Replied message                    |
 | S    | Seen message                       |
 | T    | Trashed; to be deleted later       |
 
 New messages (in the ~new/~ sub-directory) do not have flags encoded in their
-file-name; but we *mu* uses 'N' in the ~--flags~ to represent that:
+file-name; but we *mu* uses `N' in the ~--flags~ to represent that:
 
+#+ATTR_MAN: :disable-caption t
 | Flag | Meaning |
 |------+---------|
 | N    | New     |
 
 Thus, changing flags means changing the letters at the end of the message
-file-name, except when setting or removing the 'N' (new) flag. Setting or
+file-name, except when setting or removing the `N' (new) flag. Setting or
 un-setting the New flag causes the message is to be moved from ~cur/~ to ~new/~ or
 vice-versa, respectively. When marking a message as New, it looses the other
 flags.

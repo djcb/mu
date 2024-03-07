@@ -3,7 +3,7 @@
 
 * NAME
 
-mu view - display an e-mail message file
+mu-view - display an e-mail message file
 
 * SYNOPSIS
 

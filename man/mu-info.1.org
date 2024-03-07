@@ -3,7 +3,7 @@
 
 * NAME
 
-~mu info~  - show information
+mu-info  - show information
 
 * SYNOPSIS
 

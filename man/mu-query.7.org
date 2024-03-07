@@ -3,7 +3,7 @@
 
 * NAME
 
-mu query language -- a language for finding messages in *mu* databases.
+mu-query - a language for finding messages in *mu* databases.
 
 * DESCRIPTION
 
@@ -26,7 +26,7 @@ quote any characters that would otherwise be interpreted by the shell, such as
 * TERMS
 
 The basic building blocks of a query are *terms*; these are just normal words like
-'banana' or 'hello', or words prefixed with a field-name which makes them apply
+`banana' or `hello', or words prefixed with a field-name which makes them apply
 to just that field. See *mu info fields* for all the available fields.
 
 Some example queries:
@@ -36,13 +36,13 @@ subject:capybara
 maildir:/inbox
 #+end_example
 
-Terms without an explicit field-prefix, (like 'vacation' above) are interpreted
+Terms without an explicit field-prefix, (like `vacation' above) are interpreted
 like:
 #+begin_example
 to:vacation or subject:vacation or body:vacation or ...
 #+end_example
 
-The language is case-insensitive for terms and attempts to 'flatten' diacritics,
+The language is case-insensitive for terms and attempts to `flatten' diacritics,
 so =angtrom= matches =Ångström=.
 
 If terms contain whitespace, they need to be quoted:
@@ -80,7 +80,7 @@ subject:chip AND subject:dale
 #+end_example
 are equivalent. For readability, we recommend the second version.
 
-Note that a =pure not= - e.g. searching for *not apples* is quite a 'heavy' query.
+Note that a =pure not= - e.g. searching for *not apples* is quite a `heavy' query.
 
 * REGULAR EXPRESSIONS AND WILDCARDS
 
@@ -93,9 +93,9 @@ subject:/h.llo/		# match hallo, hello, ...
 subject:/
 #+end_example
 
-Note the difference between 'maildir:/foo' and 'maildir:/foo/'; the former
-matches messages in the '/foo' maildir, while the latter matches all messages in
-all maildirs that match 'foo', such as '/foo', '/bar/cuux/foo', '/fooishbar'
+Note the difference between `maildir:/foo' and `maildir:/foo/'; the former
+matches messages in the `/foo' maildir, while the latter matches all messages in
+all maildirs that match `foo', such as `/foo', `/bar/cuux/foo', `/fooishbar'
 etc.
 
 Wildcards are another mechanism for matching where a term with a rightmost ***
@@ -118,6 +118,7 @@ We already saw a number of search fields, such as *subject:* and *body:*. For th
 full table with all details, including single-char shortcuts, try the command:
 ~mu info fields~.
 
+#+ATTR_MAN: :disable-caption t
 |------------+-----------+--------------------------------|
 | field-name | alias     | description                    |
 | bcc        |           | Blind carbon-copy recipient    |
@@ -170,10 +171,10 @@ an open range.
 Dates are expressed in local time and using ISO-8601 format (YYYY-MM-DD
 HH:MM:SS); you can leave out the right part and *mu* adds the rest, depending on
 whether this is the beginning or end of the range (e.g., as a lower bound,
-'2015' would be interpreted as the start of that year; as an upper bound as the
+`2015' would be interpreted as the start of that year; as an upper bound as the
 end of the year).
 
-You can use '/' , '.', '-', ':' and 'T' to make dates more human-readable.
+You can use `/' , `.', `-', `:' and `T' to make dates more human-readable.
 
 Some examples:
 #+begin_example
@@ -184,13 +185,13 @@ date:2015-06-01..
 date:2016..2016
 #+end_example
 
-You can also use the special 'dates' *now* and *today*:
+You can also use the special `dates' *now* and *today*:
 #+begin_example
 date:20170505..now
 date:today..
 #+end_example
 
-Finally, you can use relative 'ago' times which express some time before now and
+Finally, you can use relative `ago' times which express some time before now and
 consist of a number followed by a unit, with units *s* for seconds, *M* for minutes,
 *h* for hours, *d* for days, *w* for week, *m* for months and *y* for years. Some
 examples:
@@ -221,7 +222,7 @@ available:
 	f,flagged       Flagged
 	l,list          Mailing-list message
 	n,new           New message (in new/ Maildir)
-	p,passed        Passed ('Handled')
+	p,passed        Passed (`Handled')
 	r,replied       Replied
 	s,seen          Seen
 	t,trashed       Marked for deletion
@@ -258,8 +259,8 @@ find it (and all the other messages in that same maildir) with:
 maildir:/lists/running
 #+end_example
 
-Note the starting '/'. If you want to match mails in the 'root' maildir, you can
-do with a single '/':
+Note the starting `/'. If you want to match mails in the `root' maildir, you can
+do with a single `/':
 #+begin_example
 maildir:/
 #+end_example
@@ -286,7 +287,7 @@ queries using various logical operators, parentheses and so on, but in the
 author's experience, it's usually faster to find a message with a simple query
 just searching for some words.
 
-Find all messages with both 'bee' and 'bird' (in any field)
+Find all messages with both `bee' and `bird' (in any field)
 #+begin_example
 bee AND bird
 #+end_example
@@ -296,12 +297,12 @@ Find all messages with either Frodo or Sam:
 Frodo OR Sam
 #+end_example
 
-Find all messages with the 'wombat' as subject, and 'capybara' anywhere:
+Find all messages with the `wombat' as subject, and `capybara' anywhere:
 #+begin_example
 subject:wombat and capybara
 #+end_example
 
-Find all messages in the 'Archive' folder from Fred:
+Find all messages in the `Archive' folder from Fred:
 #+begin_example
 from:fred and maildir:/Archive
 #+end_example
@@ -321,7 +322,7 @@ Find all messages with attached images:
 mime:image/*
 #+end_example
 
-Find all messages written in Dutch or German with the word 'hallo':
+Find all messages written in Dutch or German with the word `hallo':
 #+begin_example
 hallo and (lang:nl or lang:de)
 #+end_example
