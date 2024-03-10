@@ -36,3 +36,9 @@ future.
   buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
   useful one line description... perhaps the first line after the "Dear x,"?
   Moreover, this requires new functionality on the headers-view side as well.
+
+- Support indexing PDF (and other) attachments. This can be done extending
+  process_message_part in mu-message.cc; instead of using something
+  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
+  need some way for users to specify a MIME-type => tool mapping  (in Config).
+  https://github.com/djcb/mu/issues/2117
