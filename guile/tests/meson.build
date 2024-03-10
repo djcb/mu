@@ -18,8 +18,8 @@
 # guile test; they don't work with ASAN.
 #
 if get_option('b_sanitize') == 'none'
-  guile_load_path=':'.join([
-    join_paths(meson.project_source_root(), 'guile'),
+  guile_load_path       = join_paths(meson.project_source_root(), 'guile')
+  guile_extensions_path = ':'.join([
     join_paths(meson.project_build_root(), 'guile'),
     meson.current_build_dir()])
 
@@ -30,7 +30,7 @@ if get_option('b_sanitize') == 'none'
                   cpp_args: [
                     '-DABS_SRCDIR="' + meson.current_source_dir() + '"',
                     '-DGUILE_LOAD_PATH="' + guile_load_path + '"',
-                    '-DGUILE_EXTENSIONS_PATH="' + guile_load_path + '"'
+                    '-DGUILE_EXTENSIONS_PATH="' + guile_extensions_path + '"'
                   ],
                   dependencies: [glib_dep, lib_mu_dep]))
 else
