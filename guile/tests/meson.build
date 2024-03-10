@@ -20,6 +20,7 @@
 if get_option('b_sanitize') == 'none'
   guile_load_path=':'.join([
     join_paths(meson.project_source_root(), 'guile'),
+    join_paths(meson.project_build_root(), 'guile'),
     meson.current_build_dir()])
 
   test('test-mu-guile',
