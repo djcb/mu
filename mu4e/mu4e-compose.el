@@ -609,8 +609,9 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key map (kbd "C-c C-u")  #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c ;")    #'mu4e-compose-context-switch)
 
-    (keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
-    (keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom)
+    (when (fboundp 'keymap-set) ;; emacs 29
+      (keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
+      (keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom))
 
     ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
