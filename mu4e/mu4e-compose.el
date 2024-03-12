@@ -207,6 +207,45 @@ Messages are captured with `mu4e-action-capture-message'."
        "attachment")
     (mu4e-warn "No valid message has been captured")))
 
+;; Go to bottom / top
+
+(defun mu4e-compose-goto-top (&optional arg)
+  "Go to the beginning of the message or buffer.
+Go to the beginning of the message or, if already there, go to
+the beginning of the buffer.
+
+Push mark at previous position, unless either a
+\\[universal-argument] prefix is supplied, or Transient Mark mode
+is enabled and the mark is active."
+  (interactive "P")
+  (or arg
+      (region-active-p)
+      (push-mark))
+  (let ((old-position (point)))
+    (message-goto-body)
+    (when (equal (point) old-position)
+      (goto-char (point-min)))))
+
+(defun mu4e-compose-goto-bottom (&optional arg)
+  "Go to the end of the message or buffer.
+Go to the end of the message (before signature) or, if already
+there, go to the end of the buffer.
+
+Push mark at previous position, unless either a
+\\[universal-argument] prefix is supplied, or Transient Mark mode
+is enabled and the mark is active."
+  (interactive "P")
+  (or arg
+      (region-active-p)
+      (push-mark))
+  (let ((old-position (point))
+        (message-position (save-excursion (message-goto-body) (point))))
+    (goto-char (point-max))
+    (when (re-search-backward message-signature-separator message-position t)
+      (forward-line -1))
+    (when (equal (point) old-position)
+      (goto-char (point-max)))))
+
 (defun mu4e-compose-context-switch (&optional force name)
   "Change the context for the current draft message.
 
@@ -569,7 +608,11 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key map (kbd "C-S-u")    #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c C-u")  #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c ;")    #'mu4e-compose-context-switch)
-        ;; remove some unsupported commands... [remap ..]  does not work here
+
+    (keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
+    (keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom)
+
+    ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
     (define-key map (kbd "C-c C-f C-n")   nil) ;; message-goto-newsgroups
     (define-key map (kbd "C-c C-n")       nil) ;; message-insert-newsgroups
