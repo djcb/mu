@@ -734,9 +734,13 @@ Based on the value of `mu4e-compose-switch'."
 This is a little glue to use `message-reply', `message-forward'
 etc. We cannot use the normal `message-pop-to-buffer' since we're
 not ready yet to show the buffer in mu4e."
-  (set-buffer (get-buffer-create name))
-  (erase-buffer)
-  (current-buffer))
+  ;; note: we're in a _different_ buffer here, so we need to copy
+  ;; message-reply-header's buffer-local value.
+  (let ((reply-headers message-reply-headers))
+    (set-buffer (get-buffer-create name))
+    (setq-local message-reply-headers reply-headers)
+    (erase-buffer)
+    (current-buffer)))
 
 (defun mu4e--headers (compose-type)
   "Determine headers needed for message."
