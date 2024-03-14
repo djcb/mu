@@ -28,7 +28,7 @@
 ;; the mu4e context.
 
 
-;; Code
+;;; Code:
 (require 'message)
 (require 'nnheader) ;; for make-full-mail-header
 
@@ -77,7 +77,7 @@ A symbol:
 - nil           : default (new buffer)
 - window        : compose in new window
 - frame or t    : compose in new frame
-- display-buffer: use display-buffer / display-buffer-alist
+- display-buffer: use `display-buffer' / `display-buffer-alist'
   (for fine-tuning).
 
 For backward compatibility with `mu4e-compose-in-new-frame', t is
@@ -215,7 +215,7 @@ Go to the beginning of the message or, if already there, go to
 the beginning of the buffer.
 
 Push mark at previous position, unless either a
-\\[universal-argument] prefix is supplied, or Transient Mark mode
+\\[universal-argument] prefix ARG is supplied, or Transient Mark mode
 is enabled and the mark is active."
   (interactive "P")
   (or arg
@@ -232,7 +232,7 @@ Go to the end of the message (before signature) or, if already
 there, go to the end of the buffer.
 
 Push mark at previous position, unless either a
-\\[universal-argument] prefix is supplied, or Transient Mark mode
+\\[universal-argument] prefix ARG is supplied, or Transient Mark mode
 is enabled and the mark is active."
   (interactive "P")
   (or arg
@@ -254,7 +254,7 @@ switch even if the switch is to the same context.
 
 Like `mu4e-context-switch' but with some changes after switching:
 1. Update the From and Organization headers as per the new context
-2. Update the message-signature as per the new context.
+2. Update the `message-signature' as per the new context.
 
 Unlike some earlier version of this function, does _not_ update
 the draft folder for the messages, as that would require changing
@@ -609,9 +609,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key map (kbd "C-c C-u")  #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c ;")    #'mu4e-compose-context-switch)
 
-    (when (fboundp 'keymap-set) ;; emacs 29
-      (keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
-      (keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom))
+    (mu4e-keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
+    (mu4e-keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom)
 
     ;; remove some unsupported commands... [remap ..]  does not work here
     ;; XXX remove from menu, too.
@@ -701,7 +700,7 @@ With HEADERS-ONLY non-nil, only include the headers part."
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mu4e--compose-cite (msg)
-  "Return a cited version of the ORIG message (a string).
+  "Return a cited version of the ORIG message MSG (a string).
 This function uses `message-cite-function', and its settings apply."
   (with-temp-buffer
     (insert (mu4e-view-message-text msg))
@@ -730,7 +729,7 @@ Based on the value of `mu4e-compose-switch'."
     (_             (mu4e-error "Invalid mu4e-compose-switch"))))
 
 (defun mu4e--fake-pop-to-buffer (name &optional _switch)
-  "A fake `message-pop-to-buffer' which creates NAME.
+  "A fake `message-pop-to-buffer' for creating buffer NAME.
 This is a little glue to use `message-reply', `message-forward'
 etc. We cannot use the normal `message-pop-to-buffer' since we're
 not ready yet to show the buffer in mu4e."
@@ -743,7 +742,7 @@ not ready yet to show the buffer in mu4e."
     (current-buffer)))
 
 (defun mu4e--headers (compose-type)
-  "Determine headers needed for message."
+  "Determine headers needed for message based on COMPOSE-TYPE."
   (seq-filter #'identity ;; ensure needed headers are generated.
        `(From Subject Date Message-ID
         ,(when (memq compose-type '(reply forward)) 'References)
@@ -752,7 +751,9 @@ not ready yet to show the buffer in mu4e."
         ,(when message-user-organization 'Organization))))
 
 (defun mu4e--compose-setup-buffer (compose-type compose-func parent)
-  "Set up a buffer for message composition before mu4e-compose-mode.
+  "Set up a buffer for message composition before `mu4e-compose-mode'.
+
+COMPOSE-TYPE is the type of message to creat.
 
 COMPOSE-FUNC is a function / lambda to create the specific type
 of message; it should return (but not show) the created buffer.
@@ -791,6 +792,7 @@ This is mu4e's version of `message-hidden-headers'.")
 
 (defun mu4e--message-is-yours-p (func &rest args)
   "Mu4e advice for `message-is-yours'.
+FUNC is the original function, and ARGS are its arguments.
 Is this address yours?"
   (if (mu4e-running-p)
       (let ((sender (message-fetch-field "from"))
@@ -802,7 +804,11 @@ Is this address yours?"
     (apply func args)))
 
 (defun mu4e--compose-setup-post (compose-type &optional parent)
-  "Prepare the new message buffer."
+  "Prepare the new message buffer.
+
+COMPOSE-TYPE determines the type of message to create. PARENT
+refers to the optional message to start from, i.e., the message
+replied to or forwarded, etc."
   (mu4e-compose-mode)
   ;; remember some variables, e.g for user hooks.
   (setq-local
@@ -850,7 +856,7 @@ COMPOSE-FUNC is a function / lambda to create the specific type
 of message.
 
 Optionally, SWITCH determines how to find a buffer for the message
-(see SWITCH-FUNCTION in `compose-mail').
+\(see SWITCH-FUNCTION in `compose-mail').
 
 Returns the new buffer."
   (cl-assert (member compose-type '(reply forward edit new)))
@@ -888,11 +894,11 @@ Returns the new buffer."
 (defun mu4e-compose-new (&optional to subject other-headers continue
                                    switch-function yank-action send-actions
                                    return-action &rest _)
-  "This is mu4e's implementation of `compose-mail'. TO, SUBJECT,
-OTHER-HEADERS, CONTINUE, SWITCH-FUNCTION, YANK-ACTION
-SEND-ACTIONS RETURN-ACTION are as described in `compose-mail',
-and to the extend that they do not conflict with mu4e inner
-workings."
+  "Mu4e's implementation of `compose-mail'.
+TO, SUBJECT, OTHER-HEADERS, CONTINUE, SWITCH-FUNCTION,
+YANK-ACTION SEND-ACTIONS RETURN-ACTION are as described in
+`compose-mail', and to the extend that they do not conflict with
+mu4e inner workings."
   (interactive)
   (mu4e--compose-setup
    'new (lambda (_parent)
@@ -980,7 +986,7 @@ must be from current user, as determined through
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
-  "Re-send the message at point.
+  "Re-send the message at point to ADDRESS.
 The message is resent as-is, without any editing."
   (interactive
    (list (completing-read

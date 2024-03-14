@@ -1,6 +1,6 @@
 ;;; mu4e-helpers.el --- Helper functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2023  Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2024  Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -591,7 +591,7 @@ This is mu4e's version of Emacs 29's `plistp'."
 If it is unbound, return nil. If there are multiple bindings,
 return the shortest.
 
-Rougly does what `substitute-command-keys' does, but picks
+Roughly does what `substitute-command-keys' does, but picks
 shorter keys in some cases where there are multiple bindings."
   ;; not a perfect heuristic: e.g. '<up>' is longer that 'C-p'
   (car-safe
@@ -599,6 +599,15 @@ shorter keys in some cases where there are multiple bindings."
                (< (length b1) (length b2)))
              (seq-map #'key-description
                       (where-is-internal cmd)))))
+
+(defun mu4e-keymap-set (keymap key definition)
+  "Set KEY to DEFINITION in KEYMAP.
+Temporary version, from Emacs 29."
+  (cl-assert (key-valid-p key))
+  (when (stringp definition)
+    (cl-assert (key-valid-p definition))
+    (setq definition (key-parse definition)))
+  (define-key keymap (key-parse key) definition))
 
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here
