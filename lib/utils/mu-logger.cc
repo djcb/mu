@@ -209,7 +209,7 @@ test_logger_threads(void)
 	/* log to the logger file from many threass */
 	for (auto n = 0; n != thread_num; ++n)
 		threads.emplace_back(
-			std::thread([n,&running]{
+			std::thread([&running]{
 				while (running) {
 					//mu_debug("log message from thread <{}>", n);
 					std::this_thread::yield();

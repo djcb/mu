@@ -119,7 +119,6 @@ private:
 	std::string		fname_;
 	using OutType = std::variant<std::ofstream, std::ostringstream>;
 	OutType out_;
-	bool do_unlink_{};
 };
 
 

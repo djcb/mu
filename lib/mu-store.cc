@@ -655,7 +655,7 @@ Store::maildirs() const
 
 	Scanner::Handler handler = [&](const std::string& path, auto&& _1, auto&& _2) {
 		auto md{path.substr(prefix_size)};
-		mdirs.emplace_back(std::move(md.empty() ? "/" : md));
+		mdirs.emplace_back(md.empty() ? "/" : std::move(md));
 		return true;
 	};
 

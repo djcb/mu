@@ -536,10 +536,7 @@ private:
 
 	mutable std::mutex lock_;
 	std::string path_;
-
 	DbType	db_;
-	bool	in_tx_;
-
 	size_t	tx_level_{};
 	const size_t batch_size_;
 	size_t changes_{};
