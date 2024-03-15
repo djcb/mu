@@ -30,6 +30,8 @@
 
 ;;; Code:
 (require 'message)
+(require 'sendmail)
+(require 'gnus-msg)
 (require 'nnheader) ;; for make-full-mail-header
 
 (require 'mu4e-obsolete)
