@@ -326,8 +326,16 @@ get_mailing_list(const MimeMessage& mime_msg)
 	const char *b, *e;
 
 	const auto hdr{mime_msg.header("List-Id")};
-	if (!hdr)
-		return {};
+	if (!hdr) {
+		/* some marketing messages don't have a List-Id, but _do_ have a
+		 * List-Unsubscribe; if so, return an empty string here, so this
+		 * message is still flagged as "MailingList"
+		 */
+		if (const auto lu = mime_msg.header("List-Unsubscribe"); !!lu)
+			return "";
+		else
+			return Nothing;
+	}
 
 	dechdr = g_mime_utils_header_decode_phrase(NULL, hdr->c_str());
 	if (!dechdr)

@@ -1065,8 +1065,27 @@ Hello!
 		     "Le poids économique de la chasse : la dette cachée de la chasse !");
 	assert_equal(msg->header("Subject").value_or(""),
 		     "Le poids économique de la chasse : \n\nla dette cachée de la chasse !");
+	g_assert_true(none_of(msg->flags() & Flags::MailingList));
 }
 
+static void
+test_message_list_unsubscribe()
+{
+	constexpr const auto txt =
+R"(From: "Mu Test" <mu@djcbsoftware.nl>
+To: mu@djcbsoftware.nl
+Subject: Test
+Message-ID: <87lew9xddt.fsf@djcbsoftware.nl>
+List-Unsubscribe: <mailto:unsubscribe-T7BC8RRQMK-booking-email-9@booking.com>
+
+abcdef
+)";
+	const auto msg{Message::make_from_text(txt, "/xxx/m123:2,S")};
+	assert_valid_result(msg);
+
+	assert_equal(msg->mailing_list(), "");
+	g_assert_true(any_of(msg->flags() & Flags::MailingList));
+}
 
 int
 main(int argc, char* argv[])
@@ -1099,6 +1118,8 @@ main(int argc, char* argv[])
 			test_message_fail);
 	g_test_add_func("/message/message/sanitize-maildir",
 			test_message_sanitize_maildir);
+	g_test_add_func("/message/message/message-list-unsubscribe",
+			test_message_list_unsubscribe);
 
 	return g_test_run();
 }
