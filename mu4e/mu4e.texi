@@ -1612,6 +1612,7 @@ The major mode for the composer is @code{mu4e-compose-mode}.
 
 @menu
 * Composer overview: Composer overview. What is the composer good for
+* Entering the composer:: How to start writing messages
 * Keybindings: Composer Keybindings. Doing things with your keyboard
 * Address autocompletion:: Quickly entering known addresses
 * Compose hooks::Calling functions when composing
