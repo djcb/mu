@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -89,7 +89,7 @@ try {
 	return Err(Error{Error::Code::Xapian, "message not found in database"}.
 		   add_hint("Try reopening the database"));
 } catch (const Xapian::Error& xerr) {
-	return Err(Error::Code::Xapian, "{}", xerr.get_error_string());
+	return Err(Error::Code::Xapian, "{}", xerr.get_msg());
 } catch (const std::runtime_error& re) {
 	return Err(Error::Code::Internal, "runtime error: {}", re.what());
 } catch (const std::exception& e) {
