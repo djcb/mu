@@ -603,9 +603,9 @@ shorter keys in some cases where there are multiple bindings."
 (defun mu4e-keymap-set (keymap key definition)
   "Set KEY to DEFINITION in KEYMAP.
 Temporary version, from Emacs 29."
-  (cl-assert (key-valid-p key))
+  (when (fboundp 'key-valid-p) (cl-assert (key-valid-p key)))
   (when (stringp definition)
-    (cl-assert (key-valid-p definition))
+    (when (fboundp 'key-valid-p) (cl-assert (key-valid-p definition)))
     (setq definition (key-parse definition)))
   (define-key keymap (key-parse key) definition))
 
