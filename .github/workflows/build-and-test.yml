@@ -22,7 +22,7 @@ jobs:
         name: ubuntu-deps
         run: |
           sudo apt update
-          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev pkg-config guile-3.0-dev emacs texinfo
+          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev libcld2-dev pkg-config guile-3.0-dev emacs texinfo
 
       - if: contains(matrix.os, 'macos')
         name: macos-deps
@@ -30,7 +30,7 @@ jobs:
           brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian guile emacs texinfo
 
       - name: configure
-        run: ./autogen.sh '-Db_sanitize=address'
+        run: ./autogen.sh # '-Db_sanitize=address'
 
       - name: build
         run: make
