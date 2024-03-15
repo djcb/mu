@@ -600,14 +600,5 @@ shorter keys in some cases where there are multiple bindings."
              (seq-map #'key-description
                       (where-is-internal cmd)))))
 
-(defun mu4e-keymap-set (keymap key definition)
-  "Set KEY to DEFINITION in KEYMAP.
-Temporary version, from Emacs 29."
-  (when (fboundp 'key-valid-p) (cl-assert (key-valid-p key)))
-  (when (stringp definition)
-    (when (or (not (fboundp 'key-valid-p)) (cl-assert (key-valid-p definition)))
-        (setq definition (key-parse definition))))
-  (define-key keymap (key-parse key) definition))
-
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here
