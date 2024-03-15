@@ -605,8 +605,8 @@ shorter keys in some cases where there are multiple bindings."
 Temporary version, from Emacs 29."
   (when (fboundp 'key-valid-p) (cl-assert (key-valid-p key)))
   (when (stringp definition)
-    (when (fboundp 'key-valid-p) (cl-assert (key-valid-p definition)))
-    (setq definition (key-parse definition)))
+    (when (or (not (fboundp 'key-valid-p)) (cl-assert (key-valid-p definition)))
+        (setq definition (key-parse definition))))
   (define-key keymap (key-parse key) definition))
 
 (provide 'mu4e-helpers)
