@@ -218,11 +218,13 @@ The *flag/g* field allows you to match message flags. The following fields are
 available:
 #+begin_example
 	a,attach        Message with attachment
+	c,calendar      Calendar invitation
 	d,draft         Draft Message
 	f,flagged       Flagged
 	l,list          Mailing-list message
 	n,new           New message (in new/ Maildir)
 	p,passed        Passed (`Handled')
+	q,personal      Personal message
 	r,replied       Replied
 	s,seen          Seen
 	t,trashed       Marked for deletion
