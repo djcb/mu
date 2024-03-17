@@ -119,31 +119,39 @@ full table with all details, including single-char shortcuts, try the command:
 ~mu info fields~.
 
 #+ATTR_MAN: :disable-caption t
-|------------+-----------+--------------------------------|
-| field-name | alias     | description                    |
-| bcc        |           | Blind carbon-copy recipient    |
-| body       |           | Message plain-text body        |
-| cc         |           | Carbon-copy recipient          |
-| changed    |           | Last change time               |
-| date       |           | Message date                   |
-| embed      |           | Embedded text                  |
-| file       |           | Attachment file name           |
-| flags      | flag      | Message properties             |
-| from       |           | Message sender                 |
-| language   | lang      | ISO 639-1 language code (*)    |
-| maildir    |           | Maildir path for message       |
-| list       |           | Mailing list (List-Id:)        |
-| message-id | msgid     | Message-Id                     |
-| mime       | mime-type | Attachment MIME-type           |
-| path       |           | File system path to message    |
-| priority   | prio      | Priority                       |
-| references |           | References to related messages |
-| size       |           | Message size in bytes          |
-| subject    |           | Message subject                |
-| tags       | tag       | Message tags                   |
-| thread     |           | Thread a message belongs to    |
-| to         |           | Message recipient              |
-|------------+-----------+--------------------------------|
+#+begin_example
++-----------+----------+----------+-----------------------------+
+| flag      | shortcut | category | description                 |
++-----------+----------+----------+-----------------------------+
+| draft     | D        | file     | Draft (in progress)         |
++-----------+----------+----------+-----------------------------+
+| flagged   | F        | file     | User-flagged                |
++-----------+----------+----------+-----------------------------+
+| passed    | P        | file     | Forwarded message           |
++-----------+----------+----------+-----------------------------+
+| replied   | R        | file     | Replied-to                  |
++-----------+----------+----------+-----------------------------+
+| seen      | S        | file     | Viewed at least once        |
++-----------+----------+----------+-----------------------------+
+| trashed   | T        | file     | Marked for deletion         |
++-----------+----------+----------+-----------------------------+
+| new       | N        | maildir  | New message                 |
++-----------+----------+----------+-----------------------------+
+| signed    | z        | content  | Cryptographically signed    |
++-----------+----------+----------+-----------------------------+
+| encrypted | x        | content  | Encrypted                   |
++-----------+----------+----------+-----------------------------+
+| attach    | a        | content  | Has at least one attachment |
++-----------+----------+----------+-----------------------------+
+| unread    | u        | pseudo   | New or not seen message     |
++-----------+----------+----------+-----------------------------+
+| list      | l        | content  | Mailing list message        |
++-----------+----------+----------+-----------------------------+
+| personal  | q        | content  | Personal message            |
++-----------+----------+----------+-----------------------------+
+| calendar  | c        | content  | Calendar invitation         |
++-----------+----------+----------+-----------------------------+
+#+end_example
 
 (*) The language code for the text-body if found. This works only if ~mu~ was
 built with CLD2 support.
@@ -217,20 +225,37 @@ size:10m..
 The *flag/g* field allows you to match message flags. The following fields are
 available:
 #+begin_example
-	a,attach        Message with attachment
-	c,calendar      Calendar invitation
-	d,draft         Draft Message
-	f,flagged       Flagged
-	l,list          Mailing-list message
-	n,new           New message (in new/ Maildir)
-	p,passed        Passed (`Handled')
-	q,personal      Personal message
-	r,replied       Replied
-	s,seen          Seen
-	t,trashed       Marked for deletion
-	u,unread        new OR NOT seen
-	x,encrypted     Encrypted message
-	z,signed        Signed message
++-----------+----------+----------+-----------------------------+
+| flag      | shortcut | category | description                 |
++-----------+----------+----------+-----------------------------+
+| draft     | D        | file     | Draft (in progress)         |
++-----------+----------+----------+-----------------------------+
+| flagged   | F        | file     | User-flagged                |
++-----------+----------+----------+-----------------------------+
+| passed    | P        | file     | Forwarded message           |
++-----------+----------+----------+-----------------------------+
+| replied   | R        | file     | Replied-to                  |
++-----------+----------+----------+-----------------------------+
+| seen      | S        | file     | Viewed at least once        |
++-----------+----------+----------+-----------------------------+
+| trashed   | T        | file     | Marked for deletion         |
++-----------+----------+----------+-----------------------------+
+| new       | N        | maildir  | New message                 |
++-----------+----------+----------+-----------------------------+
+| signed    | z        | content  | Cryptographically signed    |
++-----------+----------+----------+-----------------------------+
+| encrypted | x        | content  | Encrypted                   |
++-----------+----------+----------+-----------------------------+
+| attach    | a        | content  | Has at least one attachment |
++-----------+----------+----------+-----------------------------+
+| unread    | u        | pseudo   | New or not seen message     |
++-----------+----------+----------+-----------------------------+
+| list      | l        | content  | Mailing list message        |
++-----------+----------+----------+-----------------------------+
+| personal  | q        | content  | Personal message            |
++-----------+----------+----------+-----------------------------+
+| calendar  | c        | content  | Calendar invitation         |
++-----------+----------+----------+-----------------------------+
 #+end_example
 
 Some examples:
