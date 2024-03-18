@@ -1672,6 +1672,19 @@ that, you can set (or @t{let}-bind) @t{message-cite-function} to
 See @ref{(message) Reply} and @ref{(message) Wide Reply} for further
 information.
 
+Note: in older versions, @t{mu4e-compose-reply} would @emph{ask} whether you
+want to reply-to-all or not; if you are nostalgic for that old behavior, you
+could add something like the following to your configuration:
+@lisp
+(defun compose-reply-wide-or-not-please-ask ()
+  "Ask whether to reply-to-all or not."
+  (interactive)
+  (mu4e-compose-reply (yes-or-no-p "Reply to all?")))
+
+(define-key mu4e-compose-minor-mode-map (kbd "R")
+  #'compose-reply-wide-or-not-please-ask)
+@end lisp
+
 @subsection Forward
 
 You can forward some existing message with @t{mu4e-compose-forward} (with
