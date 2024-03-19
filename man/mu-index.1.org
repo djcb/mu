@@ -42,7 +42,7 @@ speed up things you have some maildirs that never change.
 
 =.noupdate= does not affect already-indexed message: you can still search for
 them. =.noupdate= is ignored when you start indexing with an empty database (such
-as directly after =mu init=.
+as directly after =mu init=).
 
 There also the option *--lazy-check* which can greatly speed up indexing; see
 below for details.
