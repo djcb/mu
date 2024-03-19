@@ -26,8 +26,8 @@
 
 ;; To install:
 ;; (require 'mu4e-icalendar)
-;; (mu4e-icalendar-setup)
-;; Optional
+;; (gnus-icalendar-setup)
+;; Optional:
 ;; (setq mu4e-icalendar-trash-after-reply t)
 
 ;; By default, the original message is not cited.  However, if you
