@@ -730,6 +730,8 @@ determine which browser function to use."
           (run-hooks 'gnus-article-decode-hook)
           (gnus-article-prepare-display)
           (mu4e--view-activate-urls)
+          ;; `gnus-summary-bookmark-make-record' does not work properly when "appeased."
+          (kill-local-variable 'bookmark-make-record-function)
           (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
