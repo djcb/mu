@@ -366,11 +366,11 @@ is, show how ~mu~ interprets the query.
 This uses the the ~--analyze~ option to *mu find*.
 #+begin_example
 $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
-* query:
+,* query:
   subject:wombat AND date:3m.. size:..2000
-* parsed query:
+,* parsed query:
   (and (subject "wombat") (date (range "2023-05-30T06:10:09Z" "")) (size (range "" "2000")))
-* Xapian query:
+,* Xapian query:
   Query((Swombat AND VALUE_GE 4 n64759341 AND VALUE_LE 17 i7d0))
 #+end_example
 
