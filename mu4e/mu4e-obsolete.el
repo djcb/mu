@@ -273,8 +273,7 @@
   'gnus-icalendar-setup '"1.11.22")
 
 ;; mu4e.
-(make-obsolete 'mu4e-clear-caches "No longer used" "1.11.15")
-
+(define-obsolete-function-alias 'mu4e-clear-caches #'ignore "1.11.15")
 
 (provide 'mu4e-obsolete)
 ;;; mu4e-obsolete.el ends here
