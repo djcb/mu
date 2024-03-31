@@ -846,7 +846,7 @@ replied to or forwarded, etc."
     (if (not (message-field-value "Subject"))
         (message-goto-subject)
       (pcase message-cite-reply-position
-        ((or 'above 'traditional) (message-goto-body))
+        ((or 'above 'traditional) (message-goto-body) (open-line 1))
         (_ (when (message-goto-signature) (forward-line -2))))))
   ;; buffer is not user-modified yet
   (set-buffer-modified-p nil)
