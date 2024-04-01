@@ -265,7 +265,7 @@ bool fputs_encoded (const std::string& str, FILE *stream);
 template<typename...T>
 static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) noexcept {
 	return fputs_encoded(fmt::format(frm, std::forward<T>(args)...),
-			     ::stdout);
+			     stdout);
 }
 
 /**
