@@ -1743,10 +1743,14 @@ C-S-u        update mail & re-index
 source for this. Address auto-completion is enabled by default; if you want to
 disable it for some reason, set @t{mu4e-compose-complete-addresses} to @t{nil}.
 
-Emacs also supports cycling through the alternatives. When there are more than
-@emph{5} matching addresses, they are shown in a @t{*Completions*} buffer. Once
-the number of matches gets below this number, one is inserted in the address
-field and you can cycle through the alternatives using @key{TAB}.
+This uses the Emacs machinery for showing and cycling through the candidate
+addresses; it is active when looking at one of the contact fields in the message
+header area.
+
+It is also possible to use @t{mu4e}'s completion elsewhere in @t{emacs}. To
+enable that, a function @t{mu4e-complete-contact} exists, which you can add to
+@t{completion-at-point-functions}, see @ref{(elisp) Completion in Buffers}.
+@t{mu4e} must be running for any completions to be available.
 
 @subsection Limiting the number of addresses
 

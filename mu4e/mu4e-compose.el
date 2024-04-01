@@ -364,28 +364,30 @@ sending."
   (propertize "--text follows this line--" 'read-only t 'intangible t)
   "Line used to separate headers from text in messages being composed.")
 
-(defun mu4e--compose-complete-contact (&optional start)
-  "Complete the text at START with a contact.
-Ie. either \"name <email>\" or \"email\")."
-  (interactive)
+(defun mu4e-complete-contact ()
+  "Attempt to complete the text at point with a contact.
+I.e., either \"name <email>\" or \"email\". Return nil if not found.
+
+This function can be used for `completion-at-point-functions', to
+complete addresses. This can be used outside mu4e, but mu4e must
+be active (running) for this to work."
+  (let* ((end (point))
+         (start (save-excursion
+                  (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+                  (goto-char (match-end 0))
+                  (point))))
+    (list start end #'mu4e--compose-complete-handler)))
+
+(defun mu4e--compose-complete-contact-field ()
+  "Attempt to complete a contact when in a contact field.
+
+This is like `mu4e-compose-complete-contact', but limited to the
+contact fields."
   (let ((mail-abbrev-mode-regexp
          "^\\(To\\|B?Cc\\|Reply-To\\|From\\|Sender\\):")
-        (mail-header-separator mu4e--header-separator)
-        (eoh ;; end-of-headers
-         (save-excursion
-           (goto-char (point-min))
-           (search-forward-regexp mail-header-separator nil t))))
-    ;; try to complete only when we're in the headers area, looking at an
-    ;; address field.
-    (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
-      (let* ((end (point))
-             (start
-              (or start
-                  (save-excursion
-                    (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
-                    (goto-char (match-end 0))
-                    (point)))))
-        (list start end 'mu4e--compose-complete-handler)))))
+        (mail-header-separator mu4e--header-separator))
+    (when (mail-abbrev-in-expansion-header-p)
+      (mu4e-complete-contact))))
 
 (defun mu4e--compose-setup-completion ()
   "Set up auto-completion of addresses."
@@ -393,8 +395,7 @@ Ie. either \"name <email>\" or \"email\")."
   (set (make-local-variable 'completion-cycle-threshold) 7)
   (add-to-list (make-local-variable 'completion-styles) 'substring)
   (add-hook 'completion-at-point-functions
-            'mu4e--compose-complete-contact nil t))
-
+            #'mu4e--compose-complete-contact-field nil t))
 
 (defun mu4e--fcc-handler (msgpath)
   "Handle Fcc: for MSGPATH.
