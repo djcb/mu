@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,7 +20,6 @@
 #include "mu-contact.hh"
 #include "mu-message.hh"
 #include "utils/mu-utils.hh"
-#include "utils/mu-regex.hh"
 #include "mu-mime-object.hh"
 
 #include <gmime/gmime.h>
@@ -46,34 +45,6 @@ Contact::display_name() const
 	else
 		return Mu::quote(name) + " <" + email + '>';
 }
-
-static Regex email_rx;
-
-bool
-Contact::has_valid_email() const
-{
-	/* regexp as per:
-	 *   https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
-	 *
-	 * "This requirement is a willful violation of RFC 5322, which defines a
-	 * syntax for email addresses that is simultaneously too strict (before
-	 * the "@" character), too vague (after the "@" character), and too lax
-	 * (allowing comments, whitespace characters, and quoted strings in
-	 * manners unfamiliar to most users) to be of practical use here."
-	 */
-	constexpr auto email_rx_str =
-		R"(^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$)";
-	/* avoid std::regex here, since speed matters. PCRE is faster */
-	if (!email_rx) {
-		if (auto&& res = Regex::make(email_rx_str, G_REGEX_OPTIMIZE); !res) {
-			g_error("BUG: error in regex: %s", res.error().what()); /* terminates process */
-		} else
-			email_rx = res.value();
-	}
-
-	return email_rx.matches(email);
-}
-
 
 std::string
 Mu::to_string(const Mu::Contacts& contacts)
@@ -120,7 +91,6 @@ test_ctor_foo()
 
 	assert_equal(c.email, "foo@example.com");
 	assert_equal(c.name, "Foo Bar");
-	g_assert_true(c.has_valid_email());
 	g_assert_true(*c.field_id() == Field::Id::Bcc);
 	g_assert_cmpuint(c.message_date,==,1645214647);
 
@@ -142,7 +112,6 @@ test_ctor_blinky()
 
 	assert_equal(c.email, "bar@example.com");
 	assert_equal(c.name, "Blinky");
-	g_assert_true(c.has_valid_email());
 	g_assert_true(c.personal);
 	g_assert_cmpuint(c.frequency,==,13);
 	g_assert_cmpuint(c.tstamp,==,12345);
@@ -166,7 +135,6 @@ test_ctor_cleanup()
 	assert_equal(c.email, "bar@example.com");
 	assert_equal(c.name, "Bli ky");
 	g_assert_true(c.personal);
-	g_assert_true(c.has_valid_email());
 	g_assert_cmpuint(c.frequency,==,13);
 	g_assert_cmpuint(c.tstamp,==,12345);
 	g_assert_cmpuint(c.message_date,==,1645215014);
@@ -188,7 +156,6 @@ test_encode()
 
 	assert_equal(c.email, "cassius@example.com");
 	assert_equal(c.name, "Ali, Muhammad \"The Greatest\"");
-	g_assert_true(c.has_valid_email());
 	g_assert_false(c.personal);
 	g_assert_cmpuint(c.frequency,==,333);
 	g_assert_cmpuint(c.tstamp,==,768);
@@ -207,7 +174,6 @@ test_sender()
 
 	assert_equal(c.email, "aa@example.com");
 	assert_equal(c.name, "Anders Ångström");
-	g_assert_true(c.has_valid_email());
 	g_assert_false(c.personal);
 	g_assert_cmpuint(c.frequency,==,1);
 	g_assert_cmpuint(c.message_date,==,54321);
@@ -220,15 +186,6 @@ static void
 test_misc()
 {
 	g_assert_false(!!contact_type_from_field_id(Field::Id::Subject));
-}
-
-static void
-test_broken_email()
-{
-	Contact c{"a***@@booa@example..com", "abcdef",
-		Contact::Type::Sender, 54321};
-
-	g_assert_false(c.has_valid_email());
 }
 
 int
@@ -244,7 +201,6 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/message/contact/sender", test_sender);
 	g_test_add_func("/message/contact/misc", test_misc);
-	g_test_add_func("/message/contact/broken-email", test_broken_email);
 
 	return g_test_run();
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -53,12 +53,18 @@ struct ContactsCache::Private {
 		 personal_rx_{make_rx_matchers<Config::Id::PersonalAddresses>()},
 		 ignored_plain_{make_matchers<Config::Id::IgnoredAddresses>()},
 		 ignored_rx_{make_rx_matchers<Config::Id::IgnoredAddresses>()},
-		 dirty_{0} {}
+		 dirty_{0},
+		 email_rx_{unwrap(Regex::make(email_rx_str, G_REGEX_OPTIMIZE))}
+		{}
 
 	~Private() { serialize(); }
 
 	ContactUMap deserialize(const std::string&) const;
 	void serialize() const;
+
+	bool is_valid_email(const std::string& email) const {
+		return email_rx_.matches(email);
+	}
 
 	Config&			config_db_;
 	ContactUMap		contacts_;
@@ -70,7 +76,8 @@ struct ContactsCache::Private {
 	const StringVec			ignored_plain_;
 	const std::vector<Regex>	ignored_rx_;
 
-	mutable size_t			dirty_;
+	mutable size_t	dirty_;
+	Regex		email_rx_;
 
 private:
 	static bool is_rx(const std::string& p)  {
@@ -100,6 +107,19 @@ private:
 		}
 		return rxvec;
 	}
+
+	/* regexp as per:
+	 *   https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+	 *
+	 * "This requirement is a willful violation of RFC 5322, which defines a
+	 * syntax for email addresses that is simultaneously too strict (before
+	 * the "@" character), too vague (after the "@" character), and too lax
+	 * (allowing comments, whitespace characters, and quoted strings in
+	 * manners unfamiliar to most users) to be of practical use here."
+	 */
+	static constexpr auto email_rx_str =
+		R"(^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$)";
+
 };
 
 ContactUMap
@@ -176,7 +196,7 @@ ContactsCache::add(Contact&& contact)
 {
 	/* we do _not_ cache invalid email addresses, so we won't offer them in completions etc. It
 	 * should be _rare_, but we've seen cases ( broken local messages) */
-	if (!contact.has_valid_email()) {
+	if (!is_valid(contact.email)) {
 		mu_warning("not caching invalid e-mail address '{}'", contact.email);
 		return;
 	}
@@ -345,6 +365,13 @@ ContactsCache::is_ignored(const std::string& addr) const
 {
 	return address_matches(addr, priv_->ignored_plain_, priv_->ignored_rx_);
 }
+
+bool
+ContactsCache::is_valid(const std::string& addr) const
+{
+	return priv_->is_valid_email(addr);
+}
+
 
 #ifdef BUILD_TESTS
 /*
@@ -554,17 +581,28 @@ test_mu_contacts_cache_sort()
 	}
 }
 
+static void
+test_mu_contacts_valid_address()
+{
+	MemDb xdb{};
+	Config cdb{xdb};
+	ContactsCache ccache(cdb);
+
+	g_assert_true(ccache.is_valid("a@example.com"));
+	g_assert_false(ccache.is_valid("a***@@booa@example..com"));
+}
 
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-	g_test_add_func("/lib/contacts-cache/base", test_mu_contacts_cache_base);
-	g_test_add_func("/lib/contacts-cache/personal", test_mu_contacts_cache_personal);
-	g_test_add_func("/lib/contacts-cache/ignored", test_mu_contacts_cache_ignored);
-	g_test_add_func("/lib/contacts-cache/for-each", test_mu_contacts_cache_foreach);
-	g_test_add_func("/lib/contacts-cache/sort", test_mu_contacts_cache_sort);
+	g_test_add_func("/contacts-cache/base", test_mu_contacts_cache_base);
+	g_test_add_func("/contacts-cache/personal", test_mu_contacts_cache_personal);
+	g_test_add_func("/contacts-cache/ignored", test_mu_contacts_cache_ignored);
+	g_test_add_func("/contacts-cache/for-each", test_mu_contacts_cache_foreach);
+	g_test_add_func("/contacts-cache/sort", test_mu_contacts_cache_sort);
+	g_test_add_func("/contacts-cache/valid-address", test_mu_contacts_valid_address);
 
 	return g_test_run();
 }

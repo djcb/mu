@@ -116,7 +116,6 @@ public:
 	 */
 	bool is_personal(const std::string& addr) const;
 
-
 	/**
 	 * Does this look like an email-address that should be ignored?
 	 *
@@ -125,6 +124,15 @@ public:
 	 * @return true or false
 	 */
 	bool is_ignored(const std::string& addr) const;
+
+	/**
+	 * Does this look like a valid email-address?
+	 *
+	 * @param addr some e-mail address
+	 *
+	 * @return true or false
+	 */
+	bool is_valid(const std::string& addr) const;
 
 	/**
 	 * Find a contact based on the email address. This is not safe, since

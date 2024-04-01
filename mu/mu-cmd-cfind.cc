@@ -278,7 +278,7 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 		if (opts.cfind.maxnum && num > *opts.cfind.maxnum)
 			return false; /* stop the loop */
 
-		if (!contact.has_valid_email())
+		if (!store.contacts_cache().is_valid(contact.email))
 			return true; /* next */
 
 		// filter for maxnum, personal  & "after"
