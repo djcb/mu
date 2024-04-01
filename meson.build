@@ -163,11 +163,23 @@ else
   message('no wordexp, no command-line option expansion')
 endif
 
-testmaildir=join_paths(meson.current_source_dir(), 'testdata')
-config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
-config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
-config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
-config_h_data.set_quoted('MU_TESTMAILDIR_CJK',  join_paths(testmaildir, 'cjk'))
+if not get_option('tests').disabled()
+  # only needed for tests
+  cp=find_program('cp')
+  ln=find_program('ln')
+  rm=find_program('rm')
+
+  config_h_data.set_quoted('CP_PROGRAM',   cp.full_path())
+  config_h_data.set_quoted('RM_PROGRAM',   rm.full_path())
+  config_h_data.set_quoted('LN_PROGRAM',   ln.full_path())
+
+  testmaildir=join_paths(meson.current_source_dir(), 'testdata')
+  config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
+  config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
+  config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
+  config_h_data.set_quoted('MU_TESTMAILDIR_CJK',  join_paths(testmaildir, 'cjk'))
+endif
+
 
 ################################################################################
 # hard dependencies
@@ -195,22 +207,6 @@ if not get_option('cld2').disabled() and cld2_dep.found()
 else
   message('CLD2 not found or disabled; no support for language detection')
 endif
-
-# note: these are for the unit-tests
-
-cp=find_program('cp')
-mv=find_program('mv')
-ln=find_program('ln')
-rm=find_program('rm')
-awk=find_program(['gawk', 'awk'])
-gzip=find_program('gzip')
-
-config_h_data.set_quoted('CP_PROGRAM',   cp.full_path())
-config_h_data.set_quoted('MV_PROGRAM',   mv.full_path())
-config_h_data.set_quoted('RM_PROGRAM',   rm.full_path())
-config_h_data.set_quoted('LN_PROGRAM',   ln.full_path())
-config_h_data.set_quoted('AWK_PROGRAM',  awk.full_path())
-config_h_data.set_quoted('GZIP_PROGRAM', gzip.full_path())
 
 # soft dependencies
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
@@ -259,7 +255,7 @@ endif
 
 
 ################################################################################
-# write out version.texi (for texiinfo builds in mu4e, guile)
+# write out version.texi (for texinfo builds in mu4e, guile)
 version_texi_data=configuration_data()
 version_texi_data.set('VERSION', meson.project_version())
 version_texi_data.set('EDITION', meson.project_version())
