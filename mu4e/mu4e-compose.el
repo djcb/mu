@@ -390,12 +390,16 @@ contact fields."
       (mu4e-complete-contact))))
 
 (defun mu4e--compose-setup-completion ()
-  "Set up auto-completion of addresses."
-  (set (make-local-variable 'completion-ignore-case) t)
-  (set (make-local-variable 'completion-cycle-threshold) 7)
-  (add-to-list (make-local-variable 'completion-styles) 'substring)
-  (add-hook 'completion-at-point-functions
-            #'mu4e--compose-complete-contact-field nil t))
+  "Set up auto-completion of addresses if enabled."
+  ;; turn off message-mode's completion, it's just interfering.
+  (remove-hook 'completion-at-point-functions
+               #'message-completion-function 'local)
+  (when mu4e-compose-complete-addresses
+    (set (make-local-variable 'completion-ignore-case) t)
+    (set (make-local-variable 'completion-cycle-threshold) 7)
+    (add-to-list (make-local-variable 'completion-styles) 'substring)
+    (add-hook 'completion-at-point-functions
+              #'mu4e--compose-complete-contact-field nil t)))
 
 (defun mu4e--fcc-handler (msgpath)
   "Handle Fcc: for MSGPATH.
@@ -654,11 +658,8 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (set (make-local-variable 'message-send-mail-real-function) nil)
     ;; Set to nil to enable `electric-quote-local-mode' to work:
     (set (make-local-variable 'comment-use-syntax) nil)
-    ;; offer completion for e-mail addresses
-    (when mu4e-compose-complete-addresses
-      (mu4e--compose-setup-completion))
-    ;; format-flowed
-    (if mu4e-compose-format-flowed
+    (mu4e--compose-setup-completion) ;; maybe offer address completion
+    (if mu4e-compose-format-flowed   ;; format-flowed
         (progn
           (turn-off-auto-fill)
           (setq truncate-lines nil
