@@ -222,14 +222,6 @@ if guile_dep.found()
   message('Using guile-extension-dir: ' + guile_extension_dir)
 endif
 
-# emacs -- needed for mu4e compilation
-emacs_name=get_option('emacs')
-emacs_min_version='26.3'
-emacs=find_program([emacs_name], version: '>='+emacs_min_version, required:false)
-if not emacs.found()
-  message('emacs not found; not pre-compiling mu4e sources')
-endif
-
 makeinfo=find_program(['makeinfo'], required:false)
 if not makeinfo.found()
   message('makeinfo (texinfo) not found; not building info documentation')
@@ -271,24 +263,23 @@ configure_file(input: join_paths(build_aux, 'version.texi.in'),
 
 ################################################################################
 # install some data files
-install_data('NEWS.org',
-            install_dir : join_paths(datadir,'doc', 'mu'))
+install_data('NEWS.org', install_dir : join_paths(datadir,'doc', 'mu'))
 
 ################################################################################
 # subdirs
 subdir('lib')
 subdir('mu')
 
+
+# emacs -- needed for mu4e compilation
+emacs_name=get_option('emacs')
+emacs_min_version='26.3'
+emacs=find_program([emacs_name], version: '>='+emacs_min_version, required:false)
 if emacs.found()
   subdir('man')
+  subdir('mu4e')
 else
-  message('emacs not found; not generating manpages')
-endif
-
-if emacs.found()
-   subdir('mu4e')
-else
-  message('emacs not found; not preparing mu4e support')
+  message('emacs not found; not pre-compiling mu4e / generating manpages')
 endif
 
 if not get_option('guile').disabled() and guile_dep.found()
