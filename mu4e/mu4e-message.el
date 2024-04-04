@@ -215,8 +215,11 @@ If MSG is nil, use `mu4e-message-at-point'."
     (when-let ((msg (mu4e-message-at-point 'noerror)))
       (when (buffer-live-p mu4e--sexp-buffer-name)
         (kill-buffer mu4e--sexp-buffer-name))
-      (with-current-buffer-window (get-buffer-create mu4e--sexp-buffer-name) nil nil
-        (lisp-data-mode)
+      (with-current-buffer-window
+          (get-buffer-create mu4e--sexp-buffer-name) nil nil
+        (if (fboundp 'lisp-data-mode)
+            (lisp-data-mode)
+          (lisp-mode))
         (insert (pp-to-string msg))
         (font-lock-ensure)
         ;; add basic `quit-window' bindings

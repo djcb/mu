@@ -84,7 +84,7 @@ support."
              ;;              "gnus/gnus.png"))
              :actions '("Show" "Favorite bookmark"
                         "default" "Favorite bookmark")
-             :on-action (lambda (_ _) (mu4e-jump-to-favorite)))))
+             :on-action (lambda (_1 _2) (mu4e-jump-to-favorite)))))
      ;; ... TBI: other notifications ...
      (t ;; last resort
       (mu4e-message "%s: %s" title body)))))

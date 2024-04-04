@@ -640,8 +640,7 @@ As a side-effect, a message that is being viewed loses its
         ;; problems later (#2260, #2508), so let's remove those
         (article-remove-cr)
         (setq-local mu4e--view-message msg)
-        (mu4e--view-render-buffer msg)
-        (setq-local mu4e--view-mime-part-cached nil))
+        (mu4e--view-render-buffer msg))
       (mu4e-loading-mode 0)))
   (unless (mu4e--view-detached-p gnus-article-buffer)
     (with-current-buffer mu4e-linked-headers-buffer

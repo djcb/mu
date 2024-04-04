@@ -392,7 +392,7 @@ status, STATUS."
    ((looking-back "mime:\\([a-zA-Z0-9/-]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
-          (mailcap-mime-types)))
+          (when (fboundp 'mailcap-mime-types) (mailcap-mime-types))))
    ((looking-back "\\(from\\|to\\|cc\\|bcc\\|contact\\|recip\\):\\([a-zA-Z0-9/.@]*\\)" nil)
     (list (match-beginning 2)
           (match-end 2)
