@@ -708,7 +708,6 @@ determine which browser function to use."
 
 (defun mu4e--view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode."
-  (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
          (max-specpdl-size mu4e-view-max-specpdl-size)
          (mm-decrypt-option 'known)
