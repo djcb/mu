@@ -547,7 +547,7 @@ messages, even if other programs have modified the Maildir.
 
 The downside of this thoroughness (which is the default) is that it is
 relatively slow, something that can be noticeable with large e-mail
-corpa on slow file-systems. For a faster approach, you can use the
+corpora on slow file-systems. For a faster approach, you can use the
 following:
 
 @lisp
@@ -774,7 +774,7 @@ the @ref{Composer} to write a new message.
 The next two items in the Main view are @emph{Bookmarks} and @emph{Maildirs}.
 
 Bookmarks are predefined queries with a descriptive name and a shortcut. In the
-example above, we see the default bookmarks. You can pick a bookmar by pressing
+example above, we see the default bookmarks. You can pick a bookmark by pressing
 @key{b} followed by the specific bookmark's shortcut. If you want to edit the
 bookmarked query before invoking it, use @key{B}.
 
@@ -1105,7 +1105,7 @@ results.
 @section Folding threads
 
 It is possible to fold threads - that is, visually collapse threads into a
-single line (and the reverse), by default using the @key{TAB} amd @key{S-TAB}
+single line (and the reverse), by default using the @key{TAB} and @key{S-TAB}
 bindings. Note that the collapsing is always for threads as a whole, not for
 sub-threads.
 
@@ -2801,7 +2801,7 @@ message. An example should clarify this:
       ((mu4e-message-contact-field-matches msg :to
          "mu-discuss@@googlegroups.com")
         "/mu")
-      ;; messages sent directly to some spefic address me go to /private
+      ;; messages sent directly to some specific address me go to /private
       ((mu4e-message-contact-field-matches msg :to "me@@example.com")
         "/private")
       ;; messages with football or soccer in the subject go to /football
@@ -3275,7 +3275,7 @@ some representation of @code{mu4e-search-threads}, @code{mu4e-search-full}; the
 
 The query parameters are followed by the query-string use for the headers-view.
 By default, if the query string matches some bookmark, the name of that bookmark
-is shown instead of the query it specfies. This can be changed by setting
+is shown instead of the query it specifies. This can be changed by setting
 @code{mu4e-modeline-prefer-bookmark-name} to @t{nil}.
 
 @cindex favorite bookmark
