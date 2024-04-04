@@ -445,6 +445,9 @@ If MSGPATH is nil, do nothing."
       (message-narrow-to-headers)
       (unless (message-fetch-field "Message-ID")
         (message-generate-headers '(Message-ID)))
+        ;; older Emacsen (<= 28 perhaps?) won't update the Date
+        ;; if there already is one; so make sure it's gone.
+      (message-remove-header "Date")
       (message-generate-headers '(Date)))
     (mu4e--delimit-headers 'undelimit))) ;; remove separator
 
@@ -539,11 +542,13 @@ appropriate flag at the message forwarded or replied-to."
   ;; Remove References: if In-Reply-To: is missing.
   ;; This allows the user to effectively start a new message-thread by
   ;; removing the In-Reply-To header.
-  (when (eq mu4e-compose-type 'reply)
-    (unless (message-fetch-field "In-Reply-To")
-      (message-remove-header "References")))
-  (when use-hard-newlines
-    (mu4e--send-harden-newlines))
+  (save-restriction
+    (message-narrow-to-headers)
+    (when (eq mu4e-compose-type 'reply)
+      (unless (message-fetch-field "In-Reply-To")
+        (message-remove-header "References")))
+    (when use-hard-newlines
+      (mu4e--send-harden-newlines)))
   ;; for safety, always save the draft before sending
   (set-buffer-modified-p t)
   (save-buffer))
