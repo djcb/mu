@@ -4664,14 +4664,19 @@ final confirmation, which you can of course make as elaborate as you
 wish.
 
 @lisp
-(add-hook 'message-send-hook
-  (lambda ()
-    (unless (yes-or-no-p "Sure you want to send this?")
-      (signal 'quit nil))))
+(defun confirm-empty-subject ()
+  "Require confirmation before sending without subject."
+  (let ((sub (message-field-value "Subject")))
+    (or (and sub (not (string-match "\\`[ \t]*\\'" sub)))
+        (yes-or-no-p "Really send without Subject? ")
+        (keyboard-quit))))
+
+(add-hook 'message-send-hook #'confirm-empty-subject)
 @end lisp
 
-Another option is to simply set @code{message-confirm-send} to
-non-@t{nil} so the question ``Send message?'' is asked for confirmation.
+If you @emph{always} want to be asked for for confirmation, set
+@code{message-confirm-send} to non-@t{nil} so the question ``Send message?'' is
+asked for confirmation.
 
 @node How it works
 @appendix How it works
