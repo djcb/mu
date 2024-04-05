@@ -78,13 +78,13 @@ try {
 	return func();
 } catch (const Xapian::DatabaseNotFoundError& nferr) {
 	return Err(Error{Error::Code::Xapian, "failed to open database"}.
-		   add_hint("Perhaps try (re)creating using `mu index'"));
+		   add_hint("Try (re)creating using `mu init'"));
 } catch (const Xapian::DatabaseLockError& dlerr) {
 	return Err(Error{Error::Code::StoreLock, "database locked"}.
 		   add_hint("Perhaps mu is already running?"));
 } catch (const Xapian::DatabaseCorruptError& dcerr) {
 	return Err(Error{Error::Code::Xapian, "failed to read database"}.
-		   add_hint("Try (re)creating using `mu index'"));
+		   add_hint("Try (re)creating using `mu init'"));
 } catch (const Xapian::DocNotFoundError& dnferr) {
 	return Err(Error{Error::Code::Xapian, "message not found in database"}.
 		   add_hint("Try reopening the database"));
