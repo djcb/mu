@@ -448,7 +448,7 @@ If MSGPATH is nil, do nothing."
         ;; older Emacsen (<= 28 perhaps?) won't update the Date
         ;; if there already is one; so make sure it's gone.
       (message-remove-header "Date")
-      (message-generate-headers '(Date)))
+      (message-generate-headers '(Date Subject From)))
     (mu4e--delimit-headers 'undelimit))) ;; remove separator
 
 (defvar mu4e--compose-buffer-max-name-length 48)
@@ -487,25 +487,26 @@ message buffer."
   (let ((buf (find-file-noselect path)))
     (when buf
       (with-current-buffer buf
-        (message-narrow-to-headers-or-head)
-        (let ((in-reply-to (message-fetch-field "in-reply-to"))
-              (forwarded-from)
-              (references (message-fetch-field "references")))
-          (unless in-reply-to
-            (when references
-              (with-temp-buffer ;; inspired by `message-shorten-references'.
-                (insert references)
-                (goto-char (point-min))
-                (let ((refs))
-                  (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
-                    (push (match-string 0) refs))
-                  ;; the last will be the first
-                  (setq forwarded-from (car refs))))))
-          ;; remove the <> and update the flags on the server-side.
-          (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-            (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))
-          (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-            (mu4e--server-move (match-string 1 forwarded-from) nil "+P-N")))))))
+        (save-restriction
+          (message-narrow-to-headers)
+          (let ((in-reply-to (message-fetch-field "in-reply-to"))
+                (forwarded-from)
+                (references (message-fetch-field "references")))
+            (unless in-reply-to
+              (when references
+                (with-temp-buffer ;; inspired by `message-shorten-references'.
+                  (insert references)
+                  (goto-char (point-min))
+                  (let ((refs))
+                    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
+                      (push (match-string 0) refs))
+                    ;; the last will be the first
+                    (setq forwarded-from (car refs))))))
+            ;; remove the <> and update the flags on the server-side.
+            (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
+              (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))
+            (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
+              (mu4e--server-move (match-string 1 forwarded-from) nil "+P-N"))))))))
 
 (defun mu4e--compose-after-save()
   "Function called immediately after the draft buffer is saved."
@@ -706,9 +707,11 @@ With HEADERS-ONLY non-nil, only include the headers part."
     ;; in rare (broken) case, if a message-id is missing use the generated one
     ;; from mu.
     (mu4e--delimit-headers)
-    (unless (message-fetch-field "Message-Id")
-      (goto-char (point-min))
-      (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
+    (save-restriction
+      (message-narrow-to-headers)
+      (unless (message-fetch-field "Message-Id")
+        (goto-char (point-min))
+        (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id)))))
     (mu4e--delimit-headers 'undelimit)
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (buffer-substring-no-properties (point-min) (point-max))))
@@ -809,12 +812,14 @@ This is mu4e's version of `message-hidden-headers'.")
 FUNC is the original function, and ARGS are its arguments.
 Is this address yours?"
   (if (mu4e-running-p)
-      (let ((sender (message-fetch-field "from"))
-            (from (message-fetch-field "sender")))
-        (or (and sender (mu4e-personal-or-alternative-address-p
-                         (car (mail-header-parse-address sender))))
-            (and from (mu4e-personal-or-alternative-address-p
-                       (car (mail-header-parse-address from))))))
+      (save-restriction
+        (message-narrow-to-headers)
+        (let ((sender (message-fetch-field "from"))
+              (from (message-fetch-field "sender")))
+          (or (and sender (mu4e-personal-or-alternative-address-p
+                           (car (mail-header-parse-address sender))))
+              (and from (mu4e-personal-or-alternative-address-p
+                         (car (mail-header-parse-address from)))))))
     (apply func args)))
 
 (defun mu4e--compose-setup-post (compose-type &optional parent)
@@ -972,15 +977,17 @@ must be from current user, as determined through
        (mu4e--delimit-headers)
        ;; message-forward expects message-reply-headers to be set up; here we
        ;; only need message-id & references, rest is for completeness.
-       (setq-local message-reply-headers
-             (make-full-mail-header
-              0
-              (or (message-fetch-field "subject") "none")
-              (or (message-fetch-field "from") "nobody")
-              (message-fetch-field "date")
-              (message-fetch-field "message-id" t)
-              (message-fetch-field "references")
-              0 0 ""))
+       (save-restriction
+         (message-narrow-to-headers)
+         (setq-local message-reply-headers
+                     (make-full-mail-header
+                      0
+                      (or (message-fetch-field "subject") "none")
+                      (or (message-fetch-field "from") "nobody")
+                      (message-fetch-field "date")
+                      (message-fetch-field "message-id" t)
+                      (message-fetch-field "references")
+                      0 0 "")))
        (mu4e--delimit-headers 'undelimit)
        (set-buffer-modified-p nil)
        (message-forward)))))
