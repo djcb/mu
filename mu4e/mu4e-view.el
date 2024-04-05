@@ -657,7 +657,9 @@ As a side-effect, a message that is being viewed loses its
       (select-window mu4e~headers-view-win)))
   (with-current-buffer gnus-article-buffer
     (let ((inhibit-read-only t))
-      (run-hooks 'mu4e-view-rendered-hook))))
+      (run-hooks 'mu4e-view-rendered-hook))
+    ;; only needed on some setups; #2683
+    (goto-char (point-min))))
 
 (defun mu4e-view-message-text (msg)
   "Return the rendered MSG as a string."
