@@ -78,6 +78,10 @@ messages.
 
 disable the database cleanup that *mu* does by default after indexing.
 
+** --reindex
+
+perform a complete reindexing of all the messages in the maildir.
+
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "common-options.inc" :minlevel 1

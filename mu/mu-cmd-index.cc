@@ -78,9 +78,21 @@ print_stats(const Indexer::Progress& stats, bool color)
 }
 
 Result<void>
-Mu::mu_cmd_index(Store& store, const Options& opts)
+Mu::mu_cmd_index(const Options& opts)
 {
-	const auto mdir{store.root_maildir()};
+	auto store = std::invoke([&]{
+		if (opts.index.reindex)
+			return Store::make(opts.runtime_path(RuntimePath::XapianDb),
+					   Store::Options::ReInit|Store::Options::Writable);
+		else
+			return Store::make(opts.runtime_path(RuntimePath::XapianDb),
+			       Store::Options::Writable);
+	});
+
+	if (!store)
+		return Err(store.error());
+
+	const auto mdir{store->root_maildir()};
 	if (G_UNLIKELY(::access(mdir.c_str(), R_OK) != 0))
 		return Err(Error::Code::File, "'{}' is not readable: {}",
 			   mdir, g_strerror(errno));
@@ -93,19 +105,19 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 
 		mu_println("indexing maildir {}{}{} -> "
 			   "store {}{}{}",
-			   col.fg(Color::Green), store.root_maildir(), col.reset(),
-			   col.fg(Color::Blue), store.path(), col.reset());
+			   col.fg(Color::Green), store->root_maildir(), col.reset(),
+			   col.fg(Color::Blue), store->path(), col.reset());
 	}
 
 	Mu::Indexer::Config conf{};
 	conf.cleanup    = !opts.index.nocleanup;
 	conf.lazy_check = opts.index.lazycheck;
 	// ignore .noupdate with an empty store.
-	conf.ignore_noupdate = store.empty();
+	conf.ignore_noupdate = store->empty();
 
 	install_sig_handler();
 
-	auto& indexer{store.indexer()};
+	auto& indexer{store->indexer()};
 	indexer.start(conf);
 	while (!caught_signal && indexer.is_running()) {
 		if (!opts.quiet)
@@ -119,10 +131,10 @@ Mu::mu_cmd_index(Store& store, const Options& opts)
 		}
 	}
 
-	store.indexer().stop();
+	indexer.stop();
 
 	if (!opts.quiet) {
-		print_stats(store.indexer().progress(), !opts.nocolor);
+		print_stats(indexer.progress(), !opts.nocolor);
 		mu_print("\n");
 		::fflush({});
 	}

@@ -142,10 +142,12 @@ Mu::mu_cmd_execute(const Options& opts) try {
 		return with_writable_store(mu_cmd_remove, opts);
 	case Options::SubCommand::Move:
 		return with_writable_store(mu_cmd_move, opts);
-	case Options::SubCommand::Index:
-		return with_writable_store(mu_cmd_index, opts);
 
-	/* commands instantiate store themselves */
+	/*
+	 * commands instantiate store themselves
+	 */
+	case Options::SubCommand::Index:
+		return mu_cmd_index(opts);
 	case Options::SubCommand::Init:
 		return mu_cmd_init(opts);
 	case Options::SubCommand::Server:

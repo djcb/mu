@@ -172,6 +172,7 @@ struct Options {
 	struct Index {
 		bool	nocleanup;			/**< don't cleanup del'd mails */
 		bool	lazycheck;			/**< don't check uptodate dirs */
+		bool	reindex;			/**< do a full re-index */
 	} index;
 
 

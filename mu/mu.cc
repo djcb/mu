@@ -67,8 +67,12 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 			      col.fg(Color::Blue), col.reset(),
 			      col.fg(Color::Green), res.error().hint(), col.reset());
 
-	if (res.error().exit_code() != 0 && !res.error().is_soft_error())
-		mu_warning("mu finishing with error: {}", format_as(res.error()));
+	if (res.error().exit_code() != 0 && !res.error().is_soft_error()) {
+		mu_warning("mu finishing with error: {}",
+			   format_as(res.error()));
+		if (const auto& hint = res.error().hint(); !hint.empty())
+			mu_info("hint: {}", hint);
+	}
 
 	return res.error().exit_code();
 }

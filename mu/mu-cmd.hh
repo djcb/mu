@@ -92,12 +92,11 @@ Result<void> mu_cmd_find(const Store& store, const Options& opts);
 /**
  * execute the 'index' command
  *
- * @param store store object to use
  * @param opts configuration options
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_index(Store& store, const Options& opt);
+Result<void> mu_cmd_index(const Options& opt);
 
 /**
  * execute the 'info' command

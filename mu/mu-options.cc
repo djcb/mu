@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -430,6 +430,8 @@ sub_index(CLI::App& sub, Options& opts)
 		       "Skip based on dir-timestamps");
 	sub.add_flag("--nocleanup", opts.index.nocleanup,
 		       "Don't clean up database after indexing");
+	sub.add_flag("--reindex", opts.index.reindex,
+		     "Perform a complete reindexing");
 }
 
 
