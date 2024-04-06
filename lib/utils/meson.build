@@ -14,10 +14,9 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 thirdparty=join_paths('..', '..', 'thirdparty')
 
-lib_mu_utils=static_library('mu-utils', [
+srcs = [
   'mu-command-handler.cc',
   'mu-html-to-text.cc',
   'mu-lang-detector.cc',
@@ -25,10 +24,18 @@ lib_mu_utils=static_library('mu-utils', [
   'mu-option.cc',
   'mu-readline.cc',
   'mu-sexp.cc',
-  'mu-test-utils.cc',
   'mu-utils-file.cc',
-  'mu-utils.cc'
-], dependencies: [
+  'mu-utils.cc',
+]
+
+if get_option('tests').enabled()
+  test_srcs =  [ 'mu-test-utils.cc' ]
+else
+  test_srcs =  []
+endif
+
+lib_mu_utils=static_library('mu-utils',
+ [ srcs, test_srcs ], dependencies: [
   glib_dep,
   gio_dep,
   gio_unix_dep,
