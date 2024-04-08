@@ -28,7 +28,7 @@ srcs = [
   'mu-utils.cc',
 ]
 
-if get_option('tests').enabled()
+if not get_option('tests').disabled()
   test_srcs =  [ 'mu-test-utils.cc' ]
 else
   test_srcs =  []
