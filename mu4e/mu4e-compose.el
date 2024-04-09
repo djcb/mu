@@ -1002,8 +1002,10 @@ must be from current user, as determined through
     (mu4e--compose-setup
      'edit
      (lambda (parent)
-       (find-file (plist-get parent :path))
-       (mu4e--delimit-headers)))))
+       (let ((buf (find-file (plist-get parent :path))))
+         (with-current-buffer buf
+           (mu4e--delimit-headers))
+         buf)))))
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
