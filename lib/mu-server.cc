@@ -184,7 +184,6 @@ struct Server::Private {
 	void queries_handler(const Command& cmd);
 	void quit_handler(const Command& cmd);
 	void remove_handler(const Command& cmd);
-	void sent_handler(const Command& cmd);
 	void view_handler(const Command& cmd);
 
 private:
@@ -413,12 +412,6 @@ Server::Private::make_command_map()
 			ArgInfo{Type::Number, true, "document-id for the message to remove"}}},
 		"remove a message from filesystem and database",
 		[&](const auto& params) { remove_handler(params); }});
-
-	cmap.emplace(
-	    "sent",
-	    CommandInfo{ArgMap{{":path", ArgInfo{Type::String, true, "path to the message file"}}},
-			"tell mu about a message that was sent",
-			[&](const auto& params) { sent_handler(params); }});
 
 	cmap.emplace(
 	    "view",
@@ -981,21 +974,6 @@ Server::Private::remove_handler(const Command& cmd)
 		mu_debug("removed message @ {} @ ({})", path, docid);
 
 	output_sexp(Sexp().put_props(":remove", docid)); // act as if it worked.
-}
-
-void
-Server::Private::sent_handler(const Command& cmd)
-{
-	const auto path{cmd.string_arg(":path").value_or("")};
-	const auto docid = store().add_message(path);
-	if (!docid)
-		throw Error{Error::Code::Store, "failed to add path: {}: {}",
-			path, docid.error().what()};
-
-	output_sexp(Sexp().put_props(
-			    ":sent", Sexp::t_sym,
-			    ":path", path,
-			    ":docid", docid.value()));
 }
 
 void
