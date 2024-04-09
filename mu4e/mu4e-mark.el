@@ -1,6 +1,6 @@
 ;;; mu4e-mark.el --- Marking messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -39,8 +39,11 @@
 ;;; Variables & constants
 
 (defcustom mu4e-headers-leave-behavior 'ask
-  "What to do when user leaves the headers view.
-That is when he e.g. quits, refreshes or does a new search.
+  "What to do when user leaves the current headers view.
+
+\"Leaving\" here means quitting the headers views, refreshing it
+or even quitting mu4e or Emacs.
+
 Value is one of the following symbols:
 - `ask'     ask user whether to ignore the marks
 - `apply'   automatically apply the marks before doing anything else
@@ -90,7 +93,13 @@ is the target directory (for \"move\")")
 
 (defun mu4e--mark-initialize ()
   "Initialize the marks-subsystem."
-  (set (make-local-variable 'mu4e--mark-map) (make-hash-table)))
+  (set (make-local-variable 'mu4e--mark-map) (make-hash-table))
+  ;; ask user when kill buffer / emacs with live marks.
+  ;; (subject to mu4e-headers-leave-behavior)
+  (add-hook 'kill-buffer-query-functions
+            #'mu4e-mark-handle-when-leaving nil t)
+  (add-hook 'kill-emacs-query-functions
+            #'mu4e-mark-handle-when-leaving nil t))
 
 (defun mu4e--mark-clear ()
   "Clear the marks-subsystem."
@@ -454,7 +463,8 @@ nil means \"don't do anything\"."
                         ("ignore marks?" . ignore)))))
        ;; we determined what to do... now do it
        (when (eq what 'apply)
-         (mu4e-mark-execute-all t))))))
+         (mu4e-mark-execute-all t)))))
+  t) ;; return t for compat with `kill-buffer-query-functions
 
 ;;; _
 (provide 'mu4e-mark)
