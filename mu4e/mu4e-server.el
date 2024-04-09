@@ -664,7 +664,7 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
   (unless (or (not maildir)
               (file-exists-p
                (mu4e-join-paths (mu4e-root-maildir) maildir)))
-    (mu4e-error "Target dir does not exist"))
+    (mu4e-error "Target directory does not exist"))
   (mu4e--server-call-mu
    `(move
      :docid ,(if (stringp docid-or-msgid) nil docid-or-msgid)
@@ -679,23 +679,16 @@ Returns either (:update ... ) or (:error ) sexp, which are handled my
   (mu4e--server-call-mu `(ping)))
 
 (defun mu4e--server-queries (queries)
-  "Sends queries to the mu server, expecting a (:queries ...) in response.
+  "Sends queries to the mu server, expecting a (:queries ...) sexp in response.
 QUERIES is a list of queries for the number of results with
 read/unread status are returned in the pong-response."
   (mu4e--server-call-mu `(queries :queries ,queries)))
 
 (defun mu4e--server-remove (docid)
-  "Remove message  with DOCID.
-The results are reporter through either (:update ... )
-or (:error) sexp, which are handled my `mu4e-error-func',
-respectively."
+  "Remove message with DOCID.
+The results are reported through either (:update ... )
+or (:error) sexps."
   (mu4e--server-call-mu `(remove :docid ,docid)))
-
-(defun mu4e--server-sent (path)
-  "Tell the mu server we sent a message at PATH.
-If this works, we will receive (:info add :path <path> :docid
-<docid> :fcc <path>)."
-  (mu4e--server-call-mu `(sent :path ,path)))
 
 (defun mu4e--server-view (docid-or-msgid &optional mark-as-read)
   "View a message referred to by DOCID-OR-MSGID.
