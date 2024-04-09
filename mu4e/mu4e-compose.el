@@ -526,6 +526,9 @@ message buffer."
   "Handler called with DOCID and PATH for the just-sent message.
 For Forwarded ('Passed') and Replied messages, try to set the
 appropriate flag at the message forwarded or replied-to."
+  ;; XXX we don't need this function anymore here, but
+  ;; we have an external caller in mu4e-icalendar... we should
+  ;; update that.
   (mu4e--set-parent-flags path)
   ;; if the draft file exists, remove it now.
   (when (file-exists-p path)
@@ -545,19 +548,19 @@ appropriate flag at the message forwarded or replied-to."
   ;; removing the In-Reply-To header.
   (save-restriction
     (message-narrow-to-headers)
-    (when (eq mu4e-compose-type 'reply)
-      (unless (message-fetch-field "In-Reply-To")
-        (message-remove-header "References")))
-    (when use-hard-newlines
-      (mu4e--send-harden-newlines)))
-  ;; for safety, always save the draft before sending
-  (set-buffer-modified-p t)
-  (save-buffer))
-
-(defun mu4e--compose-after-send ()
-  "Function called just after sending a message."
-  (setq mu4e-sent-func #'mu4e-sent-handler)
-  (mu4e--server-sent (buffer-file-name)))
+    (let* ((fcc-path (message-fetch-field "Fcc")))
+      (when (eq mu4e-compose-type 'reply)
+        (unless (message-fetch-field "In-Reply-To")
+          (message-remove-header "References")))
+      (when use-hard-newlines
+        (mu4e--send-harden-newlines))
+      ;; now handle what happens _after_ sending; typically, draft is gone and
+      ;; the sent message appears in sent. Update flags for related messages,
+      ;; i.e. for Forwarded ('Passed') and Replied messages, try to set the
+      ;; appropriate flag at the message forwarded or replied-to.
+      (add-hook 'message-sent-hook
+                (lambda ()
+                  (mu4e--set-parent-flags fcc-path)) nil t))))
 
 ;;; Crypto
 (defun mu4e--compose-setup-crypto (parent compose-type)
@@ -823,7 +826,6 @@ replied to or forwarded, etc."
   (add-hook 'before-save-hook  #'mu4e--compose-before-save nil t)
   (add-hook 'after-save-hook   #'mu4e--compose-after-save nil t)
   (add-hook 'message-send-hook #'mu4e--compose-before-send nil t)
-  (add-hook 'message-sent-hook #'mu4e--compose-after-send nil t)
 
   (when-let ((fcc-path (mu4e--fcc-path (mu4e--message-basename) parent)))
     (message-add-header (concat "Fcc: " fcc-path "\n")))
