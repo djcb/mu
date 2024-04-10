@@ -149,24 +149,38 @@ with both the plain addresses and /regular expressions/."
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
      (mu4e-personal-addresses))))
 
+
 (defun mu4e-personal-or-alternative-address-p (addr)
   "Is ADDR either a personal or an alternative address?
 
 That is, does it match either `mu4e-personal-address-p' or
 `message-alternative-emails'.
 
-Note that this expanded definition of user-addresses not used for
- indexing mu does not know about `message-alternative-emails' so
- it cannot use it for indexing."
+Note that this expanded definition of user-addresses is only used
+in emacs, not in `mu' (e.g. when indexing).
+
+Also see `mu4e-personal-or-alternative-address-or-empty-p'."
   (let ((alts message-alternative-emails))
     (or (mu4e-personal-address-p addr)
         (cond
          ((functionp alts) (funcall alts addr))
          ((stringp alts)   (string-match alts addr))
          (t nil)))))
+
+(defun mu4e-personal-or-alternative-address-or-empty-p (addr)
+  "Is ADDR either a personal, alternative address or nil?
+
+This is like `mu4e-personal-or-alternative-address-p' but also
+return t for _empty_ ADDR. This can be useful for use with
+`message-dont-reply-to-names' since it can receive empty strings;
+those can be filtered-out by returning t here.
+
+See #2680 for further details. "
+  (or (and addr (string= addr ""))
+      (mu4e-personal-or-alternative-address-p addr)))
+
 
 ;; Helpers
-
 
 ;;; RFC2822 handling of phrases in mail-addresses
 ;;
