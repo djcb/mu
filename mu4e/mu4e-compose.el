@@ -985,10 +985,10 @@ must be from current user, as determined through
     (mu4e--compose-setup
      'edit
      (lambda (parent)
-       (let ((buf (find-file (plist-get parent :path))))
+       (let ((buf (find-file-noselect (plist-get parent :path))))
          (with-current-buffer buf
            (mu4e--delimit-headers))
-         buf)))))
+         (switch-to-buffer buf))))))
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
