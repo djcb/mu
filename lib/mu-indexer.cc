@@ -242,8 +242,9 @@ Indexer::Private::add_message(const std::string& path)
 	 * but it believed those are _false alarms_
 	 * https://gitlab.gnome.org/GNOME/glib/-/issues/2662
 	 *
-	 *	std::unique_lock lock{w_lock_};
+	 * For now, set the lock as we were seeing some db corruption.
 	 */
+	std::unique_lock lock{w_lock_};
 	auto msg{Message::make_from_path(path, store_.message_options())};
 	if (!msg) {
 		mu_warning("failed to create message from {}: {}", path, msg.error().what());
