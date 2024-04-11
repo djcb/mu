@@ -560,7 +560,13 @@ appropriate flag at the message forwarded or replied-to."
       ;; appropriate flag at the message forwarded or replied-to.
       (add-hook 'message-sent-hook
                 (lambda ()
-                  (mu4e--set-parent-flags fcc-path)) nil t))))
+                  (mu4e--set-parent-flags fcc-path)
+                  ;; we end up with a ((buried) buffer here, visiting
+                  ;; the fcc-path; not quite sure why. But let's
+                  ;; get rid of it (#2681)
+                  (when-let ((buf (find-buffer-visiting fcc-path)))
+                    (kill-buffer buf)))
+                nil t))))
 
 ;;; Crypto
 (defun mu4e--compose-setup-crypto (parent compose-type)
