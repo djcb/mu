@@ -2984,19 +2984,25 @@ have more that one address.
 @node MIME-part actions
 @section MIME-part actions
 
-Finally, let's define a MIME-part action. As mentioned, MIME-part
-functions receive @emph{2} arguments, the message and the attachment
-number to use.
+Finally, let's define a MIME-part action.
 
 The following example action counts the number of lines in an attachment, and
 defines @key{n} as its shortcut key (the @key{n} is prefixed to the
-description). See the the @code{mu4e-view-mime-part-actions} for the details
-of the format.
+description). See the the @code{mu4e-view-mime-part-actions} for the details of
+the format.
 
 @lisp
 (add-to-list 'mu4e-view-mime-part-actions
     ;; count the number of lines in a MIME-part
     '(:name "line-count" :handler "wc -l" :receives pipe))
+@end lisp
+
+Or another one, to import a calendar invitation into the venerable emacs diary:
+@lisp
+(add-to-list 'mu4e-view-mime-part-actions
+    ;; import into calendar;
+    '(:name "dimport-in-diary" :handler (lambda(file) (icalendar-import-file file diary-file))
+      :receives temp))
 @end lisp
 
 @node Example actions

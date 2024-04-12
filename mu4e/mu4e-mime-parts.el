@@ -361,7 +361,7 @@ Each of the actions is a plist with keys
                        ;; - index: the index number of the mime part (default)
                        ;; - temp: the full path to the mime part in a
                        ;;         temporary file, which is deleted immediately
-                       ;;         after invoking handler
+                       ;;         after the handler returns
                        ;; - pipe:  the attachment is piped to some shell command
                        ;;          or as a string parameter to a function
 ).")
