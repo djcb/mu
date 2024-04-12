@@ -47,6 +47,9 @@
 
 namespace Mu {
 
+constexpr const auto TIME_MIN = sizeof(::time_t) == 8 ? G_MININT64 : G_MININT32;
+constexpr const auto TIME_MAX = sizeof(::time_t) == 8 ? G_MAXINT64 : G_MAXINT32;
+
 /*
  * Separator characters used in various places; importantly,
  * they are not used in UTF-8

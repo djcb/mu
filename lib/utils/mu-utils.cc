@@ -489,11 +489,11 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 {
 	struct tm tbuf{};
 	GDateTime *dtime{};
-	::time_t t;
+	gint64 t;
 
 	/* one-sided dates */
 	if (dstr.empty())
-		return is_first ? 0 : G_MAXINT64;
+		return is_first ? 0 : TIME_MAX;
 	else if (dstr == "today" || dstr == "now")
 		return special_date_time(dstr, is_first);
 	else if (dstr.find_first_of("ymdwhMs") != std::string::npos)
@@ -531,7 +531,12 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 	t = g_date_time_to_unix(dtime);
 	g_date_time_unref(dtime);
 
-	return std::max<::time_t>(t, 0);
+	if (t > TIME_MAX)
+		t = TIME_MAX;
+	if (t < TIME_MIN)
+		t = TIME_MIN;
+
+	return std::max<gint64>(t, 0);
 }
 
 
