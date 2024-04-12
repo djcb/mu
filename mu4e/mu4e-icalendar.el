@@ -135,21 +135,19 @@
                         (plist-get (car (plist-get msg :reply-to)) :email)
                         (plist-get (car (plist-get msg :from)) :email)
                         (mu4e-warn "Cannot find organizer"))))
-              (mu4e--compose-setup
-               'reply
-               (lambda (_parent)
-                 (message-reply organizer)
-                 (goto-char (point-max))
-                 (message-goto-body)
-                 (mml-insert-multipart "alternative")
-                 (mml-insert-empty-tag 'part 'type "text/plain")
-                 (mml-attach-buffer ical-name
-                                    "text/calendar; method=REPLY; charset=UTF-8")
-                 (when mu4e-icalendar-trash-after-reply
-                   ;; Override `mu4e-sent-handler' set by `mu4e-compose-mode' to
-                   ;; also trash the message (thus must be appended to hooks).
-                   (add-hook 'message-sent-hook
-                             (mu4e--icalendar-trash-message-hook msg) 90 t))))
+              (message-reply organizer)
+              (goto-char (point-max))
+              (message-goto-body)
+              (mml-insert-multipart "alternative")
+              (mml-insert-empty-tag 'part 'type "text/plain")
+              (mml-attach-buffer ical-name
+                                 "text/calendar; method=REPLY; charset=UTF-8")
+              (mu4e-compose-mode)
+              (when mu4e-icalendar-trash-after-reply
+                ;; Override `mu4e-sent-handler' set by `mu4e-compose-mode' to
+                ;; also trash the message (thus must be appended to hooks).
+                (add-hook 'message-sent-hook
+                          (mu4e--icalendar-trash-message-hook msg) 90 t))
 
               (when gnus-icalendar-org-enabled-p
                 (if (gnus-icalendar-find-org-event-file event)
