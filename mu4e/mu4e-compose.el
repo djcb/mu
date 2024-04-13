@@ -548,26 +548,27 @@ appropriate flag at the message forwarded or replied-to."
   ;; removing the In-Reply-To header.
   (save-restriction
     (message-narrow-to-headers)
-    (let* ((fcc-path (message-fetch-field "Fcc")))
-      (when (eq mu4e-compose-type 'reply)
-        (unless (message-fetch-field "In-Reply-To")
-          (message-remove-header "References")))
-      (when use-hard-newlines
-        (mu4e--send-harden-newlines))
-      ;; now handle what happens _after_ sending; typically, draft is gone and
-      ;; the sent message appears in sent. Update flags for related messages,
-      ;; i.e. for Forwarded ('Passed') and Replied messages, try to set the
-      ;; appropriate flag at the message forwarded or replied-to.
-      (add-hook 'message-sent-hook
-                (lambda ()
-                  (when fcc-path ;; hmmm... #2688
+    (when (eq mu4e-compose-type 'reply)
+      (unless (message-fetch-field "In-Reply-To")
+        (message-remove-header "References")))
+    (when use-hard-newlines
+      (mu4e--send-harden-newlines))
+    ;; now handle what happens _after_ sending; typically, draft is gone and
+    ;; the sent message appears in sent. Update flags for related messages,
+    ;; i.e. for Forwarded ('Passed') and Replied messages, try to set the
+    ;; appropriate flag at the message forwarded or replied-to.
+    (add-hook 'message-sent-hook
+              (lambda ()
+                (save-restriction
+                  (message-narrow-to-headers)
+                  (when-let ((fcc-path (message-fetch-field "Fcc")))
                     (mu4e--set-parent-flags fcc-path)
                     ;; we end up with a ((buried) buffer here, visiting
                     ;; the fcc-path; not quite sure why. But let's
                     ;; get rid of it (#2681)
                     (when-let ((buf (find-buffer-visiting fcc-path)))
-                      (kill-buffer buf))))
-                nil t))))
+                      (kill-buffer buf)))))
+              nil t)))
 
 ;;; Crypto
 (defun mu4e--compose-setup-crypto (parent compose-type)
