@@ -489,7 +489,7 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 {
 	struct tm tbuf{};
 	GDateTime *dtime{};
-	::time_t t;
+	gint64 t;
 
 	/* one-sided dates */
 	if (dstr.empty())
@@ -531,7 +531,7 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 	t = g_date_time_to_unix(dtime);
 	g_date_time_unref(dtime);
 
-	return std::max<::time_t>(t, 0);
+	return to_time_t(t);
 }
 
 
