@@ -62,7 +62,7 @@ test_date_basic()
 	}
 
 	g_setenv("TZ", hki, TRUE);
-	std::vector<std::tuple<const char*, bool/*is_first*/, int64_t>> cases = {{
+	std::vector<std::tuple<const char*, bool/*is_first*/, ::time_t>> cases = {{
 			{"2015-09-18T09:10:23", true, 1442556623},
 			{"1972-12-14T09:10:23", true, 93165023},
 			{"1972-12-14T09:10", true,    93165000},
@@ -82,8 +82,8 @@ test_date_basic()
 
 			// {"fnorb", true,  -1},
 			// {"fnorb", false, -1},
-			{"", false, G_MAXINT64},
-			{"", true, 0}
+			{"", false, time_t_max},
+			{"", true, time_t_min}
 		}};
 
 	for (auto& test: cases) {
