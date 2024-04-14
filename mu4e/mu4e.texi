@@ -3612,6 +3612,21 @@ such as @file{~/.emacs.d/init.el}) the following @emph{after} the
   (setq mu4e-view-show-addresses t)
 @end lisp
 
+For recent emacs (29 and later), address-completion may need some extra setup:
+@lisp
+(add-hook 'message-mode-hook
+          (lambda ()
+            (add-to-list 'completion-at-point-functions
+                         #'eudc-capf-complete)))
+@end lisp
+or, if that does not work:
+@lisp
+(add-hook 'message-mode-hook
+          (lambda ()
+            (add-to-list 'completion-at-point-functions
+                         #'message-expand-name)))
+@end lisp
+
 @noindent
 After this, you should be able to:
 @itemize
@@ -3619,6 +3634,7 @@ After this, you should be able to:
 @item Tab-complete addresses from BBDB when composing emails
 @item View the BBDB contact while viewing a message
 @end itemize
+
 
 
 @node Sauron
