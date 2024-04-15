@@ -369,8 +369,8 @@ sending."
 I.e., either \"name <email>\" or \"email\". Return nil if not found.
 
 This function can be used for `completion-at-point-functions', to
-complete addresses. This can be used outside mu4e, but mu4e must
-be active (running) for this to work."
+complete addresses. This can be used from outside mu4e, but mu4e
+must be active (running) for this to work."
   (let* ((end (point))
          (start (save-excursion
                   (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
@@ -756,6 +756,19 @@ Based on the value of `mu4e-compose-switch'."
     ;; t for backward compatibility with mu4e-compose-in-new-frame
     (_             (mu4e-error "Invalid mu4e-compose-switch"))))
 
+(defun mu4e--fake-pop-to-buffer (name &optional _switch)
+  "A fake `message-pop-to-buffer' for creating buffer NAME.
+This is a little glue to use `message-reply', `message-forward'
+etc. We cannot use the normal `message-pop-to-buffer' since we're
+not ready yet to show the buffer in mu4e."
+  ;; note: we're in a _different_ buffer here, so we need to copy
+  ;; message-reply-header's buffer-local value.
+  (let ((reply-headers message-reply-headers))
+    (set-buffer (get-buffer-create name))
+    (setq-local message-reply-headers reply-headers)
+    (erase-buffer)
+    (current-buffer)))
+
 (defun mu4e--headers (compose-type)
   "Determine headers needed for message based on COMPOSE-TYPE."
   (seq-filter #'identity ;; ensure needed headers are generated.
@@ -788,7 +801,12 @@ PARENT is the \"parent\" message; nil
                   gnus-message-replyencrypt nil
                   gnus-message-replysignencrypted nil)
       (goto-char (point-min))
-      (funcall compose-func parent)
+      ;; annoyingly, various message- functions call `message-pop-to-buffer`
+      ;; (showing the message. But we're not ready for that yet. So
+      ;; temporarily override that.
+      (cl-letf (((symbol-function #'message-pop-to-buffer)
+                  #'mu4e--fake-pop-to-buffer))
+        (funcall compose-func parent))
       ;; add some more headers, if needed.
       (message-generate-headers (mu4e--headers compose-type))
       (current-buffer)))) ;; returns new buffer (this is not the tmp buf)
