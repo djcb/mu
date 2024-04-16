@@ -685,7 +685,7 @@ determine which browser function to use."
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (let ((header (unless skip-headers
                     (cl-loop for field in '("from" "to" "cc" "date" "subject")
-                             when (message-fetch-field field)
+                             when (message-field-value field)
                              concat (format "%s: %s\n" (capitalize field) it))))
           (parts (mm-dissect-buffer t t)))
       ;; If singlepart, enforce a list.

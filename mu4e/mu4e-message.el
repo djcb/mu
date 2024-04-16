@@ -232,7 +232,8 @@ If MSG is nil, use `mu4e-message-at-point'."
 
 If the header appears multiple times, the field values are
 concatenated, unless FIRST is non-nil, in which case only the
-first value is returned. See `message-fetch-field' for details.
+first value is returned. See `message-field-value' and
+`nessage-fetch-field' for details.
 
 Note: this loads the full message file such that any available
 message header can be used. If the header is part of the MSG
@@ -240,7 +241,7 @@ plist, it is much more efficient to get the information from that
 plist."
   (with-temp-buffer
     (insert (mu4e--decoded-message msg 'headers-only))
-    (message-fetch-field hdr first)))
+    (message-field-value hdr first)))
 ;;;
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here
