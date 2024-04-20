@@ -50,9 +50,6 @@ Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 			   "Must have at least one of destination and flags");
 	else if (!dest.empty()) {
 		const auto mdirs{store.maildirs()};
-		mu_printerrln("XXXX");
-		for (auto&& m:mdirs)
-			mu_printerrln("m:'{}'", m);
 
 		if (!seq_some(mdirs, [&](auto &&d){ return d == dest;}))
 			return Err(Error{Error::Code::InvalidArgument,
