@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -23,6 +23,7 @@
 #include "mu-utils-file.hh"
 
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include <glib.h>
 #include <gio/gio.h>
