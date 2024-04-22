@@ -330,12 +330,18 @@ Returns the path for the sent message, either in the sent or
 trash folder, or nil if the message should be removed after
 sending."
   (when-let ((sent-dir
-          (pcase mu4e-sent-messages-behavior
-            ('delete nil)
-            ('trash (mu4e-get-trash-folder parent))
-            ('sent (mu4e-get-sent-folder parent))
-            ((pred functionp) (funcall mu4e-sent-messages-behavior))
-            (_ (mu4e-error "Error in `mu4e-sent-messages-behavior'")))))
+              ;; We can't call `functionp' since at least 'delete is a function.
+              (pcase mu4e-sent-messages-behavior
+                ('delete nil)
+                ('trash (mu4e-get-trash-folder parent))
+                ('sent (mu4e-get-sent-folder parent))
+                ((pred functionp)
+                 (pcase (funcall mu4e-sent-messages-behavior)
+                   ('delete nil)
+                   ('trash (mu4e-get-trash-folder parent))
+                   ('sent (mu4e-get-sent-folder parent))
+                   (_ (mu4e-error "Error in `mu4e-sent-messages-behavior'"))))
+                (_ (mu4e-error "Error in `mu4e-sent-messages-behavior'")))))
     (mu4e-join-paths
      (mu4e-root-maildir) sent-dir "cur"
      (format "%s%s2,S" base-name mu4e-maildir-info-delimiter))))
