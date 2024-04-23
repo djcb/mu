@@ -1648,8 +1648,8 @@ The major mode for the composer is @code{mu4e-compose-mode}.
 There are a view different ways to @emph{enter} the composer; i.e., from other
 @t{mu4e} views or even completely outside.
 
-If you want the composer to start in a new frame or window, see the variable
-@t{mu4e-compose-switch}.
+If you want the composer to start in a new frame or window, you can configure
+the variable @t{mu4e-compose-switch}; see its docstring for details.
 
 @subsection New message
 
