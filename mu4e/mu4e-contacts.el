@@ -236,7 +236,7 @@ case a phrase contains a quote, it will be escaped."
      (mu4e-contact-email contact)))
 
 (defsubst mu4e-contact-make (name email)
-  "Creata contact plist from NAME and EMAIL."
+  "Create a contact plist from NAME and EMAIL."
     `(:name ,name :email ,email))
 
 (defun mu4e-contact-full (contact)
