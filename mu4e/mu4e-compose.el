@@ -390,16 +390,18 @@ contact fields."
       (mu4e-complete-contact))))
 
 (defun mu4e--compose-setup-completion ()
-  "Set up auto-completion of addresses if enabled."
-  ;; turn off message-mode's completion, it's just interfering.
-  (remove-hook 'completion-at-point-functions
-               #'message-completion-function 'local)
+  "Maybe enable auto-completion of addresses.
+Do this when `mu4e-compose-complete-addresses' is non-nil.
+
+When enabled, this attempts to put mu4e's completions at the
+start of the buffer-local `completion-at-point-functions'. Other
+completion functions still apply."
   (when mu4e-compose-complete-addresses
     (set (make-local-variable 'completion-ignore-case) t)
     (set (make-local-variable 'completion-cycle-threshold) 7)
     (add-to-list (make-local-variable 'completion-styles) 'substring)
     (add-hook 'completion-at-point-functions
-              #'mu4e--compose-complete-contact-field nil t)))
+              #'mu4e--compose-complete-contact-field -10 t)))
 
 (defun mu4e--fcc-handler (msgpath)
   "Handle Fcc: for MSGPATH.
