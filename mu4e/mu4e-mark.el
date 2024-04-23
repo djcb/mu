@@ -45,9 +45,9 @@ Value is one of the following symbols:
 - `ask'     ask user whether to ignore the marks
 - `apply'   automatically apply the marks before doing anything else
 - `ignore'  automatically ignore the marks without asking"
-  :type '(choice (const ask    :tag "ask user whether to ignore marks")
-                 (const apply  :tag "apply marks without asking")
-                 (const ignore :tag "ignore marks without asking"))
+  :type '(choice (const :tag "ask user whether to ignore marks" ask)
+                 (const :tag "apply marks without asking" apply)
+                 (const :tag "ignore marks without asking" ignore))
   :group 'mu4e-headers)
 
 (defcustom mu4e-mark-execute-pre-hook nil
