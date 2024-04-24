@@ -635,7 +635,9 @@ Optionally, PARENT is the message parent or nil. For compose-type
 `reply' and `forward' we require a PARENT; for the other compose
 it must be nil.
 
-After this, user is presented with a message composition buffer."
+After this, user is presented with a message composition buffer.
+
+Returns the new buffer."
   (mu4e--prepare-draft parent)
   ;; evaluate BODY; this must yield a hidden, live buffer. This is evaluated in
   ;; a temp buffer with contains the parent-message, if any. if there's a
@@ -647,11 +649,14 @@ After this, user is presented with a message composition buffer."
       ;; interference.
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
       (with-current-buffer draft-buffer
-        ;; we have our basic buffer; turn it into a full mu4e composition buffer.
+        ;; we have our basic buffer; turn it into a full mu4e composition
+        ;; buffer.
         (mu4e--prepare-draft-buffer compose-type parent)))
     ;; we're ready for composition; let's display it in the way user configured
-    ;; things.
-    (mu4e-display-buffer draft-buffer 'do-select)
+    ;; things: directly through display buffer (via pop-t or otherwise through mu4e-window.
+    (if (eq mu4e-compose-switch 'display-buffer)
+        (pop-to-buffer draft-buffer)
+      (mu4e-display-buffer draft-buffer 'do-select))
     ;; prepare possible message actions (such as cleaning-up)
     (mu4e--prepare-message-actions oldframe)
     draft-buffer))
