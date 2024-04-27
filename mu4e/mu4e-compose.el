@@ -72,6 +72,25 @@ the place to do that."
   :type 'hook
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-post-hook
+  (list
+   ;; kill compose frames
+   #'mu4e-compose-post-kill-frame
+   ;; attempt to restore the old configuration.
+   #'mu4e-compose-post-restore-window-configuration)
+  "Hook run *after* message composition is over.
+
+This is hook is run when   composition buffer,
+either by sending, postponing, exiting or killing it.
+
+This multiplexes the `message-mode' hooks `message-send-actions',
+`message-postpone-actions', `message-exit-actions' and
+`message-kill-actions', and the hook is run with a variable
+`mu4e-compose-post-trigger' set correspondingly to a symbol,
+`send', `postpone', `exit' or `kill'."
+  :type 'hook
+  :group 'mu4e-compose)
+
 
 
 (defvar mu4e-captured-message)

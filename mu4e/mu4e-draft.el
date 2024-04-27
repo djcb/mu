@@ -606,22 +606,79 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   (set-buffer-modified-p nil)
   (undo-boundary))
 
-(defun mu4e--prepare-message-actions (oldframe)
-  "Set up some message actions.
-In particular, handle closing frames when we created it. OLDFRAME
-is the frame from which the message-composition was triggered."
-  (let* ((msgframe (selected-frame))
-         (maybe-kill-frame ;; kill frame when it was created for this
-          (lambda ()
-            (when (and (frame-live-p msgframe) (not (eq oldframe msgframe)))
-              (delete-frame msgframe)))))
+;;
+;; mu4e-compose-pos-hook helpers
+
+(defvar mu4e--before-draft-window-config nil
+  "The window configuration just before creating the draft.")
+
+(defun mu4e-compose-post-restore-window-configuration()
+  "Function that perhaps restores the window configuration.
+I.e. the configuration just before the draft buffer appeared.
+This is for use in `mu4e-compose-post-hook'.
+See `set-window-configuration' for further details."
+  (when mu4e--before-draft-window-config
+    ;;(message "RESTORE to %s" mu4e--before-draft-window-config)
+    (set-window-configuration mu4e--before-draft-window-config)
+    (setq mu4e--before-draft-window-config nil)))
+
+(defvar mu4e--draft-activation-frame nil
+  "Frame from which composition was activated.
+Used internally for mu4e-compose-post-kill-frame.")
+
+(defun mu4e-compose-post-kill-frame ()
+  "Function that perhaps kills the composition frame.
+This is for use in `mu4e-compose-post-hook'."
+  (let ((msgframe (selected-frame)))
+    ;;(message "kill frame? %s %s" mu4e--draft-activation-frame msgframe)
+    (when (and (frame-live-p msgframe)
+               (not (eq mu4e--draft-activation-frame msgframe)))
+      (delete-frame msgframe))))
+
+(defvar mu4e-message-post-action nil
+  "Runtime variable for use with `mu4e-compose-post-hook'.
+It contains a symbol denoting the action that triggered the hook,
+either `send', `exit', `kill' or `postpone'.")
+
+(defvar mu4e-compose-post-hook)
+(defun mu4e--message-post-actions (trigger)
+  "Invoked after we're done with a message.
+
+I.e. this multiplexes the `message-(send|exit|kill|postpone)-actions';
+with the mu4e-message-post-action set accordingly."
+  (setq mu4e-message-post-action trigger)
+  (run-hooks 'mu4e-compose-post-hook))
+
+(defun mu4e--prepare-post (&optional oldframe oldwindconf)
+    "Prepare the `mu4e-compose-post-hook` handling.
+
+Set up some message actions. In particular, handle closing frames
+when we created it. OLDFRAME is the frame from which the
+message-composition was triggered. OLDWINDCONF is the current
+window configuration."
+    ;; remember current frame & window conf
+    (setq mu4e--draft-activation-frame oldframe
+          mu4e--before-draft-window-config oldwindconf)
+
+    ;; make message's "post" hooks local, and multiplex them
     (make-local-variable 'message-send-actions)
+    (make-local-variable 'message-postpone-actions)
     (make-local-variable 'message-exit-actions)
     (make-local-variable 'message-kill-actions)
-    (make-local-variable 'message-postpone-actions)
 
-    (add-to-list 'message-kill-actions maybe-kill-frame)
-    (add-to-list 'message-postpone-actions maybe-kill-frame)))
+    (push (lambda () (mu4e--message-post-actions 'send))
+          message-send-actions)
+    (push (lambda () (mu4e--message-post-actions 'postpone))
+          message-postpone-actions)
+    (push (lambda () (mu4e--message-post-actions 'exit))
+          message-exit-actions)
+    (push (lambda () (mu4e--message-post-actions 'kill))
+          message-kill-actions))
+
+;;
+;; creating drafts
+;;
+
 
 (defun mu4e--draft (compose-type compose-func &optional parent)
   "Create a new message draft.
@@ -645,9 +702,11 @@ Returns the new buffer."
   ;; a temp buffer with contains the parent-message, if any. if there's a
   ;; PARENT, load the corresponding message into a temp-buffer before calling
   ;; compose-func
-  (let ((draft-buffer) (oldframe (selected-frame)))
+  (let ((draft-buffer)
+        (oldframe (selected-frame))
+        (oldwinconf (current-window-configuration)))
     (with-temp-buffer
-      ;; provide a temp buffer so the compose-func can do its thing. without
+      ;; provide a temp buffer so the compose-func can do its thing. withou
       ;; interference.
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
       (with-current-buffer draft-buffer
@@ -660,7 +719,7 @@ Returns the new buffer."
         (pop-to-buffer draft-buffer)
       (mu4e-display-buffer draft-buffer 'do-select))
     ;; prepare possible message actions (such as cleaning-up)
-    (mu4e--prepare-message-actions oldframe)
+    (mu4e--prepare-post oldframe oldwinconf)
     draft-buffer))
 
 (defun mu4e--draft-with-parent (compose-type parent compose-func)
