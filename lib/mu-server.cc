@@ -449,7 +449,8 @@ Server::Private::invoke(const std::string& expr) noexcept
 			throw res.error();
 
 	} catch (const Mu::Error& me) {
-		output_sexp(make_error(me.code(), mu_format("{}", me.what())));
+		output_sexp(make_error(me.code(), mu_format("{}",
+							    me.what())));
 		keep_going_ = true;
 	} catch (const Xapian::Error& xerr) {
 		output_sexp(make_error(Error::Code::Internal,
@@ -458,7 +459,17 @@ Server::Private::invoke(const std::string& expr) noexcept
 		keep_going_ = false;
 	} catch (const std::runtime_error& re) {
 		output_sexp(make_error(Error::Code::Internal,
-				       mu_format("caught exception: {}", re.what())));
+				       mu_format("caught runtime exception: {}",
+						 re.what())));
+		keep_going_ = false;
+	} catch (const std::out_of_range& oore) {
+		output_sexp(make_error(Error::Code::Internal,
+				       mu_format("caught out-of-range exception: {}",
+						 oore.what())));
+		keep_going_ = false;
+	} catch (const std::exception& e) {
+		output_sexp(make_error(Error::Code::Internal,
+				       mu_format(" exception: {}", e.what())));
 		keep_going_ = false;
 	} catch (...) {
 		output_sexp(make_error(Error::Code::Internal,
@@ -872,10 +883,14 @@ Server::Private::move_docid(Store::Id		docid,
 }
 
 /*
- * 'move' moves a message to a different maildir and/or changes its
- * flags. parameters are *either* a 'docid:' or 'msgid:' pointing to
- * the message, a 'maildir:' for the target maildir, and a 'flags:'
- * parameter for the new flags.
+ * 'move' moves a message to a different maildir and/or changes its flags.
+ * parameters are *either* a 'docid:' or 'msgid:' pointing to the message, a
+ * 'maildir:' for the target maildir, and a 'flags:' parameter for the new
+ * flags.
+ *
+ * With :msgid, this is "opportunistic": it's not an error when the given
+ * message-id does not exist. This is e.g. for the case when tagging possible
+ * related messages.
  */
 void
 Server::Private::move_handler(const Command& cmd)
@@ -886,7 +901,19 @@ Server::Private::move_handler(const Command& cmd)
 	const auto no_view{cmd.boolean_arg(":noupdate")};
 	const auto docids{determine_docids(store_, cmd)};
 
-	if (docids.size() > 1) {
+	if (docids.empty()) {
+		if (!!cmd.string_arg(":msgid")) {
+			// msgid not found: no problem.
+			mu_debug("no move: '{}' not found",
+				 *cmd.string_arg(":msgid"));
+			return;
+		}
+		// however, if we wanted to be move by msgid, it's worth raising
+		// an error.
+			throw Mu::Error{Error::Code::Store,
+				"message not found in store (docid={})",
+				cmd.number_arg(":docid").value_or(0)};
+	} else if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
 			throw Mu::Error{Error::Code::Store,
 				"cannot move multiple messages at the same time"};
@@ -894,21 +921,22 @@ Server::Private::move_handler(const Command& cmd)
 		for (auto&& docid : docids)
 			move_docid(docid, flagopt, rename, no_view);
 		return;
+	} else {
+		const auto docid{docids.at(0)};
+		auto    msg = store().find_message(docid)
+			.or_else([&]{throw Error{Error::Code::InvalidArgument,
+						"cannot find message {}", docid};}).value();
+
+		/* if maildir was not specified, take the current one */
+		if (maildir.empty())
+			maildir = msg.maildir();
+
+		/* determine the real target flags, which come from the flags-parameter
+		 * we received (ie., flagstr), if any, plus the existing message
+		 * flags. */
+		const auto flags = calculate_message_flags(msg, flagopt);
+		perform_move(docid, msg, maildir, flags, rename, no_view);
 	}
-	const auto docid{docids.at(0)};
-	auto    msg = store().find_message(docid)
-		.or_else([&]{throw Error{Error::Code::InvalidArgument,
-					"cannot find message {}", docid};}).value();
-
-	/* if maildir was not specified, take the current one */
-	if (maildir.empty())
-		maildir = msg.maildir();
-
-	/* determine the real target flags, which come from the flags-parameter
-	 * we received (ie., flagstr), if any, plus the existing message
-	 * flags. */
-	const auto flags = calculate_message_flags(msg, flagopt);
-	perform_move(docid, msg, maildir, flags, rename, no_view);
 }
 
 void
