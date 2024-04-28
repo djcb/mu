@@ -470,13 +470,9 @@ appropriate flag at the message forwarded or replied-to."
 (defun mu4e--message-pop-to-buffer (name &optional _switch)
   "Mu4e override for `message-pop-to-buffer'.
 Creates a buffer NAME and returns it."
-  ;; note: we're in a _different_ buffer here, so we need to copy
-  ;; message-reply-header's buffer-local value.
-  (let ((reply-headers message-reply-headers))
-    (set-buffer (get-buffer-create name))
-    (setq-local message-reply-headers reply-headers)
-    (erase-buffer)
-    (setq mu4e--message-buf (current-buffer))))
+  (set-buffer (get-buffer-create name))
+  (erase-buffer)
+  (setq mu4e--message-buf (current-buffer)))
 
 (defun mu4e--message-is-yours-p ()
   "Mu4e's override for `message-is-yours-p'."
@@ -524,7 +520,6 @@ while in a buffer with the to-be-forwarded/replied-to message."
       (setq mu4e--message-buf nil)
       (apply func params))
     (mu4e--validate-hidden-buffer mu4e--message-buf)))
-
 ;;
 ;; make the draft buffer ready for use.
 ;;
@@ -679,7 +674,6 @@ window configuration."
 ;; creating drafts
 ;;
 
-
 (defun mu4e--draft (compose-type compose-func &optional parent)
   "Create a new message draft.
 
@@ -706,15 +700,15 @@ Returns the new buffer."
         (oldframe (selected-frame))
         (oldwinconf (current-window-configuration)))
     (with-temp-buffer
-      ;; provide a temp buffer so the compose-func can do its thing. withou
-      ;; interference.
+      ;; provide a temp buffer so the compose-func can do its thing
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
       (with-current-buffer draft-buffer
         ;; we have our basic buffer; turn it into a full mu4e composition
         ;; buffer.
         (mu4e--prepare-draft-buffer compose-type parent)))
     ;; we're ready for composition; let's display it in the way user configured
-    ;; things: directly through display buffer (via pop-t or otherwise through mu4e-window.
+    ;; things: directly through display buffer (via pop-t or otherwise through
+    ;; mu4e-window.
     (if (eq mu4e-compose-switch 'display-buffer)
         (pop-to-buffer draft-buffer)
       (mu4e-display-buffer draft-buffer 'do-select))
@@ -733,6 +727,9 @@ but note the different order."
            (message-make-forward-subject-function
             (list #'message-forward-subject-fwd)))
        (insert (mu4e--decoded-message parent))
+       ;; let's make sure we don't use message-reply-headers from
+       ;; some unrelated message.
+       (setq message-reply-headers nil)
        (funcall compose-func)))
    parent))
 
