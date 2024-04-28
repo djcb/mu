@@ -1648,8 +1648,8 @@ The major mode for the composer is @code{mu4e-compose-mode}.
 There are a view different ways to @emph{enter} the composer; i.e., from other
 @t{mu4e} views or even completely outside.
 
-If you want the composer to start in a new frame or window, see the variable
-@t{mu4e-compose-switch}.
+If you want the composer to start in a new frame or window, you can configure
+the variable @t{mu4e-compose-switch}; see its docstring for details.
 
 @subsection New message
 
@@ -1798,11 +1798,15 @@ value of various properties (and see @ref{Message functions}).
 starts, when the whole buffer has already been set up. This is a good place
 for editing-related settings. @code{mu4e-compose-parent-message} (see above)
 is also at your disposal.
+@item @code{mu4e-compose-post-hook}: this hook is run when we're done with
+message compositions. See the docstring for details.
 @end itemize
 
 @noindent
-Let's look at an examples. As mentioned, @code{mu4e-compose-mode-hook} is especially
-useful for editing-related settings. For example:
+As mentioned, @code{mu4e-compose-mode-hook} is especially useful for
+editing-related settings:
+
+Let's look at an example:
 @lisp
 (add-hook 'mu4e-compose-mode-hook
   (defun my-do-compose-stuff ()
@@ -1811,7 +1815,7 @@ useful for editing-related settings. For example:
     (flyspell-mode)))
 @end lisp
 
-This hook is also useful for adding headers or changing headers, since the
+The hook is also useful for adding headers or changing headers, since the
 message is fully formed when this hook runs. For example, to add a
 @t{Bcc:}-header, you could add something like the following, using
 @code{message-add-header} from @code{message-mode}.

@@ -1,6 +1,6 @@
 ;;; mu4e-obsolete.el --- Obsolete things -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -65,6 +65,10 @@
   'mu4e-compose-cite-function 'message-cite-function "1.11.22")
 (define-obsolete-variable-alias
   'mu4e-compose-in-new-frame 'mu4e-compose-switch "1.11.22")
+
+(define-obsolete-variable-alias 'mu4e-compose-hidden-headers
+  'mu4e-draft-hidden-headers "1.12.5")
+
 
 ;; mu4e-message
 
