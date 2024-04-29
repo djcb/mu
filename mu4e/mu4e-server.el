@@ -684,11 +684,13 @@ QUERIES is a list of queries for the number of results with
 read/unread status are returned in the pong-response."
   (mu4e--server-call-mu `(queries :queries ,queries)))
 
-(defun mu4e--server-remove (docid)
-  "Remove message with DOCID.
+(defun mu4e--server-remove (docid-or-path)
+  "Remove message with either DOCID or PATH.
 The results are reported through either (:update ... )
 or (:error) sexps."
-  (mu4e--server-call-mu `(remove :docid ,docid)))
+  (if (stringp docid-or-path)
+      (mu4e--server-call-mu `(remove :path ,docid-or-path))
+      (mu4e--server-call-mu `(remove :docid ,docid-or-path))))
 
 (defun mu4e--server-view (docid-or-msgid &optional mark-as-read)
   "View a message referred to by DOCID-OR-MSGID.

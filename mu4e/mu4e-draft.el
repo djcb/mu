@@ -421,9 +421,8 @@ message buffer."
   "Handler called with DOCID and PATH for the just-sent message.
 For Forwarded ('Passed') and Replied messages, try to set the
 appropriate flag at the message forwarded or replied-to."
-  ;; XXX we don't need this function anymore here, but
-  ;; we have an external caller in mu4e-icalendar... we should
-  ;; update that.
+  ;; XXX we don't need this function anymore here, but we have an external
+  ;; caller in mu4e-icalendar... we should update that.
   (mu4e--set-parent-flags path)
   ;; if the draft file exists, remove it now.
   (when (file-exists-p path)
@@ -457,7 +456,10 @@ appropriate flag at the message forwarded or replied-to."
                 ;; we end up with a ((buried) buffer here, visiting the
                 ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
                 (when-let ((buf (find-buffer-visiting fcc-path)))
-                  (kill-buffer buf))))
+                  (kill-buffer buf))
+                ;; remove draft
+                (when-let ((draft (buffer-file-name)))
+                  (mu4e--server-remove draft))))
             nil t))
 
 ;; overrides for message-* functions

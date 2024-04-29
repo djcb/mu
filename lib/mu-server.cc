@@ -409,8 +409,11 @@ Server::Private::make_command_map()
 	    "remove",
 	    CommandInfo{
 		ArgMap{{":docid",
-			ArgInfo{Type::Number, true, "document-id for the message to remove"}}},
-		"remove a message from filesystem and database",
+			ArgInfo{Type::Number, false, "document-id for the message to remove"}},
+			{":path",
+			ArgInfo{Type::String, false, "document-id for the message to remove"}}
+		},
+		"remove a message from filesystem and database, using either :docid or :path",
 		[&](const auto& params) { remove_handler(params); }});
 
 	cmap.emplace(
@@ -989,8 +992,18 @@ Server::Private::quit_handler(const Command& cmd)
 void
 Server::Private::remove_handler(const Command& cmd)
 {
-	const auto docid{cmd.number_arg(":docid").value_or(0)};
-	const auto path{path_from_docid(store(), docid)};
+	auto docid_opt{cmd.number_arg(":docid")};
+	auto path_opt{cmd.string_arg(":path")};
+
+	if (!!docid_opt == !!path_opt)
+		throw Error(Error::Code::InvalidArgument,
+			    "must pass precisely one of :docid and :path");
+	std::string path;
+	Store::Id docid{};
+	if (docid = docid_opt.value_or(0); docid != 0)
+		path = path_from_docid(store(), docid);
+	else
+		path = path_opt.value();
 
 	if (::unlink(path.c_str()) != 0 && errno != ENOENT)
 		throw Error(Error::Code::File,
