@@ -250,8 +250,11 @@ Returns the path for the sent message, either in the sent or
 trash folder, or nil if the message should be removed after
 sending."
   (let* ((behavior
-          (if (functionp mu4e-sent-messages-behavior)
-              (funcall mu4e-sent-messages-behavior) mu4e-sent-messages-behavior))
+          (if (and (functionp mu4e-sent-messages-behavior)
+                   ;; don't interpret 'delete as a function...
+                   (not (eq mu4e-sent-messages-behavior 'delete)))
+              (funcall mu4e-sent-messages-behavior)
+            mu4e-sent-messages-behavior))
          (sent-dir
           (pcase behavior
             ('delete nil)
