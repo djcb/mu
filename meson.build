@@ -191,13 +191,16 @@ gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.60')
 gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
 thread_dep     = dependency('threads')
 
-# we need Xapian 1.4; if we have 1.4.23, we have some newer APIs.
-xapian_dep     = dependency('xapian-core', version:'>= 1.4.23', required:false)
-if xapian_dep.found()
+# we need Xapian 1.4
+xapian_dep = dependency('xapian-core', version:'>= 1.4', required:true)
+xapver = xapian_dep.version()
+if xapver.version_compare('>= 1.4.6')
+  message('xapian ' + xapver + ' supports c++ move-semantics')
+  config_h_data.set('HAVE_XAPIAN_MOVE_SEMANTICS', 1)
+endif
+if xapver.version_compare('>= 1.4.23')
+  message('xapian ' + xapver + ' supports ngrams')
   config_h_data.set('HAVE_XAPIAN_FLAG_NGRAMS', 1)
-else
-  xapian_dep = dependency('xapian-core', version:'>= 1.4')
-  message('Found xapian ' + xapian_dep.version())
 endif
 
 # optionally, use Compact Language Detector2 if we can find it.

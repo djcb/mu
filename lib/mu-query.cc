@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,13 +26,12 @@
 #include <cmath>
 
 #include <stdlib.h>
-#include <xapian.h>
 #include <glib/gstdio.h>
 
+#include "mu-xapian-db.hh"
 #include "mu-query-results.hh"
 #include "mu-query-match-deciders.hh"
 #include "mu-query-threads.hh"
-#include "mu-xapian-db.hh"
 
 #include "mu-query-parser.hh"
 

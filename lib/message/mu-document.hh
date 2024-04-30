@@ -19,7 +19,6 @@
 #ifndef MU_DOCUMENT_HH__
 #define MU_DOCUMENT_HH__
 
-#include <xapian.h>
 #include <utility>
 #include <string>
 #include <vector>

@@ -29,8 +29,6 @@
 #include <variant>
 #include <unordered_map>
 
-#include <xapian.h>
-
 #include "mu-xapian-db.hh"
 
 #include <utils/mu-utils.hh>

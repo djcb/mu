@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,11 +16,9 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-#include <memory>
 #include <string>
-#include <array>
 
-#include <xapian.h>
+#include "mu-xapian-db.hh"
 
 #include "utils/mu-sexp.hh"
 #include "utils/mu-result.hh"

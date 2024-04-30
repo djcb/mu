@@ -26,8 +26,6 @@
 #include <ctime>
 #include <memory>
 
-#include <xapian.h>
-
 #include "mu-contacts-cache.hh"
 #include "mu-xapian-db.hh"
 #include "mu-config.hh"

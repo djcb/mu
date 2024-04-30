@@ -29,9 +29,16 @@
 
 #include <glib.h>
 
-#include <xapian.h>
 #include <utils/mu-result.hh>
 #include <utils/mu-utils.hh>
+
+/* starting with 1.4.6, Xapian supports C++ move semantics,
+ * but only with XAPIAN_MOVE_SEMANTICS defined
+ */
+#ifndef XAPIAN_MOVE_SEMANTICS
+#define XAPIAN_MOVE_SEMANTICS
+#endif /*XAPIAN_MOVE_SEMANTICS*/
+#include <xapian.h>
 
 namespace Mu {
 

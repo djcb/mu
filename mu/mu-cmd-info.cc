@@ -21,7 +21,6 @@
 
 #include "mu-cmd.hh"
 #include <message/mu-message.hh>
-#include <xapian.h>
 #include "utils/mu-utils.hh"
 
 #include <glib.h>

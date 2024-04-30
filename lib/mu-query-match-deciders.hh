@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include <xapian.h>
+#include "mu-xapian-db.hh"
 
 #include "mu-query-results.hh"
 

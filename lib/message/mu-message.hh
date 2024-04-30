@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -25,6 +25,8 @@
 #include <vector>
 #include <iostream>
 
+#include "mu-xapian-db.hh"
+
 #include "mu-contact.hh"
 #include "mu-priority.hh"
 #include "mu-flags.hh"
@@ -32,8 +34,6 @@
 #include "mu-document.hh"
 #include "mu-message-part.hh"
 #include "mu-message-file.hh"
-
-#include <xapian.h>
 
 #include "utils/mu-utils.hh"
 #include "utils/mu-option.hh"
