@@ -427,8 +427,13 @@ variables ‘message-forward-as-mime’ and
                                (message-field-value "Message-Id" t)
                                (message-field-value "References")
                                0 0 ""))
-         (with-current-buffer (mu4e--message-call #'message-forward)
-           (current-buffer))))))
+       ;; a bit of a hack; mu4e--draft-with-parent will insert the decoded
+       ;; version of the message, but that's not good enough for
+       ;; message-forward, which needs the raw message instead; see #2662.
+       (erase-buffer)
+       (insert-file-contents-literally (mu4e-message-readable-path parent))
+       (with-current-buffer (mu4e--message-call #'message-forward)
+         (current-buffer))))))
 
 ;;;###autoload
 (defun mu4e-compose-edit()
