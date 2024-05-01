@@ -197,14 +197,19 @@ Display is influenced by `mu4e-compose-switch'."
   "The User-Agent string for mu4e, or nil.")
 
 ;;; Runtime variables; useful for user-hooks etc.
+;; mu4e-compose-parent-message & mu4e-compose-type are buffer-local and
+;; permanent-local so they'll survive the mode change to mu4e-compose-mode and
+;; we can use them in the corresponding mode-hook.
 (defvar-local mu4e-compose-parent-message nil
   "The parent message plist.
 This is the message being replied to, forwarded or edited; used
 in `mu4e-compose-pre-hook'. For new (non-reply, forward etc.)
 messages, it is nil.")
+(put 'mu4e-compose-parent-message 'permanent-local t)
 
 (defvar-local mu4e-compose-type nil
   "The compose-type for the current message.")
+(put 'mu4e-compose-type 'permanent-local t)
 
 ;;; Filenames
 (defun mu4e--draft-basename()
@@ -569,7 +574,7 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   ;; remember some variables, e.g for user hooks. These are permanent-local
   ;; hence survive the mode-switch below (we do this so these useful vars are
   ;; available in mode-hooks.
-  (setq
+  (setq-local
    mu4e-compose-parent-message parent
    mu4e-compose-type compose-type)
 
