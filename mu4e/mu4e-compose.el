@@ -80,8 +80,8 @@ the place to do that."
    #'mu4e-compose-post-restore-window-configuration)
   "Hook run *after* message composition is over.
 
-This is hook is run when   composition buffer,
-either by sending, postponing, exiting or killing it.
+This is hook is run when closing the composition buffer, either
+by sending, postponing, exiting or killing it.
 
 This multiplexes the `message-mode' hooks `message-send-actions',
 `message-postpone-actions', `message-exit-actions' and
