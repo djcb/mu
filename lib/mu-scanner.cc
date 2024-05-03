@@ -215,9 +215,13 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 	while (running_) {
 		errno = 0;
 		if (const auto& dentry{::readdir(dir)}; dentry) {
-#if HAVE_DIRENT_D_TYPE /* opttimization: filter out non-dirs early */
+#if HAVE_DIRENT_D_TYPE /* optimization: filter out non-dirs early.  NB not all file-systems support
+			* returning the file-type in `d_type`, so don't skip `DT_UNKNOWN`.
+			*/
 			if (maildirs_only_mode() &&
-			    dentry->d_type != DT_DIR && dentry->d_type != DT_LNK)
+			    dentry->d_type != DT_DIR &&
+			    dentry->d_type != DT_LNK &&
+			    dentry->d_type != DT_UNKNOWN)
 				continue;
 #endif /*HAVE_DIRENT_D_TYPE*/
 			dir_entries.emplace_back(dentry);
