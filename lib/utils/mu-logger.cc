@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,6 +17,9 @@
 **
 */
 
+#include "config.h"
+#include "mu-logger.hh"
+
 #define G_LOG_USE_STRUCTURED
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -30,8 +33,6 @@
 
 #include <thread>
 #include <mutex>
-
-#include "mu-logger.hh"
 
 using namespace Mu;
 
@@ -118,10 +119,29 @@ log_stdouterr(GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpo
 	return g_log_writer_standard_streams(level, fields, n_fields, user_data);
 }
 
+
+
+// log to some logging system; the one that is available & works of journal,
+// syslog, file.
 static GLogWriterOutput
-log_journal(GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpointer user_data)
+log_system(GLogLevelFlags level, const GLogField* fields, gsize n_fields, gpointer user_data)
 {
-	return g_log_writer_journald(level, fields, n_fields, user_data);
+	GLogWriterOutput res = G_LOG_WRITER_UNHANDLED;
+
+#ifdef MAYBE_USE_JOURNAL
+	res = g_log_writer_journald(level, fields, n_fields, user_data);
+	if (res == G_LOG_WRITER_HANDLED)
+		return res;
+#endif /*MAYBE_USE_JOURNAL*/
+
+#ifdef MAYBE_USE_SYSLOG
+	/* since glib 2.80 */
+	res = g_log_writer_syslog(level, fields, n_fields, user_data);
+	if (res == G_LOG_WRITER_HANDLED)
+		return res;
+#endif /*MAYBE_USE_SYSLOG*/
+
+	return res = log_file(level, fields, n_fields, user_data);
 }
 
 
@@ -156,11 +176,10 @@ Mu::Logger::Logger(const std::string& path, Mu::Logger::Options opts)
 		    }
 
 		    // log to the journal, or, if not available to a file.
-		    if (any_of(MuLogOptions & Options::File) ||
-			log_journal(level, fields, n_fields, user_data) != G_LOG_WRITER_HANDLED)
-			    return log_file(level, fields, n_fields, user_data);
-		    else
-			    return G_LOG_WRITER_HANDLED;
+		    if (any_of(MuLogOptions & Options::File))
+			return log_file(level, fields, n_fields, user_data);
+
+		    return log_system(level, fields, n_fields, user_data);
 	    },
 	    NULL,
 	    NULL);

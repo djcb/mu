@@ -50,7 +50,7 @@ test('test-logger',
      executable('test-logger', '../mu-logger.cc',
                 install: false,
                 cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [glib_dep, lib_mu_utils_dep, thread_dep ]))
+                dependencies: [glib_dep, lib_mu_utils_dep,config_h_dep,thread_dep ]))
 
 test('test-option',
      executable('test-option', '../mu-option.cc',

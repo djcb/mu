@@ -203,6 +203,23 @@ if xapver.version_compare('>= 1.4.23')
   config_h_data.set('HAVE_XAPIAN_FLAG_NGRAMS', 1)
 endif
 
+host_system = host_machine.system()
+#
+# soft dependencies
+#
+
+
+# logging
+
+# if we're on a linux machine, perhaps there's systemd/journald.
+# otherwise, we don't bother.
+if host_machine.system() == 'linux'
+  config_h_data.set('MAYBE_USE_JOURNAL', 1)
+endif
+if cc.has_function('g_log_writer_syslog',dependencies: glib_dep)
+  config_h_data.set('MAYBE_USE_SYSLOG', 1)
+endif
+
 # optionally, use Compact Language Detector2 if we can find it.
 cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: get_option('cld2'))
 if not get_option('cld2').disabled() and cld2_dep.found()
@@ -211,7 +228,7 @@ else
   message('CLD2 not found or disabled; no support for language detection')
 endif
 
-# soft dependencies
+# guile
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
 # allow for a custom guile-extension-dir
 if guile_dep.found()
