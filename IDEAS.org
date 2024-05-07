@@ -5,9 +5,6 @@ Ideas for future enhancements. We collect those here so they don't clutter up
 the Github issue list, i.e. without any clear plan for adding in the near
 future.
 
-- Ability to _mute_ message threads. This is useful but also requires quite bit of extra infra; we could add some blacklist for "muted" messages, perhaps on the 'mu server' side, but then we'd need some way to manage that (ie., unmute).
-  https://github.com/djcb/mu/issues/636
-
 - Support automatic handling for List-Unsubscribe headers
   https://github.com/djcb/mu/issues/2623 This seems useful, but probably
   requires a lot of testing to get right.
@@ -41,6 +38,8 @@ future.
   in a set of messages. That'll require some advanced scripting, maybe using
   Guile.
   https://github.com/djcb/mu/issues/301
+  https://github.com/djcb/mu/issues/2704
+
 
 * Done
 
