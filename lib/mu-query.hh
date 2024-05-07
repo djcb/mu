@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 #ifndef __MU_QUERY_HH__
 #define __MU_QUERY_HH__
 
+#include <string>
 #include <memory>
 
-#include <glib.h>
 #include <mu-store.hh>
 #include <mu-query-results.hh>
 #include <utils/mu-utils.hh>
@@ -85,12 +85,6 @@ private:
 	 *
 	 */
 	~Query();
-
-	/**
-	 * Move CTOR
-	 *
-	 * @param other
-	 */
 
 	struct Private;
 	std::unique_ptr<Private> priv_;
