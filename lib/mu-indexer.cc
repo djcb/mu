@@ -241,19 +241,17 @@ Indexer::Private::add_message(const std::string& path)
 	 * The reason for having the lock is some helgrind warnings;
 	 * but it believed those are _false alarms_
 	 * https://gitlab.gnome.org/GNOME/glib/-/issues/2662
-	 *
-	 * For now, set the lock as we were seeing some db corruption.
 	 */
-	std::unique_lock lock{w_lock_};
+	//std::unique_lock lock{w_lock_};
 	auto msg{Message::make_from_path(path, store_.message_options())};
 	if (!msg) {
 		mu_warning("failed to create message from {}: {}", path, msg.error().what());
 		return false;
 	}
 	// if the store was empty, we know that the message is completely new
-	// and can use the fast path (Xapians 'add_document' rather tahn
+	// and can use the fast path (Xapians 'add_document' rather than
 	// 'replace_document)
-	auto res = store_.add_message(msg.value(), was_empty_);
+	auto res = store_.consume_message(std::move(msg.value()), was_empty_);
 	if (!res) {
 		mu_warning("failed to add message @ {}: {}", path, res.error().what());
 		return false;

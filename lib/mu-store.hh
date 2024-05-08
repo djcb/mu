@@ -204,8 +204,22 @@ public:
 	 *
 	 * @return the doc id of the added message or an error.
 	 */
-	Result<Id> add_message(Message& msg, bool is_new = false);
-	Result<Id> add_message(const std::string& path, bool is_new = false);
+	Result<Id> add_message(Message &msg, bool is_new = false);
+	Result<Id> add_message(const std::string &path, bool is_new = false);
+
+	/**
+	 * Like add_message(), however, this consumes the message and disposes
+	 * of it when the function ends. This can be useful when injecting
+	 * messages from a worker thread, to ensure no Xapian::Documents
+	 * live in different threads.
+	 *
+	 * @param msg a message
+	 * @param is_new whether this is a completely new message
+	 */
+	Result<Id> consume_message(Message&& msg, bool is_new = false) {
+		Message consumed{std::move(msg)};
+		return add_message(consumed, is_new);
+	}
 
 	/**
 	 * Remove a message from the store. It will _not_ remove the message
