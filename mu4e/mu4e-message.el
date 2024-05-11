@@ -1,6 +1,6 @@
 ;;; mu4e-message.el --- Working with mu4e-message plists -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -29,14 +29,14 @@
 (require 'mu4e-vars)
 (require 'mu4e-contacts)
 (require 'mu4e-window)
+(require 'mu4e-helpers)
 (require 'flow-fill)
 (require 'shr)
 (require 'pp)
 
-(declare-function mu4e-error "mu4e-helpers")
-(declare-function mu4e-warn  "mu4e-helpers")
+
+(declare-function mu4e-determine-attachment-dir  "mu4e-helpers")
 (declare-function mu4e-personal-address-p "mu4e-contacts")
-(declare-function mu4e-make-temp-file  "mu4e-helpers")
 
 ;;; Message fields
 
@@ -207,6 +207,34 @@ If MSG is nil, use `mu4e-message-at-point'."
     (kill-new path)
     (mu4e-message "Saved '%s' to kill-ring" path)))
 
+(defun mu4e-save-message (&optional auto-path auto-overwrite)
+  "Save a copy of the message-at-point.
+
+If AUTO-PATH is non-nil, save to the attachment directory for
+message/rfc822 files as per `mu4e-determine-attachment-dir'.
+Otherwise, ask user.
+
+If AUTO-OVERWRITE is non-nil, automatically overwrite if a file
+with the same name already exist in the target directory.
+Otherwise, ask for user confirmation.
+
+Returns the full path."
+  (interactive "P")
+  (let* ((srcpath (mu4e-message-readable-path))
+         (srcname (file-name-nondirectory srcpath))
+         (destdir (file-name-as-directory
+                   (mu4e-determine-attachment-dir
+                    srcpath "message/rfc822")))
+         (destpath (mu4e-join-paths destdir srcname))
+         (destpath
+          (if auto-path destpath
+              (read-file-name "Save message as: "
+                              destdir nil nil srcname))))
+    (when destpath
+      (copy-file srcpath destpath (if auto-overwrite t 0))
+      (mu4e-message "Saved %s" destpath)
+      destpath)))
+
 (defun mu4e-sexp-at-point ()
   "Show or hide the s-expression for the message-at-point, if any."
   (interactive)
@@ -242,6 +270,7 @@ plist."
   (with-temp-buffer
     (insert (mu4e--decoded-message msg 'headers-only))
     (message-field-value hdr first)))
+
 ;;;
 (provide 'mu4e-message)
 ;;; mu4e-message.el ends here
