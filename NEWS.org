@@ -13,7 +13,7 @@
   - Better and faster indexing of HTML messages
   - Experimental search by (human) language wit CLD2
 
-  For details & more, see below. Note a few minor new features were added
+  For details & more, see below. Note that a few minor new features were added
   _after_ the initial 1.12.0.
 
 *** mu
@@ -116,11 +116,8 @@
     - ~mu4e-compose-in-new-frame~ has been generalized (in a backward-compatible
       way) to ~mu4e-compose-switch~, which lets you decide whether a message
       should be composed in the current window (default), a new window or a new
-      frame.
-
-    - ~mu4e-compose-context-switch~ is gone; it was a little too fragile. Best
-      change when creating the message (=mu4e= asks you by default, see
-      ~mu4e-compose-context-policy~).
+      frame or fine-tune it completely through the ~display-buffer-alist~
+      mechanism.
 
     - there's a new hook ~mu4e-compose-post-hook~ which fires when message
       composition is complete - either a message has been sent, it is postponed,
