@@ -253,8 +253,6 @@ chance."
   (mu4e-setq-if-nil mu4e-headers-append-func   #'mu4e~headers-append-handler)
   (mu4e-setq-if-nil mu4e-found-func            #'mu4e~headers-found-handler)
   (mu4e-setq-if-nil mu4e-erase-func            #'mu4e~headers-clear)
-
-  (mu4e-setq-if-nil mu4e-sent-func             #'mu4e--default-handler)
   (mu4e-setq-if-nil mu4e-contacts-func         #'mu4e--update-contacts)
   (mu4e-setq-if-nil mu4e-info-func             #'mu4e--info-handler)
   (mu4e-setq-if-nil mu4e-pong-func             #'mu4e--default-handler)

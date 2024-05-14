@@ -1,6 +1,6 @@
 ;;; mu4e-server.el --- Control mu server from mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -116,11 +116,6 @@ See `mu4e--server-filter' for the format.")
   "Function called for each :remove sexp returned.
 This happens when some message has been deleted. The function is
 passed the docid of the removed message.")
-
-(defvar mu4e-sent-func  nil
-  "Function called for each :sent sexp received.
-This happens when some message has been sent. The function is
-passed the docid and the draft-path of the sent message.")
 
 (defvar mu4e-view-func  nil
   "Function called for each single-message sexp.
@@ -357,12 +352,6 @@ The server output is as follows:
          ;; receive an erase message
          ((plist-get sexp :erase)
           (funcall mu4e-erase-func))
-
-         ;; receive a :sent message
-         ((plist-get sexp :sent)
-          (funcall mu4e-sent-func
-                   (plist-get sexp :docid)
-                   (plist-get sexp :path)))
 
          ;; received a pong message
          ((plist-get sexp :pong)
