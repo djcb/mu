@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el --- Message headers -*- lexical-binding: t; coding:utf-8 -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -34,8 +34,6 @@
 (require 'mailcap)
 (require 'mule-util) ;; seems _some_ people need this for
                      ;; truncate-string-ellipsis
-
-(require 'mu4e-update)
 
     ;; utility functions
 (require 'mu4e-server)
