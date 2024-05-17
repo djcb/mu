@@ -380,15 +380,16 @@ non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\")."
 
 ;;;###autoload
 (defun mu4e-compose-reply (&optional wide)
-  "Reply to the message at point. If WIDE is
-non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\")."
+  "Reply to the message at point.
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a.
+\"reply-to-all\")."
   (interactive "P")
   (mu4e-compose-reply-to nil wide))
 
 ;;;###autoload
 (defun mu4e-compose-wide-reply ()
   "Wide reply to the message at point.
-(a.k.a. \"reply-to-all\")."
+I.e., \"reply-to-all\"."
   (interactive)
   (mu4e-compose-reply-to nil t))1
 

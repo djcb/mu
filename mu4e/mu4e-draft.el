@@ -612,13 +612,13 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   (undo-boundary))
 
 ;;
-;; mu4e-compose-pos-hook helpers
+;; mu4e-compose-post-hook helpers
 
 (defvar mu4e--before-draft-window-config nil
   "The window configuration just before creating the draft.")
 
 (defun mu4e-compose-post-restore-window-configuration()
-  "Function that perhaps restores the window configuration.
+  "Function that might restore the window configuration.
 I.e. the configuration just before the draft buffer appeared.
 This is for use in `mu4e-compose-post-hook'.
 See `set-window-configuration' for further details."
@@ -632,7 +632,7 @@ See `set-window-configuration' for further details."
 Used internally for mu4e-compose-post-kill-frame.")
 
 (defun mu4e-compose-post-kill-frame ()
-  "Function that perhaps kills the composition frame.
+  "Function that might kill the composition frame.
 This is for use in `mu4e-compose-post-hook'."
   (let ((msgframe (selected-frame)))
     ;;(message "kill frame? %s %s" mu4e--draft-activation-frame msgframe)
@@ -744,3 +744,4 @@ but note the different order."
    parent))
 
 (provide 'mu4e-draft)
+;;; mu4e-draft.el ends here
