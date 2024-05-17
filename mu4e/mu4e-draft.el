@@ -553,7 +553,8 @@ This is mu4e's version of `message-hidden-headers'.")
   "Get ready for message composition.
 PARENT is the parent message, if any."
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
-  (mu4e--context-autoswitch parent mu4e-compose-context-policy))
+  (mu4e--context-autoswitch parent mu4e-compose-context-policy)
+  (run-hooks 'mu4e-compose-pre-hook))
 
 (defun mu4e--prepare-draft-headers (compose-type)
   "Add extra headers for message based on COMPOSE-TYPE."
