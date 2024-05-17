@@ -514,7 +514,14 @@ while in a buffer with the to-be-forwarded/replied-to message."
   (let* ((message-this-is-mail t)
          (message-generate-headers-first nil)
          (message-newsreader mu4e-user-agent-string)
-         (message-mail-user-agent nil))
+         (message-mail-user-agent nil)
+         (mam message-alternative-emails)
+         (message-alternative-emails
+          (lambda (addr)
+            (or (mu4e-personal-address-p addr)
+                (cond
+                 ((functionp mam) (funcall mam addr))
+                 ((stringp mam)   (string-match mam addr)))))))
     (cl-letf
         ;; `message-pop-to-buffer' attempts switching the visible buffer;
         ;; instead, we manipulate it to _return_ the buffer.
