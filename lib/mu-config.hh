@@ -102,7 +102,7 @@ public:
 			Flags::Configurable,
 			"batch-size",
 			"50000",
-			"Number of changes in a database transaction"
+			"Maximum number of changes in a database transaction"
 		},
 		{
 			Id::Contacts,
@@ -216,7 +216,7 @@ public:
 	 */
 	static Option<const Property&> property(const std::string& name) {
 		const auto pname{std::string_view(name.data(), name.size())};
-		for(auto&& prop: properties)
+		for (auto&& prop: properties)
 			if (prop.name == pname)
 				return prop;
 		return Nothing;
