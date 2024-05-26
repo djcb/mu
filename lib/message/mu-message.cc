@@ -104,6 +104,10 @@ get_statbuf(const std::string& path, Message::Options opts = Message::Options::N
 	return Ok(std::move(statbuf));
 }
 
+Message::Message() noexcept:
+	priv_{std::make_unique<Private>(Message::Options::None)}
+{}
+
 
 Message::Message(const std::string& path,  Message::Options opts):
 	priv_{std::make_unique<Private>(opts)}

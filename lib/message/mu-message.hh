@@ -56,6 +56,12 @@ public:
 	};
 
 	/**
+	 * Default CTOR; not useful by itself, but can be moved into.
+	 */
+	Message() noexcept;
+
+
+	/**
 	 * Move CTOR
 	 *
 	 * @param some other message
