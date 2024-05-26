@@ -101,12 +101,18 @@ make_db(const std::string& db_path, Flavor flavor)
 XapianDb::XapianDb(const std::string& db_path, Flavor flavor):
 	path_(make_path(db_path, flavor)),
 	db_(make_db(path_, flavor)),
-	batch_size_{Config(*this).get<Config::Id::BatchSize>()}
+	batch_size_{Config(*this).get<Config::Id::BatchSize>()} // default
 {
 	if (flavor == Flavor::CreateOverwrite)
 		set_timestamp(MetadataIface::created_key);
 
 	mu_debug("created {} / {} (batch-size: {})", flavor, *this, batch_size_);
+}
+
+void
+XapianDb::reinit() {
+	batch_size_ = Config(*this).get<Config::Id::BatchSize>();
+	mu_debug("set batch-size to {}", batch_size_);
 }
 
 

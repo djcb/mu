@@ -75,8 +75,11 @@ struct Store::Private {
 		config_{make_config(xapian_db_, root_maildir, conf)},
 		contacts_cache_{config_},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
-		message_opts_{make_message_options(config_)}
-		{}
+		message_opts_{make_message_options(config_)} {
+		// so tell xapian-db to update its internal cacheed values from
+		// config. In practice: batch-size.
+		xapian_db_.reinit();
+	}
 
 	~Private() try {
 		mu_debug("closing store @ {}", xapian_db_.path());

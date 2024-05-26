@@ -223,6 +223,14 @@ public:
 	}
 
 	/**
+	 * Reinitialize from inner-config. Needed after CreateOverwrite.
+	 *
+	 * This is bit of a hack, needed since we cannot setup the config
+	 * before we have a database.
+	 */
+	void reinit();
+
+	/**
 	 * Is the database read-only?
 	 *
 	 * @return true or false
@@ -545,7 +553,7 @@ private:
 	std::string path_;
 	DbType	db_;
 	size_t	tx_level_{};
-	const size_t batch_size_;
+	size_t batch_size_;
 	size_t changes_{};
 };
 
