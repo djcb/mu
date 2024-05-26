@@ -324,8 +324,6 @@ Indexer::Private::cleanup()
 void
 Indexer::Private::scan_worker()
 {
-	XapianDb::Transaction tx{store_.xapian_db()}; // RAII
-
 	progress_.reset();
 	if (conf_.scan) {
 		mu_debug("starting scanner");

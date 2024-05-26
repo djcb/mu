@@ -41,6 +41,7 @@ XapianDb::wdb()
 {
 	if (read_only())
 		throw std::runtime_error("database is read-only");
+
 	return std::get<Xapian::WritableDatabase>(db_);
 }
 
@@ -106,7 +107,7 @@ XapianDb::XapianDb(const std::string& db_path, Flavor flavor):
 	if (flavor == Flavor::CreateOverwrite)
 		set_timestamp(MetadataIface::created_key);
 
-	mu_debug("created {} / {} (batch-size: {})", flavor, *this, batch_size_);
+	mu_debug("created {}", *this);
 }
 
 void

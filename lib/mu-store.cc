@@ -382,10 +382,12 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 {
 	std::lock_guard guard{priv_->lock_};
 
-	XapianDb::Transaction tx (xapian_db()); // RAII
+	xapian_db().request_transaction();
 
 	for (auto&& id : ids)
 		xapian_db().delete_document(id);
+
+	xapian_db().request_commit(true/*force*/);
 }
 
 
