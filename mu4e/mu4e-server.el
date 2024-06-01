@@ -431,7 +431,7 @@ As per issue #2198."
     ;; sanity-check 2
     (let ((version (let ((s (shell-command-to-string
                              (concat mu4e-mu-binary " --version"))))
-                     (and (string-match "version \\([.0-9]+\\)" s)
+                     (and (string-match "version \\(.+\\)" s)
                           (match-string 1 s)))))
       (if (not (string= version mu4e-mu-version))
           (mu4e-error
