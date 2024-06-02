@@ -586,7 +586,9 @@ Server::Private::data_handler(const Command& cmd)
 {
 	const auto request_type{unwrap(cmd.symbol_arg(":kind"))};
 
-	if (request_type == "maildirs") {
+	if (request_type == "doccount") {
+		output(mu_format("(:doccount {})", store().size()));
+	} else if (request_type == "maildirs") {
 		auto&& out{make_output_stream()};
 		mu_print(out, "(");
 		for (auto&& mdir: store().maildirs())
