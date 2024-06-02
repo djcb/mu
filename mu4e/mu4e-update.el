@@ -130,9 +130,9 @@ changed")
 If non-nil, this is a plist of the form:
 \(
 :checked     <number of messages processed> (checked whether up-to-date)
-:updated     <number of messages updated/added
-:cleaned-up  <number of stale messages removed from store
-:stamp       <emacs (current-time) timestamp for the status)")
+:updated     <number of messages updated/added>
+:cleaned-up  <number of stale messages removed from store>
+:stamp       <emacs (current-time) timestamp for the status>")
 
 (defconst mu4e-last-update-buffer "*mu4e-last-update*"
   "Name of buffer with cloned from the last update buffer.
