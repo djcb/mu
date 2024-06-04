@@ -42,6 +42,7 @@ lib_mu=static_library(
     # misc
     'mu-maildir.cc',
     'mu-script.cc',
+    'mu-store-worker.cc'
   ],
   dependencies: [
     glib_dep,

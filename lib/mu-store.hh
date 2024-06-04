@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -31,6 +31,7 @@
 #include "mu-config.hh"
 #include "mu-indexer.hh"
 #include "mu-query-results.hh"
+#include "mu-store-worker.hh"
 
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils.hh>
@@ -146,6 +147,13 @@ public:
 	 * @return the indexer.
 	 */
 	Indexer& indexer();
+
+	/**
+	 * Get the store-worker instance
+	 *
+	 * @return the store-worker
+	 */
+	StoreWorker& store_worker();
 
 	/**
 	 * Run a query; see the `mu-query` man page for the syntax.

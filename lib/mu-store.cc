@@ -131,6 +131,7 @@ struct Store::Private {
 	XapianDb xapian_db_;
 	Config config_;
 	ContactsCache            contacts_cache_;
+	std::unique_ptr<StoreWorker> store_worker_;
 	std::unique_ptr<Indexer> indexer_;
 
 	const std::string	root_maildir_;
@@ -252,6 +253,7 @@ Store::Store(Store&& other)
 {
 	priv_ = std::move(other.priv_);
 	priv_->indexer_.reset();
+	priv_->store_worker_.reset();
 }
 
 Store::~Store() = default;
@@ -314,6 +316,15 @@ Store::indexer()
 		priv_->indexer_ = std::make_unique<Indexer>(*this);
 
 	return *priv_->indexer_.get();
+}
+
+StoreWorker&
+Store::store_worker()
+{
+	if (!priv_->store_worker_)
+		priv_->store_worker_ = std::make_unique<StoreWorker>(*this);
+
+	return *priv_->store_worker_;
 }
 
 Result<Store::Id>
@@ -382,10 +393,12 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 {
 	std::lock_guard guard{priv_->lock_};
 
-	XapianDb::Transaction tx (xapian_db()); // RAII
+	xapian_db().request_transaction();
 
 	for (auto&& id : ids)
 		xapian_db().delete_document(id);
+
+	xapian_db().request_commit(true/*force*/);
 }
 
 

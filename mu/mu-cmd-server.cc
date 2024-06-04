@@ -79,11 +79,12 @@ cookie(size_t n)
 		::printf(COOKIE_PRE "%x" COOKIE_POST, num);
 }
 
-
-
 static void
 output_stdout(const std::string& str, Server::OutputFlags flags)
 {
+	// Note: with the StoreWorker, we _always_ need to flush
+	flags |= Server::OutputFlags::Flush;
+
 	cookie(str.size() + 1);
 	if (G_UNLIKELY(::puts(str.c_str()) < 0)) {
 		mu_critical("failed to write output '{}'", str);

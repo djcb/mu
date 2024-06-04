@@ -1,6 +1,6 @@
 ;;; mu4e.el --- Mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -203,42 +203,47 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
     (_ (mu4e-error "Error %d: %s" errcode errmsg))))
 
 (defun mu4e--update-status (info)
-  "Update the status message with INFO."
+  "Update `mu4e-index-update-status' with INFO.
+Return the former. As an additional side-effect, updates
+doccount in server-properties."
   (setq mu4e-index-update-status
-        `(:tstamp ,(current-time)
-          :checked ,(plist-get info :checked)
-          :updated  ,(plist-get info :updated)
-          :cleaned-up ,(plist-get info :cleaned-up))))
+        `(:tstamp     ,(current-time)
+          :checked    ,(or (plist-get info :checked) 0)
+          :updated    ,(or (plist-get info :updated) 0)
+          :cleaned-up ,(or (plist-get info :cleaned-up) 0)))
+  mu4e-index-update-status)
 
 (defun mu4e--info-handler (info)
   "Handler function for (:INFO ...) sexps received from server."
-  (let* ((type (plist-get info :info))
-         (checked (plist-get info :checked))
-         (updated (plist-get info :updated))
-         (cleaned-up (plist-get info :cleaned-up)))
+  (let* ((type (plist-get info :info)))
     (cond
      ((eq type 'add) t) ;; do nothing
      ((eq type 'index)
-      (if (eq (plist-get info :status) 'running)
-          (mu4e-index-message
-           "Indexing... checked %d, updated %d" checked updated)
-        (progn ;; i.e. 'complete
-          (mu4e--update-status info)
-          (mu4e-index-message
-           "%s completed; checked %d, updated %d, cleaned-up %d"
-           (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
-           checked updated cleaned-up)
-          ;; index done; grab updated queries
-          (mu4e--query-items-refresh)
-          (run-hooks 'mu4e-index-updated-hook)
-          ;; backward compatibility...
-          (unless (zerop (+ updated cleaned-up))
-            mu4e-message-changed-hook)
-          (unless (and (not (string= mu4e--contacts-tstamp "0"))
-                       (zerop (plist-get info :updated)))
-            (mu4e--request-contacts-maybe)
-            (mu4e--server-data 'maildirs)) ;; update maildir list
-          (mu4e--main-redraw))))
+      (let* ((info (mu4e--update-status info))
+             (checked (plist-get info :checked))
+             (updated (plist-get info :updated))
+             (cleaned-up (plist-get  info :cleaned-up)))
+        (if (eq (plist-get info :status) 'running)
+            (mu4e-index-message
+             "Indexing... checked %d, updated %d"
+             checked updated)
+          (progn ;; i.e. 'complete
+            (mu4e-index-message
+             "%s completed; checked %d, updated %d, cleaned-up %d"
+             (if mu4e-index-lazy-check "Lazy indexing" "Indexing")
+             checked updated cleaned-up)
+            ;; index done; grab updated queries
+            (mu4e--query-items-refresh)
+            (run-hooks 'mu4e-index-updated-hook)
+            ;; backward compatibility...
+            (unless (zerop (+ updated cleaned-up))
+              mu4e-message-changed-hook)
+            (unless (and (not (string= mu4e--contacts-tstamp "0"))
+                         (zerop (plist-get info :updated)))
+              (mu4e--request-contacts-maybe)
+              (mu4e--server-data '(maildirs doccount)))
+            ;; update maildir list & doccount
+            (mu4e--main-redraw)))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 
