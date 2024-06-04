@@ -2150,7 +2150,7 @@ inbox:
 (add-to-list 'mu4e-bookmarks
   '( :name  "Inbox messages in the last 7 days"
      :query (lambda () (concat "maildir:/inbox AND date:"
-            (format-time-string "%Y%m%d"
+            (format-time-string "%Y%m%d.."
                 (subtract-time (current-time) (days-to-time 7)))))
      :key   ?w) t)
 @end lisp
@@ -2163,7 +2163,7 @@ shown:
   (interactive (list (read-number "Show days old messages: " 7)))
   (let ((start-date (subtract-time (current-time) (days-to-time days-old))))
     (concat "maildir:/inbox AND date:"
-            (format-time-string "%Y%m%d" start-date))))
+            (format-time-string "%Y%m%d.." start-date))))
 
 (add-to-list 'mu4e-bookmarks
   `(:name  "Inbox messages in the last 7 days"
