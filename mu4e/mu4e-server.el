@@ -385,10 +385,7 @@ The server output is as follows:
          ((plist-get sexp :info)
           (funcall mu4e-info-func sexp))
 
-         ;; get some data XXX generalize
-         ((plist-get sexp :doccount)
-          (plist-put mu4e--server-props :doccount
-                     (mu4e--server-plist-get sexp :doccount)))
+         ;; get some data
          ((plist-get sexp :maildirs)
           (setq mu4e-maildir-list (mu4e--server-plist-get sexp :maildirs)))
 
@@ -559,16 +556,9 @@ get at most MAX contacts."
 
 (defun mu4e--server-data (kind)
   "Request data of some KIND.
-KIND is a symbol or a list of symbols. Currently supported kinds:
- `maildirs', `doccount'."
-  (pcase kind
-    ((pred (lambda (k) (memq k '(maildirs doccount))))
-     (mu4e--server-call-mu `(data :kind ,kind)))
-    ((pred listp)
-     (when kind
-       (mu4e--server-data (car kind))
-       (mu4e--server-data (cdr kind))))
-    (_ (mu4e-error "Unexpected kind %s" kind))))
+KIND is a symbol. Currently supported kinds: maildirs."
+  (mu4e--server-call-mu
+   `(data :kind ,kind)))
 
 (defun mu4e--server-find (query threads sortfield sortdir maxnum skip-dups
                                 include-related)

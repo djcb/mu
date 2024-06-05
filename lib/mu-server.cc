@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,11 +29,8 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
 #include <variant>
 #include <functional>
-
-
 
 #include <cstring>
 #include <glib.h>
@@ -119,7 +116,7 @@ struct OutputStream {
 	}
 
 private:
-	std::string fname_;
+	std::string		fname_;
 	using OutType = std::variant<std::ofstream, std::ostringstream>;
 	OutType out_;
 };
@@ -129,21 +126,11 @@ private:
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
 	Private(Store& store, const Server::Options& opts, Output output)
-	    : store_{store},
-	      store_worker_{store.store_worker()},
-	      options_{opts}, output_{output},
+	    : store_{store}, options_{opts}, output_{output},
 	      command_handler_{make_command_map()},
 	      keep_going_{true},
-	      tmp_dir_{unwrap(make_temp_dir())} {
-
-		// tell the store-worker that we (this class) can handle
-		// sexp strings.
-		store_worker_.install_sexp_handler(
-			[this](const std::string& sexp) {
-				this->invoke(sexp);
-			});
-
-	}
+	      tmp_dir_{unwrap(make_temp_dir())}
+	{}
 
 	~Private() {
 		indexer().stop();
@@ -161,10 +148,13 @@ struct Server::Private {
 	// acccessors
 	Store&            store() { return store_; }
 	const Store&      store() const { return store_; }
-	StoreWorker&      store_worker() { return store_worker_; }
 	Indexer&          indexer() { return store().indexer(); }
 	//CommandMap&       command_map() const { return command_map_; }
 
+	//
+	// invoke
+	//
+	bool invoke(const std::string& expr) noexcept;
 
 	//
 	// output
@@ -196,19 +186,7 @@ struct Server::Private {
 	void remove_handler(const Command& cmd);
 	void view_handler(const Command& cmd);
 
-	bool keep_going() const { return keep_going_; }
-	void set_keep_going(bool going)  { keep_going_ = going; }
-
-	// make main thread wait until done with the command.
-	std::mutex done_lock_;
-	std::condition_variable done_cond_;
-
 private:
-	//
-	// invoke
-	//
-	bool invoke(const std::string& expr) noexcept;
-
 	void move_docid(Store::Id docid, Option<std::string> flagstr,
 			bool new_name, bool no_view);
 
@@ -231,7 +209,6 @@ private:
 	std::ofstream make_temp_file_stream(std::string& fname) const;
 
 	Store&			store_;
-	StoreWorker&            store_worker_;
 	Server::Options         options_;
 	Server::Output		output_;
 	const CommandHandler	command_handler_;
@@ -503,10 +480,6 @@ Server::Private::invoke(const std::string& expr) noexcept
 		keep_going_ = false;
 	}
 
-	// tell main thread we're done with the command.
-	std::lock_guard l{done_lock_};
-	done_cond_.notify_one();
-
 	return keep_going_;
 }
 
@@ -586,9 +559,7 @@ Server::Private::data_handler(const Command& cmd)
 {
 	const auto request_type{unwrap(cmd.symbol_arg(":kind"))};
 
-	if (request_type == "doccount") {
-		output(mu_format("(:doccount {})", store().size()));
-	} else if (request_type == "maildirs") {
+	if (request_type == "maildirs") {
 		auto&& out{make_output_stream()};
 		mu_print(out, "(");
 		for (auto&& mdir: store().maildirs())
@@ -719,6 +690,9 @@ Server::Private::find_handler(const Command& cmd)
 	StopWatch sw{mu_format("{} (indexing: {})", __func__,
 			       indexer().is_running() ? "yes" :  "no")};
 
+	// we need to _lock_ the store while querying (which likely consists of
+	// multiple actual queries) + grabbing the results.
+	std::lock_guard l{store_.lock()};
 	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
 	if (!qres)
 		throw Error(Error::Code::Query, "failed to run query: {}", qres.error().what());
@@ -1107,27 +1081,7 @@ Server::~Server() = default;
 bool
 Server::invoke(const std::string& expr) noexcept
 {
-	/* a _little_ hacky; handle _quit_ directly to properly
-	 * shut down the server */
-	if (expr == "(quit)")  {
-		mu_debug("quitting");
-		priv_->set_keep_going(false);
-		return false;
-	}
-
-	/*
-	 * feed the command to the queue; it'll get executed in the
-	 * store-worker thread; however, sync on its completion
-	 * so we get its keep_going() result
-	 *
-	 * as an added bonus, this ensures mu server shell doesn't require an
-	 * extra user RET to get back the prompt
-	 */
-	std::unique_lock done_lock{priv_->done_lock_};
-	priv_->store_worker().push(StoreWorker::SexpCommand{expr});
-	priv_->done_cond_.wait(done_lock);
-
-	return priv_->keep_going();
+	return priv_->invoke(expr);
 }
 
 /* LCOV_EXCL_STOP */
