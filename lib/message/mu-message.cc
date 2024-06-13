@@ -563,9 +563,7 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 	if (info.body_txt) { /* attempt to get the body-language */
 		if (const auto lang{detect_language(info.body_txt.value())}; lang) {
 			info.language = lang->code;
-			mu_debug("detected language: {}", lang->code);
-		} else
-			mu_debug("could not detect language");
+		}
 	}
 #endif /*HAVE_CLD2*/
 }

@@ -194,10 +194,11 @@ ContactsCache::serialize() const
 void
 ContactsCache::add(Contact&& contact)
 {
-	/* we do _not_ cache invalid email addresses, so we won't offer them in completions etc. It
-	 * should be _rare_, but we've seen cases ( broken local messages) */
+	/* we do _not_ cache invalid email addresses, so we won't offer them in
+	 * completions etc. It should be _rare_, but we've seen cases ( broken
+	 * local messages, and various "fake" messages RSS2Imap etc. */
 	if (!is_valid(contact.email)) {
-		mu_warning("not caching invalid e-mail address '{}'", contact.email);
+		mu_debug("not caching invalid e-mail address '{}'", contact.email);
 		return;
 	}
 

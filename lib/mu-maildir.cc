@@ -264,8 +264,6 @@ msg_move_verify(const std::string& src, const std::string& dst)
 		mu_debug("source is still there ({}->{})", src, dst);
 	}
 
-	mu_debug("moved {} -> {}", src, dst);
-
 	return Ok();
 }
 /* LCOV_EXCL_STOP*/
@@ -430,7 +428,6 @@ Mu::maildir_determine_target(const std::string&	old_path,
 	if (const auto checked{check_determine_target_params(
 		old_path, root_maildir_path, target_maildir, newflags)}; !checked)
 		return Err(Error{std::move(checked.error())});
-
 	/*
 	 * this gets us the source maildir filesystem path, the directory
 	 * in which new/ & cur/ lives, and the source file
