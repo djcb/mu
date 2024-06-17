@@ -556,12 +556,14 @@ while in a buffer with the to-be-forwarded/replied-to message."
   "Message headers to hide when composing.
 This is mu4e's version of `message-hidden-headers'.")
 
-(defun mu4e--prepare-draft (&optional parent)
+(defun mu4e--prepare-draft (compose-type &optional parent)
   "Get ready for message composition.
 PARENT is the parent message, if any."
+  (cl-assert (member compose-type '(reply forward edit new)))
+  (cl-assert (eq (if parent t nil)
+                 (if (member compose-type '(reply forward)) t nil)))
   (unless (mu4e-running-p) (mu4e 'background)) ;; start if needed
-  (mu4e--context-autoswitch parent mu4e-compose-context-policy)
-  (run-hooks 'mu4e-compose-pre-hook))
+  (mu4e--context-autoswitch parent mu4e-compose-context-policy))
 
 (defun mu4e--prepare-draft-headers (compose-type)
   "Add extra headers for message based on COMPOSE-TYPE."
@@ -576,16 +578,6 @@ PARENT is the parent message, if any."
 (defun mu4e--prepare-draft-buffer (compose-type parent)
   "Prepare the current buffer as a draft-buffer.
 COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
-  (cl-assert (member compose-type '(reply forward edit new)))
-  (cl-assert (eq (if parent t nil)
-                 (if (member compose-type '(reply forward)) t nil)))
-  ;; remember some variables, e.g for user hooks. These are permanent-local
-  ;; hence survive the mode-switch below (we do this so these useful vars are
-  ;; available in mode-hooks.
-  (setq-local
-   mu4e-compose-parent-message parent
-   mu4e-compose-type compose-type)
-
   ;; draft path
   (unless (eq compose-type 'edit)
     (set-visited-file-name ;; make it a draft file
@@ -709,7 +701,7 @@ it must be nil.
 After this, user is presented with a message composition buffer.
 
 Returns the new buffer."
-  (mu4e--prepare-draft parent)
+  (mu4e--prepare-draft compose-type parent)
   ;; evaluate BODY; this must yield a hidden, live buffer. This is evaluated in
   ;; a temp buffer with contains the parent-message, if any. if there's a
   ;; PARENT, load the corresponding message into a temp-buffer before calling
@@ -718,6 +710,13 @@ Returns the new buffer."
         (oldframe (selected-frame))
         (oldwinconf (current-window-configuration)))
     (with-temp-buffer
+      ;; remember some variables, e.g for user hooks. These are permanent-local
+      ;; hence survive the mode-switch below (we do this so these useful vars are
+      ;; available in mode-hooks.
+      (setq-local
+       mu4e-compose-parent-message parent
+       mu4e-compose-type compose-type)
+      (run-hooks 'mu4e-compose-pre-hook)
       ;; provide a temp buffer so the compose-func can do its thing
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
       (with-current-buffer draft-buffer
