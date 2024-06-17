@@ -494,7 +494,7 @@ Creates a buffer NAME and returns it."
 
 (defmacro mu4e--validate-hidden-buffer (&rest body)
   "Macro to evaluate BODY and asserts that it yields a valid buffer.
-Where valid means that it is a live an non-active buffer.
+Where valid means that it is a live and a non-active buffer.
 Returns said buffer."
   `(let ((buf (progn ,@body)))
      (cl-assert (buffer-live-p buf))
