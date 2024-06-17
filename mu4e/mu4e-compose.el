@@ -461,7 +461,7 @@ The message is resent as-is, without any editing. See
           "Resend message to address: " mu4e--contacts-set)))
   (let ((msg (mu4e-message-at-point)))
     (with-temp-buffer
-      (mu4e--prepare-draft msg)
+      (mu4e--prepare-draft 'new msg) ;; Resend as fake new?
       (insert-file-contents (mu4e-message-readable-path msg))
       (message-resend address))))
 
