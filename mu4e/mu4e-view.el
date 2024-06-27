@@ -658,6 +658,9 @@ As a side-effect, a message that is being viewed loses its
   (with-current-buffer gnus-article-buffer
     (let ((inhibit-read-only t))
       (run-hooks 'mu4e-view-rendered-hook))
+    ;; support bookmarks.
+    (setq-local bookmark-make-record-function
+                #'mu4e--make-bookmark-record)
     ;; only needed on some setups; #2683
     (goto-char (point-min))))
 
@@ -1073,10 +1076,6 @@ Based on Gnus' article-mode."
   (mu4e-search-minor-mode)
   (mu4e-compose-minor-mode)
   (setq buffer-undo-list t) ;; don't record undo info
-
-  ;; support bookmarks.
-  (set (make-local-variable 'bookmark-make-record-function)
-       'mu4e--make-bookmark-record)
 
   ;; autopair mode gives error when pressing RET
   ;; turn it off
