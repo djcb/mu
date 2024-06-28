@@ -789,11 +789,11 @@ changes indeed. So it is mostly useful for tracking changes while you are
 @emph{not} using @t{mu4e}. For this reason, you can reset the baseline manually,
 e.g. by visiting the main view .
 
-By comparing current results with the baseline, you can quickly what new
+By comparing current results with the baseline, you can quickly see what new
 messages have arrived since the last time you looked.
 
 The baseline@footnote{For debugging, it can be useful to see the time for the
-baseline - for that, there is the @code{mu4e-baseline-time} command} . is reset
+baseline - for that, there is the @code{mu4e-baseline-time} command.} is reset
 automatically when switching to the main view, or invoking @code{buffer-revert}
 (@kbd{g}) while in the main-view. Visiting the ``favorite'' bookmark does the
 same(explained below).
