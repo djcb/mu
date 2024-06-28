@@ -793,7 +793,7 @@ By comparing current results with the baseline, you can quickly see what new
 messages have arrived since the last time you looked.
 
 The baseline@footnote{For debugging, it can be useful to see the time for the
-baseline - for that, there is the @code{mu4e-baseline-time} command} . is reset
+baseline - for that, there is the @code{mu4e-baseline-time} command.} is reset
 automatically when switching to the main view, or invoking @code{buffer-revert}
 (@kbd{g}) while in the main-view. Visiting the ``favorite'' bookmark does the
 same(explained below).
