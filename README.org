@@ -94,7 +94,7 @@ $ sudo make install
 Alternatively, you can run ~meson~ directly (see the ~meson~ documentation for
 more details):
 #+begin_example
-$ meson setup -C build
+$ meson setup build
 $ meson compile -C build
 $ meson install -C build
 #+end_example
