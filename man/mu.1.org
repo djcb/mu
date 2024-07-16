@@ -29,7 +29,7 @@ For information about the common options, see *COMMON OPTIONS*.
 - ~server~: start a server process (for ~mu4e~-internal use)
 - ~view~: view a specific message
 
-Each of the commands have their own manpage ~mu-<command~>~.
+Each of the commands have their own manpage ~mu-<command>~.
 
 ~mu~ is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
