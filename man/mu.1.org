@@ -14,7 +14,7 @@ For information about the common options, see *COMMON OPTIONS*.
 
 * DESCRIPTION
 
-~mu~ is the general command shows help about the specific commands:
+~mu~ is the general command that shows help about the specific commands:
 
 - ~add~:  add specific messages to the database.
 - ~cfind~: find contacts
