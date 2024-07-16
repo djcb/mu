@@ -74,7 +74,7 @@ the output is always UTF-8, regardless of the locale:
 
 * DATABASE AND FILE
 
-Commands ~mu index~ and ~find~ and ~cfind~ work with the database, while the other
+The ~index~, ~find~, and ~cfind~ commands work with the database, while the other
 ones work on individual mail files. Hence, running ~view~, ~mkdir~ and ~extract~ does
 not require the mu database.
 
