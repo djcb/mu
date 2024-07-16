@@ -1,6 +1,6 @@
 ;;; mu4e-modeline.el --- Modeline for mu4e  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -34,9 +34,9 @@
   "Determines the maximum length of the local modeline string.
 If the string exceeds this limit, it will be truncated to fit.
 
-Note: this only affects the local modeline items (such as the context,
-the search properties and the last query), not the global items
-(such as the favorite bookmark results)."
+Note: this only affects the local modeline items (such as the
+context, the search properties and the last query), not the
+global items (such as the favorite bookmark results)."
   :type 'integer
   :group 'mu4e-modeline)
 
@@ -76,7 +76,7 @@ the buffer-local one."
 
 (defun mu4e--modeline-quote-and-truncate (str)
   "Quote STR to be used literally in the modeline.
-The string is truncaed to fit if its length exceeds
+The string is truncated to fit if its length exceeds
 `mu4e-modeline-max-width'."
   (replace-regexp-in-string
    "%" "%%"
