@@ -7,7 +7,7 @@ mu-server - the mu backend for the mu4e e-mail client
 
 * SYNOPSIS
 
-mu [common-options] server
+*mu* [​_COMMON-OPTIONS_​] *server*
 
 * DESCRIPTION
 

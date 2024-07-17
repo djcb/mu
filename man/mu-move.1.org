@@ -7,7 +7,7 @@ mu-move - move a message file or change its flags
 
 * SYNOPSIS
 
-*mu [common-options] move [options] <src> [--flags=<flags>] [<target>]*
+*mu* [​_COMMON-OPTIONS_​] *move* [​_OPTIONS_​] _SRC_ [--flags=​_FLAGS_​] [​_TARGET_​]
 
 * DESCRIPTION
 

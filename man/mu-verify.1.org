@@ -7,7 +7,7 @@ mu-verify - verify message signatures and display information about them
 
 * SYNOPSIS
 
-*mu [common-options] verify [options] [<file> ... ]*
+*mu* [​_COMMON-OPTIONS_​] *verify* [​_OPTIONS_​] [​_FILE_...]
 
 * DESCRIPTION
 

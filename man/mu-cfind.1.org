@@ -8,7 +8,7 @@ for use in other programs.
 
 * SYNOPSIS
 
-*mu [common-options] cfind [options] [<pattern>]*
+*mu* [​_COMMON-OPTIONS_​] *cfind* [​_OPTIONS_​] [​_PATTERN_​]
 
 * DESCRIPTION
 

@@ -7,7 +7,7 @@ mu-help - show help information about mu commands.
 
 * SYNOPSIS
 
-*mu [common-options] help [<command>]*
+*mu* [​_COMMON-OPTIONS_​] *help* [​_COMMAND_​]
 
 * DESCRIPTION
 

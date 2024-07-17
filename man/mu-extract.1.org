@@ -8,9 +8,9 @@ mu-extract - display and save message parts
 
 * SYNOPSIS
 
-*mu [common-options] extract [options] [<file>]*
+*mu* [​_COMMON-OPTIONS_​] *extract* [​_OPTIONS_​] [​_FILE_​]
 
-*mu [common-options] extract [options] <file> <pattern>*
+*mu* [​_COMMON-OPTIONS_​] *extract* [​_OPTIONS_​] _FILE_ _PATTERN_
 
 * DESCRIPTION
 

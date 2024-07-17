@@ -7,7 +7,7 @@ mu-view - display an e-mail message file
 
 * SYNOPSIS
 
-mu [common options] view [options] [<file> ...]
+*mu* [​_COMMON OPTIONS_​] *view* [​_OPTIONS_​] [​_FILE_...]
 
 * DESCRIPTION
 

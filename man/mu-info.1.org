@@ -7,7 +7,7 @@ mu-info  - show information
 
 * SYNOPSIS
 
-*mu [common options] info [<topic>]*
+*mu* [​_COMMON OPTIONS_​] *info* [​_TOPIC_​]
 
 * DESCRIPTION
 

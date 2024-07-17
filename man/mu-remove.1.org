@@ -7,7 +7,7 @@ mu-remove - remove messages from the database.
 
 * SYNOPSIS
 
-*mu [common-options] remove [options] <file> [<files>]*
+*mu* [​_COMMON-OPTIONS_​] *remove* [​_OPTIONS_​] _FILE_...
 
 * DESCRIPTION
 

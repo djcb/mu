@@ -7,7 +7,7 @@ mu-mkdir - create a new Maildir
 
 * SYNOPSIS
 
-*mu [common-options] mkdir [options] <dir> [<dirs>]*
+*mu* [​_COMMON-OPTIONS_​] *mkdir* [​_OPTIONS_​] _DIR_...
 
 * DESCRIPTION
 

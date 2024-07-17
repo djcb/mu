@@ -7,7 +7,7 @@ mu-find - find e-mail messages in the *mu* database.
 
 * SYNOPSIS
 
-*mu [common-options] find [options] <search expression>*
+*mu* [​_COMMON-OPTIONS_​] *find* [​_OPTIONS_​] _SEARCH_EXPRESSION_
 
 * DESCRIPTION
 

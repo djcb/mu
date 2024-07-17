@@ -7,7 +7,7 @@ mu-add - add one or more messages to the database
 
 * SYNOPSIS
 
-*mu [common-options] add [options] <file> [<files>]*
+*mu* [​_COMMON-OPTIONS_​] *add* [​_OPTIONS_​] _FILE_...
 
 * DESCRIPTION
 

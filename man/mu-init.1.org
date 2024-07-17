@@ -7,7 +7,7 @@ mu-init - initialize the mu message database
 
 * SYNOPSIS
 
-*mu [common-options] init [options]*
+*mu* [​_COMMON-OPTIONS_​] *init* [​_OPTIONS_​]
 
 * DESCRIPTION
 

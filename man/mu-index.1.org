@@ -7,7 +7,7 @@ mu-index - index e-mail messages stored in Maildirs
 
 * SYNOPSIS
 
-*mu [common-options] index*
+*mu* [​_COMMON-OPTIONS_​] *index*
 
 * DESCRIPTION
 

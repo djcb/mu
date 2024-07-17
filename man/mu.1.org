@@ -8,7 +8,7 @@ index and search e-mail messages.
 
 * SYNOPSIS
 
-~mu~ [COMMON-OPTIONS] [[COMMAND] [COMMAND-OPTIONS]]
+*mu* [​_COMMON-OPTIONS_​] [[​_COMMAND_​] [​_COMMAND-OPTIONS_​]]
 
 For information about the common options, see *COMMON OPTIONS*.
 
