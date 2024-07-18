@@ -26,9 +26,9 @@ standard-input.
 ** --format,-o  = <format>
 use the given output format, one of:
 
-- ~plain~ - use the plain-text body; this is the default
-- ~html~ - use the HTML body
-- ~sexp~ - show the S-expression representation of the message
+- *plain* - use the plain-text body; this is the default
+- *html* - use the HTML body
+- *sexp* - show the S-expression representation of the message
 
 ** --summary-len=<number>
 instead of displaying the full message, output a summary based upon the first

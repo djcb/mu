@@ -11,7 +11,7 @@ mu-help - show help information about mu commands.
 
 * DESCRIPTION
 
-*mu help* provides help information about mu commands.
+*mu help* provides help information about *mu* commands.
 
 #+include: "common-options.inc" :minlevel 1
 

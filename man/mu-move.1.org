@@ -17,7 +17,7 @@ For any change, both the message file in the file system as well as its
 representation in the database are updated accordingly.
 
 The source message file and target-maildir must reside under the root-maildir
-for mu's database (see *mu info store*).
+for *mu*'s database (see *mu info store*).
 
 * MOVE OPTIONS
 
@@ -41,7 +41,7 @@ the source message.
 
 print the target filename(s), but don't change anything.
 
-Note that with the ~--change-name~, the target name is not constant, so you cannot
+Note that with the *--change-name*, the target name is not constant, so you cannot
 use a dry-run to predict the exact name when doing a `real' run.
 
 #+include: "common-options.inc" :minlevel 1
@@ -66,7 +66,7 @@ messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
 | T    | Trashed; to be deleted later       |
 
 New messages (in the ~new/~ sub-directory) do not have flags encoded in their
-file-name; but we *mu* uses `N' in the ~--flags~ to represent that:
+file-name; but we *mu* uses `N' in the *--flags* to represent that:
 
 #+ATTR_MAN: :disable-caption t
 | Flag | Meaning |
@@ -81,18 +81,18 @@ flags.
 
 * ABSOLUTE AND RELATIVE FLAGS
 
-You can specify the flags with the ~--flags~ parameter, and do either with either
+You can specify the flags with the *--flags* parameter, and do either with either
 *absolute* or *relative* flags.
 
 Absolute flags just specify the new flags by their letters; e.g. to specify a
-/Trashed/, /Seen/, /Replied/ message, you'd use ~--flags STR~.
+/Trashed/, /Seen/, /Replied/ message, you'd use *--flags STR*.
 #+end_example
 
 Relative flags are relative to the current flags for some message, and each of
 the flags is prefixed with either ~+~ ("add this flag") or ~-~ ("remove this flag").
 
 So to add the /Seen/ flag and remove the /Draft/ flag from whatever the message
-already has, ~--flags +S-D~.
+already has, *--flags +S-D*.
 
 You cannot combine relative and relative flags.
 

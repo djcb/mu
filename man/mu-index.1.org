@@ -42,7 +42,7 @@ speed up things you have some maildirs that never change.
 
 =.noupdate= does not affect already-indexed message: you can still search for
 them. =.noupdate= is ignored when you start indexing with an empty database (such
-as directly after =mu init=).
+as directly after *mu init*).
 
 There also the option *--lazy-check* which can greatly speed up indexing; see
 below for details.
@@ -54,7 +54,7 @@ the `PERFORMANCE (i,ii,iii)' below for more information.
 
 The optional `phase two' of the indexing-process is the removal of messages from
 the database for which there is no longer a corresponding file in the Maildir.
-If you do not want this, you can use ~-n~, ~--nocleanup~.
+If you do not want this, you can use *-n*, *--nocleanup*.
 
 When *mu index* catches one of the signals *SIGINT*, *SIGHUP* or *SIGTERM* (e.g., when
 you press Ctrl-C during the indexing process), it attempts to shutdown
@@ -71,7 +71,7 @@ in lazy-check mode, *mu* does not consider messages for which the time-stamp
 indexing run. This is much faster than the non-lazy check, but won't update
 messages that have change (rather than having been added or removed), since
 merely editing a message does not update the directory time-stamp. Of course,
-you can run *mu-index* occasionally without ~--lazy-check~, to pick up such
+you can run *mu-index* occasionally without *--lazy-check*, to pick up such
 messages.
 
 ** --nocleanup

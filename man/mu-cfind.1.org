@@ -69,7 +69,7 @@ should only apply to name fields.
 
 ** --personal,-p only show addresses seen in messages where one of `my' e-mail
 addresses was seen in one of the address fields; this is to exclude addresses
-only seen in mailing-list messages. See the ~--my-address~ parameter to *mu init*.
+only seen in mailing-list messages. See the *--my-address* parameter to *mu init*.
 
 ** --after=<timestamp> only show addresses last seen after
 =<timestamp>=. =<timestamp>= is a UNIX *time_t* value, the number of
@@ -87,7 +87,7 @@ example, only consider addresses last seen after 2020-06-01, you could specify
 
 * JSON FORMAT
 
-With ~--format=json~, the matching contacts come out as a JSON array, e.g.,
+With *--format=json*, the matching contacts come out as a JSON array, e.g.,
 #+begin_example
 [
   {

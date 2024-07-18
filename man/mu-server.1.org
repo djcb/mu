@@ -3,7 +3,7 @@
 
 * NAME
 
-mu-server - the mu backend for the mu4e e-mail client
+mu-server - the *mu* backend for the mu4e e-mail client
 
 * SYNOPSIS
 
@@ -11,7 +11,7 @@ mu-server - the mu backend for the mu4e e-mail client
 
 * DESCRIPTION
 
-*mu server* starts a simple shell in which one can query and manipulate the mu
+*mu server* starts a simple shell in which one can query and manipulate the *mu*
 database. The output uses s-expressions. *mu server* is not meant for use by
 humans, except for debugging purposes. Instead, it is designed specifically for
 the *mu4e* e-mail client.
@@ -50,7 +50,7 @@ UTF-8 (in which the s-expressions are encoded).
 
 ** --commands
 
-List available commands (and try with ~--verbose~)
+List available commands (and try with *--verbose*)
 
 ** --eval <expression>
 
@@ -71,7 +71,7 @@ does; we take overall time of 50 such requests:
 #+begin_src sh
 time build/mu/mu server --allow-temp-file --eval '(find :query "\"\"" :include-related t :threads t :maxnum 50000)' >/dev/null
 #+end_src
-(and ~--allow-temp-file~ for 1.11)
+(and *--allow-temp-file* for 1.11)
 
 #+ATTR_MAN: :disable-caption t
 |       release | time (sec) |

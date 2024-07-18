@@ -3,7 +3,7 @@
 
 * NAME
 
-mu-init - initialize the mu message database
+mu-init - initialize the *mu* message database
 
 * SYNOPSIS
 
@@ -11,7 +11,7 @@ mu-init - initialize the mu message database
 
 * DESCRIPTION
 
-*mu init* is the subcommand for setting up the mu message database. After *mu init*
+*mu init* is the subcommand for setting up the *mu* message database. After *mu init*
 has completed, you can run *mu index*
 
 * INIT OPTIONS
@@ -21,7 +21,7 @@ has completed, you can run *mu index*
 use =<maildir>= as the root-maildir.
 
 By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses =~/Maildir=
-if it is an existing directory. If neither of those can be used, the ~--maildir~
+if it is an existing directory. If neither of those can be used, the *--maildir*
 option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
 
@@ -69,7 +69,7 @@ Chinese/Japanese/Korean. See *NGRAM SUPPORT* below for details.
 ** --reinit
 
 reinitialize the database from an earlier version; that is, create a new empty
-database with the existing settings. This cannot be combined with the other ~init~
+database with the existing settings. This cannot be combined with the other *init*
 options.
 
 #+include: "muhome.inc" :minlevel 2

@@ -45,11 +45,11 @@ For details on the possible queries, see *mu-query(7)*.
 * FIND OPTIONS
 
 Note, some of the important options are described in the *mu*(1) man-page
-and not here, as they apply to multiple mu-commands.
+and not here, as they apply to multiple *mu* commands.
 
 The *find*-command has various options that influence the way *mu* displays the
-results. If you don't specify anything, the defaults are ~fields="d f s"~,
-~--sortfield=date~ and ~--reverse~.
+results. If you don't specify anything, the defaults are *--fields="d f s"*,
+*--sortfield=date* and *--reverse*.
 
 ** -f, --fields=<fields>
 specifies a string that determines which fields are shown in the output. This
@@ -79,7 +79,7 @@ parameters, such as:
 	m       *m*aildir
 #+end_example
 
-For the complete list, try the command: ~mu info fields~.
+For the complete list, try the command: *mu info fields*.
 
 The message flags are described in *mu-query(7)*. As an example, a message which
 is `seen', has an attachment and is signed would have `asz' as its corresponding
@@ -100,7 +100,7 @@ specify the field to sort the search results by and the direction (i.e.,
 	to,t            To:-recipient(s)
 #+end_example
 
-For the complete list, try the command: ~mu info fields~.
+For the complete list, try the command: *mu info fields*.
 
 Thus, for example, to sort messages by date, you could specify:
 
@@ -132,11 +132,11 @@ output results in the specified format:
   environments
 
 ** --linksdir=<dir> and -c, --clearlinks
-when using ~-format=links~, output the results as a maildir with symbolic links to
+when using *-format=links*, output the results as a maildir with symbolic links to
 the found messages. This enables easy integration with mail-clients (see below
 for more information). *mu* will create the maildir if it does not exist yet.
 
-If you specify ~--clearlinks~, existing symlinks will be cleared from the target
+If you specify *--clearlinks*, existing symlinks will be cleared from the target
 directories; this allows for re-use of the same maildir. However, this option
 will delete any symlink it finds, so be careful.
 
@@ -163,7 +163,7 @@ could specify
 This is assuming the GNU *date* command.
 
 ** --exec=<command>
-the ~--exec~ coption causes the =command= to be executed on each matched message;
+the *--exec* coption causes the =command= to be executed on each matched message;
 for example, to see the raw text of all messages matching `milkshake', you could
 use:
 #+begin_example
@@ -216,7 +216,7 @@ description: http://www.jwz.org/doc/threading.html
 ** -a,--analyze
 instead of executing the query, analyze it by show the parse-tree s-expression
 and a stringified version of the Xapian query. This can help users to determine
-how ~mu~ interprets some query.
+how *mu* interprets some query.
 
 The output of this command are differ between versions, but should be helpful
 nevertheless.

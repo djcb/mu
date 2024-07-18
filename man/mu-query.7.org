@@ -7,7 +7,7 @@ mu-query - a language for finding messages in *mu* databases.
 
 * DESCRIPTION
 
-The mu query language is the language used by *mu find* and *mu4e* to find messages
+The *mu* query language is the language used by *mu find* and *mu4e* to find messages
 in *mu*'s Xapian database. The language is quite similar to Xapian's default
 query-parser, but is an independent implementation that is customized for the
 mu/mu4e use-case.
@@ -16,7 +16,7 @@ Here, we give a structured but informal overview of the query language and
 provide examples. As a companion to this, we recommend the *mu fields* and *mu
 flags* commands to get an up-to-date list of the available fields and flags.
 
-Furthermore, *mu find* provides the ~--analyze~ option, which shows how *mu*
+Furthermore, *mu find* provides the *--analyze* option, which shows how *mu*
 interprets your query; see the *ANALYZING QUERIES* section below.
 
 *NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
@@ -116,7 +116,7 @@ Regular expressions can be useful, but are relatively slow.
 
 We already saw a number of search fields, such as *subject:* and *body:*. For the
 full table with all details, including single-char shortcuts, try the command:
-~mu info fields~.
+*mu info fields*.
 
 #+ATTR_MAN: :disable-caption t
 #+begin_example
@@ -153,7 +153,7 @@ full table with all details, including single-char shortcuts, try the command:
 +-----------+----------+----------+-----------------------------+
 #+end_example
 
-(*) The language code for the text-body if found. This works only if ~mu~ was
+(*) The language code for the text-body if found. This works only if *mu* was
 built with CLD2 support.
 
 There are also the special fields *contact:*, which matches all contact-fields
@@ -360,10 +360,10 @@ for "cld2-support*.
 * ANALZYING QUERIES
 
 Despite all the excellent documentation, in some cases it can be non-obvious how
-~mu~ interprets your query. For that, you can ask ~mu~ to analyze the query -- that
-is, show how ~mu~ interprets the query.
+*mu* interprets your query. For that, you can ask *mu* to analyze the query -- that
+is, show how *mu* interprets the query.
 
-This uses the the ~--analyze~ option to *mu find*.
+This uses the the *--analyze* option to *mu find*.
 #+begin_example
 $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
 ,* query:

@@ -14,7 +14,7 @@ mu-mkdir - create a new Maildir
 *mu mkdir* is the command for creating Maildirs as per *maildir(5)*. A maildir is a
 a directory with subdirectories ~new~, ~cur~ and ~tmp~.
 
-The command does not use the mu database.
+The command does not use the *mu* database.
 
 If creation fails for any reason, *no* attempt is made to remove any parts that
 were created. This is for safety reasons.

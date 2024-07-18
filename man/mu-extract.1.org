@@ -30,9 +30,9 @@ Without any options, *mu extract* simply outputs the list of leaf MIME-parts in
 the message. Only `leaf' MIME-parts (including RFC822 attachments) are
 considered, *multipart/** etc. are ignored.
 
-Without a filename parameter, ~mu extract~ reads a message from standard-input. In
+Without a filename parameter, *mu extract* reads a message from standard-input. In
 that case, you cannot use the second, ~<pattern>~ parameter as this would be
-ambiguous; instead, use the ~--matches~ option.
+ambiguous; instead, use the *--matches* option.
 
 * EXTRACT OPTIONS
 
@@ -56,7 +56,7 @@ overwrite existing files with the same name; by default overwriting is not
 allowed.
 
 ** -u,--uncooked
-by default, ~mu~ transforms the attachment filenames a bit (such as by replacing
+by default, *mu* transforms the attachment filenames a bit (such as by replacing
 spaces by dashes); with this option, leave that to the minimum for creating
 a legal filename in the target directory.
 
@@ -96,7 +96,7 @@ To extract an mp3-file, and play it in the default mp3-playing application:
 $ mu extract --play msgfile 'whoopsididitagain.mp3'
 #+end_example
 
-when reading from standard-input, you need ~--matches~, so:
+when reading from standard-input, you need *--matches*, so:
 #+begin_example
 $ cat msgfile | mu extract --play --matches 'whoopsididitagain.mp3'
 #+end_example

@@ -11,14 +11,14 @@ mu-info  - show information
 
 * DESCRIPTION
 
-~mu info~ is the ~mu~ command for getting information about various topics:
+*mu info* is the *mu* command for getting information about various topics:
 
-- *mu*: general mu build information (default)
+- *mu*: general *mu* build information (default)
 - *store*: information about the message store
 - *fields*: table with all the query fields and flags
 - *maildirs*: list all maildirs under the store's root-maildir
 
-Note that while running (e.g. ~mu4e~), some of the ~store~ information can be
+Note that while running (e.g. ~mu4e~), some of the *store* information can be
 delayed due to database caching.
 
 #+include: "common-options.inc" :minlevel 1

@@ -3,7 +3,7 @@
 
 * NAME
 
-mu-easy - a quick introduction to mu
+mu-easy - a quick introduction to *mu*
 
 * DESCRIPTION
 
@@ -27,7 +27,7 @@ non-empty.
 
 * SETTING THINGS UP
 
-The first time you run the mu commands, you need to initialize it. This is done
+The first time you run the *mu* commands, you need to initialize it. This is done
 with the *init* command.
 
 #+begin_example
@@ -145,7 +145,7 @@ messages in a maildir called ~'/archive'~.
 * MORE QUERIES
 
 Let's list a few more queries that may be interesting; please note that
-searches for message flags, priority and date ranges are only available in mu
+searches for message flags, priority and date ranges are only available in *mu*
 version 0.9 or later.
 
 Get all important messages which are signed:
@@ -180,7 +180,7 @@ which is equivalent to:
 #+begin_example
   *$ mu find subject:angstrom flag:unread*
 #+end_example
-because does mu is case-insensitive and accent-insensitive.
+because does *mu* is case-insensitive and accent-insensitive.
 
 Get all unread messages between March 2002 and August 2003 about some bird (or
 a Swedish rock band):
