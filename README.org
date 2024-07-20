@@ -76,7 +76,7 @@ Help is welcome!
 ** Building
 
 #+begin_example
-$ git clone git://github.com/djcb/mu.git
+$ git clone https://github.com/djcb/mu.git
 $ cd mu
 #+end_example
 
