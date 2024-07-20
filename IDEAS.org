@@ -5,9 +5,10 @@ Ideas for future enhancements. We collect those here so they don't clutter up
 the Github issue list, i.e. without any clear plan for adding in the near
 future.
 
-- Support automatic handling for List-Unsubscribe headers
-  https://github.com/djcb/mu/issues/2623 This seems useful, but probably
-  requires a lot of testing to get right.
+- Support automatic handling for List-Unsubscribe headers and more in general,
+  handle mailing-list commands https://github.com/djcb/mu/issues/2623 and
+  https://github.com/djcb/mu/issues/2724 This seems useful, but probably
+  requires a lot of testing to get right. Can we re-use the Gnus code for this?
 
 - Allow for *muting* messages https://github.com/djcb/mu/issues/636 Useful;
   probably need to do this by *remembering* the thread-id of muted messages; and
