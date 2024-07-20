@@ -14,7 +14,7 @@ For information about the common options, see *COMMON OPTIONS*.
 
 * DESCRIPTION
 
-~mu~ is the general command shows help about the specific commands:
+~mu~ is the general command that shows help about the specific commands:
 
 - ~add~:  add specific messages to the database.
 - ~cfind~: find contacts
@@ -29,7 +29,7 @@ For information about the common options, see *COMMON OPTIONS*.
 - ~server~: start a server process (for ~mu4e~-internal use)
 - ~view~: view a specific message
 
-Each of the commands have their own manpage ~mu-<command~>~.
+Each of the commands have their own manpage ~mu-<command>~.
 
 ~mu~ is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
@@ -74,7 +74,7 @@ the output is always UTF-8, regardless of the locale:
 
 * DATABASE AND FILE
 
-Commands ~mu index~ and ~find~ and ~cfind~ work with the database, while the other
+The ~index~, ~find~, and ~cfind~ commands work with the database, while the other
 ones work on individual mail files. Hence, running ~view~, ~mkdir~ and ~extract~ does
 not require the mu database.
 
