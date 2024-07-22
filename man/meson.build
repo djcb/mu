@@ -26,6 +26,7 @@ incs=[
   'common-options.inc',
   'copyright.inc.in',
   'exit-code.inc',
+  'macros.inc',
   'muhome.inc',
   'prefooter.inc',
 ]
