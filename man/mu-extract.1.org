@@ -1,5 +1,6 @@
 #+TITLE: MU EXTRACT
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -24,7 +25,7 @@ MIME-parts, a name is derived from the message-id of the message.
 
 If you specify a regular express pattern as the second argument, all attachments
 with filenames matching that pattern will be extracted. The regular expressions
-are basic PCRE, and are case-sensitive by default; see *pcre(3)* for more details.
+are basic PCRE, and are case-sensitive by default; see {{{man-link(pcre,3)}}} for more details.
 
 Without any options, *mu extract* simply outputs the list of leaf MIME-parts in
 the message. Only `leaf' MIME-parts (including RFC822 attachments) are
@@ -62,8 +63,8 @@ a legal filename in the target directory.
 
 ** --matches=<pattern>
 Attachments with filenames matching the pattern will be extracted. The regular
-expressions are basic PCRE, and are case-sensitive by default; see *pcre(3)* for
-more details.
+expressions are basic PCRE, and are case-sensitive by default; see
+{{{man-link(pcre,3)}}} for more details.
 
 ** --play
 Try to `play' (open) the attachment with the default application for the
@@ -105,4 +106,4 @@ $ cat msgfile | mu extract --play --matches 'whoopsididitagain.mp3'
 
 * SEE ALSO
 
-*mu(1)*
+{{{man-link(mu,1)}}}

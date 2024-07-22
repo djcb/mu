@@ -1,5 +1,6 @@
 #+TITLE: MU ADD
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -26,4 +27,6 @@ must be specified with an absolute path.
 
 * SEE ALSO
 
-*mu(1)*, *mu-index(1)*, *mu-remove(1)*
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-remove,1)}}}

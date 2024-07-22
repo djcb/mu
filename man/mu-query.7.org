@@ -1,5 +1,6 @@
 #+TITLE: MU QUERY
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -84,7 +85,7 @@ Note that a =pure not= - e.g. searching for *not apples* is quite a `heavy' quer
 
 * REGULAR EXPRESSIONS AND WILDCARDS
 
-The language supports matching basic PCRE regular expressions, see *pcre(3)*.
+The language supports matching basic PCRE regular expressions, see {{{man-link(pcre,3)}}}.
 
 Regular expressions are enclosed in *//*. Some examples:
 
@@ -381,4 +382,6 @@ interprets your query.
 
 * SEE ALSO
 
-*mu-find(1)*, *mu-info(1), *pcre(3)*
+{{{man-link(mu-find,1)}}},
+{{{man-link(mu-info,1)}}},
+{{{man-link(pcre,3)}}}

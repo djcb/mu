@@ -1,5 +1,6 @@
 #+TITLE: MU INFO
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -29,4 +30,4 @@ delayed due to database caching.
 
 * SEE ALSO
 
-*mu(1)*
+{{{man-link(mu,1)}}}

@@ -1,5 +1,6 @@
 #+TITLE: MU CFIND
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -42,7 +43,7 @@ If you do not specify a search expression, *mu cfind* returns the full list of
 contacts. Note, *mu cfind* uses a cache with the e-mail information, which is
 populated during the indexing process.
 
-The regular expressions are basic case-insensitive PCRE, see *pcre(3)*.
+The regular expressions are basic case-insensitive PCRE, see {{{man-link(pcre,3)}}}.
 
 * CFIND OPTIONS
 
@@ -124,7 +125,7 @@ Each contact has the following fields:
 | ~personal~      | whether the email was seen in a message together with a personal address |
 | ~frequency~     | approximation of the number of times this contact was seen in messages   |
 
-The JSON format is useful for further processing, e.g. using the *jq(1)* tool:
+The JSON format is useful for further processing, e.g. using the {{{man-link(jq,1)}}} tool:
 
 List display names, sorted by their last-seen date:
 #+begin_example
@@ -146,7 +147,7 @@ which is (by default) accessible by pressing *Q*.
 * ENCODING
 
 *mu cfind* output is encoded according to the current locale except for
-=--format=bbdb=. This is hard-coded to UTF-8, and as such specified in the
+*--format=bbdb*. This is hard-coded to UTF-8, and as such specified in the
 output-file, so emacs/bbdb can handle things correctly, without guessing.
 
 #+include: "exit-code.inc" :minlevel 1
@@ -158,4 +159,9 @@ output-file, so emacs/bbdb can handle things correctly, without guessing.
 #+include: "copyright.inc" :minlevel 1
 
 * SEE ALSO
-*mu(1)*, *mu-index(1)*, *mu-find(1)*, *pcre(3)*, *jq(1)*
+
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-find,1)}}},
+{{{man-link(pcre,3)}}},
+{{{man-link(jq,1)}}}

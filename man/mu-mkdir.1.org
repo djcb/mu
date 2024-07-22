@@ -1,5 +1,6 @@
 #+TITLE: MU MKDIR
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -11,8 +12,9 @@ mu-mkdir - create a new Maildir
 
 * DESCRIPTION
 
-*mu mkdir* is the command for creating Maildirs as per *maildir(5)*. A maildir is a
-a directory with subdirectories ~new~, ~cur~ and ~tmp~.
+*mu mkdir* is the command for creating Maildirs as per
+{{{man-link(maildir,5)}}}. A maildir is a a directory with subdirectories ~new~,
+~cur~ and ~tmp~.
 
 The command does not use the *mu* database.
 
@@ -22,8 +24,8 @@ were created. This is for safety reasons.
 * MKDIR OPTIONS
 
 ** --mode=<mode>
-set the file access mode for the new maildir(s) as in *chmod(1)*. The default
-is 0755.
+set the file access mode for the new maildir(s) as in
+{{{man-link(chmod,1)}}}. The default is 0755.
 
 #+include: "common-options.inc" :minlevel 1
 
@@ -39,4 +41,5 @@ creates three maildirs, =tom=, =dick= and =harry=.
 
 * SEE ALSO
 
-*maildir(5)*, *chmod(1)*
+{{{man-link(maildir,5)}}},
+{{{man-link(chmod,1)}}}

@@ -1,5 +1,6 @@
 #+TITLE: MU FIND
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -12,12 +13,12 @@ mu-find - find e-mail messages in the *mu* database.
 * DESCRIPTION
 
 *mu find* is the *mu* command for searching e-mail message that were stored earlier
-using *mu index(1)*.
+using {{{man-link(mu index,1)}}}.
 
 * SEARCHING MAIL
 
 *mu find* starts a search for messages in the database that match some search
-pattern. The search patterns are described in detail in *mu-query(7)*.
+pattern. The search patterns are described in detail in {{{man-link(mu-query,7)}}}.
 
 For example:
 
@@ -40,12 +41,12 @@ The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
 treated as if there were a logical *and* between them.
 
-For details on the possible queries, see *mu-query(7)*.
+For details on the possible queries, see {{{man-link(mu-query,7)}}}.
 
 * FIND OPTIONS
 
-Note, some of the important options are described in the *mu*(1) man-page
-and not here, as they apply to multiple *mu* commands.
+Note, some of the important options are described in the {{{man-link(mu*,1)}}}
+manual page and not here, as they apply to multiple *mu* commands.
 
 The *find*-command has various options that influence the way *mu* displays the
 results. If you don't specify anything, the defaults are *--fields="d f s"*,
@@ -81,9 +82,9 @@ parameters, such as:
 
 For the complete list, try the command: *mu info fields*.
 
-The message flags are described in *mu-query(7)*. As an example, a message which
-is `seen', has an attachment and is signed would have `asz' as its corresponding
-output string, while an encrypted new message would have `nx'.
+The message flags are described in {{{man-link(mu-query,7)}}}. As an example, a
+message which is `seen', has an attachment and is signed would have `asz' as its
+corresponding output string, while an encrypted new message would have `nx'.
 
 ** -s, --sortfield=<field> and -z,--reverse
 specify the field to sort the search results by and the direction (i.e.,
@@ -176,8 +177,8 @@ $ mu find milkshake --fields="l" | xargs less
 
 ** -b, --bookmark=<bookmark>
 use a bookmarked search query. Using this option, a query from your bookmark
-file will be prepended to other search queries. See *mu-bookmarks(5)* for the
-details of the bookmarks file.
+file will be prepended to other search queries. See
+{{{man-link(mu-bookmarks,5)}}} for the details of the bookmarks file.
 
 
 ** -u, --skip-dups
@@ -276,7 +277,7 @@ After restarting Wanderlust, the virtual folders should appear.
 
 * ENCODING
 
-*mu find* output is encoded according to the locale for =--format=plain= (the
+*mu find* output is encoded according to the locale for *--format=plain* (the
 default format), and UTF-8 for all other formats (=sexp=, =xml=).
 
 
@@ -311,4 +312,7 @@ taking the total number for 10 test runs.
 
 * SEE ALSO
 
-*mu(1)*, *mu-index(1)*, *mu-query(7)*, *mu-info(1)*
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-query,7)}}},
+{{{man-link(mu-info,1)}}}

@@ -1,5 +1,6 @@
 #+TITLE: MU INDEX
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -13,15 +14,15 @@ mu-index - index e-mail messages stored in Maildirs
 
 *mu index* is the *mu* command for scanning the contents of Maildir directories and
 storing the results in a Xapian database. The data can then be queried using
-*mu-find(1)*.
+{{{man-link(mu-find,1)}}}.
 
 Before the first time you run *mu index*, you must run *mu init* to initialize the
 database.
 
-*index* understands Maildirs as defined by Daniel Bernstein for *qmail(7)*. In
-addition, it understands recursive Maildirs (Maildirs within Maildirs),
-Maildir++. It also supports VFAT-based Maildirs which use =!= or =;= as the
-separators instead of =:=.
+*index* understands Maildirs as defined by Daniel Bernstein for
+{{{man-link(qmail,7)}}}. In addition, it understands recursive Maildirs
+(Maildirs within Maildirs), Maildir++. It also supports VFAT-based Maildirs
+which use =!= or =;= as the separators instead of =:=.
 
 E-mail messages which are not stored in something resembling a maildir
 leaf-directory (=cur= and =new=) are ignored, as are the cache directories for
@@ -215,4 +216,8 @@ least for now, the latest code is both the fastest and the most featureful!
 
 * SEE ALSO
 
-*maildir(5)*, *mu(1)*, *mu-init(1)*, *mu-find(1)*, *mu-cfind(1)*
+{{{man-link(maildir,5)}}},
+{{{man-link(mu,1)}}},
+{{{man-link(mu-init,1)}}},
+{{{man-link(mu-find,1)}}},
+{{{man-link(mu-cfind,1)}}}

@@ -1,5 +1,6 @@
 #+TITLE:  MU-SERVER
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -88,4 +89,5 @@ time build/mu/mu server --allow-temp-file --eval '(find :query "\"\"" :include-r
 #+include: "prefooter.inc" :minlevel 1
 
 * SEE ALSO
-*mu(1)*
+
+{{{man-link(mu,1)}}}

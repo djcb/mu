@@ -1,5 +1,6 @@
 #+TITLE: MU VERIFY
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -21,8 +22,8 @@ standard-input.
 * VERIFY OPTIONS
 
 ** -r, --auto-retrieve
-attempt to find keys online (see the *auto-key-retrieve* option in the *gnupg(1)*
-documentation).
+attempt to find keys online (see the *auto-key-retrieve* option in the
+{{{man-link(gnupg,1)}}} documentation).
 
 ** decrypt
 attempt to decrypt the message
@@ -52,4 +53,4 @@ which does not give any output unless there is an error.
 
 * SEE ALSO
 
-*mu(1)*
+{{{man-link(mu,1)}}}

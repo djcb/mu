@@ -1,5 +1,6 @@
 #+TITLE: MU MOVE
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -28,7 +29,8 @@ specify the new message flags. See *FLAGS* for details.
 ** --change-name
 
 change the basename of the message file when moving; this can be useful when
-using some external tools such as *mbsync(1)* which otherwise get confused
+using some external tools such as {{{man-link(mbsync,1)}}} which otherwise get
+confused
 
 ** --update-dups
 
@@ -48,8 +50,8 @@ use a dry-run to predict the exact name when doing a `real' run.
 
 * FLAGS
 
-(Note: if you are not familiar with Maildirs, please refer to the *maildir(5)*
-man-page, or see http://cr.yp.to/proto/maildir.html)
+(Note: if you are not familiar with Maildirs, please refer to the
+{{{man-link(maildir,5)}}} man-page, or see http://cr.yp.to/proto/maildir.html)
 
 The message flags specify the Maildir-metadata for a message and are represented
 by uppercase letters at the end of the message file name for all `non-new'
@@ -114,4 +116,4 @@ $ mu move /home/user/Maildir/project1/cur/1695559560.a73985881f4611ac2.hostname!
 
 * SEE ALSO
 
-*maildir(5)*
+{{{man-link(maildir,5)}}}

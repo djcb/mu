@@ -1,5 +1,6 @@
 #+TITLE: MU REMOVE
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -24,4 +25,6 @@ their filename. The files do not have to exist in the file system.
 
 * SEE ALSO
 
-*mu(1)*, *mu-index(1)*, *mu-add(1)*
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-add,1)}}}

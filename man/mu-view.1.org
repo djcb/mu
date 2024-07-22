@@ -1,5 +1,6 @@
 #+TITLE: MU VIEW
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -51,4 +52,4 @@ attempt to retrieve crypto-keys automatically from the network, when needed.
 
 * SEE ALSO
 
-*mu(1)*
+{{{man-link(mu,1)}}}
