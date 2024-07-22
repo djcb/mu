@@ -48,7 +48,7 @@ attempt to retrieve crypto-keys automatically from the network, when needed.
 
 #+include: "common-options.inc" :minlevel 1
 
-* BUGS
+#+include: "bugs.inc" :minlevel 1
 
 * SEE ALSO
 
