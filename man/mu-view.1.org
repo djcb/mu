@@ -24,27 +24,27 @@ standard-input.
 
 * VIEW OPTIONS
 
-** --format,-o  = <format>
-use the given output format, one of:
+** -o, --format _format_
+Use the given output format, one of:
 
-- *plain* - use the plain-text body; this is the default
-- *html* - use the HTML body
-- *sexp* - show the S-expression representation of the message
+- *plain*: use the plain-text body; this is the default,
+- *html*: use the HTML body,
+- *sexp*: show the S-expression representation of the message.
 
-** --summary-len=<number>
-instead of displaying the full message, output a summary based upon the first
-=<number>= lines of the message.
+** --summary-len _number_
+Instead of displaying the full message, output a summary based upon the first
+_number_ lines of the message.
 
 ** --terminate
-terminate messages with \\​f (=form-feed=) characters when displaying them. This is
+Terminate messages with \\​f (=form-feed=) characters when displaying them. This is
 useful when you want to further process them.
 
 ** --decrypt
-attempt to decrypt encrypted message bodies. This is only possible if *mu*
+Attempt to decrypt encrypted message bodies. This is only possible if *mu*
 was built with crypto-support.
 
 ** --auto-retrieve
-attempt to retrieve crypto-keys automatically from the network, when needed.
+Attempt to retrieve crypto-keys automatically from the network, when needed.
 
 #+include: "common-options.inc" :minlevel 1
 

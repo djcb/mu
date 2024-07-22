@@ -22,26 +22,22 @@ for *mu*'s database (see *mu info store*).
 
 * MOVE OPTIONS
 
-** --flags=<flags>
-
-specify the new message flags. See *FLAGS* for details.
+** --flags _flags_
+Specify the new message flags. See *FLAGS* for details.
 
 ** --change-name
-
-change the basename of the message file when moving; this can be useful when
+Change the basename of the message file when moving; this can be useful when
 using some external tools such as {{{man-link(mbsync,1)}}} which otherwise get
 confused
 
 ** --update-dups
-
-update the flags of duplicate messages too, where "duplicate messages" are
+Update the flags of duplicate messages too, where "duplicate messages" are
 defined as all message that share the same message-id. Note that the
 Draft/Flagged/Trashed flags are deliberately _not_ changed if you change those on
 the source message.
 
-** --dry-run,-n
-
-print the target filename(s), but don't change anything.
+** -n, --dry-run
+Print the target filename(s), but don't change anything.
 
 Note that with the *--change-name*, the target name is not constant, so you cannot
 use a dry-run to predict the exact name when doing a `real' run.

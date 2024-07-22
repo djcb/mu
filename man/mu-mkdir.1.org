@@ -23,8 +23,8 @@ were created. This is for safety reasons.
 
 * MKDIR OPTIONS
 
-** --mode=<mode>
-set the file access mode for the new maildir(s) as in
+** --mode _mode_
+Set the file access mode for the new maildir(s) as in
 {{{man-link(chmod,1)}}}. The default is 0755.
 
 #+include: "common-options.inc" :minlevel 1

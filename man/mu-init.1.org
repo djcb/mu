@@ -17,60 +17,53 @@ has completed, you can run *mu index*
 
 * INIT OPTIONS
 
-** -m, --maildir=<maildir>
-
-use =<maildir>= as the root-maildir.
+** -m, --maildir _maildir_
+Use _maildir_ as the root-maildir.
 
 By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses _~/Maildir_
 if it is an existing directory. If neither of those can be used, the *--maildir*
 option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
 
-** --my-address=<email-address-or-regex>
-
-specifies that some e-mail address is `my-address' (the option can be used
+** --my-address _email-address-or-regex_
+Specifies that some e-mail address is `my-address' (the option can be used
 multiple times). Any message in which at least one of the contact fields
 contains such an address is considered a `personal' messages; this can then be
 used for filtering in {{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and
 *mu4e*, e.g. to filter-out mailing list messages.
 
-=<email-address-or-regex>= can be either a plain e-mail address (such as
+_email-address-or-regex_ can be either a plain e-mail address (such as
 *foo@example.com*), or a basic PCRE regular-expression (see
 {{{man-link(pcre,3)}}} for details), wrapped in */* (such as
 =/foo-.*@example\\.com/=). Depending on your shell, the argument may need to be
 quoted.
 
-** --ignored-address=<email-address-or-regex>
-
-specifies that some e-mail address is to be ignored from the contacts-cache (the
+** --ignored-address _email-address-or-regex_
+Specifies that some e-mail address is to be ignored from the contacts-cache (the
 option can be used multiple times). Such addresses then cannot be found with
 {{{man-link(mu-cfind,1)}}} or in the Mu4e contacts cache.
 
-=<my-email-address>= can be either a plain e-mail address or a regexp, just like
+_my-email-address_ can be either a plain e-mail address or a regexp, just like
 for the *--my-address* option.
 
-** --max-message-size=<size>
-
-specifies the maximum size for an e-mail message. Usually, the default of
+** --max-message-size _size_
+Specifies the maximum size for an e-mail message. Usually, the default of
 100000000 bytes should be fine.
 
-** --batch-size=<size>
-
-the number of changes after which they are committed to the database; decreasing
+** --batch-size _size_
+The number of changes after which they are committed to the database; decreasing
 the value reduces the memory requirements, at the cost of make indexing
 substantially slower. Usually, the default of 250000 should be fine.
 
 Batch-size 0 is interpreted as `use the default'.
 
 ** --support-ngrams
-
-whether to enable support for using ngrams in indexing and query parsing; this
+Whether to enable support for using ngrams in indexing and query parsing; this
 can be useful for languages without explicit word breaks, such as
 Chinese/Japanese/Korean. See *NGRAM SUPPORT* below for details.
 
 ** --reinit
-
-reinitialize the database from an earlier version; that is, create a new empty
+Reinitialize the database from an earlier version; that is, create a new empty
 database with the existing settings. This cannot be combined with the other *init*
 options.
 

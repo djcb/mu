@@ -45,15 +45,15 @@ For details on the possible queries, see {{{man-link(mu-query,7)}}}.
 
 * FIND OPTIONS
 
-Note, some of the important options are described in the {{{man-link(mu*,1)}}}
+Note, some of the important options are described in the {{{man-link(mu,1)}}}
 manual page and not here, as they apply to multiple *mu* commands.
 
 The *find*-command has various options that influence the way *mu* displays the
 results. If you don't specify anything, the defaults are *--fields="d f s"*,
 *--sortfield=date* and *--reverse*.
 
-** -f, --fields=<fields>
-specifies a string that determines which fields are shown in the output. This
+** -f, --fields _fields_
+Specifies a string that determines which fields are shown in the output. This
 string consists of a number of characters (such as 's' for subject or 'f' for
 from), which will replace with the actual field in the output. Fields that are
 not known will be output as-is, allowing for some simple formatting.
@@ -86,8 +86,8 @@ The message flags are described in {{{man-link(mu-query,7)}}}. As an example, a
 message which is `seen', has an attachment and is signed would have `asz' as its
 corresponding output string, while an encrypted new message would have `nx'.
 
-** -s, --sortfield=<field> and -z,--reverse
-specify the field to sort the search results by and the direction (i.e.,
+** -s, --sortfield _field_ and -z,--reverse
+Specify the field to sort the search results by and the direction (i.e.,
 `reverse' means that the sort should be reverted - Z-A). Examples include:
 
 #+begin_example
@@ -113,16 +113,16 @@ Note, if you specify a sortfield, by default, messages are sorted in reverse
 (descending) order (e.g., from lowest to highest). This is usually a good
 choice, but for dates it may be more useful to sort in the opposite direction.
 
-** -n, --maxnum=<number>
-If > 0, display maximally that number of entries. If not specified, all matching
-entries are displayed.
+** -n, --maxnum _number_
+If _number_ > 0, display maximally that number of entries. If not specified, all
+matching entries are displayed.
 
-** --summary-len=<number>
-If > 0, use that number of lines of the message to provide a summary.
+** --summary-len _number_
+If _number_ > 0, use that number of lines of the message to provide a summary.
 
-** --format=<plain|links|xml|sexp>
+** --format plain|links|xml|sexp
 
-output results in the specified format:
+Output results in the specified format.
 
 - The default is *plain*, i.e normal output with one line per message.
 - *links* outputs the results as a maildir with symbolic links to the found
@@ -130,10 +130,10 @@ output results in the specified format:
   information).
 - *xml* formats the search results as XML.
 - *sexp* formats the search results as an s-expression as used in Lisp programming
-  environments
+  environments.
 
-** --linksdir=<dir> and -c, --clearlinks
-when using *-format=links*, output the results as a maildir with symbolic links to
+** --linksdir _dir_ and -c, --clearlinks
+When using *--format=links*, output the results as a maildir with symbolic links to
 the found messages. This enables easy integration with mail-clients (see below
 for more information). *mu* will create the maildir if it does not exist yet.
 
@@ -150,9 +150,9 @@ exist yet, it will be created. Note: when *mu* creates a Maildir for these links
 it automatically inserts a _.noindex_ file, to exclude the directory from *mu
 index*.
 
-** --after=<timestamp>
-only show messages whose message files were last modified (*mtime*) after
-=<timestamp>=. =<timestamp>= is a UNIX *time_t* value, the number of seconds since
+** --after _timestamp_
+Only show messages whose message files were last modified (*mtime*) after
+_timestamp_. _timestamp_ is a UNIX *time_t* value, the number of seconds since
 1970-01-01 (in UTC).
 
 From the command line, you can use the *date* command to get this value. For
@@ -163,8 +163,8 @@ could specify
 #+end_example
 This is assuming the GNU *date* command.
 
-** --exec=<command>
-the *--exec* coption causes the =command= to be executed on each matched message;
+** --exec _command_
+The *--exec* coption causes _command_ to be executed on each matched message;
 for example, to see the raw text of all messages matching `milkshake', you could
 use:
 #+begin_example
@@ -175,24 +175,23 @@ which is roughly equivalent to:
 $ mu find milkshake --fields="l" | xargs less
 #+end_example
 
-** -b, --bookmark=<bookmark>
-use a bookmarked search query. Using this option, a query from your bookmark
+** -b, --bookmark _bookmark_
+Use a bookmarked search query. Using this option, a query from your bookmark
 file will be prepended to other search queries. See
 {{{man-link(mu-bookmarks,5)}}} for the details of the bookmarks file.
 
-
 ** -u, --skip-dups
-whenever there are multiple messages with the same message-id field, only show
+Whenever there are multiple messages with the same message-id field, only show
 the first one. This is useful if you have copies of the same message, which is a
 common occurrence when using e.g. Gmail together with *offlineimap*.
 
 ** -r, --include-related
-include messages being referred to by the matched messages -- i.e.. include
+Include messages being referred to by the matched messages -- i.e.. include
 messages that are part of the same message thread as some matched messages. This
 is useful if you want Gmail-style `conversations'.
 
 ** -t, --threads
-show messages in a `threaded' format -- that is, with indentation and arrows
+Show messages in a `threaded' format -- that is, with indentation and arrows
 showing the conversation threads in the list of matching messages. When using
 this, sorting is chronological (by date), based on the newest message in a
 thread.
@@ -215,7 +214,7 @@ The algorithm used for determining the threads is based on Jamie Zawinksi's
 description: http://www.jwz.org/doc/threading.html
 
 ** -a,--analyze
-instead of executing the query, analyze it by show the parse-tree s-expression
+Instead of executing the query, analyze it by show the parse-tree s-expression
 and a stringified version of the Xapian query. This can help users to determine
 how *mu* interprets some query.
 

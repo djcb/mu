@@ -66,8 +66,7 @@ terminate immediately.
 * INDEX OPTIONS
 
 ** --lazy-check
-
-in lazy-check mode, *mu* does not consider messages for which the time-stamp
+In lazy-check mode, *mu* does not consider messages for which the time-stamp
 (ctime) of the directory they reside in has not changed since the previous
 indexing run. This is much faster than the non-lazy check, but won't update
 messages that have change (rather than having been added or removed), since
@@ -76,12 +75,10 @@ you can run *mu-index* occasionally without *--lazy-check*, to pick up such
 messages.
 
 ** --nocleanup
-
-disable the database cleanup that *mu* does by default after indexing.
+Disable the database cleanup that *mu* does by default after indexing.
 
 ** --reindex
-
-perform a complete reindexing of all the messages in the maildir.
+Perform a complete reindexing of all the messages in the maildir.
 
 #+include: "muhome.inc" :minlevel 2
 

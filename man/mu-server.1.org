@@ -50,15 +50,12 @@ UTF-8 (in which the s-expressions are encoded).
 * SERVER OPTIONS
 
 ** --commands
+List available commands (and try with *--verbose*).
 
-List available commands (and try with *--verbose*)
-
-** --eval <expression>
-
-Evaluate a mu4e server s-expression
+** --eval _expression_
+Evaluate a mu4e server s-expression.
 
 ** --allow-temp-file
-
 If set, allow for the output of some commands to use temp-files rather than
 directly through the emacs process input/output. This is noticeably faster for
 commands with a lot of output, esp. when the the temp-file uses a in-memory

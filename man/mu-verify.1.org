@@ -22,11 +22,11 @@ standard-input.
 * VERIFY OPTIONS
 
 ** -r, --auto-retrieve
-attempt to find keys online (see the *auto-key-retrieve* option in the
+Attempt to find keys online (see the *auto-key-retrieve* option in the
 {{{man-link(gnupg,1)}}} documentation).
 
-** decrypt
-attempt to decrypt the message
+** --decrypt
+Attempt to decrypt the message.
 
 #+include: "common-options.inc" :minlevel 1
 

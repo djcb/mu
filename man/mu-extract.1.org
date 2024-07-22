@@ -32,37 +32,36 @@ the message. Only `leaf' MIME-parts (including RFC822 attachments) are
 considered, *multipart/** etc. are ignored.
 
 Without a filename parameter, *mu extract* reads a message from standard-input. In
-that case, you cannot use the second, ~<pattern>~ parameter as this would be
+that case, you cannot use the second, _PATTERN_ parameter as this would be
 ambiguous; instead, use the *--matches* option.
 
 * EXTRACT OPTIONS
 
 ** -a, --save-attachments
-save all MIME-parts that look like attachments.
+Save all MIME-parts that look like attachments.
 
 ** --save-all
-save all non-multipart MIME-parts.
+Save all non-multipart MIME-parts.
 
-** --parts=<parts>
-only consider the following numbered parts (comma-separated list). The numbers
+** --parts _parts_
+Only consider the following numbered _parts_ (comma-separated list). The numbers
 for the parts can be seen from running *mu extract* without any options but only
 the message file.
 
-** --target-dir=<dir>
-save the parts in the target directory rather than the current working
-directory.
+** --target-dir _dir_
+Save the parts in _dir_ rather than the current working directory.
 
 ** --overwrite
-overwrite existing files with the same name; by default overwriting is not
+Overwrite existing files with the same name; by default overwriting is not
 allowed.
 
 ** -u,--uncooked
-by default, *mu* transforms the attachment filenames a bit (such as by replacing
+By default, *mu* transforms the attachment filenames a bit (such as by replacing
 spaces by dashes); with this option, leave that to the minimum for creating
 a legal filename in the target directory.
 
-** --matches=<pattern>
-Attachments with filenames matching the pattern will be extracted. The regular
+** --matches _pattern_
+Attachments with filenames matching _pattern_ will be extracted. The regular
 expressions are basic PCRE, and are case-sensitive by default; see
 {{{man-link(pcre,3)}}} for more details.
 
