@@ -135,7 +135,7 @@ $ mu cfind --format=json --personal | jq -r '.[] | ."last-seen-iso" + " " + .dis
 * INTEGRATION WITH MUTT
 
 You can use *mu cfind* as an external address book server for *mutt*.
-For this to work, add the following to your =muttrc=:
+For this to work, add the following to your _muttrc_:
 
 #+begin_example
 set query_command = "mu cfind --format=mutt-ab '%s'"

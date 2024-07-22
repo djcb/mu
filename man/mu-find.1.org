@@ -145,9 +145,9 @@ will delete any symlink it finds, so be careful.
 $ mu find grolsch --format=links --linksdir=~/Maildir/search --clearlinks
 #+end_example
 
-stores links to found messages in =~/Maildir/search=. If the directory does not
+stores links to found messages in _~/Maildir/search_. If the directory does not
 exist yet, it will be created. Note: when *mu* creates a Maildir for these links,
-it automatically inserts a =.noindex= file, to exclude the directory from *mu
+it automatically inserts a _.noindex_ file, to exclude the directory from *mu
 index*.
 
 ** --after=<timestamp>
@@ -232,7 +232,7 @@ It is possible to integrate *mu find* with some mail clients
 
 ** *mutt*
 
-For *mutt* you can use the following in your =muttrc=; pressing the F8 key will
+For *mutt* you can use the following in your *muttrc*; pressing the F8 key will
 start a search, and F9 will take you to the results.
 
 #+begin_example
@@ -263,7 +263,7 @@ your Wanderlust configuration file:
 
 Now, you can search using the *g* key binding; you can also create permanent
 virtual folders when the messages matching some expression by adding something
-like the following to your =folders= file.
+like the following to your _folders_ file.
 
 #+begin_example
 VFolders {

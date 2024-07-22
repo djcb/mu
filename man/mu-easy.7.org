@@ -56,7 +56,7 @@ processed. See the {{{man-link(mu-index,1)}}} man page for more details.
 
 Normally, *mu index* visits all the directories under the top-level Maildir;
 however, you can exclude certain directories (say, the `trash' or `spam'
-folders) by creating a file called =.noindex= in the directory. When *mu* sees such
+folders) by creating a file called _.noindex_ in the directory. When *mu* sees such
 a file, it will exclude this directory and its sub-directories from indexing.
 Also see *.noupdate* in the {{{man-link(mu-index,1)}}} manpage.
 
@@ -106,8 +106,8 @@ Julius Caesar <jc@example.com> Fere libenter homines id quod volunt credunt
 This is the same message found before, only with some different fields
 displayed.
 
-By default, *mu* uses the logical ~AND~ for the search parameters -- that is, it
-displays messages that match all the parameters. However, we can use logical ~OR~
+By default, *mu* uses the logical _AND_ for the search parameters -- that is, it
+displays messages that match all the parameters. However, we can use logical _OR_
 as well:
 
 #+begin_example
@@ -141,7 +141,7 @@ The summary consists of the first /n/ lines of the message with all superfluous
 whitespace removed.
 
 Also note the *m:/archive* parameter in the query. This means that we only match
-messages in a maildir called ~'/archive'~.
+messages in a maildir called _'/archive'_.
 
 * MORE QUERIES
 
@@ -296,7 +296,7 @@ $ mu cfind --format=mutt-alias > ~/mutt-aliases
 #+end_example
 
 Then, you can use them in *mutt* if you add something like *source ~/mutt-aliases*
-to your =muttrc=.
+to your _muttrc_.
 
 #+include: "prefooter.inc" :minlevel 1
 

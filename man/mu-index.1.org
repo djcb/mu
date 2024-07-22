@@ -22,27 +22,27 @@ database.
 *index* understands Maildirs as defined by Daniel Bernstein for
 {{{man-link(qmail,7)}}}. In addition, it understands recursive Maildirs
 (Maildirs within Maildirs), Maildir++. It also supports VFAT-based Maildirs
-which use =!= or =;= as the separators instead of =:=.
+which use *!* or *;* as the separators instead of *:*.
 
 E-mail messages which are not stored in something resembling a maildir
-leaf-directory (=cur= and =new=) are ignored, as are the cache directories for
-=notmuch= and =gnus=, and any dot-directory.
+leaf-directory (_cur_ and _new_) are ignored, as are the cache directories for
+_notmuch_ and _gnus_, and any dot-directory.
 
 Symlinks are followed, and the directories can be spread over multiple
 filesystems; however note that moving files around is much faster when multiple
 filesystems are not involved. Be careful to avoid self-referential symlinks!
 
-If there is a file called =.noindex= in a directory, the contents of that
+If there is a file called _.noindex_ in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
 exclude certain directories from the indexing process, for example directories
 with spam-messages.
 
-If there is a file called =.noupdate= in a directory, the contents of that
+If there is a file called _.noupdate_ in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
 speed up things you have some maildirs that never change.
 
-=.noupdate= does not affect already-indexed message: you can still search for
-them. =.noupdate= is ignored when you start indexing with an empty database (such
+_.noupdate_ does not affect already-indexed message: you can still search for
+them. _.noupdate_ is ignored when you start indexing with an empty database (such
 as directly after *mu init*).
 
 There also the option *--lazy-check* which can greatly speed up indexing; see

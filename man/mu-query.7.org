@@ -281,7 +281,7 @@ prio:high
 
 The Maildir field describes the directory path starting *after* the Maildir root
 directory, and before the =/cur/= or =/new/= part. So, for example, if there's a
-message with the file name =~/Maildir/lists/running/cur/1234.213:2,=, you could
+message with the file name _~/Maildir/lists/running/cur/1234.213:2,_, you could
 find it (and all the other messages in that same maildir) with:
 #+begin_example
 maildir:/lists/running

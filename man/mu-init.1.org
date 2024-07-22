@@ -21,7 +21,7 @@ has completed, you can run *mu index*
 
 use =<maildir>= as the root-maildir.
 
-By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses =~/Maildir=
+By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses _~/Maildir_
 if it is an existing directory. If neither of those can be used, the *--maildir*
 option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
@@ -47,7 +47,7 @@ option can be used multiple times). Such addresses then cannot be found with
 {{{man-link(mu-cfind,1)}}} or in the Mu4e contacts cache.
 
 =<my-email-address>= can be either a plain e-mail address or a regexp, just like
-for the =--my-address= option.
+for the *--my-address* option.
 
 ** --max-message-size=<size>
 
@@ -85,7 +85,7 @@ query-parsing; it is not enabled by default, and is recommended only if you need
 to search for messages written in such languages.
 
 When enabled, *mu* automatically uses ngrams automatically. Xapian environment
-variables such as ~XAPIAN_CJK_NGRAM~ are ignored.
+variables such as *XAPIAN_CJK_NGRAM* are ignored.
 
 #+include: "exit-code.inc" :minlevel 1
 

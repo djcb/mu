@@ -55,7 +55,7 @@ use a dry-run to predict the exact name when doing a `real' run.
 
 The message flags specify the Maildir-metadata for a message and are represented
 by uppercase letters at the end of the message file name for all `non-new'
-messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
+messages, i.e. messages that live in the _cur/_ sub-directory of a Maildir.
 
 #+ATTR_MAN: :disable-caption t
 | Flag | Meaning                            |
@@ -67,7 +67,7 @@ messages, i.e. messages that live in the ~cur/~ sub-directory of a Maildir.
 | S    | Seen message                       |
 | T    | Trashed; to be deleted later       |
 
-New messages (in the ~new/~ sub-directory) do not have flags encoded in their
+New messages (in the _new/_ sub-directory) do not have flags encoded in their
 file-name; but we *mu* uses `N' in the *--flags* to represent that:
 
 #+ATTR_MAN: :disable-caption t
@@ -77,7 +77,7 @@ file-name; but we *mu* uses `N' in the *--flags* to represent that:
 
 Thus, changing flags means changing the letters at the end of the message
 file-name, except when setting or removing the `N' (new) flag. Setting or
-un-setting the New flag causes the message is to be moved from ~cur/~ to ~new/~ or
+un-setting the New flag causes the message is to be moved from _cur/_ to _new/_ or
 vice-versa, respectively. When marking a message as New, it looses the other
 flags.
 
@@ -91,7 +91,7 @@ Absolute flags just specify the new flags by their letters; e.g. to specify a
 #+end_example
 
 Relative flags are relative to the current flags for some message, and each of
-the flags is prefixed with either ~+~ ("add this flag") or ~-~ ("remove this flag").
+the flags is prefixed with either *+* ("add this flag") or *-* ("remove this flag").
 
 So to add the /Seen/ flag and remove the /Draft/ flag from whatever the message
 already has, *--flags +S-D*.

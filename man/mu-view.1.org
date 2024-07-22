@@ -13,7 +13,7 @@ mu-view - display an e-mail message file
 * DESCRIPTION
 
 *mu view* is the *mu* command for displaying e-mail message files. It works on
-message files and does =not= require the message to be indexed in the database.
+message files and does _not_ require the message to be indexed in the database.
 
 The command shows some common headers (From:, To:, Cc:, Bcc:, Subject: and
 Date:), the list of attachments and either the plain-text or html body of the
