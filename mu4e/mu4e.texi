@@ -1572,9 +1572,12 @@ on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @t{mu4e} defines a number of example actions.
 
 @subsection MIME-part actions
-MIME-part actions allow you to act upon MIME-parts in a message - such
-as attachments.  For now, these actions are defined and documented in
-@code{mu4e-view-mime-part-actions} and see
+MIME-part actions allow you to act upon MIME-parts in a message - such as
+attachments. These actions are defined and documented in
+@code{mu4e-view-mime-part-actions}.
+
+There are a number of built-in actions which may be a good starting point for
+creating your own.
 
 @node MSGV Detaching and reattaching
 @section Detaching and reattaching messages
