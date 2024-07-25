@@ -301,13 +301,19 @@ What all that in place, let's build and install @t{mu} and @t{mu4e}.
 Enter the directory where you unpacked or cloned @t{mu}. Then:
 
 @example
-$ ./configure && make
+$ ./autogen.sh && make
 $ sudo make install
 @end example
 
 Note: if you are familiar with @t{meson}, you can of course use its
 commands directly; the @t{make} commands are just a thin wrapper around
-that.
+that; so, this also works:
+
+@example
+$ meson setup build
+$ meson compile -C build
+$ meson install -C build
+@end example
 
 @subsection Installation
 
