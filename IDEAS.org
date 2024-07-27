@@ -41,6 +41,10 @@ future.
   https://github.com/djcb/mu/issues/301
   https://github.com/djcb/mu/issues/2704
 
+- Try to guess the encodings; sometimes people send messages that e.g., claim
+  they are ISO-8859-1 but actually use windows-1252, resulting in some
+  characters being shown incorrectly. Perhaps best solved by GMime, but maybe mu
+  can do something. https://github.com/djcb/mu/issues/2700
 
 * Done
 
