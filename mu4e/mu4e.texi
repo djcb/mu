@@ -1942,7 +1942,7 @@ Normally, queries return up to @code{mu4e-headers-results-limit} (default: 500)
 results. That is usually more than enough, and makes things significantly
 faster. Sometimes, however, you may want to show @emph{all} results; you can
 enable this with @kbd{M-x mu4e-search-toggle-property}, or by customizing the
-variable @code{mu4e-headers-full-search}. This applies to all search commands.
+variable @code{mu4e-search-full}. This applies to all search commands.
 
 You can also influence the sort order and whether threads are shown or not;
 see @ref{Sorting and threading}.
