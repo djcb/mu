@@ -1093,10 +1093,10 @@ variable @code{mu4e-use-fancy-chars}}, indicating the sort order
 You can change the sort order by clicking the corresponding column with the
 mouse, or with @kbd{M-x mu4e-headers-change-sorting} (@key{O}); note that not
 all fields can be used for sorting. You can toggle threading on/off through
-@kbd{M-x mu4e-headers-toggle-property} or @key{Pt}. For both of these functions,
+@kbd{M-x mu4e-search-toggle-property} or @key{Pt}. For both of these functions,
 unless you provide a prefix argument (@key{C-u}), the current search is updated
 immediately using the new parameters. You can toggle full-search
-(@ref{Searching}) through @kbd{M-x mu4e-headers-toggle-property} as well; or
+(@ref{Searching}) through @kbd{M-x mu4e-search-toggle-property} as well; or
 @key{Pf}.
 
 Note that with threading enabled, the sorting is exclusively by date,
@@ -1941,7 +1941,7 @@ certain folder (maildir).
 Normally, queries return up to @code{mu4e-headers-results-limit} (default: 500)
 results. That is usually more than enough, and makes things significantly
 faster. Sometimes, however, you may want to show @emph{all} results; you can
-enable this with @kbd{M-x mu4e-headers-toggle-property}, or by customizing the
+enable this with @kbd{M-x mu4e-search-toggle-property}, or by customizing the
 variable @code{mu4e-headers-full-search}. This applies to all search commands.
 
 You can also influence the sort order and whether threads are shown or not;
@@ -4132,7 +4132,7 @@ docstring).
 @subsection How can I hide certain messages from the search results?
 See the variables @code{mu4e-headers-hide-predicate} and
 @code{mu4e-headers-hide-enabled}. The latter can be toggled through
-@code{mu4e-headers-toggle-property}.
+@code{mu4e-search-toggle-property}.
 
 For example, to filter out GMail's spam folder, set it to:
 @lisp

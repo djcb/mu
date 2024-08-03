@@ -1007,7 +1007,7 @@ after the end of the search results."
      "--"
      ["Previous" mu4e-headers-prev
       :help "Move to previous header"]
-     ["Next" mu4e-headers-prev
+     ["Next" mu4e-headers-next
       :help "Move to next header"]
      "--"
      ["Mark for move" mu4e-headers-mark-for-move
