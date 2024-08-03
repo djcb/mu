@@ -628,7 +628,9 @@ query before submitting it."
     ["Next query" mu4e-search-next
      :help "Run next query"]
     ["Narrow search" mu4e-search-narrow
-     :help "Narrow the search query"])
+     :help "Narrow the search query"]
+    ["Search properties" mu4e-search-toggle-property
+     :help "Toggle some search properties"])
   "Easy menu items for search.")
 
 (provide 'mu4e-search)
