@@ -363,6 +363,8 @@ Indexer::Private::scan_worker()
 	}
 
 	completed_ = ::time({});
+	// attempt to commit to disk.
+	store_.xapian_db().request_commit(true);
 	store_.config().set<Mu::Config::Id::LastIndex>(completed_);
 	state_.change_to(IndexState::Idle);
 }

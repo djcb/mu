@@ -445,8 +445,7 @@ public:
 
 
 	/**
-	 * Explicitly request the Xapian DB to be committed to disk. This won't
-	 * do anything when not in a transaction.
+	 * Explicitly request the Xapian DB to be committed to disk
 	 *
 	 * @param force whether to force-commit
 	 */
@@ -464,21 +463,23 @@ public:
 
 private:
 	/**
-	 * To be called after all changes, with DB_LOCKED held.
+	 * To be called with DB_LOCKED held.
 	 */
 	void request_commit(Xapian::WritableDatabase& db, bool force) {
-		// in transaction-mode and enough changes, commit them
-		if (!in_transaction())
-			return;
 		if ((++changes_ < batch_size_) && !force)
 			return;
 		xapian_try([&]{
-			mu_debug("committing transaction with {} changes; "
-				 "forced={}", changes_, force ? "yes" : "no");
-			db.commit_transaction();
+			mu_debug("committing {} changes; transaction={}; "
+				 "forced={}", changes_,
+				 in_transaction() ? "yes" : "no",
+				 force ? "yes" : "no");
+			if (in_transaction()) {
+				db.commit_transaction();
+				in_transaction_ = {};
+			}
 			db.commit();
 			changes_ = 0;
-			in_transaction_ = {};
+
 		});
 	}
 
