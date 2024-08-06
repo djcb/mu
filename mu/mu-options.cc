@@ -459,7 +459,8 @@ sub_init(CLI::App& sub, Options& opts)
 	sub.add_option("--maildir,-m", opts.init.maildir, "Top of the maildir")
 		->type_name("<maildir>")
 		->default_val(default_mdir)
-		->transform(ExpandPath, "expand maildir path");
+		->transform(ExpandPath, "expand maildir path")
+		->transform(CanonicalizePath, "canonicalize maildir path");
 	sub.add_option("--my-address", opts.init.my_addresses,
 		       "Personal e-mail address or regexp")
 		->type_name("<address>");
