@@ -1519,32 +1519,35 @@ MIME-parts that contain files@footnote{Attachments come in two flavors:
 operating on them; everything that specifies a filename is considered an
 attachment}.
 
-To save such attachments as files on your file systems, the @t{mu4e}
-message-view offers the command @code{mu4e-view-save-attachments}; default
-keybinding is @key{e} (think @emph{extract}). After invoking the command, you
-can enter the file names to save, comma-separated, and using the completion
-support. Press @key{RET} to save the chosen files to your file-system.
+To save such attachments as files on your file systems, @t{mu4e}'s message-view
+offers the command @code{mu4e-view-save-attachments}; its default keybinding is
+@key{e} (think @emph{extract}).
 
-With a prefix argument, you get to choose the target-directory, otherwise,
-@t{mu4e} determines it following the variable @t{mu4e-attachment-dir} (which can
-be file-system path or a function; see its docstring for details.
+After invoking the command, you can enter the file names to save,
+comma-separated, with completion support. Press @key{RET} to save the chosen
+files to your file-system.
 
-While completing, @code{mu4e-view-completion-minor-mode} is active, which offers
-@code{mu4e-view-complete-all} (bound to @key{C-c C-a} to complete @emph{all}
-files@footnote{Except when using 'Helm'; in that case, use the Helm-mechanism
-for selecting multiple}.
+@t{mu4e} determines the target directory using the variable
+@t{mu4e-attachment-dir} (which can be either file-system path or a function; see
+its docstring for details. However, you can manually set the target by calling
+@code{mu4e-view-save-attachments} with a prefix argument.
+
+When completing the file names, @code{mu4e-view-completion-minor-mode} is
+active, which offers @code{mu4e-view-complete-all} (bound to @key{C-c C-a} to
+complete @emph{all} files@footnote{Except when using 'Helm'; in that case, use
+the Helm-mechanism for selecting multiple}.
 
 @subsection MIME-parts
 
 Not all MIME-parts are message bodies or attachments, and it can be useful to
-operate on those other parts as well. For that, there is the function
+operate on those other parts as well. For that there is
 @code{mu4e-view-mime-part-action} (default key-binding @key{A}). You can pass
-the number of the MIME-pars (as seen in the message view) as a prefix argument,
+the number of the MIME-part (as seen in the message view) as a prefix argument;
 otherwise you get to get to choose from a completion menu.
 
-After choosing one or more MIME-parts, you are asked for an action to apply to
-them; see the variable @code{mu4e-view-mime-part-actions} for the possibilities;
-and you can add your own actions as well, see @ref{MIME-part actions} for some
+After choosing one or more MIME-parts, you can specify an action to apply to
+them; see the variable @code{mu4e-view-mime-part-actions} for the possibilities.
+You can add your own actions as well, see @ref{MIME-part actions} for an
 example.
 
 @node MSGV Custom headers
