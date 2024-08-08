@@ -280,6 +280,19 @@ Optionally,
           (mu4e-view-completion-minor-mode))
       (mu4e--completing-read-real prompt candidates multi))))
 
+(defun mu4e--attachments-alist (parts)
+  "Build an alist of attachments from PARTS.
+
+Each element has the form (filename . annotation)."
+  (seq-map
+   (lambda (fpart)
+     (cons
+      (plist-get fpart :filename)
+      fpart))
+   (seq-filter
+    (lambda (part) (plist-get part :attachment-like))
+    parts)))
+
 (defun mu4e-view-save-attachments (&optional ask-dir)
   "Save files from the current view buffer.
 This applies to all MIME-parts that are \"attachment-like\" (have a filename),
@@ -289,14 +302,7 @@ With ASK-DIR is non-nil, user can specify the target-directory; otherwise
 one is determined using `mu4e-attachment-dir'."
   (interactive "P")
   (let* ((parts (mu4e-view-mime-parts))
-         (candidates  (seq-map
-                         (lambda (fpart)
-                           (cons ;; (filename . annotation)
-                            (plist-get fpart :filename)
-                            fpart))
-                         (seq-filter
-                          (lambda (part) (plist-get part :attachment-like))
-                          parts)))
+         (candidates (mu4e--attachments-alist parts))
          (candidates (or candidates
                          (mu4e-warn "No attachments for this message")))
          (files (mu4e--completing-read "Save file(s): " candidates
@@ -312,6 +318,22 @@ one is determined using `mu4e-attachment-dir'."
                              (plist-get part :filename)))))
                 (mm-save-part-to-file (plist-get part :handle) path)))
             files)))
+
+(defun mu4e-view-save-one-attachment ()
+  "Save one file from the current view buffer.
+
+Unlike `mu4e-view-save-attachments', prompt for the destination file
+name--not only the directory--of the attachment."
+  (interactive)
+  (let* ((parts (mu4e-view-mime-parts))
+         (candidates (mu4e--attachments-alist parts))
+         (candidates (or candidates
+                         (mu4e-warn "No attachments for this message")))
+         (file (mu4e--completing-read "Save file: " candidates
+                                      'attachment))
+         (mm-handle (plist-get (cdr (assoc file candidates)) :handle))
+         (dest (read-file-name "Destination: " mu4e-attachment-dir)))
+    (mm-save-part-to-file mm-handle dest)))
 
 (defvar mu4e-view-mime-part-actions
   '(
