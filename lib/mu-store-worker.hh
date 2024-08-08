@@ -159,7 +159,7 @@ private:
 	size_t cleanup_orphans();
 
 	QueueType q_;
-	Store& store_;;
+	Store& store_;
 	std::thread runner_;
 	std::atomic<bool> running_{};
 	SexpCommandHandler sexp_handler_{};
