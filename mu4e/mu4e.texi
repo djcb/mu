@@ -4070,6 +4070,11 @@ answers.
 and @t{mu4e} should yield the same results. If they differ, this is
 usually because one of the following reasons:
 @itemize
+@item Database caching:
+changes in @t{mu4e} are not immediately visible in the command-line @t{mu},
+since it can take a while before changes are committed to disk (for performance
+reasons). Note that quitting @t{mu4e} or invoking @t{mu4e-update-mail-and-index}
+and @t{mu4e-update-index} trigger committing to disk as a side-effect.
 @item different options:
 @t{mu4e} defaults to having @t{mu4e-headers-include-related}, and
 @t{mu4e-headers-results-limit} set to 500. However, the command-line
