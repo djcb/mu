@@ -282,11 +282,18 @@ Optionally,
 
 (defun mu4e-view-save-attachments (&optional ask-dir)
   "Save files from the current view buffer.
-This applies to all MIME-parts that are \"attachment-like\" (have a filename),
-regardless of their disposition.
+
+This applies to all MIME-parts that are \"attachment-like\" (have
+a filename), regardless of their disposition.
 
 With ASK-DIR is non-nil, user can specify the target-directory; otherwise
-one is determined using `mu4e-attachment-dir'."
+one is determined using `mu4e-attachment-dir'.
+
+This command assumes unique filenames for the attachments, since
+that is how the underlying completion mechanism works. If there
+are duplicates, only one is recognized. For this corner-case, it
+is recommended to use `mu4e-view-mime-part-action' instead, which
+does not have this limitation."
   (interactive "P")
   (let* ((parts (mu4e-view-mime-parts))
          (candidates  (seq-map
