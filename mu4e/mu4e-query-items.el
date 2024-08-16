@@ -1,6 +1,6 @@
 ;;; mu4e-query-items.el --- Manage query results -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -94,8 +94,8 @@ If ITEMS does not yet have a favorite item, pick the first."
 (defvar mu4e--bookmark-items-cached nil "Cached bookmarks query items.")
 (defvar mu4e--maildir-items-cached nil "Cached maildirs query items.")
 
-(declare-function  mu4e-bookmarks "mu4e-bookmarks")
-(declare-function  mu4e-maildir-shortcuts "mu4e-folders")
+(declare-function mu4e-bookmarks "mu4e-bookmarks")
+(declare-function mu4e-maildir-shortcuts "mu4e-folders")
 
 (defun mu4e--query-item-display-counts (item)
   "Get the count display string for some query-data ITEM."
@@ -222,18 +222,32 @@ bookmark or maildir."
    data))
 
 (defun mu4e-query-items (&optional type)
-  "Grab query items of TYPE.
+  "Grab cached information about query items of some TYPE.
 
-TYPE is symbol; either bookmarks or maildirs, or nil for both.
+TYPE is a symbol; either `bookmarks' or `maildirs', or nil for
+both, and returns a list of plists. The information is based on
+the last (cached) information known by mu4e.
 
 This combines:
-     - the latest queries data (i.e., `(mu4e-server-query-items)')
-     - baseline queries data (i.e. `mu4e-baseline')
-   with the combined queries for `(mu4e-bookmarks)' and
-    `(mu4e-maildir-shortcuts)' in bookmarks-compatible plists.
+- the latest queries data (i.e., `(mu4e-server-query-items)')
+- baseline queries data (i.e. `mu4e-baseline') with the combined
+  queries for `mu4e-bookmarks' and `mu4e-maildir-shortcuts' in
+  bookmarks-compatible plists.
 
-This packages the aggregated information in a format that is convenient
-for use in various places."
+Currently, the plist contains the following fields:
+- `:name'         - the name of the bookmark or query
+- `:query'        - the associated (unprocessed) query
+- `:count'        - number of matches for the query
+- `:unread'       - number of unread messages for the query
+- `:delta-count'  - change in count since baseline
+- `:delta-unread' - change in unread count since baseline
+- `:favorite'     - non-nil if this is the favorite query
+
+There are some other fields for internal mu4e use, better not use
+those externally.
+
+For the various nuances with the unread count and baseline,
+please refer to info node `(mu4e) Bookmarks and Maildirs'."
   (cond
    ((equal type 'bookmarks)
     (or mu4e--bookmark-items-cached
