@@ -440,6 +440,21 @@ appropriate flag at the message forwarded or replied-to."
     (while (search-forward "\n" nil t)
       (put-text-property (1- (point)) (point) 'hard t))))
 
+(defun mu4e--compose-message-sent ()
+  "Mu4e's `message-sent-hook' handling."
+  ;; typically, draft is gone and the sent message appears in sent. Update flags
+  ;; for related messages, i.e. for Forwarded ('Passed') and Replied messages,
+  ;; try to set the appropriate flag at the message forwarded or replied-to.
+  (when-let ((fcc-path (message-field-value "Fcc")))
+    (mu4e--set-parent-flags fcc-path)
+    ;; we end up with a ((buried) buffer here, visiting the
+    ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
+    (when-let ((buf (find-buffer-visiting fcc-path)))
+      (kill-buffer buf)))
+  ;; remove draft
+  (when-let ((draft (buffer-file-name)))
+    (mu4e--server-remove draft)))
+
 (defun mu4e--compose-before-send ()
   "Function called just before sending a message."
   ;; Remove References: if In-Reply-To: is missing.
@@ -450,22 +465,8 @@ appropriate flag at the message forwarded or replied-to."
       (message-remove-header "References")))
   (when use-hard-newlines
     (mu4e--send-harden-newlines))
-  ;; now handle what happens _after_ sending; typically, draft is gone and
-  ;; the sent message appears in sent. Update flags for related messages,
-  ;; i.e. for Forwarded ('Passed') and Replied messages, try to set the
-  ;; appropriate flag at the message forwarded or replied-to.
-  (add-hook 'message-sent-hook
-            (lambda ()
-              (when-let ((fcc-path (message-field-value "Fcc")))
-                (mu4e--set-parent-flags fcc-path)
-                ;; we end up with a ((buried) buffer here, visiting the
-                ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
-                (when-let ((buf (find-buffer-visiting fcc-path)))
-                  (kill-buffer buf))
-                ;; remove draft
-                (when-let ((draft (buffer-file-name)))
-                  (mu4e--server-remove draft))))
-            nil t))
+  ;; now handle what happens _after_ sending
+  (add-hook 'message-sent-hook #'mu4e--compose-message-sent nil t))
 
 ;; overrides for message-* functions
 ;;
