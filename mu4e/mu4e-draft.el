@@ -244,7 +244,7 @@ BASE-NAME is the base filename without any Maildir decoration."
      (format "%s%s2,DS" base-name mu4e-maildir-info-delimiter))))
 
 (defun mu4e--fcc-path (base-name &optional parent)
-  "Construct a Fcc: path, based on PARENT and `mu4e-sent-messages-behavior'.
+  "Construct an Fcc: path, based on PARENT and `mu4e-sent-messages-behavior'.
 
 PARENT is either nil or the original message (being replied
 to/forwarded etc.), and is used to determine the sent folder,

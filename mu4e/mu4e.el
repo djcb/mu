@@ -1,12 +1,14 @@
 ;;; mu4e.el --- Mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+;; Homepage: https://www.djcbsoftware.nl/code/mu/
 ;; Keywords: email
 
-;; This file is not part of GNU Emacs.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; mu4e is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,6 +26,7 @@
 ;;; Commentary:
 
 ;;; Code:
+
 (require 'mu4e-obsolete)
 
 (require 'mu4e-vars)

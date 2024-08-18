@@ -438,18 +438,18 @@ variables ‘message-forward-as-mime’ and
 
 ;;;###autoload
 (defun mu4e-compose-edit()
-         "Edit an existing draft message."
-         (interactive)
-         (let* ((msg (mu4e-message-at-point)))
-           (unless  (member 'draft (mu4e-message-field msg :flags))
-             (mu4e-warn "Cannot edit non-draft messages"))
-           (mu4e--draft
-            'edit
-            (lambda ()
-              (with-current-buffer
-                  (find-file-noselect (mu4e-message-readable-path msg))
-                (mu4e--delimit-headers)
-                (current-buffer))))))
+  "Edit an existing draft message."
+  (interactive)
+  (let* ((msg (mu4e-message-at-point)))
+    (unless  (member 'draft (mu4e-message-field msg :flags))
+      (mu4e-warn "Cannot edit non-draft messages"))
+    (mu4e--draft
+     'edit
+     (lambda ()
+       (with-current-buffer
+           (find-file-noselect (mu4e-message-readable-path msg))
+         (mu4e--delimit-headers)
+         (current-buffer))))))
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)

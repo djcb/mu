@@ -1,6 +1,24 @@
-;;; mu4e-notification.el --- Showing mail notifications -*- lexical-binding: t-*-
-;;
-;; Copyright (C) 1996-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;;; mu4e-notification.el --- Mail notifications -*- lexical-binding: t-*-
+
+;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
+
+;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; mu4e is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; mu4e is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with mu4e.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; Generic support for showing new-mail notifications.
@@ -10,10 +28,12 @@
 (require 'mu4e-query-items)
 (require 'mu4e-bookmarks)
 
-;; for emacs' built-in desktop notifications to work, we need
-;; dbus
+;; for Emacs' built-in desktop notifications to work, we need
+;; DBus
 (when (featurep 'dbus)
   (require 'notifications))
+
+;;; Options
 
 (defcustom mu4e-notification-filter #'mu4e--default-notification-filter
   "Function for determining if a notification is to be emitted.
@@ -38,6 +58,9 @@ now."
   :type 'function
   :group 'mu4e-notification)
 
+
+;;; Implementation
+
 (defvar mu4e--notification-id nil
   "The last notification id, so we can replace it.")
 
@@ -45,8 +68,8 @@ now."
   "Return t if a notification should be shown.
 
 This default implementation does so when the number of unread
-messages changed since the last notification and it is greater
-than zero."
+messages changed since the last notification and is greater than
+zero."
   (when-let* ((fav (mu4e-bookmark-favorite))
               (delta-unread (plist-get fav :delta-unread)))
     (when (and (> delta-unread 0)
@@ -57,7 +80,7 @@ than zero."
 
 (defun mu4e--default-notification-function (&optional _)
   "Default function for handling notifications.
-The default implementation uses emacs' built-in dbus-notification
+The default implementation uses Emacs' built-in DBus-notification
 support."
   (when-let* ((fav (mu4e-bookmark-favorite))
               (title "mu4e found new mail")
