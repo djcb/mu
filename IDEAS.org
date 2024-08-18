@@ -46,6 +46,11 @@ future.
   characters being shown incorrectly. Perhaps best solved by GMime, but maybe mu
   can do something. https://github.com/djcb/mu/issues/2700
 
+- Revamp the Guile support; mu has support Guile scripting for a long time, but
+  it's gone a bit stale, and the API is not very nice. It'd be nice to revamp
+  this support, so it becomes more widely useful.
+  https://github.com/djcb/mu/issues/1982
+
 * Done
 
 - Support mu4e-mark-handle-when also for when leaving emacs
