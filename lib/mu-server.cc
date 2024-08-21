@@ -452,8 +452,7 @@ Server::Private::invoke(const std::string& expr) noexcept
 			throw res.error();
 
 	} catch (const Mu::Error& me) {
-		output_sexp(make_error(me.code(), mu_format("{}",
-							    me.what())));
+		output_sexp(make_error(me.code(), mu_format("{}", me.what())));
 		keep_going_ = true;
 	} catch (const Xapian::Error& xerr) {
 		output_sexp(make_error(Error::Code::Internal,
