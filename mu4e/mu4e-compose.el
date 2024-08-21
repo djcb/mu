@@ -96,16 +96,19 @@ This multiplexes the `message-mode' hooks `message-send-actions',
 (defvar mu4e-captured-message)
 (defun mu4e-compose-attach-captured-message ()
   "Insert the last captured message file as an attachment.
-Messages are captured with `mu4e-action-capture-message'."
+
+Messages are expect to have been captured earlier with
+`mu4e-action-capture-message'. Note: this is unrelated to
+`org-mode' capturing."
   (interactive)
   (if-let* ((msg mu4e-captured-message)
-            (path (plist-get msg :path))
-            (path (and (file-exists-p path) path)))
-      (mml-attach-file
-       path
-       "message/rfc822"
-       (or (plist-get msg :subject) "No subject")
-       "attachment")
+         (path (plist-get msg :path))
+         (path (and (file-exists-p path) path))
+         (descr (or (plist-get msg :subject) ""))
+         (descr
+          (if (and (stringp descr) (not (string-empty-p descr)))
+              descr "No subject")))
+    (mml-attach-file path "message/rfc822" descr "attachment")
     (mu4e-warn "No valid message has been captured")))
 
 ;; Go to bottom / top
