@@ -743,8 +743,7 @@ determine which browser function to use."
           (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles))
       (epg-error
        (mu4e-message "EPG error: %s; fall back to raw view"
-                  (error-message-string err))
-       (error)))))
+                     (error-message-string err))))))
 
 (defun mu4e-view-refresh ()
   "Refresh the message view."
