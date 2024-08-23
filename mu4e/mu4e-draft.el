@@ -345,7 +345,7 @@ appropriate sent-messages folder. If MSGPATH is nil, do nothing."
          (mu4e-join-paths target-mdir "new" 'parents)))
       (write-file msgpath)
       (mu4e--server-add msgpath))))
-
+
 ;; save / send hooks
 
 (defvar-local mu4e--compose-undo nil
@@ -655,7 +655,9 @@ either `send', `exit', `kill' or `postpone'.")
 
 (defvar mu4e-compose-post-hook)
 (defun mu4e--message-post-actions (trigger)
-  "Invoked after we're done with a message.
+  "Invoked after we're done with a message with TRIGGER.
+
+See `mu4e-message-post-action' for the available triggers.
 
 I.e. this multiplexes the `message-(send|exit|kill|postpone)-actions';
 with the mu4e-message-post-action set accordingly."

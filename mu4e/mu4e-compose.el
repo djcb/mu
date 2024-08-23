@@ -26,7 +26,7 @@
 ;; quite a bit of trickery involved to make the message-mode functions work in
 ;; this context; see mu4e-draft for details.
 
-
+
 ;;; Code:
 (require 'message)
 (require 'sendmail)
@@ -41,7 +41,7 @@
 
 (require 'mu4e-draft)
 
-
+
 ;;; User configuration for compose-mode
 (defgroup mu4e-compose nil
   "Customization for composing/sending messages."
@@ -91,7 +91,7 @@ This multiplexes the `message-mode' hooks `message-send-actions',
   :type 'hook
   :group 'mu4e-compose)
 
-
+
 
 (defvar mu4e-captured-message)
 (defun mu4e-compose-attach-captured-message ()
@@ -187,8 +187,8 @@ the file under our feet, which is a bit fragile."
           (when message-signature
               (save-excursion (message-insert-signature))))))))
 
-
-;;; address completion
+
+;;; Address completion
 
 ;; inspired by org-contacts.el and
 ;; https://github.com/nordlow/elisp/blob/master/mine/completion-styles-cycle.el
@@ -246,7 +246,7 @@ completion functions still apply."
     (add-hook 'completion-at-point-functions
               #'mu4e--compose-complete-contact-field -10 t)))
 
- ;;; mu4e-compose-mode
+ ;;; mu4e-compose-mode
 (defun mu4e--compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
 
@@ -344,7 +344,8 @@ This function uses `message-cite-function', and its settings apply."
     (pop-mark)
     (goto-char (point-min))
     (buffer-string)))
-
+
+;;; Interactive functions
 
 ;;;###autoload
 (defalias 'mu4e-compose-mail #'mu4e-compose-new)
@@ -394,7 +395,7 @@ If WIDE is non-nil, make it a \"wide\" reply (a.k.a.
   "Wide reply to the message at point.
 I.e., \"reply-to-all\"."
   (interactive)
-  (mu4e-compose-reply-to nil t))1
+  (mu4e-compose-reply-to nil t))
 
 ;;;###autoload
 (defun mu4e-compose-supersede ()
@@ -468,7 +469,7 @@ The message is resent as-is, without any editing. See
       (insert-file-contents (mu4e-message-readable-path msg))
       (message-resend address))))
 
-;;; Compose Mail
+;;; Compose-mode
 
 (declare-function mu4e "mu4e")
 
@@ -487,7 +488,7 @@ The message is resent as-is, without any editing. See
 (defun mu4e-user-agent ()
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
-
+
 ;;; minor mode for use in other modes.
 (defvar mu4e-compose-minor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -520,6 +521,6 @@ The message is resent as-is, without any editing. See
     ["Resend" mu4e-compose-resend
      :help "Re-send message"])
   "Easy menu items for message composition.")
- ;;;
+ ;;;
 (provide 'mu4e-compose)
 ;;; mu4e-compose.el ends here
