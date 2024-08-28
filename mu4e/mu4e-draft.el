@@ -565,13 +565,14 @@ PARENT is the parent message, if any."
 
 (defun mu4e--prepare-draft-headers (compose-type)
   "Add extra headers for message based on COMPOSE-TYPE."
-  (message-generate-headers
-   (seq-filter #'identity ;; ensure needed headers are generated.
-               `(From Subject Date Message-ID
-                      ,(when (memq compose-type '(reply forward)) 'References)
-                      ,(when (eq compose-type 'reply) 'In-Reply-To)
-                      ,(when message-newsreader 'User-Agent)
-                      ,(when message-user-organization 'Organization)))))
+  (let ((message-newsreader mu4e-user-agent-string))
+    (message-generate-headers
+     (seq-filter #'identity ;; ensure needed headers are generated.
+                 `(From Subject Date Message-ID
+                        ,(when (memq compose-type '(reply forward)) 'References)
+                        ,(when (eq compose-type 'reply) 'In-Reply-To)
+                        ,(when message-newsreader 'User-Agent)
+                        ,(when message-user-organization 'Organization))))))
 
 (defun mu4e--prepare-draft-buffer (compose-type parent)
   "Prepare the current buffer as a draft-buffer.
@@ -723,8 +724,7 @@ Returns the new buffer."
   ;; compose-func
   (let ((draft-buffer)
         (oldframe (selected-frame))
-        (oldwinconf (current-window-configuration))
-        (message-newsreader mu4e-user-agent-string))
+        (oldwinconf (current-window-configuration)))
     (with-temp-buffer
       ;; provide a temp buffer so the compose-func can do its thing
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
