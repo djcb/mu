@@ -723,7 +723,8 @@ Returns the new buffer."
   ;; compose-func
   (let ((draft-buffer)
         (oldframe (selected-frame))
-        (oldwinconf (current-window-configuration)))
+        (oldwinconf (current-window-configuration))
+        (message-newsreader mu4e-user-agent-string))
     (with-temp-buffer
       ;; provide a temp buffer so the compose-func can do its thing
       (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
