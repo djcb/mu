@@ -98,21 +98,28 @@ ignore_dentry(const dentry_t& dentry)
 {
 	const auto d_name{dentry.d_name.c_str()};
 
-	/* dotdir? */
-	if (d_name[0] == '\0' || (d_name[1] == '\0' && d_name[0] == '.') ||
+	/* ignore '.' and '..' and anything starting with '#' (emacs
+	 * auto-saves) */
+	if (d_name[0] == '\0' || d_name[0] == '#' ||
+	    (d_name[1] == '\0' && d_name[0] == '.') ||
 	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
 		return true;
 
-	if (d_name[0] != 't' && d_name[0] != 'h' && d_name[0] != '.')
-		return false; /* don't ignore */
-
-	if (::strcmp(d_name, "tmp") == 0 || ::strcmp(d_name, "hcache.db") == 0)
-		return true; // ignore
-
-	if (d_name[0] == '.')
-		for (auto dname : { "nnmaildir", "notmuch", "noindex", "noupdate"})
+	switch (d_name[0]) {
+	case 't':
+		if (::strcmp(d_name, "tmp") == 0)
+			return true; // ignore the tmp dir
+		break;
+	case 'h':
+		if (::strcmp(d_name, "hcache.db") == 0)
+			return true; // ignore mutt cache
+		break;
+	case '.':
+		for (const auto& dname : {"nnmaildir", "notmuch", "noindex", "noupdate"})
 			if (::strcmp(d_name + 1, dname) == 0)
-				return true;
+				return true; // ignore some known other furniture
+		break;
+	}
 
 	return false; /* don't ignore */
 }
