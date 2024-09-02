@@ -45,7 +45,7 @@ contexts match, we have the following choices:
 - `pick-first': pick the first of the contexts available (ie. the default)
 - `ask': ask the user `ask-if-none': ask if there is no context yet,
    otherwise leave it as it is
-- nil: return nil; eaves the current context as is.
+- nil: return nil; leaves the current context as is.
 
 Also see `mu4e-compose-context-policy'."
   :type '(choice
