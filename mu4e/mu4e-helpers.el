@@ -31,6 +31,7 @@
 (require 'ido)
 (require 'cl-lib)
 (require 'bookmark)
+(require 'message)
 
 (require 'mu4e-window)
 (require 'mu4e-config)
@@ -575,6 +576,31 @@ Mu4e version of emacs 28's string-replace."
 This is mu4e's version of Emacs 29's `plistp'."
   (let ((len (proper-list-p object)))
     (and len (zerop (% len 2)))))
+
+(defun mu4e--message-hide-headers ()
+  "Hide headers based on the `message-hidden-headers' variable.
+This is mu4e's version of the post-emacs-28 `message-hide-headers',
+which we need to avoid #2661."
+  (let ((regexps (if (stringp message-hidden-headers)
+                     (list message-hidden-headers)
+                   message-hidden-headers))
+        end-of-headers)
+    (when regexps
+      (save-excursion
+        (save-restriction
+          (message-narrow-to-headers)
+          (setq end-of-headers (point-min-marker))
+          (goto-char (point-min))
+          (while (not (eobp))
+            (if (not (message-hide-header-p regexps))
+                (message-next-header)
+              (let ((begin (point)))
+                (message-next-header)
+                (let ((header (delete-and-extract-region begin (point))))
+                  (save-excursion
+                    (goto-char end-of-headers)
+                    (insert-before-markers header))))))))
+      (narrow-to-region end-of-headers (point-max)))))
 
 (defun mu4e-key-description (cmd)
   "Get the textual form of current binding to interactive function CMD.

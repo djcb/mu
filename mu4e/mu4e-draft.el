@@ -605,9 +605,11 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   ;; now, switch to compose mode
   (mu4e-compose-mode)
 
-  ;; hide some internal headers
+  ;; hide some internal headers; we use the special mu4e-- version of
+  ;; message-hide-headers, since older versions of the latter trigger some bug,
+  ;; #2661.
   (let ((message-hidden-headers mu4e-draft-hidden-headers))
-    (message-hide-headers))
+    (mu4e--message-hide-headers))
 
   ;; hooks
   (add-hook 'before-save-hook  #'mu4e--compose-before-save nil t)
