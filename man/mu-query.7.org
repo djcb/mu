@@ -14,8 +14,8 @@ query-parser, but is an independent implementation that is customized for the
 mu/mu4e use-case.
 
 Here, we give a structured but informal overview of the query language and
-provide examples. As a companion to this, we recommend the *mu fields* and *mu
-flags* commands to get an up-to-date list of the available fields and flags.
+provide examples. As a companion to this, we recommend the *mu info fields*
+command to get an up-to-date list of the available fields and flags.
 
 Furthermore, *mu find* provides the *--analyze* option, which shows how *mu*
 interprets your query; see the *ANALYZING QUERIES* section below.
