@@ -89,7 +89,8 @@ foreach src : man_orgs
     '  (setq org-export-with-sub-superscripts \'{})',
     '  (add-to-list \'org-export-filter-plain-text-functions',
     '    (lambda (text _backend _info)',
-    '      (replace-regexp-in-string "\u200b" "" text)))',
+    '      (let ((zwsp (format "%c" (char-from-name "ZERO WIDTH SPACE"))))',
+    '        (replace-regexp-in-string zwsp "" text))))',
     '  (org-export-to-file \'man "@0@"))'])
   expr = expr_tmpl.format(org.substring(0,-4))
   sectiondir = join_paths(mandir, 'man' + section)
