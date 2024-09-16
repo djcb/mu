@@ -149,6 +149,7 @@ struct Server::Private {
 	Store&            store() { return store_; }
 	const Store&      store() const { return store_; }
 	Indexer&          indexer() { return store().indexer(); }
+	void              do_index(const Indexer::Config& conf);
 	//CommandMap&       command_map() const { return command_map_; }
 
 	//
@@ -762,6 +763,20 @@ get_stats(const Indexer::Progress& stats, const std::string& state)
 }
 
 void
+Server::Private::do_index(const Indexer::Config& conf)
+{
+	StopWatch sw{"indexing"};
+	indexer().start(conf);
+	while (indexer().is_running()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		output_sexp(get_stats(indexer().progress(), "running"),
+			    Server::OutputFlags::Flush);
+	}
+	output_sexp(get_stats(indexer().progress(), "complete"),
+		    Server::OutputFlags::Flush);
+}
+
+void
 Server::Private::index_handler(const Command& cmd)
 {
 	Mu::Indexer::Config conf{};
@@ -770,22 +785,23 @@ Server::Private::index_handler(const Command& cmd)
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store().empty();
 
+#ifdef XAPIAN_SINGLE_THREADED
+	// nothing to do
+	if (indexer().is_running()) {
+		throw Error{Error::Code::Xapian, "indexer is already running"};
+	}
+	do_index(conf);
+#else
 	indexer().stop();
 	if (index_thread_.joinable())
 		index_thread_.join();
 
 	// start a background track.
 	index_thread_ = std::thread([this, conf = std::move(conf)] {
-		StopWatch sw{"indexing"};
-		indexer().start(conf);
-		while (indexer().is_running()) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-			output_sexp(get_stats(indexer().progress(), "running"),
-				    Server::OutputFlags::Flush);
-		}
-		output_sexp(get_stats(indexer().progress(), "complete"),
-			    Server::OutputFlags::Flush);
+		do_index(conf);
 	});
+#endif /*XAPIAN_SINGLE_THREADED */
+
 }
 
 void
@@ -959,6 +975,9 @@ Server::Private::ping_handler(const Command& cmd)
 				       ":personal-addresses", std::move(addrs),
 				       ":database-path", store().path(),
 				       ":root-maildir", store().root_maildir(),
+#ifdef XAPIAN_SINGLE_THREADED
+				       ":xapian-single-threaded", Sexp::t_sym,
+#endif /*XAPIAN_SINGLE_THREADED*/
 				       ":doccount", storecount)));
 }
 
