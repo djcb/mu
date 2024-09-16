@@ -16,14 +16,20 @@
 
 
 # generate some build data for use in mu4e
+version_extra=''
+if get_option('xapian-single-threaded')
+  version_extra='-st'
+endif
+
 mu4e_meta = configure_file(
   input: 'mu4e-config.el.in',
   output: 'mu4e-config.el',
   install: true,
   install_dir: mu4e_lispdir,
   configuration: {
-      'VERSION'         : meson.project_version(),
-      'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
+      'VERSION'           : meson.project_version(),
+      'MU_VERSION_EXTRA'  : version_extra,
+      'MU_DOC_DIR'        : join_paths(datadir, 'doc', 'mu'),
     })
 
 mu4e_pkg_desc = configure_file(

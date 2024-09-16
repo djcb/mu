@@ -1,6 +1,6 @@
 ;;; mu4e-main.el --- The Main interface for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -299,7 +299,9 @@ Otherwise, do nothing."
          "* "
          (propertize "mu4e" 'face 'mu4e-header-key-face)
          (propertize " - mu for emacs version " 'face 'mu4e-title-face)
-         (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
+         (propertize  (concat mu4e-mu-version
+                              (if (mu4e--server-xapian-single-threaded-p) "-st" ""))
+                      'face 'mu4e-header-key-face)
          "\n\n"
          (propertize "  Basics\n\n" 'face 'mu4e-title-face)
          (mu4e--main-action

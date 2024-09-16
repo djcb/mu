@@ -188,6 +188,11 @@ for bookmarks and maildirs.")
   "Get the latest server query items."
   mu4e--server-query-items)
 
+;; temporary
+(defun mu4e--server-xapian-single-threaded-p()
+  "Are we using Xapian in single-threaded mode?"
+  (plist-get mu4e--server-props :xapian-single-threaded))
+
 
 ;;; Handling raw server data
 
@@ -210,6 +215,9 @@ for bookmarks and maildirs.")
           mu4e--server-cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
+
+(defvar mu4e--server-indexing nil "Currently indexing?")
+
 
 (defun mu4e-running-p ()
   "Whether mu4e is running.
@@ -383,6 +391,11 @@ The server output is as follows:
 
          ;; get some info
          ((plist-get sexp :info)
+          ;; when indexing is finished, remove the block
+          (when (and (eq (plist-get sexp :info) 'index)
+                     (eq (plist-get sexp :status) 'complete))
+            (setq mu4e--server-indexing nil))
+
           (funcall mu4e-info-func sexp))
 
          ;; get some data
@@ -486,6 +499,7 @@ You cannot run the repl when mu4e is running (or vice-versa)."
          (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
       (mu4e-message "shutting down")
+      (setq mu4e--server-indexing nil)
       (set-process-filter mu4e--server-process nil)
       (set-process-sentinel mu4e--server-process nil)
       (let ((delete-exited-processes t))
@@ -526,7 +540,11 @@ You cannot run the repl when mu4e is running (or vice-versa)."
 
 (defun mu4e--server-call-mu (form)
   "Call the mu server with some command FORM."
-  (unless (mu4e-running-p) (mu4e--server-start))
+  (unless (mu4e-running-p)
+    (mu4e--server-start))
+  ;; in single-threaded mode, mu can't accept our command right now.
+  (when (and (mu4e--server-xapian-single-threaded-p) mu4e--server-indexing)
+    (mu4e-warn "Cannot handle command while indexing, please retry later."))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
@@ -600,7 +618,8 @@ added or removed), since merely editing a message does not update
 the directory time stamp."
   (mu4e--server-call-mu
    `(index :cleanup ,(and cleanup t)
-           :lazy-check ,(and lazy-check t))))
+           :lazy-check ,(and lazy-check t)))
+  (setq mu4e--server-indexing t)) ;; remember we're indexing.
 
 (defun mu4e--server-mkdir (path &optional update)
   "Create a new maildir-directory at filesystem PATH.
