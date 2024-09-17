@@ -31,7 +31,6 @@
 (require 'mu4e-view)
 (require 'mu4e-contacts)
 
-
 (defgroup mu4e-org nil
   "Settings for the Org mode related functionality in mu4e."
   :group 'mu4e
@@ -61,7 +60,7 @@ Example usage:
 If non-nil, `org-store-link' in `mu4e-headers-mode' links to the
 the current query; otherwise, it links to the message at point.")
 
-;; backward compat until org >= 9.3 is univeral.
+;; backward compat until org >= 9.3 is universal.
 (defalias 'mu4e--org-link-store-props
   (if (fboundp 'org-link-store-props)
       #'org-link-store-props
@@ -118,11 +117,15 @@ valid even after moving the message around."
         (mu4e--org-store-link-query)
       (mu4e--org-store-link-message)))))
 
+(declare-function mu4e "mu4e")
+
+;;;###autoload
 (defun mu4e-org-open (link)
   "Open the org LINK.
 Open the mu4e message (for links starting with \"msgid:\") or run
 the query (for links starting with \"query:\")."
   (require 'mu4e)
+  (mu4e 'background)
   (cond
    ((string-match "^msgid:\\(.+\\)" link)
     (mu4e-view-message-with-message-id (match-string 1 link)))
