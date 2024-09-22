@@ -163,7 +163,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		// in lazy-mode, we ignore this dir if its dirstamp suggest it
 		// is up-to-date (this is _not_ always true; hence we call it
 		// lazy-mode); only for actual message dirs, since the dir
-		// tstamps may not bubble up.U
+		// tstamps may not bubble up.
 		dirstamp_ = store_.dirstamp(fullpath);
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
