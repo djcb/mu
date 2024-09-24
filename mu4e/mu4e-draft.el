@@ -465,6 +465,10 @@ appropriate flag at the message forwarded or replied-to."
       (message-remove-header "References")))
   (when use-hard-newlines
     (mu4e--send-harden-newlines))
+  ;; in any case, make sure to save the message; this will also trigger
+  ;; before/after save hooks, which fixes up various fields.
+  (set-buffer-modified-p t)
+  (save-buffer)
   ;; now handle what happens _after_ sending
   (add-hook 'message-sent-hook #'mu4e--compose-message-sent nil t))
 
