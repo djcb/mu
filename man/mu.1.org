@@ -79,6 +79,17 @@ The *index*, *find*, and *cfind* commands work with the database, while the othe
 ones work on individual mail files. Hence, running *view*, *mkdir* and *extract* does
 not require the *mu* database.
 
+* LOGGING
+
+*mu* logs to the standard logging location, which is either the systemd journal,
+*syslog* or a log file (by default, _~/.cache/mu/mu.log_), depending on your
+*system's setup; the first that appears to be working is used.
+
+When using a log file, it can safely be deleted when *mu* is not running. When
+running with *--debug* option, the log file can grow rather quickly. See the note
+on logging below.
+
+
 #+include: "common-options.inc" :minlevel 1
 
 #+include: "exit-code.inc" :minlevel 1

@@ -2,9 +2,8 @@
 
 ** -d, --debug
 Makes *mu* generate extra debug information, useful for debugging the program
-itself. By default, debug information goes to the log file, _~/.cache/mu/mu.log_.
-It can safely be deleted when *mu* is not running. When running with *--debug*
-option, the log file can grow rather quickly. See the note on logging below.
+itself. Debug information goes to the standard logging location; see
+{{{man-link(mu,1)}}}.
 
 ** -q, --quiet
 Causes *mu* not to output informational messages and progress information to
@@ -14,7 +13,7 @@ recommended you use this option when using *mu* from scripts etc.
 
 ** --log-stderr
 Causes *mu* to not output log messages to standard error, in addition to sending
-them to the log file.
+them to the standard logging location.
 
 ** --nocolor
 Do not use ANSI colors. The environment variable *NO_COLOR* can be used as an
