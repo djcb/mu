@@ -26,11 +26,14 @@ option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
 
 ** --my-address _email-address-or-regex_
-Specifies that some e-mail address is `my-address' (the option can be used
-multiple times). Any message in which at least one of the contact fields
-contains such an address is considered a `personal' messages; this can then be
-used for filtering in {{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and
-*mu4e*, e.g. to filter-out mailing list messages.
+Specifies that some e-mail address is `my-address'. Any message in which at
+least one of the contact fields contains such an address is considered a
+`personal' messages; this can then be used for filtering in
+{{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and *mu4e*, e.g. to
+filter-out mailing list messages.
+
+You need to use this option multiple times in one line in order to have multiple
+addresses (see example below).
 
 _email-address-or-regex_ can be either a plain e-mail address (such as
 *foo@example.com*), or a basic PCRE regular-expression (see
