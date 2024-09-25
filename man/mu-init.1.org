@@ -26,17 +26,18 @@ option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
 
 ** --my-address _email-address-or-regex_
-Specifies that some e-mail address is `my-address' (the option can be used
-multiple times). Any message in which at least one of the contact fields
-contains such an address is considered a `personal' messages; this can then be
-used for filtering in {{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and
-*mu4e*, e.g. to filter-out mailing list messages.
+Specifies that some e-mail address is a personal address. The option can be used
+multiple times, to specify all your addresses.
+
+Any message in which at least one of the contact fields contains such an address
+is considered a `personal' message; this can then be used for filtering in
+{{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and *mu4e*, e.g. to
+filter-out mailing list messages.
 
 _email-address-or-regex_ can be either a plain e-mail address (such as
-*foo@example.com*), or a basic PCRE regular-expression (see
-{{{man-link(pcre,3)}}} for details), wrapped in */* (such as
-=/foo-.*@example\\.com/=). Depending on your shell, the argument may need to be
-quoted.
+*foo@example.com*), or a basic PCRE regular-expression (see {{{man-link(pcre,3)}}}
+for details), wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on your
+shell, the argument may need to be quoted.
 
 ** --ignored-address _email-address-or-regex_
 Specifies that some e-mail address is to be ignored from the contacts-cache (the
