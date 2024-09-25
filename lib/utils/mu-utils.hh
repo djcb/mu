@@ -61,7 +61,7 @@ constexpr const auto SepaChar2 = '\xff';
 /*
  * Debug/error/warning logging
  *
- * The 'noexcept' means that they _wilL_ terminate the program
+ * The 'noexcept' means that they _will_ terminate the program
  * when the formatting fails (ie. a bug)
  */
 
