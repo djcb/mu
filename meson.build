@@ -133,7 +133,13 @@ add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
 
-
+#
+# single-threaded Xapian access?
+#
+if get_option('xapian-single-threaded')
+  config_h_data.set('XAPIAN_SINGLE_THREADED', true)
+  message('use Xapian only in a single thread')
+endif
 #
 # d_type, d_ino are not available universally, so let's check
 # (we use them for optimizations in mu-scanner
@@ -321,6 +327,8 @@ if gmime_dep.version() == '3.2.13'
   warning('gmime version 3.2.13 detected, which as a decoding bug')
   warning('See: https://github.com/jstedfast/gmime/issues/133')
 endif
+
+
 
 # Local Variables:
 # indent-tabs-mode: nil

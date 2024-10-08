@@ -29,7 +29,7 @@
 
 ;;; Configuration
 (defcustom mu4e-mu-home nil
-  "Location of an alternate mu home dir.
+  "Location of an alternate mu home directory.
 If not set, use the defaults, based on the XDG Base Directory
 Specification.
 
@@ -188,6 +188,11 @@ for bookmarks and maildirs.")
   "Get the latest server query items."
   mu4e--server-query-items)
 
+;; temporary
+(defun mu4e--server-xapian-single-threaded-p()
+  "Are we using Xapian in single-threaded mode?"
+  (plist-get mu4e--server-props :xapian-single-threaded))
+
 
 ;;; Handling raw server data
 
@@ -210,6 +215,9 @@ for bookmarks and maildirs.")
           mu4e--server-cookie-post)
   "Regular expression matching the length cookie.
 Match 1 will be the length (in hex).")
+
+(defvar mu4e--server-indexing nil "Currently indexing?")
+
 
 (defun mu4e-running-p ()
   "Whether mu4e is running.
@@ -249,15 +257,18 @@ removed."
 (defun mu4e--server-plist-get (plist key)
   "Like `plist-get' but load data from file if it is a string.
 
-I.e. (mu4e--server-plist-get (:foo bar) :foo)
+PLIST is a property-list, and KEY is the the key to search for.
+
+
+E.g., (mu4e--server-plist-get (:foo bar) :foo)
   => bar
 but
      (mu4e--server-plist-get (:foo \"/tmp/data.eld\") :foo)
   => evaluates the contents of /tmp/data.eld
    (and deletes the file afterward).
 
-This for the few sexps we get from the mu server that support this
-(headers, contacts, maildirs)."
+This for the few sexps we get from the mu server that support
+ this -- headers, contacts, maildirs."
   ;; XXX: perhaps re-use the same buffer?
   (let ((val (plist-get plist key)))
     (if (stringp val)
@@ -383,6 +394,11 @@ The server output is as follows:
 
          ;; get some info
          ((plist-get sexp :info)
+          ;; when indexing is finished, remove the block
+          (when (and (eq (plist-get sexp :info) 'index)
+                     (eq (plist-get sexp :status) 'complete))
+            (setq mu4e--server-indexing nil))
+
           (funcall mu4e-info-func sexp))
 
          ;; get some data
@@ -423,6 +439,7 @@ As per issue #2198."
                 ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
 
 (defun mu4e--version-check ()
+  "Verify that the versions for mu4e and mu are the same."
   ;; sanity-check 1
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
     (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
@@ -486,6 +503,7 @@ You cannot run the repl when mu4e is running (or vice-versa)."
          (proc (and (buffer-live-p buf) (get-buffer-process buf))))
     (when proc
       (mu4e-message "shutting down")
+      (setq mu4e--server-indexing nil)
       (set-process-filter mu4e--server-process nil)
       (set-process-sentinel mu4e--server-process nil)
       (let ((delete-exited-processes t))
@@ -517,16 +535,20 @@ You cannot run the repl when mu4e is running (or vice-versa)."
        ((eq code 0)
         (message nil)) ;; don't do anything
        ((eq code 11)
-        (error "schema mismatch; please re-init mu from command-line"))
+        (error "Schema mismatch; please re-init mu from command-line"))
        ((eq code 19)
-        (error "mu database is locked by another process"))
-       (t (error "mu server process ended with exit code %d" code))))
+        (error "Mu database is locked by another process"))
+       (t (error "Mu server process ended with exit code %d" code))))
      (t
-      (error "something bad happened to the mu server process")))))
+      (error "Something bad happened to the mu server process")))))
 
 (defun mu4e--server-call-mu (form)
   "Call the mu server with some command FORM."
-  (unless (mu4e-running-p) (mu4e--server-start))
+  (unless (mu4e-running-p)
+    (mu4e--server-start))
+  ;; in single-threaded mode, mu can't accept our command right now.
+  (when (and (mu4e--server-xapian-single-threaded-p) mu4e--server-indexing)
+    (mu4e-warn "Cannot handle command while indexing, please retry later."))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
@@ -591,7 +613,7 @@ or an error."
 (defun mu4e--server-index (&optional cleanup lazy-check)
   "Index messages.
 If CLEANUP is non-nil, remove messages which are in the database
-but no longer in the filesystem. If LAZY-CHECK is non-nil, only
+but no longer in the file system. If LAZY-CHECK is non-nil, only
 consider messages for which the time stamp (ctime) of the
 directory they reside in has not changed since the previous
 indexing run. This is much faster than the non-lazy check, but
@@ -600,10 +622,11 @@ added or removed), since merely editing a message does not update
 the directory time stamp."
   (mu4e--server-call-mu
    `(index :cleanup ,(and cleanup t)
-           :lazy-check ,(and lazy-check t))))
+           :lazy-check ,(and lazy-check t)))
+  (setq mu4e--server-indexing t)) ;; remember we're indexing.
 
 (defun mu4e--server-mkdir (path &optional update)
-  "Create a new maildir-directory at filesystem PATH.
+  "Create a new maildir-directory at file system PATH.
 When UPDATE is non-nil, send a update when completed.
 PATH must be below the root-maildir."
   ;; handle maildir cache
@@ -674,7 +697,7 @@ read/unread status are returned in the pong-response."
   (mu4e--server-call-mu `(queries :queries ,queries)))
 
 (defun mu4e--server-remove (docid-or-path)
-  "Remove message with either DOCID or PATH.
+  "Remove message with either DOCID-OR-PATH.
 The results are reported through either (:update ... )
 or (:error) sexps."
   (if (stringp docid-or-path)

@@ -51,6 +51,9 @@ future.
   this support, so it becomes more widely useful.
   https://github.com/djcb/mu/issues/1982
 
+- Display the messages from old-to-new (still get the newest though)
+  https://github.com/djcb/mu/issues/2759
+
 * Done
 
 - Support mu4e-mark-handle-when also for when leaving emacs

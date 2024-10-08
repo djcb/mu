@@ -105,6 +105,7 @@ struct Indexer::Private {
 	bool handler(const std::string& fullpath, struct stat* statbuf, Scanner::HandleType htype);
 
 	void maybe_start_worker();
+
 	void item_worker();
 	void scan_worker();
 
@@ -134,6 +135,8 @@ struct Indexer::Private {
 		};
 		Type type;
 	};
+
+	void handle_item(WorkItem&& item);
 
 	AsyncQueue<WorkItem> todos_;
 
@@ -193,7 +196,11 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		return true;
 	}
 	case Scanner::HandleType::LeaveDir: {
+#ifdef XAPIAN_SINGLE_THREADED
+		handle_item({fullpath, WorkItem::Type::Dir});
+#else
 		todos_.push({fullpath, WorkItem::Type::Dir});
+#endif /*XAPIAN_SINGLE_THREADED*/
 		return true;
 	}
 
@@ -210,9 +217,13 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath))
 			return false;
 
+#ifdef XAPIAN_SINGLE_THREADED
+		handle_item({fullpath, WorkItem::Type::File});
+#else
 		// push the remaining messages to our "todo" queue for
 		// (re)parsing and adding/updating to the database.
 		todos_.push({fullpath, WorkItem::Type::File});
+#endif
 		return true;
 	}
 	default:
@@ -260,6 +271,30 @@ Indexer::Private::add_message(const std::string& path)
 	return true;
 }
 
+
+void
+Indexer::Private::handle_item(WorkItem&& item)
+{
+	try {
+		switch (item.type) {
+		case WorkItem::Type::File: {
+			if (G_LIKELY(add_message(item.full_path)))
+				++progress_.updated;
+		} break;
+		case WorkItem::Type::Dir:
+			store_.set_dirstamp(item.full_path, ::time(NULL));
+			break;
+		default:
+			g_warn_if_reached();
+			break;
+		}
+	} catch (const Mu::Error& er) {
+		mu_warning("error adding message @ {}: {}", item.full_path, er.what());
+	}
+}
+
+
+
 void
 Indexer::Private::item_worker()
 {
@@ -270,22 +305,8 @@ Indexer::Private::item_worker()
 	while (state_ == IndexState::Scanning) {
 		if (!todos_.pop(item, 250ms))
 			continue;
-		try {
-			switch (item.type) {
-			case WorkItem::Type::File: {
-				if (G_LIKELY(add_message(item.full_path)))
-					++progress_.updated;
-			} break;
-			case WorkItem::Type::Dir:
-				store_.set_dirstamp(item.full_path, ::time(NULL));
-				break;
-			default:
-				g_warn_if_reached();
-				break;
-			}
-		} catch (const Mu::Error& er) {
-			mu_warning("error adding message @ {}: {}", item.full_path, er.what());
-		}
+
+		handle_item(std::move(item));
 
 		maybe_start_worker();
 		std::this_thread::yield();
