@@ -291,9 +291,15 @@ one is determined using `mu4e-attachment-dir'.
 
 This command assumes unique filenames for the attachments, since
 that is how the underlying completion mechanism works. If there
-are duplicates, only one is recognized. For this corner-case, it
-is recommended to use `mu4e-view-mime-part-action' instead, which
-does not have this limitation."
+are duplicates, only one is recognized.
+
+Furthermore, file-names that match `crm-separator' (by default,
+commas) are not supported (see `completing-read-multiple' for
+further details).
+
+For such corner-cases, it is recommended to use
+`mu4e-view-mime-part-action' instead, which does not have this
+limitation."
   (interactive "P")
   (let* ((parts (mu4e-view-mime-parts))
          (candidates  (seq-map
