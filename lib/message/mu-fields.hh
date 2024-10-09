@@ -583,6 +583,17 @@ field_is_combi (const std::string& name)
 	return name == "recip" || name == "contact";
 }
 
+/**
+ * Check if a field name corresponds to a timestamp field.
+ *
+ * @param name field name
+ *
+ * @return true or false
+ */
+static inline bool field_is_timestamp(const std::string& name) {
+    auto fieldOpt = field_from_name(name);
+    return fieldOpt && fieldOpt->is_time_t();
+}
 
 /**
  * Get the Field::Id for some number, or nullopt if it does not match

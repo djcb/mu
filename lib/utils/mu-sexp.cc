@@ -19,6 +19,7 @@
 
 
 #include "mu-sexp.hh"
+#include "message/mu-fields.hh"
 #include "mu-utils.hh"
 
 #include <atomic>
@@ -222,9 +223,15 @@ Sexp::to_json_string(Format fopts) const
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
-				sstrm << (first ? "" : ",")  << quote(it->symbol().name) << ":";
+				const auto symbol = it->symbol();
+				sstrm << (first ? "" : ",")  << quote(symbol.name) << ":";
 				++it;
-				sstrm << it->to_json_string();
+				// For dates, convert elisp time into a unix timestamp
+				if(field_is_timestamp(symbol.asFieldName()) && it->etimep()) {
+					sstrm << it->etime();
+				} else {
+					sstrm << it->to_json_string();
+				}
 				++it;
 				first = false;
 			}

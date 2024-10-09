@@ -63,6 +63,10 @@ struct Sexp {
 			return this == &rhs ? true : rhs.name == name;
 		}
 		bool operator!=(const Symbol& rhs) const { return *this == rhs ? false : true; }
+
+		std::string asFieldName() const {
+			return (!name.empty() && name[0] == ':') ? name.substr(1) : name;
+		}
 	};
 	enum struct Type { List, String, Number, Symbol };
 	using ValueType = std::variant<List, String, Number, Symbol>;
@@ -79,6 +83,14 @@ struct Sexp {
 	constexpr bool symbolp(const Sexp::Symbol& sym) const {return symbolp() && symbol() == sym; }
 	constexpr bool nilp() const { return symbolp(nil_sym); }
 
+	// Check if the Sexp represents an Elisp time object.
+	// returns true if the Sexp is a list with at least two number elements
+	constexpr bool etimep() const { 
+		// format:  ‘(SEC-HIGH SEC-LOW [MICROSEC] [PICOSEC])
+		return listp() && list().size() >= 2 && 
+			list()[0].numberp() && list()[1].numberp();
+	}
+
 	// Get the specific variant type.
 	const List& list() const     { return std::get<List>(value); }
 	List& list()                 { return std::get<List>(value); }
@@ -88,6 +100,10 @@ struct Sexp {
 	Number& number()             { return std::get<Number>(value); }
 	const Symbol& symbol() const { return std::get<Symbol>(value); }
 	Symbol& symbol()             { return std::get<Symbol>(value); }
+
+	// Get timestamp from Elisp time object
+	// Reverse of Document::make_emacs_time_sexp
+	Number etime() const { return (list().at(0).number() << 16) | list().at(1).number();} 
 
 	/**
 	 * Constructors

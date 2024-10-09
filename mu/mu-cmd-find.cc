@@ -21,6 +21,7 @@
 
 #include <array>
 
+#include <regex>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -510,8 +511,7 @@ Mu::mu_cmd_find(const Store& store, const Options& opts)
 		return process_store_query(store, *expr, opts);
 }
 
-
-
+// #define BUILD_TESTS
 #ifdef BUILD_TESTS
 /*
  * Tests.
@@ -694,6 +694,62 @@ test_mu_find_links(void)
 	g_assert_cmpuint(determine_dtype(f2.c_str(), true), ==, DT_LNK);
 }
 
+static void
+test_mu_xml(void)
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+			"--format", "xml", "t:julius"});
+	assert_valid_result(res);
+
+	const auto expected = std::string(R"(<?xml version="1.0" encoding="UTF-8" ?>
+<messages>
+	<message>
+		<from>John Milton &lt;jm@example.com&gt;</from>
+		<to>Julius Caesar &lt;jc@example.com&gt;</to>
+		<subject>Fere libenter homines id quod volunt credunt</subject>
+		<date>1217530645</date>
+		<size>1530</size>
+		<msgid>3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com</msgid>
+		<path>)") + MU_TESTMAILDIR2 + R"(/bar/cur/mail1</path>
+		<maildir>/bar</maildir>
+	</message>
+</messages>
+)";
+	assert_equal(res->standard_out, expected);
+}
+
+static void
+test_mu_json(void)
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+			"--format", "json", "t:julius"});
+	assert_valid_result(res);
+
+	const auto expected = std::string(R"([
+{":path":")") + MU_TESTMAILDIR2 + R"(/bar/cur/mail1",":size":1530,":changed":_CHANGED_,":date":1217530645,":flags":["unread"],":from":[{":email":"jm@example.com",":name":"John Milton"}],":message-id":"3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com",":priority":"high",":subject":"Fere libenter homines id quod volunt credunt",":tags":["Paradise", "losT", "milton", "john"],":to":[{":email":"jc@example.com",":name":"Julius Caesar"}],":maildir":"/bar"}
+]
+)";
+	// changed is arbitrary, replace with placeholder
+	const std::string res_clean = std::regex_replace(res->standard_out, std::regex(R"(\":changed\":\d+,)"),"\":changed\":_CHANGED_,");
+	assert_equal(res_clean, expected);
+}
+
+static void
+test_mu_sexp(void)
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+			"--format", "sexp", "t:julius"});
+	assert_valid_result(res);
+
+	const auto expected = std::string(R"((:path ")") + MU_TESTMAILDIR2 + R"(/bar/cur/mail1" :size 1530 :changed (_CHANGED_) :date (18578 2837 0) :flags (unread) :from ((:email "jm@example.com" :name "John Milton")) :message-id "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" :priority high :subject "Fere libenter homines id quod volunt credunt" :tags ("Paradise" "losT" "milton" "john") :to ((:email "jc@example.com" :name "Julius Caesar")) :maildir "/bar")
+)";
+	mu_println("E {}", expected);
+	// changed is arbitrary, replace with placeholder
+	const std::string res_clean = std::regex_replace(res->standard_out, std::regex(R"(:changed \(\d+ \d+ \d+\))"),":changed (_CHANGED_)");
+	mu_println("R {}", res_clean);
+	assert_equal(res_clean, expected);
+}
+
 /* some more tests */
 
 int
@@ -726,6 +782,9 @@ main(int argc, char* argv[])
 	g_test_add_func("/cmd/find/text-in-rfc822", test_mu_find_text_in_rfc822);
 	g_test_add_func("/cmd/find/wrong-muhome", test_mu_find_wrong_muhome);
 	g_test_add_func("/cmd/find/maildir-special", test_mu_find_maildir_special);
+	g_test_add_func("/cmd/find/xml", test_mu_xml);
+	g_test_add_func("/cmd/find/json", test_mu_json);
+	g_test_add_func("/cmd/find/sexp", test_mu_sexp);
 
 	return g_test_run();
 }
