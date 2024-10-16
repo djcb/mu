@@ -233,7 +233,7 @@ The following marks are available, and the corresponding props:
    `flag'      n        mark this message for flagging
    `move'      y        move the message to some folder
    `read'      n        mark the message as read
-   `trash'     y        trash the message to some folder
+   `trash'     n        trash the message to some folder
    `unflag'    n        mark this message for unflagging
    `untrash'   n        remove the `trashed' flag from a message
    `unmark'    n        unmark this message
