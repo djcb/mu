@@ -2343,7 +2343,9 @@ view} matching a certain pattern with @kbd{M-x mu4e-headers-mark-pattern}
 (@key{%})
 @item @emph{thread/subthread}: You can put a mark on all the messages in the
 thread/subthread at point with @kbd{M-x mu4e-headers-mark-thread} and @kbd{M-x
-mu4e-headers-mark-subthread}, respectively
+mu4e-headers-mark-subthread}, respectively. When you haven't enabled separate
+threads in the headers view, the thread marking functions simply mark @emph{all}
+messages.
 @end itemize
 
 @node What to mark for
@@ -4102,6 +4104,9 @@ functions like @code{mu4e-headers-mark-thread} (@key{T}),
 @code{mu4e-headers-mark-subthread} (@key{t}) to mark whole threads at the same
 time, and @code{mu4e-headers-mark-pattern} (@key{%}) to mark all messages
 matching a certain regular expression.
+
+Note that when you haven't enabled separate threads in the headers view, the
+thread marking functions simply mark @emph{all} messages.
 
 @subsection Can I automatically apply the marks on messages when leaving the headers buffer?
 Yes you can --- see the documentation for the variable
