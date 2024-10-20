@@ -664,12 +664,12 @@ The server reports the results for the operation through
 `mu4e-update-func'.
 
 If the variable `mu4e-change-filenames-when-moving' is
-non-nil, moving to a different maildir generates new names forq
+non-nil, moving to a different maildir generates new names for
 the target files; this helps certain tools (such as mbsync).
 
 If NO-VIEW is non-nil, do not update the view.
 
-Returns either (:update ... ) or (:error ) sexp, which are handled my
+Returns either (:update ... ) or (:error ) sexp, which are handled by
 `mu4e-update-func' and `mu4e-error-func', respectively."
   (unless (or maildir flags)
     (mu4e-error "At least one of maildir and flags must be specified"))
