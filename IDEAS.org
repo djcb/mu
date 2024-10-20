@@ -19,11 +19,6 @@ future.
   https://github.com/djcb/mu/issues/2308
   Shouldn't be _too_ hard, for someone that uses the functionality.
 
-- Make sorting stable if there are multiple messages with the same date. We
-  _could_ do this by adding some random millisecs to each messasge's timestamp; _or_
-  complicating the search (i.e., the message hash?). Maybe leave as is?
-  https://github.com/djcb/mu/issues/2527
-
 - Include "message summary" in message information, for display in the headers
   buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
   useful one line description... perhaps the first line after the "Dear x,"?
@@ -53,6 +48,16 @@ future.
 
 - Display the messages from old-to-new (still get the newest though)
   https://github.com/djcb/mu/issues/2759
+
+- Make sorting stable if there are multiple messages with the same date. We
+  _could_ do this by adding some random millisecs to each messasge's timestamp; _or_
+  complicating the search (i.e., the message hash?). Maybe leave as is?
+  https://github.com/djcb/mu/issues/2527
+
+
+- Perhaps better support file names with commas.. perhaps temporarily add some
+  invisible unicode to fool crm-separator?
+  https://github.com/djcb/mu/issues/2768
 
 * Done
 
