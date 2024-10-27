@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.12.6',
+        version: '1.12.7',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -26,9 +26,9 @@ project('mu', ['c', 'cpp'],
           'c_std=c11',
           'cpp_std=c++17'])
 
-# hard-code the date here (for reproduciblity); we derive the dates used in e.g.
+# hard-code the date here (for reproducibility); we derive the dates used in e.g.
 # documentation from this.
-mu_date='2024-07-27'
+mu_date='2024-10-27'
 
 # installation paths
 prefixdir = get_option('prefix')
