@@ -152,7 +152,7 @@ I.e., very new messages.")
 (defun mu4e-jump-to-favorite ()
   "Jump to to the favorite bookmark, if any."
   (interactive)
-  (when-let ((fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
+  (when-let* ((fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
     (mu4e-search-bookmark fav)))
 
 (defun mu4e--bookmarks-modeline-item ()
@@ -160,7 +160,7 @@ I.e., very new messages.")
 
 This uses the one special ':favorite' bookmark, and if there is
 one, creates a propertized string for display in the modeline."
-  (when-let ((fav ;; any results for the favorite bookmark item?
+  (when-let* ((fav ;; any results for the favorite bookmark item?
               (seq-find (lambda (bm) (plist-get bm :favorite))
                         (mu4e-query-items 'bookmarks))))
     (cl-destructuring-bind (&key unread count delta-unread

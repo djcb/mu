@@ -238,9 +238,9 @@ Returns the full path."
 (defun mu4e-sexp-at-point ()
   "Show or hide the s-expression for the message-at-point, if any."
   (interactive)
-  (if-let ((win (get-buffer-window mu4e--sexp-buffer-name)))
+  (if-let* ((win (get-buffer-window mu4e--sexp-buffer-name)))
       (delete-window win)
-    (when-let ((msg (mu4e-message-at-point 'noerror)))
+    (when-let* ((msg (mu4e-message-at-point 'noerror)))
       (when (buffer-live-p mu4e--sexp-buffer-name)
         (kill-buffer mu4e--sexp-buffer-name))
       (with-current-buffer-window

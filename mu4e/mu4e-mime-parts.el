@@ -97,7 +97,7 @@ There are some internal fields as well, e.g. ; subject to change:
          (save-excursion
            (goto-char (point-min))
            (while (not (eobp))
-             (when-let ((part (get-text-property (point) 'gnus-data))
+             (when-let* ((part (get-text-property (point) 'gnus-data))
                         (index (get-text-property (point) 'gnus-part)))
                (when (and part (numberp index) (not (member index indices)))
                  (let* ((disp (mm-handle-disposition part))

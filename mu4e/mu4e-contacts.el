@@ -131,7 +131,7 @@ The address are either plain e-mail addresses or regexps (strings
  address patterns (if any)."
   (seq-remove
    (lambda (addr) (and no-regexp (string-match-p "^/.*/" addr)))
-   (when-let ((props (mu4e-server-properties)))
+   (when-let* ((props (mu4e-server-properties)))
      (plist-get props :personal-addresses))))
 
 (defun mu4e-personal-address-p (addr)

@@ -40,7 +40,7 @@ e.g. public-inbox-based archives."
 (defmacro mu4e-x-seq-url (base-url)
   "Construct x-seq archive URL for MSG or nil if not found."
   `(lambda (msg)
-     (when-let ((xseq (mu4e-fetch-field msg "X-Seq")))
+     (when-let* ((xseq (mu4e-fetch-field msg "X-Seq")))
        (concat ,base-url "/" xseq))))
 
 ;;; Configuration

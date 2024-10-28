@@ -259,7 +259,7 @@ Return the matching choice value (cdr of the cell)."
                         (mapconcat #'car choices ", "))))
     (while (not chosen)
       (message nil) ;; this seems needed...
-      (when-let ((kar (read-char-exclusive prompt)))
+      (when-let* ((kar (read-char-exclusive prompt)))
         (when (eq kar ?\e) (keyboard-quit)) ;; `read-char-exclusive' is a C
                                             ;; function and doesn't check for
                                             ;; `keyboard-quit', there we need to
@@ -543,7 +543,7 @@ Or go to the top level if there is none."
 
 (defun mu4e--jump-to-bookmark (bookmark)
   "View the message referred to by BOOKMARK."
-  (when-let ((msgid (bookmark-prop-get bookmark 'message-id)))
+  (when-let* ((msgid (bookmark-prop-get bookmark 'message-id)))
     (mu4e-view-message-with-message-id msgid)))
 
 ;;; Macros

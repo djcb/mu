@@ -387,7 +387,7 @@ also marked as Seen.
 
 Function assumes that it is executed in the context of the
 message buffer."
-  (when-let ((buf (find-file-noselect path)))
+  (when-let* ((buf (find-file-noselect path)))
     (with-current-buffer buf
       (let ((in-reply-to (message-field-value "in-reply-to"))
             (forwarded-from)
@@ -445,14 +445,14 @@ appropriate flag at the message forwarded or replied-to."
   ;; typically, draft is gone and the sent message appears in sent. Update flags
   ;; for related messages, i.e. for Forwarded ('Passed') and Replied messages,
   ;; try to set the appropriate flag at the message forwarded or replied-to.
-  (when-let ((fcc-path (message-field-value "Fcc")))
+  (when-let* ((fcc-path (message-field-value "Fcc")))
     (mu4e--set-parent-flags fcc-path)
     ;; we end up with a ((buried) buffer here, visiting the
     ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
-    (when-let ((buf (find-buffer-visiting fcc-path)))
+    (when-let* ((buf (find-buffer-visiting fcc-path)))
       (kill-buffer buf)))
   ;; remove draft
-  (when-let ((draft (buffer-file-name)))
+  (when-let* ((draft (buffer-file-name)))
     (mu4e--server-remove draft)))
 
 (defun mu4e--compose-before-send ()
@@ -492,7 +492,7 @@ Creates a buffer NAME and returns it."
 (defun mu4e--message-is-yours-p ()
   "Mu4e's override for `message-is-yours-p'."
   (seq-some (lambda (field)
-              (if-let ((recip (message-field-value field)))
+              (if-let* ((recip (message-field-value field)))
                   (mu4e-personal-or-alternative-address-p
                    (car (mail-header-parse-address recip)))))
             '("From" "Sender")))
@@ -596,7 +596,7 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
     (set-visited-file-name ;; make it a draft file
      (mu4e--draft-message-path (mu4e--draft-basename) parent)))
   ;; fcc
-  (when-let ((fcc-path (mu4e--fcc-path (mu4e--draft-basename) parent)))
+  (when-let* ((fcc-path (mu4e--fcc-path (mu4e--draft-basename) parent)))
     (message-add-header (concat "Fcc: " fcc-path "\n")))
 
   (mu4e--prepare-draft-headers compose-type)

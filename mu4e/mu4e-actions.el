@@ -257,7 +257,7 @@ the message."
   "Browse the archive for a mailing list message MSG.
 See `mu4e-mailing-list-archive-url'."
   (interactive (list (mu4e-message-at-point)))
-  (if-let ((url (mu4e-mailing-list-archive-url msg)))
+  (if-let* ((url (mu4e-mailing-list-archive-url msg)))
     (browse-url url)
     (mu4e-warn "No archive available for this message")))
 

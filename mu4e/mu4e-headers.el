@@ -669,7 +669,7 @@ This is suitable for displaying in the header view."
 
 (defsubst mu4e~headers-insert-header (msg pos)
   "Insert a header for MSG at point POS."
-  (when-let ((line (mu4e~message-header-line msg))
+  (when-let* ((line (mu4e~message-header-line msg))
              (docid (plist-get msg :docid)))
     (goto-char pos)
     (insert
@@ -1436,7 +1436,7 @@ If SUBTHREAD is non-nil, only apply to subthread."
           (if (functionp mu4e-view-auto-mark-as-read)
               (funcall mu4e-view-auto-mark-as-read msg)
             mu4e-view-auto-mark-as-read)))
-    (when-let ((buf (mu4e-get-view-buffer (current-buffer) nil)))
+    (when-let* ((buf (mu4e-get-view-buffer (current-buffer) nil)))
       (with-current-buffer buf
         (mu4e-loading-mode 1)))
     (mu4e--server-view docid mark-as-read)))

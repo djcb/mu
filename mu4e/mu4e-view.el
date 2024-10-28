@@ -615,7 +615,7 @@ As a side-effect, a message that is being viewed loses its
   ;; buffer-local state that *must* survive is correctly copied
   ;; across.
   (let ((linked-headers-buffer))
-    (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
+    (when-let* ((existing-buffer (mu4e-get-view-buffer nil nil)))
       ;; required; this state must carry over from the killed buffer
       ;; to the new one.
       (setq linked-headers-buffer mu4e-linked-headers-buffer)
@@ -749,7 +749,7 @@ determine which browser function to use."
   "Refresh the message view."
   ;;; XXX: sometimes, side-effect: increase the header-buffers size
   (interactive)
-  (when-let ((msg (and (derived-mode-p 'mu4e-view-mode)
+  (when-let* ((msg (and (derived-mode-p 'mu4e-view-mode)
                        mu4e--view-message)))
     (mu4e-view-quit)
     (mu4e-view msg)))
@@ -789,7 +789,7 @@ Note that for some messages, this can trigger high CPU load."
               ((or ':path ':maildir ':list)
                (mu4e--view-gnus-insert-header field fieldval))
               (':message-id
-               (when-let ((msgid (plist-get msg :message-id)))
+               (when-let* ((msgid (plist-get msg :message-id)))
                  (mu4e--view-gnus-insert-header field (format "<%s>" msgid))))
               (':mailing-list
                (let ((list (plist-get msg :list)))
@@ -1109,7 +1109,7 @@ Article Treatment' for more options."
   ;; This function assumes `gnus-article-mime-handle-alist' is sorted by
   ;; pertinence, i.e. the first HTML part found in it is the most important one.
   (save-excursion
-    (if-let ((html-part
+    (if-let*((html-part
               (seq-find (lambda (handle)
                           (equal (mm-handle-media-type (cdr handle))
                                  "text/html"))
