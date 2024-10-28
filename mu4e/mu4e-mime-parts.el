@@ -421,7 +421,7 @@ If N is not specified, ask for it. For instance, '3 A o' opens
 the third MIME-part."
   ;; (interactive
   ;;  (list (read-number "Number of MIME-part: ")))
-  (interactive)
+  (interactive "P")
   (let* ((parts (mu4e-view-mime-parts))
          (candidates (seq-map
                       (lambda (part)
