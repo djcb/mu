@@ -548,7 +548,7 @@ You cannot run the repl when mu4e is running (or vice-versa)."
     (mu4e--server-start))
   ;; in single-threaded mode, mu can't accept our command right now.
   (when (and (mu4e--server-xapian-single-threaded-p) mu4e--server-indexing)
-    (mu4e-warn "Cannot handle command while indexing, please retry later."))
+    (mu4e-message "Cannot handle command while indexing, please retry later."))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
     (mu4e-log 'to-server "%s" cmd)
