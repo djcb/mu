@@ -1,6 +1,26 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
+* 1.12 (post 1.12.0 updates)
+
+ The 1.12 series has been opened for a fairly long time, and gained some
+ changes, some beyond mere bug-fixing. We decided to put off a new development
+ series (1.13 -> 1.14) until incompatible changes are required; for now working
+ in the 1.12 series seems a good way to get improvements to users more quickly.
+
+  - man documentation improvements
+
+  - message composition has been reworked to avoid a number of problems user
+    reported
+
+  - many small mu4e bugs fixed, usually very old ones
+
+  - with 1.12.7, ~mu~ indexing is single-threaded again (by default), to avoid
+    cases of database-corruption that have appeared.
+
+  There's the ~-Dxapian-single-threaded=false~ flag to Meson to retain the old
+  behavior.
+
 * 1.12 (released on February 24, 2024)
 
 ** Some highlights
