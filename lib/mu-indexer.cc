@@ -145,6 +145,8 @@ struct Indexer::Private {
 	std::mutex lock_, w_lock_;
 	std::atomic<time_t> completed_{};
 	bool was_empty_{};
+
+	uint64_t last_index_{};
 };
 
 bool
@@ -206,12 +208,16 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 
 	case Scanner::HandleType::File: {
 		++progress_.checked;
-
-		if ((size_t)statbuf->st_size > max_message_size_) {
-			mu_debug("skip {} (too big: {} bytes)", fullpath, statbuf->st_size);
+		if (conf_.lazy_check && static_cast<uint64_t>(statbuf->st_ctime) < last_index_) {
+			// in lazy mode, ignore the file if it has not changed
+			// since the last indexing op.
 			return false;
 		}
 
+		if (static_cast<size_t>(statbuf->st_size) > max_message_size_) {
+			mu_debug("skip {} (too big: {} bytes)", fullpath, statbuf->st_size);
+			return false;
+		}
 		// if the message is not in the db yet, or not up-to-date, queue
 		// it for updating/inserting.
 		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath))
@@ -413,6 +419,10 @@ Indexer::Private::start(const Indexer::Config& conf, bool block)
 	mu_debug("starting indexer with <= {} worker thread(s)", max_workers_);
 	mu_debug("indexing: {}; clean-up: {}", conf_.scan ? "yes" : "no",
 		 conf_.cleanup ? "yes" : "no");
+
+	// remember the _previous_ indexing, so in lazy mode we can skip
+	// those files.
+	last_index_ = store_.config().get<Mu::Config::Id::LastIndex>();
 
 	state_.change_to(IndexState::Scanning);
 	/* kick off the first worker, which will spawn more if needed. */

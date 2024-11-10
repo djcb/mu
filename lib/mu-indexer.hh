@@ -54,8 +54,8 @@ public:
 		bool ignore_noupdate{};
 		/**< ignore .noupdate files */
 		bool lazy_check{};
-		/**< whether to skip directories that don't have a changed
-		 * mtime */
+		/**< whether to skip directories or message files that haven't changed since the
+		 * previous indexing operation, based on their ctime */
 	};
 
 	/**

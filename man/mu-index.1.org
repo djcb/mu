@@ -41,7 +41,7 @@ If there is a file called _.noupdate_ in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
 speed up things you have some maildirs that never change.
 
-_.noupdate_ does not affect already-indexed message: you can still search for
+_.noupdate_ does not affect already-indexed messages: you can still search for
 them. _.noupdate_ is ignored when you start indexing with an empty database (such
 as directly after *mu init*).
 
@@ -58,7 +58,7 @@ the database for which there is no longer a corresponding file in the Maildir.
 If you do not want this, you can use *-n*, *--nocleanup*.
 
 When *mu index* catches one of the signals *SIGINT*, *SIGHUP* or *SIGTERM* (e.g., when
-you press Ctrl-C during the indexing process), it attempts to shutdown
+you press *Ctrl-C* during the indexing process), it attempts to shutdown
 gracefully; it tries to save and commit data, and close the database etc. If it
 receives another signal (e.g., when pressing Ctrl-C once more), *mu index* will
 terminate immediately.
@@ -67,12 +67,17 @@ terminate immediately.
 
 ** --lazy-check
 In lazy-check mode, *mu* does not consider messages for which the time-stamp
-(ctime) of the directory they reside in has not changed since the previous
-indexing run. This is much faster than the non-lazy check, but won't update
-messages that have change (rather than having been added or removed), since
-merely editing a message does not update the directory time-stamp. Of course,
-you can run *mu-index* occasionally without *--lazy-check*, to pick up such
-messages.
+(*ctime*) of the directory in which they reside, has not changed since the
+previous time this directory was checked.
+
+This is much faster than the non-lazy check, but won't update messages that have
+changed (rather than having been added or removed), since merely editing a
+message does not update the directory time-stamp. Of course, you can run
+*mu-index* occasionally without *--lazy-check*, to pick up such messages.
+
+Furthermore, in lazy-check mode, files which have a *ctime* smaller than the time
+the previous indexing operation was completed, are ignored. This helps for the
+use-case where new messages can appear in big maildirs.
 
 ** --nocleanup
 Disable the database cleanup that *mu* does by default after indexing.
@@ -172,7 +177,7 @@ The instructions are a little different since we have a proper repeatable
 benchmark now. After building,
 
 #+begin_example
- $ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
+$ sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
 % THREAD_NUM=4 build/lib/tests/bench-indexer -m perf
 # random seed: R02Sf5c50e4851ec51adaf301e0e054bd52b
 1..1
@@ -185,7 +190,7 @@ ok 1 /bench/indexer/4-cores
 #+end_example
 
 Things are again a little faster, even though the index does a lot more now
-(text-normalizatian, and pre-generating message-sexps). A faster machine helps,
+(text-normalization, and pre-generating message-sexps). A faster machine helps,
 too!
 
 ** recent releases
