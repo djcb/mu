@@ -281,7 +281,8 @@ The following marks are available, and the corresponding props:
                    ;; the docid cookie and then we skip the mu4e--mark-fringe
                    (start (+ (length mu4e--mark-fringe)
                              (mu4e~headers-goto-docid docid t)))
-                   (overlay (make-overlay start (+ start (length targetstr)))))
+                   (overlay (make-overlay start (min (line-end-position)
+                                                     (+ start (length targetstr))))))
               (overlay-put overlay 'display targetstr)
               (overlay-put overlay 'mu4e-mark t)
               (overlay-put overlay 'evaporate t)
