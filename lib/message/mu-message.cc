@@ -492,11 +492,15 @@ maybe_handle_pkcs7(const MimeObject& obj, Message::Private& info)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 		// CompressedData, CertsOnly, Unknown
-		switch (smime.smime_type()) {
+		const auto smtype{smime.smime_type()};
+		switch (smtype) {
 		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
 			info.flags |= Flags::Signed;
 			break;
 		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::EnvelopedData:
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::Unknown:
+			/* The "Unknown" case... GMIME doesn't give us anything
+			 * more specific, so assume it's encrypted for now  */
 			info.flags |= Flags::Encrypted;
 			break;
 		default:
