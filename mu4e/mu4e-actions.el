@@ -215,7 +215,7 @@ would add \"tag\" and \"long tag\", and remove \"oldtag\"."
        (t
         (setq taglist (push tag taglist)))))
 
-    (setq taglist (sort (delete-dups taglist) 'string<))
+    (setq taglist (delete "" (sort (delete-dups taglist) 'string<)))
     (setq tagstr (mapconcat 'identity taglist sep))
 
     (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
