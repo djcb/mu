@@ -1665,28 +1665,30 @@ the variable @t{mu4e-compose-switch}; see its docstring for details.
 
 @subsection New message
 
-You can start composing a completely new message with @t{mu4e-compose-new} (with
-@kbd{N} from within @t{mu4e}.
+You can start composing a completely new message with @code{mu4e-compose-new}
+(with @kbd{N} from within @t{mu4e}.
 
 @subsection Reply
 
-You can compose a reply to an existing message with @t{mu4e-compose-reply} (with
-@kbd{R} from within the headers view or when looking at some specific message.
+To compose a reply to an existing message, you can use @code{mu4e-compose-reply}
+(with @kbd{R}) from within the headers view or when looking at some specific
+message.
 
-When you want to reply to @emph{all} recipients of a message, you can use
-@t{mu4e-compose-wide-reply}, bound to @kbd{W}. This is often called
-``reply-to-all'', while Gnus uses the term ``wide reply''.
+If you want to reply to @emph{all} recipients of a message, there is
+@code{mu4e-compose-wide-reply}, by default bound to @kbd{W}. This is often
+called ``reply-to-all'', but @t{mu4e} follows the Gnus terminology ``wide
+reply''.
 
 By default, the reply will cite the message being replied to. If you do not want
 that, you can set (or @t{let}-bind) @t{message-cite-function} to
 @t{mu4e-message-cite-nothing}.
 
-See @ref{(message) Reply} and @ref{(message) Wide Reply} for further
-information.
+See @ref{(message) Reply} and @ref{(message) Wide Reply} for further details.
 
-Note: in older versions, @t{mu4e-compose-reply} would @emph{ask} whether you
-want to reply-to-all or not; if you are nostalgic for that old behavior, you
-could add something like the following to your configuration:
+Note: in older versions, @code{mu4e-compose-reply} would @emph{ask} whether you
+want to reply-to-all or not (there was no separate ``wide'' reply); if you are
+nostalgic for that old behavior, you could add something like the following to
+your configuration:
 @lisp
 (defun compose-reply-wide-or-not-please-ask ()
   "Ask whether to reply-to-all or not."
@@ -1699,21 +1701,22 @@ could add something like the following to your configuration:
 
 @subsection Forward
 
-You can forward some existing message with @t{mu4e-compose-forward} (with
-@kbd{F} from within the headers view or when looking at some specific message.
-
-For more information, see @ref{(message) Forwarding}.
+You can @emph{forward} some existing message with @code{mu4e-compose-forward}
+(bound to @kbd{F}) from within the headers view or when looking at some specific
+message. For further details, see @ref{(message) Forwarding}.
 
 To influence the way a message is forwarded, you can use the variables
 @code{message-forward-as-mime} and @code{message-forward-show-mml}.
 
 @subsection Supersede
 
-Occasionally, it can be useful to ``supersede'' a message you sent; this drops
-you into a new message that is just like the old message (and a @t{Supersedes:}
-message header). You can then edit this message and send it.
+Occasionally, it can be useful to ``supersede'' a message you sent; for this,
+there is @code{mu4e-compose-supersede}.
 
-This is only possible for messages @emph{you} sent, as determined by
+This drops you into a new message that is just like the old message (and a
+@t{Supersedes:} message header). You can then edit this message and send it.
+
+Superseding is only possible for messages @emph{you} sent, as determined by
 @code{mu4e-personal-or-alternative-address-p}.
 
 This wraps @code{message-supersede}.
