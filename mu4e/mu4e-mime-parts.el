@@ -1,6 +1,6 @@
 ;;; mu4e-mime-parts.el --- Dealing with MIME-parts & URLs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -24,19 +24,14 @@
 
 ;; Implements functions and variables for dealing with MIME-parts and URLs.
 
-
 ;;; TODO:
 ;; [~] mime part candidate sorting -> is his even possible generally?
 ;; [ ] URL support
 
 ;;; Code:
-
-
 (require 'mu4e-vars)
 (require 'mu4e-folders)
 (require 'gnus-art)
-
-
 
 (defcustom mu4e-view-open-program
   (pcase system-type
@@ -54,7 +49,6 @@ specified a function as viewer."
   :type '(choice string function)
   :group 'mu4e-view)
 
-
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
 (defvar-local mu4e~gnus-article-mime-handles nil)
@@ -66,11 +60,9 @@ specified a function as viewer."
     (mm-destroy-parts mu4e~gnus-article-mime-handles)
     (setq mu4e~gnus-article-mime-handles nil)))
 
-
 ;;; MIME-parts
 (defvar-local mu4e--view-mime-parts nil
   "Cached MIME parts for this message.")
-
 
 (defun mu4e-view-mime-parts()
   "Get the list of MIME parts for this message.
@@ -176,8 +168,8 @@ Otherwise, return a file with a unique number appended to the base-name."
   :keymap mu4e-view-completion-minor-mode-map)
 
 (defun mu4e--part-annotation (candidate part type longest-filename)
-  "Calculate the annotation candidates as per
-`:annotation-function' (see `completion-extra-properties')
+  "Calculate the annotation candidates as per annotation.
+I.e., `:annotation-function' (see `completion-extra-properties')
 
 CANDIDATE is the value to annotate.
 
@@ -226,7 +218,6 @@ information' is used for alignment."
         "       "
         (format "%s" (concat "-> " target))))
       (_ (mu4e-error "Unsupported annotation type %s" type)))))
-
 
 (defvar helm-comp-read-use-marked)
 (defun mu4e--completing-read-real (prompt candidates multi)
@@ -381,7 +372,6 @@ Each of the actions is a plist with keys
                        ;;          or as a string parameter to a function
 ).")
 
-
 (defun mu4e--view-mime-part-to-temp-file (handle)
   "Write MIME-part HANDLE to a temporary file and return the file name.
 The filename is deduced from the MIME-part's filename, or
@@ -496,6 +486,5 @@ the third MIME-part."
     (display-buffer buf)))
 
 
-
 (provide 'mu4e-mime-parts)
 ;;; mu4e-mime-parts.el ends here
