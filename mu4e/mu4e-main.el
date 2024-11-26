@@ -299,9 +299,7 @@ Otherwise, do nothing."
          "* "
          (propertize "mu4e" 'face 'mu4e-header-key-face)
          (propertize " - mu for emacs version " 'face 'mu4e-title-face)
-         (propertize  (concat mu4e-mu-version
-                              (if (mu4e--server-xapian-single-threaded-p) "-st" ""))
-                      'face 'mu4e-header-key-face)
+         (propertize  mu4e-mu-version 'face 'mu4e-header-key-face)
          "\n\n"
          (propertize "  Basics\n\n" 'face 'mu4e-title-face)
          (mu4e--main-action

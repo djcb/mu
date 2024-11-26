@@ -15,11 +15,8 @@
 
   - many small mu4e bugs fixed, usually very old ones
 
-  - with 1.12.7, ~mu~ indexing is single-threaded again (by default), to avoid
-    cases of database-corruption that have appeared.
-
-  There's the ~-Dxapian-single-threaded=false~ flag to Meson to retain the old
-  behavior.
+  - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
+    database-corruption that have appeared.
 
 * 1.12 (released on February 24, 2024)
 

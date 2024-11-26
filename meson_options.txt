@@ -48,7 +48,6 @@ option('guile-extension-dir',
        type: 'string',
        description: 'custom install path for the guile extension module')
 
-
 #
 # misc
 #
@@ -57,11 +56,6 @@ option('tests',
        type : 'feature',
        value: 'auto',
        description: 'build unit tests')
-
-option('xapian-single-threaded',
-       type : 'boolean',
-       value: true,
-       description: 'only use Xapian from a single thread')
 
 option('readline',
        type: 'feature',

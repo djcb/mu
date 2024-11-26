@@ -49,8 +49,6 @@ public:
 		/**< scan for new messages */
 		bool cleanup{true};
 		/**< clean messages no longer in the file system */
-		size_t max_threads{};
-		/**< maximum # of threads to use */
 		bool ignore_noupdate{};
 		/**< ignore .noupdate files */
 		bool lazy_check{};

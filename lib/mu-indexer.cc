@@ -106,7 +106,6 @@ struct Indexer::Private {
 
 	void maybe_start_worker();
 
-	void item_worker();
 	void scan_worker();
 
 	bool add_message(const std::string& path);
@@ -123,8 +122,6 @@ struct Indexer::Private {
 	const size_t    max_message_size_;
 
 	::time_t                 dirstamp_{};
-	std::size_t              max_workers_;
-	std::vector<std::thread> workers_;
 	std::thread              scanner_worker_;
 
 	struct WorkItem {
@@ -137,8 +134,6 @@ struct Indexer::Private {
 	};
 
 	void handle_item(WorkItem&& item);
-
-	AsyncQueue<WorkItem> todos_;
 
 	Progress   progress_{};
 	IndexState state_{};
@@ -198,11 +193,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		return true;
 	}
 	case Scanner::HandleType::LeaveDir: {
-#ifdef XAPIAN_SINGLE_THREADED
 		handle_item({fullpath, WorkItem::Type::Dir});
-#else
-		todos_.push({fullpath, WorkItem::Type::Dir});
-#endif /*XAPIAN_SINGLE_THREADED*/
 		return true;
 	}
 
@@ -223,29 +214,12 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath))
 			return false;
 
-#ifdef XAPIAN_SINGLE_THREADED
 		handle_item({fullpath, WorkItem::Type::File});
-#else
-		// push the remaining messages to our "todo" queue for
-		// (re)parsing and adding/updating to the database.
-		todos_.push({fullpath, WorkItem::Type::File});
-#endif
 		return true;
 	}
 	default:
 		g_return_val_if_reached(false);
 		return false;
-	}
-}
-
-void
-Indexer::Private::maybe_start_worker()
-{
-	std::lock_guard lock{w_lock_};
-
-	if (todos_.size() > workers_.size() && workers_.size() < max_workers_) {
-		workers_.emplace_back(std::thread([this] { item_worker(); }));
-		mu_debug("added worker {}", workers_.size());
 	}
 }
 
@@ -299,26 +273,6 @@ Indexer::Private::handle_item(WorkItem&& item)
 	}
 }
 
-
-
-void
-Indexer::Private::item_worker()
-{
-	WorkItem item;
-
-	mu_debug("started worker");
-
-	while (state_ == IndexState::Scanning) {
-		if (!todos_.pop(item, 250ms))
-			continue;
-
-		handle_item(std::move(item));
-
-		maybe_start_worker();
-		std::this_thread::yield();
-	}
-}
-
 bool
 Indexer::Private::cleanup()
 {
@@ -359,28 +313,11 @@ Indexer::Private::scan_worker()
 			state_.change_to(IndexState::Idle);
 			return;
 		}
-		mu_debug("scanner finished with {} file(s) in queue", todos_.size());
+		mu_debug("scanner finished");
 	}
 
-	// now there may still be messages in the work queue...
-	// finish those; this is a bit ugly; perhaps we should
-	// handle SIGTERM etc.
-
-	if (!todos_.empty()) {
-		const auto workers_size = std::invoke([this] {
-			std::lock_guard lock{w_lock_};
-			return workers_.size();
-		});
-		mu_debug("process {} remaining message(s) with {} worker(s)",
-			todos_.size(), workers_size);
-		while (!todos_.empty())
-			std::this_thread::sleep_for(100ms);
-	}
 	// and let the worker finish their work.
 	state_.change_to(IndexState::Finishing);
-	for (auto&& w : workers_)
-		if (w.joinable())
-			w.join();
 
 	if (conf_.cleanup) {
 		mu_debug("starting cleanup");
@@ -402,21 +339,13 @@ Indexer::Private::start(const Indexer::Config& conf, bool block)
 	stop();
 
 	conf_ = conf;
-	if (conf_.max_threads == 0) {
-		/* benchmarking suggests that ~4 threads is the fastest (the
-		 * real bottleneck is the database, so adding more threads just
-		 * slows things down)
-		 */
-		max_workers_ = std::min(4U, std::thread::hardware_concurrency());
-	} else
-		max_workers_ = conf.max_threads;
 
 	if (store_.empty() && conf_.lazy_check) {
 		mu_debug("turn off lazy check since we have an empty store");
 		conf_.lazy_check = false;
 	}
 
-	mu_debug("starting indexer with <= {} worker thread(s)", max_workers_);
+	mu_debug("starting indexer");
 	mu_debug("indexing: {}; clean-up: {}", conf_.scan ? "yes" : "no",
 		 conf_.cleanup ? "yes" : "no");
 
@@ -425,8 +354,6 @@ Indexer::Private::start(const Indexer::Config& conf, bool block)
 	last_index_ = store_.config().get<Mu::Config::Id::LastIndex>();
 
 	state_.change_to(IndexState::Scanning);
-	/* kick off the first worker, which will spawn more if needed. */
-	workers_.emplace_back(std::thread([this] { item_worker(); }));
 	/* kick the disk-scanner thread */
 	scanner_worker_ = std::thread([this] { scan_worker(); });
 
@@ -446,15 +373,10 @@ Indexer::Private::stop()
 {
 	scanner_.stop();
 
-	todos_.clear();
 	if (scanner_worker_.joinable())
 		scanner_worker_.join();
 
 	state_.change_to(IndexState::Idle);
-	for (auto&& w : workers_)
-		if (w.joinable())
-			w.join();
-	workers_.clear();
 
 	return true;
 }
@@ -562,7 +484,6 @@ test_index_basic()
 	}
 
 	conf.lazy_check	     = true;
-	conf.max_threads     = 1;
 	conf.ignore_noupdate = false;
 
 	{

@@ -134,13 +134,6 @@ config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
 
 #
-# single-threaded Xapian access?
-#
-if get_option('xapian-single-threaded')
-  config_h_data.set('XAPIAN_SINGLE_THREADED', true)
-  message('use Xapian only in a single thread')
-endif
-#
 # d_type, d_ino are not available universally, so let's check
 # (we use them for optimizations in mu-scanner
 #

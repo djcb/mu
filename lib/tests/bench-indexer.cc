@@ -467,7 +467,6 @@ benchmark_indexer(gconstpointer testdata)
 		auto store{Store::make_new(BENCH_STORE, BENCH_MAILDIRS)};
 		g_assert_true(!!store);
 		Indexer::Config conf{};
-		conf.max_threads = tdata->num_threads;
 
 		auto res = store->indexer().start(conf);
 		g_assert_true(res);

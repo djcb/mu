@@ -1,4 +1,4 @@
-## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,9 +17,6 @@
 
 # generate some build data for use in mu4e
 version_extra=''
-if get_option('xapian-single-threaded')
-  version_extra='-st'
-endif
 
 mu4e_meta = configure_file(
   input: 'mu4e-config.el.in',

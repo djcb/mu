@@ -785,23 +785,11 @@ Server::Private::index_handler(const Command& cmd)
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store().empty();
 
-#ifdef XAPIAN_SINGLE_THREADED
 	// nothing to do
 	if (indexer().is_running()) {
 		throw Error{Error::Code::Xapian, "indexer is already running"};
 	}
 	do_index(conf);
-#else
-	indexer().stop();
-	if (index_thread_.joinable())
-		index_thread_.join();
-
-	// start a background track.
-	index_thread_ = std::thread([this, conf = std::move(conf)] {
-		do_index(conf);
-	});
-#endif /*XAPIAN_SINGLE_THREADED */
-
 }
 
 void
@@ -975,9 +963,6 @@ Server::Private::ping_handler(const Command& cmd)
 				       ":personal-addresses", std::move(addrs),
 				       ":database-path", store().path(),
 				       ":root-maildir", store().root_maildir(),
-#ifdef XAPIAN_SINGLE_THREADED
-				       ":xapian-single-threaded", Sexp::t_sym,
-#endif /*XAPIAN_SINGLE_THREADED*/
 				       ":doccount", storecount)));
 }
 
