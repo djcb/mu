@@ -106,8 +106,6 @@ topic_fields(const Options& opts)
 			return "boolean";
 		if (field.is_phrasable_term())
 			return "phrase";
-		if (field.is_value())
-			return "yes";
 		if (field.is_contact())
 			return "contact";
 		if (field.is_range())

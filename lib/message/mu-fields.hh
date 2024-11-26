@@ -397,11 +397,12 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::References,
 		Field::Type::StringList,
-		"references", {},
+		"references", "ref",
 		"References to related messages",
 		{},
 		'r',
 		Field::Flag::Value |
+				Field::Flag::BooleanTerm |
 		Field::Flag::IncludeInSexp
 	    },
 	    {
