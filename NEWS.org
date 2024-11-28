@@ -3,20 +3,24 @@
 
 * 1.12 (post 1.12.0 updates)
 
- The 1.12 series has been opened for a fairly long time, and gained some
- changes, some beyond mere bug-fixing. We decided to put off a new development
- series (1.13 -> 1.14) until incompatible changes are required; for now working
- in the 1.12 series seems a good way to get improvements to users more quickly.
+ The 1.12 series has been the stable one for a fairly long time, and gained some
+ changes in mean-time. Most of the changes are for big bugs, but some small new
+ features are available as well. We decided to put off a new development series
+ (1.13 -> 1.14) until incompatible changes are required; for now working in the
+ 1.12 series seems a good way to get improvements to users more quickly.
 
   - man documentation improvements
 
   - message composition has been reworked to avoid a number of problems user
-    reported
-
-  - many small mu4e bugs fixed, usually very old ones
+    reported. It is now directly uses the Gnus machinery, but integrate inside
+    mu4e.
 
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
-    database-corruption that have appeared.
+    database-corruption. This of course means that in *mu4e* you need to _wait_
+    until indexing is ready before you can continue (*mu4e* will warn you). If you
+    see that warning often, perhaps your indexing is too slow, see the section
+    on "Speeding up indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e manual.
+
 
 * 1.12 (released on February 24, 2024)
 

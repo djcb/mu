@@ -545,16 +545,16 @@ because you are running your own mail-server, you can leave
 @t{mu4e} won't try to get new mail, but still re-index your messages.
 
 @subsection Speeding up indexing
+@anchor{Speeding up indexing}
 
-If you have a large number of e-mail messages in your store,
-(re)indexing might take a while. The defaults for indexing are to
-ensure that we always have correct, up-to-date information about your
-messages, even if other programs have modified the Maildir.
+If you have a large number of e-mail messages in your store, (re)indexing might
+take a while. The defaults for indexing are to ensure that we always have
+correct, up-to-date information about your messages, even if other programs have
+modified the Maildir.
 
-The downside of this thoroughness (which is the default) is that it is
-relatively slow, something that can be noticeable with large e-mail
-corpora on slow file-systems. For a faster approach, you can use the
-following:
+The downside of this thoroughness is that it is relatively slow, something that
+can be especially noticeable with large e-mail corpora on slow file-systems. For
+a faster approach, you can use the following:
 
 @lisp
 (setq
