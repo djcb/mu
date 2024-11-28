@@ -16,11 +16,16 @@
     mu4e.
 
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
-    database-corruption. This of course means that in *mu4e* you need to _wait_
-    until indexing is ready before you can continue (*mu4e* will warn you). If you
-    see that warning often, perhaps your indexing is too slow, see the section
-    on "Speeding up indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e manual.
+    database-corruption.
 
+    This, unfortunately, means that in *mu4e* you need to _wait_ until indexing is
+    ready before you can continue (*mu4e* will warn you). If you see that warning
+    often, perhaps your indexing is too slow, see the section on "Speeding up
+    indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e manual.
+
+    Note: for a while, the single-threadedness was signified by an "-st" suffix
+    in the mu4e version in its main-page; however, since this is optional no
+    longer, the suffix has been removed.
 
 * 1.12 (released on February 24, 2024)
 
