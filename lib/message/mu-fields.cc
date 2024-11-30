@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,10 +19,58 @@
 
 #include "mu-fields.hh"
 #include "mu-flags.hh"
+#include "utils/mu-utils.hh"
 
 #include "utils/mu-test-utils.hh"
 
 using namespace Mu;
+
+const Mu::CombiFields&
+Mu::combi_fields()
+{
+	static CombiFields cfields = {
+		CombiField{ "recip",
+		  { field_from_id(Field::Id::To),
+		    field_from_id(Field::Id::Cc),
+		    field_from_id(Field::Id::Bcc)}},
+		CombiField { "contact",
+		  { field_from_id(Field::Id::To),
+		    field_from_id(Field::Id::Cc),
+		    field_from_id(Field::Id::Bcc),
+		    field_from_id(Field::Id::From)}},
+		CombiField { "",
+		  { field_from_id(Field::Id::To),
+		    field_from_id(Field::Id::Cc),
+		    field_from_id(Field::Id::Bcc),
+		    field_from_id(Field::Id::From),
+		    field_from_id(Field::Id::Subject),
+		    field_from_id(Field::Id::BodyText),
+		    field_from_id(Field::Id::EmbeddedText),
+		  }}
+	};
+
+	return cfields;
+}
+
+const Mu::FieldsVec&
+Mu::fields_from_name(const std::string& name) {
+
+	static const FieldsVec empty;
+	const auto& cfields{combi_fields()};
+	const auto it = seq_find_if(cfields, [&](auto cfield) {
+		return cfield.name == name;
+	});
+
+	return it == cfields.end() ? empty : it->fields;
+}
+
+bool
+Mu::field_is_combi(const std::string& name)
+{
+	return name != "" && seq_some(combi_fields(),[&](auto cfield) {
+		return cfield.name == name;
+	});
+}
 
 std::string
 Field::xapian_term(const std::string& s) const

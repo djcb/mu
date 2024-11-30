@@ -137,6 +137,37 @@ topic_fields(const Options& opts)
 }
 
 static Result<void>
+topic_combi_fields(const Options& opts)
+{
+	using namespace std::string_literals;
+
+	Table fields;
+	fields.add_row({"combi-field", "fields"});
+
+	seq_for_each(combi_fields(), [&](const auto& cfield) {
+
+		std::string fnames;
+		seq_for_each(cfield.fields, [&](auto&& field) {
+			if (!fnames.empty())
+				fnames += ", ";
+			fnames +=  mu_format("{}", field.name);
+		});
+
+		const std::string empty{"<empty>"};
+
+		fields.add_row({cfield.name.empty() ? empty : mu_format("{}", cfield.name),
+				fnames});
+	});
+
+	colorify(fields, opts);
+	std::cout << "# Combination fields\n" << fields << '\n';
+
+	return Ok();
+}
+
+
+
+static Result<void>
 topic_flags(const Options& opts)
 {
 	using namespace tabulate;
@@ -290,7 +321,9 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	else if (topic == "fields") {
 		topic_fields(opts);
 		std::cout << std::endl;
-		return topic_flags(opts);
+		topic_combi_fields(opts);
+		std::cout << std::endl;
+		topic_flags(opts);
 	} else if (topic == "mu") {
 		return topic_mu(opts);
 	} else {
