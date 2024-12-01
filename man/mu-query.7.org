@@ -121,45 +121,71 @@ full table with all details, including single-char shortcuts, try the command:
 
 #+ATTR_MAN: :disable-caption t
 #+begin_example
-+-----------+----------+----------+-----------------------------+
-| flag      | shortcut | category | description                 |
-+-----------+----------+----------+-----------------------------+
-| draft     | D        | file     | Draft (in progress)         |
-+-----------+----------+----------+-----------------------------+
-| flagged   | F        | file     | User-flagged                |
-+-----------+----------+----------+-----------------------------+
-| passed    | P        | file     | Forwarded message           |
-+-----------+----------+----------+-----------------------------+
-| replied   | R        | file     | Replied-to                  |
-+-----------+----------+----------+-----------------------------+
-| seen      | S        | file     | Viewed at least once        |
-+-----------+----------+----------+-----------------------------+
-| trashed   | T        | file     | Marked for deletion         |
-+-----------+----------+----------+-----------------------------+
-| new       | N        | maildir  | New message                 |
-+-----------+----------+----------+-----------------------------+
-| signed    | z        | content  | Cryptographically signed    |
-+-----------+----------+----------+-----------------------------+
-| encrypted | x        | content  | Encrypted                   |
-+-----------+----------+----------+-----------------------------+
-| attach    | a        | content  | Has at least one attachment |
-+-----------+----------+----------+-----------------------------+
-| unread    | u        | pseudo   | New or not seen message     |
-+-----------+----------+----------+-----------------------------+
-| list      | l        | content  | Mailing list message        |
-+-----------+----------+----------+-----------------------------+
-| personal  | q        | content  | Personal message            |
-+-----------+----------+----------+-----------------------------+
-| calendar  | c        | content  | Calendar invitation         |
-+-----------+----------+----------+-----------------------------+
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| field-name | alias     | short | search  | value | sexp | example query                 | description                      |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| bcc        |           | h     | phrase  | yes   | yes  | bcc:foo@example.com           | Blind carbon-copy recipient      |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| body       |           | b     | phrase  | no    | no   | body:capybara                 | Message plain-text body          |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| cc         |           | c     | phrase  | yes   | yes  | cc:quinn@example.com          | Carbon-copy recipient            |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| changed    |           | k     | range   | yes   | yes  | changed:30M..                 | Last change time                 |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| date       |           | d     | range   | yes   | yes  | date:20220101..20220505       | Message date                     |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| embed      |           | e     | phrase  | no    | no   | embed:war OR embed:peace      | Embedded text                    |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| file       |           | j     | boolean | no    | no   | file:/image\.*.jpg/           | Attachment file name             |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| flags      | flag      | g     | boolean | yes   | yes  | flag:unread AND flag:personal | Message properties               |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| from       |           | f     | phrase  | yes   | yes  | from:jimbo                    | Message sender                   |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| language   | lang      | a     | boolean | yes   | yes  | lang:nl                       | ISO 639-1 language code for body |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| maildir    |           | m     | boolean | yes   | yes  | maildir:/private/archive      | Maildir path for message         |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| list       |           | v     | boolean | yes   | yes  | list:mu-discuss.example.com   | Mailing list (List-Id:)          |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| message-id | msgid     | i     | boolean | yes   | yes  | msgid:abc@123                 | Message-Id                       |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| mime       | mime-type | y     | boolean | no    | no   | mime:image/jpeg               | Attachment MIME-type             |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| path       |           | l     | boolean | yes   | yes  | path:/a/b/Maildir/cur/msg:2,S | File system path to message      |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| priority   | prio      | p     | boolean | yes   | yes  | prio:high                     | Priority                         |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| references | ref       | r     | boolean | yes   | yes  |                               | References to related messages   |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| size       |           | z     | range   | yes   | yes  | size:1M..5M                   | Message size in bytes            |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| subject    |           | s     | phrase  | yes   | yes  | subject:wombat                | Message subject                  |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| tags       | tag       | x     | boolean | yes   | yes  | tag:projectx                  | Message tags                     |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| thread     |           | w     | boolean | yes   | no   |                               | Thread a message belongs to      |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| to         |           | t     | phrase  | yes   | yes  | to:flimflam@example.com       | Message recipient                |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 #+end_example
 
-(*) The language code for the text-body if found. This works only if *mu* was
-built with CLD2 support.
+There are also *combination fields* which allow you to search for multiple related
+fields at once:
 
-There are also the special fields *contact:*, which matches all contact-fields
-(=from=, =to=, =cc= and =bcc=), and *recip*, which matches all recipient-fields (=to=, =cc=
-and =bcc=).
+#+ATTR_MAN: :disable-caption t
+#+begin_example
+# Combination fields
++-------------+-----------------------------------------+
+| combi-field | fields                                  |
++-------------+-----------------------------------------+
+| recip       | to, cc, bcc                             |
++-------------+-----------------------------------------+
+| contact     | to, cc, bcc, from                       |
++-------------+-----------------------------------------+
+| <empty>     | to, cc, bcc, from, subject, body, embed |
++-------------+-----------------------------------------+
+#+end_example
 
 Hence, for instance,
 #+begin_example
@@ -294,7 +320,7 @@ maildir:/
 #+end_example
 
 If you have maildirs (or any fields) that include spaces, you need to quote
-them, ie.
+them, i.e.,
 #+begin_example
 maildir:"/Sent Items"
 #+end_example
@@ -348,6 +374,13 @@ mime:application/pdf
 Find all messages with attached images:
 #+begin_example
 mime:image/*
+#+end_example
+(and beware that on the command-line, you need to put this in quotes or it would
+expand the ~*~.
+
+Find a messages with the given message-id:
+#+begin_example
+msgid:CAE56pjGU2oNxN-wWku69@mail.gmail.com
 #+end_example
 
 Find all messages written in Dutch or German with the word `hallo':
