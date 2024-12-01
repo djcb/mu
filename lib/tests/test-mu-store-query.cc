@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -215,6 +215,88 @@ Boo!
 		g_assert_false(qr->empty());
 		g_assert_cmpuint(qr->size(), ==, 1);
 	}
+}
+
+
+
+
+
+static void
+test_related()
+{
+	const TestMap test_msgs = {{
+{
+"inbox/cur/msg1:2,S",
+R"(Message-Id: <aap@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 11:01:54 -0700
+To: example@example.com
+Subject: test1
+
+Parent
+)"},
+{
+"boo/cur/msg2:1,S",
+R"(Message-Id: <noot@foo.bar>
+In-Reply-To: <aap@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 13:01:54 -0700
+To: example@example.com
+Subject: Re: test1
+
+Child
+)"},
+{
+"inbox/cur/msg2:1,S",
+R"(Message-Id: <mies@foo.bar>
+In-Reply-To: <noot@foo.bar>
+References: <aap@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 14:01:54 -0700
+To: example@example.com
+Subject: Re: Re: test1
+
+Child
+)"},
+}};
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+	{
+		// direct matches
+		auto qr = store.run_query("msgid:aap@foo.bar", Field::Id::Date,
+					  QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	{
+		// skip duplicate messages; which one is skipped is arbitrary.
+		auto qr = store.run_query("msgid:aap@foo.bar", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	{
+		// skip duplicate messages; which one is skipped is arbitrary.
+		auto qr = store.run_query("msgid:mies@foo.bar", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
+
+	{
+		// skip duplicate messages; which one is skipped is arbitrary.
+		auto qr = store.run_query("ref:aap@foo.bar", Field::Id::Date,
+					  QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
 }
 
 
@@ -888,6 +970,8 @@ main(int argc, char* argv[])
 			test_simple);
 	g_test_add_func("/store/query/spam-address-components",
 			test_spam_address_components);
+	g_test_add_func("/store/query/related",
+			test_related);
 	g_test_add_func("/store/query/dups-related",
 			test_dups_related);
 	g_test_add_func("/store/query/related-missing-root",
