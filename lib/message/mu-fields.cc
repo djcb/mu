@@ -38,6 +38,10 @@ Mu::combi_fields()
 		    field_from_id(Field::Id::Cc),
 		    field_from_id(Field::Id::Bcc),
 		    field_from_id(Field::Id::From)}},
+		CombiField { "related",
+		  { field_from_id(Field::Id::MessageId),
+		    field_from_id(Field::Id::References)}
+		},
 		CombiField { "",
 		  { field_from_id(Field::Id::To),
 		    field_from_id(Field::Id::Cc),

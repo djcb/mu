@@ -217,10 +217,6 @@ Boo!
 	}
 }
 
-
-
-
-
 static void
 test_related()
 {
@@ -262,7 +258,6 @@ Child
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, {})};
 	{
-		// direct matches
 		auto qr = store.run_query("msgid:aap@foo.bar", Field::Id::Date,
 					  QueryFlags::None);
 		g_assert_true(!!qr);
@@ -271,7 +266,6 @@ Child
 	}
 
 	{
-		// skip duplicate messages; which one is skipped is arbitrary.
 		auto qr = store.run_query("msgid:aap@foo.bar", Field::Id::Date,
 					  QueryFlags::IncludeRelated);
 		g_assert_true(!!qr);
@@ -280,7 +274,6 @@ Child
 	}
 
 	{
-		// skip duplicate messages; which one is skipped is arbitrary.
 		auto qr = store.run_query("msgid:mies@foo.bar", Field::Id::Date,
 					  QueryFlags::IncludeRelated);
 		g_assert_true(!!qr);
@@ -289,7 +282,6 @@ Child
 	}
 
 	{
-		// skip duplicate messages; which one is skipped is arbitrary.
 		auto qr = store.run_query("ref:aap@foo.bar", Field::Id::Date,
 					  QueryFlags::None);
 		g_assert_true(!!qr);
@@ -297,8 +289,14 @@ Child
 		g_assert_cmpuint(qr->size(), ==, 2);
 	}
 
+	{
+		auto qr = store.run_query("related:aap@foo.bar", Field::Id::Date,
+					  QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 3);
+	}
 }
-
 
 static void
 test_dups_related()

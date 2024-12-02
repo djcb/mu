@@ -352,10 +352,38 @@ either `future' or `past'."
     (read-string prompt initial-input 'mu4e--search-hist)))
 
 (defconst mu4e--search-query-keywords
-  '("and" "or" "not"
-    "from:" "to:" "cc:" "bcc:" "contact:" "recip:" "date:" "subject:" "body:"
-    "list:" "maildir:" "flag:" "mime:" "file:" "prio:" "tag:" "msgid:"
-    "size:" "embed:"))
+  '(;; logical
+    "and"
+    "or"
+    "not"
+    ;; fields
+    "bcc:"
+    "body:"
+    "cc:"
+    "changed:"
+    "date:"
+    "embed:"
+    "file:"
+    "flag:"
+    "from:"
+    "lang:"
+    "maildir:"
+    "list:"
+    "msgid"
+    "mime:"
+    "path:"
+    "prio:"
+    "ref"
+    "size:"
+    "subject:"
+    "tags:"
+    "thread:"
+    "to:"
+    ;; combin fields
+    "recip:"
+    "contact:"
+    "related:")
+  "Mu4e query-keywords for completion.")
 
 (defun mu4e--search-completion-contacts-action (match _status)
   "Delete contact alias from contact autocompletion, leaving just email address.
@@ -378,7 +406,8 @@ status, STATUS."
     (list (match-beginning 1)
           (match-end 1)
           '("attach" "draft" "flagged" "list" "new" "passed" "replied"
-            "seen" "trashed" "unread" "encrypted" "signed" "personal")))
+            "seen" "trashed" "unread" "encrypted" "signed" "personal"
+            "calendar")))
    ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
