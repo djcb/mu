@@ -54,10 +54,12 @@ future.
   complicating the search (i.e., the message hash?). Maybe leave as is?
   https://github.com/djcb/mu/issues/2527
 
-
 - Perhaps better support file names with commas.. perhaps temporarily add some
   invisible unicode to fool crm-separator?
   https://github.com/djcb/mu/issues/2768
+
+- Org-link type for any message matching some reference
+  See: https://github.com/djcb/mu/issues/2787
 
 * Done
 
