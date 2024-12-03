@@ -32,6 +32,7 @@
 (require 'mu4e-vars)
 (require 'mu4e-folders)
 (require 'gnus-art)
+(require 'crm)
 
 (defcustom mu4e-view-open-program
   (pcase system-type
@@ -284,20 +285,22 @@ This command assumes unique filenames for the attachments, since
 that is how the underlying completion mechanism works. If there
 are duplicates, only one is recognized.
 
-Furthermore, file-names that match `crm-separator' (by default,
-commas) are not supported (see `completing-read-multiple' for
-further details).
-
-For such corner-cases, it is recommended to use
-`mu4e-view-mime-part-action' instead, which does not have this
-limitation."
+Furthermore, file-names that match `crm-separator' (by default, a
+comma and some optional whitespace) are not supported (see
+`completing-read-multiple' for further details). Hence, when we
+detect that, the function bails out and advises to use
+`mu4e-view-mime-part-action' instead, which does support such
+files."
   (interactive "P")
   (let* ((parts (mu4e-view-mime-parts))
          (candidates  (seq-map
                        (lambda (fpart)
-                         (cons ;; (filename . annotation)
-                          (plist-get fpart :filename)
-                          fpart))
+                         (let ((fname (plist-get fpart :filename)))
+                           (when (and crm-separator (string-match-p crm-separator fname))
+                             (mu4e-warn (concat  "File(s) match `crm-separator'; "
+                                                 "use mu4e-view-mime-part-action instead")))
+                           ;; (filename . annotation)
+                           (cons fname fpart)))
                        (seq-filter
                         (lambda (part) (plist-get part :attachment-like))
                         parts)))
