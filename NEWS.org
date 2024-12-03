@@ -20,6 +20,9 @@
     #+end_example
     You do need to re-index the database for this to work though.
 
+    There's also a new combination-field ~related:~ which combines ~references:~ and
+    ~msgid:~.
+
   - message composition has been completely reworked to avoid a number of
     problems user reported. It is now directly uses the Gnus machinery, but
     integrate inside mu4e.
