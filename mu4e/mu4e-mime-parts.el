@@ -50,6 +50,17 @@ specified a function as viewer."
   :type '(choice string function)
   :group 'mu4e-view)
 
+(defcustom mu4e-uniquify-save-file-name-function 'mu4e--uniquify-file-name
+  "Function to create a unique, not-yet-existing file name.
+
+Takes one parameter, a file-name path, and returns a file-name
+path that does not yet exist. This can be the same, or some
+variation.
+
+See `mu4e--uniquify-file-name' for an example."
+  :type 'function
+  :group 'mu4e-view)
+
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
 (defvar-local mu4e~gnus-article-mime-handles nil)
@@ -128,8 +139,9 @@ There are some internal fields as well, e.g. ; subject to change:
 
 ;; https://emacs.stackexchange.com/questions/74547/completing-read-search-also-in-annotationsxc
 
-(defun mu4e--uniqify-file-name (fname)
-  "Return a non-yet-existing filename based on FNAME.
+(defun mu4e--uniquify-file-name (fname)
+  "Return a not-yet-existing filename based on FNAME.
+
 If FNAME does not yet exist, return it unchanged.
 Otherwise, return a file with a unique number appended to the base-name."
   (let ((num 1) (orig-name fname))
@@ -313,7 +325,7 @@ files."
     ;; we have determined what files to save, and where.
     (seq-do (lambda (fname)
               (let* ((part (cdr (assoc fname candidates)))
-                     (path (mu4e--uniqify-file-name
+                     (path (funcall mu4e-uniquify-save-file-name-function
                             (mu4e-join-paths
                              (or custom-dir (plist-get part :target-dir))
                              (plist-get part :filename))))
