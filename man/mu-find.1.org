@@ -127,15 +127,16 @@ Output results in the specified format.
 - The default is *plain*, i.e normal output with one line per message.
 - *links* outputs the results as a maildir with symbolic links to the found
   messages. This enables easy integration with mail-clients (see below for more
-  information).
+  information). This requires *--linksdir*.
 - *xml* formats the search results as XML.
 - *sexp* formats the search results as an s-expression as used in Lisp programming
   environments.
 
 ** --linksdir _dir_ and -c, --clearlinks
-When using *--format=links*, output the results as a maildir with symbolic links to
-the found messages. This enables easy integration with mail-clients (see below
-for more information). *mu* will create the maildir if it does not exist yet.
+When using *--format=links*, output the results as a maildir with symbolic links
+to the found messages. This enables easy integration with mail-clients (see
+below for more information). *mu* will create the maildir if it does not exist
+yet.
 
 If you specify *--clearlinks*, existing symlinks will be cleared from the target
 directories; this allows for re-use of the same maildir. However, this option
