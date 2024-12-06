@@ -270,7 +270,7 @@ for aligning them."
    "\n"))
 
 (defun mu4e--main-baseline-time-string ()
-  "Calculate the baseline time string for use in the main-"
+  "Calculate the baseline time string for use in the main-view."
   (let* ((baseline-t mu4e--query-items-baseline-tstamp)
          (updated-t (plist-get mu4e-index-update-status :tstamp))
          (delta-t (and baseline-t updated-t

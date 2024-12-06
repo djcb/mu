@@ -56,8 +56,8 @@ anything about the query, it just does text replacement.
 
 A word of caution: the function should be deterministic and
 always return the same result for a given query (at least within
-some \"context\" (see `mu4e-context'). If not, you may get incorrect results
-for the various unread counts."
+some \"context\" (see `mu4e-context'). If not, you may get
+incorrect results for the various unread counts."
   :type 'function
   :group 'mu4e-search)
 
