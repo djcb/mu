@@ -43,6 +43,7 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 #include <fmt/ostream.h>
+#include <fmt/xchar.h>
 
 namespace Mu {
 
