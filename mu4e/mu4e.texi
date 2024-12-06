@@ -793,7 +793,10 @@ Note that the ``delta'' has its limitations: if you, for instance, deleted 5
 messages and received 5 new one, the ``delta'' would be 0, although there were
 changes indeed. So it is mostly useful for tracking changes while you are
 @emph{not} using @t{mu4e}. For this reason, you can reset the baseline manually,
-e.g. by visiting the main view .
+e.g. by visiting the main view.
+
+Furthermore, for speed reasons, the counts do @emph{not} exclude messages that
+no longer exist in the file-system, nor do they exclude duplicate messages.
 
 By comparing current results with the baseline, you can quickly see what new
 messages have arrived since the last time you looked.
@@ -4101,7 +4104,7 @@ necessary.
 
 @subsection The unread/all counts in the main-screen differ from the 'real' numbers - what's going on?
 For speed reasons, the counts do not exclude messages that no longer exist in
-the file-system, nor does it exclude duplicate messages; @xref{mu-mu4e-differ}.
+the file-system, nor do they exclude duplicate messages; @xref{mu-mu4e-differ}.
 
 @subsection How can I quickly delete/move/trash a lot of messages?
 You can select ('mark' in Emacs-speak) messages, just like you would select text
