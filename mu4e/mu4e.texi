@@ -1506,6 +1506,10 @@ if you have Gnus-specific settings for @t{gnus-blocked-images}, you
 should verify that they have the desired effect in @code{mu4e} as
 well.
 
+Finally, for some message with big images it can be useful to enable buttons and
+full display, e.g. for saving inline images. For this you can try @code{M-x
+mu4e-view-show-mime-parts}. This can be a little slow.
+
 @node MSGV Attachments and MIME-parts
 @section Attachments and MIME-parts
 @cindex attachments

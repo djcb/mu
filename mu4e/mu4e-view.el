@@ -754,12 +754,19 @@ determine which browser function to use."
     (mu4e-view-quit)
     (mu4e-view msg)))
 
-(defun mu4e-view-toggle-show-mime-parts()
-  "Toggle whether to show all MIME-parts."
+(defun mu4e-view-show-mime-parts()
+  "Show all MIME-parts.
+
+This can be useful for messages with embedded images etc. that
+you want to save, and that are not accessible otherwise. However,
+note that Emacs can get slow with big attached images.
+
+To go back to normal display, quit the message and re-open."
   (interactive)
-  (setq gnus-inhibit-mime-unbuttonizing
-        (not gnus-inhibit-mime-unbuttonizing))
-  (mu4e-view-refresh))
+  (let* ((toggle (not gnus-mime-display-multipart-as-mixed))
+         (gnus-inhibit-mime-unbuttonizing (not toggle))
+         (gnus-mime-display-multipart-as-mixed toggle))
+    (mu4e-view-refresh)))
 
 (defun mu4e-view-toggle-fill-flowed()
   "Toggle flowed-message text filling."
