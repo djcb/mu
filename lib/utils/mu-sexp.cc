@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -60,15 +60,18 @@ parse_list(const std::string& expr, size_t& pos)
 	Sexp lst{};
 
 	++pos;
-	while (expr[pos] != ')' && pos != expr.size()) {
+	while (pos < expr.size() && expr[pos] != ')') {
 		if (auto&& item = parse(expr, pos); item)
 			lst.add(std::move(*item));
 		else
 			return Err(item.error());
 	}
 
-	if (expr[pos] != ')')
+	if (pos >= expr.size())
+		return Err(parsing_error(pos, "expected: ')'"));
+	else if (expr[pos] != ')')
 		return Err(parsing_error(pos, "expected: ')' but got '{}'", expr[pos]));
+
 	++pos;
 	return Ok(std::move(lst));
 }
@@ -209,6 +212,17 @@ Sexp::to_string(Format fopts) const
 
 // LCOV_EXCL_START
 
+// convert emacs-timestamp (a list) to a unix-tstamp
+static uint64_t
+unix_tstamp(const Sexp& emacs_tstamp)
+{
+	if (!emacs_tstamp.listp() || emacs_tstamp.list().size() < 2)
+		throw std::runtime_error("unexpected type");
+
+	const auto& lst{emacs_tstamp.list()};
+	return (lst.at(0).number() << 16) | lst.at(1).number();
+}
+
 std::string
 Sexp::to_json_string(Format fopts) const
 {
@@ -222,11 +236,18 @@ Sexp::to_json_string(Format fopts) const
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
-				sstrm << (first ? "" : ",")  << quote(it->symbol().name) << ":";
+				const auto key{it->symbol().name};
+				sstrm << (first ? "" : ",")  << quote(key) << ":";
 				++it;
-				sstrm << it->to_json_string();
+				const auto emacs_tstamp{*it};
+				sstrm << emacs_tstamp.to_json_string();
 				++it;
 				first = false;
+				// special-case: tstamp-fields also get a "unix" value,
+				// which are easier to work with than the "emacs" timestamps
+				if (key == ":date" || key == ":changed")
+					sstrm << "," << quote(key + "-unix") << ":"
+					      << unix_tstamp(emacs_tstamp);
 			}
 			sstrm << "}";
 			if (any_of(fopts & Format::SplitList))
