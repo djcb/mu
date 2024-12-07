@@ -387,26 +387,34 @@ also marked as Seen.
 
 Function assumes that it is executed in the context of the
 message buffer."
+  ;; note that we can't use mu4e-compose-parent-message here, since it
+  ;; no longer available when editing a draft. So we scan the outgoing
+  ;; message for the information.
   (when-let* ((buf (find-file-noselect path)))
     (with-current-buffer buf
-      (let ((in-reply-to (message-field-value "in-reply-to"))
-            (forwarded-from)
-            (references (message-field-value "references")))
-        (unless in-reply-to
-          (when references
-            (with-temp-buffer ;; inspired by `message-shorten-references'.
-              (insert references)
-              (goto-char (point-min))
-              (let ((refs))
-                (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
-                  (push (match-string 0) refs))
-                ;; the last will be the first
-                (setq forwarded-from (car refs))))))
-        ;; remove the <> and update the flags on the server-side.
-        (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-          (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))
-        (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-          (mu4e--server-move (match-string 1 forwarded-from) nil "+P-N"))))))
+      (let* ((in-reply-to (message-field-value "in-reply-to"))
+             (references (message-field-value "references"))
+             (forwarded-from
+              (unless (or in-reply-to (not references))
+                (with-temp-buffer ;; inspired by `message-shorten-references'.
+                  (insert references)
+                  (goto-char (point-min))
+                  (let ((refs))
+                    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
+                      (push (match-string 0) refs))
+                    (car refs))))) ;; the last shall be the first
+             ;; remove the <>
+             (in-reply-to (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to)
+                               (match-string 1 in-reply-to)))
+             (forwarded-from (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from)
+                                  (match-string 1 forwarded-from))))
+        ;; mark parents.
+        (when in-reply-to
+          (mu4e-log 'misc "mark %s as Replied" in-reply-to)
+          (mu4e--server-move in-reply-to nil "+R-N"))
+        (when forwarded-from
+          (mu4e-log 'misc "mark %s as Passed (forwarded)" forwarded-from)
+          (mu4e--server-move forwarded-from nil "+P-N"))))))
 
 (defun mu4e--compose-after-save()
   "Function called immediately after the draft buffer is saved."
