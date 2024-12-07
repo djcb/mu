@@ -23,6 +23,10 @@
     There's also a new combination-field ~related:~ which combines ~references:~ and
     ~msgid:~.
 
+  - The ~--format=json~ output for *mu find* now includes "unix-style" timestamps
+    for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~, respectively) which
+    are a bit easier to manipulate than the emacs-style timestamps.
+
   - message composition has been completely reworked to avoid a number of
     problems user reported. It is now directly uses the Gnus machinery, but
     integrate inside mu4e.
@@ -57,7 +61,7 @@
 *** mu
 
     - new command ~mu move~ to move messages across maildirs and/or change their
-      flags. See the manpage for all the details.
+      flags. See the man-page for all the details.
 
     - ~mu~ commands ~extract~ ~verify~ and ~view~ can now read the message from
       standard input; see their man-pages for details
