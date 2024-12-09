@@ -28,8 +28,8 @@
     are a bit easier to manipulate than the emacs-style timestamps.
 
   - message composition has been completely reworked to avoid a number of
-    problems user reported. It is now directly uses the Gnus machinery, but
-    integrate inside mu4e.
+    problems that users reported. It is now directly uses the Gnus machinery,
+    integrated with mu4e.
 
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
     database-corruption. In *mu4e* that means you need to _wait_ until indexing is
