@@ -853,6 +853,11 @@ Note that for some messages, this can trigger high CPU load."
         (list handle attendee))
   handle-attendee))
 
+(defun mu4e-view-jump-to-mime-part (number)
+  "Jump to MIME-part with NUMBER."
+  (interactive "P")
+  (call-interactively #'gnus-article-jump-to-part number))
+
 (defun mu4e--view-mode-p ()
   "Is the buffer in mu4e-view-mode or one of its descendants?"
   (or (eq major-mode 'mu4e-view-mode)
@@ -925,6 +930,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "a" #'mu4e-view-action)
     (define-key map "A" #'mu4e-view-mime-part-action)
     (define-key map "e" #'mu4e-view-save-attachments)
+    (define-key map "J" #'mu4e-view-jump-to-mime-part)
 
     ;; change the number of headers
     (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)

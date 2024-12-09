@@ -1420,6 +1420,7 @@ e            extract (save) one or more attachments (asks for numbers)
 (or: <mouse-2> or S-RET with point on attachment)
 a            execute some custom action on the message
 A            execute some custom action on the message's MIME-parts
+J            jump to MIME part by its number
 
 misc
 ----
@@ -1474,6 +1475,10 @@ even clearer by indicating them in the message itself, using:
 @lisp
 (setq gnus-unbuttonized-mime-types nil)
 @end lisp
+
+Note that you can jump to the relevant MIME-parts using
+@code{mu4e-view-jump-to-mime-part}, which ask for the number or uses the
+prefix-argument.
 
 @subsection Inline images
 When you run Emacs in graphical mode, by default images attached to
