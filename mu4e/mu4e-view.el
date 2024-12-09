@@ -183,11 +183,9 @@ previous header."
    (mu4e~headers-move (- (or n 1)))))
 
 (defun mu4e--view-prev-or-next (func backwards)
-  "Move point to the next or previous message.
-Go to the previous message if BACKWARDS is non-nil.
-unread message header in the headers buffer connected with this
-message view. If this succeeds, return the new docid. Otherwise,
-return nil."
+  "Move point to the next or previous message and invoke FUNC.
+Go to the previous message if BACKWARDS is non-nil. If this
+succeeds, return the new docid. Otherwise, return nil."
   (mu4e--view-in-headers-context (funcall func backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
@@ -231,7 +229,6 @@ If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
   (mu4e--view-in-headers-context (mu4e-thread-fold-toggle-all)))
 
-
 ;;; Interactive functions
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG, then do it.
@@ -1018,7 +1015,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
   "Keymap for mu4e-view mode.")
 
 (easy-menu-define mu4e-view-mode-menu
-  mu4e-view-mode-map "Menu for mu4e's view-mode."
+  mu4e-view-mode-map "Menu for mu4e's view mode."
   (append
    '("View"
      "--"
@@ -1109,7 +1106,6 @@ Article Treatment' for more options."
   (interactive)
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
-
 (defun mu4e-view-toggle-html ()
   "Toggle html-display of the first html-part found."
   (interactive)
@@ -1128,7 +1124,6 @@ Article Treatment' for more options."
                         gnus-article-mime-handle-alist)))
         (gnus-article-inline-part (car html-part))
       (mu4e-warn "Cannot switch; no html and/or text part in this message"))))
-
 ;;; Bug Reference mode support
 
 ;; Due to mu4e's view buffer handling (mu4e-view-mode is called long before the
@@ -1169,6 +1164,5 @@ GROUP-REGEXP and each header value against HEADER-REGEXP in
   (add-hook 'bug-reference-auto-setup-functions
             #'mu4e--view-try-setup-bug-reference-mode))
 
-
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here
