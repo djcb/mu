@@ -2707,11 +2707,11 @@ when starting; see the discussion in the previous section.
                         (when msg
                           (mu4e-message-contact-field-matches msg
                             :to "aliced@@home.example.com")))
-          :vars '( ( user-mail-address	    . "aliced@@home.example.com"  )
+          :vars `( ( user-mail-address	    . "aliced@@home.example.com"  )
                    ( user-full-name	    . "Alice Derleth" )
                    ( message-user-organization . "Homebase" )
                    ( message-signature .
-                     (concat
+                     ,(concat
                        "Alice Derleth\n"
                        "Lauttasaari, Finland\n"))))
        ,(make-mu4e-context
@@ -2723,11 +2723,11 @@ when starting; see the discussion in the previous section.
           :match-func (lambda (msg)
                         (when msg
                           (string-match-p "^/Arkham" (mu4e-message-field msg :maildir))))
-          :vars '( ( user-mail-address	       . "aderleth@@miskatonic.example.com" )
+          :vars `( ( user-mail-address	       . "aderleth@@miskatonic.example.com" )
                    ( user-full-name	       . "Alice Derleth" )
                    ( message-user-organization . "Miskatonic University" )
                    ( message-signature         .
-                     (concat
+                     ,(concat
                        "Prof. Alice Derleth\n"
                        "Miskatonic University, Dept. of Occult Sciences\n"))))
 
