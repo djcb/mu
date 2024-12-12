@@ -2337,7 +2337,7 @@ can happen in both the @ref{Headers view} and the @ref{Message view}.
 * Marking messages::Selecting message do something with them
 * What to mark for::What can we do with them
 * Executing the marks::Do it
-* Trashing messages::Exceptions for mailboxes like Gmail
+* Trashing messages::Marking messages for removal
 * Leaving the headers buffer::Handling marks automatically when leaving
 * Built-in marking functions::Helper functions for dealing with them
 * Custom mark functions::Define your own mark function
@@ -2418,14 +2418,17 @@ arguments, the mark and the message itself.
 @node Trashing messages
 @section Trashing messages
 
-For regular mailboxes, trashing works like other marks: when executed,
-the message is flagged as trashed.  Depending on your mailbox provider,
-the trash flag is used to automatically move the message to the trash
-folder (@code{mu4e-trash-folder}) for instance.
+When ``trashing'' a message, it is moved to a trash-folder (i.e.,
+@code{mu4e-trash-folder}) and is flagged as ``trashed'' (a ``T'' is added to its
+filename).
 
-Some mailboxes behave differently however and they don't interpret the
-trash flag.  In cases like Gmail, the message must be @emph{moved} to
-the trash folder and the trash flag must not be used.
+Following the Maildir specification, this flag is to be interpreted as ``marked
+for manual removal later''. However, some mail retrieval and IMAP
+synchronization programs interpret this instead as a trigger for
+@emph{immediate} removal.
+
+For such cases, you can influence @t{mu4e}'s behavior; see
+@code{mu4e-trash-without-flag}.
 
 @node Leaving the headers buffer
 @section Leaving the headers buffer
@@ -4223,12 +4226,19 @@ seems to work quite well.
 @subsection How can I disable the @t{Indexing...} messages?
 Set the variable @code{mu4e-hide-index-messages} to non-@t{nil}.
 
-@subsection IMAP-synchronization and file-name changes
-Some IMAP-synchronization programs such as @t{mbsync} (but not
-@t{offlineimap}) don't like it when message files do not change their
-names when they are moved to different folders. @t{mu4e} can attempt to
-help with this - you can set the variable
-@code{mu4e-change-filenames-when-moving} to non-@t{nil}.
+@subsection IMAP-synchronization
+
+Some IMAP-synchronization programs such as @t{mbsync} (but not @t{offlineimap})
+don't like it when message files do not change their names when they are moved
+to different folders. @t{mu4e} can attempt to help with this - you can set the
+variable @code{mu4e-change-filenames-when-moving} to non-@t{nil}.
+
+Also, some of these programs may interpret the ``trash'' flag differently; see
+@code{mu4e-trash-without-flag} for how to influence that.
+
+Finally, we would warn against synchronizing the ``Drafts'' folder; the messages
+in @t{mu4e}'s draft are in @t{mu4e}'s (i.e., Gnus') format, which is not
+necessarily usable by other clients.
 
 @subsection @command{offlineimap} and UTF-7
 @command{offlineimap} uses IMAP's UTF-7 for encoding non-ascii folder
@@ -4240,6 +4250,7 @@ see @uref{https://github.com/djcb/mu/issues/68#issuecomment-8598652,this
 ticket}.
 
 @subsection @command{mbsync} or @command{offlineimap} do not sync properly
+
 Unfortunately, @command{mbsync} and/or @command{offlineimap} do not
 always agree with @t{mu} about the meaning of various Maildir-flags. If
 you encounter unexpected behavior, it is recommended you check before
