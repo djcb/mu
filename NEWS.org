@@ -13,6 +13,8 @@
 
   - many documentation improvements
 
+*** mu
+
   - you can now search for messages that have a given message-id in their
     ~References:~ or ~In-Reply-To:~ headers, e.g.
     #+begin_example
@@ -27,10 +29,6 @@
     for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~, respectively) which
     are a bit easier to manipulate than the emacs-style timestamps.
 
-  - message composition has been completely reworked to avoid a number of
-    problems that users reported. It is now directly uses the Gnus machinery,
-    integrated with mu4e.
-
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
     database-corruption. In *mu4e* that means you need to _wait_ until indexing is
     ready before you can continue (*mu4e* will warn you).
@@ -42,6 +40,21 @@
     Note: for a while, the single-threadedness was signified by an "-st" suffix
     in the mu4e version in its main-page; however, since this is optional no
     longer, the suffix has been removed.
+
+*** mu4e
+
+  - message composition has been completely reworked to avoid a number of
+    problems that users reported. It is now directly uses the Gnus machinery,
+    integrated with mu4e.
+
+  - a new variable ~mu4e-trash-without-flag~, which, when set to non-nil makes
+    trashing _not_ add the the Maildir ~T~ flag. See its docstring for details.
+
+  - new variable ~mu4e-uniquify-save-file-name-function~ to influence the way ~mu4e~
+    creates unique file names when saving. See its docstring for details.
+
+  - new command ~mu4e-view-jump-to-mime-part~ for jumping to MIME-part by its
+    number.
 
 * 1.12 (released on February 24, 2024)
 
