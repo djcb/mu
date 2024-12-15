@@ -4361,6 +4361,18 @@ See @ref{Compose hooks}.
 Since @code{mu4e-compose-mode} derives from @xref{(message) Top}, you can re-use
 many (though not @emph{all} of its facilities.
 
+@subsection Replying to unquoted contacts with commas in their name
+
+Senders may have commas in their RFC2047-encoded name without using the needed
+quoting, for instance @t{From: Foo, the great Bar <foo@@bar.com>} instead of
+@t{From: "Foo, the great Bar" <foo@@bar.com>}.
+
+By default, when replying to such messages, @t{mu4e} then interprets the address
+as @emph{multiple} contacts. To avoid that, you can add to your configuration:
+@lisp
+(setq rfc2047-quote-decoded-words-containing-tspecials t)
+@end lisp
+
 @subsection How can I easily include attachments in the messages I write?
 You can drag-and-drop from your desktop; alternatively, you can use @ref{(emacs)
 Dired}.
@@ -4396,7 +4408,9 @@ values of @var{mu4e-compose-complete-only-personal},
 (setq message-kill-buffer-on-exit t)
 @end lisp
 
-@subsection Sending big messages is slow and blocks emacs --- what can I do about it?
+@subsection Sending big messages is slow and blocks Emacs
+
+And what can I do about it?
 
 For this, there's @uref{https://github.com/jwiegley/emacs-async,emacs-async}
 (also available from the Emacs package repository); add the following snippet to
@@ -4426,7 +4440,11 @@ Sending...done
 The first and final messages are the most important, and there may be
 considerable time between them, depending on the size of the message.
 
-@subsection Is it possible to view headers and messages, or compose new ones, in a separate frame or window?
+@subsection Using a separate frame or window for composing.
+
+Is it possible to view headers and messages, or compose new ones, in a separate
+frame or window?
+
 Yes. There is built-in support for composing messages in a new frame or window.
 Either use Emacs' standard @t{compose-mail-other-frame} (@kbd{C-x 5 m}) and
 @t{compose-mail-other-window} (@kbd{C-x 4 m}) if you have set up @t{mu4e} as your Emacs
@@ -4437,12 +4455,11 @@ docstring) which you can customize to influence how @t{mu4e} creates new
 messages.
 
 @subsection How can I apply format=flowed to my outgoing messages?
-This enables receiving clients that support this feature to reflow
-paragraphs. Plain text emails with @t{Content-Type: text/plain;
-format=flowed} can be reflowed (i.e. line endings removed, paragraphs
-refilled) by receiving clients that support this standard. Clients
-that don't support this, show them as is, which means this feature is
-truly non-invasive.
+
+Plain text emails with @t{Content-Type: text/plain; format=flowed} can be
+re-flowed (i.e. line endings removed, paragraphs refilled) by receiving clients
+that support this standard. Clients that don't support this, show them as is,
+which means this feature is truly non-invasive.
 
 Here's an explanatory blog post which also shows why this is a desirable
 feature: @url{https://mathiasbynens.be/notes/gmail-plain-text} (if you don't
@@ -4462,26 +4479,11 @@ message of as a long line (i.e. without carriage return). If you introduce
 unwanted newlines in your paragraph, use @kbd{M-q} to reformat it as a single
 line.
 
-If you want to send the message with paragraphs on single lines but
-without @t{format=flowed} (because, say, the receiver does not
-understand the latter as it is the case for Google or Github), use
-@kbd{M-x use-hard-newlines} (to turn @code{use-hard-newlines} off) or
-uncheck the box @t{format=flowed} in the @t{Text} menu when composing a
-message.
-
-@subsection How can I force images to be shown at the end of my messages, regardless of where I insert them?
-User Marcin Borkowski has a solution:
-@lisp
-(defun mml-attach-file--go-to-eob (orig-fun &rest args)
-  "Go to the end of buffer before attaching files."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-max))
-      (apply orig-fun args))))
-
-(advice-add 'mml-attach-file :around #'mml-attach-file--go-to-eob)
-@end lisp
+If you want to send the message with paragraphs on single lines but without
+@t{format=flowed} (because, say, the receiver does not understand the latter as
+it is the case for Google or Github), use @kbd{M-x use-hard-newlines} (to turn
+@code{use-hard-newlines} off) or uncheck the box @t{format=flowed} in the
+@t{Text} menu when composing a message.
 
 @subsection How can I avoid Outlook display issues?
 
