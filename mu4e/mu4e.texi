@@ -523,10 +523,9 @@ If the mail-retrieval process returns with a non-zero exit code,
 is set to @code{nil}), but then try to index your maildirs anyway
 (unless @code{mu4e-index-update-error-continue} is set to @code{nil}).
 
-Reason for these defaults is that some of the mail-retrieval programs
-may return non-zero, even when the updating process succeeded; however,
-it is hard to tell such pseudo-errors from real ones like `login
-failed'.
+Reason for these defaults is that some of the mail-retrieval programs may return
+non-zero, even when the updating process succeeded; however, it is hard to tell
+such pseudo-errors from real ones like @t{login failed}.
 
 If you need more refinement, it may be useful to wrap the mail-retrieval
 program in a shell-script, for example @t{fetchmail} returns 1 to
