@@ -59,7 +59,13 @@ future.
   https://github.com/djcb/mu/issues/2768
 
 - Org-link type for any message matching some reference
-  See: https://github.com/djcb/mu/issues/2787
+  See: https://github.com/djcb/mu/issues/2787.
+  Some first steps implemented (searching for references).
+
+- Reply/forward/... to multiple messages at once. This is sometimes useful, and
+  Gnus supports. Does not seem trivial to re-use the Gnus code... (see
+  ~gnus-summary-work-articles~ etc.).
+  https://github.com/djcb/mu/issues/2799
 
 * Done
 
