@@ -3,11 +3,15 @@
 
 * 1.12 (post 1.12.0 updates)
 
- The 1.12 series has been the stable one for a fairly long time, and gained some
- changes in mean-time. Most of the changes are for big bugs, but some small new
- features are available as well. We decided to put off a new development series
- (1.13 -> 1.14) until incompatible changes are required; for now working in the
- 1.12 series seems a good way to get improvements to users more quickly.
+ The 1.12 series has been stable for a fairly long time, and gained some changes
+ in mean-time. Most of the changes are for big bugs, but some small new features
+ are available as well.
+
+ We decided to put off a new development series (1.13 -> 1.14) until
+ incompatible changes are required; for now working in the 1.12 series seems a
+ good way to get improvements to users more quickly.
+
+ The changes include:
 
   - many bug fixes
 
@@ -27,7 +31,9 @@
 
   - The ~--format=json~ output for *mu find* now includes "unix-style" timestamps
     for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~, respectively) which
-    are a bit easier to manipulate than the emacs-style timestamps.
+    represent the time as a simple number (number of seconds since epoch), which
+    is a bit easier to manipulate than the emacs-style timestamps (same value,
+    but expressed as a list).
 
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
     database-corruption. In *mu4e* that means you need to _wait_ until indexing is
@@ -61,9 +67,10 @@
 ** Some highlights
 
   - Significant speedups in both ~mu~ and ~mu4e~
-  - Reworked message composition, closer to its Gnus origins which adds many of its features
-  - Overhauled the query parser; squashing a number of bugs/limitations, incl. dealing
-    with CJK messages
+  - Reworked message composition, closer to its Gnus origins which adds many of
+    its features
+  - Overhauled the query parser; squashing a number of bugs/limitations, incl.
+    dealing with CJK messages
   - Experimental folding of message threads
   - Better and faster indexing of HTML messages
   - Experimental search by (human) language wit CLD2
@@ -165,8 +172,8 @@
 
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
-      ~message-reply-to-function~ for ultimate control; see [[info:(message)
-      Reply][info (message) Reply]] for details.
+      ~message-reply-to-function~ for ultimate control; see [[info:(message) Reply][info (message) Reply]]
+      for details.
 
     - ~mu4e-compose-in-new-frame~ has been generalized (in a backward-compatible
       way) to ~mu4e-compose-switch~, which lets you decide whether a message
