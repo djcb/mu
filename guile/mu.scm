@@ -38,8 +38,7 @@
     mu:header
     ;; message accessors
     mu:field:bcc
-    mu:field:body-html
-    mu:field:body-txt
+    mu:field:body
     mu:field:cc
     mu:field:date
     mu:field:flags
@@ -54,6 +53,9 @@
     mu:field:tags
     mu:field:timestamp
     mu:field:to
+    ;; deprecated message accessors
+    mu:body-html
+    mu:body-txt
     ;; contact funcs
     mu:name
     mu:email
@@ -125,8 +127,7 @@
 	(export method-name)))))
 
 (define-getter mu:bcc	     mu:field:bcc)
-(define-getter mu:body-html  mu:field:body-html)
-(define-getter mu:body-txt   mu:field:body-txt)
+(define-getter mu:body	     mu:field:body)
 (define-getter mu:cc	     mu:field:cc)
 (define-getter mu:date	     mu:field:date)
 (define-getter mu:flags	     mu:field:flags)
@@ -141,6 +142,16 @@
 (define-getter mu:tags	     mu:field:tags)
 (define-getter mu:timestamp  mu:field:timestamp)
 (define-getter mu:to	     mu:field:to)
+
+(define-method (mu:body-html (msg <mu:message>))
+  "The HTML body isn't stored separately anymore, so this method can't return
+anything useful. We keep it for backwards compatibility."
+  #f)
+
+(define-method (mu:body-txt (msg <mu:message>))
+  "The text body isn't stored separately anymore. This method is now a synonym
+for mu:body."
+  (mu:body msg))
 
 (define-method (mu:header (msg <mu:message>) (hdr <string>))
   "Get an arbitrary header HDR from message MSG; return #f if it does
