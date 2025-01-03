@@ -71,8 +71,8 @@ Some notes on the format:
   the MIME-part), :name (the file name, if any), :mime-type (the
   MIME-type, if any) and :size (the size in bytes, if any).
 - Messages in the Headers view come from the database and do not have
-  :attachments, :body-txt or :body-html fields. Message in the
-  Message view use the actual message file, and do include these fields."
+  :attachments or :body fields. Message in the Message view use the
+  actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
   (if msg
       (plist-get msg field)
@@ -81,18 +81,17 @@ Some notes on the format:
 (defsubst mu4e-message-field (msg field)
   "Retrieve FIELD from message plist MSG.
 Like `mu4e-message-field-nil', but will sanitize nil values:
-- all string field except body-txt/body-html: nil -> \"\"
-- numeric fields + dates                    : nil -> 0
-- all others                                : return the value
-Thus, function will return nil for empty lists, non-existing body-txt
-or body-html."
+- all string field except body: nil -> \"\"
+- numeric fields + dates      : nil -> 0
+- all others                  : return the value
+Thus, function will return nil for empty lists, or non-existing body."
   (let ((val (mu4e-message-field-raw msg field)))
     (cond
      (val
       val)   ;; non-nil -> just return it
      ((member field '(:subject :message-id :path :maildir :in-reply-to))
-      "")    ;; string fields except body-txt, body-html: nil -> ""
-     ((member field '(:body-html :body-txt))
+      "")    ;; string fields except body: nil -> ""
+     ((member field '(:body))
       val)
      ((member field '(:docid :size))
       0)     ;; numeric type: nil -> 0

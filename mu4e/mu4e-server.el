@@ -323,7 +323,7 @@ The server output is as follows:
   3. a view looks like:
   (:view <msg-sexp>)
   => the <msg-sexp> (see 2.) will be passed to `mu4e-view-func'.
-     the <msg-sexp> also contains :body-txt and/or :body-html
+     the <msg-sexp> also contains :body
 
   4. a database update looks like:
   (:update <msg-sexp> :move <nil-or-t>)
