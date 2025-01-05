@@ -1,6 +1,6 @@
 ;;; mu4e-server.el --- Control mu server from mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -93,11 +93,9 @@ stop/start mu4e."
   :group 'mu4e
   :safe  'booleanp)
 
-
 ;; Cached data
 (defvar mu4e-maildir-list)
 
-
 ;; Handlers are not strictly internal, but are not meant
 ;; for overriding outside mu4e. The are mainly for breaking
 ;; dependency cycles.
@@ -151,7 +149,6 @@ from the server process.")
   "A function called for each (:contacts (<list-of-contacts>))
 sexp received from the server process.")
 
-
 ;;; Dealing with Server properties
 (defvar mu4e--server-props nil
   "Metadata we receive from the mu4e server.")
@@ -193,7 +190,6 @@ for bookmarks and maildirs.")
   "Are we using Xapian in single-threaded mode?"
   (plist-get mu4e--server-props :xapian-single-threaded))
 
-
 ;;; Handling raw server data
 
 (defvar mu4e--server-buf nil
@@ -218,7 +214,6 @@ Match 1 will be the length (in hex).")
 
 (defvar mu4e--server-indexing nil "Currently indexing?")
 
-
 (defun mu4e-running-p ()
   "Whether mu4e is running.
 Checks whether the server process is live."
@@ -719,6 +714,5 @@ will be delivered to the function registered as `mu4e-view-func'."
      ;; because mbsync seems to get confused.
      :rename  ,(and mu4e-change-filenames-when-moving t))))
 
-
 (provide 'mu4e-server)
 ;;; mu4e-server.el ends here
