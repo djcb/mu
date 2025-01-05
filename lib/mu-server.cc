@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -39,6 +39,7 @@
 
 #include "mu-maildir.hh"
 #include "mu-query.hh"
+#include "mu-query-parser.hh"
 #include "mu-store.hh"
 
 #include "utils/mu-utils.hh"
@@ -703,7 +704,12 @@ Server::Private::find_handler(const Command& cmd)
 	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
 	const auto bsize{static_cast<size_t>(batch_size)};
 	const auto foundnum = output_results(*qres, bsize);
-	output_sexp(Sexp().put_props(":found", foundnum));
+
+	output_sexp(Sexp().put_props(
+			    ":found", foundnum,
+			    ":query", q,
+			    ":query-sexp", parse_query(q, false/*!expand*/).to_string(),
+			    ":query-sexp-expanded", parse_query(q, true/*expand*/).to_string()));
 }
 
 void

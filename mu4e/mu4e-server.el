@@ -175,7 +175,7 @@ sexp received from the server process.")
            (plist-get mu4e--server-props :version))
       (mu4e-error "Version unknown; did you start mu4e?")))
 
-;;; remember queries result.
+;;; remember query results.
 (defvar mu4e--server-query-items nil
   "Query items results we receive from the mu4e server.
 Those are the results from the counting-queries
@@ -184,6 +184,22 @@ for bookmarks and maildirs.")
 (defun mu4e-server-query-items ()
   "Get the latest server query items."
   mu4e--server-query-items)
+
+(defvar mu4e--server-query nil
+  "Last query executed by the server.
+This is a plist, see `mu4e-server-last-query' for details.")
+
+(defun mu4e-server-last-query ()
+  "Get a plist with information about the last server-query.
+
+This has the following fields:
+- :query: this is the last query the server executed (a string)
+- :query-sexp: this is that last query as processed by the query engine
+  (an s-expression as a string)
+- :query-sexp-expanded: like last-query-sexp, but with combination fields
+   expanded."
+  (cl-remf mu4e--server-query :found) ;; there's no plist-delete
+  mu4e--server-query)
 
 ;; temporary
 (defun mu4e--server-xapian-single-threaded-p()
@@ -278,7 +294,7 @@ This for the few sexps we get from the mu server that support
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
 This processes the \"mu server\" output. It accumulates the
-strings into valid sexpsv and evaluating those.
+strings into valid s-expressions and evaluates those.
 
 The server output is as follows:
 
@@ -349,6 +365,8 @@ The server output is as follows:
 
          ;; the found sexp, we receive after getting all the headers
          ((plist-get sexp :found)
+          ;; capture the query-info
+          (setq mu4e--server-query sexp)
           (funcall mu4e-found-func (plist-get sexp :found)))
 
          ;; viewing a specific message
