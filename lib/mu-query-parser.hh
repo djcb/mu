@@ -80,7 +80,8 @@ Sexp process_query(const std::string& expr);
  * processes the tokens into a Sexp. This sexp is meant to be human-readable.
  *
  * @param expr a search expression
- * @param expand whether to expand meta-fields (such as '_', 'recip', 'contacts')
+ * @param expand whether to expand combination-fields (such as '_', 'recip',
+ * 'contacts')
  *
  * @return Sexp with the parse tree
  */
