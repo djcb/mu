@@ -18,47 +18,86 @@ provide examples. As a companion to this, we recommend the *mu info fields*
 command to get an up-to-date list of the available fields and flags.
 
 Furthermore, *mu find* provides the *--analyze* option, which shows how *mu*
-interprets your query; see the *ANALYZING QUERIES* section below.
+interprets your query; similarly, mu4e has a command. mu4e-analyze-last-query.
+See the *ANALYZING QUERIES* section for further details.
 
 *NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
 quote any characters that would otherwise be interpreted by the shell, such as
-*""*, *(* and *)* and whitespace.
+'"', '*', '(' and ')'. The details are shell-specific. In case of doubt, the
+*--analyze* option can be useful.
 
 * TERMS
 
 The basic building blocks of a query are *terms*; these are just normal words like
-`banana' or `hello', or words prefixed with a field-name which makes them apply
+"banana" or "hello", or words prefixed with a field-name which makes them apply
 to just that field. See *mu info fields* for all the available fields.
 
 Some example queries:
+
 #+begin_example
 vacation
 subject:capybara
 maildir:/inbox
 #+end_example
 
-Terms without an explicit field-prefix, (like `vacation' above) are interpreted
-like:
+Terms without an explicit field-prefix, (like "vacation" above) are interpreted
+as:
+
 #+begin_example
 to:vacation or subject:vacation or body:vacation or ...
 #+end_example
 
-The language is case-insensitive for terms and attempts to `flatten' diacritics,
+The language is case-insensitive for terms and attempts to "flatten" diacritics,
 so =angtrom= matches =Ångström=.
 
-If terms contain whitespace, they need to be quoted:
+If terms contain whitespace, they need to be quoted.
+
 #+begin_example
 subject:"hi there"
 #+end_example
-This is a so-called =phrase query=, which means that we match against subjects
-that contain the literal phrase "hi there". Phrase queries only work for fields
-that are /indexed/, i.e., fields with *index* in the *mu info fields* search column.
 
-Remember that you need to escape those quotes when using this from the
-command-line:
+This is a so-called =phrase query=, which means that we match against subjects
+that contain the literal phrase "hi there". Phrase queries only work for certain
+fields; they have the word *phrase* in their *mu info fields* search column.
+
+** Quoting queries for the shell
+
+Remember that you need to escape the quotes for a search query when using this
+from the command-line; otherwise, the shell (or most shells) process the queries
+and *mu* never sees them.
+
+In this case, that means the difference between search for a subject "hi there"
+versus and subject "hi" and some word "there" that can appear in any of the
+combination fields for <empty> (combination fields are discussed below).
+
+We can use the mentioned *--analyze* option to show the difference:
+
 #+begin_example
-mu find subject:\\"hi there\\"
+mu find subject:"hi there" --analyze
+* query:
+  subject:hi there
+* parsed query:
+  (and (subject "hi") (_ "there"))
+* parsed query (expanded):
+  (and (subject "hi") (or (to "there") (cc "there") (bcc "there") (from "there") (subject "there") (body "there") (embed "there")))
+* Xapian query:
+  Query((Shi AND (Tthere OR Cthere OR Hthere OR Fthere OR Sthere OR Bthere OR Ethere)))
 #+end_example
+
+And with quotes escaped:
+
+#+begin_example
+mu find subject:\"hi there\" --analyze
+* query:
+  subject:"hi there"
+* parsed query:
+  (or (subject "hi there") (subject (phrase "hi there")))
+* Xapian query:
+  Query((Shi there OR (Shi PHRASE 2 Sthere)))
+#+end_example
+
+We won't dwell on the details of the *--analyze* output here, but hopefully this
+illustrates the difference between quoted and unquoted queries.
 
 * LOGICAL OPERATORS
 
@@ -81,37 +120,72 @@ subject:chip AND subject:dale
 #+end_example
 are equivalent. For readability, we recommend the second version.
 
-Note that a =pure not= - e.g. searching for *not apples* is quite a `heavy' query.
+Note that a =pure not= - e.g. searching for *not apples* is quite a "heavy" query.
 
-* REGULAR EXPRESSIONS AND WILDCARDS
+*  WILDCARDS
 
-The language supports matching basic PCRE regular expressions, see {{{man-link(pcre,3)}}}.
+Wildcards are a Xapian built-in mechanism for matching.
 
-Regular expressions are enclosed in *//*. Some examples:
+A search term with a rightmost *** (and =only= in that position) matches any term
+that starts with the part before the ***; they are less powerful than regular
+expressions, but also much faster:
+
+An example:
+#+begin_example
+$ mu find "hello*"
+#+end_example
+
+Quoting the "hello*" is recommended; some shells (but not all) would otherwise
+expand the '*' to all files in the current directory.
+
+* REGULAR EXPRESSIONS
+
+The query language supports matching basic PCRE regular expressions, as per
+{{{man-link(pcre,3)}}}, with some limitations.
+
+Regular expressions are enclosed in *//*. For example:
 
 #+begin_example
 subject:/h.llo/		# match hallo, hello, ...
-subject:/
 #+end_example
 
-Note the difference between `maildir:/foo' and `maildir:/foo/'; the former
-matches messages in the `/foo' maildir, while the latter matches all messages in
-all maildirs that match `foo', such as `/foo', `/bar/cuux/foo', `/fooishbar'
-etc.
+Note the difference between "maildir:/foo" and "maildir:/foo/"; the former
+matches messages in the "/foo" maildir, while the latter matches all messages in
+all maildirs that match "foo", such as "/foo", "/bar/cuux/foo", "/fooishbar",
+and so on.
 
-Wildcards are another mechanism for matching where a term with a rightmost ***
-(and =only= in that position) matches any term that starts with the part before
-the ***; they are therefore less powerful than regular expressions, but also much
-faster:
+Regular expressions are more powerful than wildcards, but are also much slower.
+Moreover, their behavior in *mu* can be a bit confusing, due to some
+implementation details. See below for some of the caveats.
+
+** Whitespace in regular expression literals
+
+To avoid ambiguities in the query parsing, regular express *must not* contain
+whitespace, so the search for a message with subject "hello world", you can write
 #+begin_example
-foo*
+mu find 'subject:/hello\\040world/'
 #+end_example
-is equivalent to
+(with the \040 specifying a space in the regular expression, and and extra '\'
+to escape it). In many cases,
 #+begin_example
-/foo.*/
+mu find 'subject:/hello.world/'
 #+end_example
+may be good enough, and easier to type.
 
-Regular expressions can be useful, but are relatively slow.
+** Anchors in regular expressions
+
+Since the underlying Xapian database does not support regular expressions (it
+does support wildcards), *mu* implements the regular-expression search by matching
+the user's regular expression against all "terms" (words or phrases) that in the
+database for a given field.
+
+That implementation detail explain why "anchored" regular expressions (with *^*
+and *$* to mark begin/end, respectively) can get unexpected results.
+
+Suppose you want to match all messages that start with "pie", and you search
+with *subject:/^pie/*. This /also/ matches messages with subject "apple pie", since
+both those words are indexed as terms separately (as well as phrases), and thus
+"^pie" matches as well for a message with subject "apple pie".
 
 * FIELDS
 
@@ -208,10 +282,10 @@ an open range.
 Dates are expressed in local time and using ISO-8601 format (YYYY-MM-DD
 HH:MM:SS); you can leave out the right part and *mu* adds the rest, depending on
 whether this is the beginning or end of the range (e.g., as a lower bound,
-`2015' would be interpreted as the start of that year; as an upper bound as the
+"2015" would be interpreted as the start of that year; as an upper bound as the
 end of the year).
 
-You can use `/' , `.', `-', `:' and `T' to make dates more human-readable.
+You can use `/' , `.', `-', `:' and "T" to make dates more human-readable.
 
 Some examples:
 #+begin_example
@@ -222,13 +296,13 @@ date:2015-06-01..
 date:2016..2016
 #+end_example
 
-You can also use the special `dates' *now* and *today*:
+You can also use the special "dates" *now* and *today*:
 #+begin_example
 date:20170505..now
 date:today..
 #+end_example
 
-Finally, you can use relative `ago' times which express some time before now and
+Finally, you can use relative "ago" times which express some time before now and
 consist of a number followed by a unit, with units *s* for seconds, *M* for minutes,
 *h* for hours, *d* for days, *w* for week, *m* for months and *y* for years. Some
 examples:
@@ -315,7 +389,7 @@ find it (and all the other messages in that same maildir) with:
 maildir:/lists/running
 #+end_example
 
-Note the starting `/'. If you want to match mails in the `root' maildir, you can
+Note the starting `/'. If you want to match mails in the "root" maildir, you can
 do with a single `/':
 #+begin_example
 maildir:/
@@ -343,7 +417,7 @@ queries using various logical operators, parentheses and so on, but in the
 author's experience, it's usually faster to find a message with a simple query
 just searching for some words.
 
-Find all messages with both `bee' and `bird' (in any field)
+Find all messages with both "bee" and "bird" (in any field)
 #+begin_example
 bee AND bird
 #+end_example
@@ -353,12 +427,12 @@ Find all messages with either Frodo or Sam:
 Frodo OR Sam
 #+end_example
 
-Find all messages with the `wombat' as subject, and `capybara' anywhere:
+Find all messages with the "wombat" as subject, and "capybara" anywhere:
 #+begin_example
 subject:wombat and capybara
 #+end_example
 
-Find all messages in the `Archive' folder from Fred:
+Find all messages in the "Archive" folder from Fred:
 #+begin_example
 from:fred and maildir:/Archive
 #+end_example
@@ -385,7 +459,7 @@ Find a messages with the given message-id:
 msgid:CAE56pjGU2oNxN-wWku69@mail.gmail.com
 #+end_example
 
-Find all messages written in Dutch or German with the word `hallo':
+Find all messages written in Dutch or German with the word "hallo":
 #+begin_example
 hallo and (lang:nl or lang:de)
 #+end_example
@@ -395,14 +469,18 @@ for "cld2-support*.
 
 * ANALZYING QUERIES
 
-Despite all the excellent documentation, in some cases it can be non-obvious how
-*mu* interprets your query. For that, you can ask *mu* to analyze the query -- that
-is, show how *mu* interprets the query.
+Despite all the excellent documentation, in some cases it can be non-obvious to
+understand how *mu* interprets your query, especially when shell interpretation is
+involved as well.
+
+For that, you can ask *mu* to analyze the
+query -- that is, show how *mu* interprets the query. We already saw an example of
+this.
 
 This uses the the *--analyze* option to *mu find*.
 #+begin_example
 $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
-,* query:
+,*query:
   subject:wombat AND date:3m.. size:..2000
 ,* parsed query:
   (and (subject "wombat") (date (range "2023-05-30T06:10:09Z" "")) (size (range "" "2000")))
@@ -411,7 +489,11 @@ $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
 #+end_example
 
 The ~parsed query~ is usually the most useful one for understanding how *mu*
-interprets your query.
+interprets your query; it shows the query as *mu* sees it, in s-expression
+notation.
+
+In *mu4e* there is the *mu4e-analyze-last-query* command, which provides similar
+information.
 
 #+include: "prefooter.inc" :minlevel 1
 
