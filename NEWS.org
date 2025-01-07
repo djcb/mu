@@ -62,6 +62,10 @@
   - new command ~mu4e-view-jump-to-mime-part~ for jumping to MIME-part by its
     number.
 
+  - new command ~mu4e-analyze-last-query~ which shows information about how the
+    server interpreted the last query; this can be useful if you don't get the
+    result you expected.
+
 * 1.12 (released on February 24, 2024)
 
 ** Some highlights
