@@ -1,6 +1,6 @@
 ;;; mu4e-helpers.el --- Helper functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2024  Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -68,8 +68,7 @@ might want to add something like the following in your configuration.
   :group 'mu4e)
 
 (defcustom mu4e-read-option-use-builtin t
-  "Whether to use mu4e's traditional completion for
-`mu4e-read-option'.
+  "Whether to use mu4e's traditional completion for `mu4e-read-option'.
 
 If nil, use the value of `mu4e-completing-read-function', integrated
 into mu4e.
@@ -546,6 +545,23 @@ Or go to the top level if there is none."
   (when-let* ((msgid (bookmark-prop-get bookmark 'message-id)))
     (mu4e-view-message-with-message-id msgid)))
 
+(defun mu4e--popup-lisp-buffer (bufname data)
+  "Show or hide an s-expression string in a popup-buffer.
+BUFNAME is the name of the buffer, and DATA is lisp-data, if any."
+  (if-let* ((win (get-buffer-window bufname)))
+      (delete-window win)
+    (when data
+      (when (buffer-live-p bufname)
+        (kill-buffer bufname))
+      (with-current-buffer-window
+          (get-buffer-create bufname) nil nil
+        ;; sadly, the default indentation for plists
+        ;; is not very nice, and I failed to overwrite it
+        (lisp-mode)
+        (insert (pp-to-string data))
+        ;; add basic `quit-window' bindings
+        (view-mode 1)))))
+
 ;;; Macros
 
 (defmacro mu4e-setq-if-nil (var val)
@@ -566,7 +582,7 @@ COMPONENTS."
 
 (defun mu4e-string-replace (from-string to-string in-string)
   "Replace FROM-STRING with TO-STRING in IN-STRING each time it occurs.
-Mu4e version of emacs 28's string-replace."
+Mu4e's version of Emacs 28's `string-replace'."
   (replace-regexp-in-string (regexp-quote from-string)
                             to-string in-string nil 'literal))
 

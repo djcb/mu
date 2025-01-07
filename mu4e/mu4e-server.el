@@ -196,10 +196,20 @@ This has the following fields:
 - :query: this is the last query the server executed (a string)
 - :query-sexp: this is that last query as processed by the query engine
   (an s-expression as a string)
-- :query-sexp-expanded: like last-query-sexp, but with combination fields
-   expanded."
+- :query-sexp-expanded: like :query-sexp, but with combination fields
+   expanded (if any)."
   (cl-remf mu4e--server-query :found) ;; there's no plist-delete
   mu4e--server-query)
+
+(defvar mu4e--last-query-buffer-name)
+(defun mu4e-analyze-last-query ()
+  "Pop-up a buffer with the most recent query as the server saw it.
+See `mu4e-server-last-query' for the fields.
+It is the mu4e-version of \"mu find <query> --analyze\"."
+  (interactive)
+  (mu4e--popup-lisp-buffer
+   mu4e--last-query-buffer-name
+   (mu4e-server-last-query)))
 
 ;; temporary
 (defun mu4e--server-xapian-single-threaded-p()

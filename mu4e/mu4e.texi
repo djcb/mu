@@ -1975,9 +1975,12 @@ see @ref{Sorting and threading}.
 @section Queries
 
 @t{mu4e} queries are the same as the ones that @t{mu find}
-understands@footnote{with the caveat that command-line queries are
-subject to the shell's interpretation before @t{mu} sees them}. You can
-consult the @code{mu-query} man page for the details.
+understands@footnote{with the caveat that command-line queries are subject to
+the shell's interpretation before @t{mu} sees them}. You can consult the
+@code{mu-query} man-page for the details. In addition, @t{mu4e} provides a
+command @code{mu4e-analyze-last-query}, which shows how the @t{mu} server has
+interpreted the query, similar to what the the @t{--analyze} option does for
+@t{mu find}.
 
 Additionally, @t{mu4e} supports @kbd{TAB}-completion for queries. There
 there is completion for all search keywords such as @code{and},
