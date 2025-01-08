@@ -43,7 +43,7 @@ exec guile -e main -s $0 $@
     (org-mu4e-link msg)
     (if tag (string-concatenate `(":" ,tag "::")) "")
     (or (mu:from msg) "?")
-    (let ((body (mu:body-txt msg)))
+    (let ((body (mu:body msg)))
       (if (not body) ;; get a 'summary' of the body text
 	"<no plain-text body>"
 	(string-map

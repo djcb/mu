@@ -4,8 +4,8 @@ Subject: atoms
 To: "Democritus" <demo@example.com>
 Message-id: <3BE9E6535E302944823E7A1A20D852173@msg.id>
 MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Content-transfer-encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: high
 
 If, in some cataclysm, all scientific knowledge were to be destroyed,
