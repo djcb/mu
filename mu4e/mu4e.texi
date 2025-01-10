@@ -1129,7 +1129,7 @@ conflicting key bindings.
 
 If you want to automatically fold all threads after a query, you can use a hook:
 @lisp
-  (add-hook 'mu4e-thread-mode-hook #'mu4e-thread-fold-apply-all)
+  (add-hook 'mu4e-thread-mode-hook #'mu4e-thread-fold-all)
 @end lisp
 
 By default, single-child threads are @emph{not} collapsed, since it would result
