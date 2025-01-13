@@ -399,7 +399,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::StringList,
 		"references", "ref",
 		"References to related messages",
-		{},
+		"ref:E1rQJDx123@example.com",
 		'r',
 		Field::Flag::Value |
 		Field::Flag::BooleanTerm |
@@ -444,7 +444,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::String,
 		"thread", {},
 		"Thread a message belongs to",
-		{},
+		"thread:abcde789@example.com",
 		'w',
 		Field::Flag::BooleanTerm |
 		Field::Flag::Value
