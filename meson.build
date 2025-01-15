@@ -294,8 +294,9 @@ subdir('mu')
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
 emacs_min_version='26.3'
-emacs=find_program([emacs_name], version: '>='+emacs_min_version, required:false)
+emacs=find_program([emacs_name], version: '>=' + emacs_min_version, required:false)
 if emacs.found()
+  emacs28 = find_program([emacs_name], version: '>=28', required:false)
   subdir('man')
   subdir('mu4e')
 else

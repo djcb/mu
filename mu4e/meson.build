@@ -72,6 +72,13 @@ mu4e_srcs=[
   'mu4e-window.el'
 ]
 
+# emacs 28 is guaranteed to have transient
+# not very elegant, but
+# https://stackoverflow.com/questions/49221792/byte-compile-file-only-when-library-is-found
+if emacs28.found()
+  mu4e_srcs += 'mu4e-transient.el'
+endif
+
 # note, we cannot compile mu4e-config.el without incurring
 #  WARNING: Source item
 #   '[...]/build/mu4e/mu4e-meta.el' cannot be converted to File object, because
