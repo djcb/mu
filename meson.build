@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -282,7 +282,8 @@ configure_file(input: join_paths(build_aux, 'version.texi.in'),
 
 ################################################################################
 # install some data files
-install_data('NEWS.org', install_dir : join_paths(datadir,'doc', 'mu'))
+install_data('NEWS.org', 'IDEAS.org',
+             install_dir : join_paths(datadir, 'doc', 'mu'))
 
 ################################################################################
 # subdirs

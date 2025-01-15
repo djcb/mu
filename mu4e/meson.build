@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -88,6 +88,7 @@ foreach src : mu4e_srcs
   # see: https://debbugs.gnu.org/db/47/47987.html
   configure_file(input: src, output:'@BASENAME@.el', copy:true,
                  install_mode: 'r--r--r--')
+  # seems meson ignores 'install_mode' for copy (1.5.1, 1.6.1)
 
   custom_target(src.underscorify() + '_el',
                 build_by_default: true,

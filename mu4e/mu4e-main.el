@@ -89,9 +89,14 @@ the personal addresses."
   (mu4e-info (mu4e-join-paths mu4e-doc-dir "mu4e-about.org")))
 
 (defun mu4e-news ()
-  "Show page with news for the current version of mu4e."
+  "Show news for the current version of mu and mu4e."
   (interactive)
   (mu4e-info (mu4e-join-paths mu4e-doc-dir "NEWS.org")))
+
+(defun mu4e-ideas ()
+  "Show development ideas for mu and mu4e."
+  (interactive)
+  (mu4e-info (mu4e-join-paths mu4e-doc-dir "IDEAS.org")))
 
 (defun mu4e-baseline-time ()
   "Show the baseline time."
