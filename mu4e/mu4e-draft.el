@@ -1,6 +1,6 @@
 ;;; mu4e-draft.el --- Helpers for m4e-compose -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2024-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -498,12 +498,18 @@ Creates a buffer NAME and returns it."
   (setq mu4e--message-buf (current-buffer)))
 
 (defun mu4e--message-is-yours-p ()
-  "Mu4e's override for `message-is-yours-p'."
-  (seq-some (lambda (field)
-              (if-let* ((recip (message-field-value field)))
-                  (mu4e-personal-or-alternative-address-p
-                   (car (mail-header-parse-address recip)))))
-            '("From" "Sender")))
+  "Did you send the message we're responding to?
+Mu4e's override for `message-is-yours-p'. This only considers the
+From: address, not the Sender: address.
+
+Note that we check the parent, message-at-point so this should
+work both in headers-view and message-view."
+  (seq-some (lambda (addr)
+              (mu4e-personal-or-alternative-address-p addr))
+            (seq-map (lambda (addr) (plist-get addr :email))
+                     (plist-get (or mu4e-compose-parent-message
+                                    (mu4e-message-at-point 'noerror))
+                                :from))))
 
 (defmacro mu4e--validate-hidden-buffer (&rest body)
   "Macro to evaluate BODY and asserts that it yields a valid buffer.
@@ -765,7 +771,10 @@ but note the different order."
    (lambda ()
      (let ( ;; only needed for Fwd. Gnus has a bad default.
            (message-make-forward-subject-function
-            (list #'message-forward-subject-fwd)))
+            (list #'message-forward-subject-fwd))
+           ;; e.g. supersede needs parent for 'message-is-yours-p
+           (mu4e-compose-parent-message parent)
+           (mu4e-compose-type compose-type))
        (insert (mu4e--decoded-message parent))
        ;; let's make sure we don't use message-reply-headers from
        ;; some unrelated message.
