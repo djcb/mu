@@ -347,7 +347,7 @@ output_plain(const Option<Message>& msg, const OutputInfo& info,
 
 	output_plain_fields(*msg, opts.find.fields, !opts.nocolor, opts.find.threads);
 
-	if (opts.view.summary_len)
+	if (opts.find.summary_len)
 		print_summary(*msg, opts);
 
 	return Ok();
