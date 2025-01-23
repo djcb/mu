@@ -5,6 +5,33 @@ Ideas for future enhancements. We collect those here so they don't clutter up
 the Github issue list, i.e. without any clear plan for adding in the near
 future.
 
+** mu
+
+- Support indexing PDF (and other) attachments. This can be done extending
+  process_message_part in mu-message.cc; instead of using something
+  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
+  need some way for users to specify a MIME-type => tool mapping  (in Config).
+  https://github.com/djcb/mu/issues/2117
+
+- Include "message summary" in message information, for display in the headers
+  buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
+  useful one line description... perhaps the first line after the "Dear x,"?
+  Moreover, this requires new functionality on the headers-view side as well.
+
+- Try to guess the encodings; sometimes people send messages that e.g., claim
+  they are ISO-8859-1 but actually use windows-1252, resulting in some
+  characters being shown incorrectly. Perhaps best solved by GMime, but maybe mu
+  can do something. https://github.com/djcb/mu/issues/2700
+
+- More sorting options: in mu4e, display the messages from old-to-new (still get
+  the newest though) https://github.com/djcb/mu/issues/2759. Or, from
+  new-to-old, reversed in thread: https://github.com/djcb/mu/issues/2807
+
+- perhaps use =--personal-addres= instead of =--my-address= for consistency
+  https://github.com/djcb/mu/issues/2806
+
+** mu4e
+
 - Support automatic handling for List-Unsubscribe headers and more in general,
   handle mailing-list commands https://github.com/djcb/mu/issues/2623 and
   https://github.com/djcb/mu/issues/2724 This seems useful, but probably
@@ -19,38 +46,14 @@ future.
   https://github.com/djcb/mu/issues/2308
   Shouldn't be _too_ hard, for someone that uses the functionality.
 
-- Include "message summary" in message information, for display in the headers
-  buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
-  useful one line description... perhaps the first line after the "Dear x,"?
-  Moreover, this requires new functionality on the headers-view side as well.
-
-- Support indexing PDF (and other) attachments. This can be done extending
-  process_message_part in mu-message.cc; instead of using something
-  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
-  need some way for users to specify a MIME-type => tool mapping  (in Config).
-  https://github.com/djcb/mu/issues/2117
-
 - Support "aggregate actions" apply to a set of messages, e.g. apply patch-set
   in a set of messages. That'll require some advanced scripting, maybe using
   Guile.
   https://github.com/djcb/mu/issues/301
   https://github.com/djcb/mu/issues/2704
 
-- Try to guess the encodings; sometimes people send messages that e.g., claim
-  they are ISO-8859-1 but actually use windows-1252, resulting in some
-  characters being shown incorrectly. Perhaps best solved by GMime, but maybe mu
-  can do something. https://github.com/djcb/mu/issues/2700
-
-- Revamp the Guile support; mu has support Guile scripting for a long time, but
-  it's gone a bit stale, and the API is not very nice. It'd be nice to revamp
-  this support, so it becomes more widely useful.
-  https://github.com/djcb/mu/issues/1982
-
-- Display the messages from old-to-new (still get the newest though)
-  https://github.com/djcb/mu/issues/2759
-
 - Make sorting stable if there are multiple messages with the same date. We
-  _could_ do this by adding some random millisecs to each messasge's timestamp; _or_
+  _could_ do this by adding some random millisecs to each message's timestamp; _or_
   complicating the search (i.e., the message hash?). Maybe leave as is?
   https://github.com/djcb/mu/issues/2527
 
@@ -66,6 +69,9 @@ future.
   Gnus supports. Does not seem trivial to re-use the Gnus code... (see
   ~gnus-summary-work-articles~ etc.).
   https://github.com/djcb/mu/issues/2799
+
+- Add some way to add a quick bookmark for (e.g.)  the current thread
+  https://github.com/djcb/mu/issues/2804
 
 * Done
 
