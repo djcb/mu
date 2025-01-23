@@ -104,6 +104,7 @@ If MSG is non-nil, store a link to MSG, otherwise use `mu4e-message-at-point'."
                   :description       ,(funcall mu4e-org-link-desc-func msg))))
     (apply #'mu4e--org-link-store-props props)))
 
+;;;###autoload
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.
 It links to the last known query when in `mu4e-headers-mode' with
@@ -133,6 +134,7 @@ the query (for links starting with \"query:\")."
     (mu4e-search (match-string 1 link) current-prefix-arg))
    (t (mu4e-error "Unrecognized link type '%s'" link))))
 
+;;;###autoload
 (defun mu4e-org-store-and-capture ()
   "Store a link to the current message or query.
 \(depending on `mu4e-org-link-query-in-headers-mode', and capture
