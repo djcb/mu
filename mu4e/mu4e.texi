@@ -195,12 +195,26 @@ have some idea on how it could work better. To report this, you can use the
 following information:
 
 @itemize
-@item what did you expect or wish to happen? what actually happened?
-@item can you provide some exact steps to reproduce?
-@item what version of @t{mu4e} and @t{emacs} were you using? What operating system?
+@item What did you expect or wish to happen? what actually happened?
+Please describe in detail what you saw. Also, try some related scenarios and
+whether the problem either @emph{always} happens, or only @emph{sometimes}.
+E.g., it might happen with only one particular type of message
+@item Provide some exact steps to reproduce?
+In particular, some minimal steps, starting from @t{emacs -Q} and with minimal
+configuration. If the problem is easily producible, it may be easily fixable as
+well; but if it's some subtle interaction in a highly complex setup, we cannot
+do much.
+@item hat version of @t{mu4e} and @t{emacs} were you using? What operating system?
+Always try with up-to-date versions. And please use the 'normal' @t{mu4e} for
+reproducing your problem, not the ``remix'' version that some Emacs
+``distributions'' use, such as ``Doom Emacs''.
 @item can you reproduce it with @command{emacs -q} and only loading @t{mu4e}?
 @item if the problem is related to some specific message, please include the raw message file (appropriately anonymized, of course)
 @end itemize
+
+In general, imagine you would be the person receiving the bug-report, and think
+about the information you would need to diagnose the problem.
+
 
 @node Getting started
 @chapter Getting started
@@ -3253,6 +3267,7 @@ ways. Here we focus on Emacs built-ins; for dealing with external tools,
 @menu
 * Default email client::Making mu4e the default emacs e-mail program
 * Modeline::Showing mu4e's status in the modeline
+* Transient::Transient menus for mu4e
 * Desktop notifications::Get desktop notifications for new mail
 * Emacs bookmarks::Using Emacs' bookmark system
 * Eldoc::Information about the current header in the echo area
@@ -3352,6 +3367,18 @@ Due to the way queries work, the modeline is @emph{not} immediately updated when
 you read messages; but going back to the main view (with @kbd{M-x mu4e} resets
 the counts to latest known ones. When in the main-view, you can use
 @code{revert-buffer} (@kbd{g}) to reset the counters explicitly.
+
+@node Transient
+@section Transient
+@cindex transient
+
+@t{mu4e} has experimental support for the ``transient'' menus, as per
+@xref{(transient) Top}. Because ``transient'' is not automatically available in
+all Emacs version that @t{mu4e} support, you need to manually enable it:
+@lisp
+(when (require 'mu4e-transient nil 'noerror)
+  (global-set-key (kbd "C-c m")  mu  #'mu4e-transient-menu))
+@end lisp
 
 @node Desktop notifications
 @section Desktop notifications
