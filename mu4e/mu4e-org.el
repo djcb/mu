@@ -144,7 +144,6 @@ it with org)."
   (org-capture))
 
 ;; install mu4e-link support.
-;;;###autoload
 (org-link-set-parameters "mu4e"
                          :follow #'mu4e-org-open
                          :store  #'mu4e-org-store-link)
