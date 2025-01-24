@@ -1,6 +1,6 @@
 ;;; mu4e.el --- Mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -45,7 +45,6 @@
 (require 'mu4e-notification)
 (require 'mu4e-server)     ;; communication with backend
 
-
 
 (when mu4e-speedbar-support
   (require 'mu4e-speedbar)) ;; support for speedbar
@@ -56,7 +55,6 @@
 ;; desktop-save-mode; so let's turn that off.
 (with-eval-after-load 'desktop
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
-
 
 ;;;###autoload
 (defun mu4e (&optional background)
@@ -86,7 +84,6 @@ Otherwise, completely quit mu4e, including automatic updating."
         (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
           (mu4e--stop))
       (mu4e--stop))))
-
 ;;; Internals
 
 (defun mu4e--check-requirements ()
@@ -191,7 +188,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
                        '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
            (kill-buffer)))))
    (buffer-list)))
-
+
 ;;; Handlers
 (defun mu4e--default-handler (&rest args)
   "Dummy handler function with arbitrary ARGS."
