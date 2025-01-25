@@ -54,8 +54,14 @@ man-page as well.
 
 * COLORS
 
-Some *mu* commands support colorized output, and do so by default. If you don't
-want colors, you can use *--nocolor*.
+Some *mu* commands support colorized output, and do so by default when writing to
+a TTY (roughly, to a screen). When not writing to a TTY, for instance when
+redirection the output to a file or using a pipe, the default is to *not* show
+output.
+
+If you don no want colors, you can use *--nocolor*.
+
+If you want colors even when it is not the default, use *--nocolor=false*.
 
 * ENCODING
 
