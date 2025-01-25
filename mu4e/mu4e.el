@@ -56,13 +56,16 @@
 (with-eval-after-load 'desktop
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
 
+(defvar mu4e--initialized nil
+  "Is mu4e initialized? Only needed once per session.")
+
 ;;;###autoload
 (defun mu4e (&optional background)
   "If mu4e is not running yet, start it.
 Then, show the main window, unless BACKGROUND (prefix-argument)
 is non-nil."
   (interactive "P")
-  (if (not (mu4e-running-p))
+  (if (not mu4e--initialized)
       (progn
         (mu4e--init-handlers)
         (mu4e--start (unless background #'mu4e--main-view)))
@@ -148,12 +151,13 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
   ;; redraw main buffer if there is one.
   (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
-  (mu4e--query-items-refresh 'reset-baseline)
+  (setq mu4e--initialized t) ;; last before we call the server.
   (mu4e--server-ping)
   ;; ask for the maildir-list
   (mu4e--server-data 'maildirs)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; re-indexing
+  (mu4e--query-items-refresh 'reset-baseline)
   (unless mu4e--contacts-set
     (mu4e--request-contacts-maybe)))
 

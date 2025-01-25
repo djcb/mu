@@ -211,11 +211,6 @@ It is the mu4e-version of \"mu find <query> --analyze\"."
    mu4e--last-query-buffer-name
    (mu4e-server-last-query)))
 
-;; temporary
-(defun mu4e--server-xapian-single-threaded-p()
-  "Are we using Xapian in single-threaded mode?"
-  (plist-get mu4e--server-props :xapian-single-threaded))
-
 ;;; Handling raw server data
 
 (defvar mu4e--server-buf nil
@@ -299,7 +294,6 @@ This for the few sexps we get from the mu server that support
           (delete-file val)
           (read (current-buffer)))
       val)))
-
 
 (defun mu4e--server-filter (_proc str)
   "Filter string STR from PROC.
@@ -565,12 +559,18 @@ You cannot run the repl when mu4e is running (or vice-versa)."
      (t
       (error "Something bad happened to the mu server process")))))
 
+(declare-function mu4e "mu4e")
+(defvar mu4e--initialized)
+
 (defun mu4e--server-call-mu (form)
   "Call the mu server with some command FORM."
+  (unless mu4e--initialized
+    (mu4e 'background))
+  ;; ensure the server is running as well
   (unless (mu4e-running-p)
     (mu4e--server-start))
   ;; in single-threaded mode, mu can't accept our command right now.
-  (when (and (mu4e--server-xapian-single-threaded-p) mu4e--server-indexing)
+  (when mu4e--server-indexing
     (mu4e-message "Cannot handle command while indexing, please retry later."))
   (let* ((print-length nil) (print-level nil)
          (cmd (format "%S" form)))
