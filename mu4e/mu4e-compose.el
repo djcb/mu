@@ -86,7 +86,7 @@ by sending, postponing, exiting or killing it.
 This multiplexes the `message-mode' hooks `message-send-actions',
 `message-postpone-actions', `message-exit-actions' and
 `message-kill-actions', and the hook is run with a variable
-`mu4e-compose-post-trigger' set correspondingly to a symbol,
+`mu4e-message-post-action' set correspondingly to a symbol,
 `send', `postpone', `exit' or `kill'."
   :type 'hook
   :group 'mu4e-compose)
