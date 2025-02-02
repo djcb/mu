@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -421,6 +421,74 @@ Child
 			assert_equal(m.message()->maildir(), "/inbox");
 	}
 }
+
+static void
+test_dups_related_new()
+{
+	TestMap test_msgs;
+/* child (dup vv) */
+	test_msgs.insert({"inbox/new/msg2:1,S",
+			 R"(Message-Id: <edcba@foo.bar>
+In-Reply-To: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 13:01:54 -0700
+To: example@example.com
+Subject: Re: test1
+
+Child
+)"});
+	test_msgs.insert({"inbox/new/msg3:1,S",
+R"(Message-Id: <edcba@foo.bar>
+In-Reply-To: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Sat, 06 Aug 2022 13:01:54 -0700
+To: example@example.com
+Subject: Re: test1
+
+Child
+)"});
+/* child (dup ^^); different file  */
+
+       TempDir tdir;
+       const auto store{make_test_store(tdir.path(), test_msgs, {})};
+	{
+		auto qr = store.run_query("flag:new", Field::Id::Date,
+					  QueryFlags::None);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
+	{
+		// direct matches
+		auto qr = store.run_query("flags:new", Field::Id::Date,
+					  QueryFlags::SkipDuplicates);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	{
+		// direct matches
+		auto qr = store.run_query("flags:new", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 2);
+	}
+
+
+	{
+		// direct matches
+		auto qr = store.run_query("flags:new", Field::Id::Date,
+					  QueryFlags::SkipDuplicates | QueryFlags::IncludeRelated);
+		g_assert_true(!!qr);
+		g_assert_false(qr->empty());
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+}
+
 
 
 static void
@@ -972,6 +1040,8 @@ main(int argc, char* argv[])
 			test_related);
 	g_test_add_func("/store/query/dups-related",
 			test_dups_related);
+	g_test_add_func("/store/query/dups-related-new",
+			test_dups_related_new);
 	g_test_add_func("/store/query/related-missing-root",
 			test_related_missing_root);
 	g_test_add_func("/store/query/body-matricula",
