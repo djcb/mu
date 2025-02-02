@@ -369,7 +369,7 @@ This function is best called from the hook
   (unless (mu4e-current-buffer-type-p 'view)
     (mu4e-error "Cannot resize as this is not a valid view buffer"))
   (when-let* ((win (and mu4e-linked-headers-buffer
-                          (get-buffer-window mu4e-linked-headers-buffer)))
+                        (get-buffer-window mu4e-linked-headers-buffer))))
     ;; This can fail for any number of reasons. If it does, we do
     ;; nothing. If the user has customized the window display we may
     ;; find it impossible to resize the window, and that should not be
@@ -380,7 +380,7 @@ This function is best called from the hook
                                    (window-width win nil))
                             t t nil))
             ((eq mu4e-split-view 'horizontal)
-             (set-window-text-height win mu4e-headers-visible-lines)))))))
+             (set-window-text-height win mu4e-headers-visible-lines))))))
 
 (provide 'mu4e-window)
 ;;; mu4e-window.el ends here
