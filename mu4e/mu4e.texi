@@ -847,7 +847,7 @@ attention:
   ;; bookmark for message that require quick attention
   '( :name "Urgent"
      :key  ?u
-     :query "maildir:/inbox AND from:boss@@exmaple.com"))
+     :query "maildir:/inbox AND from:boss@@example.com"))
 @end lisp
 
 Note that @t{mu4e} resets the baseline when you are interacting with it (for
@@ -858,6 +858,13 @@ The @emph{Maildirs} item is very similar to Bookmarks -- consider maildirs here
 as being a special kind of bookmark query that matches a Maildir. You can
 configure this using the variable @code{mu4e-maildir-shortcuts}; see its
 docstring and @ref{Maildir searches} for more details.
+
+When you ask for bookmarks or maildirs through @code{mu4e-ask-bookmark},
+@code{mu4e-ask-maildir}, the counts are displayed in the (default) completions
+next to the maildir or bookmark entry. This is a shorter version of the full
+display, just showing either the delta or the number of unread messages, if any.
+If you do not want to see these counts, set @t{mu4e-hide-short-counts} to
+non-@t{nil}.
 
 @node Miscellaneous
 @section Miscellaneous
@@ -2610,6 +2617,8 @@ Let's see what's contained in a context. Most of it is optional.
 A @code{mu4e-context} is Lisp object with the following members:
 @itemize
 @item @t{name}: the name of the context, e.g. @t{work} or @t{private}
+in the default completion UI, @t{mu4e} uses the first letter of the context to
+select them, so you should ensure all start with a different letter
 @item @t{vars}:
 an association-list (alist) of variable settings for this account.
 @item @t{enter-func}:

@@ -1,6 +1,6 @@
 ;;; mu4e-query-items.el --- Manage query results -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -61,6 +61,12 @@ incorrect results for the various unread counts."
   :type 'function
   :group 'mu4e-search)
 
+(defcustom mu4e-hide-short-counts nil
+  "Hide the short count of unread messages.
+As used in `mu4e-ask-bookmark' and `mu4e-ask-folder'."
+  :type 'boolean
+  :group 'mu4e)
+
 (defvar mu4e--query-items-baseline nil
   "Some previous version of the query-items.
 This is used as the baseline to track updates by comparing it to
@@ -98,7 +104,9 @@ If ITEMS does not yet have a favorite item, pick the first."
 (declare-function mu4e-maildir-shortcuts "mu4e-folders")
 
 (defun mu4e--query-item-display-counts (item)
-  "Get the count display string for some query-data ITEM."
+  "Get the count display string for some query-data ITEM.
+If the items has its `:hide-unread' at a non-nil value, return
+an empty string."
   ;; purely for display, but we need it in the main menu, modeline
   ;; so let's keep it consistent.
   (cl-destructuring-bind (&key unread hide-unread delta-unread count
@@ -115,6 +123,25 @@ If ITEMS does not yet have a favorite item, pick the first."
        "/"
        (propertize (number-to-string count)
                    'help-echo "Total number")))))
+
+(defun mu4e--query-item-display-short-counts (item)
+  "Get the short count display string for some query-data ITEM.
+This gets the delta if it is greater than zero. Otherwise, the
+total unread count if is greater than zero. Otherwise, an empty
+string.
+
+If the items has its `:hide-unread' at a non-nil value, or if
+`mu4e-hide-short-counts' is non-nil, returns an empty string."
+  (cl-destructuring-bind (&key unread hide-unread delta-unread
+                               &allow-other-keys) item
+    (if (or hide-unread mu4e-hide-short-counts)
+        ""
+      (concat
+       (if (> (or delta-unread 0) 0)
+           (concat "(" (propertize (format "+%d" delta-unread) 'face 'mu4e-unread-face) ")")
+         (if (> (or unread 0) 0)
+             (concat "(" (propertize (format "%d" unread) 'face 'mu4e-header-key-face) ")")
+           ""))))))
 
 (defun mu4e--query-items-refresh (&optional reset-baseline)
   "Get the latest query data from the mu4e server.
@@ -210,7 +237,8 @@ bookmark or maildir."
        ;; useful for debugging.
        (unless (string= query effective-query)
          (plist-put value :effective-query effective-query))
-
+       ;;for matching maildir shortcuts
+       (when maildir (plist-put value :maildir maildir))
        ;; nil props bring me discomfort
        (when (plist-get item :favorite)
          (plist-put value :favorite t))

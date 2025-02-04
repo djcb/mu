@@ -177,6 +177,16 @@ Converts from the old format if needed."
                item))
            mu4e-maildir-shortcuts))
 
+(declare-function mu4e-query-items "mu4e-query-items")
+(declare-function mu4e--query-item-display-short-counts "mu4e-query-items")
+
+(defun mu4e--query-item-for-maildir-shortcut (mds)
+  "Find the corresponding query-item for some maildir shortcut MDS.
+This is based on their query. Return nil if not found."
+  (seq-find (lambda (qitem)
+              (equal (plist-get qitem :maildir) (plist-get mds :maildir)))
+            (mu4e-query-items 'maildirs)))
+
 ;; the standard folders can be functions too
 (defun mu4e--get-folder (foldervar msg)
   "Within the mu-context of MSG, get message folder FOLDERVAR.
@@ -231,7 +241,7 @@ to create it; otherwise return nil."
   (let ((seems-to-exist (file-directory-p dir)))
     (when (or seems-to-exist
               (yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir)))
-      ;; even when the maildir already seems to exist, call mkdir for a deeper
+      ;; even when the maildir already seems to exist, call mkdir for a deepe
       ;; check. However only get an update when the maildir is totally new.
       (mu4e--server-mkdir dir (not seems-to-exist))
       t)))
@@ -245,14 +255,23 @@ to create it; otherwise return nil."
 
 If the special shortcut \"o\" (for _o_ther) is used, or
 if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
-from all maildirs under `mu4e-maildir'."
+from all maildirs under `mu4e-maildir'.
+
+The names of the maildirs are displayed in the minibuffer,
+suffixed with the short version of the unread counts, as per
+`mu4e--query-item-display-short-counts'."
   (let* ((options
-         (seq-map (lambda (md)
-                    (cons
-                     (format "%c%s" (plist-get md :key)
-                             (or (plist-get md :name)
-                                 (plist-get md :maildir)))
-                     (plist-get md :maildir)))
+         (seq-map
+          (lambda (md)
+            (let* ((qitem (mu4e--query-item-for-maildir-shortcut md))
+                   (unreads (mu4e--query-item-display-short-counts qitem)))
+              (cons
+               (format "%c%s%s"
+                       (plist-get md :key)
+                       (or (plist-get md :name)
+                           (plist-get md :maildir))
+                       unreads)
+               (plist-get md :maildir))))
                   (mu4e-filter-single-key (mu4e-maildir-shortcuts))))
         (response
          (if (not options)

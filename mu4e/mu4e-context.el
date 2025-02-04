@@ -1,6 +1,6 @@
 ;;; mu4e-context.el --- Switching between settings -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2015-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -87,6 +87,9 @@ none."
 (cl-defstruct mu4e-context
   "A mu4e context object with the following members:
 - `name': the name of the context, eg. \"Work\" or \"Private\".
+   When using mu4e's default completion, it uses the first letter of
+   the name for this, so you should ensure those are different for
+   all contexts.
 - `enter-func': a parameterless function invoked when entering
   this context, or nil
 - `leave-func':a parameterless function invoked when leaving this
@@ -103,7 +106,6 @@ none."
   (match-func nil)          ;; function that takes a msg-proplist, and return t
   ;; if it matches, nil otherwise
   vars) ;; alist of variables.
-
 
 (defun mu4e--context-ask-user (prompt)
   "Let user choose some context based on its name with PROMPT."
@@ -168,7 +170,7 @@ match, return the first. For MSG and POLICY, see
                      nil (mu4e-context-name context))))))
 
 (defun mu4e-context-determine (msg &optional policy)
-  "Return the first context where match-func evaluate to non-nil.
+  "Return first context for which match-func returns non-nil.
 
 MSG points to the plist for the message replied to or forwarded,
 or nil if there is no such MSG; similar to what
