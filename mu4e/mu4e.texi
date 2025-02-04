@@ -4150,9 +4150,10 @@ reasons). Note that quitting @t{mu4e} or invoking @t{mu4e-update-mail-and-index}
 and @t{mu4e-update-index} trigger committing to disk as a side-effect.
 @item different options:
 @t{mu4e} defaults to having @t{mu4e-headers-include-related}, and
-@t{mu4e-headers-results-limit} set to 500. However, the command-line
-@command{mu find}'s corresponding @t{--include-related} is false, and
-there's no limit (@t{--maxnum}).
+@t{mu4e-headers-results-limit} set to 500. However, the command-line @command{mu
+find}'s corresponding @t{--include-related} is false, and there's no limit
+(@t{--maxnum}). Furthermore, @t{mu find} by default includes duplicate messages,
+while @t{mu4e} does not (see @t{--skip-dups}/@t{mu4e-search-skip-duplicates}.
 @item reverse sorting:
 The results may be different when @t{mu4e} and @command{mu find} do
 not both sort their results in the same direction.
@@ -4238,17 +4239,23 @@ Note that Emacs 29 obsoletes this variable.
 @section Retrieving mail
 
 @subsection How can I get notifications when receiving mail?
-There is @code{mu4e-index-updated-hook}, which gets triggered when the
-indexing process triggered sees an update (not just new mail though). To
-use this hook, put something like the following in your setup (assuming
-you have @t{aplay} and some soundfile, change as needed):
+
+The recommended way is to use @t{mu4e}'s built-in notification system, see
+@ref{Desktop notifications}.
+
+Alternatively, you can set things up manually.
+
+There is @code{mu4e-index-updated-hook}, which gets triggered when the indexing
+process triggered sees an update (not just new mail though). To use this hook,
+put something like the following in your setup (assuming you have @t{aplay} and
+some soundfile, change as needed):
 @lisp
 (add-hook 'mu4e-index-updated-hook
   (defun new-mail-sound ()
     (shell-command "aplay ~/Sounds/boing.wav&")))
 @end lisp
 
-@subsection I'm getting mail through a local mailserver. What should I use for @code{mu4e-get-mail-command}?
+@subsection I'm getting mail through a local mail-server. What should I use for @code{mu4e-get-mail-command}?
 Use the literal string @t{"true"} (or don't do anything, it's the
 default) which then uses @t{/bin/true} (a command that does nothing and
 always succeeds). This makes getting mail a no-op, but the messages are
