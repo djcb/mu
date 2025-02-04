@@ -3271,12 +3271,11 @@ ways. Here we focus on Emacs built-ins; for dealing with external tools,
 * Desktop notifications::Get desktop notifications for new mail
 * Emacs bookmarks::Using Emacs' bookmark system
 * Eldoc::Information about the current header in the echo area
-* Org-mode links::Adding mu4e to your organized life
+* Org-mode::Adding mu4e to your organized life
 * iCalendar::Enabling iCalendar invite processing
 * Speedbar::A special frame with your folders
 * Dired:: Attaching files using @t{dired}
 @end menu
-
 
 @node Default email client
 @section Default email client
@@ -3420,33 +3419,34 @@ thus the bookmarks stay valid even if you move the message around.
 It is possible to get information about the current header in the echo-area.
 You can enable this by setting @t{mu4e-eldoc-support} to non-@t{nil}.
 
-@node Org-mode links
-@section Org-mode links
+@node Org-mode
 
-It can be useful to include links to e-mail messages or search queries
-in your org-mode files. @t{mu4e} supports this by default, unless you
-set @t{mu4e-support-org} to @code{nil}.
+Org-mode is a popular and powerful way to deal with todo-lists, agendas inside
+Emacs. It's only natural to integrate it with @t{mu4e}, and
 
-You can use the normal @t{org-mode} mechanisms to store links:
-@kbd{M-x org-store-link} stores a link to a particular message when
-you are in @ref{Message view}. When you are in @ref{Headers view},
-@kbd{M-x org-store-link} links to the @emph{query} if
-@code{mu4e-org-link-query-in-headers-mode} is non-@code{nil}, and to
-the particular message otherwise (which is the default). You can
-customize the link description using @code{mu4e-org-link-desc-func}.
+@subsection Org-mode links
+
+It can be useful to include links to e-mail messages or search queries in your
+org-mode files. @t{mu4e} supports this by default, unless you set
+@t{mu4e-support-org} to @code{nil}.
+
+You can use the normal @t{org-mode} mechanisms to store links: @kbd{M-x
+org-store-link} stores a link to a particular message when you are in
+@ref{Message view}. When you are in @ref{Headers view}, @kbd{M-x org-store-link}
+links to the @emph{query} if @code{mu4e-org-link-query-in-headers-mode} is
+non-@code{nil}, and to the particular message otherwise (which is the default).
+You can customize the link description using @code{mu4e-org-link-desc-func}.
 
 You can insert this link later with @kbd{M-x org-insert-link}. From
-@t{org-mode}, you can go to the query or message the link points to
-with either @kbd{M-x org-agenda-open-link} in agenda buffers, or
-@kbd{M-x org-open-at-point} elsewhere --- both typically bound to
-@kbd{C-c C-o}.
+@t{org-mode}, you can go to the query or message the link points to with either
+@kbd{M-x org-agenda-open-link} in agenda buffers, or @kbd{M-x org-open-at-point}
+elsewhere --- both typically bound to @kbd{C-c C-o}.
 
-You can also directly @emph{capture} such links --- for example, to
-add e-mail messages to your todo-list. For that, @t{mu4e-org} has a
-function @code{mu4e-org-store-and-capture}. This captures the
-message-at-point (or header --- see the discussion on
-@code{mu4e-org-link-query-in-headers-mode} above), then calls
-@t{org-mode}'s capture functionality.
+You can also directly @emph{capture} such links --- for example, to add e-mail
+messages to your todo-list. For that, @t{mu4e-org} has a function
+@code{mu4e-org-store-and-capture}. This captures the message-at-point (or header
+--- see the discussion on @code{mu4e-org-link-query-in-headers-mode} above),
+then calls @t{org-mode}'s capture functionality.
 
 You can add some specific capture-template for this. In your capture
 templates, the following mu4e-specific values are available:
@@ -3481,6 +3481,35 @@ key-bindings for that in headers and view mode:
   (define-key mu4e-headers-mode-map (kbd "C-c c") 'mu4e-org-store-and-capture)
   (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
 @end lisp
+
+@subsection Tracking sent mail
+
+To build on the above, it can be useful to automatically track outgoing e-mail
+so you can follow-up later.
+
+One way to do this is to first add a template to @t{org-capture-templates}:
+@lisp
+("wm" "To-do" entry (file+headline "~/Org/todo.org" "Waiting for")
+ "* WAIT [[mu4e:msgid:%(eval sent-message-id)][%(eval sent-subject)]]\n\t%u"
+ :immediate-finish t)
+@end lisp
+
+Then invoke this template from @t{sent-hook}:
+@lisp
+(defun my-org-wait-for-sent-mail ()
+  "Capture the outgoing mail."
+  (interactive)
+  (let* ((sent-message-id
+          (replace-regexp-in-string
+           "[<>]" "" (message-fetch-field "Message-Id")))
+         (sent-subject (or (message-fetch-field "Subject") "No subject")))
+    (org-capture nil "wm")))
+
+(add-hook 'sent-hook #'my-org-wait-for-sent-mail)
+@end lisp
+
+All of the above likely needs tweaking for your particular setup, but should
+hopefully give some inspiration.
 
 @node iCalendar
 @section iCalendar
@@ -3699,8 +3728,6 @@ After this, you should be able to:
 @item Tab-complete addresses from BBDB when composing emails
 @item View the BBDB contact while viewing a message
 @end itemize
-
-
 
 @node Sauron
 @section Sauron
