@@ -298,7 +298,6 @@ $ sudo dnf install git meson gmime30-devel xapian-core-devel emacs
 @item Otherwise, install the equivalent of the above on your system
 @end itemize
 
-
 @subsection Getting mu
 
 The next step is to get the @t{mu} sources. There are two alternatives:
@@ -315,18 +314,16 @@ What all that in place, let's build and install @t{mu} and @t{mu4e}.
 Enter the directory where you unpacked or cloned @t{mu}. Then:
 
 @example
-$ ./autogen.sh && make
-$ sudo make install
-@end example
-
-Note: if you are familiar with @t{meson}, you can of course use its
-commands directly; the @t{make} commands are just a thin wrapper around
-that; so, this also works:
-
-@example
 $ meson setup build
 $ meson compile -C build
 $ meson install -C build
+@end example
+
+For old-time's sake, alternatively you can do:
+
+@example
+$ ./autogen.sh && make
+$ sudo make install
 @end example
 
 @subsection Installation
