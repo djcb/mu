@@ -290,7 +290,6 @@ install_data('NEWS.org', 'IDEAS.org',
 subdir('lib')
 subdir('mu')
 
-
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
 emacs_min_version='26.3'
@@ -319,7 +318,7 @@ config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
 configure_file(output : 'config.h', configuration : config_h_data)
 
 if gmime_dep.version() == '3.2.13'
-  warning('gmime version 3.2.13 detected, which as a decoding bug')
+  warning('gmime version 3.2.13 detected, which has a decoding bug')
   warning('See: https://github.com/jstedfast/gmime/issues/133')
 endif
 
