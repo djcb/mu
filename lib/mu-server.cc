@@ -27,8 +27,6 @@
 #include <string>
 #include <algorithm>
 #include <atomic>
-#include <thread>
-#include <mutex>
 #include <variant>
 #include <functional>
 
@@ -123,7 +121,6 @@ private:
 };
 
 
-
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
 	Private(Store& store, const Server::Options& opts, Output output)
@@ -135,8 +132,6 @@ struct Server::Private {
 
 	~Private() {
 		indexer().stop();
-		if (index_thread_.joinable())
-			index_thread_.join();
 		if (!tmp_dir_.empty())
 			remove_directory(tmp_dir_);
 	}
@@ -215,7 +210,6 @@ private:
 	Server::Output		output_;
 	const CommandHandler	command_handler_;
 	std::atomic<bool>       keep_going_{};
-	std::thread		index_thread_;
 	std::string		tmp_dir_;
 };
 
@@ -281,7 +275,6 @@ msg_sexp_str(const Message& msg, Store::Id docid, const Option<QueryMatch&> qm)
 
 	return sexpstr;
 }
-
 
 CommandHandler::CommandInfoMap
 Server::Private::make_command_map()
@@ -572,7 +565,6 @@ Server::Private::data_handler(const Command& cmd)
 			"invalid request type '{}'", request_type);
 }
 
-
 /*
  * creating a message object just to get a path seems a bit excessive maybe
  * mu_store_get_path could be added if this turns out to be a problem
@@ -647,7 +639,6 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 
 	return n;
 }
-
 
 void
 Server::Private::find_handler(const Command& cmd)
@@ -791,10 +782,9 @@ Server::Private::index_handler(const Command& cmd)
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store().empty();
 
-	// nothing to do
-	if (indexer().is_running()) {
+	if (indexer().is_running()) // already
 		throw Error{Error::Code::Xapian, "indexer is already running"};
-	}
+
 	do_index(conf);
 }
 
@@ -990,7 +980,6 @@ Server::Private::queries_handler(const Command& cmd)
 
 	output_sexp(Sexp(":queries"_sym, std::move(qresults)));
 }
-
 
 void
 Server::Private::quit_handler(const Command& cmd)
