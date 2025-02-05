@@ -72,6 +72,10 @@ struct Message::Private {
 
 	Option<std::string> language; /* body ISO language code */
 
+	// after unload_mime_message, we don't need to re-parse the message.
+	// issue #2802.
+	bool document_filled{};
+
 private:
 	Document::Options doc_opts(Message::Options mopts) {
 		return any_of(opts & Message::Options::SupportNgrams) ?
@@ -675,6 +679,10 @@ doc_add_reply_to(Document& doc, const MimeMessage& mime_msg)
 static void
 fill_document(Message::Private& priv)
 {
+	if (priv.document_filled) {
+		return; // nothing to do.
+	}
+
 	/* hunt & gather info from message tree */
 	Document& doc{priv.doc};
 	MimeMessage& mime_msg{priv.mime_msg.value()};
@@ -691,7 +699,7 @@ fill_document(Message::Private& priv)
 	doc_add_list_post(doc, mime_msg); /* only in sexp */
 	doc_add_reply_to(doc, mime_msg);  /* only in sexp */
 
-	field_for_each([&](auto&& field) {
+	field_for_each([&](const auto& field) {
 		/* insist on explicitly handling each */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -775,6 +783,8 @@ fill_document(Message::Private& priv)
 #pragma GCC diagnostic pop
 
 	});
+
+	priv.document_filled = true;
 }
 
 Option<std::string>
