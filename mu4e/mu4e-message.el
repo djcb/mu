@@ -1,6 +1,6 @@
 ;;; mu4e-message.el --- Working with mu4e-message plists -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -40,7 +40,7 @@
 
 ;;; Message fields
 
-(defsubst mu4e-message-field-raw (msg field)
+(defun mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG.
 
 See \"mu fields\" for the full list of field, in particular the
@@ -78,7 +78,7 @@ Some notes on the format:
       (plist-get msg field)
     (mu4e-error "Message must be non-nil")))
 
-(defsubst mu4e-message-field (msg field)
+(defun mu4e-message-field (msg field)
   "Retrieve FIELD from message plist MSG.
 Like `mu4e-message-field-nil', but will sanitize nil values:
 - all string field except body: nil -> \"\"
@@ -98,11 +98,11 @@ Thus, function will return nil for empty lists, or non-existing body."
      (t
       val)))) ;; otherwise, just return nil
 
-(defsubst mu4e-message-has-field (msg field)
+(defun mu4e-message-has-field (msg field)
   "If MSG has a FIELD return t, nil otherwise."
   (plist-member msg field))
 
-(defsubst mu4e-message-at-point (&optional noerror)
+(defun mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point.
 Either the headers buffer or the view buffer, or nil if there is
 no such message. If optional NOERROR is non-nil, do not raise an
@@ -111,6 +111,11 @@ error when there is no message at point."
        ((eq major-mode 'mu4e-headers-mode) (get-text-property (point) 'msg))
        ((eq major-mode 'mu4e-view-mode) mu4e--view-message))
       (unless noerror (mu4e-warn "No message at point"))))
+
+(defun mu4e-message-p ()
+  "Are we on a message?
+Either in headers or view mode."
+  (mu4e-message-at-point 'no-error))
 
 (defsubst mu4e-message-field-at-point (field)
   "Get the field FIELD from the message at point.
