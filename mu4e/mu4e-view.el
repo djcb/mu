@@ -1,6 +1,6 @@
 ;;; mu4e-view.el --- Mode for viewing e-mail messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -96,8 +96,6 @@ The first letter of NAME is used as a shortcut character."
   "The value of `max-specpdl-size' for displaying messages with Gnus."
   :type 'integer
   :group 'mu4e-view)
-
-
 
 (defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")
@@ -594,6 +592,30 @@ message."
 (defvar gnus-icalendar-additional-identities)
 (defvar-local mu4e--view-rendering nil)
 
+(defun mu4e--fake-original-article-buffer ()
+  "Create a fake original gnus article buffer.
+
+With this, some Gnus commands that require an original message
+buffer can work, e.g. for dealing with mailing-lists. We only
+store the headers, not the body, to save some memory, as we don't
+need the body.
+
+This must be called while in the raw message buffer."
+   (message-narrow-to-headers-or-head)
+   (let ((headers (buffer-string)))
+     (widen)
+     (with-current-buffer
+         (get-buffer-create gnus-original-article-buffer 'no-hooks)
+       (erase-buffer)
+       (insert headers)
+       (current-buffer))))
+
+(defun mu4e--original-article-field (field)
+  "Get FIELD from the original article."
+  (when (bufferp gnus-original-article-buffer)
+    (with-current-buffer gnus-original-article-buffer
+      (gnus-fetch-field field))))
+
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 \"In sync\" here means that moving to the next/previous message
@@ -611,7 +633,7 @@ As a side-effect, a message that is being viewed loses its
   ;; Unfortunately that does create its own issues: namely ensuring
   ;; buffer-local state that *must* survive is correctly copied
   ;; across.
-  (let ((linked-headers-buffer))
+  (let ((linked-headers-buffer) (orig-art-buf))
     (when-let* ((existing-buffer (mu4e-get-view-buffer nil nil)))
       ;; required; this state must carry over from the killed buffer
       ;; to the new one.
@@ -633,34 +655,37 @@ As a side-effect, a message that is being viewed loses its
         (erase-buffer)
         (insert-file-contents-literally
          (mu4e-message-readable-path msg) nil nil nil t)
+        ;; set up an original-article-buffer, gnus wants it.
+        (setq orig-art-buf (mu4e--fake-original-article-buffer))
         ;; some messages have ^M which causes various rendering
         ;; problems later (#2260, #2508), so let's remove those
         (article-remove-cr)
         (setq-local mu4e--view-message msg)
         (ignore-errors
           (mu4e--view-render-buffer msg)))
-      (mu4e-loading-mode 0)))
-  (unless (mu4e--view-detached-p gnus-article-buffer)
-    (with-current-buffer mu4e-linked-headers-buffer
-      ;; We need this here as we want to avoid displaying the buffer until
-      ;; the last possible moment --- after the message is rendered in the
-      ;; view buffer.
-      ;;
-      ;; Otherwise, `mu4e-display-buffer' may adjust the view buffer's
-      ;; window height based on a buffer that has no text in it yet!
-      (setq-local mu4e~headers-view-win
-                  (mu4e-display-buffer gnus-article-buffer nil))
-      (unless (window-live-p mu4e~headers-view-win)
-        (mu4e-error "Cannot get a message view"))
-      (select-window mu4e~headers-view-win)))
-  (with-current-buffer gnus-article-buffer
-    (let ((inhibit-read-only t))
-      (run-hooks 'mu4e-view-rendered-hook))
-    ;; support bookmarks.
-    (setq-local bookmark-make-record-function
-                #'mu4e--make-bookmark-record)
-    ;; only needed on some setups; #2683
-    (goto-char (point-min))))
+      (mu4e-loading-mode 0))
+    (unless (mu4e--view-detached-p gnus-article-buffer)
+      (with-current-buffer mu4e-linked-headers-buffer
+        ;; We need this here as we want to avoid displaying the buffer until
+        ;; the last possible moment --- after the message is rendered in the
+        ;; view buffer.
+        ;;
+        ;; Otherwise, `mu4e-display-buffer' may adjust the view buffer's
+        ;; window height based on a buffer that has no text in it yet!
+        (setq-local mu4e~headers-view-win
+                    (mu4e-display-buffer gnus-article-buffer nil))
+        (unless (window-live-p mu4e~headers-view-win)
+          (mu4e-error "Cannot get a message view"))
+        (select-window mu4e~headers-view-win)))
+    (with-current-buffer gnus-article-buffer
+      (let ((inhibit-read-only t))
+        (run-hooks 'mu4e-view-rendered-hook))
+      ;; support bookmarks.
+      (setq-local bookmark-make-record-function
+                  #'mu4e--make-bookmark-record
+                  gnus-original-article orig-art-buf)
+      ;; only needed on some setups; #2683
+      (goto-char (point-min)))))
 
 (defun mu4e-view-message-text (msg)
   "Return the rendered MSG as a string."
@@ -710,7 +735,7 @@ determine which browser function to use."
 
 (defun mu4e--view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode."
-  (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
+  (setq-local gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
          (max-specpdl-size mu4e-view-max-specpdl-size)
          (mm-decrypt-option 'known)
