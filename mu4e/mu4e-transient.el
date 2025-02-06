@@ -14,6 +14,8 @@
 (require 'mu4e-headers)
 (require 'mu4e-helpers)
 
+(require 'gnus-ml)
+
 (require 'transient)
 
 ;; Helpers.
@@ -121,44 +123,68 @@ toggle-function is created."
     ;;("M" mu4e--suffix-toggle-message-forward-show-mml)
     ]])
 
+(transient-define-prefix mu4e--prefix-mailing-list()
+  "Mu4e documentation menu."
+  [[
+    :description
+    (lambda ()
+      (let* ((msg (mu4e-message-at-point 'no-error))
+             (ml (plist-get msg :list)))
+        (format "Mailing list %s" (or ml ""))))
+    ("s" "subscribe"   gnus-mailing-list-subscribe)
+    ("u" "unsubscribe" gnus-mailing-list-unsubscribe)
+    ("h" "help"        gnus-mailing-list-help)
+    ;;("a" "archive")
+]])
+
 (transient-define-prefix mu4e-transient-menu()
   "Mu4e main menu."
-  [["Basics"
-    ("M" "Main menu"           mu4e)
+  [["Main"
+    ("M" "Main screen"         mu4e)
     ("U" "Update mail"         mu4e-update-mail-and-index)
-    (";" "Switch context"      mu4e-context-switch
-     :inapt-if-nil mu4e-contexts)
-    ("M-q" "Quit mu4e"         mu4e-quit)]
+    (";" "Change context"      mu4e-context-switch
+     :inapt-if-nil mu4e-contexts
+     :description
+     (lambda ()
+       (let ((ctx (mu4e-context-current)))
+         (format "Context %s"
+                 (if ctx (propertize (mu4e-context-name ctx)
+                                     'face 'transient-value) "")))))
+    ("d" "Docs & links"      mu4e--prefix-docs-links)
+    ("D" "Debug/tweaks..."   mu4e--prefix-debug-tweaks)
+    ("M-q" "Quit"             mu4e-quit)]
    ["Search"
     ("b" "Bookmark"            mu4e-search-bookmark)
     ("j" "Maildir"             mu4e-search-maildir)
     ("c" "Choose query"        mu4e-search-query)
     ("s" "Search"              mu4e-search)]
    ["Composition"
-    ("C" "New mail"            mu4e-compose-new)
-    ("o" "Options..."          mu4e--prefix-compose-options)
-    ]
-   ["" ;; composition that requires an existing message
-    :if           (lambda ()
-                    (memq major-mode '(mu4e-headers-mode mu4e-view-mode)))
-    :inapt-if-not (lambda ()
-                    (mu4e-message-at-point 'nowarn))
-    ("R" "Reply"               mu4e-compose-reply)
-    ("W" "Reply-to-all"        mu4e-compose-wide-reply)
-    ("F" "Forward"             mu4e-compose-forward)
+    ("C" "New message"         mu4e-compose-new)
+    ("R" "Reply"               mu4e-compose-reply :if mu4e-message-p)
+    ("W" "Reply-to-all"        mu4e-compose-wide-reply :if mu4e-message-p)
+    ("F" "Forward"             mu4e-compose-forward :if mu4e-message-p)
     ;; only draft messages can be edited
     ("E" "Edit draft"          mu4e-compose-edit
+     :if mu4e-message-p
      :inapt-if-not (lambda ()
                      (member 'draft
                              (mu4e-message-field
                               (mu4e-message-at-point 'nowarn) :flags))))
     ;; you can only supersede your own messages
     ("S" "Supersede"           mu4e-compose-supersede
+     :if mu4e-message-p
      :inapt-if-not mu4e--message-is-yours-p)
-    ("X" "Resend"          mu4e-compose-resend)]
-   ["Misc"
-    ("d" "Docs & links"      mu4e--prefix-docs-links)
-    ("D" "Debug/tweaks..."   mu4e--prefix-debug-tweaks)]])
+    ("X" "Resend"          mu4e-compose-resend :if mu4e-message-p)
+    ("o" "Options..."      mu4e--prefix-compose-options)]
+   ["" ;; composition that requires an existing message
+    :if           (lambda ()
+                    (memq major-mode '(mu4e-headers-mode mu4e-view-mode)))
+    :inapt-if-not (lambda ()
+                    (mu4e-message-at-point 'nowarn))
+    ]
+   ["View"
+    :if (lambda () (eq major-mode 'mu4e-view-mode))
+    ("m" "Mailing list..."  mu4e--prefix-mailing-list)]])
 
 (provide 'mu4e-transient)
 ;;; mu4e-transient.el ends here
