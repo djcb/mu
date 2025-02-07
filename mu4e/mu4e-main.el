@@ -1,6 +1,6 @@
 ;;; mu4e-main.el --- The Main interface for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -42,7 +42,6 @@
 
 (require 'cl-lib)
 
-
 ;; Configuration
 
 (defcustom mu4e-main-hide-personal-addresses nil
@@ -64,7 +63,6 @@ the personal addresses."
   :type 'hook
   :group 'mu4e-main)
 
-
 ;;; Mode
 (define-derived-mode mu4e-org-mode org-mode "mu4e:org"
   "Major mode for mu4e documents.")
@@ -237,7 +235,7 @@ for aligning them."
                   (list #'mu4e-search-maildir #'mu4e-search
                         query))
                  ((eq item-type 'bookmarks)
-                  (list #'mu4e-search-bookmark #'mu4e-search-bookmark
+                 (list #'mu4e-search-bookmark #'mu4e-search-bookmark
                         (mu4e-get-bookmark-query key)))
                  (t
                   (mu4e-error "Invalid item-type %s" item-type)))))
