@@ -670,14 +670,23 @@ Server::Private::find_handler(const Command& cmd)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", batch_size};
 
 	auto qflags{QueryFlags::SkipUnreadable}; // don't show unreadables.
-	if (descending)
+	Sexp resprops;
+	if (descending) {
 		qflags |= QueryFlags::Descending;
-	if (skip_dups)
+		resprops.put_props(":reverse", Sexp::t_sym);
+	}
+	if (skip_dups) {
 		qflags |= QueryFlags::SkipDuplicates;
-	if (include_related)
+		resprops.put_props(":skip-dups", Sexp::t_sym);
+	}
+	if (include_related) {
 		qflags |= QueryFlags::IncludeRelated;
-	if (threads)
+		resprops.put_props(":include-related", Sexp::t_sym);
+	}
+	if (threads) {
 		qflags |= QueryFlags::Threading;
+		resprops.put_props(":threads", Sexp::t_sym);
+	}
 
 	StopWatch sw{mu_format("{} (indexing: {})", __func__,
 			       indexer().is_running() ? "yes" :  "no")};
@@ -696,11 +705,12 @@ Server::Private::find_handler(const Command& cmd)
 	const auto bsize{static_cast<size_t>(batch_size)};
 	const auto foundnum = output_results(*qres, bsize);
 
-	output_sexp(Sexp().put_props(
+	output_sexp(resprops.put_props(
 			    ":found", foundnum,
 			    ":query", q,
 			    ":query-sexp", parse_query(q, false/*!expand*/).to_string(),
-			    ":query-sexp-expanded", parse_query(q, true/*expand*/).to_string()));
+			    ":query-sexp-expanded", parse_query(q, true/*expand*/).to_string(),
+			    ":maxnum", maxnum));
 }
 
 void
