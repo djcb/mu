@@ -67,9 +67,23 @@
     result you expected.
 
   - When you ask for bookmarks or maildirs through ~mu4e-ask-bookmark~ or
-    ~mu4e-ask-maildir~, unread counts are displayed in the (default) completions UI
-    next to the maildir or bookmark. If you don't want to see these counts, set
-    ~mu4e-hide-short-counts~ to non-~nil~.
+    ~mu4e-ask-maildir~, unread counts are displayed in the (default) completions
+    UI next to the maildir or bookmark. If you don't want to see these counts,
+    set ~mu4e-hide-short-counts~ to non-~nil~.
+
+  - A (experimental) "transient" menu has been added for mu4e. You can use
+    it e.g., with something like:
+
+    #+begin_src elisp
+      (require 'mu4e-transient)
+      (global-set-key (kbd "C-c m") #'mu4e-transient-menu)
+    #+end_src
+    This is will change/improve, but is already quite useful.
+
+  - Various Gnus' mailing list commands are now available in the mu4e message
+    view as well, such as ~gnus-mailing-list-subscribe~,
+    ~gnus-mailing-list-unsubscribe~.
+
 
 * 1.12 (released on February 24, 2024)
 

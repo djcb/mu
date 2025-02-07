@@ -1319,6 +1319,7 @@ from @t{gnus-article-mode}.
 * Custom headers: MSGV Custom headers. Your very own headers
 * Actions: MSGV Actions. Defining and using actions
 * Detaching & reattaching: MSGV Detaching and reattaching. Multiple message views.
+* Mailing lists: MSGV Mailing lists. Subscribing and unsubscribing.
 @end menu
 
 @node MSGV Overview
@@ -1638,6 +1639,21 @@ simultaneous messages.
 You can @emph{tear off} the window a message is in and place it in a
 new frame by typing @key{C-x w ^ f}. You can also detach a window and
 put it in its own tab with @key{C-x w ^ t}.
+
+@node MSGV Mailing lists
+@section Mailing lists
+
+In the message view (but not the headers vies), @t{mu4e} supports various
+commands for dealing with mailing-lists, such as subscribing and unsubscribing.
+
+@itemize
+@item @code{gnus-mailing-list-subscribe}: subscribe to mailing-list
+@item @code{gnus-mailing-list-unsubscribe}: unsubscribe from mailing-list
+@item @code{gnus-mailing-list-help}: request help for mailing-list
+@end itemize
+
+These commands depend on the current message to contain the necessary
+information for these commands.
 
 @node Composer
 @chapter Composer
