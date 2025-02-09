@@ -1,14 +1,99 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
+* 1.12 (post 1.12.0 updates)
+
+ The 1.12 series has been stable for a fairly long time, and gained some changes
+ in mean-time. Most of the changes are for big bugs, but some small new features
+ are available as well.
+
+ We decided to put off a new development series (1.13 -> 1.14) until
+ incompatible changes are required; for now working in the 1.12 series seems a
+ good way to get improvements to users more quickly.
+
+ The changes include:
+
+  - many bug fixes
+
+  - many documentation improvements
+
+*** mu
+
+  - you can now search for messages that have a given message-id in their
+    ~References:~ or ~In-Reply-To:~ headers, e.g.
+    #+begin_example
+    mu find ref:0D9218A9-C7F5-4D50-B49C-FCE201114C9B@gmail.com
+    #+end_example
+    You do need to re-index the database for this to work though.
+
+    There's also a new combination-field ~related:~ which combines ~references:~ and
+    ~msgid:~.
+
+  - The ~--format=json~ output for *mu find* now includes "unix-style" timestamps
+    for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~, respectively) which
+    represent the time as a simple number (number of seconds since epoch), which
+    is a bit easier to manipulate than the emacs-style timestamps (same value,
+    but expressed as a list).
+
+  - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
+    database-corruption. In *mu4e* that means you need to _wait_ until indexing is
+    ready before you can continue (*mu4e* will warn you).
+
+    If you see that warning often, perhaps your indexing is too slow; see the
+    section on "Speeding up indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e
+    manual.
+
+    Note: for a while, the single-threadedness was signified by an "-st" suffix
+    in the mu4e version in its main-page; however, since this is optional no
+    longer, the suffix has been removed.
+
+*** mu4e
+
+  - message composition has been completely reworked to avoid a number of
+    problems that users reported. It is now directly uses the Gnus machinery,
+    integrated with mu4e.
+
+  - a new variable ~mu4e-trash-without-flag~, which, when set to non-nil makes
+    trashing _not_ add the the Maildir ~T~ flag. See its docstring for details.
+
+  - new variable ~mu4e-uniquify-save-file-name-function~ to influence the way ~mu4e~
+    creates unique file names when saving. See its docstring for details.
+
+  - new command ~mu4e-view-jump-to-mime-part~ for jumping to MIME-part by its
+    number.
+
+  - new command ~mu4e-analyze-last-query~ which shows information about how the
+    server interpreted the last query; this can be useful if you don't get the
+    result you expected.
+
+  - When you ask for bookmarks or maildirs through ~mu4e-ask-bookmark~ or
+    ~mu4e-ask-maildir~, unread counts are displayed in the (default) completions
+    UI next to the maildir or bookmark. If you don't want to see these counts,
+    set ~mu4e-hide-short-counts~ to non-~nil~.
+
+  - A (experimental) "transient" menu has been added for mu4e. You can use
+    it e.g., with something like:
+
+    #+begin_src elisp
+      (require 'mu4e-transient)
+      (global-set-key (kbd "C-c m") #'mu4e-transient-menu)
+    #+end_src
+    This is will change/improve, but is already quite useful.
+
+  - Various Gnus' mailing list commands are now available in the mu4e message
+    view as well, such as ~gnus-mailing-list-subscribe~,
+    ~gnus-mailing-list-unsubscribe~.
+
+
 * 1.12 (released on February 24, 2024)
 
 ** Some highlights
 
   - Significant speedups in both ~mu~ and ~mu4e~
-  - Reworked message composition, closer to its Gnus origins which adds many of its features
-  - Overhauled the query parser; squashing a number of bugs/limitations, incl. dealing
-    with CJK messages
+  - Reworked message composition, closer to its Gnus origins which adds many of
+    its features
+  - Overhauled the query parser; squashing a number of bugs/limitations, incl.
+    dealing with CJK messages
   - Experimental folding of message threads
   - Better and faster indexing of HTML messages
   - Experimental search by (human) language wit CLD2
@@ -19,7 +104,7 @@
 *** mu
 
     - new command ~mu move~ to move messages across maildirs and/or change their
-      flags. See the manpage for all the details.
+      flags. See the man-page for all the details.
 
     - ~mu~ commands ~extract~ ~verify~ and ~view~ can now read the message from
       standard input; see their man-pages for details
@@ -110,8 +195,8 @@
 
     - The special mailing list handling is gone; ~mu4e-compose-reply~ and
       ~mu4e-compose-wide-reply~ should take care of that. There's also
-      ~message-reply-to-function~ for ultimate control; see [[info:(message)
-      Reply][info (message) Reply]] for details.
+      ~message-reply-to-function~ for ultimate control; see [[info:(message) Reply][info (message) Reply]]
+      for details.
 
     - ~mu4e-compose-in-new-frame~ has been generalized (in a backward-compatible
       way) to ~mu4e-compose-switch~, which lets you decide whether a message

@@ -43,6 +43,7 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 #include <fmt/ostream.h>
+#include <fmt/xchar.h>
 
 namespace Mu {
 
@@ -61,7 +62,7 @@ constexpr const auto SepaChar2 = '\xff';
 /*
  * Debug/error/warning logging
  *
- * The 'noexcept' means that they _wilL_ terminate the program
+ * The 'noexcept' means that they _will_ terminate the program
  * when the formatting fails (ie. a bug)
  */
 

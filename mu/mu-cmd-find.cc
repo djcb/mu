@@ -164,6 +164,10 @@ get_query(const Store& store, const Options& opts)
 static Result<void>
 prepare_links(const Options& opts)
 {
+	// XXX: can this be done as part of the option-parsing?
+	if (opts.find.linksdir.empty())
+		return Err(Error::Code::InvalidArgument, "--linksdir is required");
+
 	/* note, mu_maildir_mkdir simply ignores whatever part of the
 	 * mail dir already exists */
 	if (auto&& res = maildir_mkdir(opts.find.linksdir, 0700, true); !res)
@@ -343,7 +347,7 @@ output_plain(const Option<Message>& msg, const OutputInfo& info,
 
 	output_plain_fields(*msg, opts.find.fields, !opts.nocolor, opts.find.threads);
 
-	if (opts.view.summary_len)
+	if (opts.find.summary_len)
 		print_summary(*msg, opts);
 
 	return Ok();

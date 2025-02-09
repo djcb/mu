@@ -62,7 +62,7 @@ as a Linux distribution. Many have packages available.
 To be able to build ~mu~, ensure you have:
 
 - a C++17 compiler (~gcc~ or ~clang~ are known to work)
-- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for thex
+- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
   versions)
 - basic tools such as ~make~, ~sed~, ~grep~
 - ~meson~

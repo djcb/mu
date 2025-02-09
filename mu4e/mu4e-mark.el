@@ -68,6 +68,18 @@ of message, showing the target makes this quite a bit
 slower (showing the target uses Emacs overlays, which can be slow
 when overused).")
 
+(defvar mu4e-trash-without-flag nil
+  "Non-nil means avoid adding the Maildir T flag when trashing.
+
+When \"trashing\" a message, it is moved to the \"trash\"-folder.
+Furthermore, as per the Maildir-spec, the \"T\" flag is added to
+its filename. This marks it for *manual* removal later.
+
+Some message retrieval and IMAP synchronization tools, however,
+interpret this flag instead as a trigger for *automatic* removal,
+may not be what the user expects. If, so set the flag to non-nil.
+This makes the \"trashing\" merely a move the trash-folder.")
+
 ;;; Insert stuff
 
 (defvar mu4e--mark-map nil
@@ -160,7 +172,8 @@ The current buffer must be either a headers or view buffer."
      :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
      :action (lambda (docid msg target)
                (mu4e--server-move docid
-                                  (mu4e--mark-check-target target) "+T-N")))
+                                  (mu4e--mark-check-target target)
+                                  (if mu4e-trash-without-flag "-N" "+T-N"))))
     (unflag
      :char    ("-" . "➖")
      :prompt "-unflag"
@@ -233,7 +246,7 @@ The following marks are available, and the corresponding props:
    `flag'      n        mark this message for flagging
    `move'      y        move the message to some folder
    `read'      n        mark the message as read
-   `trash'     y        trash the message to some folder
+   `trash'     n        trash the message to some folder
    `unflag'    n        mark this message for unflagging
    `untrash'   n        remove the `trashed' flag from a message
    `unmark'    n        unmark this message
@@ -281,7 +294,8 @@ The following marks are available, and the corresponding props:
                    ;; the docid cookie and then we skip the mu4e--mark-fringe
                    (start (+ (length mu4e--mark-fringe)
                              (mu4e~headers-goto-docid docid t)))
-                   (overlay (make-overlay start (+ start (length targetstr)))))
+                   (overlay (make-overlay start (min (line-end-position)
+                                                     (+ start (length targetstr))))))
               (overlay-put overlay 'display targetstr)
               (overlay-put overlay 'mu4e-mark t)
               (overlay-put overlay 'evaporate t)

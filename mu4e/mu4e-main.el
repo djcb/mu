@@ -1,6 +1,6 @@
 ;;; mu4e-main.el --- The Main interface for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -42,7 +42,6 @@
 
 (require 'cl-lib)
 
-
 ;; Configuration
 
 (defcustom mu4e-main-hide-personal-addresses nil
@@ -64,7 +63,6 @@ the personal addresses."
   :type 'hook
   :group 'mu4e-main)
 
-
 ;;; Mode
 (define-derived-mode mu4e-org-mode org-mode "mu4e:org"
   "Major mode for mu4e documents.")
@@ -89,9 +87,14 @@ the personal addresses."
   (mu4e-info (mu4e-join-paths mu4e-doc-dir "mu4e-about.org")))
 
 (defun mu4e-news ()
-  "Show page with news for the current version of mu4e."
+  "Show news for the current version of mu and mu4e."
   (interactive)
   (mu4e-info (mu4e-join-paths mu4e-doc-dir "NEWS.org")))
+
+(defun mu4e-ideas ()
+  "Show development ideas for mu and mu4e."
+  (interactive)
+  (mu4e-info (mu4e-join-paths mu4e-doc-dir "IDEAS.org")))
 
 (defun mu4e-baseline-time ()
   "Show the baseline time."
@@ -232,7 +235,7 @@ for aligning them."
                   (list #'mu4e-search-maildir #'mu4e-search
                         query))
                  ((eq item-type 'bookmarks)
-                  (list #'mu4e-search-bookmark #'mu4e-search-bookmark
+                 (list #'mu4e-search-bookmark #'mu4e-search-bookmark
                         (mu4e-get-bookmark-query key)))
                  (t
                   (mu4e-error "Invalid item-type %s" item-type)))))
@@ -270,7 +273,7 @@ for aligning them."
    "\n"))
 
 (defun mu4e--main-baseline-time-string ()
-  "Calculate the baseline time string for use in the main-"
+  "Calculate the baseline time string for use in the main-view."
   (let* ((baseline-t mu4e--query-items-baseline-tstamp)
          (updated-t (plist-get mu4e-index-update-status :tstamp))
          (delta-t (and baseline-t updated-t

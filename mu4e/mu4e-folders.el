@@ -1,6 +1,6 @@
-;;; mu4e-folders.el --- Dealing with maildirs & folders -*- lexical-binding: t -*-
+;;; mu4e-folders.el --- Maildirs & folders -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2024 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -28,7 +28,7 @@
 (require 'mu4e-helpers)
 (require 'mu4e-context)
 (require 'mu4e-server)
-
+
 ;;; Customization
 (defgroup mu4e-folders nil
   "Special folders."
@@ -36,12 +36,18 @@
 
 (defcustom mu4e-drafts-folder "/drafts"
   "Folder for draft messages, relative to the root maildir.
-For instance, \"/drafts\". Instead of a string, may also be a
-function that takes a message (a msg plist, see
-`mu4e-message-field'), and returns a folder. Note, the message
-parameter refers to the original message being replied to / being
-forwarded / re-edited and is nil otherwise. `mu4e-drafts-folder'
-is only evaluated once."
+For instance, \"/drafts\".
+
+Instead of a string, may also be a function that takes a
+message (a msg plist, see `mu4e-message-field'), and returns a
+folder. Note, the message parameter refers to the original
+message being replied to / being forwarded / re-edited and is nil
+otherwise. `mu4e-drafts-folder' is only evaluated once.
+
+The form of draft messages is not necessarily compatible with
+other e-mail programs, e.g. when it involves attachments and the
+like.
+"
   :type '(choice
           (string :tag "Folder name")
           (function :tag "Function return folder name"))
@@ -98,8 +104,7 @@ Each of the list elements is a plist with at least:
 
 Optionally, you can add the following:
 `:name' - name of the maildir to be displayed in main-view.
-`:hide'  - if t, the shortcut is hidden from the main-view and
-speedbar.
+`:hide'  - if t, the shortcut is hidden from the main-view.
 `:hide-unread' - do not show the counts of unread/total number
  of matches for the maildir in the main-view, and is implied
 from `:hide'.
@@ -162,7 +167,7 @@ mime-type are nil."
 (defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
 
-
+
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
 Converts from the old format if needed."
@@ -171,6 +176,16 @@ Converts from the old format if needed."
                  `(:maildir  ,(car item) :key ,(cdr item))
                item))
            mu4e-maildir-shortcuts))
+
+(declare-function mu4e-query-items "mu4e-query-items")
+(declare-function mu4e--query-item-display-short-counts "mu4e-query-items")
+
+(defun mu4e--query-item-for-maildir-shortcut (mds)
+  "Find the corresponding query-item for some maildir shortcut MDS.
+This is based on their query. Return nil if not found."
+  (seq-find (lambda (qitem)
+              (equal (plist-get qitem :maildir) (plist-get mds :maildir)))
+            (mu4e-query-items 'maildirs)))
 
 ;; the standard folders can be functions too
 (defun mu4e--get-folder (foldervar msg)
@@ -226,7 +241,7 @@ to create it; otherwise return nil."
   (let ((seems-to-exist (file-directory-p dir)))
     (when (or seems-to-exist
               (yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir)))
-      ;; even when the maildir already seems to exist, call mkdir for a deeper
+      ;; even when the maildir already seems to exist, call mkdir for a deepe
       ;; check. However only get an update when the maildir is totally new.
       (mu4e--server-mkdir dir (not seems-to-exist))
       t)))
@@ -240,14 +255,23 @@ to create it; otherwise return nil."
 
 If the special shortcut \"o\" (for _o_ther) is used, or
 if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
-from all maildirs under `mu4e-maildir'."
+from all maildirs under `mu4e-maildir'.
+
+The names of the maildirs are displayed in the minibuffer,
+suffixed with the short version of the unread counts, as per
+`mu4e--query-item-display-short-counts'."
   (let* ((options
-         (seq-map (lambda (md)
-                    (cons
-                     (format "%c%s" (plist-get md :key)
-                             (or (plist-get md :name)
-                                 (plist-get md :maildir)))
-                     (plist-get md :maildir)))
+         (seq-map
+          (lambda (md)
+            (let* ((qitem (mu4e--query-item-for-maildir-shortcut md))
+                   (unreads (mu4e--query-item-display-short-counts qitem)))
+              (cons
+               (format "%c%s%s"
+                       (plist-get md :key)
+                       (or (plist-get md :name)
+                           (plist-get md :maildir))
+                       unreads)
+               (plist-get md :maildir))))
                   (mu4e-filter-single-key (mu4e-maildir-shortcuts))))
         (response
          (if (not options)
@@ -284,8 +308,8 @@ Offer to create it if it does not exist yet."
 This is based on the variable `mu4e-attachment-dir', which is either:
 - if is a string, used it as-is
 -  a function taking two string parameters, both of which can be nil:
-    (1) a filename or a URL
-    (2) a mime-type (such as \"text/plain\"."
+    (1) FNAME, a filename or a URL
+    (2) MIMETYPE, a mime-type (such as \"text/plain\"."
   (let ((dir
          (cond
           ((stringp mu4e-attachment-dir)

@@ -456,10 +456,12 @@ sub_init(CLI::App& sub, Options& opts)
 			return {};
 	});
 
-	sub.add_option("--maildir,-m", opts.init.maildir, "Top of the maildir")
+	sub.add_option("--maildir,-m", opts.init.maildir, "Root maildir")
 		->type_name("<maildir>")
 		->default_val(default_mdir)
 		->transform(ExpandPath, "expand maildir path");
+	// don't attempt to canonicalize; in bash this breaks together with
+	// expand path.
 	sub.add_option("--my-address", opts.init.my_addresses,
 		       "Personal e-mail address or regexp")
 		->type_name("<address>");
@@ -512,7 +514,6 @@ sub_move(CLI::App& sub, Options& opts)
 	sub.add_option("source", opts.move.src, "Message file to move")
 		->type_name("<message-path>")
 		->transform(ExpandPath, "expand source path")
-		->transform(CanonicalizePath, "canonicalize source path")
 		->required();
 	sub.add_option("destination", opts.move.dest,
 		       "Destination maildir")

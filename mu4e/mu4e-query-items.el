@@ -1,6 +1,6 @@
 ;;; mu4e-query-items.el --- Manage query results -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -56,10 +56,16 @@ anything about the query, it just does text replacement.
 
 A word of caution: the function should be deterministic and
 always return the same result for a given query (at least within
-some \"context\" (see `mu4e-context'). If not, you may get incorrect results
-for the various unread counts."
+some \"context\" (see `mu4e-context'). If not, you may get
+incorrect results for the various unread counts."
   :type 'function
   :group 'mu4e-search)
+
+(defcustom mu4e-hide-short-counts nil
+  "Hide the short count of unread messages.
+As used in `mu4e-ask-bookmark' and `mu4e-ask-folder'."
+  :type 'boolean
+  :group 'mu4e)
 
 (defvar mu4e--query-items-baseline nil
   "Some previous version of the query-items.
@@ -94,11 +100,13 @@ If ITEMS does not yet have a favorite item, pick the first."
 (defvar mu4e--bookmark-items-cached nil "Cached bookmarks query items.")
 (defvar mu4e--maildir-items-cached nil "Cached maildirs query items.")
 
-(declare-function  mu4e-bookmarks "mu4e-bookmarks")
-(declare-function  mu4e-maildir-shortcuts "mu4e-folders")
+(declare-function mu4e-bookmarks "mu4e-bookmarks")
+(declare-function mu4e-maildir-shortcuts "mu4e-folders")
 
 (defun mu4e--query-item-display-counts (item)
-  "Get the count display string for some query-data ITEM."
+  "Get the count display string for some query-data ITEM.
+If the items has its `:hide-unread' at a non-nil value, return
+an empty string."
   ;; purely for display, but we need it in the main menu, modeline
   ;; so let's keep it consistent.
   (cl-destructuring-bind (&key unread hide-unread delta-unread count
@@ -115,6 +123,25 @@ If ITEMS does not yet have a favorite item, pick the first."
        "/"
        (propertize (number-to-string count)
                    'help-echo "Total number")))))
+
+(defun mu4e--query-item-display-short-counts (item)
+  "Get the short count display string for some query-data ITEM.
+This gets the delta if it is greater than zero. Otherwise, the
+total unread count if is greater than zero. Otherwise, an empty
+string.
+
+If the items has its `:hide-unread' at a non-nil value, or if
+`mu4e-hide-short-counts' is non-nil, returns an empty string."
+  (cl-destructuring-bind (&key unread hide-unread delta-unread
+                               &allow-other-keys) item
+    (if (or hide-unread mu4e-hide-short-counts)
+        ""
+      (concat
+       (if (> (or delta-unread 0) 0)
+           (concat "(" (propertize (format "+%d" delta-unread) 'face 'mu4e-unread-face) ")")
+         (if (> (or unread 0) 0)
+             (concat "(" (propertize (format "%d" unread) 'face 'mu4e-header-key-face) ")")
+           ""))))))
 
 (defun mu4e--query-items-refresh (&optional reset-baseline)
   "Get the latest query data from the mu4e server.
@@ -210,7 +237,8 @@ bookmark or maildir."
        ;; useful for debugging.
        (unless (string= query effective-query)
          (plist-put value :effective-query effective-query))
-
+       ;;for matching maildir shortcuts
+       (when maildir (plist-put value :maildir maildir))
        ;; nil props bring me discomfort
        (when (plist-get item :favorite)
          (plist-put value :favorite t))
@@ -222,18 +250,32 @@ bookmark or maildir."
    data))
 
 (defun mu4e-query-items (&optional type)
-  "Grab query items of TYPE.
+  "Grab cached information about query items of some TYPE.
 
-TYPE is symbol; either bookmarks or maildirs, or nil for both.
+TYPE is a symbol; either `bookmarks' or `maildirs', or nil for
+both, and returns a list of plists. The information is based on
+the last (cached) information known by mu4e.
 
 This combines:
-     - the latest queries data (i.e., `(mu4e-server-query-items)')
-     - baseline queries data (i.e. `mu4e-baseline')
-   with the combined queries for `(mu4e-bookmarks)' and
-    `(mu4e-maildir-shortcuts)' in bookmarks-compatible plists.
+- the latest queries data (i.e., `(mu4e-server-query-items)')
+- baseline queries data (i.e. `mu4e-baseline') with the combined
+  queries for `mu4e-bookmarks' and `mu4e-maildir-shortcuts' in
+  bookmarks-compatible plists.
 
-This packages the aggregated information in a format that is convenient
-for use in various places."
+Currently, the plist contains the following fields:
+- `:name'         - the name of the bookmark or query
+- `:query'        - the associated (unprocessed) query
+- `:count'        - number of matches for the query
+- `:unread'       - number of unread messages for the query
+- `:delta-count'  - change in count since baseline
+- `:delta-unread' - change in unread count since baseline
+- `:favorite'     - non-nil if this is the favorite query
+
+There are some other fields for internal mu4e use, better not use
+those externally.
+
+For the various nuances with the unread count and baseline,
+please refer to info node `(mu4e) Bookmarks and Maildirs'."
   (cond
    ((equal type 'bookmarks)
     (or mu4e--bookmark-items-cached

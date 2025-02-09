@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Db_sanitize=address' \
 			    '-Dreadline=enabled'   \
+			    '-Dcpp_debugstl=enabled' \
 			    '-Dcpp_std=c++23'
 endif
 

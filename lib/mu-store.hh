@@ -31,7 +31,6 @@
 #include "mu-config.hh"
 #include "mu-indexer.hh"
 #include "mu-query-results.hh"
-#include "mu-store-worker.hh"
 
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils.hh>
@@ -147,13 +146,6 @@ public:
 	 * @return the indexer.
 	 */
 	Indexer& indexer();
-
-	/**
-	 * Get the store-worker instance
-	 *
-	 * @return the store-worker
-	 */
-	StoreWorker& store_worker();
 
 	/**
 	 * Run a query; see the `mu-query` man page for the syntax.

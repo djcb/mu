@@ -1,6 +1,6 @@
 ;;; mu4e-message.el --- Working with mu4e-message plists -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -40,7 +40,7 @@
 
 ;;; Message fields
 
-(defsubst mu4e-message-field-raw (msg field)
+(defun mu4e-message-field-raw (msg field)
   "Retrieve FIELD from message plist MSG.
 
 See \"mu fields\" for the full list of field, in particular the
@@ -71,39 +71,38 @@ Some notes on the format:
   the MIME-part), :name (the file name, if any), :mime-type (the
   MIME-type, if any) and :size (the size in bytes, if any).
 - Messages in the Headers view come from the database and do not have
-  :attachments, :body-txt or :body-html fields. Message in the
-  Message view use the actual message file, and do include these fields."
+  :attachments or :body fields. Message in the Message view use the
+  actual message file, and do include these fields."
   ;; after all this documentation, the spectacular implementation
   (if msg
       (plist-get msg field)
     (mu4e-error "Message must be non-nil")))
 
-(defsubst mu4e-message-field (msg field)
+(defun mu4e-message-field (msg field)
   "Retrieve FIELD from message plist MSG.
 Like `mu4e-message-field-nil', but will sanitize nil values:
-- all string field except body-txt/body-html: nil -> \"\"
-- numeric fields + dates                    : nil -> 0
-- all others                                : return the value
-Thus, function will return nil for empty lists, non-existing body-txt
-or body-html."
+- all string field except body: nil -> \"\"
+- numeric fields + dates      : nil -> 0
+- all others                  : return the value
+Thus, function will return nil for empty lists, or non-existing body."
   (let ((val (mu4e-message-field-raw msg field)))
     (cond
      (val
       val)   ;; non-nil -> just return it
      ((member field '(:subject :message-id :path :maildir :in-reply-to))
-      "")    ;; string fields except body-txt, body-html: nil -> ""
-     ((member field '(:body-html :body-txt))
+      "")    ;; string fields except body: nil -> ""
+     ((member field '(:body))
       val)
      ((member field '(:docid :size))
       0)     ;; numeric type: nil -> 0
      (t
       val)))) ;; otherwise, just return nil
 
-(defsubst mu4e-message-has-field (msg field)
+(defun mu4e-message-has-field (msg field)
   "If MSG has a FIELD return t, nil otherwise."
   (plist-member msg field))
 
-(defsubst mu4e-message-at-point (&optional noerror)
+(defun mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point.
 Either the headers buffer or the view buffer, or nil if there is
 no such message. If optional NOERROR is non-nil, do not raise an
@@ -112,6 +111,11 @@ error when there is no message at point."
        ((eq major-mode 'mu4e-headers-mode) (get-text-property (point) 'msg))
        ((eq major-mode 'mu4e-view-mode) mu4e--view-message))
       (unless noerror (mu4e-warn "No message at point"))))
+
+(defun mu4e-message-p ()
+  "Are we on a message?
+Either in headers or view mode."
+  (mu4e-message-at-point 'no-error))
 
 (defsubst mu4e-message-field-at-point (field)
   "Get the field FIELD from the message at point.
@@ -238,9 +242,9 @@ Returns the full path."
 (defun mu4e-sexp-at-point ()
   "Show or hide the s-expression for the message-at-point, if any."
   (interactive)
-  (if-let ((win (get-buffer-window mu4e--sexp-buffer-name)))
+  (if-let* ((win (get-buffer-window mu4e--sexp-buffer-name)))
       (delete-window win)
-    (when-let ((msg (mu4e-message-at-point 'noerror)))
+    (when-let* ((msg (mu4e-message-at-point 'noerror)))
       (when (buffer-live-p mu4e--sexp-buffer-name)
         (kill-buffer mu4e--sexp-buffer-name))
       (with-current-buffer-window

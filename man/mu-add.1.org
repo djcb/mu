@@ -1,5 +1,6 @@
 #+TITLE: MU ADD
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -7,11 +8,11 @@ mu-add - add one or more messages to the database
 
 * SYNOPSIS
 
-*mu [common-options] add [options] <file> [<files>]*
+*mu* [​_COMMON-OPTIONS_​] *add* [​_OPTIONS_​] _FILE_...
 
 * DESCRIPTION
 
-~mu add~ is the command to add specific message files to the database. Each file
+*mu add* is the command to add specific message files to the database. Each file
 must be specified with an absolute path.
 
 * ADD OPTIONS
@@ -26,4 +27,6 @@ must be specified with an absolute path.
 
 * SEE ALSO
 
-*mu(1)*, *mu-index(1)*, *mu-remove(1)*
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-remove,1)}}}

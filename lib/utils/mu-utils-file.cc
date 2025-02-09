@@ -351,7 +351,6 @@ Mu::play (const std::string& path)
 }
 /* LCOV_EXCL_STOP*/
 
-
 Result<std::string>
 expand_path_real(const std::string& str)
 {
@@ -366,7 +365,8 @@ expand_path_real(const std::string& str)
 		return Err(Error::Code::File, "cannot expand {}; err={}", str, res);
 	else if (auto&n = result.we_wordc; n != 1) {
 		wordfree(&result);
-		return Err(Error::Code::File, "expected 1 expansions, but got {} for {}", n, str);
+		return Err(Error::Code::File,
+			   "expected 1 expansion, but got {} for '{}'", n, str);
 	}
 
 	std::string expanded{result.we_wordv[0]};
@@ -488,8 +488,17 @@ test_runtime_paths()
 	assert_equal(runtime_path(RuntimePath::Bookmarks, tdir.path()),
 		     join_paths(tdir.path(), "bookmarks"));
 	assert_equal(runtime_path(RuntimePath::Config, tdir.path()), tdir.path());
-	assert_equal(runtime_path(RuntimePath::Scripts, tdir.path()),
-		     join_paths(tdir.path(), "scripts"));
+	assert_equal(runtime_path(RuntimePath::Scripts, tdir.path()),join_paths(tdir.path(), "scripts"));
+}
+
+
+static void
+test_expand_path()
+{
+	g_assert_true(!!g_get_home_dir());
+	const std::string homedir{g_get_home_dir()};
+
+	assert_equal(join_paths(homedir, "boo"), expand_path("~/boo").value());
 }
 
 int
@@ -498,22 +507,16 @@ main(int argc, char* argv[])
 	mu_test_init(&argc, &argv);
 
 	/* check_dir */
-	g_test_add_func("/utils/check-dir-01",
-			test_check_dir_01);
-	g_test_add_func("/utils/check-dir-02",
-			test_check_dir_02);
-	g_test_add_func("/utils/check-dir-03",
-			test_check_dir_03);
-	g_test_add_func("/utils/check-dir-04",
-			test_check_dir_04);
-	g_test_add_func("/utils/determine-dtype-with-lstat",
+	g_test_add_func("/utils/file/check-dir-01", test_check_dir_01);
+	g_test_add_func("/utils/file/check-dir-02", test_check_dir_02);
+	g_test_add_func("/utils/file/check-dir-03", test_check_dir_03);
+	g_test_add_func("/utils/file/check-dir-04", test_check_dir_04);
+	g_test_add_func("/utils/file/determine-dtype-with-lstat",
 			test_determine_dtype_with_lstat);
-	g_test_add_func("/utils/program-in-path",
-			test_program_in_path);
-	g_test_add_func("/utils/join-paths",
-			test_join_paths);
-	g_test_add_func("/utils/runtime-paths",
-			test_runtime_paths);
+	g_test_add_func("/utils/file/program-in-path", test_program_in_path);
+	g_test_add_func("/utils/file/join-paths", test_join_paths);
+	g_test_add_func("/utils/file/runtime-paths", test_runtime_paths);
+	g_test_add_func("/utils/file/expand-path", test_expand_path);
 
 	return g_test_run();
 }

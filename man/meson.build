@@ -26,6 +26,7 @@ incs=[
   'common-options.inc',
   'copyright.inc.in',
   'exit-code.inc',
+  'macros.inc',
   'muhome.inc',
   'prefooter.inc',
 ]
@@ -79,10 +80,17 @@ foreach src : man_orgs
   configure_file(input: src, output:'@BASENAME@.org',
                  configuration: conf_data)
 
+  # (replace-regexp-in-string) removes zero-width spaces — added for
+  # text formatting purposes by the man-link macro — from the
+  # resulting man page.
   expr_tmpl = ''.join([
     '(progn',
     '  (require \'ox-man)',
     '  (setq org-export-with-sub-superscripts \'{})',
+    '  (add-to-list \'org-export-filter-plain-text-functions',
+    '    (lambda (text _backend _info)',
+    '      (let ((zwsp (format "%c" (char-from-name "ZERO WIDTH SPACE"))))',
+    '        (replace-regexp-in-string zwsp "" text))))',
     '  (org-export-to-file \'man "@0@"))'])
   expr = expr_tmpl.format(org.substring(0,-4))
   sectiondir = join_paths(mandir, 'man' + section)

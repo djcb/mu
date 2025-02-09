@@ -1,5 +1,6 @@
 #+TITLE: MU CFIND
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
 
 * NAME
 
@@ -8,7 +9,7 @@ for use in other programs.
 
 * SYNOPSIS
 
-*mu [common-options] cfind [options] [<pattern>]*
+*mu* [​_COMMON-OPTIONS_​] *cfind* [​_OPTIONS_​] [​_PATTERN_​]
 
 * DESCRIPTION
 
@@ -42,12 +43,12 @@ If you do not specify a search expression, *mu cfind* returns the full list of
 contacts. Note, *mu cfind* uses a cache with the e-mail information, which is
 populated during the indexing process.
 
-The regular expressions are basic case-insensitive PCRE, see *pcre(3)*.
+The regular expressions are basic case-insensitive PCRE, see {{{man-link(pcre,3)}}}.
 
 * CFIND OPTIONS
 
-** --format=plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv
-sets the output format to the given value. The following are available:
+** --format plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv
+Sets the output format to the given value. The following are available:
 
 #+ATTR_MAN: :disable-caption t
 | --format=   | description                       |
@@ -67,13 +68,14 @@ any double-quote is replaced by a double-double quote (thus, "hello" become
 ""hello"", and fields with commas are put in double-quotes. Normally, this
 should only apply to name fields.
 
-** --personal,-p only show addresses seen in messages where one of `my' e-mail
+** -p, --personal
+Only show addresses seen in messages where one of `my' e-mail
 addresses was seen in one of the address fields; this is to exclude addresses
-only seen in mailing-list messages. See the ~--my-address~ parameter to *mu init*.
+only seen in mailing-list messages. See the *--my-address* parameter to *mu init*.
 
-** --after=<timestamp> only show addresses last seen after
-=<timestamp>=. =<timestamp>= is a UNIX *time_t* value, the number of
-seconds since 1970-01-01 (in UTC).
+** --after _timestamp_
+Only show addresses last seen after _timestamp_. _timestamp_ is a UNIX
+*time_t* value, the number of seconds since 1970-01-01 (in UTC).
 
 From the command line, you can use the *date* command to get this value. For
 example, only consider addresses last seen after 2020-06-01, you could specify
@@ -87,7 +89,7 @@ example, only consider addresses last seen after 2020-06-01, you could specify
 
 * JSON FORMAT
 
-With ~--format=json~, the matching contacts come out as a JSON array, e.g.,
+With *--format=json*, the matching contacts come out as a JSON array, e.g.,
 #+begin_example
 [
   {
@@ -124,7 +126,7 @@ Each contact has the following fields:
 | ~personal~      | whether the email was seen in a message together with a personal address |
 | ~frequency~     | approximation of the number of times this contact was seen in messages   |
 
-The JSON format is useful for further processing, e.g. using the *jq(1)* tool:
+The JSON format is useful for further processing, e.g. using the {{{man-link(jq,1)}}} tool:
 
 List display names, sorted by their last-seen date:
 #+begin_example
@@ -134,7 +136,7 @@ $ mu cfind --format=json --personal | jq -r '.[] | ."last-seen-iso" + " " + .dis
 * INTEGRATION WITH MUTT
 
 You can use *mu cfind* as an external address book server for *mutt*.
-For this to work, add the following to your =muttrc=:
+For this to work, add the following to your _muttrc_:
 
 #+begin_example
 set query_command = "mu cfind --format=mutt-ab '%s'"
@@ -146,7 +148,7 @@ which is (by default) accessible by pressing *Q*.
 * ENCODING
 
 *mu cfind* output is encoded according to the current locale except for
-=--format=bbdb=. This is hard-coded to UTF-8, and as such specified in the
+*--format=bbdb*. This is hard-coded to UTF-8, and as such specified in the
 output-file, so emacs/bbdb can handle things correctly, without guessing.
 
 #+include: "exit-code.inc" :minlevel 1
@@ -158,4 +160,9 @@ output-file, so emacs/bbdb can handle things correctly, without guessing.
 #+include: "copyright.inc" :minlevel 1
 
 * SEE ALSO
-*mu(1)*, *mu-index(1)*, *mu-find(1)*, *pcre(3)*, *jq(1)*
+
+{{{man-link(mu,1)}}},
+{{{man-link(mu-index,1)}}},
+{{{man-link(mu-find,1)}}},
+{{{man-link(pcre,3)}}},
+{{{man-link(jq,1)}}}

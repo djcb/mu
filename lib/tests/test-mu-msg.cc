@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -58,7 +58,7 @@ assert_contacts_equal(const Contacts& contacts,
 
 
 static void
-test_mu_msg_01(void)
+test_mu_msg_01()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1220863042.12663_1.mindcrime!2,S")
 		.value()};
@@ -84,7 +84,7 @@ test_mu_msg_01(void)
 }
 
 static void
-test_mu_msg_02(void)
+test_mu_msg_02()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1220863087.12663_19.mindcrime!2,S")
 		.value()};
@@ -110,7 +110,7 @@ test_mu_msg_02(void)
 }
 
 static void
-test_mu_msg_03(void)
+test_mu_msg_03()
 {
 	//const GSList* params;
 
@@ -135,7 +135,7 @@ test_mu_msg_03(void)
 }
 
 static void
-test_mu_msg_04(void)
+test_mu_msg_04()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/mail5").value()};
 
@@ -152,7 +152,7 @@ test_mu_msg_04(void)
 }
 
 static void
-test_mu_msg_multimime(void)
+test_mu_msg_multimime()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/multimime!2,FS").value()};
 
@@ -163,7 +163,7 @@ test_mu_msg_multimime(void)
 }
 
 static void
-test_mu_msg_flags(void)
+test_mu_msg_flags()
 {
 	std::array<std::pair<std::string, Flags>, 2> tests= {{
 			{MU_TESTMAILDIR4 "/multimime!2,FS",
@@ -181,7 +181,7 @@ test_mu_msg_flags(void)
 }
 
 static void
-test_mu_msg_umlaut(void)
+test_mu_msg_umlaut()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
 		.value()};
@@ -196,7 +196,7 @@ test_mu_msg_umlaut(void)
 }
 
 static void
-test_mu_msg_references(void)
+test_mu_msg_references()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
 		.value()};
@@ -213,7 +213,7 @@ test_mu_msg_references(void)
 }
 
 static void
-test_mu_msg_references_dups(void)
+test_mu_msg_references_dups()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1252168370_3.14675.cthulhu!2,S")
 		.value()};
@@ -232,7 +232,7 @@ test_mu_msg_references_dups(void)
 }
 
 static void
-test_mu_msg_references_many(void)
+test_mu_msg_references_many()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR2 "/bar/cur/181736.eml")
 		.value()};
@@ -256,7 +256,7 @@ test_mu_msg_references_many(void)
 }
 
 static void
-test_mu_msg_tags(void)
+test_mu_msg_tags()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/mail1").value()};
 
@@ -278,7 +278,7 @@ test_mu_msg_tags(void)
 }
 
 static void
-test_mu_msg_comp_unix_programmer(void)
+test_mu_msg_comp_unix_programmer()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/181736.eml").value()};
 
@@ -309,12 +309,52 @@ test_mu_msg_comp_unix_programmer(void)
 }
 
 static void
-test_mu_str_prio_01(void)
+test_mu_str_prio_01()
 {
 	g_assert_true(priority_name(Priority::Low) == "low");
 	g_assert_true(priority_name(Priority::Normal) == "normal");
 	g_assert_true(priority_name(Priority::High) == "high");
 }
+
+
+static void
+test_mu_smime()
+{
+	const auto txt =
+R"(Return-Path: me@privacy.net
+From: Me <me@privacy.net>
+To: Me <me@privacy.net>
+Subject: smime
+Date: Mon, 19 Aug 2024 09:46:10 -0500
+Message-ID: <m2a5h8r2od.fsf@mitre.org>
+Content-Type: application/pkcs7-mime;
+ smime-type=enveloped-data;
+ name=smime.p7m
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7m
+MIME-Version: 1.0
+X-TUID: 9ipTl5lnIK+/
+
+MIAGCSqGSIb3DQEHA6CAMIACAQAxggGVMIIBkQIBADB5MHExCzAJBgNVBAYTAlVTMRAwDgYDVQQK
+EwdFbnRydXN0MSIwIAYDVQQLExlDZXJ0aWZpY2F0aW9uIEF1dGhvcml0aWVzMSwwKgYDVQQLEyNF
+bnRydXN0IE5GSSBNZWRpdW0gQXNzdXJhbmNlIFNTUCBDQQIEYdtv3DANBgkqhkiG9w0BAQEFAASC
+AQB8f86oe55rCRqzwbixv4QxWQdNsP8luhGVpDv7ojDd5qMhV30MDtM64gxqagPk44ZfaAA2NutT
+vPiWOxUp8FZYN4aNAQy18KMB5G+w2xFdbXrWMNvwXdoLOcMkxD2LF7jJyIT2hUQfBWffGXvlxiSE
+8HsAQKggmchkVJgNSMvIenXzFGhDXg9OVkRvxV/3zfbmF/0jF3e5DbjvW3Qyclidpg/H1zM2iuYE
+BMPdStvWRAkQL8sxOF0XVYjaCd0Y+crK7FwHS923vTNFxIyEaWdKD7HmuLTxVxaGAZpuRPwI/Vbj
+t0k68twxZ4sCUISxAkuvPYVntEwNjqxtOs6zdzq/MIAGCSqGSIb3DQEHATAdBglghkgBZQMEASoE
+EH4y0ZsEAM4pNRvjMhRTnIiggAQgnUUkL7jAwlLwDAsbqCdBTnqz2moSkhE9F/1Qqy/jXYwEEFYW
+k+ZGGoQ0v8b7RwmyskMAAAAAAAAAAAAA
+)";
+	const auto msg{Message::make_from_text(txt, "boo/cur/msg2:2,S")};
+	assert_valid_result(msg);
+
+	assert_equal(msg->subject(), "smime");
+
+	assert_equal("Sxa", to_string(msg->flags()));
+	g_assert_true(msg->flags() == (Flags::Seen|Flags::Encrypted|Flags::HasAttachment));
+}
+
 
 G_GNUC_UNUSED static gboolean
 ignore_error(const char* log_domain, GLogLevelFlags log_level, const gchar* msg, gpointer user_data)
@@ -331,23 +371,25 @@ main(int argc, char* argv[])
 	g_test_init(&argc, &argv, NULL);
 
 	/* mu_msg_str_date */
-	g_test_add_func("/mu-msg/mu-msg-01", test_mu_msg_01);
-	g_test_add_func("/mu-msg/mu-msg-02", test_mu_msg_02);
-	g_test_add_func("/mu-msg/mu-msg-03", test_mu_msg_03);
-	g_test_add_func("/mu-msg/mu-msg-04", test_mu_msg_04);
-	g_test_add_func("/mu-msg/mu-msg-multimime", test_mu_msg_multimime);
+	g_test_add_func("/msg/mu-msg-01", test_mu_msg_01);
+	g_test_add_func("/msg/mu-msg-02", test_mu_msg_02);
+	g_test_add_func("/msg/mu-msg-03", test_mu_msg_03);
+	g_test_add_func("/msg/mu-msg-04", test_mu_msg_04);
+	g_test_add_func("/msg/mu-msg-multimime", test_mu_msg_multimime);
 
-	g_test_add_func("/mu-msg/mu-msg-flags", test_mu_msg_flags);
+	g_test_add_func("/msg/mu-msg-flags", test_mu_msg_flags);
 
-	g_test_add_func("/mu-msg/mu-msg-tags", test_mu_msg_tags);
-	g_test_add_func("/mu-msg/mu-msg-references", test_mu_msg_references);
-	g_test_add_func("/mu-msg/mu-msg-references_dups", test_mu_msg_references_dups);
-	g_test_add_func("/mu-msg/mu-msg-references_many", test_mu_msg_references_many);
+	g_test_add_func("/msg/mu-msg-tags", test_mu_msg_tags);
+	g_test_add_func("/msg/mu-msg-references", test_mu_msg_references);
+	g_test_add_func("/msg/mu-msg-references_dups", test_mu_msg_references_dups);
+	g_test_add_func("/msg/mu-msg-references_many", test_mu_msg_references_many);
 
-	g_test_add_func("/mu-msg/mu-msg-umlaut", test_mu_msg_umlaut);
-	g_test_add_func("/mu-msg/mu-msg-comp-unix-programmer", test_mu_msg_comp_unix_programmer);
+	g_test_add_func("/msg/mu-msg-umlaut", test_mu_msg_umlaut);
+	g_test_add_func("/msg/mu-msg-comp-unix-programmer", test_mu_msg_comp_unix_programmer);
 
-	g_test_add_func("/mu-str/mu-str-prio-01", test_mu_str_prio_01);
+	g_test_add_func("/msg/mu-smime", test_mu_smime);
+
+	g_test_add_func("/str/mu-str-prio-01", test_mu_str_prio_01);
 
 	rv = g_test_run();
 

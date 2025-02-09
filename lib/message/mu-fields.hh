@@ -397,11 +397,12 @@ static constexpr std::array<Field, Field::id_size()>
 	    {
 		Field::Id::References,
 		Field::Type::StringList,
-		"references", {},
+		"references", "ref",
 		"References to related messages",
-		{},
+		"ref:E1rQJDx123@example.com",
 		'r',
 		Field::Flag::Value |
+		Field::Flag::BooleanTerm |
 		Field::Flag::IncludeInSexp
 	    },
 	    {
@@ -443,7 +444,7 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Type::String,
 		"thread", {},
 		"Thread a message belongs to",
-		{},
+		"thread:abcde789@example.com",
 		'w',
 		Field::Flag::BooleanTerm |
 		Field::Flag::Value
@@ -533,6 +534,25 @@ Option<Field> field_from_name(const std::string& name) {
 	}
 }
 
+using FieldsVec = std::vector<Field>; /**< Vec of fields */
+
+/**
+ * Describe a combination-field, i.e., a pseudo-field that
+ * expands to some real fields, as a query shortcut.
+ */
+struct CombiField {
+	std::string_view name;	/**< name of the combi-field */
+	FieldsVec fields;	/**< fields this resolves to */
+};
+using CombiFields = std::vector<CombiField>; /**< vec of combi-fields */
+
+/**
+ * Get information about the combination fields
+ *
+ * @return vector with information.
+ */
+const CombiFields&  combi_fields();
+
 /**
  * Return combination-fields such
  * as "contact", "recip" and "" (empty)
@@ -541,48 +561,16 @@ Option<Field> field_from_name(const std::string& name) {
  *
  * @return list of matching fields
  */
-using FieldsVec = std::vector<Field>;
-static inline
-const FieldsVec& fields_from_name(const std::string& name) {
+const FieldsVec& fields_from_name(const std::string& name);
 
-	static const FieldsVec none{};
-	static const FieldsVec recip_fields ={
-		field_from_id(Field::Id::To),
-		field_from_id(Field::Id::Cc),
-		field_from_id(Field::Id::Bcc)};
-
-	static const FieldsVec contact_fields = {
-		field_from_id(Field::Id::To),
-		field_from_id(Field::Id::Cc),
-		field_from_id(Field::Id::Bcc),
-		field_from_id(Field::Id::From),
-	};
-	static const FieldsVec empty_fields= {
-		field_from_id(Field::Id::To),
-		field_from_id(Field::Id::Cc),
-		field_from_id(Field::Id::Bcc),
-		field_from_id(Field::Id::From),
-		field_from_id(Field::Id::Subject),
-		field_from_id(Field::Id::BodyText),
-		field_from_id(Field::Id::EmbeddedText),
-	};
-
-	if (name == "recip")
-		return recip_fields;
-	else if (name == "contact")
-		return contact_fields;
-	else if (name.empty())
-		return empty_fields;
-	else
-		return none;
-}
-
-static inline bool
-field_is_combi (const std::string& name)
-{
-	return name == "recip" || name == "contact";
-}
-
+/**
+ * Is the field a combination field?
+ *
+ * @param name name of the field
+ *
+ * @return true or false
+ */
+bool field_is_combi (const std::string& name);
 
 /**
  * Get the Field::Id for some number, or nullopt if it does not match

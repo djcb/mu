@@ -8,7 +8,12 @@ assignees: ''
 ---
 
 **Describe the item**
-A clear and concise description of what you expected or wished to happen and what actually happened while using mu-guile.
+
+A clear and concise description of what you expected or wished to happen and
+what actually happened while using `mu-guile`.
+
+Note: `mu-guile` has been deprecated for quite some time, and will be removed in
+the future.
 
 **To Reproduce**
 Steps to reproduce the behavior.
@@ -17,4 +22,4 @@ Steps to reproduce the behavior.
 Please describe the versions of OS, Emacs, mu/mu4e etc. you are using.
 
 **Checklist**
-- [ ] you are running either the latest 1.4.x release, or a 1.5.11+ development release (otherwise, please upgrade).
+- [ ] you are running either the latest 1.12.x release, or `master`

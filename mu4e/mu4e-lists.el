@@ -1,6 +1,6 @@
-;;; mu4e-lists.el --- Get names for mailing lists -*- lexical-binding: t -*-
+;;; mu4e-lists.el --- Dealing with mailing lists -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -28,9 +28,8 @@
 ;;; Code:
 (require 'mu4e-message)
 (require 'mu4e-helpers)
-
 
- ;;; Helpers
+;;; Helpers
 (defmacro mu4e-message-id-url(base-url)
   "Construct lambda to get an archive URL for message.
 This is based on some BASE-URL to which the message-id is concatenated;
@@ -38,11 +37,11 @@ e.g. public-inbox-based archives."
   `(lambda (msg) (concat ,base-url "/" (plist-get msg :message-id))))
 
 (defmacro mu4e-x-seq-url (base-url)
-  "Construct x-seq archive URL for MSG or nil if not found."
+  "Construct x-seq archive URL for MSG or nil if not found.
+Use BASE-URL as the prefix."
   `(lambda (msg)
-     (when-let ((xseq (mu4e-fetch-field msg "X-Seq")))
+     (when-let* ((xseq (mu4e-fetch-field msg "X-Seq")))
        (concat ,base-url "/" xseq))))
-
 ;;; Configuration
 (defvar mu4e-mailing-lists
   `( (:list-id "bbdb-info.lists.sourceforge.net"         :name "BBDB")
@@ -141,10 +140,9 @@ Based on the current value of `mu4e-mailing-lists' and
 Return nil if not found."
   (unless mu4e--lists-hash (mu4e-mailing-list-info-refresh))
   (gethash list-id mu4e--lists-hash))
-
 
 (defun mu4e-get-mailing-list-shortname (list-id)
-  "Get the shortname for a mailing-list with list-id LIST-ID.
+  "Get the short-name for a mailing-list with list-id LIST-ID.
 Either we know about this mailing list, or otherwise
 we guess one."
   (or  ;; 1. perhaps we have it in one of our lists?

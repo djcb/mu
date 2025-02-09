@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.12.5',
+        version: '1.12.8',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -26,9 +26,9 @@ project('mu', ['c', 'cpp'],
           'c_std=c11',
           'cpp_std=c++17'])
 
-# hard-code the date here (for reproduciblity); we derive the dates used in e.g.
+# hard-code the date here (for reproducibility); we derive the dates used in e.g.
 # documentation from this.
-mu_date='2024-04-15'
+mu_date='2024-12-17'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -132,7 +132,6 @@ add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
 add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
-
 
 #
 # d_type, d_ino are not available universally, so let's check
@@ -283,19 +282,20 @@ configure_file(input: join_paths(build_aux, 'version.texi.in'),
 
 ################################################################################
 # install some data files
-install_data('NEWS.org', install_dir : join_paths(datadir,'doc', 'mu'))
+install_data('NEWS.org', 'IDEAS.org',
+             install_dir : join_paths(datadir, 'doc', 'mu'))
 
 ################################################################################
 # subdirs
 subdir('lib')
 subdir('mu')
 
-
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
 emacs_min_version='26.3'
-emacs=find_program([emacs_name], version: '>='+emacs_min_version, required:false)
+emacs=find_program([emacs_name], version: '>=' + emacs_min_version, required:false)
 if emacs.found()
+  emacs28 = find_program([emacs_name], version: '>=28', required:false)
   subdir('man')
   subdir('mu4e')
 else
@@ -318,6 +318,12 @@ config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
 configure_file(output : 'config.h', configuration : config_h_data)
 
 if gmime_dep.version() == '3.2.13'
-  warning('gmime version 3.2.13 detected, which as a decoding bug')
+  warning('gmime version 3.2.13 detected, which has a decoding bug')
   warning('See: https://github.com/jstedfast/gmime/issues/133')
 endif
+
+
+
+# Local Variables:
+# indent-tabs-mode: nil
+# End:

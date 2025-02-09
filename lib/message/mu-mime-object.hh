@@ -171,9 +171,6 @@ private:
 };
 
 
-
-
-
 
 /**
  * Thin wrapper around a GMimeContentType
@@ -200,6 +197,15 @@ struct MimeContentType: public Object {
 		return g_mime_content_type_is_type(self(), type.c_str(),
 						   subtype.c_str());
 	}
+
+	Option<std::string> parameter(const std::string& name) const noexcept {
+		const char *param{g_mime_content_type_get_parameter(self(), name.c_str())};
+		if (!param || !param[0])
+			return Nothing;
+		else
+			return Some(std::string{param});
+	}
+
 private:
 	GMimeContentType* self() const {
 		return reinterpret_cast<GMimeContentType*>(object());
@@ -927,6 +933,19 @@ public:
 	MimeMessage(const Object& obj): MimeObject(obj) {
 		if (!is_message())
 			throw std::runtime_error("not a mime-message");
+	}
+
+	/**
+	 * Get the top-level MIME-part or Nothing if there is none
+	 *
+	 * @return MIME-part of nothing
+	 */
+	Option<MimeObject> mime_part() const noexcept {
+		auto obj = g_mime_message_get_mime_part(self());
+		if (!obj)
+			return Nothing;
+		else
+			return MimeObject{obj};
 	}
 
 	/**

@@ -1,13 +1,13 @@
 ---
-name: Mu4e Feature request
-about: Suggest an idea for this project
-title: "[mu4e rfe]"
-labels: rfe, mu4e, new
+name: Feature request
+about: Suggest an idea for mu or mu4e
+title: "[RFE]"
+labels: rfe, new
 assignees: ''
-
 ---
-Note, please see the IDEAS.org file in repository root for existing ideas;
-maybe it's already there.
+
+Note, please see the IDEAS.org file in repository root for existing ideas; maybe
+it's already there.
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]

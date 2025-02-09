@@ -206,7 +206,7 @@ Reset individual folding states."
   "Unfold thread at point and store state unless NO-SAVE is t."
   (interactive)
   (unless (eq (line-end-position) (point-max))
-    (when-let ((overlay (mu4e-thread-is-folded)))
+    (when-let* ((overlay (mu4e-thread-is-folded)))
       (unless no-save
         (mu4e-thread--save-state 'unfolded))
       (delete-overlay overlay))))

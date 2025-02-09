@@ -333,7 +333,7 @@ SCM_DEFINE(get_parts,
 		attlist = scm_cons(elm, attlist);
 	}
 
-	/* explicitly close the file backend, so we won't run of fds */
+	/* explicitly close the file backend, so we won't run out of fds */
 	msg->unload_mime_message();
 
 	return attlist;

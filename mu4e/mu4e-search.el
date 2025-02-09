@@ -1,6 +1,6 @@
 ;;; mu4e-search.el --- Search-related functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021,2022 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -35,7 +35,7 @@
 (require 'mu4e-mark)
 (require 'mu4e-query-items)
 
-
+
 ;;; Configuration
 (defgroup mu4e-search nil
   "Search-related settings."
@@ -115,8 +115,9 @@ chronologically (`:date') by the newest message in the thread."
   :group 'mu4e-search)
 
 (defcustom mu4e-search-sort-direction 'descending
-  "Direction to sort by; a symbol either `descending' (sorting
-  Z->A) or `ascending' (sorting A->Z)."
+  "Direction to sort by.
+A symbol either `descending' (sorting Z->A) or
+`ascending' (sorting A->Z)."
   :type '(radio (const ascending)
                 (const descending))
   :group 'mu4e-search)
@@ -148,7 +149,7 @@ executed search, not just those that are invoked via bookmarks,
 but also manually invoked searches."
   :type 'hook
   :group 'mu4e-search)
-
+
 ;; Internals
 
 ;;; History
@@ -160,8 +161,6 @@ but also manually invoked searches."
 (defvar mu4e--search-last-query nil
   "The present (most recent) query.")
 
-
-
 ;;; Interactive functions
 (declare-function mu4e--search-execute "mu4e-headers")
 
@@ -170,6 +169,13 @@ but also manually invoked searches."
 (defvar mu4e--search-msgid-target nil
   "Message-id to jump to after the search has finished.")
 
+(defun mu4e--search-maybe-reset-baseline (query)
+  "Reset the baseline if QUERY matches the favorite.
+Note that the query must match the favorite _exactly_,
+equivalence is not enough."
+  (when-let* ((fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
+    (when (and fav (string= fav query))
+        (mu4e--query-items-refresh 'reset-baseline))))
 
 (defun mu4e-search (&optional expr prompt edit ignore-history msgid show)
   "Search for query EXPR.
@@ -183,7 +189,10 @@ the user edit the query before executing it.
 If IGNORE-HISTORY is true, do *not* update the query history
 stack. If MSGID is non-nil, attempt to move point to the first
 message with that message-id after searching. If SHOW is non-nil,
-show the message with MSGID."
+show the message with MSGID.
+
+Attempts to reset the query baseline if EXPR is an exact match
+with the favorite bookmark's query."
   (interactive)
   (let* ((prompt (mu4e-format (or prompt "Search for: ")))
          (expr
@@ -194,6 +203,7 @@ show the message with MSGID."
     (mu4e--search-execute expr ignore-history)
     (setq mu4e--search-msgid-target msgid
           mu4e--search-view-target show)
+    (mu4e--search-maybe-reset-baseline expr)
     (mu4e--modeline-update)))
 
 (defun mu4e-search-edit ()
@@ -210,12 +220,7 @@ the search."
          (or expr
              (mu4e-ask-bookmark
               (if edit "Select bookmark: " "Bookmark: "))))
-         (expr (if (functionp expr) (funcall expr) expr))
-         (fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
-    ;; reset baseline when searching for the favorite bookmark query
-    (when (and fav (string= fav expr))
-      (mu4e--query-items-refresh 'reset-baseline))
-
+         (expr (if (functionp expr) (funcall expr) expr)))
     (run-hook-with-args 'mu4e-search-bookmark-hook expr)
     (mu4e-search expr (when edit "Edit query: ") edit)))
 
@@ -223,7 +228,6 @@ the search."
   "Edit an existing bookmark before executing it."
   (interactive)
   (mu4e-search-bookmark nil t))
-
 
 (defun mu4e-search-maildir (maildir &optional edit)
   "Search the messages in MAILDIR.
@@ -239,7 +243,7 @@ is given, offer to edit the search query before executing it."
       (mu4e-mark-handle-when-leaving)
       (mu4e-search query))))
 
-(defun mu4e-search-narrow(&optional filter)
+(defun mu4e-search-narrow (&optional filter)
   "Narrow the last search.
 Do so by appending search expression FILTER to the last search
 expression. Note that you can go back to the previous
@@ -328,7 +332,7 @@ either `future' or `past'."
 (defun mu4e-last-query ()
   "Get the most recent query or nil if there is none."
   mu4e--search-last-query)
-
+
 ;;; Completion for queries
 
 (defvar mu4e--search-hist nil "History list of searches.")
@@ -348,10 +352,38 @@ either `future' or `past'."
     (read-string prompt initial-input 'mu4e--search-hist)))
 
 (defconst mu4e--search-query-keywords
-  '("and" "or" "not"
-    "from:" "to:" "cc:" "bcc:" "contact:" "recip:" "date:" "subject:" "body:"
-    "list:" "maildir:" "flag:" "mime:" "file:" "prio:" "tag:" "msgid:"
-    "size:" "embed:"))
+  '(;; logical
+    "and"
+    "or"
+    "not"
+    ;; fields
+    "bcc:"
+    "body:"
+    "cc:"
+    "changed:"
+    "date:"
+    "embed:"
+    "file:"
+    "flag:"
+    "from:"
+    "lang:"
+    "maildir:"
+    "list:"
+    "msgid"
+    "mime:"
+    "path:"
+    "prio:"
+    "ref"
+    "size:"
+    "subject:"
+    "tags:"
+    "thread:"
+    "to:"
+    ;; combin fields
+    "recip:"
+    "contact:"
+    "related:")
+  "Mu4e query-keywords for completion.")
 
 (defun mu4e--search-completion-contacts-action (match _status)
   "Delete contact alias from contact autocompletion, leaving just email address.
@@ -374,7 +406,8 @@ status, STATUS."
     (list (match-beginning 1)
           (match-end 1)
           '("attach" "draft" "flagged" "list" "new" "passed" "replied"
-            "seen" "trashed" "unread" "encrypted" "signed" "personal")))
+            "seen" "trashed" "unread" "encrypted" "signed" "personal"
+            "calendar")))
    ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
@@ -491,8 +524,7 @@ last search with the new setting."
 (defvar mu4e-search-skip-duplicates-label '("U" . "Ⓤ") ;; 'U' for 'unique'
   "Non-fancy and fancy labels for include-related search in the mode-line.")
 (defvar mu4e-search-hide-label            '("H" . "Ⓗ")
-  "Non-fancy and fancy labels to indicate header-hiding is active in
-the mode-line.")
+  "Non-fancy and fancy labels to indicate header-hiding.")
 
 (defun mu4e--search-modeline-item ()
   "Get mu4e-search modeline item."
@@ -628,7 +660,9 @@ query before submitting it."
     ["Next query" mu4e-search-next
      :help "Run next query"]
     ["Narrow search" mu4e-search-narrow
-     :help "Narrow the search query"])
+     :help "Narrow the search query"]
+    ["Search properties" mu4e-search-toggle-property
+     :help "Toggle some search properties"])
   "Easy menu items for search.")
 
 (provide 'mu4e-search)

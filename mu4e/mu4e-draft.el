@@ -1,6 +1,6 @@
 ;;; mu4e-draft.el --- Helpers for m4e-compose -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2024-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -244,7 +244,7 @@ BASE-NAME is the base filename without any Maildir decoration."
      (format "%s%s2,DS" base-name mu4e-maildir-info-delimiter))))
 
 (defun mu4e--fcc-path (base-name &optional parent)
-  "Construct a Fcc: path, based on PARENT and `mu4e-sent-messages-behavior'.
+  "Construct an Fcc: path, based on PARENT and `mu4e-sent-messages-behavior'.
 
 PARENT is either nil or the original message (being replied
 to/forwarded etc.), and is used to determine the sent folder,
@@ -345,7 +345,7 @@ appropriate sent-messages folder. If MSGPATH is nil, do nothing."
          (mu4e-join-paths target-mdir "new" 'parents)))
       (write-file msgpath)
       (mu4e--server-add msgpath))))
-
+
 ;; save / send hooks
 
 (defvar-local mu4e--compose-undo nil
@@ -387,26 +387,34 @@ also marked as Seen.
 
 Function assumes that it is executed in the context of the
 message buffer."
-  (when-let ((buf (find-file-noselect path)))
+  ;; note that we can't use mu4e-compose-parent-message here, since it
+  ;; no longer available when editing a draft. So we scan the outgoing
+  ;; message for the information.
+  (when-let* ((buf (find-file-noselect path)))
     (with-current-buffer buf
-      (let ((in-reply-to (message-field-value "in-reply-to"))
-            (forwarded-from)
-            (references (message-field-value "references")))
-        (unless in-reply-to
-          (when references
-            (with-temp-buffer ;; inspired by `message-shorten-references'.
-              (insert references)
-              (goto-char (point-min))
-              (let ((refs))
-                (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
-                  (push (match-string 0) refs))
-                ;; the last will be the first
-                (setq forwarded-from (car refs))))))
-        ;; remove the <> and update the flags on the server-side.
-        (when (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to))
-          (mu4e--server-move (match-string 1 in-reply-to) nil "+R-N"))
-        (when (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from))
-          (mu4e--server-move (match-string 1 forwarded-from) nil "+P-N"))))))
+      (let* ((in-reply-to (message-field-value "in-reply-to"))
+             (references (message-field-value "references"))
+             (forwarded-from
+              (unless (or in-reply-to (not references))
+                (with-temp-buffer ;; inspired by `message-shorten-references'.
+                  (insert references)
+                  (goto-char (point-min))
+                  (let ((refs))
+                    (while (re-search-forward "<[^ <]+@[^ <]+>" nil t)
+                      (push (match-string 0) refs))
+                    (car refs))))) ;; the last shall be the first
+             ;; remove the <>
+             (in-reply-to (and in-reply-to (string-match "<\\(.*\\)>" in-reply-to)
+                               (match-string 1 in-reply-to)))
+             (forwarded-from (and forwarded-from (string-match "<\\(.*\\)>" forwarded-from)
+                                  (match-string 1 forwarded-from))))
+        ;; mark parents.
+        (when in-reply-to
+          (mu4e-log 'misc "mark %s as Replied" in-reply-to)
+          (mu4e--server-move in-reply-to nil "+R-N"))
+        (when forwarded-from
+          (mu4e-log 'misc "mark %s as Passed (forwarded)" forwarded-from)
+          (mu4e--server-move forwarded-from nil "+P-N"))))))
 
 (defun mu4e--compose-after-save()
   "Function called immediately after the draft buffer is saved."
@@ -440,6 +448,21 @@ appropriate flag at the message forwarded or replied-to."
     (while (search-forward "\n" nil t)
       (put-text-property (1- (point)) (point) 'hard t))))
 
+(defun mu4e--compose-message-sent ()
+  "Mu4e's `message-sent-hook' handling."
+  ;; typically, draft is gone and the sent message appears in sent. Update flags
+  ;; for related messages, i.e. for Forwarded ('Passed') and Replied messages,
+  ;; try to set the appropriate flag at the message forwarded or replied-to.
+  (when-let* ((fcc-path (message-field-value "Fcc")))
+    (mu4e--set-parent-flags fcc-path)
+    ;; we end up with a ((buried) buffer here, visiting the
+    ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
+    (when-let* ((buf (find-buffer-visiting fcc-path)))
+      (kill-buffer buf)))
+  ;; remove draft
+  (when-let* ((draft (buffer-file-name)))
+    (mu4e--server-remove draft)))
+
 (defun mu4e--compose-before-send ()
   "Function called just before sending a message."
   ;; Remove References: if In-Reply-To: is missing.
@@ -450,22 +473,12 @@ appropriate flag at the message forwarded or replied-to."
       (message-remove-header "References")))
   (when use-hard-newlines
     (mu4e--send-harden-newlines))
-  ;; now handle what happens _after_ sending; typically, draft is gone and
-  ;; the sent message appears in sent. Update flags for related messages,
-  ;; i.e. for Forwarded ('Passed') and Replied messages, try to set the
-  ;; appropriate flag at the message forwarded or replied-to.
-  (add-hook 'message-sent-hook
-            (lambda ()
-              (when-let ((fcc-path (message-field-value "Fcc")))
-                (mu4e--set-parent-flags fcc-path)
-                ;; we end up with a ((buried) buffer here, visiting the
-                ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
-                (when-let ((buf (find-buffer-visiting fcc-path)))
-                  (kill-buffer buf))
-                ;; remove draft
-                (when-let ((draft (buffer-file-name)))
-                  (mu4e--server-remove draft))))
-            nil t))
+  ;; in any case, make sure to save the message; this will also trigger
+  ;; before/after save hooks, which fixes up various fields.
+  (set-buffer-modified-p t)
+  (save-buffer)
+  ;; now handle what happens _after_ sending
+  (add-hook 'message-sent-hook #'mu4e--compose-message-sent nil t))
 
 ;; overrides for message-* functions
 ;;
@@ -485,12 +498,18 @@ Creates a buffer NAME and returns it."
   (setq mu4e--message-buf (current-buffer)))
 
 (defun mu4e--message-is-yours-p ()
-  "Mu4e's override for `message-is-yours-p'."
-  (seq-some (lambda (field)
-              (if-let ((recip (message-field-value field)))
-                  (mu4e-personal-or-alternative-address-p
-                   (car (mail-header-parse-address recip)))))
-            '("From" "Sender")))
+  "Did you send the message we're responding to?
+Mu4e's override for `message-is-yours-p'. This only considers the
+From: address, not the Sender: address.
+
+Note that we check the parent, message-at-point so this should
+work both in headers-view and message-view."
+  (seq-some (lambda (addr)
+              (mu4e-personal-or-alternative-address-p addr))
+            (seq-map (lambda (addr) (plist-get addr :email))
+                     (plist-get (or mu4e-compose-parent-message
+                                    (mu4e-message-at-point 'noerror))
+                                :from))))
 
 (defmacro mu4e--validate-hidden-buffer (&rest body)
   "Macro to evaluate BODY and asserts that it yields a valid buffer.
@@ -564,13 +583,14 @@ PARENT is the parent message, if any."
 
 (defun mu4e--prepare-draft-headers (compose-type)
   "Add extra headers for message based on COMPOSE-TYPE."
-  (message-generate-headers
-   (seq-filter #'identity ;; ensure needed headers are generated.
-               `(From Subject Date Message-ID
-                      ,(when (memq compose-type '(reply forward)) 'References)
-                      ,(when (eq compose-type 'reply) 'In-Reply-To)
-                      ,(when message-newsreader 'User-Agent)
-                      ,(when message-user-organization 'Organization)))))
+  (let ((message-newsreader mu4e-user-agent-string))
+    (message-generate-headers
+     (seq-filter #'identity ;; ensure needed headers are generated.
+                 `(From Subject Date Message-ID
+                        ,(when (memq compose-type '(reply forward)) 'References)
+                        ,(when (eq compose-type 'reply) 'In-Reply-To)
+                        ,(when message-newsreader 'User-Agent)
+                        ,(when message-user-organization 'Organization))))))
 
 (defun mu4e--prepare-draft-buffer (compose-type parent)
   "Prepare the current buffer as a draft-buffer.
@@ -590,7 +610,7 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
     (set-visited-file-name ;; make it a draft file
      (mu4e--draft-message-path (mu4e--draft-basename) parent)))
   ;; fcc
-  (when-let ((fcc-path (mu4e--fcc-path (mu4e--draft-basename) parent)))
+  (when-let* ((fcc-path (mu4e--fcc-path (mu4e--draft-basename) parent)))
     (message-add-header (concat "Fcc: " fcc-path "\n")))
 
   (mu4e--prepare-draft-headers compose-type)
@@ -603,9 +623,11 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   ;; now, switch to compose mode
   (mu4e-compose-mode)
 
-  ;; hide some internal headers
+  ;; hide some internal headers; we use the special mu4e-- version of
+  ;; message-hide-headers, since older versions of the latter trigger some bug,
+  ;; #2661.
   (let ((message-hidden-headers mu4e-draft-hidden-headers))
-    (message-hide-headers))
+    (mu4e--message-hide-headers))
 
   ;; hooks
   (add-hook 'before-save-hook  #'mu4e--compose-before-save nil t)
@@ -654,7 +676,9 @@ either `send', `exit', `kill' or `postpone'.")
 
 (defvar mu4e-compose-post-hook)
 (defun mu4e--message-post-actions (trigger)
-  "Invoked after we're done with a message.
+  "Invoked after we're done with a message with TRIGGER.
+
+See `mu4e-message-post-action' for the available triggers.
 
 I.e. this multiplexes the `message-(send|exit|kill|postpone)-actions';
 with the mu4e-message-post-action set accordingly."
@@ -747,7 +771,10 @@ but note the different order."
    (lambda ()
      (let ( ;; only needed for Fwd. Gnus has a bad default.
            (message-make-forward-subject-function
-            (list #'message-forward-subject-fwd)))
+            (list #'message-forward-subject-fwd))
+           ;; e.g. supersede needs parent for 'message-is-yours-p
+           (mu4e-compose-parent-message parent)
+           (mu4e-compose-type compose-type))
        (insert (mu4e--decoded-message parent))
        ;; let's make sure we don't use message-reply-headers from
        ;; some unrelated message.

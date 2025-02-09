@@ -26,7 +26,7 @@
 ;; quite a bit of trickery involved to make the message-mode functions work in
 ;; this context; see mu4e-draft for details.
 
-
+
 ;;; Code:
 (require 'message)
 (require 'sendmail)
@@ -41,7 +41,7 @@
 
 (require 'mu4e-draft)
 
-
+
 ;;; User configuration for compose-mode
 (defgroup mu4e-compose nil
   "Customization for composing/sending messages."
@@ -86,26 +86,29 @@ by sending, postponing, exiting or killing it.
 This multiplexes the `message-mode' hooks `message-send-actions',
 `message-postpone-actions', `message-exit-actions' and
 `message-kill-actions', and the hook is run with a variable
-`mu4e-compose-post-trigger' set correspondingly to a symbol,
+`mu4e-message-post-action' set correspondingly to a symbol,
 `send', `postpone', `exit' or `kill'."
   :type 'hook
   :group 'mu4e-compose)
 
-
+
 
 (defvar mu4e-captured-message)
 (defun mu4e-compose-attach-captured-message ()
   "Insert the last captured message file as an attachment.
-Messages are captured with `mu4e-action-capture-message'."
+
+Messages are expect to have been captured earlier with
+`mu4e-action-capture-message'. Note: this is unrelated to
+`org-mode' capturing."
   (interactive)
   (if-let* ((msg mu4e-captured-message)
-            (path (plist-get msg :path))
-            (path (and (file-exists-p path) path)))
-      (mml-attach-file
-       path
-       "message/rfc822"
-       (or (plist-get msg :subject) "No subject")
-       "attachment")
+         (path (plist-get msg :path))
+         (path (and (file-exists-p path) path))
+         (descr (or (plist-get msg :subject) ""))
+         (descr
+          (if (and (stringp descr) (not (string-empty-p descr)))
+              descr "No subject")))
+    (mml-attach-file path "message/rfc822" descr "attachment")
     (mu4e-warn "No valid message has been captured")))
 
 ;; Go to bottom / top
@@ -184,8 +187,8 @@ the file under our feet, which is a bit fragile."
           (when message-signature
               (save-excursion (message-insert-signature))))))))
 
-
-;;; address completion
+
+;;; Address completion
 
 ;; inspired by org-contacts.el and
 ;; https://github.com/nordlow/elisp/blob/master/mine/completion-styles-cycle.el
@@ -243,7 +246,7 @@ completion functions still apply."
     (add-hook 'completion-at-point-functions
               #'mu4e--compose-complete-contact-field -10 t)))
 
- ;;; mu4e-compose-mode
+ ;;; mu4e-compose-mode
 (defun mu4e--compose-remap-faces ()
   "Remap `message-mode' faces to mu4e ones.
 
@@ -341,7 +344,8 @@ This function uses `message-cite-function', and its settings apply."
     (pop-mark)
     (goto-char (point-min))
     (buffer-string)))
-
+
+;;; Interactive functions
 
 ;;;###autoload
 (defalias 'mu4e-compose-mail #'mu4e-compose-new)
@@ -391,7 +395,7 @@ If WIDE is non-nil, make it a \"wide\" reply (a.k.a.
   "Wide reply to the message at point.
 I.e., \"reply-to-all\"."
   (interactive)
-  (mu4e-compose-reply-to nil t))1
+  (mu4e-compose-reply-to nil t))
 
 ;;;###autoload
 (defun mu4e-compose-supersede ()
@@ -438,18 +442,18 @@ variables ‘message-forward-as-mime’ and
 
 ;;;###autoload
 (defun mu4e-compose-edit()
-         "Edit an existing draft message."
-         (interactive)
-         (let* ((msg (mu4e-message-at-point)))
-           (unless  (member 'draft (mu4e-message-field msg :flags))
-             (mu4e-warn "Cannot edit non-draft messages"))
-           (mu4e--draft
-            'edit
-            (lambda ()
-              (with-current-buffer
-                  (find-file-noselect (mu4e-message-readable-path msg))
-                (mu4e--delimit-headers)
-                (current-buffer))))))
+  "Edit an existing draft message."
+  (interactive)
+  (let* ((msg (mu4e-message-at-point)))
+    (unless  (member 'draft (mu4e-message-field msg :flags))
+      (mu4e-warn "Cannot edit non-draft messages"))
+    (mu4e--draft
+     'edit
+     (lambda ()
+       (with-current-buffer
+           (find-file-noselect (mu4e-message-readable-path msg))
+         (mu4e--delimit-headers)
+         (current-buffer))))))
 
 ;;;###autoload
 (defun mu4e-compose-resend (address)
@@ -465,7 +469,7 @@ The message is resent as-is, without any editing. See
       (insert-file-contents (mu4e-message-readable-path msg))
       (message-resend address))))
 
-;;; Compose Mail
+;;; Compose-mode
 
 (declare-function mu4e "mu4e")
 
@@ -484,7 +488,7 @@ The message is resent as-is, without any editing. See
 (defun mu4e-user-agent ()
   "Return the `mu4e-user-agent' symbol."
   'mu4e-user-agent)
-
+
 ;;; minor mode for use in other modes.
 (defvar mu4e-compose-minor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -517,6 +521,6 @@ The message is resent as-is, without any editing. See
     ["Resend" mu4e-compose-resend
      :help "Re-send message"])
   "Easy menu items for message composition.")
- ;;;
+ ;;;
 (provide 'mu4e-compose)
 ;;; mu4e-compose.el ends here

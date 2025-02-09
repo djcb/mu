@@ -105,7 +105,7 @@ struct Indexer::Private {
 	bool handler(const std::string& fullpath, struct stat* statbuf, Scanner::HandleType htype);
 
 	void maybe_start_worker();
-	void item_worker();
+
 	void scan_worker();
 
 	bool add_message(const std::string& path);
@@ -122,8 +122,6 @@ struct Indexer::Private {
 	const size_t    max_message_size_;
 
 	::time_t                 dirstamp_{};
-	std::size_t              max_workers_;
-	std::vector<std::thread> workers_;
 	std::thread              scanner_worker_;
 
 	struct WorkItem {
@@ -135,13 +133,15 @@ struct Indexer::Private {
 		Type type;
 	};
 
-	AsyncQueue<WorkItem> todos_;
+	void handle_item(WorkItem&& item);
 
 	Progress   progress_{};
 	IndexState state_{};
 	std::mutex lock_, w_lock_;
 	std::atomic<time_t> completed_{};
 	bool was_empty_{};
+
+	uint64_t last_index_{};
 };
 
 bool
@@ -163,7 +163,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		// in lazy-mode, we ignore this dir if its dirstamp suggest it
 		// is up-to-date (this is _not_ always true; hence we call it
 		// lazy-mode); only for actual message dirs, since the dir
-		// tstamps may not bubble up.U
+		// tstamps may not bubble up.
 		dirstamp_ = store_.dirstamp(fullpath);
 		if (conf_.lazy_check && dirstamp_ >= statbuf->st_ctime &&
 		    htype == Scanner::HandleType::EnterNewCur) {
@@ -193,42 +193,33 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		return true;
 	}
 	case Scanner::HandleType::LeaveDir: {
-		todos_.push({fullpath, WorkItem::Type::Dir});
+		handle_item({fullpath, WorkItem::Type::Dir});
 		return true;
 	}
 
 	case Scanner::HandleType::File: {
 		++progress_.checked;
-
-		if ((size_t)statbuf->st_size > max_message_size_) {
-			mu_debug("skip {} (too big: {} bytes)", fullpath, statbuf->st_size);
+		if (conf_.lazy_check && static_cast<uint64_t>(statbuf->st_ctime) < last_index_) {
+			// in lazy mode, ignore the file if it has not changed
+			// since the last indexing op.
 			return false;
 		}
 
+		if (static_cast<size_t>(statbuf->st_size) > max_message_size_) {
+			mu_debug("skip {} (too big: {} bytes)", fullpath, statbuf->st_size);
+			return false;
+		}
 		// if the message is not in the db yet, or not up-to-date, queue
 		// it for updating/inserting.
 		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath))
 			return false;
 
-		// push the remaining messages to our "todo" queue for
-		// (re)parsing and adding/updating to the database.
-		todos_.push({fullpath, WorkItem::Type::File});
+		handle_item({fullpath, WorkItem::Type::File});
 		return true;
 	}
 	default:
 		g_return_val_if_reached(false);
 		return false;
-	}
-}
-
-void
-Indexer::Private::maybe_start_worker()
-{
-	std::lock_guard lock{w_lock_};
-
-	if (todos_.size() > workers_.size() && workers_.size() < max_workers_) {
-		workers_.emplace_back(std::thread([this] { item_worker(); }));
-		mu_debug("added worker {}", workers_.size());
 	}
 }
 
@@ -260,35 +251,25 @@ Indexer::Private::add_message(const std::string& path)
 	return true;
 }
 
+
 void
-Indexer::Private::item_worker()
+Indexer::Private::handle_item(WorkItem&& item)
 {
-	WorkItem item;
-
-	mu_debug("started worker");
-
-	while (state_ == IndexState::Scanning) {
-		if (!todos_.pop(item, 250ms))
-			continue;
-		try {
-			switch (item.type) {
-			case WorkItem::Type::File: {
-				if (G_LIKELY(add_message(item.full_path)))
-					++progress_.updated;
-			} break;
-			case WorkItem::Type::Dir:
-				store_.set_dirstamp(item.full_path, ::time(NULL));
-				break;
-			default:
-				g_warn_if_reached();
-				break;
-			}
-		} catch (const Mu::Error& er) {
-			mu_warning("error adding message @ {}: {}", item.full_path, er.what());
+	try {
+		switch (item.type) {
+		case WorkItem::Type::File: {
+			if (G_LIKELY(add_message(item.full_path)))
+				++progress_.updated;
+		} break;
+		case WorkItem::Type::Dir:
+			store_.set_dirstamp(item.full_path, ::time(NULL));
+			break;
+		default:
+			g_warn_if_reached();
+			break;
 		}
-
-		maybe_start_worker();
-		std::this_thread::yield();
+	} catch (const Mu::Error& er) {
+		mu_warning("error adding message @ {}: {}", item.full_path, er.what());
 	}
 }
 
@@ -332,28 +313,11 @@ Indexer::Private::scan_worker()
 			state_.change_to(IndexState::Idle);
 			return;
 		}
-		mu_debug("scanner finished with {} file(s) in queue", todos_.size());
+		mu_debug("scanner finished");
 	}
 
-	// now there may still be messages in the work queue...
-	// finish those; this is a bit ugly; perhaps we should
-	// handle SIGTERM etc.
-
-	if (!todos_.empty()) {
-		const auto workers_size = std::invoke([this] {
-			std::lock_guard lock{w_lock_};
-			return workers_.size();
-		});
-		mu_debug("process {} remaining message(s) with {} worker(s)",
-			todos_.size(), workers_size);
-		while (!todos_.empty())
-			std::this_thread::sleep_for(100ms);
-	}
 	// and let the worker finish their work.
 	state_.change_to(IndexState::Finishing);
-	for (auto&& w : workers_)
-		if (w.joinable())
-			w.join();
 
 	if (conf_.cleanup) {
 		mu_debug("starting cleanup");
@@ -363,6 +327,8 @@ Indexer::Private::scan_worker()
 	}
 
 	completed_ = ::time({});
+	// attempt to commit to disk.
+	store_.xapian_db().request_commit(true);
 	store_.config().set<Mu::Config::Id::LastIndex>(completed_);
 	state_.change_to(IndexState::Idle);
 }
@@ -373,27 +339,21 @@ Indexer::Private::start(const Indexer::Config& conf, bool block)
 	stop();
 
 	conf_ = conf;
-	if (conf_.max_threads == 0) {
-		/* benchmarking suggests that ~4 threads is the fastest (the
-		 * real bottleneck is the database, so adding more threads just
-		 * slows things down)
-		 */
-		max_workers_ = std::min(4U, std::thread::hardware_concurrency());
-	} else
-		max_workers_ = conf.max_threads;
 
 	if (store_.empty() && conf_.lazy_check) {
 		mu_debug("turn off lazy check since we have an empty store");
 		conf_.lazy_check = false;
 	}
 
-	mu_debug("starting indexer with <= {} worker thread(s)", max_workers_);
+	mu_debug("starting indexer");
 	mu_debug("indexing: {}; clean-up: {}", conf_.scan ? "yes" : "no",
 		 conf_.cleanup ? "yes" : "no");
 
+	// remember the _previous_ indexing, so in lazy mode we can skip
+	// those files.
+	last_index_ = store_.config().get<Mu::Config::Id::LastIndex>();
+
 	state_.change_to(IndexState::Scanning);
-	/* kick off the first worker, which will spawn more if needed. */
-	workers_.emplace_back(std::thread([this] { item_worker(); }));
 	/* kick the disk-scanner thread */
 	scanner_worker_ = std::thread([this] { scan_worker(); });
 
@@ -413,15 +373,10 @@ Indexer::Private::stop()
 {
 	scanner_.stop();
 
-	todos_.clear();
 	if (scanner_worker_.joinable())
 		scanner_worker_.join();
 
 	state_.change_to(IndexState::Idle);
-	for (auto&& w : workers_)
-		if (w.joinable())
-			w.join();
-	workers_.clear();
 
 	return true;
 }
@@ -529,7 +484,6 @@ test_index_basic()
 	}
 
 	conf.lazy_check	     = true;
-	conf.max_threads     = 1;
 	conf.ignore_noupdate = false;
 
 	{

@@ -72,6 +72,10 @@ struct Message::Private {
 
 	Option<std::string> language; /* body ISO language code */
 
+	// after unload_mime_message, we don't need to re-parse the message.
+	// issue #2802.
+	bool document_filled{};
+
 private:
 	Document::Options doc_opts(Message::Options mopts) {
 		return any_of(opts & Message::Options::SupportNgrams) ?
@@ -484,6 +488,32 @@ handle_encrypted(const MimeMultipartEncrypted& part, Message::Private& info)
 		handle_object(part, res->first, info);
 }
 
+static void
+maybe_handle_pkcs7(const MimeObject& obj, Message::Private& info)
+{
+	if (obj.is_mime_application_pkcs7_mime()) {
+		MimeApplicationPkcs7Mime smime(obj);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+		// CompressedData, CertsOnly, Unknown
+		const auto smtype{smime.smime_type()};
+		switch (smtype) {
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
+			info.flags |= Flags::Signed;
+			break;
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::EnvelopedData:
+		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::Unknown:
+			/* The "Unknown" case... GMIME doesn't give us anything
+			 * more specific, so assume it's encrypted for now  */
+			info.flags |= Flags::Encrypted;
+			break;
+		default:
+			break;
+		}
+#pragma GCC diagnostic pop
+	}
+}
+
 
 static void
 handle_object(const MimeObject& parent,
@@ -508,23 +538,8 @@ handle_object(const MimeObject& parent,
 		/* FIXME: An encrypted part might be signed at the same time.
 		 *        In that case the signed flag is lost. */
 		info.flags |= Flags::Encrypted;
-	} else if (obj.is_mime_application_pkcs7_mime()) {
-		MimeApplicationPkcs7Mime smime(obj);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-		// CompressedData, CertsOnly, Unknown
-		switch (smime.smime_type()) {
-		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::SignedData:
-			info.flags |= Flags::Signed;
-			break;
-		case Mu::MimeApplicationPkcs7Mime::SecureMimeType::EnvelopedData:
-			info.flags |= Flags::Encrypted;
-			break;
-		default:
-			break;
-		}
-#pragma GCC diagnostic pop
-	}
+	} else
+		maybe_handle_pkcs7(obj, info);
 }
 
 /**
@@ -547,6 +562,10 @@ process_message(const MimeMessage& mime_msg, const std::string& path,
 		if (any_of(info.flags & Flags::New) || none_of(info.flags & Flags::Seen))
 			info.flags |= Flags::Unread;
 	}
+
+	// handle top-level
+	if (const auto mpart = mime_msg.mime_part(); mpart)
+		maybe_handle_pkcs7(*mpart, info);
 
 	// parts
 	mime_msg.for_each([&](auto&& parent, auto&& child_obj) {
@@ -660,6 +679,10 @@ doc_add_reply_to(Document& doc, const MimeMessage& mime_msg)
 static void
 fill_document(Message::Private& priv)
 {
+	if (priv.document_filled) {
+		return; // nothing to do.
+	}
+
 	/* hunt & gather info from message tree */
 	Document& doc{priv.doc};
 	MimeMessage& mime_msg{priv.mime_msg.value()};
@@ -676,7 +699,7 @@ fill_document(Message::Private& priv)
 	doc_add_list_post(doc, mime_msg); /* only in sexp */
 	doc_add_reply_to(doc, mime_msg);  /* only in sexp */
 
-	field_for_each([&](auto&& field) {
+	field_for_each([&](const auto& field) {
 		/* insist on explicitly handling each */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -760,6 +783,8 @@ fill_document(Message::Private& priv)
 #pragma GCC diagnostic pop
 
 	});
+
+	priv.document_filled = true;
 }
 
 Option<std::string>

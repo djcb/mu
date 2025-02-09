@@ -1,6 +1,6 @@
 ---
 name: Mu4e Bug Report
-about: Create a report to help us improve
+about: Create a report to help us improve mu4e
 title: "[mu4e bug]"
 labels: bug, mu4e, new
 assignees: ''
@@ -21,6 +21,9 @@ any relevant logs and outputs:
 - Best start from `emacs -Q`, and load a minimal `mu4e` setup; describe the steps
   that lead up to the bug.
 - Does the problem happen each time? Sometimes?
+
+- Try some small variations of what you were doing. Does it make a difference?
+
 - If this is about a specific (kind of) message, attach an example message.
   (Open the message, press `.` (`mu4e-view-raw-message`), then `C-x C-w` and
   attach. Anonymize as needed, all that matters is that the issue still

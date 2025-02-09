@@ -1,4 +1,4 @@
-## Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,14 +16,17 @@
 
 
 # generate some build data for use in mu4e
+version_extra=''
+
 mu4e_meta = configure_file(
   input: 'mu4e-config.el.in',
   output: 'mu4e-config.el',
   install: true,
   install_dir: mu4e_lispdir,
   configuration: {
-      'VERSION'         : meson.project_version(),
-      'MU_DOC_DIR'      : join_paths(datadir, 'doc', 'mu'),
+      'VERSION'           : meson.project_version(),
+      'MU_VERSION_EXTRA'  : version_extra,
+      'MU_DOC_DIR'        : join_paths(datadir, 'doc', 'mu'),
     })
 
 mu4e_pkg_desc = configure_file(
@@ -69,6 +72,13 @@ mu4e_srcs=[
   'mu4e-window.el'
 ]
 
+# emacs 28 is guaranteed to have transient
+# not very elegant, but
+# https://stackoverflow.com/questions/49221792/byte-compile-file-only-when-library-is-found
+if emacs28.found()
+  mu4e_srcs += 'mu4e-transient.el'
+endif
+
 # note, we cannot compile mu4e-config.el without incurring
 #  WARNING: Source item
 #   '[...]/build/mu4e/mu4e-meta.el' cannot be converted to File object, because
@@ -85,6 +95,7 @@ foreach src : mu4e_srcs
   # see: https://debbugs.gnu.org/db/47/47987.html
   configure_file(input: src, output:'@BASENAME@.el', copy:true,
                  install_mode: 'r--r--r--')
+  # seems meson ignores 'install_mode' for copy (1.5.1, 1.6.1)
 
   custom_target(src.underscorify() + '_el',
                 build_by_default: true,

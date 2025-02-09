@@ -1,6 +1,6 @@
 ;;; mu4e-bookmarks.el --- Bookmarks handling -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -28,7 +28,6 @@
 (require 'mu4e-folders)
 (require 'mu4e-query-items)
 
-
 ;;; Configuration
 
 (defgroup mu4e-bookmarks nil
@@ -79,19 +78,33 @@ query."
   :type '(repeat (plist))
   :group 'mu4e-bookmarks)
 
+(declare-function mu4e-query-items "mu4e-query-items")
+(declare-function mu4e--query-item-display-short-counts "mu4e-query-items")
 
 (defun mu4e-ask-bookmark (prompt)
   "Ask user for bookmark using PROMPT.
 Return the corresponding query. The bookmark are as defined in
-`mu4e-bookmarks'."
+`mu4e-bookmarks'.
+
+The names of the bookmarks are displayed in the minibuffer,
+suffixed with the short version of the unread counts, as per
+`mu4e--query-item-display-short-counts'."
   (unless (mu4e-bookmarks) (mu4e-error "No bookmarks defined"))
-  (let* ((bmarks (seq-map (lambda (bm)
-                            (cons (format "%c%s"
-                                          (plist-get bm :key)
-                                          (plist-get bm :name))
-                                  (plist-get bm :query)))
-                          (mu4e-filter-single-key (mu4e-bookmarks)))))
-    (mu4e-read-option prompt bmarks)))
+  (let* ((bmarks
+          (seq-map
+           (lambda (bm) ;; find query-item for bookmark
+             (let* ((qitem (seq-find
+                           (lambda (qitem)
+                             (equal (plist-get bm :query) (plist-get qitem :query)))
+                           (mu4e-query-items 'bookmarks)))
+                    (unreads (mu4e--query-item-display-short-counts qitem)))
+               (cons (format "%c%s%s"
+                             (plist-get bm :key)
+                             (plist-get bm :name)
+                             unreads)
+                     (plist-get bm :query))))
+          (mu4e-filter-single-key (mu4e-bookmarks)))))
+  (mu4e-read-option prompt bmarks)))
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut KAR.
@@ -152,7 +165,7 @@ I.e., very new messages.")
 (defun mu4e-jump-to-favorite ()
   "Jump to to the favorite bookmark, if any."
   (interactive)
-  (when-let ((fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
+  (when-let* ((fav (mu4e--bookmark-query (mu4e-bookmark-favorite))))
     (mu4e-search-bookmark fav)))
 
 (defun mu4e--bookmarks-modeline-item ()
@@ -160,7 +173,7 @@ I.e., very new messages.")
 
 This uses the one special ':favorite' bookmark, and if there is
 one, creates a propertized string for display in the modeline."
-  (when-let ((fav ;; any results for the favorite bookmark item?
+  (when-let* ((fav ;; any results for the favorite bookmark item?
               (seq-find (lambda (bm) (plist-get bm :favorite))
                         (mu4e-query-items 'bookmarks))))
     (cl-destructuring-bind (&key unread count delta-unread
@@ -190,6 +203,5 @@ one, creates a propertized string for display in the modeline."
                            (mouse-1 . mu4e-jump-to-favorite)
                            (mouse-2 . mu4e-jump-to-favorite)
                            (mouse-3 . mu4e-jump-to-favorite))))))
-
 (provide 'mu4e-bookmarks)
 ;;; mu4e-bookmarks.el ends here

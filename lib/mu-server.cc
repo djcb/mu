@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,8 +27,6 @@
 #include <string>
 #include <algorithm>
 #include <atomic>
-#include <thread>
-#include <mutex>
 #include <variant>
 #include <functional>
 
@@ -39,6 +37,7 @@
 
 #include "mu-maildir.hh"
 #include "mu-query.hh"
+#include "mu-query-parser.hh"
 #include "mu-store.hh"
 
 #include "utils/mu-utils.hh"
@@ -122,7 +121,6 @@ private:
 };
 
 
-
 /// @brief object to manage the server-context for all commands.
 struct Server::Private {
 	Private(Store& store, const Server::Options& opts, Output output)
@@ -134,8 +132,6 @@ struct Server::Private {
 
 	~Private() {
 		indexer().stop();
-		if (index_thread_.joinable())
-			index_thread_.join();
 		if (!tmp_dir_.empty())
 			remove_directory(tmp_dir_);
 	}
@@ -149,6 +145,7 @@ struct Server::Private {
 	Store&            store() { return store_; }
 	const Store&      store() const { return store_; }
 	Indexer&          indexer() { return store().indexer(); }
+	void              do_index(const Indexer::Config& conf);
 	//CommandMap&       command_map() const { return command_map_; }
 
 	//
@@ -213,7 +210,6 @@ private:
 	Server::Output		output_;
 	const CommandHandler	command_handler_;
 	std::atomic<bool>       keep_going_{};
-	std::thread		index_thread_;
 	std::string		tmp_dir_;
 };
 
@@ -279,7 +275,6 @@ msg_sexp_str(const Message& msg, Store::Id docid, const Option<QueryMatch&> qm)
 
 	return sexpstr;
 }
-
 
 CommandHandler::CommandInfoMap
 Server::Private::make_command_map()
@@ -452,8 +447,7 @@ Server::Private::invoke(const std::string& expr) noexcept
 			throw res.error();
 
 	} catch (const Mu::Error& me) {
-		output_sexp(make_error(me.code(), mu_format("{}",
-							    me.what())));
+		output_sexp(make_error(me.code(), mu_format("{}", me.what())));
 		keep_going_ = true;
 	} catch (const Xapian::Error& xerr) {
 		output_sexp(make_error(Error::Code::Internal,
@@ -571,7 +565,6 @@ Server::Private::data_handler(const Command& cmd)
 			"invalid request type '{}'", request_type);
 }
 
-
 /*
  * creating a message object just to get a path seems a bit excessive maybe
  * mu_store_get_path could be added if this turns out to be a problem
@@ -647,7 +640,6 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 	return n;
 }
 
-
 void
 Server::Private::find_handler(const Command& cmd)
 {
@@ -678,14 +670,23 @@ Server::Private::find_handler(const Command& cmd)
 		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", batch_size};
 
 	auto qflags{QueryFlags::SkipUnreadable}; // don't show unreadables.
-	if (descending)
+	Sexp resprops;
+	if (descending) {
 		qflags |= QueryFlags::Descending;
-	if (skip_dups)
+		resprops.put_props(":reverse", Sexp::t_sym);
+	}
+	if (skip_dups) {
 		qflags |= QueryFlags::SkipDuplicates;
-	if (include_related)
+		resprops.put_props(":skip-dups", Sexp::t_sym);
+	}
+	if (include_related) {
 		qflags |= QueryFlags::IncludeRelated;
-	if (threads)
+		resprops.put_props(":include-related", Sexp::t_sym);
+	}
+	if (threads) {
 		qflags |= QueryFlags::Threading;
+		resprops.put_props(":threads", Sexp::t_sym);
+	}
 
 	StopWatch sw{mu_format("{} (indexing: {})", __func__,
 			       indexer().is_running() ? "yes" :  "no")};
@@ -703,7 +704,13 @@ Server::Private::find_handler(const Command& cmd)
 	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
 	const auto bsize{static_cast<size_t>(batch_size)};
 	const auto foundnum = output_results(*qres, bsize);
-	output_sexp(Sexp().put_props(":found", foundnum));
+
+	output_sexp(resprops.put_props(
+			    ":found", foundnum,
+			    ":query", q,
+			    ":query-sexp", parse_query(q, false/*!expand*/).to_string(),
+			    ":query-sexp-expanded", parse_query(q, true/*expand*/).to_string(),
+			    ":maxnum", maxnum));
 }
 
 void
@@ -763,6 +770,20 @@ get_stats(const Indexer::Progress& stats, const std::string& state)
 }
 
 void
+Server::Private::do_index(const Indexer::Config& conf)
+{
+	StopWatch sw{"indexing"};
+	indexer().start(conf);
+	while (indexer().is_running()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		output_sexp(get_stats(indexer().progress(), "running"),
+			    Server::OutputFlags::Flush);
+	}
+	output_sexp(get_stats(indexer().progress(), "complete"),
+		    Server::OutputFlags::Flush);
+}
+
+void
 Server::Private::index_handler(const Command& cmd)
 {
 	Mu::Indexer::Config conf{};
@@ -771,22 +792,10 @@ Server::Private::index_handler(const Command& cmd)
 	// ignore .noupdate with an empty store.
 	conf.ignore_noupdate = store().empty();
 
-	indexer().stop();
-	if (index_thread_.joinable())
-		index_thread_.join();
+	if (indexer().is_running()) // already
+		throw Error{Error::Code::Xapian, "indexer is already running"};
 
-	// start a background track.
-	index_thread_ = std::thread([this, conf = std::move(conf)] {
-		StopWatch sw{"indexing"};
-		indexer().start(conf);
-		while (indexer().is_running()) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-			output_sexp(get_stats(indexer().progress(), "running"),
-				    Server::OutputFlags::Flush);
-		}
-		output_sexp(get_stats(indexer().progress(), "complete"),
-			    Server::OutputFlags::Flush);
-	});
+	do_index(conf);
 }
 
 void
@@ -981,7 +990,6 @@ Server::Private::queries_handler(const Command& cmd)
 
 	output_sexp(Sexp(":queries"_sym, std::move(qresults)));
 }
-
 
 void
 Server::Private::quit_handler(const Command& cmd)

@@ -1,12 +1,14 @@
 ;;; mu4e.el --- Mu4e, the mu mail user agent -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+
+;; Homepage: https://www.djcbsoftware.nl/code/mu/
 ;; Keywords: email
 
-;; This file is not part of GNU Emacs.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; mu4e is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,6 +26,7 @@
 ;;; Commentary:
 
 ;;; Code:
+
 (require 'mu4e-obsolete)
 
 (require 'mu4e-vars)
@@ -42,7 +45,6 @@
 (require 'mu4e-notification)
 (require 'mu4e-server)     ;; communication with backend
 
-
 
 (when mu4e-speedbar-support
   (require 'mu4e-speedbar)) ;; support for speedbar
@@ -53,7 +55,9 @@
 ;; desktop-save-mode; so let's turn that off.
 (with-eval-after-load 'desktop
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
-
+
+(defvar mu4e--initialized nil
+  "Is mu4e initialized? Only needed once per session.")
 
 ;;;###autoload
 (defun mu4e (&optional background)
@@ -61,7 +65,7 @@
 Then, show the main window, unless BACKGROUND (prefix-argument)
 is non-nil."
   (interactive "P")
-  (if (not (mu4e-running-p))
+  (if (not mu4e--initialized)
       (progn
         (mu4e--init-handlers)
         (mu4e--start (unless background #'mu4e--main-view)))
@@ -83,7 +87,6 @@ Otherwise, completely quit mu4e, including automatic updating."
         (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
           (mu4e--stop))
       (mu4e--stop))))
-
 ;;; Internals
 
 (defun mu4e--check-requirements ()
@@ -148,12 +151,13 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (mu4e-modeline-mode (if mu4e-modeline-support 1 -1))
   ;; redraw main buffer if there is one.
   (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
-  (mu4e--query-items-refresh 'reset-baseline)
+  (setq mu4e--initialized t) ;; last before we call the server.
   (mu4e--server-ping)
   ;; ask for the maildir-list
   (mu4e--server-data 'maildirs)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; re-indexing
+  (mu4e--query-items-refresh 'reset-baseline)
   (unless mu4e--contacts-set
     (mu4e--request-contacts-maybe)))
 
@@ -188,7 +192,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
                        '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
            (kill-buffer)))))
    (buffer-list)))
-
+
 ;;; Handlers
 (defun mu4e--default-handler (&rest args)
   "Dummy handler function with arbitrary ARGS."

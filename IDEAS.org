@@ -5,10 +5,32 @@ Ideas for future enhancements. We collect those here so they don't clutter up
 the Github issue list, i.e. without any clear plan for adding in the near
 future.
 
-- Support automatic handling for List-Unsubscribe headers and more in general,
-  handle mailing-list commands https://github.com/djcb/mu/issues/2623 and
-  https://github.com/djcb/mu/issues/2724 This seems useful, but probably
-  requires a lot of testing to get right. Can we re-use the Gnus code for this?
+** mu
+
+- Support indexing PDF (and other) attachments. This can be done extending
+  process_message_part in mu-message.cc; instead of using something
+  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
+  need some way for users to specify a MIME-type => tool mapping  (in Config).
+  https://github.com/djcb/mu/issues/2117
+
+- Include "message summary" in message information, for display in the headers
+  buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
+  useful one line description... perhaps the first line after the "Dear x,"?
+  Moreover, this requires new functionality on the headers-view side as well.
+
+- Try to guess the encodings; sometimes people send messages that e.g., claim
+  they are ISO-8859-1 but actually use windows-1252, resulting in some
+  characters being shown incorrectly. Perhaps best solved by GMime, but maybe mu
+  can do something. https://github.com/djcb/mu/issues/2700
+
+- More sorting options: in mu4e, display the messages from old-to-new (still get
+  the newest though) https://github.com/djcb/mu/issues/2759. Or, from
+  new-to-old, reversed in thread: https://github.com/djcb/mu/issues/2807
+
+- perhaps use =--personal-addres= instead of =--my-address= for consistency
+  https://github.com/djcb/mu/issues/2806
+
+** mu4e
 
 - Allow for *muting* messages https://github.com/djcb/mu/issues/636 Useful;
   probably need to do this by *remembering* the thread-id of muted messages; and
@@ -19,31 +41,44 @@ future.
   https://github.com/djcb/mu/issues/2308
   Shouldn't be _too_ hard, for someone that uses the functionality.
 
-- Make sorting stable if there are multiple messages with the same date. We
-  _could_ do this by adding some random millisecs to each messasge's timestamp; _or_
-  complicating the search (i.e., the message hash?). Maybe leave as is?
-  https://github.com/djcb/mu/issues/2527
-
-- Include "message summary" in message information, for display in the headers
-  buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
-  useful one line description... perhaps the first line after the "Dear x,"?
-  Moreover, this requires new functionality on the headers-view side as well.
-
-- Support indexing PDF (and other) attachments. This can be done extending
-  process_message_part in mu-message.cc; instead of using something
-  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
-  need some way for users to specify a MIME-type => tool mapping  (in Config).
-  https://github.com/djcb/mu/issues/2117
-
 - Support "aggregate actions" apply to a set of messages, e.g. apply patch-set
   in a set of messages. That'll require some advanced scripting, maybe using
   Guile.
   https://github.com/djcb/mu/issues/301
   https://github.com/djcb/mu/issues/2704
 
+- Make sorting stable if there are multiple messages with the same date. We
+  _could_ do this by adding some random millisecs to each message's timestamp; _or_
+  complicating the search (i.e., the message hash?). Maybe leave as is?
+  https://github.com/djcb/mu/issues/2527
+
+- Perhaps better support file names with commas.. perhaps temporarily add some
+  invisible unicode to fool crm-separator?
+  https://github.com/djcb/mu/issues/2768
+
+- Org-link type for any message matching some reference See:
+  https://github.com/djcb/mu/issues/2787. Some first steps implemented
+  (searching for references).
+
+- Reply/forward/... to multiple messages at once. This is sometimes useful, and
+  Gnus supports it. Does not seem trivial to re-use the Gnus code... (see
+  ~gnus-summary-work-articles~ etc.).
+  https://github.com/djcb/mu/issues/2799
+
+- Add some way to add a quick bookmark for (e.g.)  the current thread
+  https://github.com/djcb/mu/issues/2804
 
 * Done
 
 - Support mu4e-mark-handle-when also for when leaving emacs
   (kill-emacs-query-functions).
   https://github.com/djcb/mu/issues/2649
+
+- Support automatic handling for List-Unsubscribe headers and more in general,
+  handle mailing-list commands https://github.com/djcb/mu/issues/2623 and
+  https://github.com/djcb/mu/issues/2724 This seems useful, but probably
+  requires a lot of testing to get right. Can we re-use the Gnus code for this?
+
+  Yes: this is implemented now, in 1.12.9. Various Gnus' mailing list commands
+  are now available in the mu4e message view as well, such as
+  ~gnus-mailing-list-subscribe~, ~gnus-mailing-list-unsubscribe~.

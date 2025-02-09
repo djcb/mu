@@ -1,7 +1,7 @@
 ;;; mu4e-window.el --- Window management -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022  Mickey Petersen
-;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
 
 ;; Author: Mickey Petersen <mickey@masteringemacs.org>
 ;; Keywords: mail
@@ -26,7 +26,10 @@
 ;;; Buffer names for internal use
 
 (defconst mu4e--sexp-buffer-name "*mu4e-sexp-at-point*"
-  "Buffer name for sexp buffers.")
+  "Name for the buffer which shows the sexp for the message-at-point.")
+
+(defconst mu4e--last-query-buffer-name "*mu4e-last-query*"
+  "Name for the buffer which shows the last server-query.")
 
 (defvar mu4e-main-buffer-name "*mu4e-main*"
   "Name of the mu4e main buffer.")
@@ -77,14 +80,14 @@ function; this is no longer supported; instead you can use
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-visible-lines 10
-  "Number of lines to display in the header view when using the
+  "Number of lines to display in the headers view (horizontal split-view).
 horizontal split-view. This includes the header-line at the top,
 and the mode-line."
   :type 'integer
   :group 'mu4e-headers)
 
 (defcustom mu4e-headers-visible-columns 30
-  "Number of columns to display for the header view when using the
+  "Number of columns to display for the header view (vertical split-view).
 vertical split-view."
   :type 'integer
   :group 'mu4e-headers)
@@ -263,7 +266,7 @@ This is an action function for buffer display, see Info
 node `(elisp) Buffer Display Action Functions'.  It should be
 called only by `display-buffer' or a function directly or
 indirectly called by the latter."
-    (when-let ((window (or (display-buffer-reuse-window buffer alist)
+    (when-let* ((window (or (display-buffer-reuse-window buffer alist)
                            (display-buffer-same-window buffer alist)
                            (display-buffer-pop-up-window buffer alist)
                            (display-buffer-use-some-window buffer alist))))
@@ -364,9 +367,9 @@ and `mu4e-headers-visible-lines' or
 This function is best called from the hook
 `mu4e-view-rendered-hook'."
   (unless (mu4e-current-buffer-type-p 'view)
-    (mu4e-error "Cannot resize as this is not a valid view buffer."))
-  (when-let (win (and mu4e-linked-headers-buffer
-                      (get-buffer-window mu4e-linked-headers-buffer)))
+    (mu4e-error "Cannot resize as this is not a valid view buffer"))
+  (when-let* ((win (and mu4e-linked-headers-buffer
+                        (get-buffer-window mu4e-linked-headers-buffer))))
     ;; This can fail for any number of reasons. If it does, we do
     ;; nothing. If the user has customized the window display we may
     ;; find it impossible to resize the window, and that should not be

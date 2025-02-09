@@ -391,8 +391,7 @@ properties, please refer to the @t{mu-find} man-page.
 
 @itemize
 @item @code{(mu:bcc msg)}: the @t{Bcc} field of the message, or @t{#f} if there is none
-@item @code{(mu:body-html msg)}: : the html body of the message, or @t{#f} if there is none
-@item @code{(mu:body-txt msg)}: the plain-text body of the message, or @t{#f} if there is none
+@item @code{(mu:body msg)}: the body of the message, or @t{#f} if there is none
 @item @code{(mu:cc msg)}: the @t{Bcc} field of the message, or @t{#f} if there is none
 @item @code{(mu:date msg)}: the @t{Date} field of the message, or 0 if there is none
 @item @code{(mu:flags msg)}: list of message-flags for this message

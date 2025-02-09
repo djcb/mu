@@ -50,6 +50,8 @@ template <typename Func> void
 xapian_try(Func&& func) noexcept
 try {
 	func();
+} catch (const Mu::Error& me) {
+	mu_critical("{}: mu error '{}'", __func__, me.what());
 } catch (const Xapian::Error& xerr) {
 	mu_critical("{}: xapian error '{}'", __func__, xerr.get_msg());
 } catch (const std::runtime_error& re) {
@@ -64,6 +66,9 @@ template <typename Func, typename Default = std::invoke_result<Func>> auto
 xapian_try(Func&& func, Default&& def) noexcept -> std::decay_t<decltype(func())>
 try {
 	return func();
+} catch (const Mu::Error& me) {
+	mu_critical("{}: mu error '{}'", __func__, me.what());
+	return static_cast<Default>(def);
 } catch (const Xapian::DocNotFoundError& xerr) {
 	return static_cast<Default>(def);
 } catch (const Xapian::Error& xerr) {
@@ -84,6 +89,9 @@ template <typename Func> auto
 xapian_try_result(Func&& func) noexcept -> std::decay_t<decltype(func())>
 try {
 	return func();
+
+} catch (const Mu::Error& me) {
+	return Err(std::move(me));
 } catch (const Xapian::DatabaseNotFoundError& nferr) {
 	return Err(Error{Error::Code::Xapian, "failed to open database"}.
 		   add_hint("Try (re)creating using `mu init'"));
@@ -128,13 +136,13 @@ struct MetadataIface {
 
 
 /// In-memory db
-struct MemDb: public MetadataIface {
+struct MemDb final: public MetadataIface {
 	/**
 	 * Create a new memdb
 	 *
 	 * @param readonly read-only? (for testing)
 	 */
-	MemDb(bool readonly=false):read_only_{readonly} {}
+	explicit MemDb(bool readonly=false):read_only_{readonly} {}
 
 	/**
 	 * Set some metadata
@@ -188,7 +196,7 @@ private:
 /**
  * Fairly thin wrapper around Xapian::Database and Xapian::WritableDatabase
  */
-class XapianDb: public MetadataIface {
+class XapianDb final: public MetadataIface {
 public:
 	/**
 	 * Type of database to create.
@@ -211,8 +219,9 @@ public:
 	/**
 	 * DTOR
 	 */
-	~XapianDb() {
-		if (!read_only())
+	~XapianDb() override {
+		// shouldn't use read_only() here, since that's virtual.
+		if (std::holds_alternative<Xapian::WritableDatabase>(db_))
 			request_commit(true/*force*/);
 		mu_debug("closing db");
 	}
@@ -237,7 +246,9 @@ public:
 	 *
 	 * @return path to database
 	 */
-	const std::string& path() const;
+	const std::string& path() const {
+		return path_;
+	}
 
 	/**
 	 * Get a description of the Xapian database
@@ -445,8 +456,7 @@ public:
 
 
 	/**
-	 * Explicitly request the Xapian DB to be committed to disk. This won't
-	 * do anything when not in a transaction.
+	 * Explicitly request the Xapian DB to be committed to disk
 	 *
 	 * @param force whether to force-commit
 	 */
@@ -464,21 +474,23 @@ public:
 
 private:
 	/**
-	 * To be called after all changes, with DB_LOCKED held.
+	 * To be called with DB_LOCKED held.
 	 */
 	void request_commit(Xapian::WritableDatabase& db, bool force) {
-		// in transaction-mode and enough changes, commit them
-		if (!in_transaction())
-			return;
 		if ((++changes_ < batch_size_) && !force)
 			return;
 		xapian_try([&]{
-			mu_debug("committing transaction with {} changes; "
-				 "forced={}", changes_, force ? "yes" : "no");
-			db.commit_transaction();
+			mu_debug("committing {} changes; transaction={}; "
+				 "forced={}", changes_,
+				 in_transaction() ? "yes" : "no",
+				 force ? "yes" : "no");
+			if (in_transaction()) {
+				db.commit_transaction();
+				in_transaction_ = {};
+			}
 			db.commit();
 			changes_ = 0;
-			in_transaction_ = {};
+
 		});
 	}
 
@@ -499,7 +511,7 @@ private:
 	Xapian::WritableDatabase& wdb();
 
 	std::string path_;
-	DbType	db_;
+	DbType db_;
 	size_t changes_{};
 	bool in_transaction_{};
 	size_t batch_size_;

@@ -1,6 +1,6 @@
 ;;; mu4e-view.el --- Mode for viewing e-mail messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -97,8 +97,6 @@ The first letter of NAME is used as a shortcut character."
   :type 'integer
   :group 'mu4e-view)
 
-
-
 (defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")
 
@@ -134,7 +132,7 @@ Then, display the results."
                      ((mu4e-current-buffer-type-p 'view)
                       (when (mu4e--view-detached-p (current-buffer))
                         (mu4e-error
-                         "Cannot navigate in a detached view buffer."))
+                         "Cannot navigate in a detached view buffer"))
                       (mu4e-get-headers-buffer))
                      ;; fallback; but what would trigger this?
                      (t (mu4e-get-headers-buffer))))
@@ -183,11 +181,9 @@ previous header."
    (mu4e~headers-move (- (or n 1)))))
 
 (defun mu4e--view-prev-or-next (func backwards)
-  "Move point to the next or previous message.
-Go to the previous message if BACKWARDS is non-nil.
-unread message header in the headers buffer connected with this
-message view. If this succeeds, return the new docid. Otherwise,
-return nil."
+  "Move point to the next or previous message and invoke FUNC.
+Go to the previous message if BACKWARDS is non-nil. If this
+succeeds, return the new docid. Otherwise, return nil."
   (mu4e--view-in-headers-context (funcall func backwards))
   (mu4e-select-other-view)
   (mu4e-headers-view-message))
@@ -231,13 +227,13 @@ If this succeeds, return the new docid. Otherwise, return nil."
   (interactive)
   (mu4e--view-in-headers-context (mu4e-thread-fold-toggle-all)))
 
-
 ;;; Interactive functions
 (defun mu4e-view-action (&optional msg)
   "Ask user for some action to apply on MSG, then do it.
-If MSG is nil apply action to message returned
-bymessage-at-point.  The actions are specified in
-`mu4e-view-actions'."
+If MSG is nil apply action to message returned by
+`mu4e-message-at-point'.
+
+ The actions are specified in `mu4e-view-actions'."
   (interactive)
   (let* ((msg (or msg (mu4e-message-at-point)))
          (actionfunc (mu4e-read-option "Action: " mu4e-view-actions)))
@@ -327,7 +323,7 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
   "Detach the view buffer from its headers buffer."
   (interactive)
   (unless mu4e-linked-headers-buffer
-    (mu4e-error "This view buffer is already detached."))
+    (mu4e-error "This view buffer is already detached"))
   (mu4e-message "Detached view buffer from %s"
                 (progn mu4e-linked-headers-buffer
                   (with-current-buffer mu4e-linked-headers-buffer
@@ -339,7 +335,7 @@ Add this function to `mu4e-view-mode-hook' to enable this feature."
                   (rename-buffer (make-temp-name (buffer-name)) t))))
 
 (defun mu4e-view-attach (headers-buffer)
-  "Attaches a view buffer to a headers buffer."
+  "Attaches a view buffer to HEADERS-BUFFER."
   (interactive
    (list (get-buffer (read-buffer
                       "Select a headers buffer to attach to: " nil t
@@ -421,7 +417,6 @@ list."
   (interactive)
   (mu4e--view-in-headers-context
    (mu4e-mark-execute-all)))
-
 
 ;;; URL handling
 
@@ -597,6 +592,30 @@ message."
 (defvar gnus-icalendar-additional-identities)
 (defvar-local mu4e--view-rendering nil)
 
+(defun mu4e--fake-original-article-buffer ()
+  "Create a fake original gnus article buffer.
+
+With this, some Gnus commands that require an original message
+buffer can work, e.g. for dealing with mailing-lists. We only
+store the headers, not the body, to save some memory, as we don't
+need the body.
+
+This must be called while in the raw message buffer."
+   (message-narrow-to-headers-or-head)
+   (let ((headers (buffer-string)))
+     (widen)
+     (with-current-buffer
+         (get-buffer-create gnus-original-article-buffer 'no-hooks)
+       (erase-buffer)
+       (insert headers)
+       (current-buffer))))
+
+(defun mu4e--original-article-field (field)
+  "Get FIELD from the original article."
+  (when (bufferp gnus-original-article-buffer)
+    (with-current-buffer gnus-original-article-buffer
+      (gnus-fetch-field field))))
+
 (defun mu4e-view (msg)
   "Display the message MSG in a new buffer, and keep in sync with HDRSBUF.
 \"In sync\" here means that moving to the next/previous message
@@ -614,8 +633,8 @@ As a side-effect, a message that is being viewed loses its
   ;; Unfortunately that does create its own issues: namely ensuring
   ;; buffer-local state that *must* survive is correctly copied
   ;; across.
-  (let ((linked-headers-buffer))
-    (when-let ((existing-buffer (mu4e-get-view-buffer nil nil)))
+  (let ((linked-headers-buffer) (orig-art-buf))
+    (when-let* ((existing-buffer (mu4e-get-view-buffer nil nil)))
       ;; required; this state must carry over from the killed buffer
       ;; to the new one.
       (setq linked-headers-buffer mu4e-linked-headers-buffer)
@@ -636,33 +655,37 @@ As a side-effect, a message that is being viewed loses its
         (erase-buffer)
         (insert-file-contents-literally
          (mu4e-message-readable-path msg) nil nil nil t)
+        ;; set up an original-article-buffer, gnus wants it.
+        (setq orig-art-buf (mu4e--fake-original-article-buffer))
         ;; some messages have ^M which causes various rendering
         ;; problems later (#2260, #2508), so let's remove those
         (article-remove-cr)
         (setq-local mu4e--view-message msg)
-        (mu4e--view-render-buffer msg))
-      (mu4e-loading-mode 0)))
-  (unless (mu4e--view-detached-p gnus-article-buffer)
-    (with-current-buffer mu4e-linked-headers-buffer
-      ;; We need this here as we want to avoid displaying the buffer until
-      ;; the last possible moment --- after the message is rendered in the
-      ;; view buffer.
-      ;;
-      ;; Otherwise, `mu4e-display-buffer' may adjust the view buffer's
-      ;; window height based on a buffer that has no text in it yet!
-      (setq-local mu4e~headers-view-win
-                  (mu4e-display-buffer gnus-article-buffer nil))
-      (unless (window-live-p mu4e~headers-view-win)
-        (mu4e-error "Cannot get a message view"))
-      (select-window mu4e~headers-view-win)))
-  (with-current-buffer gnus-article-buffer
-    (let ((inhibit-read-only t))
-      (run-hooks 'mu4e-view-rendered-hook))
-    ;; support bookmarks.
-    (setq-local bookmark-make-record-function
-                #'mu4e--make-bookmark-record)
-    ;; only needed on some setups; #2683
-    (goto-char (point-min))))
+        (ignore-errors
+          (mu4e--view-render-buffer msg)))
+      (mu4e-loading-mode 0))
+    (unless (mu4e--view-detached-p gnus-article-buffer)
+      (with-current-buffer mu4e-linked-headers-buffer
+        ;; We need this here as we want to avoid displaying the buffer until
+        ;; the last possible moment --- after the message is rendered in the
+        ;; view buffer.
+        ;;
+        ;; Otherwise, `mu4e-display-buffer' may adjust the view buffer's
+        ;; window height based on a buffer that has no text in it yet!
+        (setq-local mu4e~headers-view-win
+                    (mu4e-display-buffer gnus-article-buffer nil))
+        (unless (window-live-p mu4e~headers-view-win)
+          (mu4e-error "Cannot get a message view"))
+        (select-window mu4e~headers-view-win)))
+    (with-current-buffer gnus-article-buffer
+      (let ((inhibit-read-only t))
+        (run-hooks 'mu4e-view-rendered-hook))
+      ;; support bookmarks.
+      (setq-local bookmark-make-record-function
+                  #'mu4e--make-bookmark-record
+                  gnus-original-article orig-art-buf)
+      ;; only needed on some setups; #2683
+      (goto-char (point-min)))))
 
 (defun mu4e-view-message-text (msg)
   "Return the rendered MSG as a string."
@@ -712,7 +735,7 @@ determine which browser function to use."
 
 (defun mu4e--view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode."
-  (setq gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
+  (setq-local gnus-summary-buffer (get-buffer-create " *appease-gnus*"))
   (let* ((inhibit-read-only t)
          (max-specpdl-size mu4e-view-max-specpdl-size)
          (mm-decrypt-option 'known)
@@ -741,24 +764,31 @@ determine which browser function to use."
           (set-buffer-modified-p nil)
           (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles))
       (epg-error
-       (mu4e-warn "EPG error: %s; fall back to raw view"
-                  (error-message-string err))))))
+       (mu4e-message "EPG error: %s; fall back to raw view"
+                     (error-message-string err))))))
 
 (defun mu4e-view-refresh ()
   "Refresh the message view."
   ;;; XXX: sometimes, side-effect: increase the header-buffers size
   (interactive)
-  (when-let ((msg (and (derived-mode-p 'mu4e-view-mode)
+  (when-let* ((msg (and (derived-mode-p 'mu4e-view-mode)
                        mu4e--view-message)))
     (mu4e-view-quit)
     (mu4e-view msg)))
 
-(defun mu4e-view-toggle-show-mime-parts()
-  "Toggle whether to show all MIME-parts."
+(defun mu4e-view-show-mime-parts()
+  "Show all MIME-parts.
+
+This can be useful for messages with embedded images etc. that
+you want to save, and that are not accessible otherwise. However,
+note that Emacs can get slow with big attached images.
+
+To go back to normal display, quit the message and re-open."
   (interactive)
-  (setq gnus-inhibit-mime-unbuttonizing
-        (not gnus-inhibit-mime-unbuttonizing))
-  (mu4e-view-refresh))
+  (let* ((toggle (not gnus-mime-display-multipart-as-mixed))
+         (gnus-inhibit-mime-unbuttonizing (not toggle))
+         (gnus-mime-display-multipart-as-mixed toggle))
+    (mu4e-view-refresh)))
 
 (defun mu4e-view-toggle-fill-flowed()
   "Toggle flowed-message text filling."
@@ -788,7 +818,7 @@ Note that for some messages, this can trigger high CPU load."
               ((or ':path ':maildir ':list)
                (mu4e--view-gnus-insert-header field fieldval))
               (':message-id
-               (when-let ((msgid (plist-get msg :message-id)))
+               (when-let* ((msgid (plist-get msg :message-id)))
                  (mu4e--view-gnus-insert-header field (format "<%s>" msgid))))
               (':mailing-list
                (let ((list (plist-get msg :list)))
@@ -847,6 +877,11 @@ Note that for some messages, this can trigger high CPU load."
         (setq handle (cons buf (cons ty rest)))
         (list handle attendee))
   handle-attendee))
+
+(defun mu4e-view-jump-to-mime-part (number)
+  "Jump to MIME-part with NUMBER."
+  (interactive "P")
+  (call-interactively #'gnus-article-jump-to-part number))
 
 (defun mu4e--view-mode-p ()
   "Is the buffer in mu4e-view-mode or one of its descendants?"
@@ -920,6 +955,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "a" #'mu4e-view-action)
     (define-key map "A" #'mu4e-view-mime-part-action)
     (define-key map "e" #'mu4e-view-save-attachments)
+    (define-key map "J" #'mu4e-view-jump-to-mime-part)
 
     ;; change the number of headers
     (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
@@ -1010,7 +1046,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
   "Keymap for mu4e-view mode.")
 
 (easy-menu-define mu4e-view-mode-menu
-  mu4e-view-mode-map "Menu for mu4e's view-mode."
+  mu4e-view-mode-map "Menu for mu4e's view mode."
   (append
    '("View"
      "--"
@@ -1101,14 +1137,13 @@ Article Treatment' for more options."
   (interactive)
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
-
 (defun mu4e-view-toggle-html ()
   "Toggle html-display of the first html-part found."
   (interactive)
   ;; This function assumes `gnus-article-mime-handle-alist' is sorted by
   ;; pertinence, i.e. the first HTML part found in it is the most important one.
   (save-excursion
-    (if-let ((html-part
+    (if-let*((html-part
               (seq-find (lambda (handle)
                           (equal (mm-handle-media-type (cdr handle))
                                  "text/html"))
@@ -1120,7 +1155,6 @@ Article Treatment' for more options."
                         gnus-article-mime-handle-alist)))
         (gnus-article-inline-part (car html-part))
       (mu4e-warn "Cannot switch; no html and/or text part in this message"))))
-
 ;;; Bug Reference mode support
 
 ;; Due to mu4e's view buffer handling (mu4e-view-mode is called long before the
@@ -1161,6 +1195,5 @@ GROUP-REGEXP and each header value against HEADER-REGEXP in
   (add-hook 'bug-reference-auto-setup-functions
             #'mu4e--view-try-setup-bug-reference-mode))
 
-
 (provide 'mu4e-view)
 ;;; mu4e-view.el ends here

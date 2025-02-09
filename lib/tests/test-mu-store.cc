@@ -344,50 +344,70 @@ Yes, that would be excellent.
 
 	 // Index it into a store.
 	 TempDir tempdir;
-	 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir")};
-	 assert_valid_result(store);
+	 ::time_t msg3changed{};
+	 Store::Id msg3id;
 
-	 store->indexer().start({});
-	 size_t n{};
-	 while (store->indexer().is_running()) {
-		 std::this_thread::sleep_for(100ms);
-		 g_assert_cmpuint(n++,<=,25);
+	 {
+		 auto store{Store::make_new(tempdir.path(), tempdir2.path() + "/Maildir")};
+		 assert_valid_result(store);
+
+		 store->indexer().start({});
+		 size_t n{};
+		 while (store->indexer().is_running()) {
+			 std::this_thread::sleep_for(100ms);
+			 g_assert_cmpuint(n++,<=,25);
+		 }
+		 g_assert_true(!store->indexer().is_running());
+		 const auto& prog{store->indexer().progress()};
+		 g_assert_cmpuint(prog.updated,==,1);
+		 g_assert_cmpuint(store->size(), ==, 1);
+		 g_assert_false(store->empty());
+
+		 // Find the message
+		 auto qr = store->run_query("path:" + tempdir2.path() + "/Maildir/a/new/msg");
+		 assert_valid_result(qr);
+		 g_assert_cmpuint(qr->size(),==,1);
+
+		 const auto msg = qr->begin().message();
+		 g_assert_true(!!msg);
+
+		 // Check the message
+		 const auto oldpath{msg->path()};
+		 assert_equal(msg->subject(), "Re: multi-eq hash tables");
+		 g_assert_true(msg->docid() != 0);
+		 g_debug("%s", msg->sexp().to_string().c_str());
+
+		 // Move the message from new->cur
+		 const auto oldchanged{msg->changed()};
+		 std::this_thread::sleep_for(1s); /* ctime should change */
+		 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
+		 assert_valid_result(msgs3);
+		 g_assert_true(msgs3->size() == 1);
+		 auto&& msg3_opt{store->find_message(msgs3->at(0).first/*id*/)};
+		 g_assert_true(!!msg3_opt);
+		 auto&& msg3{std::move(*msg3_opt)};
+		 msg3id = msg3.docid();
+		 assert_equal(msg3.maildir(), "/a");
+		 assert_equal(msg3.path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
+		 g_assert_true(::access(msg3.path().c_str(), R_OK)==0);
+		 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
+
+		 // ensure that the changed value was updated properly.
+		 msg3changed = msg->changed();
+		 const auto changeddiff(msg3changed - oldchanged);
+		 g_assert_true(changeddiff > 0 && changeddiff <= 2);
+		 g_assert_cmpuint(store->size(), ==, 1);
 	 }
-	 g_assert_true(!store->indexer().is_running());
-	 const auto& prog{store->indexer().progress()};
-	 g_assert_cmpuint(prog.updated,==,1);
-	 g_assert_cmpuint(store->size(), ==, 1);
-	 g_assert_false(store->empty());
 
-	 // Find the message
-	 auto qr = store->run_query("path:" + tempdir2.path() + "/Maildir/a/new/msg");
-	 assert_valid_result(qr);
-	 g_assert_cmpuint(qr->size(),==,1);
-
-	 const auto msg = qr->begin().message();
-	 g_assert_true(!!msg);
-
-	 // Check the message
-	 const auto oldpath{msg->path()};
-	 assert_equal(msg->subject(), "Re: multi-eq hash tables");
-	 g_assert_true(msg->docid() != 0);
-	 g_debug("%s", msg->sexp().to_string().c_str());
-
-	 // Move the message from new->cur
-	 std::this_thread::sleep_for(1s); /* ctime should change */
-	 const auto msgs3 = store->move_message(msg->docid(), {}, Flags::Seen);
-	 assert_valid_result(msgs3);
-	 g_assert_true(msgs3->size() == 1);
-	 auto&& msg3_opt{store->find_message(msgs3->at(0).first/*id*/)};
-	 g_assert_true(!!msg3_opt);
-	 auto&& msg3{std::move(*msg3_opt)};
-
-	 assert_equal(msg3.maildir(), "/a");
-	 assert_equal(msg3.path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
-	 g_assert_true(::access(msg3.path().c_str(), R_OK)==0);
-	 g_assert_false(::access(oldpath.c_str(), R_OK)==0);
-
-	 g_debug("%s", msg3.sexp().to_string().c_str());	 g_assert_cmpuint(store->size(), ==, 1);
+	 // ensure the values are properly stored.
+	 {
+		const auto store2{Store::make(tempdir.path())};
+		assert_valid_result(store2);
+		const auto msg4 = store2->find_message(msg3id);
+		g_assert_true(!!msg4);
+		assert_equal(msg4->path(), tempdir2.path() + "/Maildir/a/cur/msg:2,S");
+		g_assert_cmpuint(msg4->changed(), ==, msg3changed);
+	 }
 }
 
 
