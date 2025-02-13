@@ -920,6 +920,57 @@ Boo!
 
 
 static void
+test_related_empty_in_reply_to()
+{
+	g_test_bug("2812");
+	// test message sent to self, and copy of received msg.
+
+	const auto test_msg = R"(From: "Edward Mallory" <ed@leviathan.gb>
+To: "Russ Hildebrandt <russ@example.com>
+Subject: New Prospect
+Date: Wed, 07 Dec 2022 18:38:06 +0200
+Message-ID: <875ysdfentbhg.fsf@djcbsoftware.nl>
+MIME-Version: 1.0
+In-Reply-To: <>
+Content-Type: text/plain
+
+Boo!
+)";
+	const TestMap test_msgs = {
+		{"inbox/cur/msg1", test_msg }};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	g_assert_cmpuint(store.size(), ==, 1);
+
+	// normal query should give 1
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::None);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	// a related query should also give 1
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+
+	// a related/threading query should also give 1
+	{
+		auto qr = store.run_query("maildir:/inbox", Field::Id::Date,
+					  QueryFlags::IncludeRelated | QueryFlags::Threading);
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1);
+	}
+}
+
+
+static void
 test_html()
 {
 	// test message sent to self, and copy of received msg.
@@ -1056,6 +1107,8 @@ main(int argc, char* argv[])
 			test_subject_kata_containers);
 	g_test_add_func("/store/query/related-dup-threaded",
 			test_related_dup_threaded);
+	g_test_add_func("/store/query/related-empty-in-reply-to",
+			test_related_empty_in_reply_to);
 	g_test_add_func("/store/query/html",
 			test_html);
 	g_test_add_func("/store/query/ngrams",

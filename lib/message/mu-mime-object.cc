@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -426,7 +426,10 @@ MimeMessage::references() const noexcept
 		return seq_some(seq, [&](auto&& str) { return ref == str; });
 	};
 
-	auto is_fake = [](auto&& msgid) {
+	auto on_blacklist = [](auto&& msgid) {
+		// don't include empty message-ids
+		if (!*msgid)
+			return true;
 		// this is bit ugly; protonmail injects fake References which
 		// can otherwise screw up threading.
 		if (g_str_has_suffix(msgid, "protonmail.internalid"))
@@ -447,7 +450,7 @@ MimeMessage::references() const noexcept
 
 		for (auto i = 0; i != g_mime_references_length(mime_refs); ++i) {
 			const auto msgid{g_mime_references_get_message_id(mime_refs, i)};
-			if (msgid && !is_dup(refs, msgid) && !is_fake(msgid))
+			if (msgid && !is_dup(refs, msgid) && !on_blacklist(msgid))
 				refs.emplace_back(msgid);
 		}
 		g_mime_references_free(mime_refs);
