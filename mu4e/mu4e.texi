@@ -403,15 +403,27 @@ You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 indexing messages. If you want to change them, you need to @t{init}
 once again.
 
-The addresses may also be basic PCRE regular expressions, wrapped in
-slashes, for example:
-
+The addresses may also be basic PCRE regular expressions, wrapped in slashes,
+for example:
 @example
   $ mu init --maildir=~/Maildir '--my-address=/foo-.*@@example\.com/'
 @end example
 
 If you want to see the values for your message-store, you can use
 @command{mu info}.
+
+Note: unfortunately, PCRE regular expressions are not the same as Emacs regular
+expressions. Very simple ones match, but e.g. @t{(foo|bar)} in PCRE syntax is
+specified as @t{\(foo\|bar\)} in Emacs/@t{mu4e}.
+
+The good news is that @t{mu4e} can do the conversion automatically; however for
+this to work, users needs to install the @t{pcre2el} package (available in
+MELPA), and ensure it is available in @t{load-path} when Emacs runs (a normal
+package-installation takes care of this). After that, @t{mu4e} takes care of the
+translation automatically.
+
+It is possible to come up with complicated PCRE regular expressions that are not
+translatable; if necessary, experiment with @t{pcre2el} to avoid this.
 
 @node Indexing your messages
 @section Indexing your messages

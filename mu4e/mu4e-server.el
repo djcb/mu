@@ -242,6 +242,8 @@ Checks whether the server process is live."
        (memq (process-status mu4e--server-process)
              '(run open listen connect stop)) t))
 
+(declare-function mu4e--massage-addresses "mu4e-contacts")
+
 (defsubst mu4e--server-eat-sexp-from-buf ()
   "Eat the next s-expression from `mu4e--server-buf'.
 Note: this is a string, not an emacs-buffer. `mu4e--server-buf gets
@@ -383,7 +385,12 @@ The server output is as follows:
 
          ;; received a pong message
          ((plist-get sexp :pong)
-          (setq mu4e--server-props (plist-get sexp :props))
+          (let ((props (plist-get sexp :props)))
+            ;; attempt to translate the regex-style.
+            (plist-put props :personal-addresses
+                       (mu4e--massage-addresses
+                        (plist-get props :personal-addresses)))
+            (setq mu4e--server-props props))
           (funcall mu4e-pong-func sexp))
 
          ;; receive queries info

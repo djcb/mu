@@ -84,6 +84,10 @@
     view as well, such as ~gnus-mailing-list-subscribe~,
     ~gnus-mailing-list-unsubscribe~.
 
+  - The mu server uses PCRE-compatible regexps (for addresses), which are not
+    necessarily compatible with Emacs regular expressions. However, mu4e can now
+    automatically translate; this depends on the ~pcre2el~ package which the user
+    should install when using regular expression-addresses.
 
 * 1.12 (released on February 24, 2024)
 

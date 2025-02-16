@@ -1,6 +1,6 @@
 ;;; mu4e-contacts.el --- Dealing with contacts -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -22,14 +22,19 @@
 
 ;;; Commentary:
 
-;; Utility functions used in the mu4e
+;; Functions and configuration for dealing with contacts in mu4e.
 
 ;;; Code:
 (require 'cl-lib)
 (require 'message)
+
+;; opportunistic; if we have it, try convert pcre-style regexps (from the mu
+;; server) to emacs-style.
+(require 'pcre2el nil 'noerror)
+
+
 (require 'mu4e-helpers)
 (require 'mu4e-update)
-
 
 ;;; Configuration
 (defcustom mu4e-compose-complete-addresses t
@@ -114,23 +119,59 @@ predicate function. A value of nil keeps all the addresses."
           (repeat string))
   :group 'mu4e-compose)
 
-
 ;;; Internal variables
 (defvar mu4e--contacts-tstamp "0"
   "Timestamp for the most recent contacts update." )
 
 (defvar mu4e--contacts-set nil
   "Set with the full contact addresses for autocompletion.")
-
+
+(defun mu4e-rx-pcre-to-emacs (pcre-rx)
+  "Convert a PCRE regular-expression PCRE-RX to Emacs-style.
+
+This depends on the \"pcre2el\" package being available. If not,
+simply returns its argument. The same happen for
+regular-expressions that cannot be converted. See the pcre2el
+documentation for further details."
+  (let ((emacs-rx
+         (if (fboundp 'pcre-to-elisp)
+             (with-demoted-errors "pcre2el error: %S"
+               (pcre-to-elisp pcre-rx))
+           pcre-rx)))
+    (unless (string= pcre-rx emacs-rx)
+     (mu4e-log 'misc "converted %s => %s" pcre-rx emacs-rx))
+    emacs-rx))
+
+(defun mu4e--grab-rx-addr(addr)
+  "Grab the regexp address (if any) from ADDR.
+Address string ADDR is either a normal address like
+\"foo@example.com\", or a regex-address like
+\"/(foo|bar)@example\\.com/\". In the former case, return nil,
+and in latter case, return the part between the slashes."
+  (save-match-data
+    (when (string-match "^/\\(.*\\)/$" addr)
+      (match-string 1 addr))))
+
+(defun mu4e--massage-addresses (addrs)
+  "Convert list of addresses ADDRS into Emacs compatible.
+This means any regexp-addresses are converted from PCRE to Emacs.
+Other addresses remain unchanged."
+  (seq-map
+   (lambda (addr)
+     (if-let* ((rxaddr (mu4e--grab-rx-addr addr)))
+         (concat "/" (mu4e-rx-pcre-to-emacs rxaddr) "/")
+       addr))
+   addrs))
+
 ;;; user mail address
 (defun mu4e-personal-addresses (&optional no-regexp)
   "Get the list user's personal addresses, as passed to \"mu init\".
 
 The address are either plain e-mail addresses or regexps (strings
- wrapped / /). When NO-REGEXP is non-nil, do not include regexp
- address patterns (if any)."
+wrapped in / /). When NO-REGEXP is non-nil, do not include regexp
+address patterns (if any)."
   (seq-remove
-   (lambda (addr) (and no-regexp (string-match-p "^/.*/" addr)))
+   (lambda (addr) (and no-regexp (mu4e--grab-rx-addr addr)))
    (when-let* ((props (mu4e-server-properties)))
      (plist-get props :personal-addresses))))
 
@@ -142,13 +183,10 @@ with both the plain addresses and /regular expressions/."
   (when addr
     (seq-find
      (lambda (m)
-       (if (string-match "/\\(.*\\)/" m)
-           (let ((rx (match-string 1 m))
-                 (case-fold-search t))
-             (string-match rx addr))
+       (if-let* ((rxaddr (mu4e--grab-rx-addr m)) (case-fold-search t))
+           (string-match rxaddr addr)
          (eq t (compare-strings addr nil nil m nil nil 'case-insensitive))))
      (mu4e-personal-addresses))))
-
 
 (defun mu4e-personal-or-alternative-address-p (addr)
   "Is ADDR either a personal or an alternative address?
@@ -179,7 +217,6 @@ See #2680 for further details."
   (or (and addr (string= addr ""))
       (mu4e-personal-or-alternative-address-p addr)))
 
-
 ;; Helpers
 
 ;;; RFC2822 handling of phrases in mail-addresses
@@ -247,7 +284,6 @@ case a phrase contains a quote, it will be escaped."
         (format "%s <%s>" (mu4e--rfc822-quote-phrase name) email)
       email)))
 
-
 (defun mu4e--update-contacts (contacts &optional tstamp)
   "Receive a sorted list of CONTACTS newer than TSTAMP.
 Update an internal set with it.

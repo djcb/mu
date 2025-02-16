@@ -39,6 +39,15 @@ _email-address-or-regex_ can be either a plain e-mail address (such as
 for details), wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on your
 shell, the argument may need to be quoted.
 
+A note of warning for *mu4e* users: any regular-expressions used with
+=--with-address= are also used by *mu4e*. Unfortunately, PCRE regular expressions
+are *not* generally compatible with Emacs regular expressions. For instance,
+*(foo|bar)* in PCRE syntax has *\(foo\|bar\)* as its Emacs equivalent.
+
+The good news is that *mu4e* can automatically translate the regular-expressions,
+if you allow it to, by installing the *pcre2el* Elisp package. See the *mu4e*
+documentation for further details.
+
 ** --ignored-address _email-address-or-regex_
 Specifies that some e-mail address is to be ignored from the contacts-cache (the
 option can be used multiple times). Such addresses then cannot be found with
