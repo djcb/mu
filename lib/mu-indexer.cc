@@ -29,6 +29,8 @@
 #include <condition_variable>
 #include <iostream>
 #include <atomic>
+#include <unordered_map>
+#include <unordered_set>
 #include <chrono>
 using namespace std::chrono_literals;
 
@@ -280,9 +282,37 @@ Indexer::Private::cleanup()
 
 	size_t                 n{};
 	std::vector<Store::Id> orphans; // store messages without files.
+
+	using DirFiles = std::unordered_set<std::string>;
+	std::unordered_map<std::string, DirFiles> dir_cache;
+
+	auto get_dir_files = [](const std::string& path) -> DirFiles {
+		DirFiles ret;
+		auto dir{::opendir(path.c_str())};
+		if (dir) {
+			struct dirent* dentry;
+			while ((dentry = ::readdir(dir))) {
+				ret.emplace(dentry->d_name);
+			}
+			::closedir(dir);
+		}
+
+		return ret;
+	};
+
+	auto is_file_present = [&](const std::string& path) -> bool {
+		std::string dir = dirname(path);
+		auto [it, inserted] = dir_cache.try_emplace(dir);
+		DirFiles& dir_files = it->second;
+		if (inserted) {
+			dir_files = get_dir_files(dir);
+		}
+		return dir_files.find(basename(path)) != dir_files.end();
+	};
+
 	store_.for_each_message_path([&](Store::Id id, const std::string& path) {
 		++n;
-		if (::access(path.c_str(), R_OK) != 0) {
+		if (!is_file_present(path)) {
 			mu_debug("cannot read {} (id={}); queuing for removal from store",
 				 path, id);
 			orphans.emplace_back(id);
