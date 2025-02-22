@@ -1,6 +1,6 @@
 ;;; mu4e-update.el --- Update the mu4e message store -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -29,7 +29,7 @@
 
 (require 'mu4e-helpers)
 (require 'mu4e-server)
-
+
 ;;; Customization
 
 (defcustom mu4e-get-mail-command "true"
@@ -138,7 +138,6 @@ If non-nil, this is a plist of the form:
   "Name of buffer with cloned from the last update buffer.
 Useful for diagnosing update problems.")
 
-
 ;;; Internal variables / const
 (defconst mu4e--update-name " *mu4e-update*"
   "Name of the process and buffer to update mail.")
@@ -152,7 +151,6 @@ Useful for diagnosing update problems.")
   "Query string for `mu4e-get-mail-command' password.")
 (defvar mu4e--get-mail-password-regexp "^Remote: Enter password: $"
   "Regexp for a `mu4e-get-mail-command' password query.")
-
 
 (defun mu4e--get-mail-process-filter (proc msg)
   "Filter the MSG output of the `mu4e-get-mail-command' PROC.
