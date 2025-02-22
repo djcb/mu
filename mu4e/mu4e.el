@@ -131,8 +131,9 @@ Invoke FUNC if non-nil."
     (when (and mu4e-update-interval (null mu4e--update-timer))
       (setq mu4e--update-timer
             (run-at-time 0 mu4e-update-interval
-                         (lambda () (mu4e-update-mail-and-index
-                                     mu4e-index-update-in-background)))))))
+                         (defun mu4e--refresh-timer ()
+                           (mu4e-update-mail-and-index
+                            mu4e-index-update-in-background)))))))
 
 (defun mu4e--start (&optional func)
   "Start mu4e.
