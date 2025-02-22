@@ -57,7 +57,12 @@
   (eval '(add-to-list 'desktop-modes-not-to-save 'mu4e-compose-mode)))
 
 (defvar mu4e--initialized nil
-  "Is mu4e initialized? Only needed once per session.")
+  "Is mu4e initialized? Only needed once per Emacs session.")
+
+(defvar mu4e--started nil
+  "Has mu4e been started?
+I.e. have we received the server pong? Needed whenever
+we (re)start mu4e.")
 
 ;;;###autoload
 (defun mu4e (&optional background)
@@ -65,10 +70,10 @@
 Then, show the main window, unless BACKGROUND (prefix-argument)
 is non-nil."
   (interactive "P")
-  (if (not mu4e--initialized)
-      (progn
-        (mu4e--init-handlers)
-        (mu4e--start (unless background #'mu4e--main-view)))
+  (when (not mu4e--initialized)
+    (mu4e--init-handlers))
+  (if (not mu4e--started)
+      (mu4e--start (unless background #'mu4e--main-view))
     ;; mu4e already running; show unless BACKGROUND
     (unless background
       (if (buffer-live-p (get-buffer mu4e-main-buffer-name))
@@ -117,6 +122,7 @@ Otherwise, completely quit mu4e, including automatic updating."
 (defun mu4e--pong-handler (_data func)
   "Handle \"pong\" responses from the mu server.
 Invoke FUNC if non-nil."
+  (setq mu4e--started t)
   (let ((doccount (plist-get (mu4e-server-properties) :doccount)))
     (mu4e--check-requirements)
     (when func (funcall func))
@@ -134,8 +140,8 @@ If `mu4e-contexts' have been defined, but we don't have a context
 yet, switch to the matching one, or none matches, the first. If
 mu4e is already running, invoke FUNC (if non-nil).
 
-Otherwise, check requirements, then start mu4e. When successful, invoke
- FUNC (if non-nil) afterwards."
+Otherwise, check requirements, then start mu4e. When successful,
+invoke FUNC (if available) afterwards."
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func
@@ -143,7 +149,7 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   ;; show some notification?
   (when mu4e-notification-support
     (add-hook 'mu4e-query-items-updated-hook #'mu4e--notification))
-  ;; modeline support
+  ;; mode-line support
   (when mu4e-modeline-support
     (mu4e--modeline-register #'mu4e--bookmarks-modeline-item 'global)
     (mu4e-modeline-mode)
@@ -170,7 +176,8 @@ Otherwise, check requirements, then start mu4e. When successful, invoke
   (setq ;; clear some caches
    mu4e-maildir-list nil
    mu4e--contacts-set nil
-   mu4e--contacts-tstamp "0")
+   mu4e--contacts-tstamp "0"
+   mu4e--started nil)
 
   (remove-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
   (remove-hook 'mu4e-query-items-updated-hook #'mu4e--modeline-update)
@@ -263,6 +270,5 @@ chance."
 
   (mu4e-setq-if-nil mu4e-queries-func      #'mu4e--query-items-queries-handler))
 
-;;;
 (provide 'mu4e)
 ;;; mu4e.el ends here
