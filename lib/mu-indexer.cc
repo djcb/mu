@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -22,12 +22,9 @@
 #include <config.h>
 
 #include <atomic>
-#include <algorithm>
 #include <mutex>
 #include <vector>
 #include <thread>
-#include <condition_variable>
-#include <iostream>
 #include <atomic>
 #include <unordered_map>
 #include <unordered_set>
@@ -286,11 +283,11 @@ Indexer::Private::cleanup()
 	using DirFiles = std::unordered_set<std::string>;
 	std::unordered_map<std::string, DirFiles> dir_cache;
 
-	auto get_dir_files = [](const std::string& path) -> DirFiles {
+	// get a set of file names in this directory.
+	const auto get_dir_files = [](const std::string& path) -> DirFiles {
 		DirFiles ret;
-		auto dir{::opendir(path.c_str())};
-		if (dir) {
-			struct dirent* dentry;
+		if (auto dir{::opendir(path.c_str())}; dir) {
+			dirent* dentry{};
 			while ((dentry = ::readdir(dir))) {
 				ret.emplace(dentry->d_name);
 			}
@@ -300,7 +297,8 @@ Indexer::Private::cleanup()
 		return ret;
 	};
 
-	auto is_file_present = [&](const std::string& path) -> bool {
+	// is the file present in our set?
+	const auto is_file_present = [&](const std::string& path) -> bool {
 		std::string dir = dirname(path);
 		auto [it, inserted] = dir_cache.try_emplace(dir);
 		DirFiles& dir_files = it->second;
