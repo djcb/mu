@@ -1,6 +1,6 @@
 ;;; mu4e-headers.el --- Message headers -*- lexical-binding: t; coding:utf-8 -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -1431,10 +1431,6 @@ If SUBTHREAD is non-nil, only apply to subthread."
   (unless (eq major-mode 'mu4e-headers-mode)
     (mu4e-error "Must be in mu4e-headers-mode (%S)" major-mode))
   (let* ((msg (mu4e-message-at-point))
-         (path (mu4e-message-field msg :path))
-         (_exists (or (file-remote-p path)
-                      (file-readable-p path)
-                      (mu4e-warn "No message at %s" path)))
          (docid (or (mu4e-message-field msg :docid)
                     (mu4e-warn "No message at point")))
          (mark-as-read
