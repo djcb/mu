@@ -5052,24 +5052,26 @@ they differ.
 @node Debugging
 @appendix Debugging
 
-As explained in @ref{How it works}, @t{mu4e} communicates with its
-backend (@t{mu server}) by sending commands and receiving responses
-(s-expressions).
+As explained in @ref{How it works}, @t{mu4e} communicates with its backend
+(@t{mu server}) by sending commands and receiving responses (s-expressions).
 
-For debugging purposes, it can be very useful to see this data. For
-this reason, @t{mu4e} can log all these messages. Note that the
-`protocol' is documented to some extent in the @t{mu-server} manpage.
+For debugging purposes, it can be very useful to see this data. For this reason,
+@t{mu4e} can log all these messages. Note that the `protocol' is documented to
+some extent in the @t{mu-server} manpage.
 
-You can enable (and disable) logging with @kbd{M-x
-mu4e-toggle-logging}. The log-buffer is called @t{*mu4e-log*}, and in
-the @ref{Main view}, @ref{Headers view} and @ref{Message view},
-there's a keybinding @key{$} that takes you there. You can quit it by
-pressing @key{q}.
+You can enable (and disable) logging with @kbd{M-x mu4e-toggle-logging}. The
+log-buffer is called @t{*mu4e-log*}, and in the @ref{Main view}, @ref{Headers
+view} and @ref{Message view}, there's a keybinding @key{$} that takes you there.
+You can quit it by pressing @key{q}.
 
-Logging can be a bit resource-intensive, so you may not want to leave
-it on all the time. By default, the log only maintains the most recent
-1200 lines. @t{mu} itself keeps a log as well, you can find it in
-@t{<MUHOME>/mu.log}, on Unix typically @t{~/.cache/mu/mu.log}.
+Logging can be a bit resource-intensive, so you may not want to leave it on all
+the time.
+
+@t{mu} itself keeps a log as well; depending on your system that could be in
+your @t{systemd} journal, @t{syslog} or in @t{<MUHOME>/mu.log}, on Unix
+typically @t{~/.cache/mu/mu.log}. To run the server in debug-mode, set
+@var{mu4e-mu-debug} to @t{t} (before starting the server).
+
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
