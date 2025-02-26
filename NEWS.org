@@ -68,8 +68,8 @@
     server interpreted the last query; this can be useful if you don't get the
     result you expected.
 
-  - When you ask for bookmarks or maildirs through ~mu4e-ask-bookmark~ or
-    ~mu4e-ask-maildir~, unread counts are displayed in the (default) completions
+  - When you ask for bookmarks or maildirs through ~mu4e-search-bookmark~ or
+    ~mu4e-search-maildir~, unread counts are displayed in the (default) completions
     UI next to the maildir or bookmark. If you don't want to see these counts,
     set ~mu4e-hide-short-counts~ to non-~nil~.
 
