@@ -41,7 +41,6 @@ ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Db_sanitize=address' \
 			    '-Dreadline=enabled'   \
-			    '-Dcpp_debugstl=enabled' \
 			    '-Dcpp_std=c++23'
 endif
 

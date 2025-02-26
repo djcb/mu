@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.12.8',
+        version: '1.12.9',
         meson_version: '>= 0.56.0',
         license: 'GPL-3.0-or-later',
         default_options : [
@@ -28,7 +28,7 @@ project('mu', ['c', 'cpp'],
 
 # hard-code the date here (for reproducibility); we derive the dates used in e.g.
 # documentation from this.
-mu_date='2024-12-17'
+mu_date='2025-02-26'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -321,8 +321,6 @@ if gmime_dep.version() == '3.2.13'
   warning('gmime version 3.2.13 detected, which has a decoding bug')
   warning('See: https://github.com/jstedfast/gmime/issues/133')
 endif
-
-
 
 # Local Variables:
 # indent-tabs-mode: nil
