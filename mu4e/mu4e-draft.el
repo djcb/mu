@@ -25,7 +25,6 @@
 ;; Implements various helper functions for mu4e-compose. This all
 ;; look a little convoluted since we need to subvert the gnus/message
 ;; functions a bit to work with mu4e.
-
 (require 'message)
 (require 'mu4e-config)
 (require 'mu4e-helpers)
@@ -735,32 +734,32 @@ Returns the new buffer."
   ;; run pre-hook early, so user can influence later steps.
   (let ((mu4e-compose-parent-message parent)
         (mu4e-compose-type compose-type))
-    (run-hooks 'mu4e-compose-pre-hook))
+    (run-hooks 'mu4e-compose-pre-hook)
 
-  (mu4e--prepare-draft parent)
-  ;; evaluate BODY; this must yield a hidden, live buffer. This is evaluated in
-  ;; a temp buffer with contains the parent-message, if any. if there's a
-  ;; PARENT, load the corresponding message into a temp-buffer before calling
-  ;; compose-func
-  (let ((draft-buffer)
-        (oldframe (selected-frame))
-        (oldwinconf (current-window-configuration)))
-    (with-temp-buffer
-      ;; provide a temp buffer so the compose-func can do its thing
-      (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
-      (with-current-buffer draft-buffer
-        ;; we have our basic buffer; turn it into a full mu4e composition
-        ;; buffer.
-        (mu4e--prepare-draft-buffer compose-type parent)))
-    ;; we're ready for composition; let's display it in the way user configured
-    ;; things: directly through display buffer (via pop-t or otherwise through
-    ;; mu4e-window.
-    (if (eq mu4e-compose-switch 'display-buffer)
-        (pop-to-buffer draft-buffer)
-      (mu4e-display-buffer draft-buffer 'do-select))
-    ;; prepare possible message actions (such as cleaning-up)
-    (mu4e--prepare-post oldframe oldwinconf)
-    draft-buffer))
+    (mu4e--prepare-draft parent)
+    ;; evaluate BODY; this must yield a hidden, live buffer. This is evaluated in
+    ;; a temp buffer with contains the parent-message, if any. if there's a
+    ;; PARENT, load the corresponding message into a temp-buffer before calling
+    ;; compose-func
+    (let ((draft-buffer)
+          (oldframe (selected-frame))
+          (oldwinconf (current-window-configuration)))
+      (with-temp-buffer
+        ;; provide a temp buffer so the compose-func can do its thing
+        (setq draft-buffer (mu4e--validate-hidden-buffer (funcall compose-func)))
+        (with-current-buffer draft-buffer
+          ;; we have our basic buffer; turn it into a full mu4e composition
+          ;; buffer.
+          (mu4e--prepare-draft-buffer compose-type parent)))
+      ;; we're ready for composition; let's display it in the way user
+      ;; configured things: directly through display buffer (via pop-t or
+      ;; otherwise through mu4e-window.
+      (if (eq mu4e-compose-switch 'display-buffer)
+          (pop-to-buffer draft-buffer)
+        (mu4e-display-buffer draft-buffer 'do-select))
+      ;; prepare possible message actions (such as cleaning-up)
+      (mu4e--prepare-post oldframe oldwinconf)
+      draft-buffer)))
 
 (defun mu4e--draft-with-parent (compose-type parent compose-func)
   "Draft a message based on some parent message.
@@ -771,10 +770,7 @@ but note the different order."
    (lambda ()
      (let ( ;; only needed for Fwd. Gnus has a bad default.
            (message-make-forward-subject-function
-            (list #'message-forward-subject-fwd))
-           ;; e.g. supersede needs parent for 'message-is-yours-p
-           (mu4e-compose-parent-message parent)
-           (mu4e-compose-type compose-type))
+            (list #'message-forward-subject-fwd)))
        (insert (mu4e--decoded-message parent))
        ;; let's make sure we don't use message-reply-headers from
        ;; some unrelated message.
