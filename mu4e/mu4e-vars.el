@@ -1,6 +1,6 @@
 ;;; mu4e-vars.el --- Variables and faces for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -26,7 +26,7 @@
 
 (require 'message)
 (require 'mu4e-helpers)
-
+
 ;;; Configuration
 (defgroup mu4e nil
   "Mu4e - an email-client for Emacs."
@@ -75,7 +75,6 @@ and show some \"Loading\" banner."
   :type 'boolean
   :group 'mu4e)
 
-
 ;;; Faces
 
 (defgroup mu4e-faces nil
