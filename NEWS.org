@@ -91,6 +91,10 @@
     automatically translate; this depends on the ~pcre2el~ package which the user
     should install when using regular expression-addresses.
 
+  - ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a property
+    ~:hide-if-no-unread~, which hides the maildir/bookmark from the main-view if
+    there are no unread messages which the corresponding query.
+
 * 1.12 (released on February 24, 2024)
 
 ** Some highlights

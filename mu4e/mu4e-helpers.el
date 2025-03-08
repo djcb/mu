@@ -593,6 +593,33 @@ This is mu4e's version of Emacs 29's `plistp'."
   (let ((len (proper-list-p object)))
     (and len (zerop (% len 2)))))
 
+(defun mu4e-plist-do (func plist)
+  "Apply FUNC to each element in PLIST.
+FUNC receives to arguments: the key and its value."
+  (when plist
+    (funcall func (car plist) (cadr plist))
+    (mu4e-plist-do func (cddr plist))))
+
+(defun mu4e-plist-remove (plist prop)
+  "Remove PROP from PLIST.
+Returns the updated PLIST."
+  ;; inspired by org-plist-delete
+  (let (p)
+    (while plist
+      (if (not (eq prop (car plist)))
+          (setq p (plist-put p (car plist) (nth 1 plist))))
+      (setq plist (cddr plist)))
+    p))
+
+(defun mu4e-plist-remove-nils (plist)
+  "Remove all properties with value nil from PLIST."
+  (let (p)
+    (while plist
+      (when (cadr plist)
+        (setq p (plist-put p (car plist) (cadr plist))))
+      (setq plist (cddr plist)))
+    p))
+
 (defun mu4e--message-hide-headers ()
   "Hide headers based on the `message-hidden-headers' variable.
 This is mu4e's version of the post-emacs-28 `message-hide-headers',

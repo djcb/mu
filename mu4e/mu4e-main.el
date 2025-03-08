@@ -223,10 +223,11 @@ for aligning them."
   (mapconcat
    (lambda (item)
      (cl-destructuring-bind
-         (&key hide name key favorite query &allow-other-keys) item
+         (&key name key favorite query
+               hide hide-if-no-unread unread &allow-other-keys) item
        ;; hide items explicitly hidden, without key or wrong category.
-       (if hide
-           ""
+       (if (or hide (and hide-if-no-unread (zerop unread)))
+           "" ;; hide
          (let ((item-info
                 ;; note, we have a function for the binding,
                 ;; and perhaps a different one for the lambda.
@@ -235,7 +236,7 @@ for aligning them."
                   (list #'mu4e-search-maildir #'mu4e-search
                         query))
                  ((eq item-type 'bookmarks)
-                 (list #'mu4e-search-bookmark #'mu4e-search-bookmark
+                  (list #'mu4e-search-bookmark #'mu4e-search-bookmark
                         (mu4e-get-bookmark-query key)))
                  (t
                   (mu4e-error "Invalid item-type %s" item-type)))))
@@ -410,8 +411,9 @@ instead."
   (unless (file-directory-p smtpmail-queue-dir)
     (mu4e-error "`smtpmail-queue-dir' does not exist"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
-  (message (concat "Outgoing mail will now be "
-                   (if smtpmail-queue-mail "queued" "sent directly")))
+  (mu4e-message
+   (concat "Outgoing mail will now be "
+           (if smtpmail-queue-mail "queued" "sent directly")))
   (unless (or (eq mu4e-split-view 'single-window)
               (not (buffer-live-p (get-buffer mu4e-main-buffer-name))))
     (mu4e--main-redraw)))

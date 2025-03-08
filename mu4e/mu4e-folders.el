@@ -105,9 +105,13 @@ Each of the list elements is a plist with at least:
 Optionally, you can add the following:
 `:name' - name of the maildir to be displayed in main-view.
 `:hide'  - if t, the shortcut is hidden from the main-view.
+`:hide-if-no-unread' - if it t, the shortcut is hidden from
+ the main-view if it contains no unread messages.
+
+ You can also use:
 `:hide-unread' - do not show the counts of unread/total number
  of matches for the maildir in the main-view, and is implied
-from `:hide'.
+ from `:hide'.
 
 For backward compatibility, an older form is recognized as well:
 

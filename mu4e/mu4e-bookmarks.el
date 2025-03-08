@@ -65,6 +65,10 @@ item must be unique among `mu4e-bookmarks' and
 `mu4e-maildir-shortcuts'.
 - `:hide' - if t, the bookmark is hidden from the main-view and
 speedbar.
+- `:hide-if-no-unread' - if t, the shortcut is hidden from
+   the main-view if it contains are no unread messages.
+
+You can also use:
 - `:hide-unread' - do not show the counts of
 unread/total number of matches for the query in the main-view.
 This can be useful if a bookmark uses a very slow query.

@@ -228,25 +228,21 @@ bookmark or maildir."
              (list
               :name         name
               :query        query
-              :key          (plist-get item :key)
               :count        count
               :unread       unread
               :delta-count  (- count baseline-count)
               :delta-unread delta-unread)))
        ;; remember the *effective* query too; we don't really need it, but
        ;; useful for debugging.
-       (unless (string= query effective-query)
-         (plist-put value :effective-query effective-query))
-       ;;for matching maildir shortcuts
-       (when maildir (plist-put value :maildir maildir))
+       (setq value (plist-put value :effective-query effective-query))
+       (setq value (plist-put value :maildir maildir))
+       ;; copy some other items from item.
+       (mu4e-plist-do (lambda (k v)
+                        (when (memq k '(:key :maildir :hide :hide-if-no-unread
+                                             :hide-unread))
+                          (setq value (plist-put value k v)))) item)
        ;; nil props bring me discomfort
-       (when (plist-get item :favorite)
-         (plist-put value :favorite t))
-       (when (plist-get item :hide)
-         (plist-put value :hide t))
-       (when (plist-get item :hide-unread)
-         (plist-put value :hide-unread t))
-       value))
+       (mu4e-plist-remove-nils value)))
    data))
 
 (defun mu4e-query-items (&optional type)

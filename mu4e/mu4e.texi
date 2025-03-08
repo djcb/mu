@@ -840,12 +840,15 @@ instance:
      :query "list:mu-discuss.googlegroups.com AND date:7d..now"))
 @end lisp
 
-There are optional keys @t{:hide} to hide the bookmark from the main menu, but
-still have it available (using @key{b})) and @t{:hide-unread} to avoid
-generating the unread-number; that can be useful if you have bookmarks for slow
-queries. Note that @t{:hide-unread} is implied when the query is not a string;
-this for the common case where the query function involves some user input,
-which would be disruptive in this case.
+There are optional keys @code{:hide} to hide the bookmark or maildirs from the
+main menu, but still have it available (using @key{b})), and
+@code{:hide-if-no-unread} to hide it if there are no unread messages.
+
+To customize the display, there is also @code{:hide-unread} to avoid generating
+the unread-number; that can be useful if you have bookmarks for slow queries.
+Note that @code{:hide-unread} is implied when the query is not a string; this
+for the common case where the query function involves some user input, which
+would be disruptive in this case.
 
 There is also the optional @code{:favorite} property, which at most one bookmark
 should have; this bookmark is highlighted in the main view, and its
@@ -2180,18 +2183,36 @@ be instructive:
   "List of pre-defined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
-:name  - the name of the query
-:query - the query expression
-:key   - the shortcut key.
+`:name'  - the name of the query
+`:query' - the query expression string or function
+`:key'   - the shortcut key (single character)
 
-Optionally, you add the following:
-:hide  - if t, bookmark is hidden from the main-view and speedbar.
-:hide-unread - do not show the counts of unread/total number
- of matches for the query. This can be useful if a bookmark uses
- a very slow query. :hide-unread is implied from :hide.
-"
+Optionally, you can add the following:
+
+- `:favorite' - if t, monitor the results of this query, and make
+it eligible for showing its status in the modeline. At most
+one bookmark should have this set to t (otherwise the _first_
+bookmark is the implicit favorite). The query for the `:favorite'
+item must be unique among `mu4e-bookmarks' and
+`mu4e-maildir-shortcuts'.
+- `:hide' - if t, the bookmark is hidden from the main-view and
+speedbar.
+- `:hide-if-no-unread' - if t, the shortcut is hidden from
+   the main-view if it contains are no unread messages.
+
+You can also use:
+- `:hide-unread' - do not show the counts of
+unread/total number of matches for the query in the main-view.
+This can be useful if a bookmark uses a very slow query.
+
+`:hide-unread' is implied from `:hide'.
+
+Note: for efficiency, queries used to determine the unread/all
+counts do not discard duplicate or unreadable messages. Thus, the
+numbers shown may differ from the number you get from a normal
+query."
   :type '(repeat (plist))
-  :group 'mu4e)
+  :group 'mu4e-bookmarks)
 @end lisp
 
 You can replace these or add your own items, by putting in your
@@ -2303,13 +2324,17 @@ maildirs (folders) very quickly --- for example, getting to the @t{/lists}
 folder only requires you to type @kbd{jl}, then change to @t{/work} with
 @kbd{jw}.
 
-While in queries you need to quote folder names (maildirs) with spaces in
-them, you should @emph{not} quote them when used in
-@code{mu4e-maildir-shortcuts}, since @t{mu4e} does that automatically for you.
+While in queries you need to quote folder names (maildirs) with spaces in them,
+you should @emph{not} quote them when used in @code{mu4e-maildir-shortcuts},
+since @t{mu4e} does that automatically for you.
 
 The very same shortcuts are used by @kbd{M-x mu4e-mark-for-move} (default
 shortcut @key{m}); so, for example, if you want to move a message to the
 @t{/archive} folder, you can do so by typing @kbd{ma}.
+
+For further customization, you can use @code{:hide}, @code{:hide-if-no-unread},
+@code{:hide-unread} and @code{:favorite} properties, just like for
+@ref{Bookmarks and Maildirs}.
 
 @node Other search functionality
 @section Other search functionality
