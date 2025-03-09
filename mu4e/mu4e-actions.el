@@ -1,6 +1,6 @@
 ;;; mu4e-actions.el --- Actions for messages/attachments -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2023 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -35,7 +35,6 @@
 (require 'mu4e-search)
 (require 'mu4e-contacts)
 (require 'mu4e-lists)
-
 ;;; Count lines
 
 (defun mu4e-action-count-lines (msg)
@@ -57,7 +56,6 @@ Later, we can create an attachment based on this message with
 `mu4e-compose-attach-captured-message'."
   (setq mu4e-captured-message msg)
   (message "Message has been captured"))
-
 
 (defun mu4e-action-copy-message-file-path (msg)
   "Save the full path for the current MSG to the kill ring."
@@ -123,6 +121,7 @@ file where you store your org-contacts."
       (shell-command
        (format "git apply %s"
                (shell-quote-argument (mu4e-message-field msg :path)))))))
+;; does this work correctly? I.e.: https://github.com/djcb/mu/issues/2827
 
 (defun mu4e-action-git-apply-mbox (msg &optional signoff)
   "Apply `MSG' a git patch with optional `SIGNOFF'.
@@ -250,7 +249,6 @@ the message."
          msgid (and (eq major-mode 'mu4e-view-mode)
                     (not (eq mu4e-split-view 'single-window))))))))
 
-
 ;;; Mailing list URLS
 
 (defun mu4e-action-browse-list-archive (msg)
