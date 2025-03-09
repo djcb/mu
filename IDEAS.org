@@ -68,6 +68,17 @@ future.
 - Add some way to add a quick bookmark for (e.g.)  the current thread
   https://github.com/djcb/mu/issues/2804
 
+- Support running mu4e over tramp
+  https://github.com/djcb/mu/issues/2815
+  Seems this is mostly possible already:
+    1. set mu4e-mu-binary to a shell script that sshes into the mail machine
+    2. added a custom file-name-handler-alist handler that implements file
+       operations for my mail directory by proxying to tramp
+  But perhaps can be documented.
+
+- Allow for watching notifications externally, perhaps using alert.el
+  https://github.com/djcb/mu/issues/2825
+
 * Done
 
 - Support mu4e-mark-handle-when also for when leaving emacs
