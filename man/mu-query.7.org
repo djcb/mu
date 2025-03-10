@@ -23,7 +23,7 @@ See the *ANALYZING QUERIES* section for further details.
 
 *NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
 quote any characters that would otherwise be interpreted by the shell, such as
-'"', '*', '(' and ')'. The details are shell-specific. In case of doubt, the
+`"', `*', `(' and `)'. The details are shell-specific. In case of doubt, the
 *--analyze* option can be useful.
 
 * TERMS
@@ -136,7 +136,7 @@ $ mu find "hello*"
 #+end_example
 
 Quoting the "hello*" is recommended; some shells (but not all) would otherwise
-expand the '*' to all files in the current directory.
+expand the `*' to all files in the current directory.
 
 * REGULAR EXPRESSIONS
 
@@ -165,7 +165,7 @@ whitespace, so the search for a message with subject "hello world", you can writ
 #+begin_example
 mu find 'subject:/hello\\040world/'
 #+end_example
-(with the \040 specifying a space in the regular expression, and and extra '\'
+(with the \\040 specifying a space in the regular expression, and and extra `\\'
 to escape it). In many cases,
 #+begin_example
 mu find 'subject:/hello.world/'
