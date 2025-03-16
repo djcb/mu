@@ -223,27 +223,22 @@ bookmark or maildir."
             (unread (or (plist-get last-results-item :unread) 0))
             (baseline-count  (or (plist-get baseline-item :count) count))
             (baseline-unread (or (plist-get baseline-item :unread) unread))
-            (delta-unread (- unread baseline-unread))
-            (value
-             (list
-              :name         name
-              :query        query
-              :count        count
-              :unread       unread
-              :delta-count  (- count baseline-count)
-              :delta-unread delta-unread)))
-       ;; remember the *effective* query too; we don't really need it, but
-       ;; useful for debugging.
-       (setq value (plist-put value :effective-query effective-query))
-       (setq value (plist-put value :maildir maildir))
-       ;; copy some other items from item.
-       (mu4e-plist-do (lambda (k v)
-                        (when (memq k '(:key :maildir :hide :hide-if-no-unread
-                                             :hide-unread))
-                          (setq value (plist-put value k v)))) item)
-       ;; nil props bring me discomfort
-       (mu4e-plist-remove-nils value)))
-   data))
+            (delta-unread (- unread baseline-unread)))
+       (mu4e-plist-remove-nils
+        (mu4e-plist-put-many
+         item
+         :name         name
+         :type         type
+         :query        query
+         :count        count
+         :unread       unread
+         :delta-count  (- count baseline-count)
+         :delta-unread delta-unread
+         :maildir      maildir
+         ;; remember the *effective* query too; we don't really need it, but
+         ;; useful for debugging.
+         :effective-query effective-query))))
+     data))
 
 (defun mu4e-query-items (&optional type)
   "Grab cached information about query items of some TYPE.

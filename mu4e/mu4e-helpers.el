@@ -620,6 +620,14 @@ Returns the updated PLIST."
       (setq plist (cddr plist)))
     p))
 
+(defun mu4e-plist-put-many (plist &rest keyvals)
+  "Like `plist-put', but allow for multiple key-value pairs.
+PLIST is a property list, and KEYVALS are key value ... ."
+  (while keyvals
+    (plist-put plist (car keyvals) (cadr keyvals))
+    (setq keyvals (cdr keyvals)))
+  plist)
+
 (defun mu4e--message-hide-headers ()
   "Hide headers based on the `message-hidden-headers' variable.
 This is mu4e's version of the post-emacs-28 `message-hide-headers',
