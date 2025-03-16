@@ -195,10 +195,17 @@ This is a plist, see `mu4e-server-last-query' for details.")
 This has the following fields:
 - :query: this is the last query the server executed (a string)
 - :query-sexp: this is that last query as processed by the query engine
-  (an s-expression as a string)
+  (an s-expression)
 - :query-sexp-expanded: like :query-sexp, but with combination fields
-   expanded (if any)."
-  (cl-remf mu4e--server-query :found) ;; there's no plist-delete
+   expanded (if any).
+
+It may also include fields describing the search properties of
+the executed query, such as:
+- :sort-field: the sort-field
+- :reverse: whether the sorting was in reverse order
+- :skip-dups: whether to skip duplicate messages
+- :threads: whether to show message threads
+- :maxnum: the maximum number of results."
   mu4e--server-query)
 
 (defvar mu4e--last-query-buffer-name)
@@ -435,7 +442,7 @@ The server output is as follows:
                    (plist-get sexp :error)
                    (plist-get sexp :message)))
 
-         (t (mu4e-message "Unexpected data from server [%S]" sexp)))
+         (t (mu4e-message "Unexpected data from server: %S" sexp)))
 
         (setq sexp (mu4e--server-eat-sexp-from-buf))))))
 
@@ -616,15 +623,19 @@ KIND is a symbol. Currently supported kinds: maildirs."
                                 include-related)
   "Run QUERY with THREADS SORTFIELD SORTDIR MAXNUM SKIP-DUPS INCLUDE-RELATED.
 
-If THREADS is non-nil, show results in threaded fashion,
+If THREADS is non-nil, show results in threaded fashion.
 SORTFIELD is a symbol describing the field to sort by (or nil);
-see `mu4e~headers-sortfield-choices'. If SORT is `descending',
-sort Z->A, if it's `ascending', sort A->Z. MAXNUM determines the
-maximum number of results to return, or nil for unlimited. If
-SKIP-DUPS is non-nil, show only one of duplicate messages (see
-`mu4e-headers-skip-duplicates'). If INCLUDE-RELATED is non-nil,
-include messages related to the messages matching the search
-query (see `mu4e-headers-include-related').
+see `mu4e~headers-sortfield-choices'. Note, since you can only
+sort by date when using threading, in the threading case,
+SORTFIELD is ignored and `date' us used.
+
+If SORT is `descending', sort Z->A, if it's `ascending', sort
+A->Z. MAXNUM determines the maximum number of results to return,
+or nil for unlimited. If SKIP-DUPS is non-nil, show only one of
+duplicate messages (see `mu4e-headers-skip-duplicates'). If
+INCLUDE-RELATED is non-nil, include messages related to the
+messages matching the search query (see
+`mu4e-headers-include-related').
 
 For each result found, a function is called, depending on the
 kind of result. The variables `mu4e-error-func' contain the
@@ -634,7 +645,7 @@ or an error."
    `(find
      :query ,query
      :threads ,(and threads t)
-     :sortfield ,sortfield
+     :sortfield ,(if threads :date sortfield)
      :descending ,(if (eq sortdir 'descending) t nil)
      :maxnum ,maxnum
      :skip-dups ,(and skip-dups t)
