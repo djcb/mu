@@ -53,7 +53,6 @@
 (declare-function mu4e-view       "mu4e-view")
 (declare-function mu4e--main-view  "mu4e-main")
 
-
 ;;; Configuration
 
 (defgroup mu4e-headers nil
@@ -216,7 +215,6 @@ When it is showing, respectively, From: or To:. It is a cons cell
 (defvar mu4e-headers-list-mark      '("l" . "Ⓛ") "Mailing list.")
 (defvar mu4e-headers-personal-mark  '("p" . "Ⓟ") "Personal.")
 (defvar mu4e-headers-calendar-mark  '("c" . "Ⓒ") "Calendar invitation.")
-
 
 ;;;; Graph drawing
 
@@ -550,9 +548,9 @@ e.g. \"mutt\"."
 (defsubst mu4e~headers-custom-field-value (msg field)
   "Show custom header FIELD for MSG, or raise error if not found."
   (let* ((item (or (assoc field mu4e-header-info-custom)
-                   (mu4e-error "field %S not found" field)))
+                   (mu4e-error "Field %S not found" field)))
          (func (or (plist-get (cdr-safe item) :function)
-                   (mu4e-error "no :function defined for field %S %S"
+                   (mu4e-error "No :function defined for field %S %S"
                                field (cdr item)))))
     (funcall func msg)))
 
@@ -846,7 +844,8 @@ true, do *not* update the query history stack."
      mu4e-search-include-related)))
 
 (defun mu4e~headers-benchmark-message (count)
-  "Get some report message for messaging search and rendering speed."
+  "Get some report message for messaging search and rendering speed.
+COUNT is the number of messages found."
   (if (and mu4e-headers-report-render-time
            mu4e~headers-search-start
            mu4e~headers-render-start
@@ -861,7 +860,7 @@ true, do *not* update the query history stack."
     ""))
 
 (defun mu4e~headers-found-handler (count)
-  "Create one=line description of the COUNT of headers found."
+  "Create one-line description of the COUNT of headers found."
   (when (buffer-live-p (mu4e-get-headers-buffer))
     (with-current-buffer (mu4e-get-headers-buffer)
       (save-excursion
@@ -1092,7 +1091,7 @@ true, do *not* update the query history stack."
       mu4e-headers-fields))))
 
 (defun mu4e~headers-maybe-auto-update ()
-  "Update the current headers buffer after indexing changes.
+  "Update the current headers buffer after indexing.
 
 Furthermore, `mu4e-headers-auto-update' is non-nil and there is
 no user-interaction ongoing.
@@ -1265,7 +1264,7 @@ corresponding header."
 
 
 (defun mu4e-headers-find-if (func &optional backward)
-  "Move to the header for which FUNC returns non-nil.
+  "Move to the header where FUNC yields non-nil.
 if BACKWARD is non-nil, search backwards.
 
 FUNC receives one argument, the message s-expression for the
