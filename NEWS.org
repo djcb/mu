@@ -1,105 +1,16 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
-* 1.12 (post 1.12.0 updates)
-
- The 1.12 series has been stable for a fairly long time, and gained some changes
- in mean-time. Most of the changes are for big bugs, but some small new features
- are available as well.
-
- We decided to put off a new development series (1.13 -> 1.14) until
- incompatible changes are required; for now working in the 1.12 series seems a
- good way to get improvements to users more quickly.
-
- The changes include:
-
-  - many bug fixes
-
-  - many documentation improvements
-
-*** mu
-
-  - you can now search for messages that have a given message-id in their
-    ~References:~ or ~In-Reply-To:~ headers, e.g.
-    #+begin_example
-    mu find ref:0D9218A9-C7F5-4D50-B49C-FCE201114C9B@gmail.com
-    #+end_example
-    You do need to re-index the database for this to work though.
-
-    There's also a new combination-field ~related:~ which combines ~references:~ and
-    ~msgid:~.
-
-  - The ~--format=json~ output for *mu find* now includes "unix-style" timestamps
-    for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~, respectively) which
-    represent the time as a simple number (number of seconds since epoch), which
-    is a bit easier to manipulate than the emacs-style timestamps (same value,
-    but expressed as a list).
-
-  - With 1.12.10, there is also an experimental ~--format=json2~, where key-names
-    are no longer prefixed with ~:~, so for example, "*subject"* instead of
-    "*:subject"*.
-
-  - With 1.12.9, the cleanup phase after indexing is significantly faster now
-
-  - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
-    database-corruption. In *mu4e* that means you need to _wait_ until indexing is
-    ready before you can continue (*mu4e* will warn you).
-
-    If you see that warning often, perhaps your indexing is too slow; see the
-    section on "Speeding up indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e
-    manual.
-
-    Note: for a while, the single-threadedness was signified by an "-st" suffix
-    in the mu4e version in its main-page; however, since this is optional no
-    longer, the suffix has been removed.
-
-*** mu4e
-
-  - message composition has been completely reworked to avoid a number of
-    problems that users reported. It is now directly uses the Gnus machinery,
-    integrated with mu4e.
-
-  - a new variable ~mu4e-trash-without-flag~, which, when set to non-nil makes
-    trashing _not_ add the the Maildir ~T~ flag. See its docstring for details.
-
-  - new variable ~mu4e-uniquify-save-file-name-function~ to influence the way ~mu4e~
-    creates unique file names when saving. See its docstring for details.
-
-  - new command ~mu4e-view-jump-to-mime-part~ for jumping to MIME-part by its
-    number.
-
-  - new command ~mu4e-analyze-last-query~ which shows information about how the
-    server interpreted the last query; this can be useful if you don't get the
-    result you expected.
-
-  - When you ask for bookmarks or maildirs through ~mu4e-search-bookmark~ or
-    ~mu4e-search-maildir~, unread counts are displayed in the (default)
-    completions UI next to the maildir or bookmark. If you don't want to see
-    these counts, set ~mu4e-hide-short-counts~ to non-~nil~.
-
-  - A (experimental) "transient" menu has been added for mu4e. You can use it
-    e.g., with something like:
-
-    #+begin_src elisp
-      (require 'mu4e-transient)
-      (global-set-key (kbd "C-c m") #'mu4e-transient-menu)
-    #+end_src
-    This will change/improve, but is already quite useful.
-
-  - Various Gnus' mailing list commands are now available in the mu4e message
-    view as well, such as ~gnus-mailing-list-subscribe~,
-    ~gnus-mailing-list-unsubscribe~.
-
-  - The mu server uses PCRE-compatible regexps (for addresses), which are not
-    necessarily compatible with Emacs regular expressions. However, mu4e can now
-    automatically translate; this depends on the ~pcre2el~ package which the user
-    should install when using regular expression-addresses.
-
-  - ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a property
-    ~:hide-if-no-unread~, which hides the maildir/bookmark from the main-view if
-    there are no unread messages which the corresponding query.
-
 * 1.12 (released on February 24, 2024)
+
+  The 1.12 series has been stable for a fairly long time, and gained some
+  changes in mean-time. Most of the changes are for bug fixes and documentation
+  improvements, but new features are available as well. Those are listed below
+  the 1.12 changes, prefixed by the version in which they appeared.
+
+  We decided to put off a new development series (1.13 -> 1.14) until
+  incompatible changes are required; for now working in the 1.12 series seems a
+  good way to get improvements to users more quickly.
 
 ** Some highlights
 
@@ -176,6 +87,46 @@
 
     - the build has been made reproducible
 
+    - 1.12.7: ~mu~ indexing is single-threaded again, to avoid cases of
+      database-corruption. In *mu4e* that means you need to _wait_ until indexing is
+      ready before you can continue (*mu4e* will warn you).
+
+      If you see that warning often, perhaps your indexing is too slow; see the
+      section on "Speeding up indexing" in [[info:mu4e#Retrieval and indexing][Retrieval and indexing]] in the mu4e
+      manual.
+
+      Note: for a while, the single-threadedness was signified by an "-st"
+      suffix
+      in the mu4e version in its main-page; however, since this is optional no
+      longer, the suffix has been removed.
+
+    - 1.12.8: The ~--format=json~ output for *mu find* now includes "unix-style"
+      timestamps for ~:date~ and ~:changed~ (~:date-unix~ and ~:changed-unix~,
+      respectively) which represent the time as a simple number (number of
+      seconds since epoch), which is a bit easier to manipulate than the
+      emacs-style timestamps (same value, but expressed as a list).
+
+    - 1.12.8: You can now search for messages that have a given message-id in
+      their ~References:~ or ~In-Reply-To:~ headers, e.g.
+      #+begin_example
+      mu find ref:0D9218A9-C7F5-4D50-B49C-FCE201114C9B@gmail.com
+      #+end_example
+      You do need to re-index the database for this to work though.
+
+      There's also a new combination-field ~related:~ which combines ~references:~
+      and ~msgid:~.
+
+    - 1.12.9: The mu server uses PCRE-compatible regexps (for addresses), which
+      are not necessarily compatible with Emacs regular expressions. However,
+      mu4e can now automatically translate; this depends on the ~pcre2el~ package
+      which the user should install when using regular expression-addresses.
+
+    - 1.12.9: the cleanup phase after indexing is significantly faster now
+
+    - 1.12.10: ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a
+      property ~:hide-if-no-unread~, which hides the maildir/bookmark from the
+      main-view if there are no unread messages which the corresponding query.
+
 *** mu4e
 
 **** message composer
@@ -183,6 +134,10 @@
     - Overhaul of the message composer; it is now closer to the Gnus/Message
       composer functions (e.g. the whole mu4e-specific draft setup is gone);
       this reduces code size and offers some new capabilities.
+
+      Message composition has been completely reworked to avoid a number of
+      problems that users reported. It is now directly uses the Gnus machinery,
+      integrated with mu4e.
 
       More of the ~message-~ functionality can be used now in ~mu4e~.
 
@@ -280,6 +235,40 @@
     - allow sorting by tag
 
     - ~mu4e~ now follows Emacs' ~package~ guidelines
+
+    - 1.12.8: new variable ~mu4e-uniquify-save-file-name-function~ to influence
+      the way ~mu4e~ creates unique file names when saving. See its docstring for
+      details.
+
+    - 1.12.8: new variable ~mu4e-uniquify-save-file-name-function~ to influence
+      the way ~mu4e~ creates unique file names when saving. See its docstring for
+      details.
+
+    - 1.12.8: a new variable ~mu4e-trash-without-flag~, which, when set to non-nil
+      makes trashing _not_ add the the Maildir ~T~ flag. See its docstring for
+      details.
+
+    - 1.12.9: A (experimental) "transient" menu has been added for mu4e. You can
+      use it e.g., with something like:
+
+      #+begin_src elisp
+	(require 'mu4e-transient)
+	(global-set-key (kbd "C-c m") #'mu4e-transient-menu)
+      #+end_src
+      This will change/improve, but is already quite useful.
+
+    - 1.12.9: new command ~mu4e-analyze-last-query~ which shows information about
+      how the server interpreted the last query; this can be useful if you don't
+      get the result you expected.
+
+    - 1.12.9: When you ask for bookmarks or maildirs through
+      ~mu4e-search-bookmark~ or ~mu4e-search-maildir~, unread counts are displayed
+      in the (default) completions UI next to the maildir or bookmark. If you
+      don't want to see these counts, set ~mu4e-hide-short-counts~ to non-~nil~.
+
+    - 1.12.9: Various Gnus' mailing list commands are now available in the mu4e
+      message view as well, such as ~gnus-mailing-list-subscribe~,
+      ~gnus-mailing-list-unsubscribe~.
 
 *** Contributors
 
