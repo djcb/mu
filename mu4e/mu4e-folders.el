@@ -98,25 +98,18 @@ This makes it possible to quickly go to a particular
 maildir (folder), or quickly moving messages to them (e.g., for
 archiving or refiling).
 
-Each of the list elements is a plist with at least:
-`:maildir'  - the maildir for the shortcut (e.g. \"/archive\")
-`:key'      - the shortcut key.
+The format is the same as for `mu4e-bookmarks', with a few
+difference, so see its doc-strings for further details.
 
-Optionally, you can add the following:
-`:name' - name of the maildir to be displayed in main-view.
-`:hide'  - if t, the shortcut is hidden from the main-view.
-`:hide-if-no-unread' - if it t, the shortcut is hidden from
- the main-view if it contains no unread messages.
+The only field specific for `mu4e-maildir-shortcuts' is
+- `:maildir'  - the maildir for the shortcut (e.g., \"/archive\")
 
- You can also use:
-`:hide-unread' - do not show the counts of unread/total number
- of matches for the maildir in the main-view, and is implied
- from `:hide'.
+Example:
 
-For backward compatibility, an older form is recognized as well:
-
-   (maildir . key), where MAILDIR is a maildir (such as
-\"/archive/\"), and key is a single character.
+\\(setq mu4e-maildir-shortcuts
+       \\'( (:maildir \"/inbox\"       :key ?i :hide-if-no-unread t)
+            (:maildir \"/drafts\"      :key ?d :hide t)
+            (:maildir \"/sent\"        :key ?s :hide-unread t)))
 
 You can use these shortcuts in the headers and view buffers, for
 example with `mu4e-mark-for-move-quick' (or \"m\", by default) or

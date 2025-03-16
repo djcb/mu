@@ -48,14 +48,16 @@
     ( :name "Messages with images"
       :query "mime:image/*"
       :key ?p))
-  "List of pre-defined queries that are shown on the main screen.
+  "List of predefined queries that are shown on the main screen.
 
 Each of the list elements is a plist with at least:
 `:name'  - the name of the query
 `:query' - the query expression string or function
+
+Likely, you also want to assign a shortcut key;
 `:key'   - the shortcut key (single character)
 
-Optionally, you can add the following:
+Furthermore, you can add the following:
 
 - `:favorite' - if t, monitor the results of this query, and make
 it eligible for showing its status in the modeline. At most
