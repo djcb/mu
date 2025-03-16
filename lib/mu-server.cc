@@ -640,53 +640,112 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 	return n;
 }
 
-void
-Server::Private::find_handler(const Command& cmd)
-{
-	const auto q{cmd.string_arg(":query").value_or("")};
-	const auto threads{cmd.boolean_arg(":threads")};
-	// perhaps let mu4e set this as frame-lines of the appropriate frame.
-	const auto batch_size{cmd.number_arg(":batch-size").value_or(200)};
-	const auto descending{cmd.boolean_arg(":descending")};
-	const auto maxnum{cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/};
-	const auto skip_dups{cmd.boolean_arg(":skip-dups")};
-	const auto include_related{cmd.boolean_arg(":include-related")};
+struct FindProps {
+	std::string query;
+	int batch_size{200};
+	int maxnum{-1};
+	Field::Id sort_field_id{Field::Id::Date};
+	QueryFlags flags{QueryFlags::SkipUnreadable};
+};
+// XXX: once we move to C++20, use designated initializers
 
+
+static const std::pair<QueryFlags, std::string> flags_props[] = {
+	{ QueryFlags::Descending, ":descending" },
+	{ QueryFlags::SkipDuplicates, ":skip-dups" },
+	{ QueryFlags::IncludeRelated, ":include-related" },
+	{ QueryFlags::Threading, ":threads" }
+};
+
+/**
+ * Determine the find search properties from a command object
+ *
+ * @param cmd the command
+ *
+ * @return structure with find properties
+ */
+static FindProps
+determine_find_props(const Command& cmd)
+{
+	FindProps props{};
+
+	props.query = cmd.string_arg(":query").value_or("");
+	props.batch_size = cmd.number_arg(":batch-size").value_or(200);
+	if (props.batch_size < 1)
+		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", props.batch_size};
+
+	props.maxnum = cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/;
+	if (props.maxnum < -1)
+		throw Error{Error::Code::InvalidArgument, "invalid max-num {}", props.maxnum};
+
+	const auto threads{cmd.boolean_arg(":threads")};
 	// complicated!
-	auto sort_field_id = std::invoke([&]()->Field::Id {
+	props.sort_field_id = std::invoke([&]()->Field::Id {
 		if (const auto arg = cmd.symbol_arg(":sortfield"); !arg)
 			return Field::Id::Date;
 		else if (arg->length() < 2)
-			throw Error{Error::Code::InvalidArgument, "invalid sort field '{}'",
+			throw Error{Error::Code::InvalidArgument, "invalid sort field parameter '{}'",
 				*arg};
 		else if (const auto field{field_from_name(arg->substr(1))}; !field)
+			// Note: mu4e gives us ':date' etc., hence the 'substr'
 			throw Error{Error::Code::InvalidArgument, "invalid sort field '{}'",
 				*arg};
+		else if (!field->is_sortable())
+			throw Error{Error::Code::InvalidArgument, "not a sortable field '{}'",
+				*arg};
+		else if (threads && field->id != Field::Id::Date)
+			throw Error{Error::Code::InvalidArgument,
+				     "with threads, you can only sort by date, not by '{}'", *arg};
 		else
 			return field->id;
 	});
 
-	if (batch_size < 1)
-		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", batch_size};
+	for (const auto& item: flags_props) {
+		if (cmd.boolean_arg(item.second))
+			props.flags |= item.first;
+	}
 
-	auto qflags{QueryFlags::SkipUnreadable}; // don't show unreadables.
+	return props;
+}
+
+/**
+ * Determine the result properties from the find results
+ *
+ * The result properties are passed back to the client
+ *
+ * @param props the find properties
+ *
+ * @return the result properties
+ */
+static Sexp
+determine_result_props(const FindProps& props, size_t found)
+{
 	Sexp resprops;
-	if (descending) {
-		qflags |= QueryFlags::Descending;
-		resprops.put_props(":reverse", Sexp::t_sym);
+
+	resprops.put_props(
+		":found", found,
+		":query", props.query,
+		":query-sexp", parse_query(props.query, false/*!expand*/),
+		":query-sexp-expanded", parse_query(props.query, true/*expand*/),
+		":maxnum", props.maxnum,
+		// mu4e expects ':'-prefixed sort-field, for historical reasons.
+		":sort-field", Sexp::Symbol{mu_format(":{}", field_from_id(props.sort_field_id).name)});
+
+	if (props.maxnum == -1)
+		resprops.put_props(":full", Sexp::t_sym);
+
+	for (const auto& item: flags_props) {
+		if (any_of(props.flags & item.first))
+			resprops.put_props(item.second, Sexp::t_sym);
 	}
-	if (skip_dups) {
-		qflags |= QueryFlags::SkipDuplicates;
-		resprops.put_props(":skip-dups", Sexp::t_sym);
-	}
-	if (include_related) {
-		qflags |= QueryFlags::IncludeRelated;
-		resprops.put_props(":include-related", Sexp::t_sym);
-	}
-	if (threads) {
-		qflags |= QueryFlags::Threading;
-		resprops.put_props(":threads", Sexp::t_sym);
-	}
+
+	return resprops;
+}
+
+void
+Server::Private::find_handler(const Command& cmd)
+{
+	const auto props = determine_find_props(cmd);
 
 	StopWatch sw{mu_format("{} (indexing: {})", __func__,
 			       indexer().is_running() ? "yes" :  "no")};
@@ -694,7 +753,8 @@ Server::Private::find_handler(const Command& cmd)
 	// we need to _lock_ the store while querying (which likely consists of
 	// multiple actual queries) + grabbing the results.
 	std::lock_guard l{store_.lock()};
-	auto qres{store_.run_query(q, sort_field_id, qflags, maxnum)};
+	auto qres{store_.run_query(props.query, props.sort_field_id,
+				   props.flags, props.maxnum)};
 	if (!qres)
 		throw Error(Error::Code::Query, "failed to run query: {}", qres.error().what());
 
@@ -702,15 +762,10 @@ Server::Private::find_handler(const Command& cmd)
 	 * knows it should erase the headers buffer. this will ensure that the
 	 * output of two finds will not be mixed. */
 	output_sexp(Sexp().put_props(":erase", Sexp::t_sym));
-	const auto bsize{static_cast<size_t>(batch_size)};
+	const auto bsize{static_cast<size_t>(props.batch_size)};
 	const auto foundnum = output_results(*qres, bsize);
 
-	output_sexp(resprops.put_props(
-			    ":found", foundnum,
-			    ":query", q,
-			    ":query-sexp", parse_query(q, false/*!expand*/).to_string(),
-			    ":query-sexp-expanded", parse_query(q, true/*expand*/).to_string(),
-			    ":maxnum", maxnum));
+	output_sexp(determine_result_props(props, foundnum));
 }
 
 void

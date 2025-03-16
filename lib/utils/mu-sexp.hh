@@ -22,15 +22,12 @@
 
 #include "mu-utils.hh"
 
-#include <stdexcept>
 #include <vector>
 #include <string>
 #include <string_view>
 #include <iostream>
 #include <variant>
-#include <cinttypes>
 #include <ostream>
-#include <cassert>
 
 #include <utils/mu-result.hh>
 #include <utils/mu-option.hh>
@@ -55,7 +52,7 @@ struct Sexp {
 		Symbol(const std::string& s): name{s} {}
 		Symbol(std::string&& s): name(std::move(s)) {}
 		Symbol(const char* str): Symbol(std::string{str}) {}
-		Symbol(std::string_view sv): Symbol(std::string{sv}) {}
+		Symbol(const std::string_view& sv): Symbol(std::string{sv}) {}
 		operator const std::string&() const {return name; }
 		std::string name;
 
