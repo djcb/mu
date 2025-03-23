@@ -326,7 +326,9 @@ Sexp::plistp(Sexp::const_iterator b, Sexp::const_iterator e) const
 	else if (b + 1 == e)
 		return false;
 	else
-		return b->symbolp() && plistp(b + 2, e);
+		return b->symbolp() &&
+			b->symbol().name.starts_with(':')
+			&& plistp(b + 2, e);
 }
 
 
