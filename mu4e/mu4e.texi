@@ -3479,6 +3479,8 @@ It is possible to get information about the current header in the echo-area.
 You can enable this by setting @t{mu4e-eldoc-support} to non-@t{nil}.
 
 @node Org-mode
+@section Org-mode
+@cindex org-mode
 
 Org-mode is a popular and powerful way to deal with todo-lists, agendas inside
 Emacs. It's only natural to integrate it with @t{mu4e}, and
