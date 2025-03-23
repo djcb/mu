@@ -228,6 +228,13 @@ Sexp::to_json_string(Format fopts) const
 {
 	std::stringstream sstrm;
 
+	const auto sym_name=[&](const std::string& sym) {
+		if (any_of(fopts & Format::NoColon) && sym[0] == ':')
+			return sym.substr(1); // remove colon
+		else
+			return sym;
+	};
+
 	switch (type()) {
 	case Type::List: {
 		// property-lists become JSON objects
@@ -237,16 +244,18 @@ Sexp::to_json_string(Format fopts) const
 			bool first{true};
 			while (it != list().end()) {
 				const auto key{it->symbol().name};
-				sstrm << (first ? "" : ",")  << quote(key) << ":";
+				sstrm << (first ? "" : ",")
+				      << quote(sym_name(key)) << ":";
 				++it;
 				const auto emacs_tstamp{*it};
-				sstrm << emacs_tstamp.to_json_string();
+				sstrm << emacs_tstamp.to_json_string(fopts);
 				++it;
 				first = false;
 				// special-case: tstamp-fields also get a "unix" value,
 				// which are easier to work with than the "emacs" timestamps
 				if (key == ":date" || key == ":changed")
-					sstrm << "," << quote(key + "-unix") << ":"
+					sstrm << "," << quote(sym_name(key) + "-unix")
+					      << ":"
 					      << unix_tstamp(emacs_tstamp);
 			}
 			sstrm << "}";
@@ -256,7 +265,7 @@ Sexp::to_json_string(Format fopts) const
 			sstrm << '[';
 			bool first{true};
 			for (auto&& child : list()) {
-				sstrm << (first ? "" : ", ") << child.to_json_string();
+				sstrm << (first ? "" : ", ") << child.to_json_string(fopts);
 				first = false;
 			}
 			sstrm << ']';
@@ -285,7 +294,6 @@ Sexp::to_json_string(Format fopts) const
 
 	return sstrm.str();
 }
-
 
 
 Sexp&

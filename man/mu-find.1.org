@@ -34,8 +34,9 @@ would find all messages in 2009 with `snow' in the subject field, e.g:
 #+end_example
 
 Note, this the default, plain-text output, which is the default, so you don't
-have to use *--format=plain*. For other types of output (such as symlinks, XML or
-s-expressions), see the discussion in the *OPTIONS*-section below about *--format*.
+have to use *--format=plain*. For other types of output (such as symlinks, XML,
+s-expressions or JSON), see the discussion in the *OPTIONS*-section below about
+*--format*.
 
 The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
@@ -114,13 +115,15 @@ Note, if you specify a sortfield, by default, messages are sorted in reverse
 choice, but for dates it may be more useful to sort in the opposite direction.
 
 ** -n, --maxnum _number_
+
 If _number_ > 0, display maximally that number of entries. If not specified, all
 matching entries are displayed.
 
 ** --summary-len _number_
+
 If _number_ > 0, use that number of lines of the message to provide a summary.
 
-** --format plain|links|xml|sexp
+** --format plain|links|xml|sexp|json|json2
 
 Output results in the specified format.
 
@@ -131,8 +134,13 @@ Output results in the specified format.
 - *xml* formats the search results as XML.
 - *sexp* formats the search results as an s-expression as used in Lisp programming
   environments.
+- *json* formats the output as JSON; it is a direct translation of the *sexp* format
+- *json2* is a slightly more idiomatic JSON, for now the only difference with *json*
+  is that the latter avoids the ':' prefix in key-names (e.g., "subject" instead
+  of ":subject"). *json2* is still experimental.
 
 ** --linksdir _dir_ and -c, --clearlinks
+
 When using *--format=links*, output the results as a maildir with symbolic links
 to the found messages. This enables easy integration with mail-clients (see
 below for more information). *mu* will create the maildir if it does not exist
@@ -152,6 +160,7 @@ it automatically inserts a _.noindex_ file, to exclude the directory from *mu
 index*.
 
 ** --after _timestamp_
+
 Only show messages whose message files were last modified (*mtime*) after
 _timestamp_. _timestamp_ is a UNIX *time_t* value, the number of seconds since
 1970-01-01 (in UTC).
@@ -279,8 +288,6 @@ After restarting Wanderlust, the virtual folders should appear.
 
 *mu find* output is encoded according to the locale for *--format=plain* (the
 default format), and UTF-8 for all other formats (=sexp=, =xml=).
-
-
 * PERFORMANCE
 
 Some notes on performance, comparing the timings between some recent releases;
@@ -288,7 +295,6 @@ taking the total number for 10 test runs.
 
 1. time (repeat 10 mu find "" -n 50000 > /dev/null)
 2. time (repeat 10 mu find "" -n 50000 --include-related --threads > /dev/null)
-
 
 #+ATTR_MAN: :disable-caption t
 |       release | time 1 (sec) | time 2 (sec) |
@@ -298,9 +304,6 @@ taking the total number for 10 test runs.
 |           1.8 | 8.7s         | 29.3s        |
 |          1.10 | 9.8s         | 30.6s        |
 | 1.11 (master) | 10.1s        | 29.5s        |
-
-
-
 
 #+include: "exit-code.inc" :minlevel 1
 

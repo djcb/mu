@@ -35,6 +35,12 @@
     is a bit easier to manipulate than the emacs-style timestamps (same value,
     but expressed as a list).
 
+  - With 1.12.10, there is also an experimental ~--format=json2~, where key-names
+    are no longer prefixed with ~:~, so for example, "*subject"* instead of
+    "*:subject"*.
+
+  - With 1.12.9, the cleanup phase after indexing is significantly faster now
+
   - with 1.12.7, ~mu~ indexing is single-threaded again, to avoid cases of
     database-corruption. In *mu4e* that means you need to _wait_ until indexing is
     ready before you can continue (*mu4e* will warn you).
@@ -46,8 +52,6 @@
     Note: for a while, the single-threadedness was signified by an "-st" suffix
     in the mu4e version in its main-page; however, since this is optional no
     longer, the suffix has been removed.
-
-  - the cleanup phase after indexing is significantly faster now
 
 *** mu4e
 
@@ -69,9 +73,9 @@
     result you expected.
 
   - When you ask for bookmarks or maildirs through ~mu4e-search-bookmark~ or
-    ~mu4e-search-maildir~, unread counts are displayed in the (default) completions
-    UI next to the maildir or bookmark. If you don't want to see these counts,
-    set ~mu4e-hide-short-counts~ to non-~nil~.
+    ~mu4e-search-maildir~, unread counts are displayed in the (default)
+    completions UI next to the maildir or bookmark. If you don't want to see
+    these counts, set ~mu4e-hide-short-counts~ to non-~nil~.
 
   - A (experimental) "transient" menu has been added for mu4e. You can use it
     e.g., with something like:

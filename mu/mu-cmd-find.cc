@@ -1,5 +1,5 @@
  /*
-** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -383,7 +383,10 @@ output_json(const Option<Message>& msg, const OutputInfo& info, const Options& o
 	if (!msg)
 		return Ok();
 
-	mu_println("{}{}", msg->sexp().to_json_string(), info.last ? "" : ",");
+	const Sexp::Format frm{opts.find.format == Format::Json2 ?  Sexp::Format::NoColon :
+		Sexp::Format::Default};
+
+	mu_println("{}{}", msg->sexp().to_json_string(frm), info.last ? "" : ",");
 
 	return Ok();
 }
@@ -443,6 +446,7 @@ get_output_func(const Options& opts)
 	case Format::Sexp:
 		return output_sexp;
 	case Format::Json:
+	case Format::Json2:
 		return output_json;
 	default:
 		throw Error(Error::Code::Internal,

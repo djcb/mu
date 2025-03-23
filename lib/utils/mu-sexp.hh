@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -264,6 +264,8 @@ struct Sexp {
 		Default	  = 0,	/**< Nothing in particular */
 		SplitList = 1 << 0,	/**< Insert newline after list item */
 		TypeInfo  = 1 << 1, /**< Show type-info */
+		NoColon = 1 << 2, /**< In the Json output, remove the colon
+				       * prefixes for property keys */
 	};
 
 	/**
@@ -272,7 +274,7 @@ struct Sexp {
 	 * @return str
 	 */
 	std::string to_string(Format fopts=Format::Default) const;
-	std::string to_json_string(Format fopts=Format::Default) const;
+	std::string to_json_string(Format fopts) const;
 
 	Sexp& del_prop(const std::string& pname);
 
@@ -280,7 +282,7 @@ struct Sexp {
 	 * Some useful constants
 	 *
 	 */
-	static inline const auto nil_sym	= Sexp::Symbol{"nil"};
+	static inline const auto nil_sym = Sexp::Symbol{"nil"};
 	static inline const auto t_sym	= Sexp::Symbol{"t"};
 
 protected:

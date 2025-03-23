@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -149,7 +149,7 @@ struct Options {
 		std::string	bookmark;		/**<  use bookmark */
 		bool		analyze;		/**<  analyze query */
 
-		enum struct Format { Plain, Links, Xml, Json, Sexp, Exec };
+		enum struct Format { Plain, Links, Xml, Json, Json2, Sexp, Exec };
 		Format		format;			/**< Output format */
 		std::string	exec;			/**<  cmd to execute on matches */
 		bool		skip_dups;		/**< show only first with msg id */
@@ -256,7 +256,7 @@ struct Options {
 		bool	terminate;			/**< add \f between msgs in view */
 		OptSize summary_len;			/**< max # of lines for summary */
 
-		enum struct Format { Plain,  Sexp, Html };
+		enum struct Format { Plain, Sexp, Html };
 		Format format;				/**< output format*/
 
 		StringVec files;			/**< Message file(s) */

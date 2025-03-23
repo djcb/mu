@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -338,6 +338,9 @@ sub_find(CLI::App& sub, Options& opts)
 			},
 			{ Format::Json,
 			  {"json", "JSON"}
+			},
+			{ Format::Json2,
+			  {"json2", "more idiomatic JSON"}
 			},
 		}};
 
