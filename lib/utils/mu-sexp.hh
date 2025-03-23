@@ -301,7 +301,7 @@ MU_ENABLE_BITOPS(Sexp::Format);
  * String-literal; allow for ":foo"_sym to be a symbol
  */
 static inline Sexp::Symbol
-operator"" _sym(const char* str, std::size_t n)
+operator""_sym(const char* str, std::size_t n)
 {
 	return Sexp::Symbol{str};
 }

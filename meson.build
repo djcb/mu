@@ -62,7 +62,10 @@ extra_flags = [
   '-Wno-switch-enum',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
-  '-Wno-stringop-overflow',]
+  '-Wno-stringop-overflow',
+  # c++23, in tabulate.hpp (3rd-party)
+  '-Wno-deprecated-literal-operator'
+]
 
 if (cxx.get_id() == 'clang')
   extra_flags += [
