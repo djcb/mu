@@ -72,6 +72,11 @@ messages changed since the last notification and is greater than
 zero."
   (when-let* ((fav (mu4e-bookmark-favorite))
               (delta-unread (plist-get fav :delta-unread)))
+    (when (and (fboundp 'notifications-close-notification)
+               mu4e--notification-id
+               (zerop delta-unread))
+      (notifications-close-notification mu4e--notification-id)
+      (setq mu4e--notification-id nil))
     (when (and (> delta-unread 0)
                (not (= delta-unread mu4e--last-delta-unread)))
       (setq mu4e--last-delta-unread delta-unread) ;; update
