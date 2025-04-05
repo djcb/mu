@@ -121,7 +121,7 @@ the beginning of the buffer.
 Push mark at previous position, unless either a
 \\[universal-argument] prefix ARG is supplied, or Transient Mark mode
 is enabled and the mark is active."
-  (interactive "P")
+  (interactive "^P")
   (or arg
       (region-active-p)
       (push-mark))
@@ -138,7 +138,7 @@ there, go to the end of the buffer.
 Push mark at previous position, unless either a
 \\[universal-argument] prefix ARG is supplied, or Transient Mark mode
 is enabled and the mark is active."
-  (interactive "P")
+  (interactive "^P")
   (or arg
       (region-active-p)
       (push-mark))
