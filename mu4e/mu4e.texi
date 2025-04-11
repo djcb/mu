@@ -2609,31 +2609,6 @@ If @code{:show-target} is @t{nil} the @t{DYN-TARGET} is shown (and
 @item @code{:action} --- the action to apply on the message when the mark is executed.
 @end itemize
 
-As an example, suppose we would like to add a mark for tagging messages
-(GMail-style). We can use the following code (after loading @t{mu4e}):
-
-@lisp
-(add-to-list 'mu4e-marks
-  '(tag
-     :char       "g"
-     :prompt     "gtag"
-     :ask-target (lambda () (read-string "What tag do you want to add? "))
-     :action     (lambda (docid msg target)
-                   (mu4e-action-retag-message msg (concat "+" target)))))
-@end lisp
-
-Adding elements to @code{mu4e-marks} (as in the example) allows you to use the
-mark in bulk operations (for example when tagging a whole thread); if you also
-want to add a key-binding for the headers view, you can use something like:
-
-@lisp
-(defun my-mu4e-mark-add-tag()
-  "Add a tag to the message at point."
-  (interactive)
-  (mu4e-headers-mark-and-next 'tag))
-
-(define-key mu4e-headers-mode-map (kbd "g") #'my-mu4e-mark-add-tag)
-@end lisp
 
 @node Contexts
 @chapter Contexts
@@ -2986,11 +2961,11 @@ compose a totally new message, the @code{msg} parameter is @code{nil}.
 @node Actions
 @chapter Actions
 
-@t{mu4e} lets you define custom actions for messages in @ref{Headers view}
-and for both messages and attachments in @ref{Message view}. Custom
-actions allow you to easily extend @t{mu4e} for specific needs --- for example,
-marking messages as spam in a spam filter or applying an attachment with a
-source code patch.
+@t{mu4e} lets you define custom actions for messages in @ref{Headers view} and
+for both messages and attachments in the @ref{Message view}. Custom actions
+allow you to easily extend @t{mu4e} for specific needs --- for example, marking
+messages as spam in a spam filter or applying an attachment with a source code
+patch.
 
 You can invoke the actions with key @key{a} for actions on messages, and key
 @key{A} for actions on attachments.
@@ -3033,16 +3008,16 @@ looks like:
 
 @noindent
 After you have defined your function, you can add it to the list of
-actions@footnote{Instead of defining the functions separately, you can
-obviously also add a @code{lambda}-function directly to the list; however,
-separate functions are easier to change}, either @code{mu4e-headers-actions},
-@code{mu4e-view-actions} or @code{mu4e-view-mime-part-actions}.  The
+actions@footnote{Instead of defining the functions separately, you can obviously
+also add a @code{lambda}-function directly to the list; however, separate
+functions are easier to change}, either @code{mu4e-headers-actions},
+@code{mu4e-view-actions} or @code{mu4e-view-mime-part-actions}. The
 format@footnote{Note, the format of the actions has changed since version
-0.9.8.4, and you must change your configuration to use the new format;
-@t{mu4e} warns you when you are using the old format.} of each action is a
-cons-cell, @code{(DESCRIPTION . VALUE)}; see below for some examples. If your
-shortcut is not also the first character of the description, simply prefix the
-description with that character.
+0.9.8.4, and you must change your configuration to use the new format; @t{mu4e}
+warns you when you are using the old format.} of each action is a cons-cell,
+@code{(DESCRIPTION . VALUE)}; see below for some examples. If your shortcut is
+not also the first character of the description, simply prefix the description
+with that character.
 
 Let's look at some examples.
 
@@ -3119,10 +3094,21 @@ Or another one, to import a calendar invitation into the venerable emacs diary:
 @node Example actions
 @section Example actions
 
-@t{mu4e} includes a number of example actions in the file
-@file{mu4e-actions.el} in the source distribution (see @kbd{C-h f
-mu4e-action-TAB}). For example, for viewing messages in an external web
-browser.
+@t{mu4e} includes a number of example actions in the file @file{mu4e-actions.el}
+in the source distribution (see @kbd{C-h f mu4e-action-TAB}). For example, for
+viewing messages in an external web browser or tagging.
+
+@cindex tagging
+It is easy to add such actions to your configuration; for instance, to enable
+@emph{tagging}@footnote{@t{mu4e} does not offer tagging by default since it
+mutates the message files, something that @t{mu}/@t{mu4e} generally try to
+avoid.} both in the message view and headers view, you could add:
+@lisp
+(add-to-list 'mu4e-headers-actions
+             '("Tag message" . mu4e-action-retag-message))
+(add-to-list 'mu4e-view-actions
+             '("Tag message" . mu4e-action-retag-message))
+@end lisp
 
 @node Extending mu4e
 @chapter Extending mu4e
