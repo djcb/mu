@@ -497,6 +497,7 @@ test_store_circular_symlink(void)
 	allow_warnings();
 
 	g_test_bug("2517");
+	g_test_bug("2832");
 
 	auto testhome{unwrap(make_temp_dir())};
 	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
@@ -514,7 +515,7 @@ test_store_circular_symlink(void)
 	size_t n{};
 	while (store.indexer().is_running()) {
 		std::this_thread::sleep_for(100ms);
-		g_assert_cmpuint(n++,<=,25);
+		g_assert_cmpuint(n++,<=,27); // 25 should be enough but #2832...
 	}
 	// there will be a lot of dups....
 	g_assert_false(store.empty());
