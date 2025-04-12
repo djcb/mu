@@ -384,8 +384,6 @@ Returns the docid, or nil if there is none."
       (goto-char point))
     (get-text-property (line-beginning-position) 'docid)))
 
-
-
 (defun mu4e~headers-goto-docid (docid &optional to-mark)
   "Go to beginning of the line with DOCID.
 Nil if it cannot be found. If the optional TO-MARK is
@@ -1032,51 +1030,66 @@ COUNT is the number of messages found."
      )))
 
 ;;; Headers-mode and mode-map
+(defun mu4e~header-line-click (sortable threads)
+  "Return function for header-line clicks.
+If SORTABLE, handle the sorting; otherwise show a message that
+you cannot sort by this field. If THREADS, give a more
+informative error message."
+    (if (not sortable)
+        (if threads
+            (lambda (&optional e)
+              (interactive "e")
+              (mu4e-message "With threading, you can only sort by date"))
+          (lambda (&optional e)
+            (interactive "e")
+            (mu4e-message "Field is not sortable")))
+      (lambda (&optional e)
+        (interactive "e")
+        ;; getting the field, inspired by
+        ;; `tabulated-list-col-sort'
+        (let* ((obj (posn-object (event-start e)))
+               (field (and obj
+                           (get-text-property 0 'field (car obj)))))
+          ;; "t": if we're already sorted by field, the
+          ;; sort-order is changed
+          (mu4e-search-change-sorting field t)))))
 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
-  (let ((uparrow   (if mu4e-use-fancy-chars " ▲" " ^"))
-        (downarrow (if mu4e-use-fancy-chars " ▼" " V")))
+  (let* ((plist (mu4e-server-last-query)) ;; info about the last query
+         (reverse (plist-get plist :reverse))
+         (threads (plist-get plist :threads))
+         ;; with threads enabled,  we can only sort by ;date
+         (sort-field (if threads :date (plist-get plist :sort-field)))
+         (fields (append mu4e-header-info mu4e-header-info-custom))
+         (arrow (if reverse
+                    (if mu4e-use-fancy-chars " ▼" " V")
+                  (if mu4e-use-fancy-chars " ▲" " ^"))))
     (cons
      (make-string
       (+ mu4e--mark-fringe-len (floor (fringe-columns 'left t))) ?\s)
      (mapcar
       (lambda (item)
-        (let* (;; with threading enabled, we're necessarily sorting by date.
-               (sort-field (if mu4e-search-threads
-                               :date mu4e-search-sort-field))
-               (field (car item)) (width (cdr item))
-               (info (cdr (assoc field
-                                 (append mu4e-header-info
-                                         mu4e-header-info-custom))))
-               (sortable (plist-get info :sortable))
-               ;; if sortable, it is either t (when field is sortable itself)
-               ;; or a symbol (if another field is used for sorting)
-               (this-field (when sortable (if (booleanp sortable)
-                                              field
-                                            sortable)))
+        (let* ((field (car item)) (width (cdr item))
+               (info (cdr (assoc field fields)))
+               (sortable-info (plist-get info :sortable))
+               ;; the effective sort-field for this field is as per its info;
+               ;; if t, it's the field itself; otherwise it's either some
+               ;; _other_ field (for fields which are sorted by some other field), or nil
+               ;; for fields that cannot be sorted.
+               (field-sort-field
+                (if (eq sortable-info t) field sortable-info))
+               ;; only if we're actually looking at if for this column
+               (field-sort-field (and (eq field-sort-field sort-field) field-sort-field))
                (help (plist-get info :help))
                ;; triangle to mark the sorted-by column
                (arrow
-                (when (and sortable (eq this-field sort-field))
-                  (if (eq mu4e-search-sort-direction 'descending)
-                      downarrow
-                    uparrow)))
+                (when field-sort-field
+                  (if reverse downarrow uparrow)))
                (name (concat (plist-get info :shortname) arrow))
                (map (make-sparse-keymap)))
-          (when sortable
-            (define-key map [header-line mouse-1]
-                        (lambda (&optional e)
-                          ;; getting the field, inspired by
-                          ;; `tabulated-list-col-sort'
-                          (interactive "e")
-                          (let* ((obj (posn-object (event-start e)))
-                                 (field
-                                  (and obj
-                                       (get-text-property 0 'field (car obj)))))
-                            ;; "t": if we're already sorted by field, the
-                            ;; sort-order is changed
-                            (mu4e-search-change-sorting field t)))))
+          (define-key map [header-line mouse-1]
+                      (mu4e~header-line-click field-sort-field threads))
           (concat
            (propertize
             (if width
@@ -1085,8 +1098,8 @@ COUNT is the number of messages found."
               name)
             'face (when arrow 'bold)
             'help-echo help
-            'mouse-face (when sortable 'highlight)
-            'keymap (when sortable map)
+            'mouse-face (when field-sort-field 'highlight)
+            'keymap (when field-sort-field map)
             'field field) " ")))
       mu4e-headers-fields))))
 

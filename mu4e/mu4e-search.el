@@ -96,15 +96,17 @@ Example that hides all trashed messages:
 This can be used to toggle use of the predicate through
  `mu4e-search-toggle-property'.")
 
-
 (defcustom mu4e-search-sort-field :date
-  "Field to sort the headers by. A symbol:
-one of: `:date', `:subject', `:size', `:prio', `:from', `:to.',
-`:list'.
+  "Field to sort the headers by.
 
-Note that when threading is enabled (through
-`mu4e-search-threads'), the headers are exclusively sorted
-chronologically (`:date') by the newest message in the thread."
+You can use any field from `mu4e-header-info' with a non-nil
+`:sortable' in their information.
+
+The ':'-prefix is there for historical reasons.
+
+When threading is enabled (through `mu4e-search-threads'), the
+headers are exclusively sorted chronologically (`:date') by the
+newest message in the thread."
   :type '(radio (const :date)
                 (const :subject)
                 (const :size)
@@ -112,6 +114,8 @@ chronologically (`:date') by the newest message in the thread."
                 (const :from)
                 (const :to)
                 (const :list))
+  ;; this is not exhaustive; but the other ones don't make
+  ;; much sense as default sort-fields.
   :group 'mu4e-search)
 
 (defcustom mu4e-search-sort-direction 'descending
@@ -528,20 +532,18 @@ last search with the new setting."
 
 (defun mu4e--search-modeline-item ()
   "Get mu4e-search modeline item."
-  (let* ((label (lambda (label-cons)
+  (let* ((pinfo (mu4e-server-last-query))
+         (label (lambda (label-cons)
                   (if mu4e-use-fancy-chars
                       (cdr label-cons) (car label-cons))))
          (props
           `((,mu4e-search-full ,mu4e-search-full-label
              "Full search")
-            (,mu4e-search-include-related
-             ,mu4e-search-related-label
+            (,(plist-get pinfo :related) ,mu4e-search-related-label
              "Include related messages")
-            (,mu4e-search-threads
-             ,mu4e-search-threaded-label
+            (,(plist-get pinfo :threads) ,mu4e-search-threaded-label
              "Show message threads")
-            (,mu4e-search-skip-duplicates
-             ,mu4e-search-skip-duplicates-label
+            (,(plist-get pinfo :skip-dups) ,mu4e-search-skip-duplicates-label
              "Skip duplicate messages")
             (,mu4e-search-hide-enabled
              ,mu4e-search-hide-label
