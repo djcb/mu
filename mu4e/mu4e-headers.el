@@ -1033,31 +1033,31 @@ COUNT is the number of messages found."
 (defun mu4e~header-line-click (sortable threads)
   "Return function for header-line clicks.
 If SORTABLE, handle the sorting; otherwise show a message that
-you cannot sort by this field. If THREADS, give a more
-informative error message."
-    (if (not sortable)
-        (if threads
-            (lambda (&optional e)
-              (interactive "e")
-              (mu4e-message "With threading, you can only sort by date"))
+you cannot sort by this field.
+
+If THREADS is non-nil, give a more informative error message."
+  (if (not sortable)
+      (if threads
           (lambda (&optional e)
             (interactive "e")
-            (mu4e-message "Field is not sortable")))
-      (lambda (&optional e)
-        (interactive "e")
-        ;; getting the field, inspired by
-        ;; `tabulated-list-col-sort'
-        (let* ((obj (posn-object (event-start e)))
-               (field (and obj
-                           (get-text-property 0 'field (car obj)))))
-          ;; "t": if we're already sorted by field, the
-          ;; sort-order is changed
-          (mu4e-search-change-sorting field t)))))
+            (mu4e-message "With threading, you can only sort by date"))
+        (lambda (&optional e)
+          (interactive "e")
+          (mu4e-message "Field is not sortable")))
+    (lambda (&optional e)
+      (interactive "e")
+      ;; getting the field, inspired by `tabulated-list-col-sort'
+      (let* ((obj (posn-object (event-start e)))
+             (field (and obj
+                         (get-text-property 0 'field (car obj)))))
+        ;; "t": if we're already sorted by field, the
+        ;; sort-order is changed
+        (mu4e-search-change-sorting field t)))))
 
 (defun mu4e~header-line-format ()
   "Get the format for the header line."
   (let* ((plist (mu4e-server-last-query)) ;; info about the last query
-         (reverse (plist-get plist :reverse))
+         (reverse (plist-get plist :descending))
          (threads (plist-get plist :threads))
          ;; with threads enabled,  we can only sort by ;date
          (sort-field (if threads :date (plist-get plist :sort-field)))
@@ -1080,13 +1080,11 @@ informative error message."
                (field-sort-field
                 (if (eq sortable-info t) field sortable-info))
                ;; only if we're actually looking at if for this column
-               (field-sort-field (and (eq field-sort-field sort-field) field-sort-field))
+               (current-sort-field (and (eq field-sort-field sort-field) field-sort-field))
                (help (plist-get info :help))
                ;; triangle to mark the sorted-by column
-               (arrow
-                (when field-sort-field
-                  (if reverse downarrow uparrow)))
-               (name (concat (plist-get info :shortname) arrow))
+               (name (concat (plist-get info :shortname)
+                             (if current-sort-field arrow "")))
                (map (make-sparse-keymap)))
           (define-key map [header-line mouse-1]
                       (mu4e~header-line-click field-sort-field threads))
@@ -1099,7 +1097,7 @@ informative error message."
             'face (when arrow 'bold)
             'help-echo help
             'mouse-face (when field-sort-field 'highlight)
-            'keymap (when field-sort-field map)
+            'keymap map
             'field field) " ")))
       mu4e-headers-fields))))
 
