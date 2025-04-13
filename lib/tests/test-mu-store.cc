@@ -515,7 +515,8 @@ test_store_circular_symlink(void)
 	size_t n{};
 	while (store.indexer().is_running()) {
 		std::this_thread::sleep_for(100ms);
-		g_assert_cmpuint(n++,<=,27); // 25 should be enough but #2832...
+		// 5 sec should be enough, even on the slowest supported systems..
+		g_assert_cmpuint(n++,<=,50);
 	}
 	// there will be a lot of dups....
 	g_assert_false(store.empty());
