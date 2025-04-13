@@ -1,4 +1,4 @@
-;;; mu4e-headers.el --- Message headers -*- lexical-binding: t; coding:utf-8 -*-
+;;; mu4e-headers.el --- Message headers -*- lexical-binding: t  -*-
 
 ;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 

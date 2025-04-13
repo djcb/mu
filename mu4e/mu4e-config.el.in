@@ -1,9 +1,17 @@
-;; auto-generated
+;;; mu4e-config.el --- configuration values -*- lexical-binding: t -*-
+
+;;; Commentary:
+
+;; Auto-generated configuration values
+
+;;; Code:
 
 (defconst mu4e-mu-version "@VERSION@"
-  "Required mu binary version; mu4e's version must agree with this.")
+  "Required mu binary version.
+mu4e's version must agree with this.")
 
 (defconst mu4e-doc-dir "@MU_DOC_DIR@"
-  "Mu4e's data-dir.")
+  "Directory for mu4e documentation.")
 
 (provide 'mu4e-config)
+;;; mu4e-config.el.in ends here
