@@ -87,10 +87,13 @@ query."
 (declare-function mu4e-query-items "mu4e-query-items")
 (declare-function mu4e--query-item-display-short-counts "mu4e-query-items")
 
-(defun mu4e-ask-bookmark (prompt)
+(defun mu4e-ask-bookmark (prompt &optional query-item)
   "Ask user for bookmark using PROMPT.
 Return the corresponding query. The bookmark are as defined in
 `mu4e-bookmarks'.
+
+If QUERY-ITEM is non-nil, return the full query-item rather than
+just the query-string.
 
 The names of the bookmarks are displayed in the minibuffer,
 suffixed with the short version of the unread counts, as per
@@ -107,10 +110,13 @@ suffixed with the short version of the unread counts, as per
                (cons (format "%c%s%s"
                              (plist-get bm :key)
                              (plist-get bm :name)
-                             unreads)
-                     (plist-get bm :query))))
-          (mu4e-filter-single-key (mu4e-bookmarks)))))
-  (mu4e-read-option prompt bmarks)))
+                             unreads) bm)))
+          (mu4e-filter-single-key (mu4e-bookmarks))))
+         (chosen (mu4e-read-option prompt bmarks)))
+    ;; return either the query string, or the corresponding query-item.
+    (if query-item
+        chosen
+      (plist-get chosen :query))))
 
 (defun mu4e-get-bookmark-query (kar)
   "Get the corresponding bookmarked query for shortcut KAR.

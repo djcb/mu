@@ -247,8 +247,12 @@ to create it; otherwise return nil."
   "Get maildirs under `mu4e-maildir'."
   mu4e-maildir-list)
 
-(defun mu4e-ask-maildir (prompt)
+
+(defun mu4e-ask-maildir (prompt &optional query-item)
   "Ask the user for a maildir (using PROMPT).
+
+If QUERY-ITEM is non-nil, return the full query-item rather than
+just the query-string.
 
 If the special shortcut \"o\" (for _o_ther) is used, or
 if (mu4e-maildir-shortcuts) evaluates to nil, let user choose
@@ -257,32 +261,34 @@ from all maildirs under `mu4e-maildir'.
 The names of the maildirs are displayed in the minibuffer,
 suffixed with the short version of the unread counts, as per
 `mu4e--query-item-display-short-counts'."
-  (let* ((options
-         (seq-map
-          (lambda (md)
-            (let* ((qitem (mu4e--query-item-for-maildir-shortcut md))
-                   (unreads (mu4e--query-item-display-short-counts qitem)))
-              (cons
-               (format "%c%s%s"
-                       (plist-get md :key)
-                       (or (plist-get md :name)
-                           (plist-get md :maildir))
-                       unreads)
-               (plist-get md :maildir))))
-                  (mu4e-filter-single-key (mu4e-maildir-shortcuts))))
-        (response
-         (if (not options)
-             'other
-           (mu4e-read-option prompt
-                             (append options
-                                     '(("oOther..." . other)))))))
-    (substring-no-properties
-     (if (eq response 'other)
-         (progn
-           (funcall mu4e-completing-read-function prompt
-                    (mu4e-get-maildirs) nil nil
-                    mu4e-maildir-initial-input))
-       response))))
+  (let* ((mdirs
+          (append
+           (seq-map
+            (lambda (md)
+              (let* ((qitem (mu4e--query-item-for-maildir-shortcut md))
+                     (unreads (mu4e--query-item-display-short-counts qitem)))
+                (cons
+                 (format "%c%s%s"
+                         (plist-get md :key)
+                         (or (plist-get md :name)
+                             (plist-get md :maildir))
+                         unreads) md)))
+            (mu4e-filter-single-key (mu4e-maildir-shortcuts)))
+           '(("oOther..." . other)))) ;; append "Other" pseudo-maildir
+         (chosen (mu4e-read-option prompt mdirs))
+         ;; special case: handle pseudo-maildir 'other
+         (chosen (if (eq chosen 'other)
+                     (list :maildir
+                           (substring-no-properties
+                            (funcall mu4e-completing-read-function prompt
+                                     (mu4e-get-maildirs) nil nil
+                                     mu4e-maildir-initial-input)))
+                   chosen)))
+    ;; return either the maildir (as a string), or the corresponding
+    ;; query-item.
+    (if query-item
+        chosen
+      (plist-get chosen :maildir))))
 
 (defun mu4e-ask-maildir-check-exists (prompt)
   "Like `mu4e-ask-maildir', PROMPT for existence of the maildir.
