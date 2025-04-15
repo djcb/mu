@@ -94,22 +94,24 @@ nil otherwise."
 
 (defcustom mu4e-maildir-shortcuts nil
   "A list of maildir shortcuts.
-This makes it possible to quickly go to a particular
-maildir (folder), or quickly moving messages to them (e.g., for
-archiving or refiling).
 
-The format is the same as for `mu4e-bookmarks', with a few
-difference, so see its doc-strings for further details.
+Creating a shortcut makes it possible to quickly go to a
+particular maildir (folder), or quickly moving messages to
+them (e.g., for archiving or refiling).
 
-The only field specific for `mu4e-maildir-shortcuts' is
-- `:maildir'  - the maildir for the shortcut (e.g., \"/archive\")
+The format is mostly the same as for `mu4e-bookmarks', with a few
+difference, so see its doc-string for further details.
+
+The only field specific to `mu4e-maildir-shortcuts' is
+`:maildir', which is the property specifying the maildir for the
+shortcut (e.g., \"/archive\").
 
 Example:
 
-\\(setq mu4e-maildir-shortcuts
-       \\'( (:maildir \"/inbox\"       :key ?i :hide-if-no-unread t)
-            (:maildir \"/drafts\"      :key ?d :hide t)
-            (:maildir \"/sent\"        :key ?s :hide-unread t)))
+ (setq mu4e-maildir-shortcuts
+       '((:maildir \"/inbox\"     :key ?i :hide-if-no-unread t)
+         (:maildir \"/drafts\"    :key ?d :hide t)
+         (:maildir \"/sent\"      :key ?s :hide-unread t)))
 
 You can use these shortcuts in the headers and view buffers, for
 example with `mu4e-mark-for-move-quick' (or \"m\", by default) or
@@ -163,7 +165,6 @@ mime-type are nil."
 
 (defvar mu4e-maildir-list nil
   "Cached list of maildirs.")
-
 
 (defun mu4e-maildir-shortcuts ()
   "Get `mu4e-maildir-shortcuts' in the (new) format.
