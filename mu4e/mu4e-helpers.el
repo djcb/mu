@@ -623,10 +623,11 @@ Returns the updated PLIST."
 (defun mu4e-plist-put-many (plist &rest keyvals)
   "Like `plist-put', but allow for multiple key-value pairs.
 PLIST is a property list, and KEYVALS are key value ... ."
-  (while keyvals
-    (plist-put plist (car keyvals) (cadr keyvals))
-    (setq keyvals (cdr keyvals)))
-  plist)
+  (let (p)
+    (while keyvals
+      (setq p (plist-put plist (car keyvals) (cadr keyvals)))
+      (setq keyvals (cddr keyvals)))
+    p))
 
 (defun mu4e--message-hide-headers ()
   "Hide headers based on the `message-hidden-headers' variable.
