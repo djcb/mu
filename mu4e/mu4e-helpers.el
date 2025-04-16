@@ -625,7 +625,7 @@ Returns the updated PLIST."
 PLIST is a property list, and KEYVALS are key value ... ."
   (let (p)
     (while keyvals
-      (setq p (plist-put plist (car keyvals) (cadr keyvals)))
+      (setq p (plist-put p (car keyvals) (cadr keyvals)))
       (setq keyvals (cddr keyvals)))
     p))
 
