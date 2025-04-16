@@ -229,6 +229,7 @@ bookmark or maildir."
          item
          :name         name
          :type         type
+         :key          (plist-get item :key)
          :query        query
          :count        count
          :unread       unread
