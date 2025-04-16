@@ -588,37 +588,30 @@ Mu4e's version of Emacs 28's `string-replace'."
 
 (defun mu4e-plistp (object)
   "Non-nil if and only if OBJECT is a valid plist.
-
 This is mu4e's version of Emacs 29's `plistp'."
   (let ((len (proper-list-p object)))
     (and len (zerop (% len 2)))))
 
-(defun mu4e-plist-do (func plist)
-  "Apply FUNC to each element in PLIST.
-FUNC receives to arguments: the key and its value."
-  (when plist
-    (funcall func (car plist) (cadr plist))
-    (mu4e-plist-do func (cddr plist))))
+(defun mu4e-plist-filter (plist pred)
+  "Return a plist for which a call to pred is non-nil.
+PLIST is some plist, and PRED is a function taking a key and
+value."
+  (let (p)
+    (while plist
+      (let ((key (car plist)) (val (cadr plist)))
+           (when (funcall pred key val)
+             (setq p (plist-put p key val))))
+      (setq plist (cddr plist)))
+    p))
 
 (defun mu4e-plist-remove (plist prop)
   "Remove PROP from PLIST.
 Returns the updated PLIST."
-  ;; inspired by org-plist-delete
-  (let (p)
-    (while plist
-      (if (not (eq prop (car plist)))
-          (setq p (plist-put p (car plist) (nth 1 plist))))
-      (setq plist (cddr plist)))
-    p))
+  (mu4e-plist-filter plist (lambda (k _v) (not (eq k prop)))))
 
 (defun mu4e-plist-remove-nils (plist)
   "Remove all properties with value nil from PLIST."
-  (let (p)
-    (while plist
-      (when (cadr plist)
-        (setq p (plist-put p (car plist) (cadr plist))))
-      (setq plist (cddr plist)))
-    p))
+  (mu4e-plist-filter plist (lambda (_k v) v)))
 
 (defun mu4e-plist-put-many (plist &rest keyvals)
   "Like `plist-put', but allow for multiple key-value pairs.
