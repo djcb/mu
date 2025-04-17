@@ -362,7 +362,9 @@ appropriate sent-messages folder. If MSGPATH is nil, do nothing."
       (message-generate-headers '(Message-ID)))
     ;; older Emacsen (<= 28 perhaps?) won't update the Date
     ;; if there already is one; so make sure it's gone.
-    (message-remove-header "Date")
+    (save-restriction
+      (message-narrow-to-headers)
+      (message-remove-header "Date"))
     (message-generate-headers '(Date Subject From))
     (mu4e--delimit-headers 'undelimit))) ;; remove separator
 
