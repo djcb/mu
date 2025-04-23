@@ -1,6 +1,6 @@
 ;;; mu4e-folders.el --- Maildirs & folders -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2021-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -36,36 +36,40 @@
 
 (defcustom mu4e-drafts-folder "/drafts"
   "Folder for draft messages, relative to the root maildir.
+
 For instance, \"/drafts\".
 
-Instead of a string, may also be a function that takes a
+Instead of a string, can also be a function that takes a
 message (a msg plist, see `mu4e-message-field'), and returns a
 folder. Note, the message parameter refers to the original
 message being replied to / being forwarded / re-edited and is nil
-otherwise. `mu4e-drafts-folder' is only evaluated once.
+otherwise.
 
-The form of draft messages is not necessarily compatible with
-other e-mail programs, e.g. when it involves attachments and the
-like.
-"
+`mu4e-drafts-folder' is only evaluated once.
+
+Note: the format of draft messages is not necessarily fully
+compatible with other e-mail programs, e.g. when it involves
+attachments or other MIME-parts."
   :type '(choice
           (string :tag "Folder name")
-          (function :tag "Function return folder name"))
+          (function :tag "Function which returns a folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-refile-folder "/archive"
-  "Folder for refiling messages, relative to the root maildir.
+  "Folder for refiling, relative to the root maildir.
+
 For instance \"/Archive\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. Note that the
 message parameter refers to the message-at-point."
   :type '(choice
           (string :tag "Folder name")
-          (function :tag "Function return folder name"))
+          (function :tag "Function which returns a folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-sent-folder "/sent"
   "Folder for sent messages, relative to the root maildir.
+
 For instance, \"/Sent Items\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
 `mu4e-message-field'), and returns a folder. Note that the
@@ -73,23 +77,25 @@ message parameter refers to the original message being replied to
 / being forwarded / re-edited, and is nil otherwise."
   :type '(choice
           (string :tag "Folder name")
-          (function :tag "Function return folder name"))
+          (function :tag "Function which returns a folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-trash-folder "/trash"
   "Folder for trashed messages, relative to the root maildir.
+
 For instance, \"/trash\". Instead of a string, may also be a
 function that takes a message (a msg plist, see
-`mu4e-message-field'), and returns a folder. When using
-`mu4e-trash-folder' in the headers view (when marking messages
-for trash). Note that the message parameter refers to the
+`mu4e-message-field'), and returns a folder.
+
+When using `mu4e-trash-folder' in the headers view (when marking
+messages for trash), the message parameter refers to the
 message-at-point. When using it when composing a message (see
 `mu4e-sent-messages-behavior'), this refers to the original
 message being replied to / being forwarded / re-edited, and is
 nil otherwise."
   :type '(choice
           (string :tag "Folder name")
-          (function :tag "Function return folder name"))
+          (function :tag "Function which returns a folder name"))
   :group 'mu4e-folders)
 
 (defcustom mu4e-maildir-shortcuts nil
