@@ -2895,9 +2895,8 @@ message. An example should clarify this:
          (mu4e-message-field msg :subject))
         "/football")
       ;; messages sent by me go to the sent folder
-      ((mu4e-message-sent-by-me msg
-         (mu4e-personal-addresses))
-        mu4e-sent-folder)
+      ((mu4e-message-sent-by-me msg)
+       mu4e-sent-folder)
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
       (t  "/archive"))))
