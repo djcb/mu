@@ -398,10 +398,14 @@ name--not only the directory--of the attachment."
          (candidates (mu4e--attachments-alist parts))
          (candidates (or candidates
                          (mu4e-warn "No attachments for this message")))
-         (file (mu4e--completing-read "Save file: " candidates
-                                      'attachment))
+         (file (mu4e--completing-read "Save file: " candidates 'attachment))
          (mm-handle (plist-get (cdr (assoc file candidates)) :handle))
-         (dest (read-file-name "Destination: " mu4e-attachment-dir)))
+         (dest (read-file-name "Destination: "
+                               mu4e-attachment-dir
+                               (expand-file-name file mu4e-attachment-dir)))
+         (dest (if (directory-name-p dest)
+                   (expand-file-name file dest)
+                 dest)))
     (mm-save-part-to-file mm-handle dest)))
 
 (defvar mu4e-view-mime-part-actions
