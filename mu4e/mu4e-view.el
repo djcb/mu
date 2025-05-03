@@ -962,6 +962,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "a" #'mu4e-view-action)
     (define-key map "A" #'mu4e-view-mime-part-action)
     (define-key map "e" #'mu4e-view-save-attachments)
+    (define-key map "o" #'mu4e-view-save-one-attachment)
     (define-key map "J" #'mu4e-view-jump-to-mime-part)
 
     ;; change the number of headers
