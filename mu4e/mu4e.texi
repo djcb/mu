@@ -1560,7 +1560,7 @@ E-mail messages can be though as a series of ``MIME-parts'', which are sections
 of the message. The most prominent is the 'body', that is the main message your
 are reading. Many e-mail messages also contains @emph{attachments}, which
 MIME-parts that contain files@footnote{Attachments come in two flavors:
-@c{inline} and @c{attachment}. @t{mu4e} does not distinguish between them when
+@t{inline} and @t{attachment}. @t{mu4e} does not distinguish between them when
 operating on them; everything that specifies a filename is considered an
 attachment}.
 
