@@ -616,7 +616,7 @@ Returns the updated PLIST."
 (defun mu4e-plist-put-many (plist &rest keyvals)
   "Like `plist-put', but allow for multiple key-value pairs.
 PLIST is a property list, and KEYVALS are key value ... ."
-  (let (p)
+  (let ((p plist))
     (while keyvals
       (setq p (plist-put p (car keyvals) (cadr keyvals)))
       (setq keyvals (cddr keyvals)))
