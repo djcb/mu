@@ -241,13 +241,12 @@ bookmark or maildir."
          :effective-query effective-query))))
      data))
 
-(defun mu4e-query-items (&optional type)
+(defun mu4e-query-items (&optional type refresh)
   "Grab cached information about query items of some TYPE.
 
 TYPE is a symbol; either `bookmarks' or `maildirs', or nil for
 both, and returns a list of plists. The information is based on
 the last (cached) information known by mu4e.
-
 This combines:
 - the latest queries data (i.e., `(mu4e-server-query-items)')
 - baseline queries data (i.e. `mu4e-baseline') with the combined
@@ -266,8 +265,13 @@ Currently, the plist contains the following fields:
 There are some other fields for internal mu4e use, better not use
 those externally.
 
+If REFRESH is non-nil, clear caches first.
+
 For the various nuances with the unread count and baseline,
 please refer to info node `(mu4e) Bookmarks and Maildirs'."
+  (when refresh ; clear caches?
+    (setq mu4e--bookmark-items-cached nil
+          mu4e--maildir-items-cached nil))
   (cond
    ((equal type 'bookmarks)
     (or mu4e--bookmark-items-cached
