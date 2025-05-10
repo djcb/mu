@@ -1556,21 +1556,27 @@ mu4e-view-show-mime-parts}. This can be a little slow.
 @cindex attachments
 @cindex mime-parts
 
-E-mail messages can be though as a series of ``MIME-parts'', which are sections
-of the message. The most prominent is the 'body', that is the main message your
-are reading. Many e-mail messages also contains @emph{attachments}, which
-MIME-parts that contain files@footnote{Attachments come in two flavors:
-@t{inline} and @t{attachment}. @t{mu4e} does not distinguish between them when
-operating on them; everything that specifies a filename is considered an
-attachment}.
+Typical e-mail messages can be thought of as a series of ``MIME-parts'', which
+are sections of the message. The most prominent of those parts is the 'body',
+which is the text of the message your are reading.
 
-To save such attachments as files on your file systems, @t{mu4e}'s message-view
+Many e-mail messages also contain @emph{attachments}, which are MIME-parts that
+contain files@footnote{Attachments come in two flavors: @t{inline} and
+@t{attachment}. @t{mu4e} does not distinguish between the two when operating on
+them: everything that specifies a filename is considered an attachment}.
+
+To save such attachments as files on your computer, @t{mu4e}'s message-view
 offers the command @code{mu4e-view-save-attachments}; its default keybinding is
 @key{e} (think @emph{extract}).
 
+Note that when point is on the attachment label in the message, e.g., on
+something that looks like @t{[4. application/pdf; Some Document.pdf]...}, Gnus'
+binding for @kbd{e} prevails, which is @code{gnus-mime-view-part-externally}.
+You can of course customize this in the usual (Emacs) way.
+
 After invoking the command, you can enter the file names to save,
 comma-separated, with completion support. Press @key{RET} to save the chosen
-files to your file-system.
+attachments as files to your computer.
 
 @t{mu4e} determines the target directory using the variable
 @t{mu4e-attachment-dir} (which can be either file-system path or a function; see
@@ -1582,13 +1588,23 @@ active, which offers @code{mu4e-view-complete-all} (bound to @key{C-c C-a} to
 complete @emph{all} files@footnote{Except when using 'Helm'; in that case, use
 the Helm-mechanism for selecting multiple}.
 
+@code{mu4e-view-save-attachments} assumes unique filenames for the attachments,
+which is requirement of the underlying completion mechanism works. If there are
+duplicates, only one is recognized.
+
+Furthermore, file names that match @code{crm-separator} (by default, commas) are
+not supported (see @t{completing-read-multiple} for further details). For such
+corner-cases, it is recommended to use @code{mu4e-view-mime-part-action}
+instead, which does not have this limitation.
+
 @subsection MIME-parts
 
 Not all MIME-parts are message bodies or attachments, and it can be useful to
-operate on those other parts as well. For that there is
-@code{mu4e-view-mime-part-action} (default key-binding @key{A}). You can pass
-the number of the MIME-part (as seen in the message view) as a prefix argument;
-otherwise you get to get to choose from a completion menu.
+operate on those other parts as well.
+
+To do so, there is @code{mu4e-view-mime-part-action} (default key-binding
+@key{A}). You can pass the number of the MIME-part (as seen in the message view)
+as a prefix argument; otherwise you get to get to choose from a completion menu.
 
 After choosing one or more MIME-parts, you can specify an action to apply to
 them; see the variable @code{mu4e-view-mime-part-actions} for the possibilities.
