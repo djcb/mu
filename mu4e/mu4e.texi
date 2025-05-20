@@ -3464,13 +3464,17 @@ want tweak the details, have a look at @code{mu4e-notification-filter} and
 @section Emacs bookmarks
 @cindex Emacs bookmarks
 
-Note, Emacs bookmarks are not to be confused with mu4e's bookmarks; the former
-are a generic linking system across Emacs, while the latter are stored queries
-within @t{mu4e}.
+@t{mu4e} integrates with the Emacs bookmarks system, and allows you to create
+bookmarks with with @code{bookmark-set} for either message-at-point or the last
+query. The message links are based on the message's message-id, and thus the
+bookmarks stay valid even if you move the message around.
 
-@t{mu4e} supports linking to the message-at-point through the normal Emacs
-built-in bookmark system. The links are based on the message's message-id, and
-thus the bookmarks stay valid even if you move the message around.
+For deciding whether to link to message or query, you can customize
+@var{mu4e-emacs-bookmark-policy}.
+
+Emacs bookmarks are not to be confused with mu4e's bookmarks; the former are a
+generic linking system across Emacs, while the latter are stored queries within
+@t{mu4e}.
 
 @node Eldoc
 @section Eldoc

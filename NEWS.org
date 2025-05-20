@@ -123,10 +123,6 @@
 
     - 1.12.9: the cleanup phase after indexing is significantly faster now
 
-    - 1.12.10: ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a
-      property ~:hide-if-no-unread~, which hides the maildir/bookmark from the
-      main-view if there are no unread messages which the corresponding query.
-
 *** mu4e
 
 **** message composer
@@ -230,7 +226,7 @@
     - links (in text-mode emails) are now clickable through <mouse-2>, to be
       consistent with eww.
 
-    - support new-mail notifications on MacOS out-of-the-box
+    - support new-mail notifications on MacOS/OSX out-of-the-box
 
     - allow sorting by tag
 
@@ -269,6 +265,18 @@
     - 1.12.9: Various Gnus' mailing list commands are now available in the mu4e
       message view as well, such as ~gnus-mailing-list-subscribe~,
       ~gnus-mailing-list-unsubscribe~.
+
+    - 1.12.10: ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a
+      property ~:hide-if-no-unread~, which hides the maildir/bookmark from the
+      main-view if there are no unread messages which the corresponding query.
+
+    - 1.12.10: ~mu4e-maildir-shortcuts~ and ~mu4e-bookmarks~ now understand a
+      property ~:hide-if-no-unread~, which hides the maildir/bookmark from the
+      main-view if there are no unread messages which the corresponding query.
+
+   - 1.12.12: it now possible to create Emacs bookmarks for both messages
+     (default) and queries. See the new variable ~mu4e-emacs-bookmark-policy~.
+
 
 *** Contributors
 
