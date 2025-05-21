@@ -412,7 +412,7 @@ status, STATUS."
           '("attach" "draft" "flagged" "list" "new" "passed" "replied"
             "seen" "trashed" "unread" "encrypted" "signed" "personal"
             "calendar")))
-   ((looking-back "maildir:\\([a-zA-Z0-9/.]*\\)" nil)
+   ((looking-back "maildir:\\([a-zA-Z0-9/.-]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
           (mapcar (lambda (dir)
