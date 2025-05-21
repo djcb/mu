@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -56,8 +56,8 @@ Mu::mu_cmd_init(const Options& opts)
 			conf.set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
 		if (opts.init.batch_size && *opts.init.batch_size != 0)
 			conf.set<Config::Id::BatchSize>(*opts.init.batch_size);
-		if (!opts.init.my_addresses.empty())
-			conf.set<Config::Id::PersonalAddresses>(opts.init.my_addresses);
+		if (!opts.init.personal_addresses.empty())
+			conf.set<Config::Id::PersonalAddresses>(opts.init.personal_addresses);
 		if (!opts.init.ignored_addresses.empty())
 			conf.set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
 		if (opts.init.support_ngrams)
@@ -130,6 +130,38 @@ test_mu_init_maildir()
 	assert_equal(store.root_maildir(), MU_TESTMAILDIR2);
 }
 
+
+static void
+test_mu_init_personal()
+{
+	TempDir temp_dir{};
+
+	const auto mu_home{temp_dir.path()};
+
+	g_setenv("MAILDIR", MU_TESTMAILDIR2, 1);
+	auto res1 = run_command({MU_PROGRAM, "--quiet", "init",
+			"--muhome", mu_home, "--personal-address", "foo@example.com",
+			"--my-address", "bar@example.com", // backward compat
+			"--personal-address", "/h.llo@example\\.com/"});
+	assert_valid_command(res1);
+
+	auto&& store = unwrap(Store::make(join_paths(temp_dir.path(), "xapian")));
+	g_assert_true(store.empty());
+	assert_equal(store.root_maildir(), MU_TESTMAILDIR2);
+
+	const auto& ccache{store.contacts_cache()};
+
+	// just some basic tests to see the parameters made it through.
+
+	g_assert_true(ccache.is_personal("foo@example.com"));
+	g_assert_true(ccache.is_personal("bar@example.com"));
+	g_assert_true(ccache.is_personal("hello@example.com"));
+	g_assert_true(ccache.is_personal("hallo@example.com"));
+
+	g_assert_false(ccache.is_personal("faa@example.com"));
+	g_assert_false(ccache.is_personal("baa@example.com"));
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -137,6 +169,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/cmd/init/basic", test_mu_init_basic);
 	g_test_add_func("/cmd/init/maildir", test_mu_init_maildir);
+	g_test_add_func("/cmd/init/personal", test_mu_init_personal);
 
 	return g_test_run();
 }

@@ -4,8 +4,8 @@
 
 * NAME
 
-mu-cfind - find contacts in the *mu* database and export them
-for use in other programs.
+mu-cfind - find contacts in the *mu* database and export them for use in other
+programs.
 
 * SYNOPSIS
 
@@ -14,15 +14,15 @@ for use in other programs.
 * DESCRIPTION
 
 *mu cfind* is the *mu* command for finding =contacts= (name and e-mail address of
-people who were either an e-mail's sender or receiver). There are different
-output formats available, for importing the contacts into other programs.
+people who were either an e-mail's sender or receiver). Different output formats
+are available, e.g., for importing the contacts into other programs.
 
 * SEARCHING CONTACTS
 
 When you index your messages (see *mu index*), *mu* creates a list of unique e-mail
-addresses found and the accompanying name, and caches this list. In case the
-same e-mail address is used with different names, the most recent non-empty name
-is used.
+addresses found and the accompanying name, and caches this list. If the same
+e-mail address is used with different names, the most recent non-empty name is
+used. If that is not the desired name, see *CORRECTING* below.
 
 *mu cfind* starts a search for contacts that match a =regular expression=. For
 example:
@@ -31,7 +31,7 @@ example:
 $ mu cfind '@gmail\.com'
 #+end_example
 
-would find all contacts with a gmail-address, while
+finds all contacts with a gmail-address, while
 
 #+begin_example
 $ mu cfind Mary
@@ -40,8 +40,8 @@ $ mu cfind Mary
 lists all contacts with Mary in either name or e-mail address.
 
 If you do not specify a search expression, *mu cfind* returns the full list of
-contacts. Note, *mu cfind* uses a cache with the e-mail information, which is
-populated during the indexing process.
+contacts. *mu cfind* uses a cache with the e-mail information, which is populated
+during the indexing process.
 
 The regular expressions are basic case-insensitive PCRE, see {{{man-link(pcre,3)}}}.
 
@@ -56,7 +56,7 @@ Sets the output format to the given value. The following are available:
 | plain       | default, simple list              |
 | mutt-alias  | mutt alias-format                 |
 | mutt-ab     | mutt external address book format |
-| wl          | wanderlust addressbook format     |
+| wl          | wanderlust address book format    |
 | org-contact | org-mode org-contact format       |
 | bbdb        | BBDB format                       |
 | csv         | comma-separated values [1]        |
@@ -69,9 +69,10 @@ any double-quote is replaced by a double-double quote (thus, "hello" become
 should only apply to name fields.
 
 ** -p, --personal
-Only show addresses seen in messages where one of `my' e-mail
-addresses was seen in one of the address fields; this is to exclude addresses
-only seen in mailing-list messages. See the *--my-address* parameter to *mu init*.
+Only show addresses seen in messages where at least one of personal e-mail
+addresses was seen in any of the address fields; this is to exclude addresses
+only seen in mailing-list messages. See the *--personal-address* parameter to *mu
+init* for specifying your personal e-mail addresses.
 
 ** --after _timestamp_
 Only show addresses last seen after _timestamp_. _timestamp_ is a UNIX
@@ -80,7 +81,7 @@ Only show addresses last seen after _timestamp_. _timestamp_ is a UNIX
 From the command line, you can use the *date* command to get this value. For
 example, only consider addresses last seen after 2020-06-01, you could specify
 #+begin_example
-  --after=`date +%s --date='2020-06-01'`
+  --after=$(date +%s --date='2020-06-01')
 #+end_example
 
 #+include: "muhome.inc" :minlevel 2
@@ -142,14 +143,22 @@ For this to work, add the following to your _muttrc_:
 set query_command = "mu cfind --format=mutt-ab '%s'"
 #+end_example
 
-Now, in mutt, you can search for e-mail addresses using the *query*-command,
-which is (by default) accessible by pressing *Q*.
+Now, in mutt, you can search for e-mail addresses using the *query*-command, which
+is (by default) accessible by pressing *Q*.
 
 * ENCODING
 
 *mu cfind* output is encoded according to the current locale except for
 *--format=bbdb*. This is hard-coded to UTF-8, and as such specified in the
 output-file, so emacs/bbdb can handle things correctly, without guessing.
+
+
+* CORRECTING
+
+If you want to correct the name for a given contact, one trick is to manual
+create an e-mail message with some future date that has all the correct name /
+e-mail address combinations, and put this in the Maildir you use.
+
 
 #+include: "exit-code.inc" :minlevel 1
 

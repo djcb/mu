@@ -465,8 +465,9 @@ sub_init(CLI::App& sub, Options& opts)
 		->transform(ExpandPath, "expand maildir path");
 	// don't attempt to canonicalize; in bash this breaks together with
 	// expand path.
-	sub.add_option("--my-address", opts.init.my_addresses,
-		       "Personal e-mail address or regexp")
+	sub.add_option("--personal-address,--my-address",
+		       opts.init.personal_addresses,
+		       "Personal e-mail address or regexp (can be used multiple titmes)")
 		->type_name("<address>");
 	sub.add_option("--ignored-address", opts.init.ignored_addresses,
 		       "Ignored e-mail address or regexp")
@@ -481,6 +482,7 @@ sub_init(CLI::App& sub, Options& opts)
 	sub.add_flag("--reinit", opts.init.reinit,
 		       "Re-initialize database with current settings")
 		->excludes("--maildir")
+		->excludes("--personal-address")
 		->excludes("--my-address")
 		->excludes("--ignored-address")
 		->excludes("--max-message-size")

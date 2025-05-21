@@ -354,7 +354,7 @@ Otherwise, do nothing."
             (mu4e-message (concat
                            "Tip: `user-mail-address' ('%s') is not part "
                            "of mu's addresses; add it with 'mu init
-                        --my-address='") user-mail-address)))
+                        --personal-address='") user-mail-address)))
         (goto-char pos)))))
 
 (defun mu4e--main-view-queue ()

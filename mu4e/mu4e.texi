@@ -395,18 +395,20 @@ following command:
 You can add some e-mail addresses, so @t{mu} recognizes them as yours:
 
 @example
-  $ mu init --maildir=~/Maildir --my-address=jim@@example.com \
-    --my-address=bob@@example.com
+  $ mu init --maildir=~/Maildir --personal-address=jim@@example.com \
+    --personal-address=bob@@example.com
 @end example
 
-@t{mu} remembers the maildir and your addresses and uses them when
-indexing messages. If you want to change them, you need to @t{init}
-once again.
+(An older synonym for @t{--personal-address} is @t{--my-address}, which is still
+supported).
+
+@t{mu} remembers the maildir and your addresses and uses them when indexing
+messages. If you want to change them, you need to @t{init} once again.
 
 The addresses may also be basic PCRE regular expressions, wrapped in slashes,
 for example:
 @example
-  $ mu init --maildir=~/Maildir '--my-address=/foo-.*@@example\.com/'
+  $ mu init --maildir=~/Maildir '--personal-address=/foo-.*@@example\.com/'
 @end example
 
 If you want to see the values for your message-store, you can use
@@ -1858,7 +1860,7 @@ only consider addresses that were seen in @emph{personal} messages ---
 that is, messages in which one of my e-mail addresses was seen in one
 of the address fields. This is to exclude mailing list posts. You can
 define what is considered `my e-mail address' using the
-@t{--my-address} parameter to @t{mu init}.
+@t{--personal-address} parameter to @t{mu init}.
 
 @item @code{mu4e-compose-complete-only-after} --- only consider e-mail
 addresses last seen after some date. Parameter is a string, parseable by
@@ -2009,7 +2011,7 @@ configuration:
 @item If you want to exclude your own e-mail addresses when ``replying to
 all'', set @code{message-dont-reply-to-names} to
 @code{mu4e-personal-or-alternative-address-p}. In order for this to work
-properly you need to pass your address to @command{mu init --my-address=} at
+properly you need to pass your address to @command{mu init --personal-address=} at
 database initialization time, and/or use @t{message-alternative-emails}.
 @end itemize
 

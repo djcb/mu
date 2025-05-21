@@ -345,8 +345,7 @@ Server::Private::make_command_map()
 	cmap.emplace(
 	    "index",
 	    CommandInfo{
-		ArgMap{{":my-addresses", ArgInfo{Type::List, false, "list of 'my' addresses"}},
-		       {":cleanup",
+		ArgMap{{":cleanup",
 			ArgInfo{Type::Symbol,
 				false,
 				"whether to remove stale messages from the store"}},

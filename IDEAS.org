@@ -27,9 +27,6 @@ future.
   the newest though) https://github.com/djcb/mu/issues/2759. Or, from
   new-to-old, reversed in thread: https://github.com/djcb/mu/issues/2807
 
-- perhaps use =--personal-addres= instead of =--my-address= for consistency
-  https://github.com/djcb/mu/issues/2806
-
 ** mu4e
 
 - Allow for *muting* messages https://github.com/djcb/mu/issues/636 Useful;
@@ -93,3 +90,6 @@ future.
   Yes: this is implemented now, in 1.12.9. Various Gnus' mailing list commands
   are now available in the mu4e message view as well, such as
   ~gnus-mailing-list-subscribe~, ~gnus-mailing-list-unsubscribe~.
+
+- perhaps use =--personal-addres= instead of =--my-address= for consistency
+  https://github.com/djcb/mu/issues/2806 (done as per 1.12.12)

@@ -25,7 +25,8 @@ if it is an existing directory. If neither of those can be used, the *--maildir*
 option is required; it must be an absolute path (but ~~/~ expansion is
 performed).
 
-** --my-address _email-address-or-regex_
+** --personal-address _email-address-or-regex_
+** --my-address _email-address-or-regex_  (alias)
 Specifies that some e-mail address is a personal address. The option can be used
 multiple times, to specify all your addresses.
 
@@ -54,7 +55,7 @@ option can be used multiple times). Such addresses then cannot be found with
 {{{man-link(mu-cfind,1)}}} or in the Mu4e contacts cache.
 
 _my-email-address_ can be either a plain e-mail address or a regexp, just like
-for the *--my-address* option.
+for the *--personal-address* option.
 
 ** --max-message-size _size_
 Specifies the maximum size for an e-mail message. Usually, the default of
