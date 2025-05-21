@@ -115,7 +115,7 @@ shortcut (e.g., \"/archive\").
 Example:
 
  (setq mu4e-maildir-shortcuts
-       '((:maildir \"/inbox\"     :key ?i :hide-if-no-unread t)
+     \='((:maildir \"/inbox\"     :key ?i :hide-if-no-unread t)
          (:maildir \"/drafts\"    :key ?d :hide t)
          (:maildir \"/sent\"      :key ?s :hide-unread t)))
 

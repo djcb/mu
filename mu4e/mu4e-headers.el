@@ -1038,10 +1038,10 @@ you cannot sort by this field.
 If THREADS is non-nil, give a more informative error message."
   (if (not sortable)
       (if threads
-          (lambda (&optional e)
+          (lambda (&optional _e)
             (interactive "e")
             (mu4e-message "With threading, you can only sort by date"))
-        (lambda (&optional e)
+        (lambda (&optional  _e)
           (interactive "e")
           (mu4e-message "Field is not sortable")))
     (lambda (&optional e)
