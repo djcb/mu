@@ -800,15 +800,13 @@ present, don't do anything."
 If so, do not attempt to switch buffers. This variable is to be let-bound
 to t before \"automatic\" searches.")
 
-(defun mu4e--search-execute (expr ignore-history)
+(defun mu4e--search-execute (expr &optional _ignore-history)
   "Search for query EXPR.
 
-Switch to the output buffer for the results. If IGNORE-HISTORY is
-true, do *not* update the query history stack."
+Switch to the output buffer for the results."
   (let* ((buf (mu4e-get-headers-buffer nil t))
          (view-window mu4e~headers-view-win)
          (inhibit-read-only t)
-         (rewritten-expr (funcall mu4e-query-rewrite-function expr))
          (maxnum (unless mu4e-search-full mu4e-search-results-limit)))
     (with-current-buffer buf
       ;; NOTE: this resets all buffer-local variables, including
@@ -816,13 +814,8 @@ true, do *not* update the query history stack."
       ;; headers buffer already exists when `mu4e-get-headers-buffer'
       ;; is called.
       (mu4e-headers-mode)
-      (setq mu4e~headers-view-win view-window)
-      (unless ignore-history
-        ;; save the old present query to the history list
-        (when mu4e--search-last-query
-          (mu4e--search-push-query mu4e--search-last-query 'past)))
-      (setq mu4e--search-last-query rewritten-expr)
-      (setq list-buffers-directory rewritten-expr)
+      (setq mu4e~headers-view-win view-window
+            list-buffers-directory expr)
       (mu4e--modeline-update))
 
     ;; when the buffer is already visible, select it; otherwise,
@@ -833,7 +826,7 @@ true, do *not* update the query history stack."
     (mu4e~headers-clear mu4e~search-message)
     (setq mu4e~headers-search-start (float-time))
     (mu4e--server-find
-     rewritten-expr
+     expr
      mu4e-search-threads
      mu4e-search-sort-field
      mu4e-search-sort-direction

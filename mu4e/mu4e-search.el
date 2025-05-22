@@ -202,13 +202,19 @@ with the favorite bookmark's query."
          (expr
           (if (or (null expr) edit)
               (mu4e-search-read-query prompt expr)
-            expr)))
+            expr))
+         (expr (if mu4e-query-rewrite-function ;; rewrite?
+                   (funcall mu4e-query-rewrite-function expr) expr)))
     (mu4e-mark-handle-when-leaving)
-    (mu4e--search-execute expr ignore-history)
+    ;; save the old present query to the history list?
+    (unless ignore-history
+      (when mu4e--search-last-query
+        (mu4e--search-push-query mu4e--search-last-query 'past)))
+    (mu4e--search-execute expr)
     (setq mu4e--search-msgid-target msgid
+          mu4e--search-last-query expr
           mu4e--search-view-target show)
-    (mu4e--search-maybe-reset-baseline expr)
-    (mu4e--modeline-update)))
+    (mu4e--search-maybe-reset-baseline expr)))
 
 (defun mu4e-search-edit ()
   "Edit the last search expression."
