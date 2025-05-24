@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2017-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -306,20 +306,24 @@ public:
 	};
 
 	/**
-	 * Move a message both in the filesystem and in the store. After a successful move, the
-	 * message is updated.
+	 * Move a message both in the filesystem and in the store.
+	 *
+	 * After a successful move, the message is updated. A moved message gets
+	 * a new doc-id, since the message-path is a unique-id for the message
 	 *
 	 * @param id the id for some message
 	 * @param target_mdir the target maildir (if any)
 	 * @param new_flags new flags (if any)
 	 * @param opts move options
 	 *
-	 * @return Result, either an IdPathVec with ids and paths for the moved message(s) or some
-	 * error. Note that in case of success at least one message is returned, and only with
-	 * MoveOptions::DupFlags can it be more than one.
+	 * @return Result, either an IdPathVec with ids and paths for the moved
+	 * message(s) or some error. Note that in case of success at least one
+	 * message is returned, and only with MoveOptions::DupFlags can it be
+	 * more than one.
 	 *
-	 * The first element of the IdPathVec, is the main message that got move; any subsequent
-	 * (if any) are the duplicate paths, sorted by path-name.
+	 * The first element of the IdPathVec, is the main message that got
+	 * move; any subsequent (if any) are the duplicate paths, sorted by
+	 * path-name.
 	 */
 	Result<IdPathVec> move_message(Store::Id id,
 				       Option<const std::string&> target_mdir = Nothing,

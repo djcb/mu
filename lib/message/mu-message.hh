@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -292,11 +292,10 @@ public:
 	 */
 	Flags flags() const { return document().flags_value(); }
 
-
 	/**
-	 * Update the flags for this message. This is useful for flags
-	 * that can only be determined after the message has been created already,
-	 * such as the 'personal' flag.
+	 * Update the flags for this message. This is useful for flags that can
+	 * only be determined after the message has been created already, such
+	 * as the 'personal' flag.
 	 *
 	 * @param flags new flags.
 	 */
@@ -366,11 +365,14 @@ public:
 	 */
 	const Sexp& sexp() const;
 
-	/*
-	 * And some non-const message, for updating an existing
-	 * message after a file-system move.
+	/**
+	 * Update the message after a move
 	 *
-	 * @return Ok or an error.
+	 * @param new_path the new file-system path; non-file flags are ignored
+	 * @param new_maildir the new maildir
+	 * @param new_flags the new flags
+	 *
+	 * @return Ok() or some error.
 	 */
 	Result<void> update_after_move(const std::string& new_path,
 				       const std::string& new_maildir,

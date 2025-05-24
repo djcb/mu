@@ -881,6 +881,14 @@ Message::update_after_move(const std::string& new_path,
 	priv_->doc.add(Field::Id::Path, new_path);
 	priv_->doc.add(Field::Id::Changed, priv_->ctime);
 
+	// note: content-flags are retained from the existing; the unread flag
+	// is implied. only file-flags are allowed for new_flags; anything else
+	// is filtered-out
+
+	new_flags = flags_maildir_file(new_flags);
+	new_flags |= flags_filter(flags(), MessageFlagCategory::Content);
+	new_flags = imply_unread(new_flags);
+
 	set_flags(new_flags);
 
 	if (const auto res = set_maildir(sanitize_maildir(new_maildir)); !res)

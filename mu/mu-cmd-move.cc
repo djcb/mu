@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -28,7 +28,6 @@
 
 using namespace Mu;
 
-
 Result<void>
 Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 {
@@ -50,7 +49,6 @@ Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 			   "Must have at least one of destination and flags");
 	else if (!dest.empty()) {
 		const auto mdirs{store.maildirs()};
-
 		if (!seq_some(mdirs, [&](auto &&d){ return d == dest;}))
 			return Err(Error{Error::Code::InvalidArgument,
 					"No maildir '{}' in store", dest}
@@ -259,6 +257,65 @@ test_move_real()
 	}
 }
 
+
+static void
+test_move_retain_non_file_flags()
+{
+	g_test_bug("2831");
+
+	allow_warnings();
+
+	TempDir tdir;
+	const auto dbpath{runtime_path(RuntimePath::XapianDb, tdir.path())};
+
+	auto res = run_command0({CP_PROGRAM, "-r", MU_TESTMAILDIR, tdir.path()});
+	assert_valid_command(res);
+
+	const auto testpath{join_paths(tdir.path(), "testdir")};
+	const auto src{join_paths(testpath, "cur", "multimime!2,FS")};
+
+	Store::Id id{};
+	{
+		auto store = Store::make_new(dbpath, testpath, {});
+		assert_valid_result(store);
+		const auto idopt{store->add_message(src, true)};
+		g_assert_true(!!idopt);
+		id = *idopt;
+		const auto msg{store->find_message(id)};
+		g_assert_true(!!msg);
+		g_assert_true(msg->flags() == (Flags::Seen | Flags::Flagged | Flags::HasAttachment));
+	}
+
+	// make a message 'New'
+	const auto dst{join_paths(testpath, "new", "multimime")};
+	{
+		auto res = run_command0({MU_PROGRAM, "--debug", "move", "--muhome",
+				tdir.path(), src, "--flags", "N"});
+		assert_valid_command(res);
+		assert_equal(res->standard_out, dst + '\n');
+		// double-check it really moved.
+		g_assert_true(::access(dst.c_str(), F_OK) == 0);
+		g_assert_true(::access(src.c_str(), F_OK) != 0);
+	}
+
+	// re-open db
+	{
+		const auto store = Store::make(dbpath);
+		assert_valid_result(store);
+
+		const auto newid{store->find_message_id(dst)};
+		g_assert_true(!!newid);
+
+		const auto msg{store->find_message(*newid)};
+		g_assert_true(!!msg);
+
+		// check the old flags
+		const auto flags = msg->flags();
+		assert_equal(to_string(flags), to_string(Flags::New | Flags::Unread |
+							 Flags::HasAttachment));
+	}
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -266,6 +323,8 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/cmd/move/dry-run", test_move_dry_run);
 	g_test_add_func("/cmd/move/real", test_move_real);
+	g_test_add_func("/cmd/move/retain-non-file-flags",
+			test_move_retain_non_file_flags);
 
 	return g_test_run();
 

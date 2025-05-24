@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -86,7 +86,7 @@ enum struct MessageFlagCategory {
 };
 
 /**
- * Info about invidual message flags
+ * Info about individual message flags
  *
  */
 struct MessageFlagInfo {
@@ -372,9 +372,6 @@ flags_maildir_file(Flags flags)
 			flags &= ~info.flag;
 	return flags;
 }
-
-
-
 
 /**
  * Return flags, where flags = new_flags but with unmutable_flag in the
