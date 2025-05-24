@@ -100,10 +100,15 @@ ignore_dentry(const dentry_t& dentry)
 
 	/* ignore '.' and '..' and anything starting with '#' (emacs
 	 * auto-saves) */
-	if (d_name[0] == '\0' || d_name[0] == '#' ||
-	    (d_name[1] == '\0' && d_name[0] == '.') ||
-	    (d_name[2] == '\0' && d_name[0] == '.' && d_name[1] == '.'))
+	if (d_name[0] == '\0' || d_name[0] == '#')
 		return true;
+	else if (d_name[1] == '\0') {
+		if (d_name[0] == '.')
+			return true;
+	} else if (d_name[2] == '\0') {
+		if (d_name[0] == '.' && d_name[1] == '.')
+			return true;
+	}
 
 	switch (d_name[0]) {
 	case 't':
