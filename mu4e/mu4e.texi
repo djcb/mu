@@ -1558,9 +1558,13 @@ mu4e-view-show-mime-parts}. This can be a little slow.
 @cindex attachments
 @cindex mime-parts
 
-Typical e-mail messages can be thought of as a series of ``MIME-parts'', which
-are sections of the message. The most prominent of those parts is the 'body',
-which is the text of the message your are reading.
+Nowadays, typical e-mail messages can be thought of as a series of
+``MIME-parts'', which are sections of the message. The most prominent of those
+parts is the 'body', which is the main text of the message your are readings.
+
+Other MIME-parts in the messages include @emph{attachments}.
+
+@subsection Attachments
 
 Many e-mail messages also contain @emph{attachments}, which are MIME-parts that
 contain files@footnote{Attachments come in two flavors: @t{inline} and
@@ -1595,11 +1599,11 @@ which is requirement of the underlying completion mechanism works. If there are
 duplicates, only one is recognized.
 
 Furthermore, file names that match @code{crm-separator} (by default, commas) are
-not supported (see @t{completing-read-multiple} for further details). For such
-corner-cases, it is recommended to use @code{mu4e-view-mime-part-action}
+@emph{not} supported (see @t{completing-read-multiple} for further details). For
+such corner-cases, it is recommended to use @code{mu4e-view-mime-part-action}
 instead, which does not have this limitation.
 
-@subsection MIME-parts
+@subsection Other MIME-parts
 
 Not all MIME-parts are message bodies or attachments, and it can be useful to
 operate on those other parts as well.
@@ -4269,9 +4273,10 @@ Yes --- if you provide a prefix-argument (@key{C-u}), @t{mu4e} starts, but does
 not show the main-window.
 
 @subsection Does @t{mu4e} support searching for CJK (Chinese-Japanese-Korean) characters?
-Only partially. If you have @t{Xapian} 1.2.8 or newer, and set the environment
-variable @t{XAPIAN_CJK_NGRAM} to non-empty before indexing, both when using
-@t{mu} from the command-line and from @t{mu4e}.
+Yes. This is not enabled by default though, since this is fairly intrusive, and
+influences both indexing and querying. The enable this, pass
+@t{--support-ngrams} to @code{mu init}; see the @t{mu-init} manpage for further
+details.
 
 @subsection How can I customize the function to select a folder?
 The @t{mu4e-completing-read-function} variable can be customized to select a
@@ -4471,6 +4476,32 @@ your configuration (courtesy of user @t{kpachnis}):
       epg-user-id "gpg_key_id"
       mml2015-encrypt-to-self t
       mml2015-sign-with-sender t)
+@end lisp
+
+
+@subsection Some plain-text attachments get corrupted, how can I avoid that?
+@t{mu4e} (or, more precisely, its Gnus helpers) automatically convert CR-LF
+(``Windows-style'') line-endings to Unix line endings for the text attachments.
+
+That is usually convenient, but can be problematic when attachments are
+mislabeled as text when they contain binary data: in that case, the conversion
+would result in invalid data.
+
+If you run into that problem, you can @t{advise} the responsible function:
+
+@lisp
+(defun mm-dcte-keep-crlf (args)
+  "Don't convert crlf->lf.
+Advise `mm-decode-content-transfer-encoding' to not perform the
+conversion."
+  (when (and (= (length args) 2)
+             (memq (nth 0 args) '(base64 x-uuencode x-uue x-binhex x-yenc))
+             (string-match "\\`text/" (nth 1 args)))
+    ;; fake the type, so no conversion happens
+    (setf (nth 1 args) "application/octet-stream"))
+  args)
+
+(advice-add 'mm-decode-content-transfer-encoding :filter-args #'mm-dcte-keep-crlf)
 @end lisp
 
 @node Writing messages
