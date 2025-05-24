@@ -489,6 +489,8 @@ test_index_basic()
 	g_assert_cmpuint(prog.updated,==, 0);
 	g_assert_cmpuint(prog.removed,==, 0);
 
+	mu_test_skip_valgrind_return();
+
 	Indexer::Config conf{};
 	conf.ignore_noupdate = true;
 
@@ -539,6 +541,8 @@ static void
 test_index_lazy()
 {
 	allow_warnings();
+
+	mu_test_skip_valgrind_return();
 
 	TempDir tdir;
 	auto store = Store::make_new(tdir.path(), MU_TESTMAILDIR2);

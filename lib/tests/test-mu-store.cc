@@ -492,12 +492,14 @@ Yes, that would be excellent.
 }
 
 static void
-test_store_circular_symlink(void)
+test_store_circular_symlink()
 {
 	allow_warnings();
 
 	g_test_bug("2517");
 	g_test_bug("2832");
+
+	mu_test_skip_valgrind_return();
 
 	auto testhome{unwrap(make_temp_dir())};
 	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
@@ -513,6 +515,7 @@ test_store_circular_symlink(void)
 	auto&& store = unwrap(Store::make_new(dbpath, testmdir));
 	store.indexer().start({});
 	size_t n{};
+
 	while (store.indexer().is_running()) {
 		std::this_thread::sleep_for(100ms);
 		// 5 sec should be enough, even on the slowest supported systems..
