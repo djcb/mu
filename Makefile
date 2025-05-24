@@ -93,6 +93,7 @@ $(BUILDDIR_VALGRIND):
 vg_opts:=--enable-debuginfod=no --leak-check=full --error-exitcode=1
 test-valgrind: export G_SLICE=always-malloc
 test-valgrind: export G_DEBUG=gc-friendly
+test-valgrind: export MU_VALGRIND=memcheck
 test-valgrind: build-valgrind
 	@$(MESON) test -C $(BUILDDIR_VALGRIND)			\
 		--wrap="$(VALGRIND) $(vg_opts)"			\
@@ -102,6 +103,7 @@ check-valgrind: test-valgrind
 
 # we do _not_ pass helgrind; but this seems to be a false-alarm
 #    https://gitlab.gnome.org/GNOME/glib/-/issues/2662
+test-helgrind: export MU_VALGRIND=helgrind
 test-helgrind: $(BUILDDIR_VALGRIND)
 	$(MESON) -C $(BUILDDIR_VALGRIND) test	\
 	--wrap="$(VALGRIND) --tool=helgrind --error-exitcode=1"	\

@@ -42,6 +42,13 @@ Mu::mu_test_mu_hacker()
 {
 	return !!g_getenv("MU_HACKER");
 }
+
+bool
+Mu::mu_test_mu_valgrind()
+{
+	return !!g_getenv("MU_VALGRIND");
+}
+
 /* LCOV_EXCL_STOP*/
 
 

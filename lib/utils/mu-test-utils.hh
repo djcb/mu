@@ -44,6 +44,23 @@ void mu_test_init(int *argc, char ***argv);
 bool mu_test_mu_hacker();
 
 /**
+ * Are we running under Valgrind?
+ *
+ * @return true or false
+ */
+bool mu_test_mu_valgrind();
+
+/**
+ * Skip test when running under valgrind
+ */
+#define mu_test_skip_valgrind_return() do {				\
+		if (mu_test_mu_valgrind()) {				\
+			g_test_skip("skip (valgrind not supported)");	\
+			return;						\
+		}							\
+	} while(0)
+
+/**
  * set the timezone
  *
  * @param tz timezone
