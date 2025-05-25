@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -33,18 +33,7 @@
 
 using namespace Mu;
 
-struct EmailHash {
-	std::size_t operator()(const std::string& email) const {
-		return lowercase_hash(email);
-	}
-};
-struct EmailEqual {
-	bool operator()(const std::string& email1, const std::string& email2) const {
-		return lowercase_hash(email1) == lowercase_hash(email2);
-	}
-};
-
-using ContactUMap = std::unordered_map<const std::string, Contact, EmailHash, EmailEqual>;
+using ContactUMap = std::unordered_map<std::string, Contact>;
 struct ContactsCache::Private {
 	Private(Config& config_db)
 		:config_db_{config_db},
@@ -137,7 +126,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 		}
 		Contact ci(parts[0],                                                  // email
 			   std::move(parts[1]),                                       // name
-			   (time_t)g_ascii_strtoll(parts[3].c_str(), NULL, 10),       // message_date
+			   static_cast<int64_t>(g_ascii_strtoll(parts[3].c_str(), NULL, 10)),       // message_date
 			   parts[2][0] == '1' ? true : false,                         // personal
 			   (std::size_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),  // frequency
 			   g_get_monotonic_time());                                   // tstamp
@@ -146,7 +135,6 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 
 	return contacts;
 }
-
 
 void
 ContactsCache::Private::serialize() const
@@ -287,41 +275,15 @@ ContactsCache::size() const
 
 
 /**
- * This is used for sorting the Contacts in order of relevance. A highly
- * specific algorithm, but the details don't matter _too_ much.
- *
- * This is currently used for the ordering in mu-cfind and auto-completion in
- * mu4e, if the various completion methods don't override it...
+* Wrapper to allow for Contact sorting
+* (needed due to reference_wrapper)
  */
-constexpr auto RecentOffset{15 * 24 * 3600};
 struct ContactLessThan {
-	ContactLessThan()
-	    : recently_{::time({}) - RecentOffset} {}
-
-	bool operator()(const Mu::Contact& ci1, const Mu::Contact& ci2) const {
-		// non-personal is less relevant.
-		if (ci1.personal != ci2.personal)
-			return ci1.personal < ci2.personal;
-
-		// older is less relevant for recent messages
-		if (std::max(ci1.message_date, ci2.message_date) > recently_ &&
-		    ci1.message_date != ci2.message_date)
-			return ci1.message_date < ci2.message_date;
-
-		// less frequent is less relevant
-		if (ci1.frequency != ci2.frequency)
-			return ci1.frequency < ci2.frequency;
-
-		// if all else fails, alphabetically
-		return ci1.email < ci2.email;
+	bool operator()(const Mu::Contact& c1, const Mu::Contact& c2) const {
+		return c1 < c2;
 	}
-	// only sort recently seen contacts by recency; approx 15 days.
-	// this changes during the lifetime, but that's all fine.
-	const time_t recently_;
 };
-
-using ContactSet = std::set<std::reference_wrapper<const Contact>,
-			    ContactLessThan>;
+using ContactSet = std::set<std::reference_wrapper<const Contact>, ContactLessThan>;
 
 void
 ContactsCache::for_each(const EachContactFunc& each_contact) const
@@ -382,6 +344,8 @@ ContactsCache::is_valid(const std::string& addr) const
 
 #include "utils/mu-test-utils.hh"
 
+constexpr auto RecentOffset = Contact::RecentOffset;
+
 static void
 test_mu_contacts_cache_base()
 {
@@ -406,10 +370,8 @@ test_mu_contacts_cache_base()
 	    Mu::Contact("foo.bar@example.com", "Foo", {}, 77777));
 	g_assert_cmpuint(contacts.size(), ==, 2);
 
-	contacts.add(
-	    Mu::Contact("Foo.Bar@Example.Com", "Foo", {}, 88888));
-	g_assert_cmpuint(contacts.size(), ==, 2);
-	// note: replaces first.
+	contacts.add(Mu::Contact("Foo.Bar@Example.Com", "Foo", {}, 88888));
+	g_assert_cmpuint(contacts.size(), ==, 3);
 
 	{
 		const auto info = contacts._find("bla@example.com");
@@ -417,9 +379,8 @@ test_mu_contacts_cache_base()
 	}
 
 	{
-		const auto info = contacts._find("foo.BAR@example.com");
+		const auto info = contacts._find("Foo.Bar@Example.Com");
 		g_assert_true(info);
-
 		g_assert_cmpstr(info->email.c_str(), ==, "Foo.Bar@Example.Com");
 	}
 
@@ -514,8 +475,6 @@ test_mu_contacts_cache_foreach()
 		g_assert_cmpuint(n,==,0);
 	}
 }
-
-
 
 static void
 test_mu_contacts_cache_sort()

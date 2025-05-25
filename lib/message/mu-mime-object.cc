@@ -323,8 +323,7 @@ MimeMessage::make_from_text(const std::string& text)
 Option<int64_t>
 MimeMessage::date() const noexcept
 {
-	GDateTime *dt{g_mime_message_get_date(self())};
-	if (!dt)
+	if (/*const*/GDateTime *dt{g_mime_message_get_date(self())}; !dt)
 		return Nothing;
 	else
 		return g_date_time_to_unix(dt);
@@ -395,12 +394,10 @@ MimeMessage::contacts(Contact::Type ctype) const noexcept
 	contacts.reserve(lst_len);
 	for (auto i = 0; i != lst_len; ++i) {
 
-		auto&& addr{internet_address_list_get_address(addrs, i)};
+		const auto addr{internet_address_list_get_address(addrs, i)};
 		const auto name{internet_address_get_name(addr)};
-
 		if (G_UNLIKELY(!INTERNET_ADDRESS_IS_MAILBOX(addr)))
 			continue;
-
 		const auto email{internet_address_mailbox_get_addr (
 				INTERNET_ADDRESS_MAILBOX(addr))};
 		if (G_UNLIKELY(!email))

@@ -61,16 +61,6 @@ Mu::to_string(const Mu::Contacts& contacts)
 	return res;
 }
 
-size_t
-Mu::lowercase_hash(const std::string& s)
-{
-	std::size_t djb = 5381; // djb hash
-	for (const auto c : s)
-		djb = ((djb << 5) + djb) +
-			static_cast<size_t>(g_ascii_tolower(c));
-	return djb;
-}
-
 #ifdef BUILD_TESTS
 /*
  * Tests.
