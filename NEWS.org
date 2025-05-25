@@ -3,10 +3,10 @@
 
 * 1.12 (released on February 24, 2024)
 
-  The 1.12 series has been stable for a fairly long time, and gained some
-  changes in mean-time. Most of the changes are for bug fixes and documentation
-  improvements, but new features are available as well. Those are listed below
-  the 1.12 changes, prefixed by the version in which they appeared.
+  The 1.12 series has been "stable" for a fairly long time, and gained some
+  changes in the mean-time. Most of the changes are for bug fixes and
+  documentation improvements, but some new features are available as well. Those
+  are listed below, with the version in which they first appeared.
 
   We decided to put off a new development series (1.13 -> 1.14) until
   incompatible changes are required; for now working in the 1.12 series seems a
@@ -23,8 +23,7 @@
   - Better and faster indexing of HTML messages
   - Experimental search by (human) language wit CLD2
 
-  For details & more, see below. Note that a few minor new features were added
-  _after_ the initial 1.12.0.
+  For details & more, see below.
 
 *** mu
 
@@ -122,6 +121,11 @@
       which the user should install when using regular expression-addresses.
 
     - 1.12.9: the cleanup phase after indexing is significantly faster now
+
+    - 1.12.12: the ~--my-address~ parameter to ~--mu-init~ has been renamed into
+      ~--personal-address~, for consistency with the other places where we refer
+      to it as a personal address. ~--my-address~ is still supported as an alias,
+      for backward compatibility.
 
 *** mu4e
 
@@ -276,7 +280,6 @@
 
    - 1.12.12: it now possible to create Emacs bookmarks for both messages
      (default) and queries. See the new variable ~mu4e-emacs-bookmark-policy~.
-
 
 *** Contributors
 
