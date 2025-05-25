@@ -636,6 +636,13 @@ private:
 	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }                        \
 	static_assert(1==1) // require a semicolon
 
+template <typename F>
+struct ScopeGuard {
+	explicit ScopeGuard(F closure) : closure(std::move(closure)) {}
+	~ScopeGuard() { closure(); }
+	F closure;
+};
+
 } // namespace Mu
 
 #endif /* MU_UTILS_HH__ */
