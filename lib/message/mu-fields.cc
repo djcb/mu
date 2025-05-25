@@ -79,17 +79,15 @@ Mu::field_is_combi(const std::string& name)
 std::string
 Field::xapian_term(const std::string& s) const
 {
-	const auto start{std::string(1U, xapian_prefix())};
-	if (const auto& size = s.size(); size == 0)
-		return start;
+	auto res{std::string(1U, xapian_prefix())};
+	if (s.empty())
+		return res;
 
-	std::string res{start};
 	res.reserve(s.size() + 10);
-
 	/* slightly optimized common pure-ascii. */
 	if (G_LIKELY(g_str_is_ascii(s.c_str()))) {
 		res += s;
-		for (auto i = 1; res[i]; ++i)
+		for (auto i = 1U; i != res.length(); ++i)
 			res[i] = g_ascii_tolower(res[i]);
 	} else
 		res += utf8_flatten(s);

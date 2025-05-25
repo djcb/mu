@@ -109,17 +109,18 @@ phrase(const Field& field, Sexp&& s)
 static Result<Xapian::Query>
 regex(const Store& store, const Field& field, const std::string& rx_str)
 {
-	auto&& str{utf8_flatten(rx_str)};
-	auto&& rx{Regex::make(str, G_REGEX_OPTIMIZE)};
+	const auto str{utf8_flatten(rx_str)};
+	const auto rx{Regex::make(str, G_REGEX_OPTIMIZE)};
 	if (!rx) {
 		mu_warning("invalid regexp: '{}': {}", str, rx.error().what());
 		return Xapian::Query::MatchNothing;
 	}
 
 	std::vector<Xapian::Query> rxvec;
-	store.for_each_term(field.id, [&](auto&& str) {
-		if (auto&& val{str.data() + 1}; rx->matches(val))
-			rxvec.emplace_back(field.xapian_term(std::string_view{val}));
+	store.for_each_term(field.id, [&](const auto& term) {
+		std::string val{term.data() + 1};
+		if (rx->matches(val))
+			rxvec.emplace_back(field.xapian_term(val));
 		return true;
 	});
 
