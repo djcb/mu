@@ -210,9 +210,9 @@ host_system = host_machine.system()
 # soft dependencies
 #
 
-
+#
 # logging
-
+#
 # if we're on a linux machine, perhaps there's systemd/journald.
 # otherwise, we don't bother.
 if host_machine.system() == 'linux'
@@ -222,7 +222,9 @@ if cc.has_function('g_log_writer_syslog',dependencies: glib_dep)
   config_h_data.set('MAYBE_USE_SYSLOG', 1)
 endif
 
-# optionally, use Compact Language Detector2 if we can find it.
+#
+# use Compact Language Detector2 if we can find it
+#
 cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: get_option('cld2'))
 if not get_option('cld2').disabled() and cld2_dep.found()
   config_h_data.set('HAVE_CLD2', 1)
@@ -230,7 +232,9 @@ else
   message('CLD2 not found or disabled; no support for language detection')
 endif
 
+#
 # guile
+
 guile_dep = dependency('guile-3.0', required: get_option('guile'))
 # allow for a custom guile-extension-dir
 if guile_dep.found()
@@ -291,6 +295,15 @@ install_data('NEWS.org', 'IDEAS.org',
 ################################################################################
 # subdirs
 subdir('lib')
+
+# this must happen _after_ subdir('lib')
+if not get_option('guile').disabled() and guile_dep.found()
+  config_h_data.set('BUILD_GUILE', 1)
+  config_h_data.set_quoted('GUILE_BINARY',
+                           guile_dep.get_variable(pkgconfig: 'guile'))
+  subdir('guile')
+endif
+
 subdir('mu')
 
 # emacs -- needed for mu4e compilation
@@ -302,15 +315,7 @@ if emacs.found()
   subdir('man')
   subdir('mu4e')
 else
-  message('emacs not found; not pre-compiling mu4e / generating manpages')
-endif
-
-if not get_option('guile').disabled() and guile_dep.found()
-  config_h_data.set('BUILD_GUILE', 1)
-  config_h_data.set_quoted('GUILE_BINARY',
-                           guile_dep.get_variable(pkgconfig: 'guile'))
-  #message('guile is disabled for now')
-  subdir('guile')
+  message('emacs not found; not pre-compiling mu4e / generating man-pages')
 endif
 
 config_h_data.set_quoted('MU_PROGRAM', mu.full_path())
