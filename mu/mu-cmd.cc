@@ -35,6 +35,10 @@
 #include "message/mu-message.hh"
 #include "message/mu-mime-object.hh"
 
+#if BUILD_GUILE
+#include "scm/mu-scm.hh"
+#endif/*BUILD_GUILE*/
+
 #include "utils/mu-error.hh"
 #include "utils/mu-utils-file.hh"
 #include "utils/mu-utils.hh"
@@ -42,7 +46,6 @@
 #include <thirdparty/tabulate.hpp>
 
 using namespace Mu;
-
 
 static Result<void>
 cmd_fields(const Options& opts)
@@ -61,6 +64,17 @@ cmd_find(const Options& opts)
 		return Err(store.error());
 	else
 		return mu_cmd_find(*store, opts);
+}
+
+static Result<void>
+cmd_scm(const Store& store, const Options& opts)
+{
+#if !BUILD_SCM
+	return Err(Error::Code::InvalidArgument,
+		   "scm/guile is not available in this build");
+#else
+	return Mu::Scm::run(Mu::Scm::Config{store, opts});
+#endif /*BUILD_SCM*/
 }
 
 
@@ -133,6 +147,9 @@ Mu::mu_cmd_execute(const Options& opts) try {
 		return cmd_find(opts);
 	case Options::SubCommand::Info:
 		return with_readonly_store(mu_cmd_info, opts);
+	case Options::SubCommand::Scm:
+		return with_readonly_store(cmd_scm, opts);
+
 
 	/* writable store */
 

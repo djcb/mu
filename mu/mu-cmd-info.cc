@@ -288,8 +288,20 @@ topic_mu(const Options& opts)
 			"yes"
 #else
 			"no"
-#endif
-		, "GNU Guile 3.x scripting support?"});
+#endif /*BUILD_GUILE*/
+		, "GNU Guile 3.x support (old)?"});
+
+	info.add_row({"scm-support",
+#if BUILD_SCM
+			"yes"
+#else
+			"no"
+#endif /*BUILD_SCM*/
+		, "GNU Guile 3.x support (new)?"});
+
+
+
+
 	info.add_row({"readline-support",
 #if HAVE_LIBREADLINE
 			"yes"

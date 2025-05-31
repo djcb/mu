@@ -40,6 +40,7 @@ struct Options {
 	using	SizeVec	     = std::vector<std::size_t>;
 	using	OptTStamp    = Option<std::time_t>;
 	using	OptFieldId   = Option<Field::Id>;
+	using   OptString    = Option<std::string>;
 	using	StringVec    = std::vector<std::string>;
 
 	/*
@@ -62,7 +63,7 @@ struct Options {
 
 	enum struct SubCommand {
 		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
-		Move, Remove, Script, Server, Verify, View,
+		Move, Remove, Scm, Script, Server, Verify, View,
 		// <private>
 		__count__
 	};
@@ -80,6 +81,7 @@ struct Options {
 			SubCommand::Mkdir,
 			SubCommand::Move,
 			SubCommand::Remove,
+			SubCommand::Scm,
 			SubCommand::Script,
 			SubCommand::Server,
 			SubCommand::Verify,
@@ -225,6 +227,16 @@ struct Options {
 	struct Remove {
 		StringVec	files;			/**< Files to remove */
 	} remove;
+
+
+	/*
+	 * Scm
+	 */
+	struct Scm {
+		OptString script_path; /**< Path to script (optional) */
+		StringVec params;      /**< Parameters for script (after "--") */
+	} scm;
+
 
 	/*
 	 * Scripts (i.e., finding scriot)

@@ -35,7 +35,7 @@ option('lispdir',
 
 
 #
-# guile
+# guile & scm
 #
 
 option('guile',
@@ -47,6 +47,11 @@ option('guile',
 option('guile-extension-dir',
        type: 'string',
        description: 'custom install path for the guile extension module')
+
+option('scm',
+       type : 'feature',
+       value: 'auto',
+       description: 'build the guile scripting support (requires guile-3.x)')
 
 #
 # misc

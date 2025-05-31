@@ -306,6 +306,15 @@ if not get_option('guile').disabled() and guile_dep.found()
   subdir('guile')
 endif
 
+# this must happen _after_ subdir('lib')
+if not get_option('scm').disabled() and guile_dep.found()
+  config_h_data.set('BUILD_SCM', 1)
+  subdir('scm')
+else
+  # dummy-dep.
+  mu_scm_dep = declare_dependency('', required:false)
+endif
+
 subdir('mu')
 
 # emacs -- needed for mu4e compilation

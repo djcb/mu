@@ -545,7 +545,15 @@ sub_server(CLI::App& sub, Options& opts)
 	sub.add_flag("--allow-temp-file", opts.server.allow_temp_file,
 		     "Allow for the temp-file optimization")
 		->excludes("--commands");
+}
 
+static void
+sub_scm(CLI::App& sub, Options& opts)
+{
+	sub.add_option("script-path", opts.scm.script_path, "Path to script")
+		->type_name("<path>");
+	sub.add_option("script-args", opts.scm.params, "Parameters for script")
+		->type_name("<parameters>");
 }
 
 static void
@@ -665,9 +673,13 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		  {Category::NeedsWritableStore,
 		  "remove", "Remove message from file-system and database", sub_remove }
 		},
+		{ SubCommand::Scm,
+		  {Category::None,
+		   "scm", "Start Guile/Scheme shell",sub_scm}
+		},
 		{ SubCommand::Script,
 		  // Note: SubCommand::Script is special; there's no literal
-		// "script" subcommand, there subcommands for all the scripts.
+		// "script" subcommand, there are subcommands for all the scripts.
 		  {Category::None,
 		   "script", "Invoke a script", {}}
 		},
