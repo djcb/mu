@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,7 +27,6 @@
 #include "mu-options.hh"
 
 namespace Mu {
-
 
 /**
  * Get message options from (sub)command options
@@ -129,6 +128,7 @@ Result<void> mu_cmd_mkdir(const Options& opts);
 /**
  * execute the 'move' command
  *
+ * @param store message store object.
  * @param opts configuration options
  *
  * @return Ok() or some error
@@ -149,17 +149,14 @@ Result<void> mu_cmd_remove(Store& store, const Options& opt);
  * execute the 'script' command
  *
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
  * @return Ok() or some error
  */
 Result<void> mu_cmd_script(const Options& opts);
 
-
 /**
  * execute the server command
  * @param opts configuration options
- * @param err receives error information, or NULL
  *
  * @return Ok() or some error
  */
@@ -187,7 +184,6 @@ Mu::Result<void> mu_cmd_view(const Options& opts);
  * execute some mu command, based on 'opts'
  *
  * @param opts configuration option
- * @param err receives error information, or NULL
  *
  * @return Ok() or some error
  */
