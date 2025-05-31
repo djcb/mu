@@ -34,7 +34,7 @@ mu = executable(
   'mu-cmd-view.cc',
   'mu-cmd.cc'
 ],
-  dependencies: [ glib_dep, gmime_dep, lib_mu_dep, thread_dep, config_h_dep ],
+  dependencies: [ glib_dep, gmime_dep, lib_mu_dep, mu_scm_dep, thread_dep, config_h_dep ],
   cpp_args: ['-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
   install: true)
 #
