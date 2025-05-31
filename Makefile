@@ -39,7 +39,6 @@ endif
 # for the better error messages (esp. for fmt).
 ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
-			    '-Db_sanitize=address' \
 			    '-Dreadline=enabled'   \
 			    '-Dcpp_std=c++23'
 endif
