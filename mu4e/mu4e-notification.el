@@ -73,9 +73,11 @@ zero."
   (when-let* ((fav (mu4e-bookmark-favorite))
               (delta-unread (plist-get fav :delta-unread)))
     (when (and (fboundp 'notifications-close-notification)
+               (fboundp 'dbus-ignore-errors)
                mu4e--notification-id
                (zerop delta-unread))
-      (notifications-close-notification mu4e--notification-id)
+      (dbus-ignore-errors
+        (notifications-close-notification mu4e--notification-id))
       (setq mu4e--notification-id nil))
     (when (and (> delta-unread 0)
                (not (= delta-unread mu4e--last-delta-unread)))
