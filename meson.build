@@ -286,6 +286,8 @@ version_texi_data.set('UPDATEDYEAR', mu_year)
 configure_file(input: join_paths(build_aux, 'version.texi.in'),
                output: 'version.texi',
                configuration: version_texi_data)
+configure_file(input: join_paths(build_aux, 'fdl.texi'),
+               output: 'fdl.texi', copy:true)
 
 ################################################################################
 # install some data files
