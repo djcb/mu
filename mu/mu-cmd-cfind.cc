@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,8 +16,6 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
-
-#include "config.h"
 #include "mu-cmd.hh"
 
 #include <cstdint>
@@ -260,63 +258,33 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 	if (!output)
 		return Err(Error::Code::Internal,
 			   "missing output function");
-
-	// get the pattern regex, if any.
-	Regex rx{};
-	if (!opts.cfind.rx_pattern.empty()) {
-		if (auto&& res =  Regex::make(opts.cfind.rx_pattern,
-					      static_cast<GRegexCompileFlags>
-					      (G_REGEX_OPTIMIZE|G_REGEX_CASELESS)); !res)
-			return Err(std::move(res.error()));
-		else
-			rx = res.value();
-	}
-
 	nicks.clear();
-	store.contacts_cache().for_each([&](const Contact& contact)->bool {
 
-		if (opts.cfind.maxnum && num > *opts.cfind.maxnum)
-			return false; /* stop the loop */
-
-		if (!store.contacts_cache().is_valid(contact.email))
-			return true; /* next */
-
-		// filter for maxnum, personal  & "after"
-		if ((opts.cfind.personal && !contact.personal) ||
-		    (opts.cfind.after.value_or(0) > contact.message_date))
-			return true; /* next */
-
-		// filter for regex, if any.
-		if (rx) {
-			if (!rx.matches(contact.name) && !rx.matches(contact.email))
-				return true; /* next */
-		}
-
-		/* seems we have a match! display it. */
+	const auto res = store.contacts_cache().for_each([&](const Contact& contact)->bool {
 		const auto itype{num == 0 ? ItemType::Header : ItemType::Normal};
 		output(itype, contact, opts);
 		++num;
 		return true;
-	});
+	}, opts.cfind.rx_pattern, opts.cfind.personal,
+		opts.cfind.after.value_or(0),
+		opts.cfind.maxnum.value_or(0U));
 
-	if (num == 0)
+	if (!res)
+		return Err(res.error());
+	else if (*res == 0)
 		return Err(Error::Code::NoMatches, "no matching contacts found");
 
 	output(ItemType::Footer, Nothing, opts);
 	return Ok();
 }
 
-
-
-
 #ifdef BUILD_TESTS
 /*
  * Tests.
  *
  */
-
+#include "config.h"
 #include "utils/mu-test-utils.hh"
-
 
 static std::string test_mu_home;
 

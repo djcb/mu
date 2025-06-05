@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -158,9 +158,30 @@ public:
 	 * highest ranked contacts come first).
 	 *
 	 * @param each_contact function invoked for each contact
+	 *
+	 * @return The number of times the callback was invoked or some error
 	 */
-	void for_each(const EachContactFunc& each_contact) const;
+	Result<size_t> for_each(const EachContactFunc& each_contact) const;
 
+	/**
+	 * Invoke some callable for each contact, in _descending_ order of rank
+	 * (i.e., the highest ranked contacts come first).
+	 *
+	 * @param each_contact function invoked for each contact
+	 * @param match_rx string with regular expression or "" for none
+	 * @param personal if true, only include personal contacts
+	 *        (i.e., contacts seen in message in which a personal address
+	 *         was involved)
+	 * @param after only consider messages after this time_t (seconds since epoch)
+	 * @param maxnum maximum number of times the callback invoked
+	 *
+	 * @return The number of times the callback was invoked or some error
+	 */
+	Result<size_t> for_each(const EachContactFunc& each_contact,
+				const std::string match_rx,
+				bool personal = false,
+				int64_t after = 0,
+				size_t maxnum = 0) const;
 private:
 	struct Private;
 	std::unique_ptr<Private> priv_;

@@ -285,7 +285,7 @@ struct ContactLessThan {
 };
 using ContactSet = std::set<std::reference_wrapper<const Contact>, ContactLessThan>;
 
-void
+Result<size_t>
 ContactsCache::for_each(const EachContactFunc& each_contact) const
 {
 	std::lock_guard<std::mutex> l_{priv_->mtx_};
@@ -296,10 +296,52 @@ ContactsCache::for_each(const EachContactFunc& each_contact) const
 		sorted.emplace(item.second);
 
 	// return in _reverse_ order, so we get the most relevant ones first.
+	size_t n{};
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+		++n;
 		if (!each_contact(*it))
 			break;
 	}
+
+	return Ok(std::move(n));
+}
+
+Result<size_t>
+ContactsCache::for_each(const EachContactFunc& each_contact,
+			const std::string match_rx,
+			bool personal,
+			int64_t after,
+			size_t maxnum) const
+{
+	// get the pattern regex, if any.
+	const Result<Regex> rxres = match_rx.empty() ? Ok(Regex{}) :
+		Regex::make(match_rx, static_cast<GRegexCompileFlags>
+			    (G_REGEX_OPTIMIZE|G_REGEX_CASELESS));
+	if (!rxres)
+		return Err(rxres.error());
+
+	const Regex rx{*rxres};
+
+	size_t n{};
+	const auto res = for_each([&](const Contact& contact)->bool {
+		// filter for personal & "after"
+		if ((personal && !contact.personal) ||
+		    (after > contact.message_date))
+			return true; /* skip this contact */
+		// filter for regex, if any.
+		if (rx && !rx.matches(contact.name) && !rx.matches(contact.email))
+			return true; /* next */
+		// do we have enough matches?
+		if (maxnum != 0 && n >= maxnum)
+			return false; // terminate
+		++n;
+		return each_contact(contact);
+	});
+
+	if (res)
+		return Ok(std::move(n));
+	else
+		return Err(res.error());
 }
 
 static bool
