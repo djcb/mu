@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -32,7 +32,6 @@
 #include <glib/gprintf.h>
 #include <gio/gio.h>
 
-#include "glibconfig.h"
 #include "mu-maildir.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-utils-file.hh"
@@ -51,7 +50,7 @@ using namespace Mu;
 static unsigned char
 get_dtype(struct dirent* dentry, const std::string& path, bool use_lstat)
 {
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+#ifdef HAVE_DIRENT_D_TYPE
 
 	if (dentry->d_type == DT_UNKNOWN)
 		goto slowpath;
@@ -61,7 +60,7 @@ get_dtype(struct dirent* dentry, const std::string& path, bool use_lstat)
 	return dentry->d_type; /* fastpath */
 
 slowpath:
-#endif /*HAVE_STRUCT_DIRENT_D_TYPE*/
+#endif /*HAVE_DIRENT_D_TYPE*/
 
 	return determine_dtype(path, use_lstat);
 }
