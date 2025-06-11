@@ -11,11 +11,6 @@
 [[https://www.djcbsoftware.nl/code/mu/mu4e/Installation.html#Building-from-a-release-tarball-1][https://img.shields.io/badge/Platform-FreeBSD-8b3a3a?logo=freebsd&logoColor=c32136&.svg]]
 [[https://formulae.brew.sh/formula/mu#default][https://img.shields.io/badge/Platform-macOS-101010?logo=apple&logoColor=ffffff&.svg]]
 
- [ *Note*: you are looking at the *development* branch, which is where new code is
- being developed and tested, and which may occasionally break. Distributions and
- non-adventurous users are instead recommended to use the [[https://github.com/djcb/mu/tree/release/1.10][1.10 Release Branch]] or
- to pick up one of the [[https://github.com/djcb/mu/releases][1.10 Releases]]. ]
-
 Welcome to ~mu~!
 
 Latest development news: [[NEWS.org]].
