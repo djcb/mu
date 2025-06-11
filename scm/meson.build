@@ -56,3 +56,16 @@ if makeinfo.found()
     meson.add_install_script(install_info_script, infodir, 'mu-scm.info')
   endif
 endif
+
+if not get_option('tests').disabled()
+
+  srcdir=meson.current_source_dir()
+  def_srcdir='-DMU_SCM_SRCDIR="' + srcdir + '"'
+
+  test('test-scm',
+       executable('test-scm',
+                  'mu-scm.cc',
+                  install: false,
+                  dependencies: [mu_scm_dep],
+                  cpp_args: [mu_scm_dir_arg, def_srcdir, '-DBUILD_TESTS']))
+endif

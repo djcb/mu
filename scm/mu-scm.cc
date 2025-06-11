@@ -158,3 +158,58 @@ Mu::Scm::run(const Mu::Scm::Config& conf) {
 
 	return Ok();
 }
+
+
+
+
+#ifdef BUILD_TESTS
+
+/*
+ * Tests.
+ *
+ */
+#include <config.h>
+#include <mu-store.hh>
+#include "utils/mu-test-utils.hh"
+
+
+static void
+test_scm_script()
+{
+	TempDir tempdir{};
+	const auto MuTestMaildir{ Mu::canonicalize_filename(MU_TESTMAILDIR, "/")};
+	auto store{Store::make_new(tempdir.path(), MuTestMaildir)};
+	assert_valid_result(store);
+
+	{
+		const auto res = store->indexer().start({}, true/*block*/);
+		g_assert_true(res);
+	}
+
+	Mu::Options opts{};
+	opts.scm.script_path = join_paths(MU_SCM_SRCDIR, "mu-scm-test.scm");
+
+	Mu::Scm::Config scm_conf {
+		.store = *store,
+		.options = opts
+	};
+
+	{
+		const auto res = Mu::Scm::run(scm_conf);
+		assert_valid_result(res);
+	}
+}
+
+int
+main(int argc, char* argv[])
+{
+	::setenv("MU_SCM_DIR", MU_SCM_SRCDIR, 1);
+
+	mu_test_init(&argc, &argv);
+
+	g_test_add_func("/scm/script", test_scm_script);
+
+	return g_test_run();
+}
+
+#endif /*BUILD_TESTS*/
