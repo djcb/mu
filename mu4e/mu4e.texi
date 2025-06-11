@@ -3706,9 +3706,9 @@ the @t{mu-discuss} mailing list by @emph{Stephen Eglen}).
 (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 @end lisp
 
-Then, mark the file(s) in @t{dired} you would like to attach and press
-@t{C-c RET C-a}, and you'll be asked whether to attach them to an
-existing message, or create a new one.
+Then, mark the file(s) in @t{dired} you would like to attach and press @kbd{C-c
+RET C-a} or @code{gnus-dired-attach}, and you'll be asked whether to attach them
+to an existing message, or create a new one.
 
 @node Other tools
 @appendix Other tools
