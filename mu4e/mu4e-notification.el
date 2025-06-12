@@ -1,6 +1,6 @@
 ;;; mu4e-notification.el --- Mail notifications -*- lexical-binding: t-*-
 
-;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -27,6 +27,8 @@
 
 (require 'mu4e-query-items)
 (require 'mu4e-bookmarks)
+
+(eval-when-compile (require 'dbus nil 'noerror))
 
 ;; for Emacs' built-in desktop notifications to work, we need
 ;; DBus
