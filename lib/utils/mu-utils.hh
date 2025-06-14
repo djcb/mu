@@ -462,9 +462,9 @@ to_string_view(const std::string& s)
 }
 
 /**
- * Consume a gchar and return a std::string
+ * Consume a gchar* and return a std::string
  *
- * @param str a gchar* (consumed/freed)
+ * @param str a gchar* (consumed/freed with g_free())
  *
  * @return a std::string, empty if gchar was {}
  */
@@ -475,7 +475,20 @@ to_string_gchar(gchar*&& str)
 	g_free(str);
 	return s;
 }
-
+/**
+ * Consume a char* and return a std::string
+ *
+ * @param str a gchar* (consumed/freed with ::free())
+ *
+ * @return a std::string, empty if gchar was {}
+ */
+static inline std::string
+to_string_char(char*&& str)
+{
+	std::string s(str?str:"");
+	::free(str);
+	return s;
+}
 
 /*
  * Lexnums are lexicographically sortable string representations of non-negative
