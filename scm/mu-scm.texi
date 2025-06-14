@@ -1,0 +1,630 @@
+\input texinfo.tex    @c -*-texinfo-*-
+@c %**start of header
+@setfilename mu-scm.info
+@settitle Mu-SCM User Manual
+
+@c Use proper quote and backtick for code sections in PDF output
+@c Cf. Texinfo manual 14.2
+@set txicodequoteundirected
+@set txicodequotebacktick
+
+@documentencoding UTF-8
+@c %**end of header
+
+@include version.texi
+
+@copying
+Copyright @copyright{} 2025-@value{UPDATED-YEAR} Dirk-Jan C. Binnema
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled ``GNU Free
+Documentation License.''
+@end quotation
+@end copying
+
+@titlepage
+@title Mu-SCM - extending @t{mu} with Guile Scheme
+@subtitle version  @value{VERSION}
+@author Dirk-Jan C. Binnema
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@dircategory The Algorithmic Language Scheme
+@direntry
+* Mu-SCM: (mu-scm).        Guile support for the mu e-mail search engine
+@end direntry
+
+@contents
+
+@ifnottex
+@node Top
+@top Mu-SCM Manual
+@end ifnottex
+
+@iftex
+@node Welcome to @t{mu-scm}
+@unnumbered Welcome to @t{mu-scm}
+@end iftex
+
+Welcome to @t{mu-scm}!
+
+@t{mu} is a program for indexing and searching your e-mails. It can do so in
+many different ways, but sometimes that may not be enough.
+
+@t{mu-scm} is made for such cases. It embeds the Guile programming language into
+@t{mu}. Guile is the @emph{GNU Ubiquitous Intelligent Language for Extensions} -
+a version of the @emph{Scheme} programming language, the official GNU extension
+language, and a member of the @emph{Lisp} family of programming languages --
+like emacs-lisp, @emph{Racket}, Common Lisp.
+
+@t{mu-scm} is replacing the older @t{mu-guile} bindings; some notable
+differences are:
+@itemize
+@item No separate 'module', instead use mu itself.
+This greatly reduces the number of 'moving parts' and mysterious errors for users
+@item Automatically set up a reasonable environment
+@t{mu scm} simply reuses the user's @t{mu} configuration, simplifying setup
+@item API improvements
+@t{mu-scm} has learned from @t{mu-guile} to make its APIs nicer to use
+@item However, some parts are missing...
+@t{mu-scm} does not yet support all that @t{mu-guile} did. It's just getting
+started.
+@end itemize
+
+If you're not familiar with Scheme or Lisp, @t{mu-scm} may be a fun way to learn
+a bit more! Note: @t{mu-scm} is brand new and rather @strong{experimental} for
+now, and APIs can still change without warning.
+
+@menu
+* Getting started::
+* Shell::
+* Scripts::
+* API Reference::
+
+Appendices
+* GNU Free Documentation License::  The license of this manual.
+
+Indices
+* Procedure Index::
+
+@end menu
+
+@node Getting started
+@chapter Getting started
+
+@menu
+* Using distributions::
+* Building it yourself::
+* Verifying support::
+@end menu
+
+This chapter walks you through the installation and basic setup.
+
+@node Using distributions
+@section Using distributions
+
+At the time of writing, no distributions ship with an SCM-enabled @t{mu} yet, so
+for now you need to build it yourself. Of course, this is fully optional.
+
+@node Building it yourself
+@section Building it yourself
+
+To build @t{mu} with SCM support, first you need to ensure you have installed
+the required Guile development packages. The details of getting those vary
+across environments / distributions, e.g.: on Fedora (as root):
+
+@example
+# dnf install guile30-devel
+@end example
+
+or on Debian/Ubuntu:
+@example
+$ sudo apt install guile-3.0-dev
+@end example
+
+With those packages in place, you can (re)build @t{mu} and @t{mu-scm} should be
+built automatically if you did @emph{not} explicitly disable it.
+
+Parts of @t{mu-scm} depend on @t{mu} being @emph{installed}, not just built;
+however, you can still use it un-installed as well by setting an environment
+variable @t{MU_SCM_DIR} to the source-directory, e.g.
+@t{/home/user/sources/mu/scm}.
+
+@node Verifying support
+@section Verifying support
+
+After installing @t{mu}, you can check the output of @command{mu info}. If
+@t{mu-scm} is available, in the table you should find a line:
+@example
+| scm-support      | yes     | GNU Guile 3.x support (new)?          |
+@end example
+
+@node Shell
+@chapter Shell
+
+This chapter discusses the @t{mu-scm}-powered shell.
+
+After installation (@xref{Getting started}), you can start the @t{mu-scm} shell
+by issuing:
+@example
+$ mu scm
+@end example
+
+This is the Guile
+REPL@footnote{@url{https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop}}
+customized for @t{mu}. In particular, it supports all the common @t{mu}
+command-line arguments for specifying where your @t{mu} stores its data and so
+on (see the @t{mu} and @t{mu scm} man-pages for details).
+
+@example
+$ mu scm
+[....]
+Welcome to the mu shell!
+
+GNU Guile 3.0.9
+Copyright (C) 1995-2023 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+This program is free software, and you are welcome to redistribute it
+under certain conditions; type `,show c' for details.
+
+Enter `,help' for help.
+scheme@@(guile-user)>
+@end example
+
+This shell is set-up for use with @t{mu} with the module imported and the
+message database loaded. So we can try some simple queries, using the
+@code{mfind} function, which mimics @t{mu find}@footnote{It is called @t{mfind}
+instead of @t{find} to avoid clashing with the core Guile function by that
+name.}
+@example
+scheme@@(guile-user)> (mfind "rhinoceros")
+$1 = (#<<message> 7f2aa671fce0>)
+@end example
+
+Which means we found one message matching @t{rhinoceros}. If you don't have such
+a message, try some different query. We can then inspect the message, using the
+@t{$1} temporary:
+
+@example
+scheme@@(guile-user)> (subject (car $1))
+$2 = "Important message about African animals"
+@end example
+
+@node Scripts
+@chapter Scripts
+
+In the @ref{Shell} chapter, we saw how you can use @t{mu-scm} interactively. In
+this also possible to run @emph{scripts}. Generally, you can invoke a script by
+passing its name to @command{mu scm}, for example:
+@example
+mu scm path/to/script/myscript.scm
+@end example
+
+@t{mu-scm} expects scripts to have a procedure @code{main} of the form:
+
+@deffn {Scheme Procedure} main script #:rest args
+@end deffn
+
+@t{main} receives the script (path) as its first argument, and any other
+arguments in the list @t{args}.
+
+Thus, an example script might look like:
+@lisp
+(use-modules (mu))
+
+(define* (main script #:rest args)
+  (format #t "running script ~a and arguments ~s\n" script args)
+  (for-each
+   (lambda (msg)
+     (format #t "~a ~a\n"
+             (time-t->iso-date (date msg))
+             (or (subject msg) "No subject")))
+   (mfind "hello AND date:2015.." #:max-results 5)))
+@end lisp
+
+You can run it like this:
+@example
+$ mu scm ~/myscript.scm some args 123
+running script /home/user/myscript.scm and arguments  ("some" "args" "123")
+2015-01-02T12:41:13 Happy 2015! It's Day 2 - How Are Those Resolutions Coming?
+2015-01-06T12:29:21 Brunch Sunday 11.1.
+2015-01-06T18:05:27 Moderator's spam report for mu-discuss@@googlegroups.com
+2015-01-13T11:37:27 Upvoted: The Story Behind the Users Who Make Reddit's Front Page
+2015-01-16T17:06:23 [mu] combining maildirs in query (#559)
+@end example
+
+Quite likely, your output will differ from the above.
+
+@node API Reference
+@chapter API Reference
+
+This chapter goes through the @t{mu-scm} API. For this, we need to understand a
+few key concepts, represented in some GOOP objects and other data-structures:
+
+@itemize
+@item the @t{<store>} represents the mu database with information about messages
+@item from the store, you can find @t{<message>} objects, each of which represent a specific message
+I.e., what you get from @code{mu find}
+@item the store also exposes tha contacts in the store as alists (``association lists'')
+I.e., the information from @code{mu cfind}
+@end itemize
+
+@menu
+* Store:: the database of all information
+* Message:: inspecting individual messages
+* Helpers:: some helper functions
+@end menu
+
+@node Store
+@section Store
+
+The store represents the @t{mu} database, i.e., the place where @t{mu index}
+stores information about messages and contacts.
+
+While you could theoretically have @emph{multiple} stores, for now @t{mu-scm}
+only supports a single one, which is the store you opened when you started
+@command{mu scm}. For completeness and possible future use, store-related
+methods do take a @t{#:store} parameter, but you can (in fact, @emph{must})
+leave it out, and use its default value.
+
+Hence, in the API descriptions below, we leave out the @t{#:store} argument.
+
+The store currently only exposes a few methods, described below.
+
+@deffn {Scheme Procedure} mfind query [#:related? #f] [#:skip-dups? #f] [#:sort-field 'date]
+       [#:reverse? #f] [#:max-results #f]
+@end deffn
+
+Perform a query for messages in the store, and return a list of message objects
+(@xref{Message}) for the matches.
+
+@itemize
+@item @t{query} is a Mu query; see @t{mu-query} man-page for details
+@item @t{#:related?} (optional) whether @emph{related} messages should be included
+This is similar to the @t{--include-related} parameter for @command{mu find}
+@item @t{#:skip-dups?} (optional) whether to exclude duplicate messages
+This is similar to the @t{--skip-dups} parameter for @command{mu find}
+@item @t{#:sort-field} (optional) a symbol, the message field to sort by
+You can sort by the fields (see @command{mu info fields} that have a @t{value=yes})
+@item @t{#:reverse?} (optional) whether to reverse the sort-direction (make it descending)
+@item @t{#:max-results} (optional) the maximum number of results
+By default, @emph{all} matches are returned
+@end itemize
+
+@t{mfind} mimics the @command{mu find} command-line command.
+
+Example usage:
+@lisp
+(mfind "capybara" #:skip-dups? #t #:sort-field 'subject)
+=> (#<<message> 7f3c8ac09c00> #<<message> 7f3c8ac09be0>)
+@end lisp
+
+@deffn {Scheme Procedure} cfind pattern [#:personal? #f] [#:after #f] [#:max-results #f]
+@end deffn
+
+Search for contacts in the store, and return a list of contacts for the matches.
+Each contact is an association list with at least a key (symbol @t{email}) with
+e-mail address as its value, and possibly a @t{name} key with the contact's
+name. In the future, other fields may be added.
+
+@itemize
+@item @t{pattern} is a basic case-insensitive PCRE-compatible regular expression
+see the @t{pcre(3)} man-page for details
+@item @t{#:personal} (optional) if true, only match @emph{personal} contacts
+A personal contact is a contact seen in message where ``you'' were an explicit
+sender or recipient, thus excluding mailing-list. Personal addresses are those
+that were specified at store creation time - see the @t{mu-init} man-page, in
+particular the @t{--personal-address} parameter
+@item @t{#:after} (optional) only include contacts last-seen after some time-point
+Specified as the number of seconds since epoch. Helper-function
+@code{iso-date->time-t} can be useful here.
+@item @t{#:max-results} (optional) the maximum number of results
+By default, @emph{all} matches are returned
+@end itemize
+
+@t{cfind} mimics the @command{mu cfind} command-line command.
+
+Example usage:
+@lisp
+(car (cfind "smith" #:personal? #t))
+=> ((name . "Hannibal Smith") (email . "jhs@@example.com"))
+@end lisp
+
+@deffn {Scheme Procedure} mcount
+@end deffn
+
+Returns the number of messages in the store.
+
+Example usage:
+@lisp
+(mcount)
+=> 140728
+@end lisp
+
+@node Message
+@section Message
+
+A message represents the information about some e-mail message whose information
+has been extracted and store in the @t{mu} store (database).
+
+You can retrieve lists of @t{<message>} objects with @t{mfind} method, as
+explained in @xref{Store}. In the following, we use some message-object
+@t{msg}, e.g.
+@lisp
+(define msg (car (mfind "hello")))
+@end lisp
+
+@subsection Basics
+
+@deffn {Scheme Procedure} subject message
+@end deffn
+Get the message subject, or @t{#f} if there is none.
+
+For example:
+@lisp
+(subject msg)
+=> "Hello!"
+@end lisp
+
+@deffn {Scheme Procedure} maildir message
+@end deffn
+Get the message subject, or @t{#f} if there is none.
+
+For example:
+@lisp
+(maildir msg)
+=> "/inbox"
+@end lisp
+
+@deffn {Scheme Procedure} path message
+@end deffn
+Get the file-system path for the the message.
+
+For example:
+@lisp
+(path msg)
+=> "/home/user/Maildir/archive/cur/1546942532.adb906ab91921e10.hyperion:2,DS"
+@end lisp
+
+@deffn {Scheme Procedure} message-id message
+@end deffn
+Get the message's @t{Message-ID} field, or @t{#f} if there is none.
+
+For example:
+@lisp
+(message-id msg)
+=> "87a15477-dd66-43e5-a722-81c545d6af19@@gmail.com"
+@end lisp
+
+@deffn {Scheme Procedure} date message
+@end deffn
+Get the message's @t{Date} field (the sent-date), or @t{#f} if there is none.
+@t{date} expressed the data as the number of seconds since epoch, @t{time_t}.
+
+As a convenience, @t{iso-date} expresses the date as an ISO-8601-compatible
+string or an empty string of the same length.
+
+For example:
+@lisp
+(date msg)
+=> 1750064431
+(iso-date msg)
+=> 2025-06-16T09:00:31
+@end lisp
+
+@subsection Contacts
+
+Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain @emph{contacts}.
+@t{mu-scm} represents those as list of contact-alists, or contacts for short.
+Each contact is an alist with at least an @t{email} and optionally a @t{name}
+field. For instance:
+
+@lisp
+(to msg)
+=> (((name . "Hannibal Smith") (email . "jhs@@example.com"))
+    ((email . "murdock@@example.com")))
+@end lisp
+
+@deffn {Scheme Procedure} from message
+@end deffn
+Get the list of message senders (usually only one). Returns either a list
+of contacts or @t{#f}.
+
+@deffn {Scheme Procedure} to message
+@end deffn
+Get the message's intended @t{To:} recipients. Returns either
+a list of contacts or @t{#f} if not found.
+
+@deffn {Scheme Procedure} cc message
+@end deffn
+Get the message's intended carbon-copy @t{Cc:} recipients. Returns either a list
+of contacts or @t{#f} if not found.
+
+@deffn {Scheme Procedure} bcc message
+@end deffn
+Get the message's intended blind carbon-copy @t{Bcc:} recipients. Returns either
+a list of contacts or @t{#f} if not found.
+
+@subsection Flags
+
+Message can have a number of properties or @emph{flags}.
+
+@deffn {Scheme Procedure} flags message
+@end deffn
+Get the message's list of @emph{flags}. Flags are symbols, see @command{mu info
+fields} for the list of all flags.
+
+For example:
+@lisp
+(flags msg)
+=> (draft seen personal)
+@end lisp
+
+There are some helpers to check for the presence of specific flags:
+
+@deffn {Scheme Procedure} flag? message flag
+@end deffn
+Does the message have the given flag? @t{#t} or @t{#f}.
+
+For example:
+@lisp
+(flags? msg 'personal)
+=> #t
+(flags? msg 'calendar)
+=> #f
+@end lisp
+
+@deffn {Scheme Procedure} draft? message
+@end deffn
+Does the message have the @t{draft} flag? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} flagged? message
+@end deffn
+Does the message have the @t{flagged} flag? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} passed? message
+@end deffn
+Does the message have the @t{passed} flag? I.e., has it been forwarded?
+Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} replied? message
+@end deffn
+Does the message have the @t{replied} flag? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} seen? message
+@end deffn
+Does the message have the @t{seen} flag? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} trashed? message
+@end deffn
+Does the message have the @t{trashed} flag? I.e., has it been marked for
+removal? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} new? message
+@end deffn
+Is this a new message? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} signed? message
+@end deffn
+Is this a cryptographically signed message? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} encrypted? message
+@end deffn
+Is this an encrypted message? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} attach? message
+@end deffn
+Does the message have an attachment? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} unread? message
+@end deffn
+Is this message unread? I.e., either new or not seen? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} list? message
+@end deffn
+Is this a mailing-list message? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} personal? message
+@end deffn
+Is this a personal message? Returns @t{#t} or @t{#f}.
+
+@deffn {Scheme Procedure} calendar? message
+@end deffn
+Does this message have a calendar invitation? Returns @t{#t} or @t{#f}.
+
+@subsection Miscellaneous
+
+@deffn {Scheme Procedure} last-change message
+@end deffn
+Get the time of the message's last change (through @t{mu}), or @t{#f} if there
+is none. The time is expressed the data as the number of seconds since epoch,
+@t{time_t}.
+
+For example:
+@lisp
+(last-change msg)
+=> 1703336567
+@end lisp
+
+@deffn {Scheme Procedure} priority message
+@end deffn
+Get the message's priority. This is symbol, either @t{high}, @t{normal} or
+@t{low}, or @t{#f} if not present.
+
+For example:
+@lisp
+(priority msg)
+=> normal
+@end lisp
+
+@deffn {Scheme Procedure} size message
+@end deffn
+Get the message's size in bytes.
+
+For example:
+@lisp
+(size msg)
+=> 2815
+@end lisp
+
+@deffn {Scheme Procedure} language message
+@end deffn
+Get the ISO-639-1 language code for message's primary language or @t{#f} if not
+found. This is available only if @t{mu} was built with CLD2 support, see
+@command{mu info}. The language code is represented as a symbol, such as @t{en},
+@t{nl} or @t{fi}.
+
+For example:
+@lisp
+(language msg)
+=> en
+@end lisp
+
+@c @deffn {Scheme Procedure} sexp message
+@c @end deffn
+@c Get the message's s-expression.
+
+@c @t{mu} caches an s-expression for each message; this was designed as an
+@c optimization for @t{mu4e}, but @t{mu-scm} uses it as well. The details of this
+@c s-expression (a property-list) are internal to @t{mu} (so do not base your next
+@c billion-dollar startup on it), but it can be useful for development and
+@c debugging.
+
+@node Helpers
+@section Helpers
+
+@deffn {Scheme Procedure} iso-date->time-t iso-date
+@end deffn
+Convert some ISO-8601 compatible time-point (assuming UTC) to a
+seconds-since-epoch @t{time_t} value. The ISO date is expected to be in the
+@t{strftime}-format @t{%F%T}, or any prefix thereof. Non-numerical characters
+are ignored.
+
+@deffn {Scheme Procedure} time-t->iso-date time-t
+@end deffn
+Convert a @t{time_t} value to an ISO-8601 compatible string (assuming UTC). If
+@t{time_t} is @t{#f}, return an empty string of the same length.
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+
+@include fdl.texi
+
+@page
+@node Procedure Index
+@unnumbered Procedure Index
+
+This is an alphabetical list of all the procedures and macros in @t{mu-scm}.
+
+@printindex fn
+
+@bye
