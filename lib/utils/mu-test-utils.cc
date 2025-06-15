@@ -104,9 +104,8 @@ Mu::mu_test_init(int *argc, char ***argv)
 
 	if (!g_test_verbose())
 		g_log_set_handler(
-			NULL,
-			(GLogLevelFlags)(G_LOG_LEVEL_MASK |
-					 G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
+			"mu",
+			(GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_RECURSION),
 			(GLogFunc)black_hole, NULL);
 }
 
