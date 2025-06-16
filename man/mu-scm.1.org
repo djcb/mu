@@ -1,0 +1,44 @@
+#+TITLE: MU SCM
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
+
+* NAME
+
+*mu scm* - bindings and shell for the GNU Guile programming language.
+
+* SYNOPSIS
+
+*mu scm* [​_COMMON-OPTIONS_​]
+
+starts the GNU Guile shell.
+
+*mu scm* [​_COMMON-OPTIONS_​] [[​_COMMAND_​] -- [​_COMMAND-OPTIONS_​]]
+
+runs a GNU Guile script.
+
+* DESCRIPTION
+
+*mu scm* is the command to use the bindings to the GNU Guile programming language.
+It can either open a shell ("REPL") or run scripts.
+
+Using *mu scm*, you can script *mu*.
+
+#+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
+
+* ENVIRONMENT
+
+By default, *mu scm* expects its internal files to be found in
+~<prefix>/hare/mu/scm~. However, for development/testing you can set the
+environment variable *MU_SCM_DIR* to some alternative directory.
+
+* SEE ALSO
+
+The full documentation for *mu scm* is maintained as a Texinfo manual. If the *info*
+and *mu* programs are properly installed at your site, the command *info mu-scm*
+should give you access to the complete manual.
+
+http://www.schemers.org provides a general introduction to the Scheme language.
+
+#+include: "prefooter.inc" :minlevel 1
