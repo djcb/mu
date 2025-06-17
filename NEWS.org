@@ -281,14 +281,20 @@
    - 1.12.12: it now possible to create Emacs bookmarks for both messages
      (default) and queries. See the new variable ~mu4e-emacs-bookmark-policy~.
 
+*** scm
+
+   - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the
+     long-deprecated ~guile/~ bindings. For this is all rather new and
+     experimental, but the basics are there.
+
 *** Contributors
 
     Thanks to our contributors - code committers belows, but also to everyone
     who filed tickets, asked questions, answered them etc.
 
-    Babak Farrokhi, Christophe Troestler, Christoph Reichenbach, Daniel Fleischer,
-    David Edmondson, Davide Masserut, Dirk-Jan C. Binnema, Jeremy Sowden,
-    Lin Jian, Martin R. Albrecht, Nacho Barrientos, Nicholas Vollmer,
+    Babak Farrokhi, Christophe Troestler, Christoph Reichenbach, Daniel
+    Fleischer, David Edmondson, Davide Masserut, Dirk-Jan C. Binnema, Jeremy
+    Sowden, Lin Jian, Martin R. Albrecht, Nacho Barrientos, Nicholas Vollmer,
     Nicolas P. Rougier, ramon diaz-uriarte (at Phelsuma), reindert, Ruijie Yu,
     Sean Farley, stardiviner, Tassilo Horn and Thierry Volpiatto
 
