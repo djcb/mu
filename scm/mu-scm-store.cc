@@ -142,13 +142,13 @@ Mu::Scm::init_store(const Store& store)
 		return;
 
 	store_type = scm_make_foreign_object_type(
-		scm_from_utf8_symbol("store"),
-		scm_list_1 (scm_from_utf8_symbol("data")),
-		{}); // no finalizer
+		make_symbol("store"),
+		scm_list_1(make_symbol("data")),
+		{});// no finalizer
 
 	default_store = scm_make_foreign_object_1(
 		store_type, const_cast<Store*>(&store));
-	scm_c_define("default-store-object", default_store);
+	scm_c_define("%default-store-object", default_store);
 
 	init_subrs();
 

@@ -23,6 +23,10 @@ It can either open a shell ("REPL") or run scripts.
 
 Using *mu scm*, you can script *mu*.
 
+* SCM OPTIONS
+
+#+include: "muhome.inc" :minlevel 2
+
 #+include: "common-options.inc" :minlevel 1
 
 #+include: "exit-code.inc" :minlevel 1

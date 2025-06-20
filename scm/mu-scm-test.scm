@@ -53,6 +53,15 @@
 
   (test-end "test-mfind"))
 
+
+(define (test-misc)
+  (let ((opts (options)))
+    (test-assert (>= (length opts) 4))
+    (test-equal (assoc-ref opts 'quiet) #f)
+    (test-equal (assoc-ref opts 'debug) #f)
+    (test-equal (assoc-ref opts 'verbose) #f)
+    (test-equal (assoc-ref opts 'muhome) #f)))
+
 (define (test-helpers)
   (test-begin "test-helpers")
   (test-equal 1750077792 (iso-date->time-t "2025-06-16T12:43:12"))
@@ -70,6 +79,7 @@
       (test-basic)
       (test-basic-mfind)
       (test-mfind)
+      (test-misc)
       (test-helpers)
 
       (test-end "mu-scm-tests")

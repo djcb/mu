@@ -37,26 +37,30 @@ static SCM mu_mod; // The mu module
 }
 
 /**
- * Create a plist for the relevant configuration items
+ * Create a plist for the relevant option items
  *
  * @param opts
  */
 static void
-init_config (const Options& opts)
+init_options(const Options& opts)
 {
-	scm_c_define("options",
-		     alist_add(
-			     SCM_EOL,
-			     make_symbol("mu-home"), opts.muhome,
-			     make_symbol("verbose"), opts.verbose,
-			     make_symbol("debug"), opts.debug,
-			     make_symbol("quiet"), opts.quiet));
+	SCM scm_opts = alist_add(SCM_EOL,
+				 make_symbol("verbose"), opts.verbose,
+				 make_symbol("debug"), opts.debug,
+				 make_symbol("quiet"), opts.quiet);
+
+	if (opts.muhome.empty())
+		scm_opts = alist_add(scm_opts, make_symbol("mu-home"), SCM_BOOL_F);
+	else
+		scm_opts = alist_add(scm_opts, make_symbol("mu-home"), opts.muhome);
+
+	scm_c_define("%options", scm_opts);
 }
 
 static void
 init_module_mu(void* _data)
 {
-	init_config(config->options);
+	init_options(config->options);
 	init_store(config->store);
 }
 
@@ -82,7 +86,6 @@ namespace {
 static std::string mu_scm_path;
 static std::string mu_scm_shell_path;
 }
-
 
 static Result<void>
 prepare_run(const Mu::Scm::Config& conf)

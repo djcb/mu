@@ -24,7 +24,6 @@
   #:export (
   ;; classes
   <store>
-  *default-store*
 
   mfind
   mcount
@@ -68,6 +67,9 @@
   to
   cc
   bcc
+
+  ;; misc
+  options
 
   ;; helpers
   iso-date->time-t
@@ -289,12 +291,12 @@ not found."
 
 ;; Store
 ;;
-;; Note: we have a *default-store*, which is the store we opened during
+;; Note: we have a %default-store, which is the store we opened during
 ;; startup; for now that's the only store supported, but we keep things
 ;; open.
 ;;
 ;; Since it's the default store, we'd like to call the methods without
-;; explicitly using *default-store*; with GOOPS, we cannot pass a default for
+;; explicitly using %default-store; with GOOPS, we cannot pass a default for
 ;; that, nor can we use keyword arguments (I think?). So use define* for that.
 
 ;; the 'store-object' is a foreign object wrapping a const Store*.
@@ -306,23 +308,23 @@ not found."
   "Make a store from some STORE-OBJECT."
   (make <store> #:store-object store-object))
 
-(define *default-store*
-  ;; default-store-object is defined in mu-scm-store.cc
-  (make-store default-store-object))
+(define %default-store
+  ;; %default-store-object is defined in mu-scm-store.cc
+  (make-store %default-store-object))
 
 (define* (mfind query
 	       #:key
-	       (store *default-store*)
+	       (store %default-store)
 	       (related? #f)
 	       (skip-dups? #f)
 	       (sort-field 'date)
 	       (reverse? #f)
 	       (max-results #f))
-   "Find messages matching some query. The query is mandatory,
-the other (keyword) arguments are optional.
+   "Find messages matching some query.
 
+The query is mandatory, the other (keyword) arguments are optional. 
 (mfind QUERY
-    #:store       *default-store*. Leave at default.
+    #:store       %default-store. Leave at default.
     #:related?    include related messages?  Default: false
     #:skip-dups?  skip duplicates? Default: false
     #:sort-field? field to sort by, a symbol. Default: date
@@ -335,25 +337,36 @@ the other (keyword) arguments are optional.
 
 (define* (mcount
 	  #:key
-	  (store *default-store*))
+	  (store %default-store))
   "Get the number of messages."
   (store-mcount (store-object store)))
 
 (define* (cfind pattern
 		#:key
-		(store *default-store*)
+		(store %default-store)
 		(personal? #f)
 		(after #f)
 		(max-results #f))
-  "Find contacts matching some regex pattern, similar to 'mu-cfind(1).
+  "Find contacts matching some regex pattern, similar to mu-cfind(1).
+
 The pattern is mandatory; the other (keyword) arguments are optional.
 (cfind PATTERN
-    #:store       *default-store*. Leave at default.
+    #:store       %default-store. Leave at default.
     #:personal?   only include 'personal' contacts. Default: all
     #:after       only include contacts last seen time_t: Default all
     #:max-results max. number of matches. Default: false (unlimited))."
   (store-cfind (store-object store) pattern personal? after max-results))
 
+;;; Misc
+
+(define (options)
+  "Get an alist with the general options this instance of \"mu\" started with.
+These are based on the command-line arguments, environment etc., see
+the mu-scm(1) manpage for details.
+
+The alist maps symbols to values; a value of #f indicates that the value
+is at its default."
+  %options)
 
 ;;; Helpers
 

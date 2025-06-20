@@ -674,7 +674,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		  "remove", "Remove message from file-system and database", sub_remove }
 		},
 		{ SubCommand::Scm,
-		  {Category::None,
+		  {Category::NeedsReadOnlyStore,
 		   "scm", "Start Guile/Scheme shell",sub_scm}
 		},
 		{ SubCommand::Script,

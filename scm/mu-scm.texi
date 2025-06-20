@@ -261,6 +261,7 @@ I.e., the information from @code{mu cfind}
 @menu
 * Store:: the database of all information
 * Message:: inspecting individual messages
+* Miscellaneous:: other functions
 * Helpers:: some helper functions
 @end menu
 
@@ -598,6 +599,19 @@ For example:
 @c s-expression (a property-list) are internal to @t{mu} (so do not base your next
 @c billion-dollar startup on it), but it can be useful for development and
 @c debugging.
+
+@node Miscellaneous
+@section Miscellaneous
+
+@deffn {Scheme Procedure} options
+@end deffn
+
+This yields an association-list (alist) of general options passed to @command{mu
+scm}. Values at @t{#f} indicate that the value is at its default.
+@lisp
+ (options)
+=> ((mu-home . #f) (quiet . #f) (debug . #f) (verbose . #f))
+@end lisp
 
 @node Helpers
 @section Helpers
