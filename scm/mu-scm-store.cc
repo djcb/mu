@@ -17,8 +17,7 @@
 **
 */
 
-#include "mu-scm-store.hh"
-#include "mu-scm-contact.hh"
+#include "mu-scm-types.hh"
 
 using namespace Mu;
 using namespace Mu::Scm;
@@ -153,4 +152,18 @@ Mu::Scm::init_store(const Store& store)
 	init_subrs();
 
 	initialized = true;
+}
+
+
+SCM
+Mu::Scm::to_scm(const Contact& contact)
+{
+	static SCM email{scm_from_utf8_symbol("email")};
+	static SCM name{scm_from_utf8_symbol("name")};
+
+	SCM alist = scm_acons(email, to_scm(contact.email), SCM_EOL);
+	if (!contact.name.empty())
+		alist = scm_acons(name, to_scm(contact.name), alist);
+
+	return alist;
 }

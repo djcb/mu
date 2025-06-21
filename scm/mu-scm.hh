@@ -61,6 +61,7 @@ namespace Mu::Scm {
 	 */
 	Result<void> run(const Config& conf);
 
+
 	/**
 	 * Helpers
 	 *
@@ -224,19 +225,5 @@ namespace Mu::Scm {
 
 	/**@}*/
 }
-
-
-/**
- * SCM formatter, for use with fmt
- *
- * @param scm some object
- *
- * @return string representation of scm
- */
-// static inline std::string format_as(SCM scm) {
-//	return Mu::Scm::from_scm<std::string>(scm_object_to_string(scm, SCM_UNSPECIFIED));
-// }
-// XXX doesn't work:
-//     "static assertion failed: Formatting of non-void pointers is disallowed"
 
 #endif /*MU_SCM_HH*/

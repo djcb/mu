@@ -20,7 +20,7 @@ lib_mu_scm=static_library(
   'mu-scm',
   [
     'mu-scm.cc',
-    'mu-scm-contact.cc',
+    'mu-scm-message.cc',
     'mu-scm-store.cc'
   ],
   dependencies: [

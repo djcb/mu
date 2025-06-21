@@ -25,8 +25,7 @@
 #include "mu-utils.hh"
 #include "config.h"
 
-#include "mu-scm-contact.hh"
-#include "mu-scm-store.hh"
+#include "mu-scm-types.hh"
 
 using namespace Mu;
 using namespace Mu::Scm;
@@ -62,6 +61,7 @@ init_module_mu(void* _data)
 {
 	init_options(config->options);
 	init_store(config->store);
+	init_message();
 }
 
 static const Result<std::string>

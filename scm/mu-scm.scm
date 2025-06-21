@@ -68,6 +68,10 @@
   cc
   bcc
 
+  ;; message-body
+  body
+  header
+
   ;; misc
   options
 
@@ -120,14 +124,30 @@ If not found, return #f."
 
 ;; Message
 ;;
-;; A <message> is created from a message plist.
+;; A <message> has two slots:
+;; plist -->      this is the message sexp cached in the database;
+;;                for each message (for mu4e, but we reuse here)
+;; object-->      wraps a Mu::Message* as a "foreign object"
+;;
+;; generally the plist is a bit cheaper, since the mu-message
+;; captures a file-deescriptor.
 
-;; In mu, we have store a plist sexp for each message in the database,
-;; for use with mu4e. But, that very plist is useful here as well.
 (define-class <message> ()
-  (plist #:init-keyword #:plist #:getter plist))
+  (plist #:init-value #f #:init-keyword #:plist)
+  (object #:init-value #f #:init-keyword #:object))
 
-;; using the plist as-is makes for O(n) access to the various fields
+(define-method (plist (message <message>))
+  "Get the PLIST for this MESSAGE."
+  (slot-ref message 'plist))
+
+(define-method (object (message <message>))
+  "Get the foreign object for this MESSAGE.
+If MESSAGE does not have such an object yet, crate it from the
+path of the message."
+  (if (not (slot-ref message 'object))
+      (slot-set! message 'object
+		 (message-object-make (path message))))
+  (slot-ref message 'object))
 
 (define-method (find-field (message <message>) field)
   (plist-find (plist message) field))
@@ -200,7 +220,7 @@ Return #f otherwise."
   (find-field message ':flags))
 
 (define-method (flag? (message <message>) flag)
-  "Does MESSAGE have FLAG?."
+  "Does MESSAGE have FLAG?"
   (let ((flags
 	 (find-field message ':flags)))
     (if flags
@@ -289,6 +309,18 @@ not found."
 #f if not found."
   (find-contact-field message ':bcc))
 
+(define* (body message #:key (html? #f))
+  "Get the MESSAGE body or #f if not found.
+If #:html is non-#f, instead search for the HTML body.
+Requires the full message."
+  (message-body (object message) html?))
+
+(define-method (header (message <message>) (field <string>))
+  "Get the raw MESSAGE header FIELD or #f if not found.
+FIELD is case-insensitive and should not have the ':' suffix.
+Requires the full message."
+  (message-header (object message) field))
+
 ;; Store
 ;;
 ;; Note: we have a %default-store, which is the store we opened during
@@ -322,7 +354,7 @@ not found."
 	       (max-results #f))
    "Find messages matching some query.
 
-The query is mandatory, the other (keyword) arguments are optional. 
+The query is mandatory, the other (keyword) arguments are optional.
 (mfind QUERY
     #:store       %default-store. Leave at default.
     #:related?    include related messages?  Default: false

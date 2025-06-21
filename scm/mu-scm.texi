@@ -68,13 +68,13 @@ like emacs-lisp, @emph{Racket}, Common Lisp.
 @t{mu-scm} is replacing the older @t{mu-guile} bindings; some notable
 differences are:
 @itemize
-@item No separate 'module', instead use mu itself.
+@item No separate 'module', instead use mu itself:
 This greatly reduces the number of 'moving parts' and mysterious errors for users
-@item Automatically set up a reasonable environment
+@item Automatically set up a reasonable environment:
 @t{mu scm} simply reuses the user's @t{mu} configuration, simplifying setup
-@item API improvements
+@item API improvements:
 @t{mu-scm} has learned from @t{mu-guile} to make its APIs nicer to use
-@item However, some parts are missing...
+@item However, some parts are still missing:
 @t{mu-scm} does not yet support all that @t{mu-guile} did. It's just getting
 started.
 @end itemize
@@ -87,7 +87,7 @@ now, and APIs can still change without warning.
 * Getting started::
 * Shell::
 * Scripts::
-* API Reference::
+* API Reference with examples::
 
 Appendices
 * GNU Free Documentation License::  The license of this manual.
@@ -244,8 +244,8 @@ running script /home/user/myscript.scm and arguments  ("some" "args" "123")
 
 Quite likely, your output will differ from the above.
 
-@node API Reference
-@chapter API Reference
+@node API Reference with examples
+@chapter API Reference with examples
 
 This chapter goes through the @t{mu-scm} API. For this, we need to understand a
 few key concepts, represented in some GOOP objects and other data-structures:
@@ -253,9 +253,9 @@ few key concepts, represented in some GOOP objects and other data-structures:
 @itemize
 @item the @t{<store>} represents the mu database with information about messages
 @item from the store, you can find @t{<message>} objects, each of which represent a specific message
-I.e., what you get from @code{mu find}
+(similar to what you get from @code{mu find})
 @item the store also exposes tha contacts in the store as alists (``association lists'')
-I.e., the information from @code{mu cfind}
+(similar to what you get from @code{mu cfind})
 @end itemize
 
 @menu
@@ -289,16 +289,16 @@ Perform a query for messages in the store, and return a list of message objects
 (@xref{Message}) for the matches.
 
 @itemize
-@item @t{query} is a Mu query; see @t{mu-query} man-page for details
-@item @t{#:related?} (optional) whether @emph{related} messages should be included
+@item @var{query} is a Mu query; see the @t{mu-query} man-page for details
+@item @var{#:related?} whether @emph{related} messages should be included.
 This is similar to the @t{--include-related} parameter for @command{mu find}
-@item @t{#:skip-dups?} (optional) whether to exclude duplicate messages
+@item @var{#:skip-dups?} whether to exclude duplicate messages
 This is similar to the @t{--skip-dups} parameter for @command{mu find}
-@item @t{#:sort-field} (optional) a symbol, the message field to sort by
+@item @var{#:sort-field} a symbol, the message field to sort by
 You can sort by the fields (see @command{mu info fields} that have a @t{value=yes})
-@item @t{#:reverse?} (optional) whether to reverse the sort-direction (make it descending)
-@item @t{#:max-results} (optional) the maximum number of results
-By default, @emph{all} matches are returned
+@item @var{#:reverse?} whether to reverse the sort-direction (make it descending)
+@item @var{#:max-results} the maximum number of results
+By default @emph{all} matches are returned
 @end itemize
 
 @t{mfind} mimics the @command{mu find} command-line command.
@@ -318,17 +318,17 @@ e-mail address as its value, and possibly a @t{name} key with the contact's
 name. In the future, other fields may be added.
 
 @itemize
-@item @t{pattern} is a basic case-insensitive PCRE-compatible regular expression
+@item @var{pattern} is a basic case-insensitive PCRE-compatible regular expression
 see the @t{pcre(3)} man-page for details
-@item @t{#:personal} (optional) if true, only match @emph{personal} contacts
+@item @var{#:personal?} if true, only match @emph{personal} contacts
 A personal contact is a contact seen in message where ``you'' were an explicit
 sender or recipient, thus excluding mailing-list. Personal addresses are those
 that were specified at store creation time - see the @t{mu-init} man-page, in
 particular the @t{--personal-address} parameter
-@item @t{#:after} (optional) only include contacts last-seen after some time-point
+@item @var{#:after} only include contacts last-seen after some time-point
 Specified as the number of seconds since epoch. Helper-function
 @code{iso-date->time-t} can be useful here.
-@item @t{#:max-results} (optional) the maximum number of results
+@item @var{#:max-results} (optional) the maximum number of results
 By default, @emph{all} matches are returned
 @end itemize
 
@@ -358,11 +358,18 @@ A message represents the information about some e-mail message whose information
 has been extracted and store in the @t{mu} store (database).
 
 You can retrieve lists of @t{<message>} objects with @t{mfind} method, as
-explained in @xref{Store}. In the following, we use some message-object
-@t{msg}, e.g.
+explained in @xref{Store}. In the following, we use some message-object @t{msg},
+e.g.
 @lisp
-(define msg (car (mfind "hello")))
+l(define msg (car (mfind "hello")))
 @end lisp
+
+@anchor{full-message} Many of the procedures below use the internal
+representation of the message from the database; this re-uses the same
+information that @t{mu4e} uses. However, that is not sufficient for all:
+@code{body} and @code{header} need the full message. To get this, it needs to
+open the message file from the file-system. Much of this is internal to
+@t{mu-scm}, except that full-method-procedures are relatively a bit slower.
 
 @subsection Basics
 
@@ -421,6 +428,14 @@ For example:
 (iso-date msg)
 => 2025-06-16T09:00:31
 @end lisp
+
+@deffn {Scheme Procedure} body message  [#:html? #f]
+@end deffn
+Get the message body as a string, or return @code{#f} if not found.
+
+If @var{#:html?} is non-@t{#f}, get the HTML-body instead.
+
+This requires the @ref{full-message,,full message}.
 
 @subsection Contacts
 
@@ -540,7 +555,7 @@ Is this a personal message? Returns @t{#t} or @t{#f}.
 
 @deffn {Scheme Procedure} calendar? message
 @end deffn
-Does this message have a calendar invitation? Returns @t{#t} or @t{#f}.
+Does this message include a calendar invitation? Returns @t{#t} or @t{#f}.
 
 @subsection Miscellaneous
 
@@ -558,7 +573,7 @@ For example:
 
 @deffn {Scheme Procedure} priority message
 @end deffn
-Get the message's priority. This is symbol, either @t{high}, @t{normal} or
+Get the message's priority. This is a symbol, either @t{high}, @t{normal} or
 @t{low}, or @t{#f} if not present.
 
 For example:
@@ -590,6 +605,25 @@ For example:
 => en
 @end lisp
 
+@deffn {Scheme Procedure} header message
+@end deffn
+Get some arbitrary, raw header from the message.
+
+The @var{header} parameter is a case-insensitive string @emph{without} the colon
+(@t{:}).
+
+This requires the @ref{full-message,,full message}.
+
+For example:
+@lisp
+(header msg "subject")
+=> "Re: Musical chairs"
+(header msg "From")
+=> "\"Raul Endymion\" <raul@@example.com>"
+(header msg "Something")
+=> #f
+@end lisp
+
 @c @deffn {Scheme Procedure} sexp message
 @c @end deffn
 @c Get the message's s-expression.
@@ -619,14 +653,14 @@ scm}. Values at @t{#f} indicate that the value is at its default.
 @deffn {Scheme Procedure} iso-date->time-t iso-date
 @end deffn
 Convert some ISO-8601 compatible time-point (assuming UTC) to a
-seconds-since-epoch @t{time_t} value. The ISO date is expected to be in the
-@t{strftime}-format @t{%F%T}, or any prefix thereof. Non-numerical characters
-are ignored.
+seconds-since-epoch @t{time_t} value. @var{iso-date} is expected to be in the
+@t{strftime}-format @t{%F%T}, or a prefix thereof. Non-numerical characters are
+ignored.
 
 @deffn {Scheme Procedure} time-t->iso-date time-t
 @end deffn
 Convert a @t{time_t} value to an ISO-8601 compatible string (assuming UTC). If
-@t{time_t} is @t{#f}, return an empty string of the same length.
+@var{time_t} is @t{#f}, return an empty string of the same length.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

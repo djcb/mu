@@ -54,6 +54,22 @@
   (test-end "test-mfind"))
 
 
+(define (test-message-full)
+  (test-begin "test-message-full")
+
+  (let ((msg (cadr (mfind ""))))
+    (test-equal "Motörhead" (header msg "Subject"))
+    (test-equal "Mü <testmu@testmu.xx>" (header msg "From"))
+    (test-equal #f (header msg "Bla"))
+
+    (test-equal (string-append "\nTest for issue #38, where apparently searching for "
+			       "accented words in subject,\nto etc. fails.\n\n"
+			       "What about here? Queensrÿche. Mötley Crüe.\n\n\n")
+      (body msg))
+    (test-equal #f (body msg #:html? #t))
+
+    (test-end "test-message-full")))
+
 (define (test-misc)
   (let ((opts (options)))
     (test-assert (>= (length opts) 4))
@@ -79,6 +95,7 @@
       (test-basic)
       (test-basic-mfind)
       (test-mfind)
+      (test-message-full)
       (test-misc)
       (test-helpers)
 

@@ -17,20 +17,39 @@
 **
 */
 
+#ifndef MU_SCM_TYPES_HH
+#define MU_SCM_TYPES_HH
 
-#include "mu-scm-contact.hh"
+#include "lib/mu-store.hh"
+#include "message/mu-contact.hh"
 
-using namespace Mu::Scm;
+#include "mu-scm.hh"
 
-SCM
-Mu::Scm::to_scm(const Contact& contact)
-{
-	static SCM email{scm_from_utf8_symbol("email")};
-	static SCM name{scm_from_utf8_symbol("name")};
+namespace Mu::Scm {
 
-	SCM alist = scm_acons(email, to_scm(contact.email), SCM_EOL);
-	if (!contact.name.empty())
-		alist = scm_acons(name, to_scm(contact.name), alist);
+/**
+ * Initialize SCM/Store support.
+ *
+ * @param store a store
+ */
+void init_store(const Mu::Store& store);
 
-	return alist;
-}
+/**
+ * Initialize SCM/Message support.
+ *
+ * @param store a store
+ */
+void init_message();
+
+/**
+ * Convert a Contact to an SCM
+ *
+ * @param contact a contact
+ *
+ * @return SCM
+ */
+SCM to_scm(const Contact& contact);
+
+} // Mu::Scm
+
+#endif /*MU_SCM_TYPES_HH*/
