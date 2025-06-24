@@ -312,7 +312,7 @@ if not get_option('scm').disabled() and guile_dep.found()
   subdir('scm')
 else
   # dummy-dep.
-  mu_scm_dep = declare_dependency('', required:false)
+  mu_scm_dep = declare_dependency()
 endif
 
 subdir('mu')
