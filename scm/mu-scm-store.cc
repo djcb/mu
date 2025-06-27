@@ -30,71 +30,72 @@ static bool initialized;
 }
 
 static const Store&
-to_store(SCM scm)
+to_store(SCM scm, const char *func, int pos)
 {
-	scm_assert_foreign_object_type(store_type, scm);
+	if (!SCM_IS_A_P(scm, store_type))
+		throw ScmError{ScmError::Id::WrongType, func, pos, scm, "store"};
+
 	return *reinterpret_cast<Store*>(scm_foreign_object_ref(scm, 0));
 }
 
 static SCM
-subr_mcount(SCM store_scm)
-{
-	return to_scm(to_store(store_scm).size());
+subr_mcount(SCM store_scm) try {
+	return to_scm(to_store(store_scm, "mcount", 1).size());
+} catch (const ScmError& err) {
+	err.throw_scm();
 }
 
 static SCM
-subr_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_scm, SCM max_results_scm)
-{
+subr_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_scm, SCM max_results_scm) try {
+
 	SCM contacts{SCM_EOL};
-	const auto pattern{from_scm<std::string>(pattern_scm)};
-	const auto personal{from_scm<bool>(personal_scm)};
-	const auto after{from_scm_with_default(after_scm, 0)};
-
+	const auto pattern{from_scm<std::string>(pattern_scm, "cfind", 2)};
+	const auto personal{from_scm<bool>(personal_scm, "cfind", 3)};
+	const auto after{from_scm_with_default(after_scm, 0, "cfind", 4)};
 	// 0 means "unlimited"
-	const size_t maxnum = from_scm_with_default(max_results_scm, 0U);
+	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, "cfind", 5);
 
-	to_store(store_scm).contacts_cache().for_each(
+	to_store(store_scm, "cfind", 1).contacts_cache().for_each(
 		[&](const auto& contact)->bool {
 			contacts = scm_append_x(scm_list_2(contacts, scm_list_1(to_scm(contact))));
 			return true;
 		}, pattern, personal, after, maxnum);
+
 	return contacts;
+} catch (const ScmError& scm_err) {
+	scm_err.throw_scm();
 }
 
 static Field::Id
-to_sort_field_id(SCM field)
+to_sort_field_id(SCM field, const char *func, int pos)
 {
 	if (scm_is_false(field))
 		return Field::Id::Date;
 
-	const auto sym{from_scm<std::string>(scm_symbol_to_string(field))};
+	const auto sym{from_scm<std::string>(scm_symbol_to_string(field), func, pos)};
 	if (const auto field_opt{field_from_name(sym)}; !field_opt) {
-		raise_error("invalid symbol", "mfind",
-			    "expected sort-field symbol, but got {}", sym);
-		return Field::Id::Date;
+		throw ScmError{ScmError::Id::WrongType, func, pos, field, "sort-field-symbol"};
 	} else
 		return field_opt->id;
 }
 
 static SCM
 subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
-	  SCM sort_field_scm, SCM reverse_scm, SCM max_results_scm)
-{
-	const auto& store{to_store(store_scm)};
-	const auto query{from_scm<std::string>(query_scm)};
-	const auto related(from_scm<bool>(related_scm));
-	const auto skip_dups(from_scm<bool>(skip_dups_scm));
-	const auto reverse(from_scm<bool>(reverse_scm));
+	  SCM sort_field_scm, SCM reverse_scm, SCM max_results_scm) try {
 
-	SCM_ASSERT_TYPE(scm_is_false(sort_field_scm) || scm_is_symbol(sort_field_scm),
-			sort_field_scm, SCM_ARG5, __func__, "symbol or #f");
+	const auto& store{to_store(store_scm, "mfind", 1)};
+	const auto query{from_scm<std::string>(query_scm, "mfind", 2)};
+	const auto related(from_scm<bool>(related_scm, "mfind", 3));
+	const auto skip_dups(from_scm<bool>(skip_dups_scm, "mfind", 4));
 
-	const auto sort_field_id = to_sort_field_id(sort_field_scm);
+	if (!scm_is_false(sort_field_scm) && !scm_is_symbol(sort_field_scm))
+		throw ScmError{ScmError::Id::WrongType, "mfind", 5, sort_field_scm, "#f or sort-field-symbol"};
+
+	const auto sort_field_id = to_sort_field_id(sort_field_scm, "mfind", 5);
+	const auto reverse(from_scm<bool>(reverse_scm, "mfind", 6));
 
 	// 0 means "unlimited"
-	const size_t maxnum = from_scm_with_default(max_results_scm, 0U);
-
-	// XXX date/reverse/maxnum
+	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, "mfind", 7);
 
 	const QueryFlags qflags = QueryFlags::SkipUnreadable |
 		(skip_dups ? QueryFlags::SkipDuplicates : QueryFlags::None) |
@@ -105,7 +106,8 @@ subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
 	std::lock_guard lock{store.lock()};
 	const auto qres = store.run_query(query, sort_field_id, qflags, maxnum);
 
-	SCM_ASSERT(qres, query_scm, SCM_ARG1, __func__);
+	if (!qres)
+		throw ScmError{ScmError::Id::WrongArg, "mfind", 2, query_scm, ""};
 
 	for (const auto& mi: *qres) {
 		if (auto plist{mi.document()->get_data()}; plist.empty())
@@ -117,8 +119,9 @@ subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
 	}
 
 	return msgs;
+} catch (const ScmError& err) {
+	err.throw_scm();
 }
-
 static void
 init_subrs()
 {

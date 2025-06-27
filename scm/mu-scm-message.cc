@@ -41,9 +41,11 @@ static MessageMap message_map;
 }
 
 static const Message&
-to_message(SCM scm)
+to_message(SCM scm, const char *func, int pos)
 {
-	scm_assert_foreign_object_type(message_type, scm);
+	if (!SCM_IS_A_P(scm, message_type))
+		throw ScmError{ScmError::Id::WrongType, func, pos, scm, "mesagestore"};
+
 	return *reinterpret_cast<Message*>(scm_foreign_object_ref(scm, 0));
 }
 
@@ -58,8 +60,7 @@ finalize_message(SCM scm)
 }
 
 static SCM
-subr_message_object_make(SCM message_path_scm)
-{
+subr_message_object_make(SCM message_path_scm) try {
 	// message objects eat fds, tickle the gc... letting it handle it
 	// automatically is not soon enough.
 	if (message_map.size() >= 0.8 * max_message_map_size)
@@ -70,48 +71,49 @@ subr_message_object_make(SCM message_path_scm)
 	// qttempt to give an good error message rather then getting something
 	// from GMime)
 	if (message_map.size() >= max_message_map_size)
-		raise_error("failure", "message-object",
-			    "too many open messages");
+		throw ScmError{"make-message", "too many open messages"};
 
 	// if we already have the message in our map, return it.
-	auto path{from_scm<std::string>(message_path_scm)};
+	auto path{from_scm<std::string>(message_path_scm, "make-message", 1)};
 	if (const auto it = message_map.find(path); it != message_map.end())
 		return it->second.foreign_object;
 
 	// don't have it yet; attempt to create one
-	if (auto res{Message::make_from_path(path)}; !res) {
-		raise_error("failure", "message-object",
-			    "failed to create message from {}: {}", path, res.error());
-		return SCM_BOOL_F;
-	} else {
+	if (auto res{Message::make_from_path(path)}; !res)
+		throw ScmError{"make-message", "failed to create message"};
+	else {
 		// create a new object, store it in our map and return the foreign ptr.
 		auto it = message_map.emplace(std::move(path), std::move(*res));
 		return it.first->second.foreign_object = scm_make_foreign_object_1(
 			message_type, const_cast<Message*>(&it.first->second.message));
 	}
+} catch (const ScmError& err) {
+	err.throw_scm();
 }
 
 static SCM
-subr_message_body(SCM message_scm, SCM html_scm)
-{
-	const auto& message{to_message(message_scm)};
-	const auto html{from_scm<bool>(html_scm)};
+subr_message_body(SCM message_scm, SCM html_scm) try {
+	const auto& message{to_message(message_scm, "body", 1)};
+	const auto html{from_scm<bool>(html_scm, "message-body", 2)};
 	if (const auto body{html ? message.body_html() : message.body_text()}; body)
 		return to_scm(*body);
 	else
 		return SCM_BOOL_F;
+} catch (const ScmError& err) {
+	err.throw_scm();
 }
 
 static SCM
-subr_message_header(SCM message_scm, SCM field_scm)
-{
-	const auto& message{to_message(message_scm)};
-	const auto field{from_scm<std::string>(field_scm)};
+subr_message_header(SCM message_scm, SCM field_scm) try {
+	const auto& message{to_message(message_scm, "header", 1)};
+	const auto field{from_scm<std::string>(field_scm, "message-header", 2)};
 
 	if (const auto val{message.header(field)}; val)
 		return to_scm(*val);
 	else
 		return SCM_BOOL_F;
+} catch (const ScmError& err) {
+	err.throw_scm();
 }
 
 static void

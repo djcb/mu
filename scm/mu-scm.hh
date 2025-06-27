@@ -74,6 +74,55 @@ namespace Mu::Scm {
 		std::is_array_v<T> &&
 		std::is_same_v<std::remove_extent_t<T>, char>;
 
+
+	/**
+	 * C++ Exception to capture an SCM exception
+	 *
+	 * An ScmError is a C++ exception that captures the information for a
+	 * Scm exception to be thrown later at some convenient moment (_after_
+	 * an orderly finishing of the block, so DTORs etc can run.)
+	 */
+	struct ScmError {
+		enum struct Id { WrongType, WrongArg, Error };
+		ScmError(Id id, const char *subr, int pos, SCM bad_val,
+			 const char *expected):
+			id{Id::WrongType}, subr{subr}, pos(pos), bad_val{bad_val},
+			expected{expected} {}
+		ScmError(const char *subr, const char *msg):
+			id{Id::Error}, subr{subr}, msg{msg} {}
+
+		/**
+		 * This will do a "non-local exit", ie. does not return.
+		 *
+		 */
+		[[noreturn]] void throw_scm() const {
+			/* Enforce exhaustive switch (do _not_ add a default case) */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error   "-Wswitch"
+			switch(id) {
+			case Id::WrongType:
+			case Id::WrongArg:
+				scm_wrong_type_arg_msg(subr, pos, bad_val, expected);
+				break;
+			case Id::Error:
+				scm_misc_error(subr, msg, SCM_BOOL_F);
+				break;
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic pop
+			}
+			throw; // never reached, just to appease compiler.
+		}
+
+	private:
+		const Id id;
+		const char *subr{};
+		int pos;
+		SCM bad_val;
+		const char *expected;
+		const char *msg{};
+	};
+
+
 	/**
 	 * Make SCM symbol from string-like value
 	 *
@@ -98,34 +147,43 @@ namespace Mu::Scm {
 	/**
 	 * Get some C++ value from an SCM object, generically.
 	 *
+	 * This throws ScmError in case of any errors.
+	 *
 	 * @param ARG some SCM object
+	 * @param func function where this is used
+	 * @param pos argument number (starting from 1)
+	 * @param expected the expected type
 	 *
 	 * @return C++ value
 	 */
 	template<typename T>
-	T from_scm(SCM ARG) {
+	T from_scm(SCM ARG, const char *func, int pos) {
+		const auto ensure=[&](bool pred, SCM ARG, const char *expected) {
+			if (!pred)
+				throw ScmError{ScmError::Id::WrongType, func, pos, ARG, expected};
+		};
 		using Type = std::remove_const_t<T>; // *not* std::remove_const
 		if constexpr (std::is_same_v<Type, std::string>) {
-			SCM_ASSERT(scm_string_p(ARG), ARG, SCM_ARG1, __func__);
+			ensure(scm_string_p(ARG), ARG, "string");
 			auto str{scm_to_utf8_string(ARG)};
 			std::string res{str};
 			::free(str);
 			return res;
 		} else if constexpr (std::is_same_v<Type, char>) {
-			SCM_ASSERT(scm_char_p(ARG), ARG, SCM_ARG1, __func__);
+			ensure(scm_char_p(ARG), ARG, "character");
 			return scm_to_char(ARG);
 		} else if constexpr (std::is_same_v<Type, bool>) {
-			SCM_ASSERT(scm_boolean_p(ARG), ARG, SCM_ARG1, __func__);
+			ensure(scm_boolean_p(ARG), ARG, "bool");
 			return scm_to_bool(ARG);
 		} else if constexpr (std::is_same_v<Type, int>) {
-			SCM_ASSERT(scm_is_signed_integer(ARG, std::numeric_limits<int>::min(),
+			ensure(scm_is_signed_integer(ARG, std::numeric_limits<int>::min(),
 							   std::numeric_limits<int>::max()),
-				   ARG, SCM_ARG1, __func__);
+				   ARG, "integer");
 			return scm_to_int(ARG);
 		} else if constexpr (std::is_same_v<Type, uint>) {
-			SCM_ASSERT(scm_is_unsigned_integer(ARG, std::numeric_limits<uint>::min(),
+			ensure(scm_is_unsigned_integer(ARG, std::numeric_limits<uint>::min(),
 					   std::numeric_limits<uint>::max()),
-				   ARG,  SCM_ARG1, __func__);
+				   ARG,  "unsigned");
 			return scm_to_uint(ARG);
 		} else if constexpr (std::is_same_v<Type, SCM>) {
 			return ARG;
@@ -143,8 +201,8 @@ namespace Mu::Scm {
 	 * @return value
 	 */
 	template<typename T>
-	T from_scm_with_default(SCM ARG, const T default_value) {
-		return (scm_is_bool(ARG) && scm_is_false(ARG)) ? default_value : from_scm<T>(ARG);
+	T from_scm_with_default(SCM ARG, const T default_value,  const char *func, int pos) {
+		return (scm_is_bool(ARG) && scm_is_false(ARG)) ? default_value : from_scm<T>(ARG, func, pos);
 	}
 
 
@@ -203,25 +261,17 @@ namespace Mu::Scm {
 		return alist_add(res, std::forward<KeyVals>(keyvals)...);
 	}
 
-	/**
-	 * Make an SCM error
-	 *
-	 * @param err name of the error
-	 * @param subr function name
-	 * @param frm... args format string
-	 *
-	 * @return an error (type)
-	 */
-	template<typename...T>
-	void raise_error(const std::string& err,
-			 const std::string& subr,
-			 fmt::format_string<T...> frm, T&&... args) noexcept {
-		static SCM mu_scm_error = scm_from_utf8_symbol("mu-scm-error");
-		scm_error(mu_scm_error,
-			  subr.c_str(),
-			  fmt::format(frm, std::forward<T>(args)...).c_str(),
-			  SCM_BOOL_F, SCM_BOOL_F);
+	//template<scm_t_catch_body Func, scm_t_catch_handler Handler>
+	static inline SCM try_scm(scm_t_catch_body func, scm_t_catch_handler handler) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+		return scm_internal_catch(
+			SCM_BOOL_F,
+			func, SCM_BOOL_F,
+			handler, SCM_BOOL_F);
+#pragma GCC diagnostic pop
 	}
+
 
 	/**@}*/
 }
