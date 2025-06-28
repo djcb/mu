@@ -602,7 +602,7 @@ the correct column for display."
                             sum w
                             until (equal f field))))
       (setq val (string-trim-right val))
-      (if (> width (length val))
+      (if (> width (string-width val))
           (setq val (concat val " "))
         (setq val
               (concat
