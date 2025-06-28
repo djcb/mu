@@ -79,6 +79,12 @@
 		  "20051209233303.GA13812@gauss.org" "439B41ED.2080402@euler.org"
 		  "439A1E03.3090604@euler.org" "20051211184308.GB13513@gauss.org")
       (references msg)))
+
+    (let ((msg (car (mfind "subject:\"gcc include search order\""))))
+      (test-equal "gcc include search order" (subject msg))
+      (test-equal "klub" (header msg "precedence"))
+      (test-equal "gcc-help.gcc.gnu.org" (mailing-list msg))
+      (test-equal #f (references msg)))
   (test-end "test-message-more"))
 
 (define (test-options)

@@ -33,7 +33,6 @@
   sexp
 
   date
-  iso-date
   last-change
 
   message-id
@@ -42,6 +41,7 @@
   subject
 
   references
+  mailing-list
 
   language
   size
@@ -222,6 +222,10 @@ reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
   (find-field message ':references))
+
+(define-method (mailing-list (message <message>))
+  "Get the mailing-list id for MESSAGE or #f if not available."
+  (find-field message ':list))
 
 ;;  Flags.
 

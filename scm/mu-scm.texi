@@ -630,11 +630,24 @@ Get the list of references (message-ids of related messages) for this message.
 This combines the @t{References} and @t{In-Reply-To} fields, from oldest to the
 immediate parent. Returns @code{#f} if there are no references.
 
+For example:
 @lisp
 (references msg)
 => ("439C1136.90504@@euler.org" "4399DD94.5070309@@euler.org"
     "20051209233303.GA13812@@gauss.org" "439B41ED.2080402@@euler.org"
     439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
+@end lisp
+
+
+@deffn {Scheme Procedure} mailing-list message
+@end deffn
+Get the mailing-list id for this message (corresponding with the @t{List-Id:}
+field), or @code{#f} if there is none.
+
+For example:
+@lisp
+(mailing-list msg)
+=> "gnu-emacs-sources.gnu.org"
 @end lisp
 
 @c @deffn {Scheme Procedure} sexp message
