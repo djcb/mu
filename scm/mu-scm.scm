@@ -41,6 +41,8 @@
   priority
   subject
 
+  references
+
   language
   size
 
@@ -201,7 +203,7 @@ A symbol, either 'high, 'low or 'normal, or #f if not found."
   (find-field message ':priority))
 
 (define-method (language (message <message>))
-  "Get the ISO-639-1 language code for the message as a symbol, if detected.
+  "Get the ISO-639-1 language code for the MESSAGE as a symbol, if detected.
 Return #f otherwise."
   (let ((lang (find-field message ':language)))
     (if lang
@@ -210,13 +212,21 @@ Return #f otherwise."
 ;; if-let would be nice!
 
 (define-method (size (message <message>))
-  "Get the size of the message in bytes or #f if not available."
+  "Get the size of the MESSAGE in bytes or #f if not available."
   (find-field message ':size))
+
+(define-method (references (message <message>))
+  "Get the list of reference of MESSAGE or #f if not available.
+ with the oldest first and the direct parent as the last one. Note, any
+reference (message-id) will appear at most once, duplicates and
+fake-message-id (see impls) are filtered out. If there are no references, return
+#f."
+  (find-field message ':references))
 
 ;;  Flags.
 
 (define-method (flags (message <message>))
-  "Get the size of the message in bytes or #f if not available."
+  "Get the size of the MESSAGE in bytes or #f if not available."
   (find-field message ':flags))
 
 (define-method (flag? (message <message>) flag)

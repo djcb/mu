@@ -70,13 +70,26 @@
 
     (test-end "test-message-full")))
 
-(define (test-misc)
+(define (test-message-more)
+  (test-begin "test-message-more")
+  (let ((msg (car (mfind "to:dfgh@floppydisk.nl"))))
+    (test-equal "Re: xyz" (subject msg))
+    (test-equal "Mozilla Thunderbird 1.0.7 (X11/20051010)" (header msg "User-Agent"))
+    (test-equal '("439C1136.90504@euler.org" "4399DD94.5070309@euler.org"
+		  "20051209233303.GA13812@gauss.org" "439B41ED.2080402@euler.org"
+		  "439A1E03.3090604@euler.org" "20051211184308.GB13513@gauss.org")
+      (references msg)))
+  (test-end "test-message-more"))
+
+(define (test-options)
+  (test-begin "test-options")
   (let ((opts (options)))
     (test-assert (>= (length opts) 4))
     (test-equal (assoc-ref opts 'quiet) #f)
     (test-equal (assoc-ref opts 'debug) #f)
     (test-equal (assoc-ref opts 'verbose) #f)
-    (test-equal (assoc-ref opts 'muhome) #f)))
+    (test-equal (assoc-ref opts 'muhome) #f))
+    (test-end "test-options"))
 
 (define (test-helpers)
   (test-begin "test-helpers")
@@ -96,7 +109,8 @@
       (test-basic-mfind)
       (test-mfind)
       (test-message-full)
-      (test-misc)
+      (test-message-more)
+      (test-options)
       (test-helpers)
 
       (test-end "mu-scm-tests")
