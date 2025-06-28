@@ -41,6 +41,8 @@
   subject
 
   references
+  thread-id
+
   mailing-list
 
   language
@@ -222,6 +224,15 @@ reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
   (find-field message ':references))
+
+(define-method (thread-id (message <message>))
+  "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
+If neither are available, return #f.
+This is method is useful to determine the thread a message is in."
+  (let ((refs (references message)))
+    (if (and refs (not (null? refs)))
+	(car refs)
+	(message-id message))))
 
 (define-method (mailing-list (message <message>))
   "Get the mailing-list id for MESSAGE or #f if not available."

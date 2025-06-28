@@ -638,6 +638,24 @@ For example:
     439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
 @end lisp
 
+@deffn {Scheme Procedure} thread-id message
+@end deffn
+Get the oldest reference for the message or its message-id if there is none.
+This is useful to identify the thread some message lives in.
+
+For example:
+@lisp
+(thread-id msg)
+=> "439C1136.90504@@euler.org"
+@end lisp
+
+For example:
+@lisp
+(references msg)
+=> ("439C1136.90504@@euler.org" "4399DD94.5070309@@euler.org"
+    "20051209233303.GA13812@@gauss.org" "439B41ED.2080402@@euler.org"
+    439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
+@end lisp
 
 @deffn {Scheme Procedure} mailing-list message
 @end deffn

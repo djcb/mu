@@ -78,13 +78,16 @@
     (test-equal '("439C1136.90504@euler.org" "4399DD94.5070309@euler.org"
 		  "20051209233303.GA13812@gauss.org" "439B41ED.2080402@euler.org"
 		  "439A1E03.3090604@euler.org" "20051211184308.GB13513@gauss.org")
-      (references msg)))
+      (references msg))
+      (test-equal "439C1136.90504@euler.org" (thread-id msg)))
 
-    (let ((msg (car (mfind "subject:\"gcc include search order\""))))
-      (test-equal "gcc include search order" (subject msg))
-      (test-equal "klub" (header msg "precedence"))
-      (test-equal "gcc-help.gcc.gnu.org" (mailing-list msg))
-      (test-equal #f (references msg)))
+  (let ((msg (car (mfind "subject:\"gcc include search order\""))))
+    (test-equal "gcc include search order" (subject msg))
+    (test-equal "klub" (header msg "precedence"))
+    (test-equal "gcc-help.gcc.gnu.org" (mailing-list msg))
+    (test-equal #f (references msg))
+    (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (message-id msg))
+    (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (thread-id msg)))
   (test-end "test-message-more"))
 
 (define (test-options)
