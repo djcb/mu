@@ -828,7 +828,7 @@ Server::Private::do_index(const Indexer::Config& conf)
 {
 	StopWatch sw{"indexing"};
 	indexer().start(conf);
-	std::chrono::milliseconds sleep_duration(125); // initial 20ms
+	std::chrono::milliseconds sleep_duration(125); // initial 125ms
 	while (indexer().is_running()) {
 		std::this_thread::sleep_for(sleep_duration);
 		output_sexp(get_stats(indexer().progress(), "running"),
