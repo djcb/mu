@@ -262,12 +262,14 @@ just the query-string.
 
 If the special shortcut \"o\" (for _o_ther) is used, or if there
 a no single-key elements in (mu4e-maildir-shortcuts), let user
-choose from all maildirs under `mu4e-maildir'.
+choose from all maildirs under `mu4e-maildir'. This is only
+available if mu4e is already running.
 
 The names of the maildirs are displayed in the minibuffer,
 suffixed with the short version of the unread counts, as per
 `mu4e--query-item-display-short-counts'."
-  (let* ((mdirs
+  (let* ((other-dirs (mu4e-get-maildirs))
+         (mdirs
           (seq-map
            (lambda (md)
              (let* ((qitem (mu4e--query-item-for-maildir-shortcut md))
@@ -280,14 +282,16 @@ suffixed with the short version of the unread counts, as per
                         unreads) md)))
            (mu4e-filter-single-key (mu4e-maildir-shortcuts))))
          ;; special case: handle pseudo-maildir 'other
-         (mdirs (and mdirs (append mdirs '(("oOther..." . other)))))
+         (mdirs (if (and mdirs other-dirs)
+                    (append mdirs '(("oOther..." . other)))
+                  mdirs))
          (chosen (and mdirs (mu4e-read-option prompt mdirs)))
          ;; if chosen nothing or other, ask for more.
          (chosen (if (or (not chosen) (eq chosen 'other))
                      (list :maildir
                            (substring-no-properties
                             (funcall mu4e-completing-read-function prompt
-                                     (mu4e-get-maildirs) nil nil
+                                     other-dirs nil nil
                                      mu4e-maildir-initial-input)))
                    chosen)))
     ;; return either the maildir (as a string), or the corresponding
