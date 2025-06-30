@@ -29,6 +29,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
+
+#ifdef HAVE_LIBURING
+#include <liburing.h>
+#endif
 
 #include <glib.h>
 
@@ -39,6 +44,7 @@
 using namespace Mu;
 
 using Mode = Scanner::Mode;
+using StructStat = struct stat;
 
 /*
  * dentry->d_ino, dentry->d_type may not be available
@@ -78,7 +84,7 @@ struct Scanner::Private {
 	void stop();
 
 	bool process_dentry(const std::string& path, const dentry_t& dentry,
-			    bool is_maildir);
+			    bool is_maildir, struct stat statbuf);
 	bool process_dir(const std::string& path, bool is_maildir);
 
 	int lazy_stat(const char *fullpath, struct stat *stat_buf,
@@ -92,6 +98,28 @@ struct Scanner::Private {
 	std::atomic<bool>       running_{};
 	std::mutex		lock_;
 };
+
+static bool
+try_lazy_stat(struct stat* stat_buf, const dentry_t& dentry, bool maildirs_only_mode)
+{
+#if HAVE_DIRENT_D_TYPE
+	if (maildirs_only_mode) {
+		switch (dentry.d_type) {
+		case DT_REG:
+			stat_buf->st_mode = S_IFREG;
+			return true;
+		case DT_DIR:
+			stat_buf->st_mode = S_IFDIR;
+			return true;
+		default:
+			/* LNK is inconclusive; we need a stat. */
+			break;
+		}
+	}
+#endif /*HAVE_DIRENT_D_TYPE*/
+
+	return false;
+}
 
 static bool
 ignore_dentry(const dentry_t& dentry)
@@ -129,6 +157,139 @@ ignore_dentry(const dentry_t& dentry)
 	return false; /* don't ignore */
 }
 
+#ifdef HAVE_LIBURING
+template<typename F>
+static bool
+try_bulk_stat_io_uring(const std::vector<dentry_t>& entries,
+		       const int directory_fd,
+		       const bool maildirs_only_mode,
+		       F&& fn)
+{
+	static struct io_uring ring;
+	static bool ring_initialized = false;
+	static bool ring_failed = false;
+	static bool ring_in_use = false;
+	static const size_t max_ring_batch_size = 16384;
+
+	if (ring_failed) {
+		return false;
+	}
+
+	if (ring_in_use) {
+		mu_warning("io_uring already in use: using regular stat");
+		return false;
+	}
+
+	if (!ring_initialized) {
+		int ret;
+		if (getenv("MU_DISABLE_IO_URING") &&
+		    !strcmp(getenv("MU_DISABLE_IO_URING"), "1")) {
+			ret = -ENOSYS;
+		} else {
+			ret = io_uring_queue_init(max_ring_batch_size, &ring,
+						  IORING_SETUP_SINGLE_ISSUER |
+						  IORING_SETUP_COOP_TASKRUN);
+		}
+
+		if (ret < 0) {
+			ring_failed = true;
+			mu_warning("failed to initialize io_uring: {}", g_strerror(-ret));
+			return false;
+		}
+
+		ring_initialized = true;
+	}
+
+	bool success = false;
+	auto sg = ScopeGuard([&]{
+		ring_in_use = false;
+		if(!success) {
+			io_uring_queue_exit(&ring);
+			ring_initialized = false;
+		}
+	});
+
+	const dentry_t* const dentries = entries.data();
+	const size_t n_entries = entries.size();
+	size_t n_processed = 0;
+	size_t n_success = 0;
+
+	const size_t max_batch_size = std::min(max_ring_batch_size, n_entries);
+
+	std::vector<struct statx> statx_bufs;
+	statx_bufs.resize(max_batch_size);
+
+	while (n_processed < n_entries) {
+		const size_t remaining = n_entries - n_processed;
+		const size_t batch_size = std::min(remaining, max_batch_size);
+		size_t n_to_await = 0;
+
+		for (size_t batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+			const size_t dentry_idx = n_processed + batch_idx;
+			struct stat stat_buf{};
+			if (try_lazy_stat(&stat_buf,
+					  dentries[dentry_idx],
+					  maildirs_only_mode)) {
+				fn(&dentries[dentry_idx], stat_buf);
+				n_success += 1;
+				continue;
+			}
+
+			struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
+			g_assert_true(sqe);
+			io_uring_sqe_set_data(sqe, reinterpret_cast<void*>(batch_idx));
+			io_uring_prep_statx(sqe,
+					    directory_fd,
+					    dentries[dentry_idx].d_name.c_str(),
+					    0,
+					    STATX_TYPE | STATX_MODE | STATX_SIZE | STATX_CTIME,
+					    &statx_bufs[batch_idx]);
+			n_to_await += 1;
+		}
+
+		if (n_to_await > 0) {
+			int ret = io_uring_submit(&ring);
+			if (ret < 0) {
+				mu_warning("io_uring submit failed: {}", g_strerror(-ret));
+				ring_failed = true;
+				return false;
+			}
+		}
+
+		for (size_t i = 0; i < n_to_await; ++i) {
+			struct io_uring_cqe *cqe;
+			int ret = io_uring_wait_cqe(&ring, &cqe);
+			if (ret < 0) {
+				mu_warning("io_uring wait failed: {}", g_strerror(-ret));
+				ring_failed = true;
+				return false;
+			}
+
+			const size_t batch_idx = reinterpret_cast<size_t>(
+				io_uring_cqe_get_data(cqe));
+			const size_t dentry_idx = batch_idx + n_processed;
+			struct stat stat_buf{};
+			if (cqe->res == 0) {
+				const struct statx& statx_buf = statx_bufs[batch_idx];
+				n_success += 1;
+				stat_buf.st_mode = statx_buf.stx_mode;
+				stat_buf.st_size = statx_buf.stx_size;
+				stat_buf.st_ctim.tv_sec = statx_buf.stx_ctime.tv_sec;
+				stat_buf.st_ctim.tv_nsec = statx_buf.stx_ctime.tv_nsec;
+			}
+			io_uring_cqe_seen(&ring, cqe);
+			fn(&dentries[dentry_idx], stat_buf);
+		}
+
+		n_processed += batch_size;
+	}
+
+	mu_debug("used io_uring to batch {} stat calls of which {} succeeded",
+		 n_entries, n_success);
+	success = true;
+	return true;
+}
+#endif
 
 /*
  * stat() if necessary (we'd like to avoid it), which we can if we only need the
@@ -137,21 +298,9 @@ ignore_dentry(const dentry_t& dentry)
 int
 Scanner::Private::lazy_stat(const char *path, struct stat *stat_buf, const dentry_t& dentry)
 {
-#if HAVE_DIRENT_D_TYPE
-	if (maildirs_only_mode()) {
-		switch (dentry.d_type) {
-		case DT_REG:
-			stat_buf->st_mode = S_IFREG;
-			return 0;
-		case DT_DIR:
-			stat_buf->st_mode = S_IFDIR;
-			return 0;
-		default:
-			/* LNK is inconclusive; we need a stat. */
-			break;
-		}
+	if (try_lazy_stat(stat_buf, dentry, maildirs_only_mode())) {
+		return 0;
 	}
-#endif /*HAVE_DIRENT_D_TYPE*/
 
 	int res = ::stat(path, stat_buf);
 	if (res != 0)
@@ -163,7 +312,7 @@ Scanner::Private::lazy_stat(const char *path, struct stat *stat_buf, const dentr
 
 bool
 Scanner::Private::process_dentry(const std::string& path, const dentry_t& dentry,
-				 bool is_maildir)
+				 bool is_maildir, struct stat statbuf)
 {
 	if (ignore_dentry(dentry))
 		return true;
@@ -173,8 +322,8 @@ Scanner::Private::process_dentry(const std::string& path, const dentry_t& dentry
 	};
 
 	const auto fullpath{join_paths(path, dentry.d_name)};
-	struct stat statbuf{};
-	if (lazy_stat(fullpath.c_str(), &statbuf, dentry) != 0)
+	if (statbuf.st_mode == 0 &&
+	    lazy_stat(fullpath.c_str(), &statbuf, dentry) != 0)
 		return false;
 
 	if (maildirs_only_mode() && S_ISDIR(statbuf.st_mode) && dentry.d_name == "cur") {
@@ -223,6 +372,10 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 		return false;
 	}
 
+	auto sg = ScopeGuard([&]{
+		::closedir(dir);
+	});
+
 	std::vector<dentry_t> dir_entries;
 	while (running_) {
 		errno = 0;
@@ -245,18 +398,32 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 
 		break;
 	}
-	::closedir(dir);
 
 #if HAVE_DIRENT_D_INO
 	// sort by i-node; much faster on rotational (HDDs) devices and on SSDs
 	// sort is quick enough to not matter much
 	std::sort(dir_entries.begin(), dir_entries.end(),
 		  [](auto&& d1, auto&& d2){ return d1.d_ino < d2.d_ino; });
-#endif /*HAVEN_DIRENT_D_INO*/
+#endif /*HAVE_DIRENT_D_INO*/
 
-	// now process...
-	for (auto&& dentry: dir_entries)
-		process_dentry(path, dentry, is_maildir);
+	auto bound_process_dentry = [this, &path, is_maildir](
+		const dentry_t* entry, struct stat statbuf) {
+		process_dentry(path, *entry, is_maildir, statbuf);
+	};
+
+#ifdef HAVE_LIBURING
+	// Only use io_uring on maildir directories so that only one invocation at a time uses the
+	// ring --- maildirs can't contain non-maildirs.  Only maildirs should be enormous enough
+	// that io_uring is worth it anyway.
+	if (is_maildir && try_bulk_stat_io_uring(dir_entries, ::dirfd(dir),
+						 maildirs_only_mode(),
+						 bound_process_dentry)) {
+		return true;
+	}
+#endif /*HAVE_LIBURING */
+
+	for (size_t i = 0; i < dir_entries.size(); ++i)
+		bound_process_dentry(&dir_entries[i], StructStat{});
 
 	return true;
 }
