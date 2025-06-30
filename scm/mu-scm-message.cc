@@ -33,7 +33,7 @@ std::mutex map_lock;
 constexpr auto max_message_map_size{512};
 
 struct MessageObject {
-	const Message message;
+	Message message;
 	SCM foreign_object{};
 };
 using MessageMap = std::unordered_map<std::string, MessageObject>;
@@ -83,7 +83,8 @@ subr_message_object_make(SCM message_path_scm) try {
 		throw ScmError{"make-message", "failed to create message"};
 	else {
 		// create a new object, store it in our map and return the foreign ptr.
-		auto it = message_map.emplace(std::move(path), std::move(*res));
+		std::pair<std::string, MessageObject> item {path, MessageObject{std::move(*res), {}}};
+		auto it = message_map.emplace(std::move(item));
 		return it.first->second.foreign_object = scm_make_foreign_object_1(
 			message_type, const_cast<Message*>(&it.first->second.message));
 	}
