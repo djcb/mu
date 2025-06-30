@@ -828,10 +828,18 @@ Server::Private::do_index(const Indexer::Config& conf)
 {
 	StopWatch sw{"indexing"};
 	indexer().start(conf);
+	std::chrono::milliseconds sleep_duration(125); // initial 20ms
 	while (indexer().is_running()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		std::this_thread::sleep_for(sleep_duration);
 		output_sexp(get_stats(indexer().progress(), "running"),
 			    Server::OutputFlags::Flush);
+		// Exponential backoff: doubling sleep duration up to 2s
+		if (sleep_duration < std::chrono::milliseconds(2000)) {
+			sleep_duration *= 2;
+			if (sleep_duration > std::chrono::milliseconds(2000)) {
+				sleep_duration = std::chrono::milliseconds(2000);
+			}
+		}
 	}
 	output_sexp(get_stats(indexer().progress(), "complete"),
 		    Server::OutputFlags::Flush);
