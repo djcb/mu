@@ -16,72 +16,72 @@
 
 ;; Note: this Scheme code depends on being loaded as part of "mu scm"
 ;; which does so automatically. It is not a general Guile module.
-
 (define-module (mu)
   :use-module (oop goops)
   :use-module (system foreign)
   :use-module (ice-9 optargs)
   #:export (
-  ;; classes
-  <store>
+	    ;; classes
+	    <store>
 
-  mfind
-  mcount
-  cfind
+	    mfind
+	    mcount
+	    cfind
 
-  <message>
-  sexp
+	    <message>
+	    sexp
 
-  date
-  last-change
+	    date
+	    last-change
 
-  message-id
-  path
-  priority
-  subject
+	    message-id
+	    path
+	    priority
+	    subject
 
-  references
-  thread-id
+	    references
+	    thread-id
 
-  mailing-list
+	    mailing-list
 
-  language
-  size
+	    language
+	    size
 
-  ;; message flags / predicates
-  flags
-  flag?
-  draft?
-  flagged?
-  passed?
-  replied?
-  seen?
-  trashed?
-  new?
-  signed?
-  encrypted?
-  attach?
-  unread?
-  list?
-  personal?
-  calendar?
+	    ;; message flags / predicates
+	    flags
+	    flag?
+	    draft?
+	    flagged?
+	    passed?
+	    replied?
+	    seen?
+	    trashed?
+	    new?
+	    signed?
+	    encrypted?
+	    attach?
+	    unread?
+	    list?
+	    personal?
+	    calendar?
 
-  ;; contact fields
-  from
-  to
-  cc
-  bcc
+	    ;; contact fields
+	    from
+	    to
+	    cc
+	    bcc
 
-  ;; message-body
-  body
-  header
+	    ;; message-body
+	    body
+	    header
 
-  ;; misc
-  options
+	    ;; misc
+	    %options
+;;	    %preferences
 
-  ;; helpers
-  iso-date->time-t
-  time-t->iso-date))
+	    ;; helpers
+	    string->time
+	    time->string))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; some helpers for dealing with plists / alists
@@ -416,39 +416,70 @@ The pattern is mandatory; the other (keyword) arguments are optional.
 
 ;;; Misc
 
-(define (options)
-  "Get an alist with the general options this instance of \"mu\" started with.
-These are based on the command-line arguments, environment etc., see
-the mu-scm(1) manpage for details.
+;; Get an alist with the general options this instance of \"mu\" started with.
+;; These are based on the command-line arguments, environment etc., see the
+;; mu-scm(1) manpage for details.
+;;
+;; The alist maps symbols to values; a value of #f indicates that the value is at
+;; its default.
+%options ;; defined in c++
 
-The alist maps symbols to values; a value of #f indicates that the value
-is at its default."
-  %options)
+;; Alist of user-preferences.
+;;
+;; - short-date: a strftime-compatibie string for the display
+;;               format of short dates.
+;; - utc?       : whether to assume use UTC for dates/times
+(define %preferences
+  '( (short-date  . "%F %T")
+     (utc?        . #f)))
+;; XXX; not exposed yet. Perhaps we need a "fluid" here?
+
+(define (value-or-preference val key)
+  "If VAL is the symbol 'preference, return the value for KEY from %preferences.
+Otherwise, return VAL."
+  (if (eq? val 'preference)
+      (assoc-ref %preferences key)
+      val))
 
 ;;; Helpers
 
-(define* (iso-date->time-t isodate)
-  "Convert an ISO-8601 ISODATE to a number of seconds since epoch.
+(define* (string->time datestr #:key (utc? 'preference))
+  "Convert an ISO-8601-style DATESTR to a number of seconds since epoch.
+(like time_t, (current-time).
 
 ISODATE is a string with the strftime format \"%FT%T\", i.e.,
 yyyy-mm-ddThh:mm:ss or any prefix there of. The 'T', ':', '-' or any non-numeric
 characters re optional.
 
-ISODATE is assumed to represent some UTC date."
-  (let* ((tmpl "00000101000000")
-	 (isodate (string-filter char-numeric? isodate)) ;; filter out 'T' ':' '-' etc
-	 (isodate					 ;; fill out isodate
-	  (if (> (string-length tmpl) (string-length isodate))
-	      (string-append isodate (substring tmpl (string-length isodate)))
-	      isodate)))
-    ;;(format #t "~a\n" isodate)
-    (car (mktime (car (strptime "%Y%m%d%H%M%S" isodate)) "Z"))))
+UTC? determines whether ISODATE should be interpreted as an UTC time.
 
-(define-method (time-t->iso-date time-t)
-  "Convert a time_t (second-since-epoch) value TIME-T to an ISO-8601
-string for the corresponding UTC time.
+The input date format is fixed."
+ ;; XXX If not set, read the default from the %preferences variable.
+  (let* ((utc? (value-or-preference utc? 'utc?))
+	 (tmpl "00000101000000")
+	 (datestr (string-filter char-numeric? datestr)) ;; filter out 'T' ':' '-' etc
+	 (datestr					 ;; fill out datestr
+	  (if (> (string-length tmpl) (string-length datestr))
+	      (string-append datestr (substring tmpl (string-length datestr)))
+	      datestr))
+	 (sbdtime (car (strptime "%Y%m%d%H%M%S" datestr))))
+    (car (if utc?
+	     (mktime sbdtime "UTC")
+	     (mktime sbdtime)))))
 
-If TIME-T is #f, return an empty string of the same length."
-  (if time-t
-      (strftime "%FT%T" (gmtime time-t))
-      "                   "))
+
+(define* (time->string time-t #:key (format 'preference) (utc? 'preference))
+  "Convert a time_t (second-since-epoch) value TIME-T into a string.
+
+FORMAT is the strftime-compatible format-string UTC? determines whether to use
+UTC time.
+
+ If TIME-T is #f, return #f."
+;; If not specified, both are determined from %preferences ('short-date
+;; and 'utc?, respectively).
+  (let* ((format (value-or-preference format 'short-date))
+	 (utc? (value-or-preference utc? 'utc?)))
+    (if time-t
+	(let ((t (if utc? (gmtime time-t) (localtime time-t))))
+	  (strftime format t))
+	#f)))

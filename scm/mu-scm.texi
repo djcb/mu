@@ -94,6 +94,7 @@ Appendices
 
 Indices
 * Procedure Index::
+* Variable Index::
 
 @end menu
 
@@ -681,30 +682,56 @@ For example:
 @node Miscellaneous
 @section Miscellaneous
 
-@deffn {Scheme Procedure} options
-@end deffn
+@defvar %options
+@end defvar
 
-This yields an association-list (alist) of general options passed to @command{mu
-scm}. Values at @t{#f} indicate that the value is at its default.
+An association-list (alist) of general options passed to @command{mu scm} or
+their default values.
 @lisp
- (options)
+ %options
 => ((mu-home . #f) (quiet . #f) (debug . #f) (verbose . #f))
 @end lisp
+
+@c @defvar %preferences
+@c @end defvar
+
+@c An association list (alist) of user-preferences that influence interactive use.
+@c E.g., the way how certain things are displayed. The alist maps symbols to values:
+@c @itemize
+@c @item @code{short-date}
+@c a @code{strftime}-compatible string for the display format of short dates.
+@c @item @code{utc?}
+@c boolean, whether to assume UTC for dates/times, such as for @code{string->time} and @code{time->string}
+@c @end itemize
+
+@c @lisp
+@c %preferences
+@c  ((short-date-format . "%F %T") (input-utc? . #f) (output-utc? . #f))
+@c @end lisp
 
 @node Helpers
 @section Helpers
 
-@deffn {Scheme Procedure} iso-date->time-t iso-date
+@deffn {Scheme Procedure} string->time timestr [#:utc? (assoc-ref %preferences 'utc?)]
 @end deffn
-Convert some ISO-8601 compatible time-point (assuming UTC) to a
-seconds-since-epoch @t{time_t} value. @var{iso-date} is expected to be in the
-@t{strftime}-format @t{%F%T}, or a prefix thereof. Non-numerical characters are
-ignored.
+Convert some ISO-8601-style time-string to a seconds-since-epoch @t{time_t}
+value. @var{timestr} is expected to be in the @t{strftime}-format @t{%F%T}, or a
+prefix thereof. Non-numerical characters are ignored.
 
-@deffn {Scheme Procedure} time-t->iso-date time-t
+You can influence whether UTC is assumed using the optional @code{#:utc?}
+parameter. The input time/date format is fixed.
+@c which uses @code{%preferences} for its default.
+
+@deffn {Scheme Procedure} time->string
+                       [#:format (assoc-ref %preferences 'short-date)]
+                       [#:utc? (assoc-ref %preferences 'utc?)]
 @end deffn
-Convert a @t{time_t} value to an ISO-8601 compatible string (assuming UTC). If
-@var{time_t} is @t{#f}, return an empty string of the same length.
+Convert a @t{time_t} value (``seconds-since-epoch'') to a string. The optional
+@code{#:format} parameter (an @code{strftime}-compatible string) determines the
+output format, while the @code{#:utc?} determines whether to use UTC.
+@c Defaults are determined by the @code{%preferences} variable.
+
+If @var{time_t} is @t{#f}, return @code{#f}.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
@@ -715,8 +742,16 @@ Convert a @t{time_t} value to an ISO-8601 compatible string (assuming UTC). If
 @node Procedure Index
 @unnumbered Procedure Index
 
-This is an alphabetical list of all the procedures and macros in @t{mu-scm}.
+This is an alphabetical list of all the public procedures and macros in @t{mu-scm}.
 
 @printindex fn
+
+@page
+@node Variable Index
+@unnumbered Variables Index
+
+This is an alphabetical list of all the public variables @t{mu-scm}.
+
+@printindex vr
 
 @bye

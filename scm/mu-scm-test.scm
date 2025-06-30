@@ -49,7 +49,8 @@
   (let ((msg (car (mfind "" #:sort-field 'date #:reverse? #t))))
 
     (test-equal "test with multi to and cc" (subject msg) )
-    (test-equal "2016-05-15T16:57:25" (time-t->iso-date (date msg))))
+    (test-equal "2016-05-15 16:57:25"
+      (time->string (date msg) #:format "%F %T" #:utc? #t)))
 
   (test-end "test-mfind"))
 
@@ -92,7 +93,7 @@
 
 (define (test-options)
   (test-begin "test-options")
-  (let ((opts (options)))
+  (let ((opts %options))
     (test-assert (>= (length opts) 4))
     (test-equal (assoc-ref opts 'quiet) #f)
     (test-equal (assoc-ref opts 'debug) #f)
@@ -102,11 +103,22 @@
 
 (define (test-helpers)
   (test-begin "test-helpers")
-  (test-equal 1750077792 (iso-date->time-t "2025-06-16T12:43:12"))
-  (test-equal 1750075200 (iso-date->time-t "2025-06-16T12"))
+  (setenv "TZ" "Europe/Helsinki")
+  (tzset)
+  (test-equal 1750077792 (string->time "2025-06-16T15:43:12" #:utc? #f))
+  (test-equal 1750077792 (string->time "2025-06-16 12:43:12" #:utc? #t))
+  (test-equal 1750075200 (string->time "2025-06-16  12" #:utc? #t))
 
-  (test-equal "2025-06-16T12:43:12" (time-t->iso-date 1750077792))
-  (test-equal "                   " (time-t->iso-date #f))
+  (test-equal "2025-06-16 12:43:12" (time->string 1750077792 #:utc? #t))
+  (test-equal "2025-06-16 15:43:12" (time->string 1750077792 #:utc? #f))
+  (test-equal "12:43:12" (time->string 1750077792 #:utc? #t #:format "%T"))
+
+  ;; (define old-prefs %preferences)
+  ;; (define %preferences '((utc? . #t) (short-date  . "%T %F")))
+  ;; (test-equal "12:43:12 2025-06-16" (time->string 1750077792))
+  ;; (set! %preferences old-prefs)
+
+  (test-equal #f (time->string #f))
   (test-end "test-helpers"))
 
 (define* (main _ #:rest args)
