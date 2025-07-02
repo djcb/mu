@@ -19,7 +19,9 @@
 
 #include "mu-scm-types.hh"
 #include "message/mu-message.hh"
+#include "message/mu-mime-object.hh"
 #include <mutex>
+#include <cstdio>
 
 using namespace Mu;
 using namespace Mu::Scm;
@@ -39,6 +41,7 @@ struct MessageObject {
 using MessageMap = std::unordered_map<std::string, MessageObject>;
 static MessageMap message_map;
 }
+
 
 static const Message&
 to_message(SCM scm, const char *func, int pos)
@@ -60,7 +63,10 @@ finalize_message(SCM scm)
 }
 
 static SCM
-subr_message_object_make(SCM message_path_scm) try {
+subr_cc_message_make(SCM message_path_scm) try {
+
+	constexpr auto func{"cc-message-make"};
+
 	// message objects eat fds, tickle the gc... letting it handle it
 	// automatically is not soon enough.
 	if (message_map.size() >= 0.8 * max_message_map_size)
@@ -71,31 +77,37 @@ subr_message_object_make(SCM message_path_scm) try {
 	// qttempt to give an good error message rather then getting something
 	// from GMime)
 	if (message_map.size() >= max_message_map_size)
-		throw ScmError{"make-message", "too many open messages"};
+		throw ScmError{"cc-make-message", "too many open messages"};
 
 	// if we already have the message in our map, return it.
-	auto path{from_scm<std::string>(message_path_scm, "make-message", 1)};
+	auto path{from_scm<std::string>(message_path_scm, func, 1)};
 	if (const auto it = message_map.find(path); it != message_map.end())
 		return it->second.foreign_object;
 
 	// don't have it yet; attempt to create one
-	if (auto res{Message::make_from_path(path)}; !res)
-		throw ScmError{"make-message", "failed to create message"};
-	else {
+	if (auto res{Message::make_from_path(path)}; !res) {
+		mu_printerrln("{}", res.error().what());
+		throw ScmError{func, "failed to create message"};
+	} else {
 		// create a new object, store it in our map and return the foreign ptr.
-		std::pair<std::string, MessageObject> item {path, MessageObject{std::move(*res), {}}};
+		std::pair<std::string, MessageObject> item {path,
+			MessageObject{std::move(*res), {}}};
 		auto it = message_map.emplace(std::move(item));
 		return it.first->second.foreign_object = scm_make_foreign_object_1(
-			message_type, const_cast<Message*>(&it.first->second.message));
+			message_type,
+			const_cast<Message*>(&it.first->second.message));
 	}
 } catch (const ScmError& err) {
 	err.throw_scm();
 }
 
 static SCM
-subr_message_body(SCM message_scm, SCM html_scm) try {
-	const auto& message{to_message(message_scm, "body", 1)};
-	const auto html{from_scm<bool>(html_scm, "message-body", 2)};
+subr_cc_message_body(SCM message_scm, SCM html_scm) try {
+
+	constexpr auto func{"cc-message-make"};
+
+	const auto& message{to_message(message_scm, func, 1)};
+	const auto html{from_scm<bool>(html_scm, func, 2)};
 	if (const auto body{html ? message.body_html() : message.body_text()}; body)
 		return to_scm(*body);
 	else
@@ -105,9 +117,12 @@ subr_message_body(SCM message_scm, SCM html_scm) try {
 }
 
 static SCM
-subr_message_header(SCM message_scm, SCM field_scm) try {
-	const auto& message{to_message(message_scm, "header", 1)};
-	const auto field{from_scm<std::string>(field_scm, "message-header", 2)};
+subr_cc_message_header(SCM message_scm, SCM field_scm) try {
+
+	constexpr auto func{"cc-message-header"};
+
+	const auto& message{to_message(message_scm, func, 1)};
+	const auto field{from_scm<std::string>(field_scm, func, 2)};
 
 	if (const auto val{message.header(field)}; val)
 		return to_scm(*val);
@@ -117,20 +132,75 @@ subr_message_header(SCM message_scm, SCM field_scm) try {
 	err.throw_scm();
 }
 
+static SCM
+subr_cc_message_plist(SCM message_scm) try {
+
+	constexpr auto func{"cc-message-plist"};
+
+	const auto& message{to_message(message_scm, func, 1)};
+	const auto plist{"'" + message.sexp().to_string()};
+	return scm_c_eval_string(plist.c_str());
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
+
+
+/**
+ * Get a list of message's MIME-parts
+ *
+ * @param message_scm  a Message (foreign-object)
+ *
+ * @return a list of MIME parts, each is a pair
+ *   ( mime-obj . alist )
+ * where the mime-obj is the GMimeObject* as a foreign-object,
+ * and alist is an association list describing the part.
+ */
+static SCM
+subr_cc_message_parts(SCM message_scm) try {
+
+	constexpr auto func{"cc-message-parts"};
+
+	const auto& message{to_message(message_scm, func, 1)};
+	const auto& parts{message.parts()};
+
+	SCM parts_scm{SCM_EOL};
+	for (size_t idx = 0; idx != parts.size(); ++idx) {
+		auto part{parts[idx]};
+		auto mime_part{GMIME_PART(part.mime_object().object())};
+		SCM mime_part_scm{to_scm(mime_part)};
+		SCM alist_scm{to_scm(idx, parts[idx])};
+
+		parts_scm = scm_append_x(
+			scm_list_2(parts_scm,
+				   scm_list_1(
+					   scm_cons(mime_part_scm, alist_scm))));
+	}
+
+	return parts_scm;
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
 static void
 init_subrs()
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-	scm_c_define_gsubr("message-object-make", 1/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_message_object_make));
-	scm_c_define_gsubr("message-body", 2/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_message_body));
-	scm_c_define_gsubr("message-header",2/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_message_header));
+	scm_c_define_gsubr("cc-message-make", 1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_message_make));
+	scm_c_define_gsubr("cc-message-body", 2/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_message_body));
+	scm_c_define_gsubr("cc-message-header",2/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_message_header));
+	scm_c_define_gsubr("cc-message-parts",1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_message_parts));
+	scm_c_define_gsubr("cc-message-plist",1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_message_plist));
 #pragma GCC diagnostic pop
 }
-
 
 void
 Mu::Scm::init_message()

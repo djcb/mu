@@ -19,17 +19,20 @@
 (define-module (mu)
   :use-module (oop goops)
   :use-module (system foreign)
+  :use-module (rnrs bytevectors)
   :use-module (ice-9 optargs)
+  :use-module (ice-9 binary-ports)
   #:export (
-	    ;; classes
-	    <store>
-
-	    mfind
-	    mcount
-	    cfind
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	    ;; Mime-parts
+	    <mime-part>
+	    mime-part->alist
+	    make-port
+	    write-to-file
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	    ;; Message
 	    <message>
-	    sexp
+	    make-message
 
 	    date
 	    last-change
@@ -75,13 +78,26 @@
 	    body
 	    header
 
+	    mime-parts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	    ;; Store
+	    <store>
+	    mfind
+	    mcount
+	    cfind
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	    ;; Other
+
 	    ;; misc
 	    %options
-;;	    %preferences
+	    ;;	    %preferences
 
 	    ;; helpers
 	    string->time
 	    time->string))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; some helpers for dealing with plists / alists
@@ -124,6 +140,62 @@ If not found, return #f."
 				  v)))))
      plist)
     alist))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; MIME-parts
+;;
+;; A <mime-object> has two slots:
+;; partobj -->    wraps a GMimePart* as a "foreign object"
+;; alist -->      alist with information about some MIME-part
+(define-class <mime-part> ()
+  (mimepart  #:init-value #f #:init-keyword #:mimepart)
+  (alist     #:init-value #f #:init-keyword #:alist #:getter mime-part->alist))
+
+(define* (make-port mime-part #:key (content-only? #t) (decode? #t))
+  "Create a read port for MIME-PART.
+If CONTENT-ONLY? is #t, only include the contents, not headers.
+If DECODE? is #t, decode the content (from e.g., base64); in that case,
+CONTENT-ONLY? is implied to be #t."
+  (cc-mime-make-stream-port (slot-ref mime-part 'mimepart) content-only? decode?))
+
+(define* (make-output-file mime-part #:key (filename #f) (overwrite? #f))
+  "Create a port for the file to write MIME-PART to.
+
+FILENAME is the path to the file name. If not specified, use the 'filename'
+field in the mime-part and if that does not exist, use 'mime-part-<index>' with
+<index> being the number of the mime-part.
+
+OVERWRITE? specifies whether existing files by the same name or overwritten.
+Otherwise, trying to overwrite an existing file raises an error."
+  (let* ((alist (mime-part->alist mime-part))
+	(filename (or filename
+		      (assoc-ref alist 'filename)
+		      (format #f "mime-part-~d" (assoc-ref alist 'index)))))
+	;; we need an fd-based port since we want to support overwrite?
+	(open filename
+	      (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
+
+(define* (write-to-file mime-part #:key (filename #f) (overwrite? #f))
+  "Write MIME-PART to a file.
+
+FILENAME is the path to the file name. If not specified, use the 'filename'
+field in the mime-part and if that does not exist, use 'mime-part-<index>' with
+<index> being the number of the mime-part.
+
+OVERWRITE? specifies whether existing files by the same name or overwritten.
+Otherwise, trying to overwrite an existing file raises an error."
+  (let* ((input (make-port mime-part))
+	 (output (make-output-file mime-part
+				   #:filename filename #:overwrite? overwrite?))
+	 (buf (make-bytevector 4096)) ;; just a guess...
+	 (bytes 0))
+    (while (not (eof-object? bytes)) ;; XXX do this in a more elegant way.
+      (set! bytes (get-bytevector-n! input buf 0 (bytevector-length buf)))
+      (put-bytevector output buf 0 (if (eof-object? bytes) 0 bytes)))
+    (close input)
+    (close output)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Message
@@ -132,25 +204,31 @@ If not found, return #f."
 ;; plist -->      this is the message sexp cached in the database;
 ;;                for each message (for mu4e, but we reuse here)
 ;; object-->      wraps a Mu::Message* as a "foreign object"
-;;
+;; parts -->      MIME-parts
 ;; generally the plist is a bit cheaper, since the mu-message
-;; captures a file-deescriptor.
+;; captures a file-descriptor.
 
 (define-class <message> ()
+  (object #:init-value #f #:init-keyword #:object)
   (plist #:init-value #f #:init-keyword #:plist)
-  (object #:init-value #f #:init-keyword #:object))
+  (parts #:init-value #f #:init-keyword #:parts))
+
+(define (make-message path)
+  "Create a <message> from file at PATH."
+  (make <message> #:object (cc-message-make path)))
 
 (define-method (plist (message <message>))
   "Get the PLIST for this MESSAGE."
+  (when (not (slot-ref message 'plist))
+    (slot-set! message 'plist (cc-message-plist (object message))))
   (slot-ref message 'plist))
 
 (define-method (object (message <message>))
   "Get the foreign object for this MESSAGE.
-If MESSAGE does not have such an object yet, crate it from the
+If MESSAGE does not have such an object yet, create it from the
 path of the message."
   (if (not (slot-ref message 'object))
-      (slot-set! message 'object
-		 (message-object-make (path message))))
+      (slot-set! message 'object (cc-message-make (path message))))
   (slot-ref message 'object))
 
 (define-method (find-field (message <message>) field)
@@ -170,7 +248,7 @@ If LST is #f, return #f."
       (+ (ash (car lst) 16) (cadr lst))
       #f))
 
-;; Accessor for the fields
+;; Accessors for the fields
 
 (define-method (subject (message <message>))
   "Get the subject for MESSAGE or #f if not found."
@@ -335,16 +413,26 @@ not found."
   (find-contact-field message ':bcc))
 
 (define* (body message #:key (html? #f))
-  "Get the MESSAGE body or #f if not found.
+  "Get the MESSAGE body or #f if not found
 If #:html is non-#f, instead search for the HTML body.
 Requires the full message."
-  (message-body (object message) html?))
+  (cc-message-body (object message) html?))
 
 (define-method (header (message <message>) (field <string>))
   "Get the raw MESSAGE header FIELD or #f if not found.
 FIELD is case-insensitive and should not have the ':' suffix.
 Requires the full message."
-  (message-header (object message) field))
+  (cc-message-header (object message) field))
+
+(define-method (mime-parts (message <message>))
+  "Get the MIME-parts for this message.
+This is a list of <mime-part> objects."
+  (let ((msgobj (object message)))
+    (map (lambda (mimepart-alist)
+	   (make <mime-part>
+	     #:mimepart (car mimepart-alist)
+	     #:alist (cdr mimepart-alist)))
+	 (cc-message-parts msgobj))))
 
 ;; Store
 ;;
@@ -370,13 +458,13 @@ Requires the full message."
   (make-store %default-store-object))
 
 (define* (mfind query
-	       #:key
-	       (store %default-store)
-	       (related? #f)
-	       (skip-dups? #f)
-	       (sort-field 'date)
-	       (reverse? #f)
-	       (max-results #f))
+		#:key
+		(store %default-store)
+		(related? #f)
+		(skip-dups? #f)
+		(sort-field 'date)
+		(reverse? #f)
+		(max-results #f))
    "Find messages matching some query.
 
 The query is mandatory, the other (keyword) arguments are optional.
@@ -389,14 +477,14 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:max-results max. number of matches. Default: false (unlimited))."
    (map (lambda (plist)
 	  (make <message> #:plist plist))
-	(store-mfind (store-object store) query
+	(cc-store-mfind (store-object store) query
 		     related? skip-dups? sort-field reverse? max-results)))
 
 (define* (mcount
 	  #:key
 	  (store %default-store))
   "Get the number of messages."
-  (store-mcount (store-object store)))
+  (cc-store-mcount (store-object store)))
 
 (define* (cfind pattern
 		#:key
@@ -412,7 +500,7 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:personal?   only include 'personal' contacts. Default: all
     #:after       only include contacts last seen time_t: Default all
     #:max-results max. number of matches. Default: false (unlimited))."
-  (store-cfind (store-object store) pattern personal? after max-results))
+  (cc-store-cfind (store-object store) pattern personal? after max-results))
 
 ;;; Misc
 
@@ -466,7 +554,6 @@ The input date format is fixed."
     (car (if utc?
 	     (mktime sbdtime "UTC")
 	     (mktime sbdtime)))))
-
 
 (define* (time->string time-t #:key (format 'preference) (utc? 'preference))
   "Convert a time_t (second-since-epoch) value TIME-T into a string.

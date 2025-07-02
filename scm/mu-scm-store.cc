@@ -39,23 +39,25 @@ to_store(SCM scm, const char *func, int pos)
 }
 
 static SCM
-subr_mcount(SCM store_scm) try {
-	return to_scm(to_store(store_scm, "mcount", 1).size());
+subr_cc_store_mcount(SCM store_scm) try {
+	return to_scm(to_store(store_scm, "cc-store-mcount", 1).size());
 } catch (const ScmError& err) {
 	err.throw_scm();
 }
 
 static SCM
-subr_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_scm, SCM max_results_scm) try {
+subr_cc_store_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_scm, SCM max_results_scm) try {
+
+	constexpr auto func{"cc-store-cfind"};
 
 	SCM contacts{SCM_EOL};
-	const auto pattern{from_scm<std::string>(pattern_scm, "cfind", 2)};
-	const auto personal{from_scm<bool>(personal_scm, "cfind", 3)};
-	const auto after{from_scm_with_default(after_scm, 0, "cfind", 4)};
+	const auto pattern{from_scm<std::string>(pattern_scm, func, 2)};
+	const auto personal{from_scm<bool>(personal_scm, func, 3)};
+	const auto after{from_scm_with_default(after_scm, 0, func, 4)};
 	// 0 means "unlimited"
-	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, "cfind", 5);
+	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, func, 5);
 
-	to_store(store_scm, "cfind", 1).contacts_cache().for_each(
+	to_store(store_scm, func, 1).contacts_cache().for_each(
 		[&](const auto& contact)->bool {
 			contacts = scm_append_x(scm_list_2(contacts, scm_list_1(to_scm(contact))));
 			return true;
@@ -80,22 +82,24 @@ to_sort_field_id(SCM field, const char *func, int pos)
 }
 
 static SCM
-subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
+subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
 	  SCM sort_field_scm, SCM reverse_scm, SCM max_results_scm) try {
 
-	const auto& store{to_store(store_scm, "mfind", 1)};
-	const auto query{from_scm<std::string>(query_scm, "mfind", 2)};
-	const auto related(from_scm<bool>(related_scm, "mfind", 3));
-	const auto skip_dups(from_scm<bool>(skip_dups_scm, "mfind", 4));
+	constexpr auto func{"cc-store-mfind"};
+
+	const auto& store{to_store(store_scm, func, 1)};
+	const auto query{from_scm<std::string>(query_scm, func, 2)};
+	const auto related(from_scm<bool>(related_scm, func, 3));
+	const auto skip_dups(from_scm<bool>(skip_dups_scm, func, 4));
 
 	if (!scm_is_false(sort_field_scm) && !scm_is_symbol(sort_field_scm))
-		throw ScmError{ScmError::Id::WrongType, "mfind", 5, sort_field_scm, "#f or sort-field-symbol"};
+		throw ScmError{ScmError::Id::WrongType, func, 5, sort_field_scm, "#f or sort-field-symbol"};
 
-	const auto sort_field_id = to_sort_field_id(sort_field_scm, "mfind", 5);
-	const auto reverse(from_scm<bool>(reverse_scm, "mfind", 6));
+	const auto sort_field_id = to_sort_field_id(sort_field_scm, func, 5);
+	const auto reverse(from_scm<bool>(reverse_scm, func, 6));
 
 	// 0 means "unlimited"
-	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, "mfind", 7);
+	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, func, 7);
 
 	const QueryFlags qflags = QueryFlags::SkipUnreadable |
 		(skip_dups ? QueryFlags::SkipDuplicates : QueryFlags::None) |
@@ -107,7 +111,7 @@ subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
 	const auto qres = store.run_query(query, sort_field_id, qflags, maxnum);
 
 	if (!qres)
-		throw ScmError{ScmError::Id::WrongArg, "mfind", 2, query_scm, ""};
+		throw ScmError{ScmError::Id::WrongArg, func, 2, query_scm, ""};
 
 	for (const auto& mi: *qres) {
 		if (auto plist{mi.document()->get_data()}; plist.empty())
@@ -122,17 +126,19 @@ subr_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups_scm,
 } catch (const ScmError& err) {
 	err.throw_scm();
 }
+
+
 static void
 init_subrs()
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-	scm_c_define_gsubr("store-mfind", 7/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_mfind));
-	scm_c_define_gsubr("store-mcount", 1/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_mcount));
-	scm_c_define_gsubr("store-cfind", 5/*req*/, 0/*opt*/, 0/*rst*/,
-			   reinterpret_cast<scm_t_subr>(subr_cfind));
+	scm_c_define_gsubr("cc-store-mfind", 7/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_mfind));
+	scm_c_define_gsubr("cc-store-mcount", 1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_mcount));
+	scm_c_define_gsubr("cc-store-cfind", 5/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_cfind));
 #pragma GCC diagnostic pop
 }
 

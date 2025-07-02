@@ -1,6 +1,7 @@
 ;; unit tests
 
-(use-modules (mu) (srfi srfi-64))
+(use-modules (mu) (srfi srfi-64)
+	     (ice-9 textual-ports))
 
 (define (test-basic)
   (test-begin "test-basic")
@@ -47,13 +48,10 @@
 (define (test-mfind)
   (test-begin "test-mfind")
   (let ((msg (car (mfind "" #:sort-field 'date #:reverse? #t))))
-
     (test-equal "test with multi to and cc" (subject msg) )
     (test-equal "2016-05-15 16:57:25"
       (time->string (date msg) #:format "%F %T" #:utc? #t)))
-
   (test-end "test-mfind"))
-
 
 (define (test-message-full)
   (test-begin "test-message-full")
@@ -91,6 +89,49 @@
     (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (thread-id msg)))
   (test-end "test-message-more"))
 
+
+(define (test-message-parts)
+  (test-begin "test-message-parts")
+  (let* ((msg (car (mfind "flag:attach")))
+	 (parts (mime-parts msg)))
+    (test-equal 3 (length parts))
+    (test-equal
+	'(((index . 0) (content-type . "text/plain") (size . 1174))
+	  ((index . 1) (content-type . "text/x-vcard") (attachment? . #t) (size . 306)
+	   (filename . "mihailim.vcf"))
+	  ((index . 2) (content-type . "text/plain") (size . 153)))
+      (map (lambda (part) (mime-part->alist part)) parts))
+
+    (let ((port (make-port (car parts))))
+      (test-assert (port? port))
+      (test-assert (input-port? port))
+      (test-assert (not (port-closed? port)))
+      (test-equal "Marco Bambini wrote:" (get-string-n port 20)))
+
+    (test-end "test-message-parts")))
+
+(define (test-message-new)
+  (test-begin "test-message-new")
+  (let ((msg (make-message (format #f "~a/testdir2/Foo/cur/mail5" (getenv "MU_TESTDATADIR"))))
+	(tmpdir (getenv "MU_TESTTEMPDIR")))
+    (test-equal "pics for you" (subject msg))
+    (test-equal
+	'(((index . 0) (content-type . "text/plain") (size . 27))
+	  ((index . 1) (content-type . "image/jpeg") (size . 23881) (filename . "sittingbull.jpg"))
+	  ((index . 2) (content-type . "image/jpeg") (size . 21566) (filename . "custer.jpg")))
+      (map (lambda (part) (mime-part->alist part)) (mime-parts msg)))
+
+    (let* ((part (list-ref (mime-parts msg) 1))
+	   (alist (mime-part->alist part))
+	   (fname (format #f "~a/~a" tmpdir (assoc-ref alist 'filename))))
+      (write-to-file part #:filename fname)
+      (test-assert (access? fname R_OK))
+      ;; note, the 23881 is the _encoded_ size.
+      (test-equal 17674 (stat:size (stat fname))))
+
+    ;;(write-to-file (list-ref (mime-parts msg) 1))
+    (test-end "test-message-new")))
+
 (define (test-options)
   (test-begin "test-options")
   (let ((opts %options))
@@ -99,7 +140,7 @@
     (test-equal (assoc-ref opts 'debug) #f)
     (test-equal (assoc-ref opts 'verbose) #f)
     (test-equal (assoc-ref opts 'muhome) #f))
-    (test-end "test-options"))
+  (test-end "test-options"))
 
 (define (test-helpers)
   (test-begin "test-helpers")
@@ -131,6 +172,8 @@
       (test-mfind)
       (test-message-full)
       (test-message-more)
+      (test-message-parts)
+      (test-message-new)
       (test-options)
       (test-helpers)
 

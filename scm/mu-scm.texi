@@ -355,14 +355,15 @@ Example usage:
 @node Message
 @section Message
 
-A message represents the information about some e-mail message whose information
-has been extracted and store in the @t{mu} store (database).
+A message represents the information about an e-mail message. @t{mu} gets this
+information either from its database (the @t{mu} store), e.g., with @code{mfind}
+(see @xref{Store}) or by reading an email message from the file-systems with
+@code{make-message}.
 
-You can retrieve lists of @t{<message>} objects with @t{mfind} method, as
-explained in @xref{Store}. In the following, we use some message-object @t{msg},
-e.g.
+In many of the examples below we assume there is some @code{message} object,
+e.g. as retrieved through:
 @lisp
-l(define msg (car (mfind "hello")))
+(define msg (car (mfind "hello")))
 @end lisp
 
 @anchor{full-message} Many of the procedures below use the internal
@@ -370,9 +371,17 @@ representation of the message from the database; this re-uses the same
 information that @t{mu4e} uses. However, that is not sufficient for all:
 @code{body} and @code{header} need the full message. To get this, it needs to
 open the message file from the file-system. Much of this is internal to
-@t{mu-scm}, except that full-method-procedures are relatively a bit slower.
+@t{mu-scm}, except that full-method-procedures are a bit slower relatively to
+the database-only ones.
 
 @subsection Basics
+
+@deffn {Scheme Procedure} make-message path
+@end deffn
+Create a new message object from a file-system path.
+
+This is a @emph{full message}, unlike the ones you get from a store-query (i.e.,
+@code{mfind}).
 
 @deffn {Scheme Procedure} subject message
 @end deffn
@@ -438,13 +447,86 @@ If @var{#:html?} is non-@t{#f}, get the HTML-body instead.
 
 This requires the @ref{full-message,,full message}.
 
+@deffn {Scheme Procedure} message-id message
+@end deffn
+Get the message's @t{Message-ID} field, or @t{#f} if there is none.
+
+For example:
+@lisp
+(message-id msg)
+=> "87a15477-dd66-43e5-a722-81c545d6af19@@gmail.com"
+@end lisp
+
+@subsection MIME-parts
+
+Messages consist of one or more MIME-parts, which include the body, attachments
+and other parts. To get the MIME-parts for a message, you can use the
+@code{mime-parts} method on a @code{message}.
+
+@deffn {Scheme Procedure} mime-parts message
+@end deffn
+Get the MIME-parts for this message, as a list of @code{<mime-part>} objects.
+
+A MIME-parts is an object with a few methods.
+
+@deffn {Scheme Procedure} mime-part->alist mime-part
+@end deffn
+Get an association list (alist) describing the MIME part.
+
+For example:
+@lisp
+;; describe the second MIME-part of the first message with an attachment
+(mime-part->alist
+ (cadr (mime-parts
+       (car (mfind "flag:attach" #:max-results 1)))))
+=> ((filename . "emacs.png") (size . 18188) (content-type . "image/png") (index . 1))
+@end lisp
+
+Depending on the MIME-part, different fields can be present:
+@itemize
+@item @t{index}
+the index (number) of the part, 0-based
+@item @t{mime-type}
+the MIME-type of the part
+@item @t{size}
+the size of the part in bytes. For encoded parts, this is the @emph{encoded} size
+@item @t{filename} the filename (for attachments).
+This is as specified in the message, but with forward slashes and
+control-characters removed or substituted with @t{-}.
+@item @t{signed?}
+is this part (cryptographically) signed?
+@item @t{encrypted?}
+is this part encrypted?
+@end itemize
+
+@deffn {Scheme Procedure} make-port mime-part [#:content-only? #f]
+                                              [#:decode? #t]
+@end deffn
+Get a read-port for the given MIME-part. Ports are the standard mechanism for
+dealing with I/O in Guile; see its documentation for further details.
+
+If @code{content-only?} is true, only include the contents, not headers. If
+@code{decode?} is true, decode the content (from e.g., Base-64); in that
+case, @code{content-only?} is implied to be #t.
+
+
+@deffn {Scheme Procedure} write-to-file [#:filename #f] [#:overwrite? #f]
+@end deffn
+Write MIME-part to file.
+
+Use @code{filename} is the file/path to use for writing; if this is @code{#f},
+the name is taken from the @t{filename} property of the MIME-part alist. If that
+does not exist, a generic name is chosen.
+
+If @code{overwrite?} is true, overwrite existing files of the same name;
+otherwise, raise an error if the file already exists.
+
 @subsection Contacts
 
 Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain @emph{contacts}.
 @t{mu-scm} represents those as list of contact-alists, or contacts for short.
-Each contact is an alist with at least an @t{email} and optionally a @t{name}
-field. For instance:
-
+Each contact is an alist with at least an @code{email} and optionally a
+@code{name} field. For instance:
 @lisp
 (to msg)
 => (((name . "Hannibal Smith") (email . "jhs@@example.com"))

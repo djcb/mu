@@ -22,6 +22,7 @@
 
 #include "lib/mu-store.hh"
 #include "message/mu-contact.hh"
+#include "message/mu-mime-object.hh"
 
 #include "mu-scm.hh"
 
@@ -41,6 +42,12 @@ void init_store(const Mu::Store& store);
  */
 void init_message();
 
+
+/**
+ * Initialize SCM/MimeObject/Part support
+ */
+void init_mime();
+
 /**
  * Convert a Contact to an SCM
  *
@@ -49,6 +56,28 @@ void init_message();
  * @return SCM
  */
 SCM to_scm(const Contact& contact);
+
+
+/**
+ * Convert a MessagePart to an SCM (alist)
+ *
+ * @param idx index of the message-part
+ * @param part the part
+ *
+ * @return SCM
+ */
+SCM to_scm(size_t idx, const MessagePart& part);
+
+
+/**
+ * Convert a GMimePart* to an SCM (alist)
+ *
+ * @param obj a mime part
+ *
+ * @return SCM
+ */
+SCM to_scm(GMimePart *part);
+
 
 } // Mu::Scm
 

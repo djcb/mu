@@ -21,6 +21,7 @@ lib_mu_scm=static_library(
   [
     'mu-scm.cc',
     'mu-scm-message.cc',
+    'mu-scm-mime.cc',
     'mu-scm-store.cc'
   ],
   dependencies: [

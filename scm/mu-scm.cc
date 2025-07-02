@@ -62,6 +62,7 @@ init_module_mu(void* _data)
 	init_options(config->options);
 	init_store(config->store);
 	init_message();
+	init_mime();
 }
 
 static const Result<std::string>
@@ -181,6 +182,9 @@ test_scm_script()
 {
 	TempDir tempdir{};
 	const auto MuTestMaildir{ Mu::canonicalize_filename(MU_TESTMAILDIR, "/")};
+
+	::setenv("MU_TESTTEMPDIR", tempdir.path().c_str(), 1);
+
 	auto store{Store::make_new(tempdir.path(), MuTestMaildir)};
 	assert_valid_result(store);
 
@@ -207,6 +211,7 @@ int
 main(int argc, char* argv[])
 {
 	::setenv("MU_SCM_DIR", MU_SCM_SRCDIR, 1);
+	::setenv("MU_TESTDATADIR", MU_TESTDATADIR, 1);
 
 	mu_test_init(&argc, &argv);
 

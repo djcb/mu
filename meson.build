@@ -176,6 +176,7 @@ if not get_option('tests').disabled()
   config_h_data.set_quoted('LN_PROGRAM',   ln.full_path())
 
   testmaildir=join_paths(meson.current_source_dir(), 'testdata')
+  config_h_data.set_quoted('MU_TESTDATADIR',  testmaildir)
   config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
   config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
   config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
