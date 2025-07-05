@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -842,7 +842,7 @@ public:
 	 * @param path path to file
 	 * @param overwrite if true, overwrite existing file, if it bqexists
 	 *
-	 * @return size of the wrtten file, or an error.
+	 * @return size of the written file, or an error.
 	 */
 	Result<size_t> to_file(const std::string& path, bool overwrite) const noexcept;
 
@@ -1137,7 +1137,7 @@ public:
 	 * @param path path to file
 	 * @param overwrite if true, overwrite existing file, if it bqexists
 	 *
-	 * @return size of the wrtten file, or an error.
+	 * @return size of the written file, or an error.
 	 */
 	Result<size_t> to_file(const std::string& path, bool overwrite)
 		const noexcept;
