@@ -559,7 +559,12 @@ BUFNAME is the name of the buffer, and DATA is lisp-data, if any."
   "Set VAR to VAL if VAR is nil."
   `(unless ,var (setq ,var ,val)))
 
+
 ;;; Misc
+(defun mu4e--fun-val (val)
+  "If var is a function, return (funcall VAL), otherwise return VAL."
+  (if (functionp val) (funcall val) val))
+
 (defun mu4e-join-paths (directory &rest components)
   "Append COMPONENTS to DIRECTORY and return the resulting string.
 

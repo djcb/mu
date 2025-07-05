@@ -521,11 +521,12 @@ Emacs/@t{mu4e}. However, you can also do it from within
 @subsection Basics
 
 To set up mail-retrieval from within @t{mu4e}, set the variable
-@code{mu4e-get-mail-command} to the program or shell command you want to
-use for retrieving mail. You can then get your e-mail using @kbd{M-x
-mu4e-update-mail-and-index}, or @kbd{C-S-u} in all @t{mu4e}-views;
-alternatively, you can use @kbd{C-c C-u}, which may be more convenient
-if you use emacs in a terminal.
+@code{mu4e-get-mail-command} to a shell command you want to use for retrieving
+mail. It can also be a function which returns such a shell-command.
+
+You can then get your e-mail using @kbd{M-x mu4e-update-mail-and-index}, or
+@kbd{C-S-u} in all @t{mu4e}-views; alternatively, you can use @kbd{C-c C-u},
+which may be more convenient if you use emacs in a terminal.
 
 You can kill the (foreground) update process with @kbd{q}.
 
@@ -608,10 +609,9 @@ A simple setup could look something like:
   mu4e-update-interval 300)             ;; update every 5 minutes
 @end lisp
 
-A hook @code{mu4e-update-pre-hook} is available which is run right
-before starting the process. That can be useful, for example, to
-influence, @code{mu4e-get-mail-command} based on the the current
-situation (location, time of day, ...).
+To influence the details, a hook @code{mu4e-update-pre-hook} is available, which
+is called right before starting the process. It is also possible to set
+@code{mu4e-get-mail-command} to a function which returns a command.
 
 It is possible to get notifications when the indexing process does any
 updates --- for example when receiving new mail. See

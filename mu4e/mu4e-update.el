@@ -33,15 +33,20 @@
 ;;; Customization
 
 (defcustom mu4e-get-mail-command "true"
-  "Shell command for retrieving new mail.
+  "Shell command for retrieving new mail or a function.
+
 Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
-arbitrary shell-commands can be used.
+arbitrary shell-commands can be used. If it is a function, it should
+return a string specifying the same.
 
 When set to the literal string \"true\" (the default), the
 command simply finishes successfully (running the \"true\"
 command) without retrieving any mail. This can be useful when
 mail is already retrieved in another way, such as a local MDA."
   :type 'string
+  :type '(choice
+          (string :tag "Shell command")
+          (function :tag "Function that returns a string (shell command)"))
   :group 'mu4e
   :safe 'stringp)
 
@@ -105,8 +110,8 @@ running."
 
 (defvar mu4e-update-pre-hook nil
   "Hook run just *before* the mail-retrieval / database updating process starts.
-You can use this hook for example to `mu4e-get-mail-command' with
-some specific setting.")
+You can use this hook for example to update
+`mu4e-get-mail-command' with some specific setting.")
 
 (defcustom mu4e-hide-index-messages nil
   "Whether to hide the \"Indexing...\" and contacts messages."
@@ -271,9 +276,9 @@ If
 RUN-IN-BACKGROUND is non-nil (or called with prefix-argument),
 run in the background; otherwise, pop up a window."
   (let* ((process-connection-type t)
+         (cmd (mu4e--fun-val mu4e-get-mail-command))
          (proc (start-process-shell-command
-                mu4e--update-name mu4e--update-name
-                mu4e-get-mail-command))
+                mu4e--update-name mu4e--update-name cmd))
          (buf (process-buffer proc))
          (win (or run-in-background
                   (mu4e--temp-window buf mu4e--update-buffer-height))))
