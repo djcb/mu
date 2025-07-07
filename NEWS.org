@@ -281,10 +281,14 @@
    - 1.12.12: it now possible to create Emacs bookmarks for both messages
      (default) and queries. See the new variable ~mu4e-emacs-bookmark-policy~.
 
+   - 1.12.12: ~mu4e-get-mail-command~ which specifies the shell command to use for
+     getting mail, can now also be a function return that shell-command. This
+     makes it easier to use different shell commands in different situations.
+
 *** scm
 
    - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the
-     long-deprecated ~guile/~ bindings. For this is all rather new and
+     long-deprecated ~guile/~ bindings. For now, this is all rather new and
      experimental, but the basics are there.
 
 *** Contributors
