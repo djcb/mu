@@ -515,11 +515,19 @@ case, @code{content-only?} is implied to be #t.
 Write MIME-part to file.
 
 Use @code{filename} is the file/path to use for writing; if this is @code{#f},
-the name is taken from the @t{filename} property of the MIME-part alist. If that
-does not exist, a generic name is chosen.
+the name using the @code{filename} procedure.
 
 If @code{overwrite?} is true, overwrite existing files of the same name;
 otherwise, raise an error if the file already exists.
+
+
+@deffn {Scheme Procedure} filename mime-part
+@end deffn
+Determine a filename for the given MIME-part.
+
+This is either taken from the @t{filename} property of the MIME-part alist, or,
+If that does not exist, a generic name.
+
 
 @subsection Contacts
 

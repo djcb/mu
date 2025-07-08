@@ -28,6 +28,7 @@
 	    <mime-part>
 	    mime-part->alist
 	    make-port
+	    filename
 	    write-to-file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	    ;; Message
@@ -159,27 +160,33 @@ If DECODE? is #t, decode the content (from e.g., base64); in that case,
 CONTENT-ONLY? is implied to be #t."
   (cc-mime-make-stream-port (slot-ref mime-part 'mimepart) content-only? decode?))
 
-(define* (make-output-file mime-part #:key (filename #f) (overwrite? #f))
+(define-method (filename (mime-part <mime-part>))
+  "Determine the file-name for MIME-part.
+Either the 'filename' field in the mime-part and if that does not exist, use
+'mime-part-<index>' with <index> being the number of the mime-part."
+  (let ((alist (mime-part->alist mime-part)))
+    (or (assoc-ref  alist 'filename)
+	(format #f "mime-part-~d" (assoc-ref alist 'index)))))
+
+(define* (make-output-file mime-part #:key (path #f) (overwrite? #f))
   "Create a port for the file to write MIME-PART to.
 
-FILENAME is the path to the file name. If not specified, use the 'filename'
+PATH is file-name or path to the file name. If not specified, use the 'filename'
 field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 <index> being the number of the mime-part.
 
 OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
   (let* ((alist (mime-part->alist mime-part))
-	(filename (or filename
-		      (assoc-ref alist 'filename)
-		      (format #f "mime-part-~d" (assoc-ref alist 'index)))))
-	;; we need an fd-based port since we want to support overwrite?
-	(open filename
-	      (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
+	 (path (or path (filename mime-part))))
+    ;; we need an fd-based port since we want to support overwrite?
+    (open path
+	  (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
 
-(define* (write-to-file mime-part #:key (filename #f) (overwrite? #f))
+(define* (write-to-file mime-part #:key (path #f) (overwrite? #f))
   "Write MIME-PART to a file.
 
-FILENAME is the path to the file name. If not specified, use the 'filename'
+PATH is the path/filename for the file. If not specified, use the 'filename'
 field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 <index> being the number of the mime-part.
 
@@ -187,7 +194,7 @@ OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
   (let* ((input (make-port mime-part))
 	 (output (make-output-file mime-part
-				   #:filename filename #:overwrite? overwrite?))
+				   #:path path #:overwrite? overwrite?))
 	 (buf (make-bytevector 4096)) ;; just a guess...
 	 (bytes 0))
     (while (not (eof-object? bytes)) ;; XXX do this in a more elegant way.

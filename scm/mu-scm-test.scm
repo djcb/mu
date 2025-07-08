@@ -121,10 +121,14 @@
 	  ((index . 2) (content-type . "image/jpeg") (size . 21566) (filename . "custer.jpg")))
       (map (lambda (part) (mime-part->alist part)) (mime-parts msg)))
 
+    (test-equal "mime-part-0" (filename (list-ref (mime-parts msg) 0)))
+    (test-equal "sittingbull.jpg" (filename (list-ref (mime-parts msg) 1)))
+    (test-equal "custer.jpg" (filename (list-ref (mime-parts msg) 2)))
+
     (let* ((part (list-ref (mime-parts msg) 1))
 	   (alist (mime-part->alist part))
 	   (fname (format #f "~a/~a" tmpdir (assoc-ref alist 'filename))))
-      (write-to-file part #:filename fname)
+      (write-to-file part #:path fname)
       (test-assert (access? fname R_OK))
       ;; note, the 23881 is the _encoded_ size.
       (test-equal 17674 (stat:size (stat fname))))
