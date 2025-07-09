@@ -291,6 +291,8 @@
      long-deprecated ~guile/~ bindings. For now, this is all rather new and
      experimental, but the basics are there.
 
+     This requires a slightly newer gmime (3.2.8?) than the one ~mu~ requires.
+
 *** Contributors
 
     Thanks to our contributors - code committers belows, but also to everyone
