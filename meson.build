@@ -191,7 +191,15 @@ glib_dep       = dependency('glib-2.0', version: '>= 2.60')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.60')
 gio_dep        = dependency('gio-2.0', version: '>= 2.60')
 gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.60')
-gmime_dep      = dependency('gmime-3.0', version: '>= 3.2')
+gmime_dep       = dependency('gmime-3.0', version: '>= 3.2')
+
+# note: g_mime_object_write_content_to_stream is not available
+# in the gmime we still support for normal mu build.; we only need
+# for scm (see beloww)
+gmime_scm_ok = cc.has_function('g_mime_object_write_content_to_stream',
+                               prefix : '#include <gmime/gmime.h>',
+                               dependencies: gmime_dep)
+
 thread_dep     = dependency('threads')
 
 # we need Xapian 1.4
@@ -308,7 +316,8 @@ if not get_option('guile').disabled() and guile_dep.found()
 endif
 
 # this must happen _after_ subdir('lib')
-if not get_option('scm').disabled() and guile_dep.found()
+
+if not get_option('scm').disabled() and guile_dep.found() and gmime_scm_ok
   config_h_data.set('BUILD_SCM', 1)
   subdir('scm')
 else
