@@ -87,6 +87,7 @@
 	    mfind
 	    mcount
 	    cfind
+	    store->alist
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	    ;; Other
@@ -453,7 +454,8 @@ This is a list of <mime-part> objects."
 
 ;; the 'store-object' is a foreign object wrapping a const Store*.
 (define-class <store> ()
-  (store-object #:init-keyword #:store-object #:getter store-object))
+  (store-object #:init-keyword #:store-object #:getter store-object)
+  (alist #:init-value #f))
 
 ;;  not exported
 (define-method (make-store store-object)
@@ -464,6 +466,14 @@ This is a list of <mime-part> objects."
   ;; %default-store-object is defined in mu-scm-store.cc
   (make-store %default-store-object))
 
+(define* (store->alist #:key (store %default-store))
+  "Get an alist-representation for some store.
+Keyword arguments:
+    #:store       %default-store. Leave at default."
+  (when (not (slot-ref store 'alist))
+    (slot-set! store 'alist (cc-store-alist (store-object store))))
+  (slot-ref store 'alist))
+
 (define* (mfind query
 		#:key
 		(store %default-store)
@@ -472,7 +482,7 @@ This is a list of <mime-part> objects."
 		(sort-field 'date)
 		(reverse? #f)
 		(max-results #f))
-   "Find messages matching some query.
+  "Find messages matching some query.
 
 The query is mandatory, the other (keyword) arguments are optional.
 (mfind QUERY
@@ -482,10 +492,10 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:sort-field? field to sort by, a symbol. Default: date
     #:reverse?    sort in descending order (z-a)
     #:max-results max. number of matches. Default: false (unlimited))."
-   (map (lambda (plist)
-	  (make <message> #:plist plist))
-	(cc-store-mfind (store-object store) query
-		     related? skip-dups? sort-field reverse? max-results)))
+  (map (lambda (plist)
+	 (make <message> #:plist plist))
+       (cc-store-mfind (store-object store) query
+		       related? skip-dups? sort-field reverse? max-results)))
 
 (define* (mcount
 	  #:key

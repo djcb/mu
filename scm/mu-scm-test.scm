@@ -3,14 +3,18 @@
 (use-modules (mu) (srfi srfi-64)
 	     (ice-9 textual-ports))
 
-(define (test-basic)
-  (test-begin "test-basic")
+(define (test-store)
+  (test-begin "test-store")
 
   (test-equal "mcount" 19 (mcount))
   (test-equal "cfind" 29 (length (cfind "")))
   (test-equal "mfind" 19 (length (mfind "")))
 
-  (test-end "test-basic"))
+  (let ((info (store->alist)))
+    (test-equal 50000 (assoc-ref info 'batch-size))
+    (test-equal 100000000 (assoc-ref info 'max-message-size)))
+
+  (test-end "test-store"))
 
 (define (test-basic-mfind)
 
@@ -33,10 +37,8 @@
     (let ((recip (car (to msg))))
       (test-equal "Bilbo Baggins" (assoc-ref recip 'name))
       (test-equal "bilbo@anotherexample.com" (assoc-ref recip 'email)))
-
     ;; no date
     (test-assert (not (date msg)))
-
     ;; flags
     (test-equal '(unread) (flags msg))
     (test-assert (unread? msg))
@@ -171,7 +173,7 @@
     (test-with-runner runner
       (test-begin "mu-scm-tests")
 
-      (test-basic)
+      (test-store)
       (test-basic-mfind)
       (test-mfind)
       (test-message-full)

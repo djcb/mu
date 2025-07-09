@@ -260,7 +260,7 @@ few key concepts, represented in some GOOP objects and other data-structures:
 @end itemize
 
 @menu
-* Store:: the database of all information
+* Store:: where message information lives
 * Message:: inspecting individual messages
 * Miscellaneous:: other functions
 * Helpers:: some helper functions
@@ -350,6 +350,18 @@ Example usage:
 @lisp
 (mcount)
 => 140728
+@end lisp
+
+@deffn {Scheme Procedure} store->alist
+@end deffn
+Retrieve an association list (``alist'') with information about the store.
+
+Example:
+@lisp
+(store->alist)
+=> ((batch-size . 50000) (created . 1741180008) (max-message-size . 100000000)
+     (personal-addresses "djcb@@example.com" "msx@@example.com")
+     (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
 @node Message
