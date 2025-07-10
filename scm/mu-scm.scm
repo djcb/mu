@@ -102,6 +102,19 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;
+
+(define (set-documentation! symbol docstring)
+  "Set the docstring for symbol in current module to docstring.
+This is useful for symbols that do not support docstrings directly, such
+add
+  (define foo 123)
+"
+  ;; https://git.wolfsden.cz/guile-wolfsden/tree/wolfsden/documentation.scm
+  (set-object-property! (module-ref (current-module) symbol)
+			'documentation docstring))
+
 ;; some helpers for dealing with plists / alists
 (define (plist-for-each func plist)
   "Call FUNC for each key/value in the PLIST.
@@ -144,15 +157,17 @@ If not found, return #f."
     alist))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; MIME-parts
-;;
-;; A <mime-object> has two slots:
-;; partobj -->    wraps a GMimePart* as a "foreign object"
-;; alist -->      alist with information about some MIME-part
 (define-class <mime-part> ()
-  (mimepart  #:init-value #f #:init-keyword #:mimepart)
-  (alist     #:init-value #f #:init-keyword #:alist #:getter mime-part->alist))
+  (cc-mimepart  #:init-value #f #:init-keyword #:mimepart #:getter cc-mimepart)
+  (alist        #:init-value #f #:init-keyword #:alist #:getter mime-part->alist))
+
+(set-documentation!
+ '<mime-part>
+ "A <mime-part> represents the information about a message's MIME-part.
+It has a few slots:
+  - cc-mimepart: a 'foreign object' wrapping a GMimePart*
+  - alist: the association-list representation of the MIME-part.")
 
 (define* (make-port mime-part #:key (content-only? #t) (decode? #t))
   "Create a read port for MIME-PART.
@@ -205,21 +220,33 @@ Otherwise, trying to overwrite an existing file raises an error."
     (close output)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Message
-;;
-;; A <message> has two slots:
-;; plist -->      this is the message sexp cached in the database;
-;;                for each message (for mu4e, but we reuse here)
-;; object-->      wraps a Mu::Message* as a "foreign object"
-;; parts -->      MIME-parts
-;; generally the plist is a bit cheaper, since the mu-message
-;; captures a file-descriptor.
-
 (define-class <message> ()
   (object #:init-value #f #:init-keyword #:object)
   (plist #:init-value #f #:init-keyword #:plist)
   (parts #:init-value #f #:init-keyword #:parts))
+(set-documentation!
+ '<message>
+ "A <message> represents the information about a message.
+
+Exactly what information depends on how the object came to be;
+these are the slots:
+
+- cc-message: this is a foreign-object representing the mu
+  message object, and needs to be passed to some 'cc-' methods.
+- parts: a list of <mime-part> objects
+- plist: this is an Emacs-style property list which is cached
+  for each message in the store; this was originally added
+  for use in mu4e, but we re-use it here.
+- alist: an association list; this is just more 'scheme-like'
+  version of the plist, it is created on-demand (message->alist).
+
+A message that came from a search such as 'mfind' initially only
+has the plist, but when a message is loaded from file, either
+through make-message or by calling a function that needs a
+full message, such as header or body, the cc-message is initialized.
+
+Only having a plist is cheaper.")
 
 (define (make-message path)
   "Create a <message> from file at PATH."
@@ -457,6 +484,16 @@ This is a list of <mime-part> objects."
   (store-object #:init-keyword #:store-object #:getter store-object)
   (alist #:init-value #f))
 
+(set-documentation!
+ '<store>
+ "A <store> represents mu's message store (database).
+
+It has a few slots:
+- cc-store: this is a foreign-object for a Mu::Store*.
+  It needs to be passed to some 'cc-' methods.
+- alist: an association list; this is the cached representation
+  of some store properties.")
+
 ;;  not exported
 (define-method (make-store store-object)
   "Make a store from some STORE-OBJECT."
@@ -465,6 +502,11 @@ This is a list of <mime-part> objects."
 (define %default-store
   ;; %default-store-object is defined in mu-scm-store.cc
   (make-store %default-store-object))
+(set-documentation! '%default-store  "Default store.")
+
+(set-documentation! '%cc-default-store
+ "Default store object.
+This is defined in the C++ code, and represents a \"foreign\" Store* object.")
 
 (define* (store->alist #:key (store %default-store))
   "Get an alist-representation for some store.
@@ -528,16 +570,18 @@ The pattern is mandatory; the other (keyword) arguments are optional.
 ;; The alist maps symbols to values; a value of #f indicates that the value is at
 ;; its default.
 %options ;; defined in c++
+(set-documentation! '%options
+		    "Alist with the command-line parameters.")
 
-;; Alist of user-preferences.
-;;
-;; - short-date: a strftime-compatibie string for the display
-;;               format of short dates.
-;; - utc?       : whether to assume use UTC for dates/times
 (define %preferences
   '( (short-date  . "%F %T")
      (utc?        . #f)))
 ;; XXX; not exposed yet. Perhaps we need a "fluid" here?
+(set-documentation! '%preferences
+  "Alist with user-preferences.
+- short-date: a strftime-compatibie string for the display
+	      format of short dates.
+- utc?       : whether to assume use UTC for dates/times")
 
 (define (value-or-preference val key)
   "If VAL is the symbol 'preference, return the value for KEY from %preferences.
