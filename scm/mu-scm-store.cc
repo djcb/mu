@@ -210,7 +210,7 @@ Mu::Scm::init_store(const Store& store)
 
 	default_store = scm_make_foreign_object_1(
 		store_type, const_cast<Store*>(&store));
-	scm_c_define("%default-store-object", default_store);
+	scm_c_define("%cc-default-store", default_store);
 
 	init_subrs();
 

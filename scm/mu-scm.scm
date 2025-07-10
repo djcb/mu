@@ -102,8 +102,8 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;;
+;; Helpers
 
 (define (set-documentation! symbol docstring)
   "Set the docstring for symbol in current module to docstring.
@@ -174,7 +174,7 @@ It has a few slots:
 If CONTENT-ONLY? is #t, only include the contents, not headers.
 If DECODE? is #t, decode the content (from e.g., base64); in that case,
 CONTENT-ONLY? is implied to be #t."
-  (cc-mime-make-stream-port (slot-ref mime-part 'mimepart) content-only? decode?))
+  (cc-mime-make-stream-port (cc-mimepart mime-part) content-only? decode?))
 
 (define-method (filename (mime-part <mime-part>))
   "Determine the file-name for MIME-part.
@@ -222,9 +222,11 @@ Otherwise, trying to overwrite an existing file raises an error."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message
 (define-class <message> ()
-  (object #:init-value #f #:init-keyword #:object)
+  (cc-message #:init-value #f #:init-keyword #:cc-message)
+  (parts #:init-value #f #:init-keyword #:parts)
   (plist #:init-value #f #:init-keyword #:plist)
-  (parts #:init-value #f #:init-keyword #:parts))
+  (alist #:init-value #f))
+
 (set-documentation!
  '<message>
  "A <message> represents the information about a message.
@@ -250,21 +252,21 @@ Only having a plist is cheaper.")
 
 (define (make-message path)
   "Create a <message> from file at PATH."
-  (make <message> #:object (cc-message-make path)))
+  (make <message> #:cc-message (cc-message-make path)))
 
 (define-method (plist (message <message>))
   "Get the PLIST for this MESSAGE."
   (when (not (slot-ref message 'plist))
-    (slot-set! message 'plist (cc-message-plist (object message))))
+    (slot-set! message 'plist (cc-message-plist (cc-message message))))
   (slot-ref message 'plist))
 
-(define-method (object (message <message>))
+(define-method (cc-message (message <message>))
   "Get the foreign object for this MESSAGE.
 If MESSAGE does not have such an object yet, create it from the
 path of the message."
-  (if (not (slot-ref message 'object))
-      (slot-set! message 'object (cc-message-make (path message))))
-  (slot-ref message 'object))
+  (if (not (slot-ref message 'cc-message))
+      (slot-set! message 'cc-message (cc-message-make (path message))))
+  (slot-ref message 'cc-message))
 
 (define-method (find-field (message <message>) field)
   (plist-find (plist message) field))
@@ -451,37 +453,33 @@ not found."
   "Get the MESSAGE body or #f if not found
 If #:html is non-#f, instead search for the HTML body.
 Requires the full message."
-  (cc-message-body (object message) html?))
+  (cc-message-body (cc-message message) html?))
 
 (define-method (header (message <message>) (field <string>))
   "Get the raw MESSAGE header FIELD or #f if not found.
 FIELD is case-insensitive and should not have the ':' suffix.
 Requires the full message."
-  (cc-message-header (object message) field))
+  (cc-message-header (cc-message message) field))
 
 (define-method (mime-parts (message <message>))
   "Get the MIME-parts for this message.
 This is a list of <mime-part> objects."
-  (let ((msgobj (object message)))
-    (map (lambda (mimepart-alist)
-	   (make <mime-part>
-	     #:mimepart (car mimepart-alist)
-	     #:alist (cdr mimepart-alist)))
-	 (cc-message-parts msgobj))))
+  (map (lambda (mimepart-alist)
+	 (make <mime-part>
+	   #:mimepart (car mimepart-alist)
+	   #:alist (cdr mimepart-alist)))
+       (cc-message-parts (cc-message message))))
 
 ;; Store
 ;;
-;; Note: we have a %default-store, which is the store we opened during
-;; startup; for now that's the only store supported, but we keep things
-;; open.
+;; Note: we have a %default-store, which is the store we opened during startup;
+;; for now that's the only store supported, but we keep things open.
 ;;
 ;; Since it's the default store, we'd like to call the methods without
 ;; explicitly using %default-store; with GOOPS, we cannot pass a default for
 ;; that, nor can we use keyword arguments (I think?). So use define* for that.
-
-;; the 'store-object' is a foreign object wrapping a const Store*.
 (define-class <store> ()
-  (store-object #:init-keyword #:store-object #:getter store-object)
+  (cc-store #:init-keyword #:cc-store #:getter cc-store)
   (alist #:init-value #f))
 
 (set-documentation!
@@ -495,13 +493,14 @@ It has a few slots:
   of some store properties.")
 
 ;;  not exported
-(define-method (make-store store-object)
-  "Make a store from some STORE-OBJECT."
-  (make <store> #:store-object store-object))
+(define-method (make-store store-obj)
+  "Make a store from some STORE-OBJ.
+STORE-OBJ a 'foreign-object' for a mu Store pointer."
+  (make <store> #:cc-store store-obj))
 
 (define %default-store
-  ;; %default-store-object is defined in mu-scm-store.cc
-  (make-store %default-store-object))
+  (make-store %cc-default-store))
+
 (set-documentation! '%default-store  "Default store.")
 
 (set-documentation! '%cc-default-store
@@ -513,7 +512,7 @@ This is defined in the C++ code, and represents a \"foreign\" Store* object.")
 Keyword arguments:
     #:store       %default-store. Leave at default."
   (when (not (slot-ref store 'alist))
-    (slot-set! store 'alist (cc-store-alist (store-object store))))
+    (slot-set! store 'alist (cc-store-alist (cc-store store))))
   (slot-ref store 'alist))
 
 (define* (mfind query
@@ -536,14 +535,14 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:max-results max. number of matches. Default: false (unlimited))."
   (map (lambda (plist)
 	 (make <message> #:plist plist))
-       (cc-store-mfind (store-object store) query
+       (cc-store-mfind (cc-store store) query
 		       related? skip-dups? sort-field reverse? max-results)))
 
 (define* (mcount
 	  #:key
 	  (store %default-store))
   "Get the number of messages."
-  (cc-store-mcount (store-object store)))
+  (cc-store-mcount (cc-store store)))
 
 (define* (cfind pattern
 		#:key
@@ -559,7 +558,7 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:personal?   only include 'personal' contacts. Default: all
     #:after       only include contacts last seen time_t: Default all
     #:max-results max. number of matches. Default: false (unlimited))."
-  (cc-store-cfind (store-object store) pattern personal? after max-results))
+  (cc-store-cfind (cc-store store) pattern personal? after max-results))
 
 ;;; Misc
 
