@@ -35,8 +35,10 @@
 	    <message>
 	    make-message
 
+	    message->alist
+
 	    date
-	    last-change
+	    changed
 
 	    message-id
 	    path
@@ -108,9 +110,7 @@
 (define (set-documentation! symbol docstring)
   "Set the docstring for symbol in current module to docstring.
 This is useful for symbols that do not support docstrings directly, such
-add
-  (define foo 123)
-"
+as (define foo 123)."
   ;; https://git.wolfsden.cz/guile-wolfsden/tree/wolfsden/documentation.scm
   (set-object-property! (module-ref (current-module) symbol)
 			'documentation docstring))
@@ -144,15 +144,29 @@ If not found, return #f."
 	(string->symbol (string-drop name 1))
 	sym)))
 
+(define (emacs-time->epoch-secs lst)
+  "Convert emacs-style timestamp LST to a number of seconds since epoch.
+If LST is #f, return #f."
+  (if lst
+      (+ (ash (car lst) 16) (cadr lst))
+      #f))
+
 (define (plist->alist plist)
-  "Convert a plist into an alist."
+  "Convert a plist into an alist.
+This is specific for message plists."
   (let ((alist '()))
     (plist-for-each
      (lambda (k v)
-       (set! alist
-	     (append! alist
-		      (list (cons (decolonize-symbol k)
-				  v)))))
+       (let ((key (decolonize-symbol k)))
+	 (set! alist
+	       (append! alist
+			(list (cons key
+				    (cond
+				     ((member key '(from to cc bcc))
+				      (map plist->alist v))
+				     ((member key '(date changed))
+				      (emacs-time->epoch-secs v))
+				     (else v))))))))
      plist)
     alist))
 
@@ -260,6 +274,12 @@ Only having a plist is cheaper.")
     (slot-set! message 'plist (cc-message-plist (cc-message message))))
   (slot-ref message 'plist))
 
+(define-method (message->alist (message <message>))
+  "Get an association-list (alist) representation for MESSAGE."
+  (when (not (slot-ref message 'alist))
+	(slot-set! message 'alist (plist->alist (plist message))))
+  (slot-ref message 'alist))
+
 (define-method (cc-message (message <message>))
   "Get the foreign object for this MESSAGE.
 If MESSAGE does not have such an object yet, create it from the
@@ -268,9 +288,6 @@ path of the message."
       (slot-set! message 'cc-message (cc-message-make (path message))))
   (slot-ref message 'cc-message))
 
-(define-method (find-field (message <message>) field)
-  (plist-find (plist message) field))
-
 (define-method (sexp (message <message>))
   "Get the s-expression (plist) for this MESSAGE.
 
@@ -278,51 +295,44 @@ This is an internal data-structure, originally for use with mu4e, but useful
 here as well. However, the precise details are not part of mu-scm API."
   (plist message))
 
-(define (emacs-time->epoch-secs lst)
-  "Convert emacs-style timestamp LST to a number of seconds since epoch.
-If LST is #f, return #f."
-  (if lst
-      (+ (ash (car lst) 16) (cadr lst))
-      #f))
-
 ;; Accessors for the fields
 
 (define-method (subject (message <message>))
   "Get the subject for MESSAGE or #f if not found."
-  (find-field message ':subject))
+  (assoc-ref (message->alist message) 'subject))
 
 (define-method (maildir (message <message>))
   "Get the maildir for MESSAGE or #f if not found."
-  (find-field message ':maildir))
+  (assoc-ref (message->alist message) 'maildir))
 
 (define-method (message-id (message <message>))
   "Get the message-id for MESSAGE or #f if not found."
-  (find-field message ':message-id))
+  (assoc-ref (message->alist message) 'message-id))
 
 (define-method (date (message <message>))
-  "Get the date for MESSAGE was sent.
+  "Get the timestamp for MESSAGE was sent.
 This is the number of seconds since epoch; #f if not found."
-  (emacs-time->epoch-secs (find-field message ':date)))
+  (assoc-ref (message->alist message) 'date))
 
-(define-method (last-change (message <message>))
-  "Get the date for the last change to MESSAGE.
+(define-method (changed (message <message>))
+  "Get the timestamp for the last change to MESSAGE.
 This is the number of seconds since epoch; #f if not found."
-  (emacs-time->epoch-secs (find-field message ':changed)))
+  (assoc-ref (message->alist message) 'changed))
 
 (define-method (path (message <message>))
   "Get the file-system path for MESSAGE.
 A symbol, either 'high, 'low or 'normal, or #f if not found."
-  (find-field message ':path))
+  (assoc-ref (message->alist message) 'path))
 
 (define-method (priority (message <message>))
   "Get the priority for MESSAGE.
 A symbol, either 'high, 'low or 'normal, or #f if not found."
-  (find-field message ':priority))
+  (assoc-ref (message->alist message) 'priority))
 
 (define-method (language (message <message>))
   "Get the ISO-639-1 language code for the MESSAGE as a symbol, if detected.
 Return #f otherwise."
-  (let ((lang (find-field message ':language)))
+  (let ((lang ( (assoc-ref (message->alist message) 'language))))
     (if lang
 	(string->symbol lang)
 	#f)))
@@ -330,7 +340,7 @@ Return #f otherwise."
 
 (define-method (size (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
-  (find-field message ':size))
+  (assoc-ref (message->alist message) 'size))
 
 (define-method (references (message <message>))
   "Get the list of reference of MESSAGE or #f if not available.
@@ -338,7 +348,7 @@ Return #f otherwise."
 reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
-  (find-field message ':references))
+  (assoc-ref (message->alist message) 'references))
 
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
@@ -351,20 +361,19 @@ This is method is useful to determine the thread a message is in."
 
 (define-method (mailing-list (message <message>))
   "Get the mailing-list id for MESSAGE or #f if not available."
-  (find-field message ':list))
+  (assoc-ref (message->alist message) 'list))
 
 ;;  Flags.
 
 (define-method (flags (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
-  (find-field message ':flags))
+  (assoc-ref (message->alist message) 'flags))
 
 (define-method (flag? (message <message>) flag)
   "Does MESSAGE have FLAG?"
-  (let ((flags
-	 (find-field message ':flags)))
-    (if flags
-	(if (member flag flags) #t #f)
+  (let ((flgs (flags message)))
+    (if flgs
+	(if (member flag flgs) #t #f)
 	#f)))
 
 (define-method (draft? (message <message>))
@@ -423,31 +432,23 @@ This is method is useful to determine the thread a message is in."
   "Does MESSAGE have a calender invitation?"
   (flag? message 'calendar))
 
-(define-method (find-contact-field (message <message>) field)
-  "Get contact FIELD from MESSAGE as an alist.
-Helper method "
-  (let ((cs (find-field message field)))
-    (if cs
-	(map plist->alist cs)
-	#f)))
-
 (define-method (from (message <message>))
   "Get the sender (the From: field) for MESSAGE or #f if not found."
-  (find-contact-field message ':from))
+  (assoc-ref (message->alist message) 'from))
 
 (define-method (to (message <message>))
   "Get the (intended) recipient for MESSAGE (the To: field) or #f if not found."
-  (find-contact-field message ':to))
+  (assoc-ref (message->alist message) 'to))
 
 (define-method (cc (message <message>))
   "Get the (intended) carbon-copy recipient for MESSAGE (the Cc: field) or #f if
 not found."
-  (find-contact-field message ':cc))
+  (assoc-ref (message->alist message) 'cc))
 
 (define-method (bcc (message <message>))
   "Get the (intended) blind carbon-copy recipient for MESSAGE (the Bcc: field) or
 #f if not found."
-  (find-contact-field message ':bcc))
+  (assoc-ref (message->alist message) 'bcc))
 
 (define* (body message #:key (html? #f))
   "Get the MESSAGE body or #f if not found

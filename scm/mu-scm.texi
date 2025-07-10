@@ -658,13 +658,13 @@ Is this a personal message? Returns @t{#t} or @t{#f}.
 
 @deffn {Scheme Procedure} calendar? message
 @end deffn
-Does this message include a calendar invitation? Returns @t{#t} or @t{#f}.
+Does this message include a calendar invitation? Returns @t{#t} or @code{#f}.
 
 @subsection Miscellaneous
 
-@deffn {Scheme Procedure} last-change message
+@deffn {Scheme Procedure} changed message
 @end deffn
-Get the time of the message's last change (through @t{mu}), or @t{#f} if there
+Get the time of the message's last change (through @t{mu}), or @code{#f} if there
 is none. The time is expressed the data as the number of seconds since epoch,
 @t{time_t}.
 
@@ -677,7 +677,7 @@ For example:
 @deffn {Scheme Procedure} priority message
 @end deffn
 Get the message's priority. This is a symbol, either @t{high}, @t{normal} or
-@t{low}, or @t{#f} if not present.
+@t{low}, or @code{#f} if not present.
 
 For example:
 @lisp
@@ -697,7 +697,7 @@ For example:
 
 @deffn {Scheme Procedure} language message
 @end deffn
-Get the ISO-639-1 language code for message's primary language or @t{#f} if not
+Get the ISO-639-1 language code for message's primary language or @code{#f} if not
 found. This is available only if @t{mu} was built with CLD2 support, see
 @command{mu info}. The language code is represented as a symbol, such as @t{en},
 @t{nl} or @t{fi}.
@@ -833,7 +833,7 @@ Convert a @t{time_t} value (``seconds-since-epoch'') to a string. The optional
 output format, while the @code{#:utc?} determines whether to use UTC.
 @c Defaults are determined by the @code{%preferences} variable.
 
-If @var{time_t} is @t{#f}, return @code{#f}.
+If @var{time_t} is @code{#f}, return @code{#f}.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
