@@ -1939,6 +1939,11 @@ Or to something context-specific:
             (save-excursion (message-add-header "Bcc: account2@@example.com\n"))))))))
 @end lisp
 
+By default, @t{mu4e} moves point to some ``reasonable place'' before letting you
+edit the message; if you want something else, see
+@code{mu4e-compose-jump-to-reasonable-place}.
+
+
 @noindent
 For a more general discussion about extending @t{mu4e}, see @ref{Extending
 mu4e}.

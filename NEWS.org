@@ -180,6 +180,10 @@
     - iCalendar support is a work-in-progress with the new editor. One change is
       that support is now _automatically_ available.
 
+    - 1.12.12: add a =defcustom= ~mu4e-compose-jump-to-a-reasonable-place~ for
+      customizing whether mu4e jumps to some "reasonable place" when opening the
+      message composition buffer. Default is ~t~, as the current behavior.
+
 **** other
 
     - New command ~mu4e-search-query~ (bound to =c=) which lets you pick a query

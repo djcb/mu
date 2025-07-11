@@ -176,6 +176,16 @@ Also see `mu4e-context-policy'."
   :safe 'symbolp
   :group 'mu4e-compose)
 
+(defcustom mu4e-compose-jump-to-a-reasonable-place t
+  "Put point at some reasonable place in the compose buffer?
+
+After the compose-buffer has been setup, mu4e can jump to some
+reasonable place as per `mu4e--jump-to-a-reasonable-place'. If
+you don't consider that reasonable, set to nil."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'mu4e-compose)
+
 ;;
 ;; display the ready-to-go display buffer in the desired way.
 ;;
@@ -636,7 +646,8 @@ COMPOSE-TYPE and PARENT are as in `mu4e--draft'."
   (add-hook 'message-send-hook #'mu4e--compose-before-send nil t)
   (setq-local message-fcc-handler-function #'mu4e--fcc-handler)
 
-  (mu4e--jump-to-a-reasonable-place)
+  (when mu4e-compose-jump-to-a-reasonable-place
+    (mu4e--jump-to-a-reasonable-place))
 
   (set-buffer-modified-p nil)
   (undo-boundary))
