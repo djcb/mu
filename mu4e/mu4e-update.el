@@ -43,7 +43,6 @@ When set to the literal string \"true\" (the default), the
 command simply finishes successfully (running the \"true\"
 command) without retrieving any mail. This can be useful when
 mail is already retrieved in another way, such as a local MDA."
-  :type 'string
   :type '(choice
           (string :tag "Shell command")
           (function :tag "Function that returns a string (shell command)"))
