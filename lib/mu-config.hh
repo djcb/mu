@@ -254,7 +254,7 @@ public:
 			return static_cast<size_t>(str.empty() ? false :
 						   std::atol(str.c_str()) != 0);
 		else if constexpr (type == Type::Timestamp)
-			return static_cast<time_t>(str.empty() ? 0 : std::atoll(str.c_str()));
+			return static_cast<int64_t>(str.empty() ? 0 : std::atoll(str.c_str()));
 		else if constexpr (type == Type::Path || type == Type::String)
 			return str;
 		else if constexpr (type == Type::StringList)
