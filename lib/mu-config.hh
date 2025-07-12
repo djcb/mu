@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -39,18 +39,18 @@ namespace Mu {
 
 struct Property {
 	enum struct Id {
-		BatchSize,	/**< Xapian batch-size */
-		Contacts,       /**< Cache of contact information */
-		Created,        /**<  Time of creation */
-		IgnoredAddresses,/**< Email addresses ignored for the contacts-cache */
-		LastChange,	/**< Time of last change */
-		LastIndex,	/**< Time of last index */
-		MaxMessageSize,	/**< Maximum message size (in bytes) */
+		BatchSize,		/**< Xapian batch-size */
+		Contacts,		/**< Cache of contact information */
+		Created,		/**<  Time of creation */
+		IgnoredAddresses,	/**< Email addresses ignored for the contacts-cache */
+		LastChange,		/**< Time of last change */
+		LastIndex,		/**< Time of last index */
+		MaxMessageSize,		/**< Maximum message size (in bytes) */
 		PersonalAddresses,	/**< List of personal e-mail addresses */
-		RootMaildir,	/**< Root maildir path */
-		SchemaVersion,	/**< Xapian DB schema version */
-		SupportNgrams,  /**< Support ngrams for indexing & querying
-				 *  for e.g. CJK languages */
+		RootMaildir,		/**< Root maildir path */
+		SchemaVersion,		/**< Xapian DB schema version */
+		SupportNgrams,		/**< Support ngrams for indexing & querying
+					 *  for e.g. CJK languages */
 		/* <private> */
 		_count_		/* Number of Ids */
 	};
@@ -65,6 +65,7 @@ struct Property {
 		Configurable = 1 << 1,	/**< A user-configurable parameter; name
 					 * starts with 'conf-' */
 		Internal     = 1 << 2,	/**< Mu-internal field */
+		Runtime      = 1 << 3,  /**< May change at runtime */
 	};
 	enum struct Type {
 		Boolean,        /**< Some boolean value */
@@ -132,7 +133,7 @@ public:
 		{
 			Id::LastChange,
 			Type::Timestamp,
-			Flags::ReadOnly,
+			Flags::ReadOnly | Flags::Runtime,
 			MetadataIface::last_change_key,
 			{},
 			"Time when last change occurred"
@@ -140,7 +141,7 @@ public:
 		{
 			Id::LastIndex,
 			Type::Timestamp,
-			Flags::ReadOnly,
+			Flags::ReadOnly | Flags::Runtime,
 			"last-index",
 			{},
 			"Time when last indexing operation was completed"
@@ -222,6 +223,47 @@ public:
 		return Nothing;
 	}
 
+
+	/**
+	 * Get the string-value for prop.
+	 *
+	 * For internal use
+	 *
+	 * @param prop some property
+	 *
+	 * @return a string
+	 */
+	std::string get_str(const Property& prop) const {
+		const auto str = cstore_.metadata(std::string{prop.name});
+		return str.empty() ? std::string{prop.default_val} : str;
+	}
+
+
+	/**
+	 * Get the property value decoded based on the type
+	 *
+	 * @param prop_id a property id
+	 *
+	 * @return the value or Nothing
+	 */
+	template<Type type>
+	static constexpr auto decode(const std::string& str)  {
+		if constexpr (type == Type::Number)
+			return static_cast<size_t>(str.empty() ? 0 : std::atoll(str.c_str()));
+		if constexpr (type == Type::Boolean)
+			return static_cast<size_t>(str.empty() ? false :
+						   std::atol(str.c_str()) != 0);
+		else if constexpr (type == Type::Timestamp)
+			return static_cast<time_t>(str.empty() ? 0 : std::atoll(str.c_str()));
+		else if constexpr (type == Type::Path || type == Type::String)
+			return str;
+		else if constexpr (type == Type::StringList)
+			return split(str, SepaChar1);
+		throw std::logic_error("invalid type");
+	}
+
+
+
 	/**
 	 * Get the property value of the correct type
 	 *
@@ -231,24 +273,8 @@ public:
 	 */
 	template<Id ID>
 	auto get() const {
-		constexpr auto&& prop{property<ID>()};
-		const auto str = std::invoke([&]()->std::string {
-			const auto str = cstore_.metadata(std::string{prop.name});
-			return str.empty() ? std::string{prop.default_val} : str;
-		});
-		if constexpr (prop.type == Type::Number)
-			return static_cast<size_t>(str.empty() ? 0 : std::atoll(str.c_str()));
-		if constexpr (prop.type == Type::Boolean)
-			return static_cast<size_t>(str.empty() ? false :
-						   std::atol(str.c_str()) != 0);
-		else if constexpr (prop.type == Type::Timestamp)
-			return static_cast<time_t>(str.empty() ? 0 : std::atoll(str.c_str()));
-		else if constexpr (prop.type == Type::Path || prop.type == Type::String)
-			return str;
-		else if constexpr (prop.type == Type::StringList)
-			return split(str, SepaChar1);
-
-		throw std::logic_error("invalid prop " + std::string{prop.name});
+		constexpr auto& prop{property<ID>()};
+		return decode<prop.type>(get_str(prop));
 	}
 
 	/**

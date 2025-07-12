@@ -28,14 +28,17 @@
 	    <mime-part>
 	    mime-part->alist
 	    make-port
+	    filename
 	    write-to-file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	    ;; Message
 	    <message>
 	    make-message
 
+	    message->alist
+
 	    date
-	    last-change
+	    changed
 
 	    message-id
 	    path
@@ -86,6 +89,7 @@
 	    mfind
 	    mcount
 	    cfind
+	    store->alist
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	    ;; Other
@@ -100,6 +104,17 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Helpers
+
+(define (set-documentation! symbol docstring)
+  "Set the docstring for symbol in current module to docstring.
+This is useful for symbols that do not support docstrings directly, such
+as (define foo 123)."
+  ;; https://git.wolfsden.cz/guile-wolfsden/tree/wolfsden/documentation.scm
+  (set-object-property! (module-ref (current-module) symbol)
+			'documentation docstring))
+
 ;; some helpers for dealing with plists / alists
 (define (plist-for-each func plist)
   "Call FUNC for each key/value in the PLIST.
@@ -129,57 +144,79 @@ If not found, return #f."
 	(string->symbol (string-drop name 1))
 	sym)))
 
+(define (emacs-time->epoch-secs lst)
+  "Convert emacs-style timestamp LST to a number of seconds since epoch.
+If LST is #f, return #f."
+  (if lst
+      (+ (ash (car lst) 16) (cadr lst))
+      #f))
+
 (define (plist->alist plist)
-  "Convert a plist into an alist."
+  "Convert a plist into an alist.
+This is specific for message plists."
   (let ((alist '()))
     (plist-for-each
      (lambda (k v)
-       (set! alist
-	     (append! alist
-		      (list (cons (decolonize-symbol k)
-				  v)))))
+       (let ((key (decolonize-symbol k)))
+	 (set! alist
+	       (append! alist
+			(list (cons key
+				    (cond
+				     ((member key '(from to cc bcc))
+				      (map plist->alist v))
+				     ((member key '(date changed))
+				      (emacs-time->epoch-secs v))
+				     (else v))))))))
      plist)
     alist))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; MIME-parts
-;;
-;; A <mime-object> has two slots:
-;; partobj -->    wraps a GMimePart* as a "foreign object"
-;; alist -->      alist with information about some MIME-part
 (define-class <mime-part> ()
-  (mimepart  #:init-value #f #:init-keyword #:mimepart)
-  (alist     #:init-value #f #:init-keyword #:alist #:getter mime-part->alist))
+  (cc-mimepart  #:init-value #f #:init-keyword #:mimepart #:getter cc-mimepart)
+  (alist        #:init-value #f #:init-keyword #:alist #:getter mime-part->alist))
+
+(set-documentation!
+ '<mime-part>
+ "A <mime-part> represents the information about a message's MIME-part.
+It has a few slots:
+  - cc-mimepart: a 'foreign object' wrapping a GMimePart*
+  - alist: the association-list representation of the MIME-part.")
 
 (define* (make-port mime-part #:key (content-only? #t) (decode? #t))
   "Create a read port for MIME-PART.
 If CONTENT-ONLY? is #t, only include the contents, not headers.
 If DECODE? is #t, decode the content (from e.g., base64); in that case,
 CONTENT-ONLY? is implied to be #t."
-  (cc-mime-make-stream-port (slot-ref mime-part 'mimepart) content-only? decode?))
+  (cc-mime-make-stream-port (cc-mimepart mime-part) content-only? decode?))
 
-(define* (make-output-file mime-part #:key (filename #f) (overwrite? #f))
+(define-method (filename (mime-part <mime-part>))
+  "Determine the file-name for MIME-part.
+Either the 'filename' field in the mime-part and if that does not exist, use
+'mime-part-<index>' with <index> being the number of the mime-part."
+  (let ((alist (mime-part->alist mime-part)))
+    (or (assoc-ref  alist 'filename)
+	(format #f "mime-part-~d" (assoc-ref alist 'index)))))
+
+(define* (make-output-file mime-part #:key (path #f) (overwrite? #f))
   "Create a port for the file to write MIME-PART to.
 
-FILENAME is the path to the file name. If not specified, use the 'filename'
+PATH is file-name or path to the file name. If not specified, use the 'filename'
 field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 <index> being the number of the mime-part.
 
 OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
   (let* ((alist (mime-part->alist mime-part))
-	(filename (or filename
-		      (assoc-ref alist 'filename)
-		      (format #f "mime-part-~d" (assoc-ref alist 'index)))))
-	;; we need an fd-based port since we want to support overwrite?
-	(open filename
-	      (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
+	 (path (or path (filename mime-part))))
+    ;; we need an fd-based port since we want to support overwrite?
+    (open path
+	  (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
 
-(define* (write-to-file mime-part #:key (filename #f) (overwrite? #f))
+(define* (write-to-file mime-part #:key (path #f) (overwrite? #f))
   "Write MIME-PART to a file.
 
-FILENAME is the path to the file name. If not specified, use the 'filename'
+PATH is the path/filename for the file. If not specified, use the 'filename'
 field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 <index> being the number of the mime-part.
 
@@ -187,7 +224,7 @@ OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
   (let* ((input (make-port mime-part))
 	 (output (make-output-file mime-part
-				   #:filename filename #:overwrite? overwrite?))
+				   #:path path #:overwrite? overwrite?))
 	 (buf (make-bytevector 4096)) ;; just a guess...
 	 (bytes 0))
     (while (not (eof-object? bytes)) ;; XXX do this in a more elegant way.
@@ -197,42 +234,59 @@ Otherwise, trying to overwrite an existing file raises an error."
     (close output)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Message
-;;
-;; A <message> has two slots:
-;; plist -->      this is the message sexp cached in the database;
-;;                for each message (for mu4e, but we reuse here)
-;; object-->      wraps a Mu::Message* as a "foreign object"
-;; parts -->      MIME-parts
-;; generally the plist is a bit cheaper, since the mu-message
-;; captures a file-descriptor.
-
 (define-class <message> ()
-  (object #:init-value #f #:init-keyword #:object)
+  (cc-message #:init-value #f #:init-keyword #:cc-message)
+  (parts #:init-value #f #:init-keyword #:parts)
   (plist #:init-value #f #:init-keyword #:plist)
-  (parts #:init-value #f #:init-keyword #:parts))
+  (alist #:init-value #f))
+
+(set-documentation!
+ '<message>
+ "A <message> represents the information about a message.
+
+Exactly what information depends on how the object came to be;
+these are the slots:
+
+- cc-message: this is a foreign-object representing the mu
+  message object, and needs to be passed to some 'cc-' methods.
+- parts: a list of <mime-part> objects
+- plist: this is an Emacs-style property list which is cached
+  for each message in the store; this was originally added
+  for use in mu4e, but we re-use it here.
+- alist: an association list; this is just more 'scheme-like'
+  version of the plist, it is created on-demand (message->alist).
+
+A message that came from a search such as 'mfind' initially only
+has the plist, but when a message is loaded from file, either
+through make-message or by calling a function that needs a
+full message, such as header or body, the cc-message is initialized.
+
+Only having a plist is cheaper.")
 
 (define (make-message path)
   "Create a <message> from file at PATH."
-  (make <message> #:object (cc-message-make path)))
+  (make <message> #:cc-message (cc-message-make path)))
 
 (define-method (plist (message <message>))
   "Get the PLIST for this MESSAGE."
   (when (not (slot-ref message 'plist))
-    (slot-set! message 'plist (cc-message-plist (object message))))
+    (slot-set! message 'plist (cc-message-plist (cc-message message))))
   (slot-ref message 'plist))
 
-(define-method (object (message <message>))
+(define-method (message->alist (message <message>))
+  "Get an association-list (alist) representation for MESSAGE."
+  (when (not (slot-ref message 'alist))
+	(slot-set! message 'alist (plist->alist (plist message))))
+  (slot-ref message 'alist))
+
+(define-method (cc-message (message <message>))
   "Get the foreign object for this MESSAGE.
 If MESSAGE does not have such an object yet, create it from the
 path of the message."
-  (if (not (slot-ref message 'object))
-      (slot-set! message 'object (cc-message-make (path message))))
-  (slot-ref message 'object))
-
-(define-method (find-field (message <message>) field)
-  (plist-find (plist message) field))
+  (if (not (slot-ref message 'cc-message))
+      (slot-set! message 'cc-message (cc-message-make (path message))))
+  (slot-ref message 'cc-message))
 
 (define-method (sexp (message <message>))
   "Get the s-expression (plist) for this MESSAGE.
@@ -241,51 +295,44 @@ This is an internal data-structure, originally for use with mu4e, but useful
 here as well. However, the precise details are not part of mu-scm API."
   (plist message))
 
-(define (emacs-time->epoch-secs lst)
-  "Convert emacs-style timestamp LST to a number of seconds since epoch.
-If LST is #f, return #f."
-  (if lst
-      (+ (ash (car lst) 16) (cadr lst))
-      #f))
-
 ;; Accessors for the fields
 
 (define-method (subject (message <message>))
   "Get the subject for MESSAGE or #f if not found."
-  (find-field message ':subject))
+  (assoc-ref (message->alist message) 'subject))
 
 (define-method (maildir (message <message>))
   "Get the maildir for MESSAGE or #f if not found."
-  (find-field message ':maildir))
+  (assoc-ref (message->alist message) 'maildir))
 
 (define-method (message-id (message <message>))
   "Get the message-id for MESSAGE or #f if not found."
-  (find-field message ':message-id))
+  (assoc-ref (message->alist message) 'message-id))
 
 (define-method (date (message <message>))
-  "Get the date for MESSAGE was sent.
+  "Get the timestamp for MESSAGE was sent.
 This is the number of seconds since epoch; #f if not found."
-  (emacs-time->epoch-secs (find-field message ':date)))
+  (assoc-ref (message->alist message) 'date))
 
-(define-method (last-change (message <message>))
-  "Get the date for the last change to MESSAGE.
+(define-method (changed (message <message>))
+  "Get the timestamp for the last change to MESSAGE.
 This is the number of seconds since epoch; #f if not found."
-  (emacs-time->epoch-secs (find-field message ':changed)))
+  (assoc-ref (message->alist message) 'changed))
 
 (define-method (path (message <message>))
   "Get the file-system path for MESSAGE.
 A symbol, either 'high, 'low or 'normal, or #f if not found."
-  (find-field message ':path))
+  (assoc-ref (message->alist message) 'path))
 
 (define-method (priority (message <message>))
   "Get the priority for MESSAGE.
 A symbol, either 'high, 'low or 'normal, or #f if not found."
-  (find-field message ':priority))
+  (assoc-ref (message->alist message) 'priority))
 
 (define-method (language (message <message>))
   "Get the ISO-639-1 language code for the MESSAGE as a symbol, if detected.
 Return #f otherwise."
-  (let ((lang (find-field message ':language)))
+  (let ((lang ( (assoc-ref (message->alist message) 'language))))
     (if lang
 	(string->symbol lang)
 	#f)))
@@ -293,7 +340,7 @@ Return #f otherwise."
 
 (define-method (size (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
-  (find-field message ':size))
+  (assoc-ref (message->alist message) 'size))
 
 (define-method (references (message <message>))
   "Get the list of reference of MESSAGE or #f if not available.
@@ -301,7 +348,7 @@ Return #f otherwise."
 reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
-  (find-field message ':references))
+  (assoc-ref (message->alist message) 'references))
 
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
@@ -314,20 +361,19 @@ This is method is useful to determine the thread a message is in."
 
 (define-method (mailing-list (message <message>))
   "Get the mailing-list id for MESSAGE or #f if not available."
-  (find-field message ':list))
+  (assoc-ref (message->alist message) 'list))
 
 ;;  Flags.
 
 (define-method (flags (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
-  (find-field message ':flags))
+  (assoc-ref (message->alist message) 'flags))
 
 (define-method (flag? (message <message>) flag)
   "Does MESSAGE have FLAG?"
-  (let ((flags
-	 (find-field message ':flags)))
-    (if flags
-	(if (member flag flags) #t #f)
+  (let ((flgs (flags message)))
+    (if flgs
+	(if (member flag flgs) #t #f)
 	#f)))
 
 (define-method (draft? (message <message>))
@@ -386,76 +432,89 @@ This is method is useful to determine the thread a message is in."
   "Does MESSAGE have a calender invitation?"
   (flag? message 'calendar))
 
-(define-method (find-contact-field (message <message>) field)
-  "Get contact FIELD from MESSAGE as an alist.
-Helper method "
-  (let ((cs (find-field message field)))
-    (if cs
-	(map plist->alist cs)
-	#f)))
-
 (define-method (from (message <message>))
   "Get the sender (the From: field) for MESSAGE or #f if not found."
-  (find-contact-field message ':from))
+  (assoc-ref (message->alist message) 'from))
 
 (define-method (to (message <message>))
   "Get the (intended) recipient for MESSAGE (the To: field) or #f if not found."
-  (find-contact-field message ':to))
+  (assoc-ref (message->alist message) 'to))
 
 (define-method (cc (message <message>))
   "Get the (intended) carbon-copy recipient for MESSAGE (the Cc: field) or #f if
 not found."
-  (find-contact-field message ':cc))
+  (assoc-ref (message->alist message) 'cc))
 
 (define-method (bcc (message <message>))
   "Get the (intended) blind carbon-copy recipient for MESSAGE (the Bcc: field) or
 #f if not found."
-  (find-contact-field message ':bcc))
+  (assoc-ref (message->alist message) 'bcc))
 
 (define* (body message #:key (html? #f))
   "Get the MESSAGE body or #f if not found
 If #:html is non-#f, instead search for the HTML body.
 Requires the full message."
-  (cc-message-body (object message) html?))
+  (cc-message-body (cc-message message) html?))
 
 (define-method (header (message <message>) (field <string>))
   "Get the raw MESSAGE header FIELD or #f if not found.
 FIELD is case-insensitive and should not have the ':' suffix.
 Requires the full message."
-  (cc-message-header (object message) field))
+  (cc-message-header (cc-message message) field))
 
 (define-method (mime-parts (message <message>))
   "Get the MIME-parts for this message.
 This is a list of <mime-part> objects."
-  (let ((msgobj (object message)))
-    (map (lambda (mimepart-alist)
-	   (make <mime-part>
-	     #:mimepart (car mimepart-alist)
-	     #:alist (cdr mimepart-alist)))
-	 (cc-message-parts msgobj))))
+  (map (lambda (mimepart-alist)
+	 (make <mime-part>
+	   #:mimepart (car mimepart-alist)
+	   #:alist (cdr mimepart-alist)))
+       (cc-message-parts (cc-message message))))
 
 ;; Store
 ;;
-;; Note: we have a %default-store, which is the store we opened during
-;; startup; for now that's the only store supported, but we keep things
-;; open.
+;; Note: we have a %default-store, which is the store we opened during startup;
+;; for now that's the only store supported, but we keep things open.
 ;;
 ;; Since it's the default store, we'd like to call the methods without
 ;; explicitly using %default-store; with GOOPS, we cannot pass a default for
 ;; that, nor can we use keyword arguments (I think?). So use define* for that.
-
-;; the 'store-object' is a foreign object wrapping a const Store*.
 (define-class <store> ()
-  (store-object #:init-keyword #:store-object #:getter store-object))
+  (cc-store #:init-keyword #:cc-store #:getter cc-store)
+  (alist #:init-value #f))
+
+(set-documentation!
+ '<store>
+ "A <store> represents mu's message store (database).
+
+It has a few slots:
+- cc-store: this is a foreign-object for a Mu::Store*.
+  It needs to be passed to some 'cc-' methods.
+- alist: an association list; this is the cached representation
+  of some store properties.")
 
 ;;  not exported
-(define-method (make-store store-object)
-  "Make a store from some STORE-OBJECT."
-  (make <store> #:store-object store-object))
+(define-method (make-store store-obj)
+  "Make a store from some STORE-OBJ.
+STORE-OBJ a 'foreign-object' for a mu Store pointer."
+  (make <store> #:cc-store store-obj))
 
 (define %default-store
-  ;; %default-store-object is defined in mu-scm-store.cc
-  (make-store %default-store-object))
+  (make-store %cc-default-store))
+
+(set-documentation! '%default-store  "Default store.")
+
+(set-documentation! '%cc-default-store
+ "Default store object.
+This is defined in the C++ code, and represents a \"foreign\" Store* object.")
+
+(define* (store->alist #:key (store %default-store))
+  "Get an alist-representation for some store.
+Keyword arguments:
+    #:store       %default-store. Leave at default."
+  (when (not (slot-ref store 'alist))
+    (slot-set! store 'alist (cc-store-alist (cc-store store))))
+  (slot-ref store 'alist))
 
 (define* (mfind query
 		#:key
@@ -465,7 +524,7 @@ This is a list of <mime-part> objects."
 		(sort-field 'date)
 		(reverse? #f)
 		(max-results #f))
-   "Find messages matching some query.
+  "Find messages matching some query.
 
 The query is mandatory, the other (keyword) arguments are optional.
 (mfind QUERY
@@ -475,16 +534,16 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:sort-field? field to sort by, a symbol. Default: date
     #:reverse?    sort in descending order (z-a)
     #:max-results max. number of matches. Default: false (unlimited))."
-   (map (lambda (plist)
-	  (make <message> #:plist plist))
-	(cc-store-mfind (store-object store) query
-		     related? skip-dups? sort-field reverse? max-results)))
+  (map (lambda (plist)
+	 (make <message> #:plist plist))
+       (cc-store-mfind (cc-store store) query
+		       related? skip-dups? sort-field reverse? max-results)))
 
 (define* (mcount
 	  #:key
 	  (store %default-store))
   "Get the number of messages."
-  (cc-store-mcount (store-object store)))
+  (cc-store-mcount (cc-store store)))
 
 (define* (cfind pattern
 		#:key
@@ -500,7 +559,7 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:personal?   only include 'personal' contacts. Default: all
     #:after       only include contacts last seen time_t: Default all
     #:max-results max. number of matches. Default: false (unlimited))."
-  (cc-store-cfind (store-object store) pattern personal? after max-results))
+  (cc-store-cfind (cc-store store) pattern personal? after max-results))
 
 ;;; Misc
 
@@ -511,16 +570,18 @@ The pattern is mandatory; the other (keyword) arguments are optional.
 ;; The alist maps symbols to values; a value of #f indicates that the value is at
 ;; its default.
 %options ;; defined in c++
+(set-documentation! '%options
+		    "Alist with the command-line parameters.")
 
-;; Alist of user-preferences.
-;;
-;; - short-date: a strftime-compatibie string for the display
-;;               format of short dates.
-;; - utc?       : whether to assume use UTC for dates/times
 (define %preferences
   '( (short-date  . "%F %T")
      (utc?        . #f)))
 ;; XXX; not exposed yet. Perhaps we need a "fluid" here?
+(set-documentation! '%preferences
+  "Alist with user-preferences.
+- short-date: a strftime-compatibie string for the display
+	      format of short dates.
+- utc?       : whether to assume use UTC for dates/times")
 
 (define (value-or-preference val key)
   "If VAL is the symbol 'preference, return the value for KEY from %preferences.

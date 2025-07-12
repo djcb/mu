@@ -3,14 +3,18 @@
 (use-modules (mu) (srfi srfi-64)
 	     (ice-9 textual-ports))
 
-(define (test-basic)
-  (test-begin "test-basic")
+(define (test-store)
+  (test-begin "test-store")
 
   (test-equal "mcount" 19 (mcount))
   (test-equal "cfind" 29 (length (cfind "")))
   (test-equal "mfind" 19 (length (mfind "")))
 
-  (test-end "test-basic"))
+  (let ((info (store->alist)))
+    (test-equal 50000 (assoc-ref info 'batch-size))
+    (test-equal 100000000 (assoc-ref info 'max-message-size)))
+
+  (test-end "test-store"))
 
 (define (test-basic-mfind)
 
@@ -33,10 +37,8 @@
     (let ((recip (car (to msg))))
       (test-equal "Bilbo Baggins" (assoc-ref recip 'name))
       (test-equal "bilbo@anotherexample.com" (assoc-ref recip 'email)))
-
     ;; no date
     (test-assert (not (date msg)))
-
     ;; flags
     (test-equal '(unread) (flags msg))
     (test-assert (unread? msg))
@@ -80,13 +82,21 @@
       (references msg))
       (test-equal "439C1136.90504@euler.org" (thread-id msg)))
 
-  (let ((msg (car (mfind "subject:\"gcc include search order\""))))
+  (let* ((msg (car (mfind "subject:\"gcc include search order\"")))
+	 (alist (message->alist msg)))
     (test-equal "gcc include search order" (subject msg))
     (test-equal "klub" (header msg "precedence"))
     (test-equal "gcc-help.gcc.gnu.org" (mailing-list msg))
     (test-equal #f (references msg))
     (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (message-id msg))
-    (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (thread-id msg)))
+    (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (thread-id msg))
+
+    ;; alist
+    (test-equal "gcc include search order" (assoc-ref alist 'subject))
+    (test-equal 'normal (assoc-ref alist 'priority))
+    (test-equal '((email . "anon@example.com") (name . "Mickey Mouse"))
+      (car  (assoc-ref alist 'from))))
+
   (test-end "test-message-more"))
 
 
@@ -121,10 +131,14 @@
 	  ((index . 2) (content-type . "image/jpeg") (size . 21566) (filename . "custer.jpg")))
       (map (lambda (part) (mime-part->alist part)) (mime-parts msg)))
 
+    (test-equal "mime-part-0" (filename (list-ref (mime-parts msg) 0)))
+    (test-equal "sittingbull.jpg" (filename (list-ref (mime-parts msg) 1)))
+    (test-equal "custer.jpg" (filename (list-ref (mime-parts msg) 2)))
+
     (let* ((part (list-ref (mime-parts msg) 1))
 	   (alist (mime-part->alist part))
 	   (fname (format #f "~a/~a" tmpdir (assoc-ref alist 'filename))))
-      (write-to-file part #:filename fname)
+      (write-to-file part #:path fname)
       (test-assert (access? fname R_OK))
       ;; note, the 23881 is the _encoded_ size.
       (test-equal 17674 (stat:size (stat fname))))
@@ -167,7 +181,7 @@
     (test-with-runner runner
       (test-begin "mu-scm-tests")
 
-      (test-basic)
+      (test-store)
       (test-basic-mfind)
       (test-mfind)
       (test-message-full)

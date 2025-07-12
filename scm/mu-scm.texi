@@ -260,7 +260,7 @@ few key concepts, represented in some GOOP objects and other data-structures:
 @end itemize
 
 @menu
-* Store:: the database of all information
+* Store:: where message information lives
 * Message:: inspecting individual messages
 * Miscellaneous:: other functions
 * Helpers:: some helper functions
@@ -350,6 +350,18 @@ Example usage:
 @lisp
 (mcount)
 => 140728
+@end lisp
+
+@deffn {Scheme Procedure} store->alist
+@end deffn
+Retrieve an association list (``alist'') with information about the store.
+
+Example:
+@lisp
+(store->alist)
+=> ((batch-size . 50000) (created . 1741180008) (max-message-size . 100000000)
+     (personal-addresses "djcb@@example.com" "msx@@example.com")
+     (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
 @node Message
@@ -515,11 +527,19 @@ case, @code{content-only?} is implied to be #t.
 Write MIME-part to file.
 
 Use @code{filename} is the file/path to use for writing; if this is @code{#f},
-the name is taken from the @t{filename} property of the MIME-part alist. If that
-does not exist, a generic name is chosen.
+the name using the @code{filename} procedure.
 
 If @code{overwrite?} is true, overwrite existing files of the same name;
 otherwise, raise an error if the file already exists.
+
+
+@deffn {Scheme Procedure} filename mime-part
+@end deffn
+Determine a filename for the given MIME-part.
+
+This is either taken from the @t{filename} property of the MIME-part alist, or,
+If that does not exist, a generic name.
+
 
 @subsection Contacts
 
@@ -638,13 +658,13 @@ Is this a personal message? Returns @t{#t} or @t{#f}.
 
 @deffn {Scheme Procedure} calendar? message
 @end deffn
-Does this message include a calendar invitation? Returns @t{#t} or @t{#f}.
+Does this message include a calendar invitation? Returns @t{#t} or @code{#f}.
 
 @subsection Miscellaneous
 
-@deffn {Scheme Procedure} last-change message
+@deffn {Scheme Procedure} changed message
 @end deffn
-Get the time of the message's last change (through @t{mu}), or @t{#f} if there
+Get the time of the message's last change (through @t{mu}), or @code{#f} if there
 is none. The time is expressed the data as the number of seconds since epoch,
 @t{time_t}.
 
@@ -657,7 +677,7 @@ For example:
 @deffn {Scheme Procedure} priority message
 @end deffn
 Get the message's priority. This is a symbol, either @t{high}, @t{normal} or
-@t{low}, or @t{#f} if not present.
+@t{low}, or @code{#f} if not present.
 
 For example:
 @lisp
@@ -677,7 +697,7 @@ For example:
 
 @deffn {Scheme Procedure} language message
 @end deffn
-Get the ISO-639-1 language code for message's primary language or @t{#f} if not
+Get the ISO-639-1 language code for message's primary language or @code{#f} if not
 found. This is available only if @t{mu} was built with CLD2 support, see
 @command{mu info}. The language code is represented as a symbol, such as @t{en},
 @t{nl} or @t{fi}.
@@ -813,7 +833,7 @@ Convert a @t{time_t} value (``seconds-since-epoch'') to a string. The optional
 output format, while the @code{#:utc?} determines whether to use UTC.
 @c Defaults are determined by the @code{%preferences} variable.
 
-If @var{time_t} is @t{#f}, return @code{#f}.
+If @var{time_t} is @code{#f}, return @code{#f}.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

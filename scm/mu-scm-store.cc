@@ -39,6 +39,57 @@ to_store(SCM scm, const char *func, int pos)
 }
 
 static SCM
+subr_cc_store_alist(SCM store_scm) try {
+	constexpr auto func{"cc-store-alist"};
+
+	SCM alist{SCM_EOL};
+	const auto& conf{to_store(store_scm, func, 1).config()};
+
+	using MuConfig = Mu::Config;
+	using Type = MuConfig::Type;
+
+	for (const auto& prop: Mu::Config::properties) {
+
+		// don't expose internal values & values that may change during
+		// runtime
+		if (any_of(prop.flags &
+			   (MuConfig::Flags::Internal | MuConfig::Flags::Runtime)))
+			continue;
+
+		const auto str{conf.get_str(prop)};
+		if (str.empty())
+			continue;
+
+		const auto name{make_symbol(prop.name)};
+		const auto val = std::invoke([&]() {
+			switch (prop.type) {
+			case Type::Number:
+				return to_scm(MuConfig::decode<Type::Number>(str));
+			case Type::Boolean:
+				return to_scm(MuConfig::decode<Type::Boolean>(str));
+			case Type::Timestamp:
+				return to_scm(MuConfig::decode<Type::Timestamp>(str));
+			case Type::Path:
+				return to_scm(MuConfig::decode<Type::Path>(str));
+			case Type::String:
+				return to_scm(MuConfig::decode<Type::String>(str));
+			case Type::StringList:
+				return to_scm(MuConfig::decode<Type::StringList>(str));
+			default:
+				throw ScmError{ScmError::Id::WrongType, func, 1, store_scm, "store"};
+			}
+		});
+
+		alist = scm_acons(name, val, alist);
+	}
+
+	return scm_reverse_x(alist, SCM_EOL);
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
+static SCM
 subr_cc_store_mcount(SCM store_scm) try {
 	return to_scm(to_store(store_scm, "cc-store-mcount", 1).size());
 } catch (const ScmError& err) {
@@ -139,6 +190,9 @@ init_subrs()
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_mcount));
 	scm_c_define_gsubr("cc-store-cfind", 5/*req*/, 0/*opt*/, 0/*rst*/,
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_cfind));
+	scm_c_define_gsubr("cc-store-alist", 1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_alist));
+
 #pragma GCC diagnostic pop
 }
 
@@ -156,7 +210,7 @@ Mu::Scm::init_store(const Store& store)
 
 	default_store = scm_make_foreign_object_1(
 		store_type, const_cast<Store*>(&store));
-	scm_c_define("%default-store-object", default_store);
+	scm_c_define("%cc-default-store", default_store);
 
 	init_subrs();
 
@@ -167,8 +221,8 @@ Mu::Scm::init_store(const Store& store)
 SCM
 Mu::Scm::to_scm(const Contact& contact)
 {
-	static SCM email{scm_from_utf8_symbol("email")};
-	static SCM name{scm_from_utf8_symbol("name")};
+	static SCM email{make_symbol("email")};
+	static SCM name{make_symbol("name")};
 
 	SCM alist = scm_acons(email, to_scm(contact.email), SCM_EOL);
 	if (!contact.name.empty())
