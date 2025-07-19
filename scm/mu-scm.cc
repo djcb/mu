@@ -197,8 +197,8 @@ test_scm_script()
 	opts.scm.script_path = join_paths(MU_SCM_SRCDIR, "mu-scm-test.scm");
 
 	Mu::Scm::Config scm_conf {
-		.store = *store,
-		.options = opts
+		/*.store =*/ *store,
+		/*.options =*/ opts
 	};
 
 	{
