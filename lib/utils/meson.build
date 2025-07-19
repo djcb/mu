@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -41,14 +41,15 @@ lib_mu_utils=static_library('mu-utils',
   gio_unix_dep,
   config_h_dep,
   readline_dep,
-  cld2_dep
+  cld2_dep,
+  fmt_dep
 ], include_directories:
      include_directories(['.', '..', thirdparty]),
 install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
-  compile_args: '-DFMT_HEADER_ONLY',
+  dependencies: [fmt_dep],
   include_directories:
     include_directories(['.', '..', thirdparty]))
 

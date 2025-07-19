@@ -219,6 +219,26 @@ host_system = host_machine.system()
 # soft dependencies
 #
 
+# use system's fmt if found, otherwise fall back to embedded version
+# we can probably get away with a lower version, but want to have (roughly)
+# the same in embedded / system.
+fmt_dep = dependency('fmt', version: '>=11.1', required:false)
+if not fmt_dep.found() or get_option('use-embedded-fmt')
+  message('using embedded fmt')
+  fmt_dep = declare_dependency(
+    include_directories : join_paths('.', 'thirdparty/fmt'),
+    compile_args: '-DFMT_HEADER_ONLY')
+endif
+
+# use system's CLI11 if found, otherwise fall back to embedded version
+cli11_dep = dependency('CLI11', version: '>=2.4', required:false)
+if not cli11_dep.found() or get_option('use-embedded-cli11')
+  message('using embedded CLI11')
+  cli11_dep = declare_dependency(
+    compile_args: '-DUSE_EMBEDDED_CLI11',
+    include_directories : join_paths('.', 'thirdparty/cli11'))
+endif
+
 #
 # logging
 #
@@ -279,7 +299,6 @@ if get_option('readline').enabled()
   config_h_data.set('HAVE_READLINE_HISTORY', 1)
   config_h_data.set('HAVE_READLINE_HISTORY_H', 1)
 endif
-
 
 ################################################################################
 # write out version.texi (for texinfo builds in mu4e, guile)

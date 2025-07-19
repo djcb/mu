@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -36,9 +36,6 @@
 
 #include "mu-option.hh"
 
-#ifndef FMT_HEADER_ONLY
-#define FMT_HEADER_ONLY
-#endif /*FMT_HEADER_ONLY*/
 #include <fmt/format.h>
 #include <fmt/core.h>
 #include <fmt/chrono.h>

@@ -15,6 +15,20 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+#
+# mu contains some 'vendored' dependencies under thirdparty/; those
+# are only used if the corresponding system package is not found
+# (if such exists). But, we can override:
+
+option('use-embedded-fmt',
+       type: 'boolean',
+       value: false,
+       description: 'Use the embedded fmt, even if system package is found')
+
+#
+# language detection
+#
+
 option('cld2',
        type : 'feature',
        value: 'auto',
