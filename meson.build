@@ -230,7 +230,9 @@ if not fmt_dep.found() or get_option('use-embedded-fmt')
     compile_args: '-DFMT_HEADER_ONLY')
 endif
 
-# use system's CLI11 if found, otherwise fall back to embedded version
+# use system's CLI11 if found, otherwise fall back to embedded version. we can
+# probably get away with a lower version, but want to have (roughly) the same in
+# embedded / system.
 cli11_dep = dependency('CLI11', version: '>=2.4', required:false)
 if not cli11_dep.found() or get_option('use-embedded-cli11')
   message('using embedded CLI11')

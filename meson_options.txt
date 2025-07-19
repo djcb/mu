@@ -25,6 +25,11 @@ option('use-embedded-fmt',
        value: false,
        description: 'Use the embedded fmt, even if system package is found')
 
+option('use-embedded-cli11',
+       type: 'boolean',
+       value: false,
+       description: 'Use the embedded CLI11, even if system package is found')
+
 #
 # language detection
 #

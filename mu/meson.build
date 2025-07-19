@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -34,7 +34,8 @@ mu = executable(
   'mu-cmd-view.cc',
   'mu-cmd.cc'
 ],
-  dependencies: [ glib_dep, gmime_dep, lib_mu_dep, mu_scm_dep, thread_dep, config_h_dep ],
+  dependencies: [ glib_dep, gmime_dep, cli11_dep,
+                  lib_mu_dep, mu_scm_dep, thread_dep, config_h_dep ],
   cpp_args: ['-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
   install: true)
 #
