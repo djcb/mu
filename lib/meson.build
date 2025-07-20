@@ -51,12 +51,15 @@ lib_mu=static_library(
     guile_dep,
     config_h_dep,
     lib_mu_utils_dep,
-    lib_mu_message_dep],
+    lib_mu_message_dep
+  ],
   install: false)
+
+lib_mu_dep_list = [ lib_mu_message_dep, thread_dep ]
 
 lib_mu_dep = declare_dependency(
   link_with: lib_mu,
-  dependencies: [ lib_mu_message_dep, thread_dep ],
+  dependencies: lib_mu_dep_list,
   include_directories:
     include_directories(['.', '..']))
 
@@ -87,8 +90,11 @@ xapian_query = executable('xapianize-query', [ 'mu-query-xapianizer.cc' ],
 list_maildirs = executable('list-maildirs', 'mu-scanner.cc',
            install: false,
            cpp_args: ['-DBUILD_LIST_MAILDIRS'],
-           dependencies: [glib_dep, config_h_dep,
-                               lib_mu_utils_dep])
+           dependencies: [
+             glib_dep,
+             config_h_dep,
+             lib_mu_utils_dep,
+           ])
 
 if not get_option('tests').disabled()
   subdir('tests')

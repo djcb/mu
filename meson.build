@@ -280,6 +280,12 @@ if get_option('readline').enabled()
   config_h_data.set('HAVE_READLINE_HISTORY_H', 1)
 endif
 
+# io_uring for faster file operations
+liburing_dep = dependency('liburing', version: '>= 2.3', required: get_option('iouring'))
+if liburing_dep.found()
+  config_h_data.set('HAVE_LIBURING', 1)
+endif
+
 
 ################################################################################
 # write out version.texi (for texinfo builds in mu4e, guile)
