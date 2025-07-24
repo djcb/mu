@@ -35,9 +35,9 @@
 #include "message/mu-message.hh"
 #include "message/mu-mime-object.hh"
 
-#if BUILD_GUILE || BUILD_SCM
+#if BUILD_SCM
 #include "scm/mu-scm.hh"
-#endif/*BUILD_GUILE || BUILD_SCM*/
+#endif/*BUILD_SCM*/
 
 #include "utils/mu-error.hh"
 #include "utils/mu-utils-file.hh"
