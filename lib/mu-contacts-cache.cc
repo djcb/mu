@@ -118,7 +118,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 	std::stringstream ss{serialized, std::ios_base::in};
 	std::string       line;
 
-	while (getline(ss, line)) {
+	while (std::getline(ss, line)) {
 		const auto parts = Mu::split(line, SepaChar2);
 		if (G_UNLIKELY(parts.size() != 5)) {
 			mu_warning("error: '{}'", line);
@@ -126,9 +126,9 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 		}
 		Contact ci(parts[0],                                                  // email
 			   std::move(parts[1]),                                       // name
-			   static_cast<int64_t>(g_ascii_strtoll(parts[3].c_str(), NULL, 10)),       // message_date
+			   static_cast<int64_t>(g_ascii_strtoll(parts[3].c_str(), {}, 10)),       // message_date
 			   parts[2][0] == '1' ? true : false,                         // personal
-			   (std::size_t)g_ascii_strtoll(parts[4].c_str(), NULL, 10),  // frequency
+			   static_cast<std::size_t>(g_ascii_strtoll(parts[4].c_str(), {}, 10)),  // frequency
 			   g_get_monotonic_time());                                   // tstamp
 		contacts.emplace(std::move(parts[0]), std::move(ci));
 	}
