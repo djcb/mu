@@ -41,8 +41,9 @@ struct Property {
 	enum struct Id {
 		BatchSize,		/**< Xapian batch-size */
 		Contacts,		/**< Cache of contact information */
-		Created,		/**<  Time of creation */
+		Created,		/**< Time of creation */
 		IgnoredAddresses,	/**< Email addresses ignored for the contacts-cache */
+		Labels,                 /**< Serialized label information. */
 		LastChange,		/**< Time of last change */
 		LastIndex,		/**< Time of last index */
 		MaxMessageSize,		/**< Maximum message size (in bytes) */
@@ -130,6 +131,16 @@ public:
 			"E-mail addresses ignored  for the contacts-cache, "
 			"literal or /regexp/"
 		},
+
+		{
+			Id::Labels,
+			Type::String,
+			Flags::Internal,
+			"labels",
+			{},
+			"Serialized labels information"
+		},
+
 		{
 			Id::LastChange,
 			Type::Timestamp,

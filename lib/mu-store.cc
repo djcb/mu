@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -38,6 +38,7 @@
 
 #include "utils/mu-error.hh"
 
+
 #include "utils/mu-utils.hh"
 #include <utils/mu-utils-file.hh>
 
@@ -65,6 +66,7 @@ struct Store::Private {
 				    : XapianDb::Flavor::Open)},
 		config_{xapian_db_},
 		contacts_cache_{config_},
+		labels_cache_{config_.get<Config::Id::Labels>()},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
 		message_opts_{make_message_options(config_)}
 		{}
@@ -74,6 +76,7 @@ struct Store::Private {
 		xapian_db_{XapianDb(path, XapianDb::Flavor::CreateOverwrite)},
 		config_{make_config(xapian_db_, root_maildir, conf)},
 		contacts_cache_{config_},
+		labels_cache_{config_.get<Config::Id::Labels>()},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
 		message_opts_{make_message_options(config_)} {
 		// so tell xapian-db to update its internal cacheed values from
@@ -83,8 +86,10 @@ struct Store::Private {
 
 	~Private() try {
 		mu_debug("closing store @ {}", xapian_db_.path());
-		if (!xapian_db_.read_only())
+		if (!xapian_db_.read_only()) {
 			contacts_cache_.serialize();
+			config_.set<Config::Id::Labels>(labels_cache_.serialize());
+		}
 	} catch (...) {
 		mu_critical("caught exception in store dtor");
 	}
@@ -131,6 +136,7 @@ struct Store::Private {
 	XapianDb xapian_db_;
 	Config config_;
 	ContactsCache            contacts_cache_;
+	LabelsCache labels_cache_;
 	std::unique_ptr<Indexer> indexer_;
 
 	const std::string	root_maildir_;
@@ -587,6 +593,56 @@ Store::contains_message(const std::string& path) const
 	std::unique_lock lock{priv_->lock_};
 
 	return xapian_db().term_exists(field_from_id(Field::Id::Path).xapian_term(path));
+}
+
+
+Result<Labels::DeltaLabelVec>
+Store::update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta)
+{
+	std::unique_lock lock{priv_->lock_};
+				// i.e. the set of effective labels. and the set up updates, the "diff"
+	auto updates{updated_labels(message.labels(), labels_delta)};
+
+	if (updates.second.empty())
+		return Ok(std::move(updates.second)); // nothing to do
+
+
+	message.set_labels(updates.first);
+	auto res{priv_->update_message_unlocked(message, message.docid())};
+	if (!res)
+		return Err(res.error());
+
+	priv_->labels_cache_.update(updates.second);
+
+	return Ok(std::move(updates.second));
+}
+
+Result<void>
+Store::clear_labels(Message& message)
+{
+	std::unique_lock lock{priv_->lock_};
+
+	const auto labels{message.labels()};
+	if (labels.empty())
+		return Ok(); // nothing to do
+
+	message.set_labels({}); // clear all
+	auto res{priv_->update_message_unlocked(message, message.docid())};
+	if (!res)
+		return Err(res.error());
+
+	for (auto label: labels)
+		priv_->labels_cache_.remove(label);
+
+	return Ok();
+}
+
+LabelsCache::Map
+Store::label_map() const
+{
+	std::unique_lock lock{priv_->lock_};
+
+	return priv_->labels_cache_.label_map();
 }
 
 std::size_t

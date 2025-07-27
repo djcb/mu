@@ -35,6 +35,7 @@
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
+#include "mu-labels-cache.hh"
 
 #include <message/mu-message.hh>
 
@@ -337,6 +338,36 @@ public:
 	 * @return vector of ids
 	 */
 	static IdVec id_vec(const IdPathVec& ips);
+
+	/**
+	 * Update the labels for a message with the labels-delta
+	 *
+	 * Update the message in the store, and update the labels-cache
+	 *
+	 * @param message some message
+	 * @param labels_delta the set of changes
+	 *
+	 * @return the effective changes for this message
+	 */
+	Result<Labels::DeltaLabelVec> update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta);
+
+	/**
+	 * Clear all labels from message
+	 *
+	 * @param message some message
+	 *
+	 * @retgurn Ok or some error
+	 */
+	Result<void> clear_labels(Message& message);
+
+	/**
+	 * Get a copy of the map of labels in use.
+	 *
+	 * The map maps label-names to their count
+	 *
+	 * @return map
+	 */
+	LabelsCache::Map label_map() const;
 
 	/**
 	 * Prototype for the ForEachMessageFunc
