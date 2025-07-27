@@ -57,12 +57,9 @@
 
 using namespace Mu;
 
-
 /*
  * helpers
  */
-
-
 
 /**
  * array of associated pair elements -- like an alist
@@ -215,6 +212,15 @@ sub_crypto(CLI::App& sub, T& opts)
 		     "Attempt to automatically retrieve online keys");
 	sub.add_flag("--decrypt", opts.decrypt,
 		     "Attempt to decrypt");
+}
+
+static void add_muhome_option(CLI::App& sub, Options& opts)
+{
+	sub.add_option("--muhome",
+		       opts.muhome, "Specify alternative mu directory")
+		->envname("MUHOME")
+		->type_name("<dir>")
+		->transform(ExpandPath, "expand muhome path");
 }
 
 /*
@@ -495,6 +501,78 @@ sub_init(CLI::App& sub, Options& opts)
 }
 
 static void
+sub_label(CLI::App& sub, Options& opts)
+{
+	sub.require_subcommand(1);
+
+	// update
+	auto update{sub.add_subcommand("update", "update labels")};
+	update->add_option("--labels", opts.label.delta_labels,
+		       "One or more comma-separated +label,-label")
+		->delimiter(',')
+		->type_name("<delta-label>")
+		->required();
+	update->add_flag("-n,--dry-run", opts.label.dry_run,
+		     "Output what would change without changing anything");
+	update->add_option("query", opts.label.query, "Query for messages to update")
+		->required();
+	add_muhome_option(*update, opts);
+
+	// clear
+	auto clear = sub.add_subcommand("clear", "clear all labels from matched messages");
+	clear ->add_option("query", opts.label.query, "Query for messages to clear of labels")
+		->required();
+	clear->add_flag("-n,--dry-run", opts.label.dry_run,
+		     "Output what would change without changing anything");
+	add_muhome_option(*clear, opts);
+
+	// list
+	[[maybe_unused]] auto list = sub.add_subcommand("list", "list labels in the store");
+	add_muhome_option(*list, opts);
+
+	// export
+	[[maybe_unused]] auto exportsub = sub.add_subcommand("export", "export labels to a file");
+	add_muhome_option(*exportsub, opts);
+	exportsub->add_option("output", opts.label.file, "File to export labels to")
+		->type_name("<file>");
+
+	// import
+	auto importsub = sub.add_subcommand("import", "import labels from a file");
+	importsub->add_flag("-n,--dry-run", opts.label.dry_run,
+			    "Output what would change without changing anything");
+	importsub->add_option("input", opts.label.file, "File with labels to import")
+		->required()
+		->type_name("<file>");
+	add_muhome_option(*importsub, opts);
+
+	// XXX: it'd be nice to make "update" the default command, such that
+	//   mu label foo --labels +a,-b
+	// would be interpreted as
+	//   mu label update foo --labels +a,-b
+	// but no succeeded yet; CLI11 treats 'foo' as unknown sub-command
+
+	sub.final_callback([&](){
+		if (sub.got_subcommand("list")) {
+			opts.label.sub = Options::Label::Sub::List;
+			opts.label.read_only = true;
+		} else if (sub.got_subcommand("clear")) {
+			opts.label.sub = Options::Label::Sub::Clear;
+			opts.label.read_only = opts.label.dry_run;
+		} else if (sub.got_subcommand("update")){
+			opts.label.sub = Options::Label::Sub::Update;
+			opts.label.read_only = opts.label.dry_run;
+		} else if (sub.got_subcommand("export")){
+			opts.label.sub = Options::Label::Sub::Export;
+			opts.label.read_only = true;
+		} else if (sub.got_subcommand("import")){
+			opts.label.sub = Options::Label::Sub::Import;
+			opts.label.read_only = opts.label.dry_run;
+		}
+	});
+}
+
+
+static void
 sub_mkdir(CLI::App& sub, Options& opts)
 {
 	sub.add_option("--mode", opts.mkdir.mode, "Set the access mode (octal)")
@@ -664,6 +742,10 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		{ SubCommand::Init,
 		  {Category::NeedsWritableStore,
 		  "init", "Initialize the database", sub_init }
+		},
+		{ SubCommand::Label,
+		  {Category::None, // note Store handled on sub-subcommmands
+		  "label", "Add/remove labels", sub_label }
 		},
 		{ SubCommand::Mkdir,
 		  {Category::None,
@@ -839,11 +921,7 @@ There is NO WARRANTY, to the extent permitted by law.
 		/* store commands get the '--muhome' parameter as well */
 		if (cat == Category::NeedsReadOnlyStore ||
 		    cat == Category::NeedsWritableStore)
-			sub->add_option("--muhome",
-					opts.muhome, "Specify alternative mu directory")
-				->envname("MUHOME")
-				->type_name("<dir>")
-				->transform(ExpandPath, "expand muhome path");
+			add_muhome_option(*sub, opts);
 	}
 
 	/* add scripts (if supported) as semi-subcommands as well */
@@ -918,7 +996,6 @@ validate_subcommand_ids()
 			return false;
 	return true;
 }
-
 
 /*
  * tests... also build as runtime-tests, so we can get coverage info

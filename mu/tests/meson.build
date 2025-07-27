@@ -66,6 +66,13 @@ test('test-cmd-init',
                 build_by_default: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_dep]))
+test('test-cmd-label',
+     executable('test-cmd-label',
+                '../mu-cmd-label.cc',
+                install: false,
+                build_by_default: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_dep]))
 
 test('test-cmd-mkdir',
      executable('test-cmd-mkdir',

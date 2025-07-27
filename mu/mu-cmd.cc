@@ -102,6 +102,17 @@ with_readonly_store(const ReadOnlyStoreFunc& func, const Options& opts)
 	return func(store.value(), opts);
 }
 
+static Result<void> // overloading does not work.
+with_readonly_store2(const WritableStoreFunc& func, const Options& opts)
+{
+	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb))};
+	if (!store)
+		return Err(store.error());
+
+	return func(store.value(), opts);
+}
+
+
 static Result<void>
 with_writable_store(const WritableStoreFunc func, const Options& opts)
 {
@@ -160,6 +171,14 @@ Mu::mu_cmd_execute(const Options& opts) try {
 	case Options::SubCommand::Move:
 		return with_writable_store(mu_cmd_move, opts);
 
+	/*
+	 *  read-only _or_ writable store
+	 */
+	case Options::SubCommand::Label:
+		if (opts.label.read_only)
+			return with_readonly_store2(mu_cmd_label, opts);
+		else
+			return with_writable_store(mu_cmd_label, opts);
 	/*
 	 * commands instantiate store themselves
 	 */

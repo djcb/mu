@@ -1,0 +1,156 @@
+#+TITLE: MU LABEL
+#+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
+#+include: macros.inc
+
+* NAME
+
+mu-label - attach labels to messages. Export labels to file, and import them.
+
+* SYNOPSIS
+
+*mu* [​_COMMON-OPTIONS_​] *label* update [​UPDATE-OPTIONS​] "<query>" --labels [{+,-}<label>]...
+
+*mu* [​_COMMON-OPTIONS_​] *label* list [LIST-OPTIONS]
+
+mu [​_COMMON-OPTIONS_​] *label* clear [CLEAR-OPTIONS] "<query>"
+
+mu [​_COMMON-OPTIONS_​] *label* export [<file>]
+
+mu [​_COMMON-OPTIONS_​] *label* import <file>
+
+* DESCRIPTION
+
+*mu label* is the sub-command for adding and removing and listing message labels.
+
+A label is a string associated with a message.
+
+*mu label* has five sub-commands (i.e., 'sub-sub-commands'):
+
+- *update* for changing the labels for the messages matching some query
+- *clear* for clearing all labels from messages matching some query
+- *list* to list all labels that are in use in the store
+- *export* to write the label information to a file
+- *import* the read label information from a file
+
+Unlike other message metadata stored by *mu*, labels _cannot_ be restored by
+re-indexing messages. Hence, to avoid loosing label information, you must *export*
+it before re-indexing, and *import* afterwards.
+
+* UPDATE OPTIONS
+
+The *update* command changes the labels for messages that match some query. Make sure the query is recognized as a single parameter, i.e., quote it when using from a shell.
+
+** --labels
+
+  a comma-separated list of labels, each prefixed with either *+* to add that
+  label, or *-* to remove it. See *VALID LABELS*.
+
+** --dry-run
+
+  only print what /would/ change, but do not change anything
+
+#+include: "muhome.inc" :minlevel 2
+
+* CLEAR OPTIONS
+
+The *clear* command removes all labels from messages that match some query. Make
+sure the query is recognized as a single parameter, i.e., quote it when using
+from a shell.
+
+** --dry-run
+
+  only print what would change, but do not change anything
+
+#+include: "muhome.inc" :minlevel 2
+
+* LIST OPTIONS
+
+The *list* command lists all the labels that are currently in use in the store.
+
+
+* EXPORT OPTIONS
+
+The *export* command outputs /all/ labels in the store to a file, so you can *import*
+it later. The command takes a path to a file as its argument.
+
+See *EXPORT FORMAT* below for details about the format.
+
+If no file is specified, *mu* creates one for you, in the current directory.
+
+* IMPORT OPTIONS
+
+The *import* command is for restoring the labels from a file created through
+*export* earlier. The command takes a path to a file as its argument.
+
+See *EXPORT FORMAT* below for details on the format.
+
+** --dry-run
+
+  only print what would change, but do not change anything
+
+#+include: "muhome.inc" :minlevel 2
+
+* VALID LABELS
+
+*mu* does not wish to limit your creativity, but nevertheless puts a few
+restrictions on what is accepted as a label:
+
+- a *valid label character* is either a UTF-8 encoded alphanumeric character, or
+  any ASCII character that is not a control-character and is not one of ' '
+  (SPC), ',', '"', '/', '\' '*', '$'.
+- a *valid label* consists of one or more valid label characters, the first of
+  which must *not* be either '+' or '-'
+
+Hence, some valid labels are: ~project-x~, ~capybara~, ~fnorb~, while some _invalid_
+ones are: ~holiday plan~ and ~+fancy$/dinner~.
+
+* EXPORT FORMAT
+
+The formats for import/export are UTF-8 encoded text. The first line starts with
+~;;~ and some internal data. Empty lines are ignored.
+
+Each entry represents the tags for a message. It consists of three lines. The
+first starts with ~path:~ followed by the file-system path to the message. The
+second line starts with ~message-id:~ followed by the message-id for the message.
+Finally, the third line starts with ~tag:~ followed by space-separated tags for
+the message
+
+With this, the labels for a message can be restored.
+
+#+begin_example
+path:/home/user/Maildir/inbox/cur/1720645394.99f64f5d81f42ba4.hyperion:2,S
+message-id:669338009127192q7821feh1t826d0c4c90bd8fdf@mail.gmail.com
+labels:foo,bar,cuux
+#+end_example
+
+Note, the ~message-id:~ is only used if the message cannot be found at ~path:.
+This adds some tolerance for the case where the precise file-system positions
+have changed since the labels were exported. The upshot of that is that if there
+are _duplicate_ messages (messages with the same message-id), the tags are applied
+to all of them.
+
+#+include: "exit-code.inc" :minlevel 1
+
+* EXAMPLES
+
+Some examples. For the query parameter, make sure to quote the query to ensure
+it is recognized as a single parameter.
+
+Remove the label "planet" and add the label "dwarf-planet" to all messages that
+have "pluto" in their subject:
+#+begin_export
+$ mu label update "subject:pluto" --labels -planet,+dwarf-planet
+#+end_export
+
+
+Clear all labels from messages with the label "boring":
+#+begin_export
+$ mu label clear "label:boring"
+#+end_export
+
+#+include: "prefooter.inc" :minlevel 1
+
+* SEE ALSO
+
+{{{man-link(mu-query,1)}}},
+{{{man-link(mu-find,1)}}},

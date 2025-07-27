@@ -62,7 +62,7 @@ struct Options {
 	static bool default_no_color();
 
 	enum struct SubCommand {
-		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Mkdir,
+		Add, Cfind, Extract, Fields, Find, Help, Index,Info, Init, Label, Mkdir,
 		Move, Remove, Scm, Script, Server, Verify, View,
 		// <private>
 		__count__
@@ -78,6 +78,7 @@ struct Options {
 			SubCommand::Index,
 			SubCommand::Info,
 			SubCommand::Init,
+			SubCommand::Label,
 			SubCommand::Mkdir,
 			SubCommand::Move,
 			SubCommand::Remove,
@@ -199,6 +200,29 @@ struct Options {
 		bool		support_ngrams;		/**< support CJK etc. ngrams */
 
 	} init;
+
+	/*
+	 * Label
+	 */
+	struct Label {
+		OptString query;                         /**< Query for the messages to label */
+		bool dry_run{};				 /**< Merely print the messages that would be
+							  * labeled without doing so */
+		StringVec delta_labels;                  /**< labels to add (+) or remove (-) */
+		bool read_only{};                        /** do not require writable store */
+
+		OptString file;                           /** file for import/export */
+
+		enum struct Sub { // sub-subcommands
+			Update, //  add/remove labels
+			Clear,  // clear all labels
+			List,   // list all labels in the store
+			Export, // export labels
+			Import, // import labels
+		};
+		Sub sub;
+	} label;
+
 
 	/*
 	 * Mkdir

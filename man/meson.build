@@ -55,6 +55,7 @@ man_orgs = [
   'mu-index.1.org',
   'mu-info.1.org',
   'mu-init.1.org',
+  'mu-label.1.org',
   'mu-mkdir.1.org',
   'mu-move.1.org',
   'mu-query.7.org',

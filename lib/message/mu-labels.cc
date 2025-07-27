@@ -20,11 +20,9 @@
 
 #include "mu-labels.hh"
 #include <set>
-#include <algorithm>
 
 using namespace Mu;
 using namespace Mu::Labels;
-
 
 Result<void>
 Mu::Labels::validate_label(const std::string &label)
@@ -55,19 +53,24 @@ Mu::Labels::validate_label(const std::string &label)
 		if (uc > ' ' &&  uc <= '~') {
 			switch (uc) {
 			case '"':
+			case ',':
 			case '/':
 			case '\\':
 			case '*':
 			case '$':
 				return Err(Error{Error::Code::InvalidArgument,
-				 "illegal character '{}' in label ({})", uc, label});
+				 "illegal character '{}' in label '{}'", uc, label});
 			default:
 				break;
 			}
-		} else
+		} else if (::isprint(uc))
 			return Err(Error{Error::Code::InvalidArgument,
-				 "illegal non alpha-numeric character '{}' in label ({})",
-				 uc, label});
+					"illegal non alpha-numeric character '{}' in label '{}'",
+					static_cast<char>(uc), label});
+		else
+			return Err(Error{Error::Code::InvalidArgument,
+					"illegal non alpha-numeric character {:#x} in label '{}'",
+					uc, label});
 	}
 
 	return Ok();
@@ -156,14 +159,12 @@ Mu::Labels::updated_labels(const LabelVec& labels, const DeltaLabelVec& deltas)
 static void
 test_parse_delta_label()
 {
-
 	{
 		const auto expr = parse_delta_label("+foo");
 		assert_valid_result(expr);
 		g_assert_true(expr->first == Delta::Add);
 		assert_equal(expr->second, "foo");
 	}
-
 
 	{
 		const auto expr = parse_delta_label("-bar@cuux");
