@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -22,6 +22,7 @@
 
 #include <initializer_list>
 #include <string>
+#include <algorithm>
 #include <utils/mu-utils.hh>
 #include <utils/mu-result.hh>
 
@@ -75,6 +76,21 @@ const char* set_tz(const char* tz);
  * @return true if the switch succeeds, false otherwise
  */
 bool set_en_us_utf8_locale();
+
+
+
+/**
+ * Count new lines in string.
+ *
+ * @param s string
+ *
+ * @return number of newlines
+ */
+static inline size_t count_nl(const std::string& s) {
+	return std::count(s.begin(), s.end(), '\n');
+}
+
+
 
 
 /**

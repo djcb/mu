@@ -533,14 +533,6 @@ Mu::mu_cmd_find(const Store& store, const Options& opts)
 
 static std::string test_mu_home;
 
-auto count_nl(const std::string& s)->size_t {
-	size_t n{};
-	for (auto&& c: s)
-		if (c == '\n')
-			++n;
-	return n;
-}
-
 static size_t
 search_func(const std::string& expr, size_t expected)
 {
