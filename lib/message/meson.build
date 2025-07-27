@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ lib_mu_message=static_library(
     'mu-document.cc',
     'mu-fields.cc',
     'mu-flags.cc',
+    'mu-labels.cc',
     'mu-priority.cc',
     'mu-mime-object.cc',
   ],

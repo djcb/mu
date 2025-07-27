@@ -42,6 +42,13 @@ test('test-fields',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, gmime_dep, lib_mu_message_dep]))
 
+test('test-labels',
+     executable('test-labels',
+                '../mu-labels.cc',
+                install: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [glib_dep, lib_mu_utils_dep]))
+
 test('test-flags',
      executable('test-flags',
                 '../mu-flags.cc',

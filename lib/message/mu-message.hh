@@ -31,6 +31,7 @@
 #include "mu-priority.hh"
 #include "mu-flags.hh"
 #include "mu-fields.hh"
+#include "mu-labels.hh"
 #include "mu-document.hh"
 #include "mu-message-part.hh"
 #include "mu-message-file.hh"
@@ -342,15 +343,29 @@ public:
 	}
 
 	/**
-	 * get the list of tags (ie., X-Label)
+	 * Get the labels for this message
 	 *
-	 * @param msg a valid MuMsg
+	 * @return a list with the tags for this msg. Don't modify/free
+	 */
+	Labels::LabelVec labels() const {
+		return document().string_vec_value(Field::Id::Labels);
+	}
+
+	/**
+	 * Set the labels for this message, removing the existing ones.
+	 *
+	 * @param labels the new labels
+	 */
+	void set_labels(const Labels::LabelVec& labels);
+
+
+	/**
+	 * get the list of tags (ie., X-Label)
 	 *
 	 * @return a list with the tags for this msg. Don't modify/free
 	 */
 	std::vector<std::string> tags() const {
-		return document()
-			.string_vec_value(Field::Id::Tags);
+		return document().string_vec_value(Field::Id::Tags);
 	}
 
 	/*

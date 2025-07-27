@@ -240,6 +240,13 @@ Message::set_flags(Flags flags)
 	priv_->doc.add(flags);
 }
 
+void
+Message::set_labels(const Labels::LabelVec& labels)
+{
+	priv_->doc.remove(Field::Id::Labels);
+	priv_->doc.add(Field::Id::Labels, labels);
+}
+
 bool
 Message::load_mime_message(bool reload) const
 {

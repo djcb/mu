@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -65,6 +65,10 @@ struct Field {
 		Tags,		/**< Message Tags */
 		ThreadId,	/**< Thread Id */
 		To,		/**< To: recipient */
+
+		// XXX: re-order when we update the db-schema.
+		Labels,         /**< Labels */
+
 		//
 		_count_         /**< Number of Ids */
 	};
@@ -462,6 +466,19 @@ static constexpr std::array<Field, Field::id_size()>
 		Field::Flag::NormalTerm |
 		Field::Flag::PhrasableTerm,
 	    },
+	    {
+		Field::Id::Labels,
+		Field::Type::StringList,
+		"labels", "label",
+		"Message label(s)",
+		"label:projectx",
+		'q',
+		Field::Flag::BooleanTerm |
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
+,
+	    },
+
 	}};
 
 /*
@@ -476,8 +493,7 @@ static constexpr std::array<Field, Field::id_size()>
  * @return ref of the message field.
  */
 constexpr const Field&
-field_from_id(Field::Id id)
-{
+field_from_id(Field::Id id) {
 	return Fields.at(static_cast<size_t>(id));
 }
 

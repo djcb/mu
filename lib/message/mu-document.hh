@@ -1,4 +1,4 @@
-/** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -28,6 +28,7 @@
 #include "mu-priority.hh"
 #include "mu-flags.hh"
 #include "mu-contact.hh"
+#include "mu-labels.hh"
 #include <utils/mu-option.hh>
 #include <utils/mu-sexp.hh>
 
@@ -102,7 +103,6 @@ public:
 	 */
 	void	add(Field::Id field_id, const std::vector<std::string>& vals);
 
-
 	/**
 	 * Add message-contacts to the document, if non-empty
 	 *
@@ -139,11 +139,12 @@ public:
 
 
 	/**
-	 *  Add message flags to the document
+	 * Add message flags to the document
 	 *
 	 * @param flags mesage flags.
 	 */
 	void	add(Flags flags);
+
 
 	/**
 	 * Remove values and terms for some field.
