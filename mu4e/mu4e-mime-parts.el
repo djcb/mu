@@ -106,6 +106,9 @@ There are some internal fields as well, e.g. ; subject to change:
                (when (and part (numberp index) (not (member index indices)))
                  (let* ((disp (mm-handle-disposition part))
                         (fname (mm-handle-filename part))
+                        (fname (and fname ;; massage
+                                    (gnus-map-function mm-file-name-rewrite-functions
+                                                       (file-name-nondirectory fname))))
                         (mime-type (mm-handle-media-type part))
                         (info
                          `(:part-index  ,index
