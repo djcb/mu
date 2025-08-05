@@ -97,7 +97,7 @@ The first letter of NAME is used as a shortcut character."
   :type 'integer
   :group 'mu4e-view)
 
-(defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
+(defconst mu4e--view-raw-buffer-name "*mu4e-raw-view*"
   "Name for the raw message view buffer.")
 
 (defun mu4e-view-raw-message ()

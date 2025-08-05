@@ -365,7 +365,7 @@ files."
     ;; open in this emacs instance, "raw"
     (:name "raw" :handler (lambda (str)
                             (let ((tmpbuf
-                                   (get-buffer-create " *mu4e-raw-mime*")))
+                                   (get-buffer-create "*mu4e-raw-mime*")))
                               (with-current-buffer tmpbuf
                                 (insert str)
                                 (view-mode)

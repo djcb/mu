@@ -34,7 +34,7 @@
 (defvar mu4e-main-buffer-name "*mu4e-main*"
   "Name of the mu4e main buffer.")
 
-(defvar mu4e-embedded-buffer-name " *mu4e-embedded*"
+(defvar mu4e-embedded-buffer-name "*mu4e-embedded*"
   "Name for the embedded message view buffer.")
 
 ;; Buffer names for public use
