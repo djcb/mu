@@ -143,7 +143,7 @@ If non-nil, this is a plist of the form:
 Useful for diagnosing update problems.")
 
 ;;; Internal variables / const
-(defconst mu4e--update-name " *mu4e-update*"
+(defconst mu4e--update-name "*mu4e-update*"
   "Name of the process and buffer to update mail.")
 (defvar mu4e--progress-reporter nil
   "Internal, the progress reporter object.")

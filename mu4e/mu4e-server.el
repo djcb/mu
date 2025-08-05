@@ -222,7 +222,7 @@ It is the mu4e-version of \"mu find <query> --analyze\"."
 
 (defvar mu4e--server-buf nil
   "Buffer (string) for data received from the backend.")
-(defconst mu4e--server-name " *mu4e-server*"
+(defconst mu4e--server-name "*mu4e-server*"
   "Name of the server process, buffer.")
 (defvar mu4e--server-process nil
   "The mu-server process.")
