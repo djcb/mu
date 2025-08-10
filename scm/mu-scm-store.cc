@@ -178,6 +178,25 @@ subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups
 	err.throw_scm();
 }
 
+static SCM
+subr_cc_store_all_labels(SCM store_scm) try {
+
+	constexpr auto func{"cc-store-all-labels"};
+	const auto& store{to_store(store_scm, func, 1)};
+
+	const auto label_map{store.label_map()};
+
+	SCM labels{SCM_EOL};
+	for (const auto& [label, _n]: label_map)
+		labels = scm_append_x(
+			scm_list_2(labels,
+				   scm_list_1(to_scm<std::string>(label))));
+	return labels;
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
 
 static void
 init_subrs()
@@ -192,7 +211,8 @@ init_subrs()
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_cfind));
 	scm_c_define_gsubr("cc-store-alist", 1/*req*/, 0/*opt*/, 0/*rst*/,
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_alist));
-
+	scm_c_define_gsubr("cc-store-all-labels", 1/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_all_labels));
 #pragma GCC diagnostic pop
 }
 

@@ -44,6 +44,7 @@
 	    path
 	    priority
 	    subject
+	    labels
 
 	    references
 	    thread-id
@@ -89,6 +90,7 @@
 	    mfind
 	    mcount
 	    cfind
+	    all-labels
 	    store->alist
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -350,6 +352,10 @@ fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
   (assoc-ref (message->alist message) 'references))
 
+(define-method (labels (message <message>))
+  "Get the list of labels for MESSAGE or #f if not available."
+  (assoc-ref (message->alist message) 'labels))
+
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
 If neither are available, return #f.
@@ -370,7 +376,7 @@ This is method is useful to determine the thread a message is in."
   (assoc-ref (message->alist message) 'flags))
 
 (define-method (flag? (message <message>) flag)
-  "Does MESSAGE have FLAG?"
+  "Does MESSAGE have some FLAG?"
   (let ((flgs (flags message)))
     (if flgs
 	(if (member flag flgs) #t #f)
@@ -560,6 +566,12 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:after       only include contacts last seen time_t: Default all
     #:max-results max. number of matches. Default: false (unlimited))."
   (cc-store-cfind (cc-store store) pattern personal? after max-results))
+
+(define* (all-labels
+	  #:key
+	  (store %default-store))
+  "Get the list of all labels in the store."
+  (cc-store-all-labels (cc-store store)))
 
 ;;; Misc
 

@@ -364,6 +364,11 @@ Example:
      (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
+@deffn {Scheme Procedure} all-labels
+@end deffn
+Get the list of all labels present in the store, or @code{#f} if there are none.
+Not to be confused with @code{labels} procedure for a @code{message} object.
+
 @node Message
 @section Message
 
@@ -695,6 +700,17 @@ For example:
 => 2815
 @end lisp
 
+@deffn {Scheme Procedure} labels message
+@end deffn
+Get the list of labels for this message, or @code{#f} if there are none.
+Not to be confused with the @code{all-labels} procedure for a Store.
+
+For example:
+@lisp
+(labels msg)
+=> ("foo" "bar")
+@end lisp
+
 @deffn {Scheme Procedure} language message
 @end deffn
 Get the ISO-639-1 language code for message's primary language or @code{#f} if not
@@ -770,6 +786,7 @@ For example:
 (mailing-list msg)
 => "gnu-emacs-sources.gnu.org"
 @end lisp
+
 
 @c @deffn {Scheme Procedure} sexp message
 @c @end deffn

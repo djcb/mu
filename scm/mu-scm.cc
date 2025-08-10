@@ -193,6 +193,20 @@ test_scm_script()
 		g_assert_true(res);
 	}
 
+	// add some label for testing
+	{
+		auto res = store->run_query("optimization");
+		const Labels::DeltaLabelVec labels{*Labels::parse_delta_label("+performance")};
+		assert_valid_result(res);
+		g_assert_cmpuint(res->size(), ==, 4);
+		for (auto& it: *res) {
+			auto msg{it.message()};
+			g_assert_true(!!msg);
+			const auto updateres{store->update_labels(*msg, labels)};
+			assert_valid_result(updateres);
+		}
+	}
+
 	Mu::Options opts{};
 	opts.scm.script_path = join_paths(MU_SCM_SRCDIR, "mu-scm-test.scm");
 

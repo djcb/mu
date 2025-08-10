@@ -120,6 +120,16 @@
 
     (test-end "test-message-parts")))
 
+(define (test-message-labels)
+  (test-begin "test-message-labels")
+  (let* ((perfmsgs (mfind "label:performance")))
+    (test-equal 4 (length perfmsgs))
+    (for-each (lambda (msg)
+		(test-equal 1 (length (labels msg)))
+		(test-equal "performance" (car (labels msg))))
+	      perfmsgs))
+    (test-end "test-message-labels"))
+
 (define (test-message-new)
   (test-begin "test-message-new")
   (let ((msg (make-message (format #f "~a/testdir2/Foo/cur/mail5" (getenv "MU_TESTDATADIR"))))
@@ -187,6 +197,7 @@
       (test-message-full)
       (test-message-more)
       (test-message-parts)
+      (test-message-labels)
       (test-message-new)
       (test-options)
       (test-helpers)
