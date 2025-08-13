@@ -33,10 +33,9 @@ would find all messages in 2009 with `snow' in the subject field, e.g:
 2009-03-05 18:38:24 EET Marius <marius@foobar.com> Re: running in the snow
 #+end_example
 
-Note, this the default, plain-text output, which is the default, so you don't
-have to use *--format=plain*. For other types of output (such as symlinks, XML,
-s-expressions or JSON), see the discussion in the *OPTIONS*-section below about
-*--format*.
+This uses the default, *plain* output (implicitly, *--format=plain)*. For other
+output formats (such as symlinks, XML, s-expressions or JSON), see the
+discussion of *--format* in the *OPTIONS*-section below.
 
 The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
@@ -68,8 +67,8 @@ $ mu find subject:snow --fields "d f s"
 lists the date, subject and sender of all messages with `snow' in the their
 subject.
 
-The table of replacement characters is superset of the list mentions for search
-parameters, such as:
+The table of replacement characters is super-set of the list mentioned for
+search parameters, such as:
 #+begin_example
 	t       *t*o: recipient
 	d       Sent *d*ate of the message
@@ -84,8 +83,8 @@ parameters, such as:
 For the complete list, try the command: *mu info fields*.
 
 The message flags are described in {{{man-link(mu-query,7)}}}. As an example, a
-message which is `seen', has an attachment and is signed would have `asz' as its
-corresponding output string, while an encrypted new message would have `nx'.
+message which is `seen', has an attachment and is signed has *asz* as its
+corresponding output string, while an encrypted new message has *nx*.
 
 ** -s, --sortfield _field_ and -z,--reverse
 Specify the field to sort the search results by and the direction (i.e.,
@@ -127,7 +126,7 @@ If _number_ > 0, use that number of lines of the message to provide a summary.
 
 Output results in the specified format.
 
-- The default is *plain*, i.e normal output with one line per message.
+- The default is *plain*, i.e., normal output with one line per message.
 - *links* outputs the results as a maildir with symbolic links to the found
   messages. This enables easy integration with mail-clients (see below for more
   information). This requires *--linksdir*.
@@ -174,7 +173,7 @@ could specify
 This is assuming the GNU *date* command.
 
 ** --exec _command_
-The *--exec* coption causes _command_ to be executed on each matched message;
+The *--exec* option causes _command_ to be executed on each matched message;
 for example, to see the raw text of all messages matching `milkshake', you could
 use:
 #+begin_example
@@ -286,8 +285,9 @@ After restarting Wanderlust, the virtual folders should appear.
 
 * ENCODING
 
-*mu find* output is encoded according to the locale for *--format=plain* (the
-default format), and UTF-8 for all other formats (=sexp=, =xml=).
+*mu find* output is encoded according to the locale wwhen using *--format=plain*
+(the default format), and UTF-8 for all other formats (=sexp=, =xml=).
+
 * PERFORMANCE
 
 Some notes on performance, comparing the timings between some recent releases;

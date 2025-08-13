@@ -23,8 +23,7 @@ your mail.
 
 By default, *mu* uses colorized output when it thinks your terminal is capable of
 doing so. If you don't like color, you can use the *--nocolor* command-line
-option, or set either the *MU_NOCOLOR* or the *NO_COLOR* environment variable to
-non-empty.
+option, or set the *NO_COLOR* environment variable to non-empty.
 
 * SETTING THINGS UP
 
@@ -284,7 +283,7 @@ $ mu cfind julius
 #+end_example
 
 will find all contacts with `julius' in either name or e-mail address. Note that
-*mu cfind* accepts a =regular expression= (as per {{{man-link(pcre,3)}}}
+*mu cfind* accepts a =regular expression= (as per {{{man-link(pcre,3)}}}).
 
 *mu cfind* also supports a *--format=*-parameter, which sets the output to some
 specific format, so the results can be imported into another program. For
@@ -296,7 +295,41 @@ $ mu cfind --format=mutt-alias > ~/mutt-aliases
 #+end_example
 
 Then, you can use them in *mutt* if you add something like *source ~/mutt-aliases*
-to your _muttrc_.
+to your ~muttrc~.
+
+* LABELING MESSAGES
+
+It is possible to associate /labels/ with messages. These are user-provided
+strings you can search for. They are a bit different from the other search
+fields, since labels are not intrinsic parts of messages, so removing your
+message database, and then re-indexing won't bring back your labels.
+
+For that reason, you can export labels to a file and later import them again
+(see {{{man-link(mu-label,1)}}})
+
+Some examples:
+
+#+begin_example
+# label optimization-related messages with a label optimization
+$ mu label update --labels=+performance "subject:performance or subject:optimization or subject:profiling"
+#+end_example
+
+Now, we can search for such messages:
+#+begin_example
+mu find label:performance
+#+end_example>
+
+You can also remove labels, for instance:
+#+begin_example
+# remove the performance label from Bill's messages
+$ mu label update --labels=-performance "from:bill"
+#+end_example>
+
+There's also *mu label clear* to remove all labels from matching messages; and the
+the mutating *label* subcommands (*update*, *clear*, *import*) accept a *--dry-run* option
+for just printing what they /would/ change, without actually changing anything.
+
+{{{man-link(mu-label,1)}}} has all the details.
 
 #+include: "prefooter.inc" :minlevel 1
 
@@ -310,3 +343,4 @@ to your _muttrc_.
 {{{man-link(mu-mkdir,1)}}},
 {{{man-link(mu-view,1)}}},
 {{{man-link(mu-extract,1)}}}
+{{{man-link(mu-label,1)}}}

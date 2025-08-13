@@ -174,12 +174,12 @@ may be good enough, and easier to type.
 
 ** Anchors in regular expressions
 
-Since the underlying Xapian database does not support regular expressions (it
+Since the underlying Xapian database does /not/ support regular expressions (it
 does support wildcards), *mu* implements the regular-expression search by matching
 the user's regular expression against all "terms" (words or phrases) that in the
 database for a given field.
 
-That implementation detail explain why "anchored" regular expressions (with *^*
+That implementation detail explains why "anchored" regular expressions (with *^*
 and *$* to mark begin/end, respectively) can get unexpected results.
 
 Suppose you want to match all messages that start with "pie", and you search
@@ -230,7 +230,7 @@ full table with all details, including single-char shortcuts, try the command:
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 | priority   | prio      | p     | boolean | yes   | yes  | prio:high                     | Priority                         |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
-| references | ref       | r     | boolean | yes   | yes  |                               | References to related messages   |
+| references | ref       | r     | boolean | yes   | yes  | ref:E1rQJDx123@example.com    | References to related messages   |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 | size       |           | z     | range   | yes   | yes  | size:1M..5M                   | Message size in bytes            |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
@@ -238,9 +238,11 @@ full table with all details, including single-char shortcuts, try the command:
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 | tags       | tag       | x     | boolean | yes   | yes  | tag:projectx                  | Message tags                     |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
-| thread     |           | w     | boolean | yes   | no   |                               | Thread a message belongs to      |
+| thread     |           | w     | boolean | yes   | no   | thread:abcde789@example.com   | Thread a message belongs to      |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 | to         |           | t     | phrase  | yes   | yes  | to:flimflam@example.com       | Message recipient                |
++------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
+| labels     | label     | q     | boolean | yes   | yes  | label:projectx                | Message label(s)                 |
 +------------+-----------+-------+---------+-------+------+-------------------------------+----------------------------------+
 #+end_example
 
