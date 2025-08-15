@@ -67,6 +67,7 @@ if not get_option('tests').disabled()
        executable('test-scm',
                   'mu-scm.cc',
                   install: false,
+                  build_by_default: false,
                   dependencies: [mu_scm_dep],
                   cpp_args: [mu_scm_dir_arg, def_srcdir, '-DBUILD_TESTS']))
 endif

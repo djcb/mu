@@ -1,4 +1,4 @@
-## Copyright (C) 2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ if get_option('b_sanitize') == 'none'
        executable('test-mu-guile',
                   'test-mu-guile.cc',
                   install: false,
+                  build_by_default: false,
                   cpp_args: [
                     '-DABS_SRCDIR="' + meson.current_source_dir() + '"',
                     '-DGUILE_LOAD_PATH="' + guile_load_path + '"',
