@@ -216,7 +216,8 @@ import_labels_for_message(Mu::Store& store, const Options& opts,
 		       [](const auto& label) {
 			       return DeltaLabel{Delta::Add, label}; });
 
-	const auto qres = [&]->Result<QueryResults>{
+	const auto qres = [&]()
+		->Result<QueryResults>{
 		// plan A: match by path
 		if (auto qres_a{log_import_get_matching(store, "path:" + path)}; !qres_a) {
 			log_import_err(opts, mu_format("failed to find by path: {}; try with message-id",

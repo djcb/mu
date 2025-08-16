@@ -99,6 +99,12 @@ Mu::Labels::parse_delta_label(const std::string &expr)
 	return Ok(DeltaLabel{std::move(delta), std::move(label)});
 }
 
+
+struct cmp_delta_label { // can not yet be a λ in C++17
+	bool operator()(const DeltaLabel& dl1, const DeltaLabel& dl2) const {
+		return dl1.second < dl2.second;
+	}
+};
 std::pair<LabelVec, DeltaLabelVec>
 Mu::Labels::updated_labels(const LabelVec& labels, const DeltaLabelVec& deltas)
 {
@@ -108,11 +114,9 @@ Mu::Labels::updated_labels(const LabelVec& labels, const DeltaLabelVec& deltas)
 	// comparison operator so "add" and "remove" deltas are considered "the same"
 	// for the set; then fill the set from the end of the deltas vec to the begining,
 	// so "the last one wins", as we want.
-	const auto cmp_delta_label=[](const DeltaLabel& dl1, const DeltaLabel& dl2) {
-		return dl1.second < dl2.second;
-	};
+
 	// only one change per label, last one wins
-	std::set<DeltaLabel, decltype(cmp_delta_label)> working_deltas{
+	std::set<DeltaLabel, cmp_delta_label> working_deltas{
 		deltas.rbegin(), deltas.rend()
 	};
 
