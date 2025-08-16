@@ -125,126 +125,17 @@ label_list(const Mu::Store& store, const Options& opts)
 	return Ok();
 }
 
-constexpr std::string_view path_key = "path:";
-constexpr std::string_view message_id_key = "message-id:";
-constexpr std::string_view labels_key = "labels:";
-
 static Result<void>
 label_export(const Mu::Store& store, const Options& opts)
 {
-	const auto now_t{::time({})};
-	const auto now_tm{::localtime(&now_t)};
-
-	const auto now{mu_format("{:%F-%T}", *now_tm)};
-	const auto fname = opts.label.file.value_or(
-		mu_format("mu-export-{}.txt", now));
-	auto output{std::ofstream{fname, std::ios::out}};
-	if (!output.good())
-		return Err(Error{Error::Code::File,
-				"failed to open '{}' for writing", fname});
-
-	const auto query{opts.label.query.value_or("")};
-	auto results{store.run_query(query)};
-	if (!results)
-		return Err(Error{Error::Code::Query,
-				 "failed to run query '{}': {}",
-				 query, *results.error().what()});
-
-	mu_println(output, ";; version:0 @ {}\n", now);
-
-	for (auto&& result : *results) {
-		if (auto &&msg{result.message()}; msg) {
-			if (const auto labels{msg->labels()}; !labels.empty()) {
-				mu_print(output,
-					 "{}{}\n"
-					 "{}{}\n"
-					 "{}{}\n\n",
-					 path_key,  msg->path(),
-					 message_id_key, msg->message_id(),
-					 labels_key, join(labels,','));
-			}
-		}
-	}
+	const auto res = export_labels(store, "", opts.label.file);
+	if (!res)
+		return Err(res.error());
 
 	if (!opts.quiet)
-		mu_println("written {}", fname);
+		mu_println("written {}", *res);
 
 	return Ok();
-}
-
-static void
-log_import(const Options& opts, const std::string& msg, bool is_err=false)
-{
-	if (is_err)
-		mu_debug("{}", msg);
-	else
-		mu_warning("{}", msg);
-
-	if (is_err && !opts.quiet)
-		mu_printerrln("{}", msg);
-	else if (opts.verbose)
-		mu_println("{}", msg);
-}
-
-static void
-log_import_err(const Options& opts, const std::string& msg)
-{
-	log_import(opts, msg, true);
-}
-
-
-static Result<QueryResults>
-log_import_get_matching(Mu::Store& store, const std::string& query, int max=1)
-{
-	if (auto qres = store.run_query(query, {}, {}, max); !qres)
-		return Err(std::move(qres.error()));
-	else if (qres->empty())
-		return Err(Error{Error::Code::Query,
-				"no matching messages for {}", query});
-	else
-		return Ok(std::move(*qres));
-}
-
-
-static void
-import_labels_for_message(Mu::Store& store, const Options& opts,
-			  const std::string& path, const std::string& msgid,
-			  const std::vector<std::string> labels)
-{
-	Labels::DeltaLabelVec delta_labels{};
-	std::transform(labels.begin(), labels.end(), std::back_inserter(delta_labels),
-		       [](const auto& label) {
-			       return DeltaLabel{Delta::Add, label}; });
-
-	const auto qres = [&]()
-		->Result<QueryResults>{
-		// plan A: match by path
-		if (auto qres_a{log_import_get_matching(store, "path:" + path)}; !qres_a) {
-			log_import_err(opts, mu_format("failed to find by path: {}; try with message-id",
-				       qres_a.error().what()));
-			// plan B: try the message-id
-			return log_import_get_matching(store, "msgid:" + msgid, -1/*all matching*/);
-		} else
-			return qres_a;
-	}();
-
-	// neither plan a or b worked? we have to give up...
-	if (!qres) {
-		log_import_err(opts, qres.error().what());
-		return;
-	}
-
-	// we have match(es)!
-	for (auto&& item: *qres) {
-		auto msg{*item.message()};
-		if (opts.label.dry_run )
-			mu_println("labels: would apply label '{}' to {}", join(labels, ","), path);
-		else if (const auto res = store.update_labels(msg, delta_labels); !res)
-			log_import_err(opts, mu_format("failed to update labels for {}: {}",
-						       msg.path(), res.error().what()));
-		else
-			log_import(opts, mu_format("applied labels {} to {}", join(labels, ","), path));
-	}
 }
 
 static Result<void>
@@ -255,36 +146,8 @@ label_import(Mu::Store& store, const Options& opts)
 		return Err(Error{Error::Code::InvalidArgument,
 				"missing input file"});
 
-	auto input{std::ifstream{*opts.label.file, std::ios::in}};
-	if (!input.good())
-		return Err(Error{Error::Code::File,
-				"failed to open '{}' for reading",
-				*opts.label.file});
-
-	std::string line;
-	std::string current_path, current_msgid;
-	std::vector<std::string> current_labels;
-
-	while (std::getline(input, line)) {
-
-		if (line.find(path_key) ==  0)
-			current_path = line.substr(path_key.length());
-		else if (line.find(message_id_key) == 0)
-			current_msgid = line.substr(message_id_key.length());
-		else if (line.find(labels_key) == 0) {
-			current_labels = split(line.substr(labels_key.length()), ',');
-			if (!current_labels.empty())
-				import_labels_for_message(store, opts,
-							current_path, current_msgid,
-							current_labels);
-			current_path.clear();
-			current_msgid.clear();
-			current_labels.clear();
-		}
-		// ignore anything else.
-	}
-
-	return Ok();
+	return Mu::import_labels(store, *opts.label.file,
+				     opts.label.dry_run, opts.quiet, opts.verbose);
 }
 
 Result<void>

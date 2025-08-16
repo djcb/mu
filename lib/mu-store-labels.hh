@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "utils/mu-utils.hh"
+#include "utils/mu-option.hh"
 #include "message/mu-labels.hh"
 
 namespace Mu {
@@ -47,17 +48,6 @@ public:
 	 */
 	LabelsCache(const std::string serialized = {}): label_map_{deserialize(serialized)} {
 	}
-
-	/**
-	 * Construct a new ContactsCache object
-	 *
-	 * @param config db configuration database object
-	 */
-	LabelsCache(Config& config) {
-
-
-	}
-
 
 	/**
 	 * Add a label occurrence to the cache
@@ -151,6 +141,36 @@ public:
 private:
 	Map label_map_;
 };
+
+class Store;
+
+/**
+ * Export labels to a file
+ *
+ * If path is not specified, use a file in the current directory
+ *
+ * @param store a store object
+ * @param query for the message whose labels to export
+ * @param path the path or nothing
+ *
+ * @return either the output filename or some error
+ */
+Result<std::string> export_labels(const Store& store, const std::string& query="", Option<std::string> path);
+
+/**
+ * Import labels from a file
+ *
+ * If path is not specified, use a file in the current directory
+ *
+ * @param store a store object
+ * @param path the path to the file
+ * @param dry_run only show what would be imported
+ * @param quiet suppress output
+ * @param verbose give verbose output
+ *
+ * @return Ok or some error
+ */
+Result<void> import_labels(Store&, const std::string& path, bool dry_run, bool quiet, bool verbose);
 
 } // namespace Mux
 #endif /*MU_LABELS_CACHE_HH*/

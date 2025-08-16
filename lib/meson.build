@@ -25,6 +25,7 @@ lib_mu=static_library(
     'mu-config.cc',
     'mu-contacts-cache.cc',
     'mu-store.cc',
+    'mu-store-labels.cc',
     'mu-xapian-db.cc',
     # querying
     'mu-query-macros.cc',

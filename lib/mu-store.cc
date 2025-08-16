@@ -79,7 +79,7 @@ struct Store::Private {
 		labels_cache_{config_.get<Config::Id::Labels>()},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
 		message_opts_{make_message_options(config_)} {
-		// so tell xapian-db to update its internal cacheed values from
+		// so tell xapian-db to update its internal cached values from
 		// config. In practice: batch-size.
 		xapian_db_.reinit();
 	}

@@ -35,7 +35,7 @@
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
-#include "mu-labels-cache.hh"
+#include "mu-store-labels.hh"
 
 #include <message/mu-message.hh>
 
