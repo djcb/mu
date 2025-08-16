@@ -71,11 +71,16 @@ The *list* command lists all the labels that are currently in use in the store.
 * EXPORT OPTIONS
 
 The *export* command outputs /all/ labels in the store to a file, so you can *import*
-it later. The command takes a path to a file as its argument.
+it later. The command takes a path to a file or a directory (ending in '/') as
+its argument.
+
+If a file is specified, *mu* writes the export to it.
+
+If a directory is specified, *mu* writes to a file in that directory. The directory must already exist.
+
+When neither is specified, *mu* writes to a file in the current directory.
 
 See *EXPORT FORMAT* below for details about the format.
-
-If no file is specified, *mu* creates one for you, in the current directory.
 
 * IMPORT OPTIONS
 

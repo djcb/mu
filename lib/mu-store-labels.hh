@@ -129,11 +129,13 @@ public:
 		std::string       line;
 
 		while (std::getline(ss, line)) {
-			if (const auto parts = Mu::split(line, SepaChar2); parts.size() != 2)
+			if (const auto parts =
+			    Mu::split(line, SepaChar2); parts.size() != 2)
 				mu_warning("error: '{}'", line);
 			else
 				map.emplace(std::move(parts[0]),
-					    static_cast<std::size_t>(g_ascii_strtoll(parts[1].c_str(),{}, 10)));
+					    static_cast<std::size_t>(
+						    g_ascii_strtoll(parts[1].c_str(),{}, 10)));
 		}
 		return map;
 	}
@@ -148,14 +150,17 @@ class Store;
  * Export labels to a file
  *
  * If path is not specified, use a file in the current directory
+ * If path ends in '/', write file in the path-directory
  *
  * @param store a store object
- * @param query for the message whose labels to export
+ * @param query for the message whose labels to export (empty for "all")
  * @param path the path or nothing
  *
  * @return either the output filename or some error
  */
-Result<std::string> export_labels(const Store& store, const std::string& query="", Option<std::string> path);
+Result<std::string> export_labels(const Store& store,
+				  const std::string& query="",
+				  Option<std::string> path={});
 
 /**
  * Import labels from a file
@@ -170,7 +175,8 @@ Result<std::string> export_labels(const Store& store, const std::string& query="
  *
  * @return Ok or some error
  */
-Result<void> import_labels(Store&, const std::string& path, bool dry_run, bool quiet, bool verbose);
+Result<void> import_labels(Store&, const std::string& path, bool dry_run,
+			   bool quiet, bool verbose);
 
 } // namespace Mux
 #endif /*MU_LABELS_CACHE_HH*/

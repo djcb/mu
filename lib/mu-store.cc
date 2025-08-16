@@ -127,7 +127,6 @@ struct Store::Private {
 	Result<Store::Id> update_message_unlocked(Message& msg, Store::Id docid);
 	Result<Store::Id> update_message_unlocked(Message& msg, const std::string& old_path);
 
-
 	using PathMessage = std::pair<std::string, Message>;
 	Result<PathMessage> move_message_unlocked(Message&& msg,
 						  Option<const std::string&> target_mdir,
@@ -211,9 +210,29 @@ Store::Private::find_duplicates_unlocked(const Store& store,
 	}
 }
 
+static void
+reinit_export_labels(const Store& store)
+{
+	// slightly hacky way to get the cache-path...
+	const auto cache_path{canonicalize_filename(
+		join_paths(store.path(), "..")) + "/"};
+
+	if (const auto res =
+	    Mu::export_labels(store, "", cache_path); !res)
+		throw Mu::Error(Error::Code::CannotReinit,
+				"cannot re-init; "
+				"failed to export labels: {}",
+				res.error().what())
+			.add_hint("see mu-init(1) for details");
+	else {
+		mu_info("exported labels to: {}", *res);
+		mu_println("exported labels to: {}", *res);
+	}
+}
 
 Store::Store(const std::string& path, Store::Options opts)
-    : priv_{std::make_unique<Private>(path, none_of(opts & Store::Options::Writable))}
+    : priv_{std::make_unique<Private>(
+		path, none_of(opts & Store::Options::Writable))}
 {
 	if (none_of(opts & Store::Options::Writable) &&
 	    any_of(opts & Store::Options::ReInit))
@@ -222,12 +241,19 @@ Store::Store(const std::string& path, Store::Options opts)
 
 	const auto s_version{config().get<Config::Id::SchemaVersion>()};
 	if (any_of(opts & Store::Options::ReInit)) {
-		/* don't try to recover from version with an incompatible scheme */
+
+		/* export labels, if necessary (throws if there's an error) */
+		if (!label_map().empty())
+			reinit_export_labels(*this);
+
+		/* don't try to recover from version with an incompatible
+		 * scheme */
 		if (s_version < 500)
-			throw Mu::Error(Error::Code::CannotReinit,
-					"old schema ({}) is too old to re-initialize from",
-					s_version).add_hint("Invoke 'mu init' without '--reinit'; "
-							    "see mu-init(1) for details");
+			throw Mu::Error(
+				Error::Code::CannotReinit,
+				"old schema ({}) is too old to re-initialize from",
+				s_version).add_hint("Invoke 'mu init' without '--reinit'; "
+						    "see mu-init(1) for details");
 		const auto old_root_maildir{root_maildir()};
 
 		MemDb mem_db;

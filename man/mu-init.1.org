@@ -13,26 +13,26 @@ mu-init - initialize the *mu* message database
 * DESCRIPTION
 
 *mu init* is the subcommand for setting up the *mu* message database. After *mu init*
-has completed, you can run *mu index*
+has completed, you can run *mu index*.
 
 * INIT OPTIONS
 
 ** -m, --maildir _maildir_
 Use _maildir_ as the root-maildir.
 
-By default, *mu* uses the *MAILDIR* environment; if it is not set, it uses _~/Maildir_
-if it is an existing directory. If neither of those can be used, the *--maildir*
-option is required; it must be an absolute path (but ~~/~ expansion is
-performed).
+By default, *mu* uses the *MAILDIR* environment to find the root-maildir. If it is
+not set, it uses _~/Maildir_ if it is an existing directory. If neither of those
+can be used, the *--maildir* option is required; it must be an absolute path (but
+~~/~ expansion is performed).
 
 ** --personal-address _email-address-or-regex_
 ** --my-address _email-address-or-regex_  (alias)
-Specifies that some e-mail address is a personal address. The option can be used
+Specifies that some e-mail address is a /personal/ address. The option can be used
 multiple times, to specify all your addresses.
 
-Any message in which at least one of the contact fields contains such an address
-is considered a `personal' message; this can then be used for filtering in
-{{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and *mu4e*, e.g. to
+Any message in which at least one of the contact fields matches a personal
+address, is considered a `personal' message; this can then be used for filtering
+in {{{man-link(mu-find,1)}}}, {{{man-link(mu-cfind,1)}}} and *mu4e*, e.g. to
 filter-out mailing list messages.
 
 _email-address-or-regex_ can be either a plain e-mail address (such as
@@ -78,6 +78,8 @@ Reinitialize the database from an earlier version; that is, create a new empty
 database with the existing settings. This cannot be combined with the other *init*
 options.
 
+When you have _labels_ defined for messages in your database, *mu* automatically exports those to file for importing later. See *RESTORING LABELS* below.
+
 #+include: "muhome.inc" :minlevel 2
 
 * NGRAM SUPPORT
@@ -93,6 +95,22 @@ variables such as *XAPIAN_CJK_NGRAM* are ignored.
 
 #+include: "exit-code.inc" :minlevel 1
 
+* RESTORING LABELS
+
+When you have any _labels_ defined for your database, *mu* automatically exports
+those to a file in the *mu* cache directory; you see this in the ~--init~ output.
+
+#+begin_example
+$ mu init --reinit
+exported labels to: /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
+#+end_example
+
+You can restore those labels _after_ re-indexing, e.g.,
+#+begin_example
+$ mu label import /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
+#+end_example
+
+Please see {{{man-link(mu-label,1)}}} for further details.
 
 * EXAMPLE
 #+begin_example
@@ -105,5 +123,6 @@ $ mu init --maildir=~/Maildir --my-address=alice@example.com --my-address=bob@ex
 
 {{{man-link(mu-index,1)}}},
 {{{man-link(mu-find,1)}}},
+{{{man-link(mu-label,1)}}},
 {{{man-link(mu-cfind,1)}}},
 {{{man-link(pcre,3)}}}

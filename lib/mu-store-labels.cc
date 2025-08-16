@@ -24,9 +24,9 @@
 using namespace Mu;
 
 namespace {
-constexpr std::string_view path_key = "path:";
-constexpr std::string_view message_id_key = "message-id:";
-constexpr std::string_view labels_key = "labels:";
+constexpr std::string_view	path_key       = "path:";
+constexpr std::string_view	message_id_key = "message-id:";
+constexpr std::string_view	labels_key     = "labels:";
 }
 
 using OutputPair = std::pair<std::ofstream, std::string>;
@@ -36,14 +36,26 @@ export_output(Option<std::string> path)
 {
 	const auto now_t{::time({})};
 	const auto now_tm{::localtime(&now_t)};
-
 	const auto now{mu_format("{:%F-%T}", *now_tm)};
-	auto fname = path.value_or(mu_format("mu-export-{}.txt", now));
+
+	// if path is not specified, use a generated file name (in pwd)
+	// if path is specified but ends in '/', use the generated file in that
+	// directory (must exist)
+	// otherwise, use the path.
+	auto fname = [&]() {
+		const auto default_fname{mu_format("mu-export-{}.txt", now)};
+		if (!path || path->empty())
+			return default_fname;
+		else if (path->at(path->length() - 1) == '/')
+			return *path + default_fname;
+		else
+			return *path;
+	}();
 
 	auto output{std::ofstream{fname, std::ios::out}};
 	if (!output.good())
 		return Err(Error{Error::Code::File,
-				"failed pen '{}' for writing", fname});
+				"failed to open '{}' for writing", fname});
 
 	mu_println(output, ";; version:0 @ {}\n", now);
 

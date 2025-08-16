@@ -131,9 +131,6 @@ Mu::remove_directory(const std::string& path)
 		return Ok();
 }
 
-
-
-
 std::string
 Mu::runtime_path(Mu::RuntimePath path, const std::string& muhome)
 {
