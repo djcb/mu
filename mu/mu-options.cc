@@ -632,8 +632,11 @@ sub_server(CLI::App& sub, Options& opts)
 static void
 sub_scm(CLI::App& sub, Options& opts)
 {
+	sub.add_flag("--listen", opts.scm.listen,
+		       "Start listening on a domain socket");
 	sub.add_option("script-path", opts.scm.script_path, "Path to script")
-		->type_name("<path>");
+		->type_name("<path>")
+		->excludes("--listen");
 	sub.add_option("script-args", opts.scm.params, "Parameters for script")
 		->type_name("<parameters>");
 }

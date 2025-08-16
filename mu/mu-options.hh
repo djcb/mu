@@ -259,6 +259,7 @@ struct Options {
 	struct Scm {
 		OptString script_path; /**< Path to script (optional) */
 		StringVec params;      /**< Parameters for script (after "--") */
+		bool listen; /**< Whether to start listening on a socket */
 	} scm;
 
 

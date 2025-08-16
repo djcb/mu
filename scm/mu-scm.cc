@@ -85,7 +85,9 @@ make_mu_scm_path(const std::string& fname) {
 
 namespace {
 static std::string mu_scm_path;
-static std::string mu_scm_shell_path;
+static std::string mu_scm_repl_path;
+static std::string mu_scm_socket_path;
+constexpr auto SOCKET_PATH_ENV = "MU_SCM_SOCKET_PATH";
 }
 
 static Result<void>
@@ -104,11 +106,10 @@ prepare_run(const Mu::Scm::Config& conf)
 	else
 		return Err(path.error());
 
-	if (const auto path = make_mu_scm_path("mu-scm-shell.scm"); path)
-		mu_scm_shell_path = *path;
+	if (const auto path = make_mu_scm_path("mu-scm-repl.scm"); path)
+		mu_scm_repl_path = *path;
 	else
 		return Err(path.error());
-
 
 	if (config->options.scm.script_path) {
 		const auto path{config->options.scm.script_path->c_str()};
@@ -121,9 +122,28 @@ prepare_run(const Mu::Scm::Config& conf)
 	return Ok();
 }
 
-Result<void>
-Mu::Scm::run(const Mu::Scm::Config& conf) {
+// make a unique unix-socket path
+static std::string
+maybe_set_uds_path(bool set)
+{
+	if (set) {
+		GRand* grand{g_rand_new()};
+		auto path = join_paths(g_get_user_runtime_dir(),
+				       mu_format("mu-scm-socket-{:08x}",
+						 g_rand_int(grand)));
+		g_rand_free(grand);
+		g_setenv(SOCKET_PATH_ENV, path.c_str(), 1);
+		return path;
+	} else  {
+		g_unsetenv(SOCKET_PATH_ENV);
+		return {};
+	}
+}
 
+
+Result<void>
+Mu::Scm::run(const Mu::Scm::Config& conf)
+{
 	if (const auto res = prepare_run(conf); !res)
 		return Err(res.error());
 
@@ -151,10 +171,13 @@ Mu::Scm::run(const Mu::Scm::Config& conf) {
 					"-c", cmd.c_str()})
 				args.emplace_back(arg);
 		} else {
-			// otherwise, drop us into an interactive shell/repl (and
-			// shell spec)
+			// otherwise, drop us into an interactive shell/repl
+			// or start listening on a domain socket.
+			mu_scm_socket_path =
+				maybe_set_uds_path(config->options.scm.listen);
+			args.emplace_back("--no-auto-compile");
 			args.emplace_back("-l");
-			args.emplace_back(mu_scm_shell_path.c_str());
+			args.emplace_back(mu_scm_repl_path.c_str());
 		}
 		/* ahem...*/
 		scm_shell(std::size(args), const_cast<char**>(args.data()));

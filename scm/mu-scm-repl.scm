@@ -13,6 +13,16 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; if not, write to the Free Software Foundation,
 ;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+(use-modules (system repl server)
+	     (ice-9 threads))
+(use-modules (mu))
+
+;; when a socket path is defined, listen on it (blocking)
+;; after printing UNIX-CONNECT:<socket-file>\n on stdout
+(let ((socket-path (getenv "MU_SCM_SOCKET_PATH")))
+  (when socket-path
+    (format #t "UNIX-CONNECT:~a\n" socket-path)
+    (run-server
+     (make-unix-domain-server-socket #:path socket-path))))
 
 (display "Welcome to the mu shell!\n\n")
-(use-modules (mu))

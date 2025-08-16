@@ -17,8 +17,7 @@ mu_scm_dir=join_paths(datadir, 'mu', 'scm')
 mu_scm_dir_arg='-DMU_SCM_DIR="' + mu_scm_dir + '"'
 
 lib_mu_scm=static_library(
-  'mu-scm',
-  [
+  'mu-scm',  [
     'mu-scm.cc',
     'mu-scm-message.cc',
     'mu-scm-mime.cc',
@@ -33,7 +32,9 @@ lib_mu_scm=static_library(
   install: false,
   cpp_args: [mu_scm_dir_arg])
 
-install_data(['mu-scm.scm', 'mu-scm-shell.scm'], install_dir : mu_scm_dir)
+install_data(['mu-scm.scm',
+              'mu-scm-repl.scm'],
+             install_dir : mu_scm_dir)
 
 # note: top-level meson.build defines a dummy replacement for this.
 mu_scm_dep = declare_dependency(

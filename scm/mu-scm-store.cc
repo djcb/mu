@@ -216,7 +216,6 @@ init_subrs()
 #pragma GCC diagnostic pop
 }
 
-
 void
 Mu::Scm::init_store(const Store& store)
 {
