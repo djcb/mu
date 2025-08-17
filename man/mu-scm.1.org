@@ -25,6 +25,19 @@ Using *mu scm*, you can script *mu*.
 
 * SCM OPTIONS
 
+** --listen
+
+With the ~--listen~ parameter, *mu scm* starts listening on a UNIX domain socket.
+This can be used for communicating with the REPL using some external tool, such
+as Emacs with the "Geiser" package. For details, refer to the *mu-scm* Info
+manual.
+
+It blocks after printing the name of the socket (which is a randomized name),
+prefixed by *UNIX_CONNECT:* and ending with a newline. For instance:
+#+begin_example
+UNIX-CONNECT:/run/user/1000/mu-scm-socket-4eb5db40
+#+end_example
+
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "common-options.inc" :minlevel 1
@@ -44,5 +57,7 @@ and *mu* programs are properly installed at your site, the command *info mu-scm*
 should give you access to the complete manual.
 
 http://www.schemers.org provides a general introduction to the Scheme language.
+
+{{{man-link(emacs,1)}}}
 
 #+include: "prefooter.inc" :minlevel 1

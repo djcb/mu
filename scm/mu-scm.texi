@@ -104,7 +104,9 @@ Indices
 @menu
 * Using distributions::
 * Building it yourself::
-* Verifying support::
+* Starting the REPL::
+* Listening on a Unix Domain Socket::
+* Hooking up with GNU/Emacs and Geiser::
 @end menu
 
 This chapter walks you through the installation and basic setup.
@@ -139,14 +141,100 @@ however, you can still use it un-installed as well by setting an environment
 variable @t{MU_SCM_DIR} to the source-directory, e.g.
 @t{/home/user/sources/mu/scm}.
 
-@node Verifying support
-@section Verifying support
+@node Starting the REPL
+@section Starting the REPL
 
 After installing @t{mu}, you can check the output of @command{mu info}. If
 @t{mu-scm} is available, in the table you should find a line:
 @example
 | scm-support      | yes     | GNU Guile 3.x support (new)?          |
 @end example
+
+You can then start an interactive shell, also known as the
+``REPL''@footnote{Read-Eval-Print-Loop}.
+@cindex REPL
+
+@example
+$ mu scm
+[....]
+Welcome to the mu shell!
+
+GNU Guile 3.0.9
+Copyright (C) 1995-2023 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+This program is free software, and you are welcome to redistribute it
+under certain conditions; type `,show c' for details.
+
+Enter `,help' for help.
+scheme@@(guile-user)>
+@end example
+
+Refer to the @xref{Shell} chapter to learn about the wonderful things you can do
+in this shell.
+
+@node Listening on a Unix Domain Socket
+@section Listening on a Unix Domain Socket
+
+Instead of using the interactive shell, it is also possible to expose the
+REPL over a Unix domain socket, using the @t{--listen} flag.
+@cindex Unix domain sockets
+
+When you start @command{mu scm} with the @t{--listen} flag, it prints a
+(randomized) UNIX domain socket name and blocks after that; for instance:
+@example
+$mu scm --listen
+UNIX-CONNECT:/run/user/1000/mu-scm-socket-6ef6222e
+@end example
+
+You can connect to this with exernal tools, for instance with @command{socat}:
+@example
+socat - UNIX-CONNECT:/run/user/1000/mu-scm-socket-6ef6222e
+GNU Guile 3.0.9
+Copyright (C) 1995-2023 Free Software Foundation, Inc.
+
+Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
+This program is free software, and you are welcome to redistribute it
+under certain conditions; type `,show c' for details.
+
+Enter `,help' for help.
+scheme@@(guile-user)>
+@end example
+
+That is not much of improvement over the normal Guile shell, but you can of
+course use more advanced tools; @xref{Hooking up with GNU/Emacs and Geiser}.
+
+@node Hooking up with GNU/Emacs and Geiser
+@section Hooking up with GNU/Emacs and Geiser
+@cindex GNU/Emacs
+@cindex Geiser
+
+Many people like interacting with Guile through Emacs and the ``Geiser''
+package, and that is possible with @command{mu scm} as well, using the Unix
+domain socket, as discussed in @xref{Listening on a Unix Domain Socket}.
+
+Assuming you have installed the @t{guile-geiser} package, the following snippet
+makes that easy:
+@lisp
+(require 'guiser-guile)
+
+(defvar mu-scm-listen-command "mu scm --listen"
+  "mu command to start an scm repl listening on a socket.")
+
+(defun mu-scm-geiser-connect ()
+  "Start a mu scm repl and connect to it using geiser.
+Connect to mu's scm (guile) interface through Geiser."
+  (interactive)
+  (make-process
+   :name "*mu-scm-repl*"
+   :command `("sh" "-c"  ,mu-scm-listen-command)
+   :filter (lambda (_proc chunk)
+             (when (string-match "^UNIX-CONNECT:\\(.*\\)$" chunk)
+               (geiser-connect-local 'guile (match-string 1 chunk))))))
+@end lisp
+
+After evaluating this, you can use @command{M-x mu-scm-geiser-connect} to start
+the REPL, with all the Geiser bells & whistles.
 
 @node Shell
 @chapter Shell
