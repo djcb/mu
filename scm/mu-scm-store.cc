@@ -157,23 +157,19 @@ subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups
 		(related ? QueryFlags::IncludeRelated: QueryFlags::None ) |
 		(reverse ? QueryFlags::Descending : QueryFlags::None);
 
-	SCM msgs{SCM_EOL};
 	std::lock_guard lock{store.lock()};
-	const auto qres = store.run_query(query, sort_field_id, qflags, maxnum);
-
+	const auto qres{store.run_query(query, sort_field_id, qflags, maxnum)};
 	if (!qres)
 		throw ScmError{ScmError::Id::WrongArg, func, 2, query_scm, ""};
 
-	for (const auto& mi: *qres) {
-		if (auto plist{mi.document()->get_data()}; plist.empty())
-			continue;
-		else {
-			SCM scm_plist{scm_c_eval_string(("'" + plist).c_str())};
-			msgs = scm_append_x(scm_list_2( msgs, scm_list_1(scm_plist)));
-		}
-	}
-
+	SCM msgs{SCM_EOL};
+	// iterate in reverse order, so the message get consed
+	// into the list in the right order.
+	for (auto it{qres->end()}; it-- != qres->begin();)
+		if (auto plist{it.document()->get_data()}; !plist.empty())
+			msgs = scm_cons(to_scm(plist), msgs);
 	return msgs;
+
 } catch (const ScmError& err) {
 	err.throw_scm();
 }

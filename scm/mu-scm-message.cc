@@ -42,7 +42,6 @@ using MessageMap = std::unordered_map<std::string, MessageObject>;
 static MessageMap message_map;
 }
 
-
 static const Message&
 to_message(SCM scm, const char *func, int pos)
 {
@@ -138,8 +137,9 @@ subr_cc_message_plist(SCM message_scm) try {
 	constexpr auto func{"cc-message-plist"};
 
 	const auto& message{to_message(message_scm, func, 1)};
-	const auto plist{"'" + message.sexp().to_string()};
-	return scm_c_eval_string(plist.c_str());
+	// return the serialized (mu4e) message
+	const auto plist{message.sexp().to_string()};
+	return to_scm(plist);
 
 } catch (const ScmError& err) {
 	err.throw_scm();

@@ -239,8 +239,8 @@ Otherwise, trying to overwrite an existing file raises an error."
 ;; Message
 (define-class <message> ()
   (cc-message #:init-value #f #:init-keyword #:cc-message)
+  (serialized #:init-value #f #:init-keyword #:serialized)
   (parts #:init-value #f #:init-keyword #:parts)
-  (plist #:init-value #f #:init-keyword #:plist)
   (alist #:init-value #f))
 
 (set-documentation!
@@ -253,33 +253,33 @@ these are the slots:
 - cc-message: this is a foreign-object representing the mu
   message object, and needs to be passed to some 'cc-' methods.
 - parts: a list of <mime-part> objects
-- plist: this is an Emacs-style property list which is cached
-  for each message in the store; this was originally added
-  for use in mu4e, but we re-use it here.
-- alist: an association list; this is just more 'scheme-like'
-  version of the plist, it is created on-demand (message->alist).
+- data: this is a string containing an Emacs-style property list
+  which is cached for each message in the store; this was
+  originally added for use in mu4e, but we re-use it here.
+- alist: an association list; an alist with properties, as
+  created from the data (converted from the plist)
 
 A message that came from a search such as 'mfind' initially only
-has the plist, but when a message is loaded from file, either
+has the data, but when a message is loaded from file, either
 through make-message or by calling a function that needs a
-full message, such as header or body, the cc-message is initialized.
-
-Only having a plist is cheaper.")
+full message, such as header or body, the cc-message is initialized.")
 
 (define (make-message path)
   "Create a <message> from file at PATH."
   (make <message> #:cc-message (cc-message-make path)))
 
-(define-method (plist (message <message>))
-  "Get the PLIST for this MESSAGE."
-  (when (not (slot-ref message 'plist))
-    (slot-set! message 'plist (cc-message-plist (cc-message message))))
-  (slot-ref message 'plist))
-
 (define-method (message->alist (message <message>))
   "Get an association-list (alist) representation for MESSAGE."
   (when (not (slot-ref message 'alist))
-	(slot-set! message 'alist (plist->alist (plist message))))
+    (let* ((serialized
+	    (or (slot-ref message 'serialized)
+		(cc-message-plist (slot-ref message 'cc-message))))
+	   ;; parse the serialized message (the mu4e plist)
+	   ;; and convert into alist. We need to _quote_ the
+	   ;; the serialized string before we can parse it.
+	   (alist (plist->alist (eval-string (string-append "'" serialized)))))
+      (slot-set! message 'alist alist)
+      (slot-set! message 'serialized #f))) ;; no longer needed
   (slot-ref message 'alist))
 
 (define-method (cc-message (message <message>))
@@ -289,13 +289,6 @@ path of the message."
   (if (not (slot-ref message 'cc-message))
       (slot-set! message 'cc-message (cc-message-make (path message))))
   (slot-ref message 'cc-message))
-
-(define-method (sexp (message <message>))
-  "Get the s-expression (plist) for this MESSAGE.
-
-This is an internal data-structure, originally for use with mu4e, but useful
-here as well. However, the precise details are not part of mu-scm API."
-  (plist message))
 
 ;; Accessors for the fields
 
@@ -540,10 +533,11 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:sort-field? field to sort by, a symbol. Default: date
     #:reverse?    sort in descending order (z-a)
     #:max-results max. number of matches. Default: false (unlimited))."
-  (map (lambda (plist)
-	 (make <message> #:plist plist))
+  (map (lambda (data)
+	 (make <message> #:serialized data))
        (cc-store-mfind (cc-store store) query
-		       related? skip-dups? sort-field reverse? max-results)))
+		       related? skip-dups? sort-field
+		       reverse? max-results)))
 
 (define* (mcount
 	  #:key
