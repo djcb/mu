@@ -616,6 +616,24 @@ sub_remove(CLI::App& sub, Options& opts)
 		->type_name("<files>");
 }
 
+static std::string
+concoct_socket_path()
+{
+	return join_paths(g_get_user_runtime_dir(),
+			  mu_format("mu-scm-{}.sock", ::getpid()));
+}
+
+static void
+add_listen_flag(CLI::App& sub, Options& opts)
+{
+	sub.add_flag("--listen", opts.scm.listen,
+		     "Start SCM REPL on a domain socket");
+	sub.callback([&opts]{
+		if (opts.scm.listen)
+			opts.scm.socket_path = concoct_socket_path();
+	});
+}
+
 static void
 sub_server(CLI::App& sub, Options& opts)
 {
@@ -627,18 +645,23 @@ sub_server(CLI::App& sub, Options& opts)
 	sub.add_flag("--allow-temp-file", opts.server.allow_temp_file,
 		     "Allow for the temp-file optimization")
 		->excludes("--commands");
+
+#if BUILD_SCM
+	add_listen_flag(sub, opts);
+#endif/*BUILD_SCM*/
 }
 
 static void
 sub_scm(CLI::App& sub, Options& opts)
 {
-	sub.add_flag("--listen", opts.scm.listen,
-		       "Start listening on a domain socket");
+	add_listen_flag(sub, opts);
+
 	sub.add_option("script-path", opts.scm.script_path, "Path to script")
 		->type_name("<path>")
 		->excludes("--listen");
 	sub.add_option("script-args", opts.scm.params, "Parameters for script")
 		->type_name("<parameters>");
+
 }
 
 static void
@@ -785,7 +808,6 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		  "view", "View specific messages", sub_view}
 		},
 	}};
-
 
 
 static ScriptInfos

@@ -46,13 +46,13 @@ struct Options {
 	/*
 	 * general options
 	 */
-	bool		quiet;				/**<  don't give any output */
-	bool		debug;				/**<  log debug-level info */
-	bool		version;			/**<  request mu version */
-	bool		log_stderr;			/**<  log to stderr */
-	bool		nocolor;			/**<  don't use use ansi-colors */
-	bool		verbose;			/**<  verbose output */
-	std::string	muhome;				/**<  alternative mu dir */
+	bool		quiet;			/**<  don't give any output */
+	bool		debug;			/**<  log debug-level info */
+	bool		version;		/**<  request mu version */
+	bool		log_stderr;		/**<  log to stderr */
+	bool		nocolor;		/**<  don't use use ansi-colors */
+	bool		verbose;		/**<  verbose output */
+	std::string	muhome;			/**<  alternative mu dir */
 
 	/**
 	 * Whether by default, we should show color
@@ -260,6 +260,8 @@ struct Options {
 		OptString script_path; /**< Path to script (optional) */
 		StringVec params;      /**< Parameters for script (after "--") */
 		bool listen; /**< Whether to start listening on a socket */
+		Option<std::string> socket_path; /**< path for the '--listen'
+						  * Unix domain socket */
 	} scm;
 
 

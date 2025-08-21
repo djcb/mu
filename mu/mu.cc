@@ -77,6 +77,10 @@ handle_result(const Result<void>& res, const Mu::Options& opts)
 	return res.error().exit_code();
 }
 
+namespace {
+Options opts; // it's big, don't want it on the stack
+}
+
 int
 main(int argc, char* argv[]) try
 {
@@ -93,34 +97,36 @@ main(int argc, char* argv[]) try
 	/*
 	 * read command-line options
 	 */
-	const auto opts{Options::make(argc, argv)};
-	if (!opts) {
-		output_error(opts.error().what(), !Options::default_no_color());
-		return opts.error().exit_code();
-	} else if (!opts->sub_command) {
+	auto optsres{Options::make(argc, argv)};
+	if (!optsres) {
+		output_error(optsres.error().what(), !Options::default_no_color());
+		return optsres.error().exit_code();
+	} else if (!optsres->sub_command) {
 		// nothing more to do.
 		return 0;
 	}
 
+	opts = std::move(*optsres);
+
 	// setup logging
 	Logger::Options lopts{Logger::Options::None};
-	if (opts->log_stderr)
+	if (opts.log_stderr)
 		lopts |= Logger::Options::StdOutErr;
-	if (opts->debug)
+	if (opts.debug)
 		lopts |= Logger::Options::Debug;
 	if (!!g_getenv("MU_TEST"))
 		lopts |= Logger::Options::File;
 
-	const auto logger{Logger::make(opts->runtime_path(RuntimePath::LogFile), lopts)};
+	const auto logger{Logger::make(opts.runtime_path(RuntimePath::LogFile), lopts)};
 	if (!logger) {
-		output_error(logger.error().what(), !opts->nocolor);
+		output_error(logger.error().what(), !opts.nocolor);
 		return logger.error().exit_code();
 	}
 
 	/*
 	 * handle sub command
 	 */
-	return handle_result(mu_cmd_execute(*opts), *opts);
+	return handle_result(mu_cmd_execute(opts), opts);
 
 	// exceptions should have been handled earlier, but catch them here,
 	// just in case...

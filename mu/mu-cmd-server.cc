@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -28,6 +28,10 @@
 
 #include "mu-cmd.hh"
 #include "mu-server.hh"
+
+#if BUILD_SCM
+#include "scm/mu-scm.hh"
+#endif/*BUILD_SCM*/
 
 #include "utils/mu-utils.hh"
 #include "utils/mu-readline.hh"
@@ -60,6 +64,8 @@ install_sig_handler()
 }
 
 /*
+ * djcb@djcbsoftware.nl
+ *
  * Markers for/after the length cookie that precedes the expression we write to
  * output. We use octal 376, 377 (ie, 0xfe, 0xff) as they will never occur in
  * utf8
@@ -102,6 +108,46 @@ report_error(const Mu::Error& err) noexcept
 		      Server::OutputFlags::Flush);
 }
 
+static void
+maybe_setup_readline(const Mu::Options& opts)
+{
+	tty = ::isatty(::fileno(stdout));
+
+	// Note, the readline stuff is inactive unless on a tty.
+	const auto histpath{opts.runtime_path(RuntimePath::Cache) + "/history"};
+	setup_readline(histpath, 50);
+}
+
+// get the SCM socket path we're listening on, or empty if not listening
+static std::string
+maybe_listen_path(const Mu::Store& store, const Mu::Options& opts)
+{
+#ifdef BUILD_SCM
+	if (!opts.scm.socket_path)
+		return {};
+	const auto res = Mu::Scm::run(store, opts, false/*!block*/);
+	if (!res) {
+		mu_warning("failed to start scm socket: {}", res.error().what());
+		return {};
+	} else
+		return  *opts.scm.socket_path;
+#endif /*BUILD_SCM*/
+	return {};
+}
+
+static bool
+maybe_eval(Server& server, const Mu::Options& opts)
+{
+	const auto eval = std::string{opts.server.commands ?
+		"(help :full t)" : opts.server.eval};
+
+	if (!eval.empty()) {
+		server.invoke(eval);
+		return true;
+	} else
+		return false;
+}
+
 Result<void>
 Mu::mu_cmd_server(const Mu::Options& opts) try {
 
@@ -110,31 +156,23 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	if (!store)
 		return Err(store.error());
 
-	Server::Options sopts{};
-	sopts.allow_temp_file = opts.server.allow_temp_file;
+	// empty when we're not listening
+	const auto socket_path = maybe_listen_path(*store, opts);
 
+	Server::Options sopts{opts.server.allow_temp_file, socket_path};
 	Server server{*store, sopts, output_stdout};
-	mu_message("created server with store @ {}; maildir @ {}; debug-mode {};"
-		  "readline: {}",
-		   store->path(), store->root_maildir(),
-		   opts.debug ? "yes" : "no",
-		   have_readline() ? "yes" : "no");
 
-	tty = ::isatty(::fileno(stdout));
-	const auto eval = std::string{opts.server.commands ? "(help :full t)" : opts.server.eval};
-	if (!eval.empty()) {
-		server.invoke(eval);
+	if (maybe_eval(server, opts))
 		return Ok();
-	}
 
-	// Note, the readline stuff is inactive unless on a tty.
-	const auto histpath{opts.runtime_path(RuntimePath::Cache) + "/history"};
-	setup_readline(histpath, 50);
-
+	maybe_setup_readline(opts);
 	install_sig_handler();
-	mu_println(";; Welcome to the " PACKAGE_STRING " command-server{}\n"
-		   ";; Use (help) to get a list of commands, (quit) to quit.",
+
+	mu_println(";; Welcome to the " PACKAGE_STRING " command-server{}",
 		   opts.debug ? " (debug-mode)" : "");
+	if (!socket_path.empty())
+	mu_println(";; SCM socket listening on {}", socket_path);
+	mu_println(";; Use (help) to get a list of commands, (quit) to quit.");
 
 	bool do_quit{};
 	while (!MuTerminate && !do_quit) {
@@ -151,7 +189,6 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 		mu_message ("shutting down due to signal {}", MuTerminate.load());
 
 	shutdown_readline();
-
 	return Ok();
 
 } catch (const Error& er) { /* note: user-level error, "OK" for mu */
