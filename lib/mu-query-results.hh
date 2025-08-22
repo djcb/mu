@@ -163,7 +163,7 @@ using QueryMatches = std::unordered_map<Xapian::docid, QueryMatch>;
 ///
 class QueryResultsIterator {
 public:
-	using iterator_category = std::output_iterator_tag;
+	using iterator_category = std::bidirectional_iterator_tag;
 	using value_type        = Message;
 	using difference_type   = void;
 	using pointer           = void;
@@ -174,14 +174,47 @@ public:
 	}
 
 	/**
-	 * Increment the iterator (we don't support post-increment)
+	 * Increment the iterator
 	 *
-	 * @return an updated iterator, or end() if we were already at end()
+	 * @return an updated iterator
 	 */
 	QueryResultsIterator& operator++() {
 		++mset_it_;
 		mdoc_ = Nothing;
 		return *this;
+	}
+
+	/**
+	 * Increment the iterator (postfix)
+	 *
+	 * @return the iterator before updating
+	 */
+	QueryResultsIterator operator++(int) {
+		auto old{mset_it_};
+		++mset_it_;
+		return QueryResultsIterator{old, query_matches_};
+	}
+
+	/**
+	 * Decrement the iterator
+	 *
+	 * @return an updated iterator
+	 */
+	QueryResultsIterator& operator--() {
+		--mset_it_;
+		mdoc_ = Nothing;
+		return *this;
+	}
+
+	/**
+	 * Decrement the iterator (postfix)
+	 *
+	 * @return the iterator before updating
+	 */
+	QueryResultsIterator operator--(int) {
+		auto old{mset_it_};
+		--mset_it_;
+		return QueryResultsIterator{old, query_matches_};
 	}
 
 	/**
@@ -371,9 +404,7 @@ public:
 	 * @param mset an Xapian::MSet with matches
 	 */
 	QueryResults(const Xapian::MSet& mset, QueryMatches&& query_matches)
-	    : mset_{mset}, query_matches_{std::move(query_matches)}
-	{
-	}
+	    : mset_{mset}, query_matches_{std::move(query_matches)} {}
 	/**
 	 * Is this QueryResults object empty (ie., no matches)?
 	 *
@@ -393,14 +424,18 @@ public:
 	 *
 	 * @return iterator
 	 */
-	const iterator begin() const { return QueryResultsIterator(mset_.begin(), query_matches_); }
+	const_iterator begin() const {
+		return QueryResultsIterator(mset_.begin(), query_matches_);
+	}
 
 	/**
 	 * Get the end iterator to the results.
 	 *
 	 * @return iterator
 	 */
-	const_iterator end() const { return QueryResultsIterator(mset_.end(), query_matches_); }
+	const_iterator end() const {
+		return QueryResultsIterator(mset_.end(), query_matches_);
+	}
 
 	/**
 	 * Get the query-matches for these QueryResults. The non-const
