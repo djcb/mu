@@ -184,10 +184,9 @@ subr_cc_store_all_labels(SCM store_scm) try {
 
 	SCM labels{SCM_EOL};
 	for (const auto& [label, _n]: label_map)
-		labels = scm_append_x(
-			scm_list_2(labels,
-				   scm_list_1(to_scm<std::string>(label))));
-	return labels;
+		labels = scm_cons(to_scm(label), labels);
+
+	return scm_reverse_x(labels, SCM_EOL);
 
 } catch (const ScmError& err) {
 	err.throw_scm();
