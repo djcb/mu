@@ -110,11 +110,11 @@ subr_cc_store_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_
 
 	to_store(store_scm, func, 1).contacts_cache().for_each(
 		[&](const auto& contact)->bool {
-			contacts = scm_append_x(scm_list_2(contacts, scm_list_1(to_scm(contact))));
+			contacts = scm_cons(to_scm(contact), contacts);
 			return true;
 		}, pattern, personal, after, maxnum);
 
-	return contacts;
+	return scm_reverse_x(contacts, SCM_EOL);
 } catch (const ScmError& scm_err) {
 	scm_err.throw_scm();
 }
