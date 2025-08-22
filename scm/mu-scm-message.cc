@@ -171,14 +171,13 @@ subr_cc_message_parts(SCM message_scm) try {
 		auto mime_part{GMIME_PART(part.mime_object().object())};
 		SCM mime_part_scm{to_scm(mime_part)};
 		SCM alist_scm{to_scm(idx, parts[idx])};
+		SCM item{scm_cons(mime_part_scm, alist_scm)};
 
-		parts_scm = scm_append_x(
-			scm_list_2(parts_scm,
-				   scm_list_1(
-					   scm_cons(mime_part_scm, alist_scm))));
+		parts_scm = scm_cons(item, parts_scm);
 	}
 
-	return parts_scm;
+	return scm_reverse_x(parts_scm, SCM_EOL);
+
 
 } catch (const ScmError& err) {
 	err.throw_scm();
