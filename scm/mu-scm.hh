@@ -223,9 +223,8 @@ namespace Mu::Scm {
 			return scm_from_utf8_string(val);
 		else if constexpr (std::is_same_v<Type, std::vector<std::string>>) {
 			SCM lst{SCM_EOL};
-			for (const auto& s: val)
-				lst = scm_append_x(scm_list_2(lst,
-							      scm_list_1(to_scm(s))));
+			for (auto it = val.end(); it-- != val.begin();)
+				lst = scm_cons(to_scm(*it), lst);
 			return lst;
 		}
 		else if constexpr (std::is_same_v<Type, bool>)
