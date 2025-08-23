@@ -39,28 +39,24 @@
  *
  */
 namespace Mu::Scm {
-
 	/**
-	 * Configuration object
+	 * Start a guile REPL or program
 	 *
-	 */
-	struct Config {
-		const Mu::Store& store;
-		const Options& options;
-	};
-
-	/**
-	 * Start a guile shell
-	 *
-	 * Initialize the Scm sub-system, then start a shell or run a script,
+	 * Initialize the Scm sub-system, then start a REPL or run a script,
 	 * based on the configuration.
 	 *
-	 * @param conf a Config object
+	 * Unless 'blocking' is false or there is some pre-guile error, this
+	 * method never returns. If blocking is false, it runs in the
+	 * background.
+	 *
+	 * @param store a Store object
+	 * @param opts options
+	 * @param blocking whether to block (or run in the background)
 	 *
 	 * @return Ok() or some error
 	 */
-	Result<void> run(const Config& conf);
-
+	Result<void> run(const Store& store, const Options& opts,
+			 bool blocking=true);
 
 	/**
 	 * Helpers

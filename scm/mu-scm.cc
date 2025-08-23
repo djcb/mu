@@ -16,23 +16,31 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#include "config.h"
 
 #include "mu-scm.hh"
 
+#include <thread>
 #include <unistd.h>
 #include <errno.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "mu-utils.hh"
-#include "config.h"
 
 #include "mu-scm-types.hh"
+
+#ifdef HAVE_PTHREAD_SETNAME_NP
+#include <pthread.h>
+#endif
 
 using namespace Mu;
 using namespace Mu::Scm;
 
 namespace {
-static const Mu::Scm::Config *config{};
-static SCM mu_mod; // The mu module
+SCM mu_mod; // The mu module
 }
 
 /**
@@ -56,15 +64,6 @@ init_options(const Options& opts)
 	scm_c_define("%options", scm_opts);
 }
 
-static void
-init_module_mu(void* _data)
-{
-	init_options(config->options);
-	init_store(config->store);
-	init_message();
-	init_mime();
-}
-
 static const Result<std::string>
 make_mu_scm_path(const std::string& fname) {
 
@@ -84,23 +83,20 @@ make_mu_scm_path(const std::string& fname) {
 }
 
 namespace {
-static std::string mu_scm_path;
-static std::string mu_scm_repl_path;
-static std::string mu_scm_socket_path;
+std::string mu_scm_path;
+std::string mu_scm_repl_path;
+std::string mu_scm_socket_path;
 constexpr auto SOCKET_PATH_ENV = "MU_SCM_SOCKET_PATH";
+using StrVec = std::vector<std::string>;
+StrVec scm_args;
+std::thread scm_worker;
 }
 
 static Result<void>
-prepare_run(const Mu::Scm::Config& conf)
+prepare_run(const Mu::Options& opts)
 {
-	if (config)
-		return Err(Error{Error::Code::AccessDenied,
-				"already prepared"});
-	config = &conf;
-
 	// do a checks _before_ entering guile, so we get a bit more civilized
 	// error message.
-
 	if (const auto path = make_mu_scm_path("mu-scm.scm"); path)
 		mu_scm_path = *path;
 	else
@@ -111,8 +107,8 @@ prepare_run(const Mu::Scm::Config& conf)
 	else
 		return Err(path.error());
 
-	if (config->options.scm.script_path) {
-		const auto path{config->options.scm.script_path->c_str()};
+	if (opts.scm.script_path) {
+		const auto path{opts.scm.script_path->c_str()};
 		if (const auto res = ::access(path, R_OK); res != 0) {
 			return Err(Error::Code::InvalidArgument,
 				   "cannot read '{}': {}", path, ::strerror(errno));
@@ -122,71 +118,129 @@ prepare_run(const Mu::Scm::Config& conf)
 	return Ok();
 }
 
-// make a unique unix-socket path
-static std::string
-maybe_set_uds_path(bool set)
+static void
+prepare_script(const Options& opts, StrVec& args)
 {
-	if (set) {
-		GRand* grand{g_rand_new()};
-		auto path = join_paths(g_get_user_runtime_dir(),
-				       mu_format("mu-scm-socket-{:08x}",
-						 g_rand_int(grand)));
-		g_rand_free(grand);
-		g_setenv(SOCKET_PATH_ENV, path.c_str(), 1);
-		return path;
-	} else  {
-		g_unsetenv(SOCKET_PATH_ENV);
-		return {};
+	static std::string cmd; // keep alive
+
+	// XXX: couldn't get another combination of -l/-s/-e/-c to work
+	// a) invokes `main' with arguments, and
+	// b) exits (rather than drop to a shell)
+	// but, what works is to manually specify (main ....)
+	cmd = "(main " + quote(*opts.scm.script_path);
+	for (const auto& scriptarg : opts.scm.params)
+		cmd += " " + quote(scriptarg);
+	cmd += ")";
+
+	args.emplace_back("-l");
+	args.emplace_back(*opts.scm.script_path);
+	args.emplace_back("-c");
+	args.emplace_back(cmd);
+}
+
+static void
+maybe_remove_socket_path()
+{
+	struct stat statbuf{};
+	const auto sock{mu_scm_socket_path};
+
+	// opportunistic, so no real warnings, but be careful deleting!
+
+	if (const int res = ::stat(sock.c_str(), &statbuf); res != 0) {
+		mu_debug("can't stat '{}'; err={}", sock, -res);
+	} else if ((statbuf.st_mode & S_IFMT) != S_IFSOCK) {
+		mu_debug("{} is not a socket", sock);
+	} else if (const int ulres = ::unlink(sock.c_str()); ulres != 0) {
+		mu_debug("failed to unlink '{}'; err={}", sock, -ulres);
+	} else {
+		mu_debug("unlinked {}", sock);
 	}
 }
 
 
-Result<void>
-Mu::Scm::run(const Mu::Scm::Config& conf)
+
+static void
+prepare_shell(const Options& opts, StrVec& args)
 {
-	if (const auto res = prepare_run(conf); !res)
-		return Err(res.error());
+	// drop us into an interactive shell/repl or start listening on a domain socket.
+	if (opts.scm.listen && opts.scm.socket_path) {
+		mu_scm_socket_path = *opts.scm.socket_path;
+		g_setenv(SOCKET_PATH_ENV, mu_scm_socket_path.c_str(), 1);
+		mu_info("setting up socket-path {}", mu_scm_socket_path);
+		::atexit(maybe_remove_socket_path); //opportunistic cleanup
+	}
+	else
+		g_unsetenv(SOCKET_PATH_ENV);
 
-	scm_boot_guile(0, {}, [](void *data, int argc, char **argv) {
-		mu_mod = scm_c_define_module ("mu", init_module_mu, {});
-
-		std::vector<const char*> args {
-			"mu",
-			"-l", mu_scm_path.c_str(),
-		};
-		std::string cmd;
-		const auto opts{config->options.scm};
-		// if a script-path was specified, run a script
-		if (opts.script_path) {
-			// XXX: couldn't get another combination of -l/-s/-e/-c to work
-			// a) invokes `main' with arguments, and
-			// b) exits (rather than drop to a shell)
-			// but, what works is to manually specify (main ....)
-			cmd = "(main " + quote(*opts.script_path);
-			for (const auto& scriptarg : opts.params)
-				cmd += " " + quote(scriptarg);
-			cmd += ")";
-			for (const auto& arg: {
-					"-l", opts.script_path->c_str(),
-					"-c", cmd.c_str()})
-				args.emplace_back(arg);
-		} else {
-			// otherwise, drop us into an interactive shell/repl
-			// or start listening on a domain socket.
-			mu_scm_socket_path =
-				maybe_set_uds_path(config->options.scm.listen);
-			args.emplace_back("--no-auto-compile");
-			args.emplace_back("-l");
-			args.emplace_back(mu_scm_repl_path.c_str());
-		}
-		/* ahem...*/
-		scm_shell(std::size(args), const_cast<char**>(args.data()));
-	}, {}); // never returns.
-
-	return Ok();
+	args.emplace_back("--no-auto-compile");
+	args.emplace_back("-l");
+	args.emplace_back(mu_scm_repl_path);
 }
 
 
+struct ModMuData { const Mu::Store& store; const Mu::Options& opts; };
+
+static void
+init_module_mu(void* data)
+{
+	const ModMuData& conf{*reinterpret_cast<ModMuData*>(data)};
+
+	init_options(conf.opts);
+	init_store(conf.store);
+	init_message();
+	init_mime();
+}
+
+static void
+run_scm(const Mu::Store& store, const Mu::Options& opts)
+{
+	static ModMuData mu_data{store, opts};
+
+	scm_boot_guile(0, {},
+		       [](auto _data, auto _argc, auto _argv) {
+			       mu_mod = scm_c_define_module ("mu", init_module_mu, &mu_data);
+		std::vector<char*> args;
+		std::transform(scm_args.begin(),
+			       scm_args.end(), std::back_inserter(args),
+			       [&](const std::string& strarg){
+				       /* ahem...*/
+				       return const_cast<char*>(strarg.c_str());
+		});
+		scm_shell(args.size(), args.data());
+
+	}, {}); // never returns.
+}
+
+Result<void>
+Mu::Scm::run(const Mu::Store& store, const Mu::Options& opts, bool blocking)
+{
+	if (const auto res = prepare_run(opts); !res)
+		return Err(res.error());
+
+	scm_args = {"mu", "-l", mu_scm_path};
+
+	// do env stuff _before_ starting guile / threads.
+	if (opts.scm.script_path)
+		prepare_script(opts, scm_args);
+	else
+		prepare_shell(opts, scm_args);
+
+	// in the non-blocking case, we start guile in a
+	// background thread; otherwise it will block.
+	if (!blocking) {
+		auto worker = std::thread([&](){
+#ifdef HAVE_PTHREAD_SETNAME_NP
+			pthread_setname_np(pthread_self(), "mu-scm");
+#endif /*HAVE_PTHREAD_SETNAME_NP*/
+			run_scm(store, opts);
+		});
+		worker.detach();
+	} else
+		run_scm(store, opts);
+
+	return Ok();
+
+}
 
 
 #ifdef BUILD_TESTS
@@ -198,7 +252,6 @@ Mu::Scm::run(const Mu::Scm::Config& conf)
 #include <config.h>
 #include <mu-store.hh>
 #include "utils/mu-test-utils.hh"
-
 
 static void
 test_scm_script()
@@ -233,13 +286,8 @@ test_scm_script()
 	Mu::Options opts{};
 	opts.scm.script_path = join_paths(MU_SCM_SRCDIR, "mu-scm-test.scm");
 
-	Mu::Scm::Config scm_conf {
-		/*.store =*/ *store,
-		/*.options =*/ opts
-	};
-
 	{
-		const auto res = Mu::Scm::run(scm_conf);
+		const auto res = Mu::Scm::run(*store, opts, false /*blocks*/);
 		assert_valid_result(res);
 	}
 }

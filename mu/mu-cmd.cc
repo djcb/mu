@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -73,7 +73,7 @@ cmd_scm(const Store& store, const Options& opts)
 	return Err(Error::Code::InvalidArgument,
 		   "scm/guile is not available in this build");
 #else
-	return Mu::Scm::run(Mu::Scm::Config{store, opts});
+	return Mu::Scm::run(store, opts, true/*blocking*/);
 #endif /*BUILD_SCM*/
 }
 
