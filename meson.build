@@ -165,6 +165,19 @@ else
   message('no wordexp, no command-line option expansion')
 endif
 
+pthread_setname_np_code = '''
+#include <pthread.h>
+int main() { return pthread_setname_np(pthread_self(), "test"); }
+'''
+pthread_setname_np_check = cxx.compiles(
+    pthread_setname_np_code,
+    name: 'pthread_setname_np check',
+    args: '-D_GNU_SOURCE'
+)
+if pthread_setname_np_check
+  config_h_data.set('HAVE_PTHREAD_SETNAME_NP', 1)
+endif
+
 if not get_option('tests').disabled()
   # only needed for tests
   cp=find_program('cp')
