@@ -51,6 +51,7 @@ public:
 
 	struct Options {
 		bool allow_temp_file; /**< temp file optimization allowed? */
+		std::string socket_path; /**< Socket path or empty */
 	};
 
 	/**

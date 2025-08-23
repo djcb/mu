@@ -132,7 +132,8 @@ struct Server::Private {
 	{}
 
 	~Private() {
-		indexer().stop();
+		if (have_indexer_)
+			indexer().stop();
 		if (!tmp_dir_.empty())
 			remove_directory(tmp_dir_);
 	}
@@ -145,7 +146,7 @@ struct Server::Private {
 	// acccessors
 	Store&            store() { return store_; }
 	const Store&      store() const { return store_; }
-	Indexer&          indexer() { return store().indexer(); }
+	Indexer&          indexer() { have_indexer_ = true; return store().indexer(); }
 	void              do_index(const Indexer::Config& conf);
 	//CommandMap&       command_map() const { return command_map_; }
 
@@ -212,6 +213,8 @@ private:
 	const CommandHandler	command_handler_;
 	std::atomic<bool>       keep_going_{};
 	std::string		tmp_dir_;
+
+	bool have_indexer_{};
 };
 
 static void
@@ -1021,15 +1024,19 @@ Server::Private::ping_handler(const Command& cmd)
 	for (auto&& addr : store().config().get<Config::Id::PersonalAddresses>())
 		addrs.add(addr);
 
-	output_sexp(Sexp()
-		    .put_props(":pong", "mu")
-		    .put_props(":props",
-			       Sexp().put_props(
-				       ":version", VERSION,
-				       ":personal-addresses", std::move(addrs),
-				       ":database-path", store().path(),
-				       ":root-maildir", store().root_maildir(),
-				       ":doccount", storecount)));
+	Sexp props =  Sexp().put_props(
+		":version", VERSION,
+		":personal-addresses", std::move(addrs),
+		":database-path", store().path(),
+		":root-maildir", store().root_maildir(),
+		":doccount", storecount);
+
+	if (!options_.socket_path.empty())
+		props.put_props(
+			":scm-socket-path", options_.socket_path);
+
+	output_sexp(Sexp().put_props(":pong", "mu")
+		    .put_props(":props", std::move(props)));
 }
 
 void
@@ -1107,7 +1114,9 @@ Server::Private::view_mark_as_read(Store::Id docid, Message&& msg, bool rename)
 	if (rename)
 		move_opts |= Store::MoveOptions::ChangeName;
 
-	const auto ids{Store::id_vec(unwrap(store().move_message(docid, {}, nflags, move_opts)))};
+	const auto ids{Store::id_vec(
+			unwrap(store().move_message(docid, {},
+						    nflags, move_opts)))};
 	for (auto&& [id, moved_msg]: store().find_messages(ids))
 		output(mu_format("({} {})", id == docid ? ":view" : ":update",
 				 msg_sexp_str(moved_msg, id, {})));
@@ -1142,7 +1151,10 @@ Server::Private::view_handler(const Command& cmd)
 
 Server::Server(Store& store, const Server::Options& opts, Server::Output output)
     : priv_{std::make_unique<Private>(store, opts, output)}
-{}
+{
+	mu_message("created server with store @ {}; maildir @ {}",
+		   store.path(), store.root_maildir());
+}
 
 Server::~Server() = default;
 
