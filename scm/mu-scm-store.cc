@@ -127,7 +127,8 @@ to_sort_field_id(SCM field, const char *func, int pos)
 
 	const auto sym{from_scm<std::string>(scm_symbol_to_string(field), func, pos)};
 	if (const auto field_opt{field_from_name(sym)}; !field_opt) {
-		throw ScmError{ScmError::Id::WrongType, func, pos, field, "sort-field-symbol"};
+		throw ScmError{ScmError::Id::WrongType, func, pos, field,
+			"sort-field-symbol"};
 	} else
 		return field_opt->id;
 }
@@ -144,7 +145,8 @@ subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups
 	const auto skip_dups(from_scm<bool>(skip_dups_scm, func, 4));
 
 	if (!scm_is_false(sort_field_scm) && !scm_is_symbol(sort_field_scm))
-		throw ScmError{ScmError::Id::WrongType, func, 5, sort_field_scm, "#f or sort-field-symbol"};
+		throw ScmError{ScmError::Id::WrongType, func, 5, sort_field_scm,
+			"#f or sort-field-symbol"};
 
 	const auto sort_field_id = to_sort_field_id(sort_field_scm, func, 5);
 	const auto reverse(from_scm<bool>(reverse_scm, func, 6));

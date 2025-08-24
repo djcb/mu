@@ -21,6 +21,7 @@
   :use-module (system foreign)
   :use-module (rnrs bytevectors)
   :use-module (ice-9 optargs)
+  :use-module (ice-9 format)
   :use-module (ice-9 binary-ports)
   #:export (
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,10 +101,15 @@
 	    %options
 	    ;;	    %preferences
 
+	    ;; logging
+	    debug
+	    info
+	    warning
+	    critical
+
 	    ;; helpers
 	    string->time
 	    time->string))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -637,3 +643,43 @@ UTC time.
 	(let ((t (if utc? (gmtime time-t) (localtime time-t))))
 	  (strftime format t))
 	#f)))
+
+
+;; Logging to mu's log
+
+(define (mlog level frmstr . args)
+  "Log to the mu logger.
+
+LEVEL is the logging-level, a symbol one of:
+  debug, info, warning, critical
+
+FRMSTR is a format string like `(format)', and the ARGS are the parameters for
+that format string."
+  (let ((msg (if (null? args)
+		 frmstr
+		 (apply format #f frmstr args))))
+    (cc-log level msg)))
+
+(define (info frm . args)
+  "Log a message at info level to the mu logger.
+FRM is the format string and ARGS are its arguments, see `(format)' for details
+on the precise format."
+  (apply mlog level-info frm args))
+
+(define (warning frm . args)
+  "Log a message at warning level to the mu logger.
+FRM is the format string and ARGS are its arguments, see `(format)' for details
+on the precise format."
+  (apply mlog level-warning frm args))
+
+(define (critical frm . args)
+  "Log a message at critical level to the mu logger.
+FRM is the format string and ARGS are its arguments, see `(format)' for details
+on the precise format."
+  (apply mlog level-critical frm args))
+
+(define (debug frm . args)
+  "Log a message at debug level to the mu logger.
+FRM is the format string and ARGS are its arguments, see `(format)' for details
+on the precise format."
+  (apply mlog level-debug frm args))

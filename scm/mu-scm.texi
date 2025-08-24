@@ -939,6 +939,26 @@ their default values.
 @node Helpers
 @section Helpers
 
+@deffn {Scheme Procedure} debug frm . args
+@end deffn
+
+@deffn {Scheme Procedure} info frm . args
+@end deffn
+
+@deffn {Scheme Procedure} warning frm . args
+@end deffn
+
+@deffn {Scheme Procedure} critical frm . args
+@end deffn
+
+Log using @t{mu}'s logging facilities at the given level (debug, info, warning
+or critical). @code{frm} and @code{args} are expected to be a format string and
+its arguments, respectively, according to Guile's @code{format} function.
+
+Note: where the log output exactly appears (i.e., log-file, journal, console,
+nowhere) dependis on the particulars of the system and how mu was started; see
+the @t{mu (1)} man-page for details on the latter.
+
 @deffn {Scheme Procedure} string->time timestr [#:utc? (assoc-ref %preferences 'utc?)]
 @end deffn
 Convert some ISO-8601-style time-string to a seconds-since-epoch @t{time_t}

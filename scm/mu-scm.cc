@@ -64,6 +64,46 @@ init_options(const Options& opts)
 	scm_c_define("%options", scm_opts);
 }
 
+static void
+init_misc()
+{
+	scm_define(make_symbol("level-critical"), to_scm(G_LOG_LEVEL_CRITICAL));
+	scm_define(make_symbol("level-warning"), to_scm(G_LOG_LEVEL_WARNING));
+	scm_define(make_symbol("level-info"), to_scm(G_LOG_LEVEL_INFO));
+	scm_define(make_symbol("level-debug"), to_scm(G_LOG_LEVEL_DEBUG));
+}
+
+static SCM
+subr_cc_log(SCM level_scm, SCM str_scm) try {
+	constexpr auto func{"cc-log"};
+
+	const auto level{static_cast<GLogLevelFlags>(from_scm<int>(level_scm, func, 1))};
+	if (level != G_LOG_LEVEL_CRITICAL && level != G_LOG_LEVEL_WARNING &&
+		level != G_LOG_LEVEL_INFO && level != G_LOG_LEVEL_DEBUG)
+		throw ScmError{ScmError::Id::WrongType, func, 1, level_scm, "level"};
+
+	const auto str{from_scm<std::string>(str_scm, func, 2)};
+
+	g_log("mu-scm", level, "%s", str.c_str());
+
+	return SCM_UNSPECIFIED;
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
+static void
+init_subrs()
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+	scm_c_define_gsubr("cc-log", 2/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_log));
+#pragma GCC diagnostic pop
+}
+
+
+
 static const Result<std::string>
 make_mu_scm_path(const std::string& fname) {
 
@@ -157,8 +197,6 @@ maybe_remove_socket_path()
 	}
 }
 
-
-
 static void
 prepare_shell(const Options& opts, StrVec& args)
 {
@@ -186,6 +224,9 @@ init_module_mu(void* data)
 	const ModMuData& conf{*reinterpret_cast<ModMuData*>(data)};
 
 	init_options(conf.opts);
+	init_misc();
+	init_subrs();
+
 	init_store(conf.store);
 	init_message();
 	init_mime();

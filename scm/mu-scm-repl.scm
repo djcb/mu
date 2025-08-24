@@ -21,6 +21,7 @@
 ;; after printing UNIX-CONNECT:<socket-file>\n on stdout
 (let ((socket-path (getenv "MU_SCM_SOCKET_PATH")))
   (when socket-path
+    (info "listening on domain socket ~a" socket-path)
     (format #t "~a\n" socket-path)
     (run-server
      (make-unix-domain-server-socket #:path socket-path))))

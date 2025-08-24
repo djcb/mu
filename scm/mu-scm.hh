@@ -227,6 +227,10 @@ namespace Mu::Scm {
 			return scm_from_bool(val);
 		else if constexpr (std::is_same_v<Type, size_t>)
 			return scm_from_size_t(val);
+		else if constexpr (std::is_same_v<Type, int>)
+			return scm_from_int(val);
+		else if constexpr (std::is_same_v<Type, GLogLevelFlags>)
+			return scm_from_int(static_cast<int>(val));
 		else if constexpr (std::is_same_v<Type, int64_t>)
 			return scm_from_int64(val);
 		else if constexpr (std::is_same_v<Type, uint64_t>)
