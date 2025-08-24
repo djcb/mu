@@ -26,7 +26,6 @@
 
 (require 'mu4e-helpers)
 
-
 ;;; Configuration
 (defcustom mu4e-mu-home nil
   "Location of an alternate mu home directory.
@@ -92,6 +91,42 @@ stop/start mu4e."
   :type  'boolean
   :group 'mu4e
   :safe  'booleanp)
+
+(defcustom mu4e-mu-scm-server nil
+  "Tell the mu server to start an SCM/Guile REPL.
+
+This starts the REPL on a Unix domain socket, which can be
+connected to using various tools. This only works if mu has been
+built with SCM support (if in doubt, check the output output of
+\"mu info\" for the line \"scm-support\"); see Info
+node `(mu-scm) Top' for details on mu-scm.
+
+The REPL uses the same server instance that mu4e uses.
+
+Changing this variable only affects the next time the mu4e
+server is started."
+  :type  'boolean
+  :group 'mu4e
+  :safe  'booleanp)
+
+(defun mu4e-mu-scm-repl ()
+  "Start a mu-scm REPL using geiser.
+
+See `mu4e-mu-scm-server' to enable this; and requires the
+`geiser-guile' package.
+
+The REPL uses the same server instance that mu4e uses.
+
+Note: this REPL is not to be confused with the mu REPL as per
+`mu4e-server-repl'."
+  (interactive)
+  (unless (require 'geiser-guile nil 'noerror)
+    (mu4e-error "geiser-guile not found; please install"))
+  (let ((sock (plist-get (mu4e-server-properties) :scm-socket-path)))
+    (unless sock
+      (mu4e-error "socket-path unavailable"))
+    (when (fboundp 'geiser-connect-local)
+      (geiser-connect-local 'guile sock))))
 
 ;; Cached data
 (defvar mu4e-maildir-list)
@@ -467,6 +502,7 @@ As per issue #2198."
               `(,(when mu4e-mu-debug "--debug")
                 "server"
                 ,(when mu4e-mu-allow-temp-file "--allow-temp-file")
+                ,(when mu4e-mu-scm-server "--listen")
                 ,(when mu4e-mu-home (format "--muhome=%s" mu4e-mu-home)))))
 
 (defun mu4e--version-check ()
@@ -491,12 +527,15 @@ As per issue #2198."
         (mu4e-message "Found mu version %s" version)))))
 
 (defun mu4e-server-repl ()
-  "Start a mu4e-server repl.
+  "Start a mu4e-server REPL.
 
-This is meant for debugging/testing - the repl is designed for
+This is meant for debugging/testing - the REPL is designed for
 machines, not for humans.
 
-You cannot run the repl when mu4e is running (or vice-versa)."
+You cannot run the REPL when mu4e is running (or vice-versa).
+
+Not to be confused with the SCM/Guile REPL, as per
+`mu4e-mu-scm-server'."
   (interactive)
   (if (mu4e-running-p)
       (mu4e-error "Cannot run repl when mu4e is running")
