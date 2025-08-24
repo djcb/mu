@@ -293,23 +293,31 @@
       property ~:hide-if-no-unread~, which hides the maildir/bookmark from the
       main-view if there are no unread messages which the corresponding query.
 
-   - 1.12.12: it now possible to create Emacs bookmarks for both messages
+    - 1.12.12: it now possible to create Emacs bookmarks for both messages
      (default) and queries. See the new variable ~mu4e-emacs-bookmark-policy~.
 
-   - 1.12.12: ~mu4e-get-mail-command~ which specifies the shell command to use for
-     getting mail, can now also be a function return that shell-command. This
-     makes it easier to use different shell commands in different situations.
+    - 1.12.12: ~mu4e-get-mail-command~ which specifies the shell command to use
+      for getting mail, can now also be a function return that shell-command.
+      This makes it easier to use different shell commands in different
+      situations.
+
+    - 1.12.13: with an SCM-enabled ~mu~, you can set ~mu4e-mu-scm-server~ to non-nil
+      and connect to the SCM REPL with ~M-x mu4e-mu-scm-repl~ after restart (see
+      their docstrings for details)
 
 *** scm
 
-   - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the
-     long-deprecated ~guile/~ bindings. For now, this is all rather new and
-     experimental, but the basics are there.
+    - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the
+      long-deprecated ~guile/~ bindings. For now, this is all rather new and
+      experimental, but the basics are there.
 
-     This requires a slightly newer gmime (3.2.8?) than the one ~mu~ requires.
+      This requires a slightly newer gmime (3.2.8?) than the one ~mu~ requires.
 
-  - 1.12.13: add the ~--listen~ flag for ~mu scm~, to start a REPL on a Unix domain
-    sockets. See the reference manual for details.
+    - 1.12.13: add the ~--listen~ flag for ~mu scm~ and ~mu server~, to start a REPL
+      on a Unix domain socket. See the reference manual for details.
+
+    - 1.12.13: ~mu scm~ also gained support for labels and logging; furthermore,
+      ~mfind~ was made much faster.
 
 *** Contributors
 
