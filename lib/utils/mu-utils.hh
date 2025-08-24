@@ -427,6 +427,16 @@ std::string summarize(const std::string& str, size_t max_lines);
  */
 std::string quote(const std::string& str);
 
+/**
+ * Set the name of the current thread
+ *
+ * This depends on pthread_setname_np() being available;
+ * otherwise, does nothing.
+ *
+ * @param name thread name
+ */
+void set_thread_name(const std::string& name);
+
 
 /**
  * Convert any ostreamable<< value to a string

@@ -711,3 +711,11 @@ Mu::fputs_encoded (const std::string& str, FILE *stream)
 
 	return (rv == EOF) ? false: true;
 }
+
+void
+Mu::set_thread_name(const std::string& name)
+{
+#ifdef HAVE_PTHREAD_SETNAME_NP
+	pthread_setname_np(pthread_self(), name.c_str());
+#endif /*HAVE_PTHREAD_SETNAME_NP*/
+}
