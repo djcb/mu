@@ -735,15 +735,15 @@ static constexpr
 AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		{ SubCommand::Add,
 		  { Category::NeedsWritableStore,
-		    "add", "Add message(s) to the database", sub_add}
+		    "add", "Add messages to the database", sub_add}
 		},
 		{ SubCommand::Cfind,
 		  { Category::NeedsReadOnlyStore,
-		    "cfind", "Find contacts matching pattern", sub_cfind}
+		    "cfind", "Find contacts matching some pattern", sub_cfind}
 		},
 		{ SubCommand::Extract,
 		  {Category::None,
-		  "extract", "Extract MIME-parts from messages", sub_extract}
+		  "extract", "Extract attachements and other MIME-parts", sub_extract}
 		},
 		{ SubCommand::Fields,
 		  {Category::None,
@@ -751,7 +751,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Find,
 		  {Category::NeedsReadOnlyStore,
-		  "find", "Find messages matching query", sub_find }
+		  "find", "Find messages matching some query", sub_find }
 		},
 		{ SubCommand::Help,
 		  {Category::None,
@@ -759,19 +759,19 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Index,
 		  {Category::NeedsWritableStore,
-		  "index", "Store message information in the database", sub_index }
+		  "index", "Scan maildirs and store information", sub_index }
 		},
 		{ SubCommand::Info,
 		  {Category::NeedsReadOnlyStore,
-		  "info", "Show information", sub_info }
+		  "info", "Show information about mu", sub_info }
 		},
 		{ SubCommand::Init,
 		  {Category::NeedsWritableStore,
-		  "init", "Initialize the database", sub_init }
+		  "init", "Initialize the mu database", sub_init }
 		},
 		{ SubCommand::Label,
 		  {Category::None, // note Store handled on sub-subcommmands
-		  "label", "Add/remove labels", sub_label }
+		  "label", "Add/remove labels form messages", sub_label }
 		},
 		{ SubCommand::Mkdir,
 		  {Category::None,
@@ -779,7 +779,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Move,
 		  {Category::NeedsWritableStore,
-		   "move", "Move a message or change flags", sub_move }
+		   "move", "Move a message or change its flags", sub_move }
 		},
 		{ SubCommand::Remove,
 		  {Category::NeedsWritableStore,
@@ -787,11 +787,11 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Scm,
 		  {Category::NeedsReadOnlyStore,
-		   "scm", "Start Guile/Scheme shell",sub_scm}
+		   "scm", "Start Guile/Scheme shell or run script",sub_scm}
 		},
 		{ SubCommand::Script,
 		  // Note: SubCommand::Script is special; there's no literal
-		// "script" subcommand, there are subcommands for all the scripts.
+		  // "script" subcommand, there are subcommands for all the scripts.
 		  {Category::None,
 		   "script", "Invoke a script", {}}
 		},
@@ -906,7 +906,7 @@ Options::make(int argc, char *argv[])
 	CLI::App app{"mu mail indexer/searcher", "mu"};
 
 	app.description(R"(mu mail indexer/searcher
-Copyright (C) 2008-2023 Dirk-Jan C. Binnema
+Copyright (C) 2008-2025 Dirk-Jan C. Binnema
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
