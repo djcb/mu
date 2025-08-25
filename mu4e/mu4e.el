@@ -160,8 +160,9 @@ invoke FUNC (if available) afterwards."
   (add-hook 'mu4e-query-items-updated-hook #'mu4e--main-redraw)
   (setq mu4e--initialized t) ;; last before we call the server.
   (mu4e--server-ping)
-  ;; ask for the maildir-list
+  ;; ask for the maildir-list and labels
   (mu4e--server-data 'maildirs)
+  (mu4e--server-data 'labels)
   ;; maybe request the list of contacts, automatically refreshed after
   ;; re-indexing
   (mu4e--query-items-refresh 'reset-baseline)
@@ -249,7 +250,9 @@ invoke FUNC (if available) afterwards."
           (unless (and (not (string= mu4e--contacts-tstamp "0"))
                        (zerop (plist-get info :updated)))
             (mu4e--request-contacts-maybe)
-            (mu4e--server-data 'maildirs)) ;; update maildir list
+            (mu4e--server-data 'maildirs)
+            (mu4e--server-data 'labels)) ;; update maildir/labels list
+
           (mu4e--main-redraw))))
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))

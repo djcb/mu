@@ -130,6 +130,7 @@ Note: this REPL is not to be confused with the mu REPL as per
 
 ;; Cached data
 (defvar mu4e-maildir-list)
+(defvar mu4e-labels-list)
 
 ;; Handlers are not strictly internal, but are not meant
 ;; for overriding outside mu4e. The are mainly for breaking
@@ -470,6 +471,8 @@ The server output is as follows:
          ;; get some data
          ((plist-get sexp :maildirs)
           (setq mu4e-maildir-list (mu4e--server-plist-get sexp :maildirs)))
+         ((plist-get sexp :labels)
+          (setq mu4e-labels-list (mu4e--server-plist-get sexp :labels)))
 
          ;; receive an error
          ((plist-get sexp :error)
@@ -654,7 +657,7 @@ get at most MAX contacts."
 
 (defun mu4e--server-data (kind)
   "Request data of some KIND.
-KIND is a symbol. Currently supported kinds: maildirs."
+KIND is a symbol. One of maildirs, labels."
   (mu4e--server-call-mu
    `(data :kind ,kind)))
 

@@ -551,19 +551,35 @@ Server::Private::contacts_handler(const Command& cmd)
 	mu_debug("sent {} of {} contact(s)", n, store().contacts_cache().size());
 }
 
+template<typename T, typename F>
+std::string quoted_join(const T& items, F&& func)
+{
+	std::vector<std::string> vec;
+
+	std::transform(items.begin(), items.end(), std::back_inserter(vec),
+		       [&](const auto& item) { return quote(func(item)); });
+
+	return join(vec,  " ");
+}
+
 void
 Server::Private::data_handler(const Command& cmd)
 {
 	const auto request_type{unwrap(cmd.symbol_arg(":kind"))};
 
-	if (request_type == "maildirs") {
-		auto&& out{make_output_stream()};
-		mu_print(out, "(");
-		for (auto&& mdir: store().maildirs())
-			mu_println(out, "{}", quote(std::move(mdir)));
-		mu_print(out, ")");
-		output(mu_format("(:maildirs {})", out.to_string()));
-	} else
+	if (request_type == "maildirs")
+		output(mu_format("(:maildirs ({}))",
+				 quoted_join(store().maildirs(),
+					     [](const auto& item) {
+					     return item; // identity
+					     })));
+	else if (request_type == "labels")
+		output(mu_format("(:labels ({}))",
+				 quoted_join(store().label_map(),
+					     [](const auto& item) {
+						     return item.first;
+					     })));
+	else
 		throw Error(Error::Code::InvalidArgument,
 			"invalid request type '{}'", request_type);
 }

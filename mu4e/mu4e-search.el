@@ -154,6 +154,9 @@ but also manually invoked searches."
   :type 'hook
   :group 'mu4e-search)
 
+(defvar mu4e-labels-list nil
+  "Cached list of labels.")
+
 ;; Internals
 
 ;;; History
