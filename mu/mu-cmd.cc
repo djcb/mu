@@ -73,7 +73,10 @@ cmd_scm(const Store& store, const Options& opts)
 	return Err(Error::Code::InvalidArgument,
 		   "scm/guile is not available in this build");
 #else
-	return Mu::Scm::run(store, opts, true/*blocking*/);
+	if (opts.scm.script_path)
+		return Mu::Scm::run_script(store, opts, *opts.scm.script_path);
+	else
+		return Mu::Scm::run_repl(store, opts, opts.scm.socket_path.value_or(""));
 #endif /*BUILD_SCM*/
 }
 

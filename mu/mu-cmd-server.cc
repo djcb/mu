@@ -125,12 +125,13 @@ maybe_listen_path(const Mu::Store& store, const Mu::Options& opts)
 #ifdef BUILD_SCM
 	if (!opts.scm.socket_path)
 		return {};
-	const auto res = Mu::Scm::run(store, opts, false/*!block*/);
+	const auto socket_path{*opts.scm.socket_path};
+	const auto res = Mu::Scm::run_repl(store, opts, socket_path);
 	if (!res) {
 		mu_warning("failed to start scm socket: {}", res.error().what());
 		return {};
 	} else
-		return  *opts.scm.socket_path;
+		return  socket_path;
 #endif /*BUILD_SCM*/
 	return {};
 }

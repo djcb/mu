@@ -40,23 +40,36 @@
  */
 namespace Mu::Scm {
 	/**
-	 * Start a guile REPL or program
+	 * Start a Guile/SCM REPL
 	 *
-	 * Initialize the Scm sub-system, then start a REPL or run a script,
-	 * based on the configuration.
-	 *
-	 * Unless 'blocking' is false or there is some pre-guile error, this
-	 * method never returns. If blocking is false, it runs in the
-	 * background.
+	 * Initialize the Scm sub-system, then start a REPL, based on the
+	 * configuration.
 	 *
 	 * @param store a Store object
-	 * @param opts options
-	 * @param blocking whether to block (or run in the background)
+	 * @param opts options; opts.scm.script_path must be Nothing
+	 * @param socket_path if non-empty, run in the background on the
+	 * socket path (Unix domain socket); otherwise, run an
+	 * interactive shell in blocking mode.
 	 *
 	 * @return Ok() or some error
 	 */
-	Result<void> run(const Store& store, const Options& opts,
-			 bool blocking=true);
+	Result<void> run_repl(const Store& store, const Options& opts,
+			      const std::string& socket_path = {});
+
+	/**
+	 * Run a Guile/SCM script
+	 *
+	 * Initialize the Scm sub-system, then start run a script,
+	 * based on the configuration.
+	 *
+	 * @param store a Store object
+	 * @param opts options; opts.scm.script_path must set
+	 *
+	 * @return Ok() or some error
+	 */
+	Result<void> run_script(const Store& store, const Options& opts,
+				const std::string& script_path);
+
 
 	/**
 	 * Helpers
