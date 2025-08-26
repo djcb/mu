@@ -96,7 +96,7 @@ Specify the field to sort the search results by and the direction (i.e.,
 	from,f          Message sender
 	maildir,m       Maildir
 	msgid,i         Message id
-	prio,p          Nessage priority
+	prio,p          Message priority
 	subject,s       Message subject
 	to,t            To:-recipient(s)
 #+end_example
