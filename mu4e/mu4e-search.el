@@ -381,6 +381,7 @@ either `future' or `past'."
     "from:"
     "lang:"
     "maildir:"
+    "label:"
     "list:"
     "msgid"
     "mime:"
@@ -448,7 +449,11 @@ status, STATUS."
    ((looking-back "list:\\([a-zA-Z0-9/.@]*\\)" nil)
     (list (match-beginning 1)
           (match-end 1)
-          mu4e--lists-hash))))
+          mu4e--lists-hash))
+   ((looking-back "label:\\([a-zA-Z0-9/.@]*\\)" nil)
+    (list (match-beginning 1)
+          (match-end 1)
+          mu4e-labels-list))))
 
 ;;; Interactive functions
 (defun mu4e-search-change-sorting (&optional field dir)
