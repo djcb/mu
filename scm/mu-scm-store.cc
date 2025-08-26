@@ -177,6 +177,20 @@ subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups
 }
 
 static SCM
+subr_cc_store_is_personal(SCM store_scm, SCM address_scm) try {
+
+	constexpr auto func{"cc-store-is-personal"};
+	const auto& store{to_store(store_scm, func, 1)};
+	const auto& address{from_scm<std::string>(address_scm, func, 2)};
+
+	return to_scm(store.contacts_cache().is_personal(address));
+
+} catch (const ScmError& err) {
+	err.throw_scm();
+}
+
+
+static SCM
 subr_cc_store_all_labels(SCM store_scm) try {
 
 	constexpr auto func{"cc-store-all-labels"};
@@ -208,6 +222,8 @@ init_subrs()
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_cfind));
 	scm_c_define_gsubr("cc-store-alist", 1/*req*/, 0/*opt*/, 0/*rst*/,
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_alist));
+	scm_c_define_gsubr("cc-store-is-personal", 2/*req*/, 0/*opt*/, 0/*rst*/,
+			   reinterpret_cast<scm_t_subr>(subr_cc_store_is_personal));
 	scm_c_define_gsubr("cc-store-all-labels", 1/*req*/, 0/*opt*/, 0/*rst*/,
 			   reinterpret_cast<scm_t_subr>(subr_cc_store_all_labels));
 #pragma GCC diagnostic pop
@@ -232,7 +248,6 @@ Mu::Scm::init_store(const Store& store)
 
 	initialized = true;
 }
-
 
 SCM
 Mu::Scm::to_scm(const Contact& contact)

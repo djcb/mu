@@ -381,12 +381,15 @@ The store represents the @t{mu} database, i.e., the place where @t{mu index}
 stores information about messages and contacts.
 
 While you could theoretically have @emph{multiple} stores, for now @t{mu-scm}
-only supports a single one, which is the store you opened when you started
-@command{mu scm}. For completeness and possible future use, store-related
-methods do take a @t{#:store} parameter, but you can (in fact, @emph{must})
-leave it out, and use its default value.
+only supports a @emph{single} one, which is the store you opened when you
+started @command{mu scm}.
 
-Hence, in the API descriptions below, we leave out the @t{#:store} argument.
+For completeness and possible future use, store-related methods do take a
+@t{store} parameter or a @t{#:store} keyword parameter, but it can be left out
+for for now.
+
+Hence, for brevity, in the API descriptions below, the @t{store} parameter is
+implicit.
 
 The store currently only exposes a few methods, described below.
 
@@ -472,7 +475,7 @@ Example:
      (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
-@deffn {Scheme Procedure} all-labels
+@deffn {Scheme Procedure} labels
 @end deffn
 Get the list of all labels present in the store, or @code{#f} if there are none.
 Not to be confused with @code{labels} procedure for a @code{message} object.
@@ -811,7 +814,7 @@ For example:
 @deffn {Scheme Procedure} labels message
 @end deffn
 Get the list of labels for this message, or @code{#f} if there are none.
-Not to be confused with the @code{all-labels} procedure for a Store.
+Not to be confused with the @code{labels} procedure for a Store.
 
 For example:
 @lisp

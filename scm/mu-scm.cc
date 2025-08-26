@@ -290,7 +290,12 @@ test_scm_script()
 
 	::setenv("MU_TESTTEMPDIR", tempdir.path().c_str(), 1);
 
-	auto store{Store::make_new(tempdir.path(), MuTestMaildir)};
+	MemDb mdb;
+	Config conf{mdb};
+;	conf.set<Config::Id::PersonalAddresses>(
+		std::vector<std::string>{"user@example.com"});
+
+	auto store{Store::make_new(tempdir.path(), MuTestMaildir, conf)};
 	assert_valid_result(store);
 
 	{

@@ -10,6 +10,9 @@
   (test-equal "cfind" 29 (length (cfind "")))
   (test-equal "mfind" 19 (length (mfind "")))
 
+  (test-assert (personal? "user@example.com"))
+  (test-assert (not (personal? "user@anotherexample.com")))
+
   (let ((info (store->alist)))
     (test-equal 50000 (assoc-ref info 'batch-size))
     (test-equal 100000000 (assoc-ref info 'max-message-size)))

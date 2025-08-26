@@ -91,7 +91,8 @@
 	    mfind
 	    mcount
 	    cfind
-	    all-labels
+	    labels
+	    personal?
 	    store->alist
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -118,7 +119,7 @@
 (define (set-documentation! symbol docstring)
   "Set the docstring for symbol in current module to docstring.
 This is useful for symbols that do not support docstrings directly, such
-as (define foo 123)."
+as (define foo 123) and, apparently, define-method."
   ;; https://git.wolfsden.cz/guile-wolfsden/tree/wolfsden/documentation.scm
   (set-object-property! (module-ref (current-module) symbol)
 			'documentation docstring))
@@ -199,12 +200,15 @@ CONTENT-ONLY? is implied to be #t."
   (cc-mime-make-stream-port (cc-mimepart mime-part) content-only? decode?))
 
 (define-method (filename (mime-part <mime-part>))
-  "Determine the file-name for MIME-part.
-Either the 'filename' field in the mime-part and if that does not exist, use
-'mime-part-<index>' with <index> being the number of the mime-part."
   (let ((alist (mime-part->alist mime-part)))
     (or (assoc-ref  alist 'filename)
 	(format #f "mime-part-~d" (assoc-ref alist 'index)))))
+
+(set-documentation! 'filename
+  "Determine the file-name for MIME-part.
+Either the 'filename' field in the mime-part and if that does not exist, use
+'mime-part-<index>' with <index> being the number of the mime-part.")
+
 
 (define* (make-output-file mime-part #:key (path #f) (overwrite? #f))
   "Create a port for the file to write MIME-PART to.
@@ -270,7 +274,7 @@ has the data, but when a message is loaded from file, either
 through make-message or by calling a function that needs a
 full message, such as header or body, the cc-message is initialized.")
 
-(define (make-message path)
+(define-method (make-message (path <string>))
   "Create a <message> from file at PATH."
   (make <message> #:cc-message (cc-message-make path)))
 
@@ -513,13 +517,15 @@ STORE-OBJ a 'foreign-object' for a mu Store pointer."
  "Default store object.
 This is defined in the C++ code, and represents a \"foreign\" Store* object.")
 
-(define* (store->alist #:key (store %default-store))
-  "Get an alist-representation for some store.
-Keyword arguments:
-    #:store       %default-store. Leave at default."
+(define-method (store->alist (store <store>))
+  "Get an alist-representation for some STORE."
   (when (not (slot-ref store 'alist))
     (slot-set! store 'alist (cc-store-alist (cc-store store))))
   (slot-ref store 'alist))
+
+(define-method (store->alist)
+  "Get an alist-representation from the default store."
+  (store->alist %default-store))
 
 (define* (mfind query
 		#:key
@@ -539,17 +545,11 @@ The query is mandatory, the other (keyword) arguments are optional.
     #:sort-field? field to sort by, a symbol. Default: date
     #:reverse?    sort in descending order (z-a)
     #:max-results max. number of matches. Default: false (unlimited))."
-  (map (lambda (data)
-	 (make <message> #:serialized data))
-       (cc-store-mfind (cc-store store) query
-		       related? skip-dups? sort-field
-		       reverse? max-results)))
-
-(define* (mcount
-	  #:key
-	  (store %default-store))
-  "Get the number of messages."
-  (cc-store-mcount (cc-store store)))
+    (map (lambda (data)
+	   (make <message> #:serialized data))
+	 (cc-store-mfind (cc-store store) query
+			 related? skip-dups? sort-field
+			 reverse? max-results)))
 
 (define* (cfind pattern
 		#:key
@@ -567,11 +567,33 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:max-results max. number of matches. Default: false (unlimited))."
   (cc-store-cfind (cc-store store) pattern personal? after max-results))
 
-(define* (all-labels
-	  #:key
-	  (store %default-store))
-  "Get the list of all labels in the store."
+(define-method (mcount (store <store>))
+ ;; "Get the number of messages in STORE."
+  (cc-store-mcount (cc-store store)))
+
+(define-method (mcount)
+  "Get the number of messages in the default store."
+  (mcount %default-store))
+
+(define-method (personal? (store <store>) (address <string>))
+  "Does the given email ADDRESS match the personal addresses in STORE?
+I.e., the personal addresses / regular expressions as specified during `mu
+init'."
+  (cc-store-is-personal (cc-store store) address))
+
+(define-method (personal? (address <string>))
+  "Does the given email ADDRESS match the personal addresses?
+I.e., the personal addresses / regular expressions as specified during `mu
+init'. Uses the default-store."
+  (personal? %default-store address))
+
+(define-method (labels (store <store>))
+  "Get the list of all labels in STORE."
   (cc-store-all-labels (cc-store store)))
+
+(define-method (labels)
+  "Get the list of all labels in the default store."
+  (labels %default-store))
 
 ;;; Misc
 
