@@ -581,7 +581,7 @@ e.g. \"mutt\"."
                                            (mu4e-msg-field msg :date))))
       (:flags (propertize (mu4e~headers-flags-str val)
                           'help-echo (format "%S" val)))
-      (:tags (propertize (mapconcat 'identity val ", ")))
+      ((:labels :tags) (propertize (mapconcat 'identity val ", ")))
       (:size (mu4e-display-size val))
       (t (mu4e~headers-custom-field-value msg field)))))
 

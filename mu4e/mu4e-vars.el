@@ -267,6 +267,11 @@ Foo\")."
         :shortname "Maildir"
         :help "Maildir for this message"
         :sortable t))
+    (:labels
+     . (:name "Labels"
+        :shortname "Lbs"
+        :help "Labels for the message"
+        :sortable nil))
     (:list
      . (:name "List-Id"
         :shortname "List"

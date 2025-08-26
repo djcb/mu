@@ -823,12 +823,12 @@ Note that for some messages, this can trigger high CPU load."
               (':mailing-list
                (let ((list (plist-get msg :list)))
                  (if list (mu4e-get-mailing-list-shortname list) "")))
-              ((or ':flags ':tags)
-               (let ((flags (mapconcat (lambda (flag)
-                                         (if (symbolp flag)
-                                             (symbol-name flag)
-                                           flag)) fieldval ", ")))
-                 (mu4e--view-gnus-insert-header field flags)))
+              ((or ':flags ':labels ':tags)
+               (let ((items (mapconcat (lambda (item)
+                                         (if (symbolp item)
+                                             (symbol-name item)
+                                           item)) fieldval ", ")))
+                 (mu4e--view-gnus-insert-header field items)))
               (':size (mu4e--view-gnus-insert-header
                        field (mu4e-display-size fieldval)))
               ((or ':subject ':to ':from ':cc ':bcc ':from-or-to
