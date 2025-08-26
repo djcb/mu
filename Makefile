@@ -153,7 +153,31 @@ dist: $(BUILDDIR)
 
 distclean: clean
 
-HTMLPATH=${BUILDDIR}/mu4e/mu4e
+
+#
+# documentation
+#
+BUILDAUX:=$(PWD)/build-aux
+DOCPATH=${BUILDDIR}/doc
+MU4E_DOCHTML=${DOCPATH}/mu4e
+
 mu4e-doc-html:
-	@mkdir -p ${HTMLPATH} && cp mu4e/texinfo-klare.css ${HTMLPATH}
-	@cd mu4e; makeinfo -v -I ${BUILDDIR} -I ${BUILDDIR}/mu4e --html --css-ref=texinfo-klare.css -o ${HTMLPATH} mu4e.texi
+	@mkdir -p ${MU4E_DOCHTML} && cp $(BUILDAUX)/texinfo-klare.css ${MU4E_DOCHTML}
+	@cd mu4e; makeinfo -v -I ${BUILDDIR} -I ${BUILDAUX} \
+		  -I ${BUILDDIR}/mu4e --html --css-ref=texinfo-klare.css -o ${MU4E_DOCHTML} mu4e.texi
+mu4e-doc-pdf:
+	@mkdir -p ${DOCPATH}
+	@cd mu4e; makeinfo -v -I ${BUILDDIR} -I ${BUILDDIR}/mu4e -I ${BUILDAUX} \
+		--pdf -o ${DOCPATH}/mu4e.pdf mu4e.texi
+
+MU_SCM_DOCHTML=${DOCPATH}/mu-scm
+mu-scm-doc-html:
+	@mkdir -p ${MU_SCM_DOCHTML} && cp $(BUILDAUX)/texinfo-klare.css ${MU_SCM_DOCHTML}
+	@cd scm; makeinfo -v -I ${BUILDDIR} -I ${BUILDDIR}/scm -I ${BUILDAUX} \
+		--html --css-ref=texinfo-klare.css -o ${MU_SCM_DOCHTML} mu-scm.texi
+mu-scm-doc-pdf:
+	@mkdir -p ${DOCPATH}
+	@cd scm; makeinfo -v -I ${BUILDDIR} -I ${BUILDDIR}/scm -I ${BUILDAUX} \
+		--pdf -o ${DOCPATH}/mu-scm.pdf mu-scm.texi
+
+doc: mu4e-doc-html mu4e-doc-pdf mu-scm-doc-html mu-scm-doc-pdf

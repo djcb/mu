@@ -1,18 +1,17 @@
-# htmlxref.cnf - reference file for free Texinfo manuals on the web.
+# Texinfo_GNU.cnf - reference file for GNU Texinfo manuals on the web.
 
-htmlxrefversion=2023-04-02.12; # UTC
+htmlxrefversion=2025-08-01.01; # UTC
 
-# Copyright 2010-2023 Free Software Foundation, Inc.
+# Copyright 2010-2025 Free Software Foundation, Inc.
 # 
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
 # notice and this notice are preserved.
 #
 # The latest version of this file is available at
-# http://ftpmirror.gnu.org/texinfo/htmlxref.cnf.
+# http://ftpmirror.gnu.org/texinfo/htmlxref.d/Texinfo_GNU.cnf.
 # Email corrections or additions to bug-texinfo@gnu.org.
-# The primary goal is to list all relevant GNU manuals;
-# other free manuals are also welcome.
+# The primary goal is to list all relevant GNU manuals.
 #
 # To be included in this list, a manual must:
 #
@@ -20,7 +19,7 @@ htmlxrefversion=2023-04-02.12; # UTC
 # - have a unique file name (e.g., manual identifier), i.e., be related to the
 #   package name.  Things like "refman" or "tutorial" don't work.
 # - follow the naming convention for nodes described at
-# http://www.gnu.org/software/texinfo/manual/texinfo/html_node/HTML-Xref.html
+# https://www.gnu.org/software/texinfo/manual/texinfo/html_node/HTML-Xref.html
 #   This is what makeinfo and texi2html implement.
 # 
 # Unless the above criteria are met, it's not possible to generate
@@ -63,10 +62,13 @@ autoconf	node	${GS}/autoconf/manual/html_node/
 
 autogen		mono	${GS}/autogen/manual/autogen.html
 autogen		chapter	${GS}/autogen/manual/html_chapter/
-autogen		node	${GS}/autoconf/manual/html_node/
+autogen		node	${GS}/autogen/manual/html_node/
 
 automake	mono	${GS}/automake/manual/automake.html
 automake	node	${GS}/automake/manual/html_node/
+ #
+ automake-history mono	${GS}/automake/history/automake-history.html
+ automake-history node	${GS}/automake/history/html_node/
 
 avl		node	http://adtinfo.org/libavl.html/
 
@@ -85,6 +87,8 @@ binutils	node	${BINUTILS}/binutils/
  #
  gprof		mono	${BINUTILS}/gprof.html
  gprof		node	${BINUTILS}/gprof/
+ #
+ gprofng 	mono    ${BINUTILS}/gprofng.html
  #
  ld		mono	${BINUTILS}/ld.html
  ld		node	${BINUTILS}/ld/
@@ -130,10 +134,7 @@ ddrescue	mono	${GS}/ddrescue/manual/ddrescue_manual.html
 dejagnu         node    ${GS}/dejagnu/manual/
 
 DICO = https://www.gnu.org.ua/software/dico/manual
-dico		mono	${DICO}/dico.html
-dico		chapter	${DICO}/html_chapter/
-dico		section	${DICO}/html_section/
-dico		node	${DICO}/html_node/
+dico		node	${DICO}
 
 diffutils	mono	${GS}/diffutils/manual/diffutils.html
 diffutils	node	${GS}/diffutils/manual/html_node/
@@ -174,8 +175,17 @@ emacs		node	${EMACS}/html_node/emacs/
  ediff		mono	${EMACS}/html_mono/ediff.html
  ediff		node	${EMACS}/html_node/ediff/
  #
+ eglot		mono	${EMACS}/html_mono/eglot.html
+ eglot		node	${EMACS}/html_node/eglot/
+ #
  eieio		mono	${EMACS}/html_mono/eieio.html
  eieio		node	${EMACS}/html_node/eieio/
+ #
+ eintr		mono	${EMACS}/html_mono/eintr.html
+ eintr		node	${EMACS}/html_node/eintr/
+ # possibly an old name
+ lispintro	mono	${EMACS}/html_mono/eintr.html
+ lispintro	node	${EMACS}/html_node/eintr/
  #
  elisp		mono	${EMACS}/html_mono/elisp.html
  elisp		node	${EMACS}/html_node/elisp/
@@ -282,8 +292,8 @@ emacs		node	${EMACS}/html_node/emacs/
  sieve		mono	${EMACS}/html_mono/sieve.html
  sieve		node	${EMACS}/html_node/sieve/
  #
- smtp		mono	${EMACS}/html_mono/smtpmail.html
- smtp		node	${EMACS}/html_node/smtpmail/
+ smtpmail	mono	${EMACS}/html_mono/smtpmail.html
+ smtpmail	node	${EMACS}/html_node/smtpmail/
  #
  speedbar	mono	${EMACS}/html_mono/speedbar.html
  speedbar	node	${EMACS}/html_node/speedbar/
@@ -299,6 +309,9 @@ emacs		node	${EMACS}/html_node/emacs/
  #
  url		mono	${EMACS}/html_mono/url.html
  url		node	${EMACS}/html_node/url/
+ #
+ use-package   mono    ${EMACS}/html_mono/use-package.html
+ use-package   node    ${EMACS}/html_node/use-package/
  #
  vhdl-mode	mono	${EMACS}/html_mono/vhdl-mode.html
  vhdl-mode	node	${EMACS}/html_node/vhdl-mode/
@@ -327,7 +340,7 @@ emacs-muse	node	${GS}/emacs-muse/manual/html_node/
 
 emms		node	${GS}/emms/manual/
 
-ada-mode	mono	https://elpa.gnu.org/packages/ada-mode.html
+ada-mode	mono	https://elpa.gnu.org/packages/doc/ada-mode.html
 
 gpr-mode	mono	https://elpa.gnu.org/packages/doc/gpr-mode.html
 
@@ -563,38 +576,16 @@ LILYPOND = http://lilypond.org/doc/stable/Documentation
  lilypond-snippets 	node ${LILYPOND}/snippets/
  lilypond-usage		node ${LILYPOND}/usage/
  lilypond-web		node ${LILYPOND}/web/
- music-glossary		node ${LILYPOND}/music-glossary/
+ music-glossary		node ${LILYPOND}/glossary/
 
 liquidwar6	mono	${GS}/liquidwar6/manual/liquidwar6.html
 liquidwar6	node	${GS}/liquidwar6/manual/html_node/
-
-lispintro	mono	${GS}/emacs/emacs-lisp-intro/html_mono/emacs-lisp-intro.html
-lispintro	node	${GS}/emacs/emacs-lisp-intro/html_node/index.html
 
 LSH = http://www.lysator.liu.se/~nisse/lsh
   lsh		mono	${LSH}/lsh.html
 
 m4		mono	${GS}/m4/manual/m4.html
 m4		node	${GS}/m4/manual/html_node/
-
-MITGNUSCHEME = ${GS}/mit-scheme/documentation/stable
-mit-scheme-user	mono	${MITGNUSCHEME}/mit-scheme-user.html
-mit-scheme-user	node	${MITGNUSCHEME}/mit-scheme-user/
- #
- mit-scheme-ref	mono	${MITGNUSCHEME}/mit-scheme-ref.html
- mit-scheme-ref	node	${MITGNUSCHEME}/mit-scheme-ref/
- #
- mit-scheme-ffi	mono	${MITGNUSCHEME}/mit-scheme-ffi.html
- mit-scheme-ffi	node	${MITGNUSCHEME}/mit-scheme-ffi/
- #
- mit-scheme-sos	mono	${MITGNUSCHEME}/mit-scheme-sos.html
- mit-scheme-sos	node	${MITGNUSCHEME}/mit-scheme-sos/
- #
- mit-scheme-imail	mono	${MITGNUSCHEME}/mit-scheme-imail.html
- #
- mit-scheme-blowfish	mono	${MITGNUSCHEME}/mit-scheme-blowfish.html
- #
- mit-scheme-gdbm	mono	${MITGNUSCHEME}/mit-scheme-gdbm.html
 
 mailutils	mono	${GS}/mailutils/manual/mailutils.html
 mailutils	chapter	${GS}/mailutils/manual/html_chapter/
@@ -607,15 +598,29 @@ make		node	${GS}/make/manual/html_node/
 mdk		mono	${GS}/mdk/manual/mdk.html
 mdk		node	${GS}/mdk/manual/html_node/
 
+# GNU Metadata Exchange Utilities.  Documentation is the IWF Metadata
+# Harvester documentation, which is the package the GNU Metadata Exchange
+# Utilities is derived from.
 METAEXCHANGE = https://ftp.gwdg.de/pub/gnu2/iwfmdh/doc/texinfo
  iwf_mh		node	${METAEXCHANGE}/iwf_mh.html
  scantest	node	${METAEXCHANGE}/scantest.html
 
 MIT_SCHEME = ${GS}/mit-scheme/documentation/stable
+ mit-scheme-ref	  mono	${MIT_SCHEME}/mit-scheme-ref.html
  mit-scheme-ref	  node	${MIT_SCHEME}/mit-scheme-ref/
+ #
+ mit-scheme-ffi	  mono	${MIT_SCHEME}/mit-scheme-ffi.html
+ mit-scheme-ffi	  node	${MIT_SCHEME}/mit-scheme-ffi/
+ #
+ mit-scheme-user  mono	${MIT_SCHEME}/mit-scheme-user.html
  mit-scheme-user  node	${MIT_SCHEME}/mit-scheme-user/
- sos		  node	${MIT_SCHEME}/mit-scheme-sos/
+ #
+ mit-scheme-sos	  mono	${MIT_SCHEME}/mit-scheme-sos.html
+ mit-scheme-sos	  node	${MIT_SCHEME}/mit-scheme-sos/
+ #
  mit-scheme-imail mono	${MIT_SCHEME}/mit-scheme-imail.html
+ mit-scheme-gdbm  mono	${MIT_SCHEME}/mit-scheme-gdbm.html
+ mit-scheme-blowfish mono	${MIT_SCHEME}/mit-scheme-blowfish.html
 
 moe		mono	${GS}/moe/manual/moe_manual.html
 
@@ -656,13 +661,14 @@ pspp		node	${GS}/pspp/manual/html_node/
 pyconfigure	mono	${GS}/pyconfigure/manual/pyconfigure.html
 pyconfigure	node	${GS}/pyconfigure/manual/html_node/
 
-R = https://cran.r-project.org/doc/manuals
+R = https://CRAN.R-project.org/doc/manuals
  R-intro	mono	${R}/R-intro.html
  R-lang		mono	${R}/R-lang.html
  R-exts		mono	${R}/R-exts.html
  R-data		mono	${R}/R-data.html
  R-admin	mono	${R}/R-admin.html
  R-ints		mono	${R}/R-ints.html
+ R-FAQ		mono	${R}/R-FAQ.html
 
 rcs		mono	${GS}/rcs/manual/rcs.html
 rcs		node	${GS}/rcs/manual/html_node/
@@ -720,7 +726,9 @@ sourceinstall	node	${GS}/sourceinstall/manual/html_node/
 sqltutor	mono	${GS}/sqltutor/manual/sqltutor.html
 sqltutor	node	${GS}/sqltutor/manual/html_node/
 
+# maybe an old name for the project
 src-highlite	mono	${GS}/src-highlite/source-highlight.html
+source-highlight	mono	${GS}/src-highlite/source-highlight.html
 
 swbis		mono	${GS}/swbis/manual.html
 
@@ -731,6 +739,8 @@ tar		node	${GS}/tar/manual/html_node/
 
 teseq		mono	${GS}/teseq/manual/teseq.html
 teseq		node	${GS}/teseq/manual/html_node/
+
+termcap		mono	${GS}/termutils/manual/termcap-1.3/html_mono/termcap.html
 
 TEXINFO = ${GS}/texinfo/manual
 texinfo		mono	${TEXINFO}/texinfo/texinfo.html
@@ -766,18 +776,6 @@ xboard		mono	${GS}/xboard/manual/xboard.html
 xboard		node	${GS}/xboard/manual/html_node/
 
 # emacs-page
-# Free TeX-related Texinfo manuals on tug.org.
-
-T = https://tug.org/texinfohtml
-
-dvipng		mono	${T}/dvipng.html
-dvips		mono	${T}/dvips.html
-eplain		mono	${T}/eplain.html
-kpathsea	mono	${T}/kpathsea.html
-latex2e		mono	${T}/latex2e.html
-tlbuild		mono	${T}/tlbuild.html
-web2c		mono	${T}/web2c.html
-
 
 # Local Variables:
 # eval: (add-hook 'write-file-hooks 'time-stamp)

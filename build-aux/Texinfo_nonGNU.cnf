@@ -1,0 +1,47 @@
+# Texinfo_nonGNU.cnf - reference file for free Texinfo manuals on the web.
+
+htmlxrefversion=2024-09-17.20; # UTC
+
+# Copyright 2010-2024 Free Software Foundation, Inc.
+# 
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.
+#
+# The latest version of this file is available at
+# http://ftpmirror.gnu.org/texinfo/htmlxref.cnf.
+# Email corrections or additions to bug-texinfo@gnu.org.
+# The primary goal is to list free manuals.
+#
+# To be included in this list, a manual must:
+#
+# - have a generic url, e.g., no version numbers;
+# - have a unique file name (e.g., manual identifier), i.e., be related to the
+#   package name.  Things like "refman" or "tutorial" don't work.
+# - follow the naming convention for nodes described at
+# https://www.gnu.org/software/texinfo/manual/texinfo/html_node/HTML-Xref.html
+#   This is what makeinfo and texi2html implement.
+# 
+# Unless the above criteria are met, it's not possible to generate
+# reliable cross-manual references.
+
+# Free TeX-related Texinfo manuals on tug.org.
+
+T = https://tug.org/texinfohtml
+
+dvipng		mono	${T}/dvipng.html
+dvips		mono	${T}/dvips.html
+eplain		mono	${T}/eplain.html
+kpathsea	mono	${T}/kpathsea.html
+latex2e		mono	${T}/latex2e.html
+tlbuild		mono	${T}/tlbuild.html
+web2c		mono	${T}/web2c.html
+
+
+# Local Variables:
+# eval: (add-hook 'write-file-hooks 'time-stamp)
+# time-stamp-start: "htmlxrefversion="
+# time-stamp-format: "%:y-%02m-%02d.%02H"
+# time-stamp-time-zone: "UTC"
+# time-stamp-end: "; # UTC"
+# End:
