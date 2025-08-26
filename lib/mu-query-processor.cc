@@ -208,7 +208,7 @@ unread_char(std::string& str, size_t& pos, char kar)
 
 
 /**
- * Remove the the next element from the string and return it
+ * Remove the next element from the string and return it
  *
  * @param[in,out] str a string
  * @param[in,out] pos position in _original_ string *

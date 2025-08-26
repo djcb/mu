@@ -75,7 +75,7 @@ public:
 	}
 
 	/**
-	 * Update the cache with the the label changes
+	 * Update the cache with the label changes
 	 *
 	 * @param updates a vector of delta-labels
 	 */

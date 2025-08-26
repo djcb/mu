@@ -157,7 +157,7 @@ struct Command: public Sexp {
 	 *
 	 * @param name name of the argument
 	 *
-	 * @return false if the the argument is absent or the symbol false;
+	 * @return false if the argument is absent or the symbol false;
 	 * otherwise true.
 	 */
 	bool boolean_arg(const std::string& name) const {

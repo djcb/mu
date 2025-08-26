@@ -80,7 +80,7 @@ struct Regex {
 	~Regex() noexcept { g_clear_pointer(&rx_, g_regex_unref); }
 
 	/**
-	 * Cast to the the underlying GRegex*
+	 * Cast to the underlying GRegex*
 	 *
 	 * @return a GRegex*
 	 */

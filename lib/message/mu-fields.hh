@@ -524,7 +524,7 @@ constexpr Option<Field> field_find_if(Pred&& pred) {
 }
 
 /**
- * Get the the message-field for the given name or shortcut
+ * Get the message-field for the given name or shortcut
  *
  * @param name_or_shortcut
  *

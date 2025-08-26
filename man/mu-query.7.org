@@ -479,7 +479,7 @@ For that, you can ask *mu* to analyze the
 query -- that is, show how *mu* interprets the query. We already saw an example of
 this.
 
-This uses the the *--analyze* option to *mu find*.
+This uses the *--analyze* option to *mu find*.
 #+begin_example
 $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
 ,*query:

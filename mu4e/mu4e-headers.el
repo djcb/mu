@@ -495,7 +495,7 @@ while our display may be different)."
 
 (defun mu4e~headers-from-or-to (msg)
   "Get the From: address from MSG if not one of user's; otherwise get To:.
-When the from address for message MSG is one of the the user's
+When the from address for message MSG is one of the user's
 addresses, (as per `mu4e-personal-address-p'), show the To
 address. Otherwise, show the From address, prefixed with the
 appropriate `mu4e-headers-from-or-to-prefix'."

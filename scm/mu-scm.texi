@@ -533,7 +533,7 @@ For example:
 
 @deffn {Scheme Procedure} path message
 @end deffn
-Get the file-system path for the the message.
+Get the file-system path for the message.
 
 For example:
 @lisp

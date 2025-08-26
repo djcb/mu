@@ -270,7 +270,7 @@ public:
 	}
 
 	/**
-	 * Is the the base empty?
+	 * Is the base empty?
 	 *
 	 * @return true or false
 	 */
