@@ -260,7 +260,7 @@
       details.
 
     - 1.12.8: a new variable ~mu4e-trash-without-flag~, which, when set to non-nil
-      makes trashing _not_ add the the Maildir ~T~ flag. See its docstring for
+      makes trashing _not_ add the Maildir ~T~ flag. See its docstring for
       details.
 
     - 1.12.9: A (experimental) "transient" menu has been added for mu4e. You can
@@ -1562,7 +1562,7 @@ End of search results
 
     - allow for shell commands with arguments in `mu4e-get-mail-command'.
     - support marking messages as 'read' and 'unread'
-    - show the current query in the the mode-line (`global-mode-string').
+    - show the current query in the mode-line (`global-mode-string').
     - don't repeat 'Re:' / 'Fwd:'
     - colorize cited message parts
     - better handling of text-based, embedded message attachments

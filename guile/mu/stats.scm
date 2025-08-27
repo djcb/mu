@@ -100,7 +100,7 @@ EXPR (or #t for all). Returns #f if undefined."
   (average (map func (mu:message-list expr))))
 
 (define* (mu:stddev func #:optional (expr #t))
-  "Get the standard deviation the the values of FUNC applied to all
+  "Get the standard deviation the values of FUNC applied to all
 messages matching EXPR (or #t for all). This is the 'population' stddev,
 not the 'sample' stddev. Returns #f if undefined."
   (stddev (map func (mu:message-list expr))))

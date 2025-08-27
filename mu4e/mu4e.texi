@@ -2055,7 +2055,7 @@ understands@footnote{with the caveat that command-line queries are subject to
 the shell's interpretation before @t{mu} sees them}. You can consult the
 @code{mu-query} man-page for the details. In addition, @t{mu4e} provides a
 command @code{mu4e-analyze-last-query}, which shows how the @t{mu} server has
-interpreted the query, similar to what the the @t{--analyze} option does for
+interpreted the query, similar to what the @t{--analyze} option does for
 @t{mu find}.
 
 Additionally, @t{mu4e} supports @kbd{TAB}-completion for queries. There
@@ -3100,7 +3100,7 @@ Finally, let's define a MIME-part action.
 
 The following example action counts the number of lines in an attachment, and
 defines @key{n} as its shortcut key (the @key{n} is prefixed to the
-description). See the the @code{mu4e-view-mime-part-actions} for the details of
+description). See the @code{mu4e-view-mime-part-actions} for the details of
 the format.
 
 @lisp

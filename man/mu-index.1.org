@@ -196,7 +196,7 @@ too!
 
 ** recent releases
 
-Indexing the the same 93000-message mail corpus with the last few releases:
+Indexing the same 93000-message mail corpus with the last few releases:
 
 #+ATTR_MAN: :disable-caption t
 |       release | time (sec) | notes                                    |

@@ -58,7 +58,7 @@ Evaluate a mu4e server s-expression.
 ** --allow-temp-file
 If set, allow for the output of some commands to use temp-files rather than
 directly through the emacs process input/output. This is noticeably faster for
-commands with a lot of output, esp. when the the temp-file uses a in-memory
+commands with a lot of output, esp. when the temp-file uses a in-memory
 file-system.
 
 ** --listen

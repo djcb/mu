@@ -318,7 +318,7 @@ removed."
 (defun mu4e--server-plist-get (plist key)
   "Like `plist-get' but load data from file if it is a string.
 
-PLIST is a property-list, and KEY is the the key to search for.
+PLIST is a property-list, and KEY is the key to search for.
 
 
 E.g., (mu4e--server-plist-get (:foo bar) :foo)
