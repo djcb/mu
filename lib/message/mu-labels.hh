@@ -47,6 +47,18 @@ using DeltaLabelVec = std::vector<DeltaLabel>;
 Result<DeltaLabel> parse_delta_label(const std::string& expr);
 
 /**
+ * Parse a series of label expressions, with some separator
+ *
+ * This also validates the labels, as per valid_label()
+ *
+ * @param exprs label expressions
+ *
+ * @return a result with either a DeltaLabel or an error
+ */
+Result<DeltaLabelVec> parse_delta_labels(const std::string& exprs,
+					 const std::string sepa);
+
+/**
  * Is the label (without +/- prefix) valid?
  *
  * @param label some label

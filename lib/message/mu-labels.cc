@@ -100,6 +100,26 @@ Mu::Labels::parse_delta_label(const std::string &expr)
 }
 
 
+Result<DeltaLabelVec>
+Mu::Labels::parse_delta_labels(const std::string& exprs,
+			       const std::string sepa)
+{
+
+	DeltaLabelVec deltas{};
+	for (const auto& expr: split(exprs, sepa)) {
+		if (auto delta = parse_delta_label(expr); !delta)
+			return Err(std::move(delta.error()));
+		else
+			deltas.emplace_back(*delta);
+	}
+
+	return Ok(std::move(deltas));
+}
+
+
+
+
+
 struct cmp_delta_label { // can not yet be a λ in C++17
 	bool operator()(const DeltaLabel& dl1, const DeltaLabel& dl2) const {
 		return dl1.second < dl2.second;
@@ -182,6 +202,29 @@ test_parse_delta_label()
 	g_assert_false(!!parse_delta_label("-😨"));
 }
 
+
+static void
+test_parse_delta_labels()
+{
+	{
+		const auto deltas = parse_delta_labels("+foo,-bar@cuux",",");
+		assert_valid_result(deltas);
+
+		g_assert_true(deltas->at(0).first == Delta::Add);
+		assert_equal(deltas->at(0).second, "foo");
+
+		g_assert_true(deltas->at(1).first == Delta::Remove);
+		assert_equal(deltas->at(1).second, "bar@cuux");
+	}
+
+	{
+		const auto expr = parse_delta_labels("+foo @boo🐂", " ");
+		g_assert_false(!!expr);
+	}
+}
+
+
+
 static void
 test_validate_label()
 {
@@ -229,11 +272,9 @@ test_updated_labels()
 	assert_eq({}, delta_labels({"-fnorb", "-fnorb", "+whiteward", "+altesia", "+fnorb"}),
 		  {"altesia", "fnorb", "whiteward"}, delta_labels({"+altesia", "+fnorb", "+whiteward"}));
 
-
 	assert_eq({"piranesi", "hyperion", "mordor", "piranesi"}, delta_labels({}),
 		  {"hyperion", "mordor", "piranesi"}, delta_labels({}));
 }
-
 
 int
 main(int argc, char* argv[])
@@ -241,6 +282,7 @@ main(int argc, char* argv[])
 	mu_test_init(&argc, &argv);
 
 	g_test_add_func("/message/labels/parse-delta-label", test_parse_delta_label);
+	g_test_add_func("/message/labels/parse-delta-labels", test_parse_delta_labels);
 	g_test_add_func("/message/labels/validate-label", test_validate_label);
 	g_test_add_func("/message/labels/updated-labels", test_updated_labels);
 
