@@ -240,8 +240,8 @@ public:
 	Flags    flags_value() const noexcept;
 
 private:
-	template<typename SexpType> void put_prop(const Field& field, SexpType&& val);
-	template<typename SexpType> void put_prop(const std::string& pname, SexpType&& val);
+	template<typename SexpType> void sexp_put_prop(const Field& field, SexpType&& val);
+	void sexp_remove_prop(const Field& field);
 
 	Sexp& cached_sexp() const {
 		if (cached_sexp_.empty())

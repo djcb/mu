@@ -1078,6 +1078,57 @@ https://trac.xapian.org/ticket/719
 	}
 }
 
+static void
+test_update_labels()
+{
+	const TestMap test_msgs = {{
+			"inbox/new/msg",
+			{
+R"(Message-Id: <abcde@foo.bar>
+From: "Foo Example" <bar@example.com>
+Date: Wed, 26 Oct 2022 11:01:54 -0700
+To: example@example.com
+Subject: testcase
+
+Boo!
+)"},
+		}};
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, {})};
+
+	{
+		const auto qr = store.run_query("label:shrike");
+		assert_valid_result(qr);
+		g_assert_true(qr->empty());
+	}
+
+	{
+		auto qr = store.run_query("subject:testcase");
+		assert_valid_result(qr);
+		g_assert_cmpuint(qr->size(), ==, 1U);
+
+		g_assert_true(!!qr->begin().message());
+		Message msg = *qr->begin().message();
+
+		g_assert_true(msg.sexp().to_string().find("shrike") == std::string::npos);
+
+		store.update_labels(msg, Labels::parse_delta_labels("+shrike"," ").value());
+
+		g_assert_true(msg.sexp().to_string().find("shrike") != std::string::npos);
+
+		store.update_labels(msg, Labels::parse_delta_labels("-shrike"," ").value());
+		g_assert_true(msg.sexp().to_string().find("shrike") == std::string::npos);
+	}
+
+	{
+		const auto qr = store.run_query("label:shrike");
+		assert_valid_result(qr);
+		g_assert_true(qr->empty());
+	}
+
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -1113,6 +1164,9 @@ main(int argc, char* argv[])
 			test_html);
 	g_test_add_func("/store/query/ngrams",
 			test_ngrams);
+	g_test_add_func("/store/query/update-labels",
+			test_update_labels);
+
 
 	return g_test_run();
 }

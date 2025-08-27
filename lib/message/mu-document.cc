@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -50,18 +50,28 @@ Document::xapian_document() const
 	return xdoc_;
 }
 
-template<typename SexpType> void
-Document::put_prop(const std::string& pname, SexpType&& val)
+static std::string
+propname(const Field& field)
 {
-	cached_sexp().put_props(pname, std::forward<SexpType>(val));
-	dirty_sexp_ = true;
+	return std::string(":") + std::string{field.name};
 }
 
 template<typename SexpType> void
-Document::put_prop(const Field& field, SexpType&& val)
+Document::sexp_put_prop(const Field& field, SexpType&& val)
 {
-	put_prop(std::string(":") + std::string{field.name},
-		 std::forward<SexpType>(val));
+	if (field.include_in_sexp()) {
+		cached_sexp().put_props(propname(field), std::forward<SexpType>(val));
+		dirty_sexp_ = true;
+	}
+}
+
+void
+Document::sexp_remove_prop(const Field& field)
+{
+	if (field.include_in_sexp()) {
+		cached_sexp().del_prop(propname(field));
+		dirty_sexp_ = true;
+	}
 }
 
 static Xapian::TermGenerator
@@ -106,16 +116,13 @@ Document::add(Field::Id id, const std::string& val)
 	if (field.is_searchable())
 		add_search_term(xdoc_, field, val, options_);
 
-	if (field.include_in_sexp())
-		put_prop(field, val);
+	sexp_put_prop(field, val);
+
 }
 
 void
 Document::add(Field::Id id, const std::vector<std::string>& vals)
 {
-	if (vals.empty())
-		return;
-
 	const auto field{field_from_id(id)};
 	if (field.is_value())
 		xdoc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
@@ -129,7 +136,7 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 		Sexp elms{};
 		for(auto&& val: vals)
 			elms.add(val);
-		put_prop(field, std::move(elms));
+		sexp_put_prop(field, std::move(elms));
 	}
 }
 
@@ -192,8 +199,7 @@ Document::add(Field::Id id, const Contacts& contacts)
 	if (!cvec.empty())
 		xdoc_.add_value(field.value_no(), join(cvec, SepaChar1));
 
-	if (field.include_in_sexp())
-		put_prop(field, make_contacts_sexp(contacts));
+	sexp_put_prop(field, make_contacts_sexp(contacts));
 }
 
 Contacts
@@ -225,14 +231,13 @@ Document::contacts_value(Field::Id id) const noexcept
 }
 
 void
-Document::add_extra_contacts(const std::string& propname, const Contacts& contacts)
+Document::add_extra_contacts(const std::string& prop_name, const Contacts& contacts)
 {
 	if (!contacts.empty()) {
-		put_prop(propname, make_contacts_sexp(contacts));
+		cached_sexp().put_props(prop_name, make_contacts_sexp(contacts));
 		dirty_sexp_ = true;
 	}
 }
-
 
 static Sexp
 make_emacs_time_sexp(::time_t t)
@@ -256,12 +261,10 @@ Document::add(Field::Id id, int64_t val)
 	if (field.is_value())
 		xdoc_.add_value(field.value_no(), to_lexnum(val));
 
-	if (field.include_in_sexp()) {
-		if (field.is_time_t())
-			put_prop(field, make_emacs_time_sexp(val));
-		else
-			put_prop(field, val);
-	}
+	if (field.is_time_t())
+		sexp_put_prop(field, make_emacs_time_sexp(val));
+	else
+		sexp_put_prop(field, val);
 }
 
 int64_t
@@ -282,7 +285,7 @@ Document::add(Priority prio)
 	xdoc_.add_boolean_term(field.xapian_term(to_char(prio)));
 
 	if (field.include_in_sexp())
-		put_prop(field, Sexp::Symbol(priority_name(prio)));
+		sexp_put_prop(field, Sexp::Symbol(priority_name(prio)));
 }
 
 Priority
@@ -308,9 +311,8 @@ Document::add(Flags flags)
 	});
 
 	if (field.include_in_sexp())
-		put_prop(field, std::move(flaglist));
+		sexp_put_prop(field, std::move(flaglist));
 }
-
 
 Flags
 Document::flags_value() const noexcept
@@ -324,12 +326,15 @@ Document::remove(Field::Id field_id)
 	const auto field{field_from_id(field_id)};
 	const auto pfx{field.xapian_prefix()};
 
+	bool updated{};
+
 	xapian_try([&]{
 
 		if (auto&& val{xdoc_.get_value(field.value_no())}; !val.empty()) {
 			// g_debug("removing value<%u>: '%s'", field.value_no(),
 			//	val.c_str());
 			xdoc_.remove_value(field.value_no());
+			updated = true;
 		}
 
 		std::vector<std::string> kill_list;
@@ -344,13 +349,16 @@ Document::remove(Field::Id field_id)
 			// g_debug("removing term '%s'", term.c_str());
 			try {
 				xdoc_.remove_term(term);
+				updated = true;
 			} catch(const Xapian::InvalidArgumentError& xe) {
 				mu_critical("failed to remove '{}'", term);
 			}
 		}
 	});
-}
 
+	if (updated)
+		sexp_remove_prop(field);
+}
 
 #ifdef BUILD_TESTS
 
@@ -366,8 +374,6 @@ Document::remove(Field::Id field_id)
 	for (auto i = 0U; i != CV1.size(); ++i)			\
 		assert_same_contact(CV1[i], CV2[i]);		\
 	} while(0)
-
-
 
 static const Contacts test_contacts = {{
 		Contact{"john@example.com", "John", Contact::Type::Bcc},
