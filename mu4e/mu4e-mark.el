@@ -1,6 +1,6 @@
 ;;; mu4e-mark.el --- Marking messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2025 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -30,6 +30,7 @@
 (require 'mu4e-server)
 (require 'mu4e-message)
 (require 'mu4e-folders)
+(require 'mu4e-labels)
 
 ;; keep byte-compiler happy
 (declare-function mu4e~headers-mark "mu4e-headers")
@@ -155,6 +156,11 @@ The current buffer must be either a headers or view buffer."
      :show-target (lambda (target) "flag")
      :action (lambda (docid msg target)
                (mu4e--server-move docid nil "+F-u-N")))
+    (unflag
+     :char    ("-" . "➖")
+     :prompt "-unflag"
+     :show-target (lambda (target) "unflag")
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "-F-N")))
     (move
      :char ("m" . "▷")
      :prompt "move"
@@ -166,6 +172,12 @@ The current buffer must be either a headers or view buffer."
      :prompt "!read"
      :show-target (lambda (target) "read")
      :action (lambda (docid msg target) (mu4e--server-move docid nil "+S-u-N")))
+    (unread
+     :char    ("?" . "◻")
+     :prompt "?unread"
+     :show-target (lambda (target) "unread")
+     :action (lambda (docid msg target) (mu4e--server-move docid nil "-S+u-N")))
+
     (trash
      :char ("d" . "▼")
      :prompt "dtrash"
@@ -174,25 +186,29 @@ The current buffer must be either a headers or view buffer."
                (mu4e--server-move docid
                                   (mu4e--mark-check-target target)
                                   (if mu4e-trash-without-flag "-N" "+T-N"))))
-    (unflag
-     :char    ("-" . "➖")
-     :prompt "-unflag"
-     :show-target (lambda (target) "unflag")
-     :action (lambda (docid msg target) (mu4e--server-move docid nil "-F-N")))
     (untrash
      :char   ("=" . "▲")
      :prompt "=untrash"
      :show-target (lambda (target) "untrash")
      :action (lambda (docid msg target) (mu4e--server-move docid nil "-T")))
-    (unread
-     :char    ("?" . "◻")
-     :prompt "?unread"
-     :show-target (lambda (target) "unread")
-     :action (lambda (docid msg target) (mu4e--server-move docid nil "-S+u-N")))
+
+    (label
+     :char ("l" . "🏷")
+     :prompt "label"
+     :ask-target mu4e-labels-delta-read
+     :action (lambda (docid msg expr)
+               (mu4e--labels-update-server docid expr)))
+    (unlabel
+     :char ("L" . "∅")
+     :prompt "unlabel"
+     :show-target (lambda (target) "clear labels")
+     :action (lambda (docid msg expr)
+               (mu4e--labels-clear-server docid)))
     (unmark
      :char  " "
      :prompt "unmark"
      :action (mu4e-error "No action for unmarking"))
+
     (action
      :char ( "a" . "◯")
      :prompt "action"
@@ -251,6 +267,8 @@ The following marks are available, and the corresponding props:
    `untrash'   n        remove the `trashed' flag from a message
    `unmark'    n        unmark this message
    `unread'    n        mark the message as unread
+   `label'     y        (re)label the message
+   `unlabel'   n        clear all labels
    `action'    y        mark the message for some action."
   (interactive)
   (let* ((msg (mu4e-message-at-point))
@@ -310,6 +328,11 @@ The following marks are available, and the corresponding props:
          (fulltarget (mu4e-join-paths (mu4e-root-maildir) target)))
     (when (mu4e-create-maildir-maybe fulltarget)
       target)))
+
+(defun mu4e--mark-get-labels-target ()
+  "Ask for a labels expression."
+  (let* ((exprs (read-from-minibuffer "Label expression: ")))
+    (mu4e-label-parse-exprs exprs)))
 
 (defun mu4e--mark-ask-target (mark)
   "Ask the target for MARK, if the user should be asked the target."
@@ -431,7 +454,8 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
        (message nil)))))
 
 (defun mu4e-mark-unmark-all (&optional no-confirmation)
-  "Unmark all marked messages."
+  "Unmark all marked messages.
+If NO-CONFIRMATION is non-nil, do not ask for confirmation."
   (interactive)
   (mu4e--mark-in-context
    (when (zerop (mu4e-mark-marks-num))

@@ -196,9 +196,10 @@ following information:
 
 @itemize
 @item What did you expect or wish to happen? what actually happened?
-Please describe in detail what you saw. Also, try some related scenarios and
-whether the problem either @emph{always} happens, or only @emph{sometimes}.
-E.g., it might happen with only one particular type of message
+Please describe in detail what you saw; what did you expect to happen and what
+actually happened? Also, please try some related scenarios and whether the
+problem either @emph{always} happens, or only @emph{sometimes}. E.g., the issue
+might happen with only one particular type of message
 @item Provide some exact steps to reproduce?
 In particular, some minimal steps, starting from @t{emacs -Q} and with minimal
 configuration. If the problem is easily producible, it may be easily fixable as
@@ -214,7 +215,6 @@ reproducing your problem, not the ``remix'' version that some Emacs
 
 In general, imagine you would be the person receiving the bug-report, and think
 about the information you would need to diagnose the problem.
-
 
 @node Getting started
 @chapter Getting started
@@ -1046,6 +1046,7 @@ DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
 +,-          mark for flagging/unflagging
+l            mark for labels
 ?,!          mark message as unread, read
 
 u            unmark message at point
@@ -1090,11 +1091,13 @@ Some keybindings are available through minor modes:
 @node HV Marking
 @section Marking
 
-You can @emph{mark} messages for a certain action, such as deletion or
-move. After one or more messages are marked, you can then execute
+You can @emph{mark} messages for a certain action, such as deletion or move or
+changing the labels.
+
+After one or more messages are marked, you can then execute
 (@code{mu4e-mark-execute-all}, @key{x}) these actions. This two-step
-mark-execute sequence is similar to what e.g. @t{dired} does. It is how
-@t{mu4e} tries to be as quick as possible, while avoiding accidents.
+mark-execute sequence is similar to what e.g. @t{dired} does. It is how @t{mu4e}
+tries to be as quick as possible, while avoiding accidents.
 
 The mark/unmark commands support the @emph{region} (i.e., ``selection'')
 --- so, for example, if you select some messages and press @key{DEL},
@@ -1423,6 +1426,7 @@ d            mark for moving to the trash folder
 DEL,D        mark for complete deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
+l            mark for labels
 +,-          mark for flagging/unflagging
 
 u            unmark message at point
@@ -2431,7 +2435,7 @@ Note, messages are considered duplicates when they have the same
 In @t{mu4e}, the common way to do things with messages is a two-step process -
 first you @emph{mark} them for a certain action, then you @emph{execute}
 (@key{x}) those marks. This is similar to the way @t{dired} operates. Marking
-can happen in both the @ref{Headers view} and the @ref{Message view}.
+can happen from both the @ref{Headers view} and the @ref{Message view}.
 
 @menu
 * Marking messages::Selecting message do something with them
@@ -2472,21 +2476,83 @@ messages.
 @verbatim
 mark for/as  | keybinding  | description
 -------------+-------------+------------------------------
-'something'  | *, <insert> | mark now, decide later
 delete       | D, <delete> | delete
-flag         | +           | mark as 'flagged' ('starred')
 move         | m           | move to some maildir
-read         | !           | mark as read
 refile       | r           | mark for refiling
+-------------+-------------+------------------------------
+flag         | +           | mark as 'flagged' ('starred')
+unflag       | -           | remove 'flagged' mark
+read         | !           | mark as read
+unread       | ?           | marks as unread
 trash        | d           | move to the trash folder
 untrash      | =           | remove 'trash' flag
-unflag       | -           | remove 'flagged' mark
+-------------+-------------+------------------------------
+label        | l           | change the labels
+unlabel      | L           | clear all labels
+action       | a           | apply some action
+'something'  | *, <insert> | mark now, decide later
+-------------+-------------------------------------------
 unmark       | u           | remove mark at point
 unmark all   | U           | remove all marks
-unread       | ?           | marks as unread
-action       | a           | apply some action
+-------------+-------------------------------------------
 @end verbatim
 @end cartouche
+
+@itemize
+@item @emph{delete} deletes the message from database and file-system
+@item @emph{move} moves the message to some different maildir
+@item @emph{refile} is similar @emph{move}, but determines the target maildir based
+on the characteristics of the message; this is very powerful. See
+@code{mu4e-refile-folder} and especially @xref{Smart refiling} for details.
+@item @emph{flag}/@emph{unflag}, @emph{read}/@emph{unread} and @emph{trash}/@emph{untrash}
+set or unset the corresponding Maildir flags
+@item @emph{label} lets you enter a label delta expression which gets applied; see below
+@item @emph{unlabel} lets you clear @emph{all} labels; see below
+@item @emph{action} lets you apply some pre-defined action on the message, as per @code{mu4e-headers-actions}
+@item @emph{'something'} marks the message for ``something'', and then decide
+later what this something should be; see below
+@item @emph{unmark} and @emph{unmark all} are ``meta'' marks, which remove the mark from the currently selected message(s) or all
+@end itemize
+
+@node Applying and clearing labels
+@subsection Applying and clearing labels
+@cindex labels
+
+The @t{label} mark lets you apply @emph{labels} to messages, which are short
+strings to attach to this message which you can query using the @t{label:}
+field. To see them in your headers / message views, you need to add the field to
+the @code{mu4e-headers-fields} and @code{mu4e-view-fields}, respectively.
+
+To change the labels for some message, you specify a @emph{label expression},
+which consists of a space-separated sequence of labels, each prefixed either
+with a @t{+} to add the label or @t{-} to remove it.
+
+For instance, to remove the @t{boring} label and add @t{urgent} from the message
+at point or the messages in region, press @kbd{l} and enter:
+@example
++urgent -boring
+@end example
+
+For @emph{clearing all labels}, you mark with @kbd{L} ('unlabel').
+
+You can search for labels using the @t{label:} field. For instance,
+@t{label:urgent} retrieves all messages labeled @t{urgent}.
+
+It is important to note that the labels are only stored in the database (the
+message files are not changed). This means that you loose this information when
+you remove the database and recrate it; it is however possible to @emph{export}
+the labels and re-@emph{import} them later; see the @t{mu-label} man-page for
+further details.
+
+@subsection Doing @emph{something}
+
+@t{something} is a special kind of mark; you can use it to mark messages for
+`something', and then decide later what the `something' should be@footnote{This
+kind of `deferred marking' is similar to the facility in @t{dired}, @t{midnight
+commander} (@url{https://www.midnight-commander.org/}) and the like, and uses
+the same key binding (@key{insert}).} Later, you can set the actual mark using
+@kbd{M-x mu4e-mark-resolve-deferred-marks} (@key{#}). Alternatively, @t{mu4e}
+will ask you when you try to execute the marks (@key{x}).
 
 After marking a message, the left-most columns in the headers view indicate
 the kind of mark. This is informative, but if you mark many (say, thousands)
@@ -2495,15 +2561,6 @@ Emacs feature called @emph{overlays}, which are slow when used a lot
 in a buffer}. For this reason, you can disable this by setting
 @code{mu4e-headers-show-target} to @code{nil}.
 
-@t{something} is a special kind of mark; you can use it to mark messages
-for `something', and then decide later what the `something' should
-be@footnote{This kind of `deferred marking' is similar to the facility
-in @t{dired}, @t{midnight commander}
-(@url{https://www.midnight-commander.org/}) and the like, and uses the
-same key binding (@key{insert}).}  Later, you can set the actual mark
-using @kbd{M-x mu4e-mark-resolve-deferred-marks}
-(@key{#}). Alternatively, @t{mu4e} will ask you when you try to execute
-the marks (@key{x}).
 
 @node Executing the marks
 @section Executing the marks
@@ -2597,7 +2654,6 @@ As you can see, it's not very hard to define simple functions to match
 messages. There are more examples in the defaults for
 @code{mu4e-headers-custom-markers}; see @file{mu4e-headers.el} and see
 @ref{Extending mu4e} for general information about writing your own functions.
-
 
 @node Adding a new kind of mark
 @section Adding a new kind of mark
@@ -3128,7 +3184,10 @@ viewing messages in an external web browser or tagging.
 It is easy to add such actions to your configuration; for instance, to enable
 @emph{tagging}@footnote{@t{mu4e} does not offer tagging by default since it
 mutates the message files, something that @t{mu}/@t{mu4e} generally try to
-avoid.} both in the message view and headers view, you could add:
+avoid. An alternative to tagging is @emph{labeling}, @xref{Applying and clearing
+labels}
+
+} both in the message view and headers view, you could add:
 @lisp
 (add-to-list 'mu4e-headers-actions
              '("Tag message" . mu4e-action-retag-message))

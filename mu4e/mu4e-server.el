@@ -708,6 +708,10 @@ the directory time stamp."
            :lazy-check ,(and lazy-check t)))
   (setq mu4e--server-indexing t)) ;; remember we're indexing.
 
+(defun mu4e--server-label (docid delta-expr)
+  "Apply the label DELTA-EXPR to the message with DOCID."
+  (mu4e--server-call-mu `(label :docid ,docid :labels ,delta-expr)))
+
 (defun mu4e--server-mkdir (path &optional update)
   "Create a new maildir-directory at file system PATH.
 When UPDATE is non-nil, send a update when completed.

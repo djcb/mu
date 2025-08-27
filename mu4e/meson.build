@@ -52,6 +52,7 @@ mu4e_srcs=[
   'mu4e-headers.el',
   'mu4e-helpers.el',
   'mu4e-icalendar.el',
+  'mu4e-labels.el',
   'mu4e-lists.el',
   'mu4e-main.el',
   'mu4e-mark.el',
@@ -115,7 +116,6 @@ foreach src : mu4e_srcs
                           '--eval', '(setq byte-compile-warnings \'(not obsolete))',
                           '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
-
 endforeach
 
 # this depends on the above hack: all mu4e elisp files needs to be in builddir

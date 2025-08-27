@@ -411,6 +411,8 @@ list."
 (mu4e--view-defun-mark-for unread)
 (mu4e--view-defun-mark-for trash)
 (mu4e--view-defun-mark-for untrash)
+(mu4e--view-defun-mark-for label)
+(mu4e--view-defun-mark-for unlabel)
 
 (defun mu4e-view-marked-execute ()
   "Execute the marked actions."
@@ -1007,6 +1009,9 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map (kbd "-") #'mu4e-view-mark-for-unflag)
     (define-key map (kbd "=") #'mu4e-view-mark-for-untrash)
     (define-key map (kbd "&") #'mu4e-view-mark-custom)
+
+    (define-key map (kbd "l") #'mu4e-view-mark-for-label)
+    (define-key map (kbd "L") #'mu4e-view-mark-for-unlabel)
 
     (define-key map (kbd "*")             #'mu4e-view-mark-for-something)
     (define-key map (kbd "<kp-multiply>") #'mu4e-view-mark-for-something)

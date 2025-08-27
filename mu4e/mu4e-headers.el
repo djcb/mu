@@ -913,6 +913,8 @@ COUNT is the number of messages found."
 (mu4e~headers-defun-mark-for untrash)
 (mu4e~headers-defun-mark-for unmark)
 (mu4e~headers-defun-mark-for unread)
+(mu4e~headers-defun-mark-for label)
+(mu4e~headers-defun-mark-for unlabel)
 (mu4e~headers-defun-mark-for action)
 
 (declare-function mu4e-view-pipe "mu4e-view")
@@ -964,6 +966,9 @@ COUNT is the number of messages found."
 
     (define-key map (kbd "?")            #'mu4e-headers-mark-for-unread)
     (define-key map (kbd "!")            #'mu4e-headers-mark-for-read)
+    (define-key map (kbd "l")            #'mu4e-headers-mark-for-label)
+    (define-key map (kbd "L")            #'mu4e-headers-mark-for-unlabel)
+
     (define-key map (kbd "A")            #'mu4e-headers-mark-for-action)
 
     (define-key map (kbd "u")            #'mu4e-headers-mark-for-unmark)
