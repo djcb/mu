@@ -40,6 +40,7 @@
 #include "mu-query.hh"
 #include "mu-query-parser.hh"
 #include "mu-store.hh"
+#include "message/mu-labels.hh"
 
 #include "utils/mu-utils.hh"
 #include "utils/mu-utils-file.hh"
@@ -72,7 +73,7 @@ struct OutputStream {
 	 * @param cdr name of the output (e.g., "contacts")
 	 *
 	 * @return
-	 */
+`	 */
 	OutputStream(): out_{std::ostringstream{}} {}
 
 	/**
@@ -177,6 +178,7 @@ struct Server::Private {
 	void find_handler(const Command& cmd);
 	void help_handler(const Command& cmd);
 	void index_handler(const Command& cmd);
+	void label_handler(const Command& cmd);
 	void move_handler(const Command& cmd);
 	void mkdir_handler(const Command& cmd);
 	void ping_handler(const Command& cmd);
@@ -359,6 +361,18 @@ Server::Private::make_command_map()
 				"whether to avoid indexing up-to-date directories"}}},
 		"scan maildir for new/updated/removed messages",
 		[&](const auto& params) { index_handler(params); }});
+	cmap.emplace(
+	    "label",
+	    CommandInfo{
+		ArgMap{
+		    {":docid", ArgInfo{Type::Number, true, "document-id"}},
+		    {":labels", ArgInfo{Type::String, true,
+					    "label delta expressions (SPC-separated)"}},
+		    {":no-view",
+		     ArgInfo{Type::Symbol, false, "if set, do not hint at updating the view"}},
+		},
+		"move messages and/or change their flags",
+		[&](const auto& params) { label_handler(params); }});
 	cmap.emplace(
 	    "mkdir",
 	    CommandInfo{
@@ -878,6 +892,39 @@ Server::Private::index_handler(const Command& cmd)
 }
 
 void
+Server::Private::label_handler(const Command& cmd)
+{
+	const auto labels{*cmd.string_arg(":labels")};
+	const auto docid{*cmd.number_arg(":docid")};
+	const auto no_view{cmd.boolean_arg(":noupdate")};
+
+	auto msg = store().find_message(docid)
+		.or_else([&]{throw Error{Error::Code::InvalidArgument,
+					"cannot find message {}", docid};}).value();
+
+	// special case: '-*' means "clear all labels"
+	if (labels == "-*") {
+		mu_debug("clear all labels from {} ({})", docid, join(msg.labels(), " "));
+		if (const auto res = store().clear_labels(msg); !res)
+			throw res.error();
+	} else {
+		const auto delta_labels = Labels::parse_delta_labels(labels, " ");
+		if (!delta_labels)
+			throw delta_labels.error();
+
+		mu_debug("apply {} to {} ({})", labels, docid, join(msg.labels(), " "));
+		if (const auto res = store().update_labels(msg, *delta_labels); !res)
+			throw res.error();
+	}
+
+	auto sexpstr = "(:update " + msg_sexp_str(msg, docid, {});
+	if (!no_view)
+		sexpstr += " :maybe-view t";
+	sexpstr += ')';
+	output(std::move(sexpstr));
+}
+
+void
 Server::Private::mkdir_handler(const Command& cmd)
 {
 	const auto path{cmd.string_arg(":path").value_or("<error>")};
@@ -990,7 +1037,7 @@ Server::Private::move_handler(const Command& cmd)
 	const auto flagopt{cmd.string_arg(":flags")};
 	const auto rename{cmd.boolean_arg(":rename")};
 	const auto no_view{cmd.boolean_arg(":noupdate")};
-	const auto docids{determine_docids(store_, cmd)};
+	const auto docids{determine_docids(store(), cmd)};
 
 	if (docids.empty()) {
 		if (!!cmd.string_arg(":msgid")) {

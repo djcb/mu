@@ -356,7 +356,7 @@ public:
 	 *
 	 * @param message some message
 	 *
-	 * @retgurn Ok or some error
+	 * @return Ok or some error
 	 */
 	Result<void> clear_labels(Message& message);
 
