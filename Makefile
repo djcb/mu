@@ -157,7 +157,7 @@ distclean: clean
 #
 # documentation
 #
-BUILDAUX:=$(PWD)/build-aux
+BUILDAUX:=./build-aux
 DOCPATH=${BUILDDIR}/doc
 MU4E_DOCHTML=${DOCPATH}/mu4e
 
