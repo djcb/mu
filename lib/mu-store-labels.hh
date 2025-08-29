@@ -52,20 +52,22 @@ public:
 	/**
 	 * Add a label occurrence to the cache
 	 *
-	 * @param label
+	 * @param label some label
 	 */
-	void add(const std::string& label) {
+	void increase(const std::string& label) {
 		if (auto it = label_map_.find(label); it == label_map_.end())
 			label_map_.insert({label, 1});
 		else
 			++it->second;
 	}
 	/**
-	 * Remove label occurrence from the cache
+	 * Remove a label occurrence from the cache
 	 *
-	 * @param label
+	 * Removes the label completely if this was the _last_ occurence.
+	 *
+	 * @param label some label
 	 */
-	void remove(const std::string& label) {
+	void decrease(const std::string& label) {
 		if (auto it = label_map_.find(label); it != label_map_.end()) {
 			if (it->second == 1)
 				label_map_.erase(it);
@@ -83,10 +85,10 @@ public:
 		for(const auto& [delta, label]: updates) {
 			switch(delta) {
 			case Labels::Delta::Add:
-				add(label);
+				increase(label);
 				break;
 			case Labels::Delta::Remove:
-				remove(label);
+				decrease(label);
 				break;
 			}
 		}
@@ -98,7 +100,6 @@ public:
 	 * @return the label-map
 	 */
 	Map label_map() const { return label_map_; }
-
 
 	// serialization/deserialization could be optimized, but is not super
 	// time-critical
@@ -115,7 +116,6 @@ public:
 
 		return s;
 	}
-
 
 	/**
 	 * Deserialize the cache into a Map

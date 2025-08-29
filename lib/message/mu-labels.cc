@@ -89,7 +89,6 @@ Mu::Labels::parse_delta_label(const std::string &expr)
 	return Ok(DeltaLabel{std::move(delta), std::move(label)});
 }
 
-
 Result<DeltaLabelVec>
 Mu::Labels::parse_delta_labels(const std::string& exprs,
 			       const std::string sepa)
@@ -105,10 +104,6 @@ Mu::Labels::parse_delta_labels(const std::string& exprs,
 
 	return Ok(std::move(deltas));
 }
-
-
-
-
 
 struct cmp_delta_label { // can not yet be a λ in C++17
 	bool operator()(const DeltaLabel& dl1, const DeltaLabel& dl2) const {

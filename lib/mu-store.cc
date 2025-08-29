@@ -626,12 +626,11 @@ Result<Labels::DeltaLabelVec>
 Store::update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta)
 {
 	std::unique_lock lock{priv_->lock_};
-				// i.e. the set of effective labels. and the set up updates, the "diff"
+	// i.e. the set of effective labels. and the set up updates, the "diff"
 	auto updates{updated_labels(message.labels(), labels_delta)};
 
 	if (updates.second.empty())
 		return Ok(std::move(updates.second)); // nothing to do
-
 
 	message.set_labels(updates.first);
 	auto res{priv_->update_message_unlocked(message, message.docid())};
@@ -643,24 +642,30 @@ Store::update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta
 	return Ok(std::move(updates.second));
 }
 
-Result<void>
+Result<Labels::DeltaLabelVec>
 Store::clear_labels(Message& message)
 {
+	using namespace Labels;
+
 	std::unique_lock lock{priv_->lock_};
+
+	DeltaLabelVec updates;
 
 	const auto labels{message.labels()};
 	if (labels.empty())
-		return Ok(); // nothing to do
+		return Ok(std::move(updates)); // nothing to do
 
 	message.set_labels({}); // clear all
 	auto res{priv_->update_message_unlocked(message, message.docid())};
 	if (!res)
 		return Err(res.error());
 
-	for (auto label: labels)
-		priv_->labels_cache_.remove(label);
+	for (auto label: labels) {
+		updates.emplace_back(DeltaLabel{Delta::Remove, label});
+		priv_->labels_cache_.decrease(label);
+	}
 
-	return Ok();
+	return Ok(std::move(updates));
 }
 
 LabelsCache::Map

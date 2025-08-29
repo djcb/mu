@@ -347,18 +347,20 @@ public:
 	 * @param message some message
 	 * @param labels_delta the set of changes
 	 *
-	 * @return the effective changes for this message
+	 * @return the effective changes for this message or an error
 	 */
-	Result<Labels::DeltaLabelVec> update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta);
-
+	Result<Labels::DeltaLabelVec> update_labels(Message& message,
+						    const Labels::DeltaLabelVec& labels_delta);
 	/**
-	 * Clear all labels from message
+	 * Clear all labels from a message
+	 *
+	 * Update the message in the store, and update the labels-cache
 	 *
 	 * @param message some message
 	 *
-	 * @return Ok or some error
+	 * @return the effective changes for this message or an error
 	 */
-	Result<void> clear_labels(Message& message);
+	Result<Labels::DeltaLabelVec> clear_labels(Message& message);
 
 	/**
 	 * Get a copy of the map of labels in use.
