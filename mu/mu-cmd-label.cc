@@ -29,12 +29,10 @@
 using namespace Mu;
 using namespace Labels;
 
-
-
 static Result<void>
 label_update(Mu::Store& store, const Options& opts)
 {
-	// First get our list of parse delta-label, and ensure they
+	// First get our list of parsed delta-label, and ensure they
 	// are valid.
 	DeltaLabelVec deltas{};
 	for (auto&& delta_label : opts.label.delta_labels) {
@@ -50,7 +48,7 @@ label_update(Mu::Store& store, const Options& opts)
 		return Err(Error{Error::Code::Query,
 				 "missing query"});
 
-	// now run queru and apply the deltas to each.
+	// now run the query and apply the deltas to each.
 	const auto query{*opts.label.query};
 	auto results{store.run_query(query)};
 	if (!results)
