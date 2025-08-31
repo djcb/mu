@@ -30,7 +30,7 @@ Mu::Labels::validate_label(const std::string &label)
 	if (label.empty())
 		return Err(Error{Error::Code::InvalidArgument,
 				 "labels cannot be empty"});
-	else if (!g_utf8_validate(label.c_str(), label.size(), {})) // perhpps put hex in err str?
+	else if (!g_utf8_validate(label.c_str(), label.size(), {})) // perhaps put hex in err str?
 		return Err(Error{Error::Code::InvalidArgument,
 				"labels must be valid UTF-8"});
 
@@ -49,28 +49,18 @@ Mu::Labels::validate_label(const std::string &label)
 		if (g_unichar_isalnum(uc))
 			continue; // alphanum is okay
 
-		// almost all non-ctrl ascii is allowed _except_ =,<,>,$,[]
-		if (uc > ' ' &&  uc <= '~') {
-			switch (uc) {
-			case '"':
-			case ',':
-			case '/':
-			case '\\':
-			case '*':
-			case '$':
-				return Err(Error{Error::Code::InvalidArgument,
-				 "illegal character '{}' in label '{}'", uc, label});
-			default:
-				break;
-			}
-		} else if (::isprint(uc))
+		if (::iscntrl(uc))
 			return Err(Error{Error::Code::InvalidArgument,
-					"illegal non alpha-numeric character '{}' in label '{}'",
-					static_cast<char>(uc), label});
-		else
+					"control character {} is not allowed",
+					static_cast<int>(uc)});
+		if (::isblank(uc))
 			return Err(Error{Error::Code::InvalidArgument,
-					"illegal non alpha-numeric character {:#x} in label '{}'",
-					uc, label});
+					"blank character {} is not allowed",
+					static_cast<int>(uc)});
+		if (uc == '"' || uc == '\'' || uc == '`' ||
+		    uc == '\\' || uc == '/' || uc == '$')
+			return Err(Error{Error::Code::InvalidArgument,
+					"character '{}' is not allowed", uc});
 	}
 
 	return Ok();
@@ -199,7 +189,7 @@ test_parse_delta_label()
 
 	g_assert_false(!!parse_delta_label("ravenking"));
 	g_assert_false(!!parse_delta_label("+norrell strange"));
-	g_assert_false(!!parse_delta_label("-😨"));
+	g_assert_true(!!parse_delta_label("-😨"));
 }
 
 
@@ -231,12 +221,14 @@ test_validate_label()
 	g_assert_true(!!validate_label("ravenking"));
 	g_assert_true(!!validate_label("@raven+king"));
 	g_assert_true(!!validate_label("operation:mindcrime"));
+	g_assert_true(!!validate_label("😨"));
 
 	g_assert_false(!!validate_label("norrell strange"));
-	g_assert_false(!!validate_label("😨"));
 	g_assert_false(!!validate_label(""));
 	g_assert_false(!!validate_label("+"));
 	g_assert_false(!!validate_label("-"));
+	g_assert_false(!!validate_label("foo`bar"));
+	g_assert_false(!!validate_label("\"quoted\""));
 }
 
 static void

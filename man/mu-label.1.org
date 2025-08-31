@@ -98,15 +98,14 @@ See *EXPORT FORMAT* below for details on the format.
 * VALID LABELS
 
 *mu* does not wish to limit your creativity, but nevertheless puts a few
-restrictions on what is accepted as a label:
+restrictions on what is accepted as a label.
 
-- a *valid label character* is either a UTF-8 encoded alphanumeric character, or
-  any ASCII character that is not a control-character and is not one of ' '
-  (SPC), ',', '"', '/', '\' '*', '$'.
+- a *valid label character* is any character that is not a control-character, a
+  blank, or any of *'*, *"*, *`*, */*, *\*, *$*
 - a *valid label* consists of one or more valid label characters, the first of
-  which must *not* be either '+' or '-'
+  which must *not* be either *+* or *-*
 
-Hence, some valid labels are: ~project-x~, ~capybara~, ~fnorb~, while some _invalid_
+Hence, some valid labels are: ~project-x~, ~c@pybara~, ~fn😃rb~, while some _invalid_
 ones are: ~holiday plan~ and ~+fancy$/dinner~.
 
 * EXPORT FORMAT
