@@ -30,13 +30,15 @@
 (require 'mu4e-helpers)
 
 (defconst mu4e-label-regex
-  (rx-let ((taboo (any cntrl blank "\"'\\/`$"))
-           (taboo1-extra (any "-+")))
-    (rx (seq
-         ;; First character: base forbidden + extra chars
-         (not (or taboo taboo1-extra))
-         ;; Rest: just base forbidden chars
-         (zero-or-more (not taboo)))))
+  "[^\"'+/\\`[:cntrl:][:blank:]-][^\"'/\\`[:cntrl:][:blank:]]*"
+  ;;Emacs 30:
+  ;;(rx-let ((taboo (any cntrl blank "\"'\\/`$"))
+  ;;          (taboo1-extra (any "-+")))
+  ;;   (rx (seq
+  ;;        ;; First character: base forbidden + extra chars
+  ;;        (not (or taboo taboo1-extra))
+  ;;        ;; Rest: just base forbidden chars
+  ;;        (zero-or-more (not taboo)))))
   "Unanchored regular expression matching a valid label.
 
 Any character is allowed that is not a control-character, a
