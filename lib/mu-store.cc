@@ -85,11 +85,11 @@ struct Store::Private {
 	}
 
 	~Private() try {
-		mu_debug("closing store @ {}", xapian_db_.path());
 		if (!xapian_db_.read_only()) {
-			contacts_cache_.serialize();
-			config_.set<Config::Id::Labels>(labels_cache_.serialize());
+			if (const auto res = serialize(); !res)
+				mu_critical("failed to serialize: {}", res.error().what());
 		}
+		mu_debug("closing store @ {}", xapian_db_.path());
 	} catch (...) {
 		mu_critical("caught exception in store dtor");
 	}
@@ -119,6 +119,8 @@ struct Store::Private {
 			return Message::Options::None;
 	}
 
+	Result<void> serialize();
+
 	Option<Message> find_message_unlocked(Store::Id docid) const;
 	Store::IdVec find_duplicates_unlocked(const Store& store,
 					      const std::string& message_id) const;
@@ -143,6 +145,23 @@ struct Store::Private {
 
 	std::mutex lock_;
 };
+
+
+Result<void>
+Store::Private::serialize()
+{
+	if (xapian_db_.read_only())
+		return Err(Error::Code::Store, "store must be writable");
+
+	mu_debug("serialize data into store @ {}", xapian_db_.path());
+
+	contacts_cache_.serialize(); // does the 'dirty' check internally.
+
+	if (labels_cache_.dirty())
+		config_.set<Config::Id::Labels>(labels_cache_.serialize());
+
+	return Ok();
+}
 
 
 Result<Store::Id>
@@ -333,6 +352,13 @@ const ContactsCache&
 Store::contacts_cache() const
 {
 	return priv_->contacts_cache_;
+}
+
+Result<void>
+Store::serialize()
+{
+	std::lock_guard guard{priv_->lock_};
+	return priv_->serialize();
 }
 
 Indexer&

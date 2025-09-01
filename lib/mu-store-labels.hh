@@ -17,7 +17,6 @@
 **
 */
 
-
 #ifndef MU_LABELS_CACHE_HH
 #define MU_LABELS_CACHE_HH
 
@@ -59,6 +58,7 @@ public:
 			label_map_.insert({label, 1});
 		else
 			++it->second;
+		dirty_ = true;
 	}
 	/**
 	 * Remove a label occurrence from the cache
@@ -73,6 +73,7 @@ public:
 				label_map_.erase(it);
 			else
 				--it->second;
+			dirty_ = true;
 		}
 	}
 
@@ -107,13 +108,15 @@ public:
 	/**
 	 * Serialize the cache into a string.
 	 *
+	 * Note: this also marks the cache a _non_ dirty;
+	 *
 	 * @return serialized cache
 	 */
-	std::string serialize() const {
+	[[nodiscard]] std::string serialize() const {
 		std::string s;
 		for (const auto&[label, n]: label_map_)
 			s += mu_format("{}{}{}\n", label, SepaChar2, n);
-
+		dirty_ = false;
 		return s;
 	}
 
@@ -140,8 +143,20 @@ public:
 		return map;
 	}
 
+	/**
+	 * Is the cache "dirty"?
+	 *
+	 * I.e. have there been changes since "serialize()" was called?
+	 *
+	 * @return true or false
+	 */
+	bool dirty() const {
+		return dirty_;
+	}
+
 private:
 	Map label_map_;
+	mutable bool dirty_{};
 };
 
 class Store;

@@ -889,6 +889,7 @@ Server::Private::index_handler(const Command& cmd)
 		throw Error{Error::Code::Xapian, "indexer is already running"};
 
 	do_index(conf);
+	store().serialize();
 }
 
 void

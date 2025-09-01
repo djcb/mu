@@ -140,6 +140,17 @@ public:
 	 */
 	const ContactsCache& contacts_cache() const;
 
+
+	/**
+	 * Serialize ephemeral information such as contacts, labels,
+	 * in the database.
+	 *
+	 * Only available when using a writable database.
+	 *
+	 * @return Ok() or some error.
+	 */
+	Result<void> serialize();
+
 	/**
 	 * Get the Indexer associated with this store. It is an error to call
 	 * this on a read-only store.
