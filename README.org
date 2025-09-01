@@ -20,29 +20,28 @@ e-mail message in our work-flows, it's essential to quickly deal with all that
 mail - in particular, to instantly find that one important e-mail you need right
 now, and quickly file away message for later use.
 
-~mu~ is a tool for dealing with e-mail messages stored in the Maildir-format. ~mu~'s
-purpose in life is to help you to quickly find the messages you need; in
-addition, it allows you to view messages, extract attachments, create new
-maildirs, and so on.
+~mu~ is a set of command-line tools for dealing with e-mail messages stored in the
+Maildir-format. ~mu~'s goal is to help you to quickly find the messages you need,
+view them, extract attachments, create new maildirs, and so on.
 
-After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them using a
-custom query language. You can use various message fields or words in the body
-text to find the right messages.
+After indexing your messages into a [[http://www.xapian.org][Xapian]]-database, you can search them through
+a query language. You can use various message fields or words in the body text
+to find the right messages.
 
 Built on top of ~mu~ are some extensions (included in this package):
 
 - ~mu4e~: a full-featured e-mail client that runs inside emacs
 
-- ~mu-guile~: bindings for the Guile/Scheme programming language (version 3.0 and
+- ~mu-scm~: bindings for the Guile/Scheme programming language (version 3.0 and
   later)
 
-~mu~ is written in C++; ~mu4e~ is written in ~elisp~ and ~mu-guile~ in a mix of C++ and
-Scheme.
+~mu~ is written in C++; ~mu4e~ is written in ~elisp~ and ~mu-scm~ is written in a mix of
+C++ and Scheme.
 
-~mu~ is available in Linux distributions (e.g. Debian/Ubuntu and Fedora) under the
-name ~maildir-utils~; apparently because they don't like short names. All of the
-code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License version 3]]
-(or higher).
+~mu~ is available in many Linux distributions (e.g. Debian/Ubuntu and Fedora)
+under the name ~maildir-utils~; apparently because they don't like short names.
+All of the code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License
+version 3]] (or higher).
 
 * Installation
 
@@ -56,7 +55,7 @@ as a Linux distribution. Many have packages available.
 
 To be able to build ~mu~, ensure you have:
 
-- a C++17 compiler (~gcc~ or ~clang~ are known to work)
+- a C++17 compiler (~gcc~ and ~clang~ are known to work)
 - development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
   versions)
 - basic tools such as ~make~, ~sed~, ~grep~
@@ -86,8 +85,8 @@ $ ./autogen.sh && make
 $ sudo make install
 #+end_example
 
-Alternatively, you can run ~meson~ directly (see the ~meson~ documentation for
-more details):
+You can of course also run ~meson~ directly (see the ~meson~ documentation for more
+details):
 #+begin_example
 $ meson setup build
 $ meson compile -C build
