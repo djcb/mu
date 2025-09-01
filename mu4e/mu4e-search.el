@@ -447,7 +447,7 @@ status, STATUS."
     (list (match-beginning 1)
           (match-end 1)
           mu4e--lists-hash))
-   ((looking-back (concat "label:\\(" mu4e-label-regex "\\)") nil)
+   ((looking-back (concat "label:\\(\\(" mu4e-label-regex "\\)?\\)") nil)
     (list (match-beginning 1)
           (match-end 1)
           mu4e-labels-list))))
