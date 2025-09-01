@@ -59,8 +59,8 @@ using from a shell.
 * CLEAR OPTIONS
 
 The *clear* command removes all labels from messages that match some query. As
-with *update*, the must be recognized as a single parameter, i.e., quote it when
-using from a shell.
+with *update*, the query must be recognized as a single parameter, i.e., quote it
+when using a shell.
 
 ** --dry-run
 

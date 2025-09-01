@@ -118,7 +118,10 @@ label_list(const Mu::Store& store, const Options& opts)
 	const auto label_map{store.label_map()};
 
 	for (const auto& [label, n]: label_map)
-		mu_println("{}: {}", label, n);
+		if (opts.verbose)
+			mu_println("{}: {}", label, n);
+		else
+			mu_println("{}", label);
 
 	return Ok();
 }
