@@ -2524,8 +2524,8 @@ field. To see them in your headers / message views, you need to add the field to
 the @code{mu4e-headers-fields} and @code{mu4e-view-fields}, respectively.
 
 To change the labels for some message, you specify a @emph{label expression},
-which consists of a space-separated sequence of labels, each prefixed either
-with a @t{+} to add the label or @t{-} to remove it.
+which consists of a space-separated sequence of labels, each prefixed with
+either a @t{+} to add the label, or @t{-} to remove it.
 
 For instance, to remove the @t{boring} label and add @t{urgent} from the message
 at point or the messages in region, press @kbd{l} and enter:
@@ -2533,16 +2533,16 @@ at point or the messages in region, press @kbd{l} and enter:
 +urgent -boring
 @end example
 
-For @emph{clearing all labels}, you mark with @kbd{L} ('unlabel').
+For clearing @emph{all} labels, you can mark with @kbd{L} ('unlabel').
 
 You can search for labels using the @t{label:} field. For instance,
 @t{label:urgent} retrieves all messages labeled @t{urgent}.
 
-It is important to note that the labels are only stored in the database (the
-message files are not changed). This means that you loose this information when
-you remove the database and recrate it; it is however possible to @emph{export}
-the labels and re-@emph{import} them later; see the @t{mu-label} man-page for
-further details.
+@emph{Important}: the labels are only stored in the database (the message files
+are not changed). This means that you would @emph{loose} this information when
+you remove the database and recreate it, @emph{unless} you @emph{export} the
+labels before removin the database and re-@emph{import} them after re-creating
+and re-indexing it; see the @t{mu-label} man-page for further details.
 
 @subsection Doing @emph{something}
 
@@ -3185,9 +3185,7 @@ It is easy to add such actions to your configuration; for instance, to enable
 @emph{tagging}@footnote{@t{mu4e} does not offer tagging by default since it
 mutates the message files, something that @t{mu}/@t{mu4e} generally try to
 avoid. An alternative to tagging is @emph{labeling}, @xref{Applying and clearing
-labels}
-
-} both in the message view and headers view, you could add:
+labels}}, you could add:
 @lisp
 (add-to-list 'mu4e-headers-actions
              '("Tag message" . mu4e-action-retag-message))

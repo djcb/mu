@@ -71,6 +71,15 @@ when using a shell.
 * LIST OPTIONS
 
 The *list* command lists all the labels that are currently in use in the store.
+This is the same information used for auto-completion in *mu4e*.
+
+With the (global, directly after *mu) *--verbose* option, this also includes the
+counts.
+
+** --restore
+
+  attempt to restore the list from the labels in the store.
+  It is possible that the list to get outdated, *--restore* fixes this.
 
 * EXPORT OPTIONS
 

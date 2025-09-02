@@ -694,6 +694,14 @@ Store::clear_labels(Message& message)
 	return Ok(std::move(updates));
 }
 
+Result<void>
+Store::restore_label_map()
+{
+	std::unique_lock lock{priv_->lock_};
+
+	return priv_->labels_cache_.restore(*this);
+}
+
 LabelsCache::Map
 Store::label_map() const
 {

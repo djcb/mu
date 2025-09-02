@@ -374,6 +374,16 @@ public:
 	Result<Labels::DeltaLabelVec> clear_labels(Message& message);
 
 	/**
+	 * Restore label-map from store
+	 *
+	 * Restore the labels list in the store, i.e., restore the cached list of labels which is
+	 * used for e.g. auto-completion in mu4e from the labels in the store.
+	 *
+	 * @return Ok or some error.
+	 */
+	Result<void> restore_label_map();
+
+	/**
 	 * Get a copy of the map of labels in use.
 	 *
 	 * The map maps label-names to their count
@@ -381,6 +391,8 @@ public:
 	 * @return map
 	 */
 	LabelsCache::Map label_map() const;
+
+
 
 	/**
 	 * Prototype for the ForEachMessageFunc

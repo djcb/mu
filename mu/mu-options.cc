@@ -528,6 +528,8 @@ sub_label(CLI::App& sub, Options& opts)
 
 	// list
 	[[maybe_unused]] auto list = sub.add_subcommand("list", "list labels in the store");
+	list->add_flag("--restore", opts.label.restore,
+			 "Restore the label-list from the labels in store");
 	add_muhome_option(*list, opts);
 
 	// export

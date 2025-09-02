@@ -30,6 +30,8 @@
 
 namespace Mu {
 
+class Store;
+
 /**
  * The cache keeps track of what labels are being used. This can be used
  * for completion etc. and `mu label list`
@@ -143,6 +145,17 @@ public:
 		return map;
 	}
 
+
+	/**
+	 * Restore the labels-cache from the labels seen in the store.
+	 *
+	 * @param store a store
+	 *
+	 * @return Ok() or some error
+	 */
+	Result<void> restore(const Store& store);
+
+
 	/**
 	 * Is the cache "dirty"?
 	 *
@@ -158,8 +171,6 @@ private:
 	Map label_map_;
 	mutable bool dirty_{};
 };
-
-class Store;
 
 /**
  * Export labels to a file

@@ -209,7 +209,9 @@ struct Options {
 		bool dry_run{};				 /**< Merely print the messages that would be
 							  * labeled without doing so */
 		StringVec delta_labels;                  /**< labels to add (+) or remove (-) */
-		bool read_only{};                        /** do not require writable store */
+		bool read_only{};                        /**< do not require writable store */
+
+		bool restore{};                         /**< restore the labels list */
 
 		OptString file;                           /** file for import/export */
 

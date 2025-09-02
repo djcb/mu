@@ -113,11 +113,16 @@ label_clear(Mu::Store& store, const Options& opts)
 }
 
 static Result<void>
-label_list(const Mu::Store& store, const Options& opts)
+label_list(Mu::Store& store, const Options& opts)
 {
-	const auto label_map{store.label_map()};
+	if (opts.label.restore) {
+		if (!opts.quiet)
+			mu_println("labels: restoring list from store...");
+		if (const auto res = store.restore_label_map(); !res)
+			return res;
+	}
 
-	for (const auto& [label, n]: label_map)
+	for (const auto& [label, n]: store.label_map())
 		if (opts.verbose)
 			mu_println("{}: {}", label, n);
 		else
