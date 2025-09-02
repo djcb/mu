@@ -18,29 +18,13 @@
 */
 
 #include "mu-store-labels.hh"
+
+#include <istream>
+#include <sstream>
+
 #include "mu-store.hh"
-#include "message/mu-labels.hh"
 
 using namespace Mu;
-
-Result<void>
-Mu::LabelsCache::restore(const Store& store)
-{
-	const auto res{store.run_query("")};
-	if (!res)
-		return Err(Error{Error::Code::Query,
-				"failed to run query: {}",
-				 *res.error().what()});
-	label_map_.clear();
-
-	for (auto&& item: *res) {
-		if (auto &&msg{item.message()}; msg) {
-			for (const auto& label: msg->labels())
-				increase(label);
-		}
-	}
-	return Ok();
-}
 
 namespace {
 constexpr std::string_view	path_key       = "path:";

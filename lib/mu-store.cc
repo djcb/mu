@@ -35,9 +35,9 @@
 #include "mu-query.hh"
 #include "mu-xapian-db.hh"
 #include "mu-scanner.hh"
+#include "mu-store-labels.hh"
 
 #include "utils/mu-error.hh"
-
 
 #include "utils/mu-utils.hh"
 #include <utils/mu-utils-file.hh>
@@ -66,7 +66,7 @@ struct Store::Private {
 				    : XapianDb::Flavor::Open)},
 		config_{xapian_db_},
 		contacts_cache_{config_},
-		labels_cache_{config_.get<Config::Id::Labels>()},
+		labels_cache_{config_},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
 		message_opts_{make_message_options(config_)}
 		{}
@@ -76,7 +76,7 @@ struct Store::Private {
 		xapian_db_{XapianDb(path, XapianDb::Flavor::CreateOverwrite)},
 		config_{make_config(xapian_db_, root_maildir, conf)},
 		contacts_cache_{config_},
-		labels_cache_{config_.get<Config::Id::Labels>()},
+		labels_cache_{config_},
 		root_maildir_{remove_slash(config_.get<Config::Id::RootMaildir>())},
 		message_opts_{make_message_options(config_)} {
 		// so tell xapian-db to update its internal cached values from
@@ -85,10 +85,6 @@ struct Store::Private {
 	}
 
 	~Private() try {
-		if (!xapian_db_.read_only()) {
-			if (const auto res = serialize(); !res)
-				mu_critical("failed to serialize: {}", res.error().what());
-		}
 		mu_debug("closing store @ {}", xapian_db_.path());
 	} catch (...) {
 		mu_critical("caught exception in store dtor");
@@ -156,9 +152,7 @@ Store::Private::serialize()
 	mu_debug("serialize data into store @ {}", xapian_db_.path());
 
 	contacts_cache_.serialize(); // does the 'dirty' check internally.
-
-	if (labels_cache_.dirty())
-		config_.set<Config::Id::Labels>(labels_cache_.serialize());
+	labels_cache_.serialize();
 
 	return Ok();
 }
@@ -697,6 +691,9 @@ Store::clear_labels(Message& message)
 Result<void>
 Store::restore_label_map()
 {
+	if (xapian_db().read_only())
+		throw Error{Error::Code::Store, "store is read-only"};
+
 	std::unique_lock lock{priv_->lock_};
 
 	return priv_->labels_cache_.restore(*this);

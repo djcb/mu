@@ -273,7 +273,6 @@ ContactsCache::size() const
 	return priv_->contacts_.size();
 }
 
-
 /**
 * Wrapper to allow for Contact sorting
 * (needed due to reference_wrapper)

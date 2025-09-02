@@ -23,6 +23,8 @@
 #include <string_view>
 
 #include "mu-store.hh"
+#include "mu-store-labels.hh"
+
 #include "message/mu-message.hh"
 #include "message/mu-labels.hh"
 
@@ -118,8 +120,9 @@ label_list(Mu::Store& store, const Options& opts)
 	if (opts.label.restore) {
 		if (!opts.quiet)
 			mu_println("labels: restoring list from store...");
-		if (const auto res = store.restore_label_map(); !res)
+		if (const auto res = store.restore_label_map(); !res) {
 			return res;
+		}
 	}
 
 	for (const auto& [label, n]: store.label_map())

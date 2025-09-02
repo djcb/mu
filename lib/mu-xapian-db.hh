@@ -480,7 +480,7 @@ private:
 		if ((++changes_ < batch_size_) && !force)
 			return;
 		xapian_try([&]{
-			mu_debug("committing {} changes; transaction={}; "
+			mu_debug("committing {} change(s); transaction={}; "
 				 "forced={}", changes_,
 				 in_transaction() ? "yes" : "no",
 				 force ? "yes" : "no");

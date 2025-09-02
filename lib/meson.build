@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ lib_mu=static_library(
     # db
     'mu-config.cc',
     'mu-contacts-cache.cc',
+    'mu-labels-cache.cc',
     'mu-store.cc',
     'mu-store-labels.cc',
     'mu-xapian-db.cc',

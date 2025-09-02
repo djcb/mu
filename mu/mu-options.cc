@@ -556,7 +556,7 @@ sub_label(CLI::App& sub, Options& opts)
 	sub.final_callback([&](){
 		if (sub.got_subcommand("list")) {
 			opts.label.sub = Options::Label::Sub::List;
-			opts.label.read_only = true;
+			opts.label.read_only = opts.label.restore ? false : true;
 		} else if (sub.got_subcommand("clear")) {
 			opts.label.sub = Options::Label::Sub::Clear;
 			opts.label.read_only = opts.label.dry_run;

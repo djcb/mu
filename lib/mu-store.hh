@@ -27,6 +27,8 @@
 #include <memory>
 
 #include "mu-contacts-cache.hh"
+#include "mu-labels-cache.hh"
+
 #include "mu-xapian-db.hh"
 #include "mu-config.hh"
 #include "mu-indexer.hh"
@@ -35,7 +37,6 @@
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
-#include "mu-store-labels.hh"
 
 #include <message/mu-message.hh>
 
