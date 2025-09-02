@@ -71,14 +71,18 @@ See `mu4e-label-regex' for the definition of the valid format."
 (defun mu4e-label-parse-expr (expr)
   "Parse a single delta expression EXPR.
 
-If EXPR is non-empty, raises an error if EXPR is not a valid
-delta. Otherwise, returns EXPR with extra whitespace removed.
+If EXPR is non-empty, raises a warning if EXPR is not a valid
+delta expression. Otherwise, returns EXPR with extra whitespace
+removed.
 
 If STR is empty, return nil."
   (let ((op (aref expr 0))
         (label (substring expr 1)))
+    ;; guess we could _imply_ '+', but for now let's not
+    ;; be too magical.
     (unless (or (char-equal op ?+) (char-equal op ?-))
-      (mu4e-warn "invalid: delta-expression must start with '+' or '-'"))
+      (mu4e-warn "delta-expressions must start with + or - ('%s')"
+                 expr))
     (concat (char-to-string op)
             (mu4e-label-validate label))))
 
