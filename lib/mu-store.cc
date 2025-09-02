@@ -118,6 +118,10 @@ struct Store::Private {
 	Result<void> serialize();
 
 	Option<Message> find_message_unlocked(Store::Id docid) const;
+
+	using IdDocument = std::pair<Store::Id, Xapian::Document>;
+	Option<IdDocument> find_document_unlocked(const std::string& path) const;
+
 	Store::IdVec find_duplicates_unlocked(const Store& store,
 					      const std::string& message_id) const;
 
@@ -197,6 +201,23 @@ Store::Private::find_message_unlocked(Store::Id docid) const
 	else
 		return Some(std::move(*msg));
 }
+
+
+Option<Store::Private::IdDocument>
+Store::Private::find_document_unlocked(const std::string& path) const
+{
+	constexpr auto path_field{field_from_id(Field::Id::Path)};
+
+	auto enq{xapian_db_.enquire()};
+	enq.set_query(Xapian::Query{path_field.xapian_term(path)});
+
+	if (auto mset{enq.get_mset(0, 1)}; mset.empty())
+		return Nothing; // message not found
+	else
+		return Some(IdDocument{*mset.begin(), mset.begin().get_document()});
+}
+
+
 
 Store::IdVec
 Store::Private::find_duplicates_unlocked(const Store& store,
@@ -416,17 +437,24 @@ Store::add_message(const std::string& path, bool is_new)
 		return add_message(msg.value(), is_new);
 }
 
-
 bool
 Store::remove_message(const std::string& path)
 {
 	const auto term{field_from_id(Field::Id::Path).xapian_term(path)};
 
 	std::lock_guard guard{priv_->lock_};
+	if (const auto& id_doc = priv_->find_document_unlocked(path); !id_doc)
+		return false;
+	else {
+		const Document doc{id_doc->second};
+		for (auto&& label : doc.string_vec_value(Field::Id::Labels))
+			priv_->labels_cache_.decrease(label);
 
-	xapian_db().delete_document(term);
-	mu_debug("deleted message @ {} from store", path);
-	return true;
+		xapian_db().delete_document(term);
+		mu_debug("deleted message @ {} from store", path);
+
+		return true;
+	}
 }
 
 void
@@ -436,12 +464,18 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 
 	xapian_db().request_transaction();
 
-	for (auto&& id : ids)
-		xapian_db().delete_document(id);
+	for (auto&& id : ids) {
+		if (const auto msg = priv_->find_message_unlocked(id); !msg) {
+			mu_warning("cannot find document {} for deletion", id);
+		} else {
+			for (auto&& label: msg->labels())
+				priv_->labels_cache_.decrease(label);
+			xapian_db().delete_document(id);
+		}
+	}
 
 	xapian_db().request_commit(true/*force*/);
 }
-
 
 Option<Message>
 Store::find_message(Store::Id docid) const
@@ -454,19 +488,13 @@ Store::find_message(Store::Id docid) const
 Option<Store::Id>
 Store::find_message_id(const std::string& path) const
 {
-	constexpr auto path_field{field_from_id(Field::Id::Path)};
-
 	std::lock_guard guard{priv_->lock_};
 
-	auto enq{xapian_db().enquire()};
-	enq.set_query(Xapian::Query{path_field.xapian_term(path)});
-
-	if (auto mset{enq.get_mset(0, 1)}; mset.empty())
+	if (const auto id_doc = priv_->find_document_unlocked(path); !id_doc)
 		return Nothing; // message not found
 	else
-		return Some(*mset.begin());
+		return Some(std::move(id_doc->first));
 }
-
 
 Store::IdMessageVec
 Store::find_messages(IdVec ids) const
