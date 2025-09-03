@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -151,6 +151,59 @@ test_store_add_count_remove()
 	g_assert_true(store->empty());
 	g_assert_false(store->contains_message(msg3path));
 }
+
+static void
+test_store_labels()
+{
+	TempDir tempdir{false};
+	using namespace Labels;
+
+	auto store{Store::make_new(tempdir.path() + "/xapian", MuTestMaildir)};
+	assert_valid_result(store);
+
+	assert_equal(store->path(), tempdir.path() + "/xapian");
+	assert_equal(store->root_maildir(), MuTestMaildir);
+
+	const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
+	const auto id1 = store->add_message(msgpath);
+	assert_valid_result(id1);
+
+	g_assert_true(store->label_map().empty());
+
+	g_assert_cmpuint(store->size(), ==, 1);
+	g_assert_true(store->contains_message(msgpath));
+
+	auto msg = store->find_message(*id1);
+	g_assert_true(!!msg);
+
+	const DeltaLabelVec updates = {
+		{ Delta::Add, "foo"},
+		{ Delta::Add, "bar"},
+		{ Delta::Remove, "cuux"}};
+
+	const DeltaLabelVec expected = {
+		{ Delta::Add, "bar"},
+		{ Delta::Add, "foo"}};
+
+	auto update_res = store->update_labels(*msg, updates);
+
+	assert_valid_result(update_res);
+	g_assert_cmpuint(update_res->size(),==,expected.size());
+
+	for (size_t idx{}; idx != expected.size(); ++idx) {
+		g_assert_true(update_res->at(idx).first  == expected.at(idx).first);
+		g_assert_true(update_res->at(idx).second == expected.at(idx).second);
+	}
+
+	g_assert_cmpuint(store->label_map().size(), ==, 2);
+	g_assert_cmpuint(store->label_map()["foo"], ==, 1);
+	g_assert_cmpuint(store->label_map()["bar"], ==, 1);
+
+	// removing a message should affect its labels in the cache.
+	g_assert_true(store->remove_message(msgpath));
+	g_assert_true(store->label_map().empty());
+}
+
 
 
 static void
@@ -597,6 +650,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
 	g_test_add_func("/store/reinit", test_store_reinit);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
+	g_test_add_func("/store/labels", test_store_labels);
 	g_test_add_func("/store/message/mailing-list",
 			test_message_mailing_list);
 	g_test_add_func("/store/message/attachments",
