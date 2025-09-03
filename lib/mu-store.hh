@@ -393,8 +393,6 @@ public:
 	 */
 	LabelsCache::Map label_map() const;
 
-
-
 	/**
 	 * Prototype for the ForEachMessageFunc
 	 *

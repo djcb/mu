@@ -125,10 +125,6 @@ struct Store::Private {
 	Store::IdVec find_duplicates_unlocked(const Store& store,
 					      const std::string& message_id) const;
 
-	Result<Store::Id> add_message_unlocked(Message& msg);
-	Result<Store::Id> update_message_unlocked(Message& msg, Store::Id docid);
-	Result<Store::Id> update_message_unlocked(Message& msg, const std::string& old_path);
-
 	using PathMessage = std::pair<std::string, Message>;
 	Result<PathMessage> move_message_unlocked(Message&& msg,
 						  Option<const std::string&> target_mdir,
@@ -159,36 +155,6 @@ Store::Private::serialize()
 	labels_cache_.serialize();
 
 	return Ok();
-}
-
-
-Result<Store::Id>
-Store::Private::add_message_unlocked(Message& msg)
-{
-	auto&& docid{xapian_db_.add_document(msg.document().xapian_document())};
-	if (docid)
-		mu_debug("added message @ {}; docid = {}", msg.path(), *docid);
-
-	return docid;
-}
-
-
-Result<Store::Id>
-Store::Private::update_message_unlocked(Message& msg, Store::Id docid)
-{
-	auto&& res{xapian_db_.replace_document(docid, msg.document().xapian_document())};
-	if (res)
-		mu_debug("updated message @ {}; docid = {}", msg.path(), *res);
-
-	return res;
-}
-
-Result<Store::Id>
-Store::Private::update_message_unlocked(Message& msg, const std::string& path_to_replace)
-{
-	return xapian_db_.replace_document(
-		field_from_id(Field::Id::Path).xapian_term(path_to_replace),
-		msg.document().xapian_document());
 }
 
 Option<Message>
@@ -228,7 +194,7 @@ Store::Private::find_duplicates_unlocked(const Store& store,
 		return {};
 	}
 
-	auto expr{mu_format("{}:{}",
+	const auto expr{mu_format("{}:{}",
 			    field_from_id(Field::Id::MessageId).shortcut,
 			    message_id)};
 	if (auto&& res{store.run_query(expr)}; !res) {
@@ -417,8 +383,8 @@ Store::add_message(Message& msg, bool is_new)
 
 	std::lock_guard guard{priv_->lock_};
 	auto&& res = is_new ?
-		priv_->add_message_unlocked(msg) :
-		priv_->update_message_unlocked(msg, msg.path());
+		xapian_db().add_document(msg.document().xapian_document()) :
+		xapian_db().replace_document(msg.xapian_term(), msg.document().xapian_document());
 	if (!res)
 		return Err(res.error());
 
@@ -553,7 +519,9 @@ Store::Private::move_message_unlocked(Message&& msg,
 			return Err(res.error());
 
 		/* 4. update message worked; re-store it */
-		if (auto&& res = update_message_unlocked(msg, old_path); !res)
+		if (auto&& res = xapian_db_.replace_document(
+			    field_from_id(Field::Id::Path).xapian_term(old_path),
+			    msg.document().xapian_document()); !res)
 			return Err(res.error());
 	}
 
@@ -671,17 +639,21 @@ Store::contains_message(const std::string& path) const
 
 
 Result<Labels::DeltaLabelVec>
-Store::update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta)
+Store::update_labels(Message& msg, const Labels::DeltaLabelVec& labels_delta)
 {
+	if (msg.docid() == Store::InvalidId)
+		return Err(Error::Code::Store, "invalid doc-id");
+
 	std::unique_lock lock{priv_->lock_};
 	// i.e. the set of effective labels. and the set up updates, the "diff"
-	auto updates{updated_labels(message.labels(), labels_delta)};
+	auto updates{updated_labels(msg.labels(), labels_delta)};
 
 	if (updates.second.empty())
 		return Ok(std::move(updates.second)); // nothing to do
 
-	message.set_labels(updates.first);
-	auto res{priv_->update_message_unlocked(message, message.docid())};
+	msg.set_labels(updates.first);
+	const auto res = xapian_db().replace_document(msg.xapian_term(),
+						      msg.document().xapian_document());
 	if (!res)
 		return Err(res.error());
 
@@ -691,29 +663,19 @@ Store::update_labels(Message& message, const Labels::DeltaLabelVec& labels_delta
 }
 
 Result<Labels::DeltaLabelVec>
-Store::clear_labels(Message& message)
+Store::clear_labels(Message& msg)
 {
 	using namespace Labels;
 
-	std::unique_lock lock{priv_->lock_};
-
 	DeltaLabelVec updates;
 
-	const auto labels{message.labels()};
-	if (labels.empty())
-		return Ok(std::move(updates)); // nothing to do
-
-	message.set_labels({}); // clear all
-	auto res{priv_->update_message_unlocked(message, message.docid())};
-	if (!res)
-		return Err(res.error());
-
-	for (auto label: labels) {
-		updates.emplace_back(DeltaLabel{Delta::Remove, label});
-		priv_->labels_cache_.decrease(label);
+	{
+		std::unique_lock lock{priv_->lock_};
+		for (auto& label: msg.labels())
+			updates.emplace_back(DeltaLabel{Delta::Remove, std::move(label)});
 	}
 
-	return Ok(std::move(updates));
+	return update_labels(msg, updates);
 }
 
 Result<void>

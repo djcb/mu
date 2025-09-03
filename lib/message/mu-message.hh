@@ -319,6 +319,26 @@ public:
 	size_t size() const { return static_cast<size_t>(document().integer_value(Field::Id::Size)); }
 
 	/**
+	 * Get the Xapian term for some message path (static function)
+	 *
+	 * @param path the path
+	 *
+	 * @return the xapian term
+	 */
+	static std::string xapian_term(const std::string& path) {
+		return field_from_id(Field::Id::Path).xapian_term(path);
+	}
+
+	/**
+	 * Get the Xapian term for this message
+	 *
+	 * @return the xapian term
+	 */
+	std::string xapian_term() const {
+		return xapian_term(path());
+	}
+
+	/**
 	 * Get the (possibly empty) list of references (consisting of both the
 	 * References and In-Reply-To fields), with the oldest first and the
 	 * direct parent as the last one. Note, any reference (message-id) will
