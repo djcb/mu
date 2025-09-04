@@ -129,17 +129,18 @@ Note: this REPL is not to be confused with the mu REPL as per
   (interactive "P")
   (unless (require 'geiser-guile nil 'noerror)
     (mu4e-error "geiser-guile not found; please install"))
-  (let ((sock (plist-get (mu4e-server-properties) :scm-socket-path))
-        (geiser-repl-buffer-name-function
-         (lambda (_)
-           mu4e-mu-scm-repl-buffer-name)))
+  (let ((sock (plist-get (mu4e-server-properties) :scm-socket-path)))
     (unless sock
       (mu4e-error "socket-path unavailable"))
     (when (fboundp 'geiser-connect-local)
-      (if (and (buffer-live-p (get-buffer mu4e-mu-scm-repl-buffer-name))
-               (not new-repl))
-          (switch-to-buffer mu4e-mu-scm-repl-buffer-name)
-        (geiser-connect-local 'guile sock)))))
+      (defvar geiser-repl-buffer-name-function) ;; avoid warning
+      (let ((geiser-repl-buffer-name-function
+             (lambda (_)
+               mu4e-mu-scm-repl-buffer-name)))
+        (if (and (buffer-live-p (get-buffer mu4e-mu-scm-repl-buffer-name))
+                 (not new-repl))
+            (switch-to-buffer mu4e-mu-scm-repl-buffer-name)
+          (geiser-connect-local 'guile sock))))))
 
 ;; Cached data
 (defvar mu4e-maildir-list)
