@@ -109,8 +109,15 @@ server is started."
   :group 'mu4e
   :safe  'booleanp)
 
-(defun mu4e-mu-scm-repl ()
-  "Start a mu-scm REPL using geiser.
+(defconst mu4e-mu-scm-repl-buffer-name
+  "*mu4e-mu-scm-repl*"
+  "Name for the mu-scm REPL buffer.")
+
+(defun mu4e-mu-scm-repl (new-repl)
+  "Start a mu-scm REPL using geiser, and switch to it.
+
+If NEW-REPL is non-nil or no REPL buffer exists yet,
+start a new one. Otherwise, use the (first) existing one.
 
 See `mu4e-mu-scm-server' to enable this; and requires the
 `geiser-guile' package.
@@ -119,14 +126,20 @@ The REPL uses the same server instance that mu4e uses.
 
 Note: this REPL is not to be confused with the mu REPL as per
 `mu4e-server-repl'."
-  (interactive)
+  (interactive "P")
   (unless (require 'geiser-guile nil 'noerror)
     (mu4e-error "geiser-guile not found; please install"))
-  (let ((sock (plist-get (mu4e-server-properties) :scm-socket-path)))
+  (let ((sock (plist-get (mu4e-server-properties) :scm-socket-path))
+        (geiser-repl-buffer-name-function
+         (lambda (_)
+           mu4e-mu-scm-repl-buffer-name)))
     (unless sock
       (mu4e-error "socket-path unavailable"))
     (when (fboundp 'geiser-connect-local)
-      (geiser-connect-local 'guile sock))))
+      (if (and (buffer-live-p (get-buffer mu4e-mu-scm-repl-buffer-name))
+               (not new-repl))
+          (switch-to-buffer mu4e-mu-scm-repl-buffer-name)
+        (geiser-connect-local 'guile sock)))))
 
 ;; Cached data
 (defvar mu4e-maildir-list)
