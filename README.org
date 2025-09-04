@@ -43,6 +43,17 @@ under the name ~maildir-utils~; apparently because they don't like short names.
 All of the code is distributed under the terms of the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GNU General Public License
 version 3]] (or higher).
 
+* Versions
+
+*mu* attempts to balance development speed and stability. For this, every few
+months there is a stable version (e.g. ~1.12.12~); development then continues in
+in ~master~, with ~~-dev~ (e.g. ~1.12.13-dev~): ~-dev~-suffixed versions refer to the
+current _development_ code, until it is released (and then looses its ~-dev~ suffix,
+i.e., become the ~1.12.13~ release).
+
+So if you want stability, grab the [[https://github.com/djcb/mu/releases/][release]]; if you are more
+adventurous/impatient, git ~master~ is there as well.
+
 * Installation
 
 Note: building from source is an /advanced/ subject, especially if something goes
