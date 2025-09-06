@@ -214,8 +214,8 @@ Many people like interacting with Guile through Emacs and the ``Geiser''
 package, and that is possible with @command{mu scm} as well, using the Unix
 domain socket, as discussed in @xref{Listening on a Unix Domain Socket}.
 
-Assuming you have installed the @t{guile-geiser} package, the following snippet
-makes that easy:
+Assuming you have installed the @code{guile-geiser} package (available through
+the ELPA package archive), the following snippet makes that easy:
 @lisp
 (require 'geiser-guile)
 
@@ -241,20 +241,20 @@ the REPL, with all the Geiser bells & whistles.
 @section Hooking up with Mu4e
 @cindex Mu4e
 
-If you use @t{mu4e}, connecting to the SCM server is even easier than with
+If you use @code{mu4e}, connecting to the SCM REPL is even easier than with
 ``plain'' Emacs.
 
-First tell @t{mu4e} to starts it server with with @t{--listen} parameter:
+First tell @code{mu4e} to starts it server with with @t{--listen} parameter:
 @lisp
 (setq mu4e-mu-scm-server t)
 @end lisp
-After that, (re)start @t{mu4e}.
+After that, (re)start @code{mu4e}.
 
-Now should be able to connect to the REPL using @t{M-x mu4e-mu-scm-repl}. Like
-@ref{Hooking up with GNU/Emacs and Geiser}, this depends on the @t{geiser-guile}
-package.
+Now should be able to connect to the REPL using @kbd{M-x mu4e-mu-scm-repl}. Like
+@ref{Hooking up with GNU/Emacs and Geiser}, this depends on the
+@code{geiser-guile} package.
 
-The SCM instance uses the same database/store instance that @t{mu4e} uses.
+The SCM instance uses the same database/store instance that @code{mu4e} uses.
 
 @node Shell
 @chapter Shell
@@ -496,7 +496,7 @@ e.g. as retrieved through:
 
 @anchor{full-message} Many of the procedures below use the internal
 representation of the message from the database; this re-uses the same
-information that @t{mu4e} uses. However, that is not sufficient for all:
+information that @code{mu4e} uses. However, that is not sufficient for all:
 @code{body} and @code{header} need the full message. To get this, it needs to
 open the message file from the file-system. Much of this is internal to
 @t{mu-scm}, except that full-method-procedures are a bit slower relatively to
@@ -904,7 +904,7 @@ For example:
 @c Get the message's s-expression.
 
 @c @t{mu} caches an s-expression for each message; this was designed as an
-@c optimization for @t{mu4e}, but @t{mu-scm} uses it as well. The details of this
+@c optimization for @code{mu4e}, but @t{mu-scm} uses it as well. The details of this
 @c s-expression (a property-list) are internal to @t{mu} (so do not base your next
 @c billion-dollar startup on it), but it can be useful for development and
 @c debugging.
