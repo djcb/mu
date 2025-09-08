@@ -47,9 +47,9 @@ version 3]] (or higher).
 
 *mu* attempts to balance development speed and stability. For this, every few
 months there is a stable version (e.g. ~1.12.12~); development then continues in
-in ~master~, with ~~-dev~ (e.g. ~1.12.13-dev~): ~-dev~-suffixed versions refer to the
+in ~master~, with ~-dev<n>~ (e.g. ~1.12.13-dev2~): ~-dev~-suffixed versions refer to the
 current _development_ code, until it is released (and then looses its ~-dev~ suffix,
-i.e., become the ~1.12.13~ release).
+i.e., becomes the ~1.12.13~ release).
 
 So if you want stability, grab the [[https://github.com/djcb/mu/releases/][release]]; if you are more
 adventurous/impatient, git ~master~ is there as well.
